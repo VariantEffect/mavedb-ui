@@ -1,0 +1,37 @@
+.mave-full-height {
+  height: 100%;
+}
+
+.mave-scroll-vertical {
+  overflow-y: auto;
+}
+
+.mave-1000px-col {
+  position: relative;
+  width: 1000px;
+  margin: 0 auto;
+  text-align: left;
+  overflow-x: hide;
+}
+
+.mave-screen-title-bar {
+  display: flex;
+  flex-direction: row;
+  justify-content: space-between;
+  font-size: 28px;
+  padding: 0 0 5px 0;
+  border-bottom: 1px solid #ccc;
+  margin: 10px 0;
+}
+
+.mave-screen-title-controls {
+  flex: 0 0 auto;
+}
+
+.mave-screen-title-controls .p-button {
+  margin-right: 10px;
+}
+
+.mave-screen-title-controls .p-button:last-child {
+  margin-right: 0;
+}

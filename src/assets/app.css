@@ -1,0 +1,25 @@
+* {
+  text-rendering: optimizeLegibility;
+  font-family: 'Raleway', sans-serif;
+  text-align: left;
+}
+
+body {
+  line-height: 1.75;
+  background-color: #f7f7f7;
+}
+
+a {
+  color: #987cb8;
+  text-decoration: none;
+  transition: color 0.1s ease-in-out;
+}
+
+body .p-inputtext {
+  font-family: 'Raleway', sans-serif;
+}
+
+/* Override the minimum width from the PrimeVue theme. */
+body .p-button {
+  min-width: 10px;
+}

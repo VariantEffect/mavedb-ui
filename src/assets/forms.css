@@ -1,0 +1,95 @@
+.field {
+  margin: 10px 0;
+}
+
+/* Field types */
+
+.field:deep(.p-chips) {
+  width: 100%;
+}
+
+.field:deep(.p-inputtext),
+.field:deep(.p-autocomplete) {
+  width: 100%;
+}
+
+.field:deep(.p-fileupload) {
+  display: flex;
+  flex-direction: row;
+  align-items: center;
+  background: #fff;
+}
+
+.field:deep(.p-fileupload .p-button.p-fileupload-choose.mave-file-input-full) {
+  display: none;
+}
+
+.field:deep(.p-fileupload .p-fileupload-buttonbar) {
+  flex: 0 0 auto;
+  border: 0 none;
+}
+
+.field:deep(.p-fileupload .p-fileupload-content) {
+  flex: 1 1 auto;
+  padding-top: 0;
+  padding-bottom: 0;
+  border: 0 none;
+}
+
+.field:deep(.p-fileupload-row > div) {
+  width: auto;
+}
+
+/* Tab views within fields */
+
+.field:deep(.p-tabview) {
+  display: flex;
+  flex-direction: row-reverse;
+}
+
+.field:deep(.p-tabview-nav-container) {
+  /*float: right;*/
+}
+
+.field:deep(.p-tabview-nav-content) {
+  overflow-x: hidden;
+  overflow-y: auto;
+}
+
+.field:deep(.p-tabview .p-tabview-nav) {
+  flex-direction: column;
+  padding-left: 5px;
+  border: 0 none;
+  background: transparent;
+}
+
+.field:deep(.p-tabview .p-tabview-panels) {
+  background: inherit;
+}
+
+.field:deep(.p-tabview .p-tabview-nav li .p-tabview-nav-link) {
+  border-width: 0 0 0 1px;
+  margin: 0 0 0 -1px;
+  background: transparent;
+}
+
+.field:deep(.p-tabview .p-tabview-nav li.p-highlight .p-tabview-nav-link) {
+  border-left: 3px solid #3f51b5;
+  background: rgba(63, 81, 181, 0.1);
+}
+
+.field:deep(.p-tabview .p-tabview-ink-bar) {
+  display: none;
+}
+
+.field:deep(.p-tabview .p-tabview-panels) {
+  position: relative;
+  flex: 1 0 auto;
+  padding: 0;
+}
+
+/* Errors */
+
+.mave-field-error {
+  color: #900;
+}

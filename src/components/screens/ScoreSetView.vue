@@ -46,6 +46,18 @@
           <div v-if="get(item, 'target.refseq.identifier')">RefSeq: {{item.target.refseq.identifier}}<span v-if="get(item, 'target.refseq.offset')"> with offset {{item.target.refseq.offset}}</span></div>
           <div v-if="get(item, 'target.ensembl.identifier')">Ensembl: {{item.target.ensembl.identifier}}</div>
         </div>
+        <div v-if="item.targetGene">
+          <div class="mave-scoreset-section-title">Target</div>
+          <div v-if="item.targetGene.name">Name: {{item.targetGene.name}}</div>
+          <div v-if="item.targetGene.category">Type: {{item.targetGene.category}}</div>
+          <div v-if="item.targetGene.referenceMaps?.genome?.organismName">Organism: {{item.targetGene.referenceMaps.genome.organismName}}</div>
+          <div v-if="item.targetGene.referenceMaps?.genome?.shortName">Reference genome: {{item.targetGene.referenceMaps.genome.shortName}}</div>
+          <div v-if="item.targetGene.referenceMaps?.genome?.assemblyIdentifier?.identifier">Reference assembly: {{item.targetGene.referenceMaps.genome.assemblyIdentifier.identifier}}</div>
+          <div v-if="item.targetGene.referenceSequence?.sequence">Reference sequence: {{item.targetGene.referenceSequence.sequence}}</div>
+          <div v-if="item.targetGene.uniprot?.identifier">UniProt: {{item.targetGene.uniprot.identifier}}</div>
+          <div v-if="item.targetGene.refseq?.identifier">RefSeq: {{item.targetGene.refseq.identifier}}<span v-if="item.targetGene.refseq?.offset"> with offset {{item.targetGene.refseq.offset}}</span></div>
+          <div v-if="item.targetGene.ensembl?.identifier">Ensembl: {{item.targetGene.ensembl.identifier}}</div>
+        </div>
       </div>
     </div>
   </DefaultLayout>

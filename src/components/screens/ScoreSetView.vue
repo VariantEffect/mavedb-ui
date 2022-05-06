@@ -51,7 +51,7 @@
           <div v-if="item.targetGene.name">Name: {{item.targetGene.name}}</div>
           <div v-if="item.targetGene.category">Type: {{item.targetGene.category}}</div>
           <div v-if="item.targetGene.referenceMaps?.[0]?.genome?.organismName">Organism: {{item.targetGene.referenceMaps[0].genome.organismName}}</div>
-          <div v-if="item.targetGene.referenceMaps?.genome?.shortName">Reference genome: {{item.targetGene.referenceMaps.genome.shortName}}</div>
+          <div v-if="item.targetGene.referenceMaps?.[0]?.genome?.shortName">Reference genome: {{item.targetGene.referenceMaps[0].genome.shortName}}</div>
           <div v-if="item.targetGene.referenceMaps?.genome?.assemblyIdentifier?.identifier">Reference assembly: {{item.targetGene.referenceMaps.genome.assemblyIdentifier.identifier}}</div>
           <div v-if="item.targetGene.referenceSequence?.sequence">Reference sequence: {{item.targetGene.referenceSequence.sequence}}</div>
           <div v-if="item.targetGene.uniprot?.identifier">UniProt: {{item.targetGene.uniprot.identifier}}</div>

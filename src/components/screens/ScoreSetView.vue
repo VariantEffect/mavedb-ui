@@ -50,7 +50,7 @@
           <div class="mave-scoreset-section-title">Target</div>
           <div v-if="item.targetGene.name">Name: {{item.targetGene.name}}</div>
           <div v-if="item.targetGene.category">Type: {{item.targetGene.category}}</div>
-          <div v-if="item.targetGene.referenceMaps?.genome?.organismName">Organism: {{item.targetGene.referenceMaps.genome.organismName}}</div>
+          <div v-if="item.targetGene.referenceMaps?.[0]?.genome?.organismName">Organism: {{item.targetGene.referenceMaps[0].genome.organismName}}</div>
           <div v-if="item.targetGene.referenceMaps?.genome?.shortName">Reference genome: {{item.targetGene.referenceMaps.genome.shortName}}</div>
           <div v-if="item.targetGene.referenceMaps?.genome?.assemblyIdentifier?.identifier">Reference assembly: {{item.targetGene.referenceMaps.genome.assemblyIdentifier.identifier}}</div>
           <div v-if="item.targetGene.referenceSequence?.sequence">Reference sequence: {{item.targetGene.referenceSequence.sequence}}</div>

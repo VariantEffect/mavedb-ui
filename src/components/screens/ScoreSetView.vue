@@ -34,18 +34,6 @@
             <a v-for="(keyword, i) of item.keywords" :key="i" :href="`https://www.mavedb.org/search/?keywords=${keyword}`"><Chip :label="keyword" /></a>
           </div>
         </div>
-        <div v-if="item.target">
-          <div class="mave-scoreset-section-title">Target</div>
-          <div v-if="item.target.name">Name: {{item.target.name}}</div>
-          <div v-if="item.target.type">Type: {{item.target.type}}</div>
-          <div v-if="get(item, 'target.referenceMaps.genome.organismName')">Organism: {{item.target.referenceMaps.genome.organismName}}</div>
-          <div v-if="get(item, 'target.referenceMaps.genome.shortName')">Reference genome: {{item.target.referenceMaps.genome.shortName}}</div>
-          <div v-if="get(item, 'target.referenceMaps.genome.assemblyIdentifier.identifier')">Reference assembly: {{item.target.referenceMaps.genome.assemblyIdentifier.identifier}}</div>
-          <div v-if="get(item, 'target.referenceSequence.sequence')">Reference sequence: {{item.target.referenceSequence.sequence}}</div>
-          <div v-if="get(item, 'target.uniprot.identifier')">UniProt: {{item.target.uniprot.identifier}}</div>
-          <div v-if="get(item, 'target.refseq.identifier')">RefSeq: {{item.target.refseq.identifier}}<span v-if="get(item, 'target.refseq.offset')"> with offset {{item.target.refseq.offset}}</span></div>
-          <div v-if="get(item, 'target.ensembl.identifier')">Ensembl: {{item.target.ensembl.identifier}}</div>
-        </div>
         <div v-if="item.targetGene">
           <div class="mave-scoreset-section-title">Target</div>
           <div v-if="item.targetGene.name">Name: {{item.targetGene.name}}</div>

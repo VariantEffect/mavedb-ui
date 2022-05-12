@@ -216,7 +216,7 @@ export default {
       try {
         // this response should be true to get published data
         let response = await axios.post(
-          `${config.apiBaseUrl}/me/scoresets/search`,
+          `${config.apiBaseUrl}/scoresets/search`,
           {
             text: this.searchText || null,
           },
@@ -243,9 +243,17 @@ export default {
         // TODO catch errors in response
         // add condition here
         this.scoresets = response.data || []
-        this.publishedScoresets = this.scoresets // where published is true
-        this.unpublishedScoresets = this.scoresets // where published is false
+        //this.publishedScoresets = this.scoresets // where published is true
+        //this.unpublishedScoresets = this.scoresets // where published is false
         //this.unpublishedScoresets = response.data || []
+        for (let i=0, len = this.scoresets.length; i<len; i++){
+          if (this.scoresets[i].publishedDate == null){
+            this.unpublishedScoresets.push(this.scoresets[i])
+          }
+          else{
+            this.publishedScoresets.push(this.scoresets[i])
+          }
+        }
       } catch (err) {
         console.log(`Error while loading search results")`, err)
       }

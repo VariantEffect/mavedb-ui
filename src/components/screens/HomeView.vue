@@ -213,7 +213,7 @@ export default {
             }
           }
         )
-        // this response should be false to get unpublished data
+        // Separate the response.data into published scoreset and unpublished scoreset.
         this.scoresets = response.data || []
         for (let i=0, len = this.scoresets.length; i<len; i++){
           console.log(this.scoresets[i].publishedDate)
@@ -223,7 +223,6 @@ export default {
           else{
             this.publishedScoresets.push(this.scoresets[i])
           }
-
         }
       } catch (err) {
         console.log(`Error while loading search results")`, err)

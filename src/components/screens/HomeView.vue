@@ -21,7 +21,7 @@
             <div class="mavedb-search-results">
               <FlexDataTable
                   :data="publishedScoresets"
-                  :options="publishedTableOptions"
+                  :options="tableOptions"
                   :scrollX="true"
                   :scrollY="true"
               />
@@ -35,7 +35,7 @@
           <div class="mavedb-search-results">
             <FlexDataTable
                 :data="unpublishedScoresets"
-                :options="unpublishedTableOptions"
+                :options="tableOptions"
                 :scrollX="true"
                 :scrollY="true"
             />
@@ -102,7 +102,7 @@ export default {
       scoresets: [],
       publishedScoresets: [],
       unpublishedScoresets: [],
-      publishedTableOptions: {
+      tableOptions: {
         columns: [
           {
             data: 'urn',
@@ -125,47 +125,6 @@ export default {
         ],
         language: {
           emptyTable: 'Type in the search box above or use the filters to find a data set.'
-        },
-        rowGroup: {
-          dataSrc: 'experiment.urn',
-          startRender: function(rows, group) {
-            const experimentUrn = group
-            const experimentUrnDisplay = experimentUrn // rows.data()[0]['parentUrnDisplay']
-            const experimentDescription = _.get(rows.data()[0], 'shortDescription', null)
-            const url = self.$router.resolve({path: `/experiments/${experimentUrn}`}).href
-
-            const link = ('<a href="' + url + '">' + experimentUrnDisplay + '</a>');
-
-            return $('<tr/>').append(
-              '<td colSpan="1">' + link + '</td>').append('<td colSpan="4">' + experimentDescription + '</td>'
-            )
-          },
-        },
-        searching: false
-      },
-      unpublishedTableOptions: {
-        columns: [
-          {
-            data: 'urn',
-            title: 'URN',
-            width: '17.5%',
-            render: function (data) { // }, type, row) {
-              var urn = data
-              var urnDisplay = urn  // row['urnDisplay']
-              const url = self.$router.resolve({path: `/scoresets/${urn}`}).href
-              return ('<a href="' + url + '">' + urnDisplay + '</a>')  // TODO Escape the text.
-            },
-          },
-          {data: 'shortDescription', title: 'Description', width: '40%'},
-          {data: (x) => _.get(x, 'targetGene.name', null), title: 'Target'},
-          {data: (x) => _.get(
-            _.get(x, 'targetGene.referenceMaps.0', null),
-                // .find((rm) => rm.isPrimary),
-            'genome.organismName'
-          ), title: 'Target organism'},
-        ],
-        language: {
-          emptyTable: 'You do not have any unpublished scoresets.'
         },
         rowGroup: {
           dataSrc: 'experiment.urn',
@@ -216,19 +175,6 @@ export default {
       try {
         // this response should be true to get published data
         let response = await axios.post(
-          `${config.apiBaseUrl}/scoresets/search`,
-          {
-            text: this.searchText || null,
-          },
-          {
-            headers: {
-              accept: 'application/json'
-            }
-          }
-        )
-        // this response should be false to get unpublished data
-        /*
-        let responseUnpublished = await axios.post(
           `${config.apiBaseUrl}/me/scoresets/search`,
           {
             text: this.searchText || null,
@@ -239,13 +185,10 @@ export default {
             }
           }
         )
-        */
-        // TODO catch errors in response
-        // add condition here
         this.scoresets = response.data || []
-        //this.publishedScoresets = this.scoresets // where published is true
-        //this.unpublishedScoresets = this.scoresets // where published is false
-        //this.unpublishedScoresets = response.data || []
+        this.publishedScoresets = []
+        this.unpublishedScoresets = []
+        // Separate the response.data into published scoreset and unpublished scoreset.
         for (let i=0, len = this.scoresets.length; i<len; i++){
           if (this.scoresets[i].publishedDate == null){
             this.unpublishedScoresets.push(this.scoresets[i])

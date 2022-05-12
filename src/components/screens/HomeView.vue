@@ -20,7 +20,7 @@
             </div>
             <div class="mavedb-search-results">
               <FlexDataTable
-                  :data="scoresets"
+                  :data="publishedScoresets"
                   :options="publishedTableOptions"
                   :scrollX="true"
                   :scrollY="true"
@@ -100,6 +100,7 @@ export default {
     return {
       searchText: null,
       scoresets: [],
+      publishedScoresets: [],
       unpublishedScoresets: [],
       publishedTableOptions: {
         columns: [
@@ -213,9 +214,9 @@ export default {
     },
     fetchSearchResults: async function() {
       try {
-        // get a second response for unpublished scoresets
+        // this response should be true to get published data
         let response = await axios.post(
-          `${config.apiBaseUrl}/scoresets/search`,
+          `${config.apiBaseUrl}/me/scoresets/search`,
           {
             text: this.searchText || null,
           },
@@ -225,8 +226,26 @@ export default {
             }
           }
         )
+        // this response should be false to get unpublished data
+        /*
+        let responseUnpublished = await axios.post(
+          `${config.apiBaseUrl}/me/scoresets/search`,
+          {
+            text: this.searchText || null,
+          },
+          {
+            headers: {
+              accept: 'application/json'
+            }
+          }
+        )
+        */
         // TODO catch errors in response
+        // add condition here
         this.scoresets = response.data || []
+        this.publishedScoresets = this.scoresets // where published is true
+        this.unpublishedScoresets = this.scoresets // where published is false
+        //this.unpublishedScoresets = response.data || []
       } catch (err) {
         console.log(`Error while loading search results")`, err)
       }

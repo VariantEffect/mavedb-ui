@@ -216,7 +216,6 @@ export default {
         // Separate the response.data into published scoreset and unpublished scoreset.
         this.scoresets = response.data || []
         for (let i=0, len = this.scoresets.length; i<len; i++){
-          console.log(this.scoresets[i].publishedDate)
           if (this.scoresets[i].publishedDate == null){
             this.unpublishedScoresets.push(this.scoresets[i])
           }

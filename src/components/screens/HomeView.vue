@@ -21,7 +21,7 @@
             <div class="mavedb-search-results">
               <FlexDataTable
                   :data="scoresets"
-                  :options="tableOptions"
+                  :options="publishedTableOptions"
                   :scrollX="true"
                   :scrollY="true"
               />
@@ -34,8 +34,8 @@
         <div class="mavedb-search-view">
           <div class="mavedb-search-results">
             <FlexDataTable
-                :data="scoresets"
-                :options="tableOptions"
+                :data="unpublishedScoresets"
+                :options="unpublishedTableOptions"
                 :scrollX="true"
                 :scrollY="true"
             />
@@ -100,7 +100,8 @@ export default {
     return {
       searchText: null,
       scoresets: [],
-      tableOptions: {
+      unpublishedScoresets: [],
+      publishedTableOptions: {
         columns: [
           {
             data: 'urn',
@@ -123,6 +124,47 @@ export default {
         ],
         language: {
           emptyTable: 'Type in the search box above or use the filters to find a data set.'
+        },
+        rowGroup: {
+          dataSrc: 'experiment.urn',
+          startRender: function(rows, group) {
+            const experimentUrn = group
+            const experimentUrnDisplay = experimentUrn // rows.data()[0]['parentUrnDisplay']
+            const experimentDescription = _.get(rows.data()[0], 'shortDescription', null)
+            const url = self.$router.resolve({path: `/experiments/${experimentUrn}`}).href
+
+            const link = ('<a href="' + url + '">' + experimentUrnDisplay + '</a>');
+
+            return $('<tr/>').append(
+              '<td colSpan="1">' + link + '</td>').append('<td colSpan="4">' + experimentDescription + '</td>'
+            )
+          },
+        },
+        searching: false
+      },
+      unpublishedTableOptions: {
+        columns: [
+          {
+            data: 'urn',
+            title: 'URN',
+            width: '17.5%',
+            render: function (data) { // }, type, row) {
+              var urn = data
+              var urnDisplay = urn  // row['urnDisplay']
+              const url = self.$router.resolve({path: `/scoresets/${urn}`}).href
+              return ('<a href="' + url + '">' + urnDisplay + '</a>')  // TODO Escape the text.
+            },
+          },
+          {data: 'shortDescription', title: 'Description', width: '40%'},
+          {data: (x) => _.get(x, 'targetGene.name', null), title: 'Target'},
+          {data: (x) => _.get(
+            _.get(x, 'targetGene.referenceMaps.0', null),
+                // .find((rm) => rm.isPrimary),
+            'genome.organismName'
+          ), title: 'Target organism'},
+        ],
+        language: {
+          emptyTable: 'You do not have any unpublished scoresets.'
         },
         rowGroup: {
           dataSrc: 'experiment.urn',
@@ -171,6 +213,7 @@ export default {
     },
     fetchSearchResults: async function() {
       try {
+        // get a second response for unpublished scoresets
         let response = await axios.post(
           `${config.apiBaseUrl}/scoresets/search`,
           {

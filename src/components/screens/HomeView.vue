@@ -125,7 +125,7 @@ export default {
           ), title: 'Target organism'},
         ],
         language: {
-          emptyTable: 'Type in the search box above or use the filters to find a data set.'
+          emptyTable: 'You do not have any scoresets matching the request.'
         },
         rowGroup: {
           dataSrc: 'experiment.urn',

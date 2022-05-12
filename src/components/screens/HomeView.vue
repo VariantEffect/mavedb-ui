@@ -102,6 +102,7 @@ export default {
       scoresets: [],
       publishedScoresets: [],
       unpublishedScoresets: [],
+      displayedUnplublishedScoresets: false,
       tableOptions: {
         columns: [
           {
@@ -175,7 +176,7 @@ export default {
       try {
         // this response should be true to get published data
         let response = await axios.post(
-          `${config.apiBaseUrl}/me/scoresets/search`,
+          `${config.apiBaseUrl}/scoresets/search`,
           {
             text: this.searchText || null,
           },
@@ -186,17 +187,22 @@ export default {
           }
         )
         this.scoresets = response.data || []
+        // reset published scoresets search results when using search bar
         this.publishedScoresets = []
-        this.unpublishedScoresets = []
+        //this.unpublishedScoresets = []
         // Separate the response.data into published scoreset and unpublished scoreset.
         for (let i=0, len = this.scoresets.length; i<len; i++){
           if (this.scoresets[i].publishedDate == null){
-            this.unpublishedScoresets.push(this.scoresets[i])
+            // do not add to unpublished scoresets if it is already populated
+            if (this.displayedUnplublishedScoresets == false){
+              this.unpublishedScoresets.push(this.scoresets[i])
+            }
           }
           else{
             this.publishedScoresets.push(this.scoresets[i])
           }
         }
+        this.displayedUnplublishedScoresets = true
       } catch (err) {
         console.log(`Error while loading search results")`, err)
       }

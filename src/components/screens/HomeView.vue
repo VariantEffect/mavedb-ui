@@ -21,7 +21,7 @@
             <div class="mavedb-search-results">
               <FlexDataTable
                   :data="publishedScoresets"
-                  :options="publishedTableOptions"
+                  :options="tableOptions"
                   :scrollX="true"
                   :scrollY="true"
               />
@@ -35,7 +35,7 @@
           <div class="mavedb-search-results">
             <FlexDataTable
                 :data="unpublishedScoresets"
-                :options="unpublishedTableOptions"
+                :options="tableOptions"
                 :scrollX="true"
                 :scrollY="true"
             />
@@ -66,7 +66,6 @@ import axios from 'axios'
 import $ from 'jquery'
 import InputText from 'primevue/inputtext'
 import FlexDataTable from '@/components/common/FlexDataTable'
-import { computed } from '@vue/runtime-core'
 //import SelectList from '@/components/common/SelectList'
 const ORCID_JWT_PUBLIC_KEY = 'jxTIntA7YvdfnYkLSN4wk__E2zf_wbb0SV_HLHFvh6a9ENVRD1_rHK0EijlBzikb-1rgDQihJETcgBLsMoZVQqGj8fDUUuxnVHsuGav_bf41PA7E_58HXKPrB2C0cON41f7K3o9TStKpVJOSXBrRWURmNQ64qnSSryn1nCxMzXpaw7VUo409ohybbvN6ngxVy4QR2NCC7Fr0QVdtapxD7zdlwx6lEwGemuqs_oG5oDtrRuRgeOHmRps2R6gG5oc-JqVMrVRv6F9h4ja3UgxCDBQjOVT1BFPWmMHnHCsVYLqbbXkZUfvP2sO1dJiYd_zrQhi-FtNth9qrLLv3gkgtwQ'
 const key = Buffer.from(ORCID_JWT_PUBLIC_KEY, 'base64')
@@ -96,7 +95,8 @@ export default {
       scoresets: [],
       publishedScoresets: [],
       unpublishedScoresets: [],
-      publishedTableOptions: {
+      displayedUnplublishedScoresets: false,
+      tableOptions: {
         columns: [
           {
             data: 'urn',
@@ -118,46 +118,7 @@ export default {
           ), title: 'Target organism'},
         ],
         language: {
-          emptyTable: 'Type in the search box above or use the filters to find a data set.'
-        },
-        rowGroup: {
-          dataSrc: 'experiment.urn',
-          startRender: function(rows, group) {
-            const experimentUrn = group
-            const experimentUrnDisplay = experimentUrn // rows.data()[0]['parentUrnDisplay']
-            const experimentDescription = _.get(rows.data()[0], 'shortDescription', null)
-            const url = self.$router.resolve({path: `/experiments/${experimentUrn}`}).href
-            const link = ('<a href="' + url + '">' + experimentUrnDisplay + '</a>');
-            return $('<tr/>').append(
-              '<td colSpan="1">' + link + '</td>').append('<td colSpan="4">' + experimentDescription + '</td>'
-            )
-          },
-        },
-        searching: false
-      },
-      unpublishedTableOptions: {
-        columns: [
-          {
-            data: 'urn',
-            title: 'URN',
-            width: '17.5%',
-            render: function (data) { // }, type, row) {
-              var urn = data
-              var urnDisplay = urn  // row['urnDisplay']
-              const url = self.$router.resolve({path: `/scoresets/${urn}`}).href
-              return ('<a href="' + url + '">' + urnDisplay + '</a>')  // TODO Escape the text.
-            },
-          },
-          {data: 'shortDescription', title: 'Description', width: '40%'},
-          {data: (x) => _.get(x, 'targetGene.name', null), title: 'Target'},
-          {data: (x) => _.get(
-            _.get(x, 'targetGene.referenceMaps.0', null),
-                // .find((rm) => rm.isPrimary),
-            'genome.organismName'
-          ), title: 'Target organism'},
-        ],
-        language: {
-          emptyTable: 'You do not have any unpublished scoresets.'
+          emptyTable: 'You do not have any scoresets matching the request.'
         },
         rowGroup: {
           dataSrc: 'experiment.urn',
@@ -213,16 +174,22 @@ export default {
             }
           }
         )
-        // Separate the response.data into published scoreset and unpublished scoreset.
         this.scoresets = response.data || []
+        // reset published scoresets search results when using search bar
+        this.publishedScoresets = []
+        // Separate the response.data into published scoreset and unpublished scoreset.
         for (let i=0, len = this.scoresets.length; i<len; i++){
           if (this.scoresets[i].publishedDate == null){
-            this.unpublishedScoresets.push(this.scoresets[i])
+            // do not add to unpublished scoresets if it is already populated
+            if (this.displayedUnplublishedScoresets == false){
+              this.unpublishedScoresets.push(this.scoresets[i])
+            }
           }
           else{
             this.publishedScoresets.push(this.scoresets[i])
           }
         }
+        this.displayedUnplublishedScoresets = true
       } catch (err) {
         console.log(`Error while loading search results")`, err)
       }

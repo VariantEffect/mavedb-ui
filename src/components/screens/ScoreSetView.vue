@@ -132,10 +132,13 @@ export default {
       return _.get(...args)
     },
     publishItem: function() {
-
+     
     },
     deleteItem: function() {
-
+      if (this.item) {
+        // delete item
+        
+      }
     }
   }
 }

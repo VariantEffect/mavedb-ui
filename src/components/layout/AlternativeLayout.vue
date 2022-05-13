@@ -12,15 +12,12 @@
 </template>
 
 <script>
-
 import Toolbar from '@/components/layout/Toolbar'
 import '@fontsource/raleway'
 import '@/assets/app.css'
-
 export default {
   components: {Toolbar}
 }
-
 </script>
 
 <style scoped>
@@ -38,7 +35,6 @@ export default {
   left: 0;
   right: 0;
 }
-
 .mavedb-main-wrapper {
   display: flex;
   flex-direction: row;
@@ -50,13 +46,11 @@ export default {
   overflow-x: hidden;
   overflow-y: auto;
 }
-
 .mavedb-main {
   flex: 1 1 auto;
   position: relative;
   overflow: hidden;
 }
-
 .sfs-draft-batches-list-pane {
   flex: 0 1 auto;
   position: relative;
@@ -68,14 +62,12 @@ export default {
   border-top-left-radius: 10px;
   border-bottom-left-radius: 10px;
 }
-
 .sfs-draft-batches-list-pane > .sfs-pane-close-button {
   position: absolute;
   top: 10px;
   left: 10px;
   z-index: 1;
 }
-
 .sfs-draft-batches-list {
   position: absolute;
   top: 0;
@@ -84,7 +76,6 @@ export default {
   right: 0;
   overflow: auto;
 }
-
 </style>
 
 <style src="../../assets/layout.css"></style>

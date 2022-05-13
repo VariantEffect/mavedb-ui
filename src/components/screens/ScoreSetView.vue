@@ -38,6 +38,7 @@
         </div>
         <div v-if="item.targetGene">
           <div class="mave-scoreset-section-title">Target</div>
+          <div v-if="item">Name: {{item}}</div>
           <div v-if="item.targetGene.name">Name: {{item.targetGene.name}}</div>
           <div v-if="item.targetGene.category">Type: {{item.targetGene.category}}</div>
           <div v-if="item.targetGene.referenceMaps?.[0]?.genome?.organismName">Organism: {{item.targetGene.referenceMaps[0].genome.organismName}}</div>
@@ -68,7 +69,7 @@ import config from '@/config'
 import {parseScores} from '@/lib/scores'
 import ScoreSetHeatmap from '@/components/ScoreSetHeatmap'
 import useFormatters from '@/composition/formatters'
-
+import Vue from "vue";
 export default {
   name: 'ScoreSetView',
   components: {Button, Chip, DefaultLayout, ScoreSetHeatmap},
@@ -125,6 +126,12 @@ export default {
         this.$router.replace({path: `/scoresets/${this.item.urn}/edit`})
       }
     },
+    deleteItem: function() {
+      if (this.item) {
+        Vue.delete(this.item);
+        this.$router.replace({path: `/my-data`})
+      }
+    },
     markdownToHtml: function(markdown) {
       return marked(markdown)
     },
@@ -134,9 +141,6 @@ export default {
     publishItem: function() {
 
     },
-    deleteItem: function() {
-
-    }
   }
 }
 
@@ -207,6 +211,18 @@ export default {
   color: #987cb8;
   font-size: 87.5%;
   word-wrap: break-word;
+}
+.p-delete-button{
+  background-color: crimson;
+  font-size: 0.875rem;
+  padding: 0.499625rem 0.65625rem;
+}
+
+.p-delete-button:enabled:hover{
+  background-color: rgb(232, 244, 74);
+  color: #ec57c9;
+  font-size: 0.875rem;
+  padding: 0.499625rem 0.65625rem;
 }
 
 /* custom button */

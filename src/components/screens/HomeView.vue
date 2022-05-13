@@ -58,23 +58,17 @@
 <script>
 //this is the path we will want to use: /api/v1/me/scoresets/search
 import jwt from 'jsonwebtoken'
-
 import AlternativeLayout from '@/components/layout/AlternativeLayout'
 import {oidc} from '@/lib/auth'
-
 import _ from 'lodash'
-
 import config from '@/config'
-
 import axios from 'axios'
 import $ from 'jquery'
 import InputText from 'primevue/inputtext'
 import FlexDataTable from '@/components/common/FlexDataTable'
 //import SelectList from '@/components/common/SelectList'
-
 const ORCID_JWT_PUBLIC_KEY = 'jxTIntA7YvdfnYkLSN4wk__E2zf_wbb0SV_HLHFvh6a9ENVRD1_rHK0EijlBzikb-1rgDQihJETcgBLsMoZVQqGj8fDUUuxnVHsuGav_bf41PA7E_58HXKPrB2C0cON41f7K3o9TStKpVJOSXBrRWURmNQ64qnSSryn1nCxMzXpaw7VUo409ohybbvN6ngxVy4QR2NCC7Fr0QVdtapxD7zdlwx6lEwGemuqs_oG5oDtrRuRgeOHmRps2R6gG5oc-JqVMrVRv6F9h4ja3UgxCDBQjOVT1BFPWmMHnHCsVYLqbbXkZUfvP2sO1dJiYd_zrQhi-FtNth9qrLLv3gkgtwQ'
 const key = Buffer.from(ORCID_JWT_PUBLIC_KEY, 'base64')
-
 export default {
   name: 'HomeView',
   components: {AlternativeLayout, FlexDataTable, InputText},
@@ -94,7 +88,6 @@ export default {
       return ''
     }
   },
-
   data: function() {
     const self = this
     return {
@@ -134,9 +127,7 @@ export default {
             const experimentUrnDisplay = experimentUrn // rows.data()[0]['parentUrnDisplay']
             const experimentDescription = _.get(rows.data()[0], 'shortDescription', null)
             const url = self.$router.resolve({path: `/experiments/${experimentUrn}`}).href
-
             const link = ('<a href="' + url + '">' + experimentUrnDisplay + '</a>');
-
             return $('<tr/>').append(
               '<td colSpan="1">' + link + '</td>').append('<td colSpan="4">' + experimentDescription + '</td>'
             )
@@ -146,11 +137,9 @@ export default {
       }
     }
   },
-
   mounted: async function() {
     await this.search()
   },
-
   watch: {
     searchText: {
       handler: function(oldValue, newValue) {
@@ -160,7 +149,6 @@ export default {
       }
     }
   },
-
   methods: {
     search: async function() {
       await this.fetchSearchResults()
@@ -208,14 +196,11 @@ export default {
     }
   }
 }
-
 </script>
 
 <style scoped>
-
 /* (A) FLEX CONTAINER */
 .flex-wrap { display: flex; }
-
 /* (B) OPTIONAL COSMETICS */
 .flex-wrap > * {
   box-sizing: border-box;
@@ -223,32 +208,26 @@ export default {
   padding: 10px;
   background: #ffe2e0;
 }
-
 /* Layout */
-
 .mavedb-search-view {
   display: flex;
   flex-direction: column;
   position: relative;
   height: 100%;
 }
-
 .mavedb-search-header {
   flex: 0 0 auto;
   text-align: center;
 }
-
 .mavedb-search-header h1 {
   font-size: 20px;
   text-align: center;
 }
-
 .mavedb-search-form {
   flex: 0 0 auto;
   padding: 10px 0;
   text-align: center;
 }
-
 .mavedb-search-filters {
   display: flex;
   flex-direction: row;
@@ -256,67 +235,52 @@ export default {
   max-width: 1000px;
   margin: 10px auto;
 }
-
 .mavedb-search-filter-option-picker {
   max-width: 300px;
   width: 30%;
 }
-
 .mavedb-organism-picker::v-deep .p-listbox-item {
   font-style: italic;
 }
-
 .mavedb-organism-picker::v-deep .p-listbox-item .p-badge {
   font-style: normal;
 }
-
 .mavedb-search-results {
   flex: 1 1 400px;
   position: relative;
 }
-
 /* Table */
-
 /* Override control bar padding applied in FlexDataTable. */
 .mavedb-search-results::v-deep .samplify-data-table .dataTables_wrapper {
   padding-top: 0;
 }
-
 /* Override background applied in FlexDataTable. */
 .mavedb-search-results::v-deep .samplify-data-table .dataTables_wrapper {
   background-color: #fff;
 }
-
 .mavedb-search-results::v-deep .samplify-data-table thead th {
   background-color: #dadff1;
 }
-
 .mavedb-search-results::v-deep .samplify-data-table td,
 .mavedb-search-results::v-deep .samplify-data-table th {
   padding: 0.75rem;
   border: 1px solid #fff;
   font-size: 14px;
 }
-
 .mavedb-search-results::v-deep .samplify-data-table td:first-child {
   padding-left: 2em;
 }
-
 .mavedb-search-results::v-deep .samplify-data-table td:last-child {
   font-style: italic;
 }
-
 .mavedb-search-results::v-deep .samplify-data-table tr.samplify-data-table-group-row {
   background-color: #eeeeee;
   font-weight: bold;
 }
-
 .mavedb-search-results::v-deep .samplify-data-table tr.samplify-data-table-group-row td:first-child {
   padding-left: 0.75rem;
 }
-
 .mavedb-search-results::v-deep .samplify-data-table tr.samplify-data-table-group-row td:last-child {
   font-style: normal;
 }
-
 </style>

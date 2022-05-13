@@ -7,7 +7,7 @@
           <div v-if="!item.publishedDate" class="mave-screen-title-controls">
             <Button class="p-button-sm" @click="editItem">Edit</Button>
             <Button class="p-button-sm" @click="publishItem">Publish</Button>
-            <Button class="p-button-sm" @click="deleteItem">Delete</Button>
+            <Button class="p-delete-button" @click="deleteItem">Delete</Button>
           </div>
         </div>
         <div v-if="item.shortDescription" class="mave-scoreset-description">{{item.shortDescription}}</div>
@@ -206,6 +206,13 @@ export default {
   color: #987cb8;
   font-size: 87.5%;
   word-wrap: break-word;
+}
+
+/* custom button */
+.p-delete-button {
+  font-size: 0.875rem;
+  padding: 0.499625rem 0.65625rem;
+  background-color: crimson;
 }
 
 </style>

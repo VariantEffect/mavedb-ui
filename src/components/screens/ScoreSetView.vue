@@ -215,4 +215,8 @@ export default {
   background-color: crimson;
 }
 
+.p-delete-button:enabled:hover {
+  background-color: rgb(223, 73, 73);
+}
+
 </style>

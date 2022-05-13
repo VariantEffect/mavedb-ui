@@ -141,15 +141,12 @@ export default {
     publishItem: function() {
      
     },
-<<<<<<< HEAD
     deleteItem: function() {
       if (this.item) {
         // delete item
         
       }
     }
-=======
->>>>>>> 525ed0a7a95c7c626a50baabc0f7b0b37f51b364
   }
 }
 

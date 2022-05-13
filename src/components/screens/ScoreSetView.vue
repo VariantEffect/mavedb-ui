@@ -6,6 +6,8 @@
           <div class="mave-screen-title">{{item.title || 'Untitled score set'}}</div>
           <div v-if="!item.publishedDate" class="mave-screen-title-controls">
             <Button class="p-button-sm" @click="editItem">Edit</Button>
+            <Button class="p-button-sm" @click="publishItem">Publish</Button>
+            <Button class="p-button-sm" @click="deleteItem">Delete</Button>
           </div>
         </div>
         <div v-if="item.shortDescription" class="mave-scoreset-description">{{item.shortDescription}}</div>
@@ -127,6 +129,12 @@ export default {
     },
     get(...args) {
       return _.get(...args)
+    },
+    publishItem: function() {
+
+    },
+    deleteItem: function() {
+
     }
   }
 }

@@ -189,7 +189,6 @@ export default {
         this.scoresets = response.data || []
         // reset published scoresets search results when using search bar
         this.publishedScoresets = []
-        //this.unpublishedScoresets = []
         // Separate the response.data into published scoreset and unpublished scoreset.
         for (let i=0, len = this.scoresets.length; i<len; i++){
           if (this.scoresets[i].publishedDate == null){

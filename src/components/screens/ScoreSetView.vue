@@ -140,12 +140,6 @@ export default {
     },
     publishItem: function() {
      
-    },
-    deleteItem: function() {
-      if (this.item) {
-        // delete item
-        
-      }
     }
   }
 }

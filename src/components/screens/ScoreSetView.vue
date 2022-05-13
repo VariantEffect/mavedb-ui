@@ -225,4 +225,15 @@ export default {
   padding: 0.499625rem 0.65625rem;
 }
 
+/* custom button */
+.p-delete-button {
+  font-size: 0.875rem;
+  padding: 0.499625rem 0.65625rem;
+  background-color: crimson;
+}
+
+.p-delete-button:enabled:hover {
+  background-color: rgb(223, 73, 73);
+}
+
 </style>

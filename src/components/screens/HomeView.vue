@@ -30,15 +30,17 @@
       </div>
 
       <div id="column2">
-        <h2 class="mave-scoreset-section-title">Unpublished Scoresets</h2>
         <div class="mavedb-search-view">
-          <div class="mavedb-search-results">
-            <FlexDataTable
-                :data="unpublishedScoresets"
-                :options="tableOptions"
-                :scrollX="true"
-                :scrollY="true"
-            />
+          <h2 class="mave-scoreset-section-title">Unpublished Scoresets</h2>
+          <div class="mavedb-search-view">
+            <div class="mavedb-search-results">
+              <FlexDataTable
+                  :data="unpublishedScoresets"
+                  :options="tableOptions"
+                  :scrollX="true"
+                  :scrollY="true"
+              />
+            </div>
           </div>
         </div>
       </div>

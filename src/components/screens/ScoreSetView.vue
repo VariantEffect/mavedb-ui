@@ -212,18 +212,6 @@ export default {
   font-size: 87.5%;
   word-wrap: break-word;
 }
-.p-delete-button{
-  background-color: crimson;
-  font-size: 0.875rem;
-  padding: 0.499625rem 0.65625rem;
-}
-
-.p-delete-button:enabled:hover{
-  background-color: rgb(232, 244, 74);
-  color: #ec57c9;
-  font-size: 0.875rem;
-  padding: 0.499625rem 0.65625rem;
-}
 
 /* custom button */
 .p-delete-button {

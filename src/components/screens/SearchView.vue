@@ -17,7 +17,7 @@
       </div>
       <div class="mavedb-search-results">
         <FlexDataTable
-            :data="scoresets"
+            :data="publishedScoresets"
             :options="tableOptions"
             :scrollX="true"
             :scrollY="true"
@@ -172,6 +172,7 @@ export default {
       filterTargetOrganismNames: [],
       searchText: null,
       scoresets: [],
+      publishedScoresets: [],
       tableOptions: {
         columns: [
           {
@@ -307,6 +308,14 @@ export default {
         )
         // TODO catch errors in response
         this.scoresets = response.data || []
+        this.publishedScoresets = []
+        // Separate the response.data into published scoreset and unpublished scoreset.
+        for (let i=0, len = this.scoresets.length; i<len; i++){
+          if (this.scoresets[i].publishedDate != null){
+            // do not add to unpublished scoresets if it is already populated
+            this.publishedScoresets.push(this.scoresets[i]) 
+          }
+        }
       } catch (err) {
         console.log(`Error while loading search results")`, err)
       }

@@ -43,7 +43,8 @@ export default {
       const self = this
       return [{
         label: 'Dashboard',
-        to: '/my-data'
+        to: '/my-data',
+        available: ()=> oidc.isAuthenticated
       },
         {
         label: 'Search',

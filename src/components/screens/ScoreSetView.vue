@@ -70,6 +70,7 @@ import {parseScores} from '@/lib/scores'
 import ScoreSetHeatmap from '@/components/ScoreSetHeatmap'
 import useFormatters from '@/composition/formatters'
 import Vue from "vue";
+import axios from 'axios'
 export default {
   name: 'ScoreSetView',
   components: {Button, Chip, DefaultLayout, ScoreSetHeatmap},
@@ -126,6 +127,14 @@ export default {
         this.$router.replace({path: `/scoresets/${this.item.urn}/edit`})
       }
     },
+    publishItem: async function() {
+      if (this.item) {
+        let response = await axios.put(`${config.apiBaseUrl}/scoresets/${this.item.urn}/publish`)
+        if (response.status == 200) {
+          console.log(response.data)
+        }
+      }
+    },
     deleteItem: function() {
       if (this.item) {
         Vue.delete(this.item);
@@ -138,9 +147,7 @@ export default {
     get(...args) {
       return _.get(...args)
     },
-    publishItem: function() {
-     
-    }
+    
   }
 }
 

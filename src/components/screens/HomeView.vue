@@ -166,7 +166,7 @@ export default {
       try {
         // this response should be true to get published data
         let response = await axios.post(
-          `${config.apiBaseUrl}/me/scoresets/search`,
+          `${config.apiBaseUrl}/scoresets/search`,
           {
             text: this.searchText || null,
           },

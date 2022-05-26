@@ -38,7 +38,7 @@
         </div>
         <div v-if="item.targetGene">
           <div class="mave-scoreset-section-title">Target</div>
-          <div v-if="item">Name: {{item}}</div>
+          <div v-if="item.private">Private: {{item}}</div>
           <div v-if="item.targetGene.name">Name: {{item.targetGene.name}}</div>
           <div v-if="item.targetGene.category">Type: {{item.targetGene.category}}</div>
           <div v-if="item.targetGene.referenceMaps?.[0]?.genome?.organismName">Organism: {{item.targetGene.referenceMaps[0].genome.organismName}}</div>
@@ -69,7 +69,9 @@ import config from '@/config'
 import {parseScores} from '@/lib/scores'
 import ScoreSetHeatmap from '@/components/ScoreSetHeatmap'
 import useFormatters from '@/composition/formatters'
-import Vue from "vue";
+import Vue from "vue"
+//import axios from 'axios'
+
 export default {
   name: 'ScoreSetView',
   components: {Button, Chip, DefaultLayout, ScoreSetHeatmap},
@@ -139,7 +141,12 @@ export default {
       return _.get(...args)
     },
     publishItem: function() {
-     
+      if (this.item) {
+        //await axios.post(`${config.apiBaseUrl}/scoresets/:urn/publish`)
+        //this.$router.replace({path: `/scoresets/${this.item.urn}/edit`})
+        // specific API endpoint for this action
+        // refresh the page
+      }
     }
   }
 }

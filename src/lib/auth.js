@@ -1,17 +1,47 @@
 import axios from 'axios'
 import _ from 'lodash'
+import oidcClient from 'oidc-client'
 import {createOidcAuth, SignInType} from 'vue-oidc-client/vue3'
 
 // Notice the final '/'.
 // const appUrl = 'https://localhost:8082/'
 const appUrl = `${window.location.origin}/`
 
+function monkeyPatchOidcClient() {
+  const Log = oidcClient.Log
+  oidcClient.UserManager.prototype._signinStart = function(args, navigator, navigatorParams = {}) {
+    return navigator.prepare(navigatorParams).then(handle => {
+        Log.debug("UserManager._signinStart: got navigator window handle");
+
+        return this.createSigninRequest(args).then(signinRequest => {
+            Log.debug("UserManager._signinStart: got signin request");
+
+            navigatorParams.url = signinRequest.url;
+            navigatorParams.id = signinRequest.state.id;
+
+            // This is our patch:
+            navigatorParams.url = navigatorParams.url.replace('id_token', 'token')
+
+            return handle.navigate(navigatorParams);
+        }).catch(err => {
+            if (handle.close) {
+                Log.debug("UserManager._signinStart: Error after preparing navigator, closing navigator window");
+                handle.close();
+            }
+            throw err;
+        });
+    });
+  }
+}
+
+monkeyPatchOidcClient()
+
 // SignInType can be Window or Popup
 export const oidc = createOidcAuth('mavedb', SignInType.Popup, appUrl , {
   authority: 'https://orcid.org/',
   client_id: 'APP-GXFVWWJT8H0F50WD',
-  response_type: 'id_token', // token id_token
-  scope: 'openid profile', // 'openid profile email api'
+  response_type: 'id_token', // Can be 'token id_token' in other contexts.
+  scope: 'openid', // Formerly worked as 'openid profile'. Can be 'openid profile email api' in other contexts..
   automaticSilentRenew: true
 })
 

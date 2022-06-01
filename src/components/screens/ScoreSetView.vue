@@ -9,6 +9,10 @@
             <Button class="p-button-sm" @click="publishItem">Publish</Button>
             <Button class="p-delete-button" @click="deleteItem">Delete</Button>
           </div>
+          <div v-else class="mave-screen-title-controls">
+            <Button class="p-button-sm" @click="editItem">Edit</Button>
+            <Button class="p-delete-button" @click="deleteItem">Delete</Button>
+          </div>
         </div>
         <div v-if="item.shortDescription" class="mave-scoreset-description">{{item.shortDescription}}</div>
         <div v-if="item.urn" class="mave-scoreset-urn">{{item.urn}}</div>
@@ -129,8 +133,16 @@ export default {
     },
     publishItem: async function() {
       if (this.item) {
-        let response = await axios.put(`${config.apiBaseUrl}/scoresets/${this.item.urn}/publish`)
+        let response = await axios.post(`${config.apiBaseUrl}/scoresets/${this.item.urn}/publish`)
         if (response.status == 200) {
+          console.log(this.item.urn)
+          this.$toast.add({severity:'success', summary: 'The score set is published sucessfully.', life: 3000})
+
+          //Something wrong here
+          this.setItemId(this.item.urn)
+          this.$router.replace({path: `/scoresets/${this.item.urn}`})
+        }else{
+          console.log("error")
           console.log(response.data)
         }
       }

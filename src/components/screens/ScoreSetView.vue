@@ -9,6 +9,10 @@
             <Button class="p-button-sm" @click="publishItem">Publish</Button>
             <Button class="p-delete-button" @click="deleteItem">Delete</Button>
           </div>
+          <div v-if="item.publishedDate" class="mave-screen-title-controls">
+            <Button class="p-button-sm" @click="editItem">Edit</Button>
+            <Button class="p-delete-button" @click="deleteItem">Delete</Button>
+          </div>
         </div>
         <div v-if="item.shortDescription" class="mave-scoreset-description">{{item.shortDescription}}</div>
         <div v-if="item.urn" class="mave-scoreset-urn">{{item.urn}}</div>

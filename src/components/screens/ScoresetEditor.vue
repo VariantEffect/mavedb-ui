@@ -83,24 +83,23 @@
                 </span>
                 <span v-if="validationErrors.keywords" class="mave-field-error">{{validationErrors.keywords}}</span>
               </div>
-              <div v-if="itemStatus == 'NotLoaded' || this.item.private==true">
-                <div class="field">
-                  <span class="p-float-label">
-                    <AutoComplete
-                        ref="doiIdentifiersInput"
-                        v-model="doiIdentifiers"
-                        :id="$scopedId('input-doiIdentifiers')"
-                        field="identifier"
-                        :multiple="true"
-                        :suggestions="doiIdentifierSuggestionsList"
-                        @complete="searchDoiIdentifiers"
-                        @keyup.enter="acceptNewDoiIdentifier"
-                        @keyup.escape="clearDoiIdentifierSearch"
-                    />
-                    <label :for="$scopedId('input-doiIdentifiers')">DOIs</label>
-                  </span>
-                  <span v-if="validationErrors.doiIdentifiers" class="mave-field-error">{{validationErrors.doiIdentifiers}}</span>
-                </div>
+            
+              <div class="field">
+                <span class="p-float-label">
+                  <AutoComplete
+                      ref="doiIdentifiersInput"
+                      v-model="doiIdentifiers"
+                      :id="$scopedId('input-doiIdentifiers')"
+                      field="identifier"
+                      :multiple="true"
+                      :suggestions="doiIdentifierSuggestionsList"
+                      @complete="searchDoiIdentifiers"
+                      @keyup.enter="acceptNewDoiIdentifier"
+                      @keyup.escape="clearDoiIdentifierSearch"
+                  />
+                  <label :for="$scopedId('input-doiIdentifiers')">DOIs</label>
+                </span>
+                <span v-if="validationErrors.doiIdentifiers" class="mave-field-error">{{validationErrors.doiIdentifiers}}</span>
               </div>
               <div class="field">
                 <span class="p-float-label">

@@ -82,75 +82,76 @@
                 </TabView>
                 <span v-if="validationErrors.methodText" class="mave-field-error">{{validationErrors.methodText}}</span>
               </div>
-              <div class="field">
-                <span class="p-float-label">
-                  <Chips v-model="keywords" :id="$scopedId('input-keywords')" :addOnBlur="true" :allowDuplicate="false" />
-                  <label :for="$scopedId('input-keywords')">Keywords</label>
-                </span>
-                <span v-if="validationErrors.keywords" class="mave-field-error">{{validationErrors.keywords}}</span>
-              </div>
-            
-              <div class="field">
-                <span class="p-float-label">
-                  <AutoComplete
-                      ref="doiIdentifiersInput"
-                      v-model="doiIdentifiers"
-                      :id="$scopedId('input-doiIdentifiers')"
-                      field="identifier"
-                      :multiple="true"
-                      :suggestions="doiIdentifierSuggestionsList"
-                      @complete="searchDoiIdentifiers"
-                      @keyup.enter="acceptNewDoiIdentifier"
-                      @keyup.escape="clearDoiIdentifierSearch"
-                  />
-                  <label :for="$scopedId('input-doiIdentifiers')">DOIs</label>
-                </span>
-                <span v-if="validationErrors.doiIdentifiers" class="mave-field-error">{{validationErrors.doiIdentifiers}}</span>
-              </div>
-              <div class="field">
-                <span class="p-float-label">
-                  <AutoComplete
-                      ref="pubmedIdentifiersInput"
-                      v-model="pubmedIdentifiers"
-                      :id="$scopedId('input-pubmedIdentifiers')"
-                      field="identifier"
-                      :multiple="true"
-                      :suggestions="pubmedIdentifierSuggestionsList"
-                      @complete="searchPubmedIdentifiers"
-                      @keyup.enter="acceptNewPubmedIdentifier"
-                      @keyup.escape="clearPubmedIdentifierSearch"
-                  />
-                  <label :for="$scopedId('input-pubmedIdentifiers')">PubMed IDs</label>
-                </span>
-                <span v-if="validationErrors.pubmedIdentifiers" class="mave-field-error">{{validationErrors.pubmedIdentifiers}}</span>
-              </div>
-              <div class="field">
-                <span class="p-float-label">
-                  <FileUpload
-                      :id="$scopedId('input-extraMetadataFile')"
-                      :auto="false"
-                      chooseLabel="Extra metadata"
-                      :class="inputClasses.extraMetadataFile"
-                      :customUpload="true"
-                      :fileLimit="1"
-                      :showCancelButton="false"
-                      :showUploadButton="false"
-                      @remove="fileCleared('extraMetadataFile')"
-                      @select="fileSelected('extraMetadataFile', $event)"
-                  >
-                    <template #empty>
-                      <p>Drop a JSON file here.</p>
-                    </template>
-                  </FileUpload>
-                </span>
-                <span v-if="validationErrors.extraMetadata" class="mave-field-error">{{validationErrors.extraMetadata}}</span>
-              </div>
-              <div class="field">
-                <span class="p-float-label">
-                  <Textarea v-model="dataUsagePolicy" :id="$scopedId('input-dataUsagePolicy')" rows="4" />
-                  <label :for="$scopedId('input-dataUsagePolicy')">Data usage policy</label>
-                </span>
-                <span v-if="validationErrors.dataUsagePolicy" class="mave-field-error">{{validationErrors.dataUsagePolicy}}</span>
+              <div v-if="itemStatus == 'NotLoaded' || this.item.private==true">
+                <div class="field">
+                  <span class="p-float-label">
+                    <Chips v-model="keywords" :id="$scopedId('input-keywords')" :addOnBlur="true" :allowDuplicate="false" />
+                    <label :for="$scopedId('input-keywords')">Keywords</label>
+                  </span>
+                  <span v-if="validationErrors.keywords" class="mave-field-error">{{validationErrors.keywords}}</span>
+                </div>
+                <div class="field">
+                  <span class="p-float-label">
+                    <AutoComplete
+                        ref="doiIdentifiersInput"
+                        v-model="doiIdentifiers"
+                        :id="$scopedId('input-doiIdentifiers')"
+                        field="identifier"
+                        :multiple="true"
+                        :suggestions="doiIdentifierSuggestionsList"
+                        @complete="searchDoiIdentifiers"
+                        @keyup.enter="acceptNewDoiIdentifier"
+                        @keyup.escape="clearDoiIdentifierSearch"
+                    />
+                    <label :for="$scopedId('input-doiIdentifiers')">DOIs</label>
+                  </span>
+                  <span v-if="validationErrors.doiIdentifiers" class="mave-field-error">{{validationErrors.doiIdentifiers}}</span>
+                </div>
+                <div class="field">
+                  <span class="p-float-label">
+                    <AutoComplete
+                        ref="pubmedIdentifiersInput"
+                        v-model="pubmedIdentifiers"
+                        :id="$scopedId('input-pubmedIdentifiers')"
+                        field="identifier"
+                        :multiple="true"
+                        :suggestions="pubmedIdentifierSuggestionsList"
+                        @complete="searchPubmedIdentifiers"
+                        @keyup.enter="acceptNewPubmedIdentifier"
+                        @keyup.escape="clearPubmedIdentifierSearch"
+                    />
+                    <label :for="$scopedId('input-pubmedIdentifiers')">PubMed IDs</label>
+                  </span>
+                  <span v-if="validationErrors.pubmedIdentifiers" class="mave-field-error">{{validationErrors.pubmedIdentifiers}}</span>
+                </div>
+                <div class="field">
+                  <span class="p-float-label">
+                    <FileUpload
+                        :id="$scopedId('input-extraMetadataFile')"
+                        :auto="false"
+                        chooseLabel="Extra metadata"
+                        :class="inputClasses.extraMetadataFile"
+                        :customUpload="true"
+                        :fileLimit="1"
+                        :showCancelButton="false"
+                        :showUploadButton="false"
+                        @remove="fileCleared('extraMetadataFile')"
+                        @select="fileSelected('extraMetadataFile', $event)"
+                    >
+                      <template #empty>
+                        <p>Drop a JSON file here.</p>
+                      </template>
+                    </FileUpload>
+                  </span>
+                  <span v-if="validationErrors.extraMetadata" class="mave-field-error">{{validationErrors.extraMetadata}}</span>
+                </div>
+                <div class="field">
+                  <span class="p-float-label">
+                    <Textarea v-model="dataUsagePolicy" :id="$scopedId('input-dataUsagePolicy')" rows="4" />
+                    <label :for="$scopedId('input-dataUsagePolicy')">Data usage policy</label>
+                  </span>
+                  <span v-if="validationErrors.dataUsagePolicy" class="mave-field-error">{{validationErrors.dataUsagePolicy}}</span>
+                </div>
               </div>
             </template>
           </Card>

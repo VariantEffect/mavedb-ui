@@ -21,18 +21,24 @@
         <div class="col-12 md:col-6">
           <Card>
             <template #content>
-              <div class="field">
-                <span class="p-float-label">
-                  <Dropdown
-                    v-model="experimentUrn"
-                    :id="$scopedId('input-experiment')"
-                    :options="editableExperiments"
-                    optionLabel="title"
-                    optionValue="urn"
-                  />
-                  <label :for="$scopedId('input-experiment')">Experiment</label>
-                </span>
-                <span v-if="validationErrors.experimentUrn" class="mave-field-error">{{validationErrors.experimentUrn}}</span>
+              <div v-if="itemStatus != 'NotLoaded'">
+                <label>Experiment</label><br>
+                {{experimentUrn}}
+              </div>
+              <div v-else>
+                <div class="field">
+                  <span class="p-float-label">
+                    <Dropdown
+                      v-model="experimentUrn"
+                      :id="$scopedId('input-experiment')"
+                      :options="editableExperiments"
+                      optionLabel="title"
+                      optionValue="urn"
+                    />
+                    <label :for="$scopedId('input-experiment')">Experiment</label>
+                  </span>
+                  <span v-if="validationErrors.experimentUrn" class="mave-field-error">{{validationErrors.experimentUrn}}</span>
+                </div>
               </div>
               <div class="field">
                 <span class="p-float-label">

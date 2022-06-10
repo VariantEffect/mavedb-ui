@@ -718,11 +718,9 @@ export default {
           //TODO. 
           //This one doesn't work for editing published scoreset due to $refs.scoresFileUpload.files.length is none.
           //this.item.private == true ||
-          if (this.$refs.scoresFileUpload.files.length == 1) {
-            console.log("hereee")
+          if (this.item.private == true && this.$refs.scoresFileUpload.files.length == 1) {
             await this.uploadData(savedItem)
           } else {
-            console.log("1111")
             this.reloadItem()
             this.$toast.add({severity:'success', summary: 'Your changes were saved.', life: 3000})
           }
@@ -805,9 +803,6 @@ export default {
 
       this.serverSideValidationErrors = {}
       this.mergeValidationErrors()
-      console.log("lalala")
-      console.log(this.$refs.scoresFileUpload.files.length)
-      console.log(this.validationErrors)
       if (_.isEmpty(this.validationErrors)) {
         await this.save()
       }

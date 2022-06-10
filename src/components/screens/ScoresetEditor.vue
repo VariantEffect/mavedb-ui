@@ -668,6 +668,7 @@ export default {
     // Currently there is some special handling here, though, so we will leave that for a later refactoring.
 
     save: async function() {
+      console.log("Save")
       const editedFields = {
         experimentUrn: this.experimentUrn,  // TODO was _urn
         title: this.title,
@@ -701,13 +702,14 @@ export default {
         if (this.item) {
           response = await axios.put(`${config.apiBaseUrl}/scoresets/${this.item.urn}`, editedItem)
         } else {
+          console.log("createItem here")
           response = await axios.post(`${config.apiBaseUrl}/scoresets/`, editedItem)
         }
       } catch (e) {
         response = e.response || {status: 500}
       }
       this.progressVisible = false
-
+      console.log(response.status)
       if (response.status == 200) {
         const savedItem = response.data
         this.setValidationErrors({})
@@ -715,9 +717,12 @@ export default {
           console.log('Updated item')
           //TODO. 
           //This one doesn't work for editing published scoreset due to $refs.scoresFileUpload.files.length is none.
+          //this.item.private == true ||
           if (this.$refs.scoresFileUpload.files.length == 1) {
+            console.log("hereee")
             await this.uploadData(savedItem)
           } else {
+            console.log("1111")
             this.reloadItem()
             this.$toast.add({severity:'success', summary: 'Your changes were saved.', life: 3000})
           }
@@ -749,7 +754,8 @@ export default {
         if (this.$refs.countsFileUpload.files.length == 1) {
           formData.append('counts_file', this.$refs.countsFileUpload.files[0])
         }
-
+        console.log("TESTING")
+        console.log(formData)
         this.progressVisible = true
         let response
         try {
@@ -799,7 +805,9 @@ export default {
 
       this.serverSideValidationErrors = {}
       this.mergeValidationErrors()
-
+      console.log("lalala")
+      console.log(this.$refs.scoresFileUpload.files.length)
+      console.log(this.validationErrors)
       if (_.isEmpty(this.validationErrors)) {
         await this.save()
       }

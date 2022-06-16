@@ -42,6 +42,11 @@ export default {
     menuItems: function() {
       const self = this
       return [{
+        label: 'Dashboard',
+        to: '/my-data',
+        available: ()=> oidc.isAuthenticated
+      },
+        {
         label: 'Search',
         to: '/search'
       }, {

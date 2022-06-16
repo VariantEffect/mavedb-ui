@@ -6,7 +6,7 @@
           <div v-if="itemStatus != 'NotLoaded'" class="mave-screen-title-bar">
             <div class="mave-screen-title">Edit score set</div>
             <div v-if="item" class="mave-screen-title-controls">
-              <Button @click="validateAndSave">Save changes</Button>
+              <Button @click="saveExisting">Save changes</Button>
               <Button @click="viewItem" class="p-button-warning">Cancel</Button>
             </div>
           </div>
@@ -21,18 +21,24 @@
         <div class="col-12 md:col-6">
           <Card>
             <template #content>
-              <div class="field">
-                <span class="p-float-label">
-                  <Dropdown
-                    v-model="experimentUrn"
-                    :id="$scopedId('input-experiment')"
-                    :options="editableExperiments"
-                    optionLabel="title"
-                    optionValue="urn"
-                  />
-                  <label :for="$scopedId('input-experiment')">Experiment</label>
-                </span>
-                <span v-if="validationErrors.experimentUrn" class="mave-field-error">{{validationErrors.experimentUrn}}</span>
+              <div v-if="itemStatus != 'NotLoaded'">
+                <label>Experiment</label><br>
+                {{experimentUrn}}
+              </div>
+              <div v-else>
+                <div class="field">
+                  <span class="p-float-label">
+                    <Dropdown
+                      v-model="experimentUrn"
+                      :id="$scopedId('input-experiment')"
+                      :options="editableExperiments"
+                      optionLabel="title"
+                      optionValue="urn"
+                    />
+                    <label :for="$scopedId('input-experiment')">Experiment</label>
+                  </span>
+                  <span v-if="validationErrors.experimentUrn" class="mave-field-error">{{validationErrors.experimentUrn}}</span>
+                </div>
               </div>
               <div class="field">
                 <span class="p-float-label">
@@ -76,220 +82,224 @@
                 </TabView>
                 <span v-if="validationErrors.methodText" class="mave-field-error">{{validationErrors.methodText}}</span>
               </div>
-              <div class="field">
-                <span class="p-float-label">
-                  <Chips v-model="keywords" :id="$scopedId('input-keywords')" :addOnBlur="true" :allowDuplicate="false" />
-                  <label :for="$scopedId('input-keywords')">Keywords</label>
-                </span>
-                <span v-if="validationErrors.keywords" class="mave-field-error">{{validationErrors.keywords}}</span>
-              </div>
-              <div class="field">
-                <span class="p-float-label">
-                  <AutoComplete
-                      ref="doiIdentifiersInput"
-                      v-model="doiIdentifiers"
-                      :id="$scopedId('input-doiIdentifiers')"
-                      field="identifier"
-                      :multiple="true"
-                      :suggestions="doiIdentifierSuggestionsList"
-                      @complete="searchDoiIdentifiers"
-                      @keyup.enter="acceptNewDoiIdentifier"
-                      @keyup.escape="clearDoiIdentifierSearch"
-                  />
-                  <label :for="$scopedId('input-doiIdentifiers')">DOIs</label>
-                </span>
-                <span v-if="validationErrors.doiIdentifiers" class="mave-field-error">{{validationErrors.doiIdentifiers}}</span>
-              </div>
-              <div class="field">
-                <span class="p-float-label">
-                  <AutoComplete
-                      ref="pubmedIdentifiersInput"
-                      v-model="pubmedIdentifiers"
-                      :id="$scopedId('input-pubmedIdentifiers')"
-                      field="identifier"
-                      :multiple="true"
-                      :suggestions="pubmedIdentifierSuggestionsList"
-                      @complete="searchPubmedIdentifiers"
-                      @keyup.enter="acceptNewPubmedIdentifier"
-                      @keyup.escape="clearPubmedIdentifierSearch"
-                  />
-                  <label :for="$scopedId('input-pubmedIdentifiers')">PubMed IDs</label>
-                </span>
-                <span v-if="validationErrors.pubmedIdentifiers" class="mave-field-error">{{validationErrors.pubmedIdentifiers}}</span>
-              </div>
-              <div class="field">
-                <span class="p-float-label">
-                  <FileUpload
-                      :id="$scopedId('input-extraMetadataFile')"
-                      :auto="false"
-                      chooseLabel="Extra metadata"
-                      :class="inputClasses.extraMetadataFile"
-                      :customUpload="true"
-                      :fileLimit="1"
-                      :showCancelButton="false"
-                      :showUploadButton="false"
-                      @remove="fileCleared('extraMetadataFile')"
-                      @select="fileSelected('extraMetadataFile', $event)"
-                  >
-                    <template #empty>
-                      <p>Drop a JSON file here.</p>
-                    </template>
-                  </FileUpload>
-                </span>
-                <span v-if="validationErrors.extraMetadata" class="mave-field-error">{{validationErrors.extraMetadata}}</span>
-              </div>
-              <div class="field">
-                <span class="p-float-label">
-                  <Textarea v-model="dataUsagePolicy" :id="$scopedId('input-dataUsagePolicy')" rows="4" />
-                  <label :for="$scopedId('input-dataUsagePolicy')">Data usage policy</label>
-                </span>
-                <span v-if="validationErrors.dataUsagePolicy" class="mave-field-error">{{validationErrors.dataUsagePolicy}}</span>
+              <div v-if="itemStatus == 'NotLoaded' || this.item.private==true">
+                <div class="field">
+                  <span class="p-float-label">
+                    <Chips v-model="keywords" :id="$scopedId('input-keywords')" :addOnBlur="true" :allowDuplicate="false" />
+                    <label :for="$scopedId('input-keywords')">Keywords</label>
+                  </span>
+                  <span v-if="validationErrors.keywords" class="mave-field-error">{{validationErrors.keywords}}</span>
+                </div>
+                <div class="field">
+                  <span class="p-float-label">
+                    <AutoComplete
+                        ref="doiIdentifiersInput"
+                        v-model="doiIdentifiers"
+                        :id="$scopedId('input-doiIdentifiers')"
+                        field="identifier"
+                        :multiple="true"
+                        :suggestions="doiIdentifierSuggestionsList"
+                        @complete="searchDoiIdentifiers"
+                        @keyup.enter="acceptNewDoiIdentifier"
+                        @keyup.escape="clearDoiIdentifierSearch"
+                    />
+                    <label :for="$scopedId('input-doiIdentifiers')">DOIs</label>
+                  </span>
+                  <span v-if="validationErrors.doiIdentifiers" class="mave-field-error">{{validationErrors.doiIdentifiers}}</span>
+                </div>
+                <div class="field">
+                  <span class="p-float-label">
+                    <AutoComplete
+                        ref="pubmedIdentifiersInput"
+                        v-model="pubmedIdentifiers"
+                        :id="$scopedId('input-pubmedIdentifiers')"
+                        field="identifier"
+                        :multiple="true"
+                        :suggestions="pubmedIdentifierSuggestionsList"
+                        @complete="searchPubmedIdentifiers"
+                        @keyup.enter="acceptNewPubmedIdentifier"
+                        @keyup.escape="clearPubmedIdentifierSearch"
+                    />
+                    <label :for="$scopedId('input-pubmedIdentifiers')">PubMed IDs</label>
+                  </span>
+                  <span v-if="validationErrors.pubmedIdentifiers" class="mave-field-error">{{validationErrors.pubmedIdentifiers}}</span>
+                </div>
+                <div class="field">
+                  <span class="p-float-label">
+                    <FileUpload
+                        :id="$scopedId('input-extraMetadataFile')"
+                        :auto="false"
+                        chooseLabel="Extra metadata"
+                        :class="inputClasses.extraMetadataFile"
+                        :customUpload="true"
+                        :fileLimit="1"
+                        :showCancelButton="false"
+                        :showUploadButton="false"
+                        @remove="fileCleared('extraMetadataFile')"
+                        @select="fileSelected('extraMetadataFile', $event)"
+                    >
+                      <template #empty>
+                        <p>Drop a JSON file here.</p>
+                      </template>
+                    </FileUpload>
+                  </span>
+                  <span v-if="validationErrors.extraMetadata" class="mave-field-error">{{validationErrors.extraMetadata}}</span>
+                </div>
+                <div class="field">
+                  <span class="p-float-label">
+                    <Textarea v-model="dataUsagePolicy" :id="$scopedId('input-dataUsagePolicy')" rows="4" />
+                    <label :for="$scopedId('input-dataUsagePolicy')">Data usage policy</label>
+                  </span>
+                  <span v-if="validationErrors.dataUsagePolicy" class="mave-field-error">{{validationErrors.dataUsagePolicy}}</span>
+                </div>
               </div>
             </template>
           </Card>
         </div>
         <div class="col-12 md:col-6">
-          <Card>
-            <template #content>
-              <div class="field">
-                <span class="p-float-label">
-                  <AutoComplete
-                      ref="existingTargetGeneInput"
-                      v-model="existingTargetGene"
-                      :id="$scopedId('input-existingTargetGene')"
-                      field="name"
-                      :forceSelection="true"
-                      :suggestions="targetGeneSuggestionsList"
-                      @complete="searchTargetGenes"
-                  />
-                  <label :for="$scopedId('input-existingTargetGene')">Copy from an existing target gene</label>
-                </span>
-              </div>
-              <div class="field">
-                <span class="p-float-label">
-                  <InputText v-model="targetGene.name" :id="$scopedId('input-targetGeneName')" />
-                  <label :for="$scopedId('input-targetGene')">Target gene name</label>
-                </span>
-                <span v-if="validationErrors['targetGene.name']" class="mave-field-error">{{validationErrors['targetGene.name']}}</span>
-              </div>
-              <div class="field">
-                <span class="p-float-label">
-                  <SelectButton
-                      v-model="targetGene.category"
-                      :id="$scopedId('input-targetGeneCategory')"
-                      :options="targetGeneCategories"
-                  />
-                </span>
-                <span v-if="validationErrors['targetGene.category']" class="mave-field-error">{{validationErrors['targetGene.category']}}</span>
-              </div>
-              <div class="field">
-                <span class="p-float-label">
-                  <Dropdown
-                      v-model="referenceGenome"
-                      :id="$scopedId('input-targetGeneReferenceGenome')"
-                      :options="referenceGenomes"
-                      panelClass="mave-reference-genome-dropdown-panel"
-                  >
-                    <template #value="slotProps">
-                      <div v-if="slotProps.value" class="mave-reference-genome-value">
-                        <div class="mave-reference-genome-name">{{slotProps.value.shortName}}</div>
-                        <div class="mave-reference-genome-organism-name">{{slotProps.value.organismName}}</div>
-                      </div>
-                      <div v-else class="mave-reference-genome-none">&nbsp;</div>
-                    </template>
-                    <template #option="slotProps">
-                      <div class="mave-reference-genome-name">{{slotProps.option.shortName}}</div>
-                      <div class="mave-reference-genome-organism-name">{{slotProps.option.organismName}}</div>
-                    </template>
-                  </Dropdown>
-                  <label :for="$scopedId('input-targetGeneReferenceGenome')">Reference genome</label>
-                </span>
-                <span v-if="validationErrors['targetGene.referenceGenome']" class="mave-field-error">{{validationErrors['targetGene.referenceGenome']}}</span>
-              </div>
-              <div class="field">
-                <span class="p-float-label">
-                  <FileUpload
-                      :id="$scopedId('input-targetGeneWtSequenceSequenceFile')"
-                      :auto="false"
-                      chooseLabel="Reference sequence"
-                      :class="inputClasses.targetGeneWtSequenceSequenceFile"
-                      :customUpload="true"
-                      :fileLimit="1"
-                      :showCancelButton="false"
-                      :showUploadButton="false"
-                      @remove="fileCleared('targetGeneWtSequenceSequenceFile')"
-                      @select="fileSelected('targetGeneWtSequenceSequenceFile', $event)"
-                  >
-                    <template #empty>
-                      <p>Drop a FASTA file here.</p>
-                    </template>
-                  </FileUpload>
-                </span>
-                <span v-if="validationErrors['targetGene.wtSequence.sequence']" class="mave-field-error">{{validationErrors['targetGene.wtSequence.sequence']}}</span>
-              </div>
-              <div class="field">
-                <span class="p-float-label">
-                  <SelectButton
-                      v-model="targetGene.wtSequence.sequenceType"
-                      :id="$scopedId('input-targetGeneWtSequenceSequenceType')"
-                      :options="sequenceTypes"
-                  />
-                </span>
-                <span v-if="validationErrors['targetGene.wtSequence.sequenceType']" class="mave-field-error">{{validationErrors['targetGene.wtSequence.sequenceType']}}</span>
-              </div>
-            </template>
-          </Card>
-          <Card>
-            <template #content>
-              <div v-if="item">
-                <div>{{formatInt(item.numVariants)}} variants are included in this score set.</div>
-                <div>To replace the variants, choose a new scores file and optional counts file:</div>
-              </div>
-              <div v-else>
-                Load a scores file and an optional counts file:
-              </div>
-              <div class="field">
-                <span class="p-float-label">
-                  <FileUpload
-                      ref="scoresFileUpload"
-                      :id="$scopedId('input-scoresFile')"
-                      :auto="false"
-                      chooseLabel="Scores file"
-                      :class="inputClasses.scoresFile || ''"
-                      :customUpload="true"
-                      :fileLimit="1"
-                      :showCancelButton="false"
-                      :showUploadButton="false"
-                  >
-                    <template #empty>
-                      <p>Drop a file here.</p>
-                    </template>
-                  </FileUpload>
-                </span>
-                <span v-if="validationErrors.scoresFile" class="mave-field-error">{{validationErrors.scoresFile}}</span>
-              </div>
-              <div class="field">
-                <span class="p-float-label">
-                  <FileUpload
-                      ref="countsFileUpload"
-                      :id="$scopedId('input-countsFile')"
-                      :auto="false"
-                      chooseLabel="Counts file"
-                      :class="inputClasses.countsFile || ''"
-                      :customUpload="true"
-                      :fileLimit="1"
-                      :showCancelButton="false"
-                      :showUploadButton="false"
-                  >
-                    <template #empty>
-                      <p>Drop a file here.</p>
-                    </template>
-                  </FileUpload>
-                </span>
-                <span v-if="validationErrors.countsFile" class="mave-field-error">{{validationErrors.countsFile}}</span>
-              </div>
-            </template>
-          </Card>
+          <div v-if="itemStatus == 'NotLoaded' || this.item.private==true">
+            <Card>
+              <template #content>
+                <div class="field">
+                  <span class="p-float-label">
+                    <AutoComplete
+                        ref="existingTargetGeneInput"
+                        v-model="existingTargetGene"
+                        :id="$scopedId('input-existingTargetGene')"
+                        field="name"
+                        :forceSelection="true"
+                        :suggestions="targetGeneSuggestionsList"
+                        @complete="searchTargetGenes"
+                    />
+                    <label :for="$scopedId('input-existingTargetGene')">Copy from an existing target gene</label>
+                  </span>
+                </div>
+                <div class="field">
+                  <span class="p-float-label">
+                    <InputText v-model="targetGene.name" :id="$scopedId('input-targetGeneName')" />
+                    <label :for="$scopedId('input-targetGene')">Target gene name</label>
+                  </span>
+                  <span v-if="validationErrors['targetGene.name']" class="mave-field-error">{{validationErrors['targetGene.name']}}</span>
+                </div>
+                <div class="field">
+                  <span class="p-float-label">
+                    <SelectButton
+                        v-model="targetGene.category"
+                        :id="$scopedId('input-targetGeneCategory')"
+                        :options="targetGeneCategories"
+                    />
+                  </span>
+                  <span v-if="validationErrors['targetGene.category']" class="mave-field-error">{{validationErrors['targetGene.category']}}</span>
+                </div>
+                <div class="field">
+                  <span class="p-float-label">
+                    <Dropdown
+                        v-model="referenceGenome"
+                        :id="$scopedId('input-targetGeneReferenceGenome')"
+                        :options="referenceGenomes"
+                        panelClass="mave-reference-genome-dropdown-panel"
+                    >
+                      <template #value="slotProps">
+                        <div v-if="slotProps.value" class="mave-reference-genome-value">
+                          <div class="mave-reference-genome-name">{{slotProps.value.shortName}}</div>
+                          <div class="mave-reference-genome-organism-name">{{slotProps.value.organismName}}</div>
+                        </div>
+                        <div v-else class="mave-reference-genome-none">&nbsp;</div>
+                      </template>
+                      <template #option="slotProps">
+                        <div class="mave-reference-genome-name">{{slotProps.option.shortName}}</div>
+                        <div class="mave-reference-genome-organism-name">{{slotProps.option.organismName}}</div>
+                      </template>
+                    </Dropdown>
+                    <label :for="$scopedId('input-targetGeneReferenceGenome')">Reference genome</label>
+                  </span>
+                  <span v-if="validationErrors['targetGene.referenceGenome']" class="mave-field-error">{{validationErrors['targetGene.referenceGenome']}}</span>
+                </div>
+                <div class="field">
+                  <span class="p-float-label">
+                    <FileUpload
+                        :id="$scopedId('input-targetGeneWtSequenceSequenceFile')"
+                        :auto="false"
+                        chooseLabel="Reference sequence"
+                        :class="inputClasses.targetGeneWtSequenceSequenceFile"
+                        :customUpload="true"
+                        :fileLimit="1"
+                        :showCancelButton="false"
+                        :showUploadButton="false"
+                        @remove="fileCleared('targetGeneWtSequenceSequenceFile')"
+                        @select="fileSelected('targetGeneWtSequenceSequenceFile', $event)"
+                    >
+                      <template #empty>
+                        <p>Drop a FASTA file here.</p>
+                      </template>
+                    </FileUpload>
+                  </span>
+                  <span v-if="validationErrors['targetGene.wtSequence.sequence']" class="mave-field-error">{{validationErrors['targetGene.wtSequence.sequence']}}</span>
+                </div>
+                <div class="field">
+                  <span class="p-float-label">
+                    <SelectButton
+                        v-model="targetGene.wtSequence.sequenceType"
+                        :id="$scopedId('input-targetGeneWtSequenceSequenceType')"
+                        :options="sequenceTypes"
+                    />
+                  </span>
+                  <span v-if="validationErrors['targetGene.wtSequence.sequenceType']" class="mave-field-error">{{validationErrors['targetGene.wtSequence.sequenceType']}}</span>
+                </div>
+              </template>
+            </Card>
+            <Card>
+              <template #content>
+                <div v-if="item">
+                  <div>{{formatInt(item.numVariants)}} variants are included in this score set.</div>
+                  <div>To replace the variants, choose a new scores file and optional counts file:</div>
+                </div>
+                <div v-else>
+                  Load a scores file and an optional counts file:
+                </div>
+                <div class="field">
+                  <span class="p-float-label">
+                    <FileUpload
+                        ref="scoresFileUpload"
+                        :id="$scopedId('input-scoresFile')"
+                        :auto="false"
+                        chooseLabel="Scores file"
+                        :class="inputClasses.scoresFile || ''"
+                        :customUpload="true"
+                        :fileLimit="1"
+                        :showCancelButton="false"
+                        :showUploadButton="false"
+                    >
+                      <template #empty>
+                        <p>Drop a file here.</p>
+                      </template>
+                    </FileUpload>
+                  </span>
+                  <span v-if="validationErrors.scoresFile" class="mave-field-error">{{validationErrors.scoresFile}}</span>
+                </div>
+                <div class="field">
+                  <span class="p-float-label">
+                    <FileUpload
+                        ref="countsFileUpload"
+                        :id="$scopedId('input-countsFile')"
+                        :auto="false"
+                        chooseLabel="Counts file"
+                        :class="inputClasses.countsFile || ''"
+                        :customUpload="true"
+                        :fileLimit="1"
+                        :showCancelButton="false"
+                        :showUploadButton="false"
+                    >
+                      <template #empty>
+                        <p>Drop a file here.</p>
+                      </template>
+                    </FileUpload>
+                  </span>
+                  <span v-if="validationErrors.countsFile" class="mave-field-error">{{validationErrors.countsFile}}</span>
+                </div>
+              </template>
+            </Card>
+          </div>
         </div>
       </div>
     </div>
@@ -660,9 +670,9 @@ export default {
       const editedFields = {
         experimentUrn: this.experimentUrn,  // TODO was _urn
         title: this.title,
-        short_description: this.shortDescription,
-        abstract_text: this.abstractText,
-        method_text: this.methodText,
+        shortDescription: this.shortDescription,
+        abstractText: this.abstractText,
+        methodText: this.methodText,
         keywords: this.keywords,
         doiIdentifiers: this.doiIdentifiers.map((identifier) => _.pick(identifier, 'identifier')),
         pubmedIdentifiers: this.pubmedIdentifiers.map((identifier) => _.pick(identifier, 'identifier')),
@@ -702,11 +712,12 @@ export default {
         this.setValidationErrors({})
         if (this.item) {
           console.log('Updated item')
-          if (this.$refs.scoresFileUpload.files.length == 1) {
+          if (this.$refs.scoresFileUpload?.files?.length == 1) {
             await this.uploadData(savedItem)
           } else {
             this.reloadItem()
             this.$toast.add({severity:'success', summary: 'Your changes were saved.', life: 3000})
+            //this.$router.replace({path: `/scoresets/${this.scoreset.urn}/edit`})
           }
         } else {
           console.log('Created item')
@@ -760,7 +771,7 @@ export default {
             this.reloadItem()
             this.$toast.add({severity:'success', summary: 'Your changes were saved.', life: 3000})
           } else {
-            this.$router.replace({path: `/scoresets/${scoreset.urn}/edit`})
+            this.$router.replace({path: `/scoresets/${scoreset.urn}`})
             this.$toast.add({severity:'success', summary: 'The new score set was saved.', life: 3000})
           }
         } else {
@@ -792,6 +803,9 @@ export default {
       }
     },
 
+    saveExisting: async function() {
+      await this.save()
+    },
     ////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
     // Navigation
     ////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////

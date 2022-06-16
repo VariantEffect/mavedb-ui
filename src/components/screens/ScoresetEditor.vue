@@ -6,7 +6,7 @@
           <div v-if="itemStatus != 'NotLoaded'" class="mave-screen-title-bar">
             <div class="mave-screen-title">Edit score set</div>
             <div v-if="item" class="mave-screen-title-controls">
-              <Button @click="validateAndSave">Save changes</Button>
+              <Button @click="saveExisting">Save changes</Button>
               <Button @click="viewItem" class="p-button-warning">Cancel</Button>
             </div>
           </div>
@@ -670,9 +670,9 @@ export default {
       const editedFields = {
         experimentUrn: this.experimentUrn,  // TODO was _urn
         title: this.title,
-        short_description: this.shortDescription,
-        abstract_text: this.abstractText,
-        method_text: this.methodText,
+        shortDescription: this.shortDescription,
+        abstractText: this.abstractText,
+        methodText: this.methodText,
         keywords: this.keywords,
         doiIdentifiers: this.doiIdentifiers.map((identifier) => _.pick(identifier, 'identifier')),
         pubmedIdentifiers: this.pubmedIdentifiers.map((identifier) => _.pick(identifier, 'identifier')),
@@ -712,11 +712,12 @@ export default {
         this.setValidationErrors({})
         if (this.item) {
           console.log('Updated item')
-          if (this.$refs.scoresFileUpload.files.length == 1) {
+          if (this.$refs.scoresFileUpload?.files?.length == 1) {
             await this.uploadData(savedItem)
           } else {
             this.reloadItem()
             this.$toast.add({severity:'success', summary: 'Your changes were saved.', life: 3000})
+            //this.$router.replace({path: `/scoresets/${this.scoreset.urn}/edit`})
           }
         } else {
           console.log('Created item')
@@ -802,6 +803,9 @@ export default {
       }
     },
 
+    saveExisting: async function() {
+      await this.save()
+    },
     ////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
     // Navigation
     ////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////

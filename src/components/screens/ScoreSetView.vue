@@ -131,22 +131,6 @@ export default {
         this.$router.replace({path: `/scoresets/${this.item.urn}/edit`})
       }
     },
-    publishItem: async function() {
-      if (this.item) {
-        let response = await axios.post(`${config.apiBaseUrl}/scoresets/${this.item.urn}/publish`)
-        if (response.status == 200) {
-          console.log(this.item.urn)
-          this.$toast.add({severity:'success', summary: 'The score set is published sucessfully.', life: 3000})
-
-          //Something wrong here
-          this.setItemId(this.item.urn)
-          this.$router.replace({path: `/scoresets/${this.item.urn}`})
-        }else{
-          console.log("error")
-          console.log(response.data)
-        }
-      }
-    },
     deleteItem: function() {
       if (this.item) {
         Vue.delete(this.item);

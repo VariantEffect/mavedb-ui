@@ -34,17 +34,18 @@
             <a v-for="(keyword, i) of item.keywords" :key="i" :href="`https://www.mavedb.org/search/?keywords=${keyword}`"><Chip :label="keyword" /></a>
           </div>
         </div>
-        <div v-if="item.target">
+        <div v-if="item.targetGene">
           <div class="mave-scoreset-section-title">Target</div>
-          <div v-if="item.target.name">Name: {{item.target.name}}</div>
-          <div v-if="item.target.type">Type: {{item.target.type}}</div>
-          <div v-if="get(item, 'target.referenceMaps.genome.organismName')">Organism: {{item.target.referenceMaps.genome.organismName}}</div>
-          <div v-if="get(item, 'target.referenceMaps.genome.shortName')">Reference genome: {{item.target.referenceMaps.genome.shortName}}</div>
-          <div v-if="get(item, 'target.referenceMaps.genome.assemblyIdentifier.identifier')">Reference assembly: {{item.target.referenceMaps.genome.assemblyIdentifier.identifier}}</div>
-          <div v-if="get(item, 'target.referenceSequence.sequence')">Reference sequence: {{item.target.referenceSequence.sequence}}</div>
-          <div v-if="get(item, 'target.uniprot.identifier')">UniProt: {{item.target.uniprot.identifier}}</div>
-          <div v-if="get(item, 'target.refseq.identifier')">RefSeq: {{item.target.refseq.identifier}}<span v-if="get(item, 'target.refseq.offset')"> with offset {{item.target.refseq.offset}}</span></div>
-          <div v-if="get(item, 'target.ensembl.identifier')">Ensembl: {{item.target.ensembl.identifier}}</div>
+          <div v-if="item.targetGene.name">Name: {{item.targetGene.name}}</div>
+          <div v-if="item.targetGene.category">Type: {{item.targetGene.category}}</div>
+          <div v-if="item.targetGene.referenceMaps?.[0]?.genome?.organismName">Organism: {{item.targetGene.referenceMaps[0].genome.organismName}}</div>
+          <div v-if="item.targetGene.referenceMaps?.[0]?.genome?.shortName">Reference genome: {{item.targetGene.referenceMaps[0].genome.shortName}}</div>
+          <div v-if="item.targetGene.referenceMaps?.[0]?.genomeId">Genome ID: {{item.targetGene.referenceMaps[0].genomeId}}</div>
+          <div v-if="item.targetGene.referenceMaps?.[0]?.targetId">Target ID: {{item.targetGene.referenceMaps[0].targetId}}</div>
+          <div v-if="item.targetGene.wtSequence?.sequence" style="word-break: break-word">Reference sequence: {{item.targetGene.wtSequence.sequence}}</div>
+          <div v-if="item.targetGene.uniprot?.identifier">UniProt: {{item.targetGene.uniprot.identifier}}</div>
+          <div v-if="item.targetGene.refseq?.identifier">RefSeq: {{item.targetGene.refseq.identifier}}<span v-if="item.targetGene.refseq?.offset"> with offset {{item.targetGene.refseq.offset}}</span></div>
+          <div v-if="item.targetGene.ensembl?.identifier">Ensembl: {{item.targetGene.ensembl.identifier}}</div>
         </div>
       </div>
     </div>

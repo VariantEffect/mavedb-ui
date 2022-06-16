@@ -42,7 +42,6 @@
         </div>
         <div v-if="item.targetGene">
           <div class="mave-scoreset-section-title">Target</div>
-          <div v-if="item.private">Private: {{item}}</div>
           <div v-if="item.targetGene.name">Name: {{item.targetGene.name}}</div>
           <div v-if="item.targetGene.category">Type: {{item.targetGene.category}}</div>
           <div v-if="item.targetGene.referenceMaps?.[0]?.genome?.organismName">Organism: {{item.targetGene.referenceMaps[0].genome.organismName}}</div>

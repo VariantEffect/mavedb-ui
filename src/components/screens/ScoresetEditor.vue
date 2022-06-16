@@ -715,12 +715,14 @@ export default {
         this.setValidationErrors({})
         if (this.item) {
           console.log('Updated item')
-          if (this.item.private == true && this.$refs.scoresFileUpload.files.length == 1) {
+          //if (this.item.private == true && this.$refs.scoresFileUpload.files.length == 1) {
+          if (this.$refs.scoresFileUpload?.files?.length == 1) {
             await this.uploadData(savedItem)
           } else {
             // this.reloadItem()
             this.$router.replace({path: `/scoresets/${this.item.urn}`}) 
             this.$toast.add({severity:'success', summary: 'Your changes were saved.', life: 3000})
+            //this.$router.replace({path: `/scoresets/${this.scoreset.urn}/edit`})
           }
         } else {
           console.log('Created item')
@@ -776,7 +778,7 @@ export default {
             this.$router.replace({path: `/scoresets/${scoreset.urn}`}) 
             this.$toast.add({severity:'success', summary: 'Your changes were saved.', life: 3000})
           } else {
-            this.$router.replace({path: `/scoresets/${scoreset.urn}`}) // /edit`})
+            this.$router.replace({path: `/scoresets/${scoreset.urn}`})
             this.$toast.add({severity:'success', summary: 'The new score set was saved.', life: 3000})
           }
         } else {

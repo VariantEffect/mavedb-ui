@@ -198,6 +198,8 @@ export default {
           }
         }
         this.displayedUnplublishedScoresets = true
+        // Get the element with id="defaultOpen" and click on it
+        document.getElementById("defaultOpen").click()
       } catch (err) {
         console.log(`Error while loading search results")`, err)
       }
@@ -224,7 +226,7 @@ export default {
     }
   },
 }
-// Get the element with id="defaultOpen" and click on it
+
 </script>
 
 <style scoped>

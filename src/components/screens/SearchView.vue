@@ -308,12 +308,14 @@ export default {
         )
         // TODO catch errors in response
         this.scoresets = response.data || []
+
+        // reset published scoresets search results when using search bar
         this.publishedScoresets = []
         // Separate the response.data into published scoreset and unpublished scoreset.
         for (let i=0, len = this.scoresets.length; i<len; i++){
           if (this.scoresets[i].publishedDate != null){
-            // do not add to unpublished scoresets if it is already populated
-            this.publishedScoresets.push(this.scoresets[i]) 
+          //if (this.scoresets[i].private)
+            this.publishedScoresets.push(this.scoresets[i])
           }
         }
       } catch (err) {

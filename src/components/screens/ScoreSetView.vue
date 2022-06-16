@@ -9,7 +9,7 @@
             <Button class="p-button-sm" @click="publishItem">Publish</Button>
             <Button class="p-delete-button" @click="deleteItem">Delete</Button>
           </div>
-          <div v-else class="mave-screen-title-controls">
+          <div v-if="item.publishedDate" class="mave-screen-title-controls">
             <Button class="p-button-sm" @click="editItem">Edit</Button>
             <Button class="p-delete-button" @click="deleteItem">Delete</Button>
           </div>
@@ -42,7 +42,6 @@
         </div>
         <div v-if="item.targetGene">
           <div class="mave-scoreset-section-title">Target</div>
-          <div v-if="item">Name: {{item}}</div>
           <div v-if="item.targetGene.name">Name: {{item.targetGene.name}}</div>
           <div v-if="item.targetGene.category">Type: {{item.targetGene.category}}</div>
           <div v-if="item.targetGene.referenceMaps?.[0]?.genome?.organismName">Organism: {{item.targetGene.referenceMaps[0].genome.organismName}}</div>
@@ -73,8 +72,9 @@ import config from '@/config'
 import {parseScores} from '@/lib/scores'
 import ScoreSetHeatmap from '@/components/ScoreSetHeatmap'
 import useFormatters from '@/composition/formatters'
-import Vue from "vue";
+import Vue from "vue"
 import axios from 'axios'
+
 export default {
   name: 'ScoreSetView',
   components: {Button, Chip, DefaultLayout, ScoreSetHeatmap},
@@ -159,7 +159,37 @@ export default {
     get(...args) {
       return _.get(...args)
     },
-    
+    publishItem: async function() {
+      let response = null 
+      try {
+        if (this.item) {
+          response = await axios.post(`${config.apiBaseUrl}/scoresets/${this.item.urn}/publish`, this.item)
+          // make sure scroesets cannot be published twice API, but also remove the button on UI side
+        }
+      } catch (e) {
+        response = e.response || {status: 500}
+      }
+
+      if (response.status == 200) {
+        // display toast message here
+        const publishedItem = response.data
+        if (this.item) {
+          console.log('Published item')
+          this.$router.replace({path: `/scoresets/${publishedItem.urn}`})
+          this.$toast.add({severity:'success', summary: 'Your scoreset was successfully published.', life: 3000})
+        }
+      } else if (response.data && response.data.detail) {
+        const formValidationErrors = {}
+        for (const error of response.data.detail) {
+          let path = error.loc
+          if (path[0] == 'body') {
+            path = path.slice(1)
+          }
+          path = path.join('.')
+          formValidationErrors[path] = error.msg
+        }
+      }
+    }
   }
 }
 

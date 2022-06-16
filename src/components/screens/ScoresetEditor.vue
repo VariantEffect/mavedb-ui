@@ -4,9 +4,9 @@
       <div class="grid">
         <div class="col-12">
           <div v-if="itemStatus != 'NotLoaded'" class="mave-screen-title-bar">
-            <div class="mave-screen-title">Edit score set</div>
+            <div class="mave-screen-title">Edit score set {{this.item.urn}}</div>
             <div v-if="item" class="mave-screen-title-controls">
-              <Button @click="saveExisting">Save changes</Button>
+              <Button @click="saveEditContent">Save changes</Button>
               <Button @click="viewItem" class="p-button-warning">Cancel</Button>
             </div>
           </div>
@@ -333,6 +333,7 @@ import useItems from '@/composition/items'
 import config from '@/config'
 import {normalizeDoi, normalizePubmedId, validateDoi, validatePubmedId} from '@/lib/identifiers'
 import useFormatters from '@/composition/formatters'
+//import func from 'vue-editor-bridge'
 
 export default {
   name: 'ScoresetEditor',
@@ -667,6 +668,7 @@ export default {
     // Currently there is some special handling here, though, so we will leave that for a later refactoring.
 
     save: async function() {
+      console.log("Save")
       const editedFields = {
         experimentUrn: this.experimentUrn,  // TODO was _urn
         title: this.title,
@@ -677,7 +679,7 @@ export default {
         doiIdentifiers: this.doiIdentifiers.map((identifier) => _.pick(identifier, 'identifier')),
         pubmedIdentifiers: this.pubmedIdentifiers.map((identifier) => _.pick(identifier, 'identifier')),
         dataUsagePolicy: this.dataUsagePolicy,
-        datasetColumns: {},
+        //datasetColumns: {},
         extraMetadata: {},
         targetGene: {
           name: _.get(this.targetGene, 'name'),
@@ -700,22 +702,25 @@ export default {
         if (this.item) {
           response = await axios.put(`${config.apiBaseUrl}/scoresets/${this.item.urn}`, editedItem)
         } else {
+          console.log("createItem here")
           response = await axios.post(`${config.apiBaseUrl}/scoresets/`, editedItem)
         }
       } catch (e) {
         response = e.response || {status: 500}
       }
       this.progressVisible = false
-
+      console.log(response.status)
       if (response.status == 200) {
         const savedItem = response.data
         this.setValidationErrors({})
         if (this.item) {
           console.log('Updated item')
+          //if (this.item.private == true && this.$refs.scoresFileUpload.files.length == 1) {
           if (this.$refs.scoresFileUpload?.files?.length == 1) {
             await this.uploadData(savedItem)
           } else {
-            this.reloadItem()
+            // this.reloadItem()
+            this.$router.replace({path: `/scoresets/${this.item.urn}`}) 
             this.$toast.add({severity:'success', summary: 'Your changes were saved.', life: 3000})
             //this.$router.replace({path: `/scoresets/${this.scoreset.urn}/edit`})
           }
@@ -747,7 +752,8 @@ export default {
         if (this.$refs.countsFileUpload.files.length == 1) {
           formData.append('counts_file', this.$refs.countsFileUpload.files[0])
         }
-
+        console.log("TESTING")
+        console.log(formData)
         this.progressVisible = true
         let response
         try {
@@ -768,7 +774,8 @@ export default {
         if (response.status == 200) {
           console.log('Imported scoreset data.')
           if (this.item) {
-            this.reloadItem()
+            // this.reloadItem()
+            this.$router.replace({path: `/scoresets/${scoreset.urn}`}) 
             this.$toast.add({severity:'success', summary: 'Your changes were saved.', life: 3000})
           } else {
             this.$router.replace({path: `/scoresets/${scoreset.urn}`})
@@ -797,15 +804,16 @@ export default {
 
       this.serverSideValidationErrors = {}
       this.mergeValidationErrors()
-
       if (_.isEmpty(this.validationErrors)) {
         await this.save()
       }
     },
 
-    saveExisting: async function() {
+    //Editing published scoreset doesn't have scoresFileUpload.
+    saveEditContent: async function() {
       await this.save()
     },
+
     ////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
     // Navigation
     ////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////

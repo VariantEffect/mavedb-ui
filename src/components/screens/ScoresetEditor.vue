@@ -771,7 +771,7 @@ export default {
             this.reloadItem()
             this.$toast.add({severity:'success', summary: 'Your changes were saved.', life: 3000})
           } else {
-            this.$router.replace({path: `/scoresets/${scoreset.urn}/edit`})
+            this.$router.replace({path: `/scoresets/${scoreset.urn}`})
             this.$toast.add({severity:'success', summary: 'The new score set was saved.', life: 3000})
           }
         } else {

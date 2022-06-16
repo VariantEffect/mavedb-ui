@@ -715,13 +715,11 @@ export default {
         this.setValidationErrors({})
         if (this.item) {
           console.log('Updated item')
-          //TODO. 
-          //This one doesn't work for editing published scoreset due to $refs.scoresFileUpload.files.length is none.
-          //this.item.private == true ||
           if (this.item.private == true && this.$refs.scoresFileUpload.files.length == 1) {
             await this.uploadData(savedItem)
           } else {
-            this.reloadItem()
+            // this.reloadItem()
+            this.$router.replace({path: `/scoresets/${this.item.urn}`}) 
             this.$toast.add({severity:'success', summary: 'Your changes were saved.', life: 3000})
           }
         } else {
@@ -774,10 +772,11 @@ export default {
         if (response.status == 200) {
           console.log('Imported scoreset data.')
           if (this.item) {
-            this.reloadItem()
+            // this.reloadItem()
+            this.$router.replace({path: `/scoresets/${scoreset.urn}`}) 
             this.$toast.add({severity:'success', summary: 'Your changes were saved.', life: 3000})
           } else {
-            this.$router.replace({path: `/scoresets/${scoreset.urn}/edit`})
+            this.$router.replace({path: `/scoresets/${scoreset.urn}`}) // /edit`})
             this.$toast.add({severity:'success', summary: 'The new score set was saved.', life: 3000})
           }
         } else {

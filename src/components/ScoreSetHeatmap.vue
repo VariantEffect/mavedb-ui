@@ -1,7 +1,9 @@
 <template>
 
-  <div v-if="showSimpleVariantsStackedHeatmap" class="mave-simple-variants-heatmap-container" ref="simpleVariantsStackedHeatmapContainer" />
-  <div v-if="showSimpleVariantsHeatmap" class="mave-simple-variants-heatmap-container" ref="simpleVariantsHeatmapContainer" />
+  <div class="mave-simple-variants-heatmaps-container">
+    <div v-if="showSimpleVariantsStackedHeatmap" class="mave-simple-variants-heatmap-container" ref="simpleVariantsStackedHeatmapContainer" />
+    <div v-if="showSimpleVariantsHeatmap" class="mave-simple-variants-heatmap-container" ref="simpleVariantsHeatmapContainer" />
+  </div>
   <div v-if="numComplexVariants > 0">{{numComplexVariants}} variants are complex and cannot be shown on this type of chart.</div>
 
 </template>
@@ -10,7 +12,18 @@
 
 import _ from 'lodash'
 import * as d3 from 'd3'
+
+import geneticCodes from '@/lib/genetic-codes'
 import {aminoAcidHydrophiliaRanking, parseProVariant, AMINO_ACIDS_BY_HYDROPHILIA} from '@/lib/scores'
+
+function stdev(array) {
+  if (!array || array.length === 0) {
+    return 0
+  }
+  const n = array.length
+  const mean = array.reduce((a, b) => a + b) / n
+  return Math.sqrt(array.map(x => Math.pow(x - mean, 2)).reduce((a, b) => a + b) / n)
+}
 
 // Copies a variable number of methods from source to target.
 d3.rebind = function(target, source) {
@@ -28,34 +41,6 @@ function d3_rebind(target, source, method) {
     return value === source ? target : value
   }
 }
-
-const CODON_TABLE = { 
-  "A": ["GCA","GCC","GCG","GCT"], 
-  "C": ["TGC","TGT"], 
-  "D": ["GAC", "GAT"],
-  "E": ["GAA","GAG"],
-  "F": ["TTC","TTT"],
-  "G": ["GGA","GGC","GGG","GGT"],
-  "H": ["CAC","CAT"],
-  "I": ["ATA","ATC","ATT"],
-  "K": ["AAA","AAG"],
-  "L": ["CTA","CTC","CTG","CTT","TTA","TTG"],
-  "M": ["ATG"],
-  "N": ["AAC","AAT"],
-  "P": ["CCA","CCC","CCG","CCT"],
-  "Q": ["CAA","CAG"],
-  "R": ["AGA","AGG","CGA","CGC","CGG","CGT"],
-  "S": ["AGC","AGT","TCA","TCC","TCG","TCT"],
-  "T": ["ACA","ACC","ACG","ACT"],
-  "V": ["GTA","GTC","GTG","GTT"],
-  "W": ["TGG"],
-  "Y": ["TAC","TAT"],
-}
-
-const INVERSE_CODON_TABLE = _.mapValues(_.keyBy(_.flatten(_.keys(CODON_TABLE).map((aa) => {
-  const codons = CODON_TABLE[aa]
-  return codons.map((codon) => ({codon, aa}))
-})), 'codon'), 'aa')
 
 export default {
   name: 'ScoreSetHeatmap',
@@ -112,18 +97,11 @@ export default {
       }
     },
     simpleAndWtVariants: function() {
-      if (this.simpleVariants && this.wtVariants) {
-        return [...this.simpleVariants, ...this.wtVariants]
-      } else {
-        return null
-      }
-    },
-    simpleVariantsByPositionAndScore: function() {
-      return this.simpleVariants ? this.prepareSimpleVariantsByPositionAndScore(this.simpleVariants) : null
+      return [...this.simpleVariants || [], ...this.wtVariants || []]
     },
     wtAminoAcids: function() {
-      const wtDnaSequenceType = _.get(this.scoreSet, 'target.reference_sequence.sequence_type')
-      const wtDnaSequence = _.get(this.scoreSet, 'target.reference_sequence.sequence')
+      const wtDnaSequenceType = _.get(this.scoreSet, 'targetGene.wtSequence.sequenceType')
+      const wtDnaSequence = _.get(this.scoreSet, 'targetGene.wtSequence.sequence')
       if (!wtDnaSequence || wtDnaSequenceType != 'dna') {
         return []
       }
@@ -132,12 +110,6 @@ export default {
     wtVariants: function() {
       return this.wtAminoAcids ? this.prepareWtVariants(this.wtAminoAcids) : []
     }
-    /* variants: function() {
-      if (!this.scores) {
-        return null
-      }
-      return this.prepareSimpleVariants(this.scores)
-    } */
   },
 
   watch: {
@@ -154,37 +126,28 @@ export default {
       },
       immediate: true
     },
-    simpleVariants: {
-      handler: function() {
-        this.renderOrRefreshStackedHeatmap()
-      },
-      immediate: true
-    },
     simpleAndWtVariants: {
       handler: function() {
         this.renderOrRefreshHeatmap()
       },
       immediate: true
-    },
+    }
+    /*
     variantsByPositionSorted: {
       handler: function() {
         this.renderOrRefreshStackedHeatmap()
       }
     }
+    */
   },
 
   methods: {
     // We assume that there will only be one substitution variant for each target AA at a given position.
     prepareSimpleVariantScoreRanks(simpleVariants) {
       _.mapValues(_.groupBy(simpleVariants, 'x'), (variantsAtOnePosition) => {
-        const variantsSortedByScore = _.sortBy(variantsAtOnePosition, 'score')
+        const variantsSortedByScore = _.sortBy(variantsAtOnePosition, 'meanScore')
         variantsAtOnePosition.forEach((v) => v.scoreRank = variantsSortedByScore.indexOf(v))
-        console.log(variantsAtOnePosition)
       })
-      /*return _.mapValues(
-        _.groupBy(simpleVariants, 'x'),
-        (variantsAtOnePosition) => _.sortBy(variantsAtOnePosition, 'score')
-      )*/
     },
 
     prepareWtVariants: function(wtAminoAcids) {
@@ -198,13 +161,13 @@ export default {
           .filter((x) => x != null)
     },
 
-    prepareSimpleVariants: function(scores) {
-      let numComplexVariants = 0
-      const simpleVariants = _.filter(
+    prepareSimpleVariantInstances: function(scores) {
+      let numComplexVariantInstances = 0
+      const simpleVariantInstances = _.filter(
         scores.map((score) => {
           const variant = parseProVariant(score.hgvs_pro)
           if (!variant) {
-            numComplexVariants++
+            numComplexVariantInstances++
             return null
           }
           if (variant.substitution == 'Ter') {
@@ -212,12 +175,44 @@ export default {
           }
           const x = variant.position
           const y = 20 - aminoAcidHydrophiliaRanking(variant.substitution) // 0 to 20
-          return {x, y, score: score.score, details: score}
+          return {x, y, score: score.score, details: _.omit(score, 'score')}
         }),
         (x) => x != null
       )
+      return {simpleVariantInstances, numComplexVariantInstances}
+    },
+
+    prepareSimpleVariants: function(scores) {
+      const {simpleVariantInstances, numComplexVariantInstances} = this.prepareSimpleVariantInstances(scores)
+
+      const simpleVariants = _.flatten(
+        _.values(
+          _.mapValues(
+            simpleVariantInstances.groupBy((vi) => vi.x),
+            (instancesAtX) => _.values(instancesAtX.groupBy((vi) => vi.y))
+          )
+        )
+      )
+          .map((v) => ({
+            ..._.pick(v[0], ['x', 'y']),
+            instances: v
+          }))
+      for (const simpleVariant of simpleVariants) {
+        const scores = simpleVariant.instances.map((instance) => instance.score).filter((s) => s != null)
+        simpleVariant.numScores = scores.length
+        simpleVariant.meanScore = scores.length == 0 ? null : (scores.reduce((a, b) => a + b, 0) / scores.length)
+        simpleVariant.scoreStdev = stdev(scores)
+
+        // Assume that aside from score, the details are identical for each instance.
+        simpleVariant.details = _.omit(simpleVariant.instances[0].details, 'score')
+      }
       this.prepareSimpleVariantScoreRanks(simpleVariants)
-      return {simpleVariants, numComplexVariants}
+
+      return {
+        simpleVariants,
+        // TODO Group these to identify instances of the same variant.
+        numComplexVariants: numComplexVariantInstances
+      }
     },
 
     translateDnaToAminoAcids1Char: function(dna) {
@@ -233,7 +228,7 @@ export default {
     },
 
     translateCodon: function(codon) {
-      return INVERSE_CODON_TABLE[codon]
+      return geneticCodes.standard.dna.codonToAa[codon]
     },
 
     // Assumes that plate dimensions do not change.
@@ -266,7 +261,8 @@ export default {
           variants: this.simpleVariants,
           rowHeight: 2,
           colWidth: 20,
-          yCoordinate: (d) => d.scoreRank
+          yCoordinate: (d) => d.scoreRank,
+          showYTickMarks: false
         })
       }
     },
@@ -295,7 +291,8 @@ export default {
       rowHeight = 20,
       colWidth = 20,
       xCoordinate = (d) => d.x,
-      yCoordinate = (d) => d.y
+      yCoordinate = (d) => d.y,
+      showYTickMarks = true
     } = {}) {
       const self = this
 
@@ -334,15 +331,17 @@ export default {
             .range([0, height])
             .domain(rows)
             .padding(0.05)
-        svg.append('g')
-            .style('font-size', 15)
-            .call(
-              d3.axisLeft(yScale)
-                  .tickSize(0)
-                  .tickFormat(n => AMINO_ACIDS_BY_HYDROPHILIA[20 - n])
-                  // .tickFormat(n => String.fromCharCode('A'.charCodeAt(0) + n - 1))
-            )
-            .select('.domain').remove()
+        if (showYTickMarks) {
+          svg.append('g')
+              .style('font-size', 15)
+              .call(
+                d3.axisLeft(yScale)
+                    .tickSize(0)
+                    .tickFormat(n => AMINO_ACIDS_BY_HYDROPHILIA[20 - n])
+                    // .tickFormat(n => String.fromCharCode('A'.charCodeAt(0) + n - 1))
+              )
+              .select('.domain').remove()
+        }
 
         const stroke = function(d, isMouseOver) {
           if (isMouseOver) {
@@ -379,20 +378,28 @@ export default {
             parts.push('WT')
           }
           if (d.details.hgvs_nt && d.details.hgvs_nt != 'NA') {
-            parts.push(`NT: ${d.details.hgvs_nt}`)
+            parts.push(`NT variant: ${d.details.hgvs_nt}`)
           }
           if (d.details.hgvs_pro && d.details.hgvs_pro != 'NA') {
-            parts.push(`Protein: ${d.details.hgvs_pro}`)
+            parts.push(`Protein variant: ${d.details.hgvs_pro}`)
           }
           if (d.details.hgvs_splice && d.details.hgvs_splice != 'NA') {
-            parts.push(`Splice: ${d.details.hgvs_splice}`)
+            parts.push(`Splice variant: ${d.details.hgvs_splice}`)
           }
-          if (d.details.score) {
-            parts.push(`Score: ${d.details.score}`)
+          if (d.numScores != null) {
+            parts.push(`# of observations: ${d.numScores}`)
           }
+          if (d.numScores == 1) {
+              parts.push(`Score: ${d.meanScore}`)
+          } else if (d.numScores > 1) {
+            parts.push(`Mean score: ${d.meanScore}`)
+            parts.push(`Score stdev: ${d.scoreStdev}`)
+          }
+          /*
           if (d.details.accession) {
             parts.push(`Accession: ${d.details.accession}`)
           }
+          */
           self.tooltip
               .html(parts.join('<br />'))
               .style('left', (d3.pointer(event, document.body)[0] + 50) + 'px')
@@ -422,23 +429,12 @@ export default {
         }
 
         const doubleClick = function() {}
-        /*
-        const doubleClick = function(event, d) {
-          let sampleResult = self.sampleResultForWell(d)
-
-          // Kluge. We should remove the tooltip when this component is not rendered.
-          self.tooltip.style('display', 'none')
-
-          self.$store.dispatch('selectSampleResult', {sampleResultId: sampleResult.id, multiSelect: false})
-          self.$store.dispatch('showSampleResultDetail', {sampleResultId: sampleResult.id})
-        }
-        */
 
         const color = function(d) {
           if (d.details.wt) {
-            return d3.color('#ccaa00')
+            return d3.color('#ddbb00')
           }
-          return d3.interpolateRdBu(1.0 - d.score / 2.0)
+          return d3.interpolateRdBu(1.0 - d.meanScore / 2.0)
         }
 
         const cancelableClick = function() {
@@ -562,7 +558,7 @@ export default {
 
 <style scoped>
 
-.mave-simple-variants-heatmap-container {
+.mave-simple-variants-heatmaps-container {
   position: relative;
   overflow-x: auto;
 }

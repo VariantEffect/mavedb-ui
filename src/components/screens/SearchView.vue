@@ -308,6 +308,7 @@ export default {
         )
         // TODO catch errors in response
         this.scoresets = response.data || []
+
         // reset published scoresets search results when using search bar
         this.publishedScoresets = []
         // Separate the response.data into published scoreset and unpublished scoreset.

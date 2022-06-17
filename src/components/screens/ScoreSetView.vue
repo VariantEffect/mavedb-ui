@@ -72,7 +72,6 @@ import config from '@/config'
 import {parseScores} from '@/lib/scores'
 import ScoreSetHeatmap from '@/components/ScoreSetHeatmap'
 import useFormatters from '@/composition/formatters'
-import Vue from "vue"
 import axios from 'axios'
 
 export default {
@@ -131,11 +130,26 @@ export default {
         this.$router.replace({path: `/scoresets/${this.item.urn}/edit`})
       }
     },
-    deleteItem: function() {
+    deleteItem: async function() {
+      let response = null
       if (this.item) {
-        Vue.delete(this.item);
-        this.$router.replace({path: `/my-data`})
-      }
+        try {
+          response = await axios.delete(`${config.apiBaseUrl}/scoresets/${this.item.urn}`, this.item)
+          // make sure scroesets cannot be published twice API, but also remove the button on UI side
+        } catch (e) {
+          response = e.response || {status: 500}
+        }
+        console.log(response)
+        //if (response.status == 200 or resp) {
+          // display toast message here
+          //const publishedItem = response.data
+          //if (this.item) {
+            //console.log('Published item')
+            //this.$router.replace({path: `/scoresets/${publishedItem.urn}`})
+            //this.$toast.add({severity:'success', summary: 'Your scoreset was successfully published.', life: 3000})
+         // }
+      } 
+        //this.$router.replace({path: `/my-data`})
     },
     markdownToHtml: function(markdown) {
       return marked(markdown)

@@ -188,6 +188,7 @@ export default {
         this.publishedScoresets = []
         // Separate the response.data into published scoreset and unpublished scoreset.
         for (let i=0, len = this.scoresets.length; i<len; i++){
+          console.log(this.scoresets[i].experiment.createdBy.orcid_id)
           if (this.scoresets[i].publishedDate == null){
             // do not add to unpublished scoresets if it is already populated
             if (this.displayedUnplublishedScoresets == false){

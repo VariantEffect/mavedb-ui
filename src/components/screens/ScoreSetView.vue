@@ -170,8 +170,6 @@ export default {
             console.log("not hi")
         }
       });
-      
-        //this.$router.replace({path: `/my-data`})
     },
     markdownToHtml: function(markdown) {
       return marked(markdown)

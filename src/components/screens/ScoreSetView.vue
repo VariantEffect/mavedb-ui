@@ -167,7 +167,7 @@ export default {
         },
         reject: () => {
             //callback to execute when user rejects the action
-            
+            //do nothing
         }
       });
     },

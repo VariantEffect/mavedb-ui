@@ -199,7 +199,6 @@ export default {
             this.publishedScoresets.push(this.scoresets[i])
           }
         }
-        console.log()
         this.displayedUnplublishedScoresets = true
         // Get the element with id="defaultOpen" and click on it
         document.getElementById("defaultOpen").click()

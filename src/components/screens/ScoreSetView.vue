@@ -140,14 +140,25 @@ export default {
           response = e.response || {status: 500}
         }
         console.log(response)
-        //if (response.status == 200 or resp) {
+
+        if (response.status == 200) {
           // display toast message here
-          //const publishedItem = response.data
-          //if (this.item) {
-            //console.log('Published item')
-            //this.$router.replace({path: `/scoresets/${publishedItem.urn}`})
-            //this.$toast.add({severity:'success', summary: 'Your scoreset was successfully published.', life: 3000})
-         // }
+          //const deletedItem = response.data
+          console.log('Deleted item')
+          this.$router.replace({path: `/my-data`})
+          this.$toast.add({severity:'success', summary: 'Your scoreset was successfully deleted.', life: 3000})
+          
+        } else if (response.data && response.data.detail) {
+          const formValidationErrors = {}
+          for (const error of response.data.detail) {
+            let path = error.loc
+            if (path[0] == 'body') {
+              path = path.slice(1)
+            }
+            path = path.join('.')
+            formValidationErrors[path] = error.msg
+          }
+        }
       } 
         //this.$router.replace({path: `/my-data`})
     },

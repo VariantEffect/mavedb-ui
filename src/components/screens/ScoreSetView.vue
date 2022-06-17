@@ -132,33 +132,45 @@ export default {
     },
     deleteItem: async function() {
       let response = null
-      if (this.item) {
-        try {
-          response = await axios.delete(`${config.apiBaseUrl}/scoresets/${this.item.urn}`, this.item)
-          // make sure scroesets cannot be published twice API, but also remove the button on UI side
-        } catch (e) {
-          response = e.response || {status: 500}
-        }
-
-        if (response.status == 200) {
-          // display toast message here
-          //const deletedItem = response.data
-          console.log('Deleted item')
-          this.$router.replace({path: `/my-data`})
-          this.$toast.add({severity:'success', summary: 'Your scoreset was successfully deleted.', life: 3000})
-          
-        } else if (response.data && response.data.detail) {
-          const formValidationErrors = {}
-          for (const error of response.data.detail) {
-            let path = error.loc
-            if (path[0] == 'body') {
-              path = path.slice(1)
+      this.$confirm.require({
+        message: 'Are you sure you want to proceed?',
+        header: 'Confirmation',
+        icon: 'pi pi-exclamation-triangle',
+        accept: async () => {
+          if (this.item) {
+            try {
+              response = await axios.delete(`${config.apiBaseUrl}/scoresets/${this.item.urn}`, this.item)
+              // make sure scroesets cannot be published twice API, but also remove the button on UI side
+            } catch (e) {
+              response = e.response || {status: 500}
             }
-            path = path.join('.')
-            formValidationErrors[path] = error.msg
-          }
+
+            if (response.status == 200) {
+              // display toast message here
+              //const deletedItem = response.data
+              console.log('Deleted item')
+              this.$router.replace({path: `/my-data`})
+              this.$toast.add({severity:'success', summary: 'Your scoreset was successfully deleted.', life: 3000})
+              
+            } else if (response.data && response.data.detail) {
+              const formValidationErrors = {}
+              for (const error of response.data.detail) {
+                let path = error.loc
+                if (path[0] == 'body') {
+                  path = path.slice(1)
+                }
+                path = path.join('.')
+                formValidationErrors[path] = error.msg
+              }
+            }
+          } 
+        },
+        reject: () => {
+            //callback to execute when user rejects the action
+            console.log("not hi")
         }
-      } 
+      });
+      
         //this.$router.replace({path: `/my-data`})
     },
     markdownToHtml: function(markdown) {

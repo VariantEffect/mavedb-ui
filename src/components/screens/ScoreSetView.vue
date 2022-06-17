@@ -139,7 +139,6 @@ export default {
         } catch (e) {
           response = e.response || {status: 500}
         }
-        console.log(response)
 
         if (response.status == 200) {
           // display toast message here

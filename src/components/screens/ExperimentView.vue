@@ -4,16 +4,21 @@
       <div class="mave-1000px-col">
         <div class="mave-screen-title-bar">
           <div class="mave-screen-title">{{item.title || 'Untitled experiment'}}</div>
-          <div v-if="!item.publishedDate" class="mave-screen-title-controls">
-            <Button class="p-button-sm" @click="editItem">Edit</Button>
+          <div v-if="oidc.isAuthenticated">
+            <div v-if="!item.publishedDate" class="mave-screen-title-controls">
+              <Button class="p-button-sm" @click="editItem">Edit</Button>
+              <Button class="p-button-sm p-button-danger" @click="deleteItem">Delete</Button>
+            </div>
           </div>
         </div>
         <div v-if="item.shortDescription" class="mave-scoreset-description">{{item.shortDescription}}</div>
         <div v-if="item.urn" class="mave-scoreset-urn">{{item.urn}}</div>
       </div>
       <div class="mave-1000px-col">
-        <div v-if="item.creationDate">Created {{formatDate(item.creationDate)}}<span v-if="item.createdBy"> <a :href="`https://orcid.org/${item.createdBy}`" class="pi pi-external-link"></a></span></div>
-        <div v-if="item.modificationDate">Last updated {{formatDate(item.modificationDate)}}<span v-if="item.modifiedBy"> <a :href="`https://orcid.org/${item.modifiedBy}`" class="pi pi-external-link"></a></span></div>
+        <div v-if="item.creationDate">Created {{formatDate(item.creationDate)}} <span v-if="item.createdBy">
+          <a :href="`https://orcid.org/${item.createdBy.orcid_id}`"><img src="@/assets/ORCIDiD_icon.png" alt="ORCIDiD">{{item.createdBy.firstName}} {{item.createdBy.lastName}}</a></span></div>
+        <div v-if="item.modificationDate">Last updated {{formatDate(item.modificationDate)}} <span v-if="item.modifiedBy"> 
+          <a :href="`https://orcid.org/${item.modifiedBy.orcid_id}`"><img src="@/assets/ORCIDiD_icon.png" alt="ORCIDiD">{{item.modifiedBy.firstName}} {{item.modifiedBy.lastName}}</a></span></div>
         <div v-if="item.publishedDate">Published {{formatDate(item.publishedDate)}}</div>
         <div v-if="item.experiment">Member of <router-link :to="{name: 'experiment', params: {urn: item.experiment.urn}}">{{item.experiment.urn}}</router-link></div>
         <div v-if="item.currentVersion">Current version {{item.currentVersion}}</div>
@@ -52,14 +57,18 @@
 
 import _ from 'lodash'
 import marked from 'marked'
+import Button from 'primevue/button'
 import Chip from 'primevue/chip'
 import DefaultLayout from '@/components/layout/DefaultLayout'
 import useItem from '@/composition/item'
 import useFormatters from '@/composition/formatters'
+import config from '@/config'
+import axios from 'axios'
+import {oidc} from '@/lib/auth'
 
 export default {
   name: 'ExperimentView',
-  components: {Chip, DefaultLayout},
+  components: {Button, Chip, DefaultLayout},
 
   setup: () => {
     return {
@@ -68,6 +77,12 @@ export default {
     }
   },
 
+  computed: {
+    oidc: function() {
+      return oidc
+      }
+    },
+    
   props: {
     itemId: {
       type: String,
@@ -93,6 +108,45 @@ export default {
       if (this.item) {
         this.$router.replace({path: `/experiments/${this.item.urn}/edit`})
       }
+    },
+    deleteItem: async function() {
+      let response = null
+      this.$confirm.require({
+        message: 'Are you sure you want to proceed?',
+        header: 'Confirmation',
+        icon: 'pi pi-exclamation-triangle',
+        accept: async () => {
+          if (this.item) {
+            try {
+              response = await axios.delete(`${config.apiBaseUrl}/experiments/${this.item.urn}`, this.item)
+            } catch (e) {
+              response = e.response || {status: 500}
+            }
+
+            if (response.status == 200) {
+              // display toast message here
+              console.log('Deleted item')
+              this.$router.replace({path: `/my-data`})
+              this.$toast.add({severity:'success', summary: 'Your experiment was successfully deleted.', life: 3000})
+              
+            } else if (response.data && response.data.detail) {
+              const formValidationErrors = {}
+              for (const error of response.data.detail) {
+                let path = error.loc
+                if (path[0] == 'body') {
+                  path = path.slice(1)
+                }
+                path = path.join('.')
+                formValidationErrors[path] = error.msg
+              }
+            }
+          } 
+        },
+        reject: () => {
+            //callback to execute when user rejects the action
+            //do nothing
+        }
+      });
     },
     markdownToHtml: function(markdown) {
       return marked(markdown)

@@ -4,9 +4,10 @@
       <div class="grid">
         <div class="col-12">
           <div v-if="itemStatus != 'NotLoaded'" class="mave-screen-title-bar">
-            <div class="mave-screen-title">Edit experiment</div>
+            <div class="mave-screen-title">Edit experiment {{this.item.urn}}</div>
             <div v-if="item" class="mave-screen-title-controls">
               <Button @click="validateAndSave">Save changes</Button>
+              <Button @click="resetForm" class="p-button-help">Clear</Button>
               <Button @click="viewItem" class="p-button-warning">Cancel</Button>
             </div>
           </div>
@@ -14,7 +15,8 @@
             <div class="mave-screen-title">Create a new experiment</div>
             <div class="mave-screen-title-controls">
               <Button @click="validateAndSave">Save experiment</Button>
-              <Button @click="resetForm" class="p-button-warning">Cancel</Button>
+              <Button @click="resetForm" class="p-button-help">Clear</Button>
+              <Button @click="backDashboard" class="p-button-warning">Cancel</Button>
             </div>
           </div>
         </div>
@@ -417,11 +419,12 @@ export default {
         this.setValidationErrors({})
         if (this.item) {
           console.log('Updated item')
-          this.reloadItem()
+          //this.reloadItem()
+          this.$router.replace({path: `/experiments/${savedItem.urn}`})
           this.$toast.add({severity:'success', summary: 'Your changes were saved.', life: 3000})
         } else {
           console.log('Created item')
-          this.$router.replace({path: `/experiments/${savedItem.urn}/edit`})
+          this.$router.replace({path: `/experiments/${savedItem.urn}`})
           this.$toast.add({severity:'success', summary: 'The new experiment was saved.', life: 3000})
         }
       } else if (response.data && response.data.detail) {
@@ -456,6 +459,11 @@ export default {
       if (this.item) {
         this.$router.replace({path: `/experiments/${this.item.urn}`})
       }
+    },
+
+    //Back to Dashboard
+    backDashboard: function() {
+      this.$router.replace({path: `/my-data`})
     },
 
     ////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////

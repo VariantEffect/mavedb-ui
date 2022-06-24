@@ -4,14 +4,16 @@
       <div class="mave-1000px-col">
         <div class="mave-screen-title-bar">
           <div class="mave-screen-title">{{item.title || 'Untitled score set'}}</div>
-          <div v-if="!item.publishedDate" class="mave-screen-title-controls">
-            <Button class="p-button-sm" @click="editItem">Edit</Button>
-            <Button class="p-button-sm" @click="publishItem">Publish</Button>
-            <Button class="p-delete-button" @click="deleteItem">Delete</Button>
-          </div>
-          <div v-if="item.publishedDate" class="mave-screen-title-controls">
-            <Button class="p-button-sm" @click="editItem">Edit</Button>
-            <Button class="p-delete-button" @click="deleteItem">Delete</Button>
+          <div v-if="oidc.isAuthenticated">
+            <div v-if="!item.publishedDate" class="mave-screen-title-controls">
+              <Button class="p-button-sm" @click="editItem">Edit</Button>
+              <Button class="p-button-sm" @click="publishItem">Publish</Button>
+              <Button class="p-button-sm p-button-danger" @click="deleteItem">Delete</Button>
+            </div>
+            <div v-if="item.publishedDate" class="mave-screen-title-controls">
+              <Button class="p-button-sm" @click="editItem">Edit</Button>
+              <Button class="p-button-sm p-button-danger" @click="deleteItem">Delete</Button>
+            </div>
           </div>
         </div>
         <div v-if="item.shortDescription" class="mave-scoreset-description">{{item.shortDescription}}</div>
@@ -21,8 +23,12 @@
         <ScoreSetHeatmap :scoreSet="item" :scores="scores" />
       </div>
       <div class="mave-1000px-col">
-        <div v-if="item.creationDate">Created {{formatDate(item.creationDate)}}<span v-if="item.createdBy"> <a :href="`https://orcid.org/${item.createdBy}`" class="pi pi-external-link"></a></span></div>
-        <div v-if="item.modificationDate">Last updated {{formatDate(item.modificationDate)}}<span v-if="item.modifiedBy"> <a :href="`https://orcid.org/${item.modifiedBy}`" class="pi pi-external-link"></a></span></div>
+        <div v-if="item.creationDate">Created {{formatDate(item.creationDate)}} <span v-if="item.createdBy">
+          <a :href="`https://orcid.org/${item.createdBy.orcid_id}`"><img src="@/assets/ORCIDiD_icon.png" alt="ORCIDiD">{{item.createdBy.firstName}} {{item.createdBy.lastName}}</a></span>
+        </div>
+        <div v-if="item.modificationDate">Last updated {{formatDate(item.modificationDate)}} <span v-if="item.modifiedBy"> 
+          <a :href="`https://orcid.org/${item.modifiedBy.orcid_id}`"><img src="@/assets/ORCIDiD_icon.png" alt="ORCIDiD">{{item.modifiedBy.firstName}} {{item.modifiedBy.lastName}}</a></span>
+        </div>
         <div v-if="item.publishedDate">Published {{formatDate(item.publisedhDate)}}</div>
         <div v-if="item.experiment">Member of <router-link :to="{name: 'experiment', params: {urn: item.experiment.urn}}">{{item.experiment.urn}}</router-link></div>
         <div v-if="item.currentVersion">Current version {{item.currentVersion}}</div>
@@ -73,11 +79,16 @@ import {parseScores} from '@/lib/scores'
 import ScoreSetHeatmap from '@/components/ScoreSetHeatmap'
 import useFormatters from '@/composition/formatters'
 import axios from 'axios'
-
+//import Vue from "vue"
+import {oidc} from '@/lib/auth'
 export default {
   name: 'ScoreSetView',
   components: {Button, Chip, DefaultLayout, ScoreSetHeatmap},
-
+  computed: {
+    oidc: function() {
+      return oidc
+      }
+    },
   setup: () => {
     const scoresRemoteData = useRemoteData()
     return {
@@ -140,7 +151,6 @@ export default {
           if (this.item) {
             try {
               response = await axios.delete(`${config.apiBaseUrl}/scoresets/${this.item.urn}`, this.item)
-              // make sure scroesets cannot be published twice API, but also remove the button on UI side
             } catch (e) {
               response = e.response || {status: 500}
             }
@@ -280,15 +290,5 @@ export default {
   word-wrap: break-word;
 }
 
-/* custom button */
-.p-delete-button {
-  font-size: 0.875rem;
-  padding: 0.499625rem 0.65625rem;
-  background-color: crimson;
-}
-
-.p-delete-button:enabled:hover {
-  background-color: rgb(223, 73, 73);
-}
 
 </style>

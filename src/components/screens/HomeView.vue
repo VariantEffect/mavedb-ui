@@ -186,20 +186,22 @@ export default {
         this.scoresets = response.data || []
         // reset published scoresets search results when using search bar
         this.publishedScoresets = []
+        this.unpublishedScoresets = []
         // Separate the response.data into published scoreset and unpublished scoreset.
         for (let i=0, len = this.scoresets.length; i<len; i++){
-          console.log(this.scoresets[i].experiment.createdBy.orcid_id)
+          console.log(this.scoresets[i])
           if (this.scoresets[i].publishedDate == null){
             // do not add to unpublished scoresets if it is already populated
-            if (this.displayedUnplublishedScoresets == false){
-              this.unpublishedScoresets.push(this.scoresets[i])
-            }
+            this.unpublishedScoresets.push(this.scoresets[i])
+            //if (this.displayedUnplublishedScoresets == false){
+            //  this.unpublishedScoresets.push(this.scoresets[i])
+            //}
           }
           else{
             this.publishedScoresets.push(this.scoresets[i])
           }
         }
-        this.displayedUnplublishedScoresets = true
+        //this.displayedUnplublishedScoresets = true
         // Get the element with id="defaultOpen" and click on it
         document.getElementById("defaultOpen").click()
       } catch (err) {

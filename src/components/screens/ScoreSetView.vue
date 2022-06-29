@@ -59,6 +59,16 @@
           <div v-if="item.targetGene.refseq?.identifier">RefSeq: {{item.targetGene.refseq.identifier}}<span v-if="item.targetGene.refseq?.offset"> with offset {{item.targetGene.refseq.offset}}</span></div>
           <div v-if="item.targetGene.ensembl?.identifier">Ensembl: {{item.targetGene.ensembl.identifier}}</div>
         </div>
+        <div class="mave-scoreset-section-title">DOI</div>
+          <div v-if="item.doiIdentifiers.length!=0">
+            <div v-html="markdownToHtml(item.doiIdentifiers[0].identifier)" class="mave-scoreset-abstract"></div>
+          </div>
+          <div v-else>No associated DOIs</div>
+        <div class="mave-scoreset-section-title">PubMed</div>
+          <div v-if="item.pubmedIdentifiers.length!=0">
+            <div v-html="markdownToHtml(item.pubmedIdentifiers[0].identifier)" class="mave-scoreset-abstract"></div>
+          </div>
+          <div v-else>No associated PubMed</div>
       </div>
     </div>
   </DefaultLayout>

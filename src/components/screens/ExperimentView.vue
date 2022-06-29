@@ -33,9 +33,20 @@
         <div v-if="item.keywords && item.keywords.length > 0">
           <div class="mave-scoreset-section-title">Keywords</div>
           <div class="mave-scoreset-keywords">
-            <a v-for="(keyword, i) of item.keywords" :key="i" :href="`https://www.mavedb.org/search/?keywords=${keyword.text}`"><Chip :label="keyword.text" /></a>
+            <a v-for="(keyword, i) of item.keywords" :key="i" :href="`https://www.mavedb.org/search/?keywords=${keyword}`"><Chip :label="keyword"/></a>
           </div>
         </div>
+        <div class="mave-scoreset-section-title">DOI</div>
+          <div v-if="item.doiIdentifiers.length!=0">
+            <div v-html="markdownToHtml(item.doiIdentifiers[0].identifier)" class="mave-scoreset-abstract"></div>
+          </div>
+          <div v-else>No associated DOIs</div>
+        <div class="mave-scoreset-section-title">PubMed</div>
+          <div v-if="item.pubmedIdentifiers.length!=0">
+            <div v-html="markdownToHtml(item.pubmedIdentifiers[0].identifier)" class="mave-scoreset-abstract"></div>
+          </div>
+          <div v-else>No associated PubMed</div>
+
         <div v-if="item.target">
           <div class="mave-scoreset-section-title">Target</div>
           <div v-if="item.target.name">Name: {{item.target.name}}</div>
@@ -82,7 +93,7 @@ export default {
       return oidc
       }
     },
-    
+
   props: {
     itemId: {
       type: String,

@@ -22,6 +22,17 @@
         <div v-if="item.publishedDate">Published {{formatDate(item.publishedDate)}}</div>
         <div v-if="item.experiment">Member of <router-link :to="{name: 'experiment', params: {urn: item.experiment.urn}}">{{item.experiment.urn}}</router-link></div>
         <div v-if="item.currentVersion">Current version {{item.currentVersion}}</div>
+
+        <div class="mave-scoreset-section-title">Score Sets</div>
+          <div v-if="this.associatedScoresets.length!=0">
+            <ul>
+              <li v-for="scoreset in associatedScoresets" :key="scoreset.id">
+                <a :href="`https://www.mavedb.org/scoreset/${scoreset.urn}`">{{scoreset.urn}}</a>
+              </li>
+            </ul>
+          </div>
+          <div v-else>No associated score set</div>
+
         <div v-if="item.abstractText">
           <div class="mave-scoreset-section-title">Abstract</div>
           <div v-html="markdownToHtml(item.abstractText)" class="mave-scoreset-abstract"></div>
@@ -101,7 +112,16 @@ export default {
     }
   },
 
-  data: () => ({}),
+  //data: () => ({}),
+  data () {
+    return {
+      associatedScoresets: []
+    }
+  },
+
+  created(){
+    this.getAssociatedScoresets();
+  },
 
   watch: {
     itemId: {
@@ -164,6 +184,10 @@ export default {
     },
     get(...args) {
       return _.get(...args)
+    },
+    getAssociatedScoresets: async function(){
+      let response = await axios.get(`${config.apiBaseUrl}/experiments/${this.itemId}/associated_scoresets`)
+      this.associatedScoresets = response.data
     }
   }
 }

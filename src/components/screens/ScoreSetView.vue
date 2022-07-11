@@ -40,6 +40,12 @@
           <div class="mave-scoreset-section-title">Method</div>
           <div v-html="markdownToHtml(item.methodText)" class="mave-scoreset-abstract"></div>
         </div>
+        <div class="mave-scoreset-section-title">Data Usage Policy</div>
+          <div v-if="item.dataUsagePolicy">
+            <div v-html="markdownToHtml(item.dataUsagePolicy)" class="mave-scoreset-abstract"></div>
+          </div>
+          <div v-else>Not specified</div>
+        
         <div v-if="item.keywords && item.keywords.length > 0">
           <div class="mave-scoreset-section-title">Keywords</div>
           <div class="mave-scoreset-keywords">

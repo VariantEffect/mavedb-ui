@@ -32,6 +32,10 @@
         <div v-if="item.publishedDate">Published {{formatDate(item.publisedhDate)}}</div>
         <div v-if="item.experiment">Member of <router-link :to="{name: 'experiment', params: {urn: item.experiment.urn}}">{{item.experiment.urn}}</router-link></div>
         <div v-if="item.currentVersion">Current version {{item.currentVersion}}</div>
+        <div>Download files <Button class="p-button-outlined p-button-sm" @click="downloadFile('scores')">Scores</Button>&nbsp;
+        <Button class="p-button-outlined p-button-sm" @click="downloadFile('counts')">Counts</Button>&nbsp;
+        <Button class="p-button-outlined p-button-sm" @click="downloadMetadata">Metadata</Button>
+        </div>
         <div v-if="item.abstractText">
           <div class="mave-scoreset-section-title">Abstract</div>
           <div v-html="markdownToHtml(item.abstractText)" class="mave-scoreset-abstract"></div>
@@ -233,6 +237,51 @@ export default {
           formValidationErrors[path] = error.msg
         }
       }
+    },
+    //Download scores or counts
+    downloadFile: async function(download_type){
+      let response = null
+      try{
+        if (this.item && download_type=="counts"){
+          response = await axios.get(`${config.apiBaseUrl}/scoresets/${this.item.urn}/counts`)
+        }else if (this.item && download_type=="scores"){
+          response = await axios.get(`${config.apiBaseUrl}/scoresets/${this.item.urn}/scores`)
+        }
+      }catch (e){
+        response = e.response || {status: 500}
+      }
+      if (response.status == 200) {
+        const file = response.data
+        const anchor = document.createElement('a');
+        anchor.href = 'data:text/csv;charset=utf-8,' + encodeURIComponent(file);
+        anchor.target = '_blank';
+        if (download_type=="counts"){
+          anchor.download = this.item.urn + '_counts.csv';
+        }else if(download_type=="scores"){
+          anchor.download = this.item.urn + '_scores.csv';
+        }
+        anchor.click();
+      } else if (response.data && response.data.detail) {
+        const formValidationErrors = {}
+        for (const error of response.data.detail) {
+          let path = error.loc
+          if (path[0] == 'body') {
+            path = path.slice(1)
+          }
+          path = path.join('.')
+          formValidationErrors[path] = error.msg
+        }
+      }
+    },
+    downloadMetadata: async function(){
+      //convert object to Json. extraMetadata is an object.
+      var metadata = JSON.stringify(this.item.extraMetadata)
+      const anchor = document.createElement('a');
+      anchor.href = 'data:text/txt;charset=utf-8,' + encodeURIComponent(metadata);
+      anchor.target = '_blank';
+      //file default name
+      anchor.download = this.item.urn + '_metadata.txt';
+      anchor.click();
     }
   }
 }

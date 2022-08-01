@@ -39,8 +39,11 @@ export default {
   },
 
   computed: {
+    userName: function() {
+      const profile = oidc?.user?.profile
+      return profile ? [profile.given_name, profile.family_name].filter(Boolean).join(' ') : null
+    },
     menuItems: function() {
-      const self = this
       return [{
         label: 'Dashboard',
         to: '/my-data',
@@ -58,9 +61,17 @@ export default {
         to: '/create-scoreset',
         available: () => oidc.isAuthenticated
       }, {
-        label: 'Sign out',
-        command: () => self.signOut(),
-        available: () => oidc.isAuthenticated
+        label: this.userName,
+        icon:'pi pi-fw pi-user',
+        items:[{
+          label: 'Settings',
+          to: '/settings',
+          available: () => oidc.isAuthenticated
+        }, {
+          label: 'Sign out',
+          command: () => self.signOut(),
+          available: () => oidc.isAuthenticated
+        }]
       }, {
         label: 'Sign in',
         to: '/my-data',

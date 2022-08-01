@@ -1,8 +1,8 @@
 <template>
 
-  <div class="mavedb-default-layout sfs-fill-parent">
+  <div class="mavedb-default-layout mavedb-fill-parent">
     <Toolbar />
-    <div class="mavedb-main-wrapper">
+    <div :class="wrapperClass">
       <div class="mavedb-main">
         <slot />
       </div>
@@ -18,7 +18,26 @@ import '@fontsource/raleway'
 import '@/assets/app.css'
 
 export default {
-  components: {Toolbar}
+  components: {Toolbar},
+
+  props: {
+    width: {
+      type: String,
+      default: 'fixed'
+    }
+  },
+
+  computed: {
+    wrapperClass: function() {
+      switch (this.width) {
+        case 'full':
+          return 'mavedb-main-wrapper mavedb-full-width'
+        case 'fixed':
+        default:
+          return 'mavedb-main-wrapper mavedb-fixed-width'
+      }
+    }
+  }
 }
 
 </script>
@@ -31,7 +50,7 @@ export default {
   position: relative;
 }
 
-.sfs-fill-parent {
+.mavedb-fill-parent {
   position: absolute;
   top: 0;
   bottom: 0;
@@ -44,11 +63,19 @@ export default {
   flex-direction: row;
   flex: 1 1 auto;
   position: relative;
+  overflow-x: hidden;
+  overflow-y: auto;
+}
+
+.mavedb-fixed-width {
   width: 100%;
   max-width: 1200px;
   margin: 0 auto;
-  overflow-x: hidden;
-  overflow-y: auto;
+}
+
+.mavedb-full-width {
+  width: 100%;
+  margin: 0 auto;
 }
 
 .mavedb-main {

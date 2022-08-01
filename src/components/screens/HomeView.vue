@@ -1,5 +1,5 @@
 <template>
-  <AlternativeLayout>
+  <DefaultLayout>
     <h1>Welcome to MaveDB</h1>
 
     <!--<div class="flex-wrap">-->
@@ -51,51 +51,26 @@
       <!-- </div>-->
     </div>
     <!--</div> -->
-    
-
-    <div v-if="false && oidc.isAuthenticated">
-      <h3>Profile</h3>
-      <p>{{oidc.userProfile}}</p>
-      <p>{{oidc.user.id_token}}</p>
-      <p>{{validationResult}}</p>
-      <p>{{decoded}}</p>
-    </div>
-  </AlternativeLayout>
+  </DefaultLayout>
 </template>
 
 <script>
-//this is the path we will want to use: /api/v1/me/scoresets/search
-import jwt from 'jsonwebtoken'
-import AlternativeLayout from '@/components/layout/AlternativeLayout'
-import {oidc} from '@/lib/auth'
-import _ from 'lodash'
-import config from '@/config'
+
 import axios from 'axios'
 import $ from 'jquery'
+import _ from 'lodash'
 import InputText from 'primevue/inputtext'
+
+import config from '@/config'
 import FlexDataTable from '@/components/common/FlexDataTable'
-//import SelectList from '@/components/common/SelectList'
-const ORCID_JWT_PUBLIC_KEY = 'jxTIntA7YvdfnYkLSN4wk__E2zf_wbb0SV_HLHFvh6a9ENVRD1_rHK0EijlBzikb-1rgDQihJETcgBLsMoZVQqGj8fDUUuxnVHsuGav_bf41PA7E_58HXKPrB2C0cON41f7K3o9TStKpVJOSXBrRWURmNQ64qnSSryn1nCxMzXpaw7VUo409ohybbvN6ngxVy4QR2NCC7Fr0QVdtapxD7zdlwx6lEwGemuqs_oG5oDtrRuRgeOHmRps2R6gG5oc-JqVMrVRv6F9h4ja3UgxCDBQjOVT1BFPWmMHnHCsVYLqbbXkZUfvP2sO1dJiYd_zrQhi-FtNth9qrLLv3gkgtwQ'
-const key = Buffer.from(ORCID_JWT_PUBLIC_KEY, 'base64')
+import DefaultLayout from '@/components/layout/DefaultLayout'
+
 export default {
   name: 'HomeView',
-  components: {AlternativeLayout, FlexDataTable, InputText},
+  components: {DefaultLayout, FlexDataTable, InputText},
   computed: {
-    oidc: function() {
-      return oidc
-    },
-    decoded: function() {
-      return jwt.decode(oidc.user.id_token)
-    },
-    validationResult: function() {
-      console.log(key)
-      console.log(oidc.user)
-      /* console.log(jwt.verify(oidc.user.id_token, ORCID_JWT_PUBLIC_KEY, {
-        algorithms: ['RS256']
-      })) */
-      return ''
-    }
-  },  
+  },
+
   data: function() {
     const self = this
     return {

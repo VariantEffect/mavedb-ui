@@ -1,6 +1,15 @@
 import config from '@/config'
 
 const itemTypes = {
+  'my-access-key': {
+    name: 'access-key', // TODO Redundant, change this structure
+    restCollectionName: 'access-keys',
+    httpOptions: {
+      list: {
+        url: `${config.apiBaseUrl}/users/me/access-keys`
+      }
+    }
+  },
   'doi-identifier-search': {
     name: 'doi-identifier', // TODO Redundant, change this structure
     restCollectionName: 'doiIdentifiers',
@@ -11,7 +20,7 @@ const itemTypes = {
       }
     }
   },
-  experiment: {
+  'experiment': {
     name: 'experiment', // TODO Redundant, change this structure
     restCollectionName: 'experiments',
     primaryKey: 'urn'
@@ -30,7 +39,7 @@ const itemTypes = {
     name: 'reference-genome', // TODO Redundant, change this structure
     restCollectionName: 'referenceGenomes'
   },
-  scoreset: {
+  'scoreset': {
     name: 'scoreset', // TODO Redundant, change this structure
     restCollectionName: 'scoresets',
     primaryKey: 'urn'
@@ -44,6 +53,11 @@ const itemTypes = {
         url: `${config.apiBaseUrl}/targetGenes/search`
       }
     }
+  },
+  'me': {
+    name: 'me',
+    restCollectionName: 'users',
+    primaryKey: () => 'me'
   }
 }
 

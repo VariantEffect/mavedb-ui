@@ -1,6 +1,16 @@
 import axios from 'axios'
 import _ from 'lodash'
 
+function getPrimaryKeyValue(item, primaryKey) {
+  if (item == null) {
+    return null
+  }
+  if (_.isFunction(primaryKey)) {
+    return primaryKey(item)
+  }
+  return item[primaryKey]
+}
+
 export default (collectionUrl, {primaryKey = '_id'} = {}) => {
   return {
     namespaced: true,
@@ -14,8 +24,8 @@ export default (collectionUrl, {primaryKey = '_id'} = {}) => {
     mutations: {
 
       loadedItem(state, {item}) {
-        if (state.itemId != item[primaryKey]) {
-          state.itemId = item[primaryKey]
+        if (state.itemId != getPrimaryKeyValue(item, primaryKey)) {
+          state.itemId = getPrimaryKeyValue(item, primaryKey)
         }
         if (state.item !== item) {
           state.item = item
@@ -46,7 +56,7 @@ export default (collectionUrl, {primaryKey = '_id'} = {}) => {
 
       setItemId(state, {itemId}) {
         state.itemId = itemId
-        if (state.item && state.item[primaryKey] != itemId) {
+        if (state.item && getPrimaryKeyValue(state.item, primaryKey) != itemId) {
           state.item = null
           state.itemsStatus = 'NotLoaded'
         }
@@ -91,6 +101,27 @@ export default (collectionUrl, {primaryKey = '_id'} = {}) => {
         if (!['Loaded', 'Loading', 'Failed'].includes(state.itemStatus)) {
           await dispatch('loadItem', {itemId: state.itemId})
         }
+      },
+
+      async saveItem({commit}, {item}) {
+        const id = getPrimaryKeyValue(item, primaryKey)
+        console.log(id)
+        let response = await axios({
+          method: id ? 'put' : 'post',
+          url: collectionUrl + (id ? id : ''),
+          data: item
+        })
+        // TODO handle error responses
+        if (response.status == 200) {
+          let newItem = response.data
+          if (id) {
+            commit('updatedItem', {item: newItem})
+          } else {
+            //commit('insertedItem', {item: newItem})
+          }
+          return newItem
+        }
+        return null
       },
 
       async setItemId({commit, dispatch, state}, itemId) {

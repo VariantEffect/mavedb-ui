@@ -5,6 +5,7 @@ import HomeView from '@/components/screens/HomeView'
 import ScoresetEditor from '@/components/screens/ScoresetEditor'
 import ScoreSetView from '@/components/screens/ScoreSetView'
 import SearchView from '@/components/screens/SearchView'
+import SettingsScreen from '@/components/screens/SettingsScreen'
 import {oidc} from '@/lib/auth'
 
 const routes = [{
@@ -14,6 +15,9 @@ const routes = [{
 }, {
   path: '/search',
   component: SearchView
+}, {
+  path: '/settings',
+  component: SettingsScreen
 }, {
   path: '/my-data',
   component: HomeView,

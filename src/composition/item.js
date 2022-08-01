@@ -101,6 +101,7 @@ export default ({
     ensureItemLoaded: (payload) => itemStoreReady.value ? store.dispatch(`${stateNamespace.value}/ensureItemLoaded`, payload) : null,
     loadItem: (payload) => itemStoreReady.value ? store.dispatch(`${stateNamespace.value}/loadItem`, payload) : null,
     reloadItem: (payload) => itemStoreReady.value ? store.dispatch(`${stateNamespace.value}/reloadItem`, payload) : null,
+    saveItem: (payload) => itemStoreReady.value ? store.dispatch(`${stateNamespace.value}/saveItem`, payload) : null,
     setItemId: (payload) => itemStoreReady.value ? store.dispatch(`${stateNamespace.value}/setItemId`, payload) : null
   }
 }

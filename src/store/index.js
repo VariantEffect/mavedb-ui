@@ -1,6 +1,10 @@
+import axios from 'axios'
 import {createStore} from 'vuex'
-import layoutModule from './modules/layout'
-// import config from '@/config'
+
+import config from '@/config'
+import {oidc} from '@/lib/auth'
+import authModule from '@/store/modules/auth'
+import layoutModule from '@/store/modules/layout'
 
 let store = createStore({
   state: {
@@ -10,11 +14,22 @@ let store = createStore({
   actions: {
   },
   modules: {
-    layout: layoutModule,
+    auth: authModule,
+    layout: layoutModule
   }
 })
 
 export default store
+
+export async function initAuthStore() {
+  if (oidc.isAuthenticated) {
+    const response = await axios.get(`${config.apiBaseUrl}/users/me`)
+    console.log(response)
+    if (response?.data) {
+      store.dispatch('auth/loggedIn', {orcidProfile: oidc.user.profile, roles: response?.data?.roles || []})
+    }
+  }
+}
 
 export function removeStoreModule(storeModuleNamespace) {
   store.unregisterModule(storeModuleNamespace)

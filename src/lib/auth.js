@@ -3,8 +3,10 @@ import _ from 'lodash'
 import oidcClient from 'oidc-client'
 import {createOidcAuth, SignInType} from 'vue-oidc-client/vue3'
 
+import config from '@/config'
+import store from '@/store/index'
+
 // Notice the final '/'.
-// const appUrl = 'https://localhost:8082/'
 const appUrl = `${window.location.origin}/`
 
 function monkeyPatchOidcClient() {
@@ -26,11 +28,11 @@ function monkeyPatchOidcClient() {
         }).catch(err => {
             if (handle.close) {
                 Log.debug("UserManager._signinStart: Error after preparing navigator, closing navigator window");
-                handle.close();
+                handle.close()
             }
-            throw err;
-        });
-    });
+            throw err
+        })
+    })
   }
 }
 
@@ -65,21 +67,17 @@ export function installAxiosAuthHeaderInterceptor() {
   })
 }
 
-oidc.events.addUserLoaded(function(user) {
-  console.log('access token:')
-  console.log(oidc.accessToken)
-  console.log('user loaded', user)
-  console.log(user.id_token)
-  console.log(user.profile.jti) // ???
-  console.log(user.profile.family_name)
-  console.log(user.profile.given_name)
-  console.log(user.profile.sub) // ORCID iD
-  // oidc.startSilentRenew()
-  // you can interact with your Vuex store if you want to save some details
+oidc.events.addUserLoaded(async function(user) {
+  const response = await axios.get(`${config.apiBaseUrl}/users/me`)
+  if (response?.data) {
+    store.dispatch('auth/loggedIn', {orcidProfile: user.profile, roles: response?.data?.roles || []})
+  } else {
+    store.dispatch('auth/loggedOut')
+  }
 })
 
 oidc.events.addUserSignedOut(function() {
-  console.log('user signed out');
+  store.dispatch(`auth/loggedOut`)
 })
 
 /*

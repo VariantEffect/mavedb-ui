@@ -463,7 +463,7 @@ export default {
 
     //Back to Dashboard
     backDashboard: function() {
-      this.$router.replace({path: `/my-data`})
+      this.$router.replace({path: `/dashboard`})
     },
 
     ////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////

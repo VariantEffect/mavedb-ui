@@ -7,73 +7,6 @@ import config from '@/config'
 import itemTypes from '@/lib/item-types'
 import makeItemsModule from '@/store/modules/items'
 
-/**
- * This provides the same functionality as the following code that uses the Vue options API:
- *   {
- *     computed: {
- *       // TODO itemType: function(itemTypeName) {
- *         return this.itemTypes ? this.itemTypes.find(et => et.name == itemTypeName) : null
- *       },
- *       ...mapState('entity-types', {
- *         itemTypes: (state) => _.get(state, 'items')
- *       })
- *       ...mapState({
- *         detailItems(state) {
- *           return _.get(state, this.stateNamespace, 'detailItems')
- *         },
- *         editingDetailItems(state) {
- *           return _.get(state, this.stateNamespace).editingDetailItems
- *         },
- *         items(state) {
- *           return _.get(state, this.stateNamespace).items
- *         },
- *         itemsStatus(state) {
- *           return _.get(state, [this.stateNamespace, 'itemsStatus'])
- *         }
- *       })
- *     },
- *     methods: {
- *         ensureItemsStore, // TODO
- *         addItem(dispatch, payload) {
- *           return this.stateNamespace ? dispatch(this.stateNamespace + '/addItem', payload) : null
- *         },
- *         deregisterListNavigator(dispatch, payload) {
- *           return this.stateNamespace ? dispatch(this.stateNamespace + '/deregisterListNavigator', payload) : null
- *         },
- *         ensureItemsLoaded(dispatch, payload) {
- *           return this.stateNamespace ? dispatch(this.stateNamespace + '/ensureItemsLoaded', payload) : null
- *         },
- *         invalidateItems(dispatch, payload) {
- *           return this.stateNamespace ? dispatch(this.stateNamespace + '/invalidateItems', payload) : null
- *         },
- *         loadItems(dispatch, payload) {
- *           return this.stateNamespace ? dispatch(this.stateNamespace + '/beginLoadingItems', payload) : null
- *         },
- *         registerListNavigator(dispatch, payload) {
- *           return this.stateNamespace ? dispatch(this.stateNamespace + '/registerListNavigator', payload) : null
- *         },
- *         saveItem(dispatch, payload) {
- *           return this.stateNamespace ? dispatch(this.stateNamespace + '/saveItem', payload) : null
- *         },
- *         saveItems(dispatch, payload) {
- *           return this.stateNamespace ? dispatch(this.stateNamespace + '/saveItems', payload) : null
- *         },
- *         selectItems(dispatch, payload) {
- *           return this.stateNamespace ? dispatch(this.stateNamespace + '/selectItems', payload) : null
- *         },
- *         setBatchSaveAttempted(dispatch, payload) {
- *           return this.stateNamespace ? dispatch(this.stateNamespace + '/setBatchSaveAttempted', payload) : null
- *         },
- *         setInvalidItemIds(dispatch, payload) {
- *           return this.stateNamespace ? dispatch(this.stateNamespace + '/setInvalidItemIds', payload) : null
- *         },
- *         setQuery(dispatch, payload) {
- *           return this.stateNamespace ? dispatch(this.stateNamespace + '/setQuery', payload) : null
- *         }
- *     }
- *   }
- */
-
 const DEFAULT_OPTIONS = {
   detail: {
     allowMultiple: true,
@@ -99,7 +32,7 @@ export default ({
   // const itemTypes = useItemTypes()
   const store = useStore()
 
-  const itemsStoreReady = ref(false)
+  const itemsStoreReady = ref(true)
 
   const configDraftBatchId = ref(initialDraftBatchId)
   const configItemType = ref(initialItemType)
@@ -197,6 +130,9 @@ export default ({
           }
           return undefined
         })
+        if (itemType?.value?.primaryKey) {
+          options.primaryKey = itemType.value.primaryKey
+        }
         store.registerModule(stateNamespace.value,
           makeItemsModule(restCollectionUrl.value, options)
         )
@@ -229,6 +165,7 @@ export default ({
   return {
     // Data
     // itemTypeName,
+    entityType: itemType,
     itemType,
     draftBatchId,
     itemsStoreReady,

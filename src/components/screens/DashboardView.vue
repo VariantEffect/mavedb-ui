@@ -1,6 +1,6 @@
 <template>
   <DefaultLayout>
-    <h1>Welcome to MaveDB</h1>
+    <h1>My data</h1>
 
     <!--<div class="flex-wrap">-->
     <div class="tab">
@@ -66,7 +66,7 @@ import FlexDataTable from '@/components/common/FlexDataTable'
 import DefaultLayout from '@/components/layout/DefaultLayout'
 
 export default {
-  name: 'HomeView',
+  name: 'DashboardView',
   components: {DefaultLayout, FlexDataTable, InputText},
   computed: {
   },

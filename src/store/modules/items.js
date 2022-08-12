@@ -2,17 +2,11 @@ import axios from 'axios'
 import _ from 'lodash'
 import jsog from 'jsog'
 
-function sortItems(items, state) {
-  if (items && _.get(state, 'filter.itemIds') && !state.order) {
-    return _.filter(state.filter.itemIds.map((id) => items.find((item) => item._id == id)), Boolean)
-  }
-  return items
-}
-
 // TODO Allow collectionUrl=false as a way of indicating that no data should be fetched.
 
 export default (collectionUrl, options = {}) => {
   options = _.merge({
+    primaryKey: '_id',
     httpOptions: {},
     requestBody: null,
     filter: null,
@@ -32,6 +26,23 @@ export default (collectionUrl, options = {}) => {
       pageSize: 5000
     }
   }, options)
+
+  function getPrimaryKeyValue(item) {
+    if (item == null) {
+      return null
+    }
+    if (_.isFunction(options.primaryKey)) {
+      return options.primaryKey(item)
+    }
+    return item[options.primaryKey]
+  }
+  
+  function sortItems(items, state) {
+    if (items && _.get(state, 'filter.itemIds') && !state.order) {
+      return _.filter(state.filter.itemIds.map((id) => items.find((item) => getPrimaryKeyValue(item) == id)), Boolean)
+    }
+    return items
+  }
 
   return {
     namespaced: true,
@@ -82,17 +93,17 @@ export default (collectionUrl, options = {}) => {
         if (['Loaded', 'LoadingMore'].includes(state.itemsStatus)) {
           // Assume that each item ID only occurs once in the list.
 
-          var index = state.items.findIndex(x => x._id == itemId)
+          var index = state.items.findIndex(x => getPrimaryKeyValue(x) == itemId)
           if (index >= 0) {
             state.items.splice(index, 1)
           }
 
-          index = state.selectedItems.findIndex(x => x._id == itemId)
+          index = state.selectedItems.findIndex(x => getPrimaryKeyValue(x) == itemId)
           if (index >= 0) {
             state.selectedItems.splice(index, 1)
           }
 
-          index = state.detailItems.findIndex(x => x._id == itemId)
+          index = state.detailItems.findIndex(x => getPrimaryKeyValue(x) == itemId)
           if (index >= 0) {
             state.detailItems.splice(index, 1)
             if (state.detailItems.length == 0) {
@@ -113,7 +124,7 @@ export default (collectionUrl, options = {}) => {
             state.items.push(frozenItem)
           }
 
-          if (options.detail.autoFromSingleInsertion && ((state.detailItems.length == 0) || ((state.detailItems.length == 1) && (state.detailItems[0]._id == null)))) {
+          if (options.detail.autoFromSingleInsertion && ((state.detailItems.length == 0) || ((state.detailItems.length == 1) && (getPrimaryKeyValue(state.detailItems[0]) == null)))) {
             state.detailItems = [frozenItem]
             state.editingDetailItems = options.detail.autoEdit
           }
@@ -125,18 +136,18 @@ export default (collectionUrl, options = {}) => {
         if (['Loaded', 'LoadingMore'].includes(state.itemsStatus)) {
           const frozenItem = Object.freeze(item)
 
-          var index = state.items.findIndex(x => x._id == item._id)
+          var index = state.items.findIndex(x => getPrimaryKeyValue(x) == getPrimaryKeyValue(item))
           // Assume that each item ID only occurs once in the list.
           if (index >= 0) {
             state.items[index] = frozenItem
           }
 
-          index = state.selectedItems.findIndex(x => x._id == item._id)
+          index = state.selectedItems.findIndex(x => getPrimaryKeyValue(x) == getPrimaryKeyValue(item))
           if (index >= 0) {
             state.selectedItems[index] = frozenItem
           }
 
-          index = state.detailItems.findIndex(x => x._id == item._id)
+          index = state.detailItems.findIndex(x => getPrimaryKeyValue(x) == getPrimaryKeyValue(item))
           if (index >= 0) {
             state.detailItems[index] = frozenItem
           }
@@ -147,18 +158,18 @@ export default (collectionUrl, options = {}) => {
         if (['Loaded', 'LoadingMore'].includes(state.itemsStatus)) {
           const frozenItem = Object.freeze(item)
 
-          var index = state.items.findIndex(x => x._id == item._id)
+          var index = state.items.findIndex(x => getPrimaryKeyValue(x) == getPrimaryKeyValue(item))
           // Assume that each item ID only occurs once in the list.
           if (index >= 0) {
             state.items[index] = frozenItem
           }
 
-          index = state.selectedItems.findIndex(x => x._id == item._id)
+          index = state.selectedItems.findIndex(x => getPrimaryKeyValue(x) == getPrimaryKeyValue(item))
           if (index >= 0) {
             state.selectedItems[index] = frozenItem
           }
 
-          index = state.detailItems.findIndex(x => x._id == item._id)
+          index = state.detailItems.findIndex(x => getPrimaryKeyValue(x) == getPrimaryKeyValue(item))
           if (index >= 0) {
             state.detailItems[index] = frozenItem
           }
@@ -205,7 +216,9 @@ export default (collectionUrl, options = {}) => {
       },
 
       editNewItem(state, itemDefaults = {}) {
-        state.detailItems = [_.omit(_.merge({}, itemDefaults), '_id')]
+        const detailItem = _.merge({}, itemDefaults)
+        // TODO What hapens in the case where primaryKey is not a string, so that we include the PK in the detail item?
+        state.detailItems = _.isString(options.primaryKey) ? [_.omit(detailItem, '_id')] : [detailItem]
         state.editingDetailItems = true
       },
 
@@ -217,8 +230,8 @@ export default (collectionUrl, options = {}) => {
       },
 
       setInvalidItemIds(state, invalidItemIds) {
-        if (!_.isEqual(invalidItemIds, state.invalidItems.map(x => x._id))) {
-          state.invalidItems = invalidItemIds.map(id => state.items.find(i => i._id == id))
+        if (!_.isEqual(invalidItemIds, state.invalidItems.map(x => getPrimaryKeyValue(x)))) {
+          state.invalidItems = invalidItemIds.map(id => state.items.find(i => getPrimaryKeyValue(i) == id))
         }
       },
 
@@ -245,7 +258,7 @@ export default (collectionUrl, options = {}) => {
       },
 
       setSelection(state, {selectedItemIds, edit}) {
-        if (!_.isEqual(selectedItemIds, state.selectedItems.map(x => x._id))) {
+        if (!_.isEqual(selectedItemIds, state.selectedItems.map(x => getPrimaryKeyValue(x)))) {
           // Check whether the transition is allowed. If an editor is open, we cannot change the detail view.
           let allowed = true
           if (state.editors.length > 0) {
@@ -254,10 +267,10 @@ export default (collectionUrl, options = {}) => {
             } else if (options.detail.autoFromMultipleSelection && options.detail.allowMultiple && (state.selectedItems.length > 1)) {
               allowed = false
             } else if (options.detail.constrainToSelection) {
-              const selectedItemIds = state.selectedItems.map(x => x._id)
-              const detailItemIds = state.detailItems.map(x => x._id)
+              const selectedItemIds = state.selectedItems.map(x => getPrimaryKeyValue(x))
+              const detailItemIds = state.detailItems.map(x => getPrimaryKeyValue(x))
               const newDetailItemIds = detailItemIds.filter(id => selectedItemIds.includes(id))
-              if (state.detailItems.filter(x => !newDetailItemIds.includes(x._id)).length > 0) {
+              if (state.detailItems.filter(x => !newDetailItemIds.includes(getPrimaryKeyValue(x))).length > 0) {
                 allowed = false
               }
             }
@@ -267,23 +280,23 @@ export default (collectionUrl, options = {}) => {
             return
           }
 
-          state.selectedItems = selectedItemIds.map(id => state.items.find(i => i._id == id))
+          state.selectedItems = selectedItemIds.map((id) => state.items.find(i => getPrimaryKeyValue(i) == id))
 
           if (options.detail.autoFromSingleSelection && (state.selectedItems.length == 1)) {
             const selectedItem = state.selectedItems[0]
-            if ((state.detailItems.length != 1) || (state.detailItems[0]._id != selectedItem._id)) {
+            if ((state.detailItems.length != 1) || (getPrimaryKeyValue(state.detailItems[0]) != getPrimaryKeyValue(selectedItem))) {
               state.detailItems = [selectedItem]
             }
           } else if (options.detail.autoFromMultipleSelection && options.detail.allowMultiple && (state.selectedItems.length > 1)) {
-            if (!_.isEqual(state.selectedItems.map(x => x._id), state.detailItems.map(x => x._id))) {
+            if (!_.isEqual(state.selectedItems.map(x => getPrimaryKeyValue(x)), state.detailItems.map(x => getPrimaryKeyValue(x)))) {
               state.detailItems = _.clone(state.selectedItems) // TODO Will this cause any problem involving the array's reactive proxy?
             }
           } else if (options.detail.constrainToSelection) {
-            const selectedItemIds = state.selectedItems.map(x => x._id)
-            const detailItemIds = state.detailItems.map(x => x._id)
+            const selectedItemIds = state.selectedItems.map(x => getPrimaryKeyValue(x))
+            const detailItemIds = state.detailItems.map(x => getPrimaryKeyValue(x))
             const newDetailItemIds = detailItemIds.filter(id => selectedItemIds.includes(id))
             if (!_.isEqual(newDetailItemIds, detailItemIds)) {
-              state.detailItems = state.detailItems.filter(x => newDetailItemIds.includes(x._id))
+              state.detailItems = state.detailItems.filter(x => newDetailItemIds.includes(getPrimaryKeyValue(x)))
             }
           }
 
@@ -297,8 +310,8 @@ export default (collectionUrl, options = {}) => {
 
       showSelectionAsDetail(state, {edit}) {
         if ((state.selectedItems.length <= 1) || options.detail.allowMultiple) {
-          const selectedItemIds = state.selectedItems.map(x => x._id)
-          const detailItemIds = state.detailItems.map(x => x._id)
+          const selectedItemIds = state.selectedItems.map(x => getPrimaryKeyValue(x))
+          const detailItemIds = state.detailItems.map(x => getPrimaryKeyValue(x))
           if (!_.isEqual(selectedItemIds, detailItemIds)) {
             state.detailItems = _.clone(state.selectedItems) // TODO Will this cause any problem involving the array's reactive proxy?
           }
@@ -379,7 +392,9 @@ export default (collectionUrl, options = {}) => {
         }
         const filterQueryParts = []
         if (_.get(state, 'filter.itemIds')) {
-          filterQueryParts.push({l: {path: '_id'}, r: {constant: state.filter.itemIds}, operator: 'in'})
+          if (_.isString(options.primaryKey)) { // TODO And if not, we can't support this type of filter.
+            filterQueryParts.push({l: {path: options.primaryKey}, r: {constant: state.filter.itemIds}, operator: 'in'})
+          }
         }
         if (_.get(state, 'filter.query') != null) {
           filterQueryParts.push(_.get(state, 'filter.query'))
@@ -525,7 +540,7 @@ export default (collectionUrl, options = {}) => {
           // TODO handle error responses
           if (response.status == 200) {
             let item = response.data
-            if (item._id) {
+            if (getPrimaryKeyValue(item)) {
               commit('refreshedItem', {item})
             }
           }
@@ -533,15 +548,16 @@ export default (collectionUrl, options = {}) => {
       },
 
       async saveItem({commit}, {item}) {
+        const id = getPrimaryKeyValue(item)
         let response = await axios({
-          method: item._id ? 'put' : 'post',
-          url: collectionUrl + (item._id ? ('/' + item._id) : ''),
+          method: id ? 'put' : 'post',
+          url: collectionUrl + (id ? ('/' + id) : ''),
           data: item
         })
         // TODO handle error responses
         if (response.status == 200) {
           let newItem = response.data
-          if (item._id) {
+          if (id) {
             commit('updatedItem', {item: newItem})
           } else {
             commit('insertedItem', {item: newItem})
@@ -552,7 +568,7 @@ export default (collectionUrl, options = {}) => {
       },
 
       async saveItems({commit}, {items}) {
-        const createdItemIndices = _.range(0, items.length).filter((i) => items[i]._id == null)
+        const createdItemIndices = _.range(0, items.length).filter((i) => getPrimaryKeyValue(items[i]) == null)
         const updatedItemIndices = _.difference(_.range(0, items.length), createdItemIndices)
         let response = await axios({
           method: 'put',
@@ -600,7 +616,7 @@ export default (collectionUrl, options = {}) => {
       },
 
       deselectItems({commit, state}, {itemIds}) {
-        let newSelectedItemIds = state.selectedItems.map(x => x._id).filter(id => !itemIds.includes(id))
+        let newSelectedItemIds = state.selectedItems.map(x => getPrimaryKeyValue(x)).filter(id => !itemIds.includes(id))
         commit('setSelection', {selectedItemIds: newSelectedItemIds})
       },
 
@@ -631,7 +647,7 @@ export default (collectionUrl, options = {}) => {
       },
 
       selectItems({commit, state}, {itemIds, addToSelection, edit}) {
-        const oldSelectedItemIds = state.selectedItems.map(x => x._id)
+        const oldSelectedItemIds = state.selectedItems.map(x => getPrimaryKeyValue(x))
         let newSelectedItemIds = itemIds
         if (addToSelection) {
           let addedItemIds = _.difference(itemIds, oldSelectedItemIds)

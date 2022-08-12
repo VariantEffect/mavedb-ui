@@ -670,7 +670,6 @@ export default {
     // Currently there is some special handling here, though, so we will leave that for a later refactoring.
 
     save: async function() {
-      console.log("Save")
       const editedFields = {
         experimentUrn: this.experimentUrn,  // TODO was _urn
         title: this.title,
@@ -828,7 +827,7 @@ export default {
 
     //Back to Dashboard
     backDashboard: function() {
-      this.$router.replace({path: `/my-data`})
+      this.$router.replace({path: `/dashboard`})
     },
 
     ////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////

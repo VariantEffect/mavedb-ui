@@ -19,15 +19,15 @@
         <div v-if="item.shortDescription" class="mave-scoreset-description">{{item.shortDescription}}</div>
         <div v-if="item.urn" class="mave-scoreset-urn">{{item.urn}}</div>
       </div>
-      <div v-if="scores" class="mave-scoreset-heatmap-pane">
+      <div v-if="showHeatmap && scores" class="mave-scoreset-heatmap-pane">
         <ScoreSetHeatmap :scoreSet="item" :scores="scores" />
       </div>
       <div class="mave-1000px-col">
         <div v-if="item.creationDate">Created {{formatDate(item.creationDate)}} <span v-if="item.createdBy">
-          <a :href="`https://orcid.org/${item.createdBy.orcid_id}`"><img src="@/assets/ORCIDiD_icon.png" alt="ORCIDiD">{{item.createdBy.firstName}} {{item.createdBy.lastName}}</a></span>
+          <a :href="`https://orcid.org/${item.createdBy.orcidId}`"><img src="@/assets/ORCIDiD_icon.png" alt="ORCIDiD">{{item.createdBy.firstName}} {{item.createdBy.lastName}}</a></span>
         </div>
         <div v-if="item.modificationDate">Last updated {{formatDate(item.modificationDate)}} <span v-if="item.modifiedBy"> 
-          <a :href="`https://orcid.org/${item.modifiedBy.orcid_id}`"><img src="@/assets/ORCIDiD_icon.png" alt="ORCIDiD">{{item.modifiedBy.firstName}} {{item.modifiedBy.lastName}}</a></span>
+          <a :href="`https://orcid.org/${item.modifiedBy.orcidId}`"><img src="@/assets/ORCIDiD_icon.png" alt="ORCIDiD">{{item.modifiedBy.firstName}} {{item.modifiedBy.lastName}}</a></span>
         </div>
         <div v-if="item.publishedDate">Published {{formatDate(item.publisedhDate)}}</div>
         <div v-if="item.experiment">Member of <router-link :to="{name: 'experiment', params: {urn: item.experiment.urn}}">{{item.experiment.urn}}</router-link></div>
@@ -86,29 +86,25 @@
 
 <script>
 
+import axios from 'axios'
 import _ from 'lodash'
 import marked from 'marked'
 import Button from 'primevue/button'
 import Chip from 'primevue/chip'
 
+import ScoreSetHeatmap from '@/components/ScoreSetHeatmap'
 import DefaultLayout from '@/components/layout/DefaultLayout'
+import useFormatters from '@/composition/formatters'
 import useItem from '@/composition/item'
 import useRemoteData from '@/composition/remote-data'
 import config from '@/config'
-import {parseScores} from '@/lib/scores'
-import ScoreSetHeatmap from '@/components/ScoreSetHeatmap'
-import useFormatters from '@/composition/formatters'
-import axios from 'axios'
-//import Vue from "vue"
 import {oidc} from '@/lib/auth'
+import {parseScores} from '@/lib/scores'
+
 export default {
   name: 'ScoreSetView',
   components: {Button, Chip, DefaultLayout, ScoreSetHeatmap},
-  computed: {
-    oidc: function() {
-      return oidc
-      }
-    },
+
   setup: () => {
     const scoresRemoteData = useRemoteData()
     return {
@@ -129,8 +125,15 @@ export default {
   },
 
   data: () => ({
-    scores: null
+    scores: null,
+    showHeatmap: false
   }),
+
+  computed: {
+    oidc: function() {
+      return oidc
+    }
+  },
 
   watch: {
     itemId: {
@@ -354,6 +357,5 @@ export default {
   font-size: 87.5%;
   word-wrap: break-word;
 }
-
 
 </style>

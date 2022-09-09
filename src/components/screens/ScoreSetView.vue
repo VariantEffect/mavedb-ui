@@ -12,7 +12,6 @@
             </div>
             <div v-if="item.publishedDate" class="mave-screen-title-controls">
               <Button class="p-button-sm" @click="editItem">Edit</Button>
-              <Button class="p-button-sm p-button-danger" @click="deleteItem">Delete</Button>
             </div>
           </div>
         </div>
@@ -69,6 +68,7 @@
           <div v-if="item.targetGene.refseq?.identifier">RefSeq: {{item.targetGene.refseq.identifier}}<span v-if="item.targetGene.refseq?.offset"> with offset {{item.targetGene.refseq.offset}}</span></div>
           <div v-if="item.targetGene.ensembl?.identifier">Ensembl: {{item.targetGene.ensembl.identifier}}</div>
         </div>
+
         <div class="mave-scoreset-section-title">DOI</div>
           <div v-if="item.doiIdentifiers.length!=0">
             <div v-html="markdownToHtml(item.doiIdentifiers[0].identifier)" class="mave-scoreset-abstract"></div>
@@ -79,6 +79,48 @@
             <div v-html="markdownToHtml(item.pubmedIdentifiers[0].identifier)" class="mave-scoreset-abstract"></div>
           </div>
           <div v-else>No associated PubMed</div>
+        
+        <div class="mave-scoreset-section-title">Variants</div>
+        <div v-if="item.numVariants > 10">Below is a sample of the first 10 variants. 
+            Please download the file on the top page if you want to read the whole variants list.</div>
+        <br/>
+        <TabView style="height:585px">
+          <TabPanel header="Scores">
+            <!--Default table-layout is fixed meaning the cell widths do not depend on their content. 
+            If you require cells to scale based on their contents set autoLayout property to true. 
+            Note that Scrollable and/or Resizable tables do not support auto layout due to technical limitations.
+            Scrollable, column can be frozen but columns and rows don't match so that add width;
+            Autolayout, column can't be frozen but columns and rows can match-->
+            <!--<div style="overflow-y: scroll; overflow-x: scroll; height:585px;">-->
+              <DataTable id="table" :value="scoresTable" :scrollable="true" showGridlines="true" > <!--autoLayout="true" :scrollable="true"  scrollHeight="500px"-->
+                <Column v-for="column of scoreColumns.slice(0,3)" :field="column" :header="column" :key="column" style="width:180px" headerStyle="background-color:#A1D8C8; font-weight: bold" frozen>
+                  <template #body="scoresTable" style="width:180px">{{scoresTable.data[column]}}</template>
+                </Column>
+                <Column v-for="column of scoreColumns.slice(3,-1)" :field="column" :header="column" :key="column" style="width:190px" headerStyle="background-color:#A1D8C8; font-weight: bold">
+                  <template #body="scoresTable" style="width:190px">{{scoresTable.data[column]}}</template>
+                </Column>
+              </DataTable>
+            <!--</div>-->
+          </TabPanel>
+          <TabPanel header="Counts">
+              <DataTable :value="countsTable" :scrollable="true" showGridlines="true">
+                <Column v-for="column of countColumns.slice(0,3)" :field="column" :header="column" :key="column" style="width:180px" headerStyle="background-color:#A1D8C8; font-weight: bold" frozen>
+                  <template #body="countsTable" style="width:180px">{{countsTable.data[column]}}</template>
+                </Column>
+                <Column v-for="column of countColumns.slice(3,-1)" :field="column" :header="column" :key="column" style="width:190px" headerStyle="background-color:#A1D8C8; font-weight: bold">
+                  <template #body="countsTable" style="width:190px">{{countsTable.data[column]}}</template>
+                </Column>
+              </DataTable>
+            <!--<table>
+              <tr>
+                <th v-for="column in countColumns" :key="column">{{column}}</th>
+              </tr>
+              <tr v-for="row in countsTable" :key="row">
+                <td v-for="column in countColumns" :key="column">{{row[column]}}</td>
+              </tr>
+            </table>-->
+          </TabPanel>
+        </TabView>
       </div>
     </div>
   </DefaultLayout>
@@ -101,14 +143,29 @@ import useFormatters from '@/composition/formatters'
 import axios from 'axios'
 //import Vue from "vue"
 import {oidc} from '@/lib/auth'
+
+import TabView from 'primevue/tabview'
+import TabPanel from 'primevue/tabpanel'
+
+import DataTable from 'primevue/datatable';
+import Column from 'primevue/column';
+
 export default {
   name: 'ScoreSetView',
-  components: {Button, Chip, DefaultLayout, ScoreSetHeatmap},
+  components: {Button, Chip, DefaultLayout, ScoreSetHeatmap, TabView, TabPanel, DataTable, Column},
   computed: {
     oidc: function() {
       return oidc
-      }
+      },
+    scoreColumns: function() {
+      const fixedColumns = ['hgvs_nt', 'hgvs_splice','hgvs_pro']
+      return [...fixedColumns, ...this.item?.datasetColumns?.score_columns || []]
     },
+    countColumns: function(){
+      const fixedColumns = ['hgvs_nt', 'hgvs_splice','hgvs_pro']
+      return [...fixedColumns, ...this.item?.datasetColumns?.count_columns || []]
+    }
+  },
   setup: () => {
     const scoresRemoteData = useRemoteData()
     return {
@@ -129,7 +186,9 @@ export default {
   },
 
   data: () => ({
-    scores: null
+    scores: null,
+    scoresTable: [],
+    countsTable: []
   }),
 
   watch: {
@@ -147,6 +206,12 @@ export default {
         }
       },
       immediate: true
+    },
+    item:{
+      handler: function(){
+        this.loadTableScores()
+        this.loadTableCounts()
+      }
     },
     scoresData: {
       handler: function(newValue) {
@@ -282,6 +347,32 @@ export default {
       //file default name
       anchor.download = this.item.urn + '_metadata.txt';
       anchor.click();
+    },
+    loadTableScores: async function(){
+      if (this.item){
+        const response = await axios.get(`${config.apiBaseUrl}/scoresets/${this.item.urn}/scores`)
+        if (response.data) {
+          if (this.item.numVariants <= 10){
+            this.scoresTable = parseScores(response.data)
+          }else{
+            this.scoresTable = parseScores(response.data).slice(0, 10)
+          }
+        }
+      }
+    },
+    loadTableCounts: async function(){
+      if (this.item){
+        const response = await axios.get(`${config.apiBaseUrl}/scoresets/${this.item.urn}/counts`)
+        console.log(response)
+        if (response.data) {
+          if (this.item.numVariants <= 10){
+            this.countsTable = parseScores(response.data)
+          }else{
+            this.countsTable = parseScores(response.data).slice(0, 10)
+            console.log(parseScores(response.data).slice(0, 10))
+          }
+        }
+      }
     }
   }
 }
@@ -354,6 +445,5 @@ export default {
   font-size: 87.5%;
   word-wrap: break-word;
 }
-
 
 </style>

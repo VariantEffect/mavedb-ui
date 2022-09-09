@@ -1,16 +1,8 @@
 <template>
   <DefaultLayout>
     <h1>Welcome to MaveDB</h1>
-
-    <!--<div class="flex-wrap">-->
-    <div class="tab">
-      <button class="tablinks" @click="openScoreset(event, 'Published')" id="defaultOpen">Published Scoreset</button>
-      <button class="tablinks" @click="openScoreset(event, 'Unpublished')">Unpublished Scoreset</button>
-    </div>
-    
-    <!-- Tab content -->
-    <div id="Published" class="tabcontent">
-      <!--<div id="column1">-->
+    <TabView>
+      <TabPanel header="Published">
         <div class="mavedb-search-view">
           <div class="mavedb-search-header" style="display: none;">
             <h1>Search MaveDB Experiments and Score Sets</h1>
@@ -31,10 +23,8 @@
               />
             </div>
         </div> 
-      <!-- </div>-->
-    </div>
-    <div id="Unpublished" class="tabcontent"> 
-      <!--<div id="column1">-->
+      </TabPanel>
+      <TabPanel header="Unpublished">
         <div class="mavedb-search-view">
           <h2 class="mave-scoreset-section-title">Unpublished Scoresets</h2>
           <div class="mavedb-search-view">
@@ -48,9 +38,8 @@
             </div>
           </div>
         </div>
-      <!-- </div>-->
-    </div>
-    <!--</div> -->
+      </TabPanel>
+    </TabView>
   </DefaultLayout>
 </template>
 
@@ -65,9 +54,12 @@ import config from '@/config'
 import FlexDataTable from '@/components/common/FlexDataTable'
 import DefaultLayout from '@/components/layout/DefaultLayout'
 
+import TabView from 'primevue/tabview'
+import TabPanel from 'primevue/tabpanel'
+
 export default {
   name: 'HomeView',
-  components: {DefaultLayout, FlexDataTable, InputText},
+  components: {DefaultLayout, FlexDataTable, InputText, TabView, TabPanel},
   computed: {
   },
 
@@ -168,40 +160,14 @@ export default {
           if (this.scoresets[i].publishedDate == null){
             // do not add to unpublished scoresets if it is already populated
             this.unpublishedScoresets.push(this.scoresets[i])
-            //if (this.displayedUnplublishedScoresets == false){
-            //  this.unpublishedScoresets.push(this.scoresets[i])
-            //}
           }
           else{
             this.publishedScoresets.push(this.scoresets[i])
           }
         }
-        //this.displayedUnplublishedScoresets = true
-        // Get the element with id="defaultOpen" and click on it
-        document.getElementById("defaultOpen").click()
       } catch (err) {
         console.log(`Error while loading search results")`, err)
       }
-    },
-    openScoreset: function(evt, scoresetType) {
-      // Declare all variables
-      var i, tabcontent, tablinks;
-
-      // Get all elements with class="tabcontent" and hide them
-      tabcontent = document.getElementsByClassName("tabcontent");
-      for (i = 0; i < tabcontent.length; i++) {
-        tabcontent[i].style.display = "none";
-      }
-
-      // Get all elements with class="tablinks" and remove the class "active"
-      tablinks = document.getElementsByClassName("tablinks");
-      for (i = 0; i < tablinks.length; i++) {
-        tablinks[i].className = tablinks[i].className.replace(" active", "");
-      }
-
-      // Show the current tab, and add an "active" class to the button that opened the tab
-      document.getElementById(scoresetType).style.display = "block";
-      evt.currentTarget.className += " active";
     }
   },
 }
@@ -294,39 +260,4 @@ export default {
   font-style: normal;
 }
 
-/* Style the tab */
-.tab {
-  overflow: hidden;
-  border: 1px solid #ccc;
-  background-color: #f1f1f1;
-}
-
-/* Style the buttons that are used to open the tab content */
-.tab button {
-  background-color: inherit;
-  float: left;
-  border: none;
-  outline: none;
-  cursor: pointer;
-  padding: 14px 16px;
-  transition: 0.3s;
-}
-
-/* Change background color of buttons on hover */
-.tab button:hover {
-  background-color: #ddd;
-}
-
-/* Create an active/current tablink class */
-.tab button.active {
-  background-color: #ccc;
-}
-
-/* Style the tab content */
-.tabcontent {
-  display: none;
-  padding: 6px 12px;
-  border: 1px solid #ccc;
-  border-top: none;
-}
 </style>

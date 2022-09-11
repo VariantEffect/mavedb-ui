@@ -421,10 +421,14 @@ export default (collectionUrl, options = {}) => {
           queryParams.offset = 0
           queryParams.limit = limit
         }
-        const queryString = _.map(queryParams, (value, key) => `${encodeURIComponent(key)}=${encodeURIComponent(value)}`).join('&')
+        const queryStr = _.map(queryParams, (value, key) => `${encodeURIComponent(key)}=${encodeURIComponent(value)}`).join('&')
         const httpOptions = _.get(state, 'httpOptions.list', {})
         const collectionListUrl = httpOptions.url || collectionUrl
-        const url = _.isEmpty(queryString) ? collectionListUrl : `${collectionListUrl}?${queryString}`
+        const [collectionListUrlPath, collectionListUrlQuery] = collectionListUrl.split('?', 2)
+        const fullQueryStr = [collectionListUrlQuery, queryStr]
+            .filter((x) => x != null)
+            .join('&')
+        const url = _.isEmpty(fullQueryStr) ? collectionListUrlPath : `${collectionListUrlPath}?${fullQueryStr}`
         try {
           let response = await axios({
             method: httpOptions.method || 'get',

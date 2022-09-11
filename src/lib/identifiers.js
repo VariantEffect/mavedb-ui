@@ -44,3 +44,18 @@ export function validatePubmedId(s) {
   }
   return false
 }
+ 
+export function normalizeIdentifier(dbName, s) {
+  if (s) {
+    s = s.trim()
+  }
+  return s
+}
+
+export function validateIdentifier(dbName, s) {
+  s = normalizeIdentifier(dbName, s)
+  if (s) {
+    return true
+  }
+  return false
+}

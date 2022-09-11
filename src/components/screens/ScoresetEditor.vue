@@ -193,6 +193,38 @@
                   </span>
                   <span v-if="validationErrors['targetGene.category']" class="mave-field-error">{{validationErrors['targetGene.category']}}</span>
                 </div>
+                <div v-for="dbName of externalGeneDatabases" class="field field-columns" :key="dbName">
+                  <div class="field-column">
+                    <span class="p-float-label">
+                      <AutoComplete
+                          :ref="`${dbName.toLowerCase()}IdentifierInput`"
+                          v-model="targetGene.externalIdentifiers[dbName].identifier"
+                          :id="$scopedId(`input-${dbName.toLowerCase()}Identifier`)"
+                          field="identifier"
+                          :suggestions="targetGeneIdentifierSuggestionsList[dbName]"
+                          @complete="searchTargetGeneIdentifiers(dbName, $event)"
+                          @keyup.enter="acceptNewTargetGeneIdentifier(dbName)"
+                          @keyup.escape="clearTargetGeneIdentifierSearch(dbName)"
+                      />
+                      <label :for="$scopedId(`input-${dbName.toLowerCase()}Identifier`)">{{dbName}} identifier</label>
+                    </span>
+                    <span v-if="validationErrors[`targetGene.externalIdentifiers.${dbName}.identifier.identifier`]" class="mave-field-error">{{validationErrors[`targetGene.externalIdentifiers.${dbName}.identifier.identifier`]}}</span>
+                  </div>
+                  <div class="field-column">
+                    <span class="p-float-label">
+                      <InputNumber
+                          v-model="targetGene.externalIdentifiers[dbName].offset" 
+                          :id="$scopedId(`input-${dbName.toLowerCase()}Offset`)"
+                          buttonLayout="stacked"
+                          min="0"
+                          showButtons
+                          suffix=" bp"
+                      />
+                      <label :for="$scopedId(`input-${dbName.toLowerCase()}Offset`)">Offset</label>
+                    </span>
+                    <span v-if="validationErrors[`targetGene.externalIdentifiers.${dbName}.offset`]" class="mave-field-error">{{validationErrors[`targetGene.externalIdentifiers.${dbName}.offset`]}}</span>
+                  </div>
+                </div>
                 <div class="field">
                   <span class="p-float-label">
                     <Dropdown
@@ -321,6 +353,7 @@ import Card from 'primevue/card'
 import Chips from 'primevue/chips'
 import Dropdown from 'primevue/dropdown'
 import FileUpload from 'primevue/fileupload'
+import InputNumber from 'primevue/inputnumber'
 import InputText from 'primevue/inputtext'
 import ProgressSpinner from 'primevue/progressspinner'
 import SelectButton from 'primevue/selectbutton'
@@ -328,18 +361,20 @@ import TabPanel from 'primevue/tabpanel'
 import TabView from 'primevue/tabview'
 import Textarea from 'primevue/textarea'
 import {useForm} from 'vee-validate'
+import {ref} from 'vue'
 
 import DefaultLayout from '@/components/layout/DefaultLayout'
 import useItem from '@/composition/item'
 import useItems from '@/composition/items'
 import config from '@/config'
-import {normalizeDoi, normalizePubmedId, validateDoi, validatePubmedId} from '@/lib/identifiers'
+import {normalizeDoi, normalizeIdentifier, normalizePubmedId, validateDoi, validateIdentifier, validatePubmedId} from '@/lib/identifiers'
 import useFormatters from '@/composition/formatters'
-//import func from 'vue-editor-bridge'
+
+const externalGeneDatabases = ['UniProt', 'Ensembl', 'RefSeq']
 
 export default {
   name: 'ScoresetEditor',
-  components: {AutoComplete, Button, Card, Chips, DefaultLayout, Dropdown, FileUpload, InputText, ProgressSpinner, SelectButton, TabPanel, TabView, Textarea},
+  components: {AutoComplete, Button, Card, Chips, DefaultLayout, Dropdown, FileUpload, InputNumber, InputText, ProgressSpinner, SelectButton, TabPanel, TabView, Textarea},
 
   setup: () => {
     const editableExperiments = useItems({
@@ -352,6 +387,10 @@ export default {
     })
     const doiIdentifierSuggestions = useItems({itemTypeName: 'doi-identifier-search'})
     const pubmedIdentifierSuggestions = useItems({itemTypeName: 'pubmed-identifier-search'})
+    const targetGeneIdentifierSuggestions = {}
+    for (const dbName of externalGeneDatabases) {
+      targetGeneIdentifierSuggestions[dbName] = useItems({itemTypeName: `${dbName.toLowerCase()}-identifier-search`})
+    }
     const referenceGenomes = useItems({itemTypeName: 'reference-genome'})
     const targetGeneSuggestions = useItems({itemTypeName: 'target-gene-search'})
     const {errors: validationErrors, handleSubmit, setErrors: setValidationErrors} = useForm()
@@ -365,6 +404,15 @@ export default {
       setPubmedIdentifierSearch: (text) => pubmedIdentifierSuggestions.setRequestBody({text}),
       targetGeneSuggestions: targetGeneSuggestions.items,
       setTargetGeneSearch: (text) => targetGeneSuggestions.setRequestBody({text}),
+      targetGeneIdentifierSuggestions: ref({
+        ..._.mapValues(targetGeneIdentifierSuggestions, (itemsModule) => itemsModule.items)
+      }),
+      setTargetGeneIdentifierSearch: _.mapValues(targetGeneIdentifierSuggestions, (itemsModule) =>
+        (text) => {
+          itemsModule.setRequestBody({text})
+          itemsModule.ensureItemsLoaded()
+        }
+      ),
       referenceGenomes: referenceGenomes.items,
       handleSubmit,
       setValidationErrors,
@@ -397,7 +445,10 @@ export default {
       wtSequence: {
         sequenceType: null,
         sequence: null
-      }
+      },
+      externalIdentifiers: _.fromPairs(
+        externalGeneDatabases.map((dbName) => [dbName, {identifier: null, offset: null}])
+      )
     },
     referenceGenome: null,
     extraMetadata: {},
@@ -422,10 +473,19 @@ export default {
       countsFile: null,
       extraMetadataFile: null,
       scoresFile: null
-    }
+    },
+    externalGeneDatabases
   }),
 
   computed: {
+    targetGeneIdentifierSuggestionsList: function() {
+      return _.fromPairs(
+        externalGeneDatabases.map((dbName) => {
+          const suggestions = this.targetGeneIdentifierSuggestions[dbName]
+          return [dbName, (!suggestions || suggestions.length == 0) ? [{}] : suggestions]
+        })
+      )
+    },
     doiIdentifierSuggestionsList: function() {
       // The PrimeVue AutoComplete doesn't seem to like it if we set the suggestion list to [].
       // This causes the drop-down to stop appearing when we later populate the list.
@@ -444,10 +504,40 @@ export default {
   },
 
   watch: {
+    'targetGene.externalIdentifiers': {
+      deep: true,
+      handler: function(newValue) {
+        // If an identifier has been set, set the offset to 0 by default.
+        for (const dbName of externalGeneDatabases) {
+          if (newValue[dbName]?.identifier?.identifier != null && newValue[dbName]?.offset == null) {
+            this.targetGene.externalIdentifiers[dbName].offset = 0
+          }
+        }
+      }
+    },
     existingTargetGene: function() {
       if (_.isObject(this.existingTargetGene)) {
         // _.cloneDeep is needed because the target gene has been frozen.
-        this.targetGene = _.cloneDeep(this.existingTargetGene)
+        // this.targetGene = _.cloneDeep(this.existingTargetGene)
+        const targetGene = _.cloneDeep(this.existingTargetGene)
+        this.targetGene = _.merge({
+          name: null,
+          category: null,
+          type: null,
+          wtSequence: {
+            sequenceType: null,
+            sequence: null
+          }
+        }, targetGene)
+        this.targetGene.externalIdentifiers = {}
+        for (const dbName of externalGeneDatabases) {
+          this.targetGene.externalIdentifiers[dbName] = (targetGene.externalIdentifiers || [])
+              .find(({identifier}) => identifier?.dbName == dbName) || {
+                identifier: null,
+                offset: null
+              }
+        }
+
         const referenceGenomeId = _.get(this.targetGene, 'referenceMaps.0.genome.id')
         this.referenceGenome = this.referenceGenomes.find((rg) => rg.id == referenceGenomeId)
       }
@@ -481,7 +571,7 @@ export default {
 
         // Clear the text input.
         // TODO This depends on PrimeVue internals more than I'd like:
-        input.$refs.input.value = ''
+        // input.$refs.input.value = ''
       }
     },
 
@@ -491,7 +581,7 @@ export default {
 
       // Clear the text input.
       // TODO This depends on PrimeVue internals more than I'd like:
-      input.$refs.input.value = ''
+      // input.$refs.input.value = ''
     },
 
     searchDoiIdentifiers: function(event) {
@@ -528,6 +618,41 @@ export default {
       const searchText = (event.query || '').trim()
       if (searchText.length > 0) {
         this.setPubmedIdentifierSearch(event.query)
+      }
+    },
+
+    acceptNewTargetGeneIdentifier: function(dbName) {
+      const input = this.$refs[`${dbName.toLowerCase()}IdentifierInput`][0]
+      const searchText = (input.inputTextValue || '').trim()
+      console.log(searchText)
+      if (searchText == '') {
+        this.targetGene.externalIdentifiers[dbName].identifier = null
+      } else  if (validateIdentifier(dbName, searchText)) {
+        const identifier = normalizeIdentifier(dbName, searchText)
+        this.targetGene.externalIdentifiers[dbName].identifier = {identifier}
+        console.log(this.targetGene.externalIdentifiers)
+        input.inputTextValue = null
+
+        // Clear the text input.
+        // TODO This depends on PrimeVue internals more than I'd like:
+        input.$refs.input.value = ''
+      }
+    },
+
+    clearTargetGeneIdentifierSearch: function(dbName) {
+      const input = this.$refs[`${dbName.toLowerCase()}IdentifierInput`][0]
+      this.targetGene.externalIdentifiers[dbName].identifier = null
+      input.inputTextValue = null
+
+      // Clear the text input.
+      // TODO This depends on PrimeVue internals more than I'd like:
+      input.$refs.input.value = ''
+    },
+
+    searchTargetGeneIdentifiers: function(dbName, event) {
+      const searchText = (event.query || '').trim()
+      if (searchText.length > 0) {
+        this.setTargetGeneIdentifierSearch[dbName](searchText)
       }
     },
 
@@ -615,10 +740,8 @@ export default {
     ////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 
     resetForm: function() {
-      console.log(this.item)
       if (this.item) {
         this.experimentUrn = this.item.experiment.urn
-        console.log(this.experimentUrn)
         this.title = this.item.title
         this.shortDescription = this.item.shortDescription
         this.abstractText = this.item.abstractText
@@ -627,6 +750,7 @@ export default {
         this.doiIdentifiers = this.item.doiIdentifiers
         this.pubmedIdentifiers = this.item.pubmedIdentifiers
         this.dataUsagePolicy = this.item.dataUsagePolicy
+
         this.targetGene = _.merge({
           name: null,
           category: null,
@@ -636,6 +760,14 @@ export default {
             sequence: null
           }
         }, this.item.targetGene)
+        this.targetGene.externalIdentifiers = {}
+        for (const dbName of externalGeneDatabases) {
+          this.targetGene.externalIdentifiers[dbName] =  (this.item.targetGene.externalIdentifiers || [])
+              .find(({identifier}) => identifier?.dbName == dbName) || {
+                identifier: null,
+                offset: null
+              }
+        }
         this.referenceGenome = this.item.referenceGenome
         this.extraMetadata = this.item.extraMetadata
       } else {
@@ -655,6 +787,13 @@ export default {
           wtSequence: {
             sequenceType: null,
             sequence: null
+          }
+        }
+        this.targetGene.externalIdentifiers = {}
+        for (const dbName of externalGeneDatabases) {
+          this.targetGene.externalIdentifiers[dbName] =  {
+            identifier: null,
+            offset: null
           }
         }
         this.referenceGenome = null
@@ -692,10 +831,25 @@ export default {
           wtSequence: {
             sequenceType: _.get(this.targetGene, 'wtSequence.sequenceType'),
             sequence: _.get(this.targetGene, 'wtSequence.sequence')
-          }
+          },
+          externalIdentifiers: _.keys(this.targetGene.externalIdentifiers).map((dbName) =>{
+            const identifierOffset = this.targetGene.externalIdentifiers[dbName]
+            if (identifierOffset.identifier != null || (identifierOffset != null && identifierOffset.offset > 0)) {
+              return {
+                offset: identifierOffset.offset,
+                identifier: {
+                  identifier: identifierOffset.identifier?.identifier,
+                  dbName
+                }
+              }
+            } else {
+              return null
+            }
+          }).filter(Boolean)
         }
       }
       const editedItem = _.merge({}, this.item || {}, editedFields)
+      console.log(editedItem)
 
       this.progressVisible = true
       let response = null
@@ -710,20 +864,15 @@ export default {
         response = e.response || {status: 500}
       }
       this.progressVisible = false
-      console.log(response.status)
       if (response.status == 200) {
         const savedItem = response.data
         this.setValidationErrors({})
         if (this.item) {
-          console.log('Updated item')
-          //if (this.item.private == true && this.$refs.scoresFileUpload.files.length == 1) {
           if (this.$refs.scoresFileUpload?.files?.length == 1) {
             await this.uploadData(savedItem)
           } else {
-            // this.reloadItem()
             this.$router.replace({path: `/scoresets/${this.item.urn}`}) 
             this.$toast.add({severity:'success', summary: 'Your changes were saved.', life: 3000})
-            //this.$router.replace({path: `/scoresets/${this.scoreset.urn}/edit`})
           }
         } else {
           console.log('Created item')
@@ -736,6 +885,17 @@ export default {
           if (path[0] == 'body') {
             path = path.slice(1)
           }
+
+          // Map errors on indexed external gene identifiers to inputs named for the identifier's database.
+          if (_.isEqual(_.slice(path, 0, 2), ['targetGene', 'externalIdentifiers'])) {
+            const identifierIndex = path[2]
+            const identifierOffset = editedFields.targetGene.externalIdentifiers[identifierIndex]
+            console.log(identifierOffset)
+            if (identifierOffset?.identifier?.dbName) {
+              path.splice(2, 1, identifierOffset.identifier.dbName)
+            }
+          }
+
           path = path.join('.')
           formValidationErrors[path] = error.msg
         }
@@ -753,8 +913,6 @@ export default {
         if (this.$refs.countsFileUpload.files.length == 1) {
           formData.append('counts_file', this.$refs.countsFileUpload.files[0])
         }
-        console.log("TESTING")
-        console.log(formData)
         this.progressVisible = true
         let response
         try {
@@ -850,6 +1008,21 @@ export default {
 <style scoped src="../../assets/forms.css"></style>
 
 <style scoped>
+
+.field-columns {
+  display: flex;
+  flex-direction: row
+}
+
+.field-column {
+  position: relative;
+  flex: 1 1 auto;
+  margin-left: 10px;
+}
+
+.field-column:first-child {
+  margin-left: 0;
+}
 
 /* Form fields */
 

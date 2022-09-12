@@ -22,10 +22,11 @@
         </div>
         <div class="col-12 md:col-6">
           <Card>
+            <template #title>Parent experiment and context</template>
             <template #content>
               <div v-if="itemStatus != 'NotLoaded'">
-                <label>Experiment</label><br>
-                {{experimentUrn}}
+                Experiment:
+                <router-link :to="{name: 'experiment', params: {urn: item.experiment.urn}}">{{item.experiment.title}}</router-link>
               </div>
               <div v-else>
                 <div class="field">
@@ -42,6 +43,36 @@
                   <span v-if="validationErrors.experimentUrn" class="mave-field-error">{{validationErrors.experimentUrn}}</span>
                 </div>
               </div>
+              <div v-if="itemStatus != 'NotLoaded' && metaAnalysisSourceScoresets.length > 0">
+                Meta-analysis for:<br />
+                <div v-for="metaAnalysisSourceScoreset of metaAnalysisSourceScoresets" :key="metaAnalysisSourceScoreset">
+                  <router-link :to="{name: 'scoreset', params: {urn: metaAnalysisSourceScoreset.urn}}">{{metaAnalysisSourceScoreset.title}}</router-link>
+                </div>
+              </div>
+              <div v-if="itemStatus == 'NotLoaded'" class="field">
+                <span class="p-float-label">
+                  <AutoComplete
+                      ref="metaAnalysisSourceScoresetsInput"
+                      v-model="metaAnalysisSourceScoresets"
+                      :id="$scopedId('input-metaAnalysisSourceScoresets')"
+                      field="title"
+                      :multiple="true"
+                      :suggestions="metaAnalysisSourceScoresetSuggestionsList"
+                      @complete="searchMetaAnalysisSourceScoresets"
+                  >
+                    <template #item="slotProps">
+                      {{slotProps.item.urn}}: {{slotProps.item.title}}
+                    </template>
+                  </AutoComplete>
+                  <label :for="$scopedId('input-metaAnalysisSourceScoresets')">Meta-analysis for</label>
+                </span>
+                <span v-if="validationErrors.metaAnalysisSourceScoresetUrns" class="mave-field-error">{{validationErrors.metaAnalysisSourceScoresetUrns}}</span>
+              </div>
+            </template>
+          </Card>
+          <Card>
+            <template #title>Score set information</template>
+            <template #content>
               <div class="field">
                 <span class="p-float-label">
                   <InputText v-model="title" :id="$scopedId('input-title')" />
@@ -159,8 +190,9 @@
           </Card>
         </div>
         <div class="col-12 md:col-6">
-          <div v-if="itemStatus == 'NotLoaded' || this.item.private==true">
+          <div v-if="itemStatus == 'NotLoaded' || this.item.private">
             <Card>
+              <template #title>Target gene</template>
               <template #content>
                 <div class="field">
                   <span class="p-float-label">
@@ -283,6 +315,7 @@
               </template>
             </Card>
             <Card>
+              <template #title>Variant scores</template>
               <template #content>
                 <div v-if="item">
                   <div>{{formatInt(item.numVariants)}} variants are included in this score set.</div>
@@ -431,6 +464,7 @@ export default {
     // Form fields
     experimentUrn: null,
     title: null,
+    metaAnalysisSourceScoresets: [],
     shortDescription: null,
     abstractText: null,
     methodText: null,
@@ -474,7 +508,8 @@ export default {
       extraMetadataFile: null,
       scoresFile: null
     },
-    externalGeneDatabases
+    externalGeneDatabases,
+    metaAnalysisSourceScoresetSuggestions: []
   }),
 
   computed: {
@@ -482,24 +517,21 @@ export default {
       return _.fromPairs(
         externalGeneDatabases.map((dbName) => {
           const suggestions = this.targetGeneIdentifierSuggestions[dbName]
-          return [dbName, (!suggestions || suggestions.length == 0) ? [{}] : suggestions]
+          return [dbName, this.suggestionsForAutocomplete(suggestions)]
         })
       )
     },
     doiIdentifierSuggestionsList: function() {
-      // The PrimeVue AutoComplete doesn't seem to like it if we set the suggestion list to [].
-      // This causes the drop-down to stop appearing when we later populate the list.
-      return this.doiIdentifierSuggestions || [{}]
+      return this.suggestionsForAutocomplete(this.doiIdentifierSuggestions)
+    },
+    metaAnalysisSourceScoresetSuggestionsList: function() {
+      return this.suggestionsForAutocomplete(this.metaAnalysisSourceScoresetSuggestions)
     },
     pubmedIdentifierSuggestionsList: function() {
-      // The PrimeVue AutoComplete doesn't seem to like it if we set the suggestion list to [].
-      // This causes the drop-down to stop appearing when we later populate the list.
-      return this.pubmedIdentifierSuggestions || [{}]
+      return this.suggestionsForAutocomplete(this.pubmedIdentifierSuggestions)
     },
     targetGeneSuggestionsList: function() {
-      // The PrimeVue AutoComplete doesn't seem to like it if we set the suggestion list to [].
-      // This causes the drop-down to stop appearing when we later populate the list.
-      return this.targetGeneSuggestions || [{}]
+      return this.suggestionsForAutocomplete(this.targetGeneSuggestions)
     }
   },
 
@@ -556,6 +588,43 @@ export default {
   },
 
   methods: {
+
+    suggestionsForAutocomplete: function(suggestions) {
+      // The PrimeVue AutoComplete doesn't seem to like it if we set the suggestion list to [].
+      // This causes the drop-down to stop appearing when we later populate the list.
+      if (!suggestions || suggestions.length == 0) {
+        return [{}]
+      }
+      return suggestions
+    },
+
+    searchMetaAnalysisSourceScoresets: async function(event) {
+      const searchText = (event.query || '').trim()
+      if (searchText.length > 0) {
+        this.metaAnalysisSourceScoresetSuggestions = await this.searchScoresets(searchText)
+      }
+    },
+
+    searchScoresets: async function(searchText) {
+      try {
+        const response = await axios.post(
+          `${config.apiBaseUrl}/scoresets/search`,
+          {
+            text: searchText || null
+          },
+          {
+            headers: {
+              accept: 'application/json'
+            }
+          }
+        )
+        // TODO catch errors in response
+        return response.data || []
+      } catch (err) {
+        console.log(`Error while loading search results")`, err)
+        return []
+      }
+    },
 
     ////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
     // Form fields
@@ -742,6 +811,7 @@ export default {
     resetForm: function() {
       if (this.item) {
         this.experimentUrn = this.item.experiment.urn
+        this.metaAnalysisSourceScoresets = this.item.metaAnalysisSourceScoresets
         this.title = this.item.title
         this.shortDescription = this.item.shortDescription
         this.abstractText = this.item.abstractText
@@ -772,6 +842,7 @@ export default {
         this.extraMetadata = this.item.extraMetadata
       } else {
         this.experimentUrn = null
+        this.metaAnalysisSourceScoresets = []
         this.title = null
         this.shortDescription = null
         this.abstractText = null
@@ -810,7 +881,7 @@ export default {
 
     save: async function() {
       const editedFields = {
-        experimentUrn: this.experimentUrn,  // TODO was _urn
+        experimentUrn: this.experimentUrn,
         title: this.title,
         shortDescription: this.shortDescription,
         abstractText: this.abstractText,
@@ -819,7 +890,6 @@ export default {
         doiIdentifiers: this.doiIdentifiers.map((identifier) => _.pick(identifier, 'identifier')),
         pubmedIdentifiers: this.pubmedIdentifiers.map((identifier) => _.pick(identifier, 'identifier')),
         dataUsagePolicy: this.dataUsagePolicy,
-        //datasetColumns: {},
         extraMetadata: {},
         targetGene: {
           name: _.get(this.targetGene, 'name'),
@@ -848,8 +918,10 @@ export default {
           }).filter(Boolean)
         }
       }
+      if (!this.item) {
+        editedFields.metaAnalysisSourceScoresetUrns = (this.metaAnalysisSourceScoresets || []).map((s) => s.urn)
+      }
       const editedItem = _.merge({}, this.item || {}, editedFields)
-      console.log(editedItem)
 
       this.progressVisible = true
       let response = null
@@ -857,7 +929,6 @@ export default {
         if (this.item) {
           response = await axios.put(`${config.apiBaseUrl}/scoresets/${this.item.urn}`, editedItem)
         } else {
-          console.log("createItem here")
           response = await axios.post(`${config.apiBaseUrl}/scoresets/`, editedItem)
         }
       } catch (e) {
@@ -1064,6 +1135,10 @@ export default {
   font-weight: normal;
   color: #3f51B5;
   margin-bottom: 0;
+}
+
+.mave-scoreset-editor:deep(.p-card-content) {
+  padding: 0;
 }
 
 /* Progress indicator */

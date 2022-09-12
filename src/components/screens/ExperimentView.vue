@@ -27,7 +27,7 @@
           <div v-if="this.associatedScoresets.length!=0">
             <ul>
               <li v-for="scoreset in associatedScoresets" :key="scoreset.id">
-                <a :href="`https://www.mavedb.org/scoreset/${scoreset.urn}`">{{scoreset.urn}}</a>
+                <router-link :to="{name: 'scoreset', params: {urn: scoreset.urn}}">{{scoreset.title}}</router-link>
               </li>
             </ul>
           </div>
@@ -44,7 +44,8 @@
         <div v-if="item.keywords && item.keywords.length > 0">
           <div class="mave-scoreset-section-title">Keywords</div>
           <div class="mave-scoreset-keywords">
-            <a v-for="(keyword, i) of item.keywords" :key="i" :href="`https://www.mavedb.org/search/?keywords=${keyword}`"><Chip :label="keyword"/></a>
+            <Chip :label="keyword"/>
+            <!--<a v-for="(keyword, i) of item.keywords" :key="i" :href="`https://www.mavedb.org/search/?keywords=${keyword}`"><Chip :label="keyword"/></a>-->
           </div>
         </div>
         <div class="mave-scoreset-section-title">DOI</div>

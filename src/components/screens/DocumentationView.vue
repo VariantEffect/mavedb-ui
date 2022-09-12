@@ -6,6 +6,7 @@
         <li><a href="/docs/mavedb/">MaveDB documentation homepage</a></li>
         <ul>
             <li>View project on <a href="https://github.com/VariantEffect/MaveDB">GitHub</a></li>
+            <li><a :href="apiDocumentationUrl">API documentation</a></li>
         </ul>
         <li><a href="/docs/mavehgvs/">MAVE-HGVS documentation homepage</a></li>
         <ul>
@@ -23,11 +24,17 @@
 
 <script>
 
+import config from '@/config'
 import DefaultLayout from '@/components/layout/DefaultLayout'
 
 export default {
   name: 'DocumentationView',
-  components: {DefaultLayout}
+  components: {DefaultLayout},
+  computed: {
+    apiDocumentationUrl: function() {
+      return new URL('/docs', config.apiBaseUrl)
+    }
+  }
 }
 
 </script>

@@ -54,6 +54,7 @@
                       v-model="supersededScoreset"
                       :id="$scopedId('input-supersededScoreset')"
                       field="title"
+                      :forceSelection="true"
                       :suggestions="supersededScoresetSuggestionsList"
                       @complete="searchSupersededScoresets"
                   >
@@ -78,6 +79,7 @@
                       v-model="metaAnalysisSourceScoresets"
                       :id="$scopedId('input-metaAnalysisSourceScoresets')"
                       field="title"
+                      :forceSelection="true"
                       :multiple="true"
                       :suggestions="metaAnalysisSourceScoresetSuggestionsList"
                       @complete="searchMetaAnalysisSourceScoresets"
@@ -256,6 +258,7 @@
                           :id="$scopedId(`input-${dbName.toLowerCase()}Identifier`)"
                           field="identifier"
                           :suggestions="targetGeneIdentifierSuggestionsList[dbName]"
+                          @blur="acceptNewTargetGeneIdentifier(dbName)"
                           @complete="searchTargetGeneIdentifiers(dbName, $event)"
                           @keyup.enter="acceptNewTargetGeneIdentifier(dbName)"
                           @keyup.escape="clearTargetGeneIdentifierSearch(dbName)"
@@ -728,18 +731,22 @@ export default {
     acceptNewTargetGeneIdentifier: function(dbName) {
       const input = this.$refs[`${dbName.toLowerCase()}IdentifierInput`][0]
       const searchText = (input.inputTextValue || '').trim()
-      console.log(searchText)
-      if (searchText == '') {
-        this.targetGene.externalIdentifiers[dbName].identifier = null
-      } else  if (validateIdentifier(dbName, searchText)) {
-        const identifier = normalizeIdentifier(dbName, searchText)
-        this.targetGene.externalIdentifiers[dbName].identifier = {identifier}
-        console.log(this.targetGene.externalIdentifiers)
-        input.inputTextValue = null
+  
+      // Only accept the current search text if we haven't set an identifier. When the user starts typing, the current
+      // identifier is cleared.
+      const currentIdentifier = this.targetGene.externalIdentifiers[dbName]?.identifier
+      if (!currentIdentifier) {
+        if (searchText == '') {
+          this.targetGene.externalIdentifiers[dbName].identifier = null
+        } else  if (validateIdentifier(dbName, searchText)) {
+          const identifier = normalizeIdentifier(dbName, searchText)
+          this.targetGene.externalIdentifiers[dbName].identifier = {identifier}
+          input.inputTextValue = null
 
-        // Clear the text input.
-        // TODO This depends on PrimeVue internals more than I'd like:
-        input.$refs.input.value = ''
+          // Clear the text input.
+          // TODO This depends on PrimeVue internals more than I'd like:
+          input.$refs.input.value = ''
+        }
       }
     },
 
@@ -756,6 +763,7 @@ export default {
     searchTargetGeneIdentifiers: function(dbName, event) {
       const searchText = (event.query || '').trim()
       if (searchText.length > 0) {
+        this.targetGene.externalIdentifiers[dbName].identifier = null
         this.setTargetGeneIdentifierSearch[dbName](searchText)
       }
     },
@@ -807,7 +815,6 @@ export default {
                   'delimiter': '|'
                 })*/
                 const fastaData = fastaParser.parse(text)
-                console.log(fastaData)
                 if (fastaData.length == 0) {
                   this.targetGene.wtSequence.sequence = null
                   this.clientSideValidationErrors['targetGene.wtSequence.sequence'] = 'The FASTA file contains no sequences.'
@@ -999,7 +1006,6 @@ export default {
           if (_.isEqual(_.slice(path, 0, 2), ['targetGene', 'externalIdentifiers'])) {
             const identifierIndex = path[2]
             const identifierOffset = editedFields.targetGene.externalIdentifiers[identifierIndex]
-            console.log(identifierOffset)
             if (identifierOffset?.identifier?.dbName) {
               path.splice(2, 1, identifierOffset.identifier.dbName)
             }

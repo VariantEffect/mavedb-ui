@@ -182,9 +182,8 @@ export default {
               // display toast message here
               //const deletedItem = response.data
               console.log('Deleted item')
-              this.$router.replace({path: `/my-data`})
+              this.$router.replace({path: `/dashboard`})
               this.$toast.add({severity:'success', summary: 'Your scoreset was successfully deleted.', life: 3000})
-              
             } else if (response.data && response.data.detail) {
               const formValidationErrors = {}
               for (const error of response.data.detail) {

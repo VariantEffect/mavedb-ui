@@ -157,7 +157,7 @@ export default {
             if (response.status == 200) {
               // display toast message here
               console.log('Deleted item')
-              this.$router.replace({path: `/my-data`})
+              this.$router.replace({path: `/dashboard`})
               this.$toast.add({severity:'success', summary: 'Your experiment was successfully deleted.', life: 3000})
               
             } else if (response.data && response.data.detail) {

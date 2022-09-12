@@ -43,6 +43,28 @@
                   <span v-if="validationErrors.experimentUrn" class="mave-field-error">{{validationErrors.experimentUrn}}</span>
                 </div>
               </div>
+              <div v-if="itemStatus != 'NotLoaded' && supersedesScoreset">
+                Supersedes:
+                <router-link :to="{name: 'scoreset', params: {urn: supersedesScoreset.urn}}">{{supersedesScoreset.title}}</router-link>
+              </div>
+              <div v-if="itemStatus == 'NotLoaded'" class="field">
+                <span class="p-float-label">
+                  <AutoComplete
+                      ref="supersededScoresetInput"
+                      v-model="supersededScoreset"
+                      :id="$scopedId('input-supersededScoreset')"
+                      field="title"
+                      :suggestions="supersededScoresetSuggestionsList"
+                      @complete="searchSupersededScoresets"
+                  >
+                    <template #item="slotProps">
+                      {{slotProps.item.urn}}: {{slotProps.item.title}}
+                    </template>
+                  </AutoComplete>
+                  <label :for="$scopedId('input-supersededScoreset')">Supersedes</label>
+                </span>
+                <span v-if="validationErrors.supersededScoresetUrn" class="mave-field-error">{{validationErrors.supersededScoresetUrn}}</span>
+              </div>
               <div v-if="itemStatus != 'NotLoaded' && metaAnalysisSourceScoresets.length > 0">
                 Meta-analysis for:<br />
                 <div v-for="metaAnalysisSourceScoreset of metaAnalysisSourceScoresets" :key="metaAnalysisSourceScoreset">
@@ -465,6 +487,7 @@ export default {
     experimentUrn: null,
     title: null,
     metaAnalysisSourceScoresets: [],
+    supersededScoreset: null,
     shortDescription: null,
     abstractText: null,
     methodText: null,
@@ -509,7 +532,8 @@ export default {
       scoresFile: null
     },
     externalGeneDatabases,
-    metaAnalysisSourceScoresetSuggestions: []
+    metaAnalysisSourceScoresetSuggestions: [],
+    supersededScoresetSuggestions: []
   }),
 
   computed: {
@@ -529,6 +553,9 @@ export default {
     },
     pubmedIdentifierSuggestionsList: function() {
       return this.suggestionsForAutocomplete(this.pubmedIdentifierSuggestions)
+    },
+    supersededScoresetSuggestionsList: function() {
+      return this.suggestionsForAutocomplete(this.supersededScoresetSuggestions)
     },
     targetGeneSuggestionsList: function() {
       return this.suggestionsForAutocomplete(this.targetGeneSuggestions)
@@ -605,10 +632,18 @@ export default {
       }
     },
 
-    searchScoresets: async function(searchText) {
+    searchSupersededScoresets: async function(event) {
+      const searchText = (event.query || '').trim()
+      if (searchText.length > 0) {
+        this.supersededScoresetSuggestions = await this.searchScoresets(searchText, true)
+      }
+    },
+
+    searchScoresets: async function(searchText, mine=false) {
+      const url = mine ? `${config.apiBaseUrl}/me/scoresets/search` : `${config.apiBaseUrl}/scoresets/search`
       try {
         const response = await axios.post(
-          `${config.apiBaseUrl}/scoresets/search`,
+          url,
           {
             text: searchText || null
           },
@@ -812,6 +847,7 @@ export default {
       if (this.item) {
         this.experimentUrn = this.item.experiment.urn
         this.metaAnalysisSourceScoresets = this.item.metaAnalysisSourceScoresets
+        this.supersededScoreset = this.item.supersededScoreset
         this.title = this.item.title
         this.shortDescription = this.item.shortDescription
         this.abstractText = this.item.abstractText
@@ -843,6 +879,7 @@ export default {
       } else {
         this.experimentUrn = null
         this.metaAnalysisSourceScoresets = []
+        this.supersededScoreset = null
         this.title = null
         this.shortDescription = null
         this.abstractText = null
@@ -919,6 +956,7 @@ export default {
         }
       }
       if (!this.item) {
+        editedFields.supersededScoresetUrn = this.supersededScoreset ? this.supersededScoreset.urn : null
         editedFields.metaAnalysisSourceScoresetUrns = (this.metaAnalysisSourceScoresets || []).map((s) => s.urn)
       }
       const editedItem = _.merge({}, this.item || {}, editedFields)

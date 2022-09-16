@@ -92,25 +92,29 @@
             Scrollable, column can be frozen but columns and rows don't match so that add width;
             Autolayout, column can't be frozen but columns and rows can match-->
             <!--<div style="overflow-y: scroll; overflow-x: scroll; height:585px;">-->
-              <DataTable id="table" :value="scoresTable" :scrollable="true" showGridlines="true" > <!--autoLayout="true" :scrollable="true"  scrollHeight="500px"-->
-                <Column v-for="column of scoreColumns.slice(0,3)" :field="column" :header="column" :key="column" style="width:180px" headerStyle="background-color:#A1D8C8; font-weight: bold" frozen>
-                  <template #body="scoresTable" style="width:180px">{{scoresTable.data[column]}}</template>
+              <DataTable :value="scoresTable" :scrollable="true" showGridlines="true" > <!--autoLayout="true" :scrollable="true"  scrollHeight="500px"-->
+                <Column v-for="column of scoreColumns.slice(0,3)" :field="column" :header="column" :key="column" 
+                style="overflow:hidden" headerStyle="background-color:#A1D8C8; font-weight: bold" :frozen="columnIsAllNa(scoresTable, column)"><!--bodyStyle="text-align:right"-->
+                  <template #body="scoresTable" >{{scoresTable.data[column]}}</template>
                 </Column>
-                <Column v-for="column of scoreColumns.slice(3,-1)" :field="column" :header="column" :key="column" style="width:190px" headerStyle="background-color:#A1D8C8; font-weight: bold">
-                  <template #body="scoresTable" style="width:190px">{{scoresTable.data[column]}}</template>
+                <Column v-for="column of scoreColumns.slice(3,-1)" :field="column" :header="column" :key="column" 
+                style="overflow:hidden" headerStyle="background-color:#A1D8C8; font-weight: bold" bodyStyle="text-align:right">
+                  <template #body="scoresTable">{{convertToThreeDecimal(scoresTable.data[column])}}</template>
                 </Column>
               </DataTable>
             <!--</div>-->
           </TabPanel>
           <TabPanel header="Counts">
-              <DataTable :value="countsTable" :scrollable="true" showGridlines="true">
-                <Column v-for="column of countColumns.slice(0,3)" :field="column" :header="column" :key="column" style="width:180px" headerStyle="background-color:#A1D8C8; font-weight: bold" frozen>
-                  <template #body="countsTable" style="width:180px">{{countsTable.data[column]}}</template>
-                </Column>
-                <Column v-for="column of countColumns.slice(3,-1)" :field="column" :header="column" :key="column" style="width:190px" headerStyle="background-color:#A1D8C8; font-weight: bold">
-                  <template #body="countsTable" style="width:190px">{{countsTable.data[column]}}</template>
-                </Column>
-              </DataTable>
+            <DataTable :value="countsTable" :scrollable="true" showGridlines="true">
+              <Column v-for="column of countColumns.slice(0,3)" :field="column" :header="column" :key="column" 
+              style="overflow:hidden" headerStyle="background-color:#A1D8C8; font-weight: bold" :frozen="columnIsAllNa(countsTable, column)">
+                <template #body="countsTable">{{countsTable.data[column]}}</template> <!--:style="{overflow: 'hidden'}"-->
+              </Column>
+              <Column v-for="column of countColumns.slice(3,-1)" :field="column" :header="column" :key="column" 
+              style="overflow:hidden" headerStyle="background-color:#A1D8C8; font-weight: bold" bodyStyle="text-align:right">
+                <template #body="countsTable">{{convertToThreeDecimal(countsTable.data[column])}}</template> 
+              </Column>
+            </DataTable>
             <!--<table>
               <tr>
                 <th v-for="column in countColumns" :key="column">{{column}}</th>
@@ -369,10 +373,27 @@ export default {
             this.countsTable = parseScores(response.data)
           }else{
             this.countsTable = parseScores(response.data).slice(0, 10)
-            console.log(parseScores(response.data).slice(0, 10))
           }
         }
       }
+    },
+    convertToThreeDecimal: function(value){
+      return parseFloat(value).toFixed(3)
+    },
+    columnIsAllNa: function(tableData, column){
+      let sliceData = tableData.slice(0,10)
+      let frozen = true
+      let count = 0
+      for(let i=0; i<sliceData.length; i++){
+        //NA is a string
+        if(sliceData[i][column]=="NA"){
+          count+=1
+        }
+      }
+      if(count==10){
+        frozen = false
+      }
+      return frozen
     }
   }
 }

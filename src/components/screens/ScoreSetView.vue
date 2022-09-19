@@ -90,31 +90,35 @@
             If you require cells to scale based on their contents set autoLayout property to true. 
             Note that Scrollable and/or Resizable tables do not support auto layout due to technical limitations.
             Scrollable, column can be frozen but columns and rows don't match so that add width;
-            Autolayout, column can't be frozen but columns and rows can match-->
-            <!--<div style="overflow-y: scroll; overflow-x: scroll; height:585px;">-->
-              <DataTable :value="scoresTable" :scrollable="true" showGridlines="true" > <!--autoLayout="true" :scrollable="true"  scrollHeight="500px"-->
+            Autolayout, column can't be frozen but columns and rows can match
+            We can keep the frozen codes first. Maybe we can figure the bug in the future-->
+            <!---->
+            <div style="overflow-y: scroll; overflow-x: scroll; height:600px;">
+              <DataTable :value="scoresTable" showGridlines="true" stripedRows="true">
                 <Column v-for="column of scoreColumns.slice(0,3)" :field="column" :header="column" :key="column" 
-                style="overflow:hidden" headerStyle="background-color:#A1D8C8; font-weight: bold" :frozen="columnIsAllNa(scoresTable, column)"><!--bodyStyle="text-align:right"-->
-                  <template #body="scoresTable" >{{scoresTable.data[column]}}</template>
-                </Column>
-                <Column v-for="column of scoreColumns.slice(3,-1)" :field="column" :header="column" :key="column" 
-                style="overflow:hidden" headerStyle="background-color:#A1D8C8; font-weight: bold" bodyStyle="text-align:right">
-                  <template #body="scoresTable">{{convertToThreeDecimal(scoresTable.data[column])}}</template>
-                </Column>
+                style="overflow:hidden" headerStyle="background-color:#A1D8C8; font-weight: bold" ><!--:frozen="columnIsAllNa(scoresTable, column)"-->
+                <template #body="scoresTable" >{{scoresTable.data[column]}}</template>
+              </Column>
+              <Column v-for="column of scoreColumns.slice(3,-1)" :field="column" :header="column" :key="column" 
+                style="overflow:hidden" headerStyle="background-color:#A1D8C8; font-weight: bold">
+                <template #body="scoresTable">{{convertToThreeDecimal(scoresTable.data[column])}}</template>
+              </Column>
               </DataTable>
-            <!--</div>-->
+            </div>
           </TabPanel>
           <TabPanel header="Counts">
-            <DataTable :value="countsTable" :scrollable="true" showGridlines="true">
-              <Column v-for="column of countColumns.slice(0,3)" :field="column" :header="column" :key="column" 
-              style="overflow:hidden" headerStyle="background-color:#A1D8C8; font-weight: bold" :frozen="columnIsAllNa(countsTable, column)">
-                <template #body="countsTable">{{countsTable.data[column]}}</template> <!--:style="{overflow: 'hidden'}"-->
-              </Column>
-              <Column v-for="column of countColumns.slice(3,-1)" :field="column" :header="column" :key="column" 
-              style="overflow:hidden" headerStyle="background-color:#A1D8C8; font-weight: bold" bodyStyle="text-align:right">
-                <template #body="countsTable">{{convertToThreeDecimal(countsTable.data[column])}}</template> 
-              </Column>
-            </DataTable>
+            <div style="overflow-y: scroll; overflow-x: scroll; height:600px;">
+              <DataTable :value="countsTable" showGridlines="true" stripedRows="true">
+                <Column v-for="column of countColumns.slice(0,3)" :field="column" :header="column" :key="column" 
+                style="overflow:hidden" headerStyle="background-color:#A1D8C8; font-weight: bold"> <!--:frozen="columnIsAllNa(countsTable, column)" bodyStyle="text-align:left"-->
+                  <template #body="countsTable">{{countsTable.data[column]}}</template> <!--:style="{overflow: 'hidden'}"-->
+                </Column>
+                <Column v-for="column of countColumns.slice(3,-1)" :field="column" :header="column" :key="column" 
+                style="overflow:hidden" headerStyle="background-color:#A1D8C8; font-weight: bold">
+                  <template #body="countsTable">{{convertToThreeDecimal(countsTable.data[column])}}</template> 
+                </Column>
+              </DataTable>
+            </div>
             <!--<table>
               <tr>
                 <th v-for="column in countColumns" :key="column">{{column}}</th>
@@ -378,8 +382,18 @@ export default {
       }
     },
     convertToThreeDecimal: function(value){
-      return parseFloat(value).toFixed(3)
+      let numStr = String(value)
+      let decimalNumber = 0
+      if (numStr.includes('.')) {
+        decimalNumber = numStr.split('.')[1].length;
+      }
+      if (decimalNumber < 4){
+        return value
+      }else{
+        return parseFloat(value).toFixed(3)
+      }
     },
+    // Check whether all columns values are NA.
     columnIsAllNa: function(tableData, column){
       let sliceData = tableData.slice(0,10)
       let frozen = true

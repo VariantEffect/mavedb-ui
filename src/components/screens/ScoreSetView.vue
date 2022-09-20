@@ -12,7 +12,6 @@
             </div>
             <div v-if="item.publishedDate" class="mave-screen-title-controls">
               <Button class="p-button-sm" @click="editItem">Edit</Button>
-              <Button class="p-button-sm p-button-danger" @click="deleteItem">Delete</Button>
             </div>
           </div>
         </div>
@@ -69,6 +68,7 @@
           <div v-if="item.targetGene.refseq?.identifier">RefSeq: {{item.targetGene.refseq.identifier}}<span v-if="item.targetGene.refseq?.offset"> with offset {{item.targetGene.refseq.offset}}</span></div>
           <div v-if="item.targetGene.ensembl?.identifier">Ensembl: {{item.targetGene.ensembl.identifier}}</div>
         </div>
+
         <div class="mave-scoreset-section-title">DOI</div>
           <div v-if="item.doiIdentifiers.length!=0">
             <div v-html="markdownToHtml(item.doiIdentifiers[0].identifier)" class="mave-scoreset-abstract"></div>
@@ -79,6 +79,56 @@
             <div v-html="markdownToHtml(item.pubmedIdentifiers[0].identifier)" class="mave-scoreset-abstract"></div>
           </div>
           <div v-else>No associated PubMed</div>
+        
+        <div class="mave-scoreset-section-title">Variants</div>
+        <div v-if="item.numVariants > 10">Below is a sample of the first 10 variants. 
+            Please download the file on the top page if you want to read the whole variants list.</div>
+        <br/>
+        <TabView style="height:585px">
+          <TabPanel header="Scores">
+            <!--Default table-layout is fixed meaning the cell widths do not depend on their content. 
+            If you require cells to scale based on their contents set autoLayout property to true. 
+            Note that Scrollable and/or Resizable tables do not support auto layout due to technical limitations.
+            Scrollable, column can be frozen but columns and rows don't match so that add width;
+            Autolayout, column can't be frozen but columns and rows can match
+            We can keep the frozen codes first. Maybe we can figure the bug in the future-->
+            <!---->
+            <div style="overflow-y: scroll; overflow-x: scroll; height:600px;">
+              <DataTable :value="scoresTable" showGridlines="true" stripedRows="true">
+                <Column v-for="column of scoreColumns.slice(0,3)" :field="column" :header="column" :key="column" 
+                style="overflow:hidden" headerStyle="background-color:#A1D8C8; font-weight: bold" ><!--:frozen="columnIsAllNa(scoresTable, column)"-->
+                <template #body="scoresTable" >{{scoresTable.data[column]}}</template>
+              </Column>
+              <Column v-for="column of scoreColumns.slice(3,-1)" :field="column" :header="column" :key="column" 
+                style="overflow:hidden" headerStyle="background-color:#A1D8C8; font-weight: bold">
+                <template #body="scoresTable">{{convertToThreeDecimal(scoresTable.data[column])}}</template>
+              </Column>
+              </DataTable>
+            </div>
+          </TabPanel>
+          <TabPanel header="Counts">
+            <div style="overflow-y: scroll; overflow-x: scroll; height:600px;">
+              <DataTable :value="countsTable" showGridlines="true" stripedRows="true">
+                <Column v-for="column of countColumns.slice(0,3)" :field="column" :header="column" :key="column" 
+                style="overflow:hidden" headerStyle="background-color:#A1D8C8; font-weight: bold"> <!--:frozen="columnIsAllNa(countsTable, column)" bodyStyle="text-align:left"-->
+                  <template #body="countsTable">{{countsTable.data[column]}}</template> <!--:style="{overflow: 'hidden'}"-->
+                </Column>
+                <Column v-for="column of countColumns.slice(3,-1)" :field="column" :header="column" :key="column" 
+                style="overflow:hidden" headerStyle="background-color:#A1D8C8; font-weight: bold">
+                  <template #body="countsTable">{{convertToThreeDecimal(countsTable.data[column])}}</template> 
+                </Column>
+              </DataTable>
+            </div>
+            <!--<table>
+              <tr>
+                <th v-for="column in countColumns" :key="column">{{column}}</th>
+              </tr>
+              <tr v-for="row in countsTable" :key="row">
+                <td v-for="column in countColumns" :key="column">{{row[column]}}</td>
+              </tr>
+            </table>-->
+          </TabPanel>
+        </TabView>
       </div>
     </div>
   </DefaultLayout>
@@ -101,14 +151,29 @@ import useFormatters from '@/composition/formatters'
 import axios from 'axios'
 //import Vue from "vue"
 import {oidc} from '@/lib/auth'
+
+import TabView from 'primevue/tabview'
+import TabPanel from 'primevue/tabpanel'
+
+import DataTable from 'primevue/datatable';
+import Column from 'primevue/column';
+
 export default {
   name: 'ScoreSetView',
-  components: {Button, Chip, DefaultLayout, ScoreSetHeatmap},
+  components: {Button, Chip, DefaultLayout, ScoreSetHeatmap, TabView, TabPanel, DataTable, Column},
   computed: {
     oidc: function() {
       return oidc
-      }
+      },
+    scoreColumns: function() {
+      const fixedColumns = ['hgvs_nt', 'hgvs_splice','hgvs_pro']
+      return [...fixedColumns, ...this.item?.datasetColumns?.score_columns || []]
     },
+    countColumns: function(){
+      const fixedColumns = ['hgvs_nt', 'hgvs_splice','hgvs_pro']
+      return [...fixedColumns, ...this.item?.datasetColumns?.count_columns || []]
+    }
+  },
   setup: () => {
     const scoresRemoteData = useRemoteData()
     return {
@@ -129,7 +194,9 @@ export default {
   },
 
   data: () => ({
-    scores: null
+    scores: null,
+    scoresTable: [],
+    countsTable: []
   }),
 
   watch: {
@@ -147,6 +214,12 @@ export default {
         }
       },
       immediate: true
+    },
+    item:{
+      handler: function(){
+        this.loadTableScores()
+        this.loadTableCounts()
+      }
     },
     scoresData: {
       handler: function(newValue) {
@@ -282,6 +355,59 @@ export default {
       //file default name
       anchor.download = this.item.urn + '_metadata.txt';
       anchor.click();
+    },
+    loadTableScores: async function(){
+      if (this.item){
+        const response = await axios.get(`${config.apiBaseUrl}/scoresets/${this.item.urn}/scores`)
+        if (response.data) {
+          if (this.item.numVariants <= 10){
+            this.scoresTable = parseScores(response.data)
+          }else{
+            this.scoresTable = parseScores(response.data).slice(0, 10)
+          }
+        }
+      }
+    },
+    loadTableCounts: async function(){
+      if (this.item){
+        const response = await axios.get(`${config.apiBaseUrl}/scoresets/${this.item.urn}/counts`)
+        console.log(response)
+        if (response.data) {
+          if (this.item.numVariants <= 10){
+            this.countsTable = parseScores(response.data)
+          }else{
+            this.countsTable = parseScores(response.data).slice(0, 10)
+          }
+        }
+      }
+    },
+    convertToThreeDecimal: function(value){
+      let numStr = String(value)
+      let decimalNumber = 0
+      if (numStr.includes('.')) {
+        decimalNumber = numStr.split('.')[1].length;
+      }
+      if (decimalNumber < 4){
+        return value
+      }else{
+        return parseFloat(value).toFixed(3)
+      }
+    },
+    // Check whether all columns values are NA.
+    columnIsAllNa: function(tableData, column){
+      let sliceData = tableData.slice(0,10)
+      let frozen = true
+      let count = 0
+      for(let i=0; i<sliceData.length; i++){
+        //NA is a string
+        if(sliceData[i][column]=="NA"){
+          count+=1
+        }
+      }
+      if(count==10){
+        frozen = false
+      }
+      return frozen
     }
   }
 }
@@ -354,6 +480,5 @@ export default {
   font-size: 87.5%;
   word-wrap: break-word;
 }
-
 
 </style>

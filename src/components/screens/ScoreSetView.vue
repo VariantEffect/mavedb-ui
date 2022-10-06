@@ -31,6 +31,12 @@
         <div v-if="item.publishedDate">Published {{formatDate(item.publisedhDate)}}</div>
         <div v-if="item.experiment">Member of <router-link :to="{name: 'experiment', params: {urn: item.experiment.urn}}">{{item.experiment.urn}}</router-link></div>
         <div v-if="item.currentVersion">Current version {{item.currentVersion}}</div>
+        <div v-if="item.metaAnalysisSourceScoresets.length!=0">Meta-analyzes 
+          <template v-for="(scoreset,index) in sortedMetaAnalysis" :key="scoreset">
+            <router-link :to="{name: 'scoreset', params: {urn: scoreset.urn}}">{{scoreset.urn}}</router-link>
+            <template v-if="index !== item.metaAnalysisSourceScoresets.length-1"> · </template>
+          </template>
+        </div>
         <div>Download files <Button class="p-button-outlined p-button-sm" @click="downloadFile('scores')">Scores</Button>&nbsp;
         <Button class="p-button-outlined p-button-sm" @click="downloadFile('counts')">Counts</Button>&nbsp;
         <Button class="p-button-outlined p-button-sm" @click="downloadMetadata">Metadata</Button>
@@ -172,7 +178,10 @@ export default {
     countColumns: function(){
       const fixedColumns = ['hgvs_nt', 'hgvs_splice','hgvs_pro']
       return [...fixedColumns, ...this.item?.datasetColumns?.count_columns || []]
-    }
+    },
+    sortedMetaAnalysis: function(){
+      return _.orderBy(this.item.metaAnalysisSourceScoresets, 'urn')
+    },
   },
   setup: () => {
     const scoresRemoteData = useRemoteData()
@@ -409,7 +418,8 @@ export default {
       }
       return frozen
     }
-  }
+  },
+  
 }
 
 </script>

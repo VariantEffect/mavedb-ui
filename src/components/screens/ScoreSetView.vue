@@ -49,6 +49,14 @@
           <div class="mave-scoreset-section-title">Method</div>
           <div v-html="markdownToHtml(item.methodText)" class="mave-scoreset-abstract"></div>
         </div>
+        <div v-if="uniqueReferences">
+          <div class="mave-scoreset-section-title">References</div>
+            <ul style="list-style-type:square">
+              <div v-for="reference in uniqueReferences" :key="reference">
+                <li v-html="markdownToHtml(reference)" ></li>
+              </div>
+            </ul>
+          </div>
         <div class="mave-scoreset-section-title">Data Usage Policy</div>
           <div v-if="item.dataUsagePolicy">
             <div v-html="markdownToHtml(item.dataUsagePolicy)" class="mave-scoreset-abstract"></div>
@@ -182,6 +190,21 @@ export default {
     sortedMetaAnalysis: function(){
       return _.orderBy(this.item.metaAnalysisSourceScoresets, 'urn')
     },
+    uniqueReferences: function(){
+      let references = []
+      if(this.item.experiment.pubmedIdentifiers){
+        for(let i of this.item.experiment.pubmedIdentifiers){
+          references.push(i.referenceHtml)
+        }
+      }
+      if(this.item.pubmedIdentifiers){
+        for(let i of this.item.pubmedIdentifiers){
+          references.push(i.referenceHtml)
+        }
+      }
+      let uniqueReferences = [...new Set(references)]
+      return uniqueReferences
+    }
   },
   setup: () => {
     const scoresRemoteData = useRemoteData()

@@ -49,6 +49,12 @@
           <div class="mave-scoreset-section-title">Method</div>
           <div v-html="markdownToHtml(item.methodText)" class="mave-scoreset-abstract"></div>
         </div>
+        <div v-if="item.pubmedIdentifiers?.[0]?.referenceHtml">
+          <div class="mave-scoreset-section-title">Reference</div>
+          <ul style="list-style-type:square">
+          <li v-html="markdownToHtml(item.pubmedIdentifiers[0].referenceHtml)"></li>
+          </ul>
+        </div>
         <div class="mave-scoreset-section-title">Data Usage Policy</div>
           <div v-if="item.dataUsagePolicy">
             <div v-html="markdownToHtml(item.dataUsagePolicy)" class="mave-scoreset-abstract"></div>

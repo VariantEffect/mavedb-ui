@@ -56,7 +56,7 @@
                 <li v-html="markdownToHtml(reference)" ></li>
               </div>
             </ul>
-          </div>
+        </div>
         <div class="mave-scoreset-section-title">Data Usage Policy</div>
           <div v-if="item.dataUsagePolicy">
             <div v-html="markdownToHtml(item.dataUsagePolicy)" class="mave-scoreset-abstract"></div>

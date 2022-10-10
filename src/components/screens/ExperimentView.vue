@@ -41,6 +41,15 @@
           <div class="mave-scoreset-section-title">Method</div>
           <div v-html="markdownToHtml(item.methodText)" class="mave-scoreset-abstract"></div>
         </div>
+        <!--Temporary codes to show references. Will change it in the future.-->
+        <div v-if="item.pubmedIdentifiers.length > 0">
+          <div class="mave-scoreset-section-title">References</div>
+            <ul style="list-style-type:square">
+              <div v-for="reference in item.pubmedIdentifiers" :key="reference">
+                <li v-html="markdownToHtml(reference.referenceHtml)" ></li>
+              </div>
+            </ul>
+        </div>
         <div v-if="item.keywords && item.keywords.length > 0">
           <div class="mave-scoreset-section-title">Keywords</div>
           <div class="mave-scoreset-keywords">

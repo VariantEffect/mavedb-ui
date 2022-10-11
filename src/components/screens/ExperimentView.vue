@@ -45,8 +45,8 @@
         <div v-if="item.pubmedIdentifiers.length > 0">
           <div class="mave-scoreset-section-title">References</div>
             <ul style="list-style-type:square">
-              <div v-for="reference in item.pubmedIdentifiers" :key="reference">
-                <li v-html="markdownToHtml(reference.referenceHtml)" ></li>
+              <div v-for="pubmed in item.pubmedIdentifiers" :key="pubmed">
+                <li v-html="markdownToHtml(pubmed.referenceHtml)" ></li>PMID: <a :href="`${pubmed.url}`" target="_blank">{{pubmed.identifier}}</a>
               </div>
             </ul>
         </div>

@@ -49,11 +49,11 @@
           <div class="mave-scoreset-section-title">Method</div>
           <div v-html="markdownToHtml(item.methodText)" class="mave-scoreset-abstract"></div>
         </div>
-        <div v-if="uniqueReferences">
+        <div v-if="uniquePubmedIdentifiers">
           <div class="mave-scoreset-section-title">References</div>
             <ul style="list-style-type:square">
-              <div v-for="reference in uniqueReferences" :key="reference">
-                <li v-html="markdownToHtml(reference)" ></li>
+              <div v-for="pubmed in uniquePubmedIdentifiers" :key="pubmed">
+                <li v-html="markdownToHtml(pubmed.referenceHtml)"></li>PMID: <a :href="`${pubmed.url}`" target="_blank">{{pubmed.identifier}}</a>
               </div>
             </ul>
         </div>
@@ -190,20 +190,20 @@ export default {
     sortedMetaAnalysis: function(){
       return _.orderBy(this.item.metaAnalysisSourceScoresets, 'urn')
     },
-    uniqueReferences: function(){
-      let references = []
+    uniquePubmedIdentifiers: function(){
+      let pubmedIdentifiers = []
       if(this.item.experiment.pubmedIdentifiers){
         for(let i of this.item.experiment.pubmedIdentifiers){
-          references.push(i.referenceHtml)
+          pubmedIdentifiers.push(i)
         }
       }
       if(this.item.pubmedIdentifiers){
         for(let i of this.item.pubmedIdentifiers){
-          references.push(i.referenceHtml)
+          pubmedIdentifiers.push(i)
         }
       }
-      let uniqueReferences = [...new Set(references)]
-      return uniqueReferences
+      let uniqueObjects = [...new Map(pubmedIdentifiers.map(item => [item.identifier, item])).values()]
+      return uniqueObjects
     }
   },
   setup: () => {

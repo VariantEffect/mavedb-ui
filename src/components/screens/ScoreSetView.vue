@@ -78,9 +78,18 @@
           <div v-if="item.targetGene.referenceMaps?.[0]?.genomeId">Genome ID: {{item.targetGene.referenceMaps[0].genomeId}}</div>
           <div v-if="item.targetGene.referenceMaps?.[0]?.targetId">Target ID: {{item.targetGene.referenceMaps[0].targetId}}</div>
           <div v-if="item.targetGene.wtSequence?.sequence" style="word-break: break-word">Reference sequence: {{item.targetGene.wtSequence.sequence}}</div>
-          <div v-if="item.targetGene.uniprot?.identifier">UniProt: {{item.targetGene.uniprot.identifier}}</div>
-          <div v-if="item.targetGene.refseq?.identifier">RefSeq: {{item.targetGene.refseq.identifier}}<span v-if="item.targetGene.refseq?.offset"> with offset {{item.targetGene.refseq.offset}}</span></div>
-          <div v-if="item.targetGene.ensembl?.identifier">Ensembl: {{item.targetGene.ensembl.identifier}}</div>
+          <!--One for loop can't handle the order so that separating them into three parts.-->
+          <div v-if="item.targetGene.externalIdentifiers?.[0]?.identifier">
+            <div v-for="i in item.targetGene.externalIdentifiers" :key="i">
+              <div v-if="i.identifier.dbName==='UniProt'">UniProt: {{i.identifier.identifier}} <span v-if="i.offset!=0"> with offset {{i.offset}}</span></div>
+            </div>
+            <div v-for="i in item.targetGene.externalIdentifiers" :key="i">
+              <div v-if="i.identifier.dbName==='RefSeq'">RefSeq: {{i.identifier.identifier}} <span v-if="i.offset!=0"> with offset {{i.offset}}</span></div>
+            </div>
+            <div v-for="i in item.targetGene.externalIdentifiers" :key="i">
+              <div v-if="i.identifier.dbName==='Ensembl'">Ensembl: {{i.identifier.identifier}} <span v-if="i.offset!=0"> with offset {{i.offset}}</span></div>
+            </div>
+          </div>
         </div>
 
         <div class="mave-scoreset-section-title">DOI</div>

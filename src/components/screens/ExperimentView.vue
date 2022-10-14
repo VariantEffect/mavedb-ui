@@ -42,14 +42,15 @@
           <div v-html="markdownToHtml(item.methodText)" class="mave-scoreset-abstract"></div>
         </div>
         <!--Temporary codes to show references. Will change it in the future.-->
-        <div v-if="item.pubmedIdentifiers.length > 0">
-          <div class="mave-scoreset-section-title">References</div>
+        <div class="mave-scoreset-section-title">References</div>
+          <div v-if="item.pubmedIdentifiers.length > 0">
             <ul style="list-style-type:square">
               <div v-for="pubmed in item.pubmedIdentifiers" :key="pubmed">
                 <li v-html="markdownToHtml(pubmed.referenceHtml)" ></li>PMID: <a :href="`${pubmed.url}`" target="_blank">{{pubmed.identifier}}</a>
               </div>
             </ul>
         </div>
+        <div v-else>No associated publication.</div>
         <div v-if="item.keywords && item.keywords.length > 0">
           <div class="mave-scoreset-section-title">Keywords</div>
           <div class="mave-scoreset-keywords">

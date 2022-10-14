@@ -49,14 +49,15 @@
           <div class="mave-scoreset-section-title">Method</div>
           <div v-html="markdownToHtml(item.methodText)" class="mave-scoreset-abstract"></div>
         </div>
-        <div v-if="uniquePubmedIdentifiers">
-          <div class="mave-scoreset-section-title">References</div>
+        <div class="mave-scoreset-section-title">References</div>
+          <div v-if="item.experiment.pubmedIdentifiers.length!=0 || item.pubmedIdentifiers.length!=0">
             <ul style="list-style-type:square">
               <div v-for="pubmed in uniquePubmedIdentifiers" :key="pubmed">
                 <li v-html="markdownToHtml(pubmed.referenceHtml)"></li>PMID: <a :href="`${pubmed.url}`" target="_blank">{{pubmed.identifier}}</a>
               </div>
             </ul>
         </div>
+        <div v-else>No associated publication.</div>
         <div class="mave-scoreset-section-title">Data Usage Policy</div>
           <div v-if="item.dataUsagePolicy">
             <div v-html="markdownToHtml(item.dataUsagePolicy)" class="mave-scoreset-abstract"></div>

@@ -12,7 +12,7 @@
           </div>
         </div>
         <div v-if="item.shortDescription" class="mave-scoreset-description">{{item.shortDescription}}</div>
-        <div v-if="item.urn" class="mave-scoreset-urn">{{item.urn}}</div>
+        <h3><div v-if="item.urn" class="mave-scoreset-urn">{{item.urn}}</div></h3>
       </div>
       <div class="mave-1000px-col">
         <div v-if="item.creationDate">Created {{formatDate(item.creationDate)}} <span v-if="item.createdBy">
@@ -42,14 +42,15 @@
           <div v-html="markdownToHtml(item.methodText)" class="mave-scoreset-abstract"></div>
         </div>
         <!--Temporary codes to show references. Will change it in the future.-->
-        <div v-if="item.pubmedIdentifiers.length > 0">
-          <div class="mave-scoreset-section-title">References</div>
+        <div class="mave-scoreset-section-title">References</div>
+          <div v-if="item.pubmedIdentifiers.length > 0">
             <ul style="list-style-type:square">
               <div v-for="pubmed in item.pubmedIdentifiers" :key="pubmed">
                 <li v-html="markdownToHtml(pubmed.referenceHtml)" ></li>PMID: <a :href="`${pubmed.url}`" target="_blank">{{pubmed.identifier}}</a>
               </div>
             </ul>
         </div>
+        <div v-else>No associated publication.</div>
         <div v-if="item.keywords && item.keywords.length > 0">
           <div class="mave-scoreset-section-title">Keywords</div>
           <div class="mave-scoreset-keywords">
@@ -67,19 +68,19 @@
           </div>
           <div v-else>No associated PubMed</div>
 
-        <div v-if="item.target">
-          <div class="mave-scoreset-section-title">Target</div>
-          <div v-if="item.target.name">Name: {{item.target.name}}</div>
-          <div v-if="item.target.type">Type: {{item.target.type}}</div>
-          <div v-if="get(item, 'target.referenceMaps.genome.organismName')">Organism: {{item.target.referenceMaps.genome.organismName}}</div>
-          <div v-if="get(item, 'target.referenceMaps.genome.shortName')">Reference genome: {{item.target.referenceMaps.genome.shortName}}</div>
-          <div v-if="get(item, 'target.referenceMaps.genome.assemblyIdentifier.identifier')">Reference assembly: {{item.target.referenceMaps.genome.assemblyIdentifier.identifier}}</div>
-          <div v-if="get(item, 'target.referenceSequence.sequence')">Reference sequence: {{item.target.referenceSequence.sequence}}</div>
-          <div v-if="get(item, 'target.uniprot.identifier')">UniProt: {{item.target.uniprot.identifier}}</div>
-          <div v-if="get(item, 'target.refseq.identifier')">RefSeq: {{item.target.refseq.identifier}}<span v-if="get(item, 'target.refseq.offset')"> with offset {{item.target.refseq.offset}}</span></div>
-          <div v-if="get(item, 'target.ensembl.identifier')">Ensembl: {{item.target.ensembl.identifier}}</div>
+        <div v-if="this.associatedScoresets.length!=0">
+          <div v-for="scoreset in this.associatedScoresets.slice(0,1)" :key="scoreset">
+            <div class="mave-scoreset-section-title">Target</div>
+            <div v-if="scoreset.targetGene.name"><strong>Name:</strong> {{scoreset.targetGene.name}}</div>
+            <div v-if="scoreset.targetGene.category"><strong>Type:</strong> {{scoreset.targetGene.category}}</div>
+            <div v-if="scoreset.targetGene.referenceMaps?.[0]?.genome?.organismName"><strong>Organism:</strong> {{scoreset.targetGene.referenceMaps[0].genome.organismName}}</div>
+            <div v-if="scoreset.targetGene.referenceMaps?.[0]?.genome?.shortName"><strong>Reference genome:</strong> {{scoreset.targetGene.referenceMaps[0].genome.shortName}}</div>
+            <!--asscembly doesn't work-->
+            <div v-if="get(scoreset, 'targetGene.referenceMaps.genome.assemblyIdentifier.identifier')">Reference assembly: {{scoreset.targetGene.referenceMaps.genome.assemblyIdentifier.identifier}}</div>
+            <div v-if="scoreset.targetGene.wtSequence?.sequence" style="word-break: break-word"><strong>Reference sequence:</strong> {{scoreset.targetGene.wtSequence.sequence}}</div>
+            </div>
+          </div>
         </div>
-      </div>
     </div>
   </DefaultLayout>
 </template>

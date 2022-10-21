@@ -56,11 +56,6 @@
             <a v-for="(keyword, i) of item.keywords" :key="i" :href="`https://www.mavedb.org/search/?keywords=${keyword}`"><Chip :label="keyword"/></a>
           </div>
         </div>
-        <div class="mave-scoreset-section-title">DOI</div>
-          <div v-if="item.doiIdentifiers.length!=0">
-            <div v-html="markdownToHtml(item.doiIdentifiers[0].identifier)" class="mave-scoreset-abstract"></div>
-          </div>
-          <div v-else>No associated DOIs</div>
         <div class="mave-scoreset-section-title">PubMed</div>
           <div v-if="item.pubmedIdentifiers.length!=0">
             <div v-html="markdownToHtml(item.pubmedIdentifiers[0].identifier)" class="mave-scoreset-abstract"></div>
@@ -79,6 +74,16 @@
           <div v-if="get(item, 'target.refseq.identifier')">RefSeq: {{item.target.refseq.identifier}}<span v-if="get(item, 'target.refseq.offset')"> with offset {{item.target.refseq.offset}}</span></div>
           <div v-if="get(item, 'target.ensembl.identifier')">Ensembl: {{item.target.ensembl.identifier}}</div>
         </div>
+
+        <div class="mave-scoreset-section-title">External identifier</div>
+        <strong>DOI: </strong>
+        <div v-if="item.doiIdentifiers.length!=0">
+          <ul style="list-style-type:square">
+            <li v-for="(doi, i) of item.doiIdentifiers" :key="i"><a :href="`${doi.url}`">{{doi.identifier}}</a></li>
+          </ul>
+        </div><template v-else>No associated DOIs <br/></template>
+        <!--Miss SRA the raw reads. We might change something for here. API view-models miss sra_identifier-->
+        <strong>Raw reads: </strong>
       </div>
     </div>
   </DefaultLayout>

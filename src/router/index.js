@@ -1,6 +1,7 @@
 import {createRouter, createWebHashHistory} from 'vue-router'
 import ExperimentEditor from '@/components/screens/ExperimentEditor'
 import ExperimentView from '@/components/screens/ExperimentView'
+import ExperimentSetView from '@/components/screens/ExperimentSetView'
 import HomeView from '@/components/screens/HomeView'
 import ScoresetEditor from '@/components/screens/ScoresetEditor'
 import ScoreSetView from '@/components/screens/ScoreSetView'
@@ -51,6 +52,11 @@ const routes = [{
   meta: {
     authName: oidc.authName
   }
+},{
+  name: 'experimentset',
+  path: '/experimentset/:urn',
+  component: ExperimentSetView,
+  props: (route) => ({itemId: route.params.urn})
 }, {
   path: '/scoresets/:urn/edit',
   name: '/edit-scoreset',

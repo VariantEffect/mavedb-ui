@@ -16,7 +16,7 @@
           </div>
         </div>
         <div v-if="item.shortDescription" class="mave-scoreset-description">{{item.shortDescription}}</div>
-        <div v-if="item.urn" class="mave-scoreset-urn">{{item.urn}}</div>
+        <div v-if="item.urn" class="mave-scoreset-urn"><h3>{{item.urn}}</h3></div>
       </div>
       <div v-if="scores" class="mave-scoreset-heatmap-pane">
         <ScoreSetHeatmap :scoreSet="item" :scores="scores" />

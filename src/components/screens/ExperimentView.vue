@@ -75,8 +75,7 @@
             <div v-if="scoreset.targetGene.category"><strong>Type:</strong> {{scoreset.targetGene.category}}</div>
             <div v-if="scoreset.targetGene.referenceMaps?.[0]?.genome?.organismName"><strong>Organism:</strong> {{scoreset.targetGene.referenceMaps[0].genome.organismName}}</div>
             <div v-if="scoreset.targetGene.referenceMaps?.[0]?.genome?.shortName"><strong>Reference genome:</strong> {{scoreset.targetGene.referenceMaps[0].genome.shortName}}</div>
-            <!--asscembly doesn't work-->
-            <div v-if="get(scoreset, 'targetGene.referenceMaps.genome.assemblyIdentifier.identifier')">Reference assembly: {{scoreset.targetGene.referenceMaps.genome.assemblyIdentifier.identifier}}</div>
+            <!--TODO: Miss TaxID part-->
             <div v-if="scoreset.targetGene.wtSequence?.sequence" style="word-break: break-word"><strong>Reference sequence:</strong> {{scoreset.targetGene.wtSequence.sequence}}</div>
             </div>
           </div>

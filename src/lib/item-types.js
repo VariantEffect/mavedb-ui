@@ -25,6 +25,11 @@ const itemTypes = {
     restCollectionName: 'experiments',
     primaryKey: 'urn'
   },
+  'experimentSet': {
+    name: 'experimentSet', 
+    restCollectionName: 'experimentSets',
+    primaryKey: 'urn'
+  },
   'pubmed-identifier-search': {
     name: 'pubmed-identifier', // TODO Redundant, change this structure
     restCollectionName: 'pubmedIdentifiers',

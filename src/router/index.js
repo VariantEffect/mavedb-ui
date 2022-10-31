@@ -54,7 +54,7 @@ const routes = [{
   }
 },{
   name: 'experimentset',
-  path: '/experimentset/:urn',
+  path: '/experimentsets/:urn',
   component: ExperimentSetView,
   props: (route) => ({itemId: route.params.urn})
 }, {

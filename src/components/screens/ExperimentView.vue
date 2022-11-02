@@ -57,16 +57,6 @@
             <a v-for="(keyword, i) of item.keywords" :key="i" :href="`https://www.mavedb.org/search/?keywords=${keyword}`"><Chip :label="keyword"/></a>
           </div>
         </div>
-        <div class="mave-scoreset-section-title">DOI</div>
-          <div v-if="item.doiIdentifiers.length!=0">
-            <div v-html="markdownToHtml(item.doiIdentifiers[0].identifier)" class="mave-scoreset-abstract"></div>
-          </div>
-          <div v-else>No associated DOIs</div>
-        <div class="mave-scoreset-section-title">PubMed</div>
-          <div v-if="item.pubmedIdentifiers.length!=0">
-            <div v-html="markdownToHtml(item.pubmedIdentifiers[0].identifier)" class="mave-scoreset-abstract"></div>
-          </div>
-          <div v-else>No associated PubMed</div>
 
         <div v-if="this.associatedScoresets.length!=0">
           <div v-for="scoreset in this.associatedScoresets.slice(0,1)" :key="scoreset">
@@ -80,6 +70,22 @@
             </div>
           </div>
         </div>
+
+        <div class="mave-scoreset-section-title">External identifier</div>
+
+        <strong>DOI: </strong>
+        <div v-if="item.doiIdentifiers.length!=0">
+          <ul style="list-style-type:square">
+            <li v-for="(doi, i) of item.doiIdentifiers" :key="i"><a :href="`${doi.url}`" target="blank">{{doi.identifier}}</a></li>
+          </ul>
+        </div><template v-else>No associated DOIs<br/></template>
+        <strong>Raw reads: </strong>
+        <div v-if="item.rawReadIdentifiers.length!=0">
+          <ul style="list-style-type:square">
+            <li v-for="(read, i) of item.rawReadIdentifiers" :key="i"><a :href="`${read.url}`" target="blank">{{read.identifier}}</a></li>
+          </ul>
+        </div><template v-else>No associated raw reads<br/></template>
+      </div>
     </div>
   </DefaultLayout>
 </template>

@@ -16,7 +16,7 @@
           </div>
         </div>
         <div v-if="item.shortDescription" class="mave-scoreset-description">{{item.shortDescription}}</div>
-        <div v-if="item.urn" class="mave-scoreset-urn">{{item.urn}}</div>
+        <div v-if="item.urn" class="mave-scoreset-urn"><h3>{{item.urn}}</h3></div>
       </div>
       <div v-if="scores" class="mave-scoreset-heatmap-pane">
         <ScoreSetHeatmap :scoreSet="item" :scores="scores" />
@@ -49,14 +49,15 @@
           <div class="mave-scoreset-section-title">Method</div>
           <div v-html="markdownToHtml(item.methodText)" class="mave-scoreset-abstract"></div>
         </div>
-        <div v-if="uniquePubmedIdentifiers">
-          <div class="mave-scoreset-section-title">References</div>
+        <div class="mave-scoreset-section-title">References</div>
+          <div v-if="item.experiment.pubmedIdentifiers.length!=0 || item.pubmedIdentifiers.length!=0">
             <ul style="list-style-type:square">
               <div v-for="pubmed in uniquePubmedIdentifiers" :key="pubmed">
                 <li v-html="markdownToHtml(pubmed.referenceHtml)"></li>PMID: <a :href="`${pubmed.url}`" target="_blank">{{pubmed.identifier}}</a>
               </div>
             </ul>
         </div>
+        <div v-else>No associated publication.</div>
         <div class="mave-scoreset-section-title">Data Usage Policy</div>
           <div v-if="item.dataUsagePolicy">
             <div v-html="markdownToHtml(item.dataUsagePolicy)" class="mave-scoreset-abstract"></div>
@@ -71,16 +72,25 @@
         </div>
         <div v-if="item.targetGene">
           <div class="mave-scoreset-section-title">Target</div>
-          <div v-if="item.targetGene.name">Name: {{item.targetGene.name}}</div>
-          <div v-if="item.targetGene.category">Type: {{item.targetGene.category}}</div>
-          <div v-if="item.targetGene.referenceMaps?.[0]?.genome?.organismName">Organism: {{item.targetGene.referenceMaps[0].genome.organismName}}</div>
-          <div v-if="item.targetGene.referenceMaps?.[0]?.genome?.shortName">Reference genome: {{item.targetGene.referenceMaps[0].genome.shortName}}</div>
-          <div v-if="item.targetGene.referenceMaps?.[0]?.genomeId">Genome ID: {{item.targetGene.referenceMaps[0].genomeId}}</div>
-          <div v-if="item.targetGene.referenceMaps?.[0]?.targetId">Target ID: {{item.targetGene.referenceMaps[0].targetId}}</div>
-          <div v-if="item.targetGene.wtSequence?.sequence" style="word-break: break-word">Reference sequence: {{item.targetGene.wtSequence.sequence}}</div>
-          <div v-if="item.targetGene.uniprot?.identifier">UniProt: {{item.targetGene.uniprot.identifier}}</div>
-          <div v-if="item.targetGene.refseq?.identifier">RefSeq: {{item.targetGene.refseq.identifier}}<span v-if="item.targetGene.refseq?.offset"> with offset {{item.targetGene.refseq.offset}}</span></div>
-          <div v-if="item.targetGene.ensembl?.identifier">Ensembl: {{item.targetGene.ensembl.identifier}}</div>
+          <div v-if="item.targetGene.name"><strong>Name:</strong> {{item.targetGene.name}}</div>
+          <div v-if="item.targetGene.category"><strong>Type:</strong> {{item.targetGene.category}}</div>
+          <div v-if="item.targetGene.referenceMaps?.[0]?.genome?.organismName"><strong>Organism:</strong> {{item.targetGene.referenceMaps[0].genome.organismName}}</div>
+          <div v-if="item.targetGene.referenceMaps?.[0]?.genome?.shortName"><strong>Reference genome:</strong> {{item.targetGene.referenceMaps[0].genome.shortName}}</div>
+          <div v-if="item.targetGene.referenceMaps?.[0]?.genomeId"><strong>Genome ID:</strong> {{item.targetGene.referenceMaps[0].genomeId}}</div>
+          <div v-if="item.targetGene.referenceMaps?.[0]?.targetId"><strong>Target ID:</strong> {{item.targetGene.referenceMaps[0].targetId}}</div>
+          <div v-if="item.targetGene.wtSequence?.sequence" style="word-break: break-word"><strong>Reference sequence:</strong> {{item.targetGene.wtSequence.sequence}}</div>
+          <!--One for loop can't handle the order so that separating them into three parts.-->
+          <div v-if="item.targetGene.externalIdentifiers?.[0]?.identifier">
+            <div v-for="i in item.targetGene.externalIdentifiers" :key="i">
+              <div v-if="i.identifier.dbName==='UniProt'"><strong>UniProt:</strong> {{i.identifier.identifier}} <span v-if="i.offset!=0"> with offset {{i.offset}}</span></div>
+            </div>
+            <div v-for="i in item.targetGene.externalIdentifiers" :key="i">
+              <div v-if="i.identifier.dbName==='RefSeq'"><strong>RefSeq:</strong> {{i.identifier.identifier}} <span v-if="i.offset!=0"> with offset {{i.offset}}</span></div>
+            </div>
+            <div v-for="i in item.targetGene.externalIdentifiers" :key="i">
+              <div v-if="i.identifier.dbName==='Ensembl'"><strong>Ensembl:</strong> {{i.identifier.identifier}} <span v-if="i.offset!=0"> with offset {{i.offset}}</span></div>
+            </div>
+          </div>
         </div>
 
         <div class="mave-scoreset-section-title">DOI</div>

@@ -1,7 +1,7 @@
 import moment from 'moment'
 
 export function formatDate(x) {
-  return moment(x).format('MMMM d, YYYY')
+  return moment(x).format('MMM DD, YYYY')
 }
 
 export function formatInt(x) {

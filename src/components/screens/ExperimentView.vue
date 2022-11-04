@@ -27,7 +27,7 @@
           <div v-if="this.associatedScoresets.length!=0">
             <ul>
               <li v-for="scoreset in associatedScoresets" :key="scoreset.id">
-                <a :href="`https://www.mavedb.org/scoreset/${scoreset.urn}`">{{scoreset.urn}}</a>
+                <router-link :to="{name: 'scoreset', params: {urn: scoreset.urn}}">{{scoreset.urn}}</router-link>
               </li>
             </ul>
           </div>
@@ -71,7 +71,6 @@
         </div>
 
         <div class="mave-scoreset-section-title">External identifier</div>
-
         <strong>DOI: </strong>
         <div v-if="item.doiIdentifiers.length!=0">
           <ul style="list-style-type:square">

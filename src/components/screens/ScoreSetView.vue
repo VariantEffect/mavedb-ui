@@ -30,8 +30,8 @@
         </div>
         <div v-if="item.publishedDate">Published {{formatDate(item.publishedDate)}}</div>
         <div v-if="item.experiment">Member of <router-link :to="{name: 'experiment', params: {urn: item.experiment.urn}}">{{item.experiment.urn}}</router-link></div>
-        <div v-if="item.supersededScoreset">Previous version {{item.supersededScoreset.urn}}</div>
-        <div v-if="item.currentVersion">Current version {{item.currentVersion}}</div>
+        <div v-if="item.supersedingScoreset">Current version <router-link :to="{name: 'scoreset', params: {urn: item.supersedingScoreset.urn}}">{{item.supersedingScoreset.urn}}</router-link></div>
+        <div v-else>Current version <router-link :to="{name: 'scoreset', params: {urn: item.urn}}">{{item.urn}}</router-link></div>
         <div v-if="item.metaAnalysisSourceScoresets.length!=0">Meta-analyzes 
           <template v-for="(scoreset,index) in sortedMetaAnalysis" :key="scoreset">
             <router-link :to="{name: 'scoreset', params: {urn: scoreset.urn}}">{{scoreset.urn}}</router-link>

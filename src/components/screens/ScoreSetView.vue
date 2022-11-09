@@ -79,7 +79,14 @@
           <div v-if="item.targetGene.referenceMaps?.[0]?.genome?.shortName"><strong>Reference genome:</strong> {{item.targetGene.referenceMaps[0].genome.shortName}}</div>
           <div v-if="item.targetGene.referenceMaps?.[0]?.genomeId"><strong>Genome ID:</strong> {{item.targetGene.referenceMaps[0].genomeId}}</div>
           <div v-if="item.targetGene.referenceMaps?.[0]?.targetId"><strong>Target ID:</strong> {{item.targetGene.referenceMaps[0].targetId}}</div>
-          <div v-if="item.targetGene.wtSequence?.sequence" style="word-break: break-word"><strong>Reference sequence:</strong> {{item.targetGene.wtSequence.sequence}}</div>
+          <div v-if="item.targetGene.wtSequence?.sequence" style="word-break: break-word"><strong>Reference sequence: </strong>
+            <template v-if="item.targetGene.wtSequence.sequence.length >= 500">
+              <template v-if="readMore == true">{{item.targetGene.wtSequence.sequence.substring(0, 500) + " ..."}} </template>
+              <template v-if="readMore == false">{{item.targetGene.wtSequence.sequence}}</template>
+              <Button @click="showMore" v-if="readMore == true" class="p-button-text p-button-sm p-button-info">Show more</Button>
+              <Button @click="showLess" v-if="readMore == false" class="p-button-text p-button-sm p-button-info">Show less</Button>
+            </template><template v-else>{{item.targetGene.wtSequence.sequence}}</template>
+          </div>
           <!--One for loop can't handle the order so that separating them into three parts.-->
           <div v-if="item.targetGene.externalIdentifiers?.[0]?.identifier">
             <div v-for="i in item.targetGene.externalIdentifiers" :key="i">
@@ -239,7 +246,8 @@ export default {
   data: () => ({
     scores: null,
     scoresTable: [],
-    countsTable: []
+    countsTable: [],
+    readMore: true
   }),
 
   watch: {
@@ -451,9 +459,19 @@ export default {
         frozen = false
       }
       return frozen
-    }
+    },
+    showMore: function(){
+    console.log("hhhh")
+    this.readMore = false
+    console.log(this.readMore)
+    return this.readMore
+    },
+    showLess: function(){
+    this.readMore = true
+    console.log(this.readMore)
+    return this.readMore
+    },
   },
-  
 }
 
 </script>

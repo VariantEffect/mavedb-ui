@@ -121,7 +121,7 @@
                 style="overflow:hidden" headerStyle="background-color:#A1D8C8; font-weight: bold" ><!--:frozen="columnIsAllNa(scoresTable, column)"-->
                 <template #body="scoresTable" >{{scoresTable.data[column]}}</template>
               </Column>
-              <Column v-for="column of scoreColumns.slice(3,-1)" :field="column" :header="column" :key="column" 
+              <Column v-for="column of scoreColumns.slice(3,scoreColumns.length)" :field="column" :header="column" :key="column" 
                 style="overflow:hidden" headerStyle="background-color:#A1D8C8; font-weight: bold">
                 <template #body="scoresTable">{{convertToThreeDecimal(scoresTable.data[column])}}</template>
               </Column>
@@ -131,14 +131,17 @@
           <TabPanel header="Counts">
             <div style="overflow-y: scroll; overflow-x: scroll; height:600px;">
               <DataTable :value="countsTable" showGridlines="true" stripedRows="true">
-                <Column v-for="column of countColumns.slice(0,3)" :field="column" :header="column" :key="column" 
-                style="overflow:hidden" headerStyle="background-color:#A1D8C8; font-weight: bold"> <!--:frozen="columnIsAllNa(countsTable, column)" bodyStyle="text-align:left"-->
-                  <template #body="countsTable">{{countsTable.data[column]}}</template> <!--:style="{overflow: 'hidden'}"-->
-                </Column>
-                <Column v-for="column of countColumns.slice(3,-1)" :field="column" :header="column" :key="column" 
-                style="overflow:hidden" headerStyle="background-color:#A1D8C8; font-weight: bold">
-                  <template #body="countsTable">{{convertToThreeDecimal(countsTable.data[column])}}</template> 
-                </Column>
+                <template v-if="countColumns.length==3">No count data available.</template>
+                <template v-else>
+                  <Column v-for="column of countColumns.slice(0,3)" :field="column" :header="column" :key="column" 
+                  style="overflow:hidden" headerStyle="background-color:#A1D8C8; font-weight: bold"> <!--:frozen="columnIsAllNa(countsTable, column)" bodyStyle="text-align:left"-->
+                    <template #body="countsTable">{{countsTable.data[column]}}</template> <!--:style="{overflow: 'hidden'}"-->
+                  </Column>
+                  <Column v-for="column of countColumns.slice(3,countColumns.length)" :field="column" :header="column" :key="column" 
+                  style="overflow:hidden" headerStyle="background-color:#A1D8C8; font-weight: bold">
+                    <template #body="countsTable">{{convertToThreeDecimal(countsTable.data[column])}}</template> 
+                  </Column>
+                </template>
               </DataTable>
             </div>
             <!--<table>

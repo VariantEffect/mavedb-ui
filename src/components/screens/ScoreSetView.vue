@@ -28,9 +28,10 @@
         <div v-if="item.modificationDate">Last updated {{formatDate(item.modificationDate)}} <span v-if="item.modifiedBy"> 
           <a :href="`https://orcid.org/${item.modifiedBy.orcid_id}`"><img src="@/assets/ORCIDiD_icon.png" alt="ORCIDiD">{{item.modifiedBy.firstName}} {{item.modifiedBy.lastName}}</a></span>
         </div>
-        <div v-if="item.publishedDate">Published {{formatDate(item.publisedhDate)}}</div>
+        <div v-if="item.publishedDate">Published {{formatDate(item.publishedDate)}}</div>
         <div v-if="item.experiment">Member of <router-link :to="{name: 'experiment', params: {urn: item.experiment.urn}}">{{item.experiment.urn}}</router-link></div>
-        <div v-if="item.currentVersion">Current version {{item.currentVersion}}</div>
+        <div v-if="item.supersedingScoreset">Current version <router-link :to="{name: 'scoreset', params: {urn: item.supersedingScoreset.urn}}">{{item.supersedingScoreset.urn}}</router-link></div>
+        <div v-else>Current version <router-link :to="{name: 'scoreset', params: {urn: item.urn}}">{{item.urn}}</router-link></div>
         <div v-if="item.metaAnalysisSourceScoresets.length!=0">Meta-analyzes 
           <template v-for="(scoreset,index) in sortedMetaAnalysis" :key="scoreset">
             <router-link :to="{name: 'scoreset', params: {urn: scoreset.urn}}">{{scoreset.urn}}</router-link>
@@ -78,7 +79,14 @@
           <div v-if="item.targetGene.referenceMaps?.[0]?.genome?.shortName"><strong>Reference genome:</strong> {{item.targetGene.referenceMaps[0].genome.shortName}}</div>
           <div v-if="item.targetGene.referenceMaps?.[0]?.genomeId"><strong>Genome ID:</strong> {{item.targetGene.referenceMaps[0].genomeId}}</div>
           <div v-if="item.targetGene.referenceMaps?.[0]?.targetId"><strong>Target ID:</strong> {{item.targetGene.referenceMaps[0].targetId}}</div>
-          <div v-if="item.targetGene.wtSequence?.sequence" style="word-break: break-word"><strong>Reference sequence:</strong> {{item.targetGene.wtSequence.sequence}}</div>
+          <div v-if="item.targetGene.wtSequence?.sequence" style="word-break: break-word"><strong>Reference sequence: </strong>
+            <template v-if="item.targetGene.wtSequence.sequence.length >= 500">
+              <template v-if="readMore == true">{{item.targetGene.wtSequence.sequence.substring(0, 500) + " ..."}} </template>
+              <template v-if="readMore == false">{{item.targetGene.wtSequence.sequence}}</template>
+              <Button @click="showMore" v-if="readMore == true" class="p-button-text p-button-sm p-button-info">Show more</Button>
+              <Button @click="showLess" v-if="readMore == false" class="p-button-text p-button-sm p-button-info">Show less</Button>
+            </template><template v-else>{{item.targetGene.wtSequence.sequence}}</template>
+          </div>
           <!--One for loop can't handle the order so that separating them into three parts.-->
           <div v-if="item.targetGene.externalIdentifiers?.[0]?.identifier">
             <div v-for="i in item.targetGene.externalIdentifiers" :key="i">
@@ -92,17 +100,14 @@
             </div>
           </div>
         </div>
-
-        <div class="mave-scoreset-section-title">DOI</div>
-          <div v-if="item.doiIdentifiers.length!=0">
-            <div v-html="markdownToHtml(item.doiIdentifiers[0].identifier)" class="mave-scoreset-abstract"></div>
-          </div>
-          <div v-else>No associated DOIs</div>
-        <div class="mave-scoreset-section-title">PubMed</div>
-          <div v-if="item.pubmedIdentifiers.length!=0">
-            <div v-html="markdownToHtml(item.pubmedIdentifiers[0].identifier)" class="mave-scoreset-abstract"></div>
-          </div>
-          <div v-else>No associated PubMed</div>
+        
+        <div class="mave-scoreset-section-title">External identifier</div>
+        <strong>DOI: </strong>
+        <div v-if="item.doiIdentifiers.length!=0">
+          <ul style="list-style-type:square">
+            <li v-for="(doi, i) of item.doiIdentifiers" :key="i"><a :href="`${doi.url}`" target="blank">{{doi.identifier}}</a></li>
+          </ul>
+        </div><template v-else>No associated DOIs<br/></template>
         
         <div class="mave-scoreset-section-title">Variants</div>
         <div v-if="item.numVariants > 10">Below is a sample of the first 10 variants. 
@@ -123,7 +128,7 @@
                 style="overflow:hidden" headerStyle="background-color:#A1D8C8; font-weight: bold" ><!--:frozen="columnIsAllNa(scoresTable, column)"-->
                 <template #body="scoresTable" >{{scoresTable.data[column]}}</template>
               </Column>
-              <Column v-for="column of scoreColumns.slice(3,-1)" :field="column" :header="column" :key="column" 
+              <Column v-for="column of scoreColumns.slice(3,scoreColumns.length)" :field="column" :header="column" :key="column" 
                 style="overflow:hidden" headerStyle="background-color:#A1D8C8; font-weight: bold">
                 <template #body="scoresTable">{{convertToThreeDecimal(scoresTable.data[column])}}</template>
               </Column>
@@ -133,14 +138,17 @@
           <TabPanel header="Counts">
             <div style="overflow-y: scroll; overflow-x: scroll; height:600px;">
               <DataTable :value="countsTable" showGridlines="true" stripedRows="true">
-                <Column v-for="column of countColumns.slice(0,3)" :field="column" :header="column" :key="column" 
-                style="overflow:hidden" headerStyle="background-color:#A1D8C8; font-weight: bold"> <!--:frozen="columnIsAllNa(countsTable, column)" bodyStyle="text-align:left"-->
-                  <template #body="countsTable">{{countsTable.data[column]}}</template> <!--:style="{overflow: 'hidden'}"-->
-                </Column>
-                <Column v-for="column of countColumns.slice(3,-1)" :field="column" :header="column" :key="column" 
-                style="overflow:hidden" headerStyle="background-color:#A1D8C8; font-weight: bold">
-                  <template #body="countsTable">{{convertToThreeDecimal(countsTable.data[column])}}</template> 
-                </Column>
+                <template v-if="countColumns.length==3">No count data available.</template>
+                <template v-else>
+                  <Column v-for="column of countColumns.slice(0,3)" :field="column" :header="column" :key="column" 
+                  style="overflow:hidden" headerStyle="background-color:#A1D8C8; font-weight: bold"> <!--:frozen="columnIsAllNa(countsTable, column)" bodyStyle="text-align:left"-->
+                    <template #body="countsTable">{{countsTable.data[column]}}</template> <!--:style="{overflow: 'hidden'}"-->
+                  </Column>
+                  <Column v-for="column of countColumns.slice(3,countColumns.length)" :field="column" :header="column" :key="column" 
+                  style="overflow:hidden" headerStyle="background-color:#A1D8C8; font-weight: bold">
+                    <template #body="countsTable">{{convertToThreeDecimal(countsTable.data[column])}}</template> 
+                  </Column>
+                </template>
               </DataTable>
             </div>
             <!--<table>
@@ -238,7 +246,8 @@ export default {
   data: () => ({
     scores: null,
     scoresTable: [],
-    countsTable: []
+    countsTable: [],
+    readMore: true
   }),
 
   watch: {
@@ -450,9 +459,19 @@ export default {
         frozen = false
       }
       return frozen
-    }
+    },
+    showMore: function(){
+    console.log("hhhh")
+    this.readMore = false
+    console.log(this.readMore)
+    return this.readMore
+    },
+    showLess: function(){
+    this.readMore = true
+    console.log(this.readMore)
+    return this.readMore
+    },
   },
-  
 }
 
 </script>

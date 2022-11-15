@@ -16,9 +16,9 @@
       </div>
       <div class="mave-1000px-col">
         <div v-if="item.creationDate">Created {{formatDate(item.creationDate)}} <span v-if="item.createdBy">
-          <a :href="`https://orcid.org/${item.createdBy.orcid_id}`"><img src="@/assets/ORCIDiD_icon.png" alt="ORCIDiD">{{item.createdBy.firstName}} {{item.createdBy.lastName}}</a></span></div>
+          <a :href="`https://orcid.org/${item.createdBy.orcidId}`" target="blank"><img src="@/assets/ORCIDiD_icon.png" alt="ORCIDiD">{{item.createdBy.firstName}} {{item.createdBy.lastName}}</a></span></div>
         <div v-if="item.modificationDate">Last updated {{formatDate(item.modificationDate)}} <span v-if="item.modifiedBy"> 
-          <a :href="`https://orcid.org/${item.modifiedBy.orcid_id}`"><img src="@/assets/ORCIDiD_icon.png" alt="ORCIDiD">{{item.modifiedBy.firstName}} {{item.modifiedBy.lastName}}</a></span></div>
+          <a :href="`https://orcid.org/${item.modifiedBy.orcidId}`" target="blank"><img src="@/assets/ORCIDiD_icon.png" alt="ORCIDiD">{{item.modifiedBy.firstName}} {{item.modifiedBy.lastName}}</a></span></div>
         <div v-if="item.publishedDate">Published {{formatDate(item.publishedDate)}}</div>
         <div v-if="item.experimentSetUrn">Member of <router-link :to="{name: 'experimentset', params: {urn: item.experimentSetUrn}}">{{item.experimentSetUrn}}</router-link></div>
         <div v-if="item.currentVersion">Current version {{item.currentVersion}}</div>
@@ -66,7 +66,14 @@
             <div v-if="scoreset.targetGene.referenceMaps?.[0]?.genome?.organismName"><strong>Organism:</strong> {{scoreset.targetGene.referenceMaps[0].genome.organismName}}</div>
             <div v-if="scoreset.targetGene.referenceMaps?.[0]?.genome?.shortName"><strong>Reference genome:</strong> {{scoreset.targetGene.referenceMaps[0].genome.shortName}}</div>
             <!--TODO: Miss TaxID part-->
-            <div v-if="scoreset.targetGene.wtSequence?.sequence" style="word-break: break-word"><strong>Reference sequence:</strong> {{scoreset.targetGene.wtSequence.sequence}}</div>
+            <div v-if="scoreset.targetGene.wtSequence?.sequence" style="word-break: break-word"><strong>Reference sequence: </strong>
+              <template v-if="scoreset.targetGene.wtSequence.sequence.length >= 500">
+                <template v-if="readMore == true">{{scoreset.targetGene.wtSequence.sequence.substring(0, 500) + "...."}} </template>
+                <template v-if="readMore == false">{{scoreset.targetGene.wtSequence.sequence}}</template>
+                <Button @click="showMore" v-if="readMore == true" class="p-button-text p-button-sm p-button-info">Show more</Button>
+                <Button @click="showLess" v-if="readMore == false" class="p-button-text p-button-sm p-button-info">Show less</Button>
+              </template><template v-else>{{scoreset.targetGene.wtSequence.sequence}}</template>
+            </div>
           </div>
         </div>
 
@@ -125,12 +132,10 @@ export default {
     }
   },
 
-  //data: () => ({}),
-  data () {
-    return {
-      associatedScoresets: []
-    }
-  },
+  data: () => ({
+    associatedScoresets: [],
+    readMore: true
+  }),
 
   created(){
     this.getAssociatedScoresets();
@@ -201,7 +206,15 @@ export default {
     getAssociatedScoresets: async function(){
       let response = await axios.get(`${config.apiBaseUrl}/experiments/${this.itemId}/associated_scoresets`)
       this.associatedScoresets = response.data
-    }
+    },
+    showMore: function(){
+      this.readMore = false
+      return this.readMore
+    },
+    showLess: function(){
+      this.readMore = true
+      return this.readMore
+    },
   }
 }
 

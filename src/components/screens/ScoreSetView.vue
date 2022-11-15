@@ -23,10 +23,10 @@
       </div>
       <div class="mave-1000px-col">
         <div v-if="item.creationDate">Created {{formatDate(item.creationDate)}} <span v-if="item.createdBy">
-          <a :href="`https://orcid.org/${item.createdBy.orcid_id}`"><img src="@/assets/ORCIDiD_icon.png" alt="ORCIDiD">{{item.createdBy.firstName}} {{item.createdBy.lastName}}</a></span>
+          <a :href="`https://orcid.org/${item.createdBy.orcidId}`" target="blank"><img src="@/assets/ORCIDiD_icon.png" alt="ORCIDiD">{{item.createdBy.firstName}} {{item.createdBy.lastName}}</a></span>
         </div>
         <div v-if="item.modificationDate">Last updated {{formatDate(item.modificationDate)}} <span v-if="item.modifiedBy"> 
-          <a :href="`https://orcid.org/${item.modifiedBy.orcid_id}`"><img src="@/assets/ORCIDiD_icon.png" alt="ORCIDiD">{{item.modifiedBy.firstName}} {{item.modifiedBy.lastName}}</a></span>
+          <a :href="`https://orcid.org/${item.modifiedBy.orcidId}`" target="blank"><img src="@/assets/ORCIDiD_icon.png" alt="ORCIDiD">{{item.modifiedBy.firstName}} {{item.modifiedBy.lastName}}</a></span>
         </div>
         <div v-if="item.publishedDate">Published {{formatDate(item.publishedDate)}}</div>
         <div v-if="item.experiment">Member of <router-link :to="{name: 'experiment', params: {urn: item.experiment.urn}}">{{item.experiment.urn}}</router-link></div>
@@ -81,7 +81,7 @@
           <div v-if="item.targetGene.referenceMaps?.[0]?.targetId"><strong>Target ID:</strong> {{item.targetGene.referenceMaps[0].targetId}}</div>
           <div v-if="item.targetGene.wtSequence?.sequence" style="word-break: break-word"><strong>Reference sequence: </strong>
             <template v-if="item.targetGene.wtSequence.sequence.length >= 500">
-              <template v-if="readMore == true">{{item.targetGene.wtSequence.sequence.substring(0, 500) + " ..."}} </template>
+              <template v-if="readMore == true">{{item.targetGene.wtSequence.sequence.substring(0, 500) + "...."}} </template>
               <template v-if="readMore == false">{{item.targetGene.wtSequence.sequence}}</template>
               <Button @click="showMore" v-if="readMore == true" class="p-button-text p-button-sm p-button-info">Show more</Button>
               <Button @click="showLess" v-if="readMore == false" class="p-button-text p-button-sm p-button-info">Show less</Button>
@@ -461,15 +461,12 @@ export default {
       return frozen
     },
     showMore: function(){
-    console.log("hhhh")
-    this.readMore = false
-    console.log(this.readMore)
-    return this.readMore
+      this.readMore = false
+      return this.readMore
     },
     showLess: function(){
-    this.readMore = true
-    console.log(this.readMore)
-    return this.readMore
+      this.readMore = true
+      return this.readMore
     },
   },
 }

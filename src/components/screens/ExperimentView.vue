@@ -92,6 +92,10 @@
         </div><template v-else>No associated raw reads<br/></template>
       </div>
     </div>
+    <div v-else>
+      <h1>Page Not Found</h1>
+      The requested experiment does not exist.
+    </div>
   </DefaultLayout>
 </template>
 

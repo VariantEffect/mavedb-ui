@@ -163,6 +163,10 @@
         </TabView>
       </div>
     </div>
+    <div v-else>
+      <h1>Page Not Found</h1>
+      The requested score set does not exist.
+    </div>
   </DefaultLayout>
 </template>
 

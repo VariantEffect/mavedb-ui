@@ -35,6 +35,10 @@
           
       </div>
     </div>
+    <div v-else>
+      <h1>Page Not Found</h1>
+      The requested experiment set does not exist.
+    </div>
   </DefaultLayout>
 </template>
 

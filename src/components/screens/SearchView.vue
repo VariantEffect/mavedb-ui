@@ -7,7 +7,8 @@
       <div class="mavedb-search-form">
         <span class="p-input-icon-left">
           <i class="pi pi-search" />
-          <InputText v-model="searchText" ref="searchTextInput" type="text" placeholder="Search" @change="search" />
+          <InputText v-model="searchText" ref="searchTextInput" type="text" class="p-inputtext-sm" placeholder="Search" @change="search" />
+          <Button @click="clear" class="p-button-help">Clear</Button>
         </span>
         <div class="mavedb-search-filters">
           <SelectList v-model="filterTargetNames" :options="targetNameFilterOptions" class="mavedb-search-filter-option-picker" title="Target name"  />
@@ -37,10 +38,11 @@ import config from '@/config'
 import FlexDataTable from '@/components/common/FlexDataTable'
 import SelectList from '@/components/common/SelectList'
 import DefaultLayout from '@/components/layout/DefaultLayout'
+import Button from 'primevue/button'
 
 export default {
   name: 'SearchView',
-  components: {DefaultLayout, FlexDataTable, InputText, SelectList},
+  components: {DefaultLayout, FlexDataTable, InputText, SelectList, Button},
 
   data: function() {
     const self = this
@@ -277,6 +279,11 @@ export default {
           this.search()
         }
       }
+    },
+    item: {
+      handler: function() {
+        this.clear()
+      }
     }
   },
   methods: {
@@ -321,6 +328,12 @@ export default {
       } catch (err) {
         console.log(`Error while loading search results")`, err)
       }
+    },
+    clear: function() {
+      this.searchText = null
+      this.filterTargetNames = []
+      this.filterTargetTypes = [] 
+      this.filterTargetOrganismNames = []
     }
   }
 }

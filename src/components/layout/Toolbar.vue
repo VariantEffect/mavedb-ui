@@ -69,9 +69,10 @@ export default {
           available: () => oidc.isAuthenticated
         }, {
           label: 'Sign out',
-          command: () => self.signOut(),
+          command: () => this.signOut(),
           available: () => oidc.isAuthenticated
-        }]
+        }],
+        available: () => oidc.isAuthenticated
       }, {
         label: 'Sign in',
         to: '/my-data',

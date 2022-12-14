@@ -59,6 +59,76 @@ const itemTypes = {
       }
     }
   },
+  'uniprot-identifier-search': {
+    name: 'uniprot-identifier', // TODO Redundant, change this structure
+    restCollectionName: 'targetGeneIdentifiers',
+    httpOptions: {
+      list: {
+        method: 'post',
+        url: `${config.apiBaseUrl}/targetGeneIdentifiers/search?db_name=UniProt`
+      }
+    }
+  },
+  'ensembl-identifier-search': {
+    name: 'ensembl-identifier', // TODO Redundant, change this structure
+    restCollectionName: 'targetGeneIdentifiers',
+    httpOptions: {
+      list: {
+        method: 'post',
+        url: `${config.apiBaseUrl}/targetGeneIdentifiers/search?db_name=Ensembl`
+      }
+    }
+  },
+  'refseq-identifier-search': {
+    name: 'refseq-identifier', // TODO Redundant, change this structure
+    restCollectionName: 'targetGeneIdentifiers',
+    httpOptions: {
+      list: {
+        method: 'post',
+        url: `${config.apiBaseUrl}/targetGeneIdentifiers/search?db_name=RefSeq`
+      }
+    }
+  },
+  'user': {
+    name: 'user',
+    restCollectionName: 'users',
+    title: 'user',
+    commonTitle: 'user',
+    schema: {
+      type: 'object',
+      properties: {
+        orcidId: {type: 'string'},
+        email: {type: 'string'},
+        lastName: {type: 'string'},
+        firstName: {type: 'string'}
+      }
+    },
+    primaryKey: 'id',
+    views: {
+      table: {
+        default: {
+          columns: [
+            {path: 'orcidId', title: 'ORCID ID'},
+            {path: 'roles'},
+            {path: 'lastName'},
+            {path: 'firstName'},
+            {path: 'email'}
+          ]
+        }
+      },
+      detail: {
+        default: {
+          fields: [
+            {path: 'orcidId', title: 'ORCID ID', readonly: true},
+            {path: 'email'},
+            {path: 'lastName'},
+            {path: 'firstName'},
+            {path: 'roles', inputType: 'tags'}
+          ]
+        }
+      }
+    }
+  },
   'me': {
     name: 'me',
     restCollectionName: 'users',

@@ -54,7 +54,8 @@
         <div v-if="item.keywords && item.keywords.length > 0">
           <div class="mave-scoreset-section-title">Keywords</div>
           <div class="mave-scoreset-keywords">
-            <a v-for="(keyword, i) of item.keywords" :key="i" :href="`https://www.mavedb.org/search/?keywords=${keyword}`"><Chip :label="keyword"/></a>
+            <Chip :label="keyword"/>
+            <!--<a v-for="(keyword, i) of item.keywords" :key="i" :href="`https://www.mavedb.org/search/?keywords=${keyword}`"><Chip :label="keyword"/></a>-->
           </div>
         </div>
 
@@ -179,7 +180,7 @@ export default {
             if (response.status == 200) {
               // display toast message here
               console.log('Deleted item')
-              this.$router.replace({path: `/my-data`})
+              this.$router.replace({path: `/dashboard`})
               this.$toast.add({severity:'success', summary: 'Your experiment was successfully deleted.', life: 3000})
               
             } else if (response.data && response.data.detail) {

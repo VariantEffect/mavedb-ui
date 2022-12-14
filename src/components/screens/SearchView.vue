@@ -169,10 +169,10 @@ export default {
         {value: 'Other - genome not listed', badge: 49},
         {value: 'Saccharomyces cerevisiae', badge: 33}
       ],
-      filterTargetNames: [],
-      filterTargetTypes: [],
-      filterTargetOrganismNames: [],
-      searchText: null,
+      filterTargetNames: this.$route.query['target-names'] ? this.$route.query['target-names'].split(',') : [],
+      filterTargetTypes: this.$route.query['target-types'] ? this.$route.query['target-types'].split(',') : [],
+      filterTargetOrganismNames: this.$route.query['target-organism-names'] ? this.$route.query['target-organism-names'].split(',') : [],
+      searchText: this.$route.query.search,
       scoresets: [],
       publishedScoresets: [],
       tableOptions: {
@@ -284,10 +284,52 @@ export default {
       handler: function() {
         this.clear()
       }
+    },
+    '$route.query.search': {
+      handler: function(newValue, oldValue) {
+        if (newValue != oldValue) {
+          this.searchText = newValue
+          this.search()
+        }
+      },
+      immediate: true
+    },
+    '$route.query.target-names': {
+      handler: function(newValue, oldValue) {
+        if (newValue != oldValue) {
+          this.filterTargetNames = newValue ? newValue.split(',') : null
+          this.search()
+        }
+      },
+      immediate: true
+    },
+    '$route.query.target-types': {
+      handler: function(newValue, oldValue) {
+        if (newValue != oldValue) {
+          this.filterTargetTypes = newValue ? newValue.split(',') : null
+          this.search()
+        }
+      },
+      immediate: true
+    },
+    '$route.query.target-organism-names': {
+      handler: function(newValue, oldValue) {
+        if (newValue != oldValue) {
+          this.filterTargetOrganismNames = newValue ? newValue.split(',') : null
+          this.search()
+        }
+      },
+      immediate: true
     }
   },
   methods: {
     search: async function() {
+      this.$router.push({query: {
+        ...(this.searchText && this.searchText.length > 0) ? {search: this.searchText} : {},
+        ...(this.filterTargetNames.length > 0) ? {'target-names': this.filterTargetNames.join(',')} : {},
+        ...(this.filterTargetTypes.length > 0) ? {'target-types': this.filterTargetTypes.join(',')} : {},
+        ...(this.filterTargetOrganismNames.length > 0) ? {'target-namorganism-nameses': this.filterTargetOrganismNames.join(',')} : {}
+      }})
       await this.fetchSearchResults()
       /*      
       if (this.searchText && this.searchText.length > 0) {

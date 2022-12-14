@@ -18,7 +18,7 @@
         <div v-if="item.shortDescription" class="mave-scoreset-description">{{item.shortDescription}}</div>
         <div v-if="item.urn" class="mave-scoreset-urn"><h3>{{item.urn}}</h3></div>
       </div>
-      <div v-if="scores" class="mave-scoreset-heatmap-pane">
+      <div v-if="showHeatmap && scores" class="mave-scoreset-heatmap-pane">
         <ScoreSetHeatmap :scoreSet="item" :scores="scores" />
       </div>
       <div class="mave-1000px-col">
@@ -172,21 +172,20 @@
 
 <script>
 
+import axios from 'axios'
 import _ from 'lodash'
 import marked from 'marked'
 import Button from 'primevue/button'
 import Chip from 'primevue/chip'
 
+import ScoreSetHeatmap from '@/components/ScoreSetHeatmap'
 import DefaultLayout from '@/components/layout/DefaultLayout'
+import useFormatters from '@/composition/formatters'
 import useItem from '@/composition/item'
 import useRemoteData from '@/composition/remote-data'
 import config from '@/config'
-import {parseScores} from '@/lib/scores'
-import ScoreSetHeatmap from '@/components/ScoreSetHeatmap'
-import useFormatters from '@/composition/formatters'
-import axios from 'axios'
-//import Vue from "vue"
 import {oidc} from '@/lib/auth'
+import {parseScores} from '@/lib/scores'
 
 import TabView from 'primevue/tabview'
 import TabPanel from 'primevue/tabpanel'
@@ -307,9 +306,8 @@ export default {
               // display toast message here
               //const deletedItem = response.data
               console.log('Deleted item')
-              this.$router.replace({path: `/my-data`})
+              this.$router.replace({path: `/dashboard`})
               this.$toast.add({severity:'success', summary: 'Your scoreset was successfully deleted.', life: 3000})
-              
             } else if (response.data && response.data.detail) {
               const formValidationErrors = {}
               for (const error of response.data.detail) {

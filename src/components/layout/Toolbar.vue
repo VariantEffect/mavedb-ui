@@ -1,5 +1,4 @@
 <template>
-
   <div class="mavedb-toolbar">
     <Menubar :model="availableMenuItems" class="mavedb-menubar">
       <template #start>
@@ -19,6 +18,7 @@
 
 import _ from 'lodash'
 import Menubar from 'primevue/menubar'
+import {mapState} from 'vuex'
 
 import {oidc} from '@/lib/auth'
 
@@ -30,66 +30,102 @@ export default {
   }),
 
   watch: {
-    user: {
+    authenticated: {
       handler: function() {
         this.availableMenuItems = this.filterAvailableMenuItems(this.menuItems)
       },
       immediate: true
+    },
+    roles: {
+      handler: function() {
+        this.availableMenuItems = this.filterAvailableMenuItems(this.menuItems)
+      }
     }
   },
 
   computed: {
+    ...mapState('auth', ['authenticated', 'orcidProfile', 'roles']),
     userName: function() {
-      const profile = oidc?.user?.profile
+      const profile = this.orcidProfile // oidc?.user?.profile
       return profile ? [profile.given_name, profile.family_name].filter(Boolean).join(' ') : null
     },
     menuItems: function() {
       return [{
         label: 'Dashboard',
-        to: '/my-data',
-        available: ()=> oidc.isAuthenticated
+        to: '/dashboard',
+        available: ({authenticated}) => authenticated // oidc.isAuthenticated
       },
-        {
+      {
         label: 'Search',
         to: '/search'
       }, {
+        label: 'Documentation',
+        to: '/docs'
+      }, {
         label: 'New experiment',
         to: '/create-experiment',
-        available: () => oidc.isAuthenticated
+        available: ({authenticated}) => authenticated // oidc.isAuthenticated
       }, {
         label: 'New scoreset',
         to: '/create-scoreset',
-        available: () => oidc.isAuthenticated
+        available: ({authenticated}) => authenticated // oidc.isAuthenticated
+      }, {
+        label: 'Users',
+        to: '/users',
+        available: ({roles}) => roles.includes('admin') // oidc.isAuthenticated
       }, {
         label: this.userName,
         icon:'pi pi-fw pi-user',
         items:[{
           label: 'Settings',
           to: '/settings',
-          available: () => oidc.isAuthenticated
+          available: ({authenticated}) => authenticated // oidc.isAuthenticated
         }, {
           label: 'Sign out',
           command: () => this.signOut(),
+          available: ({authenticated}) => authenticated // oidc.isAuthenticated
+        }]
+        /*
           available: () => oidc.isAuthenticated
         }],
         available: () => oidc.isAuthenticated
+        */
       }, {
         label: 'Sign in',
-        to: '/my-data',
-        available: () => !oidc.isAuthenticated
+        command: () => {oidc.signIn()},
+        // to: '/dashboard',
+        available: ({authenticated}) => !authenticated // !oidc.isAuthenticated
       }]
     }
   },
 
   methods: {
-    filterAvailableMenuItems: function(menuItems) {
-      return menuItems.filter((menuItem) => {
-        if (_.isFunction(menuItem.available)) {
-          return menuItem.available()
-        } else {
-          return true
+    filterAvailableMenuItems(menuItems) {
+      const self = this
+      return menuItems.map((item) => {
+        if (item.items) {
+          let newSubitems = this.filterAvailableMenuItems(item.items)
+          if (newSubitems.length == 0) {
+            return null
+          }
+          item = _.clone(item)
+          item.items = newSubitems
         }
-      })
+        const available = !item.available || item.available({
+          authenticated: self.authenticated,
+          roles: self.roles || []
+        }) // && (!item.to || this.userMayAccessPath(item.to))
+        if (!available) {
+          if (!item.items || item.items.length == 0) {
+            return null
+          } else {
+            item.command = null
+            item.to = null
+            item.url = null
+          }
+        }
+        return item
+      }).filter(Boolean)
     },
     signOut: function() {
       oidc.signOut()
@@ -141,6 +177,10 @@ export default {
 
 .mavedb-menubar.p-menubar::v-deep .p-menubar-root-list > .p-menuitem > .p-menuitem-link .p-menuitem-icon:empty {
   margin: 0;
+}
+
+.mavedb-menubar.p-menubar::v-deep .p-menubar-root-list > .p-menuitem > .p-menuitem-link .p-menuitem-icon.pi {
+  margin-right: 0.5rem;
 }
 
 .mavedb-menubar .mavedb-title {

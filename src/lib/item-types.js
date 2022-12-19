@@ -40,6 +40,16 @@ const itemTypes = {
       }
     }
   },
+  'raw-read-identifier-search': {
+    name: 'raw-read-identifier', // TODO Redundant, change this structure
+    restCollectionName: 'rawReadIdentifiers',
+    httpOptions: {
+      list: {
+        method: 'post',
+        url: `${config.apiBaseUrl}/rawReadIdentifiers/search`
+      }
+    }
+  },
   'reference-genome': {
     name: 'reference-genome', // TODO Redundant, change this structure
     restCollectionName: 'referenceGenomes'

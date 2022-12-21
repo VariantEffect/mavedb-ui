@@ -1,7 +1,7 @@
 const DOI_REGEX = /^(10[.][0-9]{4,}(?:[.][0-9]+)*\/(?:(?![%"#? ])\S)+)$/
 const DOI_PREFIXES = ['https://doi.org/', 'doi:']
 const PUBMED_REGEX = /^[0-9]+$/
-const PUBMED_PREFIXES = ['https://doi.org/', 'doi:']
+const PUBMED_PREFIXES = ['http://www.ncbi.nlm.nih.gov/pubmed/', 'pubmed:']
 const RAW_READ_REGEX = /^[A-Z]+[0-9]+$/
 const RAW_READ_PREFIXES = ['http://www.ebi.ac.uk/', 'http://www.ncbi.nlm.nih.gov/', 'sra']
 

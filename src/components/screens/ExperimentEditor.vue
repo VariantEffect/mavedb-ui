@@ -80,6 +80,23 @@
               </div>
               <div class="field">
                 <span class="p-float-label">
+                  <AutoComplete
+                      ref="rawReadIdentifiersInput"
+                      v-model="rawReadIdentifiers"
+                      :id="$scopedId('input-rarReadIdentifiers')"
+                      field="identifier"
+                      :multiple="true"
+                      :suggestions="rawReadIdentifierSuggestionsList"
+                      @complete="searchRawReadIdentifiers"
+                      @keyup.enter="acceptNewRawReadIdentifier"
+                      @keyup.escape="clearRawReadIdentifierSearch"
+                  />
+                  <label :for="$scopedId('input-rawReadIdentifiers')">Raw Read</label>
+                </span>
+                <span v-if="validationErrors.rawReadIdentifiers" class="mave-field-error">{{validationErrors.rawReadIdentifiers}}</span>
+              </div>
+              <div class="field">
+                <span class="p-float-label">
                   <FileUpload
                       :id="$scopedId('input-extraMetadataFile')"
                       :auto="false"
@@ -168,7 +185,7 @@ import DefaultLayout from '@/components/layout/DefaultLayout'
 import useItem from '@/composition/item'
 import useItems from '@/composition/items'
 import config from '@/config'
-import {normalizeDoi, normalizePubmedId, validateDoi, validatePubmedId} from '@/lib/identifiers'
+import {normalizeDoi, normalizePubmedId, normalizeRawRead, validateDoi, validatePubmedId, validateRawRead} from '@/lib/identifiers'
 import useFormatters from '@/composition/formatters'
 
 export default {
@@ -178,6 +195,7 @@ export default {
   setup: () => {
     const doiIdentifierSuggestions = useItems({itemTypeName: 'doi-identifier-search'})
     const pubmedIdentifierSuggestions = useItems({itemTypeName: 'pubmed-identifier-search'})
+    const rawReadIdentifierSuggestions = useItems({itemTypeName: 'raw-read-identifier-search'})
     const {errors: validationErrors, handleSubmit, setErrors: setValidationErrors} = useForm()
     return {
       ...useFormatters(),
@@ -186,6 +204,8 @@ export default {
       setDoiIdentifierSearch: (text) => doiIdentifierSuggestions.setRequestBody({text}),
       pubmedIdentifierSuggestions: pubmedIdentifierSuggestions.items,
       setPubmedIdentifierSearch: (text) => pubmedIdentifierSuggestions.setRequestBody({text}),
+      rawReadIdentifierSuggestions: rawReadIdentifierSuggestions.items,
+      setRawReadIdentifierSearch: (text) => rawReadIdentifierSuggestions.setRequestBody({text}),
       handleSubmit,
       setValidationErrors,
       validationErrors
@@ -208,6 +228,7 @@ export default {
     keywords: [],
     doiIdentifiers: [],
     pubmedIdentifiers: [],
+    rawReadIdentifiers: [],
     extraMetadata: {},
 
     progressVisible: false,
@@ -230,7 +251,12 @@ export default {
       // The PrimeVue AutoComplete doesn't seem to like it if we set the suggestion list to [].
       // This causes the drop-down to stop appearing when we later populate the list.
       return this.pubmedIdentifierSuggestions || [{}]
-    }
+    },
+    rawReadIdentifierSuggestionsList: function() {
+      // The PrimeVue AutoComplete doesn't seem to like it if we set the suggestion list to [].
+      // This causes the drop-down to stop appearing when we later populate the list.
+      return this.rawReadIdentifierSuggestions || [{}]
+    },
   },
 
   watch: {
@@ -313,6 +339,36 @@ export default {
       }
     },
 
+    acceptNewRawReadIdentifier: function() {
+      const input = this.$refs.rawReadIdentifiersInput
+      const searchText = (input.inputTextValue || '').trim()
+      if (validateRawRead(searchText)) {
+        const rawReadId = normalizeRawRead(searchText)
+        this.rawReadIdentifiers = _.uniqBy([...this.rawReadIdentifiers, {identifier: rawReadId}])
+        input.inputTextValue = null
+
+        // Clear the text input.
+        // TODO This depends on PrimeVue internals more than I'd like:
+        input.$refs.input.value = ''
+      }
+    },
+
+    clearRawReadIdentifierSearch: function() {
+      const input = this.$refs.rawReadIdentifiersInput
+      input.inputTextValue = null
+
+      // Clear the text input.
+      // TODO This depends on PrimeVue internals more than I'd like:
+      input.$refs.input.value = ''
+    },
+
+    searchRawReadIdentifiers: function(event) {
+      const searchText = (event.query || '').trim()
+      if (searchText.length > 0) {
+        this.setRawReadIdentifierSearch(event.query)
+      }
+    },
+
     fileCleared: function(inputName) {
       if (inputName == 'extraMetadataFile') {
         this.extraMetadata = null
@@ -370,6 +426,7 @@ export default {
         this.keywords = this.item.keywords
         this.doiIdentifiers = this.item.doiIdentifiers
         this.pubmedIdentifiers = this.item.pubmedIdentifiers
+        this.rawReadIdentifiers = this.item.rawReadIdentifiers
         this.extraMetadata = this.item.extraMetadata
       } else {
         this.title = null
@@ -379,6 +436,7 @@ export default {
         this.keywords = []
         this.doiIdentifiers = []
         this.pubmedIdentifiers = []
+        this.rawReadIdentifiers = []
         this.extraMetadata = {}
       }
     },
@@ -399,6 +457,7 @@ export default {
         keywords: this.keywords,
         doiIdentifiers: this.doiIdentifiers.map((identifier) => _.pick(identifier, 'identifier')),
         pubmedIdentifiers: this.pubmedIdentifiers.map((identifier) => _.pick(identifier, 'identifier')),
+        rawReadIdentifiers: this.rawReadIdentifiers.map((identifier) => _.pick(identifier, 'identifier')),
         extraMetadata: {}
       }
       const editedItem = _.merge({}, this.item || {}, editedFields)

@@ -517,7 +517,7 @@ export default {
 
     // Static sets of options:
     sequenceTypes: [
-      'dna',
+      'DNA',
       'protein'
     ],
     targetGeneCategories: [

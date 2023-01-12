@@ -39,8 +39,12 @@
           </template>
         </div>
         <div>Download files <Button class="p-button-outlined p-button-sm" @click="downloadFile('scores')">Scores</Button>&nbsp;
-        <Button class="p-button-outlined p-button-sm" @click="downloadFile('counts')">Counts</Button>&nbsp;
-        <Button class="p-button-outlined p-button-sm" @click="downloadMetadata">Metadata</Button>
+          <template v-if="countColumns.length!=0"> 
+            <Button class="p-button-outlined p-button-sm" @click="downloadFile('counts')">Counts</Button>&nbsp;
+          </template>
+          <template v-if="isMetaDataEmpty!=true">
+            <Button class="p-button-outlined p-button-sm" @click="downloadMetadata">Metadata</Button>
+          </template>
         </div>
         <div v-if="item.abstractText">
           <div class="mave-scoreset-section-title">Abstract</div>
@@ -108,7 +112,7 @@
             <li v-for="(doi, i) of item.doiIdentifiers" :key="i"><a :href="`${doi.url}`" target="blank">{{doi.identifier}}</a></li>
           </ul>
         </div><template v-else>No associated DOIs<br/></template>
-        
+
         <div class="mave-scoreset-section-title">Variants</div>
         <div v-if="item.numVariants > 10">Below is a sample of the first 10 variants. 
             Please download the file on the top page if you want to read the whole variants list.</div>
@@ -138,7 +142,7 @@
           <TabPanel header="Counts">
             <div style="overflow-y: scroll; overflow-x: scroll; height:600px;">
               <DataTable :value="countsTable" showGridlines="true" stripedRows="true">
-                <template v-if="countColumns.length==3">No count data available.</template>
+                <template v-if="countColumns.length==0">No count data available.</template>
                 <template v-else>
                   <Column v-for="column of countColumns.slice(0,3)" :field="column" :header="column" :key="column" 
                   style="overflow:hidden" headerStyle="background-color:#A1D8C8; font-weight: bold"> <!--:frozen="columnIsAllNa(countsTable, column)" bodyStyle="text-align:left"-->
@@ -197,6 +201,10 @@ export default {
   name: 'ScoreSetView',
   components: {Button, Chip, DefaultLayout, ScoreSetHeatmap, TabView, TabPanel, DataTable, Column},
   computed: {
+    isMetaDataEmpty: function(){
+      //If extraMetadata is empty, return value will be true.
+      return Object.keys(this.item.extraMetadata).length === 0
+    },
     oidc: function() {
       return oidc
       },
@@ -206,7 +214,8 @@ export default {
     },
     countColumns: function(){
       const fixedColumns = ['hgvs_nt', 'hgvs_splice','hgvs_pro']
-      return [...fixedColumns, ...this.item?.datasetColumns?.count_columns || []]
+      const showCountColumns = !_.isEmpty(this.item?.datasetColumns?.count_columns)
+      return showCountColumns ? [...fixedColumns, ...this.item?.datasetColumns?.count_columns || []] : []
     },
     sortedMetaAnalysis: function(){
       return _.orderBy(this.item.metaAnalysisSourceScoresets, 'urn')

@@ -1,6 +1,6 @@
 <template>
   <DefaultLayout>
-    <div class="mave-experiment-editor mave-full-height mave-scroll-vertical">
+    <div class="mave-experiment-editor">
       <div class="grid">
         <div class="col-12">
           <div v-if="itemStatus != 'NotLoaded'" class="mave-screen-title-bar">

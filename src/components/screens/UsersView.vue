@@ -1,5 +1,5 @@
 <template>
-  <DefaultLayout width="full">
+  <DefaultLayout height="full" overflow-y="hidden" width="full">
     <ItemsView entityTypeName="user" />
   </DefaultLayout>
 </template>

@@ -1,5 +1,5 @@
 <template>
-  <DefaultLayout>
+  <DefaultLayout overflow-y="hidden">
     <div class="mavedb-search-view">
       <div class="mavedb-search-header" style="display: none;">
         <h1>Search MaveDB Experiments and Score Sets</h1>

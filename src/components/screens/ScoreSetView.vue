@@ -1,6 +1,6 @@
 <template>
   <DefaultLayout>
-    <div v-if="item" class="mave-full-height mave-scoreset mave-scroll-vertical">
+    <div v-if="item" class="mave-scoreset">
       <div class="mave-1000px-col">
         <div class="mave-screen-title-bar">
           <div class="mave-screen-title">{{item.title || 'Untitled score set'}}</div>

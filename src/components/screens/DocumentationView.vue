@@ -5,7 +5,7 @@
     <ul>
         <li><a href="/docs/mavedb/">MaveDB documentation homepage</a></li>
         <ul>
-            <li>View project on <a href="https://github.com/VariantEffect/MaveDB">GitHub</a></li>
+            <li>View project on <a href="https://github.com/VariantEffect/mavedb-api">GitHub</a></li>
             <li><a :href="apiDocumentationUrl">API documentation</a></li>
         </ul>
         <li><a href="/docs/mavehgvs/">MAVE-HGVS documentation homepage</a></li>

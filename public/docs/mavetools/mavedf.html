@@ -1,0 +1,228 @@
+
+<!DOCTYPE html>
+
+<html lang="en">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" /><meta name="generator" content="Docutils 0.19: https://docutils.sourceforge.io/" />
+
+    <title>mavevdf &#8212; mavetools 0.1.1 documentation</title>
+    <link rel="stylesheet" type="text/css" href="_static/pygments.css" />
+    <link rel="stylesheet" type="text/css" href="_static/pyramid.css" />
+    <link rel="stylesheet" type="text/css" href="_static/styles.css" />
+    <script data-url_root="./" id="documentation_options" src="_static/documentation_options.js"></script>
+    <script src="_static/doctools.js"></script>
+    <script src="_static/sphinx_highlight.js"></script>
+    <link rel="index" title="Index" href="genindex.html" />
+    <link rel="search" title="Search" href="search.html" />
+    <link rel="next" title="validators" href="validators.html" />
+    <link rel="prev" title="convert" href="convert.html" />
+<link rel="stylesheet" href="https://fonts.googleapis.com/css?family=Neuton&amp;subset=latin" type="text/css" media="screen" charset="utf-8" />
+<link rel="stylesheet" href="https://fonts.googleapis.com/css?family=Nobile:regular,italic,bold,bolditalic&amp;subset=latin" type="text/css" media="screen" charset="utf-8" />
+<!--[if lte IE 6]>
+<link rel="stylesheet" href="_static/ie6.css" type="text/css" media="screen" charset="utf-8" />
+<![endif]-->
+
+  </head><body>
+
+    <div class="related" role="navigation" aria-label="related navigation">
+      <h3>Navigation</h3>
+      <ul>
+        <li class="right" style="margin-right: 10px">
+          <a href="genindex.html" title="General Index"
+             accesskey="I">index</a></li>
+        <li class="right" >
+          <a href="py-modindex.html" title="Python Module Index"
+             >modules</a> |</li>
+        <li class="right" >
+          <a href="validators.html" title="validators"
+             accesskey="N">next</a> |</li>
+        <li class="right" >
+          <a href="convert.html" title="convert"
+             accesskey="P">previous</a> |</li>
+        <li class="nav-item nav-item-0"><a href="index.html">mavetools 0.1.1 documentation</a> &#187;</li>
+        <li class="nav-item nav-item-this"><a href="">mavevdf</a></li> 
+      </ul>
+    </div>  
+
+    <div class="document">
+      <div class="documentwrapper">
+        <div class="bodywrapper">
+          <div class="body" role="main">
+            
+  <section id="mavevdf">
+<h1>mavevdf<a class="headerlink" href="#mavevdf" title="Permalink to this heading">¶</a></h1>
+<p>mavedf features a MaveDf object and functions
+that can be performed on that object. It also features
+helper functions that may be useful to the user.</p>
+<span class="target" id="module-mavetools.mavedf.mutation_type"></span><dl class="py function">
+<dt class="sig sig-object py" id="mavetools.mavedf.mutation_type.is_deletion">
+<span class="sig-prename descclassname"><span class="pre">mavetools.mavedf.mutation_type.</span></span><span class="sig-name descname"><span class="pre">is_deletion</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">hgvs</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#mavetools.mavedf.mutation_type.is_deletion" title="Permalink to this definition">¶</a></dt>
+<dd><p>This function takes an hgvs formatted string and returns True if the hgvs string indicates
+there was a deletion.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><p><strong>hgvs</strong> (<em>string</em>) – hgvs formatted string</p>
+</dd>
+<dt class="field-even">Returns<span class="colon">:</span></dt>
+<dd class="field-even"><p><strong>deletion</strong> – True if hgvs string is indicates a deletion</p>
+</dd>
+<dt class="field-odd">Return type<span class="colon">:</span></dt>
+<dd class="field-odd"><p><a class="reference external" href="https://docs.python.org/3/library/functions.html#bool" title="(in Python v3.11)">bool</a></p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py function">
+<dt class="sig sig-object py" id="mavetools.mavedf.mutation_type.is_substitution_one_base">
+<span class="sig-prename descclassname"><span class="pre">mavetools.mavedf.mutation_type.</span></span><span class="sig-name descname"><span class="pre">is_substitution_one_base</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">hgvs</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#mavetools.mavedf.mutation_type.is_substitution_one_base" title="Permalink to this definition">¶</a></dt>
+<dd><p>This function takes an hgvs formatted string and returns True if the hgvs string indicates
+there was a substitution at one base of the codon.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><p><strong>hgvs</strong> (<em>string</em>) – hgvs formatted string</p>
+</dd>
+<dt class="field-even">Returns<span class="colon">:</span></dt>
+<dd class="field-even"><p><strong>sub_one</strong> – True if hgvs string is indicates a substitution at one base of codon</p>
+</dd>
+<dt class="field-odd">Return type<span class="colon">:</span></dt>
+<dd class="field-odd"><p><a class="reference external" href="https://docs.python.org/3/library/functions.html#bool" title="(in Python v3.11)">bool</a></p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py function">
+<dt class="sig sig-object py" id="mavetools.mavedf.mutation_type.is_substitution_two_bases_nonadjacent">
+<span class="sig-prename descclassname"><span class="pre">mavetools.mavedf.mutation_type.</span></span><span class="sig-name descname"><span class="pre">is_substitution_two_bases_nonadjacent</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">hgvs</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#mavetools.mavedf.mutation_type.is_substitution_two_bases_nonadjacent" title="Permalink to this definition">¶</a></dt>
+<dd><p>This function takes an hgvs formatted string and returns True if the hgvs string indicates
+there were substitutions (non-adjacent) in the codon.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><p><strong>hgvs</strong> (<em>string</em>) – hgvs formatted string</p>
+</dd>
+<dt class="field-even">Returns<span class="colon">:</span></dt>
+<dd class="field-even"><p><strong>sub_two</strong> – True if hgvs string is indicates a substitution at one base of codon</p>
+</dd>
+<dt class="field-odd">Return type<span class="colon">:</span></dt>
+<dd class="field-odd"><p><a class="reference external" href="https://docs.python.org/3/library/functions.html#bool" title="(in Python v3.11)">bool</a></p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py function">
+<dt class="sig sig-object py" id="mavetools.mavedf.mutation_type.is_wild_type">
+<span class="sig-prename descclassname"><span class="pre">mavetools.mavedf.mutation_type.</span></span><span class="sig-name descname"><span class="pre">is_wild_type</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">hgvs</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#mavetools.mavedf.mutation_type.is_wild_type" title="Permalink to this definition">¶</a></dt>
+<dd><p>This function takes an hgvs formatted string and returns True if the hgvs string indicates
+there was no change from the target sequence.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><p><strong>hgvs</strong> (<em>string</em>) – hgvs formatted string</p>
+</dd>
+<dt class="field-even">Returns<span class="colon">:</span></dt>
+<dd class="field-even"><p><strong>wt</strong> – True if hgvs string indicates wild type</p>
+</dd>
+<dt class="field-odd">Return type<span class="colon">:</span></dt>
+<dd class="field-odd"><p><a class="reference external" href="https://docs.python.org/3/library/functions.html#bool" title="(in Python v3.11)">bool</a></p>
+</dd>
+</dl>
+</dd></dl>
+
+<span class="target" id="module-mavetools.mavedf.legacy_to_mave_new"></span><dl class="py function">
+<dt class="sig sig-object py" id="mavetools.mavedf.legacy_to_mave_new.legacy_to_mave_hgvs_nt">
+<span class="sig-prename descclassname"><span class="pre">mavetools.mavedf.legacy_to_mave_new.</span></span><span class="sig-name descname"><span class="pre">legacy_to_mave_hgvs_nt</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">legacy_hgvs</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#mavetools.mavedf.legacy_to_mave_new.legacy_to_mave_hgvs_nt" title="Permalink to this definition">¶</a></dt>
+<dd><p>This function converts a legacy hgvs_nt formatted string (i.e., c.[1C&gt;A;2=;3=]) and converts it
+to the standard format (i.e., c.1delinsA). If string is already in standard format, the input
+string is returned as-is.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><p><strong>hgvs_legacy</strong> (<em>string</em>) – legacy format hgvs string</p>
+</dd>
+<dt class="field-even">Returns<span class="colon">:</span></dt>
+<dd class="field-even"><p><strong>mave_hgvs</strong> – standard format hgvs string or
+empty string if input string is in invalid format</p>
+</dd>
+<dt class="field-odd">Return type<span class="colon">:</span></dt>
+<dd class="field-odd"><p>string</p>
+</dd>
+</dl>
+</dd></dl>
+
+</section>
+
+
+            <div class="clearer"></div>
+          </div>
+        </div>
+      </div>
+      <div class="sphinxsidebar" role="navigation" aria-label="main navigation">
+        <div class="sphinxsidebarwrapper">
+  <div>
+    <h3><a href="index.html">Table of Contents</a></h3>
+    <ul>
+<li><a class="reference internal" href="#">mavevdf</a><ul>
+<li><a class="reference internal" href="#mavetools.mavedf.mutation_type.is_deletion"><code class="docutils literal notranslate"><span class="pre">is_deletion()</span></code></a></li>
+<li><a class="reference internal" href="#mavetools.mavedf.mutation_type.is_substitution_one_base"><code class="docutils literal notranslate"><span class="pre">is_substitution_one_base()</span></code></a></li>
+<li><a class="reference internal" href="#mavetools.mavedf.mutation_type.is_substitution_two_bases_nonadjacent"><code class="docutils literal notranslate"><span class="pre">is_substitution_two_bases_nonadjacent()</span></code></a></li>
+<li><a class="reference internal" href="#mavetools.mavedf.mutation_type.is_wild_type"><code class="docutils literal notranslate"><span class="pre">is_wild_type()</span></code></a></li>
+<li><a class="reference internal" href="#mavetools.mavedf.legacy_to_mave_new.legacy_to_mave_hgvs_nt"><code class="docutils literal notranslate"><span class="pre">legacy_to_mave_hgvs_nt()</span></code></a></li>
+</ul>
+</li>
+</ul>
+
+  </div>
+  <div>
+    <h4>Previous topic</h4>
+    <p class="topless"><a href="convert.html"
+                          title="previous chapter">convert</a></p>
+  </div>
+  <div>
+    <h4>Next topic</h4>
+    <p class="topless"><a href="validators.html"
+                          title="next chapter">validators</a></p>
+  </div>
+  <div role="note" aria-label="source link">
+    <h3>This Page</h3>
+    <ul class="this-page-menu">
+      <li><a href="_sources/mavedf.rst.txt"
+            rel="nofollow">Show Source</a></li>
+    </ul>
+   </div>
+<div id="searchbox" style="display: none" role="search">
+  <h3 id="searchlabel">Quick search</h3>
+    <div class="searchformwrapper">
+    <form class="search" action="search.html" method="get">
+      <input type="text" name="q" aria-labelledby="searchlabel" autocomplete="off" autocorrect="off" autocapitalize="off" spellcheck="false"/>
+      <input type="submit" value="Go" />
+    </form>
+    </div>
+</div>
+<script>document.getElementById('searchbox').style.display = "block"</script>
+        </div>
+      </div>
+      <div class="clearer"></div>
+    </div>
+    <div class="related" role="navigation" aria-label="related navigation">
+      <h3>Navigation</h3>
+      <ul>
+        <li class="right" style="margin-right: 10px">
+          <a href="genindex.html" title="General Index"
+             >index</a></li>
+        <li class="right" >
+          <a href="py-modindex.html" title="Python Module Index"
+             >modules</a> |</li>
+        <li class="right" >
+          <a href="validators.html" title="validators"
+             >next</a> |</li>
+        <li class="right" >
+          <a href="convert.html" title="convert"
+             >previous</a> |</li>
+        <li class="nav-item nav-item-0"><a href="index.html">mavetools 0.1.1 documentation</a> &#187;</li>
+        <li class="nav-item nav-item-this"><a href="">mavevdf</a></li> 
+      </ul>
+    </div>
+    <div class="footer" role="contentinfo">
+        &#169; Copyright 2020-2021, Alan F Rubin.
+      Created using <a href="https://www.sphinx-doc.org/">Sphinx</a> 6.1.3.
+    </div>
+  </body>
+</html>

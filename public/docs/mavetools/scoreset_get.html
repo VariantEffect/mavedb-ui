@@ -1,0 +1,310 @@
+
+<!DOCTYPE html>
+
+<html lang="en">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" /><meta name="generator" content="Docutils 0.19: https://docutils.sourceforge.io/" />
+
+    <title>GET scoreset &#8212; mavetools 0.1.1 documentation</title>
+    <link rel="stylesheet" type="text/css" href="_static/pygments.css" />
+    <link rel="stylesheet" type="text/css" href="_static/pyramid.css" />
+    <link rel="stylesheet" type="text/css" href="_static/styles.css" />
+    <script data-url_root="./" id="documentation_options" src="_static/documentation_options.js"></script>
+    <script src="_static/doctools.js"></script>
+    <script src="_static/sphinx_highlight.js"></script>
+    <link rel="index" title="Index" href="genindex.html" />
+    <link rel="search" title="Search" href="search.html" />
+    <link rel="prev" title="POST scoreset" href="scoreset_create.html" />
+<link rel="stylesheet" href="https://fonts.googleapis.com/css?family=Neuton&amp;subset=latin" type="text/css" media="screen" charset="utf-8" />
+<link rel="stylesheet" href="https://fonts.googleapis.com/css?family=Nobile:regular,italic,bold,bolditalic&amp;subset=latin" type="text/css" media="screen" charset="utf-8" />
+<!--[if lte IE 6]>
+<link rel="stylesheet" href="_static/ie6.css" type="text/css" media="screen" charset="utf-8" />
+<![endif]-->
+
+  </head><body>
+
+    <div class="related" role="navigation" aria-label="related navigation">
+      <h3>Navigation</h3>
+      <ul>
+        <li class="right" style="margin-right: 10px">
+          <a href="genindex.html" title="General Index"
+             accesskey="I">index</a></li>
+        <li class="right" >
+          <a href="py-modindex.html" title="Python Module Index"
+             >modules</a> |</li>
+        <li class="right" >
+          <a href="scoreset_create.html" title="POST scoreset"
+             accesskey="P">previous</a> |</li>
+        <li class="nav-item nav-item-0"><a href="index.html">mavetools 0.1.1 documentation</a> &#187;</li>
+        <li class="nav-item nav-item-this"><a href="">GET scoreset</a></li> 
+      </ul>
+    </div>  
+
+    <div class="document">
+      <div class="documentwrapper">
+        <div class="bodywrapper">
+          <div class="body" role="main">
+            
+  <section id="get-scoreset">
+<h1>GET scoreset<a class="headerlink" href="#get-scoreset" title="Permalink to this heading">¶</a></h1>
+<section id="get-a-scoreset-from-mavedb-via-the-api">
+<h2>get a scoreset from MaveDB via the API<a class="headerlink" href="#get-a-scoreset-from-mavedb-via-the-api" title="Permalink to this heading">¶</a></h2>
+<p>To begin, import the modeules below.</p>
+<div class="highlight-ipython3 notranslate"><div class="highlight"><pre><span></span>import attr, os
+from pprint import PrettyPrinter
+from mavetools.client.client import Client
+from mavetools.models.scoreset import ScoreSet
+</pre></div>
+</div>
+<p>Pretty printer is used to format the output nicely.</p>
+<div class="highlight-ipython3 notranslate"><div class="highlight"><pre><span></span>pp = PrettyPrinter(indent=2)
+</pre></div>
+</div>
+<p>Here your base_url is set to localhost, <a class="reference external" href="http://127.0.0.1:8000/api/">http://127.0.0.1:8000/api/</a>. This
+default funcionality is what you would want to use when working with a
+local instance of MaveDB (e.g., a development branch). If working with
+production mavedb you would set base url to <a class="reference external" href="https://www.mavedb.org/api/">https://www.mavedb.org/api/</a>.</p>
+<p>In the cell below, comment out the base_url you will not be using.</p>
+<div class="highlight-ipython3 notranslate"><div class="highlight"><pre><span></span>base_url = &#39;http://127.0.0.1:8000/api/&#39;
+#base_url = &#39;https://www.mavedb.org/api/&#39;
+</pre></div>
+</div>
+<p>Set experiment_urn to match the scoreset you want to get.</p>
+<div class="highlight-ipython3 notranslate"><div class="highlight"><pre><span></span>scoreset_urn = &#39;urn:mavedb:00000001-a-1&#39;
+</pre></div>
+</div>
+<p>Next, you will need an auth_token to make POST requests to MaveDB. If
+you have one, substitute it in the example provided below. If you need
+one, please follow these instructions:</p>
+<div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="mf">1.</span> <span class="n">go</span> <span class="n">to</span> <span class="n">https</span><span class="p">:</span><span class="o">//</span><span class="n">www</span><span class="o">.</span><span class="n">mavedb</span><span class="o">.</span><span class="n">org</span>
+<span class="mf">2.</span> <span class="n">login</span> <span class="n">using</span> <span class="n">your</span> <span class="n">ORCID</span> <span class="n">ID</span>
+<span class="mf">3.</span> <span class="n">go</span> <span class="n">to</span> <span class="n">settings</span>
+<span class="mf">4.</span> <span class="n">generate</span> <span class="n">new</span> <span class="n">auth</span> <span class="n">token</span>
+<span class="mf">5.</span> <span class="n">copy</span> <span class="n">auth</span> <span class="n">token</span> <span class="ow">and</span> <span class="n">pase</span> <span class="n">it</span> <span class="ow">in</span> <span class="n">the</span> <span class="n">auth_token</span> <span class="n">field</span> <span class="n">below</span>
+</pre></div>
+</div>
+<div class="highlight-ipython3 notranslate"><div class="highlight"><pre><span></span># this is an example of what your auth_token should look like
+auth_token = &#39;R2skRbpBD3Rsf5dNHoQxDZevdEE74T5lCKMFyBhBwwPFH4ZfTrxDz7TZ0kbFLtEZ&#39;
+</pre></div>
+</div>
+<p>Here you instantiate the Client object. The Client object is the object
+by which the POST request is performed. The client object is
+instantiated with the value of base_url provided earlier, so make sure
+that is up-to-date. If base_url does not exist, base_url is defaulted to
+localhost, <a class="reference external" href="http://127.0.0.1:8000/api/">http://127.0.0.1:8000/api/</a>.</p>
+<div class="highlight-ipython3 notranslate"><div class="highlight"><pre><span></span>client = Client(base_url, auth_token=auth_token) if base_url else Client(auth_token=auth_token)
+</pre></div>
+</div>
+<p>GET the model instance by passing the model type (Scoreset, in this
+instance) and the scoreset_urn as arguments to the get_model_istance
+funtion that operates on the Client object. This will GET the model
+instance (resource) from the server via the approprate API endpoint.</p>
+<div class="highlight-ipython3 notranslate"><div class="highlight"><pre><span></span>scoreset = client.get_model_instance(ScoreSet, scoreset_urn)
+</pre></div>
+</div>
+<p>Now, display the results!</p>
+<div class="highlight-ipython3 notranslate"><div class="highlight"><pre><span></span>pp.pprint(attr.asdict(scoreset))
+</pre></div>
+</div>
+<pre class="literal-block">{ 'abstract_text': 'Although we now routinely sequence human genomes, we can '
+                   'confidently identify only a fraction of the sequence '
+                   'variants that have a functional impact. Here, we developed '
+                   'a deep mutational scanning framework that produces '
+                   'exhaustive maps for human missense variants by combining '
+                   'random codon mutagenesis and multiplexed functional '
+                   'variation assays with computational imputation and '
+                   'refinement. We applied this framework to four proteins '
+                   'corresponding to six human genes: UBE2I (encoding SUMO E2 '
+                   'conjugase), SUMO1 (small ubiquitin-like modifier), TPK1 '
+                   '(thiamin pyrophosphokinase), and CALM1/2/3 (three genes '
+                   'encoding the protein calmodulin). The resulting maps '
+                   'recapitulate known protein features and confidently '
+                   'identify pathogenic variation. Assays potentially amenable '
+                   'to deep mutational scanning are already available for 57% '
+                   'of human disease genes, suggesting that DMS could '
+                   'ultimately map functional variation for all human disease '
+                   'genes. rn'
+                   'rn'
+                   'See [<strong>Weile *et al.* '
+                   '2017</strong>](<a class="reference external" href="http://msb.embopress.org/content/13/12/957">http://msb.embopress.org/content/13/12/957</a>)',
+  'approved': None,
+  'contributors': ['0000-0003-1628-9390'],
+  'count_columns': ['hgvs_nt', 'hgvs_splice', 'hgvs_pro'],
+  'created_by': '0000-0003-1628-9390',
+  'creation_date': '2018-06-26',
+  'current_version': '<a class="reference external" href="urn:mavedb:00000001-a-1">urn:mavedb:00000001-a-1</a>',
+  'data_usage_policy': '',
+  'dataset_columns': None,
+  'doi_ids': [],
+  'experiment': '<a class="reference external" href="urn:mavedb:00000001-a">urn:mavedb:00000001-a</a>',
+  'extra_metadata': {},
+  'is_meta_analysis': False,
+  'keywords': [ {'text': 'DMS-BarSeq'},
+                {'text': 'E2'},
+                {'text': 'sumoylation'},
+                {'text': 'imputation'},
+                {'text': 'DMS-TileSeq'},
+                {'text': 'complementation'}],
+  'last_child_value': None,
+  'licence': { 'link': '<a class="reference external" href="https://creativecommons.org/licenses/by/4.0/">https://creativecommons.org/licenses/by/4.0/</a>',
+               'long_name': 'CC BY 4.0 (Attribution)',
+               'short_name': 'CC BY 4.0',
+               'version': '4.0'},
+  'method_text': '##Scoring procedure:rn'
+                 'DMS-BarSeq and DMS-TileSeq reads were processed using the '
+                 '[dmsPipeline](https://bitbucket.org/rothlabto/dmspipeline) '
+                 'software. Briefly, Barseq read counts were used to establish '
+                 'relative frequencies of each strain at each timepoint and '
+                 'converted to estimates of absolute frequencies using OD '
+                 'measurement data. Absolute counts were used to establish '
+                 'growth curves from which fitness parameters were estimated '
+                 'and then normalized to 0-1 scale where 0 corresponds to null '
+                 'controls and 1 corresponds to WT controls. Meanwhile, '
+                 'TileSeq read counts were used to establish relative allele '
+                 'frequencies in each condition. Non-mutagenized control '
+                 'counts were subtracted from counts (as estimates of '
+                 'sequencing error). log ratios of selection over '
+                 'non-selection counts were calculated. The resulting TileSeq '
+                 'fitness values were then rescaled to the distribution of the '
+                 'BarSeq fitness scores. Fitness scores were joined using '
+                 'confidence-weighted averages. Random-Forest base machine '
+                 'learning was used to impute missing values and refine '
+                 'low-confidence measurements, based on intrinsic, structural, '
+                 'and biochemical features.rn'
+                 'rn'
+                 'See [<strong>Weile *et al.* '
+                 '2017</strong>](<a class="reference external" href="http://msb.embopress.org/content/13/12/957">http://msb.embopress.org/content/13/12/957</a>) for more '
+                 'details.rn'
+                 'rn'
+                 '## Additional columns:rn'
+                 '* exp.score = experimental score from the joint '
+                 'DMS-BarSeq/DMS-TileSeq screensrn'
+                 '* exp.sd = standard deviation of the experimental scorern'
+                 '* df = degrees of freedom (number of replicates contributing '
+                 'to the experimental score)rn'
+                 '* pred.score = machine-learning predicted score',
+  'modification_date': '2019-08-08',
+  'modified_by': '0000-0003-1628-9390',
+  'next_version': None,
+  'previous_version': None,
+  'private': None,
+  'publish_date': '2018-06-26',
+  'pubmed_ids': [ { 'dbname': 'PubMed',
+                    'dbversion': None,
+                    'identifier': '29269382',
+                    'url': 'http://www.ncbi.nlm.nih.gov/pubmed/29269382'}],
+  'replaces': None,
+  'score_columns': [ 'hgvs_nt',
+                     'hgvs_splice',
+                     'hgvs_pro',
+                     'score',
+                     'sd',
+                     'se',
+                     'exp.score',
+                     'exp.sd',
+                     'df',
+                     'pred.score'],
+  'short_description': 'A joint Deep Mutational Scan of the human SUMO E2 '
+                       'conjugase UBE2I using functional complementation in '
+                       'yeast, combining DMS-BarSeq and DMS-TileSeq data, '
+                       'followed by machine-learning-based imputation and '
+                       'refinement.',
+  'sra_ids': None,
+  'target': { 'ensembl': { 'dbname': 'Ensembl',
+                           'dbversion': None,
+                           'identifier': 'ENSG00000103275',
+                           'offset': 0,
+                           'url': 'http://www.ensembl.org/id/ENSG00000103275'},
+              'name': 'UBE2I',
+              'reference_maps': [ { 'genome': { 'assembly_identifier': { 'dbname': 'GenomeAssembly',
+                                                                         'dbversion': None,
+                                                                         'identifier': 'GCF_000001405.26',
+                                                                         'url': 'http://www.ncbi.nlm.nih.gov/assembly/GCF_000001405.26'},
+                                                'organism_name': 'Homo sapiens',
+                                                'short_name': 'hg38'}}],
+              'reference_sequence': { 'sequence': 'ATGTCGGGGATCGCCCTCAGCAGACTCGCCCAGGAGAGGAAAGCATGGAGGAAAGACCACCCATTTGGTTTCGTGGCTGTCCCAACAAAAAATCCCGATGGCACGATGAACCTCATGAACTGGGAGTGCGCCATTCCAGGAAAGAAAGGGACTCCGTGGGAAGGAGGCTTGTTTAAACTACGGATGCTTTTCAAAGATGATTATCCATCTTCGCCACCAAAATGTAAATTCGAACCACCATTATTTCACCCGAATGTGTACCCTTCGGGGACAGTGTGCCTGTCCATCTTAGAGGAGGACAAGGACTGGAGGCCAGCCATCACAATCAAACAGATCCTATTAGGAATACAGGAACTTCTAAATGAACCAAATATCCAAGACCCAGCTCAAGCAGAGGCCTACACGATTTACTGCCAAAACAGAGTGGAGTACGAGAAAAGGGTCCGAGCACAAGCCAAGAAGTTTGCGCCCTCATAA',
+                                      'sequence_type': 'dna'},
+              'refseq': { 'dbname': 'RefSeq',
+                          'dbversion': None,
+                          'identifier': 'NM_003345',
+                          'offset': 159,
+                          'url': 'http://www.ncbi.nlm.nih.gov/entrez/viewer.fcgi?val=NM_003345'},
+              'scoreset': 'urn:mavedb:00000001-a-1',
+              'type': 'Protein coding',
+              'uniprot': { 'dbname': 'UniProt',
+                           'dbversion': None,
+                           'identifier': 'P63279',
+                           'offset': 0,
+                           'url': 'http://purl.uniprot.org/uniprot/P63279'}},
+  'title': 'UBE2I imputed &amp; refined',
+  'urn': 'urn:mavedb:00000001-a-1',
+  'variant_count': 3180}</pre>
+</section>
+</section>
+
+
+            <div class="clearer"></div>
+          </div>
+        </div>
+      </div>
+      <div class="sphinxsidebar" role="navigation" aria-label="main navigation">
+        <div class="sphinxsidebarwrapper">
+  <div>
+    <h3><a href="index.html">Table of Contents</a></h3>
+    <ul>
+<li><a class="reference internal" href="#">GET scoreset</a><ul>
+<li><a class="reference internal" href="#get-a-scoreset-from-mavedb-via-the-api">get a scoreset from MaveDB via the API</a></li>
+</ul>
+</li>
+</ul>
+
+  </div>
+  <div>
+    <h4>Previous topic</h4>
+    <p class="topless"><a href="scoreset_create.html"
+                          title="previous chapter">POST scoreset</a></p>
+  </div>
+  <div role="note" aria-label="source link">
+    <h3>This Page</h3>
+    <ul class="this-page-menu">
+      <li><a href="_sources/scoreset_get.rst.txt"
+            rel="nofollow">Show Source</a></li>
+    </ul>
+   </div>
+<div id="searchbox" style="display: none" role="search">
+  <h3 id="searchlabel">Quick search</h3>
+    <div class="searchformwrapper">
+    <form class="search" action="search.html" method="get">
+      <input type="text" name="q" aria-labelledby="searchlabel" autocomplete="off" autocorrect="off" autocapitalize="off" spellcheck="false"/>
+      <input type="submit" value="Go" />
+    </form>
+    </div>
+</div>
+<script>document.getElementById('searchbox').style.display = "block"</script>
+        </div>
+      </div>
+      <div class="clearer"></div>
+    </div>
+    <div class="related" role="navigation" aria-label="related navigation">
+      <h3>Navigation</h3>
+      <ul>
+        <li class="right" style="margin-right: 10px">
+          <a href="genindex.html" title="General Index"
+             >index</a></li>
+        <li class="right" >
+          <a href="py-modindex.html" title="Python Module Index"
+             >modules</a> |</li>
+        <li class="right" >
+          <a href="scoreset_create.html" title="POST scoreset"
+             >previous</a> |</li>
+        <li class="nav-item nav-item-0"><a href="index.html">mavetools 0.1.1 documentation</a> &#187;</li>
+        <li class="nav-item nav-item-this"><a href="">GET scoreset</a></li> 
+      </ul>
+    </div>
+    <div class="footer" role="contentinfo">
+        &#169; Copyright 2020-2021, Alan F Rubin.
+      Created using <a href="https://www.sphinx-doc.org/">Sphinx</a> 6.1.3.
+    </div>
+  </body>
+</html>

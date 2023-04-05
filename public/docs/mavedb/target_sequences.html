@@ -1,0 +1,143 @@
+
+<!DOCTYPE html>
+
+<html lang="en">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" /><meta name="generator" content="Docutils 0.19: https://docutils.sourceforge.io/" />
+
+    <title>Target sequence information &#8212; MaveDB 2.1.0 documentation</title>
+    <link rel="stylesheet" type="text/css" href="_static/pygments.css" />
+    <link rel="stylesheet" type="text/css" href="_static/pyramid.css" />
+    <link rel="stylesheet" type="text/css" href="_static/graphviz.css" />
+    <link rel="stylesheet" type="text/css" href="_static/styles.css" />
+    <script data-url_root="./" id="documentation_options" src="_static/documentation_options.js"></script>
+    <script src="_static/doctools.js"></script>
+    <script src="_static/sphinx_highlight.js"></script>
+    <link rel="index" title="Index" href="genindex.html" />
+    <link rel="search" title="Search" href="search.html" />
+    <link rel="next" title="MaveDB accession numbers" href="accession_numbers.html" />
+    <link rel="prev" title="Data table formats" href="data_formats.html" />
+<link rel="stylesheet" href="https://fonts.googleapis.com/css?family=Neuton&amp;subset=latin" type="text/css" media="screen" charset="utf-8" />
+<link rel="stylesheet" href="https://fonts.googleapis.com/css?family=Nobile:regular,italic,bold,bolditalic&amp;subset=latin" type="text/css" media="screen" charset="utf-8" />
+<!--[if lte IE 6]>
+<link rel="stylesheet" href="_static/ie6.css" type="text/css" media="screen" charset="utf-8" />
+<![endif]-->
+
+  </head><body>
+
+    <div class="related" role="navigation" aria-label="related navigation">
+      <h3>Navigation</h3>
+      <ul>
+        <li class="right" style="margin-right: 10px">
+          <a href="genindex.html" title="General Index"
+             accesskey="I">index</a></li>
+        <li class="right" >
+          <a href="accession_numbers.html" title="MaveDB accession numbers"
+             accesskey="N">next</a> |</li>
+        <li class="right" >
+          <a href="data_formats.html" title="Data table formats"
+             accesskey="P">previous</a> |</li>
+        <li class="nav-item nav-item-0"><a href="index.html">MaveDB 2.1.0 documentation</a> &#187;</li>
+        <li class="nav-item nav-item-this"><a href="">Target sequence information</a></li> 
+      </ul>
+    </div>  
+
+    <div class="document">
+      <div class="documentwrapper">
+        <div class="bodywrapper">
+          <div class="body" role="main">
+            
+  <section id="target-sequence-information">
+<h1>Target sequence information<a class="headerlink" href="#target-sequence-information" title="Permalink to this heading">¶</a></h1>
+<p>All variants in a MaveDB <a class="reference internal" href="record_types.html#score-sets"><span class="std std-ref">score set</span></a> are described relative to a target sequence.
+This target sequence should be the sequence that was mutagenized to create the variant library.</p>
+<p>For datasets that target a single functional domain, only that part of the gene should be included as the target.
+If multiple discontinuous functional domains were included in a single experiment,
+the target sequence should be given with the intervening sequence so that coordinates can be mapped back to a
+full-length reference.</p>
+<p>While some target sequences match those that appear in sequence databases, others have important differences.
+Examples include codon optimized sequences or non-reference backgrounds.
+Other sequences may not appear in any database, such as synthetic or designed proteins.</p>
+<p>When uploading a dataset to MaveDB, it is required that the uploader provide the target sequence.
+If the target is protein coding and variants are only described by their protein changes,
+the target sequence can be an amino acid sequence.
+If variants describing nucleotide changes are present, the target sequence must be a DNA sequence.</p>
+<div class="admonition note">
+<p class="admonition-title">Note</p>
+<p>When entering target information for a new score set, users will have the option to use an existing target.
+Typically users will only want to use an existing target that they created themselves,
+as even targets with the same name may specify a different part of the gene or alternative sequence.</p>
+</div>
+<p>Targets can also be linked to accession numbers in other databases, including <a class="reference external" href="https://www.uniprot.org/">UniProt</a>,
+<a class="reference external" href="https://www.ncbi.nlm.nih.gov/refseq/">RefSeq</a>, and <a class="reference external" href="https://www.ensembl.org/">Ensembl</a>.
+If the target sequence provided to MaveDB starts partway through the linked sequence
+(such as an assay targeting a single functional domain), the target should have an “offset” term.
+The offset is the integer value that should be added to the MaveDB coordinates
+(which are relative to the target sequence) in order to match the coordinates in the linked sequence.</p>
+<p>For example, the target sequence for <a class="reference external" href="https://mavedb.org/scoreset/urn:mavedb:00000002-a-1/">urn:mavedb:00000002-a-1</a>
+is a codon optimized version of the WW domain of YAP1.
+This corresponds to UniProt identifier <a class="reference external" href="https://www.uniprot.org/uniprot/P46937">P46937</a> with offset 169,
+meaning that position 1 in the MaveDB score set is position 170 in the UniProt sequence.</p>
+</section>
+
+
+            <div class="clearer"></div>
+          </div>
+        </div>
+      </div>
+      <div class="sphinxsidebar" role="navigation" aria-label="main navigation">
+        <div class="sphinxsidebarwrapper">
+  <div>
+    <h4>Previous topic</h4>
+    <p class="topless"><a href="data_formats.html"
+                          title="previous chapter">Data table formats</a></p>
+  </div>
+  <div>
+    <h4>Next topic</h4>
+    <p class="topless"><a href="accession_numbers.html"
+                          title="next chapter">MaveDB accession numbers</a></p>
+  </div>
+  <div role="note" aria-label="source link">
+    <h3>This Page</h3>
+    <ul class="this-page-menu">
+      <li><a href="_sources/target_sequences.rst.txt"
+            rel="nofollow">Show Source</a></li>
+    </ul>
+   </div>
+<div id="searchbox" style="display: none" role="search">
+  <h3 id="searchlabel">Quick search</h3>
+    <div class="searchformwrapper">
+    <form class="search" action="search.html" method="get">
+      <input type="text" name="q" aria-labelledby="searchlabel" autocomplete="off" autocorrect="off" autocapitalize="off" spellcheck="false"/>
+      <input type="submit" value="Go" />
+    </form>
+    </div>
+</div>
+<script>document.getElementById('searchbox').style.display = "block"</script>
+        </div>
+      </div>
+      <div class="clearer"></div>
+    </div>
+    <div class="related" role="navigation" aria-label="related navigation">
+      <h3>Navigation</h3>
+      <ul>
+        <li class="right" style="margin-right: 10px">
+          <a href="genindex.html" title="General Index"
+             >index</a></li>
+        <li class="right" >
+          <a href="accession_numbers.html" title="MaveDB accession numbers"
+             >next</a> |</li>
+        <li class="right" >
+          <a href="data_formats.html" title="Data table formats"
+             >previous</a> |</li>
+        <li class="nav-item nav-item-0"><a href="index.html">MaveDB 2.1.0 documentation</a> &#187;</li>
+        <li class="nav-item nav-item-this"><a href="">Target sequence information</a></li> 
+      </ul>
+    </div>
+    <div class="footer" role="contentinfo">
+        &#169; Copyright 2017-2021, Alan F Rubin and Daniel C Esposito.
+      Created using <a href="https://www.sphinx-doc.org/">Sphinx</a> 6.1.3.
+    </div>
+  </body>
+</html>

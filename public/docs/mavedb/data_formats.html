@@ -1,0 +1,440 @@
+
+<!DOCTYPE html>
+
+<html lang="en">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" /><meta name="generator" content="Docutils 0.19: https://docutils.sourceforge.io/" />
+
+    <title>Data table formats &#8212; MaveDB 2.1.0 documentation</title>
+    <link rel="stylesheet" type="text/css" href="_static/pygments.css" />
+    <link rel="stylesheet" type="text/css" href="_static/pyramid.css" />
+    <link rel="stylesheet" type="text/css" href="_static/graphviz.css" />
+    <link rel="stylesheet" type="text/css" href="_static/styles.css" />
+    <script data-url_root="./" id="documentation_options" src="_static/documentation_options.js"></script>
+    <script src="_static/doctools.js"></script>
+    <script src="_static/sphinx_highlight.js"></script>
+    <link rel="index" title="Index" href="genindex.html" />
+    <link rel="search" title="Search" href="search.html" />
+    <link rel="next" title="Target sequence information" href="target_sequences.html" />
+    <link rel="prev" title="Record types" href="record_types.html" />
+<link rel="stylesheet" href="https://fonts.googleapis.com/css?family=Neuton&amp;subset=latin" type="text/css" media="screen" charset="utf-8" />
+<link rel="stylesheet" href="https://fonts.googleapis.com/css?family=Nobile:regular,italic,bold,bolditalic&amp;subset=latin" type="text/css" media="screen" charset="utf-8" />
+<!--[if lte IE 6]>
+<link rel="stylesheet" href="_static/ie6.css" type="text/css" media="screen" charset="utf-8" />
+<![endif]-->
+
+  </head><body>
+
+    <div class="related" role="navigation" aria-label="related navigation">
+      <h3>Navigation</h3>
+      <ul>
+        <li class="right" style="margin-right: 10px">
+          <a href="genindex.html" title="General Index"
+             accesskey="I">index</a></li>
+        <li class="right" >
+          <a href="target_sequences.html" title="Target sequence information"
+             accesskey="N">next</a> |</li>
+        <li class="right" >
+          <a href="record_types.html" title="Record types"
+             accesskey="P">previous</a> |</li>
+        <li class="nav-item nav-item-0"><a href="index.html">MaveDB 2.1.0 documentation</a> &#187;</li>
+        <li class="nav-item nav-item-this"><a href="">Data table formats</a></li> 
+      </ul>
+    </div>  
+
+    <div class="document">
+      <div class="documentwrapper">
+        <div class="bodywrapper">
+          <div class="body" role="main">
+            
+  <section id="data-table-formats">
+<h1>Data table formats<a class="headerlink" href="#data-table-formats" title="Permalink to this heading">¶</a></h1>
+<p>MaveDB accepts and provides data tables in CSV format.
+Each row of the data table describes a single variant, and variants are described using <a class="reference external" href="https://www.mavedb.org/docs/mavehgvs">MAVE-HGVS</a> format.
+All other columns are expected to be floating point values.</p>
+<section id="variant-columns">
+<h2>Variant columns<a class="headerlink" href="#variant-columns" title="Permalink to this heading">¶</a></h2>
+<p>For both score and count data tables, there are three variant columns:</p>
+<ul class="simple">
+<li><p><code class="docutils literal notranslate"><span class="pre">hgvs_nt</span></code> describes variants with respect to the nucleotide <a class="reference internal" href="target_sequences.html#target-sequence-information"><span class="std std-ref">target sequence</span></a></p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">hgvs_tx</span></code> describes variants with respect to a transcript model</p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">hgvs_pro</span></code> describes variants with respect to the amino acid <a class="reference internal" href="target_sequences.html#target-sequence-information"><span class="std std-ref">target sequence</span></a></p></li>
+</ul>
+<p><code class="docutils literal notranslate"><span class="pre">hgvs_nt</span></code> and <code class="docutils literal notranslate"><span class="pre">hgvs_pro</span></code> variants are required to be described in relation to the score set target sequence,
+rather than to an external reference sequence.</p>
+<p>If <code class="docutils literal notranslate"><span class="pre">hgvs_nt</span></code> is present, it will be used as the primary key for distinguishing variants and must be unique.
+Otherwise, <code class="docutils literal notranslate"><span class="pre">hgvs_pro</span></code> will be used as the primary key.</p>
+<div class="admonition note">
+<p class="admonition-title">Note</p>
+<p>Datasets with only <code class="docutils literal notranslate"><span class="pre">hgvs_pro</span></code> variants can specify nucleotide target sequences.
+In this case, the target sequence will be translated using the
+<a class="reference external" href="https://www.ncbi.nlm.nih.gov/Taxonomy/Utils/wprintgc.cgi?chapter=cgencodes#SG1">standard amino acid translation table</a> for validation.</p>
+</div>
+<p>The <code class="docutils literal notranslate"><span class="pre">hgvs_tx</span></code> variants are not validated against a transcript model or target sequence.
+This is a convenience feature for datasets that contain splice variants; most datasets will not use <code class="docutils literal notranslate"><span class="pre">hgvs_tx</span></code>.
+Datasets that use <code class="docutils literal notranslate"><span class="pre">hgvs_tx</span></code> must also have <code class="docutils literal notranslate"><span class="pre">hgvs_nt</span></code>, which is used as the primary key,
+and the <code class="docutils literal notranslate"><span class="pre">hgvs_nt</span></code> variants must use the <code class="docutils literal notranslate"><span class="pre">'g.'</span></code> prefix.</p>
+</section>
+<section id="score-table-columns">
+<h2>Score table columns<a class="headerlink" href="#score-table-columns" title="Permalink to this heading">¶</a></h2>
+<p>All score tables must have a column named <code class="docutils literal notranslate"><span class="pre">score</span></code> that describes the score of that variant in the assay.
+Score tables may have any number of additional numeric columns.</p>
+<p>Suggested numeric columns include a standard deviation or variance,
+or some other measure of uncertainty for the score such as a 95% confidence interval
+(represented as two columns, e.g. <code class="docutils literal notranslate"><span class="pre">ci_lower</span></code> and <code class="docutils literal notranslate"><span class="pre">ci_upper</span></code>).</p>
+<p>Score sets that describe experiments with multiple replicates often include the score and standard deviation for each
+replicate as additional columns.</p>
+<p>For datasets with categorical data,
+we recommend encoding the categories as integers and describing the mapping between integers and categories in the
+<a class="reference internal" href="upload_guide.html#free-text-metadata"><span class="std std-ref">free text methods</span></a>.
+Support for additional data columns with string data will be added in a future version to support this use case.</p>
+<section id="score-table-examples">
+<h3>Score table examples<a class="headerlink" href="#score-table-examples" title="Permalink to this heading">¶</a></h3>
+<p>Here is a short excerpt from the score table for
+<a class="reference external" href="https://mavedb.org/scoreset/urn:mavedb:00000003-a-1/">urn:mavedb:00000003-a-1</a>.</p>
+<p>That this dataset uses <code class="docutils literal notranslate"><span class="pre">hgvs_nt</span></code> as the primary variant key.
+It has several additional data columns with the scores and error estimates for multiple biological replicates.</p>
+<p>Note that some variants do not have a score.
+This is permitted (and encouraged) as long as there is some data provided for that variant,
+such as a score in an individual replicate or some counts.</p>
+<table class="docutils align-default" id="id1">
+<caption><span class="caption-number">Table 1 </span><span class="caption-text">Example Score Data</span><a class="headerlink" href="#id1" title="Permalink to this table">¶</a></caption>
+<thead>
+<tr class="row-odd"><th class="head"><p>hgvs_nt</p></th>
+<th class="head"><p>hgvs_splice</p></th>
+<th class="head"><p>hgvs_pro</p></th>
+<th class="head"><p>score</p></th>
+<th class="head"><p>SE</p></th>
+<th class="head"><p>epsilon</p></th>
+<th class="head"><p>SE_PlusE2NewRep3</p></th>
+<th class="head"><p>score_PlusE2NewRep3</p></th>
+<th class="head"><p>SE_PlusE2NewRep4</p></th>
+<th class="head"><p>score_PlusE2NewRep4</p></th>
+<th class="head"><p>SE_PlusE2NewRep5</p></th>
+<th class="head"><p>score_PlusE2NewRep5</p></th>
+<th class="head"><p>SE_PlusE2Rep3</p></th>
+<th class="head"><p>score_PlusE2Rep3</p></th>
+<th class="head"><p>SE_PlusE2Rep4</p></th>
+<th class="head"><p>score_PlusE2Rep4</p></th>
+<th class="head"><p>SE_PlusE2Rep5</p></th>
+<th class="head"><p>score_PlusE2Rep5</p></th>
+</tr>
+</thead>
+<tbody>
+<tr class="row-even"><td><p>c.38T&gt;C</p></td>
+<td><p>NA</p></td>
+<td><p>p.Val13Ala</p></td>
+<td><p>-0.128</p></td>
+<td><p>0.115</p></td>
+<td><p>0.000</p></td>
+<td><p>0.148</p></td>
+<td><p>0.283</p></td>
+<td><p>0.162</p></td>
+<td><p>-0.456</p></td>
+<td><p>0.075</p></td>
+<td><p>-0.186</p></td>
+<td><p>0.167</p></td>
+<td><p>-0.165</p></td>
+<td><p>0.289</p></td>
+<td><p>-0.073</p></td>
+<td><p>0.388</p></td>
+<td><p>-0.184</p></td>
+</tr>
+<tr class="row-odd"><td><p>c.186A&gt;T</p></td>
+<td><p>NA</p></td>
+<td><p>p.Leu62Phe</p></td>
+<td><p>-4.132</p></td>
+<td><p>0.396</p></td>
+<td><p>0.000</p></td>
+<td><p>0.289</p></td>
+<td><p>-3.752</p></td>
+<td><p>0.433</p></td>
+<td><p>-4.166</p></td>
+<td><p>0.549</p></td>
+<td><p>-3.456</p></td>
+<td><p>0.341</p></td>
+<td><p>-3.166</p></td>
+<td><p>0.499</p></td>
+<td><p>-6.079</p></td>
+<td><p>0.204</p></td>
+<td><p>-4.309</p></td>
+</tr>
+<tr class="row-even"><td><p>c.164A&gt;T</p></td>
+<td><p>NA</p></td>
+<td><p>p.Lys55Ile</p></td>
+<td><p>-0.655</p></td>
+<td><p>0.112</p></td>
+<td><p>0.000</p></td>
+<td><p>0.100</p></td>
+<td><p>-0.592</p></td>
+<td><p>0.121</p></td>
+<td><p>-0.929</p></td>
+<td><p>0.086</p></td>
+<td><p>-0.254</p></td>
+<td><p>0.143</p></td>
+<td><p>-0.695</p></td>
+<td><p>0.039</p></td>
+<td><p>-0.950</p></td>
+<td><p>0.080</p></td>
+<td><p>-0.514</p></td>
+</tr>
+<tr class="row-odd"><td><p>c.[439C&gt;A;441G&gt;A;842C&gt;A]</p></td>
+<td><p>NA</p></td>
+<td><p>p.[Gln147Lys;Ser281Ter]</p></td>
+<td><p>NA</p></td>
+<td><p>NA</p></td>
+<td><p>NA</p></td>
+<td><p>0.668</p></td>
+<td><p>-1.612</p></td>
+<td><p>NA</p></td>
+<td><p>NA</p></td>
+<td><p>NA</p></td>
+<td><p>NA</p></td>
+<td><p>NA</p></td>
+<td><p>NA</p></td>
+<td><p>NA</p></td>
+<td><p>NA</p></td>
+<td><p>0.464</p></td>
+<td><p>-1.273</p></td>
+</tr>
+<tr class="row-even"><td><p>c.22_23delinsCC]</p></td>
+<td><p>NA</p></td>
+<td><p>p.Glu8Pro</p></td>
+<td><p>-0.375</p></td>
+<td><p>0.280</p></td>
+<td><p>0.000</p></td>
+<td><p>0.158</p></td>
+<td><p>-1.421</p></td>
+<td><p>0.240</p></td>
+<td><p>-0.265</p></td>
+<td><p>0.200</p></td>
+<td><p>-0.796</p></td>
+<td><p>0.192</p></td>
+<td><p>-0.022</p></td>
+<td><p>0.311</p></td>
+<td><p>-0.232</p></td>
+<td><p>0.091</p></td>
+<td><p>0.476</p></td>
+</tr>
+<tr class="row-odd"><td><p>c.598G&gt;A</p></td>
+<td><p>NA</p></td>
+<td><p>p.Asp200Asn</p></td>
+<td><p>0.271</p></td>
+<td><p>0.170</p></td>
+<td><p>0.000</p></td>
+<td><p>0.103</p></td>
+<td><p>-0.337</p></td>
+<td><p>0.094</p></td>
+<td><p>0.830</p></td>
+<td><p>0.092</p></td>
+<td><p>0.408</p></td>
+<td><p>0.163</p></td>
+<td><p>0.051</p></td>
+<td><p>0.243</p></td>
+<td><p>0.278</p></td>
+<td><p>0.172</p></td>
+<td><p>0.382</p></td>
+</tr>
+<tr class="row-even"><td><p>c.285C&gt;G</p></td>
+<td><p>NA</p></td>
+<td><p>p.Asp95Glu</p></td>
+<td><p>NA</p></td>
+<td><p>NA</p></td>
+<td><p>NA</p></td>
+<td><p>0.401</p></td>
+<td><p>-3.993</p></td>
+<td><p>0.150</p></td>
+<td><p>-3.380</p></td>
+<td><p>NA</p></td>
+<td><p>NA</p></td>
+<td><p>0.452</p></td>
+<td><p>-3.221</p></td>
+<td><p>0.228</p></td>
+<td><p>-1.973</p></td>
+<td><p>0.277</p></td>
+<td><p>-1.774</p></td>
+</tr>
+<tr class="row-odd"><td><p>c.[64G&gt;C;142C&gt;T]</p></td>
+<td><p>NA</p></td>
+<td><p>p.Glu22Gln</p></td>
+<td><p>NA</p></td>
+<td><p>NA</p></td>
+<td><p>NA</p></td>
+<td><p>NA</p></td>
+<td><p>NA</p></td>
+<td><p>NA</p></td>
+<td><p>NA</p></td>
+<td><p>NA</p></td>
+<td><p>NA</p></td>
+<td><p>NA</p></td>
+<td><p>NA</p></td>
+<td><p>NA</p></td>
+<td><p>NA</p></td>
+<td><p>NA</p></td>
+<td><p>NA</p></td>
+</tr>
+<tr class="row-even"><td><p>c.869T&gt;G</p></td>
+<td><p>NA</p></td>
+<td><p>p.Leu290Ter</p></td>
+<td><p>-1.231</p></td>
+<td><p>0.245</p></td>
+<td><p>0.000</p></td>
+<td><p>0.117</p></td>
+<td><p>-0.456</p></td>
+<td><p>0.285</p></td>
+<td><p>-0.792</p></td>
+<td><p>0.424</p></td>
+<td><p>-0.993</p></td>
+<td><p>0.084</p></td>
+<td><p>-1.909</p></td>
+<td><p>0.143</p></td>
+<td><p>-1.325</p></td>
+<td><p>0.093</p></td>
+<td><p>-1.735</p></td>
+</tr>
+<tr class="row-odd"><td><p>c.200T&gt;G</p></td>
+<td><p>NA</p></td>
+<td><p>p.Ile67Arg</p></td>
+<td><p>NA</p></td>
+<td><p>NA</p></td>
+<td><p>NA</p></td>
+<td><p>0.255</p></td>
+<td><p>-3.600</p></td>
+<td><p>0.152</p></td>
+<td><p>-3.399</p></td>
+<td><p>NA</p></td>
+<td><p>NA</p></td>
+<td><p>0.171</p></td>
+<td><p>-4.097</p></td>
+<td><p>0.361</p></td>
+<td><p>-3.764</p></td>
+<td><p>NA</p></td>
+<td><p>NA</p></td>
+</tr>
+<tr class="row-even"><td><p>c.[1G&gt;T;97_99delinsGGG]</p></td>
+<td><p>NA</p></td>
+<td><p>p.[Asp1Tyr;Pro33Gly]</p></td>
+<td><p>NA</p></td>
+<td><p>NA</p></td>
+<td><p>NA</p></td>
+<td><p>0.159</p></td>
+<td><p>-0.177</p></td>
+<td><p>0.445</p></td>
+<td><p>-0.583</p></td>
+<td><p>0.500</p></td>
+<td><p>-0.323</p></td>
+<td><p>0.537</p></td>
+<td><p>-0.470</p></td>
+<td><p>NA</p></td>
+<td><p>NA</p></td>
+<td><p>0.284</p></td>
+<td><p>0.188</p></td>
+</tr>
+<tr class="row-odd"><td><p>c.476G&gt;T</p></td>
+<td><p>NA</p></td>
+<td><p>p.Gly159Val</p></td>
+<td><p>-1.192</p></td>
+<td><p>0.100</p></td>
+<td><p>0.000</p></td>
+<td><p>0.141</p></td>
+<td><p>-1.050</p></td>
+<td><p>0.079</p></td>
+<td><p>-1.557</p></td>
+<td><p>0.030</p></td>
+<td><p>-0.969</p></td>
+<td><p>0.114</p></td>
+<td><p>-1.030</p></td>
+<td><p>0.126</p></td>
+<td><p>-1.264</p></td>
+<td><p>0.168</p></td>
+<td><p>-1.303</p></td>
+</tr>
+</tbody>
+</table>
+</section>
+</section>
+<section id="count-table-columns">
+<h2>Count table columns<a class="headerlink" href="#count-table-columns" title="Permalink to this heading">¶</a></h2>
+<p>Count data are optional for MaveDB score sets, but are recommended.</p>
+<p>There are no required columns for count data,
+but uploaders should decide on an intuitive naming convention for the column names and describe it in the
+<a class="reference internal" href="upload_guide.html#free-text-metadata"><span class="std std-ref">free text methods</span></a>.</p>
+</section>
+</section>
+
+
+            <div class="clearer"></div>
+          </div>
+        </div>
+      </div>
+      <div class="sphinxsidebar" role="navigation" aria-label="main navigation">
+        <div class="sphinxsidebarwrapper">
+  <div>
+    <h3><a href="index.html">Table of Contents</a></h3>
+    <ul>
+<li><a class="reference internal" href="#">Data table formats</a><ul>
+<li><a class="reference internal" href="#variant-columns">Variant columns</a></li>
+<li><a class="reference internal" href="#score-table-columns">Score table columns</a><ul>
+<li><a class="reference internal" href="#score-table-examples">Score table examples</a></li>
+</ul>
+</li>
+<li><a class="reference internal" href="#count-table-columns">Count table columns</a></li>
+</ul>
+</li>
+</ul>
+
+  </div>
+  <div>
+    <h4>Previous topic</h4>
+    <p class="topless"><a href="record_types.html"
+                          title="previous chapter">Record types</a></p>
+  </div>
+  <div>
+    <h4>Next topic</h4>
+    <p class="topless"><a href="target_sequences.html"
+                          title="next chapter">Target sequence information</a></p>
+  </div>
+  <div role="note" aria-label="source link">
+    <h3>This Page</h3>
+    <ul class="this-page-menu">
+      <li><a href="_sources/data_formats.rst.txt"
+            rel="nofollow">Show Source</a></li>
+    </ul>
+   </div>
+<div id="searchbox" style="display: none" role="search">
+  <h3 id="searchlabel">Quick search</h3>
+    <div class="searchformwrapper">
+    <form class="search" action="search.html" method="get">
+      <input type="text" name="q" aria-labelledby="searchlabel" autocomplete="off" autocorrect="off" autocapitalize="off" spellcheck="false"/>
+      <input type="submit" value="Go" />
+    </form>
+    </div>
+</div>
+<script>document.getElementById('searchbox').style.display = "block"</script>
+        </div>
+      </div>
+      <div class="clearer"></div>
+    </div>
+    <div class="related" role="navigation" aria-label="related navigation">
+      <h3>Navigation</h3>
+      <ul>
+        <li class="right" style="margin-right: 10px">
+          <a href="genindex.html" title="General Index"
+             >index</a></li>
+        <li class="right" >
+          <a href="target_sequences.html" title="Target sequence information"
+             >next</a> |</li>
+        <li class="right" >
+          <a href="record_types.html" title="Record types"
+             >previous</a> |</li>
+        <li class="nav-item nav-item-0"><a href="index.html">MaveDB 2.1.0 documentation</a> &#187;</li>
+        <li class="nav-item nav-item-this"><a href="">Data table formats</a></li> 
+      </ul>
+    </div>
+    <div class="footer" role="contentinfo">
+        &#169; Copyright 2017-2021, Alan F Rubin and Daniel C Esposito.
+      Created using <a href="https://www.sphinx-doc.org/">Sphinx</a> 6.1.3.
+    </div>
+  </body>
+</html>

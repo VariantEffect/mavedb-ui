@@ -1,0 +1,269 @@
+
+<!DOCTYPE html>
+
+<html lang="en">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" /><meta name="generator" content="Docutils 0.19: https://docutils.sourceforge.io/" />
+
+    <title>POST scoreset &#8212; mavetools 0.1.1 documentation</title>
+    <link rel="stylesheet" type="text/css" href="_static/pygments.css" />
+    <link rel="stylesheet" type="text/css" href="_static/pyramid.css" />
+    <link rel="stylesheet" type="text/css" href="_static/styles.css" />
+    <script data-url_root="./" id="documentation_options" src="_static/documentation_options.js"></script>
+    <script src="_static/doctools.js"></script>
+    <script src="_static/sphinx_highlight.js"></script>
+    <link rel="index" title="Index" href="genindex.html" />
+    <link rel="search" title="Search" href="search.html" />
+    <link rel="next" title="GET scoreset" href="scoreset_get.html" />
+    <link rel="prev" title="GET experiment" href="experiment_get.html" />
+<link rel="stylesheet" href="https://fonts.googleapis.com/css?family=Neuton&amp;subset=latin" type="text/css" media="screen" charset="utf-8" />
+<link rel="stylesheet" href="https://fonts.googleapis.com/css?family=Nobile:regular,italic,bold,bolditalic&amp;subset=latin" type="text/css" media="screen" charset="utf-8" />
+<!--[if lte IE 6]>
+<link rel="stylesheet" href="_static/ie6.css" type="text/css" media="screen" charset="utf-8" />
+<![endif]-->
+
+  </head><body>
+
+    <div class="related" role="navigation" aria-label="related navigation">
+      <h3>Navigation</h3>
+      <ul>
+        <li class="right" style="margin-right: 10px">
+          <a href="genindex.html" title="General Index"
+             accesskey="I">index</a></li>
+        <li class="right" >
+          <a href="py-modindex.html" title="Python Module Index"
+             >modules</a> |</li>
+        <li class="right" >
+          <a href="scoreset_get.html" title="GET scoreset"
+             accesskey="N">next</a> |</li>
+        <li class="right" >
+          <a href="experiment_get.html" title="GET experiment"
+             accesskey="P">previous</a> |</li>
+        <li class="nav-item nav-item-0"><a href="index.html">mavetools 0.1.1 documentation</a> &#187;</li>
+        <li class="nav-item nav-item-this"><a href="">POST scoreset</a></li> 
+      </ul>
+    </div>  
+
+    <div class="document">
+      <div class="documentwrapper">
+        <div class="bodywrapper">
+          <div class="body" role="main">
+            
+  <section id="post-scoreset">
+<h1>POST scoreset<a class="headerlink" href="#post-scoreset" title="Permalink to this heading">¶</a></h1>
+<section id="create-a-scoreset-in-mavedb-via-the-api">
+<h2>create a scoreset in MaveDB via the API<a class="headerlink" href="#create-a-scoreset-in-mavedb-via-the-api" title="Permalink to this heading">¶</a></h2>
+<p>To begin, import the modeules below.</p>
+<div class="highlight-ipython3 notranslate"><div class="highlight"><pre><span></span>import attr, os
+from mavetools.client.client import Client
+from mavetools.models.licence import Licence
+from mavetools.models.scoreset import NewScoreSet, NewScoreSetRequest, ScoreSet
+from mavetools.models.target import NewTarget, ReferenceGenome, ReferenceMap, SequenceOffset
+from mavetools.validators.validate import validate_all
+</pre></div>
+</div>
+<p>Here your base_url is set to localhost, <a class="reference external" href="http://127.0.0.1:8000/api/">http://127.0.0.1:8000/api/</a>. This
+default funcionality is what you would want to use when working with a
+local instance of MaveDB (e.g., a development branch). If working with
+production mavedb you would set base url to <a class="reference external" href="https://www.mavedb.org/api/">https://www.mavedb.org/api/</a>.</p>
+<p>In the cell below, comment out the base_url you will not be using.</p>
+<div class="highlight-ipython3 notranslate"><div class="highlight"><pre><span></span>base_url = &#39;http://127.0.0.1:8000/api/&#39;
+#base_url = &#39;https://www.mavedb.org/api/&#39;
+</pre></div>
+</div>
+<p>Set the name value of experiment_urn to the urn of the experiment where
+the scoreset belongs.</p>
+<div class="highlight-ipython3 notranslate"><div class="highlight"><pre><span></span>experiment_urn = &#39;tmp:WRe9wTCdGxKKQV4a&#39;
+</pre></div>
+</div>
+<p>Next, you will need an auth_token to make POST requests to MaveDB. If
+you have one, substitute it in the example provided below. If you need
+one, please follow these instructions:</p>
+<div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="mf">1.</span> <span class="n">go</span> <span class="n">to</span> <span class="n">https</span><span class="p">:</span><span class="o">//</span><span class="n">www</span><span class="o">.</span><span class="n">mavedb</span><span class="o">.</span><span class="n">org</span>
+<span class="mf">2.</span> <span class="n">login</span> <span class="n">using</span> <span class="n">your</span> <span class="n">ORCID</span> <span class="n">ID</span>
+<span class="mf">3.</span> <span class="n">go</span> <span class="n">to</span> <span class="n">settings</span>
+<span class="mf">4.</span> <span class="n">generate</span> <span class="n">new</span> <span class="n">auth</span> <span class="n">token</span>
+<span class="mf">5.</span> <span class="n">copy</span> <span class="n">auth</span> <span class="n">token</span> <span class="ow">and</span> <span class="n">pase</span> <span class="n">it</span> <span class="ow">in</span> <span class="n">the</span> <span class="n">auth_token</span> <span class="n">field</span> <span class="n">below</span>
+</pre></div>
+</div>
+<div class="highlight-ipython3 notranslate"><div class="highlight"><pre><span></span># Generate a new auth_token in your profile and post it here
+auth_token = &#39;R2skRbpBD3Rsf5dNHoQxDZevdEE74T5lCKMFyBhBwwPFH4ZfTrxDz7TZ0kbFLtEZ&#39;
+</pre></div>
+</div>
+<p>Here you instantiate the Client object. The Client object is the object
+by which the POST request is performed. The client object is
+instantiated with the value of base_url provided earlier, so make sure
+that is up-to-date. If base_url does not exist, base_url is defaulted to
+localhost, <a class="reference external" href="http://127.0.0.1:8000/api/">http://127.0.0.1:8000/api/</a>.</p>
+<div class="highlight-ipython3 notranslate"><div class="highlight"><pre><span></span>client = Client(base_url, auth_token=auth_token) if base_url else Client(auth_token=auth_token)
+</pre></div>
+</div>
+<p>test_file_dir is the path to the directory in which the files needed for
+making a scoreset POST resquest exist. The required files are as
+follows:</p>
+<ol class="arabic simple">
+<li><p>abstract.md</p></li>
+<li><p>method.md</p></li>
+<li><p>test_count.csv</p></li>
+<li><p>test_fasta_file.fasta</p></li>
+<li><p>test_metadata.json</p></li>
+<li><p>test_score_data.csv</p></li>
+</ol>
+<p>For the abstrct.md and method.md files, simply paste your content into
+these files.</p>
+<p>The test_ files above will be replaced by your own files. You can do
+this in two ways, replace the name of your files to correspond with the
+above files and replace the files in the directory listed below
+(recommended). Or, you can put your files with their current name in the
+directory, just ensure that you change the names accoringly when
+instantiating the NewScoreSet and NewScoreSetRequest onjects later in
+this module.</p>
+<p>We have an example directory in mavetools that holds the files of
+interest. Though this directory can exist anywhere on your computer, you
+must put the correct path to that directory as the value to
+test_file_dir.</p>
+<div class="highlight-ipython3 notranslate"><div class="highlight"><pre><span></span># here is an example if your copy of mavetools exists within Pycharm
+test_file_dir = &#39;~/PycharmProjects/mavetools/tests/test_upload_scoreset/test_files&#39;
+</pre></div>
+</div>
+<p>Here we want to valide the data we want to POST, run the validation code
+here.</p>
+<p>If you get an error message here, DO NOT UPLOAD, as your upload will
+fail serverside as well. Instead resolve the error, run script again,
+confirm error has been resolved, then upload.</p>
+<div class="highlight-ipython3 notranslate"><div class="highlight"><pre><span></span>#validate
+#validate_all(count_data=f&quot;{test_file_dir}/test_count.csv&quot;,
+#             score_data=f&quot;{test_file_dir}/test_score_data.csv&quot;,
+#             scorejson=None)
+</pre></div>
+</div>
+<p>Instantiate the NewScoreSet object and assign it to the new_scoreset
+veriable. You must substitute the attribute values for your scoreset’s
+attribute values.</p>
+<div class="highlight-ipython3 notranslate"><div class="highlight"><pre><span></span>#with open(f&quot;{test_file_dir}/abstract.md&quot;) as handle:
+#    test_abstract_text = handle.read()
+
+# substitute each attribute for your scoreset attributes
+new_scoreset = NewScoreSet(
+    title=&#39;test_title&#39;,
+    short_description=&#39;test_short_description&#39;,
+    #abstract_text=test_abstract_text,
+    abstract_text=&quot;abstract&quot;,
+
+    experiment=experiment_urn,
+    score_data=f&quot;{test_file_dir}/test_score_data.csv&quot;,
+    count_data=f&quot;{test_file_dir}/test_count.csv&quot;,
+    meta_data=f&quot;{test_file_dir}/test_metadata.json&quot;,
+    licence=Licence(short_name=&#39;CC BY 4.0&#39;),
+
+    sra_ids=[&#39;SRP109119&#39;],
+    pubmed_ids=[&#39;23035249&#39;],
+    doi_ids=[&#39;10.1038/s41467-019-11526-w&#39;],
+)
+</pre></div>
+</div>
+<p>Instantiate the NewScoresetRequest object and assign it to the
+new_scoreset_request. You must substitute the attribute values for your
+own.</p>
+<div class="highlight-ipython3 notranslate"><div class="highlight"><pre><span></span># substitute each attribute for your scoreset attributes
+new_scoreset_request = NewScoreSetRequest(
+    scoreset=new_scoreset,
+    target=NewTarget(
+        name=&#39;test_target_name&#39;,
+        type=&#39;Protein coding&#39;,
+        sequence_type=&#39;Infer&#39;,
+        fasta_file=f&quot;{test_file_dir}/test_fasta_file.fasta&quot;
+    ),
+    uniprot=SequenceOffset(offset=1, identifier=&#39;P63165&#39;),
+    ensembl=SequenceOffset(offset=1, identifier=&#39;ENSG00000116030&#39;),
+    refseq=SequenceOffset(offset=1, identifier=&#39;NM_001005781.1&#39;),
+    reference_maps=[
+        ReferenceMap(genome=ReferenceGenome(short_name=&#39;hg16&#39;))
+    ]
+)
+</pre></div>
+</div>
+<p>POST the model instance by passing the NewExperiment object as an
+argument to the post_model_istance funtion that operates on the Client
+object. This will POST the model instance to the approprate API
+endpoint.</p>
+<div class="highlight-ipython3 notranslate"><div class="highlight"><pre><span></span>client.post_model_instance(new_scoreset_request)
+</pre></div>
+</div>
+</section>
+</section>
+
+
+            <div class="clearer"></div>
+          </div>
+        </div>
+      </div>
+      <div class="sphinxsidebar" role="navigation" aria-label="main navigation">
+        <div class="sphinxsidebarwrapper">
+  <div>
+    <h3><a href="index.html">Table of Contents</a></h3>
+    <ul>
+<li><a class="reference internal" href="#">POST scoreset</a><ul>
+<li><a class="reference internal" href="#create-a-scoreset-in-mavedb-via-the-api">create a scoreset in MaveDB via the API</a></li>
+</ul>
+</li>
+</ul>
+
+  </div>
+  <div>
+    <h4>Previous topic</h4>
+    <p class="topless"><a href="experiment_get.html"
+                          title="previous chapter">GET experiment</a></p>
+  </div>
+  <div>
+    <h4>Next topic</h4>
+    <p class="topless"><a href="scoreset_get.html"
+                          title="next chapter">GET scoreset</a></p>
+  </div>
+  <div role="note" aria-label="source link">
+    <h3>This Page</h3>
+    <ul class="this-page-menu">
+      <li><a href="_sources/scoreset_create.rst.txt"
+            rel="nofollow">Show Source</a></li>
+    </ul>
+   </div>
+<div id="searchbox" style="display: none" role="search">
+  <h3 id="searchlabel">Quick search</h3>
+    <div class="searchformwrapper">
+    <form class="search" action="search.html" method="get">
+      <input type="text" name="q" aria-labelledby="searchlabel" autocomplete="off" autocorrect="off" autocapitalize="off" spellcheck="false"/>
+      <input type="submit" value="Go" />
+    </form>
+    </div>
+</div>
+<script>document.getElementById('searchbox').style.display = "block"</script>
+        </div>
+      </div>
+      <div class="clearer"></div>
+    </div>
+    <div class="related" role="navigation" aria-label="related navigation">
+      <h3>Navigation</h3>
+      <ul>
+        <li class="right" style="margin-right: 10px">
+          <a href="genindex.html" title="General Index"
+             >index</a></li>
+        <li class="right" >
+          <a href="py-modindex.html" title="Python Module Index"
+             >modules</a> |</li>
+        <li class="right" >
+          <a href="scoreset_get.html" title="GET scoreset"
+             >next</a> |</li>
+        <li class="right" >
+          <a href="experiment_get.html" title="GET experiment"
+             >previous</a> |</li>
+        <li class="nav-item nav-item-0"><a href="index.html">mavetools 0.1.1 documentation</a> &#187;</li>
+        <li class="nav-item nav-item-this"><a href="">POST scoreset</a></li> 
+      </ul>
+    </div>
+    <div class="footer" role="contentinfo">
+        &#169; Copyright 2020-2021, Alan F Rubin.
+      Created using <a href="https://www.sphinx-doc.org/">Sphinx</a> 6.1.3.
+    </div>
+  </body>
+</html>

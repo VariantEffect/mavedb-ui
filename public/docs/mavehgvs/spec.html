@@ -1,0 +1,413 @@
+
+<!DOCTYPE html>
+
+<html lang="en">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" /><meta name="generator" content="Docutils 0.19: https://docutils.sourceforge.io/" />
+
+    <title>MAVE-HGVS specification &#8212; MAVE-HGVS 0.6.0 documentation</title>
+    <link rel="stylesheet" type="text/css" href="_static/pygments.css" />
+    <link rel="stylesheet" type="text/css" href="_static/nature.css" />
+    <script data-url_root="./" id="documentation_options" src="_static/documentation_options.js"></script>
+    <script src="_static/doctools.js"></script>
+    <script src="_static/sphinx_highlight.js"></script>
+    <link rel="index" title="Index" href="genindex.html" />
+    <link rel="search" title="Search" href="search.html" />
+    <link rel="next" title="mavehgvs API documentation" href="api.html" />
+    <link rel="prev" title="MAVE-HGVS documentation" href="index.html" /> 
+  </head><body>
+    <div class="related" role="navigation" aria-label="related navigation">
+      <h3>Navigation</h3>
+      <ul>
+        <li class="right" style="margin-right: 10px">
+          <a href="genindex.html" title="General Index"
+             accesskey="I">index</a></li>
+        <li class="right" >
+          <a href="py-modindex.html" title="Python Module Index"
+             >modules</a> |</li>
+        <li class="right" >
+          <a href="api.html" title="mavehgvs API documentation"
+             accesskey="N">next</a> |</li>
+        <li class="right" >
+          <a href="index.html" title="MAVE-HGVS documentation"
+             accesskey="P">previous</a> |</li>
+        <li class="nav-item nav-item-0"><a href="index.html">MAVE-HGVS 0.6.0 documentation</a> &#187;</li>
+        <li class="nav-item nav-item-this"><a href="">MAVE-HGVS specification</a></li> 
+      </ul>
+    </div>  
+
+    <div class="document">
+      <div class="documentwrapper">
+        <div class="bodywrapper">
+          <div class="body" role="main">
+            
+  <section id="mave-hgvs-specification">
+<span id="spec-docs"></span><h1>MAVE-HGVS specification<a class="headerlink" href="#mave-hgvs-specification" title="Permalink to this heading">¶</a></h1>
+<p>MAVE-HGVS is a strict subset of the <a class="reference external" href="https://varnomen.hgvs.org/">HGVS Sequence Variant Nomenclature</a>, version 20.05.
+HGVS nomenclature is comprehensive and very expressive and consequently includes a lot of syntax that is not needed to
+represent variants from Multiplexed Assay of Variant Effect (MAVE) data and makes the variant strings more challenging
+to parse.</p>
+<p>While packages exist for parsing HGVS (most notably the
+<a class="reference external" href="https://github.com/biocommons/hgvs/">biocommons hgvs package</a>), they are intended for use in human genetics and
+rely on sequence databases and reference sequence (called “target sequence” for MAVE-HGVS), which are not always
+available for or relevant for multiplexed assays.</p>
+<p>MAVE-HGVS is an attempt to define an easy-to-parse subset of the HGVS nomenclature that captures those variants that
+occur in MAVE datasets, while excluding many variant types that are unlikely to be found. Importantly, the
+<a class="reference internal" href="api.html#api-docs"><span class="std std-ref">corresponding implementation</span></a> of MAVE-HGVS does not rely on external sequence databases or identifiers.</p>
+<section id="key-differences-between-hgvs-and-mave-hgvs">
+<h2>Key differences between HGVS and MAVE-HGVS<a class="headerlink" href="#key-differences-between-hgvs-and-mave-hgvs" title="Permalink to this heading">¶</a></h2>
+<p>Standard HGVS strings have the format <code class="code docutils literal notranslate"><span class="pre">reference:variant</span></code> (e.g. <code class="code docutils literal notranslate"><span class="pre">NM_001130145.3:c.832C&gt;T</span></code>).
+MAVE-HGVS strings typically include the variant portion only and the reference (target) portion is inferred from the
+MAVE design.</p>
+<p>Target identifiers in MAVE-HGVS are optional, and would typically be used in cases where a mix of MAVE datasets are
+being analyzed jointly or for experimental designs that contain multiple target sequences.
+Target identifiers in MAVE-HGVS can contain any word characters, numbers, or the underscore.</p>
+<p>MAVE-HGVS does not distinguish between variants that have been observed experimentally and the predicted consequence of
+observed variants.
+Therefore, variants that contain <code class="code docutils literal notranslate"><span class="pre">()</span></code> to denote predicted consequences are considered invalid with one exception
+(see <a class="reference internal" href="#substitution">Substitution</a> below).</p>
+<p>MAVE-HGVS supports position numberings that are relative to a transcript (e.g. <code class="code docutils literal notranslate"><span class="pre">c.85+12G&gt;A</span></code> or <code class="code docutils literal notranslate"><span class="pre">n.*22del</span></code>).
+These positions are referred to here as using the extended position notation.
+Variants using the extended position notation should appear alongside variants with simple (integer only) position
+numbers relative to the target sequence, expressed using the appropriate genomic prefix.</p>
+<p>Like HGVS, MAVE-HGVS supports alleles (called multi-variants in MAVE-HGVS) that describe multiple variants in a single
+variant string.
+Multi-variants are represented as a semicolon-separated list of valid MAVE-HGVS variants.</p>
+<p>MAVE-HGVS supports a subset of HGVS variants including:</p>
+<ul class="simple">
+<li><p>substitutions</p></li>
+<li><p>frame shifts</p></li>
+<li><p>deletions</p></li>
+<li><p>duplications</p></li>
+<li><p>insertions</p></li>
+</ul>
+<p>Many HGVS variants are unsupported including:</p>
+<ul class="simple">
+<li><p>inversions</p></li>
+<li><p>extensions</p></li>
+<li><p>changes in methylation state</p></li>
+<li><p>RNA fusion transcripts</p></li>
+<li><p>mosaicism</p></li>
+<li><p>chimerism</p></li>
+<li><p>variants with uncertain consequence</p></li>
+<li><p>variants in trans or unknown phase</p></li>
+<li><p>complex variants (e.g. translocations)</p></li>
+</ul>
+</section>
+<section id="sequence-prefixes-and-sequence-types">
+<h2>Sequence prefixes and sequence types<a class="headerlink" href="#sequence-prefixes-and-sequence-types" title="Permalink to this heading">¶</a></h2>
+<p>Similarly to HGVS, a MAVE-HGVS variant begins with a single prefix character that defines the sequence type.
+Supported sequence types are the same as for HGVS, and are listed in the following table:</p>
+<table class="docutils align-default">
+<colgroup>
+<col style="width: 20.0%" />
+<col style="width: 80.0%" />
+</colgroup>
+<thead>
+<tr class="row-odd"><th class="head"><p>Prefix</p></th>
+<th class="head"><p>Description</p></th>
+</tr>
+</thead>
+<tbody>
+<tr class="row-even"><td><p>c</p></td>
+<td><p>coding DNA sequence</p></td>
+</tr>
+<tr class="row-odd"><td><p>g</p></td>
+<td><p>linear genomic DNA sequence</p></td>
+</tr>
+<tr class="row-even"><td><p>m</p></td>
+<td><p>mitochondrial genomic DNA sequence</p></td>
+</tr>
+<tr class="row-odd"><td><p>n</p></td>
+<td><p>non-coding DNA sequence</p></td>
+</tr>
+<tr class="row-even"><td><p>o</p></td>
+<td><p>circular genomic DNA sequence</p></td>
+</tr>
+<tr class="row-odd"><td><p>p</p></td>
+<td><p>protein sequence</p></td>
+</tr>
+<tr class="row-even"><td><p>r</p></td>
+<td><p>RNA transcript sequence</p></td>
+</tr>
+</tbody>
+</table>
+<p>Typically MAVE variants are expressed relative to a coding, non-coding, or protein sequence.</p>
+<p>A notable exception is when the target sequence for the MAVE consists of both coding and non-coding sequences,
+such as when a full-length gene with introns is mutagenized and splice variants are assayed via saturation genome
+editing or other methods.
+In this case, it is appropriate to use one of the genomic sequence prefixes to describe changes using the contiguous
+region containing all mutagenized sequences as the target sequence.</p>
+<p>RNA variants are intended to be used when assaying the functional consequences to an RNA molecule,
+such as a tRNA or ribozyme.
+Variants that are measured at the DNA level should generally not use the RNA syntax.</p>
+</section>
+<section id="equality">
+<h2>Equality<a class="headerlink" href="#equality" title="Permalink to this heading">¶</a></h2>
+<p>MAVE-HGVS allows variants to describe equality to the target in a variety of ways.</p>
+<p>Variants describing identity to the full target sequence (e.g. <code class="code docutils literal notranslate"><span class="pre">c.=</span></code>) are valid and are the intended way to
+specify identity to the target (wild-type) sequence.
+This replaces the <a class="reference external" href="https://doi.org/10.1186/s13059-017-1272-5">Enrich2</a> <code class="code docutils literal notranslate"><span class="pre">_wt</span></code> variant syntax.</p>
+<p>Variants that describe identity to the reference (target) at a single position (e.g. <code class="code docutils literal notranslate"><span class="pre">c.44=</span></code>)
+or range of positions (e.g. <code class="code docutils literal notranslate"><span class="pre">c.1_3=</span></code>) are valid for coding and genomic sequences.
+These should only be used for special cases, such as in MITE-seq datasets where the scores and counts are
+reported separately for each wild-type codon.</p>
+<p>The target-identity variants <code class="code docutils literal notranslate"><span class="pre">c.=</span></code> and <code class="code docutils literal notranslate"><span class="pre">p.=</span></code> are only valid on their own and are considered invalid as
+part of multi-variants.
+The variants that describe nucleotide identity to part of the reference are also invalid as part of multi-variants.</p>
+<p>Variants that describe identity to the target at a single amino acid position (e.g. <code class="code docutils literal notranslate"><span class="pre">p.Cys22=</span></code>) are valid and
+are the preferred way to describe specific synonymous variants.</p>
+<p>The variant <code class="code docutils literal notranslate"><span class="pre">p.(=)</span></code> is used when summarizing the population of variants that are synonymous at the protein level
+but not target identical at the DNA level.
+This replaces the <a class="reference external" href="https://doi.org/10.1186/s13059-017-1272-5">Enrich2</a>  <code class="code docutils literal notranslate"><span class="pre">_sy</span></code> variant syntax.</p>
+<div class="admonition warning">
+<p class="admonition-title">Warning</p>
+<p>Many variants currently in MaveDB use only ‘=’ as part of multi-variants and are therefore invalid
+MAVE-HGVS.
+Additionally, some MaveDB datasets have a one-to-one relationship between nucleotide and protein multi-variants
+resulting in duplicate protein variants in the multi-variant.
+This should also be considered invalid.</p>
+</div>
+<p>Examples of valid equality variants:</p>
+<ul class="simple">
+<li><p>c.=</p></li>
+<li><p>c.22=</p></li>
+<li><p>c.1_3=</p></li>
+<li><p>g.123=</p></li>
+<li><p>p.Cys22=</p></li>
+<li><p>p.(=)</p></li>
+</ul>
+</section>
+<section id="substitution">
+<h2>Substitution<a class="headerlink" href="#substitution" title="Permalink to this heading">¶</a></h2>
+<div class="admonition note">
+<p class="admonition-title">Note</p>
+<p>TODO: add some noncoding (‘n.’ variants) to the examples.</p>
+</div>
+<p>MAVE-HGVS supports substitutions of a single nucleotide or amino acid.</p>
+<p>MAVE-HGVS does not support extension variants, which extend an amino acid sequence to the N- or C- terminal end
+(e.g. <code class="code docutils literal notranslate"><span class="pre">p.Met1ext-4</span></code> for gain of an upstream start or <code class="code docutils literal notranslate"><span class="pre">p.Ter345Lysext5</span></code> for a new downstream termination
+codon).
+Variants that remove a termination codon should be written as standard substitution variants.
+Variants that result in an N-terminal extension are currently undefined,
+but have not been observed in the MAVE literature at the time of writing.</p>
+<p>Substitutions of more than one base at a time are covered under <a class="reference internal" href="#deletion-insertion">Deletion-Insertion</a>.</p>
+<p>Examples of valid substitutions:</p>
+<ul class="simple">
+<li><p>g.48C&gt;A</p></li>
+<li><p>c.122-6T&gt;A</p></li>
+<li><p>c.*33G&gt;C</p></li>
+<li><p>p.Glu27Trp</p></li>
+<li><p>p.Ter345Lys</p></li>
+<li><p>r.22g&gt;u</p></li>
+<li><p>r.33+12a&gt;c</p></li>
+</ul>
+<p>Examples of valid HGVS substitutions that are invalid in MAVE-HGVS:</p>
+<ul class="simple">
+<li><p>g.48C&gt;W</p></li>
+<li><p>c.122=/T&gt;A</p></li>
+<li><p>p.(Glu27Trp)</p></li>
+<li><p>p.*345Lys</p></li>
+<li><p>p.Glu23Xaa</p></li>
+<li><p>r.spl</p></li>
+</ul>
+</section>
+<section id="frame-shift">
+<h2>Frame Shift<a class="headerlink" href="#frame-shift" title="Permalink to this heading">¶</a></h2>
+<p>MAVE-HGVS supports a simplified syntax to describe frame shifts in protein variants.
+Multi-variants that include multiple frame shifts or a second variant after a frame shift are considered invalid.</p>
+<p>Because frame shift (and the related extension) variants are uncommon in MAVE datasets, MAVE-HGVS provides this minimal support.
+Extension variants (removal of a termination codon) should be expressed as a frame shift at the termination codon.</p>
+<p>Examples of valid frame shift variants:</p>
+<ul class="simple">
+<li><p>p.Glu27fs</p></li>
+<li><p>p.Asp125fs</p></li>
+<li><p>p.Ter385fs</p></li>
+</ul>
+<p>Examples of valid HGVS frame shift variants that are invalid in MAVE-HGVS:</p>
+<ul class="simple">
+<li><p>p.Arg12LysfsTer18</p></li>
+<li><p>p.Arg12Lysfs*18</p></li>
+<li><p>p.Glu27fs*?</p></li>
+<li><p>p.(Glu27fs)</p></li>
+</ul>
+</section>
+<section id="deletion">
+<h2>Deletion<a class="headerlink" href="#deletion" title="Permalink to this heading">¶</a></h2>
+<p>MAVE-HGVS supports deletions of specified nucleotides or amino acids.</p>
+<p>Deletions of an unknown number of bases or amino acids are not supported.
+For example, deletions where the breakpoint is not known or where the deletion extends past the end of the target
+cannot be represented with uncertainty.
+To represent a deletion of a sequence including the start or end of the target, specify the deletion exactly as if it
+extended to the first or last position.</p>
+<p>Examples of valid deletions:</p>
+<ul class="simple">
+<li><p>g.44del</p></li>
+<li><p>c.78+5_78+10del</p></li>
+<li><p>c.1_95del</p></li>
+<li><p>p.Gly18del</p></li>
+<li><p>p.Gln7_Asn19del</p></li>
+<li><p>r.34_36del</p></li>
+</ul>
+<p>Examples of valid HGVS deletions that are invalid in MAVE-HGVS:</p>
+<ul class="simple">
+<li><p>c.(78+1_79-1)_(124+1_125-1)del</p></li>
+<li><p>g.(?_85)_(124_?)del</p></li>
+<li><p>c.122=/del</p></li>
+<li><p>p.(Gly18del)</p></li>
+<li><p>r.=/9_12del</p></li>
+<li><p>r.(155_185)del</p></li>
+</ul>
+</section>
+<section id="duplication">
+<h2>Duplication<a class="headerlink" href="#duplication" title="Permalink to this heading">¶</a></h2>
+<p>MAVE-HGVS supports duplications of one or more nucleotides or amino acids.
+The syntax is the same as HGVS.</p>
+<p>Examples of valid duplications:</p>
+<ul class="simple">
+<li><p>g.22_24dup</p></li>
+<li><p>c.77dup</p></li>
+<li><p>c.101+1_101+7dup</p></li>
+<li><p>p.Pro12_Gly18dup</p></li>
+<li><p>p.Cys5dup</p></li>
+<li><p>r.12dup</p></li>
+</ul>
+<p>Examples of valid HGVS duplications that are invalid in MAVE-HGVS:</p>
+<ul class="simple">
+<li><p>c.(78+1_79-1)_(124+1_125-1)dup</p></li>
+<li><p>g.(?_85)_(124_?)dup</p></li>
+<li><p>c.122_125=//dup</p></li>
+<li><p>p.(Cys5dup)</p></li>
+</ul>
+</section>
+<section id="insertion">
+<h2>Insertion<a class="headerlink" href="#insertion" title="Permalink to this heading">¶</a></h2>
+<p>MAVE-HGVS supports insertions of a specified nucleotide or amino acid sequence.</p>
+<p>Insertions of a number of unspecified bases or amino acids or insertions using ambiguity characters (e.g. N or Xaa)
+are not supported.</p>
+<p>Insertions must be specified by listing the complete inserted sequence.
+Referring to the sequence that is inserted based on its position in the target sequence is not considered valid for
+MAVE-HGVS.</p>
+<p>To describe an insertion at the end of the target sequence, use a <a class="reference internal" href="#deletion-insertion"><span class="std std-ref">Deletion-Insertion</span></a> variant that deletes
+the last base or amino acid in the target and inserts the deleted symbol plus the insertion.</p>
+<p>Examples of valid insertions:</p>
+<ul class="simple">
+<li><p>g.234_235insT</p></li>
+<li><p>c.84_85insCTG</p></li>
+<li><p>c.99+6_99+7insA</p></li>
+<li><p>p.His7_Gln8insSer</p></li>
+<li><p>p.Ala12_Pro13insGlyProCys</p></li>
+<li><p>r.22_23insauc</p></li>
+</ul>
+<p>Examples of valid HGVS insertions that are invalid in MAVE-HGVS:</p>
+<ul class="simple">
+<li><p>c.84_85ins100_125</p></li>
+<li><p>g.234_235ins(10)</p></li>
+<li><p>g.234_235ins(?)</p></li>
+<li><p>c.(122_125)insG</p></li>
+<li><p>p.(His7_Gln8insSer)</p></li>
+<li><p>p.(His7_Gln8insX)</p></li>
+<li><p>p.(Ala12_Pro13ins(2))</p></li>
+<li><p>r.(27_30)insu</p></li>
+<li><p>r.74_74insnnn</p></li>
+</ul>
+</section>
+<section id="deletion-insertion">
+<h2>Deletion-Insertion<a class="headerlink" href="#deletion-insertion" title="Permalink to this heading">¶</a></h2>
+<p>MAVE-HGVS supports deletion-insertions of a specified nucleotide or amino acid sequence.</p>
+<p>Deletion-insertions of a number of unspecified bases or amino acids or insertions using ambiguity characters
+(e.g. N or Xaa) are not supported. This includes deletion-insertions with uncertain breakpoints.</p>
+<p>Examples of valid deletion-insertions:</p>
+<ul class="simple">
+<li><p>g.22delinsAACG</p></li>
+<li><p>c.83_85delinsT</p></li>
+<li><p>c.43-6_595+12delinsCTT</p></li>
+<li><p>p.Ile71_Cys80delinsSer</p></li>
+<li><p>p.His44delinsValProGlyGlu</p></li>
+<li><p>r.92delinsgac</p></li>
+</ul>
+</section>
+</section>
+
+
+            <div class="clearer"></div>
+          </div>
+        </div>
+      </div>
+      <div class="sphinxsidebar" role="navigation" aria-label="main navigation">
+        <div class="sphinxsidebarwrapper">
+  <div>
+    <h3><a href="index.html">Table of Contents</a></h3>
+    <ul>
+<li><a class="reference internal" href="#">MAVE-HGVS specification</a><ul>
+<li><a class="reference internal" href="#key-differences-between-hgvs-and-mave-hgvs">Key differences between HGVS and MAVE-HGVS</a></li>
+<li><a class="reference internal" href="#sequence-prefixes-and-sequence-types">Sequence prefixes and sequence types</a></li>
+<li><a class="reference internal" href="#equality">Equality</a></li>
+<li><a class="reference internal" href="#substitution">Substitution</a></li>
+<li><a class="reference internal" href="#frame-shift">Frame Shift</a></li>
+<li><a class="reference internal" href="#deletion">Deletion</a></li>
+<li><a class="reference internal" href="#duplication">Duplication</a></li>
+<li><a class="reference internal" href="#insertion">Insertion</a></li>
+<li><a class="reference internal" href="#deletion-insertion">Deletion-Insertion</a></li>
+</ul>
+</li>
+</ul>
+
+  </div>
+  <div>
+    <h4>Previous topic</h4>
+    <p class="topless"><a href="index.html"
+                          title="previous chapter">MAVE-HGVS documentation</a></p>
+  </div>
+  <div>
+    <h4>Next topic</h4>
+    <p class="topless"><a href="api.html"
+                          title="next chapter">mavehgvs API documentation</a></p>
+  </div>
+  <div role="note" aria-label="source link">
+    <h3>This Page</h3>
+    <ul class="this-page-menu">
+      <li><a href="_sources/spec.rst.txt"
+            rel="nofollow">Show Source</a></li>
+    </ul>
+   </div>
+<div id="searchbox" style="display: none" role="search">
+  <h3 id="searchlabel">Quick search</h3>
+    <div class="searchformwrapper">
+    <form class="search" action="search.html" method="get">
+      <input type="text" name="q" aria-labelledby="searchlabel" autocomplete="off" autocorrect="off" autocapitalize="off" spellcheck="false"/>
+      <input type="submit" value="Go" />
+    </form>
+    </div>
+</div>
+<script>document.getElementById('searchbox').style.display = "block"</script>
+        </div>
+      </div>
+      <div class="clearer"></div>
+    </div>
+    <div class="related" role="navigation" aria-label="related navigation">
+      <h3>Navigation</h3>
+      <ul>
+        <li class="right" style="margin-right: 10px">
+          <a href="genindex.html" title="General Index"
+             >index</a></li>
+        <li class="right" >
+          <a href="py-modindex.html" title="Python Module Index"
+             >modules</a> |</li>
+        <li class="right" >
+          <a href="api.html" title="mavehgvs API documentation"
+             >next</a> |</li>
+        <li class="right" >
+          <a href="index.html" title="MAVE-HGVS documentation"
+             >previous</a> |</li>
+        <li class="nav-item nav-item-0"><a href="index.html">MAVE-HGVS 0.6.0 documentation</a> &#187;</li>
+        <li class="nav-item nav-item-this"><a href="">MAVE-HGVS specification</a></li> 
+      </ul>
+    </div>
+    <div class="footer" role="contentinfo">
+        &#169; Copyright 2018-2023, Alan F Rubin and Daniel Esposito.
+      Created using <a href="https://www.sphinx-doc.org/">Sphinx</a> 6.1.3.
+    </div>
+  </body>
+</html>

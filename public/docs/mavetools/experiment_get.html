@@ -1,0 +1,251 @@
+
+<!DOCTYPE html>
+
+<html lang="en">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" /><meta name="generator" content="Docutils 0.19: https://docutils.sourceforge.io/" />
+
+    <title>GET experiment &#8212; mavetools 0.1.1 documentation</title>
+    <link rel="stylesheet" type="text/css" href="_static/pygments.css" />
+    <link rel="stylesheet" type="text/css" href="_static/pyramid.css" />
+    <link rel="stylesheet" type="text/css" href="_static/styles.css" />
+    <script data-url_root="./" id="documentation_options" src="_static/documentation_options.js"></script>
+    <script src="_static/doctools.js"></script>
+    <script src="_static/sphinx_highlight.js"></script>
+    <link rel="index" title="Index" href="genindex.html" />
+    <link rel="search" title="Search" href="search.html" />
+    <link rel="next" title="POST scoreset" href="scoreset_create.html" />
+    <link rel="prev" title="POST experiment" href="experiment_create.html" />
+<link rel="stylesheet" href="https://fonts.googleapis.com/css?family=Neuton&amp;subset=latin" type="text/css" media="screen" charset="utf-8" />
+<link rel="stylesheet" href="https://fonts.googleapis.com/css?family=Nobile:regular,italic,bold,bolditalic&amp;subset=latin" type="text/css" media="screen" charset="utf-8" />
+<!--[if lte IE 6]>
+<link rel="stylesheet" href="_static/ie6.css" type="text/css" media="screen" charset="utf-8" />
+<![endif]-->
+
+  </head><body>
+
+    <div class="related" role="navigation" aria-label="related navigation">
+      <h3>Navigation</h3>
+      <ul>
+        <li class="right" style="margin-right: 10px">
+          <a href="genindex.html" title="General Index"
+             accesskey="I">index</a></li>
+        <li class="right" >
+          <a href="py-modindex.html" title="Python Module Index"
+             >modules</a> |</li>
+        <li class="right" >
+          <a href="scoreset_create.html" title="POST scoreset"
+             accesskey="N">next</a> |</li>
+        <li class="right" >
+          <a href="experiment_create.html" title="POST experiment"
+             accesskey="P">previous</a> |</li>
+        <li class="nav-item nav-item-0"><a href="index.html">mavetools 0.1.1 documentation</a> &#187;</li>
+        <li class="nav-item nav-item-this"><a href="">GET experiment</a></li> 
+      </ul>
+    </div>  
+
+    <div class="document">
+      <div class="documentwrapper">
+        <div class="bodywrapper">
+          <div class="body" role="main">
+            
+  <section id="get-experiment">
+<h1>GET experiment<a class="headerlink" href="#get-experiment" title="Permalink to this heading">¶</a></h1>
+<section id="get-an-experiment-from-mavedb-via-the-api">
+<h2>get an experiment from MaveDB via the API<a class="headerlink" href="#get-an-experiment-from-mavedb-via-the-api" title="Permalink to this heading">¶</a></h2>
+<p>To begin, import the modeules below.</p>
+<div class="highlight-ipython3 notranslate"><div class="highlight"><pre><span></span>import attr, os
+from pprint import PrettyPrinter
+from mavetools.client.client import Client
+from mavetools.models.experiment import Experiment
+</pre></div>
+</div>
+<p>Pretty printer is used to format the output nicely.</p>
+<div class="highlight-ipython3 notranslate"><div class="highlight"><pre><span></span>pp = PrettyPrinter(indent=2)  # displayes results in readable format
+</pre></div>
+</div>
+<p>Here your base_url is set to localhost, <a class="reference external" href="http://127.0.0.1:8000/api/">http://127.0.0.1:8000/api/</a>. This
+default funcionality is what you would want to use when working with a
+local instance of MaveDB (e.g., a development branch). If working with
+production mavedb you would set base url to <a class="reference external" href="https://www.mavedb.org/api/">https://www.mavedb.org/api/</a>.</p>
+<p>In the cell below, comment out the base_url you will not be using.</p>
+<div class="highlight-ipython3 notranslate"><div class="highlight"><pre><span></span>base_url = &#39;http://127.0.0.1:8000/api/&#39;
+#base_url = &#39;https://www.mavedb.org/api/&#39;
+</pre></div>
+</div>
+<p>Set experiment_urn to match the experiment you want to get.</p>
+<div class="highlight-ipython3 notranslate"><div class="highlight"><pre><span></span>experiment_urn = &#39;urn:mavedb:00000001-a&#39;
+</pre></div>
+</div>
+<p>Next, you will need an auth_token to make POST requests to MaveDB. If
+you have one, substitute it in the example provided below. If you need
+one, please follow these instructions:</p>
+<div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="mf">1.</span> <span class="n">go</span> <span class="n">to</span> <span class="n">https</span><span class="p">:</span><span class="o">//</span><span class="n">www</span><span class="o">.</span><span class="n">mavedb</span><span class="o">.</span><span class="n">org</span>
+<span class="mf">2.</span> <span class="n">login</span> <span class="n">using</span> <span class="n">your</span> <span class="n">ORCID</span> <span class="n">ID</span>
+<span class="mf">3.</span> <span class="n">go</span> <span class="n">to</span> <span class="n">settings</span>
+<span class="mf">4.</span> <span class="n">generate</span> <span class="n">new</span> <span class="n">auth</span> <span class="n">token</span>
+<span class="mf">5.</span> <span class="n">copy</span> <span class="n">auth</span> <span class="n">token</span> <span class="ow">and</span> <span class="n">pase</span> <span class="n">it</span> <span class="ow">in</span> <span class="n">the</span> <span class="n">auth_token</span> <span class="n">field</span> <span class="n">below</span>
+</pre></div>
+</div>
+<div class="highlight-ipython3 notranslate"><div class="highlight"><pre><span></span># Generate a new auth_token in your profile and post it here
+auth_token = &#39;R2skRbpBD3Rsf5dNHoQxDZevdEE74T5lCKMFyBhBwwPFH4ZfTrxDz7TZ0kbFLtEZ&#39;
+</pre></div>
+</div>
+<p>Here you instantiate the Client object. The Client object is the object
+by which the POST request is performed. The client object is
+instantiated with the value of base_url provided earlier, so make sure
+that is up-to-date. If base_url does not exist, base_url is defaulted to
+localhost, <a class="reference external" href="http://127.0.0.1:8000/api/">http://127.0.0.1:8000/api/</a>.</p>
+<div class="highlight-ipython3 notranslate"><div class="highlight"><pre><span></span>client = Client(base_url, auth_token=auth_token) if base_url else Client(auth_token=auth_token)
+</pre></div>
+</div>
+<p>GET the model instance by passing the model type (Experiment, in this
+instance) and the experiment_urn as arguments to the get_model_istance
+funtion that operates on the Client object. This will GET the model
+instance (resource) from the server via the approprate API endpoint.</p>
+<div class="highlight-ipython3 notranslate"><div class="highlight"><pre><span></span>experiment = client.get_model_instance(Experiment, experiment_urn)
+</pre></div>
+</div>
+<p>Now, display the results!</p>
+<div class="highlight-ipython3 notranslate"><div class="highlight"><pre><span></span>pp.pprint(attr.asdict(experiment))
+</pre></div>
+</div>
+<pre class="literal-block">{ 'abstract_text': 'Although we now routinely sequence human genomes, we can '
+                   'confidently identify only a fraction of the sequence '
+                   'variants that have a functional impact. Here, we developed '
+                   'a deep mutational scanning framework that produces '
+                   'exhaustive maps for human missense variants by combining '
+                   'random codon mutagenesis and multiplexed functional '
+                   'variation assays with computational imputation and '
+                   'refinement. We applied this framework to four proteins '
+                   'corresponding to six human genes: UBE2I (encoding SUMO E2 '
+                   'conjugase), SUMO1 (small ubiquitin-like modifier), TPK1 '
+                   '(thiamin pyrophosphokinase), and CALM1/2/3 (three genes '
+                   'encoding the protein calmodulin). The resulting maps '
+                   'recapitulate known protein features and confidently '
+                   'identify pathogenic variation. Assays potentially amenable '
+                   'to deep mutational scanning are already available for 57% '
+                   'of human disease genes, suggesting that DMS could '
+                   'ultimately map functional variation for all human disease '
+                   'genes.',
+  'approved': None,
+  'contributors': ['0000-0003-1628-9390'],
+  'created_by': '0000-0003-1628-9390',
+  'creation_date': '2018-06-26',
+  'doi_ids': [],
+  'experimentset': '<a class="reference external" href="urn:mavedb:00000001">urn:mavedb:00000001</a>',
+  'extra_metadata': {},
+  'keywords': [ {'text': 'E2'},
+                {'text': 'sumoylation'},
+                {'text': 'imputation'},
+                {'text': 'complementation'}],
+  'last_child_value': None,
+  'method_text': 'A Deep Mutational Scan of UBE2I using functional '
+                 'complementation in yeast was performed using two different '
+                 'methods: DMS-BarSeq and DMS-TileSeq, both datasets were '
+                 'combined and a machine-learning method was used to impute '
+                 'the effects of missing variants and refine measurements of '
+                 'lower confidence. See [<strong>Weile *et al.* '
+                 '2017</strong>](<a class="reference external" href="http://msb.embopress.org/content/13/12/957">http://msb.embopress.org/content/13/12/957</a>) for '
+                 'details.',
+  'modification_date': '2019-08-08',
+  'modified_by': '0000-0003-1628-9390',
+  'private': None,
+  'publish_date': '2018-06-26',
+  'pubmed_ids': [ { 'dbname': 'PubMed',
+                    'dbversion': None,
+                    'identifier': '29269382',
+                    'url': '<a class="reference external" href="http://www.ncbi.nlm.nih.gov/pubmed/29269382">http://www.ncbi.nlm.nih.gov/pubmed/29269382</a>'}],
+  'scoresets': [ '<a class="reference external" href="urn:mavedb:00000001-a-2">urn:mavedb:00000001-a-2</a>',
+                 '<a class="reference external" href="urn:mavedb:00000001-a-3">urn:mavedb:00000001-a-3</a>',
+                 '<a class="reference external" href="urn:mavedb:00000001-a-4">urn:mavedb:00000001-a-4</a>',
+                 '<a class="reference external" href="urn:mavedb:00000001-a-1">urn:mavedb:00000001-a-1</a>'],
+  'short_description': 'A Deep Mutational Scan of the human SUMO E2 conjugase '
+                       'UBE2I using functional complementation in yeast.',
+  'sra_ids': [ { 'dbname': 'SRA',
+                 'dbversion': None,
+                 'identifier': 'SRP109101',
+                 'url': '<a class="reference external" href="http://www.ebi.ac.uk/ena/data/view/SRP109101">http://www.ebi.ac.uk/ena/data/view/SRP109101</a>'},
+               { 'dbname': 'SRA',
+                 'dbversion': None,
+                 'identifier': 'SRP109119',
+                 'url': '<a class="reference external" href="http://www.ebi.ac.uk/ena/data/view/SRP109119">http://www.ebi.ac.uk/ena/data/view/SRP109119</a>'}],
+  'title': 'UBE2I yeast complementation',
+  'urn': '<a class="reference external" href="urn:mavedb:00000001-a">urn:mavedb:00000001-a</a>'}</pre>
+</section>
+</section>
+
+
+            <div class="clearer"></div>
+          </div>
+        </div>
+      </div>
+      <div class="sphinxsidebar" role="navigation" aria-label="main navigation">
+        <div class="sphinxsidebarwrapper">
+  <div>
+    <h3><a href="index.html">Table of Contents</a></h3>
+    <ul>
+<li><a class="reference internal" href="#">GET experiment</a><ul>
+<li><a class="reference internal" href="#get-an-experiment-from-mavedb-via-the-api">get an experiment from MaveDB via the API</a></li>
+</ul>
+</li>
+</ul>
+
+  </div>
+  <div>
+    <h4>Previous topic</h4>
+    <p class="topless"><a href="experiment_create.html"
+                          title="previous chapter">POST experiment</a></p>
+  </div>
+  <div>
+    <h4>Next topic</h4>
+    <p class="topless"><a href="scoreset_create.html"
+                          title="next chapter">POST scoreset</a></p>
+  </div>
+  <div role="note" aria-label="source link">
+    <h3>This Page</h3>
+    <ul class="this-page-menu">
+      <li><a href="_sources/experiment_get.rst.txt"
+            rel="nofollow">Show Source</a></li>
+    </ul>
+   </div>
+<div id="searchbox" style="display: none" role="search">
+  <h3 id="searchlabel">Quick search</h3>
+    <div class="searchformwrapper">
+    <form class="search" action="search.html" method="get">
+      <input type="text" name="q" aria-labelledby="searchlabel" autocomplete="off" autocorrect="off" autocapitalize="off" spellcheck="false"/>
+      <input type="submit" value="Go" />
+    </form>
+    </div>
+</div>
+<script>document.getElementById('searchbox').style.display = "block"</script>
+        </div>
+      </div>
+      <div class="clearer"></div>
+    </div>
+    <div class="related" role="navigation" aria-label="related navigation">
+      <h3>Navigation</h3>
+      <ul>
+        <li class="right" style="margin-right: 10px">
+          <a href="genindex.html" title="General Index"
+             >index</a></li>
+        <li class="right" >
+          <a href="py-modindex.html" title="Python Module Index"
+             >modules</a> |</li>
+        <li class="right" >
+          <a href="scoreset_create.html" title="POST scoreset"
+             >next</a> |</li>
+        <li class="right" >
+          <a href="experiment_create.html" title="POST experiment"
+             >previous</a> |</li>
+        <li class="nav-item nav-item-0"><a href="index.html">mavetools 0.1.1 documentation</a> &#187;</li>
+        <li class="nav-item nav-item-this"><a href="">GET experiment</a></li> 
+      </ul>
+    </div>
+    <div class="footer" role="contentinfo">
+        &#169; Copyright 2020-2021, Alan F Rubin.
+      Created using <a href="https://www.sphinx-doc.org/">Sphinx</a> 6.1.3.
+    </div>
+  </body>
+</html>

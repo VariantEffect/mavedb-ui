@@ -166,41 +166,25 @@ export default {
   text-align: left;
 }
 
-.mavedb-menubar::v-deep .p-menubar-start {
+.mavedb-menubar:deep(.p-menubar-start) {
   flex: 1 0 auto;
   text-align: left;
 }
 
-.mavedb-menubar.p-menubar::v-deep .p-menubar-root-list {
+.mavedb-menubar.p-menubar:deep(.p-menubar-root-list) {
   margin: 0 2em;
 }
 
-.mavedb-menubar.p-menubar::v-deep .p-menubar-root-list > .p-menuitem > .p-menuitem-link .p-menuitem-icon:empty {
+.mavedb-menubar.p-menubar:deep(.p-menubar-root-list > .p-menuitem > .p-menuitem-link .p-menuitem-icon:empty) {
   margin: 0;
 }
 
-.mavedb-menubar.p-menubar::v-deep .p-menubar-root-list > .p-menuitem > .p-menuitem-link .p-menuitem-icon.pi {
+.mavedb-menubar.p-menubar:deep(.p-menubar-root-list > .p-menuitem > .p-menuitem-link .p-menuitem-icon.pi) {
   margin-right: 0.5rem;
 }
 
 .mavedb-menubar .mavedb-title {
   font-size: 2rem;
-}
-
-.sfs-nav-button {
-  margin: 0 0.5em;
-}
-
-.sfs-navbar .p-button {
-  background: #bbb;
-}
-
-.sfs-navbar a {
-  text-decoration: none;
-}
-
-.sfs-navbar .router-link-active .p-button {
-  background: #999;
 }
 
 </style>

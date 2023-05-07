@@ -209,7 +209,7 @@ export default {
       return _.get(...args)
     },
     getAssociatedScoresets: async function(){
-      let response = await axios.get(`${config.apiBaseUrl}/experiments/${this.itemId}/associated_scoresets`)
+      let response = await axios.get(`${config.apiBaseUrl}/experiments/${this.itemId}/scoresets`)
       this.associatedScoresets = response.data
     },
     showMore: function(){

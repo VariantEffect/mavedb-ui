@@ -30,6 +30,10 @@ const itemTypes = {
     restCollectionName: 'experimentSets',
     primaryKey: 'urn'
   },
+  'license': {
+    name: 'license', // TODO Redundant, change this structure
+    restCollectionName: 'licenses'
+  },
   'pubmed-identifier-search': {
     name: 'pubmed-identifier', // TODO Redundant, change this structure
     restCollectionName: 'pubmedIdentifiers',

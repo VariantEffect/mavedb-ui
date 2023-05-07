@@ -142,6 +142,22 @@
               <div v-if="itemStatus == 'NotLoaded' || this.item.private==true">
                 <div class="field">
                   <span class="p-float-label">
+                    <Dropdown
+                        v-model="licenseId"
+                        :id="$scopedId('input-targetLicenseId')"
+                        :options="licenses"
+                        optionLabel="longName"
+                        optionValue="id"
+                    />
+                    <label :for="$scopedId('input-targetLicenseId')">License</label>
+                  </span>
+                  <span v-if="validationErrors['targetGene.referenceGenome']" class="mave-field-error">{{validationErrors['targetGene.referenceGenome']}}</span>
+                  <span v-if="licenseId && licenses && licenses.find((l) => l.id == licenseId)?.shortName != 'CC0'" class="mave-field-warning">
+                    Choosing a license with these restrictions may cause your dataset to be excluded from data federation and aggregation by MaveDB collaborators.
+                  </span>
+                </div>
+                <div class="field">
+                  <span class="p-float-label">
                     <Chips v-model="keywords" :id="$scopedId('input-keywords')" :addOnBlur="true" :allowDuplicate="false" />
                     <label :for="$scopedId('input-keywords')">Keywords</label>
                   </span>
@@ -449,6 +465,7 @@ export default {
     for (const dbName of externalGeneDatabases) {
       targetGeneIdentifierSuggestions[dbName] = useItems({itemTypeName: `${dbName.toLowerCase()}-identifier-search`})
     }
+    const licenses = useItems({itemTypeName: 'license'})
     const referenceGenomes = useItems({itemTypeName: 'reference-genome'})
     const targetGeneSuggestions = useItems({itemTypeName: 'target-gene-search'})
     const {errors: validationErrors, handleSubmit, setErrors: setValidationErrors} = useForm()
@@ -456,6 +473,7 @@ export default {
       ...useFormatters(),
       ...useItem({itemTypeName: 'scoreset'}),
       editableExperiments: editableExperiments.items,
+      licenses: licenses.items,
       doiIdentifierSuggestions: doiIdentifierSuggestions.items,
       setDoiIdentifierSearch: (text) => doiIdentifierSuggestions.setRequestBody({text}),
       pubmedIdentifierSuggestions: pubmedIdentifierSuggestions.items,
@@ -488,6 +506,7 @@ export default {
   data: () => ({
     // Form fields
     experimentUrn: null,
+    licenseId: null,
     title: null,
     metaAnalysisSourceScoresets: [],
     supersededScoreset: null,
@@ -562,6 +581,9 @@ export default {
     },
     targetGeneSuggestionsList: function() {
       return this.suggestionsForAutocomplete(this.targetGeneSuggestions)
+    },
+    defaultLicenseId: function() {
+      return this.licenses ? this.licenses.find((license) => license.shortName == 'CC0')?.id : null
     }
   },
 
@@ -614,6 +636,13 @@ export default {
         this.setItemId(this.itemId)
       },
       immediate: true
+    },
+    defaultLicenseId: {
+      handler: function() {
+        if (this.licenseId == null) {
+          this.licenseId = this.defaultLicenseId
+        }
+      }
     }
   },
 
@@ -853,6 +882,7 @@ export default {
     resetForm: function() {
       if (this.item) {
         this.experimentUrn = this.item.experiment.urn
+        this.licenseId = this.item.license.id
         this.metaAnalysisSourceScoresets = this.item.metaAnalysisSourceScoresets
         this.supersededScoreset = this.item.supersededScoreset
         this.title = this.item.title
@@ -885,6 +915,7 @@ export default {
         this.extraMetadata = this.item.extraMetadata
       } else {
         this.experimentUrn = null
+        this.licenseId = this.defaultLicenseId
         this.metaAnalysisSourceScoresets = []
         this.supersededScoreset = null
         this.title = null
@@ -926,6 +957,7 @@ export default {
     save: async function() {
       const editedFields = {
         experimentUrn: this.experimentUrn,
+        licenseId: this.licenseId,
         title: this.title,
         shortDescription: this.shortDescription,
         abstractText: this.abstractText,

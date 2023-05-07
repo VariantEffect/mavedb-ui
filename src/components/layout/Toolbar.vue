@@ -63,8 +63,10 @@ export default {
         label: 'Dashboard',
         to: '/dashboard',
         available: ({authenticated}) => authenticated // oidc.isAuthenticated
-      },
-      {
+      }, {
+        label: 'Home',
+        to: '/'
+      }, {
         label: 'Search',
         to: '/search'
       }, {

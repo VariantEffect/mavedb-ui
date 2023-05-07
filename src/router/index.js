@@ -5,7 +5,7 @@ import DocumentationView from '@/components/screens/DocumentationView'
 import ExperimentEditor from '@/components/screens/ExperimentEditor'
 import ExperimentView from '@/components/screens/ExperimentView'
 import ExperimentSetView from '@/components/screens/ExperimentSetView'
-// import HomeView from '@/components/screens/HomeView'
+import HomeScreen from '@/components/screens/HomeScreen'
 import ScoresetEditor from '@/components/screens/ScoresetEditor'
 import ScoreSetView from '@/components/screens/ScoreSetView'
 import SearchView from '@/components/screens/SearchView'
@@ -16,7 +16,7 @@ import {oidc} from '@/lib/auth'
 const routes = [{
   path: '/',
   name: 'home',
-  redirect: '/search'
+  component: HomeScreen
 }, {
   path: '/search',
   name: 'search',

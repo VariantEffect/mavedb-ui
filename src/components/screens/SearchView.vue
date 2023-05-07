@@ -7,8 +7,8 @@
       <div class="mavedb-search-form">
         <span class="p-input-icon-left">
           <i class="pi pi-search" />
-          <InputText v-model="searchText" ref="searchTextInput" type="text" class="p-inputtext-sm" placeholder="Search" @change="search" />
-          <Button @click="clear" class="p-button-help">Clear</Button>
+          <InputText v-model="searchText" ref="searchTextInput" type="search" class="p-inputtext-sm" placeholder="Search" @change="search" />
+          <Button v-if="searchText && searchText.length > 0" class="mavedb-search-clear-button p-button-plain p-button-text" @click="clear"><i class="pi pi-times"/></Button>
         </span>
         <div class="mavedb-search-filters">
           <SelectList v-model="filterTargetNames" :options="targetNameFilterOptions" class="mavedb-search-filter-option-picker" title="Target name"  />
@@ -477,6 +477,14 @@ export default {
 
 .mavedb-search-results::v-deep .samplify-data-table tr.samplify-data-table-group-row td:last-child {
   font-style: normal;
+}
+
+.mavedb-search-clear-button {
+  position: absolute;
+  top: 12px;
+  right: 8px;
+  margin: 0;
+  padding: 0;
 }
 
 </style>

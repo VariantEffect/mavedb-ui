@@ -43,6 +43,7 @@
     "primevue": "^3.12.5",
     "vee-validate": "^4.5.11",
     "vue": "^3.2.33",
+    "vue-debounce": "^4.0.0",
     "vue-oidc-client": "^1.0.0-alpha.4",
     "vue-router": "^4.0.14",
     "vuex": "^4.0.0-0",

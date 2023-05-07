@@ -7,7 +7,7 @@
       <div class="mavedb-search-form">
         <span class="p-input-icon-left">
           <i class="pi pi-search" />
-          <InputText v-model="searchText" ref="searchTextInput" type="search" class="p-inputtext-sm" placeholder="Search" @change="search" />
+          <InputText v-model="searchText" ref="searchTextInput" type="search" class="p-inputtext-sm" placeholder="Search" />
           <Button v-if="searchText && searchText.length > 0" class="mavedb-search-clear-button p-button-plain p-button-text" @click="clear"><i class="pi pi-times"/></Button>
         </span>
         <div class="mavedb-search-filters">
@@ -39,6 +39,7 @@ import FlexDataTable from '@/components/common/FlexDataTable'
 import SelectList from '@/components/common/SelectList'
 import DefaultLayout from '@/components/layout/DefaultLayout'
 import Button from 'primevue/button'
+import {debounce} from 'vue-debounce'
 
 export default {
   name: 'SearchView',
@@ -255,28 +256,28 @@ export default {
     filterTargetNames: {
       handler: function(oldValue, newValue) {
         if (oldValue != newValue) {
-          this.search()
+          this.debouncedSearch()
         }
       }
     },
     filterTargetOrganismNames: {
       handler: function(oldValue, newValue) {
         if (oldValue != newValue) {
-          this.search()
+          this.debouncedSearch()
         }
       }
     },
     filterTargetTypes: {
       handler: function(oldValue, newValue) {
         if (oldValue != newValue) {
-          this.search()
+          this.debouncedSearch()
         }
       }
     },
     searchText: {
       handler: function(oldValue, newValue) {
         if (oldValue != newValue) {
-          this.search()
+          this.debouncedSearch()
         }
       }
     },
@@ -289,7 +290,7 @@ export default {
       handler: function(newValue, oldValue) {
         if (newValue != oldValue) {
           this.searchText = newValue
-          this.search()
+          this.debouncedSearch()
         }
       },
       immediate: true
@@ -298,7 +299,7 @@ export default {
       handler: function(newValue, oldValue) {
         if (newValue != oldValue) {
           this.filterTargetNames = newValue ? newValue.split(',') : null
-          this.search()
+          this.debouncedSearch()
         }
       },
       immediate: true
@@ -307,7 +308,7 @@ export default {
       handler: function(newValue, oldValue) {
         if (newValue != oldValue) {
           this.filterTargetTypes = newValue ? newValue.split(',') : null
-          this.search()
+          this.debouncedSearch()
         }
       },
       immediate: true
@@ -316,13 +317,16 @@ export default {
       handler: function(newValue, oldValue) {
         if (newValue != oldValue) {
           this.filterTargetOrganismNames = newValue ? newValue.split(',') : null
-          this.search()
+          this.debouncedSearch()
         }
       },
       immediate: true
     }
   },
   methods: {
+    debouncedSearch: function() {
+      debounce(() => this.search(), '400ms')()
+    },
     search: async function() {
       this.$router.push({query: {
         ...(this.searchText && this.searchText.length > 0) ? {search: this.searchText} : {},

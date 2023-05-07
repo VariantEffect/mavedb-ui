@@ -29,6 +29,12 @@
           <a :href="`https://orcid.org/${item.modifiedBy.orcidId}`" target="blank"><img src="@/assets/ORCIDiD_icon.png" alt="ORCIDiD">{{item.modifiedBy.firstName}} {{item.modifiedBy.lastName}}</a></span>
         </div>
         <div v-if="item.publishedDate">Published {{formatDate(item.publishedDate)}}</div>
+        <div v-if="item.license">
+          License:
+          <a v-if="item.license.link" :href="item.license.link">{{item.license.longName || item.license.shortName}}</a>
+          <span v-else>{{item.license.longName || item.license.shortName}}</span>
+        </div>
+        <div v-if="item.dataUsagePolicy">Data usage policy: {{ item.dataUsagePolicy }}</div>
         <div v-if="item.experiment">Member of <router-link :to="{name: 'experiment', params: {urn: item.experiment.urn}}">{{item.experiment.urn}}</router-link></div>
         <div v-if="item.supersedingScoreset">Current version <router-link :to="{name: 'scoreset', params: {urn: item.supersedingScoreset.urn}}">{{item.supersedingScoreset.urn}}</router-link></div>
         <div v-else>Current version <router-link :to="{name: 'scoreset', params: {urn: item.urn}}">{{item.urn}}</router-link></div>

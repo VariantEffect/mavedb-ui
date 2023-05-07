@@ -6,6 +6,12 @@
           <img src="@/assets/logo-mave.png" alt="MAVE" />
           <span>DB</span>
         </router-link>
+        <div style="display: inline-block; margin-left: 40px;">
+          <div class="p-inputgroup" style="max-width: 300px; wdith: 300px;">
+            <InputText v-model="searchText" ref="searchTextInput" type="search" class="p-inputtext-sm" placeholder="Search" @keyup.enter="search" style="width: 200px;" />
+            <Button :enabled="searchText && searchText.length > 0" icon="pi pi-search" class="p-button-default p-button-sm" @click="search" />
+          </div>
+        </div>
       </template>
       <template #end>
       </template>
@@ -17,16 +23,19 @@
 <script>
 
 import _ from 'lodash'
+import Button from 'primevue/button'
+import InputText from 'primevue/inputtext'
 import Menubar from 'primevue/menubar'
 import {mapState} from 'vuex'
 
 import {oidc} from '@/lib/auth'
 
 export default {
-  components: {Menubar},
+  components: {Button, InputText, Menubar},
 
   data: () => ({
-    availableMenuItems: []
+    availableMenuItems: [],
+    searchText: ''
   }),
 
   watch: {
@@ -100,6 +109,12 @@ export default {
   },
 
   methods: {
+    search() {
+      if (this.searchText && this.searchText.length > 0) {
+        this.$router.push({name: 'search', query: {search: this.searchText}})
+      }
+    },
+
     filterAvailableMenuItems(menuItems) {
       const self = this
       return menuItems.map((item) => {

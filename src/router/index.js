@@ -19,6 +19,7 @@ const routes = [{
   redirect: '/search'
 }, {
   path: '/search',
+  name: 'search',
   component: SearchView,
   meta: {
     title: 'MaveDB | Search'

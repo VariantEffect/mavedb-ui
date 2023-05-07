@@ -44,7 +44,9 @@ export const oidc = createOidcAuth('mavedb', SignInType.Popup, appUrl , {
   client_id: 'APP-GXFVWWJT8H0F50WD',
   response_type: 'id_token', // Can be 'token id_token' in other contexts.
   scope: 'openid', // Formerly worked as 'openid profile'. Can be 'openid profile email api' in other contexts..
-  automaticSilentRenew: true
+  automaticSilentRenew: true,
+  popup_redirect_uri: `${appUrl}signed-in.html`,
+  post_logout_redirect_uri: `${appUrl}signed-out.html`
 })
 
 // This can be used to include authorization headers in HTTP requests that are not made using Axios.

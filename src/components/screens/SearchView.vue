@@ -221,6 +221,9 @@ export default {
     }
   },
   computed: {
+    debouncedSearchFunction: function() {
+      return debounce(() => this.search(), '400ms')
+    },
     targetNameFilterOptions: function() {
       if (this.scoresets.length > 0) {
         const values = this.scoresets.map((s) => _.get(s, 'targetGene.name'))
@@ -290,7 +293,6 @@ export default {
       handler: function(newValue, oldValue) {
         if (newValue != oldValue) {
           this.searchText = newValue
-          this.debouncedSearch()
         }
       },
       immediate: true
@@ -299,7 +301,6 @@ export default {
       handler: function(newValue, oldValue) {
         if (newValue != oldValue) {
           this.filterTargetNames = newValue ? newValue.split(',') : null
-          this.debouncedSearch()
         }
       },
       immediate: true
@@ -308,7 +309,6 @@ export default {
       handler: function(newValue, oldValue) {
         if (newValue != oldValue) {
           this.filterTargetTypes = newValue ? newValue.split(',') : null
-          this.debouncedSearch()
         }
       },
       immediate: true
@@ -317,7 +317,6 @@ export default {
       handler: function(newValue, oldValue) {
         if (newValue != oldValue) {
           this.filterTargetOrganismNames = newValue ? newValue.split(',') : null
-          this.debouncedSearch()
         }
       },
       immediate: true
@@ -325,7 +324,7 @@ export default {
   },
   methods: {
     debouncedSearch: function() {
-      debounce(() => this.search(), '400ms')()
+      this.debouncedSearchFunction()
     },
     search: async function() {
       this.$router.push({query: {

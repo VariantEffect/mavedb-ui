@@ -183,19 +183,19 @@
                 <div class="field">
                   <span class="p-float-label">
                     <AutoComplete
-                        ref="pubmedIdentifiersInput"
-                        v-model="pubmedIdentifiers"
-                        :id="$scopedId('input-pubmedIdentifiers')"
+                        ref="publicationIdentifiersInput"
+                        v-model="publicationIdentifiers"
+                        :id="$scopedId('input-publicationIdentifiers')"
                         field="identifier"
                         :multiple="true"
-                        :suggestions="pubmedIdentifierSuggestionsList"
-                        @complete="searchPubmedIdentifiers"
-                        @keyup.enter="acceptNewPubmedIdentifier"
-                        @keyup.escape="clearPubmedIdentifierSearch"
+                        :suggestions="publicationIdentifierSuggestionsList"
+                        @complete="searchPublicationIdentifiers"
+                        @keyup.enter="acceptNewPublicationIdentifier"
+                        @keyup.escape="clearPublicationIdentifierSearch"
                     />
-                    <label :for="$scopedId('input-pubmedIdentifiers')">PubMed IDs</label>
+                    <label :for="$scopedId('input-publicationIdentifiers')">PubMed IDs</label>
                   </span>
-                  <span v-if="validationErrors.pubmedIdentifiers" class="mave-field-error">{{validationErrors.pubmedIdentifiers}}</span>
+                  <span v-if="validationErrors.publicationIdentifiers" class="mave-field-error">{{validationErrors.publicationIdentifiers}}</span>
                 </div>
                 <div class="field">
                   <span class="p-float-label">
@@ -286,7 +286,7 @@
                   <div class="field-column">
                     <span class="p-float-label">
                       <InputNumber
-                          v-model="targetGene.externalIdentifiers[dbName].offset" 
+                          v-model="targetGene.externalIdentifiers[dbName].offset"
                           :id="$scopedId(`input-${dbName.toLowerCase()}Offset`)"
                           buttonLayout="stacked"
                           min="0"
@@ -460,7 +460,7 @@ export default {
       }
     })
     const doiIdentifierSuggestions = useItems({itemTypeName: 'doi-identifier-search'})
-    const pubmedIdentifierSuggestions = useItems({itemTypeName: 'pubmed-identifier-search'})
+    const publicationIdentifierSuggestions = useItems({itemTypeName: 'pubmed-identifier-search'})
     const targetGeneIdentifierSuggestions = {}
     for (const dbName of externalGeneDatabases) {
       targetGeneIdentifierSuggestions[dbName] = useItems({itemTypeName: `${dbName.toLowerCase()}-identifier-search`})
@@ -476,8 +476,8 @@ export default {
       licenses: licenses.items,
       doiIdentifierSuggestions: doiIdentifierSuggestions.items,
       setDoiIdentifierSearch: (text) => doiIdentifierSuggestions.setRequestBody({text}),
-      pubmedIdentifierSuggestions: pubmedIdentifierSuggestions.items,
-      setPubmedIdentifierSearch: (text) => pubmedIdentifierSuggestions.setRequestBody({text}),
+      publicationIdentifierSuggestions: publicationIdentifierSuggestions.items,
+      setPublicationIdentifierSearch: (text) => publicationIdentifierSuggestions.setRequestBody({text}),
       targetGeneSuggestions: targetGeneSuggestions.items,
       setTargetGeneSearch: (text) => targetGeneSuggestions.setRequestBody({text}),
       targetGeneIdentifierSuggestions: ref({
@@ -515,7 +515,7 @@ export default {
     methodText: null,
     keywords: [],
     doiIdentifiers: [],
-    pubmedIdentifiers: [],
+    publicationIdentifiers: [],
     dataUsagePolicy: null,
     targetGene: {
       name: null,
@@ -573,8 +573,8 @@ export default {
     metaAnalysisSourceScoresetSuggestionsList: function() {
       return this.suggestionsForAutocomplete(this.metaAnalysisSourceScoresetSuggestions)
     },
-    pubmedIdentifierSuggestionsList: function() {
-      return this.suggestionsForAutocomplete(this.pubmedIdentifierSuggestions)
+    publicationIdentifierSuggestionsList: function() {
+      return this.suggestionsForAutocomplete(this.publicationIdentifierSuggestions)
     },
     supersededScoresetSuggestionsList: function() {
       return this.suggestionsForAutocomplete(this.supersededScoresetSuggestions)
@@ -727,12 +727,12 @@ export default {
       }
     },
 
-    acceptNewPubmedIdentifier: function() {
-      const input = this.$refs.pubmedIdentifiersInput
+    acceptNewPublicationIdentifier: function() {
+      const input = this.$refs.publicationIdentifiersInput
       const searchText = (input.inputTextValue || '').trim()
       if (validatePubmedId(searchText)) {
         const pubmedId = normalizePubmedId(searchText)
-        this.pubmedIdentifiers = _.uniqBy([...this.pubmedIdentifiers, {identifier: pubmedId}])
+        this.publicationIdentifiers = _.uniqBy([...this.publicationIdentifiers, {identifier: pubmedId}])
         input.inputTextValue = null
 
         // Clear the text input.
@@ -741,8 +741,8 @@ export default {
       }
     },
 
-    clearPubmedIdentifierSearch: function() {
-      const input = this.$refs.pubmedIdentifiersInput
+    clearPublicationIdentifierSearch: function() {
+      const input = this.$refs.publicationIdentifiersInput
       input.inputTextValue = null
 
       // Clear the text input.
@@ -750,17 +750,17 @@ export default {
       input.$refs.input.value = ''
     },
 
-    searchPubmedIdentifiers: function(event) {
+    searchPublicationIdentifiers: function(event) {
       const searchText = (event.query || '').trim()
       if (searchText.length > 0) {
-        this.setPubmedIdentifierSearch(event.query)
+        this.setPublicationIdentifierSearch(event.query)
       }
     },
 
     acceptNewTargetGeneIdentifier: function(dbName) {
       const input = this.$refs[`${dbName.toLowerCase()}IdentifierInput`][0]
       const searchText = (input.inputTextValue || '').trim()
-  
+
       // Only accept the current search text if we haven't set an identifier. When the user starts typing, the current
       // identifier is cleared.
       const currentIdentifier = this.targetGene.externalIdentifiers[dbName]?.identifier
@@ -891,7 +891,7 @@ export default {
         this.methodText = this.item.methodText
         this.keywords = this.item.keywords
         this.doiIdentifiers = this.item.doiIdentifiers
-        this.pubmedIdentifiers = this.item.pubmedIdentifiers
+        this.publicationIdentifiers = this.item.publicationIdentifiers
         this.dataUsagePolicy = this.item.dataUsagePolicy
 
         this.targetGene = _.merge({
@@ -924,7 +924,7 @@ export default {
         this.methodText = null
         this.keywords = []
         this.doiIdentifiers = []
-        this.pubmedIdentifiers = []
+        this.publicationIdentifiers = []
         this.dataUsagePolicy = null
         this.targetGene = {
           name: null,
@@ -964,7 +964,7 @@ export default {
         methodText: this.methodText,
         keywords: this.keywords,
         doiIdentifiers: this.doiIdentifiers.map((identifier) => _.pick(identifier, 'identifier')),
-        pubmedIdentifiers: this.pubmedIdentifiers.map((identifier) => _.pick(identifier, 'identifier')),
+        publicationIdentifiers: this.publicationIdentifiers.map((identifier) => _.pick(identifier, 'identifier')),
         dataUsagePolicy: this.dataUsagePolicy,
         extraMetadata: {},
         targetGene: {
@@ -1019,7 +1019,7 @@ export default {
           if (this.$refs.scoresFileUpload?.files?.length == 1) {
             await this.uploadData(savedItem)
           } else {
-            this.$router.replace({path: `/scoresets/${this.item.urn}`}) 
+            this.$router.replace({path: `/scoresets/${this.item.urn}`})
             this.$toast.add({severity:'success', summary: 'Your changes were saved.', life: 3000})
           }
         } else {
@@ -1081,7 +1081,7 @@ export default {
           console.log('Imported scoreset data.')
           if (this.item) {
             // this.reloadItem()
-            this.$router.replace({path: `/scoresets/${scoreset.urn}`}) 
+            this.$router.replace({path: `/scoresets/${scoreset.urn}`})
             this.$toast.add({severity:'success', summary: 'Your changes were saved.', life: 3000})
           } else {
             this.$router.replace({path: `/scoresets/${scoreset.urn}`})

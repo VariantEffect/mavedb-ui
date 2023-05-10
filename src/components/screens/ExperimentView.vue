@@ -17,7 +17,7 @@
       <div class="mave-1000px-col">
         <div v-if="item.creationDate">Created {{formatDate(item.creationDate)}} <span v-if="item.createdBy">
           <a :href="`https://orcid.org/${item.createdBy.orcidId}`" target="blank"><img src="@/assets/ORCIDiD_icon.png" alt="ORCIDiD">{{item.createdBy.firstName}} {{item.createdBy.lastName}}</a></span></div>
-        <div v-if="item.modificationDate">Last updated {{formatDate(item.modificationDate)}} <span v-if="item.modifiedBy"> 
+        <div v-if="item.modificationDate">Last updated {{formatDate(item.modificationDate)}} <span v-if="item.modifiedBy">
           <a :href="`https://orcid.org/${item.modifiedBy.orcidId}`" target="blank"><img src="@/assets/ORCIDiD_icon.png" alt="ORCIDiD">{{item.modifiedBy.firstName}} {{item.modifiedBy.lastName}}</a></span></div>
         <div v-if="item.publishedDate">Published {{formatDate(item.publishedDate)}}</div>
         <div v-if="item.experimentSetUrn">Member of <router-link :to="{name: 'experimentset', params: {urn: item.experimentSetUrn}}">{{item.experimentSetUrn}}</router-link></div>
@@ -43,9 +43,9 @@
         </div>
         <!--Temporary codes to show references. Will change it in the future.-->
         <div class="mave-scoreset-section-title">References</div>
-          <div v-if="item.pubmedIdentifiers.length > 0">
+          <div v-if="item.publicationIdentifiers.length > 0">
             <ul style="list-style-type:square">
-              <div v-for="pubmed in item.pubmedIdentifiers" :key="pubmed">
+              <div v-for="pubmed in item.publicationIdentifiers" :key="pubmed">
                 <li v-html="markdownToHtml(pubmed.referenceHtml)" ></li>PMID: <a :href="`${pubmed.url}`" target="_blank">{{pubmed.identifier}}</a>
               </div>
             </ul>
@@ -182,7 +182,7 @@ export default {
               console.log('Deleted item')
               this.$router.replace({path: `/dashboard`})
               this.$toast.add({severity:'success', summary: 'Your experiment was successfully deleted.', life: 3000})
-              
+
             } else if (response.data && response.data.detail) {
               const formValidationErrors = {}
               for (const error of response.data.detail) {
@@ -194,7 +194,7 @@ export default {
                 formValidationErrors[path] = error.msg
               }
             }
-          } 
+          }
         },
         reject: () => {
             //callback to execute when user rejects the action

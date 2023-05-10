@@ -64,19 +64,19 @@
               <div class="field">
                 <span class="p-float-label">
                   <AutoComplete
-                      ref="pubmedIdentifiersInput"
-                      v-model="pubmedIdentifiers"
-                      :id="$scopedId('input-pubmedIdentifiers')"
+                      ref="publicationIdentifiersInput"
+                      v-model="publicationIdentifiers"
+                      :id="$scopedId('input-publicationIdentifiers')"
                       field="identifier"
                       :multiple="true"
-                      :suggestions="pubmedIdentifierSuggestionsList"
-                      @complete="searchPubmedIdentifiers"
-                      @keyup.enter="acceptNewPubmedIdentifier"
-                      @keyup.escape="clearPubmedIdentifierSearch"
+                      :suggestions="publicationIdentifierSuggestionsList"
+                      @complete="searchPublicationIdentifiers"
+                      @keyup.enter="acceptNewPublicationIdentifier"
+                      @keyup.escape="clearPublicationIdentifierSearch"
                   />
-                  <label :for="$scopedId('input-pubmedIdentifiers')">PubMed IDs</label>
+                  <label :for="$scopedId('input-publicationIdentifiers')">PubMed IDs</label>
                 </span>
-                <span v-if="validationErrors.pubmedIdentifiers" class="mave-field-error">{{validationErrors.pubmedIdentifiers}}</span>
+                <span v-if="validationErrors.publicationIdentifiers" class="mave-field-error">{{validationErrors.publicationIdentifiers}}</span>
               </div>
               <div class="field">
                 <span class="p-float-label">
@@ -194,7 +194,7 @@ export default {
 
   setup: () => {
     const doiIdentifierSuggestions = useItems({itemTypeName: 'doi-identifier-search'})
-    const pubmedIdentifierSuggestions = useItems({itemTypeName: 'pubmed-identifier-search'})
+    const publicationIdentifierSuggestions = useItems({itemTypeName: 'pubmed-identifier-search'})
     const rawReadIdentifierSuggestions = useItems({itemTypeName: 'raw-read-identifier-search'})
     const {errors: validationErrors, handleSubmit, setErrors: setValidationErrors} = useForm()
     return {
@@ -202,8 +202,8 @@ export default {
       ...useItem({itemTypeName: 'experiment'}),
       doiIdentifierSuggestions: doiIdentifierSuggestions.items,
       setDoiIdentifierSearch: (text) => doiIdentifierSuggestions.setRequestBody({text}),
-      pubmedIdentifierSuggestions: pubmedIdentifierSuggestions.items,
-      setPubmedIdentifierSearch: (text) => pubmedIdentifierSuggestions.setRequestBody({text}),
+      publicationIdentifierSuggestions: publicationIdentifierSuggestions.items,
+      setPublicationIdentifierSearch: (text) => publicationIdentifierSuggestions.setRequestBody({text}),
       rawReadIdentifierSuggestions: rawReadIdentifierSuggestions.items,
       setRawReadIdentifierSearch: (text) => rawReadIdentifierSuggestions.setRequestBody({text}),
       handleSubmit,
@@ -227,7 +227,7 @@ export default {
     methodText: null,
     keywords: [],
     doiIdentifiers: [],
-    pubmedIdentifiers: [],
+    publicationIdentifiers: [],
     rawReadIdentifiers: [],
     extraMetadata: {},
 
@@ -247,10 +247,10 @@ export default {
       // This causes the drop-down to stop appearing when we later populate the list.
       return this.doiIdentifierSuggestions || [{}]
     },
-    pubmedIdentifierSuggestionsList: function() {
+    publicationIdentifierSuggestionsList: function() {
       // The PrimeVue AutoComplete doesn't seem to like it if we set the suggestion list to [].
       // This causes the drop-down to stop appearing when we later populate the list.
-      return this.pubmedIdentifierSuggestions || [{}]
+      return this.publicationIdentifierSuggestions || [{}]
     },
     rawReadIdentifierSuggestionsList: function() {
       // The PrimeVue AutoComplete doesn't seem to like it if we set the suggestion list to [].
@@ -309,12 +309,12 @@ export default {
       }
     },
 
-    acceptNewPubmedIdentifier: function() {
-      const input = this.$refs.pubmedIdentifiersInput
+    acceptNewPublicationIdentifier: function() {
+      const input = this.$refs.publicationIdentifiersInput
       const searchText = (input.inputTextValue || '').trim()
       if (validatePubmedId(searchText)) {
         const pubmedId = normalizePubmedId(searchText)
-        this.pubmedIdentifiers = _.uniqBy([...this.pubmedIdentifiers, {identifier: pubmedId}])
+        this.publicationIdentifiers = _.uniqBy([...this.publicationIdentifiers, {identifier: pubmedId}])
         input.inputTextValue = null
 
         // Clear the text input.
@@ -323,8 +323,8 @@ export default {
       }
     },
 
-    clearPubmedIdentifierSearch: function() {
-      const input = this.$refs.pubmedIdentifiersInput
+    clearPublicationIdentifierSearch: function() {
+      const input = this.$refs.publicationIdentifiersInput
       input.inputTextValue = null
 
       // Clear the text input.
@@ -332,10 +332,10 @@ export default {
       input.$refs.input.value = ''
     },
 
-    searchPubmedIdentifiers: function(event) {
+    searchPublicationIdentifiers: function(event) {
       const searchText = (event.query || '').trim()
       if (searchText.length > 0) {
-        this.setPubmedIdentifierSearch(event.query)
+        this.setPublicationIdentifierSearch(event.query)
       }
     },
 
@@ -425,7 +425,7 @@ export default {
         this.methodText = this.item.methodText
         this.keywords = this.item.keywords
         this.doiIdentifiers = this.item.doiIdentifiers
-        this.pubmedIdentifiers = this.item.pubmedIdentifiers
+        this.publicationIdentifiers = this.item.publicationIdentifiers
         this.rawReadIdentifiers = this.item.rawReadIdentifiers
         this.extraMetadata = this.item.extraMetadata
       } else {
@@ -435,7 +435,7 @@ export default {
         this.methodText = null
         this.keywords = []
         this.doiIdentifiers = []
-        this.pubmedIdentifiers = []
+        this.publicationIdentifiers = []
         this.rawReadIdentifiers = []
         this.extraMetadata = {}
       }
@@ -456,7 +456,7 @@ export default {
         methodText: this.methodText,
         keywords: this.keywords,
         doiIdentifiers: this.doiIdentifiers.map((identifier) => _.pick(identifier, 'identifier')),
-        pubmedIdentifiers: this.pubmedIdentifiers.map((identifier) => _.pick(identifier, 'identifier')),
+        publicationIdentifiers: this.publicationIdentifiers.map((identifier) => _.pick(identifier, 'identifier')),
         rawReadIdentifiers: this.rawReadIdentifiers.map((identifier) => _.pick(identifier, 'identifier')),
         extraMetadata: {}
       }

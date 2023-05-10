@@ -26,7 +26,7 @@ const itemTypes = {
     primaryKey: 'urn'
   },
   'experimentSet': {
-    name: 'experimentSet', 
+    name: 'experimentSet',
     restCollectionName: 'experimentSets',
     primaryKey: 'urn'
   },
@@ -36,11 +36,11 @@ const itemTypes = {
   },
   'pubmed-identifier-search': {
     name: 'pubmed-identifier', // TODO Redundant, change this structure
-    restCollectionName: 'pubmedIdentifiers',
+    restCollectionName: 'publicationIdentifiers',
     httpOptions: {
       list: {
         method: 'post',
-        url: `${config.apiBaseUrl}/pubmedIdentifiers/search`
+        url: `${config.apiBaseUrl}/publicationIdentifiers/search`
       }
     }
   },

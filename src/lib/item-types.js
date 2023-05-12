@@ -34,8 +34,8 @@ const itemTypes = {
     name: 'license', // TODO Redundant, change this structure
     restCollectionName: 'licenses'
   },
-  'pubmed-identifier-search': {
-    name: 'pubmed-identifier', // TODO Redundant, change this structure
+  'publication-identifier-search': {
+    name: 'publication-identifier', // TODO Redundant, change this structure
     restCollectionName: 'publicationIdentifiers',
     httpOptions: {
       list: {

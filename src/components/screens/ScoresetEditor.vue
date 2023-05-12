@@ -460,7 +460,7 @@ export default {
       }
     })
     const doiIdentifierSuggestions = useItems({itemTypeName: 'doi-identifier-search'})
-    const publicationIdentifierSuggestions = useItems({itemTypeName: 'pubmed-identifier-search'})
+    const publicationIdentifierSuggestions = useItems({itemTypeName: 'publication-identifier-search'})
     const targetGeneIdentifierSuggestions = {}
     for (const dbName of externalGeneDatabases) {
       targetGeneIdentifierSuggestions[dbName] = useItems({itemTypeName: `${dbName.toLowerCase()}-identifier-search`})
@@ -727,6 +727,7 @@ export default {
       }
     },
 
+    // TODO accept other publication identifiers besides pubmed
     acceptNewPublicationIdentifier: function() {
       const input = this.$refs.publicationIdentifiersInput
       const searchText = (input.inputTextValue || '').trim()

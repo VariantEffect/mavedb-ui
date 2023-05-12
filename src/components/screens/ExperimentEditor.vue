@@ -74,7 +74,7 @@
                       @keyup.enter="acceptNewPublicationIdentifier"
                       @keyup.escape="clearPublicationIdentifierSearch"
                   />
-                  <label :for="$scopedId('input-publicationIdentifiers')">PubMed IDs</label>
+                  <label :for="$scopedId('input-publicationIdentifiers')">Publication Identifiers</label>
                 </span>
                 <span v-if="validationErrors.publicationIdentifiers" class="mave-field-error">{{validationErrors.publicationIdentifiers}}</span>
               </div>
@@ -194,7 +194,7 @@ export default {
 
   setup: () => {
     const doiIdentifierSuggestions = useItems({itemTypeName: 'doi-identifier-search'})
-    const publicationIdentifierSuggestions = useItems({itemTypeName: 'pubmed-identifier-search'})
+    const publicationIdentifierSuggestions = useItems({itemTypeName: 'publication-identifier-search'})
     const rawReadIdentifierSuggestions = useItems({itemTypeName: 'raw-read-identifier-search'})
     const {errors: validationErrors, handleSubmit, setErrors: setValidationErrors} = useForm()
     return {
@@ -313,8 +313,8 @@ export default {
       const input = this.$refs.publicationIdentifiersInput
       const searchText = (input.inputTextValue || '').trim()
       if (validatePubmedId(searchText)) {
-        const pubmedId = normalizePubmedId(searchText)
-        this.publicationIdentifiers = _.uniqBy([...this.publicationIdentifiers, {identifier: pubmedId}])
+        const publicationId = normalizePubmedId(searchText)
+        this.publicationIdentifiers = _.uniqBy([...this.publicationIdentifiers, {identifier: publicationId}])
         input.inputTextValue = null
 
         // Clear the text input.

@@ -1,5 +1,6 @@
 <template>
   <DefaultLayout>
+    {{ experimentSetUrn }}
     <div class="mave-experiment-editor">
       <div class="grid">
         <div class="col-12">
@@ -23,6 +24,21 @@
         <div class="col-12 md:col-6">
           <Card>
             <template #content>
+              <div v-if="experimentSetUrn" class="field">
+                <label :for="$scopedId('field-value-experiment-set')" style="font-weight: bold; margin-right: 5px;">Experiment set:</label>
+                <span :id="$scopedId('field-value-experiment-set')">{{ experimentSetUrn }}</span>
+                <span v-if="validationErrors.experimentSetUrn" class="mave-field-error">{{validationErrors.experimentSetUrn}}</span>
+                <div v-if="!item" class="mave-field-help">
+                  To add an experiment to a different set, please navigate to the experiment set first and click "Add experiment."
+                </div>
+              </div>
+              <div class="field" v-else>
+                <label :for="$scopedId('field-value-experiment-set')" style="font-weight: bold; margin-right: 5px;">Experiment set:</label>
+                <span :id="$scopedId('field-value-experiment-set')">(New experiment set)</span>
+                <div class="mave-field-help">
+                  To add an experiment to an existing set, please navigate to the experiment set first and click "Add experiment."
+                </div>
+              </div>
               <div class="field">
                 <span class="p-float-label">
                   <InputText v-model="title" :id="$scopedId('input-title')" />
@@ -213,6 +229,10 @@ export default {
   },
 
   props: {
+    experimentSetUrn: {
+      type: String,
+      required: false
+    },
     itemId: {
       type: String,
       required: false
@@ -467,6 +487,9 @@ export default {
         if (this.item) {
           response = await axios.put(`${config.apiBaseUrl}/experiments/${this.item.urn}`, editedItem)
         } else {
+          if (this.experimentSetUrn) {
+            editedItem.experimentSetUrn = this.experimentSetUrn
+          }
           response = await axios.post(`${config.apiBaseUrl}/experiments/`, editedItem)
         }
       } catch (e) {

@@ -4,24 +4,18 @@
       <div class="mave-1000px-col">
         <div class="mave-screen-title-bar">
           <div class="mave-screen-title">{{item.urn}}</div>
+          <div v-if="oidc.isAuthenticated">
+            <div class="mave-screen-title-controls">
+              <Button class="p-button-sm" @click="addExperiment">Add an experiment</Button>
+            </div>
+          </div>
         </div>
-        <div class="mave-screen-title">{{item.title || 'Untitled experimentset'}}</div>
-        <div v-if="item.shortDescription" class="mave-scoreset-description">{{item.shortDescription}}</div>
+        <div class="mave-screen-title">Experiment set</div>
       </div>
       <div class="mave-1000px-col">
         <div v-if="item.creationDate">Created {{formatDate(item.creationDate)}} </div>
         <div v-if="item.modificationDate">Last updated {{formatDate(item.modificationDate)}} </div>
         <div v-if="item.publishedDate">Published {{formatDate(item.publishedDate)}}</div>
-
-        <div v-if="item.abstractText">
-          <div class="mave-scoreset-section-title">Abstract</div>
-          <div v-html="markdownToHtml(item.abstractText)" class="mave-scoreset-abstract"></div>
-        </div>
-        <div v-if="item.methodText">
-          <div class="mave-scoreset-section-title">Method</div>
-          <div v-html="markdownToHtml(item.methodText)" class="mave-scoreset-abstract"></div>
-        </div>
-
         <div class="mave-scoreset-section-title">Experiments</div>
           <div v-if="item.experiments.length!=0">
             <ul style="list-style-type:square">
@@ -32,7 +26,6 @@
             </ul>
           </div>
           <div v-else>No associated experiment</div>
-          
       </div>
     </div>
     <div v-else>
@@ -46,6 +39,7 @@
 
 import _ from 'lodash'
 import marked from 'marked'
+import Button from 'primevue/button'
 
 import DefaultLayout from '@/components/layout/DefaultLayout'
 import useItem from '@/composition/item'
@@ -54,7 +48,7 @@ import {oidc} from '@/lib/auth'
 
 export default {
   name: 'ExperimentSetView',
-  components: {DefaultLayout},
+  components: {Button, DefaultLayout},
 
   computed: {
     oidc: function() {
@@ -96,13 +90,16 @@ export default {
 
   methods: {
     
+    addExperiment: function() {
+      this.$router.push({name: 'createExperimentInExperimentset', params: {urn: this.item.urn}})
+    },
     markdownToHtml: function(markdown) {
       return marked(markdown)
     },
     get(...args) {
       return _.get(...args)
-    },
-  },
+    }
+  }
   
 }
 

@@ -60,15 +60,24 @@
           <div class="mave-scoreset-section-title">Method</div>
           <div v-html="markdownToHtml(item.methodText)" class="mave-scoreset-abstract"></div>
         </div>
-        <div class="mave-scoreset-section-title">References</div>
-          <div v-if="item.experiment.publicationIdentifiers.length!=0 || item.publicationIdentifiers.length!=0">
-            <ul style="list-style-type:square">
-              <div v-for="publication in uniquePublicationIdentifiers" :key="publication">
-                <li v-html="markdownToHtml(publication.referenceHtml)"></li>PMID: <a :href="`${publication.url}`" target="_blank">{{publication.identifier}}</a>
-              </div>
-            </ul>
-        </div>
-        <div v-else>No associated publication.</div>
+        <div class="mave-scoreset-section-title">Primary References</div>
+          <div v-if="item.primaryPublicationIdentifiers.length > 0">
+            <div v-for="publication in item.primaryPublicationIdentifiers" :key="publication">
+                <ul style="list-style-type:square;">
+                  <li v-html="markdownToHtml(publication.referenceHtml)" ></li>Publication: <a :href="`${publication.url}`" target="_blank">{{publication.identifier}}</a>
+                </ul>
+            </div>
+          </div>
+          <div v-else>No associated primary publications.</div>
+          <div class="mave-scoreset-section-title">Secondary References</div>
+          <div v-if="item.publicationIdentifiers.length > 0">
+            <div v-for="publication in item.publicationIdentifiers" :key="publication">
+                <ul style="list-style-type:square;">
+                  <li v-html="markdownToHtml(publication.referenceHtml)" ></li>Publication: <a :href="`${publication.url}`" target="_blank">{{publication.identifier}}</a>
+                </ul>
+            </div>
+          </div>
+          <div v-else>No associated secondary publications.</div>
         <div class="mave-scoreset-section-title">Data Usage Policy</div>
           <div v-if="item.dataUsagePolicy">
             <div v-html="markdownToHtml(item.dataUsagePolicy)" class="mave-scoreset-abstract"></div>
@@ -226,21 +235,6 @@ export default {
     sortedMetaAnalysis: function(){
       return _.orderBy(this.item.metaAnalysisSourceScoresets, 'urn')
     },
-    uniquePublicationIdentifiers: function(){
-      let publicationIdentifiers = []
-      if(this.item.experiment.publicationIdentifiers){
-        for(let i of this.item.experiment.publicationIdentifiers){
-          publicationIdentifiers.push(i)
-        }
-      }
-      if(this.item.publicationIdentifiers){
-        for(let i of this.item.publicationIdentifiers){
-          publicationIdentifiers.push(i)
-        }
-      }
-      let uniqueObjects = [...new Map(publicationIdentifiers.map(item => [item.identifier, item])).values()]
-      return uniqueObjects
-    }
   },
   setup: () => {
     const scoresRemoteData = useRemoteData()

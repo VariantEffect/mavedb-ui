@@ -4,7 +4,7 @@
       <div class="grid">
         <div class="col-12">
           <div v-if="itemStatus != 'NotLoaded'" class="mave-screen-title-bar">
-            <div class="mave-screen-title">Edit score set {{this.item.urn}}</div>
+            <div class="mave-screen-title">Edit score set {{this.item.experiment.urn}}</div>
             <div v-if="item" class="mave-screen-title-controls">
               <Button @click="saveEditContent">Save changes</Button>
               <Button @click="resetForm" class="p-button-help">Clear</Button>
@@ -32,15 +32,15 @@
                 <div class="field">
                   <span class="p-float-label">
                     <Dropdown
-                      v-model="experimentUrn"
+                      v-model="experiment"
                       :id="$scopedId('input-experiment')"
                       :options="editableExperiments"
                       optionLabel="title"
-                      optionValue="urn"
+                      v-on:change="populateExperimentMetadata"
                     />
                     <label :for="$scopedId('input-experiment')">Experiment</label>
                   </span>
-                  <span v-if="validationErrors.experimentUrn" class="mave-field-error">{{validationErrors.experimentUrn}}</span>
+                  <span v-if="validationErrors.experiment" class="mave-field-error">{{validationErrors.experiment}}</span>
                 </div>
               </div>
               <div v-if="itemStatus != 'NotLoaded' && supersedesScoreset">
@@ -152,10 +152,10 @@
                     <label :for="$scopedId('input-targetLicenseId')">License</label>
                   </span>
                   <span v-if="validationErrors['targetGene.referenceGenome']" class="mave-field-error">{{validationErrors['targetGene.referenceGenome']}}</span>
-                  <span v-if="licenseId && licenses && licenses.find((l) => l.id == licenseId)?.shortName != 'CC0'" class="mave-field-warning">
-                    Choosing a license with these restrictions may cause your dataset to be excluded from data federation and aggregation by MaveDB collaborators.
-                  </span>
                 </div>
+                <Message v-if="licenseId && licenses && licenses.find((l) => l.id == licenseId)?.shortName != 'CC0'" severity="warn">
+                    Choosing a license with these restrictions may cause your dataset to be excluded from data federation and aggregation by MaveDB collaborators.
+                </Message>
                 <div class="field">
                   <span class="p-float-label">
                     <Chips v-model="keywords" :id="$scopedId('input-keywords')" :addOnBlur="true" :allowDuplicate="false" />
@@ -197,6 +197,25 @@
                   </span>
                   <span v-if="validationErrors.publicationIdentifiers" class="mave-field-error">{{validationErrors.publicationIdentifiers}}</span>
                 </div>
+                <div class="field">
+                  <span class="p-float-label" style="display:block">
+                  <Multiselect
+                    ref="primaryPublicationInput"
+                    v-model="primaryPublicationIdentifiers"
+                    :id="$scopedId('input-primaryPublicationIdentifiers')"
+                    :options="publicationIdentifiers"
+                    optionLabel="identifier"
+                    placeholder="Select a primary publication (Where the dataset is described)"
+                    :selectionLimit="1"
+                  />
+                  <!-- label overlaps with placeholder when none are selected without this v-if -->
+                  <label v-if="this.primaryPublicationIdentifiers.length > 0" :for="$scopedId('input-primaryPublicationIdentifiers')">Primary publication</label>
+                </span>
+                <span v-if="validationErrors.primaryPublicationIdentifiers" class="mave-field-error">{{validationErrors.primaryPublicationIdentifiers}}</span>
+              </div>
+              <Message v-if="experiment" severity="info">
+                  Some fields were autopopulated based on the selected experiment and should be inspected to ensure they are still relevant to this scoreset.
+              </Message>
                 <div class="field">
                   <span class="p-float-label">
                     <FileUpload
@@ -429,6 +448,8 @@ import Dropdown from 'primevue/dropdown'
 import FileUpload from 'primevue/fileupload'
 import InputNumber from 'primevue/inputnumber'
 import InputText from 'primevue/inputtext'
+import Message from 'primevue/message'
+import Multiselect from 'primevue/multiselect'
 import ProgressSpinner from 'primevue/progressspinner'
 import SelectButton from 'primevue/selectbutton'
 import TabPanel from 'primevue/tabpanel'
@@ -448,7 +469,7 @@ const externalGeneDatabases = ['UniProt', 'Ensembl', 'RefSeq']
 
 export default {
   name: 'ScoresetEditor',
-  components: {AutoComplete, Button, Card, Chips, DefaultLayout, Dropdown, FileUpload, InputNumber, InputText, ProgressSpinner, SelectButton, TabPanel, TabView, Textarea},
+  components: { AutoComplete, Button, Card, Chips, DefaultLayout, Dropdown, FileUpload, InputNumber, InputText, Message, Multiselect, ProgressSpinner, SelectButton, TabPanel, TabView, Textarea},
 
   setup: () => {
     const editableExperiments = useItems({
@@ -505,7 +526,7 @@ export default {
 
   data: () => ({
     // Form fields
-    experimentUrn: null,
+    experiment: null,
     licenseId: null,
     title: null,
     metaAnalysisSourceScoresets: [],
@@ -515,6 +536,7 @@ export default {
     methodText: null,
     keywords: [],
     doiIdentifiers: [],
+    primaryPublicationIdentifiers: [],
     publicationIdentifiers: [],
     dataUsagePolicy: null,
     targetGene: {
@@ -696,6 +718,18 @@ export default {
     ////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
     // Form fields
     ////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+
+    populateExperimentMetadata: function(event) {
+      this.doiIdentifiers = event.value.doiIdentifiers
+      this.keywords = event.value.keywords
+      this.publicationIdentifiers = _.concat(event.value.primaryPublicationIdentifiers, event.value.publicationIdentifiers)
+      console.log(this.publicationIdentifiers)
+      this.primaryPublicationIdentifiers = event.value.primaryPublicationIdentifiers.filter((primary) => {
+          return this.publicationIdentifiers.some((publication) => {
+            return primary.identifier === publication.identifier
+          })
+        })
+    },
 
     acceptNewDoiIdentifier: function() {
       const input = this.$refs.doiIdentifiersInput
@@ -882,7 +916,7 @@ export default {
 
     resetForm: function() {
       if (this.item) {
-        this.experimentUrn = this.item.experiment.urn
+        this.experiment = this.item.experiment
         this.licenseId = this.item.license.id
         this.metaAnalysisSourceScoresets = this.item.metaAnalysisSourceScoresets
         this.supersededScoreset = this.item.supersededScoreset
@@ -892,9 +926,16 @@ export default {
         this.methodText = this.item.methodText
         this.keywords = this.item.keywords
         this.doiIdentifiers = this.item.doiIdentifiers
-        this.publicationIdentifiers = this.item.publicationIdentifiers
+        // So that the multiselect can populate correctly, build the primary publication identifiers
+        // indirectly by filtering publication identifiers list for those publications we know to be
+        // primary.
+        this.publicationIdentifiers = _.concat(this.item.primaryPublicationIdentifiers, this.item.publicationIdentifiers)
+        this.primaryPublicationIdentifiers = this.item.primaryPublicationIdentifiers.filter((publication) => {
+          return this.publicationIdentifiers.some((primary) => {
+            return primary.identifier === publication.identifier
+          })
+        })
         this.dataUsagePolicy = this.item.dataUsagePolicy
-
         this.targetGene = _.merge({
           name: null,
           category: null,
@@ -915,7 +956,7 @@ export default {
         this.referenceGenome = this.item.referenceGenome
         this.extraMetadata = this.item.extraMetadata
       } else {
-        this.experimentUrn = null
+        this.experiment = null
         this.licenseId = this.defaultLicenseId
         this.metaAnalysisSourceScoresets = []
         this.supersededScoreset = null
@@ -925,6 +966,7 @@ export default {
         this.methodText = null
         this.keywords = []
         this.doiIdentifiers = []
+        this.primaryPublicationIdentifiers = []
         this.publicationIdentifiers = []
         this.dataUsagePolicy = null
         this.targetGene = {
@@ -957,7 +999,7 @@ export default {
 
     save: async function() {
       const editedFields = {
-        experimentUrn: this.experimentUrn,
+        experimentUrn: this.experiment.urn,
         licenseId: this.licenseId,
         title: this.title,
         shortDescription: this.shortDescription,
@@ -965,6 +1007,7 @@ export default {
         methodText: this.methodText,
         keywords: this.keywords,
         doiIdentifiers: this.doiIdentifiers.map((identifier) => _.pick(identifier, 'identifier')),
+        primaryPublicationIdentifiers: this.primaryPublicationIdentifiers.map((identifier) => _.pick(identifier, 'identifier')),
         publicationIdentifiers: this.publicationIdentifiers.map((identifier) => _.pick(identifier, 'identifier')),
         dataUsagePolicy: this.dataUsagePolicy,
         extraMetadata: {},
@@ -999,6 +1042,15 @@ export default {
         editedFields.supersededScoresetUrn = this.supersededScoreset ? this.supersededScoreset.urn : null
         editedFields.metaAnalysisSourceScoresetUrns = (this.metaAnalysisSourceScoresets || []).map((s) => s.urn)
       }
+      else {
+        // empty item arrays so that deleted items aren't merged back into editedItem object
+        this.item.keywords = []
+        this.item.doiIdentifiers = []
+        this.item.primaryPublicationIdentifiers
+        this.item.publicationIdentifiers = []
+        this.item.rawReadIdentifiers = []
+      }
+
       const editedItem = _.merge({}, this.item || {}, editedFields)
 
       this.progressVisible = true

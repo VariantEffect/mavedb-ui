@@ -722,8 +722,7 @@ export default {
     populateExperimentMetadata: function(event) {
       this.doiIdentifiers = event.value.doiIdentifiers
       this.keywords = event.value.keywords
-      this.publicationIdentifiers = _.concat(event.value.primaryPublicationIdentifiers, event.value.publicationIdentifiers)
-      console.log(this.publicationIdentifiers)
+      this.publicationIdentifiers = _.concat(event.value.primaryPublicationIdentifiers, event.value.secondaryPublicationIdentifiers)
       this.primaryPublicationIdentifiers = event.value.primaryPublicationIdentifiers.filter((primary) => {
           return this.publicationIdentifiers.some((publication) => {
             return primary.identifier === publication.identifier
@@ -927,9 +926,8 @@ export default {
         this.keywords = this.item.keywords
         this.doiIdentifiers = this.item.doiIdentifiers
         // So that the multiselect can populate correctly, build the primary publication identifiers
-        // indirectly by filtering publication identifiers list for those publications we know to be
-        // primary.
-        this.publicationIdentifiers = _.concat(this.item.primaryPublicationIdentifiers, this.item.publicationIdentifiers)
+        // indirectly by filtering a merged list of secondary and primary publication identifiers
+        this.publicationIdentifiers = _.concat(this.item.primaryPublicationIdentifiers, this.item.secondaryPublicationIdentifiers)
         this.primaryPublicationIdentifiers = this.item.primaryPublicationIdentifiers.filter((publication) => {
           return this.publicationIdentifiers.some((primary) => {
             return primary.identifier === publication.identifier
@@ -1046,12 +1044,13 @@ export default {
         // empty item arrays so that deleted items aren't merged back into editedItem object
         this.item.keywords = []
         this.item.doiIdentifiers = []
-        this.item.primaryPublicationIdentifiers
+        this.item.primaryPublicationIdentifiers = []
         this.item.publicationIdentifiers = []
         this.item.rawReadIdentifiers = []
       }
 
       const editedItem = _.merge({}, this.item || {}, editedFields)
+      console.log(editedItem)
 
       this.progressVisible = true
       let response = null

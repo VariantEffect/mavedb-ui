@@ -446,7 +446,7 @@ export default {
         // So that the multiselect can populate correctly, build the primary publication identifiers
         // indirectly by filtering publication identifiers list for those publications we know to be
         // primary.
-        this.publicationIdentifiers = _.concat(this.item.primaryPublicationIdentifiers, this.item.publicationIdentifiers)
+        this.publicationIdentifiers = _.concat(this.item.primaryPublicationIdentifiers, this.item.secondaryPublicationIdentifiers)
         this.primaryPublicationIdentifiers = this.item.primaryPublicationIdentifiers.filter((publication) => {
           return this.publicationIdentifiers.some((primary) => {
             return primary.identifier === publication.identifier

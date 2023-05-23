@@ -52,8 +52,8 @@
           </div>
           <div v-else>No associated primary publications.</div>
           <div class="mave-scoreset-section-title">Secondary References</div>
-          <div v-if="item.publicationIdentifiers.length > 0">
-            <div v-for="publication in item.publicationIdentifiers" :key="publication">
+          <div v-if="item.secondaryPublicationIdentifiers.length > 0">
+            <div v-for="publication in item.secondaryPublicationIdentifiers" :key="publication">
                 <ul style="list-style-type:square;">
                   <li v-html="markdownToHtml(publication.referenceHtml)" ></li>Publication: <a :href="`${publication.url}`" target="_blank">{{publication.identifier}}</a>
                 </ul>

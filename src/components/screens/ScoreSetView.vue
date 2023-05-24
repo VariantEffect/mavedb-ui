@@ -49,8 +49,9 @@
             <Button class="p-button-outlined p-button-sm" @click="downloadFile('counts')">Counts</Button>&nbsp;
           </template>
           <template v-if="isMetaDataEmpty!=true">
-            <Button class="p-button-outlined p-button-sm" @click="downloadMetadata">Metadata</Button>
+            <Button class="p-button-outlined p-button-sm" @click="downloadMetadata">Metadata</Button>&nbsp;
           </template>
+          <Button class="p-button-outlined p-button-sm" @click="downloadMappedVariants()">Mapped Variants</Button>
         </div>
         <div v-if="item.abstractText">
           <div class="mave-scoreset-section-title">Abstract</div>
@@ -412,6 +413,30 @@ export default {
           path = path.join('.')
           formValidationErrors[path] = error.msg
         }
+      }
+    },
+    downloadMappedVariants: async function(){
+      let response = null
+      try{
+        if (this.item){
+          response = await axios.get(`${config.apiBaseUrl}/scoresets/${this.item.urn}/mappedVariants`)
+        }
+      }
+      catch (e){
+        response = e.response || {status: 500}
+      }
+      if (response.status == 200) {
+        //convert object to Json.
+        const file = JSON.stringify(response.data)
+        const anchor = document.createElement('a')
+        
+        anchor.href = 'data:text/json;charset=utf-8,' + encodeURIComponent(file);
+        anchor.target = '_blank';
+        //file default name
+        anchor.download = this.item.urn + '_mapped_variants.json';
+        anchor.click();
+      } else  {
+        this.$toast.add({severity:'error', summary: 'No downloadable mapped variants text file', life: 3000})
       }
     },
     downloadMetadata: async function(){

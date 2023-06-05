@@ -17,7 +17,7 @@
       <div class="mave-1000px-col">
         <div v-if="item.creationDate">Created {{formatDate(item.creationDate)}} <span v-if="item.createdBy">
           <a :href="`https://orcid.org/${item.createdBy.orcidId}`" target="blank"><img src="@/assets/ORCIDiD_icon.png" alt="ORCIDiD">{{item.createdBy.firstName}} {{item.createdBy.lastName}}</a></span></div>
-        <div v-if="item.modificationDate">Last updated {{formatDate(item.modificationDate)}} <span v-if="item.modifiedBy"> 
+        <div v-if="item.modificationDate">Last updated {{formatDate(item.modificationDate)}} <span v-if="item.modifiedBy">
           <a :href="`https://orcid.org/${item.modifiedBy.orcidId}`" target="blank"><img src="@/assets/ORCIDiD_icon.png" alt="ORCIDiD">{{item.modifiedBy.firstName}} {{item.modifiedBy.lastName}}</a></span></div>
         <div v-if="item.publishedDate">Published {{formatDate(item.publishedDate)}}</div>
         <div v-if="item.experimentSetUrn">Member of <router-link :to="{name: 'experimentset', params: {urn: item.experimentSetUrn}}">{{item.experimentSetUrn}}</router-link></div>
@@ -42,15 +42,24 @@
           <div v-html="markdownToHtml(item.methodText)" class="mave-scoreset-abstract"></div>
         </div>
         <!--Temporary codes to show references. Will change it in the future.-->
-        <div class="mave-scoreset-section-title">References</div>
-          <div v-if="item.pubmedIdentifiers.length > 0">
-            <ul style="list-style-type:square">
-              <div v-for="pubmed in item.pubmedIdentifiers" :key="pubmed">
-                <li v-html="markdownToHtml(pubmed.referenceHtml)" ></li>PMID: <a :href="`${pubmed.url}`" target="_blank">{{pubmed.identifier}}</a>
-              </div>
-            </ul>
-        </div>
-        <div v-else>No associated publication.</div>
+        <div class="mave-scoreset-section-title">Primary References</div>
+          <div v-if="item.primaryPublicationIdentifiers.length > 0">
+            <div v-for="publication in item.primaryPublicationIdentifiers" :key="publication">
+                <ul style="list-style-type:square;">
+                  <li v-html="markdownToHtml(publication.referenceHtml)" ></li>Publication: <a :href="`${publication.url}`" target="_blank">{{publication.identifier}}</a>
+                </ul>
+            </div>
+          </div>
+          <div v-else>No associated primary publications.</div>
+          <div class="mave-scoreset-section-title">Secondary References</div>
+          <div v-if="item.secondaryPublicationIdentifiers.length > 0">
+            <div v-for="publication in item.secondaryPublicationIdentifiers" :key="publication">
+                <ul style="list-style-type:square;">
+                  <li v-html="markdownToHtml(publication.referenceHtml)" ></li>Publication: <a :href="`${publication.url}`" target="_blank">{{publication.identifier}}</a>
+                </ul>
+            </div>
+          </div>
+          <div v-else>No associated secondary publications.</div>
         <div v-if="item.keywords && item.keywords.length > 0">
           <div class="mave-scoreset-section-title">Keywords</div>
           <div class="mave-scoreset-keywords">
@@ -182,7 +191,7 @@ export default {
               console.log('Deleted item')
               this.$router.replace({path: `/dashboard`})
               this.$toast.add({severity:'success', summary: 'Your experiment was successfully deleted.', life: 3000})
-              
+
             } else if (response.data && response.data.detail) {
               const formValidationErrors = {}
               for (const error of response.data.detail) {
@@ -194,7 +203,7 @@ export default {
                 formValidationErrors[path] = error.msg
               }
             }
-          } 
+          }
         },
         reject: () => {
             //callback to execute when user rejects the action

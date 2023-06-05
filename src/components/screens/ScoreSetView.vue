@@ -25,7 +25,7 @@
         <div v-if="item.creationDate">Created {{formatDate(item.creationDate)}} <span v-if="item.createdBy">
           <a :href="`https://orcid.org/${item.createdBy.orcidId}`" target="blank"><img src="@/assets/ORCIDiD_icon.png" alt="ORCIDiD">{{item.createdBy.firstName}} {{item.createdBy.lastName}}</a></span>
         </div>
-        <div v-if="item.modificationDate">Last updated {{formatDate(item.modificationDate)}} <span v-if="item.modifiedBy"> 
+        <div v-if="item.modificationDate">Last updated {{formatDate(item.modificationDate)}} <span v-if="item.modifiedBy">
           <a :href="`https://orcid.org/${item.modifiedBy.orcidId}`" target="blank"><img src="@/assets/ORCIDiD_icon.png" alt="ORCIDiD">{{item.modifiedBy.firstName}} {{item.modifiedBy.lastName}}</a></span>
         </div>
         <div v-if="item.publishedDate">Published {{formatDate(item.publishedDate)}}</div>
@@ -38,14 +38,14 @@
         <div v-if="item.experiment">Member of <router-link :to="{name: 'experiment', params: {urn: item.experiment.urn}}">{{item.experiment.urn}}</router-link></div>
         <div v-if="item.supersedingScoreset">Current version <router-link :to="{name: 'scoreset', params: {urn: item.supersedingScoreset.urn}}">{{item.supersedingScoreset.urn}}</router-link></div>
         <div v-else>Current version <router-link :to="{name: 'scoreset', params: {urn: item.urn}}">{{item.urn}}</router-link></div>
-        <div v-if="item.metaAnalysisSourceScoresets.length!=0">Meta-analyzes 
+        <div v-if="item.metaAnalysisSourceScoresets.length!=0">Meta-analyzes
           <template v-for="(scoreset,index) in sortedMetaAnalysis" :key="scoreset">
             <router-link :to="{name: 'scoreset', params: {urn: scoreset.urn}}">{{scoreset.urn}}</router-link>
             <template v-if="index !== item.metaAnalysisSourceScoresets.length-1"> · </template>
           </template>
         </div>
         <div>Download files <Button class="p-button-outlined p-button-sm" @click="downloadFile('scores')">Scores</Button>&nbsp;
-          <template v-if="countColumns.length!=0"> 
+          <template v-if="countColumns.length!=0">
             <Button class="p-button-outlined p-button-sm" @click="downloadFile('counts')">Counts</Button>&nbsp;
           </template>
           <template v-if="isMetaDataEmpty!=true">
@@ -60,21 +60,30 @@
           <div class="mave-scoreset-section-title">Method</div>
           <div v-html="markdownToHtml(item.methodText)" class="mave-scoreset-abstract"></div>
         </div>
-        <div class="mave-scoreset-section-title">References</div>
-          <div v-if="item.experiment.pubmedIdentifiers.length!=0 || item.pubmedIdentifiers.length!=0">
-            <ul style="list-style-type:square">
-              <div v-for="pubmed in uniquePubmedIdentifiers" :key="pubmed">
-                <li v-html="markdownToHtml(pubmed.referenceHtml)"></li>PMID: <a :href="`${pubmed.url}`" target="_blank">{{pubmed.identifier}}</a>
-              </div>
-            </ul>
-        </div>
-        <div v-else>No associated publication.</div>
+        <div class="mave-scoreset-section-title">Primary References</div>
+          <div v-if="item.primaryPublicationIdentifiers.length > 0">
+            <div v-for="publication in item.primaryPublicationIdentifiers" :key="publication">
+                <ul style="list-style-type:square;">
+                  <li v-html="markdownToHtml(publication.referenceHtml)" ></li>Publication: <a :href="`${publication.url}`" target="_blank">{{publication.identifier}}</a>
+                </ul>
+            </div>
+          </div>
+          <div v-else>No associated primary publications.</div>
+          <div class="mave-scoreset-section-title">Secondary References</div>
+          <div v-if="item.secondaryPublicationIdentifiers.length > 0">
+            <div v-for="publication in item.secondaryPublicationIdentifiers" :key="publication">
+                <ul style="list-style-type:square;">
+                  <li v-html="markdownToHtml(publication.referenceHtml)" ></li>Publication: <a :href="`${publication.url}`" target="_blank">{{publication.identifier}}</a>
+                </ul>
+            </div>
+          </div>
+          <div v-else>No associated secondary publications.</div>
         <div class="mave-scoreset-section-title">Data Usage Policy</div>
           <div v-if="item.dataUsagePolicy">
             <div v-html="markdownToHtml(item.dataUsagePolicy)" class="mave-scoreset-abstract"></div>
           </div>
           <div v-else>Not specified</div>
-        
+
         <div v-if="item.keywords && item.keywords.length > 0">
           <div class="mave-scoreset-section-title">Keywords</div>
           <div class="mave-scoreset-keywords">
@@ -110,7 +119,7 @@
             </div>
           </div>
         </div>
-        
+
         <div class="mave-scoreset-section-title">External identifier</div>
         <strong>DOI: </strong>
         <div v-if="item.doiIdentifiers.length!=0">
@@ -120,13 +129,13 @@
         </div><template v-else>No associated DOIs<br/></template>
 
         <div class="mave-scoreset-section-title">Variants</div>
-        <div v-if="item.numVariants > 10">Below is a sample of the first 10 variants. 
+        <div v-if="item.numVariants > 10">Below is a sample of the first 10 variants.
             Please download the file on the top page if you want to read the whole variants list.</div>
         <br/>
         <TabView style="height:585px">
           <TabPanel header="Scores">
-            <!--Default table-layout is fixed meaning the cell widths do not depend on their content. 
-            If you require cells to scale based on their contents set autoLayout property to true. 
+            <!--Default table-layout is fixed meaning the cell widths do not depend on their content.
+            If you require cells to scale based on their contents set autoLayout property to true.
             Note that Scrollable and/or Resizable tables do not support auto layout due to technical limitations.
             Scrollable, column can be frozen but columns and rows don't match so that add width;
             Autolayout, column can't be frozen but columns and rows can match
@@ -134,11 +143,11 @@
             <!---->
             <div style="overflow-y: scroll; overflow-x: scroll; height:600px;">
               <DataTable :value="scoresTable" showGridlines="true" stripedRows="true">
-                <Column v-for="column of scoreColumns.slice(0,3)" :field="column" :header="column" :key="column" 
+                <Column v-for="column of scoreColumns.slice(0,3)" :field="column" :header="column" :key="column"
                 style="overflow:hidden" headerStyle="background-color:#A1D8C8; font-weight: bold" ><!--:frozen="columnIsAllNa(scoresTable, column)"-->
                 <template #body="scoresTable" >{{scoresTable.data[column]}}</template>
               </Column>
-              <Column v-for="column of scoreColumns.slice(3,scoreColumns.length)" :field="column" :header="column" :key="column" 
+              <Column v-for="column of scoreColumns.slice(3,scoreColumns.length)" :field="column" :header="column" :key="column"
                 style="overflow:hidden" headerStyle="background-color:#A1D8C8; font-weight: bold">
                 <template #body="scoresTable">{{convertToThreeDecimal(scoresTable.data[column])}}</template>
               </Column>
@@ -150,13 +159,13 @@
               <DataTable :value="countsTable" showGridlines="true" stripedRows="true">
                 <template v-if="countColumns.length==0">No count data available.</template>
                 <template v-else>
-                  <Column v-for="column of countColumns.slice(0,3)" :field="column" :header="column" :key="column" 
+                  <Column v-for="column of countColumns.slice(0,3)" :field="column" :header="column" :key="column"
                   style="overflow:hidden" headerStyle="background-color:#A1D8C8; font-weight: bold"> <!--:frozen="columnIsAllNa(countsTable, column)" bodyStyle="text-align:left"-->
                     <template #body="countsTable">{{countsTable.data[column]}}</template> <!--:style="{overflow: 'hidden'}"-->
                   </Column>
-                  <Column v-for="column of countColumns.slice(3,countColumns.length)" :field="column" :header="column" :key="column" 
+                  <Column v-for="column of countColumns.slice(3,countColumns.length)" :field="column" :header="column" :key="column"
                   style="overflow:hidden" headerStyle="background-color:#A1D8C8; font-weight: bold">
-                    <template #body="countsTable">{{convertToThreeDecimal(countsTable.data[column])}}</template> 
+                    <template #body="countsTable">{{convertToThreeDecimal(countsTable.data[column])}}</template>
                   </Column>
                 </template>
               </DataTable>
@@ -226,21 +235,6 @@ export default {
     sortedMetaAnalysis: function(){
       return _.orderBy(this.item.metaAnalysisSourceScoresets, 'urn')
     },
-    uniquePubmedIdentifiers: function(){
-      let pubmedIdentifiers = []
-      if(this.item.experiment.pubmedIdentifiers){
-        for(let i of this.item.experiment.pubmedIdentifiers){
-          pubmedIdentifiers.push(i)
-        }
-      }
-      if(this.item.pubmedIdentifiers){
-        for(let i of this.item.pubmedIdentifiers){
-          pubmedIdentifiers.push(i)
-        }
-      }
-      let uniqueObjects = [...new Map(pubmedIdentifiers.map(item => [item.identifier, item])).values()]
-      return uniqueObjects
-    }
   },
   setup: () => {
     const scoresRemoteData = useRemoteData()
@@ -334,7 +328,7 @@ export default {
                 formValidationErrors[path] = error.msg
               }
             }
-          } 
+          }
         },
         reject: () => {
             //callback to execute when user rejects the action
@@ -349,7 +343,7 @@ export default {
       return _.get(...args)
     },
     publishItem: async function() {
-      let response = null 
+      let response = null
       try {
         if (this.item) {
           response = await axios.post(`${config.apiBaseUrl}/scoresets/${this.item.urn}/publish`, this.item)

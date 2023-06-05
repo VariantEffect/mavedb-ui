@@ -80,19 +80,35 @@
               <div class="field">
                 <span class="p-float-label">
                   <AutoComplete
-                      ref="pubmedIdentifiersInput"
-                      v-model="pubmedIdentifiers"
-                      :id="$scopedId('input-pubmedIdentifiers')"
+                      ref="publicationIdentifiersInput"
+                      v-model="publicationIdentifiers"
+                      :id="$scopedId('input-publicationIdentifiers')"
                       field="identifier"
                       :multiple="true"
-                      :suggestions="pubmedIdentifierSuggestionsList"
-                      @complete="searchPubmedIdentifiers"
-                      @keyup.enter="acceptNewPubmedIdentifier"
-                      @keyup.escape="clearPubmedIdentifierSearch"
+                      :suggestions="publicationIdentifierSuggestionsList"
+                      @complete="searchPublicationIdentifiers"
+                      @keyup.enter="acceptNewPublicationIdentifier"
+                      @keyup.escape="clearPublicationIdentifierSearch"
                   />
-                  <label :for="$scopedId('input-pubmedIdentifiers')">PubMed IDs</label>
+                  <label :for="$scopedId('input-publicationIdentifiers')">Publication identifiers</label>
                 </span>
-                <span v-if="validationErrors.pubmedIdentifiers" class="mave-field-error">{{validationErrors.pubmedIdentifiers}}</span>
+                <span v-if="validationErrors.publicationIdentifiers" class="mave-field-error">{{validationErrors.publicationIdentifiers}}</span>
+              </div>
+              <div class="field">
+                <span class="p-float-label" style="display:block">
+                  <Multiselect
+                    ref="primaryPublicationIdentifiersInput"
+                    v-model="primaryPublicationIdentifiers"
+                    :id="$scopedId('input-primaryPublicationIdentifiers')"
+                    :options="publicationIdentifiers"
+                    optionLabel="identifier"
+                    placeholder="Select a primary publication (Where the dataset is described)"
+                    :selectionLimit="1"
+                  />
+                  <!-- label overlaps with placeholder when none are selected without this v-if -->
+                  <label v-if="this.primaryPublicationIdentifiers.length > 0" :for="$scopedId('input-primaryPublicationIdentifiers')">Primary publication</label>
+                </span>
+                <span v-if="validationErrors.primaryPublicationIdentifiers" class="mave-field-error">{{validationErrors.primaryPublicationIdentifiers}}</span>
               </div>
               <div class="field">
                 <span class="p-float-label">
@@ -189,6 +205,7 @@ import AutoComplete from 'primevue/autocomplete'
 import Button from 'primevue/button'
 import Card from 'primevue/card'
 import Chips from 'primevue/chips'
+import Multiselect from 'primevue/multiselect'
 import FileUpload from 'primevue/fileupload'
 import InputText from 'primevue/inputtext'
 import ProgressSpinner from 'primevue/progressspinner'
@@ -206,11 +223,11 @@ import useFormatters from '@/composition/formatters'
 
 export default {
   name: 'ExperimentEditor',
-  components: {AutoComplete, Button, Card, Chips, DefaultLayout, FileUpload, InputText, ProgressSpinner, TabPanel, TabView, Textarea},
+  components: { AutoComplete, Button, Card, Chips, Multiselect, DefaultLayout, FileUpload, InputText, ProgressSpinner, TabPanel, TabView, Textarea },
 
   setup: () => {
     const doiIdentifierSuggestions = useItems({itemTypeName: 'doi-identifier-search'})
-    const pubmedIdentifierSuggestions = useItems({itemTypeName: 'pubmed-identifier-search'})
+    const publicationIdentifierSuggestions = useItems({itemTypeName: 'publication-identifier-search'})
     const rawReadIdentifierSuggestions = useItems({itemTypeName: 'raw-read-identifier-search'})
     const {errors: validationErrors, handleSubmit, setErrors: setValidationErrors} = useForm()
     return {
@@ -218,8 +235,8 @@ export default {
       ...useItem({itemTypeName: 'experiment'}),
       doiIdentifierSuggestions: doiIdentifierSuggestions.items,
       setDoiIdentifierSearch: (text) => doiIdentifierSuggestions.setRequestBody({text}),
-      pubmedIdentifierSuggestions: pubmedIdentifierSuggestions.items,
-      setPubmedIdentifierSearch: (text) => pubmedIdentifierSuggestions.setRequestBody({text}),
+      publicationIdentifierSuggestions: publicationIdentifierSuggestions.items,
+      setPublicationIdentifierSearch: (text) => publicationIdentifierSuggestions.setRequestBody({text}),
       rawReadIdentifierSuggestions: rawReadIdentifierSuggestions.items,
       setRawReadIdentifierSearch: (text) => rawReadIdentifierSuggestions.setRequestBody({text}),
       handleSubmit,
@@ -247,7 +264,8 @@ export default {
     methodText: null,
     keywords: [],
     doiIdentifiers: [],
-    pubmedIdentifiers: [],
+    primaryPublicationIdentifiers: [],
+    publicationIdentifiers: [],
     rawReadIdentifiers: [],
     extraMetadata: {},
 
@@ -267,10 +285,10 @@ export default {
       // This causes the drop-down to stop appearing when we later populate the list.
       return this.doiIdentifierSuggestions || [{}]
     },
-    pubmedIdentifierSuggestionsList: function() {
+    publicationIdentifierSuggestionsList: function() {
       // The PrimeVue AutoComplete doesn't seem to like it if we set the suggestion list to [].
       // This causes the drop-down to stop appearing when we later populate the list.
-      return this.pubmedIdentifierSuggestions || [{}]
+      return this.publicationIdentifierSuggestions || [{}]
     },
     rawReadIdentifierSuggestionsList: function() {
       // The PrimeVue AutoComplete doesn't seem to like it if we set the suggestion list to [].
@@ -329,12 +347,12 @@ export default {
       }
     },
 
-    acceptNewPubmedIdentifier: function() {
-      const input = this.$refs.pubmedIdentifiersInput
+    acceptNewPublicationIdentifier: function() {
+      const input = this.$refs.publicationIdentifiersInput
       const searchText = (input.inputTextValue || '').trim()
       if (validatePubmedId(searchText)) {
-        const pubmedId = normalizePubmedId(searchText)
-        this.pubmedIdentifiers = _.uniqBy([...this.pubmedIdentifiers, {identifier: pubmedId}])
+        const publicationId = normalizePubmedId(searchText)
+        this.publicationIdentifiers = _.uniqBy([...this.publicationIdentifiers, {identifier: publicationId}])
         input.inputTextValue = null
 
         // Clear the text input.
@@ -343,8 +361,8 @@ export default {
       }
     },
 
-    clearPubmedIdentifierSearch: function() {
-      const input = this.$refs.pubmedIdentifiersInput
+    clearPublicationIdentifierSearch: function() {
+      const input = this.$refs.publicationIdentifiersInput
       input.inputTextValue = null
 
       // Clear the text input.
@@ -352,10 +370,10 @@ export default {
       input.$refs.input.value = ''
     },
 
-    searchPubmedIdentifiers: function(event) {
+    searchPublicationIdentifiers: function(event) {
       const searchText = (event.query || '').trim()
       if (searchText.length > 0) {
-        this.setPubmedIdentifierSearch(event.query)
+        this.setPublicationIdentifierSearch(event.query)
       }
     },
 
@@ -445,7 +463,15 @@ export default {
         this.methodText = this.item.methodText
         this.keywords = this.item.keywords
         this.doiIdentifiers = this.item.doiIdentifiers
-        this.pubmedIdentifiers = this.item.pubmedIdentifiers
+        // So that the multiselect can populate correctly, build the primary publication identifiers
+        // indirectly by filtering publication identifiers list for those publications we know to be
+        // primary.
+        this.publicationIdentifiers = _.concat(this.item.primaryPublicationIdentifiers, this.item.secondaryPublicationIdentifiers)
+        this.primaryPublicationIdentifiers = this.item.primaryPublicationIdentifiers.filter((publication) => {
+          return this.publicationIdentifiers.some((primary) => {
+            return primary.identifier === publication.identifier
+          })
+        })
         this.rawReadIdentifiers = this.item.rawReadIdentifiers
         this.extraMetadata = this.item.extraMetadata
       } else {
@@ -455,7 +481,8 @@ export default {
         this.methodText = null
         this.keywords = []
         this.doiIdentifiers = []
-        this.pubmedIdentifiers = []
+        this.primaryPublicationIdentifiers = []
+        this.publicationIdentifiers = []
         this.rawReadIdentifiers = []
         this.extraMetadata = {}
       }
@@ -476,10 +503,20 @@ export default {
         methodText: this.methodText,
         keywords: this.keywords,
         doiIdentifiers: this.doiIdentifiers.map((identifier) => _.pick(identifier, 'identifier')),
-        pubmedIdentifiers: this.pubmedIdentifiers.map((identifier) => _.pick(identifier, 'identifier')),
+        primaryPublicationIdentifiers: this.primaryPublicationIdentifiers.map((identifier) => _.pick(identifier, 'identifier')),
+        publicationIdentifiers: this.publicationIdentifiers.map((identifier) => _.pick(identifier, 'identifier')),
         rawReadIdentifiers: this.rawReadIdentifiers.map((identifier) => _.pick(identifier, 'identifier')),
         extraMetadata: {}
       }
+      // empty item arrays so that deleted items aren't merged back into editedItem object
+      if(this.item) {
+        this.item.keywords = []
+        this.item.doiIdentifiers = []
+        this.item.publicationIdentifiers = []
+        this.item.primaryPublicationIdentifiers = []
+        this.item.rawReadIdentifiers = []
+      }
+
       const editedItem = _.merge({}, this.item || {}, editedFields)
 
       let response

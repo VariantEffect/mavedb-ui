@@ -44,6 +44,16 @@ const itemTypes = {
       }
     }
   },
+  'external-publication-identifier-search': {
+    name: 'publication-identifier', // TODO Redundant, change this structure
+    restCollectionName: 'publicationIdentifiers',
+    httpOptions: {
+      list: {
+        method: 'post',
+        url: `${config.apiBaseUrl}/publicationIdentifiers/search-external`
+      }
+    }
+  },
   'raw-read-identifier-search': {
     name: 'raw-read-identifier', // TODO Redundant, change this structure
     restCollectionName: 'raw-read-identifiers',

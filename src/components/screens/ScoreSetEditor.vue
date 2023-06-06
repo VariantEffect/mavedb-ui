@@ -183,31 +183,54 @@
                 <div class="field">
                   <span class="p-float-label">
                     <AutoComplete
-                        ref="publicationIdentifiersInput"
-                        v-model="publicationIdentifiers"
-                        :id="$scopedId('input-publicationIdentifiers')"
-                        field="identifier"
-                        :multiple="true"
-                        :suggestions="publicationIdentifierSuggestionsList"
-                        @complete="searchPublicationIdentifiers"
-                        @keyup.enter="acceptNewPublicationIdentifier"
-                        @keyup.escape="clearPublicationIdentifierSearch"
-                    />
+                      ref="publicationIdentifiersInput"
+                      v-model="publicationIdentifiers"
+                      :id="$scopedId('input-publicationIdentifiers')"
+                      :multiple="true"
+                      :suggestions="publicationIdentifierSuggestionsList"
+                      @complete="searchPublicationIdentifiers"
+                      @keyup.enter="acceptNewPublicationIdentifier"
+                      @keyup.escape="clearPublicationIdentifierSearch"
+                      forceSelection
+                  >
+                    <template #chip="slotProps">
+                      <div>
+                        <div>{{ slotProps.value.identifier }}</div>
+                      </div>
+                    </template>
+                    <template #item="slotProps">
+                      <div>
+                          <div>Title: {{ slotProps.item.title }}</div>
+                          <div>DOI: {{ slotProps.item.publicationDoi || slotProps.item.preprintDoi }}</div>
+                          <div>Identifier: {{ slotProps.item.identifier }}</div>
+                          <div>Database: {{ slotProps.item.dbName }}</div>
+                      </div>
+                    </template>
+                  </AutoComplete>
                     <label :for="$scopedId('input-publicationIdentifiers')">PubMed IDs</label>
                   </span>
                   <span v-if="validationErrors.publicationIdentifiers" class="mave-field-error">{{validationErrors.publicationIdentifiers}}</span>
                 </div>
                 <div class="field">
                   <span class="p-float-label" style="display:block">
-                  <Multiselect
-                    ref="primaryPublicationInput"
+                    <Multiselect
+                    ref="primaryPublicationIdentifiersInput"
                     v-model="primaryPublicationIdentifiers"
                     :id="$scopedId('input-primaryPublicationIdentifiers')"
                     :options="publicationIdentifiers"
                     optionLabel="identifier"
                     placeholder="Select a primary publication (Where the dataset is described)"
                     :selectionLimit="1"
-                  />
+                  >
+                    <template #option="slotProps">
+                          <div>
+                              <div>Title: {{ slotProps.option.title }}</div>
+                              <div>DOI: {{ slotProps.option.publicationDoi || slotProps.option.preprintDoi }}</div>
+                              <div>Identifier: {{ slotProps.option.identifier }}</div>
+                              <div>Database: {{ slotProps.option.dbName }}</div>
+                          </div>
+                    </template>
+                  </Multiselect>
                   <!-- label overlaps with placeholder when none are selected without this v-if -->
                   <label v-if="this.primaryPublicationIdentifiers.length > 0" :for="$scopedId('input-primaryPublicationIdentifiers')">Primary publication</label>
                 </span>
@@ -482,6 +505,7 @@ export default {
     })
     const doiIdentifierSuggestions = useItems({itemTypeName: 'doi-identifier-search'})
     const publicationIdentifierSuggestions = useItems({itemTypeName: 'publication-identifier-search'})
+    const externalPublicationIdentifierSuggestions = useItems({itemTypeName: 'external-publication-identifier-search'})
     const targetGeneIdentifierSuggestions = {}
     for (const dbName of externalGeneDatabases) {
       targetGeneIdentifierSuggestions[dbName] = useItems({itemTypeName: `${dbName.toLowerCase()}-identifier-search`})
@@ -499,6 +523,8 @@ export default {
       setDoiIdentifierSearch: (text) => doiIdentifierSuggestions.setRequestBody({text}),
       publicationIdentifierSuggestions: publicationIdentifierSuggestions.items,
       setPublicationIdentifierSearch: (text) => publicationIdentifierSuggestions.setRequestBody({text}),
+      externalPublicationIdentifierSuggestions: externalPublicationIdentifierSuggestions.items,
+      setExternalPublicationIdentifierSearch: (text) => externalPublicationIdentifierSuggestions.setRequestBody({text}),
       targetGeneSuggestions: targetGeneSuggestions.items,
       setTargetGeneSearch: (text) => targetGeneSuggestions.setRequestBody({text}),
       targetGeneIdentifierSuggestions: ref({
@@ -596,7 +622,7 @@ export default {
       return this.suggestionsForAutocomplete(this.metaAnalysisSourceScoreSetSuggestions)
     },
     publicationIdentifierSuggestionsList: function() {
-      return this.suggestionsForAutocomplete(this.publicationIdentifierSuggestions)
+      return this.suggestionsForAutocomplete(_.unionBy(this.publicationIdentifierSuggestions, this.externalPublicationIdentifierSuggestions, 'identifier'))
     },
     supersededScoreSetSuggestionsList: function() {
       return this.suggestionsForAutocomplete(this.supersededScoreSetSuggestions)
@@ -788,6 +814,7 @@ export default {
       const searchText = (event.query || '').trim()
       if (searchText.length > 0) {
         this.setPublicationIdentifierSearch(event.query)
+        this.setExternalPublicationIdentifierSearch(event.query)
       }
     },
 
@@ -1005,8 +1032,8 @@ export default {
         methodText: this.methodText,
         keywords: this.keywords,
         doiIdentifiers: this.doiIdentifiers.map((identifier) => _.pick(identifier, 'identifier')),
-        primaryPublicationIdentifiers: this.primaryPublicationIdentifiers.map((identifier) => _.pick(identifier, 'identifier')),
-        publicationIdentifiers: this.publicationIdentifiers.map((identifier) => _.pick(identifier, 'identifier')),
+        primaryPublicationIdentifiers: this.primaryPublicationIdentifiers.map((identifier) => _.pick(identifier, ['identifier', 'dbName'])),
+        publicationIdentifiers: this.publicationIdentifiers.map((identifier) => _.pick(identifier, ['identifier', 'dbName'])),
         dataUsagePolicy: this.dataUsagePolicy,
         extraMetadata: {},
         targetGene: {

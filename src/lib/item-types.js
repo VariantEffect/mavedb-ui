@@ -46,11 +46,11 @@ const itemTypes = {
   },
   'external-publication-identifier-search': {
     name: 'publication-identifier', // TODO Redundant, change this structure
-    restCollectionName: 'publicationIdentifiers',
+    restCollectionName: 'publication-identifiers',
     httpOptions: {
       list: {
         method: 'post',
-        url: `${config.apiBaseUrl}/publicationIdentifiers/search-external`
+        url: `${config.apiBaseUrl}/publication-identifiers/search-external`
       }
     }
   },

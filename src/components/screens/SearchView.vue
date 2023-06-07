@@ -10,11 +10,22 @@
           <InputText v-model="searchText" ref="searchTextInput" type="search" class="p-inputtext-sm" placeholder="Search" />
           <Button v-if="searchText && searchText.length > 0" class="mavedb-search-clear-button p-button-plain p-button-text" @click="clear"><i class="pi pi-times"/></Button>
         </span>
-        <div class="mavedb-search-filters">
-          <SelectList v-model="filterTargetNames" :options="targetNameFilterOptions" class="mavedb-search-filter-option-picker" title="Target name"  />
-          <SelectList v-model="filterTargetTypes" :options="targetTypeFilterOptions" class="mavedb-search-filter-option-picker" title="Target type"  />
-          <SelectList v-model="filterTargetOrganismNames" :options="targetOrganismFilterOptions" class="mavedb-search-filter-option-picker mavedb-organism-picker" title="Target organism"  />
-        </div>
+        <TabView class="mavedb-search-tabs">
+          <TabPanel header="Target filters">
+            <div class="mavedb-search-filters">
+              <SelectList v-model="filterTargetNames" :options="targetNameFilterOptions" class="mavedb-search-filter-option-picker" title="Target name"  />
+              <SelectList v-model="filterTargetTypes" :options="targetTypeFilterOptions" class="mavedb-search-filter-option-picker" title="Target type"  />
+              <SelectList v-model="filterTargetOrganismNames" :options="targetOrganismFilterOptions" class="mavedb-search-filter-option-picker mavedb-organism-picker" title="Target organism"  />
+            </div>
+          </TabPanel>
+          <TabPanel header="Publication filters">
+            <div class="mavedb-search-filters">
+              <SelectList v-model="filterPublicationAuthors" :options="publicationAuthorFilterOptions" class="mavedb-search-filter-option-picker" title="Publication authors"  />
+              <SelectList v-model="filterPublicationDatabases" :options="publicationDatabaseFilterOptions" class="mavedb-search-filter-option-picker" title="Publication database"  />
+              <SelectList v-model="filterPublicationJournals" :options="publicationJournalFilterOptions" class="mavedb-search-filter-option-picker" title="Publication journal"  />
+            </div>
+          </TabPanel>
+        </TabView>
       </div>
       <div class="mavedb-search-results">
         <FlexDataTable
@@ -39,11 +50,13 @@ import FlexDataTable from '@/components/common/FlexDataTable'
 import SelectList from '@/components/common/SelectList'
 import DefaultLayout from '@/components/layout/DefaultLayout'
 import Button from 'primevue/button'
+import TabPanel from 'primevue/tabpanel'
+import TabView from 'primevue/tabview'
 import {debounce} from 'vue-debounce'
 
 export default {
   name: 'SearchView',
-  components: {DefaultLayout, FlexDataTable, InputText, SelectList, Button},
+  components: {DefaultLayout, FlexDataTable, InputText, SelectList, TabView, TabPanel, Button},
 
   data: function() {
     const self = this
@@ -170,9 +183,80 @@ export default {
         {value: 'Other - genome not listed', badge: 49},
         {value: 'Saccharomyces cerevisiae', badge: 33}
       ],
+      defaultPublicationAuthorOptions: [ // so many of these, just show A last names as placeholders
+        {value: 'Abbasi, Shawn A', badge: 1},
+        {value: 'Adamovich, Aleksandra I', badge: 2},
+        {value: 'Adkar, Bharat V', badge: 1},
+        {value: 'Aguirre, Andrew J', badge: 3},
+        {value: 'Ahituv, Nadav', badge: 33},
+        {value: 'Ahler, Ethan', badge: 4},
+        {value: 'Ahmad, Tariq', badge: 3},
+        {value: 'Akdoğan, Emel', badge: 5},
+        {value: 'Aleksandrov, Radoslav', badge: 2},
+        {value: 'Aloy, Patrick', badge: 9},
+        {value: 'Amorosi, Clara J', badge: 2},
+        {value: 'Andreev, Aleksandr', badge: 4},
+        {value: 'Andrews, Bryan', badge: 2},
+        {value: 'Andrie, Jennifer M', badge: 4},
+        {value: 'Anquetil, Vincent', badge: 10},
+        {value: 'Aramini, James', badge: 4},
+        {value: 'Araya, Carlos L', badge: 4},
+        {value: 'Arias, Mauricio A', badge: 10},
+        {value: 'Ashenberg, Orr', badge: 4},
+        {value: 'Ashmead, Julee', badge: 1},
+        {value: 'Ashworth, Alan', badge: 2},
+        {value: 'Aziz, Nazneen', badge: 1}
+      ],
+      defaultPublicationDatabaseOptions: [
+        {value: 'PubMed', badge: 403},
+        {value: 'bioRxiv', badge: 3},
+        {value: 'medRxiv', badge: 2}
+      ],
+      defaultPublicationJournalOptions: [
+      {value: 'ACS Chem Biol', badge: 18},
+      {value: 'Am J Hum Genet', badge: 22},
+      {value: 'Cancer Cell', badge: 2},
+      {value: 'Cell', badge: 14},
+      {value: 'Cell Rep', badge: 10},
+      {value: 'Cell Syst', badge: 4},
+      {value: 'Circ Genom Precis Med', badge: 2},
+      {value: 'Clin Transl Sci', badge: 4},
+      {value: 'Curr Biol', badge: 2},
+      {value: 'Elife', badge: 50},
+      {value: 'Evolution', badge: 8},
+      {value: 'G3 (Bethesda)', badge: 2},
+      {value: 'Genetics', badge: 14},
+      {value: 'Genome Biol', badge: 14},
+      {value: 'Genome Med', badge: 4},
+      {value: 'Genome Res', badge: 20},
+      {value: 'Hum Mutat', badge: 2},
+      {value: 'J Immunol', badge: 4},
+      {value: 'J Inherit Metab Dis', badge: 2},
+      {value: 'J Mol Biol', badge: 6},
+      {value: 'Microb Genom', badge: 4},
+      {value: 'Mol Biol Evol', badge: 14},
+      {value: 'Mol Cell', badge: 6},
+      {value: 'Mol Syst Biol', badge: 18},
+      {value: 'Nat Biotechnol', badge: 8},
+      {value: 'Nat Chem Biol', badge: 4},
+      {value: 'Nat Commun', badge: 64},
+      {value: 'Nat Genet', badge: 10},
+      {value: 'Nat Methods', badge: 12},
+      {value: 'Nature', badge: 78},
+      {value: 'Nucleic Acids Res', badge: 8},
+      {value: 'PLoS Genet', badge: 14},
+      {value: 'Pigment Cell Melanoma Res', badge: 2},
+      {value: 'Proc Natl Acad Sci U S A', badge: 6},
+      {value: 'Sci Rep', badge: 4},
+      {value: 'Science', badge: 2},
+      {value: 'Structure', badge: 2}
+      ],
       filterTargetNames: this.$route.query['target-names'] ? this.$route.query['target-names'].split(',') : [],
       filterTargetTypes: this.$route.query['target-types'] ? this.$route.query['target-types'].split(',') : [],
       filterTargetOrganismNames: this.$route.query['target-organism-names'] ? this.$route.query['target-organism-names'].split(',') : [],
+      filterPublicationAuthors: this.$route.query['publication-authors'] ? this.$route.query['publication-authors'] : [],
+      filterPublicationDatabases: this.$route.query['publication-databases'] ? this.$route.query['publication-databases'].split(',') : [],
+      filterPublicationJournals: this.$route.query['publication-journals'] ? this.$route.query['publication-journals'].split(',') : [],
       searchText: this.$route.query.search,
       scoreSets: [],
       publishedScoreSets: [],
@@ -250,6 +334,64 @@ export default {
       } else {
         return this.defaultTargetTypeOptions
       }
+    },
+    publicationAuthorFilterOptions: function() {
+      if (this.scoresets.length > 0) {
+        // map each scoresets associated identifiers,
+        // then map each publications authors' names,
+        // then concatenate these names together, flatten them,
+        // and flatten the list of lists of author names (:O)
+        const values = this.scoresets.map(
+          (s) => _.concat(
+            _.get(s, 'primaryPublicationIdentifiers').map(
+              (p) => _.get(p, 'authors').map(
+                (a) => _.get(a, 'name'))),
+            _.get(s, 'secondaryPublicationIdentifiers').map(
+              (p) => _.get(p, 'authors').map(
+                (a) => _.get(a, 'name')))
+          ).flat()
+        ).flat()
+        const valueFrequencies = _.countBy(values)
+        return _.sortBy(_.keys(valueFrequencies)).map((value) => ({value, badge: valueFrequencies[value]}))
+      } else {
+        return this.defaultPublicationAuthorOptions
+      }
+    },
+    publicationDatabaseFilterOptions: function() {
+      if (this.scoresets.length > 0) {
+        const values = this.scoresets.map(
+          (s) => _.uniq(
+            _.concat(
+              _.get(s, 'primaryPublicationIdentifiers').map(
+                (p) => _.get(p, 'dbName')),
+              _.get(s, 'secondaryPublicationIdentifiers').map(
+                (p) => _.get(p, 'dbName'))
+            ).flat()
+          )
+        ).flat()
+        const valueFrequencies = _.countBy(values)
+        return _.sortBy(_.keys(valueFrequencies)).map((value) => ({value, badge: valueFrequencies[value]}))
+      } else {
+        return this.defaultPublicationDatabaseOptions
+      }
+    },
+    publicationJournalFilterOptions: function() {
+      if (this.scoresets.length > 0) {
+        const values = this.scoresets.map(
+          (s) => _.uniq(
+            _.concat(
+              _.get(s, 'primaryPublicationIdentifiers').map(
+                (p) => _.get(p, 'publicationJournal')),
+              _.get(s, 'secondaryPublicationIdentifiers').map(
+                (p) => _.get(p, 'publicationJournal'))
+            ).flat()
+          )
+        ).flat()
+        const valueFrequencies = _.countBy(values)
+        return _.sortBy(_.keys(valueFrequencies)).map((value) => ({value, badge: valueFrequencies[value]}))
+      } else {
+        return this.defaultPublicationJournalOptions
+      }
     }
   },
   mounted: async function() {
@@ -271,6 +413,27 @@ export default {
       }
     },
     filterTargetTypes: {
+      handler: function(oldValue, newValue) {
+        if (oldValue != newValue) {
+          this.debouncedSearch()
+        }
+      }
+    },
+    filterPublicationAuthors: {
+      handler: function(oldValue, newValue) {
+        if (oldValue != newValue) {
+          this.debouncedSearch()
+        }
+      }
+    },
+    filterPublicationDatabases: {
+      handler: function(oldValue, newValue) {
+        if (oldValue != newValue) {
+          this.debouncedSearch()
+        }
+      }
+    },
+    filterPublicationJournals: {
       handler: function(oldValue, newValue) {
         if (oldValue != newValue) {
           this.debouncedSearch()
@@ -320,6 +483,30 @@ export default {
         }
       },
       immediate: true
+    },
+    '$route.query.publication-authors': {
+      handler: function(newValue, oldValue) {
+        if (newValue != oldValue) {
+          this.filterPublicationAuthors = newValue ? newValue : null
+        }
+      },
+      immediate: true
+    },
+    '$route.query.publication-databases': {
+      handler: function(newValue, oldValue) {
+        if (newValue != oldValue) {
+          this.filterPublicationDatabases = newValue ? newValue.split(',') : null
+        }
+      },
+      immediate: true
+    },
+    '$route.query.publication-journals': {
+      handler: function(newValue, oldValue) {
+        if (newValue != oldValue) {
+          this.filterPublicationJournals = newValue ? newValue.split(',') : null
+        }
+      },
+      immediate: true
     }
   },
   methods: {
@@ -331,10 +518,13 @@ export default {
         ...(this.searchText && this.searchText.length > 0) ? {search: this.searchText} : {},
         ...(this.filterTargetNames.length > 0) ? {'target-names': this.filterTargetNames.join(',')} : {},
         ...(this.filterTargetTypes.length > 0) ? {'target-types': this.filterTargetTypes.join(',')} : {},
-        ...(this.filterTargetOrganismNames.length > 0) ? {'target-namorganism-nameses': this.filterTargetOrganismNames.join(',')} : {}
+        ...(this.filterTargetOrganismNames.length > 0) ? {'target-namorganism-nameses': this.filterTargetOrganismNames.join(',')} : {},
+        ...(this.filterPublicationAuthors.length > 0) ? {'publication-authors': this.filterPublicationAuthors} : {},
+        ...(this.filterPublicationDatabases.length > 0) ? {'publication-databases': this.filterPublicationDatabases.join(',')} : {},
+        ...(this.filterPublicationJournals.length > 0) ? {'publication-journals': this.filterPublicationJournals.join(',')} : {}
       }})
       await this.fetchSearchResults()
-      /*      
+      /*URL
       if (this.searchText && this.searchText.length > 0) {
         await this.fetchSearchResults()
       } else {
@@ -350,7 +540,10 @@ export default {
             text: this.searchText || null,
             targets: this.filterTargetNames.length > 0 ? this.filterTargetNames : null,
             targetOrganismNames: this.filterTargetOrganismNames.length > 0 ? this.filterTargetOrganismNames : null,
-            targetTypes: this.filterTargetTypes.length > 0 ? this.filterTargetTypes : null
+            targetTypes: this.filterTargetTypes.length > 0 ? this.filterTargetTypes : null,
+            authors: this.filterPublicationAuthors.length > 0 ? this.filterPublicationAuthors : null,
+            databases: this.filterPublicationDatabases.length > 0 ? this.filterPublicationDatabases : null,
+            journals: this.filterPublicationJournals.length > 0 ? this.filterPublicationJournals : null
           },
           {
             headers: {
@@ -377,8 +570,11 @@ export default {
     clear: function() {
       this.searchText = null
       this.filterTargetNames = []
-      this.filterTargetTypes = [] 
+      this.filterTargetTypes = []
       this.filterTargetOrganismNames = []
+      this.filterPublicationAuthors = []
+      this.filterPublicationDatabases = []
+      this.filterPublicationJournals = []
     }
   }
 }
@@ -407,6 +603,12 @@ export default {
 }
 
 .mavedb-search-form {
+  flex: 0 0 auto;
+  padding: 10px 0;
+  text-align: center;
+}
+
+.mavedb-search-tabs {
   flex: 0 0 auto;
   padding: 10px 0;
   text-align: center;

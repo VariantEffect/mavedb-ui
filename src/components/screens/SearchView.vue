@@ -61,196 +61,6 @@ export default {
   data: function() {
     const self = this
     return {
-      defaultTargetNameOptions: [
-        {value: 'HSP90', badge: 12},
-        {value: 'Src catalytic domain', badge: 1},
-        {value: 'CXCR4', badge: 3},
-        {value: 'TP53 (P72R)', badge: 3},
-        {value: 'LDLR promoter', badge: 2},
-        {value: 'alpha-synuclein', badge: 12},
-        {value: 'MTHFR', badge: 8},
-        {value: 'CYP2C19', badge: 1},
-        {value: 'Ras', badge: 4},
-        {value: 'HBB promoter', badge: 1},
-        {value: 'RAF', badge: 9},
-        {value: 'VIM-2 with p.Met1_Phe2insGly', badge: 9},
-        {value: 'CALM1', badge: 2},
-        {value: 'UBE2I', badge: 4},
-        {value: 'MSH2', badge: 1},
-        {value: 'Minigene exon - hnRNPA1 binding site', badge: 1},
-        {value: 'BRCA1 RING domain', badge: 4},
-        {value: 'PKLR promoter', badge: 2},
-        {value: 'CYP2C9', badge: 1},
-        {value: 'C. cellulolyticum cohesin fragment', badge: 1},
-        {value: 'CBS', badge: 4},
-        {value: 'ZFAND3 enhancer', badge: 1},
-        {value: 'Minigene exon - SRSF1 (ASF/SF2) binding site', badge: 1},
-        {value: 'SUL1 promoter', badge: 2},
-        {value: 'S505N MPL', badge: 1},
-        {value: 'NUDT15', badge: 3},
-        {value: 'Minigene exon - SRSF7 (9G8) binding site', badge: 1},
-        {value: 'HA (H1N1)', badge: 1},
-        {value: 'Hsp82', badge: 1},
-        {value: 'E4B', badge: 3},
-        {value: 'Minigene exon - CG-containing enhancer', badge: 1},
-        {value: 'RET enhancer', badge: 1},
-        {value: 'Fis1 tail anchor', badge: 5},
-        {value: 'CcdB', badge: 1},
-        {value: 'NP, H3N2 Aichi/1968', badge: 2},
-        {value: 'Gal4', badge: 6},
-        {value: 'SORT1 enhancer', badge: 2},
-        {value: 'VKOR', badge: 2},
-        {value: 'TEM-1 β-lactamase', badge: 9},
-        {value: 'TPMT', badge: 1},
-        {value: 'avGFP', badge: 2},
-        {value: 'MPL', badge: 1},
-        {value: 'BRCA1 translation start through RING domain', badge: 1},
-        {value: 'C. thermocellum cohesin fragment', badge: 1},
-        {value: 'CD86', badge: 3},
-        {value: 'BRCA1', badge: 1},
-        {value: 'TECR', badge: 1},
-        {value: 'TARDBP', badge: 2},
-        {value: 'Aβ42', badge: 1},
-        {value: 'Minigene exon - hnRNP L binding site', badge: 1},
-        {value: 'LDLRAP1', badge: 2},
-        {value: 'Bovine S-arrestin', badge: 1},
-        {value: 'Dlg4 (PSD95_PDZ3)', badge: 2},
-        {value: 'ACE2', badge: 2},
-        {value: 'hYAP65 WW domain', badge: 2},
-        {value: 'HMGCR', badge: 3},
-        {value: 'TERT promoter', badge: 4},
-        {value: 'ALDOB enhancer', badge: 1},
-        {value: 'Glycophorin A', badge: 1},
-        {value: 'DHFR', badge: 2},
-        {value: 'ZRS enhancer', badge: 2},
-        {value: 'NP', badge: 1},
-        {value: 'CCR5', badge: 3},
-        {value: 'Src SH4 domain', badge: 1},
-        {value: 'PSD95 PDZ3', badge: 2},
-        {value: 'LamB', badge: 2},
-        {value: 'PTEN', badge: 2},
-        {value: 'IRF6 enhancer', badge: 1},
-        {value: 'EGFP', badge: 1},
-        {value: 'human L-Selectin', badge: 1},
-        {value: 'GDI1', badge: 1},
-        {value: 'IRF4 enhancer', badge: 1},
-        {value: 'NP, H1N1 PR/1934', badge: 1},
-        {value: 'p53', badge: 1},
-        {value: 'Minigene exon - AC-rich enhancer', badge: 1},
-        {value: 'SpCas9 (Human Codon Optimized)', badge: 2},
-        {value: 'PAB1', badge: 1},
-        {value: 'F9 promoter', badge: 1},
-        {value: 'MYC enhancer (rs6983267)', badge: 1},
-        {value: 'Gcn4', badge: 2},
-        {value: 'NCS1', badge: 1},
-        {value: 'MYC enhancer (rs11986220)', badge: 1},
-        {value: 'Minigene exon - pyrimidine sequence', badge: 1},
-        {value: 'Minigene exon - hnRNP D binding site', badge: 1},
-        {value: 'HBG1 promoter', badge: 1},
-        {value: 'Ubiquitin', badge: 4},
-        {value: 'BCL11A enhancer', badge: 1},
-        {value: 'Zika E protein MR766', badge: 1},
-        {value: 'SUMO1', badge: 2},
-        {value: 'LTV1 enhancer', badge: 2},
-        {value: 'TPK1', badge: 2},
-        {value: 'TEM-15 β-lactamase', badge: 2},
-        {value: 'SARS-CoV-2 receptor binding domain', badge: 4},
-        {value: 'TEM-19 β-lactamase', badge: 1},
-        {value: 'GP1BB promoter', badge: 1},
-        {value: 'Minigene exon - hnRNP I (PTB) binding site', badge: 1},
-        {value: 'UC88 enhancer', badge: 1},
-        {value: 'HNF4A promoter', badge: 1},
-        {value: 'ECR11 enhancer', badge: 1},
-        {value: 'TEM-17 β-lactamase', badge: 1},
-        {value: 'BRAF', badge: 1},
-        {value: 'FOXE1 promoter', badge: 1},
-        {value: 'ErbB2', badge: 1},
-        {value: 'SORT1 enhancer (flipped)', badge: 1},
-        {value: 'TCF7L2 enhancer', badge: 1},
-        {value: 'PyKS', badge: 1},
-        {value: 'Minigene exon - Wilms’ tumor gene', badge: 1},
-        {value: 'MSMB promoter', badge: 1},
-        {value: 'IGHG1', badge: 1}
-      ],
-      defaultTargetTypeOptions: [
-        {value: 'Other noncoding', badge: 10},
-        {value: 'Protein coding', badge: 185},
-        {value: 'Regulatory', badge: 35}
-      ],
-      defaultTargetOrganismOptions: [
-        {value: 'Homo sapiens', badge: 143},
-        {value: 'Mus musculus', badge: 5},
-        {value: 'Other - genome not listed', badge: 49},
-        {value: 'Saccharomyces cerevisiae', badge: 33}
-      ],
-      defaultPublicationAuthorOptions: [ // so many of these, just show A last names as placeholders
-        {value: 'Abbasi, Shawn A', badge: 1},
-        {value: 'Adamovich, Aleksandra I', badge: 2},
-        {value: 'Adkar, Bharat V', badge: 1},
-        {value: 'Aguirre, Andrew J', badge: 3},
-        {value: 'Ahituv, Nadav', badge: 33},
-        {value: 'Ahler, Ethan', badge: 4},
-        {value: 'Ahmad, Tariq', badge: 3},
-        {value: 'Akdoğan, Emel', badge: 5},
-        {value: 'Aleksandrov, Radoslav', badge: 2},
-        {value: 'Aloy, Patrick', badge: 9},
-        {value: 'Amorosi, Clara J', badge: 2},
-        {value: 'Andreev, Aleksandr', badge: 4},
-        {value: 'Andrews, Bryan', badge: 2},
-        {value: 'Andrie, Jennifer M', badge: 4},
-        {value: 'Anquetil, Vincent', badge: 10},
-        {value: 'Aramini, James', badge: 4},
-        {value: 'Araya, Carlos L', badge: 4},
-        {value: 'Arias, Mauricio A', badge: 10},
-        {value: 'Ashenberg, Orr', badge: 4},
-        {value: 'Ashmead, Julee', badge: 1},
-        {value: 'Ashworth, Alan', badge: 2},
-        {value: 'Aziz, Nazneen', badge: 1}
-      ],
-      defaultPublicationDatabaseOptions: [
-        {value: 'PubMed', badge: 403},
-        {value: 'bioRxiv', badge: 3},
-        {value: 'medRxiv', badge: 2}
-      ],
-      defaultPublicationJournalOptions: [
-      {value: 'ACS Chem Biol', badge: 18},
-      {value: 'Am J Hum Genet', badge: 22},
-      {value: 'Cancer Cell', badge: 2},
-      {value: 'Cell', badge: 14},
-      {value: 'Cell Rep', badge: 10},
-      {value: 'Cell Syst', badge: 4},
-      {value: 'Circ Genom Precis Med', badge: 2},
-      {value: 'Clin Transl Sci', badge: 4},
-      {value: 'Curr Biol', badge: 2},
-      {value: 'Elife', badge: 50},
-      {value: 'Evolution', badge: 8},
-      {value: 'G3 (Bethesda)', badge: 2},
-      {value: 'Genetics', badge: 14},
-      {value: 'Genome Biol', badge: 14},
-      {value: 'Genome Med', badge: 4},
-      {value: 'Genome Res', badge: 20},
-      {value: 'Hum Mutat', badge: 2},
-      {value: 'J Immunol', badge: 4},
-      {value: 'J Inherit Metab Dis', badge: 2},
-      {value: 'J Mol Biol', badge: 6},
-      {value: 'Microb Genom', badge: 4},
-      {value: 'Mol Biol Evol', badge: 14},
-      {value: 'Mol Cell', badge: 6},
-      {value: 'Mol Syst Biol', badge: 18},
-      {value: 'Nat Biotechnol', badge: 8},
-      {value: 'Nat Chem Biol', badge: 4},
-      {value: 'Nat Commun', badge: 64},
-      {value: 'Nat Genet', badge: 10},
-      {value: 'Nat Methods', badge: 12},
-      {value: 'Nature', badge: 78},
-      {value: 'Nucleic Acids Res', badge: 8},
-      {value: 'PLoS Genet', badge: 14},
-      {value: 'Pigment Cell Melanoma Res', badge: 2},
-      {value: 'Proc Natl Acad Sci U S A', badge: 6},
-      {value: 'Sci Rep', badge: 4},
-      {value: 'Science', badge: 2},
-      {value: 'Structure', badge: 2}
-      ],
       filterTargetNames: this.$route.query['target-names'] ? this.$route.query['target-names'].split(',') : [],
       filterTargetTypes: this.$route.query['target-types'] ? this.$route.query['target-types'].split(',') : [],
       filterTargetOrganismNames: this.$route.query['target-organism-names'] ? this.$route.query['target-organism-names'].split(',') : [],
@@ -314,7 +124,7 @@ export default {
         const valueFrequencies = _.countBy(values)
         return _.sortBy(_.keys(valueFrequencies)).map((value) => ({value, badge: valueFrequencies[value]}))
       } else {
-        return this.defaultTargetNameOptions
+        return null
       }
     },
     targetOrganismFilterOptions: function() {
@@ -323,7 +133,7 @@ export default {
         const valueFrequencies = _.countBy(values)
         return _.sortBy(_.keys(valueFrequencies)).map((value) => ({value, badge: valueFrequencies[value]}))
       } else {
-        return this.defaultTargetOrganismOptions
+        return null
       }
     },
     targetTypeFilterOptions: function() {
@@ -332,7 +142,7 @@ export default {
         const valueFrequencies = _.countBy(values)
         return _.sortBy(_.keys(valueFrequencies)).map((value) => ({value, badge: valueFrequencies[value]}))
       } else {
-        return this.defaultTargetTypeOptions
+        return null
       }
     },
     publicationAuthorFilterOptions: function() {
@@ -354,7 +164,7 @@ export default {
         const valueFrequencies = _.countBy(values)
         return _.sortBy(_.keys(valueFrequencies)).map((value) => ({value, badge: valueFrequencies[value]}))
       } else {
-        return this.defaultPublicationAuthorOptions
+        return null
       }
     },
     publicationDatabaseFilterOptions: function() {
@@ -372,7 +182,7 @@ export default {
         const valueFrequencies = _.countBy(values)
         return _.sortBy(_.keys(valueFrequencies)).map((value) => ({value, badge: valueFrequencies[value]}))
       } else {
-        return this.defaultPublicationDatabaseOptions
+        return null
       }
     },
     publicationJournalFilterOptions: function() {
@@ -390,7 +200,7 @@ export default {
         const valueFrequencies = _.countBy(values)
         return _.sortBy(_.keys(valueFrequencies)).map((value) => ({value, badge: valueFrequencies[value]}))
       } else {
-        return this.defaultPublicationJournalOptions
+        return null
       }
     }
   },

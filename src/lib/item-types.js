@@ -58,9 +58,9 @@ const itemTypes = {
     name: 'reference-genome', // TODO Redundant, change this structure
     restCollectionName: 'referenceGenomes'
   },
-  'scoreset': {
-    name: 'scoreset', // TODO Redundant, change this structure
-    restCollectionName: 'scoresets',
+  'scoreSet': {
+    name: 'scoreSet', // TODO Redundant, change this structure
+    restCollectionName: 'score-sets',
     primaryKey: 'urn'
   },
   'target-gene-search': {

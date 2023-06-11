@@ -6,7 +6,7 @@ import ExperimentEditor from '@/components/screens/ExperimentEditor'
 import ExperimentView from '@/components/screens/ExperimentView'
 import ExperimentSetView from '@/components/screens/ExperimentSetView'
 import HomeScreen from '@/components/screens/HomeScreen'
-import ScoresetEditor from '@/components/screens/ScoresetEditor'
+import ScoreSetEditor from '@/components/screens/ScoreSetEditor'
 import ScoreSetView from '@/components/screens/ScoreSetView'
 import SearchView from '@/components/screens/SearchView'
 import SettingsScreen from '@/components/screens/SettingsScreen'
@@ -43,12 +43,12 @@ const routes = [{
   path: '/users',
   component: UsersView
 }, {
-  name: 'experiment',
   path: '/experiments/:urn',
+  name: 'experiment',
   component: ExperimentView,
   props: (route) => ({itemId: route.params.urn})
 }, {
-  name: 'create-experiment',
+  name: 'createExperiment',
   path: '/create-experiment',
   component: ExperimentEditor,
   meta: {
@@ -56,43 +56,43 @@ const routes = [{
   }
 }, {
   path: '/experiments/:urn/edit',
-  name: '/edit-experiment',
+  name: '/editExperiment',
   component: ExperimentEditor,
   meta: {
     authName: oidc.authName
   },
   props: (route) => ({itemId: route.params.urn})
 }, {
-  name: 'create-scoreset',
-  path: '/create-scoreset',
-  component: ScoresetEditor,
+  path: '/create-score-set',
+  name: 'createScoreSet',
+  component: ScoreSetEditor,
   meta: {
     authName: oidc.authName
   }
 }, {
-  name: 'experimentset',
   path: '/experimentsets/:urn',
+  name: 'experimentset',
   component: ExperimentSetView,
   props: (route) => ({itemId: route.params.urn})
 }, {
-  name: 'createExperimentInExperimentset',
   path: '/experimentsets/:urn/create-experiment',
+  name: 'createExperimentInExperimentSet',
   component: ExperimentEditor,
   meta: {
     authName: oidc.authName
   },
   props: (route) => ({experimentSetUrn: route.params.urn})
 }, {
-  path: '/scoresets/:urn/edit',
-  name: '/edit-scoreset',
-  component: ScoresetEditor,
+  path: '/score-sets/:urn/edit',
+  name: 'editScoreSet',
+  component: ScoreSetEditor,
   meta: {
     authName: oidc.authName
   },
   props: (route) => ({itemId: route.params.urn})
 }, {
-  name: 'scoreset',
-  path: '/scoresets/:urn',
+  path: '/score-sets/:urn',
+  name: 'scoreSet',
   component: ScoreSetView,
   props: (route) => ({itemId: route.params.urn})
 }]

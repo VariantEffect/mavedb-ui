@@ -77,8 +77,8 @@ export default {
         to: '/create-experiment',
         available: ({authenticated}) => authenticated // oidc.isAuthenticated
       }, {
-        label: 'New scoreset',
-        to: '/create-scoreset',
+        label: 'New score set',
+        to: '/create-score-set',
         available: ({authenticated}) => authenticated // oidc.isAuthenticated
       }, {
         label: 'Users',

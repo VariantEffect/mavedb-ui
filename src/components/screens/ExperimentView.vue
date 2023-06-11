@@ -1,6 +1,6 @@
 <template>
   <DefaultLayout>
-    <div v-if="item" class="mave-scoreset">
+    <div v-if="item" class="mave-score-set">
       <div class="mave-1000px-col">
         <div class="mave-screen-title-bar">
           <div class="mave-screen-title">{{item.title || 'Untitled experiment'}}</div>
@@ -11,8 +11,8 @@
             </div>
           </div>
         </div>
-        <div v-if="item.shortDescription" class="mave-scoreset-description">{{item.shortDescription}}</div>
-        <h3><div v-if="item.urn" class="mave-scoreset-urn">{{item.urn}}</div></h3>
+        <div v-if="item.shortDescription" class="mave-score-set-description">{{item.shortDescription}}</div>
+        <h3><div v-if="item.urn" class="mave-score-set-urn">{{item.urn}}</div></h3>
       </div>
       <div class="mave-1000px-col">
         <div v-if="item.creationDate">Created {{formatDate(item.creationDate)}} <span v-if="item.createdBy">
@@ -23,26 +23,26 @@
         <div v-if="item.experimentSetUrn">Member of <router-link :to="{name: 'experimentset', params: {urn: item.experimentSetUrn}}">{{item.experimentSetUrn}}</router-link></div>
         <div v-if="item.currentVersion">Current version {{item.currentVersion}}</div>
 
-        <div class="mave-scoreset-section-title">Score Sets</div>
-          <div v-if="this.associatedScoresets.length!=0">
+        <div class="mave-score-set-section-title">Score Sets</div>
+          <div v-if="this.associatedScoreSets.length!=0">
             <ul>
-              <li v-for="scoreset in associatedScoresets" :key="scoreset.id">
-                <router-link :to="{name: 'scoreset', params: {urn: scoreset.urn}}">{{scoreset.urn}}</router-link>
+              <li v-for="scoreSet in associatedScoreSets" :key="scoreSet.id">
+                <router-link :to="{name: 'scoreSet', params: {urn: scoreSet.urn}}">{{scoreSet.urn}}</router-link>
               </li>
             </ul>
           </div>
           <div v-else>No associated score set</div>
 
         <div v-if="item.abstractText">
-          <div class="mave-scoreset-section-title">Abstract</div>
-          <div v-html="markdownToHtml(item.abstractText)" class="mave-scoreset-abstract"></div>
+          <div class="mave-score-set-section-title">Abstract</div>
+          <div v-html="markdownToHtml(item.abstractText)" class="mave-score-set-abstract"></div>
         </div>
         <div v-if="item.methodText">
-          <div class="mave-scoreset-section-title">Method</div>
-          <div v-html="markdownToHtml(item.methodText)" class="mave-scoreset-abstract"></div>
+          <div class="mave-score-set-section-title">Method</div>
+          <div v-html="markdownToHtml(item.methodText)" class="mave-score-set-abstract"></div>
         </div>
         <!--Temporary codes to show references. Will change it in the future.-->
-        <div class="mave-scoreset-section-title">Primary References</div>
+        <div class="mave-score-set-section-title">Primary References</div>
           <div v-if="item.primaryPublicationIdentifiers.length > 0">
             <div v-for="publication in item.primaryPublicationIdentifiers" :key="publication">
                 <ul style="list-style-type:square;">
@@ -51,7 +51,7 @@
             </div>
           </div>
           <div v-else>No associated primary publications.</div>
-          <div class="mave-scoreset-section-title">Secondary References</div>
+          <div class="mave-score-set-section-title">Secondary References</div>
           <div v-if="item.secondaryPublicationIdentifiers.length > 0">
             <div v-for="publication in item.secondaryPublicationIdentifiers" :key="publication">
                 <ul style="list-style-type:square;">
@@ -61,33 +61,33 @@
           </div>
           <div v-else>No associated secondary publications.</div>
         <div v-if="item.keywords && item.keywords.length > 0">
-          <div class="mave-scoreset-section-title">Keywords</div>
-          <div class="mave-scoreset-keywords">
+          <div class="mave-score-set-section-title">Keywords</div>
+          <div class="mave-score-set-keywords">
             <Chip :label="keyword"/>
             <!--<a v-for="(keyword, i) of item.keywords" :key="i" :href="`https://www.mavedb.org/search/?keywords=${keyword}`"><Chip :label="keyword"/></a>-->
           </div>
         </div>
 
-        <div v-if="this.associatedScoresets.length!=0">
-          <div v-for="scoreset in this.associatedScoresets.slice(0,1)" :key="scoreset">
-            <div class="mave-scoreset-section-title">Target</div>
-            <div v-if="scoreset.targetGene.name"><strong>Name:</strong> {{scoreset.targetGene.name}}</div>
-            <div v-if="scoreset.targetGene.category"><strong>Type:</strong> {{scoreset.targetGene.category}}</div>
-            <div v-if="scoreset.targetGene.referenceMaps?.[0]?.genome?.organismName"><strong>Organism:</strong> {{scoreset.targetGene.referenceMaps[0].genome.organismName}}</div>
-            <div v-if="scoreset.targetGene.referenceMaps?.[0]?.genome?.shortName"><strong>Reference genome:</strong> {{scoreset.targetGene.referenceMaps[0].genome.shortName}}</div>
+        <div v-if="this.associatedScoreSets.length!=0">
+          <div v-for="scoreSet in this.associatedScoreSets.slice(0,1)" :key="scoreSet">
+            <div class="mave-score-set-section-title">Target</div>
+            <div v-if="scoreSet.targetGene.name"><strong>Name:</strong> {{scoreSet.targetGene.name}}</div>
+            <div v-if="scoreSet.targetGene.category"><strong>Type:</strong> {{scoreSet.targetGene.category}}</div>
+            <div v-if="scoreSet.targetGene.referenceMaps?.[0]?.genome?.organismName"><strong>Organism:</strong> {{scoreSet.targetGene.referenceMaps[0].genome.organismName}}</div>
+            <div v-if="scoreSet.targetGene.referenceMaps?.[0]?.genome?.shortName"><strong>Reference genome:</strong> {{scoreSet.targetGene.referenceMaps[0].genome.shortName}}</div>
             <!--TODO: Miss TaxID part-->
-            <div v-if="scoreset.targetGene.wtSequence?.sequence" style="word-break: break-word"><strong>Reference sequence: </strong>
-              <template v-if="scoreset.targetGene.wtSequence.sequence.length >= 500">
-                <template v-if="readMore == true">{{scoreset.targetGene.wtSequence.sequence.substring(0, 500) + "...."}} </template>
-                <template v-if="readMore == false">{{scoreset.targetGene.wtSequence.sequence}}</template>
+            <div v-if="scoreSet.targetGene.wtSequence?.sequence" style="word-break: break-word"><strong>Reference sequence: </strong>
+              <template v-if="scoreSet.targetGene.wtSequence.sequence.length >= 500">
+                <template v-if="readMore == true">{{scoreSet.targetGene.wtSequence.sequence.substring(0, 500) + "...."}} </template>
+                <template v-if="readMore == false">{{scoreSet.targetGene.wtSequence.sequence}}</template>
                 <Button @click="showMore" v-if="readMore == true" class="p-button-text p-button-sm p-button-info">Show more</Button>
                 <Button @click="showLess" v-if="readMore == false" class="p-button-text p-button-sm p-button-info">Show less</Button>
-              </template><template v-else>{{scoreset.targetGene.wtSequence.sequence}}</template>
+              </template><template v-else>{{scoreSet.targetGene.wtSequence.sequence}}</template>
             </div>
           </div>
         </div>
 
-        <div class="mave-scoreset-section-title">External identifier</div>
+        <div class="mave-score-set-section-title">External identifier</div>
         <strong>DOI: </strong>
         <div v-if="item.doiIdentifiers.length!=0">
           <ul style="list-style-type:square">
@@ -147,12 +147,12 @@ export default {
   },
 
   data: () => ({
-    associatedScoresets: [],
+    associatedScoreSets: [],
     readMore: true
   }),
 
   created(){
-    this.getAssociatedScoresets();
+    this.getAssociatedScoreSets();
   },
 
   watch: {
@@ -217,9 +217,9 @@ export default {
     get(...args) {
       return _.get(...args)
     },
-    getAssociatedScoresets: async function(){
-      let response = await axios.get(`${config.apiBaseUrl}/experiments/${this.itemId}/scoresets`)
-      this.associatedScoresets = response.data
+    getAssociatedScoreSets: async function(){
+      let response = await axios.get(`${config.apiBaseUrl}/experiments/${this.itemId}/score-sets`)
+      this.associatedScoreSets = response.data
     },
     showMore: function(){
       this.readMore = false
@@ -256,17 +256,17 @@ export default {
 
 /* Score set */
 
-.mave-scoreset {
+.mave-score-set {
   padding: 20px;
 }
 
-.mave-scoreset-heatmap-pane {
+.mave-score-set-heatmap-pane {
   margin: 10px 0;
 }
 
 /* Score set details */
 
-.mave-scoreset-section-title {
+.mave-score-set-section-title {
   /*font-family: Helvetica, Verdana, Arial, sans-serif;*/
   font-size: 24px;
   padding: 0 0 5px 0;
@@ -274,28 +274,28 @@ export default {
   margin: 20px 0 10px 0;
 }
 
-.mave-scoreset-description {
+.mave-score-set-description {
   /*font-family: Helvetica, Verdana, Arial, sans-serif;*/
   margin: 0 0 10px 0;
 }
 
-.mave-scoreset-urn {
+.mave-score-set-urn {
   /*font-family: Helvetica, Verdana, Arial, sans-serif;*/
 }
 
-.mave-scoreset-keywords .p-chip {
+.mave-score-set-keywords .p-chip {
   /*font-family: Helvetica, Verdana, Arial, sans-serif;*/
   margin: 0 5px;
 }
 
 /* Formatting in Markdown blocks */
 
-.mave-scoreset-abstract {
+.mave-score-set-abstract {
   /*font-family: Helvetica, Verdana, Arial, sans-serif;*/
   font-size: 20px;
 }
 
-.mave-scoreset-abstract::v-deep code {
+.mave-score-set-abstract::v-deep code {
   color: #987cb8;
   font-size: 87.5%;
   word-wrap: break-word;

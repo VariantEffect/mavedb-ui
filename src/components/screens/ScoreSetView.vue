@@ -1,6 +1,6 @@
 <template>
   <DefaultLayout>
-    <div v-if="item" class="mave-scoreset">
+    <div v-if="item" class="mave-score-set">
       <div class="mave-1000px-col">
         <div class="mave-screen-title-bar">
           <div class="mave-screen-title">{{item.title || 'Untitled score set'}}</div>
@@ -15,10 +15,10 @@
             </div>
           </div>
         </div>
-        <div v-if="item.shortDescription" class="mave-scoreset-description">{{item.shortDescription}}</div>
-        <div v-if="item.urn" class="mave-scoreset-urn"><h3>{{item.urn}}</h3></div>
+        <div v-if="item.shortDescription" class="mave-score-set-description">{{item.shortDescription}}</div>
+        <div v-if="item.urn" class="mave-score-set-urn"><h3>{{item.urn}}</h3></div>
       </div>
-      <div v-if="showHeatmap && scores" class="mave-scoreset-heatmap-pane">
+      <div v-if="showHeatmap && scores" class="mave-score-set-heatmap-pane">
         <ScoreSetHeatmap :scoreSet="item" :scores="scores" />
       </div>
       <div class="mave-1000px-col">
@@ -36,12 +36,12 @@
         </div>
         <div v-if="item.dataUsagePolicy">Data usage policy: {{ item.dataUsagePolicy }}</div>
         <div v-if="item.experiment">Member of <router-link :to="{name: 'experiment', params: {urn: item.experiment.urn}}">{{item.experiment.urn}}</router-link></div>
-        <div v-if="item.supersedingScoreset">Current version <router-link :to="{name: 'scoreset', params: {urn: item.supersedingScoreset.urn}}">{{item.supersedingScoreset.urn}}</router-link></div>
-        <div v-else>Current version <router-link :to="{name: 'scoreset', params: {urn: item.urn}}">{{item.urn}}</router-link></div>
-        <div v-if="item.metaAnalysisSourceScoresets.length!=0">Meta-analyzes
-          <template v-for="(scoreset,index) in sortedMetaAnalysis" :key="scoreset">
-            <router-link :to="{name: 'scoreset', params: {urn: scoreset.urn}}">{{scoreset.urn}}</router-link>
-            <template v-if="index !== item.metaAnalysisSourceScoresets.length-1"> · </template>
+        <div v-if="item.supersedingScoreSet">Current version <router-link :to="{name: 'scoreSet', params: {urn: item.supersedingScoreSet.urn}}">{{item.supersedingScoreSet.urn}}</router-link></div>
+        <div v-else>Current version <router-link :to="{name: 'scoreSet', params: {urn: item.urn}}">{{item.urn}}</router-link></div>
+        <div v-if="item.metaAnalysisSourceScoreSets.length!=0">Meta-analyzes
+          <template v-for="(scoreSet,index) in sortedMetaAnalysis" :key="scoreSet">
+            <router-link :to="{name: 'scoreSet', params: {urn: scoreSet.urn}}">{{scoreSet.urn}}</router-link>
+            <template v-if="index !== item.metaAnalysisSourceScoreSets.length-1"> · </template>
           </template>
         </div>
         <div>Download files <Button class="p-button-outlined p-button-sm" @click="downloadFile('scores')">Scores</Button>&nbsp;
@@ -53,14 +53,14 @@
           </template>
         </div>
         <div v-if="item.abstractText">
-          <div class="mave-scoreset-section-title">Abstract</div>
-          <div v-html="markdownToHtml(item.abstractText)" class="mave-scoreset-abstract"></div>
+          <div class="mave-score-set-section-title">Abstract</div>
+          <div v-html="markdownToHtml(item.abstractText)" class="mave-score-set-abstract"></div>
         </div>
         <div v-if="item.methodText">
-          <div class="mave-scoreset-section-title">Method</div>
-          <div v-html="markdownToHtml(item.methodText)" class="mave-scoreset-abstract"></div>
+          <div class="mave-score-set-section-title">Method</div>
+          <div v-html="markdownToHtml(item.methodText)" class="mave-score-set-abstract"></div>
         </div>
-        <div class="mave-scoreset-section-title">Primary References</div>
+        <div class="mave-score-set-section-title">Primary References</div>
           <div v-if="item.primaryPublicationIdentifiers.length > 0">
             <div v-for="publication in item.primaryPublicationIdentifiers" :key="publication">
                 <ul style="list-style-type:square;">
@@ -69,7 +69,7 @@
             </div>
           </div>
           <div v-else>No associated primary publications.</div>
-          <div class="mave-scoreset-section-title">Secondary References</div>
+          <div class="mave-score-set-section-title">Secondary References</div>
           <div v-if="item.secondaryPublicationIdentifiers.length > 0">
             <div v-for="publication in item.secondaryPublicationIdentifiers" :key="publication">
                 <ul style="list-style-type:square;">
@@ -78,20 +78,20 @@
             </div>
           </div>
           <div v-else>No associated secondary publications.</div>
-        <div class="mave-scoreset-section-title">Data Usage Policy</div>
+        <div class="mave-score-set-section-title">Data Usage Policy</div>
           <div v-if="item.dataUsagePolicy">
-            <div v-html="markdownToHtml(item.dataUsagePolicy)" class="mave-scoreset-abstract"></div>
+            <div v-html="markdownToHtml(item.dataUsagePolicy)" class="mave-score-set-abstract"></div>
           </div>
           <div v-else>Not specified</div>
 
         <div v-if="item.keywords && item.keywords.length > 0">
-          <div class="mave-scoreset-section-title">Keywords</div>
-          <div class="mave-scoreset-keywords">
+          <div class="mave-score-set-section-title">Keywords</div>
+          <div class="mave-score-set-keywords">
             <a v-for="(keyword, i) of item.keywords" :key="i" :href="`https://www.mavedb.org/search/?keywords=${keyword}`"><Chip :label="keyword" /></a>
           </div>
         </div>
         <div v-if="item.targetGene">
-          <div class="mave-scoreset-section-title">Target</div>
+          <div class="mave-score-set-section-title">Target</div>
           <div v-if="item.targetGene.name"><strong>Name:</strong> {{item.targetGene.name}}</div>
           <div v-if="item.targetGene.category"><strong>Type:</strong> {{item.targetGene.category}}</div>
           <div v-if="item.targetGene.referenceMaps?.[0]?.genome?.organismName"><strong>Organism:</strong> {{item.targetGene.referenceMaps[0].genome.organismName}}</div>
@@ -120,7 +120,7 @@
           </div>
         </div>
 
-        <div class="mave-scoreset-section-title">External identifier</div>
+        <div class="mave-score-set-section-title">External identifier</div>
         <strong>DOI: </strong>
         <div v-if="item.doiIdentifiers.length!=0">
           <ul style="list-style-type:square">
@@ -128,7 +128,7 @@
           </ul>
         </div><template v-else>No associated DOIs<br/></template>
 
-        <div class="mave-scoreset-section-title">Variants</div>
+        <div class="mave-score-set-section-title">Variants</div>
         <div v-if="item.numVariants > 10">Below is a sample of the first 10 variants.
             Please download the file on the top page if you want to read the whole variants list.</div>
         <br/>
@@ -233,14 +233,14 @@ export default {
       return showCountColumns ? [...fixedColumns, ...this.item?.datasetColumns?.count_columns || []] : []
     },
     sortedMetaAnalysis: function(){
-      return _.orderBy(this.item.metaAnalysisSourceScoresets, 'urn')
+      return _.orderBy(this.item.metaAnalysisSourceScoreSets, 'urn')
     },
   },
   setup: () => {
     const scoresRemoteData = useRemoteData()
     return {
       ...useFormatters(),
-      ...useItem({itemTypeName: 'scoreset'}),
+      ...useItem({itemTypeName: 'scoreSet'}),
       scoresData: scoresRemoteData.data,
       scoresDataStatus: scoresRemoteData.dataStatus,
       setScoresDataUrl: scoresRemoteData.setDataUrl,
@@ -294,7 +294,7 @@ export default {
   methods: {
     editItem: function() {
       if (this.item) {
-        this.$router.replace({path: `/scoresets/${this.item.urn}/edit`})
+        this.$router.replace({path: `/score-sets/${this.item.urn}/edit`})
       }
     },
     deleteItem: async function() {
@@ -306,7 +306,7 @@ export default {
         accept: async () => {
           if (this.item) {
             try {
-              response = await axios.delete(`${config.apiBaseUrl}/scoresets/${this.item.urn}`, this.item)
+              response = await axios.delete(`${config.apiBaseUrl}/score-sets/${this.item.urn}`, this.item)
             } catch (e) {
               response = e.response || {status: 500}
             }
@@ -316,7 +316,7 @@ export default {
               //const deletedItem = response.data
               console.log('Deleted item')
               this.$router.replace({path: `/dashboard`})
-              this.$toast.add({severity:'success', summary: 'Your scoreset was successfully deleted.', life: 3000})
+              this.$toast.add({severity:'success', summary: 'Your score set was successfully deleted.', life: 3000})
             } else if (response.data && response.data.detail) {
               const formValidationErrors = {}
               for (const error of response.data.detail) {
@@ -346,7 +346,7 @@ export default {
       let response = null
       try {
         if (this.item) {
-          response = await axios.post(`${config.apiBaseUrl}/scoresets/${this.item.urn}/publish`, this.item)
+          response = await axios.post(`${config.apiBaseUrl}/score-sets/${this.item.urn}/publish`, this.item)
           // make sure scroesets cannot be published twice API, but also remove the button on UI side
         }
       } catch (e) {
@@ -358,8 +358,8 @@ export default {
         const publishedItem = response.data
         if (this.item) {
           console.log('Published item')
-          this.$router.replace({path: `/scoresets/${publishedItem.urn}`})
-          this.$toast.add({severity:'success', summary: 'Your scoreset was successfully published.', life: 3000})
+          this.$router.replace({path: `/score-sets/${publishedItem.urn}`})
+          this.$toast.add({severity:'success', summary: 'Your score set was successfully published.', life: 3000})
         }
       } else if (response.data && response.data.detail) {
         const formValidationErrors = {}
@@ -378,9 +378,9 @@ export default {
       let response = null
       try{
         if (this.item && download_type=="counts"){
-          response = await axios.get(`${config.apiBaseUrl}/scoresets/${this.item.urn}/counts`)
+          response = await axios.get(`${config.apiBaseUrl}/score-sets/${this.item.urn}/counts`)
         }else if (this.item && download_type=="scores"){
-          response = await axios.get(`${config.apiBaseUrl}/scoresets/${this.item.urn}/scores`)
+          response = await axios.get(`${config.apiBaseUrl}/score-sets/${this.item.urn}/scores`)
         }
       }catch (e){
         response = e.response || {status: 500}
@@ -420,7 +420,7 @@ export default {
     },
     loadTableScores: async function(){
       if (this.item){
-        const response = await axios.get(`${config.apiBaseUrl}/scoresets/${this.item.urn}/scores`)
+        const response = await axios.get(`${config.apiBaseUrl}/score-sets/${this.item.urn}/scores`)
         if (response.data) {
           if (this.item.numVariants <= 10){
             this.scoresTable = parseScores(response.data)
@@ -432,7 +432,7 @@ export default {
     },
     loadTableCounts: async function(){
       if (this.item){
-        const response = await axios.get(`${config.apiBaseUrl}/scoresets/${this.item.urn}/counts`)
+        const response = await axios.get(`${config.apiBaseUrl}/score-sets/${this.item.urn}/counts`)
         console.log(response)
         if (response.data) {
           if (this.item.numVariants <= 10){
@@ -506,17 +506,17 @@ export default {
 
 /* Score set */
 
-.mave-scoreset {
+.mave-score-set {
   padding: 20px;
 }
 
-.mave-scoreset-heatmap-pane {
+.mave-score-set-heatmap-pane {
   margin: 10px 0;
 }
 
 /* Score set details */
 
-.mave-scoreset-section-title {
+.mave-score-set-section-title {
   /*font-family: Helvetica, Verdana, Arial, sans-serif;*/
   font-size: 24px;
   padding: 0 0 5px 0;
@@ -524,28 +524,28 @@ export default {
   margin: 20px 0 10px 0;
 }
 
-.mave-scoreset-description {
+.mave-score-set-description {
   /*font-family: Helvetica, Verdana, Arial, sans-serif;*/
   margin: 0 0 10px 0;
 }
 
-.mave-scoreset-urn {
+.mave-score-set-urn {
   /*font-family: Helvetica, Verdana, Arial, sans-serif;*/
 }
 
-.mave-scoreset-keywords .p-chip {
+.mave-score-set-keywords .p-chip {
   /*font-family: Helvetica, Verdana, Arial, sans-serif;*/
   margin: 0 5px;
 }
 
 /* Formatting in Markdown blocks */
 
-.mave-scoreset-abstract {
+.mave-score-set-abstract {
   /*font-family: Helvetica, Verdana, Arial, sans-serif;*/
   font-size: 20px;
 }
 
-.mave-scoreset-abstract::v-deep code {
+.mave-score-set-abstract::v-deep code {
   color: #987cb8;
   font-size: 87.5%;
   word-wrap: break-word;

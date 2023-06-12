@@ -12,11 +12,11 @@ const itemTypes = {
   },
   'doi-identifier-search': {
     name: 'doi-identifier', // TODO Redundant, change this structure
-    restCollectionName: 'doiIdentifiers',
+    restCollectionName: 'doi-identifiers',
     httpOptions: {
       list: {
         method: 'post',
-        url: `${config.apiBaseUrl}/doiIdentifiers/search`
+        url: `${config.apiBaseUrl}/doi-identifiers/search`
       }
     }
   },
@@ -27,7 +27,7 @@ const itemTypes = {
   },
   'experimentSet': {
     name: 'experimentSet',
-    restCollectionName: 'experimentSets',
+    restCollectionName: 'experiment-sets',
     primaryKey: 'urn'
   },
   'license': {
@@ -36,50 +36,50 @@ const itemTypes = {
   },
   'publication-identifier-search': {
     name: 'publication-identifier', // TODO Redundant, change this structure
-    restCollectionName: 'publicationIdentifiers',
+    restCollectionName: 'publication-identifiers',
     httpOptions: {
       list: {
         method: 'post',
-        url: `${config.apiBaseUrl}/publicationIdentifiers/search`
+        url: `${config.apiBaseUrl}/publication-identifiers/search`
       }
     }
   },
   'raw-read-identifier-search': {
     name: 'raw-read-identifier', // TODO Redundant, change this structure
-    restCollectionName: 'rawReadIdentifiers',
+    restCollectionName: 'raw-read-identifiers',
     httpOptions: {
       list: {
         method: 'post',
-        url: `${config.apiBaseUrl}/rawReadIdentifiers/search`
+        url: `${config.apiBaseUrl}/raw-read-identifiers/search`
       }
     }
   },
   'reference-genome': {
     name: 'reference-genome', // TODO Redundant, change this structure
-    restCollectionName: 'referenceGenomes'
+    restCollectionName: 'reference-genomes'
   },
-  'scoreset': {
-    name: 'scoreset', // TODO Redundant, change this structure
-    restCollectionName: 'scoresets',
+  'scoreSet': {
+    name: 'scoreSet', // TODO Redundant, change this structure
+    restCollectionName: 'score-sets',
     primaryKey: 'urn'
   },
   'target-gene-search': {
     name: 'target-gene', // TODO Redundant, change this structure
-    restCollectionName: 'targetGenes',
+    restCollectionName: 'target-genes',
     httpOptions: {
       list: {
         method: 'post',
-        url: `${config.apiBaseUrl}/targetGenes/search`
+        url: `${config.apiBaseUrl}/target-genes/search`
       }
     }
   },
   'uniprot-identifier-search': {
     name: 'uniprot-identifier', // TODO Redundant, change this structure
-    restCollectionName: 'targetGeneIdentifiers',
+    restCollectionName: 'target-gene-identifiers',
     httpOptions: {
       list: {
         method: 'post',
-        url: `${config.apiBaseUrl}/targetGeneIdentifiers/search?db_name=UniProt`
+        url: `${config.apiBaseUrl}/target-gene-identifiers/search?db_name=UniProt`
       }
     }
   },
@@ -95,11 +95,11 @@ const itemTypes = {
   },
   'refseq-identifier-search': {
     name: 'refseq-identifier', // TODO Redundant, change this structure
-    restCollectionName: 'targetGeneIdentifiers',
+    restCollectionName: 'target-gene-identifiers',
     httpOptions: {
       list: {
         method: 'post',
-        url: `${config.apiBaseUrl}/targetGeneIdentifiers/search?db_name=RefSeq`
+        url: `${config.apiBaseUrl}/target-gene-identifiers/search?db_name=RefSeq`
       }
     }
   },

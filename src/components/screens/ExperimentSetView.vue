@@ -1,6 +1,6 @@
 <template>
   <DefaultLayout>
-    <div v-if="item" class="mave-full-height mave-scoreset mave-scroll-vertical">
+    <div v-if="item" class="mave-full-height mave-score-set mave-scroll-vertical">
       <div class="mave-1000px-col">
         <div class="mave-screen-title-bar">
           <div class="mave-screen-title">{{item.urn}}</div>
@@ -16,7 +16,7 @@
         <div v-if="item.creationDate">Created {{formatDate(item.creationDate)}} </div>
         <div v-if="item.modificationDate">Last updated {{formatDate(item.modificationDate)}} </div>
         <div v-if="item.publishedDate">Published {{formatDate(item.publishedDate)}}</div>
-        <div class="mave-scoreset-section-title">Experiments</div>
+        <div class="mave-score-set-section-title">Experiments</div>
           <div v-if="item.experiments.length!=0">
             <ul style="list-style-type:square">
               <li v-for="ex in item.experiments" :key="ex">
@@ -91,7 +91,7 @@ export default {
   methods: {
     
     addExperiment: function() {
-      this.$router.push({name: 'createExperimentInExperimentset', params: {urn: this.item.urn}})
+      this.$router.push({name: 'createExperimentInExperimentSet', params: {urn: this.item.urn}})
     },
     markdownToHtml: function(markdown) {
       return marked(markdown)
@@ -127,17 +127,17 @@ export default {
 
 /* Score set */
 
-.mave-scoreset {
+.mave-score-set {
   padding: 20px;
 }
 
-.mave-scoreset-heatmap-pane {
+.mave-score-set-heatmap-pane {
   margin: 10px 0;
 }
 
 /* Score set details */
 
-.mave-scoreset-section-title {
+.mave-score-set-section-title {
   /*font-family: Helvetica, Verdana, Arial, sans-serif;*/
   font-size: 24px;
   padding: 0 0 5px 0;
@@ -145,28 +145,28 @@ export default {
   margin: 20px 0 10px 0;
 }
 
-.mave-scoreset-description {
+.mave-score-set-description {
   /*font-family: Helvetica, Verdana, Arial, sans-serif;*/
   margin: 0 0 10px 0;
 }
 
-.mave-scoreset-urn {
+.mave-score-set-urn {
   /*font-family: Helvetica, Verdana, Arial, sans-serif;*/
 }
 
-.mave-scoreset-keywords .p-chip {
+.mave-score-set-keywords .p-chip {
   /*font-family: Helvetica, Verdana, Arial, sans-serif;*/
   margin: 0 5px;
 }
 
 /* Formatting in Markdown blocks */
 
-.mave-scoreset-abstract {
+.mave-score-set-abstract {
   /*font-family: Helvetica, Verdana, Arial, sans-serif;*/
   font-size: 20px;
 }
 
-.mave-scoreset-abstract::v-deep code {
+.mave-score-set-abstract::v-deep code {
   color: #987cb8;
   font-size: 87.5%;
   word-wrap: break-word;

@@ -186,7 +186,7 @@
           </Card>
           <Card v-if="item">
             <template #content>
-              <div>{{item.numScoresets}} scoresets loaded</div>
+              <div>{{item.numScoreSets}} score sets loaded</div>
             </template>
           </Card>
         </div>

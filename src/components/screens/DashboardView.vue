@@ -7,7 +7,7 @@
           <div class="mavedb-search-header" style="display: none;">
             <h1>Search MaveDB Experiments and Score Sets</h1>
           </div>
-          <h2 class="mave-scoreset-section-title">Published Scoresets</h2>
+          <h2 class="mave-score-set-section-title">Published Score sets</h2>
             <div class="mavedb-search-form">
               <span class="p-input-icon-left">
                 <i class="pi pi-search" />
@@ -16,7 +16,7 @@
             </div>
             <div class="mavedb-search-results">
               <FlexDataTable
-                  :data="publishedScoresets"
+                  :data="publishedScoreSets"
                   :options="tableOptions"
                   :scrollX="true"
                   :scrollY="true"
@@ -26,11 +26,11 @@
       </TabPanel>
       <TabPanel header="Unpublished">
         <div class="mavedb-search-view">
-          <h2 class="mave-scoreset-section-title">Unpublished Scoresets</h2>
+          <h2 class="mave-score-set-section-title">Unpublished Score sets</h2>
           <div class="mavedb-search-view">
             <div class="mavedb-search-results">
               <FlexDataTable
-                  :data="unpublishedScoresets"
+                  :data="unpublishedScoreSets"
                   :options="tableOptions"
                   :scrollX="true"
                   :scrollY="true"
@@ -68,10 +68,10 @@ export default {
     return {
       //currentUser: user,
       searchText: null,
-      scoresets: [],
-      publishedScoresets: [],
-      unpublishedScoresets: [],
-      displayedUnplublishedScoresets: false,
+      scoreSets: [],
+      publishedScoreSets: [],
+      unpublishedScoreSets: [],
+      displayedUnplublishedScoreSets: false,
       tableOptions: {
         columns: [
           {
@@ -81,7 +81,7 @@ export default {
             render: function (data) { // }, type, row) {
               var urn = data
               var urnDisplay = urn  // row['urnDisplay']
-              const url = self.$router.resolve({path: `/scoresets/${urn}`}).href
+              const url = self.$router.resolve({path: `/score-sets/${urn}`}).href
               return ('<a href="' + url + '">' + urnDisplay + '</a>')  // TODO Escape the text.
             },
           },
@@ -94,7 +94,7 @@ export default {
           ), title: 'Target organism'},
         ],
         language: {
-          emptyTable: 'You do not have any scoresets matching the request.'
+          emptyTable: 'You do not have any score sets matching the request.'
         },
         rowGroup: {
           dataSrc: 'experiment.urn',
@@ -132,7 +132,7 @@ export default {
       if (this.searchText && this.searchText.length > 0) {
         await this.fetchSearchResults()
       } else {
-        this.scoresets = []
+        this.scoreSets = []
       }
       */
     },
@@ -140,7 +140,7 @@ export default {
       try {
         // this response should be true to get published data
         let response = await axios.post(
-          `${config.apiBaseUrl}/me/scoresets/search`,
+          `${config.apiBaseUrl}/me/score-sets/search`,
           {
             text: this.searchText || null,
           },
@@ -150,19 +150,19 @@ export default {
             }
           }
         )
-        this.scoresets = response.data || []
-        // reset published scoresets search results when using search bar
-        this.publishedScoresets = []
-        this.unpublishedScoresets = []
-        // Separate the response.data into published scoreset and unpublished scoreset.
-        for (let i=0, len = this.scoresets.length; i<len; i++){
-          console.log(this.scoresets[i])
-          if (this.scoresets[i].publishedDate == null){
-            // do not add to unpublished scoresets if it is already populated
-            this.unpublishedScoresets.push(this.scoresets[i])
+        this.scoreSets = response.data || []
+        // reset published score sets search results when using search bar
+        this.publishedScoreSets = []
+        this.unpublishedScoreSets = []
+        // Separate the response.data into published score set and unpublished score set.
+        for (let i=0, len = this.scoreSets.length; i<len; i++){
+          console.log(this.scoreSets[i])
+          if (this.scoreSets[i].publishedDate == null){
+            // do not add to unpublished score sets if it is already populated
+            this.unpublishedScoreSets.push(this.scoreSets[i])
           }
           else{
-            this.publishedScoresets.push(this.scoresets[i])
+            this.publishedScoreSets.push(this.scoreSets[i])
           }
         }
       } catch (err) {

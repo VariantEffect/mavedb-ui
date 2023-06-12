@@ -1,6 +1,6 @@
 <template>
   <DefaultLayout>
-    <div class="mave-scoreset-editor">
+    <div class="mave-score-set-editor">
       <div class="grid">
         <div class="col-12">
           <div v-if="itemStatus != 'NotLoaded'" class="mave-screen-title-bar">
@@ -43,54 +43,54 @@
                   <span v-if="validationErrors.experiment" class="mave-field-error">{{validationErrors.experiment}}</span>
                 </div>
               </div>
-              <div v-if="itemStatus != 'NotLoaded' && supersedesScoreset">
+              <div v-if="itemStatus != 'NotLoaded' && supersedesScoreSet">
                 Supersedes:
-                <router-link :to="{name: 'scoreset', params: {urn: supersedesScoreset.urn}}">{{supersedesScoreset.title}}</router-link>
+                <router-link :to="{name: 'scoreSet', params: {urn: supersedesScoreSet.urn}}">{{supersedesScoreSet.title}}</router-link>
               </div>
               <div v-if="itemStatus == 'NotLoaded'" class="field">
                 <span class="p-float-label">
                   <AutoComplete
-                      ref="supersededScoresetInput"
-                      v-model="supersededScoreset"
-                      :id="$scopedId('input-supersededScoreset')"
+                      ref="supersededScoreSetInput"
+                      v-model="supersededScoreSet"
+                      :id="$scopedId('input-supersededScoreSet')"
                       field="title"
                       :forceSelection="true"
-                      :suggestions="supersededScoresetSuggestionsList"
-                      @complete="searchSupersededScoresets"
+                      :suggestions="supersededScoreSetSuggestionsList"
+                      @complete="searchSupersededScoreSets"
                   >
                     <template #item="slotProps">
                       {{slotProps.item.urn}}: {{slotProps.item.title}}
                     </template>
                   </AutoComplete>
-                  <label :for="$scopedId('input-supersededScoreset')">Supersedes</label>
+                  <label :for="$scopedId('input-supersededScoreSet')">Supersedes</label>
                 </span>
-                <span v-if="validationErrors.supersededScoresetUrn" class="mave-field-error">{{validationErrors.supersededScoresetUrn}}</span>
+                <span v-if="validationErrors.supersededScoreSetUrn" class="mave-field-error">{{validationErrors.supersededScoreSetUrn}}</span>
               </div>
-              <div v-if="itemStatus != 'NotLoaded' && metaAnalysisSourceScoresets.length > 0">
+              <div v-if="itemStatus != 'NotLoaded' && metaAnalysisSourceScoreSets.length > 0">
                 Meta-analysis for:<br />
-                <div v-for="metaAnalysisSourceScoreset of metaAnalysisSourceScoresets" :key="metaAnalysisSourceScoreset">
-                  <router-link :to="{name: 'scoreset', params: {urn: metaAnalysisSourceScoreset.urn}}">{{metaAnalysisSourceScoreset.title}}</router-link>
+                <div v-for="metaAnalysisSourceScoreSet of metaAnalysisSourceScoreSets" :key="metaAnalysisSourceScoreSet">
+                  <router-link :to="{name: 'scoreSet', params: {urn: metaAnalysisSourceScoreSet.urn}}">{{metaAnalysisSourceScoreSet.title}}</router-link>
                 </div>
               </div>
               <div v-if="itemStatus == 'NotLoaded'" class="field">
                 <span class="p-float-label">
                   <AutoComplete
-                      ref="metaAnalysisSourceScoresetsInput"
-                      v-model="metaAnalysisSourceScoresets"
-                      :id="$scopedId('input-metaAnalysisSourceScoresets')"
+                      ref="metaAnalysisSourceScoreSetsInput"
+                      v-model="metaAnalysisSourceScoreSets"
+                      :id="$scopedId('input-metaAnalysisSourceScoreSets')"
                       field="title"
                       :forceSelection="true"
                       :multiple="true"
-                      :suggestions="metaAnalysisSourceScoresetSuggestionsList"
-                      @complete="searchMetaAnalysisSourceScoresets"
+                      :suggestions="metaAnalysisSourceScoreSetSuggestionsList"
+                      @complete="searchMetaAnalysisSourceScoreSets"
                   >
                     <template #item="slotProps">
                       {{slotProps.item.urn}}: {{slotProps.item.title}}
                     </template>
                   </AutoComplete>
-                  <label :for="$scopedId('input-metaAnalysisSourceScoresets')">Meta-analysis for</label>
+                  <label :for="$scopedId('input-metaAnalysisSourceScoreSets')">Meta-analysis for</label>
                 </span>
-                <span v-if="validationErrors.metaAnalysisSourceScoresetUrns" class="mave-field-error">{{validationErrors.metaAnalysisSourceScoresetUrns}}</span>
+                <span v-if="validationErrors.metaAnalysisSourceScoreSetUrns" class="mave-field-error">{{validationErrors.metaAnalysisSourceScoreSetUrns}}</span>
               </div>
             </template>
           </Card>
@@ -214,7 +214,7 @@
                 <span v-if="validationErrors.primaryPublicationIdentifiers" class="mave-field-error">{{validationErrors.primaryPublicationIdentifiers}}</span>
               </div>
               <Message v-if="experiment" severity="info">
-                  Some fields were autopopulated based on the selected experiment and should be inspected to ensure they are still relevant to this scoreset.
+                  Some fields were autopopulated based on the selected experiment and should be inspected to ensure they are still relevant to this score set.
               </Message>
                 <div class="field">
                   <span class="p-float-label">
@@ -468,7 +468,7 @@ import useFormatters from '@/composition/formatters'
 const externalGeneDatabases = ['UniProt', 'Ensembl', 'RefSeq']
 
 export default {
-  name: 'ScoresetEditor',
+  name: 'ScoreSetEditor',
   components: { AutoComplete, Button, Card, Chips, DefaultLayout, Dropdown, FileUpload, InputNumber, InputText, Message, Multiselect, ProgressSpinner, SelectButton, TabPanel, TabView, Textarea},
 
   setup: () => {
@@ -492,7 +492,7 @@ export default {
     const {errors: validationErrors, handleSubmit, setErrors: setValidationErrors} = useForm()
     return {
       ...useFormatters(),
-      ...useItem({itemTypeName: 'scoreset'}),
+      ...useItem({itemTypeName: 'scoreSet'}),
       editableExperiments: editableExperiments.items,
       licenses: licenses.items,
       doiIdentifierSuggestions: doiIdentifierSuggestions.items,
@@ -529,8 +529,8 @@ export default {
     experiment: null,
     licenseId: null,
     title: null,
-    metaAnalysisSourceScoresets: [],
-    supersededScoreset: null,
+    metaAnalysisSourceScoreSets: [],
+    supersededScoreSet: null,
     shortDescription: null,
     abstractText: null,
     methodText: null,
@@ -576,8 +576,8 @@ export default {
       scoresFile: null
     },
     externalGeneDatabases,
-    metaAnalysisSourceScoresetSuggestions: [],
-    supersededScoresetSuggestions: []
+    metaAnalysisSourceScoreSetSuggestions: [],
+    supersededScoreSetSuggestions: []
   }),
 
   computed: {
@@ -592,14 +592,14 @@ export default {
     doiIdentifierSuggestionsList: function() {
       return this.suggestionsForAutocomplete(this.doiIdentifierSuggestions)
     },
-    metaAnalysisSourceScoresetSuggestionsList: function() {
-      return this.suggestionsForAutocomplete(this.metaAnalysisSourceScoresetSuggestions)
+    metaAnalysisSourceScoreSetSuggestionsList: function() {
+      return this.suggestionsForAutocomplete(this.metaAnalysisSourceScoreSetSuggestions)
     },
     publicationIdentifierSuggestionsList: function() {
       return this.suggestionsForAutocomplete(this.publicationIdentifierSuggestions)
     },
-    supersededScoresetSuggestionsList: function() {
-      return this.suggestionsForAutocomplete(this.supersededScoresetSuggestions)
+    supersededScoreSetSuggestionsList: function() {
+      return this.suggestionsForAutocomplete(this.supersededScoreSetSuggestions)
     },
     targetGeneSuggestionsList: function() {
       return this.suggestionsForAutocomplete(this.targetGeneSuggestions)
@@ -679,22 +679,22 @@ export default {
       return suggestions
     },
 
-    searchMetaAnalysisSourceScoresets: async function(event) {
+    searchMetaAnalysisSourceScoreSets: async function(event) {
       const searchText = (event.query || '').trim()
       if (searchText.length > 0) {
-        this.metaAnalysisSourceScoresetSuggestions = await this.searchScoresets(searchText)
+        this.metaAnalysisSourceScoreSetSuggestions = await this.searchScoreSets(searchText)
       }
     },
 
-    searchSupersededScoresets: async function(event) {
+    searchSupersededScoreSets: async function(event) {
       const searchText = (event.query || '').trim()
       if (searchText.length > 0) {
-        this.supersededScoresetSuggestions = await this.searchScoresets(searchText, true)
+        this.supersededScoreSetSuggestions = await this.searchScoreSets(searchText, true)
       }
     },
 
-    searchScoresets: async function(searchText, mine=false) {
-      const url = mine ? `${config.apiBaseUrl}/me/scoresets/search` : `${config.apiBaseUrl}/scoresets/search`
+    searchScoreSets: async function(searchText, mine=false) {
+      const url = mine ? `${config.apiBaseUrl}/me/score-sets/search` : `${config.apiBaseUrl}/score-sets/search`
       try {
         const response = await axios.post(
           url,
@@ -917,8 +917,8 @@ export default {
       if (this.item) {
         this.experiment = this.item.experiment
         this.licenseId = this.item.license.id
-        this.metaAnalysisSourceScoresets = this.item.metaAnalysisSourceScoresets
-        this.supersededScoreset = this.item.supersededScoreset
+        this.metaAnalysisSourceScoreSets = this.item.metaAnalysisSourceScoreSets
+        this.supersededScoreSet = this.item.supersededScoreSet
         this.title = this.item.title
         this.shortDescription = this.item.shortDescription
         this.abstractText = this.item.abstractText
@@ -956,8 +956,8 @@ export default {
       } else {
         this.experiment = null
         this.licenseId = this.defaultLicenseId
-        this.metaAnalysisSourceScoresets = []
-        this.supersededScoreset = null
+        this.metaAnalysisSourceScoreSets = []
+        this.supersededScoreSet = null
         this.title = null
         this.shortDescription = null
         this.abstractText = null
@@ -1037,8 +1037,8 @@ export default {
         }
       }
       if (!this.item) {
-        editedFields.supersededScoresetUrn = this.supersededScoreset ? this.supersededScoreset.urn : null
-        editedFields.metaAnalysisSourceScoresetUrns = (this.metaAnalysisSourceScoresets || []).map((s) => s.urn)
+        editedFields.supersededScoreSetUrn = this.supersededScoreSet ? this.supersededScoreSet.urn : null
+        editedFields.metaAnalysisSourceScoreSetUrns = (this.metaAnalysisSourceScoreSets || []).map((s) => s.urn)
       }
       else {
         // empty item arrays so that deleted items aren't merged back into editedItem object
@@ -1056,9 +1056,9 @@ export default {
       let response = null
       try {
         if (this.item) {
-          response = await axios.put(`${config.apiBaseUrl}/scoresets/${this.item.urn}`, editedItem)
+          response = await axios.put(`${config.apiBaseUrl}/score-sets/${this.item.urn}`, editedItem)
         } else {
-          response = await axios.post(`${config.apiBaseUrl}/scoresets/`, editedItem)
+          response = await axios.post(`${config.apiBaseUrl}/score-sets/`, editedItem)
         }
       } catch (e) {
         response = e.response || {status: 500}
@@ -1071,7 +1071,7 @@ export default {
           if (this.$refs.scoresFileUpload?.files?.length == 1) {
             await this.uploadData(savedItem)
           } else {
-            this.$router.replace({path: `/scoresets/${this.item.urn}`})
+            this.$router.replace({path: `/score-sets/${this.item.urn}`})
             this.$toast.add({severity:'success', summary: 'Your changes were saved.', life: 3000})
           }
         } else {
@@ -1103,7 +1103,7 @@ export default {
       }
     },
 
-    uploadData: async function(scoreset) {
+    uploadData: async function(scoreSet) {
       if (this.$refs.scoresFileUpload.files.length != 1) {
         this.setValidationErrors({scores: 'Required'})
       } else {
@@ -1116,7 +1116,7 @@ export default {
         let response
         try {
           response = await axios.post(
-            `${config.apiBaseUrl}/scoresets/${scoreset.urn}/variants/data`,
+            `${config.apiBaseUrl}/score-sets/${scoreSet.urn}/variants/data`,
             formData,
             {
               headers: {
@@ -1130,20 +1130,20 @@ export default {
         this.progressVisible = false
 
         if (response.status == 200) {
-          console.log('Imported scoreset data.')
+          console.log('Imported score set data.')
           if (this.item) {
             // this.reloadItem()
-            this.$router.replace({path: `/scoresets/${scoreset.urn}`})
+            this.$router.replace({path: `/score-sets/${scoreSet.urn}`})
             this.$toast.add({severity:'success', summary: 'Your changes were saved.', life: 3000})
           } else {
-            this.$router.replace({path: `/scoresets/${scoreset.urn}`})
+            this.$router.replace({path: `/score-sets/${scoreSet.urn}`})
             this.$toast.add({severity:'success', summary: 'The new score set was saved.', life: 3000})
           }
         } else {
           this.$toast.add({severity:'error', summary: 'The score and count files could not be imported.', life: 3000})
 
-          // Delete the scoreset if just created.
-          // Warn if the scoreset already exists.
+          // Delete the score set if just created.
+          // Warn if the score set already exists.
         }
       }
     },
@@ -1167,7 +1167,7 @@ export default {
       }
     },
 
-    //Editing published scoreset doesn't have scoresFileUpload.
+    //Editing published score set doesn't have scoresFileUpload.
     saveEditContent: async function() {
       await this.save()
     },
@@ -1178,7 +1178,7 @@ export default {
 
     viewItem: function() {
       if (this.item) {
-        this.$router.replace({path: `/scoresets/${this.item.urn}`})
+        this.$router.replace({path: `/score-sets/${this.item.urn}`})
       }
     },
 
@@ -1253,19 +1253,19 @@ export default {
 
 /* Cards */
 
-.mave-scoreset-editor:deep(.p-card) {
+.mave-score-set-editor:deep(.p-card) {
   margin: 1em 0;
   background: rgba(0,0,0,0.05);
 }
 
-.mave-scoreset-editor:deep(.p-card .p-card-title) {
+.mave-score-set-editor:deep(.p-card .p-card-title) {
   font-size: 1.2em;
   font-weight: normal;
   color: #3f51B5;
   margin-bottom: 0;
 }
 
-.mave-scoreset-editor:deep(.p-card-content) {
+.mave-score-set-editor:deep(.p-card-content) {
   padding: 0;
 }
 

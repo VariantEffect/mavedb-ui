@@ -5,8 +5,8 @@
       @clickedResidue="didSelectResidue($event.residueNumber)"
       @hoveredOverResidue="didHighlightResidue($event.residueNumber)"
   />
-  <div v-if="scores" class="mave-scoreset-heatmap-pane">
-    <ScoreSetHeatmap :highlightedResidueRange="highlightedResidueRange" :scoreSet="scoreset" :scores="scores" :selectedResidueRange="selectedResidueRange" />
+  <div v-if="scores" class="mave-score-set-heatmap-pane">
+    <ScoreSetHeatmap :highlightedResidueRange="highlightedResidueRange" :scoreSet="scoreSet" :scores="scores" :selectedResidueRange="selectedResidueRange" />
   </div>
 </template>
 
@@ -16,7 +16,7 @@ import ProteinStructureView from '@/components/ProteinStructureView'
 import ScoreSetHeatmap from '@/components/ScoreSetHeatmap'
 
 export default {
-  name: 'ScoresetVisualizer',
+  name: 'ScoreSetVisualizer',
   components: {ProteinStructureView, ScoreSetHeatmap},
 
   props: {
@@ -24,7 +24,7 @@ export default {
       type: Array,
       required: true
     },
-    scoreset: {
+    scoreSet: {
       type: Object,
       required: true
     }

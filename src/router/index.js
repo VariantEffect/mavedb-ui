@@ -70,12 +70,12 @@ const routes = [{
     authName: oidc.authName
   }
 }, {
-  path: '/experimentsets/:urn',
-  name: 'experimentset',
+  path: '/experiment-sets/:urn',
+  name: 'experimentSet',
   component: ExperimentSetView,
   props: (route) => ({itemId: route.params.urn})
 }, {
-  path: '/experimentsets/:urn/create-experiment',
+  path: '/experiment-sets/:urn/create-experiment',
   name: 'createExperimentInExperimentSet',
   component: ExperimentEditor,
   meta: {

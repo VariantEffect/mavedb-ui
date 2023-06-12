@@ -20,7 +20,7 @@
         <div v-if="item.modificationDate">Last updated {{formatDate(item.modificationDate)}} <span v-if="item.modifiedBy">
           <a :href="`https://orcid.org/${item.modifiedBy.orcidId}`" target="blank"><img src="@/assets/ORCIDiD_icon.png" alt="ORCIDiD">{{item.modifiedBy.firstName}} {{item.modifiedBy.lastName}}</a></span></div>
         <div v-if="item.publishedDate">Published {{formatDate(item.publishedDate)}}</div>
-        <div v-if="item.experimentSetUrn">Member of <router-link :to="{name: 'experimentset', params: {urn: item.experimentSetUrn}}">{{item.experimentSetUrn}}</router-link></div>
+        <div v-if="item.experimentSetUrn">Member of <router-link :to="{name: 'experimentSet', params: {urn: item.experimentSetUrn}}">{{item.experimentSetUrn}}</router-link></div>
         <div v-if="item.currentVersion">Current version {{item.currentVersion}}</div>
 
         <div class="mave-score-set-section-title">Score Sets</div>

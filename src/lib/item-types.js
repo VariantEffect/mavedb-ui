@@ -56,7 +56,7 @@ const itemTypes = {
   },
   'reference-genome': {
     name: 'reference-genome', // TODO Redundant, change this structure
-    restCollectionName: 'referenceGenomes'
+    restCollectionName: 'reference-genomes'
   },
   'scoreSet': {
     name: 'scoreSet', // TODO Redundant, change this structure

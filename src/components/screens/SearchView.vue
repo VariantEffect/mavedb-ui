@@ -27,14 +27,12 @@
           </TabPanel>
         </TabView>
       </div>
-      <div class="mavedb-search-results">
-        <FlexDataTable
-            :data="publishedScoreSets"
-            :options="tableOptions"
-            :scrollX="true"
-            :scrollY="true"
-        />
-      </div>
+      <ScoreSetTable
+          :data="publishedScoreSets"
+          :language="language"
+          :scrollX="true"
+          :scrollY="true"
+      />
     </div>
   </DefaultLayout>
 </template>
@@ -42,11 +40,10 @@
 <script>
 
 import axios from 'axios'
-import $ from 'jquery'
 import _ from 'lodash'
 import InputText from 'primevue/inputtext'
 import config from '@/config'
-import FlexDataTable from '@/components/common/FlexDataTable'
+import ScoreSetTable from '@/components/ScoreSetTable'
 import SelectList from '@/components/common/SelectList'
 import DefaultLayout from '@/components/layout/DefaultLayout'
 import Button from 'primevue/button'
@@ -56,10 +53,9 @@ import {debounce} from 'vue-debounce'
 
 export default {
   name: 'SearchView',
-  components: {DefaultLayout, FlexDataTable, InputText, SelectList, TabView, TabPanel, Button},
+  components: {DefaultLayout, ScoreSetTable, InputText, SelectList, TabView, TabPanel, Button},
 
   data: function() {
-    const self = this
     return {
       filterTargetNames: this.$route.query['target-names'] ? this.$route.query['target-names'].split(',') : [],
       filterTargetTypes: this.$route.query['target-types'] ? this.$route.query['target-types'].split(',') : [],
@@ -70,48 +66,9 @@ export default {
       searchText: this.$route.query.search,
       scoreSets: [],
       publishedScoreSets: [],
-      tableOptions: {
-        columns: [
-          {
-            data: 'urn',
-            title: 'URN',
-            width: '17.5%',
-            render: function (data) { // }, type, row) {
-              var urn = data
-              var urnDisplay = urn  // row['urnDisplay']
-              const url = self.$router.resolve({path: `/score-sets/${urn}`}).href
-              return ('<a href="' + url + '">' + urnDisplay + '</a>')  // TODO Escape the text.
-            },
-          },
-          {data: 'shortDescription', title: 'Description', width: '40%'},
-          {data: (x) => _.get(x, 'targetGene.name', null), title: 'Target'},
-          {data: (x) => _.get(x, 'targetGene.category', null), title: 'Target type'},
-          {data: (x) => _.get(
-            _.get(x, 'targetGene.referenceMaps.0', null),
-                // .find((rm) => rm.isPrimary),
-            'genome.organismName'
-          ), title: 'Target organism'},
-        ],
-        language: {
-          emptyTable: 'Type in the search box above or use the filters to find a data set.'
-        },
-        rowGroup: {
-          dataSrc: 'experiment.urn',
-          startRender: function(rows, group) {
-            const experimentUrn = group
-            const experimentUrnDisplay = experimentUrn // rows.data()[0]['parentUrnDisplay']
-            const experimentDescription = _.get(rows.data()[0], 'shortDescription', null)
-            const url = self.$router.resolve({path: `/experiments/${experimentUrn}`}).href
-
-            const link = ('<a href="' + url + '">' + experimentUrnDisplay + '</a>');
-
-            return $('<tr/>').append(
-              '<td colSpan="1">' + link + '</td>').append('<td colSpan="4">' + experimentDescription + '</td>'
-            )
-          },
-        },
-        searching: false
-      }
+      language: {
+        emptyTable: 'Type in the search box above or use the filters to find a data set.'
+      },
     }
   },
   computed: {
@@ -146,12 +103,12 @@ export default {
       }
     },
     publicationAuthorFilterOptions: function() {
-      if (this.scoresets.length > 0) {
-        // map each scoresets associated identifiers,
+      if (this.scoreSets.length > 0) {
+        // map each scoreSets associated identifiers,
         // then map each publications authors' names,
         // then concatenate these names together, flatten them,
         // and flatten the list of lists of author names (:O)
-        const values = this.scoresets.map(
+        const values = this.scoreSets.map(
           (s) => _.concat(
             _.get(s, 'primaryPublicationIdentifiers').map(
               (p) => _.get(p, 'authors').map(
@@ -168,8 +125,8 @@ export default {
       }
     },
     publicationDatabaseFilterOptions: function() {
-      if (this.scoresets.length > 0) {
-        const values = this.scoresets.map(
+      if (this.scoreSets.length > 0) {
+        const values = this.scoreSets.map(
           (s) => _.uniq(
             _.concat(
               _.get(s, 'primaryPublicationIdentifiers').map(
@@ -186,8 +143,8 @@ export default {
       }
     },
     publicationJournalFilterOptions: function() {
-      if (this.scoresets.length > 0) {
-        const values = this.scoresets.map(
+      if (this.scoreSets.length > 0) {
+        const values = this.scoreSets.map(
           (s) => _.uniq(
             _.concat(
               _.get(s, 'primaryPublicationIdentifiers').map(

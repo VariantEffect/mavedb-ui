@@ -24,7 +24,7 @@
           <Card>
             <template #title>Parent experiment and context</template>
             <template #content>
-              <div v-if="itemStatus != 'NotLoaded'">
+              <div v-if="itemStatus != 'NotLoaded' && item.experiment">
                 Experiment:
                 <router-link :to="{name: 'experiment', params: {urn: item.experiment.urn}}">{{item.experiment.title}}</router-link>
               </div>
@@ -997,7 +997,7 @@ export default {
 
     save: async function() {
       const editedFields = {
-        experimentUrn: this.experiment.urn,
+        experimentUrn: this.experiment?.urn,
         licenseId: this.licenseId,
         title: this.title,
         shortDescription: this.shortDescription,

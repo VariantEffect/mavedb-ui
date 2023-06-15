@@ -7,6 +7,7 @@ import ExperimentView from '@/components/screens/ExperimentView'
 import ExperimentSetView from '@/components/screens/ExperimentSetView'
 import HomeScreen from '@/components/screens/HomeScreen'
 import ScoreSetEditor from '@/components/screens/ScoreSetEditor'
+import PublicationIdentifierView from '@/components/screens/PublicationIdentifierView'
 import ScoreSetView from '@/components/screens/ScoreSetView'
 import SearchView from '@/components/screens/SearchView'
 import SettingsScreen from '@/components/screens/SettingsScreen'
@@ -95,6 +96,21 @@ const routes = [{
   name: 'scoreSet',
   component: ScoreSetView,
   props: (route) => ({itemId: route.params.urn})
+}, {
+  name: 'pubmedPublicationIdentifier',
+  path: '/publication-identifiers/pubmed/:identifier',
+  component: PublicationIdentifierView,
+  props: (route) => ({itemId: route.params.identifier, name: route.name})
+}, {
+  name: 'biorxivPublicationIdentifier',
+  path: '/publication-identifiers/biorxiv/:identifier',
+  component: PublicationIdentifierView,
+  props: (route) => ({itemId: route.params.identifier, name: route.name})
+}, {
+  name: 'medrxivPublicationIdentifier',
+  path: '/publication-identifiers/medrxiv/:identifier',
+  component: PublicationIdentifierView,
+  props: (route) => ({itemId: route.params.identifier, name: route.name})
 }]
 
 const router = createRouter({

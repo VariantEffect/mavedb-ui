@@ -4,7 +4,7 @@
       <div class="grid">
         <div class="col-12">
           <div v-if="itemStatus != 'NotLoaded'" class="mave-screen-title-bar">
-            <div class="mave-screen-title">Edit score set {{this.item.experiment.urn}}</div>
+            <div class="mave-screen-title">Edit score set {{this.item.urn}}</div>
             <div v-if="item" class="mave-screen-title-controls">
               <Button @click="saveEditContent">Save changes</Button>
               <Button @click="resetForm" class="p-button-help">Clear</Button>

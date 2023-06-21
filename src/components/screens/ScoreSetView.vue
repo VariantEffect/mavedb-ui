@@ -413,7 +413,7 @@ export default {
       let response = null
       try{
         if (this.item){
-          response = await axios.get(`${config.apiBaseUrl}/scoresets/${this.item.urn}/mappedVariants`)
+          response = await axios.get(`${config.apiBaseUrl}/score-sets/${this.item.urn}/mapped-variants`)
         }
       }
       catch (e){

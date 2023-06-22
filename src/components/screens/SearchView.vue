@@ -19,7 +19,7 @@
       </div>
       <div class="mavedb-search-results">
         <FlexDataTable
-            :data="publishedScoresets"
+            :data="publishedScoreSets"
             :options="tableOptions"
             :scrollX="true"
             :scrollY="true"
@@ -175,8 +175,8 @@ export default {
       filterTargetTypes: this.$route.query['target-types'] ? this.$route.query['target-types'].split(',') : [],
       filterTargetOrganismNames: this.$route.query['target-organism-names'] ? this.$route.query['target-organism-names'].split(',') : [],
       searchText: this.$route.query.search,
-      scoresets: [],
-      publishedScoresets: [],
+      scoreSets: [],
+      publishedScoreSets: [],
       tableOptions: {
         columns: [
           {
@@ -186,7 +186,7 @@ export default {
             render: function (data) { // }, type, row) {
               var urn = data
               var urnDisplay = urn  // row['urnDisplay']
-              const url = self.$router.resolve({path: `/scoresets/${urn}`}).href
+              const url = self.$router.resolve({path: `/score-sets/${urn}`}).href
               return ('<a href="' + url + '">' + urnDisplay + '</a>')  // TODO Escape the text.
             },
           },
@@ -226,8 +226,8 @@ export default {
       return debounce(() => this.search(), '400ms')
     },
     targetNameFilterOptions: function() {
-      if (this.scoresets.length > 0) {
-        const values = this.scoresets.map((s) => _.get(s, 'targetGene.name'))
+      if (this.scoreSets.length > 0) {
+        const values = this.scoreSets.map((s) => _.get(s, 'targetGene.name'))
         const valueFrequencies = _.countBy(values)
         return _.sortBy(_.keys(valueFrequencies)).map((value) => ({value, badge: valueFrequencies[value]}))
       } else {
@@ -238,8 +238,7 @@ export default {
       if (this.scoresets.length > 0) {
         var allScoresets = this.scoresets.map((s) => _.get(s, 'targetGene.taxonomy.organismName')).filter(String)
         // Remove Undefined and null values
-        const values  =allScoresets.filter(item => !!item)
-        console.log(values)
+        const values  = allScoresets.filter(item => !!item)
         const valueFrequencies = _.countBy(values)
         return _.sortBy(_.keys(valueFrequencies)).map((value) => ({value, badge: valueFrequencies[value]}))
       } else {
@@ -247,8 +246,8 @@ export default {
       }
     },
     targetTypeFilterOptions: function() {
-      if (this.scoresets.length > 0) {
-        const values = this.scoresets.map((s) => _.get(s, 'targetGene.category'))
+      if (this.scoreSets.length > 0) {
+        const values = this.scoreSets.map((s) => _.get(s, 'targetGene.category'))
         const valueFrequencies = _.countBy(values)
         return _.sortBy(_.keys(valueFrequencies)).map((value) => ({value, badge: valueFrequencies[value]}))
       } else {
@@ -342,14 +341,14 @@ export default {
       if (this.searchText && this.searchText.length > 0) {
         await this.fetchSearchResults()
       } else {
-        this.scoresets = []
+        this.scoreSets = []
       }
       */
     },
     fetchSearchResults: async function() {
       try {
         let response = await axios.post(
-          `${config.apiBaseUrl}/scoresets/search`,
+          `${config.apiBaseUrl}/score-sets/search`,
           {
             text: this.searchText || null,
             targets: this.filterTargetNames.length > 0 ? this.filterTargetNames : null,
@@ -363,15 +362,15 @@ export default {
           }
         )
         // TODO catch errors in response
-        this.scoresets = response.data || []
+        this.scoreSets = response.data || []
 
-        // reset published scoresets search results when using search bar
-        this.publishedScoresets = []
-        // Separate the response.data into published scoreset and unpublished scoreset.
-        for (let i=0, len = this.scoresets.length; i<len; i++){
-          if (this.scoresets[i].publishedDate != null){
-          //if (this.scoresets[i].private)
-            this.publishedScoresets.push(this.scoresets[i])
+        // reset published score sets search results when using search bar
+        this.publishedScoreSets = []
+        // Separate the response.data into published score set and unpublished score set.
+        for (let i=0, len = this.scoreSets.length; i<len; i++){
+          if (this.scoreSets[i].publishedDate != null){
+          //if (this.scoreSets[i].private)
+            this.publishedScoreSets.push(this.scoreSets[i])
           }
         }
       } catch (err) {

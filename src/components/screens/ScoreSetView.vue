@@ -1,6 +1,6 @@
 <template>
   <DefaultLayout>
-    <div v-if="item" class="mave-scoreset">
+    <div v-if="item" class="mave-score-set">
       <div class="mave-1000px-col">
         <div class="mave-screen-title-bar">
           <div class="mave-screen-title">{{item.title || 'Untitled score set'}}</div>
@@ -15,17 +15,17 @@
             </div>
           </div>
         </div>
-        <div v-if="item.shortDescription" class="mave-scoreset-description">{{item.shortDescription}}</div>
-        <div v-if="item.urn" class="mave-scoreset-urn"><h3>{{item.urn}}</h3></div>
+        <div v-if="item.shortDescription" class="mave-score-set-description">{{item.shortDescription}}</div>
+        <div v-if="item.urn" class="mave-score-set-urn"><h3>{{item.urn}}</h3></div>
       </div>
-      <div v-if="showHeatmap && scores" class="mave-scoreset-heatmap-pane">
+      <div v-if="showHeatmap && scores" class="mave-score-set-heatmap-pane">
         <ScoreSetHeatmap :scoreSet="item" :scores="scores" />
       </div>
       <div class="mave-1000px-col">
         <div v-if="item.creationDate">Created {{formatDate(item.creationDate)}} <span v-if="item.createdBy">
           <a :href="`https://orcid.org/${item.createdBy.orcidId}`" target="blank"><img src="@/assets/ORCIDiD_icon.png" alt="ORCIDiD">{{item.createdBy.firstName}} {{item.createdBy.lastName}}</a></span>
         </div>
-        <div v-if="item.modificationDate">Last updated {{formatDate(item.modificationDate)}} <span v-if="item.modifiedBy"> 
+        <div v-if="item.modificationDate">Last updated {{formatDate(item.modificationDate)}} <span v-if="item.modifiedBy">
           <a :href="`https://orcid.org/${item.modifiedBy.orcidId}`" target="blank"><img src="@/assets/ORCIDiD_icon.png" alt="ORCIDiD">{{item.modifiedBy.firstName}} {{item.modifiedBy.lastName}}</a></span>
         </div>
         <div v-if="item.publishedDate">Published {{formatDate(item.publishedDate)}}</div>
@@ -36,53 +36,63 @@
         </div>
         <div v-if="item.dataUsagePolicy">Data usage policy: {{ item.dataUsagePolicy }}</div>
         <div v-if="item.experiment">Member of <router-link :to="{name: 'experiment', params: {urn: item.experiment.urn}}">{{item.experiment.urn}}</router-link></div>
-        <div v-if="item.supersedingScoreset">Current version <router-link :to="{name: 'scoreset', params: {urn: item.supersedingScoreset.urn}}">{{item.supersedingScoreset.urn}}</router-link></div>
-        <div v-else>Current version <router-link :to="{name: 'scoreset', params: {urn: item.urn}}">{{item.urn}}</router-link></div>
-        <div v-if="item.metaAnalysisSourceScoresets.length!=0">Meta-analyzes 
-          <template v-for="(scoreset,index) in sortedMetaAnalysis" :key="scoreset">
-            <router-link :to="{name: 'scoreset', params: {urn: scoreset.urn}}">{{scoreset.urn}}</router-link>
-            <template v-if="index !== item.metaAnalysisSourceScoresets.length-1"> · </template>
+        <div v-if="item.supersedingScoreSet">Current version <router-link :to="{name: 'scoreSet', params: {urn: item.supersedingScoreSet.urn}}">{{item.supersedingScoreSet.urn}}</router-link></div>
+        <div v-else>Current version <router-link :to="{name: 'scoreSet', params: {urn: item.urn}}">{{item.urn}}</router-link></div>
+        <div v-if="item.metaAnalysisSourceScoreSets.length!=0">Meta-analyzes
+          <template v-for="(scoreSet,index) in sortedMetaAnalysis" :key="scoreSet">
+            <router-link :to="{name: 'scoreSet', params: {urn: scoreSet.urn}}">{{scoreSet.urn}}</router-link>
+            <template v-if="index !== item.metaAnalysisSourceScoreSets.length-1"> · </template>
           </template>
         </div>
         <div>Download files <Button class="p-button-outlined p-button-sm" @click="downloadFile('scores')">Scores</Button>&nbsp;
-          <template v-if="countColumns.length!=0"> 
+          <template v-if="countColumns.length!=0">
             <Button class="p-button-outlined p-button-sm" @click="downloadFile('counts')">Counts</Button>&nbsp;
           </template>
           <template v-if="isMetaDataEmpty!=true">
-            <Button class="p-button-outlined p-button-sm" @click="downloadMetadata">Metadata</Button>
+            <Button class="p-button-outlined p-button-sm" @click="downloadMetadata">Metadata</Button>&nbsp;
           </template>
+          <Button class="p-button-outlined p-button-sm" @click="downloadMappedVariants()">Mapped Variants</Button>
         </div>
         <div v-if="item.abstractText">
-          <div class="mave-scoreset-section-title">Abstract</div>
-          <div v-html="markdownToHtml(item.abstractText)" class="mave-scoreset-abstract"></div>
+          <div class="mave-score-set-section-title">Abstract</div>
+          <div v-html="markdownToHtml(item.abstractText)" class="mave-score-set-abstract"></div>
         </div>
         <div v-if="item.methodText">
-          <div class="mave-scoreset-section-title">Method</div>
-          <div v-html="markdownToHtml(item.methodText)" class="mave-scoreset-abstract"></div>
+          <div class="mave-score-set-section-title">Method</div>
+          <div v-html="markdownToHtml(item.methodText)" class="mave-score-set-abstract"></div>
         </div>
-        <div class="mave-scoreset-section-title">References</div>
-          <div v-if="item.experiment.pubmedIdentifiers.length!=0 || item.pubmedIdentifiers.length!=0">
-            <ul style="list-style-type:square">
-              <div v-for="pubmed in uniquePubmedIdentifiers" :key="pubmed">
-                <li v-html="markdownToHtml(pubmed.referenceHtml)"></li>PMID: <a :href="`${pubmed.url}`" target="_blank">{{pubmed.identifier}}</a>
-              </div>
-            </ul>
-        </div>
-        <div v-else>No associated publication.</div>
-        <div class="mave-scoreset-section-title">Data Usage Policy</div>
+        <div class="mave-score-set-section-title">Primary References</div>
+          <div v-if="item.primaryPublicationIdentifiers.length > 0">
+            <div v-for="publication in item.primaryPublicationIdentifiers" :key="publication">
+                <ul style="list-style-type:square;">
+                  <li v-html="markdownToHtml(publication.referenceHtml)" ></li>Publication: <a :href="`${publication.url}`" target="_blank">{{publication.identifier}}</a>
+                </ul>
+            </div>
+          </div>
+          <div v-else>No associated primary publications.</div>
+          <div class="mave-score-set-section-title">Secondary References</div>
+          <div v-if="item.secondaryPublicationIdentifiers.length > 0">
+            <div v-for="publication in item.secondaryPublicationIdentifiers" :key="publication">
+                <ul style="list-style-type:square;">
+                  <li v-html="markdownToHtml(publication.referenceHtml)" ></li>Publication: <a :href="`${publication.url}`" target="_blank">{{publication.identifier}}</a>
+                </ul>
+            </div>
+          </div>
+          <div v-else>No associated secondary publications.</div>
+        <div class="mave-score-set-section-title">Data Usage Policy</div>
           <div v-if="item.dataUsagePolicy">
-            <div v-html="markdownToHtml(item.dataUsagePolicy)" class="mave-scoreset-abstract"></div>
+            <div v-html="markdownToHtml(item.dataUsagePolicy)" class="mave-score-set-abstract"></div>
           </div>
           <div v-else>Not specified</div>
-        
+
         <div v-if="item.keywords && item.keywords.length > 0">
-          <div class="mave-scoreset-section-title">Keywords</div>
-          <div class="mave-scoreset-keywords">
+          <div class="mave-score-set-section-title">Keywords</div>
+          <div class="mave-score-set-keywords">
             <a v-for="(keyword, i) of item.keywords" :key="i" :href="`https://www.mavedb.org/search/?keywords=${keyword}`"><Chip :label="keyword" /></a>
           </div>
         </div>
         <div v-if="item.targetGene">
-          <div class="mave-scoreset-section-title">Target</div>
+          <div class="mave-score-set-section-title">Target</div>
           <div v-if="item.targetGene.name"><strong>Name:</strong> {{item.targetGene.name}}</div>
           <div v-if="item.targetGene.category"><strong>Type:</strong> {{item.targetGene.category}}</div>
           <div v-if="item.targetGene.taxonomy?.organismName"><strong>Organism:</strong> {{item.targetGene.taxonomy.organismName}}</div>
@@ -110,8 +120,8 @@
             </div>
           </div>
         </div>
-        
-        <div class="mave-scoreset-section-title">External identifier</div>
+
+        <div class="mave-score-set-section-title">External identifier</div>
         <strong>DOI: </strong>
         <div v-if="item.doiIdentifiers.length!=0">
           <ul style="list-style-type:square">
@@ -119,14 +129,14 @@
           </ul>
         </div><template v-else>No associated DOIs<br/></template>
 
-        <div class="mave-scoreset-section-title">Variants</div>
-        <div v-if="item.numVariants > 10">Below is a sample of the first 10 variants. 
+        <div class="mave-score-set-section-title">Variants</div>
+        <div v-if="item.numVariants > 10">Below is a sample of the first 10 variants.
             Please download the file on the top page if you want to read the whole variants list.</div>
         <br/>
         <TabView style="height:585px">
           <TabPanel header="Scores">
-            <!--Default table-layout is fixed meaning the cell widths do not depend on their content. 
-            If you require cells to scale based on their contents set autoLayout property to true. 
+            <!--Default table-layout is fixed meaning the cell widths do not depend on their content.
+            If you require cells to scale based on their contents set autoLayout property to true.
             Note that Scrollable and/or Resizable tables do not support auto layout due to technical limitations.
             Scrollable, column can be frozen but columns and rows don't match so that add width;
             Autolayout, column can't be frozen but columns and rows can match
@@ -134,11 +144,11 @@
             <!---->
             <div style="overflow-y: scroll; overflow-x: scroll; height:600px;">
               <DataTable :value="scoresTable" showGridlines="true" stripedRows="true">
-                <Column v-for="column of scoreColumns.slice(0,3)" :field="column" :header="column" :key="column" 
+                <Column v-for="column of scoreColumns.slice(0,3)" :field="column" :header="column" :key="column"
                 style="overflow:hidden" headerStyle="background-color:#A1D8C8; font-weight: bold" ><!--:frozen="columnIsAllNa(scoresTable, column)"-->
                 <template #body="scoresTable" >{{scoresTable.data[column]}}</template>
               </Column>
-              <Column v-for="column of scoreColumns.slice(3,scoreColumns.length)" :field="column" :header="column" :key="column" 
+              <Column v-for="column of scoreColumns.slice(3,scoreColumns.length)" :field="column" :header="column" :key="column"
                 style="overflow:hidden" headerStyle="background-color:#A1D8C8; font-weight: bold">
                 <template #body="scoresTable">{{convertToThreeDecimal(scoresTable.data[column])}}</template>
               </Column>
@@ -150,13 +160,13 @@
               <DataTable :value="countsTable" showGridlines="true" stripedRows="true">
                 <template v-if="countColumns.length==0">No count data available.</template>
                 <template v-else>
-                  <Column v-for="column of countColumns.slice(0,3)" :field="column" :header="column" :key="column" 
+                  <Column v-for="column of countColumns.slice(0,3)" :field="column" :header="column" :key="column"
                   style="overflow:hidden" headerStyle="background-color:#A1D8C8; font-weight: bold"> <!--:frozen="columnIsAllNa(countsTable, column)" bodyStyle="text-align:left"-->
                     <template #body="countsTable">{{countsTable.data[column]}}</template> <!--:style="{overflow: 'hidden'}"-->
                   </Column>
-                  <Column v-for="column of countColumns.slice(3,countColumns.length)" :field="column" :header="column" :key="column" 
+                  <Column v-for="column of countColumns.slice(3,countColumns.length)" :field="column" :header="column" :key="column"
                   style="overflow:hidden" headerStyle="background-color:#A1D8C8; font-weight: bold">
-                    <template #body="countsTable">{{convertToThreeDecimal(countsTable.data[column])}}</template> 
+                    <template #body="countsTable">{{convertToThreeDecimal(countsTable.data[column])}}</template>
                   </Column>
                 </template>
               </DataTable>
@@ -224,29 +234,14 @@ export default {
       return showCountColumns ? [...fixedColumns, ...this.item?.datasetColumns?.count_columns || []] : []
     },
     sortedMetaAnalysis: function(){
-      return _.orderBy(this.item.metaAnalysisSourceScoresets, 'urn')
+      return _.orderBy(this.item.metaAnalysisSourceScoreSets, 'urn')
     },
-    uniquePubmedIdentifiers: function(){
-      let pubmedIdentifiers = []
-      if(this.item.experiment.pubmedIdentifiers){
-        for(let i of this.item.experiment.pubmedIdentifiers){
-          pubmedIdentifiers.push(i)
-        }
-      }
-      if(this.item.pubmedIdentifiers){
-        for(let i of this.item.pubmedIdentifiers){
-          pubmedIdentifiers.push(i)
-        }
-      }
-      let uniqueObjects = [...new Map(pubmedIdentifiers.map(item => [item.identifier, item])).values()]
-      return uniqueObjects
-    }
   },
   setup: () => {
     const scoresRemoteData = useRemoteData()
     return {
       ...useFormatters(),
-      ...useItem({itemTypeName: 'scoreset'}),
+      ...useItem({itemTypeName: 'scoreSet'}),
       scoresData: scoresRemoteData.data,
       scoresDataStatus: scoresRemoteData.dataStatus,
       setScoresDataUrl: scoresRemoteData.setDataUrl,
@@ -300,7 +295,7 @@ export default {
   methods: {
     editItem: function() {
       if (this.item) {
-        this.$router.replace({path: `/scoresets/${this.item.urn}/edit`})
+        this.$router.replace({path: `/score-sets/${this.item.urn}/edit`})
       }
     },
     deleteItem: async function() {
@@ -312,7 +307,7 @@ export default {
         accept: async () => {
           if (this.item) {
             try {
-              response = await axios.delete(`${config.apiBaseUrl}/scoresets/${this.item.urn}`, this.item)
+              response = await axios.delete(`${config.apiBaseUrl}/score-sets/${this.item.urn}`, this.item)
             } catch (e) {
               response = e.response || {status: 500}
             }
@@ -322,7 +317,7 @@ export default {
               //const deletedItem = response.data
               console.log('Deleted item')
               this.$router.replace({path: `/dashboard`})
-              this.$toast.add({severity:'success', summary: 'Your scoreset was successfully deleted.', life: 3000})
+              this.$toast.add({severity:'success', summary: 'Your score set was successfully deleted.', life: 3000})
             } else if (response.data && response.data.detail) {
               const formValidationErrors = {}
               for (const error of response.data.detail) {
@@ -334,7 +329,7 @@ export default {
                 formValidationErrors[path] = error.msg
               }
             }
-          } 
+          }
         },
         reject: () => {
             //callback to execute when user rejects the action
@@ -349,10 +344,10 @@ export default {
       return _.get(...args)
     },
     publishItem: async function() {
-      let response = null 
+      let response = null
       try {
         if (this.item) {
-          response = await axios.post(`${config.apiBaseUrl}/scoresets/${this.item.urn}/publish`, this.item)
+          response = await axios.post(`${config.apiBaseUrl}/score-sets/${this.item.urn}/publish`, this.item)
           // make sure scroesets cannot be published twice API, but also remove the button on UI side
         }
       } catch (e) {
@@ -364,8 +359,8 @@ export default {
         const publishedItem = response.data
         if (this.item) {
           console.log('Published item')
-          this.$router.replace({path: `/scoresets/${publishedItem.urn}`})
-          this.$toast.add({severity:'success', summary: 'Your scoreset was successfully published.', life: 3000})
+          this.$router.replace({path: `/score-sets/${publishedItem.urn}`})
+          this.$toast.add({severity:'success', summary: 'Your score set was successfully published.', life: 3000})
         }
       } else if (response.data && response.data.detail) {
         const formValidationErrors = {}
@@ -384,9 +379,9 @@ export default {
       let response = null
       try{
         if (this.item && download_type=="counts"){
-          response = await axios.get(`${config.apiBaseUrl}/scoresets/${this.item.urn}/counts`)
+          response = await axios.get(`${config.apiBaseUrl}/score-sets/${this.item.urn}/counts`)
         }else if (this.item && download_type=="scores"){
-          response = await axios.get(`${config.apiBaseUrl}/scoresets/${this.item.urn}/scores`)
+          response = await axios.get(`${config.apiBaseUrl}/score-sets/${this.item.urn}/scores`)
         }
       }catch (e){
         response = e.response || {status: 500}
@@ -414,6 +409,30 @@ export default {
         }
       }
     },
+    downloadMappedVariants: async function(){
+      let response = null
+      try{
+        if (this.item){
+          response = await axios.get(`${config.apiBaseUrl}/score-sets/${this.item.urn}/mapped-variants`)
+        }
+      }
+      catch (e){
+        response = e.response || {status: 500}
+      }
+      if (response.status == 200) {
+        //convert object to Json.
+        const file = JSON.stringify(response.data)
+        const anchor = document.createElement('a')
+        
+        anchor.href = 'data:text/json;charset=utf-8,' + encodeURIComponent(file);
+        anchor.target = '_blank';
+        //file default name
+        anchor.download = this.item.urn + '_mapped_variants.json';
+        anchor.click();
+      } else  {
+        this.$toast.add({severity:'error', summary: 'No downloadable mapped variants text file', life: 3000})
+      }
+    },
     downloadMetadata: async function(){
       //convert object to Json. extraMetadata is an object.
       var metadata = JSON.stringify(this.item.extraMetadata)
@@ -426,7 +445,7 @@ export default {
     },
     loadTableScores: async function(){
       if (this.item){
-        const response = await axios.get(`${config.apiBaseUrl}/scoresets/${this.item.urn}/scores`)
+        const response = await axios.get(`${config.apiBaseUrl}/score-sets/${this.item.urn}/scores`)
         if (response.data) {
           if (this.item.numVariants <= 10){
             this.scoresTable = parseScores(response.data)
@@ -438,7 +457,7 @@ export default {
     },
     loadTableCounts: async function(){
       if (this.item){
-        const response = await axios.get(`${config.apiBaseUrl}/scoresets/${this.item.urn}/counts`)
+        const response = await axios.get(`${config.apiBaseUrl}/score-sets/${this.item.urn}/counts`)
         console.log(response)
         if (response.data) {
           if (this.item.numVariants <= 10){
@@ -512,17 +531,17 @@ export default {
 
 /* Score set */
 
-.mave-scoreset {
+.mave-score-set {
   padding: 20px;
 }
 
-.mave-scoreset-heatmap-pane {
+.mave-score-set-heatmap-pane {
   margin: 10px 0;
 }
 
 /* Score set details */
 
-.mave-scoreset-section-title {
+.mave-score-set-section-title {
   /*font-family: Helvetica, Verdana, Arial, sans-serif;*/
   font-size: 24px;
   padding: 0 0 5px 0;
@@ -530,28 +549,28 @@ export default {
   margin: 20px 0 10px 0;
 }
 
-.mave-scoreset-description {
+.mave-score-set-description {
   /*font-family: Helvetica, Verdana, Arial, sans-serif;*/
   margin: 0 0 10px 0;
 }
 
-.mave-scoreset-urn {
+.mave-score-set-urn {
   /*font-family: Helvetica, Verdana, Arial, sans-serif;*/
 }
 
-.mave-scoreset-keywords .p-chip {
+.mave-score-set-keywords .p-chip {
   /*font-family: Helvetica, Verdana, Arial, sans-serif;*/
   margin: 0 5px;
 }
 
 /* Formatting in Markdown blocks */
 
-.mave-scoreset-abstract {
+.mave-score-set-abstract {
   /*font-family: Helvetica, Verdana, Arial, sans-serif;*/
   font-size: 20px;
 }
 
-.mave-scoreset-abstract::v-deep code {
+.mave-score-set-abstract::v-deep code {
   color: #987cb8;
   font-size: 87.5%;
   word-wrap: break-word;

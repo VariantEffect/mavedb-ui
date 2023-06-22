@@ -30,7 +30,7 @@ If the target sequence provided to MaveDB starts partway through the linked sequ
 The offset is the integer value that should be added to the MaveDB coordinates
 (which are relative to the target sequence) in order to match the coordinates in the linked sequence.
 
-For example, the target sequence for `urn:mavedb:00000002-a-1 <https://mavedb.org/scoreset/urn:mavedb:00000002-a-1/>`_
+For example, the target sequence for `urn:mavedb:00000002-a-1 <https://mavedb.org/score-sets/urn:mavedb:00000002-a-1/>`_
 is a codon optimized version of the WW domain of YAP1.
 This corresponds to UniProt identifier `P46937 <https://www.uniprot.org/uniprot/P46937>`_ with offset 169,
 meaning that position 1 in the MaveDB score set is position 170 in the UniProt sequence.

@@ -7,8 +7,9 @@
       <div class="mavedb-search-form">
         <span class="p-input-icon-left">
           <i class="pi pi-search" />
-          <InputText v-model="searchText" ref="searchTextInput" type="search" class="p-inputtext-sm" placeholder="Search" />
-          <Button v-if="searchText && searchText.length > 0" class="mavedb-search-clear-button p-button-plain p-button-text" @click="clear"><i class="pi pi-times"/></Button>
+          <InputText v-model="searchText" ref="searchTextInput" type="search" class="p-inputtext-sm" placeholder="Search" /> &nbsp;
+          <!--<Button v-if="searchText && searchText.length > 0" class="mavedb-search-clear-button p-button-plain p-button-text" @click="clear"><i class="pi pi-times"/></Button>-->
+          <Button class="p-button-plain" @click="clear">Clear All</Button>
         </span>
         <div class="mavedb-search-filters">
           <SelectList v-model="filterTargetNames" :options="targetNameFilterOptions" class="mavedb-search-filter-option-picker" title="Target name"  />
@@ -167,8 +168,8 @@ export default {
       defaultTargetOrganismOptions: [
         {value: 'Homo sapiens', badge: 143},
         {value: 'Mus musculus', badge: 5},
-        {value: 'Other - genome not listed', badge: 49},
-        {value: 'Saccharomyces cerevisiae', badge: 33}
+        {value: 'Aequorea victoria', badge: 49},
+        {value: 'Saccharomyces cerevisiae S288C', badge: 33}
       ],
       filterTargetNames: this.$route.query['target-names'] ? this.$route.query['target-names'].split(',') : [],
       filterTargetTypes: this.$route.query['target-types'] ? this.$route.query['target-types'].split(',') : [],
@@ -193,9 +194,9 @@ export default {
           {data: (x) => _.get(x, 'targetGene.name', null), title: 'Target'},
           {data: (x) => _.get(x, 'targetGene.category', null), title: 'Target type'},
           {data: (x) => _.get(
-            _.get(x, 'targetGene.referenceMaps.0', null),
+            _.get(x, 'targetGene.taxonomy', null),
                 // .find((rm) => rm.isPrimary),
-            'genome.organismName'
+            'organismName'
           ), title: 'Target organism'},
         ],
         language: {
@@ -235,7 +236,10 @@ export default {
     },
     targetOrganismFilterOptions: function() {
       if (this.scoresets.length > 0) {
-        const values = this.scoresets.map((s) => _.get(s, 'targetGene.referenceMaps.0.genome.organismName'))
+        var allScoresets = this.scoresets.map((s) => _.get(s, 'targetGene.taxonomy.organismName')).filter(String)
+        // Remove Undefined and null values
+        const values  =allScoresets.filter(item => !!item)
+        console.log(values)
         const valueFrequencies = _.countBy(values)
         return _.sortBy(_.keys(valueFrequencies)).map((value) => ({value, badge: valueFrequencies[value]}))
       } else {

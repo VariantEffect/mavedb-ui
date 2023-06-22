@@ -85,10 +85,10 @@
           <div class="mave-scoreset-section-title">Target</div>
           <div v-if="item.targetGene.name"><strong>Name:</strong> {{item.targetGene.name}}</div>
           <div v-if="item.targetGene.category"><strong>Type:</strong> {{item.targetGene.category}}</div>
-          <div v-if="item.targetGene.referenceMaps?.[0]?.genome?.organismName"><strong>Organism:</strong> {{item.targetGene.referenceMaps[0].genome.organismName}}</div>
-          <div v-if="item.targetGene.referenceMaps?.[0]?.genome?.shortName"><strong>Reference genome:</strong> {{item.targetGene.referenceMaps[0].genome.shortName}}</div>
-          <div v-if="item.targetGene.referenceMaps?.[0]?.genomeId"><strong>Genome ID:</strong> {{item.targetGene.referenceMaps[0].genomeId}}</div>
-          <div v-if="item.targetGene.referenceMaps?.[0]?.targetId"><strong>Target ID:</strong> {{item.targetGene.referenceMaps[0].targetId}}</div>
+          <div v-if="item.targetGene.taxonomy?.organismName"><strong>Organism:</strong> {{item.targetGene.taxonomy.organismName}}</div>
+          <div v-if="item.targetGene.taxonomy?.rank"><strong>Rank:</strong> {{item.targetGene.taxonomy.rank}}</div>
+          <div v-if="item.targetGene.taxonomy?.url"><strong>url:</strong> {{item.targetGene.taxonomy.url}}</div>
+          <div v-if="item.targetGene.id"><strong>Target ID:</strong> {{item.targetGene.id}}</div>
           <div v-if="item.targetGene.wtSequence?.sequence" style="word-break: break-word"><strong>Reference sequence: </strong>
             <template v-if="item.targetGene.wtSequence.sequence.length >= 500">
               <template v-if="readMore == true">{{item.targetGene.wtSequence.sequence.substring(0, 500) + "...."}} </template>

@@ -73,9 +73,11 @@
             <div class="mave-score-set-section-title">Target</div>
             <div v-if="scoreSet.targetGene.name"><strong>Name:</strong> {{scoreSet.targetGene.name}}</div>
             <div v-if="scoreSet.targetGene.category"><strong>Type:</strong> {{scoreSet.targetGene.category}}</div>
-            <div v-if="scoreSet.targetGene.referenceMaps?.[0]?.genome?.organismName"><strong>Organism:</strong> {{scoreSet.targetGene.referenceMaps[0].genome.organismName}}</div>
-            <div v-if="scoreSet.targetGene.referenceMaps?.[0]?.genome?.shortName"><strong>Reference genome:</strong> {{scoreSet.targetGene.referenceMaps[0].genome.shortName}}</div>
-            <!--TODO: Miss TaxID part-->
+            <div v-if="scoreSet.targetGene.taxonomy?.organismName"><strong>Organism:</strong> {{scoreSet.targetGene.taxonomy.organismName}}</div>
+            <div v-if="scoreSet.targetGene.taxonomy?.commonName"><strong>Common name:</strong> {{scoreSet.targetGene.taxonomy.commonName}}</div>
+            <div v-if="scoreSet.targetGene.taxonomy?.rank"><strong>Rank:</strong> {{scoreSet.targetGene.taxonomy.rank}}</div>
+            <div v-if="scoreSet.targetGene.taxonomy?.url"><strong>Taxonomy ID:</strong> <a :href="`${scoreSet.targetGene.taxonomy.url}`" target="blank">{{scoreSet.targetGene.taxonomy.taxId}}</a> </div>
+            <div v-if="scoreSet.targetGene.id"><strong>Target ID:</strong> {{scoreSet.targetGene.id}}</div>
             <div v-if="scoreSet.targetGene.wtSequence?.sequence" style="word-break: break-word"><strong>Reference sequence: </strong>
               <template v-if="scoreSet.targetGene.wtSequence.sequence.length >= 500">
                 <template v-if="readMore == true">{{scoreSet.targetGene.wtSequence.sequence.substring(0, 500) + "...."}} </template>

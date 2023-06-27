@@ -87,11 +87,7 @@ export default {
           },
           {data: 'shortDescription', title: 'Description', width: '40%'},
           {data: (x) => _.get(x, 'targetGene.name', null), title: 'Target'},
-          {data: (x) => _.get(
-            _.get(x, 'targetGene.referenceMaps.0', null),
-                // .find((rm) => rm.isPrimary),
-            'genome.organismName'
-          ), title: 'Target organism'},
+          {data: (x) => _.get(x, 'targetGene.taxonomy.organismName', null),  title: 'Target organism'},
         ],
         language: {
           emptyTable: 'You do not have any score sets matching the request.'

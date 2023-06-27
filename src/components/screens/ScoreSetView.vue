@@ -96,8 +96,9 @@
           <div v-if="item.targetGene.name"><strong>Name:</strong> {{item.targetGene.name}}</div>
           <div v-if="item.targetGene.category"><strong>Type:</strong> {{item.targetGene.category}}</div>
           <div v-if="item.targetGene.taxonomy?.organismName"><strong>Organism:</strong> {{item.targetGene.taxonomy.organismName}}</div>
+          <div v-if="item.targetGene.taxonomy?.commonName"><strong>Common name:</strong> {{item.targetGene.taxonomy.commonName}}</div>
           <div v-if="item.targetGene.taxonomy?.rank"><strong>Rank:</strong> {{item.targetGene.taxonomy.rank}}</div>
-          <div v-if="item.targetGene.taxonomy?.url"><strong>url:</strong> {{item.targetGene.taxonomy.url}}</div>
+          <div v-if="item.targetGene.taxonomy?.url"><strong>Taxonomy ID:</strong> <a :href="`${item.targetGene.taxonomy.url}`" target="blank">{{item.targetGene.taxonomy.taxId}}</a> </div>
           <div v-if="item.targetGene.id"><strong>Target ID:</strong> {{item.targetGene.id}}</div>
           <div v-if="item.targetGene.wtSequence?.sequence" style="word-break: break-word"><strong>Reference sequence: </strong>
             <template v-if="item.targetGene.wtSequence.sequence.length >= 500">

@@ -151,7 +151,7 @@
                     />
                     <label :for="$scopedId('input-targetLicenseId')">License</label>
                   </span>
-                  <span v-if="validationErrors['targetGene.referenceGenome']" class="mave-field-error">{{validationErrors['targetGene.referenceGenome']}}</span>
+                  <span v-if="validationErrors['targetGene.taxonomy']" class="mave-field-error">{{validationErrors['targetGene.taxonomy']}}</span>
                 </div>
                 <Message v-if="licenseId && licenses && licenses.find((l) => l.id == licenseId)?.shortName != 'CC0'" severity="warn">
                     Choosing a license with these restrictions may cause your dataset to be excluded from data federation and aggregation by MaveDB collaborators.
@@ -320,26 +320,27 @@
                 <div class="field">
                   <span class="p-float-label">
                     <Dropdown
-                        v-model="referenceGenome"
-                        :id="$scopedId('input-targetGeneReferenceGenome')"
-                        :options="referenceGenomes"
-                        panelClass="mave-reference-genome-dropdown-panel"
+                        v-model="taxonomy"
+                        :id="$scopedId('input-targetGeneTaxonomy')"
+                        :options="taxonomies"
+                        panelClass="mave-taxonomy-dropdown-panel"
                     >
                       <template #value="slotProps">
-                        <div v-if="slotProps.value" class="mave-reference-genome-value">
-                          <div class="mave-reference-genome-name">{{slotProps.value.shortName}}</div>
-                          <div class="mave-reference-genome-organism-name">{{slotProps.value.organismName}}</div>
+                        <div v-if="slotProps.value" class="mave-taxonomy-value">
+                          <div class="mave-taxonomy-common-name">{{slotProps.value.taxId}}</div>
+                          <div class="mave-taxonomy-organism-name">{{slotProps.value.organismName}}</div>
                         </div>
-                        <div v-else class="mave-reference-genome-none">&nbsp;</div>
+                        <div v-else class="mave-taxonomy-none">&nbsp;</div>
                       </template>
                       <template #option="slotProps">
-                        <div class="mave-reference-genome-name">{{slotProps.option.shortName}}</div>
-                        <div class="mave-reference-genome-organism-name">{{slotProps.option.organismName}}</div>
+                        <!--<div class="mave-reference-genome-name">{{slotProps.option.shortName}}</div>-->
+                        <div class="mave-taxonomy-common-name">{{slotProps.option.taxId}}</div>
+                        <div class="mave-taxonomy-organism-name">{{slotProps.option.organismName}}</div>
                       </template>
                     </Dropdown>
-                    <label :for="$scopedId('input-targetGeneReferenceGenome')">Reference genome</label>
+                    <label :for="$scopedId('input-targetGeneTaxonomy')">Taxonomy</label>
                   </span>
-                  <span v-if="validationErrors['targetGene.referenceGenome']" class="mave-field-error">{{validationErrors['targetGene.referenceGenome']}}</span>
+                  <span v-if="validationErrors['targetGene.taxonomy']" class="mave-field-error">{{validationErrors['targetGene.taxonomy']}}</span>
                 </div>
                 <div class="field">
                   <span class="p-float-label">
@@ -487,7 +488,7 @@ export default {
       targetGeneIdentifierSuggestions[dbName] = useItems({itemTypeName: `${dbName.toLowerCase()}-identifier-search`})
     }
     const licenses = useItems({itemTypeName: 'license'})
-    const referenceGenomes = useItems({itemTypeName: 'reference-genome'})
+    const taxonomies = useItems({itemTypeName: 'taxonomy'})
     const targetGeneSuggestions = useItems({itemTypeName: 'target-gene-search'})
     const {errors: validationErrors, handleSubmit, setErrors: setValidationErrors} = useForm()
     return {
@@ -510,7 +511,7 @@ export default {
           itemsModule.ensureItemsLoaded()
         }
       ),
-      referenceGenomes: referenceGenomes.items,
+      taxonomies: taxonomies.items,
       handleSubmit,
       setValidationErrors,
       validationErrors
@@ -551,7 +552,7 @@ export default {
         externalGeneDatabases.map((dbName) => [dbName, {identifier: null, offset: null}])
       )
     },
-    referenceGenome: null,
+    taxonomy: null,
     extraMetadata: {},
 
     existingTargetGene: null,
@@ -644,8 +645,8 @@ export default {
               }
         }
 
-        const referenceGenomeId = _.get(this.targetGene, 'referenceMaps.0.genome.id')
-        this.referenceGenome = this.referenceGenomes.find((rg) => rg.id == referenceGenomeId)
+        const taxonomyId = _.get(this.targetGene, 'taxonomy.taxId')
+        this.taxonomy = this.taxonomies.find((ta) => ta.taxId == taxonomyId)
       }
     },
     item: {
@@ -951,7 +952,7 @@ export default {
                 offset: null
               }
         }
-        this.referenceGenome = this.item.referenceGenome
+        this.taxonomy = this.item.taxonomy
         this.extraMetadata = this.item.extraMetadata
       } else {
         this.experiment = null
@@ -983,7 +984,7 @@ export default {
             offset: null
           }
         }
-        this.referenceGenome = null
+        this.taxonomy = null
         this.extraMetadata = {}
       }
     },
@@ -1013,8 +1014,8 @@ export default {
           name: _.get(this.targetGene, 'name'),
           category: _.get(this.targetGene, 'category'),
           type: _.get(this.targetGene, 'type'),
-          referenceMaps: [{
-            genomeId: _.get(this.referenceGenome, 'id')
+          taxonomy: [{
+            taxonomyId: _.get(this.taxonomy, 'id')
           }],
           wtSequence: {
             sequenceType: _.get(this.targetGene, 'wtSequence.sequenceType'),
@@ -1036,6 +1037,8 @@ export default {
           }).filter(Boolean)
         }
       }
+      console.log("111")
+      console.log(editedFields)
       if (!this.item) {
         editedFields.supersededScoreSetUrn = this.supersededScoreSet ? this.supersededScoreSet.urn : null
         editedFields.metaAnalysisSourceScoreSetUrns = (this.metaAnalysisSourceScoreSets || []).map((s) => s.urn)
@@ -1225,11 +1228,11 @@ export default {
 
 /* Form fields */
 
-.mave-reference-genome-none {
+.mave-taxonomy-none {
   min-width: 300px;
 }
 
-.mave-reference-genome-name {
+.mave-taxonomy-common-name {
   float: left;
   padding: 10px;
   min-width: 120px;
@@ -1237,17 +1240,17 @@ export default {
   background: #eee;
 }
 
-.mave-reference-genome-organism-name {
+.mave-taxonomy-organism-name {
   padding: 10px;
   margin-left: 125px;
   background: #f9f9f9;
 }
 
-.p-dropdown-item:nth-child(even) .mave-reference-genome-name {
+.p-dropdown-item:nth-child(even) .mave-taxonomy-common-name {
   background: #ddd;
 }
 
-.p-dropdown-item:nth-child(even) .mave-reference-genome-organism-name {
+.p-dropdown-item:nth-child(even) .mave-taxonomy-organism-name {
   background: #e9e9e9;
 }
 
@@ -1282,16 +1285,16 @@ export default {
 
 <style>
 
-.mave-reference-genome-dropdown-panel.p-dropdown-panel .p-dropdown-items .p-dropdown-item {
+.mave-taxonomy-dropdown-panel.p-dropdown-panel .p-dropdown-items .p-dropdown-item {
   padding: 0;
 }
 
-.mave-reference-genome-dropdown-panel.p-dropdown-panel .p-dropdown-items .p-dropdown-item:not(.p-highlight):not(.p-disabled):hover {
+.mave-taxonomy-dropdown-panel.p-dropdown-panel .p-dropdown-items .p-dropdown-item:not(.p-highlight):not(.p-disabled):hover {
   background: #eef;
 }
 
-.mave-reference-genome-dropdown-panel.p-dropdown-panel .p-dropdown-items .p-dropdown-item:not(.p-highlight):not(.p-disabled):hover .mave-reference-genome-name,
-.mave-reference-genome-dropdown-panel.p-dropdown-panel .p-dropdown-items .p-dropdown-item:not(.p-highlight):not(.p-disabled):hover .mave-reference-genome-organism-name {
+.mave-taxonomy-dropdown-panel.p-dropdown-panel .p-dropdown-items .p-dropdown-item:not(.p-highlight):not(.p-disabled):hover .mave-taxonomy-common-name,
+.mave-taxonomy-dropdown-panel.p-dropdown-panel .p-dropdown-items .p-dropdown-item:not(.p-highlight):not(.p-disabled):hover .mave-taxonomy-organism-name {
   background: #eef;
 }
 

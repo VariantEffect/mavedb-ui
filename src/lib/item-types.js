@@ -54,9 +54,9 @@ const itemTypes = {
       }
     }
   },
-  'reference-genome': {
-    name: 'reference-genome', // TODO Redundant, change this structure
-    restCollectionName: 'reference-genomes'
+  'taxonomy': {
+    name: 'taxonomy', // TODO Redundant, change this structure
+    restCollectionName: 'taxonomies'
   },
   'scoreSet': {
     name: 'scoreSet', // TODO Redundant, change this structure

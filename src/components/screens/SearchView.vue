@@ -235,10 +235,10 @@ export default {
       }
     },
     targetOrganismFilterOptions: function() {
-      if (this.scoresets.length > 0) {
-        var allScoresets = this.scoresets.map((s) => _.get(s, 'targetGene.taxonomy.organismName')).filter(String)
+      if (this.scoreSets.length > 0) {
+        var allScoreSets = this.scoreSets.map((s) => _.get(s, 'targetGene.taxonomy.organismName'))
         // Remove Undefined and null values
-        const values  = allScoresets.filter(item => !!item)
+        const values  = allScoreSets.filter(item => !!item)
         const valueFrequencies = _.countBy(values)
         return _.sortBy(_.keys(valueFrequencies)).map((value) => ({value, badge: valueFrequencies[value]}))
       } else {

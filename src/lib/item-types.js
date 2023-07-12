@@ -54,10 +54,6 @@ const itemTypes = {
       }
     }
   },
-  'taxonomy': {
-    name: 'taxonomy', // TODO Redundant, change this structure
-    restCollectionName: 'taxonomies'
-  },
   'scoreSet': {
     name: 'scoreSet', // TODO Redundant, change this structure
     restCollectionName: 'score-sets',
@@ -70,6 +66,20 @@ const itemTypes = {
       list: {
         method: 'post',
         url: `${config.apiBaseUrl}/target-genes/search`
+      }
+    }
+  },
+  'taxonomy': {
+    name: 'taxonomy', // TODO Redundant, change this structure
+    restCollectionName: 'taxonomies'
+  },
+  'taxonomy-search': {
+    name: 'taxonomy-search', // TODO Redundant, change this structure
+    restCollectionName: 'taxonomies-search',
+    httpOptions: {
+      list: {
+        method: 'post',
+        url: `${config.apiBaseUrl}/taxonomies/search`
       }
     }
   },

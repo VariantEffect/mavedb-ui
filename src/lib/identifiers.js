@@ -1,3 +1,5 @@
+import axios from 'axios'
+
 const DOI_REGEX = /^(10[.][0-9]{4,}(?:[.][0-9]+)*\/(?:(?![%"#? ])\S)+)$/
 const DOI_PREFIXES = ['https://doi.org/', 'doi:']
 const PUBMED_REGEX = /^[0-9]+$/
@@ -81,4 +83,16 @@ if (s) {
   return RAW_READ_REGEX.test(s)
 }
 return false
+}
+
+export async function validateTaxonomy(s) {
+  let response = await axios.get(`https://api.ncbi.nlm.nih.gov/datasets/v2alpha/taxonomy/taxon/${s}`)
+  if (response.status == 200) {
+    //console.log(typeof(JSON.stringify(response.data)))
+    //console.log(JSON.stringify(response.data))
+    //console.log(response.data['taxonomy_nodes'][0]['taxonomy'])
+    return response.data
+  } else {
+    return false
+  }
 }

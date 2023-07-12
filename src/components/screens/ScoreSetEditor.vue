@@ -317,13 +317,16 @@
                     <span v-if="validationErrors[`targetGene.externalIdentifiers.${dbName}.offset`]" class="mave-field-error">{{validationErrors[`targetGene.externalIdentifiers.${dbName}.offset`]}}</span>
                   </div>
                 </div>
+                <!--
                 <div class="field">
                   <span class="p-float-label">
-                    <Dropdown
+                    <Dropdown 
                         v-model="taxonomy"
                         :id="$scopedId('input-targetGeneTaxonomy')"
                         :options="taxonomies"
                         panelClass="mave-taxonomy-dropdown-panel"
+                        filter optionLabel="organismName"
+                        placeholder="Select a Taxonomy"
                     >
                       <template #value="slotProps">
                         <div v-if="slotProps.value" class="mave-taxonomy-value">
@@ -333,7 +336,6 @@
                         <div v-else class="mave-taxonomy-none">&nbsp;</div>
                       </template>
                       <template #option="slotProps">
-                        <!--<div class="mave-reference-genome-name">{{slotProps.option.shortName}}</div>-->
                         <div class="mave-taxonomy-common-name">{{slotProps.option.taxId}}</div>
                         <div class="mave-taxonomy-organism-name">{{slotProps.option.organismName}}</div>
                       </template>
@@ -342,6 +344,43 @@
                   </span>
                   <span v-if="validationErrors['targetGene.taxonomy']" class="mave-field-error">{{validationErrors['targetGene.taxonomy']}}</span>
                 </div>
+                :options="taxonomies"
+                -->
+                
+                <div class="field">
+                  <span class="p-float-label">
+                    <AutoComplete 
+                    v-model="taxonomy" 
+                    :dropdown="true"
+                    :id="$scopedId('input-targetGeneTaxonomy')"
+                    :suggestions="taxonomySuggestionsList" 
+                    field="organismName"
+                    :multiple="false"
+                    :forceSelection="true"
+                    :options="taxonomies"
+                    @complete="searchTaxonomies($event)">
+                      <template #item="slotProps">
+                        {{slotProps.item.taxId}} - {{slotProps.item.organismName}} <template v-if="slotProps.item.commonName!='NULL'">/{{slotProps.item.commonName}}</template>
+                      </template>
+                    </AutoComplete>
+                    <label :for="$scopedId('input-targetGeneTaxonomy')">Taxonomy</label>
+                  </span>
+                  <span v-if="validationErrors['targetGene.taxonomy']" class="mave-field-error">{{validationErrors['targetGene.taxonomy']}}</span>
+                </div>
+
+                <!--<AutoComplete
+                        ref="taxonomyInput"
+                        v-model="taxonomies"
+                        :id="$scopedId('input-targetGeneTaxonomy')"
+                        dropdown
+                        :suggestions="taxonomySuggestionsList"
+                        :multiple="false"
+                        field="taxonomyName"
+                        @complete="searchTaxonomies"
+                        @blur="acceptNewTaxonomy"
+                        @keyup.enter="acceptNewTaxonomy"
+                        @keyup.escape="clearTaxonomySearch"
+                    />-->
                 <div class="field">
                   <span class="p-float-label">
                     <FileUpload
@@ -489,6 +528,7 @@ export default {
     }
     const licenses = useItems({itemTypeName: 'license'})
     const taxonomies = useItems({itemTypeName: 'taxonomy'})
+    const taxonomySuggestions = useItems({itemTypeName: 'taxonomy-search'})
     const targetGeneSuggestions = useItems({itemTypeName: 'target-gene-search'})
     const {errors: validationErrors, handleSubmit, setErrors: setValidationErrors} = useForm()
     return {
@@ -512,6 +552,8 @@ export default {
         }
       ),
       taxonomies: taxonomies.items,
+      taxonomySuggestions: taxonomySuggestions.items,
+      setTaxonomySearch: (text) => taxonomySuggestions.setRequestBody({text}),
       handleSubmit,
       setValidationErrors,
       validationErrors
@@ -604,6 +646,9 @@ export default {
     },
     targetGeneSuggestionsList: function() {
       return this.suggestionsForAutocomplete(this.targetGeneSuggestions)
+    },
+    taxonomySuggestionsList: function() {
+      return this.suggestionsForAutocomplete(this.taxonomySuggestions)
     },
     defaultLicenseId: function() {
       return this.licenses ? this.licenses.find((license) => license.shortName == 'CC0')?.id : null
@@ -802,7 +847,7 @@ export default {
       if (!currentIdentifier) {
         if (searchText == '') {
           this.targetGene.externalIdentifiers[dbName].identifier = null
-        } else  if (validateIdentifier(dbName, searchText)) {
+        } else if (validateIdentifier(dbName, searchText)) {
           const identifier = normalizeIdentifier(dbName, searchText)
           this.targetGene.externalIdentifiers[dbName].identifier = {identifier}
           input.inputTextValue = null
@@ -836,6 +881,46 @@ export default {
       const searchText = (event.query || '').trim()
       if (searchText.length > 0) {
         this.setTargetGeneSearch(event.query)
+      }
+    },
+
+
+    /*acceptNewTaxonomy: function() {
+      const input = this.$refs.taxonomyInput
+      //const searchText = (input.inputTextValue || '').trim()
+      //if (validateTaxonomy(searchText) == false) {
+      //  this.$toast.add({severity:'error', summary: 'Invalid Taxonomy.', life: 3500})
+      //}else{
+      //  const newTaxonomyResponse = validateTaxonomy(searchText)
+      //  console.log(JSON.stringify(newTaxonomyResponse))
+      //  this.taxonomy = newTaxonomyResponse
+      //  input.inputTextValue = null
+
+        // Clear the text input.
+        // TODO This depends on PrimeVue internals more than I'd like:
+        // input.$refs.input.value = ''
+      //}
+    }, */
+
+    clearTaxonomySearch: function() {
+      const input = this.$refs.taxonomyInput
+      input.inputTextValue = null
+
+      // Clear the text input.
+      // TODO This depends on PrimeVue internals more than I'd like:
+      // input.$refs.input.value = ''
+    },
+
+    searchTaxonomies: function(event) {
+      const searchText = (event.query || '').trim()
+      //let taxonomyList = [{"taxId":1515,"organismName":"Acetivibrio thermocellus","commonName":"NULL","rank":"SPECIES","hasDescribedSpeciesName":true,"articleReference":"NCBI:txid1515","genomeId":null,"id":88,"url":"https://www.ncbi.nlm.nih.gov/Taxonomy/Browser/wwwtax.cgi?mode=info&id=1515"},{"taxId":203119,"organismName":"Acetivibrio thermocellus ATCC 27405","commonName":"NULL","rank":"STRAIN","hasDescribedSpeciesName":false,"articleReference":"NCBI:txid203119","genomeId":null,"id":41,"url":"https://www.ncbi.nlm.nih.gov/Taxonomy/Browser/wwwtax.cgi?mode=info&id=203119"}]
+      if (searchText.length > 0) {
+        this.setTaxonomySearch(event.query)
+      }else{
+        this.taxonomySuggestionsList.value = this.taxonomies
+        console.log("111")
+        console.log(this.taxonomySuggestionsList)
+        console.log(this.taxonomySuggestionsList.value)
       }
     },
 
@@ -1014,9 +1099,9 @@ export default {
           name: _.get(this.targetGene, 'name'),
           category: _.get(this.targetGene, 'category'),
           type: _.get(this.targetGene, 'type'),
-          taxonomy: [{
-            taxonomyId: _.get(this.taxonomy, 'id')
-          }],
+          //taxonomy: {
+          taxonomyId: _.get(this.taxonomy, 'id'),
+          //},
           wtSequence: {
             sequenceType: _.get(this.targetGene, 'wtSequence.sequenceType'),
             sequence: _.get(this.targetGene, 'wtSequence.sequence')
@@ -1037,8 +1122,6 @@ export default {
           }).filter(Boolean)
         }
       }
-      console.log("111")
-      console.log(editedFields)
       if (!this.item) {
         editedFields.supersededScoreSetUrn = this.supersededScoreSet ? this.supersededScoreSet.urn : null
         editedFields.metaAnalysisSourceScoreSetUrns = (this.metaAnalysisSourceScoreSets || []).map((s) => s.urn)

@@ -349,16 +349,20 @@
                 
                 <div class="field">
                   <span class="p-float-label">
-                    <AutoComplete 
+                    <AutoComplete
+                    ref="taxonomyInput" 
                     v-model="taxonomy" 
                     :dropdown="true"
                     :id="$scopedId('input-targetGeneTaxonomy')"
                     :suggestions="taxonomySuggestionsList" 
-                    field="organismName"
+                    field="taxonomyFieldName"
                     :multiple="false"
                     :forceSelection="true"
                     :options="taxonomies"
-                    @complete="searchTaxonomies($event)">
+                    @complete="searchTaxonomies"
+                    @blur="acceptNewTaxonomy"
+                    @keyup.enter="acceptNewTaxonomy"
+                    @keyup.escape="clearTaxonomySearch">
                       <template #item="slotProps">
                         {{slotProps.item.taxId}} - {{slotProps.item.organismName}} <template v-if="slotProps.item.commonName!='NULL'">/{{slotProps.item.commonName}}</template>
                       </template>
@@ -375,7 +379,7 @@
                         dropdown
                         :suggestions="taxonomySuggestionsList"
                         :multiple="false"
-                        field="taxonomyName"
+                        field="organismName"
                         @complete="searchTaxonomies"
                         @blur="acceptNewTaxonomy"
                         @keyup.enter="acceptNewTaxonomy"
@@ -502,7 +506,7 @@ import DefaultLayout from '@/components/layout/DefaultLayout'
 import useItem from '@/composition/item'
 import useItems from '@/composition/items'
 import config from '@/config'
-import {normalizeDoi, normalizeIdentifier, normalizePubmedId, validateDoi, validateIdentifier, validatePubmedId} from '@/lib/identifiers'
+import {normalizeDoi, normalizeIdentifier, normalizePubmedId, validateDoi, validateIdentifier,validateTaxonomy, validatePubmedId} from '@/lib/identifiers'
 import useFormatters from '@/composition/formatters'
 
 const externalGeneDatabases = ['UniProt', 'Ensembl', 'RefSeq']
@@ -648,6 +652,8 @@ export default {
       return this.suggestionsForAutocomplete(this.targetGeneSuggestions)
     },
     taxonomySuggestionsList: function() {
+      console.log("hahah")
+      console.log(this.suggestionsForAutocomplete(this.taxonomySuggestions))
       return this.suggestionsForAutocomplete(this.taxonomySuggestions)
     },
     defaultLicenseId: function() {
@@ -885,22 +891,25 @@ export default {
     },
 
 
-    /*acceptNewTaxonomy: function() {
+    acceptNewTaxonomy: async function() {
       const input = this.$refs.taxonomyInput
-      //const searchText = (input.inputTextValue || '').trim()
-      //if (validateTaxonomy(searchText) == false) {
-      //  this.$toast.add({severity:'error', summary: 'Invalid Taxonomy.', life: 3500})
-      //}else{
-      //  const newTaxonomyResponse = validateTaxonomy(searchText)
-      //  console.log(JSON.stringify(newTaxonomyResponse))
-      //  this.taxonomy = newTaxonomyResponse
-      //  input.inputTextValue = null
-
-        // Clear the text input.
+      const searchText = (input.inputTextValue || '').trim()
+      const newTaxonomyResponse = await validateTaxonomy(searchText)
+      console.log("222")
+      console.log(newTaxonomyResponse)
+    if (newTaxonomyResponse === false) {
+      this.$toast.add({ severity: 'error', summary: 'Invalid Taxonomy.', life: 3500 })
+    } else {
+      this.taxonomy = newTaxonomyResponse
+      console.log("223")
+      //console.log(this.taxonomy)
+      //console.log(newTaxonomyResponse.organism_name)
+      input.inputTextValue = null
+      // Clear the text input.
         // TODO This depends on PrimeVue internals more than I'd like:
-        // input.$refs.input.value = ''
-      //}
-    }, */
+      input.$refs.input.value = ''
+    }
+  },
 
     clearTaxonomySearch: function() {
       const input = this.$refs.taxonomyInput
@@ -1099,9 +1108,15 @@ export default {
           name: _.get(this.targetGene, 'name'),
           category: _.get(this.targetGene, 'category'),
           type: _.get(this.targetGene, 'type'),
-          //taxonomy: {
-          taxonomyId: _.get(this.taxonomy, 'id'),
-          //},
+          taxonomy: {
+            //taxonomyId: _.get(this.taxonomy, 'id'),
+            taxId: _.get(this.taxonomy, 'taxId'),
+            organismName: _.get(this.taxonomy, 'organismName'),
+            commonName: _.get(this.taxonomy, 'commonName'),
+            rank: _.get(this.taxonomy, 'rank'),
+            hasDescribedSpeciesName: _.get(this.taxonomy, 'hasDescribedSpeciesName'),
+            articleReference: _.get(this.taxonomy, 'articleReference'),
+          },
           wtSequence: {
             sequenceType: _.get(this.targetGene, 'wtSequence.sequenceType'),
             sequence: _.get(this.targetGene, 'wtSequence.sequence')
@@ -1136,6 +1151,7 @@ export default {
       }
 
       const editedItem = _.merge({}, this.item || {}, editedFields)
+      console.log("1212")
       console.log(editedItem)
 
       this.progressVisible = true

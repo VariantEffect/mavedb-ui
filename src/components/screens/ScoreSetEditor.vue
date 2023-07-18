@@ -563,6 +563,7 @@ export default {
     keywords: [],
     doiIdentifiers: [],
     primaryPublicationIdentifiers: [],
+    secondaryPublicationIdentifiers: [],
     publicationIdentifiers: [],
     dataUsagePolicy: null,
     targetGene: {
@@ -960,6 +961,7 @@ export default {
             return primary.identifier === publication.identifier
           })
         })
+        this.secondaryPublicationIdentifiers = this.item.secondaryPublicationIdentifiers
         this.dataUsagePolicy = this.item.dataUsagePolicy
         this.targetGene = _.merge({
           name: null,
@@ -992,6 +994,7 @@ export default {
         this.keywords = []
         this.doiIdentifiers = []
         this.primaryPublicationIdentifiers = []
+        this.secondaryPublicationIdentifiers = []
         this.publicationIdentifiers = []
         this.dataUsagePolicy = null
         this.targetGene = {
@@ -1023,6 +1026,14 @@ export default {
     // Currently there is some special handling here, though, so we will leave that for a later refactoring.
 
     save: async function() {
+      // Remove primary identifier from publications to construct secondary identifiers
+      const primaryPublicationIdentifiers = this.primaryPublicationIdentifiers.map((identifier) => _.pick(identifier, ['identifier', 'dbName']))
+      const secondaryPublicationIdentifiers = this.publicationIdentifiers.map(
+        (identifier) => _.pick(identifier, ['identifier', 'dbName'])
+      ).filter(
+          secondary => !primaryPublicationIdentifiers.some(primary => primary.identifier == secondary.identifier && primary.dbName == secondary.dbName)
+      )
+
       const editedFields = {
         experimentUrn: this.experiment?.urn,
         licenseId: this.licenseId,
@@ -1032,8 +1043,8 @@ export default {
         methodText: this.methodText,
         keywords: this.keywords,
         doiIdentifiers: this.doiIdentifiers.map((identifier) => _.pick(identifier, 'identifier')),
-        primaryPublicationIdentifiers: this.primaryPublicationIdentifiers.map((identifier) => _.pick(identifier, ['identifier', 'dbName'])),
-        publicationIdentifiers: this.publicationIdentifiers.map((identifier) => _.pick(identifier, ['identifier', 'dbName'])),
+        primaryPublicationIdentifiers: primaryPublicationIdentifiers,
+        secondaryPublicationIdentifiers: secondaryPublicationIdentifiers,
         dataUsagePolicy: this.dataUsagePolicy,
         extraMetadata: {},
         targetGene: {

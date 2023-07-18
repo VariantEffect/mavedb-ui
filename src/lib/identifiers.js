@@ -92,14 +92,15 @@ export async function validateTaxonomy(s) {
   try {
     response = await axios.get(`https://api.ncbi.nlm.nih.gov/datasets/v2alpha/taxonomy/taxon/${s}`)
     if (response.status === 200) {
-      //console.log(typeof(JSON.stringify(response.data)))
-      //console.log(JSON.stringify(response.data))
-      //console.log(response.data['taxonomy_nodes'][0]['taxonomy'])
-      //nih_taxonomy = JSON.stringify(response.data['taxonomy_nodes'][0]['taxonomy'])
       taxonomyNode = response.data.taxonomy_nodes[0]
       ncbi_taxonomy = taxonomyNode.taxonomy
-      //return JSON.stringify(response.data)
-      return ncbi_taxonomy
+      return [ncbi_taxonomy].map((ncbiTaxonomyEntry) => ({
+        taxId: ncbiTaxonomyEntry.tax_id,
+        organismName: ncbiTaxonomyEntry.organism_name,
+        commonName: ncbiTaxonomyEntry.common_name !== null ? ncbiTaxonomyEntry.common_name : null,
+        rank: ncbiTaxonomyEntry.rank !== null ? ncbiTaxonomyEntry.rank : null,
+        hasDescribedSpeciesName: ncbiTaxonomyEntry.has_described_species_name !== null ? ncbiTaxonomyEntry.has_described_species_name : null,
+      }))
     } else {
       return false
     }

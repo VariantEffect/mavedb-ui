@@ -355,9 +355,8 @@
                     :dropdown="true"
                     :id="$scopedId('input-targetGeneTaxonomy')"
                     :suggestions="taxonomySuggestionsList" 
-                    field="taxonomyFieldName"
+                    field="organismName"
                     :multiple="false"
-                    :forceSelection="true"
                     :options="taxonomies"
                     @complete="searchTaxonomies"
                     @blur="acceptNewTaxonomy"
@@ -652,8 +651,6 @@ export default {
       return this.suggestionsForAutocomplete(this.targetGeneSuggestions)
     },
     taxonomySuggestionsList: function() {
-      console.log("hahah")
-      console.log(this.suggestionsForAutocomplete(this.taxonomySuggestions))
       return this.suggestionsForAutocomplete(this.taxonomySuggestions)
     },
     defaultLicenseId: function() {
@@ -890,25 +887,21 @@ export default {
       }
     },
 
-
     acceptNewTaxonomy: async function() {
       const input = this.$refs.taxonomyInput
       const searchText = (input.inputTextValue || '').trim()
-      const newTaxonomyResponse = await validateTaxonomy(searchText)
-      console.log("222")
-      console.log(newTaxonomyResponse)
-    if (newTaxonomyResponse === false) {
-      this.$toast.add({ severity: 'error', summary: 'Invalid Taxonomy.', life: 3500 })
-    } else {
-      this.taxonomy = newTaxonomyResponse
-      console.log("223")
-      //console.log(this.taxonomy)
-      //console.log(newTaxonomyResponse.organism_name)
-      input.inputTextValue = null
-      // Clear the text input.
-        // TODO This depends on PrimeVue internals more than I'd like:
-      input.$refs.input.value = ''
-    }
+      if (searchText.length > 0) {
+        const newTaxonomyResponse = await validateTaxonomy(searchText)
+        if (newTaxonomyResponse === false) {
+          this.$toast.add({ severity: 'error', summary: 'Invalid Taxonomy.', life: 3500 })
+        } else {
+          this.taxonomy = newTaxonomyResponse[0]
+          input.inputTextValue = null
+          // Clear the text input.
+          // TODO This depends on PrimeVue internals more than I'd like:
+          input.$refs.input.value = ''
+      }
+    }  
   },
 
     clearTaxonomySearch: function() {

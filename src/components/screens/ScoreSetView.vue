@@ -38,10 +38,11 @@
         <div v-if="item.experiment">Member of <router-link :to="{name: 'experiment', params: {urn: item.experiment.urn}}">{{item.experiment.urn}}</router-link></div>
         <div v-if="item.supersedingScoreSet">Current version <router-link :to="{name: 'scoreSet', params: {urn: item.supersedingScoreSet.urn}}">{{item.supersedingScoreSet.urn}}</router-link></div>
         <div v-else>Current version <router-link :to="{name: 'scoreSet', params: {urn: item.urn}}">{{item.urn}}</router-link></div>
-        <div v-if="item.metaAnalysisSourceScoreSets.length!=0">Meta-analyzes
-          <template v-for="(scoreSet,index) in sortedMetaAnalysis" :key="scoreSet">
-            <router-link :to="{name: 'scoreSet', params: {urn: scoreSet.urn}}">{{scoreSet.urn}}</router-link>
-            <template v-if="index !== item.metaAnalysisSourceScoreSets.length-1"> · </template>
+        <div v-if="sortedMetaAnalyzesScoreSetUrns.length > 0">
+          Meta-analyzes
+          <template v-for="(urn, index) of sortedMetaAnalyzesScoreSetUrns" :key="urn">
+            <template v-if="index > 0"> · </template>
+            <EntityLink entityType="scoreSet" :urn="urn" />
           </template>
         </div>
         <div>Download files <Button class="p-button-outlined p-button-sm" @click="downloadFile('scores')">Scores</Button>&nbsp;
@@ -199,6 +200,7 @@ import Button from 'primevue/button'
 import Chip from 'primevue/chip'
 
 import ScoreSetHeatmap from '@/components/ScoreSetHeatmap'
+import EntityLink from '@/components/common/EntityLink'
 import DefaultLayout from '@/components/layout/DefaultLayout'
 import useFormatters from '@/composition/formatters'
 import useItem from '@/composition/item'
@@ -215,7 +217,7 @@ import Column from 'primevue/column';
 
 export default {
   name: 'ScoreSetView',
-  components: {Button, Chip, DefaultLayout, ScoreSetHeatmap, TabView, TabPanel, DataTable, Column},
+  components: {Button, Chip, DefaultLayout, EntityLink, ScoreSetHeatmap, TabView, TabPanel, DataTable, Column},
   computed: {
     isMetaDataEmpty: function(){
       //If extraMetadata is empty, return value will be true.
@@ -233,9 +235,9 @@ export default {
       const showCountColumns = !_.isEmpty(this.item?.datasetColumns?.count_columns)
       return showCountColumns ? [...fixedColumns, ...this.item?.datasetColumns?.count_columns || []] : []
     },
-    sortedMetaAnalysis: function(){
-      return _.orderBy(this.item.metaAnalysisSourceScoreSets, 'urn')
-    },
+    sortedMetaAnalyzesScoreSetUrns: function(){
+      return _.sortBy(this.item?.metaAnalyzesScoreSetUrns || [])
+    }
   },
   setup: () => {
     const scoresRemoteData = useRemoteData()

@@ -66,31 +66,31 @@
                 </span>
                 <span v-if="validationErrors.supersededScoreSetUrn" class="mave-field-error">{{validationErrors.supersededScoreSetUrn}}</span>
               </div>
-              <div v-if="itemStatus != 'NotLoaded' && metaAnalysisSourceScoreSets.length > 0">
+              <div v-if="itemStatus != 'NotLoaded' && item?.metaAnalyzesScoreSetUrns?.length > 0">
                 Meta-analysis for:<br />
-                <div v-for="metaAnalysisSourceScoreSet of metaAnalysisSourceScoreSets" :key="metaAnalysisSourceScoreSet">
-                  <router-link :to="{name: 'scoreSet', params: {urn: metaAnalysisSourceScoreSet.urn}}">{{metaAnalysisSourceScoreSet.title}}</router-link>
+                <div v-for="metaAnalyzesScoreSetUrn of item.metaAnalyzesScoreSetUrns" :key="metaAnalyzesScoreSetUrn">
+                  <EntityLink entityType="scoreSet" :urn="metaAnalyzesScoreSetUrn"></EntityLink>
                 </div>
               </div>
               <div v-if="itemStatus == 'NotLoaded'" class="field">
                 <span class="p-float-label">
                   <AutoComplete
-                      ref="metaAnalysisSourceScoreSetsInput"
-                      v-model="metaAnalysisSourceScoreSets"
-                      :id="$scopedId('input-metaAnalysisSourceScoreSets')"
+                      ref="metaAnalyzesScoreSetsInput"
+                      v-model="metaAnalyzesScoreSets"
+                      :id="$scopedId('input-metaAnalyzesScoreSets')"
                       field="title"
                       :forceSelection="true"
                       :multiple="true"
-                      :suggestions="metaAnalysisSourceScoreSetSuggestionsList"
-                      @complete="searchMetaAnalysisSourceScoreSets"
+                      :suggestions="metaAnalyzesScoreSetSuggestionsList"
+                      @complete="searchMetaAnalyzesScoreSets"
                   >
                     <template #item="slotProps">
                       {{slotProps.item.urn}}: {{slotProps.item.title}}
                     </template>
                   </AutoComplete>
-                  <label :for="$scopedId('input-metaAnalysisSourceScoreSets')">Meta-analysis for</label>
+                  <label :for="$scopedId('input-metaAnalyzesScoreSets')">Meta-analysis for</label>
                 </span>
-                <span v-if="validationErrors.metaAnalysisSourceScoreSetUrns" class="mave-field-error">{{validationErrors.metaAnalysisSourceScoreSetUrns}}</span>
+                <span v-if="validationErrors.metaAnalyzesScoreSetUrns" class="mave-field-error">{{validationErrors.metaAnalyzesScoreSetUrns}}</span>
               </div>
             </template>
           </Card>
@@ -458,6 +458,7 @@ import Textarea from 'primevue/textarea'
 import {useForm} from 'vee-validate'
 import {ref} from 'vue'
 
+import EntityLink from '@/components/common/EntityLink'
 import DefaultLayout from '@/components/layout/DefaultLayout'
 import useItem from '@/composition/item'
 import useItems from '@/composition/items'
@@ -469,7 +470,7 @@ const externalGeneDatabases = ['UniProt', 'Ensembl', 'RefSeq']
 
 export default {
   name: 'ScoreSetEditor',
-  components: { AutoComplete, Button, Card, Chips, DefaultLayout, Dropdown, FileUpload, InputNumber, InputText, Message, Multiselect, ProgressSpinner, SelectButton, TabPanel, TabView, Textarea},
+  components: { AutoComplete, Button, Card, Chips, DefaultLayout, Dropdown, EntityLink, FileUpload, InputNumber, InputText, Message, Multiselect, ProgressSpinner, SelectButton, TabPanel, TabView, Textarea},
 
   setup: () => {
     const editableExperiments = useItems({
@@ -529,7 +530,7 @@ export default {
     experiment: null,
     licenseId: null,
     title: null,
-    metaAnalysisSourceScoreSets: [],
+    metaAnalyzesScoreSets: [],
     supersededScoreSet: null,
     shortDescription: null,
     abstractText: null,
@@ -576,7 +577,7 @@ export default {
       scoresFile: null
     },
     externalGeneDatabases,
-    metaAnalysisSourceScoreSetSuggestions: [],
+    metaAnalyzesScoreSetSuggestions: [],
     supersededScoreSetSuggestions: []
   }),
 
@@ -592,8 +593,8 @@ export default {
     doiIdentifierSuggestionsList: function() {
       return this.suggestionsForAutocomplete(this.doiIdentifierSuggestions)
     },
-    metaAnalysisSourceScoreSetSuggestionsList: function() {
-      return this.suggestionsForAutocomplete(this.metaAnalysisSourceScoreSetSuggestions)
+    metaAnalyzesScoreSetSuggestionsList: function() {
+      return this.suggestionsForAutocomplete(this.metaAnalyzesScoreSetSuggestions)
     },
     publicationIdentifierSuggestionsList: function() {
       return this.suggestionsForAutocomplete(this.publicationIdentifierSuggestions)
@@ -679,10 +680,10 @@ export default {
       return suggestions
     },
 
-    searchMetaAnalysisSourceScoreSets: async function(event) {
+    searchMetaAnalyzesScoreSets: async function(event) {
       const searchText = (event.query || '').trim()
       if (searchText.length > 0) {
-        this.metaAnalysisSourceScoreSetSuggestions = await this.searchScoreSets(searchText)
+        this.metaAnalyzesScoreSetSuggestions = await this.searchScoreSets(searchText)
       }
     },
 
@@ -917,7 +918,8 @@ export default {
       if (this.item) {
         this.experiment = this.item.experiment
         this.licenseId = this.item.license.id
-        this.metaAnalysisSourceScoreSets = this.item.metaAnalysisSourceScoreSets
+        // metaAnalyzesScoreSets is only used when editing a new score set, so we don't need to populate it from URNs.
+        this.metaAnalyzesScoreSets = []
         this.supersededScoreSet = this.item.supersededScoreSet
         this.title = this.item.title
         this.shortDescription = this.item.shortDescription
@@ -956,7 +958,7 @@ export default {
       } else {
         this.experiment = null
         this.licenseId = this.defaultLicenseId
-        this.metaAnalysisSourceScoreSets = []
+        this.metaAnalyzesScoreSets = []
         this.supersededScoreSet = null
         this.title = null
         this.shortDescription = null
@@ -1038,7 +1040,7 @@ export default {
       }
       if (!this.item) {
         editedFields.supersededScoreSetUrn = this.supersededScoreSet ? this.supersededScoreSet.urn : null
-        editedFields.metaAnalysisSourceScoreSetUrns = (this.metaAnalysisSourceScoreSets || []).map((s) => s.urn)
+        editedFields.metaAnalyzesScoreSetUrns = this.metaAnalyzesScoreSets.map((s) => s.urn)
       }
       else {
         // empty item arrays so that deleted items aren't merged back into editedItem object
@@ -1050,7 +1052,6 @@ export default {
       }
 
       const editedItem = _.merge({}, this.item || {}, editedFields)
-      console.log(editedItem)
 
       this.progressVisible = true
       let response = null

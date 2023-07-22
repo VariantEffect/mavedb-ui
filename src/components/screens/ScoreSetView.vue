@@ -89,7 +89,7 @@
         <div v-if="item.keywords && item.keywords.length > 0">
           <div class="mave-score-set-section-title">Keywords</div>
           <div class="mave-score-set-keywords">
-            <a v-for="(keyword, i) of item.keywords" :key="i" :href="`https://www.mavedb.org/search/?keywords=${keyword}`"><Chip :label="keyword" /></a>
+            <a v-for="(keyword, i) in item.keywords" :key="i" :href="`https://www.mavedb.org/search/?keywords=${keyword}`"><Chip :label="keyword" /></a>
           </div>
         </div>
         <div v-if="item.targetGene">
@@ -198,6 +198,10 @@ import _ from 'lodash'
 import marked from 'marked'
 import Button from 'primevue/button'
 import Chip from 'primevue/chip'
+import Column from 'primevue/column'
+import DataTable from 'primevue/datatable'
+import TabPanel from 'primevue/tabpanel'
+import TabView from 'primevue/tabview'
 
 import ScoreSetHeatmap from '@/components/ScoreSetHeatmap'
 import EntityLink from '@/components/common/EntityLink'
@@ -208,12 +212,6 @@ import useRemoteData from '@/composition/remote-data'
 import config from '@/config'
 import {oidc} from '@/lib/auth'
 import {parseScores} from '@/lib/scores'
-
-import TabView from 'primevue/tabview'
-import TabPanel from 'primevue/tabpanel'
-
-import DataTable from 'primevue/datatable';
-import Column from 'primevue/column';
 
 export default {
   name: 'ScoreSetView',

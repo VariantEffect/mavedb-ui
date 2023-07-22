@@ -83,13 +83,27 @@
                       ref="publicationIdentifiersInput"
                       v-model="publicationIdentifiers"
                       :id="$scopedId('input-publicationIdentifiers')"
-                      field="identifier"
                       :multiple="true"
                       :suggestions="publicationIdentifierSuggestionsList"
                       @complete="searchPublicationIdentifiers"
                       @keyup.enter="acceptNewPublicationIdentifier"
                       @keyup.escape="clearPublicationIdentifierSearch"
-                  />
+                      forceSelection
+                  >
+                    <template #chip="slotProps">
+                      <div>
+                        <div>{{ slotProps.value.identifier }}</div>
+                      </div>
+                    </template>
+                    <template #item="slotProps">
+                      <div>
+                          <div>Title: {{ slotProps.item.title }}</div>
+                          <div>DOI: {{ slotProps.item.publicationDoi || slotProps.item.preprintDoi }}</div>
+                          <div>Identifier: {{ slotProps.item.identifier }}</div>
+                          <div>Database: {{ slotProps.item.dbName }}</div>
+                      </div>
+                    </template>
+                  </AutoComplete>
                   <label :for="$scopedId('input-publicationIdentifiers')">Publication identifiers</label>
                 </span>
                 <span v-if="validationErrors.publicationIdentifiers" class="mave-field-error">{{validationErrors.publicationIdentifiers}}</span>
@@ -104,7 +118,16 @@
                     optionLabel="identifier"
                     placeholder="Select a primary publication (Where the dataset is described)"
                     :selectionLimit="1"
-                  />
+                  >
+                    <template #option="slotProps">
+                          <div>
+                              <div>Title: {{ slotProps.option.title }}</div>
+                              <div>DOI: {{ slotProps.option.publicationDoi || slotProps.option.preprintDoi }}</div>
+                              <div>Identifier: {{ slotProps.option.identifier }}</div>
+                              <div>Database: {{ slotProps.option.dbName }}</div>
+                          </div>
+                    </template>
+                  </Multiselect>
                   <!-- label overlaps with placeholder when none are selected without this v-if -->
                   <label v-if="this.primaryPublicationIdentifiers.length > 0" :for="$scopedId('input-primaryPublicationIdentifiers')">Primary publication</label>
                 </span>
@@ -228,6 +251,7 @@ export default {
   setup: () => {
     const doiIdentifierSuggestions = useItems({itemTypeName: 'doi-identifier-search'})
     const publicationIdentifierSuggestions = useItems({itemTypeName: 'publication-identifier-search'})
+    const externalPublicationIdentifierSuggestions = useItems({itemTypeName: 'external-publication-identifier-search'})
     const rawReadIdentifierSuggestions = useItems({itemTypeName: 'raw-read-identifier-search'})
     const {errors: validationErrors, handleSubmit, setErrors: setValidationErrors} = useForm()
     return {
@@ -237,6 +261,8 @@ export default {
       setDoiIdentifierSearch: (text) => doiIdentifierSuggestions.setRequestBody({text}),
       publicationIdentifierSuggestions: publicationIdentifierSuggestions.items,
       setPublicationIdentifierSearch: (text) => publicationIdentifierSuggestions.setRequestBody({text}),
+      externalPublicationIdentifierSuggestions: externalPublicationIdentifierSuggestions.items,
+      setExternalPublicationIdentifierSearch: (text) => externalPublicationIdentifierSuggestions.setRequestBody({text}),
       rawReadIdentifierSuggestions: rawReadIdentifierSuggestions.items,
       setRawReadIdentifierSearch: (text) => rawReadIdentifierSuggestions.setRequestBody({text}),
       handleSubmit,
@@ -265,6 +291,7 @@ export default {
     keywords: [],
     doiIdentifiers: [],
     primaryPublicationIdentifiers: [],
+    secondaryPublicationIdentifiers: [],
     publicationIdentifiers: [],
     rawReadIdentifiers: [],
     extraMetadata: {},
@@ -288,7 +315,13 @@ export default {
     publicationIdentifierSuggestionsList: function() {
       // The PrimeVue AutoComplete doesn't seem to like it if we set the suggestion list to [].
       // This causes the drop-down to stop appearing when we later populate the list.
-      return this.publicationIdentifierSuggestions || [{}]
+      let publicationIdentifierSuggestions = _.unionBy(this.publicationIdentifierSuggestions, this.externalPublicationIdentifierSuggestions, 'identifier')
+      if (!Array.isArray(publicationIdentifierSuggestions) || !publicationIdentifierSuggestions.length) {
+        // array does not exist, is not an array, or is empty
+        return [{}]
+      } else {
+        return publicationIdentifierSuggestions
+      }
     },
     rawReadIdentifierSuggestionsList: function() {
       // The PrimeVue AutoComplete doesn't seem to like it if we set the suggestion list to [].
@@ -374,6 +407,7 @@ export default {
       const searchText = (event.query || '').trim()
       if (searchText.length > 0) {
         this.setPublicationIdentifierSearch(event.query)
+        this.setExternalPublicationIdentifierSearch(event.query)
       }
     },
 
@@ -472,6 +506,7 @@ export default {
             return primary.identifier === publication.identifier
           })
         })
+        this.secondaryPublicationIdentifiers = this.item.secondaryPublicationIdentifiers
         this.rawReadIdentifiers = this.item.rawReadIdentifiers
         this.extraMetadata = this.item.extraMetadata
       } else {
@@ -482,6 +517,7 @@ export default {
         this.keywords = []
         this.doiIdentifiers = []
         this.primaryPublicationIdentifiers = []
+        this.secondaryPublicationIdentifiers = []
         this.publicationIdentifiers = []
         this.rawReadIdentifiers = []
         this.extraMetadata = {}
@@ -496,6 +532,14 @@ export default {
     // Currently there is some special handling here, though, so we will leave that for a later refactoring.
 
     save: async function() {
+      // Remove primary identifier from publications to construct secondary identifiers
+      const primaryPublicationIdentifiers = this.primaryPublicationIdentifiers.map((identifier) => _.pick(identifier, ['identifier', 'dbName']))
+      const secondaryPublicationIdentifiers = this.publicationIdentifiers.map(
+        (identifier) => _.pick(identifier, ['identifier', 'dbName'])
+      ).filter(
+          secondary => !primaryPublicationIdentifiers.some(primary => primary.identifier == secondary.identifier && primary.dbName == secondary.dbName)
+      )
+
       const editedFields = {
         title: this.title,
         shortDescription: this.shortDescription,
@@ -503,8 +547,8 @@ export default {
         methodText: this.methodText,
         keywords: this.keywords,
         doiIdentifiers: this.doiIdentifiers.map((identifier) => _.pick(identifier, 'identifier')),
-        primaryPublicationIdentifiers: this.primaryPublicationIdentifiers.map((identifier) => _.pick(identifier, 'identifier')),
-        publicationIdentifiers: this.publicationIdentifiers.map((identifier) => _.pick(identifier, 'identifier')),
+        primaryPublicationIdentifiers: primaryPublicationIdentifiers,
+        secondaryPublicationIdentifiers: secondaryPublicationIdentifiers,
         rawReadIdentifiers: this.rawReadIdentifiers.map((identifier) => _.pick(identifier, 'identifier')),
         extraMetadata: {}
       }

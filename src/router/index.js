@@ -100,17 +100,17 @@ const routes = [{
   name: 'pubmedPublicationIdentifier',
   path: '/publication-identifiers/pubmed/:identifier',
   component: PublicationIdentifierView,
-  props: (route) => ({itemId: route.params.identifier, name: route.name})
+  props: (route) => ({itemId: route.params.identifier, name: route.name, dbId: 'PubMed'})
 }, {
   name: 'biorxivPublicationIdentifier',
   path: '/publication-identifiers/biorxiv/:identifier',
   component: PublicationIdentifierView,
-  props: (route) => ({itemId: route.params.identifier, name: route.name})
+  props: (route) => ({itemId: route.params.identifier, name: route.name,  dbId: 'bioRxiv'})
 }, {
   name: 'medrxivPublicationIdentifier',
   path: '/publication-identifiers/medrxiv/:identifier',
   component: PublicationIdentifierView,
-  props: (route) => ({itemId: route.params.identifier, name: route.name})
+  props: (route) => ({itemId: route.params.identifier, name: route.name, dbId: 'medRxiv'})
 }]
 
 const router = createRouter({

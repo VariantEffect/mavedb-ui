@@ -68,7 +68,7 @@
                 <ul style="list-style-type:square;">
                   <li v-html="markdownToHtml(publication.referenceHtml)" ></li>
                   <div>
-                    Publication: <a :href="`https://localhost:8081/#/publication-identifiers/${publication.dbName}/${publication.identifier}`">{{ publication.identifier }}</a>
+                    Publication: <a :href="`https://www.mavedb.org/#/publication-identifiers/${publication.dbName}/${publication.identifier}`">{{ publication.identifier }}</a>
                   </div>
                   <div>
                     <a :href="`${publication.url}`" target="_blank">View article on the web</a>
@@ -83,7 +83,7 @@
                 <ul style="list-style-type:square;">
                   <li v-html="markdownToHtml(publication.referenceHtml)" ></li>
                   <div>
-                    Publication: <a :href="`https://localhost:8081/#/publication-identifiers/${publication.dbName}/${publication.identifier}`">{{ publication.identifier }}</a>
+                    Publication: <a :href="`https://www.mavedb.org/#/publication-identifiers/${publication.dbName}/${publication.identifier}`">{{ publication.identifier }}</a>
                   </div>
                   <div>
                     <a :href="`${publication.url}`" target="_blank">View article on the web</a>
@@ -435,7 +435,7 @@ export default {
         //convert object to Json.
         const file = JSON.stringify(response.data)
         const anchor = document.createElement('a')
-        
+
         anchor.href = 'data:text/json;charset=utf-8,' + encodeURIComponent(file);
         anchor.target = '_blank';
         //file default name

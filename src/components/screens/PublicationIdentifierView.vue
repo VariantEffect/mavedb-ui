@@ -67,6 +67,7 @@
         },
     },
     setup: (props) => {
+      console.log(props)
       return {
         ...useFormatters(),
         ...useItem({itemTypeName: props.name})
@@ -79,6 +80,10 @@
         required: true
       },
       name: {
+        type: String,
+        required: true
+      },
+      dbId: {
         type: String,
         required: true
       }
@@ -103,7 +108,6 @@
         handler: function(newValue, oldValue) {
           if (newValue != oldValue) {
             this.setItemId(newValue)
-            console.log(newValue)
           }
         },
         immediate: true
@@ -126,7 +130,8 @@
           let response = await axios.post(
               `${config.apiBaseUrl}/score-sets/search`,
             {
-              publications: [{identifier: this.itemId, dbName: this.pathId}]
+              publication_identifiers: [this.itemId],
+              databases: [this.dbId]
             },
             {
               headers: {

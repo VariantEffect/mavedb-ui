@@ -359,31 +359,33 @@
                     :multiple="false"
                     :options="taxonomies"
                     @complete="searchTaxonomies"
-                    @blur="acceptNewTaxonomy"
+                    @input="acceptNewTaxonomy"
                     @keyup.enter="acceptNewTaxonomy"
-                    @keyup.escape="clearTaxonomySearch">
+                    @keyup.escape="clearTaxonomySearch"
+                    @focus="openDropdown">
                       <template #item="slotProps">
-                        {{slotProps.item.taxId}} - {{slotProps.item.organismName}} <template v-if="slotProps.item.commonName!='NULL'">/{{slotProps.item.commonName}}</template>
+                        {{slotProps.item.taxId}} - {{slotProps.item.organismName}} <template v-if="slotProps.item.commonName!=='NULL' && slotProps.item.commonName!== null">/{{slotProps.item.commonName}}</template>
                       </template>
                     </AutoComplete>
                     <label :for="$scopedId('input-targetGeneTaxonomy')">Taxonomy</label>
                   </span>
                   <span v-if="validationErrors['targetGene.taxonomy']" class="mave-field-error">{{validationErrors['targetGene.taxonomy']}}</span>
                 </div>
-
                 <!--<AutoComplete
-                        ref="taxonomyInput"
-                        v-model="taxonomies"
-                        :id="$scopedId('input-targetGeneTaxonomy')"
-                        dropdown
-                        :suggestions="taxonomySuggestionsList"
-                        :multiple="false"
-                        field="organismName"
-                        @complete="searchTaxonomies"
-                        @blur="acceptNewTaxonomy"
-                        @keyup.enter="acceptNewTaxonomy"
-                        @keyup.escape="clearTaxonomySearch"
-                    />-->
+                    ref="taxonomyInput" 
+                    v-model="taxonomy" 
+                    :dropdown="true"
+                    :id="$scopedId('input-targetGeneTaxonomy')"
+                    :suggestions="taxonomySuggestionsList" 
+                    field="organismName"
+                    :multiple="false"
+                    :options="taxonomies"
+                    @complete="searchTaxonomies"
+                    @input="acceptNewTaxonomy"
+                    @keyup.enter="acceptNewTaxonomy"
+                    @keyup.escape="clearTaxonomySearch"
+                    @focus="openDropdown">-->
+                    
                 <div class="field">
                   <span class="p-float-label">
                     <FileUpload
@@ -651,7 +653,7 @@ export default {
       return this.suggestionsForAutocomplete(this.targetGeneSuggestions)
     },
     taxonomySuggestionsList: function() {
-      return this.suggestionsForAutocomplete(this.taxonomySuggestions)
+      return this.suggestionsForTaxonomyAutocomplete(this.taxonomySuggestions)
     },
     defaultLicenseId: function() {
       return this.licenses ? this.licenses.find((license) => license.shortName == 'CC0')?.id : null
@@ -694,7 +696,8 @@ export default {
         }
 
         const taxonomyId = _.get(this.targetGene, 'taxonomy.taxId')
-        this.taxonomy = this.taxonomies.find((ta) => ta.taxId == taxonomyId)
+        //this.taxonomy = this.taxonomies.find((ta) => ta.taxId == taxonomyId)
+        this.targetGene.taxonomy = this.taxonomies.find((ta) => ta.taxId == taxonomyId)
       }
     },
     item: {
@@ -718,12 +721,21 @@ export default {
   },
 
   methods: {
-
+    
     suggestionsForAutocomplete: function(suggestions) {
       // The PrimeVue AutoComplete doesn't seem to like it if we set the suggestion list to [].
       // This causes the drop-down to stop appearing when we later populate the list.
       if (!suggestions || suggestions.length == 0) {
         return [{}]
+      }
+      return suggestions
+    },
+
+    suggestionsForTaxonomyAutocomplete: function(suggestions) {
+      // The PrimeVue AutoComplete doesn't seem to like it if we set the suggestion list to [].
+      // This causes the drop-down to stop appearing when we later populate the list.
+      if (!suggestions || suggestions.length == 0) {
+        return this.taxonomies
       }
       return suggestions
     },
@@ -901,7 +913,7 @@ export default {
           // TODO This depends on PrimeVue internals more than I'd like:
           input.$refs.input.value = ''
       }
-    }  
+    }
   },
 
     clearTaxonomySearch: function() {
@@ -913,9 +925,14 @@ export default {
       // input.$refs.input.value = ''
     },
 
+    openDropdown: function(){
+      this.taxonomySuggestionsList.value = this.taxonomies
+      console.log("2323")
+      console.log(this.taxonomySuggestionsList.value)
+    },
+
     searchTaxonomies: function(event) {
       const searchText = (event.query || '').trim()
-      //let taxonomyList = [{"taxId":1515,"organismName":"Acetivibrio thermocellus","commonName":"NULL","rank":"SPECIES","hasDescribedSpeciesName":true,"articleReference":"NCBI:txid1515","genomeId":null,"id":88,"url":"https://www.ncbi.nlm.nih.gov/Taxonomy/Browser/wwwtax.cgi?mode=info&id=1515"},{"taxId":203119,"organismName":"Acetivibrio thermocellus ATCC 27405","commonName":"NULL","rank":"STRAIN","hasDescribedSpeciesName":false,"articleReference":"NCBI:txid203119","genomeId":null,"id":41,"url":"https://www.ncbi.nlm.nih.gov/Taxonomy/Browser/wwwtax.cgi?mode=info&id=203119"}]
       if (searchText.length > 0) {
         this.setTaxonomySearch(event.query)
       }else{

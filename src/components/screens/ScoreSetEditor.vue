@@ -321,17 +321,17 @@
                 <div class="field">
                   <span class="p-float-label">
                     <AutoComplete
-                    ref="taxonomyInput" 
-                    v-model="taxonomy" 
-                    dropdown
-                    :id="$scopedId('input-targetGeneTaxonomy')"
-                    :suggestions="taxonomySuggestionsList" 
-                    field="organismName"
-                    :multiple="false"
-                    :options="taxonomies"
-                    @complete="searchTaxonomies"
-                    @keyup.enter="acceptNewTaxonomy"
-                    @keyup.escape="clearTaxonomySearch">
+                      ref="taxonomyInput" 
+                      v-model="taxonomy" 
+                      dropdown
+                      :id="$scopedId('input-targetGeneTaxonomy')"
+                      :suggestions="taxonomySuggestionsList" 
+                      field="organismName"
+                      :multiple="false"
+                      @complete="searchTaxonomies"
+                      @keyup.enter="acceptNewTaxonomy"
+                      @keyup.escape="clearTaxonomySearch"
+                    >
                       <template #item="slotProps">
                         {{slotProps.item.taxId}} - {{slotProps.item.organismName}} <template v-if="slotProps.item.commonName!=='NULL' && slotProps.item.commonName!== null">/ {{slotProps.item.commonName}}</template>
                       </template>
@@ -487,6 +487,7 @@ export default {
       targetGeneIdentifierSuggestions[dbName] = useItems({itemTypeName: `${dbName.toLowerCase()}-identifier-search`})
     }
     const licenses = useItems({itemTypeName: 'license'})
+    const lastTaxonomySearch = ref(null)
     const taxonomies = useItems({itemTypeName: 'taxonomy'})
     const taxonomySuggestions = useItems({itemTypeName: 'taxonomy-search'})
     const targetGeneSuggestions = useItems({itemTypeName: 'target-gene-search'})
@@ -513,7 +514,11 @@ export default {
       ),
       taxonomies: taxonomies.items,
       taxonomySuggestions: taxonomySuggestions.items,
-      setTaxonomySearch: (text) => taxonomySuggestions.setRequestBody({text}),
+      setTaxonomySearch: (text) => {
+        lastTaxonomySearch.value = text
+        taxonomySuggestions.setRequestBody({text})
+      },
+      lastTaxonomySearch,
       handleSubmit,
       setValidationErrors,
       validationErrors
@@ -580,7 +585,9 @@ export default {
     },
     externalGeneDatabases,
     metaAnalysisSourceScoreSetSuggestions: [],
-    supersededScoreSetSuggestions: []
+    supersededScoreSetSuggestions: [],
+    targetGeneSuggestionList: [],
+    taxonomySuggestionsList: []
   }),
 
   computed: {
@@ -607,15 +614,22 @@ export default {
     targetGeneSuggestionsList: function() {
       return this.suggestionsForAutocomplete(this.targetGeneSuggestions)
     },
+    /*
     taxonomySuggestionsList: function() {
       return this.suggestionsForAutocomplete(this.taxonomySuggestions)
     },
+    */
     defaultLicenseId: function() {
       return this.licenses ? this.licenses.find((license) => license.shortName == 'CC0')?.id : null
     }
   },
 
   watch: {
+    taxonomySuggestions: {
+      handler: function(newValue) {
+        this.taxonomySuggestionsList = this.suggestionsForAutocomplete(newValue)
+      }
+    },
     'targetGene.externalIdentifiers': {
       deep: true,
       handler: function(newValue) {
@@ -868,9 +882,15 @@ export default {
     },
 
     searchTaxonomies: function(event) {
-      // if no search text, then return all taxonomy list. Otherwise, return the searching results.
-      // If not do in this way, dropdown button can't work.
-      this.setTaxonomySearch(event.query)
+      if (event.query == this.lastTaxonomySearch) {
+        // Don't search again. But re-assign to the suggestions list, because otherwise the AutoComplete will stay in
+        // "searching" mode.
+        this.taxonomySuggestionsList = [...this.taxonomySuggestionsList]
+      } else {
+        // if no search text, then return all taxonomy list. Otherwise, return the searching results.
+        // If not do in this way, dropdown button can't work.
+        this.setTaxonomySearch(event.query)
+      }
     },
 
     fileCleared: function(inputName) {

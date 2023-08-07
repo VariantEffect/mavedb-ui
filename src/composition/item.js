@@ -49,11 +49,12 @@ export default ({
   const ensureItemStore = () => {
     let switchedStore = false
     if (itemType.value && stateNamespace.value) {
+      const httpOptions = _.get(itemType.value, 'httpOptions.list', {})
       if (store.hasModule(stateNamespace.value)) {
         switchedStore = true
         itemStoreReady.value = true
       } else {
-        const restCollectionUrl = `${config.apiBaseUrl}/${itemType.value.restCollectionName}/`
+        const restCollectionUrl = httpOptions.url ? `${httpOptions.url}/` : `${config.apiBaseUrl}/${itemType.value.restCollectionName}/`
         store.registerModule(
           stateNamespace.value,
           makeItemModule(restCollectionUrl, {

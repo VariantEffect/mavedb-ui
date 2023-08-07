@@ -34,6 +34,39 @@ const itemTypes = {
     name: 'license', // TODO Redundant, change this structure
     restCollectionName: 'licenses'
   },
+  'pubmedPublicationIdentifier': {
+    name: 'pubmedPublicationIdentifier', // TODO Redundant, change this structure
+    restCollectionName: 'publication-identifiers',
+    primaryKey: 'identifier',
+    httpOptions: {
+      list: {
+        method: 'get',
+        url: `${config.apiBaseUrl}/publication-identifiers/pubmed`
+      }
+    }
+  },
+  'biorxivPublicationIdentifier': {
+    name: 'biorxivPublicationIdentifier', // TODO Redundant, change this structure
+    restCollectionName: 'publication-identifiers',
+    primaryKey: 'identifier',
+    httpOptions: {
+      list: {
+        method: 'get',
+        url: `${config.apiBaseUrl}/publication-identifiers/biorxiv`
+      }
+    }
+  },
+  'medrxivPublicationIdentifier': {
+    name: 'medrxivPublicationIdentifier', // TODO Redundant, change this structure
+    restCollectionName: 'publication-identifiers',
+    primaryKey: 'identifier',
+    httpOptions: {
+      list: {
+        method: 'get',
+        url: `${config.apiBaseUrl}/publication-identifiers/medrxiv`
+      }
+    }
+  },
   'publication-identifier-search': {
     name: 'publication-identifier', // TODO Redundant, change this structure
     restCollectionName: 'publication-identifiers',

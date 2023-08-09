@@ -317,7 +317,8 @@
                     <span v-if="validationErrors[`targetGene.externalIdentifiers.${dbName}.offset`]" class="mave-field-error">{{validationErrors[`targetGene.externalIdentifiers.${dbName}.offset`]}}</span>
                   </div>
                 </div>
-                
+                If taxonomy does not appear on the option list, please enter a taxonomy ID, organism name or common name from 
+                <a href="https://www.ncbi.nlm.nih.gov/datasets/taxonomy/tree/" target="blank">NCBI</a> taxonomies and press the Enter key. 
                 <div class="field">
                   <span class="p-float-label">
                     <AutoComplete

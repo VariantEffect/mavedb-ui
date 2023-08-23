@@ -274,126 +274,204 @@
         <div class="col-12 md:col-6">
           <div v-if="itemStatus == 'NotLoaded' || this.item.private">
             <Card>
-              <template #title>Target gene</template>
+              <template #title>Targets</template>
               <template #content>
-                <div class="field">
-                  <span class="p-float-label">
-                    <AutoComplete
-                        ref="existingTargetGeneInput"
-                        v-model="existingTargetGene"
-                        :id="$scopedId('input-existingTargetGene')"
-                        field="name"
-                        :forceSelection="true"
-                        :suggestions="targetGeneSuggestionsList"
-                        @complete="searchTargetGenes"
-                    />
-                    <label :for="$scopedId('input-existingTargetGene')">Copy from an existing target gene</label>
-                  </span>
-                </div>
-                <div class="field">
-                  <span class="p-float-label">
-                    <InputText v-model="targetGene.name" :id="$scopedId('input-targetGeneName')" />
-                    <label :for="$scopedId('input-targetGene')">Target gene name</label>
-                  </span>
-                  <span v-if="validationErrors['targetGene.name']" class="mave-field-error">{{validationErrors['targetGene.name']}}</span>
-                </div>
-                <div class="field">
-                  <span class="p-float-label">
-                    <SelectButton
-                        v-model="targetGene.category"
-                        :id="$scopedId('input-targetGeneCategory')"
-                        :options="targetGeneCategories"
-                    />
-                  </span>
-                  <span v-if="validationErrors['targetGene.category']" class="mave-field-error">{{validationErrors['targetGene.category']}}</span>
-                </div>
-                <div v-for="dbName of externalGeneDatabases" class="field field-columns" :key="dbName">
-                  <div class="field-column">
-                    <span class="p-float-label">
-                      <AutoComplete
-                          :ref="`${dbName.toLowerCase()}IdentifierInput`"
-                          v-model="targetGene.externalIdentifiers[dbName].identifier"
-                          :id="$scopedId(`input-${dbName.toLowerCase()}Identifier`)"
-                          field="identifier"
-                          :suggestions="targetGeneIdentifierSuggestionsList[dbName]"
-                          @blur="acceptNewTargetGeneIdentifier(dbName)"
-                          @complete="searchTargetGeneIdentifiers(dbName, $event)"
-                          @keyup.enter="acceptNewTargetGeneIdentifier(dbName)"
-                          @keyup.escape="clearTargetGeneIdentifierSearch(dbName)"
-                      />
-                      <label :for="$scopedId(`input-${dbName.toLowerCase()}Identifier`)">{{dbName}} identifier</label>
-                    </span>
-                    <span v-if="validationErrors[`targetGene.externalIdentifiers.${dbName}.identifier.identifier`]" class="mave-field-error">{{validationErrors[`targetGene.externalIdentifiers.${dbName}.identifier.identifier`]}}</span>
-                  </div>
-                  <div class="field-column">
-                    <span class="p-float-label">
-                      <InputNumber
-                          v-model="targetGene.externalIdentifiers[dbName].offset"
-                          :id="$scopedId(`input-${dbName.toLowerCase()}Offset`)"
-                          buttonLayout="stacked"
-                          min="0"
-                          showButtons
-                          suffix=" bp"
-                      />
-                      <label :for="$scopedId(`input-${dbName.toLowerCase()}Offset`)">Offset</label>
-                    </span>
-                    <span v-if="validationErrors[`targetGene.externalIdentifiers.${dbName}.offset`]" class="mave-field-error">{{validationErrors[`targetGene.externalIdentifiers.${dbName}.offset`]}}</span>
-                  </div>
-                </div>
-                <div class="field">
-                  <span class="p-float-label">
-                    <Dropdown
-                        v-model="referenceGenome"
-                        :id="$scopedId('input-targetGeneReferenceGenome')"
-                        :options="referenceGenomes"
-                        panelClass="mave-reference-genome-dropdown-panel"
-                    >
-                      <template #value="slotProps">
-                        <div v-if="slotProps.value" class="mave-reference-genome-value">
-                          <div class="mave-reference-genome-name">{{slotProps.value.shortName}}</div>
-                          <div class="mave-reference-genome-organism-name">{{slotProps.value.organismName}}</div>
+                <div>
+                  <TabView class="field">
+                    <TabPanel header="Genomic Sequence">
+                    <div class="field">
+                      <span class="p-float-label">
+                        <AutoComplete
+                            ref="existingTargetGeneInput"
+                            v-model="existingTargetGene"
+                            :id="$scopedId('input-existingTargetGene')"
+                            field="name"
+                            :forceSelection="true"
+                            :suggestions="targetGeneSuggestionsList"
+                            @complete="searchTargetGenes"
+                        />
+                        <label :for="$scopedId('input-existingTargetGene')">Copy from an existing target gene</label>
+                      </span>
+                    </div>
+                    <div class="field">
+                      <span class="p-float-label">
+                        <InputText v-model="targetGene.name" :id="$scopedId('input-targetGeneName')" />
+                        <label :for="$scopedId('input-targetGene')">Target gene name</label>
+                      </span>
+                      <span v-if="validationErrors['targetGene.name']" class="mave-field-error">{{validationErrors['targetGene.name']}}</span>
+                    </div>
+                    <div class="field">
+                      <span class="p-float-label">
+                        <SelectButton
+                            v-model="targetGene.category"
+                            :id="$scopedId('input-targetGeneCategory')"
+                            :options="targetGeneCategories"
+                        />
+                      </span>
+                      <span v-if="validationErrors['targetGene.category']" class="mave-field-error">{{validationErrors['targetGene.category']}}</span>
+                    </div>
+                    <div v-for="dbName of externalGeneDatabases" class="field field-columns" :key="dbName">
+                      <div class="field-column">
+                        <span class="p-float-label">
+                          <AutoComplete
+                              :ref="`${dbName.toLowerCase()}IdentifierInput`"
+                              v-model="targetGene.externalIdentifiers[dbName].identifier"
+                              :id="$scopedId(`input-${dbName.toLowerCase()}Identifier`)"
+                              field="identifier"
+                              :suggestions="targetGeneIdentifierSuggestionsList[dbName]"
+                              @blur="acceptNewTargetGeneIdentifier(dbName)"
+                              @complete="searchTargetGeneIdentifiers(dbName, $event)"
+                              @keyup.enter="acceptNewTargetGeneIdentifier(dbName)"
+                              @keyup.escape="clearTargetGeneIdentifierSearch(dbName)"
+                          />
+                          <label :for="$scopedId(`input-${dbName.toLowerCase()}Identifier`)">{{dbName}} identifier</label>
+                        </span>
+                        <span v-if="validationErrors[`targetGene.externalIdentifiers.${dbName}.identifier.identifier`]" class="mave-field-error">{{validationErrors[`targetGene.externalIdentifiers.${dbName}.identifier.identifier`]}}</span>
+                      </div>
+                      <div class="field-column">
+                        <span class="p-float-label">
+                          <InputNumber
+                              v-model="targetGene.externalIdentifiers[dbName].offset"
+                              :id="$scopedId(`input-${dbName.toLowerCase()}Offset`)"
+                              buttonLayout="stacked"
+                              min="0"
+                              showButtons
+                              suffix=" bp"
+                          />
+                          <label :for="$scopedId(`input-${dbName.toLowerCase()}Offset`)">Offset</label>
+                        </span>
+                        <span v-if="validationErrors[`targetGene.externalIdentifiers.${dbName}.offset`]" class="mave-field-error">{{validationErrors[`targetGene.externalIdentifiers.${dbName}.offset`]}}</span>
+                      </div>
+                    </div>
+                    <div class="field">
+                      <span class="p-float-label">
+                        <Dropdown
+                            v-model="referenceGenome"
+                            :id="$scopedId('input-targetGeneReferenceGenome')"
+                            :options="referenceGenomes"
+                            panelClass="mave-reference-genome-dropdown-panel"
+                        >
+                          <template #value="slotProps">
+                            <div v-if="slotProps.value" class="mave-reference-genome-value">
+                              <div class="mave-reference-genome-name">{{slotProps.value.shortName}}</div>
+                              <div class="mave-reference-genome-organism-name">{{slotProps.value.organismName}}</div>
+                            </div>
+                            <div v-else class="mave-reference-genome-none">&nbsp;</div>
+                          </template>
+                          <template #option="slotProps">
+                            <div class="mave-reference-genome-name">{{slotProps.option.shortName}}</div>
+                            <div class="mave-reference-genome-organism-name">{{slotProps.option.organismName}}</div>
+                          </template>
+                        </Dropdown>
+                        <label :for="$scopedId('input-targetGeneReferenceGenome')">Reference genome</label>
+                      </span>
+                      <span v-if="validationErrors['targetGene.referenceGenome']" class="mave-field-error">{{validationErrors['targetGene.referenceGenome']}}</span>
+                    </div>
+                    <div class="field">
+                      <span class="p-float-label">
+                        <FileUpload
+                            :id="$scopedId('input-targetGeneWtSequenceSequenceFile')"
+                            :auto="false"
+                            chooseLabel="Reference sequence"
+                            :class="inputClasses.targetGeneWtSequenceSequenceFile"
+                            :customUpload="true"
+                            :fileLimit="1"
+                            :showCancelButton="false"
+                            :showUploadButton="false"
+                            @remove="fileCleared('targetGeneWtSequenceSequenceFile')"
+                            @select="fileSelected('targetGeneWtSequenceSequenceFile', $event)"
+                        >
+                          <template #empty>
+                            <p>Drop a FASTA file here.</p>
+                          </template>
+                        </FileUpload>
+                      </span>
+                      <span v-if="validationErrors['targetGene.wtSequence.sequence']" class="mave-field-error">{{validationErrors['targetGene.wtSequence.sequence']}}</span>
+                    </div>
+                    <div class="field">
+                      <span class="p-float-label">
+                        <SelectButton
+                            v-model="targetGene.wtSequence.sequenceType"
+                            :id="$scopedId('input-targetGeneWtSequenceSequenceType')"
+                            :options="sequenceTypes"
+                        />
+                      </span>
+                      <span v-if="validationErrors['targetGene.wtSequence.sequenceType']" class="mave-field-error">{{validationErrors['targetGene.wtSequence.sequenceType']}}</span>
+                    </div>
+                    <div>
+                        <Button @click="addTarget" icon="pi pi-check" label="Add Target" />
+                        <Button @click="resetTarget" class="p-button-help" icon="pi pi-times" label="Clear Target" severity="secondary" style="margin-left: 0.5em" />
+                    </div>
+                  </TabPanel>
+                  <TabPanel header="Genomic Coordinates">
+                      <div class="field field-columns">
+                        <div class="field-column">
+                          <span class="p-float-label">
+                          <InputText v-model="targetGene.name" :id="$scopedId('input-targetGeneName')" />
+                          <label :for="$scopedId('input-targetGene')">Target gene name</label>
+                          </span>
+                          <span v-if="validationErrors['targetGene.name']" class="mave-field-error">{{validationErrors['targetGene.name']}}</span>
                         </div>
-                        <div v-else class="mave-reference-genome-none">&nbsp;</div>
-                      </template>
-                      <template #option="slotProps">
-                        <div class="mave-reference-genome-name">{{slotProps.option.shortName}}</div>
-                        <div class="mave-reference-genome-organism-name">{{slotProps.option.organismName}}</div>
-                      </template>
-                    </Dropdown>
-                    <label :for="$scopedId('input-targetGeneReferenceGenome')">Reference genome</label>
-                  </span>
-                  <span v-if="validationErrors['targetGene.referenceGenome']" class="mave-field-error">{{validationErrors['targetGene.referenceGenome']}}</span>
+                        <div class="field-column">
+                          <span class="p-float-label">
+                          <!-- Assembly is the reference genome property in coordinate cases -->
+                          <Dropdown
+                              v-model="assembly"
+                              :id="$scopedId('input-targetGeneAssembly')"
+                              :options="assemblies"
+                          />
+                          <label :for="$scopedId('input-targetGeneAssembly')">Assembly</label>
+                          </span>
+                          <span v-if="validationErrors['targetGene.referenceGenome']" class="mave-field-error">{{validationErrors['targetGene.referenceGenome']}}</span>
+                        </div>
+                      </div>
+                      <div class="field">
+                        <span class="p-float-label">
+                          <AutoComplete
+                            v-model="targetGene.targetAccession.accession"
+                            :id="$scopedId('input-targetGene-accession')"
+                            :suggestions="targetGeneAccessionSuggestionsList"
+                            :force-selection="true"
+                            :dropdown="true"
+                            @complete="fetchTargetAccessions"
+                          />
+                          <label :for="$scopedId('input-targetGene-accession')">Accession Number</label>
+                        </span>
+                        <span v-if="validationErrors['targetGene.targetAccession.accession']" class="mave-field-error">{{validationErrors['targetGene.targetAccession.accession']}}</span>
+                      </div>
+                      <div class="field">
+                        <span class="p-float-label">
+                          <SelectButton
+                              v-model="targetGene.category"
+                              :id="$scopedId('input-targetGeneCategory')"
+                              :options="targetGeneCategories"
+                          />
+                        </span>
+                        <span v-if="validationErrors['targetGene.category']" class="mave-field-error">{{validationErrors['targetGene.category']}}</span>
+                      </div>
+                      <div>
+                        <Button @click="addTarget" icon="pi pi-check" label="Add Target" />
+                        <Button @click="resetTarget" class="p-button-help" icon="pi pi-times" label="Clear Target" severity="secondary" style="margin-left: 0.5em" />
+                      </div>
+                    </TabPanel>
+                  </TabView>
                 </div>
+              </template>
+              <template #footer>
                 <div class="field">
                   <span class="p-float-label">
-                    <FileUpload
-                        :id="$scopedId('input-targetGeneWtSequenceSequenceFile')"
-                        :auto="false"
-                        chooseLabel="Reference sequence"
-                        :class="inputClasses.targetGeneWtSequenceSequenceFile"
-                        :customUpload="true"
-                        :fileLimit="1"
-                        :showCancelButton="false"
-                        :showUploadButton="false"
-                        @remove="fileCleared('targetGeneWtSequenceSequenceFile')"
-                        @select="fileSelected('targetGeneWtSequenceSequenceFile', $event)"
-                    >
-                      <template #empty>
-                        <p>Drop a FASTA file here.</p>
+                    <Chips v-model="targetGenes" :id="$scopedId('input-targetGenes')">
+                      <template #chip="slotProps">
+                        <div>
+                          <div>{{ slotProps.value.name }}</div>
+                        </div>
                       </template>
-                    </FileUpload>
+                    </Chips>
+                    <label :for="$scopedId('input-targetGenes')">Targets</label>
                   </span>
-                  <span v-if="validationErrors['targetGene.wtSequence.sequence']" class="mave-field-error">{{validationErrors['targetGene.wtSequence.sequence']}}</span>
-                </div>
-                <div class="field">
-                  <span class="p-float-label">
-                    <SelectButton
-                        v-model="targetGene.wtSequence.sequenceType"
-                        :id="$scopedId('input-targetGeneWtSequenceSequenceType')"
-                        :options="sequenceTypes"
-                    />
-                  </span>
-                  <span v-if="validationErrors['targetGene.wtSequence.sequenceType']" class="mave-field-error">{{validationErrors['targetGene.wtSequence.sequenceType']}}</span>
+                  <Message v-if="targetGenes.length > 1" severity="info">
+                    When defining variants against multiple targets, uploaded variant coordinates should be fully qualified with respect to target names or target accessions.
+                  </Message>
                 </div>
               </template>
             </Card>
@@ -513,6 +591,7 @@ export default {
     }
     const licenses = useItems({itemTypeName: 'license'})
     const referenceGenomes = useItems({itemTypeName: 'reference-genome'})
+    const assemblies = useItems({itemTypeName: 'assemblies'})
     const targetGeneSuggestions = useItems({itemTypeName: 'target-gene-search'})
     const {errors: validationErrors, handleSubmit, setErrors: setValidationErrors} = useForm()
     return {
@@ -538,6 +617,7 @@ export default {
         }
       ),
       referenceGenomes: referenceGenomes.items,
+      assemblies: assemblies.items,
       handleSubmit,
       setValidationErrors,
       validationErrors
@@ -570,19 +650,23 @@ export default {
     targetGene: {
       name: null,
       category: null,
-      type: null,
       wtSequence: {
         sequenceType: null,
         sequence: null
+      },
+      targetAccession: {
+        accession: null
       },
       externalIdentifiers: _.fromPairs(
         externalGeneDatabases.map((dbName) => [dbName, {identifier: null, offset: null}])
       )
     },
     referenceGenome: null,
+    assembly: null,
     extraMetadata: {},
 
     existingTargetGene: null,
+    targetGenes: [],
 
     // Static sets of options:
     sequenceTypes: [
@@ -605,7 +689,8 @@ export default {
     },
     externalGeneDatabases,
     metaAnalyzesScoreSetSuggestions: [],
-    supersededScoreSetSuggestions: []
+    supersededScoreSetSuggestions: [],
+    targetGeneAccessionSuggestions: []
   }),
 
   computed: {
@@ -631,6 +716,9 @@ export default {
     },
     targetGeneSuggestionsList: function() {
       return this.suggestionsForAutocomplete(this.targetGeneSuggestions)
+    },
+    targetGeneAccessionSuggestionsList: function() {
+      return this.suggestionsForAutocomplete(this.targetGeneAccessionSuggestions)
     },
     defaultLicenseId: function() {
       return this.licenses ? this.licenses.find((license) => license.shortName == 'CC0')?.id : null
@@ -729,6 +817,36 @@ export default {
           {
             text: searchText || null
           },
+          {
+            headers: {
+              accept: 'application/json'
+            }
+          }
+        )
+        // TODO catch errors in response
+        return response.data || []
+      } catch (err) {
+        console.log(`Error while loading search results")`, err)
+        return []
+      }
+    },
+
+    fetchTargetAccessions: async function(event) {
+      const assembly = (this.assembly || 'GRCh38.p14').trim() // current assembly is the default
+      this.targetGeneAccessionSuggestions = await this.fetchTargetAccessionsByAssembly(assembly)
+
+      const searchText = (event.query || '').trim()
+      if (searchText.length > 0) {
+        this.targetGeneAccessionSuggestions = this.targetGeneAccessionSuggestions.filter(s => s.includes(searchText))
+      }
+      console.log(this.targetGeneAccessionSuggestions)
+    },
+
+    fetchTargetAccessionsByAssembly: async function(assembly) {
+      const url = `${config.apiBaseUrl}/hgvs/${assembly}/accessions`
+      try {
+        const response = await axios.get(
+          url,
           {
             headers: {
               accept: 'application/json'
@@ -972,6 +1090,9 @@ export default {
           wtSequence: {
             sequenceType: null,
             sequence: null
+          },
+          targetAccession: {
+            accession: null
           }
         }, this.item.targetGene)
         this.targetGene.externalIdentifiers = {}
@@ -983,6 +1104,8 @@ export default {
               }
         }
         this.referenceGenome = this.item.referenceGenome
+        this.assembly = this.item.assembly
+        this.targetGenes = this.item.targetGenes
         this.extraMetadata = this.item.extraMetadata
       } else {
         this.experiment = null
@@ -1006,6 +1129,9 @@ export default {
           wtSequence: {
             sequenceType: null,
             sequence: null
+          },
+          targetAccession: {
+            accession: null
           }
         }
         this.targetGene.externalIdentifiers = {}
@@ -1016,8 +1142,62 @@ export default {
           }
         }
         this.referenceGenome = null
+        this.assembly = null
+        this.targetGenes = []
         this.extraMetadata = {}
       }
+    },
+
+    resetTarget: function() {
+      this.targetGene = {
+        name: null,
+        category: null,
+        type: null,
+        wtSequence: {
+          sequenceType: null,
+          sequence: null
+        },
+        targetAccession: {
+          accession: null
+        },
+        externalIdentifiers: _.fromPairs(
+          externalGeneDatabases.map((dbName) => [dbName, {identifier: null, offset: null}])
+        )
+      },
+      this.assembly = null
+      this.referenceGenome = null
+      this.existingTargetGene = null
+    },
+
+    addTarget: function() {
+      if (this.referenceGenome) {
+        this.targetGene.referenceMaps = [{'genomeId': this.referenceGenome.id}]
+        delete this.targetGene.targetAccession;
+      }
+      else {
+        this.targetGene.referenceMaps = [{'genomeId': 6}]
+        delete this.targetGene.wtSequence;
+      }
+      this.targetGene.externalIdentifiers = _.keys(
+        this.targetGene.externalIdentifiers).map(
+          (dbName) => {
+            const identifierOffset = this.targetGene.externalIdentifiers[dbName]
+            if (identifierOffset.identifier != null || (identifierOffset != null && identifierOffset.offset > 0)) {
+              return {
+                offset: identifierOffset.offset,
+                identifier: {
+                  identifier: identifierOffset.identifier?.identifier,
+                  dbName
+                }
+              }
+            } else {
+              return null
+            }
+          }
+        ).filter(Boolean)
+      this.targetGenes.push(_.clone(this.targetGene))
+      this.resetTarget()
+      console.log(this.targetGenes)
     },
 
     ////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
@@ -1049,32 +1229,7 @@ export default {
         secondaryPublicationIdentifiers: secondaryPublicationIdentifiers,
         dataUsagePolicy: this.dataUsagePolicy,
         extraMetadata: {},
-        targetGene: {
-          name: _.get(this.targetGene, 'name'),
-          category: _.get(this.targetGene, 'category'),
-          type: _.get(this.targetGene, 'type'),
-          referenceMaps: [{
-            genomeId: _.get(this.referenceGenome, 'id')
-          }],
-          wtSequence: {
-            sequenceType: _.get(this.targetGene, 'wtSequence.sequenceType'),
-            sequence: _.get(this.targetGene, 'wtSequence.sequence')
-          },
-          externalIdentifiers: _.keys(this.targetGene.externalIdentifiers).map((dbName) =>{
-            const identifierOffset = this.targetGene.externalIdentifiers[dbName]
-            if (identifierOffset.identifier != null || (identifierOffset != null && identifierOffset.offset > 0)) {
-              return {
-                offset: identifierOffset.offset,
-                identifier: {
-                  identifier: identifierOffset.identifier?.identifier,
-                  dbName
-                }
-              }
-            } else {
-              return null
-            }
-          }).filter(Boolean)
-        }
+        targetGene: this.targetGenes
       }
       if (!this.item) {
         editedFields.supersededScoreSetUrn = this.supersededScoreSet ? this.supersededScoreSet.urn : null
@@ -1087,6 +1242,7 @@ export default {
         this.item.primaryPublicationIdentifiers = []
         this.item.publicationIdentifiers = []
         this.item.rawReadIdentifiers = []
+        this.item.targetGenes = []
       }
 
       const editedItem = _.merge({}, this.item || {}, editedFields)

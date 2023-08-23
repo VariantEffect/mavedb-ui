@@ -105,32 +105,43 @@
           </div>
         </div>
         <div v-if="item.targetGene">
-          <div class="mave-score-set-section-title">Target</div>
-          <div v-if="item.targetGene.name"><strong>Name:</strong> {{item.targetGene.name}}</div>
-          <div v-if="item.targetGene.category"><strong>Type:</strong> {{item.targetGene.category}}</div>
-          <div v-if="item.targetGene.referenceMaps?.[0]?.genome?.organismName"><strong>Organism:</strong> {{item.targetGene.referenceMaps[0].genome.organismName}}</div>
-          <div v-if="item.targetGene.referenceMaps?.[0]?.genome?.shortName"><strong>Reference genome:</strong> {{item.targetGene.referenceMaps[0].genome.shortName}}</div>
-          <div v-if="item.targetGene.referenceMaps?.[0]?.genomeId"><strong>Genome ID:</strong> {{item.targetGene.referenceMaps[0].genomeId}}</div>
-          <div v-if="item.targetGene.referenceMaps?.[0]?.targetId"><strong>Target ID:</strong> {{item.targetGene.referenceMaps[0].targetId}}</div>
-          <div v-if="item.targetGene.wtSequence?.sequence" style="word-break: break-word"><strong>Reference sequence: </strong>
-            <template v-if="item.targetGene.wtSequence.sequence.length >= 500">
-              <template v-if="readMore == true">{{item.targetGene.wtSequence.sequence.substring(0, 500) + "...."}} </template>
-              <template v-if="readMore == false">{{item.targetGene.wtSequence.sequence}}</template>
-              <Button @click="showMore" v-if="readMore == true" class="p-button-text p-button-sm p-button-info">Show more</Button>
-              <Button @click="showLess" v-if="readMore == false" class="p-button-text p-button-sm p-button-info">Show less</Button>
-            </template><template v-else>{{item.targetGene.wtSequence.sequence}}</template>
-          </div>
-          <!--One for loop can't handle the order so that separating them into three parts.-->
-          <div v-if="item.targetGene.externalIdentifiers?.[0]?.identifier">
-            <div v-for="i in item.targetGene.externalIdentifiers" :key="i">
-              <div v-if="i.identifier.dbName==='UniProt'"><strong>UniProt:</strong> {{i.identifier.identifier}} <span v-if="i.offset!=0"> with offset {{i.offset}}</span></div>
+          <div class="mave-score-set-section-title">Targets</div>
+          <div v-for="targetGene of item.targetGene" :key="targetGene">
+            <div v-if="targetGene.name"><strong>Name:</strong> {{targetGene.name}}</div>
+            <div v-if="targetGene.category"><strong>Type:</strong> {{targetGene.category}}</div>
+
+            <div v-if="targetGene.targetAccession?.accession" style="word-break: break-word">
+              <div v-if="targetGene.targetAccession?.assembly"><strong>Assembly:</strong> {{targetGene.targetAccession.assembly}}</div>
+              <strong>Accession Number: </strong>
+              {{targetGene.targetAccession.accession}}
             </div>
-            <div v-for="i in item.targetGene.externalIdentifiers" :key="i">
-              <div v-if="i.identifier.dbName==='RefSeq'"><strong>RefSeq:</strong> {{i.identifier.identifier}} <span v-if="i.offset!=0"> with offset {{i.offset}}</span></div>
+
+            <div v-if="targetGene.wtSequence?.sequence" style="word-break: break-word">
+              <div v-if="targetGene.referenceMaps?.[0]?.genome?.organismName"><strong>Organism:</strong> {{targetGene.referenceMaps[0].genome.organismName}}</div>
+              <div v-if="targetGene.referenceMaps?.[0]?.genome?.shortName"><strong>Reference genome:</strong> {{targetGene.referenceMaps[0].genome.shortName}}</div>
+              <div v-if="targetGene.referenceMaps?.[0]?.genomeId"><strong>Genome ID:</strong> {{targetGene.referenceMaps[0].genomeId}}</div>
+              <div v-if="targetGene.referenceMaps?.[0]?.targetId"><strong>Target ID:</strong> {{targetGene.referenceMaps[0].targetId}}</div>
+              <strong>Reference sequence: </strong>
+              <template v-if="targetGene.wtSequence.sequence.length >= 500">
+                <template v-if="readMore == true">{{targetGene.wtSequence.sequence.substring(0, 500) + "...."}} </template>
+                <template v-if="readMore == false">{{targetGene.wtSequence.sequence}}</template>
+                <Button @click="showMore" v-if="readMore == true" class="p-button-text p-button-sm p-button-info">Show more</Button>
+                <Button @click="showLess" v-if="readMore == false" class="p-button-text p-button-sm p-button-info">Show less</Button>
+              </template><template v-else>{{targetGene.wtSequence.sequence}}</template>
             </div>
-            <div v-for="i in item.targetGene.externalIdentifiers" :key="i">
-              <div v-if="i.identifier.dbName==='Ensembl'"><strong>Ensembl:</strong> {{i.identifier.identifier}} <span v-if="i.offset!=0"> with offset {{i.offset}}</span></div>
+            <!--One for loop can't handle the order so that separating them into three parts.-->
+            <div v-if="targetGene.externalIdentifiers?.[0]?.identifier">
+              <div v-for="i in targetGene.externalIdentifiers" :key="i">
+                <div v-if="i.identifier.dbName==='UniProt'"><strong>UniProt:</strong> {{i.identifier.identifier}} <span v-if="i.offset!=0"> with offset {{i.offset}}</span></div>
+              </div>
+              <div v-for="i in targetGene.externalIdentifiers" :key="i">
+                <div v-if="i.identifier.dbName==='RefSeq'"><strong>RefSeq:</strong> {{i.identifier.identifier}} <span v-if="i.offset!=0"> with offset {{i.offset}}</span></div>
+              </div>
+              <div v-for="i in targetGene.externalIdentifiers" :key="i">
+                <div v-if="i.identifier.dbName==='Ensembl'"><strong>Ensembl:</strong> {{i.identifier.identifier}} <span v-if="i.offset!=0"> with offset {{i.offset}}</span></div>
+              </div>
             </div>
+            <br>
           </div>
         </div>
 

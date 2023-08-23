@@ -101,6 +101,10 @@ const itemTypes = {
     name: 'reference-genome', // TODO Redundant, change this structure
     restCollectionName: 'reference-genomes'
   },
+  'assemblies': {
+    name: 'assemblies', // TODO Redundant, change this structure
+    restCollectionName: 'hgvs/assemblies'
+  },
   'scoreSet': {
     name: 'scoreSet', // TODO Redundant, change this structure
     restCollectionName: 'score-sets',

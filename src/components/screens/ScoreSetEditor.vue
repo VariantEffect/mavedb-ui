@@ -655,7 +655,8 @@ export default {
         sequence: null
       },
       targetAccession: {
-        accession: null
+        accession: null,
+        assembly: null
       },
       externalIdentifiers: _.fromPairs(
         externalGeneDatabases.map((dbName) => [dbName, {identifier: null, offset: null}])
@@ -749,6 +750,10 @@ export default {
           wtSequence: {
             sequenceType: null,
             sequence: null
+          },
+          targetAccession: {
+            assembly: null,
+            accession: null
           }
         }, targetGene)
         this.targetGene.externalIdentifiers = {}
@@ -1083,25 +1088,20 @@ export default {
         })
         this.secondaryPublicationIdentifiers = this.item.secondaryPublicationIdentifiers
         this.dataUsagePolicy = this.item.dataUsagePolicy
-        this.targetGene = _.merge({
+        this.targetGene = {
           name: null,
           category: null,
-          type: null,
           wtSequence: {
             sequenceType: null,
             sequence: null
           },
           targetAccession: {
-            accession: null
-          }
-        }, this.item.targetGene)
-        this.targetGene.externalIdentifiers = {}
-        for (const dbName of externalGeneDatabases) {
-          this.targetGene.externalIdentifiers[dbName] =  (this.item.targetGene.externalIdentifiers || [])
-              .find(({identifier}) => identifier?.dbName == dbName) || {
-                identifier: null,
-                offset: null
-              }
+            accession: null,
+            assembly: null
+          },
+          externalIdentifiers: _.fromPairs(
+            externalGeneDatabases.map((dbName) => [dbName, {identifier: null, offset: null}])
+          )
         }
         this.referenceGenome = this.item.referenceGenome
         this.assembly = this.item.assembly
@@ -1122,25 +1122,8 @@ export default {
         this.secondaryPublicationIdentifiers = []
         this.publicationIdentifiers = []
         this.dataUsagePolicy = null
-        this.targetGene = {
-          name: null,
-          category: null,
-          type: null,
-          wtSequence: {
-            sequenceType: null,
-            sequence: null
-          },
-          targetAccession: {
-            accession: null
-          }
-        }
-        this.targetGene.externalIdentifiers = {}
-        for (const dbName of externalGeneDatabases) {
-          this.targetGene.externalIdentifiers[dbName] =  {
-            identifier: null,
-            offset: null
-          }
-        }
+        this.targetGene = null
+        this.targetGenes = []
         this.referenceGenome = null
         this.assembly = null
         this.targetGenes = []
@@ -1174,9 +1157,13 @@ export default {
         this.targetGene.referenceMaps = [{'genomeId': this.referenceGenome.id}]
         delete this.targetGene.targetAccession;
       }
-      else {
+      else if (this.assembly) {
         this.targetGene.referenceMaps = [{'genomeId': 6}]
+        this.targetGene.targetAccession.assembly = this.assembly
         delete this.targetGene.wtSequence;
+      }
+      else {
+        return null // don't add our target if it is invalid in some way
       }
       this.targetGene.externalIdentifiers = _.keys(
         this.targetGene.externalIdentifiers).map(
@@ -1197,7 +1184,6 @@ export default {
         ).filter(Boolean)
       this.targetGenes.push(_.clone(this.targetGene))
       this.resetTarget()
-      console.log(this.targetGenes)
     },
 
     ////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////

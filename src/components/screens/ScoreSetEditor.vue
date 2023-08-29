@@ -199,7 +199,7 @@
                       </div>
                     </template>
                     <template #item="slotProps">
-                      <div>
+                      <div class="field">
                           <div>Title: {{ slotProps.item.title }}</div>
                           <div>DOI: {{ slotProps.item.publicationDoi || slotProps.item.preprintDoi }}</div>
                           <div>Identifier: {{ slotProps.item.identifier }}</div>
@@ -212,7 +212,7 @@
                   <span v-if="validationErrors.publicationIdentifiers" class="mave-field-error">{{validationErrors.publicationIdentifiers}}</span>
                 </div>
                 <div class="field">
-                  <span class="p-float-label" style="display:block">
+                  <span class="p-float-label">
                     <Multiselect
                     ref="primaryPublicationIdentifiersInput"
                     v-model="primaryPublicationIdentifiers"
@@ -223,7 +223,7 @@
                     :selectionLimit="1"
                   >
                     <template #option="slotProps">
-                          <div>
+                          <div class="field">
                               <div>Title: {{ slotProps.option.title }}</div>
                               <div>DOI: {{ slotProps.option.publicationDoi || slotProps.option.preprintDoi }}</div>
                               <div>Identifier: {{ slotProps.option.identifier }}</div>
@@ -232,7 +232,7 @@
                     </template>
                   </Multiselect>
                   <!-- label overlaps with placeholder when none are selected without this v-if -->
-                  <label v-if="this.primaryPublicationIdentifiers.length > 0" :for="$scopedId('input-primaryPublicationIdentifiers')">Primary publication</label>
+                  <label v-if="this.primaryPublicationIdentifiers?.length > 0" :for="$scopedId('input-primaryPublicationIdentifiers')">Primary publication</label>
                 </span>
                 <span v-if="validationErrors.primaryPublicationIdentifiers" class="mave-field-error">{{validationErrors.primaryPublicationIdentifiers}}</span>
               </div>
@@ -278,7 +278,7 @@
               <template #content>
                 <div>
                   <TabView class="field">
-                    <TabPanel header="Genomic Sequence">
+                    <TabPanel header="Target Sequence">
                     <div class="field">
                       <span class="p-float-label">
                         <AutoComplete
@@ -334,7 +334,7 @@
                               v-model="targetGene.externalIdentifiers[dbName].offset"
                               :id="$scopedId(`input-${dbName.toLowerCase()}Offset`)"
                               buttonLayout="stacked"
-                              min="0"
+                              :min="0"
                               showButtons
                               suffix=" bp"
                           />
@@ -370,6 +370,7 @@
                     <div class="field">
                       <span class="p-float-label">
                         <FileUpload
+                            ref="sequenceFileUpload"
                             :id="$scopedId('input-targetGeneWtSequenceSequenceFile')"
                             :auto="false"
                             chooseLabel="Reference sequence"
@@ -459,17 +460,60 @@
               </template>
               <template #footer>
                 <div class="field">
-                  <span class="p-float-label">
-                    <Chips v-model="targetGenes" :id="$scopedId('input-targetGenes')">
-                      <template #chip="slotProps">
-                        <div>
-                          <div>{{ slotProps.value.name }}</div>
-                        </div>
+                  <span v-if="targetGenes.length > 0">
+                    <DataTable v-model:expandedRows="expandedRows" :value="targetGenes" dataKey="name">
+                      <template #header>
+                        <h3 class="target-header">Created Targets</h3>
                       </template>
-                    </Chips>
-                    <label :for="$scopedId('input-targetGenes')">Targets</label>
+                      <Column expander style="width: 5rem" />
+                      <Column field="name" header="Name"></Column>
+                      <Column field="category" header="Category"></Column>
+                      <Column>
+                          <template #body="slotProps">
+                            <Button icon="pi pi-minus-circle" label="Remove" class="p-button-help" severity="secondary" @click="targetDeleted(slotProps.data)"/>
+                          </template>
+                      </Column>
+                      <template #expansion="slotProps">
+                        <Card v-if="slotProps.data.wtSequence?.sequence" class="field">
+                          <template #content>
+                              <h3 class="compact-target">Genomic Sequence Data</h3>
+                              <p class="compact-target">
+                                <strong>Sequence Type:</strong> {{ slotProps.data.wtSequence.sequenceType }}<br>
+                                <strong>Reference Name:</strong> {{ slotProps.data.wtSequence.reference.shortName }}<br>
+                                <strong>Reference Organism:</strong> {{ slotProps.data.wtSequence.reference.organismName }}
+                              </p>
+                          </template>
+                        </Card>
+                        <Card v-if="slotProps.data.targetAccession?.accession">
+                          <template #content>
+                              <h3 class="compact-target">Accession Data</h3>
+                              <p class="compact-target">
+                                <strong>Assembly:</strong> {{ slotProps.data.targetAccession.assembly }}<br>
+                                <strong>Accession:</strong> {{ slotProps.data.targetAccession.accession }}
+                              </p>
+                          </template>
+                        </Card>
+                        <Card v-if="slotProps.data.externalIdentifiers.length > 0">
+                          <template #content>
+                              <h3 class="target-header">External Identifier Data</h3>
+                              <div v-for="dbName of slotProps.data.externalIdentifiers" class="compact-target" :key="dbName">
+                                <p class="compact-target">
+                                  <strong>{{ dbName.identifier.dbName }}:</strong> {{ dbName.identifier.identifier }}, <strong>Offset:</strong> {{ dbName.offset }}
+                                </p>
+                              </div>
+                          </template>
+                        </Card>
+                      </template>
+                      <template #footer>
+                          <div class="flex flex-wrap justify-content-start gap-2">
+                            <Button icon="pi pi-times-circle" label="Clear all" severity="secondary" class="p-button-help" @click="targetsCleared"/>
+                          </div>
+                      </template>
+                    </DataTable>
                   </span>
-                  <Message v-if="targetGenes.length > 1" severity="info">
+                </div>
+                <div class="field">
+                  <Message v-if="targetGenes?.length > 1" severity="info">
                     When defining variants against multiple targets, uploaded variant coordinates should be fully qualified with respect to target names or target accessions.
                   </Message>
                 </div>
@@ -545,6 +589,7 @@ import AutoComplete from 'primevue/autocomplete'
 import Button from 'primevue/button'
 import Card from 'primevue/card'
 import Chips from 'primevue/chips'
+import Column from 'primevue/column'
 import Dropdown from 'primevue/dropdown'
 import FileUpload from 'primevue/fileupload'
 import InputNumber from 'primevue/inputnumber'
@@ -556,6 +601,7 @@ import SelectButton from 'primevue/selectbutton'
 import TabPanel from 'primevue/tabpanel'
 import TabView from 'primevue/tabview'
 import Textarea from 'primevue/textarea'
+import DataTable from 'primevue/datatable';
 import {useForm} from 'vee-validate'
 import {ref} from 'vue'
 
@@ -571,7 +617,7 @@ const externalGeneDatabases = ['UniProt', 'Ensembl', 'RefSeq']
 
 export default {
   name: 'ScoreSetEditor',
-  components: { AutoComplete, Button, Card, Chips, DefaultLayout, Dropdown, EntityLink, FileUpload, InputNumber, InputText, Message, Multiselect, ProgressSpinner, SelectButton, TabPanel, TabView, Textarea},
+  components: { AutoComplete, Button, Card, Chips, Column, DataTable, DefaultLayout, Dropdown, EntityLink, FileUpload, InputNumber, InputText, Message, Multiselect, ProgressSpinner, SelectButton, TabPanel, TabView, Textarea},
 
   setup: () => {
     const editableExperiments = useItems({
@@ -652,7 +698,8 @@ export default {
       category: null,
       wtSequence: {
         sequenceType: null,
-        sequence: null
+        sequence: null,
+        reference: null
       },
       targetAccession: {
         accession: null,
@@ -691,7 +738,8 @@ export default {
     externalGeneDatabases,
     metaAnalyzesScoreSetSuggestions: [],
     supersededScoreSetSuggestions: [],
-    targetGeneAccessionSuggestions: []
+    targetGeneAccessionSuggestions: [],
+    expandedRows: []
   }),
 
   computed: {
@@ -749,7 +797,8 @@ export default {
           type: null,
           wtSequence: {
             sequenceType: null,
-            sequence: null
+            sequence: null,
+            reference: null
           },
           targetAccession: {
             assembly: null,
@@ -765,7 +814,7 @@ export default {
               }
         }
 
-        const referenceGenomeId = _.get(this.targetGene, 'referenceMaps.0.genome.id')
+        const referenceGenomeId = _.get(this.targetGene, 'wtSequence.reference.genome.id')
         this.referenceGenome = this.referenceGenomes.find((rg) => rg.id == referenceGenomeId)
       }
     },
@@ -844,7 +893,6 @@ export default {
       if (searchText.length > 0) {
         this.targetGeneAccessionSuggestions = this.targetGeneAccessionSuggestions.filter(s => s.includes(searchText))
       }
-      console.log(this.targetGeneAccessionSuggestions)
     },
 
     fetchTargetAccessionsByAssembly: async function(assembly) {
@@ -990,10 +1038,22 @@ export default {
       }
     },
 
+    targetsCleared: function() {
+      this.targetGenes = [];
+    },
+
+    targetDeleted: function(target) {
+      this.targetGenes = this.targetGenes.filter(val => val !== target);
+    },
+
     fileCleared: function(inputName) {
       if (inputName == 'extraMetadataFile') {
         this.extraMetadata = null
         delete this.clientSideValidationErrors.extraMetadata
+      }
+      // ensure files are cleared from sequence loader even when remove button not used
+      else if (inputName == 'targetGeneWtSequenceSequenceFile') {
+        this.$refs.sequenceFileUpload.files = []
       }
       this.inputClasses[inputName] = 'mave-file-input-empty'
       this.mergeValidationErrors()
@@ -1093,7 +1153,8 @@ export default {
           category: null,
           wtSequence: {
             sequenceType: null,
-            sequence: null
+            sequence: null,
+            reference: null
           },
           targetAccession: {
             accession: null,
@@ -1105,7 +1166,7 @@ export default {
         }
         this.referenceGenome = this.item.referenceGenome
         this.assembly = this.item.assembly
-        this.targetGenes = this.item.targetGenes
+        this.targetGenes = this.item.targetGene
         this.extraMetadata = this.item.extraMetadata
       } else {
         this.experiment = null
@@ -1132,13 +1193,15 @@ export default {
     },
 
     resetTarget: function() {
+      this.fileCleared('targetGeneWtSequenceSequenceFile')
       this.targetGene = {
         name: null,
         category: null,
         type: null,
         wtSequence: {
           sequenceType: null,
-          sequence: null
+          sequence: null,
+          reference: null
         },
         targetAccession: {
           accession: null
@@ -1154,11 +1217,10 @@ export default {
 
     addTarget: function() {
       if (this.referenceGenome) {
-        this.targetGene.referenceMaps = [{'genomeId': this.referenceGenome.id}]
+        this.targetGene.wtSequence.reference = this.referenceGenome
         delete this.targetGene.targetAccession;
       }
       else if (this.assembly) {
-        this.targetGene.referenceMaps = [{'genomeId': 6}]
         this.targetGene.targetAccession.assembly = this.assembly
         delete this.targetGene.wtSequence;
       }
@@ -1183,6 +1245,7 @@ export default {
           }
         ).filter(Boolean)
       this.targetGenes.push(_.clone(this.targetGene))
+      this.$toast.add({severity:'success', summary: `Target ${this.targetGene.name} was added successfully.`, life: 3000})
       this.resetTarget()
     },
 
@@ -1228,7 +1291,7 @@ export default {
         this.item.primaryPublicationIdentifiers = []
         this.item.publicationIdentifiers = []
         this.item.rawReadIdentifiers = []
-        this.item.targetGenes = []
+        this.item.targetGene = []
       }
 
       const editedItem = _.merge({}, this.item || {}, editedFields)
@@ -1388,6 +1451,17 @@ export default {
 <style scoped src="../../assets/forms.css"></style>
 
 <style scoped>
+.target-header {
+  display: flex;
+  margin-bottom: 0;
+  margin-top: 0;
+}
+
+.compact-target {
+  margin-bottom: 0;
+  margin-top: 0;
+  display: block;
+}
 
 .field-columns {
   display: flex;

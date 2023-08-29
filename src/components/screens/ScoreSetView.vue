@@ -117,10 +117,10 @@
             </div>
 
             <div v-if="targetGene.wtSequence?.sequence" style="word-break: break-word">
-              <div v-if="targetGene.referenceMaps?.[0]?.genome?.organismName"><strong>Organism:</strong> {{targetGene.referenceMaps[0].genome.organismName}}</div>
-              <div v-if="targetGene.referenceMaps?.[0]?.genome?.shortName"><strong>Reference genome:</strong> {{targetGene.referenceMaps[0].genome.shortName}}</div>
-              <div v-if="targetGene.referenceMaps?.[0]?.genomeId"><strong>Genome ID:</strong> {{targetGene.referenceMaps[0].genomeId}}</div>
-              <div v-if="targetGene.referenceMaps?.[0]?.targetId"><strong>Target ID:</strong> {{targetGene.referenceMaps[0].targetId}}</div>
+              <div v-if="targetGene.wtSequence.reference?.organismName"><strong>Organism:</strong> {{targetGene.wtSequence.reference.organismName}}</div>
+              <div v-if="targetGene.wtSequence.reference?.shortName"><strong>Reference genome:</strong> {{targetGene.wtSequence.reference.shortName}}</div>
+              <div v-if="targetGene.wtSequence.reference?.id"><strong>Genome ID:</strong> {{targetGene.wtSequence.reference.id}}</div>
+              <div v-if="targetGene.id"><strong>Target ID:</strong> {{targetGene.id}}</div>
               <strong>Reference sequence: </strong>
               <template v-if="targetGene.wtSequence.sequence.length >= 500">
                 <template v-if="readMore == true">{{targetGene.wtSequence.sequence.substring(0, 500) + "...."}} </template>
@@ -167,7 +167,7 @@
             We can keep the frozen codes first. Maybe we can figure the bug in the future-->
             <!---->
             <div style="overflow-y: scroll; overflow-x: scroll; height:600px;">
-              <DataTable :value="scoresTable" showGridlines="true" stripedRows="true">
+              <DataTable :value="scoresTable" :showGridlines="true" :stripedRows="true">
                 <Column v-for="column of scoreColumns.slice(0,3)" :field="column" :header="column" :key="column"
                 style="overflow:hidden" headerStyle="background-color:#A1D8C8; font-weight: bold" ><!--:frozen="columnIsAllNa(scoresTable, column)"-->
                 <template #body="scoresTable" >{{scoresTable.data[column]}}</template>
@@ -181,7 +181,7 @@
           </TabPanel>
           <TabPanel header="Counts">
             <div style="overflow-y: scroll; overflow-x: scroll; height:600px;">
-              <DataTable :value="countsTable" showGridlines="true" stripedRows="true">
+              <DataTable :value="countsTable" :showGridlines="true" :stripedRows="true">
                 <template v-if="countColumns.length==0">No count data available.</template>
                 <template v-else>
                   <Column v-for="column of countColumns.slice(0,3)" :field="column" :header="column" :key="column"
@@ -480,6 +480,7 @@ export default {
     },
     loadTableCounts: async function(){
       if (this.item){
+        console.log(this.item.targetGene)
         const response = await axios.get(`${config.apiBaseUrl}/score-sets/${this.item.urn}/counts`)
         console.log(response)
         if (response.data) {

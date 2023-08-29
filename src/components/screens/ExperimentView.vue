@@ -88,13 +88,13 @@
             <div v-if="scoreSet.targetGene.targetSequence?.reference?.genome?.organismName"><strong>Organism:</strong> {{scoreSet.targetGene.targetSequence.reference.genome.organismName}}</div>
             <div v-if="scoreSet.targetGene.targetSequence?.reference?.genome?.shortName"><strong>Reference genome:</strong> {{scoreSet.targetGene.targetSequence.reference.genome.shortName}}</div>
             <!--TODO: Miss TaxID part-->
-            <div v-if="scoreSet.targetGene.wtSequence?.sequence" style="word-break: break-word"><strong>Reference sequence: </strong>
-              <template v-if="scoreSet.targetGene.wtSequence.sequence.length >= 500">
-                <template v-if="readMore == true">{{scoreSet.targetGene.wtSequence.sequence.substring(0, 500) + "...."}} </template>
-                <template v-if="readMore == false">{{scoreSet.targetGene.wtSequence.sequence}}</template>
+            <div v-if="scoreSet.targetGene.targetSequence?.sequence" style="word-break: break-word"><strong>Reference sequence: </strong>
+              <template v-if="scoreSet.targetGene.targetSequence.sequence.length >= 500">
+                <template v-if="readMore == true">{{scoreSet.targetGene.targetSequence.sequence.substring(0, 500) + "...."}} </template>
+                <template v-if="readMore == false">{{scoreSet.targetGene.targetSequence.sequence}}</template>
                 <Button @click="showMore" v-if="readMore == true" class="p-button-text p-button-sm p-button-info">Show more</Button>
                 <Button @click="showLess" v-if="readMore == false" class="p-button-text p-button-sm p-button-info">Show less</Button>
-              </template><template v-else>{{scoreSet.targetGene.wtSequence.sequence}}</template>
+              </template><template v-else>{{scoreSet.targetGene.targetSequence.sequence}}</template>
             </div>
           </div>
         </div>

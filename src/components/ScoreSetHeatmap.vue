@@ -100,8 +100,8 @@ export default {
       return [...this.simpleVariants || [], ...this.wtVariants || []]
     },
     wtAminoAcids: function() {
-      const wtDnaSequenceType = _.get(this.scoreSet, 'targetGene.wtSequence.sequenceType')
-      const wtDnaSequence = _.get(this.scoreSet, 'targetGene.wtSequence.sequence')
+      const wtDnaSequenceType = _.get(this.scoreSet, 'targetGene.targetSequence.sequenceType')
+      const wtDnaSequence = _.get(this.scoreSet, 'targetGene.targetSequence.sequence')
       if (!wtDnaSequence || wtDnaSequenceType != 'dna') {
         return []
       }

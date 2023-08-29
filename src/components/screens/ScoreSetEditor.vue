@@ -371,33 +371,33 @@
                       <span class="p-float-label">
                         <FileUpload
                             ref="sequenceFileUpload"
-                            :id="$scopedId('input-targetGeneWtSequenceSequenceFile')"
+                            :id="$scopedId('input-targetGeneTargetSequenceSequenceFile')"
                             :auto="false"
                             chooseLabel="Reference sequence"
-                            :class="inputClasses.targetGeneWtSequenceSequenceFile"
+                            :class="inputClasses.targetGeneTargetSequenceSequenceFile"
                             :customUpload="true"
                             :fileLimit="1"
                             :showCancelButton="false"
                             :showUploadButton="false"
-                            @remove="fileCleared('targetGeneWtSequenceSequenceFile')"
-                            @select="fileSelected('targetGeneWtSequenceSequenceFile', $event)"
+                            @remove="fileCleared('targetGeneTargetSequenceSequenceFile')"
+                            @select="fileSelected('targetGeneTargetSequenceSequenceFile', $event)"
                         >
                           <template #empty>
                             <p>Drop a FASTA file here.</p>
                           </template>
                         </FileUpload>
                       </span>
-                      <span v-if="validationErrors['targetGene.wtSequence.sequence']" class="mave-field-error">{{validationErrors['targetGene.wtSequence.sequence']}}</span>
+                      <span v-if="validationErrors['targetGene.targetSequence.sequence']" class="mave-field-error">{{validationErrors['targetGene.targetSequence.sequence']}}</span>
                     </div>
                     <div class="field">
                       <span class="p-float-label">
                         <SelectButton
-                            v-model="targetGene.wtSequence.sequenceType"
-                            :id="$scopedId('input-targetGeneWtSequenceSequenceType')"
+                            v-model="targetGene.targetSequence.sequenceType"
+                            :id="$scopedId('input-targetGeneTargetSequenceSequenceType')"
                             :options="sequenceTypes"
                         />
                       </span>
-                      <span v-if="validationErrors['targetGene.wtSequence.sequenceType']" class="mave-field-error">{{validationErrors['targetGene.wtSequence.sequenceType']}}</span>
+                      <span v-if="validationErrors['targetGene.targetSequence.sequenceType']" class="mave-field-error">{{validationErrors['targetGene.targetSequence.sequenceType']}}</span>
                     </div>
                     <div>
                         <Button @click="addTarget" icon="pi pi-check" label="Add Target" />
@@ -474,13 +474,13 @@
                           </template>
                       </Column>
                       <template #expansion="slotProps">
-                        <Card v-if="slotProps.data.wtSequence?.sequence" class="field">
+                        <Card v-if="slotProps.data.targetSequence?.sequence" class="field">
                           <template #content>
                               <h3 class="compact-target">Genomic Sequence Data</h3>
                               <p class="compact-target">
-                                <strong>Sequence Type:</strong> {{ slotProps.data.wtSequence.sequenceType }}<br>
-                                <strong>Reference Name:</strong> {{ slotProps.data.wtSequence.reference.shortName }}<br>
-                                <strong>Reference Organism:</strong> {{ slotProps.data.wtSequence.reference.organismName }}
+                                <strong>Sequence Type:</strong> {{ slotProps.data.targetSequence.sequenceType }}<br>
+                                <strong>Reference Name:</strong> {{ slotProps.data.targetSequence.reference.shortName }}<br>
+                                <strong>Reference Organism:</strong> {{ slotProps.data.targetSequence.reference.organismName }}
                               </p>
                           </template>
                         </Card>
@@ -696,7 +696,7 @@ export default {
     targetGene: {
       name: null,
       category: null,
-      wtSequence: {
+      targetSequence: {
         sequenceType: null,
         sequence: null,
         reference: null
@@ -795,7 +795,7 @@ export default {
           name: null,
           category: null,
           type: null,
-          wtSequence: {
+          targetSequence: {
             sequenceType: null,
             sequence: null,
             reference: null
@@ -814,7 +814,7 @@ export default {
               }
         }
 
-        const referenceGenomeId = _.get(this.targetGene, 'wtSequence.reference.genome.id')
+        const referenceGenomeId = _.get(this.targetGene, 'targetSequence.reference.genome.id')
         this.referenceGenome = this.referenceGenomes.find((rg) => rg.id == referenceGenomeId)
       }
     },
@@ -1052,7 +1052,7 @@ export default {
         delete this.clientSideValidationErrors.extraMetadata
       }
       // ensure files are cleared from sequence loader even when remove button not used
-      else if (inputName == 'targetGeneWtSequenceSequenceFile') {
+      else if (inputName == 'targetGeneTargetSequenceSequenceFile') {
         this.$refs.sequenceFileUpload.files = []
       }
       this.inputClasses[inputName] = 'mave-file-input-empty'
@@ -1080,7 +1080,7 @@ export default {
               }
             }
             break
-          case 'targetGeneWtSequenceSequenceFile':
+          case 'targetGeneTargetSequenceSequenceFile':
             {
               const text = await file.text()
               try {
@@ -1091,18 +1091,18 @@ export default {
                 })*/
                 const fastaData = fastaParser.parse(text)
                 if (fastaData.length == 0) {
-                  this.targetGene.wtSequence.sequence = null
-                  this.clientSideValidationErrors['targetGene.wtSequence.sequence'] = 'The FASTA file contains no sequences.'
+                  this.targetGene.targetSequence.sequence = null
+                  this.clientSideValidationErrors['targetGene.targetSequence.sequence'] = 'The FASTA file contains no sequences.'
                 } else if (fastaData.length > 1) {
-                  this.targetGene.wtSequence.sequence = null
-                  this.clientSideValidationErrors['targetGene.wtSequence.sequence'] = 'The FASTA file contains more than one sequence.'
+                  this.targetGene.targetSequence.sequence = null
+                  this.clientSideValidationErrors['targetGene.targetSequence.sequence'] = 'The FASTA file contains more than one sequence.'
                 } else {
-                  this.targetGene.wtSequence.sequence = fastaData[0].sequence
-                  this.clientSideValidationErrors['targetGene.wtSequence.sequence'] = null
+                  this.targetGene.targetSequence.sequence = fastaData[0].sequence
+                  this.clientSideValidationErrors['targetGene.targetSequence.sequence'] = null
                 }
               } catch (e) {
-                this.targetGene.wtSequence.sequence = null
-                this.clientSideValidationErrors['targetGene.wtSequence.sequence'] = 'The file was not a valid FASTA file.'
+                this.targetGene.targetSequence.sequence = null
+                this.clientSideValidationErrors['targetGene.targetSequence.sequence'] = 'The file was not a valid FASTA file.'
                 console.log('Reference sequence file was not a valid FASTA file.')
               }
             }
@@ -1151,7 +1151,7 @@ export default {
         this.targetGene = {
           name: null,
           category: null,
-          wtSequence: {
+          targetSequence: {
             sequenceType: null,
             sequence: null,
             reference: null
@@ -1193,12 +1193,12 @@ export default {
     },
 
     resetTarget: function() {
-      this.fileCleared('targetGeneWtSequenceSequenceFile')
+      this.fileCleared('targetGeneTargetSequenceSequenceFile')
       this.targetGene = {
         name: null,
         category: null,
         type: null,
-        wtSequence: {
+        targetSequence: {
           sequenceType: null,
           sequence: null,
           reference: null
@@ -1217,12 +1217,12 @@ export default {
 
     addTarget: function() {
       if (this.referenceGenome) {
-        this.targetGene.wtSequence.reference = this.referenceGenome
+        this.targetGene.targetSequence.reference = this.referenceGenome
         delete this.targetGene.targetAccession;
       }
       else if (this.assembly) {
         this.targetGene.targetAccession.assembly = this.assembly
-        delete this.targetGene.wtSequence;
+        delete this.targetGene.targetSequence;
       }
       else {
         return null // don't add our target if it is invalid in some way

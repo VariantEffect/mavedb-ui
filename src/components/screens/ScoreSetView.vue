@@ -116,18 +116,18 @@
               {{targetGene.targetAccession.accession}}
             </div>
 
-            <div v-if="targetGene.wtSequence?.sequence" style="word-break: break-word">
-              <div v-if="targetGene.wtSequence.reference?.organismName"><strong>Organism:</strong> {{targetGene.wtSequence.reference.organismName}}</div>
-              <div v-if="targetGene.wtSequence.reference?.shortName"><strong>Reference genome:</strong> {{targetGene.wtSequence.reference.shortName}}</div>
-              <div v-if="targetGene.wtSequence.reference?.id"><strong>Genome ID:</strong> {{targetGene.wtSequence.reference.id}}</div>
+            <div v-if="targetGene.targetSequence?.sequence" style="word-break: break-word">
+              <div v-if="targetGene.targetSequence.reference?.organismName"><strong>Organism:</strong> {{targetGene.targetSequence.reference.organismName}}</div>
+              <div v-if="targetGene.targetSequence.reference?.shortName"><strong>Reference genome:</strong> {{targetGene.targetSequence.reference.shortName}}</div>
+              <div v-if="targetGene.targetSequence.reference?.id"><strong>Genome ID:</strong> {{targetGene.targetSequence.reference.id}}</div>
               <div v-if="targetGene.id"><strong>Target ID:</strong> {{targetGene.id}}</div>
               <strong>Reference sequence: </strong>
-              <template v-if="targetGene.wtSequence.sequence.length >= 500">
-                <template v-if="readMore == true">{{targetGene.wtSequence.sequence.substring(0, 500) + "...."}} </template>
-                <template v-if="readMore == false">{{targetGene.wtSequence.sequence}}</template>
+              <template v-if="targetGene.targetSequence.sequence.length >= 500">
+                <template v-if="readMore == true">{{targetGene.targetSequence.sequence.substring(0, 500) + "...."}} </template>
+                <template v-if="readMore == false">{{targetGene.targetSequence.sequence}}</template>
                 <Button @click="showMore" v-if="readMore == true" class="p-button-text p-button-sm p-button-info">Show more</Button>
                 <Button @click="showLess" v-if="readMore == false" class="p-button-text p-button-sm p-button-info">Show less</Button>
-              </template><template v-else>{{targetGene.wtSequence.sequence}}</template>
+              </template><template v-else>{{targetGene.targetSequence.sequence}}</template>
             </div>
             <!--One for loop can't handle the order so that separating them into three parts.-->
             <div v-if="targetGene.externalIdentifiers?.[0]?.identifier">

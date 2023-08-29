@@ -22,7 +22,7 @@
                   :scrollY="true"
               />
             </div>
-        </div> 
+        </div>
       </TabPanel>
       <TabPanel header="Unpublished">
         <div class="mavedb-search-view">
@@ -88,7 +88,7 @@ export default {
           {data: 'shortDescription', title: 'Description', width: '40%'},
           {data: (x) => _.get(x, 'targetGene.name', null), title: 'Target'},
           {data: (x) => _.get(
-            _.get(x, 'targetGene.referenceMaps.0', null),
+            _.get(x, 'targetGene.reference', null),
                 // .find((rm) => rm.isPrimary),
             'genome.organismName'
           ), title: 'Target organism'},
@@ -128,7 +128,7 @@ export default {
   methods: {
     search: async function() {
       await this.fetchSearchResults()
-      /*      
+      /*
       if (this.searchText && this.searchText.length > 0) {
         await this.fetchSearchResults()
       } else {
@@ -180,7 +180,7 @@ export default {
 /* (B) OPTIONAL COSMETICS */
 .flex-wrap > * {
   box-sizing: border-box;
-  width: 50%; 
+  width: 50%;
   padding: 10px;
   background: #ffe2e0;
 }

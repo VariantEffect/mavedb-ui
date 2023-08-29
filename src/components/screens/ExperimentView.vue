@@ -85,8 +85,8 @@
             <div class="mave-score-set-section-title">Target</div>
             <div v-if="scoreSet.targetGene.name"><strong>Name:</strong> {{scoreSet.targetGene.name}}</div>
             <div v-if="scoreSet.targetGene.category"><strong>Type:</strong> {{scoreSet.targetGene.category}}</div>
-            <div v-if="scoreSet.targetGene.referenceMaps?.[0]?.genome?.organismName"><strong>Organism:</strong> {{scoreSet.targetGene.referenceMaps[0].genome.organismName}}</div>
-            <div v-if="scoreSet.targetGene.referenceMaps?.[0]?.genome?.shortName"><strong>Reference genome:</strong> {{scoreSet.targetGene.referenceMaps[0].genome.shortName}}</div>
+            <div v-if="scoreSet.targetGene.targetSequence?.reference?.genome?.organismName"><strong>Organism:</strong> {{scoreSet.targetGene.targetSequence.reference.genome.organismName}}</div>
+            <div v-if="scoreSet.targetGene.targetSequence?.reference?.genome?.shortName"><strong>Reference genome:</strong> {{scoreSet.targetGene.targetSequence.reference.genome.shortName}}</div>
             <!--TODO: Miss TaxID part-->
             <div v-if="scoreSet.targetGene.wtSequence?.sequence" style="word-break: break-word"><strong>Reference sequence: </strong>
               <template v-if="scoreSet.targetGene.wtSequence.sequence.length >= 500">

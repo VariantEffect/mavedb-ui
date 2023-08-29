@@ -72,11 +72,11 @@
               },
             },
             {data: 'shortDescription', title: 'Description', width: '40%'},
-            {data: (x) => _.get(x, 'targetGene.name', null), title: 'Target'},
-            {data: (x) => _.get(x, 'targetGene.category', null), title: 'Target type'},
+            {data: (x) => _.get(x, 'targetGene[0].name', null), title: 'Target'},
+            {data: (x) => _.get(x, 'targetGene[0].category', null), title: 'Target type'},
             {data: (x) => _.get(
-              _.get(x, 'targetGene.referenceMaps.0', null),
-              'genome.organismName'
+              _.get(x, 'targetGene[0].targetSequence.reference', null),
+              'organismName'
             ), title: 'Target organism'},
           ],
           language: this.language,

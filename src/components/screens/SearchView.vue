@@ -77,7 +77,7 @@ export default {
     },
     targetNameFilterOptions: function() {
       if (this.scoreSets.length > 0) {
-        const values = this.scoreSets.map((s) => _.get(s, 'targetGene.name'))
+        const values = this.scoreSets.map((s) => s.targetGene.map((t) => _.get(t, 'name')))
         const valueFrequencies = _.countBy(values)
         return _.sortBy(_.keys(valueFrequencies)).map((value) => ({value, badge: valueFrequencies[value]}))
       } else {
@@ -86,7 +86,7 @@ export default {
     },
     targetOrganismFilterOptions: function() {
       if (this.scoreSets.length > 0) {
-        const values = this.scoreSets.map((s) => _.get(s, 'targetGene.referenceMaps.0.genome.organismName'))
+        const values = this.scoreSets.map((s) => s.targetGene.map((t) => _.get(t, 'targetSequence.reference.organismName')))
         const valueFrequencies = _.countBy(values)
         return _.sortBy(_.keys(valueFrequencies)).map((value) => ({value, badge: valueFrequencies[value]}))
       } else {
@@ -95,7 +95,7 @@ export default {
     },
     targetTypeFilterOptions: function() {
       if (this.scoreSets.length > 0) {
-        const values = this.scoreSets.map((s) => _.get(s, 'targetGene.category'))
+        const values = this.scoreSets.map((s) => s.targetGene.map((t) => _.get(t, 'category')))
         const valueFrequencies = _.countBy(values)
         return _.sortBy(_.keys(valueFrequencies)).map((value) => ({value, badge: valueFrequencies[value]}))
       } else {
@@ -285,7 +285,7 @@ export default {
         ...(this.searchText && this.searchText.length > 0) ? {search: this.searchText} : {},
         ...(this.filterTargetNames.length > 0) ? {'target-names': this.filterTargetNames.join(',')} : {},
         ...(this.filterTargetTypes.length > 0) ? {'target-types': this.filterTargetTypes.join(',')} : {},
-        ...(this.filterTargetOrganismNames.length > 0) ? {'target-namorganism-nameses': this.filterTargetOrganismNames.join(',')} : {},
+        ...(this.filterTargetOrganismNames.length > 0) ? {'target-organism-names': this.filterTargetOrganismNames.join(',')} : {},
         ...(this.filterPublicationAuthors.length > 0) ? {'publication-authors': this.filterPublicationAuthors} : {},
         ...(this.filterPublicationDatabases.length > 0) ? {'publication-databases': this.filterPublicationDatabases.join(',')} : {},
         ...(this.filterPublicationJournals.length > 0) ? {'publication-journals': this.filterPublicationJournals.join(',')} : {}

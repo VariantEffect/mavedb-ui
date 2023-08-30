@@ -151,7 +151,7 @@
                     />
                     <label :for="$scopedId('input-targetLicenseId')">License</label>
                   </span>
-                  <span v-if="validationErrors['targetGene.referenceGenome']" class="mave-field-error">{{validationErrors['targetGene.referenceGenome']}}</span>
+                  <span v-if="validationErrors.referenceGenome" class="mave-field-error">{{validationErrors.referenceGenome}}</span>
                 </div>
                 <Message v-if="licenseId && licenses && licenses.find((l) => l.id == licenseId)?.shortName != 'CC0'" severity="warn">
                     Choosing a license with these restrictions may cause your dataset to be excluded from data federation and aggregation by MaveDB collaborators.
@@ -296,7 +296,7 @@
                     <div class="field">
                       <span class="p-float-label">
                         <InputText v-model="targetGene.name" :id="$scopedId('input-targetGeneName')" />
-                        <label :for="$scopedId('input-targetGene')">Target gene name</label>
+                        <label :for="$scopedId('input-targetGeneName')">Target name</label>
                       </span>
                       <span v-if="validationErrors['targetGene.name']" class="mave-field-error">{{validationErrors['targetGene.name']}}</span>
                     </div>
@@ -430,7 +430,7 @@
                           />
                           <label :for="$scopedId('input-targetGeneAssembly')">Assembly</label>
                           </span>
-                          <span v-if="validationErrors['targetGene.referenceGenome']" class="mave-field-error">{{validationErrors['targetGene.referenceGenome']}}</span>
+                          <span v-if="validationErrors['targetGene.targetAccession.assembly']" class="mave-field-error">{{validationErrors['targetGene.targetAccession.assembly']}}</span>
                         </div>
                       </div>
                       <div class="field">

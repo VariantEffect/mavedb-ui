@@ -427,7 +427,16 @@
                               v-model="assembly"
                               :id="$scopedId('input-targetGeneAssembly')"
                               :options="assemblies"
-                          />
+                              optionLabel="name"
+                              optionGroupLabel="type"
+                              optionGroupChildren="assemblies"
+                            >
+                            <template #optiongroup="slotProps">
+                                <div class="flex align-items-center dropdown-option-group">
+                                    <div>{{ slotProps.option.type }}</div>
+                                </div>
+                            </template>
+                          </Dropdown>
                           <label :for="$scopedId('input-targetGeneAssembly')">Assembly</label>
                           </span>
                           <span v-if="validationErrors['targetGene.targetAccession.assembly']" class="mave-field-error">{{validationErrors['targetGene.targetAccession.assembly']}}</span>
@@ -647,7 +656,7 @@ export default {
     }
     const licenses = useItems({itemTypeName: 'license'})
     const referenceGenomes = useItems({itemTypeName: 'reference-genome'})
-    const assemblies = useItems({itemTypeName: 'assemblies'})
+    const assemblies = useItems({itemTypeName: 'grouped-assemblies'})
     const targetGeneSuggestions = useItems({itemTypeName: 'target-gene-search'})
     const {errors: validationErrors, handleSubmit, setErrors: setValidationErrors} = useForm()
     return {
@@ -1530,6 +1539,12 @@ export default {
 .mave-score-set-editor:deep(.p-card .p-card-title) {
   font-size: 1.2em;
   font-weight: normal;
+  color: #3f51B5;
+  margin-bottom: 0;
+}
+
+.dropdown-option-group {
+  font-weight: bold;
   color: #3f51B5;
   margin-bottom: 0;
 }

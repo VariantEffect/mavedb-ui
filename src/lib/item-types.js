@@ -105,6 +105,10 @@ const itemTypes = {
     name: 'assemblies', // TODO Redundant, change this structure
     restCollectionName: 'hgvs/assemblies'
   },
+  'grouped-assemblies': {
+    name: 'grouped-assemblies', // TODO Redundant, change this structure
+    restCollectionName: 'hgvs/grouped-assemblies'
+  },
   'scoreSet': {
     name: 'scoreSet', // TODO Redundant, change this structure
     restCollectionName: 'score-sets',

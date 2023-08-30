@@ -302,6 +302,13 @@
                     </div>
                     <div class="field">
                       <span class="p-float-label">
+                        <InputText v-model="targetGene.targetSequence.label" :id="$scopedId('input-targetSequenceLabel')" />
+                        <label :for="$scopedId('input-targetSequenceLabel')">Target label (only required when providing multiple targets)</label>
+                      </span>
+                      <span v-if="validationErrors['targetGene.targetSequence.label']" class="mave-field-error">{{validationErrors['targetGene.targetSequence.label']}}</span>
+                    </div>
+                    <div class="field">
+                      <span class="p-float-label">
                         <SelectButton
                             v-model="targetGene.category"
                             :id="$scopedId('input-targetGeneCategory')"
@@ -477,6 +484,9 @@
                         <Card v-if="slotProps.data.targetSequence?.sequence" class="field">
                           <template #content>
                               <h3 class="compact-target">Genomic Sequence Data</h3>
+                              <p v-if="slotProps.data.targetSequence.label" class="compact-target">
+                                <strong>Sequence Label:</strong> {{ slotProps.data.targetSequence.label }}<br>
+                              </p>
                               <p class="compact-target">
                                 <strong>Sequence Type:</strong> {{ slotProps.data.targetSequence.sequenceType }}<br>
                                 <strong>Reference Name:</strong> {{ slotProps.data.targetSequence.reference.shortName }}<br>
@@ -699,7 +709,8 @@ export default {
       targetSequence: {
         sequenceType: null,
         sequence: null,
-        reference: null
+        reference: null,
+        label: null
       },
       targetAccession: {
         accession: null,
@@ -798,6 +809,7 @@ export default {
           targetSequence: {
             sequenceType: null,
             sequence: null,
+            label: null,
             reference: null
           },
           targetAccession: {
@@ -1154,6 +1166,7 @@ export default {
           targetSequence: {
             sequenceType: null,
             sequence: null,
+            label: null,
             reference: null
           },
           targetAccession: {
@@ -1201,6 +1214,7 @@ export default {
         targetSequence: {
           sequenceType: null,
           sequence: null,
+          label: null,
           reference: null
         },
         targetAccession: {
@@ -1225,7 +1239,7 @@ export default {
         delete this.targetGene.targetSequence;
       }
       else {
-        return null // don't add our target if it is invalid in some way
+        return null // target must include one of the above objects
       }
       this.targetGene.externalIdentifiers = _.keys(
         this.targetGene.externalIdentifiers).map(

@@ -249,12 +249,12 @@ export default {
       },
     scoreColumns: function() {
       const fixedColumns = ['hgvs_nt', 'hgvs_splice','hgvs_pro']
-      return [...fixedColumns, ...this.item?.datasetColumns?.score_columns || []]
+      return [...fixedColumns, ...this.item?.datasetColumns?.scoreColumns || []]
     },
     countColumns: function(){
       const fixedColumns = ['hgvs_nt', 'hgvs_splice','hgvs_pro']
-      const showCountColumns = !_.isEmpty(this.item?.datasetColumns?.count_columns)
-      return showCountColumns ? [...fixedColumns, ...this.item?.datasetColumns?.count_columns || []] : []
+      const showCountColumns = !_.isEmpty(this.item?.datasetColumns?.countColumns)
+      return showCountColumns ? [...fixedColumns, ...this.item?.datasetColumns?.countColumns || []] : []
     },
     sortedMetaAnalyzesScoreSetUrns: function(){
       return _.sortBy(this.item?.metaAnalyzesScoreSetUrns || [])
@@ -482,11 +482,10 @@ export default {
       if (this.item){
         console.log(this.item.targetGene)
         const response = await axios.get(`${config.apiBaseUrl}/score-sets/${this.item.urn}/counts`)
-        console.log(response)
         if (response.data) {
           if (this.item.numVariants <= 10){
             this.countsTable = parseScores(response.data)
-          }else{
+          } else{
             this.countsTable = parseScores(response.data).slice(0, 10)
           }
         }

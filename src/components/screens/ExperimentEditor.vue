@@ -53,6 +53,7 @@
                 </span>
                 <span v-if="validationErrors.shortDescription" class="mave-field-error">{{validationErrors.shortDescription}}</span>
               </div>
+              <!--
               <div class="field">
                 <span class="p-float-label">
                   <Chips v-model="keywords" :id="$scopedId('input-keywords')" :addOnBlur="true" :allowDuplicate="false" />
@@ -60,6 +61,60 @@
                 </span>
                 <span v-if="validationErrors.keywords" class="mave-field-error">{{validationErrors.keywords}}</span>
               </div>
+-->
+              <div class="field">
+                <span class="p-float-label">
+                  <Dropdown
+                      v-model="endogenousKeyword"
+                      :id="$scopedId('input-endogenous-locus-library-method-keywords')"
+                      :options="endogenousKeywordsOptions"
+                      optionLabel="value"
+                      optionValue="value"
+                  />
+                  <label :for="$scopedId('input-endogenous-locus-library-method-keywords')">Endogenous Locus Library Method Keywords</label>
+                </span>
+                <span v-if="validationErrors.keywords" class="mave-field-error">{{validationErrors.keywords}}</span>
+              </div>
+              <div class="field">
+                <span class="p-float-label">
+                  <Dropdown
+                      v-model="invitroKeyword"
+                      :id="$scopedId('input-in-vitro-construct-library-method-keywords')"
+                      :options="invitroKeywordsOptions"
+                      optionLabel="value"
+                      optionValue="value"
+                  />
+                  <label :for="$scopedId('input-in-vitro-construct-library-method-keywords')">In Vitro Construct Library Method Keywords</label>
+                </span>
+                <span v-if="validationErrors.keywords" class="mave-field-error">{{validationErrors.keywords}}</span>
+              </div>  
+              <div class="field">
+                <span class="p-float-label">
+                  <Dropdown
+                      v-model="variantKeyword"
+                      :id="$scopedId('variant-library-keywords')"
+                      :options="variantKeywordsOptions"
+                      optionLabel="value"
+                      optionValue="value"
+                  />
+                  <label :for="$scopedId('variant-library-keywords')">Variant Library Method Keywords</label>
+                </span>
+                <span v-if="validationErrors.keywords" class="mave-field-error">{{validationErrors.keywords}}</span>
+              </div>  
+              <div class="field">
+                <span class="p-float-label">
+                  <Dropdown
+                      v-model="phenotypicKeyword"
+                      :id="$scopedId('phenotypic-assay-keywords')"
+                      :options="phenotypicKeywordsOptions"
+                      optionLabel="value"
+                      optionValue="value"
+                  />
+                  <label :for="$scopedId('phenotypic-assay-keywords')">Phenotypic Assay Keywords</label>
+                </span>
+                <span v-if="validationErrors.keywords" class="mave-field-error">{{validationErrors.keywords}}</span>
+              </div>  
+
               <div class="field">
                 <span class="p-float-label">
                   <AutoComplete
@@ -204,7 +259,8 @@ import marked from 'marked'
 import AutoComplete from 'primevue/autocomplete'
 import Button from 'primevue/button'
 import Card from 'primevue/card'
-import Chips from 'primevue/chips'
+//import Chips from 'primevue/chips'
+import Dropdown from 'primevue/dropdown'
 import Multiselect from 'primevue/multiselect'
 import FileUpload from 'primevue/fileupload'
 import InputText from 'primevue/inputtext'
@@ -223,16 +279,24 @@ import useFormatters from '@/composition/formatters'
 
 export default {
   name: 'ExperimentEditor',
-  components: { AutoComplete, Button, Card, Chips, Multiselect, DefaultLayout, FileUpload, InputText, ProgressSpinner, TabPanel, TabView, Textarea },
+  components: { AutoComplete, Button, Card, Dropdown, Multiselect, DefaultLayout, FileUpload, InputText, ProgressSpinner, TabPanel, TabView, Textarea }, //Chips,
 
   setup: () => {
+    const endogenousKeywordsOptions = useItems({itemTypeName: `controlled-keywords-endogenous-search`})
+    const invitroKeywordsOptions = useItems({itemTypeName: `controlled-keywords-invitro-search`})
+    const variantKeywordsOptions = useItems({itemTypeName: `controlled-keywords-variant-search`})
+    const phenotypicKeywordsOptions = useItems({itemTypeName: `controlled-keywords-phenotypic-search`})
     const doiIdentifierSuggestions = useItems({itemTypeName: 'doi-identifier-search'})
     const publicationIdentifierSuggestions = useItems({itemTypeName: 'publication-identifier-search'})
     const rawReadIdentifierSuggestions = useItems({itemTypeName: 'raw-read-identifier-search'})
     const {errors: validationErrors, handleSubmit, setErrors: setValidationErrors} = useForm()
     return {
       ...useFormatters(),
-      ...useItem({itemTypeName: 'experiment'}),
+      ...useItem({itemTypeName: 'experiment'}),      
+      endogenousKeywordsOptions: endogenousKeywordsOptions.items,
+      invitroKeywordsOptions: invitroKeywordsOptions.items,
+      variantKeywordsOptions: variantKeywordsOptions.items,
+      phenotypicKeywordsOptions: phenotypicKeywordsOptions.items,
       doiIdentifierSuggestions: doiIdentifierSuggestions.items,
       setDoiIdentifierSearch: (text) => doiIdentifierSuggestions.setRequestBody({text}),
       publicationIdentifierSuggestions: publicationIdentifierSuggestions.items,
@@ -263,6 +327,10 @@ export default {
     abstractText: null,
     methodText: null,
     keywords: [],
+    endogenousKeyword: null,
+    invitroKeyword: null,
+    variantKeyword: null,
+    phenotypicKeyword: null,
     doiIdentifiers: [],
     primaryPublicationIdentifiers: [],
     publicationIdentifiers: [],
@@ -462,6 +530,7 @@ export default {
         this.abstractText = this.item.abstractText
         this.methodText = this.item.methodText
         this.keywords = this.item.keywords
+        //this.endogenousKeywords = this.item
         this.doiIdentifiers = this.item.doiIdentifiers
         // So that the multiselect can populate correctly, build the primary publication identifiers
         // indirectly by filtering publication identifiers list for those publications we know to be
@@ -480,6 +549,10 @@ export default {
         this.abstractText = null
         this.methodText = null
         this.keywords = []
+        this.endogenousKeyword = null
+        this.invitroKeyword = null
+        this.variantKeyword = null
+        this.phenotypicKeyword = null
         this.doiIdentifiers = []
         this.primaryPublicationIdentifiers = []
         this.publicationIdentifiers = []
@@ -502,6 +575,7 @@ export default {
         abstractText: this.abstractText,
         methodText: this.methodText,
         keywords: this.keywords,
+        //keywords: [{""}],
         doiIdentifiers: this.doiIdentifiers.map((identifier) => _.pick(identifier, 'identifier')),
         primaryPublicationIdentifiers: this.primaryPublicationIdentifiers.map((identifier) => _.pick(identifier, 'identifier')),
         publicationIdentifiers: this.publicationIdentifiers.map((identifier) => _.pick(identifier, 'identifier')),
@@ -605,6 +679,10 @@ export default {
 <style scoped src="../../assets/forms.css"></style>
 
 <style scoped>
+/* Keywords */
+.custom-keyword-dropdown .p-dropdown-trigger {
+  width: 600px; 
+}
 
 /* Cards */
 

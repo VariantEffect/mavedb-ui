@@ -59,7 +59,7 @@
                   </td>
                   <td>
                     <ul>
-                      <li><router-link :to="{name: 'search', query: {search: 'MPRA'}}">MPRA</router-link></li>
+                      <li><router-link :to="{name: 'search', query: {search: 'SpCas9'}}">SpCas9</router-link></li>
                       <li><router-link :to="{name: 'search', query: {search: 'SGE'}}">SGE</router-link></li>
                       <li><router-link :to="{name: 'search', query: {search: 'barcode sequencing'}}">barcode sequencing</router-link></li>
                     </ul>

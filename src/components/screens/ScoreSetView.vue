@@ -86,12 +86,14 @@
           </div>
           <div v-else>Not specified</div>
 
-        <div v-if="item.keywords && item.keywords.length > 0">
+        <div v-if="item.keywords && Object.keys(item.keywords).length > 0">
           <div class="mave-score-set-section-title">Keywords</div>
           <div class="mave-score-set-keywords">
-            <a v-for="(keyword, i) in item.keywords" :key="i" :href="`https://www.mavedb.org/search/?keywords=${keyword}`"><Chip :label="keyword" /></a>
+            <!--<a v-for="(keyword, i) in item.keywords" :key="i" :href="`https://www.mavedb.org/search/?keywords=${keyword}`"><Chip :label="keyword" /></a>-->
+            <li v-for="(value, key) in item.keywords" :key="key"> {{ key }}: <a :href="`https://www.mavedb.org/search/?keywords=${value.value}`">{{ value.value }} <Chip :label="value.value" /></a></li>
           </div>
         </div>
+        <!--chip or link?-->
         <div v-if="item.targetGene">
           <div class="mave-score-set-section-title">Target</div>
           <div v-if="item.targetGene.name"><strong>Name:</strong> {{item.targetGene.name}}</div>

@@ -317,6 +317,7 @@
                     <span v-if="validationErrors[`targetGene.externalIdentifiers.${dbName}.offset`]" class="mave-field-error">{{validationErrors[`targetGene.externalIdentifiers.${dbName}.offset`]}}</span>
                   </div>
                 </div>
+                {{ referenceGenome }}
                 <div class="field">
                   <span class="p-float-label">
                     <Dropdown

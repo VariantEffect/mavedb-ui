@@ -226,12 +226,12 @@ export default {
       },
     scoreColumns: function() {
       const fixedColumns = ['hgvs_nt', 'hgvs_splice','hgvs_pro']
-      return [...fixedColumns, ...this.item?.datasetColumns?.score_columns || []]
+      return [...fixedColumns, ...this.item?.datasetColumns?.scoreColumns || []]
     },
     countColumns: function(){
       const fixedColumns = ['hgvs_nt', 'hgvs_splice','hgvs_pro']
-      const showCountColumns = !_.isEmpty(this.item?.datasetColumns?.count_columns)
-      return showCountColumns ? [...fixedColumns, ...this.item?.datasetColumns?.count_columns || []] : []
+      const showCountColumns = !_.isEmpty(this.item?.datasetColumns?.countColumns)
+      return showCountColumns ? [...fixedColumns, ...this.item?.datasetColumns?.countColumns || []] : []
     },
     sortedMetaAnalyzesScoreSetUrns: function(){
       return _.sortBy(this.item?.metaAnalyzesScoreSetUrns || [])

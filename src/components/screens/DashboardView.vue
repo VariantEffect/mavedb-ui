@@ -16,7 +16,7 @@
             </div>
             <div class="mavedb-search-results">
               <FlexDataTable
-                  :data="publishedScoreSets"
+                  :data="published"
                   :options="tableOptions"
                   :scrollX="true"
                   :scrollY="true"
@@ -26,17 +26,15 @@
       </TabPanel>
       <TabPanel header="Unpublished">
         <div class="mavedb-search-view">
-          <h2 class="mave-score-set-section-title">Unpublished Score sets</h2>
-          <div class="mavedb-search-view">
+          <h2 class="mave-score-set-section-title">Unpublished Score sets and Experiments</h2>
             <div class="mavedb-search-results">
               <FlexDataTable
-                  :data="unpublishedScoreSets"
+                  :data="unpublished"
                   :options="tableOptions"
                   :scrollX="true"
                   :scrollY="true"
               />
             </div>
-          </div>
         </div>
       </TabPanel>
     </TabView>
@@ -69,46 +67,91 @@ export default {
       //currentUser: user,
       searchText: null,
       scoreSets: [],
-      publishedScoreSets: [],
-      unpublishedScoreSets: [],
-      displayedUnplublishedScoreSets: false,
+      experiments: [],
+      published: [],
+      unpublished: [],
       tableOptions: {
         columns: [
           {
-            data: 'urn',
+            data: 'scoreSetUrn',
             title: 'URN',
-            width: '17.5%',
-            render: function (data) { // }, type, row) {
-              var urn = data
-              var urnDisplay = urn  // row['urnDisplay']
-              const url = self.$router.resolve({path: `/score-sets/${urn}`}).href
-              return ('<a href="' + url + '">' + urnDisplay + '</a>')  // TODO Escape the text.
+            width: '19%',
+            render: function (data) {
+              if (data) {
+                var urn = data
+                const url = self.$router.resolve({path: `/score-sets/${urn}`}).href
+                return ('<a href="' + url + '">' + urn + '</a>')  // TODO Escape the text.
+              }else {
+                return 'No related score set'
+              }
             },
           },
-          {data: 'shortDescription', title: 'Description', width: '40%'},
-          {data: (x) => _.get(x, 'targetGene.name', null), title: 'Target'},
-          {data: (x) => _.get(
-            _.get(x, 'targetGene.referenceMaps.0', null),
+          {
+            data: (x) => _.get(x, 'scoreSetShortDescription', null), 
+            title: 'Description', 
+            width: '40%',
+            render: function (data) {
+              // Score set
+              if (data) {
+                return data
+              // Experiment and experiment set
+              } else {
+                return ''
+              }
+            }
+          },
+          {
+            data: (x) => _.get(x, 'scoreSetTargetGene.name', null), 
+            title: 'Target',
+            render: function (data) {
+              if (data) {
+                return data
+              } else {
+                return ''
+              }
+            }
+          },
+          {
+            data: (x) => _.get(
+            _.get(x, 'scoreSetTargetGene.referenceMaps.0', null),
                 // .find((rm) => rm.isPrimary),
             'genome.organismName'
-          ), title: 'Target organism'},
+            ), 
+            title: 'Target organism',
+            render: function (data) {
+              if (data) {
+                return data
+              } else {
+                return ''
+              }
+            }
+          },
         ],
         language: {
           emptyTable: 'You do not have any score sets matching the request.'
         },
-        rowGroup: {
-          dataSrc: 'experiment.urn',
-          startRender: function(rows, group) {
-            const experimentUrn = group
-            const experimentUrnDisplay = experimentUrn // rows.data()[0]['parentUrnDisplay']
-            const experimentDescription = _.get(rows.data()[0], 'shortDescription', null)
-            const url = self.$router.resolve({path: `/experiments/${experimentUrn}`}).href
-            const link = ('<a href="' + url + '">' + experimentUrnDisplay + '</a>');
-            return $('<tr/>').append(
-              '<td colSpan="1">' + link + '</td>').append('<td colSpan="4">' + experimentDescription + '</td>'
-            )
+        rowGroup:
+          {
+            dataSrc: ['experimentSetUrn', 'experimentUrn'],
+            startRender: function(rows, group) {
+              // Group by experiment set urn
+              if (group.startsWith("expSet")) {
+                const experimentSetUrn = group.substring(6)
+                const url = self.$router.resolve({path: `/experiment-sets/${experimentSetUrn}`}).href
+                const link = ('<a href="' + url + '">' + experimentSetUrn + '</a>');
+                return $('<tr/>').append('<td colSpan="4">' + link + '</td>')
+              } else {
+                // Group by experiment urn
+                const experimentUrn = group
+                const experimentDescription = _.get(rows.data()[0], 'experimentShortDescription', null)
+                const url = self.$router.resolve({path: `/experiments/${experimentUrn}`}).href
+                const link = ('<a href="' + url + '">' + experimentUrn + '</a>');
+                return $('<tr/>').append(
+                  '<td colSpan="1">' + link + '</td>').append('<td colSpan="4">' + experimentDescription + '</td>'
+                )
+              }
+            },
           },
-        },
         searching: false
       }
     }
@@ -138,7 +181,6 @@ export default {
     },
     fetchSearchResults: async function() {
       try {
-        // this response should be true to get published data
         let response = await axios.post(
           `${config.apiBaseUrl}/me/score-sets/search`,
           {
@@ -150,19 +192,47 @@ export default {
             }
           }
         )
-        this.scoreSets = response.data || []
-        // reset published score sets search results when using search bar
-        this.publishedScoreSets = []
-        this.unpublishedScoreSets = []
-        // Separate the response.data into published score set and unpublished score set.
-        for (let i=0, len = this.scoreSets.length; i<len; i++){
-          console.log(this.scoreSets[i])
-          if (this.scoreSets[i].publishedDate == null){
-            // do not add to unpublished score sets if it is already populated
-            this.unpublishedScoreSets.push(this.scoreSets[i])
+        let experimentResponse = await axios.post(
+          `${config.apiBaseUrl}/me/experiments/search`,
+          {
+            text: this.searchText || null,
+          },
+          {
+            headers: {
+              accept: 'application/json'
+            }
           }
-          else{
-            this.publishedScoreSets.push(this.scoreSets[i])
+        )
+        this.scoreSets = response.data || []
+        this.experiments = experimentResponse.data || []
+        // reset published score sets search results when using search bar
+        this.published = []
+        this.unpublished = []
+        // Transform score sets data structure and separate the response.data into published score set and unpublished score set.
+        for (let i = 0, len = this.scoreSets.length; i < len; i++) {
+          var transformedScoreSet = {
+            experimentUrn: this.scoreSets[i].experiment.urn,
+            experimentSetUrn: 'expSet'+this.scoreSets[i].experiment.experimentSetUrn,
+            experimentShortDescription: this.scoreSets[i].experiment.shortDescription,
+            scoreSetUrn: this.scoreSets[i].urn,
+            scoreSetShortDescription: this.scoreSets[i].shortDescription,
+            scoreSetTargetGene: this.scoreSets[i].targetGene,
+          }
+          if (this.scoreSets[i].publishedDate == null) {
+            this.unpublished.push(transformedScoreSet)
+          } else {
+            this.published.push(transformedScoreSet)
+          }
+        }
+        // Transform experiment data structure and push unpublished experiments to unpublished list.
+        for (let i=0, len = this.experiments.length; i<len; i++){
+          if (this.experiments[i].scoreSetUrns.length == 0){
+            var transformedExperiment = {
+              experimentUrn: this.experiments[i].urn,
+              experimentSetUrn: 'expSet'+this.experiments[i].experimentSetUrn,
+              experimentShortDescription: this.experiments[i].shortDescription
+            }
+            this.unpublished.push(transformedExperiment)
           }
         }
       } catch (err) {

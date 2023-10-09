@@ -402,55 +402,6 @@ export default {
   font-style: normal;
 }
 
-.mavedb-search-results {
-  flex: 1 1 400px;
-  position: relative;
-}
-
-/* Table */
-
-/* Override control bar padding applied in FlexDataTable. */
-.mavedb-search-results::v-deep .samplify-data-table .dataTables_wrapper {
-  padding-top: 0;
-}
-
-/* Override background applied in FlexDataTable. */
-.mavedb-search-results::v-deep .samplify-data-table .dataTables_wrapper {
-  background-color: #fff;
-}
-
-.mavedb-search-results::v-deep .samplify-data-table thead th {
-  background-color: #dadff1;
-}
-
-.mavedb-search-results::v-deep .samplify-data-table td,
-.mavedb-search-results::v-deep .samplify-data-table th {
-  padding: 0.75rem;
-  border: 1px solid #fff;
-  font-size: 14px;
-}
-
-.mavedb-search-results::v-deep .samplify-data-table td:first-child {
-  padding-left: 2em;
-}
-
-.mavedb-search-results::v-deep .samplify-data-table td:last-child {
-  font-style: italic;
-}
-
-.mavedb-search-results::v-deep .samplify-data-table tr.samplify-data-table-group-row {
-  background-color: #eeeeee;
-  font-weight: bold;
-}
-
-.mavedb-search-results::v-deep .samplify-data-table tr.samplify-data-table-group-row td:first-child {
-  padding-left: 0.75rem;
-}
-
-.mavedb-search-results::v-deep .samplify-data-table tr.samplify-data-table-group-row td:last-child {
-  font-style: normal;
-}
-
 .mavedb-search-clear-button {
   position: absolute;
   top: 12px;

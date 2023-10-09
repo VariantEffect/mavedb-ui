@@ -105,6 +105,10 @@ const itemTypes = {
     name: 'assemblies', // TODO Redundant, change this structure
     restCollectionName: 'hgvs/assemblies'
   },
+  'gene-names': {
+    name: 'gene-names', // TODO Redundant, change this structure
+    restCollectionName: 'hgvs/genes'
+  },
   'grouped-assemblies': {
     name: 'grouped-assemblies', // TODO Redundant, change this structure
     restCollectionName: 'hgvs/grouped-assemblies'

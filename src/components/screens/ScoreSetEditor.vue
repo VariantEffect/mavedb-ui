@@ -396,8 +396,6 @@
                           <SelectButton v-model="targetGene.category" :id="$scopedId('input-targetGeneCategory')"
                             :options="targetGeneCategories" />
                         </span>
-                        <span v-if="validationErrors['targetGene.category']" class="mave-field-error">{{
-                          validationErrors['targetGene.category'] }}</span>
                       </div>
                       <div>
                         <Button @click="addTarget" icon="pi pi-check" label="Add Target" />
@@ -427,38 +425,38 @@
                         </template>
                       </Column>
                       <template #expansion="slotProps">
-                        <span v-if="validationErrors[`targetGene.${slotProps.data.index}.name`]"
-                          class="mave-field-error">{{ validationErrors[`targetGene.${slotProps.data.index}.name`]
+                        <span v-if="validationErrors[`targetGenes.${slotProps.data.index}.name`]"
+                          class="mave-field-error">{{ validationErrors[`targetGenes.${slotProps.data.index}.name`]
                           }}</span>
-                        <span v-if="validationErrors[`targetGene.${slotProps.data.index}.category`]"
-                          class="mave-field-error">{{ validationErrors[`targetGene.${slotProps.data.index}.category`]
+                        <span v-if="validationErrors[`targetGenes.${slotProps.data.index}.category`]"
+                          class="mave-field-error">{{ validationErrors[`targetGenes.${slotProps.data.index}.category`]
                           }}</span>
                         <Card v-if="slotProps.data.targetSequence?.sequence" class="field">
                           <template #content>
                             <h3 class="compact-target">Genomic Sequence Data</h3>
                             <p v-if="slotProps.data.targetSequence.label" class="compact-target">
                               <strong>Sequence Label:</strong> {{ slotProps.data.targetSequence.label }}<br>
-                              <span v-if="validationErrors[`targetGene.${slotProps.data.index}.targetSequence.label`]"
+                              <span v-if="validationErrors[`targetGenes.${slotProps.data.index}.targetSequence.label`]"
                                 class="mave-field-error">{{
-                                  validationErrors[`targetGene.${slotProps.data.index}.targetSequence.label`] }}<br></span>
+                                  validationErrors[`targetGenes.${slotProps.data.index}.targetSequence.label`] }}<br></span>
                             </p>
                             <p class="compact-target">
                               <strong>Sequence Type:</strong> {{ slotProps.data.targetSequence.sequenceType }}<br>
                               <span
-                                v-if="validationErrors[`targetGene.${slotProps.data.index}.targetSequence.sequenceType`]"
+                                v-if="validationErrors[`targetGenes.${slotProps.data.index}.targetSequence.sequenceType`]"
                                 class="mave-field-error">{{
-                                  validationErrors[`targetGene.${slotProps.data.index}.targetSequence.sequenceType`]
+                                  validationErrors[`targetGenes.${slotProps.data.index}.targetSequence.sequenceType`]
                                 }}<br></span>
                               <strong>Reference Name:</strong> {{ slotProps.data.targetSequence.reference.shortName }}<br>
-                              <span v-if="validationErrors[`targetGene.${slotProps.data.index}.referenceGenome`]"
+                              <span v-if="validationErrors[`targetGenes.${slotProps.data.index}.referenceGenome`]"
                                 class="mave-field-error">{{
-                                  validationErrors[`targetGene.${slotProps.data.index}.referenceGenome`] }}<br></span>
+                                  validationErrors[`targetGenes.${slotProps.data.index}.referenceGenome`] }}<br></span>
                               <strong>Reference Organism:</strong> {{ slotProps.data.targetSequence.reference.organismName
                               }}
                             </p>
-                            <span v-if="validationErrors[`targetGene.${slotProps.data.index}.targetSequence.sequence`]"
+                            <span v-if="validationErrors[`targetGenes.${slotProps.data.index}.targetSequence.sequence`]"
                               class="mave-field-error">{{
-                                validationErrors[`targetGene.${slotProps.data.index}.targetSequence.sequence`] }}</span>
+                                validationErrors[`targetGenes.${slotProps.data.index}.targetSequence.sequence`] }}</span>
                           </template>
                         </Card>
                         <Card v-if="slotProps.data.targetAccession?.accession">
@@ -466,19 +464,19 @@
                             <h3 class="compact-target">Accession Data</h3>
                             <p class="compact-target">
                               <strong>Assembly:</strong> {{ slotProps.data.targetAccession.assembly || 'N/A' }}<br>
-                              <span v-if="validationErrors[`targetGene.${slotProps.data.index}.targetAccession.assembly`]"
+                              <span v-if="validationErrors[`targetGenes.${slotProps.data.index}.targetAccession.assembly`]"
                                 class="mave-field-error">{{
-                                  validationErrors[`targetGene.${slotProps.data.index}.targetAccession.assembly`]
+                                  validationErrors[`targetGenes.${slotProps.data.index}.targetAccession.assembly`]
                                 }}<br></span>
                               <strong>Gene:</strong> {{ slotProps.data.targetAccession.gene || 'N/A' }}<br>
-                              <span v-if="validationErrors[`targetGene.${slotProps.data.index}.targetAccession.gene`]"
+                              <span v-if="validationErrors[`targetGenes.${slotProps.data.index}.targetAccession.gene`]"
                                 class="mave-field-error">{{
-                                  validationErrors[`targetGene.${slotProps.data.index}.targetAccession.gene`] }}<br></span>
+                                  validationErrors[`targetGenes.${slotProps.data.index}.targetAccession.gene`] }}<br></span>
                               <strong>Accession:</strong> {{ slotProps.data.targetAccession.accession }}<br>
                               <span
-                                v-if="validationErrors[`targetGene.${slotProps.data.index}.targetAccession.accession`]"
+                                v-if="validationErrors[`targetGenes.${slotProps.data.index}.targetAccession.accession`]"
                                 class="mave-field-error">{{
-                                  validationErrors[`targetGene.${slotProps.data.index}.targetAccession.accession`] }}</span>
+                                  validationErrors[`targetGenes.${slotProps.data.index}.targetAccession.accession`] }}</span>
                             </p>
                           </template>
                         </Card>
@@ -492,14 +490,14 @@
                                 }}, <strong>Offset:</strong> {{ externalId.offset }}
                               </p>
                               <span
-                                v-if="validationErrors[`targetGene.${slotProps.data.index}.externalIdentifiers.${externalId.identifier.dbName}.identifier`]"
+                                v-if="validationErrors[`targetGenes.${slotProps.data.index}.externalIdentifiers.${externalId.identifier.dbName}.identifier`]"
                                 class="mave-field-error">{{
-                                  validationErrors[`targetGene.${slotProps.data.index}.externalIdentifiers.${externalId.identifier.dbName}.identifier`]
+                                  validationErrors[`targetGenes.${slotProps.data.index}.externalIdentifiers.${externalId.identifier.dbName}.identifier`]
                                 }}</span><br>
                               <span
-                                v-if="validationErrors[`targetGene.${slotProps.data.index}.externalIdentifiers.${externalId.identifier.dbName}.offset`]"
+                                v-if="validationErrors[`targetGenes.${slotProps.data.index}.externalIdentifiers.${externalId.identifier.dbName}.offset`]"
                                 class="mave-field-error">{{
-                                  validationErrors[`targetGene.${slotProps.data.index}.externalIdentifiers.${externalId.identifier.dbName}.offset`]
+                                  validationErrors[`targetGenes.${slotProps.data.index}.externalIdentifiers.${externalId.identifier.dbName}.offset`]
                                 }}</span>
                             </div>
                           </template>
@@ -1246,7 +1244,7 @@ export default {
         }
         this.referenceGenome = this.item.referenceGenome
         this.assembly = this.item.assembly
-        this.targetGenes = this.item.targetGene
+        this.targetGenes = [this.item.targetGene]
         this.extraMetadata = this.item.extraMetadata
       } else {
         this.experiment = null
@@ -1369,7 +1367,7 @@ export default {
         dataUsagePolicy: this.dataUsagePolicy,
         extraMetadata: {},
         // eslint-disable-next-line no-unused-vars
-        targetGene: this.targetGenes.map(({ index, ...target }) => target) // drop index property from target genes before save
+        targetGenes: this.targetGenes.map(({ index, ...target }) => target) // drop index property from target genes before save
       }
       if (!this.item) {
         editedFields.supersededScoreSetUrn = this.supersededScoreSet ? this.supersededScoreSet.urn : null
@@ -1382,7 +1380,7 @@ export default {
         this.item.primaryPublicationIdentifiers = []
         this.item.publicationIdentifiers = []
         this.item.rawReadIdentifiers = []
-        this.item.targetGene = []
+        this.item.targetGenes = []
       }
 
       const editedItem = _.merge({}, this.item || {}, editedFields)
@@ -1428,14 +1426,14 @@ export default {
             }
 
             // set expanded rows to any target genes responsible for errors
-            if (_.isEqual(_.slice(path, 0, 1), ['targetGene'])) {
+            if (_.isEqual(_.slice(path, 0, 1), ['targetGenes'])) {
               if (this.expandedRows.indexOf(this.targetGenes[path[1]]) === -1) {
                 this.expandedRows.push(this.targetGenes[path[1]])
               }
             }
 
             // Map errors on indexed external gene identifiers to inputs named for the identifier's database.
-            if (_.isEqual(_.slice(path, 0, 1), ['targetGene']) && _.isEqual(_.slice(path, 2, 3), ['externalIdentifiers'])) {
+            if (_.isEqual(_.slice(path, 0, 1), ['targetGenes']) && _.isEqual(_.slice(path, 2, 3), ['externalIdentifiers'])) {
               const identifierIndex = path[3]
               const identifierOffset = editedFields.targetGene[path[1]].externalIdentifiers[identifierIndex]
               if (identifierOffset?.identifier?.dbName) {

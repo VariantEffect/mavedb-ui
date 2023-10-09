@@ -120,9 +120,9 @@
             </a>
           </div>
         </div>
-        <div v-if="item.targetGene">
+        <div v-if="item.targetGenes">
           <div class="mave-score-set-section-title">Targets</div>
-          <div v-for="targetGene of item.targetGene" :key="targetGene">
+          <div v-for="targetGene of item.targetGenes" :key="targetGene">
             <div v-if="targetGene.name"><strong>Name:</strong> {{ targetGene.name }}</div>
             <div v-if="targetGene.category"><strong>Type:</strong> {{ targetGene.category }}</div>
 
@@ -512,7 +512,6 @@ export default {
     },
     loadTableCounts: async function () {
       if (this.item) {
-        console.log(this.item.targetGene)
         const response = await axios.get(`${config.apiBaseUrl}/score-sets/${this.item.urn}/counts`)
         if (response.data) {
           if (this.item.numVariants <= 10) {

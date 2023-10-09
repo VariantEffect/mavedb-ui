@@ -77,7 +77,7 @@ export default {
     },
     targetNameFilterOptions: function() {
       if (this.scoreSets.length > 0) {
-        const values = this.scoreSets.map((s) => s.targetGene.map((t) => _.get(t, 'name')))
+        const values = this.scoreSets.map((s) => s.targetGenes.map((t) => _.get(t, 'name')))
         const valueFrequencies = _.countBy(values)
         return _.sortBy(_.keys(valueFrequencies)).map((value) => ({value, badge: valueFrequencies[value]}))
       } else {
@@ -86,7 +86,7 @@ export default {
     },
     targetOrganismFilterOptions: function() {
       if (this.scoreSets.length > 0) {
-        const values = this.scoreSets.map((s) => s.targetGene.map((t) => _.get(t, 'targetSequence.reference.organismName')))
+        const values = this.scoreSets.map((s) => s.targetGenes.map((t) => _.get(t, 'targetSequence.reference.organismName')))
         const valueFrequencies = _.countBy(values)
         return _.sortBy(_.keys(valueFrequencies)).map((value) => ({value, badge: valueFrequencies[value]}))
       } else {
@@ -95,7 +95,7 @@ export default {
     },
     targetTypeFilterOptions: function() {
       if (this.scoreSets.length > 0) {
-        const values = this.scoreSets.map((s) => s.targetGene.map((t) => _.get(t, 'category')))
+        const values = this.scoreSets.map((s) => s.targetGenes.map((t) => _.get(t, 'category')))
         const valueFrequencies = _.countBy(values)
         return _.sortBy(_.keys(valueFrequencies)).map((value) => ({value, badge: valueFrequencies[value]}))
       } else {

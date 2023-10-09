@@ -94,7 +94,7 @@
           <div class="mave-score-set-section-title">Scoreset Targets</div>
           <div class="mave-score-set-section-sublist" v-for="scoreSet in this.associatedScoreSets" :key="scoreSet">
             <router-link :to="{ name: 'scoreSet', params: { urn: scoreSet.urn } }">Scoreset: {{ scoreSet.urn }}</router-link>
-            <div v-for="targetGene of scoreSet.targetGene" :key="targetGene">
+            <div v-for="targetGene of scoreSet.targetGenes" :key="targetGene">
               <div v-if="targetGene.name"><strong>Name:</strong> {{ targetGene.name }}</div>
               <div v-if="targetGene.category"><strong>Type:</strong> {{ targetGene.category }}</div>
 

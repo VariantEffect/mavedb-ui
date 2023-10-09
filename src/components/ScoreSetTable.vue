@@ -74,19 +74,19 @@ export default {
           },
           { data: "shortDescription", title: "Description", width: "40%" },
           {
-            data: (x) => _.get(x, "targetGene[0].name", "null name"),
+            data: (x) => _.get(x, "targetGenes[0].name", "null name"),
             title: "Target",
           },
           {
-            data: (x) => _.get(x, "targetGene[0].category", "null category"),
+            data: (x) => _.get(x, "targetGenes[0].category", "null category"),
             title: "Target type",
           },
           {
             data: (x) =>
               _.get(
                 x,
-                "targetGene[0].targetSequence.reference.organismName",
-                _.get(x, "targetGene[0].targetAccession.assembly", null)
+                "targetGenes[0].targetSequence.reference.organismName",
+                _.get(x, "targetGenes[0].targetAccession.assembly", null)
               ),
             title: "Target organism/assembly",
           },
@@ -94,7 +94,7 @@ export default {
             data: (x) =>
               _.get(
                 x,
-                "targetGene[0].targetAccession.accession",
+                "targetGenes[0].targetAccession.accession",
                 "Internal Sequence"
               ),
             title: "Target accession",

@@ -20,12 +20,14 @@
         <div v-if="item.creationDate">Created {{ formatDate(item.creationDate) }} <span v-if="item.createdBy">
             <a :href="`https://orcid.org/${item.createdBy.orcidId}`" target="blank"><img src="@/assets/ORCIDiD_icon.png"
                 alt="ORCIDiD">{{ item.createdBy.firstName }} {{ item.createdBy.lastName }}</a></span></div>
-        <div v-if="item.modificationDate">Last updated {{ formatDate(item.modificationDate) }} <span v-if="item.modifiedBy">
+        <div v-if="item.modificationDate">Last updated {{ formatDate(item.modificationDate) }} <span
+            v-if="item.modifiedBy">
             <a :href="`https://orcid.org/${item.modifiedBy.orcidId}`" target="blank"><img src="@/assets/ORCIDiD_icon.png"
                 alt="ORCIDiD">{{ item.modifiedBy.firstName }} {{ item.modifiedBy.lastName }}</a></span></div>
         <div v-if="item.publishedDate">Published {{ formatDate(item.publishedDate) }}</div>
         <div v-if="item.experimentSetUrn">Member of <router-link
-            :to="{ name: 'experimentSet', params: { urn: item.experimentSetUrn } }">{{ item.experimentSetUrn }}</router-link>
+            :to="{ name: 'experimentSet', params: { urn: item.experimentSetUrn } }">{{ item.experimentSetUrn
+            }}</router-link>
         </div>
         <div v-if="item.currentVersion">Current version {{ item.currentVersion }}</div>
 
@@ -90,10 +92,11 @@
           </div>
         </div>
 
+        <div class="mave-score-set-section-title">Scoreset Targets</div>
         <div v-if="this.associatedScoreSets.length != 0">
-          <div class="mave-score-set-section-title">Scoreset Targets</div>
           <div class="mave-score-set-section-sublist" v-for="scoreSet in this.associatedScoreSets" :key="scoreSet">
-            <router-link :to="{ name: 'scoreSet', params: { urn: scoreSet.urn } }">Scoreset: {{ scoreSet.urn }}</router-link>
+            <router-link :to="{ name: 'scoreSet', params: { urn: scoreSet.urn } }">Scoreset: {{ scoreSet.urn
+            }}</router-link>
             <div v-for="targetGene of scoreSet.targetGenes" :key="targetGene">
               <div v-if="targetGene.name"><strong>Name:</strong> {{ targetGene.name }}</div>
               <div v-if="targetGene.category"><strong>Type:</strong> {{ targetGene.category }}</div>
@@ -129,16 +132,16 @@
               <!--One for loop can't handle the order so separating them into three parts.-->
               <div v-if="targetGene.externalIdentifiers?.[0]?.identifier">
                 <div v-for="i in targetGene.externalIdentifiers" :key="i">
-                  <div v-if="i.identifier.dbName === 'UniProt'"><strong>UniProt:</strong> {{ i.identifier.identifier }} <span
-                      v-if="i.offset != 0"> with offset {{ i.offset }}</span></div>
+                  <div v-if="i.identifier.dbName === 'UniProt'"><strong>UniProt:</strong> {{ i.identifier.identifier }}
+                    <span v-if="i.offset != 0"> with offset {{ i.offset }}</span></div>
                 </div>
                 <div v-for="i in targetGene.externalIdentifiers" :key="i">
-                  <div v-if="i.identifier.dbName === 'RefSeq'"><strong>RefSeq:</strong> {{ i.identifier.identifier }} <span
-                      v-if="i.offset != 0"> with offset {{ i.offset }}</span></div>
+                  <div v-if="i.identifier.dbName === 'RefSeq'"><strong>RefSeq:</strong> {{ i.identifier.identifier }}
+                    <span v-if="i.offset != 0"> with offset {{ i.offset }}</span></div>
                 </div>
                 <div v-for="i in targetGene.externalIdentifiers" :key="i">
-                  <div v-if="i.identifier.dbName === 'Ensembl'"><strong>Ensembl:</strong> {{ i.identifier.identifier }} <span
-                      v-if="i.offset != 0"> with offset {{ i.offset }}</span></div>
+                  <div v-if="i.identifier.dbName === 'Ensembl'"><strong>Ensembl:</strong> {{ i.identifier.identifier }}
+                    <span v-if="i.offset != 0"> with offset {{ i.offset }}</span></div>
                 </div>
               </div>
               <br>
@@ -151,15 +154,15 @@
         <strong>DOI: </strong>
         <div v-if="item.doiIdentifiers.length != 0">
           <ul style="list-style-type:square">
-            <li v-for="(doi, i) of item.doiIdentifiers" :key="i"><a :href="`${doi.url}`"
-                target="blank">{{ doi.identifier }}</a></li>
+            <li v-for="(doi, i) of item.doiIdentifiers" :key="i"><a :href="`${doi.url}`" target="blank">{{ doi.identifier
+            }}</a></li>
           </ul>
         </div><template v-else>No associated DOIs<br /></template>
         <strong>Raw reads: </strong>
         <div v-if="item.rawReadIdentifiers.length != 0">
           <ul style="list-style-type:square">
-            <li v-for="(read, i) of item.rawReadIdentifiers" :key="i"><a :href="`${read.url}`"
-                target="blank">{{ read.identifier }}</a></li>
+            <li v-for="(read, i) of item.rawReadIdentifiers" :key="i"><a :href="`${read.url}`" target="blank">{{
+              read.identifier }}</a></li>
           </ul>
         </div><template v-else>No associated raw reads<br /></template>
       </div>

@@ -73,6 +73,7 @@ export default {
             },
           },
           { data: "shortDescription", title: "Description", width: "40%" },
+          // TODO: Surface target genes besides the first one in the data table.
           {
             data: (x) => _.get(x, "targetGenes[0].name", "null name"),
             title: "Target",

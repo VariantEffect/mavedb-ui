@@ -388,7 +388,6 @@
                             :suggestions="targetGeneAccessionSuggestionsList" :force-selection="true" :dropdown="true"
                             @complete="fetchTargetAccessions" />
                           <label :for="$scopedId('input-targetGene-accession')">Accession/Transcript Identifier</label>
-
                         </span>
                       </div>
                       <div class="field">
@@ -765,7 +764,10 @@ export default {
       return this.suggestionsForAutocomplete(this.targetGeneSuggestions)
     },
     targetGeneAccessionSuggestionsList: function () {
-      return this.suggestionsForAutocomplete(this.targetGeneAccessionSuggestions)
+      if (!this.targetGeneAccessionSuggestions || this.targetGeneAccessionSuggestions.length == 0) {
+        return ['']
+      }
+      return this.targetGeneAccessionSuggestions
     },
     defaultLicenseId: function () {
       return this.licenses ? this.licenses.find((license) => license.shortName == 'CC0')?.id : null
@@ -897,24 +899,20 @@ export default {
     fetchTargetAccessions: async function (event) {
       if (this.targetAutocomplete == 'Assembly') {
         const assembly = this.assembly?.trim() || null
-        if (!assembly) {
-          this.targetGeneAccessionSuggestions = [{}]
-        } else {
+        if (assembly) {
           this.targetGeneAccessionSuggestions = await this.fetchTargetAccessionsByAssembly(assembly)
         }
       }
       else {
         const gene = this.geneName?.name || null
-        if (!gene) {
-          this.targetGeneAccessionSuggestions = [{}]
-        } else {
+        if (gene) {
           this.targetGeneAccessionSuggestions = await this.fetchTargetAccessionsByGene(gene)
         }
       }
 
       const searchText = (event.query || '').trim()
       if (searchText.length > 0) {
-        this.targetGeneAccessionSuggestions = this.targetGeneAccessionSuggestions.filter(s => s.includes(searchText))
+          this.targetGeneAccessionSuggestions = this.targetGeneAccessionSuggestions.filter(s => s?.toLowerCase().includes(searchText.toLowerCase()))
       }
     },
 

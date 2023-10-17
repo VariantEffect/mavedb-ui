@@ -411,7 +411,7 @@
               <template #footer>
                 <div class="field">
                   <span v-if="targetGenes.length > 0">
-                    <DataTable v-model:expandedRows="expandedRows" :value="targetGenes" dataKey="name">
+                    <DataTable v-model:expandedRows="expandedTargetGeneRows" :value="targetGenes" dataKey="name">
                       <template #header>
                         <h3 class="target-header">Created Targets</h3>
                       </template>
@@ -426,10 +426,10 @@
                       </Column>
                       <template #expansion="slotProps">
                         <span v-if="validationErrors[`targetGenes.${slotProps.data.index}.name`]"
-                          class="mave-field-error">{{ validationErrors[`targetGenes.${slotProps.data.index}.name`]
+                          class="mave-field-error">Gene Name {{ validationErrors[`targetGenes.${slotProps.data.index}.name`]
                           }}</span>
                         <span v-if="validationErrors[`targetGenes.${slotProps.data.index}.category`]"
-                          class="mave-field-error">{{ validationErrors[`targetGenes.${slotProps.data.index}.category`]
+                          class="mave-field-error">Gene Category {{ validationErrors[`targetGenes.${slotProps.data.index}.category`]
                           }}</span>
                         <Card v-if="slotProps.data.targetSequence?.sequence" class="field">
                           <template #content>
@@ -629,6 +629,8 @@ export default {
     const targetGeneSuggestions = useItems({ itemTypeName: 'target-gene-search' })
     const { errors: validationErrors, handleSubmit, setErrors: setValidationErrors } = useForm()
 
+    const expandedTargetGeneRows = ref([])
+
     return {
       ...useFormatters(),
       ...useItem({ itemTypeName: 'scoreSet' }),
@@ -656,7 +658,8 @@ export default {
       geneNames: geneNames.items,
       handleSubmit,
       setValidationErrors,
-      validationErrors
+      validationErrors,
+      expandedTargetGeneRows
     }
   },
 
@@ -734,8 +737,7 @@ export default {
     externalGeneDatabases,
     metaAnalyzesScoreSetSuggestions: [],
     supersededScoreSetSuggestions: [],
-    targetGeneAccessionSuggestions: [],
-    expandedRows: []
+    targetGeneAccessionSuggestions: []
   }),
 
   computed: {
@@ -1425,11 +1427,12 @@ export default {
               path = path.slice(1)
             }
 
-            // set expanded rows to any target genes responsible for errors
+            // expand all rows of target genes table if there are errors
+            // so users can view error messages.
+            // TODO: Expand only the problematic target.
             if (_.isEqual(_.slice(path, 0, 1), ['targetGenes'])) {
-              if (this.expandedRows.indexOf(this.targetGenes[path[1]]) === -1) {
-                this.expandedRows.push(this.targetGenes[path[1]])
-              }
+              this.expandedTargetGeneRows = this.targetGenes
+              console.log(this.expandedTargetGeneRows)
             }
 
             // Map errors on indexed external gene identifiers to inputs named for the identifier's database.

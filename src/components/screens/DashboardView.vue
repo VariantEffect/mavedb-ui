@@ -8,35 +8,19 @@
             <h1>Search MaveDB Experiments and Score Sets</h1>
           </div>
           <h2 class="mave-score-set-section-title">Published Score sets</h2>
-            <div class="mavedb-search-form">
-              <span class="p-input-icon-left">
-                <i class="pi pi-search" />
-                <InputText v-model="searchText" ref="searchTextInput" type="text" placeholder="Search" @change="search" />
-              </span>
-            </div>
-            <div class="mavedb-search-results">
-              <FlexDataTable
-                  :data="publishedScoreSets"
-                  :options="tableOptions"
-                  :scrollX="true"
-                  :scrollY="true"
-              />
-            </div>
-        </div> 
+          <div class="mavedb-search-form">
+            <span class="p-input-icon-left">
+              <i class="pi pi-search" />
+              <InputText v-model="searchText" ref="searchTextInput" type="text" placeholder="Search" @change="search" />
+            </span>
+          </div>
+          <ScoreSetTable :data="publishedScoreSets" :language="language" :scrollX="true" :scrollY="true" />
+        </div>
       </TabPanel>
       <TabPanel header="Unpublished">
         <div class="mavedb-search-view">
           <h2 class="mave-score-set-section-title">Unpublished Score sets</h2>
-          <div class="mavedb-search-view">
-            <div class="mavedb-search-results">
-              <FlexDataTable
-                  :data="unpublishedScoreSets"
-                  :options="tableOptions"
-                  :scrollX="true"
-                  :scrollY="true"
-              />
-            </div>
-          </div>
+          <ScoreSetTable :data="unpublishedScoreSets" :language="language" :scrollX="true" :scrollY="true" />
         </div>
       </TabPanel>
     </TabView>
@@ -46,12 +30,10 @@
 <script>
 
 import axios from 'axios'
-import $ from 'jquery'
-import _ from 'lodash'
 import InputText from 'primevue/inputtext'
 
 import config from '@/config'
-import FlexDataTable from '@/components/common/FlexDataTable'
+import ScoreSetTable from '@/components/ScoreSetTable.vue'
 import DefaultLayout from '@/components/layout/DefaultLayout'
 
 import TabView from 'primevue/tabview'
@@ -59,12 +41,11 @@ import TabPanel from 'primevue/tabpanel'
 
 export default {
   name: 'HomeView',
-  components: {DefaultLayout, FlexDataTable, InputText, TabView, TabPanel},
+  components: { DefaultLayout, ScoreSetTable, InputText, TabView, TabPanel },
   computed: {
   },
 
-  data: function() {
-    const self = this
+  data: function () {
     return {
       //currentUser: user,
       searchText: null,
@@ -72,53 +53,17 @@ export default {
       publishedScoreSets: [],
       unpublishedScoreSets: [],
       displayedUnplublishedScoreSets: false,
-      tableOptions: {
-        columns: [
-          {
-            data: 'urn',
-            title: 'URN',
-            width: '17.5%',
-            render: function (data) { // }, type, row) {
-              var urn = data
-              var urnDisplay = urn  // row['urnDisplay']
-              const url = self.$router.resolve({path: `/score-sets/${urn}`}).href
-              return ('<a href="' + url + '">' + urnDisplay + '</a>')  // TODO Escape the text.
-            },
-          },
-          {data: 'shortDescription', title: 'Description', width: '40%'},
-          {data: (x) => _.get(x, 'targetGene.name', null), title: 'Target'},
-          {data: (x) => _.get(
-            _.get(x, 'targetGene.referenceMaps.0', null),
-                // .find((rm) => rm.isPrimary),
-            'genome.organismName'
-          ), title: 'Target organism'},
-        ],
-        language: {
-          emptyTable: 'You do not have any score sets matching the request.'
-        },
-        rowGroup: {
-          dataSrc: 'experiment.urn',
-          startRender: function(rows, group) {
-            const experimentUrn = group
-            const experimentUrnDisplay = experimentUrn // rows.data()[0]['parentUrnDisplay']
-            const experimentDescription = _.get(rows.data()[0], 'shortDescription', null)
-            const url = self.$router.resolve({path: `/experiments/${experimentUrn}`}).href
-            const link = ('<a href="' + url + '">' + experimentUrnDisplay + '</a>');
-            return $('<tr/>').append(
-              '<td colSpan="1">' + link + '</td>').append('<td colSpan="4">' + experimentDescription + '</td>'
-            )
-          },
-        },
-        searching: false
-      }
+      language: {
+        emptyTable: 'You do not have any score sets matching the request.'
+      },
     }
   },
-  mounted: async function() {
+  mounted: async function () {
     await this.search()
   },
   watch: {
     searchText: {
-      handler: function(oldValue, newValue) {
+      handler: function (oldValue, newValue) {
         if (oldValue != newValue) {
           this.search()
         }
@@ -126,9 +71,9 @@ export default {
     }
   },
   methods: {
-    search: async function() {
+    search: async function () {
       await this.fetchSearchResults()
-      /*      
+      /*
       if (this.searchText && this.searchText.length > 0) {
         await this.fetchSearchResults()
       } else {
@@ -136,7 +81,7 @@ export default {
       }
       */
     },
-    fetchSearchResults: async function() {
+    fetchSearchResults: async function () {
       try {
         // this response should be true to get published data
         let response = await axios.post(
@@ -155,13 +100,12 @@ export default {
         this.publishedScoreSets = []
         this.unpublishedScoreSets = []
         // Separate the response.data into published score set and unpublished score set.
-        for (let i=0, len = this.scoreSets.length; i<len; i++){
-          console.log(this.scoreSets[i])
-          if (this.scoreSets[i].publishedDate == null){
+        for (let i = 0, len = this.scoreSets.length; i < len; i++) {
+          if (this.scoreSets[i].publishedDate == null) {
             // do not add to unpublished score sets if it is already populated
             this.unpublishedScoreSets.push(this.scoreSets[i])
           }
-          else{
+          else {
             this.publishedScoreSets.push(this.scoreSets[i])
           }
         }
@@ -176,14 +120,18 @@ export default {
 
 <style scoped>
 /* (A) FLEX CONTAINER */
-.flex-wrap { display: flex; }
+.flex-wrap {
+  display: flex;
+}
+
 /* (B) OPTIONAL COSMETICS */
-.flex-wrap > * {
+.flex-wrap>* {
   box-sizing: border-box;
-  width: 50%; 
+  width: 50%;
   padding: 10px;
   background: #ffe2e0;
 }
+
 /* Layout */
 .mavedb-search-view {
   display: flex;
@@ -191,73 +139,21 @@ export default {
   position: relative;
   height: 100%;
 }
+
 .mavedb-search-header {
   flex: 0 0 auto;
   text-align: center;
 }
+
 .mavedb-search-header h1 {
   font-size: 20px;
   text-align: center;
 }
+
 .mavedb-search-form {
   flex: 0 0 auto;
   padding: 10px 0;
   text-align: center;
-}
-.mavedb-search-filters {
-  display: flex;
-  flex-direction: row;
-  justify-content: space-around;
-  max-width: 1000px;
-  margin: 10px auto;
-}
-.mavedb-search-filter-option-picker {
-  max-width: 300px;
-  width: 30%;
-}
-.mavedb-organism-picker::v-deep .p-listbox-item {
-  font-style: italic;
-}
-.mavedb-organism-picker::v-deep .p-listbox-item .p-badge {
-  font-style: normal;
-}
-.mavedb-search-results {
-  flex: 1 1 400px;
-  position: relative;
-}
-/* Table */
-/* Override control bar padding applied in FlexDataTable. */
-.mavedb-search-results::v-deep .samplify-data-table .dataTables_wrapper {
-  padding-top: 0;
-}
-/* Override background applied in FlexDataTable. */
-.mavedb-search-results::v-deep .samplify-data-table .dataTables_wrapper {
-  background-color: #fff;
-}
-.mavedb-search-results::v-deep .samplify-data-table thead th {
-  background-color: #dadff1;
-}
-.mavedb-search-results::v-deep .samplify-data-table td,
-.mavedb-search-results::v-deep .samplify-data-table th {
-  padding: 0.75rem;
-  border: 1px solid #fff;
-  font-size: 14px;
-}
-.mavedb-search-results::v-deep .samplify-data-table td:first-child {
-  padding-left: 2em;
-}
-.mavedb-search-results::v-deep .samplify-data-table td:last-child {
-  font-style: italic;
-}
-.mavedb-search-results::v-deep .samplify-data-table tr.samplify-data-table-group-row {
-  background-color: #eeeeee;
-  font-weight: bold;
-}
-.mavedb-search-results::v-deep .samplify-data-table tr.samplify-data-table-group-row td:first-child {
-  padding-left: 0.75rem;
-}
-.mavedb-search-results::v-deep .samplify-data-table tr.samplify-data-table-group-row td:last-child {
-  font-style: normal;
 }
 
 </style>

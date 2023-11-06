@@ -90,7 +90,7 @@
           <div class="mave-score-set-section-title">Keywords</div>
           <div class="mave-score-set-keywords">
             <!--<a v-for="(keyword, i) in item.keywords" :key="i" :href="`https://www.mavedb.org/search/?keywords=${keyword}`"><Chip :label="keyword" /></a>-->
-            <li v-for="(value, key) in item.keywords" :key="key"> {{ key }}: <a :href="`https://www.mavedb.org/search/?keywords=${value.value}`">{{ value.value }} <Chip :label="value.value" /></a></li>
+            <li v-for="(value, key) in item.keywords" :key="key"> {{ key }}: <a :href="`https://www.mavedb.org/search/?keywords=${value.value}`">{{ value.value }} </a></li>
           </div>
         </div>
         <!--chip or link?-->
@@ -199,7 +199,6 @@ import axios from 'axios'
 import _ from 'lodash'
 import marked from 'marked'
 import Button from 'primevue/button'
-import Chip from 'primevue/chip'
 import Column from 'primevue/column'
 import DataTable from 'primevue/datatable'
 import TabPanel from 'primevue/tabpanel'
@@ -217,7 +216,7 @@ import {parseScores} from '@/lib/scores'
 
 export default {
   name: 'ScoreSetView',
-  components: {Button, Chip, DefaultLayout, EntityLink, ScoreSetHeatmap, TabView, TabPanel, DataTable, Column},
+  components: {Button, DefaultLayout, EntityLink, ScoreSetHeatmap, TabView, TabPanel, DataTable, Column},
   computed: {
     isMetaDataEmpty: function(){
       //If extraMetadata is empty, return value will be true.
@@ -228,12 +227,12 @@ export default {
       },
     scoreColumns: function() {
       const fixedColumns = ['hgvs_nt', 'hgvs_splice','hgvs_pro']
-      return [...fixedColumns, ...this.item?.datasetColumns?.score_columns || []]
+      return [...fixedColumns, ...this.item?.datasetColumns?.scoreColumns || []]
     },
     countColumns: function(){
       const fixedColumns = ['hgvs_nt', 'hgvs_splice','hgvs_pro']
-      const showCountColumns = !_.isEmpty(this.item?.datasetColumns?.count_columns)
-      return showCountColumns ? [...fixedColumns, ...this.item?.datasetColumns?.count_columns || []] : []
+      const showCountColumns = !_.isEmpty(this.item?.datasetColumns?.countColumns)
+      return showCountColumns ? [...fixedColumns, ...this.item?.datasetColumns?.countColumns || []] : []
     },
     sortedMetaAnalyzesScoreSetUrns: function(){
       return _.sortBy(this.item?.metaAnalyzesScoreSetUrns || [])

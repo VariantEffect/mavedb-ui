@@ -64,7 +64,7 @@
           <div class="mave-score-set-section-title">Keywords</div>
           <div class="mave-score-set-keywords">
             <!--<a v-for="(keyword, i) in item.keywords" :key="i" :href="`https://www.mavedb.org/search/?keywords=${keyword}`"><Chip :label="keyword" /></a>-->
-            <li v-for="(value, key) in item.keywords" :key="key"> {{ key }}: <a :href="`https://www.mavedb.org/search/?keywords=${value.value}`">{{ value.value }} <Chip :label="value.value" /></a></li>
+            <li v-for="(value, key) in item.keywords" :key="key"> {{ key }}: <a :href="`https://www.mavedb.org/search/?keywords=${value.value}`">{{ value.value }}</a></li>
           </div>
         </div>
 
@@ -114,7 +114,6 @@
 import _ from 'lodash'
 import marked from 'marked'
 import Button from 'primevue/button'
-import Chip from 'primevue/chip'
 import DefaultLayout from '@/components/layout/DefaultLayout'
 import useItem from '@/composition/item'
 import useFormatters from '@/composition/formatters'
@@ -124,7 +123,7 @@ import {oidc} from '@/lib/auth'
 
 export default {
   name: 'ExperimentView',
-  components: {Button, Chip, DefaultLayout},
+  components: {Button, DefaultLayout},
 
   setup: () => {
     return {

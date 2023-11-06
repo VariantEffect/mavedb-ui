@@ -158,11 +158,61 @@
                 </Message>
                 <div class="field">
                   <span class="p-float-label">
-                    <Chips v-model="keywords" :id="$scopedId('input-keywords')" :addOnBlur="true" :allowDuplicate="false" />
-                    <label :for="$scopedId('input-keywords')">Keywords</label>
+                    <Dropdown
+                        v-model="endogenousKeyword"
+                        :id="$scopedId('input-endogenous-locus-library-method-keywords')"
+                        :options="endogenousKeywordsOptions"
+                        optionLabel="value"
+                        optionValue="value"
+                        style="width: 400px"
+                    />
+                    <label :for="$scopedId('input-endogenous-locus-library-method-keywords')">Endogenous Locus Library Method Keywords</label>
                   </span>
                   <span v-if="validationErrors.keywords" class="mave-field-error">{{validationErrors.keywords}}</span>
                 </div>
+                <div class="field">
+                  <span class="p-float-label">
+                    <Dropdown
+                        v-model="invitroKeyword"
+                        :id="$scopedId('input-in-vitro-construct-library-method-keywords')"
+                        :options="invitroKeywordsOptions"
+                        optionLabel="value"
+                        optionValue="value"
+                        style="width: 400px"
+                    />
+                    <label :for="$scopedId('input-in-vitro-construct-library-method-keywords')">In Vitro Construct Library Method Keywords</label>
+                  </span>
+                  <span v-if="validationErrors.keywords" class="mave-field-error">{{validationErrors.keywords}}</span>
+                </div>  
+                <div class="field">
+                  <span class="p-float-label">
+                    <Dropdown
+                        v-model="variantKeyword"
+                        :id="$scopedId('variant-library-keywords')"
+                        :options="variantKeywordsOptions"
+                        optionLabel="value"
+                        optionValue="value"
+                        style="width: 400px"
+                    />
+                    <label :for="$scopedId('variant-library-keywords')">Variant Library Method Keywords</label>
+                  </span>
+                  <span v-if="validationErrors.keywords" class="mave-field-error">{{validationErrors.keywords}}</span>
+                </div>  
+                <div class="field">
+                  <span class="p-float-label">
+                    <Dropdown
+                        v-model="phenotypicKeyword"
+                        :id="$scopedId('phenotypic-assay-keywords')"
+                        :options="phenotypicKeywordsOptions"
+                        optionLabel="value"
+                        optionValue="value"
+                        style="width: 400px"
+                    />
+                    <label :for="$scopedId('phenotypic-assay-keywords')">Phenotypic Assay Keywords</label>
+                  </span>
+                  <span v-if="validationErrors.keywords" class="mave-field-error">{{validationErrors.keywords}}</span>
+                </div>
+
                 <div class="field">
                   <span class="p-float-label">
                     <AutoComplete
@@ -317,7 +367,6 @@
                     <span v-if="validationErrors[`targetGene.externalIdentifiers.${dbName}.offset`]" class="mave-field-error">{{validationErrors[`targetGene.externalIdentifiers.${dbName}.offset`]}}</span>
                   </div>
                 </div>
-                {{ referenceGenome }}
                 <div class="field">
                   <span class="p-float-label">
                     <Dropdown
@@ -444,7 +493,7 @@ import marked from 'marked'
 import AutoComplete from 'primevue/autocomplete'
 import Button from 'primevue/button'
 import Card from 'primevue/card'
-import Chips from 'primevue/chips'
+//import Chips from 'primevue/chips'
 import Dropdown from 'primevue/dropdown'
 import FileUpload from 'primevue/fileupload'
 import InputNumber from 'primevue/inputnumber'
@@ -471,7 +520,7 @@ const externalGeneDatabases = ['UniProt', 'Ensembl', 'RefSeq']
 
 export default {
   name: 'ScoreSetEditor',
-  components: { AutoComplete, Button, Card, Chips, DefaultLayout, Dropdown, EntityLink, FileUpload, InputNumber, InputText, Message, Multiselect, ProgressSpinner, SelectButton, TabPanel, TabView, Textarea},
+  components: { AutoComplete, Button, Card, DefaultLayout, Dropdown, EntityLink, FileUpload, InputNumber, InputText, Message, Multiselect, ProgressSpinner, SelectButton, TabPanel, TabView, Textarea}, //Chips,
 
   setup: () => {
     const editableExperiments = useItems({
@@ -482,6 +531,10 @@ export default {
         }
       }
     })
+    const endogenousKeywordsOptions = useItems({itemTypeName: `controlled-keywords-endogenous-search`})
+    const invitroKeywordsOptions = useItems({itemTypeName: `controlled-keywords-invitro-search`})
+    const variantKeywordsOptions = useItems({itemTypeName: `controlled-keywords-variant-search`})
+    const phenotypicKeywordsOptions = useItems({itemTypeName: `controlled-keywords-phenotypic-search`})
     const doiIdentifierSuggestions = useItems({itemTypeName: 'doi-identifier-search'})
     const publicationIdentifierSuggestions = useItems({itemTypeName: 'publication-identifier-search'})
     const targetGeneIdentifierSuggestions = {}
@@ -497,6 +550,10 @@ export default {
       ...useItem({itemTypeName: 'scoreSet'}),
       editableExperiments: editableExperiments.items,
       licenses: licenses.items,
+      endogenousKeywordsOptions: endogenousKeywordsOptions.items,
+      invitroKeywordsOptions: invitroKeywordsOptions.items,
+      variantKeywordsOptions: variantKeywordsOptions.items,
+      phenotypicKeywordsOptions: phenotypicKeywordsOptions.items,
       doiIdentifierSuggestions: doiIdentifierSuggestions.items,
       setDoiIdentifierSearch: (text) => doiIdentifierSuggestions.setRequestBody({text}),
       publicationIdentifierSuggestions: publicationIdentifierSuggestions.items,
@@ -536,7 +593,11 @@ export default {
     shortDescription: null,
     abstractText: null,
     methodText: null,
-    keywords: [],
+    endogenousKeyword: null,
+    invitroKeyword: null,
+    variantKeyword: null,
+    phenotypicKeyword: null,
+    keywords: {},
     doiIdentifiers: [],
     primaryPublicationIdentifiers: [],
     publicationIdentifiers: [],
@@ -926,7 +987,10 @@ export default {
         this.shortDescription = this.item.shortDescription
         this.abstractText = this.item.abstractText
         this.methodText = this.item.methodText
-        this.keywords = this.item.keywords
+        this.endogenousKeyword = this.item.keywords["Endogenous Locus Library Method"].value
+        this.invitroKeyword = this.item.keywords["In Vitro Construct Library Method"].value
+        this.variantKeyword = this.item.keywords["Variant Library"].value
+        this.phenotypicKeyword = this.item.keywords["phenotypic Assay"].value
         this.doiIdentifiers = this.item.doiIdentifiers
         // So that the multiselect can populate correctly, build the primary publication identifiers
         // indirectly by filtering a merged list of secondary and primary publication identifiers
@@ -965,7 +1029,11 @@ export default {
         this.shortDescription = null
         this.abstractText = null
         this.methodText = null
-        this.keywords = []
+        this.keywords = {}
+        this.endogenousKeyword = null
+        this.invitroKeyword = null
+        this.variantKeyword = null
+        this.phenotypicKeyword = null
         this.doiIdentifiers = []
         this.primaryPublicationIdentifiers = []
         this.publicationIdentifiers = []
@@ -1006,7 +1074,12 @@ export default {
         shortDescription: this.shortDescription,
         abstractText: this.abstractText,
         methodText: this.methodText,
-        keywords: this.keywords,
+        keywords: {
+          endogenousKeyword: {"key": "Endogenous Locus Library Method", "value": this.endogenousKeyword},
+          invitroKeyword: {"key": "In Vitro Construct Library Method", "value": this.invitroKeyword},
+          variantKeyword: {"key": "Variant Library", "value": this.variantKeyword},
+          phenotypicKeyword: {"key": "phenotypic Assay", "value": this.phenotypicKeyword}
+        },
         doiIdentifiers: this.doiIdentifiers.map((identifier) => _.pick(identifier, 'identifier')),
         primaryPublicationIdentifiers: this.primaryPublicationIdentifiers.map((identifier) => _.pick(identifier, 'identifier')),
         publicationIdentifiers: this.publicationIdentifiers.map((identifier) => _.pick(identifier, 'identifier')),
@@ -1045,7 +1118,7 @@ export default {
       }
       else {
         // empty item arrays so that deleted items aren't merged back into editedItem object
-        this.item.keywords = []
+        this.item.keywords = {}
         this.item.doiIdentifiers = []
         this.item.primaryPublicationIdentifiers = []
         this.item.publicationIdentifiers = []

@@ -43,24 +43,24 @@
         </div>
         <!--Temporary codes to show references. Will change it in the future.-->
         <div class="mave-score-set-section-title">Primary References</div>
-          <div v-if="item.primaryPublicationIdentifiers.length > 0">
-            <div v-for="publication in item.primaryPublicationIdentifiers" :key="publication">
-                <ul style="list-style-type:square;">
-                  <li v-html="markdownToHtml(publication.referenceHtml)" ></li>Publication: <a :href="`${publication.url}`" target="_blank">{{publication.identifier}}</a>
-                </ul>
-            </div>
+        <div v-if="item.primaryPublicationIdentifiers.length > 0">
+          <div v-for="publication in item.primaryPublicationIdentifiers" :key="publication">
+              <ul style="list-style-type:square;">
+                <li v-html="markdownToHtml(publication.referenceHtml)" ></li>Publication: <a :href="`${publication.url}`" target="_blank">{{publication.identifier}}</a>
+              </ul>
           </div>
-          <div v-else>No associated primary publications.</div>
-          <div class="mave-score-set-section-title">Secondary References</div>
-          <div v-if="item.secondaryPublicationIdentifiers.length > 0">
-            <div v-for="publication in item.secondaryPublicationIdentifiers" :key="publication">
-                <ul style="list-style-type:square;">
-                  <li v-html="markdownToHtml(publication.referenceHtml)" ></li>Publication: <a :href="`${publication.url}`" target="_blank">{{publication.identifier}}</a>
-                </ul>
-            </div>
+        </div>
+        <div v-else>No associated primary publications.</div>
+        <div class="mave-score-set-section-title">Secondary References</div>
+        <div v-if="item.secondaryPublicationIdentifiers.length > 0">
+          <div v-for="publication in item.secondaryPublicationIdentifiers" :key="publication">
+              <ul style="list-style-type:square;">
+                <li v-html="markdownToHtml(publication.referenceHtml)" ></li>Publication: <a :href="`${publication.url}`" target="_blank">{{publication.identifier}}</a>
+              </ul>
           </div>
-          <div v-else>No associated secondary publications.</div>
-          <div v-if="item.keywords && Object.keys(item.keywords).length > 0">
+        </div>
+        <div v-else>No associated secondary publications.</div>
+        <div v-if="item.keywords && Object.keys(item.keywords).length > 0">
           <div class="mave-score-set-section-title">Keywords</div>
           <div class="mave-score-set-keywords">
             <!--<a v-for="(keyword, i) in item.keywords" :key="i" :href="`https://www.mavedb.org/search/?keywords=${keyword}`"><Chip :label="keyword" /></a>-->

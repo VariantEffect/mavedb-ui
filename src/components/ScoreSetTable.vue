@@ -5,6 +5,7 @@
       :options="tableOptions"
       :scrollX="scrollX"
       :scrollY="scrollY"
+      :loading="loading"
       rowIdPath="urn"
     />
   </div>
@@ -52,6 +53,11 @@ export default {
       required: false,
       default: false,
     },
+    loading: {
+      type: Boolean,
+      required: false,
+      default: false,
+    }
   },
 
   data() {

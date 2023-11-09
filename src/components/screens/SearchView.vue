@@ -31,6 +31,7 @@
       <ScoreSetTable
           :data="publishedScoreSets"
           :language="language"
+          :loading="loading"
           :scrollX="true"
           :scrollY="true"
       />
@@ -65,6 +66,7 @@ export default {
       filterPublicationAuthors: this.$route.query['publication-authors'] ? this.$route.query['publication-authors'] : [],
       filterPublicationDatabases: this.$route.query['publication-databases'] ? this.$route.query['publication-databases'].split(',') : [],
       filterPublicationJournals: this.$route.query['publication-journals'] ? this.$route.query['publication-journals'].split(',') : [],
+      loading: false,
       searchText: this.$route.query.search,
       scoreSets: [],
       publishedScoreSets: [],
@@ -317,6 +319,7 @@ export default {
         ...(this.filterPublicationDatabases.length > 0) ? {'publication-databases': this.filterPublicationDatabases.join(',')} : {},
         ...(this.filterPublicationJournals.length > 0) ? {'publication-journals': this.filterPublicationJournals.join(',')} : {}
       }})
+      this.loading = true;
       await this.fetchSearchResults()
       /*URL
       if (this.searchText && this.searchText.length > 0) {
@@ -325,6 +328,7 @@ export default {
         this.scoreSets = []
       }
       */
+     this.loading = false;
     },
     fetchSearchResults: async function() {
       try {

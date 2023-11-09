@@ -1,7 +1,12 @@
 <template>
 
-<div :class="{'samplify-data-table': true, 'lims-flex-data-table-scroll-x': scrollX}" :style="containerStyle" ref="dataTableElement">
+<div :class="{'samplify-data-table': true, 'lims-flex-data-table-scroll-x': scrollX, 'samplify-data-table-loading': loading}"
+     :style="containerStyle"
+     ref="dataTableElement">
   <div class="samplify-data-table-liner" ref="tableLiner"></div>
+  <div v-if="loading" class="samplify-data-table-spinner-container" ref="spinner">
+    <ProgressSpinner class="samplify-data-table-progress" />
+  </div>
 </div>
 
 </template>
@@ -25,12 +30,15 @@ import 'datatables.net-rowgroup-dt'
 import 'datatables.net-scroller-dt'
 import 'datatables.net-select-dt'
 import jszip from 'jszip'
+import ProgressSpinner from 'primevue/progressspinner'
 import 'pdfmake'
 
 window.JSZip = jszip
 
 export default {
   name: 'FlexDataTable',
+
+  components: { ProgressSpinner },
 
   emits: [
     'did-click-checkbox',
@@ -94,6 +102,10 @@ export default {
     virtualRows: {
       type: Boolean,
       default: true
+    },
+    loading: {
+      type: Boolean,
+      default: false 
     }
   },
 
@@ -771,6 +783,23 @@ export default {
 
 .samplify-data-table .dataTables_scrollBody .dts_label {
   display: none;
+}
+
+.samplify-data-table.samplify-data-table-loading .dataTables_scrollBody {
+  display: none;
+}
+
+.samplify-data-table .samplify-data-table-spinner-container {
+  align-items: center;
+  display: flex;
+  justify-content: center;
+  padding-top: 18px;
+  width: 100%;
+}
+
+.samplify-data-table .samplify-data-table-progress {
+  height: 50px;
+  width: 50px;
 }
 
 </style>

@@ -315,7 +315,8 @@ export default {
     scores: null,
     scoresTable: [],
     countsTable: [],
-    readMore: true
+    readMore: true,
+    showHeatmap: true
   }),
 
   watch: {

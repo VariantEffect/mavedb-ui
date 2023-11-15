@@ -10,7 +10,7 @@ MaveDB user interface
 
 Your development environment will need to have the following software installed.
 
-- Node.js, version 16 or later
+- Node.js, version 14.
 
   https://nodejs.org/en/download/
 

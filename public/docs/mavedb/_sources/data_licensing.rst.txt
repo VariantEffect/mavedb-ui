@@ -5,7 +5,7 @@ When uploading score set information to the database, the user can choose one of
 
 * `CC BY-NC-SA 4.0 (Attribution-NonCommercial-ShareAlike) <https://creativecommons.org/licenses/by-nc-sa/4.0/>`_
 * `CC BY 4.0 (Attribution) license <https://creativecommons.org/licenses/by/4.0/>`_
-* `CC0 (Public domain) <https://creativecommons.org/licenses/cc0>`_
+* `CC0 (Public domain) <https://creativecommons.org/publicdomain/zero/1.0/>`_
 
 By default, new score sets will have the non-commercial license.
 The license can be changed after publication, but previously-downloaded copies of the dataset will retain the license

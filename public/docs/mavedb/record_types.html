@@ -5,12 +5,12 @@
     <meta charset="utf-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" /><meta name="viewport" content="width=device-width, initial-scale=1" />
 
-    <title>Record types &#8212; MaveDB 2.1.0 documentation</title>
+    <title>Record types &#8212; MaveDB 2023.2.0 documentation</title>
     <link rel="stylesheet" type="text/css" href="_static/pygments.css?v=4848ba22" />
     <link rel="stylesheet" type="text/css" href="_static/pyramid.css?v=a5b9c134" />
     <link rel="stylesheet" type="text/css" href="_static/graphviz.css?v=eafc0fe6" />
     <link rel="stylesheet" type="text/css" href="_static/styles.css?v=1cacb62a" />
-    <script src="_static/documentation_options.js?v=20623aea"></script>
+    <script src="_static/documentation_options.js?v=953b8078"></script>
     <script src="_static/doctools.js?v=888ff710"></script>
     <script src="_static/sphinx_highlight.js?v=dc90522c"></script>
     <link rel="index" title="Index" href="genindex.html" />
@@ -37,7 +37,7 @@
         <li class="right" >
           <a href="publishing.html" title="Making your data public"
              accesskey="P">previous</a> |</li>
-        <li class="nav-item nav-item-0"><a href="index.html">MaveDB 2.1.0 documentation</a> &#187;</li>
+        <li class="nav-item nav-item-0"><a href="index.html">MaveDB 2023.2.0 documentation</a> &#187;</li>
         <li class="nav-item nav-item-this"><a href="">Record types</a></li> 
       </ul>
     </div>  
@@ -59,7 +59,7 @@ Each of these record types are described in more detail below.</p>
 <p><span class="caption-number">Fig. 1 </span><span class="caption-text">Schematic of an experiment set.</span><a class="headerlink" href="#experiment-set-cartoon" title="Link to this image">¶</a></p>
 <div class="legend">
 <p>This cartoon shows the experiment set for
-<a class="reference external" href="https://www.mavedb.org/experimentset/urn:mavedb:00000003/">urn:mavedb:00000003</a>,
+<a class="reference external" href="https://www.mavedb.org/#/experiment-sets/urn:mavedb:00000003/">urn:mavedb:00000003</a>,
 which describes two distinct assays performed on a single <em>BRCA1</em> variant library,
 each with two associated score sets.
 This nested structure is typical of a MaveDB record describing a complex study with multiple elements.
@@ -74,7 +74,7 @@ and that each experiment has its own score set records that describe the analysi
 <h2>Experiment sets<a class="headerlink" href="#experiment-sets" title="Link to this heading">¶</a></h2>
 <p>Experiment sets do not have their own data or metadata and are used to group related experiments,
 such as when different functional assays are performed on the same target and described in the same publication
-(<a class="reference external" href="https://www.mavedb.org/experimentset/urn:mavedb:00000003/">example experiment set</a>).</p>
+(<a class="reference external" href="https://www.mavedb.org/#/experiment-sets/urn:mavedb:00000003/">example experiment set</a>).</p>
 <p>In general, an experiment set should contain data for a single target.
 It is not necessary to include all data from a single publication or research project under one experiment set.</p>
 <p>Experiment sets are automatically created when the first associated experiment is saved.</p>
@@ -84,7 +84,7 @@ It is not necessary to include all data from a single publication or research pr
 <p>Experiments describe the data generated from performing a MAVE on a target.
 This includes all steps of the experimental procedure up to and including high-throughput sequencing.
 Library construction, assay design, and sequencing strategy are all described in the experiment
-(<a class="reference external" href="https://www.mavedb.org/experiment/urn:mavedb:00000003-a/">example experiment</a>).</p>
+(<a class="reference external" href="https://www.mavedb.org/#/experiments/urn:mavedb:00000003-a/">example experiment</a>).</p>
 <div class="admonition seealso">
 <p class="admonition-title">See also</p>
 <p>Data analysis steps including read filtering, read counting, and score calculation are described in a
@@ -94,7 +94,7 @@ Library construction, assay design, and sequencing strategy are all described in
 a single experiment set, and each functional assay should be described in its own experiment record.
 This still applies to experimental designs where the differences between assays were relatively minor,
 such as varying the temperature or the concentration of a small molecule.</p>
-<p>To assign a new experiment to an existing experiment set, use the dropdown at the top of the experiment form.</p>
+<p>To assign a new experiment to an existing experiment set, use the ‘Add an experiment’ button on the experiment set page.</p>
 <p>Replicate assays should not be reported as separate experiments,
 instead the number and nature of the replicates should be clearly stated in the experiment’s methods section.</p>
 </section>
@@ -102,7 +102,7 @@ instead the number and nature of the replicates should be clearly stated in the 
 <h2>Score sets<a class="headerlink" href="#score-sets" title="Link to this heading">¶</a></h2>
 <p>Score sets are records that describe the scores generated from the raw data described in their associated experiment.
 This includes all steps following the high-throughput sequencing step, including read filtering, read counting, and
-score calculations (<a class="reference external" href="https://www.mavedb.org/score-sets/urn:mavedb:00000003-a-1/">example score set</a>).</p>
+score calculations (<a class="reference external" href="https://www.mavedb.org/#/score-sets/urn:mavedb:00000003-a-1/">example score set</a>).</p>
 <p>Multiple score sets should be used when distinct methods were used to calculate scores for raw data described by the
 experiment.
 The most common use case for multiple score sets is when scores are calculated at nucleotide resolution and amino
@@ -115,7 +115,7 @@ and then use <a class="reference internal" href="#meta-analysis-score-sets"><spa
 <h3>Meta-analysis score sets<a class="headerlink" href="#meta-analysis-score-sets" title="Link to this heading">¶</a></h3>
 <p>Meta-analysis score sets have all the same attributes as a regular score set,
 but they are linked to existing score sets rather than an existing experiment
-(<a class="reference external" href="https://www.mavedb.org/score-sets/urn:mavedb:00000055-0-1/">example meta-analysis score set</a>).</p>
+(<a class="reference external" href="https://www.mavedb.org/#/score-sets/urn:mavedb:00000055-0-1/">example meta-analysis score set</a>).</p>
 </section>
 </section>
 </section>
@@ -185,12 +185,12 @@ but they are linked to existing score sets rather than an existing experiment
         <li class="right" >
           <a href="publishing.html" title="Making your data public"
              >previous</a> |</li>
-        <li class="nav-item nav-item-0"><a href="index.html">MaveDB 2.1.0 documentation</a> &#187;</li>
+        <li class="nav-item nav-item-0"><a href="index.html">MaveDB 2023.2.0 documentation</a> &#187;</li>
         <li class="nav-item nav-item-this"><a href="">Record types</a></li> 
       </ul>
     </div>
     <div class="footer" role="contentinfo">
-    &#169; Copyright 2017-2021, Alan F Rubin and Daniel C Esposito.
+    &#169; Copyright 2017-2023, Alan F Rubin et al..
       Created using <a href="https://www.sphinx-doc.org/">Sphinx</a> 7.2.6.
     </div>
   </body>

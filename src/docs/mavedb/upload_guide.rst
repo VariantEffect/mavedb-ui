@@ -71,6 +71,7 @@ Publications included in an experiment will also be displayed on their associate
 
 Preprints or publications that are not indexed by PubMed can be included via the DOI field.
 Improved support for preprints (including displaying them as formatted references) is planned for a future release.
+// are preprints displayed as formatted references?
 
 Raw data accessions
 -----------------------------------
@@ -128,7 +129,6 @@ For each experiment and score set:
     * Abstract
     * Methods
 * `Keywords`_
-* `ORCID iDs <https://www.orcid.org/>`_ for other people you want to add as :ref:`contributors<Contributor roles>`.
 * `PubMed IDs <https://pubmed.ncbi.nlm.nih.gov/>`_ for the study reference(s) or `DOIs <https://www.doi.org/>`_
   for references not listed in PubMed (such as on `bioRxiv <https://www.biorxiv.org/>`_)
 

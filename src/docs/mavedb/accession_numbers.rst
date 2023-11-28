@@ -25,7 +25,7 @@ Score sets are indexed by number within the experiment.
      - score set
    * - ``urn:mavedb:00000055-0-1``
      - meta-analysis using only data from ``urn:mavedb:00000055``
-   * - ``tmp:8VfrPIpdrJQ1teor``
+   * - ``tmp:446191af-c1f8-4891-9f67-de152e9d328b``
      - temporary accession number
 
 Meta-analysis accession numbers

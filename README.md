@@ -83,3 +83,9 @@ python -m venv .venv
 source .venv/bin/activate
 pip install -r requirements.txt
 ```
+
+and then build a new version of the documentation with:
+
+```
+sphinx-build -b html src/docs/mavedb public/docs/mavedb
+```

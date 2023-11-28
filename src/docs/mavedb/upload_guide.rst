@@ -71,7 +71,6 @@ Publications included in an experiment will also be displayed on their associate
 
 Preprints or publications that are not indexed by PubMed can be included via the DOI field.
 Improved support for preprints (including displaying them as formatted references) is planned for a future release.
-// are preprints displayed as formatted references?
 
 Raw data accessions
 -----------------------------------

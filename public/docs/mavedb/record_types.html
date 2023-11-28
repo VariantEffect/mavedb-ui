@@ -1,19 +1,18 @@
-
 <!DOCTYPE html>
 
-<html lang="en">
+<html lang="en" data-content_root="./">
   <head>
     <meta charset="utf-8" />
-    <meta name="viewport" content="width=device-width, initial-scale=1.0" /><meta name="generator" content="Docutils 0.19: https://docutils.sourceforge.io/" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" /><meta name="viewport" content="width=device-width, initial-scale=1" />
 
     <title>Record types &#8212; MaveDB 2.1.0 documentation</title>
-    <link rel="stylesheet" type="text/css" href="_static/pygments.css" />
-    <link rel="stylesheet" type="text/css" href="_static/pyramid.css" />
-    <link rel="stylesheet" type="text/css" href="_static/graphviz.css" />
-    <link rel="stylesheet" type="text/css" href="_static/styles.css" />
-    <script data-url_root="./" id="documentation_options" src="_static/documentation_options.js"></script>
-    <script src="_static/doctools.js"></script>
-    <script src="_static/sphinx_highlight.js"></script>
+    <link rel="stylesheet" type="text/css" href="_static/pygments.css?v=4848ba22" />
+    <link rel="stylesheet" type="text/css" href="_static/pyramid.css?v=a5b9c134" />
+    <link rel="stylesheet" type="text/css" href="_static/graphviz.css?v=eafc0fe6" />
+    <link rel="stylesheet" type="text/css" href="_static/styles.css?v=1cacb62a" />
+    <script src="_static/documentation_options.js?v=20623aea"></script>
+    <script src="_static/doctools.js?v=888ff710"></script>
+    <script src="_static/sphinx_highlight.js?v=dc90522c"></script>
     <link rel="index" title="Index" href="genindex.html" />
     <link rel="search" title="Search" href="search.html" />
     <link rel="next" title="Data table formats" href="data_formats.html" />
@@ -49,7 +48,7 @@
           <div class="body" role="main">
             
   <section id="record-types">
-<h1>Record types<a class="headerlink" href="#record-types" title="Permalink to this heading">¶</a></h1>
+<h1>Record types<a class="headerlink" href="#record-types" title="Link to this heading">¶</a></h1>
 <p>MaveDB has three kinds of records: experiment set, experiment, and score set.
 These records are organized hierarchically.
 Each experiment set can contain multiple experiments and each experiment can contain multiple score sets.
@@ -57,7 +56,7 @@ MaveDB also supports meta-analysis score sets, which are based on one or more ex
 Each of these record types are described in more detail below.</p>
 <figure class="align-left" id="experiment-set-cartoon">
 <img alt="cartoon schematic of an experiment set with multiple experiments and score sets in MaveDB" src="_images/brca1_mavedb_cartoon.svg" /><figcaption>
-<p><span class="caption-number">Fig. 1 </span><span class="caption-text">Schematic of an experiment set.</span><a class="headerlink" href="#experiment-set-cartoon" title="Permalink to this image">¶</a></p>
+<p><span class="caption-number">Fig. 1 </span><span class="caption-text">Schematic of an experiment set.</span><a class="headerlink" href="#experiment-set-cartoon" title="Link to this image">¶</a></p>
 <div class="legend">
 <p>This cartoon shows the experiment set for
 <a class="reference external" href="https://www.mavedb.org/experimentset/urn:mavedb:00000003/">urn:mavedb:00000003</a>,
@@ -72,7 +71,7 @@ and that each experiment has its own score set records that describe the analysi
 </figcaption>
 </figure>
 <section id="experiment-sets">
-<h2>Experiment sets<a class="headerlink" href="#experiment-sets" title="Permalink to this heading">¶</a></h2>
+<h2>Experiment sets<a class="headerlink" href="#experiment-sets" title="Link to this heading">¶</a></h2>
 <p>Experiment sets do not have their own data or metadata and are used to group related experiments,
 such as when different functional assays are performed on the same target and described in the same publication
 (<a class="reference external" href="https://www.mavedb.org/experimentset/urn:mavedb:00000003/">example experiment set</a>).</p>
@@ -81,7 +80,7 @@ It is not necessary to include all data from a single publication or research pr
 <p>Experiment sets are automatically created when the first associated experiment is saved.</p>
 </section>
 <section id="experiments">
-<h2>Experiments<a class="headerlink" href="#experiments" title="Permalink to this heading">¶</a></h2>
+<h2>Experiments<a class="headerlink" href="#experiments" title="Link to this heading">¶</a></h2>
 <p>Experiments describe the data generated from performing a MAVE on a target.
 This includes all steps of the experimental procedure up to and including high-throughput sequencing.
 Library construction, assay design, and sequencing strategy are all described in the experiment
@@ -100,7 +99,7 @@ such as varying the temperature or the concentration of a small molecule.</p>
 instead the number and nature of the replicates should be clearly stated in the experiment’s methods section.</p>
 </section>
 <section id="score-sets">
-<h2>Score sets<a class="headerlink" href="#score-sets" title="Permalink to this heading">¶</a></h2>
+<h2>Score sets<a class="headerlink" href="#score-sets" title="Link to this heading">¶</a></h2>
 <p>Score sets are records that describe the scores generated from the raw data described in their associated experiment.
 This includes all steps following the high-throughput sequencing step, including read filtering, read counting, and
 score calculations (<a class="reference external" href="https://www.mavedb.org/score-sets/urn:mavedb:00000003-a-1/">example score set</a>).</p>
@@ -113,7 +112,7 @@ acid resolution for deep mutational scanning data.</p>
 it’s recommended to upload a more raw form of the scores (e.g. enrichment ratios) as a normal score set,
 and then use <a class="reference internal" href="#meta-analysis-score-sets"><span class="std std-ref">meta-analysis score sets</span></a> to describe the imputed or normalized results.</p>
 <section id="meta-analysis-score-sets">
-<h3>Meta-analysis score sets<a class="headerlink" href="#meta-analysis-score-sets" title="Permalink to this heading">¶</a></h3>
+<h3>Meta-analysis score sets<a class="headerlink" href="#meta-analysis-score-sets" title="Link to this heading">¶</a></h3>
 <p>Meta-analysis score sets have all the same attributes as a regular score set,
 but they are linked to existing score sets rather than an existing experiment
 (<a class="reference external" href="https://www.mavedb.org/score-sets/urn:mavedb:00000055-0-1/">example meta-analysis score set</a>).</p>
@@ -191,8 +190,8 @@ but they are linked to existing score sets rather than an existing experiment
       </ul>
     </div>
     <div class="footer" role="contentinfo">
-        &#169; Copyright 2017-2021, Alan F Rubin and Daniel C Esposito.
-      Created using <a href="https://www.sphinx-doc.org/">Sphinx</a> 6.1.3.
+    &#169; Copyright 2017-2021, Alan F Rubin and Daniel C Esposito.
+      Created using <a href="https://www.sphinx-doc.org/">Sphinx</a> 7.2.6.
     </div>
   </body>
 </html>

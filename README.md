@@ -73,3 +73,19 @@ To deploy in production, simply push the contents of `dist` to the appropriate S
 ```
 aws s3 sync ./dist s3://mavedb-ui
 ```
+
+### Updating the documentation
+
+To update the documentation, first install `sphinx`:
+
+```
+python -m venv .venv
+source .venv/bin/activate
+pip install -r requirements.txt
+```
+
+and then build a new version of the documentation with:
+
+```
+sphinx-build -b html src/docs/mavedb public/docs/mavedb
+```

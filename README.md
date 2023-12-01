@@ -1,7 +1,10 @@
 # mavedb-ui
 
-MaveDB user interface
+UI for the MaveDB website at [mavedb.org](https://www.mavedb.org). MaveDB is a biological database
+for Multiplex Assays of Variant Effect (MAVE) datasets.
 
+For more information about MaveDB or to cite MaveDB please refer to the
+[MaveDB paper in Genome Biology](https://genomebiology.biomedcentral.com/articles/10.1186/s13059-019-1845-6).
 ## Build and deployment
 
 ### Prerequisites

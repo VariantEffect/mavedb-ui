@@ -1,7 +1,10 @@
 # mavedb-ui
 
-MaveDB user interface
+UI for the MaveDB website at [mavedb.org](https://www.mavedb.org). MaveDB is a biological database
+for Multiplex Assays of Variant Effect (MAVE) datasets.
 
+For more information about MaveDB or to cite MaveDB please refer to the
+[MaveDB paper in Genome Biology](https://genomebiology.biomedcentral.com/articles/10.1186/s13059-019-1845-6).
 ## Build and deployment
 
 ### Prerequisites
@@ -72,4 +75,20 @@ To deploy in production, simply push the contents of `dist` to the appropriate S
 
 ```
 aws s3 sync ./dist s3://mavedb-ui
+```
+
+### Updating the documentation
+
+To update the documentation, first install `sphinx`:
+
+```
+python -m venv .venv
+source .venv/bin/activate
+pip install -r requirements.txt
+```
+
+and then build a new version of the documentation with:
+
+```
+sphinx-build -b html src/docs/mavedb public/docs/mavedb
 ```

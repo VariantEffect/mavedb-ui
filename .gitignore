@@ -120,3 +120,16 @@ yarn-error.log
 ####################################################################################################
 
 .java-version
+
+# Python virtualenv
+.env.*
+!.env.template
+.venv
+env/
+venv/
+ENV/
+env.bak/
+venv.bak/
+
+# Sphinx documentation build cache
+.doctrees/

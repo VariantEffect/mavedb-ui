@@ -20,11 +20,11 @@ import json
 # -- Project information -----------------------------------------------------
 
 project = "MaveDB"
-copyright = "2017-2021, Alan F Rubin and Daniel C Esposito"
-author = "Alan F Rubin and Daniel C Esposito"
+copyright = "2017-2023, Alan F Rubin et al."
+author = "Alan F Rubin et al."
 
 # The full version, including alpha/beta/rc tags
-release = "2.1.0"
+release = json.load(open("../../../package.json", "rt"))["version"]
 
 
 # -- General configuration ---------------------------------------------------
@@ -63,8 +63,8 @@ html_static_path = ["static"]
 
 # -- General substitutions and link targets ----------------------------------
 rst_epilog = """
-.. _MaveDB issue tracker: https://github.com/VariantEffect/mavedb/issues
-.. _MaveDB GitHub: https://github.com/VariantEffect/mavedb
+.. _MaveDB issue tracker: https://github.com/VariantEffect/mavedb-ui/issues
+.. _MaveDB GitHub: https://github.com/VariantEffect/mavedb-ui
 .. _MAVE-HGVS: https://www.mavedb.org/docs/mavehgvs
 """
 

@@ -22,7 +22,7 @@ Otherwise, ``hgvs_pro`` will be used as the primary key.
 
 .. note::
    Datasets with only ``hgvs_pro`` variants can specify nucleotide target sequences.
-   In this case, the target sequence will be translated using the
+   The target sequence will be translated using the
    `standard amino acid translation table
    <https://www.ncbi.nlm.nih.gov/Taxonomy/Utils/wprintgc.cgi?chapter=cgencodes#SG1>`_ for validation.
 
@@ -53,7 +53,7 @@ Score table examples
 ----------------------------------
 
 Here is a short excerpt from the score table for
-`urn:mavedb:00000003-a-1 <https://mavedb.org/score-sets/urn:mavedb:00000003-a-1/>`_.
+`urn:mavedb:00000003-a-1 <https://mavedb.org/#/score-sets/urn:mavedb:00000003-a-1/>`_.
 
 That this dataset uses ``hgvs_nt`` as the primary variant key.
 It has several additional data columns with the scores and error estimates for multiple biological replicates.

@@ -15,7 +15,7 @@ Each of these record types are described in more detail below.
    Schematic of an experiment set.
 
    This cartoon shows the experiment set for
-   `urn:mavedb:00000003 <https://www.mavedb.org/experimentset/urn:mavedb:00000003/>`_,
+   `urn:mavedb:00000003 <https://www.mavedb.org/#/experiment-sets/urn:mavedb:00000003/>`_,
    which describes two distinct assays performed on a single *BRCA1* variant library,
    each with two associated score sets.
    This nested structure is typical of a MaveDB record describing a complex study with multiple elements.
@@ -29,7 +29,7 @@ Experiment sets
 
 Experiment sets do not have their own data or metadata and are used to group related experiments,
 such as when different functional assays are performed on the same target and described in the same publication
-(`example experiment set <https://www.mavedb.org/experimentset/urn:mavedb:00000003/>`_).
+(`example experiment set <https://www.mavedb.org/#/experiment-sets/urn:mavedb:00000003/>`_).
 
 In general, an experiment set should contain data for a single target.
 It is not necessary to include all data from a single publication or research project under one experiment set.
@@ -42,7 +42,7 @@ Experiments
 Experiments describe the data generated from performing a MAVE on a target.
 This includes all steps of the experimental procedure up to and including high-throughput sequencing.
 Library construction, assay design, and sequencing strategy are all described in the experiment
-(`example experiment <https://www.mavedb.org/experiment/urn:mavedb:00000003-a/>`_).
+(`example experiment <https://www.mavedb.org/#/experiments/urn:mavedb:00000003-a/>`_).
 
 .. seealso::
    Data analysis steps including read filtering, read counting, and score calculation are described in a
@@ -53,7 +53,7 @@ a single experiment set, and each functional assay should be described in its ow
 This still applies to experimental designs where the differences between assays were relatively minor,
 such as varying the temperature or the concentration of a small molecule.
 
-To assign a new experiment to an existing experiment set, use the dropdown at the top of the experiment form.
+To assign a new experiment to an existing experiment set, use the 'Add an experiment' button on the experiment set page.
 
 Replicate assays should not be reported as separate experiments,
 instead the number and nature of the replicates should be clearly stated in the experiment's methods section.
@@ -63,7 +63,7 @@ Score sets
 
 Score sets are records that describe the scores generated from the raw data described in their associated experiment.
 This includes all steps following the high-throughput sequencing step, including read filtering, read counting, and
-score calculations (`example score set <https://www.mavedb.org/score-sets/urn:mavedb:00000003-a-1/>`_).
+score calculations (`example score set <https://www.mavedb.org/#/score-sets/urn:mavedb:00000003-a-1/>`_).
 
 Multiple score sets should be used when distinct methods were used to calculate scores for raw data described by the
 experiment.
@@ -81,4 +81,4 @@ Meta-analysis score sets
 
 Meta-analysis score sets have all the same attributes as a regular score set,
 but they are linked to existing score sets rather than an existing experiment
-(`example meta-analysis score set <https://www.mavedb.org/score-sets/urn:mavedb:00000055-0-1/>`_).
+(`example meta-analysis score set <https://www.mavedb.org/#/score-sets/urn:mavedb:00000055-0-1/>`_).

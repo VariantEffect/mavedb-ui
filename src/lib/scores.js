@@ -1,4 +1,4 @@
-// TODO find alternative that doesn't use node's Buffer
+// TODO(#82): find an alternative that doesn't use Node's Buffer.
 import parse from 'csv-parse/lib/sync'
 
 export const AMINO_ACIDS = [

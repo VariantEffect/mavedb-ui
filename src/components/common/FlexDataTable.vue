@@ -16,24 +16,35 @@
 import $ from 'jquery'
 import _ from 'lodash'
 import 'datatables.net'
-import 'datatables.net-dt'
+import dt from 'datatables.net-dt'
 import 'datatables.net-dt/css/jquery.dataTables.css'
 import 'datatables.net-buttons'
-import 'datatables.net-buttons-dt'
-import 'datatables.net-colreorder-dt'
-import 'datatables.net-buttons/js/buttons.html5'
+import dtButtons from 'datatables.net-buttons-dt'
+import dtColReorder from 'datatables.net-colreorder-dt'
+import dtButtonsHtml5 from 'datatables.net-buttons/js/buttons.html5'
 import 'datatables.net-buttons-dt/css/buttons.dataTables.css'
-import 'datatables.net-buttons/js/buttons.colVis'
-import 'datatables.net-buttons/js/buttons.print'
-import 'datatables.net-fixedcolumns-dt'
-import 'datatables.net-rowgroup-dt'
-import 'datatables.net-scroller-dt'
-import 'datatables.net-select-dt'
+import dtButtonsColvis from 'datatables.net-buttons/js/buttons.colVis'
+import dtButtonsPrint from 'datatables.net-buttons/js/buttons.print'
+import dtFixedColumns from 'datatables.net-fixedcolumns-dt'
+import dtRowGroup from 'datatables.net-rowgroup-dt'
+import dtScroller from 'datatables.net-scroller-dt'
+import dtSelect from 'datatables.net-select-dt'
 import jszip from 'jszip'
 import ProgressSpinner from 'primevue/progressspinner'
 import 'pdfmake'
 
 window.JSZip = jszip
+
+dt(window, $)
+dtButtons(window, $)
+dtButtonsHtml5(window, $)
+dtColReorder(window, $)
+dtButtonsColvis(window, $)
+dtButtonsPrint(window, $)
+dtFixedColumns(window, $)
+dtRowGroup(window, $)
+dtScroller(window, $)
+dtSelect(window, $)
 
 export default {
   name: 'FlexDataTable',
@@ -338,7 +349,8 @@ export default {
       let self = this
       if (self.dataTable) {
         self.dataTable.rows().every(function() {
-          self.applyClassesToRow(this.node(), this.data())
+          const row = this
+          self.applyClassesToRow(row.node(), row.data())
         })
       }
     },

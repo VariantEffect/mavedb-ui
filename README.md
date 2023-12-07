@@ -13,7 +13,7 @@ For more information about MaveDB or to cite MaveDB please refer to the
 
 Your development environment will need to have the following software installed.
 
-- Node.js, version 14.
+- Node.js, version 20.
 
   https://nodejs.org/en/download/
 

@@ -13,7 +13,7 @@ For more information about MaveDB or to cite MaveDB please refer to the
 
 Your development environment will need to have the following software installed.
 
-- Node.js, version 14.
+- Node.js, version 20.
 
   https://nodejs.org/en/download/
 
@@ -39,17 +39,17 @@ to install all project dependencies.
 
 ### Running locally in development
 
-In development, this Vue.js application is served by the Vue Loader, which supports hot reload of updated components.
+In development, this Vue.js application is served by Vite, which supports hot reload of updated components.
 
-To start the application in the Vue Loader, run this command from the project root directory:
+To start the application for local development, run this command from the project root directory:
 
 ```
-npm run serve
+npm run dev
 ```
 
 ### Building for production
 
-In production, the application is a static web application bundled using Webpack.
+In production, the application is a static web application bundled using Rollup.
 
 To build for production, run
 
@@ -57,7 +57,14 @@ To build for production, run
 npm run build
 ```
 
-in the project root directory. The result is generated in the `dest` subdirectory, and the contents of `dest` can be deployed as static files on any web server.
+in the project root directory. The result is generated in the `dist` subdirectory, and the contents of `dist` can be deployed as static files on any web server.
+
+If you want to preview the production build, run
+
+```
+npm run serve
+```
+
 
 ### Deploying in production
 

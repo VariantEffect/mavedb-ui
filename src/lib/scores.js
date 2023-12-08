@@ -1,4 +1,4 @@
-import { _ } from 'core-js'
+// TODO(#82): find an alternative that doesn't use Node's Buffer.
 import parse from 'csv-parse/lib/sync'
 
 export const AMINO_ACIDS = [
@@ -24,7 +24,7 @@ export const AMINO_ACIDS = [
   {name: 'Valine', codes: {single: 'V', triple: 'VAL', dAminoAcidCode: 'd-VAL'}}
 ]
 
-export const AMINO_ACIDS_BY_HYDROPHILIA = _.reverse(Array.from('AVLIMFYWRHKDESTNQGCP*'))
+export const AMINO_ACIDS_BY_HYDROPHILIA = Array.from('AVLIMFYWRHKDESTNQGCP*').reverse()
 
 export function parseScores(csvData) {
   csvData = csvData.replace(/(^|\n|\r) *#[^\n\r]*(\n|\r|\r\n|$)/g, '$1')

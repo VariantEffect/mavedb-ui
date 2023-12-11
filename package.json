@@ -10,7 +10,6 @@
   "dependencies": {
     "@fontsource/raleway": "^4.5.5",
     "axios": "^0.21.1",
-    "csv": "^5.5.3",
     "d3": "^6.7.0",
     "datatables.net": "^1.11.5",
     "datatables.net-buttons": "^1.7.0",
@@ -33,6 +32,7 @@
     "marked": "^3.0.8",
     "moment": "^2.29.3",
     "oidc-client-ts": "^2.0.3",
+    "papaparse": "^5.4.1",
     "pdfmake": "^0.1.70",
     "pluralize": "^8.0.0",
     "primeflex": "^3.1.3",

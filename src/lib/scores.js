@@ -1,5 +1,4 @@
-// TODO(#82): find an alternative that doesn't use Node's Buffer.
-import parse from 'csv-parse/lib/sync'
+import Papa from 'papaparse'
 
 export const AMINO_ACIDS = [
   {name: 'Alanine', codes: {single: 'A', triple: 'ALA', dAminoAcidCode: 'd-ALA'}},
@@ -28,11 +27,11 @@ export const AMINO_ACIDS_BY_HYDROPHILIA = Array.from('AVLIMFYWRHKDESTNQGCP*').re
 
 export function parseScores(csvData) {
   csvData = csvData.replace(/(^|\n|\r) *#[^\n\r]*(\n|\r|\r\n|$)/g, '$1')
-  const records = parse(csvData, {
-    columns: true,
+  const records = Papa.parse(csvData, {
+    header: true,
     // comment: '#', // We can't use this, because our data have unescaped #s.
-    skip_empty_lines: true
-  })
+    skipEmptyLines: true
+  }).data
   records.forEach((record) => {
     if (record.score) {
       record.score = parseFloat(record.score)
@@ -47,11 +46,13 @@ export function singleLetterAminoAcidCode(code) {
     return code
   }
   if (code.length == 3) {
-    return _.get(_.find(AMINO_ACIDS, (aa) => aa.codes.triple == code), 'codes.single', null)
+    const aa = AMINO_ACIDS.find((aa) => aa.codes.triple == code)
+    return aa ? aa.codes.single : null
   }
   // TODO Deal with the lowercase d-
   if (code.length == 5) {
-    return _.get(_.find(AMINO_ACIDS, (aa) => aa.codes.dAminoAcidCode == code), 'codes.single', null)
+    const aa = AMINO_ACIDS.find((aa) => aa.codes.dAminoAcidCode == code)
+    return aa ? aa.codes.single : null
   }
   return null
 }

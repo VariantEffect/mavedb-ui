@@ -172,8 +172,8 @@ export default {
       const simpleVariants = _.flatten(
         _.values(
           _.mapValues(
-            simpleVariantInstances.groupBy((vi) => vi.x),
-            (instancesAtX) => _.values(instancesAtX.groupBy((vi) => vi.y))
+            _.groupBy(simpleVariantInstances, 'x'),
+            (instancesAtX) => _.values(_.groupBy(instancesAtX, 'y'))
           )
         )
       )

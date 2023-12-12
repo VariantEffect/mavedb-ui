@@ -47,7 +47,8 @@
     "vue-oidc-client": "^1.0.0-alpha.4",
     "vue-router": "^4.0.14",
     "vuex": "^4.0.0-0",
-    "yup": "^0.32.9"
+    "yup": "^0.32.9",
+    "cors": "^2.8.5"
   },
   "devDependencies": {
     "@vue/cli-plugin-babel": "^4.5.17",

@@ -13,11 +13,17 @@ import SearchView from '@/components/screens/SearchView'
 import SettingsScreen from '@/components/screens/SettingsScreen'
 import UsersView from '@/components/screens/UsersView'
 import {oidc} from '@/lib/auth'
+import store from '@/store';
 
 const routes = [{
   path: '/',
   name: 'home',
-  component: HomeScreen
+  component: HomeScreen,
+  props: (route) => {
+    const props = { ...route.query };
+    store.commit('setRouteProps', props);
+    return props;
+  },
 }, {
   path: '/search',
   name: 'search',
@@ -95,7 +101,11 @@ const routes = [{
   path: '/score-sets/:urn',
   name: 'scoreSet',
   component: ScoreSetView,
-  props: (route) => ({itemId: route.params.urn})
+  props: (route) => ({
+    ...store.state.routeProps,
+    itemId: route.params.urn,
+  }),
+
 }, {
   name: 'pubmedPublicationIdentifier',
   path: '/publication-identifiers/pubmed/:identifier',

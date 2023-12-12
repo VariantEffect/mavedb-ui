@@ -8,8 +8,12 @@ import layoutModule from '@/store/modules/layout'
 
 let store = createStore({
   state: {
+    routeProps: {},
   },
   mutations: {
+    setRouteProps(state, props) {
+      state.routeProps = props;
+    },
   },
   actions: {
   },

@@ -61,7 +61,13 @@
           <template v-if="isMetaDataEmpty != true">
             <Button class="p-button-outlined p-button-sm" @click="downloadMetadata">Metadata</Button>&nbsp;
           </template>
-          <Button class="p-button-outlined p-button-sm" @click="downloadMappedVariants()">Mapped Variants</Button>
+          <Button v-if="sendToGalaxy == '1'" class="p-button-outlined p-button-sm" @click="sendGalaxy('scores')">Send
+          Scores to
+          Galaxy</Button>&nbsp;
+          <Button class="p-button-outlined p-button-sm" @click="downloadMappedVariants()">Mapped Variants</Button>&nbsp;
+          <Button v-if="sendToGalaxy == '1'" class="p-button-outlined p-button-sm" @click="sendGalaxy('mappedVariants')">Send
+          Mapped Variants to
+          Galaxy</Button>&nbsp;
         </div>
         <div v-if="item.abstractText">
           <div class="mave-score-set-section-title">Abstract</div>
@@ -303,14 +309,16 @@ export default {
       ensureScoresDataLoaded: scoresRemoteData.ensureDataLoaded
     }
   },
-
   props: {
     itemId: {
       type: String,
       required: true
-    }
+    },
+    GALAXY_URL: String,
+    tool_id: String,
+    sendToGalaxy: String
   },
-
+  // mounted() { console.log('Props:', this.GALAXY_URL, this.tool_id, this.sendToGalaxy); },
   data: () => ({
     scores: null,
     scoresTable: [],
@@ -318,7 +326,6 @@ export default {
     readMore: true,
     showHeatmap: true
   }),
-
   watch: {
     itemId: {
       handler: function (newValue, oldValue) {
@@ -347,11 +354,50 @@ export default {
       }
     }
   },
-
   methods: {
     editItem: function () {
       if (this.item) {
         this.$router.replace({ path: `/score-sets/${this.item.urn}/edit` })
+      }
+    },
+    sendGalaxy: async function (download_type) {
+      try {
+        const galaxyUrl = this.GALAXY_URL;
+        let params = {};
+        if (this.item && download_type == "counts") {
+          const apiUrl = `${config.apiBaseUrl}/score-sets/${this.item.urn}/counts`;
+          params = {
+            tool_id: this.tool_id,
+            maveData: download_type,
+            urn: this.item.urn,
+            outputType: 'table',
+            URL: apiUrl
+          };
+        } else if (this.item && download_type == "scores") {
+          const apiUrl = `${config.apiBaseUrl}/score-sets/${this.item.urn}/scores`;
+          params = {
+            tool_id: this.tool_id,
+            maveData: download_type,
+            urn: this.item.urn,
+            outputType: 'table',
+            URL: apiUrl
+          };
+        } else if (this.item && download_type == "mappedVariants") {
+          const apiUrl = `${config.apiBaseUrl}/score-sets/${this.item.urn}/mapped-variants`;
+          params = {
+            tool_id: this.tool_id,
+            maveData: download_type,
+            urn: this.item.urn,
+            outputType: 'json',
+            URL: apiUrl
+          };
+        }
+        const submitGalaxyUrl = `${galaxyUrl}?tool_id=${params.tool_id}&maveData=${params.maveData}&urn=${params
+        .urn}&outputType=${params
+        .outputType}&URL=${encodeURIComponent(params.URL)}`;
+        window.location.href = submitGalaxyUrl;
+      } catch (error) {
+        console.error('Error sending data:', error);
       }
     },
     deleteItem: async function () {

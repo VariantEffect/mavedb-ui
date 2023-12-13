@@ -53,21 +53,20 @@
             <EntityLink entityType="scoreSet" :urn="urn" />
           </template>
         </div>
-        <div>Download files <Button class="p-button-outlined p-button-sm"
-            @click="downloadFile('scores')">Scores</Button>&nbsp;
+        <div>Download files <Button class="p-button-outlined p-button-sm" @click="downloadFile('scores')">Scores</Button>&nbsp;
           <template v-if="countColumns.length != 0">
             <Button class="p-button-outlined p-button-sm" @click="downloadFile('counts')">Counts</Button>&nbsp;
           </template>
           <template v-if="isMetaDataEmpty != true">
             <Button class="p-button-outlined p-button-sm" @click="downloadMetadata">Metadata</Button>&nbsp;
           </template>
-          <Button v-if="sendToGalaxy == '1'" class="p-button-outlined p-button-sm" @click="sendGalaxy('scores')">Send
-          Scores to
-          Galaxy</Button>&nbsp;
           <Button class="p-button-outlined p-button-sm" @click="downloadMappedVariants()">Mapped Variants</Button>&nbsp;
-          <Button v-if="sendToGalaxy == '1'" class="p-button-outlined p-button-sm" @click="sendGalaxy('mappedVariants')">Send
-          Mapped Variants to
-          Galaxy</Button>&nbsp;
+        </div>
+        <div v-if="requestFromGalaxy == '1'"><br>Send files to <a :href="`${this.galaxyUrl}`">Galaxy</a> <Button class="p-button-outlined p-button-sm" @click="sendToGalaxy('scores')">Scores</Button>&nbsp;
+          <template v-if="countColumns.length != 0">
+            <Button class="p-button-outlined p-button-sm" @click="sendToGalaxy('counts')">Counts</Button>&nbsp;
+          </template>
+          <Button class="p-button-outlined p-button-sm" @click="sendToGalaxy('mappedVariants')">Mapped Variants</Button>&nbsp;
         </div>
         <div v-if="item.abstractText">
           <div class="mave-score-set-section-title">Abstract</div>
@@ -314,11 +313,10 @@ export default {
       type: String,
       required: true
     },
-    GALAXY_URL: String,
-    tool_id: String,
-    sendToGalaxy: String
+    galaxyUrl: String,
+    toolId: String,
+    requestFromGalaxy: String
   },
-  // mounted() { console.log('Props:', this.GALAXY_URL, this.tool_id, this.sendToGalaxy); },
   data: () => ({
     scores: null,
     scoresTable: [],
@@ -360,42 +358,45 @@ export default {
         this.$router.replace({ path: `/score-sets/${this.item.urn}/edit` })
       }
     },
-    sendGalaxy: async function (download_type) {
+    sendToGalaxy: async function (download_type) {
       try {
-        const galaxyUrl = this.GALAXY_URL;
+        const galaxyUrl = this.galaxyUrl;
         let params = {};
-        if (this.item && download_type == "counts") {
-          const apiUrl = `${config.apiBaseUrl}/score-sets/${this.item.urn}/counts`;
+        if (this.item) {
+          const baseApiUrl = `${config.apiBaseUrl}/score-sets/${this.item.urn}`;
+
+          let endpoint, outputType;
+          switch (download_type) {
+            case "counts":
+              endpoint = "counts";
+              outputType = "table";
+              break;
+            case "scores":
+              endpoint = "scores";
+              outputType = "table";
+              break;
+            case "mappedVariants":
+              endpoint = "mapped-variants";
+              outputType = "json";
+              break;
+            default:
+              break;
+          }
+
+          const apiUrl = `${baseApiUrl}/${endpoint}`;
+
           params = {
-            tool_id: this.tool_id,
+            toolId: this.toolId,
             maveData: download_type,
             urn: this.item.urn,
-            outputType: 'table',
+            outputType: outputType,
             URL: apiUrl
           };
-        } else if (this.item && download_type == "scores") {
-          const apiUrl = `${config.apiBaseUrl}/score-sets/${this.item.urn}/scores`;
-          params = {
-            tool_id: this.tool_id,
-            maveData: download_type,
-            urn: this.item.urn,
-            outputType: 'table',
-            URL: apiUrl
-          };
-        } else if (this.item && download_type == "mappedVariants") {
-          const apiUrl = `${config.apiBaseUrl}/score-sets/${this.item.urn}/mapped-variants`;
-          params = {
-            tool_id: this.tool_id,
-            maveData: download_type,
-            urn: this.item.urn,
-            outputType: 'json',
-            URL: apiUrl
-          };
+          const submitGalaxyUrl = `${galaxyUrl}?tool_id=${params.toolId}&maveData=${params.maveData}&urn=${params
+          .urn}&outputType=${params
+          .outputType}&URL=${encodeURIComponent(params.URL)}`;
+          window.location.href = submitGalaxyUrl;
         }
-        const submitGalaxyUrl = `${galaxyUrl}?tool_id=${params.tool_id}&maveData=${params.maveData}&urn=${params
-        .urn}&outputType=${params
-        .outputType}&URL=${encodeURIComponent(params.URL)}`;
-        window.location.href = submitGalaxyUrl;
       } catch (error) {
         console.error('Error sending data:', error);
       }

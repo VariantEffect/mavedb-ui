@@ -51,7 +51,7 @@ In development mode, the application will look for a local server running the Ma
 To instead use the live MaveDB API server at `https://mavedb.org`, run:
 
 ```
-MODE=production npm run dev
+MODE=live npm run dev
 ```
 
 ### Building for production
@@ -77,7 +77,7 @@ This will automatically rebuild the files in `dist` on any changes.
 This command will by default use the live MaveDB API server at `https://mavedb.org`. To use a local API instance instead, run:
 
 ```
-MODE=development npm run preview
+MODE=dev npm run preview
 ```
 
 ### Deploying in production

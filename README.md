@@ -47,11 +47,18 @@ To start the application for local development, run this command from the projec
 npm run dev
 ```
 
+In development mode, the application will look for a local server running the MaveDB API at `http://localhost:8002`.
+To instead use the live MaveDB API server at `https://mavedb.org`, run:
+
+```
+MODE=production npm run dev
+```
+
 ### Building for production
 
 In production, the application is a static web application bundled using Rollup.
 
-To build for production, run
+To build for production, run:
 
 ```
 npm run build
@@ -59,12 +66,19 @@ npm run build
 
 in the project root directory. The result is generated in the `dist` subdirectory, and the contents of `dist` can be deployed as static files on any web server.
 
-If you want to preview the production build, run
+If you want to preview the production build, run:
 
 ```
-npm run serve
+npm run preview
 ```
 
+This will automatically rebuild the files in `dist` on any changes.
+
+This command will by default use the live MaveDB API server at `https://mavedb.org`. To use a local API instance instead, run:
+
+```
+MODE=development npm run preview
+```
 
 ### Deploying in production
 

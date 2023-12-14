@@ -3,9 +3,9 @@
   "version": "2023.5.0",
   "private": true,
   "scripts": {
-    "build": "vite build",
-    "dev": "vite",
-    "serve": "vite build --watch & vite preview"
+    "build": "vite build --mode=${MODE=production}",
+    "dev": "vite --mode=${MODE=development}",
+    "preview": "vite build --mode=${MODE=production} --watch & vite preview --mode=${MODE=production}"
   },
   "dependencies": {
     "@fontsource/raleway": "^4.5.5",

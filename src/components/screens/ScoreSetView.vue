@@ -272,6 +272,7 @@ import useRemoteData from '@/composition/remote-data'
 import config from '@/config'
 import { oidc } from '@/lib/auth'
 import { parseScores } from '@/lib/scores'
+import { mapState } from 'vuex'
 
 export default {
   name: 'ScoreSetView',
@@ -295,7 +296,12 @@ export default {
     },
     sortedMetaAnalyzesScoreSetUrns: function () {
       return _.sortBy(this.item?.metaAnalyzesScoreSetUrns || [])
-    }
+    },
+    ...mapState({
+      galaxyUrl: state => state.routeProps.galaxyUrl,
+      toolId: state => state.routeProps.toolId,
+      requestFromGalaxy: state => state.routeProps.requestFromGalaxy
+    })
   },
   setup: () => {
     const scoresRemoteData = useRemoteData()
@@ -312,10 +318,7 @@ export default {
     itemId: {
       type: String,
       required: true
-    },
-    galaxyUrl: String,
-    toolId: String,
-    requestFromGalaxy: String
+    }
   },
   data: () => ({
     scores: null,

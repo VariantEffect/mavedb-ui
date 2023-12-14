@@ -20,7 +20,12 @@ const routes = [{
   name: 'home',
   component: HomeScreen,
   props: (route) => {
-    const props = { ...route.query };
+    const { galaxyUrl, toolId, requestFromGalaxy } = route.query;
+    const props = {
+      galaxyUrl,
+      toolId,
+      requestFromGalaxy,
+    };
     store.commit('setRouteProps', props);
     return props;
   },
@@ -102,7 +107,6 @@ const routes = [{
   name: 'scoreSet',
   component: ScoreSetView,
   props: (route) => ({
-    ...store.state.routeProps,
     itemId: route.params.urn,
   }),
 

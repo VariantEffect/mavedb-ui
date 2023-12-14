@@ -80,8 +80,8 @@ export default {
       return debounce(() => this.search(), '400ms')
     },
     targetNameFilterOptions: function() {
-      if (this.scoreSets.length > 0) {
-        const values = this.scoreSets.map((s) => s.targetGenes.map((t) => _.get(t, 'name')))
+      if (this.publishedScoreSets.length > 0) {
+        const values = this.publishedScoreSets.map((s) => s.targetGenes.map((t) => _.get(t, 'name')))
         const valueFrequencies = _.countBy(values)
         return _.sortBy(_.keys(valueFrequencies)).map((value) => ({value, badge: valueFrequencies[value]}))
       } else {
@@ -89,8 +89,8 @@ export default {
       }
     },
     targetOrganismFilterOptions: function() {
-      if (this.scoreSets.length > 0) {
-        const values = this.scoreSets.map((s) => _.concat(s.targetGenes.map((t) => _.get(t, 'targetSequence.reference.organismName', 'Accession Based Scoresets'))).flat()).flat()
+      if (this.publishedScoreSets.length > 0) {
+        const values = this.publishedScoreSets.map((s) => _.concat(s.targetGenes.map((t) => _.get(t, 'targetSequence.reference.organismName', 'Accession Based Scoresets'))).flat()).flat()
         const valueFrequencies = _.countBy(values)
         return _.sortBy(_.keys(valueFrequencies)).map((value) => ({value, badge: valueFrequencies[value]}))
       } else {
@@ -98,8 +98,8 @@ export default {
       }
     },
     targetAccessionFilterOptions: function() {
-      if (this.scoreSets.length > 0) {
-        const values = this.scoreSets.map((s) => _.concat(s.targetGenes.map((t) => _.get(t, 'targetAccession.accession', 'Sequence Based Scoresets'))).flat()).flat()
+      if (this.publishedScoreSets.length > 0) {
+        const values = this.publishedScoreSets.map((s) => _.concat(s.targetGenes.map((t) => _.get(t, 'targetAccession.accession', 'Sequence Based Scoresets'))).flat()).flat()
         const valueFrequencies = _.countBy(values)
         return _.sortBy(_.keys(valueFrequencies)).map((value) => ({value, badge: valueFrequencies[value]}))
       } else {
@@ -107,8 +107,8 @@ export default {
       }
     },
     targetTypeFilterOptions: function() {
-      if (this.scoreSets.length > 0) {
-        const values = this.scoreSets.map((s) => _.concat(s.targetGenes.map((t) => _.get(t, 'category'))).flat()).flat()
+      if (this.publishedScoreSets.length > 0) {
+        const values = this.publishedScoreSets.map((s) => _.concat(s.targetGenes.map((t) => _.get(t, 'category'))).flat()).flat()
         const valueFrequencies = _.countBy(values)
         return _.sortBy(_.keys(valueFrequencies)).map((value) => ({value, badge: valueFrequencies[value]}))
       } else {
@@ -116,12 +116,12 @@ export default {
       }
     },
     publicationAuthorFilterOptions: function() {
-      if (this.scoreSets.length > 0) {
+      if (this.publishedScoreSets.length > 0) {
         // map each scoreSets associated identifiers,
         // then map each publications authors' names,
         // then concatenate these names together, flatten them,
         // and flatten the list of lists of author names (:O)
-        const values = this.scoreSets.map(
+        const values = this.publishedScoreSets.map(
           (s) => _.concat(
             _.get(s, 'primaryPublicationIdentifiers').map(
               (p) => _.get(p, 'authors').map(
@@ -138,8 +138,8 @@ export default {
       }
     },
     publicationDatabaseFilterOptions: function() {
-      if (this.scoreSets.length > 0) {
-        const values = this.scoreSets.map(
+      if (this.publishedScoreSets.length > 0) {
+        const values = this.publishedScoreSets.map(
           (s) => _.uniq(
             _.concat(
               _.get(s, 'primaryPublicationIdentifiers').map(
@@ -156,8 +156,8 @@ export default {
       }
     },
     publicationJournalFilterOptions: function() {
-      if (this.scoreSets.length > 0) {
-        const values = this.scoreSets.map(
+      if (this.publishedScoreSets.length > 0) {
+        const values = this.publishedScoreSets.map(
           (s) => _.uniq(
             _.concat(
               _.get(s, 'primaryPublicationIdentifiers').map(
@@ -354,14 +354,7 @@ export default {
         this.scoreSets = response.data || []
 
         // reset published score sets search results when using search bar
-        this.publishedScoreSets = []
-        // Separate the response.data into published score set and unpublished score set.
-        for (let i=0, len = this.scoreSets.length; i<len; i++){
-          if (this.scoreSets[i].publishedDate != null){
-          //if (this.scoreSets[i].private)
-            this.publishedScoreSets.push(this.scoreSets[i])
-          }
-        }
+        this.publishedScoreSets = this.scoreSets.filter((scoreSet) => !!scoreSet.publishedDate)
       } catch (err) {
         console.log(`Error while loading search results")`, err)
       }

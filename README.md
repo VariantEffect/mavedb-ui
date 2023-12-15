@@ -114,4 +114,4 @@ To update these types from a local copy of `mavedb-api` for development, run:
 npx openapi-typescript ../mavedb-api/openapi.json -o src/schema/openapi.d.ts
 ```
 
-replacing `../mavedb-api` with the relative path to your local copy of the `mavedb-api` repo. See the instructions in that repo for updating the `openapi.json` file.
+replacing `../mavedb-api` with the relative path to your local copy of the `mavedb-api` repo. See the [instructions in that repo](https://github.com/VariantEffect/mavedb-api?tab=readme-ov-file#updating-openapijson) for updating the `openapi.json` file.

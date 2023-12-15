@@ -108,10 +108,9 @@ We use `openapi-typescript` to provide Typescript types for our API. To update t
 npx openapi-typescript https://api.mavedb.org/openapi.json -o src/schema/openapi.d.ts
 ```
 
-To update these types from a local copy of `mavedb-api` for development, run:
+To update these types from a locally running `mavedb-api` server for development, instead run:
 
 ```
-npx openapi-typescript ../mavedb-api/openapi.json -o src/schema/openapi.d.ts
+npx openapi-typescript http://localhost:8002/openapi.json -o src/schema/openapi.d.ts
 ```
 
-replacing `../mavedb-api` with the relative path to your local copy of the `mavedb-api` repo. See the [instructions in that repo](https://github.com/VariantEffect/mavedb-api?tab=readme-ov-file#updating-openapijson) for how to update the `openapi.json` file.

@@ -54,6 +54,7 @@
     "@vue/compiler-sfc": "^3.2.33",
     "eslint": "^8.55.0",
     "eslint-plugin-vue": "^9.12.2",
+    "openapi-typescript": "^6.7.3",
     "vite": "^5.0.5"
   },
   "browserslist": [

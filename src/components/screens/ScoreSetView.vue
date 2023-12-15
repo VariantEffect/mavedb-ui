@@ -250,7 +250,7 @@
 
 import axios from 'axios'
 import _ from 'lodash'
-import marked from 'marked'
+import {marked} from 'marked'
 import Button from 'primevue/button'
 import Chip from 'primevue/chip'
 import Column from 'primevue/column'

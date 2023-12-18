@@ -282,7 +282,7 @@ export default {
     '$route.query.publication-authors': {
       handler: function(newValue, oldValue) {
         if (newValue != oldValue) {
-          this.filterPublicationAuthors = newValue ? newValue : []
+          this.filterPublicationAuthors = newValue ? [newValue] : []
         }
       },
       immediate: true

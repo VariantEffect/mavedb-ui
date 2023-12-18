@@ -34,13 +34,13 @@ const routes = [{
   name: 'search',
   component: SearchView,
   meta: {
-    title: 'MaveDB | Search'
+    title: import.meta.env.VITE_SITE_TITLE + ' | Search'
   }
 }, {
   path: '/docs',
   component: DocumentationView,
   meta: {
-    title: 'MaveDB | Documentation'
+    title: import.meta.env.VITE_SITE_TITLE + ' | Documentation'
   }
 }, {
   path: '/settings',

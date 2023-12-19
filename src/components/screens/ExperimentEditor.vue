@@ -223,7 +223,7 @@
 
 import axios from 'axios'
 import _ from 'lodash'
-import marked from 'marked'
+import {marked} from 'marked'
 import AutoComplete from 'primevue/autocomplete'
 import Button from 'primevue/button'
 import Card from 'primevue/card'

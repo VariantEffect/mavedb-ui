@@ -47,7 +47,7 @@
   <script>
 
   import _ from 'lodash'
-  import marked from 'marked'
+  import {marked} from 'marked'
 
   import DefaultLayout from '@/components/layout/DefaultLayout'
   import ScoreSetTable from '@/components/ScoreSetTable'

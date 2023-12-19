@@ -38,7 +38,7 @@
 <script>
 
 import _ from 'lodash'
-import marked from 'marked'
+import {marked} from 'marked'
 import Button from 'primevue/button'
 
 import DefaultLayout from '@/components/layout/DefaultLayout'

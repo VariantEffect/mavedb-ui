@@ -113,3 +113,18 @@ and then build a new version of the documentation with:
 ```
 sphinx-build -b html src/docs/mavedb public/docs/mavedb
 ```
+
+### Updating Typescript types for the API
+
+We use `openapi-typescript` to provide Typescript types for our API. To update these types from the live version of the API, run:
+
+```
+npx openapi-typescript https://api.mavedb.org/openapi.json -o src/schema/openapi.d.ts
+```
+
+To update these types from a locally running `mavedb-api` server for development, instead run:
+
+```
+npx openapi-typescript http://localhost:8002/openapi.json -o src/schema/openapi.d.ts
+```
+

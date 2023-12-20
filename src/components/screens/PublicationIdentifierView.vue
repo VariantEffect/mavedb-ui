@@ -216,7 +216,7 @@
     font-size: 20px;
   }
 
-  .mave-publication-abstract::v-deep code {
+  .mave-publication-abstract:deep(code) {
     color: #987cb8;
     font-size: 87.5%;
     word-wrap: break-word;

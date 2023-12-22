@@ -42,7 +42,6 @@
 <script>
 
 import axios from 'axios'
-import _ from 'lodash'
 import InputText from 'primevue/inputtext'
 import config from '@/config'
 import ScoreSetTable from '@/components/ScoreSetTable'
@@ -67,7 +66,6 @@ function countScoreSetMetadata(scoreSets, scoreSetMetadataFn) {
 function countTargetGeneMetadata(scoreSets, geneMetadataFn) {
   return countScoreSetMetadata(scoreSets, (scoreSet) => [...new Set(scoreSet.targetGenes.map(geneMetadataFn))])
 }
-
 function countPublicationMetadata(scoreSets, publicationMetadataFn) {
   return countScoreSetMetadata(scoreSets, (scoreSet) => {
     const primary = scoreSet.primaryPublicationIdentifiers.map(publicationMetadataFn).flat()
@@ -77,6 +75,7 @@ function countPublicationMetadata(scoreSets, publicationMetadataFn) {
     return [...new Set<string>(primary.concat(secondary))]
   })
 }
+
 export default {
   name: 'SearchView',
   components: {DefaultLayout, ScoreSetTable, InputText, SelectList, TabView, TabPanel, Button},
@@ -104,99 +103,31 @@ export default {
       return debounce(() => this.search(), '400ms')
     },
     targetNameFilterOptions: function() {
-      if (this.publishedScoreSets.length > 0) {
-        const values = this.publishedScoreSets.map((s) => s.targetGenes.map((t) => _.get(t, 'name')))
-        const valueFrequencies = _.countBy(values)
-        return _.sortBy(_.keys(valueFrequencies)).map((value) => ({value, badge: valueFrequencies[value]}))
-      } else {
-        return null
-      }
+      return countTargetGeneMetadata(this.publishedScoreSets, (targetGene) => targetGene.name)
     },
     targetOrganismFilterOptions: function() {
-      if (this.publishedScoreSets.length > 0) {
-        const values = this.publishedScoreSets.map((s) => _.concat(s.targetGenes.map((t) => _.get(t, 'targetSequence.reference.organismName', 'Accession Based Scoresets'))).flat()).flat()
-        const valueFrequencies = _.countBy(values)
-        return _.sortBy(_.keys(valueFrequencies)).map((value) => ({value, badge: valueFrequencies[value]}))
-      } else {
-        return null
-      }
+      return countTargetGeneMetadata(this.publishedScoreSets, 
+        (targetGene) => targetGene.targetSequence?.reference.organismName || 'Accession Based Scoresets')
     },
     targetAccessionFilterOptions: function() {
-      if (this.publishedScoreSets.length > 0) {
-        const values = this.publishedScoreSets.map((s) => _.concat(s.targetGenes.map((t) => _.get(t, 'targetAccession.accession', 'Sequence Based Scoresets'))).flat()).flat()
-        const valueFrequencies = _.countBy(values)
-        return _.sortBy(_.keys(valueFrequencies)).map((value) => ({value, badge: valueFrequencies[value]}))
-      } else {
-        return null
-      }
+      return countTargetGeneMetadata(this.publishedScoreSets,
+        (targetGene) => targetGene.targetAccession?.accession || 'Sequence Based Scoresets')
     },
     targetTypeFilterOptions: function() {
-      if (this.publishedScoreSets.length > 0) {
-        const values = this.publishedScoreSets.map((s) => _.concat(s.targetGenes.map((t) => _.get(t, 'category'))).flat()).flat()
-        const valueFrequencies = _.countBy(values)
-        return _.sortBy(_.keys(valueFrequencies)).map((value) => ({value, badge: valueFrequencies[value]}))
-      } else {
-        return null
-      }
+      return countTargetGeneMetadata(this.publishedScoreSets, (targetGene) => targetGene.category)
     },
     publicationAuthorFilterOptions: function() {
-      if (this.publishedScoreSets.length > 0) {
-        // map each scoreSets associated identifiers,
-        // then map each publications authors' names,
-        // then concatenate these names together, flatten them,
-        // and flatten the list of lists of author names (:O)
-        const values = this.publishedScoreSets.map(
-          (s) => _.concat(
-            _.get(s, 'primaryPublicationIdentifiers').map(
-              (p) => _.get(p, 'authors').map(
-                (a) => _.get(a, 'name'))),
-            _.get(s, 'secondaryPublicationIdentifiers').map(
-              (p) => _.get(p, 'authors').map(
-                (a) => _.get(a, 'name')))
-          ).flat()
-        ).flat()
-        const valueFrequencies = _.countBy(values)
-        return _.sortBy(_.keys(valueFrequencies)).map((value) => ({value, badge: valueFrequencies[value]}))
-      } else {
-        return null
-      }
+      return countPublicationMetadata(this.publishedScoreSets, 
+        (publicationIdentifier) => publicationIdentifier.authors.map((author) => author.name))
     },
     publicationDatabaseFilterOptions: function() {
-      if (this.publishedScoreSets.length > 0) {
-        const values = this.publishedScoreSets.map(
-          (s) => _.uniq(
-            _.concat(
-              _.get(s, 'primaryPublicationIdentifiers').map(
-                (p) => _.get(p, 'dbName')),
-              _.get(s, 'secondaryPublicationIdentifiers').map(
-                (p) => _.get(p, 'dbName'))
-            ).flat()
-          )
-        ).flat()
-        const valueFrequencies = _.countBy(values)
-        return _.sortBy(_.keys(valueFrequencies)).map((value) => ({value, badge: valueFrequencies[value]}))
-      } else {
-        return null
-      }
+      return countPublicationMetadata(this.publishedScoreSets, 
+        (publicationIdentifier) => publicationIdentifier.dbName ? [publicationIdentifier.dbName] : [])
     },
     publicationJournalFilterOptions: function() {
-      if (this.publishedScoreSets.length > 0) {
-        const values = this.publishedScoreSets.map(
-          (s) => _.uniq(
-            _.concat(
-              _.get(s, 'primaryPublicationIdentifiers').map(
-                (p) => _.get(p, 'publicationJournal')),
-              _.get(s, 'secondaryPublicationIdentifiers').map(
-                (p) => _.get(p, 'publicationJournal'))
-            ).flat()
-          )
-        ).flat()
-        const valueFrequencies = _.countBy(values)
-        return _.sortBy(_.keys(valueFrequencies)).map((value) => ({value, badge: valueFrequencies[value]}))
-      } else {
-        return null
-      }
-    }
+      return countPublicationMetadata(this.publishedScoreSets, 
+        (publicationIdentifier) => publicationIdentifier.publicationJournal ? [publicationIdentifier.publicationJournal] : [])
+    },
   },
   mounted: async function() {
     await this.search()

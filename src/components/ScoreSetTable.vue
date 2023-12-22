@@ -18,8 +18,9 @@ import _ from "lodash";
 import useFormatters from "@/composition/formatters";
 import { oidc } from "@/lib/auth";
 import FlexDataTable from "@/components/common/FlexDataTable";
+import { defineComponent } from 'vue'
 
-export default {
+export default defineComponent({
   name: "PublicationIdentifierView",
   components: { FlexDataTable },
 
@@ -134,7 +135,7 @@ export default {
       },
     };
   },
-};
+});
 </script>
 
 <style scoped>

@@ -53,6 +53,30 @@ import TabPanel from 'primevue/tabpanel'
 import TabView from 'primevue/tabview'
 import {debounce} from 'vue-debounce'
 
+function countScoreSetMetadata(scoreSets, scoreSetMetadataFn) {
+  if (!scoreSets.length) {
+    return []
+  }
+  const values = scoreSets.map(scoreSetMetadataFn).flat();
+  const frequencies = values.reduce((counts, item) => {
+    counts.set(item, (counts.get(item) || 0) + 1)
+    return counts
+  }, new Map())
+  return Array.from(frequencies.keys()).sort().map((value) => ({value, badge: frequencies.get(value) || 0}))
+}
+function countTargetGeneMetadata(scoreSets, geneMetadataFn) {
+  return countScoreSetMetadata(scoreSets, (scoreSet) => [...new Set(scoreSet.targetGenes.map(geneMetadataFn))])
+}
+
+function countPublicationMetadata(scoreSets, publicationMetadataFn) {
+  return countScoreSetMetadata(scoreSets, (scoreSet) => {
+    const primary = scoreSet.primaryPublicationIdentifiers.map(publicationMetadataFn).flat()
+    const secondary = scoreSet.secondaryPublicationIdentifiers.map(publicationMetadataFn).flat()
+
+    // Use a Set to eliminate duplicate values, then transform it back into an Array.
+    return [...new Set<string>(primary.concat(secondary))]
+  })
+}
 export default {
   name: 'SearchView',
   components: {DefaultLayout, ScoreSetTable, InputText, SelectList, TabView, TabPanel, Button},

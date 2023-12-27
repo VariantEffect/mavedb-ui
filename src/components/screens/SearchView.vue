@@ -56,7 +56,9 @@ function countScoreSetMetadata(scoreSets, scoreSetMetadataFn) {
   if (!scoreSets.length) {
     return []
   }
-  const values = scoreSets.map(scoreSetMetadataFn).flat();
+
+  // Filter out empty string values.
+  const values = scoreSets.map(scoreSetMetadataFn).flat().filter((item) => !!item);
   const frequencies = values.reduce((counts, item) => {
     counts.set(item, (counts.get(item) || 0) + 1)
     return counts
@@ -72,7 +74,7 @@ function countPublicationMetadata(scoreSets, publicationMetadataFn) {
     const secondary = scoreSet.secondaryPublicationIdentifiers.map(publicationMetadataFn).flat()
 
     // Use a Set to eliminate duplicate values, then transform it back into an Array.
-    return [...new Set<string>(primary.concat(secondary))]
+    return [...new Set(primary.concat(secondary))]
   })
 }
 
@@ -107,11 +109,11 @@ export default {
     },
     targetOrganismFilterOptions: function() {
       return countTargetGeneMetadata(this.publishedScoreSets, 
-        (targetGene) => targetGene.targetSequence?.reference.organismName || 'Accession Based Scoresets')
+        (targetGene) => targetGene.targetSequence?.reference.organismName || '')
     },
     targetAccessionFilterOptions: function() {
       return countTargetGeneMetadata(this.publishedScoreSets,
-        (targetGene) => targetGene.targetAccession?.accession || 'Sequence Based Scoresets')
+        (targetGene) => targetGene.targetAccession?.accession || '')
     },
     targetTypeFilterOptions: function() {
       return countTargetGeneMetadata(this.publishedScoreSets, (targetGene) => targetGene.category)

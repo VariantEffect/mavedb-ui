@@ -77,6 +77,15 @@ function countPublicationMetadata(scoreSets, publicationMetadataFn) {
     return [...new Set(primary.concat(secondary))]
   })
 }
+function extractQueryParam(content) {
+  // If there are multiple values, they will be stored as multiple identical query params (i.e. ?a=1&b=2&a=3) and
+  // content will be an Array.
+  if (Array.isArray(content)) {
+    // Only return non-null values.
+    return content.filter((item) => !!item);
+  }
+  return content ? [content] : []
+}
 
 export default {
   name: 'SearchView',
@@ -84,13 +93,13 @@ export default {
 
   data: function() {
     return {
-      filterTargetNames: this.$route.query['target-names'] ? this.$route.query['target-names'].split(',') : [],
-      filterTargetTypes: this.$route.query['target-types'] ? this.$route.query['target-types'].split(',') : [],
-      filterTargetOrganismNames: this.$route.query['target-organism-names'] ? this.$route.query['target-organism-names'].split(',') : [],
-      filterTargetAccession: this.$route.query['target-accessions'] ? this.$route.query['target-accessions'].split(',') : [],
-      filterPublicationAuthors: this.$route.query['publication-authors'] ? this.$route.query['publication-authors'] : [],
-      filterPublicationDatabases: this.$route.query['publication-databases'] ? this.$route.query['publication-databases'].split(',') : [],
-      filterPublicationJournals: this.$route.query['publication-journals'] ? this.$route.query['publication-journals'].split(',') : [],
+      filterTargetNames: extractQueryParam(this.$route.query['target-name']),
+      filterTargetTypes: extractQueryParam(this.$route.query['target-type']),
+      filterTargetOrganismNames: extractQueryParam(this.$route.query['target-organism-name']),
+      filterTargetAccession: extractQueryParam(this.$route.query['target-accession']),
+      filterPublicationAuthors: extractQueryParam(this.$route.query['publication-author']),
+      filterPublicationDatabases: extractQueryParam(this.$route.query['publication-database']),
+      filterPublicationJournals: extractQueryParam(this.$route.query['publication-journal']),
       loading: false,
       searchText: this.$route.query.search,
       scoreSets: [],
@@ -204,58 +213,58 @@ export default {
       },
       immediate: true
     },
-    '$route.query.target-names': {
+    '$route.query.target-name': {
       handler: function(newValue, oldValue) {
         if (newValue != oldValue) {
-          this.filterTargetNames = newValue ? newValue.split(',') : []
+          this.filterTargetNames = extractQueryParam(newValue)
         }
       },
       immediate: true
     },
-    '$route.query.target-types': {
+    '$route.query.target-type': {
       handler: function(newValue, oldValue) {
         if (newValue != oldValue) {
-          this.filterTargetTypes = newValue ? newValue.split(',') : []
+          this.filterTargetTypes = extractQueryParam(newValue)
         }
       },
       immediate: true
     },
-    '$route.query.target-organism-names': {
+    '$route.query.target-organism-name': {
       handler: function(newValue, oldValue) {
         if (newValue != oldValue) {
-          this.filterTargetOrganismNames = newValue ? newValue.split(',') : []
+          this.filterTargetOrganismNames = extractQueryParam(newValue)
         }
       },
       immediate: true
     },
-    '$route.query.target-accessions': {
+    '$route.query.target-accession': {
       handler: function(newValue, oldValue) {
         if (newValue != oldValue) {
-          this.filterTargetAccession = newValue ? newValue.split(',') : []
+          this.filterTargetAccession = extractQueryParam(newValue)
         }
       },
       immediate: true
     },
-    '$route.query.publication-authors': {
+    '$route.query.publication-author': {
       handler: function(newValue, oldValue) {
         if (newValue != oldValue) {
-          this.filterPublicationAuthors = newValue ? [newValue] : []
+          this.filterPublicationAuthors = extractQueryParam(newValue)
         }
       },
       immediate: true
     },
-    '$route.query.publication-databases': {
+    '$route.query.publication-database': {
       handler: function(newValue, oldValue) {
         if (newValue != oldValue) {
-          this.filterPublicationDatabases = newValue ? newValue.split(',') : []
+          this.filterPublicationDatabases = extractQueryParam(newValue)
         }
       },
       immediate: true
     },
-    '$route.query.publication-journals': {
+    '$route.query.publication-journal': {
       handler: function(newValue, oldValue) {
         if (newValue != oldValue) {
-          this.filterPublicationJournals = newValue ? newValue.split(',') : []
+          this.filterPublicationJournals = extractQueryParam(newValue)
         }
       },
       immediate: true
@@ -268,24 +277,17 @@ export default {
     search: async function() {
       this.$router.push({query: {
         ...(this.searchText && this.searchText.length > 0) ? {search: this.searchText} : {},
-        ...(this.filterTargetNames.length > 0) ? {'target-names': this.filterTargetNames.join(',')} : {},
-        ...(this.filterTargetTypes.length > 0) ? {'target-types': this.filterTargetTypes.join(',')} : {},
-        ...(this.filterTargetOrganismNames.length > 0) ? {'target-organism-names': this.filterTargetOrganismNames.join(',')} : {},
-        ...(this.filterTargetAccession.length > 0) ? {'target-accessions': this.filterTargetAccession.join(',')} : {},
-        ...(this.filterPublicationAuthors.length > 0) ? {'publication-authors': this.filterPublicationAuthors} : {},
-        ...(this.filterPublicationDatabases.length > 0) ? {'publication-databases': this.filterPublicationDatabases.join(',')} : {},
-        ...(this.filterPublicationJournals.length > 0) ? {'publication-journals': this.filterPublicationJournals.join(',')} : {}
+        ...(this.filterTargetNames.length > 0) ? {'target-name': this.filterTargetNames} : {},
+        ...(this.filterTargetTypes.length > 0) ? {'target-type': this.filterTargetTypes} : {},
+        ...(this.filterTargetOrganismNames.length > 0) ? {'target-organism-name': this.filterTargetOrganismNames} : {},
+        ...(this.filterTargetAccession.length > 0) ? {'target-accession': this.filterTargetAccession} : {},
+        ...(this.filterPublicationAuthors.length > 0) ? {'publication-author': this.filterPublicationAuthors} : {},
+        ...(this.filterPublicationDatabases.length > 0) ? {'publication-database': this.filterPublicationDatabases} : {},
+        ...(this.filterPublicationJournals.length > 0) ? {'publication-journal': this.filterPublicationJournals} : {}
       }})
       this.loading = true;
       await this.fetchSearchResults()
-      /*URL
-      if (this.searchText && this.searchText.length > 0) {
-        await this.fetchSearchResults()
-      } else {
-        this.scoreSets = []
-      }
-      */
-     this.loading = false;
+      this.loading = false;
     },
     fetchSearchResults: async function() {
       try {

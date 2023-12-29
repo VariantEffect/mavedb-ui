@@ -39,20 +39,35 @@
   </DefaultLayout>
 </template>
 
-<script>
+<script lang="ts">
 
 import axios from 'axios'
 import InputText from 'primevue/inputtext'
 import config from '@/config'
-import ScoreSetTable from '@/components/ScoreSetTable'
-import SelectList from '@/components/common/SelectList'
-import DefaultLayout from '@/components/layout/DefaultLayout'
+import ScoreSetTable from '@/components/ScoreSetTable.vue'
+import SelectList from '@/components/common/SelectList.vue'
+import DefaultLayout from '@/components/layout/DefaultLayout.vue'
 import Button from 'primevue/button'
 import TabPanel from 'primevue/tabpanel'
 import TabView from 'primevue/tabview'
 import {debounce} from 'vue-debounce'
+import { defineComponent } from 'vue'
+import { paths, components } from '@/schema/openapi'
 
-function countScoreSetMetadata(scoreSets, scoreSetMetadataFn) {
+import type {LocationQueryValue} from "vue-router";
+
+type ShortScoreSet = components['schemas']['ShortScoreSet']
+type ShortTargetGene = components['schemas']['ShortTargetGene']
+type PublicationIdentifier = components['schemas']['SavedPublicationIdentifier']
+type SearchParams = paths['/api/v1/score-sets/search']['post']['requestBody']['content']['application/json']
+
+type FilterOptions = Array<{
+  value: string,
+  badge: number,
+}>
+
+type ScoreSetMetadataFn = (scoreSet: ShortScoreSet) => Array<string>
+function countScoreSetMetadata(scoreSets: Array<ShortScoreSet>, scoreSetMetadataFn: ScoreSetMetadataFn): FilterOptions {
   if (!scoreSets.length) {
     return []
   }
@@ -62,48 +77,52 @@ function countScoreSetMetadata(scoreSets, scoreSetMetadataFn) {
   const frequencies = values.reduce((counts, item) => {
     counts.set(item, (counts.get(item) || 0) + 1)
     return counts
-  }, new Map())
+  }, new Map<string, number>())
   return Array.from(frequencies.keys()).sort().map((value) => ({value, badge: frequencies.get(value) || 0}))
 }
-function countTargetGeneMetadata(scoreSets, geneMetadataFn) {
-  return countScoreSetMetadata(scoreSets, (scoreSet) => [...new Set(scoreSet.targetGenes.map(geneMetadataFn))])
+type GeneMetadataFn = (targetGene: ShortTargetGene) => string
+function countTargetGeneMetadata(scoreSets: Array<ShortScoreSet>, geneMetadataFn: GeneMetadataFn): FilterOptions {
+  return countScoreSetMetadata(scoreSets, (scoreSet) => [...new Set<string>(scoreSet.targetGenes.map(geneMetadataFn))])
 }
-function countPublicationMetadata(scoreSets, publicationMetadataFn) {
+
+type PublicationMetadataFn = (publicationIdentifier: PublicationIdentifier) => Array<string>
+function countPublicationMetadata(scoreSets: Array<ShortScoreSet>, publicationMetadataFn: PublicationMetadataFn): FilterOptions {
   return countScoreSetMetadata(scoreSets, (scoreSet) => {
     const primary = scoreSet.primaryPublicationIdentifiers.map(publicationMetadataFn).flat()
     const secondary = scoreSet.secondaryPublicationIdentifiers.map(publicationMetadataFn).flat()
 
     // Use a Set to eliminate duplicate values, then transform it back into an Array.
-    return [...new Set(primary.concat(secondary))]
+    return [...new Set<string>(primary.concat(secondary))]
   })
 }
-function extractQueryParam(content) {
+
+function extractQueryParam(content: LocationQueryValue | LocationQueryValue[]): Array<string> {
   // If there are multiple values, they will be stored as multiple identical query params (i.e. ?a=1&b=2&a=3) and
   // content will be an Array.
   if (Array.isArray(content)) {
-    // Only return non-null values.
-    return content.filter((item) => !!item);
+    // Only return non-null values. Typescript can't intuit what our filter is doing here, so we tell it explicitly.
+    return content.filter((item) => !!item) as Array<string>;
   }
   return content ? [content] : []
 }
 
-export default {
+export default defineComponent({
   name: 'SearchView',
   components: {DefaultLayout, ScoreSetTable, InputText, SelectList, TabView, TabPanel, Button},
 
   data: function() {
     return {
-      filterTargetNames: extractQueryParam(this.$route.query['target-name']),
-      filterTargetTypes: extractQueryParam(this.$route.query['target-type']),
-      filterTargetOrganismNames: extractQueryParam(this.$route.query['target-organism-name']),
-      filterTargetAccession: extractQueryParam(this.$route.query['target-accession']),
-      filterPublicationAuthors: extractQueryParam(this.$route.query['publication-author']),
-      filterPublicationDatabases: extractQueryParam(this.$route.query['publication-database']),
-      filterPublicationJournals: extractQueryParam(this.$route.query['publication-journal']),
+      filterTargetNames: extractQueryParam(this.$route.query['target-name']) as Array<string>,
+      filterTargetTypes: extractQueryParam(this.$route.query['target-type']) as Array<string>,
+      filterTargetOrganismNames: extractQueryParam(this.$route.query['target-organism-name']) as Array<string>,
+      filterTargetAccession: extractQueryParam(this.$route.query['target-accession']) as Array<string>,
+      filterPublicationAuthors: extractQueryParam(this.$route.query['publication-author']) as Array<string>,
+      filterPublicationDatabases: extractQueryParam(this.$route.query['publication-database']) as Array<string>,
+      filterPublicationJournals: extractQueryParam(this.$route.query['publication-journal']) as Array<string>,
       loading: false,
-      searchText: this.$route.query.search,
-      scoreSets: [],
-      publishedScoreSets: [],
+      searchText: this.$route.query.search as string | null,
+      scoreSets: [] as Array<ShortScoreSet>,
+      publishedScoreSets: [] as Array<ShortScoreSet>,
       language: {
         emptyTable: 'Type in the search box above or use the filters to find a data set.'
       },
@@ -291,18 +310,19 @@ export default {
     },
     fetchSearchResults: async function() {
       try {
+        const requestParams: SearchParams = {
+            text: this.searchText || undefined,
+            targets: this.filterTargetNames.length > 0 ? this.filterTargetNames : undefined,
+            targetOrganismNames: this.filterTargetOrganismNames.length > 0 ? this.filterTargetOrganismNames : undefined,
+            targetAccessions: this.filterTargetAccession.length > 0 ? this.filterTargetAccession : undefined,
+            targetTypes: this.filterTargetTypes.length > 0 ? this.filterTargetTypes : undefined,
+            authors: this.filterPublicationAuthors.length > 0 ? this.filterPublicationAuthors : undefined,
+            databases: this.filterPublicationDatabases.length > 0 ? this.filterPublicationDatabases : undefined,
+            journals: this.filterPublicationJournals.length > 0 ? this.filterPublicationJournals : undefined,
+        }
         let response = await axios.post(
           `${config.apiBaseUrl}/score-sets/search`,
-          {
-            text: this.searchText || null,
-            targets: this.filterTargetNames.length > 0 ? this.filterTargetNames : null,
-            targetOrganismNames: this.filterTargetOrganismNames.length > 0 ? this.filterTargetOrganismNames : null,
-            targetAccessions: this.filterTargetAccession.length > 0 ? this.filterTargetAccession : null,
-            targetTypes: this.filterTargetTypes.length > 0 ? this.filterTargetTypes : null,
-            authors: this.filterPublicationAuthors.length > 0 ? this.filterPublicationAuthors : null,
-            databases: this.filterPublicationDatabases.length > 0 ? this.filterPublicationDatabases : null,
-            journals: this.filterPublicationJournals.length > 0 ? this.filterPublicationJournals : null
-          },
+          requestParams,
           {
             headers: {
               accept: 'application/json'
@@ -329,7 +349,7 @@ export default {
       this.filterPublicationJournals = []
     }
   }
-}
+})
 
 </script>
 

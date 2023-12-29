@@ -29,9 +29,8 @@
 import _ from 'lodash'
 import Badge from 'primevue/badge'
 import Listbox from 'primevue/listbox'
-import { defineComponent } from 'vue'
 
-export default defineComponent({
+export default {
   name: 'SelectList',
   components: {Badge, Listbox},
 
@@ -86,7 +85,7 @@ export default defineComponent({
   },
   methods: {
   }
-})
+}
 
 </script>
 

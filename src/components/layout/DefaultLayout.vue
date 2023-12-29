@@ -16,9 +16,8 @@
 import Toolbar from '@/components/layout/Toolbar'
 import '@fontsource/raleway'
 import '@/assets/app.css'
-import { defineComponent } from 'vue'
 
-export default defineComponent({
+export default {
   components: {Toolbar},
 
   props: {
@@ -67,7 +66,7 @@ export default defineComponent({
       return classNames
     }
   }
-})
+}
 
 </script>
 

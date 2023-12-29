@@ -71,7 +71,9 @@ function countScoreSetMetadata(scoreSets: Array<ShortScoreSet>, scoreSetMetadata
   if (!scoreSets.length) {
     return []
   }
-  const values = scoreSets.map(scoreSetMetadataFn).flat();
+
+  // Filter out empty string values.
+  const values = scoreSets.map(scoreSetMetadataFn).flat().filter((item) => !!item);
   const frequencies = values.reduce((counts, item) => {
     counts.set(item, (counts.get(item) || 0) + 1)
     return counts
@@ -135,11 +137,11 @@ export default defineComponent({
     },
     targetOrganismFilterOptions: function() {
       return countTargetGeneMetadata(this.publishedScoreSets, 
-        (targetGene) => targetGene.targetSequence?.reference.organismName || 'Accession Based Scoresets')
+        (targetGene) => targetGene.targetSequence?.reference.organismName || '')
     },
     targetAccessionFilterOptions: function() {
       return countTargetGeneMetadata(this.publishedScoreSets,
-        (targetGene) => targetGene.targetAccession?.accession || 'Sequence Based Scoresets')
+        (targetGene) => targetGene.targetAccession?.accession || '')
     },
     targetTypeFilterOptions: function() {
       return countTargetGeneMetadata(this.publishedScoreSets, (targetGene) => targetGene.category)
@@ -215,6 +217,11 @@ export default defineComponent({
         if (oldValue != newValue) {
           this.debouncedSearch()
         }
+      }
+    },
+    item: {
+      handler: function() {
+        this.clear()
       }
     },
     '$route.query.search': {

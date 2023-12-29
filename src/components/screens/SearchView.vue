@@ -306,7 +306,7 @@ export default defineComponent({
       }})
       this.loading = true;
       await this.fetchSearchResults()
-     this.loading = false;
+      this.loading = false;
     },
     fetchSearchResults: async function() {
       try {

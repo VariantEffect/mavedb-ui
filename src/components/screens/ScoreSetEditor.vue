@@ -1003,11 +1003,11 @@ export default {
 
     acceptNewDoiIdentifier: function () {
       const input = this.$refs.doiIdentifiersInput
-      const searchText = (input.inputTextValue || '').trim()
+      const searchText = (input.modelValue || '').trim()
       if (validateDoi(searchText)) {
         const doi = normalizeDoi(searchText)
         this.doiIdentifiers = _.uniqBy([...this.doiIdentifiers, { identifier: doi }])
-        input.inputTextValue = null
+        input.modelValue = null
 
         // Clear the text input.
         // TODO This depends on PrimeVue internals more than I'd like:
@@ -1017,7 +1017,7 @@ export default {
 
     clearDoiIdentifierSearch: function () {
       const input = this.$refs.doiIdentifiersInput
-      input.inputTextValue = null
+      input.modelValue = null
 
       // Clear the text input.
       // TODO This depends on PrimeVue internals more than I'd like:
@@ -1034,11 +1034,11 @@ export default {
     // TODO accept other publication identifiers besides pubmed
     acceptNewPublicationIdentifier: function () {
       const input = this.$refs.publicationIdentifiersInput
-      const searchText = (input.inputTextValue || '').trim()
+      const searchText = (input.modelValue || '').trim()
       if (validatePubmedId(searchText)) {
         const pubmedId = normalizePubmedId(searchText)
         this.publicationIdentifiers = _.uniqBy([...this.publicationIdentifiers, { identifier: pubmedId }])
-        input.inputTextValue = null
+        input.modelValue = null
 
         // Clear the text input.
         // TODO This depends on PrimeVue internals more than I'd like:
@@ -1048,7 +1048,7 @@ export default {
 
     clearPublicationIdentifierSearch: function () {
       const input = this.$refs.publicationIdentifiersInput
-      input.inputTextValue = null
+      input.modelValue = null
 
       // Clear the text input.
       // TODO This depends on PrimeVue internals more than I'd like:
@@ -1065,7 +1065,7 @@ export default {
 
     acceptNewTargetGeneIdentifier: function (dbName) {
       const input = this.$refs[`${dbName.toLowerCase()}IdentifierInput`][0]
-      const searchText = (input.inputTextValue || '').trim()
+      const searchText = (input.modelValue || '').trim()
 
       // Only accept the current search text if we haven't set an identifier. When the user starts typing, the current
       // identifier is cleared.
@@ -1076,7 +1076,7 @@ export default {
         } else if (validateIdentifier(dbName, searchText)) {
           const identifier = normalizeIdentifier(dbName, searchText)
           this.targetGene.externalIdentifiers[dbName].identifier = { identifier }
-          input.inputTextValue = null
+          input.modelValue = null
 
           // Clear the text input.
           // TODO This depends on PrimeVue internals more than I'd like:
@@ -1088,7 +1088,7 @@ export default {
     clearTargetGeneIdentifierSearch: function (dbName) {
       const input = this.$refs[`${dbName.toLowerCase()}IdentifierInput`][0]
       this.targetGene.externalIdentifiers[dbName].identifier = null
-      input.inputTextValue = null
+      input.modelValue = null
 
       // Clear the text input.
       // TODO This depends on PrimeVue internals more than I'd like:
@@ -1098,7 +1098,6 @@ export default {
     searchTargetGeneIdentifiers: function (dbName, event) {
       const searchText = (event.query || '').trim()
       if (searchText.length > 0) {
-        this.targetGene.externalIdentifiers[dbName].identifier = null
         this.setTargetGeneIdentifierSearch[dbName](searchText)
       }
     },

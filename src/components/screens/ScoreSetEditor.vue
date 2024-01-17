@@ -349,7 +349,7 @@
                       <div class="field field-columns">
                         <div class="field-column">
                           <span class="p-float-label">
-                            <InputText v-model="targetGene.name" :id="$scopedId('input-targetGeneName')" />
+                            <InputText v-model="targetGene.name" :id="$scopedId('input-targetGeneName')" style="width: 100%"/>
                             <label :for="$scopedId('input-targetGene')">Target gene name</label>
                           </span>
                         </div>
@@ -357,7 +357,7 @@
                           <span class="p-float-label">
                             <!-- Assembly is the reference genome property in coordinate cases -->
                             <Dropdown v-model="assembly" :id="$scopedId('input-targetGeneAssembly')" :options="assemblies"
-                              optionGroupLabel="type" optionGroupChildren="assemblies">
+                              optionGroupLabel="type" optionGroupChildren="assemblies" style="width: 100%">
                               <template #optiongroup="slotProps">
                                 <div class="flex align-items-center dropdown-option-group">
                                   <div>{{ slotProps.option.type }}</div>
@@ -372,7 +372,7 @@
                           <span class="p-float-label">
                             <Dropdown v-model="geneName" :id="$scopedId('input-targetGeneGeneNames')"
                               :options="geneNamesAsObject" optionLabel="name" filter
-                              :virtualScrollerOptions="{ itemSize: 50 }" @change="autofillGeneName" />
+                              :virtualScrollerOptions="{ itemSize: 50 }" @change="autofillGeneName" style="width: 100%"/>
                             <label :for="$scopedId('input-targetGeneAssembly')">HGNC Name</label>
                           </span>
                         </div>
@@ -706,7 +706,9 @@ export default {
     },
     referenceGenome: null,
     assembly: null,
+    assemblySuggestions: [],
     geneName: null,
+    geneNameAccessionSuggestions: [],
     targetOptions: ["Assembly", "HGNC"],
     targetAutocomplete: 'HGNC',
     extraMetadata: {},
@@ -781,7 +783,7 @@ export default {
       else {
         return this.geneNames.map(name => ({ name }))
       }
-    }
+    },
   },
 
   watch: {
@@ -846,6 +848,22 @@ export default {
           this.licenseId = this.defaultLicenseId
         }
       }
+    },
+    geneName: {
+      handler: async function(newValue, oldValue) {
+        if (newValue == oldValue) {
+          return;
+        }
+        this.geneNameAccessionSuggestions = await this.fetchTargetAccessionsByGene(this.geneName.name.trim())
+      }
+    },
+    assembly: {
+      handler: async function(newValue, oldValue) {
+        if (newValue == oldValue) {
+          return;
+        }
+        this.assemblySuggestions = await this.fetchTargetAccessionsByAssembly(this.assembly.trim())
+      }
     }
   },
 
@@ -897,16 +915,14 @@ export default {
     },
 
     fetchTargetAccessions: async function (event) {
-      if (this.targetAutocomplete == 'Assembly') {
-        const assembly = this.assembly?.trim() || null
-        if (assembly) {
-          this.targetGeneAccessionSuggestions = await this.fetchTargetAccessionsByAssembly(assembly)
+      if (this.targetAutocomplete == 'Assembly' ) {
+        if (this.assembly?.trim() != null) {
+          this.targetGeneAccessionSuggestions = this.assemblySuggestions
         }
       }
       else {
-        const gene = this.geneName?.name || null
-        if (gene) {
-          this.targetGeneAccessionSuggestions = await this.fetchTargetAccessionsByGene(gene)
+        if (this.geneName?.name.trim() != null) {
+          this.targetGeneAccessionSuggestions = this.geneNameAccessionSuggestions
         }
       }
 

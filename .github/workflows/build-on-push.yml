@@ -20,6 +20,6 @@ jobs:
       id: artifact-upload-step
       with:
         name: mavedb-ui
-        path: /app/dist/
+        path: dist/
         if-no-files-found: error
     - run: echo 'Artifact ID is ${{ steps.artifact-upload-step.outputs.artifact-id }}'

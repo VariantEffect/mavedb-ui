@@ -707,8 +707,10 @@ export default {
     referenceGenome: null,
     assembly: null,
     assemblySuggestions: [],
+    assemblyDropdownValue: null,
     geneName: null,
     geneNameAccessionSuggestions: [],
+    geneNameDropdownValue: null,
     targetOptions: ["Assembly", "HGNC"],
     targetAutocomplete: 'HGNC',
     extraMetadata: {},
@@ -854,7 +856,8 @@ export default {
         if (newValue == oldValue) {
           return;
         }
-        this.geneNameAccessionSuggestions = await this.fetchTargetAccessionsByGene(this.geneName.name.trim())
+        this.geneNameDropdownValue = this.geneName?.name || null
+        this.geneNameAccessionSuggestions = await this.fetchTargetAccessionsByGene(this.geneNameDropdownValue)
       }
     },
     assembly: {
@@ -862,9 +865,10 @@ export default {
         if (newValue == oldValue) {
           return;
         }
-        this.assemblySuggestions = await this.fetchTargetAccessionsByAssembly(this.assembly.trim())
+        this.assemblyDropdownValue = this.assembly?.trim() || null
+        this.assemblySuggestions = await this.fetchTargetAccessionsByAssembly(this.assemblyDropdownValue)
       }
-    }
+    },
   },
 
   methods: {
@@ -916,12 +920,12 @@ export default {
 
     fetchTargetAccessions: async function (event) {
       if (this.targetAutocomplete == 'Assembly' ) {
-        if (this.assembly?.trim() != null) {
+        if (this.assemblyDropdownValue) {
           this.targetGeneAccessionSuggestions = this.assemblySuggestions
         }
       }
       else {
-        if (this.geneName?.name.trim() != null) {
+        if (this.geneNameDropdownValue) {
           this.targetGeneAccessionSuggestions = this.geneNameAccessionSuggestions
         }
       }

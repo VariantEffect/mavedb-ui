@@ -16,3 +16,10 @@ jobs:
     - run: npx browserslist@latest --update-db
     - run: npm run build
 #    - run: npm test
+    - uses: actions/upload-artifact@v4
+      id: artifact-upload-step
+      with:
+        name: mavedb-ui
+        path: /app/dist/
+        if-no-files-found: error
+    - run: echo 'Artifact ID is ${{ steps.artifact-upload-step.outputs.artifact-id }}'

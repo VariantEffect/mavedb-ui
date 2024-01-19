@@ -857,7 +857,9 @@ export default {
           return;
         }
         this.geneNameDropdownValue = this.geneName?.name || null
-        this.geneNameAccessionSuggestions = await this.fetchTargetAccessionsByGene(this.geneNameDropdownValue)
+        if (this.geneNameDropdownValue) {
+          this.geneNameAccessionSuggestions = await this.fetchTargetAccessionsByGene(this.geneNameDropdownValue)
+        }
       }
     },
     assembly: {
@@ -866,7 +868,7 @@ export default {
           return;
         }
         this.assemblyDropdownValue = this.assembly?.trim() || null
-        if (this.assemblyDropdownValue){
+        if (this.assemblyDropdownValue) {
           this.assemblySuggestions = await this.fetchTargetAccessionsByAssembly(this.assemblyDropdownValue)
         }
       }
@@ -1265,6 +1267,7 @@ export default {
         }
         this.referenceGenome = this.item.referenceGenome
         this.assembly = this.item.assembly
+        this.geneName = this.item.geneName
         this.targetGenes = this.item.targetGenes
         this.extraMetadata = this.item.extraMetadata
       } else {
@@ -1286,6 +1289,11 @@ export default {
         this.targetGenes = []
         this.referenceGenome = null
         this.assembly = null
+        this.assemblySuggestions = []
+        this.assemblyDropdownValue = null
+        this.geneName = null
+        this.geneNameAccessionSuggestions = []
+        this.geneNameDropdownValue =  null
         this.targetGenes = []
         this.extraMetadata = {}
       }
@@ -1313,10 +1321,14 @@ export default {
           externalGeneDatabases.map((dbName) => [dbName, { identifier: null, offset: null }])
         )
       },
-        this.assembly = null
+      this.assembly = null
+      this.assemblySuggestions = []
+      this.assemblyDropdownValue = null
       this.referenceGenome = null
       this.existingTargetGene = null
       this.geneName = null
+      this.geneNameAccessionSuggestions = []
+      this.geneNameDropdownValue =  null
     },
 
     addTarget: function () {
@@ -1325,8 +1337,8 @@ export default {
         delete this.targetGene.targetAccession;
       }
       else if (this.assembly || this.geneName) {
-        this.targetGene.targetAccession.assembly = this.assembly || null
-        this.targetGene.targetAccession.gene = this.geneName?.name || null // Name property on string object array
+        this.targetGene.targetAccession.assembly = this.assemblyDropdownValue
+        this.targetGene.targetAccession.gene = this.geneNameDropdownValue // Name property on string object array
         delete this.targetGene.targetSequence;
       }
       else {

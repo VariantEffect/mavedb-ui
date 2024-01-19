@@ -866,7 +866,9 @@ export default {
           return;
         }
         this.assemblyDropdownValue = this.assembly?.trim() || null
-        this.assemblySuggestions = await this.fetchTargetAccessionsByAssembly(this.assemblyDropdownValue)
+        if (this.assemblyDropdownValue){
+          this.assemblySuggestions = await this.fetchTargetAccessionsByAssembly(this.assemblyDropdownValue)
+        }
       }
     },
   },

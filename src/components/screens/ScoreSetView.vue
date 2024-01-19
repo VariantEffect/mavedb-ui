@@ -3,7 +3,7 @@
     <div v-if="item" class="mave-score-set">
       <div class="mave-1000px-col">
         <div class="mave-screen-title-bar">
-          <div class="mave-screen-title">{{item.title || 'Untitled score set'}}</div>
+          <div class="mave-screen-title">{{ item.title || 'Untitled score set' }}</div>
           <div v-if="oidc.isAuthenticated">
             <div v-if="!item.publishedDate" class="mave-screen-title-controls">
               <Button class="p-button-sm" @click="editItem">Edit</Button>
@@ -15,40 +15,50 @@
             </div>
           </div>
         </div>
-        <div v-if="item.shortDescription" class="mave-score-set-description">{{item.shortDescription}}</div>
-        <div v-if="item.urn" class="mave-score-set-urn"><h3>{{item.urn}}</h3></div>
+        <div v-if="item.shortDescription" class="mave-score-set-description">{{ item.shortDescription }}</div>
+        <div v-if="item.urn" class="mave-score-set-urn">
+          <h3>{{ item.urn }}</h3>
+        </div>
       </div>
       <div v-if="showHeatmap && scores" class="mave-score-set-heatmap-pane">
         <ScoreSetHeatmap :scoreSet="item" :scores="scores" />
       </div>
       <div class="mave-1000px-col">
-        <div v-if="item.creationDate">Created {{formatDate(item.creationDate)}} <span v-if="item.createdBy">
-          <a :href="`https://orcid.org/${item.createdBy.orcidId}`" target="blank"><img src="@/assets/ORCIDiD_icon.png" alt="ORCIDiD">{{item.createdBy.firstName}} {{item.createdBy.lastName}}</a></span>
+        <div v-if="item.creationDate">Created {{ formatDate(item.creationDate) }} <span v-if="item.createdBy">
+            <a :href="`https://orcid.org/${item.createdBy.orcidId}`" target="blank"><img src="@/assets/ORCIDiD_icon.png"
+                alt="ORCIDiD">{{ item.createdBy.firstName }} {{ item.createdBy.lastName }}</a></span>
         </div>
-        <div v-if="item.modificationDate">Last updated {{formatDate(item.modificationDate)}} <span v-if="item.modifiedBy">
-          <a :href="`https://orcid.org/${item.modifiedBy.orcidId}`" target="blank"><img src="@/assets/ORCIDiD_icon.png" alt="ORCIDiD">{{item.modifiedBy.firstName}} {{item.modifiedBy.lastName}}</a></span>
+        <div v-if="item.modificationDate">Last updated {{ formatDate(item.modificationDate) }} <span v-if="item.modifiedBy">
+            <a :href="`https://orcid.org/${item.modifiedBy.orcidId}`" target="blank"><img src="@/assets/ORCIDiD_icon.png"
+                alt="ORCIDiD">{{ item.modifiedBy.firstName }} {{ item.modifiedBy.lastName }}</a></span>
         </div>
-        <div v-if="item.publishedDate">Published {{formatDate(item.publishedDate)}}</div>
+        <div v-if="item.publishedDate">Published {{ formatDate(item.publishedDate) }}</div>
         <div v-if="item.license">
           License:
-          <a v-if="item.license.link" :href="item.license.link">{{item.license.longName || item.license.shortName}}</a>
-          <span v-else>{{item.license.longName || item.license.shortName}}</span>
+          <a v-if="item.license.link" :href="item.license.link">{{ item.license.longName || item.license.shortName }}</a>
+          <span v-else>{{ item.license.longName || item.license.shortName }}</span>
         </div>
         <div v-if="item.dataUsagePolicy">Data usage policy: {{ item.dataUsagePolicy }}</div>
-        <div v-if="item.experiment">Member of <router-link :to="{name: 'experiment', params: {urn: item.experiment.urn}}">{{item.experiment.urn}}</router-link></div>
-        <div v-if="item.supersedingScoreSet">Current version <router-link :to="{name: 'scoreSet', params: {urn: item.supersedingScoreSet.urn}}">{{item.supersedingScoreSet.urn}}</router-link></div>
-        <div v-else>Current version <router-link :to="{name: 'scoreSet', params: {urn: item.urn}}">{{item.urn}}</router-link></div>
-        <div v-if="item.metaAnalysisSourceScoreSets.length!=0">Meta-analyzes
-          <template v-for="(scoreSet,index) in sortedMetaAnalysis" :key="scoreSet">
-            <router-link :to="{name: 'scoreSet', params: {urn: scoreSet.urn}}">{{scoreSet.urn}}</router-link>
-            <template v-if="index !== item.metaAnalysisSourceScoreSets.length-1"> · </template>
+        <div v-if="item.experiment">Member of <router-link
+            :to="{ name: 'experiment', params: { urn: item.experiment.urn } }">{{ item.experiment.urn }}</router-link></div>
+        <div v-if="item.supersedingScoreSet">Current version <router-link
+            :to="{ name: 'scoreSet', params: { urn: item.supersedingScoreSet.urn } }">{{ item.supersedingScoreSet.urn }}</router-link>
+        </div>
+        <div v-else>Current version <router-link
+            :to="{ name: 'scoreSet', params: { urn: item.urn } }">{{ item.urn }}</router-link></div>
+        <div v-if="sortedMetaAnalyzesScoreSetUrns.length > 0">
+          Meta-analyzes
+          <template v-for="(urn, index) of sortedMetaAnalyzesScoreSetUrns" :key="urn">
+            <template v-if="index > 0"> · </template>
+            <EntityLink entityType="scoreSet" :urn="urn" />
           </template>
         </div>
-        <div>Download files <Button class="p-button-outlined p-button-sm" @click="downloadFile('scores')">Scores</Button>&nbsp;
-          <template v-if="countColumns.length!=0">
+        <div>Download files <Button class="p-button-outlined p-button-sm"
+            @click="downloadFile('scores')">Scores</Button>&nbsp;
+          <template v-if="countColumns.length != 0">
             <Button class="p-button-outlined p-button-sm" @click="downloadFile('counts')">Counts</Button>&nbsp;
           </template>
-          <template v-if="isMetaDataEmpty!=true">
+          <template v-if="isMetaDataEmpty != true">
             <Button class="p-button-outlined p-button-sm" @click="downloadMetadata">Metadata</Button>&nbsp;
           </template>
           <Button class="p-button-outlined p-button-sm" @click="downloadMappedVariants()">Mapped Variants</Button>
@@ -62,78 +72,123 @@
           <div v-html="markdownToHtml(item.methodText)" class="mave-score-set-abstract"></div>
         </div>
         <div class="mave-score-set-section-title">Primary References</div>
-          <div v-if="item.primaryPublicationIdentifiers.length > 0">
-            <div v-for="publication in item.primaryPublicationIdentifiers" :key="publication">
-                <ul style="list-style-type:square;">
-                  <li v-html="markdownToHtml(publication.referenceHtml)" ></li>Publication: <a :href="`${publication.url}`" target="_blank">{{publication.identifier}}</a>
-                </ul>
-            </div>
+        <div v-if="item.primaryPublicationIdentifiers.length > 0">
+          <div v-for="publication in item.primaryPublicationIdentifiers" :key="publication">
+            <ul style="list-style-type:square;">
+              <li v-html="markdownToHtml(publication.referenceHtml)"></li>
+              <div>
+                Publication: <a
+                  :href="`https://www.mavedb.org/#/publication-identifiers/${publication.dbName}/${publication.identifier}`">{{
+                    publication.identifier }}</a>
+              </div>
+              <div>
+                <a :href="`${publication.url}`" target="_blank">View article on the web</a>
+              </div>
+            </ul>
           </div>
-          <div v-else>No associated primary publications.</div>
-          <div class="mave-score-set-section-title">Secondary References</div>
-          <div v-if="item.secondaryPublicationIdentifiers.length > 0">
-            <div v-for="publication in item.secondaryPublicationIdentifiers" :key="publication">
-                <ul style="list-style-type:square;">
-                  <li v-html="markdownToHtml(publication.referenceHtml)" ></li>Publication: <a :href="`${publication.url}`" target="_blank">{{publication.identifier}}</a>
-                </ul>
-            </div>
+        </div>
+        <div v-else>No associated primary publications.</div>
+        <div class="mave-score-set-section-title">Secondary References</div>
+        <div v-if="item.secondaryPublicationIdentifiers.length > 0">
+          <div v-for="publication in item.secondaryPublicationIdentifiers" :key="publication">
+            <ul style="list-style-type:square;">
+              <li v-html="markdownToHtml(publication.referenceHtml)"></li>
+              <div>
+                Publication: <a
+                  :href="`https://www.mavedb.org/#/publication-identifiers/${publication.dbName}/${publication.identifier}`">{{
+                    publication.identifier }}</a>
+              </div>
+              <div>
+                <a :href="`${publication.url}`" target="_blank">View article on the web</a>
+              </div>
+            </ul>
           </div>
-          <div v-else>No associated secondary publications.</div>
+        </div>
+        <div v-else>No associated secondary publications.</div>
         <div class="mave-score-set-section-title">Data Usage Policy</div>
-          <div v-if="item.dataUsagePolicy">
-            <div v-html="markdownToHtml(item.dataUsagePolicy)" class="mave-score-set-abstract"></div>
-          </div>
-          <div v-else>Not specified</div>
+        <div v-if="item.dataUsagePolicy">
+          <div v-html="markdownToHtml(item.dataUsagePolicy)" class="mave-score-set-abstract"></div>
+        </div>
+        <div v-else>Not specified</div>
 
         <div v-if="item.keywords && item.keywords.length > 0">
           <div class="mave-score-set-section-title">Keywords</div>
           <div class="mave-score-set-keywords">
-            <a v-for="(keyword, i) of item.keywords" :key="i" :href="`https://www.mavedb.org/search/?keywords=${keyword}`"><Chip :label="keyword" /></a>
+            <a v-for="(keyword, i) in item.keywords" :key="i"
+              :href="`https://www.mavedb.org/search/?keywords=${keyword}`">
+              <Chip :label="keyword" />
+            </a>
           </div>
         </div>
-        <div v-if="item.targetGene">
-          <div class="mave-score-set-section-title">Target</div>
-          <div v-if="item.targetGene.name"><strong>Name:</strong> {{item.targetGene.name}}</div>
-          <div v-if="item.targetGene.category"><strong>Type:</strong> {{item.targetGene.category}}</div>
-          <div v-if="item.targetGene.taxonomy?.organismName"><strong>Organism:</strong> {{item.targetGene.taxonomy.organismName}}</div>
-          <div v-if="item.targetGene.taxonomy?.commonName"><strong>Common name:</strong> {{item.targetGene.taxonomy.commonName}}</div>
-          <div v-if="item.targetGene.taxonomy?.rank"><strong>Rank:</strong> {{item.targetGene.taxonomy.rank}}</div>
-          <div v-if="item.targetGene.taxonomy?.url"><strong>Taxonomy ID:</strong> <a :href="`${item.targetGene.taxonomy.url}`" target="blank">{{item.targetGene.taxonomy.taxId}}</a> </div>
-          <div v-if="item.targetGene.id"><strong>Target ID:</strong> {{item.targetGene.id}}</div>
-          <div v-if="item.targetGene.wtSequence?.sequence" style="word-break: break-word"><strong>Reference sequence: </strong>
-            <template v-if="item.targetGene.wtSequence.sequence.length >= 500">
-              <template v-if="readMore == true">{{item.targetGene.wtSequence.sequence.substring(0, 500) + "...."}} </template>
-              <template v-if="readMore == false">{{item.targetGene.wtSequence.sequence}}</template>
-              <Button @click="showMore" v-if="readMore == true" class="p-button-text p-button-sm p-button-info">Show more</Button>
-              <Button @click="showLess" v-if="readMore == false" class="p-button-text p-button-sm p-button-info">Show less</Button>
-            </template><template v-else>{{item.targetGene.wtSequence.sequence}}</template>
-          </div>
-          <!--One for loop can't handle the order so that separating them into three parts.-->
-          <div v-if="item.targetGene.externalIdentifiers?.[0]?.identifier">
-            <div v-for="i in item.targetGene.externalIdentifiers" :key="i">
-              <div v-if="i.identifier.dbName==='UniProt'"><strong>UniProt:</strong> {{i.identifier.identifier}} <span v-if="i.offset!=0"> with offset {{i.offset}}</span></div>
+        <div v-if="item.targetGenes">
+          <div class="mave-score-set-section-title">Targets</div>
+          <div v-for="targetGene of item.targetGenes" :key="targetGene">
+            <div v-if="targetGene.name"><strong>Name:</strong> {{ targetGene.name }}</div>
+            <div v-if="targetGene.category"><strong>Type:</strong> {{ targetGene.category }}</div>
+
+            <div v-if="targetGene.targetAccession?.accession" style="word-break: break-word">
+              <div v-if="targetGene.targetAccession?.assembly"><strong>Assembly:</strong>
+                {{ targetGene.targetAccession.assembly }}</div>
+              <div v-if="targetGene.targetAccession?.gene"><strong>HGNC:</strong> {{ targetGene.targetAccession.gene }}
+              </div>
+              <strong>Accession Number: </strong>
+              {{ targetGene.targetAccession.accession }}
             </div>
-            <div v-for="i in item.targetGene.externalIdentifiers" :key="i">
-              <div v-if="i.identifier.dbName==='RefSeq'"><strong>RefSeq:</strong> {{i.identifier.identifier}} <span v-if="i.offset!=0"> with offset {{i.offset}}</span></div>
+
+            <div v-if="targetGene.targetSequence?.sequence" style="word-break: break-word">
+              <div v-if="targetGene.targetSequence.taxonomy?.organismName"><strong>Organism:</strong>
+                {{ targetGene.targetSequence.taxonomy.organismName }}</div>
+              <div v-if="targetGene.targetSequence.taxonomy?.commonName"><strong>Common Name:</strong>
+                {{ targetGene.targetSequence.taxonomy.commonName }}</div>
+              <div v-if="targetGene.targetSequence.taxonomy?.taxId">
+                <div v-if="item.targetGene.targetSequence.taxonomy?.url"> <strong>Taxonomy ID:</strong>
+                  <a :href="`${item.targetGene.targetSequence.taxonomy.url}`" target="blank">{{item.targetGene.targetSequence.taxonomy.taxId}}</a> 
+                </div>
+              </div>
+              <div v-if="targetGene.id"><strong>Target ID:</strong> {{ targetGene.id }}</div>
+              <strong>Reference sequence: </strong>
+              <template v-if="targetGene.targetSequence.sequence.length >= 500">
+                <template v-if="readMore == true">{{ targetGene.targetSequence.sequence.substring(0, 500) + "...." }}
+                </template>
+                <template v-if="readMore == false">{{ targetGene.targetSequence.sequence }}</template>
+                <Button @click="showMore" v-if="readMore == true" class="p-button-text p-button-sm p-button-info">Show
+                  more</Button>
+                <Button @click="showLess" v-if="readMore == false" class="p-button-text p-button-sm p-button-info">Show
+                  less</Button>
+              </template><template v-else>{{ targetGene.targetSequence.sequence }}</template>
             </div>
-            <div v-for="i in item.targetGene.externalIdentifiers" :key="i">
-              <div v-if="i.identifier.dbName==='Ensembl'"><strong>Ensembl:</strong> {{i.identifier.identifier}} <span v-if="i.offset!=0"> with offset {{i.offset}}</span></div>
+            <!--One for loop can't handle the order so separating them into three parts.-->
+            <div v-if="targetGene.externalIdentifiers?.[0]?.identifier">
+              <div v-for="i in targetGene.externalIdentifiers" :key="i">
+                <div v-if="i.identifier.dbName === 'UniProt'"><strong>UniProt:</strong> {{ i.identifier.identifier }} <span
+                    v-if="i.offset != 0"> with offset {{ i.offset }}</span></div>
+              </div>
+              <div v-for="i in targetGene.externalIdentifiers" :key="i">
+                <div v-if="i.identifier.dbName === 'RefSeq'"><strong>RefSeq:</strong> {{ i.identifier.identifier }} <span
+                    v-if="i.offset != 0"> with offset {{ i.offset }}</span></div>
+              </div>
+              <div v-for="i in targetGene.externalIdentifiers" :key="i">
+                <div v-if="i.identifier.dbName === 'Ensembl'"><strong>Ensembl:</strong> {{ i.identifier.identifier }} <span
+                    v-if="i.offset != 0"> with offset {{ i.offset }}</span></div>
+              </div>
             </div>
+            <br>
           </div>
         </div>
 
         <div class="mave-score-set-section-title">External identifier</div>
         <strong>DOI: </strong>
-        <div v-if="item.doiIdentifiers.length!=0">
+        <div v-if="item.doiIdentifiers.length != 0">
           <ul style="list-style-type:square">
-            <li v-for="(doi, i) of item.doiIdentifiers" :key="i"><a :href="`${doi.url}`" target="blank">{{doi.identifier}}</a></li>
+            <li v-for="(doi, i) of item.doiIdentifiers" :key="i"><a :href="`${doi.url}`"
+                target="blank">{{ doi.identifier }}</a></li>
           </ul>
-        </div><template v-else>No associated DOIs<br/></template>
+        </div><template v-else>No associated DOIs<br /></template>
 
         <div class="mave-score-set-section-title">Variants</div>
         <div v-if="item.numVariants > 10">Below is a sample of the first 10 variants.
-            Please download the file on the top page if you want to read the whole variants list.</div>
-        <br/>
+          Please download the file on the top page if you want to read the whole variants list.</div>
+        <br />
         <TabView style="height:585px">
           <TabPanel header="Scores">
             <!--Default table-layout is fixed meaning the cell widths do not depend on their content.
@@ -144,30 +199,33 @@
             We can keep the frozen codes first. Maybe we can figure the bug in the future-->
             <!---->
             <div style="overflow-y: scroll; overflow-x: scroll; height:600px;">
-              <DataTable :value="scoresTable" showGridlines="true" stripedRows="true">
-                <Column v-for="column of scoreColumns.slice(0,3)" :field="column" :header="column" :key="column"
-                style="overflow:hidden" headerStyle="background-color:#A1D8C8; font-weight: bold" ><!--:frozen="columnIsAllNa(scoresTable, column)"-->
-                <template #body="scoresTable" >{{scoresTable.data[column]}}</template>
-              </Column>
-              <Column v-for="column of scoreColumns.slice(3,scoreColumns.length)" :field="column" :header="column" :key="column"
-                style="overflow:hidden" headerStyle="background-color:#A1D8C8; font-weight: bold">
-                <template #body="scoresTable">{{convertToThreeDecimal(scoresTable.data[column])}}</template>
-              </Column>
+              <DataTable :value="scoresTable" :showGridlines="true" :stripedRows="true">
+                <Column v-for="column of scoreColumns.slice(0, 3)" :field="column" :header="column" :key="column"
+                  style="overflow:hidden" headerStyle="background-color:#A1D8C8; font-weight: bold">
+                  <!--:frozen="columnIsAllNa(scoresTable, column)"-->
+                  <template #body="scoresTable">{{ scoresTable.data[column] }}</template>
+                </Column>
+                <Column v-for="column of scoreColumns.slice(3, scoreColumns.length)" :field="column" :header="column"
+                  :key="column" style="overflow:hidden" headerStyle="background-color:#A1D8C8; font-weight: bold">
+                  <template #body="scoresTable">{{ convertToThreeDecimal(scoresTable.data[column]) }}</template>
+                </Column>
               </DataTable>
             </div>
           </TabPanel>
           <TabPanel header="Counts">
             <div style="overflow-y: scroll; overflow-x: scroll; height:600px;">
-              <DataTable :value="countsTable" showGridlines="true" stripedRows="true">
-                <template v-if="countColumns.length==0">No count data available.</template>
+              <DataTable :value="countsTable" :showGridlines="true" :stripedRows="true">
+                <template v-if="countColumns.length == 0">No count data available.</template>
                 <template v-else>
-                  <Column v-for="column of countColumns.slice(0,3)" :field="column" :header="column" :key="column"
-                  style="overflow:hidden" headerStyle="background-color:#A1D8C8; font-weight: bold"> <!--:frozen="columnIsAllNa(countsTable, column)" bodyStyle="text-align:left"-->
-                    <template #body="countsTable">{{countsTable.data[column]}}</template> <!--:style="{overflow: 'hidden'}"-->
+                  <Column v-for="column of countColumns.slice(0, 3)" :field="column" :header="column" :key="column"
+                    style="overflow:hidden" headerStyle="background-color:#A1D8C8; font-weight: bold">
+                    <!--:frozen="columnIsAllNa(countsTable, column)" bodyStyle="text-align:left"-->
+                    <template #body="countsTable">{{ countsTable.data[column] }}</template>
+                    <!--:style="{overflow: 'hidden'}"-->
                   </Column>
-                  <Column v-for="column of countColumns.slice(3,countColumns.length)" :field="column" :header="column" :key="column"
-                  style="overflow:hidden" headerStyle="background-color:#A1D8C8; font-weight: bold">
-                    <template #body="countsTable">{{convertToThreeDecimal(countsTable.data[column])}}</template>
+                  <Column v-for="column of countColumns.slice(3, countColumns.length)" :field="column" :header="column"
+                    :key="column" style="overflow:hidden" headerStyle="background-color:#A1D8C8; font-weight: bold">
+                    <template #body="countsTable">{{ convertToThreeDecimal(countsTable.data[column]) }}</template>
                   </Column>
                 </template>
               </DataTable>
@@ -198,51 +256,50 @@ import _ from 'lodash'
 import marked from 'marked'
 import Button from 'primevue/button'
 import Chip from 'primevue/chip'
+import Column from 'primevue/column'
+import DataTable from 'primevue/datatable'
+import TabPanel from 'primevue/tabpanel'
+import TabView from 'primevue/tabview'
 
 import ScoreSetHeatmap from '@/components/ScoreSetHeatmap'
+import EntityLink from '@/components/common/EntityLink'
 import DefaultLayout from '@/components/layout/DefaultLayout'
 import useFormatters from '@/composition/formatters'
 import useItem from '@/composition/item'
 import useRemoteData from '@/composition/remote-data'
 import config from '@/config'
-import {oidc} from '@/lib/auth'
-import {parseScores} from '@/lib/scores'
-
-import TabView from 'primevue/tabview'
-import TabPanel from 'primevue/tabpanel'
-
-import DataTable from 'primevue/datatable';
-import Column from 'primevue/column';
+import { oidc } from '@/lib/auth'
+import { parseScores } from '@/lib/scores'
 
 export default {
   name: 'ScoreSetView',
-  components: {Button, Chip, DefaultLayout, ScoreSetHeatmap, TabView, TabPanel, DataTable, Column},
+  components: { Button, Chip, DefaultLayout, EntityLink, ScoreSetHeatmap, TabView, TabPanel, DataTable, Column },
   computed: {
-    isMetaDataEmpty: function(){
+    isMetaDataEmpty: function () {
       //If extraMetadata is empty, return value will be true.
       return Object.keys(this.item.extraMetadata).length === 0
     },
-    oidc: function() {
+    oidc: function () {
       return oidc
-      },
-    scoreColumns: function() {
-      const fixedColumns = ['hgvs_nt', 'hgvs_splice','hgvs_pro']
-      return [...fixedColumns, ...this.item?.datasetColumns?.score_columns || []]
     },
-    countColumns: function(){
-      const fixedColumns = ['hgvs_nt', 'hgvs_splice','hgvs_pro']
-      const showCountColumns = !_.isEmpty(this.item?.datasetColumns?.count_columns)
-      return showCountColumns ? [...fixedColumns, ...this.item?.datasetColumns?.count_columns || []] : []
+    scoreColumns: function () {
+      const fixedColumns = ['hgvs_nt', 'hgvs_splice', 'hgvs_pro']
+      return [...fixedColumns, ...this.item?.datasetColumns?.scoreColumns || []]
     },
-    sortedMetaAnalysis: function(){
-      return _.orderBy(this.item.metaAnalysisSourceScoreSets, 'urn')
+    countColumns: function () {
+      const fixedColumns = ['hgvs_nt', 'hgvs_splice', 'hgvs_pro']
+      const showCountColumns = !_.isEmpty(this.item?.datasetColumns?.countColumns)
+      return showCountColumns ? [...fixedColumns, ...this.item?.datasetColumns?.countColumns || []] : []
     },
+    sortedMetaAnalyzesScoreSetUrns: function () {
+      return _.sortBy(this.item?.metaAnalyzesScoreSetUrns || [])
+    }
   },
   setup: () => {
     const scoresRemoteData = useRemoteData()
     return {
       ...useFormatters(),
-      ...useItem({itemTypeName: 'scoreSet'}),
+      ...useItem({ itemTypeName: 'scoreSet' }),
       scoresData: scoresRemoteData.data,
       scoresDataStatus: scoresRemoteData.dataStatus,
       setScoresDataUrl: scoresRemoteData.setDataUrl,
@@ -261,12 +318,13 @@ export default {
     scores: null,
     scoresTable: [],
     countsTable: [],
-    readMore: true
+    readMore: true,
+    showHeatmap: true
   }),
 
   watch: {
     itemId: {
-      handler: function(newValue, oldValue) {
+      handler: function (newValue, oldValue) {
         if (newValue != oldValue) {
           this.setItemId(newValue)
 
@@ -280,26 +338,26 @@ export default {
       },
       immediate: true
     },
-    item:{
-      handler: function(){
+    item: {
+      handler: function () {
         this.loadTableScores()
         this.loadTableCounts()
       }
     },
     scoresData: {
-      handler: function(newValue) {
+      handler: function (newValue) {
         this.scores = newValue ? Object.freeze(parseScores(newValue)) : null
       }
     }
   },
 
   methods: {
-    editItem: function() {
+    editItem: function () {
       if (this.item) {
-        this.$router.replace({path: `/score-sets/${this.item.urn}/edit`})
+        this.$router.replace({ path: `/score-sets/${this.item.urn}/edit` })
       }
     },
-    deleteItem: async function() {
+    deleteItem: async function () {
       let response = null
       this.$confirm.require({
         message: 'Are you sure you want to proceed?',
@@ -310,15 +368,15 @@ export default {
             try {
               response = await axios.delete(`${config.apiBaseUrl}/score-sets/${this.item.urn}`, this.item)
             } catch (e) {
-              response = e.response || {status: 500}
+              response = e.response || { status: 500 }
             }
 
             if (response.status == 200) {
               // display toast message here
               //const deletedItem = response.data
               console.log('Deleted item')
-              this.$router.replace({path: `/dashboard`})
-              this.$toast.add({severity:'success', summary: 'Your score set was successfully deleted.', life: 3000})
+              this.$router.replace({ path: `/dashboard` })
+              this.$toast.add({ severity: 'success', summary: 'Your score set was successfully deleted.', life: 3000 })
             } else if (response.data && response.data.detail) {
               const formValidationErrors = {}
               for (const error of response.data.detail) {
@@ -333,18 +391,18 @@ export default {
           }
         },
         reject: () => {
-            //callback to execute when user rejects the action
-            //do nothing
+          //callback to execute when user rejects the action
+          //do nothing
         }
       });
     },
-    markdownToHtml: function(markdown) {
+    markdownToHtml: function (markdown) {
       return marked(markdown)
     },
     get(...args) {
       return _.get(...args)
     },
-    publishItem: async function() {
+    publishItem: async function () {
       let response = null
       try {
         if (this.item) {
@@ -352,7 +410,7 @@ export default {
           // make sure scroesets cannot be published twice API, but also remove the button on UI side
         }
       } catch (e) {
-        response = e.response || {status: 500}
+        response = e.response || { status: 500 }
       }
 
       if (response.status == 200) {
@@ -360,8 +418,8 @@ export default {
         const publishedItem = response.data
         if (this.item) {
           console.log('Published item')
-          this.$router.replace({path: `/score-sets/${publishedItem.urn}`})
-          this.$toast.add({severity:'success', summary: 'Your score set was successfully published.', life: 3000})
+          this.$router.replace({ path: `/score-sets/${publishedItem.urn}` })
+          this.$toast.add({ severity: 'success', summary: 'Your score set was successfully published.', life: 3000 })
         }
       } else if (response.data && response.data.detail) {
         const formValidationErrors = {}
@@ -376,25 +434,25 @@ export default {
       }
     },
     //Download scores or counts
-    downloadFile: async function(download_type){
+    downloadFile: async function (download_type) {
       let response = null
-      try{
-        if (this.item && download_type=="counts"){
+      try {
+        if (this.item && download_type == "counts") {
           response = await axios.get(`${config.apiBaseUrl}/score-sets/${this.item.urn}/counts`)
-        }else if (this.item && download_type=="scores"){
+        } else if (this.item && download_type == "scores") {
           response = await axios.get(`${config.apiBaseUrl}/score-sets/${this.item.urn}/scores`)
         }
-      }catch (e){
-        response = e.response || {status: 500}
+      } catch (e) {
+        response = e.response || { status: 500 }
       }
       if (response.status == 200) {
         const file = response.data
         const anchor = document.createElement('a');
         anchor.href = 'data:text/csv;charset=utf-8,' + encodeURIComponent(file);
         anchor.target = '_blank';
-        if (download_type=="counts"){
+        if (download_type == "counts") {
           anchor.download = this.item.urn + '_counts.csv';
-        }else if(download_type=="scores"){
+        } else if (download_type == "scores") {
           anchor.download = this.item.urn + '_scores.csv';
         }
         anchor.click();
@@ -410,31 +468,31 @@ export default {
         }
       }
     },
-    downloadMappedVariants: async function(){
+    downloadMappedVariants: async function () {
       let response = null
-      try{
-        if (this.item){
+      try {
+        if (this.item) {
           response = await axios.get(`${config.apiBaseUrl}/score-sets/${this.item.urn}/mapped-variants`)
         }
       }
-      catch (e){
-        response = e.response || {status: 500}
+      catch (e) {
+        response = e.response || { status: 500 }
       }
       if (response.status == 200) {
         //convert object to Json.
         const file = JSON.stringify(response.data)
         const anchor = document.createElement('a')
-        
+
         anchor.href = 'data:text/json;charset=utf-8,' + encodeURIComponent(file);
         anchor.target = '_blank';
         //file default name
         anchor.download = this.item.urn + '_mapped_variants.json';
         anchor.click();
-      } else  {
-        this.$toast.add({severity:'error', summary: 'No downloadable mapped variants text file', life: 3000})
+      } else {
+        this.$toast.add({ severity: 'error', summary: 'No downloadable mapped variants text file', life: 3000 })
       }
     },
-    downloadMetadata: async function(){
+    downloadMetadata: async function () {
       //convert object to Json. extraMetadata is an object.
       var metadata = JSON.stringify(this.item.extraMetadata)
       const anchor = document.createElement('a');
@@ -444,64 +502,63 @@ export default {
       anchor.download = this.item.urn + '_metadata.txt';
       anchor.click();
     },
-    loadTableScores: async function(){
-      if (this.item){
+    loadTableScores: async function () {
+      if (this.item) {
         const response = await axios.get(`${config.apiBaseUrl}/score-sets/${this.item.urn}/scores`)
         if (response.data) {
-          if (this.item.numVariants <= 10){
+          if (this.item.numVariants <= 10) {
             this.scoresTable = parseScores(response.data)
-          }else{
+          } else {
             this.scoresTable = parseScores(response.data).slice(0, 10)
           }
         }
       }
     },
-    loadTableCounts: async function(){
-      if (this.item){
+    loadTableCounts: async function () {
+      if (this.item) {
         const response = await axios.get(`${config.apiBaseUrl}/score-sets/${this.item.urn}/counts`)
-        console.log(response)
         if (response.data) {
-          if (this.item.numVariants <= 10){
+          if (this.item.numVariants <= 10) {
             this.countsTable = parseScores(response.data)
-          }else{
+          } else {
             this.countsTable = parseScores(response.data).slice(0, 10)
           }
         }
       }
     },
-    convertToThreeDecimal: function(value){
+    convertToThreeDecimal: function (value) {
       let numStr = String(value)
       let decimalNumber = 0
       if (numStr.includes('.')) {
         decimalNumber = numStr.split('.')[1].length;
       }
-      if (decimalNumber < 4){
+      if (decimalNumber < 4) {
         return value
-      }else{
+      } else {
         return parseFloat(value).toFixed(3)
       }
     },
     // Check whether all columns values are NA.
-    columnIsAllNa: function(tableData, column){
-      let sliceData = tableData.slice(0,10)
+    columnIsAllNa: function (tableData, column) {
+      let sliceData = tableData.slice(0, 10)
       let frozen = true
       let count = 0
-      for(let i=0; i<sliceData.length; i++){
+      for (let i = 0; i < sliceData.length; i++) {
         //NA is a string
-        if(sliceData[i][column]=="NA"){
-          count+=1
+        if (sliceData[i][column] == "NA") {
+          count += 1
         }
       }
-      if(count==10){
+      if (count == 10) {
         frozen = false
       }
       return frozen
     },
-    showMore: function(){
+    showMore: function () {
       this.readMore = false
       return this.readMore
     },
-    showLess: function(){
+    showLess: function () {
       this.readMore = true
       return this.readMore
     },
@@ -511,7 +568,6 @@ export default {
 </script>
 
 <style scoped>
-
 /* General layout */
 
 .mave-full-height {
@@ -576,5 +632,4 @@ export default {
   font-size: 87.5%;
   word-wrap: break-word;
 }
-
 </style>

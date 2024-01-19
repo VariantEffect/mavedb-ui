@@ -34,6 +34,39 @@ const itemTypes = {
     name: 'license', // TODO Redundant, change this structure
     restCollectionName: 'licenses'
   },
+  'pubmedPublicationIdentifier': {
+    name: 'pubmedPublicationIdentifier', // TODO Redundant, change this structure
+    restCollectionName: 'publication-identifiers',
+    primaryKey: 'identifier',
+    httpOptions: {
+      list: {
+        method: 'get',
+        url: `${config.apiBaseUrl}/publication-identifiers/pubmed`
+      }
+    }
+  },
+  'biorxivPublicationIdentifier': {
+    name: 'biorxivPublicationIdentifier', // TODO Redundant, change this structure
+    restCollectionName: 'publication-identifiers',
+    primaryKey: 'identifier',
+    httpOptions: {
+      list: {
+        method: 'get',
+        url: `${config.apiBaseUrl}/publication-identifiers/biorxiv`
+      }
+    }
+  },
+  'medrxivPublicationIdentifier': {
+    name: 'medrxivPublicationIdentifier', // TODO Redundant, change this structure
+    restCollectionName: 'publication-identifiers',
+    primaryKey: 'identifier',
+    httpOptions: {
+      list: {
+        method: 'get',
+        url: `${config.apiBaseUrl}/publication-identifiers/medrxiv`
+      }
+    }
+  },
   'publication-identifier-search': {
     name: 'publication-identifier', // TODO Redundant, change this structure
     restCollectionName: 'publication-identifiers',
@@ -41,6 +74,16 @@ const itemTypes = {
       list: {
         method: 'post',
         url: `${config.apiBaseUrl}/publication-identifiers/search`
+      }
+    }
+  },
+  'external-publication-identifier-search': {
+    name: 'publication-identifier', // TODO Redundant, change this structure
+    restCollectionName: 'publication-identifiers',
+    httpOptions: {
+      list: {
+        method: 'post',
+        url: `${config.apiBaseUrl}/publication-identifiers/search-external`
       }
     }
   },
@@ -53,6 +96,18 @@ const itemTypes = {
         url: `${config.apiBaseUrl}/raw-read-identifiers/search`
       }
     }
+  },
+  'assemblies': {
+    name: 'assemblies', // TODO Redundant, change this structure
+    restCollectionName: 'hgvs/assemblies'
+  },
+  'gene-names': {
+    name: 'gene-names', // TODO Redundant, change this structure
+    restCollectionName: 'hgvs/genes'
+  },
+  'grouped-assemblies': {
+    name: 'grouped-assemblies', // TODO Redundant, change this structure
+    restCollectionName: 'hgvs/grouped-assemblies'
   },
   'scoreSet': {
     name: 'scoreSet', // TODO Redundant, change this structure

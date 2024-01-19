@@ -11,20 +11,31 @@
           <!--<Button v-if="searchText && searchText.length > 0" class="mavedb-search-clear-button p-button-plain p-button-text" @click="clear"><i class="pi pi-times"/></Button>-->
           <Button class="p-button-plain" @click="clear">Clear All</Button>
         </span>
-        <div class="mavedb-search-filters">
-          <SelectList v-model="filterTargetNames" :options="targetNameFilterOptions" class="mavedb-search-filter-option-picker" title="Target name"  />
-          <SelectList v-model="filterTargetTypes" :options="targetTypeFilterOptions" class="mavedb-search-filter-option-picker" title="Target type"  />
-          <SelectList v-model="filterTargetOrganismNames" :options="targetOrganismFilterOptions" class="mavedb-search-filter-option-picker mavedb-organism-picker" title="Target organism"  />
-        </div>
+        <TabView class="mavedb-search-tabs">
+          <TabPanel header="Target filters">
+            <div class="mavedb-search-filters">
+              <SelectList v-model="filterTargetNames" :options="targetNameFilterOptions" class="mavedb-search-filter-option-picker" title="Target name"  />
+              <SelectList v-model="filterTargetTypes" :options="targetTypeFilterOptions" class="mavedb-search-filter-option-picker" title="Target type"  />
+              <SelectList v-model="filterTargetOrganismNames" :options="targetOrganismFilterOptions" class="mavedb-search-filter-option-picker mavedb-organism-picker" title="Target organism"  />
+              <SelectList v-model="filterTargetAccession" :options="targetAccessionFilterOptions" class="mavedb-search-filter-option-picker mavedb-organism-picker" title="Target accession"  />
+            </div>
+          </TabPanel>
+          <TabPanel header="Publication filters">
+            <div class="mavedb-search-filters">
+              <SelectList v-model="filterPublicationAuthors" :options="publicationAuthorFilterOptions" class="mavedb-search-filter-option-picker" title="Publication authors"  />
+              <SelectList v-model="filterPublicationDatabases" :options="publicationDatabaseFilterOptions" class="mavedb-search-filter-option-picker" title="Publication database"  />
+              <SelectList v-model="filterPublicationJournals" :options="publicationJournalFilterOptions" class="mavedb-search-filter-option-picker" title="Publication journal"  />
+            </div>
+          </TabPanel>
+        </TabView>
       </div>
-      <div class="mavedb-search-results">
-        <FlexDataTable
-            :data="publishedScoreSets"
-            :options="tableOptions"
-            :scrollX="true"
-            :scrollY="true"
-        />
-      </div>
+      <ScoreSetTable
+          :data="publishedScoreSets"
+          :language="language"
+          :loading="loading"
+          :scrollX="true"
+          :scrollY="true"
+      />
     </div>
   </DefaultLayout>
 </template>
@@ -32,193 +43,37 @@
 <script>
 
 import axios from 'axios'
-import $ from 'jquery'
 import _ from 'lodash'
 import InputText from 'primevue/inputtext'
 import config from '@/config'
-import FlexDataTable from '@/components/common/FlexDataTable'
+import ScoreSetTable from '@/components/ScoreSetTable'
 import SelectList from '@/components/common/SelectList'
 import DefaultLayout from '@/components/layout/DefaultLayout'
 import Button from 'primevue/button'
+import TabPanel from 'primevue/tabpanel'
+import TabView from 'primevue/tabview'
 import {debounce} from 'vue-debounce'
 
 export default {
   name: 'SearchView',
-  components: {DefaultLayout, FlexDataTable, InputText, SelectList, Button},
+  components: {DefaultLayout, ScoreSetTable, InputText, SelectList, TabView, TabPanel, Button},
 
   data: function() {
-    const self = this
     return {
-      defaultTargetNameOptions: [
-        {value: 'HSP90', badge: 12},
-        {value: 'Src catalytic domain', badge: 1},
-        {value: 'CXCR4', badge: 3},
-        {value: 'TP53 (P72R)', badge: 3},
-        {value: 'LDLR promoter', badge: 2},
-        {value: 'alpha-synuclein', badge: 12},
-        {value: 'MTHFR', badge: 8},
-        {value: 'CYP2C19', badge: 1},
-        {value: 'Ras', badge: 4},
-        {value: 'HBB promoter', badge: 1},
-        {value: 'RAF', badge: 9},
-        {value: 'VIM-2 with p.Met1_Phe2insGly', badge: 9},
-        {value: 'CALM1', badge: 2},
-        {value: 'UBE2I', badge: 4},
-        {value: 'MSH2', badge: 1},
-        {value: 'Minigene exon - hnRNPA1 binding site', badge: 1},
-        {value: 'BRCA1 RING domain', badge: 4},
-        {value: 'PKLR promoter', badge: 2},
-        {value: 'CYP2C9', badge: 1},
-        {value: 'C. cellulolyticum cohesin fragment', badge: 1},
-        {value: 'CBS', badge: 4},
-        {value: 'ZFAND3 enhancer', badge: 1},
-        {value: 'Minigene exon - SRSF1 (ASF/SF2) binding site', badge: 1},
-        {value: 'SUL1 promoter', badge: 2},
-        {value: 'S505N MPL', badge: 1},
-        {value: 'NUDT15', badge: 3},
-        {value: 'Minigene exon - SRSF7 (9G8) binding site', badge: 1},
-        {value: 'HA (H1N1)', badge: 1},
-        {value: 'Hsp82', badge: 1},
-        {value: 'E4B', badge: 3},
-        {value: 'Minigene exon - CG-containing enhancer', badge: 1},
-        {value: 'RET enhancer', badge: 1},
-        {value: 'Fis1 tail anchor', badge: 5},
-        {value: 'CcdB', badge: 1},
-        {value: 'NP, H3N2 Aichi/1968', badge: 2},
-        {value: 'Gal4', badge: 6},
-        {value: 'SORT1 enhancer', badge: 2},
-        {value: 'VKOR', badge: 2},
-        {value: 'TEM-1 β-lactamase', badge: 9},
-        {value: 'TPMT', badge: 1},
-        {value: 'avGFP', badge: 2},
-        {value: 'MPL', badge: 1},
-        {value: 'BRCA1 translation start through RING domain', badge: 1},
-        {value: 'C. thermocellum cohesin fragment', badge: 1},
-        {value: 'CD86', badge: 3},
-        {value: 'BRCA1', badge: 1},
-        {value: 'TECR', badge: 1},
-        {value: 'TARDBP', badge: 2},
-        {value: 'Aβ42', badge: 1},
-        {value: 'Minigene exon - hnRNP L binding site', badge: 1},
-        {value: 'LDLRAP1', badge: 2},
-        {value: 'Bovine S-arrestin', badge: 1},
-        {value: 'Dlg4 (PSD95_PDZ3)', badge: 2},
-        {value: 'ACE2', badge: 2},
-        {value: 'hYAP65 WW domain', badge: 2},
-        {value: 'HMGCR', badge: 3},
-        {value: 'TERT promoter', badge: 4},
-        {value: 'ALDOB enhancer', badge: 1},
-        {value: 'Glycophorin A', badge: 1},
-        {value: 'DHFR', badge: 2},
-        {value: 'ZRS enhancer', badge: 2},
-        {value: 'NP', badge: 1},
-        {value: 'CCR5', badge: 3},
-        {value: 'Src SH4 domain', badge: 1},
-        {value: 'PSD95 PDZ3', badge: 2},
-        {value: 'LamB', badge: 2},
-        {value: 'PTEN', badge: 2},
-        {value: 'IRF6 enhancer', badge: 1},
-        {value: 'EGFP', badge: 1},
-        {value: 'human L-Selectin', badge: 1},
-        {value: 'GDI1', badge: 1},
-        {value: 'IRF4 enhancer', badge: 1},
-        {value: 'NP, H1N1 PR/1934', badge: 1},
-        {value: 'p53', badge: 1},
-        {value: 'Minigene exon - AC-rich enhancer', badge: 1},
-        {value: 'SpCas9 (Human Codon Optimized)', badge: 2},
-        {value: 'PAB1', badge: 1},
-        {value: 'F9 promoter', badge: 1},
-        {value: 'MYC enhancer (rs6983267)', badge: 1},
-        {value: 'Gcn4', badge: 2},
-        {value: 'NCS1', badge: 1},
-        {value: 'MYC enhancer (rs11986220)', badge: 1},
-        {value: 'Minigene exon - pyrimidine sequence', badge: 1},
-        {value: 'Minigene exon - hnRNP D binding site', badge: 1},
-        {value: 'HBG1 promoter', badge: 1},
-        {value: 'Ubiquitin', badge: 4},
-        {value: 'BCL11A enhancer', badge: 1},
-        {value: 'Zika E protein MR766', badge: 1},
-        {value: 'SUMO1', badge: 2},
-        {value: 'LTV1 enhancer', badge: 2},
-        {value: 'TPK1', badge: 2},
-        {value: 'TEM-15 β-lactamase', badge: 2},
-        {value: 'SARS-CoV-2 receptor binding domain', badge: 4},
-        {value: 'TEM-19 β-lactamase', badge: 1},
-        {value: 'GP1BB promoter', badge: 1},
-        {value: 'Minigene exon - hnRNP I (PTB) binding site', badge: 1},
-        {value: 'UC88 enhancer', badge: 1},
-        {value: 'HNF4A promoter', badge: 1},
-        {value: 'ECR11 enhancer', badge: 1},
-        {value: 'TEM-17 β-lactamase', badge: 1},
-        {value: 'BRAF', badge: 1},
-        {value: 'FOXE1 promoter', badge: 1},
-        {value: 'ErbB2', badge: 1},
-        {value: 'SORT1 enhancer (flipped)', badge: 1},
-        {value: 'TCF7L2 enhancer', badge: 1},
-        {value: 'PyKS', badge: 1},
-        {value: 'Minigene exon - Wilms’ tumor gene', badge: 1},
-        {value: 'MSMB promoter', badge: 1},
-        {value: 'IGHG1', badge: 1}
-      ],
-      defaultTargetTypeOptions: [
-        {value: 'Other noncoding', badge: 10},
-        {value: 'Protein coding', badge: 185},
-        {value: 'Regulatory', badge: 35}
-      ],
-      defaultTargetOrganismOptions: [
-        {value: 'Homo sapiens', badge: 143},
-        {value: 'Mus musculus', badge: 5},
-        {value: 'Aequorea victoria', badge: 49},
-        {value: 'Saccharomyces cerevisiae S288C', badge: 33}
-      ],
       filterTargetNames: this.$route.query['target-names'] ? this.$route.query['target-names'].split(',') : [],
       filterTargetTypes: this.$route.query['target-types'] ? this.$route.query['target-types'].split(',') : [],
       filterTargetOrganismNames: this.$route.query['target-organism-names'] ? this.$route.query['target-organism-names'].split(',') : [],
+      filterTargetAccession: this.$route.query['target-accessions'] ? this.$route.query['target-accessions'].split(',') : [],
+      filterPublicationAuthors: this.$route.query['publication-authors'] ? this.$route.query['publication-authors'] : [],
+      filterPublicationDatabases: this.$route.query['publication-databases'] ? this.$route.query['publication-databases'].split(',') : [],
+      filterPublicationJournals: this.$route.query['publication-journals'] ? this.$route.query['publication-journals'].split(',') : [],
+      loading: false,
       searchText: this.$route.query.search,
       scoreSets: [],
       publishedScoreSets: [],
-      tableOptions: {
-        columns: [
-          {
-            data: 'urn',
-            title: 'URN',
-            width: '17.5%',
-            render: function (data) { // }, type, row) {
-              var urn = data
-              var urnDisplay = urn  // row['urnDisplay']
-              const url = self.$router.resolve({path: `/score-sets/${urn}`}).href
-              return ('<a href="' + url + '">' + urnDisplay + '</a>')  // TODO Escape the text.
-            },
-          },
-          {data: 'shortDescription', title: 'Description', width: '40%'},
-          {data: (x) => _.get(x, 'targetGene.name', null), title: 'Target'},
-          {data: (x) => _.get(x, 'targetGene.category', null), title: 'Target type'},
-          {data: (x) => _.get(
-            _.get(x, 'targetGene.taxonomy', null),
-                // .find((rm) => rm.isPrimary),
-            'organismName'
-          ), title: 'Target organism'},
-        ],
-        language: {
-          emptyTable: 'Type in the search box above or use the filters to find a data set.'
-        },
-        rowGroup: {
-          dataSrc: 'experiment.urn',
-          startRender: function(rows, group) {
-            const experimentUrn = group
-            const experimentUrnDisplay = experimentUrn // rows.data()[0]['parentUrnDisplay']
-            const experimentDescription = _.get(rows.data()[0], 'shortDescription', null)
-            const url = self.$router.resolve({path: `/experiments/${experimentUrn}`}).href
-
-            const link = ('<a href="' + url + '">' + experimentUrnDisplay + '</a>');
-
-            return $('<tr/>').append(
-              '<td colSpan="1">' + link + '</td>').append('<td colSpan="4">' + experimentDescription + '</td>'
-            )
-          },
-        },
-        searching: false
-      }
+      language: {
+        emptyTable: 'Type in the search box above or use the filters to find a data set.'
+      },
     }
   },
   computed: {
@@ -227,31 +82,96 @@ export default {
     },
     targetNameFilterOptions: function() {
       if (this.scoreSets.length > 0) {
-        const values = this.scoreSets.map((s) => _.get(s, 'targetGene.name'))
+        const values = this.scoreSets.map((s) => s.targetGenes.map((t) => _.get(t, 'name')))
         const valueFrequencies = _.countBy(values)
         return _.sortBy(_.keys(valueFrequencies)).map((value) => ({value, badge: valueFrequencies[value]}))
       } else {
-        return this.defaultTargetNameOptions
+        return null
       }
     },
     targetOrganismFilterOptions: function() {
       if (this.scoreSets.length > 0) {
-        var allScoreSets = this.scoreSets.map((s) => _.get(s, 'targetGene.taxonomy.organismName'))
-        // Remove Undefined and null values
-        const values  = allScoreSets.filter(item => !!item)
+        const values = this.scoreSets.map((s) => _.concat(s.targetGenes.map((t) => _.get(t, 'targetSequence.taxonomy.organismName', 'Accession Based Scoresets'))).flat()).flat()
         const valueFrequencies = _.countBy(values)
         return _.sortBy(_.keys(valueFrequencies)).map((value) => ({value, badge: valueFrequencies[value]}))
       } else {
-        return this.defaultTargetOrganismOptions
+        return null
+      }
+    },
+    targetAccessionFilterOptions: function() {
+      if (this.scoreSets.length > 0) {
+        const values = this.scoreSets.map((s) => _.concat(s.targetGenes.map((t) => _.get(t, 'targetAccession.accession', 'Sequence Based Scoresets'))).flat()).flat()
+        const valueFrequencies = _.countBy(values)
+        return _.sortBy(_.keys(valueFrequencies)).map((value) => ({value, badge: valueFrequencies[value]}))
+      } else {
+        return null
       }
     },
     targetTypeFilterOptions: function() {
       if (this.scoreSets.length > 0) {
-        const values = this.scoreSets.map((s) => _.get(s, 'targetGene.category'))
+        const values = this.scoreSets.map((s) => _.concat(s.targetGenes.map((t) => _.get(t, 'category'))).flat()).flat()
         const valueFrequencies = _.countBy(values)
         return _.sortBy(_.keys(valueFrequencies)).map((value) => ({value, badge: valueFrequencies[value]}))
       } else {
-        return this.defaultTargetTypeOptions
+        return null
+      }
+    },
+    publicationAuthorFilterOptions: function() {
+      if (this.scoreSets.length > 0) {
+        // map each scoreSets associated identifiers,
+        // then map each publications authors' names,
+        // then concatenate these names together, flatten them,
+        // and flatten the list of lists of author names (:O)
+        const values = this.scoreSets.map(
+          (s) => _.concat(
+            _.get(s, 'primaryPublicationIdentifiers').map(
+              (p) => _.get(p, 'authors').map(
+                (a) => _.get(a, 'name'))),
+            _.get(s, 'secondaryPublicationIdentifiers').map(
+              (p) => _.get(p, 'authors').map(
+                (a) => _.get(a, 'name')))
+          ).flat()
+        ).flat()
+        const valueFrequencies = _.countBy(values)
+        return _.sortBy(_.keys(valueFrequencies)).map((value) => ({value, badge: valueFrequencies[value]}))
+      } else {
+        return null
+      }
+    },
+    publicationDatabaseFilterOptions: function() {
+      if (this.scoreSets.length > 0) {
+        const values = this.scoreSets.map(
+          (s) => _.uniq(
+            _.concat(
+              _.get(s, 'primaryPublicationIdentifiers').map(
+                (p) => _.get(p, 'dbName')),
+              _.get(s, 'secondaryPublicationIdentifiers').map(
+                (p) => _.get(p, 'dbName'))
+            ).flat()
+          )
+        ).flat()
+        const valueFrequencies = _.countBy(values)
+        return _.sortBy(_.keys(valueFrequencies)).map((value) => ({value, badge: valueFrequencies[value]}))
+      } else {
+        return null
+      }
+    },
+    publicationJournalFilterOptions: function() {
+      if (this.scoreSets.length > 0) {
+        const values = this.scoreSets.map(
+          (s) => _.uniq(
+            _.concat(
+              _.get(s, 'primaryPublicationIdentifiers').map(
+                (p) => _.get(p, 'publicationJournal')),
+              _.get(s, 'secondaryPublicationIdentifiers').map(
+                (p) => _.get(p, 'publicationJournal'))
+            ).flat()
+          )
+        ).flat()
+        const valueFrequencies = _.countBy(values)
+        return _.sortBy(_.keys(valueFrequencies)).map((value) => ({value, badge: valueFrequencies[value]}))
+      } else {
+        return null
       }
     }
   },
@@ -273,7 +193,35 @@ export default {
         }
       }
     },
+    filterTargetAccession: {
+      handler: function(oldValue, newValue) {
+        if (oldValue != newValue) {
+          this.debouncedSearch()
+        }
+      }
+    },
     filterTargetTypes: {
+      handler: function(oldValue, newValue) {
+        if (oldValue != newValue) {
+          this.debouncedSearch()
+        }
+      }
+    },
+    filterPublicationAuthors: {
+      handler: function(oldValue, newValue) {
+        if (oldValue != newValue) {
+          this.debouncedSearch()
+        }
+      }
+    },
+    filterPublicationDatabases: {
+      handler: function(oldValue, newValue) {
+        if (oldValue != newValue) {
+          this.debouncedSearch()
+        }
+      }
+    },
+    filterPublicationJournals: {
       handler: function(oldValue, newValue) {
         if (oldValue != newValue) {
           this.debouncedSearch()
@@ -303,7 +251,7 @@ export default {
     '$route.query.target-names': {
       handler: function(newValue, oldValue) {
         if (newValue != oldValue) {
-          this.filterTargetNames = newValue ? newValue.split(',') : null
+          this.filterTargetNames = newValue ? newValue.split(',') : []
         }
       },
       immediate: true
@@ -311,7 +259,7 @@ export default {
     '$route.query.target-types': {
       handler: function(newValue, oldValue) {
         if (newValue != oldValue) {
-          this.filterTargetTypes = newValue ? newValue.split(',') : null
+          this.filterTargetTypes = newValue ? newValue.split(',') : []
         }
       },
       immediate: true
@@ -319,7 +267,39 @@ export default {
     '$route.query.target-organism-names': {
       handler: function(newValue, oldValue) {
         if (newValue != oldValue) {
-          this.filterTargetOrganismNames = newValue ? newValue.split(',') : null
+          this.filterTargetOrganismNames = newValue ? newValue.split(',') : []
+        }
+      },
+      immediate: true
+    },
+    '$route.query.target-accessions': {
+      handler: function(newValue, oldValue) {
+        if (newValue != oldValue) {
+          this.filterTargetAccession = newValue ? newValue.split(',') : []
+        }
+      },
+      immediate: true
+    },
+    '$route.query.publication-authors': {
+      handler: function(newValue, oldValue) {
+        if (newValue != oldValue) {
+          this.filterPublicationAuthors = newValue ? newValue : []
+        }
+      },
+      immediate: true
+    },
+    '$route.query.publication-databases': {
+      handler: function(newValue, oldValue) {
+        if (newValue != oldValue) {
+          this.filterPublicationDatabases = newValue ? newValue.split(',') : []
+        }
+      },
+      immediate: true
+    },
+    '$route.query.publication-journals': {
+      handler: function(newValue, oldValue) {
+        if (newValue != oldValue) {
+          this.filterPublicationJournals = newValue ? newValue.split(',') : []
         }
       },
       immediate: true
@@ -334,16 +314,22 @@ export default {
         ...(this.searchText && this.searchText.length > 0) ? {search: this.searchText} : {},
         ...(this.filterTargetNames.length > 0) ? {'target-names': this.filterTargetNames.join(',')} : {},
         ...(this.filterTargetTypes.length > 0) ? {'target-types': this.filterTargetTypes.join(',')} : {},
-        ...(this.filterTargetOrganismNames.length > 0) ? {'target-namorganism-nameses': this.filterTargetOrganismNames.join(',')} : {}
+        ...(this.filterTargetOrganismNames.length > 0) ? {'target-organism-names': this.filterTargetOrganismNames.join(',')} : {},
+        ...(this.filterTargetAccession.length > 0) ? {'target-accessions': this.filterTargetAccession.join(',')} : {},
+        ...(this.filterPublicationAuthors.length > 0) ? {'publication-authors': this.filterPublicationAuthors} : {},
+        ...(this.filterPublicationDatabases.length > 0) ? {'publication-databases': this.filterPublicationDatabases.join(',')} : {},
+        ...(this.filterPublicationJournals.length > 0) ? {'publication-journals': this.filterPublicationJournals.join(',')} : {}
       }})
+      this.loading = true;
       await this.fetchSearchResults()
-      /*      
+      /*URL
       if (this.searchText && this.searchText.length > 0) {
         await this.fetchSearchResults()
       } else {
         this.scoreSets = []
       }
       */
+     this.loading = false;
     },
     fetchSearchResults: async function() {
       try {
@@ -353,7 +339,11 @@ export default {
             text: this.searchText || null,
             targets: this.filterTargetNames.length > 0 ? this.filterTargetNames : null,
             targetOrganismNames: this.filterTargetOrganismNames.length > 0 ? this.filterTargetOrganismNames : null,
-            targetTypes: this.filterTargetTypes.length > 0 ? this.filterTargetTypes : null
+            targetAccessions: this.filterTargetAccession.length > 0 ? this.filterTargetAccession : null,
+            targetTypes: this.filterTargetTypes.length > 0 ? this.filterTargetTypes : null,
+            authors: this.filterPublicationAuthors.length > 0 ? this.filterPublicationAuthors : null,
+            databases: this.filterPublicationDatabases.length > 0 ? this.filterPublicationDatabases : null,
+            journals: this.filterPublicationJournals.length > 0 ? this.filterPublicationJournals : null
           },
           {
             headers: {
@@ -380,8 +370,12 @@ export default {
     clear: function() {
       this.searchText = null
       this.filterTargetNames = []
-      this.filterTargetTypes = [] 
+      this.filterTargetTypes = []
       this.filterTargetOrganismNames = []
+      this.filterTargetAccession = []
+      this.filterPublicationAuthors = []
+      this.filterPublicationDatabases = []
+      this.filterPublicationJournals = []
     }
   }
 }
@@ -415,17 +409,23 @@ export default {
   text-align: center;
 }
 
+.mavedb-search-tabs {
+  flex: 0 0 auto;
+  padding: 10px 0;
+  text-align: center;
+}
+
 .mavedb-search-filters {
   display: flex;
   flex-direction: row;
-  justify-content: space-around;
+  justify-content: space-evenly;
   max-width: 1000px;
   margin: 10px auto;
 }
 
 .mavedb-search-filter-option-picker {
   max-width: 300px;
-  width: 30%;
+  width: 24%;
 }
 
 .mavedb-organism-picker::v-deep .p-listbox-item {
@@ -433,55 +433,6 @@ export default {
 }
 
 .mavedb-organism-picker::v-deep .p-listbox-item .p-badge {
-  font-style: normal;
-}
-
-.mavedb-search-results {
-  flex: 1 1 400px;
-  position: relative;
-}
-
-/* Table */
-
-/* Override control bar padding applied in FlexDataTable. */
-.mavedb-search-results::v-deep .samplify-data-table .dataTables_wrapper {
-  padding-top: 0;
-}
-
-/* Override background applied in FlexDataTable. */
-.mavedb-search-results::v-deep .samplify-data-table .dataTables_wrapper {
-  background-color: #fff;
-}
-
-.mavedb-search-results::v-deep .samplify-data-table thead th {
-  background-color: #dadff1;
-}
-
-.mavedb-search-results::v-deep .samplify-data-table td,
-.mavedb-search-results::v-deep .samplify-data-table th {
-  padding: 0.75rem;
-  border: 1px solid #fff;
-  font-size: 14px;
-}
-
-.mavedb-search-results::v-deep .samplify-data-table td:first-child {
-  padding-left: 2em;
-}
-
-.mavedb-search-results::v-deep .samplify-data-table td:last-child {
-  font-style: italic;
-}
-
-.mavedb-search-results::v-deep .samplify-data-table tr.samplify-data-table-group-row {
-  background-color: #eeeeee;
-  font-weight: bold;
-}
-
-.mavedb-search-results::v-deep .samplify-data-table tr.samplify-data-table-group-row td:first-child {
-  padding-left: 0.75rem;
-}
-
-.mavedb-search-results::v-deep .samplify-data-table tr.samplify-data-table-group-row td:last-child {
   font-style: normal;
 }
 

@@ -1,19 +1,18 @@
-
 <!DOCTYPE html>
 
-<html lang="en">
+<html lang="en" data-content_root="./">
   <head>
     <meta charset="utf-8" />
-    <meta name="viewport" content="width=device-width, initial-scale=1.0" /><meta name="generator" content="Docutils 0.19: https://docutils.sourceforge.io/" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" /><meta name="viewport" content="width=device-width, initial-scale=1" />
 
-    <title>Target sequence information &#8212; MaveDB 2.1.0 documentation</title>
-    <link rel="stylesheet" type="text/css" href="_static/pygments.css" />
-    <link rel="stylesheet" type="text/css" href="_static/pyramid.css" />
-    <link rel="stylesheet" type="text/css" href="_static/graphviz.css" />
-    <link rel="stylesheet" type="text/css" href="_static/styles.css" />
-    <script data-url_root="./" id="documentation_options" src="_static/documentation_options.js"></script>
-    <script src="_static/doctools.js"></script>
-    <script src="_static/sphinx_highlight.js"></script>
+    <title>Target sequence information &#8212; MaveDB 2023.2.0 documentation</title>
+    <link rel="stylesheet" type="text/css" href="_static/pygments.css?v=4848ba22" />
+    <link rel="stylesheet" type="text/css" href="_static/pyramid.css?v=a5b9c134" />
+    <link rel="stylesheet" type="text/css" href="_static/graphviz.css?v=eafc0fe6" />
+    <link rel="stylesheet" type="text/css" href="_static/styles.css?v=1cacb62a" />
+    <script src="_static/documentation_options.js?v=953b8078"></script>
+    <script src="_static/doctools.js?v=888ff710"></script>
+    <script src="_static/sphinx_highlight.js?v=dc90522c"></script>
     <link rel="index" title="Index" href="genindex.html" />
     <link rel="search" title="Search" href="search.html" />
     <link rel="next" title="MaveDB accession numbers" href="accession_numbers.html" />
@@ -38,7 +37,7 @@
         <li class="right" >
           <a href="data_formats.html" title="Data table formats"
              accesskey="P">previous</a> |</li>
-        <li class="nav-item nav-item-0"><a href="index.html">MaveDB 2.1.0 documentation</a> &#187;</li>
+        <li class="nav-item nav-item-0"><a href="index.html">MaveDB 2023.2.0 documentation</a> &#187;</li>
         <li class="nav-item nav-item-this"><a href="">Target sequence information</a></li> 
       </ul>
     </div>  
@@ -49,7 +48,7 @@
           <div class="body" role="main">
             
   <section id="target-sequence-information">
-<h1>Target sequence information<a class="headerlink" href="#target-sequence-information" title="Permalink to this heading">¶</a></h1>
+<h1>Target sequence information<a class="headerlink" href="#target-sequence-information" title="Link to this heading">¶</a></h1>
 <p>All variants in a MaveDB <a class="reference internal" href="record_types.html#score-sets"><span class="std std-ref">score set</span></a> are described relative to a target sequence.
 This target sequence should be the sequence that was mutagenized to create the variant library.</p>
 <p>For datasets that target a single functional domain, only that part of the gene should be included as the target.
@@ -75,7 +74,7 @@ If the target sequence provided to MaveDB starts partway through the linked sequ
 (such as an assay targeting a single functional domain), the target should have an “offset” term.
 The offset is the integer value that should be added to the MaveDB coordinates
 (which are relative to the target sequence) in order to match the coordinates in the linked sequence.</p>
-<p>For example, the target sequence for <a class="reference external" href="https://mavedb.org/score-sets/urn:mavedb:00000002-a-1/">urn:mavedb:00000002-a-1</a>
+<p>For example, the target sequence for <a class="reference external" href="https://mavedb.org/#/score-sets/urn:mavedb:00000002-a-1/">urn:mavedb:00000002-a-1</a>
 is a codon optimized version of the WW domain of YAP1.
 This corresponds to UniProt identifier <a class="reference external" href="https://www.uniprot.org/uniprot/P46937">P46937</a> with offset 169,
 meaning that position 1 in the MaveDB score set is position 170 in the UniProt sequence.</p>
@@ -131,13 +130,13 @@ meaning that position 1 in the MaveDB score set is position 170 in the UniProt s
         <li class="right" >
           <a href="data_formats.html" title="Data table formats"
              >previous</a> |</li>
-        <li class="nav-item nav-item-0"><a href="index.html">MaveDB 2.1.0 documentation</a> &#187;</li>
+        <li class="nav-item nav-item-0"><a href="index.html">MaveDB 2023.2.0 documentation</a> &#187;</li>
         <li class="nav-item nav-item-this"><a href="">Target sequence information</a></li> 
       </ul>
     </div>
     <div class="footer" role="contentinfo">
-        &#169; Copyright 2017-2021, Alan F Rubin and Daniel C Esposito.
-      Created using <a href="https://www.sphinx-doc.org/">Sphinx</a> 6.1.3.
+    &#169; Copyright 2017-2023, Alan F Rubin et al..
+      Created using <a href="https://www.sphinx-doc.org/">Sphinx</a> 7.2.6.
     </div>
   </body>
 </html>

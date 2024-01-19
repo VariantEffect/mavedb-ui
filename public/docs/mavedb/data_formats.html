@@ -1,19 +1,18 @@
-
 <!DOCTYPE html>
 
-<html lang="en">
+<html lang="en" data-content_root="./">
   <head>
     <meta charset="utf-8" />
-    <meta name="viewport" content="width=device-width, initial-scale=1.0" /><meta name="generator" content="Docutils 0.19: https://docutils.sourceforge.io/" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" /><meta name="viewport" content="width=device-width, initial-scale=1" />
 
-    <title>Data table formats &#8212; MaveDB 2.1.0 documentation</title>
-    <link rel="stylesheet" type="text/css" href="_static/pygments.css" />
-    <link rel="stylesheet" type="text/css" href="_static/pyramid.css" />
-    <link rel="stylesheet" type="text/css" href="_static/graphviz.css" />
-    <link rel="stylesheet" type="text/css" href="_static/styles.css" />
-    <script data-url_root="./" id="documentation_options" src="_static/documentation_options.js"></script>
-    <script src="_static/doctools.js"></script>
-    <script src="_static/sphinx_highlight.js"></script>
+    <title>Data table formats &#8212; MaveDB 2023.2.0 documentation</title>
+    <link rel="stylesheet" type="text/css" href="_static/pygments.css?v=4848ba22" />
+    <link rel="stylesheet" type="text/css" href="_static/pyramid.css?v=a5b9c134" />
+    <link rel="stylesheet" type="text/css" href="_static/graphviz.css?v=eafc0fe6" />
+    <link rel="stylesheet" type="text/css" href="_static/styles.css?v=1cacb62a" />
+    <script src="_static/documentation_options.js?v=953b8078"></script>
+    <script src="_static/doctools.js?v=888ff710"></script>
+    <script src="_static/sphinx_highlight.js?v=dc90522c"></script>
     <link rel="index" title="Index" href="genindex.html" />
     <link rel="search" title="Search" href="search.html" />
     <link rel="next" title="Target sequence information" href="target_sequences.html" />
@@ -38,7 +37,7 @@
         <li class="right" >
           <a href="record_types.html" title="Record types"
              accesskey="P">previous</a> |</li>
-        <li class="nav-item nav-item-0"><a href="index.html">MaveDB 2.1.0 documentation</a> &#187;</li>
+        <li class="nav-item nav-item-0"><a href="index.html">MaveDB 2023.2.0 documentation</a> &#187;</li>
         <li class="nav-item nav-item-this"><a href="">Data table formats</a></li> 
       </ul>
     </div>  
@@ -49,12 +48,12 @@
           <div class="body" role="main">
             
   <section id="data-table-formats">
-<h1>Data table formats<a class="headerlink" href="#data-table-formats" title="Permalink to this heading">¶</a></h1>
+<h1>Data table formats<a class="headerlink" href="#data-table-formats" title="Link to this heading">¶</a></h1>
 <p>MaveDB accepts and provides data tables in CSV format.
 Each row of the data table describes a single variant, and variants are described using <a class="reference external" href="https://www.mavedb.org/docs/mavehgvs">MAVE-HGVS</a> format.
 All other columns are expected to be floating point values.</p>
 <section id="variant-columns">
-<h2>Variant columns<a class="headerlink" href="#variant-columns" title="Permalink to this heading">¶</a></h2>
+<h2>Variant columns<a class="headerlink" href="#variant-columns" title="Link to this heading">¶</a></h2>
 <p>For both score and count data tables, there are three variant columns:</p>
 <ul class="simple">
 <li><p><code class="docutils literal notranslate"><span class="pre">hgvs_nt</span></code> describes variants with respect to the nucleotide <a class="reference internal" href="target_sequences.html#target-sequence-information"><span class="std std-ref">target sequence</span></a></p></li>
@@ -68,7 +67,7 @@ Otherwise, <code class="docutils literal notranslate"><span class="pre">hgvs_pro
 <div class="admonition note">
 <p class="admonition-title">Note</p>
 <p>Datasets with only <code class="docutils literal notranslate"><span class="pre">hgvs_pro</span></code> variants can specify nucleotide target sequences.
-In this case, the target sequence will be translated using the
+The target sequence will be translated using the
 <a class="reference external" href="https://www.ncbi.nlm.nih.gov/Taxonomy/Utils/wprintgc.cgi?chapter=cgencodes#SG1">standard amino acid translation table</a> for validation.</p>
 </div>
 <p>The <code class="docutils literal notranslate"><span class="pre">hgvs_tx</span></code> variants are not validated against a transcript model or target sequence.
@@ -77,7 +76,7 @@ Datasets that use <code class="docutils literal notranslate"><span class="pre">h
 and the <code class="docutils literal notranslate"><span class="pre">hgvs_nt</span></code> variants must use the <code class="docutils literal notranslate"><span class="pre">'g.'</span></code> prefix.</p>
 </section>
 <section id="score-table-columns">
-<h2>Score table columns<a class="headerlink" href="#score-table-columns" title="Permalink to this heading">¶</a></h2>
+<h2>Score table columns<a class="headerlink" href="#score-table-columns" title="Link to this heading">¶</a></h2>
 <p>All score tables must have a column named <code class="docutils literal notranslate"><span class="pre">score</span></code> that describes the score of that variant in the assay.
 Score tables may have any number of additional numeric columns.</p>
 <p>Suggested numeric columns include a standard deviation or variance,
@@ -90,16 +89,16 @@ we recommend encoding the categories as integers and describing the mapping betw
 <a class="reference internal" href="upload_guide.html#free-text-metadata"><span class="std std-ref">free text methods</span></a>.
 Support for additional data columns with string data will be added in a future version to support this use case.</p>
 <section id="score-table-examples">
-<h3>Score table examples<a class="headerlink" href="#score-table-examples" title="Permalink to this heading">¶</a></h3>
+<h3>Score table examples<a class="headerlink" href="#score-table-examples" title="Link to this heading">¶</a></h3>
 <p>Here is a short excerpt from the score table for
-<a class="reference external" href="https://mavedb.org/score-sets/urn:mavedb:00000003-a-1/">urn:mavedb:00000003-a-1</a>.</p>
+<a class="reference external" href="https://mavedb.org/#/score-sets/urn:mavedb:00000003-a-1/">urn:mavedb:00000003-a-1</a>.</p>
 <p>That this dataset uses <code class="docutils literal notranslate"><span class="pre">hgvs_nt</span></code> as the primary variant key.
 It has several additional data columns with the scores and error estimates for multiple biological replicates.</p>
 <p>Note that some variants do not have a score.
 This is permitted (and encouraged) as long as there is some data provided for that variant,
 such as a score in an individual replicate or some counts.</p>
 <table class="docutils align-default" id="id1">
-<caption><span class="caption-number">Table 1 </span><span class="caption-text">Example Score Data</span><a class="headerlink" href="#id1" title="Permalink to this table">¶</a></caption>
+<caption><span class="caption-number">Table 1 </span><span class="caption-text">Example Score Data</span><a class="headerlink" href="#id1" title="Link to this table">¶</a></caption>
 <thead>
 <tr class="row-odd"><th class="head"><p>hgvs_nt</p></th>
 <th class="head"><p>hgvs_splice</p></th>
@@ -355,7 +354,7 @@ such as a score in an individual replicate or some counts.</p>
 </section>
 </section>
 <section id="count-table-columns">
-<h2>Count table columns<a class="headerlink" href="#count-table-columns" title="Permalink to this heading">¶</a></h2>
+<h2>Count table columns<a class="headerlink" href="#count-table-columns" title="Link to this heading">¶</a></h2>
 <p>Count data are optional for MaveDB score sets, but are recommended.</p>
 <p>There are no required columns for count data,
 but uploaders should decide on an intuitive naming convention for the column names and describe it in the
@@ -428,13 +427,13 @@ but uploaders should decide on an intuitive naming convention for the column nam
         <li class="right" >
           <a href="record_types.html" title="Record types"
              >previous</a> |</li>
-        <li class="nav-item nav-item-0"><a href="index.html">MaveDB 2.1.0 documentation</a> &#187;</li>
+        <li class="nav-item nav-item-0"><a href="index.html">MaveDB 2023.2.0 documentation</a> &#187;</li>
         <li class="nav-item nav-item-this"><a href="">Data table formats</a></li> 
       </ul>
     </div>
     <div class="footer" role="contentinfo">
-        &#169; Copyright 2017-2021, Alan F Rubin and Daniel C Esposito.
-      Created using <a href="https://www.sphinx-doc.org/">Sphinx</a> 6.1.3.
+    &#169; Copyright 2017-2023, Alan F Rubin et al..
+      Created using <a href="https://www.sphinx-doc.org/">Sphinx</a> 7.2.6.
     </div>
   </body>
 </html>

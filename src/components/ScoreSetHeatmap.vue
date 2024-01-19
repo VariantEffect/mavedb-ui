@@ -99,9 +99,10 @@ export default {
     simpleAndWtVariants: function() {
       return [...this.simpleVariants || [], ...this.wtVariants || []]
     },
+    // TODO: Swappable targets
     wtAminoAcids: function() {
-      const wtDnaSequenceType = _.get(this.scoreSet, 'targetGene.wtSequence.sequenceType')
-      const wtDnaSequence = _.get(this.scoreSet, 'targetGene.wtSequence.sequence')
+      const wtDnaSequenceType = _.get(this.scoreSet, 'targetGenes[0].targetSequence.sequenceType')
+      const wtDnaSequence = _.get(this.scoreSet, 'targetGenes[0].targetSequence.sequence')
       if (!wtDnaSequence || wtDnaSequenceType != 'dna') {
         return []
       }

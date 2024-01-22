@@ -1267,7 +1267,6 @@ export default {
         }
         this.referenceGenome = this.item.referenceGenome
         this.assembly = this.item.assembly
-        this.geneName = this.item.geneName
         this.targetGenes = this.item.targetGenes
         this.extraMetadata = this.item.extraMetadata
       } else {

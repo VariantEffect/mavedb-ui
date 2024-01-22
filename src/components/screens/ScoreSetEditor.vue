@@ -349,7 +349,7 @@
                       <div class="field field-columns">
                         <div class="field-column">
                           <span class="p-float-label">
-                            <InputText v-model="targetGene.name" :id="$scopedId('input-targetGeneName')" />
+                            <InputText v-model="targetGene.name" :id="$scopedId('input-targetGeneName')" style="width: 100%"/>
                             <label :for="$scopedId('input-targetGene')">Target gene name</label>
                           </span>
                         </div>
@@ -357,7 +357,7 @@
                           <span class="p-float-label">
                             <!-- Assembly is the reference genome property in coordinate cases -->
                             <Dropdown v-model="assembly" :id="$scopedId('input-targetGeneAssembly')" :options="assemblies"
-                              optionGroupLabel="type" optionGroupChildren="assemblies">
+                              optionGroupLabel="type" optionGroupChildren="assemblies" style="width: 100%">
                               <template #optiongroup="slotProps">
                                 <div class="flex align-items-center dropdown-option-group">
                                   <div>{{ slotProps.option.type }}</div>
@@ -372,7 +372,7 @@
                           <span class="p-float-label">
                             <Dropdown v-model="geneName" :id="$scopedId('input-targetGeneGeneNames')"
                               :options="geneNamesAsObject" optionLabel="name" filter
-                              :virtualScrollerOptions="{ itemSize: 50 }" @change="autofillGeneName" />
+                              :virtualScrollerOptions="{ itemSize: 50 }" @change="autofillGeneName" style="width: 100%"/>
                             <label :for="$scopedId('input-targetGeneAssembly')">HGNC Name</label>
                           </span>
                         </div>
@@ -706,7 +706,11 @@ export default {
     },
     referenceGenome: null,
     assembly: null,
+    assemblySuggestions: [],
+    assemblyDropdownValue: null,
     geneName: null,
+    geneNameAccessionSuggestions: [],
+    geneNameDropdownValue: null,
     targetOptions: ["Assembly", "HGNC"],
     targetAutocomplete: 'HGNC',
     extraMetadata: {},
@@ -781,7 +785,7 @@ export default {
       else {
         return this.geneNames.map(name => ({ name }))
       }
-    }
+    },
   },
 
   watch: {
@@ -846,7 +850,29 @@ export default {
           this.licenseId = this.defaultLicenseId
         }
       }
-    }
+    },
+    geneName: {
+      handler: async function(newValue, oldValue) {
+        if (newValue == oldValue) {
+          return;
+        }
+        this.geneNameDropdownValue = this.geneName?.name || null
+        if (this.geneNameDropdownValue) {
+          this.geneNameAccessionSuggestions = await this.fetchTargetAccessionsByGene(this.geneNameDropdownValue)
+        }
+      }
+    },
+    assembly: {
+      handler: async function(newValue, oldValue) {
+        if (newValue == oldValue) {
+          return;
+        }
+        this.assemblyDropdownValue = this.assembly?.trim() || null
+        if (this.assemblyDropdownValue) {
+          this.assemblySuggestions = await this.fetchTargetAccessionsByAssembly(this.assemblyDropdownValue)
+        }
+      }
+    },
   },
 
   methods: {
@@ -897,16 +923,14 @@ export default {
     },
 
     fetchTargetAccessions: async function (event) {
-      if (this.targetAutocomplete == 'Assembly') {
-        const assembly = this.assembly?.trim() || null
-        if (assembly) {
-          this.targetGeneAccessionSuggestions = await this.fetchTargetAccessionsByAssembly(assembly)
+      if (this.targetAutocomplete == 'Assembly' ) {
+        if (this.assemblyDropdownValue) {
+          this.targetGeneAccessionSuggestions = this.assemblySuggestions
         }
       }
       else {
-        const gene = this.geneName?.name || null
-        if (gene) {
-          this.targetGeneAccessionSuggestions = await this.fetchTargetAccessionsByGene(gene)
+        if (this.geneNameDropdownValue) {
+          this.targetGeneAccessionSuggestions = this.geneNameAccessionSuggestions
         }
       }
 
@@ -1264,6 +1288,11 @@ export default {
         this.targetGenes = []
         this.referenceGenome = null
         this.assembly = null
+        this.assemblySuggestions = []
+        this.assemblyDropdownValue = null
+        this.geneName = null
+        this.geneNameAccessionSuggestions = []
+        this.geneNameDropdownValue =  null
         this.targetGenes = []
         this.extraMetadata = {}
       }
@@ -1291,10 +1320,14 @@ export default {
           externalGeneDatabases.map((dbName) => [dbName, { identifier: null, offset: null }])
         )
       },
-        this.assembly = null
+      this.assembly = null
+      this.assemblySuggestions = []
+      this.assemblyDropdownValue = null
       this.referenceGenome = null
       this.existingTargetGene = null
       this.geneName = null
+      this.geneNameAccessionSuggestions = []
+      this.geneNameDropdownValue =  null
     },
 
     addTarget: function () {
@@ -1303,8 +1336,8 @@ export default {
         delete this.targetGene.targetAccession;
       }
       else if (this.assembly || this.geneName) {
-        this.targetGene.targetAccession.assembly = this.assembly || null
-        this.targetGene.targetAccession.gene = this.geneName?.name || null // Name property on string object array
+        this.targetGene.targetAccession.assembly = this.assemblyDropdownValue
+        this.targetGene.targetAccession.gene = this.geneNameDropdownValue // Name property on string object array
         delete this.targetGene.targetSequence;
       }
       else {

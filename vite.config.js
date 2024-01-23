@@ -1,4 +1,5 @@
 import {fileURLToPath, URL} from 'node:url'
+import {resolve} from 'path'
 import {defineConfig} from 'vite'
 import vue from '@vitejs/plugin-vue'
 import basicSsl from '@vitejs/plugin-basic-ssl'
@@ -26,5 +27,14 @@ export default defineConfig({
     port: 8082,
     // Same as above, but localhost:8082 is also legal per ORCID.
     strictPort: true,
+  },
+  build: {
+    rollupOptions: {
+      input: {
+        'index': resolve(__dirname, 'index.html'),
+        'signed-in': resolve(__dirname, 'signed-in.html'),
+        'signed-out': resolve(__dirname, 'signed-out.html'),
+      },
+    },
   },
 })

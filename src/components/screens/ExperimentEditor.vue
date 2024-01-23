@@ -128,8 +128,7 @@
                           </div>
                     </template>
                   </Multiselect>
-                  <!-- label overlaps with placeholder when none are selected without this v-if -->
-                  <label v-if="this.primaryPublicationIdentifiers.length > 0" :for="$scopedId('input-primaryPublicationIdentifiers')">Primary publication</label>
+                  <label :for="$scopedId('input-primaryPublicationIdentifiers')">Primary publication</label>
                 </span>
                 <span v-if="validationErrors.primaryPublicationIdentifiers" class="mave-field-error">{{validationErrors.primaryPublicationIdentifiers}}</span>
               </div>

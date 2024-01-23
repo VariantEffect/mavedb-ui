@@ -33,7 +33,7 @@
                 <div class="field">
                   <span class="p-float-label">
                     <Dropdown v-model="experiment" :id="$scopedId('input-experiment')" :options="editableExperiments"
-                      optionLabel="title" v-on:change="populateExperimentMetadata" />
+                      optionLabel="title" v-on:change="populateExperimentMetadata" style="width: 50%"/>
                     <label :for="$scopedId('input-experiment')">Experiment</label>
                   </span>
                   <span v-if="validationErrors.experiment" class="mave-field-error">{{ validationErrors.experiment
@@ -132,7 +132,7 @@
                 <div class="field">
                   <span class="p-float-label">
                     <Dropdown v-model="licenseId" :id="$scopedId('input-targetLicenseId')" :options="licenses"
-                      optionLabel="longName" optionValue="id" />
+                      optionLabel="longName" optionValue="id" style="width: 50%"/>
                     <label :for="$scopedId('input-targetLicenseId')">License</label>
                   </span>
                   <span v-if="validationErrors.referenceGenome" class="mave-field-error">{{
@@ -203,9 +203,7 @@
                         </div>
                       </template>
                     </Multiselect>
-                    <!-- label overlaps with placeholder when none are selected without this v-if -->
-                    <label v-if="this.primaryPublicationIdentifiers?.length > 0"
-                      :for="$scopedId('input-primaryPublicationIdentifiers')">Primary publication</label>
+                    <label :for="$scopedId('input-primaryPublicationIdentifiers')">Primary publication</label>
                   </span>
                   <span v-if="validationErrors.primaryPublicationIdentifiers" class="mave-field-error">{{
                     validationErrors.primaryPublicationIdentifiers }}</span>
@@ -1609,7 +1607,7 @@ export default {
 
 .field-column {
   position: relative;
-  flex: 1 1 auto;
+  flex: 1 1 0;
   margin-left: 10px;
 }
 

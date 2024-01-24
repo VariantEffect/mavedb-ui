@@ -1,10 +1,10 @@
-import base64url from 'base64url'
+import {decode, encode} from 'universal-base64url'
 
 export function encodeState(state) {
   if (state == null) {
     return null
   }
-  return base64url(JSON.stringify(state))
+  return encode(JSON.stringify(state))
 }
 
 export function decodeState(stateQueryParam) {
@@ -12,7 +12,7 @@ export function decodeState(stateQueryParam) {
     return {}
   }
   try {
-    return JSON.parse(base64url.decode(stateQueryParam))
+    return JSON.parse(decode(stateQueryParam))
   } catch (e) {
     console.log('Invalid state query parameter', {stateQueryParam})
     return {}

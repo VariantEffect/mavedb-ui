@@ -122,8 +122,6 @@ yarn-error.log
 .java-version
 
 # Python virtualenv
-.env.*
-!.env.template
 .venv
 env/
 venv/

@@ -154,7 +154,7 @@ const itemTypes = {
     httpOptions: {
       list: {
         method: 'post',
-        url: `${config.apiBaseUrl}/targetGeneIdentifiers/search?db_name=Ensembl`
+        url: `${config.apiBaseUrl}/target-gene-identifiers/search?db_name=Ensembl`
       }
     }
   },

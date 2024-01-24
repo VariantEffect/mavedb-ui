@@ -33,7 +33,7 @@
                 <div class="field">
                   <span class="p-float-label">
                     <Dropdown v-model="experiment" :id="$scopedId('input-experiment')" :options="editableExperiments"
-                      optionLabel="title" v-on:change="populateExperimentMetadata" />
+                      optionLabel="title" v-on:change="populateExperimentMetadata" style="width: 50%"/>
                     <label :for="$scopedId('input-experiment')">Experiment</label>
                   </span>
                   <span v-if="validationErrors.experiment" class="mave-field-error">{{ validationErrors.experiment
@@ -132,7 +132,7 @@
                 <div class="field">
                   <span class="p-float-label">
                     <Dropdown v-model="licenseId" :id="$scopedId('input-targetLicenseId')" :options="licenses"
-                      optionLabel="longName" optionValue="id" />
+                      optionLabel="longName" optionValue="id" style="width: 50%"/>
                     <label :for="$scopedId('input-targetLicenseId')">License</label>
                   </span>
                   <span v-if="validationErrors['targetSequence.taxonomy']" class="mave-field-error">{{validationErrors['targetSequence.taxonomy']}}</span>
@@ -202,9 +202,7 @@
                         </div>
                       </template>
                     </Multiselect>
-                    <!-- label overlaps with placeholder when none are selected without this v-if -->
-                    <label v-if="this.primaryPublicationIdentifiers?.length > 0"
-                      :for="$scopedId('input-primaryPublicationIdentifiers')">Primary publication</label>
+                    <label :for="$scopedId('input-primaryPublicationIdentifiers')">Primary publication</label>
                   </span>
                   <span v-if="validationErrors.primaryPublicationIdentifiers" class="mave-field-error">{{
                     validationErrors.primaryPublicationIdentifiers }}</span>
@@ -348,7 +346,7 @@
                       <div class="field field-columns">
                         <div class="field-column">
                           <span class="p-float-label">
-                            <InputText v-model="targetGene.name" :id="$scopedId('input-targetGeneName')" />
+                            <InputText v-model="targetGene.name" :id="$scopedId('input-targetGeneName')" style="width: 100%"/>
                             <label :for="$scopedId('input-targetGene')">Target gene name</label>
                           </span>
                         </div>
@@ -356,7 +354,7 @@
                           <span class="p-float-label">
                             <!-- Assembly is the reference genome property in coordinate cases -->
                             <Dropdown v-model="assembly" :id="$scopedId('input-targetGeneAssembly')" :options="assemblies"
-                              optionGroupLabel="type" optionGroupChildren="assemblies">
+                              optionGroupLabel="type" optionGroupChildren="assemblies" style="width: 100%">
                               <template #optiongroup="slotProps">
                                 <div class="flex align-items-center dropdown-option-group">
                                   <div>{{ slotProps.option.type }}</div>
@@ -371,7 +369,7 @@
                           <span class="p-float-label">
                             <Dropdown v-model="geneName" :id="$scopedId('input-targetGeneGeneNames')"
                               :options="geneNamesAsObject" optionLabel="name" filter
-                              :virtualScrollerOptions="{ itemSize: 50 }" @change="autofillGeneName" />
+                              :virtualScrollerOptions="{ itemSize: 50 }" @change="autofillGeneName" style="width: 100%"/>
                             <label :for="$scopedId('input-targetGeneAssembly')">HGNC Name</label>
                           </span>
                         </div>
@@ -610,7 +608,7 @@
 import axios from 'axios'
 import fasta from 'fasta-js'
 import _ from 'lodash'
-import marked from 'marked'
+import {marked} from 'marked'
 import AutoComplete from 'primevue/autocomplete'
 import Button from 'primevue/button'
 import Card from 'primevue/card'
@@ -749,7 +747,11 @@ export default {
     },
     taxonomy: null,
     assembly: null,
+    assemblySuggestions: [],
+    assemblyDropdownValue: null,
     geneName: null,
+    geneNameAccessionSuggestions: [],
+    geneNameDropdownValue: null,
     targetOptions: ["Assembly", "HGNC"],
     targetAutocomplete: 'HGNC',
     extraMetadata: {},
@@ -827,7 +829,7 @@ export default {
       else {
         return this.geneNames.map(name => ({ name }))
       }
-    }
+    },
   },
 
   watch: {
@@ -893,7 +895,29 @@ export default {
           this.licenseId = this.defaultLicenseId
         }
       }
-    }
+    },
+    geneName: {
+      handler: async function(newValue, oldValue) {
+        if (newValue == oldValue) {
+          return;
+        }
+        this.geneNameDropdownValue = this.geneName?.name || null
+        if (this.geneNameDropdownValue) {
+          this.geneNameAccessionSuggestions = await this.fetchTargetAccessionsByGene(this.geneNameDropdownValue)
+        }
+      }
+    },
+    assembly: {
+      handler: async function(newValue, oldValue) {
+        if (newValue == oldValue) {
+          return;
+        }
+        this.assemblyDropdownValue = this.assembly?.trim() || null
+        if (this.assemblyDropdownValue) {
+          this.assemblySuggestions = await this.fetchTargetAccessionsByAssembly(this.assemblyDropdownValue)
+        }
+      }
+    },
   },
 
   methods: {
@@ -946,16 +970,14 @@ export default {
     },
 
     fetchTargetAccessions: async function (event) {
-      if (this.targetAutocomplete == 'Assembly') {
-        const assembly = this.assembly?.trim() || null
-        if (assembly) {
-          this.targetGeneAccessionSuggestions = await this.fetchTargetAccessionsByAssembly(assembly)
+      if (this.targetAutocomplete == 'Assembly' ) {
+        if (this.assemblyDropdownValue) {
+          this.targetGeneAccessionSuggestions = this.assemblySuggestions
         }
       }
       else {
-        const gene = this.geneName?.name || null
-        if (gene) {
-          this.targetGeneAccessionSuggestions = await this.fetchTargetAccessionsByGene(gene)
+        if (this.geneNameDropdownValue) {
+          this.targetGeneAccessionSuggestions = this.geneNameAccessionSuggestions
         }
       }
 
@@ -1052,11 +1074,11 @@ export default {
 
     acceptNewDoiIdentifier: function () {
       const input = this.$refs.doiIdentifiersInput
-      const searchText = (input.inputTextValue || '').trim()
+      const searchText = (input.modelValue || '').trim()
       if (validateDoi(searchText)) {
         const doi = normalizeDoi(searchText)
         this.doiIdentifiers = _.uniqBy([...this.doiIdentifiers, { identifier: doi }])
-        input.inputTextValue = null
+        input.modelValue = null
 
         // Clear the text input.
         // TODO This depends on PrimeVue internals more than I'd like:
@@ -1066,7 +1088,7 @@ export default {
 
     clearDoiIdentifierSearch: function () {
       const input = this.$refs.doiIdentifiersInput
-      input.inputTextValue = null
+      input.modelValue = null
 
       // Clear the text input.
       // TODO This depends on PrimeVue internals more than I'd like:
@@ -1083,11 +1105,11 @@ export default {
     // TODO accept other publication identifiers besides pubmed
     acceptNewPublicationIdentifier: function () {
       const input = this.$refs.publicationIdentifiersInput
-      const searchText = (input.inputTextValue || '').trim()
+      const searchText = (input.modelValue || '').trim()
       if (validatePubmedId(searchText)) {
         const pubmedId = normalizePubmedId(searchText)
         this.publicationIdentifiers = _.uniqBy([...this.publicationIdentifiers, { identifier: pubmedId }])
-        input.inputTextValue = null
+        input.modelValue = null
 
         // Clear the text input.
         // TODO This depends on PrimeVue internals more than I'd like:
@@ -1097,7 +1119,7 @@ export default {
 
     clearPublicationIdentifierSearch: function () {
       const input = this.$refs.publicationIdentifiersInput
-      input.inputTextValue = null
+      input.modelValue = null
 
       // Clear the text input.
       // TODO This depends on PrimeVue internals more than I'd like:
@@ -1114,7 +1136,7 @@ export default {
 
     acceptNewTargetGeneIdentifier: function (dbName) {
       const input = this.$refs[`${dbName.toLowerCase()}IdentifierInput`][0]
-      const searchText = (input.inputTextValue || '').trim()
+      const searchText = (input.modelValue || '').trim()
 
       // Only accept the current search text if we haven't set an identifier. When the user starts typing, the current
       // identifier is cleared.
@@ -1125,7 +1147,7 @@ export default {
         } else if (validateIdentifier(dbName, searchText)) {
           const identifier = normalizeIdentifier(dbName, searchText)
           this.targetGene.externalIdentifiers[dbName].identifier = { identifier }
-          input.inputTextValue = null
+          input.modelValue = null
 
           // Clear the text input.
           // TODO This depends on PrimeVue internals more than I'd like:
@@ -1137,7 +1159,7 @@ export default {
     clearTargetGeneIdentifierSearch: function (dbName) {
       const input = this.$refs[`${dbName.toLowerCase()}IdentifierInput`][0]
       this.targetGene.externalIdentifiers[dbName].identifier = null
-      input.inputTextValue = null
+      input.modelValue = null
 
       // Clear the text input.
       // TODO This depends on PrimeVue internals more than I'd like:
@@ -1147,7 +1169,6 @@ export default {
     searchTargetGeneIdentifiers: function (dbName, event) {
       const searchText = (event.query || '').trim()
       if (searchText.length > 0) {
-        this.targetGene.externalIdentifiers[dbName].identifier = null
         this.setTargetGeneIdentifierSearch[dbName](searchText)
       }
     },
@@ -1341,6 +1362,11 @@ export default {
         this.targetGene = null
         this.targetGenes = []
         this.assembly = null
+        this.assemblySuggestions = []
+        this.assemblyDropdownValue = null
+        this.geneName = null
+        this.geneNameAccessionSuggestions = []
+        this.geneNameDropdownValue =  null
         this.extraMetadata = {}
       }
     },
@@ -1367,10 +1393,15 @@ export default {
           externalGeneDatabases.map((dbName) => [dbName, { identifier: null, offset: null }])
         )
       },
-        this.assembly = null
+      this.assembly = null
+      this.assemblySuggestions = []
+      this.assemblyDropdownValue = null
+      this.referenceGenome = null
       this.taxonomy = null
       this.existingTargetGene = null
       this.geneName = null
+      this.geneNameAccessionSuggestions = []
+      this.geneNameDropdownValue =  null
     },
 
     addTarget: function () {
@@ -1379,8 +1410,8 @@ export default {
         delete this.targetGene.targetAccession;
       }
       else if (this.assembly || this.geneName) {
-        this.targetGene.targetAccession.assembly = this.assembly || null
-        this.targetGene.targetAccession.gene = this.geneName?.name || null // Name property on string object array
+        this.targetGene.targetAccession.assembly = this.assemblyDropdownValue
+        this.targetGene.targetAccession.gene = this.geneNameDropdownValue // Name property on string object array
         delete this.targetGene.targetSequence;
       }
       else {
@@ -1652,7 +1683,7 @@ export default {
 
 .field-column {
   position: relative;
-  flex: 1 1 auto;
+  flex: 1 1 0;
   margin-left: 10px;
 }
 

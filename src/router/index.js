@@ -13,23 +13,34 @@ import SearchView from '@/components/screens/SearchView'
 import SettingsScreen from '@/components/screens/SettingsScreen'
 import UsersView from '@/components/screens/UsersView'
 import {oidc} from '@/lib/auth'
+import store from '@/store';
 
 const routes = [{
   path: '/',
   name: 'home',
-  component: HomeScreen
+  component: HomeScreen,
+  props: (route) => {
+    const { galaxyUrl, toolId, requestFromGalaxy } = route.query;
+    const props = {
+      galaxyUrl,
+      toolId,
+      requestFromGalaxy,
+    };
+    store.commit('setRouteProps', props);
+    return props;
+  },
 }, {
   path: '/search',
   name: 'search',
   component: SearchView,
   meta: {
-    title: 'MaveDB | Search'
+    title: import.meta.env.VITE_SITE_TITLE + ' | Search'
   }
 }, {
   path: '/docs',
   component: DocumentationView,
   meta: {
-    title: 'MaveDB | Documentation'
+    title: import.meta.env.VITE_SITE_TITLE + ' | Documentation'
   }
 }, {
   path: '/settings',
@@ -95,7 +106,10 @@ const routes = [{
   path: '/score-sets/:urn',
   name: 'scoreSet',
   component: ScoreSetView,
-  props: (route) => ({itemId: route.params.urn})
+  props: (route) => ({
+    itemId: route.params.urn,
+  }),
+
 }, {
   name: 'pubmedPublicationIdentifier',
   path: '/publication-identifiers/pubmed/:identifier',

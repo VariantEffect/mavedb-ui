@@ -790,13 +790,15 @@ export default {
     'targetGene.externalIdentifiers': {
       deep: true,
       handler: function (newValue) {
-        // If an identifier has been set, set the offset to 0 by default.
-        for (const dbName of externalGeneDatabases) {
-          if (newValue[dbName]?.identifier?.identifier != null && newValue[dbName]?.offset == null) {
-            this.targetGene.externalIdentifiers[dbName].offset = 0
+        if (newValue) {
+          // If an identifier has been set, set the offset to 0 by default.
+          for (const dbName of externalGeneDatabases) {
+            if (newValue[dbName]?.identifier?.identifier != null && newValue[dbName]?.offset == null) {
+              this.targetGene.externalIdentifiers[dbName].offset = 0
+            }
           }
         }
-      }
+      }  
     },
     existingTargetGene: function () {
       if (_.isObject(this.existingTargetGene)) {
@@ -1282,7 +1284,27 @@ export default {
         this.secondaryPublicationIdentifiers = []
         this.publicationIdentifiers = []
         this.dataUsagePolicy = null
-        this.targetGene = null
+        this.existingTargetGene = null
+        this.targetGene = {
+          index: null,
+          name: null,
+          category: null,
+          type: null,
+          targetSequence: {
+            sequenceType: null,
+            sequence: null,
+            label: null,
+            reference: null
+          },
+          targetAccession: {
+            accession: null,
+            assembly: null,
+            gene: null
+          },
+          externalIdentifiers: _.fromPairs(
+            externalGeneDatabases.map((dbName) => [dbName, { identifier: null, offset: null }])
+          )
+        }
         this.targetGenes = []
         this.referenceGenome = null
         this.assembly = null
@@ -1291,7 +1313,6 @@ export default {
         this.geneName = null
         this.geneNameAccessionSuggestions = []
         this.geneNameDropdownValue =  null
-        this.targetGenes = []
         this.extraMetadata = {}
       }
     },

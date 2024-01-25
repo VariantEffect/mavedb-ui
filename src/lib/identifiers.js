@@ -94,6 +94,8 @@ export async function validateTaxonomy(s) {
     if (response.status === 200) {
       taxonomyNode = response.data.taxonomy_nodes[0]
       ncbi_taxonomy = taxonomyNode.taxonomy
+      console.log("validateTaxonomy")
+      console.log(ncbi_taxonomy)
       return [ncbi_taxonomy].map((ncbiTaxonomyEntry) => ({
         taxId: ncbiTaxonomyEntry.tax_id,
         organismName: ncbiTaxonomyEntry.organism_name,

@@ -298,23 +298,30 @@
                         </div>
                       </div>
                       <div class="field">
-                        <span class="p-float-label">
-                          <Dropdown v-model="referenceGenome" :id="$scopedId('input-targetGeneReferenceGenome')"
-                            :options="referenceGenomes" panelClass="mave-reference-genome-dropdown-panel">
-                            <template #value="slotProps">
-                              <div v-if="slotProps.value" class="mave-reference-genome-value">
-                                <div class="mave-reference-genome-name">{{ slotProps.value.shortName }}</div>
-                                <div class="mave-reference-genome-organism-name">{{ slotProps.value.organismName }}</div>
-                              </div>
-                              <div v-else class="mave-reference-genome-none">&nbsp;</div>
-                            </template>
-                            <template #option="slotProps">
-                              <div class="mave-reference-genome-name">{{ slotProps.option.shortName }}</div>
-                              <div class="mave-reference-genome-organism-name">{{ slotProps.option.organismName }}</div>
-                            </template>
-                          </Dropdown>
-                          <label :for="$scopedId('input-targetGeneReferenceGenome')">Reference genome</label>
-                        </span>
+                        If taxonomy does not appear on the option list, please enter a taxonomy ID, organism name or common name from 
+                        <a href="https://www.ncbi.nlm.nih.gov/datasets/taxonomy/tree/" target="blank">NCBI</a> taxonomies and press the Enter key. 
+                        <div class="field">
+                          <span class="p-float-label">
+                            <AutoComplete
+                            ref="taxonomyInput" 
+                            v-model="taxonomy" 
+                            dropdown
+                            :id="$scopedId('input-targetSequenceTaxonomy')"
+                            :suggestions="taxonomySuggestionsList" 
+                            field="organismName"
+                            :multiple="false"
+                            :options="taxonomies"
+                            @complete="searchTaxonomies"
+                            @keyup.enter="acceptNewTaxonomy"
+                            @keyup.escape="clearTaxonomySearch">
+                              <template #item="slotProps">
+                                {{slotProps.item.taxId}} - {{slotProps.item.organismName}} <template v-if="slotProps.item.commonName!=='NULL' && slotProps.item.commonName!== null">/ {{slotProps.item.commonName}}</template>
+                              </template>
+                            </AutoComplete>
+                            <label :for="$scopedId('input-targetSequenceTaxonomy')">Taxonomy</label>
+                          </span>
+                          <span v-if="validationErrors['targetGene.targetSequence.taxonomy']" class="mave-field-error">{{validationErrors['targetGene.targetSequence.taxonomy']}}</span>
+                        </div>
                       </div>
                       <div class="field">
                         <span class="p-float-label">
@@ -403,47 +410,6 @@
                     </TabPanel>
                   </TabView>
                 </div>
-                <!-- If taxonomy does not appear on the option list, please enter a taxonomy ID, organism name or common name from 
-                <a href="https://www.ncbi.nlm.nih.gov/datasets/taxonomy/tree/" target="blank">NCBI</a> taxonomies and press the Enter key. 
-                <div class="field">
-                  <span class="p-float-label">
-                    <AutoComplete
-                    ref="taxonomyInput" 
-                    v-model="taxonomy" 
-                    dropdown
-                    :id="$scopedId('input-targetGeneTaxonomy')"
-                    :suggestions="taxonomySuggestionsList" 
-                    field="organismName"
-                    :multiple="false"
-                    :options="taxonomies"
-                    @complete="searchTaxonomies"
-                    @keyup.enter="acceptNewTaxonomy"
-                    @keyup.escape="clearTaxonomySearch">
-                      <template #item="slotProps">
-                        {{slotProps.item.taxId}} - {{slotProps.item.organismName}} <template v-if="slotProps.item.commonName!=='NULL' && slotProps.item.commonName!== null">/ {{slotProps.item.commonName}}</template>
-                      </template>
-                    </AutoComplete>
-                    <label :for="$scopedId('input-targetGeneTaxonomy')">Taxonomy</label>
-                  </span>
-                  <span v-if="validationErrors['targetGene.taxonomy']" class="mave-field-error">{{validationErrors['targetGene.taxonomy']}}</span>
-                </div>
-                
-                <div class="field">
-                  <span class="p-float-label">
-                    <FileUpload
-                        :id="$scopedId('input-targetGeneWtSequenceSequenceFile')"
-                        :auto="false"
-                        chooseLabel="Reference sequence"
-                        :class="inputClasses.targetGeneWtSequenceSequenceFile"
-                        :customUpload="true"
-                        :fileLimit="1"
-                        :showCancelButton="false"
-                        :showUploadButton="false"
-                        @remove="fileCleared('targetGeneWtSequenceSequenceFile')"
-                        @select="fileSelected('targetGeneWtSequenceSequenceFile', $event)"
-                    >
-                      <template #empty>
-                        <p>Drop a FASTA file here.</p> -->
               </template>
               <template #footer>
                 <div class="field">
@@ -873,9 +839,9 @@ export default {
           }
         }
 
-        const taxonomyId = _.get(this.targetGene, 'targetSequence.taxonomy.taxId')
-        //this.taxonomy = this.taxonomies.find((ta) => ta.taxId == taxonomyId)
-        this.targetSequence.taxonomy = this.taxonomies.find((ta) => ta.taxId == taxonomyId)
+        // const taxonomyId = _.get(this.targetGene, 'targetSequence.taxonomy.taxId')
+        // //this.taxonomy = this.taxonomies.find((ta) => ta.taxId == taxonomyId)
+        // this.targetSequence.taxonomy = this.taxonomies.find((ta) => ta.taxId == taxonomyId)
       }
     },
     item: {
@@ -1182,7 +1148,11 @@ export default {
 
     acceptNewTaxonomy: async function() {
       const input = this.$refs.taxonomyInput
-      const searchText = (input.inputTextValue || '').trim()
+      console.log("111")
+      console.log(input)
+      const searchText = (this.taxonomy && this.taxonomy.trim) ? this.taxonomy.trim() : ''
+      console.log(searchText)
+      //const searchText = (input.inputTextValue || '').trim()
       if (searchText.length > 0) {
         const newTaxonomyResponse = await validateTaxonomy(searchText)
         if (newTaxonomyResponse === false) {
@@ -1396,7 +1366,6 @@ export default {
       this.assembly = null
       this.assemblySuggestions = []
       this.assemblyDropdownValue = null
-      this.referenceGenome = null
       this.taxonomy = null
       this.existingTargetGene = null
       this.geneName = null
@@ -1501,6 +1470,7 @@ export default {
         }
       } catch (e) {
         response = e.response || { status: 500 }
+        this.$toast.add({ severity: 'error', summary: 'Error', life: 3000 })
       }
       this.progressVisible = false
       if (response.status == 200) {
@@ -1521,7 +1491,7 @@ export default {
         const formValidationErrors = {}
         if (typeof response.data.detail === 'string' || response.data.detail instanceof String) {
           // Handle generic errors that are not surfaced by the API as objects
-          this.$toast.add({ severity: 'error', summary: `Encountered an error saving score set: ${response.data.detail}`, life: 3000 })
+          this.$toast.add({ severity: 'error', summary: `Encountered an error saving score set: ${response.data.detail}` })
         }
         else {
           for (const error of response.data.detail) {
@@ -1546,8 +1516,6 @@ export default {
               if (identifierOffset?.identifier?.dbName) {
                 path.splice(3, 2, identifierOffset.identifier.dbName)
               }
-
-
             }
 
             path = path.join('.')
@@ -1596,7 +1564,7 @@ export default {
             this.$toast.add({ severity: 'success', summary: 'The new score set was saved.', life: 3000 })
           }
         } else {
-          this.$toast.add({ severity: 'error', summary: `The score and count files could not be imported. ${response.data.detail}`, life: 3000 })
+          this.$toast.add({ severity: 'error', summary: `The score and count files could not be imported. ${response.data.detail}`})
 
           // Delete the score set if just created.
           // Warn if the score set already exists.

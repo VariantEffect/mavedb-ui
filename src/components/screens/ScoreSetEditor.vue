@@ -1286,15 +1286,11 @@ export default {
         this.publicationIdentifiers = []
         this.dataUsagePolicy = null
         this.extraMetadata = {}
-        this.emptyTargetGene()
+        this.resetTarget()
       }
     },
 
     resetTarget: function () {
-      this.emptyTargetGene()
-    },
-
-    emptyTargetGene: function() {
       this.assembly = null
       this.assemblySuggestions = []
       this.assemblyDropdownValue = null

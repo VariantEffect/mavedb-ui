@@ -790,12 +790,13 @@ export default {
     'targetGene.externalIdentifiers': {
       deep: true,
       handler: function (newValue) {
-        if (newValue) {
-          // If an identifier has been set, set the offset to 0 by default.
-          for (const dbName of externalGeneDatabases) {
-            if (newValue[dbName]?.identifier?.identifier != null && newValue[dbName]?.offset == null) {
-              this.targetGene.externalIdentifiers[dbName].offset = 0
-            }
+        if (!newValue) {
+          return
+        }
+        // If an identifier has been set, set the offset to 0 by default.
+        for (const dbName of externalGeneDatabases) {
+          if (newValue[dbName]?.identifier?.identifier != null && newValue[dbName]?.offset == null) {
+            this.targetGene.externalIdentifiers[dbName].offset = 0
           }
         }
       }  
@@ -1284,41 +1285,25 @@ export default {
         this.secondaryPublicationIdentifiers = []
         this.publicationIdentifiers = []
         this.dataUsagePolicy = null
-        this.existingTargetGene = null
-        this.targetGene = {
-          index: null,
-          name: null,
-          category: null,
-          type: null,
-          targetSequence: {
-            sequenceType: null,
-            sequence: null,
-            label: null,
-            reference: null
-          },
-          targetAccession: {
-            accession: null,
-            assembly: null,
-            gene: null
-          },
-          externalIdentifiers: _.fromPairs(
-            externalGeneDatabases.map((dbName) => [dbName, { identifier: null, offset: null }])
-          )
-        }
-        this.targetGenes = []
-        this.referenceGenome = null
-        this.assembly = null
-        this.assemblySuggestions = []
-        this.assemblyDropdownValue = null
-        this.geneName = null
-        this.geneNameAccessionSuggestions = []
-        this.geneNameDropdownValue =  null
         this.extraMetadata = {}
+        this.emptyTargetGene()
       }
     },
 
     resetTarget: function () {
+      this.emptyTargetGene()
+    },
+
+    emptyTargetGene: function() {
+      this.assembly = null
+      this.assemblySuggestions = []
+      this.assemblyDropdownValue = null
+      this.existingTargetGene = null
+      this.geneName = null
+      this.geneNameAccessionSuggestions = []
+      this.geneNameDropdownValue =  null
       this.fileCleared('targetGeneTargetSequenceSequenceFile')
+      this.referenceGenome = null
       this.targetGene = {
         index: null,
         name: null,
@@ -1338,15 +1323,7 @@ export default {
         externalIdentifiers: _.fromPairs(
           externalGeneDatabases.map((dbName) => [dbName, { identifier: null, offset: null }])
         )
-      },
-      this.assembly = null
-      this.assemblySuggestions = []
-      this.assemblyDropdownValue = null
-      this.referenceGenome = null
-      this.existingTargetGene = null
-      this.geneName = null
-      this.geneNameAccessionSuggestions = []
-      this.geneNameDropdownValue =  null
+      }
     },
 
     addTarget: function () {

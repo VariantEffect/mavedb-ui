@@ -1247,25 +1247,7 @@ export default {
         })
         this.secondaryPublicationIdentifiers = this.item.secondaryPublicationIdentifiers
         this.dataUsagePolicy = this.item.dataUsagePolicy
-        this.targetGene = {
-          index: null,
-          name: null,
-          category: null,
-          targetSequence: {
-            sequenceType: null,
-            sequence: null,
-            label: null,
-            reference: null
-          },
-          targetAccession: {
-            accession: null,
-            assembly: null,
-            gene: null
-          },
-          externalIdentifiers: _.fromPairs(
-            externalGeneDatabases.map((dbName) => [dbName, { identifier: null, offset: null }])
-          )
-        }
+        this.resetTargetGene()
         this.referenceGenome = this.item.referenceGenome
         this.assembly = this.item.assembly
         this.targetGenes = this.item.targetGenes
@@ -1300,6 +1282,10 @@ export default {
       this.geneNameDropdownValue =  null
       this.fileCleared('targetGeneTargetSequenceSequenceFile')
       this.referenceGenome = null
+      this.resetTargetGene()
+    },
+
+    resetTargetGene: function() {
       this.targetGene = {
         index: null,
         name: null,
@@ -1321,7 +1307,7 @@ export default {
         )
       }
     },
-
+    
     addTarget: function () {
       if (this.referenceGenome) {
         this.targetGene.targetSequence.reference = this.referenceGenome

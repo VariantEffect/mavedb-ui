@@ -599,6 +599,30 @@ import useFormatters from '@/composition/formatters'
 
 const externalGeneDatabases = ['UniProt', 'Ensembl', 'RefSeq']
 
+function emptyTargetGene() {
+  return {
+    index: null,
+    name: null,
+    category: null,
+    type: null,
+    targetSequence: {
+      sequenceType: null,
+      sequence: null,
+      label: null,
+      reference: null
+    },
+    targetAccession: {
+      accession: null,
+      assembly: null,
+      gene: null
+    },
+    externalIdentifiers: _.fromPairs(
+      externalGeneDatabases.map((dbName) => [dbName, { identifier: null, offset: null }])
+    )
+  }
+}
+
+
 export default {
   name: 'ScoreSetEditor',
   components: { AutoComplete, Button, Card, Chips, Column, DataTable, DefaultLayout, Dropdown, EntityLink, FileUpload, InputNumber, InputText, Message, Multiselect, ProgressSpinner, SelectButton, TabPanel, TabView, Textarea },
@@ -683,25 +707,7 @@ export default {
     secondaryPublicationIdentifiers: [],
     publicationIdentifiers: [],
     dataUsagePolicy: null,
-    targetGene: {
-      index: null,
-      name: null,
-      category: null,
-      targetSequence: {
-        sequenceType: null,
-        sequence: null,
-        reference: null,
-        label: null
-      },
-      targetAccession: {
-        accession: null,
-        assembly: null,
-        gene: null
-      },
-      externalIdentifiers: _.fromPairs(
-        externalGeneDatabases.map((dbName) => [dbName, { identifier: null, offset: null }])
-      )
-    },
+    targetGene: emptyTargetGene(),
     referenceGenome: null,
     assembly: null,
     assemblySuggestions: [],
@@ -1247,7 +1253,7 @@ export default {
         })
         this.secondaryPublicationIdentifiers = this.item.secondaryPublicationIdentifiers
         this.dataUsagePolicy = this.item.dataUsagePolicy
-        this.resetTargetGene()
+        this.targetGene = emptyTargetGene()
         this.referenceGenome = this.item.referenceGenome
         this.assembly = this.item.assembly
         this.targetGenes = this.item.targetGenes
@@ -1269,6 +1275,7 @@ export default {
         this.dataUsagePolicy = null
         this.extraMetadata = {}
         this.resetTarget()
+        this.targetGenes = []
       }
     },
 
@@ -1282,32 +1289,9 @@ export default {
       this.geneNameDropdownValue =  null
       this.fileCleared('targetGeneTargetSequenceSequenceFile')
       this.referenceGenome = null
-      this.resetTargetGene()
+      this.targetGene = emptyTargetGene()
     },
 
-    resetTargetGene: function() {
-      this.targetGene = {
-        index: null,
-        name: null,
-        category: null,
-        type: null,
-        targetSequence: {
-          sequenceType: null,
-          sequence: null,
-          label: null,
-          reference: null
-        },
-        targetAccession: {
-          accession: null,
-          assembly: null,
-          gene: null
-        },
-        externalIdentifiers: _.fromPairs(
-          externalGeneDatabases.map((dbName) => [dbName, { identifier: null, offset: null }])
-        )
-      }
-    },
-    
     addTarget: function () {
       if (this.referenceGenome) {
         this.targetGene.targetSequence.reference = this.referenceGenome

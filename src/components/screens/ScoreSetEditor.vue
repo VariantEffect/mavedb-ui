@@ -586,7 +586,6 @@ import TabPanel from 'primevue/tabpanel'
 import TabView from 'primevue/tabview'
 import Textarea from 'primevue/textarea'
 import DataTable from 'primevue/datatable';
-import { useForm } from 'vee-validate'
 import { ref } from 'vue'
 
 import EntityLink from '@/components/common/EntityLink'
@@ -624,7 +623,6 @@ export default {
     const geneNames = useItems({ itemTypeName: 'gene-names' })
     const assemblies = useItems({ itemTypeName: 'grouped-assemblies' })
     const targetGeneSuggestions = useItems({ itemTypeName: 'target-gene-search' })
-    const { errors: validationErrors, handleSubmit, setErrors: setValidationErrors } = useForm()
 
     const expandedTargetGeneRows = ref([])
 
@@ -653,9 +651,6 @@ export default {
       referenceGenomes: referenceGenomes.items,
       assemblies: assemblies.items,
       geneNames: geneNames.items,
-      handleSubmit,
-      setValidationErrors,
-      validationErrors,
       expandedTargetGeneRows
     }
   },
@@ -738,7 +733,8 @@ export default {
     externalGeneDatabases,
     metaAnalyzesScoreSetSuggestions: [],
     supersededScoreSetSuggestions: [],
-    targetGeneAccessionSuggestions: []
+    targetGeneAccessionSuggestions: [],
+    validationErrors: {},
   }),
 
   computed: {
@@ -1214,7 +1210,7 @@ export default {
     ////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 
     mergeValidationErrors: function () {
-      this.setValidationErrors(_.merge({}, this.serverSideValidationErrors, this.clientSideValidationErrors))
+      this.validationErrors = _.merge({}, this.serverSideValidationErrors, this.clientSideValidationErrors)
     },
 
     ////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
@@ -1429,7 +1425,7 @@ export default {
       this.progressVisible = false
       if (response.status == 200) {
         const savedItem = response.data
-        this.setValidationErrors({})
+        this.validationErrors = {}
         if (this.item) {
           if (this.$refs.scoresFileUpload?.files?.length == 1) {
             await this.uploadData(savedItem)
@@ -1485,7 +1481,7 @@ export default {
 
     uploadData: async function (scoreSet) {
       if (this.$refs.scoresFileUpload.files.length != 1) {
-        this.setValidationErrors({ scores: 'Required' })
+        this.validationErrors = { scores: 'Required' }
       } else {
         const formData = new FormData()
         formData.append('scores_file', this.$refs.scoresFileUpload.files[0])

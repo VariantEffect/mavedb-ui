@@ -621,7 +621,6 @@ function emptyTargetGene() {
   }
 }
 
-
 export default {
   name: 'ScoreSetEditor',
   components: { AutoComplete, Button, Card, Chips, Column, DataTable, DefaultLayout, Dropdown, EntityLink, FileUpload, InputNumber, InputText, Message, Multiselect, ProgressSpinner, SelectButton, TabPanel, TabView, Textarea },
@@ -801,7 +800,7 @@ export default {
             this.targetGene.externalIdentifiers[dbName].offset = 0
           }
         }
-      }  
+      }
     },
     existingTargetGene: function () {
       if (_.isObject(this.existingTargetGene)) {

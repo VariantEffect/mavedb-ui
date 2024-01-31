@@ -598,6 +598,30 @@ import useFormatters from '@/composition/formatters'
 
 const externalGeneDatabases = ['UniProt', 'Ensembl', 'RefSeq']
 
+function emptyTargetGene() {
+  return {
+    index: null,
+    name: null,
+    category: null,
+    type: null,
+    targetSequence: {
+      sequenceType: null,
+      sequence: null,
+      label: null,
+      reference: null
+    },
+    targetAccession: {
+      accession: null,
+      assembly: null,
+      gene: null
+    },
+    externalIdentifiers: _.fromPairs(
+      externalGeneDatabases.map((dbName) => [dbName, { identifier: null, offset: null }])
+    )
+  }
+}
+
+
 export default {
   name: 'ScoreSetEditor',
   components: { AutoComplete, Button, Card, Chips, Column, DataTable, DefaultLayout, Dropdown, EntityLink, FileUpload, InputNumber, InputText, Message, Multiselect, ProgressSpinner, SelectButton, TabPanel, TabView, Textarea },
@@ -678,25 +702,7 @@ export default {
     secondaryPublicationIdentifiers: [],
     publicationIdentifiers: [],
     dataUsagePolicy: null,
-    targetGene: {
-      index: null,
-      name: null,
-      category: null,
-      targetSequence: {
-        sequenceType: null,
-        sequence: null,
-        reference: null,
-        label: null
-      },
-      targetAccession: {
-        accession: null,
-        assembly: null,
-        gene: null
-      },
-      externalIdentifiers: _.fromPairs(
-        externalGeneDatabases.map((dbName) => [dbName, { identifier: null, offset: null }])
-      )
-    },
+    targetGene: emptyTargetGene(),
     referenceGenome: null,
     assembly: null,
     assemblySuggestions: [],
@@ -786,13 +792,16 @@ export default {
     'targetGene.externalIdentifiers': {
       deep: true,
       handler: function (newValue) {
+        if (!newValue) {
+          return
+        }
         // If an identifier has been set, set the offset to 0 by default.
         for (const dbName of externalGeneDatabases) {
           if (newValue[dbName]?.identifier?.identifier != null && newValue[dbName]?.offset == null) {
             this.targetGene.externalIdentifiers[dbName].offset = 0
           }
         }
-      }
+      }  
     },
     existingTargetGene: function () {
       if (_.isObject(this.existingTargetGene)) {
@@ -1240,25 +1249,7 @@ export default {
         })
         this.secondaryPublicationIdentifiers = this.item.secondaryPublicationIdentifiers
         this.dataUsagePolicy = this.item.dataUsagePolicy
-        this.targetGene = {
-          index: null,
-          name: null,
-          category: null,
-          targetSequence: {
-            sequenceType: null,
-            sequence: null,
-            label: null,
-            reference: null
-          },
-          targetAccession: {
-            accession: null,
-            assembly: null,
-            gene: null
-          },
-          externalIdentifiers: _.fromPairs(
-            externalGeneDatabases.map((dbName) => [dbName, { identifier: null, offset: null }])
-          )
-        }
+        this.targetGene = emptyTargetGene()
         this.referenceGenome = this.item.referenceGenome
         this.assembly = this.item.assembly
         this.targetGenes = this.item.targetGenes
@@ -1278,50 +1269,23 @@ export default {
         this.secondaryPublicationIdentifiers = []
         this.publicationIdentifiers = []
         this.dataUsagePolicy = null
-        this.targetGene = null
-        this.targetGenes = []
-        this.referenceGenome = null
-        this.assembly = null
-        this.assemblySuggestions = []
-        this.assemblyDropdownValue = null
-        this.geneName = null
-        this.geneNameAccessionSuggestions = []
-        this.geneNameDropdownValue =  null
-        this.targetGenes = []
         this.extraMetadata = {}
+        this.resetTarget()
+        this.targetGenes = []
       }
     },
 
     resetTarget: function () {
-      this.fileCleared('targetGeneTargetSequenceSequenceFile')
-      this.targetGene = {
-        index: null,
-        name: null,
-        category: null,
-        type: null,
-        targetSequence: {
-          sequenceType: null,
-          sequence: null,
-          label: null,
-          reference: null
-        },
-        targetAccession: {
-          accession: null,
-          assembly: null,
-          gene: null
-        },
-        externalIdentifiers: _.fromPairs(
-          externalGeneDatabases.map((dbName) => [dbName, { identifier: null, offset: null }])
-        )
-      },
       this.assembly = null
       this.assemblySuggestions = []
       this.assemblyDropdownValue = null
-      this.referenceGenome = null
       this.existingTargetGene = null
       this.geneName = null
       this.geneNameAccessionSuggestions = []
       this.geneNameDropdownValue =  null
+      this.fileCleared('targetGeneTargetSequenceSequenceFile')
+      this.referenceGenome = null
+      this.targetGene = emptyTargetGene()
     },
 
     addTarget: function () {

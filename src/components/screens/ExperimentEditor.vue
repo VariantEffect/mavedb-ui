@@ -234,7 +234,6 @@ import ProgressSpinner from 'primevue/progressspinner'
 import TabPanel from 'primevue/tabpanel'
 import TabView from 'primevue/tabview'
 import Textarea from 'primevue/textarea'
-import {useForm} from 'vee-validate'
 
 import DefaultLayout from '@/components/layout/DefaultLayout'
 import useItem from '@/composition/item'
@@ -252,7 +251,6 @@ export default {
     const publicationIdentifierSuggestions = useItems({itemTypeName: 'publication-identifier-search'})
     const externalPublicationIdentifierSuggestions = useItems({itemTypeName: 'external-publication-identifier-search'})
     const rawReadIdentifierSuggestions = useItems({itemTypeName: 'raw-read-identifier-search'})
-    const {errors: validationErrors, handleSubmit, setErrors: setValidationErrors} = useForm()
     return {
       ...useFormatters(),
       ...useItem({itemTypeName: 'experiment'}),
@@ -264,9 +262,6 @@ export default {
       setExternalPublicationIdentifierSearch: (text) => externalPublicationIdentifierSuggestions.setRequestBody({text}),
       rawReadIdentifierSuggestions: rawReadIdentifierSuggestions.items,
       setRawReadIdentifierSearch: (text) => rawReadIdentifierSuggestions.setRequestBody({text}),
-      handleSubmit,
-      setValidationErrors,
-      validationErrors
     }
   },
 
@@ -302,7 +297,8 @@ export default {
       countsFile: null,
       extraMetadataFile: null,
       scoresFile: null
-    }
+    },
+    validationErrors: {},
   }),
 
   computed: {
@@ -481,7 +477,7 @@ export default {
     ////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 
     mergeValidationErrors: function() {
-      this.setValidationErrors(_.merge({}, this.serverSideValidationErrors, this.clientSideValidationErrors))
+      this.validationErrors = _.merge({}, this.serverSideValidationErrors, this.clientSideValidationErrors)
     },
 
     ////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
@@ -578,7 +574,7 @@ export default {
 
       if (response.status == 200) {
         const savedItem = response.data
-        this.setValidationErrors({})
+        this.validationErrors = {}
         if (this.item) {
           console.log('Updated item')
           //this.reloadItem()

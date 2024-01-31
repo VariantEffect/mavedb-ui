@@ -128,8 +128,7 @@
                           </div>
                     </template>
                   </Multiselect>
-                  <!-- label overlaps with placeholder when none are selected without this v-if -->
-                  <label v-if="this.primaryPublicationIdentifiers.length > 0" :for="$scopedId('input-primaryPublicationIdentifiers')">Primary publication</label>
+                  <label :for="$scopedId('input-primaryPublicationIdentifiers')">Primary publication</label>
                 </span>
                 <span v-if="validationErrors.primaryPublicationIdentifiers" class="mave-field-error">{{validationErrors.primaryPublicationIdentifiers}}</span>
               </div>
@@ -223,7 +222,7 @@
 
 import axios from 'axios'
 import _ from 'lodash'
-import marked from 'marked'
+import {marked} from 'marked'
 import AutoComplete from 'primevue/autocomplete'
 import Button from 'primevue/button'
 import Card from 'primevue/card'
@@ -235,7 +234,6 @@ import ProgressSpinner from 'primevue/progressspinner'
 import TabPanel from 'primevue/tabpanel'
 import TabView from 'primevue/tabview'
 import Textarea from 'primevue/textarea'
-import {useForm} from 'vee-validate'
 
 import DefaultLayout from '@/components/layout/DefaultLayout'
 import useItem from '@/composition/item'
@@ -253,7 +251,6 @@ export default {
     const publicationIdentifierSuggestions = useItems({itemTypeName: 'publication-identifier-search'})
     const externalPublicationIdentifierSuggestions = useItems({itemTypeName: 'external-publication-identifier-search'})
     const rawReadIdentifierSuggestions = useItems({itemTypeName: 'raw-read-identifier-search'})
-    const {errors: validationErrors, handleSubmit, setErrors: setValidationErrors} = useForm()
     return {
       ...useFormatters(),
       ...useItem({itemTypeName: 'experiment'}),
@@ -265,9 +262,6 @@ export default {
       setExternalPublicationIdentifierSearch: (text) => externalPublicationIdentifierSuggestions.setRequestBody({text}),
       rawReadIdentifierSuggestions: rawReadIdentifierSuggestions.items,
       setRawReadIdentifierSearch: (text) => rawReadIdentifierSuggestions.setRequestBody({text}),
-      handleSubmit,
-      setValidationErrors,
-      validationErrors
     }
   },
 
@@ -303,7 +297,8 @@ export default {
       countsFile: null,
       extraMetadataFile: null,
       scoresFile: null
-    }
+    },
+    validationErrors: {},
   }),
 
   computed: {
@@ -352,11 +347,11 @@ export default {
 
     acceptNewDoiIdentifier: function() {
       const input = this.$refs.doiIdentifiersInput
-      const searchText = (input.inputTextValue || '').trim()
+      const searchText = (input.modelValue || '').trim()
       if (validateDoi(searchText)) {
         const doi = normalizeDoi(searchText)
         this.doiIdentifiers = _.uniqBy([...this.doiIdentifiers, {identifier: doi}])
-        input.inputTextValue = null
+        input.modelValue = null
 
         // Clear the text input.
         // TODO This depends on PrimeVue internals more than I'd like:
@@ -366,7 +361,7 @@ export default {
 
     clearDoiIdentifierSearch: function() {
       const input = this.$refs.doiIdentifiersInput
-      input.inputTextValue = null
+      input.modelValue = null
 
       // Clear the text input.
       // TODO This depends on PrimeVue internals more than I'd like:
@@ -382,11 +377,11 @@ export default {
 
     acceptNewPublicationIdentifier: function() {
       const input = this.$refs.publicationIdentifiersInput
-      const searchText = (input.inputTextValue || '').trim()
+      const searchText = (input.modelValue || '').trim()
       if (validatePubmedId(searchText)) {
         const publicationId = normalizePubmedId(searchText)
         this.publicationIdentifiers = _.uniqBy([...this.publicationIdentifiers, {identifier: publicationId}])
-        input.inputTextValue = null
+        input.modelValue = null
 
         // Clear the text input.
         // TODO This depends on PrimeVue internals more than I'd like:
@@ -396,7 +391,7 @@ export default {
 
     clearPublicationIdentifierSearch: function() {
       const input = this.$refs.publicationIdentifiersInput
-      input.inputTextValue = null
+      input.modelValue = null
 
       // Clear the text input.
       // TODO This depends on PrimeVue internals more than I'd like:
@@ -413,11 +408,11 @@ export default {
 
     acceptNewRawReadIdentifier: function() {
       const input = this.$refs.rawReadIdentifiersInput
-      const searchText = (input.inputTextValue || '').trim()
+      const searchText = (input.modelValue || '').trim()
       if (validateRawRead(searchText)) {
         const rawReadId = normalizeRawRead(searchText)
         this.rawReadIdentifiers = _.uniqBy([...this.rawReadIdentifiers, {identifier: rawReadId}])
-        input.inputTextValue = null
+        input.modelValue = null
 
         // Clear the text input.
         // TODO This depends on PrimeVue internals more than I'd like:
@@ -427,7 +422,7 @@ export default {
 
     clearRawReadIdentifierSearch: function() {
       const input = this.$refs.rawReadIdentifiersInput
-      input.inputTextValue = null
+      input.modelValue = null
 
       // Clear the text input.
       // TODO This depends on PrimeVue internals more than I'd like:
@@ -482,7 +477,7 @@ export default {
     ////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 
     mergeValidationErrors: function() {
-      this.setValidationErrors(_.merge({}, this.serverSideValidationErrors, this.clientSideValidationErrors))
+      this.validationErrors = _.merge({}, this.serverSideValidationErrors, this.clientSideValidationErrors)
     },
 
     ////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
@@ -579,7 +574,7 @@ export default {
 
       if (response.status == 200) {
         const savedItem = response.data
-        this.setValidationErrors({})
+        this.validationErrors = {}
         if (this.item) {
           console.log('Updated item')
           //this.reloadItem()

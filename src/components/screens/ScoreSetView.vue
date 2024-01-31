@@ -53,15 +53,20 @@
             <EntityLink entityType="scoreSet" :urn="urn" />
           </template>
         </div>
-        <div>Download files <Button class="p-button-outlined p-button-sm"
-            @click="downloadFile('scores')">Scores</Button>&nbsp;
+        <div>Download files <Button class="p-button-outlined p-button-sm" @click="downloadFile('scores')">Scores</Button>&nbsp;
           <template v-if="countColumns.length != 0">
             <Button class="p-button-outlined p-button-sm" @click="downloadFile('counts')">Counts</Button>&nbsp;
           </template>
           <template v-if="isMetaDataEmpty != true">
             <Button class="p-button-outlined p-button-sm" @click="downloadMetadata">Metadata</Button>&nbsp;
           </template>
-          <Button class="p-button-outlined p-button-sm" @click="downloadMappedVariants()">Mapped Variants</Button>
+          <Button class="p-button-outlined p-button-sm" @click="downloadMappedVariants()">Mapped Variants</Button>&nbsp;
+        </div>
+        <div v-if="requestFromGalaxy == '1'"><br>Send files to <a :href="`${this.galaxyUrl}`">Galaxy</a> <Button class="p-button-outlined p-button-sm" @click="sendToGalaxy('scores')">Scores</Button>&nbsp;
+          <template v-if="countColumns.length != 0">
+            <Button class="p-button-outlined p-button-sm" @click="sendToGalaxy('counts')">Counts</Button>&nbsp;
+          </template>
+          <Button class="p-button-outlined p-button-sm" @click="sendToGalaxy('mappedVariants')">Mapped Variants</Button>&nbsp;
         </div>
         <div v-if="item.abstractText">
           <div class="mave-score-set-section-title">Abstract</div>
@@ -250,7 +255,7 @@
 
 import axios from 'axios'
 import _ from 'lodash'
-import marked from 'marked'
+import {marked} from 'marked'
 import Button from 'primevue/button'
 import Chip from 'primevue/chip'
 import Column from 'primevue/column'
@@ -267,6 +272,7 @@ import useRemoteData from '@/composition/remote-data'
 import config from '@/config'
 import { oidc } from '@/lib/auth'
 import { parseScores } from '@/lib/scores'
+import { mapState } from 'vuex'
 
 export default {
   name: 'ScoreSetView',
@@ -290,7 +296,12 @@ export default {
     },
     sortedMetaAnalyzesScoreSetUrns: function () {
       return _.sortBy(this.item?.metaAnalyzesScoreSetUrns || [])
-    }
+    },
+    ...mapState({
+      galaxyUrl: state => state.routeProps.galaxyUrl,
+      toolId: state => state.routeProps.toolId,
+      requestFromGalaxy: state => state.routeProps.requestFromGalaxy
+    })
   },
   setup: () => {
     const scoresRemoteData = useRemoteData()
@@ -303,14 +314,12 @@ export default {
       ensureScoresDataLoaded: scoresRemoteData.ensureDataLoaded
     }
   },
-
   props: {
     itemId: {
       type: String,
       required: true
     }
   },
-
   data: () => ({
     scores: null,
     scoresTable: [],
@@ -318,7 +327,6 @@ export default {
     readMore: true,
     showHeatmap: true
   }),
-
   watch: {
     itemId: {
       handler: function (newValue, oldValue) {
@@ -347,11 +355,53 @@ export default {
       }
     }
   },
-
   methods: {
     editItem: function () {
       if (this.item) {
         this.$router.replace({ path: `/score-sets/${this.item.urn}/edit` })
+      }
+    },
+    sendToGalaxy: async function (download_type) {
+      try {
+        const galaxyUrl = this.galaxyUrl;
+        let params = {};
+        if (this.item) {
+          const baseApiUrl = `${config.apiBaseUrl}/score-sets/${this.item.urn}`;
+
+          let endpoint, outputType;
+          switch (download_type) {
+            case "counts":
+              endpoint = "counts";
+              outputType = "table";
+              break;
+            case "scores":
+              endpoint = "scores";
+              outputType = "table";
+              break;
+            case "mappedVariants":
+              endpoint = "mapped-variants";
+              outputType = "json";
+              break;
+            default:
+              break;
+          }
+
+          const apiUrl = `${baseApiUrl}/${endpoint}`;
+
+          params = {
+            toolId: this.toolId,
+            maveData: download_type,
+            urn: this.item.urn,
+            outputType: outputType,
+            URL: apiUrl
+          };
+          const submitGalaxyUrl = `${galaxyUrl}?tool_id=${params.toolId}&maveData=${params.maveData}&urn=${params
+          .urn}&outputType=${params
+          .outputType}&URL=${encodeURIComponent(params.URL)}`;
+          window.location.href = submitGalaxyUrl;
+        }
+      } catch (error) {
+        console.error('Error sending data:', error);
       }
     },
     deleteItem: async function () {

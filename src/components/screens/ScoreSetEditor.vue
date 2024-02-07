@@ -823,7 +823,7 @@ export default {
             sequenceType: null,
             sequence: null,
             label: null,
-            reference: null
+            taxonomy: null
           },
           targetAccession: {
             assembly: null,
@@ -838,10 +838,6 @@ export default {
             offset: null
           }
         }
-
-        // const taxonomyId = _.get(this.targetGene, 'targetSequence.taxonomy.taxId')
-        // //this.taxonomy = this.taxonomies.find((ta) => ta.taxId == taxonomyId)
-        // this.targetSequence.taxonomy = this.taxonomies.find((ta) => ta.taxId == taxonomyId)
       }
     },
     item: {
@@ -1148,11 +1144,8 @@ export default {
 
     acceptNewTaxonomy: async function() {
       const input = this.$refs.taxonomyInput
-      console.log("111")
-      console.log(input)
       const searchText = (this.taxonomy && this.taxonomy.trim) ? this.taxonomy.trim() : ''
-      console.log(searchText)
-      //const searchText = (input.inputTextValue || '').trim()
+      // const searchText = (input.inputTextValue || '').trim()
       if (searchText.length > 0) {
         const newTaxonomyResponse = await validateTaxonomy(searchText)
         if (newTaxonomyResponse === false) {

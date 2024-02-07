@@ -117,6 +117,7 @@
                   {{ targetGene.targetSequence.taxonomy.organismName }}</div>
                 <div v-if="targetGene.targetSequence.taxonomy?.commonName"><strong>Common name:</strong>
                   {{ targetGene.targetSequence.taxonomy.commonName }}</div>
+                <div v-if="targetGene.id"><strong>Target ID:</strong> {{ targetGene.id }}</div>
                 <strong>Reference sequence: </strong>
                 <template v-if="targetGene.targetSequence.sequence.length >= 500">
                   <template v-if="readMore == true">{{ targetGene.targetSequence.sequence.substring(0, 500) + "...." }}

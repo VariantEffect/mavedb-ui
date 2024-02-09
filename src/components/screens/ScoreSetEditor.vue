@@ -303,17 +303,17 @@
                         <div class="field">
                           <span class="p-float-label">
                             <AutoComplete
-                            ref="taxonomyInput" 
-                            v-model="taxonomy" 
-                            dropdown
-                            :id="$scopedId('input-targetSequenceTaxonomy')"
-                            :suggestions="taxonomySuggestionsList" 
-                            field="organismName"
-                            :multiple="false"
-                            :options="taxonomies"
-                            @complete="searchTaxonomies"
-                            @keyup.enter="acceptNewTaxonomy"
-                            @keyup.escape="clearTaxonomySearch">
+                              ref="taxonomyInput" 
+                              v-model="taxonomy" 
+                              dropdown
+                              :id="$scopedId('input-targetSequenceTaxonomy')"
+                              :suggestions="taxonomySuggestionsList" 
+                              field="organismName"
+                              :multiple="false"
+                              :options="taxonomies"
+                              @complete="searchTaxonomies"
+                              @keyup.enter="acceptNewTaxonomy"
+                              @keyup.escape="clearTaxonomySearch">
                               <template #item="slotProps">
                                 {{slotProps.item.taxId}} - {{slotProps.item.organismName}} <template v-if="slotProps.item.commonName!=='NULL' && slotProps.item.commonName!== null">/ {{slotProps.item.commonName}}</template>
                               </template>
@@ -600,7 +600,7 @@ import DefaultLayout from '@/components/layout/DefaultLayout'
 import useItem from '@/composition/item'
 import useItems from '@/composition/items'
 import config from '@/config'
-import { normalizeDoi, normalizeIdentifier, normalizePubmedId, validateDoi, validateIdentifier,validateTaxonomy, validatePubmedId} from '@/lib/identifiers'
+import { normalizeDoi, normalizeIdentifier, normalizePubmedId, validateDoi, validateIdentifier, validatePubmedId} from '@/lib/identifiers'
 import useFormatters from '@/composition/formatters'
 
 const externalGeneDatabases = ['UniProt', 'Ensembl', 'RefSeq']
@@ -1145,18 +1145,44 @@ export default {
     acceptNewTaxonomy: async function() {
       const input = this.$refs.taxonomyInput
       const searchText = (this.taxonomy && this.taxonomy.trim) ? this.taxonomy.trim() : ''
-      // const searchText = (input.inputTextValue || '').trim()
       if (searchText.length > 0) {
-        const newTaxonomyResponse = await validateTaxonomy(searchText)
+        const newTaxonomyResponse = await this.validateTaxonomy(searchText)
         if (newTaxonomyResponse === false) {
           this.$toast.add({ severity: 'error', summary: 'Invalid Taxonomy.', life: 3500 })
         } else {
-          this.taxonomy = newTaxonomyResponse[0]
+          this.taxonomy = newTaxonomyResponse.length > 0 ? newTaxonomyResponse[0] : '';
           input.inputTextValue = null
           input.$refs.input.value = ''
+        }
       }
-    }
-  },
+    },
+  
+    validateTaxonomy: async function(newValue) {
+      let response = null
+      let taxonomyNode = null
+      let ncbi_taxonomy = null
+      try {
+        response = await axios.get(`https://api.ncbi.nlm.nih.gov/datasets/v2alpha/taxonomy/taxon/${newValue}`)
+        if (response.status === 200) {
+          taxonomyNode = response.data.taxonomy_nodes[0]
+          ncbi_taxonomy = taxonomyNode.taxonomy
+          console.log("validateTaxonomy")
+          console.log(ncbi_taxonomy)
+          return [ncbi_taxonomy].map((ncbiTaxonomyEntry) => ({
+            taxId: ncbiTaxonomyEntry.tax_id,
+            organismName: ncbiTaxonomyEntry.organism_name,
+            commonName: ncbiTaxonomyEntry.common_name !== null ? ncbiTaxonomyEntry.common_name : null,
+            rank: ncbiTaxonomyEntry.rank !== null ? ncbiTaxonomyEntry.rank : null,
+            hasDescribedSpeciesName: ncbiTaxonomyEntry.has_described_species_name !== null ? ncbiTaxonomyEntry.has_described_species_name : null,
+          }))
+        } else {
+          return false
+        }
+      } catch (error) {
+        console.error(error)
+        return false;
+      }
+    },
 
     clearTaxonomySearch: function() {
       const input = this.$refs.taxonomyInput

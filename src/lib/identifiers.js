@@ -84,30 +84,3 @@ if (s) {
 }
 return false
 }
-
-export async function validateTaxonomy(s) {
-  let response = null
-  let taxonomyNode = null
-  let ncbi_taxonomy = null
-  try {
-    response = await axios.get(`https://api.ncbi.nlm.nih.gov/datasets/v2alpha/taxonomy/taxon/${s}`)
-    if (response.status === 200) {
-      taxonomyNode = response.data.taxonomy_nodes[0]
-      ncbi_taxonomy = taxonomyNode.taxonomy
-      console.log("validateTaxonomy")
-      console.log(ncbi_taxonomy)
-      return [ncbi_taxonomy].map((ncbiTaxonomyEntry) => ({
-        taxId: ncbiTaxonomyEntry.tax_id,
-        organismName: ncbiTaxonomyEntry.organism_name,
-        commonName: ncbiTaxonomyEntry.common_name !== null ? ncbiTaxonomyEntry.common_name : null,
-        rank: ncbiTaxonomyEntry.rank !== null ? ncbiTaxonomyEntry.rank : null,
-        hasDescribedSpeciesName: ncbiTaxonomyEntry.has_described_species_name !== null ? ncbiTaxonomyEntry.has_described_species_name : null,
-      }))
-    } else {
-      return false
-    }
-  } catch (error) {
-    console.error(error)
-    return false;
-  }
-}

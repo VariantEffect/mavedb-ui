@@ -83,7 +83,7 @@
               <li v-html="markdownToHtml(publication.referenceHtml)"></li>
               <div>
                 Publication: <a
-                  :href="`https://www.mavedb.org/#/publication-identifiers/${publication.dbName}/${publication.identifier}`">{{
+                  :href="`${config.appBaseUrl}/#/publication-identifiers/${publication.dbName}/${publication.identifier}`">{{
                     publication.identifier }}</a>
               </div>
               <div>
@@ -100,7 +100,7 @@
               <li v-html="markdownToHtml(publication.referenceHtml)"></li>
               <div>
                 Publication: <a
-                  :href="`https://www.mavedb.org/#/publication-identifiers/${publication.dbName}/${publication.identifier}`">{{
+                  :href="`${config.appBaseUrl}/#/publication-identifiers/${publication.dbName}/${publication.identifier}`">{{
                     publication.identifier }}</a>
               </div>
               <div>
@@ -120,7 +120,7 @@
           <div class="mave-score-set-section-title">Keywords</div>
           <div class="mave-score-set-keywords">
             <a v-for="(keyword, i) in item.keywords" :key="i"
-              :href="`https://www.mavedb.org/search/?keywords=${keyword}`">
+              :href="`${config.appBaseUrl}/#/search?search=${keyword}`">
               <Chip :label="keyword" />
             </a>
           </div>
@@ -306,6 +306,8 @@ export default {
   setup: () => {
     const scoresRemoteData = useRemoteData()
     return {
+      config: config,
+
       ...useFormatters(),
       ...useItem({ itemTypeName: 'scoreSet' }),
       scoresData: scoresRemoteData.data,

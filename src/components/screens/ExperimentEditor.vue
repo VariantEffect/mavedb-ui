@@ -72,6 +72,7 @@
                       @complete="searchDoiIdentifiers"
                       @keyup.enter="acceptNewDoiIdentifier"
                       @keyup.escape="clearDoiIdentifierSearch"
+                      :forceSelection="true"
                   />
                   <label :for="$scopedId('input-doiIdentifiers')">DOIs</label>
                 </span>
@@ -88,7 +89,6 @@
                       @complete="searchPublicationIdentifiers"
                       @keyup.enter="acceptNewPublicationIdentifier"
                       @keyup.escape="clearPublicationIdentifierSearch"
-                      forceSelection
                   >
                     <template #chip="slotProps">
                       <div>
@@ -284,6 +284,7 @@ export default {
     methodText: null,
     keywords: [],
     doiIdentifiers: [],
+    lastDoiIdentifierSearch: null,
     primaryPublicationIdentifiers: [],
     secondaryPublicationIdentifiers: [],
     publicationIdentifiers: [],
@@ -346,16 +347,23 @@ export default {
     ////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 
     acceptNewDoiIdentifier: function() {
-      const input = this.$refs.doiIdentifiersInput
-      const searchText = (input.modelValue || '').trim()
+      const autocomplete = this.$refs.doiIdentifiersInput
+      const input = autocomplete.$refs.focusInput
+      let searchText = ''
+      if (input.value) {
+        searchText = input.value.trim()
+        input.value = ''
+      } else if (this.lastDoiIdentifierSearch) {
+        searchText = this.lastDoiIdentifierSearch
+        this.lastDoiIdentifierSearch = ''
+        const inputValue = autocomplete.inputValue
+        if (inputValue[inputValue.length - 1] === undefined) {
+          inputValue.pop()
+        }
+      }
       if (validateDoi(searchText)) {
         const doi = normalizeDoi(searchText)
         this.doiIdentifiers = _.uniqBy([...this.doiIdentifiers, {identifier: doi}])
-        input.modelValue = null
-
-        // Clear the text input.
-        // TODO This depends on PrimeVue internals more than I'd like:
-        input.$refs.input.value = ''
       }
     },
 
@@ -371,6 +379,7 @@ export default {
     searchDoiIdentifiers: function(event) {
       const searchText = (event.query || '').trim()
       if (searchText.length > 0) {
+        this.lastDoiIdentifierSearch = searchText
         this.setDoiIdentifierSearch(event.query)
       }
     },

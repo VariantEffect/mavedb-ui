@@ -1480,7 +1480,6 @@ export default {
           }
         } else {
           this.$toast.add({ severity: 'error', summary: `The score and count files could not be imported. ${response.data.detail}`, life: 3000 })
-          this.$toast.add({severity:'error', summary: response.data.detail})
           // Delete the score set if just created.
           // Warn if the score set already exists.
         }

@@ -62,18 +62,21 @@
               </div>
               <div class="field">
                 <span class="p-float-label">
-                  <AutoComplete
+                  <Chips
                       ref="doiIdentifiersInput"
                       v-model="doiIdentifiers"
                       :id="$scopedId('input-doiIdentifiers')"
-                      field="identifier"
-                      :multiple="true"
-                      :suggestions="doiIdentifierSuggestionsList"
-                      @complete="searchDoiIdentifiers"
-                      @keyup.enter="acceptNewDoiIdentifier"
+                      :addOnBlur="true"
+                      :allowDuplicate="false"
+                      @add="acceptNewDoiIdentifier"
                       @keyup.escape="clearDoiIdentifierSearch"
-                      :forceSelection="true"
-                  />
+                    >
+                      <template #chip="slotProps">
+                        <div>
+                            <span>{{ slotProps.value.identifier }}</span>
+                        </div>
+                    </template>
+                  </Chips>
                   <label :for="$scopedId('input-doiIdentifiers')">DOIs</label>
                 </span>
                 <span v-if="validationErrors.doiIdentifiers" class="mave-field-error">{{validationErrors.doiIdentifiers}}</span>
@@ -87,8 +90,9 @@
                       :multiple="true"
                       :suggestions="publicationIdentifierSuggestionsList"
                       @complete="searchPublicationIdentifiers"
-                      @keyup.enter="acceptNewPublicationIdentifier"
+                      @item-select="acceptNewPublicationIdentifier"
                       @keyup.escape="clearPublicationIdentifierSearch"
+                      option-label="identifier"
                   >
                     <template #chip="slotProps">
                       <div>
@@ -134,17 +138,20 @@
               </div>
               <div class="field">
                 <span class="p-float-label">
-                  <AutoComplete
+                  <Chips
                       ref="rawReadIdentifiersInput"
                       v-model="rawReadIdentifiers"
-                      :id="$scopedId('input-rarReadIdentifiers')"
-                      field="identifier"
-                      :multiple="true"
-                      :suggestions="rawReadIdentifierSuggestionsList"
-                      @complete="searchRawReadIdentifiers"
-                      @keyup.enter="acceptNewRawReadIdentifier"
+                      :id="$scopedId('input-rawReadIdentifiers')"
+                      :addOnBlur="true"
+                      :allowDuplicate="false"
+                      @add="acceptNewRawReadIdentifier">
                       @keyup.escape="clearRawReadIdentifierSearch"
-                  />
+                      <template #chip="slotProps">
+                        <div>
+                            <span>{{ slotProps.value.identifier }}</span>
+                        </div>
+                    </template>
+                  </Chips>
                   <label :for="$scopedId('input-rawReadIdentifiers')">Raw Read</label>
                 </span>
                 <span v-if="validationErrors.rawReadIdentifiers" class="mave-field-error">{{validationErrors.rawReadIdentifiers}}</span>
@@ -247,21 +254,15 @@ export default {
   components: { AutoComplete, Button, Card, Chips, Multiselect, DefaultLayout, FileUpload, InputText, ProgressSpinner, TabPanel, TabView, Textarea },
 
   setup: () => {
-    const doiIdentifierSuggestions = useItems({itemTypeName: 'doi-identifier-search'})
     const publicationIdentifierSuggestions = useItems({itemTypeName: 'publication-identifier-search'})
     const externalPublicationIdentifierSuggestions = useItems({itemTypeName: 'external-publication-identifier-search'})
-    const rawReadIdentifierSuggestions = useItems({itemTypeName: 'raw-read-identifier-search'})
     return {
       ...useFormatters(),
       ...useItem({itemTypeName: 'experiment'}),
-      doiIdentifierSuggestions: doiIdentifierSuggestions.items,
-      setDoiIdentifierSearch: (text) => doiIdentifierSuggestions.setRequestBody({text}),
       publicationIdentifierSuggestions: publicationIdentifierSuggestions.items,
       setPublicationIdentifierSearch: (text) => publicationIdentifierSuggestions.setRequestBody({text}),
       externalPublicationIdentifierSuggestions: externalPublicationIdentifierSuggestions.items,
       setExternalPublicationIdentifierSearch: (text) => externalPublicationIdentifierSuggestions.setRequestBody({text}),
-      rawReadIdentifierSuggestions: rawReadIdentifierSuggestions.items,
-      setRawReadIdentifierSearch: (text) => rawReadIdentifierSuggestions.setRequestBody({text}),
     }
   },
 
@@ -284,7 +285,6 @@ export default {
     methodText: null,
     keywords: [],
     doiIdentifiers: [],
-    lastDoiIdentifierSearch: null,
     primaryPublicationIdentifiers: [],
     secondaryPublicationIdentifiers: [],
     publicationIdentifiers: [],
@@ -303,11 +303,6 @@ export default {
   }),
 
   computed: {
-    doiIdentifierSuggestionsList: function() {
-      // The PrimeVue AutoComplete doesn't seem to like it if we set the suggestion list to [].
-      // This causes the drop-down to stop appearing when we later populate the list.
-      return this.doiIdentifierSuggestions || [{}]
-    },
     publicationIdentifierSuggestionsList: function() {
       // The PrimeVue AutoComplete doesn't seem to like it if we set the suggestion list to [].
       // This causes the drop-down to stop appearing when we later populate the list.
@@ -318,11 +313,6 @@ export default {
       } else {
         return publicationIdentifierSuggestions
       }
-    },
-    rawReadIdentifierSuggestionsList: function() {
-      // The PrimeVue AutoComplete doesn't seem to like it if we set the suggestion list to [].
-      // This causes the drop-down to stop appearing when we later populate the list.
-      return this.rawReadIdentifierSuggestions || [{}]
     },
   },
 
@@ -346,65 +336,49 @@ export default {
     // Form fields
     ////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 
-    acceptNewDoiIdentifier: function() {
-      const autocomplete = this.$refs.doiIdentifiersInput
-      const input = autocomplete.$refs.focusInput
-      let searchText = ''
-      if (input.value) {
-        searchText = input.value.trim()
-        input.value = ''
-      } else if (this.lastDoiIdentifierSearch) {
-        searchText = this.lastDoiIdentifierSearch
-        this.lastDoiIdentifierSearch = ''
-        const inputValue = autocomplete.inputValue
-        if (inputValue[inputValue.length - 1] === undefined) {
-          inputValue.pop()
-        }
+    acceptNewDoiIdentifier: function(event) {
+      // Remove new string item from the model and add new structured item in its place if it validates and is not a duplicate.
+      const idx = this.doiIdentifiers.findIndex((item) => typeof item === 'string' || item instanceof String)
+      if (idx == -1) {
+        return
       }
-      if (validateDoi(searchText)) {
-        const doi = normalizeDoi(searchText)
-        this.doiIdentifiers = _.uniqBy([...this.doiIdentifiers, {identifier: doi}])
+
+      const searchText = this.doiIdentifiers[idx]
+      const newDoi = normalizeDoi(searchText)
+      if (this.doiIdentifiers.find((item) => item.identifier == newDoi)) {
+        this.doiIdentifiers.splice(idx, 1)
+        this.$toast.add({severity:'warning', summary: `DOI "${newDoi}" is already associated with this experiment`, life: 3000})
+      } else if (validateDoi(searchText)) {
+        this.doiIdentifiers.splice(idx, 1, { identifier: newDoi })
+      } else {
+        this.doiIdentifiers.splice(idx, 1)
+        this.$toast.add({severity:'warning', summary: `"${searchText}" is not a valid DOI`, life: 3000})
       }
     },
 
     clearDoiIdentifierSearch: function() {
+      // This could change with a new Primevue version.
       const input = this.$refs.doiIdentifiersInput
-      input.modelValue = null
-
-      // Clear the text input.
-      // TODO This depends on PrimeVue internals more than I'd like:
       input.$refs.input.value = ''
     },
 
-    searchDoiIdentifiers: function(event) {
-      const searchText = (event.query || '').trim()
-      if (searchText.length > 0) {
-        this.lastDoiIdentifierSearch = searchText
-        this.setDoiIdentifierSearch(event.query)
-      }
-    },
-
     acceptNewPublicationIdentifier: function() {
-      const input = this.$refs.publicationIdentifiersInput
-      const searchText = (input.modelValue || '').trim()
-      if (validatePubmedId(searchText)) {
-        const publicationId = normalizePubmedId(searchText)
-        this.publicationIdentifiers = _.uniqBy([...this.publicationIdentifiers, {identifier: publicationId}])
-        input.modelValue = null
+      // We assume the newest value is the right-most one here. That seems to always be true in this version of Primevue,
+      // but that may change in the future.
+      const newIdx = this.publicationIdentifiers.length - 1
 
-        // Clear the text input.
-        // TODO This depends on PrimeVue internals more than I'd like:
-        input.$refs.input.value = ''
+      // Remove new value if it is a duplicate.
+      const newIdentifier = this.publicationIdentifiers[newIdx].identifier
+      if (this.publicationIdentifiers.findIndex((pub) => pub.identifier == newIdentifier) < newIdx) {
+        this.publicationIdentifiers.splice(newIdx, 1)
+        this.$toast.add({severity:'warning', summary: `Identifier "${newIdentifier}" is already associated with this experiment`, life: 3000})
       }
     },
 
     clearPublicationIdentifierSearch: function() {
+      // This could change with a new Primevue version.
       const input = this.$refs.publicationIdentifiersInput
-      input.modelValue = null
-
-      // Clear the text input.
-      // TODO This depends on PrimeVue internals more than I'd like:
-      input.$refs.input.value = ''
+      input.$refs.focusInput.value = ''
     },
 
     searchPublicationIdentifiers: function(event) {
@@ -416,33 +390,29 @@ export default {
     },
 
     acceptNewRawReadIdentifier: function() {
-      const input = this.$refs.rawReadIdentifiersInput
-      const searchText = (input.modelValue || '').trim()
-      if (validateRawRead(searchText)) {
-        const rawReadId = normalizeRawRead(searchText)
-        this.rawReadIdentifiers = _.uniqBy([...this.rawReadIdentifiers, {identifier: rawReadId}])
-        input.modelValue = null
+      // Remove new string item from the model and add new structured item in its place if it validates and is not a duplicate.
+      const idx = this.rawReadIdentifiers.findIndex((item) => typeof item === 'string' || item instanceof String)
+      if (idx == -1) {
+        return
+      }
 
-        // Clear the text input.
-        // TODO This depends on PrimeVue internals more than I'd like:
-        input.$refs.input.value = ''
+      const searchText = this.rawReadIdentifiers[idx]
+      const newRawRead = normalizeRawRead(searchText)
+      if (this.rawReadIdentifiers.find((item) => item.identifier == newRawRead)) {
+        this.rawReadIdentifiers.splice(idx, 1)
+        this.$toast.add({severity:'warning', summary: `Raw Read identifier "${newRawRead}" is already associated with this experiment`, life: 3000})
+      } else if (validateRawRead(searchText)) {
+        this.rawReadIdentifiers.splice(idx, 1, { identifier: newRawRead })
+      } else {
+        this.rawReadIdentifiers.splice(idx, 1)
+        this.$toast.add({severity:'warning', summary: `"${searchText}" is not a valid Raw Read identifier`, life: 3000})
       }
     },
 
     clearRawReadIdentifierSearch: function() {
+      // This could change with a new Primevue version.
       const input = this.$refs.rawReadIdentifiersInput
-      input.modelValue = null
-
-      // Clear the text input.
-      // TODO This depends on PrimeVue internals more than I'd like:
       input.$refs.input.value = ''
-    },
-
-    searchRawReadIdentifiers: function(event) {
-      const searchText = (event.query || '').trim()
-      if (searchText.length > 0) {
-        this.setRawReadIdentifierSearch(event.query)
-      }
     },
 
     fileCleared: function(inputName) {

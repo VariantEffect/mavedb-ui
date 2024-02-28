@@ -153,40 +153,55 @@
                 </div>
                 <div class="field">
                   <span class="p-float-label">
-                    <AutoComplete ref="doiIdentifiersInput" v-model="doiIdentifiers"
-                      :id="$scopedId('input-doiIdentifiers')" field="identifier" :multiple="true"
-                      :suggestions="doiIdentifierSuggestionsList" @complete="searchDoiIdentifiers"
-                      @keyup.enter="acceptNewDoiIdentifier" @keyup.escape="clearDoiIdentifierSearch" />
+                    <Chips
+                        ref="doiIdentifiersInput"
+                        v-model="doiIdentifiers"
+                        :id="$scopedId('input-doiIdentifiers')"
+                        :addOnBlur="true"
+                        :allowDuplicate="false"
+                        @add="acceptNewDoiIdentifier"
+                        @keyup.escape="clearDoiIdentifierSearch"
+                      >
+                        <template #chip="slotProps">
+                          <div>
+                              <span>{{ slotProps.value.identifier }}</span>
+                          </div>
+                      </template>
+                    </Chips>
                     <label :for="$scopedId('input-doiIdentifiers')">DOIs</label>
                   </span>
-                  <span v-if="validationErrors.doiIdentifiers" class="mave-field-error">{{ validationErrors.doiIdentifiers
-                  }}</span>
+                  <span v-if="validationErrors.doiIdentifiers" class="mave-field-error">{{validationErrors.doiIdentifiers}}</span>
                 </div>
                 <div class="field">
                   <span class="p-float-label">
-                    <AutoComplete ref="publicationIdentifiersInput" v-model="publicationIdentifiers"
-                      :id="$scopedId('input-publicationIdentifiers')" :multiple="true"
-                      :suggestions="publicationIdentifierSuggestionsList" @complete="searchPublicationIdentifiers"
-                      @keyup.enter="acceptNewPublicationIdentifier" @keyup.escape="clearPublicationIdentifierSearch"
-                      forceSelection>
+                    <AutoComplete
+                        ref="publicationIdentifiersInput"
+                        v-model="publicationIdentifiers"
+                        :id="$scopedId('input-publicationIdentifiers')"
+                        :multiple="true"
+                        :suggestions="publicationIdentifierSuggestionsList"
+                        @complete="searchPublicationIdentifiers"
+                        @item-select="acceptNewPublicationIdentifier"
+                        @keyup.escape="clearPublicationIdentifierSearch"
+                        option-label="identifier"
+                    >
                       <template #chip="slotProps">
                         <div>
                           <div>{{ slotProps.value.identifier }}</div>
                         </div>
                       </template>
                       <template #item="slotProps">
-                        <div class="field">
-                          <div>Title: {{ slotProps.item.title }}</div>
-                          <div>DOI: {{ slotProps.item.publicationDoi || slotProps.item.preprintDoi }}</div>
-                          <div>Identifier: {{ slotProps.item.identifier }}</div>
-                          <div>Database: {{ slotProps.item.dbName }}</div>
+                        <div>
+                            <div>Title: {{ slotProps.item.title }}</div>
+                            <div>DOI: {{ slotProps.item.publicationDoi || slotProps.item.preprintDoi }}</div>
+                            <div>Identifier: {{ slotProps.item.identifier }}</div>
+                            <div>Database: {{ slotProps.item.dbName }}</div>
                         </div>
                       </template>
                     </AutoComplete>
-                    <label :for="$scopedId('input-publicationIdentifiers')">PubMed IDs</label>
+                    <label :for="$scopedId('input-publicationIdentifiers')">Publication identifiers</label>
                   </span>
-                  <span v-if="validationErrors.publicationIdentifiers" class="mave-field-error">{{
-                    validationErrors.publicationIdentifiers }}</span>
+                  <span v-if="validationErrors.publicationIdentifiers" class="mave-field-error">{{validationErrors.publicationIdentifiers}}</span>
                 </div>
                 <div class="field">
                   <span class="p-float-label">
@@ -634,7 +649,6 @@ export default {
         }
       }
     })
-    const doiIdentifierSuggestions = useItems({ itemTypeName: 'doi-identifier-search' })
     const publicationIdentifierSuggestions = useItems({ itemTypeName: 'publication-identifier-search' })
     const externalPublicationIdentifierSuggestions = useItems({ itemTypeName: 'external-publication-identifier-search' })
     const targetGeneIdentifierSuggestions = {}
@@ -654,8 +668,6 @@ export default {
       ...useItem({ itemTypeName: 'scoreSet' }),
       editableExperiments: editableExperiments.items,
       licenses: licenses.items,
-      doiIdentifierSuggestions: doiIdentifierSuggestions.items,
-      setDoiIdentifierSearch: (text) => doiIdentifierSuggestions.setRequestBody({ text }),
       publicationIdentifierSuggestions: publicationIdentifierSuggestions.items,
       setPublicationIdentifierSearch: (text) => publicationIdentifierSuggestions.setRequestBody({ text }),
       externalPublicationIdentifierSuggestions: externalPublicationIdentifierSuggestions.items,
@@ -750,9 +762,6 @@ export default {
           return [dbName, this.suggestionsForAutocomplete(suggestions)]
         })
       )
-    },
-    doiIdentifierSuggestionsList: function () {
-      return this.suggestionsForAutocomplete(this.doiIdentifierSuggestions)
     },
     metaAnalyzesScoreSetSuggestionsList: function () {
       return this.suggestionsForAutocomplete(this.metaAnalyzesScoreSetSuggestions)
@@ -1027,58 +1036,49 @@ export default {
       })
     },
 
-    acceptNewDoiIdentifier: function () {
+    acceptNewDoiIdentifier: function(event) {
+      // Remove new string item from the model and add new structured item in its place if it validates and is not a duplicate.
+      const idx = this.doiIdentifiers.findIndex((item) => typeof item === 'string' || item instanceof String)
+      if (idx == -1) {
+        return
+      }
+
+      const searchText = this.doiIdentifiers[idx]
+      const newDoi = normalizeDoi(searchText)
+      if (this.doiIdentifiers.find((item) => item.identifier == newDoi)) {
+        this.doiIdentifiers.splice(idx, 1)
+        this.$toast.add({severity:'warning', summary: `DOI "${newDoi}" is already associated with this experiment`, life: 3000})
+      } else if (validateDoi(searchText)) {
+        this.doiIdentifiers.splice(idx, 1, { identifier: newDoi })
+      } else {
+        this.doiIdentifiers.splice(idx, 1)
+        this.$toast.add({severity:'warning', summary: `"${searchText}" is not a valid DOI`, life: 3000})
+      }
+    },
+
+    clearDoiIdentifierSearch: function() {
+      // This could change with a new Primevue version.
       const input = this.$refs.doiIdentifiersInput
-      const searchText = (input.modelValue || '').trim()
-      if (validateDoi(searchText)) {
-        const doi = normalizeDoi(searchText)
-        this.doiIdentifiers = _.uniqBy([...this.doiIdentifiers, { identifier: doi }])
-        input.modelValue = null
-
-        // Clear the text input.
-        // TODO This depends on PrimeVue internals more than I'd like:
-        // input.$refs.input.value = ''
-      }
-    },
-
-    clearDoiIdentifierSearch: function () {
-      const input = this.$refs.doiIdentifiersInput
-      input.modelValue = null
-
-      // Clear the text input.
-      // TODO This depends on PrimeVue internals more than I'd like:
-      // input.$refs.input.value = ''
-    },
-
-    searchDoiIdentifiers: function (event) {
-      const searchText = (event.query || '').trim()
-      if (searchText.length > 0) {
-        this.setDoiIdentifierSearch(event.query)
-      }
-    },
-
-    // TODO accept other publication identifiers besides pubmed
-    acceptNewPublicationIdentifier: function () {
-      const input = this.$refs.publicationIdentifiersInput
-      const searchText = (input.modelValue || '').trim()
-      if (validatePubmedId(searchText)) {
-        const pubmedId = normalizePubmedId(searchText)
-        this.publicationIdentifiers = _.uniqBy([...this.publicationIdentifiers, { identifier: pubmedId }])
-        input.modelValue = null
-
-        // Clear the text input.
-        // TODO This depends on PrimeVue internals more than I'd like:
-        input.$refs.input.value = ''
-      }
-    },
-
-    clearPublicationIdentifierSearch: function () {
-      const input = this.$refs.publicationIdentifiersInput
-      input.modelValue = null
-
-      // Clear the text input.
-      // TODO This depends on PrimeVue internals more than I'd like:
       input.$refs.input.value = ''
+    },
+
+    acceptNewPublicationIdentifier: function() {
+      // We assume the newest value is the right-most one here. That seems to always be true in this version of Primevue,
+      // but that may change in the future.
+      const newIdx = this.publicationIdentifiers.length - 1
+
+      // Remove new value if it is a duplicate.
+      const newIdentifier = this.publicationIdentifiers[newIdx].identifier
+      if (this.publicationIdentifiers.findIndex((pub) => pub.identifier == newIdentifier) < newIdx) {
+        this.publicationIdentifiers.splice(newIdx, 1)
+        this.$toast.add({severity:'warning', summary: `Identifier "${newIdentifier}" is already associated with this experiment`, life: 3000})
+      }
+    },
+
+    clearPublicationIdentifierSearch: function() {
+      // This could change with a new Primevue version.
+      const input = this.$refs.publicationIdentifiersInput
+      input.$refs.focusInput.value = ''
     },
 
     searchPublicationIdentifiers: function (event) {
@@ -1480,7 +1480,6 @@ export default {
           }
         } else {
           this.$toast.add({ severity: 'error', summary: `The score and count files could not be imported. ${response.data.detail}`, life: 3000 })
-
           // Delete the score set if just created.
           // Warn if the score set already exists.
         }

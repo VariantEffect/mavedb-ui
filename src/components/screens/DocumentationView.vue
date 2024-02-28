@@ -32,7 +32,7 @@ export default {
   components: {DefaultLayout},
   computed: {
     apiDocumentationUrl: function() {
-      return new URL('/docs', config.apiBaseUrl)
+      return new URL('/docs/index.html', config.apiBaseUrl)
     }
   }
 }

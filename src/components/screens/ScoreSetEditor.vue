@@ -354,15 +354,7 @@
                         <div class="field-column">
                           <span class="p-float-label">
                             <!-- Assembly is the reference genome property in coordinate cases -->
-                            <Dropdown v-model="assembly" :id="$scopedId('input-targetGeneAssembly')" :options="assemblies"
-                              optionGroupLabel="type" optionGroupChildren="assemblies" style="width: 100%">
-                              <template #optiongroup="slotProps">
-                                <div class="flex align-items-center dropdown-option-group">
-                                  <div>{{ slotProps.option.type }}</div>
-                                </div>
-                              </template>
-                            </Dropdown>
-
+                            <Dropdown v-model="assembly" :id="$scopedId('input-targetGeneAssembly')" :options="assemblies" style="width: 100%"/>
                             <label :for="$scopedId('input-targetGeneAssembly')">Assembly</label>
                           </span>
                         </div>
@@ -644,7 +636,7 @@ export default {
     const licenses = useItems({ itemTypeName: 'license' })
     const referenceGenomes = useItems({ itemTypeName: 'reference-genome' })
     const geneNames = useItems({ itemTypeName: 'gene-names' })
-    const assemblies = useItems({ itemTypeName: 'grouped-assemblies' })
+    const assemblies = useItems({ itemTypeName: 'assemblies' })
     const targetGeneSuggestions = useItems({ itemTypeName: 'target-gene-search' })
 
     const expandedTargetGeneRows = ref([])

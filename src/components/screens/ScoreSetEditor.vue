@@ -312,7 +312,6 @@
                               :multiple="false"
                               :options="taxonomies"
                               @complete="searchTaxonomies"
-                              @keyup.enter="acceptNewTaxonomy"
                               @keyup.escape="clearTaxonomySearch">
                               <template #item="slotProps">
                                 {{slotProps.item.taxId}} - {{slotProps.item.organismName}} <template v-if="slotProps.item.commonName!=='NULL' && slotProps.item.commonName!== null">/ {{slotProps.item.commonName}}</template>
@@ -1140,57 +1139,6 @@ export default {
       const searchText = (event.query || '').trim()
       if (searchText.length > 0) {
         this.setTargetGeneSearch(event.query)
-      }
-    },
-
-    acceptNewTaxonomy: async function() {
-      // const input = this.$refs.taxonomyInput
-      // const searchText = (this.taxonomy && this.taxonomy.trim) ? this.taxonomy.trim() : ''
-      const autocomplete = this.$refs.taxonomyInput
-      const input = autocomplete.$refs.focusInput
-      let searchText = ''
-      if (input.value) {
-        searchText = input.value.trim()
-        input.value = ''
-      } else if (this.lastTaxonomySearch) {
-        searchText = this.lastTaxonomySearch
-        this.lastTaxonomySearch = ''
-        const inputValue = autocomplete.inputValue
-        if (inputValue[inputValue.length - 1] === undefined) {
-          inputValue.pop()
-        }
-      }
-      if (searchText.length > 0) {
-        const newTaxonomyResponse = await this.validateTaxonomy(searchText)
-        if (newTaxonomyResponse === false) {
-          this.$toast.add({ severity: 'error', summary: 'Invalid Taxonomy.', life: 3500 })
-        } else {
-          this.taxonomy = newTaxonomyResponse.length > 0 ? newTaxonomyResponse[0] : '';
-          autocomplete.inputTextValue = null
-          autocomplete.$refs.input.value = ''
-        }
-      }
-    },
-  
-    validateTaxonomy: async function(newValue) {
-      try {
-        const response = await axios.get(`https://api.ncbi.nlm.nih.gov/datasets/v2alpha/taxonomy/taxon/${newValue}`)
-        if (response.status === 200) {
-          const taxonomyNode = response.data.taxonomy_nodes[0]
-          const ncbi_taxonomy = taxonomyNode.taxonomy
-          return [ncbi_taxonomy].map((ncbiTaxonomyEntry) => ({
-            taxId: ncbiTaxonomyEntry.tax_id,
-            organismName: ncbiTaxonomyEntry.organism_name,
-            commonName: ncbiTaxonomyEntry.common_name !== null ? ncbiTaxonomyEntry.common_name : null,
-            rank: ncbiTaxonomyEntry.rank !== null ? ncbiTaxonomyEntry.rank : null,
-            hasDescribedSpeciesName: ncbiTaxonomyEntry.has_described_species_name !== null ? ncbiTaxonomyEntry.has_described_species_name : null,
-          }))
-        } else {
-          return false
-        }
-      } catch (error) {
-        console.error(error)
-        return false;
       }
     },
 

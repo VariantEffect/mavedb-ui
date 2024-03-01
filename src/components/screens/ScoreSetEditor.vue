@@ -152,40 +152,55 @@
                 </div>
                 <div class="field">
                   <span class="p-float-label">
-                    <AutoComplete ref="doiIdentifiersInput" v-model="doiIdentifiers"
-                      :id="$scopedId('input-doiIdentifiers')" field="identifier" :multiple="true"
-                      :suggestions="doiIdentifierSuggestionsList" @complete="searchDoiIdentifiers"
-                      @keyup.enter="acceptNewDoiIdentifier" @keyup.escape="clearDoiIdentifierSearch" />
+                    <Chips
+                        ref="doiIdentifiersInput"
+                        v-model="doiIdentifiers"
+                        :id="$scopedId('input-doiIdentifiers')"
+                        :addOnBlur="true"
+                        :allowDuplicate="false"
+                        @add="acceptNewDoiIdentifier"
+                        @keyup.escape="clearDoiIdentifierSearch"
+                      >
+                        <template #chip="slotProps">
+                          <div>
+                              <span>{{ slotProps.value.identifier }}</span>
+                          </div>
+                      </template>
+                    </Chips>
                     <label :for="$scopedId('input-doiIdentifiers')">DOIs</label>
                   </span>
-                  <span v-if="validationErrors.doiIdentifiers" class="mave-field-error">{{ validationErrors.doiIdentifiers
-                  }}</span>
+                  <span v-if="validationErrors.doiIdentifiers" class="mave-field-error">{{validationErrors.doiIdentifiers}}</span>
                 </div>
                 <div class="field">
                   <span class="p-float-label">
-                    <AutoComplete ref="publicationIdentifiersInput" v-model="publicationIdentifiers"
-                      :id="$scopedId('input-publicationIdentifiers')" :multiple="true"
-                      :suggestions="publicationIdentifierSuggestionsList" @complete="searchPublicationIdentifiers"
-                      @keyup.enter="acceptNewPublicationIdentifier" @keyup.escape="clearPublicationIdentifierSearch"
-                      forceSelection>
+                    <AutoComplete
+                        ref="publicationIdentifiersInput"
+                        v-model="publicationIdentifiers"
+                        :id="$scopedId('input-publicationIdentifiers')"
+                        :multiple="true"
+                        :suggestions="publicationIdentifierSuggestionsList"
+                        @complete="searchPublicationIdentifiers"
+                        @item-select="acceptNewPublicationIdentifier"
+                        @keyup.escape="clearPublicationIdentifierSearch"
+                        option-label="identifier"
+                    >
                       <template #chip="slotProps">
                         <div>
                           <div>{{ slotProps.value.identifier }}</div>
                         </div>
                       </template>
                       <template #item="slotProps">
-                        <div class="field">
-                          <div>Title: {{ slotProps.item.title }}</div>
-                          <div>DOI: {{ slotProps.item.publicationDoi || slotProps.item.preprintDoi }}</div>
-                          <div>Identifier: {{ slotProps.item.identifier }}</div>
-                          <div>Database: {{ slotProps.item.dbName }}</div>
+                        <div>
+                            <div>Title: {{ slotProps.item.title }}</div>
+                            <div>DOI: {{ slotProps.item.publicationDoi || slotProps.item.preprintDoi }}</div>
+                            <div>Identifier: {{ slotProps.item.identifier }}</div>
+                            <div>Database: {{ slotProps.item.dbName }}</div>
                         </div>
                       </template>
                     </AutoComplete>
-                    <label :for="$scopedId('input-publicationIdentifiers')">PubMed IDs</label>
+                    <label :for="$scopedId('input-publicationIdentifiers')">Publication identifiers</label>
                   </span>
-                  <span v-if="validationErrors.publicationIdentifiers" class="mave-field-error">{{
-                    validationErrors.publicationIdentifiers }}</span>
+                  <span v-if="validationErrors.publicationIdentifiers" class="mave-field-error">{{validationErrors.publicationIdentifiers}}</span>
                 </div>
                 <div class="field">
                   <span class="p-float-label">
@@ -587,7 +602,6 @@ import TabPanel from 'primevue/tabpanel'
 import TabView from 'primevue/tabview'
 import Textarea from 'primevue/textarea'
 import DataTable from 'primevue/datatable';
-import { useForm } from 'vee-validate'
 import { ref } from 'vue'
 
 import EntityLink from '@/components/common/EntityLink'
@@ -599,6 +613,29 @@ import { normalizeDoi, normalizeIdentifier, normalizePubmedId, validateDoi, vali
 import useFormatters from '@/composition/formatters'
 
 const externalGeneDatabases = ['UniProt', 'Ensembl', 'RefSeq']
+
+function emptyTargetGene() {
+  return {
+    index: null,
+    name: null,
+    category: null,
+    type: null,
+    targetSequence: {
+      sequenceType: null,
+      sequence: null,
+      label: null,
+      reference: null
+    },
+    targetAccession: {
+      accession: null,
+      assembly: null,
+      gene: null
+    },
+    externalIdentifiers: _.fromPairs(
+      externalGeneDatabases.map((dbName) => [dbName, { identifier: null, offset: null }])
+    )
+  }
+}
 
 export default {
   name: 'ScoreSetEditor',
@@ -613,7 +650,6 @@ export default {
         }
       }
     })
-    const doiIdentifierSuggestions = useItems({ itemTypeName: 'doi-identifier-search' })
     const publicationIdentifierSuggestions = useItems({ itemTypeName: 'publication-identifier-search' })
     const externalPublicationIdentifierSuggestions = useItems({ itemTypeName: 'external-publication-identifier-search' })
     const targetGeneIdentifierSuggestions = {}
@@ -626,7 +662,7 @@ export default {
     const targetGeneSuggestions = useItems({itemTypeName: 'target-gene-search'})
     const geneNames = useItems({ itemTypeName: 'gene-names' })
     const assemblies = useItems({ itemTypeName: 'grouped-assemblies' })
-    const { errors: validationErrors, handleSubmit, setErrors: setValidationErrors } = useForm()
+    const targetGeneSuggestions = useItems({ itemTypeName: 'target-gene-search' })
 
     const expandedTargetGeneRows = ref([])
 
@@ -635,8 +671,6 @@ export default {
       ...useItem({ itemTypeName: 'scoreSet' }),
       editableExperiments: editableExperiments.items,
       licenses: licenses.items,
-      doiIdentifierSuggestions: doiIdentifierSuggestions.items,
-      setDoiIdentifierSearch: (text) => doiIdentifierSuggestions.setRequestBody({ text }),
       publicationIdentifierSuggestions: publicationIdentifierSuggestions.items,
       setPublicationIdentifierSearch: (text) => publicationIdentifierSuggestions.setRequestBody({ text }),
       externalPublicationIdentifierSuggestions: externalPublicationIdentifierSuggestions.items,
@@ -657,9 +691,6 @@ export default {
       setTaxonomySearch: (text) => taxonomySuggestions.setRequestBody({text}),
       assemblies: assemblies.items,
       geneNames: geneNames.items,
-      handleSubmit,
-      setValidationErrors,
-      validationErrors,
       expandedTargetGeneRows
     }
   },
@@ -687,27 +718,9 @@ export default {
     secondaryPublicationIdentifiers: [],
     publicationIdentifiers: [],
     dataUsagePolicy: null,
-    targetGene: {
-      index: null,
-      name: null,
-      category: null,
-      targetSequence: {
-        sequenceType: null,
-        sequence: null,
-        taxonomy: null,
-        label: null
-      },
-      targetAccession: {
-        accession: null,
-        assembly: null,
-        gene: null
-      },
-      externalIdentifiers: _.fromPairs(
-        externalGeneDatabases.map((dbName) => [dbName, { identifier: null, offset: null }])
-      )
-    },
     taxonomy: null,
     lastTaxonomySearch: null,
+    targetGene: emptyTargetGene(),
     assembly: null,
     assemblySuggestions: [],
     assemblyDropdownValue: null,
@@ -743,7 +756,8 @@ export default {
     externalGeneDatabases,
     metaAnalyzesScoreSetSuggestions: [],
     supersededScoreSetSuggestions: [],
-    targetGeneAccessionSuggestions: []
+    targetGeneAccessionSuggestions: [],
+    validationErrors: {},
   }),
 
   computed: {
@@ -754,9 +768,6 @@ export default {
           return [dbName, this.suggestionsForAutocomplete(suggestions)]
         })
       )
-    },
-    doiIdentifierSuggestionsList: function () {
-      return this.suggestionsForAutocomplete(this.doiIdentifierSuggestions)
     },
     metaAnalyzesScoreSetSuggestionsList: function () {
       return this.suggestionsForAutocomplete(this.metaAnalyzesScoreSetSuggestions)
@@ -798,6 +809,9 @@ export default {
     'targetGene.externalIdentifiers': {
       deep: true,
       handler: function (newValue) {
+        if (!newValue) {
+          return
+        }
         // If an identifier has been set, set the offset to 0 by default.
         for (const dbName of externalGeneDatabases) {
           if (newValue[dbName]?.identifier?.identifier != null && newValue[dbName]?.offset == null) {
@@ -1030,58 +1044,49 @@ export default {
       })
     },
 
-    acceptNewDoiIdentifier: function () {
+    acceptNewDoiIdentifier: function(event) {
+      // Remove new string item from the model and add new structured item in its place if it validates and is not a duplicate.
+      const idx = this.doiIdentifiers.findIndex((item) => typeof item === 'string' || item instanceof String)
+      if (idx == -1) {
+        return
+      }
+
+      const searchText = this.doiIdentifiers[idx]
+      const newDoi = normalizeDoi(searchText)
+      if (this.doiIdentifiers.find((item) => item.identifier == newDoi)) {
+        this.doiIdentifiers.splice(idx, 1)
+        this.$toast.add({severity:'warning', summary: `DOI "${newDoi}" is already associated with this experiment`, life: 3000})
+      } else if (validateDoi(searchText)) {
+        this.doiIdentifiers.splice(idx, 1, { identifier: newDoi })
+      } else {
+        this.doiIdentifiers.splice(idx, 1)
+        this.$toast.add({severity:'warning', summary: `"${searchText}" is not a valid DOI`, life: 3000})
+      }
+    },
+
+    clearDoiIdentifierSearch: function() {
+      // This could change with a new Primevue version.
       const input = this.$refs.doiIdentifiersInput
-      const searchText = (input.modelValue || '').trim()
-      if (validateDoi(searchText)) {
-        const doi = normalizeDoi(searchText)
-        this.doiIdentifiers = _.uniqBy([...this.doiIdentifiers, { identifier: doi }])
-        input.modelValue = null
-
-        // Clear the text input.
-        // TODO This depends on PrimeVue internals more than I'd like:
-        // input.$refs.input.value = ''
-      }
-    },
-
-    clearDoiIdentifierSearch: function () {
-      const input = this.$refs.doiIdentifiersInput
-      input.modelValue = null
-
-      // Clear the text input.
-      // TODO This depends on PrimeVue internals more than I'd like:
-      // input.$refs.input.value = ''
-    },
-
-    searchDoiIdentifiers: function (event) {
-      const searchText = (event.query || '').trim()
-      if (searchText.length > 0) {
-        this.setDoiIdentifierSearch(event.query)
-      }
-    },
-
-    // TODO accept other publication identifiers besides pubmed
-    acceptNewPublicationIdentifier: function () {
-      const input = this.$refs.publicationIdentifiersInput
-      const searchText = (input.modelValue || '').trim()
-      if (validatePubmedId(searchText)) {
-        const pubmedId = normalizePubmedId(searchText)
-        this.publicationIdentifiers = _.uniqBy([...this.publicationIdentifiers, { identifier: pubmedId }])
-        input.modelValue = null
-
-        // Clear the text input.
-        // TODO This depends on PrimeVue internals more than I'd like:
-        input.$refs.input.value = ''
-      }
-    },
-
-    clearPublicationIdentifierSearch: function () {
-      const input = this.$refs.publicationIdentifiersInput
-      input.modelValue = null
-
-      // Clear the text input.
-      // TODO This depends on PrimeVue internals more than I'd like:
       input.$refs.input.value = ''
+    },
+
+    acceptNewPublicationIdentifier: function() {
+      // We assume the newest value is the right-most one here. That seems to always be true in this version of Primevue,
+      // but that may change in the future.
+      const newIdx = this.publicationIdentifiers.length - 1
+
+      // Remove new value if it is a duplicate.
+      const newIdentifier = this.publicationIdentifiers[newIdx].identifier
+      if (this.publicationIdentifiers.findIndex((pub) => pub.identifier == newIdentifier) < newIdx) {
+        this.publicationIdentifiers.splice(newIdx, 1)
+        this.$toast.add({severity:'warning', summary: `Identifier "${newIdentifier}" is already associated with this experiment`, life: 3000})
+      }
+    },
+
+    clearPublicationIdentifierSearch: function() {
+      // This could change with a new Primevue version.
+      const input = this.$refs.publicationIdentifiersInput
+      input.$refs.focusInput.value = ''
     },
 
     searchPublicationIdentifiers: function (event) {
@@ -1232,7 +1237,7 @@ export default {
     ////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 
     mergeValidationErrors: function () {
-      this.setValidationErrors(_.merge({}, this.serverSideValidationErrors, this.clientSideValidationErrors))
+      this.validationErrors = _.merge({}, this.serverSideValidationErrors, this.clientSideValidationErrors)
     },
 
     ////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
@@ -1262,27 +1267,8 @@ export default {
         })
         this.secondaryPublicationIdentifiers = this.item.secondaryPublicationIdentifiers
         this.dataUsagePolicy = this.item.dataUsagePolicy
-        this.targetGene = {
-          index: null,
-          name: null,
-          category: null,
-          targetSequence: {
-            sequenceType: null,
-            sequence: null,
-            label: null,
-            taxonomy: null
-          },
-          targetAccession: {
-            accession: null,
-            assembly: null,
-            gene: null
-          },
-          externalIdentifiers: _.fromPairs(
-            externalGeneDatabases.map((dbName) => [dbName, { identifier: null, offset: null }])
-          )
-        }
-
         this.taxonomy = this.item.taxonomy
+        this.targetGene = emptyTargetGene()
         this.assembly = this.item.assembly
         this.targetGenes = this.item.targetGenes
         this.extraMetadata = this.item.extraMetadata
@@ -1302,48 +1288,24 @@ export default {
         this.publicationIdentifiers = []
         this.dataUsagePolicy = null
         this.taxonomy = null
-        this.targetGene = null
-        this.targetGenes = []
-        this.assembly = null
-        this.assemblySuggestions = []
-        this.assemblyDropdownValue = null
-        this.geneName = null
-        this.geneNameAccessionSuggestions = []
-        this.geneNameDropdownValue =  null
         this.extraMetadata = {}
+        this.resetTarget()
+        this.targetGenes = []
       }
     },
 
     resetTarget: function () {
-      this.fileCleared('targetGeneTargetSequenceSequenceFile')
-      this.targetGene = {
-        index: null,
-        name: null,
-        category: null,
-        type: null,
-        targetSequence: {
-          sequenceType: null,
-          sequence: null,
-          label: null,
-          taxonomy: null
-        },
-        targetAccession: {
-          accession: null,
-          assembly: null,
-          gene: null
-        },
-        externalIdentifiers: _.fromPairs(
-          externalGeneDatabases.map((dbName) => [dbName, { identifier: null, offset: null }])
-        )
-      },
+      this.taxonomy = null
       this.assembly = null
       this.assemblySuggestions = []
       this.assemblyDropdownValue = null
-      this.taxonomy = null
       this.existingTargetGene = null
       this.geneName = null
       this.geneNameAccessionSuggestions = []
       this.geneNameDropdownValue =  null
+      this.fileCleared('targetGeneTargetSequenceSequenceFile')
+      this.referenceGenome = null
+      this.targetGene = emptyTargetGene()
     },
 
     addTarget: function () {
@@ -1448,7 +1410,7 @@ export default {
       this.progressVisible = false
       if (response.status == 200) {
         const savedItem = response.data
-        this.setValidationErrors({})
+        this.validationErrors = {}
         if (this.item) {
           if (this.$refs.scoresFileUpload?.files?.length == 1) {
             await this.uploadData(savedItem)
@@ -1502,7 +1464,7 @@ export default {
 
     uploadData: async function (scoreSet) {
       if (this.$refs.scoresFileUpload.files.length != 1) {
-        this.setValidationErrors({ scores: 'Required' })
+        this.validationErrors = { scores: 'Required' }
       } else {
         const formData = new FormData()
         formData.append('scores_file', this.$refs.scoresFileUpload.files[0])
@@ -1537,8 +1499,7 @@ export default {
             this.$toast.add({ severity: 'success', summary: 'The new score set was saved.', life: 3000 })
           }
         } else {
-          this.$toast.add({ severity: 'error', summary: `The score and count files could not be imported. ${response.data.detail}`})
-
+          this.$toast.add({ severity: 'error', summary: `The score and count files could not be imported. ${response.data.detail}`, life: 3000 })
           // Delete the score set if just created.
           // Warn if the score set already exists.
         }

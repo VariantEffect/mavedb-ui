@@ -298,29 +298,25 @@
                         </div>
                       </div>
                       <div class="field">
-                        If taxonomy does not appear on the option list, please enter a taxonomy ID, organism name or common name from 
-                        <a href="https://www.ncbi.nlm.nih.gov/datasets/taxonomy/tree/" target="blank">NCBI</a> taxonomies and press the Enter key. 
-                        <div class="field">
-                          <span class="p-float-label">
-                            <AutoComplete
-                              ref="taxonomyInput" 
-                              v-model="taxonomy" 
-                              dropdown
-                              :id="$scopedId('input-targetSequenceTaxonomy')"
-                              :suggestions="taxonomySuggestionsList" 
-                              field="organismName"
-                              :multiple="false"
-                              :options="taxonomies"
-                              @complete="searchTaxonomies"
-                              @keyup.escape="clearTaxonomySearch">
-                              <template #item="slotProps">
-                                {{slotProps.item.taxId}} - {{slotProps.item.organismName}} <template v-if="slotProps.item.commonName!=='NULL' && slotProps.item.commonName!== null">/ {{slotProps.item.commonName}}</template>
-                              </template>
-                            </AutoComplete>
-                            <label :for="$scopedId('input-targetSequenceTaxonomy')">Taxonomy</label>
-                          </span>
-                          <span v-if="validationErrors['targetGene.targetSequence.taxonomy']" class="mave-field-error">{{validationErrors['targetGene.targetSequence.taxonomy']}}</span>
-                        </div>
+                        <span class="p-float-label">
+                          <AutoComplete
+                            ref="taxonomyInput" 
+                            v-model="taxonomy" 
+                            dropdown
+                            :id="$scopedId('input-targetSequenceTaxonomy')"
+                            :suggestions="taxonomySuggestionsList" 
+                            field="organismName"
+                            :multiple="false"
+                            :options="taxonomies"
+                            @complete="searchTaxonomies"
+                            @keyup.escape="clearTaxonomySearch">
+                            <template #item="slotProps">
+                              {{slotProps.item.taxId}} - {{slotProps.item.organismName}} <template v-if="slotProps.item.commonName!=='NULL' && slotProps.item.commonName!== null">/ {{slotProps.item.commonName}}</template>
+                            </template>
+                          </AutoComplete>
+                          <label :for="$scopedId('input-targetSequenceTaxonomy')">Taxonomy</label>
+                        </span>
+                        <span v-if="validationErrors['targetGene.targetSequence.taxonomy']" class="mave-field-error">{{validationErrors['targetGene.targetSequence.taxonomy']}}</span>
                       </div>
                       <div class="field">
                         <span class="p-float-label">

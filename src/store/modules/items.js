@@ -629,7 +629,7 @@ export default (collectionUrl, options = {}) => {
           await dispatch('beginLoadingItems')
           /*commit('loadingItems')
           let response = await axios.get(collectionUrl)
-          // TODO mavedb-ui#130 catch errors in response
+          // TODO (#130) catch errors in response
           commit('loadedItems', {items: response.data || []})*/
         }
       },

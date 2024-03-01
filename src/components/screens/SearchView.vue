@@ -329,7 +329,7 @@ export default defineComponent({
             }
           }
         )
-        // TODO mavedb-ui#130 catch errors in response
+        // TODO (#130) catch errors in response
         this.scoreSets = response.data || []
 
         // reset published score sets search results when using search bar

@@ -466,7 +466,7 @@ export default defineComponent({
             }
           }
         )
-        // TODO mavedb-ui#130 catch errors in response
+        // TODO(#130) catch errors in response
         return response.data || {}
       } catch (err) {
         console.log(`Error while loading search results for Model: ${model}, Name: ${name}, Field: ${field}")`, err)
@@ -485,7 +485,7 @@ export default defineComponent({
             }
           }
         )
-        // TODO mavedb-ui#130 catch errors in response
+        // TODO (#130) catch errors in response
         return response.data || []
       } catch (err) {
         console.log(`Error while loading ${identifier} search results")`, err)
@@ -503,7 +503,7 @@ export default defineComponent({
             }
           }
         )
-        // TODO mavedb-ui#130 catch errors in response
+        // TODO (#130) catch errors in response
         return response.data || []
       } catch (err) {
         console.log(`Error while loading publication identifier search results")`, err)
@@ -522,7 +522,7 @@ export default defineComponent({
             }
           }
         )
-        // TODO mavedb-ui#130 catch errors in response
+        // TODO (#130) catch errors in response
         return response.data || []
       } catch (err) {
         console.log(`Error while loading search results")`, err)

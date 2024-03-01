@@ -357,9 +357,6 @@ export default defineComponent({
           window.open(`${config.appBaseUrl}/#/search?${model}=${Object.keys(data)[element[0].index]}`)
         },
         plugins: {
-          colorschemes: {
-            scheme: 'brewer.Paired12'
-          },
           legend: {
             display: false
           },
@@ -378,7 +375,7 @@ export default defineComponent({
         datasets: [
           {
             data: entries.map((e) => { return e[1] }),
-            // Color pallete for pie charts.
+            // Colors for pie charts; Colors palette from https://sashamaps.net/docs/resources/20-colors/.
             backgroundColor: ['#3f51b5', '#e6194b', '#3cb44b', '#ffe119', '#f032e6', '#bcf60c', '#fabebe', '#008080', '#e6beff', '#f58231', '#911eb4', '#4363d8', '#46f0f0', '#9a6324', '#fffac8', '#800000', '#aaffc3', '#808000', '#ffd8b1', '#808080', '#ffffff', '#000000']
           }
         ]

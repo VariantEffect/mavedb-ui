@@ -139,7 +139,7 @@
               }
             }
           )
-          // TODO catch errors in response
+          // TODO mavedb-ui#130 catch errors in response
           this.scoreSets = response.data || []
 
           // reset published score sets search results when using search bar

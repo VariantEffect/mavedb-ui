@@ -378,10 +378,11 @@ export default defineComponent({
     statisticsDictToChartData: function (stats) {
       let entries = Object.entries(stats)
       return {
-        labels: entries.map(e => { return e[0] }),
+        labels: entries.map((e) => { return e[0] }),
         datasets: [
           {
-            data: entries.map(e => { return e[1] }),
+            data: entries.map((e) => { return e[1] }),
+            // Color pallete for pie charts.
             backgroundColor: ['#3f51b5', '#e6194b', '#3cb44b', '#ffe119', '#f032e6', '#bcf60c', '#fabebe', '#008080', '#e6beff', '#f58231', '#911eb4', '#4363d8', '#46f0f0', '#9a6324', '#fffac8', '#800000', '#aaffc3', '#808000', '#ffd8b1', '#808080', '#ffffff', '#000000']
           }
         ]
@@ -428,7 +429,7 @@ export default defineComponent({
       const loadDoiIdentifiers = async () => {
         const identifiers = []
         for (const identifier of Object.keys(this.dataForField)) {
-          let result = await this.searchDoiIdentifiers(identifier)
+          let result = await this.searchIdentifiers(identifier, "doi-identifiers")
           identifiers.push({ ...result[0], ...{ count: this.dataForField[identifier] } })
         }
 
@@ -450,7 +451,7 @@ export default defineComponent({
       const loadRawReadSetIdentifiers = async () => {
         const identifiers = []
         for (const identifier of Object.keys(this.dataForField)) {
-          let result = await this.searchRawReadSetIdentifiers(identifier)
+          let result = await this.searchIdentifiers(identifier, 'raw-read-identifiers')
           identifiers.push({ ...result[0], ...{ count: this.dataForField[identifier] } })
         }
 
@@ -503,7 +504,7 @@ export default defineComponent({
             }
           }
         )
-        // TODO catch errors in response
+        // TODO mavedb-ui#130 catch errors in response
         return response.data || {}
       } catch (err) {
         console.log(`Error while loading search results")`, err)
@@ -511,10 +512,10 @@ export default defineComponent({
       }
     },
 
-    searchDoiIdentifiers: async function (identifier) {
+    searchIdentifiers: async function (identifier, field) {
       try {
         const response = await axios.post(
-          `${config.apiBaseUrl}/doi-identifiers/search`,
+          `${config.apiBaseUrl}/${field}/search`,
           { text: identifier },
           {
             headers: {
@@ -522,7 +523,7 @@ export default defineComponent({
             }
           }
         )
-        // TODO catch errors in response
+        // TODO mavedb-ui#130 catch errors in response
         return response.data || []
       } catch (err) {
         console.log(`Error while loading search results")`, err)
@@ -540,26 +541,7 @@ export default defineComponent({
             }
           }
         )
-        // TODO catch errors in response
-        return response.data || []
-      } catch (err) {
-        console.log(`Error while loading search results")`, err)
-        return []
-      }
-    },
-
-    searchRawReadSetIdentifiers: async function (identifier) {
-      try {
-        const response = await axios.post(
-          `${config.apiBaseUrl}/raw-read-identifiers/search`,
-          { text: identifier },
-          {
-            headers: {
-              accept: 'application/json'
-            }
-          }
-        )
-        // TODO catch errors in response
+        // TODO mavedb-ui#130 catch errors in response
         return response.data || []
       } catch (err) {
         console.log(`Error while loading search results")`, err)
@@ -578,7 +560,7 @@ export default defineComponent({
             }
           }
         )
-        // TODO catch errors in response
+        // TODO mavedb-ui#130 catch errors in response
         return response.data || []
       } catch (err) {
         console.log(`Error while loading search results")`, err)

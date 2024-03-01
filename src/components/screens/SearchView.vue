@@ -136,7 +136,7 @@ export default defineComponent({
       return countTargetGeneMetadata(this.publishedScoreSets, (targetGene) => targetGene.name)
     },
     targetOrganismFilterOptions: function() {
-      return countTargetGeneMetadata(this.publishedScoreSets, 
+      return countTargetGeneMetadata(this.publishedScoreSets,
         (targetGene) => targetGene.targetSequence?.reference.organismName || '')
     },
     targetAccessionFilterOptions: function() {
@@ -147,15 +147,15 @@ export default defineComponent({
       return countTargetGeneMetadata(this.publishedScoreSets, (targetGene) => targetGene.category)
     },
     publicationAuthorFilterOptions: function() {
-      return countPublicationMetadata(this.publishedScoreSets, 
+      return countPublicationMetadata(this.publishedScoreSets,
         (publicationIdentifier) => publicationIdentifier.authors.map((author) => author.name))
     },
     publicationDatabaseFilterOptions: function() {
-      return countPublicationMetadata(this.publishedScoreSets, 
+      return countPublicationMetadata(this.publishedScoreSets,
         (publicationIdentifier) => publicationIdentifier.dbName ? [publicationIdentifier.dbName] : [])
     },
     publicationJournalFilterOptions: function() {
-      return countPublicationMetadata(this.publishedScoreSets, 
+      return countPublicationMetadata(this.publishedScoreSets,
         (publicationIdentifier) => publicationIdentifier.publicationJournal ? [publicationIdentifier.publicationJournal] : [])
     },
   },
@@ -329,7 +329,7 @@ export default defineComponent({
             }
           }
         )
-        // TODO catch errors in response
+        // TODO mavedb-ui#130 catch errors in response
         this.scoreSets = response.data || []
 
         // reset published score sets search results when using search bar

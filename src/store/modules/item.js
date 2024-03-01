@@ -89,7 +89,7 @@ export default (collectionUrl, {primaryKey = '_id'} = {}) => {
                 }
               }
             )
-            // TODO catch errors in response
+            // TODO mavedb-ui#130 catch errors in response
             commit('loadedItem', {item: response.data || null})
           } catch (err) {
             console.log(`Error while loading item (URL="${url}")`, err)

@@ -36,7 +36,7 @@ export default (collectionUrl, options = {}) => {
     }
     return item[options.primaryKey]
   }
-  
+
   function sortItems(items, state) {
     if (items && _.get(state, 'filter.itemIds') && !state.order) {
       return _.filter(state.filter.itemIds.map((id) => items.find((item) => getPrimaryKeyValue(item) == id)), Boolean)
@@ -629,7 +629,7 @@ export default (collectionUrl, options = {}) => {
           await dispatch('beginLoadingItems')
           /*commit('loadingItems')
           let response = await axios.get(collectionUrl)
-          // TODO catch errors in response
+          // TODO mavedb-ui#130 catch errors in response
           commit('loadedItems', {items: response.data || []})*/
         }
       },

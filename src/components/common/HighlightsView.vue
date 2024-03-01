@@ -30,20 +30,20 @@
                   </template>
                   <!-- Handle url columns separately, so that we can fill in any missing DB data -->
                   <template v-else-if="this.field == 'uniprot-identifier' && col.field == 'url'" #body="slotProps">
-                    <a
-                      :href="slotProps.data[col.field] ? `${slotProps.data[col.field]}` : `http://purl.uniprot.org/uniprot/${slotProps.data.identifier}`" target="_blank">{{
+                    <a :href="slotProps.data[col.field] ? `${slotProps.data[col.field]}` : `http://purl.uniprot.org/uniprot/${slotProps.data.identifier}`"
+                      target="_blank">{{
                       slotProps.data.url ? slotProps.data.url :
                       `http://purl.uniprot.org/uniprot/${slotProps.data.identifier}` }}</a>
                   </template>
                   <template v-else-if="this.field == 'refseq-identifier' && col.field == 'url'" #body="slotProps">
-                    <a
-                      :href="slotProps.data[col.field] ? `${slotProps.data[col.field]}` : `http://www.ncbi.nlm.nih.gov/entrez/viewer.fcgi?val=${slotProps.data.identifier}`" target="_blank">{{
+                    <a :href="slotProps.data[col.field] ? `${slotProps.data[col.field]}` : `http://www.ncbi.nlm.nih.gov/entrez/viewer.fcgi?val=${slotProps.data.identifier}`"
+                      target="_blank">{{
                       slotProps.data.url ? slotProps.data.url :
                       `http://www.ncbi.nlm.nih.gov/entrez/viewer.fcgi?val=${slotProps.data.identifier}` }}</a>
                   </template>
                   <template v-else-if="this.field == 'ensembl-identifier' && col.field == 'url'" #body="slotProps">
-                    <a
-                      :href="slotProps.data[col.field] ? `${slotProps.data[col.field]}` : `http://www.ensembl.org/id/${slotProps.data.identifier}`" target="_blank">{{
+                    <a :href="slotProps.data[col.field] ? `${slotProps.data[col.field]}` : `http://www.ensembl.org/id/${slotProps.data.identifier}`"
+                      target="_blank">{{
                       slotProps.data.url ? slotProps.data.url : `http://www.ensembl.org/id/${slotProps.data.identifier}`
                       }}</a>
                   </template>
@@ -290,10 +290,6 @@ export default defineComponent({
     }
   },
 
-  computed: {
-
-  },
-
   props: {
     model: {
       type: String,
@@ -394,42 +390,25 @@ export default defineComponent({
         return []
       }
 
-      // Target loaders
-      const loadUniprotIdentifiers = async () => {
+      const loadTargetIdentifiers = async (dbName) => {
+        const dbNames = {
+          "uniprot-identifier": "UniProt",
+          "refseq-identifier": "RefSeq",
+          "ensembl-identifier": "Ensembl"
+        }
         const identifiers = []
         for (const identifier of Object.keys(this.dataForField)) {
-          let result = await this.searchTargetIdentifiers("UniProt", identifier)
+          let result = await this.searchTargetIdentifiers(dbNames[dbName], identifier)
           identifiers.push({ ...result[0], ...{ count: this.dataForField[identifier] } })
         }
 
         return identifiers
       }
 
-      const loadRefseqIdentifiers = async () => {
+      const loadRecordIdentifiers = async (identifierType) => {
         const identifiers = []
         for (const identifier of Object.keys(this.dataForField)) {
-          let result = await this.searchTargetIdentifiers("RefSeq", identifier)
-          identifiers.push({ ...result[0], ...{ count: this.dataForField[identifier] } })
-        }
-
-        return identifiers
-      }
-
-      const loadEnsemblIdentifiers = async () => {
-        const identifiers = []
-        for (const identifier of Object.keys(this.dataForField)) {
-          let result = await this.searchTargetIdentifiers("Ensembl", identifier)
-          identifiers.push({ ...result[0], ...{ count: this.dataForField[identifier] } })
-        }
-
-        return identifiers
-      }
-
-      // ScoreSet loaders
-      const loadDoiIdentifiers = async () => {
-        const identifiers = []
-        for (const identifier of Object.keys(this.dataForField)) {
-          let result = await this.searchIdentifiers(identifier, "doi-identifiers")
+          let result = await this.searchIdentifiers(identifier, identifierType)
           identifiers.push({ ...result[0], ...{ count: this.dataForField[identifier] } })
         }
 
@@ -448,46 +427,29 @@ export default defineComponent({
         return identifiers
       }
 
-      const loadRawReadSetIdentifiers = async () => {
-        const identifiers = []
-        for (const identifier of Object.keys(this.dataForField)) {
-          let result = await this.searchIdentifiers(identifier, 'raw-read-identifiers')
-          identifiers.push({ ...result[0], ...{ count: this.dataForField[identifier] } })
-        }
-
-        return identifiers
+      var identifiers;
+      // Fields loaded directly via data for field. These fields do not require additional `/search` endpoint requests.
+      if (this.field == 'accession' || this.field == 'gene' || this.field == 'keywords') {
+        identifiers = this.countsToLeaderboard(this.dataForField)
+      }
+      // External gene identifiers
+      else if (this.field == 'uniprot-identifier' || this.field == 'refseq-identifier' || this.field == 'ensembl-identifier') {
+        identifiers = (await loadTargetIdentifiers(this.field))
       }
 
-      // Target fields
-      if (this.field == 'accession' || this.field == 'gene') {
-        return this.countsToLeaderboard(this.dataForField)
+      // Record identifiers
+      else if (this.field == 'doi-identifiers' || this.field == 'raw-read-identifiers') {
+        identifiers = (await loadRecordIdentifiers(this.field))
       }
-      if (this.field == 'uniprot-identifier') {
-        return (await loadUniprotIdentifiers()).sort((a, b) => { a.count - b.count })
-      }
-      else if (this.field == 'refseq-identifier') {
-        return (await loadRefseqIdentifiers()).sort((a, b) => { a.count - b.count })
-      }
-      else if (this.field == 'ensembl-identifier') {
-        return (await loadEnsemblIdentifiers()).sort((a, b) => { a.count - b.count })
-      }
-
-      // ScoreSet fields
-      else if (this.field == 'doi-identifiers') {
-        return (await loadDoiIdentifiers()).sort((a, b) => { a.count - b.count })
-      }
+      // Publication identifiers - loaded differently to account for dbName nesting.
       else if (this.field == 'publication-identifiers') {
-        return (await loadPublicationIdentifiers()).sort((a, b) => { a.count - b.count })
-      }
-      else if (this.field == 'raw-read-identifiers') {
-        return (await loadRawReadSetIdentifiers()).sort((a, b) => { a.count - b.count })
-      }
-      else if (this.field == 'keywords') {
-        return this.countsToLeaderboard(this.dataForField)
+        identifiers = (await loadPublicationIdentifiers())
       }
       else {
-        return []
+        identifiers = []
       }
+
+      return identifiers.sort((a, b) => { a.count - b.count })
     },
 
     countsToLeaderboard: function (counts) {
@@ -507,7 +469,7 @@ export default defineComponent({
         // TODO mavedb-ui#130 catch errors in response
         return response.data || {}
       } catch (err) {
-        console.log(`Error while loading search results")`, err)
+        console.log(`Error while loading search results for Model: ${model}, Name: ${name}, Field: ${field}")`, err)
         return []
       }
     },
@@ -526,7 +488,7 @@ export default defineComponent({
         // TODO mavedb-ui#130 catch errors in response
         return response.data || []
       } catch (err) {
-        console.log(`Error while loading search results")`, err)
+        console.log(`Error while loading ${identifier} search results")`, err)
         return []
       }
     },
@@ -544,7 +506,7 @@ export default defineComponent({
         // TODO mavedb-ui#130 catch errors in response
         return response.data || []
       } catch (err) {
-        console.log(`Error while loading search results")`, err)
+        console.log(`Error while loading publication identifier search results")`, err)
         return []
       }
     },

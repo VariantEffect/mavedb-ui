@@ -1,5 +1,3 @@
-import axios from 'axios'
-
 const DOI_REGEX = /^(10[.][0-9]{4,}(?:[.][0-9]+)*\/(?:(?![%"#? ])\S)+)$/
 const DOI_PREFIXES = ['https://doi.org/', 'doi:']
 const PUBMED_REGEX = /^[0-9]+$/

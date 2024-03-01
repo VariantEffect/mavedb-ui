@@ -659,7 +659,6 @@ export default {
     const licenses = useItems({itemTypeName: 'license'})
     const taxonomies = useItems({itemTypeName: 'taxonomy'})
     const taxonomySuggestions = useItems({itemTypeName: 'taxonomy-search'})
-    const targetGeneSuggestions = useItems({itemTypeName: 'target-gene-search'})
     const geneNames = useItems({ itemTypeName: 'gene-names' })
     const assemblies = useItems({ itemTypeName: 'grouped-assemblies' })
     const targetGeneSuggestions = useItems({ itemTypeName: 'target-gene-search' })
@@ -897,8 +896,6 @@ export default {
     suggestionsForAutocomplete: function (suggestions) {
       // The PrimeVue AutoComplete doesn't seem to like it if we set the suggestion list to [].
       // This causes the drop-down to stop appearing when we later populate the list.
-
-      // list [] doesn't affect dropdown menu. API side search function should return something so that dropdown menu can get data.
       if (!suggestions || suggestions.length == 0) {
         return [{}]
       }

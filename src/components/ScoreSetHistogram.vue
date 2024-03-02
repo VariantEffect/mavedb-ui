@@ -109,7 +109,7 @@ export default {
 
     binsToLine: function(bins, filter = (item) => true) {
       if (!bins.length) {
-        return [];
+        return []
       }
 
       // Start the line at the bottom-left of the first bin.
@@ -175,7 +175,7 @@ export default {
         const yMax = d3.max(bins, (d) => d.length) * 1.05
         const yScale = d3.scaleLinear()
             .domain([0, yMax])
-            .range([height, 0]);
+            .range([height, 0])
         
         svg.append('g')
             .attr('transform', `translate(0,${height})`)
@@ -206,14 +206,14 @@ export default {
           // Outline the highlight for this bin.
           d3.select(this)
             .select('rect.mave-histogram-hover-highlight')
-              .style('opacity', opacity(d, true));
+              .style('opacity', opacity(d, true))
         }
 
         const mousemove = function(event, d) {
           // Move tooltip to be 50px to the right of the pointer.
           self.tooltip
               .style('left', (d3.pointer(event, document.body)[0] + 50) + 'px')
-              .style('top', (d3.pointer(event, document.body)[1]) + 'px');
+              .style('top', (d3.pointer(event, document.body)[1]) + 'px')
         }
 
         const mouseleave = function(event, d) {
@@ -221,7 +221,7 @@ export default {
           self.tooltip.style('display', 'none')
           d3.select(this)
             .select('rect.mave-histogram-hover-highlight')
-              .style('opacity', opacity(d, false));
+              .style('opacity', opacity(d, false))
         }
 
         const refresh = function(bins) {

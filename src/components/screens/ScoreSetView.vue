@@ -20,6 +20,9 @@
           <h3>{{ item.urn }}</h3>
         </div>
       </div>
+      <div v-if="scores" class="mave-score-set-histogram-pane">
+        <ScoreSetHistogram :scoreSet="item" :scores="scores" />
+      </div>
       <div v-if="showHeatmap && scores" class="mave-score-set-heatmap-pane">
         <ScoreSetHeatmap :scoreSet="item" :scores="scores" />
       </div>
@@ -264,6 +267,7 @@ import TabPanel from 'primevue/tabpanel'
 import TabView from 'primevue/tabview'
 
 import ScoreSetHeatmap from '@/components/ScoreSetHeatmap'
+import ScoreSetHistogram from '@/components/ScoreSetHistogram'
 import EntityLink from '@/components/common/EntityLink'
 import DefaultLayout from '@/components/layout/DefaultLayout'
 import useFormatters from '@/composition/formatters'
@@ -276,7 +280,7 @@ import { mapState } from 'vuex'
 
 export default {
   name: 'ScoreSetView',
-  components: { Button, Chip, DefaultLayout, EntityLink, ScoreSetHeatmap, TabView, TabPanel, DataTable, Column },
+  components: { Button, Chip, DefaultLayout, EntityLink, ScoreSetHeatmap, ScoreSetHistogram, TabView, TabPanel, DataTable, Column },
   computed: {
     isMetaDataEmpty: function () {
       //If extraMetadata is empty, return value will be true.

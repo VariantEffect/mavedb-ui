@@ -135,8 +135,7 @@
                       optionLabel="longName" optionValue="id" style="width: 50%"/>
                     <label :for="$scopedId('input-targetLicenseId')">License</label>
                   </span>
-                  <span v-if="validationErrors.referenceGenome" class="mave-field-error">{{
-                    validationErrors.referenceGenome }}</span>
+                  <span v-if="validationErrors['targetSequence.taxonomy']" class="mave-field-error">{{validationErrors['targetSequence.taxonomy']}}</span>
                 </div>
                 <Message v-if="licenseId && licenses && licenses.find((l) => l.id == licenseId)?.shortName != 'CC0'"
                   severity="warn">
@@ -315,22 +314,24 @@
                       </div>
                       <div class="field">
                         <span class="p-float-label">
-                          <Dropdown v-model="referenceGenome" :id="$scopedId('input-targetGeneReferenceGenome')"
-                            :options="referenceGenomes" panelClass="mave-reference-genome-dropdown-panel">
-                            <template #value="slotProps">
-                              <div v-if="slotProps.value" class="mave-reference-genome-value">
-                                <div class="mave-reference-genome-name">{{ slotProps.value.shortName }}</div>
-                                <div class="mave-reference-genome-organism-name">{{ slotProps.value.organismName }}</div>
-                              </div>
-                              <div v-else class="mave-reference-genome-none">&nbsp;</div>
+                          <AutoComplete
+                            ref="taxonomyInput" 
+                            v-model="taxonomy" 
+                            dropdown
+                            :id="$scopedId('input-targetSequenceTaxonomy')"
+                            :suggestions="taxonomySuggestionsList" 
+                            field="organismName"
+                            :multiple="false"
+                            :options="taxonomies"
+                            @complete="searchTaxonomies"
+                            @keyup.escape="clearTaxonomySearch">
+                            <template #item="slotProps">
+                              {{slotProps.item.taxId}} - {{slotProps.item.organismName}} <template v-if="slotProps.item.commonName!=='NULL' && slotProps.item.commonName!== null">/ {{slotProps.item.commonName}}</template>
                             </template>
-                            <template #option="slotProps">
-                              <div class="mave-reference-genome-name">{{ slotProps.option.shortName }}</div>
-                              <div class="mave-reference-genome-organism-name">{{ slotProps.option.organismName }}</div>
-                            </template>
-                          </Dropdown>
-                          <label :for="$scopedId('input-targetGeneReferenceGenome')">Reference genome</label>
+                          </AutoComplete>
+                          <label :for="$scopedId('input-targetSequenceTaxonomy')">Taxonomy</label>
                         </span>
+                        <span v-if="validationErrors['targetGene.targetSequence.taxonomy']" class="mave-field-error">{{validationErrors['targetGene.targetSequence.taxonomy']}}</span>
                       </div>
                       <div class="field">
                         <span class="p-float-label">
@@ -459,11 +460,11 @@
                                 class="mave-field-error">{{
                                   validationErrors[`targetGenes.${slotProps.data.index}.targetSequence.sequenceType`]
                                 }}<br></span>
-                              <strong>Reference Name:</strong> {{ slotProps.data.targetSequence.reference.shortName }}<br>
-                              <span v-if="validationErrors[`targetGenes.${slotProps.data.index}.referenceGenome`]"
+                              <strong>Taxonomy Organism Name:</strong> {{ slotProps.data.targetSequence.taxonomy.organismName }}<br>
+                              <span v-if="validationErrors[`targetGenes.${slotProps.data.index}.taxonomy`]"
                                 class="mave-field-error">{{
-                                  validationErrors[`targetGenes.${slotProps.data.index}.referenceGenome`] }}<br></span>
-                              <strong>Reference Organism:</strong> {{ slotProps.data.targetSequence.reference.organismName
+                                  validationErrors[`targetGenes.${slotProps.data.index}.taxonomy`] }}<br></span>
+                              <strong>Taxonomy Common Name:</strong> {{ slotProps.data.targetSequence.taxonomy.commonName
                               }}
                             </p>
                             <span v-if="validationErrors[`targetGenes.${slotProps.data.index}.targetSequence.sequence`]"
@@ -608,7 +609,7 @@ import DefaultLayout from '@/components/layout/DefaultLayout'
 import useItem from '@/composition/item'
 import useItems from '@/composition/items'
 import config from '@/config'
-import { normalizeDoi, normalizeIdentifier, normalizePubmedId, validateDoi, validateIdentifier, validatePubmedId } from '@/lib/identifiers'
+import { normalizeDoi, normalizeIdentifier, normalizePubmedId, validateDoi, validateIdentifier, validatePubmedId} from '@/lib/identifiers'
 import useFormatters from '@/composition/formatters'
 
 const externalGeneDatabases = ['UniProt', 'Ensembl', 'RefSeq']
@@ -655,8 +656,9 @@ export default {
     for (const dbName of externalGeneDatabases) {
       targetGeneIdentifierSuggestions[dbName] = useItems({ itemTypeName: `${dbName.toLowerCase()}-identifier-search` })
     }
-    const licenses = useItems({ itemTypeName: 'license' })
-    const referenceGenomes = useItems({ itemTypeName: 'reference-genome' })
+    const licenses = useItems({itemTypeName: 'license'})
+    const taxonomies = useItems({itemTypeName: 'taxonomy'})
+    const taxonomySuggestions = useItems({itemTypeName: 'taxonomy-search'})
     const geneNames = useItems({ itemTypeName: 'gene-names' })
     const assemblies = useItems({ itemTypeName: 'grouped-assemblies' })
     const targetGeneSuggestions = useItems({ itemTypeName: 'target-gene-search' })
@@ -683,7 +685,9 @@ export default {
           itemsModule.ensureItemsLoaded()
         }
       ),
-      referenceGenomes: referenceGenomes.items,
+      taxonomies: taxonomies.items,
+      taxonomySuggestions: taxonomySuggestions.items,
+      setTaxonomySearch: (text) => taxonomySuggestions.setRequestBody({text}),
       assemblies: assemblies.items,
       geneNames: geneNames.items,
       expandedTargetGeneRows
@@ -713,8 +717,9 @@ export default {
     secondaryPublicationIdentifiers: [],
     publicationIdentifiers: [],
     dataUsagePolicy: null,
+    taxonomy: null,
+    lastTaxonomySearch: null,
     targetGene: emptyTargetGene(),
-    referenceGenome: null,
     assembly: null,
     assemblySuggestions: [],
     assemblyDropdownValue: null,
@@ -775,6 +780,9 @@ export default {
     targetGeneSuggestionsList: function () {
       return this.suggestionsForAutocomplete(this.targetGeneSuggestions)
     },
+    taxonomySuggestionsList: function() {
+      return this.suggestionsForAutocomplete(this.taxonomySuggestions)
+    },
     targetGeneAccessionSuggestionsList: function () {
       if (!this.targetGeneAccessionSuggestions || this.targetGeneAccessionSuggestions.length == 0) {
         return ['']
@@ -824,7 +832,7 @@ export default {
             sequenceType: null,
             sequence: null,
             label: null,
-            reference: null
+            taxonomy: null
           },
           targetAccession: {
             assembly: null,
@@ -839,9 +847,6 @@ export default {
             offset: null
           }
         }
-
-        const referenceGenomeId = _.get(this.targetGene, 'targetSequence.reference.genome.id')
-        this.referenceGenome = this.referenceGenomes.find((rg) => rg.id == referenceGenomeId)
       }
     },
     item: {
@@ -1135,6 +1140,17 @@ export default {
       }
     },
 
+    clearTaxonomySearch: function() {
+      const input = this.$refs.taxonomyInput
+      input.inputTextValue = null
+    },
+
+    searchTaxonomies: function(event) {
+      // if no search text, then return all taxonomy list. Otherwise, return the searching results.
+      // If not do in this way, dropdown button can't work.
+      this.setTaxonomySearch(event.query)
+    },
+
     targetsCleared: function () {
       this.targetGenes = [];
     },
@@ -1248,8 +1264,8 @@ export default {
         })
         this.secondaryPublicationIdentifiers = this.item.secondaryPublicationIdentifiers
         this.dataUsagePolicy = this.item.dataUsagePolicy
+        this.taxonomy = this.item.taxonomy
         this.targetGene = emptyTargetGene()
-        this.referenceGenome = this.item.referenceGenome
         this.assembly = this.item.assembly
         this.targetGenes = this.item.targetGenes
         this.extraMetadata = this.item.extraMetadata
@@ -1268,6 +1284,7 @@ export default {
         this.secondaryPublicationIdentifiers = []
         this.publicationIdentifiers = []
         this.dataUsagePolicy = null
+        this.taxonomy = null
         this.extraMetadata = {}
         this.resetTarget()
         this.targetGenes = []
@@ -1275,6 +1292,7 @@ export default {
     },
 
     resetTarget: function () {
+      this.taxonomy = null
       this.assembly = null
       this.assemblySuggestions = []
       this.assemblyDropdownValue = null
@@ -1288,8 +1306,8 @@ export default {
     },
 
     addTarget: function () {
-      if (this.referenceGenome) {
-        this.targetGene.targetSequence.reference = this.referenceGenome
+      if (this.taxonomy) {
+        this.targetGene.targetSequence.taxonomy = this.taxonomy
         delete this.targetGene.targetAccession;
       }
       else if (this.assembly || this.geneName) {
@@ -1384,6 +1402,7 @@ export default {
         }
       } catch (e) {
         response = e.response || { status: 500 }
+        this.$toast.add({ severity: 'error', summary: 'Error', life: 3000 })
       }
       this.progressVisible = false
       if (response.status == 200) {
@@ -1404,7 +1423,7 @@ export default {
         const formValidationErrors = {}
         if (typeof response.data.detail === 'string' || response.data.detail instanceof String) {
           // Handle generic errors that are not surfaced by the API as objects
-          this.$toast.add({ severity: 'error', summary: `Encountered an error saving score set: ${response.data.detail}`, life: 3000 })
+          this.$toast.add({ severity: 'error', summary: `Encountered an error saving score set: ${response.data.detail}` })
         }
         else {
           for (const error of response.data.detail) {
@@ -1429,8 +1448,6 @@ export default {
               if (identifierOffset?.identifier?.dbName) {
                 path.splice(3, 2, identifierOffset.identifier.dbName)
               }
-
-
             }
 
             path = path.join('.')
@@ -1575,11 +1592,11 @@ export default {
 
 /* Form fields */
 
-.mave-reference-genome-none {
+.mave-taxonomy-none {
   min-width: 300px;
 }
 
-.mave-reference-genome-name {
+.mave-taxonomy-common-name {
   float: left;
   padding: 10px;
   min-width: 120px;
@@ -1587,17 +1604,17 @@ export default {
   background: #eee;
 }
 
-.mave-reference-genome-organism-name {
+.mave-taxonomy-organism-name {
   padding: 10px;
   margin-left: 125px;
   background: #f9f9f9;
 }
 
-.p-dropdown-item:nth-child(even) .mave-reference-genome-name {
+.p-dropdown-item:nth-child(even) .mave-taxonomy-common-name {
   background: #ddd;
 }
 
-.p-dropdown-item:nth-child(even) .mave-reference-genome-organism-name {
+.p-dropdown-item:nth-child(even) .mave-taxonomy-organism-name {
   background: #e9e9e9;
 }
 
@@ -1633,18 +1650,18 @@ export default {
   right: 5px;
   z-index: 1001;
 }
-</style>
 
-<style>.mave-reference-genome-dropdown-panel.p-dropdown-panel .p-dropdown-items .p-dropdown-item {
+.mave-taxonomy-dropdown-panel.p-dropdown-panel .p-dropdown-items .p-dropdown-item {
+
   padding: 0;
 }
 
-.mave-reference-genome-dropdown-panel.p-dropdown-panel .p-dropdown-items .p-dropdown-item:not(.p-highlight):not(.p-disabled):hover {
+.mave-taxonomy-dropdown-panel.p-dropdown-panel .p-dropdown-items .p-dropdown-item:not(.p-highlight):not(.p-disabled):hover {
   background: #eef;
 }
 
-.mave-reference-genome-dropdown-panel.p-dropdown-panel .p-dropdown-items .p-dropdown-item:not(.p-highlight):not(.p-disabled):hover .mave-reference-genome-name,
-.mave-reference-genome-dropdown-panel.p-dropdown-panel .p-dropdown-items .p-dropdown-item:not(.p-highlight):not(.p-disabled):hover .mave-reference-genome-organism-name {
+.mave-taxonomy-dropdown-panel.p-dropdown-panel .p-dropdown-items .p-dropdown-item:not(.p-highlight):not(.p-disabled):hover .mave-taxonomy-common-name,
+.mave-taxonomy-dropdown-panel.p-dropdown-panel .p-dropdown-items .p-dropdown-item:not(.p-highlight):not(.p-disabled):hover .mave-taxonomy-organism-name {
   background: #eef;
 }
 </style>

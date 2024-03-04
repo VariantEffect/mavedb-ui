@@ -137,7 +137,7 @@ export default defineComponent({
     },
     targetOrganismFilterOptions: function() {
       return countTargetGeneMetadata(this.publishedScoreSets, 
-        (targetGene) => targetGene.targetSequence?.reference.organismName || '')
+        (targetGene) => targetGene.targetSequence?.taxonomy.organismName || '')
     },
     targetAccessionFilterOptions: function() {
       return countTargetGeneMetadata(this.publishedScoreSets,

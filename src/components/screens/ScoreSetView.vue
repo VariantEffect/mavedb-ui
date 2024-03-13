@@ -498,9 +498,9 @@ export default {
         anchor.href = 'data:text/csv;charset=utf-8,' + encodeURIComponent(file);
         anchor.target = '_blank';
         if (download_type == "counts") {
-          anchor.download = this.item.urn + '_counts.csv';
+          anchor.download = this.item.urn.replace(/:/g, '-') + '_counts.csv';
         } else if (download_type == "scores") {
-          anchor.download = this.item.urn + '_scores.csv';
+          anchor.download = this.item.urn.replace(/:/g, '-') + '_scores.csv';
         }
         anchor.click();
       } else if (response.data && response.data.detail) {

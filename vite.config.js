@@ -17,6 +17,7 @@ export default defineConfig({
     extensions: ['.vue', '.tsx', '.ts', '.mjs', '.js', '.jsx', '.json', '.wasm'],
   },
   server: {
+    host: '0.0.0.0',
     port: 8081,
     // Our ORCID app only has a limited set of legal redirect URLs (which 
     // includes localhost:8081 but not all other ports), so fail if the desired

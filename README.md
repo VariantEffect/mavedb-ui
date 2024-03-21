@@ -48,7 +48,13 @@ npm run dev
 ```
 
 In development mode, the application will look for a local server running the MaveDB API at `http://localhost:8002`.
-To instead use the live MaveDB API server at `https://mavedb.org`, run:
+If you would like to use the live MaveDB API server at `https://mavedb.org` while still having internal links resolve
+to the development environment, run:
+```
+MODE=prodapi npm run dev
+```
+
+If you would like internal links to resolve to the live MaveDB site at `https://mavedb.org`, run:
 
 ```
 MODE=live npm run dev
@@ -78,6 +84,12 @@ This command will by default use the live MaveDB API server at `https://mavedb.o
 
 ```
 MODE=dev npm run preview
+```
+
+To use the live MaveDB API server at `https://mavedb.org` while still using local internal site links, run:
+
+```
+MODE=prodapi npm run preview
 ```
 
 ### Deploying in production
@@ -127,4 +139,3 @@ To update these types from a locally running `mavedb-api` server for development
 ```
 npx openapi-typescript http://localhost:8002/openapi.json -o src/schema/openapi.d.ts
 ```
-

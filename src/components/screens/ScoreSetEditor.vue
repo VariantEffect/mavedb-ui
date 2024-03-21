@@ -925,7 +925,7 @@ export default {
             }
           }
         )
-        // TODO catch errors in response
+        // TODO (#130) catch errors in response
         return response.data || []
       } catch (err) {
         console.log(`Error while loading search results")`, err)
@@ -962,7 +962,7 @@ export default {
             }
           }
         )
-        // TODO catch errors in response
+        // TODO (#130) catch errors in response
         return response.data || []
       } catch (err) {
         console.log(`Error while loading search results")`, err)
@@ -981,7 +981,7 @@ export default {
             }
           }
         )
-        // TODO catch errors in response
+        // TODO (#130) catch errors in response
         return response.data || []
       } catch (err) {
         console.log(`Error while loading search results")`, err)
@@ -1011,7 +1011,7 @@ export default {
             }
           }
         )
-        // TODO catch errors in response
+        // TODO (#130) catch errors in response
         if (!response.data) {
           this.$toast.add({ severity: 'error', summary: `No matching protein accession found for ${this.targetGene.targetAccession.accession}`, life: 3000 })
         }

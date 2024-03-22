@@ -7,8 +7,8 @@
       <div class="mavedb-search-form">
         <span class="p-input-icon-left">
           <i class="pi pi-search" />
-          <InputText v-model="searchText" ref="searchTextInput" type="search" class="p-inputtext-sm" placeholder="Search" />
-          <Button v-if="searchText && searchText.length > 0" class="mavedb-search-clear-button p-button-plain p-button-text" @click="clear"><i class="pi pi-times"/></Button>
+          <InputText v-model="searchText" ref="searchTextInput" type="search" class="p-inputtext-sm" placeholder="Search" />&nbsp;
+          <Button class="p-button-plain" @click="clear">Clear All</Button>
         </span>
         <TabView class="mavedb-search-tabs">
           <TabPanel header="Target filters">

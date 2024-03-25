@@ -54,18 +54,12 @@
   import useItem from '@/composition/item'
   import config from '@/config'
   import useFormatters from '@/composition/formatters'
-  import {oidc} from '@/lib/auth'
   import axios from 'axios'
 
   export default {
     name: 'PublicationIdentifierView',
     components: {DefaultLayout, ScoreSetTable},
 
-    computed: {
-      oidc: function() {
-        return oidc
-        },
-    },
     setup: (props) => {
       console.log(props)
       return {

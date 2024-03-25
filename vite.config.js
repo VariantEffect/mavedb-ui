@@ -33,8 +33,6 @@ export default defineConfig({
     rollupOptions: {
       input: {
         'index': resolve(__dirname, 'index.html'),
-        'signed-in': resolve(__dirname, 'signed-in.html'),
-        'signed-out': resolve(__dirname, 'signed-out.html'),
       },
     },
   },

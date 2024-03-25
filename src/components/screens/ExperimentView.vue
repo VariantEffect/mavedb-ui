@@ -4,7 +4,7 @@
       <div class="mave-1000px-col">
         <div class="mave-screen-title-bar">
           <div class="mave-screen-title">{{ item.title || 'Untitled experiment' }}</div>
-          <div v-if="oidc.isAuthenticated">
+          <div v-if="userIsAuthenticated">
             <div v-if="!item.publishedDate" class="mave-screen-title-controls">
               <Button class="p-button-sm" @click="editItem">Edit</Button>
               <Button class="p-button-sm p-button-danger" @click="deleteItem">Delete</Button>
@@ -178,18 +178,21 @@
 
 <script>
 
+import axios from 'axios'
 import _ from 'lodash'
 import {marked} from 'marked'
 import config from '@/config'
 import Button from 'primevue/button'
 import Chip from 'primevue/chip'
+
 import DefaultLayout from '@/components/layout/DefaultLayout'
 import PageLoading from '@/components/common/PageLoading'
 import ItemNotFound from '@/components/common/ItemNotFound'
 import ProgressSpinner from 'primevue/progressspinner'
+import useAuth from '@/composition/auth'
 import useItem from '@/composition/item'
 import useFormatters from '@/composition/formatters'
-import axios from 'axios'
+import config from '@/config'
 import { oidc } from '@/lib/auth'
 
 export default {
@@ -197,17 +200,13 @@ export default {
   components: { Button, Chip, DefaultLayout, PageLoading, ItemNotFound },
 
   setup: () => {
+    const {userIsAuthenticated} = useAuth()
     return {
       config: config,
 
       ...useFormatters(),
-      ...useItem({ itemTypeName: 'experiment' })
-    }
-  },
-
-  computed: {
-    oidc: function () {
-      return oidc
+      ...useItem({ itemTypeName: 'experiment' }),
+      userIsAuthenticated
     }
   },
 

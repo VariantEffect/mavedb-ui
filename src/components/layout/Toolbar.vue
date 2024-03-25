@@ -26,12 +26,18 @@ import _ from 'lodash'
 import Button from 'primevue/button'
 import InputText from 'primevue/inputtext'
 import Menubar from 'primevue/menubar'
-import {mapState} from 'vuex'
+import {mapActions, mapState} from 'vuex'
 
-import {oidc} from '@/lib/auth'
+import useAuth from '@/composition/auth'
 
 export default {
   components: {Button, InputText, Menubar},
+
+  setup: () => {
+    const {signIn, signOut, userProfile, userIsAuthenticated} = useAuth()
+
+    return {signIn, signOut, userProfile, userIsAuthenticated}
+  },
 
   data: () => ({
     availableMenuItems: [],
@@ -39,7 +45,7 @@ export default {
   }),
 
   watch: {
-    authenticated: {
+    userIsAuthenticated: {
       handler: function() {
         this.availableMenuItems = this.filterAvailableMenuItems(this.menuItems)
       },
@@ -53,16 +59,16 @@ export default {
   },
 
   computed: {
-    ...mapState('auth', ['authenticated', 'orcidProfile', 'roles']),
+    ...mapState('auth', ['roles']),
     userName: function() {
-      const profile = this.orcidProfile // oidc?.user?.profile
+      const profile = this.userProfile
       return profile ? [profile.given_name, profile.family_name].filter(Boolean).join(' ') : null
     },
     menuItems: function() {
       return [{
         label: 'Dashboard',
         to: '/dashboard',
-        available: ({authenticated}) => authenticated // oidc.isAuthenticated
+        available: ({authenticated}) => authenticated
       }, {
         label: 'Home',
         to: '/'
@@ -75,37 +81,31 @@ export default {
       }, {
         label: 'New experiment',
         to: '/create-experiment',
-        available: ({authenticated}) => authenticated // oidc.isAuthenticated
+        available: ({authenticated}) => authenticated
       }, {
         label: 'New score set',
         to: '/create-score-set',
-        available: ({authenticated}) => authenticated // oidc.isAuthenticated
+        available: ({authenticated}) => authenticated
       }, {
         label: 'Users',
         to: '/users',
-        available: ({roles}) => roles.includes('admin') // oidc.isAuthenticated
+        available: ({roles}) => roles.includes('admin')
       }, {
         label: this.userName,
         icon:'pi pi-fw pi-user',
         items:[{
           label: 'Settings',
           to: '/settings',
-          available: ({authenticated}) => authenticated // oidc.isAuthenticated
+          available: ({authenticated}) => authenticated
         }, {
           label: 'Sign out',
           command: () => this.signOut(),
-          available: ({authenticated}) => authenticated // oidc.isAuthenticated
+          available: ({authenticated}) => authenticated
         }]
-        /*
-          available: () => oidc.isAuthenticated
-        }],
-        available: () => oidc.isAuthenticated
-        */
       }, {
         label: 'Sign in',
-        command: () => {oidc.signIn()},
-        // to: '/dashboard',
-        available: ({authenticated}) => !authenticated // !oidc.isAuthenticated
+        command: () => this.signIn(),
+        available: ({authenticated}) => !authenticated
       }]
     }
   },
@@ -129,8 +129,8 @@ export default {
           item.items = newSubitems
         }
         const available = !item.available || item.available({
-          authenticated: self.authenticated,
-          roles: self.roles || []
+          authenticated: this.userIsAuthenticated,
+          roles: this.roles || []
         }) // && (!item.to || this.userMayAccessPath(item.to))
         if (!available) {
           if (!item.items || item.items.length == 0) {
@@ -143,9 +143,6 @@ export default {
         }
         return item
       }).filter(Boolean)
-    },
-    signOut: function() {
-      oidc.signOut()
     }
   }
 }

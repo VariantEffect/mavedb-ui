@@ -4,7 +4,7 @@
       <div class="mave-1000px-col">
         <div class="mave-screen-title-bar">
           <div class="mave-screen-title">{{ item.title || 'Untitled score set' }}</div>
-          <div v-if="oidc.isAuthenticated">
+          <div v-if="userIsAuthenticated">
             <div v-if="!item.publishedDate" class="mave-screen-title-controls">
               <Button class="p-button-sm" @click="editItem">Edit</Button>
               <Button class="p-button-sm" @click="publishItem">Publish</Button>
@@ -266,24 +266,25 @@ import TabView from 'primevue/tabview'
 import ScoreSetHeatmap from '@/components/ScoreSetHeatmap'
 import EntityLink from '@/components/common/EntityLink'
 import DefaultLayout from '@/components/layout/DefaultLayout'
+import useAuth from '@/composition/auth'
 import useFormatters from '@/composition/formatters'
 import useItem from '@/composition/item'
 import useRemoteData from '@/composition/remote-data'
 import config from '@/config'
-import { oidc } from '@/lib/auth'
 import { parseScores } from '@/lib/scores'
 import { mapState } from 'vuex'
 
 export default {
   name: 'ScoreSetView',
   components: { Button, Chip, DefaultLayout, EntityLink, ScoreSetHeatmap, TabView, TabPanel, DataTable, Column },
+  setup: () => {
+    const {userIsAuthenticated} = useAuth()
+    return {userIsAuthenticated}
+  },
   computed: {
     isMetaDataEmpty: function () {
       //If extraMetadata is empty, return value will be true.
       return Object.keys(this.item.extraMetadata).length === 0
-    },
-    oidc: function () {
-      return oidc
     },
     scoreColumns: function () {
       const fixedColumns = ['hgvs_nt', 'hgvs_splice', 'hgvs_pro']

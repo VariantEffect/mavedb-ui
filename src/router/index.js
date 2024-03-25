@@ -1,4 +1,4 @@
-import {createRouter, createWebHashHistory} from 'vue-router'
+import {createRouter, createWebHistory} from 'vue-router'
 
 import DashboardView from '@/components/screens/DashboardView'
 import DocumentationView from '@/components/screens/DocumentationView'
@@ -6,14 +6,15 @@ import ExperimentEditor from '@/components/screens/ExperimentEditor'
 import ExperimentView from '@/components/screens/ExperimentView'
 import ExperimentSetView from '@/components/screens/ExperimentSetView'
 import HomeScreen from '@/components/screens/HomeScreen'
+import OidcCallback from '@/components/screens/OidcCallback'
+import OidcCallbackError from '@/components/screens/OidcCallbackError'
 import ScoreSetEditor from '@/components/screens/ScoreSetEditor'
 import PublicationIdentifierView from '@/components/screens/PublicationIdentifierView'
 import ScoreSetView from '@/components/screens/ScoreSetView'
 import SearchView from '@/components/screens/SearchView'
 import SettingsScreen from '@/components/screens/SettingsScreen'
 import UsersView from '@/components/screens/UsersView'
-import {oidc} from '@/lib/auth'
-import store from '@/store';
+import store from '@/store'
 
 const routes = [{
   path: '/',
@@ -28,7 +29,7 @@ const routes = [{
     };
     store.commit('setRouteProps', props);
     return props;
-  },
+  }
 }, {
   path: '/search',
   name: 'search',
@@ -47,10 +48,7 @@ const routes = [{
   component: SettingsScreen
 }, {
   path: '/dashboard',
-  component: DashboardView,
-  meta: {
-    authName: oidc.authName
-  }
+  component: DashboardView
 }, {
   path: '/users',
   component: UsersView
@@ -62,25 +60,16 @@ const routes = [{
 }, {
   name: 'createExperiment',
   path: '/create-experiment',
-  component: ExperimentEditor,
-  meta: {
-    authName: oidc.authName
-  }
+  component: ExperimentEditor
 }, {
   path: '/experiments/:urn/edit',
   name: '/editExperiment',
   component: ExperimentEditor,
-  meta: {
-    authName: oidc.authName
-  },
   props: (route) => ({itemId: route.params.urn})
 }, {
   path: '/create-score-set',
   name: 'createScoreSet',
-  component: ScoreSetEditor,
-  meta: {
-    authName: oidc.authName
-  }
+  component: ScoreSetEditor
 }, {
   path: '/experiment-sets/:urn',
   name: 'experimentSet',
@@ -90,17 +79,11 @@ const routes = [{
   path: '/experiment-sets/:urn/create-experiment',
   name: 'createExperimentInExperimentSet',
   component: ExperimentEditor,
-  meta: {
-    authName: oidc.authName
-  },
   props: (route) => ({experimentSetUrn: route.params.urn})
 }, {
   path: '/score-sets/:urn/edit',
   name: 'editScoreSet',
   component: ScoreSetEditor,
-  meta: {
-    authName: oidc.authName
-  },
   props: (route) => ({itemId: route.params.urn})
 }, {
   path: '/score-sets/:urn',
@@ -108,8 +91,7 @@ const routes = [{
   component: ScoreSetView,
   props: (route) => ({
     itemId: route.params.urn,
-  }),
-
+  })
 }, {
   name: 'pubmedPublicationIdentifier',
   path: '/publication-identifiers/pubmed/:identifier',
@@ -125,10 +107,18 @@ const routes = [{
   path: '/publication-identifiers/medrxiv/:identifier',
   component: PublicationIdentifierView,
   props: (route) => ({itemId: route.params.identifier, name: route.name, dbId: 'medRxiv'})
+}, {
+  path: '/oidc-callback',
+  name: 'oidcCallback',
+  component: OidcCallback
+}, {
+  path: '/oidc-callback-error',
+  name: 'oidcCallbackError',
+  component: OidcCallbackError
 }]
 
 const router = createRouter({
-  history: createWebHashHistory(),
+  history: createWebHistory(),
   routes
 })
 
@@ -176,7 +166,5 @@ router.beforeEach((to, from, next) => {
 
   next()
 })
-
-oidc.useRouter(router)
 
 export default router

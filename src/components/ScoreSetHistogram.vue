@@ -11,13 +11,13 @@ export default {
   name: 'ScoreSetHistogram',
 
   props: {
-    margins: { // Margins must accommodate the axis labels and title.
+    margins: { // Margins must accommodate the X axis label and title.
       type: Object,
       default: () => ({
         top: 20,
-        right: 0,
-        bottom: 20,
-        left: 30
+        right: 20,
+        bottom: 30,
+        left: 20 
       })
     },
     numBins: {
@@ -143,25 +143,49 @@ export default {
       if (!self.isMounted || !bins || !bins.length || !container) {
         return null
       } else {
-        const width = container.clientWidth - (self.margins.left + self.margins.right)
-
         const contents = d3.select(container)
             .html(null)
             .append('svg')
             .attr('width', container.clientWidth)
             .attr('height', height + self.margins.top + self.margins.bottom)
+
+        // First, calculate space required for y axis and label.
+        // Give 5% breathing room at the top of the chart.
+        const yMax = d3.max(bins, (d) => d.length) * 1.05
+        const yScale = d3.scaleLinear()
+            .domain([0, yMax])
+            .range([height, 0])
+
+        // Add temporary y axis, for measuring.
+        const tempYAxis = contents.append('g')
+            .style('visibility', 'hidden') 
+            .call(d3.axisLeft(yScale).ticks(10))
+        
+        const labelSize = 10;
+        const yAxisWidthWithLabel = tempYAxis.node().getBoundingClientRect().width + labelSize
+
+        tempYAxis.remove()
+
+        // Calculate final margins using calculated width.
+        const margins = {
+          top: self.margins.top,
+          right: self.margins.right,
+          bottom: self.margins.bottom,
+          left: self.margins.left + yAxisWidthWithLabel,
+        }
+        const width = container.clientWidth - (margins.left + margins.right)
         
         // Add plot title.
         contents.append('text')
-            .attr('x', container.clientWidth / 2 )
+            .attr('x', margins.left + width / 2 )
             .attr('y', 12)
             .style('text-anchor', 'middle')
-            .text('Histogram of Scores')
+            .text('Distribution of Functional Scores')
         
         // Main canvas to which chart elements will be added.
         const svg = contents
             .append('g')
-            .attr('transform', `translate(${self.margins.left},${self.margins.top})`)
+            .attr('transform', `translate(${margins.left},${margins.top})`)
         
         const firstBin = bins[0]    
         const lastBin = bins[bins.length - 1]
@@ -171,19 +195,29 @@ export default {
             .domain([firstBin.x0 - (firstBin.x1 - firstBin.x0), lastBin.x1 + (lastBin.x1 - lastBin.x0)])
             .range([0, width])
 
-        // Likewise, give 5% breathing room at the top of the chart.
-        const yMax = d3.max(bins, (d) => d.length) * 1.05
-        const yScale = d3.scaleLinear()
-            .domain([0, yMax])
-            .range([height, 0])
-        
+        // Add x axis and label.
         svg.append('g')
             .attr('transform', `translate(0,${height})`)
             .call(d3.axisBottom(xScale).ticks(10))
 
-        svg.append('g')
+        svg.append('text')
+            .attr('class', 'mave-histogram-axis-label')
+            .attr('x', width / 2)
+            .attr('y', height + 25)
+            .attr('font-size', labelSize)
+            .style('text-anchor', 'middle')
+            .text('Functional Score')
+
+        // Add final y axis and label.
+        const yAxis = svg.append('g')
             .call(d3.axisLeft(yScale).ticks(10))
 
+        svg.append('text')
+            .attr('class', 'mave-histogram-axis-label')
+            .attr('transform', `translate(${-(yAxisWidthWithLabel - labelSize / 2)},${height / 2})rotate(-90)`)
+            .attr('font-size', labelSize)
+            .style('text-anchor', 'middle')
+            .text('Number of Variants')
 
         const opacity = (d, isMouseOver) => {
           // Don't show if there's no data in this bin.

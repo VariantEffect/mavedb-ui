@@ -1,6 +1,6 @@
 <template>
   <DefaultLayout>
-    <div v-if="item" class="mave-score-set">
+    <div v-if="itemStatus=='Loaded'" class="mave-score-set">
       <div class="mave-1000px-col">
         <div class="mave-screen-title-bar">
           <div class="mave-screen-title">{{ item.title || 'Untitled score set' }}</div>
@@ -244,6 +244,9 @@
         </TabView>
       </div>
     </div>
+    <div v-else-if="itemStatus=='Loading' || itemStatus=='NotLoaded'">
+      <ProgressSpinner class="mave-progress"/>
+    </div>
     <div v-else>
       <h1>Page Not Found</h1>
       The requested score set does not exist.
@@ -262,6 +265,7 @@ import Column from 'primevue/column'
 import DataTable from 'primevue/datatable'
 import TabPanel from 'primevue/tabpanel'
 import TabView from 'primevue/tabview'
+import ProgressSpinner from 'primevue/progressspinner'
 
 import ScoreSetHeatmap from '@/components/ScoreSetHeatmap'
 import EntityLink from '@/components/common/EntityLink'
@@ -273,10 +277,11 @@ import config from '@/config'
 import { oidc } from '@/lib/auth'
 import { parseScores } from '@/lib/scores'
 import { mapState } from 'vuex'
+import items from '@/composition/items'
 
 export default {
   name: 'ScoreSetView',
-  components: { Button, Chip, DefaultLayout, EntityLink, ScoreSetHeatmap, TabView, TabPanel, DataTable, Column },
+  components: { Button, Chip, DefaultLayout, EntityLink, ScoreSetHeatmap, TabView, TabPanel, DataTable, Column, ProgressSpinner },
   computed: {
     isMetaDataEmpty: function () {
       //If extraMetadata is empty, return value will be true.
@@ -678,5 +683,12 @@ export default {
   color: #987cb8;
   font-size: 87.5%;
   word-wrap: break-word;
+}
+
+.mave-progress {
+  position: absolute;
+  bottom: 5px;
+  right: 5px;
+  z-index: 1001;
 }
 </style>

@@ -1,6 +1,6 @@
 <template>
     <DefaultLayout>
-      <div v-if="item" class="mave-publication mave-scroll-vertical">
+      <div v-if="itemStatus=='Loaded'" class="mave-publication mave-scroll-vertical">
         <div class="mave-1000px-col">
           <div class="mave-screen-title-bar">
             <div class="mave-screen-title">{{ item.dbName }} {{ item.identifier }}: {{item.title}}</div>
@@ -37,6 +37,9 @@
 
         </div>
       </div>
+      <div v-else-if="itemStatus=='Loading' || itemStatus=='NotLoaded'">
+          <ProgressSpinner class="mave-progress"/>
+      </div>
       <div v-else>
         <h1>Page Not Found</h1>
         The requested publication does not exist.
@@ -48,6 +51,7 @@
 
   import _ from 'lodash'
   import {marked} from 'marked'
+  import ProgressSpinner from 'primevue/progressspinner'
 
   import DefaultLayout from '@/components/layout/DefaultLayout'
   import ScoreSetTable from '@/components/ScoreSetTable'
@@ -59,7 +63,7 @@
 
   export default {
     name: 'PublicationIdentifierView',
-    components: {DefaultLayout, ScoreSetTable},
+    components: {DefaultLayout, ScoreSetTable, ProgressSpinner},
 
     computed: {
       oidc: function() {
@@ -222,4 +226,10 @@
     word-wrap: break-word;
   }
 
+  .mave-progress {
+  position: absolute;
+  bottom: 5px;
+  right: 5px;
+  z-index: 1001;
+}
 </style>

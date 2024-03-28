@@ -1,6 +1,6 @@
 <template>
   <DefaultLayout>
-    <div v-if="item" class="mave-score-set">
+    <div v-if="itemStatus=='Loaded'" class="mave-score-set">
       <div class="mave-1000px-col">
         <div class="mave-screen-title-bar">
           <div class="mave-screen-title">{{ item.title || 'Untitled experiment' }}</div>
@@ -167,6 +167,9 @@
         </div><template v-else>No associated raw reads<br /></template>
       </div>
     </div>
+    <div v-else-if="itemStatus=='Loading' || itemStatus=='NotLoaded'">
+      <ProgressSpinner class="mave-progress"/>
+    </div>
     <div v-else>
       <h1>Page Not Found</h1>
       The requested experiment does not exist.
@@ -181,6 +184,7 @@ import {marked} from 'marked'
 import Button from 'primevue/button'
 import Chip from 'primevue/chip'
 import DefaultLayout from '@/components/layout/DefaultLayout'
+import ProgressSpinner from 'primevue/progressspinner'
 import useItem from '@/composition/item'
 import useFormatters from '@/composition/formatters'
 import config from '@/config'
@@ -189,7 +193,7 @@ import { oidc } from '@/lib/auth'
 
 export default {
   name: 'ExperimentView',
-  components: { Button, Chip, DefaultLayout },
+  components: { Button, Chip, DefaultLayout, ProgressSpinner },
 
   setup: () => {
     return {
@@ -369,5 +373,12 @@ export default {
   color: #987cb8;
   font-size: 87.5%;
   word-wrap: break-word;
+}
+
+.mave-progress {
+  position: absolute;
+  bottom: 5px;
+  right: 5px;
+  z-index: 1001;
 }
 </style>

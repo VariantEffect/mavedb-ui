@@ -1,6 +1,6 @@
 <template>
   <DefaultLayout>
-    <div v-if="item" class="mave-full-height mave-score-set mave-scroll-vertical">
+    <div v-if="itemStatus=='Loaded'" class="mave-full-height mave-score-set mave-scroll-vertical">
       <div class="mave-1000px-col">
         <div class="mave-screen-title-bar">
           <div class="mave-screen-title">{{item.urn}}</div>
@@ -28,6 +28,9 @@
           <div v-else>No associated experiment</div>
       </div>
     </div>
+    <div v-else-if="itemStatus=='Loading' || itemStatus=='NotLoaded'">
+      <ProgressSpinner class="mave-progress"/>
+    </div>
     <div v-else>
       <h1>Page Not Found</h1>
       The requested experiment set does not exist.
@@ -40,6 +43,7 @@
 import _ from 'lodash'
 import {marked} from 'marked'
 import Button from 'primevue/button'
+import ProgressSpinner from 'primevue/progressspinner'
 
 import DefaultLayout from '@/components/layout/DefaultLayout'
 import useItem from '@/composition/item'
@@ -48,13 +52,13 @@ import {oidc} from '@/lib/auth'
 
 export default {
   name: 'ExperimentSetView',
-  components: {Button, DefaultLayout},
+  components: {Button, DefaultLayout, ProgressSpinner},
 
   computed: {
     oidc: function() {
       return oidc
       },
-    
+
   },
   setup: () => {
     return {
@@ -89,7 +93,7 @@ export default {
   },
 
   methods: {
-    
+
     addExperiment: function() {
       this.$router.push({name: 'createExperimentInExperimentSet', params: {urn: this.item.urn}})
     },
@@ -100,7 +104,7 @@ export default {
       return _.get(...args)
     }
   }
-  
+
 }
 
 </script>
@@ -172,4 +176,10 @@ export default {
   word-wrap: break-word;
 }
 
+.mave-progress {
+  position: absolute;
+  bottom: 5px;
+  right: 5px;
+  z-index: 1001;
+}
 </style>

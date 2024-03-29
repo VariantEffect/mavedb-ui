@@ -168,11 +168,10 @@
       </div>
     </div>
     <div v-else-if="itemStatus=='Loading' || itemStatus=='NotLoaded'">
-      <ProgressSpinner class="mave-progress"/>
+      <PageLoading/>
     </div>
     <div v-else>
-      <h1>Page Not Found</h1>
-      The requested experiment does not exist.
+      <ItemNotFound model="experiment" :itemId="itemId"/>
     </div>
   </DefaultLayout>
 </template>
@@ -184,6 +183,8 @@ import {marked} from 'marked'
 import Button from 'primevue/button'
 import Chip from 'primevue/chip'
 import DefaultLayout from '@/components/layout/DefaultLayout'
+import PageLoading from '@/components/common/PageLoading'
+import ItemNotFound from '@/components/common/ItemNotFound'
 import ProgressSpinner from 'primevue/progressspinner'
 import useItem from '@/composition/item'
 import useFormatters from '@/composition/formatters'
@@ -193,7 +194,7 @@ import { oidc } from '@/lib/auth'
 
 export default {
   name: 'ExperimentView',
-  components: { Button, Chip, DefaultLayout, ProgressSpinner },
+  components: { Button, Chip, DefaultLayout, PageLoading, ItemNotFound },
 
   setup: () => {
     return {
@@ -373,12 +374,5 @@ export default {
   color: #987cb8;
   font-size: 87.5%;
   word-wrap: break-word;
-}
-
-.mave-progress {
-  position: absolute;
-  bottom: 5px;
-  right: 5px;
-  z-index: 1001;
 }
 </style>

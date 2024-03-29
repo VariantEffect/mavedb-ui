@@ -38,11 +38,10 @@
         </div>
       </div>
       <div v-else-if="itemStatus=='Loading' || itemStatus=='NotLoaded'">
-          <ProgressSpinner class="mave-progress"/>
+          <PageLoading/>
       </div>
       <div v-else>
-        <h1>Page Not Found</h1>
-        The requested publication does not exist.
+        <ItemNotFound model="publication" :itemId="itemId"/>
       </div>
     </DefaultLayout>
   </template>
@@ -51,10 +50,11 @@
 
   import _ from 'lodash'
   import {marked} from 'marked'
-  import ProgressSpinner from 'primevue/progressspinner'
 
   import DefaultLayout from '@/components/layout/DefaultLayout'
   import ScoreSetTable from '@/components/ScoreSetTable'
+  import PageLoading from '@/components/common/PageLoading'
+  import ItemNotFound from '@/components/common/ItemNotFound'
   import useItem from '@/composition/item'
   import config from '@/config'
   import useFormatters from '@/composition/formatters'
@@ -63,7 +63,7 @@
 
   export default {
     name: 'PublicationIdentifierView',
-    components: {DefaultLayout, ScoreSetTable, ProgressSpinner},
+    components: {DefaultLayout, ScoreSetTable, PageLoading, ItemNotFound},
 
     computed: {
       oidc: function() {
@@ -225,11 +225,4 @@
     font-size: 87.5%;
     word-wrap: break-word;
   }
-
-  .mave-progress {
-  position: absolute;
-  bottom: 5px;
-  right: 5px;
-  z-index: 1001;
-}
 </style>

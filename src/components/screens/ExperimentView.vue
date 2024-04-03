@@ -57,7 +57,7 @@
               <li v-html="markdownToHtml(publication.referenceHtml)"></li>
               <div>
                 Publication: <a
-                  :href="`https://www.mavedb.org/#/publication-identifiers/${publication.dbName}/${publication.identifier}`">{{
+                  :href="`${config.appBaseUrl}/#/publication-identifiers/${publication.dbName}/${publication.identifier}`">{{
                     publication.identifier }}</a>
               </div>
               <div>
@@ -74,7 +74,7 @@
               <li v-html="markdownToHtml(publication.referenceHtml)"></li>
               <div>
                 Publication: <a
-                  :href="`https://www.mavedb.org/#/publication-identifiers/${publication.dbName}/${publication.identifier}`">{{
+                  :href="`${config.appBaseUrl}/#/publication-identifiers/${publication.dbName}/${publication.identifier}`">{{
                     publication.identifier }}</a>
               </div>
               <div>
@@ -88,7 +88,7 @@
           <div class="mave-score-set-section-title">Keywords</div>
           <div class="mave-score-set-keywords">
             <Chip :label="keyword" />
-            <!--<a v-for="(keyword, i) of item.keywords" :key="i" :href="`https://www.mavedb.org/search/?keywords=${keyword}`"><Chip :label="keyword"/></a>-->
+            <a v-for="(keyword, i) of item.keywords" :key="i" :href="`${config.appBaseUrl}/search?search=${keyword}`"><Chip :label="keyword"/></a>
           </div>
         </div>
 
@@ -178,12 +178,12 @@
 
 import _ from 'lodash'
 import {marked} from 'marked'
+import config from '@/config'
 import Button from 'primevue/button'
 import Chip from 'primevue/chip'
 import DefaultLayout from '@/components/layout/DefaultLayout'
 import useItem from '@/composition/item'
 import useFormatters from '@/composition/formatters'
-import config from '@/config'
 import axios from 'axios'
 import { oidc } from '@/lib/auth'
 
@@ -193,6 +193,8 @@ export default {
 
   setup: () => {
     return {
+      config: config,
+
       ...useFormatters(),
       ...useItem({ itemTypeName: 'experiment' })
     }

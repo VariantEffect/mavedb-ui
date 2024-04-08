@@ -20,6 +20,9 @@
           <h3>{{ item.urn }}</h3>
         </div>
       </div>
+      <div v-if="scores" class="mave-score-set-histogram-pane">
+        <ScoreSetHistogram :scoreSet="item" :scores="scores" />
+      </div>
       <div v-if="showHeatmap && scores" class="mave-score-set-heatmap-pane">
         <ScoreSetHeatmap :scoreSet="item" :scores="scores" />
       </div>
@@ -267,6 +270,7 @@ import TabView from 'primevue/tabview'
 import ProgressSpinner from 'primevue/progressspinner'
 
 import ScoreSetHeatmap from '@/components/ScoreSetHeatmap'
+import ScoreSetHistogram from '@/components/ScoreSetHistogram'
 import EntityLink from '@/components/common/EntityLink'
 import PageLoading from '@/components/common/PageLoading'
 import ItemNotFound from '@/components/common/ItemNotFound'
@@ -282,7 +286,7 @@ import items from '@/composition/items'
 
 export default {
   name: 'ScoreSetView',
-  components: { Button, Chip, DefaultLayout, EntityLink, ScoreSetHeatmap, TabView, TabPanel, DataTable, Column, PageLoading, ItemNotFound },
+  components: { Button, Chip, DefaultLayout, EntityLink, ScoreSetHeatmap, ScoreSetHistogram, TabView, TabPanel, DataTable, Column, PageLoading, ItemNotFound },
   computed: {
     isMetaDataEmpty: function () {
       //If extraMetadata is empty, return value will be true.

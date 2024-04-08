@@ -1,6 +1,6 @@
 <template>
   <DefaultLayout>
-    <div v-if="item" class="mave-score-set">
+    <div v-if="itemStatus=='Loaded'" class="mave-score-set">
       <div class="mave-1000px-col">
         <div class="mave-screen-title-bar">
           <div class="mave-screen-title">{{ item.title || 'Untitled score set' }}</div>
@@ -86,7 +86,7 @@
               <li v-html="markdownToHtml(publication.referenceHtml)"></li>
               <div>
                 Publication: <a
-                  :href="`https://www.mavedb.org/#/publication-identifiers/${publication.dbName}/${publication.identifier}`">{{
+                  :href="`${config.appBaseUrl}/#/publication-identifiers/${publication.dbName}/${publication.identifier}`">{{
                     publication.identifier }}</a>
               </div>
               <div>
@@ -103,7 +103,7 @@
               <li v-html="markdownToHtml(publication.referenceHtml)"></li>
               <div>
                 Publication: <a
-                  :href="`https://www.mavedb.org/#/publication-identifiers/${publication.dbName}/${publication.identifier}`">{{
+                  :href="`${config.appBaseUrl}/#/publication-identifiers/${publication.dbName}/${publication.identifier}`">{{
                     publication.identifier }}</a>
               </div>
               <div>
@@ -123,7 +123,7 @@
           <div class="mave-score-set-section-title">Keywords</div>
           <div class="mave-score-set-keywords">
             <a v-for="(keyword, i) in item.keywords" :key="i"
-              :href="`https://www.mavedb.org/search/?keywords=${keyword}`">
+              :href="`${config.appBaseUrl}/#/search?search=${keyword}`">
               <Chip :label="keyword" />
             </a>
           </div>
@@ -247,9 +247,11 @@
         </TabView>
       </div>
     </div>
+    <div v-else-if="itemStatus=='Loading' || itemStatus=='NotLoaded'">
+      <PageLoading/>
+    </div>
     <div v-else>
-      <h1>Page Not Found</h1>
-      The requested score set does not exist.
+      <ItemNotFound model="score set" :itemId="itemId"/>
     </div>
   </DefaultLayout>
 </template>
@@ -265,10 +267,13 @@ import Column from 'primevue/column'
 import DataTable from 'primevue/datatable'
 import TabPanel from 'primevue/tabpanel'
 import TabView from 'primevue/tabview'
+import ProgressSpinner from 'primevue/progressspinner'
 
 import ScoreSetHeatmap from '@/components/ScoreSetHeatmap'
 import ScoreSetHistogram from '@/components/ScoreSetHistogram'
 import EntityLink from '@/components/common/EntityLink'
+import PageLoading from '@/components/common/PageLoading'
+import ItemNotFound from '@/components/common/ItemNotFound'
 import DefaultLayout from '@/components/layout/DefaultLayout'
 import useFormatters from '@/composition/formatters'
 import useItem from '@/composition/item'
@@ -277,10 +282,11 @@ import config from '@/config'
 import { oidc } from '@/lib/auth'
 import { parseScores } from '@/lib/scores'
 import { mapState } from 'vuex'
+import items from '@/composition/items'
 
 export default {
   name: 'ScoreSetView',
-  components: { Button, Chip, DefaultLayout, EntityLink, ScoreSetHeatmap, ScoreSetHistogram, TabView, TabPanel, DataTable, Column },
+  components: { Button, Chip, DefaultLayout, EntityLink, ScoreSetHeatmap, ScoreSetHistogram, TabView, TabPanel, DataTable, Column, PageLoading, ItemNotFound },
   computed: {
     isMetaDataEmpty: function () {
       //If extraMetadata is empty, return value will be true.
@@ -310,6 +316,8 @@ export default {
   setup: () => {
     const scoresRemoteData = useRemoteData()
     return {
+      config: config,
+
       ...useFormatters(),
       ...useItem({ itemTypeName: 'scoreSet' }),
       scoresData: scoresRemoteData.data,

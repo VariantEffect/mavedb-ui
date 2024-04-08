@@ -105,10 +105,6 @@ const itemTypes = {
     name: 'gene-names', // TODO Redundant, change this structure
     restCollectionName: 'hgvs/genes'
   },
-  'grouped-assemblies': {
-    name: 'grouped-assemblies', // TODO Redundant, change this structure
-    restCollectionName: 'hgvs/grouped-assemblies'
-  },
   'scoreSet': {
     name: 'scoreSet', // TODO Redundant, change this structure
     restCollectionName: 'score-sets',
@@ -135,6 +131,28 @@ const itemTypes = {
       list: {
         method: 'post',
         url: `${config.apiBaseUrl}/taxonomies/search`
+      }
+    }
+  },
+  'target-gene-statistics': {
+    name: 'target-gene-statistics',
+    restCollectionName: 'target-gene-statistics',
+    primaryKey: 'field',
+    httpOptions: {
+      list: {
+        method: 'get',
+        url: `${config.apiBaseUrl}/statistics/target/gene`
+      }
+    }
+  },
+  'target-accession-statistics': {
+    name: 'target-accession-statistics',
+    restCollectionName: 'target-accession-statistics',
+    primaryKey: 'field',
+    httpOptions: {
+      list: {
+        method: 'get',
+        url: `${config.apiBaseUrl}/statistics/target/accession`
       }
     }
   },

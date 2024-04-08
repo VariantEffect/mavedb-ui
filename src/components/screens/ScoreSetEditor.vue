@@ -264,7 +264,17 @@
                         <span class="p-float-label">
                           <AutoComplete ref="existingTargetGeneInput" v-model="existingTargetGene"
                             :id="$scopedId('input-existingTargetGene')" field="name" :forceSelection="true"
-                            :suggestions="targetGeneSuggestionsList" @complete="searchTargetGenes" />
+                            :suggestions="targetGeneSuggestionsList" @complete="searchTargetGenes">
+                            <template #item="slotProps">
+                              <div>
+                                  <div>Name: {{ slotProps.item.name }}</div>
+                                  <div>Category: {{ slotProps.item.category }}</div>
+                                  <div v-for="externalIdentifier of slotProps.item.externalIdentifiers" :key=externalIdentifier.identifier>
+                                    {{ externalIdentifier.identifier.dbName }}: {{ externalIdentifier.identifier.identifier }}, Offset: {{ externalIdentifier.offset }}
+                                  </div>
+                              </div>
+                            </template>
+                          </AutoComplete>
                           <label :for="$scopedId('input-existingTargetGene')">Copy from an existing target gene</label>
                         </span>
                       </div>
@@ -370,15 +380,7 @@
                         <div class="field-column">
                           <span class="p-float-label">
                             <!-- Assembly is the reference genome property in coordinate cases -->
-                            <Dropdown v-model="assembly" :id="$scopedId('input-targetGeneAssembly')" :options="assemblies"
-                              optionGroupLabel="type" optionGroupChildren="assemblies" style="width: 100%">
-                              <template #optiongroup="slotProps">
-                                <div class="flex align-items-center dropdown-option-group">
-                                  <div>{{ slotProps.option.type }}</div>
-                                </div>
-                              </template>
-                            </Dropdown>
-
+                            <Dropdown v-model="assembly" :id="$scopedId('input-targetGeneAssembly')" :options="assemblies" style="width: 100%"/>
                             <label :for="$scopedId('input-targetGeneAssembly')">Assembly</label>
                           </span>
                         </div>
@@ -660,7 +662,7 @@ export default {
     const taxonomies = useItems({itemTypeName: 'taxonomy'})
     const taxonomySuggestions = useItems({itemTypeName: 'taxonomy-search'})
     const geneNames = useItems({ itemTypeName: 'gene-names' })
-    const assemblies = useItems({ itemTypeName: 'grouped-assemblies' })
+    const assemblies = useItems({ itemTypeName: 'assemblies' })
     const targetGeneSuggestions = useItems({ itemTypeName: 'target-gene-search' })
 
     const expandedTargetGeneRows = ref([])
@@ -930,7 +932,7 @@ export default {
             }
           }
         )
-        // TODO catch errors in response
+        // TODO (#130) catch errors in response
         return response.data || []
       } catch (err) {
         console.log(`Error while loading search results")`, err)
@@ -967,7 +969,7 @@ export default {
             }
           }
         )
-        // TODO catch errors in response
+        // TODO (#130) catch errors in response
         return response.data || []
       } catch (err) {
         console.log(`Error while loading search results")`, err)
@@ -986,7 +988,7 @@ export default {
             }
           }
         )
-        // TODO catch errors in response
+        // TODO (#130) catch errors in response
         return response.data || []
       } catch (err) {
         console.log(`Error while loading search results")`, err)
@@ -1016,7 +1018,7 @@ export default {
             }
           }
         )
-        // TODO catch errors in response
+        // TODO (#130) catch errors in response
         if (!response.data) {
           this.$toast.add({ severity: 'error', summary: `No matching protein accession found for ${this.targetGene.targetAccession.accession}`, life: 3000 })
         }

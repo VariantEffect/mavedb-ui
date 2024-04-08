@@ -1,11 +1,11 @@
 <template>
-
-  <div class="mave-simple-variants-heatmaps-container">
-    <div v-if="showSimpleVariantsStackedHeatmap" class="mave-simple-variants-heatmap-container" ref="simpleVariantsStackedHeatmapContainer" />
-    <div v-if="showSimpleVariantsHeatmap" class="mave-simple-variants-heatmap-container" ref="simpleVariantsHeatmapContainer" />
+  <div v-if="showHeatmap">
+    <div class="mave-simple-variants-heatmaps-container">
+      <div class="mave-simple-variants-heatmap-container" ref="simpleVariantsStackedHeatmapContainer" />
+      <div class="mave-simple-variants-heatmap-container" ref="simpleVariantsHeatmapContainer" />
+    </div>
+    <div v-if="numComplexVariants > 0">{{numComplexVariants}} variants are complex and cannot be shown on this type of chart.</div>
   </div>
-  <div v-if="numComplexVariants > 0">{{numComplexVariants}} variants are complex and cannot be shown on this type of chart.</div>
-
 </template>
 
 <script>
@@ -66,8 +66,6 @@ export default {
     isMounted: false,
     simpleVariants: null,
     numComplexVariants: 0,
-    showSimpleVariantsHeatmap: true,
-    showSimpleVariantsStackedHeatmap: true
   }),
 
   computed: {
@@ -93,6 +91,9 @@ export default {
     },
     wtVariants: function() {
       return this.wtAminoAcids ? this.prepareWtVariants(this.wtAminoAcids) : []
+    },
+    showHeatmap: function() {
+      return this.simpleVariants && this.simpleVariants.length
     }
   },
 

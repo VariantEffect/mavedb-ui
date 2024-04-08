@@ -1,6 +1,6 @@
 <template>
   <DefaultLayout>
-    <div v-if="item" class="mave-score-set">
+    <div v-if="itemStatus=='Loaded'" class="mave-score-set">
       <div class="mave-1000px-col">
         <div class="mave-screen-title-bar">
           <div class="mave-screen-title">{{ item.title || 'Untitled experiment' }}</div>
@@ -167,9 +167,11 @@
         </div><template v-else>No associated raw reads<br /></template>
       </div>
     </div>
+    <div v-else-if="itemStatus=='Loading' || itemStatus=='NotLoaded'">
+      <PageLoading/>
+    </div>
     <div v-else>
-      <h1>Page Not Found</h1>
-      The requested experiment does not exist.
+      <ItemNotFound model="experiment" :itemId="itemId"/>
     </div>
   </DefaultLayout>
 </template>
@@ -182,6 +184,9 @@ import config from '@/config'
 import Button from 'primevue/button'
 import Chip from 'primevue/chip'
 import DefaultLayout from '@/components/layout/DefaultLayout'
+import PageLoading from '@/components/common/PageLoading'
+import ItemNotFound from '@/components/common/ItemNotFound'
+import ProgressSpinner from 'primevue/progressspinner'
 import useItem from '@/composition/item'
 import useFormatters from '@/composition/formatters'
 import axios from 'axios'
@@ -189,7 +194,7 @@ import { oidc } from '@/lib/auth'
 
 export default {
   name: 'ExperimentView',
-  components: { Button, Chip, DefaultLayout },
+  components: { Button, Chip, DefaultLayout, PageLoading, ItemNotFound },
 
   setup: () => {
     return {

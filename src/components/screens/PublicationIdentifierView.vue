@@ -1,6 +1,6 @@
 <template>
     <DefaultLayout>
-      <div v-if="item" class="mave-publication mave-scroll-vertical">
+      <div v-if="itemStatus=='Loaded'" class="mave-publication mave-scroll-vertical">
         <div class="mave-1000px-col">
           <div class="mave-screen-title-bar">
             <div class="mave-screen-title">{{ item.dbName }} {{ item.identifier }}: {{item.title}}</div>
@@ -37,9 +37,11 @@
 
         </div>
       </div>
+      <div v-else-if="itemStatus=='Loading' || itemStatus=='NotLoaded'">
+          <PageLoading/>
+      </div>
       <div v-else>
-        <h1>Page Not Found</h1>
-        The requested publication does not exist.
+        <ItemNotFound model="publication" :itemId="itemId"/>
       </div>
     </DefaultLayout>
   </template>
@@ -51,6 +53,8 @@
 
   import DefaultLayout from '@/components/layout/DefaultLayout'
   import ScoreSetTable from '@/components/ScoreSetTable'
+  import PageLoading from '@/components/common/PageLoading'
+  import ItemNotFound from '@/components/common/ItemNotFound'
   import useItem from '@/composition/item'
   import config from '@/config'
   import useFormatters from '@/composition/formatters'
@@ -59,7 +63,7 @@
 
   export default {
     name: 'PublicationIdentifierView',
-    components: {DefaultLayout, ScoreSetTable},
+    components: {DefaultLayout, ScoreSetTable, PageLoading, ItemNotFound},
 
     computed: {
       oidc: function() {
@@ -221,5 +225,4 @@
     font-size: 87.5%;
     word-wrap: break-word;
   }
-
 </style>

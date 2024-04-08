@@ -1,6 +1,6 @@
 <template>
   <DefaultLayout>
-    <div v-if="item" class="mave-full-height mave-score-set mave-scroll-vertical">
+    <div v-if="itemStatus=='Loaded'" class="mave-full-height mave-score-set mave-scroll-vertical">
       <div class="mave-1000px-col">
         <div class="mave-screen-title-bar">
           <div class="mave-screen-title">{{item.urn}}</div>
@@ -28,9 +28,11 @@
           <div v-else>No associated experiment</div>
       </div>
     </div>
+    <div v-else-if="itemStatus=='Loading' || itemStatus=='NotLoaded'">
+      <PageLoading/>
+    </div>
     <div v-else>
-      <h1>Page Not Found</h1>
-      The requested experiment set does not exist.
+      <ItemNotFound model="experiment set" :itemId="itemId"/>
     </div>
   </DefaultLayout>
 </template>
@@ -42,19 +44,21 @@ import {marked} from 'marked'
 import Button from 'primevue/button'
 
 import DefaultLayout from '@/components/layout/DefaultLayout'
+import PageLoading from '@/components/common/PageLoading'
+import ItemNotFound from '@/components/common/ItemNotFound'
 import useItem from '@/composition/item'
 import useFormatters from '@/composition/formatters'
 import {oidc} from '@/lib/auth'
 
 export default {
   name: 'ExperimentSetView',
-  components: {Button, DefaultLayout},
+  components: {Button, DefaultLayout, PageLoading, ItemNotFound},
 
   computed: {
     oidc: function() {
       return oidc
       },
-    
+
   },
   setup: () => {
     return {
@@ -89,7 +93,7 @@ export default {
   },
 
   methods: {
-    
+
     addExperiment: function() {
       this.$router.push({name: 'createExperimentInExperimentSet', params: {urn: this.item.urn}})
     },
@@ -100,7 +104,7 @@ export default {
       return _.get(...args)
     }
   }
-  
+
 }
 
 </script>
@@ -171,5 +175,4 @@ export default {
   font-size: 87.5%;
   word-wrap: break-word;
 }
-
 </style>

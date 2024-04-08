@@ -93,6 +93,7 @@ export default (collectionUrl, {primaryKey = '_id'} = {}) => {
             commit('loadedItem', {item: response.data || null})
           } catch (err) {
             console.log(`Error while loading item (URL="${url}")`, err)
+            commit('loadingFailed')
           }
         }
       },

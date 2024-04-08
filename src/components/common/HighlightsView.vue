@@ -69,11 +69,6 @@
               :data="chartDataForTarget(this.targetGeneCategoryFieldCounts)"
               :options="setChartOptions('Target Gene Category', this.targetGeneCategoryFieldCounts, 'target-type')" />
           </div>
-          <div v-if="this.targetGeneReferenceFieldCounts" class="chart">
-            <Chart v-show="Object.keys(this.targetGeneReferenceFieldCounts).length > 0" type="pie"
-              :data="chartDataForTarget(this.targetGeneReferenceFieldCounts)"
-              :options="setChartOptions('Target Reference Genome', this.targetGeneReferenceFieldCounts, null)" />
-          </div>
           <div v-if="this.targetGeneOrganismFieldCounts" class="chart">
             <Chart v-show="Object.keys(this.targetGeneOrganismFieldCounts).length > 0" type="pie"
               :data="chartDataForTarget(this.targetGeneOrganismFieldCounts)"
@@ -191,8 +186,6 @@ export default defineComponent({
     targetAccessionAssemblyStatistic.setItemId("assembly")
     const targetGeneCategoryStatistic = useItem({ itemTypeName: "target-gene-statistics" })
     targetGeneCategoryStatistic.setItemId("category")
-    const targetGeneReferenceStatistic = useItem({ itemTypeName: "target-gene-statistics" })
-    targetGeneReferenceStatistic.setItemId("reference")
     const targetGeneOrganismStatistic = useItem({ itemTypeName: "target-gene-statistics" })
     targetGeneOrganismStatistic.setItemId("organism")
 
@@ -206,7 +199,6 @@ export default defineComponent({
         "sequence-type": { "model": "target", "name": "sequence", "field": "sequence-type" },
 
         "category": { "model": "target", "name": "gene", "field": "category" },
-        "reference": { "model": "target", "name": "gene", "field": "reference" },
         "organism": { "model": "target", "name": "gene", "field": "organism" },
         "uniprot-identifier": { "model": "target", "name": "gene", "field": "uniprot-identifier" },
         "refseq-identifier": { "model": "target", "name": "gene", "field": "refseq-identifier" },
@@ -281,7 +273,6 @@ export default defineComponent({
       // These are for the pie charts
       targetAccessionAssemblyFieldCounts: targetAccessionAssemblyStatistic.item,
       targetGeneCategoryFieldCounts: targetGeneCategoryStatistic.item,
-      targetGeneReferenceFieldCounts: targetGeneReferenceStatistic.item,
       targetGeneOrganismFieldCounts: targetGeneOrganismStatistic.item,
 
       field: field,

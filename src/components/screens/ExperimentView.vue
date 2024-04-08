@@ -1,6 +1,6 @@
 <template>
   <DefaultLayout>
-    <div v-if="item" class="mave-score-set">
+    <div v-if="itemStatus=='Loaded'" class="mave-score-set">
       <div class="mave-1000px-col">
         <div class="mave-screen-title-bar">
           <div class="mave-screen-title">{{ item.title || 'Untitled experiment' }}</div>
@@ -57,7 +57,7 @@
               <li v-html="markdownToHtml(publication.referenceHtml)"></li>
               <div>
                 Publication: <a
-                  :href="`https://www.mavedb.org/#/publication-identifiers/${publication.dbName}/${publication.identifier}`">{{
+                  :href="`${config.appBaseUrl}/#/publication-identifiers/${publication.dbName}/${publication.identifier}`">{{
                     publication.identifier }}</a>
               </div>
               <div>
@@ -74,7 +74,7 @@
               <li v-html="markdownToHtml(publication.referenceHtml)"></li>
               <div>
                 Publication: <a
-                  :href="`https://www.mavedb.org/#/publication-identifiers/${publication.dbName}/${publication.identifier}`">{{
+                  :href="`${config.appBaseUrl}/#/publication-identifiers/${publication.dbName}/${publication.identifier}`">{{
                     publication.identifier }}</a>
               </div>
               <div>
@@ -88,7 +88,7 @@
           <div class="mave-score-set-section-title">Keywords</div>
           <div class="mave-score-set-keywords">
             <Chip :label="keyword" />
-            <!--<a v-for="(keyword, i) of item.keywords" :key="i" :href="`https://www.mavedb.org/search/?keywords=${keyword}`"><Chip :label="keyword"/></a>-->
+            <a v-for="(keyword, i) of item.keywords" :key="i" :href="`${config.appBaseUrl}/search?search=${keyword}`"><Chip :label="keyword"/></a>
           </div>
         </div>
 
@@ -167,9 +167,11 @@
         </div><template v-else>No associated raw reads<br /></template>
       </div>
     </div>
+    <div v-else-if="itemStatus=='Loading' || itemStatus=='NotLoaded'">
+      <PageLoading/>
+    </div>
     <div v-else>
-      <h1>Page Not Found</h1>
-      The requested experiment does not exist.
+      <ItemNotFound model="experiment" :itemId="itemId"/>
     </div>
   </DefaultLayout>
 </template>
@@ -178,21 +180,26 @@
 
 import _ from 'lodash'
 import {marked} from 'marked'
+import config from '@/config'
 import Button from 'primevue/button'
 import Chip from 'primevue/chip'
 import DefaultLayout from '@/components/layout/DefaultLayout'
+import PageLoading from '@/components/common/PageLoading'
+import ItemNotFound from '@/components/common/ItemNotFound'
+import ProgressSpinner from 'primevue/progressspinner'
 import useItem from '@/composition/item'
 import useFormatters from '@/composition/formatters'
-import config from '@/config'
 import axios from 'axios'
 import { oidc } from '@/lib/auth'
 
 export default {
   name: 'ExperimentView',
-  components: { Button, Chip, DefaultLayout },
+  components: { Button, Chip, DefaultLayout, PageLoading, ItemNotFound },
 
   setup: () => {
     return {
+      config: config,
+
       ...useFormatters(),
       ...useItem({ itemTypeName: 'experiment' })
     }

@@ -265,7 +265,17 @@
                         <span class="p-float-label">
                           <AutoComplete ref="existingTargetGeneInput" v-model="existingTargetGene"
                             :id="$scopedId('input-existingTargetGene')" field="name" :forceSelection="true"
-                            :suggestions="targetGeneSuggestionsList" @complete="searchTargetGenes" />
+                            :suggestions="targetGeneSuggestionsList" @complete="searchTargetGenes">
+                            <template #item="slotProps">
+                              <div>
+                                  <div>Name: {{ slotProps.item.name }}</div>
+                                  <div>Category: {{ slotProps.item.category }}</div>
+                                  <div v-for="externalIdentifier of slotProps.item.externalIdentifiers" :key=externalIdentifier.identifier>
+                                    {{ externalIdentifier.identifier.dbName }}: {{ externalIdentifier.identifier.identifier }}, Offset: {{ externalIdentifier.offset }}
+                                  </div>
+                              </div>
+                            </template>
+                          </AutoComplete>
                           <label :for="$scopedId('input-existingTargetGene')">Copy from an existing target gene</label>
                         </span>
                       </div>
@@ -925,7 +935,7 @@ export default {
             }
           }
         )
-        // TODO catch errors in response
+        // TODO (#130) catch errors in response
         return response.data || []
       } catch (err) {
         console.log(`Error while loading search results")`, err)
@@ -962,7 +972,7 @@ export default {
             }
           }
         )
-        // TODO catch errors in response
+        // TODO (#130) catch errors in response
         return response.data || []
       } catch (err) {
         console.log(`Error while loading search results")`, err)
@@ -981,7 +991,7 @@ export default {
             }
           }
         )
-        // TODO catch errors in response
+        // TODO (#130) catch errors in response
         return response.data || []
       } catch (err) {
         console.log(`Error while loading search results")`, err)
@@ -1011,7 +1021,7 @@ export default {
             }
           }
         )
-        // TODO catch errors in response
+        // TODO (#130) catch errors in response
         if (!response.data) {
           this.$toast.add({ severity: 'error', summary: `No matching protein accession found for ${this.targetGene.targetAccession.accession}`, life: 3000 })
         }

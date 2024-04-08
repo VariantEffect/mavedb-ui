@@ -128,6 +128,28 @@ const itemTypes = {
       }
     }
   },
+  'target-gene-statistics': {
+    name: 'target-gene-statistics',
+    restCollectionName: 'target-gene-statistics',
+    primaryKey: 'field',
+    httpOptions: {
+      list: {
+        method: 'get',
+        url: `${config.apiBaseUrl}/statistics/target/gene`
+      }
+    }
+  },
+  'target-accession-statistics': {
+    name: 'target-accession-statistics',
+    restCollectionName: 'target-accession-statistics',
+    primaryKey: 'field',
+    httpOptions: {
+      list: {
+        method: 'get',
+        url: `${config.apiBaseUrl}/statistics/target/accession`
+      }
+    }
+  },
   'uniprot-identifier-search': {
     name: 'uniprot-identifier', // TODO Redundant, change this structure
     restCollectionName: 'target-gene-identifiers',

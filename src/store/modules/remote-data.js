@@ -72,7 +72,7 @@ export default () => {
                 } */
               }
             )
-            // TODO catch errors in response
+            // TODO (#130) catch errors in response
             commit('loadedData', {data: response.data || null})
           } catch (err) {
             console.log(`Error while loading data (URL="${dataUrl}")`, err)

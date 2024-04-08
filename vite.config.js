@@ -17,15 +17,16 @@ export default defineConfig({
     extensions: ['.vue', '.tsx', '.ts', '.mjs', '.js', '.jsx', '.json', '.wasm'],
   },
   server: {
+    host: '0.0.0.0',
     port: 8081,
     // Our ORCID app only has a limited set of legal redirect URLs (which 
-    // includes localhost:8081 but not all other ports), so fail if the desired
+    // includes 127.0.0.1:8081 but not all other ports), so fail if the desired
     // port is occupied.
     strictPort: true, 
   },
   preview: {
     port: 8082,
-    // Same as above, but localhost:8082 is also legal per ORCID.
+    // Same as above, but 127.0.0.1:8082 is also legal per ORCID.
     strictPort: true,
   },
   build: {

@@ -311,7 +311,6 @@ import TabView from 'primevue/tabview'
 import Message from 'primevue/message'
 import ProgressSpinner from 'primevue/progressspinner'
 import ScrollPanel from 'primevue/scrollpanel';
-import ProgressSpinner from 'primevue/progressspinner'
 
 import ScoreSetHeatmap from '@/components/ScoreSetHeatmap'
 import ScoreSetHistogram from '@/components/ScoreSetHistogram'

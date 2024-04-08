@@ -2,28 +2,6 @@
   <DefaultLayout>
     <div v-if="item" class="mave-score-set">
       <div class="mave-1000px-col">
-        <div v-if="!item.publishedDate" class="variant-processing-status">
-          <div v-if="item.processingState == 'success'">
-            <Message severity="success">
-              Scores and/or counts have been successfully processed. This score set is ready to be published.
-            </Message>
-          </div>
-          <div v-else-if="item.processingState == 'processing'">
-            <Message severity="info">
-                Scores and/or counts are being processed. Refresh this page in a few minutes to check on their status.
-            </Message>
-          </div>
-          <div v-else-if="item.processingState == 'failed'">
-            <Message severity="error">
-                  Failed to process score and/or count data: {{ item.processingErrors.exception }}. To view more detailed errors, scroll to the 'Variants' section of this page.
-            </Message>
-          </div>
-          <div v-else-if="item.processingState == 'incomplete'">
-            <Message severity="warn">
-              This score set is currently incomplete and may not be published. Please add any required fields and/or data files.
-            </Message>
-          </div>
-        </div>
         <div class="mave-screen-title-bar">
           <div class="mave-screen-title">{{ item.title || 'Untitled score set' }}</div>
           <div v-if="oidc.isAuthenticated">
@@ -209,78 +187,61 @@
           </ul>
         </div><template v-else>No associated DOIs<br /></template>
 
-        <div class="mave-score-set-section-title" id="variants">Variants</div>
-        <div v-if="item.processingState == 'failed' && item.processingErrors.detail">
-          <Accordion :active-index="0">
-              <AccordionTab>
-                  <template #header>
-                      <i class="pi pi-exclamation-triangle" style="font-size: 3em"></i>
-                      <div style="margin: 0px 10px; font-weight: bold">Scores and/or counts could not be processed. Please remedy the {{ item.processingErrors.detail.length }} errors below, then try submitting again.</div>
-                  </template>
-                  <ScrollPanel style="width: 100%; height: 200px">
-                    <div v-if="item.processingErrors.detail" v-for="err of item.processingErrors.detail">
-                      <span>{{ err }}</span>
-                    </div>
-                  </ScrollPanel>
-              </AccordionTab>
-            </Accordion>
-        </div>
-        <div v-else>
-          <div v-if="item.numVariants > 10">Below is a sample of the first 10 variants (out of {{ item.numVariants }} total variants).
-            Please download the file on the top page if you want to read the whole variants list.</div>
-          <br />
-          <TabView style="height:585px">
-            <TabPanel header="Scores">
-              <!--Default table-layout is fixed meaning the cell widths do not depend on their content.
-              If you require cells to scale based on their contents set autoLayout property to true.
-              Note that Scrollable and/or Resizable tables do not support auto layout due to technical limitations.
-              Scrollable, column can be frozen but columns and rows don't match so that add width;
-              Autolayout, column can't be frozen but columns and rows can match
-              We can keep the frozen codes first. Maybe we can figure the bug in the future-->
-              <!---->
-              <div style="overflow-y: scroll; overflow-x: scroll; height:600px;">
-                <DataTable :value="scoresTable" :showGridlines="true" :stripedRows="true">
-                  <Column v-for="column of scoreColumns.slice(0, 3)" :field="column" :header="column" :key="column"
+        <div class="mave-score-set-section-title">Variants</div>
+        <div v-if="item.numVariants > 10">Below is a sample of the first 10 variants.
+          Please download the file on the top page if you want to read the whole variants list.</div>
+        <br />
+        <TabView style="height:585px">
+          <TabPanel header="Scores">
+            <!--Default table-layout is fixed meaning the cell widths do not depend on their content.
+            If you require cells to scale based on their contents set autoLayout property to true.
+            Note that Scrollable and/or Resizable tables do not support auto layout due to technical limitations.
+            Scrollable, column can be frozen but columns and rows don't match so that add width;
+            Autolayout, column can't be frozen but columns and rows can match
+            We can keep the frozen codes first. Maybe we can figure the bug in the future-->
+            <!---->
+            <div style="overflow-y: scroll; overflow-x: scroll; height:600px;">
+              <DataTable :value="scoresTable" :showGridlines="true" :stripedRows="true">
+                <Column v-for="column of scoreColumns.slice(0, 3)" :field="column" :header="column" :key="column"
+                  style="overflow:hidden" headerStyle="background-color:#A1D8C8; font-weight: bold">
+                  <!--:frozen="columnIsAllNa(scoresTable, column)"-->
+                  <template #body="scoresTable">{{ scoresTable.data[column] }}</template>
+                </Column>
+                <Column v-for="column of scoreColumns.slice(3, scoreColumns.length)" :field="column" :header="column"
+                  :key="column" style="overflow:hidden" headerStyle="background-color:#A1D8C8; font-weight: bold">
+                  <template #body="scoresTable">{{ convertToThreeDecimal(scoresTable.data[column]) }}</template>
+                </Column>
+              </DataTable>
+            </div>
+          </TabPanel>
+          <TabPanel header="Counts">
+            <div style="overflow-y: scroll; overflow-x: scroll; height:600px;">
+              <DataTable :value="countsTable" :showGridlines="true" :stripedRows="true">
+                <template v-if="countColumns.length == 0">No count data available.</template>
+                <template v-else>
+                  <Column v-for="column of countColumns.slice(0, 3)" :field="column" :header="column" :key="column"
                     style="overflow:hidden" headerStyle="background-color:#A1D8C8; font-weight: bold">
-                    <!--:frozen="columnIsAllNa(scoresTable, column)"-->
-                    <template #body="scoresTable">{{ scoresTable.data[column] }}</template>
+                    <!--:frozen="columnIsAllNa(countsTable, column)" bodyStyle="text-align:left"-->
+                    <template #body="countsTable">{{ countsTable.data[column] }}</template>
+                    <!--:style="{overflow: 'hidden'}"-->
                   </Column>
-                  <Column v-for="column of scoreColumns.slice(3, scoreColumns.length)" :field="column" :header="column"
+                  <Column v-for="column of countColumns.slice(3, countColumns.length)" :field="column" :header="column"
                     :key="column" style="overflow:hidden" headerStyle="background-color:#A1D8C8; font-weight: bold">
-                    <template #body="scoresTable">{{ convertToThreeDecimal(scoresTable.data[column]) }}</template>
+                    <template #body="countsTable">{{ convertToThreeDecimal(countsTable.data[column]) }}</template>
                   </Column>
-                </DataTable>
-              </div>
-            </TabPanel>
-            <TabPanel header="Counts">
-              <div style="overflow-y: scroll; overflow-x: scroll; height:600px;">
-                <DataTable :value="countsTable" :showGridlines="true" :stripedRows="true">
-                  <template v-if="countColumns.length == 0">No count data available.</template>
-                  <template v-else>
-                    <Column v-for="column of countColumns.slice(0, 3)" :field="column" :header="column" :key="column"
-                      style="overflow:hidden" headerStyle="background-color:#A1D8C8; font-weight: bold">
-                      <!--:frozen="columnIsAllNa(countsTable, column)" bodyStyle="text-align:left"-->
-                      <template #body="countsTable">{{ countsTable.data[column] }}</template>
-                      <!--:style="{overflow: 'hidden'}"-->
-                    </Column>
-                    <Column v-for="column of countColumns.slice(3, countColumns.length)" :field="column" :header="column"
-                      :key="column" style="overflow:hidden" headerStyle="background-color:#A1D8C8; font-weight: bold">
-                      <template #body="countsTable">{{ convertToThreeDecimal(countsTable.data[column]) }}</template>
-                    </Column>
-                  </template>
-                </DataTable>
-              </div>
-              <!--<table>
-                <tr>
-                  <th v-for="column in countColumns" :key="column">{{column}}</th>
-                </tr>
-                <tr v-for="row in countsTable" :key="row">
-                  <td v-for="column in countColumns" :key="column">{{row[column]}}</td>
-                </tr>
-              </table>-->
-            </TabPanel>
-          </TabView>
-        </div>
+                </template>
+              </DataTable>
+            </div>
+            <!--<table>
+              <tr>
+                <th v-for="column in countColumns" :key="column">{{column}}</th>
+              </tr>
+              <tr v-for="row in countsTable" :key="row">
+                <td v-for="column in countColumns" :key="column">{{row[column]}}</td>
+              </tr>
+            </table>-->
+          </TabPanel>
+        </TabView>
       </div>
     </div>
     <div v-else>
@@ -295,17 +256,12 @@
 import axios from 'axios'
 import _ from 'lodash'
 import {marked} from 'marked'
-import Accordion from 'primevue/accordion';
-import AccordionTab from 'primevue/accordiontab';
 import Button from 'primevue/button'
 import Chip from 'primevue/chip'
 import Column from 'primevue/column'
 import DataTable from 'primevue/datatable'
 import TabPanel from 'primevue/tabpanel'
 import TabView from 'primevue/tabview'
-import Message from 'primevue/message'
-import ProgressSpinner from 'primevue/progressspinner'
-import ScrollPanel from 'primevue/scrollpanel';
 
 import ScoreSetHeatmap from '@/components/ScoreSetHeatmap'
 import EntityLink from '@/components/common/EntityLink'
@@ -320,7 +276,7 @@ import { mapState } from 'vuex'
 
 export default {
   name: 'ScoreSetView',
-  components: { Accordion, AccordionTab, Button, Chip, DefaultLayout, EntityLink, ScoreSetHeatmap, TabView, TabPanel, Message, DataTable, Column, ProgressSpinner, ScrollPanel },
+  components: { Button, Chip, DefaultLayout, EntityLink, ScoreSetHeatmap, TabView, TabPanel, DataTable, Column },
   computed: {
     isMetaDataEmpty: function () {
       //If extraMetadata is empty, return value will be true.
@@ -722,18 +678,5 @@ export default {
   color: #987cb8;
   font-size: 87.5%;
   word-wrap: break-word;
-}
-
-.samplify-data-table .samplify-data-table-spinner-container {
-  align-items: center;
-  display: flex;
-  justify-content: center;
-  padding-top: 18px;
-  width: 100%;
-}
-
-.samplify-data-table .samplify-data-table-progress {
-  height: 50px;
-  width: 50px;
 }
 </style>

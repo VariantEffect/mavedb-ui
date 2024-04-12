@@ -164,14 +164,17 @@
               <strong>Accession Number: </strong>
               {{ targetGene.targetAccession.accession }}
             </div>
-
+            
+            <div v-if="targetGene.targetSequence.taxonomy?.taxId">
+                <div v-if="targetGene.targetSequence.taxonomy?.url"> <strong>Taxonomy ID:</strong>
+                  &nbsp;<a :href="`${targetGene.targetSequence.taxonomy.url}`" target="blank">{{targetGene.targetSequence.taxonomy.taxId}}</a> 
+                </div>
+            </div>
             <div v-if="targetGene.targetSequence?.sequence" style="word-break: break-word">
-              <div v-if="targetGene.targetSequence.reference?.organismName"><strong>Organism:</strong>
-                {{ targetGene.targetSequence.reference.organismName }}</div>
-              <div v-if="targetGene.targetSequence.reference?.shortName"><strong>Reference genome:</strong>
-                {{ targetGene.targetSequence.reference.shortName }}</div>
-              <div v-if="targetGene.targetSequence.reference?.id"><strong>Genome ID:</strong>
-                {{ targetGene.targetSequence.reference.id }}</div>
+              <div v-if="targetGene.targetSequence.taxonomy?.organismName"><strong>Organism:</strong>
+                {{ targetGene.targetSequence.taxonomy.organismName }}</div>
+              <div v-if="targetGene.targetSequence.taxonomy?.commonName"><strong>Common Name:</strong>
+                {{ targetGene.targetSequence.taxonomy.commonName }}</div>
               <div v-if="targetGene.id"><strong>Target ID:</strong> {{ targetGene.id }}</div>
               <strong>Reference sequence: </strong>
               <template v-if="targetGene.targetSequence.sequence.length >= 500">

@@ -91,7 +91,6 @@
             <a v-for="(keyword, i) of item.keywords" :key="i" :href="`${config.appBaseUrl}/search?search=${keyword}`"><Chip :label="keyword"/></a>
           </div>
         </div>
-
         <div class="mave-score-set-section-title">Scoreset Targets</div>
         <div v-if="this.associatedScoreSets.length != 0">
           <div class="mave-score-set-section-sublist" v-for="scoreSet in this.associatedScoreSets" :key="scoreSet">
@@ -110,13 +109,14 @@
                 {{ targetGene.targetAccession.accession }}
               </div>
 
+              <div v-if="targetGene.targetSequence.taxonomy?.url"><strong>Taxonomy ID:</strong> 
+                &nbsp;<a :href="`${targetGene.targetSequence.taxonomy.url}`" target="blank">{{targetGene.targetSequence.taxonomy.taxId}}</a> 
+                </div>
               <div v-if="targetGene.targetSequence?.sequence" style="word-break: break-word">
-                <div v-if="targetGene.targetSequence.reference?.organismName"><strong>Organism:</strong>
-                  {{ targetGene.targetSequence.reference.organismName }}</div>
-                <div v-if="targetGene.targetSequence.reference?.shortName"><strong>Reference genome:</strong>
-                  {{ targetGene.targetSequence.reference.shortName }}</div>
-                <div v-if="targetGene.targetSequence.reference?.id"><strong>Genome ID:</strong>
-                  {{ targetGene.targetSequence.reference.id }}</div>
+                <div v-if="targetGene.targetSequence.taxonomy?.organismName"><strong>Organism name:</strong>
+                  {{ targetGene.targetSequence.taxonomy.organismName }}</div>
+                <div v-if="targetGene.targetSequence.taxonomy?.commonName"><strong>Common name:</strong>
+                  {{ targetGene.targetSequence.taxonomy.commonName }}</div>
                 <div v-if="targetGene.id"><strong>Target ID:</strong> {{ targetGene.id }}</div>
                 <strong>Reference sequence: </strong>
                 <template v-if="targetGene.targetSequence.sequence.length >= 500">

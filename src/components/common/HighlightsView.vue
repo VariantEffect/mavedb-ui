@@ -57,22 +57,15 @@
             </div>
           </TabPanel>
         </TabView>
-        <!-- TODO: I think these v-ifs are causing persistent re-rendering of charts when tabs are switched, but a workaround is unclear. -->
         <div class="chart-container">
-          <div v-if="this.targetAccessionAssemblyFieldCounts" class="chart">
-            <Chart v-show="Object.keys(this.targetAccessionAssemblyFieldCounts).length > 0" type="pie"
-              :data="chartDataForTarget(this.targetAccessionAssemblyFieldCounts)"
-              :options="setChartOptions('Target Gene Assemblies', this.targetAccessionAssemblyFieldCounts, null)" />
+          <div v-if="showAssemblyChart" class="chart">
+            <Chart type="pie" :data="assemblyChartData" :options="assemblyChartOptions"></Chart>
           </div>
-          <div v-if="this.targetGeneCategoryFieldCounts" class="chart">
-            <Chart v-show="Object.keys(this.targetGeneCategoryFieldCounts).length > 0" type="pie"
-              :data="chartDataForTarget(this.targetGeneCategoryFieldCounts)"
-              :options="setChartOptions('Target Gene Category', this.targetGeneCategoryFieldCounts, 'target-type')" />
+          <div v-if="showCategoryChart" class="chart">
+            <Chart type="pie" :data="categoryChartData" :options="categoryChartOptions"></Chart>
           </div>
-          <div v-if="this.targetGeneOrganismFieldCounts" class="chart">
-            <Chart v-show="Object.keys(this.targetGeneOrganismFieldCounts).length > 0" type="pie"
-              :data="chartDataForTarget(this.targetGeneOrganismFieldCounts)"
-              :options="setChartOptions('Target Organism', this.targetGeneOrganismFieldCounts, 'target-organism-name')" />
+          <div v-if="showOrganismChart" class="chart">
+            <Chart type="pie" :data="organismChartData" :options="organismChartOptions"></Chart>
           </div>
         </div>
       </template>
@@ -295,6 +288,31 @@ export default defineComponent({
 
     fetchedLeaderboardData: {}
   }),
+
+  computed: {
+    // Why are these all computed properties? To avoid chart re-render when tab is switched.
+    showAssemblyChart: function() {
+      return this.targetAccessionAssemblyFieldCounts && Object.keys(this.targetAccessionAssemblyFieldCounts).length > 0
+    },
+    showCategoryChart: function() {
+      return this.targetGeneCategoryFieldCounts && Object.keys(this.targetGeneCategoryFieldCounts).length > 0
+    },
+    showOrganismChart: function() {
+      return this.targetGeneOrganismFieldCounts && Object.keys(this.targetGeneOrganismFieldCounts).length > 0
+    },
+    assemblyChartData: function() { return this.chartDataForTarget(this.targetAccessionAssemblyFieldCounts) },
+    categoryChartData: function() { return this.chartDataForTarget(this.targetGeneCategoryFieldCounts) },
+    organismChartData: function() { return this.chartDataForTarget(this.targetGeneOrganismFieldCounts) },
+    assemblyChartOptions: function() {
+       return this.setChartOptions('Target Gene Assemblies', this.targetGeneOrganismFieldCounts, null) 
+    },
+    categoryChartOptions: function() {
+       return this.setChartOptions('Target Gene Category', this.targetGeneOrganismFieldCounts, 'target-type') 
+    },
+    organismChartOptions: function() {
+       return this.setChartOptions('Target Organism', this.targetGeneOrganismFieldCounts, 'target-organism-name') 
+    },
+  },
 
   watch: {
     field: {

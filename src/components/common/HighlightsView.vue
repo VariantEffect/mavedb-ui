@@ -24,6 +24,10 @@
                     <a :href="`${config.appBaseUrl}/#/search?search=${slotProps.data[col.field]}`">{{
                       slotProps.data[col.field] }}</a>
                   </template>
+                  <template v-else-if="this.field == 'organism' && col.field == 'column'" #body="slotProps">
+                    <a :href="`${config.appBaseUrl}/#/search?target-organism-name=${slotProps.data[col.field]}`">{{
+                      slotProps.data[col.field] }}</a>
+                  </template>
                   <template v-else-if="col.field == 'identifier'" #body="slotProps">
                     <a :href="`${config.appBaseUrl}/#/search?search=${slotProps.data[col.field]}`">{{
                       slotProps.data[col.field] }}</a>
@@ -219,7 +223,7 @@ export default defineComponent({
       }
     }
 
-    const targetLeaderboardFields = ['accession', 'gene', 'uniprot-identifier', 'refseq-identifier', 'ensembl-identifier']
+    const targetLeaderboardFields = ['accession', 'gene', 'organism', 'uniprot-identifier', 'refseq-identifier', 'ensembl-identifier']
     const scoreSetLeaderboardFields = ['keywords', 'publication-identifiers', 'doi-identifiers']
     const experimentLeaderboardFields = ['keywords', 'raw-read-identifiers', 'publication-identifiers', 'doi-identifiers']
     const activeTabIndex = ref(0)
@@ -254,6 +258,7 @@ export default defineComponent({
       targetLeaderboardColumns: {
         "accession": [{ field: "column", header: "Accession" }, { field: "count", "header": "Associated Score Sets" }],
         "gene": [{ field: "column", header: "Gene Name" }, { field: "count", "header": "Associated Score Sets" }],
+        "organism": [{ field: "column", header: "Organism Name" }, { field: "count", "header": "Associated Score Sets" }],
         "uniprot-identifier": [{ field: "identifier", header: "Uniprot Id" }, { field: "count", "header": "Associated Score Sets" }, { field: "url", header: "URL" }],
         "refseq-identifier": [{ field: "identifier", header: "RefSeq Id" }, { field: "count", "header": "Associated Score Sets" }, { field: "url", header: "URL" }],
         "ensembl-identifier": [{ field: "identifier", header: "Ensembl Id" }, { field: "count", "header": "Associated Score Sets" }, { field: "url", header: "URL" }]
@@ -417,7 +422,7 @@ export default defineComponent({
 
       var identifiers;
       // Fields loaded directly via data for field. These fields do not require additional `/search` endpoint requests.
-      if (this.field == 'accession' || this.field == 'gene' || this.field == 'keywords') {
+      if (this.field == 'accession' || this.field == 'gene' || this.field == 'organism' || this.field == 'keywords') {
         identifiers = this.countsToLeaderboard(this.dataForField)
       }
       // External gene identifiers

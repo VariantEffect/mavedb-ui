@@ -15,7 +15,7 @@
           </div>
           <div v-else-if="item.processingState == 'failed'">
             <Message severity="error">
-                  Failed to process score and/or count data: {{ item.processingErrors.exception }}. To view more detailed errors, scroll to the 'Variants' section of this page.
+                  Failed to process score and/or count data: {{ item.processingErrors.exception }}. If there were issues with validation of individual variants, they will appear in the `Variants` section of this page.
             </Message>
           </div>
           <div v-else-if="item.processingState == 'incomplete'">
@@ -164,14 +164,17 @@
               <strong>Accession Number: </strong>
               {{ targetGene.targetAccession.accession }}
             </div>
-
+            
+            <div v-if="targetGene.targetSequence.taxonomy?.taxId">
+                <div v-if="targetGene.targetSequence.taxonomy?.url"> <strong>Taxonomy ID:</strong>
+                  &nbsp;<a :href="`${targetGene.targetSequence.taxonomy.url}`" target="blank">{{targetGene.targetSequence.taxonomy.taxId}}</a> 
+                </div>
+            </div>
             <div v-if="targetGene.targetSequence?.sequence" style="word-break: break-word">
-              <div v-if="targetGene.targetSequence.reference?.organismName"><strong>Organism:</strong>
-                {{ targetGene.targetSequence.reference.organismName }}</div>
-              <div v-if="targetGene.targetSequence.reference?.shortName"><strong>Reference genome:</strong>
-                {{ targetGene.targetSequence.reference.shortName }}</div>
-              <div v-if="targetGene.targetSequence.reference?.id"><strong>Genome ID:</strong>
-                {{ targetGene.targetSequence.reference.id }}</div>
+              <div v-if="targetGene.targetSequence.taxonomy?.organismName"><strong>Organism:</strong>
+                {{ targetGene.targetSequence.taxonomy.organismName }}</div>
+              <div v-if="targetGene.targetSequence.taxonomy?.commonName"><strong>Common Name:</strong>
+                {{ targetGene.targetSequence.taxonomy.commonName }}</div>
               <div v-if="targetGene.id"><strong>Target ID:</strong> {{ targetGene.id }}</div>
               <strong>Reference sequence: </strong>
               <template v-if="targetGene.targetSequence.sequence.length >= 500">
@@ -218,11 +221,14 @@
               <AccordionTab>
                   <template #header>
                       <i class="pi pi-exclamation-triangle" style="font-size: 3em"></i>
-                      <div style="margin: 0px 10px; font-weight: bold">Scores and/or counts could not be processed. Please remedy the {{ item.processingErrors.detail.length }} errors below, then try submitting again.</div>
+                      <div v-if="item.processingErrors.detail" style="margin: 0px 10px; font-weight: bold">Scores and/or counts could not be processed. Please remedy the {{ item.processingErrors.detail.length }} errors below, then try submitting again.</div>
+                      <div v-else style="margin: 0px 10px; font-weight: bold">Scores and/or counts could not be processed.</div>
                   </template>
                   <ScrollPanel style="width: 100%; height: 200px">
-                    <div v-if="item.processingErrors.detail" v-for="err of item.processingErrors.detail">
-                      <span>{{ err }}</span>
+                    <div v-if="item.processingErrors.detail">
+                      <div v-for="err of item.processingErrors.detail">
+                        <span>{{ err }}</span>
+                      </div>
                     </div>
                   </ScrollPanel>
               </AccordionTab>

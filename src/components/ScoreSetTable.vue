@@ -92,7 +92,7 @@ export default {
             data: (x) =>
               _.get(
                 x,
-                "targetGenes[0].targetSequence.reference.organismName",
+                "targetGenes[0].targetSequence.taxonomy.organismName",
                 _.get(x, "targetGenes[0].targetAccession.assembly", null)
               ),
             title: "Target organism/assembly",

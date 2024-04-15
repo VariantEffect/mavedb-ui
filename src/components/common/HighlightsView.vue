@@ -6,7 +6,7 @@
         <TabView @update:active-index="(idx) => { this.field = targetLeaderboardFields[idx] }"
           v-model:activeIndex="activeTabIndex">
           <TabPanel v-for="tab in targetLeaderboardFields" :key="tab"
-            :header="tab.charAt(0).toUpperCase() + tab.slice(1)">
+            :header="targetLeaderboardFieldTitles[tab]">
             <div v-if="loading" class="highlights-spinner-container" ref="spinner">
               <ProgressSpinner class="highlights-progress" />
             </div>
@@ -14,7 +14,7 @@
               <DataTable :value="leaderboardData" sortField="count" :sortOrder="-1" paginator :rows="5"
                 :rowsPerPageOptions="[5, 10, 20]" size="small">
                 <Column v-for="col of targetLeaderboardColumns[this.field]" :field="col.field" :header="col.header"
-                  :sortable="col.field == 'count'" :key="col.field" :style="`width: ${col.width}`">
+                  :sortable="col.field == 'count'" :key="col.field" :style="`width: ${col.width || auto}`">
                   <!-- Link any identifier columns or `column` (in this compoenent representative of some db key) to a MaveDB search page -->
                   <template v-if="this.field == 'accession' && col.field == 'column'" #body="slotProps">
                     <a :href="`${config.appBaseUrl}/#/search?target-accession=${slotProps.data[col.field]}`">{{
@@ -82,7 +82,7 @@
         <TabView @tab-change="(event) => { this.field = scoreSetLeaderboardFields[event.index] }"
           v-model:activeIndex="activeTabIndex">
           <TabPanel v-for="tab in scoreSetLeaderboardFields" :key="tab"
-            :header="tab.charAt(0).toUpperCase() + tab.slice(1)">
+            :header="scoreSetLeaderboardFieldTitles[tab]">
             <div v-if="loading" class="highlights-spinner-container" ref="spinner">
               <ProgressSpinner class="highlights-progress" />
             </div>
@@ -90,7 +90,7 @@
               <DataTable :value="leaderboardData" sortField="count" :sortOrder="-1" paginator :rows="5"
                 :rowsPerPageOptions="[5, 10, 20]" size="small">
                 <Column v-for="col of scoreSetLeaderboardColumns[this.field]" :field="col.field" :header="col.header"
-                  :sortable="col.field == 'count'" :key="col.field">
+                  :sortable="col.field == 'count'" :key="col.field" :style="`width: ${col.width || auto}`">
                   <!-- Link publication identifiers to their MaveDB page -->
                   <template v-if="this.field == 'publication-identifiers' && col.field == 'identifier'" #body="slotProps">
                     <a
@@ -134,7 +134,7 @@
               <DataTable :value="leaderboardData" sortField="count" :sortOrder="-1" paginator :rows="5"
                 :rowsPerPageOptions="[5, 10, 20]" size="small">
                 <Column v-for="col of experimentLeaderboardColumns[this.field]" :field="col.field" :header="col.header"
-                  :sortable="col.field == 'count'" :key="col.field">
+                  :sortable="col.field == 'count'" :key="col.field" :style="`width: ${col.width || auto}`">
                   <!-- Link publication identifiers to their MaveDB page -->
                   <template v-if="this.field == 'publication-identifiers' && col.field == 'identifier'" #body="slotProps">
                     <a
@@ -189,35 +189,48 @@ export default defineComponent({
     const statisticFields = {
       Target: {
         accession: { model: 'target', name: 'accession', field: 'accession' },
-        assembly: { model: "target", name: "accession", field: "assembly" },
-        gene: { model: "target", name: "accession", field: "gene" },
+        assembly: { model: 'target', name: 'accession', field: 'assembly' },
+        gene: { model: 'target', name: 'accession', field: 'gene' },
 
-        sequence: { model: "target", name: "sequence", field: "sequence" },
-        'sequence-type': { model: "target", name: "sequence", field: "sequence-type" },
+        sequence: { model: 'target', name: 'sequence', field: 'sequence' },
+        'sequence-type': { model: 'target', name: 'sequence', field: 'sequence-type' },
 
-        category: { model: "target", name: "gene", field: "category" },
-        organism: { model: "target", name: "gene", field: "organism" },
-        'uniprot-identifier': { model: "target", name: "gene", field: "uniprot-identifier" },
-        'refseq-identifier': { model: "target", name: "gene", field: "refseq-identifier" },
-        'ensembl-identifier': { model: "target", name: "gene", field: "ensembl-identifier" },
+        category: { model: 'target', name: 'gene', field: 'category' },
+        organism: { model: 'target', name: 'gene', field: 'organism' },
+        'uniprot-identifier': { model: 'target', name: 'gene', field: 'uniprot-identifier' },
+        'refseq-identifier': { model: 'target', name: 'gene', field: 'refseq-identifier' },
+        'ensembl-identifier': { model: 'target', name: 'gene', field: 'ensembl-identifier' },
       },
 
       ScoreSet: {
-        keywords: { model: "record", name: "score-set", field: "keywords" },
-        "publication-identifiers": { model: "record", name: "score-set", field: "publication-identifiers" },
-        "doi-identifiers": { model: "record", name: "score-set", field: "doi-identifiers" },
+        keywords: { model: 'record', name: 'score-set', field: 'keywords' },
+        'publication-identifiers': { model: 'record', name: 'score-set', field: 'publication-identifiers' },
+        'doi-identifiers': { model: 'record', name: 'score-set', field: 'doi-identifiers' },
       },
 
       Experiment: {
-        keywords: { model: "record", name: "experiment", field: "keywords" },
-        "raw-read-identifiers": { model: "record", name: "experiment", field: "raw-read-identifiers" },
-        "publication-identifiers": { model: "record", name: "experiment", field: "publication-identifiers" },
-        "doi-identifiers": { model: "record", name: "experiment", field: "doi-identifiers" },
+        keywords: { model: 'record', name: 'experiment', field: 'keywords' },
+        'raw-read-identifiers': { model: 'record', name: 'experiment', field: 'raw-read-identifiers' },
+        'publication-identifiers': { model: 'record', name: 'experiment', field: 'publication-identifiers' },
+        'doi-identifiers': { model: 'record', name: 'experiment', field: 'doi-identifiers' },
       }
     }
 
     const targetLeaderboardFields = ['accession', 'gene', 'organism', 'uniprot-identifier', 'refseq-identifier', 'ensembl-identifier']
+    const targetLeaderboardFieldTitles = {
+      accession: 'Accession',
+      gene: 'Gene',
+      organism: 'Organism',
+      'uniprot-identifier': 'UniProt ID',
+      'refseq-identifier': 'RefSeq ID',
+      'ensembl-identifier': 'Ensembl ID',
+    }
     const scoreSetLeaderboardFields = ['keywords', 'publication-identifiers', 'doi-identifiers']
+    const scoreSetLeaderboardFieldTitles = {
+      keywords: 'Keyword',
+      'publication-identifiers': 'Publication ID',
+      'doi-identifiers': 'DOI',
+    }
     const experimentLeaderboardFields = ['keywords', 'raw-read-identifiers', 'publication-identifiers', 'doi-identifiers']
     const activeTabIndex = ref(0)
 
@@ -245,27 +258,29 @@ export default defineComponent({
       statisticFields: statisticFields,
 
       targetLeaderboardFields: targetLeaderboardFields,
+      targetLeaderboardFieldTitles: targetLeaderboardFieldTitles,
       scoreSetLeaderboardFields: scoreSetLeaderboardFields,
+      scoreSetLeaderboardFieldTitles: scoreSetLeaderboardFieldTitles,
       experimentLeaderboardFields: experimentLeaderboardFields,
 
       targetLeaderboardColumns: {
-        accession: [{ field: "column", header: "Accession"}, { field: "count", header: "Associated Score Sets" }],
-        gene: [{ field: "column", header: "Gene Name" }, { field: "count", header: "Associated Score Sets" }],
-        organism: [{ field: "column", header: "Organism Name" }, { field: "count", header: "Associated Score Sets" }],
-        "uniprot-identifier": [{ field: "identifier", header: "Uniprot Id" }, { field: "count", header: "Associated Score Sets" }, { field: "url", header: "URL" }],
-        "refseq-identifier": [{ field: "identifier", header: "RefSeq Id" }, { field: "count", header: "Associated Score Sets" }, { field: "url", header: "URL" }],
-        "ensembl-identifier": [{ field: "identifier", header: "Ensembl Id" }, { field: "count", header: "Associated Score Sets" }, { field: "url", header: "URL" }]
+        accession: [{ field: 'column', header: 'Accession', width: '70%' }, { field: 'count', header: 'Associated Score Sets', width: '30%'}],
+        gene: [{ field: 'column', header: 'Gene Name', width: '70%'}, { field: 'count', header: 'Associated Score Sets', width: '30%'}],
+        organism: [{ field: 'column', header: 'Organism Name', width: '70%'}, { field: 'count', header: 'Associated Score Sets', width: '30%'}],
+        'uniprot-identifier': [{ field: 'identifier', header: 'Uniprot Id', width: '25%' }, { field: 'count', header: 'Associated Score Sets', width: '20%' }, { field: 'url', header: 'URL', width: '55%' }],
+        'refseq-identifier': [{ field: 'identifier', header: 'RefSeq Id', width: '25%' }, { field: 'count', header: 'Associated Score Sets', width: '20%' }, { field: 'url', header: 'URL', width: '55%' }],
+        'ensembl-identifier': [{ field: 'identifier', header: 'Ensembl Id', width: '25%' }, { field: 'count', header: 'Associated Score Sets', width: '20%' }, { field: 'url', header: 'URL', width: '55%' }]
       },
       scoreSetLeaderboardColumns: {
-        keywords: [{ field: "column", header: "Keyword" }, { field: "count", header: "Associated Score Sets" }],
-        "publication-identifiers": [{ field: "identifier", header: "Identifier" }, { field: "count", header: "Associated Score Sets" }, { field: "title", header: "Title" }, { field: "url", header: "URL" }],
-        "doi-identifiers": [{ field: "identifier", header: "Identifier" }, { field: "count", header: "Associated Score Sets" }, { field: "url", header: "URL" }]
+        keywords: [{ field: 'column', header: 'Keyword', width: '50%' }, { field: 'count', header: 'Associated Score Sets', width: '50%' }],
+        'publication-identifiers': [{ field: 'identifier', header: 'Identifier', width: '7.5%' }, { field: 'count', header: 'Associated Score Sets', width: '12.5%' }, { field: 'title', header: 'Title', width: '47%' }, { field: 'url', header: 'URL', width: '33%' }],
+        'doi-identifiers': [{ field: 'identifier', header: 'Identifier', width: '33%' }, { field: 'count', header: 'Associated Score Sets', width: '33%' }, { field: 'url', header: 'URL', width: '33%' }]
       },
       experimentLeaderboardColumns: {
-        keywords: [{ field: "column", header: "Keyword" }, { field: "count", header: "Associated Score Sets" }],
-        "raw-read-identifiers": [{ field: "identifier", header: "Raw Read Identifier" }, { field: "count", header: "Associated Score Sets" }, { field: "url", header: "URL" }],
-        "publication-identifiers": [{ field: "identifier", header: "Identifier" }, { field: "count", header: "Associated Score Sets" }, { field: "title", header: "Title" }, { field: "url", header: "URL" }],
-        "doi-identifiers": [{ field: "identifier", header: "Identifier" }, { field: "count", header: "Associated Score Sets" }, { field: "url", header: "URL" }]
+        keywords: [{ field: 'column', header: 'Keyword' }, { field: 'count', header: 'Associated Score Sets' }],
+        'raw-read-identifiers': [{ field: 'identifier', header: 'Raw Read Identifier' }, { field: 'count', header: 'Associated Score Sets' }, { field: 'url', header: 'URL' }],
+        'publication-identifiers': [{ field: 'identifier', header: 'Identifier' }, { field: 'count', header: 'Associated Score Sets' }, { field: 'title', header: 'Title' }, { field: 'url', header: 'URL' }],
+        'doi-identifiers': [{ field: 'identifier', header: 'Identifier' }, { field: 'count', header: 'Associated Score Sets' }, { field: 'url', header: 'URL' }]
       },
 
       // These are for the pie charts
@@ -403,9 +418,9 @@ export default defineComponent({
 
       const loadTargetIdentifiers = async (dbName) => {
         const dbNames = {
-          "uniprot-identifier": "UniProt",
-          "refseq-identifier": "RefSeq",
-          "ensembl-identifier": "Ensembl"
+          'uniprot-identifier': 'UniProt',
+          'refseq-identifier': 'RefSeq',
+          'ensembl-identifier': 'Ensembl'
         }
         const identifiers = []
         for (const identifier of Object.keys(this.dataForField)) {
@@ -480,7 +495,7 @@ export default defineComponent({
         // TODO(#130) catch errors in response
         return response.data || {}
       } catch (err) {
-        console.log(`Error while loading search results for Model: ${model}, Name: ${name}, Field: ${field})`, err)
+        console.log(`Error while loading search results for Model: ${model}, Name: ${name}, Field: ${field}`, err)
         return []
       }
     },
@@ -499,7 +514,7 @@ export default defineComponent({
         // TODO (#130) catch errors in response
         return response.data || []
       } catch (err) {
-        console.log(`Error while loading ${identifier} search results)`, err)
+        console.log(`Error while loading ${identifier} search results`, err)
         return []
       }
     },
@@ -517,7 +532,7 @@ export default defineComponent({
         // TODO (#130) catch errors in response
         return response.data || []
       } catch (err) {
-        console.log(`Error while loading publication identifier search results)`, err)
+        console.log('Error while loading publication identifier search results', err)
         return []
       }
     },
@@ -536,7 +551,7 @@ export default defineComponent({
         // TODO (#130) catch errors in response
         return response.data || []
       } catch (err) {
-        console.log(`Error while loading search results)`, err)
+        console.log('Error while loading search results', err)
         return []
       }
     },

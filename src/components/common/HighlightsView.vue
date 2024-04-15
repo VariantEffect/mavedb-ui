@@ -213,7 +213,7 @@ export default defineComponent({
       }
     }
 
-    const targetLeaderboardFields = ['accession', 'gene', 'organism', 'uniprot-identifier', 'refseq-identifier', 'ensembl-identifier']
+    const targetLeaderboardFields = ['organism', 'uniprot-identifier', 'refseq-identifier', 'ensembl-identifier', 'accession', 'gene']
     const targetLeaderboardFieldTitles = {
       accession: 'Accession',
       gene: 'Gene',
@@ -317,10 +317,10 @@ export default defineComponent({
     categoryChartData: function() { return this.chartDataForTarget(this.targetGeneCategoryFieldCounts) },
     organismChartData: function() { return this.chartDataForTarget(this.targetGeneOrganismFieldCounts) },
     categoryChartOptions: function() {
-       return this.setChartOptions('Target Gene Category', this.targetGeneOrganismFieldCounts, 'target-type') 
+       return this.setChartOptions('Target Gene Category', this.chartDataForTarget(this.targetGeneCategoryFieldCounts), 'target-type') 
     },
     organismChartOptions: function() {
-       return this.setChartOptions('Target Organism', this.targetGeneOrganismFieldCounts, 'target-organism-name') 
+       return this.setChartOptions('Target Organism', this.chartDataForTarget(this.targetGeneOrganismFieldCounts), 'target-organism-name') 
     },
   },
 
@@ -372,8 +372,13 @@ export default defineComponent({
           if (!model) {
             model = 'search'
           }
+          
+          const clickedLabel = data.labels[element[0].index]
+          if (clickedLabel == 'Others') {
+            return
+          }
 
-          window.open(`${config.appBaseUrl}/#/search?${model}=${Object.keys(data)[element[0].index]}`)
+          window.open(`${config.appBaseUrl}/#/search?${model}=${clickedLabel}`)
         },
         plugins: {
           legend: {
@@ -388,12 +393,21 @@ export default defineComponent({
     },
 
     statisticsDictToChartData: function (stats) {
+      const numToShow = 12
+
       let entries = Object.entries(stats)
+      entries.sort((a,b) => b[1] - a[1])
+      const top = entries.slice(0, numToShow)
+      const others = entries.slice(numToShow)
+      if (others.length) {
+        top.push(['Others', others.reduce((a,b) => a + b[1], 0)])
+      }
+
       return {
-        labels: entries.map((e) => { return e[0] }),
+        labels: top.map((e) => e[0]),
         datasets: [
           {
-            data: entries.map((e) => { return e[1] }),
+            data: top.map((e) => e[1]),
             // Colors for pie charts; Colors palette from https://sashamaps.net/docs/resources/20-colors/.
             backgroundColor: ['#3f51b5', '#e6194b', '#3cb44b', '#ffe119', '#f032e6', '#bcf60c', '#fabebe', '#008080', '#e6beff', '#f58231', '#911eb4', '#4363d8', '#46f0f0', '#9a6324', '#fffac8', '#800000', '#aaffc3', '#808000', '#ffd8b1', '#808080', '#ffffff', '#000000']
           }

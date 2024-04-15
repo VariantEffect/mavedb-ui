@@ -62,9 +62,6 @@
           </TabPanel>
         </TabView>
         <div class="chart-container">
-          <div v-if="showAssemblyChart" class="chart">
-            <Chart type="pie" :data="assemblyChartData" :options="assemblyChartOptions"></Chart>
-          </div>
           <div v-if="showCategoryChart" class="chart">
             <Chart type="pie" :data="categoryChartData" :options="categoryChartOptions"></Chart>
           </div>
@@ -311,21 +308,14 @@ export default defineComponent({
 
   computed: {
     // Why are these all computed properties? To avoid chart re-render when tab is switched.
-    showAssemblyChart: function() {
-      return this.targetAccessionAssemblyFieldCounts && Object.keys(this.targetAccessionAssemblyFieldCounts).length > 0
-    },
     showCategoryChart: function() {
       return this.targetGeneCategoryFieldCounts && Object.keys(this.targetGeneCategoryFieldCounts).length > 0
     },
     showOrganismChart: function() {
       return this.targetGeneOrganismFieldCounts && Object.keys(this.targetGeneOrganismFieldCounts).length > 0
     },
-    assemblyChartData: function() { return this.chartDataForTarget(this.targetAccessionAssemblyFieldCounts) },
     categoryChartData: function() { return this.chartDataForTarget(this.targetGeneCategoryFieldCounts) },
     organismChartData: function() { return this.chartDataForTarget(this.targetGeneOrganismFieldCounts) },
-    assemblyChartOptions: function() {
-       return this.setChartOptions('Target Gene Assemblies', this.targetGeneOrganismFieldCounts, null) 
-    },
     categoryChartOptions: function() {
        return this.setChartOptions('Target Gene Category', this.targetGeneOrganismFieldCounts, 'target-type') 
     },

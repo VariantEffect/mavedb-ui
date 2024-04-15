@@ -396,7 +396,11 @@ export default defineComponent({
       const numToShow = 12
 
       let entries = Object.entries(stats)
+
+      // Sort in descending order.
       entries.sort((a,b) => b[1] - a[1])
+
+      // Bundle up smaller categories into an 'Others' category.
       const top = entries.slice(0, numToShow)
       const others = entries.slice(numToShow)
       if (others.length) {

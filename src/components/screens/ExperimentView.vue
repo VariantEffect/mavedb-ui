@@ -109,8 +109,8 @@
                 {{ targetGene.targetAccession.accession }}
               </div>
 
-              <div v-if="targetGene.targetSequence.taxonomy?.url"><strong>Taxonomy ID:</strong> 
-                &nbsp;<a :href="`${targetGene.targetSequence.taxonomy.url}`" target="blank">{{targetGene.targetSequence.taxonomy.taxId}}</a> 
+              <div v-if="targetGene.targetSequence?.taxonomy?.url"><strong>Taxonomy ID:</strong>
+                &nbsp;<a :href="`${targetGene.targetSequence.taxonomy.url}`" target="blank">{{targetGene.targetSequence.taxonomy.taxId}}</a>
                 </div>
               <div v-if="targetGene.targetSequence?.sequence" style="word-break: break-word">
                 <div v-if="targetGene.targetSequence.taxonomy?.organismName"><strong>Organism name:</strong>

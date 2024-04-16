@@ -1,7 +1,7 @@
 <template>
   <DefaultLayout>
     <div class="grid" style="margin: 10px 0;">
-      <div class="col-6">
+      <div class="col-8">
         <Card>
           <template #title>About</template>
           <template #content>
@@ -29,9 +29,9 @@
           </template>
         </Card>
       </div>
-      <div class="col-6">
+      <div class="col-4">
         <Card>
-          <template #title>Highlights</template>
+          <template #title>Featured Searches</template>
           <template #content>
             <table>
               <thead>
@@ -46,8 +46,8 @@
                   <td>
                     <ul>
                       <li><router-link :to="{name: 'search', query: {search: 'Homo sapiens'}}">Homo sapiens</router-link></li>
-                      <li><router-link :to="{name: 'search', query: {search: 'Other - genome not listed'}}">Other - genome not listed</router-link></li>
-                      <li><router-link :to="{name: 'search', query: {search: 'Saccharomyces cerevisiae'}}">Saccharomyces cerevisiae</router-link></li>
+                      <li><router-link :to="{name: 'search', query: {search: 'Mus musculus'}}">Mus musculus</router-link></li>
+                      <li><router-link :to="{name: 'search', query: {search: 'Saccharomyces cerevisiae S288C'}}">Saccharomyces cerevisiae S288C</router-link></li>
                     </ul>
                   </td>
                   <td>
@@ -70,7 +70,13 @@
           </template>
         </Card>
       </div>
-      <div class="col-6">
+      <div class="col-12">
+        <HighlightsView model="ScoreSet"></HighlightsView>
+      </div>
+      <div class="col-8">
+        <HighlightsView model="Target"></HighlightsView>
+      </div>
+      <div class="col-4">
         <Card>
           <template #title>Citation</template>
           <template #content>
@@ -97,10 +103,11 @@ import Card from 'primevue/card'
 
 //import config from '@/config'
 import DefaultLayout from '@/components/layout/DefaultLayout'
+import HighlightsView from '@/components/common/HighlightsView.vue';
 
 export default {
   name: 'HomeScreen',
-  components: {Card, DefaultLayout}
+  components: {Card, DefaultLayout, HighlightsView}
 }
 
 </script>

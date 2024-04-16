@@ -115,7 +115,7 @@ export interface paths {
   "/api/v1/hgvs/validate": {
     /**
      * Hgvs Validate
-     * @description List stored sequences
+     * @description Validate a provided variant
      */
     post: operations["hgvs_validate_api_v1_hgvs_validate_post"];
   };
@@ -141,23 +141,38 @@ export interface paths {
     get: operations["list_accessions_api_v1_hgvs__assembly__accessions_get"];
   };
   "/api/v1/hgvs/genes": {
-    /** List Genes */
+    /**
+     * List Genes
+     * @description List stored genes
+     */
     get: operations["list_genes_api_v1_hgvs_genes_get"];
   };
   "/api/v1/hgvs/genes/{gene}": {
-    /** Gene Info */
+    /**
+     * Gene Info
+     * @description List stored gene information for a specified gene
+     */
     get: operations["gene_info_api_v1_hgvs_genes__gene__get"];
   };
   "/api/v1/hgvs/transcripts/gene/{gene}": {
-    /** List Transcripts For Gene */
+    /**
+     * List Transcripts For Gene
+     * @description List transcripts associated with a particular gene
+     */
     get: operations["list_transcripts_for_gene_api_v1_hgvs_transcripts_gene__gene__get"];
   };
   "/api/v1/hgvs/transcripts/{transcript}": {
-    /** Transcript Info */
+    /**
+     * Transcript Info
+     * @description List transcript information for a particular transcript
+     */
     get: operations["transcript_info_api_v1_hgvs_transcripts__transcript__get"];
   };
   "/api/v1/hgvs/transcripts/protein/{transcript}": {
-    /** Convert To Protein */
+    /**
+     * Convert To Protein
+     * @description Convert a provided transcript from it's nucleotide accession identifier to its protein accession identifier
+     */
     get: operations["convert_to_protein_api_v1_hgvs_transcripts_protein__transcript__get"];
   };
   "/api/v1/licenses/": {
@@ -251,27 +266,6 @@ export interface paths {
      * @description Search Raw Read identifiers.
      */
     post: operations["search_raw_read_identifiers_api_v1_raw_read_identifiers_search_post"];
-  };
-  "/api/v1/reference-genomes/": {
-    /**
-     * List Reference Genomes
-     * @description List reference genomes.
-     */
-    get: operations["list_reference_genomes_api_v1_reference_genomes__get"];
-  };
-  "/api/v1/reference-genomes/organism-names": {
-    /**
-     * List Reference Genome Organism Names
-     * @description List distinct reference genome organism names, in alphabetical order.
-     */
-    get: operations["list_reference_genome_organism_names_api_v1_reference_genomes_organism_names_get"];
-  };
-  "/api/v1/reference-genomes/{item_id}": {
-    /**
-     * Fetch Reference Genome
-     * @description Fetch a single reference genome by ID.
-     */
-    get: operations["fetch_reference_genome_api_v1_reference_genomes__item_id__get"];
   };
   "/api/v1/score-sets/search": {
     /**
@@ -398,6 +392,56 @@ export interface paths {
      * @description Search target genes.
      */
     post: operations["search_target_genes_api_v1_target_genes_search_post"];
+  };
+  "/api/v1/taxonomies/concatenateTaxonomyList": {
+    /**
+     * Concatenate Taxonomy Tax Id Organism Names Common Name
+     * @description List distinct species names, in alphabetical order.
+     */
+    get: operations["concatenate_taxonomy_tax_id_organism_names_common_name_api_v1_taxonomies_concatenateTaxonomyList_get"];
+  };
+  "/api/v1/taxonomies/": {
+    /**
+     * List Taxonomies
+     * @description List taxonomies.
+     */
+    get: operations["list_taxonomies_api_v1_taxonomies__get"];
+  };
+  "/api/v1/taxonomies/speciesNames": {
+    /**
+     * List Taxonomy Organism Names
+     * @description List distinct species names, in alphabetical order.
+     */
+    get: operations["list_taxonomy_organism_names_api_v1_taxonomies_speciesNames_get"];
+  };
+  "/api/v1/taxonomies/commonNames": {
+    /**
+     * List Taxonomy Common Names
+     * @description List distinct common names, in alphabetical order.
+     */
+    get: operations["list_taxonomy_common_names_api_v1_taxonomies_commonNames_get"];
+  };
+  "/api/v1/taxonomies/{item_id}": {
+    /**
+     * Fetch Taxonomy
+     * @description Fetch a single taxonomy by ID.
+     */
+    get: operations["fetch_taxonomy_api_v1_taxonomies__item_id__get"];
+  };
+  "/api/v1/taxonomies/tax-id/{item_id}": {
+    /**
+     * Fetch Taxonomy By Tax Id
+     * @description Fetch a single taxonomy by tax_id.
+     */
+    get: operations["fetch_taxonomy_by_tax_id_api_v1_taxonomies_tax_id__item_id__get"];
+  };
+  "/api/v1/taxonomies/search": {
+    /**
+     * Search Taxonomies
+     * @description Search Taxonomy.
+     * If no search text, return the whole taxonomy list so that front end Taxonomy component can get data to show in dropdown button.
+     */
+    post: operations["search_taxonomies_api_v1_taxonomies_search_post"];
   };
   "/api/v1/users/": {
     /**
@@ -856,27 +900,6 @@ export interface components {
       /** Identifier */
       identifier: string;
     };
-    /** ReferenceGenome */
-    ReferenceGenome: {
-      /** Shortname */
-      shortName: string;
-      /** Organismname */
-      organismName: string;
-      /** Genomeid */
-      genomeId?: number;
-      /**
-       * Creationdate
-       * Format: date
-       */
-      creationDate: string;
-      /**
-       * Modificationdate
-       * Format: date
-       */
-      modificationDate: string;
-      /** Id */
-      id: number;
-    };
     /** SavedDoiIdentifier */
     SavedDoiIdentifier: {
       /** Identifier */
@@ -946,7 +969,7 @@ export interface components {
       sequence: string;
       /** Label */
       label?: string;
-      reference: components["schemas"]["ReferenceGenome"];
+      taxonomy: components["schemas"]["Taxonomy"];
     };
     /**
      * SavedUser
@@ -1291,7 +1314,7 @@ export interface components {
       sequence: string;
       /** Label */
       label?: string;
-      reference: components["schemas"]["ReferenceGenome"];
+      taxonomy: components["schemas"]["Taxonomy"];
     };
     /** TargetSequenceCreate */
     TargetSequenceCreate: {
@@ -1301,7 +1324,28 @@ export interface components {
       sequence: string;
       /** Label */
       label?: string;
-      reference: components["schemas"]["ReferenceGenome"];
+      taxonomy: components["schemas"]["Taxonomy"];
+    };
+    /** Taxonomy */
+    Taxonomy: {
+      /** Taxid */
+      taxId: number;
+      /** Organismname */
+      organismName?: string;
+      /** Commonname */
+      commonName?: string;
+      /** Rank */
+      rank?: string;
+      /** Hasdescribedspeciesname */
+      hasDescribedSpeciesName?: boolean;
+      /** Articlereference */
+      articleReference?: string;
+      /** Genomeid */
+      genomeId?: number;
+      /** Id */
+      id: number;
+      /** Url */
+      url: string;
     };
     /** TextSearch */
     TextSearch: {
@@ -1769,7 +1813,7 @@ export interface operations {
   };
   /**
    * Hgvs Validate
-   * @description List stored sequences
+   * @description Validate a provided variant
    */
   hgvs_validate_api_v1_hgvs_validate_post: {
     requestBody: {
@@ -1865,7 +1909,10 @@ export interface operations {
       };
     };
   };
-  /** List Genes */
+  /**
+   * List Genes
+   * @description List stored genes
+   */
   list_genes_api_v1_hgvs_genes_get: {
     responses: {
       /** @description Successful Response */
@@ -1880,7 +1927,10 @@ export interface operations {
       };
     };
   };
-  /** Gene Info */
+  /**
+   * Gene Info
+   * @description List stored gene information for a specified gene
+   */
   gene_info_api_v1_hgvs_genes__gene__get: {
     parameters: {
       path: {
@@ -1891,7 +1941,7 @@ export interface operations {
       /** @description Successful Response */
       200: {
         content: {
-          "application/json": unknown[];
+          "application/json": unknown;
         };
       };
       /** @description Not found */
@@ -1906,7 +1956,10 @@ export interface operations {
       };
     };
   };
-  /** List Transcripts For Gene */
+  /**
+   * List Transcripts For Gene
+   * @description List transcripts associated with a particular gene
+   */
   list_transcripts_for_gene_api_v1_hgvs_transcripts_gene__gene__get: {
     parameters: {
       path: {
@@ -1932,7 +1985,10 @@ export interface operations {
       };
     };
   };
-  /** Transcript Info */
+  /**
+   * Transcript Info
+   * @description List transcript information for a particular transcript
+   */
   transcript_info_api_v1_hgvs_transcripts__transcript__get: {
     parameters: {
       path: {
@@ -1943,7 +1999,7 @@ export interface operations {
       /** @description Successful Response */
       200: {
         content: {
-          "application/json": unknown[];
+          "application/json": unknown;
         };
       };
       /** @description Not found */
@@ -1958,7 +2014,10 @@ export interface operations {
       };
     };
   };
-  /** Convert To Protein */
+  /**
+   * Convert To Protein
+   * @description Convert a provided transcript from it's nucleotide accession identifier to its protein accession identifier
+   */
   convert_to_protein_api_v1_hgvs_transcripts_protein__transcript__get: {
     parameters: {
       path: {
@@ -1969,7 +2028,7 @@ export interface operations {
       /** @description Successful Response */
       200: {
         content: {
-          "application/json": string;
+          "application/json": unknown;
         };
       };
       /** @description Not found */
@@ -2321,71 +2380,6 @@ export interface operations {
         };
       };
       /** @description Not found */
-      404: {
-        content: never;
-      };
-      /** @description Validation Error */
-      422: {
-        content: {
-          "application/json": components["schemas"]["HTTPValidationError"];
-        };
-      };
-    };
-  };
-  /**
-   * List Reference Genomes
-   * @description List reference genomes.
-   */
-  list_reference_genomes_api_v1_reference_genomes__get: {
-    responses: {
-      /** @description Successful Response */
-      200: {
-        content: {
-          "application/json": components["schemas"]["ReferenceGenome"][];
-        };
-      };
-      /** @description Not Found */
-      404: {
-        content: never;
-      };
-    };
-  };
-  /**
-   * List Reference Genome Organism Names
-   * @description List distinct reference genome organism names, in alphabetical order.
-   */
-  list_reference_genome_organism_names_api_v1_reference_genomes_organism_names_get: {
-    responses: {
-      /** @description Successful Response */
-      200: {
-        content: {
-          "application/json": string[];
-        };
-      };
-      /** @description Not Found */
-      404: {
-        content: never;
-      };
-    };
-  };
-  /**
-   * Fetch Reference Genome
-   * @description Fetch a single reference genome by ID.
-   */
-  fetch_reference_genome_api_v1_reference_genomes__item_id__get: {
-    parameters: {
-      path: {
-        item_id: number;
-      };
-    };
-    responses: {
-      /** @description Successful Response */
-      200: {
-        content: {
-          "application/json": components["schemas"]["ReferenceGenome"];
-        };
-      };
-      /** @description Not Found */
       404: {
         content: never;
       };
@@ -2867,6 +2861,166 @@ export interface operations {
       200: {
         content: {
           "application/json": components["schemas"]["TargetGene"][];
+        };
+      };
+      /** @description Not found */
+      404: {
+        content: never;
+      };
+      /** @description Validation Error */
+      422: {
+        content: {
+          "application/json": components["schemas"]["HTTPValidationError"];
+        };
+      };
+    };
+  };
+  /**
+   * Concatenate Taxonomy Tax Id Organism Names Common Name
+   * @description List distinct species names, in alphabetical order.
+   */
+  concatenate_taxonomy_tax_id_organism_names_common_name_api_v1_taxonomies_concatenateTaxonomyList_get: {
+    responses: {
+      /** @description Successful Response */
+      200: {
+        content: {
+          "application/json": string[];
+        };
+      };
+      /** @description Not Found */
+      404: {
+        content: never;
+      };
+    };
+  };
+  /**
+   * List Taxonomies
+   * @description List taxonomies.
+   */
+  list_taxonomies_api_v1_taxonomies__get: {
+    responses: {
+      /** @description Successful Response */
+      200: {
+        content: {
+          "application/json": components["schemas"]["Taxonomy"][];
+        };
+      };
+      /** @description Not Found */
+      404: {
+        content: never;
+      };
+    };
+  };
+  /**
+   * List Taxonomy Organism Names
+   * @description List distinct species names, in alphabetical order.
+   */
+  list_taxonomy_organism_names_api_v1_taxonomies_speciesNames_get: {
+    responses: {
+      /** @description Successful Response */
+      200: {
+        content: {
+          "application/json": string[];
+        };
+      };
+      /** @description Not Found */
+      404: {
+        content: never;
+      };
+    };
+  };
+  /**
+   * List Taxonomy Common Names
+   * @description List distinct common names, in alphabetical order.
+   */
+  list_taxonomy_common_names_api_v1_taxonomies_commonNames_get: {
+    responses: {
+      /** @description Successful Response */
+      200: {
+        content: {
+          "application/json": string[];
+        };
+      };
+      /** @description Not Found */
+      404: {
+        content: never;
+      };
+    };
+  };
+  /**
+   * Fetch Taxonomy
+   * @description Fetch a single taxonomy by ID.
+   */
+  fetch_taxonomy_api_v1_taxonomies__item_id__get: {
+    parameters: {
+      path: {
+        item_id: number;
+      };
+    };
+    responses: {
+      /** @description Successful Response */
+      200: {
+        content: {
+          "application/json": components["schemas"]["Taxonomy"];
+        };
+      };
+      /** @description Not Found */
+      404: {
+        content: never;
+      };
+      /** @description Validation Error */
+      422: {
+        content: {
+          "application/json": components["schemas"]["HTTPValidationError"];
+        };
+      };
+    };
+  };
+  /**
+   * Fetch Taxonomy By Tax Id
+   * @description Fetch a single taxonomy by tax_id.
+   */
+  fetch_taxonomy_by_tax_id_api_v1_taxonomies_tax_id__item_id__get: {
+    parameters: {
+      path: {
+        item_id: number;
+      };
+    };
+    responses: {
+      /** @description Successful Response */
+      200: {
+        content: {
+          "application/json": components["schemas"]["Taxonomy"];
+        };
+      };
+      /** @description Not Found */
+      404: {
+        content: never;
+      };
+      /** @description Validation Error */
+      422: {
+        content: {
+          "application/json": components["schemas"]["HTTPValidationError"];
+        };
+      };
+    };
+  };
+  /**
+   * Search Taxonomies
+   * @description Search Taxonomy.
+   * If no search text, return the whole taxonomy list so that front end Taxonomy component can get data to show in dropdown button.
+   */
+  search_taxonomies_api_v1_taxonomies_search_post: {
+    requestBody: {
+      content: {
+        "application/json": components["schemas"]["TextSearch"];
+      };
+    };
+    responses: {
+      /** @description Successful Response */
+      200: {
+        content: {
+          "application/json": components["schemas"]["Taxonomy"][];
         };
       };
       /** @description Not found */

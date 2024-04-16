@@ -97,10 +97,6 @@ const itemTypes = {
       }
     }
   },
-  'reference-genome': {
-    name: 'reference-genome', // TODO Redundant, change this structure
-    restCollectionName: 'reference-genomes'
-  },
   'assemblies': {
     name: 'assemblies', // TODO Redundant, change this structure
     restCollectionName: 'hgvs/assemblies'
@@ -108,10 +104,6 @@ const itemTypes = {
   'gene-names': {
     name: 'gene-names', // TODO Redundant, change this structure
     restCollectionName: 'hgvs/genes'
-  },
-  'grouped-assemblies': {
-    name: 'grouped-assemblies', // TODO Redundant, change this structure
-    restCollectionName: 'hgvs/grouped-assemblies'
   },
   'scoreSet': {
     name: 'scoreSet', // TODO Redundant, change this structure
@@ -125,6 +117,42 @@ const itemTypes = {
       list: {
         method: 'post',
         url: `${config.apiBaseUrl}/target-genes/search`
+      }
+    }
+  },
+  'taxonomy': {
+    name: 'taxonomy', // TODO Redundant, change this structure
+    restCollectionName: 'taxonomies'
+  },
+  'taxonomy-search': {
+    name: 'taxonomy-search', // TODO Redundant, change this structure
+    restCollectionName: 'taxonomies-search',
+    httpOptions: {
+      list: {
+        method: 'post',
+        url: `${config.apiBaseUrl}/taxonomies/search`
+      }
+    }
+  },
+  'target-gene-statistics': {
+    name: 'target-gene-statistics',
+    restCollectionName: 'target-gene-statistics',
+    primaryKey: 'field',
+    httpOptions: {
+      list: {
+        method: 'get',
+        url: `${config.apiBaseUrl}/statistics/target/gene`
+      }
+    }
+  },
+  'target-accession-statistics': {
+    name: 'target-accession-statistics',
+    restCollectionName: 'target-accession-statistics',
+    primaryKey: 'field',
+    httpOptions: {
+      list: {
+        method: 'get',
+        url: `${config.apiBaseUrl}/statistics/target/accession`
       }
     }
   },

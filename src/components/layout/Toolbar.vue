@@ -1,4 +1,10 @@
 <template>
+  <div v-if="(activeRole && activeRole != 'default') || (!activeRole && roles.length > 0)">
+    <Message severity="warn">
+      When making API requests, you are currently acting as a user with the [{{ activeRoles || roles.join(", ") }}] role(s). You may have additional permissions than normal. To change your
+      active role(s), use the menu in your user setttings screen.
+    </Message>
+  </div>
   <div class="mavedb-toolbar">
     <Menubar :model="availableMenuItems" class="mavedb-menubar">
       <template #start>
@@ -7,7 +13,7 @@
           <span>DB</span>
         </router-link>
         <div style="display: inline-block; margin-left: 40px;">
-          <div class="p-inputgroup" style="max-width: 300px; wdith: 300px;">
+          <div class="p-inputgroup" style="max-width: 300px; width: 300px;">
             <InputText v-model="searchText" ref="searchTextInput" type="search" class="p-inputtext-sm" placeholder="Search" @keyup.enter="search" style="width: 200px;" />
             <Button :enabled="searchText && searchText.length > 0" icon="pi pi-search" class="p-button-default p-button-sm" @click="search" />
           </div>
@@ -26,12 +32,13 @@ import _ from 'lodash'
 import Button from 'primevue/button'
 import InputText from 'primevue/inputtext'
 import Menubar from 'primevue/menubar'
+import Message from 'primevue/message'
 import {mapActions, mapState} from 'vuex'
 
 import useAuth from '@/composition/auth'
 
 export default {
-  components: {Button, InputText, Menubar},
+  components: {Button, InputText, Menubar, Message},
 
   setup: () => {
     const {signIn, signOut, userProfile, userIsAuthenticated} = useAuth()
@@ -59,7 +66,7 @@ export default {
   },
 
   computed: {
-    ...mapState('auth', ['roles']),
+    ...mapState('auth', ['roles', 'activeRoles']),
     userName: function() {
       const profile = this.userProfile
       return profile ? [profile.given_name, profile.family_name].filter(Boolean).join(' ') : null

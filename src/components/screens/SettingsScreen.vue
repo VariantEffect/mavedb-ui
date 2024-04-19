@@ -54,7 +54,7 @@
         </template>
         <template #content>
           <div v-for="role in user?.roles.concat(['ordinary user'])" :key="role" class="flex align-items-center">
-            <Checkbox v-model="activeRoles" :inputId="role" name="roleSelector" :value="role" @update:modelValue="updateActiveRoles" :disabled="role == 'ordinary user'" />
+            <Checkbox v-model="activeRoles" :inputId="role" name="roleSelector" :value="role" @update:modelValue="setActiveRoles" :disabled="role == 'ordinary user'" />
             <label :for="role" class="ml-2">{{ role }}</label>
           </div>
         </template>
@@ -112,7 +112,8 @@ import DefaultLayout from '@/components/layout/DefaultLayout'
 import useClipboard from '@/composition/clipboard'
 import useItem from '@/composition/item'
 import useItems from '@/composition/items'
-import { ref } from 'vue'
+
+import useAuth from '@/composition/auth'
 
 export default {
   name: 'HomeView',
@@ -121,7 +122,12 @@ export default {
   setup: () => {
     const { item: user, setItemId: setUserId, saveItem: saveUser } = useItem({ itemTypeName: 'me' })
     const { items: accessKeys, invalidateItems: invalidateAccessKeys } = useItems({ itemTypeName: 'my-access-key' })
+    const {activeRoles, updateActiveRoles} = useAuth()
+    console.log(activeRoles)
+
     return {
+      activeRoles,
+      updateActiveRoles,
       ...useClipboard(),
       user,
       setUserId,
@@ -133,8 +139,7 @@ export default {
 
   data: function() {
     return {
-      email: null,
-      activeRoles: ref(store.state.auth.activeRoles),
+      email: null
     }
   },
 
@@ -180,8 +185,8 @@ export default {
         })
       }
     },
-    updateActiveRoles: function(newRoles) {
-      store.dispatch('auth/changeActiveRoles', { roles: newRoles })
+    setActiveRoles: function(newRoles) {
+      this.updateActiveRoles(newRoles)
     },
     createAccessKey: async function(role) {
       if (role === 'ordinary user') {

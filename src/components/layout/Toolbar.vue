@@ -33,6 +33,7 @@ import Button from 'primevue/button'
 import InputText from 'primevue/inputtext'
 import Menubar from 'primevue/menubar'
 import Message from 'primevue/message'
+import config from '@/config'
 import {mapActions, mapState} from 'vuex'
 
 import useAuth from '@/composition/auth'

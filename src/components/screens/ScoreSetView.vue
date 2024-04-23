@@ -140,11 +140,10 @@
           <div v-html="markdownToHtml(item.dataUsagePolicy)" class="mave-score-set-abstract"></div>
         </div>
         <div v-else>Not specified</div>
-
-        <div v-if="item.keywords && item.keywords.length > 0">
-          <div class="mave-score-set-section-title">Keywords</div>
+        <div v-if="item.legacyKeywords && item.legacyKeywords.length > 0">
+          <div class="mave-score-set-section-title">Legacy Keywords</div>
           <div class="mave-score-set-keywords">
-            <a v-for="(keyword, i) in item.keywords" :key="i"
+            <a v-for="(keyword, i) in item.legacyKeywords" :key="i"
               :href="`${config.appBaseUrl}/#/search?search=${keyword}`">
               <Chip :label="keyword" />
             </a>

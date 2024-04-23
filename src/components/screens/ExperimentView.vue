@@ -84,11 +84,10 @@
           </div>
         </div>
         <div v-else>No associated secondary publications.</div>
-        <div v-if="item.keywords && item.keywords.length > 0">
+        <div v-if="item.keywords && Object.keys(item.keywords).length > 0">
           <div class="mave-score-set-section-title">Keywords</div>
           <div class="mave-score-set-keywords">
-            <Chip :label="keyword" />
-            <a v-for="(keyword, i) of item.keywords" :key="i" :href="`${config.appBaseUrl}/search?search=${keyword}`"><Chip :label="keyword"/></a>
+            <li v-for="(value, key) in item.keywords" :key="key"> {{ key }}: <a :href="`https://www.mavedb.org/search/?keywords=${value.value}`">{{ value.value }}</a></li>
           </div>
         </div>
         <div class="mave-score-set-section-title">Scoreset Targets</div>
@@ -182,7 +181,6 @@ import _ from 'lodash'
 import {marked} from 'marked'
 import config from '@/config'
 import Button from 'primevue/button'
-import Chip from 'primevue/chip'
 import DefaultLayout from '@/components/layout/DefaultLayout'
 import PageLoading from '@/components/common/PageLoading'
 import ItemNotFound from '@/components/common/ItemNotFound'
@@ -194,7 +192,7 @@ import { oidc } from '@/lib/auth'
 
 export default {
   name: 'ExperimentView',
-  components: { Button, Chip, DefaultLayout, PageLoading, ItemNotFound },
+  components: { Button, DefaultLayout, PageLoading, ItemNotFound },
 
   setup: () => {
     return {

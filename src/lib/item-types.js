@@ -10,6 +10,46 @@ const itemTypes = {
       }
     }
   },
+  'controlled-keywords-endogenous-search': {
+    name: 'controlled-keyword-endogenous-locus-library-method', 
+    restCollectionName: 'controlled-keywords',
+    httpOptions: {
+      list: {
+        method: 'get',
+        url: `${config.apiBaseUrl}/controlled-keywords/endogenous locus library method`
+      }
+    }
+  },
+  'controlled-keywords-invitro-search': {
+    name: 'controlled-keyword-in-vitro-construct-library-method', 
+    restCollectionName: 'controlled-keywords',
+    httpOptions: {
+      list: {
+        method: 'get',
+        url: `${config.apiBaseUrl}/controlled-keywords/in vitro construct library method`
+      }
+    }
+  },
+  'controlled-keywords-variant-search': {
+    name: 'controlled-keyword-variant-library', 
+    restCollectionName: 'controlled-keywords',
+    httpOptions: {
+      list: {
+        method: 'get',
+        url: `${config.apiBaseUrl}/controlled-keywords/variant library`
+      }
+    }
+  },
+  'controlled-keywords-phenotypic-search': {
+    name: 'controlled-keyword-phenotypic-assay', 
+    restCollectionName: 'controlled-keywords',
+    httpOptions: {
+      list: {
+        method: 'get',
+        url: `${config.apiBaseUrl}/controlled-keywords/phenotypic assay`
+      }
+    }
+  },
   'doi-identifier-search': {
     name: 'doi-identifier', // TODO Redundant, change this structure
     restCollectionName: 'doi-identifiers',

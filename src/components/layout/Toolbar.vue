@@ -1,8 +1,8 @@
 <template>
-  <div v-if="(activeRole && activeRole != 'default') || (!activeRole && roles.length > 0)">
+  <div v-if="(activeRoles.length > 0 && !activeRoles.every(elem => elem === 'ordinary user'))">
     <Message severity="warn">
-      When making API requests, you are currently acting as a user with the [{{ activeRoles || roles.join(", ") }}] role(s). You may have additional permissions than normal. To change your
-      active role(s), use the menu in your user setttings screen.
+      You are currently acting as a user with the {{ activeRoles }} role(s). These roles may grant you additional permissions. To change your
+      active role(s), use the menu in your <a :href="`${config.appBaseUrl}/#/settings`">settings screen</a>.
     </Message>
   </div>
   <div class="mavedb-toolbar">
@@ -47,6 +47,8 @@ export default {
   },
 
   data: () => ({
+    config: config,
+
     availableMenuItems: [],
     searchText: ''
   }),

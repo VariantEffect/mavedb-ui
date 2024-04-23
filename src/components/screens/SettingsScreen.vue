@@ -50,15 +50,13 @@
     <div v-if="user?.roles">
       <Card>
         <template #title>
-          Acting Role
+          Acting Roles
         </template>
         <template #content>
-          <div v-for="role in user?.roles.concat(['default'])" :key="role" class="flex align-items-center">
-            <RadioButton v-model="activeRole" :inputId="role" name="roleSelector" :value="role"
-              @update:modelValue="updateActiveRole" />
+          <div v-for="role in user?.roles.concat(['ordinary user'])" :key="role" class="flex align-items-center">
+            <Checkbox v-model="activeRoles" :inputId="role" name="roleSelector" :value="role" @update:modelValue="updateActiveRoles" :disabled="role == 'ordinary user'" />
             <label :for="role" class="ml-2">{{ role }}</label>
           </div>
-          <Button label="Unset" icon="pi pi-times" @click="unsetActiveRole" :disabled="!activeRole"></Button>
         </template>
       </Card>
 
@@ -105,7 +103,7 @@
 import axios from 'axios'
 import Button from 'primevue/button'
 import Card from 'primevue/card'
-import RadioButton from 'primevue/radiobutton'
+import Checkbox from 'primevue/checkbox'
 import InputText from 'primevue/inputtext'
 import store from '@/store/index'
 
@@ -118,7 +116,7 @@ import { ref } from 'vue'
 
 export default {
   name: 'HomeView',
-  components: { Button, Card, DefaultLayout, InputText, RadioButton },
+  components: { Button, Card, DefaultLayout, InputText, Checkbox },
 
   setup: () => {
     const { item: user, setItemId: setUserId, saveItem: saveUser } = useItem({ itemTypeName: 'me' })
@@ -136,7 +134,7 @@ export default {
   data: function() {
     return {
       email: null,
-      activeRole: ref(store.state.auth.activeRole),
+      activeRoles: ref(store.state.auth.activeRoles),
     }
   },
 
@@ -150,7 +148,7 @@ export default {
         return {}
       }
       else {
-        return this.accessKeys.reduce((acc, cur) => ({ ...acc, [cur.role || 'default']: cur.keyId }), {})
+        return this.accessKeys.reduce((acc, cur) => ({ ...acc, [cur.role || 'ordinary user']: cur.keyId }), {})
       }
     }
   },
@@ -182,15 +180,11 @@ export default {
         })
       }
     },
-    updateActiveRole: function(newRole) {
-      store.dispatch('auth/changeActiveRole', { role: newRole })
-    },
-    unsetActiveRole: function() {
-      store.dispatch('auth/changeActiveRole', { role: null })
-      this.activeRole = null
+    updateActiveRoles: function(newRoles) {
+      store.dispatch('auth/changeActiveRoles', { roles: newRoles })
     },
     createAccessKey: async function(role) {
-      if (role === 'default') {
+      if (role === 'ordinary user') {
         await axios.post(
           `${config.apiBaseUrl}/users/me/access-keys`,
           {},

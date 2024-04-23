@@ -1,5 +1,6 @@
 <template>
   <DefaultLayout>
+    <EmailPrompt></EmailPrompt>
     {{ experimentSetUrn }}
     <div class="mave-experiment-editor">
       <div class="grid">
@@ -243,6 +244,7 @@ import TabView from 'primevue/tabview'
 import Textarea from 'primevue/textarea'
 
 import DefaultLayout from '@/components/layout/DefaultLayout'
+import EmailPrompt from '@/components/common/EmailPrompt'
 import useItem from '@/composition/item'
 import useItems from '@/composition/items'
 import config from '@/config'
@@ -251,7 +253,7 @@ import useFormatters from '@/composition/formatters'
 
 export default {
   name: 'ExperimentEditor',
-  components: { AutoComplete, Button, Card, Chips, Multiselect, DefaultLayout, FileUpload, InputText, ProgressSpinner, TabPanel, TabView, Textarea },
+  components: { AutoComplete, Button, Card, Chips, Multiselect, DefaultLayout, EmailPrompt, FileUpload, InputText, ProgressSpinner, TabPanel, TabView, Textarea },
 
   setup: () => {
     const publicationIdentifierSuggestions = useItems({itemTypeName: 'publication-identifier-search'})

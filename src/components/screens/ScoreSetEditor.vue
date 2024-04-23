@@ -1,4 +1,5 @@
 <template>
+  <EmailPrompt></EmailPrompt>
   <DefaultLayout>
     <div class="mave-score-set-editor">
       <div class="grid">
@@ -325,11 +326,11 @@
                       <div class="field">
                         <span class="p-float-label">
                           <AutoComplete
-                            ref="taxonomyInput" 
-                            v-model="taxonomy" 
+                            ref="taxonomyInput"
+                            v-model="taxonomy"
                             dropdown
                             :id="$scopedId('input-targetSequenceTaxonomy')"
-                            :suggestions="taxonomySuggestionsList" 
+                            :suggestions="taxonomySuggestionsList"
                             field="organismName"
                             :multiple="false"
                             :options="taxonomies"
@@ -608,6 +609,7 @@ import { ref } from 'vue'
 
 import EntityLink from '@/components/common/EntityLink'
 import DefaultLayout from '@/components/layout/DefaultLayout'
+import EmailPrompt from '@/components/common/EmailPrompt'
 import useItem from '@/composition/item'
 import useItems from '@/composition/items'
 import config from '@/config'
@@ -641,7 +643,7 @@ function emptyTargetGene() {
 
 export default {
   name: 'ScoreSetEditor',
-  components: { AutoComplete, Button, Card, Chips, Column, DataTable, DefaultLayout, Dropdown, EntityLink, FileUpload, InputNumber, InputText, Message, Multiselect, ProgressSpinner, SelectButton, TabPanel, TabView, Textarea },
+  components: { AutoComplete, Button, Card, Chips, Column, DataTable, DefaultLayout, Dropdown, EmailPrompt, EntityLink, FileUpload, InputNumber, InputText, Message, Multiselect, ProgressSpinner, SelectButton, TabPanel, TabView, Textarea },
 
   setup: () => {
     const editableExperiments = useItems({

@@ -325,11 +325,11 @@
                       <div class="field">
                         <span class="p-float-label">
                           <AutoComplete
-                            ref="taxonomyInput" 
-                            v-model="taxonomy" 
+                            ref="taxonomyInput"
+                            v-model="taxonomy"
                             dropdown
                             :id="$scopedId('input-targetSequenceTaxonomy')"
-                            :suggestions="taxonomySuggestionsList" 
+                            :suggestions="taxonomySuggestionsList"
                             field="organismName"
                             :multiple="false"
                             :options="taxonomies"
@@ -527,6 +527,7 @@
                     </DataTable>
                   </span>
                 </div>
+                <span v-if="validationErrors['targetGenes']" class="mave-field-error">{{validationErrors['targetGenes']}}</span>
                 <div class="field">
                   <Message v-if="targetGenes?.length > 1" severity="info">
                     When defining variants against multiple targets, uploaded variant coordinates should be fully

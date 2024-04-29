@@ -319,13 +319,24 @@ export default {
             .padding(0.05)
         if (showYTickMarks) {
           svg.append('g')
-              .style('font-size', 15)
+              .attr('class', 'mave-heatmap-y-axis-tick-labels')
               .call(
                 d3.axisLeft(yScale)
                     .tickSize(0)
-                    .tickFormat(n => HEATMAP_ROWS[HEATMAP_ROWS.length - 1 - n])
+                    .tickFormat((n) => {
+                      // Get the row's amino acid code or variation symbol.
+                      const label = HEATMAP_ROWS[HEATMAP_ROWS.length - 1 - n]
+                      // If the row's symbol is * (deletion), display a centered asterisk instead.
+                      return label == '*' ? '\uff0a' : label
+                    })
               )
               .select('.domain').remove()
+          // Use larger text for - and = symbols.
+          svg.selectAll('g.mave-heatmap-y-axis-tick-labels g.tick')
+              .classed('mave-heatmap-y-axis-tick-label-lg', (n) => {
+                const text = HEATMAP_ROWS[HEATMAP_ROWS.length - 1 - n]
+                return ['-', '='].includes(text)
+              })
         }
 
         const stroke = function(d, isMouseOver) {
@@ -546,6 +557,14 @@ export default {
 .mave-simple-variants-heatmaps-container {
   position: relative;
   overflow-x: auto;
+}
+
+.mave-simple-variants-heatmaps-container:deep(.mave-heatmap-y-axis-tick-labels) {
+  font-size: 14px;
+}
+
+.mave-simple-variants-heatmaps-container:deep(.mave-heatmap-y-axis-tick-label-lg) {
+  font-size: 22px;
 }
 
 </style>

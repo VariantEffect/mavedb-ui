@@ -329,7 +329,7 @@ import useItem from '@/composition/item'
 import useRemoteData from '@/composition/remote-data'
 import config from '@/config'
 import { oidc } from '@/lib/auth'
-import { parseScores } from '@/lib/scores'
+import { parseScoresOrCounts } from '@/lib/scores'
 import { mapState } from 'vuex'
 import items from '@/composition/items'
 
@@ -412,7 +412,7 @@ export default {
     },
     scoresData: {
       handler: function (newValue) {
-        this.scores = newValue ? Object.freeze(parseScores(newValue)) : null
+        this.scores = newValue ? Object.freeze(parseScoresOrCounts(newValue)) : null
       }
     }
   },
@@ -615,9 +615,9 @@ export default {
         const response = await axios.get(`${config.apiBaseUrl}/score-sets/${this.item.urn}/scores`)
         if (response.data) {
           if (this.item.numVariants <= 10) {
-            this.scoresTable = parseScores(response.data)
+            this.scoresTable = parseScoresOrCounts(response.data)
           } else {
-            this.scoresTable = parseScores(response.data).slice(0, 10)
+            this.scoresTable = parseScoresOrCounts(response.data).slice(0, 10)
           }
         }
       }
@@ -627,9 +627,9 @@ export default {
         const response = await axios.get(`${config.apiBaseUrl}/score-sets/${this.item.urn}/counts`)
         if (response.data) {
           if (this.item.numVariants <= 10) {
-            this.countsTable = parseScores(response.data)
+            this.countsTable = parseScoresOrCounts(response.data)
           } else {
-            this.countsTable = parseScores(response.data).slice(0, 10)
+            this.countsTable = parseScoresOrCounts(response.data).slice(0, 10)
           }
         }
       }

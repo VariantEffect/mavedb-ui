@@ -14,7 +14,8 @@ import _ from 'lodash'
 import * as d3 from 'd3'
 
 import geneticCodes from '@/lib/genetic-codes'
-import {heatmapRowForVariant, parseProVariant, HEATMAP_ROWS} from '@/lib/scores'
+import {heatmapRowForVariant, HEATMAP_ROWS} from '@/lib/heatmap'
+import {parseSimpleProVariant} from '@/lib/mave-hgvs'
 
 function stdev(array) {
   if (!array || array.length === 0) {
@@ -150,7 +151,7 @@ export default {
       let numComplexVariantInstances = 0
       const simpleVariantInstances = _.filter(
         scores.map((score) => {
-          const variant = parseProVariant(score.hgvs_pro)
+          const variant = parseSimpleProVariant(score.hgvs_pro)
           if (!variant) {
             numComplexVariantInstances++
             return null

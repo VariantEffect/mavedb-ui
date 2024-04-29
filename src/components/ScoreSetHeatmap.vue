@@ -14,7 +14,7 @@ import _ from 'lodash'
 import * as d3 from 'd3'
 
 import geneticCodes from '@/lib/genetic-codes'
-import {aminoAcidHydrophiliaRanking, parseProVariant, AMINO_ACIDS_BY_HYDROPHILIA} from '@/lib/scores'
+import {heatmapRowForVariant, parseProVariant, HEATMAP_ROWS} from '@/lib/scores'
 
 function stdev(array) {
   if (!array || array.length === 0) {
@@ -138,7 +138,7 @@ export default {
     prepareWtVariants: function(wtAminoAcids) {
       return wtAminoAcids.map((aa, i) => aa == null ? null : ({
         x: i + 1,
-        y: 20 - aminoAcidHydrophiliaRanking(aa),
+        y: HEATMAP_ROWS.length - 1 - heatmapRowForVariant(aa),
         details: {
           wt: true
         }
@@ -159,7 +159,7 @@ export default {
             return null
           }
           const x = variant.position
-          const y = 20 - aminoAcidHydrophiliaRanking(variant.substitution) // 0 to 20
+          const y = HEATMAP_ROWS.length - 1 - heatmapRowForVariant(variant.substitution)
           return {x, y, score: score.score, details: _.omit(score, 'score')}
         }),
         (x) => x != null
@@ -288,7 +288,7 @@ export default {
       } else {
         // let rows = _.sortBy(_.uniq(_.map(self.scores, 'y')))
         // const cols = _.sortBy(_.uniq(_.map(self.scores, 'x')))
-        const rows = _.range(0, 21)
+        const rows = _.range(0, HEATMAP_ROWS.length)
         const cols = self.heatmapColumns // _.range(_.minBy(variants, 'x').x, _.maxBy(variants, 'x').x + 1)
 
         const height = rowHeight * rows.length
@@ -322,8 +322,7 @@ export default {
               .call(
                 d3.axisLeft(yScale)
                     .tickSize(0)
-                    .tickFormat(n => AMINO_ACIDS_BY_HYDROPHILIA[20 - n])
-                    // .tickFormat(n => String.fromCharCode('A'.charCodeAt(0) + n - 1))
+                    .tickFormat(n => HEATMAP_ROWS[HEATMAP_ROWS.length - 1 - n])
               )
               .select('.domain').remove()
         }

@@ -140,15 +140,6 @@
           <div v-html="markdownToHtml(item.dataUsagePolicy)" class="mave-score-set-abstract"></div>
         </div>
         <div v-else>Not specified</div>
-        <div v-if="item.legacyKeywords && item.legacyKeywords.length > 0">
-          <div class="mave-score-set-section-title">Legacy Keywords</div>
-          <div class="mave-score-set-keywords">
-            <a v-for="(keyword, i) in item.legacyKeywords" :key="i"
-              :href="`${config.appBaseUrl}/#/search?search=${keyword}`">
-              <Chip :label="keyword" />
-            </a>
-          </div>
-        </div>
         <div v-if="item.targetGenes">
           <div class="mave-score-set-section-title">Targets</div>
           <div v-for="targetGene of item.targetGenes" :key="targetGene">
@@ -720,11 +711,6 @@ export default {
 
 .mave-score-set-urn {
   /*font-family: Helvetica, Verdana, Arial, sans-serif;*/
-}
-
-.mave-score-set-keywords .p-chip {
-  /*font-family: Helvetica, Verdana, Arial, sans-serif;*/
-  margin: 0 5px;
 }
 
 /* Formatting in Markdown blocks */

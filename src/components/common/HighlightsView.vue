@@ -94,11 +94,6 @@
                       :href="`${config.appBaseUrl}/#/publication-identifiers/${slotProps.data.dbName}/${slotProps.data[col.field]}`">{{
                         slotProps.data[col.field] }}</a>
                   </template>
-                  <!-- Link keywords and Doi Identifiers to an internal MaveDB search page -->
-                  <template v-else-if="this.field == 'keywords' && col.field == 'column'" #body="slotProps">
-                    <a :href="`${config.appBaseUrl}/#/search?search=${slotProps.data[col.field]}`">{{
-                      slotProps.data[col.field] }}</a>
-                  </template>
                   <template v-else-if="this.field == 'doi-identifiers' && col.field == 'identifier'" #body="slotProps">
                     <a :href="`${config.appBaseUrl}/#/search?search=${slotProps.data[col.field]}`">{{
                       slotProps.data[col.field] }}</a>
@@ -137,11 +132,6 @@
                     <a
                       :href="`${config.appBaseUrl}/#/publication-identifiers/${slotProps.data.dbName}/${slotProps.data[col.field]}`">{{
                         slotProps.data[col.field] }}</a>
-                  </template>
-                  <!-- Link keywords to an internal MaveDB search page -->
-                  <template v-else-if="this.field == 'keywords' && col.field == 'column'" #body="slotProps">
-                    <a :href="`${config.appBaseUrl}/#/search?search=${slotProps.data[col.field]}`">{{
-                      slotProps.data[col.field] }}</a>
                   </template>
                   <!-- Link out any URLs to the appropriate location -->
                   <template v-else-if="col.field == 'url'" #body="slotProps">
@@ -200,7 +190,6 @@ export default defineComponent({
       },
 
       ScoreSet: {
-        keywords: { model: 'record', name: 'score-set', field: 'keywords' },
         'publication-identifiers': { model: 'record', name: 'score-set', field: 'publication-identifiers' },
         'doi-identifiers': { model: 'record', name: 'score-set', field: 'doi-identifiers' },
       },
@@ -222,9 +211,8 @@ export default defineComponent({
       'refseq-identifier': 'RefSeq ID',
       'ensembl-identifier': 'Ensembl ID',
     }
-    const scoreSetLeaderboardFields = ['keywords', 'publication-identifiers', 'doi-identifiers']
+    const scoreSetLeaderboardFields = ['publication-identifiers', 'doi-identifiers']
     const scoreSetLeaderboardFieldTitles = {
-      keywords: 'Keyword',
       'publication-identifiers': 'Publication ID',
       'doi-identifiers': 'DOI',
     }
@@ -269,12 +257,11 @@ export default defineComponent({
         'ensembl-identifier': [{ field: 'identifier', header: 'Ensembl Id', width: '25%' }, { field: 'count', header: 'Associated Score Sets', width: '20%' }, { field: 'url', header: 'URL', width: '55%' }]
       },
       scoreSetLeaderboardColumns: {
-        keywords: [{ field: 'column', header: 'Keyword', width: '50%' }, { field: 'count', header: 'Associated Score Sets', width: '50%' }],
         'publication-identifiers': [{ field: 'identifier', header: 'Identifier', width: '7.5%' }, { field: 'count', header: 'Associated Score Sets', width: '12.5%' }, { field: 'title', header: 'Title', width: '47%' }, { field: 'url', header: 'URL', width: '33%' }],
         'doi-identifiers': [{ field: 'identifier', header: 'Identifier', width: '33%' }, { field: 'count', header: 'Associated Score Sets', width: '33%' }, { field: 'url', header: 'URL', width: '33%' }]
       },
       experimentLeaderboardColumns: {
-        keywords: [{ field: 'column', header: 'Keyword' }, { field: 'count', header: 'Associated Score Sets' }],
+        'keywords': [{ field: 'column', header: 'Keyword' }, { field: 'count', header: 'Associated Score Sets' }],
         'raw-read-identifiers': [{ field: 'identifier', header: 'Raw Read Identifier' }, { field: 'count', header: 'Associated Score Sets' }, { field: 'url', header: 'URL' }],
         'publication-identifiers': [{ field: 'identifier', header: 'Identifier' }, { field: 'count', header: 'Associated Score Sets' }, { field: 'title', header: 'Title' }, { field: 'url', header: 'URL' }],
         'doi-identifiers': [{ field: 'identifier', header: 'Identifier' }, { field: 'count', header: 'Associated Score Sets' }, { field: 'url', header: 'URL' }]

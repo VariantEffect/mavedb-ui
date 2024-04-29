@@ -1,14 +1,13 @@
 <template>
-    <Dialog v-model:visible="visible" modal header="Add User Email" :style="{ width: '25rem' }">
-        <span class="p-text-secondary block mb-5">Your email is required to use this feature. Please add it
-            below.</span>
+    <Dialog v-model:visible="visible" :closable="false" :header=title :style="{ width: '25rem' }">
+        <span class="p-text-secondary block mb-5">{{ dialog }}</span>
         <div class="flex align-items-center gap-3 mb-3">
             <label for="email" class="font-semibold w-6rem">Email</label>
             <InputText v-model:model-value="email" id="email" class="flex-auto" />
         </div>
         <div><span v-if="emailValidationError" class="mave-field-error">{{ emailValidationError }}</span></div>
         <div class="flex justify-content-end gap-2">
-            <Button type="button" label="Ignore" severity="secondary" @click="visible = false"></Button>
+            <Button type="button" label="Ignore" severity="secondary" @click="ignoreEmail"></Button>
             <Button type="button" label="Save" @click="saveEmail"></Button>
         </div>
     </Dialog>
@@ -25,9 +24,27 @@ import { ref } from 'vue'
 export default {
     components: { Button, Dialog, InputText },
 
+    props: {
+        title: {
+            type: String,
+            required: false,
+            default: "Add User Email"
+        },
+        dialog: {
+            type: String,
+            required: false,
+            default: "Your email is required to use this feature. Please add it below"
+        },
+        isFirstLoginPrompt: {
+            type: Boolean,
+            required: true
+        }
+    },
+
     setup: () => {
         const { item: user, setItemId: setUserId, saveItem: saveUser } = useItem({ itemTypeName: 'me' })
-        const visible = ref(user.email == null);
+        const visible = ref(false);
+
         return {
             user,
             setUserId,
@@ -47,6 +64,13 @@ export default {
         user: {
             handler: function() {
                 this.email = this.user?.email
+
+                if (this.$props.isFirstLoginPrompt) {
+                    this.visible = this.user.isFirstLogin && this.user.email == null
+                }
+                else {
+                    this.visible = this.user.email == null
+                }
             }
         }
     },
@@ -58,6 +82,11 @@ export default {
     methods: {
         saveEmail: async function() {
             const email = this.email ? this.email.trim() : null
+
+            if (!email) {
+                this.emailValidationError = "Email cannot be empty."
+            }
+
             if (this.user && email && email != this.user.email) {
                 let errorResponse = null
                 try {
@@ -89,6 +118,15 @@ export default {
                 }
             }
         },
+
+        ignoreEmail: async function() {
+            await this.saveUser({
+                item: {
+                    ...this.user
+                }
+            })
+            this.visible = false
+        }
     }
 }
 

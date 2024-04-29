@@ -1,5 +1,8 @@
 <template>
-  <EmailPrompt></EmailPrompt>
+  <EmailPrompt
+    dialog="Your email is required to create or edit an experiment. Please add it below."
+    :isFirstLoginPrompt="false"
+  />
   <DefaultLayout>
     <div class="mave-score-set-editor">
       <div class="grid">

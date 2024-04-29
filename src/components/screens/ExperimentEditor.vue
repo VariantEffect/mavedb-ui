@@ -1,6 +1,9 @@
 <template>
   <DefaultLayout>
-    <EmailPrompt></EmailPrompt>
+    <EmailPrompt
+      dialog="Your email is required to create or edit an experiment. Please add it below."
+      :isFirstLoginPrompt="false"
+    />
     {{ experimentSetUrn }}
     <div class="mave-experiment-editor">
       <div class="grid">

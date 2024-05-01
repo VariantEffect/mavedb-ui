@@ -59,9 +59,9 @@
             >
               <template #option="slotProps">
                 <div class="flex align-options-center">
-                  <div v-if="slotProps.option.hgvs_nt != 'NA'">Nucleotide variant: {{ slotProps.option.hgvs_nt }}</div>
-                  <div v-if="slotProps.option.hgvs_splice != 'NA'">Splice variant: {{ slotProps.option.hgvs_splice }}</div>
-                  <div v-if="slotProps.option.hgvs_pro != 'NA'">Protein variant: {{ slotProps.option.hgvs_pro }}</div>
+                  <div v-if="variantNotNullOrNA(slotProps.option.hgvs_nt)">Nucleotide variant: {{ slotProps.option.hgvs_nt }};&nbsp;</div>
+                  <div v-if="variantNotNullOrNA(slotProps.option.hgvs_splice)">Splice variant: {{ slotProps.option.hgvs_splice }};&nbsp;</div>
+                  <div v-if="variantNotNullOrNA(slotProps.option.hgvs_pro)">Protein variant: {{ slotProps.option.hgvs_pro }};&nbsp;</div>
                   </div>
               </template>
             </AutoComplete>
@@ -451,6 +451,7 @@ export default {
     }
   },
   methods: {
+    variantNotNullOrNA,
     editItem: function () {
       if (this.item) {
         this.$router.replace({ path: `/score-sets/${this.item.urn}/edit` })
@@ -670,21 +671,14 @@ export default {
     },
     variantSearch: function (event) {
       const matches = []
-      for (let variant of this.scores) {
-        const potentialVariants = []
-        if (variantNotNullOrNA(variant.hgvs_pro)) {
-          potentialVariants.push(variant.hgvs_pro)
+      for (const variant of this.scores) {
+        if (
+          (variantNotNullOrNA(variant.hgvs_pro) && variant.hgvs_pro.toLowerCase().includes(event.query.toLowerCase()))
+          || (variantNotNullOrNA(variant.hgvs_nt) && variant.hgvs_nt.toLowerCase().includes(event.query.toLowerCase()))
+          || (variantNotNullOrNA(variant.hgvs_splice) && variant.hgvs_splice.toLowerCase().includes(event.query.toLowerCase()))
+        ) {
+          matches.push(variant)
         }
-        if (variantNotNullOrNA(variant.hgvs_nt)) {
-          potentialVariants.push(variant.hgvs_nt)
-        }
-        if (variantNotNullOrNA(variant.hgvs_splice)) {
-          potentialVariants.push(variant.hgvs_splice)
-        }
-
-        matches.concat(
-          potentialVariants.filter((hgvsString) => hgvsString.toLowerCase().includes(event.query.toLowerCase()))
-        )
       }
 
       this.variantSearchSuggestions = matches
@@ -692,16 +686,16 @@ export default {
     variantSearchLabel: function (selectedVariant) {
       var displayStr = ""
       if (variantNotNullOrNA(selectedVariant.hgvs_nt)) {
-        displayStr += `Nucleotide variant: ${selectedVariant.hgvs_nt}, `
+        displayStr += `Nucleotide variant: ${selectedVariant.hgvs_nt}; `
       }
       if (variantNotNullOrNA(selectedVariant.hgvs_pro)) {
-        displayStr += `Protein variant: ${selectedVariant.hgvs_pro}, `
+        displayStr += `Protein variant: ${selectedVariant.hgvs_pro}; `
       }
       if (variantNotNullOrNA(selectedVariant.hgvs_splice)) {
         displayStr += `Splice variant: ${selectedVariant.hgvs_splice}`
       }
 
-      return displayStr.replace(/, $/, '')
+      return displayStr.trim().replace(/;$/, '')
     },
     convertToThreeDecimal: function (value) {
       let numStr = String(value)

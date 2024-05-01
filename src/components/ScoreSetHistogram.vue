@@ -17,7 +17,7 @@ export default {
         top: 20,
         right: 20,
         bottom: 30,
-        left: 20 
+        left: 20
       })
     },
     numBins: {
@@ -31,6 +31,11 @@ export default {
     scoreSet: {
       type: Object,
       required: true
+    },
+    externalSelection: {
+      type: Object,
+      default: null,
+      required: false
     }
   },
 
@@ -57,6 +62,16 @@ export default {
       const bins = this.bins
       return bins
     },
+    selectedBin: function() {
+      const externalSelection = this.externalSelection
+      const bins = this.bins
+
+      const binContainsScore = function(bin) {
+        return externalSelection ? externalSelection.score >= bin.x0 && externalSelection.score < bin.x1 : false
+      }
+
+      return bins.find(binContainsScore)
+    }
   },
 
   watch: {
@@ -66,11 +81,22 @@ export default {
           this.bins = []
         } else {
           this.bins = d3.bin().thresholds(this.numBins).value((d) => d.score)(this.scores)
+
+          // add an index to each bin to simplify class based fetching of bin divs.
+          this.bins.forEach(function(bin, index) {
+            bin.idx = index;
+          });
         }
       },
       immediate: true
     },
     bins: {
+      handler: function() {
+        this.renderOrRefreshHistogram()
+      },
+      immediate: true
+    },
+    externalSelection: {
       handler: function() {
         this.renderOrRefreshHistogram()
       },
@@ -88,7 +114,7 @@ export default {
       } else {
         this.histogram = this.renderHistogram({
           container: this.$refs.histogramContainer,
-          bins: this.bins,
+          bins: this.bins
         })
       }
     },
@@ -105,7 +131,7 @@ export default {
           .style('border-radius', '5px')
           .style('padding', '5px')
           .style('z-index', 2001)
-    },
+      },
 
     binsToLine: function(bins, filter = (item) => true) {
       if (!bins.length) {
@@ -120,7 +146,7 @@ export default {
         const filtered = bin.filter(filter)
         line.push({x: bin.x0, y: filtered.length})
         line.push({x: bin.x1, y: filtered.length})
-      }) 
+      })
 
       // End the line at the bottom-right of the last bin.
       line.push({x: bins[bins.length - 1].x1, y: 0})
@@ -158,9 +184,9 @@ export default {
 
         // Add temporary y axis, for measuring.
         const tempYAxis = contents.append('g')
-            .style('visibility', 'hidden') 
+            .style('visibility', 'hidden')
             .call(d3.axisLeft(yScale).ticks(10))
-        
+
         const labelSize = 10;
         const yAxisWidthWithLabel = tempYAxis.node().getBoundingClientRect().width + labelSize
 
@@ -174,20 +200,20 @@ export default {
           left: self.margins.left + yAxisWidthWithLabel,
         }
         const width = container.clientWidth - (margins.left + margins.right)
-        
+
         // Add plot title.
         contents.append('text')
             .attr('x', margins.left + width / 2 )
             .attr('y', 12)
             .style('text-anchor', 'middle')
             .text('Distribution of Functional Scores')
-        
+
         // Main canvas to which chart elements will be added.
         const svg = contents
             .append('g')
             .attr('transform', `translate(${margins.left},${margins.top})`)
-        
-        const firstBin = bins[0]    
+
+        const firstBin = bins[0]
         const lastBin = bins[bins.length - 1]
         const xScale = d3.scaleLinear()
             // Expand domain from that of the data by the size of the first and last bin.
@@ -219,6 +245,23 @@ export default {
             .style('text-anchor', 'middle')
             .text('Number of Variants')
 
+        const selectionTooltip = d3.select(this.$refs.histogramContainer)
+          .append('div')
+          .style('display', 'none')
+          .attr('class', 'mave-selection-histogram-tooltip')
+          .attr('id', 'mave-selection-histogram-tooltip')
+
+          .style('background-color', 'white')
+          .style('border', 'solid')
+          .style('border-width', '2px')
+          .style('border-radius', '5px')
+          .style('padding', '5px')
+
+          .style('position', 'relative')
+          .style('width', 'fit-content')
+
+          .style('z-index', 1)
+
         const opacity = (d, isMouseOver) => {
           // Don't show if there's no data in this bin.
           if (!d.length) {
@@ -227,19 +270,32 @@ export default {
           return isMouseOver ? 1 : 0
         }
 
-        // Using function, not arrow notation, so that 'this' is the event target.
-        const mouseover = function(event, d) {
+        const showTooltip = (tooltip, d) => {
           // Construct the tooltip.
           const parts = []
           parts.push(`Number of variants: ${d.length}`)
           parts.push(`Range: ${d.x0} to ${d.x1}`)
-          self.tooltip
-              .html(parts.join('<br />'))
+
+          tooltip.html(parts.join('<br />'))
+
           // Show the tooltip.
-          self.tooltip.style('display', 'block')
+          tooltip.style('display', 'block')
+        }
+
+        // Using function, not arrow notation, so that 'this' is the event target.
+        const mouseover = function(event, d) {
+          // Hide the selected variant tooltip
+          if (self.externalSelection) {
+            d3.select(`.mave-histogram-hover-highlight-${self.selectedBin.idx}`).style('opacity', opacity(self.selectedBin, false))
+          }
+
+          // show the mouse over tooltip and hide the tooltip for the currently selected variant.
+          showTooltip(self.tooltip, d)
+          hideSelectionTooltip()
+
           // Outline the highlight for this bin.
           d3.select(this)
-            .select('rect.mave-histogram-hover-highlight')
+            .select(`rect.mave-histogram-hover-highlight-${d.idx}`)
               .style('opacity', opacity(d, true))
         }
 
@@ -254,13 +310,59 @@ export default {
           // Hide the tooltip and the highlight.
           self.tooltip.style('display', 'none')
           d3.select(this)
-            .select('rect.mave-histogram-hover-highlight')
+            .select(`rect.mave-histogram-hover-highlight-${d.idx}`)
               .style('opacity', opacity(d, false))
+
+          // redraw the tooltip from the selected variant
+          displaySelectionTooltip()
+        }
+
+        const displaySelectionTooltip = function() {
+          // Don't do anything if there is no selected variant.
+          if (!self.externalSelection) {
+            return
+          }
+
+          showTooltip(selectionTooltip, self.selectedBin)
+          positionSelectionTooltip()
+
+          // highlight the bin
+          d3.select(`.mave-histogram-hover-highlight-${self.selectedBin.idx}`).style('opacity', opacity(self.selectedBin, true))
+        }
+
+        const positionSelectionTooltip = function() {
+          const elementProperties = document.getElementById('mave-selection-histogram-tooltip')
+
+          // position of this tooltip is relative to the parent div.
+          const left = xScale(self.selectedBin.x1) + margins.left
+          var top = -(yScale(0) - yScale(self.selectedBin.length)) - margins.bottom
+
+          // element properties are necessary to properly place the relative div within the document.
+          const height = elementProperties.clientHeight;
+          const borders = elementProperties.clientTop;
+
+          // Move the tooltip above the x-axis if it would have obscured it.
+          if (top > -(height + margins.bottom)) {
+            top -= height
+          }
+
+          selectionTooltip
+            // Add a small buffer area to both the left and top of the tooltip.
+            .style('left', left + 5 + "px")
+            .style('top', top - 15 + "px")
+            // A pretty silly workaround to the fact that this div is relatively positioned and would
+            // otherwise take up space in the document flow.
+            .style('margin-bottom', -height -(borders*2) + "px")
+        }
+
+        const hideSelectionTooltip = function() {
+          selectionTooltip
+            .style('display', 'none')
         }
 
         const refresh = function(bins) {
-          svg.selectAll('mave-histogram-line').remove()
-          svg.selectAll('mave-histogram-hovers').remove()
+          svg.selectAll('.mave-histogram-line').remove()
+          svg.selectAll('.mave-histogram-hovers').remove()
 
           const line = self.binsToLine(bins)
           const path = d3.line((d) => xScale(d.x), (d) => yScale(d.y))
@@ -282,10 +384,10 @@ export default {
               .on('mouseover', mouseover)
               .on('mousemove', mousemove)
               .on('mouseleave', mouseleave)
-          
+
           // Hover target is the full height of the chart.
           hovers.append('rect')
-              .attr('class', 'mave-histogram-hover-target')
+              .attr('class', (d) => `mave-histogram-hover-target-${d.idx}`)
               .attr('x', (d) => xScale(d.x0))
               .attr('width', (d) => xScale(d.x1) - xScale(d.x0))
               .attr('y', (d) => yScale(yMax))
@@ -294,7 +396,7 @@ export default {
 
           // However, only the bin is highlighted on hover.
           hovers.append('rect')
-              .attr('class', 'mave-histogram-hover-highlight')
+              .attr('class', (d) => `mave-histogram-hover-highlight-${d.idx}`)
               .attr('x', (d) => xScale(d.x0))
               .attr('width', (d) => xScale(d.x1) - xScale(d.x0))
               .attr('y', (d) => yScale(d.length))
@@ -303,6 +405,13 @@ export default {
               .style('stroke', 'black')
               .style('stroke-width', 1.5)
               .style('opacity', d => opacity(d, false))
+
+          if (self.externalSelection) {
+            displaySelectionTooltip()
+          }
+          else {
+            hideSelectionTooltip()
+          }
         }
         refresh(bins)
         return {refresh}

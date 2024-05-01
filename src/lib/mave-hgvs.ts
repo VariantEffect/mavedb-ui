@@ -45,5 +45,5 @@ export function parseSimpleProVariant(variant: string): SimpleProteinVariation |
  * @returns a boolean indicating whether the variant is NA or null.
  */
 export function variantNotNullOrNA(variant: string | null): boolean {
-  return !(variant === null || variant === "na")
+  return !(variant === null || variant.toLowerCase() === "na")
 }

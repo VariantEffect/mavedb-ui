@@ -44,6 +44,6 @@ export function parseSimpleProVariant(variant: string): SimpleProteinVariation |
  * @param variant A MaveHGVS-pro variant string representing a single variation.
  * @returns a boolean indicating whether the variant is NA or null.
  */
-export function variantNotNullOrNA(variant: string | null): boolean {
-  return !(variant === null || variant.toLowerCase() === "na")
+export function variantNotNullOrNA(variant: string | null | undefined): boolean {
+  return variant ? variant.toLowerCase() !== "na" : false
 }

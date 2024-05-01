@@ -42,11 +42,39 @@
           <h3>{{ item.urn }}</h3>
         </div>
       </div>
-      <div v-if="scores" class="mave-score-set-histogram-pane">
-        <ScoreSetHistogram :scoreSet="item" :scores="scores" />
-      </div>
-      <div v-if="showHeatmap && scores" class="mave-score-set-heatmap-pane">
-        <ScoreSetHeatmap :scoreSet="item" :scores="scores" />
+      <div v-if="scores">
+        <div class="mave-score-set-variant-search">
+          <span class="p-float-label">
+              <AutoComplete
+              v-model="selectedVariant"
+              :id="$scopedId('variant-search')"
+              :suggestions="variantSearchSuggestions"
+              :option-label="variantSearchLabel"
+              dropdown
+              @complete="variantSearch"
+              selectOnFocus
+              scroll-height="100px"
+              :virtualScrollerOptions="{ itemSize: 50 }"
+              style="flex: 1; padding-right: 0.1em;"
+            >
+              <template #option="slotProps">
+                <div class="flex align-options-center">
+                  <div v-if="slotProps.option.hgvs_nt != 'NA'">Nucleotide variant: {{ slotProps.option.hgvs_nt }}</div>
+                  <div v-if="slotProps.option.hgvs_splice != 'NA'">Splice variant: {{ slotProps.option.hgvs_splice }}</div>
+                  <div v-if="slotProps.option.hgvs_pro != 'NA'">Protein variant: {{ slotProps.option.hgvs_pro }}</div>
+                  </div>
+              </template>
+            </AutoComplete>
+            <label :for="$scopedId('variant-search')">Search for a variant defined by this score set</label>
+            <Button icon="pi pi-times" severity="danger" aria-label="Clear" @click="selectedVariant = null" />
+          </span>
+        </div>
+        <div class="mave-score-set-histogram-pane">
+          <ScoreSetHistogram :scoreSet="item" :scores="scores" :externalSelection="typeof selectedVariant === 'object' ? selectedVariant : null" />
+        </div>
+        <div v-if="showHeatmap" class="mave-score-set-heatmap-pane">
+          <ScoreSetHeatmap :scoreSet="item" :scores="scores" />
+        </div>
       </div>
       <div class="mave-1000px-col">
         <div v-if="item.creationDate">Created {{ formatDate(item.creationDate) }} <span v-if="item.createdBy">
@@ -308,6 +336,7 @@ import _ from 'lodash'
 import {marked} from 'marked'
 import Accordion from 'primevue/accordion';
 import AccordionTab from 'primevue/accordiontab';
+import AutoComplete from 'primevue/autocomplete'
 import Button from 'primevue/button'
 import Chip from 'primevue/chip'
 import Column from 'primevue/column'
@@ -330,12 +359,14 @@ import useRemoteData from '@/composition/remote-data'
 import config from '@/config'
 import { oidc } from '@/lib/auth'
 import { parseScoresOrCounts } from '@/lib/scores'
+import { variantNotNullOrNA } from '@/lib/mave-hgvs';
 import { mapState } from 'vuex'
+import { ref } from 'vue'
 import items from '@/composition/items'
 
 export default {
   name: 'ScoreSetView',
-  components: { Accordion, AccordionTab, Button, Chip, DefaultLayout, EntityLink, ScoreSetHeatmap, ScoreSetHistogram, TabView, TabPanel, Message, DataTable, Column, ProgressSpinner, ScrollPanel, PageLoading, ItemNotFound },
+  components: { Accordion, AccordionTab, AutoComplete, Button, Chip, DefaultLayout, EntityLink, ScoreSetHeatmap, ScoreSetHistogram, TabView, TabPanel, Message, DataTable, Column, ProgressSpinner, ScrollPanel, PageLoading, ItemNotFound },
   computed: {
     isMetaDataEmpty: function () {
       //If extraMetadata is empty, return value will be true.
@@ -364,6 +395,7 @@ export default {
   },
   setup: () => {
     const scoresRemoteData = useRemoteData()
+    const variantSearchSuggestions = ref([])
     return {
       config: config,
 
@@ -372,7 +404,8 @@ export default {
       scoresData: scoresRemoteData.data,
       scoresDataStatus: scoresRemoteData.dataStatus,
       setScoresDataUrl: scoresRemoteData.setDataUrl,
-      ensureScoresDataLoaded: scoresRemoteData.ensureDataLoaded
+      ensureScoresDataLoaded: scoresRemoteData.ensureDataLoaded,
+      variantSearchSuggestions
     }
   },
   props: {
@@ -386,7 +419,8 @@ export default {
     scoresTable: [],
     countsTable: [],
     readMore: true,
-    showHeatmap: true
+    showHeatmap: true,
+    selectedVariant: null
   }),
   watch: {
     itemId: {
@@ -634,6 +668,41 @@ export default {
         }
       }
     },
+    variantSearch: function (event) {
+      const matches = []
+      for (let variant of this.scores) {
+        const potentialVariants = []
+        if (variantNotNullOrNA(variant.hgvs_pro)) {
+          potentialVariants.push(variant.hgvs_pro)
+        }
+        if (variantNotNullOrNA(variant.hgvs_nt)) {
+          potentialVariants.push(variant.hgvs_nt)
+        }
+        if (variantNotNullOrNA(variant.hgvs_splice)) {
+          potentialVariants.push(variant.hgvs_splice)
+        }
+
+        matches.concat(
+          potentialVariants.filter((hgvsString) => hgvsString.toLowerCase().includes(event.query.toLowerCase()))
+        )
+      }
+
+      this.variantSearchSuggestions = matches
+    },
+    variantSearchLabel: function (selectedVariant) {
+      var displayStr = ""
+      if (variantNotNullOrNA(selectedVariant.hgvs_nt)) {
+        displayStr += `Nucleotide variant: ${selectedVariant.hgvs_nt}, `
+      }
+      if (variantNotNullOrNA(selectedVariant.hgvs_pro)) {
+        displayStr += `Protein variant: ${selectedVariant.hgvs_pro}, `
+      }
+      if (variantNotNullOrNA(selectedVariant.hgvs_splice)) {
+        displayStr += `Splice variant: ${selectedVariant.hgvs_splice}`
+      }
+
+      return displayStr.replace(/, $/, '')
+    },
     convertToThreeDecimal: function (value) {
       let numStr = String(value)
       let decimalNumber = 0
@@ -702,6 +771,16 @@ export default {
 
 .mave-score-set-heatmap-pane {
   margin: 10px 0;
+}
+
+.mave-score-set-variant-search {
+  margin: 10px 0;
+  display: flex;
+}
+
+.p-float-label {
+  display: flex;
+  width: 100%;
 }
 
 /* Score set details */

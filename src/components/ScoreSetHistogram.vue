@@ -331,13 +331,17 @@ export default {
         }
 
         const positionSelectionTooltip = function() {
-          const elementProperties = document.getElementById('mave-selection-histogram-tooltip')
-
-          // position of this tooltip is relative to the parent div.
+          const width = document.body.clientWidth
           const left = xScale(self.selectedBin.x1) + margins.left
           var top = -(yScale(0) - yScale(self.selectedBin.length)) - margins.bottom
 
-          // element properties are necessary to properly place the relative div within the document.
+          selectionTooltip
+            // Add a small buffer area to the left side of the tooltip so it doesn't overlap with the bin.
+            .style('left', left + 5 + "px")
+            // Ensure the tooltip doesn't extend outside of the histogram container.
+            .style('max-width', width - left + "px")
+
+          const elementProperties = document.getElementById('mave-selection-histogram-tooltip')
           const height = elementProperties.clientHeight;
           const borders = elementProperties.clientTop;
 
@@ -347,8 +351,7 @@ export default {
           }
 
           selectionTooltip
-            // Add a small buffer area to both the left and top of the tooltip.
-            .style('left', left + 5 + "px")
+            // Add a small buffer to the vertical placement of the tooltip so it doesn't overlap with the axis.
             .style('top', top - 15 + "px")
             // A pretty silly workaround to the fact that this div is relatively positioned and would
             // otherwise take up space in the document flow.

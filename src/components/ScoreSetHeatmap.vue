@@ -276,7 +276,8 @@ export default {
           rowHeight: 2,
           colWidth: 20,
           yCoordinate: (d) => d.scoreRank,
-          showYTickMarks: false
+          showYTickMarks: false,
+          showSelectionTooltip: false
         })
       }
     },
@@ -310,7 +311,8 @@ export default {
       colWidth = 20,
       xCoordinate = (d) => d.x,
       yCoordinate = (d) => d.y,
-      showYTickMarks = true
+      showYTickMarks = true,
+      showSelectionTooltip = true
     } = {}) {
       const self = this
 
@@ -587,6 +589,16 @@ export default {
         }
 
         const refreshSelectionTooltip = function() {
+          if (!showSelectionTooltip) {
+            if (self.selectedVariant) {
+              hideTooltipForVariant(self.selectedVariant)
+            }
+            if (priorSelection) {
+              hideTooltipForVariant(self.selectedVariant)
+            }
+            return
+          }
+
           if (priorSelection) {
             hideTooltipForVariant(priorSelection)
           }

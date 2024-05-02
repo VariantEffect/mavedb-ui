@@ -1,8 +1,8 @@
 <template>
   <div v-if="showHeatmap">
-    <div class="mave-simple-variants-heatmaps-container">
-      <div class="mave-simple-variants-heatmap-container" ref="simpleVariantsStackedHeatmapContainer" />
-      <div class="mave-simple-variants-heatmap-container" ref="simpleVariantsHeatmapContainer" />
+    <div id="mave-heatmap-scroll-container" class="mave-simple-variants-heatmaps-container">
+      <div id="mave-stacked-heatmap-container" class="mave-simple-variants-heatmap-container" ref="simpleVariantsStackedHeatmapContainer" />
+      <div id="mave-variants-heatmap-container" class="mave-simple-variants-heatmap-container" ref="simpleVariantsHeatmapContainer" />
     </div>
     <div v-if="numComplexVariants > 0">{{numComplexVariants}} variants are complex and cannot be shown on this type of chart.</div>
   </div>
@@ -15,7 +15,7 @@ import * as d3 from 'd3'
 
 import geneticCodes from '@/lib/genetic-codes'
 import {heatmapRowForVariant, HEATMAP_ROWS} from '@/lib/heatmap'
-import {parseSimpleProVariant} from '@/lib/mave-hgvs'
+import {parseSimpleProVariant, variantNotNullOrNA} from '@/lib/mave-hgvs'
 
 function stdev(array) {
   if (!array || array.length === 0) {
@@ -28,6 +28,8 @@ function stdev(array) {
 
 export default {
   name: 'ScoreSetHeatmap',
+
+  emits: ['variantSelected'],
 
   props: {
     margins: { // Margins must accommodate the axis labels
@@ -46,6 +48,11 @@ export default {
     scoreSet: {
       type: Object,
       required: true
+    },
+    externalSelection: {
+      type: Object,
+      required: false,
+      default: null
     }
   },
 
@@ -95,6 +102,9 @@ export default {
     },
     showHeatmap: function() {
       return this.simpleVariants && this.simpleVariants.length
+    },
+    selectedVariant: function() {
+      return this.externalSelection ? this.simpleAndWtVariants.filter((variant) => variant.details?.accession == this.externalSelection.accession)[0] : null
     }
   },
 
@@ -115,6 +125,12 @@ export default {
     simpleAndWtVariants: {
       handler: function() {
         this.renderOrRefreshHeatmap()
+      },
+      immediate: true
+    },
+    externalSelection: {
+      handler: function() {
+        this.refreshSelectionTooltipIfRendered()
       },
       immediate: true
     }
@@ -219,6 +235,7 @@ export default {
 
     // Assumes that plate dimensions do not change.
     renderOrRefreshHeatmap: function() {
+      console.log("re-rendering")
       if (!this.simpleAndWtVariants) {
         return
       }
@@ -231,6 +248,17 @@ export default {
           rowHeight: 20,
           colWidth: 20
         })
+      }
+    },
+
+    refreshSelectionTooltipIfRendered: function() {
+      if (!this.simpleAndWtVariants) {
+        return
+      }
+      if (this.heatmap) {
+        this.heatmap.refreshSelectionTooltip()
+      } else {
+        return
       }
     },
 
@@ -258,13 +286,17 @@ export default {
       self.tooltip = d3.select(document.body)
           .append('div')
           .style('display', 'none')
-          .attr('class', 'samplify-gene-expression-assay-results-plate-view-tooltip')
+          .attr('class', 'heatmap-mouseover-selection-tooltip')
           .style('background-color', 'white')
           .style('border', 'solid')
           .style('border-width', '2px')
           .style('border-radius', '5px')
           .style('padding', '5px')
           .style('z-index', 2001)
+    },
+
+    variantSelected: function(variant) {
+      this.$emit('variantSelected', variant.details)
     },
 
     // -------------------------------------------------------------------------------------------------
@@ -294,6 +326,8 @@ export default {
 
         const height = rowHeight * rows.length
         const width = colWidth * cols.length
+
+        var priorSelection = self.selectedVariant
 
         const svg = d3.select(container)
             .html(null)
@@ -339,6 +373,20 @@ export default {
               })
         }
 
+        const selectionTooltip = d3.select(this.$refs.simpleVariantsHeatmapContainer)
+          .append('div')
+          .style('display', 'none')
+          .attr('class', 'heatmap-external-selection-tooltip')
+          .attr('id', 'heatmap-external-selection-tooltip')
+          .style('background-color', 'white')
+          .style('border', 'solid')
+          .style('border-width', '2px')
+          .style('border-radius', '5px')
+          .style('padding', '5px')
+          .style('position', 'relative')
+          .style('width', 'fit-content')
+          .style('z-index', 1)
+
         const stroke = function(d, isMouseOver) {
           if (isMouseOver) {
             return '#000'
@@ -355,31 +403,18 @@ export default {
           return isMouseOver ? 2 : 0;
         }
 
-        const mouseover = function() { //event, d) {
-          self.tooltip.style('display', 'block')
-          //tooltip.style('opacity', 1)
-          d3.select(this)
-              .attr('x', d => xScale(xCoordinate(d)) + strokeWidth(d, true) / 2)
-              .attr('y', d => yScale(yCoordinate(d)) + strokeWidth(d, true) / 2)
-              .attr('width', d => xScale.bandwidth() - strokeWidth(d, true))
-              .attr('height', d => yScale.bandwidth() - strokeWidth(d, true))
-              .style('stroke', d => stroke(d, true))
-              .style('stroke-width', d => strokeWidth(d, true))
-              .style('opacity', 1);
-        }
-
-        const mousemove = function(event, d) {
+        const constructTooltip = function(d) {
           const parts = []
           if (d.details.wt) {
             parts.push('WT')
           }
-          if (d.details.hgvs_nt && d.details.hgvs_nt != 'NA') {
+          if (variantNotNullOrNA(d.details.hgvs_nt)) {
             parts.push(`NT variant: ${d.details.hgvs_nt}`)
           }
-          if (d.details.hgvs_pro && d.details.hgvs_pro != 'NA') {
+          if (variantNotNullOrNA(d.details.hgvs_pro)) {
             parts.push(`Protein variant: ${d.details.hgvs_pro}`)
           }
-          if (d.details.hgvs_splice && d.details.hgvs_splice != 'NA') {
+          if (variantNotNullOrNA(d.details.hgvs_splice)) {
             parts.push(`Splice variant: ${d.details.hgvs_splice}`)
           }
           if (d.numScores != null) {
@@ -391,40 +426,131 @@ export default {
             parts.push(`Mean score: ${d.meanScore}`)
             parts.push(`Score stdev: ${d.scoreStdev}`)
           }
-          /*
-          if (d.details.accession) {
-            parts.push(`Accession: ${d.details.accession}`)
+
+          return parts
+        }
+
+        const showVariantOutline = function(d) {
+          d3.selectAll(`.mave-heatmap-item-${d.x}-${d.y}`)
+            .style('stroke', stroke(d, true))
+            .style('stroke-width', strokeWidth(d, true))
+            .style('opacity', 1);
+        }
+
+        const hideVariantOutline = function(d) {
+          d3.selectAll(`.mave-heatmap-item-${d.x}-${d.y}`)
+            .style('stroke', stroke(d, false))
+            .style('stroke-width', strokeWidth(d, false))
+            .style('opacity', 0.8);
+        }
+
+        const scrollToVariant = function(d) {
+          const scrollValue = xScale(xCoordinate(d)) + strokeWidth(d) / 2
+          const scrollDiv = document.getElementById("mave-heatmap-scroll-container")
+
+          // Only scroll if the variant is not in view.
+          const variantIsInView = scrollDiv.scrollLeft < scrollValue && scrollDiv.clientWidth + scrollDiv.scrollLeft > scrollValue
+          if (!variantIsInView) {
+            document.getElementById("mave-heatmap-scroll-container").scrollLeft = scrollValue
           }
-          */
+        }
+
+        const mouseover = function(event, d) {
+          // If we are moused over the selected variant, don't display this tooltip.
+          if (self.selectedVariant && self.selectedVariant == d) {
+            self.tooltip.style('display', 'none')
+            return
+          }
+
+          self.tooltip.style('display', 'block')
+          showVariantOutline(d)
+        }
+
+        const mousemove = function(event, d) {
+          // If we mouse onto the selected variant, don't display this tooltip.
+          if (self.selectedVariant && self.selectedVariant == d) {
+            self.tooltip.style('display', 'none')
+            return
+          }
+
+          const parts = constructTooltip(d)
           self.tooltip
               .html(parts.join('<br />'))
               .style('left', (d3.pointer(event, document.body)[0] + 50) + 'px')
               .style('top', (d3.pointer(event, document.body)[1]) + 'px');
         }
 
-        const mouseleave = function() { //event, d) {
+        const mouseleave = function(event, d) {
           self.tooltip.style('display', 'none')
-          //tooltip.style('opacity', 0)
-          d3.select(this)
-              .attr('x', d => xScale(xCoordinate(d)) + strokeWidth(d, false) / 2)
-              .attr('y', d => yScale(yCoordinate(d)) + strokeWidth(d, false) / 2)
-              .attr('width', d => xScale.bandwidth() - strokeWidth(d, false))
-              .attr('height', d => yScale.bandwidth() - strokeWidth(d, false))
-              .style('stroke', d => stroke(d, false))
-              .style('stroke-width', d => strokeWidth(d, false))
-              .style('opacity', 0.8);
+
+          // Don't undraw the variant outline when the mouse leaves the selected variant.
+          if (!(self.selectedVariant && self.selectedVariant == d)) {
+            hideVariantOutline(d)
+          }
+
+        }
+
+        const displaySelectionTooltip = function() {
+          const parts = constructTooltip(self.selectedVariant)
+
+          selectionTooltip
+            .html(parts.join('<br />'))
+            .style('display', 'block')
+
+          // Scroll to variant prior to setting constant properties so we are operating with the correct values.
+          scrollToVariant(self.selectedVariant)
+
+          // The left and top anchor positions for this tooltip.
+          const left = xScale(xCoordinate(self.selectedVariant) + 2) + strokeWidth(self.selectedVariant, false) / 2
+          const top = yScale(yCoordinate(self.selectedVariant)) - strokeWidth(self.selectedVariant, false) / 2
+
+          // Properties of this tooltip.
+          const elementProperties = document.getElementById('heatmap-external-selection-tooltip')
+          const tooltipHeight = elementProperties.clientHeight;
+          const tooltipWidth = elementProperties.clientWidth;
+          const tooltipBorders = elementProperties.clientTop;
+
+          // The divs which contain this tooltip.
+          const scrollableContainer = document.getElementById("mave-heatmap-scroll-container")
+          const heatmapContainer = document.getElementById("mave-variants-heatmap-container")
+
+          // Setting the margin-bottom property to a negative value equal to the total height of the tooltip
+          // ensures the tooltip div doesn't occupy any space in the document flow.
+          selectionTooltip.style('margin-bottom', -tooltipHeight -(tooltipBorders*2) + "px")
+
+          // Show the tooltip to the right of the variant if it would overflow from the heatmap container.
+          if (left + tooltipWidth > scrollableContainer.scrollLeft + scrollableContainer.clientWidth) {
+            // tooltip needs a small amount of additional padding when shown on the inverse side to look correct.
+            selectionTooltip
+              .style('left', left - tooltipWidth - (tooltipBorders * 2) - colWidth - 5 + 'px')
+          } else {
+            selectionTooltip
+              .style('left', left + tooltipBorders + 'px')
+          }
+
+          // Show the tooltip under the variant square if it is in the top quarter of the heatmap so
+          // it doesn't obscure the stacked heatmap.
+          if (yCoordinate(self.selectedVariant) < rows.length / 4) {
+            selectionTooltip
+              .style('top', null)
+              .style('bottom', heatmapContainer.clientHeight - top - tooltipHeight + 'px')
+          } else {
+            selectionTooltip
+              .style('top', -(heatmapContainer.clientHeight - top) + rowHeight + 'px')
+              .style('bottom', null)
+          }
+
+          showVariantOutline(self.selectedVariant)
+        }
+
+        const hideTooltipForVariant = function(variant) {
+          selectionTooltip.style('display', 'none')
+          hideVariantOutline(variant)
         }
 
         const click = function(event, d) {
-          let previousSelectionIndex = self.wellSelectionIndex(d);
-          if (previousSelectionIndex != null) {
-            self.deselectWells({itemIds: [d._id]})
-          } else {
-            self.selectWells({itemIds: [d._id], addToSelection: event.shiftKey})
-          }
+          self.variantSelected(d)
         }
-
-        const doubleClick = function() {}
 
         const color = function(d) {
           if (d.details.wt) {
@@ -433,89 +559,13 @@ export default {
           return d3.interpolateRdBu(1.0 - d.meanScore / 2.0)
         }
 
-        const cancelableClick = function() {
-          // Euclidean distance
-          const dist = (a, b) => {
-            return Math.sqrt(Math.pow(a[0] - b[0], 2) + Math.pow(a[1] - b[1], 2));
-          }
-
-          // Method is assumed to be a standard D3 getter-setter:
-          // If passed with no arguments, gets the value.
-          // If passed with arguments, sets the value and returns the target.
-          const rebindMethod = (target, source, method) => {
-            return (...args) => {
-              const value = method.apply(source, args)
-              return value === source ? target : value
-            }
-          }
-
-          // Copy a variable number of methods from source to target.
-          const rebind = (target, source, ...methods) => {
-            for (let method of methods) {
-              target[method] = rebindMethod(target, source, source[method])
-            }
-            return target
-          }
-
-          // see: http://bl.ocks.org/ropeladder/83915942ac42f17c087a82001418f2ee
-          //      based on: http://bl.ocks.org/couchand/6394506
-          return({tolerance = 5, timeout = 200} = {}) => {
-            const dispatcher = d3.dispatch('click', 'dblclick');
-
-            const cc = (selection) => {
-              let downPt;
-              //let lastTs;
-              let waitId;
-              let eventArgs;
-
-              selection.on('mousedown', (event, ...args) => {
-                downPt = d3.pointer(event, document.body);
-                //lastTs = Date.now();
-                eventArgs = [event, ...args];
-              });
-
-              selection.on('click', (e) => {
-                if (dist(downPt, d3.pointer(e, document.body)) >= tolerance) {
-                  return;
-                }
-
-                if (waitId) {
-                  window.clearTimeout(waitId);
-                  waitId = null;
-                  dispatcher.apply('dblclick', selection, eventArgs);
-                } else {
-                  waitId = window.setTimeout(
-                    () => {
-                      dispatcher.apply('click', selection, eventArgs);
-                      waitId = null;
-                    },
-                    timeout
-                  );
-                }
-              });
-            };
-
-            return rebind(cc, dispatcher, 'on');
-          }
-        }
-
-        let cc = cancelableClick()({
-          // Maximum Euclidean distance from mouse down (x,y) to mouse up (x,y) that will count as one click
-          tolerance: 10,
-          // Maximum duration of a double-click. All single clicks will have to wait this long.
-          timeout: 300,
-        })
-
-        cc.on('click', click)
-            .on('dblclick', doubleClick)
-
         const refresh = function(variants) {
           const chartVariants = svg.selectAll('rect.well')
               .data(variants, (d) => d)
           chartVariants.exit().remove()
           chartVariants.enter()
               .append('rect')
-              .attr('class', 'mave-heatmap-item')
+              .attr('class', d => `mave-heatmap-item-${d.x}-${d.y}`)
               .attr('rx', 4)
               .attr('ry', 4)
               .style('cursor', 'pointer')
@@ -523,7 +573,7 @@ export default {
               .on('mouseover', mouseover)
               .on('mousemove', mousemove)
               .on('mouseleave', mouseleave)
-              .call(cc)
+              .on('click', click)
           .merge(chartVariants)
               .attr('x', d => xScale(xCoordinate(d)) + strokeWidth(d, false) / 2)
               .attr('y', d => yScale(yCoordinate(d)) + strokeWidth(d, false) / 2)
@@ -532,11 +582,30 @@ export default {
               .style('fill', d => color(d))
               .style('stroke-width', d => strokeWidth(d, false))
               .style('stroke', d => stroke(d, false))
+
+          refreshSelectionTooltip()
+        }
+
+        const refreshSelectionTooltip = function() {
+          if (priorSelection) {
+            hideTooltipForVariant(priorSelection)
+          }
+
+          if (!self.selectedVariant){
+            priorSelection = null
+            return
+          }
+
+          priorSelection = self.selectedVariant
+          displaySelectionTooltip()
+          // spoof a mouseover event so we can undraw the mouseover tooltip in the case that the
+          // mouse is hovering over the selected variant.
+          mouseover({}, self.selectedVariant)
         }
 
         refresh(variants)
 
-        return {refresh}
+        return {refresh, refreshSelectionTooltip}
       }
     }
   }
@@ -546,7 +615,7 @@ export default {
 
 <style>
 
-.samplify-gene-expression-assay-results-plate-view-tooltip {
+.heatmap-mouseover-selection-tooltip {
   position: absolute;
 }
 

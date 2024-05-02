@@ -73,7 +73,7 @@
           <ScoreSetHistogram :scoreSet="item" :scores="scores" :externalSelection="typeof selectedVariant === 'object' ? selectedVariant : null" />
         </div>
         <div v-if="showHeatmap" class="mave-score-set-heatmap-pane">
-          <ScoreSetHeatmap :scoreSet="item" :scores="scores" />
+          <ScoreSetHeatmap :scoreSet="item" :scores="scores" :externalSelection="typeof selectedVariant === 'object' ? selectedVariant : null" @variant-selected="childComponentSelectedVariant"/>
         </div>
       </div>
       <div class="mave-1000px-col">
@@ -696,6 +696,13 @@ export default {
       }
 
       return displayStr.trim().replace(/;$/, '')
+    },
+    childComponentSelectedVariant: function (variant) {
+      if (!variant?.accession) {
+        return
+      }
+
+      this.selectedVariant = this.scores.find((v) => v.accession == variant.accession)
     },
     convertToThreeDecimal: function (value) {
       let numStr = String(value)

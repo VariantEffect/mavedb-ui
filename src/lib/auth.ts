@@ -3,10 +3,15 @@
 import axios from 'axios'
 
 import {idToken as orcidIdToken} from '@/lib/orcid'
+import authStore from '@/store/modules/auth'
 
 export interface AuthorizationHeader {
   /** The Authorization header value, typically a bearer token having the form "Bearer: <token>". */
   Authorization?: string
+  /** The X-Active-Roles header value, which denotes the requested roles this client would like to assume.
+   *  Is a comma separated list.
+   */
+  'X-Active-Roles'?: string[]
 }
 
 /**
@@ -20,8 +25,10 @@ export interface AuthorizationHeader {
  */
 export function authHeader(): AuthorizationHeader {
   const token = orcidIdToken.value
+  const activeRoles = authStore.state.activeRoles
+
   if (token) {
-    return {Authorization: `Bearer ${token}`}
+    return {Authorization: `Bearer ${token}`, 'X-Active-Roles': activeRoles}
   } else {
     return {}
   }
@@ -36,8 +43,11 @@ export function authHeader(): AuthorizationHeader {
 export function installAxiosAuthHeaderInterceptor() {
   axios.interceptors.request.use((config) => {
     const token = orcidIdToken.value
+    const activeRoles = authStore.state.activeRoles
+
     if (token) {
       config.headers.Authorization = `Bearer ${token}`
+      config.headers['X-Active-Roles'] = activeRoles
     }
     return config
   })

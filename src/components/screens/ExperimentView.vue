@@ -109,7 +109,7 @@
                 {{ targetGene.targetAccession.accession }}
               </div>
 
-              <div v-if="targetGene.targetSequence.taxonomy?.url"><strong>Taxonomy ID:</strong>
+              <div v-if="targetGene.targetSequence?.taxonomy?.url"><strong>Taxonomy ID:</strong>
                 &nbsp;<a :href="`${targetGene.targetSequence.taxonomy.url}`" target="blank">{{targetGene.targetSequence.taxonomy.taxId}}</a>
                 </div>
               <div v-if="targetGene.targetSequence?.sequence" style="word-break: break-word">
@@ -181,17 +181,16 @@
 import axios from 'axios'
 import _ from 'lodash'
 import {marked} from 'marked'
-import config from '@/config'
 import Button from 'primevue/button'
 import Chip from 'primevue/chip'
 
 import DefaultLayout from '@/components/layout/DefaultLayout'
 import PageLoading from '@/components/common/PageLoading'
 import ItemNotFound from '@/components/common/ItemNotFound'
-import ProgressSpinner from 'primevue/progressspinner'
 import useAuth from '@/composition/auth'
 import useItem from '@/composition/item'
 import useFormatters from '@/composition/formatters'
+import config from '@/config'
 
 export default {
   name: 'ExperimentView',

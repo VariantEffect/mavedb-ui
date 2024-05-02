@@ -6,8 +6,8 @@
  *   credentials in localStorage; and
  * - The authorization store module, store/modules/auth.ts, which checks the user's roles after login.
  *
- * The user's authentication state, profile and roles are exposed here, as are functions for logging in and out, so Vue
- * components should not need to interact with the 
+ * The user's authentication state, profile, roles, and active roles are exposed here, as are functions for logging in and out, so Vue
+ * components should not need to interact with the store itself.
  */
 import _ from 'lodash'
 import {computed, watch} from 'vue'
@@ -33,10 +33,15 @@ export default () => {
   // sign in.
   const signOut = () => orcidSignOut()
 
+  function updateActiveRoles(newActiveRoles: string[]) {
+    store.dispatch('auth/activeRolesChanged', newActiveRoles)
+  }
+
   const userIdToken = computed(() => orcidIdToken)
   const userIsAuthenticated = computed(() => orcidIsAuthenticated.value)
   const userProfile = computed(() => orcidUserProfile.value)
   const roles = computed(() => store.state.auth.roles)
+  const activeRoles = computed(() => store.state.auth.activeRoles)
 
   store.dispatch('auth/userChanged', userProfile.value)
 
@@ -45,12 +50,14 @@ export default () => {
   })
 
   return {
+    activeRoles,
     roles,
     userIdToken,
     userIsAuthenticated,
     userProfile,
 
     signIn,
-    signOut
+    signOut,
+    updateActiveRoles
   }
 }

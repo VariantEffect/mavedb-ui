@@ -1,8 +1,7 @@
 <template>
     <Dialog v-model:visible="visible" :closable="false" :header=title :style="{ width: '25rem' }">
         <span class="p-text-secondary block mb-5">{{ dialog }}</span>
-        <div class="flex align-items-center gap-3 mb-3">
-            <label for="email" class="font-semibold w-6rem">Email</label>
+        <div class="flex align-items-center gap-3 mb-3 p-float-label">
             <InputText v-model:model-value="email" id="email" class="flex-auto" />
         </div>
         <div><span v-if="emailValidationError" class="mave-field-error">{{ emailValidationError }}</span></div>

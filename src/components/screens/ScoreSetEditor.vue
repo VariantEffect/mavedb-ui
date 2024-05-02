@@ -1,6 +1,6 @@
 <template>
   <EmailPrompt
-    dialog="Your email is required to create or edit an experiment. Please add it below."
+    dialog="You must add an email address to your account to create or edit a score set. You can do so below, or on the 'Settings' page."
     :isFirstLoginPrompt="false"
   />
   <DefaultLayout>

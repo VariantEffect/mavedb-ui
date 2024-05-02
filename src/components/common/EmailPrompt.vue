@@ -32,7 +32,7 @@ export default {
         dialog: {
             type: String,
             required: false,
-            default: "Your email is required to use this feature. Please add it below"
+            default: "You must add an email address to your account to use this feature. You can do so below, or on the 'Settings' page."
         },
         isFirstLoginPrompt: {
             type: Boolean,

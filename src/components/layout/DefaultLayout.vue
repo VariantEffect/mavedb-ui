@@ -4,7 +4,7 @@
     <Toolbar />
     <EmailPrompt
       title="Welcome to MaveDB!"
-      dialog="This appears to be your first time logging into MaveDB. Your email is required for certain site features, such as creating an experiment or score set. You may add it now, or ignore this message and add it prior to uploading data."
+      dialog="We're glad you're here! We require a valid email address to upload data to MaveDB, so that we can get in touch if there are any issues. You may add an email now, or do so at any time on the 'Settings' page."
       :isFirstLoginPrompt="true"
     />
     <div :class="wrapperClasses">

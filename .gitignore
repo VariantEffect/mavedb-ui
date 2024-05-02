@@ -131,3 +131,6 @@ venv.bak/
 
 # Sphinx documentation build cache
 .doctrees/
+
+# OS X folder view option files
+*.DS_Store

@@ -6,8 +6,8 @@
         </div>
         <div><span v-if="emailValidationError" class="mave-field-error">{{ emailValidationError }}</span></div>
         <div class="flex justify-content-end gap-2">
-            <Button type="button" label="Ignore" severity="secondary" @click="ignoreEmail"></Button>
-            <Button type="button" label="Save" @click="saveEmail"></Button>
+            <Button type="button" label="Now now" severity="secondary" @click="ignoreEmail"></Button>
+            <Button type="button" label="Add email" @click="saveEmail"></Button>
         </div>
     </Dialog>
 </template>

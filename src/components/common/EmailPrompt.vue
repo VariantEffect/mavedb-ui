@@ -3,6 +3,7 @@
         <span class="p-text-secondary block mb-5">{{ dialog }}</span>
         <div class="flex align-items-center gap-3 mb-3 p-float-label">
             <InputText v-model:model-value="email" id="email" class="flex-auto" />
+            <label for="email">Email</label>
         </div>
         <div><span v-if="emailValidationError" class="mave-field-error">{{ emailValidationError }}</span></div>
         <div class="flex justify-content-end gap-2">
@@ -118,6 +119,8 @@ export default {
             }
         },
 
+        // Save the user with a null email. Saving the user ensures their `is_first_login` value is set to `False`, which
+        // makes sure they are not prompted with this component again.
         ignoreEmail: async function() {
             await this.saveUser({
                 item: {

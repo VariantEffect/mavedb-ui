@@ -63,14 +63,12 @@ export default {
       return bins
     },
     selectedBin: function() {
-      const externalSelection = this.externalSelection
-      const bins = this.bins
-
+      const self = this
       const binContainsScore = function(bin) {
-        return externalSelection ? externalSelection.score >= bin.x0 && externalSelection.score < bin.x1 : false
+        return self.externalSelection ? self.externalSelection.score >= bin.x0 && self.externalSelection.score < bin.x1 : false
       }
 
-      return bins.find(binContainsScore)
+      return self.bins.find(binContainsScore)
     }
   },
 

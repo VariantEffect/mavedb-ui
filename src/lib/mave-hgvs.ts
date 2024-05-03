@@ -38,7 +38,7 @@ export function parseSimpleProVariant(variant: string): SimpleProteinVariation |
 }
 
 
-  /**
+/**
  * Checks whether a provided variant is null or na
  *
  * @param variant A MaveHGVS-pro variant string representing a single variation.

@@ -70,10 +70,10 @@
           </span>
         </div>
         <div class="mave-score-set-histogram-pane">
-          <ScoreSetHistogram :scoreSet="item" :scores="scores" :externalSelection="typeof selectedVariant === 'object' ? selectedVariant : null" />
+          <ScoreSetHistogram :scoreSet="item" :scores="scores" :externalSelection="variantToVisualize" />
         </div>
         <div v-if="showHeatmap" class="mave-score-set-heatmap-pane">
-          <ScoreSetHeatmap :scoreSet="item" :scores="scores" :externalSelection="typeof selectedVariant === 'object' ? selectedVariant : null" @variant-selected="childComponentSelectedVariant"/>
+          <ScoreSetHeatmap :scoreSet="item" :scores="scores" :externalSelection="variantToVisualize" @variant-selected="childComponentSelectedVariant"/>
         </div>
       </div>
       <div class="mave-1000px-col">
@@ -386,6 +386,10 @@ export default {
     },
     sortedMetaAnalyzesScoreSetUrns: function () {
       return _.sortBy(this.item?.metaAnalyzesScoreSetUrns || [])
+    },
+    variantToVisualize: function() {
+      // While a user is autocompleting, `this.selectedVariant` is a string. Once selected, it will become an object and we can pass it as a prop.
+      return typeof this.selectedVariant === 'object' ? this.selectedVariant : null
     },
     ...mapState({
       galaxyUrl: state => state.routeProps.galaxyUrl,

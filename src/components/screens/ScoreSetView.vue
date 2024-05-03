@@ -65,7 +65,7 @@
                   </div>
               </template>
             </AutoComplete>
-            <label :for="$scopedId('variant-search')">Search for a variant defined by this score set</label>
+            <label :for="$scopedId('variant-search')">Search for a variant in this score set</label>
             <Button icon="pi pi-times" severity="danger" aria-label="Clear" @click="selectedVariant = null" />
           </span>
         </div>

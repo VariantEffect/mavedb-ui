@@ -6,6 +6,7 @@
 <script>
 
 import * as d3 from 'd3'
+import { variantNotNullOrNA } from '@/lib/mave-hgvs'
 
 export default {
   name: 'ScoreSetHistogram',
@@ -268,9 +269,25 @@ export default {
           return isMouseOver ? 1 : 0
         }
 
-        const showTooltip = (tooltip, d) => {
+        const showTooltip = (tooltip, d, variant) => {
           // Construct the tooltip.
           const parts = []
+
+          if (variant) {
+            if (variantNotNullOrNA(variant.hgvs_nt)) {
+              parts.push(`NT variant: ${variant.hgvs_nt}`)
+            }
+            if (variantNotNullOrNA(variant.hgvs_pro)) {
+              parts.push(`Protein variant: ${variant.hgvs_pro}`)
+            }
+            if (variantNotNullOrNA(variant.hgvs_splice)) {
+              parts.push(`Splice variant: ${variant.hgvs_splice}`)
+            }
+            if (variant.score) {
+                parts.push(`Score: ${variant.score}`)
+            }
+          }
+
           parts.push(`Number of variants: ${d.length}`)
           parts.push(`Range: ${d.x0} to ${d.x1}`)
 
@@ -288,7 +305,7 @@ export default {
           }
 
           // show the mouse over tooltip and hide the tooltip for the currently selected variant.
-          showTooltip(self.tooltip, d)
+          showTooltip(self.tooltip, d, null)
           hideSelectionTooltip()
 
           // Outline the highlight for this bin.
@@ -321,7 +338,7 @@ export default {
             return
           }
 
-          showTooltip(selectionTooltip, self.selectedBin)
+          showTooltip(selectionTooltip, self.selectedBin, self.externalSelection)
           positionSelectionTooltip()
 
           // highlight the bin

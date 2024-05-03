@@ -368,23 +368,23 @@ export default {
   name: 'ScoreSetView',
   components: { Accordion, AccordionTab, AutoComplete, Button, Chip, DefaultLayout, EntityLink, ScoreSetHeatmap, ScoreSetHistogram, TabView, TabPanel, Message, DataTable, Column, ProgressSpinner, ScrollPanel, PageLoading, ItemNotFound },
   computed: {
-    isMetaDataEmpty: function () {
+    isMetaDataEmpty: function() {
       //If extraMetadata is empty, return value will be true.
       return Object.keys(this.item.extraMetadata).length === 0
     },
-    oidc: function () {
+    oidc: function() {
       return oidc
     },
-    scoreColumns: function () {
+    scoreColumns: function() {
       const fixedColumns = ['hgvs_nt', 'hgvs_splice', 'hgvs_pro']
       return [...fixedColumns, ...this.item?.datasetColumns?.scoreColumns || []]
     },
-    countColumns: function () {
+    countColumns: function() {
       const fixedColumns = ['hgvs_nt', 'hgvs_splice', 'hgvs_pro']
       const showCountColumns = !_.isEmpty(this.item?.datasetColumns?.countColumns)
       return showCountColumns ? [...fixedColumns, ...this.item?.datasetColumns?.countColumns || []] : []
     },
-    sortedMetaAnalyzesScoreSetUrns: function () {
+    sortedMetaAnalyzesScoreSetUrns: function() {
       return _.sortBy(this.item?.metaAnalyzesScoreSetUrns || [])
     },
     variantToVisualize: function() {
@@ -428,7 +428,7 @@ export default {
   }),
   watch: {
     itemId: {
-      handler: function (newValue, oldValue) {
+      handler: function(newValue, oldValue) {
         if (newValue != oldValue) {
           this.setItemId(newValue)
 
@@ -443,25 +443,25 @@ export default {
       immediate: true
     },
     item: {
-      handler: function () {
+      handler: function() {
         this.loadTableScores()
         this.loadTableCounts()
       }
     },
     scoresData: {
-      handler: function (newValue) {
+      handler: function(newValue) {
         this.scores = newValue ? Object.freeze(parseScoresOrCounts(newValue)) : null
       }
     }
   },
   methods: {
     variantNotNullOrNA,
-    editItem: function () {
+    editItem: function() {
       if (this.item) {
         this.$router.replace({ path: `/score-sets/${this.item.urn}/edit` })
       }
     },
-    sendToGalaxy: async function (download_type) {
+    sendToGalaxy: async function(download_type) {
       try {
         const galaxyUrl = this.galaxyUrl;
         let params = {};
@@ -504,7 +504,7 @@ export default {
         console.error('Error sending data:', error);
       }
     },
-    deleteItem: async function () {
+    deleteItem: async function() {
       let response = null
       this.$confirm.require({
         message: 'Are you sure you want to proceed?',
@@ -543,13 +543,13 @@ export default {
         }
       });
     },
-    markdownToHtml: function (markdown) {
+    markdownToHtml: function(markdown) {
       return marked(markdown)
     },
     get(...args) {
       return _.get(...args)
     },
-    publishItem: async function () {
+    publishItem: async function() {
       let response = null
       try {
         if (this.item) {
@@ -581,7 +581,7 @@ export default {
       }
     },
     //Download scores or counts
-    downloadFile: async function (download_type) {
+    downloadFile: async function(download_type) {
       let response = null
       try {
         if (this.item && download_type == "counts") {
@@ -615,7 +615,7 @@ export default {
         }
       }
     },
-    downloadMappedVariants: async function () {
+    downloadMappedVariants: async function() {
       let response = null
       try {
         if (this.item) {
@@ -639,7 +639,7 @@ export default {
         this.$toast.add({ severity: 'error', summary: 'No downloadable mapped variants text file', life: 3000 })
       }
     },
-    downloadMetadata: async function () {
+    downloadMetadata: async function() {
       //convert object to Json. extraMetadata is an object.
       var metadata = JSON.stringify(this.item.extraMetadata)
       const anchor = document.createElement('a');
@@ -649,7 +649,7 @@ export default {
       anchor.download = this.item.urn + '_metadata.txt';
       anchor.click();
     },
-    loadTableScores: async function () {
+    loadTableScores: async function() {
       if (this.item) {
         const response = await axios.get(`${config.apiBaseUrl}/score-sets/${this.item.urn}/scores`)
         if (response.data) {
@@ -661,7 +661,7 @@ export default {
         }
       }
     },
-    loadTableCounts: async function () {
+    loadTableCounts: async function() {
       if (this.item) {
         const response = await axios.get(`${config.apiBaseUrl}/score-sets/${this.item.urn}/counts`)
         if (response.data) {
@@ -673,7 +673,7 @@ export default {
         }
       }
     },
-    variantSearch: function (event) {
+    variantSearch: function(event) {
       const matches = []
       for (const variant of this.scores) {
         if (
@@ -687,7 +687,7 @@ export default {
 
       this.variantSearchSuggestions = matches
     },
-    variantSearchLabel: function (selectedVariant) {
+    variantSearchLabel: function(selectedVariant) {
       var displayStr = ""
       if (variantNotNullOrNA(selectedVariant.hgvs_nt)) {
         displayStr += `Nucleotide variant: ${selectedVariant.hgvs_nt}; `
@@ -701,14 +701,14 @@ export default {
 
       return displayStr.trim().replace(/;$/, '')
     },
-    childComponentSelectedVariant: function (variant) {
+    childComponentSelectedVariant: function(variant) {
       if (!variant?.accession) {
         return
       }
 
       this.selectedVariant = this.scores.find((v) => v.accession == variant.accession)
     },
-    convertToThreeDecimal: function (value) {
+    convertToThreeDecimal: function(value) {
       let numStr = String(value)
       let decimalNumber = 0
       if (numStr.includes('.')) {
@@ -721,7 +721,7 @@ export default {
       }
     },
     // Check whether all columns values are NA.
-    columnIsAllNa: function (tableData, column) {
+    columnIsAllNa: function(tableData, column) {
       let sliceData = tableData.slice(0, 10)
       let frozen = true
       let count = 0
@@ -736,11 +736,11 @@ export default {
       }
       return frozen
     },
-    showMore: function () {
+    showMore: function() {
       this.readMore = false
       return this.readMore
     },
-    showLess: function () {
+    showLess: function() {
       this.readMore = true
       return this.readMore
     },

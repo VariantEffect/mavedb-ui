@@ -14,11 +14,13 @@
 </template>
 
 <script>
+import axios from 'axios'
 import Button from 'primevue/button'
 import Dialog from 'primevue/dialog'
 import InputText from 'primevue/inputtext'
 
 import useItem from '@/composition/item'
+import config from '@/config'
 import { ref } from 'vue'
 
 export default {
@@ -122,11 +124,15 @@ export default {
         // Save the user with a null email. Saving the user ensures their `is_first_login` value is set to `False`, which
         // makes sure they are not prompted with this component again.
         ignoreEmail: async function() {
-            await this.saveUser({
-                item: {
-                    ...this.user
+            await axios.put(
+                `${config.apiBaseUrl}/users/me/has-logged-in`,
+                {},
+                {
+                    headers: {
+                    accept: 'application/json'
+                    }
                 }
-            })
+            )
             this.visible = false
         }
     }

@@ -1,6 +1,13 @@
 import {AMINO_ACIDS, AMINO_ACIDS_BY_HYDROPHILIA} from './amino-acids.js'
 
-interface HeatmapRow {
+/** Codes used in the right part of a MaveHGVS-pro string representing a single variation in a protein sequence. */
+const MAVE_HGVS_PRO_CHANGE_CODES = [
+  {codes: {single: '='}}, // Synonymous AA variant
+  {codes: {single: '*'}}, // Stop codon
+  {codes: {single: '-', triple: 'DEL'}} // Deletion
+]
+
+interface HeatmapRowSpecification {
   /** A single-character amino acid code or single-character code from MAVE_HGVS_PRO_CHANGE_CODES. */
   code: string
   /** The tick mark label text to display for this change, which is usually the same as the code. */
@@ -9,15 +16,8 @@ interface HeatmapRow {
   cssClass?: string
 }
 
-/** Codes used in the right part of a MaveHGVS-pro string representing a single variation in a protein sequence. */
-const MAVE_HGVS_PRO_CHANGE_CODES = [
-  {codes: {single: '='}}, // Synonymous AA variant
-  {codes: {single: '*'}}, // Stop codon
-  {codes: {single: '-', triple: 'DEL'}} // Deletion
-]
-
 /** List of single-character codes for the heatmap's rows, from bottom to top. */
-export const HEATMAP_ROWS: HeatmapRow[] = [
+export const HEATMAP_ROWS: HeatmapRowSpecification[] = [
   {code: '=', label: '=', cssClass: 'mave-heatmap-y-axis-tick-label-lg'},
   {code: '*', label: '\uff0a'},
   {code: '-', label: '-', cssClass: 'mave-heatmap-y-axis-tick-label-lg'},
@@ -34,7 +34,7 @@ export const HEATMAP_ROWS: HeatmapRow[] = [
  * @return The one-character code representing the same amino acid or change, or null if the input was not a supported
  *   amino acid or change.
  */
-export function singleLetterAminoAcidOrHgvsCode(aaCodeOrChange: string) {
+export function singleLetterAminoAcidOrHgvsCode(aaCodeOrChange: string): string | null {
   const code = aaCodeOrChange.toUpperCase()
   if (code.length == 1) {
     return code
@@ -58,7 +58,7 @@ export function singleLetterAminoAcidOrHgvsCode(aaCodeOrChange: string) {
  *   variation (=), stop codon (*), or deletion (- or del).
  * @returns The heatmap row number, from 0 (the bottom row) to 22 (the top row).
  */
-export function heatmapRowForVariant(aaCodeOrChange: string) {
+export function heatmapRowForVariant(aaCodeOrChange: string): number | null {
   const singleLetterCode = singleLetterAminoAcidOrHgvsCode(aaCodeOrChange)
   const ranking = singleLetterCode ? HEATMAP_ROWS.findIndex((rowSpec) => rowSpec.code == singleLetterCode) : null
   return (ranking != null && ranking >= 0) ? ranking : null

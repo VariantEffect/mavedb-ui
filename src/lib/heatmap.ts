@@ -1,5 +1,14 @@
 import {AMINO_ACIDS, AMINO_ACIDS_BY_HYDROPHILIA} from './amino-acids.js'
 
+interface HeatmapRow {
+  /** A single-character amino acid code or single-character code from MAVE_HGVS_PRO_CHANGE_CODES. */
+  code: string
+  /** The tick mark label text to display for this change, which is usually the same as the code. */
+  label: string
+  /** An optional CSS class name to apply to the row's tick mark label. */
+  cssClass?: string
+}
+
 /** Codes used in the right part of a MaveHGVS-pro string representing a single variation in a protein sequence. */
 const MAVE_HGVS_PRO_CHANGE_CODES = [
   {codes: {single: '='}}, // Synonymous AA variant
@@ -8,7 +17,12 @@ const MAVE_HGVS_PRO_CHANGE_CODES = [
 ]
 
 /** List of single-character codes for the heatmap's rows, from bottom to top. */
-export const HEATMAP_ROWS = ['=', '*', '-', ...AMINO_ACIDS_BY_HYDROPHILIA]
+export const HEATMAP_ROWS: HeatmapRow[] = [
+  {code: '=', label: '=', cssClass: 'mave-heatmap-y-axis-tick-label-lg'},
+  {code: '*', label: '\uff0a'},
+  {code: '-', label: '-', cssClass: 'mave-heatmap-y-axis-tick-label-lg'},
+  ...AMINO_ACIDS_BY_HYDROPHILIA.map((aaCode) => ({code: aaCode, label: aaCode}))
+]
 
 /**
  * Given a MaveHGVS-pro amino acid code or code representing deletion, synonmyous variation, or stop codon, return the
@@ -46,6 +60,6 @@ export function singleLetterAminoAcidOrHgvsCode(aaCodeOrChange: string) {
  */
 export function heatmapRowForVariant(aaCodeOrChange: string) {
   const singleLetterCode = singleLetterAminoAcidOrHgvsCode(aaCodeOrChange)
-  const ranking = singleLetterCode ? HEATMAP_ROWS.indexOf(singleLetterCode) : null
+  const ranking = singleLetterCode ? HEATMAP_ROWS.findIndex((rowSpec) => rowSpec.code == singleLetterCode) : null
   return (ranking != null && ranking >= 0) ? ranking : null
 }

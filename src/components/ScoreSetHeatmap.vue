@@ -323,20 +323,13 @@ export default {
               .call(
                 d3.axisLeft(yScale)
                     .tickSize(0)
-                    .tickFormat((n) => {
-                      // Get the row's amino acid code or variation symbol.
-                      const label = HEATMAP_ROWS[HEATMAP_ROWS.length - 1 - n]
-                      // If the row's symbol is * (deletion), display a centered asterisk instead.
-                      return label == '*' ? '\uff0a' : label
-                    })
+                    // Get the row's amino acid code or variation symbol.
+                    .tickFormat((n) => HEATMAP_ROWS[HEATMAP_ROWS.length - 1 - n].label)
               )
               .select('.domain').remove()
-          // Use larger text for - and = symbols.
+          // Apply row-specific CSS classes to Y-axis tick mark labels.
           svg.selectAll('g.mave-heatmap-y-axis-tick-labels g.tick')
-              .classed('mave-heatmap-y-axis-tick-label-lg', (n) => {
-                const text = HEATMAP_ROWS[HEATMAP_ROWS.length - 1 - n]
-                return ['-', '='].includes(text)
-              })
+              .attr('class', (n) => HEATMAP_ROWS[HEATMAP_ROWS.length - 1 - n].cssClass || '')
         }
 
         const stroke = function(d, isMouseOver) {

@@ -2,6 +2,11 @@
 
   <div class="mavedb-default-layout mavedb-fill-parent">
     <Toolbar />
+    <EmailPrompt
+      title="Welcome to MaveDB!"
+      dialog="We're glad you're here! We require a valid email address to upload data to MaveDB, so that we can get in touch if there are any issues. You may add an email now, or do so at any time on the 'Settings' page."
+      :isFirstLoginPrompt="true"
+    />
     <div :class="wrapperClasses">
       <div :class="mainClasses">
         <slot />
@@ -14,11 +19,12 @@
 <script>
 
 import Toolbar from '@/components/layout/Toolbar'
+import EmailPrompt from '@/components/common/EmailPrompt.vue'
 import '@fontsource/raleway'
 import '@/assets/app.css'
 
 export default {
-  components: {Toolbar},
+  components: {Toolbar, EmailPrompt},
 
   props: {
     height: {

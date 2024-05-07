@@ -7,8 +7,22 @@ const MAVE_HGVS_PRO_CHANGE_CODES = [
   {codes: {single: '-', triple: 'DEL'}} // Deletion
 ]
 
+interface HeatmapRowSpecification {
+  /** A single-character amino acid code or single-character code from MAVE_HGVS_PRO_CHANGE_CODES. */
+  code: string
+  /** The tick mark label text to display for this change, which is usually the same as the code. */
+  label: string
+  /** An optional CSS class name to apply to the row's tick mark label. */
+  cssClass?: string
+}
+
 /** List of single-character codes for the heatmap's rows, from bottom to top. */
-export const HEATMAP_ROWS = ['=', '*', '-', ...AMINO_ACIDS_BY_HYDROPHILIA]
+export const HEATMAP_ROWS: HeatmapRowSpecification[] = [
+  {code: '=', label: '=', cssClass: 'mave-heatmap-y-axis-tick-label-lg'},
+  {code: '*', label: '\uff0a'},
+  {code: '-', label: '-', cssClass: 'mave-heatmap-y-axis-tick-label-lg'},
+  ...AMINO_ACIDS_BY_HYDROPHILIA.map((aaCode) => ({code: aaCode, label: aaCode}))
+]
 
 /**
  * Given a MaveHGVS-pro amino acid code or code representing deletion, synonmyous variation, or stop codon, return the
@@ -20,7 +34,7 @@ export const HEATMAP_ROWS = ['=', '*', '-', ...AMINO_ACIDS_BY_HYDROPHILIA]
  * @return The one-character code representing the same amino acid or change, or null if the input was not a supported
  *   amino acid or change.
  */
-export function singleLetterAminoAcidOrHgvsCode(aaCodeOrChange: string) {
+export function singleLetterAminoAcidOrHgvsCode(aaCodeOrChange: string): string | null {
   const code = aaCodeOrChange.toUpperCase()
   if (code.length == 1) {
     return code
@@ -44,8 +58,8 @@ export function singleLetterAminoAcidOrHgvsCode(aaCodeOrChange: string) {
  *   variation (=), stop codon (*), or deletion (- or del).
  * @returns The heatmap row number, from 0 (the bottom row) to 22 (the top row).
  */
-export function heatmapRowForVariant(aaCodeOrChange: string) {
+export function heatmapRowForVariant(aaCodeOrChange: string): number | null {
   const singleLetterCode = singleLetterAminoAcidOrHgvsCode(aaCodeOrChange)
-  const ranking = singleLetterCode ? HEATMAP_ROWS.indexOf(singleLetterCode) : null
+  const ranking = singleLetterCode ? HEATMAP_ROWS.findIndex((rowSpec) => rowSpec.code == singleLetterCode) : null
   return (ranking != null && ranking >= 0) ? ranking : null
 }

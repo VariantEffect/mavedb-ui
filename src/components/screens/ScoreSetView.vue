@@ -26,7 +26,7 @@
         </div>
         <div class="mave-screen-title-bar">
           <div class="mave-screen-title">{{ item.title || 'Untitled score set' }}</div>
-          <div v-if="oidc.isAuthenticated">
+          <div v-if="userIsAuthenticated">
             <div v-if="!item.publishedDate" class="mave-screen-title-controls">
               <Button class="p-button-sm" @click="editItem">Edit</Button>
               <Button class="p-button-sm" @click="publishItem">Publish</Button>
@@ -353,6 +353,7 @@ import EntityLink from '@/components/common/EntityLink'
 import PageLoading from '@/components/common/PageLoading'
 import ItemNotFound from '@/components/common/ItemNotFound'
 import DefaultLayout from '@/components/layout/DefaultLayout'
+import useAuth from '@/composition/auth'
 import useFormatters from '@/composition/formatters'
 import useItem from '@/composition/item'
 import useRemoteData from '@/composition/remote-data'
@@ -398,10 +399,13 @@ export default {
     })
   },
   setup: () => {
+    const {userIsAuthenticated} = useAuth()
     const scoresRemoteData = useRemoteData()
     const variantSearchSuggestions = ref([])
+
     return {
       config: config,
+      userIsAuthenticated,
 
       ...useFormatters(),
       ...useItem({ itemTypeName: 'scoreSet' }),
@@ -409,7 +413,7 @@ export default {
       scoresDataStatus: scoresRemoteData.dataStatus,
       setScoresDataUrl: scoresRemoteData.setDataUrl,
       ensureScoresDataLoaded: scoresRemoteData.ensureDataLoaded,
-      variantSearchSuggestions
+      variantSearchSuggestions,
     }
   },
   props: {

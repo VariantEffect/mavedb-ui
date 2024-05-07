@@ -12,7 +12,7 @@ export interface ScoresOrCountsRow {
  *   column names. If there is a colum named "scores," its values should be numeric.
  * @returns The parsed data, as an array of objects with keys from the column names.
  */
-export function parseScoresOrCounts(csvData: string) {
+export function parseScoresOrCounts(csvData: string): ScoresOrCountsRow[] {
   csvData = csvData.replace(/(^|\n|\r) *#[^\n\r]*(\n|\r|\r\n|$)/g, '$1')
   const rows = Papa.parse<ScoresOrCountsRow>(csvData, {
     dynamicTyping: true,

@@ -16,18 +16,12 @@ import $ from "jquery";
 import _ from "lodash";
 
 import useFormatters from "@/composition/formatters";
-import { oidc } from "@/lib/auth";
 import FlexDataTable from "@/components/common/FlexDataTable";
 
 export default {
   name: "PublicationIdentifierView",
   components: { FlexDataTable },
 
-  computed: {
-    oidc: function () {
-      return oidc;
-    },
-  },
   setup: () => {
     return {
       ...useFormatters(),

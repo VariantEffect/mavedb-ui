@@ -1,5 +1,4 @@
-import Papa from 'papaparse'
-
+/** Amino acids and their codes. */
 export const AMINO_ACIDS = [
   {name: 'Alanine', codes: {single: 'A', triple: 'ALA', dAminoAcidCode: 'd-ALA'}},
   {name: 'Arginine', codes: {single: 'R', triple: 'ARG', dAminoAcidCode: 'd-ARG'}},
@@ -23,65 +22,10 @@ export const AMINO_ACIDS = [
   {name: 'Valine', codes: {single: 'V', triple: 'VAL', dAminoAcidCode: 'd-VAL'}}
 ]
 
-export const AMINO_ACIDS_BY_HYDROPHILIA = Array.from('AVLIMFYWRHKDESTNQGCP*').reverse()
-
-export function parseScores(csvData) {
-  csvData = csvData.replace(/(^|\n|\r) *#[^\n\r]*(\n|\r|\r\n|$)/g, '$1')
-  const records = Papa.parse(csvData, {
-    header: true,
-    // comment: '#', // We can't use this, because our data have unescaped #s.
-    skipEmptyLines: true
-  }).data
-  records.forEach((record) => {
-    if (record.score) {
-      record.score = parseFloat(record.score)
-    }
-  })
-  return records
-}
-
-export function singleLetterAminoAcidCode(code) {
-  code = code.toUpperCase()
-  if (code.length == 1) {
-    return code
-  }
-  if (code.length == 3) {
-    const aa = AMINO_ACIDS.find((aa) => aa.codes.triple == code)
-    return aa ? aa.codes.single : null
-  }
-  // TODO Deal with the lowercase d-
-  if (code.length == 5) {
-    const aa = AMINO_ACIDS.find((aa) => aa.codes.dAminoAcidCode == code)
-    return aa ? aa.codes.single : null
-  }
-  return null
-}
-
-// TODO What about *?
-export function aminoAcidHydrophiliaRanking(aaCode) {
-  let singleLetterCode = singleLetterAminoAcidCode(aaCode)
-  if (singleLetterCode == null) {
-    if (aaCode == '=') {
-      return 0
-    } else {
-      return -1
-    }
-  }
-  const ranking = AMINO_ACIDS_BY_HYDROPHILIA.indexOf(singleLetterCode)
-  return ranking >= 0 ? ranking : null
-}
-
-const proVariantRegex = /^p\.([A-Za-z]{3})([0-9]+)([A-Za-z]{3}|=)$/
-
-export function parseProVariant(variant) {
-  const match = variant.match(proVariantRegex)
-  if (!match) {
-    // console.log(`WARNING: Unrecognized pro variant: ${variant}`)
-    return null
-  }
-  return {
-    position: parseInt(match[2]),
-    original: match[1],
-    substitution: match[3]
-  }
-}
+/**
+ * Single-letter amino acid codes, ordered from hydrophobic to hydrophilic.
+ *
+ * The ordering is adopted from mavevis (https://github.com/VariantEffect/mavevis) and does not seem to correspond to a
+ * standard hydrophobicity scale.
+ */
+export const AMINO_ACIDS_BY_HYDROPHILIA = Array.from('PCGQNTSEDKHRWYFMILVA')

@@ -531,6 +531,7 @@
                     </DataTable>
                   </span>
                 </div>
+                <span v-if="validationErrors['targetGenes']" class="mave-field-error">{{validationErrors['targetGenes']}}</span>
                 <div class="field">
                   <Message v-if="targetGenes?.length > 1" severity="info">
                     When defining variants against multiple targets, uploaded variant coordinates should be fully

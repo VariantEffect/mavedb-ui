@@ -9,8 +9,7 @@
     <Menubar :model="availableMenuItems" class="mavedb-menubar">
       <template #start>
         <router-link to="/" class="mavedb-logo">
-          <img src="@/assets/logo-mave.png" alt="MAVE" />
-          <span>DB</span>
+          <img src="@/assets/logo-mavedb.png" alt="MaveDB" />
         </router-link>
         <div style="display: inline-block; margin-left: 40px;">
           <div class="p-inputgroup" style="max-width: 300px; width: 300px;">
@@ -170,9 +169,6 @@ export default {
   flex: 0 0 auto;
   display: inline-block;
   vertical-align: middle;
-  color: #222;
-  font-size: 20px;
-  transition: none;
 }
 
 .mavedb-logo img {

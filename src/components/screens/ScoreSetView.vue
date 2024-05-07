@@ -358,7 +358,6 @@ import useFormatters from '@/composition/formatters'
 import useItem from '@/composition/item'
 import useRemoteData from '@/composition/remote-data'
 import config from '@/config'
-import { oidc } from '@/lib/auth'
 import { parseScoresOrCounts } from '@/lib/scores'
 import { variantNotNullOrNA } from '@/lib/mave-hgvs';
 import { mapState } from 'vuex'
@@ -372,9 +371,6 @@ export default {
     isMetaDataEmpty: function() {
       //If extraMetadata is empty, return value will be true.
       return Object.keys(this.item.extraMetadata).length === 0
-    },
-    oidc: function() {
-      return oidc
     },
     scoreColumns: function() {
       const fixedColumns = ['hgvs_nt', 'hgvs_splice', 'hgvs_pro']

@@ -42,11 +42,39 @@
           <h3>{{ item.urn }}</h3>
         </div>
       </div>
-      <div v-if="scores" class="mave-score-set-histogram-pane">
-        <ScoreSetHistogram :scoreSet="item" :scores="scores" />
-      </div>
-      <div v-if="showHeatmap && scores" class="mave-score-set-heatmap-pane">
-        <ScoreSetHeatmap :scoreSet="item" :scores="scores" />
+      <div v-if="scores">
+        <div class="mave-score-set-variant-search">
+          <span class="p-float-label">
+              <AutoComplete
+              v-model="selectedVariant"
+              :id="$scopedId('variant-search')"
+              :suggestions="variantSearchSuggestions"
+              :option-label="variantSearchLabel"
+              dropdown
+              @complete="variantSearch"
+              selectOnFocus
+              scroll-height="100px"
+              :virtualScrollerOptions="{ itemSize: 50 }"
+              style="flex: 1; padding-right: 0.1em;"
+            >
+              <template #option="slotProps">
+                <div class="flex align-options-center">
+                  <div v-if="variantNotNullOrNA(slotProps.option.hgvs_nt)">Nucleotide variant: {{ slotProps.option.hgvs_nt }};&nbsp;</div>
+                  <div v-if="variantNotNullOrNA(slotProps.option.hgvs_splice)">Splice variant: {{ slotProps.option.hgvs_splice }};&nbsp;</div>
+                  <div v-if="variantNotNullOrNA(slotProps.option.hgvs_pro)">Protein variant: {{ slotProps.option.hgvs_pro }};&nbsp;</div>
+                  </div>
+              </template>
+            </AutoComplete>
+            <label :for="$scopedId('variant-search')">Search for a variant in this score set</label>
+            <Button icon="pi pi-times" severity="danger" aria-label="Clear" @click="selectedVariant = null" />
+          </span>
+        </div>
+        <div class="mave-score-set-histogram-pane">
+          <ScoreSetHistogram :scoreSet="item" :scores="scores" :externalSelection="variantToVisualize" />
+        </div>
+        <div v-if="showHeatmap" class="mave-score-set-heatmap-pane">
+          <ScoreSetHeatmap :scoreSet="item" :scores="scores" :externalSelection="variantToVisualize" @variant-selected="childComponentSelectedVariant"/>
+        </div>
       </div>
       <div class="mave-1000px-col">
         <div v-if="item.creationDate">Created {{ formatDate(item.creationDate) }} <span v-if="item.createdBy">
@@ -308,6 +336,7 @@ import _ from 'lodash'
 import {marked} from 'marked'
 import Accordion from 'primevue/accordion';
 import AccordionTab from 'primevue/accordiontab';
+import AutoComplete from 'primevue/autocomplete'
 import Button from 'primevue/button'
 import Chip from 'primevue/chip'
 import Column from 'primevue/column'
@@ -329,18 +358,46 @@ import useFormatters from '@/composition/formatters'
 import useItem from '@/composition/item'
 import useRemoteData from '@/composition/remote-data'
 import config from '@/config'
-import { oidc } from '@/lib/auth'
 import { parseScoresOrCounts } from '@/lib/scores'
+import { variantNotNullOrNA } from '@/lib/mave-hgvs';
 import { mapState } from 'vuex'
+import { ref } from 'vue'
 import items from '@/composition/items'
 
 export default {
   name: 'ScoreSetView',
-  components: { Accordion, AccordionTab, Button, Chip, DefaultLayout, EntityLink, ScoreSetHeatmap, ScoreSetHistogram, TabView, TabPanel, Message, DataTable, Column, ProgressSpinner, ScrollPanel, PageLoading, ItemNotFound },
-
+  components: { Accordion, AccordionTab, AutoComplete, Button, Chip, DefaultLayout, EntityLink, ScoreSetHeatmap, ScoreSetHistogram, TabView, TabPanel, Message, DataTable, Column, ProgressSpinner, ScrollPanel, PageLoading, ItemNotFound },
+  computed: {
+    isMetaDataEmpty: function() {
+      //If extraMetadata is empty, return value will be true.
+      return Object.keys(this.item.extraMetadata).length === 0
+    },
+    scoreColumns: function() {
+      const fixedColumns = ['hgvs_nt', 'hgvs_splice', 'hgvs_pro']
+      return [...fixedColumns, ...this.item?.datasetColumns?.scoreColumns || []]
+    },
+    countColumns: function() {
+      const fixedColumns = ['hgvs_nt', 'hgvs_splice', 'hgvs_pro']
+      const showCountColumns = !_.isEmpty(this.item?.datasetColumns?.countColumns)
+      return showCountColumns ? [...fixedColumns, ...this.item?.datasetColumns?.countColumns || []] : []
+    },
+    sortedMetaAnalyzesScoreSetUrns: function() {
+      return _.sortBy(this.item?.metaAnalyzesScoreSetUrns || [])
+    },
+    variantToVisualize: function() {
+      // While a user is autocompleting, `this.selectedVariant` is a string. Once selected, it will become an object and we can pass it as a prop.
+      return typeof this.selectedVariant === 'object' ? this.selectedVariant : null
+    },
+    ...mapState({
+      galaxyUrl: state => state.routeProps.galaxyUrl,
+      toolId: state => state.routeProps.toolId,
+      requestFromGalaxy: state => state.routeProps.requestFromGalaxy
+    })
+  },
   setup: () => {
     const {userIsAuthenticated} = useAuth()
     const scoresRemoteData = useRemoteData()
+    const variantSearchSuggestions = ref([])
 
     return {
       config: config,
@@ -351,34 +408,10 @@ export default {
       scoresData: scoresRemoteData.data,
       scoresDataStatus: scoresRemoteData.dataStatus,
       setScoresDataUrl: scoresRemoteData.setDataUrl,
-      ensureScoresDataLoaded: scoresRemoteData.ensureDataLoaded
+      ensureScoresDataLoaded: scoresRemoteData.ensureDataLoaded,
+      variantSearchSuggestions,
     }
   },
-
-  computed: {
-    isMetaDataEmpty: function () {
-      //If extraMetadata is empty, return value will be true.
-      return Object.keys(this.item.extraMetadata).length === 0
-    },
-    scoreColumns: function () {
-      const fixedColumns = ['hgvs_nt', 'hgvs_splice', 'hgvs_pro']
-      return [...fixedColumns, ...this.item?.datasetColumns?.scoreColumns || []]
-    },
-    countColumns: function () {
-      const fixedColumns = ['hgvs_nt', 'hgvs_splice', 'hgvs_pro']
-      const showCountColumns = !_.isEmpty(this.item?.datasetColumns?.countColumns)
-      return showCountColumns ? [...fixedColumns, ...this.item?.datasetColumns?.countColumns || []] : []
-    },
-    sortedMetaAnalyzesScoreSetUrns: function () {
-      return _.sortBy(this.item?.metaAnalyzesScoreSetUrns || [])
-    },
-    ...mapState({
-      galaxyUrl: state => state.routeProps.galaxyUrl,
-      toolId: state => state.routeProps.toolId,
-      requestFromGalaxy: state => state.routeProps.requestFromGalaxy
-    })
-  },
-
   props: {
     itemId: {
       type: String,
@@ -390,11 +423,12 @@ export default {
     scoresTable: [],
     countsTable: [],
     readMore: true,
-    showHeatmap: true
+    showHeatmap: true,
+    selectedVariant: null
   }),
   watch: {
     itemId: {
-      handler: function (newValue, oldValue) {
+      handler: function(newValue, oldValue) {
         if (newValue != oldValue) {
           this.setItemId(newValue)
 
@@ -409,24 +443,25 @@ export default {
       immediate: true
     },
     item: {
-      handler: function () {
+      handler: function() {
         this.loadTableScores()
         this.loadTableCounts()
       }
     },
     scoresData: {
-      handler: function (newValue) {
+      handler: function(newValue) {
         this.scores = newValue ? Object.freeze(parseScoresOrCounts(newValue)) : null
       }
     }
   },
   methods: {
-    editItem: function () {
+    variantNotNullOrNA,
+    editItem: function() {
       if (this.item) {
         this.$router.replace({ path: `/score-sets/${this.item.urn}/edit` })
       }
     },
-    sendToGalaxy: async function (download_type) {
+    sendToGalaxy: async function(download_type) {
       try {
         const galaxyUrl = this.galaxyUrl;
         let params = {};
@@ -469,7 +504,7 @@ export default {
         console.error('Error sending data:', error);
       }
     },
-    deleteItem: async function () {
+    deleteItem: async function() {
       let response = null
       this.$confirm.require({
         message: 'Are you sure you want to proceed?',
@@ -508,13 +543,13 @@ export default {
         }
       });
     },
-    markdownToHtml: function (markdown) {
+    markdownToHtml: function(markdown) {
       return marked(markdown)
     },
     get(...args) {
       return _.get(...args)
     },
-    publishItem: async function () {
+    publishItem: async function() {
       let response = null
       try {
         if (this.item) {
@@ -546,7 +581,7 @@ export default {
       }
     },
     //Download scores or counts
-    downloadFile: async function (download_type) {
+    downloadFile: async function(download_type) {
       let response = null
       try {
         if (this.item && download_type == "counts") {
@@ -580,7 +615,7 @@ export default {
         }
       }
     },
-    downloadMappedVariants: async function () {
+    downloadMappedVariants: async function() {
       let response = null
       try {
         if (this.item) {
@@ -604,7 +639,7 @@ export default {
         this.$toast.add({ severity: 'error', summary: 'No downloadable mapped variants text file', life: 3000 })
       }
     },
-    downloadMetadata: async function () {
+    downloadMetadata: async function() {
       //convert object to Json. extraMetadata is an object.
       var metadata = JSON.stringify(this.item.extraMetadata)
       const anchor = document.createElement('a');
@@ -614,7 +649,7 @@ export default {
       anchor.download = this.item.urn + '_metadata.txt';
       anchor.click();
     },
-    loadTableScores: async function () {
+    loadTableScores: async function() {
       if (this.item) {
         const response = await axios.get(`${config.apiBaseUrl}/score-sets/${this.item.urn}/scores`)
         if (response.data) {
@@ -626,7 +661,7 @@ export default {
         }
       }
     },
-    loadTableCounts: async function () {
+    loadTableCounts: async function() {
       if (this.item) {
         const response = await axios.get(`${config.apiBaseUrl}/score-sets/${this.item.urn}/counts`)
         if (response.data) {
@@ -638,7 +673,42 @@ export default {
         }
       }
     },
-    convertToThreeDecimal: function (value) {
+    variantSearch: function(event) {
+      const matches = []
+      for (const variant of this.scores) {
+        if (
+          (variantNotNullOrNA(variant.hgvs_pro) && variant.hgvs_pro.toLowerCase().includes(event.query.toLowerCase()))
+          || (variantNotNullOrNA(variant.hgvs_nt) && variant.hgvs_nt.toLowerCase().includes(event.query.toLowerCase()))
+          || (variantNotNullOrNA(variant.hgvs_splice) && variant.hgvs_splice.toLowerCase().includes(event.query.toLowerCase()))
+        ) {
+          matches.push(variant)
+        }
+      }
+
+      this.variantSearchSuggestions = matches
+    },
+    variantSearchLabel: function(selectedVariant) {
+      var displayStr = ""
+      if (variantNotNullOrNA(selectedVariant.hgvs_nt)) {
+        displayStr += `Nucleotide variant: ${selectedVariant.hgvs_nt}; `
+      }
+      if (variantNotNullOrNA(selectedVariant.hgvs_pro)) {
+        displayStr += `Protein variant: ${selectedVariant.hgvs_pro}; `
+      }
+      if (variantNotNullOrNA(selectedVariant.hgvs_splice)) {
+        displayStr += `Splice variant: ${selectedVariant.hgvs_splice}`
+      }
+
+      return displayStr.trim().replace(/;$/, '')
+    },
+    childComponentSelectedVariant: function(variant) {
+      if (!variant?.accession) {
+        return
+      }
+
+      this.selectedVariant = this.scores.find((v) => v.accession == variant.accession)
+    },
+    convertToThreeDecimal: function(value) {
       let numStr = String(value)
       let decimalNumber = 0
       if (numStr.includes('.')) {
@@ -651,7 +721,7 @@ export default {
       }
     },
     // Check whether all columns values are NA.
-    columnIsAllNa: function (tableData, column) {
+    columnIsAllNa: function(tableData, column) {
       let sliceData = tableData.slice(0, 10)
       let frozen = true
       let count = 0
@@ -666,11 +736,11 @@ export default {
       }
       return frozen
     },
-    showMore: function () {
+    showMore: function() {
       this.readMore = false
       return this.readMore
     },
-    showLess: function () {
+    showLess: function() {
       this.readMore = true
       return this.readMore
     },
@@ -706,6 +776,16 @@ export default {
 
 .mave-score-set-heatmap-pane {
   margin: 10px 0;
+}
+
+.mave-score-set-variant-search {
+  margin: 10px 0;
+  display: flex;
+}
+
+.p-float-label {
+  display: flex;
+  width: 100%;
 }
 
 /* Score set details */

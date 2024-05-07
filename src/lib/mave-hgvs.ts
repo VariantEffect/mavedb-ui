@@ -22,7 +22,7 @@ const proVariantRegex = /^p\.([A-Za-z]{3})([0-9]+)([A-Za-z]{3}|=)$/
  * Parse a MaveHGVS protein variant representing a variation at one locus.
  *
  * @param variant A MaveHGVS-pro variant string representing a single variation.
- * @returns An object with properties indicating 
+ * @returns An object with properties indicating
  */
 export function parseSimpleProVariant(variant: string): SimpleProteinVariation | null {
   const match = variant.match(proVariantRegex)
@@ -35,4 +35,15 @@ export function parseSimpleProVariant(variant: string): SimpleProteinVariation |
     original: match[1],
     substitution: match[3]
   }
+}
+
+
+/**
+ * Checks whether a provided variant is null or na
+ *
+ * @param variant A MaveHGVS-pro variant string representing a single variation.
+ * @returns a boolean indicating whether the variant is NA or null.
+ */
+export function variantNotNullOrNA(variant: string | null | undefined): boolean {
+  return variant ? variant.toLowerCase() !== "na" : false
 }

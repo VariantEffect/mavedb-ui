@@ -26,7 +26,7 @@
         </div>
         <div class="mave-screen-title-bar">
           <div class="mave-screen-title">{{ item.title || 'Untitled score set' }}</div>
-          <div v-if="oidc.isAuthenticated">
+          <div v-if="userIsAuthenticated">
             <div v-if="!item.publishedDate" class="mave-screen-title-controls">
               <Button class="p-button-sm" @click="editItem">Edit</Button>
               <Button class="p-button-sm" @click="publishItem">Publish</Button>
@@ -324,6 +324,7 @@ import EntityLink from '@/components/common/EntityLink'
 import PageLoading from '@/components/common/PageLoading'
 import ItemNotFound from '@/components/common/ItemNotFound'
 import DefaultLayout from '@/components/layout/DefaultLayout'
+import useAuth from '@/composition/auth'
 import useFormatters from '@/composition/formatters'
 import useItem from '@/composition/item'
 import useRemoteData from '@/composition/remote-data'
@@ -336,13 +337,28 @@ import items from '@/composition/items'
 export default {
   name: 'ScoreSetView',
   components: { Accordion, AccordionTab, Button, Chip, DefaultLayout, EntityLink, ScoreSetHeatmap, ScoreSetHistogram, TabView, TabPanel, Message, DataTable, Column, ProgressSpinner, ScrollPanel, PageLoading, ItemNotFound },
+
+  setup: () => {
+    const {userIsAuthenticated} = useAuth()
+    const scoresRemoteData = useRemoteData()
+
+    return {
+      config: config,
+      userIsAuthenticated,
+
+      ...useFormatters(),
+      ...useItem({ itemTypeName: 'scoreSet' }),
+      scoresData: scoresRemoteData.data,
+      scoresDataStatus: scoresRemoteData.dataStatus,
+      setScoresDataUrl: scoresRemoteData.setDataUrl,
+      ensureScoresDataLoaded: scoresRemoteData.ensureDataLoaded
+    }
+  },
+
   computed: {
     isMetaDataEmpty: function () {
       //If extraMetadata is empty, return value will be true.
       return Object.keys(this.item.extraMetadata).length === 0
-    },
-    oidc: function () {
-      return oidc
     },
     scoreColumns: function () {
       const fixedColumns = ['hgvs_nt', 'hgvs_splice', 'hgvs_pro']
@@ -362,19 +378,7 @@ export default {
       requestFromGalaxy: state => state.routeProps.requestFromGalaxy
     })
   },
-  setup: () => {
-    const scoresRemoteData = useRemoteData()
-    return {
-      config: config,
 
-      ...useFormatters(),
-      ...useItem({ itemTypeName: 'scoreSet' }),
-      scoresData: scoresRemoteData.data,
-      scoresDataStatus: scoresRemoteData.dataStatus,
-      setScoresDataUrl: scoresRemoteData.setDataUrl,
-      ensureScoresDataLoaded: scoresRemoteData.ensureDataLoaded
-    }
-  },
   props: {
     itemId: {
       type: String,

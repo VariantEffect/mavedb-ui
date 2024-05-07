@@ -1,5 +1,9 @@
 <template>
   <DefaultLayout>
+    <EmailPrompt
+      dialog="You must add an email address to your account to create or edit an experiment. You can do so below, or on the 'Settings' page."
+      :isFirstLoginPrompt="false"
+    />
     {{ experimentSetUrn }}
     <div class="mave-experiment-editor">
       <div class="grid">
@@ -243,6 +247,7 @@ import TabView from 'primevue/tabview'
 import Textarea from 'primevue/textarea'
 
 import DefaultLayout from '@/components/layout/DefaultLayout'
+import EmailPrompt from '@/components/common/EmailPrompt'
 import useItem from '@/composition/item'
 import useItems from '@/composition/items'
 import config from '@/config'
@@ -251,7 +256,7 @@ import useFormatters from '@/composition/formatters'
 
 export default {
   name: 'ExperimentEditor',
-  components: { AutoComplete, Button, Card, Chips, Multiselect, DefaultLayout, FileUpload, InputText, ProgressSpinner, TabPanel, TabView, Textarea },
+  components: { AutoComplete, Button, Card, Chips, Multiselect, DefaultLayout, EmailPrompt, FileUpload, InputText, ProgressSpinner, TabPanel, TabView, Textarea },
 
   setup: () => {
     const publicationIdentifierSuggestions = useItems({itemTypeName: 'publication-identifier-search'})
@@ -565,17 +570,23 @@ export default {
           this.$toast.add({severity:'success', summary: 'The new experiment was saved.', life: 3000})
         }
       } else if (response.data && response.data.detail) {
-        const formValidationErrors = {}
-        for (const error of response.data.detail) {
-          let path = error.loc
-          if (path[0] == 'body') {
-            path = path.slice(1)
-          }
-          path = path.join('.')
-          formValidationErrors[path] = error.msg
+        if (typeof response.data.detail === 'string' || response.data.detail instanceof String) {
+          // Handle generic errors that are not surfaced by the API as objects
+          this.$toast.add({ severity: 'error', summary: `Encountered an error saving experiment: ${response.data.detail}` })
         }
-        this.serverSideValidationErrors = formValidationErrors
-        this.mergeValidationErrors()
+        else {
+          const formValidationErrors = {}
+          for (const error of response.data.detail) {
+            let path = error.loc
+            if (path[0] == 'body') {
+              path = path.slice(1)
+            }
+            path = path.join('.')
+            formValidationErrors[path] = error.msg
+          }
+          this.serverSideValidationErrors = formValidationErrors
+          this.mergeValidationErrors()
+        }
       }
     },
 

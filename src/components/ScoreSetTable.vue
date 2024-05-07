@@ -16,18 +16,12 @@ import $ from "jquery";
 import _ from "lodash";
 
 import useFormatters from "@/composition/formatters";
-import { oidc } from "@/lib/auth";
 import FlexDataTable from "@/components/common/FlexDataTable";
 
 export default {
   name: "PublicationIdentifierView",
   components: { FlexDataTable },
 
-  computed: {
-    oidc: function () {
-      return oidc;
-    },
-  },
   setup: () => {
     return {
       ...useFormatters(),
@@ -92,7 +86,7 @@ export default {
             data: (x) =>
               _.get(
                 x,
-                "targetGenes[0].targetSequence.reference.organismName",
+                "targetGenes[0].targetSequence.taxonomy.organismName",
                 _.get(x, "targetGenes[0].targetAccession.assembly", null)
               ),
             title: "Target organism/assembly",

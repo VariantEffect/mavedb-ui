@@ -46,8 +46,8 @@
                   <td>
                     <ul>
                       <li><router-link :to="{name: 'search', query: {search: 'Homo sapiens'}}">Homo sapiens</router-link></li>
-                      <li><router-link :to="{name: 'search', query: {search: 'Other - genome not listed'}}">Other - genome not listed</router-link></li>
-                      <li><router-link :to="{name: 'search', query: {search: 'Saccharomyces cerevisiae'}}">Saccharomyces cerevisiae</router-link></li>
+                      <li><router-link :to="{name: 'search', query: {search: 'Mus musculus'}}">Mus musculus</router-link></li>
+                      <li><router-link :to="{name: 'search', query: {search: 'Saccharomyces cerevisiae S288C'}}">Saccharomyces cerevisiae S288C</router-link></li>
                     </ul>
                   </td>
                   <td>

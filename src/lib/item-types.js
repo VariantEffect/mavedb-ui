@@ -97,10 +97,6 @@ const itemTypes = {
       }
     }
   },
-  'reference-genome': {
-    name: 'reference-genome', // TODO Redundant, change this structure
-    restCollectionName: 'reference-genomes'
-  },
   'assemblies': {
     name: 'assemblies', // TODO Redundant, change this structure
     restCollectionName: 'hgvs/assemblies'
@@ -121,6 +117,20 @@ const itemTypes = {
       list: {
         method: 'post',
         url: `${config.apiBaseUrl}/target-genes/search`
+      }
+    }
+  },
+  'taxonomy': {
+    name: 'taxonomy', // TODO Redundant, change this structure
+    restCollectionName: 'taxonomies'
+  },
+  'taxonomy-search': {
+    name: 'taxonomy-search', // TODO Redundant, change this structure
+    restCollectionName: 'taxonomies-search',
+    httpOptions: {
+      list: {
+        method: 'post',
+        url: `${config.apiBaseUrl}/taxonomies/search`
       }
     }
   },

@@ -13,6 +13,9 @@
             <label :for="$scopedId('input-email')">Email</label>
           </span>
         </div>
+        <div>
+          <span v-if="emailValidationError" class="mave-field-error">{{ emailValidationError }}</span>
+        </div>
       </template>
       <template #footer>
         <Button :disabled="!user || email == user.email" icon="pi pi-check" label="Save" @click="saveEmail" />
@@ -139,7 +142,8 @@ export default {
 
   data: function() {
     return {
-      email: null
+      email: null,
+      emailValidationError: null
     }
   },
 
@@ -174,15 +178,36 @@ export default {
     cancelEmailEditing: function() {
       this.email = this.user?.email
     },
-    saveEmail: function() {
+    saveEmail: async function() {
       const email = this.email ? this.email.trim() : null
       if (this.user && email && email != this.user.email) {
-        this.saveUser({
-          item: {
-            ...this.user,
-            email
+        let errorResponse = null
+        try {
+            await this.saveUser({
+            item: {
+              ...this.user,
+              email
+            }
+          })
+        } catch (error) {
+          errorResponse = error.response
+        }
+
+        if (errorResponse) {
+          if (typeof errorResponse.data.detail === 'string' || errorResponse.data.detail instanceof String) {
+            // Handle generic errors that are not surfaced by the API as objects
+            this.$toast.add({ severity: 'error', summary: `Encountered an error saving email: ${errorResponse.data.detail}` })
           }
-        })
+          else {
+            // There will only be one validation error surfaced for emails.
+            this.emailValidationError = errorResponse.data.detail[0].msg
+          }
+        }
+        else {
+          this.emailValidationError = null
+          this.user.email = email
+          this.$toast.add({ severity: 'success', summary: `Your email was succesfully updated.`, life: 3000 })
+        }
       }
     },
     setActiveRoles: function(newRoles) {
@@ -229,6 +254,8 @@ export default {
 }
 
 </script>
+
+<style scoped src="../../assets/forms.css"></style>
 
 <style scoped>
 .p-card {

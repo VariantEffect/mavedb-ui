@@ -4,7 +4,7 @@
       <div class="mave-1000px-col">
         <div class="mave-screen-title-bar">
           <div class="mave-screen-title">{{ item.title || 'Untitled experiment' }}</div>
-          <div v-if="oidc.isAuthenticated">
+          <div v-if="userIsAuthenticated">
             <div v-if="!item.publishedDate" class="mave-screen-title-controls">
               <Button class="p-button-sm" @click="editItem">Edit</Button>
               <Button class="p-button-sm p-button-danger" @click="deleteItem">Delete</Button>
@@ -91,7 +91,6 @@
             <a v-for="(keyword, i) of item.keywords" :key="i" :href="`${config.appBaseUrl}/search?search=${keyword}`"><Chip :label="keyword"/></a>
           </div>
         </div>
-
         <div class="mave-score-set-section-title">Scoreset Targets</div>
         <div v-if="this.associatedScoreSets.length != 0">
           <div class="mave-score-set-section-sublist" v-for="scoreSet in this.associatedScoreSets" :key="scoreSet">
@@ -110,13 +109,14 @@
                 {{ targetGene.targetAccession.accession }}
               </div>
 
+              <div v-if="targetGene.targetSequence?.taxonomy?.url"><strong>Taxonomy ID:</strong>
+                &nbsp;<a :href="`${targetGene.targetSequence.taxonomy.url}`" target="blank">{{targetGene.targetSequence.taxonomy.taxId}}</a>
+                </div>
               <div v-if="targetGene.targetSequence?.sequence" style="word-break: break-word">
-                <div v-if="targetGene.targetSequence.reference?.organismName"><strong>Organism:</strong>
-                  {{ targetGene.targetSequence.reference.organismName }}</div>
-                <div v-if="targetGene.targetSequence.reference?.shortName"><strong>Reference genome:</strong>
-                  {{ targetGene.targetSequence.reference.shortName }}</div>
-                <div v-if="targetGene.targetSequence.reference?.id"><strong>Genome ID:</strong>
-                  {{ targetGene.targetSequence.reference.id }}</div>
+                <div v-if="targetGene.targetSequence.taxonomy?.organismName"><strong>Organism name:</strong>
+                  {{ targetGene.targetSequence.taxonomy.organismName }}</div>
+                <div v-if="targetGene.targetSequence.taxonomy?.commonName"><strong>Common name:</strong>
+                  {{ targetGene.targetSequence.taxonomy.commonName }}</div>
                 <div v-if="targetGene.id"><strong>Target ID:</strong> {{ targetGene.id }}</div>
                 <strong>Reference sequence: </strong>
                 <template v-if="targetGene.targetSequence.sequence.length >= 500">
@@ -178,36 +178,32 @@
 
 <script>
 
+import axios from 'axios'
 import _ from 'lodash'
 import {marked} from 'marked'
-import config from '@/config'
 import Button from 'primevue/button'
 import Chip from 'primevue/chip'
+
 import DefaultLayout from '@/components/layout/DefaultLayout'
 import PageLoading from '@/components/common/PageLoading'
 import ItemNotFound from '@/components/common/ItemNotFound'
-import ProgressSpinner from 'primevue/progressspinner'
+import useAuth from '@/composition/auth'
 import useItem from '@/composition/item'
 import useFormatters from '@/composition/formatters'
-import axios from 'axios'
-import { oidc } from '@/lib/auth'
+import config from '@/config'
 
 export default {
   name: 'ExperimentView',
   components: { Button, Chip, DefaultLayout, PageLoading, ItemNotFound },
 
   setup: () => {
+    const {userIsAuthenticated} = useAuth()
     return {
       config: config,
 
       ...useFormatters(),
-      ...useItem({ itemTypeName: 'experiment' })
-    }
-  },
-
-  computed: {
-    oidc: function () {
-      return oidc
+      ...useItem({ itemTypeName: 'experiment' }),
+      userIsAuthenticated
     }
   },
 

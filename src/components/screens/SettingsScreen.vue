@@ -29,15 +29,15 @@
         User API Key
       </template>
       <template #content>
-        <div v-if="('default' in accessKeysByRole)">
+        <div v-if="('ordinary user' in accessKeysByRole)">
           <div class="mavedb-access-key-id">
-            {{ accessKeysByRole['default'] }}
+            {{ accessKeysByRole['ordinary user'] }}
             &nbsp;
             <Button icon="pi pi-copy" class="p-button-rounded p-button-outlined"
-              @click="copyTextToClipboard(accessKeysByRole['default'])" />
+              @click="copyTextToClipboard(accessKeysByRole['ordinary user'])" />
             &nbsp;
             <Button icon="pi pi-times" class="p-button-rounded p-button-danger"
-              @click="deleteAccessKeyWithConfirmation(accessKeysByRole['default'])" />
+              @click="deleteAccessKeyWithConfirmation(accessKeysByRole['ordinary user'])" />
           </div>
         </div>
         <div v-else>
@@ -45,12 +45,12 @@
         </div>
       </template>
       <template #footer>
-        <Button v-if="!('default' in accessKeysByRole)" icon="pi pi-check" label="Generate an API key"
-          @click="createAccessKey('default')" />
+        <Button v-if="!('ordinary user' in accessKeysByRole)" icon="pi pi-check" label="Generate an API key"
+          @click="createAccessKey('ordinary user')" />
       </template>
     </Card>
 
-    <div v-if="user?.roles">
+    <div v-if="!user?.roles.every(elem => elem === 'ordinary user')">
       <Card>
         <template #title>
           Acting Roles

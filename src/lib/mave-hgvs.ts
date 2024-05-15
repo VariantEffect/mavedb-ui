@@ -15,8 +15,13 @@ interface SimpleProteinVariation {
   substitution: string
 }
 
-/** Regular expression for parsing simple MaveHGVS-pro expressions. */
-const proVariantRegex = /^p\.([A-Za-z]{3})([0-9]+)([A-Za-z]{3}|=)$/
+/**
+ * Regular expression for parsing simple MaveHGVS-pro expressions.
+ *
+ * MaveHGVS doesn't allow single-character codes in substitutions, but for flexibility we allow * and - here. These are
+ * properly represented as Ter and del in MaveHGVS.
+ */
+const proVariantRegex = /^p\.([A-Za-z]{3})([0-9]+)([A-Za-z]{3}|=|\*|-)$/
 
 /**
  * Parse a MaveHGVS protein variant representing a variation at one locus.

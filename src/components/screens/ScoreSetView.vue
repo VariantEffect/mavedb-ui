@@ -455,7 +455,8 @@ export default {
     }
   },
   methods: {
-    editItem: function () {
+    variantNotNullOrNA,
+    editItem: function() {
       if (this.item) {
         this.$router.replace({ path: `/score-sets/${this.item.urn}/edit` })
       }

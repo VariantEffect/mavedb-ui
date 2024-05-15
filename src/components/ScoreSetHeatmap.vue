@@ -165,6 +165,10 @@ export default {
 
     prepareSimpleVariantInstances: function(scores) {
       let numComplexVariantInstances = 0
+
+      // Count of variants that do not appear to be complex but are don't have a valid substitution
+      let numIgnoredVariantInstances = 0
+
       const simpleVariantInstances = _.filter(
         scores.map((score) => {
           const variant = parseSimpleProVariant(score.hgvs_pro)
@@ -172,16 +176,18 @@ export default {
             numComplexVariantInstances++
             return null
           }
-          if (variant.substitution == 'Ter') {
+          const row = heatmapRowForVariant(variant.substitution)
+          if (row == null) {
+            numIgnoredVariantInstances++
             return null
           }
           const x = variant.position
-          const y = HEATMAP_ROWS.length - 1 - heatmapRowForVariant(variant.substitution)
+          const y = HEATMAP_ROWS.length - 1 - row
           return {x, y, score: score.score, details: _.omit(score, 'score')}
         }),
         (x) => x != null
       )
-      return {simpleVariantInstances, numComplexVariantInstances}
+      return {simpleVariantInstances, numComplexVariantInstances, numIgnoredVariantInstances}
     },
 
     prepareSimpleVariants: function(scores) {

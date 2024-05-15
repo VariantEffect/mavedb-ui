@@ -3,7 +3,7 @@ import {AMINO_ACIDS, AMINO_ACIDS_BY_HYDROPHILIA} from './amino-acids.js'
 /** Codes used in the right part of a MaveHGVS-pro string representing a single variation in a protein sequence. */
 const MAVE_HGVS_PRO_CHANGE_CODES = [
   {codes: {single: '='}}, // Synonymous AA variant
-  {codes: {single: '*'}}, // Stop codon
+  {codes: {single: '*', triple: 'TER'}}, // Stop codon
   {codes: {single: '-', triple: 'DEL'}} // Deletion
 ]
 

@@ -827,33 +827,48 @@ export default {
         }
       }
     },
-    existingTargetGene: function () {
-      if (_.isObject(this.existingTargetGene)) {
-        // _.cloneDeep is needed because the target gene has been frozen.
-        // this.targetGene = _.cloneDeep(this.existingTargetGene)
-        const targetGene = _.cloneDeep(this.existingTargetGene)
-        this.targetGene = _.merge({
-          name: null,
-          category: null,
-          type: null,
-          targetSequence: {
-            sequenceType: null,
-            sequence: null,
-            label: null,
-            taxonomy: null
-          },
-          targetAccession: {
-            assembly: null,
-            accession: null
+    existingTargetGene: {
+      immediate: true,
+      handler: function () {
+        console.log(this.existingTargetGene)
+        if (_.isObject(this.existingTargetGene)) {
+          // _.cloneDeep is needed because the target gene has been frozen.
+          // this.targetGene = _.cloneDeep(this.existingTargetGene)
+          const targetGene = _.cloneDeep(this.existingTargetGene)
+          if (!targetGene.targetSequence) {
+            targetGene.targetSequence = {
+              sequenceType: null,
+              sequence: null,
+              label: null,
+              taxonomy: null
+            }
           }
-        }, targetGene)
-        this.targetGene.externalIdentifiers = {}
-        for (const dbName of externalGeneDatabases) {
-          this.targetGene.externalIdentifiers[dbName] = (targetGene.externalIdentifiers || [])
-            .find(({ identifier }) => identifier?.dbName == dbName) || {
-            identifier: null,
-            offset: null
+          else {
+            this.sequenceType = targetGene.targetSequence.sequenceType
+            this.sequence = targetGene.targetSequence.sequence
+            this.label = targetGene.targetSequence.label
+            this.taxonomy = targetGene.targetSequence.taxonomy
           }
+          if (!targetGene.targetAccession) {
+            targetGene.targetAccession = {
+              assembly: null,
+              accession: null
+            }
+          }
+          else {
+            this.assembly = targetGene.targetAccession.assembly
+            this.accession = targetGene.targetAccession.accession
+          }
+          const autopopulatedExternalIdentifiers = {}
+          for (const dbName of externalGeneDatabases) {
+            autopopulatedExternalIdentifiers[dbName] = (targetGene.externalIdentifiers || [])
+              .find(({ identifier }) => identifier?.dbName == dbName) || {
+              identifier: null,
+              offset: null
+            }
+          }
+          targetGene.externalIdentifiers = autopopulatedExternalIdentifiers
+          this.targetGene = targetGene
         }
       }
     },

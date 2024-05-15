@@ -830,10 +830,8 @@ export default {
     existingTargetGene: {
       immediate: true,
       handler: function () {
-        console.log(this.existingTargetGene)
         if (_.isObject(this.existingTargetGene)) {
           // _.cloneDeep is needed because the target gene has been frozen.
-          // this.targetGene = _.cloneDeep(this.existingTargetGene)
           const targetGene = _.cloneDeep(this.existingTargetGene)
           if (!targetGene.targetSequence) {
             targetGene.targetSequence = {
@@ -859,6 +857,7 @@ export default {
             this.assembly = targetGene.targetAccession.assembly
             this.accession = targetGene.targetAccession.accession
           }
+
           const autopopulatedExternalIdentifiers = {}
           for (const dbName of externalGeneDatabases) {
             autopopulatedExternalIdentifiers[dbName] = (targetGene.externalIdentifiers || [])

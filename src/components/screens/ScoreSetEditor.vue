@@ -842,9 +842,6 @@ export default {
             }
           }
           else {
-            this.sequenceType = targetGene.targetSequence.sequenceType
-            this.sequence = targetGene.targetSequence.sequence
-            this.label = targetGene.targetSequence.label
             this.taxonomy = targetGene.targetSequence.taxonomy
           }
           if (!targetGene.targetAccession) {
@@ -853,6 +850,7 @@ export default {
               accession: null
             }
           }
+          // Reactivity is handled by separate fields for target accession properties.
           else {
             this.assembly = targetGene.targetAccession.assembly
             this.accession = targetGene.targetAccession.accession

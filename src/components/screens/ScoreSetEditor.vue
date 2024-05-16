@@ -24,9 +24,8 @@
             </div>
           </div>
         </div>
-        <div class="col-12 md:col-6">
-          <Card>
-            <template #title>Parent experiment and context</template>
+        <Stepper v-model:activeStep="activeWizardStep">
+          <StepperPanel header="Parent experiment and context">
             <template #content>
               <div v-if="itemStatus != 'NotLoaded' && item.experiment">
                 Experiment:
@@ -84,9 +83,8 @@
                   validationErrors.metaAnalyzesScoreSetUrns }}</span>
               </div>
             </template>
-          </Card>
-          <Card>
-            <template #title>Score set information</template>
+          </StepperPanel>
+          <StepperPanel header="Score set information">
             <template #content>
               <div class="field">
                 <span class="p-float-label">
@@ -254,12 +252,9 @@
                 </div>
               </div>
             </template>
-          </Card>
-        </div>
-        <div class="col-12 md:col-6">
+          </StepperPanel>
           <div v-if="itemStatus == 'NotLoaded' || this.item.private">
-            <Card>
-              <template #title>Targets</template>
+            <StepperPanel header="Targets">
               <template #content>
                 <div>
                   <TabView class="field">
@@ -426,8 +421,6 @@
                     </TabPanel>
                   </TabView>
                 </div>
-              </template>
-              <template #footer>
                 <div class="field">
                   <span v-if="targetGenes.length > 0">
                     <DataTable v-model:expandedRows="expandedTargetGeneRows" :value="targetGenes" dataKey="name">
@@ -539,8 +532,8 @@
                   </Message>
                 </div>
               </template>
-            </Card>
-            <Card>
+            </StepperPanel>
+            <StepperPanel header="Variant scores">
               <template #title>Variant scores</template>
               <template #content>
                 <div v-if="item">
@@ -577,9 +570,9 @@
                   }}</span>
                 </div>
               </template>
-            </Card>
-          </div>
-        </div>
+            </StepperPanel>
+            </div>
+        </Stepper>
       </div>
     </div>
     <ProgressSpinner v-if="progressVisible" class="mave-progress" />
@@ -605,6 +598,8 @@ import Message from 'primevue/message'
 import Multiselect from 'primevue/multiselect'
 import ProgressSpinner from 'primevue/progressspinner'
 import SelectButton from 'primevue/selectbutton'
+import Stepper from 'primevue/stepper'
+import StepperPanel from 'primevue/stepperpanel'
 import TabPanel from 'primevue/tabpanel'
 import TabView from 'primevue/tabview'
 import Textarea from 'primevue/textarea'
@@ -647,7 +642,7 @@ function emptyTargetGene() {
 
 export default {
   name: 'ScoreSetEditor',
-  components: { AutoComplete, Button, Card, Chips, Column, DataTable, DefaultLayout, Dropdown, EmailPrompt, EntityLink, FileUpload, InputNumber, InputText, Message, Multiselect, ProgressSpinner, SelectButton, TabPanel, TabView, Textarea },
+  components: { AutoComplete, Button, Card, Chips, Column, DataTable, DefaultLayout, Dropdown, EmailPrompt, EntityLink, FileUpload, InputNumber, InputText, Message, Multiselect, ProgressSpinner, SelectButton, Stepper, StepperPanel, TabPanel, TabView, Textarea },
 
   setup: () => {
     const editableExperiments = useItems({
@@ -752,6 +747,7 @@ export default {
       'Other noncoding'
     ],
 
+    activeWizardStep: 0,
     progressVisible: false,
     serverSideValidationErrors: {},
     clientSideValidationErrors: {},

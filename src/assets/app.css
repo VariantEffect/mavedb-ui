@@ -23,3 +23,7 @@ body .p-inputtext {
 body .p-button {
   min-width: 10px;
 }
+
+.p-badge {
+  text-align: center;
+}

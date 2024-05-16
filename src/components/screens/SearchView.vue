@@ -5,11 +5,13 @@
         <h1>Search MaveDB Experiments and Score Sets</h1>
       </div>
       <div class="mavedb-search-form">
-        <span class="p-input-icon-left">
-          <i class="pi pi-search" />
-          <InputText v-model="searchText" ref="searchTextInput" type="search" class="p-inputtext-sm" placeholder="Search" />&nbsp;
+        <div class="flex flex-wrap justify-content-center gap-3">
+          <IconField iconPosition="left">
+            <InputIcon class="pi pi-search"></InputIcon>
+            <InputText v-model="searchText" ref="searchTextInput" type="search" class="p-inputtext-sm" placeholder="Search" />
+          </IconField>
           <Button class="p-button-plain" @click="clear">Clear All</Button>
-        </span>
+        </div>
         <TabView class="mavedb-search-tabs">
           <TabPanel header="Target filters">
             <div class="mavedb-search-filters">
@@ -42,6 +44,8 @@
 <script lang="ts">
 
 import axios from 'axios'
+import IconField from 'primevue/iconfield'
+import InputIcon from 'primevue/inputicon'
 import InputText from 'primevue/inputtext'
 import config from '@/config'
 import ScoreSetTable from '@/components/ScoreSetTable.vue'
@@ -108,7 +112,7 @@ function extractQueryParam(content: LocationQueryValue | LocationQueryValue[]): 
 
 export default defineComponent({
   name: 'SearchView',
-  components: {DefaultLayout, ScoreSetTable, InputText, SelectList, TabView, TabPanel, Button},
+  components: {DefaultLayout, ScoreSetTable, IconField, InputIcon, InputText, SelectList, TabView, TabPanel, Button},
 
   data: function() {
     return {

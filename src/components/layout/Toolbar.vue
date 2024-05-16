@@ -76,35 +76,35 @@ export default {
     menuItems: function() {
       return [{
         label: 'Dashboard',
-        to: '/dashboard',
+        command: () => this.navigate('/dashboard'),
         available: ({authenticated}) => authenticated
       }, {
         label: 'Home',
-        to: '/'
+        command: () => this.navigate('/'),
       }, {
         label: 'Search',
-        to: '/search'
+        command: () => this.navigate('/search'),
       }, {
         label: 'Documentation',
-        to: '/docs'
+        command: () => this.navigate('/docs'),
       }, {
         label: 'New experiment',
-        to: '/create-experiment',
+        command: () => this.navigate('/create-experiment'),
         available: ({authenticated}) => authenticated
       }, {
         label: 'New score set',
-        to: '/create-score-set',
+        command: () => this.navigate('/create-score-set'),
         available: ({authenticated}) => authenticated
       }, {
         label: 'Users',
-        to: '/users',
+        command: () => this.navigate('/users'),
         available: ({roles}) => roles.includes('admin')
       }, {
         label: this.userName,
         icon:'pi pi-fw pi-user',
         items:[{
           label: 'Settings',
-          to: '/settings',
+          command: () => this.navigate('/settings'),
           available: ({authenticated}) => authenticated
         }, {
           label: 'Sign out',
@@ -124,6 +124,10 @@ export default {
       if (this.searchText && this.searchText.length > 0) {
         this.$router.push({name: 'search', query: {search: this.searchText}})
       }
+    },
+
+    navigate(routerPath) {
+      this.$router.push(routerPath)
     },
 
     filterAvailableMenuItems(menuItems) {

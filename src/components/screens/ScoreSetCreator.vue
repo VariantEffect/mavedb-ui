@@ -157,6 +157,8 @@
                     <span v-if="validationErrors.title" class="mave-field-error">{{ validationErrors.title }}</span>
                   </div>
                 </div>
+
+                <!-- Move the other form rows here. -->
               </div>
               <div class="field">
                 <span class="p-float-label">

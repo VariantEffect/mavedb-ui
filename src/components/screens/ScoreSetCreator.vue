@@ -5,87 +5,143 @@
   />
   <DefaultLayout>
     <div class="mave-score-set-editor">
-      <div class="grid">
-        <div class="col-12">
-          <div v-if="itemStatus != 'NotLoaded'" class="mave-screen-title-bar">
-            <div class="mave-screen-title">Edit score set {{ this.item.urn }}</div>
-            <div v-if="item" class="mave-screen-title-controls">
-              <Button @click="saveEditContent">Save changes</Button>
-              <Button @click="resetForm" class="p-button-help">Clear</Button>
-              <Button @click="viewItem" class="p-button-warning">Cancel</Button>
-            </div>
-          </div>
-          <div v-else class="mave-screen-title-bar">
-            <div class="mave-screen-title">Create a new score set</div>
-            <div class="mave-screen-title-controls">
-              <Button @click="validateAndSave">Save</Button>
-              <Button @click="resetForm" class="p-button-help">Clear</Button>
-              <Button @click="backDashboard" class="p-button-warning">Cancel</Button>
-            </div>
-          </div>
+      <div v-if="itemStatus != 'NotLoaded'" class="mave-screen-title-bar">
+        <div class="mave-screen-title">Edit score set {{ this.item.urn }}</div>
+        <div v-if="item" class="mave-screen-title-controls">
+          <Button @click="saveEditContent">Save changes</Button>
+          <Button @click="resetForm" class="p-button-help">Clear</Button>
+          <Button @click="viewItem" class="p-button-warning">Cancel</Button>
         </div>
+      </div>
+      <div v-else class="mave-screen-title-bar">
+        <div class="mave-screen-title">Create a new score set</div>
+        <div class="mave-screen-title-controls">
+          <Button @click="validateAndSave">Save</Button>
+          <Button @click="resetForm" class="p-button-help">Clear</Button>
+          <Button @click="backDashboard" class="p-button-warning">Cancel</Button>
+        </div>
+      </div>
+      <div class="mavedb-wizard">
         <Stepper v-model:activeStep="activeWizardStep">
-          <StepperPanel header="Parent experiment and context">
-            <template #content>
-              <div v-if="itemStatus != 'NotLoaded' && item.experiment">
-                Experiment:
-                <router-link :to="{ name: 'experiment', params: { urn: item.experiment.urn } }">{{ item.experiment.title
-                }}</router-link>
-              </div>
-              <div v-else>
-                <div class="field">
-                  <span class="p-float-label">
-                    <Dropdown v-model="experiment" :id="$scopedId('input-experiment')" :options="editableExperiments"
-                      optionLabel="title" v-on:change="populateExperimentMetadata" style="width: 50%"/>
-                    <label :for="$scopedId('input-experiment')">Experiment</label>
-                  </span>
-                  <span v-if="validationErrors.experiment" class="mave-field-error">{{ validationErrors.experiment
-                  }}</span>
+          <StepperPanel>
+            <template #header="{index, clickCallback}">
+              <button class="p-stepper-action" :disabled="maxWizardStepEntered < index || maxWizardStepValidated < index - 1" role="tab" @click="clickCallback">
+                <span class="p-stepper-number">{{ index + 1 }}</span>
+                <span class="p-stepper-title">Parent experiment and context</span>
+              </button>
+            </template>
+            <template #content="{nextCallback: showNextWizardStep}">
+              <div class="mavedb-wizard-form">
+                <div class="mavedb-wizard-form-content-background"></div>
+                <div class="mavedb-wizard-row">
+                  <div class="mavedb-wizard-help">
+                    <label :id="$scopedId('input-superseding-score-set-label')">Will these scores replace a published score set for which you are a contributor?</label>
+                  </div>
+                  <div class="mavedb-wizard-content">
+                    <InputSwitch v-model="isSupersedingScoreSet" :aria-labelledby="$scopedId('input-superseding-score-set-label')" />
+                    <div class="mavedb-switch-value">{{ isSupersedingScoreSet ? 'Yes, this supersedes another score set' : 'No, this does not supersede another score set' }}</div>
+                  </div>
+                </div>
+                <div class="mavedb-wizard-row">
+                  <div class="mavedb-wizard-help">
+                    <label :id="$scopedId('input-is-meta-analysis-label')">Is this a meta-analysis?</label>
+                    <div class="mavedb-help-small">Meta-analyses are score sets derived from other score sets. You may create a meta-analysis of other investigators' scores.</div>
+                  </div>
+                  <div class="mavedb-wizard-content">
+                    <InputSwitch v-model="isMetaAnalysis" :aria-labelledby="$scopedId('input-is-meta-analysis-label')" />
+                    <div class="mavedb-switch-value">{{ isMetaAnalysis ? 'Yes, this is a meta-analysis' : 'No, this is not a meta-analysis' }}</div>
+                  </div>
+                </div>
+                <div v-if="!isSupersedingScoreSet && !isMetaAnalysis" class="mavedb-wizard-row">
+                  <div class="mavedb-wizard-help">
+                    What experiment yielded this score set?
+                  </div>
+                  <div class="mavedb-wizard-content">
+                    <div v-if="itemStatus != 'NotLoaded' && item.experiment">
+                      Experiment:
+                      <router-link :to="{ name: 'experiment', params: { urn: item.experiment.urn } }">{{ item.experiment.title
+                      }}</router-link>
+                    </div>
+                    <div v-else style="position: relative;">
+                      <span class="p-float-label">
+                        <Dropdown v-model="experiment" :id="$scopedId('input-experiment')" :options="editableExperiments"
+                          optionLabel="title" v-on:change="populateExperimentMetadata" style="width: 50%"/>
+                        <label :for="$scopedId('input-experiment')">Experiment</label>
+                      </span>
+                      <span v-if="validationErrors.experiment" class="mave-field-error">{{ validationErrors.experiment }}</span>
+                    </div>
+                  </div>
+                </div>
+                <div v-if="isSupersedingScoreSet" class="mavedb-wizard-row">
+                  <div class="mavedb-wizard-help">
+                    What score set does this supersede?
+                    <div class="mavedb-help-small">Type the old score set's description or URN here and select it from the list.</div>
+                  </div>
+                  <div class="mavedb-wizard-content">
+                    <div v-if="itemStatus != 'NotLoaded' && supersedesScoreSet">
+                      Supersedes:
+                      <router-link :to="{ name: 'scoreSet', params: { urn: supersedesScoreSet.urn } }">{{ supersedesScoreSet.title }}</router-link>
+                    </div>
+                    <div v-if="itemStatus == 'NotLoaded'" class="field">
+                      <span class="p-float-label">
+                        <AutoComplete ref="supersededScoreSetInput" v-model="supersededScoreSet"
+                          :id="$scopedId('input-supersededScoreSet')" field="title" :forceSelection="true"
+                          :suggestions="supersededScoreSetSuggestionsList" @complete="searchSupersededScoreSets">
+                          <template #item="slotProps">
+                            {{ slotProps.item.urn }}: {{ slotProps.item.title }}
+                          </template>
+                        </AutoComplete>
+                        <label :for="$scopedId('input-supersededScoreSet')">Supersedes</label>
+                      </span>
+                      <span v-if="validationErrors.supersededScoreSetUrn" class="mave-field-error">{{
+                        validationErrors.supersededScoreSetUrn }}</span>
+                    </div>
+                  </div>
+                </div>
+                <div v-if="isMetaAnalysis" class="mavedb-wizard-row">
+                  <div class="mavedb-wizard-help">
+                    What score set(s) have been analyzed?
+                    <div class="mavedb-help-small">Type an old score set's description or URN here and select it from the list. You may choose more than one score set.</div>
+                  </div>
+                  <div class="mavedb-wizard-content">
+                    <div v-if="itemStatus != 'NotLoaded' && item?.metaAnalyzesScoreSetUrns?.length > 0">
+                      Meta-analysis for:<br />
+                      <div v-for="metaAnalyzesScoreSetUrn of item.metaAnalyzesScoreSetUrns" :key="metaAnalyzesScoreSetUrn">
+                        <EntityLink entityType="scoreSet" :urn="metaAnalyzesScoreSetUrn"></EntityLink>
+                      </div>
+                    </div>
+                    <div v-if="itemStatus == 'NotLoaded'" class="field">
+                      <span class="p-float-label">
+                        <AutoComplete ref="metaAnalyzesScoreSetsInput" v-model="metaAnalyzesScoreSets"
+                          :id="$scopedId('input-metaAnalyzesScoreSets')" field="title" :forceSelection="true" :multiple="true"
+                          :suggestions="metaAnalyzesScoreSetSuggestionsList" @complete="searchMetaAnalyzesScoreSets">
+                          <template #item="slotProps">
+                            {{ slotProps.item.urn }}: {{ slotProps.item.title }}
+                          </template>
+                        </AutoComplete>
+                        <label :for="$scopedId('input-metaAnalyzesScoreSets')">Meta-analysis for</label>
+                      </span>
+                      <span v-if="validationErrors.metaAnalyzesScoreSetUrns" class="mave-field-error">{{
+                        validationErrors.metaAnalyzesScoreSetUrns }}</span>
+                    </div>
+                  </div>
                 </div>
               </div>
-              <div v-if="itemStatus != 'NotLoaded' && supersedesScoreSet">
-                Supersedes:
-                <router-link :to="{ name: 'scoreSet', params: { urn: supersedesScoreSet.urn } }">{{
-                  supersedesScoreSet.title }}</router-link>
-              </div>
-              <div v-if="itemStatus == 'NotLoaded'" class="field">
-                <span class="p-float-label">
-                  <AutoComplete ref="supersededScoreSetInput" v-model="supersededScoreSet"
-                    :id="$scopedId('input-supersededScoreSet')" field="title" :forceSelection="true"
-                    :suggestions="supersededScoreSetSuggestionsList" @complete="searchSupersededScoreSets">
-                    <template #item="slotProps">
-                      {{ slotProps.item.urn }}: {{ slotProps.item.title }}
-                    </template>
-                  </AutoComplete>
-                  <label :for="$scopedId('input-supersededScoreSet')">Supersedes</label>
-                </span>
-                <span v-if="validationErrors.supersededScoreSetUrn" class="mave-field-error">{{
-                  validationErrors.supersededScoreSetUrn }}</span>
-              </div>
-              <div v-if="itemStatus != 'NotLoaded' && item?.metaAnalyzesScoreSetUrns?.length > 0">
-                Meta-analysis for:<br />
-                <div v-for="metaAnalyzesScoreSetUrn of item.metaAnalyzesScoreSetUrns" :key="metaAnalyzesScoreSetUrn">
-                  <EntityLink entityType="scoreSet" :urn="metaAnalyzesScoreSetUrn"></EntityLink>
+              <div class="mavedb-wizard-step-controls-row">
+                <div class="flex justify-content-end mavedb-wizard-step-controls pt-4">
+                  <Button label="Next" :disabled="this.maxWizardStepValidated < activeWizardStep" icon="pi pi-arrow-right" iconPos="right" @click="showNextWizardStepIfValid(showNextWizardStep)" />
                 </div>
-              </div>
-              <div v-if="itemStatus == 'NotLoaded'" class="field">
-                <span class="p-float-label">
-                  <AutoComplete ref="metaAnalyzesScoreSetsInput" v-model="metaAnalyzesScoreSets"
-                    :id="$scopedId('input-metaAnalyzesScoreSets')" field="title" :forceSelection="true" :multiple="true"
-                    :suggestions="metaAnalyzesScoreSetSuggestionsList" @complete="searchMetaAnalyzesScoreSets">
-                    <template #item="slotProps">
-                      {{ slotProps.item.urn }}: {{ slotProps.item.title }}
-                    </template>
-                  </AutoComplete>
-                  <label :for="$scopedId('input-metaAnalyzesScoreSets')">Meta-analysis for</label>
-                </span>
-                <span v-if="validationErrors.metaAnalyzesScoreSetUrns" class="mave-field-error">{{
-                  validationErrors.metaAnalyzesScoreSetUrns }}</span>
               </div>
             </template>
           </StepperPanel>
-          <StepperPanel header="Score set information">
-            <template #content>
+          <StepperPanel>
+            <template #header="{index, clickCallback}">
+              <button class="p-stepper-action" :disabled="maxWizardStepEntered < index || maxWizardStepValidated < index - 1" role="tab" @click="clickCallback">
+                <span class="p-stepper-number">{{ index + 1 }}</span>
+                <span class="p-stepper-title">Score set information</span>
+              </button>
+            </template>
+            <template #content="{prevCallback: showPreviousWizardStep, nextCallback: showNextWizardStep}">
               <div class="field">
                 <span class="p-float-label">
                   <InputText v-model="title" :id="$scopedId('input-title')" />
@@ -251,327 +307,354 @@
                     validationErrors.dataUsagePolicy }}</span>
                 </div>
               </div>
+              <div class="mavedb-wizard-step-controls-row">
+                <div class="flex justify-content-between mavedb-wizard-step-controls pt-4">
+                  <Button label="Back" severity="secondary" icon="pi pi-arrow-left" @click="showPreviousWizardStep" />
+                  <Button label="Next" :disabled="this.maxWizardStepValidated < activeWizardStep" icon="pi pi-arrow-right" iconPos="right" @click="showNextWizardStepIfValid(showNextWizardStep)" />
+                </div>
+              </div>
             </template>
           </StepperPanel>
-          <div v-if="itemStatus == 'NotLoaded' || this.item.private">
-            <StepperPanel header="Targets">
-              <template #content>
-                <div>
-                  <TabView class="field">
-                    <TabPanel header="Target Sequence">
-                      <div class="field">
-                        <span class="p-float-label">
-                          <AutoComplete ref="existingTargetGeneInput" v-model="existingTargetGene"
-                            :id="$scopedId('input-existingTargetGene')" field="name" :forceSelection="true"
-                            :suggestions="targetGeneSuggestionsList" @complete="searchTargetGenes">
-                            <template #item="slotProps">
-                              <div>
-                                  <div>Name: {{ slotProps.item.name }}</div>
-                                  <div>Category: {{ slotProps.item.category }}</div>
-                                  <div v-for="externalIdentifier of slotProps.item.externalIdentifiers" :key=externalIdentifier.identifier>
-                                    {{ externalIdentifier.identifier.dbName }}: {{ externalIdentifier.identifier.identifier }}, Offset: {{ externalIdentifier.offset }}
-                                  </div>
-                              </div>
-                            </template>
-                          </AutoComplete>
-                          <label :for="$scopedId('input-existingTargetGene')">Copy from an existing target gene</label>
-                        </span>
-                      </div>
-                      <div class="field">
-                        <span class="p-float-label">
-                          <InputText v-model="targetGene.name" :id="$scopedId('input-targetGeneName')" />
-                          <label :for="$scopedId('input-targetGeneName')">Target name</label>
-                        </span>
-                      </div>
-                      <div class="field">
-                        <span class="p-float-label">
-                          <InputText v-model="targetGene.targetSequence.label"
-                            :id="$scopedId('input-targetSequenceLabel')" />
-                          <label :for="$scopedId('input-targetSequenceLabel')">Target label (only required when providing
-                            multiple targets)</label>
-                        </span>
-                      </div>
-                      <div class="field">
-                        <span class="p-float-label">
-                          <SelectButton v-model="targetGene.category" :id="$scopedId('input-targetGeneCategory')"
-                            :options="targetGeneCategories" />
-                        </span>
-                      </div>
-                      <div v-for="dbName of externalGeneDatabases" class="field field-columns" :key="dbName">
-                        <div class="field-column">
-                          <span class="p-float-label">
-                            <AutoComplete :ref="`${dbName.toLowerCase()}IdentifierInput`"
-                              v-model="targetGene.externalIdentifiers[dbName].identifier"
-                              :id="$scopedId(`input-${dbName.toLowerCase()}Identifier`)" field="identifier"
-                              :suggestions="targetGeneIdentifierSuggestionsList[dbName]"
-                              @blur="acceptNewTargetGeneIdentifier(dbName)"
-                              @complete="searchTargetGeneIdentifiers(dbName, $event)"
-                              @keyup.enter="acceptNewTargetGeneIdentifier(dbName)"
-                              @keyup.escape="clearTargetGeneIdentifierSearch(dbName)" />
-                            <label :for="$scopedId(`input-${dbName.toLowerCase()}Identifier`)">{{ dbName }}
-                              identifier</label>
-                          </span>
-                        </div>
-                        <div class="field-column">
-                          <span class="p-float-label">
-                            <InputNumber v-model="targetGene.externalIdentifiers[dbName].offset"
-                              :id="$scopedId(`input-${dbName.toLowerCase()}Offset`)" buttonLayout="stacked" :min="0"
-                              showButtons suffix=" bp" />
-                            <label :for="$scopedId(`input-${dbName.toLowerCase()}Offset`)">Offset</label>
-                          </span>
-                        </div>
-                      </div>
-                      <div class="field">
-                        <span class="p-float-label">
-                          <AutoComplete
-                            ref="taxonomyInput"
-                            v-model="taxonomy"
-                            dropdown
-                            :id="$scopedId('input-targetSequenceTaxonomy')"
-                            :suggestions="taxonomySuggestionsList"
-                            field="organismName"
-                            :multiple="false"
-                            :options="taxonomies"
-                            @complete="searchTaxonomies"
-                            @keyup.escape="clearTaxonomySearch">
-                            <template #item="slotProps">
-                              {{slotProps.item.taxId}} - {{slotProps.item.organismName}} <template v-if="slotProps.item.commonName!=='NULL' && slotProps.item.commonName!== null">/ {{slotProps.item.commonName}}</template>
-                            </template>
-                          </AutoComplete>
-                          <label :for="$scopedId('input-targetSequenceTaxonomy')">Taxonomy</label>
-                        </span>
-                        <span v-if="validationErrors['targetGene.targetSequence.taxonomy']" class="mave-field-error">{{validationErrors['targetGene.targetSequence.taxonomy']}}</span>
-                      </div>
-                      <div class="field">
-                        <span class="p-float-label">
-                          <FileUpload ref="sequenceFileUpload"
-                            :id="$scopedId('input-targetGeneTargetSequenceSequenceFile')" :auto="false"
-                            chooseLabel="Reference sequence" :class="inputClasses.targetGeneTargetSequenceSequenceFile"
-                            :customUpload="true" :fileLimit="1" :showCancelButton="false" :showUploadButton="false"
-                            @remove="fileCleared('targetGeneTargetSequenceSequenceFile')"
-                            @select="fileSelected('targetGeneTargetSequenceSequenceFile', $event)">
-                            <template #empty>
-                              <p>Drop a FASTA file here.</p>
-                            </template>
-                          </FileUpload>
-                        </span>
-                      </div>
-                      <div class="field">
-                        <span class="p-float-label">
-                          <SelectButton v-model="targetGene.targetSequence.sequenceType"
-                            :id="$scopedId('input-targetGeneTargetSequenceSequenceType')" :options="sequenceTypes" />
-                        </span>
-                      </div>
-                      <div>
-                        <Button @click="addTarget" icon="pi pi-check" label="Add Target" />
-                        <Button @click="resetTarget" class="p-button-help" icon="pi pi-times" label="Clear Target"
-                          severity="secondary" style="margin-left: 0.5em" />
-                      </div>
-                    </TabPanel>
-                    <TabPanel header="Genomic Coordinates">
-                      <div class="field field-columns">
-                        <div class="field-column">
-                          <span class="p-float-label">
-                            <InputText v-model="targetGene.name" :id="$scopedId('input-targetGeneName')" style="width: 100%"/>
-                            <label :for="$scopedId('input-targetGene')">Target gene name</label>
-                          </span>
-                        </div>
-                        <div class="field-column">
-                          <span class="p-float-label">
-                            <!-- Assembly is the reference genome property in coordinate cases -->
-                            <Dropdown v-model="assembly" :id="$scopedId('input-targetGeneAssembly')" :options="assemblies" style="width: 100%"/>
-                            <label :for="$scopedId('input-targetGeneAssembly')">Assembly</label>
-                          </span>
-                        </div>
-                        <div class="field-column">
-                          <span class="p-float-label">
-                            <Dropdown v-model="geneName" :id="$scopedId('input-targetGeneGeneNames')"
-                              :options="geneNamesAsObject" optionLabel="name" filter
-                              :virtualScrollerOptions="{ itemSize: 50 }" @change="autofillGeneName" style="width: 100%"/>
-                            <label :for="$scopedId('input-targetGeneAssembly')">HGNC Name</label>
-                          </span>
-                        </div>
-                      </div>
-                      <div class="field">
-                        <span class="p-float-label">
-                          Autocomplete By:
-                          <SelectButton v-model="targetAutocomplete" :options="targetOptions" aria-labelledby="basic" />
-                        </span>
-                        <span class="p-float-label">
-                          <AutoComplete v-model="targetGene.targetAccession.accession"
-                            :id="$scopedId('input-targetGene-accession')"
-                            :suggestions="targetGeneAccessionSuggestionsList" :force-selection="true" :dropdown="true"
-                            @complete="fetchTargetAccessions" />
-                          <label :for="$scopedId('input-targetGene-accession')">Accession/Transcript Identifier</label>
-                        </span>
-                      </div>
-                      <div class="field">
-                        <span class="p-float-label">
-                          <SelectButton v-model="targetGene.category" :id="$scopedId('input-targetGeneCategory')"
-                            :options="targetGeneCategories" />
-                        </span>
-                      </div>
-                      <div>
-                        <Button @click="addTarget" icon="pi pi-check" label="Add Target" />
-                        <Button @click="swapNucleotideProteinAccessions" icon="pi pi-arrows-h"
-                          label="Switch to Protein Accession" severity="info" style="margin-left: 0.5em" />
-                        <Button @click="resetTarget" class="p-button-help" icon="pi pi-times" label="Clear Target"
-                          severity="secondary" style="margin-left: 0.5em" />
-                      </div>
-                    </TabPanel>
-                  </TabView>
-                </div>
-                <div class="field">
-                  <span v-if="targetGenes.length > 0">
-                    <DataTable v-model:expandedRows="expandedTargetGeneRows" :value="targetGenes" dataKey="name">
-                      <template #header>
-                        <h3 class="target-header">Created Targets</h3>
-                      </template>
-                      <Column expander style="width: 5rem" />
-                      <Column field="name" header="Name"></Column>
-                      <Column field="category" header="Category"></Column>
-                      <Column>
-                        <template #body="slotProps">
-                          <Button icon="pi pi-minus-circle" label="Remove" class="p-button-help" severity="secondary"
-                            @click="targetDeleted(slotProps.data)" />
-                        </template>
-                      </Column>
-                      <template #expansion="slotProps">
-                        <span v-if="validationErrors[`targetGenes.${slotProps.data.index}.name`]"
-                          class="mave-field-error">Gene Name {{ validationErrors[`targetGenes.${slotProps.data.index}.name`]
-                          }}</span>
-                        <span v-if="validationErrors[`targetGenes.${slotProps.data.index}.category`]"
-                          class="mave-field-error">Gene Category {{ validationErrors[`targetGenes.${slotProps.data.index}.category`]
-                          }}</span>
-                        <Card v-if="slotProps.data.targetSequence?.sequence" class="field">
-                          <template #content>
-                            <h3 class="compact-target">Genomic Sequence Data</h3>
-                            <p v-if="slotProps.data.targetSequence.label" class="compact-target">
-                              <strong>Sequence Label:</strong> {{ slotProps.data.targetSequence.label }}<br>
-                              <span v-if="validationErrors[`targetGenes.${slotProps.data.index}.targetSequence.label`]"
-                                class="mave-field-error">{{
-                                  validationErrors[`targetGenes.${slotProps.data.index}.targetSequence.label`] }}<br></span>
-                            </p>
-                            <p class="compact-target">
-                              <strong>Sequence Type:</strong> {{ slotProps.data.targetSequence.sequenceType }}<br>
-                              <span
-                                v-if="validationErrors[`targetGenes.${slotProps.data.index}.targetSequence.sequenceType`]"
-                                class="mave-field-error">{{
-                                  validationErrors[`targetGenes.${slotProps.data.index}.targetSequence.sequenceType`]
-                                }}<br></span>
-                              <strong>Taxonomy Organism Name:</strong> {{ slotProps.data.targetSequence.taxonomy.organismName }}<br>
-                              <span v-if="validationErrors[`targetGenes.${slotProps.data.index}.taxonomy`]"
-                                class="mave-field-error">{{
-                                  validationErrors[`targetGenes.${slotProps.data.index}.taxonomy`] }}<br></span>
-                              <strong>Taxonomy Common Name:</strong> {{ slotProps.data.targetSequence.taxonomy.commonName
-                              }}
-                            </p>
-                            <span v-if="validationErrors[`targetGenes.${slotProps.data.index}.targetSequence.sequence`]"
-                              class="mave-field-error">{{
-                                validationErrors[`targetGenes.${slotProps.data.index}.targetSequence.sequence`] }}</span>
-                          </template>
-                        </Card>
-                        <Card v-if="slotProps.data.targetAccession?.accession">
-                          <template #content>
-                            <h3 class="compact-target">Accession Data</h3>
-                            <p class="compact-target">
-                              <strong>Assembly:</strong> {{ slotProps.data.targetAccession.assembly || 'N/A' }}<br>
-                              <span v-if="validationErrors[`targetGenes.${slotProps.data.index}.targetAccession.assembly`]"
-                                class="mave-field-error">{{
-                                  validationErrors[`targetGenes.${slotProps.data.index}.targetAccession.assembly`]
-                                }}<br></span>
-                              <strong>Gene:</strong> {{ slotProps.data.targetAccession.gene || 'N/A' }}<br>
-                              <span v-if="validationErrors[`targetGenes.${slotProps.data.index}.targetAccession.gene`]"
-                                class="mave-field-error">{{
-                                  validationErrors[`targetGenes.${slotProps.data.index}.targetAccession.gene`] }}<br></span>
-                              <strong>Accession:</strong> {{ slotProps.data.targetAccession.accession }}<br>
-                              <span
-                                v-if="validationErrors[`targetGenes.${slotProps.data.index}.targetAccession.accession`]"
-                                class="mave-field-error">{{
-                                  validationErrors[`targetGenes.${slotProps.data.index}.targetAccession.accession`] }}</span>
-                            </p>
-                          </template>
-                        </Card>
-                        <Card v-if="slotProps.data.externalIdentifiers.length > 0">
-                          <template #content>
-                            <h3 class="target-header">External Identifier Data</h3>
-                            <div v-for="externalId of slotProps.data.externalIdentifiers" class="compact-target"
-                              :key="externalId">
-                              <p class="compact-target">
-                                <strong>{{ externalId.identifier.dbName }}:</strong> {{ externalId.identifier.identifier
-                                }}, <strong>Offset:</strong> {{ externalId.offset }}
-                              </p>
-                              <span
-                                v-if="validationErrors[`targetGenes.${slotProps.data.index}.externalIdentifiers.${externalId.identifier.dbName}.identifier`]"
-                                class="mave-field-error">{{
-                                  validationErrors[`targetGenes.${slotProps.data.index}.externalIdentifiers.${externalId.identifier.dbName}.identifier`]
-                                }}</span><br>
-                              <span
-                                v-if="validationErrors[`targetGenes.${slotProps.data.index}.externalIdentifiers.${externalId.identifier.dbName}.offset`]"
-                                class="mave-field-error">{{
-                                  validationErrors[`targetGenes.${slotProps.data.index}.externalIdentifiers.${externalId.identifier.dbName}.offset`]
-                                }}</span>
+          <StepperPanel v-if="itemStatus == 'NotLoaded' || this.item.private">
+            <template #header="{index, clickCallback}">
+              <button class="p-stepper-action" :disabled="maxWizardStepEntered < index || maxWizardStepValidated < index - 1" role="tab" @click="clickCallback">
+                <span class="p-stepper-number">{{ index + 1 }}</span>
+                <span class="p-stepper-title">Targets</span>
+              </button>
+            </template>
+            <template #content="{prevCallback: showPreviousWizardStep, nextCallback: showNextWizardStep}">
+              <div>
+                <TabView class="field">
+                  <TabPanel header="Target Sequence">
+                    <div class="field">
+                      <span class="p-float-label">
+                        <AutoComplete ref="existingTargetGeneInput" v-model="existingTargetGene"
+                          :id="$scopedId('input-existingTargetGene')" field="name" :forceSelection="true"
+                          :suggestions="targetGeneSuggestionsList" @complete="searchTargetGenes">
+                          <template #item="slotProps">
+                            <div>
+                                <div>Name: {{ slotProps.item.name }}</div>
+                                <div>Category: {{ slotProps.item.category }}</div>
+                                <div v-for="externalIdentifier of slotProps.item.externalIdentifiers" :key=externalIdentifier.identifier>
+                                  {{ externalIdentifier.identifier.dbName }}: {{ externalIdentifier.identifier.identifier }}, Offset: {{ externalIdentifier.offset }}
+                                </div>
                             </div>
                           </template>
-                        </Card>
+                        </AutoComplete>
+                        <label :for="$scopedId('input-existingTargetGene')">Copy from an existing target gene</label>
+                      </span>
+                    </div>
+                    <div class="field">
+                      <span class="p-float-label">
+                        <InputText v-model="targetGene.name" :id="$scopedId('input-targetGeneName')" />
+                        <label :for="$scopedId('input-targetGeneName')">Target name</label>
+                      </span>
+                    </div>
+                    <div class="field">
+                      <span class="p-float-label">
+                        <InputText v-model="targetGene.targetSequence.label"
+                          :id="$scopedId('input-targetSequenceLabel')" />
+                        <label :for="$scopedId('input-targetSequenceLabel')">Target label (only required when providing
+                          multiple targets)</label>
+                      </span>
+                    </div>
+                    <div class="field">
+                      <span class="p-float-label">
+                        <SelectButton v-model="targetGene.category" :id="$scopedId('input-targetGeneCategory')"
+                          :options="targetGeneCategories" />
+                      </span>
+                    </div>
+                    <div v-for="dbName of externalGeneDatabases" class="field field-columns" :key="dbName">
+                      <div class="field-column">
+                        <span class="p-float-label">
+                          <AutoComplete :ref="`${dbName.toLowerCase()}IdentifierInput`"
+                            v-model="targetGene.externalIdentifiers[dbName].identifier"
+                            :id="$scopedId(`input-${dbName.toLowerCase()}Identifier`)" field="identifier"
+                            :suggestions="targetGeneIdentifierSuggestionsList[dbName]"
+                            @blur="acceptNewTargetGeneIdentifier(dbName)"
+                            @complete="searchTargetGeneIdentifiers(dbName, $event)"
+                            @keyup.enter="acceptNewTargetGeneIdentifier(dbName)"
+                            @keyup.escape="clearTargetGeneIdentifierSearch(dbName)" />
+                          <label :for="$scopedId(`input-${dbName.toLowerCase()}Identifier`)">{{ dbName }}
+                            identifier</label>
+                        </span>
+                      </div>
+                      <div class="field-column">
+                        <span class="p-float-label">
+                          <InputNumber v-model="targetGene.externalIdentifiers[dbName].offset"
+                            :id="$scopedId(`input-${dbName.toLowerCase()}Offset`)" buttonLayout="stacked" :min="0"
+                            showButtons suffix=" bp" />
+                          <label :for="$scopedId(`input-${dbName.toLowerCase()}Offset`)">Offset</label>
+                        </span>
+                      </div>
+                    </div>
+                    <div class="field">
+                      <span class="p-float-label">
+                        <AutoComplete
+                          ref="taxonomyInput"
+                          v-model="taxonomy"
+                          dropdown
+                          :id="$scopedId('input-targetSequenceTaxonomy')"
+                          :suggestions="taxonomySuggestionsList"
+                          field="organismName"
+                          :multiple="false"
+                          :options="taxonomies"
+                          @complete="searchTaxonomies"
+                          @keyup.escape="clearTaxonomySearch">
+                          <template #item="slotProps">
+                            {{slotProps.item.taxId}} - {{slotProps.item.organismName}} <template v-if="slotProps.item.commonName!=='NULL' && slotProps.item.commonName!== null">/ {{slotProps.item.commonName}}</template>
+                          </template>
+                        </AutoComplete>
+                        <label :for="$scopedId('input-targetSequenceTaxonomy')">Taxonomy</label>
+                      </span>
+                      <span v-if="validationErrors['targetGene.targetSequence.taxonomy']" class="mave-field-error">{{validationErrors['targetGene.targetSequence.taxonomy']}}</span>
+                    </div>
+                    <div class="field">
+                      <span class="p-float-label">
+                        <FileUpload ref="sequenceFileUpload"
+                          :id="$scopedId('input-targetGeneTargetSequenceSequenceFile')" :auto="false"
+                          chooseLabel="Reference sequence" :class="inputClasses.targetGeneTargetSequenceSequenceFile"
+                          :customUpload="true" :fileLimit="1" :showCancelButton="false" :showUploadButton="false"
+                          @remove="fileCleared('targetGeneTargetSequenceSequenceFile')"
+                          @select="fileSelected('targetGeneTargetSequenceSequenceFile', $event)">
+                          <template #empty>
+                            <p>Drop a FASTA file here.</p>
+                          </template>
+                        </FileUpload>
+                      </span>
+                    </div>
+                    <div class="field">
+                      <span class="p-float-label">
+                        <SelectButton v-model="targetGene.targetSequence.sequenceType"
+                          :id="$scopedId('input-targetGeneTargetSequenceSequenceType')" :options="sequenceTypes" />
+                      </span>
+                    </div>
+                    <div>
+                      <Button @click="addTarget" icon="pi pi-check" label="Add Target" />
+                      <Button @click="resetTarget" class="p-button-help" icon="pi pi-times" label="Clear Target"
+                        severity="secondary" style="margin-left: 0.5em" />
+                    </div>
+                  </TabPanel>
+                  <TabPanel header="Genomic Coordinates">
+                    <div class="field field-columns">
+                      <div class="field-column">
+                        <span class="p-float-label">
+                          <InputText v-model="targetGene.name" :id="$scopedId('input-targetGeneName')" style="width: 100%"/>
+                          <label :for="$scopedId('input-targetGene')">Target gene name</label>
+                        </span>
+                      </div>
+                      <div class="field-column">
+                        <span class="p-float-label">
+                          <!-- Assembly is the reference genome property in coordinate cases -->
+                          <Dropdown v-model="assembly" :id="$scopedId('input-targetGeneAssembly')" :options="assemblies" style="width: 100%"/>
+                          <label :for="$scopedId('input-targetGeneAssembly')">Assembly</label>
+                        </span>
+                      </div>
+                      <div class="field-column">
+                        <span class="p-float-label">
+                          <Dropdown v-model="geneName" :id="$scopedId('input-targetGeneGeneNames')"
+                            :options="geneNamesAsObject" optionLabel="name" filter
+                            :virtualScrollerOptions="{ itemSize: 50 }" @change="autofillGeneName" style="width: 100%"/>
+                          <label :for="$scopedId('input-targetGeneAssembly')">HGNC Name</label>
+                        </span>
+                      </div>
+                    </div>
+                    <div class="field">
+                      <span class="p-float-label">
+                        Autocomplete By:
+                        <SelectButton v-model="targetAutocomplete" :options="targetOptions" aria-labelledby="basic" />
+                      </span>
+                      <span class="p-float-label">
+                        <AutoComplete v-model="targetGene.targetAccession.accession"
+                          :id="$scopedId('input-targetGene-accession')"
+                          :suggestions="targetGeneAccessionSuggestionsList" :force-selection="true" :dropdown="true"
+                          @complete="fetchTargetAccessions" />
+                        <label :for="$scopedId('input-targetGene-accession')">Accession/Transcript Identifier</label>
+                      </span>
+                    </div>
+                    <div class="field">
+                      <span class="p-float-label">
+                        <SelectButton v-model="targetGene.category" :id="$scopedId('input-targetGeneCategory')"
+                          :options="targetGeneCategories" />
+                      </span>
+                    </div>
+                    <div>
+                      <Button @click="addTarget" icon="pi pi-check" label="Add Target" />
+                      <Button @click="swapNucleotideProteinAccessions" icon="pi pi-arrows-h"
+                        label="Switch to Protein Accession" severity="info" style="margin-left: 0.5em" />
+                      <Button @click="resetTarget" class="p-button-help" icon="pi pi-times" label="Clear Target"
+                        severity="secondary" style="margin-left: 0.5em" />
+                    </div>
+                  </TabPanel>
+                </TabView>
+              </div>
+              <div class="field">
+                <span v-if="targetGenes.length > 0">
+                  <DataTable v-model:expandedRows="expandedTargetGeneRows" :value="targetGenes" dataKey="name">
+                    <template #header>
+                      <h3 class="target-header">Created Targets</h3>
+                    </template>
+                    <Column expander style="width: 5rem" />
+                    <Column field="name" header="Name"></Column>
+                    <Column field="category" header="Category"></Column>
+                    <Column>
+                      <template #body="slotProps">
+                        <Button icon="pi pi-minus-circle" label="Remove" class="p-button-help" severity="secondary"
+                          @click="targetDeleted(slotProps.data)" />
                       </template>
-                      <template #footer>
-                        <div class="flex flex-wrap justify-content-start gap-2">
-                          <Button icon="pi pi-times-circle" label="Clear all" severity="secondary" class="p-button-help"
-                            @click="targetsCleared" />
-                        </div>
-                      </template>
-                    </DataTable>
-                  </span>
+                    </Column>
+                    <template #expansion="slotProps">
+                      <span v-if="validationErrors[`targetGenes.${slotProps.data.index}.name`]"
+                        class="mave-field-error">Gene Name {{ validationErrors[`targetGenes.${slotProps.data.index}.name`]
+                        }}</span>
+                      <span v-if="validationErrors[`targetGenes.${slotProps.data.index}.category`]"
+                        class="mave-field-error">Gene Category {{ validationErrors[`targetGenes.${slotProps.data.index}.category`]
+                        }}</span>
+                      <Card v-if="slotProps.data.targetSequence?.sequence" class="field">
+                        <template #content>
+                          <h3 class="compact-target">Genomic Sequence Data</h3>
+                          <p v-if="slotProps.data.targetSequence.label" class="compact-target">
+                            <strong>Sequence Label:</strong> {{ slotProps.data.targetSequence.label }}<br>
+                            <span v-if="validationErrors[`targetGenes.${slotProps.data.index}.targetSequence.label`]"
+                              class="mave-field-error">{{
+                                validationErrors[`targetGenes.${slotProps.data.index}.targetSequence.label`] }}<br></span>
+                          </p>
+                          <p class="compact-target">
+                            <strong>Sequence Type:</strong> {{ slotProps.data.targetSequence.sequenceType }}<br>
+                            <span
+                              v-if="validationErrors[`targetGenes.${slotProps.data.index}.targetSequence.sequenceType`]"
+                              class="mave-field-error">{{
+                                validationErrors[`targetGenes.${slotProps.data.index}.targetSequence.sequenceType`]
+                              }}<br></span>
+                            <strong>Taxonomy Organism Name:</strong> {{ slotProps.data.targetSequence.taxonomy.organismName }}<br>
+                            <span v-if="validationErrors[`targetGenes.${slotProps.data.index}.taxonomy`]"
+                              class="mave-field-error">{{
+                                validationErrors[`targetGenes.${slotProps.data.index}.taxonomy`] }}<br></span>
+                            <strong>Taxonomy Common Name:</strong> {{ slotProps.data.targetSequence.taxonomy.commonName
+                            }}
+                          </p>
+                          <span v-if="validationErrors[`targetGenes.${slotProps.data.index}.targetSequence.sequence`]"
+                            class="mave-field-error">{{
+                              validationErrors[`targetGenes.${slotProps.data.index}.targetSequence.sequence`] }}</span>
+                        </template>
+                      </Card>
+                      <Card v-if="slotProps.data.targetAccession?.accession">
+                        <template #content>
+                          <h3 class="compact-target">Accession Data</h3>
+                          <p class="compact-target">
+                            <strong>Assembly:</strong> {{ slotProps.data.targetAccession.assembly || 'N/A' }}<br>
+                            <span v-if="validationErrors[`targetGenes.${slotProps.data.index}.targetAccession.assembly`]"
+                              class="mave-field-error">{{
+                                validationErrors[`targetGenes.${slotProps.data.index}.targetAccession.assembly`]
+                              }}<br></span>
+                            <strong>Gene:</strong> {{ slotProps.data.targetAccession.gene || 'N/A' }}<br>
+                            <span v-if="validationErrors[`targetGenes.${slotProps.data.index}.targetAccession.gene`]"
+                              class="mave-field-error">{{
+                                validationErrors[`targetGenes.${slotProps.data.index}.targetAccession.gene`] }}<br></span>
+                            <strong>Accession:</strong> {{ slotProps.data.targetAccession.accession }}<br>
+                            <span
+                              v-if="validationErrors[`targetGenes.${slotProps.data.index}.targetAccession.accession`]"
+                              class="mave-field-error">{{
+                                validationErrors[`targetGenes.${slotProps.data.index}.targetAccession.accession`] }}</span>
+                          </p>
+                        </template>
+                      </Card>
+                      <Card v-if="slotProps.data.externalIdentifiers.length > 0">
+                        <template #content>
+                          <h3 class="target-header">External Identifier Data</h3>
+                          <div v-for="externalId of slotProps.data.externalIdentifiers" class="compact-target"
+                            :key="externalId">
+                            <p class="compact-target">
+                              <strong>{{ externalId.identifier.dbName }}:</strong> {{ externalId.identifier.identifier
+                              }}, <strong>Offset:</strong> {{ externalId.offset }}
+                            </p>
+                            <span
+                              v-if="validationErrors[`targetGenes.${slotProps.data.index}.externalIdentifiers.${externalId.identifier.dbName}.identifier`]"
+                              class="mave-field-error">{{
+                                validationErrors[`targetGenes.${slotProps.data.index}.externalIdentifiers.${externalId.identifier.dbName}.identifier`]
+                              }}</span><br>
+                            <span
+                              v-if="validationErrors[`targetGenes.${slotProps.data.index}.externalIdentifiers.${externalId.identifier.dbName}.offset`]"
+                              class="mave-field-error">{{
+                                validationErrors[`targetGenes.${slotProps.data.index}.externalIdentifiers.${externalId.identifier.dbName}.offset`]
+                              }}</span>
+                          </div>
+                        </template>
+                      </Card>
+                    </template>
+                    <template #footer>
+                      <div class="flex flex-wrap justify-content-start gap-2">
+                        <Button icon="pi pi-times-circle" label="Clear all" severity="secondary" class="p-button-help"
+                          @click="targetsCleared" />
+                      </div>
+                    </template>
+                  </DataTable>
+                </span>
+              </div>
+              <span v-if="validationErrors['targetGenes']" class="mave-field-error">{{validationErrors['targetGenes']}}</span>
+              <div class="field">
+                <Message v-if="targetGenes?.length > 1" severity="info">
+                  When defining variants against multiple targets, uploaded variant coordinates should be fully
+                  qualified with respect to target names or target accessions.
+                </Message>
+              </div>
+              <div class="mavedb-wizard-step-controls-row">
+                <div class="flex justify-content-between mavedb-wizard-step-controls pt-4">
+                  <Button label="Back" severity="secondary" icon="pi pi-arrow-left" @click="showPreviousWizardStep" />
+                  <Button label="Next" :disabled="this.maxWizardStepValidated < activeWizardStep" icon="pi pi-arrow-right" iconPos="right" @click="showNextWizardStepIfValid(showNextWizardStep)" />
                 </div>
-                <span v-if="validationErrors['targetGenes']" class="mave-field-error">{{validationErrors['targetGenes']}}</span>
-                <div class="field">
-                  <Message v-if="targetGenes?.length > 1" severity="info">
-                    When defining variants against multiple targets, uploaded variant coordinates should be fully
-                    qualified with respect to target names or target accessions.
-                  </Message>
+              </div>
+            </template>
+          </StepperPanel>
+          <StepperPanel v-if="itemStatus == 'NotLoaded' || this.item.private" header="Variant scores">
+            <template #header="{index, clickCallback}">
+              <button class="p-stepper-action" :disabled="maxWizardStepEntered < index || maxWizardStepValidated < index - 1" role="tab" @click="clickCallback">
+                <span class="p-stepper-number">{{ index + 1 }}</span>
+                <span class="p-stepper-title">Variant scores</span>
+              </button>
+            </template>
+            <template #content="{prevCallback: showPreviousWizardStep}">
+              <div v-if="item">
+                <div>{{ formatInt(item.numVariants) }} variants are included in this score set.</div>
+                <div>To replace the variants, choose a new scores file and optional counts file:</div>
+              </div>
+              <div v-else>
+                Load a scores file and an optional counts file:
+              </div>
+              <div class="field">
+                <span class="p-float-label">
+                  <FileUpload ref="scoresFileUpload" :id="$scopedId('input-scoresFile')" :auto="false"
+                    chooseLabel="Scores file" :class="inputClasses.scoresFile || ''" :customUpload="true" :fileLimit="1"
+                    :showCancelButton="false" :showUploadButton="false">
+                    <template #empty>
+                      <p>Drop a file here.</p>
+                    </template>
+                  </FileUpload>
+                </span>
+                <span v-if="validationErrors.scoresFile" class="mave-field-error">{{ validationErrors.scoresFile
+                }}</span>
+              </div>
+              <div class="field">
+                <span class="p-float-label">
+                  <FileUpload ref="countsFileUpload" :id="$scopedId('input-countsFile')" :auto="false"
+                    chooseLabel="Counts file" :class="inputClasses.countsFile || ''" :customUpload="true" :fileLimit="1"
+                    :showCancelButton="false" :showUploadButton="false">
+                    <template #empty>
+                      <p>Drop a file here.</p>
+                    </template>
+                  </FileUpload>
+                </span>
+                <span v-if="validationErrors.countsFile" class="mave-field-error">{{ validationErrors.countsFile
+                }}</span>
+              </div>
+              <div class="mavedb-wizard-step-controls-row">
+                <div class="flex justify-content-between mavedb-wizard-step-controls pt-4">
+                  <Button label="Back" severity="secondary" icon="pi pi-arrow-left" @click="showPreviousWizardStep" />
+                  <Button label="Save" :disabled="this.maxWizardStepValidated < activeWizardStep" icon="pi pi-arrow-right" iconPos="right" @click="item ? saveEditContent() : validateAndSave()" />
                 </div>
-              </template>
-            </StepperPanel>
-            <StepperPanel header="Variant scores">
-              <template #title>Variant scores</template>
-              <template #content>
-                <div v-if="item">
-                  <div>{{ formatInt(item.numVariants) }} variants are included in this score set.</div>
-                  <div>To replace the variants, choose a new scores file and optional counts file:</div>
-                </div>
-                <div v-else>
-                  Load a scores file and an optional counts file:
-                </div>
-                <div class="field">
-                  <span class="p-float-label">
-                    <FileUpload ref="scoresFileUpload" :id="$scopedId('input-scoresFile')" :auto="false"
-                      chooseLabel="Scores file" :class="inputClasses.scoresFile || ''" :customUpload="true" :fileLimit="1"
-                      :showCancelButton="false" :showUploadButton="false">
-                      <template #empty>
-                        <p>Drop a file here.</p>
-                      </template>
-                    </FileUpload>
-                  </span>
-                  <span v-if="validationErrors.scoresFile" class="mave-field-error">{{ validationErrors.scoresFile
-                  }}</span>
-                </div>
-                <div class="field">
-                  <span class="p-float-label">
-                    <FileUpload ref="countsFileUpload" :id="$scopedId('input-countsFile')" :auto="false"
-                      chooseLabel="Counts file" :class="inputClasses.countsFile || ''" :customUpload="true" :fileLimit="1"
-                      :showCancelButton="false" :showUploadButton="false">
-                      <template #empty>
-                        <p>Drop a file here.</p>
-                      </template>
-                    </FileUpload>
-                  </span>
-                  <span v-if="validationErrors.countsFile" class="mave-field-error">{{ validationErrors.countsFile
-                  }}</span>
-                </div>
-              </template>
-            </StepperPanel>
-            </div>
+              </div>
+            </template>
+          </StepperPanel>
         </Stepper>
       </div>
     </div>
@@ -593,6 +676,7 @@ import Column from 'primevue/column'
 import Dropdown from 'primevue/dropdown'
 import FileUpload from 'primevue/fileupload'
 import InputNumber from 'primevue/inputnumber'
+import InputSwitch from 'primevue/inputswitch'
 import InputText from 'primevue/inputtext'
 import Message from 'primevue/message'
 import Multiselect from 'primevue/multiselect'
@@ -642,7 +726,31 @@ function emptyTargetGene() {
 
 export default {
   name: 'ScoreSetEditor',
-  components: { AutoComplete, Button, Card, Chips, Column, DataTable, DefaultLayout, Dropdown, EmailPrompt, EntityLink, FileUpload, InputNumber, InputText, Message, Multiselect, ProgressSpinner, SelectButton, Stepper, StepperPanel, TabPanel, TabView, Textarea },
+  components: {
+    AutoComplete,
+    Button,
+    Card,
+    Chips,
+    Column,
+    DataTable,
+    DefaultLayout,
+    Dropdown,
+    EmailPrompt,
+    EntityLink,
+    FileUpload,
+    InputNumber,
+    InputSwitch,
+    InputText,
+    Message,
+    Multiselect,
+    ProgressSpinner,
+    SelectButton,
+    Stepper,
+    StepperPanel,
+    TabPanel,
+    TabView,
+    Textarea
+  },
 
   setup: () => {
     const editableExperiments = useItems({
@@ -747,7 +855,6 @@ export default {
       'Other noncoding'
     ],
 
-    activeWizardStep: 0,
     progressVisible: false,
     serverSideValidationErrors: {},
     clientSideValidationErrors: {},
@@ -761,9 +868,25 @@ export default {
     supersededScoreSetSuggestions: [],
     targetGeneAccessionSuggestions: [],
     validationErrors: {},
+
+    isSupersedingScoreSet: false,
+    isMetaAnalysis: false,
+
+    /** The currently active step. */
+    activeWizardStep: 0,
+
+    /** The highest step that the user has entered. This can be used to prevent the user from jumping ahead. */
+    maxWizardStepEntered: 0
   }),
 
   computed: {
+    maxWizardStepValidated: function() {
+      const numSteps = 4
+      // This yields the index of the maximum step validated, -1 if step 0 is not valid, and -2 if all steps are valid.
+      const maxStepValidated = _.findIndex(_.range(0, numSteps), (step) => !this.validateWizardStep(step)) - 1
+      return maxStepValidated == -2 ? numSteps - 1 : maxStepValidated
+    },
+
     targetGeneIdentifierSuggestionsList: function () {
       return _.fromPairs(
         externalGeneDatabases.map((dbName) => {
@@ -896,6 +1019,33 @@ export default {
   },
 
   methods: {
+    validateWizardStep: function(step) {
+      switch (step) {
+        case 0: {
+          // Step 0 is valid if
+          // - The score set is a meta-analysis and at least one meta-analyzed score set has been chosen..
+          // - The score set is a superseding score set, and the superseded score set has been chosen.
+          // - Or the score set is neither, and its parent experiment has been chosen.
+          console.log('validate 0')
+          const x = !!(this.isMetaAnalysis && this.metaAnalyzesScoreSets.length > 0)
+              || !!(this.isSupersedingScoreSet && this.supersededScoreSet)
+              || !!(!this.isMetaAnalysis && !this.isSupersedingScoreSet && this.experiment)
+          console.log(x)
+          return x
+        }
+
+        default:
+          // Add validation logic for steps 1-3 here. Later, this may depend on server-side validation.
+          return true
+      }
+    },
+
+    showNextWizardStepIfValid: function(navigate) {
+      if (this.maxWizardStepValidated >= this.activeWizardStep) {
+        this.maxWizardStepEntered = Math.max(this.maxWizardStepEntered, this.activeWizardStep + 1)
+        navigate()
+      }
+    },
 
     suggestionsForAutocomplete: function (suggestions) {
       // The PrimeVue AutoComplete doesn't seem to like it if we set the suggestion list to [].
@@ -1567,6 +1717,88 @@ export default {
 </style>
 
 <style scoped>
+
+/* Remove the stepper panel's background color. */
+.mavedb-wizard:deep(.p-stepper .p-stepper-panels) {
+  background-color: transparent;
+}
+
+/* One form within a wizard. Needed as the parent of .mavedb-sizard-content-background. */
+.mavedb-wizard-form {
+  position: relative;
+  z-index: 0;
+}
+
+/* Give the right side of the wizard a white background, without gaps between rows. */
+.mavedb-wizard-form-content-background {
+  position: absolute;
+  top: 0;
+  bottom: 0;
+  right: 0;
+  width: 676px;
+  background-color: #fff;
+}
+
+.mavedb-wizard-row {
+  position: relative;
+  z-index: 1;
+}
+
+/* Clear floats after each wizard form row. */
+.mavedb-wizard-row:after {
+  content: "";
+  clear: both;
+  display: table;
+}
+
+/* The help block for one wizard form row. */
+.mavedb-wizard-help {
+  float: left;
+  width: 480px;
+  padding: 22px 10px 10px 10px;
+}
+
+/* More detailed help text. */
+.mavedb-help-small {
+  font-size: smaller;
+}
+
+/* Form content for one wizard form row. */
+.mavedb-wizard-content {
+  float: right;
+  width: 676px;
+  padding: 10px;
+  background-color: #fff;
+}
+
+/* Wizard step controls */
+.mavedb-wizard-step-controls-row {
+  position: relative;
+}
+
+.mavedb-wizard-step-controls-row:after {
+  content: "";
+  clear: both;
+  display: table;
+}
+
+.mavedb-wizard-step-controls {
+  float: right;
+  position: relative;
+  width: 676px;
+}
+
+/* Switches */
+.p-inputswitch {
+  margin: 20px 0;
+  vertical-align: middle;
+}
+
+.mavedb-switch-value {
+  display: inline-block;
+  margin: 20px 1em;
+}
+
 .target-header {
   display: flex;
   margin-bottom: 0;

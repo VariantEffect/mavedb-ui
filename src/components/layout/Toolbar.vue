@@ -18,6 +18,19 @@
           </div>
         </div>
       </template>
+      <template #item="{item, props, hasSubmenu}">
+        <router-link v-if="item.route" v-slot="{href, navigate}" :to="item.route" custom>
+          <a v-ripple v-bind="props.action" class="p-menuitem-link" :href="href" @click="navigate">
+            <span v-if="item.icon" :class="['p-menuitem-icon', item.icon]" />
+            <span class="p-menuitem-text">{{ item.label }}</span>
+          </a>
+        </router-link>
+        <a v-else v-ripple class="p-menuitem-link" :href="item.url" :target="item.target" v-bind="props.action">
+          <span v-if="item.icon" :class="['p-menuitem-icon', item.icon]" />
+          <span class="p-menuitem-text">{{ item.label }}</span>
+          <span v-if="hasSubmenu" class="pi pi-fw pi-angle-down ml-2" />
+        </a>
+      </template>
       <template #end>
       </template>
     </Menubar>
@@ -76,35 +89,35 @@ export default {
     menuItems: function() {
       return [{
         label: 'Dashboard',
-        command: () => this.navigate('/dashboard'),
+        route: '/dashboard',
         available: ({authenticated}) => authenticated
       }, {
         label: 'Home',
-        command: () => this.navigate('/'),
+        route: '/'
       }, {
         label: 'Search',
-        command: () => this.navigate('/search'),
+        route: '/search',
       }, {
         label: 'Documentation',
-        command: () => this.navigate('/docs'),
+        route: '/docs'
       }, {
         label: 'New experiment',
-        command: () => this.navigate('/create-experiment'),
+        route: '/create-experiment',
         available: ({authenticated}) => authenticated
       }, {
         label: 'New score set',
-        command: () => this.navigate('/create-score-set'),
+        route: '/create-score-set',
         available: ({authenticated}) => authenticated
       }, {
         label: 'Users',
-        command: () => this.navigate('/users'),
+        route: '/users',
         available: ({roles}) => roles.includes('admin')
       }, {
         label: this.userName,
         icon:'pi pi-fw pi-user',
         items:[{
           label: 'Settings',
-          command: () => this.navigate('/settings'),
+          route: '/settings',
           available: ({authenticated}) => authenticated
         }, {
           label: 'Sign out',
@@ -126,12 +139,7 @@ export default {
       }
     },
 
-    navigate(routerPath) {
-      this.$router.push(routerPath)
-    },
-
     filterAvailableMenuItems(menuItems) {
-      const self = this
       return menuItems.map((item) => {
         if (item.items) {
           let newSubitems = this.filterAvailableMenuItems(item.items)

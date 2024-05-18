@@ -142,12 +142,21 @@
               </button>
             </template>
             <template #content="{prevCallback: showPreviousWizardStep, nextCallback: showNextWizardStep}">
-              <div class="field">
-                <span class="p-float-label">
-                  <InputText v-model="title" :id="$scopedId('input-title')" />
-                  <label :for="$scopedId('input-title')">Title</label>
-                </span>
-                <span v-if="validationErrors.title" class="mave-field-error">{{ validationErrors.title }}</span>
+              <div class="mavedb-wizard-form">
+                <div class="mavedb-wizard-form-content-background"></div>
+                <div class="mavedb-wizard-row">
+                  <div class="mavedb-wizard-help">
+                    <label>Please give the score set a short title.</label>
+                    <div class="mavedb-help-small">Examples: </div>
+                  </div>
+                  <div class="mavedb-wizard-content">
+                    <span class="p-float-label">
+                      <InputText v-model="title" :id="$scopedId('input-title')" />
+                      <label :for="$scopedId('input-title')">Title</label>
+                    </span>
+                    <span v-if="validationErrors.title" class="mave-field-error">{{ validationErrors.title }}</span>
+                  </div>
+                </div>
               </div>
               <div class="field">
                 <span class="p-float-label">

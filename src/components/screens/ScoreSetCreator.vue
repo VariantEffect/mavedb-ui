@@ -35,7 +35,7 @@
                 <div class="mavedb-wizard-form-content-background"></div>
                 <div class="mavedb-wizard-row">
                   <div class="mavedb-wizard-help">
-                    <label :id="$scopedId('input-superseding-score-set-label')">Will these scores replace a published score set for which you are a contributor?</label>
+                    <label :id="$scopedId('input-superseding-score-set-label')">Will this score set replace a score set previously published on MaveDB that you created?</label>
                   </div>
                   <div class="mavedb-wizard-content">
                     <InputSwitch v-model="isSupersedingScoreSet" :aria-labelledby="$scopedId('input-superseding-score-set-label')" />
@@ -44,8 +44,8 @@
                 </div>
                 <div class="mavedb-wizard-row">
                   <div class="mavedb-wizard-help">
-                    <label :id="$scopedId('input-is-meta-analysis-label')">Is this a meta-analysis?</label>
-                    <div class="mavedb-help-small">Meta-analyses are score sets derived from other score sets. You may create a meta-analysis of other investigators' scores.</div>
+                    <label :id="$scopedId('input-is-meta-analysis-label')">Is this score set a meta-analysis?</label>
+                    <div class="mavedb-help-small">Meta-analyses are score sets derived from data in other score sets that were created by you or other users.</div>
                   </div>
                   <div class="mavedb-wizard-content">
                     <InputSwitch v-model="isMetaAnalysis" :aria-labelledby="$scopedId('input-is-meta-analysis-label')" />
@@ -54,7 +54,11 @@
                 </div>
                 <div v-if="!isSupersedingScoreSet && !isMetaAnalysis" class="mavedb-wizard-row">
                   <div class="mavedb-wizard-help">
-                    What experiment yielded this score set?
+                    To which experiment does this score set belong?
+                    <div class="mavedb-help-small">
+                      For more on the relationship between score sets and experiments, see the
+                      <a target="_blank" href="https://mavedb.org/docs/mavedb/record_types.html#record-types">documentation</a>.
+                    </div>
                   </div>
                   <div class="mavedb-wizard-content">
                     <div v-if="itemStatus != 'NotLoaded' && item.experiment">
@@ -75,7 +79,7 @@
                 <div v-if="isSupersedingScoreSet" class="mavedb-wizard-row">
                   <div class="mavedb-wizard-help">
                     What score set does this supersede?
-                    <div class="mavedb-help-small">Type the old score set's description or URN here and select it from the list.</div>
+                    <div class="mavedb-help-small">Type the superseded score set's MaveDB URN here and select it from the list.</div>
                   </div>
                   <div class="mavedb-wizard-content">
                     <div v-if="itemStatus != 'NotLoaded' && supersedesScoreSet">
@@ -100,8 +104,8 @@
                 </div>
                 <div v-if="isMetaAnalysis" class="mavedb-wizard-row">
                   <div class="mavedb-wizard-help">
-                    What score set(s) have been analyzed?
-                    <div class="mavedb-help-small">Type an old score set's description or URN here and select it from the list. You may choose more than one score set.</div>
+                    What score set(s) does this score set analyze?
+                    <div class="mavedb-help-small">Type a score set's MaveDB URN here and select it from the list. You may choose more than one score set.</div>
                   </div>
                   <div class="mavedb-wizard-content">
                     <div v-if="itemStatus != 'NotLoaded' && item?.metaAnalyzesScoreSetUrns?.length > 0">
@@ -146,12 +150,15 @@
                 <div class="mavedb-wizard-form-content-background"></div>
                 <div class="mavedb-wizard-row">
                   <div class="mavedb-wizard-help">
-                    <label>Please give the score set a short title.</label>
-                    <div class="mavedb-help-small">Examples: </div>
+                    <label>A short title for the score set, to be displayed at the top of the score set's own page.</label>
+                    <div class="mavedb-help-small">
+                      Examples: NUDT15 protein stability assay, CBS low-B6 imputed and refined, Arrestin-1 binding,
+                      SpCas9 positive selection
+                    </div>
                   </div>
                   <div class="mavedb-wizard-content">
                     <span class="p-float-label">
-                      <InputText v-model="title" :id="$scopedId('input-title')" />
+                      <InputText v-model="title" :id="$scopedId('input-title')" style="width: 100%"/>
                       <label :for="$scopedId('input-title')">Title</label>
                     </span>
                     <span v-if="validationErrors.title" class="mave-field-error">{{ validationErrors.title }}</span>
@@ -1037,12 +1044,9 @@ export default {
           // - The score set is a meta-analysis and at least one meta-analyzed score set has been chosen..
           // - The score set is a superseding score set, and the superseded score set has been chosen.
           // - Or the score set is neither, and its parent experiment has been chosen.
-          console.log('validate 0')
-          const x = !!(this.isMetaAnalysis && this.metaAnalyzesScoreSets.length > 0)
+          return !!(this.isMetaAnalysis && this.metaAnalyzesScoreSets.length > 0)
               || !!(this.isSupersedingScoreSet && this.supersededScoreSet)
               || !!(!this.isMetaAnalysis && !this.isSupersedingScoreSet && this.experiment)
-          console.log(x)
-          return x
         }
 
         default:

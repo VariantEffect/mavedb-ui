@@ -20,15 +20,15 @@
       </template>
       <template #item="{item, props, hasSubmenu}">
         <router-link v-if="item.route" v-slot="{href, navigate}" :to="item.route" custom>
-          <a v-ripple v-bind="props.action" class="p-menuitem-link" :href="href" @click="navigate">
-            <span v-if="item.icon" :class="['p-menuitem-icon', item.icon]" />
+          <a v-bind="props.action" class="p-menuitem-link" :href="href" @click="navigate">
+            <span v-if="item.icon" :class="['p-menuitem-icon', item.icon]"></span>
             <span class="p-menuitem-text">{{ item.label }}</span>
           </a>
         </router-link>
-        <a v-else v-ripple class="p-menuitem-link" :href="item.url" :target="item.target" v-bind="props.action">
-          <span v-if="item.icon" :class="['p-menuitem-icon', item.icon]" />
+        <a v-else class="p-menuitem-link" :href="item.url" :target="item.target" v-bind="props.action">
+          <span v-if="item.icon" :class="['p-menuitem-icon', item.icon]"></span>
           <span class="p-menuitem-text">{{ item.label }}</span>
-          <span v-if="hasSubmenu" class="pi pi-fw pi-angle-down ml-2" />
+          <span v-if="hasSubmenu" class="pi pi-fw pi-angle-down ml-2"></span>
         </a>
       </template>
       <template #end>

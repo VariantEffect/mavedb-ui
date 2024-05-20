@@ -1134,7 +1134,9 @@ export default {
         case 1: {
           return this.title && this.shortDescription && this.abstractText && this.methodText
         }
-
+case 2: {
+      return this.targetGenes.length > 0
+}
         default:
           // Add validation logic for steps 1-3 here. Later, this may depend on server-side validation.
           return true

@@ -1905,9 +1905,7 @@ export default {
 }
 
 .mavedb-wizard-step-controls {
-  float: right;
-  position: relative;
-  width: 676px;
+  padding-left: 10px;
 }
 
 /* Switches */

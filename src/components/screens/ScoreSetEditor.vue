@@ -585,9 +585,9 @@
       <ProgressSpinner v-if="progressVisible" class="mave-progress" />
     </DefaultLayout>
   </template>
-  
+
   <script>
-  
+
   import axios from 'axios'
   import fasta from 'fasta-js'
   import _ from 'lodash'
@@ -610,7 +610,7 @@
   import Textarea from 'primevue/textarea'
   import DataTable from 'primevue/datatable';
   import { ref } from 'vue'
-  
+
   import EntityLink from '@/components/common/EntityLink'
   import DefaultLayout from '@/components/layout/DefaultLayout'
   import EmailPrompt from '@/components/common/EmailPrompt'
@@ -619,9 +619,9 @@
   import config from '@/config'
   import { normalizeDoi, normalizeIdentifier, normalizePubmedId, validateDoi, validateIdentifier, validatePubmedId} from '@/lib/identifiers'
   import useFormatters from '@/composition/formatters'
-  
+
   const externalGeneDatabases = ['UniProt', 'Ensembl', 'RefSeq']
-  
+
   function emptyTargetGene() {
     return {
       index: null,
@@ -644,11 +644,11 @@
       )
     }
   }
-  
+
   export default {
     name: 'ScoreSetEditor',
     components: { AutoComplete, Button, Card, Chips, Column, DataTable, DefaultLayout, Dropdown, EmailPrompt, EntityLink, FileUpload, InputNumber, InputText, Message, Multiselect, ProgressSpinner, SelectButton, TabPanel, TabView, Textarea },
-  
+
     setup: () => {
       const editableExperiments = useItems({
         itemTypeName: 'experiment',
@@ -670,9 +670,9 @@
       const geneNames = useItems({ itemTypeName: 'gene-names' })
       const assemblies = useItems({ itemTypeName: 'assemblies' })
       const targetGeneSuggestions = useItems({ itemTypeName: 'target-gene-search' })
-  
+
       const expandedTargetGeneRows = ref([])
-  
+
       return {
         ...useFormatters(),
         ...useItem({ itemTypeName: 'scoreSet' }),
@@ -701,14 +701,14 @@
         expandedTargetGeneRows
       }
     },
-  
+
     props: {
       itemId: {
         type: String,
         required: false
       }
     },
-  
+
     data: () => ({
       // Form fields
       experiment: null,
@@ -737,10 +737,10 @@
       targetOptions: ["Assembly", "HGNC"],
       targetAutocomplete: 'HGNC',
       extraMetadata: {},
-  
+
       existingTargetGene: null,
       targetGenes: [],
-  
+
       // Static sets of options:
       sequenceTypes: [
         'DNA',
@@ -751,7 +751,7 @@
         'Regulatory',
         'Other noncoding'
       ],
-  
+
       progressVisible: false,
       serverSideValidationErrors: {},
       clientSideValidationErrors: {},
@@ -766,7 +766,7 @@
       targetGeneAccessionSuggestions: [],
       validationErrors: {},
     }),
-  
+
     computed: {
       targetGeneIdentifierSuggestionsList: function () {
         return _.fromPairs(
@@ -811,7 +811,7 @@
         }
       },
     },
-  
+
     watch: {
       'targetGene.externalIdentifiers': {
         deep: true,
@@ -827,36 +827,47 @@
           }
         }
       },
-      existingTargetGene: function () {
+      existingTargetGene: {
+      immediate: true,
+      handler: function () {
         if (_.isObject(this.existingTargetGene)) {
           // _.cloneDeep is needed because the target gene has been frozen.
-          // this.targetGene = _.cloneDeep(this.existingTargetGene)
           const targetGene = _.cloneDeep(this.existingTargetGene)
-          this.targetGene = _.merge({
-            name: null,
-            category: null,
-            type: null,
-            targetSequence: {
+          if (!targetGene.targetSequence) {
+            targetGene.targetSequence = {
               sequenceType: null,
               sequence: null,
               label: null,
               taxonomy: null
-            },
-            targetAccession: {
+            }
+          }
+          else {
+            this.taxonomy = targetGene.targetSequence.taxonomy
+          }
+          if (!targetGene.targetAccession) {
+            targetGene.targetAccession = {
               assembly: null,
               accession: null
             }
-          }, targetGene)
-          this.targetGene.externalIdentifiers = {}
+          }
+          // Reactivity is handled by separate fields for target accession properties.
+          else {
+            this.assembly = targetGene.targetAccession.assembly
+            this.accession = targetGene.targetAccession.accession
+          }
+          const autopopulatedExternalIdentifiers = {}
           for (const dbName of externalGeneDatabases) {
-            this.targetGene.externalIdentifiers[dbName] = (targetGene.externalIdentifiers || [])
+            autopopulatedExternalIdentifiers[dbName] = (targetGene.externalIdentifiers || [])
               .find(({ identifier }) => identifier?.dbName == dbName) || {
               identifier: null,
               offset: null
             }
           }
+          targetGene.externalIdentifiers = autopopulatedExternalIdentifiers
+          this.targetGene = targetGene
         }
-      },
+      }
+    },
       item: {
         handler: function () {
           this.resetForm()
@@ -898,9 +909,9 @@
         }
       },
     },
-  
+
     methods: {
-  
+
       suggestionsForAutocomplete: function (suggestions) {
         // The PrimeVue AutoComplete doesn't seem to like it if we set the suggestion list to [].
         // This causes the drop-down to stop appearing when we later populate the list.
@@ -909,21 +920,21 @@
         }
         return suggestions
       },
-  
+
       searchMetaAnalyzesScoreSets: async function (event) {
         const searchText = (event.query || '').trim()
         if (searchText.length > 0) {
           this.metaAnalyzesScoreSetSuggestions = await this.searchScoreSets(searchText)
         }
       },
-  
+
       searchSupersededScoreSets: async function (event) {
         const searchText = (event.query || '').trim()
         if (searchText.length > 0) {
           this.supersededScoreSetSuggestions = await this.searchScoreSets(searchText, true)
         }
       },
-  
+
       searchScoreSets: async function (searchText, mine = false) {
         const url = mine ? `${config.apiBaseUrl}/me/score-sets/search` : `${config.apiBaseUrl}/score-sets/search`
         try {
@@ -945,7 +956,7 @@
           return []
         }
       },
-  
+
       fetchTargetAccessions: async function (event) {
         if (this.targetAutocomplete == 'Assembly' ) {
           if (this.assemblyDropdownValue) {
@@ -957,13 +968,13 @@
             this.targetGeneAccessionSuggestions = this.geneNameAccessionSuggestions
           }
         }
-  
+
         const searchText = (event.query || '').trim()
         if (searchText.length > 0) {
             this.targetGeneAccessionSuggestions = this.targetGeneAccessionSuggestions.filter(s => s?.toLowerCase().includes(searchText.toLowerCase()))
         }
       },
-  
+
       fetchTargetAccessionsByAssembly: async function (assembly) {
         const url = `${config.apiBaseUrl}/hgvs/${assembly}/accessions`
         try {
@@ -982,7 +993,7 @@
           return []
         }
       },
-  
+
       fetchTargetAccessionsByGene: async function (gene) {
         const url = `${config.apiBaseUrl}/hgvs/transcripts/gene/${gene}`
         try {
@@ -1000,14 +1011,14 @@
           console.log(`Error while loading search results")`, err)
         }
       },
-  
+
       autofillGeneName: function (changeEvent) {
         if (!this.targetGene.name) {
           this.targetGene.name = changeEvent.value.name // Gene Name string object
         }
       },
-  
-  
+
+
       swapNucleotideProteinAccessions: async function () {
         if (this.targetGene.targetAccession.accession.startsWith("NP")) {
           // Don't do anything if we already are operating on a protein transcript
@@ -1033,11 +1044,11 @@
           console.log(`Error while loading protein accession")`, err)
         }
       },
-  
+
       ////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
       // Form fields
       ////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
-  
+
       populateExperimentMetadata: function (event) {
         this.doiIdentifiers = event.value.doiIdentifiers
         this.keywords = event.value.keywords
@@ -1048,14 +1059,14 @@
           })
         })
       },
-  
+
       acceptNewDoiIdentifier: function(event) {
         // Remove new string item from the model and add new structured item in its place if it validates and is not a duplicate.
         const idx = this.doiIdentifiers.findIndex((item) => typeof item === 'string' || item instanceof String)
         if (idx == -1) {
           return
         }
-  
+
         const searchText = this.doiIdentifiers[idx]
         const newDoi = normalizeDoi(searchText)
         if (this.doiIdentifiers.find((item) => item.identifier == newDoi)) {
@@ -1068,18 +1079,18 @@
           this.$toast.add({severity:'warning', summary: `"${searchText}" is not a valid DOI`, life: 3000})
         }
       },
-  
+
       clearDoiIdentifierSearch: function() {
         // This could change with a new Primevue version.
         const input = this.$refs.doiIdentifiersInput
         input.$refs.input.value = ''
       },
-  
+
       acceptNewPublicationIdentifier: function() {
         // We assume the newest value is the right-most one here. That seems to always be true in this version of Primevue,
         // but that may change in the future.
         const newIdx = this.publicationIdentifiers.length - 1
-  
+
         // Remove new value if it is a duplicate.
         const newIdentifier = this.publicationIdentifiers[newIdx].identifier
         if (this.publicationIdentifiers.findIndex((pub) => pub.identifier == newIdentifier) < newIdx) {
@@ -1087,13 +1098,13 @@
           this.$toast.add({severity:'warning', summary: `Identifier "${newIdentifier}" is already associated with this experiment`, life: 3000})
         }
       },
-  
+
       clearPublicationIdentifierSearch: function() {
         // This could change with a new Primevue version.
         const input = this.$refs.publicationIdentifiersInput
         input.$refs.focusInput.value = ''
       },
-  
+
       searchPublicationIdentifiers: function (event) {
         const searchText = (event.query || '').trim()
         if (searchText.length > 0) {
@@ -1101,11 +1112,11 @@
           this.setExternalPublicationIdentifierSearch(event.query)
         }
       },
-  
+
       acceptNewTargetGeneIdentifier: function (dbName) {
         const input = this.$refs[`${dbName.toLowerCase()}IdentifierInput`][0]
         const searchText = (input.modelValue || '').trim()
-  
+
         // Only accept the current search text if we haven't set an identifier. When the user starts typing, the current
         // identifier is cleared.
         const currentIdentifier = this.targetGene.externalIdentifiers[dbName]?.identifier
@@ -1116,60 +1127,60 @@
             const identifier = normalizeIdentifier(dbName, searchText)
             this.targetGene.externalIdentifiers[dbName].identifier = { identifier }
             input.modelValue = null
-  
+
             // Clear the text input.
             // TODO This depends on PrimeVue internals more than I'd like:
             input.$refs.input.value = ''
           }
         }
       },
-  
+
       clearTargetGeneIdentifierSearch: function (dbName) {
         const input = this.$refs[`${dbName.toLowerCase()}IdentifierInput`][0]
         this.targetGene.externalIdentifiers[dbName].identifier = null
         input.modelValue = null
-  
+
         // Clear the text input.
         // TODO This depends on PrimeVue internals more than I'd like:
         input.$refs.input.value = ''
       },
-  
+
       searchTargetGeneIdentifiers: function (dbName, event) {
         const searchText = (event.query || '').trim()
         if (searchText.length > 0) {
           this.setTargetGeneIdentifierSearch[dbName](searchText)
         }
       },
-  
+
       searchTargetGenes: function (event) {
         const searchText = (event.query || '').trim()
         if (searchText.length > 0) {
           this.setTargetGeneSearch(event.query)
         }
       },
-  
+
       clearTaxonomySearch: function() {
         const input = this.$refs.taxonomyInput
         input.inputTextValue = null
       },
-  
+
       searchTaxonomies: function(event) {
         // if no search text, then return all taxonomy list. Otherwise, return the searching results.
         // If not do in this way, dropdown button can't work.
         this.setTaxonomySearch(event.query)
       },
-  
+
       targetsCleared: function () {
         this.targetGenes = [];
       },
-  
+
       targetDeleted: function (target) {
         this.targetGenes = this.targetGenes.filter(val => val !== target);
         this.targetGenes.forEach(function (target, index) {
           target.index = index;
         });
       },
-  
+
       fileCleared: function (inputName) {
         if (inputName == 'extraMetadataFile') {
           this.extraMetadata = null
@@ -1182,7 +1193,7 @@
         this.inputClasses[inputName] = 'mave-file-input-empty'
         this.mergeValidationErrors()
       },
-  
+
       fileSelected: async function (inputName, event) {
         const file = event.files[0]
         if (file) {
@@ -1236,19 +1247,19 @@
         }
         this.mergeValidationErrors()
       },
-  
+
       ////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
       // Validation
       ////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
-  
+
       mergeValidationErrors: function () {
         this.validationErrors = _.merge({}, this.serverSideValidationErrors, this.clientSideValidationErrors)
       },
-  
+
       ////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
       // Converting between view model and form model
       ////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
-  
+
       resetForm: function () {
         if (this.item) {
           this.experiment = this.item.experiment
@@ -1298,7 +1309,7 @@
           this.targetGenes = []
         }
       },
-  
+
       resetTarget: function () {
         this.taxonomy = null
         this.assembly = null
@@ -1312,7 +1323,7 @@
         this.referenceGenome = null
         this.targetGene = emptyTargetGene()
       },
-  
+
       addTarget: function () {
         if (this.taxonomy) {
           this.targetGene.targetSequence.taxonomy = this.taxonomy
@@ -1351,14 +1362,14 @@
         this.$toast.add({ severity: 'success', summary: `Target ${this.targetGene.name} was added successfully.`, life: 3000 })
         this.resetTarget()
       },
-  
+
       ////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
       // Saving changes
       ////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
-  
+
       // TODO It would be nice to let the items state module handle saving.
       // Currently there is some special handling here, though, so we will leave that for a later refactoring.
-  
+
       save: async function () {
         // Remove primary identifier from publications to construct secondary identifiers
         const primaryPublicationIdentifiers = this.primaryPublicationIdentifiers.map((identifier) => _.pick(identifier, ['identifier', 'dbName']))
@@ -1367,7 +1378,7 @@
         ).filter(
           secondary => !primaryPublicationIdentifiers.some(primary => primary.identifier == secondary.identifier && primary.dbName == secondary.dbName)
         )
-  
+
         const editedFields = {
           experimentUrn: this.experiment?.urn,
           licenseId: this.licenseId,
@@ -1397,9 +1408,9 @@
           this.item.rawReadIdentifiers = []
           this.item.targetGenes = []
         }
-  
+
         const editedItem = _.merge({}, this.item || {}, editedFields)
-  
+
         this.progressVisible = true
         let response = null
         try {
@@ -1440,7 +1451,7 @@
               if (path[0] == 'body') {
                 path = path.slice(1)
               }
-  
+
               // expand all rows of target genes table if there are errors
               // so users can view error messages.
               // TODO: Expand only the problematic target.
@@ -1448,7 +1459,7 @@
                 this.expandedTargetGeneRows = this.targetGenes
                 console.log(this.expandedTargetGeneRows)
               }
-  
+
               // Map errors on indexed external gene identifiers to inputs named for the identifier's database.
               if (_.isEqual(_.slice(path, 0, 1), ['targetGenes']) && _.isEqual(_.slice(path, 2, 3), ['externalIdentifiers'])) {
                 const identifierIndex = path[3]
@@ -1457,7 +1468,7 @@
                   path.splice(3, 2, identifierOffset.identifier.dbName)
                 }
               }
-  
+
               path = path.join('.')
               formValidationErrors[path] = error.msg
             }
@@ -1466,7 +1477,7 @@
           this.mergeValidationErrors()
         }
       },
-  
+
       uploadData: async function (scoreSet) {
         if (this.$refs.scoresFileUpload.files.length != 1) {
           this.validationErrors = { scores: 'Required' }
@@ -1492,7 +1503,7 @@
             response = e.response || { status: 500 }
           }
           this.progressVisible = false
-  
+
           if (response.status == 200) {
             console.log('Imported score set data.')
             if (this.item) {
@@ -1510,10 +1521,10 @@
           }
         }
       },
-  
+
       validateAndSave: async function () {
         this.clientSideValidationErrors = {}
-  
+
         const hasScoresFile = this.$refs.scoresFileUpload.files.length == 1
         const hasCountsFile = this.$refs.countsFileUpload.files.length == 1
         if (hasCountsFile && !hasScoresFile) {
@@ -1522,88 +1533,88 @@
         if (!this.item && !hasScoresFile) {
           this.clientSideValidationErrors.scoresFile = 'Required'
         }
-  
+
         this.serverSideValidationErrors = {}
         this.mergeValidationErrors()
         if (_.isEmpty(this.validationErrors)) {
           await this.save()
         }
       },
-  
+
       //Editing published score set doesn't have scoresFileUpload.
       saveEditContent: async function () {
         await this.save()
       },
-  
+
       ////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
       // Navigation
       ////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
-  
+
       viewItem: function () {
         if (this.item) {
           this.$router.replace({ path: `/score-sets/${this.item.urn}` })
         }
       },
-  
+
       //Back to Dashboard
       backDashboard: function () {
         this.$router.replace({ path: `/dashboard` })
       },
-  
+
       ////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
       // Rendering utilities
       ////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
-  
+
       markdownToHtml: function (markdown) {
         return marked(markdown || '')
       },
-  
+
       get(...args) {
         return _.get(...args)
       }
-  
+
     }
   }
-  
+
   </script>
-  
+
   <style scoped src="../../assets/forms.css">
   </style>
-  
+
   <style scoped>
   .target-header {
     display: flex;
     margin-bottom: 0;
     margin-top: 0;
   }
-  
+
   .compact-target {
     margin-bottom: 0;
     margin-top: 0;
     display: block;
   }
-  
+
   .field-columns {
     display: flex;
     flex-direction: row
   }
-  
+
   .field-column {
     position: relative;
     flex: 1 1 0;
     margin-left: 10px;
   }
-  
+
   .field-column:first-child {
     margin-left: 0;
   }
-  
+
   /* Form fields */
-  
+
   .mave-taxonomy-none {
     min-width: 300px;
   }
-  
+
   .mave-taxonomy-common-name {
     float: left;
     padding: 10px;
@@ -1611,66 +1622,65 @@
     margin: 0 5px 0 0;
     background: #eee;
   }
-  
+
   .mave-taxonomy-organism-name {
     padding: 10px;
     margin-left: 125px;
     background: #f9f9f9;
   }
-  
+
   .p-dropdown-item:nth-child(even) .mave-taxonomy-common-name {
     background: #ddd;
   }
-  
+
   .p-dropdown-item:nth-child(even) .mave-taxonomy-organism-name {
     background: #e9e9e9;
   }
-  
+
   /* Cards */
-  
+
   .mave-score-set-editor:deep(.p-card) {
     margin: 1em 0;
     background: rgba(0, 0, 0, 0.05);
   }
-  
+
   .mave-score-set-editor:deep(.p-card .p-card-title) {
     font-size: 1.2em;
     font-weight: normal;
     color: #3f51B5;
     margin-bottom: 0;
   }
-  
+
   .dropdown-option-group {
     font-weight: bold;
     color: #3f51B5;
     margin-bottom: 0;
   }
-  
+
   .mave-score-set-editor:deep(.p-card-content) {
     padding: 0;
   }
-  
+
   /* Progress indicator */
-  
+
   .mave-progress {
     position: absolute;
     bottom: 5px;
     right: 5px;
     z-index: 1001;
   }
-  
+
   .mave-taxonomy-dropdown-panel.p-dropdown-panel .p-dropdown-items .p-dropdown-item {
-  
+
     padding: 0;
   }
-  
+
   .mave-taxonomy-dropdown-panel.p-dropdown-panel .p-dropdown-items .p-dropdown-item:not(.p-highlight):not(.p-disabled):hover {
     background: #eef;
   }
-  
+
   .mave-taxonomy-dropdown-panel.p-dropdown-panel .p-dropdown-items .p-dropdown-item:not(.p-highlight):not(.p-disabled):hover .mave-taxonomy-common-name,
   .mave-taxonomy-dropdown-panel.p-dropdown-panel .p-dropdown-items .p-dropdown-item:not(.p-highlight):not(.p-disabled):hover .mave-taxonomy-organism-name {
     background: #eef;
   }
   </style>
-  

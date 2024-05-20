@@ -194,7 +194,7 @@
                 <div class="mavedb-wizard-row">
                   <div class="mavedb-wizard-help">
                     <label>
-                      The motivation for and approach of the score set. 
+                      The motivation for and approach of the score set.
                     </label>
                     <div class="mavedb-help-small">
                       May be formatted using <a target="_blank" href="https://daringfireball.net/projects/markdown/syntax">Markdown</a>.
@@ -227,7 +227,7 @@
                     </label>
                     <div class="mavedb-help-small">
                       May be formatted using <a target="_blank" href="https://daringfireball.net/projects/markdown/syntax">Markdown</a>.
-                      Should include: 
+                      Should include:
                       <ul>
                         <template v-if="isMetaAnalysis">
                           <li>a description of how the scores in this score set were generated from the data in the analyzed score sets, and</li>
@@ -397,7 +397,7 @@
                       </label>
                       <div class="mavedb-help-small">
                         This is intended for data that has not yet been published in a peer-reviewed journal and may assert,
-                        for example, the original author's right to publish the data first. 
+                        for example, the original author's right to publish the data first.
                       </div>
                     </div>
                     <div class="mavedb-wizard-content field">
@@ -1050,33 +1050,44 @@ export default {
         }
       }
     },
-    existingTargetGene: function () {
-      if (_.isObject(this.existingTargetGene)) {
-        // _.cloneDeep is needed because the target gene has been frozen.
-        // this.targetGene = _.cloneDeep(this.existingTargetGene)
-        const targetGene = _.cloneDeep(this.existingTargetGene)
-        this.targetGene = _.merge({
-          name: null,
-          category: null,
-          type: null,
-          targetSequence: {
-            sequenceType: null,
-            sequence: null,
-            label: null,
-            taxonomy: null
-          },
-          targetAccession: {
-            assembly: null,
-            accession: null
+    existingTargetGene: {
+      immediate: true,
+      handler: function () {
+        if (_.isObject(this.existingTargetGene)) {
+          // _.cloneDeep is needed because the target gene has been frozen.
+          const targetGene = _.cloneDeep(this.existingTargetGene)
+          if (!targetGene.targetSequence) {
+            targetGene.targetSequence = {
+              sequenceType: null,
+              sequence: null,
+              label: null,
+              taxonomy: null
+            }
           }
-        }, targetGene)
-        this.targetGene.externalIdentifiers = {}
-        for (const dbName of externalGeneDatabases) {
-          this.targetGene.externalIdentifiers[dbName] = (targetGene.externalIdentifiers || [])
-            .find(({ identifier }) => identifier?.dbName == dbName) || {
-            identifier: null,
-            offset: null
+          else {
+            this.taxonomy = targetGene.targetSequence.taxonomy
           }
+          if (!targetGene.targetAccession) {
+            targetGene.targetAccession = {
+              assembly: null,
+              accession: null
+            }
+          }
+          // Reactivity is handled by separate fields for target accession properties.
+          else {
+            this.assembly = targetGene.targetAccession.assembly
+            this.accession = targetGene.targetAccession.accession
+          }
+          const autopopulatedExternalIdentifiers = {}
+          for (const dbName of externalGeneDatabases) {
+            autopopulatedExternalIdentifiers[dbName] = (targetGene.externalIdentifiers || [])
+              .find(({ identifier }) => identifier?.dbName == dbName) || {
+              identifier: null,
+              offset: null
+            }
+          }
+          targetGene.externalIdentifiers = autopopulatedExternalIdentifiers
+          this.targetGene = targetGene
         }
       }
     },

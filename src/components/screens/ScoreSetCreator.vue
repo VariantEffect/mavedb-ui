@@ -148,6 +148,14 @@
             <template #content="{prevCallback: showPreviousWizardStep, nextCallback: showNextWizardStep}">
               <div class="mavedb-wizard-form">
                 <div class="mavedb-wizard-form-content-background"></div>
+                <div class="mavedb-wizard-row" v-if="experiment">
+                  <div class="mavedb-wizard-content-pane">
+                    <Message severity="info">
+                      Some fields were autopopulated based on the selected experiment and should be inspected to ensure they
+                      are still relevant to this score set.
+                    </Message>
+                  </div>
+                </div>
                 <div class="mavedb-wizard-row">
                   <div class="mavedb-wizard-help">
                     <label>A short title for the score set, to be displayed at the top of the score set's own page.</label>
@@ -358,10 +366,6 @@
                       </span>
                       <span v-if="validationErrors.primaryPublicationIdentifiers" class="mave-field-error">{{
                         validationErrors.primaryPublicationIdentifiers }}</span>
-                      <Message v-if="experiment" severity="info">
-                        Some fields were autopopulated based on the selected experiment and should be inspected to ensure they
-                        are still relevant to this score set.
-                      </Message>
                     </div>
                   </div>
                   <div class="mavedb-wizard-row">
@@ -416,7 +420,6 @@
             </template>
           </StepperPanel>
           <StepperPanel v-if="itemStatus == 'NotLoaded' || this.item.private">
-                  <!-- Move the other form rows here. -->
             <template #header="{index, clickCallback}">
               <button class="p-stepper-action" :disabled="maxWizardStepEntered < index || maxWizardStepValidated < index - 1" role="tab" @click="clickCallback">
                 <span class="p-stepper-number">{{ index + 1 }}</span>
@@ -1121,6 +1124,7 @@ export default {
 
   methods: {
     validateWizardStep: function(step) {
+      // Later, this may depend on server-side validation.
       switch (step) {
         case 0: {
           // Step 0 is valid if
@@ -1134,11 +1138,10 @@ export default {
         case 1: {
           return this.title && this.shortDescription && this.abstractText && this.methodText
         }
-case 2: {
-      return this.targetGenes.length > 0
-}
+        case 2: {
+          return this.targetGenes.length > 0
+        }
         default:
-          // Add validation logic for steps 1-3 here. Later, this may depend on server-side validation.
           return true
       }
     },
@@ -1880,6 +1883,13 @@ case 2: {
   float: right;
   width: 676px;
   padding: 22px 10px 10px 10px;
+  background-color: #fff;
+}
+
+.mavedb-wizard-content-pane {
+  float: right;
+  width: 676px;
+  padding: 0 10px;
   background-color: #fff;
 }
 

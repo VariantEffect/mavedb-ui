@@ -35,7 +35,9 @@
                 <div class="mavedb-wizard-form-content-background"></div>
                 <div class="mavedb-wizard-row">
                   <div class="mavedb-wizard-help">
-                    <label :id="$scopedId('input-superseding-score-set-label')">Will this score set replace a score set previously published on MaveDB that you created?</label>
+                    <label :id="$scopedId('input-superseding-score-set-label')">
+                      Does this score set correct errors in and replace a score set previously published on MaveDB that you created?
+                    </label>
                   </div>
                   <div class="mavedb-wizard-content">
                     <InputSwitch v-model="isSupersedingScoreSet" :aria-labelledby="$scopedId('input-superseding-score-set-label')" />
@@ -45,7 +47,14 @@
                 <div class="mavedb-wizard-row">
                   <div class="mavedb-wizard-help">
                     <label :id="$scopedId('input-is-meta-analysis-label')">Is this score set a meta-analysis?</label>
-                    <div class="mavedb-help-small">Meta-analyses are score sets derived from data in other score sets that were created by you or other users.</div>
+                    <div class="mavedb-help-small">
+                      Meta-analyses are score sets derived from data in other score sets that were created by you or other users.
+                      For example:
+                      <ul>
+                        <li>a score set that combines data from two other score sets to produce new scores, or</li>
+                        <li>a score set that adds imputed missing values to the scores in another score set.</li>
+                      </ul>
+                    </div>
                   </div>
                   <div class="mavedb-wizard-content">
                     <InputSwitch v-model="isMetaAnalysis" :aria-labelledby="$scopedId('input-is-meta-analysis-label')" />
@@ -222,7 +231,7 @@
                 <div class="mavedb-wizard-row">
                   <div class="mavedb-wizard-help">
                     <label>
-                      A condensed description of the experimental design from the point of sequencing,
+                      A condensed description of the data analysis, starting from raw sequence data,
                       suitable for a specialist audience of MAVE researchers.
                     </label>
                     <div class="mavedb-help-small">
@@ -234,7 +243,7 @@
                         </template>
                         <template v-else>
                           <li>a description of how scores were generated from raw data, including any normalization,</li>
-                          <li>the sequence read filtering approach used (if applicable),</li>
+                          <li>the sequence read filtering approach used,</li>
                           <li>details of how replicates were combined (if applicable), and</li>
                         </template>
                         <li>a description of any additional data columns included in the score and count tables, including column naming conventions.</li>

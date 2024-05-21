@@ -369,7 +369,7 @@
                       <span v-if="validationErrors.publicationIdentifiers" class="mave-field-error">{{validationErrors.publicationIdentifiers}}</span>
                     </div>
                   </div>
-                  <div class="mavedb-wizard-row">
+                  <div class="mavedb-wizard-row" v-if="publicationIdentifiers.length > 1">
                     <div class="mavedb-wizard-help">
                       <label>
                         Of the above publications, the primary publication that describes the score set.
@@ -1106,6 +1106,16 @@ export default {
           }
           targetGene.externalIdentifiers = autopopulatedExternalIdentifiers
           this.targetGene = targetGene
+        }
+      },
+    },
+    publicationIdentifiers: {
+      handler: function(newValue, oldValue) {
+        if (newValue.length == 1) {
+          this.primaryPublicationIdentifiers = newValue
+        } else if (newValue.length == 0 || (newValue.length > 1 && oldValue.length == 1)) {
+          // Clear primary publication if we have just added a second ID, or if we have deleted all IDs.
+          this.primaryPublicationIdentifiers = []
         }
       }
     },

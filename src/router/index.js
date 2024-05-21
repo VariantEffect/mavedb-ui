@@ -8,8 +8,9 @@ import ExperimentSetView from '@/components/screens/ExperimentSetView'
 import HomeScreen from '@/components/screens/HomeScreen'
 import OidcCallback from '@/components/screens/OidcCallback'
 import OidcCallbackError from '@/components/screens/OidcCallbackError'
-import ScoreSetEditor from '@/components/screens/ScoreSetEditor'
 import PublicationIdentifierView from '@/components/screens/PublicationIdentifierView'
+import ScoreSetCreator from '@/components/screens/ScoreSetCreator'
+import ScoreSetEditor from '@/components/screens/ScoreSetEditor'
 import ScoreSetView from '@/components/screens/ScoreSetView'
 import SearchView from '@/components/screens/SearchView'
 import SettingsScreen from '@/components/screens/SettingsScreen'
@@ -69,7 +70,7 @@ const routes = [{
 }, {
   path: '/create-score-set',
   name: 'createScoreSet',
-  component: ScoreSetEditor
+  component: ScoreSetCreator
 }, {
   path: '/experiment-sets/:urn',
   name: 'experimentSet',

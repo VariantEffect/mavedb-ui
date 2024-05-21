@@ -13,9 +13,16 @@ export interface paths {
     get: operations["list_my_access_keys_api_v1_users_me_access_keys_get"];
     /**
      * Create My Access Key
-     * @description Create a new access key for the current user.
+     * @description Create a new access key for the current user, with the default user role.
      */
     post: operations["create_my_access_key_api_v1_users_me_access_keys_post"];
+  };
+  "/api/v1/users/me/access-keys/{role}": {
+    /**
+     * Create My Access Key With Role
+     * @description Create a new access key for the current user, with the specified role.
+     */
+    post: operations["create_my_access_key_with_role_api_v1_users_me_access_keys__role__post"];
   };
   "/api/v1/users/me/access-keys/{key_id}": {
     /**
@@ -126,13 +133,6 @@ export interface paths {
      */
     get: operations["list_assemblies_api_v1_hgvs_assemblies_get"];
   };
-  "/api/v1/hgvs/grouped-assemblies": {
-    /**
-     * List Assemblies Grouped
-     * @description List stored assemblies in groups of major/minor versions
-     */
-    get: operations["list_assemblies_grouped_api_v1_hgvs_grouped_assemblies_get"];
-  };
   "/api/v1/hgvs/{assembly}/accessions": {
     /**
      * List Accessions
@@ -231,10 +231,24 @@ export interface paths {
      */
     get: operations["list_publication_database_names_api_v1_publication_identifiers_databases_get"];
   };
+  "/api/v1/publication-identifiers/search/identifier": {
+    /**
+     * Search Publication Identifier Identifiers
+     * @description Search publication identifiers via a TextSearch query.
+     */
+    post: operations["search_publication_identifier_identifiers_api_v1_publication_identifiers_search_identifier_post"];
+  };
+  "/api/v1/publication-identifiers/search/doi": {
+    /**
+     * Search Publication Identifier Dois
+     * @description Search publication DOIs via a TextSearch query.
+     */
+    post: operations["search_publication_identifier_dois_api_v1_publication_identifiers_search_doi_post"];
+  };
   "/api/v1/publication-identifiers/search": {
     /**
      * Search Publication Identifiers
-     * @description Search publication identifiers via a TextSearch query.
+     * @description Search publication identifiers via a TextSearch query, returning substring matches on DOI and Identifier.
      */
     post: operations["search_publication_identifiers_api_v1_publication_identifiers_search_post"];
   };
@@ -312,6 +326,11 @@ export interface paths {
     /**
      * Get Score Set Scores Csv
      * @description Return scores from a score set, identified by URN, in CSV format.
+     * If no start and limit, all of variants of this score set will be returned.
+     * Example path:
+     * /score-sets/{urn}/scores
+     * /score-sets/{urn}/scores?start=0&limit=100
+     * /score-sets/{urn}/scores?start=100
      */
     get: operations["get_score_set_scores_csv_api_v1_score_sets__urn__scores_get"];
   };
@@ -319,6 +338,11 @@ export interface paths {
     /**
      * Get Score Set Counts Csv
      * @description Return counts from a score set, identified by URN, in CSV format.
+     * If no start and limit, all of variants of this score set will be returned.
+     * Example path:
+     * /score-sets/{urn}/counts
+     * /score-sets/{urn}/counts?start=0&limit=100
+     * /score-sets/{urn}/counts?start=100
      */
     get: operations["get_score_set_counts_csv_api_v1_score_sets__urn__counts_get"];
   };
@@ -350,6 +374,41 @@ export interface paths {
      * @description Publish a score set.
      */
     post: operations["publish_score_set_api_v1_score_sets__urn__publish_post"];
+  };
+  "/api/v1/statistics/target/accession/{field}": {
+    /**
+     * Target Accessions By Field
+     * @description Returns a dictionary of counts for the distinct values of the provided `field` (member of the `target_accessions` table).
+     * Don't include any NULL field values.
+     */
+    get: operations["target_accessions_by_field_api_v1_statistics_target_accession__field__get"];
+  };
+  "/api/v1/statistics/target/sequence/{field}": {
+    /**
+     * Target Sequences By Field
+     * @description Returns a dictionary of counts for the distinct values of the provided `field` (member of the `target_sequences` table).
+     * Don't include any NULL field values.
+     */
+    get: operations["target_sequences_by_field_api_v1_statistics_target_sequence__field__get"];
+  };
+  "/api/v1/statistics/target/gene/{field}": {
+    /**
+     * Target Genes By Field
+     * @description Returns a dictionary of counts for the distinct values of the provided `field` (member of the `target_sequences` table).
+     * Don't include any NULL field values. Each field here is handled individually because of the unique structure of this
+     * target gene object- fields might require information from both TargetGene subtypes (accession and sequence).
+     */
+    get: operations["target_genes_by_field_api_v1_statistics_target_gene__field__get"];
+  };
+  "/api/v1/statistics/record/{model}/{field}": {
+    /**
+     * Record Object Statistics
+     * @description Resolve a dictionary of statistics based on the provided model name and model field.
+     *
+     * Model names and fields should be members of the Enum classes defined above. Providing an invalid model name or
+     * model field will yield a 422 Unprocessable Entity error with details about valid enum values.
+     */
+    get: operations["record_object_statistics_api_v1_statistics_record__model___field__get"];
   };
   "/api/v1/target-gene-identifiers/search": {
     /**
@@ -392,13 +451,6 @@ export interface paths {
      * @description Search target genes.
      */
     post: operations["search_target_genes_api_v1_target_genes_search_post"];
-  };
-  "/api/v1/taxonomies/concatenateTaxonomyList": {
-    /**
-     * Concatenate Taxonomy Tax Id Organism Names Common Name
-     * @description List distinct species names, in alphabetical order.
-     */
-    get: operations["concatenate_taxonomy_tax_id_organism_names_common_name_api_v1_taxonomies_concatenateTaxonomyList_get"];
   };
   "/api/v1/taxonomies/": {
     /**
@@ -469,6 +521,13 @@ export interface paths {
      */
     get: operations["show_user_api_v1_users__id__get"];
   };
+  "/api/v1/users/me/has-logged-in": {
+    /**
+     * User Has Logged In
+     * @description Update the current user's.
+     */
+    put: operations["user_has_logged_in_api_v1_users_me_has_logged_in_put"];
+  };
   "/api/v1/users//{id}": {
     /**
      * Update User
@@ -495,6 +554,7 @@ export interface components {
       expirationDate?: string;
       /** Createdat */
       createdAt?: string;
+      role?: components["schemas"]["UserRole"];
     };
     /**
      * AdminUser
@@ -507,24 +567,26 @@ export interface components {
       firstName?: string;
       /** Lastname */
       lastName?: string;
+      /** Email */
+      email?: string;
+      /** Isfirstlogin */
+      isFirstLogin: boolean;
+      roles: components["schemas"]["UserRole"][];
       /** Id */
       id: number;
-      /** Roles */
-      roles: string[];
     };
     /**
      * AdminUserUpdate
      * @description View model for updating current user, for admin clients.
      */
     AdminUserUpdate: {
+      /** Email */
+      email?: string;
       /** Firstname */
       firstName?: string;
       /** Lastname */
       lastName?: string;
-      /** Email */
-      email?: string;
-      /** Roles */
-      roles: string[];
+      roles?: components["schemas"]["UserRole"][];
     };
     /** ApiVersion */
     ApiVersion: {
@@ -559,8 +621,9 @@ export interface components {
       lastName?: string;
       /** Email */
       email?: string;
-      /** Roles */
-      roles: string[];
+      /** Isfirstlogin */
+      isFirstLogin: boolean;
+      roles: components["schemas"]["UserRole"][];
     };
     /**
      * CurrentUserUpdate
@@ -617,8 +680,6 @@ export interface components {
       publishedDate?: string;
       /** Experimentseturn */
       experimentSetUrn: string;
-      /** Scoreseturns */
-      scoreSetUrns: string[];
       /** Doiidentifiers */
       doiIdentifiers: components["schemas"]["DoiIdentifier"][];
       /** Primarypublicationidentifiers */
@@ -627,10 +688,12 @@ export interface components {
       secondaryPublicationIdentifiers: components["schemas"]["PublicationIdentifier"][];
       /** Rawreadidentifiers */
       rawReadIdentifiers: components["schemas"]["RawReadIdentifier"][];
-      /** Processingstate */
-      processingState?: string;
       /** Keywords */
       keywords: string[];
+      /** Scoreseturns */
+      scoreSetUrns: string[];
+      /** Processingstate */
+      processingState?: string;
     };
     /** ExperimentCreate */
     ExperimentCreate: {
@@ -759,31 +822,22 @@ export interface components {
       identifier: string;
       /** Dbname */
       dbName?: string;
-      /** Url */
-      url: string;
-      /** Referencehtml */
-      referenceHtml: string;
       /** Title */
       title: string;
+      /** Authors */
+      authors: components["schemas"]["PublicationAuthors"][];
       /** Abstract */
       abstract?: string;
-      /** Authors */
-      authors: {
-          [key: string]: string;
-        }[];
-      /** Publicationdoi */
-      publicationDoi?: string;
-      /** Preprintdoi */
-      preprintDoi?: string;
+      /** Doi */
+      doi?: string;
       /** Publicationyear */
       publicationYear?: number;
-      /**
-       * Preprintdate
-       * Format: date
-       */
-      preprintDate?: string;
       /** Publicationjournal */
       publicationJournal?: string;
+      /** Url */
+      url?: string;
+      /** Referencehtml */
+      referenceHtml?: string;
     };
     /** HTTPValidationError */
     HTTPValidationError: {
@@ -842,8 +896,22 @@ export interface components {
       expirationDate?: string;
       /** Createdat */
       createdAt?: string;
+      role?: components["schemas"]["UserRole"];
       /** Privatekey */
       privateKey: string;
+    };
+    /**
+     * ProcessingState
+     * @description An enumeration.
+     * @enum {unknown}
+     */
+    ProcessingState: "incomplete" | "processing" | "failed" | "success";
+    /** PublicationAuthors */
+    PublicationAuthors: {
+      /** Name */
+      name: string;
+      /** Primary */
+      primary: boolean;
     };
     /** PublicationIdentifier */
     PublicationIdentifier: {
@@ -851,31 +919,22 @@ export interface components {
       identifier: string;
       /** Dbname */
       dbName?: string;
-      /** Url */
-      url: string;
-      /** Referencehtml */
-      referenceHtml: string;
       /** Title */
       title: string;
+      /** Authors */
+      authors: components["schemas"]["PublicationAuthors"][];
       /** Abstract */
       abstract?: string;
-      /** Authors */
-      authors: {
-          [key: string]: string;
-        }[];
-      /** Publicationdoi */
-      publicationDoi?: string;
-      /** Preprintdoi */
-      preprintDoi?: string;
+      /** Doi */
+      doi?: string;
       /** Publicationyear */
       publicationYear?: number;
-      /**
-       * Preprintdate
-       * Format: date
-       */
-      preprintDate?: string;
       /** Publicationjournal */
       publicationJournal?: string;
+      /** Url */
+      url?: string;
+      /** Referencehtml */
+      referenceHtml?: string;
       /** Id */
       id: number;
     };
@@ -900,6 +959,18 @@ export interface components {
       /** Identifier */
       identifier: string;
     };
+    /**
+     * RecordFields
+     * @description An enumeration.
+     * @enum {string}
+     */
+    RecordFields: "publication-identifiers" | "keywords" | "doi-identifiers" | "raw-read-identifiers" | "created-by";
+    /**
+     * RecordNames
+     * @description An enumeration.
+     * @enum {string}
+     */
+    RecordNames: "experiment" | "score-set";
     /** SavedDoiIdentifier */
     SavedDoiIdentifier: {
       /** Identifier */
@@ -915,31 +986,22 @@ export interface components {
       identifier: string;
       /** Dbname */
       dbName?: string;
-      /** Url */
-      url: string;
-      /** Referencehtml */
-      referenceHtml: string;
       /** Title */
       title: string;
+      /** Authors */
+      authors: components["schemas"]["PublicationAuthors"][];
       /** Abstract */
       abstract?: string;
-      /** Authors */
-      authors: {
-          [key: string]: string;
-        }[];
-      /** Publicationdoi */
-      publicationDoi?: string;
-      /** Preprintdoi */
-      preprintDoi?: string;
+      /** Doi */
+      doi?: string;
       /** Publicationyear */
       publicationYear?: number;
-      /**
-       * Preprintdate
-       * Format: date
-       */
-      preprintDate?: string;
       /** Publicationjournal */
       publicationJournal?: string;
+      /** Url */
+      url?: string;
+      /** Referencehtml */
+      referenceHtml?: string;
       /** Id */
       id: number;
     };
@@ -969,7 +1031,28 @@ export interface components {
       sequence: string;
       /** Label */
       label?: string;
-      taxonomy: components["schemas"]["Taxonomy"];
+      taxonomy: components["schemas"]["SavedTaxonomy"];
+    };
+    /** SavedTaxonomy */
+    SavedTaxonomy: {
+      /** Taxid */
+      taxId: number;
+      /** Organismname */
+      organismName?: string;
+      /** Commonname */
+      commonName?: string;
+      /** Rank */
+      rank?: string;
+      /** Hasdescribedspeciesname */
+      hasDescribedSpeciesName?: boolean;
+      /** Articlereference */
+      articleReference?: string;
+      /** Genomeid */
+      genomeId?: number;
+      /** Id */
+      id: number;
+      /** Url */
+      url: string;
     };
     /**
      * SavedUser
@@ -1004,12 +1087,9 @@ export interface components {
       urn: string;
       /** Numvariants */
       numVariants: number;
-      experiment: components["schemas"]["Experiment"];
       license: components["schemas"]["ShortLicense"];
-      /** Supersededscoreseturn */
-      supersededScoreSetUrn?: string;
-      /** Supersedingscoreseturn */
-      supersedingScoreSetUrn?: string;
+      supersededScoreSet?: components["schemas"]["ShorterScoreSet"];
+      supersedingScoreSet?: components["schemas"]["ShorterScoreSet"];
       /** Metaanalyzesscoreseturns */
       metaAnalyzesScoreSetUrns: string[];
       /** Metaanalyzedbyscoreseturns */
@@ -1043,8 +1123,12 @@ export interface components {
       datasetColumns: Record<string, never>;
       /** Keywords */
       keywords: string[];
+      experiment: components["schemas"]["Experiment"];
       /** Private */
       private: boolean;
+      processingState?: components["schemas"]["ProcessingState"];
+      /** Processingerrors */
+      processingErrors?: Record<string, never>;
     };
     /**
      * ScoreSetCreate
@@ -1168,8 +1252,6 @@ export interface components {
       publishedDate?: string;
       /** Experimentseturn */
       experimentSetUrn: string;
-      /** Scoreseturns */
-      scoreSetUrns: string[];
       /** Doiidentifiers */
       doiIdentifiers: components["schemas"]["SavedDoiIdentifier"][];
       /** Primarypublicationidentifiers */
@@ -1178,10 +1260,12 @@ export interface components {
       secondaryPublicationIdentifiers: components["schemas"]["SavedPublicationIdentifier"][];
       /** Rawreadidentifiers */
       rawReadIdentifiers: components["schemas"]["SavedRawReadIdentifier"][];
-      /** Processingstate */
-      processingState?: string;
       /** Keywords */
       keywords: string[];
+      /** Scoreseturns */
+      scoreSetUrns: string[];
+      /** Processingstate */
+      processingState?: string;
     };
     /**
      * ShortLicense
@@ -1258,6 +1342,11 @@ export interface components {
       targetSequence?: components["schemas"]["SavedTargetSequence"];
       targetAccession?: components["schemas"]["SavedTargetAccession"];
     };
+    /** ShorterScoreSet */
+    ShorterScoreSet: {
+      /** Urn */
+      urn: string;
+    };
     /** TargetAccession */
     TargetAccession: {
       /** Accession */
@@ -1276,6 +1365,12 @@ export interface components {
       /** Gene */
       gene?: string;
     };
+    /**
+     * TargetAccessionFields
+     * @description An enumeration.
+     * @enum {string}
+     */
+    TargetAccessionFields: "accession" | "assembly" | "gene";
     /**
      * TargetGene
      * @description Target gene view model containing a complete set of properties visible to non-admin users.
@@ -1306,6 +1401,12 @@ export interface components {
       targetSequence?: components["schemas"]["TargetSequenceCreate"];
       targetAccession?: components["schemas"]["TargetAccessionCreate"];
     };
+    /**
+     * TargetGeneFields
+     * @description An enumeration.
+     * @enum {string}
+     */
+    TargetGeneFields: "category" | "organism" | "ensembl-identifier" | "refseq-identifier" | "uniprot-identifier";
     /** TargetSequence */
     TargetSequence: {
       /** Sequencetype */
@@ -1324,8 +1425,14 @@ export interface components {
       sequence: string;
       /** Label */
       label?: string;
-      taxonomy: components["schemas"]["Taxonomy"];
+      taxonomy: components["schemas"]["TaxonomyCreate"];
     };
+    /**
+     * TargetSequenceFields
+     * @description An enumeration.
+     * @enum {string}
+     */
+    TargetSequenceFields: "sequence" | "sequence-type";
     /** Taxonomy */
     Taxonomy: {
       /** Taxid */
@@ -1347,6 +1454,23 @@ export interface components {
       /** Url */
       url: string;
     };
+    /** TaxonomyCreate */
+    TaxonomyCreate: {
+      /** Taxid */
+      taxId: number;
+      /** Organismname */
+      organismName?: string;
+      /** Commonname */
+      commonName?: string;
+      /** Rank */
+      rank?: string;
+      /** Hasdescribedspeciesname */
+      hasDescribedSpeciesName?: boolean;
+      /** Articlereference */
+      articleReference?: string;
+      /** Genomeid */
+      genomeId?: number;
+    };
     /** TextSearch */
     TextSearch: {
       /** Text */
@@ -1364,10 +1488,16 @@ export interface components {
       /** Lastname */
       lastName?: string;
     };
+    /**
+     * UserRole
+     * @description An enumeration.
+     * @enum {unknown}
+     */
+    UserRole: "admin";
     /** ValidationError */
     ValidationError: {
       /** Location */
-      loc: string[];
+      loc: (string | number)[];
       /** Message */
       msg: string;
       /** Error Type */
@@ -1392,6 +1522,11 @@ export interface operations {
    * @description List the current user's access keys.
    */
   list_my_access_keys_api_v1_users_me_access_keys_get: {
+    parameters: {
+      header?: {
+        "x-active-roles"?: string;
+      };
+    };
     responses: {
       /** @description Successful Response */
       200: {
@@ -1403,6 +1538,12 @@ export interface operations {
       404: {
         content: never;
       };
+      /** @description Validation Error */
+      422: {
+        content: {
+          "application/json": components["schemas"]["HTTPValidationError"];
+        };
+      };
       /** @description Internal Server Error */
       500: {
         content: never;
@@ -1411,9 +1552,14 @@ export interface operations {
   };
   /**
    * Create My Access Key
-   * @description Create a new access key for the current user.
+   * @description Create a new access key for the current user, with the default user role.
    */
   create_my_access_key_api_v1_users_me_access_keys_post: {
+    parameters: {
+      header?: {
+        "x-active-roles"?: string;
+      };
+    };
     responses: {
       /** @description Successful Response */
       200: {
@@ -1424,6 +1570,48 @@ export interface operations {
       /** @description Not Found */
       404: {
         content: never;
+      };
+      /** @description Validation Error */
+      422: {
+        content: {
+          "application/json": components["schemas"]["HTTPValidationError"];
+        };
+      };
+      /** @description Internal Server Error */
+      500: {
+        content: never;
+      };
+    };
+  };
+  /**
+   * Create My Access Key With Role
+   * @description Create a new access key for the current user, with the specified role.
+   */
+  create_my_access_key_with_role_api_v1_users_me_access_keys__role__post: {
+    parameters: {
+      header?: {
+        "x-active-roles"?: string;
+      };
+      path: {
+        role: components["schemas"]["UserRole"];
+      };
+    };
+    responses: {
+      /** @description Successful Response */
+      200: {
+        content: {
+          "application/json": components["schemas"]["NewAccessKey"];
+        };
+      };
+      /** @description Not Found */
+      404: {
+        content: never;
+      };
+      /** @description Validation Error */
+      422: {
+        content: {
+          "application/json": components["schemas"]["HTTPValidationError"];
+        };
       };
       /** @description Internal Server Error */
       500: {
@@ -1437,6 +1625,9 @@ export interface operations {
    */
   delete_my_access_key_api_v1_users_me_access_keys__key_id__delete: {
     parameters: {
+      header?: {
+        "x-active-roles"?: string;
+      };
       path: {
         key_id: string;
       };
@@ -1550,6 +1741,9 @@ export interface operations {
         editable?: boolean;
         q?: string;
       };
+      header?: {
+        "x-active-roles"?: string;
+      };
     };
     responses: {
       /** @description Successful Response */
@@ -1575,6 +1769,11 @@ export interface operations {
    * @description Create an experiment.
    */
   create_experiment_api_v1_experiments__post: {
+    parameters: {
+      header?: {
+        "x-active-roles"?: string;
+      };
+    };
     requestBody: {
       content: {
         "application/json": components["schemas"]["ExperimentCreate"];
@@ -1631,6 +1830,11 @@ export interface operations {
    * @description Search experiments created by the current user..
    */
   search_my_experiments_api_v1_me_experiments_search_post: {
+    parameters: {
+      header?: {
+        "x-active-roles"?: string;
+      };
+    };
     requestBody: {
       content: {
         "application/json": components["schemas"]["ExperimentsSearch"];
@@ -1661,6 +1865,9 @@ export interface operations {
    */
   fetch_experiment_api_v1_experiments__urn__get: {
     parameters: {
+      header?: {
+        "x-active-roles"?: string;
+      };
       path: {
         urn: string;
       };
@@ -1690,6 +1897,9 @@ export interface operations {
    */
   update_experiment_api_v1_experiments__urn__put: {
     parameters: {
+      header?: {
+        "x-active-roles"?: string;
+      };
       path: {
         urn: string;
       };
@@ -1732,6 +1942,9 @@ export interface operations {
    */
   delete_experiment_api_v1_experiments__urn__delete: {
     parameters: {
+      header?: {
+        "x-active-roles"?: string;
+      };
       path: {
         urn: string;
       };
@@ -1740,7 +1953,7 @@ export interface operations {
       /** @description Successful Response */
       200: {
         content: {
-          "application/json": components["schemas"]["Experiment"];
+          "application/json": unknown;
         };
       };
       /** @description Not found */
@@ -1759,6 +1972,9 @@ export interface operations {
    */
   get_experiment_score_sets_api_v1_experiments__urn__score_sets_get: {
     parameters: {
+      header?: {
+        "x-active-roles"?: string;
+      };
       path: {
         urn: string;
       };
@@ -1796,7 +2012,7 @@ export interface operations {
       /** @description Successful Response */
       200: {
         content: {
-          "application/json": unknown;
+          "application/json": string;
         };
       };
       /** @description Not found */
@@ -1827,7 +2043,7 @@ export interface operations {
       /** @description Successful Response */
       200: {
         content: {
-          "application/json": unknown;
+          "application/json": boolean;
         };
       };
       /** @description Not found */
@@ -1861,26 +2077,6 @@ export interface operations {
     };
   };
   /**
-   * List Assemblies Grouped
-   * @description List stored assemblies in groups of major/minor versions
-   */
-  list_assemblies_grouped_api_v1_hgvs_grouped_assemblies_get: {
-    responses: {
-      /** @description Successful Response */
-      200: {
-        content: {
-          "application/json": ({
-              [key: string]: string | string[];
-            })[];
-        };
-      };
-      /** @description Not found */
-      404: {
-        content: never;
-      };
-    };
-  };
-  /**
    * List Accessions
    * @description List stored accessions
    */
@@ -1894,7 +2090,7 @@ export interface operations {
       /** @description Successful Response */
       200: {
         content: {
-          "application/json": unknown[];
+          "application/json": string[];
         };
       };
       /** @description Not found */
@@ -1941,7 +2137,7 @@ export interface operations {
       /** @description Successful Response */
       200: {
         content: {
-          "application/json": unknown;
+          "application/json": Record<string, never>;
         };
       };
       /** @description Not found */
@@ -1970,7 +2166,7 @@ export interface operations {
       /** @description Successful Response */
       200: {
         content: {
-          "application/json": unknown[];
+          "application/json": string[];
         };
       };
       /** @description Not found */
@@ -1999,7 +2195,7 @@ export interface operations {
       /** @description Successful Response */
       200: {
         content: {
-          "application/json": unknown;
+          "application/json": Record<string, never>;
         };
       };
       /** @description Not found */
@@ -2028,7 +2224,7 @@ export interface operations {
       /** @description Successful Response */
       200: {
         content: {
-          "application/json": unknown;
+          "application/json": string;
         };
       };
       /** @description Not found */
@@ -2237,8 +2433,66 @@ export interface operations {
     };
   };
   /**
-   * Search Publication Identifiers
+   * Search Publication Identifier Identifiers
    * @description Search publication identifiers via a TextSearch query.
+   */
+  search_publication_identifier_identifiers_api_v1_publication_identifiers_search_identifier_post: {
+    requestBody: {
+      content: {
+        "application/json": components["schemas"]["TextSearch"];
+      };
+    };
+    responses: {
+      /** @description Successful Response */
+      200: {
+        content: {
+          "application/json": components["schemas"]["PublicationIdentifier"][];
+        };
+      };
+      /** @description Not found */
+      404: {
+        content: never;
+      };
+      /** @description Validation Error */
+      422: {
+        content: {
+          "application/json": components["schemas"]["HTTPValidationError"];
+        };
+      };
+    };
+  };
+  /**
+   * Search Publication Identifier Dois
+   * @description Search publication DOIs via a TextSearch query.
+   */
+  search_publication_identifier_dois_api_v1_publication_identifiers_search_doi_post: {
+    requestBody: {
+      content: {
+        "application/json": components["schemas"]["TextSearch"];
+      };
+    };
+    responses: {
+      /** @description Successful Response */
+      200: {
+        content: {
+          "application/json": components["schemas"]["PublicationIdentifier"][];
+        };
+      };
+      /** @description Not found */
+      404: {
+        content: never;
+      };
+      /** @description Validation Error */
+      422: {
+        content: {
+          "application/json": components["schemas"]["HTTPValidationError"];
+        };
+      };
+    };
+  };
+  /**
+   * Search Publication Identifiers
+   * @description Search publication identifiers via a TextSearch query, returning substring matches on DOI and Identifier.
    */
   search_publication_identifiers_api_v1_publication_identifiers_search_post: {
     requestBody: {
@@ -2425,6 +2679,11 @@ export interface operations {
    * @description Search score sets created by the current user..
    */
   search_my_score_sets_api_v1_me_score_sets_search_post: {
+    parameters: {
+      header?: {
+        "x-active-roles"?: string;
+      };
+    };
     requestBody: {
       content: {
         "application/json": components["schemas"]["ScoreSetsSearch"];
@@ -2455,6 +2714,9 @@ export interface operations {
    */
   show_score_set_api_v1_score_sets__urn__get: {
     parameters: {
+      header?: {
+        "x-active-roles"?: string;
+      };
       path: {
         urn: string;
       };
@@ -2488,6 +2750,9 @@ export interface operations {
    */
   update_score_set_api_v1_score_sets__urn__put: {
     parameters: {
+      header?: {
+        "x-active-roles"?: string;
+      };
       path: {
         urn: string;
       };
@@ -2530,6 +2795,9 @@ export interface operations {
    */
   delete_score_set_api_v1_score_sets__urn__delete: {
     parameters: {
+      header?: {
+        "x-active-roles"?: string;
+      };
       path: {
         urn: string;
       };
@@ -2554,9 +2822,23 @@ export interface operations {
   /**
    * Get Score Set Scores Csv
    * @description Return scores from a score set, identified by URN, in CSV format.
+   * If no start and limit, all of variants of this score set will be returned.
+   * Example path:
+   * /score-sets/{urn}/scores
+   * /score-sets/{urn}/scores?start=0&limit=100
+   * /score-sets/{urn}/scores?start=100
    */
   get_score_set_scores_csv_api_v1_score_sets__urn__scores_get: {
     parameters: {
+      query?: {
+        /** @description Start index for pagination */
+        start?: number;
+        /** @description Number of variants to return */
+        limit?: number;
+      };
+      header?: {
+        "x-active-roles"?: string;
+      };
       path: {
         urn: string;
       };
@@ -2584,9 +2866,23 @@ export interface operations {
   /**
    * Get Score Set Counts Csv
    * @description Return counts from a score set, identified by URN, in CSV format.
+   * If no start and limit, all of variants of this score set will be returned.
+   * Example path:
+   * /score-sets/{urn}/counts
+   * /score-sets/{urn}/counts?start=0&limit=100
+   * /score-sets/{urn}/counts?start=100
    */
   get_score_set_counts_csv_api_v1_score_sets__urn__counts_get: {
     parameters: {
+      query?: {
+        /** @description Start index for pagination */
+        start?: number;
+        /** @description Number of variants to return */
+        limit?: number;
+      };
+      header?: {
+        "x-active-roles"?: string;
+      };
       path: {
         urn: string;
       };
@@ -2617,6 +2913,9 @@ export interface operations {
    */
   get_score_set_mapped_variants_api_v1_score_sets__urn__mapped_variants_get: {
     parameters: {
+      header?: {
+        "x-active-roles"?: string;
+      };
       path: {
         urn: string;
       };
@@ -2645,6 +2944,11 @@ export interface operations {
    * @description Create a score set.
    */
   create_score_set_api_v1_score_sets__post: {
+    parameters: {
+      header?: {
+        "x-active-roles"?: string;
+      };
+    };
     requestBody: {
       content: {
         "application/json": components["schemas"]["ScoreSetCreate"];
@@ -2674,6 +2978,9 @@ export interface operations {
    */
   upload_score_set_variant_data_api_v1_score_sets__urn__variants_data_post: {
     parameters: {
+      header?: {
+        "x-active-roles"?: string;
+      };
       path: {
         urn: string;
       };
@@ -2706,6 +3013,9 @@ export interface operations {
    */
   publish_score_set_api_v1_score_sets__urn__publish_post: {
     parameters: {
+      header?: {
+        "x-active-roles"?: string;
+      };
       path: {
         urn: string;
       };
@@ -2718,6 +3028,142 @@ export interface operations {
         };
       };
       /** @description not found */
+      404: {
+        content: never;
+      };
+      /** @description Validation Error */
+      422: {
+        content: {
+          "application/json": components["schemas"]["HTTPValidationError"];
+        };
+      };
+    };
+  };
+  /**
+   * Target Accessions By Field
+   * @description Returns a dictionary of counts for the distinct values of the provided `field` (member of the `target_accessions` table).
+   * Don't include any NULL field values.
+   */
+  target_accessions_by_field_api_v1_statistics_target_accession__field__get: {
+    parameters: {
+      path: {
+        field: components["schemas"]["TargetAccessionFields"];
+      };
+    };
+    responses: {
+      /** @description Successful Response */
+      200: {
+        content: {
+          "application/json": {
+            [key: string]: number;
+          };
+        };
+      };
+      /** @description Not found */
+      404: {
+        content: never;
+      };
+      /** @description Validation Error */
+      422: {
+        content: {
+          "application/json": components["schemas"]["HTTPValidationError"];
+        };
+      };
+    };
+  };
+  /**
+   * Target Sequences By Field
+   * @description Returns a dictionary of counts for the distinct values of the provided `field` (member of the `target_sequences` table).
+   * Don't include any NULL field values.
+   */
+  target_sequences_by_field_api_v1_statistics_target_sequence__field__get: {
+    parameters: {
+      path: {
+        field: components["schemas"]["TargetSequenceFields"];
+      };
+    };
+    responses: {
+      /** @description Successful Response */
+      200: {
+        content: {
+          "application/json": {
+            [key: string]: number;
+          };
+        };
+      };
+      /** @description Not found */
+      404: {
+        content: never;
+      };
+      /** @description Validation Error */
+      422: {
+        content: {
+          "application/json": components["schemas"]["HTTPValidationError"];
+        };
+      };
+    };
+  };
+  /**
+   * Target Genes By Field
+   * @description Returns a dictionary of counts for the distinct values of the provided `field` (member of the `target_sequences` table).
+   * Don't include any NULL field values. Each field here is handled individually because of the unique structure of this
+   * target gene object- fields might require information from both TargetGene subtypes (accession and sequence).
+   */
+  target_genes_by_field_api_v1_statistics_target_gene__field__get: {
+    parameters: {
+      path: {
+        field: components["schemas"]["TargetGeneFields"];
+      };
+    };
+    responses: {
+      /** @description Successful Response */
+      200: {
+        content: {
+          "application/json": {
+            [key: string]: number;
+          };
+        };
+      };
+      /** @description Not found */
+      404: {
+        content: never;
+      };
+      /** @description Validation Error */
+      422: {
+        content: {
+          "application/json": components["schemas"]["HTTPValidationError"];
+        };
+      };
+    };
+  };
+  /**
+   * Record Object Statistics
+   * @description Resolve a dictionary of statistics based on the provided model name and model field.
+   *
+   * Model names and fields should be members of the Enum classes defined above. Providing an invalid model name or
+   * model field will yield a 422 Unprocessable Entity error with details about valid enum values.
+   */
+  record_object_statistics_api_v1_statistics_record__model___field__get: {
+    parameters: {
+      path: {
+        model: components["schemas"]["RecordNames"];
+        field: components["schemas"]["RecordFields"];
+      };
+    };
+    responses: {
+      /** @description Successful Response */
+      200: {
+        content: {
+          "application/json": {
+            [key: string]: number;
+          } | {
+            [key: string]: {
+              [key: string]: number;
+            };
+          };
+        };
+      };
+      /** @description Not found */
       404: {
         content: never;
       };
@@ -2876,24 +3322,6 @@ export interface operations {
     };
   };
   /**
-   * Concatenate Taxonomy Tax Id Organism Names Common Name
-   * @description List distinct species names, in alphabetical order.
-   */
-  concatenate_taxonomy_tax_id_organism_names_common_name_api_v1_taxonomies_concatenateTaxonomyList_get: {
-    responses: {
-      /** @description Successful Response */
-      200: {
-        content: {
-          "application/json": string[];
-        };
-      };
-      /** @description Not Found */
-      404: {
-        content: never;
-      };
-    };
-  };
-  /**
    * List Taxonomies
    * @description List taxonomies.
    */
@@ -3040,6 +3468,11 @@ export interface operations {
    * @description List users.
    */
   list_users_api_v1_users__get: {
+    parameters: {
+      header?: {
+        "x-active-roles"?: string;
+      };
+    };
     responses: {
       /** @description Successful Response */
       200: {
@@ -3051,6 +3484,12 @@ export interface operations {
       404: {
         content: never;
       };
+      /** @description Validation Error */
+      422: {
+        content: {
+          "application/json": components["schemas"]["HTTPValidationError"];
+        };
+      };
     };
   };
   /**
@@ -3058,6 +3497,11 @@ export interface operations {
    * @description Return the current user.
    */
   show_me_api_v1_users_me_get: {
+    parameters: {
+      header?: {
+        "x-active-roles"?: string;
+      };
+    };
     responses: {
       /** @description Successful Response */
       200: {
@@ -3068,6 +3512,12 @@ export interface operations {
       /** @description Not Found */
       404: {
         content: never;
+      };
+      /** @description Validation Error */
+      422: {
+        content: {
+          "application/json": components["schemas"]["HTTPValidationError"];
+        };
       };
       /** @description Internal Server Error */
       500: {
@@ -3080,6 +3530,11 @@ export interface operations {
    * @description Update the current user.
    */
   update_me_api_v1_users_me_put: {
+    parameters: {
+      header?: {
+        "x-active-roles"?: string;
+      };
+    };
     requestBody: {
       content: {
         "application/json": components["schemas"]["CurrentUserUpdate"];
@@ -3114,6 +3569,9 @@ export interface operations {
    */
   show_user_api_v1_users__id__get: {
     parameters: {
+      header?: {
+        "x-active-roles"?: string;
+      };
       path: {
         id: number;
       };
@@ -3142,11 +3600,47 @@ export interface operations {
     };
   };
   /**
+   * User Has Logged In
+   * @description Update the current user's.
+   */
+  user_has_logged_in_api_v1_users_me_has_logged_in_put: {
+    parameters: {
+      header?: {
+        "x-active-roles"?: string;
+      };
+    };
+    responses: {
+      /** @description Successful Response */
+      200: {
+        content: {
+          "application/json": components["schemas"]["CurrentUser"];
+        };
+      };
+      /** @description Not Found */
+      404: {
+        content: never;
+      };
+      /** @description Validation Error */
+      422: {
+        content: {
+          "application/json": components["schemas"]["HTTPValidationError"];
+        };
+      };
+      /** @description Internal Server Error */
+      500: {
+        content: never;
+      };
+    };
+  };
+  /**
    * Update User
    * @description Update a user.
    */
   update_user_api_v1_users___id__put: {
     parameters: {
+      header?: {
+        "x-active-roles"?: string;
+      };
       path: {
         id: number;
       };

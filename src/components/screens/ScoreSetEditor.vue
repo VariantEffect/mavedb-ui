@@ -196,7 +196,7 @@
                         <template #item="slotProps">
                           <div>
                               <div>Title: {{ slotProps.item.title }}</div>
-                              <div>DOI: {{ slotProps.item.publicationDoi || slotProps.item.preprintDoi }}</div>
+                              <div>DOI: {{ slotProps.item.doi }}</div>
                               <div>Identifier: {{ slotProps.item.identifier }}</div>
                               <div>Database: {{ slotProps.item.dbName }}</div>
                           </div>
@@ -215,7 +215,7 @@
                         <template #option="slotProps">
                           <div class="field">
                             <div>Title: {{ slotProps.option.title }}</div>
-                            <div>DOI: {{ slotProps.option.publicationDoi || slotProps.option.preprintDoi }}</div>
+                            <div>DOI: {{ slotProps.option.doi }}</div>
                             <div>Identifier: {{ slotProps.option.identifier }}</div>
                             <div>Database: {{ slotProps.option.dbName }}</div>
                           </div>

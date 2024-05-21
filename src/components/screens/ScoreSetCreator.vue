@@ -602,7 +602,7 @@
               </div>
               <div class="field">
                 <span v-if="targetGenes.length > 0">
-                  <DataTable v-model:expandedRows="expandedTargetGeneRows" :value="targetGenes" dataKey="name">
+                  <DataTable v-model:expandedRows="expandedTargetGeneRows" :value="targetGenes" dataKey="index">
                     <template #header>
                       <h3 class="target-header">Created Targets</h3>
                     </template>

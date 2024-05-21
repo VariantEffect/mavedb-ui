@@ -94,8 +94,11 @@
         <div v-if="item.dataUsagePolicy">Data usage policy: {{ item.dataUsagePolicy }}</div>
         <div v-if="item.experiment">Member of <router-link
             :to="{ name: 'experiment', params: { urn: item.experiment.urn } }">{{ item.experiment.urn }}</router-link></div>
-        <div v-if="currentScoreSet">Current version <router-link
-            :to="{ name: 'scoreSet', params: { urn: this.currentScoreSet.urn } }">{{ this.currentScoreSet.urn }}</router-link></div>
+        <div v-if="item.supersedingScoreSet">Current version <router-link
+            :to="{ name: 'scoreSet', params: { urn: item.supersedingScoreSet.urn } }">{{ item.supersedingScoreSet.urn }}</router-link>
+        </div>
+        <div v-else>Current version <router-link
+            :to="{ name: 'scoreSet', params: { urn: item.urn } }">{{ item.urn }}</router-link></div>
         <div v-if="sortedMetaAnalyzesScoreSetUrns.length > 0">
           Meta-analyzes
           <template v-for="(urn, index) of sortedMetaAnalyzesScoreSetUrns" :key="urn">
@@ -417,7 +420,6 @@ export default {
   },
   data: () => ({
     scores: null,
-    currentScoreSet: null,
     scoresTable: [],
     countsTable: [],
     readMore: true,
@@ -441,8 +443,7 @@ export default {
       immediate: true
     },
     item: {
-      handler: function() {
-        this.currentVersion()
+      handler: function () {
         this.loadTableScores()
         this.loadTableCounts()
       }
@@ -455,17 +456,6 @@ export default {
   },
   methods: {
     variantNotNullOrNA,
-    currentVersion: async function() {
-      if (this.item) {
-        try {
-          const response = await axios.get(`${config.apiBaseUrl}/score-sets/current-version/${this.item.urn}`)
-          this.currentScoreSet = response.data
-        } catch (error) {
-          console.error("Error fetching current version:", error)
-        }
-      }
-      return this.currentScoreSet  // Return currentScoreSet inside the async function
-    },
     editItem: function() {
       if (this.item) {
         this.$router.replace({ path: `/score-sets/${this.item.urn}/edit` })

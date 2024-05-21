@@ -18,6 +18,19 @@
           </div>
         </div>
       </template>
+      <template #item="{item, props, hasSubmenu}">
+        <router-link v-if="item.route" v-slot="{href, navigate}" :to="item.route" custom>
+          <a v-bind="props.action" class="p-menuitem-link" :href="href" @click="navigate">
+            <span v-if="item.icon" :class="['p-menuitem-icon', item.icon]"></span>
+            <span class="p-menuitem-text">{{ item.label }}</span>
+          </a>
+        </router-link>
+        <a v-else class="p-menuitem-link" :href="item.url" :target="item.target" v-bind="props.action">
+          <span v-if="item.icon" :class="['p-menuitem-icon', item.icon]"></span>
+          <span class="p-menuitem-text">{{ item.label }}</span>
+          <span v-if="hasSubmenu" class="pi pi-fw pi-angle-down ml-2"></span>
+        </a>
+      </template>
       <template #end>
       </template>
     </Menubar>
@@ -76,35 +89,35 @@ export default {
     menuItems: function() {
       return [{
         label: 'Dashboard',
-        to: '/dashboard',
+        route: '/dashboard',
         available: ({authenticated}) => authenticated
       }, {
         label: 'Home',
-        to: '/'
+        route: '/'
       }, {
         label: 'Search',
-        to: '/search'
+        route: '/search',
       }, {
         label: 'Documentation',
-        to: '/docs'
+        route: '/docs'
       }, {
         label: 'New experiment',
-        to: '/create-experiment',
+        route: '/create-experiment',
         available: ({authenticated}) => authenticated
       }, {
         label: 'New score set',
-        to: '/create-score-set',
+        route: '/create-score-set',
         available: ({authenticated}) => authenticated
       }, {
         label: 'Users',
-        to: '/users',
+        route: '/users',
         available: ({roles}) => roles.includes('admin')
       }, {
         label: this.userName,
         icon:'pi pi-fw pi-user',
         items:[{
           label: 'Settings',
-          to: '/settings',
+          route: '/settings',
           available: ({authenticated}) => authenticated
         }, {
           label: 'Sign out',
@@ -127,7 +140,6 @@ export default {
     },
 
     filterAvailableMenuItems(menuItems) {
-      const self = this
       return menuItems.map((item) => {
         if (item.items) {
           let newSubitems = this.filterAvailableMenuItems(item.items)

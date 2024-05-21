@@ -46,6 +46,7 @@ import Button from 'primevue/button'
 import DefaultLayout from '@/components/layout/DefaultLayout'
 import PageLoading from '@/components/common/PageLoading'
 import ItemNotFound from '@/components/common/ItemNotFound'
+import useAuth from '@/composition/auth'
 import useItem from '@/composition/item'
 import useFormatters from '@/composition/formatters'
 
@@ -54,9 +55,12 @@ export default {
   components: {Button, DefaultLayout, PageLoading, ItemNotFound},
 
   setup: () => {
+    const {userIsAuthenticated} = useAuth()
+
     return {
       ...useFormatters(),
-      ...useItem({itemTypeName: 'experimentSet'})
+      ...useItem({itemTypeName: 'experimentSet'}),
+      userIsAuthenticated
     }
   },
 

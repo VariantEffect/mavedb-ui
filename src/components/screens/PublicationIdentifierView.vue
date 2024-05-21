@@ -9,14 +9,9 @@
         <div class="mave-1000px-col">
           <div v-if="item.creationDate">Created {{formatDate(item.creationDate)}}, updated {{ formatDate(item.modificationDate) }} </div>
           <div v-if="item.publicationJournal">Published {{item.publicationYear}} in {{item.publicationJournal}} </div>
-          <div v-if="item.publicationDoi">DOI:
+          <div v-if="item.doi">DOI:
             <span>
-              <a :href="`${item.url}`" target="blank">{{ item.publicationDoi }}</a>
-            </span>
-          </div>
-          <div v-if="item.preprintDoi">DOI:
-            <span>
-              <a :href="`${item.url}`" target="blank">{{ item.preprintDoi }}</a>
+              <a :href="`${item.url}`" target="blank">{{ item.doi }}</a>
             </span>
           </div>
 

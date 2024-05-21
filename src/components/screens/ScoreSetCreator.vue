@@ -289,6 +289,25 @@
                       </Message>
                     </div>
                   </div>
+                  <div v-if="licenseId && licenses && licenses.find((l) => l.id == licenseId)?.shortName == 'Other - See Data Usage Guidelines'"
+                    class="mavedb-wizard-row">
+                    <div class="mavedb-wizard-help">
+                      <label>
+                        A license and/or any restrictions governing the usage of the data in this score set.
+                      </label>
+                      <div class="mavedb-help-small">
+                        This may assert, for example, the original author's right to publish the data first.
+                      </div>
+                    </div>
+                    <div class="mavedb-wizard-content field">
+                      <span class="p-float-label">
+                        <Textarea v-model="dataUsagePolicy" :id="$scopedId('input-dataUsagePolicy')" rows="4" />
+                        <label :for="$scopedId('input-dataUsagePolicy')">Data usage guidelines</label>
+                      </span>
+                      <span v-if="validationErrors.dataUsagePolicy" class="mave-field-error">{{
+                        validationErrors.dataUsagePolicy }}</span>
+                    </div>
+                  </div>
                   <div class="mavedb-wizard-row">
                     <div class="mavedb-wizard-help">
                       <label>
@@ -396,26 +415,6 @@
                     </span>
                     <span v-if="validationErrors.extraMetadata" class="mave-field-error">{{ validationErrors.extraMetadata
                     }}</span>
-                    </div>
-                  </div>
-                  <div class="mavedb-wizard-row">
-                    <div class="mavedb-wizard-help">
-                      <label>
-                        Any additional restrictions governing the usage of the data in this score set,
-                        beyond those imposed by the license.
-                      </label>
-                      <div class="mavedb-help-small">
-                        This is intended for data that has not yet been published in a peer-reviewed journal and may assert,
-                        for example, the original author's right to publish the data first.
-                      </div>
-                    </div>
-                    <div class="mavedb-wizard-content field">
-                      <span class="p-float-label">
-                        <Textarea v-model="dataUsagePolicy" :id="$scopedId('input-dataUsagePolicy')" rows="4" />
-                        <label :for="$scopedId('input-dataUsagePolicy')">Data usage policy</label>
-                      </span>
-                      <span v-if="validationErrors.dataUsagePolicy" class="mave-field-error">{{
-                        validationErrors.dataUsagePolicy }}</span>
                     </div>
                   </div>
                 </div>

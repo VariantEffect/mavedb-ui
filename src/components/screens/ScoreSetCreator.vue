@@ -980,7 +980,17 @@ export default {
     activeWizardStep: 0,
 
     /** The highest step that the user has entered. This can be used to prevent the user from jumping ahead. */
-    maxWizardStepEntered: 0
+    maxWizardStepEntered: 0,
+
+    stepFields: [
+      ['experiment', 'supersededScoreSetUrn', 'metaAnalyzesScoreSetUrns'],
+      [
+        'title', 'shortDescription', 'methodText', 'abstractText', 'keywords',
+        'publicationIdentifiers', 'primaryPublicationIdentifiers', 'extraMetadata', 'dataUsagePolicy'
+      ],
+      ['targetGene', 'targetGenes'],
+      ['scoresFile', 'countsFile'],
+    ],
   }),
 
   computed: {
@@ -1155,6 +1165,31 @@ export default {
         default:
           return true
       }
+    },
+
+    minStepWithError: function() {
+      const numSteps = this.stepFields.length
+      for (let i = 0; i < numSteps; i++) {
+        if (this.wizardStepHasError(i)) {
+          return i;
+        }
+      }
+      return numSteps - 1 
+    },
+
+    wizardStepHasError: function(step) {
+      if (step >= this.stepFields.length) {
+        return false
+      }
+      let ret = false
+      this.stepFields[step].forEach((field) => {
+        Object.keys(this.validationErrors).forEach((key) => {
+          if (key.startsWith(field)) {
+            ret = true
+          }
+        })
+      })
+      return ret
     },
 
     showNextWizardStepIfValid: function(navigate) {
@@ -1728,6 +1763,7 @@ export default {
         }
         this.serverSideValidationErrors = formValidationErrors
         this.mergeValidationErrors()
+        this.activeWizardStep = this.minStepWithError()
       }
     },
 

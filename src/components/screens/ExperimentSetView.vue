@@ -4,7 +4,7 @@
       <div class="mave-1000px-col">
         <div class="mave-screen-title-bar">
           <div class="mave-screen-title">{{item.urn}}</div>
-          <div v-if="oidc.isAuthenticated">
+          <div v-if="userIsAuthenticated">
             <div class="mave-screen-title-controls">
               <Button class="p-button-sm" @click="addExperiment">Add an experiment</Button>
             </div>
@@ -46,24 +46,21 @@ import Button from 'primevue/button'
 import DefaultLayout from '@/components/layout/DefaultLayout'
 import PageLoading from '@/components/common/PageLoading'
 import ItemNotFound from '@/components/common/ItemNotFound'
+import useAuth from '@/composition/auth'
 import useItem from '@/composition/item'
 import useFormatters from '@/composition/formatters'
-import {oidc} from '@/lib/auth'
 
 export default {
   name: 'ExperimentSetView',
   components: {Button, DefaultLayout, PageLoading, ItemNotFound},
 
-  computed: {
-    oidc: function() {
-      return oidc
-      },
-
-  },
   setup: () => {
+    const {userIsAuthenticated} = useAuth()
+
     return {
       ...useFormatters(),
-      ...useItem({itemTypeName: 'experimentSet'})
+      ...useItem({itemTypeName: 'experimentSet'}),
+      userIsAuthenticated
     }
   },
 

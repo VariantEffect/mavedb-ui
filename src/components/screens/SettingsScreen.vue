@@ -8,40 +8,96 @@
       <template #content>
         <div class="field">
           <span class="p-float-label">
-            <InputText :id="$scopedId('input-email')" style="max-width: 400px; width: 100%;" v-model="email" type="text" placeholder="Email" />
+            <InputText :id="$scopedId('input-email')" style="max-width: 400px; width: 100%;" v-model="email" type="text"
+              placeholder="Email" />
             <label :for="$scopedId('input-email')">Email</label>
           </span>
+        </div>
+        <div>
+          <span v-if="emailValidationError" class="mave-field-error">{{ emailValidationError }}</span>
         </div>
       </template>
       <template #footer>
         <Button :disabled="!user || email == user.email" icon="pi pi-check" label="Save" @click="saveEmail" />
-        <Button :disabled="!user || email == user.email" icon="pi pi-times" label="Cancel" class="p-button-secondary" style="margin-left: .5em" @click="cancelEmailEditing" />
+        <Button :disabled="!user || email == user.email" icon="pi pi-times" label="Cancel" class="p-button-secondary"
+          style="margin-left: .5em" @click="cancelEmailEditing" />
       </template>
     </Card>
 
     <Card>
       <template #title>
-        API key
+        User API Key
       </template>
       <template #content>
-        <div v-if="accessKeys && accessKeys.length == 0">
-          You have not created an API key.
-        </div>
-        <div v-for="accessKey in accessKeys || []" class="mavedb-access-key" :key="accessKey">
+        <div v-if="('ordinary user' in accessKeysByRole)">
           <div class="mavedb-access-key-id">
-            {{accessKey.keyId}}
+            {{ accessKeysByRole['ordinary user'] }}
+            &nbsp;
+            <Button icon="pi pi-copy" class="p-button-rounded p-button-outlined"
+              @click="copyTextToClipboard(accessKeysByRole['ordinary user'])" />
+            &nbsp;
+            <Button icon="pi pi-times" class="p-button-rounded p-button-danger"
+              @click="deleteAccessKeyWithConfirmation(accessKeysByRole['ordinary user'])" />
           </div>
-          &nbsp;
-          <Button icon="pi pi-copy" class="p-button-rounded p-button-outlined" @click="copyTextToClipboard(accessKey.keyId)" />
-          &nbsp;
-          <Button icon="pi pi-times" class="p-button-rounded p-button-danger" @click="deleteAccessKeyWithConfirmation(accessKey.keyId)" />
+        </div>
+        <div v-else>
+          You have not created an API key for your user.
         </div>
       </template>
       <template #footer>
-        <Button v-if="accessKeys && accessKeys.length == 0" icon="pi pi-check" label="Generate an API key" @click="createAccessKey" />
+        <Button v-if="!('ordinary user' in accessKeysByRole)" icon="pi pi-check" label="Generate an API key"
+          @click="createAccessKey('ordinary user')" />
       </template>
     </Card>
 
+    <div v-if="!user?.roles.every(elem => elem === 'ordinary user')">
+      <Card>
+        <template #title>
+          Acting Roles
+        </template>
+        <template #content>
+          <div v-for="role in user?.roles.concat(['ordinary user'])" :key="role" class="flex align-items-center">
+            <Checkbox v-model="activeRoles" :inputId="role" name="roleSelector" :value="role" @update:modelValue="setActiveRoles" :disabled="role == 'ordinary user'" />
+            <label :for="role" class="ml-2">{{ role }}</label>
+          </div>
+        </template>
+      </Card>
+
+      <Card>
+        <template #title>
+          Role Based API keys
+        </template>
+        <template #content>
+          <div v-for="role in user?.roles" class="mavedb-access-key" :key="role">
+            <Card>
+              <template #title>
+                Access Key for role: {{ role }}
+              </template>
+              <template #content>
+                <div v-if="(role in accessKeysByRole)">
+                  <div class="mavedb-access-key-id">
+                    {{ accessKeysByRole[role] }}
+                    &nbsp;
+                    <Button icon="pi pi-copy" class="p-button-rounded p-button-outlined"
+                      @click="copyTextToClipboard(accessKeysByRole[role])" />
+                    &nbsp;
+                    <Button icon="pi pi-times" class="p-button-rounded p-button-danger"
+                      @click="deleteAccessKeyWithConfirmation(accessKeysByRole[role])" />
+                  </div>
+                </div>
+                <div v-else>
+                  You have not created an API key for this role.
+                </div>
+              </template>
+              <template #footer>
+                <Button v-if="!(role in accessKeysByRole)" icon="pi pi-check" label="Generate an API key"
+                  @click="createAccessKey(role)" />
+              </template>
+            </Card>
+          </div>
+        </template>
+      </Card>
+    </div>
   </DefaultLayout>
 </template>
 
@@ -50,7 +106,9 @@
 import axios from 'axios'
 import Button from 'primevue/button'
 import Card from 'primevue/card'
+import Checkbox from 'primevue/checkbox'
 import InputText from 'primevue/inputtext'
+import store from '@/store/index'
 
 import config from '@/config'
 import DefaultLayout from '@/components/layout/DefaultLayout'
@@ -58,14 +116,21 @@ import useClipboard from '@/composition/clipboard'
 import useItem from '@/composition/item'
 import useItems from '@/composition/items'
 
+import useAuth from '@/composition/auth'
+
 export default {
   name: 'HomeView',
-  components: {Button, Card, DefaultLayout, InputText},
+  components: { Button, Card, DefaultLayout, InputText, Checkbox },
 
   setup: () => {
-    const {item: user, setItemId: setUserId, saveItem: saveUser} = useItem({itemTypeName: 'me'})
-    const {items: accessKeys, invalidateItems: invalidateAccessKeys} = useItems({itemTypeName: 'my-access-key'})
+    const { item: user, setItemId: setUserId, saveItem: saveUser } = useItem({ itemTypeName: 'me' })
+    const { items: accessKeys, invalidateItems: invalidateAccessKeys } = useItems({ itemTypeName: 'my-access-key' })
+    const {activeRoles, updateActiveRoles} = useAuth()
+    console.log(activeRoles)
+
     return {
+      activeRoles,
+      updateActiveRoles,
       ...useClipboard(),
       user,
       setUserId,
@@ -77,13 +142,23 @@ export default {
 
   data: function() {
     return {
-      email: null
+      email: null,
+      emailValidationError: null
     }
   },
 
   computed: {
     accessToken: function() {
       return null
+    },
+
+    accessKeysByRole: function() {
+      if (!this.accessKeys) {
+        return {}
+      }
+      else {
+        return this.accessKeys.reduce((acc, cur) => ({ ...acc, [cur.role || 'ordinary user']: cur.keyId }), {})
+      }
     }
   },
 
@@ -103,28 +178,66 @@ export default {
     cancelEmailEditing: function() {
       this.email = this.user?.email
     },
-    saveEmail: function() {
+    saveEmail: async function() {
       const email = this.email ? this.email.trim() : null
       if (this.user && email && email != this.user.email) {
-        this.saveUser({
-          item: {
-            ...this.user,
-            email
+        let errorResponse = null
+        try {
+            await this.saveUser({
+            item: {
+              ...this.user,
+              email
+            }
+          })
+        } catch (error) {
+          errorResponse = error.response
+        }
+
+        if (errorResponse) {
+          if (typeof errorResponse.data.detail === 'string' || errorResponse.data.detail instanceof String) {
+            // Handle generic errors that are not surfaced by the API as objects
+            this.$toast.add({ severity: 'error', summary: `Encountered an error saving email: ${errorResponse.data.detail}` })
           }
-        })
-      }
-    },
-    createAccessKey: async function() {
-      await axios.post(
-        `${config.apiBaseUrl}/users/me/access-keys`,
-        {},
-        {
-          headers: {
-            accept: 'application/json'
+          else {
+            // There will only be one validation error surfaced for emails.
+            this.emailValidationError = errorResponse.data.detail[0].msg
           }
         }
-      )
-      this.invalidateAccessKeys()
+        else {
+          this.emailValidationError = null
+          this.user.email = email
+          this.$toast.add({ severity: 'success', summary: `Your email was succesfully updated.`, life: 3000 })
+        }
+      }
+    },
+    setActiveRoles: function(newRoles) {
+      this.updateActiveRoles(newRoles)
+    },
+    createAccessKey: async function(role) {
+      if (role === 'ordinary user') {
+        await axios.post(
+          `${config.apiBaseUrl}/users/me/access-keys`,
+          {},
+          {
+            headers: {
+              accept: 'application/json'
+            }
+          }
+        )
+        this.invalidateAccessKeys()
+      }
+      else {
+        await axios.post(
+          `${config.apiBaseUrl}/users/me/access-keys/${role}`,
+          {},
+          {
+            headers: {
+              accept: 'application/json'
+            }
+          }
+        )
+        this.invalidateAccessKeys()
+      }
     },
     deleteAccessKeyWithConfirmation: function(keyId) {
       this.$confirm.require({
@@ -142,8 +255,9 @@ export default {
 
 </script>
 
-<style scoped>
+<style scoped src="../../assets/forms.css"></style>
 
+<style scoped>
 .p-card {
   margin-bottom: 1em;
 }
@@ -161,5 +275,4 @@ export default {
   border: 1px solid rgba(0, 0, 0, 0.38);
   border-radius: 4px;
 }
-
 </style>

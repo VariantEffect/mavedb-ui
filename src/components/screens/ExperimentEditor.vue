@@ -1,5 +1,9 @@
 <template>
   <DefaultLayout>
+    <EmailPrompt
+      dialog="You must add an email address to your account to create or edit an experiment. You can do so below, or on the 'Settings' page."
+      :isFirstLoginPrompt="false"
+    />
     {{ experimentSetUrn }}
     <div class="mave-experiment-editor">
       <div class="grid">
@@ -153,7 +157,7 @@
                     <template #item="slotProps">
                       <div>
                           <div>Title: {{ slotProps.item.title }}</div>
-                          <div>DOI: {{ slotProps.item.publicationDoi || slotProps.item.preprintDoi }}</div>
+                          <div>DOI: {{ slotProps.item.doi }}</div>
                           <div>Identifier: {{ slotProps.item.identifier }}</div>
                           <div>Database: {{ slotProps.item.dbName }}</div>
                       </div>
@@ -177,7 +181,7 @@
                     <template #option="slotProps">
                           <div>
                               <div>Title: {{ slotProps.option.title }}</div>
-                              <div>DOI: {{ slotProps.option.publicationDoi || slotProps.option.preprintDoi }}</div>
+                              <div>DOI: {{ slotProps.option.doi }}</div>
                               <div>Identifier: {{ slotProps.option.identifier }}</div>
                               <div>Database: {{ slotProps.option.dbName }}</div>
                           </div>
@@ -295,6 +299,7 @@ import TabView from 'primevue/tabview'
 import Textarea from 'primevue/textarea'
 
 import DefaultLayout from '@/components/layout/DefaultLayout'
+import EmailPrompt from '@/components/common/EmailPrompt'
 import useItem from '@/composition/item'
 import useItems from '@/composition/items'
 import config from '@/config'
@@ -303,7 +308,7 @@ import useFormatters from '@/composition/formatters'
 
 export default {
   name: 'ExperimentEditor',
-  components: { AutoComplete, Button, Card, Chips, Dropdown, Multiselect, DefaultLayout, FileUpload, InputText, ProgressSpinner, TabPanel, TabView, Textarea },
+  components: { AutoComplete, Button, Card, Chips, Dropdown, Multiselect, DefaultLayout, EmailPrompt, FileUpload, InputText, ProgressSpinner, TabPanel, TabView, Textarea },
 
   setup: () => {
     const endogenousKeywordsOptions = useItems({itemTypeName: `controlled-keywords-endogenous-search`})
@@ -641,17 +646,23 @@ export default {
           this.$toast.add({severity:'success', summary: 'The new experiment was saved.', life: 3000})
         }
       } else if (response.data && response.data.detail) {
-        const formValidationErrors = {}
-        for (const error of response.data.detail) {
-          let path = error.loc
-          if (path[0] == 'body') {
-            path = path.slice(1)
-          }
-          path = path.join('.')
-          formValidationErrors[path] = error.msg
+        if (typeof response.data.detail === 'string' || response.data.detail instanceof String) {
+          // Handle generic errors that are not surfaced by the API as objects
+          this.$toast.add({ severity: 'error', summary: `Encountered an error saving experiment: ${response.data.detail}` })
         }
-        this.serverSideValidationErrors = formValidationErrors
-        this.mergeValidationErrors()
+        else {
+          const formValidationErrors = {}
+          for (const error of response.data.detail) {
+            let path = error.loc
+            if (path[0] == 'body') {
+              path = path.slice(1)
+            }
+            path = path.join('.')
+            formValidationErrors[path] = error.msg
+          }
+          this.serverSideValidationErrors = formValidationErrors
+          this.mergeValidationErrors()
+        }
       }
     },
 

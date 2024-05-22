@@ -1,17 +1,35 @@
 <template>
+  <div v-if="(activeRoles.length > 0 && !activeRoles.every(elem => elem === 'ordinary user'))">
+    <Message severity="warn">
+      You are currently acting as a user with the {{ activeRoles }} role(s). These roles may grant you additional permissions. To change your
+      active role(s), use the menu in your <a :href="`${config.appBaseUrl}/#/settings`">settings screen</a>.
+    </Message>
+  </div>
   <div class="mavedb-toolbar">
     <Menubar :model="availableMenuItems" class="mavedb-menubar">
       <template #start>
         <router-link to="/" class="mavedb-logo">
-          <img src="@/assets/logo-mave.png" alt="MAVE" />
-          <span>DB</span>
+          <img src="@/assets/logo-mavedb.png" alt="MaveDB" />
         </router-link>
         <div style="display: inline-block; margin-left: 40px;">
-          <div class="p-inputgroup" style="max-width: 300px; wdith: 300px;">
+          <div class="p-inputgroup" style="max-width: 300px; width: 300px;">
             <InputText v-model="searchText" ref="searchTextInput" type="search" class="p-inputtext-sm" placeholder="Search" @keyup.enter="search" style="width: 200px;" />
             <Button :enabled="searchText && searchText.length > 0" icon="pi pi-search" class="p-button-default p-button-sm" @click="search" />
           </div>
         </div>
+      </template>
+      <template #item="{item, props, hasSubmenu}">
+        <router-link v-if="item.route" v-slot="{href, navigate}" :to="item.route" custom>
+          <a v-bind="props.action" class="p-menuitem-link" :href="href" @click="navigate">
+            <span v-if="item.icon" :class="['p-menuitem-icon', item.icon]"></span>
+            <span class="p-menuitem-text">{{ item.label }}</span>
+          </a>
+        </router-link>
+        <a v-else class="p-menuitem-link" :href="item.url" :target="item.target" v-bind="props.action">
+          <span v-if="item.icon" :class="['p-menuitem-icon', item.icon]"></span>
+          <span class="p-menuitem-text">{{ item.label }}</span>
+          <span v-if="hasSubmenu" class="pi pi-fw pi-angle-down ml-2"></span>
+        </a>
       </template>
       <template #end>
       </template>
@@ -26,20 +44,30 @@ import _ from 'lodash'
 import Button from 'primevue/button'
 import InputText from 'primevue/inputtext'
 import Menubar from 'primevue/menubar'
-import {mapState} from 'vuex'
+import Message from 'primevue/message'
+import config from '@/config'
+import {mapActions, mapState} from 'vuex'
 
-import {oidc} from '@/lib/auth'
+import useAuth from '@/composition/auth'
 
 export default {
-  components: {Button, InputText, Menubar},
+  components: {Button, InputText, Menubar, Message},
+
+  setup: () => {
+    const {signIn, signOut, userProfile, userIsAuthenticated} = useAuth()
+
+    return {signIn, signOut, userProfile, userIsAuthenticated}
+  },
 
   data: () => ({
+    config: config,
+
     availableMenuItems: [],
     searchText: ''
   }),
 
   watch: {
-    authenticated: {
+    userIsAuthenticated: {
       handler: function() {
         this.availableMenuItems = this.filterAvailableMenuItems(this.menuItems)
       },
@@ -53,59 +81,53 @@ export default {
   },
 
   computed: {
-    ...mapState('auth', ['authenticated', 'orcidProfile', 'roles']),
+    ...mapState('auth', ['roles', 'activeRoles']),
     userName: function() {
-      const profile = this.orcidProfile // oidc?.user?.profile
+      const profile = this.userProfile
       return profile ? [profile.given_name, profile.family_name].filter(Boolean).join(' ') : null
     },
     menuItems: function() {
       return [{
         label: 'Dashboard',
-        to: '/dashboard',
-        available: ({authenticated}) => authenticated // oidc.isAuthenticated
+        route: '/dashboard',
+        available: ({authenticated}) => authenticated
       }, {
         label: 'Home',
-        to: '/'
+        route: '/'
       }, {
         label: 'Search',
-        to: '/search'
+        route: '/search',
       }, {
         label: 'Documentation',
-        to: '/docs'
+        route: '/docs'
       }, {
         label: 'New experiment',
-        to: '/create-experiment',
-        available: ({authenticated}) => authenticated // oidc.isAuthenticated
+        route: '/create-experiment',
+        available: ({authenticated}) => authenticated
       }, {
         label: 'New score set',
-        to: '/create-score-set',
-        available: ({authenticated}) => authenticated // oidc.isAuthenticated
+        route: '/create-score-set',
+        available: ({authenticated}) => authenticated
       }, {
         label: 'Users',
-        to: '/users',
-        available: ({roles}) => roles.includes('admin') // oidc.isAuthenticated
+        route: '/users',
+        available: ({roles}) => roles.includes('admin')
       }, {
         label: this.userName,
         icon:'pi pi-fw pi-user',
         items:[{
           label: 'Settings',
-          to: '/settings',
-          available: ({authenticated}) => authenticated // oidc.isAuthenticated
+          route: '/settings',
+          available: ({authenticated}) => authenticated
         }, {
           label: 'Sign out',
           command: () => this.signOut(),
-          available: ({authenticated}) => authenticated // oidc.isAuthenticated
+          available: ({authenticated}) => authenticated
         }]
-        /*
-          available: () => oidc.isAuthenticated
-        }],
-        available: () => oidc.isAuthenticated
-        */
       }, {
         label: 'Sign in',
-        command: () => {oidc.signIn()},
-        // to: '/dashboard',
-        available: ({authenticated}) => !authenticated // !oidc.isAuthenticated
+        command: () => this.signIn(),
+        available: ({authenticated}) => !authenticated
       }]
     }
   },
@@ -118,7 +140,6 @@ export default {
     },
 
     filterAvailableMenuItems(menuItems) {
-      const self = this
       return menuItems.map((item) => {
         if (item.items) {
           let newSubitems = this.filterAvailableMenuItems(item.items)
@@ -129,8 +150,8 @@ export default {
           item.items = newSubitems
         }
         const available = !item.available || item.available({
-          authenticated: self.authenticated,
-          roles: self.roles || []
+          authenticated: this.userIsAuthenticated,
+          roles: this.roles || []
         }) // && (!item.to || this.userMayAccessPath(item.to))
         if (!available) {
           if (!item.items || item.items.length == 0) {
@@ -143,9 +164,6 @@ export default {
         }
         return item
       }).filter(Boolean)
-    },
-    signOut: function() {
-      oidc.signOut()
     }
   }
 }
@@ -163,9 +181,6 @@ export default {
   flex: 0 0 auto;
   display: inline-block;
   vertical-align: middle;
-  color: #222;
-  font-size: 20px;
-  transition: none;
 }
 
 .mavedb-logo img {

@@ -77,6 +77,12 @@
         </div>
       </div>
       <div class="mave-1000px-col">
+        <div v-if="item.externalLinks?.ucscGenomeBrowser?.url">
+            <a :href="item.externalLinks.ucscGenomeBrowser.url" target="blank">
+              <img src="@/assets/logo-ucsc-genome-browser.png" alt="UCSC Genome Browser" style="height: 20px;" />
+              View this score set on the UCSC Genome Browser
+            </a>
+        </div>
         <div v-if="item.creationDate">Created {{ formatDate(item.creationDate) }} <span v-if="item.createdBy">
             <a :href="`https://orcid.org/${item.createdBy.orcidId}`" target="blank"><img src="@/assets/ORCIDiD_icon.png"
                 alt="ORCIDiD">{{ item.createdBy.firstName }} {{ item.createdBy.lastName }}</a></span>

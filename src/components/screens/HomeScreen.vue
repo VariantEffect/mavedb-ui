@@ -91,6 +91,32 @@
             </p>
           </template>
         </Card>
+        <br />
+        <Card>
+          <template #title>News</template>
+          <template #content>
+            <ul>
+              <li>
+                <p>Tracks for many score sets are now available on the UCSC Genome Browser.</p>
+                <p>
+                  Example:
+                  <a href="https://genome.ucsc.edu/cgi-bin/hgTracks?db=hg38&lastVirtModeType=default&lastVirtModeExtraState=&virtModeType=default&virtMode=0&nonVirtPosition=&position=chr17%3A43051063%2D43051117&hgsid=2272187358_GvEaR2Uhrkjmq4ihbegTvdJFEzGw
+  " target="_blank">
+                    <img src="@/assets/logo-ucsc-genome-browser.png" alt="UCSC Genome Browser" style="height: 20px;" />
+                    UCSC Genome Browser
+                  </a>
+                  track for
+                  <router-link :to="{name: 'scoreSet', params: {urn: 'urn:mavedb:00000097-s-1'}}">BRCA1 SGE Exon 20 Replicate 1</router-link>
+                </p>
+              </li>
+              <li>
+                The complete set of MAVE data licensed under
+                <a href="https://creativecommons.org/public-domain/cc0/" target="_blank">Creative Commons Zero</a>
+                can now be downloaded from <a href="https://zenodo.org/records/11201737" target="_blank">Zenodo</a>.
+              </li>
+            </ul>
+          </template>
+        </Card>
       </div>
     </div>
   </DefaultLayout>

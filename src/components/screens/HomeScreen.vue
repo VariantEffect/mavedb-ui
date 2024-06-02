@@ -100,8 +100,7 @@
                 <p>Tracks for many score sets are now available on the UCSC Genome Browser.</p>
                 <p>
                   Example:
-                  <a href="https://genome.ucsc.edu/cgi-bin/hgTracks?db=hg38&lastVirtModeType=default&lastVirtModeExtraState=&virtModeType=default&virtMode=0&nonVirtPosition=&position=chr17%3A43051063%2D43051117&hgsid=2272187358_GvEaR2Uhrkjmq4ihbegTvdJFEzGw
-  " target="_blank">
+                  <a href="https://genome.ucsc.edu/cgi-bin/hgTracks?db=hg38&position=chr17:43051063-43051117&hubUrl=https://public.gi.ucsc.edu/~cline/mavedb/hub/hub.txt&Variant_Effect_Maps_hideKids=1&BRCA1_00000097-s-1=dense" target="_blank">
                     <img src="@/assets/logo-ucsc-genome-browser.png" alt="UCSC Genome Browser" style="height: 20px;" />
                     UCSC Genome Browser
                   </a>

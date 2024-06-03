@@ -67,6 +67,17 @@ const itemTypes = {
       }
     }
   },
+  'crossrefPublicationIdentifier': {
+    name: 'crossrefPublicationIdentifier', // TODO Redundant, change this structure
+    restCollectionName: 'publication-identifiers',
+    primaryKey: 'identifier',
+    httpOptions: {
+      list: {
+        method: 'get',
+        url: `${config.apiBaseUrl}/publication-identifiers/crossref`
+      }
+    }
+  },
   'publication-identifier-search': {
     name: 'publication-identifier', // TODO Redundant, change this structure
     restCollectionName: 'publication-identifiers',

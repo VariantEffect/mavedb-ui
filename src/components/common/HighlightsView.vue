@@ -91,7 +91,7 @@
                   <!-- Link publication identifiers to their MaveDB page -->
                   <template v-if="this.field == 'publication-identifiers' && col.field == 'identifier'" #body="slotProps">
                     <a
-                      :href="`${config.appBaseUrl}/#/publication-identifiers/${slotProps.data.dbName}/${slotProps.data[col.field]}`">{{
+                      :href="`${config.appBaseUrl}/publication-identifiers/${slotProps.data.dbName}/${encodeURIComponent(slotProps.data[col.field])}`">{{
                         slotProps.data[col.field] }}</a>
                   </template>
                   <!-- Link keywords and Doi Identifiers to an internal MaveDB search page -->
@@ -135,7 +135,7 @@
                   <!-- Link publication identifiers to their MaveDB page -->
                   <template v-if="this.field == 'publication-identifiers' && col.field == 'identifier'" #body="slotProps">
                     <a
-                      :href="`${config.appBaseUrl}/#/publication-identifiers/${slotProps.data.dbName}/${slotProps.data[col.field]}`">{{
+                      :href="`${config.appBaseUrl}/publication-identifiers/${slotProps.data.dbName}/${encodeURIComponent(slotProps.data[col.field])}`">{{
                         slotProps.data[col.field] }}</a>
                   </template>
                   <!-- Link keywords to an internal MaveDB search page -->

@@ -10,43 +10,113 @@ const itemTypes = {
       }
     }
   },
-  'controlled-keywords-endogenous-search': {
-    name: 'controlled-keyword-endogenous-locus-library-method', 
-    restCollectionName: 'controlled-keywords',
-    httpOptions: {
-      list: {
-        method: 'get',
-        url: `${config.apiBaseUrl}/controlled-keywords/endogenous locus library method`
-      }
-    }
-  },
-  'controlled-keywords-invitro-search': {
-    name: 'controlled-keyword-in-vitro-construct-library-method', 
-    restCollectionName: 'controlled-keywords',
-    httpOptions: {
-      list: {
-        method: 'get',
-        url: `${config.apiBaseUrl}/controlled-keywords/in vitro construct library method`
-      }
-    }
-  },
   'controlled-keywords-variant-search': {
-    name: 'controlled-keyword-variant-library', 
+    name: 'controlled-keywords-variant-library-search', 
     restCollectionName: 'controlled-keywords',
     httpOptions: {
       list: {
         method: 'get',
-        url: `${config.apiBaseUrl}/controlled-keywords/variant library`
+        url: `${config.apiBaseUrl}/controlled-keywords/variant library creation method`
       }
     }
   },
-  'controlled-keywords-phenotypic-search': {
-    name: 'controlled-keyword-phenotypic-assay', 
+  'controlled-keywords-endo-system-search': {
+    name: 'controlled-keyword-endogenous-locus-library-method-system', 
     restCollectionName: 'controlled-keywords',
     httpOptions: {
       list: {
         method: 'get',
-        url: `${config.apiBaseUrl}/controlled-keywords/phenotypic assay`
+        url: `${config.apiBaseUrl}/controlled-keywords/endogenous locus library method system`
+      }
+    }
+  },
+  'controlled-keywords-endo-mechanism-search': {
+    name: 'controlled-keywords-endogenous-locus-library-method-mechanism', 
+    restCollectionName: 'controlled-keywords',
+    httpOptions: {
+      list: {
+        method: 'get',
+        url: `${config.apiBaseUrl}/controlled-keywords/endogenous locus library method mechanism`
+      }
+    }
+  },
+  'controlled-keywords-in-vitro-system-search': {
+    name: 'controlled-keywords-in-vitro-construct-library-method-system', 
+    restCollectionName: 'controlled-keywords',
+    httpOptions: {
+      list: {
+        method: 'get',
+        url: `${config.apiBaseUrl}/controlled-keywords/in vitro construct library method system`
+      }
+    }
+  },
+  'controlled-keywords-in-vitro-mechanism-search': {
+    name: 'controlled-keywords-in-vitro-construct-library-method-mechanism', 
+    restCollectionName: 'controlled-keywords',
+    httpOptions: {
+      list: {
+        method: 'get',
+        url: `${config.apiBaseUrl}/controlled-keywords/in vitro construct library method mechanism`
+      }
+    }
+  },
+  'controlled-keywords-delivery-search': {
+    name: 'controlled-keywords-delivery-method', 
+    restCollectionName: 'controlled-keywords',
+    httpOptions: {
+      list: {
+        method: 'get',
+        url: `${config.apiBaseUrl}/controlled-keywords/delivery method`
+      }
+    }
+  },
+  'controlled-keywords-phenotypic-dimensionality-search': {
+    name: 'controlled-keywords-phenotypic-assay-dimensionality', 
+    restCollectionName: 'controlled-keywords',
+    httpOptions: {
+      list: {
+        method: 'get',
+        url: `${config.apiBaseUrl}/controlled-keywords/phenotypic assay dimensionality`
+      }
+    }
+  },
+  'controlled-keywords-phenotypic-method-search': {
+    name: 'controlled-keywords-phenotypic-assay-method', 
+    restCollectionName: 'controlled-keywords',
+    httpOptions: {
+      list: {
+        method: 'get',
+        url: `${config.apiBaseUrl}/controlled-keywords/phenotypic assay method`
+      }
+    }
+  },
+  'controlled-keywords-phenotypic-modle-system-search': {
+    name: 'controlled-keywords-phenotypic-assay-model-system', 
+    restCollectionName: 'controlled-keywords',
+    httpOptions: {
+      list: {
+        method: 'get',
+        url: `${config.apiBaseUrl}/controlled-keywords/phenotypic assay model system`
+      }
+    }
+  },
+  'controlled-keywords-phenotypic-profiling-strategy-search': {
+    name: 'controlled-keywords-phenotypic-assay-profiling-strategy', 
+    restCollectionName: 'controlled-keywords',
+    httpOptions: {
+      list: {
+        method: 'get',
+        url: `${config.apiBaseUrl}/controlled-keywords/phenotypic assay profiling strategy`
+      }
+    }
+  },
+  'controlled-keywords-phenotypic-sequencing-type-search': {
+    name: 'controlled-keywords-phenotypic-assay-sequencing-read-type', 
+    restCollectionName: 'controlled-keywords',
+    httpOptions: {
+      list: {
+        method: 'get',
+        url: `${config.apiBaseUrl}/controlled-keywords/phenotypic assay sequencing read type`
       }
     }
   },

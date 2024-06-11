@@ -57,64 +57,6 @@
                 </span>
                 <span v-if="validationErrors.shortDescription" class="mave-field-error">{{validationErrors.shortDescription}}</span>
               </div>
-
-              <div class="field">
-                <span class="p-float-label">
-                  <Dropdown
-                      v-model="endogenousKeyword"
-                      :id="$scopedId('input-endogenous-locus-library-method-keywords')"
-                      :options="endogenousKeywordsOptions"
-                      optionLabel="value"
-                      optionValue="value"
-                      style="width: 400px"
-                  />
-                  <label :for="$scopedId('input-endogenous-locus-library-method-keywords')">Endogenous Locus Library Method Keyword</label>
-                </span>
-                <span v-if="validationErrors.keywords" class="mave-field-error">{{validationErrors.keywords}}</span>
-              </div>
-              <div class="field">
-                <span class="p-float-label">
-                  <Dropdown
-                      v-model="invitroKeyword"
-                      :id="$scopedId('input-in-vitro-construct-library-method-keywords')"
-                      :options="invitroKeywordsOptions"
-                      optionLabel="value"
-                      optionValue="value"
-                      style="width: 400px"
-                  />
-                  <label :for="$scopedId('input-in-vitro-construct-library-method-keywords')">In Vitro Construct Library Method Keyword</label>
-                </span>
-                <span v-if="validationErrors.keywords" class="mave-field-error">{{validationErrors.keywords}}</span>
-              </div>  
-              <div class="field">
-                <span class="p-float-label">
-                  <Dropdown
-                      v-model="variantKeyword"
-                      :id="$scopedId('variant-library-keywords')"
-                      :options="variantKeywordsOptions"
-                      optionLabel="value"
-                      optionValue="value"
-                      style="width: 400px"
-                  />
-                  <label :for="$scopedId('variant-library-keywords')">Variant Library Method Keyword</label>
-                </span>
-                <span v-if="validationErrors.keywords" class="mave-field-error">{{validationErrors.keywords}}</span>
-              </div>  
-              <div class="field">
-                <span class="p-float-label">
-                  <Dropdown
-                      v-model="phenotypicKeyword"
-                      :id="$scopedId('phenotypic-assay-keywords')"
-                      :options="phenotypicKeywordsOptions"
-                      optionLabel="value"
-                      optionValue="value"
-                      style="width: 400px"
-                  />
-                  <label :for="$scopedId('phenotypic-assay-keywords')">Phenotypic Assay Keyword</label>
-                </span>
-                <span v-if="validationErrors.keywords" class="mave-field-error">{{validationErrors.keywords}}</span>
-              </div>
-
               <div class="field">
                 <span class="p-float-label">
                   <Chips
@@ -232,12 +174,6 @@
                 </span>
                 <span v-if="validationErrors.extraMetadata" class="mave-field-error">{{validationErrors.extraMetadata}}</span>
               </div>
-            </template>
-          </Card>
-        </div>
-        <div class="col-12 md:col-6">
-          <Card>
-            <template #content>
               <div class="field">
                 <TabView>
                   <TabPanel header="Edit">
@@ -266,6 +202,188 @@
                 </TabView>
                 <span v-if="validationErrors.methodText" class="mave-field-error">{{validationErrors.methodText}}</span>
               </div>
+            </template>
+          </Card>
+        </div>
+        <div class="col-12 md:col-6">
+          <Card>
+            <template #content>
+              <div class="field">
+                <span class="p-float-label">
+                  <Dropdown
+                      v-model="variantLibraryKeyword"
+                      :id="$scopedId('input-variant-library-keywords')"
+                      :options="variantLibraryKeywordOptions"
+                      optionLabel="value"
+                      optionValue="value"
+                      style="width: 500px"
+                  />
+                  <label :for="$scopedId('input-variant-library-keywords')">Variant Library Creation Method</label>
+                </span>
+                <span v-if="validationErrors.keywords" class="mave-field-error">{{validationErrors.keywords}}</span>
+              </div>
+              <div class="field">
+                <div v-if="variantLibraryKeyword==='Other'">
+                  <span class="p-float-label">
+                      <InputText v-model="variantLibraryKeywordDescription" :id="$scopedId('input-title')" style="width: 500px" required/>
+                      <label :for="$scopedId('input-title')">Variant Library Creation Method Description</label>
+                    </span>
+                  <span v-if="validationErrors.variantLibraryKeywordDescription" class="mave-field-error">{{validationErrors.variantLibraryKeywordDescription}}</span>
+                </div>
+                <div v-else>
+                  <span class="p-float-label">
+                    <InputText v-model="variantLibraryKeywordDescription" :id="$scopedId('input-title')" style="width: 500px"/>
+                    <label :for="$scopedId('input-title')">Variant Library Creation Method Description (Optional)</label>
+                  </span>
+                  <span v-if="validationErrors.variantLibraryKeywordDescription" class="mave-field-error">{{validationErrors.variantLibraryKeywordDescription}}</span>
+                </div>
+              </div>
+              <div v-if="variantLibraryKeyword === 'Endogenous locus library method'">
+                <div class="field">
+                  <span class="p-float-label">
+                    <Dropdown
+                        v-model="endogenousSystemKeyword"
+                        :id="$scopedId('input-endogenous-system-keywords')"
+                        :options="endogenousSystemKeywordOptions"
+                        optionLabel="value"
+                        optionValue="value"
+                        style="width: 400px"
+                    />
+                    <label :for="$scopedId('input-endogenous-system-keywords')">Endogenous Locus Library Method System</label>
+                  </span>
+                  <span v-if="validationErrors.keywords" class="mave-field-error">{{validationErrors.keywords}}</span>
+                </div>
+                <div class="field">
+                  <span class="p-float-label">
+                    <Dropdown
+                        v-model="endogenousMechanismKeyword"
+                        :id="$scopedId('input-endogenous-mechanism-keywords')"
+                        :options="endogenousMechanismKeywordOptions"
+                        optionLabel="value"
+                        optionValue="value"
+                        style="width: 400px"
+                    />
+                    <label :for="$scopedId('input-endogenous-mechanism-keywords')">Endogenous Locus Library Method Mechanism</label>
+                  </span>
+                  <span v-if="validationErrors.keywords" class="mave-field-error">{{validationErrors.keywords}}</span>
+                </div>
+              </div>
+              <div v-if="variantLibraryKeyword === 'In vitro construct library method'">
+                <div class="field">
+                  <span class="p-float-label">
+                    <Dropdown
+                        v-model="inVitroSystemKeyword"
+                        :id="$scopedId('input-in-vitro-system-keywords')"
+                        :options="inVitroSystemKeywordOptions"
+                        optionLabel="value"
+                        optionValue="value"
+                        style="width: 400px"
+                    />
+                    <label :for="$scopedId('input-in-vitro-system-keywords')">In Vitro Construct Library Method System</label>
+                  </span>
+                  <span v-if="validationErrors.keywords" class="mave-field-error">{{validationErrors.keywords}}</span>
+                </div>
+                <div class="field">
+                  <span class="p-float-label">
+                    <Dropdown
+                        v-model="inVitroMechanismKeyword"
+                        :id="$scopedId('input-in-vitro-mechanism-keywords')"
+                        :options="inVitroMechanismKeywordOptions"
+                        optionLabel="value"
+                        optionValue="value"
+                        style="width: 400px"
+                    />
+                    <label :for="$scopedId('input-in-vitro-mechanism-keywords')">In Vitro Construct Library Method Mechanism</label>
+                  </span>
+                  <span v-if="validationErrors.keywords" class="mave-field-error">{{validationErrors.keywords}}</span>
+                </div>  
+              </div>
+              <div class="field">
+                <span class="p-float-label">
+                  <Dropdown
+                      v-model="deliveryMethodKeyword"
+                      :id="$scopedId('delivery-method-keywords')"
+                      :options="deliveryMethodKeywordOptions"
+                      optionLabel="value"
+                      optionValue="value"
+                      style="width: 400px"
+                  />
+                  <label :for="$scopedId('delivery-method-keywords')">Delivery Method</label>
+                </span>
+                <span v-if="validationErrors.keywords" class="mave-field-error">{{validationErrors.keywords}}</span>
+              </div>
+              <div class="field">
+                <span class="p-float-label">
+                  <Dropdown
+                      v-model="phenotypicDimensionalityKeyword"
+                      :id="$scopedId('phenotypic-dimensionality-keywords')"
+                      :options="phenotypicDimensionalityKeywordOptions"
+                      optionLabel="value"
+                      optionValue="value"
+                      style="width: 400px"
+                  />
+                  <label :for="$scopedId('phenotypic-dimensionality-keywords')">Phenotypic Assay Dimensionality</label>
+                </span>
+                <span v-if="validationErrors.keywords" class="mave-field-error">{{validationErrors.keywords}}</span>
+              </div>
+              <div class="field">
+                <span class="p-float-label">
+                  <Dropdown
+                      v-model="phenotypicMethodKeyword"
+                      :id="$scopedId('phenotypic-method-keywords')"
+                      :options="phenotypicMethodKeywordOptions"
+                      optionLabel="value"
+                      optionValue="value"
+                      style="width: 400px"
+                  />
+                  <label :for="$scopedId('phenotypic-method-keywords')">Phenotypic Assay Method</label>
+                </span>
+                <span v-if="validationErrors.keywords" class="mave-field-error">{{validationErrors.keywords}}</span>
+              </div>
+              <div class="field">
+                <span class="p-float-label">
+                  <Dropdown
+                      v-model="phenotypicModelSystemKeyword"
+                      :id="$scopedId('phenotypic-model-system-keywords')"
+                      :options="phenotypicModelSystemKeywordOptions"
+                      optionLabel="value"
+                      optionValue="value"
+                      style="width: 400px"
+                  />
+                  <label :for="$scopedId('phenotypic-model-system-keywords')">Phenotypic Assay Model System</label>
+                </span>
+                <span v-if="validationErrors.keywords" class="mave-field-error">{{validationErrors.keywords}}</span>
+              </div>
+              <div class="field">
+                <span class="p-float-label">
+                  <Dropdown
+                      v-model="phenotypicProfilingStrategyKeyword"
+                      :id="$scopedId('phenotypic-profiling-strategy-keywords')"
+                      :options="phenotypicProfilingStrategyKeywordOptions"
+                      optionLabel="value"
+                      optionValue="value"
+                      style="width: 400px"
+                  />
+                  <label :for="$scopedId('phenotypic-profiling-strategy-keywords')">Phenotypic Assay Profiling Strategy</label>
+                </span>
+                <span v-if="validationErrors.keywords" class="mave-field-error">{{validationErrors.keywords}}</span>
+              </div>
+              <div class="field">
+                <span class="p-float-label">
+                  <Dropdown
+                      v-model="phenotypicSequencingTypeKeyword"
+                      :id="$scopedId('phenotypic-sequencing-type-keywords')"
+                      :options="phenotypicSequencingTypeKeywordOptions"
+                      optionLabel="value"
+                      optionValue="value"
+                      style="width: 400px"
+                  />
+                  <label :for="$scopedId('phenotypic-sequencing-type-keywords')">Phenotypic Assay Sequencing Read Type</label>
+                </span>
+                <span v-if="validationErrors.keywords" class="mave-field-error">{{validationErrors.keywords}}</span>
+              </div>
+
+              
             </template>
           </Card>
           <Card v-if="item?.scoreSetUrns">
@@ -306,24 +424,47 @@ import config from '@/config'
 import {normalizeDoi, normalizePubmedId, normalizeRawRead, validateDoi, validatePubmedId, validateRawRead} from '@/lib/identifiers'
 import useFormatters from '@/composition/formatters'
 
+const controlledKeywordKeys = ['variantLibrary', 'endogenousSystem', 'endogenousMechanism', 'inVitroSystem', 'inVitroMechanism', 'deliveryMethod',
+  'phenotypicDimensionality', 'phenotypicMethod', 'phenotypicModelSystem', 'phenotypicProfilingStrategy', 'phenotypicSequencingType', 'phenotypicSequencingType'
+]
+
 export default {
   name: 'ExperimentEditor',
   components: { AutoComplete, Button, Card, Chips, Dropdown, Multiselect, DefaultLayout, EmailPrompt, FileUpload, InputText, ProgressSpinner, TabPanel, TabView, Textarea },
 
   setup: () => {
-    const endogenousKeywordsOptions = useItems({itemTypeName: `controlled-keywords-endogenous-search`})
-    const invitroKeywordsOptions = useItems({itemTypeName: `controlled-keywords-invitro-search`})
-    const variantKeywordsOptions = useItems({itemTypeName: `controlled-keywords-variant-search`})
-    const phenotypicKeywordsOptions = useItems({itemTypeName: `controlled-keywords-phenotypic-search`})
+    const variantLibraryKeywordOptions = useItems({itemTypeName: `controlled-keywords-variant-search`})
+    const endogenousSystemKeywordOptions = useItems({itemTypeName: `controlled-keywords-endo-system-search`})
+    const endogenousMechanismKeywordOptions = useItems({itemTypeName: `controlled-keywords-endo-mechanism-search`})
+    const inVitroSystemKeywordOptions = useItems({itemTypeName: `controlled-keywords-in-vitro-system-search`})
+    const inVitroMechanismKeywordOptions = useItems({itemTypeName: `controlled-keywords-in-vitro-mechanism-search`})
+    const deliveryMethodKeywordOptions = useItems({itemTypeName: `controlled-keywords-delivery-search`})
+    const phenotypicDimensionalityKeywordOptions = useItems({itemTypeName: `controlled-keywords-phenotypic-dimensionality-search`})
+    const phenotypicMethodKeywordOptions = useItems({itemTypeName: `controlled-keywords-phenotypic-method-search`})
+    const phenotypicModelSystemKeywordOptions = useItems({itemTypeName: `controlled-keywords-phenotypic-modle-system-search`})
+    const phenotypicProfilingStrategyKeywordOptions = useItems({itemTypeName: `controlled-keywords-phenotypic-profiling-strategy-search`})
+    const phenotypicSequencingTypeKeywordOptions = useItems({itemTypeName: `controlled-keywords-phenotypic-sequencing-type-search`})
+    // for (const key of controlledKeywordKeys) {
+    //   optionKey = `${key}KeywordOptions`
+    //   optionKey = useItems({ itemTypeName: `${key}-controlled-keywords-search` })
+    // }
+
     const publicationIdentifierSuggestions = useItems({itemTypeName: 'publication-identifier-search'})
     const externalPublicationIdentifierSuggestions = useItems({itemTypeName: 'external-publication-identifier-search'})
     return {
       ...useFormatters(),
       ...useItem({itemTypeName: 'experiment'}),
-      endogenousKeywordsOptions: endogenousKeywordsOptions.items,
-      invitroKeywordsOptions: invitroKeywordsOptions.items,
-      variantKeywordsOptions: variantKeywordsOptions.items,
-      phenotypicKeywordsOptions: phenotypicKeywordsOptions.items,
+      variantLibraryKeywordOptions: variantLibraryKeywordOptions.items,
+      endogenousSystemKeywordOptions: endogenousSystemKeywordOptions.items,
+      endogenousMechanismKeywordOptions: endogenousMechanismKeywordOptions.items,
+      inVitroSystemKeywordOptions: inVitroSystemKeywordOptions.items,
+      inVitroMechanismKeywordOptions: inVitroMechanismKeywordOptions.items,
+      deliveryMethodKeywordOptions: deliveryMethodKeywordOptions.items,
+      phenotypicDimensionalityKeywordOptions: phenotypicDimensionalityKeywordOptions.items,
+      phenotypicMethodKeywordOptions: phenotypicMethodKeywordOptions.items,
+      phenotypicModelSystemKeywordOptions: phenotypicModelSystemKeywordOptions.items,
+      phenotypicProfilingStrategyKeywordOptions: phenotypicProfilingStrategyKeywordOptions.items,
+      phenotypicSequencingTypeKeywordOptions: phenotypicSequencingTypeKeywordOptions.items,
       publicationIdentifierSuggestions: publicationIdentifierSuggestions.items,
       setPublicationIdentifierSearch: (text) => publicationIdentifierSuggestions.setRequestBody({text}),
       externalPublicationIdentifierSuggestions: externalPublicationIdentifierSuggestions.items,
@@ -348,11 +489,18 @@ export default {
     shortDescription: null,
     abstractText: null,
     methodText: null,
-    endogenousKeyword: null,
-    invitroKeyword: null,
-    variantKeyword: null,
-    phenotypicKeyword: null,
-    keywords: {},
+    variantLibraryKeyword: null,
+    endogenousSystemKeyword: null,
+    endogenousMechanismKeyword: null,
+    inVitroSystemKeyword: null,
+    inVitroMechanismKeyword: null,
+    deliveryMethodKeyword: null,
+    phenotypicDimensionalityKeyword: null,
+    phenotypicMethodKeyword: null,
+    phenotypicModelSystemKeyword: null,
+    phenotypicProfilingStrategyKeyword: null,
+    phenotypicSequencingTypeKeyword: null,
+    keywords: [],
     doiIdentifiers: [],
     primaryPublicationIdentifiers: [],
     secondaryPublicationIdentifiers: [],
@@ -396,6 +544,16 @@ export default {
         this.setItemId(this.itemId)
       },
       immediate: true
+    },
+    variantLibraryKeyword(newValue) {
+      if (newValue !== 'Endogenous locus library method') {
+        this.endogenousSystemKeyword = null
+        this.endogenousMechanismKeyword = null
+      }
+      if (newValue !== 'In vitro construct library method') {
+        this.inVitroSystemKeyword = null
+        this.inVitroMechanismKeyword = null
+      }
     }
   },
 
@@ -538,10 +696,17 @@ export default {
         this.shortDescription = this.item.shortDescription
         this.abstractText = this.item.abstractText
         this.methodText = this.item.methodText
-        this.endogenousKeyword = this.item.keywords["Endogenous Locus Library Method"].value
-        this.invitroKeyword = this.item.keywords["In Vitro Construct Library Method"].value
-        this.variantKeyword = this.item.keywords["Variant Library"].value
-        this.phenotypicKeyword = this.item.keywords["Phenotypic Assay"].value
+        this.variantLibraryKeyword = this.item.keywords.find(keyword => keyword.keyword.key === "Variant Library Creation Method").keyword.value
+        this.endogenousSystemKeyword = this.item.keywords.find(keyword => keyword.keyword.key === "Endogenous Locus Library Method System").keyword.value
+        this.endogenousMechanismKeyword = this.item.keywords.find(keyword => keyword.keyword.key === "Endogenous Locus Library Method Mechanism").keyword.value
+        this.inVitroSystemKeyword = this.item.keywords.find(keyword => keyword.keyword.key === "In Vitro Construct Library Method System").keyword.value
+        this.inVitroMechanismKeyword = this.item.keywords.find(keyword => keyword.keyword.key === "In Vitro Construct Library Method Mechanism").keyword.value
+        this.deliveryMethodKeyword = this.item.keywords.find(keyword => keyword.keyword.key === "Delivery method").keyword.value
+        this.phenotypicDimensionalityKeyword = this.item.keywords.find(keyword => keyword.keyword.key === "Phenotypic Assay Dimensionality").keyword.value
+        this.phenotypicMethodKeyword = this.item.keywords.find(keyword => keyword.keyword.key === "Phenotypic Assay Method").keyword.value
+        this.phenotypicModelSystemKeyword = this.item.keywords.find(keyword => keyword.keyword.key === "Phenotypic Assay Model System").keyword.value
+        this.phenotypicProfilingStrategyKeyword = this.item.keywords.find(keyword => keyword.keyword.key === "Phenotypic Assay Profiling Strategy").keyword.value
+        this.phenotypicSequencingTypeKeyword = this.item.keywords.find(keyword => keyword.keyword.key === "Phenotypic Assay Sequencing Read Type").keyword.value
         this.doiIdentifiers = this.item.doiIdentifiers
         // So that the multiselect can populate correctly, build the primary publication identifiers
         // indirectly by filtering publication identifiers list for those publications we know to be
@@ -560,11 +725,18 @@ export default {
         this.shortDescription = null
         this.abstractText = null
         this.methodText = null
-        this.keywords = {}
-        this.endogenousKeyword = null
-        this.invitroKeyword = null
-        this.variantKeyword = null
-        this.phenotypicKeyword = null
+        this.keywords = []
+        this.variantLibraryKeyword = null
+        this.endogenousSystemKeyword = null
+        this.endogenousMechanismKeyword = null
+        this.inVitroSystemKeyword = null
+        this.inVitroMechanismKeyword = null
+        this.deliveryMethodKeyword = null
+        this.phenotypicDimensionalityKeyword = null
+        this.phenotypicMethodKeyword = null
+        this.phenotypicModelSystemKeyword = null
+        this.phenotypicProfilingStrategyKeyword = null
+        this.phenotypicSequencingTypeKeyword = null
         this.doiIdentifiers = []
         this.primaryPublicationIdentifiers = []
         this.secondaryPublicationIdentifiers = []
@@ -589,18 +761,77 @@ export default {
       ).filter(
           secondary => !primaryPublicationIdentifiers.some(primary => primary.identifier == secondary.identifier && primary.dbName == secondary.dbName)
       )
-
+      const combinedKeywords = []
+      const variantKeywords = []
+      if(this.item && this.variantLibraryKeyword === "Endogenous locus library method") {
+        variantKeywords = [{
+            "keyword": {"key": "Variant Library Creation Method", "value": this.variantLibraryKeyword},
+            "description": this.variantLibraryKeywordDescription,
+          },
+          {
+            "keyword": {"key": "Endogenous Locus Library Method System", "value": this.endogenousSystemKeyword},
+            "description": this.endogenousSystemKeywordDescription,
+          },
+          {
+            "keyword": {"key": "Endogenous Locus Library Method Mechanism", "value": this.endogenousMechanismKeyword},
+            "description": this.endogenousMechanismKeywordDescription,
+          }
+        ]
+      }else if(this.item && this.variantLibraryKeyword === "In vitro construct library method"){
+        variantKeywords = [{
+            "keyword": {"key": "Variant Library Creation Method", "value": this.variantLibraryKeyword},
+            "description": this.variantLibraryKeywordDescription,
+          },
+          {
+            "keyword": {"key": "In Vitro Construct Library Method System", "value": this.inVitroSystemKeyword},
+            "description": this.inVitroSystemKeywordDescription,
+          },
+          {
+            "keyword": {"key": "inVitroMechanismKeyword", "value": this.inVitroMechanismKeyword},
+            "description": this.inVitroMechanismKeywordDescription,
+          }
+        ]
+      }else if(this.item && this.variantLibraryKeyword === "Other"){
+        variantKeywords = [{
+            "keyword": {"key": "Variant Library Creation Method", "value": this.variantLibraryKeyword},
+            "description": this.variantLibraryKeywordDescription,
+          }
+        ]
+      }
+      combinedKeywords.push(...variantKeywords)
+      const phenotypicKeywords = [
+        {
+          "keyword": {"key": "Delivery method", "value": this.deliveryMethodKeyword},
+          "description": this.deliveryMethodKeywordDescription,
+        },
+        {
+          "keyword": {"key": "Phenotypic Assay Dimensionality", "value": this.phenotypicDimensionalityKeyword},
+          "description": this.phenotypicDimensionalityKeywordDescription,
+        },
+        {
+          "keyword": {"key": "Phenotypic Assay Method", "value": this.phenotypicMethodKeyword},
+          "description": this.phenotypicMethodKeywordDescription,
+        },
+        {
+          "keyword": {"key": "Phenotypic Assay Model System", "value": this.phenotypicModelSystemKeyword},
+          "description": this.phenotypicModelSystemKeywordDescription,
+        },
+        {
+          "keyword": {"key": "Phenotypic Assay Profiling Strategy", "value": this.phenotypicProfilingStrategyKeyword},
+          "description": this.phenotypicProfilingStrategyKeywordDescription,
+        },
+        {
+          "keyword": {"key": "Phenotypic Assay Sequencing Read Type", "value": this.phenotypicSequencingTypeKeyword},
+          "description": this.phenotypicSequencingTypeKeywordDescription,
+        }
+      ]
+      combinedKeywords.push(...phenotypicKeywords)
       const editedFields = {
         title: this.title,
         shortDescription: this.shortDescription,
         abstractText: this.abstractText,
         methodText: this.methodText,
-        keywords: {
-          endogenousKeyword: {"key": "Endogenous Locus Library Method", "value": this.endogenousKeyword},
-          invitroKeyword: {"key": "In Vitro Construct Library Method", "value": this.invitroKeyword},
-          variantKeyword: {"key": "Variant Library", "value": this.variantKeyword},
-          phenotypicKeyword: {"key": "Phenotypic Assay", "value": this.phenotypicKeyword}
-        },
+        keywords: this.combinedKeywords,
         doiIdentifiers: this.doiIdentifiers.map((identifier) => _.pick(identifier, 'identifier')),
         primaryPublicationIdentifiers: primaryPublicationIdentifiers,
         secondaryPublicationIdentifiers: secondaryPublicationIdentifiers,
@@ -609,7 +840,7 @@ export default {
       }
       // empty item arrays so that deleted items aren't merged back into editedItem object
       if(this.item) {
-        this.item.keywords = {}
+        this.item.keywords = []
         this.item.doiIdentifiers = []
         this.item.publicationIdentifiers = []
         this.item.primaryPublicationIdentifiers = []

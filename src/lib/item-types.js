@@ -41,7 +41,7 @@ const itemTypes = {
     httpOptions: {
       list: {
         method: 'get',
-        url: `${config.apiBaseUrl}/publication-identifiers/pubmed`
+        url: `${config.apiBaseUrl}/publication-identifiers/PubMed`
       }
     }
   },
@@ -52,7 +52,7 @@ const itemTypes = {
     httpOptions: {
       list: {
         method: 'get',
-        url: `${config.apiBaseUrl}/publication-identifiers/biorxiv`
+        url: `${config.apiBaseUrl}/publication-identifiers/bioRxiv`
       }
     }
   },
@@ -63,7 +63,18 @@ const itemTypes = {
     httpOptions: {
       list: {
         method: 'get',
-        url: `${config.apiBaseUrl}/publication-identifiers/medrxiv`
+        url: `${config.apiBaseUrl}/publication-identifiers/medRxiv`
+      }
+    }
+  },
+  'crossrefPublicationIdentifier': {
+    name: 'crossrefPublicationIdentifier', // TODO Redundant, change this structure
+    restCollectionName: 'publication-identifiers',
+    primaryKey: 'identifier',
+    httpOptions: {
+      list: {
+        method: 'get',
+        url: `${config.apiBaseUrl}/publication-identifiers/Crossref`
       }
     }
   },

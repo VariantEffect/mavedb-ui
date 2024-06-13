@@ -57,7 +57,7 @@
               <li v-html="markdownToHtml(publication.referenceHtml)"></li>
               <div>
                 Publication: <a
-                  :href="`${config.appBaseUrl}/#/publication-identifiers/${publication.dbName}/${publication.identifier}`">{{
+                  :href="`${config.appBaseUrl}/publication-identifiers/${publication.dbName}/${encodeURIComponent(publication.identifier)}`">{{
                     publication.identifier }}</a>
               </div>
               <div>
@@ -74,7 +74,7 @@
               <li v-html="markdownToHtml(publication.referenceHtml)"></li>
               <div>
                 Publication: <a
-                  :href="`${config.appBaseUrl}/#/publication-identifiers/${publication.dbName}/${publication.identifier}`">{{
+                  :href="`${config.appBaseUrl}/publication-identifiers/${publication.dbName}/${encodeURIComponent(publication.identifier)}`">{{
                     publication.identifier }}</a>
               </div>
               <div>

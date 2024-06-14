@@ -505,6 +505,9 @@ export default {
           .urn}&outputType=${params
           .outputType}&URL=${encodeURIComponent(params.URL)}`;
           window.location.href = submitGalaxyUrl;
+          localStorage.removeItem('galaxyUrl'); 
+          localStorage.removeItem('toolId'); 
+          localStorage.removeItem('requestFromGalaxy');
         }
       } catch (error) {
         console.error('Error sending data:', error);

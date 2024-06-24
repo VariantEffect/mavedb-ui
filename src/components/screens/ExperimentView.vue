@@ -87,7 +87,16 @@
         <div v-if="item.keywords && Object.keys(item.keywords).length > 0">
           <div class="mave-score-set-section-title">Keywords</div>
           <div class="mave-score-set-keywords">
-            <li v-for="(value, key) in item.keywords" :key="key"> {{ key }}: <a :href="`https://www.mavedb.org/search/?keywords=${value.value}`">{{ value.value }}</a></li>
+            <li v-for="(keyword, index) in item.keywords" :key="index">
+              {{ keyword.keyword.key }}
+              <i class="pi pi-info-circle" style="color: green; cursor: pointer;" @click="showDialog(index)"/>
+              <Dialog v-model:visible="dialogVisible[index]" modal header="Description" :style="{ width: '50vw' }" :breakpoints="{ '1199px': '75vw', '575px': '90vw' }">
+                <p class="m-0">
+                  {{ keyword.keyword.description }}
+                </p>
+                <div v-if="keyword.description">Extra description: {{ keyword.description }}</div>
+              </Dialog> : <a :href="`https://www.mavedb.org/search/?keywords=${keyword.keyword.value}`">{{ keyword.keyword.value }}</a>
+            </li>
           </div>
         </div>
         <div class="mave-score-set-section-title">Scoreset Targets</div>
@@ -183,16 +192,19 @@ import {marked} from 'marked'
 import Button from 'primevue/button'
 import Chip from 'primevue/chip'
 import DefaultLayout from '@/components/layout/DefaultLayout'
+import Dialog from 'primevue/dialog'
 import PageLoading from '@/components/common/PageLoading'
+import PrimeIcons from 'primevue/api'
 import ItemNotFound from '@/components/common/ItemNotFound'
 import useAuth from '@/composition/auth'
 import useItem from '@/composition/item'
 import useFormatters from '@/composition/formatters'
 import config from '@/config'
+import 'primeicons/primeicons.css'
 
 export default {
   name: 'ExperimentView',
-  components: { Button, DefaultLayout, PageLoading, ItemNotFound },
+  components: { Button, DefaultLayout, Dialog, PageLoading, ItemNotFound, PrimeIcons },
 
   setup: () => {
     const {userIsAuthenticated} = useAuth()
@@ -214,6 +226,7 @@ export default {
 
   data: () => ({
     associatedScoreSets: [],
+    dialogVisible: [],
     readMore: true
   }),
 
@@ -295,6 +308,9 @@ export default {
       this.readMore = true
       return this.readMore
     },
+    showDialog: function (index) {
+      this.dialogVisible[index] = true
+    }
   }
 }
 

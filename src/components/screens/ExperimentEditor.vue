@@ -208,6 +208,7 @@
         <div class="col-12 md:col-6">
           <Card>
             <template #content>
+              <div class="field">Please click <Button icon="pi pi-plus" aria-label="Filter" size="small"/> if you  would like to add a description. </div>
               <div class="field">
                 <span class="p-float-label">
                   <Dropdown
@@ -216,27 +217,19 @@
                       :options="variantLibraryKeywordOptions"
                       optionLabel="value"
                       optionValue="value"
-                      style="width: 500px"
+                      style="width: 450px"
                   />
                   <label :for="$scopedId('input-variant-library-keywords')">Variant Library Creation Method</label>
+                  &nbsp;<Button :icon="(keywordTextVisible['variantLibrary'] || variantLibraryKeyword === 'Other') ? 'pi pi-minus' : 'pi pi-plus'" @click="keywordToggleInput('variantLibrary')" aria-label="Filter" size="large"/>
                 </span>
                 <span v-if="validationErrors.keywords" class="mave-field-error">{{validationErrors.keywords}}</span>
               </div>
-              <div class="field">
-                <div v-if="variantLibraryKeyword==='Other'">
-                  <span class="p-float-label">
-                      <InputText v-model="variantLibraryKeywordDescription" :id="$scopedId('input-title')" style="width: 500px" required/>
-                      <label :for="$scopedId('input-title')">Variant Library Creation Method Description</label>
-                    </span>
-                  <span v-if="validationErrors.variantLibraryKeywordDescription" class="mave-field-error">{{validationErrors.variantLibraryKeywordDescription}}</span>
-                </div>
-                <div v-else>
-                  <span class="p-float-label">
-                    <InputText v-model="variantLibraryKeywordDescription" :id="$scopedId('input-title')" style="width: 500px"/>
-                    <label :for="$scopedId('input-title')">Variant Library Creation Method Description (Optional)</label>
-                  </span>
-                  <span v-if="validationErrors.variantLibraryKeywordDescription" class="mave-field-error">{{validationErrors.variantLibraryKeywordDescription}}</span>
-                </div>
+              <div class="field" v-if="keywordTextVisible['variantLibrary'] || variantLibraryKeyword==='Other'">
+                <span class="p-float-label">
+                  <Textarea v-model="variantLibraryKeywordDescription" :id="$scopedId('input-title')" rows="4"/>
+                  <label :for="$scopedId('input-title')">Variant Library Creation Method Description {{variantLibraryKeyword==='Other' ? '(Required)' : '(Optional)'}}</label>
+                </span>
+                <span v-if="validationErrors.variantLibraryKeywordDescription" class="mave-field-error">{{validationErrors.variantLibraryKeywordDescription}}</span>
               </div>
               <div v-if="variantLibraryKeyword === 'Endogenous locus library method'">
                 <div class="field">
@@ -247,11 +240,19 @@
                         :options="endogenousSystemKeywordOptions"
                         optionLabel="value"
                         optionValue="value"
-                        style="width: 400px"
+                        style="width: 450px"
                     />
                     <label :for="$scopedId('input-endogenous-system-keywords')">Endogenous Locus Library Method System</label>
+                    &nbsp;<Button :icon="(keywordTextVisible['endogenousSystem']  || endogenousSystemKeyword==='Other')? 'pi pi-minus' : 'pi pi-plus'" @click="keywordToggleInput('endogenousSystem')" aria-label="Filter" size="large"/>
                   </span>
                   <span v-if="validationErrors.keywords" class="mave-field-error">{{validationErrors.keywords}}</span>
+                </div>
+                <div class="field" v-if="keywordTextVisible['endogenousSystem'] || endogenousSystemKeyword==='Other'">
+                  <span class="p-float-label">
+                    <Textarea v-model="endogenousSystemKeywordDescription" :id="$scopedId('input-title')" rows="4"/>
+                    <label :for="$scopedId('input-title')">Endogenous Locus Library Method System Description {{endogenousSystemKeyword==='Other' ? '(Required)' : '(Optional)'}}</label>
+                  </span>
+                  <span v-if="validationErrors.variantLibraryKeywordDescription" class="mave-field-error">{{validationErrors.variantLibraryKeywordDescription}}</span>
                 </div>
                 <div class="field">
                   <span class="p-float-label">
@@ -261,11 +262,19 @@
                         :options="endogenousMechanismKeywordOptions"
                         optionLabel="value"
                         optionValue="value"
-                        style="width: 400px"
+                        style="width: 450px"
                     />
                     <label :for="$scopedId('input-endogenous-mechanism-keywords')">Endogenous Locus Library Method Mechanism</label>
+                    &nbsp;<Button :icon="(keywordTextVisible['endogenousMechanism'] || endogenousMechanismKeyword==='Other')? 'pi pi-minus' : 'pi pi-plus'" @click="keywordToggleInput('endogenousMechanism')" aria-label="Filter" size="large"/>
                   </span>
                   <span v-if="validationErrors.keywords" class="mave-field-error">{{validationErrors.keywords}}</span>
+                </div>
+                <div class="field" v-if="keywordTextVisible['endogenousMechanism'] || endogenousMechanismKeyword==='Other'">
+                  <span class="p-float-label">
+                    <Textarea v-model="endogenousMechanismKeywordDescription" :id="$scopedId('input-title')" rows="4"/>
+                    <label :for="$scopedId('input-title')">Endogenous Locus Library Method Mechanism Description {{endogenousMechanismKeyword==='Other' ? '(Required)' : '(Optional)'}}</label>
+                  </span>
+                  <span v-if="validationErrors.variantLibraryKeywordDescription" class="mave-field-error">{{validationErrors.variantLibraryKeywordDescription}}</span>
                 </div>
               </div>
               <div v-if="variantLibraryKeyword === 'In vitro construct library method'">
@@ -277,11 +286,19 @@
                         :options="inVitroSystemKeywordOptions"
                         optionLabel="value"
                         optionValue="value"
-                        style="width: 400px"
+                        style="width: 450px"
                     />
                     <label :for="$scopedId('input-in-vitro-system-keywords')">In Vitro Construct Library Method System</label>
+                    &nbsp;<Button :icon="(keywordTextVisible['inVitroSystem'] || inVitroSystemKeyword==='Other')? 'pi pi-minus' : 'pi pi-plus'" @click="keywordToggleInput('inVitroSystem')" aria-label="Filter" size="large"/>
                   </span>
                   <span v-if="validationErrors.keywords" class="mave-field-error">{{validationErrors.keywords}}</span>
+                </div>
+                <div class="field" v-if="keywordTextVisible['inVitroSystem'] || inVitroSystemKeyword==='Other'">
+                  <span class="p-float-label">
+                    <Textarea v-model="inVitroSystemKeywordDescription" :id="$scopedId('input-title')" rows="4"/>
+                    <label :for="$scopedId('input-title')">In Vitro Construct Library Method System Description {{inVitroSystemKeyword==='Other' ? '(Required)' : '(Optional)'}}</label>
+                  </span>
+                  <span v-if="validationErrors.variantLibraryKeywordDescription" class="mave-field-error">{{validationErrors.variantLibraryKeywordDescription}}</span>
                 </div>
                 <div class="field">
                   <span class="p-float-label">
@@ -291,12 +308,20 @@
                         :options="inVitroMechanismKeywordOptions"
                         optionLabel="value"
                         optionValue="value"
-                        style="width: 400px"
+                        style="width: 450px"
                     />
                     <label :for="$scopedId('input-in-vitro-mechanism-keywords')">In Vitro Construct Library Method Mechanism</label>
+                    &nbsp;<Button :icon="(keywordTextVisible['inVitroMechanism'] || inVitroMechanismKeyword==='Other')? 'pi pi-minus' : 'pi pi-plus'" @click="keywordToggleInput('inVitroMechanism')" aria-label="Filter" size="large"/>
                   </span>
                   <span v-if="validationErrors.keywords" class="mave-field-error">{{validationErrors.keywords}}</span>
                 </div>  
+                <div class="field" v-if="keywordTextVisible['inVitroMechanism'] || inVitroMechanismKeyword==='Other'">
+                  <span class="p-float-label">
+                    <Textarea v-model="inVitroMechanismKeywordDescription" :id="$scopedId('input-title')" rows="4"/>
+                    <label :for="$scopedId('input-title')">In Vitro Construct Library Method Mechanism Description {{inVitroMechanismKeyword==='Other' ? '(Required)' : '(Optional)'}}</label>
+                  </span>
+                  <span v-if="validationErrors.variantLibraryKeywordDescription" class="mave-field-error">{{validationErrors.variantLibraryKeywordDescription}}</span>
+                </div>
               </div>
               <div class="field">
                 <span class="p-float-label">
@@ -306,11 +331,19 @@
                       :options="deliveryMethodKeywordOptions"
                       optionLabel="value"
                       optionValue="value"
-                      style="width: 400px"
+                      style="width: 450px"
                   />
                   <label :for="$scopedId('delivery-method-keywords')">Delivery Method</label>
+                  &nbsp;<Button :icon="(keywordTextVisible['deliveryMethod'] || deliveryMethodKeyword==='Other')? 'pi pi-minus' : 'pi pi-plus'" @click="keywordToggleInput('deliveryMethod')" aria-label="Filter" size="large"/>
                 </span>
                 <span v-if="validationErrors.keywords" class="mave-field-error">{{validationErrors.keywords}}</span>
+              </div>
+              <div class="field" v-if="keywordTextVisible['deliveryMethod'] || deliveryMethodKeyword==='Other'">
+                <span class="p-float-label">
+                  <Textarea v-model="deliveryMethodKeywordDescription" :id="$scopedId('input-title')" rows="4"/>
+                  <label :for="$scopedId('input-title')">Delivery Method Description {{deliveryMethodKeyword==='Other' ? '(Required)' : '(Optional)'}}</label>
+                </span>
+                <span v-if="validationErrors.variantLibraryKeywordDescription" class="mave-field-error">{{validationErrors.variantLibraryKeywordDescription}}</span>
               </div>
               <div class="field">
                 <span class="p-float-label">
@@ -320,11 +353,19 @@
                       :options="phenotypicDimensionalityKeywordOptions"
                       optionLabel="value"
                       optionValue="value"
-                      style="width: 400px"
+                      style="width: 450px"
                   />
                   <label :for="$scopedId('phenotypic-dimensionality-keywords')">Phenotypic Assay Dimensionality</label>
+                  &nbsp;<Button :icon="(keywordTextVisible['phenotypicDimensionality'] || phenotypicDimensionalityKeyword==='Other')? 'pi pi-minus' : 'pi pi-plus'" @click="keywordToggleInput('phenotypicDimensionality')" aria-label="Filter" size="large"/>
                 </span>
                 <span v-if="validationErrors.keywords" class="mave-field-error">{{validationErrors.keywords}}</span>
+              </div>
+              <div class="field" v-if="keywordTextVisible['phenotypicDimensionality'] || phenotypicDimensionalityKeyword==='Other'">
+                <span class="p-float-label">
+                  <Textarea v-model="phenotypicDimensionalityKeywordDescription" :id="$scopedId('input-title')" rows="4"/>
+                  <label :for="$scopedId('input-title')">Phenotypic Assay Dimensionality Description {{phenotypicDimensionalityKeyword==='Other' ? '(Required)' : '(Optional)'}}</label>
+                </span>
+                <span v-if="validationErrors.variantLibraryKeywordDescription" class="mave-field-error">{{validationErrors.variantLibraryKeywordDescription}}</span>
               </div>
               <div class="field">
                 <span class="p-float-label">
@@ -334,11 +375,19 @@
                       :options="phenotypicMethodKeywordOptions"
                       optionLabel="value"
                       optionValue="value"
-                      style="width: 400px"
+                      style="width: 450px"
                   />
                   <label :for="$scopedId('phenotypic-method-keywords')">Phenotypic Assay Method</label>
+                  &nbsp;<Button :icon="(keywordTextVisible['phenotypicMethod'] || phenotypicMethodKeyword==='Other')? 'pi pi-minus' : 'pi pi-plus'" @click="keywordToggleInput('phenotypicMethod')" aria-label="Filter" size="large"/>
                 </span>
                 <span v-if="validationErrors.keywords" class="mave-field-error">{{validationErrors.keywords}}</span>
+              </div>
+              <div class="field" v-if="keywordTextVisible['phenotypicMethod'] || phenotypicMethodKeyword==='Other'">
+                <span class="p-float-label">
+                  <Textarea v-model="phenotypicMethodKeywordDescription" :id="$scopedId('input-title')" rows="4"/>
+                  <label :for="$scopedId('input-title')">Phenotypic Assay Method Description {{phenotypicMethodKeyword==='Other' ? '(Required)' : '(Optional)'}}</label>
+                </span>
+                <span v-if="validationErrors.variantLibraryKeywordDescription" class="mave-field-error">{{validationErrors.variantLibraryKeywordDescription}}</span>
               </div>
               <div class="field">
                 <span class="p-float-label">
@@ -348,11 +397,19 @@
                       :options="phenotypicModelSystemKeywordOptions"
                       optionLabel="value"
                       optionValue="value"
-                      style="width: 400px"
+                      style="width: 450px"
                   />
                   <label :for="$scopedId('phenotypic-model-system-keywords')">Phenotypic Assay Model System</label>
+                  &nbsp;<Button :icon="(keywordTextVisible['phenotypicModelSystem'] || phenotypicModelSystemKeyword==='Other')? 'pi pi-minus' : 'pi pi-plus'" @click="keywordToggleInput('phenotypicModelSystem')" aria-label="Filter" size="large"/>
                 </span>
                 <span v-if="validationErrors.keywords" class="mave-field-error">{{validationErrors.keywords}}</span>
+              </div>
+              <div class="field" v-if="keywordTextVisible['phenotypicModelSystem'] || phenotypicModelSystemKeyword==='Other'">
+                <span class="p-float-label">
+                  <Textarea v-model="phenotypicModelSystemKeywordDescription" :id="$scopedId('input-title')" rows="4"/>
+                  <label :for="$scopedId('input-title')">Phenotypic Assay Model System Description {{phenotypicModelSystemKeyword==='Other' ? '(Required)' : '(Optional)'}}</label>
+                </span>
+                <span v-if="validationErrors.variantLibraryKeywordDescription" class="mave-field-error">{{validationErrors.variantLibraryKeywordDescription}}</span>
               </div>
               <div class="field">
                 <span class="p-float-label">
@@ -362,11 +419,19 @@
                       :options="phenotypicProfilingStrategyKeywordOptions"
                       optionLabel="value"
                       optionValue="value"
-                      style="width: 400px"
+                      style="width: 450px"
                   />
                   <label :for="$scopedId('phenotypic-profiling-strategy-keywords')">Phenotypic Assay Profiling Strategy</label>
+                  &nbsp;<Button :icon="(keywordTextVisible['phenotypicProfilingStrategy'] || phenotypicProfilingStrategyKeyword==='Other')? 'pi pi-minus' : 'pi pi-plus'" @click="keywordToggleInput('phenotypicProfilingStrategy')" aria-label="Filter" size="large"/>
                 </span>
                 <span v-if="validationErrors.keywords" class="mave-field-error">{{validationErrors.keywords}}</span>
+              </div>
+              <div class="field" v-if="keywordTextVisible['phenotypicProfilingStrategy'] || phenotypicProfilingStrategyKeyword==='Other'">
+                <span class="p-float-label">
+                  <Textarea v-model="phenotypicProfilingStrategyKeywordDescription" :id="$scopedId('input-title')" rows="4"/>
+                  <label :for="$scopedId('input-title')">Phenotypic Assay Profiling Strategy Description {{phenotypicProfilingStrategyKeyword==='Other' ? '(Required)' : '(Optional)'}}</label>
+                </span>
+                <span v-if="validationErrors.variantLibraryKeywordDescription" class="mave-field-error">{{validationErrors.variantLibraryKeywordDescription}}</span>
               </div>
               <div class="field">
                 <span class="p-float-label">
@@ -376,14 +441,20 @@
                       :options="phenotypicSequencingTypeKeywordOptions"
                       optionLabel="value"
                       optionValue="value"
-                      style="width: 400px"
+                      style="width: 450px"
                   />
                   <label :for="$scopedId('phenotypic-sequencing-type-keywords')">Phenotypic Assay Sequencing Read Type</label>
+                  &nbsp;<Button :icon="(keywordTextVisible['phenotypicSequencingType'] || phenotypicSequencingTypeKeyword==='Other')? 'pi pi-minus' : 'pi pi-plus'" @click="keywordToggleInput('phenotypicSequencingType')" aria-label="Filter" size="large"/>
                 </span>
                 <span v-if="validationErrors.keywords" class="mave-field-error">{{validationErrors.keywords}}</span>
               </div>
-
-              
+              <div class="field" v-if="keywordTextVisible['phenotypicSequencingType'] || phenotypicSequencingTypeKeyword==='Other'">
+                <span class="p-float-label">
+                  <Textarea v-model="phenotypicSequencingTypeKeywordDescription" :id="$scopedId('input-title')" rows="4"/>
+                  <label :for="$scopedId('input-title')">Phenotypic Assay Sequencing Read Type Description {{phenotypicSequencingTypeKeyword==='Other' ? '(Required)' : '(Optional)'}}</label>
+                </span>
+                <span v-if="validationErrors.variantLibraryKeywordDescription" class="mave-field-error">{{validationErrors.variantLibraryKeywordDescription}}</span>
+              </div>
             </template>
           </Card>
           <Card v-if="item?.scoreSetUrns">
@@ -490,17 +561,41 @@ export default {
     abstractText: null,
     methodText: null,
     variantLibraryKeyword: null,
+    variantLibraryKeywordDescription: null,
     endogenousSystemKeyword: null,
+    endogenousSystemKeywordDescription: null,
     endogenousMechanismKeyword: null,
+    endogenousMechanismKeywordDescription: null,
     inVitroSystemKeyword: null,
+    inVitroSystemKeywordDescription: null,
     inVitroMechanismKeyword: null,
+    inVitroMechanismKeywordDescription: null,
     deliveryMethodKeyword: null,
+    deliveryMethodKeywordDescription: null,
     phenotypicDimensionalityKeyword: null,
+    phenotypicDimensionalityKeywordDescription: null,
     phenotypicMethodKeyword: null,
+    phenotypicMethodKeywordDescription: null,
     phenotypicModelSystemKeyword: null,
+    phenotypicModelSystemKeywordDescription: null,
     phenotypicProfilingStrategyKeyword: null,
+    phenotypicProfilingStrategyKeywordDescription: null,
     phenotypicSequencingTypeKeyword: null,
+    phenotypicSequencingTypeKeywordDescription: null,
     keywords: [],
+    keywordTextVisible:{
+        variantLibrary: false,
+        endogenousSystem: false,
+        endogenousMechanism: false,
+        inVitroSystem: false,
+        inVitroMechanism: false,
+        deliveryMethod: false,
+        phenotypicDimensionality: false,
+        phenotypicMethod: false,
+        phenotypicModelSystem: false,
+        phenotypicProfilingStrategy: false,
+        phenotypicSequencingType: false
+      },
     doiIdentifiers: [],
     primaryPublicationIdentifiers: [],
     secondaryPublicationIdentifiers: [],
@@ -697,16 +792,51 @@ export default {
         this.abstractText = this.item.abstractText
         this.methodText = this.item.methodText
         this.variantLibraryKeyword = this.item.keywords.find(keyword => keyword.keyword.key === "Variant Library Creation Method").keyword.value
-        this.endogenousSystemKeyword = this.item.keywords.find(keyword => keyword.keyword.key === "Endogenous Locus Library Method System").keyword.value
-        this.endogenousMechanismKeyword = this.item.keywords.find(keyword => keyword.keyword.key === "Endogenous Locus Library Method Mechanism").keyword.value
-        this.inVitroSystemKeyword = this.item.keywords.find(keyword => keyword.keyword.key === "In Vitro Construct Library Method System").keyword.value
-        this.inVitroMechanismKeyword = this.item.keywords.find(keyword => keyword.keyword.key === "In Vitro Construct Library Method Mechanism").keyword.value
+        this.variantLibraryKeywordDescription = this.item.keywords.find(keyword => keyword.keyword.key === "Variant Library Creation Method").description
+        const endogenousSystemKeywordObj = this.item.keywords.find(keyword => keyword.keyword.key === "Endogenous Locus Library Method System")
+        if (endogenousSystemKeywordObj) {
+          this.endogenousSystemKeyword = endogenousSystemKeywordObj.keyword.value
+          this.endogenousSystemKeywordDescription = endogenousSystemKeywordObj.description
+        } else {
+          this.endogenousSystemKeyword = null
+          this.endogenousSystemKeywordDescription = null
+        }
+        const endogenousMechanismKeywordObj = this.item.keywords.find(keyword => keyword.keyword.key === "Endogenous Locus Library Method Mechanism")
+        if (endogenousMechanismKeywordObj) {
+          this.endogenousMechanismKeyword = endogenousMechanismKeywordObj.keyword.value
+          this.endogenousMechanismKeywordDescription = endogenousMechanismKeywordObj.description
+        } else {
+          this.endogenousMechanismKeyword = null
+          this.endogenousMechanismKeywordDescription = null
+        }
+        const inVitroSystemKeywordObj = this.item.keywords.find(keyword => keyword.keyword.key === "In Vitro Construct Library Method System")
+        if (inVitroSystemKeywordObj) {
+          this.inVitroSystemKeyword = inVitroSystemKeywordObj.keyword.value
+          this.inVitroSystemKeywordDescription = inVitroSystemKeywordObj.description
+        } else {
+          this.inVitroSystemKeyword = null
+          this.inVitroSystemKeywordDescription = null
+        }
+        const inVitroMechanismKeywordObj = this.item.keywords.find(keyword => keyword.keyword.key === "In Vitro Construct Library Method Mechanism")
+        if (inVitroMechanismKeywordObj) {
+          this.inVitroMechanismKeyword = inVitroMechanismKeywordObj.keyword.value
+          this.inVitroMechanismKeywordDescription = inVitroMechanismKeywordObj.description
+        } else{
+          this.inVitroMechanismKeyword = null
+          this.inVitroMechanismKeywordDescription = null
+        }
         this.deliveryMethodKeyword = this.item.keywords.find(keyword => keyword.keyword.key === "Delivery method").keyword.value
+        this.deliveryMethodKeywordDescription = this.item.keywords.find(keyword => keyword.keyword.key === "Delivery method").description
         this.phenotypicDimensionalityKeyword = this.item.keywords.find(keyword => keyword.keyword.key === "Phenotypic Assay Dimensionality").keyword.value
+        this.phenotypicDimensionalityKeywordDescription = this.item.keywords.find(keyword => keyword.keyword.key === "Phenotypic Assay Dimensionality").description
         this.phenotypicMethodKeyword = this.item.keywords.find(keyword => keyword.keyword.key === "Phenotypic Assay Method").keyword.value
+        this.phenotypicMethodKeywordDescription = this.item.keywords.find(keyword => keyword.keyword.key === "Phenotypic Assay Method").description
         this.phenotypicModelSystemKeyword = this.item.keywords.find(keyword => keyword.keyword.key === "Phenotypic Assay Model System").keyword.value
+        this.phenotypicModelSystemKeywordDescription = this.item.keywords.find(keyword => keyword.keyword.key === "Phenotypic Assay Model System").description
         this.phenotypicProfilingStrategyKeyword = this.item.keywords.find(keyword => keyword.keyword.key === "Phenotypic Assay Profiling Strategy").keyword.value
+        this.phenotypicProfilingStrategyKeywordDescription = this.item.keywords.find(keyword => keyword.keyword.key === "Phenotypic Assay Profiling Strategy").description
         this.phenotypicSequencingTypeKeyword = this.item.keywords.find(keyword => keyword.keyword.key === "Phenotypic Assay Sequencing Read Type").keyword.value
+        this.phenotypicSequencingTypeKeywordDescription = this.item.keywords.find(keyword => keyword.keyword.key === "Phenotypic Assay Sequencing Read Type").description
         this.doiIdentifiers = this.item.doiIdentifiers
         // So that the multiselect can populate correctly, build the primary publication identifiers
         // indirectly by filtering publication identifiers list for those publications we know to be
@@ -727,16 +857,27 @@ export default {
         this.methodText = null
         this.keywords = []
         this.variantLibraryKeyword = null
+        this.variantLibraryKeywordDescription = null
         this.endogenousSystemKeyword = null
+        this.endogenousSystemKeywordDescription = null
         this.endogenousMechanismKeyword = null
+        this.endogenousMechanismKeywordDescription = null
         this.inVitroSystemKeyword = null
+        this.inVitroSystemKeywordDescription = null
         this.inVitroMechanismKeyword = null
+        this.inVitroMechanismKeywordDescription = null
         this.deliveryMethodKeyword = null
+        this.deliveryMethodKeywordDescription = null
         this.phenotypicDimensionalityKeyword = null
+        this.phenotypicDimensionalityKeywordDescription = null
         this.phenotypicMethodKeyword = null
+        this.phenotypicMethodKeywordDescription = null
         this.phenotypicModelSystemKeyword = null
+        this.phenotypicModelSystemKeywordDescription = null
         this.phenotypicProfilingStrategyKeyword = null
+        this.phenotypicProfilingStrategyKeywordDescription = null
         this.phenotypicSequencingTypeKeyword = null
+        this.phenotypicSequencingTypeKeywordDescription = null
         this.doiIdentifiers = []
         this.primaryPublicationIdentifiers = []
         this.secondaryPublicationIdentifiers = []
@@ -762,8 +903,8 @@ export default {
           secondary => !primaryPublicationIdentifiers.some(primary => primary.identifier == secondary.identifier && primary.dbName == secondary.dbName)
       )
       const combinedKeywords = []
-      const variantKeywords = []
-      if(this.item && this.variantLibraryKeyword === "Endogenous locus library method") {
+      let variantKeywords = []
+      if(this.variantLibraryKeyword === "Endogenous locus library method") {
         variantKeywords = [{
             "keyword": {"key": "Variant Library Creation Method", "value": this.variantLibraryKeyword},
             "description": this.variantLibraryKeywordDescription,
@@ -777,7 +918,7 @@ export default {
             "description": this.endogenousMechanismKeywordDescription,
           }
         ]
-      }else if(this.item && this.variantLibraryKeyword === "In vitro construct library method"){
+      }else if(this.variantLibraryKeyword === "In vitro construct library method"){
         variantKeywords = [{
             "keyword": {"key": "Variant Library Creation Method", "value": this.variantLibraryKeyword},
             "description": this.variantLibraryKeywordDescription,
@@ -787,11 +928,11 @@ export default {
             "description": this.inVitroSystemKeywordDescription,
           },
           {
-            "keyword": {"key": "inVitroMechanismKeyword", "value": this.inVitroMechanismKeyword},
+            "keyword": {"key": "In Vitro Construct Library Method Mechanism", "value": this.inVitroMechanismKeyword},
             "description": this.inVitroMechanismKeywordDescription,
           }
         ]
-      }else if(this.item && this.variantLibraryKeyword === "Other"){
+      }else if(this.variantLibraryKeyword === "Other"){
         variantKeywords = [{
             "keyword": {"key": "Variant Library Creation Method", "value": this.variantLibraryKeyword},
             "description": this.variantLibraryKeywordDescription,
@@ -826,12 +967,13 @@ export default {
         }
       ]
       combinedKeywords.push(...phenotypicKeywords)
+      this.keywords = combinedKeywords
       const editedFields = {
         title: this.title,
         shortDescription: this.shortDescription,
         abstractText: this.abstractText,
         methodText: this.methodText,
-        keywords: this.combinedKeywords,
+        keywords: this.keywords,
         doiIdentifiers: this.doiIdentifiers.map((identifier) => _.pick(identifier, 'identifier')),
         primaryPublicationIdentifiers: primaryPublicationIdentifiers,
         secondaryPublicationIdentifiers: secondaryPublicationIdentifiers,
@@ -848,7 +990,7 @@ export default {
       }
 
       const editedItem = _.merge({}, this.item || {}, editedFields)
-
+      console.log(editedItem)
       let response
       try {
         if (this.item) {
@@ -931,6 +1073,10 @@ export default {
 
     get(...args) {
       return _.get(...args)
+    },
+
+    keywordToggleInput: function(field) {
+      this.keywordTextVisible[field] = !this.keywordTextVisible[field]
     }
 
   }

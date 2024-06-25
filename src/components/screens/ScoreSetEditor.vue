@@ -1335,6 +1335,7 @@
           delete this.targetGene.targetSequence;
         }
         else {
+          this.$toast.add({ severity: 'error', summary: 'Target must include taxonomy or assembly and gene name.' })
           return null // target must include one of the above objects
         }
         this.targetGene.externalIdentifiers = _.keys(

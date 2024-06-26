@@ -515,11 +515,6 @@ export default {
     const phenotypicModelSystemKeywordOptions = useItems({itemTypeName: `controlled-keywords-phenotypic-modle-system-search`})
     const phenotypicProfilingStrategyKeywordOptions = useItems({itemTypeName: `controlled-keywords-phenotypic-profiling-strategy-search`})
     const phenotypicSequencingTypeKeywordOptions = useItems({itemTypeName: `controlled-keywords-phenotypic-sequencing-type-search`})
-    // for (const key of controlledKeywordKeys) {
-    //   optionKey = `${key}KeywordOptions`
-    //   optionKey = useItems({ itemTypeName: `${key}-controlled-keywords-search` })
-    // }
-
     const publicationIdentifierSuggestions = useItems({itemTypeName: 'publication-identifier-search'})
     const externalPublicationIdentifierSuggestions = useItems({itemTypeName: 'external-publication-identifier-search'})
     return {
@@ -791,39 +786,41 @@ export default {
         this.shortDescription = this.item.shortDescription
         this.abstractText = this.item.abstractText
         this.methodText = this.item.methodText
-        this.variantLibraryKeyword = this.item.keywords.find(keyword => keyword.keyword.key === "Variant Library Creation Method").keyword.value
-        this.variantLibraryKeywordDescription = this.item.keywords.find(keyword => keyword.keyword.key === "Variant Library Creation Method").description
-        const endogenousSystemKeywordObj = this.item.keywords.find(keyword => keyword.keyword.key === "Endogenous Locus Library Method System")
-        if (endogenousSystemKeywordObj) {
-          this.endogenousSystemKeyword = endogenousSystemKeywordObj.keyword.value
-          this.endogenousSystemKeywordDescription = endogenousSystemKeywordObj.description
-        } else {
-          this.endogenousSystemKeyword = null
-          this.endogenousSystemKeywordDescription = null
-        }
-        const endogenousMechanismKeywordObj = this.item.keywords.find(keyword => keyword.keyword.key === "Endogenous Locus Library Method Mechanism")
-        if (endogenousMechanismKeywordObj) {
-          this.endogenousMechanismKeyword = endogenousMechanismKeywordObj.keyword.value
-          this.endogenousMechanismKeywordDescription = endogenousMechanismKeywordObj.description
-        } else {
-          this.endogenousMechanismKeyword = null
-          this.endogenousMechanismKeywordDescription = null
-        }
-        const inVitroSystemKeywordObj = this.item.keywords.find(keyword => keyword.keyword.key === "In Vitro Construct Library Method System")
-        if (inVitroSystemKeywordObj) {
-          this.inVitroSystemKeyword = inVitroSystemKeywordObj.keyword.value
-          this.inVitroSystemKeywordDescription = inVitroSystemKeywordObj.description
-        } else {
-          this.inVitroSystemKeyword = null
-          this.inVitroSystemKeywordDescription = null
-        }
-        const inVitroMechanismKeywordObj = this.item.keywords.find(keyword => keyword.keyword.key === "In Vitro Construct Library Method Mechanism")
-        if (inVitroMechanismKeywordObj) {
-          this.inVitroMechanismKeyword = inVitroMechanismKeywordObj.keyword.value
-          this.inVitroMechanismKeywordDescription = inVitroMechanismKeywordObj.description
-        } else{
-          this.inVitroMechanismKeyword = null
-          this.inVitroMechanismKeywordDescription = null
+        // Keywords could be an empty list now. Will modify it back to compulsory when we get final list. 
+        if (this.item.keywords.length !== 0) {
+          this.variantLibraryKeyword = this.item.keywords.find(keyword => keyword.keyword.key === "Variant Library Creation Method").keyword.value
+          this.variantLibraryKeywordDescription = this.item.keywords.find(keyword => keyword.keyword.key === "Variant Library Creation Method").description
+          const endogenousSystemKeywordObj = this.item.keywords.find(keyword => keyword.keyword.key === "Endogenous Locus Library Method System")
+          if (endogenousSystemKeywordObj) {
+            this.endogenousSystemKeyword = endogenousSystemKeywordObj.keyword.value
+            this.endogenousSystemKeywordDescription = endogenousSystemKeywordObj.description
+          } else {
+            this.endogenousSystemKeyword = null
+            this.endogenousSystemKeywordDescription = null
+          }
+          const endogenousMechanismKeywordObj = this.item.keywords.find(keyword => keyword.keyword.key === "Endogenous Locus Library Method Mechanism")
+          if (endogenousMechanismKeywordObj) {
+            this.endogenousMechanismKeyword = endogenousMechanismKeywordObj.keyword.value
+            this.endogenousMechanismKeywordDescription = endogenousMechanismKeywordObj.description
+          } else {
+            this.endogenousMechanismKeyword = null
+            this.endogenousMechanismKeywordDescription = null
+          }
+          const inVitroSystemKeywordObj = this.item.keywords.find(keyword => keyword.keyword.key === "In Vitro Construct Library Method System")
+          if (inVitroSystemKeywordObj) {
+            this.inVitroSystemKeyword = inVitroSystemKeywordObj.keyword.value
+            this.inVitroSystemKeywordDescription = inVitroSystemKeywordObj.description
+          } else {
+            this.inVitroSystemKeyword = null
+            this.inVitroSystemKeywordDescription = null
+          }
+          const inVitroMechanismKeywordObj = this.item.keywords.find(keyword => keyword.keyword.key === "In Vitro Construct Library Method Mechanism")
+          if (inVitroMechanismKeywordObj) {
+            this.inVitroMechanismKeyword = inVitroMechanismKeywordObj.keyword.value
+            this.inVitroMechanismKeywordDescription = inVitroMechanismKeywordObj.description
+          } else{
+            this.inVitroMechanismKeyword = null
+            this.inVitroMechanismKeywordDescription = null
         }
         this.deliveryMethodKeyword = this.item.keywords.find(keyword => keyword.keyword.key === "Delivery method").keyword.value
         this.deliveryMethodKeywordDescription = this.item.keywords.find(keyword => keyword.keyword.key === "Delivery method").description
@@ -837,6 +834,7 @@ export default {
         this.phenotypicProfilingStrategyKeywordDescription = this.item.keywords.find(keyword => keyword.keyword.key === "Phenotypic Assay Profiling Strategy").description
         this.phenotypicSequencingTypeKeyword = this.item.keywords.find(keyword => keyword.keyword.key === "Phenotypic Assay Sequencing Read Type").keyword.value
         this.phenotypicSequencingTypeKeywordDescription = this.item.keywords.find(keyword => keyword.keyword.key === "Phenotypic Assay Sequencing Read Type").description
+        }
         this.doiIdentifiers = this.item.doiIdentifiers
         // So that the multiselect can populate correctly, build the primary publication identifiers
         // indirectly by filtering publication identifiers list for those publications we know to be

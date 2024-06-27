@@ -210,6 +210,9 @@
             <template #content>
               <div class="field">Please click <Button icon="pi pi-plus" aria-label="Filter" size="small"/> if you  would like to add a description. </div>
               <div class="field">
+                <Button class="p-button-help" @click="resetKeywords">Clear Keywords</Button>
+              </div>
+              <div class="field">
                 <span class="p-float-label">
                   <Dropdown
                       v-model="variantLibraryKeyword"
@@ -768,91 +771,28 @@ export default {
       this.mergeValidationErrors()
     },
 
-    ////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
-    // Validation
-    ////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
-
-    mergeValidationErrors: function() {
-      this.validationErrors = _.merge({}, this.serverSideValidationErrors, this.clientSideValidationErrors)
-    },
-
-    ////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
-    // Converting between view model and form model
-    ////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
-
-    resetForm: function() {
+    resetKeywords: function() {
       if (this.item) {
-        this.title = this.item.title
-        this.shortDescription = this.item.shortDescription
-        this.abstractText = this.item.abstractText
-        this.methodText = this.item.methodText
         // Keywords could be an empty list now. Will modify it back to compulsory when we get final list. 
         if (this.item.keywords.length !== 0) {
-          this.variantLibraryKeyword = this.item.keywords.find(keyword => keyword.keyword.key === "Variant Library Creation Method").keyword.value
-          this.variantLibraryKeywordDescription = this.item.keywords.find(keyword => keyword.keyword.key === "Variant Library Creation Method").description
-          const endogenousSystemKeywordObj = this.item.keywords.find(keyword => keyword.keyword.key === "Endogenous Locus Library Method System")
-          if (endogenousSystemKeywordObj) {
-            this.endogenousSystemKeyword = endogenousSystemKeywordObj.keyword.value
-            this.endogenousSystemKeywordDescription = endogenousSystemKeywordObj.description
-          } else {
-            this.endogenousSystemKeyword = null
-            this.endogenousSystemKeywordDescription = null
+          const setKeyword = (key, keywordProp, descriptionProp) => {
+            const keywordObj = this.item.keywords.find(keyword => keyword.keyword.key === key)
+            this[keywordProp] = keywordObj ? keywordObj.keyword.value : null
+            this[descriptionProp] = keywordObj ? keywordObj.description : null
           }
-          const endogenousMechanismKeywordObj = this.item.keywords.find(keyword => keyword.keyword.key === "Endogenous Locus Library Method Mechanism")
-          if (endogenousMechanismKeywordObj) {
-            this.endogenousMechanismKeyword = endogenousMechanismKeywordObj.keyword.value
-            this.endogenousMechanismKeywordDescription = endogenousMechanismKeywordObj.description
-          } else {
-            this.endogenousMechanismKeyword = null
-            this.endogenousMechanismKeywordDescription = null
-          }
-          const inVitroSystemKeywordObj = this.item.keywords.find(keyword => keyword.keyword.key === "In Vitro Construct Library Method System")
-          if (inVitroSystemKeywordObj) {
-            this.inVitroSystemKeyword = inVitroSystemKeywordObj.keyword.value
-            this.inVitroSystemKeywordDescription = inVitroSystemKeywordObj.description
-          } else {
-            this.inVitroSystemKeyword = null
-            this.inVitroSystemKeywordDescription = null
-          }
-          const inVitroMechanismKeywordObj = this.item.keywords.find(keyword => keyword.keyword.key === "In Vitro Construct Library Method Mechanism")
-          if (inVitroMechanismKeywordObj) {
-            this.inVitroMechanismKeyword = inVitroMechanismKeywordObj.keyword.value
-            this.inVitroMechanismKeywordDescription = inVitroMechanismKeywordObj.description
-          } else{
-            this.inVitroMechanismKeyword = null
-            this.inVitroMechanismKeywordDescription = null
+          setKeyword("Variant Library Creation Method", "variantLibraryKeyword", "variantLibraryKeywordDescription")
+          setKeyword("Endogenous Locus Library Method System", "endogenousSystemKeyword", "endogenousSystemKeywordDescription")
+          setKeyword("Endogenous Locus Library Method Mechanism", "endogenousMechanismKeyword", "endogenousMechanismKeywordDescription")
+          setKeyword("In Vitro Construct Library Method System", "inVitroSystemKeyword", "inVitroSystemKeywordDescription")
+          setKeyword("In Vitro Construct Library Method Mechanism", "inVitroMechanismKeyword", "inVitroMechanismKeywordDescription")
+          setKeyword("Delivery method", "deliveryMethodKeyword", "deliveryMethodKeywordDescription")
+          setKeyword("Phenotypic Assay Dimensionality", "phenotypicDimensionalityKeyword", "phenotypicDimensionalityKeywordDescription")
+          setKeyword("Phenotypic Assay Method", "phenotypicMethodKeyword", "phenotypicMethodKeywordDescription")
+          setKeyword("Phenotypic Assay Model System", "phenotypicModelSystemKeyword", "phenotypicModelSystemKeywordDescription")
+          setKeyword("Phenotypic Assay Profiling Strategy", "phenotypicProfilingStrategyKeyword", "phenotypicProfilingStrategyKeywordDescription")
+          setKeyword("Phenotypic Assay Sequencing Read Type", "phenotypicSequencingTypeKeyword", "phenotypicSequencingTypeKeywordDescription")
         }
-        this.deliveryMethodKeyword = this.item.keywords.find(keyword => keyword.keyword.key === "Delivery method").keyword.value
-        this.deliveryMethodKeywordDescription = this.item.keywords.find(keyword => keyword.keyword.key === "Delivery method").description
-        this.phenotypicDimensionalityKeyword = this.item.keywords.find(keyword => keyword.keyword.key === "Phenotypic Assay Dimensionality").keyword.value
-        this.phenotypicDimensionalityKeywordDescription = this.item.keywords.find(keyword => keyword.keyword.key === "Phenotypic Assay Dimensionality").description
-        this.phenotypicMethodKeyword = this.item.keywords.find(keyword => keyword.keyword.key === "Phenotypic Assay Method").keyword.value
-        this.phenotypicMethodKeywordDescription = this.item.keywords.find(keyword => keyword.keyword.key === "Phenotypic Assay Method").description
-        this.phenotypicModelSystemKeyword = this.item.keywords.find(keyword => keyword.keyword.key === "Phenotypic Assay Model System").keyword.value
-        this.phenotypicModelSystemKeywordDescription = this.item.keywords.find(keyword => keyword.keyword.key === "Phenotypic Assay Model System").description
-        this.phenotypicProfilingStrategyKeyword = this.item.keywords.find(keyword => keyword.keyword.key === "Phenotypic Assay Profiling Strategy").keyword.value
-        this.phenotypicProfilingStrategyKeywordDescription = this.item.keywords.find(keyword => keyword.keyword.key === "Phenotypic Assay Profiling Strategy").description
-        this.phenotypicSequencingTypeKeyword = this.item.keywords.find(keyword => keyword.keyword.key === "Phenotypic Assay Sequencing Read Type").keyword.value
-        this.phenotypicSequencingTypeKeywordDescription = this.item.keywords.find(keyword => keyword.keyword.key === "Phenotypic Assay Sequencing Read Type").description
-        }
-        this.doiIdentifiers = this.item.doiIdentifiers
-        // So that the multiselect can populate correctly, build the primary publication identifiers
-        // indirectly by filtering publication identifiers list for those publications we know to be
-        // primary.
-        this.publicationIdentifiers = _.concat(this.item.primaryPublicationIdentifiers, this.item.secondaryPublicationIdentifiers)
-        this.primaryPublicationIdentifiers = this.item.primaryPublicationIdentifiers.filter((publication) => {
-          return this.publicationIdentifiers.some((primary) => {
-            return primary.identifier === publication.identifier
-          })
-        })
-        this.secondaryPublicationIdentifiers = this.item.secondaryPublicationIdentifiers
-        this.rawReadIdentifiers = this.item.rawReadIdentifiers
-        this.extraMetadata = this.item.extraMetadata
       } else {
-        this.title = null
-        this.shortDescription = null
-        this.abstractText = null
-        this.methodText = null
         this.keywords = []
         this.variantLibraryKeyword = null
         this.variantLibraryKeywordDescription = null
@@ -876,6 +816,45 @@ export default {
         this.phenotypicProfilingStrategyKeywordDescription = null
         this.phenotypicSequencingTypeKeyword = null
         this.phenotypicSequencingTypeKeywordDescription = null
+      }
+    },
+
+    ////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+    // Validation
+    ////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+
+    mergeValidationErrors: function() {
+      this.validationErrors = _.merge({}, this.serverSideValidationErrors, this.clientSideValidationErrors)
+    },
+
+    ////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+    // Converting between view model and form model
+    ////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+
+    resetForm: function() {
+      if (this.item) {
+        this.title = this.item.title
+        this.shortDescription = this.item.shortDescription
+        this.abstractText = this.item.abstractText
+        this.methodText = this.item.methodText
+        this.doiIdentifiers = this.item.doiIdentifiers
+        // So that the multiselect can populate correctly, build the primary publication identifiers
+        // indirectly by filtering publication identifiers list for those publications we know to be
+        // primary.
+        this.publicationIdentifiers = _.concat(this.item.primaryPublicationIdentifiers, this.item.secondaryPublicationIdentifiers)
+        this.primaryPublicationIdentifiers = this.item.primaryPublicationIdentifiers.filter((publication) => {
+          return this.publicationIdentifiers.some((primary) => {
+            return primary.identifier === publication.identifier
+          })
+        })
+        this.secondaryPublicationIdentifiers = this.item.secondaryPublicationIdentifiers
+        this.rawReadIdentifiers = this.item.rawReadIdentifiers
+        this.extraMetadata = this.item.extraMetadata
+      } else {
+        this.title = null
+        this.shortDescription = null
+        this.abstractText = null
+        this.methodText = null
         this.doiIdentifiers = []
         this.primaryPublicationIdentifiers = []
         this.secondaryPublicationIdentifiers = []
@@ -883,6 +862,7 @@ export default {
         this.rawReadIdentifiers = []
         this.extraMetadata = {}
       }
+      this.resetKeywords()
     },
 
     ////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////

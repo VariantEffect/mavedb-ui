@@ -86,7 +86,7 @@ export function installAxiosUnauthorizedResponseInterceptor() {
               orcidSignOut()
               store.dispatch('toast/enqueueToast', {
                 severity: 'info',
-                summary: 'Your ORCID session ended. Please log in again.',
+                summary: 'Your ORCID session has ended. Please log in again.',
                 life: 5000
               })
             }

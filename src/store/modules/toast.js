@@ -17,11 +17,9 @@ const module = {
 
   actions: {
     enqueueToast({commit}, toast) {
-      console.log('here!!!')
       commit('enqueueToast', toast)
     },
     removeDequeuedToasts({commit}, numToasts) {
-      console.log('dequeue')
       commit('removeDequeuedToasts', numToasts)
     }
   }

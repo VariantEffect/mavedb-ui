@@ -5,7 +5,7 @@ import Tooltip from 'primevue/tooltip';
 import {createApp} from 'vue'
 
 import App from '@/App.vue'
-import {installAxiosAuthHeaderInterceptor} from '@/lib/auth'
+import {installAxiosAuthHeaderInterceptor, installAxiosUnauthorizedResponseInterceptor} from '@/lib/auth'
 import {initializeAuthentication as initializeOrcidAuthentication} from '@/lib/orcid'
 import router from '@/router'
 import store from '@/store'
@@ -46,3 +46,4 @@ createApp(App)
 
 // Monkey-patch Axios so that all requests will have the user's credentials.
 installAxiosAuthHeaderInterceptor()
+installAxiosUnauthorizedResponseInterceptor()

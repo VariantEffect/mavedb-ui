@@ -142,7 +142,7 @@
               <li v-html="markdownToHtml(publication.referenceHtml)"></li>
               <div>
                 Publication: <a
-                  :href="`${config.appBaseUrl}/#/publication-identifiers/${publication.dbName}/${publication.identifier}`">{{
+                  :href="`${config.appBaseUrl}/publication-identifiers/${publication.dbName}/${encodeURIComponent(publication.identifier)}`">{{
                     publication.identifier }}</a>
               </div>
               <div>
@@ -159,7 +159,7 @@
               <li v-html="markdownToHtml(publication.referenceHtml)"></li>
               <div>
                 Publication: <a
-                  :href="`${config.appBaseUrl}/#/publication-identifiers/${publication.dbName}/${publication.identifier}`">{{
+                  :href="`${config.appBaseUrl}/publication-identifiers/${publication.dbName}/${encodeURIComponent(publication.identifier)}`">{{
                     publication.identifier }}</a>
               </div>
               <div>
@@ -505,6 +505,9 @@ export default {
           .urn}&outputType=${params
           .outputType}&URL=${encodeURIComponent(params.URL)}`;
           window.location.href = submitGalaxyUrl;
+          localStorage.removeItem('galaxyUrl'); 
+          localStorage.removeItem('toolId'); 
+          localStorage.removeItem('requestFromGalaxy');
         }
       } catch (error) {
         console.error('Error sending data:', error);

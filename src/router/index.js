@@ -109,6 +109,11 @@ const routes = [{
   component: PublicationIdentifierView,
   props: (route) => ({itemId: route.params.identifier, name: route.name, dbId: 'medRxiv'})
 }, {
+  name: 'crossrefPublicationIdentifier',
+  path: '/publication-identifiers/crossref/:identifier',
+  component: PublicationIdentifierView,
+  props: (route) => ({itemId: route.params.identifier, name: route.name, dbId: 'Crossref'})
+}, {
   path: '/oidc-callback',
   name: 'oidcCallback',
   component: OidcCallback

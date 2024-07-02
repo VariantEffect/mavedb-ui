@@ -311,24 +311,6 @@
                   <div class="mavedb-wizard-row">
                     <div class="mavedb-wizard-help">
                       <label>
-                        An optional list of keywords that describe the experimental design of the score set. Score sets can be searched by keyword.
-                      </label>
-                      <div class="mavedb-help-small">
-                        Examples: SGE, barcode sequencing, MPRA, complementation
-                      </div>
-                    </div>
-                    <div class="mavedb-wizard-content field">
-                      <span class="p-float-label">
-                        <Chips v-model="keywords" :id="$scopedId('input-keywords')" :addOnBlur="true"
-                          :allowDuplicate="false" />
-                        <label :for="$scopedId('input-keywords')">Keywords</label>
-                        <span v-if="validationErrors.keywords" class="mave-field-error">{{ validationErrors.keywords }}</span>
-                      </span>
-                    </div>
-                  </div>
-                  <div class="mavedb-wizard-row">
-                    <div class="mavedb-wizard-help">
-                      <label>
                         Any publications associated with the score set.
                         You can search for publications to add by DOI, PubMed ID, bioRxiv ID, or medRxiv ID.
                       </label>
@@ -934,7 +916,6 @@ export default {
     shortDescription: null,
     abstractText: null,
     methodText: null,
-    keywords: [],
     doiIdentifiers: [],
     primaryPublicationIdentifiers: [],
     secondaryPublicationIdentifiers: [],
@@ -993,7 +974,7 @@ export default {
     stepFields: [
       ['experiment', 'supersededScoreSetUrn', 'metaAnalyzesScoreSetUrns'],
       [
-        'title', 'shortDescription', 'methodText', 'abstractText', 'keywords',
+        'title', 'shortDescription', 'methodText', 'abstractText',
         'publicationIdentifiers', 'primaryPublicationIdentifiers', 'extraMetadata', 'dataUsagePolicy'
       ],
       ['targetGene', 'targetGenes'],
@@ -1357,7 +1338,6 @@ export default {
     populateExperimentMetadata: function (event) {
       this.abstractText = event.value.abstractText
       this.doiIdentifiers = event.value.doiIdentifiers
-      this.keywords = event.value.keywords
       this.publicationIdentifiers = _.concat(event.value.primaryPublicationIdentifiers, event.value.secondaryPublicationIdentifiers)
       this.primaryPublicationIdentifiers = event.value.primaryPublicationIdentifiers.filter((primary) => {
         return this.publicationIdentifiers.some((publication) => {
@@ -1577,7 +1557,6 @@ export default {
         this.shortDescription = this.item.shortDescription
         this.abstractText = this.item.abstractText
         this.methodText = this.item.methodText
-        this.keywords = this.item.keywords
         this.doiIdentifiers = this.item.doiIdentifiers
         // So that the multiselect can populate correctly, build the primary publication identifiers
         // indirectly by filtering a merged list of secondary and primary publication identifiers
@@ -1603,7 +1582,6 @@ export default {
         this.shortDescription = null
         this.abstractText = null
         this.methodText = null
-        this.keywords = []
         this.doiIdentifiers = []
         this.primaryPublicationIdentifiers = []
         this.secondaryPublicationIdentifiers = []
@@ -1692,7 +1670,6 @@ export default {
         shortDescription: this.shortDescription,
         abstractText: this.abstractText,
         methodText: this.methodText,
-        keywords: this.keywords,
         doiIdentifiers: this.doiIdentifiers.map((identifier) => _.pick(identifier, 'identifier')),
         primaryPublicationIdentifiers: primaryPublicationIdentifiers,
         secondaryPublicationIdentifiers: secondaryPublicationIdentifiers,
@@ -1707,7 +1684,6 @@ export default {
       }
       else {
         // empty item arrays so that deleted items aren't merged back into editedItem object
-        this.item.keywords = []
         this.item.doiIdentifiers = []
         this.item.primaryPublicationIdentifiers = []
         this.item.publicationIdentifiers = []

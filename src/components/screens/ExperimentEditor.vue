@@ -772,26 +772,24 @@ export default {
     },
 
     resetKeywords: function() {
-      if (this.item) {
+      if (this.item && this.item.keywords.length !== 0) {
         // Keywords could be an empty list now. Will modify it back to compulsory when we get final list. 
-        if (this.item.keywords.length !== 0) {
-          const setKeyword = (key, keywordProp, descriptionProp) => {
-            const keywordObj = this.item.keywords.find(keyword => keyword.keyword.key === key)
-            this[keywordProp] = keywordObj ? keywordObj.keyword.value : null
-            this[descriptionProp] = keywordObj ? keywordObj.description : null
-          }
-          setKeyword("Variant Library Creation Method", "variantLibraryKeyword", "variantLibraryKeywordDescription")
-          setKeyword("Endogenous Locus Library Method System", "endogenousSystemKeyword", "endogenousSystemKeywordDescription")
-          setKeyword("Endogenous Locus Library Method Mechanism", "endogenousMechanismKeyword", "endogenousMechanismKeywordDescription")
-          setKeyword("In Vitro Construct Library Method System", "inVitroSystemKeyword", "inVitroSystemKeywordDescription")
-          setKeyword("In Vitro Construct Library Method Mechanism", "inVitroMechanismKeyword", "inVitroMechanismKeywordDescription")
-          setKeyword("Delivery method", "deliveryMethodKeyword", "deliveryMethodKeywordDescription")
-          setKeyword("Phenotypic Assay Dimensionality", "phenotypicDimensionalityKeyword", "phenotypicDimensionalityKeywordDescription")
-          setKeyword("Phenotypic Assay Method", "phenotypicMethodKeyword", "phenotypicMethodKeywordDescription")
-          setKeyword("Phenotypic Assay Model System", "phenotypicModelSystemKeyword", "phenotypicModelSystemKeywordDescription")
-          setKeyword("Phenotypic Assay Profiling Strategy", "phenotypicProfilingStrategyKeyword", "phenotypicProfilingStrategyKeywordDescription")
-          setKeyword("Phenotypic Assay Sequencing Read Type", "phenotypicSequencingTypeKeyword", "phenotypicSequencingTypeKeywordDescription")
+        const setKeyword = (key, keywordProp, descriptionProp) => {
+          const keywordObj = this.item.keywords.find(keyword => keyword.keyword.key === key)
+          this[keywordProp] = keywordObj ? keywordObj.keyword.value : null
+          this[descriptionProp] = keywordObj ? keywordObj.description : null
         }
+        setKeyword("Variant Library Creation Method", "variantLibraryKeyword", "variantLibraryKeywordDescription")
+        setKeyword("Endogenous Locus Library Method System", "endogenousSystemKeyword", "endogenousSystemKeywordDescription")
+        setKeyword("Endogenous Locus Library Method Mechanism", "endogenousMechanismKeyword", "endogenousMechanismKeywordDescription")
+        setKeyword("In Vitro Construct Library Method System", "inVitroSystemKeyword", "inVitroSystemKeywordDescription")
+        setKeyword("In Vitro Construct Library Method Mechanism", "inVitroMechanismKeyword", "inVitroMechanismKeywordDescription")
+        setKeyword("Delivery method", "deliveryMethodKeyword", "deliveryMethodKeywordDescription")
+        setKeyword("Phenotypic Assay Dimensionality", "phenotypicDimensionalityKeyword", "phenotypicDimensionalityKeywordDescription")
+        setKeyword("Phenotypic Assay Method", "phenotypicMethodKeyword", "phenotypicMethodKeywordDescription")
+        setKeyword("Phenotypic Assay Model System", "phenotypicModelSystemKeyword", "phenotypicModelSystemKeywordDescription")
+        setKeyword("Phenotypic Assay Profiling Strategy", "phenotypicProfilingStrategyKeyword", "phenotypicProfilingStrategyKeywordDescription")
+        setKeyword("Phenotypic Assay Sequencing Read Type", "phenotypicSequencingTypeKeyword", "phenotypicSequencingTypeKeywordDescription")
       } else {
         this.keywords = []
         this.variantLibraryKeyword = null

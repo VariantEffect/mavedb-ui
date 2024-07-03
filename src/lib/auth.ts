@@ -74,12 +74,15 @@ export function installAxiosUnauthorizedResponseInterceptor() {
   axios.interceptors.response.use(
     (response) => response,
     async (error) => {
-      if (error && !error.config?.isSessionCheck && error.response?.status && error.response?.status == 401) {
+      if (error && !error.config?.isSessionCheck && error.response?.status && (
+        error.response?.status == 401 ||
+        error.response?.status == 403
+      )) {
         try {
           // @ts-ignore: We need to pass a custom property in the request configuration.
           await axios.get(`${config.apiBaseUrl}/users/me`, {isSessionCheck: true})
         } catch (error: any) {
-          if (error.response?.status == 401) {
+          if (error.response?.status == 401 || error.response?.status == 403) {
             // The user's session has expired. This may happen after several requests issued around the same time, so
             // only take action if the user has not yet been signed out.
             if (orcidIsAuthenticated.value) {

@@ -1631,11 +1631,27 @@ export default {
     },
 
     addTarget: function () {
-      if (this.taxonomy) {
+      if (this.targetGene.name && this.taxonomy) {
+        if ( !this.targetGene.category ) {
+          this.$toast.add({ severity: 'error', summary: 'Please choose protein coding, regulatory or other noncoding for the target gene type.' })
+          return null
+        }
+        if ( !this.targetGene.targetSequence.sequence ) {
+          this.$toast.add({ severity: 'error', summary: 'Please upload reference sequence FAST file.' })
+          return null
+        }
+        if ( !this.targetGene.targetSequence.sequenceType ) {
+          this.$toast.add({ severity: 'error', summary: 'Please choose DNA or protein for the sequence type.' })
+          return null
+        }
         this.targetGene.targetSequence.taxonomy = this.taxonomy
         delete this.targetGene.targetAccession;
       }
-      else if (this.assembly || this.geneName) {
+      else if (this.geneName && this.assembly) {
+        if ( !this.targetGene.category ) {
+          this.$toast.add({ severity: 'error', summary: 'Please choose protein coding, regulatory or other noncoding for the target gene type.' })
+          return null
+        }
         this.targetGene.targetAccession.assembly = this.assemblyDropdownValue
         this.targetGene.targetAccession.gene = this.geneNameDropdownValue // Name property on string object array
         delete this.targetGene.targetSequence;

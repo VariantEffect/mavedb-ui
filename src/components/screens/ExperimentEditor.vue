@@ -223,7 +223,7 @@
                       style="width: 450px"
                   />
                   <label :for="$scopedId('input-variant-library-keywords')">Variant Library Creation Method</label>
-                  &nbsp;<Button :icon="(keywordTextVisible['variantLibrary'] || variantLibraryKeyword === 'Other') ? 'pi pi-minus' : 'pi pi-plus'" @click="keywordToggleInput('variantLibrary')" aria-label="Filter" size="large"/>
+                  &nbsp;<Button rounded :disabled="variantLibraryKeyword == 'Other' ? true : null" :icon="(keywordTextVisible['variantLibrary'] || variantLibraryKeyword === 'Other') ? 'pi pi-minus' : 'pi pi-file-edit'" @click="keywordToggleInput('variantLibrary')" aria-label="Filter" size="large"/>
                 </span>
                 <span v-if="validationErrors.keywords" class="mave-field-error">{{validationErrors.keywords}}</span>
               </div>

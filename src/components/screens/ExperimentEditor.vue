@@ -206,7 +206,7 @@
           </Card>
         </div>
         <div class="col-12 md:col-6">
-          <Card>
+          <Card class="keyword-editor">
             <template #content>
               <div class="field">Please click <Button icon="pi pi-plus" aria-label="Filter" size="small"/> if you  would like to add a description. </div>
               <div class="field">
@@ -223,12 +223,20 @@
                       style="width: 450px"
                   />
                   <label :for="$scopedId('input-variant-library-keywords')">Variant Library Creation Method</label>
-                  &nbsp;<Button rounded :disabled="variantLibraryKeyword == 'Other' ? true : null" :icon="(keywordTextVisible['variantLibrary'] || variantLibraryKeyword === 'Other') ? 'pi pi-minus' : 'pi pi-file-edit'" @click="keywordToggleInput('variantLibrary')" aria-label="Filter" size="large"/>
                 </span>
+                <Button
+                    class="keyword-description-button" 
+                    rounded
+                    :disabled="variantLibraryKeyword == 'Other' ? true : null"
+                    :icon="(keywordTextVisible['variantLibrary'] || variantLibraryKeyword === 'Other') ? 'pi pi-minus' : 'pi pi-file-edit'"
+                    @click="keywordToggleInput('variantLibrary')"
+                    aria-label="Filter"
+                    size="large"
+                 />
                 <span v-if="validationErrors.keywords" class="mave-field-error">{{validationErrors.keywords}}</span>
               </div>
               <div class="field" v-if="keywordTextVisible['variantLibrary'] || variantLibraryKeyword==='Other'">
-                <span class="p-float-label">
+                <span class="p-float-label keyword-description-input">
                   <Textarea v-model="variantLibraryKeywordDescription" :id="$scopedId('input-title')" rows="4"/>
                   <label :for="$scopedId('input-title')">Variant Library Creation Method Description {{variantLibraryKeyword==='Other' ? '(Required)' : '(Optional)'}}</label>
                 </span>
@@ -1091,6 +1099,31 @@ export default {
   bottom: 5px;
   right: 5px;
   z-index: 1001;
+}
+
+.keyword-editor .field {
+  display: flex;
+  align-items: center;
+}
+
+.keyword-description-button {
+  margin-left: 8px;
+  height: 32px;
+  width: 32px;
+}
+
+.keyword-description-button:deep(.p-button-icon) {
+  font-size: 1.1rem;
+  margin-top: 1px;
+  margin-left: 1px;
+}
+
+.keyword-description-button:deep(.p-button-icon.pi-file-edit) {
+  margin-left: 4px;
+}
+
+.keyword-description-input {
+  width: 450px;
 }
 
 </style>

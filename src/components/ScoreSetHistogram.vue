@@ -1,4 +1,5 @@
 <template>
+  <TabMenu class="mave-histogram-viz-select" v-if="vizOptions.length > 1" v-model:activeIndex="activeViz" :model="vizOptions" />
   <div class="mave-histogram-container" ref="histogramContainer">
   </div>
 </template>
@@ -6,10 +7,14 @@
 <script>
 
 import * as d3 from 'd3'
+
+import TabMenu from 'primevue/tabmenu'
+
 import { variantNotNullOrNA } from '@/lib/mave-hgvs'
 
 export default {
   name: 'ScoreSetHistogram',
+  components: { TabMenu, },
 
   props: {
     margins: { // Margins must accommodate the X axis label and title.
@@ -56,20 +61,32 @@ export default {
   data: () => ({
     isMounted: false,
     bins: [],
+    seriesBinned: [],
+    activeViz: 0,
   }),
 
   computed: {
-    lines: function() {
-      const bins = this.bins
-      return bins
-    },
-    selectedBin: function() {
+    selectionBinIdx: function() {
       const self = this
       const binContainsScore = function(bin) {
         return self.externalSelection ? self.externalSelection.score >= bin.x0 && self.externalSelection.score < bin.x1 : false
       }
 
-      return self.bins.find(binContainsScore)
+      return self.bins.findIndex(binContainsScore)
+    },
+    selectionSeries: function() {
+      // Check to see if this variant is in any currently displayed series in the bin that contains it. If not, return null.
+      const serie = this.seriesBinned[this.selectionBinIdx].seriesBins.find((serie) => {
+        return serie.some((variant) => variant.accession == this.externalSelection.accession)
+      })
+      return serie ? serie.displayName : null
+    },
+    vizOptions: function() {
+      const ret = [{label: 'Overall Distribution'}]
+      if (this.scores.some((item) => item.mavedb_clnsig !== undefined)) {
+        ret.push({label: 'Clinical View'})
+      }
+      return ret
     }
   },
 
@@ -90,6 +107,12 @@ export default {
       immediate: true
     },
     bins: {
+      handler: function() {
+        this.renderOrRefreshHistogram()
+      },
+      immediate: true
+    },
+    activeViz: {
       handler: function() {
         this.renderOrRefreshHistogram()
       },
@@ -132,10 +155,14 @@ export default {
           .style('z-index', 2001)
       },
 
-    binsToLine: function(bins, filter = (item) => true) {
+    binsToSeries: function(bins, {filter = (item) => true, color = '153,153,153', displayName = ''} = {}) {
       if (!bins.length) {
         return []
       }
+      const ret = []
+      
+      // Indexed by x0
+      const binCounts = {}
 
       // Start the line at the bottom-left of the first bin.
       const line = [{x: bins[0].x0, y: 0}]
@@ -143,14 +170,41 @@ export default {
       // Draw the two ends of what would be the 'top' of each bin.
       bins.forEach((bin) => {
         const filtered = bin.filter(filter)
-        line.push({x: bin.x0, y: filtered.length})
-        line.push({x: bin.x1, y: filtered.length})
+        ret.push(filtered)
+        const binCount = filtered.length
+        binCounts[bin.x0] = binCount
+        line.push({x: bin.x0, y: binCount})
+        line.push({x: bin.x1, y: binCount})
       })
+      const maxBinCount = d3.max(Object.values(binCounts))
 
       // End the line at the bottom-right of the last bin.
       line.push({x: bins[bins.length - 1].x1, y: 0})
 
-      return line
+      return Object.assign(ret, { line, maxBinCount, color, binCounts, displayName })
+    },
+
+    // -------------------------------------------------------------------------------------------------
+    // Clinical variant parsing
+    // -------------------------------------------------------------------------------------------------
+    filterVariants: function({
+      allowable_clnsig,
+      allowable_clnrevstat = [
+        'criteria_provided,_single_submitter', 
+        'criteria_provided,_multiple_submitters,_no_conflicts',
+        'reviewed_by_expert_panel',
+        'criteria_provided,_conflicting_interpretations',
+      ],
+      clnsig_field = 'mavedb_clnsig',
+      clnrevstat_field = 'mavedb_clnrevstat',
+    }) {
+      return (variant) => {
+        if (allowable_clnsig.includes(variant[clnsig_field]) &&
+            allowable_clnrevstat.includes(variant[clnrevstat_field])) {
+          return true
+        }
+        return false
+      }
     },
 
     // -------------------------------------------------------------------------------------------------
@@ -174,11 +228,14 @@ export default {
             .attr('width', container.clientWidth)
             .attr('height', height + self.margins.top + self.margins.bottom)
 
-        // First, calculate space required for y axis and label.
+        // First, calculate space required for y axis and label for the largest possible number of
+        // variants. We will need to re-scale the y-axis for displaying smaller numbers (i.e. for the
+        // clinical view), but this will give us enough space for the y-axis at maximum axis width (i.e.
+        // with the longest number in the variant count).
         // Give 5% breathing room at the top of the chart.
-        const yMax = d3.max(bins, (d) => d.length) * 1.05
-        const yScale = d3.scaleLinear()
-            .domain([0, yMax])
+        const yMaxAll = d3.max(bins, (d) => d.length) * 1.05
+        let yScale = d3.scaleLinear()
+            .domain([0, yMaxAll])
             .range([height, 0])
 
         // Add temporary y axis, for measuring.
@@ -199,13 +256,6 @@ export default {
           left: self.margins.left + yAxisWidthWithLabel,
         }
         const width = container.clientWidth - (margins.left + margins.right)
-
-        // Add plot title.
-        contents.append('text')
-            .attr('x', margins.left + width / 2 )
-            .attr('y', 12)
-            .style('text-anchor', 'middle')
-            .text('Distribution of Functional Scores')
 
         // Main canvas to which chart elements will be added.
         const svg = contents
@@ -233,10 +283,6 @@ export default {
             .style('text-anchor', 'middle')
             .text('Functional Score')
 
-        // Add final y axis and label.
-        const yAxis = svg.append('g')
-            .call(d3.axisLeft(yScale).ticks(10))
-
         svg.append('text')
             .attr('class', 'mave-histogram-axis-label')
             .attr('transform', `translate(${-(yAxisWidthWithLabel - labelSize / 2)},${height / 2})rotate(-90)`)
@@ -263,7 +309,7 @@ export default {
 
         const opacity = (d, isMouseOver) => {
           // Don't show if there's no data in this bin.
-          if (!d.length) {
+          if (!d.seriesBins.some((serie) => serie.length)) {
             return 0
           }
           return isMouseOver ? 1 : 0
@@ -274,22 +320,23 @@ export default {
           const parts = []
 
           if (variant) {
-            if (variantNotNullOrNA(variant.hgvs_nt)) {
-              parts.push(`NT variant: ${variant.hgvs_nt}`)
-            }
-            if (variantNotNullOrNA(variant.hgvs_pro)) {
-              parts.push(`Protein variant: ${variant.hgvs_pro}`)
-            }
-            if (variantNotNullOrNA(variant.hgvs_splice)) {
-              parts.push(`Splice variant: ${variant.hgvs_splice}`)
+            parts.push(variant.mavedb_label)
+            if (self.selectionSeries == null) {
+              parts.push('(not shown)')
+            } else if (self.selectionSeries) {
+              parts.push(`${self.selectionSeries} variant`)
             }
             if (variant.score) {
-                parts.push(`Score: ${variant.score}`)
+                parts.push(`Score: ${variant.score.toPrecision(4)}`)
             }
+            parts.push('')
           }
 
-          parts.push(`Number of variants: ${d.length}`)
           parts.push(`Range: ${d.x0} to ${d.x1}`)
+
+          d.seriesBins.forEach((serie) => {
+            parts.push(`Number of ${serie.displayName ? serie.displayName + ' ' : ''}variants: ${serie.length}`)
+          })
 
           tooltip.html(parts.join('<br />'))
 
@@ -301,7 +348,8 @@ export default {
         const mouseover = function(event, d) {
           // Hide the selected variant tooltip
           if (self.externalSelection) {
-            d3.select(`.mave-histogram-hover-highlight-${self.selectedBin.idx}`).style('opacity', opacity(self.selectedBin, false))
+            d3.select(`.mave-histogram-hover-highlight-${self.selectionBinIdx}`).style(
+              'opacity', opacity(self.seriesBinned[self.selectionBinIdx], false))
           }
 
           // show the mouse over tooltip and hide the tooltip for the currently selected variant.
@@ -338,17 +386,18 @@ export default {
             return
           }
 
-          showTooltip(selectionTooltip, self.selectedBin, self.externalSelection)
+          showTooltip(selectionTooltip, self.seriesBinned[self.selectionBinIdx], self.externalSelection)
           positionSelectionTooltip()
 
           // highlight the bin
-          d3.select(`.mave-histogram-hover-highlight-${self.selectedBin.idx}`).style('opacity', opacity(self.selectedBin, true))
+          d3.select(`.mave-histogram-hover-highlight-${self.selectionBinIdx}`).style(
+            'opacity', opacity(self.seriesBinned[self.selectionBinIdx], true))
         }
 
         const positionSelectionTooltip = function() {
           const width = document.body.clientWidth
-          const left = xScale(self.selectedBin.x1) + margins.left
-          var top = -(yScale(0) - yScale(self.selectedBin.length)) - margins.bottom
+          const left = xScale(self.seriesBinned[self.selectionBinIdx].x1) + margins.left
+          var top = -(yScale(0) - yScale(self.seriesBinned[self.selectionBinIdx].maxBinSize)) - margins.bottom
 
           selectionTooltip
             // Add a small buffer area to the left side of the tooltip so it doesn't overlap with the bin.
@@ -381,22 +430,69 @@ export default {
         const refresh = function(bins) {
           svg.selectAll('.mave-histogram-line').remove()
           svg.selectAll('.mave-histogram-hovers').remove()
+          svg.selectAll('.mave-histogram-y-axis').remove()
 
-          const line = self.binsToLine(bins)
+          let series = []
+          if (self.activeViz == 0) {
+            series = [self.binsToSeries(bins)]
+          } else if (self.activeViz == 1) {
+            const defaultPathogenicFilter = self.filterVariants({
+              allowable_clnsig: ['Likely_pathogenic', 'Pathogenic', 'Pathogenic/Likely_pathogenic'],
+            })
+            const defaultBenignFilter = self.filterVariants({
+              allowable_clnsig: ['Likely_benign', 'Benign', 'Benign/Likely_benign'],
+            })
+            // Display names must be unique for tooltips to work.
+            series = [
+              self.binsToSeries(bins, {
+                filter: defaultPathogenicFilter,
+                color: "228,26,28",
+                displayName: 'Pathogenic/Likely Pathogenic'
+              }),
+              self.binsToSeries(bins, {
+                filter: defaultBenignFilter,
+                color: "55,126,184",
+                displayName: 'Benign/Likely Benign'
+              }),
+            ]
+          }
+          self.seriesBinned = bins.map((bin, idx) => {
+            const seriesBins = series.map((serie) => Object.assign(serie[idx], {displayName: serie.displayName}))
+            const maxBinSize = d3.max(seriesBins, (bin) => bin.length)
+            return {
+              x0: bin.x0,
+              x1: bin.x1,
+              idx: bin.idx,
+              seriesBins, 
+              maxBinSize,
+            }
+          })
+
+          const yMax = d3.max(series, (d) => d.maxBinCount) * 1.05
+          yScale = d3.scaleLinear()
+              .domain([0, yMax])
+              .range([height, 0])
+          
+          const yAxis = svg.append('g')
+              .attr('class', 'mave-histogram-y-axis')
+              .call(d3.axisLeft(yScale).ticks(10))
+
           const path = d3.line((d) => xScale(d.x), (d) => yScale(d.y))
 
-          svg.append('g')
-              .attr('class', 'mave-histogram-line')
-            .append('path')
-            .attr('fill', 'rgba(153,153,153,.25)')
-            .attr('stroke', 'rgba(153,153,153,1)')
-            .attr('stroke-width', 1.5)
-            .attr('d', path(line))
+          series.forEach((serie) => {
+            svg.append('g')
+                .attr('class', 'mave-histogram-line')
+              .append('path')
+              .attr('fill', `rgba(${serie.color},.25)`)
+              .attr('stroke', `rgba(${serie.color},1)`)
+              .attr('stroke-width', 1.5)
+              .attr('d', path(serie.line))
+          })
 
           const hovers = svg.append('g')
               .attr('class', 'mave-histogram-hovers')
             .selectAll('g')
-            .data(bins)
+            .data(self.seriesBinned)
             .join('g')
               .attr('class', 'mave-histogram-hover')
               .on('mouseover', mouseover)
@@ -412,13 +508,13 @@ export default {
               .attr('height', (d) => yScale(0) - yScale(yMax))
               .style('fill', 'transparent')  // Necessary for mouse events to fire.
 
-          // However, only the bin is highlighted on hover.
+          // However, only the largest bin is highlighted on hover.
           hovers.append('rect')
               .attr('class', (d) => `mave-histogram-hover-highlight-${d.idx}`)
               .attr('x', (d) => xScale(d.x0))
               .attr('width', (d) => xScale(d.x1) - xScale(d.x0))
-              .attr('y', (d) => yScale(d.length))
-              .attr('height', (d) => yScale(0) - yScale(d.length))
+              .attr('y', (d) => yScale(d.maxBinSize))
+              .attr('height', (d) => yScale(0) - yScale(d.maxBinSize))
               .style('fill', 'none')
               .style('stroke', 'black')
               .style('stroke-width', 1.5)
@@ -440,10 +536,20 @@ export default {
 
 </script>
 
-<style>
-
+<style> 
 .mave-histogram-tooltip {
   position: absolute;
+}
+</style>
+
+<style scoped>
+
+.mave-histogram-viz-select {
+  padding-bottom: 16px;
+}
+.mave-histogram-viz-select:deep(.p-tabmenu-nav),
+.mave-histogram-viz-select:deep(.p-menuitem-link) {
+  background: transparent;
 }
 
 </style>

@@ -25,7 +25,10 @@
           </div>
         </div>
         <div class="mave-screen-title-bar">
-          <div class="mave-screen-title">{{ item.title || 'Untitled score set' }}</div>
+          <div class="mave-screen-title">
+            <span>{{ item.title || 'Untitled score set' }}</span>
+            <span v-if="item.urn" class="mave-score-set-urn">{{ item.urn }}</span>
+          </div>
           <div v-if="userIsAuthenticated">
             <div v-if="!item.publishedDate" class="mave-screen-title-controls">
               <Button class="p-button-sm" @click="editItem">Edit</Button>
@@ -38,35 +41,31 @@
           </div>
         </div>
         <div v-if="item.shortDescription" class="mave-score-set-description">{{ item.shortDescription }}</div>
-        <div v-if="item.urn" class="mave-score-set-urn">
-          <h3>{{ item.urn }}</h3>
-        </div>
       </div>
       <div v-if="scores">
         <div class="mave-score-set-variant-search">
           <span class="p-float-label">
-              <AutoComplete
+            <AutoComplete
               v-model="selectedVariant"
               :id="$scopedId('variant-search')"
               :suggestions="variantSearchSuggestions"
-              :option-label="variantSearchLabel"
+              optionLabel="mavedb_label"
               dropdown
               @complete="variantSearch"
               selectOnFocus
-              scroll-height="100px"
+              scroll-height="175px"
               :virtualScrollerOptions="{ itemSize: 50 }"
-              style="flex: 1; padding-right: 0.1em;"
-            >
-              <template #option="slotProps">
-                <div class="flex align-options-center">
-                  <div v-if="variantNotNullOrNA(slotProps.option.hgvs_nt)">Nucleotide variant: {{ slotProps.option.hgvs_nt }};&nbsp;</div>
-                  <div v-if="variantNotNullOrNA(slotProps.option.hgvs_splice)">Splice variant: {{ slotProps.option.hgvs_splice }};&nbsp;</div>
-                  <div v-if="variantNotNullOrNA(slotProps.option.hgvs_pro)">Protein variant: {{ slotProps.option.hgvs_pro }};&nbsp;</div>
-                  </div>
-              </template>
-            </AutoComplete>
+              style="flex: 1;"
+            />
             <label :for="$scopedId('variant-search')">Search for a variant in this score set</label>
-            <Button icon="pi pi-times" severity="danger" aria-label="Clear" @click="selectedVariant = null" />
+            <Button 
+              icon="pi pi-times"
+              severity="danger"
+              aria-label="Clear"
+              rounded
+              @click="selectedVariant = null"
+              :style="{visibility: variantToVisualize ? 'visible' : 'hidden'}"
+            />
           </span>
         </div>
         <div class="mave-score-set-histogram-pane">
@@ -685,30 +684,16 @@ export default {
     variantSearch: function(event) {
       const matches = []
       for (const variant of this.scores) {
-        if (
-          (variantNotNullOrNA(variant.hgvs_pro) && variant.hgvs_pro.toLowerCase().includes(event.query.toLowerCase()))
-          || (variantNotNullOrNA(variant.hgvs_nt) && variant.hgvs_nt.toLowerCase().includes(event.query.toLowerCase()))
-          || (variantNotNullOrNA(variant.hgvs_splice) && variant.hgvs_splice.toLowerCase().includes(event.query.toLowerCase()))
-        ) {
-          matches.push(variant)
+        if (variantNotNullOrNA(variant.hgvs_nt) && variant.hgvs_nt.toLowerCase().includes(event.query.toLowerCase())) {
+            matches.push(Object.assign(variant, {mavedb_label: variant.hgvs_nt}))
+        } else if (variantNotNullOrNA(variant.hgvs_splice) && variant.hgvs_splice.toLowerCase().includes(event.query.toLowerCase())) {
+            matches.push(Object.assign(variant, {mavedb_label: variant.hgvs_splice}))
+        } else if (variantNotNullOrNA(variant.hgvs_pro) && variant.hgvs_pro.toLowerCase().includes(event.query.toLowerCase())) {
+            matches.push(Object.assign(variant, {mavedb_label: variant.hgvs_pro}))
         }
       }
 
       this.variantSearchSuggestions = matches
-    },
-    variantSearchLabel: function(selectedVariant) {
-      var displayStr = ""
-      if (variantNotNullOrNA(selectedVariant.hgvs_nt)) {
-        displayStr += `Nucleotide variant: ${selectedVariant.hgvs_nt}; `
-      }
-      if (variantNotNullOrNA(selectedVariant.hgvs_pro)) {
-        displayStr += `Protein variant: ${selectedVariant.hgvs_pro}; `
-      }
-      if (variantNotNullOrNA(selectedVariant.hgvs_splice)) {
-        displayStr += `Splice variant: ${selectedVariant.hgvs_splice}`
-      }
-
-      return displayStr.trim().replace(/;$/, '')
     },
     childComponentSelectedVariant: function(variant) {
       if (!variant?.accession) {
@@ -788,8 +773,17 @@ export default {
 }
 
 .mave-score-set-variant-search {
-  margin: 10px 0;
+  margin-top: 40px;
+  margin-bottom: 8px;
   display: flex;
+  justify-content: center;
+}
+
+.mave-score-set-variant-search > span {
+  width: 50%;
+  display: flex;
+  align-items: center;
+  column-gap: .5em;
 }
 
 .p-float-label {
@@ -813,7 +807,9 @@ export default {
 }
 
 .mave-score-set-urn {
-  /*font-family: Helvetica, Verdana, Arial, sans-serif;*/
+  font-size: 20px;
+  color: gray;
+  margin-left: 12px;
 }
 
 .mave-score-set-keywords .p-chip {

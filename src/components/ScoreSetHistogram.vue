@@ -398,10 +398,10 @@ export default {
                 `<span class="mave-histogram-tooltip-variant-color" style="background-color: rgb(${
                   self.selectionSeries.color})"></span>`
             }
-            if (variant.mavedb_clnsig) {
+            if (variant.mavedb_clnsig && variant.mavedb_clnsig != 'NA') {
               variantDescription += `${CLNSIG_DISPLAY_NAMES[variant.mavedb_clnsig].variant_name} `
             }
-            if (variant.mavedb_clnrevstat) {
+            if (variant.mavedb_clnrevstat && variant.mavedb_clnrevstat != 'NA') {
               const num_stars = CLNREVSTAT_STARS[variant.mavedb_clnrevstat]
 
               // Create an array of 4 stars to hold clinical review status a la ClinVar.

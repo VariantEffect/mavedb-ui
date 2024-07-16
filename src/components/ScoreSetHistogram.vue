@@ -104,12 +104,16 @@ export default {
     selectionBinIdx: function() {
       const self = this
       const binContainsScore = function(bin) {
-        return self.externalSelection ? self.externalSelection.score >= bin.x0 && self.externalSelection.score < bin.x1 : false
+        return self.externalSelection?.score && self.externalSelection.score != 'NA' ?
+            self.externalSelection.score >= bin.x0 && self.externalSelection.score < bin.x1 : false
       }
 
       return self.bins.findIndex(binContainsScore)
     },
     selectionSeries: function() {
+      if (this.selectionBinIdx == -1) {
+        return null
+      }
       // Check to see if this variant is in any currently displayed series in the bin that contains it. If not, return null.
       const serie = this.seriesBinned[this.selectionBinIdx].seriesBins.find((serie) => {
         return serie.some((variant) => variant.accession == this.externalSelection.accession)
@@ -435,7 +439,7 @@ export default {
         // Using function, not arrow notation, so that 'this' is the event target.
         const mouseover = function(event, d) {
           // Hide the selected variant tooltip
-          if (self.externalSelection) {
+          if (self.externalSelection && self.selectionBinIdx != -1) {
             d3.select(`.mave-histogram-hover-highlight-${self.selectionBinIdx}`).style(
               'opacity', opacity(self.seriesBinned[self.selectionBinIdx], false))
           }
@@ -470,7 +474,9 @@ export default {
 
         const displaySelectionTooltip = function() {
           // Don't do anything if there is no selected variant.
-          if (!self.externalSelection) {
+          if (!self.externalSelection || self.selectionBinIdx == -1) {
+            selectionTooltip
+              .style('display', 'none')
             return
           }
 

@@ -568,7 +568,7 @@ export default {
               series.push(self.binsToSeries(bins, {
                 filter: self.filterVariants({allowable_clnsig: ['Conflicting_interpretations_of_pathogenicity']}),
                 color: '152,78,163',
-                displayName: 'Conflicting',
+                displayName: 'Conflicting interpretations',
               }))
             }
           }

@@ -1,5 +1,20 @@
 <template>
   <TabMenu class="mave-histogram-viz-select" v-if="hasTabBar" v-model:activeIndex="activeViz" :model="vizOptions" />
+  <div v-if="hasControls" class="mave-histogram-controls">
+    <div class="mave-histogram-control">
+      <label for="mave-histogram-star-select" class="mave-histogram-control-label">Minimum ClinVar review status 'gold stars': </label>
+      <Rating v-model="customMinStarRating" :stars="4" style="display: inline" inputId="mave-histogram-star-select" />
+    </div>
+    <div class="mave-histogram-control">
+      <span class="mave-histogram-control-label">Include variants with classification: </span>
+      <div class="flex flex-wrap gap-3">
+        <div v-for="clnsig of clnsigs" :key="clnsig.key" class="flex gap-1 align-items-center">
+          <Checkbox v-model="customSelectedClnsigs" :inputId="clnsig.key" name="clnsig" :value="clnsig.key" />
+          <label :for="clnsig.key">{{ clnsig.displayName }}</label>
+        </div>
+      </div>
+    </div>
+  </div>
   <div class="mave-histogram-container" ref="histogramContainer">
   </div>
 </template>
@@ -8,14 +23,25 @@
 
 import * as d3 from 'd3'
 
+import Checkbox from 'primevue/checkbox'
+import Rating from 'primevue/rating'
 import TabMenu from 'primevue/tabmenu'
 
-import { variantNotNullOrNA } from '@/lib/mave-hgvs'
 import { CLNSIG_DISPLAY_NAMES, CLNREVSTAT_STARS } from '@/lib/clinvar'
+
+const DEFAULT_CLNSIGS = [
+  'Likely_pathogenic',
+  'Pathogenic',
+  'Pathogenic/Likely_pathogenic',
+  'Likely_benign',
+  'Benign',
+  'Benign/Likely_benign'
+]
+const DEFAULT_MIN_STAR_RATING = 1
 
 export default {
   name: 'ScoreSetHistogram',
-  components: { TabMenu, },
+  components: { Checkbox, Rating, TabMenu, },
 
   props: {
     margins: { // Margins must accommodate the X axis label and title.
@@ -64,6 +90,14 @@ export default {
     bins: [],
     seriesBinned: [],
     activeViz: 0,
+    clnsigs: Object.keys(CLNSIG_DISPLAY_NAMES).map((clnsig) => {
+      return {
+        key: clnsig,
+        displayName: CLNSIG_DISPLAY_NAMES[clnsig].short_name,
+      }
+    }),
+    customMinStarRating: DEFAULT_MIN_STAR_RATING,
+    customSelectedClnsigs: DEFAULT_CLNSIGS,
   }),
 
   computed: {
@@ -86,12 +120,28 @@ export default {
       const ret = [{label: 'Overall Distribution'}]
       if (this.scores.some((item) => item.mavedb_clnsig !== undefined)) {
         ret.push({label: 'Clinical View'})
+        ret.push({label: 'Custom'})
       }
       return ret
     },
     hasTabBar: function() {
       return this.vizOptions.length > 1
-    }
+    },
+    hasControls: function() {
+      return this.activeViz == 2
+    },
+    selectedClnsigs: function() {
+      if (this.activeViz == 1) {
+        return DEFAULT_CLNSIGS
+      }
+      return this.customSelectedClnsigs
+    },
+    minStarRating: function() {
+      if (this.activeViz == 1) {
+        return DEFAULT_MIN_STAR_RATING
+      }
+      return this.customMinStarRating
+    },
   },
 
   watch: {
@@ -127,7 +177,19 @@ export default {
         this.renderOrRefreshHistogram()
       },
       immediate: true
-    }
+    },
+    minStarRating: {
+      handler: function() {
+        this.renderOrRefreshHistogram()
+      },
+      immediate: true
+    },
+    selectedClnsigs: {
+      handler: function() {
+        this.renderOrRefreshHistogram()
+      },
+      immediate: true
+    },
   },
 
   methods: {
@@ -193,18 +255,12 @@ export default {
     // -------------------------------------------------------------------------------------------------
     filterVariants: function({
       allowable_clnsig,
-      allowable_clnrevstat = [
-        'criteria_provided,_single_submitter', 
-        'criteria_provided,_multiple_submitters,_no_conflicts',
-        'reviewed_by_expert_panel',
-        'criteria_provided,_conflicting_interpretations',
-      ],
       clnsig_field = 'mavedb_clnsig',
       clnrevstat_field = 'mavedb_clnrevstat',
     }) {
       return (variant) => {
         if (allowable_clnsig.includes(variant[clnsig_field]) &&
-            allowable_clnrevstat.includes(variant[clnrevstat_field])) {
+            CLNREVSTAT_STARS[variant[clnrevstat_field]] >= this.minStarRating) {
           return true
         }
         return false
@@ -334,20 +390,28 @@ export default {
 
           if (variant) {
             parts.push(variant.mavedb_label)
+            let variantDescription = ''
             if (self.selectionSeries == null) {
-              parts.push('(not shown)')
+              variantDescription += '(not shown) '
             } else if (self.selectionSeries?.displayName) {
+              variantDescription +=
+                `<span class="mave-histogram-tooltip-variant-color" style="background-color: rgb(${
+                  self.selectionSeries.color})"></span>`
+            }
+            if (variant.mavedb_clnsig) {
+              variantDescription += `${CLNSIG_DISPLAY_NAMES[variant.mavedb_clnsig].variant_name} `
+            }
+            if (variant.mavedb_clnrevstat) {
               const num_stars = CLNREVSTAT_STARS[variant.mavedb_clnrevstat]
 
               // Create an array of 4 stars to hold clinical review status a la ClinVar.
               const stars = new Array(4).fill(
                 '<span class="mave-histogram-tooltip-variant-star mave-histogram-tooltip-variant-star-filled">★</span>')
                   .fill('<span class="mave-histogram-tooltip-variant-star">☆</span>', num_stars)
-              parts.push(
-                `<span class="mave-histogram-tooltip-variant-color" style="background-color: rgb(${
-                  self.selectionSeries.color})"></span>` +
-                `${CLNSIG_DISPLAY_NAMES[variant.mavedb_clnsig]} ` +
-                `(${stars.join('')})`)
+              variantDescription += `(${stars.join('')})`
+            }
+            if (variantDescription) {
+              parts.push(variantDescription)
             }
             if (variant.score) {
                 parts.push(`Score: ${variant.score.toPrecision(4)}`)
@@ -451,6 +515,7 @@ export default {
         }
 
         const refresh = function(bins) {
+          svg.selectAll('.mave-histogram-no-data-message').remove()
           svg.selectAll('.mave-histogram-line').remove()
           svg.selectAll('.mave-histogram-hovers').remove()
           svg.selectAll('.mave-histogram-y-axis').remove()
@@ -459,26 +524,45 @@ export default {
           let series = []
           if (self.activeViz == 0) {
             series = [self.binsToSeries(bins)]
-          } else if (self.activeViz == 1) {
-            const defaultPathogenicFilter = self.filterVariants({
-              allowable_clnsig: ['Likely_pathogenic', 'Pathogenic', 'Pathogenic/Likely_pathogenic'],
+          } else {
+            const pathogenicFilter = self.filterVariants({
+              allowable_clnsig: ['Likely_pathogenic', 'Pathogenic', 'Pathogenic/Likely_pathogenic'].filter(
+                (clnsig) => self.selectedClnsigs.includes(clnsig)
+              ),
             })
-            const defaultBenignFilter = self.filterVariants({
-              allowable_clnsig: ['Likely_benign', 'Benign', 'Benign/Likely_benign'],
+            const benignFilter = self.filterVariants({
+              allowable_clnsig: ['Likely_benign', 'Benign', 'Benign/Likely_benign'].filter(
+                (clnsig) => self.selectedClnsigs.includes(clnsig)
+              ),
             })
             // Display names must be unique for tooltips to work.
             series = [
               self.binsToSeries(bins, {
-                filter: defaultPathogenicFilter,
+                filter: pathogenicFilter,
                 color: "228,26,28",
                 displayName: 'Pathogenic/Likely Pathogenic'
               }),
               self.binsToSeries(bins, {
-                filter: defaultBenignFilter,
+                filter: benignFilter,
                 color: "55,126,184",
                 displayName: 'Benign/Likely Benign'
               }),
             ]
+
+            if (self.selectedClnsigs.includes('Uncertain_significance')) {
+              series.push(self.binsToSeries(bins, {
+                filter: self.filterVariants({allowable_clnsig: ['Uncertain_significance']}),
+                // Default grey color
+                displayName: 'Uncertain significance',
+              }))
+            }
+            if (self.selectedClnsigs.includes('Conflicting_interpretations_of_pathogenicity')) {
+              series.push(self.binsToSeries(bins, {
+                filter: self.filterVariants({allowable_clnsig: ['Conflicting_interpretations_of_pathogenicity']}),
+                color: '152,78,163',
+                displayName: 'Conflicting',
+              }))
+            }
           }
           self.seriesBinned = bins.map((bin, idx) => {
             const seriesBins = series.map((serie) => Object.assign(serie[idx], {color: serie.color, displayName: serie.displayName}))
@@ -500,6 +584,16 @@ export default {
           const yAxis = svg.append('g')
               .attr('class', 'mave-histogram-y-axis')
               .call(d3.axisLeft(yScale).ticks(10))
+
+          if (yMax == 0) {
+            svg.append('text')
+                .attr('class', 'mave-histogram-no-data-message')
+                .attr('x', width / 2 )
+                .attr('y', height / 2 )
+                .style('text-anchor', 'middle')
+                .text('No data')
+            return
+          }
 
           // Add a legend for clinical views.
           if (self.activeViz != 0) {
@@ -610,8 +704,6 @@ export default {
 
 .mave-histogram-tooltip-variant-star {
   margin: 0 1.5px;
-  font-size: 14px;
-  vertical-align: middle;
 }
 .mave-histogram-tooltip-variant-star-filled {
   color: #fdb81e
@@ -619,6 +711,12 @@ export default {
 </style>
 
 <style scoped>
+
+.mave-histogram-control {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 1rem;
+}
 
 .mave-histogram-viz-select {
   padding-bottom: 16px;

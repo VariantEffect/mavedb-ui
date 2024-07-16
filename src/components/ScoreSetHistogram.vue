@@ -536,6 +536,7 @@ export default {
               ),
             })
             // Display names must be unique for tooltips to work.
+            // TODO: update these display names so that they change depending on whether or not likely (etc.) variants are included.
             series = [
               self.binsToSeries(bins, {
                 filter: pathogenicFilter,

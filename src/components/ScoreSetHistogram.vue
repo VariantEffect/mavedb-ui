@@ -421,6 +421,7 @@ export default {
 
           parts.push(`Range: ${d.x0} to ${d.x1}`)
 
+          // TODO: Instead of using series display names here, could break out into specific variant category.
           d.seriesBins.forEach((serie) => {
             parts.push(`Number of ${serie.displayName ? serie.displayName + ' ' : ''}variants: ${serie.length}`)
           })

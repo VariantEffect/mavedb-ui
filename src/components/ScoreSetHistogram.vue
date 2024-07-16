@@ -1,5 +1,5 @@
 <template>
-  <TabMenu class="mave-histogram-viz-select" v-if="vizOptions.length > 1" v-model:activeIndex="activeViz" :model="vizOptions" />
+  <TabMenu class="mave-histogram-viz-select" v-if="hasTabBar" v-model:activeIndex="activeViz" :model="vizOptions" />
   <div class="mave-histogram-container" ref="histogramContainer">
   </div>
 </template>
@@ -11,6 +11,7 @@ import * as d3 from 'd3'
 import TabMenu from 'primevue/tabmenu'
 
 import { variantNotNullOrNA } from '@/lib/mave-hgvs'
+import { CLNSIG_DISPLAY_NAMES, CLNREVSTAT_STARS } from '@/lib/clinvar'
 
 export default {
   name: 'ScoreSetHistogram',
@@ -79,7 +80,7 @@ export default {
       const serie = this.seriesBinned[this.selectionBinIdx].seriesBins.find((serie) => {
         return serie.some((variant) => variant.accession == this.externalSelection.accession)
       })
-      return serie ? serie.displayName : null
+      return serie || null
     },
     vizOptions: function() {
       const ret = [{label: 'Overall Distribution'}]
@@ -87,6 +88,9 @@ export default {
         ret.push({label: 'Clinical View'})
       }
       return ret
+    },
+    hasTabBar: function() {
+      return this.vizOptions.length > 1
     }
   },
 
@@ -257,6 +261,15 @@ export default {
         }
         const width = container.clientWidth - (margins.left + margins.right)
 
+        // Add plot title when only one visualization is present.
+        if (!self.hasTabBar) {
+          contents.append('text')
+              .attr('x', margins.left + width / 2 )
+              .attr('y', 24)
+              .style('text-anchor', 'middle')
+              .text('Distribution of Functional Scores')
+        }
+
         // Main canvas to which chart elements will be added.
         const svg = contents
             .append('g')
@@ -323,8 +336,18 @@ export default {
             parts.push(variant.mavedb_label)
             if (self.selectionSeries == null) {
               parts.push('(not shown)')
-            } else if (self.selectionSeries) {
-              parts.push(`${self.selectionSeries} variant`)
+            } else if (self.selectionSeries?.displayName) {
+              const num_stars = CLNREVSTAT_STARS[variant.mavedb_clnrevstat]
+
+              // Create an array of 4 stars to hold clinical review status a la ClinVar.
+              const stars = new Array(4).fill(
+                '<span class="mave-histogram-tooltip-variant-star mave-histogram-tooltip-variant-star-filled">★</span>')
+                  .fill('<span class="mave-histogram-tooltip-variant-star">☆</span>', num_stars)
+              parts.push(
+                `<span class="mave-histogram-tooltip-variant-color" style="background-color: rgb(${
+                  self.selectionSeries.color})"></span>` +
+                `${CLNSIG_DISPLAY_NAMES[variant.mavedb_clnsig]} ` +
+                `(${stars.join('')})`)
             }
             if (variant.score) {
                 parts.push(`Score: ${variant.score.toPrecision(4)}`)
@@ -431,6 +454,7 @@ export default {
           svg.selectAll('.mave-histogram-line').remove()
           svg.selectAll('.mave-histogram-hovers').remove()
           svg.selectAll('.mave-histogram-y-axis').remove()
+          svg.selectAll('.mave-histogram-legend').remove()
 
           let series = []
           if (self.activeViz == 0) {
@@ -457,7 +481,7 @@ export default {
             ]
           }
           self.seriesBinned = bins.map((bin, idx) => {
-            const seriesBins = series.map((serie) => Object.assign(serie[idx], {displayName: serie.displayName}))
+            const seriesBins = series.map((serie) => Object.assign(serie[idx], {color: serie.color, displayName: serie.displayName}))
             const maxBinSize = d3.max(seriesBins, (bin) => bin.length)
             return {
               x0: bin.x0,
@@ -476,6 +500,41 @@ export default {
           const yAxis = svg.append('g')
               .attr('class', 'mave-histogram-y-axis')
               .call(d3.axisLeft(yScale).ticks(10))
+
+          // Add a legend for clinical views.
+          if (self.activeViz != 0) {
+            const legend = svg.append('g')
+                .attr('class', 'mave-histogram-legend')
+            const legendItems = legend.selectAll('g')
+              .data(series)
+              .join('g')
+                .attr('class', 'mave-histogram-legend-item')
+          
+            const legendX = 32
+            const legendY = 12
+            const legendItemHeight = 22
+            const legendFontSize = '13px'
+            const legendCircleWidth = 7
+            const legendSpacing = 5
+            legendItems.append('circle')
+                .attr('r', legendCircleWidth)
+                .attr('cx', legendX)
+                .attr('cy', (d, i) => legendY + i*legendItemHeight)
+                .style('fill', (d) => `rgba(${d.color},1)`)
+          
+            legendItems.append('text')
+                .attr('x', legendX + legendCircleWidth + legendSpacing)
+                .attr('y', (d, i) => legendY + i*legendItemHeight + legendSpacing)
+                .style('font-size', legendFontSize)
+                .text((d) => d.displayName)
+
+            // Add text to the end of the legend indicating the source of clinical data.
+            legend.append('text')
+                .attr('x', legendX - legendCircleWidth)
+                .attr('y', legendY + series.length*legendItemHeight + legendSpacing - 1)
+                .style('font-size', legendFontSize)
+                .text('ClinVar data from time of publication')
+          }
 
           const path = d3.line((d) => xScale(d.x), (d) => yScale(d.y))
 
@@ -539,6 +598,23 @@ export default {
 <style> 
 .mave-histogram-tooltip {
   position: absolute;
+}
+
+.mave-histogram-tooltip-variant-color {
+  display: inline-block;
+  height: 12px;
+  width: 12px;
+  margin-right: 4px;
+  border-radius: 100%;
+}
+
+.mave-histogram-tooltip-variant-star {
+  margin: 0 1.5px;
+  font-size: 14px;
+  vertical-align: middle;
+}
+.mave-histogram-tooltip-variant-star-filled {
+  color: #fdb81e
 }
 </style>
 

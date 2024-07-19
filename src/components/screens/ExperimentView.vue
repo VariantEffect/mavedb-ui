@@ -89,13 +89,25 @@
           <div class="mave-score-set-keywords">
             <li v-for="(keyword, index) in item.keywords" :key="index">
               {{ keyword.keyword.key }}
+              <!--Present local database keyword description-->
               <i class="pi pi-info-circle" style="color: green; cursor: pointer;" @click="showDialog(index)"/>
-              <Dialog v-model:visible="dialogVisible[index]" modal header="Description" :style="{ width: '50vw' }" :breakpoints="{ '1199px': '75vw', '575px': '90vw' }">
+              <Dialog v-model:visible="dialogVisible[index]" modal :header="keyword.keyword.key" :style="{ width: '50vw' }" :breakpoints="{ '1199px': '75vw', '575px': '90vw' }">
                 <p class="m-0">
                   {{ keyword.keyword.description }}
                 </p>
-                <div v-if="keyword.description">Extra description: {{ keyword.description }}</div>
               </Dialog> : <a :href="`https://www.mavedb.org/search/?keywords=${keyword.keyword.value}`">{{ keyword.keyword.value }}</a>
+              <!--Present user's description-->
+              <div class="field" v-if="keyword.description">
+                <div v-if="keyword.description.length >= 500"> 
+                  <div v-if="readFullDescription">{{ keyword.description.substring(0, 500) + "...." }}
+                  </div>
+                  <div v-else>{{ keyword.description }}</div>
+                  <Button @click="readFullDescription = !readFullDescription" class="p-button-text p-button-sm p-button-info">
+                    {{ readFullDescription ? 'Show more' : 'Show less' }}
+                  </Button>
+                </div>
+                <div v-else>{{ keyword.description }}</div>
+              </div>
             </li>
           </div>
         </div>
@@ -227,7 +239,8 @@ export default {
   data: () => ({
     associatedScoreSets: [],
     dialogVisible: [],
-    readMore: true
+    readMore: true,
+    readFullDescription: true,
   }),
 
   created() {

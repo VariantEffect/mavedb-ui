@@ -340,11 +340,42 @@ export default defineComponent({
           seriesIndices.filter((seriesIndex) => this.series[seriesIndex].classifier(d))
       }
 
+      let ranges = []
+      switch (this.scoreSet.urn) {
+        case 'urn:mavedb:00000097-0-1':
+          ranges = [{
+            min: -0.748,
+            max: 1.307,
+            color: '#4444ff',
+            title: 'Functionally normal'
+          }, {
+            min: -5.651,
+            max: -1.328,
+            color: '#ff4444',
+            title: 'Functionally abnormal'
+          }]
+          break
+        case 'urn:mavedb:00000050-a-1':
+          ranges = [{
+            min: -7.57,
+            max: 0,
+            color: '#4444ff',
+            title: 'Functionally normal'
+          }, {
+            min: 0,
+            max: 5.39,
+            color: '#ff4444',
+            title: 'Functionally abnormal'
+          }]
+          break
+      }
+
       this.histogram.data(this.variants)
           .seriesOptions(this.series?.map((s) => s.options) || null)
           .seriesClassifier(seriesClassifier)
           .title(this.hasTabBar ? null : 'Distribution of Functional Scores')
           .legendNote(this.activeViz == 0 ? null : 'ClinVar data from time of publication')
+          .ranges(ranges)
           .refresh()
     }
   }

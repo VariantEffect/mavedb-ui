@@ -74,6 +74,21 @@
         <div v-if="showHeatmap" class="mave-score-set-heatmap-pane">
           <ScoreSetHeatmap :scoreSet="item" :scores="scores" :externalSelection="variantToVisualize" @variant-selected="childComponentSelectedVariant"/>
         </div>
+        <table v-if="evidenceStrengths" class="mave-odds-path-table">
+          <tr>
+            <th>Odds Path Abnormal</th>
+            <th>Odds Path Normal</th>
+          </tr>
+          <tr v-if="evidenceStrengths.oddsOfPathogenicity">
+            <td>{{ evidenceStrengths.oddsOfPathogenicity.abnormal }}</td>
+            <td>{{ evidenceStrengths.oddsOfPathogenicity.normal }}</td>
+          </tr>
+          <tr>
+            <td :class="`mave-evidence-code-${evidenceStrengths.evidenceCodes.abnormal}`">{{ evidenceStrengths.evidenceCodes.abnormal }}</td>
+            <td :class="`mave-evidence-code-${evidenceStrengths.evidenceCodes.normal}`">{{ evidenceStrengths.evidenceCodes.normal }}</td>
+          </tr>
+        </table>
+        <div style="font-style: italic; text-align: center; margin-bottom: 2em;">For demo purposes only. Odds Path and evidence codes are not final.</div>
       </div>
       <div class="mave-1000px-col">
         <div v-if="item.externalLinks?.ucscGenomeBrowser?.url">
@@ -373,6 +388,24 @@ export default {
   name: 'ScoreSetView',
   components: { Accordion, AccordionTab, AutoComplete, Button, Chip, DefaultLayout, EntityLink, ScoreSetHeatmap, ScoreSetHistogram, TabView, TabPanel, Message, DataTable, Column, ProgressSpinner, ScrollPanel, PageLoading, ItemNotFound },
   computed: {
+    evidenceStrengths: function() {
+      let evidenceStrengths = null
+      switch (this.item.urn) {
+        case 'urn:mavedb:00000097-0-1':
+          evidenceStrengths = {
+            oddsOfPathogenicity: {
+              abnormal: 18.6,
+              normal: 0.022
+            },
+            evidenceCodes: {
+              abnormal: 'PS3_Strong',
+              normal: 'BS3_Strong'
+            }
+          }
+          break
+      }
+      return evidenceStrengths
+    },
     isMetaDataEmpty: function() {
       //If extraMetadata is empty, return value will be true.
       return Object.keys(this.item.extraMetadata).length === 0
@@ -812,6 +845,31 @@ export default {
 .mave-score-set-keywords .p-chip {
   /*font-family: Helvetica, Verdana, Arial, sans-serif;*/
   margin: 0 5px;
+}
+
+/* Evidence strength */
+
+table.mave-odds-path-table {
+   border-collapse: collapse;
+   margin: 1em auto 2em auto;
+}
+
+table.mave-odds-path-table td,
+table.mave-odds-path-table th {
+   border: 1px solid gray;
+   padding: 0.5em 1em;
+   text-align: center;
+}
+
+table.mave-odds-path-table td.mave-evidence-code-PS3_Strong { 
+   background-color: #b02418; 
+   color: white;
+   font-weight: bold;
+}
+table.mave-odds-path-table td.mave-evidence-code-BS3_Strong { 
+   background-color: #385492; 
+   color: white;
+   font-weight: bold;
 }
 
 /* Formatting in Markdown blocks */

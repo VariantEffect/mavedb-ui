@@ -1,42 +1,45 @@
-export const CLNSIG_DISPLAY_NAMES = {
-    'Pathogenic': {
-        variant_name: 'Pathogenic variant',
-        short_name: 'Pathogenic',
-    },
-    'Likely_pathogenic': {
-        variant_name: 'Likely pathogenic variant',
-        short_name: 'LP',
-    },
-    'Pathogenic/Likely_pathogenic': {
-        variant_name: 'Pathogenic/Likely pathogenic variant (in different submissions)',
-        short_name: 'Path/LP (both)',
-    },
-    'Benign': {
-        variant_name: 'Benign variant',
-        short_name: 'Benign',
-    },
-    'Likely_benign': {
-        variant_name: 'Likely benign variant',
-        short_name: 'LB',
-    },
-    'Benign/Likely_benign': {
-        variant_name: 'Benign/Likely benign variant (in different submissions)',
-        short_name: 'B/LB (both)',
-    },
-    'Uncertain_significance': {
-        variant_name: 'Variant of uncertain significance',
-        short_name: 'VUS',
-    },
-    'Conflicting_interpretations_of_pathogenicity': {
-        variant_name: 'Variant with conflicting interpretations of pathogenicity',
-        short_name: 'Conflicting',
-    },
-}
+export const CLINVAR_CLINICAL_SIGNIFICANCE_CLASSIFICATIONS = [{
+  name: 'Pathogenic',
+  description: 'Pathogenic variant',
+  shortDescription: 'Pathogenic'
+}, {
+  name: 'Likely_pathogenic',
+  description: 'Likely pathogenic variant',
+  shortDescription: 'LP'
+}, {
+  name: 'Pathogenic/Likely_pathogenic',
+  description: 'Pathogenic/Likely pathogenic variant (in different submissions)',
+  shortDescription: 'Path/LP (both)'
+}, {
+  name: 'Benign',
+  description: 'Benign variant',
+  shortDescription: 'Benign'
+}, {
+  name: 'Likely_benign',
+  description: 'Likely benign variant',
+  shortDescription: 'LB'
+}, {
+  name: 'Benign/Likely_benign',
+  description: 'Benign/Likely benign variant (in different submissions)',
+  shortDescription: 'B/LB (both)'
+}, {
+  name: 'Uncertain_significance',
+  description: 'Variant of uncertain significance',
+  shortDescription: 'VUS'
+}, {
+  name: 'Conflicting_interpretations_of_pathogenicity',
+  description: 'Variant with conflicting interpretations of pathogenicity',
+  shortDescription: 'Conflicting'
+}]
 
-export const CLNREVSTAT_STARS = {
-    'no_assertion_criteria_provided': 0,
-    'criteria_provided,_conflicting_interpretations': 1,
-    'criteria_provided,_single_submitter': 1,
-    'criteria_provided,_multiple_submitters,_no_conflicts': 2,
-    'reviewed_by_expert_panel': 3,
+export const BENIGN_CLINICAL_SIGNIFICANCE_CLASSIFICATIONS = ['Likely_benign', 'Benign', 'Benign/Likely_benign']
+
+export const PATHOGENIC_CLINICAL_SIGNIFICANCE_CLASSIFICATIONS = ['Likely_pathogenic', 'Pathogenic', 'Pathogenic/Likely_pathogenic']
+
+export const CLINVAR_REVIEW_STATUS_STARS = {
+  'no_assertion_criteria_provided': 0,
+  'criteria_provided,_conflicting_interpretations': 1,
+  'criteria_provided,_single_submitter': 1,
+  'criteria_provided,_multiple_submitters,_no_conflicts': 2,
+  'reviewed_by_expert_panel': 3
 }

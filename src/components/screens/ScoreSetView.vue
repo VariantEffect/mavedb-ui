@@ -69,7 +69,7 @@
           </span>
         </div>
         <div class="mave-score-set-histogram-pane">
-          <ScoreSetHistogram :scoreSet="item" :scores="scores" :externalSelection="variantToVisualize" />
+          <ScoreSetHistogram :scoreSet="item" :variants="scores" :externalSelection="variantToVisualize" />
         </div>
         <div v-if="showHeatmap" class="mave-score-set-heatmap-pane">
           <ScoreSetHeatmap :scoreSet="item" :scores="scores" :externalSelection="variantToVisualize" @variant-selected="childComponentSelectedVariant"/>

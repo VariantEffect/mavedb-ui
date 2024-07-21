@@ -8,7 +8,7 @@
           <template #content>
             <div>{{ item.urn }}</div>
             <div v-if="item && scores" class="mave-score-set-histogram-pane">
-              <ScoreSetHistogram :scoreSet="item" :scores="scores" />
+              <ScoreSetHistogram :scoreSet="item" :variants="scores" />
             </div>
             <table class="odds-path-table">
               <tr>

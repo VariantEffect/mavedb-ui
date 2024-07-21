@@ -6,6 +6,7 @@ type FieldGetter<T> = ((d: HistogramDatum) => T) | string
 type Getter<T> = () => T
 type Accessor<T, Self> = (value?: T) => T | Self
 
+export const DEFAULT_RANGE_COLOR = '#333333'
 export const DEFAULT_SERIES_COLOR = '#333333'
 const LABEL_SIZE = 10
 
@@ -60,6 +61,13 @@ export interface HistogramBin {
   seriesBins: d3.Bin<HistogramDatum, number>[]
 }
 
+export interface HistogramRange {
+  min: number | null
+  max: number | null
+  title: string | null
+  color: string | null
+}
+
 export interface Histogram {
   //////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
   // Methods
@@ -84,6 +92,7 @@ export interface Histogram {
   data: Accessor<HistogramDatum[], Histogram>
   seriesOptions: Accessor<HistogramSerieOptions[] | null, Histogram>
   seriesClassifier: Accessor<((d: HistogramDatum) => number[]) | null, Histogram>
+  ranges: Accessor<HistogramRange[], Histogram>
   numBins: Accessor<number, Histogram>
 
   // Data fields
@@ -129,6 +138,7 @@ export default function makeHistogram(): Histogram {
   let data: HistogramDatum[] = []
   let seriesOptions: HistogramSerieOptions[] | null = null
   let seriesClassifier: ((d: HistogramDatum) => number[]) | null = null
+  let ranges: HistogramRange[] = []
   let numBins = 30
 
   // Data fields
@@ -452,6 +462,62 @@ export default function makeHistogram(): Histogram {
     }
   }
 
+  ////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+  // Ranges
+  ////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+
+  const rangePolygon = (range: HistogramRange, yMax: number) => {
+    const points = []
+    const {min: xMin, max: xMax} = visibleRange(range)
+    const yMin = yScale.domain()[0]
+
+    // Start at the top left.
+    points.push([xMin, yMax])
+
+    // Trace the contour formed by the baseline and the bins, between xMin and xMax
+    let x = xMin
+
+    // First trace any portion to the left of the bins.
+    if (bins.length == 0 || x < bins[0].x0) {
+      points.push([x, yMin]) // Bottom left, if outside all bins
+      if (bins.length > 0) {
+        x = Math.min(bins[0].x1, xMax)
+        points.push([x, yMin]) // Base of first bin, or end of range if entire range is to the left of all bins
+      }
+    }
+    
+    // Trace the portion above bins.
+    const startBinIndex = findBinIndex(x)
+    const xMaxBinIndex = findBinIndex(xMax)
+    const endBinIndex = xMaxBinIndex == null ? bins.length - 1 : xMaxBinIndex
+    if (x < xMax && startBinIndex != null) {
+      for (let binIndex = startBinIndex; binIndex <= endBinIndex; binIndex++) {
+        const bin = bins[binIndex]
+        points.push([x, bin.yMax])
+        x = Math.min(bin.x1, xMax)
+        points.push([x, bin.yMax])
+      }
+    }
+
+    // Trace any portion to the right of the bins.
+    if (x < xMax) {
+      points.push([x, yMin])
+      points.push([xMax, yMin])
+    }
+
+    // End at the top right.
+    points.push([xMax, yMax])
+
+    return points
+  }
+
+  const visibleRange = (range: HistogramRange) => {
+    return {
+      min: range.min == null ? xScale.domain()[0] : Math.max(range.min, xScale.domain()[0]),
+      max: range.max == null ? xScale.domain()[1] : Math.min(range.max, xScale.domain()[1])
+    }
+  }
+
   const chart: Histogram = {
     ////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
     // Chart lifecyle methods
@@ -485,6 +551,10 @@ export default function makeHistogram(): Histogram {
         const mainGroup = svg.append('g')
             .attr('class', 'histogram-main')
             .attr('transform', `translate(${margins.left},${margins.top})`)
+        mainGroup.append('g')
+            .attr('class', 'histogram-ranges')
+        mainGroup.append('g')
+            .attr('class', 'histogram-range-thresholds')
         mainGroup.append('g')
             .attr('class', 'histogram-bars')
         mainGroup.append('g')
@@ -707,6 +777,75 @@ export default function makeHistogram(): Histogram {
             .style('stroke', 'black')
             .style('stroke-width', 1.5)
             .style('opacity', d => hoverOpacity(d))
+
+        // Refresh the ranges.
+        svg.select('defs')
+            .selectAll('linearGradient')
+            .data(ranges)
+            .join(
+              (enter) => {
+                const gradient = enter.append('linearGradient')
+                    .attr('id', (d, i) => `histogram-range-gradient-${i}`) // TODO Include a UUID for this chart.
+                    .attr('gradientTransform', 'rotate(45)')
+                gradient.append('stop')
+                    .attr('offset', '0')
+                    .attr('stop-color', (d) => d.color || DEFAULT_SERIES_COLOR)
+                    .attr('stop-opacity', '0.15')
+                gradient.append('stop')
+                    .attr('offset', '100%')
+                    .attr('stop-color', (d) => d.color || DEFAULT_SERIES_COLOR)
+                    .attr('stop-opacity', '0.05')
+                return gradient
+              }
+            )
+        const rangeG = svg.select('g.histogram-ranges')
+            .selectAll('g.histogram-range')
+            .data(chartHasContent ? ranges : [])
+            .join(
+              (enter) => {
+                const g = enter.append('g')
+                g.append('polygon')
+                g.append('text')
+                return g
+              },
+              (update) => update,
+              (exit) => exit.remove()
+            )
+        rangeG.attr('class', 'histogram-range')
+            .style('fill', (d, i) => `url(#histogram-range-gradient-${i})`)
+        rangeG.select('polygon')
+            .attr('points', (d) => rangePolygon(d, yMax).map(([x, y]) => `${xScale(x)},${yScale(y)}`).join(' '))
+        rangeG.select('text')
+            .attr('class', 'histogram-range-title')
+            .style('fill', (d) => d.color || '#000000')
+            .attr('x', (d) => {
+              const span = visibleRange(d)
+              return xScale((span.min + span.max) / 2)
+            })
+            .attr('y', 15)
+            .style('text-anchor', 'middle')
+            .style('visibility', (d) => d.title ? 'visible' : 'hidden')
+            .text((d) => d.title)
+        const rangeThresholds = ranges.map((range) => [
+          ...(range.min != null && range.min > xScale.domain()[0]) ? [{x: range.min, range}] : [],
+          ...(range.max != null && range.max < xScale.domain()[1]) ? [{x: range.max, range}] : [],
+        ]).flat()
+        svg.select('g.histogram-range-thresholds')
+            .selectAll('path.histogram-range-threshold')
+            .data(chartHasContent ? rangeThresholds : [])
+            .join('path')
+            .attr('class', 'histogram-range-threshold')
+            .attr('stroke', (d) => d.range.color || DEFAULT_RANGE_COLOR)
+            .attr('stroke-dasharray', '4 4')
+            .attr('stroke-width', 1.5)
+            .attr('d', (d) => {
+              const intersectedBinIndex = findBinIndex(d.x)
+              let yMin = (intersectedBinIndex == null) ? yScale.domain()[0] : bins[intersectedBinIndex].yMax
+              if (intersectedBinIndex != null && intersectedBinIndex > 0 && d.x == bins[intersectedBinIndex].x0) {
+                yMin = Math.max(yMin, bins[intersectedBinIndex - 1].x1)
+              }
+              return path([[d.x, yMin], [d.x, yMax]])
+            })
       }
 
       updateSelectionAfterRefresh()
@@ -775,6 +914,14 @@ export default function makeHistogram(): Histogram {
         return seriesClassifier
       }
       seriesClassifier = value
+      return chart
+    },
+
+    ranges: (value?: HistogramRange[]) => {
+      if (value === undefined) {
+        return ranges
+      }
+      ranges = value
       return chart
     },
 

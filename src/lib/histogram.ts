@@ -869,12 +869,14 @@ export default function makeHistogram(): Histogram {
       selectedBin = null
       selectedDatum = null
       refreshHighlighting()
+      hideSelectionTooltip()
     },
 
     selectBin: (binIndex: number) => {
       selectedBin = bins[binIndex] || null
       selectedDatum = null
       refreshHighlighting()
+      showSelectionTooltip()
     },
 
     selectDatum: (d: HistogramDatum) => {

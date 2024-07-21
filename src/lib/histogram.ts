@@ -589,7 +589,7 @@ export default function makeHistogram(): Histogram {
         // axis width (i.e. with the longest numbers in the counts.
         //
         // Also leave 5% breathing room at the top of the chart.
-        const yMax = (d3.max(series, (s) => s.maxBinSize) || 0) * 1.05
+        const yMax = (d3.max(series, (s) => s.maxBinSize) || 0) * 1.10
         const chartHasContent = yMax > 0
         yScale.domain([0, yMax])
             .range([height, 0])

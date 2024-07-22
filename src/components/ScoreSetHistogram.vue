@@ -386,6 +386,12 @@ export default defineComponent({
           .legendNote(this.activeViz == 0 ? null : 'ClinVar data from time of publication')
           .ranges(ranges)
           .refresh()
+      
+      if (this.externalSelection) {
+        this.histogram.selectDatum(this.externalSelection)
+      } else {
+        this.histogram.clearSelection()
+      }
     }
   }
 })

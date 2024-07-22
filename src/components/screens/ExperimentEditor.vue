@@ -425,20 +425,20 @@
                 <div class="field">
                   <span class="p-float-label">
                     <Dropdown
-                      v-model="keywordKey[keyword.model]"
-                      :id="$scopedId(keyword.name)"
-                      :options="getKeywordOptions(keyword.options)"
+                      v-model="keywordValues[keyword.key]"
+                      :id="$scopedId(keyword.key)"
+                      :options="keywordOptions[keyword.key]"
                       optionLabel="value"
                       optionValue="value"
                       class="keyword-dropdown"
                     />
-                    <label :for="$scopedId(keyword.name)">{{ keyword.label }}</label>
+                    <label :for="$scopedId(keyword.key)">{{ keyword.label }}</label>
                   </span>
                   <Button
                     class="keyword-description-button"
                     rounded
                     :disabled="keywordKey[keyword.model] == 'Other' ? true : null"
-                    :icon="(keywordTextVisible[keyword.key] || keywordKey[keyword.model] === 'Other') ? 'pi pi-minus' : 'pi pi-file-edit'"
+                    :icon="(keywordTextVisible[keyword.key] || keywordValues[keyword.key] === 'Other') ? 'pi pi-minus' : 'pi pi-file-edit'"
                     @click="keywordToggleInput(keyword.key)"
                     aria-label="Filter"
                   />
@@ -451,7 +451,7 @@
                     :breakpoints="{ '1199px': '75vw', '575px': '90vw' }"
                   >
                     <p class="m-0">
-                      {{ getKeywordOptions(keyword.options)[0].description }}
+                      {{ keywordOptions(keyword.key)[0].description }}
                     </p>
                   </Dialog>
                   <span v-if="validationErrors.keywords?.[keyword.model]" class="mave-field-error">{{ validationErrors.keywords?.[keyword.model] }}</span>

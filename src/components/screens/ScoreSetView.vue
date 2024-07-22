@@ -25,7 +25,10 @@
           </div>
         </div>
         <div class="mave-screen-title-bar">
-          <div class="mave-screen-title">{{ item.title || 'Untitled score set' }}</div>
+          <div class="mave-screen-title">
+            <span>{{ item.title || 'Untitled score set' }}</span>
+            <span v-if="item.urn" class="mave-score-set-urn">{{ item.urn }}</span>
+          </div>
           <div v-if="userIsAuthenticated">
             <div v-if="!item.publishedDate" class="mave-screen-title-controls">
               <Button class="p-button-sm" @click="editItem">Edit</Button>
@@ -38,42 +41,56 @@
           </div>
         </div>
         <div v-if="item.shortDescription" class="mave-score-set-description">{{ item.shortDescription }}</div>
-        <div v-if="item.urn" class="mave-score-set-urn">
-          <h3>{{ item.urn }}</h3>
-        </div>
       </div>
       <div v-if="scores">
         <div class="mave-score-set-variant-search">
           <span class="p-float-label">
-              <AutoComplete
+            <AutoComplete
               v-model="selectedVariant"
               :id="$scopedId('variant-search')"
               :suggestions="variantSearchSuggestions"
-              :option-label="variantSearchLabel"
+              optionLabel="mavedb_label"
               dropdown
               @complete="variantSearch"
               selectOnFocus
-              scroll-height="100px"
+              scroll-height="175px"
               :virtualScrollerOptions="{ itemSize: 50 }"
-              style="flex: 1; padding-right: 0.1em;"
-            >
-              <template #option="slotProps">
-                <div class="flex align-options-center">
-                  <div v-if="variantNotNullOrNA(slotProps.option.hgvs_nt)">Nucleotide variant: {{ slotProps.option.hgvs_nt }};&nbsp;</div>
-                  <div v-if="variantNotNullOrNA(slotProps.option.hgvs_splice)">Splice variant: {{ slotProps.option.hgvs_splice }};&nbsp;</div>
-                  <div v-if="variantNotNullOrNA(slotProps.option.hgvs_pro)">Protein variant: {{ slotProps.option.hgvs_pro }};&nbsp;</div>
-                  </div>
-              </template>
-            </AutoComplete>
+              style="flex: 1;"
+            />
             <label :for="$scopedId('variant-search')">Search for a variant in this score set</label>
-            <Button icon="pi pi-times" severity="danger" aria-label="Clear" @click="selectedVariant = null" />
+            <Button 
+              icon="pi pi-times"
+              severity="danger"
+              aria-label="Clear"
+              rounded
+              @click="selectedVariant = null"
+              :style="{visibility: variantToVisualize ? 'visible' : 'hidden'}"
+            />
           </span>
         </div>
         <div class="mave-score-set-histogram-pane">
-          <ScoreSetHistogram :scoreSet="item" :scores="scores" :externalSelection="variantToVisualize" />
+          <ScoreSetHistogram :scoreSet="item" :variants="scores" :externalSelection="variantToVisualize" />
         </div>
         <div v-if="showHeatmap" class="mave-score-set-heatmap-pane">
           <ScoreSetHeatmap :scoreSet="item" :scores="scores" :externalSelection="variantToVisualize" @variant-selected="childComponentSelectedVariant"/>
+        </div>
+        <table v-if="evidenceStrengths" class="mave-odds-path-table">
+          <tr>
+            <th>Odds Path Abnormal<sup>*</sup></th>
+            <th>Odds Path Normal<sup>*</sup></th>
+          </tr>
+          <tr v-if="evidenceStrengths.oddsOfPathogenicity">
+            <td>{{ evidenceStrengths.oddsOfPathogenicity.abnormal }}</td>
+            <td>{{ evidenceStrengths.oddsOfPathogenicity.normal }}</td>
+          </tr>
+          <tr>
+            <td :class="`mave-evidence-code-${evidenceStrengths.evidenceCodes.abnormal}`">{{ evidenceStrengths.evidenceCodes.abnormal }}</td>
+            <td :class="`mave-evidence-code-${evidenceStrengths.evidenceCodes.normal}`">{{ evidenceStrengths.evidenceCodes.normal }}</td>
+          </tr>
+        </table>
+        <div v-if="evidenceStrengths" style="font-style: italic; text-align: center; margin-bottom: 2em;"><sup>*</sup> Source: <a :href="evidenceStrengths.source" target="_blank">{{ evidenceStrengths.source }}</a></div>
+        <div v-if="evidenceStrengths?.exampleVariant" style="font-style: italic; text-align: center; margin-top: -1.5em; margin-bottom: 2em;">
+          <router-link :to="{name: 'variant', params: {urn: evidenceStrengths.exampleVariant.urn}}">Click here</router-link> for a preview of future clinical variant features.
         </div>
       </div>
       <div class="mave-1000px-col">
@@ -368,12 +385,41 @@ import { parseScoresOrCounts } from '@/lib/scores'
 import { variantNotNullOrNA } from '@/lib/mave-hgvs';
 import { mapState } from 'vuex'
 import { ref } from 'vue'
-import items from '@/composition/items'
 
 export default {
   name: 'ScoreSetView',
   components: { Accordion, AccordionTab, AutoComplete, Button, Chip, DefaultLayout, EntityLink, ScoreSetHeatmap, ScoreSetHistogram, TabView, TabPanel, Message, DataTable, Column, ProgressSpinner, ScrollPanel, PageLoading, ItemNotFound },
   computed: {
+    evidenceStrengths: function() {
+      return {
+        'urn:mavedb:00000050-a-1': {
+          oddsOfPathogenicity: {
+            abnormal: 24.9,
+            normal: 0.043
+          },
+          evidenceCodes: {
+            abnormal: 'PS3_Strong',
+            normal: 'BS3_Strong'
+          },
+          source: 'https://pubmed.ncbi.nlm.nih.gov/36550560/'
+        },
+        'urn:mavedb:00000097-0-1': {
+          oddsOfPathogenicity: {
+            abnormal: 52.4,
+            normal: 0.02
+          },
+          evidenceCodes: {
+            abnormal: 'PS3_Strong',
+            normal: 'BS3_Strong'
+          },
+          source: 'https://pubmed.ncbi.nlm.nih.gov/34793697/',
+          exampleVariant: {
+            urn: 'urn:mavedb:00000097-0-1#1697',
+            name: 'NM_007294.4(BRCA1):c.5237A>C (p.His1746Pro)'
+          }
+        }
+      }[this.item.urn] || null
+    },
     isMetaDataEmpty: function() {
       //If extraMetadata is empty, return value will be true.
       return Object.keys(this.item.extraMetadata).length === 0
@@ -682,30 +728,16 @@ export default {
     variantSearch: function(event) {
       const matches = []
       for (const variant of this.scores) {
-        if (
-          (variantNotNullOrNA(variant.hgvs_pro) && variant.hgvs_pro.toLowerCase().includes(event.query.toLowerCase()))
-          || (variantNotNullOrNA(variant.hgvs_nt) && variant.hgvs_nt.toLowerCase().includes(event.query.toLowerCase()))
-          || (variantNotNullOrNA(variant.hgvs_splice) && variant.hgvs_splice.toLowerCase().includes(event.query.toLowerCase()))
-        ) {
-          matches.push(variant)
+        if (variantNotNullOrNA(variant.hgvs_nt) && variant.hgvs_nt.toLowerCase().includes(event.query.toLowerCase())) {
+            matches.push(Object.assign(variant, {mavedb_label: variant.hgvs_nt}))
+        } else if (variantNotNullOrNA(variant.hgvs_splice) && variant.hgvs_splice.toLowerCase().includes(event.query.toLowerCase())) {
+            matches.push(Object.assign(variant, {mavedb_label: variant.hgvs_splice}))
+        } else if (variantNotNullOrNA(variant.hgvs_pro) && variant.hgvs_pro.toLowerCase().includes(event.query.toLowerCase())) {
+            matches.push(Object.assign(variant, {mavedb_label: variant.hgvs_pro}))
         }
       }
 
       this.variantSearchSuggestions = matches
-    },
-    variantSearchLabel: function(selectedVariant) {
-      var displayStr = ""
-      if (variantNotNullOrNA(selectedVariant.hgvs_nt)) {
-        displayStr += `Nucleotide variant: ${selectedVariant.hgvs_nt}; `
-      }
-      if (variantNotNullOrNA(selectedVariant.hgvs_pro)) {
-        displayStr += `Protein variant: ${selectedVariant.hgvs_pro}; `
-      }
-      if (variantNotNullOrNA(selectedVariant.hgvs_splice)) {
-        displayStr += `Splice variant: ${selectedVariant.hgvs_splice}`
-      }
-
-      return displayStr.trim().replace(/;$/, '')
     },
     childComponentSelectedVariant: function(variant) {
       if (!variant?.accession) {
@@ -785,8 +817,17 @@ export default {
 }
 
 .mave-score-set-variant-search {
-  margin: 10px 0;
+  margin-top: 40px;
+  margin-bottom: 8px;
   display: flex;
+  justify-content: center;
+}
+
+.mave-score-set-variant-search > span {
+  width: 50%;
+  display: flex;
+  align-items: center;
+  column-gap: .5em;
 }
 
 .p-float-label {
@@ -810,12 +851,39 @@ export default {
 }
 
 .mave-score-set-urn {
-  /*font-family: Helvetica, Verdana, Arial, sans-serif;*/
+  font-size: 20px;
+  color: gray;
+  margin-left: 12px;
 }
 
 .mave-score-set-keywords .p-chip {
   /*font-family: Helvetica, Verdana, Arial, sans-serif;*/
   margin: 0 5px;
+}
+
+/* Evidence strength */
+
+table.mave-odds-path-table {
+   border-collapse: collapse;
+   margin: 1em auto 0.5em auto;
+}
+
+table.mave-odds-path-table td,
+table.mave-odds-path-table th {
+   border: 1px solid gray;
+   padding: 0.5em 1em;
+   text-align: center;
+}
+
+table.mave-odds-path-table td.mave-evidence-code-PS3_Strong { 
+   background-color: #b02418; 
+   color: white;
+   font-weight: bold;
+}
+table.mave-odds-path-table td.mave-evidence-code-BS3_Strong { 
+   background-color: #385492; 
+   color: white;
+   font-weight: bold;
 }
 
 /* Formatting in Markdown blocks */

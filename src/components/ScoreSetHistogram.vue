@@ -220,7 +220,16 @@ export default defineComponent({
 
         if (variant) {
           // Line 1: Variant identifier
-          parts.push(variant.mavedb_label)
+          const variantLabel = variant.mavedb_label || (
+            variant.hgvs_pro ?
+              (variant.hgvs_nt ? `${variant.hgvs_pro} (${variant.hgvs_nt})` : variant.hgvs_pro)
+              : variant.hgvs_splice ? 
+                (variant.hgvs_nt ? `${variant.hgvs_splice} (${variant.hgvs_nt})` : variant.hgvs_splice)
+                : variant.hgvs_nt
+          )
+          if (variantLabel) {
+            parts.push(variantLabel)
+          }
 
           // Line 2: Variant description
           const variantDescriptionParts = []

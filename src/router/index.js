@@ -94,7 +94,8 @@ const routes = [{
   props: (route) => ({
     itemId: route.params.urn,
   })
-}, {  path: '/variants/:urn',
+}, {
+  path: '/variants/:urn',
   name: 'variant',
   component: VariantScreen,
   props: (route) => ({

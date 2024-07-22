@@ -426,13 +426,13 @@
                   <span class="p-float-label">
                     <Dropdown
                       v-model="keywordKey[keyword.model]"
-                      :id="$scopedId(keyword.id)"
+                      :id="$scopedId(keyword.name)"
                       :options="getKeywordOptions(keyword.options)"
                       optionLabel="value"
                       optionValue="value"
                       class="keyword-dropdown"
                     />
-                    <label :for="$scopedId(keyword.id)">{{ keyword.label }}</label>
+                    <label :for="$scopedId(keyword.name)">{{ keyword.label }}</label>
                   </span>
                   <Button
                     class="keyword-description-button"
@@ -512,6 +512,13 @@ import config from '@/config'
 import {normalizeDoi, normalizePubmedId, normalizeRawRead, validateDoi, validatePubmedId, validateRawRead} from '@/lib/identifiers'
 import useFormatters from '@/composition/formatters'
 
+const KEYWORDS = [{
+  key: 'Variant Library Creation Method',
+  descriptionLabel: 'Delivery Method Description',
+  label: 'Delivery Method',
+  optionsCollection: 'controlled-keywords-variant-search'
+}]
+
 export default {
   name: 'ExperimentEditor',
   components: { AutoComplete, Button, Card, Chips, Dialog, Dropdown, Multiselect, DefaultLayout, EmailPrompt, FileUpload, InputText, ProgressSpinner, TabPanel, TabView, Textarea },
@@ -533,6 +540,10 @@ export default {
     return {
       ...useFormatters(),
       ...useItem({itemTypeName: 'experiment'}),
+      keywordOptions: {
+        'Variant Library Creation Method': variantLibraryKeywordOptions.items
+      }
+      /*
       variantLibraryKeywordOptions: variantLibraryKeywordOptions.items,
       endogenousSystemKeywordOptions: endogenousSystemKeywordOptions.items,
       endogenousMechanismKeywordOptions: endogenousMechanismKeywordOptions.items,
@@ -544,6 +555,7 @@ export default {
       phenotypicModelSystemKeywordOptions: phenotypicModelSystemKeywordOptions.items,
       phenotypicProfilingStrategyKeywordOptions: phenotypicProfilingStrategyKeywordOptions.items,
       phenotypicSequencingTypeKeywordOptions: phenotypicSequencingTypeKeywordOptions.items,
+      */
       publicationIdentifierSuggestions: publicationIdentifierSuggestions.items,
       setPublicationIdentifierSearch: (text) => publicationIdentifierSuggestions.setRequestBody({text}),
       externalPublicationIdentifierSuggestions: externalPublicationIdentifierSuggestions.items,
@@ -570,41 +582,18 @@ export default {
     dialogVisible: [],
     methodText: null,
     keywords: [],
-    keywordDescription: {
-      variantLibraryKeywordDescription: null,
-      endogenousSystemKeywordDescription: null,
-      endogenousMechanismKeywordDescription: null,
-      inVitroSystemKeywordDescription: null,
-      inVitroMechanismKeywordDescription: null,
-      deliveryMethodKeywordDescription: null,
-      phenotypicDimensionalityKeywordDescription: null,
-      phenotypicMethodKeywordDescription: null,
-      phenotypicModelSystemKeywordDescription: null,
-      phenotypicProfilingStrategyKeywordDescription: null,
-      phenotypicSequencingTypeKeywordDescription: null,
-    },
-    keywordKey: {
-      variantLibraryKeyword: null,
-      endogenousSystemKeyword: null,
-      endogenousMechanismKeyword: null,
-      inVitroSystemKeyword: null,
-      inVitroMechanismKeyword: null,
-      deliveryMethodKeyword: null,
-      phenotypicDimensionalityKeyword: null,
-      phenotypicMethodKeyword: null,
-      phenotypicModelSystemKeyword: null,
-      phenotypicModelSystemKeyword: null,
-      phenotypicProfilingStrategyKeyword: null,
-      phenotypicSequencingTypeKeyword: null,
-    },
+    keywordValues: _.fromPairs(KEYWORDS.map((keyword) => [keyword.key, null])),
+    keywordDescriptionValues: _.fromPairs(KEYWORDS.map((keyword) => [keyword.key, null])),
+    /*
     keywordData: [
         {
-          model: 'deliveryMethodKeyword',
-          id: 'delivery-method-keywords',
-          options: 'deliveryMethodKeywordOptions',
+          key: 'Variant Library Creation Method',
+          //model: 'deliveryMethodKeyword',
+          //id: 'delivery-method-keywords',
+          //options: 'deliveryMethodKeywordOptions',
           label: 'Delivery Method',
-          key: 'deliveryMethod',
-          descriptionModel: 'deliveryMethodKeywordDescription',
+          //key: 'deliveryMethod',
+          //descriptionModel: 'deliveryMethodKeywordDescription',
           descriptionLabel: 'Delivery Method Description',
         },
         {
@@ -653,19 +642,8 @@ export default {
           descriptionLabel: 'Phenotypic Assay Sequencing Read Type Description',
         },
     ],
-    keywordTextVisible:{
-        variantLibrary: false,
-        endogenousSystem: false,
-        endogenousMechanism: false,
-        inVitroSystem: false,
-        inVitroMechanism: false,
-        deliveryMethod: false,
-        phenotypicDimensionality: false,
-        phenotypicMethod: false,
-        phenotypicModelSystem: false,
-        phenotypicProfilingStrategy: false,
-        phenotypicSequencingType: false
-      },
+    */
+    keywordTextVisible: _.fromPairs(KEYWORDS.map((keyword) => [keyword.key, false])),
     doiIdentifiers: [],
     primaryPublicationIdentifiers: [],
     secondaryPublicationIdentifiers: [],
@@ -682,28 +660,9 @@ export default {
       scoresFile: null
     },
     validationErrors: {
-      keywords: {
-        // Condition check keywords
-        variantLibraryKeyword: null,
-        endogenousSystemKeyword: null,
-        endogenousMechanismKeyword: null,
-        inVitroSystemKeyword: null,
-        inVitroMechanismKeyword: null,
-        variantLibraryKeywordDescription: null,
-        endogenousSystemKeywordDescription: null,
-        endogenousMechanismKeywordDescription: null,
-        inVitroSystemKeywordDescription: null,
-        inVitroMechanismKeywordDescription: null,
-        // For loop keywords
-        variantLibraryKeyword: null,
-        deliveryMethodKeywordDescription: null,
-        phenotypicDimensionalityKeywordDescription: null,
-        phenotypicMethodKeywordDescription: null,
-        phenotypicModelSystemKeywordDescription: null,
-        phenotypicProfilingStrategyKeywordDescription: null,
-        phenotypicSequencingTypeKeywordDescription: null,
-      },
-    },
+      keywords: _.fromPairs(KEYWORDS.map((keyword) => [keyword.key, null])),
+      keywordDescriptions: _.fromPairs(KEYWORDS.map((keyword) => [keyword.key, null])),
+    }
   }),
 
   computed: {

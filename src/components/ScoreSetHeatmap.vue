@@ -169,12 +169,17 @@ export default {
       // Count of variants that do not appear to be complex but are don't have a valid substitution
       let numIgnoredVariantInstances = 0
 
+      const distinctAccessions = new Set()
+
       const simpleVariantInstances = _.filter(
         scores.map((score) => {
           const variant = parseSimpleProVariant(score.hgvs_pro)
           if (!variant) {
             numComplexVariantInstances++
             return null
+          }
+          if (variant.target) {
+            distinctAccessions.add(variant.target)
           }
           const row = heatmapRowForVariant(variant.substitution)
           if (row == null) {
@@ -187,6 +192,11 @@ export default {
         }),
         (x) => x != null
       )
+      // TODO(#237) See https://github.com/VariantEffect/mavedb-ui/issues/237.
+      if (distinctAccessions.size > 1) {
+        numComplexVariantInstances += simpleVariantInstances.length
+        simpleVariantInstances = []
+      }
       return {simpleVariantInstances, numComplexVariantInstances, numIgnoredVariantInstances}
     },
 

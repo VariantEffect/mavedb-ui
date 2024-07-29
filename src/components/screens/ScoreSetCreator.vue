@@ -1721,6 +1721,9 @@ export default {
       if (!this.item) {
         editedFields.supersededScoreSetUrn = this.supersededScoreSet ? this.supersededScoreSet.urn : null
         editedFields.metaAnalyzesScoreSetUrns = this.metaAnalyzesScoreSets.map((s) => s.urn)
+        if ( editedFields.metaAnalyzesScoreSetUrns.length===0 && editedFields.supersededScoreSetUrn ) {
+          editedFields.experimentUrn = this.supersededScoreSet.experiment.urn
+        }
       }
       else {
         // empty item arrays so that deleted items aren't merged back into editedItem object

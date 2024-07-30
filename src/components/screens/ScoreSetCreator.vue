@@ -1192,7 +1192,7 @@ export default {
           return i;
         }
       }
-      return numSteps - 1 
+      return numSteps - 1
     },
 
     wizardStepHasError: function(step) {
@@ -1631,16 +1631,33 @@ export default {
     },
 
     addTarget: function () {
-      if (this.taxonomy) {
+      if (this.targetGene.name && this.taxonomy) {
+        if ( !this.targetGene.category ) {
+          this.$toast.add({ severity: 'error', summary: 'Please choose protein coding, regulatory or other noncoding for the target gene type.' })
+          return null
+        }
+        if ( !this.targetGene.targetSequence.sequence ) {
+          this.$toast.add({ severity: 'error', summary: 'Please upload reference sequence FAST file.' })
+          return null
+        }
+        if ( !this.targetGene.targetSequence.sequenceType ) {
+          this.$toast.add({ severity: 'error', summary: 'Please choose DNA or protein for the sequence type.' })
+          return null
+        }
         this.targetGene.targetSequence.taxonomy = this.taxonomy
         delete this.targetGene.targetAccession;
       }
-      else if (this.assembly || this.geneName) {
+      else if (this.geneName && this.assembly) {
+        if ( !this.targetGene.category ) {
+          this.$toast.add({ severity: 'error', summary: 'Please choose protein coding, regulatory or other noncoding for the target gene type.' })
+          return null
+        }
         this.targetGene.targetAccession.assembly = this.assemblyDropdownValue
         this.targetGene.targetAccession.gene = this.geneNameDropdownValue // Name property on string object array
         delete this.targetGene.targetSequence;
       }
       else {
+        this.$toast.add({ severity: 'error', summary: 'Target must include taxonomy or assembly and gene name.' })
         return null // target must include one of the above objects
       }
       this.targetGene.externalIdentifiers = _.keys(
@@ -1704,6 +1721,9 @@ export default {
       if (!this.item) {
         editedFields.supersededScoreSetUrn = this.supersededScoreSet ? this.supersededScoreSet.urn : null
         editedFields.metaAnalyzesScoreSetUrns = this.metaAnalyzesScoreSets.map((s) => s.urn)
+        if ( editedFields.metaAnalyzesScoreSetUrns.length===0 && editedFields.supersededScoreSetUrn ) {
+          editedFields.experimentUrn = this.supersededScoreSet.experiment.urn
+        }
       }
       else {
         // empty item arrays so that deleted items aren't merged back into editedItem object
@@ -1969,8 +1989,10 @@ export default {
   display: table;
 }
 
+/* Ensure the step controls are never off-screen. */
 .mavedb-wizard-step-controls {
   padding-left: 10px;
+  max-width: 100vw;
 }
 
 /* Switches */

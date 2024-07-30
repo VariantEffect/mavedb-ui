@@ -13,6 +13,8 @@ interface SimpleProteinVariation {
    * change of another sort.
    */
   substitution: string
+  /** The genomic target (accession) from a fully qualified MaveHGVS-pro string. */
+  target: null | string
 }
 
 /**
@@ -30,7 +32,10 @@ const proVariantRegex = /^p\.([A-Za-z]{3})([0-9]+)([A-Za-z]{3}|=|\*|-)$/
  * @returns An object with properties indicating
  */
 export function parseSimpleProVariant(variant: string): SimpleProteinVariation | null {
-  const match = variant.match(proVariantRegex)
+  const parts = variant.split(":")
+  const variation = parts.length == 1 ? parts[0] : parts[1]
+  const target = parts.length == 1 ? null : parts[0]
+  const match = variation.match(proVariantRegex)
   if (!match) {
     // console.log(`WARNING: Unrecognized pro variant: ${variant}`)
     return null
@@ -38,7 +43,8 @@ export function parseSimpleProVariant(variant: string): SimpleProteinVariation |
   return {
     position: parseInt(match[2]),
     original: match[1],
-    substitution: match[3]
+    substitution: match[3],
+    target: target
   }
 }
 

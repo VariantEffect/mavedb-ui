@@ -11,8 +11,20 @@
               <ProgressSpinner class="highlights-progress" />
             </div>
             <div v-else>
-              <DataTable :value="leaderboardData" sortField="count" :sortOrder="-1" paginator :rows="5"
-                :rowsPerPageOptions="[5, 10, 20]" size="small">
+              <DataTable
+                :ref="`targetDataTable${tab}`"
+                :exportFilename="`mavedb-${pluralize(tab)}`"
+                paginator
+                :rows="5"
+                :rowsPerPageOptions="[5, 10, 20]"
+                size="small"
+                sortField="count"
+                :sortOrder="-1"
+                :value="leaderboardData"
+              >
+                <template #paginatorstart>
+                  <Button type="button" icon="pi pi-download" text @click="exportCsv('target', tab)" />
+                </template>
                 <Column v-for="col of targetLeaderboardColumns[this.field]" :field="col.field" :header="col.header"
                   :sortable="col.field == 'count'" :key="col.field" :style="`width: ${col.width || auto}`">
                   <!-- Link any identifier columns or `column` (in this compoenent representative of some db key) to a MaveDB search page -->
@@ -84,8 +96,20 @@
               <ProgressSpinner class="highlights-progress" />
             </div>
             <div v-else>
-              <DataTable :value="leaderboardData" sortField="count" :sortOrder="-1" paginator :rows="5"
-                :rowsPerPageOptions="[5, 10, 20]" size="small">
+              <DataTable
+                :ref="`scoreSetDataTable${tab}`"
+                :exportFilename="`mavedb-${pluralize(tab)}`"
+                :value="leaderboardData"
+                sortField="count"
+                :sortOrder="-1"
+                paginator
+                :rows="5"
+                :rowsPerPageOptions="[5, 10, 20]"
+                size="small"
+              >
+                <template #paginatorstart>
+                  <Button type="button" icon="pi pi-download" text @click="exportCsv('scoreSet', tab)" />
+                </template>
                 <Column v-for="col of scoreSetLeaderboardColumns[this.field]" :field="col.field" :header="col.header"
                   :sortable="col.field == 'count'" :key="col.field" :style="`width: ${col.width || auto}`">
                   <!-- Link publication identifiers to their MaveDB page -->
@@ -160,20 +184,23 @@
 
 <script>
 import axios from 'axios'
-import config from '@/config'
-import { defineComponent, ref } from 'vue';
-import useItem from '@/composition/item'
-import DataTable from 'primevue/datatable';
-import Column from 'primevue/column';
+import pluralize from 'pluralize'
+import Button from 'primevue/button'
+import Column from 'primevue/column'
 import Card from 'primevue/card'
+import DataTable from 'primevue/datatable'
 import TabView from 'primevue/tabview'
 import TabPanel from 'primevue/tabpanel'
-import ProgressSpinner from 'primevue/progressspinner';
+import ProgressSpinner from 'primevue/progressspinner'
 import Chart from 'primevue/chart'
+import {defineComponent, ref} from 'vue'
+
+import config from '@/config'
+import useItem from '@/composition/item'
 
 export default defineComponent({
   name: 'HighlightsView',
-  components: { Card, Chart, Column, DataTable, TabView, TabPanel, ProgressSpinner },
+  components: {Button, Card, Chart, Column, DataTable, TabView, TabPanel, ProgressSpinner},
 
   setup: (props) => {
     const targetAccessionAssemblyStatistic = useItem({ itemTypeName: 'target-accession-statistics' })
@@ -343,6 +370,14 @@ export default defineComponent({
   },
 
   methods: {
+    pluralize: function(...args) {
+      return pluralize(...args)
+    },
+
+    exportCsv: function(model, tab) {
+      this.$refs[`${model}DataTable${tab}`][0].exportCSV()
+    },
+
     chartDataForTarget: function (targetData) {
       if (!targetData) {
         return {}

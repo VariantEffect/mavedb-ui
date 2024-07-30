@@ -1192,7 +1192,7 @@ export default {
           return i;
         }
       }
-      return numSteps - 1 
+      return numSteps - 1
     },
 
     wizardStepHasError: function(step) {
@@ -1989,8 +1989,10 @@ export default {
   display: table;
 }
 
+/* Ensure the step controls are never off-screen. */
 .mavedb-wizard-step-controls {
   padding-left: 10px;
+  max-width: 100vw;
 }
 
 /* Switches */

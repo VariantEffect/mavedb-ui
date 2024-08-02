@@ -98,12 +98,13 @@
               </Dialog> : <a :href="`https://www.mavedb.org/search/?keywords=${keyword.keyword.value}`">{{ keyword.keyword.value }}</a>
               <!--Present user's description-->
               <div class="field" v-if="keyword.description">
-                <div v-if="keyword.description.length >= 500"> 
-                  <div v-if="readFullDescription">{{ keyword.description.substring(0, 500) + "...." }}
+                <div v-if="keyword.description.length >= 300"> 
+                  <div v-if="!fullDescription[index]">
+                    {{ keyword.description.substring(0, 300) + "...." }}
                   </div>
                   <div v-else>{{ keyword.description }}</div>
-                  <Button @click="readFullDescription = !readFullDescription" class="p-button-text p-button-sm p-button-info">
-                    {{ readFullDescription ? 'Show more' : 'Show less' }}
+                  <Button @click="showFullDescription(index)" class="p-button-text p-button-sm p-button-info">
+                    {{ fullDescription[index] ? 'Show less' : 'Show all' }}
                   </Button>
                 </div>
                 <div v-else>{{ keyword.description }}</div>
@@ -240,7 +241,7 @@ export default {
     associatedScoreSets: [],
     dialogVisible: [],
     readMore: true,
-    readFullDescription: true,
+    fullDescription: [],
   }),
 
   created() {
@@ -320,6 +321,10 @@ export default {
     showLess: function () {
       this.readMore = true
       return this.readMore
+    },
+    showFullDescription: function(index) {
+      console.log()
+      this.fullDescription[index] = !this.fullDescription[index]
     },
     showDialog: function (index) {
       this.dialogVisible[index] = true

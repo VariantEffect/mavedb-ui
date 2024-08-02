@@ -245,7 +245,7 @@
                         {{ getKeywordOptions(keyword.option)[0].description }}
                       </p>
                     </Dialog>
-                    <span v-if="validationErrors.keywords?.[keyword.key]" class="mave-field-error">{{ validationErrors.keywords?.[keyword.key] }}</span>
+                    <span v-if="validationErrors[`keywords.${keyword.key}`]" class="mave-field-error">{{ validationErrors[`keywords.${keyword.key}`] }}</span>
                   </div>
                   <div class="field" v-if="keywordTextVisible[keyword.key] || keywordKeys[keyword.key] === 'Other'">
                     <span class="p-float-label keyword-description-input">
@@ -256,7 +256,7 @@
                       />
                       <label :for="$scopedId('input-title')">{{ keyword.descriptionLabel }} {{ keywordKeys[keyword.key] === 'Other' ? '(Required)' : '(Optional)' }}</label>
                     </span>
-                    <span v-if="validationErrors.keywordDescriptions?.[keyword.descriptionLabel]" class="mave-field-error"> {{ validationErrors.keywordDescriptions?.[keyword.descriptionLabel] }}</span>
+                    <span v-if="validationErrors[`keywordDescriptions.${keyword.key}`]" class="mave-field-error"> {{ validationErrors[`keywordDescriptions.${keyword.key}`] }}</span>
                   </div>
                 </div>
               </div>
@@ -362,6 +362,21 @@ const KEYWORDS = [
   }
 ]
 
+// Used for save function
+const KEYWORD_GROUPS = {
+    "Endogenous locus library method": [
+      "Variant Library Creation Method",
+      "Endogenous Locus Library Method System",
+      "Endogenous Locus Library Method Mechanism"
+    ],
+    "In vitro construct library method": [
+      "Variant Library Creation Method",
+      "In Vitro Construct Library Method System",
+      "In Vitro Construct Library Method Mechanism"
+    ],
+    "Other": ["Variant Library Creation Method"]
+  }
+
 export default {
   name: 'ExperimentEditor',
   components: { AutoComplete, Button, Card, Chips, Dialog, Dropdown, Multiselect, DefaultLayout, EmailPrompt, FileUpload, InputText, ProgressSpinner, TabPanel, TabView, Textarea },
@@ -383,19 +398,6 @@ export default {
     return {
       ...useFormatters(),
       ...useItem({itemTypeName: 'experiment'}),
-      // keywordOptions: {
-      //   'Variant Library Creation Method': variantLibraryKeywordOptions.items,
-      //   'Endogenous Locus Library Method System': endogenousSystemKeywordOptions.items,
-      //   'Endogenous Locus Library Method Mechanism': endogenousMechanismKeywordOptions.items,
-      //   'In Vitro Construct Library Method System': inVitroSystemKeywordOptions.items,
-      //   'In Vitro Construct Library Method Mechanism': inVitroMechanismKeywordOptions.items,
-      //   'Delivery method': deliveryMethodKeywordOptions.items,
-      //   'Phenotypic Assay Dimensionality': phenotypicDimensionalityKeywordOptions.items,
-      //   'Phenotypic Assay Method': phenotypicMethodKeywordOptions.items,
-      //   'Phenotypic Assay Model System': phenotypicModelSystemKeywordOptions.items,
-      //   'Phenotypic Assay Profiling Strategy': phenotypicProfilingStrategyKeywordOptions.items,
-      //   'Phenotypic Assay Sequencing Read Type': phenotypicSequencingTypeKeywordOptions.items,
-      // },
       variantLibraryKeywordOptions: variantLibraryKeywordOptions.items,
       endogenousSystemKeywordOptions: endogenousSystemKeywordOptions.items,
       endogenousMechanismKeywordOptions: endogenousMechanismKeywordOptions.items,
@@ -442,7 +444,6 @@ export default {
     publicationIdentifiers: [],
     rawReadIdentifiers: [],
     extraMetadata: {},
-
     progressVisible: false,
     serverSideValidationErrors: {},
     clientSideValidationErrors: {},
@@ -481,6 +482,9 @@ export default {
     keywordData() {
       return KEYWORDS
     },
+    keywordGroups() {
+      return KEYWORD_GROUPS
+    }
   },
 
   watch: {
@@ -636,17 +640,9 @@ export default {
           this.keywordKeys[key] = keywordObj ? keywordObj.keyword.value : null
           this.keywordDescriptions[key] = keywordObj ? keywordObj.description : null
         }
-        setKeyword("Variant Library Creation Method")
-        setKeyword("Endogenous Locus Library Method System")
-        setKeyword("Endogenous Locus Library Method Mechanism")
-        setKeyword("In Vitro Construct Library Method System")
-        setKeyword("In Vitro Construct Library Method Mechanism")
-        setKeyword("Delivery method")
-        setKeyword("Phenotypic Assay Dimensionality")
-        setKeyword("Phenotypic Assay Method")
-        setKeyword("Phenotypic Assay Model System")
-        setKeyword("Phenotypic Assay Profiling Strategy")
-        setKeyword("Phenotypic Assay Sequencing Read Type")
+        for (const k of KEYWORDS) {
+          setKeyword(k.key)
+        }
       } else {
         this.keywords = []
         this.keywordKeys = _.fromPairs(KEYWORDS.map((keyword) => [keyword.key, null]))
@@ -715,72 +711,25 @@ export default {
       ).filter(
           secondary => !primaryPublicationIdentifiers.some(primary => primary.identifier == secondary.identifier && primary.dbName == secondary.dbName)
       )
+      // Keywods section
       const combinedKeywords = []
-      let variantKeywords = []
-      if(this.keywordKeys['Variant Library Creation Method'] === "Endogenous locus library method") {
-        variantKeywords = [{
-            "keyword": {"key": "Variant Library Creation Method", "value": this.keywordKeys['Variant Library Creation Method']},
-            "description": this.keywordDescriptions['Variant Library Creation Method'],
-          },
-          {
-            "keyword": {"key": "Endogenous Locus Library Method System", "value": this.keywordKeys['Endogenous Locus Library Method System']},
-            "description": this.keywordDescriptions['Endogenous Locus Library Method System'],
-          },
-          {
-            "keyword": {"key": "Endogenous Locus Library Method Mechanism", "value": this.keywordKeys['Endogenous Locus Library Method Mechanism']},
-            "description": this.keywordDescriptions['Endogenous Locus Library Method Mechanism'],
-          }
-        ]
-      }else if(this.keywordKeys['Variant Library Creation Method'] === "In vitro construct library method"){
-        variantKeywords = [{
-            "keyword": {"key": "Variant Library Creation Method", "value": this.keywordKeys['Variant Library Creation Method']},
-            "description": this.keywordDescriptions['Variant Library Creation Method'],
-          },
-          {
-            "keyword": {"key": "In Vitro Construct Library Method System", "value": this.keywordKeys['In Vitro Construct Library Method System']},
-            "description": this.keywordDescriptions['In Vitro Construct Library Method System'],
-          },
-          {
-            "keyword": {"key": "In Vitro Construct Library Method Mechanism", "value": this.keywordKeys['In Vitro Construct Library Method Mechanism']},
-            "description": this.keywordDescriptions['In Vitro Construct Library Method Mechanism'],
-          }
-        ]
-      }else if(this.keywordKeys['Variant Library Creation Method'] === "Other"){
-        variantKeywords = [{
-            "keyword": {"key": "Variant Library Creation Method", "value": this.keywordKeys['Variant Library Creation Method']},
-            "description": this.keywordDescriptions['Variant Library Creation Method'],
-          }
-        ]
+      const methodKey = this.keywordKeys['Variant Library Creation Method']
+      if (this.keywordGroups[methodKey]) {
+        this.keywordGroups[methodKey].forEach((key) => {
+          combinedKeywords.push({
+            "keyword": {"key": key, "value": this.keywordKeys[key]},
+            "description": this.keywordDescriptions[key],
+          })
+        })
       }
-      combinedKeywords.push(...variantKeywords)
-      const phenotypicKeywords = [
-        {
-          "keyword": {"key": "Delivery method", "value": this.keywordKeys['Delivery method']},
-          "description": this.keywordDescriptions['Delivery method'],
-        },
-        {
-          "keyword": {"key": "Phenotypic Assay Dimensionality", "value": this.keywordKeys['Phenotypic Assay Dimensionality']},
-          "description": this.keywordDescriptions['Phenotypic Assay Dimensionality'],
-        },
-        {
-          "keyword": {"key": "Phenotypic Assay Method", "value": this.keywordKeys['Phenotypic Assay Method']},
-          "description": this.keywordDescriptions['Phenotypic Assay Method'],
-        },
-        {
-          "keyword": {"key": "Phenotypic Assay Model System", "value": this.keywordKeys['Phenotypic Assay Model System']},
-          "description": this.keywordDescriptions['Phenotypic Assay Model System'],
-        },
-        {
-          "keyword": {"key": "Phenotypic Assay Profiling Strategy", "value": this.keywordKeys['Phenotypic Assay Profiling Strategy']},
-          "description": this.keywordDescriptions['Phenotypic Assay Profiling Strategy'],
-        },
-        {
-          "keyword": {"key": "Phenotypic Assay Sequencing Read Type", "value": this.keywordKeys['Phenotypic Assay Sequencing Read Type']},
-          "description": this.keywordDescriptions['Phenotypic Assay Sequencing Read Type'],
-        }
-      ]
+      const phenotypicKeywords = KEYWORDS.slice(5).map((keyword) => ({
+        "keyword": {"key": keyword.key, "value": this.keywordKeys[keyword.key]},
+        "description": this.keywordDescriptions[keyword.key],
+      }))
       combinedKeywords.push(...phenotypicKeywords)
+      // Push all of the keyworeds to this.keywords directly will raise a bug if users choose Other option without typing anything. 
       this.keywords = combinedKeywords
+
       const editedFields = {
         title: this.title,
         shortDescription: this.shortDescription,

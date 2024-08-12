@@ -202,6 +202,37 @@
                 </TabView>
                 <span v-if="validationErrors.methodText" class="mave-field-error">{{validationErrors.methodText}}</span>
               </div>
+              <div class="field">
+                <span class="p-float-label">
+                  <AutoComplete
+                      ref="contributorsInput"
+                      v-model="contributors"
+                      :id="$scopedId('input-contributors')"
+                      :multiple="true"
+                      placeholder="Type an ORCID ID"
+                      :suggestions="contributorSuggestions"
+                      @complete="lookupContributor"
+                      @keyup.escape="clearContributorSearch"
+                      @item-select="acceptNewContributor"
+                      option-label="orcidId"
+                  >
+                    <template #chip="slotProps">
+                      <div>
+                        <div v-if="slotProps.value.givenName || slotProps.value.familyName">{{ slotProps.value.givenName }} {{ slotProps.value.familyName }} ({{ slotProps.value.orcidId }})</div>
+                        <div v-else>{{ slotProps.value.orcidId }}</div>
+                      </div>
+                    </template>
+                    <template #item="slotProps">
+                      <div>
+                          <div>Name: {{ slotProps.item.givenName }} {{ slotProps.item.familyName }}</div>
+                          <div>ORCID ID: {{ slotProps.item.orcidId }}</div>
+                      </div>
+                    </template>
+                  </AutoComplete>
+                  <label :for="$scopedId('input-contributors')">Contributors</label>
+                </span>
+                <span v-if="validationErrors.contributors" class="mave-field-error">{{validationErrors.contributors}}</span>
+              </div>
             </template>
           </Card>
         </div>
@@ -295,6 +326,7 @@ import ProgressSpinner from 'primevue/progressspinner'
 import TabPanel from 'primevue/tabpanel'
 import TabView from 'primevue/tabview'
 import Textarea from 'primevue/textarea'
+import {useRestResource} from 'rest-client-vue'
 
 import DefaultLayout from '@/components/layout/DefaultLayout'
 import EmailPrompt from '@/components/common/EmailPrompt'
@@ -393,6 +425,18 @@ export default {
     const phenotypicModelSystemKeywordOptions = useItems({itemTypeName: `controlled-keywords-phenotypic-modle-system-search`})
     const phenotypicProfilingStrategyKeywordOptions = useItems({itemTypeName: `controlled-keywords-phenotypic-profiling-strategy-search`})
     const phenotypicSequencingTypeKeywordOptions = useItems({itemTypeName: `controlled-keywords-phenotypic-sequencing-type-search`})
+
+    const {
+      resource: contributorLookupResult,
+      setEnabled: setContributorLookupEnabled,
+      setResourceId: setContributorLookupId
+    } = useRestResource({
+      resourceType: {
+        collectionName: 'orcid/users',
+        idProperty: 'orcidId'
+      }
+    })
+
     const publicationIdentifierSuggestions = useItems({itemTypeName: 'publication-identifier-search'})
     const externalPublicationIdentifierSuggestions = useItems({itemTypeName: 'external-publication-identifier-search'})
     return {
@@ -413,6 +457,10 @@ export default {
       setPublicationIdentifierSearch: (text) => publicationIdentifierSuggestions.setRequestBody({text}),
       externalPublicationIdentifierSuggestions: externalPublicationIdentifierSuggestions.items,
       setExternalPublicationIdentifierSearch: (text) => externalPublicationIdentifierSuggestions.setRequestBody({text}),
+
+      contributorLookupResult,
+      setContributorLookupEnabled,
+      setContributorLookupId
     }
   },
 
@@ -434,6 +482,7 @@ export default {
     abstractText: null,
     dialogVisible: [],
     methodText: null,
+    contributors: [],
     keywords: [],
     keywordKeys: _.fromPairs(KEYWORDS.map((keyword) => [keyword.key, null])),
     keywordDescriptions: _.fromPairs(KEYWORDS.map((keyword) => [keyword.key, null])),
@@ -459,6 +508,10 @@ export default {
   }),
 
   computed: {
+    contributorSuggestions: function() {
+      console.log(this.contributorLookupResult)
+      return this.suggestionsForAutocomplete(this.contributorLookupResult ? [this.contributorLookupResult] : [])
+    },
     publicationIdentifierSuggestionsList: function() {
       // The PrimeVue AutoComplete doesn't seem to like it if we set the suggestion list to [].
       // This causes the drop-down to stop appearing when we later populate the list.
@@ -512,6 +565,57 @@ export default {
   },
 
   methods: {
+    //////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+    // Contributors
+    //////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+
+    acceptNewContributor: function() {
+      // Assume the newest value is the right-most one. That seems to always be true in this version of PrimeVue, but it
+      // might change in the future.
+      const newIdx = this.contributors.length - 1
+
+      const newIdentifier = this.contributors[newIdx].orcidId
+
+      if (!newIdentifier) {
+        // Remove the new value if it contains no ORCID ID, which may happen if the user clicks an option before the
+        // ORCID ID has been looked up.
+        this.contributors.splice(newIdx, 1)
+      } else if (this.contributors.findIndex((c) => c.orcidId == newIdentifier) < newIdx) {
+        // Remove new value if it is a duplicate.
+        this.contributors.splice(newIdx, 1)
+        let description = `${this.contributors[newIdx].firstName} ${this.contributors[newIdx].lastName}`
+        if (description.length == 1) {
+          description = this.contributors[newIdx].orcidId
+        }
+        this.$toast.add({severity:'warning', summary: `The ORCID user "${description}" is already associated with this experiment`, life: 3000})
+      }
+    },
+
+    clearContributorSearch: function() {
+      // This could change with a new PrimeVue version.
+      const input = this.$refs.contributorsInput
+      input.$refs.focusInput.value = ''
+    },
+
+    lookupContributor: function(event) {
+      const searchText = (event.query || '').trim()
+      console.log(searchText)
+      if (searchText.length > 0) {
+        this.setContributorLookupId(searchText)
+        this.setContributorLookupEnabled(true)
+      } else {
+        this.setContributorLookupEnabled(false)
+      }
+    },
+
+    suggestionsForAutocomplete: function (suggestions) {
+      // The PrimeVue AutoComplete doesn't seem to like it if we set the suggestion list to [].
+      // This causes the drop-down to stop appearing when we later populate the list.
+      if (!suggestions || suggestions.length == 0) {
+        return [{}]
+      }
+      return suggestions
+    },
 
     ////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
     // Form fields
@@ -668,6 +772,7 @@ export default {
         this.shortDescription = this.item.shortDescription
         this.abstractText = this.item.abstractText
         this.methodText = this.item.methodText
+        this.contributors = _.sortBy(this.item.contributors, ['familyName', 'givenName', 'orcidId'])
         this.doiIdentifiers = this.item.doiIdentifiers
         // So that the multiselect can populate correctly, build the primary publication identifiers
         // indirectly by filtering publication identifiers list for those publications we know to be
@@ -686,6 +791,7 @@ export default {
         this.shortDescription = null
         this.abstractText = null
         this.methodText = null
+        this.contributors = []
         this.doiIdentifiers = []
         this.primaryPublicationIdentifiers = []
         this.secondaryPublicationIdentifiers = []
@@ -735,6 +841,7 @@ export default {
         shortDescription: this.shortDescription,
         abstractText: this.abstractText,
         methodText: this.methodText,
+        contributors: this.contributors,
         keywords: this.keywords,
         doiIdentifiers: this.doiIdentifiers.map((identifier) => _.pick(identifier, 'identifier')),
         primaryPublicationIdentifiers: primaryPublicationIdentifiers,
@@ -744,6 +851,7 @@ export default {
       }
       // empty item arrays so that deleted items aren't merged back into editedItem object
       if(this.item) {
+        this.item.contributors = []
         this.item.keywords = []
         this.item.doiIdentifiers = []
         this.item.publicationIdentifiers = []

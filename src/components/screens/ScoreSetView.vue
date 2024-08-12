@@ -91,6 +91,19 @@
             <a :href="`https://orcid.org/${item.modifiedBy.orcidId}`" target="blank"><img src="@/assets/ORCIDiD_icon.png"
                 alt="ORCIDiD">{{ item.modifiedBy.firstName }} {{ item.modifiedBy.lastName }}</a></span>
         </div>
+        <div v-if="contributors.length > 0">
+          Contributors
+          <a
+            v-for="contributor in contributors"
+            class="mave-contributor"
+            :href="`https://orcid.org/${contributor.orcidId}`"
+            :key="contributor.orcidId"
+            target="blank"
+          >
+            <img src="@/assets/ORCIDiD_icon.png" alt="ORCIDiD">
+            {{ contributor.givenName }} {{ contributor.familyName }}
+          </a>
+        </div>
         <div v-if="item.publishedDate">Published {{ formatDate(item.publishedDate) }}</div>
         <div v-if="item.license">
           License:
@@ -364,6 +377,12 @@ export default {
   name: 'ScoreSetView',
   components: { Accordion, AccordionTab, AutoComplete, Button, Chip, DefaultLayout, EntityLink, ScoreSetHeatmap, ScoreSetHistogram, TabView, TabPanel, Message, DataTable, Column, ProgressSpinner, ScrollPanel, PageLoading, ItemNotFound },
   computed: {
+    contributors: function() {
+      return _.sortBy(
+        (this.item?.contributors || []).filter((c) => c.orcidId != this.item?.createdBy?.orcidId),
+        ['familyName', 'givenName', 'orcidId']
+      )
+    },
     isMetaDataEmpty: function() {
       //If extraMetadata is empty, return value will be true.
       return Object.keys(this.item.extraMetadata).length === 0
@@ -804,6 +823,10 @@ export default {
 
 .mave-score-set-urn {
   /*font-family: Helvetica, Verdana, Arial, sans-serif;*/
+}
+
+.mave-contributor {
+  margin: 0 0.5em;
 }
 
 /* Formatting in Markdown blocks */

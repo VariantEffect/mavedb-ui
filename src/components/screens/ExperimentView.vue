@@ -24,6 +24,19 @@
             v-if="item.modifiedBy">
             <a :href="`https://orcid.org/${item.modifiedBy.orcidId}`" target="blank"><img src="@/assets/ORCIDiD_icon.png"
                 alt="ORCIDiD">{{ item.modifiedBy.firstName }} {{ item.modifiedBy.lastName }}</a></span></div>
+        <div v-if="contributors.length > 0">
+          Contributors
+          <a
+            v-for="contributor in contributors"
+            class="mave-contributor"
+            :href="`https://orcid.org/${contributor.orcidId}`"
+            :key="contributor.orcidId"
+            target="blank"
+          >
+            <img src="@/assets/ORCIDiD_icon.png" alt="ORCIDiD">
+            {{ contributor.givenName }} {{ contributor.familyName }}
+          </a>
+        </div>
         <div v-if="item.publishedDate">Published {{ formatDate(item.publishedDate) }}</div>
         <div v-if="item.experimentSetUrn">Member of <router-link
             :to="{ name: 'experimentSet', params: { urn: item.experimentSetUrn } }">{{ item.experimentSetUrn
@@ -244,6 +257,15 @@ export default {
     fullDescription: [],
   }),
 
+  computed: {
+    contributors: function() {
+      return _.sortBy(
+        (this.item?.contributors || []).filter((c) => c.orcidId != this.item?.createdBy?.orcidId),
+        ['familyName', 'givenName', 'orcidId']
+      )
+    }
+  },
+
   created() {
     this.getAssociatedScoreSets();
   },
@@ -390,6 +412,10 @@ export default {
 .mave-score-set-keywords .p-chip {
   /*font-family: Helvetica, Verdana, Arial, sans-serif;*/
   margin: 0 5px;
+}
+
+.mave-contributor {
+  margin: 0 0.5em;
 }
 
 /* Formatting in Markdown blocks */

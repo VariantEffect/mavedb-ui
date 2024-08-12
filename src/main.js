@@ -1,10 +1,13 @@
+import {createPinia} from 'pinia'
 import PrimeVue from 'primevue/config';
 import ConfirmationService from 'primevue/confirmationservice'
 import ToastService from 'primevue/toastservice'
 import Tooltip from 'primevue/tooltip';
+import {initRestClient} from 'rest-client-vue'
 import {createApp} from 'vue'
 
 import App from '@/App.vue'
+import config from '@/config'
 import {installAxiosAuthHeaderInterceptor, installAxiosUnauthorizedResponseInterceptor} from '@/lib/auth'
 import {initializeAuthentication as initializeOrcidAuthentication} from '@/lib/orcid'
 import router from '@/router'
@@ -37,12 +40,15 @@ router.beforeEach((to) => {
 createApp(App)
     .use(router)
     .use(store)
+    .use(createPinia())
     .use(PrimeVue)
     .use(ConfirmationService)
     .use(ToastService)
     .use(vueComponentId)
     .directive('tooltip', Tooltip)
     .mount('#app')
+
+initRestClient({apiBaseUrl: config.apiBaseUrl})
 
 // Monkey-patch Axios so that all requests will have the user's credentials.
 installAxiosAuthHeaderInterceptor()

@@ -148,7 +148,8 @@
                     >
                       <template #chip="slotProps">
                         <div>
-                          <div>{{ slotProps.value.givenName }} {{ slotProps.value.familyName }} ({{ slotProps.value.orcidId }})</div>
+                          <div v-if="slotProps.value.givenName || slotProps.value.familyName">{{ slotProps.value.givenName }} {{ slotProps.value.familyName }} ({{ slotProps.value.orcidId }})</div>
+                          <div v-else>{{ slotProps.value.orcidId }}</div>
                         </div>
                       </template>
                       <template #item="slotProps">
@@ -699,7 +700,7 @@
         setEnabled: setContributorLookupEnabled,
         setResourceId: setContributorLookupId
       } = useRestResource({
-        enabled: true,
+        enabled: false,
         resourceType: {
           collectionName: 'orcid/users',
           idProperty: 'orcidId'
@@ -954,38 +955,42 @@
     },
 
     methods: {
-
       //////////////////////////////////////////////////////////////////////////////////////////////////////////////////
       // Contributors
       //////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 
       acceptNewContributor: function() {
-        // We assume the newest value is the right-most one here. That seems to always be true in this version of PrimeVue,
-        // but it may change in the future.
+        // Assume the newest value is the right-most one. That seems to always be true in this version of PrimeVue, but it
+        // might change in the future.
         const newIdx = this.contributors.length - 1
 
-        // Remove new value if it is a duplicate.
         const newIdentifier = this.contributors[newIdx].orcidId
-        let description = `${this.contributors[newIdx].firstName} ${this.contributors[newIdx].lastName}`
-        if (description.length == 1) {
-          description = this.contributors[newIdx].orcidId
-        }
-        if (this.contributors.findIndex((c) => c.orcidId == newIdentifier) < newIdx) {
+
+        if (!newIdentifier) {
+          // Remove the new value if it contains no ORCID ID, which may happen if the user clicks an option before the
+          // ORCID ID has been looked up.
           this.contributors.splice(newIdx, 1)
+        } else if (this.contributors.findIndex((c) => c.orcidId == newIdentifier) < newIdx) {
+          // Remove new value if it is a duplicate.
+          this.contributors.splice(newIdx, 1)
+          let description = `${this.contributors[newIdx].firstName} ${this.contributors[newIdx].lastName}`
+          if (description.length == 1) {
+            description = this.contributors[newIdx].orcidId
+          }
           this.$toast.add({severity:'warning', summary: `The ORCID user "${description}" is already associated with this experiment`, life: 3000})
         }
       },
 
       clearContributorSearch: function() {
-        // This could change with a new Primevue version.
+        // This could change with a new PrimeVue version.
         const input = this.$refs.contributorsInput
         input.$refs.focusInput.value = ''
       },
 
       lookupContributor: function(event) {
         const searchText = (event.query || '').trim()
-        if (searchText.length > 0) { // TODO Validate ORCID ID
-          this.setContributorLookupId(event.query)
+        if (searchText.length > 0) {
+          this.setContributorLookupId(searchText)
           this.setContributorLookupEnabled(true)
         } else {
           this.setContributorLookupEnabled(false)
@@ -1165,8 +1170,8 @@
       },
 
       acceptNewPublicationIdentifier: function() {
-        // We assume the newest value is the right-most one here. That seems to always be true in this version of Primevue,
-        // but that may change in the future.
+        // Assume the newest value is the right-most one. That seems to always be true in this version of PrimeVue, but it
+        // might change in the future.
         const newIdx = this.publicationIdentifiers.length - 1
 
         // Remove new value if it is a duplicate.

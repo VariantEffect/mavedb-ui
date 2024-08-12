@@ -311,6 +311,48 @@
                   <div class="mavedb-wizard-row">
                     <div class="mavedb-wizard-help">
                       <label>
+                        Contributors who may edit this score set. Enter each contributor's
+                        <a href="https://orcid.org" target="_blank">ORCID</a> ID and confirm their name.
+                      </label>
+                      <div class="mavedb-help-small">
+                        Examples: 1111-1111-1111-1111
+                      </div>
+                    </div>
+                    <div class="mavedb-wizard-content field">
+                      <span class="p-float-label">
+                        <AutoComplete
+                            ref="contributorsInput"
+                            v-model="contributors"
+                            :id="$scopedId('input-contributors')"
+                            :multiple="true"
+                            placeholder="Type an ORCID ID"
+                            :suggestions="contributorSuggestions"
+                            @complete="lookupContributor"
+                            @item-select="acceptNewContributor"
+                            @keyup.escape="clearContributorSearch"
+                            option-label="orcidId"
+                        >
+                          <template #chip="slotProps">
+                            <div>
+                              <div v-if="slotProps.value.givenName || slotProps.value.familyName">{{ slotProps.value.givenName }} {{ slotProps.value.familyName }} ({{ slotProps.value.orcidId }})</div>
+                              <div v-else>{{ slotProps.value.orcidId }}</div>
+                            </div>
+                          </template>
+                          <template #item="slotProps">
+                            <div>
+                                <div>Name: {{ slotProps.item.givenName }} {{ slotProps.item.familyName }}</div>
+                                <div>ORCID ID: {{ slotProps.item.orcidId }}</div>
+                            </div>
+                          </template>
+                        </AutoComplete>
+                        <label :for="$scopedId('input-contributors')">Contributors</label>
+                      </span>
+                      <span v-if="validationErrors.contributors" class="mave-field-error">{{validationErrors.contributors}}</span>
+                    </div>
+                  </div>
+                  <div class="mavedb-wizard-row">
+                    <div class="mavedb-wizard-help">
+                      <label>
                         Any publications associated with the score set.
                         You can search for publications to add by DOI, PubMed ID, bioRxiv ID, or medRxiv ID.
                       </label>
@@ -781,8 +823,9 @@ import StepperPanel from 'primevue/stepperpanel'
 import TabPanel from 'primevue/tabpanel'
 import TabView from 'primevue/tabview'
 import Textarea from 'primevue/textarea'
-import DataTable from 'primevue/datatable';
-import { ref } from 'vue'
+import DataTable from 'primevue/datatable'
+import {useRestResource} from 'rest-client-vue'
+import {ref} from 'vue'
 
 import EntityLink from '@/components/common/EntityLink'
 import DefaultLayout from '@/components/layout/DefaultLayout'
@@ -790,7 +833,7 @@ import EmailPrompt from '@/components/common/EmailPrompt'
 import useItem from '@/composition/item'
 import useItems from '@/composition/items'
 import config from '@/config'
-import { normalizeDoi, normalizeIdentifier, normalizePubmedId, validateDoi, validateIdentifier, validatePubmedId} from '@/lib/identifiers'
+import {normalizeDoi, normalizeIdentifier, normalizePubmedId, validateDoi, validateIdentifier, validatePubmedId} from '@/lib/identifiers'
 import useFormatters from '@/composition/formatters'
 
 const externalGeneDatabases = ['UniProt', 'Ensembl', 'RefSeq']
@@ -868,6 +911,18 @@ export default {
     const assemblies = useItems({ itemTypeName: 'assemblies' })
     const targetGeneSuggestions = useItems({ itemTypeName: 'target-gene-search' })
 
+    const {
+      resource: contributorLookupResult,
+      setEnabled: setContributorLookupEnabled,
+      setResourceId: setContributorLookupId
+    } = useRestResource({
+      enabled: false,
+      resourceType: {
+        collectionName: 'orcid/users',
+        idProperty: 'orcidId'
+      }
+    })
+
     const expandedTargetGeneRows = ref([])
 
     return {
@@ -895,7 +950,11 @@ export default {
       setTaxonomySearch: (text) => taxonomySuggestions.setRequestBody({text}),
       assemblies: assemblies.items,
       geneNames: geneNames.items,
-      expandedTargetGeneRows
+      expandedTargetGeneRows,
+
+      contributorLookupResult,
+      setContributorLookupEnabled,
+      setContributorLookupId
     }
   },
 
@@ -916,6 +975,7 @@ export default {
     shortDescription: null,
     abstractText: null,
     methodText: null,
+    contributors: [],
     doiIdentifiers: [],
     primaryPublicationIdentifiers: [],
     secondaryPublicationIdentifiers: [],
@@ -983,6 +1043,10 @@ export default {
   }),
 
   computed: {
+    contributorSuggestions: function() {
+        console.log(this.contributorLookupResult)
+        return this.suggestionsForAutocomplete(this.contributorLookupResult ? [this.contributorLookupResult] : [])
+      },
     maxWizardStepValidated: function() {
       const numSteps = 4
       // This yields the index of the maximum step validated, -1 if step 0 is not valid, and -2 if all steps are valid.
@@ -1143,6 +1207,58 @@ export default {
   },
 
   methods: {
+    //////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+    // Contributors
+    //////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+
+    acceptNewContributor: function() {
+      // Assume the newest value is the right-most one. That seems to always be true in this version of PrimeVue, but it
+      // might change in the future.
+      const newIdx = this.contributors.length - 1
+
+      const newIdentifier = this.contributors[newIdx].orcidId
+
+      if (!newIdentifier) {
+        // Remove the new value if it contains no ORCID ID, which may happen if the user clicks an option before the
+        // ORCID ID has been looked up.
+        this.contributors.splice(newIdx, 1)
+      } else if (this.contributors.findIndex((c) => c.orcidId == newIdentifier) < newIdx) {
+        // Remove new value if it is a duplicate.
+        this.contributors.splice(newIdx, 1)
+        let description = `${this.contributors[newIdx].firstName} ${this.contributors[newIdx].lastName}`
+        if (description.length == 1) {
+          description = this.contributors[newIdx].orcidId
+        }
+        this.$toast.add({severity:'warning', summary: `The ORCID user "${description}" is already associated with this experiment`, life: 3000})
+      }
+    },
+
+    clearContributorSearch: function() {
+      console.log('clear')
+      // This could change with a new PrimeVue version.
+      const input = this.$refs.contributorsInput
+      input.$refs.focusInput.value = ''
+    },
+
+    lookupContributor: function(event) {
+      const searchText = (event.query || '').trim()
+      if (searchText.length > 0) {
+        this.setContributorLookupId(searchText)
+        this.setContributorLookupEnabled(true)
+      } else {
+        this.setContributorLookupEnabled(false)
+      }
+    },
+
+    suggestionsForAutocomplete: function (suggestions) {
+      // The PrimeVue AutoComplete doesn't seem to like it if we set the suggestion list to [].
+      // This causes the drop-down to stop appearing when we later populate the list.
+      if (!suggestions || suggestions.length == 0) {
+        return [{}]
+      }
+      return suggestions
+    },
+
     validateWizardStep: function(step) {
       // Later, this may depend on server-side validation.
       switch (step) {
@@ -1557,6 +1673,7 @@ export default {
         this.shortDescription = this.item.shortDescription
         this.abstractText = this.item.abstractText
         this.methodText = this.item.methodText
+        this.contributors = _.sortBy(this.item.contributors, ['familyName', 'givenName', 'orcidId'])
         this.doiIdentifiers = this.item.doiIdentifiers
         // So that the multiselect can populate correctly, build the primary publication identifiers
         // indirectly by filtering a merged list of secondary and primary publication identifiers
@@ -1582,6 +1699,7 @@ export default {
         this.shortDescription = null
         this.abstractText = null
         this.methodText = null
+        this.contributors = []
         this.doiIdentifiers = []
         this.primaryPublicationIdentifiers = []
         this.secondaryPublicationIdentifiers = []
@@ -1687,6 +1805,7 @@ export default {
         shortDescription: this.shortDescription,
         abstractText: this.abstractText,
         methodText: this.methodText,
+        contributors: this.contributors,
         doiIdentifiers: this.doiIdentifiers.map((identifier) => _.pick(identifier, 'identifier')),
         primaryPublicationIdentifiers: primaryPublicationIdentifiers,
         secondaryPublicationIdentifiers: secondaryPublicationIdentifiers,
@@ -1704,6 +1823,7 @@ export default {
       }
       else {
         // empty item arrays so that deleted items aren't merged back into editedItem object
+        this.item.contributors = []
         this.item.doiIdentifiers = []
         this.item.primaryPublicationIdentifiers = []
         this.item.publicationIdentifiers = []

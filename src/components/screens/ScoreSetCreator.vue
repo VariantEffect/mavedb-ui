@@ -42,7 +42,7 @@
                       <div class="mavedb-help-small">
                         To add a score set to a different experiment, supercede a score set or add a score set to meta-analysis, please navigate to "New score set".
                         For more on the relationship between score sets and experiments, see the
-                        <a target="_blank" href="https://mavedb.org/docs/mavedb/record_types.html#record-types">documentation</a>.
+                        <a target="_blank" :href="`${config.appBaseUrl}/docs/mavedb/record_types.html#record-types`">documentation</a>.
                       </div>
                     </div>
                     <div class="mavedb-wizard-content">
@@ -84,7 +84,7 @@
                       To which experiment does this score set belong?
                       <div class="mavedb-help-small">
                         For more on the relationship between score sets and experiments, see the
-                        <a target="_blank" href="https://mavedb.org/docs/mavedb/record_types.html#record-types">documentation</a>.
+                        <a target="_blank" :href="`${config.appBaseUrl}/docs/mavedb/record_types.html#record-types`">documentation</a>.
                       </div>
                     </div>
                     <div class="mavedb-wizard-content">
@@ -306,7 +306,7 @@
                       </label>
                       <div class="mavedb-help-small">
                         For more on data licensing in MaveDB, see the
-                        <a target="_blank" href="https://mavedb.org/docs/mavedb/data_licensing.html#data-licensing">documentation</a>.
+                        <a target="_blank" :href="`${config.appBaseUrl}/docs/mavedb/data_licensing.html#data-licensing`">documentation</a>.
                       </div>
                     </div>
                     <div class="mavedb-wizard-content field">
@@ -601,6 +601,7 @@
                         </div>
                       </template>
                     </AutoComplete>
+                    <label :for="$scopedId('input-existingTargetGene')">Copy from an existing target</label>
                     </span>
                   </div>
                 </div>
@@ -884,7 +885,7 @@
                     </div>
                     <div class="mavedb-help-small">
                       This file is required and should be a CSV file, with each row of the table describing a single variant. For more information about what this file can include and how it should be formatted, please take a look at
-                      <a target="_blank" href=" https://www.mavedb.org/docs/mavedb/data_formats.html#data-table-formats">our documentation</a>.
+                      <a target="_blank" :href="`${config.appBaseUrl}/docs/mavedb/data_formats.html#data-table-formats`">our documentation</a>.
                     </div>
                   </div>
                   <div class="mavedb-wizard-content">
@@ -1062,6 +1063,8 @@ export default {
     const targetGeneSuggestions = useItems({ itemTypeName: 'target-gene-search' })
 
     return {
+      config: config,
+
       ...useFormatters(),
       ...useItem({ itemTypeName: 'scoreSet' }),
       editableExperiments: editableExperiments.items,

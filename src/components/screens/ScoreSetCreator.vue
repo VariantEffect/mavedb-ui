@@ -581,9 +581,9 @@
                 <div class="mavedb-wizard-form-content-background"></div>
                 <div v-if="isTargetSequence" class="mavedb-wizard-row">
                   <div class="mavedb-wizard-help">
-                    <label>Copy target from a previously created target gene.</label>
+                    <label>Copy target from a previously created target</label>
                     <div class="mavedb-help-small">
-                      Use this autocomplete to search for existing targets in MaveDB and fill this target with its metadata. You'll still have to provide the target sequence.
+                      Use this autocomplete to search for existing targets in MaveDB and fill this target with its metadata. You'll still be able to edit any fields below.
                     </div>
                   </div>
                   <div class="mavedb-wizard-content field">
@@ -601,7 +601,6 @@
                         </div>
                       </template>
                     </AutoComplete>
-                    <label :for="$scopedId('input-existingTargetGene')">Copy from an existing target gene</label>
                     </span>
                   </div>
                 </div>
@@ -616,7 +615,7 @@
                   <div class="mavedb-wizard-content field">
                       <span class="p-float-label">
                         <InputText v-model="createdTargetGenes[targetIdx].targetGene.name" :id="$scopedId('input-targetGeneName')" style="width: 100%" />
-                        <label :for="$scopedId('input-targetGeneName')">Target gene name</label>
+                        <label :for="$scopedId('input-targetGeneName')">Target name</label>
                       </span>
                       <span v-if="validationErrors[`targetGene.${targetIdx}.name`]" class="mave-field-error">{{ validationErrors[`targetGene.${targetIdx}.name`] }}</span>
                   </div>
@@ -634,7 +633,7 @@
                       <div class="mavedb-wizard-content field">
                         <span class="p-float-label">
                           <InputText v-model="createdTargetGenes[targetIdx].targetGene.targetSequence.label" :id="$scopedId('input-targetGeneLabel')" style="width: 100%"/>
-                          <label :for="$scopedId('input-targetGeneLabel')">Target gene label</label>
+                          <label :for="$scopedId('input-targetGeneLabel')">Target label</label>
                         </span>
                         <span v-if="validationErrors[`targetGene.${targetIdx}.targetSequence.label`]" class="mave-field-error">{{ validationErrors[`targetGene.${targetIdx}.targetSequence.label`] }}</span>
                     </div>
@@ -811,7 +810,8 @@
                     <div class="mavedb-wizard-help">
                       <label :id="$scopedId('input-targetGeneAccessionLabel')">The accession identifier for this target</label>
                       <div class="mavedb-help-small">
-                        This will be the sequence that your variants are described against. It may be a RefSeq or Ensemble identifier.
+                        This will be the sequence that your variants are described against. It may be a RefSeq or Ensemble identifier. Available accessions matching the
+                        {{ createdTargetGenes[targetIdx].isRelativeToChromosome ? "assembly" : "gene name" }} will be displayed once one is selected.
                       </div>
                     </div>
                     <div class="mavedb-wizard-content">

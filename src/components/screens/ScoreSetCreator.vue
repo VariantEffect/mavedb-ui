@@ -862,44 +862,64 @@
               </button>
             </template>
             <template #content="{prevCallback: showPreviousWizardStep}">
-              <div class="field">
-                <Message v-if="numTargets > 1" severity="info">
-                  Please note that when you are defining variants against multiple targets, the position of each variant must be provided
-                  with respect to the target label or accession from which it originated.
-                </Message>
-              </div>
-              <div v-if="item">
-                <div>{{ formatInt(item.numVariants) }} variants are included in this score set.</div>
-                <div>To replace the variants, choose a new scores file and optional counts file:</div>
-              </div>
-              <div v-else>
-                Load a scores file and an optional counts file:
-              </div>
-              <div class="field">
-                <span class="p-float-label">
-                  <FileUpload ref="scoresFileUpload" :id="$scopedId('input-scoresFile')" :auto="false"
-                    chooseLabel="Scores file" :class="inputClasses.scoresFile || ''" :customUpload="true" :fileLimit="1"
-                    :showCancelButton="false" :showUploadButton="false">
-                    <template #empty>
-                      <p>Drop a file here.</p>
-                    </template>
-                  </FileUpload>
-                </span>
-                <span v-if="validationErrors.scoresFile" class="mave-field-error">{{ validationErrors.scoresFile
-                }}</span>
-              </div>
-              <div class="field">
-                <span class="p-float-label">
-                  <FileUpload ref="countsFileUpload" :id="$scopedId('input-countsFile')" :auto="false"
-                    chooseLabel="Counts file" :class="inputClasses.countsFile || ''" :customUpload="true" :fileLimit="1"
-                    :showCancelButton="false" :showUploadButton="false">
-                    <template #empty>
-                      <p>Drop a file here.</p>
-                    </template>
-                  </FileUpload>
-                </span>
-                <span v-if="validationErrors.countsFile" class="mave-field-error">{{ validationErrors.countsFile
-                }}</span>
+              <div class="mavedb-wizard-form">
+                <div class="mavedb-wizard-form-content-background"></div>
+                <div class="mavedb-wizard-row">
+                  <div class="mavedb-wizard-content">
+                    <Message v-if="numTargets > 1" severity="info">
+                      Please note that when you submit variants with respect to multiple targets, the position of each variant must be provided
+                      with respect to the target label or accession identifier from which the variant originated.
+                    </Message>
+                  </div>
+
+                </div>
+                <div class="mavedb-wizard-row">
+                  <div class="mavedb-wizard-help">
+                    <div v-if="item">
+                      <div>{{ formatInt(item.numVariants) }} variants are included in this score set.</div>
+                      <label :id="$scopedId('input-scoresFile')">Load a new scores file to replace existing variants</label>
+                    </div>
+                    <div v-else>
+                      <label :id="$scopedId('input-scoresFile')">Load a scores file</label>
+                    </div>
+                    <div class="mavedb-help-small">
+                      This file is required and should be a CSV file, with each row of the table describing a single variant. For more information about what this file can include and how it should be formatted, please take a look at
+                      <a target="_blank" href=" https://www.mavedb.org/docs/mavedb/data_formats.html#data-table-formats">our documentation</a>.
+                    </div>
+                  </div>
+                  <div class="mavedb-wizard-content">
+                    <span class="p-float-label">
+                      <FileUpload ref="scoresFileUpload" :id="$scopedId('input-scoresFile')" :auto="false"
+                        chooseLabel="Scores file" :class="inputClasses.scoresFile || ''" :customUpload="true" :fileLimit="1"
+                        :showCancelButton="false" :showUploadButton="false">
+                        <template #empty>
+                          <p>Drop a file here.</p>
+                        </template>
+                      </FileUpload>
+                    </span>
+                    <span v-if="validationErrors.scoresFile" class="mave-field-error">{{ validationErrors.scoresFile}}</span>
+                  </div>
+                </div>
+                <div class="mavedb-wizard-row">
+                  <div class="mavedb-wizard-help">
+                    <label :id="$scopedId('input-countsFile')">Load a counts file</label>
+                    <div class="mavedb-help-small">
+                      This file is optional, but recommended. There are no required columns for your count data, but you should describe the meaning of any columns in your methods section.
+                    </div>
+                  </div>
+                  <div class="mavedb-wizard-content">
+                    <span class="p-float-label">
+                      <FileUpload ref="countsFileUpload" :id="$scopedId('input-countsFile')" :auto="false"
+                        chooseLabel="Counts file" :class="inputClasses.countsFile || ''" :customUpload="true" :fileLimit="1"
+                        :showCancelButton="false" :showUploadButton="false">
+                        <template #empty>
+                          <p>Drop a file here.</p>
+                        </template>
+                      </FileUpload>
+                    </span>
+                    <span v-if="validationErrors.countsFile" class="mave-field-error">{{ validationErrors.countsFile}}</span>
+                  </div>
+                </div>
               </div>
               <div class="mavedb-wizard-step-controls-row">
                 <div class="flex justify-content-between mavedb-wizard-step-controls pt-4">

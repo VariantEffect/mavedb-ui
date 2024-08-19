@@ -195,9 +195,10 @@ export default {
       // TODO(#237) See https://github.com/VariantEffect/mavedb-ui/issues/237.
       if (distinctAccessions.size > 1) {
         numComplexVariantInstances += simpleVariantInstances.length
-        simpleVariantInstances = []
       }
-      return {simpleVariantInstances, numComplexVariantInstances, numIgnoredVariantInstances}
+
+      const variantInstances = distinctAccessions.size > 1 ? simpleVariantInstances : []
+      return {variantInstances, numComplexVariantInstances, numIgnoredVariantInstances}
     },
 
     prepareSimpleVariants: function(scores) {

@@ -171,7 +171,7 @@ export default {
 
       const distinctAccessions = new Set()
 
-      const simpleVariantInstances = _.filter(
+      let simpleVariantInstances = _.filter(
         scores.map((score) => {
           const variant = parseSimpleProVariant(score.hgvs_pro)
           if (!variant) {
@@ -197,6 +197,7 @@ export default {
         numComplexVariantInstances += simpleVariantInstances.length
         simpleVariantInstances = []
       }
+
       return {simpleVariantInstances, numComplexVariantInstances, numIgnoredVariantInstances}
     },
 

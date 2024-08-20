@@ -752,7 +752,6 @@ export default {
       }
 
       const editedItem = _.merge({}, this.item || {}, editedFields)
-      console.log(editedItem)
       let response
       try {
         if (this.item) {

@@ -323,7 +323,6 @@ export default {
       return this.readMore
     },
     showFullDescription: function(index) {
-      console.log()
       this.fullDescription[index] = !this.fullDescription[index]
     },
     showDialog: function (index) {

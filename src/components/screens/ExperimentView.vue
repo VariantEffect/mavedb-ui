@@ -95,10 +95,10 @@
                 <p class="m-0">
                   {{ keyword.keyword.description }}
                 </p>
-              </Dialog> : <a :href="`https://www.mavedb.org/search/?keywords=${keyword.keyword.value}`">{{ keyword.keyword.value }}</a>
+              </Dialog> : <a :href="`${config.appBaseUrl}/search?keywords=${keyword.keyword.value}`">{{ keyword.keyword.value }}</a>
               <!--Present user's description-->
               <div class="field" v-if="keyword.description">
-                <div v-if="keyword.description.length >= 300"> 
+                <div v-if="keyword.description.length >= 300">
                   <div v-if="!fullDescription[index]">
                     {{ keyword.description.substring(0, 300) + "...." }}
                   </div>

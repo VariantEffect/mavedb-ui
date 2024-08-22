@@ -29,7 +29,7 @@ function stdev(array) {
 export default {
   name: 'ScoreSetHeatmap',
 
-  emits: ['variantSelected'],
+  emits: ['variantSelected', 'heatmapVisible'],
 
   props: {
     margins: { // Margins must accommodate the axis labels
@@ -100,8 +100,10 @@ export default {
     wtVariants: function() {
       return this.wtAminoAcids ? this.prepareWtVariants(this.wtAminoAcids) : []
     },
-    showHeatmap: function() {
-      return this.simpleVariants && this.simpleVariants.length
+    heatmapVisible: function() {
+      const heatmapVisible = this.simpleVariants && this.simpleVariants.length
+      this.$emit('heatmapVisible', heatmapVisible)
+      return heatmapVisible
     },
     selectedVariant: function() {
       return this.externalSelection ? this.simpleAndWtVariants.filter((variant) => variant.details?.accession == this.externalSelection.accession)[0] : null

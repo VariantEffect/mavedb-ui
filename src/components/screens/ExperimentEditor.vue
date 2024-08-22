@@ -59,13 +59,6 @@
               </div>
               <div class="field">
                 <span class="p-float-label">
-                  <Chips v-model="keywords" :id="$scopedId('input-keywords')" :addOnBlur="true" :allowDuplicate="false" />
-                  <label :for="$scopedId('input-keywords')">Keywords</label>
-                </span>
-                <span v-if="validationErrors.keywords" class="mave-field-error">{{validationErrors.keywords}}</span>
-              </div>
-              <div class="field">
-                <span class="p-float-label">
                   <Chips
                       ref="doiIdentifiersInput"
                       v-model="doiIdentifiers"
@@ -181,12 +174,6 @@
                 </span>
                 <span v-if="validationErrors.extraMetadata" class="mave-field-error">{{validationErrors.extraMetadata}}</span>
               </div>
-            </template>
-          </Card>
-        </div>
-        <div class="col-12 md:col-6">
-          <Card>
-            <template #content>
               <div class="field">
                 <TabView>
                   <TabPanel header="Edit">
@@ -217,6 +204,67 @@
               </div>
             </template>
           </Card>
+        </div>
+        <div class="col-12 md:col-6">
+          <Card class="keyword-editor">
+            <template #content>
+              <div class="field">
+                <label style="font-weight: bold; margin-right: 3px;">Keywords</label>
+              </div>
+              <div v-for="keyword in keywordData" :key="keyword.key">
+                <div v-if="keywordVisibility[keyword.key]">
+                  <div class="field">
+                    <span class="p-float-label">
+                      <Dropdown
+                        v-model="keywordKeys[keyword.key]"
+                        :id="$scopedId(`keyword-input-${keyword.key}`)"
+                        :options="getKeywordOptions(keyword.option)" 
+                        optionLabel="value"
+                        optionValue="value"
+                        class="keyword-dropdown"
+                      />
+                      <label :for="$scopedId(`keyword-input-${keyword.key}`)">{{ keyword.key }}</label>
+                    </span>
+                    <Button
+                      class="keyword-description-button"
+                      rounded
+                      :disabled="keywordKeys[keyword.key] == 'Other' ? true : null"
+                      :icon="(keywordTextVisible[keyword.key] || keywordKeys[keyword.key] === 'Other') ? 'pi pi-minus' : 'pi pi-file-edit'"
+                      @click="keywordToggleInput(keyword.key)"
+                      aria-label="Filter"
+                    />
+                    &nbsp;<i class="pi pi-info-circle" style="color: green; cursor: pointer;" @click="showDialog(keyword.key)"/>
+                    <Dialog
+                      v-model:visible="dialogVisible[keyword.key]"
+                      modal
+                      :header="keyword.key"
+                      :style="{ width: '50vw' }"
+                      :breakpoints="{ '1199px': '75vw', '575px': '90vw' }"
+                    >
+                      <p class="m-0">
+                        {{ getKeywordOptions(keyword.option)[0].description }}
+                      </p>
+                    </Dialog>
+                    <span v-if="validationErrors[`keywords.${keyword.key}`]" class="mave-field-error">{{ validationErrors[`keywords.${keyword.key}`] }}</span>
+                  </div>
+                  <div class="field" v-if="keywordTextVisible[keyword.key] || keywordKeys[keyword.key] === 'Other'">
+                    <span class="p-float-label keyword-description-input">
+                      <Textarea
+                        v-model="keywordDescriptions[keyword.key]"
+                        :id="$scopedId('input-title')"
+                        rows="4"
+                      />
+                      <label :for="$scopedId('input-title')">{{ keyword.descriptionLabel }} {{ keywordKeys[keyword.key] === 'Other' ? '(Required)' : '(Optional)' }}</label>
+                    </span>
+                    <span v-if="validationErrors[`keywordDescriptions.${keyword.key}`]" class="mave-field-error"> {{ validationErrors[`keywordDescriptions.${keyword.key}`] }}</span>
+                  </div>
+                </div>
+              </div>
+              <div class="field">
+                <Button class="p-button-help" @click="resetKeywords">Clear Keywords</Button>
+              </div>
+            </template>
+          </Card>
           <Card v-if="item?.scoreSetUrns">
             <template #content>
               <div>{{item.scoreSetUrns?.length}} score sets loaded</div>
@@ -238,6 +286,8 @@ import AutoComplete from 'primevue/autocomplete'
 import Button from 'primevue/button'
 import Card from 'primevue/card'
 import Chips from 'primevue/chips'
+import Dialog from 'primevue/dialog'
+import Dropdown from 'primevue/dropdown'
 import Multiselect from 'primevue/multiselect'
 import FileUpload from 'primevue/fileupload'
 import InputText from 'primevue/inputtext'
@@ -254,16 +304,111 @@ import config from '@/config'
 import {normalizeDoi, normalizePubmedId, normalizeRawRead, validateDoi, validatePubmedId, validateRawRead} from '@/lib/identifiers'
 import useFormatters from '@/composition/formatters'
 
+const KEYWORDS = [
+  {
+    key: 'Variant Library Creation Method',
+    descriptionLabel: 'Variant Library Creation Method Description',
+    option: 'variantLibraryKeywordOptions',
+  },
+  {
+    key: 'Endogenous Locus Library Method System',
+    descriptionLabel: 'Endogenous Locus Library Method System Description',
+    option: 'endogenousSystemKeywordOptions',
+  },
+  {
+    key: 'Endogenous Locus Library Method Mechanism',
+    descriptionLabel: 'Endogenous Locus Library Method Mechanism Description',
+    option: 'endogenousMechanismKeywordOptions',
+  },
+  {
+    key: 'In Vitro Construct Library Method System',
+    descriptionLabel: 'In Vitro Construct Library Method System Description',
+    option: 'inVitroSystemKeywordOptions',
+  },
+  {
+    key: 'In Vitro Construct Library Method Mechanism',
+    descriptionLabel: 'In Vitro Construct Library Method Mechanism Description',
+    option: 'inVitroMechanismKeywordOptions',
+  },
+  {
+    key: 'Delivery method',
+    descriptionLabel: 'Delivery method Description',
+    option: 'deliveryMethodKeywordOptions',
+  },
+  {
+    key: 'Phenotypic Assay Dimensionality',
+    descriptionLabel: 'Phenotypic Assay Dimensionality Description',
+    option: 'phenotypicDimensionalityKeywordOptions'
+  },
+  {
+    key: 'Phenotypic Assay Method',
+    descriptionLabel: 'Phenotypic Assay Method Description',
+    option: 'phenotypicMethodKeywordOptions',
+  },
+  {
+    key: 'Phenotypic Assay Model System',
+    descriptionLabel: 'Phenotypic Assay Model System Description',
+    option: 'phenotypicModelSystemKeywordOptions',
+  },
+  {
+    key: 'Phenotypic Assay Profiling Strategy',
+    descriptionLabel: 'Phenotypic Assay Profiling Strategy Description',
+    option: 'phenotypicProfilingStrategyKeywordOptions',
+  },
+  {
+    key: 'Phenotypic Assay Sequencing Read Type',
+    descriptionLabel: 'Phenotypic Assay Sequencing Read Type Description',
+    option: 'phenotypicSequencingTypeKeywordOptions',
+  }
+]
+
+// Used for save function
+const KEYWORD_GROUPS = {
+    "Endogenous locus library method": [
+      "Variant Library Creation Method",
+      "Endogenous Locus Library Method System",
+      "Endogenous Locus Library Method Mechanism"
+    ],
+    "In vitro construct library method": [
+      "Variant Library Creation Method",
+      "In Vitro Construct Library Method System",
+      "In Vitro Construct Library Method Mechanism"
+    ],
+    "Other": ["Variant Library Creation Method"]
+  }
+
 export default {
   name: 'ExperimentEditor',
-  components: { AutoComplete, Button, Card, Chips, Multiselect, DefaultLayout, EmailPrompt, FileUpload, InputText, ProgressSpinner, TabPanel, TabView, Textarea },
+  components: { AutoComplete, Button, Card, Chips, Dialog, Dropdown, Multiselect, DefaultLayout, EmailPrompt, FileUpload, InputText, ProgressSpinner, TabPanel, TabView, Textarea },
 
   setup: () => {
+    const variantLibraryKeywordOptions = useItems({itemTypeName: `controlled-keywords-variant-search`})
+    const endogenousSystemKeywordOptions = useItems({itemTypeName: `controlled-keywords-endo-system-search`})
+    const endogenousMechanismKeywordOptions = useItems({itemTypeName: `controlled-keywords-endo-mechanism-search`})
+    const inVitroSystemKeywordOptions = useItems({itemTypeName: `controlled-keywords-in-vitro-system-search`})
+    const inVitroMechanismKeywordOptions = useItems({itemTypeName: `controlled-keywords-in-vitro-mechanism-search`})
+    const deliveryMethodKeywordOptions = useItems({itemTypeName: `controlled-keywords-delivery-search`})
+    const phenotypicDimensionalityKeywordOptions = useItems({itemTypeName: `controlled-keywords-phenotypic-dimensionality-search`})
+    const phenotypicMethodKeywordOptions = useItems({itemTypeName: `controlled-keywords-phenotypic-method-search`})
+    const phenotypicModelSystemKeywordOptions = useItems({itemTypeName: `controlled-keywords-phenotypic-modle-system-search`})
+    const phenotypicProfilingStrategyKeywordOptions = useItems({itemTypeName: `controlled-keywords-phenotypic-profiling-strategy-search`})
+    const phenotypicSequencingTypeKeywordOptions = useItems({itemTypeName: `controlled-keywords-phenotypic-sequencing-type-search`})
     const publicationIdentifierSuggestions = useItems({itemTypeName: 'publication-identifier-search'})
     const externalPublicationIdentifierSuggestions = useItems({itemTypeName: 'external-publication-identifier-search'})
     return {
       ...useFormatters(),
       ...useItem({itemTypeName: 'experiment'}),
+      variantLibraryKeywordOptions: variantLibraryKeywordOptions.items,
+      endogenousSystemKeywordOptions: endogenousSystemKeywordOptions.items,
+      endogenousMechanismKeywordOptions: endogenousMechanismKeywordOptions.items,
+      inVitroSystemKeywordOptions: inVitroSystemKeywordOptions.items,
+      inVitroMechanismKeywordOptions: inVitroMechanismKeywordOptions.items,
+      deliveryMethodKeywordOptions: deliveryMethodKeywordOptions.items,
+      phenotypicDimensionalityKeywordOptions: phenotypicDimensionalityKeywordOptions.items,
+      phenotypicMethodKeywordOptions: phenotypicMethodKeywordOptions.items,
+      phenotypicModelSystemKeywordOptions: phenotypicModelSystemKeywordOptions.items,
+      phenotypicProfilingStrategyKeywordOptions: phenotypicProfilingStrategyKeywordOptions.items,
+      phenotypicSequencingTypeKeywordOptions: phenotypicSequencingTypeKeywordOptions.items,
       publicationIdentifierSuggestions: publicationIdentifierSuggestions.items,
       setPublicationIdentifierSearch: (text) => publicationIdentifierSuggestions.setRequestBody({text}),
       externalPublicationIdentifierSuggestions: externalPublicationIdentifierSuggestions.items,
@@ -287,15 +432,18 @@ export default {
     title: null,
     shortDescription: null,
     abstractText: null,
+    dialogVisible: [],
     methodText: null,
     keywords: [],
+    keywordKeys: _.fromPairs(KEYWORDS.map((keyword) => [keyword.key, null])),
+    keywordDescriptions: _.fromPairs(KEYWORDS.map((keyword) => [keyword.key, null])),
+    keywordTextVisible: _.fromPairs(KEYWORDS.map((keyword) => [keyword.key, false])),
     doiIdentifiers: [],
     primaryPublicationIdentifiers: [],
     secondaryPublicationIdentifiers: [],
     publicationIdentifiers: [],
     rawReadIdentifiers: [],
     extraMetadata: {},
-
     progressVisible: false,
     serverSideValidationErrors: {},
     clientSideValidationErrors: {},
@@ -304,7 +452,10 @@ export default {
       extraMetadataFile: null,
       scoresFile: null
     },
-    validationErrors: {},
+    validationErrors: {
+      keywords: _.fromPairs(KEYWORDS.map((keyword) => [keyword.key, null])),
+      keywordDescriptions: _.fromPairs(KEYWORDS.map((keyword) => [keyword.key, null])),
+    }
   }),
 
   computed: {
@@ -319,6 +470,21 @@ export default {
         return publicationIdentifierSuggestions
       }
     },
+    keywordVisibility: function() {
+      return {
+        ..._.fromPairs(KEYWORDS.map((keyword) => [keyword.key, true])),
+        'Endogenous Locus Library Method System': this.keywordKeys['Variant Library Creation Method'] == 'Endogenous locus library method',
+        'Endogenous Locus Library Method Mechanism': this.keywordKeys['Variant Library Creation Method'] == 'Endogenous locus library method',
+        'In Vitro Construct Library Method System': this.keywordKeys['Variant Library Creation Method'] == 'In vitro construct library method',
+        'In Vitro Construct Library Method Mechanism': this.keywordKeys['Variant Library Creation Method'] == 'In vitro construct library method',
+      }
+    },
+    keywordData() {
+      return KEYWORDS
+    },
+    keywordGroups() {
+      return KEYWORD_GROUPS
+    }
   },
 
   watch: {
@@ -332,6 +498,16 @@ export default {
         this.setItemId(this.itemId)
       },
       immediate: true
+    },
+    'keywordKeys.Variant Library Creation Method': function(newValue) {
+      if (newValue !== 'Endogenous locus library method') {
+        this.keywordKeys['Endogenous Locus Library Method System'] = null
+        this.keywordKeys['Endogenous Locus Library Method Mechanism'] = null
+      }
+      if (newValue !== 'In vitro construct library method') {
+        this.keywordKeys['In Vitro Construct Library Method System'] = null
+        this.keywordKeys['In Vitro Construct Library Method Mechanism'] = null
+      }
     }
   },
 
@@ -456,6 +632,24 @@ export default {
       this.mergeValidationErrors()
     },
 
+    resetKeywords: function() {
+      if (this.item && this.item.keywords.length !== 0) {
+        // Keywords could be an empty list now. Will modify it back to compulsory when we get final list. 
+        const setKeyword = (key) => {
+          const keywordObj = this.item.keywords.find(keyword => keyword.keyword.key === key)
+          this.keywordKeys[key] = keywordObj ? keywordObj.keyword.value : null
+          this.keywordDescriptions[key] = keywordObj ? keywordObj.description : null
+        }
+        for (const k of KEYWORDS) {
+          setKeyword(k.key)
+        }
+      } else {
+        this.keywords = []
+        this.keywordKeys = _.fromPairs(KEYWORDS.map((keyword) => [keyword.key, null]))
+        this.keywordKeys = _.fromPairs(KEYWORDS.map((keyword) => [keyword.key, null]))
+      }
+    },
+
     ////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
     // Validation
     ////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
@@ -474,7 +668,6 @@ export default {
         this.shortDescription = this.item.shortDescription
         this.abstractText = this.item.abstractText
         this.methodText = this.item.methodText
-        this.keywords = this.item.keywords
         this.doiIdentifiers = this.item.doiIdentifiers
         // So that the multiselect can populate correctly, build the primary publication identifiers
         // indirectly by filtering publication identifiers list for those publications we know to be
@@ -493,7 +686,6 @@ export default {
         this.shortDescription = null
         this.abstractText = null
         this.methodText = null
-        this.keywords = []
         this.doiIdentifiers = []
         this.primaryPublicationIdentifiers = []
         this.secondaryPublicationIdentifiers = []
@@ -501,6 +693,7 @@ export default {
         this.rawReadIdentifiers = []
         this.extraMetadata = {}
       }
+      this.resetKeywords()
     },
 
     ////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
@@ -518,6 +711,24 @@ export default {
       ).filter(
           secondary => !primaryPublicationIdentifiers.some(primary => primary.identifier == secondary.identifier && primary.dbName == secondary.dbName)
       )
+      // Keywods section
+      const combinedKeywords = []
+      const methodKey = this.keywordKeys['Variant Library Creation Method']
+      if (this.keywordGroups[methodKey]) {
+        this.keywordGroups[methodKey].forEach((key) => {
+          combinedKeywords.push({
+            "keyword": {"key": key, "value": this.keywordKeys[key]},
+            "description": this.keywordDescriptions[key],
+          })
+        })
+      }
+      const phenotypicKeywords = KEYWORDS.slice(5).map((keyword) => ({
+        "keyword": {"key": keyword.key, "value": this.keywordKeys[keyword.key]},
+        "description": this.keywordDescriptions[keyword.key],
+      }))
+      combinedKeywords.push(...phenotypicKeywords)
+      // Push all of the keyworeds to this.keywords directly will raise a bug if users choose Other option without typing anything. 
+      this.keywords = combinedKeywords
 
       const editedFields = {
         title: this.title,
@@ -541,7 +752,6 @@ export default {
       }
 
       const editedItem = _.merge({}, this.item || {}, editedFields)
-
       let response
       try {
         if (this.item) {
@@ -624,8 +834,19 @@ export default {
 
     get(...args) {
       return _.get(...args)
-    }
+    },
 
+    getKeywordOptions(optionsName) {
+      return this[optionsName]
+    },
+
+    keywordToggleInput: function(field) {
+      this.keywordTextVisible[field] = !this.keywordTextVisible[field]
+    },
+
+    showDialog: function (index) {
+      this.dialogVisible[index] = true
+    },
   }
 }
 
@@ -656,6 +877,38 @@ export default {
   bottom: 5px;
   right: 5px;
   z-index: 1001;
+}
+
+/* Keywords */
+
+.keyword-dropdown {
+  width: 450px;
+  height: 45px;
+}
+
+.keyword-editor .field {
+  display: flex;
+  align-items: center;
+}
+
+.keyword-description-button {
+  margin-left: 8px;
+  height: 32px;
+  width: 32px;
+}
+
+.keyword-description-button:deep(.p-button-icon) {
+  font-size: 1.1rem;
+  margin-top: 1px;
+  margin-left: 1px;
+}
+
+.keyword-description-button:deep(.p-button-icon.pi-file-edit) {
+  margin-left: 4px;
+}
+
+.keyword-description-input {
+  width: 450px;
 }
 
 </style>

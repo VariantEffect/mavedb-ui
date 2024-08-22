@@ -148,14 +148,6 @@
                   </Message>
                   <div class="field">
                     <span class="p-float-label">
-                      <Chips v-model="keywords" :id="$scopedId('input-keywords')" :addOnBlur="true"
-                        :allowDuplicate="false" />
-                      <label :for="$scopedId('input-keywords')">Keywords</label>
-                    </span>
-                    <span v-if="validationErrors.keywords" class="mave-field-error">{{ validationErrors.keywords }}</span>
-                  </div>
-                  <div class="field">
-                    <span class="p-float-label">
                       <Chips
                           ref="doiIdentifiersInput"
                           v-model="doiIdentifiers"
@@ -719,7 +711,6 @@
       shortDescription: null,
       abstractText: null,
       methodText: null,
-      keywords: [],
       doiIdentifiers: [],
       primaryPublicationIdentifiers: [],
       secondaryPublicationIdentifiers: [],
@@ -1044,14 +1035,12 @@
           console.log(`Error while loading protein accession")`, err)
         }
       },
-
       ////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
       // Form fields
       ////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 
       populateExperimentMetadata: function (event) {
         this.doiIdentifiers = event.value.doiIdentifiers
-        this.keywords = event.value.keywords
         this.publicationIdentifiers = _.concat(event.value.primaryPublicationIdentifiers, event.value.secondaryPublicationIdentifiers)
         this.primaryPublicationIdentifiers = event.value.primaryPublicationIdentifiers.filter((primary) => {
           return this.publicationIdentifiers.some((publication) => {
@@ -1255,7 +1244,6 @@
       mergeValidationErrors: function () {
         this.validationErrors = _.merge({}, this.serverSideValidationErrors, this.clientSideValidationErrors)
       },
-
       ////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
       // Converting between view model and form model
       ////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
@@ -1271,7 +1259,6 @@
           this.shortDescription = this.item.shortDescription
           this.abstractText = this.item.abstractText
           this.methodText = this.item.methodText
-          this.keywords = this.item.keywords
           this.doiIdentifiers = this.item.doiIdentifiers
           // So that the multiselect can populate correctly, build the primary publication identifiers
           // indirectly by filtering a merged list of secondary and primary publication identifiers
@@ -1297,7 +1284,6 @@
           this.shortDescription = null
           this.abstractText = null
           this.methodText = null
-          this.keywords = []
           this.doiIdentifiers = []
           this.primaryPublicationIdentifiers = []
           this.secondaryPublicationIdentifiers = []
@@ -1379,7 +1365,6 @@
         ).filter(
           secondary => !primaryPublicationIdentifiers.some(primary => primary.identifier == secondary.identifier && primary.dbName == secondary.dbName)
         )
-
         const editedFields = {
           experimentUrn: this.experiment?.urn,
           licenseId: this.licenseId,
@@ -1387,7 +1372,6 @@
           shortDescription: this.shortDescription,
           abstractText: this.abstractText,
           methodText: this.methodText,
-          keywords: this.keywords,
           doiIdentifiers: this.doiIdentifiers.map((identifier) => _.pick(identifier, 'identifier')),
           primaryPublicationIdentifiers: primaryPublicationIdentifiers,
           secondaryPublicationIdentifiers: secondaryPublicationIdentifiers,
@@ -1402,7 +1386,6 @@
         }
         else {
           // empty item arrays so that deleted items aren't merged back into editedItem object
-          this.item.keywords = []
           this.item.doiIdentifiers = []
           this.item.primaryPublicationIdentifiers = []
           this.item.publicationIdentifiers = []

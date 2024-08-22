@@ -219,7 +219,7 @@ export default {
       for (const simpleVariant of simpleVariants) {
         const scores = simpleVariant.instances.map((instance) => instance.score).filter((s) => s != null)
         simpleVariant.numScores = scores.length
-        simpleVariant.meanScore = scores.length == 0 ? null : (scores.reduce((a, b) => a + b, 0) / scores.length)
+        simpleVariant.meanScore = scores.length == 0 ? null : (scores.reduce((a, b) => a ? a:null + b ? b:null, 0) / scores.length)
         simpleVariant.scoreStdev = stdev(scores)
 
         // Assume that aside from score, the details are identical for each instance.

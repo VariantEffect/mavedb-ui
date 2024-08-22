@@ -333,8 +333,9 @@ export default {
         }
 
         const displaySelectionTooltip = function() {
-          // Don't do anything if there is no selected variant.
-          if (!self.externalSelection) {
+          // Hide the tooltip if there is no selected variant or no selected bin.
+          if (!self.externalSelection || !self.selectedBin) {
+            hideSelectionTooltip()
             return
           }
 

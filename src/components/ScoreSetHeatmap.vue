@@ -1,6 +1,6 @@
 <template>
-  <div v-if="showHeatmap">
-    <div id="mave-heatmap-scroll-container" class="mave-simple-variants-heatmaps-container">
+  <div v-if="heatmapVisible">
+    <div id="mave-heatmap-scroll-container" class="heatmapContainer">
       <div id="mave-stacked-heatmap-container" class="mave-simple-variants-heatmap-container" ref="simpleVariantsStackedHeatmapContainer" />
       <div id="mave-variants-heatmap-container" class="mave-simple-variants-heatmap-container" ref="simpleVariantsHeatmapContainer" />
     </div>
@@ -647,16 +647,16 @@ export default {
 
 <style scoped>
 
-.mave-simple-variants-heatmaps-container {
+.heatmapContainer {
   position: relative;
   overflow-x: auto;
 }
 
-.mave-simple-variants-heatmaps-container:deep(.mave-heatmap-y-axis-tick-labels) {
+.heatmapContainer:deep(.mave-heatmap-y-axis-tick-labels) {
   font-size: 14px;
 }
 
-.mave-simple-variants-heatmaps-container:deep(.mave-heatmap-y-axis-tick-label-lg) {
+.heatmapContainer:deep(.mave-heatmap-y-axis-tick-label-lg) {
   font-size: 22px;
 }
 

@@ -70,10 +70,10 @@
           </span>
         </div>
         <div class="mave-score-set-histogram-pane">
-          <ScoreSetHistogram :scoreSet="item" :scores="scores" :externalSelection="variantToVisualize" />
+          <ScoreSetHistogram :scoreSet="item" :scores="scores" :externalSelection="variantToVisualize" ref="histogram"/>
         </div>
         <div v-if="showHeatmap" class="mave-score-set-heatmap-pane">
-          <ScoreSetHeatmap :scoreSet="item" :scores="scores" :externalSelection="variantToVisualize" @variant-selected="childComponentSelectedVariant"/>
+          <ScoreSetHeatmap :scoreSet="item" :scores="scores" :externalSelection="variantToVisualize" @variant-selected="childComponentSelectedVariant" @heatmap-visible="heatmapVisibilityUpdated" ref="heatmap"/>
         </div>
       </div>
       <div class="mave-1000px-col">
@@ -112,7 +112,7 @@
             <EntityLink entityType="scoreSet" :urn="urn" />
           </template>
         </div>
-        <div>Download files <Button class="p-button-outlined p-button-sm" @click="downloadFile('scores')">Scores</Button>&nbsp;
+        <div>Download files and/or charts <Button class="p-button-outlined p-button-sm" @click="downloadFile('scores')">Scores</Button>&nbsp;
           <template v-if="countColumns.length != 0">
             <Button class="p-button-outlined p-button-sm" @click="downloadFile('counts')">Counts</Button>&nbsp;
           </template>
@@ -120,6 +120,10 @@
             <Button class="p-button-outlined p-button-sm" @click="downloadMetadata">Metadata</Button>&nbsp;
           </template>
           <Button class="p-button-outlined p-button-sm" @click="downloadMappedVariants()">Mapped Variants</Button>&nbsp;
+          <Button class="p-button-outlined p-button-sm" @click="downloadHistogram()">Histogram</Button>&nbsp;
+          <template v-if="heatmapExists">
+            <Button class="p-button-outlined p-button-sm" @click="downloadHeatmap()">Heatmap</Button>&nbsp;
+          </template>
         </div>
         <div v-if="requestFromGalaxy == '1'"><br>Send files to <a :href="`${this.galaxyUrl}`">Galaxy</a> <Button class="p-button-outlined p-button-sm" @click="sendToGalaxy('scores')">Scores</Button>&nbsp;
           <template v-if="countColumns.length != 0">
@@ -364,6 +368,7 @@ import useFormatters from '@/composition/formatters'
 import useItem from '@/composition/item'
 import useRemoteData from '@/composition/remote-data'
 import config from '@/config'
+import {saveChartAsFile} from '@/lib/chart-export'
 import { parseScoresOrCounts } from '@/lib/scores'
 import { variantNotNullOrNA } from '@/lib/mave-hgvs';
 import { mapState } from 'vuex'
@@ -430,6 +435,7 @@ export default {
     countsTable: [],
     readMore: true,
     showHeatmap: true,
+    heatmapExists: false,
     selectedVariant: null
   }),
   watch: {
@@ -505,8 +511,8 @@ export default {
           .urn}&outputType=${params
           .outputType}&URL=${encodeURIComponent(params.URL)}`;
           window.location.href = submitGalaxyUrl;
-          localStorage.removeItem('galaxyUrl'); 
-          localStorage.removeItem('toolId'); 
+          localStorage.removeItem('galaxyUrl');
+          localStorage.removeItem('toolId');
           localStorage.removeItem('requestFromGalaxy');
         }
       } catch (error) {
@@ -658,6 +664,18 @@ export default {
       anchor.download = this.item.urn + '_metadata.txt';
       anchor.click();
     },
+    downloadHistogram: function() {
+      const svgContainer = this.$refs.histogram.$refs.histogramContainer
+      if (svgContainer) {
+        saveChartAsFile(svgContainer, `${this.itemId}-scores-histogram`, 'mave-histogram-container')
+      }
+    },
+    downloadHeatmap: function() {
+      const svgContainer = this.$refs.heatmap.$el.firstElementChild
+      if (svgContainer) {
+        saveChartAsFile(svgContainer, `${this.itemId}-scores-heatmap`)
+      }
+    },
     loadTableScores: async function() {
       if (this.item) {
         const response = await axios.get(`${config.apiBaseUrl}/score-sets/${this.item.urn}/scores`)
@@ -716,6 +734,9 @@ export default {
       }
 
       this.selectedVariant = this.scores.find((v) => v.accession == variant.accession)
+    },
+    heatmapVisibilityUpdated: function(visible) {
+      this.heatmapExists = visible
     },
     convertToThreeDecimal: function(value) {
       let numStr = String(value)

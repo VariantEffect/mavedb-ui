@@ -509,6 +509,7 @@
                           :id="$scopedId('input-targetSequenceTaxonomy')"
                           :suggestions="taxonomySuggestionsList"
                           field="organismName"
+                          forceSelection
                           :multiple="false"
                           :options="taxonomies"
                           @complete="searchTaxonomies"

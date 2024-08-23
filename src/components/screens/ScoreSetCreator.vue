@@ -1044,7 +1044,6 @@ export default {
 
   computed: {
     contributorSuggestions: function() {
-        console.log(this.contributorLookupResult)
         return this.suggestionsForAutocomplete(this.contributorLookupResult ? [this.contributorLookupResult] : [])
       },
     maxWizardStepValidated: function() {
@@ -1204,6 +1203,20 @@ export default {
         }
       }
     },
+    experiment: {
+      handler: async function(newValue, oldValue) {
+        if (!_.isEqual(newValue, oldValue) && this.contributors.length == 0) {
+          this.contributors = newValue.contributors || []
+        }
+      }
+    },
+    supersededScoreSet: {
+      handler: async function(newValue, oldValue) {
+        if (!_.isEqual(newValue, oldValue) && this.contributors.length == 0) {
+          this.contributors = newValue.contributors || []
+        }
+      }
+    }
   },
 
   methods: {
@@ -1234,7 +1247,6 @@ export default {
     },
 
     clearContributorSearch: function() {
-      console.log('clear')
       // This could change with a new PrimeVue version.
       const input = this.$refs.contributorsInput
       input.$refs.focusInput.value = ''

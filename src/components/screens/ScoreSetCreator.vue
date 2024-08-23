@@ -77,8 +77,14 @@
                     </div>
                     <div v-else style="position: relative;">
                       <span class="p-float-label">
-                        <Dropdown v-model="experiment" :id="$scopedId('input-experiment')" :options="editableExperiments"
-                          optionLabel="title" v-on:change="populateExperimentMetadata" style="width: 50%"/>
+                        <Dropdown
+                          v-model="experiment"
+                          :id="$scopedId('input-experiment')"
+                          :options="editableExperiments"
+                          optionLabel="title"
+                          style="width: 50%"
+                          @change="populateExperimentMetadata"
+                        />
                         <label :for="$scopedId('input-experiment')">Experiment</label>
                       </span>
                       <span v-if="validationErrors.experiment" class="mave-field-error">{{ validationErrors.experiment }}</span>
@@ -97,9 +103,16 @@
                     </div>
                     <div v-if="itemStatus == 'NotLoaded'" class="field">
                       <span class="p-float-label">
-                        <AutoComplete ref="supersededScoreSetInput" v-model="supersededScoreSet"
-                          :id="$scopedId('input-supersededScoreSet')" field="title" :forceSelection="true"
-                          :suggestions="supersededScoreSetSuggestionsList" @complete="searchSupersededScoreSets">
+                        <AutoComplete
+                          ref="supersededScoreSetInput"
+                          v-model="supersededScoreSet"
+                          :id="$scopedId('input-supersededScoreSet')"
+                          field="title"
+                          :forceSelection="true"
+                          :suggestions="supersededScoreSetSuggestionsList"
+                          @change="populateSupersededScoreSetMetadata"
+                          @complete="searchSupersededScoreSets"
+                        >
                           <template #item="slotProps">
                             {{ slotProps.item.urn }}: {{ slotProps.item.title }}
                           </template>
@@ -1203,20 +1216,6 @@ export default {
           this.assemblySuggestions = await this.fetchTargetAccessionsByAssembly(this.assemblyDropdownValue)
         }
       }
-    },
-    experiment: {
-      handler: async function(newValue, oldValue) {
-        if (!_.isEqual(newValue, oldValue) && this.contributors.length == 0) {
-          this.contributors = newValue.contributors || []
-        }
-      }
-    },
-    supersededScoreSet: {
-      handler: async function(newValue, oldValue) {
-        if (!_.isEqual(newValue, oldValue) && this.contributors.length == 0) {
-          this.contributors = newValue.contributors || []
-        }
-      }
     }
   },
 
@@ -1466,6 +1465,7 @@ export default {
 
     populateExperimentMetadata: function (event) {
       this.abstractText = event.value.abstractText
+      this.contributors = event.value.contributors || []
       this.doiIdentifiers = event.value.doiIdentifiers
       this.publicationIdentifiers = _.concat(event.value.primaryPublicationIdentifiers, event.value.secondaryPublicationIdentifiers)
       this.primaryPublicationIdentifiers = event.value.primaryPublicationIdentifiers.filter((primary) => {
@@ -1474,7 +1474,9 @@ export default {
         })
       })
     },
-
+    populateSupersededScoreSetMetadata: function(event) {
+      this.contributors = event.value.contributors || []
+    },
     acceptNewDoiIdentifier: function(event) {
       // Remove new string item from the model and add new structured item in its place if it validates and is not a duplicate.
       const idx = this.doiIdentifiers.findIndex((item) => typeof item === 'string' || item instanceof String)

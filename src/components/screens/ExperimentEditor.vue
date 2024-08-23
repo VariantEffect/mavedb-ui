@@ -334,6 +334,7 @@ import useItem from '@/composition/item'
 import useItems from '@/composition/items'
 import config from '@/config'
 import {normalizeDoi, normalizePubmedId, normalizeRawRead, validateDoi, validatePubmedId, validateRawRead} from '@/lib/identifiers'
+import {ORCID_ID_REGEX} from '@/lib/orcid'
 import useFormatters from '@/composition/formatters'
 
 const KEYWORDS = [
@@ -509,7 +510,6 @@ export default {
 
   computed: {
     contributorSuggestions: function() {
-      console.log(this.contributorLookupResult)
       return this.suggestionsForAutocomplete(this.contributorLookupResult ? [this.contributorLookupResult] : [])
     },
     publicationIdentifierSuggestionsList: function() {
@@ -599,8 +599,7 @@ export default {
 
     lookupContributor: function(event) {
       const searchText = (event.query || '').trim()
-      console.log(searchText)
-      if (searchText.length > 0) {
+      if (searchText.length > 0 && ORCID_ID_REGEX.test(searchText)) {
         this.setContributorLookupId(searchText)
         this.setContributorLookupEnabled(true)
       } else {

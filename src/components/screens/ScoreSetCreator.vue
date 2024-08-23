@@ -834,6 +834,7 @@ import useItem from '@/composition/item'
 import useItems from '@/composition/items'
 import config from '@/config'
 import {normalizeDoi, normalizeIdentifier, normalizePubmedId, validateDoi, validateIdentifier, validatePubmedId} from '@/lib/identifiers'
+import {ORCID_ID_REGEX} from '@/lib/orcid'
 import useFormatters from '@/composition/formatters'
 
 const externalGeneDatabases = ['UniProt', 'Ensembl', 'RefSeq']
@@ -1254,7 +1255,7 @@ export default {
 
     lookupContributor: function(event) {
       const searchText = (event.query || '').trim()
-      if (searchText.length > 0) {
+      if (searchText.length > 0 && ORCID_ID_REGEX.test(searchText)) {
         this.setContributorLookupId(searchText)
         this.setContributorLookupEnabled(true)
       } else {

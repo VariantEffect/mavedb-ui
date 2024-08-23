@@ -134,17 +134,15 @@
                 </div>
                 <div class="field">
                   <span class="p-float-label">
-                    <AutoComplete
-                        ref="contributorsInput"
-                        v-model="contributors"
-                        :id="$scopedId('input-contributors')"
-                        :multiple="true"
-                        placeholder="Type an ORCID ID"
-                        :suggestions="contributorSuggestions"
-                        @complete="lookupContributor"
-                        @item-select="acceptNewContributor"
-                        @keyup.escape="clearContributorSearch"
-                        option-label="orcidId"
+                    <Chips
+                      ref="contributorsInput"
+                      v-model="contributors"
+                      :id="$scopedId('input-contributors')"
+                      :addOnBlur="true"
+                      :allowDuplicate="false"
+                      placeholder="Type or paste ORCID IDs here."
+                      @add="newContributorsAdded"
+                      @keyup.escape="clearContributorSearch"
                     >
                       <template #chip="slotProps">
                         <div>
@@ -152,13 +150,7 @@
                           <div v-else>{{ slotProps.value.orcidId }}</div>
                         </div>
                       </template>
-                      <template #item="slotProps">
-                        <div>
-                            <div>Name: {{ slotProps.item.givenName }} {{ slotProps.item.familyName }}</div>
-                            <div>ORCID ID: {{ slotProps.item.orcidId }}</div>
-                        </div>
-                      </template>
-                    </AutoComplete>
+                    </Chips>
                     <label :for="$scopedId('input-contributors')">Contributors</label>
                   </span>
                   <span v-if="validationErrors.contributors" class="mave-field-error">{{validationErrors.contributors}}</span>
@@ -695,19 +687,6 @@
       const geneNames = useItems({ itemTypeName: 'gene-names' })
       const assemblies = useItems({ itemTypeName: 'assemblies' })
       const targetGeneSuggestions = useItems({ itemTypeName: 'target-gene-search' })
-
-      const {
-        resource: contributorLookupResult,
-        setEnabled: setContributorLookupEnabled,
-        setResourceId: setContributorLookupId
-      } = useRestResource({
-        enabled: false,
-        resourceType: {
-          collectionName: 'orcid/users',
-          idProperty: 'orcidId'
-        }
-      })
-
       const expandedTargetGeneRows = ref([])
 
       return {
@@ -735,11 +714,7 @@
         setTaxonomySearch: (text) => taxonomySuggestions.setRequestBody({text}),
         assemblies: assemblies.items,
         geneNames: geneNames.items,
-        expandedTargetGeneRows,
-
-        contributorLookupResult,
-        setContributorLookupEnabled,
-        setContributorLookupId
+        expandedTargetGeneRows
       }
     },
 
@@ -809,10 +784,6 @@
     }),
 
     computed: {
-      contributorSuggestions: function() {
-        console.log(this.contributorLookupResult)
-        return this.suggestionsForAutocomplete(this.contributorLookupResult ? [this.contributorLookupResult] : [])
-      },
       targetGeneIdentifierSuggestionsList: function () {
         return _.fromPairs(
           externalGeneDatabases.map((dbName) => {
@@ -960,41 +931,64 @@
       // Contributors
       //////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 
-      acceptNewContributor: function() {
-        // Assume the newest value is the right-most one. That seems to always be true in this version of PrimeVue, but it
-        // might change in the future.
-        const newIdx = this.contributors.length - 1
-
-        const newIdentifier = this.contributors[newIdx].orcidId
-
-        if (!newIdentifier) {
-          // Remove the new value if it contains no ORCID ID, which may happen if the user clicks an option before the
-          // ORCID ID has been looked up.
-          this.contributors.splice(newIdx, 1)
-        } else if (this.contributors.findIndex((c) => c.orcidId == newIdentifier) < newIdx) {
-          // Remove new value if it is a duplicate.
-          this.contributors.splice(newIdx, 1)
-          let description = `${this.contributors[newIdx].firstName} ${this.contributors[newIdx].lastName}`
-          if (description.length == 1) {
-            description = this.contributors[newIdx].orcidId
-          }
-          this.$toast.add({severity:'warning', summary: `The ORCID user "${description}" is already associated with this experiment`, life: 3000})
-        }
-      },
-
       clearContributorSearch: function() {
         // This could change with a new PrimeVue version.
         const input = this.$refs.contributorsInput
-        input.$refs.focusInput.value = ''
+        input.$refs.input.value = ''
       },
 
-      lookupContributor: function(event) {
-        const searchText = (event.query || '').trim()
-        if (searchText.length > 0 && ORCID_ID_REGEX.test(searchText)) {
-          this.setContributorLookupId(searchText)
-          this.setContributorLookupEnabled(true)
-        } else {
-          this.setContributorLookupEnabled(false)
+      lookupOrcidUser: async function(orcidId) {
+        let orcidUser = null
+        try {
+          orcidUser = (await axios.get(`${config.apiBaseUrl}/orcid/users/${orcidId}`)).data
+        } catch (err) {
+          // Assume that the error was 404 Not Found.
+        }
+        return orcidUser
+      },
+
+      newContributorsAdded: async function(event) {
+        const newContributors = event.value
+
+        // Convert any strings to ORCID users without names.
+        this.contributors = this.contributors.map((c) => _.isString(c) ? {orcidId: c} : c)
+
+        // Validate and look up each new contributor.
+        for (const newContributor of newContributors) {
+          if (_.isString(newContributor)) {
+            const orcidId = newContributor.trim()
+            if (orcidId && this.contributors.filter((c) => c.orcidId == orcidId).length > 1) {
+              const firstIndex = _.findIndex(this.contributors, (c) => c.orcidId == orcidId)
+              _.remove(this.contributors, (c, i) => i > firstIndex && c.orcidId == orcidId)
+            } else if (orcidId && ORCID_ID_REGEX.test(orcidId)) {
+              // Look up the ORCID ID.
+              const orcidUser = await this.lookupOrcidUser(orcidId)
+
+              if (orcidUser) {
+                // If found, update matching contributors. (There should only be one.)
+                for (const contributor of this.contributors) {
+                  if (contributor.orcidId == orcidUser.orcidId) {
+                    _.merge(contributor, orcidUser)
+                  }
+                }
+              } else {
+                // Otherwise remove the contributor.
+                _.remove(this.contributors, (c) => c.orcidId == orcidId)
+                this.$toast.add({
+                  life: 3000,
+                  severity: 'warning',
+                  summary: `No ORCID user was found with ORCID ID ${orcidId}.`
+                })
+              }
+            } else {
+              _.remove(this.contributors, (c) => c.orcidId == orcidId)
+              this.$toast.add({
+                life: 3000,
+                severity: 'warning',
+                summary: `${orcidId} is not a valid ORCID ID`
+              })
+            }
+          }
         }
       },
 

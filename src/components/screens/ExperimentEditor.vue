@@ -322,6 +322,7 @@ import {useRestResource} from 'rest-client-vue'
 
 import DefaultLayout from '@/components/layout/DefaultLayout'
 import EmailPrompt from '@/components/common/EmailPrompt'
+import useAuth from '@/composition/auth'
 import useItem from '@/composition/item'
 import useItems from '@/composition/items'
 import config from '@/config'
@@ -407,6 +408,8 @@ export default {
   components: { AutoComplete, Button, Card, Chips, Dialog, Dropdown, Multiselect, DefaultLayout, EmailPrompt, FileUpload, InputText, ProgressSpinner, TabPanel, TabView, Textarea },
 
   setup: () => {
+    const {userProfile} = useAuth()
+
     const variantLibraryKeywordOptions = useItems({itemTypeName: `controlled-keywords-variant-search`})
     const endogenousSystemKeywordOptions = useItems({itemTypeName: `controlled-keywords-endo-system-search`})
     const endogenousMechanismKeywordOptions = useItems({itemTypeName: `controlled-keywords-endo-mechanism-search`})
@@ -422,6 +425,7 @@ export default {
     const publicationIdentifierSuggestions = useItems({itemTypeName: 'publication-identifier-search'})
     const externalPublicationIdentifierSuggestions = useItems({itemTypeName: 'external-publication-identifier-search'})
     return {
+      userProfile,
       ...useFormatters(),
       ...useItem({itemTypeName: 'experiment'}),
       variantLibraryKeywordOptions: variantLibraryKeywordOptions.items,
@@ -536,6 +540,10 @@ export default {
         this.keywordKeys['In Vitro Construct Library Method Mechanism'] = null
       }
     }
+  },
+
+  mounted: function() {
+    this.resetForm()
   },
 
   methods: {
@@ -787,7 +795,7 @@ export default {
         this.shortDescription = null
         this.abstractText = null
         this.methodText = null
-        this.contributors = []
+        this.contributors = [{orcidId: this.userProfile?.sub, givenName: this.userProfile?.given_name, familyName: this.userProfile?.family_name}]
         this.doiIdentifiers = []
         this.primaryPublicationIdentifiers = []
         this.secondaryPublicationIdentifiers = []

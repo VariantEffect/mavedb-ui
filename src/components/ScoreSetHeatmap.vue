@@ -1,6 +1,6 @@
 <template>
-  <div v-if="showHeatmap">
-    <div id="mave-heatmap-scroll-container" class="mave-simple-variants-heatmaps-container">
+  <div v-if="heatmapVisible">
+    <div id="mave-heatmap-scroll-container" class="heatmapContainer" ref="heatmapContainer">
       <div id="mave-stacked-heatmap-container" class="mave-simple-variants-heatmap-container" ref="simpleVariantsStackedHeatmapContainer" />
       <div id="mave-variants-heatmap-container" class="mave-simple-variants-heatmap-container" ref="simpleVariantsHeatmapContainer" />
     </div>
@@ -16,6 +16,7 @@ import * as d3 from 'd3'
 import geneticCodes from '@/lib/genetic-codes'
 import {heatmapRowForVariant, HEATMAP_ROWS} from '@/lib/heatmap'
 import {parseSimpleProVariant, variantNotNullOrNA} from '@/lib/mave-hgvs'
+import { saveChartAsFile } from '@/lib/chart-export'
 
 function stdev(array) {
   if (!array || array.length === 0) {
@@ -29,7 +30,7 @@ function stdev(array) {
 export default {
   name: 'ScoreSetHeatmap',
 
-  emits: ['variantSelected'],
+  emits: ['variantSelected', 'heatmapVisible', 'exportChart'],
 
   props: {
     margins: { // Margins must accommodate the axis labels
@@ -61,6 +62,7 @@ export default {
     this.isMounted = true
     this.renderOrRefreshHeatmap()
     this.renderOrRefreshStackedHeatmap()
+    this.$emit('exportChart', this.exportChart)
   },
 
   beforeUnmount: function() {
@@ -100,7 +102,7 @@ export default {
     wtVariants: function() {
       return this.wtAminoAcids ? this.prepareWtVariants(this.wtAminoAcids) : []
     },
-    showHeatmap: function() {
+    heatmapVisible: function() {
       return this.simpleVariants && this.simpleVariants.length
     },
     selectedVariant: function() {
@@ -133,6 +135,15 @@ export default {
         this.refreshSelectionTooltipIfRendered()
       },
       immediate: true
+    },
+    heatmapVisible: {
+      handler: function(newValue, oldValue) {
+        if (newValue === oldValue) {
+          return
+        }
+        this.$emit('heatmapVisible', newValue)
+      },
+      immediate: true
     }
     /*
     variantsByPositionSorted: {
@@ -144,6 +155,10 @@ export default {
   },
 
   methods: {
+    exportChart() {
+      saveChartAsFile(this.$refs.heatmapContainer, `${this.scoreSet.urn}-scores-heatmap`, 'mave-heatmap-scroll-container')
+    },
+
     // We assume that there will only be one substitution variant for each target AA at a given position.
     prepareSimpleVariantScoreRanks(simpleVariants) {
       _.mapValues(_.groupBy(simpleVariants, 'x'), (variantsAtOnePosition) => {
@@ -171,7 +186,7 @@ export default {
 
       const distinctAccessions = new Set()
 
-      const simpleVariantInstances = _.filter(
+      let simpleVariantInstances = _.filter(
         scores.map((score) => {
           const variant = parseSimpleProVariant(score.hgvs_pro)
           if (!variant) {
@@ -197,6 +212,7 @@ export default {
         numComplexVariantInstances += simpleVariantInstances.length
         simpleVariantInstances = []
       }
+
       return {simpleVariantInstances, numComplexVariantInstances, numIgnoredVariantInstances}
     },
 
@@ -218,7 +234,7 @@ export default {
       for (const simpleVariant of simpleVariants) {
         const scores = simpleVariant.instances.map((instance) => instance.score).filter((s) => s != null)
         simpleVariant.numScores = scores.length
-        simpleVariant.meanScore = scores.length == 0 ? null : (scores.reduce((a, b) => a + b, 0) / scores.length)
+        simpleVariant.meanScore = scores.length == 0 ? null : (scores.reduce((a, b) => a ? a:null + b ? b:null, 0) / scores.length)
         simpleVariant.scoreStdev = stdev(scores)
 
         // Assume that aside from score, the details are identical for each instance.
@@ -644,16 +660,16 @@ export default {
 
 <style scoped>
 
-.mave-simple-variants-heatmaps-container {
+.heatmapContainer {
   position: relative;
   overflow-x: auto;
 }
 
-.mave-simple-variants-heatmaps-container:deep(.mave-heatmap-y-axis-tick-labels) {
+.heatmapContainer:deep(.mave-heatmap-y-axis-tick-labels) {
   font-size: 14px;
 }
 
-.mave-simple-variants-heatmaps-container:deep(.mave-heatmap-y-axis-tick-label-lg) {
+.heatmapContainer:deep(.mave-heatmap-y-axis-tick-label-lg) {
   font-size: 22px;
 }
 

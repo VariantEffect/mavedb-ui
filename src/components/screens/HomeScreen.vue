@@ -38,7 +38,6 @@
                 <tr>
                   <th>Organisms</th>
                   <th>Target genes</th>
-                  <th>Keywords</th>
                 </tr>
               </thead>
               <tbody>
@@ -55,13 +54,6 @@
                       <li><router-link :to="{name: 'search', query: {search: 'HSP90'}}">HSP90</router-link></li>
                       <li><router-link :to="{name: 'search', query: {search: 'KCNQ4'}}">KCNQ4</router-link></li>
                       <li><router-link :to="{name: 'search', query: {search: 'TEM-1 β-lactamase'}}">TEM-1 β-lactamase</router-link></li>
-                    </ul>
-                  </td>
-                  <td>
-                    <ul>
-                      <li><router-link :to="{name: 'search', query: {search: 'MPRA'}}">MPRA</router-link></li>
-                      <li><router-link :to="{name: 'search', query: {search: 'SGE'}}">SGE</router-link></li>
-                      <li><router-link :to="{name: 'search', query: {search: 'barcode sequencing'}}">barcode sequencing</router-link></li>
                     </ul>
                   </td>
                 </tr>

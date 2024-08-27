@@ -104,6 +104,19 @@
             <a :href="`https://orcid.org/${item.modifiedBy.orcidId}`" target="blank"><img src="@/assets/ORCIDiD_icon.png"
                 alt="ORCIDiD">{{ item.modifiedBy.firstName }} {{ item.modifiedBy.lastName }}</a></span>
         </div>
+        <div v-if="contributors.length > 0">
+          Contributors
+          <a
+            v-for="contributor in contributors"
+            class="mave-contributor"
+            :href="`https://orcid.org/${contributor.orcidId}`"
+            :key="contributor.orcidId"
+            target="blank"
+          >
+            <img src="@/assets/ORCIDiD_icon.png" alt="ORCIDiD">
+            {{ contributor.givenName }} {{ contributor.familyName }}
+          </a>
+        </div>
         <div v-if="item.publishedDate">Published {{ formatDate(item.publishedDate) }}</div>
         <div v-if="item.license">
           License:
@@ -191,16 +204,6 @@
           <div v-html="markdownToHtml(item.dataUsagePolicy)" class="mave-score-set-abstract"></div>
         </div>
         <div v-else>Not specified</div>
-
-        <div v-if="item.keywords && item.keywords.length > 0">
-          <div class="mave-score-set-section-title">Keywords</div>
-          <div class="mave-score-set-keywords">
-            <a v-for="(keyword, i) in item.keywords" :key="i"
-              :href="`${config.appBaseUrl}/#/search?search=${keyword}`">
-              <Chip :label="keyword" />
-            </a>
-          </div>
-        </div>
         <div v-if="item.targetGenes">
           <div class="mave-score-set-section-title">Targets</div>
           <div v-for="targetGene of item.targetGenes" :key="targetGene">
@@ -392,6 +395,12 @@ export default {
   name: 'ScoreSetView',
   components: { Accordion, AccordionTab, AutoComplete, Button, Chip, DefaultLayout, EntityLink, ScoreSetHeatmap, ScoreSetHistogram, TabView, TabPanel, Message, DataTable, Column, ProgressSpinner, ScrollPanel, PageLoading, ItemNotFound },
   computed: {
+    contributors: function() {
+      return _.sortBy(
+        (this.item?.contributors || []).filter((c) => c.orcidId != this.item?.createdBy?.orcidId),
+        ['familyName', 'givenName', 'orcidId']
+      )
+    },
     isMetaDataEmpty: function() {
       //If extraMetadata is empty, return value will be true.
       return Object.keys(this.item.extraMetadata).length === 0
@@ -844,9 +853,8 @@ export default {
   /*font-family: Helvetica, Verdana, Arial, sans-serif;*/
 }
 
-.mave-score-set-keywords .p-chip {
-  /*font-family: Helvetica, Verdana, Arial, sans-serif;*/
-  margin: 0 5px;
+.mave-contributor {
+  margin: 0 0.5em;
 }
 
 /* Formatting in Markdown blocks */

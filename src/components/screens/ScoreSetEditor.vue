@@ -132,6 +132,29 @@
                   </TabView>
                   <span v-if="validationErrors.methodText" class="mave-field-error">{{ validationErrors.methodText }}</span>
                 </div>
+                <div class="field">
+                  <span class="p-float-label">
+                    <Chips
+                      ref="contributorsInput"
+                      v-model="contributors"
+                      :id="$scopedId('input-contributors')"
+                      :addOnBlur="true"
+                      :allowDuplicate="false"
+                      placeholder="Type or paste ORCID IDs here."
+                      @add="newContributorsAdded"
+                      @keyup.escape="clearContributorSearch"
+                    >
+                      <template #chip="slotProps">
+                        <div>
+                          <div v-if="slotProps.value.givenName || slotProps.value.familyName">{{ slotProps.value.givenName }} {{ slotProps.value.familyName }} ({{ slotProps.value.orcidId }})</div>
+                          <div v-else>{{ slotProps.value.orcidId }}</div>
+                        </div>
+                      </template>
+                    </Chips>
+                    <label :for="$scopedId('input-contributors')">Contributors</label>
+                  </span>
+                  <span v-if="validationErrors.contributors" class="mave-field-error">{{validationErrors.contributors}}</span>
+                </div>
                 <div v-if="itemStatus == 'NotLoaded' || this.item.private == true">
                   <div class="field">
                     <span class="p-float-label">
@@ -146,14 +169,6 @@
                     Choosing a license with these restrictions may cause your dataset to be excluded from data federation
                     and aggregation by MaveDB collaborators.
                   </Message>
-                  <div class="field">
-                    <span class="p-float-label">
-                      <Chips v-model="keywords" :id="$scopedId('input-keywords')" :addOnBlur="true"
-                        :allowDuplicate="false" />
-                      <label :for="$scopedId('input-keywords')">Keywords</label>
-                    </span>
-                    <span v-if="validationErrors.keywords" class="mave-field-error">{{ validationErrors.keywords }}</span>
-                  </div>
                   <div class="field">
                     <span class="p-float-label">
                       <Chips
@@ -597,6 +612,7 @@
   import Card from 'primevue/card'
   import Chips from 'primevue/chips'
   import Column from 'primevue/column'
+  import DataTable from 'primevue/datatable'
   import Dropdown from 'primevue/dropdown'
   import FileUpload from 'primevue/fileupload'
   import InputNumber from 'primevue/inputnumber'
@@ -608,8 +624,8 @@
   import TabPanel from 'primevue/tabpanel'
   import TabView from 'primevue/tabview'
   import Textarea from 'primevue/textarea'
-  import DataTable from 'primevue/datatable';
-  import { ref } from 'vue'
+  import {useRestResource} from 'rest-client-vue'
+  import {ref} from 'vue'
 
   import EntityLink from '@/components/common/EntityLink'
   import DefaultLayout from '@/components/layout/DefaultLayout'
@@ -617,7 +633,8 @@
   import useItem from '@/composition/item'
   import useItems from '@/composition/items'
   import config from '@/config'
-  import { normalizeDoi, normalizeIdentifier, normalizePubmedId, validateDoi, validateIdentifier, validatePubmedId} from '@/lib/identifiers'
+  import {normalizeDoi, normalizeIdentifier, normalizePubmedId, validateDoi, validateIdentifier, validatePubmedId} from '@/lib/identifiers'
+  import {ORCID_ID_REGEX} from '@/lib/orcid'
   import useFormatters from '@/composition/formatters'
 
   const externalGeneDatabases = ['UniProt', 'Ensembl', 'RefSeq']
@@ -670,7 +687,6 @@
       const geneNames = useItems({ itemTypeName: 'gene-names' })
       const assemblies = useItems({ itemTypeName: 'assemblies' })
       const targetGeneSuggestions = useItems({ itemTypeName: 'target-gene-search' })
-
       const expandedTargetGeneRows = ref([])
 
       return {
@@ -719,11 +735,11 @@
       shortDescription: null,
       abstractText: null,
       methodText: null,
-      keywords: [],
       doiIdentifiers: [],
       primaryPublicationIdentifiers: [],
       secondaryPublicationIdentifiers: [],
       publicationIdentifiers: [],
+      contributors: [],
       dataUsagePolicy: null,
       taxonomy: null,
       lastTaxonomySearch: null,
@@ -764,7 +780,7 @@
       metaAnalyzesScoreSetSuggestions: [],
       supersededScoreSetSuggestions: [],
       targetGeneAccessionSuggestions: [],
-      validationErrors: {},
+      validationErrors: {}
     }),
 
     computed: {
@@ -911,6 +927,70 @@
     },
 
     methods: {
+      //////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+      // Contributors
+      //////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+
+      clearContributorSearch: function() {
+        // This could change with a new PrimeVue version.
+        const input = this.$refs.contributorsInput
+        input.$refs.input.value = ''
+      },
+
+      lookupOrcidUser: async function(orcidId) {
+        let orcidUser = null
+        try {
+          orcidUser = (await axios.get(`${config.apiBaseUrl}/orcid/users/${orcidId}`)).data
+        } catch (err) {
+          // Assume that the error was 404 Not Found.
+        }
+        return orcidUser
+      },
+
+      newContributorsAdded: async function(event) {
+        const newContributors = event.value
+
+        // Convert any strings to ORCID users without names.
+        this.contributors = this.contributors.map((c) => _.isString(c) ? {orcidId: c} : c)
+
+        // Validate and look up each new contributor.
+        for (const newContributor of newContributors) {
+          if (_.isString(newContributor)) {
+            const orcidId = newContributor.trim()
+            if (orcidId && this.contributors.filter((c) => c.orcidId == orcidId).length > 1) {
+              const firstIndex = _.findIndex(this.contributors, (c) => c.orcidId == orcidId)
+              _.remove(this.contributors, (c, i) => i > firstIndex && c.orcidId == orcidId)
+            } else if (orcidId && ORCID_ID_REGEX.test(orcidId)) {
+              // Look up the ORCID ID.
+              const orcidUser = await this.lookupOrcidUser(orcidId)
+
+              if (orcidUser) {
+                // If found, update matching contributors. (There should only be one.)
+                for (const contributor of this.contributors) {
+                  if (contributor.orcidId == orcidUser.orcidId) {
+                    _.merge(contributor, orcidUser)
+                  }
+                }
+              } else {
+                // Otherwise remove the contributor.
+                _.remove(this.contributors, (c) => c.orcidId == orcidId)
+                this.$toast.add({
+                  life: 3000,
+                  severity: 'warning',
+                  summary: `No ORCID user was found with ORCID ID ${orcidId}.`
+                })
+              }
+            } else {
+              _.remove(this.contributors, (c) => c.orcidId == orcidId)
+              this.$toast.add({
+                life: 3000,
+                severity: 'warning',
+                summary: `${orcidId} is not a valid ORCID ID`
+              })
+            }
+          }
+        }
+      },
 
       suggestionsForAutocomplete: function (suggestions) {
         // The PrimeVue AutoComplete doesn't seem to like it if we set the suggestion list to [].
@@ -1044,14 +1124,12 @@
           console.log(`Error while loading protein accession")`, err)
         }
       },
-
       ////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
       // Form fields
       ////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 
       populateExperimentMetadata: function (event) {
         this.doiIdentifiers = event.value.doiIdentifiers
-        this.keywords = event.value.keywords
         this.publicationIdentifiers = _.concat(event.value.primaryPublicationIdentifiers, event.value.secondaryPublicationIdentifiers)
         this.primaryPublicationIdentifiers = event.value.primaryPublicationIdentifiers.filter((primary) => {
           return this.publicationIdentifiers.some((publication) => {
@@ -1087,8 +1165,8 @@
       },
 
       acceptNewPublicationIdentifier: function() {
-        // We assume the newest value is the right-most one here. That seems to always be true in this version of Primevue,
-        // but that may change in the future.
+        // Assume the newest value is the right-most one. That seems to always be true in this version of PrimeVue, but it
+        // might change in the future.
         const newIdx = this.publicationIdentifiers.length - 1
 
         // Remove new value if it is a duplicate.
@@ -1255,7 +1333,6 @@
       mergeValidationErrors: function () {
         this.validationErrors = _.merge({}, this.serverSideValidationErrors, this.clientSideValidationErrors)
       },
-
       ////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
       // Converting between view model and form model
       ////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
@@ -1271,7 +1348,7 @@
           this.shortDescription = this.item.shortDescription
           this.abstractText = this.item.abstractText
           this.methodText = this.item.methodText
-          this.keywords = this.item.keywords
+          this.contributors = _.sortBy(this.item.contributors, ['familyName', 'givenName', 'orcidId'])
           this.doiIdentifiers = this.item.doiIdentifiers
           // So that the multiselect can populate correctly, build the primary publication identifiers
           // indirectly by filtering a merged list of secondary and primary publication identifiers
@@ -1297,7 +1374,7 @@
           this.shortDescription = null
           this.abstractText = null
           this.methodText = null
-          this.keywords = []
+          this.contributors = []
           this.doiIdentifiers = []
           this.primaryPublicationIdentifiers = []
           this.secondaryPublicationIdentifiers = []
@@ -1379,7 +1456,6 @@
         ).filter(
           secondary => !primaryPublicationIdentifiers.some(primary => primary.identifier == secondary.identifier && primary.dbName == secondary.dbName)
         )
-
         const editedFields = {
           experimentUrn: this.experiment?.urn,
           licenseId: this.licenseId,
@@ -1387,7 +1463,7 @@
           shortDescription: this.shortDescription,
           abstractText: this.abstractText,
           methodText: this.methodText,
-          keywords: this.keywords,
+          contributors: this.contributors,
           doiIdentifiers: this.doiIdentifiers.map((identifier) => _.pick(identifier, 'identifier')),
           primaryPublicationIdentifiers: primaryPublicationIdentifiers,
           secondaryPublicationIdentifiers: secondaryPublicationIdentifiers,
@@ -1402,7 +1478,7 @@
         }
         else {
           // empty item arrays so that deleted items aren't merged back into editedItem object
-          this.item.keywords = []
+          this.item.contributors = []
           this.item.doiIdentifiers = []
           this.item.primaryPublicationIdentifiers = []
           this.item.publicationIdentifiers = []

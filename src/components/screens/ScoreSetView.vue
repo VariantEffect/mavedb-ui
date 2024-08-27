@@ -70,10 +70,23 @@
           </span>
         </div>
         <div class="mave-score-set-histogram-pane">
-          <ScoreSetHistogram :scoreSet="item" :scores="scores" :externalSelection="variantToVisualize" ref="histogram"/>
+          <ScoreSetHistogram
+            :scoreSet="item"
+            :scores="scores"
+            :externalSelection="variantToVisualize"
+            @export-chart="setHistogramExport"
+            ref="histogram"
+          />
         </div>
         <div v-if="showHeatmap" class="mave-score-set-heatmap-pane">
-          <ScoreSetHeatmap :scoreSet="item" :scores="scores" :externalSelection="variantToVisualize" @variant-selected="childComponentSelectedVariant" @heatmap-visible="heatmapVisibilityUpdated" ref="heatmap"/>
+          <ScoreSetHeatmap
+            :scoreSet="item"
+            :scores="scores"
+            :externalSelection="variantToVisualize"
+            @variant-selected="childComponentSelectedVariant"
+            @heatmap-visible="heatmapVisibilityUpdated"
+            @export-chart="setHeatmapExport" ref="heatmap"
+          />
         </div>
       </div>
       <div class="mave-1000px-col">
@@ -120,9 +133,9 @@
             <Button class="p-button-outlined p-button-sm" @click="downloadMetadata">Metadata</Button>&nbsp;
           </template>
           <Button class="p-button-outlined p-button-sm" @click="downloadMappedVariants()">Mapped Variants</Button>&nbsp;
-          <Button class="p-button-outlined p-button-sm" @click="downloadHistogram()">Histogram</Button>&nbsp;
+          <Button class="p-button-outlined p-button-sm" @click="histogramExport()">Histogram</Button>&nbsp;
           <template v-if="heatmapExists">
-            <Button class="p-button-outlined p-button-sm" @click="downloadHeatmap()">Heatmap</Button>&nbsp;
+            <Button class="p-button-outlined p-button-sm" @click="heatmapExport()">Heatmap</Button>&nbsp;
           </template>
         </div>
         <div v-if="requestFromGalaxy == '1'"><br>Send files to <a :href="`${this.galaxyUrl}`">Galaxy</a> <Button class="p-button-outlined p-button-sm" @click="sendToGalaxy('scores')">Scores</Button>&nbsp;
@@ -664,17 +677,11 @@ export default {
       anchor.download = this.item.urn + '_metadata.txt';
       anchor.click();
     },
-    downloadHistogram: function() {
-      const svgContainer = this.$refs.histogram.$refs.histogramContainer
-      if (svgContainer) {
-        saveChartAsFile(svgContainer, `${this.itemId}-scores-histogram`, 'mave-histogram-container')
-      }
+    setHistogramExport: function(fn) {
+      this.histogramExport = fn
     },
-    downloadHeatmap: function() {
-      const svgContainer = this.$refs.heatmap.$el.firstElementChild
-      if (svgContainer) {
-        saveChartAsFile(svgContainer, `${this.itemId}-scores-heatmap`)
-      }
+    setHeatmapExport: function(fn) {
+      this.heatmapExport = fn
     },
     loadTableScores: async function() {
       if (this.item) {

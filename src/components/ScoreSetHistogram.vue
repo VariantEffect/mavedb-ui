@@ -8,9 +8,12 @@
 
 import * as d3 from 'd3'
 import { variantNotNullOrNA } from '@/lib/mave-hgvs'
+import { saveChartAsFile } from '@/lib/chart-export'
 
 export default {
   name: 'ScoreSetHistogram',
+
+  emits: ['exportChart'],
 
   props: {
     margins: { // Margins must accommodate the X axis label and title.
@@ -45,6 +48,7 @@ export default {
     this.renderTooltip()
     this.isMounted = true
     this.renderOrRefreshHistogram()
+    this.$emit('exportChart', this.exportChart)
   },
 
   beforeUnmount: function() {
@@ -105,6 +109,10 @@ export default {
   },
 
   methods: {
+    exportChart() {
+      saveChartAsFile(this.$refs.histogramContainer, `${this.scoreSet.urn}-scores-heatmap`, 'mave-heatmap-scroll-container')
+    },
+
     renderOrRefreshHistogram: function() {
       if (!this.bins) {
         return

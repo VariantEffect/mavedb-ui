@@ -1,7 +1,7 @@
 <template>
   <div v-if="heatmapVisible">
     <!-- This ref name is coupled to parent elements; do not change it. -->
-    <div id="mave-heatmap-scroll-container" class="heatmapContainer">
+    <div id="mave-heatmap-scroll-container" class="heatmapContainer" ref="heatmapContainer">
       <div id="mave-stacked-heatmap-container" class="mave-simple-variants-heatmap-container" ref="simpleVariantsStackedHeatmapContainer" />
       <div id="mave-variants-heatmap-container" class="mave-simple-variants-heatmap-container" ref="simpleVariantsHeatmapContainer" />
     </div>
@@ -17,6 +17,7 @@ import * as d3 from 'd3'
 import geneticCodes from '@/lib/genetic-codes'
 import {heatmapRowForVariant, HEATMAP_ROWS} from '@/lib/heatmap'
 import {parseSimpleProVariant, variantNotNullOrNA} from '@/lib/mave-hgvs'
+import { saveChartAsFile } from '@/lib/chart-export'
 
 function stdev(array) {
   if (!array || array.length === 0) {
@@ -30,7 +31,7 @@ function stdev(array) {
 export default {
   name: 'ScoreSetHeatmap',
 
-  emits: ['variantSelected', 'heatmapVisible'],
+  emits: ['variantSelected', 'heatmapVisible', 'exportChart'],
 
   props: {
     margins: { // Margins must accommodate the axis labels
@@ -62,6 +63,7 @@ export default {
     this.isMounted = true
     this.renderOrRefreshHeatmap()
     this.renderOrRefreshStackedHeatmap()
+    this.$emit('exportChart', this.exportChart)
   },
 
   beforeUnmount: function() {
@@ -154,6 +156,10 @@ export default {
   },
 
   methods: {
+    exportChart() {
+      saveChartAsFile(this.$refs.heatmapContainer, `${this.scoreSet.urn}-scores-heatmap`, 'mave-heatmap-scroll-container')
+    },
+
     // We assume that there will only be one substitution variant for each target AA at a given position.
     prepareSimpleVariantScoreRanks(simpleVariants) {
       _.mapValues(_.groupBy(simpleVariants, 'x'), (variantsAtOnePosition) => {

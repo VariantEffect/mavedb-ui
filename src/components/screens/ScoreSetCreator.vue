@@ -77,8 +77,14 @@
                     </div>
                     <div v-else style="position: relative;">
                       <span class="p-float-label">
-                        <Dropdown v-model="experiment" :id="$scopedId('input-experiment')" :options="editableExperiments"
-                          optionLabel="title" v-on:change="populateExperimentMetadata" style="width: 50%"/>
+                        <Dropdown
+                          v-model="experiment"
+                          :id="$scopedId('input-experiment')"
+                          :options="editableExperiments"
+                          optionLabel="title"
+                          style="width: 50%"
+                          @change="populateExperimentMetadata"
+                        />
                         <label :for="$scopedId('input-experiment')">Experiment</label>
                       </span>
                       <span v-if="validationErrors.experiment" class="mave-field-error">{{ validationErrors.experiment }}</span>
@@ -97,9 +103,16 @@
                     </div>
                     <div v-if="itemStatus == 'NotLoaded'" class="field">
                       <span class="p-float-label">
-                        <AutoComplete ref="supersededScoreSetInput" v-model="supersededScoreSet"
-                          :id="$scopedId('input-supersededScoreSet')" field="title" :forceSelection="true"
-                          :suggestions="supersededScoreSetSuggestionsList" @complete="searchSupersededScoreSets">
+                        <AutoComplete
+                          ref="supersededScoreSetInput"
+                          v-model="supersededScoreSet"
+                          :id="$scopedId('input-supersededScoreSet')"
+                          field="title"
+                          :forceSelection="true"
+                          :suggestions="supersededScoreSetSuggestionsList"
+                          @change="populateSupersededScoreSetMetadata"
+                          @complete="searchSupersededScoreSets"
+                        >
                           <template #item="slotProps">
                             {{ slotProps.item.urn }}: {{ slotProps.item.title }}
                           </template>
@@ -306,6 +319,40 @@
                       </span>
                       <span v-if="validationErrors.dataUsagePolicy" class="mave-field-error">{{
                         validationErrors.dataUsagePolicy }}</span>
+                    </div>
+                  </div>
+                  <div class="mavedb-wizard-row">
+                    <div class="mavedb-wizard-help">
+                      <label>
+                        Contributors who may edit this score set. Enter each contributor's
+                        <a href="https://orcid.org" target="_blank">ORCID</a> ID and confirm their name.
+                      </label>
+                      <div class="mavedb-help-small">
+                        Examples: 1111-1111-1111-1111
+                      </div>
+                    </div>
+                    <div class="mavedb-wizard-content field">
+                      <span class="p-float-label">
+                        <Chips
+                          ref="contributorsInput"
+                          v-model="contributors"
+                          :id="$scopedId('input-contributors')"
+                          :addOnBlur="true"
+                          :allowDuplicate="false"
+                          placeholder="Type or paste ORCID IDs here."
+                          @add="newContributorsAdded"
+                          @keyup.escape="clearContributorSearch"
+                        >
+                          <template #chip="slotProps">
+                            <div>
+                              <div v-if="slotProps.value.givenName || slotProps.value.familyName">{{ slotProps.value.givenName }} {{ slotProps.value.familyName }} ({{ slotProps.value.orcidId }})</div>
+                              <div v-else>{{ slotProps.value.orcidId }}</div>
+                            </div>
+                          </template>
+                        </Chips>
+                        <label :for="$scopedId('input-contributors')">Contributors</label>
+                      </span>
+                      <span v-if="validationErrors.contributors" class="mave-field-error">{{validationErrors.contributors}}</span>
                     </div>
                   </div>
                   <div class="mavedb-wizard-row">
@@ -782,8 +829,9 @@ import StepperPanel from 'primevue/stepperpanel'
 import TabPanel from 'primevue/tabpanel'
 import TabView from 'primevue/tabview'
 import Textarea from 'primevue/textarea'
-import DataTable from 'primevue/datatable';
-import { ref } from 'vue'
+import DataTable from 'primevue/datatable'
+import {useRestResource} from 'rest-client-vue'
+import {ref} from 'vue'
 
 import EntityLink from '@/components/common/EntityLink'
 import DefaultLayout from '@/components/layout/DefaultLayout'
@@ -791,7 +839,8 @@ import EmailPrompt from '@/components/common/EmailPrompt'
 import useItem from '@/composition/item'
 import useItems from '@/composition/items'
 import config from '@/config'
-import { normalizeDoi, normalizeIdentifier, normalizePubmedId, validateDoi, validateIdentifier, validatePubmedId} from '@/lib/identifiers'
+import {normalizeDoi, normalizeIdentifier, normalizePubmedId, validateDoi, validateIdentifier, validatePubmedId} from '@/lib/identifiers'
+import {ORCID_ID_REGEX} from '@/lib/orcid'
 import useFormatters from '@/composition/formatters'
 
 const externalGeneDatabases = ['UniProt', 'Ensembl', 'RefSeq']
@@ -868,7 +917,6 @@ export default {
     const geneNames = useItems({ itemTypeName: 'gene-names' })
     const assemblies = useItems({ itemTypeName: 'assemblies' })
     const targetGeneSuggestions = useItems({ itemTypeName: 'target-gene-search' })
-
     const expandedTargetGeneRows = ref([])
 
     return {
@@ -917,6 +965,7 @@ export default {
     shortDescription: null,
     abstractText: null,
     methodText: null,
+    contributors: [],
     doiIdentifiers: [],
     primaryPublicationIdentifiers: [],
     secondaryPublicationIdentifiers: [],
@@ -1140,10 +1189,84 @@ export default {
           this.assemblySuggestions = await this.fetchTargetAccessionsByAssembly(this.assemblyDropdownValue)
         }
       }
-    },
+    }
   },
 
   methods: {
+    //////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+    // Contributors
+    //////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+
+    clearContributorSearch: function() {
+      // This could change with a new PrimeVue version.
+      const input = this.$refs.contributorsInput
+      input.$refs.input.value = ''
+    },
+
+    lookupOrcidUser: async function(orcidId) {
+      let orcidUser = null
+      try {
+        orcidUser = (await axios.get(`${config.apiBaseUrl}/orcid/users/${orcidId}`)).data
+      } catch (err) {
+        // Assume that the error was 404 Not Found.
+      }
+      return orcidUser
+    },
+
+    newContributorsAdded: async function(event) {
+      const newContributors = event.value
+
+      // Convert any strings to ORCID users without names.
+      this.contributors = this.contributors.map((c) => _.isString(c) ? {orcidId: c} : c)
+
+      // Validate and look up each new contributor.
+      for (const newContributor of newContributors) {
+        if (_.isString(newContributor)) {
+          const orcidId = newContributor.trim()
+          if (orcidId && this.contributors.filter((c) => c.orcidId == orcidId).length > 1) {
+            const firstIndex = _.findIndex(this.contributors, (c) => c.orcidId == orcidId)
+            _.remove(this.contributors, (c, i) => i > firstIndex && c.orcidId == orcidId)
+          } else if (orcidId && ORCID_ID_REGEX.test(orcidId)) {
+            // Look up the ORCID ID.
+            const orcidUser = await this.lookupOrcidUser(orcidId)
+
+            if (orcidUser) {
+              // If found, update matching contributors. (There should only be one.)
+              for (const contributor of this.contributors) {
+                if (contributor.orcidId == orcidUser.orcidId) {
+                  _.merge(contributor, orcidUser)
+                }
+              }
+            } else {
+              // Otherwise remove the contributor.
+              _.remove(this.contributors, (c) => c.orcidId == orcidId)
+              this.$toast.add({
+                life: 3000,
+                severity: 'warning',
+                summary: `No ORCID user was found with ORCID ID ${orcidId}.`
+              })
+            }
+          } else {
+            _.remove(this.contributors, (c) => c.orcidId == orcidId)
+            this.$toast.add({
+              life: 3000,
+              severity: 'warning',
+              summary: `${orcidId} is not a valid ORCID ID`
+            })
+          }
+        }
+      }
+    },
+
+    suggestionsForAutocomplete: function (suggestions) {
+      // The PrimeVue AutoComplete doesn't seem to like it if we set the suggestion list to [].
+      // This causes the drop-down to stop appearing when we later populate the list.
+      if (!suggestions || suggestions.length == 0) {
+        return [{}]
+      }
+      return suggestions
+    },
+
     validateWizardStep: function(step) {
       // Later, this may depend on server-side validation.
       switch (step) {
@@ -1338,6 +1461,7 @@ export default {
 
     populateExperimentMetadata: function (event) {
       this.abstractText = event.value.abstractText
+      this.contributors = event.value.contributors || []
       this.doiIdentifiers = event.value.doiIdentifiers
       this.publicationIdentifiers = _.concat(event.value.primaryPublicationIdentifiers, event.value.secondaryPublicationIdentifiers)
       this.primaryPublicationIdentifiers = event.value.primaryPublicationIdentifiers.filter((primary) => {
@@ -1346,7 +1470,9 @@ export default {
         })
       })
     },
-
+    populateSupersededScoreSetMetadata: function(event) {
+      this.contributors = event.value.contributors || []
+    },
     acceptNewDoiIdentifier: function(event) {
       // Remove new string item from the model and add new structured item in its place if it validates and is not a duplicate.
       const idx = this.doiIdentifiers.findIndex((item) => typeof item === 'string' || item instanceof String)
@@ -1558,6 +1684,7 @@ export default {
         this.shortDescription = this.item.shortDescription
         this.abstractText = this.item.abstractText
         this.methodText = this.item.methodText
+        this.contributors = _.sortBy(this.item.contributors, ['familyName', 'givenName', 'orcidId'])
         this.doiIdentifiers = this.item.doiIdentifiers
         // So that the multiselect can populate correctly, build the primary publication identifiers
         // indirectly by filtering a merged list of secondary and primary publication identifiers
@@ -1583,6 +1710,7 @@ export default {
         this.shortDescription = null
         this.abstractText = null
         this.methodText = null
+        this.contributors = []
         this.doiIdentifiers = []
         this.primaryPublicationIdentifiers = []
         this.secondaryPublicationIdentifiers = []
@@ -1688,6 +1816,7 @@ export default {
         shortDescription: this.shortDescription,
         abstractText: this.abstractText,
         methodText: this.methodText,
+        contributors: this.contributors,
         doiIdentifiers: this.doiIdentifiers.map((identifier) => _.pick(identifier, 'identifier')),
         primaryPublicationIdentifiers: primaryPublicationIdentifiers,
         secondaryPublicationIdentifiers: secondaryPublicationIdentifiers,
@@ -1705,6 +1834,7 @@ export default {
       }
       else {
         // empty item arrays so that deleted items aren't merged back into editedItem object
+        this.item.contributors = []
         this.item.doiIdentifiers = []
         this.item.primaryPublicationIdentifiers = []
         this.item.publicationIdentifiers = []

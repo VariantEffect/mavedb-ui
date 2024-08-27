@@ -202,6 +202,29 @@
                 </TabView>
                 <span v-if="validationErrors.methodText" class="mave-field-error">{{validationErrors.methodText}}</span>
               </div>
+              <div class="field">
+                <span class="p-float-label">
+                  <Chips
+                    ref="contributorsInput"
+                    v-model="contributors"
+                    :id="$scopedId('input-contributors')"
+                    :addOnBlur="true"
+                    :allowDuplicate="false"
+                    placeholder="Type or paste ORCID IDs here."
+                    @add="newContributorsAdded"
+                    @keyup.escape="clearContributorSearch"
+                  >
+                    <template #chip="slotProps">
+                      <div>
+                        <div v-if="slotProps.value.givenName || slotProps.value.familyName">{{ slotProps.value.givenName }} {{ slotProps.value.familyName }} ({{ slotProps.value.orcidId }})</div>
+                        <div v-else>{{ slotProps.value.orcidId }}</div>
+                      </div>
+                    </template>
+                  </Chips>
+                  <label :for="$scopedId('input-contributors')">Contributors</label>
+                </span>
+                <span v-if="validationErrors.contributors" class="mave-field-error">{{validationErrors.contributors}}</span>
+              </div>
             </template>
           </Card>
         </div>
@@ -295,13 +318,16 @@ import ProgressSpinner from 'primevue/progressspinner'
 import TabPanel from 'primevue/tabpanel'
 import TabView from 'primevue/tabview'
 import Textarea from 'primevue/textarea'
+import {useRestResource} from 'rest-client-vue'
 
 import DefaultLayout from '@/components/layout/DefaultLayout'
 import EmailPrompt from '@/components/common/EmailPrompt'
+import useAuth from '@/composition/auth'
 import useItem from '@/composition/item'
 import useItems from '@/composition/items'
 import config from '@/config'
 import {normalizeDoi, normalizePubmedId, normalizeRawRead, validateDoi, validatePubmedId, validateRawRead} from '@/lib/identifiers'
+import {ORCID_ID_REGEX} from '@/lib/orcid'
 import useFormatters from '@/composition/formatters'
 
 const KEYWORDS = [
@@ -382,6 +408,8 @@ export default {
   components: { AutoComplete, Button, Card, Chips, Dialog, Dropdown, Multiselect, DefaultLayout, EmailPrompt, FileUpload, InputText, ProgressSpinner, TabPanel, TabView, Textarea },
 
   setup: () => {
+    const {userProfile} = useAuth()
+
     const variantLibraryKeywordOptions = useItems({itemTypeName: `controlled-keywords-variant-search`})
     const endogenousSystemKeywordOptions = useItems({itemTypeName: `controlled-keywords-endo-system-search`})
     const endogenousMechanismKeywordOptions = useItems({itemTypeName: `controlled-keywords-endo-mechanism-search`})
@@ -393,9 +421,11 @@ export default {
     const phenotypicModelSystemKeywordOptions = useItems({itemTypeName: `controlled-keywords-phenotypic-modle-system-search`})
     const phenotypicProfilingStrategyKeywordOptions = useItems({itemTypeName: `controlled-keywords-phenotypic-profiling-strategy-search`})
     const phenotypicSequencingTypeKeywordOptions = useItems({itemTypeName: `controlled-keywords-phenotypic-sequencing-type-search`})
+
     const publicationIdentifierSuggestions = useItems({itemTypeName: 'publication-identifier-search'})
     const externalPublicationIdentifierSuggestions = useItems({itemTypeName: 'external-publication-identifier-search'})
     return {
+      userProfile,
       ...useFormatters(),
       ...useItem({itemTypeName: 'experiment'}),
       variantLibraryKeywordOptions: variantLibraryKeywordOptions.items,
@@ -412,7 +442,7 @@ export default {
       publicationIdentifierSuggestions: publicationIdentifierSuggestions.items,
       setPublicationIdentifierSearch: (text) => publicationIdentifierSuggestions.setRequestBody({text}),
       externalPublicationIdentifierSuggestions: externalPublicationIdentifierSuggestions.items,
-      setExternalPublicationIdentifierSearch: (text) => externalPublicationIdentifierSuggestions.setRequestBody({text}),
+      setExternalPublicationIdentifierSearch: (text) => externalPublicationIdentifierSuggestions.setRequestBody({text})
     }
   },
 
@@ -434,6 +464,7 @@ export default {
     abstractText: null,
     dialogVisible: [],
     methodText: null,
+    contributors: [],
     keywords: [],
     keywordKeys: _.fromPairs(KEYWORDS.map((keyword) => [keyword.key, null])),
     keywordDescriptions: _.fromPairs(KEYWORDS.map((keyword) => [keyword.key, null])),
@@ -511,7 +542,84 @@ export default {
     }
   },
 
+  mounted: function() {
+    this.resetForm()
+  },
+
   methods: {
+    //////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+    // Contributors
+    //////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+
+    clearContributorSearch: function() {
+      // This could change with a new PrimeVue version.
+      const input = this.$refs.contributorsInput
+      input.$refs.input.value = ''
+    },
+
+    lookupOrcidUser: async function(orcidId) {
+      let orcidUser = null
+      try {
+        orcidUser = (await axios.get(`${config.apiBaseUrl}/orcid/users/${orcidId}`)).data
+      } catch (err) {
+        // Assume that the error was 404 Not Found.
+      }
+      return orcidUser
+    },
+
+    newContributorsAdded: async function(event) {
+      const newContributors = event.value
+
+      // Convert any strings to ORCID users without names.
+      this.contributors = this.contributors.map((c) => _.isString(c) ? {orcidId: c} : c)
+
+      // Validate and look up each new contributor.
+      for (const newContributor of newContributors) {
+        if (_.isString(newContributor)) {
+          const orcidId = newContributor.trim()
+          if (orcidId && this.contributors.filter((c) => c.orcidId == orcidId).length > 1) {
+            const firstIndex = _.findIndex(this.contributors, (c) => c.orcidId == orcidId)
+            _.remove(this.contributors, (c, i) => i > firstIndex && c.orcidId == orcidId)
+          } else if (orcidId && ORCID_ID_REGEX.test(orcidId)) {
+            // Look up the ORCID ID.
+            const orcidUser = await this.lookupOrcidUser(orcidId)
+
+            if (orcidUser) {
+              // If found, update matching contributors. (There should only be one.)
+              for (const contributor of this.contributors) {
+                if (contributor.orcidId == orcidUser.orcidId) {
+                  _.merge(contributor, orcidUser)
+                }
+              }
+            } else {
+              // Otherwise remove the contributor.
+              _.remove(this.contributors, (c) => c.orcidId == orcidId)
+              this.$toast.add({
+                life: 3000,
+                severity: 'warning',
+                summary: `No ORCID user was found with ORCID ID ${orcidId}.`
+              })
+            }
+          } else {
+            _.remove(this.contributors, (c) => c.orcidId == orcidId)
+            this.$toast.add({
+              life: 3000,
+              severity: 'warning',
+              summary: `${orcidId} is not a valid ORCID ID`
+            })
+          }
+        }
+      }
+    },
+
+    suggestionsForAutocomplete: function (suggestions) {
+      // The PrimeVue AutoComplete doesn't seem to like it if we set the suggestion list to [].
+      // This causes the drop-down to stop appearing when we later populate the list.
+      if (!suggestions || suggestions.length == 0) {
+        return [{}]
+      }
+      return suggestions
+    },
 
     ////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
     // Form fields
@@ -668,6 +776,7 @@ export default {
         this.shortDescription = this.item.shortDescription
         this.abstractText = this.item.abstractText
         this.methodText = this.item.methodText
+        this.contributors = _.sortBy(this.item.contributors, ['familyName', 'givenName', 'orcidId'])
         this.doiIdentifiers = this.item.doiIdentifiers
         // So that the multiselect can populate correctly, build the primary publication identifiers
         // indirectly by filtering publication identifiers list for those publications we know to be
@@ -686,6 +795,7 @@ export default {
         this.shortDescription = null
         this.abstractText = null
         this.methodText = null
+        this.contributors = [{orcidId: this.userProfile?.sub, givenName: this.userProfile?.given_name, familyName: this.userProfile?.family_name}]
         this.doiIdentifiers = []
         this.primaryPublicationIdentifiers = []
         this.secondaryPublicationIdentifiers = []
@@ -735,6 +845,7 @@ export default {
         shortDescription: this.shortDescription,
         abstractText: this.abstractText,
         methodText: this.methodText,
+        contributors: this.contributors,
         keywords: this.keywords,
         doiIdentifiers: this.doiIdentifiers.map((identifier) => _.pick(identifier, 'identifier')),
         primaryPublicationIdentifiers: primaryPublicationIdentifiers,
@@ -744,6 +855,7 @@ export default {
       }
       // empty item arrays so that deleted items aren't merged back into editedItem object
       if(this.item) {
+        this.item.contributors = []
         this.item.keywords = []
         this.item.doiIdentifiers = []
         this.item.publicationIdentifiers = []

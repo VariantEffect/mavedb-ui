@@ -102,9 +102,7 @@ export default {
       return this.wtAminoAcids ? this.prepareWtVariants(this.wtAminoAcids) : []
     },
     heatmapVisible: function() {
-      const heatmapVisible = this.simpleVariants && this.simpleVariants.length
-      this.$emit('heatmapVisible', heatmapVisible)
-      return heatmapVisible
+      return this.simpleVariants && this.simpleVariants.length
     },
     selectedVariant: function() {
       return this.externalSelection ? this.simpleAndWtVariants.filter((variant) => variant.details?.accession == this.externalSelection.accession)[0] : null
@@ -134,6 +132,15 @@ export default {
     externalSelection: {
       handler: function() {
         this.refreshSelectionTooltipIfRendered()
+      },
+      immediate: true
+    },
+    heatmapVisible: {
+      handler: function(newValue, oldValue) {
+        if (newValue === oldValue) {
+          return
+        }
+        this.$emit('heatmapVisible', newValue)
       },
       immediate: true
     }

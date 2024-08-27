@@ -1,5 +1,4 @@
 <template>
-  <!-- This ref name is coupled to parent elements; do not change it. -->
   <div class="mave-histogram-container" ref="histogramContainer">
   </div>
 </template>

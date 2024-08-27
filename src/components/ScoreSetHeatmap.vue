@@ -1,6 +1,5 @@
 <template>
   <div v-if="heatmapVisible">
-    <!-- This ref name is coupled to parent elements; do not change it. -->
     <div id="mave-heatmap-scroll-container" class="heatmapContainer" ref="heatmapContainer">
       <div id="mave-stacked-heatmap-container" class="mave-simple-variants-heatmap-container" ref="simpleVariantsStackedHeatmapContainer" />
       <div id="mave-variants-heatmap-container" class="mave-simple-variants-heatmap-container" ref="simpleVariantsHeatmapContainer" />

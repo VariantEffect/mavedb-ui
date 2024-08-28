@@ -109,7 +109,7 @@ export default {
 
   methods: {
     exportChart() {
-      saveChartAsFile(this.$refs.histogramContainer, `${this.scoreSet.urn}-scores-heatmap`, 'mave-heatmap-scroll-container')
+      saveChartAsFile(this.$refs.histogramContainer, `${this.scoreSet.urn}-scores-histogram`, 'mave-histogram-container')
     },
 
     renderOrRefreshHistogram: function() {

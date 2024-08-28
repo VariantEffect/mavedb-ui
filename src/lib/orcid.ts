@@ -43,6 +43,8 @@ export interface OidcUserProfileBase {
   sub: string
 }
 
+export const ORCID_ID_REGEX = /^\d{4}-\d{4}-\d{4}-(\d{4}|\d{3}X)$/
+
 // Notice the final '/'.
 const appUrl = `${window.location.origin}/`
 

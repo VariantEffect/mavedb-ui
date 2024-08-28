@@ -24,6 +24,19 @@
             v-if="item.modifiedBy">
             <a :href="`https://orcid.org/${item.modifiedBy.orcidId}`" target="blank"><img src="@/assets/ORCIDiD_icon.png"
                 alt="ORCIDiD">{{ item.modifiedBy.firstName }} {{ item.modifiedBy.lastName }}</a></span></div>
+        <div v-if="contributors.length > 0">
+          Contributors
+          <a
+            v-for="contributor in contributors"
+            class="mave-contributor"
+            :href="`https://orcid.org/${contributor.orcidId}`"
+            :key="contributor.orcidId"
+            target="blank"
+          >
+            <img src="@/assets/ORCIDiD_icon.png" alt="ORCIDiD">
+            {{ contributor.givenName }} {{ contributor.familyName }}
+          </a>
+        </div>
         <div v-if="item.publishedDate">Published {{ formatDate(item.publishedDate) }}</div>
         <div v-if="item.experimentSetUrn">Member of <router-link
             :to="{ name: 'experimentSet', params: { urn: item.experimentSetUrn } }">{{ item.experimentSetUrn
@@ -84,11 +97,32 @@
           </div>
         </div>
         <div v-else>No associated secondary publications.</div>
-        <div v-if="item.keywords && item.keywords.length > 0">
+        <div v-if="item.keywords && Object.keys(item.keywords).length > 0">
           <div class="mave-score-set-section-title">Keywords</div>
           <div class="mave-score-set-keywords">
-            <Chip :label="keyword" />
-            <a v-for="(keyword, i) of item.keywords" :key="i" :href="`${config.appBaseUrl}/search?search=${keyword}`"><Chip :label="keyword"/></a>
+            <li v-for="(keyword, index) in item.keywords" :key="index">
+              {{ keyword.keyword.key }}
+              <!--Present local database keyword description-->
+              <i class="pi pi-info-circle" style="color: green; cursor: pointer;" @click="showDialog(index)"/>
+              <Dialog v-model:visible="dialogVisible[index]" modal :header="keyword.keyword.key" :style="{ width: '50vw' }" :breakpoints="{ '1199px': '75vw', '575px': '90vw' }">
+                <p class="m-0">
+                  {{ keyword.keyword.description }}
+                </p>
+              </Dialog> : <a :href="`${config.appBaseUrl}/search?keywords=${keyword.keyword.value}`">{{ keyword.keyword.value }}</a>
+              <!--Present user's description-->
+              <div class="field" v-if="keyword.description">
+                <div v-if="keyword.description.length >= 300">
+                  <div v-if="!fullDescription[index]">
+                    {{ keyword.description.substring(0, 300) + "...." }}
+                  </div>
+                  <div v-else>{{ keyword.description }}</div>
+                  <Button @click="showFullDescription(index)" class="p-button-text p-button-sm p-button-info">
+                    {{ fullDescription[index] ? 'Show less' : 'Show all' }}
+                  </Button>
+                </div>
+                <div v-else>{{ keyword.description }}</div>
+              </div>
+            </li>
           </div>
         </div>
         <div class="mave-score-set-section-title">Scoreset Targets</div>
@@ -183,18 +217,20 @@ import _ from 'lodash'
 import {marked} from 'marked'
 import Button from 'primevue/button'
 import Chip from 'primevue/chip'
-
 import DefaultLayout from '@/components/layout/DefaultLayout'
+import Dialog from 'primevue/dialog'
 import PageLoading from '@/components/common/PageLoading'
+import { PrimeIcons } from 'primevue/api'
 import ItemNotFound from '@/components/common/ItemNotFound'
 import useAuth from '@/composition/auth'
 import useItem from '@/composition/item'
 import useFormatters from '@/composition/formatters'
 import config from '@/config'
+import 'primeicons/primeicons.css'
 
 export default {
   name: 'ExperimentView',
-  components: { Button, Chip, DefaultLayout, PageLoading, ItemNotFound },
+  components: { Button, DefaultLayout, Dialog, PageLoading, ItemNotFound, PrimeIcons },
 
   setup: () => {
     const {userIsAuthenticated} = useAuth()
@@ -216,8 +252,19 @@ export default {
 
   data: () => ({
     associatedScoreSets: [],
-    readMore: true
+    dialogVisible: [],
+    readMore: true,
+    fullDescription: [],
   }),
+
+  computed: {
+    contributors: function() {
+      return _.sortBy(
+        (this.item?.contributors || []).filter((c) => c.orcidId != this.item?.createdBy?.orcidId),
+        ['familyName', 'givenName', 'orcidId']
+      )
+    }
+  },
 
   created() {
     this.getAssociatedScoreSets();
@@ -297,6 +344,12 @@ export default {
       this.readMore = true
       return this.readMore
     },
+    showFullDescription: function(index) {
+      this.fullDescription[index] = !this.fullDescription[index]
+    },
+    showDialog: function (index) {
+      this.dialogVisible[index] = true
+    }
   }
 }
 
@@ -359,6 +412,10 @@ export default {
 .mave-score-set-keywords .p-chip {
   /*font-family: Helvetica, Verdana, Arial, sans-serif;*/
   margin: 0 5px;
+}
+
+.mave-contributor {
+  margin: 0 0.5em;
 }
 
 /* Formatting in Markdown blocks */

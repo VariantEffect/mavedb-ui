@@ -123,6 +123,7 @@ export default defineComponent({
       filterPublicationAuthors: extractQueryParam(this.$route.query['publication-author']) as Array<string>,
       filterPublicationDatabases: extractQueryParam(this.$route.query['publication-database']) as Array<string>,
       filterPublicationJournals: extractQueryParam(this.$route.query['publication-journal']) as Array<string>,
+      filterKeywords: extractQueryParam(this.$route.query['keywords']) as Array<string>,
       loading: false,
       searchText: this.$route.query.search as string | null,
       scoreSets: [] as Array<ShortScoreSet>,
@@ -140,7 +141,7 @@ export default defineComponent({
       return countTargetGeneMetadata(this.publishedScoreSets, (targetGene) => targetGene.name)
     },
     targetOrganismFilterOptions: function() {
-      return countTargetGeneMetadata(this.publishedScoreSets, 
+      return countTargetGeneMetadata(this.publishedScoreSets,
         (targetGene) => targetGene.targetSequence?.taxonomy.organismName || '')
     },
     targetAccessionFilterOptions: function() {
@@ -210,6 +211,13 @@ export default defineComponent({
       }
     },
     filterPublicationJournals: {
+      handler: function(oldValue, newValue) {
+        if (oldValue != newValue) {
+          this.debouncedSearch()
+        }
+      }
+    },
+    filterKeywords: {
       handler: function(oldValue, newValue) {
         if (oldValue != newValue) {
           this.debouncedSearch()
@@ -291,6 +299,14 @@ export default defineComponent({
         }
       },
       immediate: true
+    },
+    '$route.query.keywords': {
+      handler: function(newValue, oldValue) {
+        if (newValue != oldValue) {
+          this.filterKeywords = extractQueryParam(newValue)
+        }
+      },
+      immediate: true
     }
   },
   methods: {
@@ -306,7 +322,8 @@ export default defineComponent({
         ...(this.filterTargetAccession.length > 0) ? {'target-accession': this.filterTargetAccession} : {},
         ...(this.filterPublicationAuthors.length > 0) ? {'publication-author': this.filterPublicationAuthors} : {},
         ...(this.filterPublicationDatabases.length > 0) ? {'publication-database': this.filterPublicationDatabases} : {},
-        ...(this.filterPublicationJournals.length > 0) ? {'publication-journal': this.filterPublicationJournals} : {}
+        ...(this.filterPublicationJournals.length > 0) ? {'publication-journal': this.filterPublicationJournals} : {},
+        ...(this.filterKeywords.length > 0) ? {'keywords': this.filterKeywords} : {}
       }})
       this.loading = true;
       await this.fetchSearchResults()
@@ -323,6 +340,7 @@ export default defineComponent({
             authors: this.filterPublicationAuthors.length > 0 ? this.filterPublicationAuthors : undefined,
             databases: this.filterPublicationDatabases.length > 0 ? this.filterPublicationDatabases : undefined,
             journals: this.filterPublicationJournals.length > 0 ? this.filterPublicationJournals : undefined,
+            keywords: this.filterKeywords.length > 0 ? this.filterKeywords : undefined,
         }
         let response = await axios.post(
           `${config.apiBaseUrl}/score-sets/search`,
@@ -351,6 +369,7 @@ export default defineComponent({
       this.filterPublicationAuthors = []
       this.filterPublicationDatabases = []
       this.filterPublicationJournals = []
+      this.filterKeywords = []
     }
   }
 })

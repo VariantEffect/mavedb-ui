@@ -70,10 +70,23 @@
           </span>
         </div>
         <div class="mave-score-set-histogram-pane">
-          <ScoreSetHistogram :scoreSet="item" :scores="scores" :externalSelection="variantToVisualize" />
+          <ScoreSetHistogram
+            :scoreSet="item"
+            :scores="scores"
+            :externalSelection="variantToVisualize"
+            @export-chart="setHistogramExport"
+            ref="histogram"
+          />
         </div>
         <div v-if="showHeatmap" class="mave-score-set-heatmap-pane">
-          <ScoreSetHeatmap :scoreSet="item" :scores="scores" :externalSelection="variantToVisualize" @variant-selected="childComponentSelectedVariant"/>
+          <ScoreSetHeatmap
+            :scoreSet="item"
+            :scores="scores"
+            :externalSelection="variantToVisualize"
+            @variant-selected="childComponentSelectedVariant"
+            @heatmap-visible="heatmapVisibilityUpdated"
+            @export-chart="setHeatmapExport" ref="heatmap"
+          />
         </div>
       </div>
       <div class="mave-1000px-col">
@@ -90,6 +103,19 @@
         <div v-if="item.modificationDate">Last updated {{ formatDate(item.modificationDate) }} <span v-if="item.modifiedBy">
             <a :href="`https://orcid.org/${item.modifiedBy.orcidId}`" target="blank"><img src="@/assets/ORCIDiD_icon.png"
                 alt="ORCIDiD">{{ item.modifiedBy.firstName }} {{ item.modifiedBy.lastName }}</a></span>
+        </div>
+        <div v-if="contributors.length > 0">
+          Contributors
+          <a
+            v-for="contributor in contributors"
+            class="mave-contributor"
+            :href="`https://orcid.org/${contributor.orcidId}`"
+            :key="contributor.orcidId"
+            target="blank"
+          >
+            <img src="@/assets/ORCIDiD_icon.png" alt="ORCIDiD">
+            {{ contributor.givenName }} {{ contributor.familyName }}
+          </a>
         </div>
         <div v-if="item.publishedDate">Published {{ formatDate(item.publishedDate) }}</div>
         <div v-if="item.license">
@@ -112,7 +138,7 @@
             <EntityLink entityType="scoreSet" :urn="urn" />
           </template>
         </div>
-        <div>Download files <Button class="p-button-outlined p-button-sm" @click="downloadFile('scores')">Scores</Button>&nbsp;
+        <div>Download files and/or charts <Button class="p-button-outlined p-button-sm" @click="downloadFile('scores')">Scores</Button>&nbsp;
           <template v-if="countColumns.length != 0">
             <Button class="p-button-outlined p-button-sm" @click="downloadFile('counts')">Counts</Button>&nbsp;
           </template>
@@ -120,6 +146,10 @@
             <Button class="p-button-outlined p-button-sm" @click="downloadMetadata">Metadata</Button>&nbsp;
           </template>
           <Button class="p-button-outlined p-button-sm" @click="downloadMappedVariants()">Mapped Variants</Button>&nbsp;
+          <Button class="p-button-outlined p-button-sm" @click="histogramExport()">Histogram</Button>&nbsp;
+          <template v-if="heatmapExists">
+            <Button class="p-button-outlined p-button-sm" @click="heatmapExport()">Heatmap</Button>&nbsp;
+          </template>
         </div>
         <div v-if="requestFromGalaxy == '1'"><br>Send files to <a :href="`${this.galaxyUrl}`">Galaxy</a> <Button class="p-button-outlined p-button-sm" @click="sendToGalaxy('scores')">Scores</Button>&nbsp;
           <template v-if="countColumns.length != 0">
@@ -174,16 +204,6 @@
           <div v-html="markdownToHtml(item.dataUsagePolicy)" class="mave-score-set-abstract"></div>
         </div>
         <div v-else>Not specified</div>
-
-        <div v-if="item.keywords && item.keywords.length > 0">
-          <div class="mave-score-set-section-title">Keywords</div>
-          <div class="mave-score-set-keywords">
-            <a v-for="(keyword, i) in item.keywords" :key="i"
-              :href="`${config.appBaseUrl}/#/search?search=${keyword}`">
-              <Chip :label="keyword" />
-            </a>
-          </div>
-        </div>
         <div v-if="item.targetGenes">
           <div class="mave-score-set-section-title">Targets</div>
           <div v-for="targetGene of item.targetGenes" :key="targetGene">
@@ -364,6 +384,7 @@ import useFormatters from '@/composition/formatters'
 import useItem from '@/composition/item'
 import useRemoteData from '@/composition/remote-data'
 import config from '@/config'
+import {saveChartAsFile} from '@/lib/chart-export'
 import { parseScoresOrCounts } from '@/lib/scores'
 import { variantNotNullOrNA } from '@/lib/mave-hgvs';
 import { mapState } from 'vuex'
@@ -374,6 +395,12 @@ export default {
   name: 'ScoreSetView',
   components: { Accordion, AccordionTab, AutoComplete, Button, Chip, DefaultLayout, EntityLink, ScoreSetHeatmap, ScoreSetHistogram, TabView, TabPanel, Message, DataTable, Column, ProgressSpinner, ScrollPanel, PageLoading, ItemNotFound },
   computed: {
+    contributors: function() {
+      return _.sortBy(
+        (this.item?.contributors || []).filter((c) => c.orcidId != this.item?.createdBy?.orcidId),
+        ['familyName', 'givenName', 'orcidId']
+      )
+    },
     isMetaDataEmpty: function() {
       //If extraMetadata is empty, return value will be true.
       return Object.keys(this.item.extraMetadata).length === 0
@@ -430,6 +457,7 @@ export default {
     countsTable: [],
     readMore: true,
     showHeatmap: true,
+    heatmapExists: false,
     selectedVariant: null
   }),
   watch: {
@@ -505,8 +533,8 @@ export default {
           .urn}&outputType=${params
           .outputType}&URL=${encodeURIComponent(params.URL)}`;
           window.location.href = submitGalaxyUrl;
-          localStorage.removeItem('galaxyUrl'); 
-          localStorage.removeItem('toolId'); 
+          localStorage.removeItem('galaxyUrl');
+          localStorage.removeItem('toolId');
           localStorage.removeItem('requestFromGalaxy');
         }
       } catch (error) {
@@ -658,6 +686,12 @@ export default {
       anchor.download = this.item.urn + '_metadata.txt';
       anchor.click();
     },
+    setHistogramExport: function(fn) {
+      this.histogramExport = fn
+    },
+    setHeatmapExport: function(fn) {
+      this.heatmapExport = fn
+    },
     loadTableScores: async function() {
       if (this.item) {
         const response = await axios.get(`${config.apiBaseUrl}/score-sets/${this.item.urn}/scores`)
@@ -716,6 +750,9 @@ export default {
       }
 
       this.selectedVariant = this.scores.find((v) => v.accession == variant.accession)
+    },
+    heatmapVisibilityUpdated: function(visible) {
+      this.heatmapExists = visible
     },
     convertToThreeDecimal: function(value) {
       let numStr = String(value)
@@ -816,9 +853,8 @@ export default {
   /*font-family: Helvetica, Verdana, Arial, sans-serif;*/
 }
 
-.mave-score-set-keywords .p-chip {
-  /*font-family: Helvetica, Verdana, Arial, sans-serif;*/
-  margin: 0 5px;
+.mave-contributor {
+  margin: 0 0.5em;
 }
 
 /* Formatting in Markdown blocks */

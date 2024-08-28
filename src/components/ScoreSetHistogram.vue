@@ -7,9 +7,12 @@
 
 import * as d3 from 'd3'
 import { variantNotNullOrNA } from '@/lib/mave-hgvs'
+import { saveChartAsFile } from '@/lib/chart-export'
 
 export default {
   name: 'ScoreSetHistogram',
+
+  emits: ['exportChart'],
 
   props: {
     margins: { // Margins must accommodate the X axis label and title.
@@ -44,6 +47,7 @@ export default {
     this.renderTooltip()
     this.isMounted = true
     this.renderOrRefreshHistogram()
+    this.$emit('exportChart', this.exportChart)
   },
 
   beforeUnmount: function() {
@@ -104,6 +108,10 @@ export default {
   },
 
   methods: {
+    exportChart() {
+      saveChartAsFile(this.$refs.histogramContainer, `${this.scoreSet.urn}-scores-histogram`, 'mave-histogram-container')
+    },
+
     renderOrRefreshHistogram: function() {
       if (!this.bins) {
         return
@@ -333,8 +341,9 @@ export default {
         }
 
         const displaySelectionTooltip = function() {
-          // Don't do anything if there is no selected variant.
-          if (!self.externalSelection) {
+          // Hide the tooltip if there is no selected variant or no selected bin.
+          if (!self.externalSelection || !self.selectedBin) {
+            hideSelectionTooltip()
             return
           }
 

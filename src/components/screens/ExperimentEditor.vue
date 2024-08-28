@@ -241,7 +241,7 @@
                       <Dropdown
                         v-model="keywordKeys[keyword.key]"
                         :id="$scopedId(`keyword-input-${keyword.key}`)"
-                        :options="getKeywordOptions(keyword.option)" 
+                        :options="getKeywordOptions(keyword.option)"
                         optionLabel="value"
                         optionValue="value"
                         class="keyword-dropdown"
@@ -596,7 +596,7 @@ export default {
               _.remove(this.contributors, (c) => c.orcidId == orcidId)
               this.$toast.add({
                 life: 3000,
-                severity: 'warning',
+                severity: 'warn',
                 summary: `No ORCID user was found with ORCID ID ${orcidId}.`
               })
             }
@@ -604,7 +604,7 @@ export default {
             _.remove(this.contributors, (c) => c.orcidId == orcidId)
             this.$toast.add({
               life: 3000,
-              severity: 'warning',
+              severity: 'warn',
               summary: `${orcidId} is not a valid ORCID ID`
             })
           }
@@ -636,12 +636,12 @@ export default {
       const newDoi = normalizeDoi(searchText)
       if (this.doiIdentifiers.find((item) => item.identifier == newDoi)) {
         this.doiIdentifiers.splice(idx, 1)
-        this.$toast.add({severity:'warning', summary: `DOI "${newDoi}" is already associated with this experiment`, life: 3000})
+        this.$toast.add({severity:'warn', summary: `DOI "${newDoi}" is already associated with this experiment`, life: 3000})
       } else if (validateDoi(searchText)) {
         this.doiIdentifiers.splice(idx, 1, { identifier: newDoi })
       } else {
         this.doiIdentifiers.splice(idx, 1)
-        this.$toast.add({severity:'warning', summary: `"${searchText}" is not a valid DOI`, life: 3000})
+        this.$toast.add({severity:'warn', summary: `"${searchText}" is not a valid DOI`, life: 3000})
       }
     },
 
@@ -660,7 +660,7 @@ export default {
       const newIdentifier = this.publicationIdentifiers[newIdx].identifier
       if (this.publicationIdentifiers.findIndex((pub) => pub.identifier == newIdentifier) < newIdx) {
         this.publicationIdentifiers.splice(newIdx, 1)
-        this.$toast.add({severity:'warning', summary: `Identifier "${newIdentifier}" is already associated with this experiment`, life: 3000})
+        this.$toast.add({severity:'warn', summary: `Identifier "${newIdentifier}" is already associated with this experiment`, life: 3000})
       }
     },
 
@@ -689,12 +689,12 @@ export default {
       const newRawRead = normalizeRawRead(searchText)
       if (this.rawReadIdentifiers.find((item) => item.identifier == newRawRead)) {
         this.rawReadIdentifiers.splice(idx, 1)
-        this.$toast.add({severity:'warning', summary: `Raw Read identifier "${newRawRead}" is already associated with this experiment`, life: 3000})
+        this.$toast.add({severity:'warn', summary: `Raw Read identifier "${newRawRead}" is already associated with this experiment`, life: 3000})
       } else if (validateRawRead(searchText)) {
         this.rawReadIdentifiers.splice(idx, 1, { identifier: newRawRead })
       } else {
         this.rawReadIdentifiers.splice(idx, 1)
-        this.$toast.add({severity:'warning', summary: `"${searchText}" is not a valid Raw Read identifier`, life: 3000})
+        this.$toast.add({severity:'warn', summary: `"${searchText}" is not a valid Raw Read identifier`, life: 3000})
       }
     },
 
@@ -742,7 +742,7 @@ export default {
 
     resetKeywords: function() {
       if (this.item && this.item.keywords.length !== 0) {
-        // Keywords could be an empty list now. Will modify it back to compulsory when we get final list. 
+        // Keywords could be an empty list now. Will modify it back to compulsory when we get final list.
         const setKeyword = (key) => {
           const keywordObj = this.item.keywords.find(keyword => keyword.keyword.key === key)
           this.keywordKeys[key] = keywordObj ? keywordObj.keyword.value : null
@@ -837,7 +837,7 @@ export default {
         "description": this.keywordDescriptions[keyword.key],
       }))
       combinedKeywords.push(...phenotypicKeywords)
-      // Push all of the keyworeds to this.keywords directly will raise a bug if users choose Other option without typing anything. 
+      // Push all of the keyworeds to this.keywords directly will raise a bug if users choose Other option without typing anything.
       this.keywords = combinedKeywords
 
       const editedFields = {

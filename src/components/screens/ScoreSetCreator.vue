@@ -1242,7 +1242,7 @@ export default {
               _.remove(this.contributors, (c) => c.orcidId == orcidId)
               this.$toast.add({
                 life: 3000,
-                severity: 'warning',
+                severity: 'warn',
                 summary: `No ORCID user was found with ORCID ID ${orcidId}.`
               })
             }
@@ -1250,7 +1250,7 @@ export default {
             _.remove(this.contributors, (c) => c.orcidId == orcidId)
             this.$toast.add({
               life: 3000,
-              severity: 'warning',
+              severity: 'warn',
               summary: `${orcidId} is not a valid ORCID ID`
             })
           }
@@ -1484,12 +1484,12 @@ export default {
       const newDoi = normalizeDoi(searchText)
       if (this.doiIdentifiers.find((item) => item.identifier == newDoi)) {
         this.doiIdentifiers.splice(idx, 1)
-        this.$toast.add({severity:'warning', summary: `DOI "${newDoi}" is already associated with this experiment`, life: 3000})
+        this.$toast.add({severity:'warn', summary: `DOI "${newDoi}" is already associated with this experiment`, life: 3000})
       } else if (validateDoi(searchText)) {
         this.doiIdentifiers.splice(idx, 1, { identifier: newDoi })
       } else {
         this.doiIdentifiers.splice(idx, 1)
-        this.$toast.add({severity:'warning', summary: `"${searchText}" is not a valid DOI`, life: 3000})
+        this.$toast.add({severity:'warn', summary: `"${searchText}" is not a valid DOI`, life: 3000})
       }
     },
 
@@ -1508,7 +1508,7 @@ export default {
       const newIdentifier = this.publicationIdentifiers[newIdx].identifier
       if (this.publicationIdentifiers.findIndex((pub) => pub.identifier == newIdentifier) < newIdx) {
         this.publicationIdentifiers.splice(newIdx, 1)
-        this.$toast.add({severity:'warning', summary: `Identifier "${newIdentifier}" is already associated with this experiment`, life: 3000})
+        this.$toast.add({severity:'warn', summary: `Identifier "${newIdentifier}" is already associated with this experiment`, life: 3000})
       }
     },
 

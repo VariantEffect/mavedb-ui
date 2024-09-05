@@ -251,7 +251,7 @@
                     <Button
                       class="keyword-description-button"
                       rounded
-                      :disabled="keywordKeys[keyword.key] == 'Other' ? true : null"
+                      :disabled="!keywordKeys[keyword.key] || keywordKeys[keyword.key] == 'Other' ? true : null"
                       :icon="(keywordTextVisible[keyword.key] || keywordKeys[keyword.key] === 'Other') ? 'pi pi-minus' : 'pi pi-file-edit'"
                       @click="keywordToggleInput(keyword.key)"
                       aria-label="Filter"
@@ -479,9 +479,7 @@ export default {
     serverSideValidationErrors: {},
     clientSideValidationErrors: {},
     inputClasses: {
-      countsFile: null,
       extraMetadataFile: null,
-      scoresFile: null
     },
     validationErrors: {
       keywords: _.fromPairs(KEYWORDS.map((keyword) => [keyword.key, null])),
@@ -740,24 +738,6 @@ export default {
       this.mergeValidationErrors()
     },
 
-    resetKeywords: function() {
-      if (this.item && this.item.keywords.length !== 0) {
-        // Keywords could be an empty list now. Will modify it back to compulsory when we get final list.
-        const setKeyword = (key) => {
-          const keywordObj = this.item.keywords.find(keyword => keyword.keyword.key === key)
-          this.keywordKeys[key] = keywordObj ? keywordObj.keyword.value : null
-          this.keywordDescriptions[key] = keywordObj ? keywordObj.description : null
-        }
-        for (const k of KEYWORDS) {
-          setKeyword(k.key)
-        }
-      } else {
-        this.keywords = []
-        this.keywordKeys = _.fromPairs(KEYWORDS.map((keyword) => [keyword.key, null]))
-        this.keywordKeys = _.fromPairs(KEYWORDS.map((keyword) => [keyword.key, null]))
-      }
-    },
-
     ////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
     // Validation
     ////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
@@ -804,6 +784,24 @@ export default {
         this.extraMetadata = {}
       }
       this.resetKeywords()
+    },
+
+    resetKeywords: function() {
+      if (this.item && this.item.keywords.length !== 0) {
+        // Keywords could be an empty list now. Will modify it back to compulsory when we get final list.
+        const setKeyword = (key) => {
+          const keywordObj = this.item.keywords.find(keyword => keyword.keyword.key === key)
+          this.keywordKeys[key] = keywordObj ? keywordObj.keyword.value : null
+          this.keywordDescriptions[key] = keywordObj ? keywordObj.description : null
+        }
+        for (const k of KEYWORDS) {
+          setKeyword(k.key)
+        }
+      } else {
+        this.keywords = []
+        this.keywordKeys = _.fromPairs(KEYWORDS.map((keyword) => [keyword.key, null]))
+        this.keywordKeys = _.fromPairs(KEYWORDS.map((keyword) => [keyword.key, null]))
+      }
     },
 
     ////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////

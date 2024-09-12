@@ -3,7 +3,7 @@
     <div v-if="itemStatus=='Loaded'" class="mave-score-set">
       <div class="mave-1000px-col">
         <div v-if="!item.publishedDate" class="variant-processing-status">
-          <div v-if="item.processingState == 'success'">
+          <div v-if="item.processingState == 'success' && item.mappingState != 'processing'">
             <Message severity="success">
               Scores and/or counts have been successfully processed. This score set is ready to be published.
             </Message>
@@ -11,6 +11,11 @@
           <div v-else-if="item.processingState == 'processing'">
             <Message severity="info">
                 Scores and/or counts are being processed. Refresh this page in a few minutes to check on their status.
+            </Message>
+          </div>
+          <div v-else-if="item.processingSate == 'success' && (item.mappingState == 'pending_variant_processing' || item.mappingState == 'processing')">
+            <Message severity="info">
+              Variants are being mapped to a reference. Refresh this page in a few minutes to check on their status.
             </Message>
           </div>
           <div v-else-if="item.processingState == 'failed'">
@@ -22,6 +27,25 @@
             <Message severity="warn">
               This score set is currently incomplete and may not be published. Please add any required fields and/or data files.
             </Message>
+          </div>
+        </div>
+        <div class="mave-1000px-col">
+          <div v-if="!item.publishedDate && item.processingState == 'success'" class="mapping-status">
+            <div v-if="item.mappingState == 'complete'">
+              <Message severity="info">
+                All variants mapped successfully to reference.
+              </Message>
+            </div>
+            <div v-else-if="item.mappingState == 'incomplete'">
+              <Message severity="info">
+                Variant mapping completed, but some variants did not map successfully. The mapped variants file available on this page includes specific error messages for each failed variant mapping. Score set is still publishable.
+              </Message>
+            </div>
+            <div v-else-if="item.mappingSate == 'failed'">
+              <Message severity="info">
+                Variants could not be mapped to reference: {{  item.mappingErrors.error_message }}. This score set is still publishable.
+              </Message>
+            </div>
           </div>
         </div>
         <div class="mave-screen-title-bar">

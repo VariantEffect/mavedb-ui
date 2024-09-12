@@ -41,7 +41,7 @@
                 Variant mapping completed, but some variants did not map successfully. The mapped variants file available on this page includes specific error messages for each failed variant mapping. Score set is still publishable.
               </Message>
             </div>
-            <div v-else-if="item.mappingSate == 'failed'">
+            <div v-else-if="item.mappingState == 'failed'">
               <Message severity="info">
                 Variants could not be mapped to reference: {{  item.mappingErrors.error_message }}. This score set is still publishable.
               </Message>

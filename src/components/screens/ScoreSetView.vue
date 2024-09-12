@@ -3,7 +3,7 @@
     <div v-if="itemStatus=='Loaded'" class="mave-score-set">
       <div class="mave-1000px-col">
         <div v-if="!item.publishedDate" class="variant-processing-status">
-          <div v-if="item.processingState == 'success' && item.mappingState != 'processing'">
+          <div v-if="item.processingState == 'success' && item.mappingState != 'processing' && item.mappingState != 'pending_variant_processing'">
             <Message severity="success">
               Scores and/or counts have been successfully processed. This score set is ready to be published.
             </Message>

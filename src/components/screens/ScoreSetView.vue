@@ -13,7 +13,7 @@
                 Scores and/or counts are being processed. Refresh this page in a few minutes to check on their status.
             </Message>
           </div>
-          <div v-else-if="item.processingSate == 'success' && (item.mappingState == 'pending_variant_processing' || item.mappingState == 'processing')">
+          <div v-else-if="item.processingState == 'success' && (item.mappingState == 'pending_variant_processing' || item.mappingState == 'processing')">
             <Message severity="info">
               Variants are being mapped to a reference. Refresh this page in a few minutes to check on their status.
             </Message>
@@ -30,7 +30,7 @@
           </div>
         </div>
         <div class="mave-1000px-col">
-          <div v-if="!item.publishedDate && item.processingState == 'success'" class="mapping-status">
+          <div v-if="!item.publishedDate && item.processingState == 'success' && item.mappingState != 'pending_variant_processing' && item.mappingState != 'processing'" class="mapping-status">
             <div v-if="item.mappingState == 'complete'">
               <Message severity="info">
                 All variants mapped successfully to reference.

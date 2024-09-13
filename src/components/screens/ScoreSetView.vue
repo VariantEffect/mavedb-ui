@@ -3,7 +3,7 @@
     <div v-if="itemStatus=='Loaded'" class="mave-score-set">
       <div class="mave-1000px-col">
         <div v-if="!item.publishedDate" class="variant-processing-status">
-          <div v-if="item.processingState == 'success' && item.mappingState != 'processing' && item.mappingState != 'pending_variant_processing'">
+          <div v-if="item.processingState == 'success' && item.mappingState != 'processing' && item.mappingState != 'pending_variant_processing' && item.mappingState != 'queued'">
             <Message severity="success">
               Scores and/or counts have been successfully processed. This score set is ready to be published.
             </Message>
@@ -13,7 +13,7 @@
                 Scores and/or counts are being processed. Refresh this page in a few minutes to check on their status.
             </Message>
           </div>
-          <div v-else-if="item.processingState == 'success' && (item.mappingState == 'pending_variant_processing' || item.mappingState == 'processing')">
+          <div v-else-if="item.processingState == 'success' && (item.mappingState == 'pending_variant_processing' || item.mappingState == 'processing' || item.mappingState == 'queued')">
             <Message severity="info">
               Variants are being mapped to a reference. Refresh this page in a few minutes to check on their status.
             </Message>
@@ -30,7 +30,7 @@
           </div>
         </div>
         <div class="mave-1000px-col">
-          <div v-if="!item.publishedDate && item.processingState == 'success' && item.mappingState != 'pending_variant_processing' && item.mappingState != 'processing'" class="mapping-status">
+          <div v-if="!item.publishedDate && item.processingState == 'success' && item.mappingState != 'pending_variant_processing' && item.mappingState != 'processing' && item.mappingState != 'queued'" class="mapping-status">
             <div v-if="item.mappingState == 'complete'">
               <Message severity="info">
                 All variants mapped successfully to reference.

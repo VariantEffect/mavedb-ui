@@ -1258,15 +1258,6 @@ export default {
       }
     },
 
-    suggestionsForAutocomplete: function (suggestions) {
-      // The PrimeVue AutoComplete doesn't seem to like it if we set the suggestion list to [].
-      // This causes the drop-down to stop appearing when we later populate the list.
-      if (!suggestions || suggestions.length == 0) {
-        return [{}]
-      }
-      return suggestions
-    },
-
     validateWizardStep: function(step) {
       // Later, this may depend on server-side validation.
       switch (step) {

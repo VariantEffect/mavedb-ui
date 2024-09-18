@@ -886,6 +886,150 @@
             </template>
           </StepperPanel>
 
+          <StepperPanel v-if="itemStatus == 'NotLoaded' || this.item.private" header="Score Ranges">
+            <template #header="{index, clickCallback}">
+              <button class="p-stepper-action" :disabled="maxWizardStepEntered < index || maxWizardStepValidated < index - 1" role="tab" @click="clickCallback">
+                <span class="p-stepper-number">{{ index + 1 }}</span>
+                <span class="p-stepper-title">Score Ranges</span>
+              </button>
+            </template>
+            <template #content="{prevCallback: showPreviousWizardStep, nextCallback: showNextWizardStep}">
+              <div class="mavedb-wizard-form">
+                <div class="mavedb-wizard-form-content-background"></div>
+                <div class="mavedb-wizard-row">
+                  <div class="mavedb-wizard-help">
+                    <label :id="$scopedId('input-isProvidingScoreRanges')">Will you be providing score ranges for this score set?</label>
+                    <div class="mavedb-help-small">
+                      Score ranges provide additional clinical context to the scores you upload. If you provide score ranges, you must
+                      classify each range as denoting either normal or abnormal function, with at least one range of each type. You should
+                      also provide a wild type score within the normal range. This score is the expected score for wild type variants.
+                    </div>
+                  </div>
+                  <div class="mavedb-wizard-content">
+                    <InputSwitch v-model="isProvidingScoreRanges" :aria-labelledby="$scopedId('input-isProvidingScoreRanges')" />
+                    <div class="mavedb-switch-value">{{ isProvidingScoreRanges ? 'Yes, I will be providing score range data.' : 'No, I will not be providing score range data.' }}</div>
+                  </div>
+                </div>
+                <div v-if="isProvidingScoreRanges" class="mavedb-wizard-row">
+                  <div class="mavedb-wizard-help">
+                    <label :id="$scopedId('input-wtScore')">What is the wild type score for this score set?</label>
+                    <div class="mavedb-help-small">
+                      This number should be within the range of normal scores for your score data.
+                    </div>
+                  </div>
+                  <div class="mavedb-wizard-content">
+                    <span class="p-float-label">
+                      <InputNumber v-model="scoreRanges.wtScore" :aria-labelledby="$scopedId('input-wtScore')" showButtons :step="0.01" style="width:100%;" />
+                      <label :for="$scopedId('input-wtScore')"> Wild Type Score </label>
+                    </span>
+                    <span v-if="validationErrors[`scoreRanges.wtScore`]" class="mave-field-error">{{ validationErrors[`scoreRanges.wtScore`] }}</span>
+                  </div>
+                </div>
+                <div v-if="isProvidingScoreRanges">
+                  <div v-for="(rangeObj, rangeIdx) in scoreRanges.ranges" :key="rangeIdx">
+                    <div class="mavedb-wizard-row">
+                      <div class="mavedb-wizard-content">
+                        <div>
+                          Score Range {{  rangeIdx + 1 }}
+                          <Button label="Remove" severity="danger" icon="pi pi-times" style="float:right;" @click="removeScoreRange(rangeIdx)"></Button>
+                        </div>
+                        <hr>
+                        <span v-if="validationErrors[`scoreRanges.ranges.${rangeIdx}`]" class="mave-field-error">{{ validationErrors[`scoreRanges.ranges.${rangeIdx}`] }}</span>
+                      </div>
+                    </div>
+                    <div class="mavedb-wizard-row">
+                      <div class="mavedb-wizard-help">
+                        <label :id="$scopedId(`input-rangeLabel-${rangeIdx}`)">Enter a label for this score range</label>
+                        <div class="mavedb-help-small">
+                          This label will be used to describe this range on visualizations of this score data.
+                        </div>
+                      </div>
+                      <div class="mavedb-wizard-content">
+                        <span class="p-float-label">
+                          <InputText v-model="rangeObj.value.label" :aria-labelledby="$scopedId(`input-rangeLabel-${rangeIdx}`)" style="width:100%;" />
+                          <label :for="$scopedId(`input-rangeLabel-${rangeIdx}`)"> Score range label </label>
+                        </span>
+                        <span v-if="validationErrors[`scoreRanges.ranges.${rangeIdx}.label`]" class="mave-field-error">{{ validationErrors[`scoreRanges.ranges.${rangeIdx}.label`] }}</span>
+                      </div>
+                    </div>
+                    <div class="mavedb-wizard-row">
+                      <div class="mavedb-wizard-help">
+                        <label :id="$scopedId(`input-rangeDescription-${rangeIdx}`)">Enter an (optional) description for this score range</label>
+                        <div class="mavedb-help-small">
+                          This description should provide additional details about this score range if necessary.
+                        </div>
+                      </div>
+                      <div class="mavedb-wizard-content">
+                        <span class="p-float-label">
+                          <Textarea v-model="rangeObj.value.description" :aria-labelledby="$scopedId(`input-rangeDescription-${rangeIdx}`)" autoResize rows="5" style="width:100%;" />
+                          <label :for="$scopedId(`input-rangeDescription-${rangeIdx}`)"> Score range description </label>
+                        </span>
+                        <span v-if="validationErrors[`scoreRanges.ranges.${rangeIdx}.description`]" class="mave-field-error">{{ validationErrors[`scoreRanges.ranges.${rangeIdx}.description`] }}</span>
+                      </div>
+                    </div>
+                    <div class="mavedb-wizard-row">
+                      <div class="mavedb-wizard-help">
+                        <label :id="$scopedId(`input-rangeClassification-${rangeIdx}`)">How should this range be classified?</label>
+                        <div class="mavedb-help-small">
+                          When providing score ranges, it is necessary to classify each range as either normal or abnormal. You may provide more
+                          than one range within each classification, but at least one of each is necessary.
+                        </div>
+                      </div>
+                      <div class="mavedb-wizard-content">
+                          <SelectButton v-model="rangeObj.value.classification" :id="$scopedId(`input-rangeClassification-${rangeIdx}`)"
+                          :options="rangeClassifications" />
+                          <span v-if="validationErrors[`scoreRanges.ranges.${rangeIdx}.classification`]" class="mave-field-error">{{ validationErrors[`scoreRanges.ranges.${rangeIdx}.classification`] }}</span>
+                      </div>
+                    </div>
+                    <div class="mavedb-wizard-row">
+                      <div class="mavedb-wizard-help">
+                        <label :id="$scopedId(`input-rangeBoundaries-${rangeIdx}`)">What are the upper and lower bounds of this score range?</label>
+                        <div class="mavedb-help-small">
+                          The lower bound is inclusive while the upper bound is exclusive of the provided value. Score range boundaries should not overlap with the boundaries
+                          of other score ranges. If a range does not have an upper or lower bound, the value will be treated as either positive or negative infinity.
+                        </div>
+                      </div>
+                      <div class="mavedb-wizard-content">
+                          <InputGroup>
+                            <span class=p-float-label>
+                              <InputText v-model="rangeObj.value.range[0]" :aria-labelledby="$scopedId(`input-rangeLower-${rangeIdx}`)" :disabled="rangeObj.infiniteLower"/>
+                              <label :for="$scopedId(`input-rangeLower-${rangeIdx}`)"> {{ rangeObj.infiniteLower ? "-infinity" : "Lower Bound" }} </label>
+                            </span>
+                            <InputGroupAddon>to</InputGroupAddon>
+                            <span class=p-float-label>
+                              <InputText v-model="rangeObj.value.range[1]" :aria-labelledby="$scopedId(`input-rangeUpper-${rangeIdx}`)" :disabled="rangeObj.infiniteUpper"/>
+                              <label :for="$scopedId(`input-rangeUpper-${rangeIdx}`)"> {{ rangeObj.infiniteUpper ? "infinity" : "Upper Bound" }} </label>
+                            </span>
+                          </InputGroup>
+                          <span>
+                            <Checkbox :binary="true" v-model="rangeObj.infiniteLower" inputId="lowerBound" name="lower" @change="boundaryLimitUpdated(rangeIdx, 'lower')"/>
+                            <label for="lowerBound" class="ml-2"> No lower bound </label>
+                          </span>
+                          <span style="float:right;">
+                            <label for="upperBound" class="ml-2"> No upper bound </label>
+                            <Checkbox :binary="true" v-model="rangeObj.infiniteUpper" inputId="upperBound" name="upper" @change="boundaryLimitUpdated(rangeIdx, 'upper')"/>
+                          </span>
+                          <span v-if="validationErrors[`scoreRanges.ranges.${rangeIdx}.0`]" class="mave-field-error">{{ validationErrors[`scoreRanges.ranges.${rangeIdx}.0`] }}</span>
+                          <span v-if="validationErrors[`scoreRanges.ranges.${rangeIdx}.1`]" class="mave-field-error">{{ validationErrors[`scoreRanges.ranges.${rangeIdx}.1`] }}</span>
+                      </div>
+                    </div>
+                  </div>
+                  <div class="mavedb-wizard-row">
+                    <div class="mavedb-wizard-content">
+                      <Button label="Add another range" icon="pi pi-plus" style="float:right;" @click="addScoreRange"></Button>
+                    </div>
+                  </div>
+                </div>
+              </div>
+              <div class="mavedb-wizard-step-controls-row">
+                <div class="flex justify-content-between mavedb-wizard-step-controls pt-5">
+                  <Button label="Back" severity="secondary" icon="pi pi-arrow-left" @click="showPreviousWizardStep" />
+                  <Button label="Next" :disabled="this.maxWizardStepValidated < activeWizardStep" icon="pi pi-arrow-right" iconPos="right" @click="showNextWizardStepIfValid(showNextWizardStep)" />
+                </div>
+              </div>
+            </template>
+          </StepperPanel>
+
           <StepperPanel v-if="itemStatus == 'NotLoaded' || this.item.private" header="Variant scores">
             <template #header="{index, clickCallback}">
               <button class="p-stepper-action" :disabled="maxWizardStepEntered < index || maxWizardStepValidated < index - 1" role="tab" @click="clickCallback">
@@ -978,12 +1122,15 @@ import AutoComplete from 'primevue/autocomplete'
 import Button from 'primevue/button'
 import Card from 'primevue/card'
 import Chips from 'primevue/chips'
+import Checkbox from 'primevue/checkbox'
 import Column from 'primevue/column'
 import Dropdown from 'primevue/dropdown'
 import FileUpload from 'primevue/fileupload'
 import InputNumber from 'primevue/inputnumber'
 import InputSwitch from 'primevue/inputswitch'
 import InputText from 'primevue/inputtext'
+import InputGroup from 'primevue/inputgroup'
+import InputGroupAddon from 'primevue/inputgroupaddon'
 import Message from 'primevue/message'
 import Multiselect from 'primevue/multiselect'
 import ProgressSpinner from 'primevue/progressspinner'
@@ -1039,6 +1186,19 @@ function emptyTargetGeneWizardObj() {
   }
 }
 
+function emptyScoreRangeWizardObj() {
+  return {
+    value: {
+      label: null,
+      description: null,
+      range: [null, null],
+      classification: null,
+    },
+    infiniteLower: false,
+    infiniteUpper: false
+  }
+}
+
 export default {
   name: 'ScoreSetEditor',
   components: {
@@ -1046,6 +1206,7 @@ export default {
     Button,
     Card,
     Chips,
+    Checkbox,
     Column,
     DataTable,
     DefaultLayout,
@@ -1056,6 +1217,8 @@ export default {
     InputNumber,
     InputSwitch,
     InputText,
+    InputGroup,
+    InputGroupAddon,
     Message,
     Multiselect,
     ProgressSpinner,
@@ -1090,7 +1253,6 @@ export default {
     const taxonomySuggestions = useItems({itemTypeName: 'taxonomy-search'})
     const geneNames = useItems({ itemTypeName: 'gene-names' })
     const assemblies = useItems({ itemTypeName: 'assemblies' })
-
     const targetGeneSuggestions = useItems({ itemTypeName: 'target-gene-search' })
 
     return {
@@ -1165,6 +1327,11 @@ export default {
     geneNameSuggestions: [],
     accessionSuggestions: [],
 
+    scoreRanges: {
+      wtScore: null,
+      ranges: [],
+    },
+
     // Static sets of options:
     sequenceTypes: [
       'DNA',
@@ -1174,6 +1341,10 @@ export default {
       'Protein coding',
       'Regulatory',
       'Other noncoding'
+    ],
+    rangeClassifications: [
+      'Normal',
+      'Abnormal'
     ],
 
     progressVisible: false,
@@ -1189,6 +1360,7 @@ export default {
 
     isTargetSequence: true,
     isMultiTarget: false,
+    isProvidingScoreRanges: false,
 
     // track this separately, since it is a pain to reconstruct steps from target paths (targetGenes.**step**.rest.of.error.path)
     minTargetGeneStepWithError: Infinity,
@@ -1207,13 +1379,14 @@ export default {
       ],
       ['targets'],
       ['targetGene'],
+      ['scoreRanges'],
       ['scoresFile', 'countsFile'],
     ],
   }),
 
   computed: {
     maxWizardStepValidated: function() {
-      const numSteps = 4 + this.numTargets
+      const numSteps = 5 + this.numTargets
       // This yields the index of the maximum step validated, -1 if step 0 is not valid, and -2 if all steps are valid.
       const maxStepValidated = _.findIndex(_.range(0, numSteps), (step) => !this.validateWizardStep(step)) - 1
       return maxStepValidated == -2 ? numSteps - 1 : maxStepValidated
@@ -1395,6 +1568,14 @@ export default {
           this.stepFields.splice(3, oldValue-newValue)
         }
       }
+    },
+    isProvidingScoreRanges: {
+      handler: function (newValue) {
+        if (newValue && this.scoreRanges.ranges.length === 0) {
+          this.scoreRanges.ranges.push(emptyScoreRangeWizardObj())
+        }
+        console.log(this.scoreRanges)
+      }
     }
   },
 
@@ -1488,6 +1669,16 @@ export default {
               && currentTargetGene.category
               && (currentTargetGene.targetAccession.accession || (currentTargetGene.targetSequence.sequence && currentTargetGene.targetSequence.sequenceType))
         }
+        case (step == 3 + this.numTargets): {
+          let allRangesCompleted = false
+          for (const scoreRange of this.scoreRanges.ranges) {
+            if (!scoreRange.value.label || !scoreRange.value.classification || (!scoreRange.value.range[0] && !scoreRange.infiniteLower) || (!scoreRange.value.range[1] && !scoreRange.infiniteUpper)) {
+              break
+            }
+            allRangesCompleted = true
+          }
+          return !(this.isProvidingScoreRanges) || (allRangesCompleted && this.scoreRanges.wtScore)
+        }
         default:
           return true
       }
@@ -1578,6 +1769,13 @@ export default {
       targetGene.targetGene = existingTarget
 
       return targetGene
+    },
+
+    scoreRangeWithWizardProperties(existingRange) {
+      const scoreRange = this.emptyScoreRangeWizardObj()
+      scoreRange.value = existingRange
+
+      return scoreRange
     },
 
     refreshAccessionOptions: async function (targetIdx) {
@@ -1678,6 +1876,27 @@ export default {
         return response.data || []
       } catch (err) {
         console.log(`Error while loading search results")`, err)
+      }
+    },
+
+    boundaryLimitUpdated: function(rangeIdx, boundary) {
+      const updatedRange = this.scoreRanges.ranges[rangeIdx]
+      if (boundary === "upper") {
+        updatedRange.value.range[1] = null
+      }
+      else if (boundary == "lower") {
+        updatedRange.value.range[0] = null
+      }
+    },
+
+    addScoreRange: function() {
+      this.scoreRanges.ranges.push(emptyScoreRangeWizardObj())
+    },
+
+    removeScoreRange: function(rangeIdx) {
+      this.scoreRanges.ranges.splice(rangeIdx, 1)
+      if (this.scoreRanges.ranges.length === 0) {
+        this.isProvidingScoreRanges = false
       }
     },
 
@@ -1915,6 +2134,12 @@ export default {
         this.secondaryPublicationIdentifiers = this.item.secondaryPublicationIdentifiers
         this.extraMetadata = this.item.extraMetadata
 
+        this.scoreRanges = {
+          wtScore: this.item.scoreRanges?.wtScore,
+          ranges: this.item.scoreRanges?.ranges.map(range => this.scoreRangeWithWizardProperties(range))
+        }
+        this.isProvidingScoreRanges = this.scoreRanges.ranges.length > 0
+
         this.createdTargetGenes = this.item.targetGenes.map(target => this.targetGeneWithWizardProperties(target))
         this.numTargets = this.createdTargetGenes.length
         this.isMultiTarget = this.numTargets == 1 ? false : true
@@ -1939,6 +2164,9 @@ export default {
         this.primaryPublicationIdentifiers = []
         this.secondaryPublicationIdentifiers = []
         this.extraMetadata = {}
+
+        this.scoreRanges = {wtScore: null, ranges: []}
+        this.isProvidingScoreRanges = false
 
         this.createdTargetGenes = [emptyTargetGeneWizardObj]
         this.numTargets = 1
@@ -1967,7 +2195,7 @@ export default {
       ).filter(
         secondary => !primaryPublicationIdentifiers.some(primary => primary.identifier == secondary.identifier && primary.dbName == secondary.dbName)
       )
-
+      console.log(this.scoreRanges)
       const editedFields = {
         experimentUrn: this.experimentUrn ? this.experimentUrn : this.experiment?.urn,
         title: this.title,
@@ -1982,6 +2210,11 @@ export default {
         secondaryPublicationIdentifiers: secondaryPublicationIdentifiers,
         dataUsagePolicy: this.dataUsagePolicy,
         extraMetadata: {},
+
+        scoreRanges: {
+          wtScore: this.scoreRanges.wtScore,
+          ranges: this.scoreRanges.ranges.map((range) => range.value)
+        },
 
         targetGenes: this.createdTargetGenes.map(
           (target) => {
@@ -2007,6 +2240,9 @@ export default {
           }
         )
       }
+      if (!this.isProvidingScoreRanges) {
+        delete editedFields.scoreRanges
+      }
       if (!this.item) {
         editedFields.supersededScoreSetUrn = this.supersededScoreSet ? this.supersededScoreSet.urn : null
         editedFields.metaAnalyzesScoreSetUrns = this.metaAnalyzesScoreSets.map((s) => s.urn)
@@ -2022,6 +2258,7 @@ export default {
         this.item.publicationIdentifiers = []
         this.item.rawReadIdentifiers = []
         this.item.targetGenes = []
+        this.item.scoreRanges = {wtScore: null, ranges: []}
       }
 
       const editedItem = _.merge({}, this.item || {}, editedFields)

@@ -75,7 +75,7 @@ const routes = [{
   path: '/experiment/:urn/create-score-set',
   name: 'createScoreSetInExperiment',
   component: ScoreSetCreator,
-  props: (route) => ({experimentUrn: route.params.urn, experimentTitle: route.query.title})
+  props: (route) => ({experimentUrn: route.params.urn})
 },{
   path: '/experiment-sets/:urn',
   name: 'experimentSet',

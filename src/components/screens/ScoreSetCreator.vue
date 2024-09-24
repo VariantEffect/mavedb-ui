@@ -33,11 +33,11 @@
             <template #content="{nextCallback: showNextWizardStep}">
               <div class="mavedb-wizard-form">
                 <div class="mavedb-wizard-form-content-background"></div>
-                <div v-if="experimentUrn">
+                <!-- <div v-if="experimentUrn && this.experiment">
                   <div class="mavedb-wizard-row">
                     <div class="mavedb-wizard-help">
                       <label :id="$scopedId('input-experiment')">
-                        Experiment: {{ experimentUrn  }}
+                        Experiment: {{ experimentUrn }}
                       </label>
                       <div class="mavedb-help-small">
                         To add a score set to a different experiment, superced a score set or add a score set to meta-analysis, please navigate to "New score set".
@@ -46,132 +46,132 @@
                       </div>
                     </div>
                     <div class="mavedb-wizard-content">
-                      Title: {{ experimentTitle}}
+                      Experiment title: {{ this.experiment.title }}
                     </div>
                   </div>
                 </div>
-                <div v-else>
-                  <div class="mavedb-wizard-row">
-                    <div class="mavedb-wizard-help">
-                      <label :id="$scopedId('input-superseding-score-set-label')">
-                        Does this score set correct errors in and replace a score set previously published on MaveDB that you created?
-                      </label>
-                    </div>
-                    <div class="mavedb-wizard-content">
-                      <InputSwitch v-model="isSupersedingScoreSet" :aria-labelledby="$scopedId('input-superseding-score-set-label')" />
-                      <div class="mavedb-switch-value">{{ isSupersedingScoreSet ? 'Yes, this supersedes another score set' : 'No, this does not supersede another score set' }}</div>
+                <div v-else> -->
+                <div class="mavedb-wizard-row">
+                  <div class="mavedb-wizard-help">
+                    <label :id="$scopedId('input-superseding-score-set-label')">
+                      Does this score set correct errors in and replace a score set previously published on MaveDB that you created?
+                    </label>
+                  </div>
+                  <div class="mavedb-wizard-content">
+                    <InputSwitch v-model="isSupersedingScoreSet" :aria-labelledby="$scopedId('input-superseding-score-set-label')" />
+                    <div class="mavedb-switch-value">{{ isSupersedingScoreSet ? 'Yes, this supersedes another score set' : 'No, this does not supersede another score set' }}</div>
+                  </div>
+                </div>
+                <div class="mavedb-wizard-row">
+                  <div class="mavedb-wizard-help">
+                    <label :id="$scopedId('input-is-meta-analysis-label')">Is this score set a meta-analysis?</label>
+                    <div class="mavedb-help-small">
+                      Meta-analyses are score sets derived from data in other score sets that were created by you or other users.
+                      For example:
+                      <ul>
+                        <li>a score set that combines data from two other score sets to produce new scores, or</li>
+                        <li>a score set that adds imputed missing values to the scores in another score set.</li>
+                      </ul>
                     </div>
                   </div>
-                  <div class="mavedb-wizard-row">
-                    <div class="mavedb-wizard-help">
-                      <label :id="$scopedId('input-is-meta-analysis-label')">Is this score set a meta-analysis?</label>
-                      <div class="mavedb-help-small">
-                        Meta-analyses are score sets derived from data in other score sets that were created by you or other users.
-                        For example:
-                        <ul>
-                          <li>a score set that combines data from two other score sets to produce new scores, or</li>
-                          <li>a score set that adds imputed missing values to the scores in another score set.</li>
-                        </ul>
-                      </div>
-                    </div>
-                    <div class="mavedb-wizard-content">
-                      <InputSwitch v-model="isMetaAnalysis" :aria-labelledby="$scopedId('input-is-meta-analysis-label')" />
-                      <div class="mavedb-switch-value">{{ isMetaAnalysis ? 'Yes, this is a meta-analysis' : 'No, this is not a meta-analysis' }}</div>
+                  <div class="mavedb-wizard-content">
+                    <InputSwitch v-model="isMetaAnalysis" :aria-labelledby="$scopedId('input-is-meta-analysis-label')" />
+                    <div class="mavedb-switch-value">{{ isMetaAnalysis ? 'Yes, this is a meta-analysis' : 'No, this is not a meta-analysis' }}</div>
+                  </div>
+                </div>
+                <div v-if="!isSupersedingScoreSet && !isMetaAnalysis" class="mavedb-wizard-row">
+                  <div class="mavedb-wizard-help">
+                    To which experiment does this score set belong?
+                    <div class="mavedb-help-small">
+                      For more on the relationship between score sets and experiments, see the
+                      <a target="_blank" href="https://mavedb.org/docs/mavedb/record_types.html#record-types">documentation</a>.
                     </div>
                   </div>
-                  <div v-if="!isSupersedingScoreSet && !isMetaAnalysis" class="mavedb-wizard-row">
-                    <div class="mavedb-wizard-help">
-                      To which experiment does this score set belong?
-                      <div class="mavedb-help-small">
-                        For more on the relationship between score sets and experiments, see the
-                        <a target="_blank" href="https://mavedb.org/docs/mavedb/record_types.html#record-types">documentation</a>.
-                      </div>
+                  <div class="mavedb-wizard-content">
+                    <div v-if="itemStatus != 'NotLoaded' && item.experiment">
+                      Experiment:
+                      <router-link :to="{ name: 'experiment', params: { urn: item.experiment.urn } }">{{ item.experiment.title
+                      }}</router-link>
                     </div>
-                    <div class="mavedb-wizard-content">
-                      <div v-if="itemStatus != 'NotLoaded' && item.experiment">
-                        Experiment:
-                        <router-link :to="{ name: 'experiment', params: { urn: item.experiment.urn } }">{{ item.experiment.title
-                        }}</router-link>
-                      </div>
-                      <div v-else style="position: relative;">
-                        <span class="p-float-label">
-                          <Dropdown
-                            v-model="experiment"
-                            :id="$scopedId('input-experiment')"
-                            :options="editableExperiments"
-                            optionLabel="title"
-                            optionValue=""
-                            style="width: 50%"
-                            @change="populateExperimentMetadata"
-                          />
-                          <label :for="$scopedId('input-experiment')">Experiment</label>
-                        </span>
-                        <span v-if="validationErrors.experiment" class="mave-field-error">{{ validationErrors.experiment }}</span>
-                      </div>
-                    </div>
-                  </div>
-                  <div v-if="isSupersedingScoreSet" class="mavedb-wizard-row">
-                    <div class="mavedb-wizard-help">
-                      What score set does this supersede?
-                      <div class="mavedb-help-small">Type the superseded score set's MaveDB URN here and select it from the list.</div>
-                    </div>
-                    <div class="mavedb-wizard-content">
-                      <div v-if="itemStatus != 'NotLoaded' && supersedesScoreSet">
-                        Supersedes:
-                        <router-link :to="{ name: 'scoreSet', params: { urn: supersedesScoreSet.urn } }">{{ supersedesScoreSet.title }}</router-link>
-                      </div>
-                      <div v-if="itemStatus == 'NotLoaded'" class="field">
-                        <span class="p-float-label">
-                          <AutoComplete
-                            ref="supersededScoreSetInput"
-                            v-model="supersededScoreSet"
-                            :id="$scopedId('input-supersededScoreSet')"
-                            field="title"
-                            :forceSelection="true"
-                            :suggestions="supersededScoreSetSuggestionsList"
-                            @change="populateSupersededScoreSetMetadata"
-                            @complete="searchSupersededScoreSets"
-                          >
-                            <template #item="slotProps">
-                              {{ slotProps.item.urn }}: {{ slotProps.item.title }}
-                            </template>
-                          </AutoComplete>
-                          <label :for="$scopedId('input-supersededScoreSet')">Supersedes</label>
-                        </span>
-                        <span v-if="validationErrors.supersededScoreSetUrn" class="mave-field-error">{{
-                          validationErrors.supersededScoreSetUrn }}</span>
-                      </div>
-                    </div>
-                  </div>
-                  <div v-if="isMetaAnalysis" class="mavedb-wizard-row">
-                    <div class="mavedb-wizard-help">
-                      What score set(s) does this score set analyze?
-                      <div class="mavedb-help-small">Type a score set's MaveDB URN here and select it from the list. You may choose more than one score set.</div>
-                    </div>
-                    <div class="mavedb-wizard-content">
-                      <div v-if="itemStatus != 'NotLoaded' && item?.metaAnalyzesScoreSetUrns?.length > 0">
-                        Meta-analysis for:<br />
-                        <div v-for="metaAnalyzesScoreSetUrn of item.metaAnalyzesScoreSetUrns" :key="metaAnalyzesScoreSetUrn">
-                          <EntityLink entityType="scoreSet" :urn="metaAnalyzesScoreSetUrn"></EntityLink>
-                        </div>
-                      </div>
-                      <div v-if="itemStatus == 'NotLoaded'" class="field">
-                        <span class="p-float-label">
-                          <AutoComplete ref="metaAnalyzesScoreSetsInput" v-model="metaAnalyzesScoreSets"
-                            :id="$scopedId('input-metaAnalyzesScoreSets')" field="title" :forceSelection="true" :multiple="true"
-                            :suggestions="metaAnalyzesScoreSetSuggestionsList" @complete="searchMetaAnalyzesScoreSets">
-                            <template #item="slotProps">
-                              {{ slotProps.item.urn }}: {{ slotProps.item.title }}
-                            </template>
-                          </AutoComplete>
-                          <label :for="$scopedId('input-metaAnalyzesScoreSets')">Meta-analysis for</label>
-                        </span>
-                        <span v-if="validationErrors.metaAnalyzesScoreSetUrns" class="mave-field-error">{{
-                          validationErrors.metaAnalyzesScoreSetUrns }}</span>
-                      </div>
+                    <div v-else style="position: relative;">
+                      <span class="p-float-label">
+                        <Dropdown
+                          v-model="experiment"
+                          :id="$scopedId('input-experiment')"
+                          :options="editableExperiments"
+                          optionLabel="title"
+                          optionValue=""
+                          style="width: 50%"
+                          @change="populateExperimentMetadata"
+                        />
+                        <label :for="$scopedId('input-experiment')">Experiment</label>
+                      </span>
+                      <span v-if="validationErrors.experiment" class="mave-field-error">{{ validationErrors.experiment }}</span>
                     </div>
                   </div>
                 </div>
+                <div v-if="isSupersedingScoreSet" class="mavedb-wizard-row">
+                  <div class="mavedb-wizard-help">
+                    What score set does this supersede?
+                    <div class="mavedb-help-small">Type the superseded score set's MaveDB URN here and select it from the list.</div>
+                  </div>
+                  <div class="mavedb-wizard-content">
+                    <div v-if="itemStatus != 'NotLoaded' && supersedesScoreSet">
+                      Supersedes:
+                      <router-link :to="{ name: 'scoreSet', params: { urn: supersedesScoreSet.urn } }">{{ supersedesScoreSet.title }}</router-link>
+                    </div>
+                    <div v-if="itemStatus == 'NotLoaded'" class="field">
+                      <span class="p-float-label">
+                        <AutoComplete
+                          ref="supersededScoreSetInput"
+                          v-model="supersededScoreSet"
+                          :id="$scopedId('input-supersededScoreSet')"
+                          field="title"
+                          :forceSelection="true"
+                          :suggestions="supersededScoreSetSuggestionsList"
+                          @change="populateSupersededScoreSetMetadata"
+                          @complete="searchSupersededScoreSets"
+                        >
+                          <template #item="slotProps">
+                            {{ slotProps.item.urn }}: {{ slotProps.item.title }}
+                          </template>
+                        </AutoComplete>
+                        <label :for="$scopedId('input-supersededScoreSet')">Supersedes</label>
+                      </span>
+                      <span v-if="validationErrors.supersededScoreSetUrn" class="mave-field-error">{{
+                        validationErrors.supersededScoreSetUrn }}</span>
+                    </div>
+                  </div>
+                </div>
+                <div v-if="isMetaAnalysis" class="mavedb-wizard-row">
+                  <div class="mavedb-wizard-help">
+                    What score set(s) does this score set analyze?
+                    <div class="mavedb-help-small">Type a score set's MaveDB URN here and select it from the list. You may choose more than one score set.</div>
+                  </div>
+                  <div class="mavedb-wizard-content">
+                    <div v-if="itemStatus != 'NotLoaded' && item?.metaAnalyzesScoreSetUrns?.length > 0">
+                      Meta-analysis for:<br />
+                      <div v-for="metaAnalyzesScoreSetUrn of item.metaAnalyzesScoreSetUrns" :key="metaAnalyzesScoreSetUrn">
+                        <EntityLink entityType="scoreSet" :urn="metaAnalyzesScoreSetUrn"></EntityLink>
+                      </div>
+                    </div>
+                    <div v-if="itemStatus == 'NotLoaded'" class="field">
+                      <span class="p-float-label">
+                        <AutoComplete ref="metaAnalyzesScoreSetsInput" v-model="metaAnalyzesScoreSets"
+                          :id="$scopedId('input-metaAnalyzesScoreSets')" field="title" :forceSelection="true" :multiple="true"
+                          :suggestions="metaAnalyzesScoreSetSuggestionsList" @complete="searchMetaAnalyzesScoreSets">
+                          <template #item="slotProps">
+                            {{ slotProps.item.urn }}: {{ slotProps.item.title }}
+                          </template>
+                        </AutoComplete>
+                        <label :for="$scopedId('input-metaAnalyzesScoreSets')">Meta-analysis for</label>
+                      </span>
+                      <span v-if="validationErrors.metaAnalyzesScoreSetUrns" class="mave-field-error">{{
+                        validationErrors.metaAnalyzesScoreSetUrns }}</span>
+                    </div>
+                  </div>
+                </div>
+                <!-- </div> -->
               </div>
               <div class="mavedb-wizard-step-controls-row">
                 <div class="flex justify-content-end mavedb-wizard-step-controls pt-4">
@@ -969,10 +969,6 @@ export default {
   },
 
   props: {
-    experimentTitle: {
-      type: String,
-      required: false
-    },
     experimentUrn: {
       type: String,
       required: false
@@ -1113,6 +1109,27 @@ export default {
   },
 
   watch: {
+    experimentUrn: {
+      immediate: true,
+      handler: async function (newValue, oldValue) {
+        if (newValue != oldValue) {
+          let response = null
+          try {
+            response = await axios.get(`${config.apiBaseUrl}/experiments/${this.experimentUrn}`)
+          } catch (e) {
+              response = e.response || { status: 500 }   
+          }
+
+          if (response.status == 200) {
+            this.experiment = response.data
+            this.populateExperimentMetadata({value: this.experiment})
+            this.activeWizardStep = 0
+          } else {
+              this.$toast.add({ severity: 'error', summary: `Could not fetch experiment with urn ${this.experimentUrn}` })
+          }
+        }
+      }
+    },
     'targetGene.externalIdentifiers': {
       deep: true,
       handler: function (newValue) {

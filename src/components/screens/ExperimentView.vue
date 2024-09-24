@@ -287,7 +287,7 @@ export default {
 
   methods: {
     addScoreSet: function() {
-      this.$router.push({name: 'createScoreSetInExperiment', params: {urn: this.item.urn}, query: { title: this.item.title }})
+      this.$router.push({name: 'createScoreSetInExperiment', params: {urn: this.item.urn}})
     },
     editItem: function () {
       if (this.item) {

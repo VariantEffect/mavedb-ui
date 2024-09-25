@@ -381,10 +381,15 @@ export default {
             .call(d3.axisBottom(xScale).tickSize(0))
             .select('.domain').remove()
 
+        // Make all even-numbered x-axis labels invisible so they don't overlap at n > 100.
+        svg.selectAll('g.tick')
+            .attr('class', (n) => (n%2 === 0) ? 'mave-heatmap-x-axis-invisible' : '')
+
         const yScale = d3.scaleBand()
             .range([0, height])
             .domain(rows)
             .padding(0.05)
+
         if (showYTickMarks) {
           svg.append('g')
               .attr('class', 'mave-heatmap-y-axis-tick-labels')
@@ -395,6 +400,7 @@ export default {
                     .tickFormat((n) => HEATMAP_ROWS[HEATMAP_ROWS.length - 1 - n].label)
               )
               .select('.domain').remove()
+
           // Apply row-specific CSS classes to Y-axis tick mark labels.
           svg.selectAll('g.mave-heatmap-y-axis-tick-labels g.tick')
               .attr('class', (n) => HEATMAP_ROWS[HEATMAP_ROWS.length - 1 - n].cssClass || '')
@@ -671,6 +677,10 @@ export default {
 
 .heatmapContainer:deep(.mave-heatmap-y-axis-tick-label-lg) {
   font-size: 22px;
+}
+
+.heatmapContainer:deep(.mave-heatmap-x-axis-invisible) {
+  visibility: hidden;
 }
 
 </style>

@@ -137,11 +137,12 @@
                 </div>
                 <div class="mavedb-wizard-row">
                   <div class="mavedb-wizard-help">
-                    <label>
-                      Digital Object Identifier
+                    <label :id="$scopedId('input-doiIdentifiers')">
+                      The DOIs of any digital resources associated with the experiment.
                     </label>
                     <div class="mavedb-help-small">
-                      Preprints or publications that are not indexed by PubMed can be included via the DOI field.
+                      Please note: If you would like to associate publications with this experiment via their DOI, please do not do so here.
+                      Instead, use the publication identifiers field below.
                     </div>
                   </div>
                   <div class="mavedb-wizard-content field">

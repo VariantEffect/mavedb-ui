@@ -6,8 +6,12 @@
           <div class="mave-screen-title">{{ item.title || 'Untitled experiment' }}</div>
           <div v-if="userIsAuthenticated">
             <div v-if="!item.publishedDate" class="mave-screen-title-controls">
+              <Button class="p-button-sm" @click="addScoreSet">Add a score set</Button>
               <Button class="p-button-sm" @click="editItem">Edit</Button>
               <Button class="p-button-sm p-button-danger" @click="deleteItem">Delete</Button>
+            </div>
+            <div v-else>
+              <Button class="p-button-sm" @click="addScoreSet">Add a score set</Button>
             </div>
           </div>
         </div>
@@ -282,6 +286,9 @@ export default {
   },
 
   methods: {
+    addScoreSet: function() {
+      this.$router.push({name: 'createScoreSetInExperiment', params: {urn: this.item.urn}})
+    },
     editItem: function () {
       if (this.item) {
         this.$router.replace({ path: `/experiments/${this.item.urn}/edit` })

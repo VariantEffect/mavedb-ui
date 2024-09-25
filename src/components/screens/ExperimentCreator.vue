@@ -37,7 +37,8 @@
                 <div class="mavedb-wizard-row">
                   <div class="mavedb-wizard-content-pane">
                     <Message severity="info">
-                      To add an experiment to a different set, please navigate to the experiment set first and click "Add experiment."
+                      You are currently adding an experiment to a new experiment set. 
+                      To add an experiment to an existing experiment set, navigate to the existing experiment set and click the "Add experiment" button.
                     </Message>
                   </div>
                 </div>
@@ -359,7 +360,7 @@
             <template #content="{prevCallback: showPreviousWizardStep}">
               <div class="mavedb-wizard-row">
                 <div class="mavedb-wizard-help">
-                  <label>Choose related keywords(Optional).</label>
+                  <label>Choose related keywords (Optional).</label>
                   <div class="mavedb-help-small">
                     Experiments can be tagged with optional keywords.
                     In a future release, the keyword vocabulary will become restricted and keyword selection will be mandatory. 

@@ -359,68 +359,64 @@
               </button>
             </template>
             <template #content="{prevCallback: showPreviousWizardStep}">
-              <div class="mavedb-wizard-row">
-                <div class="mavedb-wizard-help">
-                  <label>Choose related keywords (Optional).</label>
-                  <div class="mavedb-help-small">
-                    Experiments can be tagged with optional keywords.
-                    In a future release, the keyword vocabulary will become restricted and keyword selection will be mandatory. 
+              <Message>
+                Experiments can be tagged with optional keywords.
+                In a future release, the keyword vocabulary will become restricted and keyword selection will be mandatory.
+              </Message>
+              <div class="mavedb-wizard-form">
+                <div class="mavedb-wizard-form-content-background"></div>
+                <div v-for="keyword in keywordData" :key="keyword.key" class="mavedb-wizard-row">
+                  <div v-if="keywordVisibility[keyword.key]">
+                    <div class="mavedb-wizard-help">
+                    <label>{{ keyword.key }}</label>
+                    <div class="mavedb-help-small" v-if="getKeywordOptions(keyword.option)">
+                      {{ getKeywordOptions(keyword.option)[0].description }}
+                    </div>
                   </div>
-                </div>
-                <div class="mavedb-wizard-content field">
-                  <div class="keyword-editor">
-                    <div v-for="keyword in keywordData" :key="keyword.key">
-                      <div v-if="keywordVisibility[keyword.key]">
-                        <div class="field">
-                          <span class="p-float-label">
-                            <Dropdown
-                              v-model="keywordKeys[keyword.key]"
-                              :id="$scopedId(`keyword-input-${keyword.key}`)"
-                              :options="getKeywordOptions(keyword.option)"
-                              optionLabel="value"
-                              optionValue="value"
-                              class="keyword-dropdown"
-                            />
-                            <label :for="$scopedId(`keyword-input-${keyword.key}`)">{{ keyword.key }}</label>
-                          </span>
-                          <Button
-                            class="keyword-description-button"
-                            rounded
-                            :disabled="!keywordKeys[keyword.key] || keywordKeys[keyword.key] == 'Other' ? true : null"
-                            :icon="(keywordTextVisible[keyword.key] || keywordKeys[keyword.key] === 'Other') ? 'pi pi-minus' : 'pi pi-file-edit'"
-                            @click="keywordToggleInput(keyword.key)"
-                            aria-label="Filter"
-                          />
-                          &nbsp;<i class="pi pi-info-circle" style="color: green; cursor: pointer;" @click="showDialog(keyword.key)"/>
-                          <Dialog
-                            v-model:visible="dialogVisible[keyword.key]"
-                            modal
-                            :header="keyword.key"
-                            :style="{ width: '50vw' }"
-                            :breakpoints="{ '1199px': '75vw', '575px': '90vw' }"
-                          >
-                            <p class="m-0">
-                              {{ getKeywordOptions(keyword.option)[0].description }}
-                            </p>
-                          </Dialog>
-                          <span v-if="validationErrors[`keywords.${keyword.key}`]" class="mave-field-error">{{ validationErrors[`keywords.${keyword.key}`] }}</span>
-                        </div>
-                        <div class="field" v-if="keywordTextVisible[keyword.key] || keywordKeys[keyword.key] === 'Other'">
-                          <span class="p-float-label keyword-description-input">
-                            <Textarea
-                              v-model="keywordDescriptions[keyword.key]"
-                              :id="$scopedId('input-title')"
-                              rows="4"
-                            />
-                            <label :for="$scopedId('input-title')">{{ keyword.descriptionLabel }} {{ keywordKeys[keyword.key] === 'Other' ? '(Required)' : '(Optional)' }}</label>
-                          </span>
-                          <span v-if="validationErrors[`keywordDescriptions.${keyword.key}`]" class="mave-field-error"> {{ validationErrors[`keywordDescriptions.${keyword.key}`] }}</span>
-                        </div>
-                      </div>
+
+                  <div class="mavedb-wizard-content keyword-editor">
+                    <span class="p-float-label field">
+                      <Dropdown
+                        v-model="keywordKeys[keyword.key]"
+                        :id="$scopedId(`keyword-input-${keyword.key}`)"
+                        :options="getKeywordOptions(keyword.option)"
+                        optionLabel="value"
+                        optionValue="value"
+                        class="keyword-dropdown"
+                      />
+                      <label :for="$scopedId(`keyword-input-${keyword.key}`)">{{ keyword.key }}</label>
+                      <Button
+                        class="keyword-button"
+                        rounded
+                        :disabled="!keywordKeys[keyword.key] || keywordKeys[keyword.key] == 'Other' ? true : null"
+                        :icon="(keywordTextVisible[keyword.key] || keywordKeys[keyword.key] === 'Other') ? 'pi pi-minus' : 'pi pi-file-edit'"
+                        @click="keywordToggleInput(keyword.key)"
+                        aria-label="Filter"
+                      />
+                      <Button
+                        class="keyword-button"
+                        rounded
+                        :disabled="!keywordKeys[keyword.key]"
+                        icon="pi pi-times"
+                        @click="() => {keywordKeys[keyword.key] = null; keywordTextVisible[keyword.key] = null;}"
+                        aria-label="Remove"
+                        severity="danger"
+                      />
+                    </span>
+                    <span v-if="validationErrors[`keywords.${keyword.key}`]" class="mave-field-error">{{ validationErrors[`keywords.${keyword.key}`] }}</span>
+
+                    <div class="field" v-if="keywordTextVisible[keyword.key] || keywordKeys[keyword.key] === 'Other'">
+                      <span class="p-float-label keyword-description-input">
+                        <Textarea
+                          v-model="keywordDescriptions[keyword.key]"
+                          :id="$scopedId('input-title')"
+                          rows="4"
+                        />
+                        <label :for="$scopedId('input-title')">{{ keyword.descriptionLabel }} {{ keywordKeys[keyword.key] === 'Other' ? '(Required)' : '(Optional)' }}</label>
+                      </span>
+                      <span v-if="validationErrors[`keywordDescriptions.${keyword.key}`]" class="mave-field-error"> {{ validationErrors[`keywordDescriptions.${keyword.key}`] }}</span>
                     </div>
-                    <div class="field">
-                      <Button class="p-button-help" @click="resetKeywords">Clear Keywords</Button>
-                    </div>
+                  </div>
                   </div>
                 </div>
               </div>
@@ -1225,19 +1221,19 @@ export default {
   align-items: center;
 }
 
-.keyword-description-button {
+.keyword-button {
   margin-left: 8px;
   height: 32px;
   width: 32px;
 }
 
-.keyword-description-button:deep(.p-button-icon) {
+.keyword-button:deep(.p-button-icon) {
   font-size: 1.1rem;
   margin-top: 1px;
   margin-left: 1px;
 }
 
-.keyword-description-button:deep(.p-button-icon.pi-file-edit) {
+.keyword-button:deep(.p-button-icon.pi-file-edit) {
   margin-left: 4px;
 }
 

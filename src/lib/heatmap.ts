@@ -1,3 +1,4 @@
+import * as d3 from 'd3'
 import {AMINO_ACIDS, AMINO_ACIDS_BY_HYDROPHILIA} from './amino-acids.js'
 
 /** Codes used in the right part of a MaveHGVS-pro string representing a single variation in a protein sequence. */
@@ -6,6 +7,8 @@ const MAVE_HGVS_PRO_CHANGE_CODES = [
   {codes: {single: '*', triple: 'TER'}}, // Stop codon
   {codes: {single: '-', triple: 'DEL'}} // Deletion
 ]
+
+export const SYNONOMOUS_DEFAULT_SCORE = 1
 
 interface HeatmapRowSpecification {
   /** A single-character amino acid code or single-character code from MAVE_HGVS_PRO_CHANGE_CODES. */
@@ -62,4 +65,67 @@ export function heatmapRowForVariant(aaCodeOrChange: string): number | null {
   const singleLetterCode = singleLetterAminoAcidOrHgvsCode(aaCodeOrChange)
   const ranking = singleLetterCode ? HEATMAP_ROWS.findIndex((rowSpec) => rowSpec.code == singleLetterCode) : null
   return (ranking != null && ranking >= 0) ? ranking : null
+}
+
+
+function ramp(color, n = 256) {
+  const canvas = document.createElement('canvas')
+  canvas.width = 1;
+  canvas.height = n;
+  const context = canvas.getContext("2d");
+  for (let i = 0; i < n; ++i) {
+    context.fillStyle = color(i / (n - 1));
+    context.fillRect(0, n-i, 1, 1);
+  }
+  return canvas
+}
+
+export function verticalColorLegend(containerSelection, {
+  color,
+  title,
+  tickSize = 6,
+  width = 36 + tickSize,
+  height = 100,
+  marginTop = 20,
+  marginRight = 10,
+  marginBottom = 0,
+  marginLeft = 10 + tickSize,
+  ticks = height / 64,
+  tickFormat,
+  tickValues
+} = {}) {
+  let tickAdjust = g => g.selectAll(".tick line").attr("x1", width - marginLeft - marginRight);
+  let x;
+
+  // Continuous
+  const n = Math.min(color.domain().length, color.range().length);
+  x = color.copy().rangeRound(d3.quantize(d3.interpolate(height - marginBottom, marginTop), n));
+
+  containerSelection.append("image")
+      .attr("x", marginLeft + tickSize)
+      .attr("y", marginTop)
+      .attr("width", width - marginLeft - marginRight)
+      .attr("height", height - marginTop - marginBottom)
+      .attr("preserveAspectRatio", "none")
+      .attr("xlink:href", ramp(color.copy().domain(d3.quantize(d3.interpolate(0, 1), n))).toDataURL());
+
+  containerSelection.append("g")
+      .attr("transform", `translate(${width - marginLeft},0)`)
+      .call(d3.axisLeft(x)
+        .ticks(ticks, typeof tickFormat === "string" ? tickFormat : undefined)
+        .tickFormat(typeof tickFormat === "function" ? tickFormat : undefined)
+        .tickSize(tickSize)
+        .tickValues(tickValues))
+      .call(tickAdjust)
+      .call(g => g.select(".domain").remove())
+      .call(g => g.append("text")
+        .attr("x", marginLeft)
+        .attr("y", 15)
+        .attr("fill", "#000000")
+        .attr("text-anchor", "end")
+        .attr("font-weight", "bold")
+        .attr("class", "title")
+        .text(title));
+
+  return containerSelection.node();
 }

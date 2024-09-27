@@ -1,8 +1,15 @@
 <template>
   <div v-if="heatmapVisible">
-    <div id="mave-heatmap-scroll-container" class="heatmapContainer" ref="heatmapContainer">
-      <div id="mave-stacked-heatmap-container" class="mave-simple-variants-heatmap-container" ref="simpleVariantsStackedHeatmapContainer" />
-      <div id="mave-variants-heatmap-container" class="mave-simple-variants-heatmap-container" ref="simpleVariantsHeatmapContainer" />
+    <div id="mave-heatmap-container" class="heatmapContainer" ref="heatmapContainer">
+      <div id="mave-heatmap-legend-container" class="heatmapLegendContainer" ref="heatmapLegendContainer">
+        <div id="mave-heatmap-legend" class="heatmapLegend" ref="heatmapLegend"></div>
+      </div>
+      <div id="mave-heatmap-scroll-container" class="heatmapScrollContainer" ref="heatmapScrollContainer">
+        <div id="mave-stacked-heatmap-container" class="mave-simple-variants-heatmap-container" ref="simpleVariantsStackedHeatmapContainer" />
+        <div id="mave-variants-heatmap-container" class="mave-simple-variants-heatmap-container" ref="simpleVariantsHeatmapContainer" />
+      </div>
+      <p>Score Ranges</p>
+      <div id="mave-heat-map-color-bar-container" class="mave-simple-variants-heatmap-container" ref="heatmapColorBarContainer" />
     </div>
     <div v-if="numComplexVariants > 0">{{numComplexVariants}} variants are complex and cannot be shown on this type of chart.</div>
   </div>
@@ -14,7 +21,7 @@ import _ from 'lodash'
 import * as d3 from 'd3'
 
 import geneticCodes from '@/lib/genetic-codes'
-import {heatmapRowForVariant, HEATMAP_ROWS} from '@/lib/heatmap'
+import {heatmapRowForVariant, HEATMAP_ROWS, SYNONOMOUS_DEFAULT_SCORE, verticalColorLegend} from '@/lib/heatmap'
 import {parseSimpleProVariant, variantNotNullOrNA} from '@/lib/mave-hgvs'
 import { saveChartAsFile } from '@/lib/chart-export'
 
@@ -62,6 +69,8 @@ export default {
     this.isMounted = true
     this.renderOrRefreshHeatmap()
     this.renderOrRefreshStackedHeatmap()
+    this.renderOrRefreshColorBar()
+    this.renderColorLegend()
     this.$emit('exportChart', this.exportChart)
   },
 
@@ -76,6 +85,10 @@ export default {
     isMounted: false,
     simpleVariants: null,
     numComplexVariants: 0,
+    lowerBound: null,
+    upperBound: null,
+    firstSynonomousVariant: null,
+    lastSynonomousVariant: null,
   }),
 
   computed: {
@@ -107,7 +120,10 @@ export default {
     },
     selectedVariant: function() {
       return this.externalSelection ? this.simpleAndWtVariants.filter((variant) => variant.details?.accession == this.externalSelection.accession)[0] : null
-    }
+    },
+    scoreRanges: function () {
+      return this.scoreSet?.scoreRanges ? this.scoreSet.scoreRanges : null
+    },
   },
 
   watch: {
@@ -156,7 +172,18 @@ export default {
 
   methods: {
     exportChart() {
-      saveChartAsFile(this.$refs.heatmapContainer, `${this.scoreSet.urn}-scores-heatmap`, 'mave-heatmap-scroll-container')
+      saveChartAsFile(this.$refs.heatmapContainer, `${this.scoreSet.urn}-scores-heatmap`, 'mave-heatmap-container')
+    },
+
+    defaultRangeMarkers() {
+      // default range markers should yield the variant at the lowest bound, the variant at the highest bound, and the
+      // two variants which contain all synonomous variants. We might also consider adding the whole numbers other than
+      // those that are contained by the bounds.
+    },
+
+    customRangeMarkers() {
+      // custom range markers should define the variants which contain each of the user provided score ranges. we should
+      // include some mechanism that marks the lower and upper bounds of the color bar if the ranges don't touch the bounds.
     },
 
     // We assume that there will only be one substitution variant for each target AA at a given position.
@@ -165,6 +192,27 @@ export default {
         const variantsSortedByScore = _.sortBy(variantsAtOnePosition, 'meanScore')
         variantsAtOnePosition.forEach((v) => v.scoreRank = variantsSortedByScore.indexOf(v))
       })
+    },
+
+    prepareSimpleVariantScoreSetRanks(simpleVariants) {
+      simpleVariants
+        .map(variant => ({variant}))
+        .sort((a, b) => b.variant.meanScore - a.variant.meanScore)
+        .forEach((_, i, arr) => {
+          arr[i].variant.scoreSetRank = i
+          if (arr[i].variant.meanScore === SYNONOMOUS_DEFAULT_SCORE && this.firstSynonomousVariant === null) {
+            this.firstSynonomousVariant = arr[i].variant
+          }
+          if (this.firstSynonomousVariant !== null && this.lastSynonomousVariant === null && arr[i].variant.meanScore !== SYNONOMOUS_DEFAULT_SCORE) {
+            this.lastSynonomousVariant = arr[i-1].variant
+          }
+          if (i === 0) {
+            this.lowerBound = arr[i].variant
+          }
+          if (i === arr.length - 1) {
+            this.upperBound = arr[i].variant
+          }
+        })
     },
 
     prepareWtVariants: function(wtAminoAcids) {
@@ -241,6 +289,7 @@ export default {
         simpleVariant.details = _.omit(simpleVariant.instances[0].details, 'score')
       }
       this.prepareSimpleVariantScoreRanks(simpleVariants)
+      this.prepareSimpleVariantScoreSetRanks(simpleVariants)
 
       return {
         simpleVariants,
@@ -263,6 +312,26 @@ export default {
 
     translateCodon: function(codon) {
       return geneticCodes.standard.dna.codonToAa[codon]
+    },
+
+    renderColorLegend: function() {
+      const legend = d3.select(this.$refs.heatmapLegend)
+      const height = 2 * HEATMAP_ROWS.length + 20 * HEATMAP_ROWS.length
+
+      legend
+        .html(null)
+        .append('svg')
+        .attr('width', 63)
+        .attr('height', height + 20)
+        .append('g')
+        .attr('class', 'heatmap-color-legend')
+
+      verticalColorLegend(
+        legend.select('.heatmap-color-legend'), {
+          color: d3.scaleSequential(d3.interpolateRdBu).domain([this.lowerBound.meanScore, this.upperBound.meanScore]),
+          title: 'Score',
+          height: height + 20
+        })
     },
 
     // Assumes that plate dimensions do not change.
@@ -314,6 +383,25 @@ export default {
       }
     },
 
+    // Assumes that plate dimensions do not change.
+    renderOrRefreshColorBar: function() {
+      if (!this.simpleVariants) {
+        return
+      }
+      this.colorBar = this.renderHeatmap({
+        container: this.$refs.heatmapColorBarContainer,
+        variants: this.simpleVariants,
+        rowHeight: 50,
+        colWidth: (this.$refs.heatmapContainer.clientWidth - this.margins.left) / this.simpleVariants.length,
+        yCoordinate: (d) => 0,
+        xCoordinate: (d) => d.scoreSetRank,
+        showYTickMarks: false,
+        showXTickMarks: false,
+        showSelectionTooltip: false,
+        isColorBar: true,
+      })
+    },
+
     renderTooltip: function() {
       let self = this
       self.tooltip = d3.select(document.body)
@@ -344,7 +432,9 @@ export default {
       xCoordinate = (d) => d.x,
       yCoordinate = (d) => d.y,
       showYTickMarks = true,
-      showSelectionTooltip = true
+      showXTickMarks = true,
+      showSelectionTooltip = true,
+      isColorBar = false
     } = {}) {
       const self = this
 
@@ -356,9 +446,9 @@ export default {
         // let rows = _.sortBy(_.uniq(_.map(self.scores, 'y')))
         // const cols = _.sortBy(_.uniq(_.map(self.scores, 'x')))
         const rows = _.range(0, HEATMAP_ROWS.length)
-        const cols = self.heatmapColumns // _.range(_.minBy(variants, 'x').x, _.maxBy(variants, 'x').x + 1)
+        const cols = isColorBar ? _.range(0, variants.length) : self.heatmapColumns // _.range(_.minBy(variants, 'x').x, _.maxBy(variants, 'x').x + 1)
 
-        const height = rowHeight * rows.length
+        const height = isColorBar ? rowHeight : rowHeight * rows.length
         const width = colWidth * cols.length
 
         var priorSelection = self.selectedVariant
@@ -367,23 +457,26 @@ export default {
             .html(null)
             .append('svg')
             .attr('width', width + self.margins.left + self.margins.right)
-            .attr('height', height + self.margins.top + self.margins.bottom)
+            .attr('height', height + self.margins.top + self.margins.bottom + (isColorBar ? 20 : 0))
             .append('g')
-            .attr('transform', 'translate(' + self.margins.left + ',' + self.margins.top + ')')
+            .attr('transform', 'translate(' + self.margins.left + ',' + (isColorBar ? self.margins.bottom : self.margins.top) + ')')
 
         const xScale = d3.scaleBand()
             .range([0, width])
             .domain(cols)
             .padding(0.05)
-        svg.append('g')
+
+        if (showXTickMarks) {
+          svg.append('g')
             .style('font-size', 15)
             .attr('transform', 'translate(0,' + height + ')')
             .call(d3.axisBottom(xScale).tickSize(0))
             .select('.domain').remove()
 
-        // Make all even-numbered x-axis labels invisible so they don't overlap at n > 100.
-        svg.selectAll('g.tick')
-            .attr('class', (n) => (n%2 === 0) ? 'mave-heatmap-x-axis-invisible' : '')
+          // Make all even-numbered x-axis labels invisible so they don't overlap at n > 100.
+          svg.selectAll('g.tick')
+              .attr('class', (n) => (n%2 === 0) ? 'mave-heatmap-x-axis-invisible' : '')
+        }
 
         const yScale = d3.scaleBand()
             .range([0, height])
@@ -404,6 +497,69 @@ export default {
           // Apply row-specific CSS classes to Y-axis tick mark labels.
           svg.selectAll('g.mave-heatmap-y-axis-tick-labels g.tick')
               .attr('class', (n) => HEATMAP_ROWS[HEATMAP_ROWS.length - 1 - n].cssClass || '')
+        }
+
+        if (isColorBar) {
+          if (this.scoreRanges === null) {
+            const colorBarMin = d3.scaleBand().range([0])
+            const colorBarMax = d3.scaleBand().range([width-1])
+            const synonomousScale = d3.scaleBand()
+              .range([xScale(this.firstSynonomousVariant.scoreSetRank), xScale(this.lastSynonomousVariant.scoreSetRank)])
+
+            svg.append('g')
+              .call(
+                d3.axisBottom(synonomousScale)
+              )
+            svg.append('g')
+              .attr('transform', 'translate(0,' + height + ')')
+              .call(
+                d3.axisBottom(colorBarMax)
+              )
+            svg.append('g')
+              .attr('transform', 'translate(0,' + height + ')')
+              .call(
+                d3.axisBottom(colorBarMin)
+              )
+
+            svg.append('text')
+              .attr("class", "mave-heatmap-color-bar-labels")
+              .attr("text-anchor", "middle")
+              .attr("x", xScale((this.lastSynonomousVariant.scoreSetRank + this.firstSynonomousVariant.scoreSetRank) / 2))
+              .attr("y", (self.margins.top - 10))
+              .text("Synonomous Mutations")
+
+            svg.append('text')
+              .attr("class", "mave-heatmap-color-bar-labels")
+              .attr("text-anchor", "start")
+              .attr("x", xScale(0))
+              .attr("y", rowHeight + 15)
+              .text(`${this.lowerBound.meanScore.toFixed(2)}`)
+
+            svg.append('text')
+              .attr("class", "mave-heatmap-color-bar-labels")
+              .attr("text-anchor", "end")
+              .attr("x", width-1)
+              .attr("y", rowHeight + 15)
+              .text(`${this.upperBound.meanScore.toFixed(2)}`)
+          }
+
+          // TODO: Make this not an append or re-draw during refresh
+          if (self.selectedVariant) {
+            const selectionScale = d3.scaleBand().range([xScale(this.selectedVariant.scoreSetRank)])
+
+            svg.append('g')
+              .attr('transform', 'translate(0,' + height + ')')
+              .call(
+                d3.axisBottom(selectionScale)
+              )
+
+            svg.append('text')
+              .attr("class", "mave-heatmap-color-bar-labels")
+              .attr("text-anchor", "middle")
+              .attr("x", xScale(this.selectedVariant.scoreSetRank))
+              .attr("y", height + (self.margins.bottom))
+              .text(`${this.selectedVariant.meanScore.toFixed(2)}`)
+          }
         }
 
         const selectionTooltip = d3.select(this.$refs.simpleVariantsHeatmapContainer)
@@ -589,7 +745,7 @@ export default {
           if (d.details.wt) {
             return d3.color('#ddbb00')
           }
-          return d3.interpolateRdBu(1.0 - d.meanScore / 2.0)
+          return d3.interpolateRdBu(SYNONOMOUS_DEFAULT_SCORE - d.meanScore / 2.0)
         }
 
         const refresh = function(variants) {
@@ -611,7 +767,7 @@ export default {
               .attr('x', d => xScale(xCoordinate(d)) + strokeWidth(d, false) / 2)
               .attr('y', d => yScale(yCoordinate(d)) + strokeWidth(d, false) / 2)
               .attr('width', d => xScale.bandwidth() - strokeWidth(d, false))
-              .attr('height', d => yScale.bandwidth() - strokeWidth(d, false))
+              .attr('height', d => isColorBar ? height : yScale.bandwidth() - strokeWidth(d, false))
               .style('fill', d => color(d))
               .style('stroke-width', d => strokeWidth(d, false))
               .style('stroke', d => stroke(d, false))
@@ -668,10 +824,24 @@ export default {
 
 .heatmapContainer {
   position: relative;
+}
+
+.heatmapLegendContainer {
+  float: left;
+  position: absolute;
+}
+
+.heatmapScrollContainer {
   overflow-x: auto;
+  position: relative;
+  margin-left: 50px;
 }
 
 .heatmapContainer:deep(.mave-heatmap-y-axis-tick-labels) {
+  font-size: 14px;
+}
+
+.heatmapContainer:deep(.mave-heatmap-color-bar-labels) {
   font-size: 14px;
 }
 

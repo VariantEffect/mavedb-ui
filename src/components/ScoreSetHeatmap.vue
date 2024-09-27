@@ -21,7 +21,7 @@ import _ from 'lodash'
 import * as d3 from 'd3'
 
 import geneticCodes from '@/lib/genetic-codes'
-import {heatmapRowForVariant, HEATMAP_ROWS, SYNONOMOUS_DEFAULT_SCORE, verticalColorLegend} from '@/lib/heatmap'
+import {heatmapRowForVariant, HEATMAP_ROWS, verticalColorLegend} from '@/lib/heatmap'
 import {parseSimpleProVariant, variantNotNullOrNA} from '@/lib/mave-hgvs'
 import { saveChartAsFile } from '@/lib/chart-export'
 
@@ -86,9 +86,9 @@ export default {
     simpleVariants: null,
     numComplexVariants: 0,
     lowerBound: null,
+    nonNaNUpperBound: null,
     upperBound: null,
-    firstSynonomousVariant: null,
-    lastSynonomousVariant: null,
+    rangeBoundaries: null,
   }),
 
   computed: {
@@ -121,9 +121,35 @@ export default {
     selectedVariant: function() {
       return this.externalSelection ? this.simpleAndWtVariants.filter((variant) => variant.details?.accession == this.externalSelection.accession)[0] : null
     },
-    scoreRanges: function () {
-      return this.scoreSet?.scoreRanges ? this.scoreSet.scoreRanges : null
+    wtScore: function() {
+      if (this.scoreSet?.scoreRanges === null) {
+        return null
+      }
+
+      return this.scoreSet.scoreRanges.wtScore
     },
+    scoreRanges: function() {
+      if (!this.scoreSet?.scoreRanges) {
+        return {}
+      }
+      const computedRanges = {}
+
+      this.scoreSet.scoreRanges.ranges.forEach((range) => {
+        const lowerBound = range.range[0] ? range.range[0] : -Infinity
+        const upperBound = range.range[1] ? range.range[1] : Infinity
+
+        if (lowerBound === -Infinity) {
+          this.labelContainsNegInf = range.label
+        }
+        if (upperBound === Infinity) {
+          this.labelContainsPosInf = range.label
+        }
+
+        computedRanges[range.label] = [lowerBound, upperBound]
+      })
+
+      return computedRanges
+    }
   },
 
   watch: {
@@ -195,24 +221,57 @@ export default {
     },
 
     prepareSimpleVariantScoreSetRanks(simpleVariants) {
+      const comparator = (a,b) => a.variant.meanScore-b.variant.meanScore || isNaN(a.variant.meanScore)-isNaN(b.variant.meanScore) || Object.is(b.variant.meanScore, -0) - Object.is(a.variant.meanScore, -0);
+      const rangeBoundaries = _.cloneDeep(this.scoreRanges)
+
+      let activeRange = null
       simpleVariants
         .map(variant => ({variant}))
-        .sort((a, b) => b.variant.meanScore - a.variant.meanScore)
+        .sort(comparator)
         .forEach((_, i, arr) => {
-          arr[i].variant.scoreSetRank = i
-          if (arr[i].variant.meanScore === SYNONOMOUS_DEFAULT_SCORE && this.firstSynonomousVariant === null) {
-            this.firstSynonomousVariant = arr[i].variant
-          }
-          if (this.firstSynonomousVariant !== null && this.lastSynonomousVariant === null && arr[i].variant.meanScore !== SYNONOMOUS_DEFAULT_SCORE) {
-            this.lastSynonomousVariant = arr[i-1].variant
-          }
+          let variant = arr[i].variant
+
+          variant.scoreSetRank = i
           if (i === 0) {
-            this.lowerBound = arr[i].variant
+            this.lowerBound = variant
+          }
+          if (isNaN(variant.meanScore)) {
+            this.nonNaNUpperBound = arr[i-1].variant
           }
           if (i === arr.length - 1) {
-            this.upperBound = arr[i].variant
+            this.upperBound = variant
+
+            if (this.nonNaNUpperBound === null) {
+              this.nonNaNUpperBound = this.upperBound
+            }
+
+            // this is the last iteration of this for...each loop, so terminate the currently active range boundary.
+            if (activeRange) {
+              rangeBoundaries[activeRange].upperBound = variant
+            }
+          }
+
+          // If the current variant is no longer within an active range, set the range boundary to the previous
+          // variant and allow us to start looking at another range.
+          if (activeRange !== null) {
+            if (!(variant.meanScore >= this.scoreRanges[activeRange].lowerBound && variant.meanScore < this.scoreRanges[activeRange].upperBound)) {
+              rangeBoundaries[activeRange].upperBound = arr[i-1].variant
+              activeRange = null
+            }
+          }
+
+          // set the active range and lower bound if a variant penetrates a new range.
+          if (activeRange === null && rangeBoundaries.length) {
+            for (let range of Object.keys(this.scoreRanges)) {
+              if (variant.meanScore >= this.scoreRanges[range].lowerBound && variant.meanScore < this.scoreRanges[range].upperBound) {
+                activeRange = range
+                rangeBoundaries[range].lowerBound = variant
+              }
+            }
           }
         })
+
+        this.rangeBoundaries = rangeBoundaries
     },
 
     prepareWtVariants: function(wtAminoAcids) {
@@ -328,7 +387,8 @@ export default {
 
       verticalColorLegend(
         legend.select('.heatmap-color-legend'), {
-          color: d3.scaleSequential(d3.interpolateRdBu).domain([this.lowerBound.meanScore, this.upperBound.meanScore]),
+          // These bounds are purposefully reversed.
+          color: d3.scaleSequential(d3.interpolateRdBu).domain([this.nonNaNUpperBound.meanScore, this.lowerBound.meanScore]),
           title: 'Score',
           height: height + 20
         })
@@ -500,16 +560,16 @@ export default {
         }
 
         if (isColorBar) {
-          if (this.scoreRanges === null) {
+          if (!Object.keys(this.scoreRanges).length) {
             const colorBarMin = d3.scaleBand().range([0])
             const colorBarMax = d3.scaleBand().range([width-1])
-            const synonomousScale = d3.scaleBand()
-              .range([xScale(this.firstSynonomousVariant.scoreSetRank), xScale(this.lastSynonomousVariant.scoreSetRank)])
+            // const synonomousScale = d3.scaleBand()
+            //   .range([xScale(this.firstSynonomousVariant.scoreSetRank), xScale(this.lastSynonomousVariant.scoreSetRank)])
 
-            svg.append('g')
-              .call(
-                d3.axisBottom(synonomousScale)
-              )
+            // svg.append('g')
+            //   .call(
+            //     d3.axisBottom(synonomousScale)
+            //   )
             svg.append('g')
               .attr('transform', 'translate(0,' + height + ')')
               .call(
@@ -521,12 +581,12 @@ export default {
                 d3.axisBottom(colorBarMin)
               )
 
-            svg.append('text')
-              .attr("class", "mave-heatmap-color-bar-labels")
-              .attr("text-anchor", "middle")
-              .attr("x", xScale((this.lastSynonomousVariant.scoreSetRank + this.firstSynonomousVariant.scoreSetRank) / 2))
-              .attr("y", (self.margins.top - 10))
-              .text("Synonomous Mutations")
+            // svg.append('text')
+            //   .attr("class", "mave-heatmap-color-bar-labels")
+            //   .attr("text-anchor", "middle")
+            //   .attr("x", xScale((this.lastSynonomousVariant.scoreSetRank + this.firstSynonomousVariant.scoreSetRank) / 2))
+            //   .attr("y", (self.margins.top - 10))
+            //   .text("Synonomous Mutations")
 
             svg.append('text')
               .attr("class", "mave-heatmap-color-bar-labels")
@@ -745,7 +805,7 @@ export default {
           if (d.details.wt) {
             return d3.color('#ddbb00')
           }
-          return d3.interpolateRdBu(SYNONOMOUS_DEFAULT_SCORE - d.meanScore / 2.0)
+          return d3.interpolateRdBu(1 - d.meanScore / 2.0)
         }
 
         const refresh = function(variants) {

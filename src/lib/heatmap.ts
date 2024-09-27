@@ -1,9 +1,6 @@
 import * as d3 from 'd3'
 import { AMINO_ACIDS, AMINO_ACIDS_BY_HYDROPHILIA } from './amino-acids.js'
 
-/** The default score value of a synonomous mutation */
-export const SYNONOMOUS_DEFAULT_SCORE = 1
-
 /** Codes used in the right part of a MaveHGVS-pro string representing a single variation in a protein sequence. */
 const MAVE_HGVS_PRO_CHANGE_CODES = [
   { codes: { single: '=' } }, // Synonymous AA variant

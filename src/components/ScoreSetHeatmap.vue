@@ -8,7 +8,7 @@
         <div id="mave-stacked-heatmap-container" class="mave-simple-variants-heatmap-container" ref="simpleVariantsStackedHeatmapContainer" />
         <div id="mave-variants-heatmap-container" class="mave-simple-variants-heatmap-container" ref="simpleVariantsHeatmapContainer" />
       </div>
-      <p>Score Ranges</p>
+      <!-- <p>Score Ranges</p> -->
       <div id="mave-heat-map-color-bar-container" class="mave-simple-variants-heatmap-container" ref="heatmapColorBarContainer" />
     </div>
     <div v-if="numComplexVariants > 0">{{numComplexVariants}} variants are complex and cannot be shown on this type of chart.</div>
@@ -69,7 +69,7 @@ export default {
     this.isMounted = true
     this.renderOrRefreshHeatmap()
     this.renderOrRefreshStackedHeatmap()
-    this.renderOrRefreshColorBar()
+    // this.renderOrRefreshColorBar()
     this.renderColorLegend()
     this.$emit('exportChart', this.exportChart)
   },
@@ -135,8 +135,8 @@ export default {
       const computedRanges = {}
 
       this.scoreSet.scoreRanges.ranges.forEach((range) => {
-        const lowerBound = range.range[0] ? range.range[0] : -Infinity
-        const upperBound = range.range[1] ? range.range[1] : Infinity
+        const lowerBound = range.range[0] !== null ? range.range[0] : -Infinity
+        const upperBound = range.range[1] !== null ? range.range[1] : Infinity
 
         if (lowerBound === -Infinity) {
           this.labelContainsNegInf = range.label
@@ -145,7 +145,7 @@ export default {
           this.labelContainsPosInf = range.label
         }
 
-        computedRanges[range.label] = [lowerBound, upperBound]
+        computedRanges[range.label] = {lowerBound: lowerBound, upperBound: upperBound}
       })
 
       return computedRanges
@@ -261,7 +261,7 @@ export default {
           }
 
           // set the active range and lower bound if a variant penetrates a new range.
-          if (activeRange === null && rangeBoundaries.length) {
+          if (activeRange === null && Object.keys(rangeBoundaries).length) {
             for (let range of Object.keys(this.scoreRanges)) {
               if (variant.meanScore >= this.scoreRanges[range].lowerBound && variant.meanScore < this.scoreRanges[range].upperBound) {
                 activeRange = range
@@ -560,47 +560,86 @@ export default {
         }
 
         if (isColorBar) {
-          if (!Object.keys(this.scoreRanges).length) {
-            const colorBarMin = d3.scaleBand().range([0])
-            const colorBarMax = d3.scaleBand().range([width-1])
-            // const synonomousScale = d3.scaleBand()
-            //   .range([xScale(this.firstSynonomousVariant.scoreSetRank), xScale(this.lastSynonomousVariant.scoreSetRank)])
+          if (!Object.keys(this.rangeBoundaries).length) {
 
-            // svg.append('g')
-            //   .call(
-            //     d3.axisBottom(synonomousScale)
-            //   )
-            svg.append('g')
-              .attr('transform', 'translate(0,' + height + ')')
-              .call(
-                d3.axisBottom(colorBarMax)
-              )
-            svg.append('g')
-              .attr('transform', 'translate(0,' + height + ')')
-              .call(
-                d3.axisBottom(colorBarMin)
-              )
 
-            // svg.append('text')
-            //   .attr("class", "mave-heatmap-color-bar-labels")
-            //   .attr("text-anchor", "middle")
-            //   .attr("x", xScale((this.lastSynonomousVariant.scoreSetRank + this.firstSynonomousVariant.scoreSetRank) / 2))
-            //   .attr("y", (self.margins.top - 10))
-            //   .text("Synonomous Mutations")
+          const colorBarMin = d3.scaleBand().range([0])
+          const colorBarMax = d3.scaleBand().range([width-1])
 
-            svg.append('text')
-              .attr("class", "mave-heatmap-color-bar-labels")
-              .attr("text-anchor", "start")
-              .attr("x", xScale(0))
-              .attr("y", rowHeight + 15)
-              .text(`${this.lowerBound.meanScore.toFixed(2)}`)
+          svg.append('g')
+            .attr('transform', 'translate(0,' + height + ')')
+            .call(
+              d3.axisBottom(colorBarMax)
+            )
+          svg.append('g')
+            .attr('transform', 'translate(0,' + height + ')')
+            .call(
+              d3.axisBottom(colorBarMin)
+            )
 
-            svg.append('text')
-              .attr("class", "mave-heatmap-color-bar-labels")
-              .attr("text-anchor", "end")
-              .attr("x", width-1)
-              .attr("y", rowHeight + 15)
-              .text(`${this.upperBound.meanScore.toFixed(2)}`)
+          svg.append('text')
+            .attr("class", "mave-heatmap-color-bar-labels")
+            .attr("text-anchor", "start")
+            .attr("x", xScale(0))
+            .attr("y", rowHeight + 15)
+            .text(`${this.lowerBound.meanScore.toFixed(2)}`)
+
+          svg.append('text')
+            .attr("class", "mave-heatmap-color-bar-labels")
+            .attr("text-anchor", "end")
+            .attr("x", width-1)
+            .attr("y", rowHeight + 15)
+            .text(`${this.upperBound.meanScore.toFixed(2)}`)
+          }
+
+          else {
+            for (let range of Object.keys(this.rangeBoundaries)) {
+              // Range container
+              const rangeScale = d3.scaleBand()
+                .range([xScale(this.rangeBoundaries[range].lowerBound.scoreSetRank), xScale(this.rangeBoundaries[range].upperBound.scoreSetRank)])
+
+              svg.append('g')
+                .attr('transform', 'translate(0,' + (self.margins.top - 3) + ')')
+                .call(d3.axisBottom(rangeScale))
+
+              // Place ticks on bottom of the scale
+              // const rangeMin = d3.scaleBand().range([xScale(this.rangeBoundaries[range].lowerBound.scoreSetRank)])
+              // const rangeMax = d3.scaleBand().range([xScale(this.rangeBoundaries[range].upperBound.scoreSetRank)])
+
+              // svg.append('g')
+              //   .attr('transform', 'translate(0,' + height + ')')
+              //   .call(
+              //     d3.axisBottom(rangeMin)
+              //   )
+              // svg.append('g')
+              //   .attr('transform', 'translate(0,' + height + ')')
+              //   .call(
+              //     d3.axisBottom(rangeMax)
+              //   )
+
+              // Range textual label
+              // svg.append('text')
+              //   .attr("class", "mave-heatmap-color-bar-labels")
+              //   .attr("text-anchor", "end")
+              //   .attr("x", (xScale(this.rangeBoundaries[range].lowerBound.scoreSetRank) + xScale(this.rangeBoundaries[range].upperBound.scoreSetRank)) / 2)
+              //   .attr("y", (self.margins.top - 5))
+              //   .text(range)
+
+              // Range numerical labels
+              svg.append('text')
+                .attr("class", "mave-heatmap-color-bar-labels")
+                .attr("text-anchor", "middle")
+                .attr("x", xScale(this.rangeBoundaries[range].lowerBound.scoreSetRank))
+                .attr("y", self.margins.top - 7)
+                .text(`${this.scoreRanges[range].lowerBound.toFixed(2)}`)
+
+              svg.append('text')
+                .attr("class", "mave-heatmap-color-bar-labels")
+                .attr("text-anchor", "middle")
+                .attr("x", xScale(this.rangeBoundaries[range].upperBound.scoreSetRank))
+                .attr("y", self.margins.top - 7)
+                .text(`${this.scoreRanges[range].upperBound.toFixed(2)}`)
+            }
           }
 
           // TODO: Make this not an append or re-draw during refresh

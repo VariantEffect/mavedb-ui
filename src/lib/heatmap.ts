@@ -117,8 +117,6 @@ export function verticalColorLegend(containerSelection: d3.Selection<Element, SV
 } = {}) {
   let tickAdjust = (g: any) => g.selectAll(".tick line").attr("x1", width - marginLeft - marginRight);
 
-  console.log(containerSelection)
-
   // Continuous color scale
   const n = Math.min(color.domain().length, color.range().length);
   const x: any = color.copy().rangeRound(d3.quantize(d3.interpolate(height - marginBottom, marginTop), n));

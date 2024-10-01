@@ -4,7 +4,7 @@
       <div class="mave-1000px-col">
         <div class="mave-screen-title-bar">
           <div class="mave-screen-title">{{ item.title || 'Untitled experiment' }}</div>
-          <div v-if="userIsAuthenticated">
+          <div v-if="userIsAuthenticated & userIsAuthorized">
             <div v-if="!item.publishedDate" class="mave-screen-title-controls">
               <Button class="p-button-sm" @click="editItem">Edit</Button>
               <Button class="p-button-sm p-button-danger" @click="deleteItem">Delete</Button>
@@ -255,7 +255,12 @@ export default {
     dialogVisible: [],
     readMore: true,
     fullDescription: [],
+    userIsAuthorized: false,
   }),
+
+  mounted: async function() {
+    await this.checkUserAuthorization()
+  },
 
   computed: {
     contributors: function() {
@@ -282,6 +287,19 @@ export default {
   },
 
   methods: {
+    checkUserAuthorization: async function() {
+      await this.checkUsers()
+    },
+    checkUsers: async function() {
+      try {
+        // this response should be true to get authorization
+        let response = await axios.get(`${config.apiBaseUrl}/experiments/check-authorizations/${this.itemId}`)
+        this.userIsAuthorized = response.data
+        console.log(this.userIsAuthorized)
+      } catch (err) {
+        console.log(`Error to get authorization:`, err)
+      }
+    },
     editItem: function () {
       if (this.item) {
         this.$router.replace({ path: `/experiments/${this.item.urn}/edit` })

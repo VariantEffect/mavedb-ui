@@ -50,7 +50,7 @@
         </div>
         <div class="mave-screen-title-bar">
           <div class="mave-screen-title">{{ item.title || 'Untitled score set' }}</div>
-          <div v-if="userIsAuthenticated">
+          <div v-if="userIsAuthenticated & userIsAuthorized">
             <div v-if="!item.publishedDate" class="mave-screen-title-controls">
               <Button class="p-button-sm" @click="editItem">Edit</Button>
               <Button class="p-button-sm" @click="publishItem">Publish</Button>
@@ -482,8 +482,12 @@ export default {
     readMore: true,
     showHeatmap: true,
     heatmapExists: false,
-    selectedVariant: null
+    selectedVariant: null,
+    userIsAuthorized: false
   }),
+  mounted: async function() {
+    await this.checkUserAuthorization()
+  },
   watch: {
     itemId: {
       handler: function(newValue, oldValue) {
@@ -514,6 +518,18 @@ export default {
   },
   methods: {
     variantNotNullOrNA,
+    checkUserAuthorization: async function() {
+      await this.checkUsers()
+    },
+    checkUsers: async function() {
+      try {
+        // this response should be true to get authorization
+        let response = await axios.get(`${config.apiBaseUrl}/score-sets/check-authorizations/${this.itemId}`)
+        this.userIsAuthorized = response.data
+      } catch (err) {
+        console.log(`Error to get authorization:`, err)
+      }
+    },
     editItem: function() {
       if (this.item) {
         this.$router.replace({ path: `/score-sets/${this.item.urn}/edit` })

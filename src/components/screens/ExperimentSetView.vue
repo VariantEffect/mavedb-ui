@@ -4,7 +4,7 @@
       <div class="mave-1000px-col">
         <div class="mave-screen-title-bar">
           <div class="mave-screen-title">{{item.urn}}</div>
-          <div v-if="userIsAuthenticated">
+          <div v-if="userIsAuthenticated & userIsAuthorized">
             <div class="mave-screen-title-controls">
               <Button class="p-button-sm" @click="addExperiment">Add an experiment</Button>
             </div>
@@ -40,8 +40,10 @@
 <script>
 
 import _ from 'lodash'
+import axios from 'axios'
 import {marked} from 'marked'
 import Button from 'primevue/button'
+import config from '@/config'
 
 import DefaultLayout from '@/components/layout/DefaultLayout'
 import PageLoading from '@/components/common/PageLoading'
@@ -73,8 +75,13 @@ export default {
 
   data () {
     return {
-      associatedExperiments: []
+      associatedExperiments: [],
+      userIsAuthorized: false
     }
+  },
+
+  mounted: async function() {
+    await this.checkUserAuthorization()
   },
 
   watch: {
@@ -94,6 +101,18 @@ export default {
     addExperiment: function() {
       this.$router.push({name: 'createExperimentInExperimentSet', params: {urn: this.item.urn}})
     },
+    checkUserAuthorization: async function() {
+      await this.checkUsers()
+    },
+    checkUsers: async function() {
+      try {
+        // this response should be true to get authorization
+        let response = await axios.get(`${config.apiBaseUrl}/experiment-sets/check-authorizations/${this.itemId}`)
+        this.userIsAuthorized = response.data
+      } catch (err) {
+        console.log(`Error to get authorization:`, err)
+      }
+    },
     markdownToHtml: function(markdown) {
       return marked(markdown)
     },
@@ -103,6 +122,7 @@ export default {
   }
 
 }
+
 
 </script>
 

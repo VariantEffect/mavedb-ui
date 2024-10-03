@@ -800,7 +800,7 @@ export default {
       } else {
         this.keywords = []
         this.keywordKeys = _.fromPairs(KEYWORDS.map((keyword) => [keyword.key, null]))
-        this.keywordKeys = _.fromPairs(KEYWORDS.map((keyword) => [keyword.key, null]))
+        this.keywordDescriptions = _.fromPairs(KEYWORDS.map((keyword) => [keyword.key, null]))
       }
     },
 

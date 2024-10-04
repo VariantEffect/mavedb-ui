@@ -6,12 +6,12 @@
           <div class="mave-screen-title">{{ item.title || 'Untitled experiment' }}</div>
           <div v-if="userIsAuthenticated">
             <div v-if="!item.publishedDate" class="mave-screen-title-controls">
-              <Button class="p-button-sm" @click="addScoreSet">Add a score set</Button>
+              <Button v-if="userIsAuthorized.add_score_set" class="p-button-sm" @click="addScoreSet">Add a score set</Button>
               <Button v-if="userIsAuthorized.update" class="p-button-sm" @click="editItem">Edit</Button>
               <Button v-if="userIsAuthorized.delete" class="p-button-sm p-button-danger" @click="deleteItem">Delete</Button>
             </div>
             <div v-else>
-              <Button class="p-button-sm" @click="addScoreSet">Add a score set</Button>
+              <Button v-if="userIsAuthorized.add_score_set" class="p-button-sm" @click="addScoreSet">Add a score set</Button>
             </div>
           </div>
         </div>
@@ -260,6 +260,7 @@ export default {
     readMore: true,
     fullDescription: [],
     userIsAuthorized: {
+      add_score_set: false,
       delete: false,
       update: false,
     }
@@ -301,7 +302,7 @@ export default {
       await this.checkUsers()
     },
     checkUsers: async function() {
-      const actions = ['delete', 'update']
+      const actions = ['add_score_set', 'delete', 'update']
       try {
         for (const action of actions) {
           let response = await axios.get(`${config.apiBaseUrl}/user-is-authorized/experiment/${this.itemId}/${action}`)

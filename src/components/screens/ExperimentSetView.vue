@@ -107,7 +107,7 @@ export default {
     checkUsers: async function() {
       try {
         // this response should be true to get authorization
-        let response = await axios.get(`${config.apiBaseUrl}/experiment-sets/check-authorizations/${this.itemId}`)
+        let response = await axios.get(`${config.apiBaseUrl}/user-is-authorized/experiment-set/${this.itemId}/add_experiment`)
         this.userIsAuthorized = response.data
       } catch (err) {
         console.log(`Error to get authorization:`, err)

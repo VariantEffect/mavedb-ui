@@ -4,10 +4,10 @@
       <div class="mave-1000px-col">
         <div class="mave-screen-title-bar">
           <div class="mave-screen-title">{{ item.title || 'Untitled experiment' }}</div>
-          <div v-if="userIsAuthenticated & userIsAuthorized">
+          <div v-if="userIsAuthenticated">
             <div v-if="!item.publishedDate" class="mave-screen-title-controls">
-              <Button class="p-button-sm" @click="editItem">Edit</Button>
-              <Button class="p-button-sm p-button-danger" @click="deleteItem">Delete</Button>
+              <Button v-if="userIsAuthorized.update" class="p-button-sm" @click="editItem">Edit</Button>
+              <Button v-if="userIsAuthorized.delete" class="p-button-sm p-button-danger" @click="deleteItem">Delete</Button>
             </div>
           </div>
         </div>
@@ -255,7 +255,10 @@ export default {
     dialogVisible: [],
     readMore: true,
     fullDescription: [],
-    userIsAuthorized: false,
+    userIsAuthorized: {
+      delete: false,
+      update: false,
+    }
   }),
 
   mounted: async function() {
@@ -291,11 +294,12 @@ export default {
       await this.checkUsers()
     },
     checkUsers: async function() {
+      const actions = ['delete', 'update']
       try {
-        // this response should be true to get authorization
-        let response = await axios.get(`${config.apiBaseUrl}/experiments/check-authorizations/${this.itemId}`)
-        this.userIsAuthorized = response.data
-        console.log(this.userIsAuthorized)
+        for (const action of actions) {
+          let response = await axios.get(`${config.apiBaseUrl}/user-is-authorized/experiment/${this.itemId}/${action}`)
+          this.userIsAuthorized[action] = response.data
+        }
       } catch (err) {
         console.log(`Error to get authorization:`, err)
       }

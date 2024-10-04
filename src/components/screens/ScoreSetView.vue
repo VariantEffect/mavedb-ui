@@ -50,14 +50,14 @@
         </div>
         <div class="mave-screen-title-bar">
           <div class="mave-screen-title">{{ item.title || 'Untitled score set' }}</div>
-          <div v-if="userIsAuthenticated & userIsAuthorized">
+          <div v-if="userIsAuthenticated">
             <div v-if="!item.publishedDate" class="mave-screen-title-controls">
-              <Button class="p-button-sm" @click="editItem">Edit</Button>
-              <Button class="p-button-sm" @click="publishItem">Publish</Button>
-              <Button class="p-button-sm p-button-danger" @click="deleteItem">Delete</Button>
+              <Button v-if="userIsAuthorized.update" class="p-button-sm" @click="editItem">Edit</Button>
+              <Button v-if="userIsAuthorized.publish" class="p-button-sm" @click="publishItem">Publish</Button>
+              <Button v-if="userIsAuthorized.delete" class="p-button-sm p-button-danger" @click="deleteItem">Delete</Button>
             </div>
             <div v-if="item.publishedDate" class="mave-screen-title-controls">
-              <Button class="p-button-sm" @click="editItem">Edit</Button>
+              <Button v-if="userIsAuthorized.update" class="p-button-sm" @click="editItem">Edit</Button>
             </div>
           </div>
         </div>
@@ -483,7 +483,11 @@ export default {
     showHeatmap: true,
     heatmapExists: false,
     selectedVariant: null,
-    userIsAuthorized: false
+    userIsAuthorized: {
+      delete: false,
+      publish: false,
+      update: false,
+    }
   }),
   mounted: async function() {
     await this.checkUserAuthorization()
@@ -522,10 +526,13 @@ export default {
       await this.checkUsers()
     },
     checkUsers: async function() {
+      // Response should be true to get authorization
+      const actions = ['delete', 'publish', 'update']
       try {
-        // this response should be true to get authorization
-        let response = await axios.get(`${config.apiBaseUrl}/score-sets/check-authorizations/${this.itemId}`)
-        this.userIsAuthorized = response.data
+        for (const action of actions) {
+          let response = await axios.get(`${config.apiBaseUrl}/user-is-authorized/score-set/${this.itemId}/${action}`)
+          this.userIsAuthorized[action] = response.data
+        }
       } catch (err) {
         console.log(`Error to get authorization:`, err)
       }

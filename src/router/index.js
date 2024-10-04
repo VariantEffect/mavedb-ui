@@ -2,6 +2,7 @@ import {createRouter, createWebHistory} from 'vue-router'
 
 import DashboardView from '@/components/screens/DashboardView'
 import DocumentationView from '@/components/screens/DocumentationView'
+import ExperimentCreator from '@/components/screens/ExperimentCreator'
 import ExperimentEditor from '@/components/screens/ExperimentEditor'
 import ExperimentView from '@/components/screens/ExperimentView'
 import ExperimentSetView from '@/components/screens/ExperimentSetView'
@@ -61,7 +62,7 @@ const routes = [{
 }, {
   name: 'createExperiment',
   path: '/create-experiment',
-  component: ExperimentEditor
+  component: ExperimentCreator
 }, {
   path: '/experiments/:urn/edit',
   name: '/editExperiment',

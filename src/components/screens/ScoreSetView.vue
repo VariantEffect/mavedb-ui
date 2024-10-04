@@ -523,9 +523,9 @@ export default {
   methods: {
     variantNotNullOrNA,
     checkUserAuthorization: async function() {
-      await this.checkUsers()
+      await this.checkAuthorization()
     },
-    checkUsers: async function() {
+    checkAuthorization: async function() {
       // Response should be true to get authorization
       const actions = ['delete', 'publish', 'update']
       try {

@@ -299,9 +299,9 @@ export default {
       this.$router.push({name: 'createScoreSetInExperiment', params: {urn: this.item.urn}})
     },
     checkUserAuthorization: async function() {
-      await this.checkUsers()
+      await this.checkAuthorization()
     },
-    checkUsers: async function() {
+    checkAuthorization: async function() {
       const actions = ['add_score_set', 'delete', 'update']
       try {
         for (const action of actions) {

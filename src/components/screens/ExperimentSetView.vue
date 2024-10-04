@@ -102,9 +102,9 @@ export default {
       this.$router.push({name: 'createExperimentInExperimentSet', params: {urn: this.item.urn}})
     },
     checkUserAuthorization: async function() {
-      await this.checkUsers()
+      await this.checkAuthorization()
     },
-    checkUsers: async function() {
+    checkAuthorization: async function() {
       try {
         // this response should be true to get authorization
         let response = await axios.get(`${config.apiBaseUrl}/user-is-authorized/experiment-set/${this.itemId}/add_experiment`)

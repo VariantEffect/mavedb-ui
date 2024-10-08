@@ -919,7 +919,7 @@
                   </div>
                   <div class="mavedb-wizard-content">
                     <span class="p-float-label">
-                      <InputNumber v-model="scoreRanges.wtScore" :aria-labelledby="$scopedId('input-wtScore')" showButtons :step="0.01" style="width:100%;" :minFractionDigits="1" />
+                      <InputNumber v-model="scoreRanges.wtScore" :aria-labelledby="$scopedId('input-wtScore')" style="width:100%;" :minFractionDigits="1" :maxFractionDigits="10" />
                       <label :for="$scopedId('input-wtScore')"> Wild Type Score </label>
                     </span>
                     <span v-if="validationErrors[`scoreRanges.wtScore`]" class="mave-field-error">{{ validationErrors[`scoreRanges.wtScore`] }}</span>

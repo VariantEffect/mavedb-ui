@@ -530,7 +530,7 @@ export default {
       const actions = ['delete', 'publish', 'update']
       try {
         for (const action of actions) {
-          let response = await axios.get(`${config.apiBaseUrl}/user-is-authorized/score-set/${this.itemId}/${action}`)
+          let response = await axios.get(`${config.apiBaseUrl}/permissions/user-is-permitted/score-set/${this.itemId}/${action}`)
           this.userIsAuthorized[action] = response.data
         }
       } catch (err) {

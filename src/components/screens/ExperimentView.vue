@@ -6,12 +6,12 @@
           <div class="mave-screen-title">{{ item.title || 'Untitled experiment' }}</div>
           <div v-if="userIsAuthenticated">
             <div v-if="!item.publishedDate" class="mave-screen-title-controls">
-              <Button class="p-button-sm" @click="addScoreSet">Add a score set</Button>
-              <Button class="p-button-sm" @click="editItem">Edit</Button>
-              <Button class="p-button-sm p-button-danger" @click="deleteItem">Delete</Button>
+              <Button v-if="userIsAuthorized.add_score_set" class="p-button-sm" @click="addScoreSet">Add a score set</Button>
+              <Button v-if="userIsAuthorized.update" class="p-button-sm" @click="editItem">Edit</Button>
+              <Button v-if="userIsAuthorized.delete" class="p-button-sm p-button-danger" @click="deleteItem">Delete</Button>
             </div>
             <div v-else>
-              <Button class="p-button-sm" @click="addScoreSet">Add a score set</Button>
+              <Button v-if="userIsAuthorized.add_score_set" class="p-button-sm" @click="addScoreSet">Add a score set</Button>
             </div>
           </div>
         </div>
@@ -259,7 +259,16 @@ export default {
     dialogVisible: [],
     readMore: true,
     fullDescription: [],
+    userIsAuthorized: {
+      add_score_set: false,
+      delete: false,
+      update: false,
+    }
   }),
+
+  mounted: async function() {
+    await this.checkUserAuthorization()
+  },
 
   computed: {
     contributors: function() {
@@ -288,6 +297,20 @@ export default {
   methods: {
     addScoreSet: function() {
       this.$router.push({name: 'createScoreSetInExperiment', params: {urn: this.item.urn}})
+    },
+    checkUserAuthorization: async function() {
+      await this.checkAuthorization()
+    },
+    checkAuthorization: async function() {
+      const actions = ['add_score_set', 'delete', 'update']
+      try {
+        for (const action of actions) {
+          let response = await axios.get(`${config.apiBaseUrl}/permissions/user-is-permitted/experiment/${this.itemId}/${action}`)
+          this.userIsAuthorized[action] = response.data
+        }
+      } catch (err) {
+        console.log(`Error to get authorization:`, err)
+      }
     },
     editItem: function () {
       if (this.item) {

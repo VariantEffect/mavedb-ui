@@ -1670,12 +1670,12 @@ export default {
               && (currentTargetGene.targetAccession.accession || (currentTargetGene.targetSequence.sequence && currentTargetGene.targetSequence.sequenceType))
         }
         case (step == 3 + this.numTargets): {
-          let allRangesCompleted = false
+          let allRangesCompleted = true
           for (const scoreRange of this.scoreRanges.ranges) {
             if (!scoreRange.value.label || !scoreRange.value.classification || (!scoreRange.value.range[0] && !scoreRange.infiniteLower) || (!scoreRange.value.range[1] && !scoreRange.infiniteUpper)) {
+              allRangesCompleted = false
               break
             }
-            allRangesCompleted = true
           }
           return !(this.isProvidingScoreRanges) || (allRangesCompleted && this.scoreRanges.wtScore)
         }

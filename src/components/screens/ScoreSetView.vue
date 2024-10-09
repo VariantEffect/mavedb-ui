@@ -292,7 +292,7 @@
             <div v-if="scoreRange.label"><strong>Name:</strong> {{ scoreRange.label }}</div>
             <div v-if="scoreRange.description"><strong>Description:</strong> {{ scoreRange.description }}</div>
             <div v-if="scoreRange.classification"><strong>Classification:</strong> {{ scoreRange.classification }}</div>
-            <div v-if="scoreRange.range"><strong>Range:</strong> [{{ scoreRange.range[0] ? scoreRange.range[0] : "-infinity" }}, {{ scoreRange.range[1] ? scoreRange.range[1] : "infinity" }})</div>
+            <div v-if="scoreRange.range"><strong>Range:</strong> [{{ scoreRange.range[0] !== null ? scoreRange.range[0] : "-infinity" }}, {{ scoreRange.range[1] !== null ? scoreRange.range[1] : "infinity" }})</div>
             <br>
           </div>
         </div>

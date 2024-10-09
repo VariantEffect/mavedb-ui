@@ -979,8 +979,8 @@
                             <label for="upperBound" class="ml-2"> No upper bound </label>
                             <Checkbox :binary="true" v-model="rangeObj.infiniteUpper" inputId="upperBound" name="upper" @change="boundaryLimitUpdated(rangeIdx, 'upper')"/>
                           </span>
-                          <span v-if="validationErrors[`scoreRanges.ranges.${rangeIdx}.0`]" class="mave-field-error">{{ validationErrors[`scoreRanges.ranges.${rangeIdx}.0`] }}</span>
-                          <span v-if="validationErrors[`scoreRanges.ranges.${rangeIdx}.1`]" class="mave-field-error">{{ validationErrors[`scoreRanges.ranges.${rangeIdx}.1`] }}</span>
+                          <span v-if="validationErrors[`scoreRanges.ranges.${rangeIdx}.0.range`]" class="mave-field-error">{{ validationErrors[`scoreRanges.ranges.${rangeIdx}.0.range`] }}</span>
+                          <span v-if="validationErrors[`scoreRanges.ranges.${rangeIdx}.1.range`]" class="mave-field-error">{{ validationErrors[`scoreRanges.ranges.${rangeIdx}.1.range`] }}</span>
                       </div>
                     </div>
                   </div>

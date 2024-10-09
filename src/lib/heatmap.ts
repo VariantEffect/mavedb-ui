@@ -107,7 +107,7 @@ export function verticalColorLegend(containerSelection: d3.Selection<Element, SV
   tickSize = 6,
   width = 36 + tickSize,
   height = 100,
-  marginTop = 20,
+  marginTop = 12,
   marginRight = 10,
   marginBottom = 0,
   marginLeft = 10 + tickSize,
@@ -142,7 +142,7 @@ export function verticalColorLegend(containerSelection: d3.Selection<Element, SV
     .call((g) => g.select(".domain").remove())
     .call((g) => g.append("text")
       .attr("x", marginLeft)
-      .attr("y", 15)
+      .attr("y", 8)
       .attr("fill", "#000000")
       .attr("text-anchor", "end")
       .attr("font-weight", "bold")

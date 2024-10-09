@@ -375,13 +375,13 @@ export default {
 
     renderColorLegend: function() {
       const legend = d3.select(this.$refs.heatmapLegend)
-      const height = 2 * HEATMAP_ROWS.length + 20 * HEATMAP_ROWS.length
+      const height = 2 * HEATMAP_ROWS.length + 22 * HEATMAP_ROWS.length
 
       legend
         .html(null)
         .append('svg')
         .attr('width', 63)
-        .attr('height', height + 20)
+        .attr('height', height)
         .append('g')
         .attr('class', 'heatmap-color-legend')
 
@@ -390,7 +390,7 @@ export default {
           // These bounds are purposefully reversed.
           color: d3.scaleSequential(d3.interpolateRdBu).domain([this.nonNaNUpperBound.meanScore, this.lowerBound.meanScore]),
           title: 'Score',
-          height: height + 20
+          height: height
         })
     },
 

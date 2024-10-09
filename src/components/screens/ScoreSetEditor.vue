@@ -1218,24 +1218,24 @@
       },
 
       boundaryLimitUpdated: function(rangeIdx, boundary) {
-      const updatedRange = this.scoreRanges.ranges[rangeIdx]
-      if (boundary === "upper") {
-        updatedRange.range[1] = null
-      }
-      else if (boundary == "lower") {
-        updatedRange.range[0] = null
-      }
-    },
+        const updatedRange = this.scoreRanges.ranges[rangeIdx]
+        if (boundary === "upper") {
+          updatedRange.range[1] = null
+        }
+        else if (boundary == "lower") {
+          updatedRange.range[0] = null
+        }
+      },
 
-    addScoreRange: function() {
-      this.scoreRanges.ranges.push(emptyScoreRange())
-      this.scoreRangeBoundaryHelper.push(emptyScoreRangeBoundaryHelper())
-    },
+      addScoreRange: function() {
+        this.scoreRanges.ranges.push(emptyScoreRange())
+        this.scoreRangeBoundaryHelper.push(emptyScoreRangeBoundaryHelper())
+      },
 
-    removeScoreRange: function(rangeIdx) {
-      this.scoreRanges.ranges.splice(rangeIdx, 1)
-      this.scoreRangeBoundaryHelper.splice(rangeIdx, 1)
-    },
+      removeScoreRange: function(rangeIdx) {
+        this.scoreRanges.ranges.splice(rangeIdx, 1)
+        this.scoreRangeBoundaryHelper.splice(rangeIdx, 1)
+      },
 
       ////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
       // Form fields
@@ -1479,7 +1479,11 @@
           this.targetGenes = this.item.targetGenes
           this.scoreRanges = this.item.scoreRanges
           this.scoreRangeBoundaryHelper = []
-          this.scoreRanges.ranges.forEach(() => this.scoreRangeBoundaryHelper.push(emptyScoreRangeBoundaryHelper()))
+          this.scoreRanges.ranges.forEach((range, idx) => {
+            this.scoreRangeBoundaryHelper.push(emptyScoreRangeBoundaryHelper())
+            this.scoreRangeBoundaryHelper[idx].lowerBoundIsInfinity = this.scoreRanges.ranges[idx].range[0] === null
+            this.scoreRangeBoundaryHelper[idx].upperBoundIsInfinity = this.scoreRanges.ranges[idx].range[1] === null
+          })
           this.extraMetadata = this.item.extraMetadata
         } else {
           this.experiment = null

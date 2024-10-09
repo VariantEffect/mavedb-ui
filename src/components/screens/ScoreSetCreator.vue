@@ -343,36 +343,6 @@
                   </div>
                   <div class="mavedb-wizard-row">
                     <div class="mavedb-wizard-help">
-                      <label :id="$scopedId('input-doiIdentifiers')">
-                        The DOIs of any digital resources associated with the score set.
-                      </label>
-                      <div class="mavedb-help-small">
-                        Please note: If you would like to associate publications with this score set via their DOI, please do not do so here.
-                        Instead, use the publication identifiers field below.
-                      </div>
-                    </div>
-                    <div class="mavedb-wizard-content field">
-                      <span class="p-float-label">
-                        <Chips
-                            v-model="doiIdentifiers"
-                            :id="$scopedId('input-doiIdentifiers')"
-                            :addOnBlur="true"
-                            :allowDuplicate="false"
-                            @add="acceptNewDoiIdentifier"
-                        >
-                          <template #chip="slotProps">
-                            <div>
-                              <div>{{ slotProps.value.identifier }}</div>
-                            </div>
-                          </template>
-                        </Chips>
-                        <label :for="$scopedId('input-doiIdentifiers')">DOI identifiers</label>
-                      </span>
-                      <span v-if="validationErrors.doiIdentifiers" class="mave-field-error">{{validationErrors.doiIdentifiers}}</span>
-                    </div>
-                  </div>
-                  <div class="mavedb-wizard-row">
-                    <div class="mavedb-wizard-help">
                       <label>
                         Contributors who may edit this score set. Enter each contributor's
                         <a href="https://orcid.org" target="_blank">ORCID</a> ID and confirm their name.

@@ -142,7 +142,7 @@ export function verticalColorLegend(containerSelection: d3.Selection<Element, SV
     .call((g) => g.select(".domain").remove())
     .call((g) => g.append("text")
       .attr("x", marginLeft)
-      .attr("y", 8)
+      .attr("y", marginTop - 5) // draw the title 5px above the color bar
       .attr("fill", "#000000")
       .attr("text-anchor", "end")
       .attr("font-weight", "bold")

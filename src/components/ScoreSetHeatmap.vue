@@ -86,6 +86,7 @@ export default {
     simpleVariants: null,
     numComplexVariants: 0,
     lowerBound: null,
+    nonNaNLowerBound: null,
     nonNaNUpperBound: null,
     upperBound: null,
     rangeBoundaries: null,
@@ -122,7 +123,7 @@ export default {
       return this.externalSelection ? this.simpleAndWtVariants.filter((variant) => variant.details?.accession == this.externalSelection.accession)[0] : null
     },
     wtScore: function() {
-      if (this.scoreSet?.scoreRanges === null) {
+      if (!this.scoreSet?.scoreRanges) {
         return null
       }
 
@@ -149,6 +150,9 @@ export default {
       })
 
       return computedRanges
+    },
+    colorScale: function() {
+      return d3.scaleLinear().domain([this.nonNaNLowerBound.meanScore, this.wtScore ? this.wtScore : (this.nonNaNLowerBound.meanScore + this.nonNaNUpperBound.meanScore) / 2, this.nonNaNUpperBound.meanScore]).range(["blue", "white", "red"])
     }
   },
 
@@ -234,6 +238,12 @@ export default {
           variant.scoreSetRank = i
           if (i === 0) {
             this.lowerBound = variant
+            if (!isNaN(variant.meanScore)) {
+              this.nonNaNLowerBound = variant
+            }
+          }
+          if (this.nonNaNLowerBound === null && !isNaN(variant)) {
+            this.nonNaNLowerBound = variant
           }
           if (isNaN(variant.meanScore)) {
             this.nonNaNUpperBound = arr[i-1].variant
@@ -373,9 +383,13 @@ export default {
       return geneticCodes.standard.dna.codonToAa[codon]
     },
 
+    normalizeScore: function(score, max, min) {
+      return (score - min) / (max - min)
+    },
+
     renderColorLegend: function() {
       const legend = d3.select(this.$refs.heatmapLegend)
-      const height = 2 * HEATMAP_ROWS.length + 22 * HEATMAP_ROWS.length
+      const height = 20 * (HEATMAP_ROWS.length) + (HEATMAP_ROWS.length - 1) // 20 pixels per row plus one pixel buffer per row (save for the last unbuffered row)
 
       legend
         .html(null)
@@ -387,10 +401,11 @@ export default {
 
       verticalColorLegend(
         legend.select('.heatmap-color-legend'), {
-          // These bounds are purposefully reversed.
-          color: d3.scaleSequential(d3.interpolateRdBu).domain([this.nonNaNUpperBound.meanScore, this.lowerBound.meanScore]),
+          // color: d3.scaleSequential(d3.interpolateRdBu).domain([1 - this.nonNaNUpperBound.meanScore / 2.0, 1 - this.nonNaNLowerBound.meanScore / 2.0]),
+          color: this.colorScale,
           title: 'Score',
-          height: height
+          height: height,
+          marginTop: 2 * HEATMAP_ROWS.length + this.margins.bottom, // Color legend margin is the same as the stacked heatmap size.
         })
     },
 
@@ -844,7 +859,7 @@ export default {
           if (d.details.wt) {
             return d3.color('#ddbb00')
           }
-          return d3.interpolateRdBu(1 - d.meanScore / 2.0)
+          return self.colorScale(d.meanScore)
         }
 
         const refresh = function(variants) {

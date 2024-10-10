@@ -152,7 +152,7 @@ export default {
       return computedRanges
     },
     colorScale: function() {
-      return d3.scaleLinear().domain([this.nonNaNLowerBound.meanScore, this.wtScore ? this.wtScore : (this.nonNaNLowerBound.meanScore + this.nonNaNUpperBound.meanScore) / 2, this.nonNaNUpperBound.meanScore]).range(["blue", "white", "red"])
+      return d3.scaleLinear().domain([this.nonNaNLowerBound.meanScore, this.wtScore ? this.wtScore : (this.nonNaNLowerBound.meanScore + this.nonNaNUpperBound.meanScore) / 2, this.nonNaNUpperBound.meanScore]).range(["#3F51B5", "white", "#B00020"])
     }
   },
 
@@ -401,7 +401,6 @@ export default {
 
       verticalColorLegend(
         legend.select('.heatmap-color-legend'), {
-          // color: d3.scaleSequential(d3.interpolateRdBu).domain([1 - this.nonNaNUpperBound.meanScore / 2.0, 1 - this.nonNaNLowerBound.meanScore / 2.0]),
           color: this.colorScale,
           title: 'Score',
           height: height,

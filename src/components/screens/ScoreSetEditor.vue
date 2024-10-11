@@ -270,6 +270,68 @@
                 </div>
               </template>
             </Card>
+            <Card>
+              <template #title>Score ranges</template>
+              <template #content>
+                <div v-for="(scoreRange, scoreIdx) of scoreRanges.ranges" :key="scoreIdx" class="mavedb-score-range-container">
+                  <Card>
+                    <template #title>Range {{ scoreIdx+1 }}:
+                      <Button icon="pi pi-times" severity="danger" aria-label="Delete range" rounded text style="float:right;" @click="removeScoreRange(scoreIdx)"/>
+                    </template>
+                    <template #content>
+                      <div style="padding-top: 1%;">
+                          <InputGroup>
+                            <span class="p-float-label" style="width:75%;">
+                              <InputText v-model="scoreRange.label" style="width:75%;" :aria-labelledby="$scopedId(`input-scoreRangeLabel-${scoreIdx}`)"></InputText>
+                              <label :for="$scopedId(`input-scoreRangeLabel-${scoreIdx}`)">Label</label>
+                            </span>
+                            <span class="p-float-label" style="width:25%;">
+                              <Dropdown v-model="scoreRange.classification" :options="rangeClassifications" style="width:25%;" :aria-labelledby="$scopedId(`input-scoreRangeClassification-${scoreIdx}`)"/>
+                              <label :for="$scopedId(`input-scoreRangeClassification-${scoreIdx}`)">Classification</label>
+                            </span>
+                          </InputGroup>
+                          <span v-if="validationErrors[`scoreRanges.ranges.${scoreIdx}.label`]" class="mave-field-error">{{ validationErrors[`scoreRanges.ranges.${scoreIdx}.label`] }}</span>
+                          <span v-if="validationErrors[`scoreRanges.ranges.${scoreIdx}.classification`]" class="mave-field-error">{{ validationErrors[`scoreRanges.ranges.${scoreIdx}.classification`] }}</span>
+                      </div>
+                      <div style="padding-top: 2%;">
+                        <span class="p-float-label">
+                          <Textarea v-model="scoreRange.description" style="width:100%;" :aria-labelledby="$scopedId(`input-scoreRangeDescription-${scoreIdx}`)"/>
+                          <label :for="$scopedId(`input-scoreRangeDescription-${scoreIdx}`)">Description (optional)</label>
+                        </span>
+                        <span v-if="validationErrors[`scoreRanges.ranges.${scoreIdx}.description`]" class="mave-field-error">{{ validationErrors[`scoreRanges.ranges.${scoreIdx}.description`] }}</span>
+                      </div>
+                      <div>
+                        <InputGroup>
+                          <span class=p-float-label>
+                            <InputText v-model="scoreRange.range[0]" :aria-labelledby="$scopedId(`input-scoreRangeLower-${scoreIdx}`)" :disabled="scoreRangeBoundaryHelper[scoreIdx].lowerBoundIsInfinity"/>
+                            <label :for="$scopedId(`input-scoreRangeLower-${scoreIdx}`)"> {{ scoreRangeBoundaryHelper[scoreIdx].lowerBoundIsInfinity ? "-infinity" : "Lower Bound" }} </label>
+                          </span>
+                          <InputGroupAddon>to</InputGroupAddon>
+                          <span class=p-float-label>
+                            <InputText v-model="scoreRange.range[1]" :aria-labelledby="$scopedId(`input-scoreRangeUpper-${scoreIdx}`)" :disabled="scoreRangeBoundaryHelper[scoreIdx].upperBoundIsInfinity"/>
+                            <label :for="$scopedId(`input-scoreRangeUpper-${scoreIdx}`)"> {{ scoreRangeBoundaryHelper[scoreIdx].upperBoundIsInfinity ? "infinity" : "Upper Bound" }} </label>
+                          </span>
+                        </InputGroup>
+                      </div>
+                      <div>
+                        <span>
+                          <Checkbox v-model="scoreRangeBoundaryHelper[scoreIdx].lowerBoundIsInfinity" :binary="true" inputId="lowerBound" name="lower" @change="boundaryLimitUpdated(scoreIdx, 'lower')"/>
+                          <label for="lowerBound" class="ml-2"> No lower bound </label>
+                        </span>
+                        <span style="float:right;">
+                          <label for="upperBound" class="ml-2"> No upper bound </label>
+                          <Checkbox v-model="scoreRangeBoundaryHelper[scoreIdx].upperBoundIsInfinity" :binary="true" inputId="upperBound" name="upper" @change="boundaryLimitUpdated(scoreIdx, 'upper')"/>
+                        </span>
+                      </div>
+                      <span v-if="validationErrors[`scoreRanges.ranges.${scoreIdx}.range`]" class="mave-field-error">{{ validationErrors[`scoreRanges.ranges.${scoreIdx}.range`] }}</span>
+                    </template>
+                  </Card>
+                </div>
+                <div class="field" style="align-items: center; justify-content: center; display: flex">
+                  <Button label="Add new score range" icon="pi pi-plus" aria-label="Add range" outlined raised text @click="addScoreRange()"/>
+                </div>
+              </template>
+            </Card>
           </div>
           <div class="col-12 md:col-6">
             <div v-if="itemStatus == 'NotLoaded' || this.item.private">
@@ -555,6 +617,7 @@
                   </div>
                 </template>
               </Card>
+
               <Card>
                 <template #title>Variant scores</template>
                 <template #content>
@@ -612,9 +675,12 @@
   import Card from 'primevue/card'
   import Chips from 'primevue/chips'
   import Column from 'primevue/column'
+  import Checkbox from 'primevue/checkbox'
   import DataTable from 'primevue/datatable'
   import Dropdown from 'primevue/dropdown'
   import FileUpload from 'primevue/fileupload'
+  import InputGroup from 'primevue/inputgroup'
+  import InputGroupAddon from 'primevue/inputgroupaddon'
   import InputNumber from 'primevue/inputnumber'
   import InputText from 'primevue/inputtext'
   import Message from 'primevue/message'
@@ -662,9 +728,25 @@
     }
   }
 
+  function emptyScoreRange() {
+    return {
+        label: null,
+        description: null,
+        range: [null, null],
+        classification: null,
+      }
+  }
+
+  function emptyScoreRangeBoundaryHelper() {
+    return {
+      lowerBoundIsInfinity: false,
+      upperBoundIsInfinity: false
+    }
+  }
+
   export default {
     name: 'ScoreSetEditor',
-    components: { AutoComplete, Button, Card, Chips, Column, DataTable, DefaultLayout, Dropdown, EmailPrompt, EntityLink, FileUpload, InputNumber, InputText, Message, Multiselect, ProgressSpinner, SelectButton, TabPanel, TabView, Textarea },
+    components: { AutoComplete, Button, Card, Chips, Column, Checkbox, DataTable, DefaultLayout, Dropdown, EmailPrompt, EntityLink, FileUpload, InputGroup, InputGroupAddon, InputNumber, InputText, Message, Multiselect, ProgressSpinner, SelectButton, TabPanel, TabView, Textarea },
 
     setup: () => {
       const editableExperiments = useItems({
@@ -757,6 +839,12 @@
       existingTargetGene: null,
       targetGenes: [],
 
+      scoreRanges: {
+        wtScore: null,
+        ranges: [],
+      },
+      scoreRangeBoundaryHelper: [],
+
       // Static sets of options:
       sequenceTypes: [
         'DNA',
@@ -766,6 +854,10 @@
         'Protein coding',
         'Regulatory',
         'Other noncoding'
+      ],
+      rangeClassifications: [
+        'normal',
+        'abnormal'
       ],
 
       progressVisible: false,
@@ -1124,6 +1216,27 @@
           console.log(`Error while loading protein accession")`, err)
         }
       },
+
+      boundaryLimitUpdated: function(rangeIdx, boundary) {
+        const updatedRange = this.scoreRanges.ranges[rangeIdx]
+        if (boundary === "upper") {
+          updatedRange.range[1] = null
+        }
+        else if (boundary == "lower") {
+          updatedRange.range[0] = null
+        }
+      },
+
+      addScoreRange: function() {
+        this.scoreRanges.ranges.push(emptyScoreRange())
+        this.scoreRangeBoundaryHelper.push(emptyScoreRangeBoundaryHelper())
+      },
+
+      removeScoreRange: function(rangeIdx) {
+        this.scoreRanges.ranges.splice(rangeIdx, 1)
+        this.scoreRangeBoundaryHelper.splice(rangeIdx, 1)
+      },
+
       ////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
       // Form fields
       ////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
@@ -1364,6 +1477,13 @@
           this.targetGene = emptyTargetGene()
           this.assembly = this.item.assembly
           this.targetGenes = this.item.targetGenes
+          this.scoreRanges = this.item.scoreRanges
+          this.scoreRangeBoundaryHelper = []
+          this.scoreRanges.ranges.forEach((range, idx) => {
+            this.scoreRangeBoundaryHelper.push(emptyScoreRangeBoundaryHelper())
+            this.scoreRangeBoundaryHelper[idx].lowerBoundIsInfinity = this.scoreRanges.ranges[idx].range[0] === null
+            this.scoreRangeBoundaryHelper[idx].upperBoundIsInfinity = this.scoreRanges.ranges[idx].range[1] === null
+          })
           this.extraMetadata = this.item.extraMetadata
         } else {
           this.experiment = null
@@ -1384,6 +1504,8 @@
           this.extraMetadata = {}
           this.resetTarget()
           this.targetGenes = []
+          this.scoreRanges = {wtScore: null, ranges: []}
+          this.scoreRangeBoundaryHelper = []
         }
       },
 
@@ -1399,6 +1521,8 @@
         this.fileCleared('targetGeneTargetSequenceSequenceFile')
         this.referenceGenome = null
         this.targetGene = emptyTargetGene()
+        this.scoreRanges = {wtScore: null, ranges: []}
+        this.scoreRangeBoundaryHelper = []
       },
 
       addTarget: function () {
@@ -1684,6 +1808,16 @@
 
   .field-column:first-child {
     margin-left: 0;
+  }
+
+  .mavedb-score-range-container {
+    display: flex;
+    flex-direction: row;
+    flex-flow: row wrap;
+  }
+
+  .mavedb-score-range-container > * {
+    flex: 1 100%;
   }
 
   /* Form fields */

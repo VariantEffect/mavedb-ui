@@ -284,6 +284,20 @@
           </div>
         </div>
 
+        <div class="mave-score-set-section-title">Score Ranges</div>
+        <div v-if="item.scoreRanges">
+          <div v-if="item.scoreRanges.wtScore"><strong>Wild Type Score:</strong> {{ item.scoreRanges.wtScore }}</div>
+          <br>
+          <div v-for="scoreRange of item.scoreRanges.ranges.sort((a, b) => a.range[0] - b.range[0])" :key="scoreRange">
+            <div v-if="scoreRange.label"><strong>Name:</strong> {{ scoreRange.label }}</div>
+            <div v-if="scoreRange.description"><strong>Description:</strong> {{ scoreRange.description }}</div>
+            <div v-if="scoreRange.classification"><strong>Classification:</strong> {{ scoreRange.classification }}</div>
+            <div v-if="scoreRange.range"><strong>Range:</strong> [{{ scoreRange.range[0] !== null ? scoreRange.range[0] : "-infinity" }}, {{ scoreRange.range[1] !== null ? scoreRange.range[1] : "infinity" }})</div>
+            <br>
+          </div>
+        </div>
+        <div v-else>Not specified</div>
+
         <div class="mave-score-set-section-title">External identifier</div>
         <strong>DOI: </strong>
         <div v-if="item.doiIdentifiers.length != 0">

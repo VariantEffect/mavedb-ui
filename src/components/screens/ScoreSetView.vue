@@ -52,12 +52,12 @@
           <div class="mave-screen-title">{{ item.title || 'Untitled score set' }}</div>
           <div v-if="userIsAuthenticated">
             <div v-if="!item.publishedDate" class="mave-screen-title-controls">
-              <Button class="p-button-sm" @click="editItem">Edit</Button>
-              <Button class="p-button-sm" @click="publishItem">Publish</Button>
-              <Button class="p-button-sm p-button-danger" @click="deleteItem">Delete</Button>
+              <Button v-if="userIsAuthorized.update" class="p-button-sm" @click="editItem">Edit</Button>
+              <Button v-if="userIsAuthorized.publish" class="p-button-sm" @click="publishItem">Publish</Button>
+              <Button v-if="userIsAuthorized.delete" class="p-button-sm p-button-danger" @click="deleteItem">Delete</Button>
             </div>
             <div v-if="item.publishedDate" class="mave-screen-title-controls">
-              <Button class="p-button-sm" @click="editItem">Edit</Button>
+              <Button v-if="userIsAuthorized.update" class="p-button-sm" @click="editItem">Edit</Button>
             </div>
           </div>
         </div>
@@ -496,8 +496,16 @@ export default {
     readMore: true,
     showHeatmap: true,
     heatmapExists: false,
-    selectedVariant: null
+    selectedVariant: null,
+    userIsAuthorized: {
+      delete: false,
+      publish: false,
+      update: false,
+    }
   }),
+  mounted: async function() {
+    await this.checkUserAuthorization()
+  },
   watch: {
     itemId: {
       handler: function(newValue, oldValue) {
@@ -528,6 +536,21 @@ export default {
   },
   methods: {
     variantNotNullOrNA,
+    checkUserAuthorization: async function() {
+      await this.checkAuthorization()
+    },
+    checkAuthorization: async function() {
+      // Response should be true to get authorization
+      const actions = ['delete', 'publish', 'update']
+      try {
+        for (const action of actions) {
+          let response = await axios.get(`${config.apiBaseUrl}/permissions/user-is-permitted/score-set/${this.itemId}/${action}`)
+          this.userIsAuthorized[action] = response.data
+        }
+      } catch (err) {
+        console.log(`Error to get authorization:`, err)
+      }
+    },
     editItem: function() {
       if (this.item) {
         this.$router.replace({ path: `/score-sets/${this.item.urn}/edit` })

@@ -610,7 +610,11 @@
                   </div>
                   <span v-if="validationErrors['targetGenes']" class="mave-field-error">{{validationErrors['targetGenes']}}</span>
                   <div class="field">
-                    <Message v-if="targetGenes?.length > 1" severity="info">
+                    <Message v-if="targetGenes[0]?.targetAccession?.accession" severity="info">
+                      When defining variants against an accession based target, uploaded variant coordinates should be fully
+                      qualified with respect to target names or target accessions (e.g: NC_000001.1:c.1A>C).
+                    </Message>
+                    <Message v-else-if="targetGenes?.length > 1" severity="info">
                       When defining variants against multiple targets, uploaded variant coordinates should be fully
                       qualified with respect to target names or target accessions.
                     </Message>

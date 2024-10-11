@@ -1012,9 +1012,13 @@
                 <div class="mavedb-wizard-form-content-background"></div>
                 <div class="mavedb-wizard-row">
                   <div class="mavedb-wizard-content">
-                    <Message v-if="numTargets > 1" severity="info">
-                      Please note that when you submit variants with respect to multiple targets, the position of each variant must be provided
-                      with respect to the target label or accession identifier from which the variant originated.
+                    <Message v-if="targetGenes[0]?.targetAccession?.accession" severity="info">
+                      When defining variants against an accession based target, uploaded variant coordinates should be fully
+                      qualified with respect to target names or target accessions (e.g: NC_000001.1:c.1A>C).
+                    </Message>
+                    <Message v-else-if="numTargets > 1" severity="info">
+                      When defining variants against multiple targets, uploaded variant coordinates should be fully
+                      qualified with respect to target names or target accessions.
                     </Message>
                   </div>
 

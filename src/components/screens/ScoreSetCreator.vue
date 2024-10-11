@@ -42,7 +42,7 @@
                       <div class="mavedb-help-small">
                         To add a score set to a different experiment, supercede a score set or add a score set to meta-analysis, please navigate to "New score set".
                         For more on the relationship between score sets and experiments, see the
-                        <a target="_blank" href="https://mavedb.org/docs/mavedb/record_types.html#record-types">documentation</a>.
+                        <a target="_blank" :href="`${config.appBaseUrl}/docs/mavedb/record_types.html#record-types`">documentation</a>.
                       </div>
                     </div>
                     <div class="mavedb-wizard-content">
@@ -84,7 +84,7 @@
                       To which experiment does this score set belong?
                       <div class="mavedb-help-small">
                         For more on the relationship between score sets and experiments, see the
-                        <a target="_blank" href="https://mavedb.org/docs/mavedb/record_types.html#record-types">documentation</a>.
+                        <a target="_blank" :href="`${config.appBaseUrl}/docs/mavedb/record_types.html#record-types`">documentation</a>.
                       </div>
                     </div>
                     <div class="mavedb-wizard-content">
@@ -306,7 +306,7 @@
                       </label>
                       <div class="mavedb-help-small">
                         For more on data licensing in MaveDB, see the
-                        <a target="_blank" href="https://mavedb.org/docs/mavedb/data_licensing.html#data-licensing">documentation</a>.
+                        <a target="_blank" :href="`${config.appBaseUrl}/docs/mavedb/data_licensing.html#data-licensing`">documentation</a>.
                       </div>
                     </div>
                     <div class="mavedb-wizard-content field">
@@ -373,6 +373,36 @@
                         <label :for="$scopedId('input-contributors')">Contributors</label>
                       </span>
                       <span v-if="validationErrors.contributors" class="mave-field-error">{{validationErrors.contributors}}</span>
+                    </div>
+                  </div>
+                  <div class="mavedb-wizard-row">
+                    <div class="mavedb-wizard-help">
+                      <label :id="$scopedId('input-doiIdentifiers')">
+                        The DOIs of any digital resources associated with the score set.
+                      </label>
+                      <div class="mavedb-help-small">
+                        Please note: If you would like to associate publications with this score set via their DOI, please do not do so here.
+                        Instead, use the publication identifiers field below.
+                      </div>
+                    </div>
+                    <div class="mavedb-wizard-content field">
+                      <span class="p-float-label">
+                        <Chips
+                            v-model="doiIdentifiers"
+                            :id="$scopedId('input-doiIdentifiers')"
+                            :addOnBlur="true"
+                            :allowDuplicate="false"
+                            @add="acceptNewDoiIdentifier"
+                        >
+                          <template #chip="slotProps">
+                            <div>
+                              <div>{{ slotProps.value.identifier }}</div>
+                            </div>
+                          </template>
+                        </Chips>
+                        <label :for="$scopedId('input-doiIdentifiers')">DOI identifiers</label>
+                      </span>
+                      <span v-if="validationErrors.doiIdentifiers" class="mave-field-error">{{validationErrors.doiIdentifiers}}</span>
                     </div>
                   </div>
                   <div class="mavedb-wizard-row">
@@ -476,6 +506,7 @@
               </div>
             </template>
           </StepperPanel>
+
           <StepperPanel v-if="itemStatus == 'NotLoaded' || this.item.private">
             <template #header="{index, clickCallback}">
               <button class="p-stepper-action" :disabled="maxWizardStepEntered < index || maxWizardStepValidated < index - 1" role="tab" @click="clickCallback">
@@ -484,281 +515,50 @@
               </button>
             </template>
             <template #content="{prevCallback: showPreviousWizardStep, nextCallback: showNextWizardStep}">
-              <div>
-                <TabView class="field">
-                  <TabPanel header="Target Sequence">
-                    <div class="field">
-                      <span class="p-float-label">
-                        <AutoComplete ref="existingTargetGeneInput" v-model="existingTargetGene"
-                          :id="$scopedId('input-existingTargetGene')" field="name" :forceSelection="true"
-                          :suggestions="targetGeneSuggestionsList" @complete="searchTargetGenes">
-                          <template #item="slotProps">
-                            <div>
-                                <div>Name: {{ slotProps.item.name }}</div>
-                                <div>Category: {{ slotProps.item.category }}</div>
-                                <div v-for="externalIdentifier of slotProps.item.externalIdentifiers" :key=externalIdentifier.identifier>
-                                  {{ externalIdentifier.identifier.dbName }}: {{ externalIdentifier.identifier.identifier }}, Offset: {{ externalIdentifier.offset }}
-                                </div>
-                            </div>
-                          </template>
-                        </AutoComplete>
-                        <label :for="$scopedId('input-existingTargetGene')">Copy from an existing target gene</label>
-                      </span>
+              <div class="mavedb-wizard-form">
+                <div class="mavedb-wizard-form-content-background"></div>
+                <div class="mavedb-wizard-row">
+                  <div class="mavedb-wizard-help">
+                    <label :id="$scopedId('input-scoreSetIsSequenceBasedLabel')">Will you be uploading the target sequences used for your assay?</label>
+                    <div class="mavedb-help-small">
+                      The target sequence is the sequence that was mutagenized to create the variant library, such as in a cDNA-based deep mutational scan.
+                      If your variants were generated by editing the genome directly (e.g., using saturation genome editing or base editing), you should provide
+                      an Ensembl or RefSeq accession instead of uploading the target locus sequence as your own target.
                     </div>
-                    <div class="field">
-                      <span class="p-float-label">
-                        <InputText v-model="targetGene.name" :id="$scopedId('input-targetGeneName')" />
-                        <label :for="$scopedId('input-targetGeneName')">Target name</label>
-                      </span>
+                  </div>
+                  <div class="mavedb-wizard-content">
+                    <InputSwitch v-model="isTargetSequence" :aria-labelledby="$scopedId('input-scoreSetIsSequenceBasedLabel')" />
+                    <div class="mavedb-switch-value">{{ isTargetSequence ? 'Yes, variants are described relative to a target sequence.' : 'No, variants are described relative to a RefSeq or Ensembl accession (either a transcript or chromosome).' }}</div>
+                  </div>
+                </div>
+
+                <div class="mavedb-wizard-row">
+                  <div class="mavedb-wizard-help">
+                    <label :id="$scopedId('input-scoreSetHasMultipleTargetsLabel')">Does this score set describe variants with respect to more than one target?</label>
+                    <div class="mavedb-help-small">
+                      Some experiments might describe variants against two or more distinct target sequences. If this is the case, your variants will need to be described explicitly
+                      from the target they came from.
                     </div>
-                    <div class="field">
-                      <span class="p-float-label">
-                        <InputText v-model="targetGene.targetSequence.label"
-                          :id="$scopedId('input-targetSequenceLabel')" />
-                        <label :for="$scopedId('input-targetSequenceLabel')">Target label (only required when providing
-                          multiple targets)</label>
-                      </span>
-                    </div>
-                    <div class="field">
-                      <span class="p-float-label">
-                        <SelectButton v-model="targetGene.category" :id="$scopedId('input-targetGeneCategory')"
-                          :options="targetGeneCategories" />
-                      </span>
-                    </div>
-                    <div v-for="dbName of externalGeneDatabases" class="field field-columns" :key="dbName">
-                      <div class="field-column">
-                        <span class="p-float-label">
-                          <AutoComplete :ref="`${dbName.toLowerCase()}IdentifierInput`"
-                            v-model="targetGene.externalIdentifiers[dbName].identifier"
-                            :id="$scopedId(`input-${dbName.toLowerCase()}Identifier`)" field="identifier"
-                            :suggestions="targetGeneIdentifierSuggestionsList[dbName]"
-                            @blur="acceptNewTargetGeneIdentifier(dbName)"
-                            @complete="searchTargetGeneIdentifiers(dbName, $event)"
-                            @keyup.enter="acceptNewTargetGeneIdentifier(dbName)"
-                            @keyup.escape="clearTargetGeneIdentifierSearch(dbName)" />
-                          <label :for="$scopedId(`input-${dbName.toLowerCase()}Identifier`)">{{ dbName }}
-                            identifier</label>
-                        </span>
-                      </div>
-                      <div class="field-column">
-                        <span class="p-float-label">
-                          <InputNumber v-model="targetGene.externalIdentifiers[dbName].offset"
-                            :id="$scopedId(`input-${dbName.toLowerCase()}Offset`)" buttonLayout="stacked" :min="0"
-                            showButtons suffix=" bp" />
-                          <label :for="$scopedId(`input-${dbName.toLowerCase()}Offset`)">Offset</label>
-                        </span>
-                      </div>
-                    </div>
-                    <div class="field">
-                      <span class="p-float-label">
-                        <AutoComplete
-                          ref="taxonomyInput"
-                          v-model="taxonomy"
-                          dropdown
-                          :id="$scopedId('input-targetSequenceTaxonomy')"
-                          :suggestions="taxonomySuggestionsList"
-                          field="organismName"
-                          forceSelection
-                          :multiple="false"
-                          :options="taxonomies"
-                          @complete="searchTaxonomies"
-                          @keyup.escape="clearTaxonomySearch">
-                          <template #item="slotProps">
-                            {{slotProps.item.taxId}} - {{slotProps.item.organismName}} <template v-if="slotProps.item.commonName!=='NULL' && slotProps.item.commonName!== null">/ {{slotProps.item.commonName}}</template>
-                          </template>
-                        </AutoComplete>
-                        <label :for="$scopedId('input-targetSequenceTaxonomy')">Taxonomy</label>
-                      </span>
-                      <span v-if="validationErrors['targetGene.targetSequence.taxonomy']" class="mave-field-error">{{validationErrors['targetGene.targetSequence.taxonomy']}}</span>
-                    </div>
-                    <div class="field">
-                      <span class="p-float-label">
-                        <FileUpload ref="sequenceFileUpload"
-                          :id="$scopedId('input-targetGeneTargetSequenceSequenceFile')" :auto="false"
-                          chooseLabel="Reference sequence" :class="inputClasses.targetGeneTargetSequenceSequenceFile"
-                          :customUpload="true" :fileLimit="1" :showCancelButton="false" :showUploadButton="false"
-                          @remove="fileCleared('targetGeneTargetSequenceSequenceFile')"
-                          @select="fileSelected('targetGeneTargetSequenceSequenceFile', $event)">
-                          <template #empty>
-                            <p>Drop a FASTA file here.</p>
-                          </template>
-                        </FileUpload>
-                      </span>
-                    </div>
-                    <div class="field">
-                      <span class="p-float-label">
-                        <SelectButton v-model="targetGene.targetSequence.sequenceType"
-                          :id="$scopedId('input-targetGeneTargetSequenceSequenceType')" :options="sequenceTypes" />
-                      </span>
-                    </div>
-                    <div>
-                      <Button @click="addTarget" icon="pi pi-check" label="Add Target" />
-                      <Button @click="resetTarget" class="p-button-help" icon="pi pi-times" label="Clear Target"
-                        severity="secondary" style="margin-left: 0.5em" />
-                    </div>
-                  </TabPanel>
-                  <TabPanel header="Genomic Coordinates">
-                    <div class="field field-columns">
-                      <div class="field-column">
-                        <span class="p-float-label">
-                          <InputText v-model="targetGene.name" :id="$scopedId('input-targetGeneName')" style="width: 100%"/>
-                          <label :for="$scopedId('input-targetGene')">Target gene name</label>
-                        </span>
-                      </div>
-                      <div class="field-column">
-                        <span class="p-float-label">
-                          <!-- Assembly is the reference genome property in coordinate cases -->
-                          <Dropdown v-model="assembly" :id="$scopedId('input-targetGeneAssembly')" :options="assemblies" style="width: 100%"/>
-                          <label :for="$scopedId('input-targetGeneAssembly')">Assembly</label>
-                        </span>
-                      </div>
-                      <div class="field-column">
-                        <span class="p-float-label">
-                          <Dropdown v-model="geneName" :id="$scopedId('input-targetGeneGeneNames')"
-                            :options="geneNamesAsObject" optionLabel="name" filter
-                            :virtualScrollerOptions="{ itemSize: 50 }" @change="autofillGeneName" style="width: 100%"/>
-                          <label :for="$scopedId('input-targetGeneAssembly')">HGNC Name</label>
-                        </span>
-                      </div>
-                    </div>
-                    <div class="field">
-                      <span class="p-float-label">
-                        Autocomplete By:
-                        <SelectButton v-model="targetAutocomplete" :options="targetOptions" aria-labelledby="basic" />
-                      </span>
-                      <span class="p-float-label">
-                        <AutoComplete v-model="targetGene.targetAccession.accession"
-                          :id="$scopedId('input-targetGene-accession')"
-                          :suggestions="targetGeneAccessionSuggestionsList" :force-selection="true" :dropdown="true"
-                          @complete="fetchTargetAccessions" />
-                        <label :for="$scopedId('input-targetGene-accession')">Accession/Transcript Identifier</label>
-                      </span>
-                    </div>
-                    <div class="field">
-                      <span class="p-float-label">
-                        <SelectButton v-model="targetGene.category" :id="$scopedId('input-targetGeneCategory')"
-                          :options="targetGeneCategories" />
-                      </span>
-                    </div>
-                    <div>
-                      <Button @click="addTarget" icon="pi pi-check" label="Add Target" />
-                      <Button @click="swapNucleotideProteinAccessions" icon="pi pi-arrows-h"
-                        label="Switch to Protein Accession" severity="info" style="margin-left: 0.5em" />
-                      <Button @click="resetTarget" class="p-button-help" icon="pi pi-times" label="Clear Target"
-                        severity="secondary" style="margin-left: 0.5em" />
-                    </div>
-                  </TabPanel>
-                </TabView>
-              </div>
-              <div class="field">
-                <span v-if="targetGenes.length > 0">
-                  <DataTable v-model:expandedRows="expandedTargetGeneRows" :value="targetGenes" dataKey="index">
-                    <template #header>
-                      <h3 class="target-header">Created Targets</h3>
-                    </template>
-                    <Column expander style="width: 5rem" />
-                    <Column field="name" header="Name"></Column>
-                    <Column field="category" header="Category"></Column>
-                    <Column>
-                      <template #body="slotProps">
-                        <Button icon="pi pi-minus-circle" label="Remove" class="p-button-help" severity="secondary"
-                          @click="targetDeleted(slotProps.data)" />
-                      </template>
-                    </Column>
-                    <template #expansion="slotProps">
-                      <span v-if="validationErrors[`targetGenes.${slotProps.data.index}.name`]"
-                        class="mave-field-error">Gene Name {{ validationErrors[`targetGenes.${slotProps.data.index}.name`]
-                        }}</span>
-                      <span v-if="validationErrors[`targetGenes.${slotProps.data.index}.category`]"
-                        class="mave-field-error">Gene Category {{ validationErrors[`targetGenes.${slotProps.data.index}.category`]
-                        }}</span>
-                      <Card v-if="slotProps.data.targetSequence?.sequence" class="field">
-                        <template #content>
-                          <h3 class="compact-target">Genomic Sequence Data</h3>
-                          <p v-if="slotProps.data.targetSequence.label" class="compact-target">
-                            <strong>Sequence Label:</strong> {{ slotProps.data.targetSequence.label }}<br>
-                            <span v-if="validationErrors[`targetGenes.${slotProps.data.index}.targetSequence.label`]"
-                              class="mave-field-error">{{
-                                validationErrors[`targetGenes.${slotProps.data.index}.targetSequence.label`] }}<br></span>
-                          </p>
-                          <p class="compact-target">
-                            <strong>Sequence Type:</strong> {{ slotProps.data.targetSequence.sequenceType }}<br>
-                            <span
-                              v-if="validationErrors[`targetGenes.${slotProps.data.index}.targetSequence.sequenceType`]"
-                              class="mave-field-error">{{
-                                validationErrors[`targetGenes.${slotProps.data.index}.targetSequence.sequenceType`]
-                              }}<br></span>
-                            <strong>Taxonomy Organism Name:</strong> {{ slotProps.data.targetSequence.taxonomy.organismName }}<br>
-                            <span v-if="validationErrors[`targetGenes.${slotProps.data.index}.taxonomy`]"
-                              class="mave-field-error">{{
-                                validationErrors[`targetGenes.${slotProps.data.index}.taxonomy`] }}<br></span>
-                            <strong>Taxonomy Common Name:</strong> {{ slotProps.data.targetSequence.taxonomy.commonName
-                            }}
-                          </p>
-                          <span v-if="validationErrors[`targetGenes.${slotProps.data.index}.targetSequence.sequence`]"
-                            class="mave-field-error">{{
-                              validationErrors[`targetGenes.${slotProps.data.index}.targetSequence.sequence`] }}</span>
-                        </template>
-                      </Card>
-                      <Card v-if="slotProps.data.targetAccession?.accession">
-                        <template #content>
-                          <h3 class="compact-target">Accession Data</h3>
-                          <p class="compact-target">
-                            <strong>Assembly:</strong> {{ slotProps.data.targetAccession.assembly || 'N/A' }}<br>
-                            <span v-if="validationErrors[`targetGenes.${slotProps.data.index}.targetAccession.assembly`]"
-                              class="mave-field-error">{{
-                                validationErrors[`targetGenes.${slotProps.data.index}.targetAccession.assembly`]
-                              }}<br></span>
-                            <strong>Gene:</strong> {{ slotProps.data.targetAccession.gene || 'N/A' }}<br>
-                            <span v-if="validationErrors[`targetGenes.${slotProps.data.index}.targetAccession.gene`]"
-                              class="mave-field-error">{{
-                                validationErrors[`targetGenes.${slotProps.data.index}.targetAccession.gene`] }}<br></span>
-                            <strong>Accession:</strong> {{ slotProps.data.targetAccession.accession }}<br>
-                            <span
-                              v-if="validationErrors[`targetGenes.${slotProps.data.index}.targetAccession.accession`]"
-                              class="mave-field-error">{{
-                                validationErrors[`targetGenes.${slotProps.data.index}.targetAccession.accession`] }}</span>
-                          </p>
-                        </template>
-                      </Card>
-                      <Card v-if="slotProps.data.externalIdentifiers.length > 0">
-                        <template #content>
-                          <h3 class="target-header">External Identifier Data</h3>
-                          <div v-for="externalId of slotProps.data.externalIdentifiers" class="compact-target"
-                            :key="externalId">
-                            <p class="compact-target">
-                              <strong>{{ externalId.identifier.dbName }}:</strong> {{ externalId.identifier.identifier
-                              }}, <strong>Offset:</strong> {{ externalId.offset }}
-                            </p>
-                            <span
-                              v-if="validationErrors[`targetGenes.${slotProps.data.index}.externalIdentifiers.${externalId.identifier.dbName}.identifier`]"
-                              class="mave-field-error">{{
-                                validationErrors[`targetGenes.${slotProps.data.index}.externalIdentifiers.${externalId.identifier.dbName}.identifier`]
-                              }}</span><br>
-                            <span
-                              v-if="validationErrors[`targetGenes.${slotProps.data.index}.externalIdentifiers.${externalId.identifier.dbName}.offset`]"
-                              class="mave-field-error">{{
-                                validationErrors[`targetGenes.${slotProps.data.index}.externalIdentifiers.${externalId.identifier.dbName}.offset`]
-                              }}</span>
-                          </div>
-                        </template>
-                      </Card>
-                    </template>
-                    <template #footer>
-                      <div class="flex flex-wrap justify-content-start gap-2">
-                        <Button icon="pi pi-times-circle" label="Clear all" severity="secondary" class="p-button-help"
-                          @click="targetsCleared" />
-                      </div>
-                    </template>
-                  </DataTable>
-                </span>
-              </div>
-              <span v-if="validationErrors['targetGenes']" class="mave-field-error">{{validationErrors['targetGenes']}}</span>
-              <div class="field">
-                <Message v-if="targetGenes?.length > 1" severity="info">
-                  When defining variants against multiple targets, uploaded variant coordinates should be fully
-                  qualified with respect to target names or target accessions.
-                </Message>
+                  </div>
+                  <div class="mavedb-wizard-content">
+                    <InputSwitch v-model="isMultiTarget" :aria-labelledby="$scopedId('input-scoreSetHasMultipleTargetsLabel')" />
+                    <div class="mavedb-switch-value">{{ isMultiTarget ? 'Yes, variants are described relative to multiple target sequences.' : 'No, variants are described relative to a single target sequence.' }}</div>
+                  </div>
+                </div>
+
+                <div v-if="isMultiTarget" class="mavedb-wizard-row">
+                  <div class="mavedb-wizard-help">
+                    <label>How many targets will be included with this score set?</label>
+                  </div>
+                  <div class="mavedb-wizard-content field">
+                    <span class="p-float-label">
+                      <InputNumber v-model="numTargets"
+                            :id="$scopedId(`input-numTargets`)" buttonLayout="stacked" :min="isMultiTarget ? 2 : 1"
+                            showButtons suffix=" targets" />
+                      <label :for="$scopedId(`input-numTargets`)">Targets</label>
+                    </span>
+                  </div>
+                </div>
               </div>
               <div class="mavedb-wizard-step-controls-row">
                 <div class="flex justify-content-between mavedb-wizard-step-controls pt-4">
@@ -768,6 +568,438 @@
               </div>
             </template>
           </StepperPanel>
+
+          <!-- Annoyingly, `idx in numTargets` is 1-indexed. -->
+          <StepperPanel v-for="(targetNum, targetIdx) in numTargets" :key="targetIdx">
+            <template #header="{index, clickCallback}">
+              <button class="p-stepper-action" :disabled="maxWizardStepEntered < index || maxWizardStepValidated < index - 1" role="tab" @click="clickCallback">
+                <span class="p-stepper-number">{{ index + 1 }}</span>
+                <span class="p-stepper-title">Target {{ targetNum }}</span>
+              </button>
+            </template>
+            <template #content="{prevCallback: showPreviousWizardStep, nextCallback: showNextWizardStep}">
+              <div class="mavedb-wizard-form">
+                <div class="mavedb-wizard-form-content-background"></div>
+                <div v-if="isTargetSequence" class="mavedb-wizard-row">
+                  <div class="mavedb-wizard-help">
+                    <label>Copy target from a previously created target</label>
+                    <div class="mavedb-help-small">
+                      Use this autocomplete field to find an existing target in MaveDB and fill this target with its metadata. You'll still be able to edit any fields below.
+                    </div>
+                  </div>
+                  <div class="mavedb-wizard-content field">
+                    <span class="p-float-label">
+                    <AutoComplete ref="existingTargetGeneInput" v-model="createdTargetGenes[targetIdx].autofilledTargetGene"
+                      :id="$scopedId('input-existingTargetGene')" field="name" :forceSelection="true"
+                      :suggestions="targetGeneSuggestionsList" @complete="searchTargetGenes" @item-select="autofillFromExistingTarget($event, targetIdx)">
+                      <template #item="slotProps">
+                        <div>
+                            <div>Name: {{ slotProps.item.name }}</div>
+                            <div>Category: {{ slotProps.item.category }}</div>
+                            <div v-for="externalIdentifier of slotProps.item.externalIdentifiers" :key=externalIdentifier.identifier>
+                              {{ externalIdentifier.identifier.dbName }}: {{ externalIdentifier.identifier.identifier }}, Offset: {{ externalIdentifier.offset }}
+                            </div>
+                        </div>
+                      </template>
+                    </AutoComplete>
+                    <label :for="$scopedId('input-existingTargetGene')">Copy from an existing target</label>
+                    </span>
+                  </div>
+                </div>
+                <div class="mavedb-wizard-row">
+                  <div class="mavedb-wizard-help">
+                    <label>The name of the target</label>
+                    <div class="mavedb-help-small">
+                      This name will be used to identify the target on the score set page and can be used to autofill from this target in the future.
+                      Most users choose to name this target after the associated gene, if applicable.
+                    </div>
+                  </div>
+                  <div class="mavedb-wizard-content field">
+                      <span class="p-float-label">
+                        <InputText v-model="createdTargetGenes[targetIdx].targetGene.name" :id="$scopedId('input-targetGeneName')" style="width: 100%" />
+                        <label :for="$scopedId('input-targetGeneName')">Target name</label>
+                      </span>
+                      <span v-if="validationErrors[`targetGene.${targetIdx}.name`]" class="mave-field-error">{{ validationErrors[`targetGene.${targetIdx}.name`] }}</span>
+                  </div>
+                </div>
+
+                <div v-if="isTargetSequence">
+                  <div v-if="numTargets > 1" class="mavedb-wizard-row">
+                    <div class="mavedb-wizard-help">
+                      <label>The label of the target</label>
+                      <div class="mavedb-help-small">
+                        This label is what you use in your variants file to indicate which of your targets the variant is described relative to.
+                        Because it is used with MAVE-HGVS strings, it may not contain any spaces or colons.
+                      </div>
+                    </div>
+                      <div class="mavedb-wizard-content field">
+                        <span class="p-float-label">
+                          <InputText v-model="createdTargetGenes[targetIdx].targetGene.targetSequence.label" :id="$scopedId('input-targetGeneLabel')" style="width: 100%"/>
+                          <label :for="$scopedId('input-targetGeneLabel')">Target label</label>
+                        </span>
+                        <span v-if="validationErrors[`targetGene.${targetIdx}.targetSequence.label`]" class="mave-field-error">{{ validationErrors[`targetGene.${targetIdx}.targetSequence.label`] }}</span>
+                    </div>
+                  </div>
+
+                  <div class="mavedb-wizard-row">
+                    <div class="mavedb-wizard-help">
+                      <label :id="$scopedId('input-targetGeneCategory')">The functional category of the target</label>
+                    </div>
+                    <div class="mavedb-wizard-content">
+                      <span class="p-float-label">
+                        <span class="p-float-label">
+                          <SelectButton v-model="createdTargetGenes[targetIdx].targetGene.category" :id="$scopedId('input-targetGeneCategory')"
+                            :options="targetGeneCategories" />
+                        </span>
+                      </span>
+                      <span v-if="validationErrors[`targetGene.${targetIdx}.category`]" class="mave-field-error">{{ validationErrors[`targetGene.${targetIdx}.category`] }}</span>
+                    </div>
+                  </div>
+
+                  <div class="mavedb-wizard-row" v-for="dbName of externalGeneDatabases" :key="dbName">
+                    <div class="mavedb-wizard-help">
+                      <label :id="$scopedId(`input-targetGeneExternalDatabase${dbName}Label`)">Link this target to a {{dbName}} accession</label>
+                      <!-- only display this verbose help on the first of the external gene database selections. -->
+                      <div class="mavedb-help-small" v-if="dbName === externalGeneDatabases[0]">
+                        If the target sequence provided to MaveDB starts partway through the linked sequence (such as an assay targeting a single functional domain),
+                        the target should also have an “offset”. The offset is the integer value that should be added to the MaveDB coordinates (which are relative
+                        to the target sequence) in order to match the coordinates in the linked sequence.
+                      </div>
+                    </div>
+                    <div class="mavedb-wizard-content">
+                      <InputSwitch v-model="createdTargetGenes[targetIdx].linkedAccessions[dbName]" :aria-labelledby="$scopedId(`input-targetGeneExternalDatabase${dbName}Label`)" />
+                      <div class="mavedb-switch-value">{{ createdTargetGenes[targetIdx].linkedAccessions[dbName] ? `Yes, link this target to a ${dbName} accession.` : `No, do not link this target to a ${dbName} accession.` }}</div>
+                      <div class="mavedb-wizard-subcontent field-columns" v-if="createdTargetGenes[targetIdx].linkedAccessions[dbName]">
+                          <div class="p-float-label field-column">
+                            <AutoComplete style="width: 100%;"
+                                v-model="createdTargetGenes[targetIdx].targetGene.externalIdentifiers[dbName].identifier"
+                                :id="$scopedId(`input-${dbName.toLowerCase()}Identifier`)" field="identifier"
+                                :suggestions="targetGeneIdentifierSuggestionsList[dbName]" :forceSelection="true"
+                                @complete="searchTargetGeneIdentifiers(dbName, $event)"
+                                @change="addDefaultOffset(dbName, targetIdx)"
+                              />
+                            <label :for="$scopedId(`input-${dbName.toLowerCase()}Identifier`)">{{ dbName }} identifier</label>
+                          </div>
+                          <span class="p-float-label">
+                            <InputNumber v-model="createdTargetGenes[targetIdx].targetGene.externalIdentifiers[dbName].offset"
+                              :id="$scopedId(`input-${dbName.toLowerCase()}Offset`)" buttonLayout="stacked" :min="0"
+                              showButtons suffix=" bp" />
+                            <label :for="$scopedId(`input-${dbName.toLowerCase()}Offset`)">Offset</label>
+                          </span>
+                        </div>
+                        <span v-if="validationErrors[`targetGene.${targetIdx}.externalIdentifiers.${dbName}`]" class="mave-field-error">{{ validationErrors[`targetGene.${targetIdx}.externalIdentifiers.${dbName}`] }}</span>
+                        <span v-if="validationErrors[`targetGene.${targetIdx}.externalIdentifiers.${dbName}.identifier`]" class="mave-field-error">{{ validationErrors[`targetGene.${targetIdx}.externalIdentifiers.${dbName}.identifier`] }}</span>
+                        <span v-if="validationErrors[`targetGene.${targetIdx}.externalIdentifiers.${dbName}.offset`]" class="mave-field-error">{{ validationErrors[`targetGene.${targetIdx}.externalIdentifiers.${dbName}.offset`] }}</span>
+                    </div>
+                  </div>
+                  <div class="mavedb-wizard-row">
+                    <div class="mavedb-wizard-help">
+                      <label :id="$scopedId('input-targetGeneTaxonomyLabel')">The taxonomy group to which this target belongs</label>
+                      <div class="mavedb-help-small">
+                        For more details about taxonomy, see the <a target="_blank" href="https://www.ncbi.nlm.nih.gov/books/NBK53758/">NCBI taxonomy help page.</a>
+                      </div>
+                    </div>
+                    <div class="mavedb-wizard-content">
+                      <span class="p-float-label">
+                        <AutoComplete
+                          ref="taxonomyInput"
+                          v-model="createdTargetGenes[targetIdx].targetGene.targetSequence.taxonomy"
+                          dropdown
+                          :id="$scopedId('input-targetGeneTaxonomyLabel')"
+                          :suggestions="taxonomySuggestionsList"
+                          field="organismName"
+                          forceSelection
+                          :multiple="false"
+                          :options="taxonomies"
+                          @complete="searchTaxonomies"
+                          @keyup.escape="clearTaxonomySearch"
+                          style="width: 100%;"
+                        >
+                          <template #item="slotProps">
+                            {{slotProps.item.taxId}} - {{slotProps.item.organismName}} <template v-if="slotProps.item.commonName!=='NULL' && slotProps.item.commonName!== null">/ {{slotProps.item.commonName}}</template>
+                          </template>
+                        </AutoComplete>
+                        <label :for="$scopedId('input-targetGeneTaxonomyLabel')">Taxonomy</label>
+                      </span>
+                      <span v-if="validationErrors[`targetGene.${targetIdx}.targetSequence.taxonomy`]" class="mave-field-error">{{ validationErrors[`targetGene.${targetIdx}.targetSequence.taxonomy`] }}</span>
+                    </div>
+                  </div>
+                  <div class="mavedb-wizard-row">
+                    <div class="mavedb-wizard-help">
+                      <label :id="$scopedId('input-targetGeneSequenceTypeLabel')">The sequence type of the target</label>
+                    </div>
+                    <div class="mavedb-wizard-content">
+                      <span class="p-float-label">
+                        <SelectButton v-model="createdTargetGenes[targetIdx].targetGene.targetSequence.sequenceType"
+                          :id="$scopedId('input-targetGeneSequenceType')" :options="sequenceTypes" />
+                      </span>
+                      <span v-if="validationErrors[`targetGene.${targetIdx}.targetSequence.sequenceType`]" class="mave-field-error">{{ validationErrors[`targetGene.${targetIdx}.targetSequence.sequenceType`] }}</span>
+                    </div>
+                  </div>
+                  <div class="mavedb-wizard-row">
+                    <div class="mavedb-wizard-help">
+                      <label :id="$scopedId('input-targetGeneSequenceFileLabel')">The sequence of the target</label>
+                      <div class="mavedb-help-small">
+                        Variants will be validated against this sequence. Note that the first position in the sequence is numbered as position 1 when validating variants.
+                      </div>
+                    </div>
+                    <div class="mavedb-wizard-content">
+                      <span class="p-float-label">
+                        <FileUpload ref="sequenceFileUpload"
+                          :id="$scopedId('input-targetGeneSequenceFileLabel')" :auto="false"
+                          chooseLabel="Reference sequence" :class="inputClasses.targetGeneTargetSequenceSequenceFile"
+                          :customUpload="true" :fileLimit="1" :showCancelButton="false" :showUploadButton="false"
+                          @remove="fileCleared('targetGeneTargetSequenceSequenceFile', targetIdx)"
+                          @select="fileSelected('targetGeneTargetSequenceSequenceFile', $event, targetIdx)" >
+                          <template #empty>
+                            <div v-if="createdTargetGenes[targetIdx].targetGene.targetSequence.sequence != null" >
+                              <Textarea v-model="createdTargetGenes[targetIdx].targetGene.targetSequence.sequence" rows=5 disabled style="width:100%; max-width:60em; word-wrap:break-word; font-family: monospace;" />
+                              <small>This sequence was set by the autofilled target. To use a different sequence, upload a new FASTA file.</small>
+                            </div>
+                            <div v-else>
+                              <p>Drop a <a target="_blank" href="https://blast.ncbi.nlm.nih.gov/doc/blast-topics/#fasta">FASTA</a> file here</p>
+                            </div>
+                          </template>
+                        </FileUpload>
+                      </span>
+                      <span v-if="validationErrors[`targetGene.${targetIdx}.targetSequence.sequence`]" class="mave-field-error">{{ validationErrors[`targetGene.${targetIdx}.targetSequence.sequence`] }}</span>
+                    </div>
+                  </div>
+                </div>
+                <div v-else>
+                  <div class="mavedb-wizard-row">
+                    <div class="mavedb-wizard-help">
+                      <label :id="$scopedId('input-targetDescribesChromosomeLabel')">Does this target represent a whole chromosome?</label>
+                      <div class="mavedb-help-small">
+                        Some score sets might describe variants relative to an entire chromosome, while others will describe variants relative to a
+                        RefSeq or Ensembl accession representing a gene.
+                      </div>
+                    </div>
+                    <div class="mavedb-wizard-content">
+                      <InputSwitch v-model="createdTargetGenes[targetIdx].isRelativeToChromosome" :aria-labelledby="$scopedId('input-targetDescribesChromosomeLabel')" @change="refreshAccessionOptions(targetIdx)" />
+                      <div class="mavedb-switch-value">{{ createdTargetGenes[targetIdx].isRelativeToChromosome ? 'Yes, this target represents an entire chromosome.' : 'No, this target represents a gene.' }}</div>
+                    </div>
+                  </div>
+                  <div v-if="createdTargetGenes[targetIdx].isRelativeToChromosome" class="mavedb-wizard-row">
+                    <div class="mavedb-wizard-help">
+                      <label :id="$scopedId('input-targetGeneAssemblyLabel')">The assembly for this accession</label>
+                    </div>
+                    <div class="mavedb-wizard-content">
+                      <span class="p-float-label">
+                        <!-- Assembly is the reference genome property in coordinate cases -->
+                        <Dropdown v-model="createdTargetGenes[targetIdx].targetGene.targetAccession.assembly" :aria-labelledby="$scopedId('input-targetGeneAssemblyLabel')" :options="assemblies" style="width: 100%" @change="refreshAccessionOptions(targetIdx)"/>
+                        <label :for="$scopedId('input-targetGeneAssemblyLabel')">Assembly</label>
+                      </span>
+                      <span v-if="validationErrors[`targetGene.${targetIdx}.targetAccession.assembly`]" class="mave-field-error">{{ validationErrors[`targetGene.${targetIdx}.targetAccession.assembly`] }}</span>
+                    </div>
+                  </div>
+                  <div v-else class="mavedb-wizard-row">
+                    <div class="mavedb-wizard-help">
+                      <label :id="$scopedId('input-targetGeneGeneNameLabel')">The gene name for this accession</label>
+                    </div>
+                    <div class="mavedb-wizard-content">
+                      <span class="p-float-label">
+                        <Dropdown v-model="createdTargetGenes[targetIdx].targetGene.targetAccession.gene" :id="$scopedId('input-targetGeneGeneNameLabel')"
+                            :options="geneNamesAsObject" optionLabel="name" filter
+                            :virtualScrollerOptions="{ itemSize: 50 }" @change="autofillGeneName($event, targetIdx)" style="width: 100%"/>
+                          <label :for="$scopedId('input-targetGeneGeneNameLabel')">HGNC Name</label>
+                      </span>
+                      <span v-if="validationErrors[`targetGene.${targetIdx}.targetAccession.gene`]" class="mave-field-error">{{ validationErrors[`targetGene.${targetIdx}.targetAccession.gene`] }}</span>
+                    </div>
+                  </div>
+
+                  <div class="mavedb-wizard-row">
+                    <div class="mavedb-wizard-help">
+                      <label :id="$scopedId('input-targetGeneAccessionLabel')">The accession identifier for this target</label>
+                      <div class="mavedb-help-small">
+                        This will be the sequence that your variants are described against. It may be a RefSeq or Ensemble identifier. Available accessions matching the
+                        {{ createdTargetGenes[targetIdx].isRelativeToChromosome ? "assembly" : "gene name" }} will be displayed once one is selected.
+                      </div>
+                    </div>
+                    <div class="mavedb-wizard-content">
+                      <span class="p-float-label">
+                        <AutoComplete v-model="createdTargetGenes[targetIdx].targetGene.targetAccession.accession"
+                          :id="$scopedId('input-targetGeneAccessionLabel')"
+                          :suggestions="targetGeneAccessionSuggestionsList" :force-selection="true" :dropdown="true"
+                          @complete="fetchTargetAccessions($event)" style="width: 100%"/>
+                        <label :for="$scopedId('input-targetGeneAccessionLabel')"> Accession Identifier </label>
+                      </span>
+                      <div v-if="createdTargetGenes[targetIdx].targetGene.targetAccession.accession && !createdTargetGenes[targetIdx].targetGene.targetAccession.accession?.startsWith('NP')" class="mavedb-wizard-subcontent">
+                        <Button @click="swapNucleotideProteinAccessions(targetIdx)" icon="pi pi-arrows-h"
+                          label="Switch to Protein Accession" severity="info" />
+                      </div>
+                      <span v-if="validationErrors[`targetGene.${targetIdx}.targetAccession.accession`]" class="mave-field-error">{{ validationErrors[`targetGene.${targetIdx}.targetAccession.accession`] }}</span>
+                    </div>
+                  </div>
+                  <div class="mavedb-wizard-row">
+                    <div class="mavedb-wizard-help">
+                      <label :id="$scopedId('input-targetGeneCategoryLabel')">The genetic category of the target</label>
+                    </div>
+                    <div class="mavedb-wizard-content">
+                      <span class="p-float-label">
+                        <span class="p-float-label">
+                          <SelectButton v-model="createdTargetGenes[targetIdx].targetGene.category" :id="$scopedId('input-targetGeneCategoryLabel')"
+                            :options="targetGeneCategories" />
+                        </span>
+                      </span>
+                      <span v-if="validationErrors[`targetGene.${targetIdx}.category`]" class="mave-field-error">{{ validationErrors[`targetGene.${targetIdx}.category`] }}</span>
+                    </div>
+                  </div>
+                </div>
+              </div>
+              <div class="mavedb-wizard-step-controls-row">
+                <div class="flex justify-content-between mavedb-wizard-step-controls pt-4">
+                  <Button label="Back" severity="secondary" icon="pi pi-arrow-left" @click="showPreviousWizardStep" />
+                  <Button label="Next" :disabled="this.maxWizardStepValidated < activeWizardStep" icon="pi pi-arrow-right" iconPos="right" @click="showNextWizardStepIfValid(showNextWizardStep)" />
+                </div>
+              </div>
+            </template>
+          </StepperPanel>
+
+          <StepperPanel v-if="itemStatus == 'NotLoaded' || this.item.private" header="Score Ranges">
+            <template #header="{index, clickCallback}">
+              <button class="p-stepper-action" :disabled="maxWizardStepEntered < index || maxWizardStepValidated < index - 1" role="tab" @click="clickCallback">
+                <span class="p-stepper-number">{{ index + 1 }}</span>
+                <span class="p-stepper-title">Score Ranges</span>
+              </button>
+            </template>
+            <template #content="{prevCallback: showPreviousWizardStep, nextCallback: showNextWizardStep}">
+              <div class="mavedb-wizard-form">
+                <div class="mavedb-wizard-form-content-background"></div>
+                <div class="mavedb-wizard-row">
+                  <div class="mavedb-wizard-help">
+                    <label :id="$scopedId('input-isProvidingScoreRanges')">Will you be providing score ranges for this score set?</label>
+                    <div class="mavedb-help-small">
+                      Score ranges provide additional clinical context to the scores you upload. If you provide score ranges, you must
+                      classify each range as denoting either normal or abnormal function, with at least one range of each type. You should
+                      also provide a wild type score within the normal range. This score is the expected score for wild type variants.
+                    </div>
+                  </div>
+                  <div class="mavedb-wizard-content">
+                    <InputSwitch v-model="isProvidingScoreRanges" :aria-labelledby="$scopedId('input-isProvidingScoreRanges')" />
+                    <div class="mavedb-switch-value">{{ isProvidingScoreRanges ? 'Yes, I will be providing score range data.' : 'No, I will not be providing score range data.' }}</div>
+                  </div>
+                </div>
+                <div v-if="isProvidingScoreRanges" class="mavedb-wizard-row">
+                  <div class="mavedb-wizard-help">
+                    <label :id="$scopedId('input-wtScore')">What is the wild type score for this score set?</label>
+                    <div class="mavedb-help-small">
+                      This number should be within the range of normal scores for your score data.
+                    </div>
+                  </div>
+                  <div class="mavedb-wizard-content">
+                    <span class="p-float-label">
+                      <InputNumber v-model="scoreRanges.wtScore" :aria-labelledby="$scopedId('input-wtScore')" style="width:100%;" :minFractionDigits="1" :maxFractionDigits="10" />
+                      <label :for="$scopedId('input-wtScore')"> Wild Type Score </label>
+                    </span>
+                    <span v-if="validationErrors[`scoreRanges.wtScore`]" class="mave-field-error">{{ validationErrors[`scoreRanges.wtScore`] }}</span>
+                  </div>
+                </div>
+                <div v-if="isProvidingScoreRanges">
+                  <div v-for="(rangeObj, rangeIdx) in scoreRanges.ranges" :key="rangeIdx">
+                    <div class="mavedb-wizard-row">
+                      <div class="mavedb-wizard-content">
+                        <div>
+                          Score Range {{  rangeIdx + 1 }}
+                          <Button label="Remove" severity="danger" icon="pi pi-times" style="float:right;" @click="removeScoreRange(rangeIdx)"></Button>
+                        </div>
+                        <hr>
+                        <span v-if="validationErrors[`scoreRanges.ranges.${rangeIdx}`]" class="mave-field-error">{{ validationErrors[`scoreRanges.ranges.${rangeIdx}`] }}</span>
+                      </div>
+                    </div>
+                    <div class="mavedb-wizard-row">
+                      <div class="mavedb-wizard-help">
+                        <label :id="$scopedId(`input-rangeLabel-${rangeIdx}`)">Enter a label for this score range</label>
+                        <div class="mavedb-help-small">
+                          This label will be used to describe this range on visualizations of this score data.
+                        </div>
+                      </div>
+                      <div class="mavedb-wizard-content">
+                        <span class="p-float-label">
+                          <InputText v-model="rangeObj.value.label" :aria-labelledby="$scopedId(`input-rangeLabel-${rangeIdx}`)" style="width:100%;" />
+                          <label :for="$scopedId(`input-rangeLabel-${rangeIdx}`)"> Score range label </label>
+                        </span>
+                        <span v-if="validationErrors[`scoreRanges.ranges.${rangeIdx}.label`]" class="mave-field-error">{{ validationErrors[`scoreRanges.ranges.${rangeIdx}.label`] }}</span>
+                      </div>
+                    </div>
+                    <div class="mavedb-wizard-row">
+                      <div class="mavedb-wizard-help">
+                        <label :id="$scopedId(`input-rangeDescription-${rangeIdx}`)">Enter an (optional) description for this score range</label>
+                        <div class="mavedb-help-small">
+                          This description should provide additional details about this score range if necessary.
+                        </div>
+                      </div>
+                      <div class="mavedb-wizard-content">
+                        <span class="p-float-label">
+                          <Textarea v-model="rangeObj.value.description" :aria-labelledby="$scopedId(`input-rangeDescription-${rangeIdx}`)" autoResize rows="5" style="width:100%;" />
+                          <label :for="$scopedId(`input-rangeDescription-${rangeIdx}`)"> Score range description </label>
+                        </span>
+                        <span v-if="validationErrors[`scoreRanges.ranges.${rangeIdx}.description`]" class="mave-field-error">{{ validationErrors[`scoreRanges.ranges.${rangeIdx}.description`] }}</span>
+                      </div>
+                    </div>
+                    <div class="mavedb-wizard-row">
+                      <div class="mavedb-wizard-help">
+                        <label :id="$scopedId(`input-rangeClassification-${rangeIdx}`)">How should this range be classified?</label>
+                        <div class="mavedb-help-small">
+                          When providing score ranges, it is necessary to classify each range as either normal or abnormal. You may provide more
+                          than one range within each classification, but at least one of each is necessary.
+                        </div>
+                      </div>
+                      <div class="mavedb-wizard-content">
+                          <SelectButton v-model="rangeObj.value.classification" :id="$scopedId(`input-rangeClassification-${rangeIdx}`)"
+                          :options="rangeClassifications" />
+                          <span v-if="validationErrors[`scoreRanges.ranges.${rangeIdx}.classification`]" class="mave-field-error">{{ validationErrors[`scoreRanges.ranges.${rangeIdx}.classification`] }}</span>
+                      </div>
+                    </div>
+                    <div class="mavedb-wizard-row">
+                      <div class="mavedb-wizard-help">
+                        <label :id="$scopedId(`input-rangeBoundaries-${rangeIdx}`)">What are the upper and lower bounds of this score range?</label>
+                        <div class="mavedb-help-small">
+                          The lower bound is inclusive while the upper bound is exclusive of the provided value. Score range boundaries should not overlap with the boundaries
+                          of other score ranges. If a range does not have an upper or lower bound, the value will be treated as either positive or negative infinity.
+                        </div>
+                      </div>
+                      <div class="mavedb-wizard-content">
+                          <InputGroup>
+                            <span class=p-float-label>
+                              <InputText v-model="rangeObj.value.range[0]" :aria-labelledby="$scopedId(`input-rangeLower-${rangeIdx}`)" :disabled="rangeObj.infiniteLower"/>
+                              <label :for="$scopedId(`input-rangeLower-${rangeIdx}`)"> {{ rangeObj.infiniteLower ? "-infinity" : "Lower Bound" }} </label>
+                            </span>
+                            <InputGroupAddon>to</InputGroupAddon>
+                            <span class=p-float-label>
+                              <InputText v-model="rangeObj.value.range[1]" :aria-labelledby="$scopedId(`input-rangeUpper-${rangeIdx}`)" :disabled="rangeObj.infiniteUpper"/>
+                              <label :for="$scopedId(`input-rangeUpper-${rangeIdx}`)"> {{ rangeObj.infiniteUpper ? "infinity" : "Upper Bound" }} </label>
+                            </span>
+                          </InputGroup>
+                          <span>
+                            <Checkbox :binary="true" v-model="rangeObj.infiniteLower" inputId="lowerBound" name="lower" @change="boundaryLimitUpdated(rangeIdx, 'lower')"/>
+                            <label for="lowerBound" class="ml-2"> No lower bound </label>
+                          </span>
+                          <span style="float:right;">
+                            <label for="upperBound" class="ml-2"> No upper bound </label>
+                            <Checkbox :binary="true" v-model="rangeObj.infiniteUpper" inputId="upperBound" name="upper" @change="boundaryLimitUpdated(rangeIdx, 'upper')"/>
+                          </span>
+                          <span v-if="validationErrors[`scoreRanges.ranges.${rangeIdx}.0.range`]" class="mave-field-error">{{ validationErrors[`scoreRanges.ranges.${rangeIdx}.0.range`] }}</span>
+                          <span v-if="validationErrors[`scoreRanges.ranges.${rangeIdx}.1.range`]" class="mave-field-error">{{ validationErrors[`scoreRanges.ranges.${rangeIdx}.1.range`] }}</span>
+                      </div>
+                    </div>
+                  </div>
+                  <div class="mavedb-wizard-row">
+                    <div class="mavedb-wizard-content">
+                      <Button label="Add another range" icon="pi pi-plus" style="float:right;" @click="addScoreRange"></Button>
+                    </div>
+                  </div>
+                </div>
+              </div>
+              <div class="mavedb-wizard-step-controls-row">
+                <div class="flex justify-content-between mavedb-wizard-step-controls pt-5">
+                  <Button label="Back" severity="secondary" icon="pi pi-arrow-left" @click="showPreviousWizardStep" />
+                  <Button label="Next" :disabled="this.maxWizardStepValidated < activeWizardStep" icon="pi pi-arrow-right" iconPos="right" @click="showNextWizardStepIfValid(showNextWizardStep)" />
+                </div>
+              </div>
+            </template>
+          </StepperPanel>
+
           <StepperPanel v-if="itemStatus == 'NotLoaded' || this.item.private" header="Variant scores">
             <template #header="{index, clickCallback}">
               <button class="p-stepper-action" :disabled="maxWizardStepEntered < index || maxWizardStepValidated < index - 1" role="tab" @click="clickCallback">
@@ -776,38 +1008,64 @@
               </button>
             </template>
             <template #content="{prevCallback: showPreviousWizardStep}">
-              <div v-if="item">
-                <div>{{ formatInt(item.numVariants) }} variants are included in this score set.</div>
-                <div>To replace the variants, choose a new scores file and optional counts file:</div>
-              </div>
-              <div v-else>
-                Load a scores file and an optional counts file:
-              </div>
-              <div class="field">
-                <span class="p-float-label">
-                  <FileUpload ref="scoresFileUpload" :id="$scopedId('input-scoresFile')" :auto="false"
-                    chooseLabel="Scores file" :class="inputClasses.scoresFile || ''" :customUpload="true" :fileLimit="1"
-                    :showCancelButton="false" :showUploadButton="false">
-                    <template #empty>
-                      <p>Drop a file here.</p>
-                    </template>
-                  </FileUpload>
-                </span>
-                <span v-if="validationErrors.scoresFile" class="mave-field-error">{{ validationErrors.scoresFile
-                }}</span>
-              </div>
-              <div class="field">
-                <span class="p-float-label">
-                  <FileUpload ref="countsFileUpload" :id="$scopedId('input-countsFile')" :auto="false"
-                    chooseLabel="Counts file" :class="inputClasses.countsFile || ''" :customUpload="true" :fileLimit="1"
-                    :showCancelButton="false" :showUploadButton="false">
-                    <template #empty>
-                      <p>Drop a file here.</p>
-                    </template>
-                  </FileUpload>
-                </span>
-                <span v-if="validationErrors.countsFile" class="mave-field-error">{{ validationErrors.countsFile
-                }}</span>
+              <div class="mavedb-wizard-form">
+                <div class="mavedb-wizard-form-content-background"></div>
+                <div class="mavedb-wizard-row">
+                  <div class="mavedb-wizard-content">
+                    <Message v-if="numTargets > 1" severity="info">
+                      Please note that when you submit variants with respect to multiple targets, the position of each variant must be provided
+                      with respect to the target label or accession identifier from which the variant originated.
+                    </Message>
+                  </div>
+
+                </div>
+                <div class="mavedb-wizard-row">
+                  <div class="mavedb-wizard-help">
+                    <div v-if="item">
+                      <div>{{ formatInt(item.numVariants) }} variants are included in this score set.</div>
+                      <label :id="$scopedId('input-scoresFile')">Load a new scores file to replace existing variants</label>
+                    </div>
+                    <div v-else>
+                      <label :id="$scopedId('input-scoresFile')">Load a scores file</label>
+                    </div>
+                    <div class="mavedb-help-small">
+                      This file is required and should be a CSV file, with each row of the table describing a single variant. For more information about what this file can include and how it should be formatted, please take a look at
+                      <a target="_blank" :href="`${config.appBaseUrl}/docs/mavedb/data_formats.html#data-table-formats`">our documentation</a>.
+                    </div>
+                  </div>
+                  <div class="mavedb-wizard-content">
+                    <span class="p-float-label">
+                      <FileUpload ref="scoresFileUpload" :id="$scopedId('input-scoresFile')" :auto="false"
+                        chooseLabel="Scores file" :class="inputClasses.scoresFile || ''" :customUpload="true" :fileLimit="1"
+                        :showCancelButton="false" :showUploadButton="false">
+                        <template #empty>
+                          <p>Drop a file here.</p>
+                        </template>
+                      </FileUpload>
+                    </span>
+                    <span v-if="validationErrors.scoresFile" class="mave-field-error">{{ validationErrors.scoresFile}}</span>
+                  </div>
+                </div>
+                <div class="mavedb-wizard-row">
+                  <div class="mavedb-wizard-help">
+                    <label :id="$scopedId('input-countsFile')">Load a counts file</label>
+                    <div class="mavedb-help-small">
+                      This file is optional, but recommended. There are no required columns for your count data, but you should describe the meaning of any columns in your methods section.
+                    </div>
+                  </div>
+                  <div class="mavedb-wizard-content">
+                    <span class="p-float-label">
+                      <FileUpload ref="countsFileUpload" :id="$scopedId('input-countsFile')" :auto="false"
+                        chooseLabel="Counts file" :class="inputClasses.countsFile || ''" :customUpload="true" :fileLimit="1"
+                        :showCancelButton="false" :showUploadButton="false">
+                        <template #empty>
+                          <p>Drop a file here.</p>
+                        </template>
+                      </FileUpload>
+                    </span>
+                    <span v-if="validationErrors.countsFile" class="mave-field-error">{{ validationErrors.countsFile}}</span>
+                  </div>
+                </div>
               </div>
               <div class="mavedb-wizard-step-controls-row">
                 <div class="flex justify-content-between mavedb-wizard-step-controls pt-4">
@@ -834,12 +1092,15 @@ import AutoComplete from 'primevue/autocomplete'
 import Button from 'primevue/button'
 import Card from 'primevue/card'
 import Chips from 'primevue/chips'
+import Checkbox from 'primevue/checkbox'
 import Column from 'primevue/column'
 import Dropdown from 'primevue/dropdown'
 import FileUpload from 'primevue/fileupload'
 import InputNumber from 'primevue/inputnumber'
 import InputSwitch from 'primevue/inputswitch'
 import InputText from 'primevue/inputtext'
+import InputGroup from 'primevue/inputgroup'
+import InputGroupAddon from 'primevue/inputgroupaddon'
 import Message from 'primevue/message'
 import Multiselect from 'primevue/multiselect'
 import ProgressSpinner from 'primevue/progressspinner'
@@ -859,32 +1120,52 @@ import EmailPrompt from '@/components/common/EmailPrompt'
 import useItem from '@/composition/item'
 import useItems from '@/composition/items'
 import config from '@/config'
-import {normalizeDoi, normalizeIdentifier, normalizePubmedId, validateDoi, validateIdentifier, validatePubmedId} from '@/lib/identifiers'
 import {ORCID_ID_REGEX} from '@/lib/orcid'
+import { normalizeDoi, validateDoi} from '@/lib/identifiers'
 import useFormatters from '@/composition/formatters'
 
 const externalGeneDatabases = ['UniProt', 'Ensembl', 'RefSeq']
 
-function emptyTargetGene() {
+function emptyTargetGeneWizardObj() {
   return {
-    index: null,
-    name: null,
-    category: null,
-    type: null,
-    targetSequence: {
-      sequenceType: null,
-      sequence: null,
+    isRelativeToChromosome: false,
+    targetGene: {
+      name: null,
+      category: null,
+      type: null,
+      targetSequence: {
+        sequenceType: null,
+        sequence: null,
+        label: null,
+        reference: null,
+        taxonomy: null,
+      },
+      targetAccession: {
+        accession: null,
+        assembly: null,
+        gene: null
+      },
+      externalIdentifiers: _.fromPairs(
+        externalGeneDatabases.map((dbName) => [dbName, { identifier: null, offset: null }])
+      )
+    },
+    linkedAccessions: _.fromPairs(
+      externalGeneDatabases.map((dbName) => [dbName, false])
+    ),
+    autofilledTargetGene: null
+  }
+}
+
+function emptyScoreRangeWizardObj() {
+  return {
+    value: {
       label: null,
-      reference: null
+      description: null,
+      range: [null, null],
+      classification: null,
     },
-    targetAccession: {
-      accession: null,
-      assembly: null,
-      gene: null
-    },
-    externalIdentifiers: _.fromPairs(
-      externalGeneDatabases.map((dbName) => [dbName, { identifier: null, offset: null }])
-    )
+    infiniteLower: false,
+    infiniteUpper: false
   }
 }
 
@@ -895,6 +1176,7 @@ export default {
     Button,
     Card,
     Chips,
+    Checkbox,
     Column,
     DataTable,
     DefaultLayout,
@@ -905,6 +1187,8 @@ export default {
     InputNumber,
     InputSwitch,
     InputText,
+    InputGroup,
+    InputGroupAddon,
     Message,
     Multiselect,
     ProgressSpinner,
@@ -913,7 +1197,7 @@ export default {
     StepperPanel,
     TabPanel,
     TabView,
-    Textarea
+    Textarea,
   },
 
   setup: () => {
@@ -925,21 +1209,25 @@ export default {
         }
       }
     })
+
     const publicationIdentifierSuggestions = useItems({ itemTypeName: 'publication-identifier-search' })
     const externalPublicationIdentifierSuggestions = useItems({ itemTypeName: 'external-publication-identifier-search' })
+
     const targetGeneIdentifierSuggestions = {}
     for (const dbName of externalGeneDatabases) {
       targetGeneIdentifierSuggestions[dbName] = useItems({ itemTypeName: `${dbName.toLowerCase()}-identifier-search` })
     }
+
     const licenses = useItems({itemTypeName: 'license'})
     const taxonomies = useItems({itemTypeName: 'taxonomy'})
     const taxonomySuggestions = useItems({itemTypeName: 'taxonomy-search'})
     const geneNames = useItems({ itemTypeName: 'gene-names' })
     const assemblies = useItems({ itemTypeName: 'assemblies' })
     const targetGeneSuggestions = useItems({ itemTypeName: 'target-gene-search' })
-    const expandedTargetGeneRows = ref([])
 
     return {
+      config: config,
+
       ...useFormatters(),
       ...useItem({ itemTypeName: 'scoreSet' }),
       editableExperiments: editableExperiments.items,
@@ -963,8 +1251,7 @@ export default {
       taxonomySuggestions: taxonomySuggestions.items,
       setTaxonomySearch: (text) => taxonomySuggestions.setRequestBody({text}),
       assemblies: assemblies.items,
-      geneNames: geneNames.items,
-      expandedTargetGeneRows
+      geneNames: geneNames.items
     }
   },
 
@@ -981,35 +1268,39 @@ export default {
 
   data: () => ({
     // Form fields
-    experiment: null,
-    licenseId: null,
-    title: null,
-    metaAnalyzesScoreSets: [],
+    isSupersedingScoreSet: false,
     supersededScoreSet: null,
+    supersededScoreSetSuggestions: [],
+    isMetaAnalysis: false,
+    metaAnalyzesScoreSets: [],
+    metaAnalyzesScoreSetSuggestions: [],
+    experiment: null,
+
+    title: null,
     shortDescription: null,
     abstractText: null,
     methodText: null,
+    licenseId: null,
+    dataUsagePolicy: null,
+
     contributors: [],
     doiIdentifiers: [],
     primaryPublicationIdentifiers: [],
     secondaryPublicationIdentifiers: [],
     publicationIdentifiers: [],
-    dataUsagePolicy: null,
-    taxonomy: null,
-    lastTaxonomySearch: null,
-    targetGene: emptyTargetGene(),
-    assembly: null,
-    assemblySuggestions: [],
-    assemblyDropdownValue: null,
-    geneName: null,
-    geneNameAccessionSuggestions: [],
-    geneNameDropdownValue: null,
-    targetOptions: ["Assembly", "HGNC"],
-    targetAutocomplete: 'HGNC',
     extraMetadata: {},
 
-    existingTargetGene: null,
-    targetGenes: [],
+    createdTargetGenes: [emptyTargetGeneWizardObj()],
+    numTargets: 1,
+
+    assemblySuggestions: [],
+    geneNameSuggestions: [],
+    accessionSuggestions: [],
+
+    scoreRanges: {
+      wtScore: null,
+      ranges: [],
+    },
 
     // Static sets of options:
     sequenceTypes: [
@@ -1021,6 +1312,10 @@ export default {
       'Regulatory',
       'Other noncoding'
     ],
+    rangeClassifications: [
+      'Normal',
+      'Abnormal'
+    ],
 
     progressVisible: false,
     serverSideValidationErrors: {},
@@ -1031,13 +1326,14 @@ export default {
       scoresFile: null
     },
     externalGeneDatabases,
-    metaAnalyzesScoreSetSuggestions: [],
-    supersededScoreSetSuggestions: [],
-    targetGeneAccessionSuggestions: [],
     validationErrors: {},
 
-    isSupersedingScoreSet: false,
-    isMetaAnalysis: false,
+    isTargetSequence: true,
+    isMultiTarget: false,
+    isProvidingScoreRanges: false,
+
+    // track this separately, since it is a pain to reconstruct steps from target paths (targetGenes.**step**.rest.of.error.path)
+    minTargetGeneStepWithError: Infinity,
 
     /** The currently active step. */
     activeWizardStep: 0,
@@ -1051,14 +1347,16 @@ export default {
         'title', 'shortDescription', 'methodText', 'abstractText',
         'publicationIdentifiers', 'primaryPublicationIdentifiers', 'extraMetadata', 'dataUsagePolicy'
       ],
-      ['targetGene', 'targetGenes'],
+      ['targets'],
+      ['targetGene'],
+      ['scoreRanges'],
       ['scoresFile', 'countsFile'],
     ],
   }),
 
   computed: {
     maxWizardStepValidated: function() {
-      const numSteps = 4
+      const numSteps = 5 + this.numTargets
       // This yields the index of the maximum step validated, -1 if step 0 is not valid, and -2 if all steps are valid.
       const maxStepValidated = _.findIndex(_.range(0, numSteps), (step) => !this.validateWizardStep(step)) - 1
       return maxStepValidated == -2 ? numSteps - 1 : maxStepValidated
@@ -1088,10 +1386,10 @@ export default {
       return this.suggestionsForAutocomplete(this.taxonomySuggestions)
     },
     targetGeneAccessionSuggestionsList: function () {
-      if (!this.targetGeneAccessionSuggestions || this.targetGeneAccessionSuggestions.length == 0) {
+      if (!this.accessionSuggestions || this.accessionSuggestions.length == 0) {
         return ['']
       }
-      return this.targetGeneAccessionSuggestions
+      return this.accessionSuggestions
     },
     defaultLicenseId: function () {
       return this.licenses ? this.licenses.find((license) => license.shortName == 'CC0')?.id : null
@@ -1117,7 +1415,7 @@ export default {
           try {
             response = await axios.get(`${config.apiBaseUrl}/experiments/${this.experimentUrn}`)
           } catch (e) {
-              response = e.response || { status: 500 }   
+              response = e.response || { status: 500 }
           }
 
           if (response.status == 200) {
@@ -1213,26 +1511,40 @@ export default {
         }
       }
     },
-    geneName: {
-      handler: async function(newValue, oldValue) {
+    isMultiTarget: {
+      handler: function (newValue, oldValue) {
         if (newValue == oldValue) {
           return;
         }
-        this.geneNameDropdownValue = this.geneName?.name || null
-        if (this.geneNameDropdownValue) {
-          this.geneNameAccessionSuggestions = await this.fetchTargetAccessionsByGene(this.geneNameDropdownValue)
+        if (newValue) {
+          this.numTargets = 2
+        } else {
+          this.numTargets = 1
         }
       }
     },
-    assembly: {
-      handler: async function(newValue, oldValue) {
+    numTargets: {
+      handler: function (newValue, oldValue) {
         if (newValue == oldValue) {
           return;
         }
-        this.assemblyDropdownValue = this.assembly?.trim() || null
-        if (this.assemblyDropdownValue) {
-          this.assemblySuggestions = await this.fetchTargetAccessionsByAssembly(this.assemblyDropdownValue)
+        if (this.createdTargetGenes.length < this.numTargets) {
+          for (let i = this.createdTargetGenes.length; i < this.numTargets; i++) {
+            this.createdTargetGenes.push(emptyTargetGeneWizardObj())
+            this.stepFields.splice(3, 0, ['targetGene'])
+          }
+        } else if (this.createdTargetGenes.length > this.numTargets) {
+          this.createdTargetGenes = this.createdTargetGenes.slice(0, this.numTargets)
+          this.stepFields.splice(3, oldValue-newValue)
         }
+      }
+    },
+    isProvidingScoreRanges: {
+      handler: function (newValue) {
+        if (newValue && this.scoreRanges.ranges.length === 0) {
+          this.scoreRanges.ranges.push(emptyScoreRangeWizardObj())
+        }
+        console.log(this.scoreRanges)
       }
     }
   },
@@ -1305,8 +1617,8 @@ export default {
 
     validateWizardStep: function(step) {
       // Later, this may depend on server-side validation.
-      switch (step) {
-        case 0: {
+      switch (true) {
+        case step == 0: {
           // Step 0 is valid if
           // - The score set is a meta-analysis and at least one meta-analyzed score set has been chosen..
           // - The score set is a superseding score set, and the superseded score set has been chosen.
@@ -1315,11 +1627,27 @@ export default {
               || !!(this.isSupersedingScoreSet && this.supersededScoreSet)
               || !!(!this.isMetaAnalysis && !this.isSupersedingScoreSet && this.experiment || this.experimentUrn)
         }
-        case 1: {
+        case step == 1: {
           return this.title && this.shortDescription && this.abstractText && this.methodText
         }
-        case 2: {
-          return this.targetGenes.length > 0
+        case step == 2: {
+          return this.numTargets > 0
+        }
+        case ((step > 2) && (step < 3 + this.numTargets)): {
+          const currentTargetGene = this.createdTargetGenes[step-3].targetGene
+          return currentTargetGene.name
+              && currentTargetGene.category
+              && (currentTargetGene.targetAccession.accession || (currentTargetGene.targetSequence.sequence && currentTargetGene.targetSequence.sequenceType))
+        }
+        case (step == 3 + this.numTargets): {
+          let allRangesCompleted = true
+          for (const scoreRange of this.scoreRanges.ranges) {
+            if (!scoreRange.value.label || !scoreRange.value.classification || (!scoreRange.value.range[0] && !scoreRange.infiniteLower) || (!scoreRange.value.range[1] && !scoreRange.infiniteUpper)) {
+              allRangesCompleted = false
+              break
+            }
+          }
+          return !(this.isProvidingScoreRanges) || (allRangesCompleted && this.scoreRanges.wtScore)
         }
         default:
           return true
@@ -1330,6 +1658,10 @@ export default {
       const numSteps = this.stepFields.length
       for (let i = 0; i < numSteps; i++) {
         if (this.wizardStepHasError(i)) {
+          // errors in the target creation step
+          if (i > 2 && i < 3 + this.numTargets) {
+            return this.minTargetGeneStepWithError + 3
+          }
           return i;
         }
       }
@@ -1340,15 +1672,14 @@ export default {
       if (step >= this.stepFields.length) {
         return false
       }
-      let ret = false
-      this.stepFields[step].forEach((field) => {
-        Object.keys(this.validationErrors).forEach((key) => {
-          if (key.startsWith(field)) {
-            ret = true
+      return !this.stepFields[step].every((field) => {
+        for (const v of Object.keys(this.validationErrors)) {
+          if (v.startsWith(field)) {
+            return false
           }
-        })
+        }
+        return true
       })
-      return ret
     },
 
     showNextWizardStepIfValid: function(navigate) {
@@ -1403,26 +1734,86 @@ export default {
       }
     },
 
-    fetchTargetAccessions: async function (event) {
-      if (this.targetAutocomplete == 'Assembly' ) {
-        if (this.assemblyDropdownValue) {
-          this.targetGeneAccessionSuggestions = this.assemblySuggestions
-        }
-      }
-      else {
-        if (this.geneNameDropdownValue) {
-          this.targetGeneAccessionSuggestions = this.geneNameAccessionSuggestions
-        }
+    targetGeneWithWizardProperties(existingTarget) {
+      const targetGene = this.emptyTargetGeneWizardObj()
+      targetGene.targetGene = existingTarget
+
+      return targetGene
+    },
+
+    scoreRangeWithWizardProperties(existingRange) {
+      const scoreRange = this.emptyScoreRangeWizardObj()
+      scoreRange.value = existingRange
+
+      return scoreRange
+    },
+
+    refreshAccessionOptions: async function (targetIdx) {
+      const currentTarget = this.createdTargetGenes[targetIdx]
+
+      // if we are refreshing the accession options, we can't retain the currently selected accession
+      if (currentTarget.targetGene.targetAccession.accession) {
+        currentTarget.targetGene.targetAccession.accession = null
       }
 
+      if (currentTarget.isRelativeToChromosome && currentTarget.targetGene.targetAccession.assembly) {
+        this.accessionSuggestions = await this.fetchTargetAccessionsByAssembly(currentTarget.targetGene.targetAccession.assembly)
+      }
+      else if (!currentTarget.isRelativeToChromosome && currentTarget.targetGene.targetAccession.gene) {
+        this.accessionSuggestions = await this.fetchTargetAccessionsByGene(currentTarget.targetGene.targetAccession.gene.name)
+      }
+
+      if (!this.accessionSuggestions) {
+        this.$toast.add({ severity: 'warn', summary: `No accession identifiers were found for ${currentTarget.isRelativeToChromosome ? currentTarget.targetGene.targetAccession.assembly : currentTarget.targetGene.targetAccession.gene.name}`, life: 3000 })
+      }
+    },
+
+    fetchTargetAccessions: async function (event) {
       const searchText = (event.query || '').trim()
       if (searchText.length > 0) {
-          this.targetGeneAccessionSuggestions = this.targetGeneAccessionSuggestions.filter(s => s?.toLowerCase().includes(searchText.toLowerCase()))
+          this.accessionSuggestions = this.accessionSuggestions.filter(s => s?.toLowerCase().includes(searchText.toLowerCase()))
+      }
+    },
+
+    autofillGeneName: function (changeEvent, targetIdx) {
+      if (!this.createdTargetGenes[targetIdx].targetGene.name) {
+        this.createdTargetGenes[targetIdx].targetGene.name = changeEvent.value.name // Gene Name string object
+      }
+
+      this.refreshAccessionOptions(targetIdx)
+    },
+
+    swapNucleotideProteinAccessions: async function (targetIdx) {
+      const currentTargetGene = this.createdTargetGenes[targetIdx].targetGene
+      if (currentTargetGene.targetAccession.accession.startsWith("NP")) {
+        // Don't do anything if we already are operating on a protein transcript
+        this.$toast.add({ severity: 'info', summary: `${currentTargetGene.targetAccession.accession} is already a protein accession.`, life: 3000 })
+        return
+      }
+      const url = `${config.apiBaseUrl}/hgvs/transcripts/protein/${currentTargetGene.targetAccession.accession}`
+      try {
+        const response = await axios.get(
+          url,
+          {
+            headers: {
+              accept: 'application/json'
+            }
+          }
+        )
+        // TODO (#130) catch errors in response
+        currentTargetGene.targetAccession.accession = response.data
+      } catch (err) {
+        if (err.response.status == 404) {
+          this.$toast.add({ severity: 'error', summary: err.response.data.detail, life: 3000 })
+        } else {
+          this.$toast.add({ severity: 'error', summary: `Could not fetch protein accession for ${currentTargetGene.targetAccession.accession}`})
+          console.log("Request to swap protein accession failed", err)
+        }
       }
     },
 
     fetchTargetAccessionsByAssembly: async function (assembly) {
-      const url = `${config.apiBaseUrl}/hgvs/${assembly}/accessions`
+      const url = `${config.apiBaseUrl}/hgvs/${assembly.trim()}/accessions`
       try {
         const response = await axios.get(
           url,
@@ -1441,7 +1832,7 @@ export default {
     },
 
     fetchTargetAccessionsByGene: async function (gene) {
-      const url = `${config.apiBaseUrl}/hgvs/transcripts/gene/${gene}`
+      const url = `${config.apiBaseUrl}/hgvs/transcripts/gene/${gene.trim()}`
       try {
         const response = await axios.get(
           url,
@@ -1458,36 +1849,24 @@ export default {
       }
     },
 
-    autofillGeneName: function (changeEvent) {
-      if (!this.targetGene.name) {
-        this.targetGene.name = changeEvent.value.name // Gene Name string object
+    boundaryLimitUpdated: function(rangeIdx, boundary) {
+      const updatedRange = this.scoreRanges.ranges[rangeIdx]
+      if (boundary === "upper") {
+        updatedRange.value.range[1] = null
+      }
+      else if (boundary == "lower") {
+        updatedRange.value.range[0] = null
       }
     },
 
+    addScoreRange: function() {
+      this.scoreRanges.ranges.push(emptyScoreRangeWizardObj())
+    },
 
-    swapNucleotideProteinAccessions: async function () {
-      if (this.targetGene.targetAccession.accession.startsWith("NP")) {
-        // Don't do anything if we already are operating on a protein transcript
-        this.$toast.add({ severity: 'info', summary: `${this.targetGene.targetAccession.accession} is already a protein accession.`, life: 3000 })
-        return
-      }
-      const url = `${config.apiBaseUrl}/hgvs/transcripts/protein/${this.targetGene.targetAccession.accession}`
-      try {
-        const response = await axios.get(
-          url,
-          {
-            headers: {
-              accept: 'application/json'
-            }
-          }
-        )
-        // TODO (#130) catch errors in response
-        if (!response.data) {
-          this.$toast.add({ severity: 'error', summary: `No matching protein accession found for ${this.targetGene.targetAccession.accession}`, life: 3000 })
-        }
-        this.targetGene.targetAccession.accession = response.data || this.targetGene.targetAccession.accession // Maintain current accession when response is empty
-      } catch (err) {
-        console.log(`Error while loading protein accession")`, err)
+    removeScoreRange: function(rangeIdx) {
+      this.scoreRanges.ranges.splice(rangeIdx, 1)
+      if (this.scoreRanges.ranges.length === 0) {
+        this.isProvidingScoreRanges = false
       }
     },
 
@@ -1506,10 +1885,12 @@ export default {
         })
       })
     },
+
     populateSupersededScoreSetMetadata: function(event) {
       this.contributors = event.value.contributors || []
     },
-    acceptNewDoiIdentifier: function(event) {
+
+    acceptNewDoiIdentifier: function() {
       // Remove new string item from the model and add new structured item in its place if it validates and is not a duplicate.
       const idx = this.doiIdentifiers.findIndex((item) => typeof item === 'string' || item instanceof String)
       if (idx == -1) {
@@ -1520,19 +1901,13 @@ export default {
       const newDoi = normalizeDoi(searchText)
       if (this.doiIdentifiers.find((item) => item.identifier == newDoi)) {
         this.doiIdentifiers.splice(idx, 1)
-        this.$toast.add({severity:'warn', summary: `DOI "${newDoi}" is already associated with this experiment`, life: 3000})
+        this.$toast.add({severity:'warn', summary: `DOI "${newDoi}" is already associated with this score set`, life: 3000})
       } else if (validateDoi(searchText)) {
         this.doiIdentifiers.splice(idx, 1, { identifier: newDoi })
       } else {
         this.doiIdentifiers.splice(idx, 1)
         this.$toast.add({severity:'warn', summary: `"${searchText}" is not a valid DOI`, life: 3000})
       }
-    },
-
-    clearDoiIdentifierSearch: function() {
-      // This could change with a new Primevue version.
-      const input = this.$refs.doiIdentifiersInput
-      input.$refs.input.value = ''
     },
 
     acceptNewPublicationIdentifier: function() {
@@ -1562,36 +1937,11 @@ export default {
       }
     },
 
-    acceptNewTargetGeneIdentifier: function (dbName) {
-      const input = this.$refs[`${dbName.toLowerCase()}IdentifierInput`][0]
-      const searchText = (input.modelValue || '').trim()
-
-      // Only accept the current search text if we haven't set an identifier. When the user starts typing, the current
-      // identifier is cleared.
-      const currentIdentifier = this.targetGene.externalIdentifiers[dbName]?.identifier
-      if (!currentIdentifier) {
-        if (searchText == '') {
-          this.targetGene.externalIdentifiers[dbName].identifier = null
-        } else if (validateIdentifier(dbName, searchText)) {
-          const identifier = normalizeIdentifier(dbName, searchText)
-          this.targetGene.externalIdentifiers[dbName].identifier = { identifier }
-          input.modelValue = null
-
-          // Clear the text input.
-          // TODO This depends on PrimeVue internals more than I'd like:
-          input.$refs.input.value = ''
-        }
+    addDefaultOffset: function (dbName, targetIdx) {
+      const currentTargetGene = this.createdTargetGenes[targetIdx].targetGene
+      if (!currentTargetGene.externalIdentifiers[dbName]?.offset){
+        currentTargetGene.externalIdentifiers[dbName].offset = 0
       }
-    },
-
-    clearTargetGeneIdentifierSearch: function (dbName) {
-      const input = this.$refs[`${dbName.toLowerCase()}IdentifierInput`][0]
-      this.targetGene.externalIdentifiers[dbName].identifier = null
-      input.modelValue = null
-
-      // Clear the text input.
-      // TODO This depends on PrimeVue internals more than I'd like:
-      input.$refs.input.value = ''
     },
 
     searchTargetGeneIdentifiers: function (dbName, event) {
@@ -1608,6 +1958,33 @@ export default {
       }
     },
 
+    autofillFromExistingTarget: function(event, targetIdx) {
+      const autofilledTargetGene = this.createdTargetGenes[targetIdx].autofilledTargetGene
+
+      this.resetTarget(targetIdx)
+      const createdTarget = this.createdTargetGenes[targetIdx]
+
+      createdTarget.targetGene.category = autofilledTargetGene.category
+      createdTarget.targetGene.name = autofilledTargetGene.name
+
+      if (this.isTargetSequence) {
+        createdTarget.targetGene.targetSequence = autofilledTargetGene.targetSequence
+        // dna comes back from the API as a lower cased string. Make it upper case to match the button definition.
+        if (createdTarget.targetGene.targetSequence.sequenceType == "dna") {
+          createdTarget.targetGene.targetSequence.sequenceType = createdTarget.targetGene.targetSequence.sequenceType.toUpperCase()
+        }
+      } else {
+        createdTarget.targetGene.targetAccession = autofilledTargetGene.targetAccession
+      }
+
+      autofilledTargetGene.externalIdentifiers.forEach((externalIdentifier) => {
+        createdTarget.linkedAccessions[externalIdentifier.identifier.dbName] = true
+        createdTarget.targetGene.externalIdentifiers[externalIdentifier.identifier.dbName] = externalIdentifier
+      })
+
+      createdTarget.autofilledTargetGene = autofilledTargetGene
+    },
+
     clearTaxonomySearch: function() {
       const input = this.$refs.taxonomyInput
       input.inputTextValue = null
@@ -1617,17 +1994,6 @@ export default {
       // if no search text, then return all taxonomy list. Otherwise, return the searching results.
       // If not do in this way, dropdown button can't work.
       this.setTaxonomySearch(event.query)
-    },
-
-    targetsCleared: function () {
-      this.targetGenes = [];
-    },
-
-    targetDeleted: function (target) {
-      this.targetGenes = this.targetGenes.filter(val => val !== target);
-      this.targetGenes.forEach(function (target, index) {
-        target.index = index;
-      });
     },
 
     fileCleared: function (inputName) {
@@ -1643,7 +2009,7 @@ export default {
       this.mergeValidationErrors()
     },
 
-    fileSelected: async function (inputName, event) {
+    fileSelected: async function (inputName, event, targetIdx) {
       const file = event.files[0]
       if (file) {
         switch (inputName) {
@@ -1675,17 +2041,17 @@ export default {
                 })*/
                 const fastaData = fastaParser.parse(text)
                 if (fastaData.length == 0) {
-                  this.targetGene.targetSequence.sequence = null
+                  this.createdTargetGenes[targetIdx].targetGene.targetSequence.sequence = null
                   this.clientSideValidationErrors['targetGene.targetSequence.sequence'] = 'The FASTA file contains no sequences.'
                 } else if (fastaData.length > 1) {
-                  this.targetGene.targetSequence.sequence = null
+                  this.createdTargetGenes[targetIdx].targetGene.targetSequence.sequence = null
                   this.clientSideValidationErrors['targetGene.targetSequence.sequence'] = 'The FASTA file contains more than one sequence.'
                 } else {
-                  this.targetGene.targetSequence.sequence = fastaData[0].sequence
+                  this.createdTargetGenes[targetIdx].targetGene.targetSequence.sequence = fastaData[0].sequence
                   this.clientSideValidationErrors['targetGene.targetSequence.sequence'] = null
                 }
               } catch (e) {
-                this.targetGene.targetSequence.sequence = null
+                this.createdTargetGenes[targetIdx].targetGene.targetSequence.sequence = null
                 this.clientSideValidationErrors['targetGene.targetSequence.sequence'] = 'The file was not a valid FASTA file.'
                 console.log('Reference sequence file was not a valid FASTA file.')
               }
@@ -1712,14 +2078,19 @@ export default {
     resetForm: function () {
       if (this.item) {
         this.experiment = this.item.experiment
-        this.licenseId = this.item.license.id
+        this.supersededScoreSet = this.item.supersededScoreSet
+        this.isSupersedingScoreSet = this.supersededScoreSet ? true : false
         // metaAnalyzesScoreSets is only used when editing a new score set, so we don't need to populate it from URNs.
         this.metaAnalyzesScoreSets = []
-        this.supersededScoreSet = this.item.supersededScoreSet
+        this.isMetaAnalysis = false,
+
         this.title = this.item.title
         this.shortDescription = this.item.shortDescription
         this.abstractText = this.item.abstractText
         this.methodText = this.item.methodText
+        this.licenseId = this.item.license.id
+        this.dataUsagePolicy = this.item.dataUsagePolicy
+
         this.contributors = _.sortBy(this.item.contributors, ['familyName', 'givenName', 'orcidId'])
         this.doiIdentifiers = this.item.doiIdentifiers
         // So that the multiselect can populate correctly, build the primary publication identifiers
@@ -1731,102 +2102,52 @@ export default {
           })
         })
         this.secondaryPublicationIdentifiers = this.item.secondaryPublicationIdentifiers
-        this.dataUsagePolicy = this.item.dataUsagePolicy
-        this.taxonomy = this.item.taxonomy
-        this.targetGene = emptyTargetGene()
-        this.assembly = this.item.assembly
-        this.targetGenes = this.item.targetGenes
         this.extraMetadata = this.item.extraMetadata
+
+        this.scoreRanges = {
+          wtScore: this.item.scoreRanges?.wtScore,
+          ranges: this.item.scoreRanges?.ranges.map(range => this.scoreRangeWithWizardProperties(range))
+        }
+        this.isProvidingScoreRanges = this.scoreRanges.ranges.length > 0
+
+        this.createdTargetGenes = this.item.targetGenes.map(target => this.targetGeneWithWizardProperties(target))
+        this.numTargets = this.createdTargetGenes.length
+        this.isMultiTarget = this.numTargets == 1 ? false : true
+        this.isTargetSequence = this.createdTargetGenes[0].targetGene?.targetSequence ? true : false
       } else {
         this.experiment = null
-        this.licenseId = this.defaultLicenseId
-        this.metaAnalyzesScoreSets = []
         this.supersededScoreSet = null
+        this.isSupersedingScoreSet = false
+        this.metaAnalyzesScoreSets = []
+        this.isMetaAnalysis = false,
+
         this.title = null
         this.shortDescription = null
         this.abstractText = null
         this.methodText = null
+        this.licenseId = this.defaultLicenseId
+        this.dataUsagePolicy = null
+
         this.contributors = []
         this.doiIdentifiers = []
+        this.publicationIdentifiers = []
         this.primaryPublicationIdentifiers = []
         this.secondaryPublicationIdentifiers = []
-        this.publicationIdentifiers = []
-        this.dataUsagePolicy = null
-        this.taxonomy = null
         this.extraMetadata = {}
-        this.resetTarget()
-        this.targetGenes = []
+
+        this.scoreRanges = {wtScore: null, ranges: []}
+        this.isProvidingScoreRanges = false
+
+        this.createdTargetGenes = [emptyTargetGeneWizardObj]
+        this.numTargets = 1
+        this.isMultiTarget = false
+        this.isTargetSequence = true
       }
     },
 
-    resetTarget: function () {
-      this.taxonomy = null
-      this.assembly = null
-      this.assemblySuggestions = []
-      this.assemblyDropdownValue = null
-      this.existingTargetGene = null
-      this.geneName = null
-      this.geneNameAccessionSuggestions = []
-      this.geneNameDropdownValue =  null
+    resetTarget: function (targetIdx) {
       this.fileCleared('targetGeneTargetSequenceSequenceFile')
-      this.referenceGenome = null
-      this.targetGene = emptyTargetGene()
-    },
-
-    addTarget: function () {
-      if (this.targetGene.name && this.taxonomy) {
-        if ( !this.targetGene.category ) {
-          this.$toast.add({ severity: 'error', summary: 'Please choose protein coding, regulatory or other noncoding for the target gene type.' })
-          return null
-        }
-        if ( !this.targetGene.targetSequence.sequence ) {
-          this.$toast.add({ severity: 'error', summary: 'Please upload reference sequence FAST file.' })
-          return null
-        }
-        if ( !this.targetGene.targetSequence.sequenceType ) {
-          this.$toast.add({ severity: 'error', summary: 'Please choose DNA or protein for the sequence type.' })
-          return null
-        }
-        this.targetGene.targetSequence.taxonomy = this.taxonomy
-        delete this.targetGene.targetAccession;
-      }
-      else if (this.geneName && this.assembly) {
-        if ( !this.targetGene.category ) {
-          this.$toast.add({ severity: 'error', summary: 'Please choose protein coding, regulatory or other noncoding for the target gene type.' })
-          return null
-        }
-        this.targetGene.targetAccession.assembly = this.assemblyDropdownValue
-        this.targetGene.targetAccession.gene = this.geneNameDropdownValue // Name property on string object array
-        delete this.targetGene.targetSequence;
-      }
-      else {
-        this.$toast.add({ severity: 'error', summary: 'Target must include taxonomy or assembly and gene name.' })
-        return null // target must include one of the above objects
-      }
-      this.targetGene.externalIdentifiers = _.keys(
-        this.targetGene.externalIdentifiers).map(
-          (dbName) => {
-            const identifierOffset = this.targetGene.externalIdentifiers[dbName]
-            if (identifierOffset.identifier != null || (identifierOffset != null && identifierOffset.offset > 0)) {
-              return {
-                offset: identifierOffset.offset,
-                identifier: {
-                  identifier: identifierOffset.identifier?.identifier,
-                  dbName
-                }
-              }
-            } else {
-              return null
-            }
-          }
-        ).filter(Boolean)
-      this.targetGenes.push(_.clone(this.targetGene))
-      // set index property on each target gene to surface error data
-      this.targetGenes.forEach(function (target, index) {
-        target.index = index;
-      });
-      this.$toast.add({ severity: 'success', summary: `Target ${this.targetGene.name} was added successfully.`, life: 3000 })
-      this.resetTarget()
+      this.createdTargetGenes[targetIdx] = emptyTargetGeneWizardObj()
     },
 
     ////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
@@ -1844,22 +2165,53 @@ export default {
       ).filter(
         secondary => !primaryPublicationIdentifiers.some(primary => primary.identifier == secondary.identifier && primary.dbName == secondary.dbName)
       )
-
+      console.log(this.scoreRanges)
       const editedFields = {
         experimentUrn: this.experimentUrn ? this.experimentUrn : this.experiment?.urn,
-        licenseId: this.licenseId,
         title: this.title,
         shortDescription: this.shortDescription,
         abstractText: this.abstractText,
         methodText: this.methodText,
+        licenseId: this.licenseId,
+
         contributors: this.contributors,
         doiIdentifiers: this.doiIdentifiers.map((identifier) => _.pick(identifier, 'identifier')),
         primaryPublicationIdentifiers: primaryPublicationIdentifiers,
         secondaryPublicationIdentifiers: secondaryPublicationIdentifiers,
         dataUsagePolicy: this.dataUsagePolicy,
         extraMetadata: {},
-        // eslint-disable-next-line no-unused-vars
-        targetGenes: this.targetGenes.map(({ index, ...target }) => target) // drop index property from target genes before save
+
+        scoreRanges: {
+          wtScore: this.scoreRanges.wtScore,
+          ranges: this.scoreRanges.ranges.map((range) => range.value)
+        },
+
+        targetGenes: this.createdTargetGenes.map(
+          (target) => {
+            const targetGene = {
+              name: target.targetGene.name,
+              category: target.targetGene.category,
+              targetSequence: this.isTargetSequence ? target.targetGene.targetSequence : null,
+              targetAccession: !this.isTargetSequence ? target.targetGene.targetAccession : null,
+              externalIdentifiers: []
+            }
+
+            for (const [db, linked] of Object.entries(target.linkedAccessions)) {
+              if (linked) {
+                targetGene.externalIdentifiers.push(target.targetGene.externalIdentifiers[db])
+              }
+            }
+
+            if (!this.isTargetSequence && !target.isRelativeToChromosome) {
+              targetGene.targetAccession.gene = targetGene.targetAccession.gene.name
+            }
+
+            return targetGene
+          }
+        )
+      }
+      if (!this.isProvidingScoreRanges) {
+        delete editedFields.scoreRanges
       }
       if (!this.item) {
         editedFields.supersededScoreSetUrn = this.supersededScoreSet ? this.supersededScoreSet.urn : null
@@ -1876,6 +2228,7 @@ export default {
         this.item.publicationIdentifiers = []
         this.item.rawReadIdentifiers = []
         this.item.targetGenes = []
+        this.item.scoreRanges = {wtScore: null, ranges: []}
       }
 
       const editedItem = _.merge({}, this.item || {}, editedFields)
@@ -1921,20 +2274,16 @@ export default {
               path = path.slice(1)
             }
 
-            // expand all rows of target genes table if there are errors
-            // so users can view error messages.
-            // TODO: Expand only the problematic target.
-            if (_.isEqual(_.slice(path, 0, 1), ['targetGenes'])) {
-              this.expandedTargetGeneRows = this.targetGenes
-              console.log(this.expandedTargetGeneRows)
-            }
+            if (_.isEqual(_.slice(path, 0, 1), ['targetGene'])){
+              this.minTargetGeneStepWithError = Math.min(this.minTargetGeneStepWithError, path[1])
 
-            // Map errors on indexed external gene identifiers to inputs named for the identifier's database.
-            if (_.isEqual(_.slice(path, 0, 1), ['targetGenes']) && _.isEqual(_.slice(path, 2, 3), ['externalIdentifiers'])) {
-              const identifierIndex = path[3]
-              const identifierOffset = editedFields.targetGene[path[1]].externalIdentifiers[identifierIndex]
-              if (identifierOffset?.identifier?.dbName) {
-                path.splice(3, 2, identifierOffset.identifier.dbName)
+              // Map errors on indexed external gene identifiers to inputs named for the identifier's database.
+              if (_.isEqual(_.slice(path, 2, 3), ['externalIdentifiers'])) {
+                const identifierIndex = path[3]
+                const identifierOffset = editedFields.targetGenes[path[1]].externalIdentifiers[identifierIndex]
+                // Potentially incorrect to fall back on index of the external gene database to induce the name, but displaying the error in the wrong spot is
+                // preferable to not displaying the error.
+                path.splice(3, 2, identifierOffset?.identifier?.dbName ? identifierOffset.identifier.dbName : this.externalGeneDatabases[identifierIndex])
               }
             }
 
@@ -2114,6 +2463,10 @@ export default {
   background-color: #fff;
 }
 
+.mavedb-wizard-subcontent {
+  padding: 5px 0px 5px 5px;
+}
+
 .mavedb-wizard-content-pane {
   float: right;
   width: 676px;
@@ -2171,13 +2524,19 @@ export default {
 
 .field-columns {
   display: flex;
-  flex-direction: row
+  flex-direction: row;
 }
 
 .field-column {
   position: relative;
-  flex: 1 1 0;
+  flex: 1 1 auto;
   margin-left: 10px;
+  margin-right: 10px;
+}
+
+/* Make sure autocomplete text input is the same width as the autocomplete */
+.p-autocomplete:deep(.p-autocomplete-input) {
+  width: 100%;
 }
 
 .field-column:first-child {

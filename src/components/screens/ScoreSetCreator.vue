@@ -1012,7 +1012,7 @@
                 <div class="mavedb-wizard-form-content-background"></div>
                 <div class="mavedb-wizard-row">
                   <div class="mavedb-wizard-content">
-                    <Message v-if="targetGenes[0]?.targetAccession?.accession" severity="info">
+                    <Message v-if="createdTargetGenes[0]?.targetAccession?.accession" severity="info">
                       When defining variants against an accession based target, uploaded variant coordinates should be fully
                       qualified with respect to target names or target accessions (e.g: NC_000001.1:c.1A>C).
                     </Message>

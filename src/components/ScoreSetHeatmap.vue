@@ -152,6 +152,8 @@ export default {
       return computedRanges
     },
     colorScale: function() {
+      console.log(this.nonNaNLowerBound)
+      console.log(this.nonNaNUpperBound)
       return d3.scaleLinear().domain([this.nonNaNLowerBound?.meanScore, this.wtScore ? this.wtScore : (this.nonNaNLowerBound?.meanScore + this.nonNaNUpperBound?.meanScore) / 2, this.nonNaNUpperBound?.meanScore]).range(["#3F51B5", "white", "#B00020"])
     }
   },

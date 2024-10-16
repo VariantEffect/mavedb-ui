@@ -284,7 +284,8 @@
                 </div>
               </div>
               <div class="field">
-                <Button class="p-button-help" @click="resetKeywords">Clear Keywords</Button>
+                <Button class="p-button-help" @click="resetKeywords">Reset Keywords</Button>
+                <Button class="p-button-warning padded-button" @click="clearKeywords">Clear Keywords</Button>
               </div>
             </template>
           </Card>
@@ -798,10 +799,14 @@ export default {
           setKeyword(k.key)
         }
       } else {
-        this.keywords = []
-        this.keywordKeys = _.fromPairs(KEYWORDS.map((keyword) => [keyword.key, null]))
-        this.keywordDescriptions = _.fromPairs(KEYWORDS.map((keyword) => [keyword.key, null]))
+        this.clearKeywords()
       }
+    },
+
+    clearKeywords: function() {
+      this.keywords = []
+      this.keywordKeys = _.fromPairs(KEYWORDS.map((keyword) => [keyword.key, null]))
+      this.keywordDescriptions = _.fromPairs(KEYWORDS.map((keyword) => [keyword.key, null]))
     },
 
     ////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
@@ -1019,6 +1024,10 @@ export default {
 
 .keyword-description-input {
   width: 450px;
+}
+
+.padded-button {
+  margin-left: 5px;
 }
 
 </style>

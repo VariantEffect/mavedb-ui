@@ -66,7 +66,7 @@
           <h3>{{ item.urn }}</h3>
         </div>
       </div>
-      <div v-if="scores">
+      <div v-if="scores?.length">
         <div class="mave-score-set-variant-search">
           <span class="p-float-label">
               <AutoComplete

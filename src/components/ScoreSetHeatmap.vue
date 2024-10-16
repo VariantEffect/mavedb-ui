@@ -245,7 +245,7 @@ export default {
           if (this.nonNaNLowerBound === null && !isNaN(variant)) {
             this.nonNaNLowerBound = variant
           }
-          if (isNaN(variant.meanScore)) {
+          if (this.nonNaNLowerBound !== null && this.nonNaNUpperBound === null && isNaN(variant.meanScore)) {
             this.nonNaNUpperBound = arr[i-1].variant
           }
           if (i === arr.length - 1) {

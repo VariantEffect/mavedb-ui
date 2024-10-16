@@ -270,69 +270,93 @@
                 </div>
               </template>
             </Card>
-            <Card>
-              <template #title>Score ranges</template>
-              <template #content>
-                <div v-for="(scoreRange, scoreIdx) of scoreRanges.ranges" :key="scoreIdx" class="mavedb-score-range-container">
+            <div v-if="scoreRanges">
+              <Card>
+                <template #title>Score ranges
+                  <Button icon="pi pi-times" severity="danger" aria-label="Delete all ranges" rounded text style="float:right;" @click="removeScoreRanges()"/>
+                </template>
+                <template #content>
                   <Card>
-                    <template #title>Range {{ scoreIdx+1 }}:
-                      <Button icon="pi pi-times" severity="danger" aria-label="Delete range" rounded text style="float:right;" @click="removeScoreRange(scoreIdx)"/>
-                    </template>
+                    <template #title>Wild Type Score</template>
                     <template #content>
                       <div style="padding-top: 1%;">
-                          <InputGroup>
-                            <span class="p-float-label" style="width:75%;">
-                              <InputText v-model="scoreRange.label" style="width:75%;" :aria-labelledby="$scopedId(`input-scoreRangeLabel-${scoreIdx}`)"></InputText>
-                              <label :for="$scopedId(`input-scoreRangeLabel-${scoreIdx}`)">Label</label>
-                            </span>
-                            <span class="p-float-label" style="width:25%;">
-                              <Dropdown v-model="scoreRange.classification" :options="rangeClassifications" style="width:25%;" :aria-labelledby="$scopedId(`input-scoreRangeClassification-${scoreIdx}`)"/>
-                              <label :for="$scopedId(`input-scoreRangeClassification-${scoreIdx}`)">Classification</label>
-                            </span>
-                          </InputGroup>
-                          <span v-if="validationErrors[`scoreRanges.ranges.${scoreIdx}.label`]" class="mave-field-error">{{ validationErrors[`scoreRanges.ranges.${scoreIdx}.label`] }}</span>
-                          <span v-if="validationErrors[`scoreRanges.ranges.${scoreIdx}.classification`]" class="mave-field-error">{{ validationErrors[`scoreRanges.ranges.${scoreIdx}.classification`] }}</span>
-                      </div>
-                      <div style="padding-top: 2%;">
                         <span class="p-float-label">
-                          <Textarea v-model="scoreRange.description" style="width:100%;" :aria-labelledby="$scopedId(`input-scoreRangeDescription-${scoreIdx}`)"/>
-                          <label :for="$scopedId(`input-scoreRangeDescription-${scoreIdx}`)">Description (optional)</label>
+                          <InputNumber v-model="scoreRanges.wtScore" :aria-labelledby="$scopedId('input-wtScore')" style="width:100%;" :minFractionDigits="1" :maxFractionDigits="10" />
+                          <label :for="$scopedId('input-wtScore')"> Wild Type Score </label>
                         </span>
-                        <span v-if="validationErrors[`scoreRanges.ranges.${scoreIdx}.description`]" class="mave-field-error">{{ validationErrors[`scoreRanges.ranges.${scoreIdx}.description`] }}</span>
+                        <span v-if="validationErrors[`scoreRanges.wtScore`]" class="mave-field-error">{{ validationErrors[`scoreRanges.wtScore`] }}</span>
                       </div>
-                      <div>
-                        <InputGroup>
-                          <span class=p-float-label>
-                            <InputText v-model="scoreRange.range[0]" :aria-labelledby="$scopedId(`input-scoreRangeLower-${scoreIdx}`)" :disabled="scoreRangeBoundaryHelper[scoreIdx].lowerBoundIsInfinity"/>
-                            <label :for="$scopedId(`input-scoreRangeLower-${scoreIdx}`)"> {{ scoreRangeBoundaryHelper[scoreIdx].lowerBoundIsInfinity ? "-infinity" : "Lower Bound" }} </label>
-                          </span>
-                          <InputGroupAddon>to</InputGroupAddon>
-                          <span class=p-float-label>
-                            <InputText v-model="scoreRange.range[1]" :aria-labelledby="$scopedId(`input-scoreRangeUpper-${scoreIdx}`)" :disabled="scoreRangeBoundaryHelper[scoreIdx].upperBoundIsInfinity"/>
-                            <label :for="$scopedId(`input-scoreRangeUpper-${scoreIdx}`)"> {{ scoreRangeBoundaryHelper[scoreIdx].upperBoundIsInfinity ? "infinity" : "Upper Bound" }} </label>
-                          </span>
-                        </InputGroup>
-                      </div>
-                      <div>
-                        <span>
-                          <Checkbox v-model="scoreRangeBoundaryHelper[scoreIdx].lowerBoundIsInfinity" :binary="true" inputId="lowerBound" name="lower" @change="boundaryLimitUpdated(scoreIdx, 'lower')"/>
-                          <label for="lowerBound" class="ml-2"> No lower bound </label>
-                        </span>
-                        <span style="float:right;">
-                          <label for="upperBound" class="ml-2"> No upper bound </label>
-                          <Checkbox v-model="scoreRangeBoundaryHelper[scoreIdx].upperBoundIsInfinity" :binary="true" inputId="upperBound" name="upper" @change="boundaryLimitUpdated(scoreIdx, 'upper')"/>
-                        </span>
-                      </div>
-                      <span v-if="validationErrors[`scoreRanges.ranges.${scoreIdx}.range`]" class="mave-field-error">{{ validationErrors[`scoreRanges.ranges.${scoreIdx}.range`] }}</span>
                     </template>
                   </Card>
-                </div>
-                <div class="field" style="align-items: center; justify-content: center; display: flex">
-                  <Button label="Add new score range" icon="pi pi-plus" aria-label="Add range" outlined raised text @click="addScoreRange()"/>
-                </div>
-              </template>
-            </Card>
+                  <div v-for="(scoreRange, scoreIdx) of scoreRanges.ranges" :key="scoreIdx" class="mavedb-score-range-container">
+                    <Card>
+                      <template #title>Range {{ scoreIdx+1 }}:
+                        <Button icon="pi pi-times" severity="danger" aria-label="Delete range" rounded text style="float:right;" @click="removeScoreRange(scoreIdx)"/>
+                      </template>
+                      <template #content>
+                        <div style="padding-top: 1%;">
+                            <InputGroup>
+                              <span class="p-float-label" style="width:75%;">
+                                <InputText v-model="scoreRange.label" style="width:75%;" :aria-labelledby="$scopedId(`input-scoreRangeLabel-${scoreIdx}`)"></InputText>
+                                <label :for="$scopedId(`input-scoreRangeLabel-${scoreIdx}`)">Label</label>
+                              </span>
+                              <span class="p-float-label" style="width:25%;">
+                                <Dropdown v-model="scoreRange.classification" :options="rangeClassifications" style="width:25%;" :aria-labelledby="$scopedId(`input-scoreRangeClassification-${scoreIdx}`)"/>
+                                <label :for="$scopedId(`input-scoreRangeClassification-${scoreIdx}`)">Classification</label>
+                              </span>
+                            </InputGroup>
+                            <span v-if="validationErrors[`scoreRanges.ranges.${scoreIdx}.label`]" class="mave-field-error">{{ validationErrors[`scoreRanges.ranges.${scoreIdx}.label`] }}</span>
+                            <span v-if="validationErrors[`scoreRanges.ranges.${scoreIdx}.classification`]" class="mave-field-error">{{ validationErrors[`scoreRanges.ranges.${scoreIdx}.classification`] }}</span>
+                        </div>
+                        <div style="padding-top: 2%;">
+                          <span class="p-float-label">
+                            <Textarea v-model="scoreRange.description" style="width:100%;" :aria-labelledby="$scopedId(`input-scoreRangeDescription-${scoreIdx}`)"/>
+                            <label :for="$scopedId(`input-scoreRangeDescription-${scoreIdx}`)">Description (optional)</label>
+                          </span>
+                          <span v-if="validationErrors[`scoreRanges.ranges.${scoreIdx}.description`]" class="mave-field-error">{{ validationErrors[`scoreRanges.ranges.${scoreIdx}.description`] }}</span>
+                        </div>
+                        <div>
+                          <InputGroup>
+                            <span class=p-float-label>
+                              <InputText v-model="scoreRange.range[0]" :aria-labelledby="$scopedId(`input-scoreRangeLower-${scoreIdx}`)" :disabled="scoreRangeBoundaryHelper[scoreIdx].lowerBoundIsInfinity"/>
+                              <label :for="$scopedId(`input-scoreRangeLower-${scoreIdx}`)"> {{ scoreRangeBoundaryHelper[scoreIdx].lowerBoundIsInfinity ? "-infinity" : "Lower Bound" }} </label>
+                            </span>
+                            <InputGroupAddon>to</InputGroupAddon>
+                            <span class=p-float-label>
+                              <InputText v-model="scoreRange.range[1]" :aria-labelledby="$scopedId(`input-scoreRangeUpper-${scoreIdx}`)" :disabled="scoreRangeBoundaryHelper[scoreIdx].upperBoundIsInfinity"/>
+                              <label :for="$scopedId(`input-scoreRangeUpper-${scoreIdx}`)"> {{ scoreRangeBoundaryHelper[scoreIdx].upperBoundIsInfinity ? "infinity" : "Upper Bound" }} </label>
+                            </span>
+                          </InputGroup>
+                        </div>
+                        <div>
+                          <span>
+                            <Checkbox v-model="scoreRangeBoundaryHelper[scoreIdx].lowerBoundIsInfinity" :binary="true" inputId="lowerBound" name="lower" @change="boundaryLimitUpdated(scoreIdx, 'lower')"/>
+                            <label for="lowerBound" class="ml-2"> No lower bound </label>
+                          </span>
+                          <span style="float:right;">
+                            <label for="upperBound" class="ml-2"> No upper bound </label>
+                            <Checkbox v-model="scoreRangeBoundaryHelper[scoreIdx].upperBoundIsInfinity" :binary="true" inputId="upperBound" name="upper" @change="boundaryLimitUpdated(scoreIdx, 'upper')"/>
+                          </span>
+                        </div>
+                        <span v-if="validationErrors[`scoreRanges.ranges.${scoreIdx}.range`]" class="mave-field-error">{{ validationErrors[`scoreRanges.ranges.${scoreIdx}.range`] }}</span>
+                      </template>
+                    </Card>
+                  </div>
+                  <div class="field" style="align-items: center; justify-content: center; display: flex">
+                    <Button label="Add new score range" icon="pi pi-plus" aria-label="Add range" outlined raised text @click="addScoreRange()"/>
+                  </div>
+                </template>
+              </Card>
+            </div>
+            <div v-else>
+              <Card>
+                <template #title>Add Score Ranges
+                  <Button icon="pi pi-plus" aria-label="Add score ranges" rounded text style="float:right;" @click="addScoreRanges()"/>
+                </template>
+              </Card>
+            </div>
           </div>
+
           <div class="col-12 md:col-6">
             <div v-if="itemStatus == 'NotLoaded' || this.item.private">
               <Card>
@@ -1241,6 +1265,18 @@
         this.scoreRangeBoundaryHelper.splice(rangeIdx, 1)
       },
 
+      removeScoreRanges: function() {
+        this.scoreRanges = null
+        this.scoreRangeBoundaryHelper = null
+      },
+
+      addScoreRanges: function() {
+        this.scoreRanges = {wtScore: null, ranges: []}
+        this.scoreRangeBoundaryHelper = []
+        this.scoreRanges.ranges.push(emptyScoreRange())
+        this.scoreRangeBoundaryHelper.push(emptyScoreRangeBoundaryHelper())
+      },
+
       ////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
       // Form fields
       ////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
@@ -1483,7 +1519,7 @@
           this.targetGenes = this.item.targetGenes
           this.scoreRanges = this.item.scoreRanges
           this.scoreRangeBoundaryHelper = []
-          this.scoreRanges.ranges.forEach((range, idx) => {
+          this.scoreRanges?.ranges.forEach((range, idx) => {
             this.scoreRangeBoundaryHelper.push(emptyScoreRangeBoundaryHelper())
             this.scoreRangeBoundaryHelper[idx].lowerBoundIsInfinity = this.scoreRanges.ranges[idx].range[0] === null
             this.scoreRangeBoundaryHelper[idx].upperBoundIsInfinity = this.scoreRanges.ranges[idx].range[1] === null
@@ -1598,7 +1634,8 @@
           dataUsagePolicy: this.dataUsagePolicy,
           extraMetadata: {},
           // eslint-disable-next-line no-unused-vars
-          targetGenes: this.targetGenes.map(({ index, ...target }) => target) // drop index property from target genes before save
+          targetGenes: this.targetGenes.map(({ index, ...target }) => target), // drop index property from target genes before save
+          scoreRanges: this.scoreRanges
         }
         if (!this.item) {
           editedFields.supersededScoreSetUrn = this.supersededScoreSet ? this.supersededScoreSet.urn : null
@@ -1612,6 +1649,7 @@
           this.item.publicationIdentifiers = []
           this.item.rawReadIdentifiers = []
           this.item.targetGenes = []
+          this.item.scoreRanges = null
         }
 
         const editedItem = _.merge({}, this.item || {}, editedFields)

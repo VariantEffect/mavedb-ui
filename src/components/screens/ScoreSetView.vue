@@ -175,6 +175,7 @@
             <Button class="p-button-outlined p-button-sm" @click="heatmapExport()">Heatmap</Button>&nbsp;
           </template>
         </div>
+        <ScoreSetStatistics :score-set="item" />
         <div v-if="requestFromGalaxy == '1'"><br>Send files to <a :href="`${this.galaxyUrl}`">Galaxy</a> <Button class="p-button-outlined p-button-sm" @click="sendToGalaxy('scores')">Scores</Button>&nbsp;
           <template v-if="countColumns.length != 0">
             <Button class="p-button-outlined p-button-sm" @click="sendToGalaxy('counts')">Counts</Button>&nbsp;
@@ -408,11 +409,11 @@ import DataTable from 'primevue/datatable'
 import TabPanel from 'primevue/tabpanel'
 import TabView from 'primevue/tabview'
 import Message from 'primevue/message'
-import ProgressSpinner from 'primevue/progressspinner'
 import ScrollPanel from 'primevue/scrollpanel';
 
 import ScoreSetHeatmap from '@/components/ScoreSetHeatmap'
 import ScoreSetHistogram from '@/components/ScoreSetHistogram'
+import ScoreSetStatistics from '@/components/ScoreSetStatistics'
 import EntityLink from '@/components/common/EntityLink'
 import PageLoading from '@/components/common/PageLoading'
 import ItemNotFound from '@/components/common/ItemNotFound'
@@ -431,7 +432,26 @@ import items from '@/composition/items'
 
 export default {
   name: 'ScoreSetView',
-  components: { Accordion, AccordionTab, AutoComplete, Button, Chip, DefaultLayout, EntityLink, ScoreSetHeatmap, ScoreSetHistogram, TabView, TabPanel, Message, DataTable, Column, ProgressSpinner, ScrollPanel, PageLoading, ItemNotFound },
+  components: {
+    Accordion,
+    AccordionTab,
+    AutoComplete,
+    Button,
+    Chip,
+    Column,
+    DataTable,
+    DefaultLayout,
+    EntityLink,
+    ItemNotFound,
+    Message,
+    PageLoading,
+    ScoreSetHeatmap,
+    ScoreSetHistogram,
+    ScoreSetStatistics,
+    ScrollPanel,
+    TabPanel,
+    TabView
+  },
   computed: {
     contributors: function() {
       return _.sortBy(

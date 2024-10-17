@@ -52,12 +52,12 @@
           <div class="mave-screen-title">{{ item.title || 'Untitled score set' }}</div>
           <div v-if="userIsAuthenticated">
             <div v-if="!item.publishedDate" class="mave-screen-title-controls">
-              <Button class="p-button-sm" @click="editItem">Edit</Button>
-              <Button class="p-button-sm" @click="publishItem">Publish</Button>
-              <Button class="p-button-sm p-button-danger" @click="deleteItem">Delete</Button>
+              <Button v-if="userIsAuthorized.update" class="p-button-sm" @click="editItem">Edit</Button>
+              <Button v-if="userIsAuthorized.publish" class="p-button-sm" @click="publishItem">Publish</Button>
+              <Button v-if="userIsAuthorized.delete" class="p-button-sm p-button-danger" @click="deleteItem">Delete</Button>
             </div>
             <div v-if="item.publishedDate" class="mave-screen-title-controls">
-              <Button class="p-button-sm" @click="editItem">Edit</Button>
+              <Button v-if="userIsAuthorized.update" class="p-button-sm" @click="editItem">Edit</Button>
             </div>
           </div>
         </div>
@@ -66,7 +66,7 @@
           <h3>{{ item.urn }}</h3>
         </div>
       </div>
-      <div v-if="scores">
+      <div v-if="scores?.length">
         <div class="mave-score-set-variant-search">
           <span class="p-float-label">
               <AutoComplete
@@ -284,6 +284,20 @@
           </div>
         </div>
 
+        <div class="mave-score-set-section-title">Score Ranges</div>
+        <div v-if="item.scoreRanges">
+          <div v-if="item.scoreRanges.wtScore"><strong>Wild Type Score:</strong> {{ item.scoreRanges.wtScore }}</div>
+          <br>
+          <div v-for="scoreRange of item.scoreRanges.ranges.sort((a, b) => a.range[0] - b.range[0])" :key="scoreRange">
+            <div v-if="scoreRange.label"><strong>Name:</strong> {{ scoreRange.label }}</div>
+            <div v-if="scoreRange.description"><strong>Description:</strong> {{ scoreRange.description }}</div>
+            <div v-if="scoreRange.classification"><strong>Classification:</strong> {{ scoreRange.classification }}</div>
+            <div v-if="scoreRange.range"><strong>Range:</strong> [{{ scoreRange.range[0] !== null ? scoreRange.range[0] : "-infinity" }}, {{ scoreRange.range[1] !== null ? scoreRange.range[1] : "infinity" }})</div>
+            <br>
+          </div>
+        </div>
+        <div v-else>Not specified</div>
+
         <div class="mave-score-set-section-title">External identifier</div>
         <strong>DOI: </strong>
         <div v-if="item.doiIdentifiers.length != 0">
@@ -482,8 +496,16 @@ export default {
     readMore: true,
     showHeatmap: true,
     heatmapExists: false,
-    selectedVariant: null
+    selectedVariant: null,
+    userIsAuthorized: {
+      delete: false,
+      publish: false,
+      update: false,
+    }
   }),
+  mounted: async function() {
+    await this.checkUserAuthorization()
+  },
   watch: {
     itemId: {
       handler: function(newValue, oldValue) {
@@ -514,6 +536,21 @@ export default {
   },
   methods: {
     variantNotNullOrNA,
+    checkUserAuthorization: async function() {
+      await this.checkAuthorization()
+    },
+    checkAuthorization: async function() {
+      // Response should be true to get authorization
+      const actions = ['delete', 'publish', 'update']
+      try {
+        for (const action of actions) {
+          let response = await axios.get(`${config.apiBaseUrl}/permissions/user-is-permitted/score-set/${this.itemId}/${action}`)
+          this.userIsAuthorized[action] = response.data
+        }
+      } catch (err) {
+        console.log(`Error to get authorization:`, err)
+      }
+    },
     editItem: function() {
       if (this.item) {
         this.$router.replace({ path: `/score-sets/${this.item.urn}/edit` })

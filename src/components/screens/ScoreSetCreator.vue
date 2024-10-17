@@ -95,15 +95,25 @@
                       </div>
                       <div v-else style="position: relative;">
                         <span class="p-float-label">
-                          <Dropdown
+                          <AutoComplete
+                            ref="experimentInput"
                             v-model="experiment"
+                            dropdown
                             :id="$scopedId('input-experiment')"
+                            :suggestions="experimentSuggestionsList"
+                            field="title"
+                            forceSelection
+                            :multiple="false"
                             :options="editableExperiments"
-                            optionLabel="title"
-                            optionValue=""
-                            style="width: 50%"
-                            @change="populateExperimentMetadata"
-                          />
+                            @option-select="populateExperimentMetadata"
+                            @complete="searchExperiments"
+                            @keyup.escape="clearExperimentSearch"
+                            style="width: 100%;"
+                          >
+                            <template #item="slotProps">
+                              {{slotProps.item.urn}}: {{slotProps.item.title}}
+                            </template>
+                          </AutoComplete>
                           <label :for="$scopedId('input-experiment')">Experiment</label>
                         </span>
                         <span v-if="validationErrors.experiment" class="mave-field-error">{{ validationErrors.experiment }}</span>
@@ -1205,7 +1215,7 @@ export default {
 
   setup: () => {
     const editableExperiments = useItems({
-      itemTypeName: 'experiment',
+      itemTypeName: 'editable-experiment',
       options: {
         filter: {
           query: { l: { path: 'something' }, r: { constant: 'value' } }
@@ -1234,6 +1244,7 @@ export default {
       ...useFormatters(),
       ...useItem({ itemTypeName: 'scoreSet' }),
       editableExperiments: editableExperiments.items,
+      setExperimentSearch: (text) => editableExperiments.setRequestBody({ text }),
       licenses: licenses.items,
       publicationIdentifierSuggestions: publicationIdentifierSuggestions.items,
       setPublicationIdentifierSearch: (text) => publicationIdentifierSuggestions.setRequestBody({ text }),
@@ -1358,6 +1369,9 @@ export default {
   }),
 
   computed: {
+    experimentSuggestionsList: function() {
+      return this.suggestionsForAutocomplete(this.editableExperiments)
+    },
     maxWizardStepValidated: function() {
       const numSteps = 5 + this.numTargets
       // This yields the index of the maximum step validated, -1 if step 0 is not valid, and -2 if all steps are valid.
@@ -1876,6 +1890,15 @@ export default {
     ////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
     // Form fields
     ////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+
+    clearExperimentSearch: function() {
+      const input = this.$refs.experimentInput
+      input.inputTextValue = null
+    },
+
+    searchExperiments: function(event) {
+      this.setExperimentSearch(event.query)
+    },
 
     populateExperimentMetadata: function (event) {
       this.abstractText = event.value.abstractText

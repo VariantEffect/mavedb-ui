@@ -105,13 +105,13 @@
                             forceSelection
                             :multiple="false"
                             :options="editableExperiments"
-                            @change="populateExperimentMetadata"
+                            @option-select="populateExperimentMetadata"
                             @complete="searchExperiments"
                             @keyup.escape="clearExperimentSearch"
                             style="width: 100%;"
                           >
                             <template #item="slotProps">
-                              {{slotProps.item.urn}}: {{slotProps.item.title}} 
+                              {{slotProps.item.urn}}: {{slotProps.item.title}}
                             </template>
                           </AutoComplete>
                           <label :for="$scopedId('input-experiment')">Experiment</label>

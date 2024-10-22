@@ -130,16 +130,6 @@ const itemTypes = {
       }
     }
   },
-  'editable-experiment': {
-    name: 'editable-experiments',
-    restCollectionName: 'editable-experiments',
-    httpOptions: {
-      list: {
-        method: 'post',
-        url: `${config.apiBaseUrl}/me/experiments/search`
-      }
-    }
-  },
   'experiment': {
     name: 'experiment', // TODO Redundant, change this structure
     restCollectionName: 'experiments',

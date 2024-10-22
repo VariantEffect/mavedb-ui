@@ -96,14 +96,24 @@
                       <div v-else style="position: relative;">
                         <span class="p-float-label">
                           <Dropdown
+                            ref="experimentInput"
                             v-model="experiment"
                             :id="$scopedId('input-experiment')"
+                            filter optionLabel="title"
                             :options="editableExperiments"
-                            optionLabel="title"
-                            optionValue=""
-                            style="width: 50%"
-                            @change="populateExperimentMetadata"
-                          />
+                            :virtualScrollerOptions="{ itemSize: 50 }"
+                            @option-select="populateExperimentMetadata"
+                            style="width: 100%;"
+                          >
+                            <template #option="slotProps">
+                              {{slotProps.option.urn}}: {{slotProps.option.title}}
+                            </template>
+                            <template #empty>
+                              <div style="padding: 10px; text-align:center;">
+                                No experiments found.
+                              </div>
+                            </template>
+                          </Dropdown>
                           <label :for="$scopedId('input-experiment')">Experiment</label>
                         </span>
                         <span v-if="validationErrors.experiment" class="mave-field-error">{{ validationErrors.experiment }}</span>

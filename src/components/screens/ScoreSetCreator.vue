@@ -1218,7 +1218,7 @@ export default {
       itemTypeName: 'experiment',
       options: {
         filter: {
-          query: { l: { path: 'something' }, r: { constant: 'value' } }
+          query: { l: { path: 'something', meta_analysis: 'false' }, r: { constant: 'value' } }
         }
       }
     })

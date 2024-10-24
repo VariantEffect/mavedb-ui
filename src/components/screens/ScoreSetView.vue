@@ -95,7 +95,7 @@
         <div class="mave-score-set-histogram-pane">
           <ScoreSetHistogram
             :scoreSet="item"
-            :scores="scores"
+            :variants="scores"
             :externalSelection="variantToVisualize"
             @export-chart="setHistogramExport"
             ref="histogram"

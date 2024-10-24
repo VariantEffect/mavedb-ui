@@ -102,7 +102,7 @@
                             filter optionLabel="title"
                             :options="editableExperiments"
                             :virtualScrollerOptions="{ itemSize: 50 }"
-                            @option-select="populateExperimentMetadata"
+                            @change="populateExperimentMetadata"
                             style="width: 100%;"
                           >
                             <template #option="slotProps">

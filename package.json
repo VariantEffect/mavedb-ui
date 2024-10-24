@@ -11,7 +11,7 @@
     "@fontsource/raleway": "^5.0.16",
     "axios": "^1.6.2",
     "chart.js": "^4.4.1",
-    "d3": "^7.8.5",
+    "d3": "^7.9.0",
     "datatables.net": "1.11.5",
     "datatables.net-buttons": "1.7.0",
     "datatables.net-buttons-dt": "1.7.0",

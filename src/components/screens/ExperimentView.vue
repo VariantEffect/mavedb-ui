@@ -5,13 +5,10 @@
         <div class="mave-screen-title-bar">
           <div class="mave-screen-title">{{ item.title || 'Untitled experiment' }}</div>
           <div v-if="userIsAuthenticated">
-            <div v-if="!item.publishedDate" class="mave-screen-title-controls">
+            <div class="mave-screen-title-controls">
               <Button v-if="userIsAuthorized.add_score_set" class="p-button-sm" @click="addScoreSet">Add a score set</Button>
               <Button v-if="userIsAuthorized.update" class="p-button-sm" @click="editItem">Edit</Button>
               <Button v-if="userIsAuthorized.delete" class="p-button-sm p-button-danger" @click="deleteItem">Delete</Button>
-            </div>
-            <div v-else>
-              <Button v-if="userIsAuthorized.add_score_set" class="p-button-sm" @click="addScoreSet">Add a score set</Button>
             </div>
           </div>
         </div>

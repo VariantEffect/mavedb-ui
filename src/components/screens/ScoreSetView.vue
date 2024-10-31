@@ -441,7 +441,7 @@ import useRemoteData from '@/composition/remote-data'
 import config from '@/config'
 import {saveChartAsFile} from '@/lib/chart-export'
 import { parseScoresOrCounts } from '@/lib/scores'
-import { variantNotNullOrNA } from '@/lib/mave-hgvs';
+import { preferredVariantLabel, variantNotNullOrNA } from '@/lib/mave-hgvs';
 import { mapState } from 'vuex'
 import { ref } from 'vue'
 
@@ -508,6 +508,9 @@ export default {
     variantToVisualize: function() {
       // While a user is autocompleting, `this.selectedVariant` is a string. Once selected, it will become an object and we can pass it as a prop.
       return typeof this.selectedVariant === 'object' ? this.selectedVariant : null
+    },
+    urlVariant: function() {
+      return this.$route.query.variant
     },
     ...mapState({
       galaxyUrl: state => state.routeProps.galaxyUrl,
@@ -581,8 +584,16 @@ export default {
     scoresData: {
       handler: function(newValue) {
         this.scores = newValue ? Object.freeze(parseScoresOrCounts(newValue)) : null
+        this.applyUrlState()
       }
-    }
+    },
+    selectedVariant: {
+      handler: function(newValue) {
+        this.$router.push({query: {
+          ...(this.selectedVariant && this.selectedVariant.accession) ? {variant: this.selectedVariant.accession} : {},
+        }})
+      }
+    },
   },
   methods: {
     variantNotNullOrNA,
@@ -836,17 +847,30 @@ export default {
             matches.push(Object.assign(variant, {mavedb_label: variant.hgvs_splice}))
         } else if (variantNotNullOrNA(variant.hgvs_pro) && variant.hgvs_pro.toLowerCase().includes(event.query.toLowerCase())) {
             matches.push(Object.assign(variant, {mavedb_label: variant.hgvs_pro}))
+        } else if (variantNotNullOrNA(variant.accession) && variant.accession.toLowerCase().includes(event.query.toLowerCase())) {
+            matches.push(Object.assign(variant, {mavedb_label: variant.accession}))
         }
       }
 
       this.variantSearchSuggestions = matches
     },
     childComponentSelectedVariant: function(variant) {
+      if (variant == null) {
+        this.selectedVariant = null
+      }
+
       if (!variant?.accession) {
         return
       }
 
-      this.selectedVariant = this.scores.find((v) => v.accession == variant.accession)
+      const selectedVariant = this.scores.find((v) => v.accession == variant.accession)
+      this.selectedVariant = Object.assign(selectedVariant, preferredVariantLabel(selectedVariant))
+    },
+    applyUrlState: function() {
+      if (this.$route.query.variant) {
+        const selectedVariant = this.scores.find((v) => v.accession == this.$route.query.variant)
+        this.selectedVariant = Object.assign(selectedVariant, preferredVariantLabel(selectedVariant))
+      }
     },
     heatmapVisibilityUpdated: function(visible) {
       this.heatmapExists = visible

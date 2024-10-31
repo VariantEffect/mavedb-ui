@@ -11,7 +11,7 @@ export const DEFAULT_SERIES_COLOR = '#333333'
 const LABEL_SIZE = 10
 
 /**
- * Margins of the heatmap content inside the SVG, expressed in screen units (pixels).
+ * Margins of the histogram content inside the SVG, expressed in screen units (pixels).
  *
  * This should include space for the color scale legend.
  */
@@ -177,7 +177,7 @@ export default function makeHistogram(): Histogram {
   //////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
   // Internal properties
   //////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
-  
+
   // Data
   let series: HistogramSerie[] = []
   let bins: HistogramBin[] = []
@@ -485,7 +485,7 @@ export default function makeHistogram(): Histogram {
         points.push([x, yMin]) // Base of first bin, or end of range if entire range is to the left of all bins
       }
     }
-    
+
     // Trace the portion above bins.
     const startBinIndex = findBinIndex(x)
     const xMaxBinIndex = findBinIndex(xMax)
@@ -714,7 +714,7 @@ export default function makeHistogram(): Histogram {
             .attr('x', legendX - legendCircleWidth)
             .attr('y', legendY + (series.length == 1 ? 0 : series.length) * legendItemHeight + legendSpacing - 1)
             .text((d) => d)
-        
+
         // Add a background for the legend, for visibility.
         const legendBounds = (legend.node() as SVGGraphicsElement | null)?.getBBox()
         svg.select('g.histogram-legend-background')
@@ -865,7 +865,7 @@ export default function makeHistogram(): Histogram {
       }
 
       updateSelectionAfterRefresh()
-      
+
       return chart
     },
 
@@ -899,14 +899,14 @@ export default function makeHistogram(): Histogram {
       selectedDatum = d
       const value = applyField(d, valueField)
 
-      // Also select the bin in which the datum falls. 
+      // Also select the bin in which the datum falls.
       const selectedBinIndex = findBinIndex(value)
       selectedBin = selectedBinIndex == null ? null : bins[selectedBinIndex]
 
       refreshHighlighting()
       showSelectionTooltip()
     },
-  
+
     ////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
     // Accessors
     ////////////////////////////////////////////////////////////////////////////////////////////////////////////////////

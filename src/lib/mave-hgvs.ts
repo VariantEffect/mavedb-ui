@@ -1,6 +1,20 @@
 /**
  * An object holding parsed values from a simple MaveHGVS-pro string representing a variation at one locus in a protein.
  */
+interface SimpleMaveVariant {
+  /** The MaveDB Accession for a variant. */
+  accession: string
+  /** The nucleotide HGVS string. */
+  hgvs_nt: string
+  /** The protein HGVS string. */
+  hgvs_pro: string
+  /** The splice HGVS string. */
+  hgvs_splice: string
+}
+
+/**
+ * An object holding parsed values from a simple MaveHGVS-pro string representing a variation at one locus in a protein.
+ */
 interface SimpleProteinVariation {
   /** The numeric position from a MaveHGVS-pro string. */
   position: number
@@ -15,6 +29,10 @@ interface SimpleProteinVariation {
   substitution: string
   /** The genomic target (accession) from a fully qualified MaveHGVS-pro string. */
   target: null | string
+}
+
+type VariantLabel = {
+  mavedb_label: string
 }
 
 /**
@@ -57,4 +75,26 @@ export function parseSimpleProVariant(variant: string): SimpleProteinVariation |
  */
 export function variantNotNullOrNA(variant: string | null | undefined): boolean {
   return variant ? variant.toLowerCase() !== "na" : false
+}
+
+
+/**
+ * Return the preferred variant label for a given variant. Protein variation is preferred
+ * to nucleotide variation, which is preferred to splice variation.
+ *
+ * hgvs_pro > hgvs_nt > hgvs_splice
+ *
+ * @param variant An object representing a simple MaveDB variant.
+ * @returns the label of the preferred variant, or just the accession if none are valid.
+ */
+export function preferredVariantLabel(variant: SimpleMaveVariant): VariantLabel {
+  if (variantNotNullOrNA(variant.hgvs_pro)) {
+    return {mavedb_label: variant.hgvs_pro}
+  } else if (variantNotNullOrNA(variant.hgvs_nt)) {
+    return {mavedb_label: variant.hgvs_nt}
+  } else if (variantNotNullOrNA(variant.hgvs_splice)) {
+    return {mavedb_label: variant.hgvs_splice}
+  } else {
+    return {mavedb_label: variant.accession}
+  }
 }

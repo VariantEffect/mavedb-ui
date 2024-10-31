@@ -456,34 +456,38 @@ export default {
       )
     },
     evidenceStrengths: function() {
-      return {
-        'urn:mavedb:00000050-a-1': {
-          oddsOfPathogenicity: {
-            abnormal: 24.9,
-            normal: 0.043
+      if (config.CLINICAL_FEATURES_ENABLED) {
+        return {
+          'urn:mavedb:00000050-a-1': {
+            oddsOfPathogenicity: {
+              abnormal: 24.9,
+              normal: 0.043
+            },
+            evidenceCodes: {
+              abnormal: 'PS3_Strong',
+              normal: 'BS3_Strong'
+            },
+            source: 'https://pubmed.ncbi.nlm.nih.gov/36550560/'
           },
-          evidenceCodes: {
-            abnormal: 'PS3_Strong',
-            normal: 'BS3_Strong'
-          },
-          source: 'https://pubmed.ncbi.nlm.nih.gov/36550560/'
-        },
-        'urn:mavedb:00000097-0-1': {
-          oddsOfPathogenicity: {
-            abnormal: 52.4,
-            normal: 0.02
-          },
-          evidenceCodes: {
-            abnormal: 'PS3_Strong',
-            normal: 'BS3_Strong'
-          },
-          source: 'https://pubmed.ncbi.nlm.nih.gov/34793697/',
-          exampleVariant: {
-            urn: 'urn:mavedb:00000097-0-1#1697',
-            name: 'NM_007294.4(BRCA1):c.5237A>C (p.His1746Pro)'
+          'urn:mavedb:00000097-0-1': {
+            oddsOfPathogenicity: {
+              abnormal: 52.4,
+              normal: 0.02
+            },
+            evidenceCodes: {
+              abnormal: 'PS3_Strong',
+              normal: 'BS3_Strong'
+            },
+            source: 'https://pubmed.ncbi.nlm.nih.gov/34793697/',
+            exampleVariant: {
+              urn: 'urn:mavedb:00000097-0-1#1697',
+              name: 'NM_007294.4(BRCA1):c.5237A>C (p.His1746Pro)'
+            }
           }
-        }
-      }[this.item.urn] || null
+        }[this.item.urn] || null
+      } else {
+        return null
+      }
     },
     isMetaDataEmpty: function() {
       //If extraMetadata is empty, return value will be true.

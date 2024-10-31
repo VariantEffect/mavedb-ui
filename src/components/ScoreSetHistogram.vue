@@ -27,6 +27,7 @@ import Checkbox from 'primevue/checkbox'
 import Rating from 'primevue/rating'
 import TabMenu from 'primevue/tabmenu'
 import {defineComponent} from 'vue'
+import config from '@/config'
 
 import {
   BENIGN_CLINICAL_SIGNIFICANCE_CLASSIFICATIONS,
@@ -98,6 +99,8 @@ export default defineComponent({
   },
 
   data: () => ({
+    config: config,
+
     activeViz: 0,
     clinicalSignificanceClassificationOptions: CLINVAR_CLINICAL_SIGNIFICANCE_CLASSIFICATIONS,
     customMinStarRating: DEFAULT_MIN_STAR_RATING,
@@ -193,7 +196,7 @@ export default defineComponent({
     },
 
     hasTabBar: function() {
-      return this.vizOptions.length > 1
+      return config.CLINICAL_FEATURES_ENABLED && this.vizOptions.length > 1
     },
 
     showControls: function() {
@@ -359,33 +362,35 @@ export default defineComponent({
       }
 
       let ranges = []
-      switch (this.scoreSet.urn) {
-        case 'urn:mavedb:00000097-0-1':
-          ranges = [{
-            min: -0.748,
-            max: 1.307,
-            color: '#4444ff',
-            title: 'Functionally normal'
-          }, {
-            min: -5.651,
-            max: -1.328,
-            color: '#ff4444',
-            title: 'Functionally abnormal'
-          }]
-          break
-        case 'urn:mavedb:00000050-a-1':
-          ranges = [{
-            min: -7.57,
-            max: 0,
-            color: '#4444ff',
-            title: 'Functionally normal'
-          }, {
-            min: 0,
-            max: 5.39,
-            color: '#ff4444',
-            title: 'Functionally abnormal'
-          }]
-          break
+      if (config.CLINICAL_FEATURES_ENABLED) {
+        switch (this.scoreSet.urn) {
+          case 'urn:mavedb:00000097-0-1':
+            ranges = [{
+              min: -0.748,
+              max: 1.307,
+              color: '#4444ff',
+              title: 'Functionally normal'
+            }, {
+              min: -5.651,
+              max: -1.328,
+              color: '#ff4444',
+              title: 'Functionally abnormal'
+            }]
+            break
+          case 'urn:mavedb:00000050-a-1':
+            ranges = [{
+              min: -7.57,
+              max: 0,
+              color: '#4444ff',
+              title: 'Functionally normal'
+            }, {
+              min: 0,
+              max: 5.39,
+              color: '#ff4444',
+              title: 'Functionally abnormal'
+            }]
+            break
+        }
       }
 
       this.histogram.data(this.variants)

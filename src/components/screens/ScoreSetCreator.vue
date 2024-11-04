@@ -595,7 +595,7 @@
                       <template #item="slotProps">
                         <div>
                             <div>Name: {{ slotProps.item.name }}</div>
-                            <div>Category: {{ slotProps.item.category }}</div>
+                            <div>Category: {{ textForTargetGeneCategory(slotProps.item.category) }}</div>
                             <div v-for="externalIdentifier of slotProps.item.externalIdentifiers" :key=externalIdentifier.identifier>
                               {{ externalIdentifier.identifier.dbName }}: {{ externalIdentifier.identifier.identifier }}, Offset: {{ externalIdentifier.offset }}
                             </div>
@@ -649,7 +649,7 @@
                       <span class="p-float-label">
                         <span class="p-float-label">
                           <SelectButton v-model="createdTargetGenes[targetIdx].targetGene.category" :id="$scopedId('input-targetGeneCategory')"
-                            :options="targetGeneCategories" />
+                            :options="targetGeneCategories" :optionLabel="textForTargetGeneCategory" />
                         </span>
                       </span>
                       <span v-if="validationErrors[`targetGene.${targetIdx}.category`]" class="mave-field-error">{{ validationErrors[`targetGene.${targetIdx}.category`] }}</span>
@@ -839,7 +839,7 @@
                       <span class="p-float-label">
                         <span class="p-float-label">
                           <SelectButton v-model="createdTargetGenes[targetIdx].targetGene.category" :id="$scopedId('input-targetGeneCategoryLabel')"
-                            :options="targetGeneCategories" />
+                            :options="targetGeneCategories" :optionLabel="textForTargetGeneCategory" />
                         </span>
                       </span>
                       <span v-if="validationErrors[`targetGene.${targetIdx}.category`]" class="mave-field-error">{{ validationErrors[`targetGene.${targetIdx}.category`] }}</span>
@@ -1123,6 +1123,7 @@ import EmailPrompt from '@/components/common/EmailPrompt'
 import useItem from '@/composition/item'
 import useItems from '@/composition/items'
 import config from '@/config'
+import { TARGET_GENE_CATEGORIES, textForTargetGeneCategory } from '@/lib/target-genes'
 import {ORCID_ID_REGEX} from '@/lib/orcid'
 import { normalizeDoi, validateDoi} from '@/lib/identifiers'
 import useFormatters from '@/composition/formatters'
@@ -1254,7 +1255,8 @@ export default {
       taxonomySuggestions: taxonomySuggestions.items,
       setTaxonomySearch: (text) => taxonomySuggestions.setRequestBody({text}),
       assemblies: assemblies.items,
-      geneNames: geneNames.items
+      geneNames: geneNames.items,
+      textForTargetGeneCategory: textForTargetGeneCategory
     }
   },
 
@@ -1310,11 +1312,7 @@ export default {
       'DNA',
       'protein'
     ],
-    targetGeneCategories: [
-      'Protein coding',
-      'Regulatory',
-      'Other noncoding'
-    ],
+    targetGeneCategories: TARGET_GENE_CATEGORIES,
     rangeClassifications: [
       'Normal',
       'Abnormal'

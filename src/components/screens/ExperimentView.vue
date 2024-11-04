@@ -136,7 +136,7 @@
             }}</router-link>
             <div v-for="targetGene of scoreSet.targetGenes" :key="targetGene">
               <div v-if="targetGene.name"><strong>Name:</strong> {{ targetGene.name }}</div>
-              <div v-if="targetGene.category"><strong>Type:</strong> {{ targetGene.category }}</div>
+              <div v-if="targetGene.category"><strong>Type:</strong> {{ textForTargetGeneCategory(targetGene.category) }}</div>
 
               <div v-if="targetGene.targetAccession?.accession" style="word-break: break-word">
                 <div v-if="targetGene.targetAccession?.assembly"><strong>Assembly:</strong>
@@ -227,6 +227,7 @@ import PageLoading from '@/components/common/PageLoading'
 import { PrimeIcons } from 'primevue/api'
 import ItemNotFound from '@/components/common/ItemNotFound'
 import useAuth from '@/composition/auth'
+import { textForTargetGeneCategory } from '@/lib/target-genes'
 import useItem from '@/composition/item'
 import useFormatters from '@/composition/formatters'
 import config from '@/config'
@@ -243,7 +244,8 @@ export default {
 
       ...useFormatters(),
       ...useItem({ itemTypeName: 'experiment' }),
-      userIsAuthenticated
+      userIsAuthenticated,
+      textForTargetGeneCategory: textForTargetGeneCategory
     }
   },
 

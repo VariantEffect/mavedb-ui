@@ -155,7 +155,7 @@
                   </span>
                   <span v-if="validationErrors.contributors" class="mave-field-error">{{validationErrors.contributors}}</span>
                 </div>
-                <div v-if="itemStatus == 'NotLoaded' || this.item.private == true">
+                <div v-if="itemStatus != 'NotLoaded'">
                   <div class="field">
                     <span class="p-float-label">
                       <Dropdown v-model="licenseId" :id="$scopedId('input-targetLicenseId')" :options="licenses"

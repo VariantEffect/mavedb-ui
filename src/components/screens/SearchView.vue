@@ -16,7 +16,7 @@
           <TabPanel header="Target filters">
             <div class="mavedb-search-filters">
               <SelectList v-model="filterTargetNames" :options="targetNameFilterOptions" class="mavedb-search-filter-option-picker" title="Target name"  />
-              <SelectList v-model="filterTargetTypes" :options="targetTypeFilterOptions" class="mavedb-search-filter-option-picker" title="Target type"  />
+              <SelectList v-model="filterTargetTypes" :options="targetTypeFilterOptions" :optionLabel="textForTargetGeneCategory" class="mavedb-search-filter-option-picker" title="Target type"  />
               <SelectList v-model="filterTargetOrganismNames" :options="targetOrganismFilterOptions" class="mavedb-search-filter-option-picker mavedb-organism-picker" title="Target organism"  />
               <SelectList v-model="filterTargetAccession" :options="targetAccessionFilterOptions" class="mavedb-search-filter-option-picker mavedb-organism-picker" title="Target accession"  />
             </div>
@@ -59,6 +59,7 @@ import { defineComponent } from 'vue'
 import { paths, components } from '@/schema/openapi'
 
 import type {LocationQueryValue} from "vue-router";
+import { textForTargetGeneCategory } from '@/lib/target-genes'
 
 type ShortScoreSet = components['schemas']['ShortScoreSet']
 type ShortTargetGene = components['schemas']['ShortTargetGene']
@@ -131,6 +132,7 @@ export default defineComponent({
       language: {
         emptyTable: 'Type in the search box above or use the filters to find a data set.'
       },
+      textForTargetGeneCategory: textForTargetGeneCategory,
     }
   },
   computed: {

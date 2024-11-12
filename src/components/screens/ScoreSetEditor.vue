@@ -375,7 +375,7 @@
                               <template #item="slotProps">
                                 <div>
                                     <div>Name: {{ slotProps.item.name }}</div>
-                                    <div>Category: {{ slotProps.item.category }}</div>
+                                    <div>Category: {{ textForTargetGeneCategory(slotProps.item.category) }}</div>
                                     <div v-for="externalIdentifier of slotProps.item.externalIdentifiers" :key=externalIdentifier.identifier>
                                       {{ externalIdentifier.identifier.dbName }}: {{ externalIdentifier.identifier.identifier }}, Offset: {{ externalIdentifier.offset }}
                                     </div>
@@ -402,7 +402,7 @@
                         <div class="field">
                           <span class="p-float-label">
                             <SelectButton v-model="targetGene.category" :id="$scopedId('input-targetGeneCategory')"
-                              :options="targetGeneCategories" />
+                              :options="targetGeneCategories" :optionLabel="textForTargetGeneCategory" />
                           </span>
                         </div>
                         <div v-for="dbName of externalGeneDatabases" class="field field-columns" :key="dbName">
@@ -516,7 +516,7 @@
                         <div class="field">
                           <span class="p-float-label">
                             <SelectButton v-model="targetGene.category" :id="$scopedId('input-targetGeneCategory')"
-                              :options="targetGeneCategories" />
+                              :options="targetGeneCategories" :optionLabel="textForTargetGeneCategory" />
                           </span>
                         </div>
                         <div>
@@ -732,6 +732,7 @@
   import {normalizeDoi, normalizeIdentifier, normalizePubmedId, validateDoi, validateIdentifier, validatePubmedId} from '@/lib/identifiers'
   import {ORCID_ID_REGEX} from '@/lib/orcid'
   import useFormatters from '@/composition/formatters'
+import { TARGET_GENE_CATEGORIES, textForTargetGeneCategory } from '@/lib/target-genes'
 
   const externalGeneDatabases = ['UniProt', 'Ensembl', 'RefSeq']
 
@@ -826,7 +827,8 @@
         setTaxonomySearch: (text) => taxonomySuggestions.setRequestBody({text}),
         assemblies: assemblies.items,
         geneNames: geneNames.items,
-        expandedTargetGeneRows
+        expandedTargetGeneRows,
+        textForTargetGeneCategory: textForTargetGeneCategory
       }
     },
 
@@ -880,11 +882,7 @@
         'DNA',
         'protein'
       ],
-      targetGeneCategories: [
-        'Protein coding',
-        'Regulatory',
-        'Other noncoding'
-      ],
+      targetGeneCategories: TARGET_GENE_CATEGORIES,
       rangeClassifications: [
         'normal',
         'abnormal'

@@ -232,7 +232,7 @@
           <div class="mave-score-set-section-title">Targets</div>
           <div v-for="targetGene of item.targetGenes" :key="targetGene">
             <div v-if="targetGene.name"><strong>Name:</strong> {{ targetGene.name }}</div>
-            <div v-if="targetGene.category"><strong>Type:</strong> {{ targetGene.category }}</div>
+            <div v-if="targetGene.category"><strong>Type:</strong> {{ textForTargetGeneCategory(targetGene.category) }}</div>
 
             <div v-if="targetGene.targetAccession?.accession" style="word-break: break-word">
               <div v-if="targetGene.targetAccession?.assembly"><strong>Assembly:</strong>
@@ -422,6 +422,7 @@ import useFormatters from '@/composition/formatters'
 import useItem from '@/composition/item'
 import useRemoteData from '@/composition/remote-data'
 import config from '@/config'
+import { textForTargetGeneCategory } from '@/lib/target-genes';
 import {saveChartAsFile} from '@/lib/chart-export'
 import { parseScoresOrCounts } from '@/lib/scores'
 import { variantNotNullOrNA } from '@/lib/mave-hgvs';
@@ -481,6 +482,7 @@ export default {
       setScoresDataUrl: scoresRemoteData.setDataUrl,
       ensureScoresDataLoaded: scoresRemoteData.ensureDataLoaded,
       variantSearchSuggestions,
+      textForTargetGeneCategory: textForTargetGeneCategory
     }
   },
   props: {

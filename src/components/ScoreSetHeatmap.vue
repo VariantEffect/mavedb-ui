@@ -1,5 +1,7 @@
 <template>
   <div v-if="heatmapVisible">
+
+    <div style="text-align: center;">Functional Score by Variant</div>
     <div id="mave-heatmap-container" class="heatmapContainer" ref="heatmapContainer">
       <div id="mave-heatmap-scroll-container" class="heatmapScrollContainer" ref="heatmapScrollContainer">
         <div id="mave-stacked-heatmap-container" class="mave-simple-variants-stacked-heatmap-container" ref="simpleVariantsStackedHeatmapContainer" />
@@ -16,8 +18,8 @@ import _ from 'lodash'
 import * as d3 from 'd3'
 
 import geneticCodes from '@/lib/genetic-codes'
-import makeHeatmap, {heatmapRowForVariant, HEATMAP_ROWS, verticalColorLegend, HeatmapDatum} from '@/lib/heatmap'
-import {parseSimpleProVariant, variantNotNullOrNA} from '@/lib/mave-hgvs'
+import makeHeatmap, {heatmapRowForNucleotideVariant, heatmapRowForProteinVariant, HEATMAP_AMINO_ACID_ROWS, HEATMAP_NUCLEOTIDE_ROWS, HeatmapDatum} from '@/lib/heatmap'
+import {parseSimpleProVariant, parseSimpleNtVariant, variantNotNullOrNA} from '@/lib/mave-hgvs'
 import { saveChartAsFile } from '@/lib/chart-export'
 import { Heatmap } from '@/lib/heatmap'
 
@@ -62,7 +64,7 @@ export default {
 
   mounted: function() {
     this.renderOrRefreshHeatmap()
-    this.renderOrRefreshStackedHeatmap()
+    this.isNucleotideHeatmap ? null : this.renderOrRefreshStackedHeatmap()
     this.$emit('exportChart', this.exportChart)
   },
 
@@ -89,17 +91,33 @@ export default {
     simpleAndWtVariants: function() {
       return [...this.simpleVariants || [], ...this.wtVariants || []]
     },
-    // TODO: Swappable targets
-    wtAminoAcids: function() {
+    isNucleotideHeatmap: function() {
+      return _.get(this.scoreSet, 'targetGenes[0].category') === 'other_noncoding'
+    },
+    heatmapRows: function() {
+      return this.isNucleotideHeatmap ? HEATMAP_NUCLEOTIDE_ROWS : HEATMAP_AMINO_ACID_ROWS
+    },
+    heatmapRowForVariant: function () {
+      return this.isNucleotideHeatmap ? heatmapRowForNucleotideVariant : heatmapRowForProteinVariant
+    },
+    parseSimpleVariant: function () {
+      return this.isNucleotideHeatmap ? parseSimpleNtVariant : parseSimpleProVariant
+    },
+    // TODO: Swapable Targets
+    heatmapRange: function() {
       const wtDnaSequenceType = _.get(this.scoreSet, 'targetGenes[0].targetSequence.sequenceType')
       const wtDnaSequence = _.get(this.scoreSet, 'targetGenes[0].targetSequence.sequence')
       if (!wtDnaSequence || wtDnaSequenceType != 'dna') {
         return []
       }
+      if (this.isNucleotideHeatmap) {
+        return this.dnaToSingletons(wtDnaSequence)
+      }
+
       return this.translateDnaToAminoAcids1Char(wtDnaSequence)
     },
     wtVariants: function() {
-      return this.wtAminoAcids ? this.prepareWtVariants(this.wtAminoAcids) : []
+      return this.heatmapRange ? this.prepareWtVariants(this.heatmapRange) : []
     },
     heatmapVisible: function() {
       return this.simpleVariants && this.simpleVariants.length
@@ -191,10 +209,10 @@ export default {
       })
     },
 
-    prepareWtVariants: function(wtAminoAcids) {
-      return wtAminoAcids.map((aa, i) => aa == null ? null : ({
+    prepareWtVariants: function(heatmapRange) {
+      return heatmapRange.map((el, i) => el == null ? null : ({
         x: i + 1,
-        y: HEATMAP_ROWS.length - 1 - heatmapRowForVariant(aa),
+        y: this.heatmapRows.length - 1 - this.heatmapRowForVariant(el),
         details: {
           wt: true
         }
@@ -212,7 +230,8 @@ export default {
 
       let simpleVariantInstances = _.filter(
         scores.map((score) => {
-          const variant = parseSimpleProVariant(score.hgvs_pro)
+          const vToParse = this.isNucleotideHeatmap ? score.hgvs_nt : score.hgvs_pro
+          const variant = this.parseSimpleVariant(vToParse)
           if (!variant) {
             numComplexVariantInstances++
             return null
@@ -220,13 +239,13 @@ export default {
           if (variant.target) {
             distinctAccessions.add(variant.target)
           }
-          const row = heatmapRowForVariant(variant.substitution)
+          const row = this.heatmapRowForVariant(variant.substitution)
           if (row == null) {
             numIgnoredVariantInstances++
             return null
           }
           const x = variant.position
-          const y = HEATMAP_ROWS.length - 1 - row
+          const y = this.heatmapRows.length - 1 - row
           return {x, y, score: score.score, details: _.omit(score, 'score')}
         }),
         (x) => x != null
@@ -285,6 +304,13 @@ export default {
       return _.words(dna, /.../g)
     },
 
+    dnaToSingletons: function(dna) {
+      if (_.isArray(dna)) {
+        dna = dna.join('')
+      }
+      return _.words(dna, /./g)
+    },
+
     translateCodon: function(codon) {
       return geneticCodes.standard.dna.codonToAa[codon]
     },
@@ -302,10 +328,12 @@ export default {
       if (!this.simpleAndWtVariants) {
         return
       }
+
       this.heatmap = makeHeatmap()
         .margins({top: 0, bottom: 25, left: 20, right: 20})
         .legendTitle("Functional Score")
         .render(this.$refs.simpleVariantsHeatmapContainer)
+        .rows(this.heatmapRows)
         .xCoordinate(this.xCoord)
         .yCoordinate(this.yCoord)
         .tooltipHtml(this.tooltipHtmlGetter)
@@ -325,6 +353,7 @@ export default {
       this.stackedHeatmap = makeHeatmap()
         .margins({top: 20, bottom: 25, left: 20, right: 20})
         .render(this.$refs.simpleVariantsStackedHeatmapContainer)
+        .rows(this.heatmapRows)
         .drawY(false)
         .drawLegend(false)
         .alignViaLegend(true)

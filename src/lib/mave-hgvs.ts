@@ -36,12 +36,13 @@ type VariantLabel = {
 }
 
 /**
- * Regular expression for parsing simple MaveHGVS-pro expressions.
+ * Regular expression for parsing simple MaveHGVS-pro and -nt expressions.
  *
  * MaveHGVS doesn't allow single-character codes in substitutions, but for flexibility we allow * and - here. These are
  * properly represented as Ter and del in MaveHGVS.
  */
 const proVariantRegex = /^p\.([A-Za-z]{3})([0-9]+)([A-Za-z]{3}|=|\*|-)$/
+const ntVariantRegex = /^c|g|n\.([0-9]+)([ACGTacgt]{1})(>)([ACGTactg]{1})$/
 
 /**
  * Parse a MaveHGVS protein variant representing a variation at one locus.
@@ -62,6 +63,29 @@ export function parseSimpleProVariant(variant: string): SimpleProteinVariation |
     position: parseInt(match[2]),
     original: match[1],
     substitution: match[3],
+    target: target
+  }
+}
+
+/**
+ * Parse a MaveHGVS nucleotide variant representing a variation at one locus.
+ *
+ * @param variant A MaveHGVS-nt variant string representing a single variation.
+ * @returns An object with properties indicating
+ */
+export function parseSimpleNtVariant(variant: string): SimpleProteinVariation | null {
+  const parts = variant.split(":")
+  const variation = parts.length == 1 ? parts[0] : parts[1]
+  const target = parts.length == 1 ? null : parts[0]
+  const match = variation.match(ntVariantRegex)
+  if (!match) {
+    // console.log(`WARNING: Unrecognized pro variant: ${variant}`)
+    return null
+  }
+  return {
+    position: parseInt(match[1]),
+    original: match[2],
+    substitution: match[4],
     target: target
   }
 }

@@ -5,13 +5,10 @@
         <div class="mave-screen-title-bar">
           <div class="mave-screen-title">{{ item.title || 'Untitled experiment' }}</div>
           <div v-if="userIsAuthenticated">
-            <div v-if="!item.publishedDate" class="mave-screen-title-controls">
+            <div class="mave-screen-title-controls">
               <Button v-if="userIsAuthorized.add_score_set" class="p-button-sm" @click="addScoreSet">Add a score set</Button>
               <Button v-if="userIsAuthorized.update" class="p-button-sm" @click="editItem">Edit</Button>
               <Button v-if="userIsAuthorized.delete" class="p-button-sm p-button-danger" @click="deleteItem">Delete</Button>
-            </div>
-            <div v-else>
-              <Button v-if="userIsAuthorized.add_score_set" class="p-button-sm" @click="addScoreSet">Add a score set</Button>
             </div>
           </div>
         </div>
@@ -136,7 +133,7 @@
             }}</router-link>
             <div v-for="targetGene of scoreSet.targetGenes" :key="targetGene">
               <div v-if="targetGene.name"><strong>Name:</strong> {{ targetGene.name }}</div>
-              <div v-if="targetGene.category"><strong>Type:</strong> {{ targetGene.category }}</div>
+              <div v-if="targetGene.category"><strong>Type:</strong> {{ textForTargetGeneCategory(targetGene.category) }}</div>
 
               <div v-if="targetGene.targetAccession?.accession" style="word-break: break-word">
                 <div v-if="targetGene.targetAccession?.assembly"><strong>Assembly:</strong>
@@ -227,6 +224,7 @@ import PageLoading from '@/components/common/PageLoading'
 import { PrimeIcons } from 'primevue/api'
 import ItemNotFound from '@/components/common/ItemNotFound'
 import useAuth from '@/composition/auth'
+import { textForTargetGeneCategory } from '@/lib/target-genes'
 import useItem from '@/composition/item'
 import useFormatters from '@/composition/formatters'
 import config from '@/config'
@@ -243,7 +241,8 @@ export default {
 
       ...useFormatters(),
       ...useItem({ itemTypeName: 'experiment' }),
-      userIsAuthenticated
+      userIsAuthenticated,
+      textForTargetGeneCategory: textForTargetGeneCategory
     }
   },
 

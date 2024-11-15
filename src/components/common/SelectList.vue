@@ -15,9 +15,9 @@
       <div class="mavedb-listbox-controls">
       </div>
     </template>
-    <template #option="slotProps">  
+    <template #option="slotProps">
       <div>
-        <span>{{slotProps.option.title || slotProps.option.value}}</span>
+        <span>{{ optionLabel ? optionLabel(slotProps.option.value) : slotProps.option.title || optionLabel ? optionLabel(slotProps.option.value) : slotProps.option.value }}</span>
         <Badge v-if="slotProps.option.badge" :value="slotProps.option.badge" class="badge"></Badge>
       </div>
     </template>
@@ -38,6 +38,10 @@ export default {
     options: {
       type: Array,
       default: () => []
+    },
+    optionLabel: {
+      type: Function,
+      default: null
     },
     order: {
       type: Array,

@@ -247,7 +247,7 @@ const itemTypes = {
     httpOptions: {
       list: {
         method: 'post',
-        url: `${config.apiBaseUrl}/target-genes/search`
+        url: `${config.apiBaseUrl}/me/target-genes/search`
       }
     }
   },

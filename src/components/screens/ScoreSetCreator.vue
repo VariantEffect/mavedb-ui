@@ -603,7 +603,7 @@
                   <div class="mavedb-wizard-help">
                     <label>Copy target from a previously created target</label>
                     <div class="mavedb-help-small">
-                      Use this autocomplete field to find an existing target in MaveDB and fill this target with its metadata. You'll still be able to edit any fields below.
+                      Use this autocomplete field to find an existing target from one of your published or unpublished score sets in MaveDB and fill this target with its metadata. You'll still be able to edit any fields below.
                     </div>
                   </div>
                   <div class="mavedb-wizard-content field">

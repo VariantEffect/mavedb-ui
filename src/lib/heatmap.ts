@@ -3,6 +3,7 @@ import $ from 'jquery'
 import _, { last } from 'lodash'
 
 import { AMINO_ACIDS, AMINO_ACIDS_BY_HYDROPHILIA } from './amino-acids.js'
+import { NUCLEOTIDE_BASES } from './nucleotides.js'
 
 type FieldGetter<T> = ((d: HeatmapDatum) => T)
 type Getter<T> = () => T
@@ -22,8 +23,12 @@ export const MAVE_HGVS_PRO_CHANGE_CODES = [
   { codes: { single: '-', triple: 'DEL' } } // Deletion
 ]
 
+export const HEATMAP_NUCLEOTIDE_ROWS: HeatmapRowSpecification[] = [
+  ...NUCLEOTIDE_BASES.map((ntCode) => ({ code: ntCode.codes.single, label: ntCode.codes.single }))
+]
+
 /** List of single-character codes for the heatmap's rows, from bottom to top. */
-export const HEATMAP_ROWS: HeatmapRowSpecification[] = [
+export const HEATMAP_AMINO_ACID_ROWS: HeatmapRowSpecification[] = [
   { code: '=', label: '=', cssClass: 'mave-heatmap-y-axis-tick-label-lg' },
   { code: '*', label: '\uff0a' },
   { code: '-', label: '-', cssClass: 'mave-heatmap-y-axis-tick-label-lg' },
@@ -169,7 +174,7 @@ export default function makeHeatmap(): Heatmap {
   // Layout
   let margins: HeatmapMargins = { top: 20, right: 20, bottom: 30, left: 20 }
   let nodeSize: HeatmapNodeSize = { width: 20, height: 20}
-  let rows: HeatmapRowSpecification[] = HEATMAP_ROWS
+  let rows: HeatmapRowSpecification[] = HEATMAP_AMINO_ACID_ROWS
 
   // Colors
   let lowerBoundColor: string = DEFAULT_MINIMUM_COLOR
@@ -608,7 +613,6 @@ export default function makeHeatmap(): Heatmap {
               color: colorScale,
               title: legendTitle,
               height: height,
-              marginLeft: 20,
               marginTop: 0,
             })
         }
@@ -726,6 +730,14 @@ export default function makeHeatmap(): Heatmap {
       }
       data = value
       prepareData()
+      return chart
+    },
+
+    rows: (value?: HeatmapRowSpecification[]) => {
+      if (value === undefined) {
+        return data
+      }
+      rows = value
       return chart
     },
 
@@ -928,9 +940,24 @@ export function singleLetterAminoAcidOrHgvsCode(aaCodeOrChange: string): string 
  *   variation (=), stop codon (*), or deletion (- or del).
  * @returns The heatmap row number, from 0 (the bottom row) to 22 (the top row).
  */
-export function heatmapRowForVariant(aaCodeOrChange: string): number | null {
+export function heatmapRowForProteinVariant(aaCodeOrChange: string): number | null {
   const singleLetterCode = singleLetterAminoAcidOrHgvsCode(aaCodeOrChange)
-  const ranking = singleLetterCode ? HEATMAP_ROWS.findIndex((rowSpec) => rowSpec.code == singleLetterCode) : null
+  const ranking = singleLetterCode ? HEATMAP_AMINO_ACID_ROWS.findIndex((rowSpec) => rowSpec.code == singleLetterCode) : null
+  return (ranking != null && ranking >= 0) ? ranking : null
+}
+
+
+/**
+ * Given a MaveHGVS-pro amino acid code or code representing deletion, synonmyous variation, or stop codon, return the
+ * heatmap row number on which a single-AA variant should be displayed.
+ *
+ * @param ntCodeOrChange A one-character code representing a nucleotide base or the result of a variation at a
+ *   single locus in a nucleotide sequence.
+ * @returns The heatmap row number, from 0 (the bottom row) to 3 (the top row).
+ */
+export function heatmapRowForNucleotideVariant(ntCodeOrChange: string): number | null {
+  const singleLetterCode = ntCodeOrChange.toUpperCase()
+  const ranking = singleLetterCode ? HEATMAP_NUCLEOTIDE_ROWS.findIndex((rowSpec) => rowSpec.code == singleLetterCode) : null
   return (ranking != null && ranking >= 0) ? ranking : null
 }
 
@@ -979,12 +1006,12 @@ export function verticalColorLegend(containerSelection: d3.Selection<Element, SV
   marginTop = 12,
   marginRight = 5,
   marginBottom = 0,
-  marginLeft = 10 + tickSize,
+  marginLeft = 15 + tickSize,
   ticks = height / 64,
   tickFormat = null,
   tickValues = null,
 } = {}) {
-  let tickAdjust = (g: any) => g.selectAll(".tick line").attr("x1", width - marginLeft - marginRight);
+  let tickAdjust = (g: any) => g.selectAll(".tick line").attr("x1", width - marginLeft - marginRight + tickSize);
 
   // Continuous color scale
   const n = Math.min(color.domain().length, color.range().length);
@@ -1003,7 +1030,7 @@ export function verticalColorLegend(containerSelection: d3.Selection<Element, SV
   containerSelection.append("g")
     .attr("transform", `translate(${marginLeft},0)`)
     .call(d3.axisLeft(x)
-      .ticks(ticks, typeof tickFormat === "string" ? tickFormat : null)
+      .ticks(Math.max(ticks, 4), typeof tickFormat === "string" ? tickFormat : null)
       .tickFormat(typeof tickFormat === "function" ? tickFormat : null)
       .tickSize(tickSize)
       .tickValues(tickValues))
@@ -1016,7 +1043,7 @@ export function verticalColorLegend(containerSelection: d3.Selection<Element, SV
       .attr("text-anchor", "middle")
       .attr("class", "title")
       .attr('font-size', LABEL_SIZE)
-      .attr('transform', `translate(${-(width - marginLeft / 2 - LABEL_SIZE / 2)}, ${height / 2}) rotate(-90)`)
+      .attr('transform', `translate(${-(width - marginLeft / 2)}, ${height / 2}) rotate(-90)`)
       .text(title));
 
   return containerSelection.node();

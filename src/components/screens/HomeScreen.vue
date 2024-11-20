@@ -103,7 +103,7 @@
               <li>
                 The complete set of MAVE data licensed under
                 <a href="https://creativecommons.org/public-domain/cc0/" target="_blank">Creative Commons Zero</a>
-                can now be downloaded from <a href="https://zenodo.org/records/11201737" target="_blank">Zenodo</a>.
+                can now be downloaded from <a href="https://doi.org/10.5281/zenodo.11201736" target="_blank">Zenodo</a>.
               </li>
             </ul>
           </template>

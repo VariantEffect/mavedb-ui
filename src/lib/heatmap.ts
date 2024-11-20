@@ -1,6 +1,6 @@
 import * as d3 from 'd3'
 import $ from 'jquery'
-import _, { last } from 'lodash'
+import _, { filter, last } from 'lodash'
 
 import { AMINO_ACIDS, AMINO_ACIDS_BY_HYDROPHILIA } from './amino-acids.js'
 import { NUCLEOTIDE_BASES } from './nucleotides.js'
@@ -100,6 +100,7 @@ export interface Heatmap {
   rowClassifier: Accessor<((d: HeatmapDatum) => number[]) | null, Heatmap>
   colorClassifier: Accessor<((d: HeatmapDatum) => number | d3.Color), Heatmap>
   datumSelected: Accessor<((d: HeatmapDatum) => void) | null, Heatmap>
+  excludeDatum: Accessor<((d: HeatmapDatum) => boolean), Heatmap>
 
   // Data fields
   valueField: Accessor<FieldGetter<number>, Heatmap>
@@ -140,6 +141,7 @@ export interface Heatmap {
 
   // Data
   heatmapContent: Getter<HeatmapContent | null>
+  filteredData: Getter<HeatmapDatum[] | null>
   lowerBound: Getter<number | null>
   upperBound: Getter<number | null>
 
@@ -170,6 +172,7 @@ export default function makeHeatmap(): Heatmap {
   let rowClassifier: ((d: HeatmapDatum) => number[]) | null = null
   let colorClassifier: ((d: HeatmapDatum) => number | d3.Color) = valueField
   let datumSelected: ((d: HeatmapDatum) => void) | null = null
+  let excludeDatum: ((d: HeatmapDatum) => boolean) = (d) => false as boolean
 
   // Layout
   let margins: HeatmapMargins = { top: 20, right: 20, bottom: 30, left: 20 }
@@ -198,6 +201,7 @@ export default function makeHeatmap(): Heatmap {
   let content: HeatmapContent = {
     columns: undefined
   }
+  let filteredData: HeatmapDatum[] = []
   let lowerBound: number | null = null
   let upperBound: number | null = null
 
@@ -246,6 +250,8 @@ export default function makeHeatmap(): Heatmap {
 
   const prepareData = () => {
     for (let datum of data) {
+      datum.isVisible = !excludeDatum(datum)
+
       content[xCoordinate(datum)] = content[xCoordinate(datum)] || {}
       content[xCoordinate(datum)][yCoordinate(datum)] = datum
 
@@ -257,6 +263,9 @@ export default function makeHeatmap(): Heatmap {
       idxLowerBound = idxLowerBound ? Math.min(idxLowerBound, xCoordinate(datum)) : xCoordinate(datum)
       idxUpperBound = idxUpperBound ? Math.max(idxUpperBound, xCoordinate(datum)) : xCoordinate(datum)
 
+      if (datum.isVisible) {
+        filteredData.push(datum)
+      }
     }
     content.columns = Object.keys(content).length - 1
     buildColorScale()
@@ -546,6 +555,7 @@ export default function makeHeatmap(): Heatmap {
         selectionTooltip = null
       }
       data = []
+      filteredData = []
       content = {columns: undefined}
     },
 
@@ -651,8 +661,10 @@ export default function makeHeatmap(): Heatmap {
             .attr('class', (n) => rows[rows.length - 1 - n].cssClass || '')
         }
 
+
+
         // Refresh each heatmap node.
-        const chartedDatum = svg.select('g.heatmap-nodes').selectAll('rect').data(data, (d) => d)
+        const chartedDatum = svg.select('g.heatmap-nodes').selectAll('rect').data(filteredData, (d) => d)
         chartedDatum.exit().remove()
         chartedDatum.enter()
           .append('rect')
@@ -762,6 +774,14 @@ export default function makeHeatmap(): Heatmap {
         return datumSelected
       }
       datumSelected = value
+      return chart
+    },
+
+    excludeDatum: (value?: ((d: HeatmapDatum) => boolean)) => {
+      if (value === undefined) {
+        return excludeDatum
+      }
+      excludeDatum = value
       return chart
     },
 
@@ -901,6 +921,10 @@ export default function makeHeatmap(): Heatmap {
     lowerBound: () => lowerBound,
 
     upperBound: () => upperBound,
+
+    filteredData: () => filteredData,
+
+    content: () => content,
   }
 
   return chart

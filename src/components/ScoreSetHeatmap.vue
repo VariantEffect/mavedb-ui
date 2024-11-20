@@ -63,8 +63,7 @@ export default {
   },
 
   mounted: function() {
-    this.renderOrRefreshHeatmap()
-    this.isNucleotideHeatmap ? null : this.renderOrRefreshStackedHeatmap()
+    this.renderOrRefreshHeatmaps()
     this.$emit('exportChart', this.exportChart)
   },
 
@@ -146,13 +145,13 @@ export default {
           this.numComplexVariants = numComplexVariants
         }
 
-        this.renderOrRefreshHeatmap()
+        this.renderOrRefreshHeatmaps()
       },
       immediate: true
     },
     simpleAndWtVariants: {
       handler: function() {
-        this.renderOrRefreshHeatmap()
+        this.renderOrRefreshHeatmaps()
       },
       immediate: true
     },
@@ -323,12 +322,17 @@ export default {
       }
     },
 
-    // Assumes that plate dimensions do not change.
-    renderOrRefreshHeatmap: function() {
+    renderOrRefreshHeatmaps: function() {
       if (!this.simpleAndWtVariants) {
         return
       }
 
+      this.drawHeatmap()
+      this.isNucleotideHeatmap ? null : this.drawStackedHeatmap()
+    },
+
+    // Assumes that plate dimensions do not change.
+    drawHeatmap: function() {
       this.heatmap = makeHeatmap()
         .margins({top: 0, bottom: 25, left: 20, right: 20})
         .legendTitle("Functional Score")
@@ -346,22 +350,20 @@ export default {
         .selectDatum(this.selectedVariant)
     },
 
-    renderOrRefreshStackedHeatmap: function() {
-      if (!this.simpleAndWtVariants) {
-        return
-      }
+    drawStackedHeatmap: function() {
       this.stackedHeatmap = makeHeatmap()
         .margins({top: 20, bottom: 25, left: 20, right: 20})
         .render(this.$refs.simpleVariantsStackedHeatmapContainer)
         .rows(this.heatmapRows)
-        .drawY(false)
-        .drawLegend(false)
-        .alignViaLegend(true)
         .nodeSize({width: 20, height: 1})
         .xCoordinate(this.xCoord)
         .yCoordinate(this.vRank)
+        .drawY(false)
+        .drawLegend(false)
+        .alignViaLegend(true)
+        .excludeDatum((d) => d.details.wt ? true : false)
 
-      this.stackedHeatmap.data(this.simpleVariants)
+      this.stackedHeatmap.data(this.simpleAndWtVariants)
         .valueField((d) => d.meanScore)
         .colorClassifier((variant) => variant.details.wt ? d3.color('#ddbb00') : variant.meanScore)
         .refresh()

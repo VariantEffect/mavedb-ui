@@ -238,10 +238,11 @@ export default function makeHistogram(): Histogram {
     }
 
     for (const serie of series) {
-      serie.x0 = serie.bins[0]?.x0 || null
-      serie.x1 = _.last(serie.bins)?.x0 || null
+      serie.x0 = serie.bins[0]?.x0 === undefined ? null : serie.bins[0].x0
+      // @ts-ignore - We protect against the return value of `_.last(serie.bins)` being undefined.
+      serie.x1 = _.last(serie.bins)?.x1 === undefined ? null : _.last(serie.bins).x1
       serie.maxBinSize = Math.max(...serie.bins.map((bin) => bin.length))
-      if (serie.x0 && serie.x1) {
+      if (serie.x0 !== null && serie.x1 !== null) {
         serie.line.push([serie.x0, 0])
         for (const bin of serie.bins) {
           if (bin.x0 != null) {
@@ -761,7 +762,7 @@ export default function makeHistogram(): Histogram {
             .attr('fill-opacity', '.25')
             .attr('stroke', (d) => d.options.color)
             .attr('stroke-width', 1.5)
-            .attr('d', (d) => path(d.line))
+            .attr('d', (d) => {console.log(d); return path(d.line)})
 
         // Refresh the hover and highlight boxes.
         const hovers = svg.select('g.histogram-hovers')

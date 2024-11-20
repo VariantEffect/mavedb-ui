@@ -240,6 +240,12 @@ export default {
           if (variant.target) {
             distinctAccessions.add(variant.target)
           }
+          // Don't display variants out of range from the provided sequence. This happens occassionally
+          // with legacy variant data.
+          if (variant.position > this.heatmapRange.length) {
+            numIgnoredVariantInstances++
+            return null
+          }
           const row = this.heatmapRowForVariant(variant.substitution)
           if (row == null) {
             numIgnoredVariantInstances++

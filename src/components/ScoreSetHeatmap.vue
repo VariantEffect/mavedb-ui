@@ -104,16 +104,18 @@ export default {
     },
     // TODO: Swapable Targets
     heatmapRange: function() {
-      const wtDnaSequenceType = _.get(this.scoreSet, 'targetGenes[0].targetSequence.sequenceType')
-      const wtDnaSequence = _.get(this.scoreSet, 'targetGenes[0].targetSequence.sequence')
-      if (!wtDnaSequence || wtDnaSequenceType != 'dna') {
-        return []
-      }
-      if (this.isNucleotideHeatmap) {
-        return this.dnaToSingletons(wtDnaSequence)
-      }
+      const wtSequence = _.get(this.scoreSet, 'targetGenes[0].targetSequence.sequence')
+      const wtSequenceType = _.get(this.scoreSet, 'targetGenes[0].targetSequence.sequenceType')
 
-      return this.translateDnaToAminoAcids1Char(wtDnaSequence)
+      if (!wtSequence) {
+        return []
+      } else if (wtSequenceType === "protein") {
+        return _.toArray(wtSequence)
+      } else if (this.isNucleotideHeatmap) {
+        return this.dnaToSingletons(wtSequence)
+      } else {
+        return this.translateDnaToAminoAcids1Char(wtSequence)
+      }
     },
     wtVariants: function() {
       return this.heatmapRange ? this.prepareWtVariants(this.heatmapRange) : []

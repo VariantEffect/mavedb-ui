@@ -15,6 +15,7 @@
 import $ from "jquery";
 import _ from "lodash";
 
+import { textForTargetGeneCategory } from "@/lib/target-genes"
 import useFormatters from "@/composition/formatters";
 import FlexDataTable from "@/components/common/FlexDataTable";
 
@@ -25,6 +26,7 @@ export default {
   setup: () => {
     return {
       ...useFormatters(),
+      textForTargetGeneCategory: textForTargetGeneCategory
     };
   },
 
@@ -79,7 +81,7 @@ export default {
             title: "Target",
           },
           {
-            data: (x) => _.get(x, "targetGenes[0].category", "null category"),
+            data: (x) => textForTargetGeneCategory(_.get(x, "targetGenes[0].category", undefined)) || "null category",
             title: "Target type",
           },
           {

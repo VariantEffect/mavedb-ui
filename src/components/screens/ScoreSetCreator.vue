@@ -96,14 +96,24 @@
                       <div v-else style="position: relative;">
                         <span class="p-float-label">
                           <Dropdown
+                            ref="experimentInput"
                             v-model="experiment"
                             :id="$scopedId('input-experiment')"
+                            filter optionLabel="title"
                             :options="editableExperiments"
-                            optionLabel="title"
-                            optionValue=""
-                            style="width: 50%"
+                            :virtualScrollerOptions="{ itemSize: 50 }"
                             @change="populateExperimentMetadata"
-                          />
+                            style="width: 100%;"
+                          >
+                            <template #option="slotProps">
+                              {{slotProps.option.urn}}: {{slotProps.option.title}}
+                            </template>
+                            <template #empty>
+                              <div style="padding: 10px; text-align:center;">
+                                No experiments found.
+                              </div>
+                            </template>
+                          </Dropdown>
                           <label :for="$scopedId('input-experiment')">Experiment</label>
                         </span>
                         <span v-if="validationErrors.experiment" class="mave-field-error">{{ validationErrors.experiment }}</span>
@@ -322,11 +332,20 @@
                       </Message>
                     </div>
                   </div>
-                  <div v-if="licenseId && licenses && licenses.find((l) => l.id == licenseId)?.shortName == 'Other - See Data Usage Guidelines'"
+                  <div class="mavedb-wizard-row">
+                    <div class="mavedb-wizard-help">
+                      Would you like to define any additional restrictions governing the usage of data within this score set?
+                    </div>
+                    <div class="mavedb-wizard-content">
+                      <InputSwitch v-model="hasCustomUsagePolicy" :aria-labelledby="$scopedId('input-has-custom-usage-policy')" />
+                      <div class="mavedb-switch-value">{{ hasCustomUsagePolicy ? 'Yes, I would like to define additional usage guidelines' : 'No, I do not need to define additional usage guidenlines' }}</div>
+                    </div>
+                  </div>
+                  <div v-if="hasCustomUsagePolicy"
                     class="mavedb-wizard-row">
                     <div class="mavedb-wizard-help">
                       <label>
-                        A license and/or any restrictions governing the usage of the data in this score set.
+                        Any additional guidelines governing the usage of the data in this score set.
                       </label>
                       <div class="mavedb-help-small">
                         This may assert, for example, the original author's right to publish the data first.
@@ -584,7 +603,7 @@
                   <div class="mavedb-wizard-help">
                     <label>Copy target from a previously created target</label>
                     <div class="mavedb-help-small">
-                      Use this autocomplete field to find an existing target in MaveDB and fill this target with its metadata. You'll still be able to edit any fields below.
+                      Use this autocomplete field to find an existing target from one of your published or unpublished score sets in MaveDB and fill this target with its metadata. You'll still be able to edit any fields below.
                     </div>
                   </div>
                   <div class="mavedb-wizard-content field">
@@ -595,7 +614,7 @@
                       <template #item="slotProps">
                         <div>
                             <div>Name: {{ slotProps.item.name }}</div>
-                            <div>Category: {{ slotProps.item.category }}</div>
+                            <div>Category: {{ textForTargetGeneCategory(slotProps.item.category) }}</div>
                             <div v-for="externalIdentifier of slotProps.item.externalIdentifiers" :key=externalIdentifier.identifier>
                               {{ externalIdentifier.identifier.dbName }}: {{ externalIdentifier.identifier.identifier }}, Offset: {{ externalIdentifier.offset }}
                             </div>
@@ -649,7 +668,7 @@
                       <span class="p-float-label">
                         <span class="p-float-label">
                           <SelectButton v-model="createdTargetGenes[targetIdx].targetGene.category" :id="$scopedId('input-targetGeneCategory')"
-                            :options="targetGeneCategories" />
+                            :options="targetGeneCategories" :optionLabel="textForTargetGeneCategory" />
                         </span>
                       </span>
                       <span v-if="validationErrors[`targetGene.${targetIdx}.category`]" class="mave-field-error">{{ validationErrors[`targetGene.${targetIdx}.category`] }}</span>
@@ -839,7 +858,7 @@
                       <span class="p-float-label">
                         <span class="p-float-label">
                           <SelectButton v-model="createdTargetGenes[targetIdx].targetGene.category" :id="$scopedId('input-targetGeneCategoryLabel')"
-                            :options="targetGeneCategories" />
+                            :options="targetGeneCategories" :optionLabel="textForTargetGeneCategory" />
                         </span>
                       </span>
                       <span v-if="validationErrors[`targetGene.${targetIdx}.category`]" class="mave-field-error">{{ validationErrors[`targetGene.${targetIdx}.category`] }}</span>
@@ -1123,6 +1142,7 @@ import EmailPrompt from '@/components/common/EmailPrompt'
 import useItem from '@/composition/item'
 import useItems from '@/composition/items'
 import config from '@/config'
+import { TARGET_GENE_CATEGORIES, textForTargetGeneCategory } from '@/lib/target-genes'
 import {ORCID_ID_REGEX} from '@/lib/orcid'
 import { normalizeDoi, validateDoi} from '@/lib/identifiers'
 import useFormatters from '@/composition/formatters'
@@ -1221,7 +1241,7 @@ export default {
       targetGeneIdentifierSuggestions[dbName] = useItems({ itemTypeName: `${dbName.toLowerCase()}-identifier-search` })
     }
 
-    const licenses = useItems({itemTypeName: 'license'})
+    const licenses = useItems({itemTypeName: 'active-license'})
     const taxonomies = useItems({itemTypeName: 'taxonomy'})
     const taxonomySuggestions = useItems({itemTypeName: 'taxonomy-search'})
     const geneNames = useItems({ itemTypeName: 'gene-names' })
@@ -1254,7 +1274,8 @@ export default {
       taxonomySuggestions: taxonomySuggestions.items,
       setTaxonomySearch: (text) => taxonomySuggestions.setRequestBody({text}),
       assemblies: assemblies.items,
-      geneNames: geneNames.items
+      geneNames: geneNames.items,
+      textForTargetGeneCategory: textForTargetGeneCategory
     }
   },
 
@@ -1284,6 +1305,7 @@ export default {
     abstractText: null,
     methodText: null,
     licenseId: null,
+    hasCustomUsagePolicy: false,
     dataUsagePolicy: null,
 
     contributors: [],
@@ -1310,11 +1332,7 @@ export default {
       'DNA',
       'protein'
     ],
-    targetGeneCategories: [
-      'Protein coding',
-      'Regulatory',
-      'Other noncoding'
-    ],
+    targetGeneCategories: TARGET_GENE_CATEGORIES,
     rangeClassifications: [
       'Normal',
       'Abnormal'
@@ -2093,6 +2111,7 @@ export default {
         this.methodText = this.item.methodText
         this.licenseId = this.item.license.id
         this.dataUsagePolicy = this.item.dataUsagePolicy
+        this.hasCustomUsagePolicy = this.dataUsagePolicy ? true : false
 
         this.contributors = _.sortBy(this.item.contributors, ['familyName', 'givenName', 'orcidId'])
         this.doiIdentifiers = this.item.doiIdentifiers
@@ -2129,6 +2148,7 @@ export default {
         this.abstractText = null
         this.methodText = null
         this.licenseId = this.defaultLicenseId
+        this.hasCustomUsagePolicy = false
         this.dataUsagePolicy = null
 
         this.contributors = []
@@ -2168,7 +2188,7 @@ export default {
       ).filter(
         secondary => !primaryPublicationIdentifiers.some(primary => primary.identifier == secondary.identifier && primary.dbName == secondary.dbName)
       )
-      console.log(this.scoreRanges)
+
       const editedFields = {
         experimentUrn: this.experimentUrn ? this.experimentUrn : this.experiment?.urn,
         title: this.title,
@@ -2181,7 +2201,7 @@ export default {
         doiIdentifiers: this.doiIdentifiers.map((identifier) => _.pick(identifier, 'identifier')),
         primaryPublicationIdentifiers: primaryPublicationIdentifiers,
         secondaryPublicationIdentifiers: secondaryPublicationIdentifiers,
-        dataUsagePolicy: this.dataUsagePolicy,
+        dataUsagePolicy: this.hasCustomUsagePolicy ? this.dataUsagePolicy : null,
         extraMetadata: {},
 
         scoreRanges: {

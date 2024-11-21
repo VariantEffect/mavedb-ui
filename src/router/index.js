@@ -16,7 +16,10 @@ import ScoreSetView from '@/components/screens/ScoreSetView'
 import SearchView from '@/components/screens/SearchView'
 import SettingsScreen from '@/components/screens/SettingsScreen'
 import UsersView from '@/components/screens/UsersView'
+import VariantScreen from '@/components/screens/VariantScreen'
 import store from '@/store'
+
+import config from '@/config'
 
 const routes = [{
   path: '/',
@@ -99,7 +102,14 @@ const routes = [{
   props: (route) => ({
     itemId: route.params.urn,
   })
-}, {
+}, ...config.CLINICAL_FEATURES_ENABLED ? [{
+  path: '/variants/:urn',
+  name: 'variant',
+  component: VariantScreen,
+  props: (route) => ({
+    variantUrn: route.params.urn,
+  })
+}] : [], {
   name: 'pubmedPublicationIdentifier',
   path: '/publication-identifiers/pubmed/:identifier',
   component: PublicationIdentifierView,

@@ -155,20 +155,27 @@
                   </span>
                   <span v-if="validationErrors.contributors" class="mave-field-error">{{validationErrors.contributors}}</span>
                 </div>
-                <div v-if="itemStatus == 'NotLoaded' || this.item.private == true">
+                <div v-if="itemStatus != 'NotLoaded'">
                   <div class="field">
                     <span class="p-float-label">
-                      <Dropdown v-model="licenseId" :id="$scopedId('input-targetLicenseId')" :options="licenses"
-                        optionLabel="longName" optionValue="id" style="width: 50%"/>
+                      <Dropdown v-model="licenseId" :id="$scopedId('input-targetLicenseId')" :options="selectableLicenses"
+                        optionLabel="longName" optionValue="id" style="width: 100%" />
                       <label :for="$scopedId('input-targetLicenseId')">License</label>
                     </span>
-                    <span v-if="validationErrors['targetSequence.taxonomy']" class="mave-field-error">{{validationErrors['targetSequence.taxonomy']}}</span>
+                    <span v-if="validationErrors.licenseId" class="mave-field-error">{{validationErrors.licenseId}}</span>
                   </div>
-                  <Message v-if="licenseId && licenses && licenses.find((l) => l.id == licenseId)?.shortName != 'CC0'"
-                    severity="warn">
-                    Choosing a license with these restrictions may cause your dataset to be excluded from data federation
-                    and aggregation by MaveDB collaborators.
-                  </Message>
+                  <div v-if="licenseId && licenses && licenses.find((l) => l.id == licenseId)?.active !== true">
+                    <Message severity="warn">
+                      The currently selected license is outdated and no longer supported for new score sets. We highly recommend switching to an updated license
+                      to ensure your dataset is not excluded from data federation and aggregation by MaveDB collaborators.
+                    </Message>
+                  </div>
+                  <div v-else-if="licenseId && licenses && licenses.find((l) => l.id == licenseId)?.shortName != 'CC0'">
+                    <Message severity="warn">
+                      Choosing a license with these restrictions may cause your dataset to be excluded from data federation
+                      and aggregation by MaveDB collaborators.
+                    </Message>
+                  </div>
                   <div class="field">
                     <span class="p-float-label">
                       <Chips
@@ -936,6 +943,9 @@ import { TARGET_GENE_CATEGORIES, textForTargetGeneCategory } from '@/lib/target-
       defaultLicenseId: function () {
         return this.licenses ? this.licenses.find((license) => license.shortName == 'CC0')?.id : null
       },
+      selectableLicenses: function () {
+        return this.licenses ? this.licenses.filter((license) => this.licenseIsSelectable(license)) : []
+      },
       geneNamesAsObject: function () {
         // Heinous workaround for string filtration, see: https://github.com/primefaces/primevue/issues/2059
         // When this is fixed, we'll need to also remove object accessors in other miscellaneous helpers below.
@@ -1399,6 +1409,16 @@ import { TARGET_GENE_CATEGORIES, textForTargetGeneCategory } from '@/lib/target-
         // if no search text, then return all taxonomy list. Otherwise, return the searching results.
         // If not do in this way, dropdown button can't work.
         this.setTaxonomySearch(event.query)
+      },
+
+      // A license is selectable if it is the active license for a score set or if it is marked as active
+      // in the backend.
+      licenseIsSelectable: function(license) {
+        if (this.item?.license.id === license.id) {
+          return true
+        } else {
+          return license.active
+        }
       },
 
       targetsCleared: function () {

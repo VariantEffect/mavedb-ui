@@ -332,11 +332,20 @@
                       </Message>
                     </div>
                   </div>
-                  <div v-if="licenseId && licenses && licenses.find((l) => l.id == licenseId)?.shortName == 'Other - See Data Usage Guidelines'"
+                  <div class="mavedb-wizard-row">
+                    <div class="mavedb-wizard-help">
+                      Would you like to define any additional restrictions governing the usage of data within this score set?
+                    </div>
+                    <div class="mavedb-wizard-content">
+                      <InputSwitch v-model="hasCustomUsagePolicy" :aria-labelledby="$scopedId('input-has-custom-usage-policy')" />
+                      <div class="mavedb-switch-value">{{ hasCustomUsagePolicy ? 'Yes, I would like to define additional usage guidelines' : 'No, I do not need to define additional usage guidenlines' }}</div>
+                    </div>
+                  </div>
+                  <div v-if="hasCustomUsagePolicy"
                     class="mavedb-wizard-row">
                     <div class="mavedb-wizard-help">
                       <label>
-                        A license and/or any restrictions governing the usage of the data in this score set.
+                        Any additional guidelines governing the usage of the data in this score set.
                       </label>
                       <div class="mavedb-help-small">
                         This may assert, for example, the original author's right to publish the data first.
@@ -594,7 +603,7 @@
                   <div class="mavedb-wizard-help">
                     <label>Copy target from a previously created target</label>
                     <div class="mavedb-help-small">
-                      Use this autocomplete field to find an existing target in MaveDB and fill this target with its metadata. You'll still be able to edit any fields below.
+                      Use this autocomplete field to find an existing target from one of your published or unpublished score sets in MaveDB and fill this target with its metadata. You'll still be able to edit any fields below.
                     </div>
                   </div>
                   <div class="mavedb-wizard-content field">
@@ -1232,7 +1241,7 @@ export default {
       targetGeneIdentifierSuggestions[dbName] = useItems({ itemTypeName: `${dbName.toLowerCase()}-identifier-search` })
     }
 
-    const licenses = useItems({itemTypeName: 'license'})
+    const licenses = useItems({itemTypeName: 'active-license'})
     const taxonomies = useItems({itemTypeName: 'taxonomy'})
     const taxonomySuggestions = useItems({itemTypeName: 'taxonomy-search'})
     const geneNames = useItems({ itemTypeName: 'gene-names' })
@@ -1296,6 +1305,7 @@ export default {
     abstractText: null,
     methodText: null,
     licenseId: null,
+    hasCustomUsagePolicy: false,
     dataUsagePolicy: null,
 
     contributors: [],
@@ -2101,6 +2111,7 @@ export default {
         this.methodText = this.item.methodText
         this.licenseId = this.item.license.id
         this.dataUsagePolicy = this.item.dataUsagePolicy
+        this.hasCustomUsagePolicy = this.dataUsagePolicy ? true : false
 
         this.contributors = _.sortBy(this.item.contributors, ['familyName', 'givenName', 'orcidId'])
         this.doiIdentifiers = this.item.doiIdentifiers
@@ -2137,6 +2148,7 @@ export default {
         this.abstractText = null
         this.methodText = null
         this.licenseId = this.defaultLicenseId
+        this.hasCustomUsagePolicy = false
         this.dataUsagePolicy = null
 
         this.contributors = []
@@ -2176,7 +2188,7 @@ export default {
       ).filter(
         secondary => !primaryPublicationIdentifiers.some(primary => primary.identifier == secondary.identifier && primary.dbName == secondary.dbName)
       )
-      console.log(this.scoreRanges)
+
       const editedFields = {
         experimentUrn: this.experimentUrn ? this.experimentUrn : this.experiment?.urn,
         title: this.title,
@@ -2189,7 +2201,7 @@ export default {
         doiIdentifiers: this.doiIdentifiers.map((identifier) => _.pick(identifier, 'identifier')),
         primaryPublicationIdentifiers: primaryPublicationIdentifiers,
         secondaryPublicationIdentifiers: secondaryPublicationIdentifiers,
-        dataUsagePolicy: this.dataUsagePolicy,
+        dataUsagePolicy: this.hasCustomUsagePolicy ? this.dataUsagePolicy : null,
         extraMetadata: {},
 
         scoreRanges: {

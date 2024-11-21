@@ -11,7 +11,7 @@ const itemTypes = {
     }
   },
   'controlled-keywords-variant-search': {
-    name: 'controlled-keywords-variant-library-search', 
+    name: 'controlled-keywords-variant-library-search',
     restCollectionName: 'controlled-keywords',
     httpOptions: {
       list: {
@@ -21,7 +21,7 @@ const itemTypes = {
     }
   },
   'controlled-keywords-endo-system-search': {
-    name: 'controlled-keyword-endogenous-locus-library-method-system', 
+    name: 'controlled-keyword-endogenous-locus-library-method-system',
     restCollectionName: 'controlled-keywords',
     httpOptions: {
       list: {
@@ -31,7 +31,7 @@ const itemTypes = {
     }
   },
   'controlled-keywords-endo-mechanism-search': {
-    name: 'controlled-keywords-endogenous-locus-library-method-mechanism', 
+    name: 'controlled-keywords-endogenous-locus-library-method-mechanism',
     restCollectionName: 'controlled-keywords',
     httpOptions: {
       list: {
@@ -41,7 +41,7 @@ const itemTypes = {
     }
   },
   'controlled-keywords-in-vitro-system-search': {
-    name: 'controlled-keywords-in-vitro-construct-library-method-system', 
+    name: 'controlled-keywords-in-vitro-construct-library-method-system',
     restCollectionName: 'controlled-keywords',
     httpOptions: {
       list: {
@@ -51,7 +51,7 @@ const itemTypes = {
     }
   },
   'controlled-keywords-in-vitro-mechanism-search': {
-    name: 'controlled-keywords-in-vitro-construct-library-method-mechanism', 
+    name: 'controlled-keywords-in-vitro-construct-library-method-mechanism',
     restCollectionName: 'controlled-keywords',
     httpOptions: {
       list: {
@@ -61,7 +61,7 @@ const itemTypes = {
     }
   },
   'controlled-keywords-delivery-search': {
-    name: 'controlled-keywords-delivery-method', 
+    name: 'controlled-keywords-delivery-method',
     restCollectionName: 'controlled-keywords',
     httpOptions: {
       list: {
@@ -71,7 +71,7 @@ const itemTypes = {
     }
   },
   'controlled-keywords-phenotypic-dimensionality-search': {
-    name: 'controlled-keywords-phenotypic-assay-dimensionality', 
+    name: 'controlled-keywords-phenotypic-assay-dimensionality',
     restCollectionName: 'controlled-keywords',
     httpOptions: {
       list: {
@@ -81,7 +81,7 @@ const itemTypes = {
     }
   },
   'controlled-keywords-phenotypic-method-search': {
-    name: 'controlled-keywords-phenotypic-assay-method', 
+    name: 'controlled-keywords-phenotypic-assay-method',
     restCollectionName: 'controlled-keywords',
     httpOptions: {
       list: {
@@ -91,7 +91,7 @@ const itemTypes = {
     }
   },
   'controlled-keywords-phenotypic-modle-system-search': {
-    name: 'controlled-keywords-phenotypic-assay-model-system', 
+    name: 'controlled-keywords-phenotypic-assay-model-system',
     restCollectionName: 'controlled-keywords',
     httpOptions: {
       list: {
@@ -101,7 +101,7 @@ const itemTypes = {
     }
   },
   'controlled-keywords-phenotypic-profiling-strategy-search': {
-    name: 'controlled-keywords-phenotypic-assay-profiling-strategy', 
+    name: 'controlled-keywords-phenotypic-assay-profiling-strategy',
     restCollectionName: 'controlled-keywords',
     httpOptions: {
       list: {
@@ -111,7 +111,7 @@ const itemTypes = {
     }
   },
   'controlled-keywords-phenotypic-sequencing-type-search': {
-    name: 'controlled-keywords-phenotypic-assay-sequencing-read-type', 
+    name: 'controlled-keywords-phenotypic-assay-sequencing-read-type',
     restCollectionName: 'controlled-keywords',
     httpOptions: {
       list: {
@@ -143,6 +143,16 @@ const itemTypes = {
   'license': {
     name: 'license', // TODO Redundant, change this structure
     restCollectionName: 'licenses'
+  },
+  'active-license': {
+    name: 'active-license', // TODO Redundant, change this structure
+    restCollectionName: 'active-licenses',
+    httpOptions: {
+      list: {
+        method: 'get',
+        url: `${config.apiBaseUrl}/licenses/active`
+      }
+    }
   },
   'pubmedPublicationIdentifier': {
     name: 'pubmedPublicationIdentifier', // TODO Redundant, change this structure
@@ -237,7 +247,7 @@ const itemTypes = {
     httpOptions: {
       list: {
         method: 'post',
-        url: `${config.apiBaseUrl}/target-genes/search`
+        url: `${config.apiBaseUrl}/me/target-genes/search`
       }
     }
   },

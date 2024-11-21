@@ -457,7 +457,7 @@ export default {
       )
     },
     evidenceStrengths: function() {
-      if (config.CLINICAL_FEATURES_ENABLED) {
+      if (this.config.CLINICAL_FEATURES_ENABLED) {
         return {
           'urn:mavedb:00000050-a-1': {
             oddsOfPathogenicity: {

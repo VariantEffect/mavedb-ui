@@ -196,7 +196,7 @@ export default defineComponent({
     },
 
     hasTabBar: function() {
-      return config.CLINICAL_FEATURES_ENABLED && this.vizOptions.length > 1
+      return this.config.CLINICAL_FEATURES_ENABLED && this.vizOptions.length > 1
     },
 
     showControls: function() {
@@ -362,7 +362,7 @@ export default defineComponent({
       }
 
       let ranges = []
-      if (config.CLINICAL_FEATURES_ENABLED) {
+      if (this.config.CLINICAL_FEATURES_ENABLED) {
         switch (this.scoreSet.urn) {
           case 'urn:mavedb:00000097-0-1':
             ranges = [{

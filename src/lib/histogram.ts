@@ -762,7 +762,7 @@ export default function makeHistogram(): Histogram {
             .attr('fill-opacity', '.25')
             .attr('stroke', (d) => d.options.color)
             .attr('stroke-width', 1.5)
-            .attr('d', (d) => {console.log(d); return path(d.line)})
+            .attr('d', (d) => path(d.line))
 
         // Refresh the hover and highlight boxes.
         const hovers = svg.select('g.histogram-hovers')

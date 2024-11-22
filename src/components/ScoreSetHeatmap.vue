@@ -92,7 +92,7 @@ export default {
     },
     isNucleotideHeatmap: function() {
       const targetCategory = _.get(this.scoreSet, 'targetGenes[0].category')
-      const proteinVariantsAreDefined = this.scores.every((elem) => elem.hgvs_pro !== null)
+      const proteinVariantsAreDefined = this.scores.every((elem) => !isNaN(elem.hgvs_pro))
       return !proteinVariantsAreDefined && (targetCategory === 'other_noncoding' || targetCategory == "regulatory")
     },
     heatmapRows: function() {

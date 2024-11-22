@@ -91,7 +91,9 @@ export default {
       return [...this.simpleVariants || [], ...this.wtVariants || []]
     },
     isNucleotideHeatmap: function() {
-      return _.get(this.scoreSet, 'targetGenes[0].category') === 'other_noncoding'
+      const targetCategory = _.get(this.scoreSet, 'targetGenes[0].category')
+      const proteinVariantsAreDefined = this.scores.every((elem) => elem.hgvs_pro !== null)
+      return !proteinVariantsAreDefined && (targetCategory === 'other_noncoding' || targetCategory == "regulatory")
     },
     heatmapRows: function() {
       return this.isNucleotideHeatmap ? HEATMAP_NUCLEOTIDE_ROWS : HEATMAP_AMINO_ACID_ROWS

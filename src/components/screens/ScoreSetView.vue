@@ -53,6 +53,13 @@
             <span>{{ item.title || 'Untitled score set' }}</span>
             <span v-if="item.urn" class="mave-score-set-urn">{{ item.urn }}</span>
           </div>
+          <div class="mave-collection-badges">
+            <CollectionBadge
+              v-for="badgeName in item.officialCollectionNames"
+              :key="badgeName"
+              :badgeName="badgeName"
+            />
+          </div>
           <div v-if="userIsAuthenticated">
             <div v-if="!item.publishedDate" class="mave-screen-title-controls">
               <Button v-if="userIsAuthorized.update" class="p-button-sm" @click="editItem">Edit</Button>
@@ -410,6 +417,7 @@ import Message from 'primevue/message'
 import ProgressSpinner from 'primevue/progressspinner'
 import ScrollPanel from 'primevue/scrollpanel';
 
+import CollectionBadge from '@/components/CollectionBadge'
 import ScoreSetHeatmap from '@/components/ScoreSetHeatmap'
 import ScoreSetHistogram from '@/components/ScoreSetHistogram'
 import EntityLink from '@/components/common/EntityLink'
@@ -430,7 +438,7 @@ import { ref } from 'vue'
 
 export default {
   name: 'ScoreSetView',
-  components: { Accordion, AccordionTab, AutoComplete, Button, Chip, DefaultLayout, EntityLink, ScoreSetHeatmap, ScoreSetHistogram, TabView, TabPanel, Message, DataTable, Column, ProgressSpinner, ScrollPanel, PageLoading, ItemNotFound },
+  components: { Accordion, AccordionTab, AutoComplete, Button, Chip, CollectionBadge, DefaultLayout, EntityLink, ScoreSetHeatmap, ScoreSetHistogram, TabView, TabPanel, Message, DataTable, Column, ProgressSpinner, ScrollPanel, PageLoading, ItemNotFound },
   computed: {
     contributors: function() {
       return _.sortBy(
@@ -912,6 +920,13 @@ export default {
 .p-float-label {
   display: flex;
   width: 100%;
+}
+
+.mave-collection-badges {
+  flex: 1 1 auto;
+  padding: 0 0 0 7px;
+  font-size: 12px;
+  line-height: 29px;
 }
 
 /* Score set details */

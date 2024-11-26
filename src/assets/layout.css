@@ -15,6 +15,7 @@
 }
 
 .mave-screen-title-bar {
+  align-items: center;
   display: flex;
   flex-direction: row;
   justify-content: space-between;
@@ -22,6 +23,10 @@
   padding: 0 0 5px 0;
   border-bottom: 1px solid #ccc;
   margin: 10px 0;
+}
+
+.mave-screen-title {
+  flex: 0 0 auto;
 }
 
 .mave-screen-title-controls {

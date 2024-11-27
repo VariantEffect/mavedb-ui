@@ -1224,14 +1224,14 @@ export default {
   },
 
   setup: () => {
-    const editableExperiments = useItems({
-      itemTypeName: 'experiment',
-      options: {
-        filter: {
-          query: { l: { path: 'something', meta_analysis: 'false' }, r: { constant: 'value' } }
-        }
-      }
-    })
+    const editableExperiments = useItems({ itemTypeName: 'experiment' })
+    //   itemTypeName: 'experiment',
+    //   options: {
+    //     filter: {
+    //       query: { l: { path: 'something', meta_analysis: 'false' }, r: { constant: 'value' } }
+    //     }
+    //   }
+    // })
 
     const publicationIdentifierSuggestions = useItems({ itemTypeName: 'publication-identifier-search' })
     const externalPublicationIdentifierSuggestions = useItems({ itemTypeName: 'external-publication-identifier-search' })

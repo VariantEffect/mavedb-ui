@@ -133,7 +133,15 @@ const itemTypes = {
   'experiment': {
     name: 'experiment', // TODO Redundant, change this structure
     restCollectionName: 'experiments',
-    primaryKey: 'urn'
+    httpOptions: {
+      list: {
+        method: 'post',
+        url: `${config.apiBaseUrl}/me/experiments/search`,
+        data: {
+          "meta_analysis": false
+        }
+      }
+    }
   },
   'experimentSet': {
     name: 'experimentSet',

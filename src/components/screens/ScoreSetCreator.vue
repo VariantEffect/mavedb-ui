@@ -106,7 +106,7 @@
                             style="width: 100%;"
                           >
                             <template #option="slotProps">
-                              {{slotProps.option.urn}}: {{slotProps.option.title}}
+                              {{ slotProps.option.urn }}: {{ slotProps.option.title }}
                             </template>
                             <template #empty>
                               <div style="padding: 10px; text-align:center;">
@@ -1224,15 +1224,6 @@ export default {
   },
 
   setup: () => {
-    const editableExperiments = useItems({ itemTypeName: 'experiment' })
-    //   itemTypeName: 'experiment',
-    //   options: {
-    //     filter: {
-    //       query: { l: { path: 'something', meta_analysis: 'false' }, r: { constant: 'value' } }
-    //     }
-    //   }
-    // })
-
     const publicationIdentifierSuggestions = useItems({ itemTypeName: 'publication-identifier-search' })
     const externalPublicationIdentifierSuggestions = useItems({ itemTypeName: 'external-publication-identifier-search' })
 
@@ -1253,7 +1244,7 @@ export default {
 
       ...useFormatters(),
       ...useItem({ itemTypeName: 'scoreSet' }),
-      editableExperiments: editableExperiments.items,
+      editableExperiments: ref([]),
       licenses: licenses.items,
       publicationIdentifierSuggestions: publicationIdentifierSuggestions.items,
       setPublicationIdentifierSearch: (text) => publicationIdentifierSuggestions.setRequestBody({ text }),
@@ -1568,6 +1559,10 @@ export default {
         console.log(this.scoreRanges)
       }
     }
+  },
+
+  mounted: async function() {
+    await this.loadEditableExperiment()
   },
 
   methods: {
@@ -1894,6 +1889,16 @@ export default {
     ////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
     // Form fields
     ////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+
+    loadEditableExperiment: async function() {
+      try {
+        const response = await axios.post(`${config.apiBaseUrl}/me/experiments/search`, {metaAnalysis: false})
+        this.editableExperiments = response.data
+      } catch (error) {
+        console.error("Error loading experiments:", error)
+        this.editableExperiments = [] // Reset in case of an error
+      }
+    },
 
     populateExperimentMetadata: function (event) {
       this.abstractText = event.value.abstractText

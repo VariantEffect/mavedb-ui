@@ -130,11 +130,6 @@ const itemTypes = {
       }
     }
   },
-  'experiment': {
-    name: 'experiment', // TODO Redundant, change this structure
-    restCollectionName: 'experiments',
-    primaryKey: 'urn'
-  },
   'experimentSet': {
     name: 'experimentSet',
     restCollectionName: 'experiment-sets',

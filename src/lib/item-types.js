@@ -241,6 +241,11 @@ const itemTypes = {
     restCollectionName: 'score-sets',
     primaryKey: 'urn'
   },
+  'collection': {
+    name: 'collection',
+    restCollectionName: 'collections',
+    primaryKey: 'urn'
+  },
   'target-gene-search': {
     name: 'target-gene', // TODO Redundant, change this structure
     restCollectionName: 'target-genes',

@@ -97,10 +97,9 @@ export default {
 
         if (response.status == 200) {
             const allCollections = response.data
-            const ownedCollections = allCollections["owner"]
             const adminCollections = allCollections["admin"]
             const editorCollections = allCollections["editor"]
-            this.collections = ownedCollections.concat(adminCollections, editorCollections)
+            this.collections = adminCollections.concat(editorCollections)
         } else if (response.data && response.data.detail) {
             // TODO what to do in event of error?
         }

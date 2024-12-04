@@ -8,7 +8,13 @@
         label="Add to collection"
     ></Button>
 
-    <Dialog v-model:visible="visible" modal header="Add to collection" :style="{ width: '25rem' }">
+    <Dialog
+        v-model:visible="visible"
+        modal
+        header="Add to collection"
+        :style="{ width: '25rem' }"
+        :close-on-escape="false"
+    >
         <div class="flex align-items-center gap-3 mb-3">
             <!-- TODO currently multiple collections with same name are allowed in db, so may need to show urns in the dropdown alongside the name -->
             <!-- TODO maybe show more information, such as public/private status and who or number of users the collection has been shared with -->
@@ -18,21 +24,30 @@
                 option-label="name"
                 option-value="urn"
                 placeholder="Select a collection" 
-                lass="w-full md:w-14rem" 
+                class="w-full md:w-14rem" 
             />
         </div>
         <div class="add-collection-buttons">
             <Button label="Create new collection" class="create-new-collection-button" @click="creatorVisible = true"></Button>
             <div class="add-collection-save-cancel">
                 <!-- TODO fix bug: when dialog buttons happen to lie on top of the score histogram, score range info displays off to the side when dialog is closed -->
-                <Button label="Cancel" severity="secondary" @click="visible = false"></Button>
-                <Button label="Save" @click="saveToCollection"></Button>
+                <Button label="Cancel" severity="secondary" @click="visible = false" />
+                <Button label="Save" @click="saveToCollection" />
             </div>
         </div>
     </Dialog>
 
-    <Dialog v-model:visible="creatorVisible" modal header="Create collection" :style="{ width: '25rem' }">
-        <CollectionCreator></CollectionCreator>
+    <Dialog
+        v-model:visible="creatorVisible"
+        modal
+        header="Create collection"
+        :style="{ width: '25rem' }"
+        :close-on-escape="false"
+    >
+        <CollectionCreator
+            @canceled="creatorVisible = false"
+            @created-collection="childComponentCreatedCollection"
+        />
     </Dialog>
 </div>
 
@@ -154,7 +169,14 @@ export default {
             }
         },
 
-        // fetch collection
+        childComponentCreatedCollection: function(collection) {
+            // set creatorVisible to false
+            this.creatorVisible = false
+            // refresh the list of collections to display (or at least add the new collection)
+            this.collections.push(collection)
+            // select the new collection in the dropdown
+            this.selectedCollectionUrn = collection.urn
+        }
     }
 }
 

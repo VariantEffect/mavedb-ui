@@ -1811,7 +1811,7 @@ export default {
         this.$toast.add({ severity: 'info', summary: `${currentTargetGene.targetAccession.accession} is already a protein accession.`, life: 3000 })
         return
       }
-      const url = `${config.apiBaseUrl}/hgvs/transcripts/protein/${currentTargetGene.targetAccession.accession}`
+      const url = `${config.apiBaseUrl}/transcripts/protein/${currentTargetGene.targetAccession.accession}`
       try {
         const response = await axios.get(
           url,
@@ -1834,7 +1834,7 @@ export default {
     },
 
     fetchTargetAccessionsByAssembly: async function (assembly) {
-      const url = `${config.apiBaseUrl}/hgvs/${assembly.trim()}/accessions`
+      const url = `${config.apiBaseUrl}/transcripts/${assembly.trim()}/accessions`
       try {
         const response = await axios.get(
           url,
@@ -1853,7 +1853,7 @@ export default {
     },
 
     fetchTargetAccessionsByGene: async function (gene) {
-      const url = `${config.apiBaseUrl}/hgvs/transcripts/gene/${gene.trim()}`
+      const url = `${config.apiBaseUrl}/transcripts/gene/${gene.trim()}`
       try {
         const response = await axios.get(
           url,

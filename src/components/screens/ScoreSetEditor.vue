@@ -1186,7 +1186,7 @@ import { TARGET_GENE_CATEGORIES, textForTargetGeneCategory } from '@/lib/target-
       },
 
       fetchTargetAccessionsByAssembly: async function (assembly) {
-        const url = `${config.apiBaseUrl}/hgvs/${assembly}/accessions`
+        const url = `${config.apiBaseUrl}/transcripts/${assembly}/accessions`
         try {
           const response = await axios.get(
             url,
@@ -1205,7 +1205,7 @@ import { TARGET_GENE_CATEGORIES, textForTargetGeneCategory } from '@/lib/target-
       },
 
       fetchTargetAccessionsByGene: async function (gene) {
-        const url = `${config.apiBaseUrl}/hgvs/transcripts/gene/${gene}`
+        const url = `${config.apiBaseUrl}/transcripts/gene/${gene}`
         try {
           const response = await axios.get(
             url,
@@ -1235,7 +1235,7 @@ import { TARGET_GENE_CATEGORIES, textForTargetGeneCategory } from '@/lib/target-
           this.$toast.add({ severity: 'info', summary: `${this.targetGene.targetAccession.accession} is already a protein accession.`, life: 3000 })
           return
         }
-        const url = `${config.apiBaseUrl}/hgvs/transcripts/protein/${this.targetGene.targetAccession.accession}`
+        const url = `${config.apiBaseUrl}/transcripts/protein/${this.targetGene.targetAccession.accession}`
         try {
           const response = await axios.get(
             url,

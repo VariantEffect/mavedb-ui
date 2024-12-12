@@ -3,9 +3,68 @@
         <div v-if="itemStatus=='Loaded'" class="mave-collection">
             <div class="mave-1000px-col">
                 <div class="mave-screen-title-bar">
-                    <div class="mave-screen-title">{{ item.name }}</div>
+                    <!-- TODO see if this if-else structure can be simplified -->
+                    <div v-if="userIsAuthenticated">
+                        <div v-if="userIsAuthorized.update">
+                             <!-- TODO make input text box wider
+                             add spacing between input text box and buttons, and between buttons -->
+                            <Inplace
+                                :active="displayCollectionNameEdit"
+                                class="mave-screen-collection-title"
+                                @open="displayCollectionNameEdit = true; editName = item.name"
+                            >
+                                <template #display>
+                                    {{ item.name }}
+                                </template>
+                                <template #content>
+                                    <InputText
+                                        v-model="editName"
+                                        autofocus
+                                        @keyup.enter="saveCollectionName"
+                                        @keyup.escape="displayCollectionNameEdit = false"
+                                    />
+                                    <Button icon="pi pi-check" @click="saveCollectionName" />
+                                    <Button icon="pi pi-times" severity="danger" @click="displayCollectionNameEdit = false" />
+                                </template>
+                            </Inplace>
+                        </div>
+                        <div v-else>
+                            <div class="mave-screen-title">{{ item.name }}</div>
+                        </div>
+                    </div>
+                    <div v-else>
+                        <div class="mave-screen-title">{{ item.name }}</div>
+                    </div>
                 </div>
-                <div v-if="item.description" class="mave-collection-description">{{ item.description }}</div>               
+                <div v-if="userIsAuthenticated">
+                    <div v-if="userIsAuthorized.update">
+                        <Inplace
+                            :active="displayCollectionDescriptionEdit"
+                            class="mave-collection-description"
+                            @open="displayCollectionDescriptionEdit = true; editDescription = item.description"
+                        >
+                            <template #display>
+                                {{ item.description || "(Click here to add description)" }}
+                            </template>
+                            <template #content>
+                                <InputText
+                                    v-model="editDescription"
+                                    autofocus
+                                    @keyup.enter="saveCollectionDescription"
+                                    @keyup.escape="displayCollectionDescriptionEdit = false"
+                                />
+                                <Button icon="pi pi-check" @click="saveCollectionDescription" />
+                                <Button icon="pi pi-times" severity="danger" @click="displayCollectionDescriptionEdit = false" />
+                            </template>
+                        </Inplace>
+                    </div>
+                    <div v-else>
+                        <div v-if="item.description" class="mave-collection-description">{{ item.description }}</div> 
+                    </div> 
+                </div>
+                <div v-else>
+                    <div v-if="item.description" class="mave-collection-description">{{ item.description }}</div> 
+                </div>           
             </div>
             <div class="mave-1000px-col">
                 <div v-if="item.creationDate">Created {{ formatDate(item.creationDate) }} <span v-if="item.createdBy">
@@ -36,7 +95,7 @@
                 </div>
                 <div v-else>No associated experiments yet</div>
 
-                <div class="mave-collection-section-title">Contributors</div>
+                <div class="mave-collection-section-title">User Permissions</div>
                 <!-- TODO think about what to show if there are no admins (shouldn't happen), editors, or viewers.
                 Keep in mind that we shouldn't show the editors or viewers sections to non-collection-admins at all.
                 But we might want to show if those sections are blank to collection admins. -->
@@ -86,18 +145,23 @@
 
 <script>
 
+import axios from 'axios'
+import Button from 'primevue/button'
+import Inplace from 'primevue/inplace'
+import InputText from 'primevue/inputtext'
+
 import DefaultLayout from '@/components/layout/DefaultLayout'
 import ItemNotFound from '@/components/common/ItemNotFound'
 import PageLoading from '@/components/common/PageLoading'
 import config from '@/config'
-// import useAuth from '@/composition/auth'
+import useAuth from '@/composition/auth'
 import useFormatters from '@/composition/formatters'
 import useItem from '@/composition/item'
 
 export default {
     name: 'CollectionView',
 
-    components: { DefaultLayout, ItemNotFound, PageLoading },
+    components: { Button, DefaultLayout, Inplace, InputText, ItemNotFound, PageLoading },
 
     props: {
         itemId: {
@@ -106,15 +170,32 @@ export default {
         }
     },
 
+    data: () => ({
+        userIsAuthorized: {
+            delete: false,
+            publish: false,
+            update: false,
+            // add authorizations for adding/deleting data sets and contributors
+        },
+        editName: null,
+        displayCollectionNameEdit: false,
+        editDescription: null,
+        displayCollectionDescriptionEdit: false,
+    }),
+
     setup: () => {
-        // const {userIsAuthenticated} = useAuth()
+        const {userIsAuthenticated} = useAuth()
         return {
             config: config,
-            // userIsAuthenticated,
+            userIsAuthenticated,
 
             ...useFormatters(),
             ...useItem({ itemTypeName: 'collection' }),
         }
+    },
+
+    mounted: async function() {
+        await this.checkUserAuthorization()
     },
 
     watch: {
@@ -125,6 +206,73 @@ export default {
                 }
             },
             immediate: true
+        }
+    },
+
+    methods: {
+        checkUserAuthorization: async function() {
+            await this.checkAuthorization()
+        },
+
+        checkAuthorization: async function() {
+            // Response should be true to get authorization
+            const actions = ['delete', 'publish', 'update']
+            try {
+                for (const action of actions) {
+                    let response = await axios.get(`${config.apiBaseUrl}/permissions/user-is-permitted/collection/${this.itemId}/${action}`)
+                    this.userIsAuthorized[action] = response.data
+                }
+            } catch (err) {
+                console.log(`Error to get authorization:`, err)
+            }
+        },
+
+        saveCollectionName: async function() {
+            if (this.editName) {
+                const updatedCollection = {
+                    "name": this.editName
+                }
+                let response = null
+                try {
+                    response = await axios.put(`${config.apiBaseUrl}/collections/${this.item.urn}`, updatedCollection)
+                } catch (e) {
+                    response = e.response || { status: 500 }
+                    this.$toast.add({ severity: 'error', summary: 'Error saving name to collection', life: 3000 })
+                }
+                if (response.status == 200) {
+                    this.reloadItem(this.itemId)
+                    this.displayCollectionNameEdit = false
+                    this.$toast.add({ severity: 'success', summary: 'Saved new name to collection.', life: 3000 })
+                } else {
+                    console.log(response)
+                }
+            } else {
+                this.$toast.add({ severity: 'error', summary: 'Cannot save blank name to collection', life: 3000 })
+            }   
+        },
+
+        saveCollectionDescription: async function() {
+            if (this.editDescription === "") {
+                // if user enters a blank string, update the description to be null
+                this.editDescription = null
+            }
+            const updatedCollection = {
+                "description": this.editDescription
+            }
+            let response = null
+            try {
+                response = await axios.put(`${config.apiBaseUrl}/collections/${this.item.urn}`, updatedCollection)
+            } catch (e) {
+                response = e.response || { status: 500 }
+                this.$toast.add({ severity: 'error', summary: 'Error saving description to collection', life: 3000 })
+            }
+            if (response.status == 200) {
+                this.reloadItem(this.itemId)
+                this.displayCollectionDescriptionEdit = false
+                this.$toast.add({ severity: 'success', summary: 'Saved description to collection.', life: 3000 })
+            } else {
+                console.log(response)
+            }  
         }
     }
 }
@@ -137,8 +285,9 @@ export default {
   padding: 20px;
 }
 
-.mave-collection-description {
+.mave-collection-description:deep(.p-inplace-display) {
   margin: 0 0 10px 0;
+  padding-left: 0;
 }
 
 .mave-collection-section-title {
@@ -158,6 +307,12 @@ export default {
   padding: 0 0 5px 0;
   border-bottom: 1px dashed #ccc;
   margin: 20px 0 10px 0;
+}
+
+.mave-screen-collection-title:deep(.p-inplace-display) {
+    flex: 0 0 auto;
+    font-size: 28px;
+    padding: 0;
 }
 
 </style>

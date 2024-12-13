@@ -35,6 +35,7 @@
                     <div v-else>
                         <div class="mave-screen-title">{{ item.name }}</div>
                     </div>
+                    <!-- TODO add badge if there is one associated -->
                 </div>
                 <div v-if="userIsAuthenticated">
                     <div v-if="userIsAuthorized.update">
@@ -75,7 +76,12 @@
                     <a :href="`https://orcid.org/${item.modifiedBy.orcidId}`" target="blank"><img src="@/assets/ORCIDiD_icon.png"
                         alt="ORCIDiD">{{ item.modifiedBy.firstName }} {{ item.modifiedBy.lastName }}</a></span></div>
 
-                <div class="mave-collection-section-title">Score Sets</div>
+                <div class="mave-collection-section-title">
+                    Score Sets
+                    <div v-if="userIsAuthenticated && userIsAuthorized.add_score_set">
+                        <CollectionScoreSetEditor :collection-urn="item.urn" />
+                    </div>
+                </div>
                 <div v-if="item.scoreSetUrns.length != 0">
                     <ul>
                         <li v-for="scoreSetUrn in item.scoreSetUrns" :key="scoreSetUrn">
@@ -150,6 +156,7 @@ import Button from 'primevue/button'
 import Inplace from 'primevue/inplace'
 import InputText from 'primevue/inputtext'
 
+import CollectionScoreSetEditor from '@/components/CollectionScoreSetEditor'
 import DefaultLayout from '@/components/layout/DefaultLayout'
 import ItemNotFound from '@/components/common/ItemNotFound'
 import PageLoading from '@/components/common/PageLoading'
@@ -161,7 +168,7 @@ import useItem from '@/composition/item'
 export default {
     name: 'CollectionView',
 
-    components: { Button, DefaultLayout, Inplace, InputText, ItemNotFound, PageLoading },
+    components: { Button, CollectionScoreSetEditor, DefaultLayout, Inplace, InputText, ItemNotFound, PageLoading },
 
     props: {
         itemId: {
@@ -175,7 +182,8 @@ export default {
             delete: false,
             publish: false,
             update: false,
-            // add authorizations for adding/deleting data sets and contributors
+            add_score_set: false, // permissions are the same for add score set, remove score set, add experiment, and remove experiment
+            add_role: false, // permissions are the same for add user to role and remove user from role
         },
         editName: null,
         displayCollectionNameEdit: false,
@@ -216,7 +224,7 @@ export default {
 
         checkAuthorization: async function() {
             // Response should be true to get authorization
-            const actions = ['delete', 'publish', 'update']
+            const actions = ['delete', 'publish', 'update', 'add_score_set', 'add_role']
             try {
                 for (const action of actions) {
                     let response = await axios.get(`${config.apiBaseUrl}/permissions/user-is-permitted/collection/${this.itemId}/${action}`)
@@ -229,12 +237,13 @@ export default {
 
         saveCollectionName: async function() {
             if (this.editName) {
-                const updatedCollection = {
+                // TODO check that new name is not same as old name
+                const collectionPatch = {
                     "name": this.editName
                 }
                 let response = null
                 try {
-                    response = await axios.put(`${config.apiBaseUrl}/collections/${this.item.urn}`, updatedCollection)
+                    response = await axios.patch(`${config.apiBaseUrl}/collections/${this.item.urn}`, collectionPatch)
                 } catch (e) {
                     response = e.response || { status: 500 }
                     this.$toast.add({ severity: 'error', summary: 'Error saving name to collection', life: 3000 })
@@ -256,12 +265,13 @@ export default {
                 // if user enters a blank string, update the description to be null
                 this.editDescription = null
             }
-            const updatedCollection = {
+            // TODO check that new description is not same as old description
+            const collectionPatch = {
                 "description": this.editDescription
             }
             let response = null
             try {
-                response = await axios.put(`${config.apiBaseUrl}/collections/${this.item.urn}`, updatedCollection)
+                response = await axios.patch(`${config.apiBaseUrl}/collections/${this.item.urn}`, collectionPatch)
             } catch (e) {
                 response = e.response || { status: 500 }
                 this.$toast.add({ severity: 'error', summary: 'Error saving description to collection', life: 3000 })
@@ -295,6 +305,11 @@ export default {
   padding: 0 0 5px 0;
   border-bottom: 1px solid #ccc;
   margin: 20px 0 10px 0;
+  align-items: center;
+  display: flex;
+  flex-direction: row;
+  justify-content: flex-start;
+  gap: 20px;
 }
 
 .mave-collection-contributors-subsection-title {

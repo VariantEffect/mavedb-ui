@@ -48,6 +48,7 @@
                                 {{ item.description || "(Click here to add description)" }}
                             </template>
                             <template #content>
+                                <!-- TODO change to textarea and make full width. consider where to put buttons -->
                                 <InputText
                                     v-model="editDescription"
                                     autofocus
@@ -79,11 +80,16 @@
                 <div class="mave-collection-section-title">
                     Score Sets
                     <div v-if="userIsAuthenticated && userIsAuthorized.add_score_set">
-                        <CollectionScoreSetEditor :collection-urn="item.urn" />
+                        <CollectionDataSetEditor
+                            :collection-urn="item.urn"
+                            data-set-type="scoreSet"
+                            @saved="childComponentEditedCollection"
+                        />
                     </div>
                 </div>
                 <div v-if="item.scoreSetUrns.length != 0">
                     <ul>
+                        <!-- TODO show more info about score sets and experiments -->
                         <li v-for="scoreSetUrn in item.scoreSetUrns" :key="scoreSetUrn">
                             <router-link :to="{ name: 'scoreSet', params: { urn: scoreSetUrn } }">{{ scoreSetUrn }}</router-link>
                         </li>
@@ -91,7 +97,17 @@
                 </div>
                 <div v-else>No associated score sets yet</div>
 
-                <div class="mave-collection-section-title">Experiments</div>
+                <div class="mave-collection-section-title">
+                    Experiments
+                    <!-- NOTE: permissions are the same for add score set and add experiment -->
+                    <div v-if="userIsAuthenticated && userIsAuthorized.add_score_set">
+                        <CollectionDataSetEditor
+                            :collection-urn="item.urn"
+                            data-set-type="experiment"
+                            @saved="childComponentEditedCollection"
+                        />
+                    </div>
+                </div>
                 <div v-if="item.experimentUrns.length != 0">
                     <ul>
                         <li v-for="experimentUrn in item.experimentUrns" :key="experimentUrn">
@@ -101,7 +117,15 @@
                 </div>
                 <div v-else>No associated experiments yet</div>
 
-                <div class="mave-collection-section-title">User Permissions</div>
+                <div class="mave-collection-section-title">
+                    User Permissions
+                    <div v-if="userIsAuthenticated && userIsAuthorized.add_role">
+                        <CollectionContributorEditor
+                            :collection-urn="item.urn"
+                            @saved="childComponentEditedCollection"
+                        />
+                    </div>
+                </div>
                 <!-- TODO think about what to show if there are no admins (shouldn't happen), editors, or viewers.
                 Keep in mind that we shouldn't show the editors or viewers sections to non-collection-admins at all.
                 But we might want to show if those sections are blank to collection admins. -->
@@ -156,7 +180,8 @@ import Button from 'primevue/button'
 import Inplace from 'primevue/inplace'
 import InputText from 'primevue/inputtext'
 
-import CollectionScoreSetEditor from '@/components/CollectionScoreSetEditor'
+import CollectionContributorEditor from '@/components/CollectionContributorEditor'
+import CollectionDataSetEditor from '@/components/CollectionDataSetEditor'
 import DefaultLayout from '@/components/layout/DefaultLayout'
 import ItemNotFound from '@/components/common/ItemNotFound'
 import PageLoading from '@/components/common/PageLoading'
@@ -168,7 +193,7 @@ import useItem from '@/composition/item'
 export default {
     name: 'CollectionView',
 
-    components: { Button, CollectionScoreSetEditor, DefaultLayout, Inplace, InputText, ItemNotFound, PageLoading },
+    components: { Button, CollectionContributorEditor, CollectionDataSetEditor, DefaultLayout, Inplace, InputText, ItemNotFound, PageLoading },
 
     props: {
         itemId: {
@@ -283,6 +308,10 @@ export default {
             } else {
                 console.log(response)
             }  
+        },
+
+        childComponentEditedCollection: function() {
+            this.reloadItem(this.itemId)
         }
     }
 }

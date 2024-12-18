@@ -24,7 +24,7 @@
     -->
     <div class="contributors-adder">
         <div class="contributors-adder-title">
-            Add contributors
+            Grant user permissions
         </div>
         <div class="flex flex-column gap-2">
             <label for="input-viewers">Viewers</label>
@@ -210,8 +210,8 @@ export default {
         },
 
         saveCollection: async function() {
-            // check for required fields
-            if (this.collectionName != null) {
+            // check that collection name is not null or empty string
+            if (this.collectionName) {
                 // create object that has field names assigned to this.<field name>
                 const newCollection = {
                     name: this.collectionName,

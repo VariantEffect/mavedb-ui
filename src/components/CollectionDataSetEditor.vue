@@ -15,47 +15,23 @@
         :close-on-escape="false"
         @hide="resetDataSetEditor"
     >
-        <div>
-            Add {{dataSetTypeDisplay[dataSetType]}}s
-            <div class="add-data-set-panels">
-                <Chips
-                    v-model="addDataSetInput"
-                    separator=","
-                    :addOnBlur="true"
-                    :allowDuplicate="false"
-                    @keyup.escape="addDataSetInput = []"
-                    placeholder="Type or paste comma-separated URNs"
-                    class="add-data-set-panel"
-                />
-                <!-- TODO allow client to remove individual URNs that have already been validated?
-                Not sure if this is possible with Chips - would need to selectively disable so that input can't be added but chips can be removed. -->
-                <!-- TODO need language to make it clear that ONLY urns which show up in the validated panel will be added, and also pressing validate is not the same as saving. -->
-                <Chips
-                    :disabled="true"
-                    v-model="validDataSetUrnsToAdd"
-                    :placeholder="`Validated ${dataSetTypeDisplay[dataSetType]} URNs`"
-                    class="add-data-set-panel"
-                />
-            </div>
-            <!-- TODO move button to bottom right of left-hand (input) panel -->
-            <Button label="Validate" @click="validateUrns" />
-            <!-- TODO put each item in the validationErrors array on a new line -->
-            <div v-if="validationErrors.length != 0" class="mave-field-error">
-                <div>The following URNs did not validate. Successfully validated {{dataSetTypeDisplay[dataSetType]}}s can still be saved to collection.</div>
-                {{ validationErrors }}
-            </div>
-        </div>
         <div class="flex flex-column gap-2">
-            <label :for="$scopedId('input-remove-data-sets')">Remove {{dataSetTypeDisplay[dataSetType]}}s</label>
-            <!-- TODO consider using virtual scroll option, depending on how large we expect collections to become -->
-            <MultiSelect
-                v-model="dataSetUrnsToRemove"
-                :options="item[`${dataSetType}Urns`]"
-                :placeholder="`Select ${dataSetTypeDisplay[dataSetType]}s`"
-                :maxSelectedLabels="3"
-                class="w-full md:w-20rem"
-                :id="$scopedId('input-remove-data-sets')"
+            <Button label="Remove" icon="pi pi-trash" severity="danger" class="remove-data-set-button" @click="markDataSetsToRemove" :disabled="!selectedDataSets || !selectedDataSets.length" />
+            <DataTable v-model:selection="selectedDataSets" :value="allDataSets" data-key="urn" :row-style="rowStyle" tableStyle="min-width: 50rem">
+                <Column selectionMode="multiple"></Column>
+                <Column field="urn" header="URN"></Column>
+                <!-- TODO add title column once we have full data set objects in allDataSets -->
+            </DataTable>
+            <Chips
+                v-model="addDataSetInput"
+                separator=","
+                :addOnBlur="true"
+                :allowDuplicate="false"
+                @keyup.escape="addDataSetInput = []"
+                placeholder="Type or paste comma-separated URNs"
+                class="add-data-set-input"
             />
+            <Button label="Add" icon="pi pi-plus" class="add-data-set-button" @click="validateUrns" />
         </div>
         <div class="save-cancel-buttons">
             <Button label="Cancel" severity="secondary" @click="visible = false" />
@@ -73,6 +49,8 @@ import axios from 'axios'
 import _ from 'lodash'
 import Button from 'primevue/button'
 import Chips from 'primevue/chips'
+import Column from 'primevue/column';
+import DataTable from 'primevue/datatable';
 import Dialog from 'primevue/dialog'
 import Dropdown from 'primevue/dropdown'
 import MultiSelect from 'primevue/multiselect'
@@ -85,7 +63,7 @@ export default {
 
     emits: ['saved'],
 
-    components: { Button, Chips, Dialog, Dropdown, MultiSelect },
+    components: { Button, Chips, Column, DataTable, Dialog, Dropdown, MultiSelect },
 
     props: {
         collectionUrn: {
@@ -115,12 +93,22 @@ export default {
         }
     },
 
+    computed: {
+        allDataSets() {
+            // for now, just using urns, but will want to grab actual score sets and add title to table
+            const savedDataSets = this.item[`${this.dataSetType}Urns`].map((str) => ({ urn: str, saved: true }))
+            const newDataSets = this.validDataSetUrnsToAdd.map((str) =>({ urn: str, saved: false }))
+            return savedDataSets.concat(newDataSets)
+        }
+    },
+
     data: () => ({
         visible: false,
         addDataSetInput: [],
         validDataSetUrnsToAdd: [],
         validationErrors: [],
         dataSetUrnsToRemove: [],
+        selectedDataSets: [],
         additionErrors: [],
         removalErrors: [],
         dataSetTypeDisplay: {
@@ -130,6 +118,28 @@ export default {
     }),
 
     methods: {
+        rowStyle: function(data) {
+            //if (this.dataSetUrnsToRemove.includes(data.urn)) {
+            if (this.selectedDataSets.includes(data)) {
+                return { backgroundColor: '#FFCCCB' } // light red
+            } else if (data.saved === false) {
+                return { backgroundColor: '#D1FFBD'} // light green
+            }
+            // else if (this.validDataSetUrnsToAdd.includes(data.urn)) {
+            //     return { backgroundColor: '#D1FFBD'} // light green
+            // }
+        },
+
+        markDataSetsToRemove: function() {
+            for (const dataSet of this.selectedDataSets) {
+                if (dataSet.saved) {
+                    this.dataSetUrnsToRemove.push(dataSet.urn)
+                } else {
+                    _.remove(this.validDataSetUrnsToAdd, (u) => u == dataSet.urn)
+                }
+            }
+        },
+
         saveToCollection: async function(dataSet) {
             if (this.dataSetType === "scoreSet") {
                 this.saveScoreSetChangesToCollection(dataSet)
@@ -325,21 +335,12 @@ export default {
     width: fit-content;
 }
 
-.add-data-set-panels {
-    display: flex;
-    justify-content: space-between;
-    gap: 30px;
+.add-data-set-button {
+    width: fit-content;
 }
 
-.add-data-set-panels .p-chips {
-    flex-grow: 1;
-    min-width: 0;
-    max-width: 50%;
-}
-
-.add-data-set-panel:deep(.p-chips-multiple-container) {
-    width: 100%;
-    overflow-x: scroll;
+.remove-data-set-button {
+    width: fit-content;
 }
 
 .save-cancel-buttons {

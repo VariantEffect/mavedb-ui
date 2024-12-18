@@ -100,6 +100,7 @@ import Dialog from 'primevue/dialog'
 import MultiSelect from 'primevue/multiselect'
 
 import config from '@/config'
+import useAuth from '@/composition/auth'
 import useItem from '@/composition/item'
 import {ORCID_ID_REGEX} from '@/lib/orcid'
 

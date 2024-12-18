@@ -87,7 +87,7 @@ export default {
     }),
 
     created: async function() {
-        // TODO have we confirmed that the user is logged in already?
+        // TODO this takes a second to load, would be nice to let the user know it is still loading (currently says "no available options")
         let response = null
         try {
             response = await axios.get(`${config.apiBaseUrl}/users/me/collections`)

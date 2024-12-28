@@ -15,6 +15,7 @@ import PublicationIdentifierView from '@/components/screens/PublicationIdentifie
 import ScoreSetCreator from '@/components/screens/ScoreSetCreator'
 import ScoreSetEditor from '@/components/screens/ScoreSetEditor'
 import ScoreSetView from '@/components/screens/ScoreSetView'
+import SearchVariantsScreen from '@/components/screens/SearchVariantsScreen'
 import SearchView from '@/components/screens/SearchView'
 import SettingsScreen from '@/components/screens/SettingsScreen'
 import UsersView from '@/components/screens/UsersView'
@@ -43,6 +44,13 @@ const routes = [{
   component: SearchView,
   meta: {
     title: import.meta.env.VITE_SITE_TITLE + ' | Search'
+  }
+}, {
+  path: '/search-variants',
+  name: 'search-variants',
+  component: SearchVariantsScreen,
+  meta: {
+    title: import.meta.env.VITE_SITE_TITLE + ' | Search Variants'
   }
 }, {
   path: '/docs',

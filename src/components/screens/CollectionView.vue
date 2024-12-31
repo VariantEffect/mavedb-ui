@@ -85,13 +85,11 @@
             />
           </div>
         </div>
-        <div v-if="item.scoreSetUrns.length != 0">
-          <ul>
-            <li v-for="scoreSetUrn in item.scoreSetUrns" :key="scoreSetUrn">
-              <EntityLink display="title" entity-type="scoreSet" :urn="scoreSetUrn" />
-            </li>
-          </ul>
-        </div>
+        <ul v-if="item.scoreSetUrns.length != 0">
+          <li v-for="scoreSetUrn in item.scoreSetUrns" :key="scoreSetUrn">
+            <EntityLink display="title" entity-type="scoreSet" :urn="scoreSetUrn" />
+          </li>
+        </ul>
         <div v-else>No associated score sets yet</div>
         <div class="mave-collection-section-title">
           Experiments
@@ -104,13 +102,11 @@
             />
           </div>
         </div>
-        <div v-if="item.experimentUrns.length != 0">
-          <ul>
-            <li v-for="experimentUrn in item.experimentUrns" :key="experimentUrn">
-              <EntityLink display="title" entity-type="experiment" :urn="experimentUrn" />
-            </li>
-          </ul>
-        </div>
+        <ul v-if="item.experimentUrns.length != 0">
+          <li v-for="experimentUrn in item.experimentUrns" :key="experimentUrn">
+            <EntityLink display="title" entity-type="experiment" :urn="experimentUrn" />
+          </li>
+        </ul>
         <div v-else>No associated experiments yet</div>
         <div class="mave-collection-section-title">
           User Permissions

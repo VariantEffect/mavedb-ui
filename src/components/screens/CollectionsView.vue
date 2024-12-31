@@ -14,7 +14,7 @@
             :value="collections"
           >
             <Column field="name" header="Collection name" :sortable="true">
-              <template #body="{data}"><router-link :to="`/collections/${data.urn}`">{{data.name}}</router-link></template>
+              <template #body="{data}"><router-link :to="{name: 'collection', params: {urn: data.urn}}">{{data.name}}</router-link></template>
             </Column>
             <Column field="description" header="Description" :sortable="true" />
             <Column field="role" header="Permissions" :sortable="true" />

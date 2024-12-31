@@ -16,7 +16,7 @@
             <Column field="name" header="Collection name" :sortable="true">
               <template #body="{data}"><router-link :to="{name: 'collection', params: {urn: data.urn}}">{{data.name}}</router-link></template>
             </Column>
-            <Column field="description" header="Description" :sortable="true" />
+            <Column class="mave-collection-description" field="description" header="Description" :sortable="true" />
             <Column field="role" header="Permissions" :sortable="true" />
             <Column field="creationDate" header="Created" :sortable="true">
               <template #body="{data}">{{ formatDate(data.creationDate) }}</template>
@@ -116,5 +116,13 @@ export default {
 <style scoped>
 .mave-collections-table {
   margin: 1em 0;
+}
+
+.mave-collections-table:deep(td) {
+  vertical-align: top;
+}
+
+.mave-collections-table:deep(.mave-collection-description) {
+  white-space: pre-line;
 }
 </style>

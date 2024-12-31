@@ -70,12 +70,12 @@
       </div>
       <div class="mave-1000px-col">
         <div v-if="item.creationDate">Created {{ formatDate(item.creationDate) }} <span v-if="item.createdBy">
-          <a :href="`https://orcid.org/${item.createdBy.orcidId}`" target="blank"><img src="@/assets/ORCIDiD_icon.png"
+          <a :href="`https://orcid.org/${item.createdBy.orcidId}`" target="_blank"><img src="@/assets/ORCIDiD_icon.png"
             alt="ORCIDiD">{{ item.createdBy.firstName }} {{ item.createdBy.lastName }}</a></span></div>
         <div v-if="item.modificationDate">
           Last updated {{ formatDate(item.modificationDate) }}
           <span v-if="item.modifiedBy">
-            <a :href="`https://orcid.org/${item.modifiedBy.orcidId}`" target="blank">
+            <a :href="`https://orcid.org/${item.modifiedBy.orcidId}`" target="_blank">
               <img src="@/assets/ORCIDiD_icon.png" alt="ORCIDiD" />
               {{ item.modifiedBy.firstName }} {{ item.modifiedBy.lastName }}
             </a>
@@ -135,7 +135,7 @@
           <div class="mave-collection-contributors-subsection-title">Admins</div>
           <ul>
             <div v-for="admin in item.admins" :key="admin">
-              <a :href="`https://orcid.org/${admin.orcidId}`" target="blank">
+              <a :href="`https://orcid.org/${admin.orcidId}`" target="_blank">
                 <img src="@/assets/ORCIDiD_icon.png" alt="ORCIDiD" />
                 {{ admin.firstName }} {{ admin.lastName }}
               </a>
@@ -146,7 +146,7 @@
           <div class="mave-collection-contributors-subsection-title">Editors</div>
           <ul>
             <div v-for="editor in item.editors" :key="editor">
-              <a :href="`https://orcid.org/${editor.orcidId}`" target="blank">
+              <a :href="`https://orcid.org/${editor.orcidId}`" target="_blank">
                 <img src="@/assets/ORCIDiD_icon.png" alt="ORCIDiD" />
                 {{ editor.firstName }} {{ editor.lastName }}
               </a>
@@ -157,7 +157,7 @@
           <div class="mave-collection-contributors-subsection-title">Viewers</div>
           <ul>
             <div v-for="viewer in item.viewers" :key="viewer">
-              <a :href="`https://orcid.org/${viewer.orcidId}`" target="blank">
+              <a :href="`https://orcid.org/${viewer.orcidId}`" target="_blank">
                 <img src="@/assets/ORCIDiD_icon.png" alt="ORCIDiD" />
                 {{ viewer.firstName }} {{ viewer.lastName }}
               </a>

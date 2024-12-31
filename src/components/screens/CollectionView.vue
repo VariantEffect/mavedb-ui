@@ -87,9 +87,8 @@
         </div>
         <div v-if="item.scoreSetUrns.length != 0">
           <ul>
-            <!-- TODO show more info about score sets and experiments -->
             <li v-for="scoreSetUrn in item.scoreSetUrns" :key="scoreSetUrn">
-              <router-link :to="{name: 'scoreSet', params: {urn: scoreSetUrn}}">{{ scoreSetUrn }}</router-link>
+              <EntityLink display="title" entity-type="scoreSet" :urn="scoreSetUrn" />
             </li>
           </ul>
         </div>
@@ -108,7 +107,7 @@
         <div v-if="item.experimentUrns.length != 0">
           <ul>
             <li v-for="experimentUrn in item.experimentUrns" :key="experimentUrn">
-              <router-link :to="{name: 'experiment', params: {urn: experimentUrn}}">{{ experimentUrn }}</router-link>
+              <EntityLink display="title" entity-type="experiment" :urn="experimentUrn" />
             </li>
           </ul>
         </div>
@@ -176,6 +175,7 @@ import Inplace from 'primevue/inplace'
 import InputText from 'primevue/inputtext'
 import Textarea from 'primevue/textarea'
 
+import EntityLink from '@/components/common/EntityLink'
 import CollectionBadge from '@/components/CollectionBadge'
 import CollectionContributorEditor from '@/components/CollectionContributorEditor'
 import CollectionDataSetEditor from '@/components/CollectionDataSetEditor'
@@ -190,7 +190,7 @@ import useItem from '@/composition/item'
 export default {
   name: 'CollectionView',
 
-  components: { Button, CollectionBadge, CollectionContributorEditor, CollectionDataSetEditor, DefaultLayout, Inplace, InputText, ItemNotFound, PageLoading, Textarea },
+  components: { Button, CollectionBadge, CollectionContributorEditor, CollectionDataSetEditor, DefaultLayout, EntityLink, Inplace, InputText, ItemNotFound, PageLoading, Textarea },
 
   props: {
     itemId: {

@@ -71,6 +71,9 @@ export interface HistogramShader {
   /** The displayed title of this region. */
   title: string | null
 
+  /** The alignment of the title of this region. */
+  align: "left" | "right" | "center" | null
+
   /** The color of this shaded region. */
   color: string | null
 
@@ -304,6 +307,41 @@ export default function makeHistogram(): Histogram {
 
   function applyField<T>(d: HistogramDatum, field: FieldGetter<T>) {
     return _.isString(field) ? (_.get(d, field) as T) : (field(d) as T)
+  }
+
+
+  //////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+  // Canvas placement calculations
+  //////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+
+  const alignTextInRegion = (min: number, max: number, align: string | null) => {
+    switch(align){
+      case "left":
+        return min
+      case "right":
+        return max
+      default:
+        return (min + max) / 2
+    }
+  }
+
+  const padTextInElement = (elem: d3.Selection<d3.BaseType | SVGGElement, HistogramShader, d3.BaseType, any>, align: string | null, text: string | null) => {
+    const tempText = elem.append('g')
+        .append('text')
+        .style('visibility', 'hidden')
+        .text(text)
+    const textWidth = (tempText.node()?.getBoundingClientRect()?.width || 0)
+
+    console.log(textWidth)
+
+    switch (align) {
+      case "left":
+        return 10
+      case "right":
+        return -textWidth
+      default:
+        return 0
+    }
   }
 
   //////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
@@ -882,7 +920,7 @@ export default function makeHistogram(): Histogram {
             .style('fill', (d) => d.thresholdColor || '#000000')
             .attr('x', (d) => {
               const span = visibleShaderRegion(d)
-              return xScale((span.min + span.max) / 2)
+              return xScale(alignTextInRegion(span.min, span.max, d.align)) + padTextInElement(shaderG, d.align, d.title)
             })
             .attr('y', 15)
             .style('text-anchor', 'middle')

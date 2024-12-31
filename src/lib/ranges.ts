@@ -25,6 +25,7 @@ export function prepareRangesForHistogram(scoreRanges: ScoreSetRanges): Histogra
             min: range.range[0],
             max: range.range[1],
             title: range.label,
+            align: "center",
             color: rangeIsNormal ? NORMAL_RANGE_DEFAULT_COLOR : ABNORMAL_RANGE_DEFAULT_COLOR,
             thresholdColor: rangeIsNormal ? NORMAL_RANGE_DEFAULT_COLOR : ABNORMAL_RANGE_DEFAULT_COLOR,
             startOpacity: 0.15,

@@ -3,7 +3,6 @@
     <div v-if="itemStatus=='Loaded'" class="mave-collection">
       <div class="mave-1000px-col">
         <div class="mave-screen-title-bar">
-          <!-- TODO see if this if-else structure can be simplified -->
           <div v-if="userIsAuthorized.update" class="flex-auto">
             <Inplace
               :active="displayCollectionNameEdit"
@@ -120,12 +119,9 @@
             />
           </div>
         </div>
-        <!-- TODO think about what to show if there are no admins (shouldn't happen), editors, or viewers.
-        Keep in mind that we shouldn't show the editors or viewers sections to non-collection-admins at all.
-        But we might want to show if those sections are blank to collection admins. -->
-        <div v-if="item.admins.length != 0" class="mave-collection-contributors-subsection">
+        <div v-if="item.admins.length != 0 || userIsAuthorized.add_role" class="mave-collection-contributors-subsection">
           <div class="mave-collection-contributors-subsection-title">Admins</div>
-          <ul>
+          <ul v-if="item.admins.length > 0">
             <div v-for="admin in item.admins" :key="admin">
               <a :href="`https://orcid.org/${admin.orcidId}`" target="_blank">
                 <img src="@/assets/ORCIDiD_icon.png" alt="ORCIDiD" />
@@ -133,10 +129,11 @@
               </a>
             </div>
           </ul>
+          <p v-else>No admins</p>
         </div>
-        <div v-if="item.editors.length != 0" class="mave-collection-contributors-subsection">
+        <div v-if="userIsAuthorized.add_role" class="mave-collection-contributors-subsection">
           <div class="mave-collection-contributors-subsection-title">Editors</div>
-          <ul>
+          <ul v-if="item.editors.length > 0">
             <div v-for="editor in item.editors" :key="editor">
               <a :href="`https://orcid.org/${editor.orcidId}`" target="_blank">
                 <img src="@/assets/ORCIDiD_icon.png" alt="ORCIDiD" />
@@ -144,10 +141,11 @@
               </a>
             </div>
           </ul>
+          <p v-else>No editors</p>
         </div>
-        <div v-if="item.viewers.length != 0" class="mave-collection-contributors-subsection">
+        <div v-if="userIsAuthorized.add_role" class="mave-collection-contributors-subsection">
           <div class="mave-collection-contributors-subsection-title">Viewers</div>
-          <ul>
+          <ul v-if="item.viewers.length > 0">
             <div v-for="viewer in item.viewers" :key="viewer">
               <a :href="`https://orcid.org/${viewer.orcidId}`" target="_blank">
                 <img src="@/assets/ORCIDiD_icon.png" alt="ORCIDiD" />
@@ -155,6 +153,7 @@
               </a>
             </div>
           </ul>
+          <p v-else>No viewers</p>
         </div>
       </div>
     </div>

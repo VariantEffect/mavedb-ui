@@ -317,6 +317,10 @@ export default {
   padding: 20px;
 }
 
+.mave-collection-description {
+  white-space: pre-line;
+}
+
 .mave-collection-description:deep(.p-inplace-display) {
   margin: 0 0 10px 0;
   padding-left: 0;

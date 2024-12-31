@@ -4,7 +4,7 @@
       <div class="mave-1000px-col">
         <div class="mave-screen-title-bar">
           <!-- TODO see if this if-else structure can be simplified -->
-          <div v-if="userIsAuthenticated && userIsAuthorized.update" class="flex-auto">
+          <div v-if="userIsAuthorized.update" class="flex-auto">
             <Inplace
               :active="displayCollectionNameEdit"
               class="mave-screen-collection-title"
@@ -14,7 +14,7 @@
                 {{ item.name }}
               </template>
               <template #content>
-                <div class="flex mave-screen-collection-title-editor">
+                <div class="flex mave-collection-name-editor">
                   <InputText
                     v-model="editName"
                     autofocus
@@ -33,32 +33,29 @@
           </div>
           <!-- TODO add badge if there is one associated -->
         </div>
-        <div v-if="userIsAuthenticated">
-          <div v-if="userIsAuthorized.update">
-            <Inplace
-              :active="displayCollectionDescriptionEdit"
-              class="mave-collection-description"
-              @open="displayCollectionDescriptionEdit = true; editDescription = item.description"
-            >
-              <template #display>
-                {{ item.description || "(Click here to add description)" }}
-              </template>
-              <template #content>
+        <div v-if="userIsAuthorized.update">
+          <Inplace
+            :active="displayCollectionDescriptionEdit"
+            class="mave-collection-description"
+            @open="displayCollectionDescriptionEdit = true; editDescription = item.description"
+          >
+            <template #display>
+              {{ item.description || "(Click here to add description)" }}
+            </template>
+            <template #content>
+              <div class="flex mave-collection-description-editor">
                 <!-- TODO change to textarea and make full width. consider where to put buttons -->
-                <InputText
+                <Textarea
                   v-model="editDescription"
                   autofocus
-                  @keyup.enter="saveCollectionDescription"
+                  class="flex-auto"
                   @keyup.escape="displayCollectionDescriptionEdit = false"
                 />
                 <Button icon="pi pi-check" @click="saveCollectionDescription" />
                 <Button icon="pi pi-times" severity="danger" @click="displayCollectionDescriptionEdit = false" />
-              </template>
-            </Inplace>
-          </div>
-          <div v-else>
-            <div v-if="item.description" class="mave-collection-description">{{ item.description }}</div>
-          </div>
+              </div>
+            </template>
+          </Inplace>
         </div>
         <div v-else>
           <div v-if="item.description" class="mave-collection-description">{{ item.description }}</div>
@@ -176,6 +173,7 @@ import axios from 'axios'
 import Button from 'primevue/button'
 import Inplace from 'primevue/inplace'
 import InputText from 'primevue/inputtext'
+import Textarea from 'primevue/textarea'
 
 import CollectionContributorEditor from '@/components/CollectionContributorEditor'
 import CollectionDataSetEditor from '@/components/CollectionDataSetEditor'
@@ -190,7 +188,7 @@ import useItem from '@/composition/item'
 export default {
   name: 'CollectionView',
 
-  components: { Button, CollectionContributorEditor, CollectionDataSetEditor, DefaultLayout, Inplace, InputText, ItemNotFound, PageLoading },
+  components: { Button, CollectionContributorEditor, CollectionDataSetEditor, DefaultLayout, Inplace, InputText, ItemNotFound, PageLoading, Textarea },
 
   props: {
     itemId: {
@@ -348,22 +346,25 @@ export default {
   margin: 20px 0 10px 0;
 }
 
-.mave-screen-collection-title:deep(.p-inplace-display) {
-  flex: 0 0 auto;
-  font-size: 28px;
-  padding: 0;
-}
-
-.mave-screen-collection-title-editor {
+.mave-collection-description-editor,
+.mave-collection-name-editor {
   position: relative;
   width: 100%;
 }
 
-.mave-screen-collection-title-editor > * {
+.mave-collection-description-editor > *,
+.mave-collection-name-editor > * {
   margin-left: 0.5em;
 }
 
-.mave-screen-collection-title-editor > *:first-child {
+.mave-collection-description-editor > *:first-child,
+.mave-collection-name-editor > *:first-child {
   margin-left: 0;
+}
+
+.mave-screen-collection-title:deep(.p-inplace-display) {
+  flex: 0 0 auto;
+  font-size: 28px;
+  padding: 0;
 }
 </style>

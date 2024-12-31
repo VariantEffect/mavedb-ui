@@ -4,33 +4,29 @@
       <div class="mave-1000px-col">
         <div class="mave-screen-title-bar">
           <!-- TODO see if this if-else structure can be simplified -->
-          <div v-if="userIsAuthenticated">
-            <div v-if="userIsAuthorized.update">
-               <!-- TODO make input text box wider
-               add spacing between input text box and buttons, and between buttons -->
-              <Inplace
-                :active="displayCollectionNameEdit"
-                class="mave-screen-collection-title"
-                @open="displayCollectionNameEdit = true; editName = item.name"
-              >
-                <template #display>
-                  {{ item.name }}
-                </template>
-                <template #content>
+          <div v-if="userIsAuthenticated && userIsAuthorized.update" class="flex-auto">
+            <Inplace
+              :active="displayCollectionNameEdit"
+              class="mave-screen-collection-title"
+              @open="displayCollectionNameEdit = true; editName = item.name"
+            >
+              <template #display>
+                {{ item.name }}
+              </template>
+              <template #content>
+                <div class="flex mave-screen-collection-title-editor">
                   <InputText
                     v-model="editName"
                     autofocus
+                    class="flex-auto"
                     @keyup.enter="saveCollectionName"
                     @keyup.escape="displayCollectionNameEdit = false"
                   />
-                  <Button icon="pi pi-check" @click="saveCollectionName" />
-                  <Button icon="pi pi-times" severity="danger" @click="displayCollectionNameEdit = false" />
-                </template>
-              </Inplace>
-            </div>
-            <div v-else>
-              <div class="mave-screen-title">{{ item.name }}</div>
-            </div>
+                  <Button class="flex-none" icon="pi pi-check" @click="saveCollectionName" />
+                  <Button class="flex-none" icon="pi pi-times" severity="danger" @click="displayCollectionNameEdit = false" />
+                </div>
+              </template>
+            </Inplace>
           </div>
           <div v-else>
             <div class="mave-screen-title">{{ item.name }}</div>
@@ -356,5 +352,18 @@ export default {
   flex: 0 0 auto;
   font-size: 28px;
   padding: 0;
+}
+
+.mave-screen-collection-title-editor {
+  position: relative;
+  width: 100%;
+}
+
+.mave-screen-collection-title-editor > * {
+  margin-left: 0.5em;
+}
+
+.mave-screen-collection-title-editor > *:first-child {
+  margin-left: 0;
 }
 </style>

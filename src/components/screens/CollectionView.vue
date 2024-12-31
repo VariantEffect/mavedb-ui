@@ -44,7 +44,6 @@
             </template>
             <template #content>
               <div class="flex mave-collection-description-editor">
-                <!-- TODO change to textarea and make full width. consider where to put buttons -->
                 <Textarea
                   v-model="editDescription"
                   autofocus
@@ -76,7 +75,7 @@
         </div>
         <div class="mave-collection-section-title">
           Score Sets
-          <div v-if="userIsAuthenticated && userIsAuthorized.add_score_set">
+          <div v-if="userIsAuthorized.add_score_set">
             <CollectionDataSetEditor
               :collection-urn="item.urn"
               data-set-type="scoreSet"
@@ -96,7 +95,7 @@
         <div class="mave-collection-section-title">
           Experiments
           <!-- NOTE: permissions are the same for add score set and add experiment -->
-          <div v-if="userIsAuthenticated && userIsAuthorized.add_score_set">
+          <div v-if="userIsAuthorized.add_score_set">
             <CollectionDataSetEditor
               :collection-urn="item.urn"
               data-set-type="experiment"
@@ -114,7 +113,7 @@
         <div v-else>No associated experiments yet</div>
         <div class="mave-collection-section-title">
           User Permissions
-          <div v-if="userIsAuthenticated && userIsAuthorized.add_role">
+          <div v-if="userIsAuthorized.add_role">
             <CollectionContributorEditor
               :collection-urn="item.urn"
               @saved="childComponentEditedCollection"

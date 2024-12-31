@@ -32,11 +32,9 @@
       </div>
     </div>
   </div>
-  <div v-if="showCalibrations" class="mave-histogram-controls">
-    <Dropdown v-model="activeCalibrationKey" :options="Object.keys(scoreSet.scoreCalibrations)" :optionLabel="titleCase" style="width: 100%;" />
-  </div>
   <div class="mave-histogram-container" ref="histogramContainer" />
-  <div v-if="showCalibrations && activeCalibrationKey">
+  <div v-if="activeShader == 'threshold' && activeCalibrationKey">
+    <Dropdown v-model="activeCalibrationKey" :options="Object.keys(scoreSet.scoreCalibrations)" :optionLabel="titleCase" style="width: 100%;" />
     <CalibrationTable :calibrations="scoreSet.scoreCalibrations" :selected-calibration="activeCalibrationKey"></CalibrationTable>
   </div>
 </template>
@@ -228,9 +226,6 @@ export default defineComponent({
       if (someVariantsHaveClinicalSignificance) {
         options.push({label: 'Clinical View', view: 'clinical'})
       }
-      if (this.scoreSet.scoreCalibrations) {
-        options.push({label: 'Calibrations', view: 'calibrations'})
-      }
 
       // custom view should always come last
       if (someVariantsHaveClinicalSignificance) {
@@ -259,10 +254,6 @@ export default defineComponent({
 
     showControls: function() {
       return this.activeViz == this.vizOptions.findIndex(item => item.view === 'custom')
-    },
-
-    showCalibrations: function() {
-      return this.activeViz == this.vizOptions.findIndex(item => item.view === 'calibrations')
     },
 
     showShaders: function() {

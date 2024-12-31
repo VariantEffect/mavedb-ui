@@ -30,7 +30,10 @@
           <div v-else>
             <div class="mave-screen-title">{{ item.name }}</div>
           </div>
-          <!-- TODO add badge if there is one associated -->
+          <CollectionBadge
+            v-if="item.badgeName"
+            :badge-name="item.badgeName"
+          />
         </div>
         <div v-if="userIsAuthorized.update">
           <Inplace
@@ -173,6 +176,7 @@ import Inplace from 'primevue/inplace'
 import InputText from 'primevue/inputtext'
 import Textarea from 'primevue/textarea'
 
+import CollectionBadge from '@/components/CollectionBadge'
 import CollectionContributorEditor from '@/components/CollectionContributorEditor'
 import CollectionDataSetEditor from '@/components/CollectionDataSetEditor'
 import DefaultLayout from '@/components/layout/DefaultLayout'
@@ -186,7 +190,7 @@ import useItem from '@/composition/item'
 export default {
   name: 'CollectionView',
 
-  components: { Button, CollectionContributorEditor, CollectionDataSetEditor, DefaultLayout, Inplace, InputText, ItemNotFound, PageLoading, Textarea },
+  components: { Button, CollectionBadge, CollectionContributorEditor, CollectionDataSetEditor, DefaultLayout, Inplace, InputText, ItemNotFound, PageLoading, Textarea },
 
   props: {
     itemId: {

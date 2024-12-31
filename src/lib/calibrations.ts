@@ -26,6 +26,7 @@ export function prepareThresholdsForHistogram(calibrations: Calibrations): Histo
             color: thresholdColor,
             thresholdColor: thresholdColor,
             title: calibrations.evidenceStrengths[idx].toString(),
+            align: null,
 
             startOpacity: 0.15,
             stopOpacity: 0.05,
@@ -37,6 +38,7 @@ export function prepareThresholdsForHistogram(calibrations: Calibrations): Histo
         // value.
         if (idx === 0 || idx === calibrations.thresholds.length - 1) {
             thresholdCardinality[idx] > 0 ? thresholdRange.min = threshold : thresholdRange.max = threshold
+            thresholdCardinality[idx] > 0 ? thresholdRange.align = "left" : thresholdRange.align = "right"
         }
         // If the threshold cardinality is positive, the threshold maximum will be the next threshold. The opposite is true
         // for thresholds with negative cardinality.
@@ -44,9 +46,11 @@ export function prepareThresholdsForHistogram(calibrations: Calibrations): Histo
             if (thresholdCardinality[idx] > 0) {
                 thresholdRange.min = threshold
                 thresholdRange.max = calibrations.thresholds[idx+1]
+                thresholdRange.align = "left"
             } else {
                 thresholdRange.min = calibrations.thresholds[idx-1]
                 thresholdRange.max = threshold
+                thresholdRange.align = "right"
             }
         }
 

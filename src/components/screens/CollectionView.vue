@@ -254,52 +254,55 @@ export default {
     },
 
     saveCollectionName: async function() {
-      if (this.editName) {
-        // TODO check that new name is not same as old name
+      const editedName = this.editName?.trim()
+      if (!editedName || editedName.length == 0 || editedName == this.item.name) {
+        // Do nothing if the name is empty or has not changed.
+        this.displayCollectionNameEdit = false
+      } else {
         const collectionPatch = {
-          "name": this.editName
+          "name": editedName
         }
         let response = null
         try {
           response = await axios.patch(`${config.apiBaseUrl}/collections/${this.item.urn}`, collectionPatch)
         } catch (e) {
           response = e.response || { status: 500 }
-          this.$toast.add({ severity: 'error', summary: 'Error saving name to collection', life: 3000 })
+          this.$toast.add({ severity: 'error', summary: 'Error saving collection name', life: 3000 })
         }
         if (response.status == 200) {
           this.reloadItem(this.itemId)
           this.displayCollectionNameEdit = false
-          this.$toast.add({ severity: 'success', summary: 'Saved new name to collection.', life: 3000 })
+          this.$toast.add({ severity: 'success', summary: 'Saved new collection name.', life: 3000 })
         } else {
           console.log(response)
         }
-      } else {
-        this.$toast.add({ severity: 'error', summary: 'Cannot save blank name to collection', life: 3000 })
       }
     },
 
     saveCollectionDescription: async function() {
-      if (this.editDescription === "") {
-        // if user enters a blank string, update the description to be null
-        this.editDescription = null
-      }
-      // TODO check that new description is not same as old description
-      const collectionPatch = {
-        "description": this.editDescription
-      }
-      let response = null
-      try {
-        response = await axios.patch(`${config.apiBaseUrl}/collections/${this.item.urn}`, collectionPatch)
-      } catch (e) {
-        response = e.response || { status: 500 }
-        this.$toast.add({ severity: 'error', summary: 'Error saving description to collection', life: 3000 })
-      }
-      if (response.status == 200) {
-        this.reloadItem(this.itemId)
-        this.displayCollectionDescriptionEdit = false
-        this.$toast.add({ severity: 'success', summary: 'Saved description to collection.', life: 3000 })
+      let editedDescription = this.editDescription?.trim()
+      editedDescription = editedDescription == '' ? null : editedDescription
+      if (editedDescription == this.item.description) {
+        // Do nothing if the description has not changed.
+        this.displayCollectionNameEdit = false
       } else {
-        console.log(response)
+        const collectionPatch = {
+          "description": editedDescription == '' ? null : editedDescription
+        }
+        let response = null
+        try {
+          response = await axios.patch(`${config.apiBaseUrl}/collections/${this.item.urn}`, collectionPatch)
+        } catch (e) {
+          response = e.response || { status: 500 }
+          this.$toast.add({ severity: 'error', summary: 'Error saving description', life: 3000 })
+        }
+        if (response.status == 200) {
+          this.reloadItem(this.itemId)
+          this.displayCollectionDescriptionEdit = false
+          this.$toast.add({ severity: 'success', summary: 'Saved description.', life: 3000 })
+        } else {
+          console.log(response)
+        }
       }
     },
 

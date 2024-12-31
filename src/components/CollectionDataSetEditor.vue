@@ -245,7 +245,41 @@ export default {
                 this.validateScoreSetUrns()
             } else if (this.dataSetType === "experiment") {
                 this.validateExperimentUrns()
-            } // TODO else  
+            }
+        },
+
+        validateExperimentUrns: async function() {
+            this.validationErrors = []
+            // iterate backwards to remove urns from addScoreSetInput as we loop through the array
+            // TODO iterating backwards means that validation errors are listed in reverse, which is not ideal
+            for (let i = this.addDataSetInput.length - 1; i >= 0; i--) {
+                const urn = this.addDataSetInput[i].trim()
+                // TODO check regex first? would need to include tmp and watch out for old urns that follow outdated regex, which we would still want to include
+                // check experiment not already in validated list
+                if (this.validDataSetUrnsToAdd.includes(urn)) {
+                    // silently remove duplicates
+                    _.remove(this.addDataSetInput, (u) => u == urn)
+                    continue
+                }
+                // check experiment not already in collection
+                if (this.item.experimentUrns.includes(urn)) {
+                    this.validationErrors.push(`${urn}: Experiment already in collection`)
+                    continue
+                }
+                // check that experiment exists
+                let response = null
+                try {
+                    response = await axios.get(`${config.apiBaseUrl}/experiments/${urn}`)
+                } catch (e) {
+                    response = e.response || { status: 500 }
+                    this.validationErrors.push(`${urn}: ${e.message}`)
+                }
+                if (response.status == 200) {
+                    // if it validates, remove from addExperimentInput and add to validDataSetUrnsToAdd
+                    _.remove(this.addDataSetInput, (u) => u == urn)
+                    this.validDataSetUrnsToAdd.push(urn)
+                }
+            }
         },
 
         validateScoreSetUrns: async function() {
@@ -275,7 +309,7 @@ export default {
                     this.validationErrors.push(`${urn}: ${e.message}`)
                 }
                 if (response.status == 200) {
-                    // if it validates, remove from addScoreSetInput and add to validScoreSetUrnsToAdd
+                    // if it validates, remove from addScoreSetInput and add to validDataSetUrnsToAdd
                     _.remove(this.addDataSetInput, (u) => u == urn)
                     this.validDataSetUrnsToAdd.push(urn)
                 }

@@ -40,7 +40,7 @@
     :close-on-escape="true"
     header="Create a new collection"
     modal
-    :style="{width: '25rem'}"
+    :style="{maxWidth: '90%', width: '50rem'}"
   >
     <CollectionCreator
       @canceled="creatorVisible = false"

@@ -39,10 +39,10 @@
 
     <Dialog
         v-model:visible="creatorVisible"
-        modal
-        header="Create collection"
-        :style="{ width: '25rem' }"
         :close-on-escape="false"
+        header="Create collection"
+        modal
+        :style="{maxWidth: '90%', width: '50rem'}"
     >
         <CollectionCreator
             @canceled="creatorVisible = false"

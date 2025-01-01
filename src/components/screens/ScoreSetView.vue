@@ -55,9 +55,9 @@
           </div>
           <div class="mave-collection-badges">
             <CollectionBadge
-              v-for="badgeName in item.officialCollectionNames"
-              :key="badgeName"
-              :badgeName="badgeName"
+              v-for="officialCollection in item.officialCollections"
+              :collection="officialCollection"
+              :key="officialCollection.urn"
             />
           </div>
           <div v-if="userIsAuthenticated">

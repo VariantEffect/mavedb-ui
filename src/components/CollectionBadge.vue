@@ -1,69 +1,55 @@
 <template>
-    <div class="collection-badge">
-        <!-- TODO add router link to collection page -->
-        <!-- TODO may want to add img alt (collection name) -->
-        <img v-if="badgeNameIsLink" :src="badgeName"/>
-        <Tag v-else :class="tagClassName" :value="badgeName" rounded></Tag>
-    </div>
+  <div class="mave-collection-badge">
+    <router-link :to="{name: 'collection', params: {urn: collection.urn}}">
+      <img v-if="badgeNameIsLink" :alt="collection.name" :src="collection.badgeName"/>
+      <Tag v-else :class="tagClassName" :value="collection.badgeName" rounded />
+    </router-link>
+  </div>
 </template>
 
 <script>
-
 import Tag from 'primevue/tag'
 
 export default {
-    name: 'CollectionBadge',
+  name: 'CollectionBadge',
+  components: { Tag },
 
-    components: { Tag },
+  props: {
+    collection: {
+      type: Object,
+      required: true
+    }
+  },
 
-    props: {
-        badgeName: {
-            type: String,
-            required: true
-        }
+  computed: {
+    // determine whether badgeName is a link to an img or not
+    // TODO if so, also get the badge's collection name to use as img alt?
+    badgeNameIsLink: function() {
+      // TODO make this a regex to also allow https
+      return this.collection.badgeName?.startsWith("http://") || false
     },
 
-    computed: {
-        // determine whether badgeName is a link to an img or not
-        // TODO if so, also get the badge's collection name to use as img alt?
-        badgeNameIsLink: function() {
-            // TODO make this a regex to also allow https
-            return this.badgeName.startsWith("http://")
-        },
-
-        tagClassName: function() {
-            return {
-                IGVF: "mave-collection-badge-igvf"
-            }[this.badgeName] || "mave-collection-badge-other"
-        },
-
-
+    tagClassName: function() {
+      return {
+        IGVF: "mave-collection-badge-igvf"
+      }[this.collection.badgeName] || "mave-collection-badge-other"
     }
+  }
 }
-
 </script>
 
 <style scoped>
-
-.collection-badge {
-    display: inline; /* may need inline-block */
-    padding: 0 7px 0 0;
+.mave-collection-badge {
+  cursor: pointer;
+  display: inline; /* may need inline-block */
+  padding: 0 7px 0 0;
 }
 
-.collection-badge img {
-
+.mave-collection-badge .mave-collection-badge-igvf {
+  background-color: rgb(227, 35, 176);
 }
 
-.collection-badge .p-tag {
-
+.mave-collection-badge .mave-collection-badge-other {
+  background-color: cadetblue;
 }
-
-.collection-badge .mave-collection-badge-igvf {
-    background-color: rgb(227, 35, 176);
-}
-
-.collection-badge .mave-collection-badge-other {
-    background-color:cadetblue;
-}
-
 </style>

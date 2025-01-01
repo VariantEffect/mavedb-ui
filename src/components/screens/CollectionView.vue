@@ -13,7 +13,7 @@
                 {{ item.name }}
                 <CollectionBadge
                   v-if="item.badgeName"
-                  :badge-name="item.badgeName"
+                  :collection="item"
                 />
               </template>
               <template #content>
@@ -182,7 +182,6 @@ import config from '@/config'
 import useAuth from '@/composition/auth'
 import useFormatters from '@/composition/formatters'
 import useItem from '@/composition/item'
-import CollectionPermissionsEditor from '../CollectionPermissionsEditor.vue'
 
 export default {
   name: 'CollectionView',

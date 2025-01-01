@@ -3,7 +3,16 @@
     <div v-if="itemStatus=='Loaded'" class="mave-score-set">
       <div class="mave-1000px-col">
         <div class="mave-screen-title-bar">
-          <div class="mave-screen-title">{{ item.title || 'Untitled experiment' }}</div>
+          <div class="mave-screen-title">
+            {{ item.title || 'Untitled experiment' }}
+          </div>
+          <div class="mave-collection-badges">
+            <CollectionBadge
+              v-for="officialCollection in item.officialCollections"
+              :collection="officialCollection"
+              :key="officialCollection.urn"
+            />
+          </div>
           <div v-if="userIsAuthenticated">
             <div class="mave-screen-title-controls">
               <Button v-if="userIsAuthorized.add_score_set" class="p-button-sm" @click="addScoreSet">Add a score set</Button>
@@ -212,27 +221,27 @@
 </template>
 
 <script>
-
 import axios from 'axios'
 import _ from 'lodash'
 import {marked} from 'marked'
+import {PrimeIcons} from 'primevue/api'
 import Button from 'primevue/button'
-import Chip from 'primevue/chip'
-import DefaultLayout from '@/components/layout/DefaultLayout'
 import Dialog from 'primevue/dialog'
-import PageLoading from '@/components/common/PageLoading'
-import { PrimeIcons } from 'primevue/api'
-import ItemNotFound from '@/components/common/ItemNotFound'
-import useAuth from '@/composition/auth'
-import { textForTargetGeneCategory } from '@/lib/target-genes'
-import useItem from '@/composition/item'
-import useFormatters from '@/composition/formatters'
-import config from '@/config'
 import 'primeicons/primeicons.css'
+
+import CollectionBadge from '@/components/CollectionBadge'
+import ItemNotFound from '@/components/common/ItemNotFound'
+import PageLoading from '@/components/common/PageLoading'
+import DefaultLayout from '@/components/layout/DefaultLayout'
+import useAuth from '@/composition/auth'
+import useFormatters from '@/composition/formatters'
+import useItem from '@/composition/item'
+import config from '@/config'
+import {textForTargetGeneCategory} from '@/lib/target-genes'
 
 export default {
   name: 'ExperimentView',
-  components: { Button, DefaultLayout, Dialog, PageLoading, ItemNotFound, PrimeIcons },
+  components: {Button, CollectionBadge, DefaultLayout, Dialog, PageLoading, ItemNotFound, PrimeIcons},
 
   setup: () => {
     const {userIsAuthenticated} = useAuth()
@@ -411,6 +420,13 @@ export default {
 
 .mave-score-set-heatmap-pane {
   margin: 10px 0;
+}
+
+.mave-collection-badges {
+  flex: 1 1 auto;
+  padding: 0 0 0 7px;
+  font-size: 12px;
+  line-height: 29px;
 }
 
 /* Score set details */

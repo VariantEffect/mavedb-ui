@@ -25,9 +25,10 @@
         v-model="orcidIdsToAddStr"
         class="mave-collection-add-users-search-input"
         placeholder="Type or paste ORCID IDs here."
+        @keyup.enter="addUsers"
         @keyup.escape="clearUserSearch"
       />
-      <div>
+      <div class="mave-collection-user-role-add-controls">
         <SelectButton
           v-model="roleToAdd"
           :allow-empty="false"
@@ -36,19 +37,27 @@
           option-value="value"
           :options="roleOptions"
         />
-        <Button label="Add" @click="addUsers" />
+        <Button label="Add user" @click="addUsers" />
       </div>
       <DataTable
+        v-if="pendingUserRoles.length > 0"
         data-key="orcidId"
+        :multi-sort-meta="[{field: 'user.lastName', order: 1}, {field: 'user.firstName', order: 1}, {field: 'user.orcidId', order: 1}]"
+        sort-mode="multiple"
         :value="pendingUserRoles"
       >
         <Column field="user.orcidId" header="ORCID ID" />
         <Column :field="(userRole) => `${userRole.user.firstName} ${userRole.user.lastName}`" header="Name" />
         <Column field="role" header="Role" />
+        <Column>
+          <template #body="{data}">
+            <Button label="Remove" size="small" @click="removeUserRole(data.user.orcidId)" />
+          </template>
+        </Column>
       </DataTable>
     </div>
 
-    <div>
+    <div class="mave-collection-editor-action-buttons">
       <Button label="Cancel" severity="secondary" @click="cancel" />
       <Button label="Save" @click="saveCollection" />
     </div>
@@ -60,7 +69,6 @@
 import axios from 'axios'
 import _ from 'lodash'
 import Button from 'primevue/button'
-import Chips from 'primevue/chips'
 import Column from 'primevue/column'
 import DataTable from 'primevue/datatable'
 import InputSwitch from 'primevue/inputswitch'
@@ -73,7 +81,7 @@ import {ORCID_ID_REGEX} from '@/lib/orcid'
 
 export default {
   name: 'CollectionCreator',
-  components: {Button, Chips, Column, DataTable, InputSwitch, InputText, SelectButton, Textarea},
+  components: {Button, Column, DataTable, InputSwitch, InputText, SelectButton, Textarea},
   emits: ['createdCollection', 'canceled'],
 
   data: () => ({
@@ -94,9 +102,8 @@ export default {
 
   methods: {
     addUsers: async function() {
-      const orcidIdsToAdd = this.orcidIdsToAddStr.split(/[ ,]+/g)
+      const orcidIdsToAdd = _.without(this.orcidIdsToAddStr.split(/[ ,]+/g), '')
 
-      // Validate and look up each new user.
       const invalidOrcidIds = []
       for (const orcidId of orcidIdsToAdd) {
         const pendingUserRole = this.pendingUserRoles.find((ur) => ur.user.orcidId == orcidId)
@@ -135,22 +142,27 @@ export default {
     },
 
     lookupUser: async function(orcidId) {
-      // Look up MaveDB user by ORCID ID.
       let user = null
       try {
         user = (await axios.get(`${config.apiBaseUrl}/users/${orcidId}`)).data
       } catch (err) {
         // Assume that the error was 404 Not Found.
       }
-
       return user
+    },
+
+    removeUserRole: function(orcidId) {
+      // If the user as been added in this session, remove the pending user role.
+      const pendingUserRoleIndex = this.pendingUserRoles.findIndex((ur) => ur.user.orcidId == orcidId)
+      if (pendingUserRoleIndex >= 0) {
+        this.pendingUserRoles.splice(pendingUserRoleIndex, 1)
+      }
     },
 
     saveCollection: async function() {
       const collectionName = this.collectionName?.trim()
       let collectionDescription = this.collectionDescription?.trim()
       collectionDescription = _.isEmpty(collectionDescription) ? null : collectionDescription
-      // check that collection name is not null or empty string
       if (_.isEmpty(collectionName)) {
         this.$toast.add({
           life: 3000,
@@ -174,8 +186,6 @@ export default {
           response = error.response || {status: 500}
           this.$toast.add({severity: 'error', summary: 'Error', life: 3000})
         }
-        // if there is an error, probably keep the dialog open. log errors to console?
-        // then, if status is 200, throw toast success message and emit the saved collection
         if (response.status == 200) {
           const savedCollection = response.data
           this.$toast.add({severity: 'success', summary: 'Created new collection.', life: 3000})
@@ -198,10 +208,32 @@ export default {
 
 .mave-collection-role-to-add {
   display: inline;
+}
+
+.mave-collection-user-role-add-controls {
+  margin: 1em 0;
+}
+
+.mave-collection-user-role-add-controls .p-selectbutton {
+  margin-right: 1em;
+}
+
+.mave-collection-user-role-add-controls:deep(*) {
   vertical-align: middle;
 }
 
-.mave-collection-role-to-add * {
-  vertical-align: middle;
+.mave-collection-creator > * {
+  margin-bottom: 1em;
+}
+
+.mave-collection-editor-action-buttons {
+  display: flex;
+  justify-content: flex-end;
+  gap: 2px;
+  margin: 5px 0 0 0;
+}
+
+.mave-collection-editor-action-buttons Button {
+  margin: 0 0 0 3px;
 }
 </style>

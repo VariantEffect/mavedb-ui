@@ -1,7 +1,7 @@
 <template>
   <div class="collection-data-set-editor">
     <Button
-      class="collection-data-set-editor-button"
+      class="mave-collection-data-set-editor-button"
       label="Edit"
       @click="visible = true"
     />
@@ -15,7 +15,7 @@
     >
       <div class="flex flex-column gap-2">
         <Button
-          class="remove-data-set-button"
+          class="mave-collection-remove-data-set-button"
           :disabled="!selectedDataSets || !selectedDataSets.length"
           icon="pi pi-trash"
           label="Remove"
@@ -37,17 +37,16 @@
           v-model="unvalidatedUrnsToAdd"
           :add-on-blur="true"
           :allow-duplicate="false"
-          class="add-data-set-input"
           placeholder="Type or paste comma-separated URNs"
           separator=" "
           @keyup.escape="unvalidatedUrnsToAdd = []"
         />
-        <Button class="add-data-set-button" icon="pi pi-plus" label="Add" @click="fetchDataSetsToAdd" />
+        <Button class="mave-collection-add-data-set-button" icon="pi pi-plus" label="Add" @click="fetchDataSetsToAdd" />
         <Message v-if="errors.length > 0" severity="error">
           Sorry, some changes could not be saved.
         </Message>
       </div>
-      <div class="save-cancel-buttons">
+      <div class="mave-collection-editor-action-buttons">
         <Button label="Cancel" severity="secondary" @click="visible = false" />
         <Button label="Save" @click="saveChanges" />
       </div>
@@ -167,9 +166,9 @@ export default {
   methods: {
     rowStyle: function(data) {
       if (this.urnsToRemove.includes(data.urn)) {
-        return {backgroundColor: '#FFCCCB'} // Light red
+        return {backgroundColor: '#ffcccb'} // Light red
       } else if (data.saved === false) {
-        return {backgroundColor: '#D1FFBD'} // Light green
+        return {backgroundColor: '#d1ffbd'} // Light green
       }
     },
 
@@ -290,26 +289,26 @@ export default {
 </script>
 
 <style scoped>
-.collection-data-set-editor-button {
+.mave-collection-data-set-editor-button {
   width: fit-content;
 }
 
-.add-data-set-button {
+.mave-collection-add-data-set-button {
   width: fit-content;
 }
 
-.remove-data-set-button {
+.mave-collection-remove-data-set-button {
   width: fit-content;
 }
 
-.save-cancel-buttons {
+.mave-collection-editor-action-buttons {
   display: flex;
   justify-content: flex-end;
   gap: 2px;
   margin: 5px 0 0 0;
 }
 
-.save-cancel-buttons Button {
+.mave-collection-editor-action-buttons Button {
   margin: 0 0 0 3px;
 }
 </style>

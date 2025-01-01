@@ -111,7 +111,7 @@
         <div class="mave-collection-section-title">
           User Permissions
           <div v-if="userIsAuthorized.add_role">
-            <CollectionContributorEditor
+            <CollectionPermissionsEditor
               :collection-urn="item.urn"
               @saved="childComponentEditedCollection"
             />
@@ -173,8 +173,8 @@ import Textarea from 'primevue/textarea'
 
 import EntityLink from '@/components/common/EntityLink'
 import CollectionBadge from '@/components/CollectionBadge'
-import CollectionContributorEditor from '@/components/CollectionContributorEditor'
 import CollectionDataSetEditor from '@/components/CollectionDataSetEditor'
+import CollectionPermissionsEditor from '@/components/CollectionPermissionsEditor'
 import DefaultLayout from '@/components/layout/DefaultLayout'
 import ItemNotFound from '@/components/common/ItemNotFound'
 import PageLoading from '@/components/common/PageLoading'
@@ -182,11 +182,12 @@ import config from '@/config'
 import useAuth from '@/composition/auth'
 import useFormatters from '@/composition/formatters'
 import useItem from '@/composition/item'
+import CollectionPermissionsEditor from '../CollectionPermissionsEditor.vue'
 
 export default {
   name: 'CollectionView',
 
-  components: { Button, CollectionBadge, CollectionContributorEditor, CollectionDataSetEditor, DefaultLayout, EntityLink, Inplace, InputText, ItemNotFound, PageLoading, Textarea },
+  components: { Button, CollectionBadge, CollectionDataSetEditor, CollectionPermissionsEditor, DefaultLayout, EntityLink, Inplace, InputText, ItemNotFound, PageLoading, Textarea },
 
   props: {
     itemId: {

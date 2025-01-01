@@ -11,6 +11,10 @@
             >
               <template #display>
                 {{ item.name }}
+                <CollectionBadge
+                  v-if="item.badgeName"
+                  :badge-name="item.badgeName"
+                />
               </template>
               <template #content>
                 <div class="flex mave-collection-name-editor">
@@ -30,10 +34,6 @@
           <div v-else>
             <div class="mave-screen-title">{{ item.name }}</div>
           </div>
-          <CollectionBadge
-            v-if="item.badgeName"
-            :badge-name="item.badgeName"
-          />
         </div>
         <div v-if="userIsAuthorized.update">
           <Inplace

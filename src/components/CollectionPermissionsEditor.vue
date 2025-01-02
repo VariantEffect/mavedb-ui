@@ -303,7 +303,7 @@ export default {
       for (const orcidId of this.orcidIdsToRemove) {
         const userRole = this.existingUserRoles.find((ur) => ur.user.orcidId == orcidId)
         try {
-          await axios.delete(`${config.apiBaseUrl}/collections/${this.collectionUrn}/${userRole.role}/${orcidId}`)
+          await axios.delete(`${config.apiBaseUrl}/collections/${this.collectionUrn}/${userRole.role}s/${orcidId}`)
         } catch (e) {
           failedRemovalUserRoles.push(userRole)
           this.errors.push(`${orcidId}: ${e.message}`)
@@ -317,7 +317,7 @@ export default {
         for (const userRole of userRoles) {
           try {
             await axios.post(
-              `${config.apiBaseUrl}/collections/${this.collectionUrn}/${role}`,
+              `${config.apiBaseUrl}/collections/${this.collectionUrn}/${role}s`,
               {orcid_id: userRole.user.orcidId}
             )
           } catch (error) {

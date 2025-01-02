@@ -1,35 +1,45 @@
 <template>
-  <div class="collection-adder">
+  <div v-if="userIsAuthenticated" class="mave-collection-adder">
     <Button
-      @click="visible = true"
-      icon="pi pi-plus"
-      class="collection-adder-button"
-      label="Add to collection"
+      icon="pi pi-bookmark"
+      class="mave-save-to-collection-button"
+      label="Save to a collection"
+      @click="dialogVisible = true"
     />
+    <div v-if="collectionsContainingDataSet.length > 0" class="mave-collection-bookmarks">
+      <router-link v-for="collection in collectionsContainingDataSet" class="mave-collection-bookmark" :key="collection" :to="{name: 'collection', params: {urn: collection.urn}}">
+        <i class="pi pi-bookmark-fill" />
+        {{ collection.name }}
+      </router-link>
+    </div>
 
     <Dialog
-      v-model:visible="visible"
-      modal
+      v-model:visible="dialogVisible"
+      :close-on-escape="true"
       header="Add to collection"
-      :style="{ width: '25rem' }"
-      :close-on-escape="false"
+      modal
+      :style="{width: '25rem'}"
     >
       <div class="flex align-items-center gap-3 mb-3">
-        <!-- TODO maybe show more information, such as public/private status and who or number of users the collection has been shared with -->
         <Dropdown
           v-model="selectedCollectionUrn"
           class="w-full md:w-14rem"
           option-label="name"
           option-value="urn"
-          :options="collections"
+          :options="editableCollections"
           placeholder="Select a collection"
-        />
+        >
+          <template #option="{option}">
+            {{ option.name }}
+            <i v-if="option.private" class="mave-collection-option-private pi pi-lock" title="Private collection" />
+            <span class="mave-collection-option-sharing">{{ collectionSharingInfo(option) }}</span>
+          </template>
+        </Dropdown>
       </div>
-      <div class="add-collection-buttons">
-        <Button label="Create new collection" class="create-new-collection-button" @click="creatorVisible = true"></Button>
-        <div class="add-collection-save-cancel">
-          <!-- TODO fix bug: when dialog buttons happen to lie on top of the score histogram, score range info displays off to the side when dialog is closed -->
-          <Button label="Cancel" severity="secondary" @click="visible = false" />
+      <div class="mave-save-to-collection-actions">
+        <Button label="Create new collection" @click="creatorVisible = true" />
+        <div class="mave-save-cancel-actions">
+          <Button label="Cancel" severity="secondary" @click="dialogVisible = false" />
           <Button label="Save" @click="saveToCollection" />
         </div>
       </div>
@@ -52,12 +62,14 @@
 
 <script>
 import axios from 'axios'
+import pluralize from 'pluralize'
 import Button from 'primevue/button'
 import Dialog from 'primevue/dialog'
 import Dropdown from 'primevue/dropdown'
 
 import config from '@/config'
 import CollectionCreator from '@/components/CollectionCreator'
+import useAuth from '@/composition/auth'
 
 export default {
   name: 'CollectionAdder',
@@ -69,56 +81,99 @@ export default {
       required: true
     },
     dataSetType: {
-      type: String, // TODO make enum
+      type: String,
       required: true
     }
   },
 
+  setup: () => {
+    const {userIsAuthenticated, userOrcidId} = useAuth()
+    return {userIsAuthenticated, userOrcidId}
+  },
+
   data: () => ({
+    myCollections: {
+      admin: [],
+      editor: [],
+      viewer: []
+    },
     selectedCollectionUrn: null,
-    collections: null,
-    visible: false,
+    dialogVisible: false,
     creatorVisible: false
   }),
 
-  created: async function() {
-    // TODO this takes a second to load, would be nice to let the user know it is still loading (currently says "no available options")
-    let response = null
-    try {
-      response = await axios.get(`${config.apiBaseUrl}/users/me/collections`)
-    } catch (e) {
-      response = e.response || { status: 500 }
+  computed: {
+    collectionsContainingDataSet: function() {
+      return [...this.myCollections.admin, ...this.myCollections.editor, ...this.myCollections.viewer].filter((collection) =>
+        (collection[this.dataSetType == 'scoreSet' ? 'scoreSetUrns' : 'experimentUrns'] || []).includes(this.dataSetUrn)
+      )
+    },
+
+    editableCollections: function() {
+      const adminCollections = this.myCollections['admin']
+      const editorCollections = this.myCollections['editor']
+      return adminCollections.concat(editorCollections)
     }
+  },
 
-    if (response.status == 200) {
-      const allCollections = response.data
-      const adminCollections = allCollections["admin"]
-      const editorCollections = allCollections["editor"]
-      this.collections = adminCollections.concat(editorCollections)
-    } else if (response.data && response.data.detail) {
-      // TODO what to do in event of error?
+  mounted: async function() {
+    this.fetchMyCollections()
+  },
+
+  watch: {
+    userOrcidId: {
+      handler: function(newValue, oldValue) {
+        if (newValue != oldValue) {
+          this.fetchMyCollections()
+        }
+      }
     }
-
-    // TODO other things to handle:
-    // user logs out (don't show previous user's list of collections, refresh correctly)
-    // user adds a new collection (refresh list of collections to show in dropdown)
-    // TODO filter response so that it only includes collections for which the current user is an editor or admin (or change/add API)
-
   },
 
   methods: {
-    saveToCollection: async function(dataSet) {
-      // determine whether data set is a score set or an experiment
-      // call the relevant function
-      // if no errors, set visible to false and show a toast notification
+    childComponentCreatedCollection: function(collection) {
+      this.creatorVisible = false
+      this.myCollections.admin.push(collection)
+      this.selectedCollectionUrn = collection.urn
+    },
+
+    collectionSharingInfo: function(collection) {
+      const numUsers = (collection.admins || []).length + (collection.editors || []).length
+          + (collection.viewers || []).length
+      if (numUsers > 1) {
+        return `Shared with ${numUsers - 1} other ${pluralize('user', numUsers - 1)}`
+      }
+      return null
+    },
+
+    fetchMyCollections: async function() {
+      this.myCollections = {
+        admin: [],
+        editor: [],
+        viewer: []
+      }
+
+      let response = null
+      try {
+        response = await axios.get(`${config.apiBaseUrl}/users/me/collections`)
+      } catch (error) {
+        console.log(error)
+        response = error.response || {status: 500}
+      }
+
+      if (response.status == 200) {
+        this.myCollections = response.data
+      }
+    },
+
+    saveToCollection: async function() {
       if (this.dataSetType === "scoreSet") {
         this.saveScoreSetToCollection(this.dataSetUrn)
       } else if (this.dataSetType === "experiment") {
         this.saveExperimentToCollection(this.dataSetUrn)
       }
-      this.visible = false
-
-      // TODO should the dialog box remain open if there was an error? yes
+      this.dialogVisible = false
+      await this.fetchMyCollections()
     },
 
     saveScoreSetToCollection: async function(scoreSetUrn) {
@@ -128,17 +183,15 @@ export default {
           `${config.apiBaseUrl}/collections/${this.selectedCollectionUrn}/score-sets`,
           {scoreSetUrn}
         )
-      } catch (e) {
-        response = e.response || { status: 500 }
+      } catch (error) {
+        console.log(error)
+        response = error.response || {status: 500}
       }
 
       if (response.status == 200) {
-        this.$toast.add({ severity: 'success', summary: 'Score set saved to collection.', life: 3000 })
+        this.$toast.add({severity: 'success', summary: 'Score set saved to collection.', life: 3000})
       } else if (response.data && response.data.detail) {
-        // TODO what to do in event of error?
-        // look at http status code and determine whether to display error information
-          // would probably be useful to display information related to authentication errors
-        // add to toast message and log to console
+        this.$toast.add({severity: 'warn', summary: 'Sorry, saving the score set to the collection failed.', life: 3000})
       }
     },
 
@@ -149,48 +202,62 @@ export default {
           `${config.apiBaseUrl}/collections/${this.selectedCollectionUrn}/experiments`,
           {experimentUrn}
         )
-      } catch (e) {
-        response = e.response || { status: 500 }
+      } catch (error) {
+        response = error.response || {status: 500}
       }
 
       if (response.status == 200) {
         this.$toast.add({ severity: 'success', summary: 'Experiment saved to collection.', life: 3000 })
       } else if (response.data && response.data.detail) {
-        // TODO what to do in event of error?
+        this.$toast.add({severity: 'warn', summary: 'Sorry, saving the experiment to the collection failed.', life: 3000})
       }
-    },
-
-    childComponentCreatedCollection: function(collection) {
-      // set creatorVisible to false
-      this.creatorVisible = false
-      // refresh the list of collections to display (or at least add the new collection)
-      this.collections.push(collection)
-      // select the new collection in the dropdown
-      this.selectedCollectionUrn = collection.urn
     }
   }
 }
 </script>
 
 <style scoped>
-.collection-adder-button {
+.mave-save-to-collection-button {
   width: fit-content;
 }
 
-.add-collection-buttons {
+.mave-collection-bookmarks {
+  margin: 1em 0;
+}
+
+.mave-collection-bookmark {
+  /*background-color: #3f51b5;*/
+  color: #3f51b5;
+  padding: 5px;
+  margin-right: 2em;
+}
+
+.mave-collection-bookmark .mave-collection-option-private {
+  margin: 0;
+}
+
+.mave-save-to-collection-actions {
   justify-content: space-between;
   display: flex;
 }
 
-.add-collection-buttons .add-collection-save-cancel {
+.mave-save-to-collection-actions .mave-save-cancel-actions {
   display: inline;
 }
 
-.add-collection-buttons .add-collection-save-cancel Button {
+.mave-save-to-collection-actions .mave-save-cancel-actions Button {
   margin: 0 0 0 3px;
 }
 
-.create-new-collection-button {
+.mave-collection-option-private {
+  margin: 0 0.5em;
+}
+
+.mave-collection-option-sharing {
+  color: #999;
+}
+
+.mave-create-collection-button {
   display: inline;
 }
 </style>

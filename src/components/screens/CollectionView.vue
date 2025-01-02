@@ -11,6 +11,7 @@
             >
               <template #display>
                 {{ item.name }}
+                <i v-if="item.private" class="pi pi-lock" title="Private collection" />
                 <CollectionBadge
                   v-if="item.badgeName"
                   :collection="item"
@@ -32,7 +33,7 @@
             </Inplace>
           </div>
           <div v-else>
-            <div class="mave-screen-title">{{ item.name }}</div>
+            <div class="mave-screen-title"><i v-if="item.private" class="pi pi-lock" /> {{ item.name }}</div>
           </div>
           <div v-if="userIsAuthorized.delete" class="mave-screen-title-controls">
             <Button label="Delete" severity="danger" size="small" @click="deleteCollectionWithConfirmation" />

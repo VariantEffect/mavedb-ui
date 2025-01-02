@@ -33,9 +33,11 @@
     </div>
   </div>
   <div class="mave-histogram-container" ref="histogramContainer" />
-  <div v-if="activeShader == 'threshold' && activeCalibrationKey">
-    <Dropdown v-model="activeCalibrationKey" :options="Object.keys(scoreSet.scoreCalibrations)" :optionLabel="titleCase" style="width: 100%;" />
-    <CalibrationTable :calibrations="scoreSet.scoreCalibrations" :selected-calibration="activeCalibrationKey"></CalibrationTable>
+  <div v-if="activeShader == 'range'">
+    <OddsPathTable :score-set="scoreSet" />
+  </div>
+  <div v-if="activeShader == 'threshold'">
+    <CalibrationTable :calibrations="scoreSet.scoreCalibrations" @calibration-selected="childComponentSelectedCalibrations" />
   </div>
 </template>
 
@@ -60,6 +62,7 @@ import makeHistogram, {DEFAULT_SERIES_COLOR, Histogram, HistogramSerieOptions, H
 import CalibrationTable from '@/components/CalibrationTable.vue'
 import { prepareThresholdsForHistogram } from '@/lib/calibrations'
 import { prepareRangesForHistogram } from '@/lib/ranges'
+import OddsPathTable from './OddsPathTable.vue'
 
 const CLNSIG_FIELD = 'mavedb_clnsig'
 const CLNREVSTAT_FIELD = 'mavedb_clnrevstat'
@@ -76,7 +79,7 @@ const DEFAULT_MIN_STAR_RATING = 1
 
 export default defineComponent({
   name: 'ScoreSetHistogram',
-  components: { Checkbox, Dropdown, RadioButton, Rating, TabMenu, CalibrationTable },
+  components: { Checkbox, Dropdown, RadioButton, Rating, TabMenu, CalibrationTable, OddsPathTable },
 
   emits: ['exportChart'],
 
@@ -124,14 +127,13 @@ export default defineComponent({
 
   data: function() {
     const scoreSetHasRanges = config.CLINICAL_FEATURES_ENABLED && this.scoreSet.scoreRanges != null
-    const selectedCalibrationKey = config.CLINICAL_FEATURES_ENABLED && this.scoreSet.scoreCalibrations ? Object.keys(this.scoreSet.scoreCalibrations)[0] : null
 
     return {
       config: config,
 
       activeViz: 0,
       activeShader: scoreSetHasRanges ? 'range' : 'null',
-      activeCalibrationKey: selectedCalibrationKey,
+      activeCalibrationKey: null,
 
       clinicalSignificanceClassificationOptions: CLINVAR_CLINICAL_SIGNIFICANCE_CLASSIFICATIONS,
       customMinStarRating: DEFAULT_MIN_STAR_RATING,
@@ -461,6 +463,10 @@ export default defineComponent({
       }
 
       this.histogram.refresh()
+    },
+
+    childComponentSelectedCalibrations: function(calibrationKey: string) {
+      this.activeCalibrationKey = calibrationKey
     },
 
     titleCase: (s) =>

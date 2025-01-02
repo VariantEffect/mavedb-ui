@@ -332,8 +332,6 @@ export default function makeHistogram(): Histogram {
         .text(text)
     const textWidth = (tempText.node()?.getBoundingClientRect()?.width || 0)
 
-    console.log(textWidth)
-
     switch (align) {
       case "left":
         return 10

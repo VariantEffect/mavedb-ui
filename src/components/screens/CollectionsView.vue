@@ -17,6 +17,8 @@
               <template #body="{data}"><router-link :to="{name: 'collection', params: {urn: data.urn}}">{{data.name}}</router-link></template>
             </Column>
             <Column class="mave-collection-description" field="description" header="Description" :sortable="true" />
+            <Column body-class="mave-align-center" :field="(c) => (c.experimentUrns || []).length" header="Experiments" :sortable="true" />
+            <Column body-class="mave-align-center" :field="(c) => (c.scoreSetUrns || []).length" header="Score&nbsp;sets" :sortable="true" />
             <Column field="role" header="Permissions" :sortable="true" />
             <Column field="creationDate" header="Created" :sortable="true">
               <template #body="{data}">{{ formatDate(data.creationDate) }}</template>
@@ -120,6 +122,10 @@ export default {
 
 .mave-collections-table:deep(td) {
   vertical-align: top;
+}
+
+.mave-collections-table:deep(.mave-align-center) {
+  text-align: center;
 }
 
 .mave-collections-table:deep(.mave-collection-description) {

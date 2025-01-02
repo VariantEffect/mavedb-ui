@@ -34,6 +34,9 @@
           <div v-else>
             <div class="mave-screen-title">{{ item.name }}</div>
           </div>
+          <div v-if="userIsAuthorized.delete" class="mave-screen-title-controls">
+            <Button label="Delete" severity="danger" size="small" @click="deleteCollectionWithConfirmation" />
+          </div>
         </div>
         <div v-if="userIsAuthorized.update">
           <Inplace
@@ -251,6 +254,38 @@ export default {
       } catch (err) {
         console.log(`Error to get authorization:`, err)
       }
+    },
+
+    deleteCollectionWithConfirmation: function() {
+      const numOtherUsers = (this.item.admins || []).length + (this.item.editors || []).length
+          + (this.item.viewers || []).length - 1
+
+      const message = (numOtherUsers > 0) ?
+        `Are you sure you want to delete the collection named "${this.item.name}"? ${numOtherUsers} users will also lose access.`
+        : `Are you sure you want to delete the collection named "${this.item.name}"?`
+
+      this.$confirm.require({
+        message,
+        header: `Delete ${this.item.name}`,
+        icon: 'pi pi-exclamation-triangle',
+        accept: async () => {
+          if (this.item) {
+            let response = null
+            try {
+              response = await axios.delete(`${config.apiBaseUrl}/collections/${this.item.urn}`, this.item)
+            } catch (e) {
+              response = e.response || {status: 500}
+            }
+
+            if (response.status == 200) {
+              this.$router.replace({ name: `collections` })
+              this.$toast.add({severity: 'success', summary: 'The collection was successfully deleted.', life: 3000})
+            } else  {
+              this.$toast.add({severity: 'warn', summary: response.data?.detail || 'Sorry, deletion failed.', life: 3000})
+            }
+          }
+        }
+      })
     },
 
     saveCollectionName: async function() {

@@ -190,8 +190,8 @@ export default {
 
       if (response.status == 200) {
         this.$toast.add({severity: 'success', summary: 'Score set saved to collection.', life: 3000})
-      } else if (response.data && response.data.detail) {
-        this.$toast.add({severity: 'warn', summary: 'Sorry, saving the score set to the collection failed.', life: 3000})
+      } else {
+        this.$toast.add({severity: 'warn', summary: response.data?.detail || 'Sorry, saving the score set to the collection failed.', life: 3000})
       }
     },
 
@@ -209,7 +209,7 @@ export default {
       if (response.status == 200) {
         this.$toast.add({ severity: 'success', summary: 'Experiment saved to collection.', life: 3000 })
       } else if (response.data && response.data.detail) {
-        this.$toast.add({severity: 'warn', summary: 'Sorry, saving the experiment to the collection failed.', life: 3000})
+        this.$toast.add({severity: 'warn', summary: response.data?.detail || 'Sorry, saving the experiment to the collection failed.', life: 3000})
       }
     }
   }

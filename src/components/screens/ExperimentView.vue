@@ -53,6 +53,7 @@
             }}</router-link>
         </div>
         <div v-if="item.currentVersion">Current version {{ item.currentVersion }}</div>
+        <CollectionAdder class="mave-save-to-collection-button" data-set-type="experiment" :data-set-urn="item.urn" />
 
         <div class="mave-score-set-section-title">Score Sets</div>
         <div v-if="this.associatedScoreSets.length != 0">
@@ -229,6 +230,7 @@ import Button from 'primevue/button'
 import Dialog from 'primevue/dialog'
 import 'primeicons/primeicons.css'
 
+import CollectionAdder from '@/components/CollectionAdder'
 import CollectionBadge from '@/components/CollectionBadge'
 import ItemNotFound from '@/components/common/ItemNotFound'
 import PageLoading from '@/components/common/PageLoading'
@@ -241,7 +243,7 @@ import {textForTargetGeneCategory} from '@/lib/target-genes'
 
 export default {
   name: 'ExperimentView',
-  components: {Button, CollectionBadge, DefaultLayout, Dialog, PageLoading, ItemNotFound, PrimeIcons},
+  components: {Button, CollectionAdder, CollectionBadge, DefaultLayout, Dialog, PageLoading, ItemNotFound, PrimeIcons},
 
   setup: () => {
     const {userIsAuthenticated} = useAuth()
@@ -474,5 +476,9 @@ export default {
   color: #987cb8;
   font-size: 87.5%;
   word-wrap: break-word;
+}
+
+.mave-save-to-collection-button {
+  margin: 1em 0;
 }
 </style>

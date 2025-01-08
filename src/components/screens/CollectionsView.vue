@@ -20,8 +20,8 @@
             <Column body-class="mave-align-center" :field="(c) => (c.experimentUrns || []).length" header="Experiments" :sortable="true" />
             <Column body-class="mave-align-center" :field="(c) => (c.scoreSetUrns || []).length" header="Score&nbsp;sets" :sortable="true" />
             <Column field="role" header="Permissions" :sortable="true" />
-            <Column field="creationDate" header="Created" :sortable="true">
-              <template #body="{data}">{{ formatDate(data.creationDate) }}</template>
+            <Column field="modificationDate" header="Last modified" :sortable="true">
+              <template #body="{data}">{{ formatDate(data.modificationDate) }}</template>
             </Column>
           </DataTable>
           <Button label="Add an empty collection" @click="creatorVisible = true" />

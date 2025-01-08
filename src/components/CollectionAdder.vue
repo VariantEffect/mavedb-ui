@@ -7,6 +7,7 @@
       @click="dialogVisible = true"
     />
     <div v-if="collectionsContainingDataSet.length > 0" class="mave-collection-bookmarks">
+      Member of:
       <router-link v-for="collection in collectionsContainingDataSet" class="mave-collection-bookmark" :key="collection" :to="{name: 'collection', params: {urn: collection.urn}}">
         <i class="pi pi-bookmark-fill" />
         {{ collection.name }}

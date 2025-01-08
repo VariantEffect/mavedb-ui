@@ -24,7 +24,7 @@
         ref="userSearchInput"
         v-model="orcidIdsToAddStr"
         class="mave-collection-add-users-search-input"
-        placeholder="Type or paste ORCID IDs here."
+        placeholder="Type or paste 1 or more ORCID IDs here."
         @keyup.enter="addUsers"
         @keyup.escape="clearUserSearch"
       />
@@ -48,7 +48,18 @@
       >
         <Column field="user.orcidId" header="ORCID ID" />
         <Column :field="(userRole) => `${userRole.user.firstName} ${userRole.user.lastName}`" header="Name" />
-        <Column field="role" header="Role" />
+        <Column field="role" header="Role">
+          <template #body="{data}">
+            <Dropdown
+              class="mave-collection-role-dropdown"
+              option-label="title"
+              option-value="value"
+              :options="roleOptions"
+              :model-value="data.role"
+              @change="changeRole(data.user.orcidId, $event.value)"
+            />
+          </template>
+        </Column>
         <Column>
           <template #body="{data}">
             <Button label="Remove" size="small" @click="removeUserRole(data.user.orcidId)" />
@@ -71,6 +82,7 @@ import _ from 'lodash'
 import Button from 'primevue/button'
 import Column from 'primevue/column'
 import DataTable from 'primevue/datatable'
+import Dropdown from 'primevue/dropdown'
 import InputSwitch from 'primevue/inputswitch'
 import InputText from 'primevue/inputtext'
 import SelectButton from 'primevue/selectbutton'
@@ -81,7 +93,7 @@ import {ORCID_ID_REGEX} from '@/lib/orcid'
 
 export default {
   name: 'CollectionCreator',
-  components: {Button, Column, DataTable, InputSwitch, InputText, SelectButton, Textarea},
+  components: {Button, Column, DataTable, Dropdown, InputSwitch, InputText, SelectButton, Textarea},
   emits: ['createdCollection', 'canceled'],
 
   data: () => ({
@@ -135,6 +147,13 @@ export default {
 
     cancel: function() {
       this.$emit('canceled')
+    },
+
+    changeRole: function(orcidId, newRole) {
+      const userRole = this.pendingUserRoles.find((ur) => ur.user.orcidId == orcidId)
+      if (userRole) {
+        userRole.role = newRole
+      }
     },
 
     clearUserSearch: function() {
@@ -220,6 +239,10 @@ export default {
 
 .mave-collection-user-role-add-controls:deep(*) {
   vertical-align: middle;
+}
+
+.mave-collection-role-dropdown:deep(.p-inputtext) {
+  padding: 0 0.3em;
 }
 
 .mave-collection-creator > * {

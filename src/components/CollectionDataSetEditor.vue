@@ -33,15 +33,24 @@
           <Column field="urn" header="URN"></Column>
           <Column field="title" header="Title"></Column>
         </DataTable>
-        <Chips
-          v-model="unvalidatedUrnsToAdd"
-          :add-on-blur="true"
-          :allow-duplicate="false"
-          placeholder="Type or paste comma-separated URNs"
-          separator=" "
-          @keyup.escape="unvalidatedUrnsToAdd = []"
-        />
-        <Button class="mave-collection-add-data-set-button" icon="pi pi-plus" label="Add" @click="fetchDataSetsToAdd" />
+        <div class="flex gap-2">
+          <Chips
+            v-model="unvalidatedUrnsToAdd"
+            :add-on-blur="true"
+            :allow-duplicate="false"
+            class="flex-auto p-fluid"
+            placeholder="Type or paste comma-separated URNs"
+            separator=" "
+            @keyup.escape="unvalidatedUrnsToAdd = []"
+          />
+          <Button class="flex-none mave-collection-add-data-set-button" icon="pi pi-plus" label="Add" @click="fetchDataSetsToAdd" />
+        </div>
+        <Message class="mave-validation-errors-message" v-if="validationErrors.length > 0" severity="error">
+          There were validation errors
+          <div v-if="validationErrors.length > 0" class="mave-validation-errors">
+            <div v-for="errorMessage in validationErrors" class="mave-validation-error" :key="errorMessage">{{ errorMessage }}</div>
+          </div>
+        </Message>
         <Message v-if="errors.length > 0" severity="error">
           Sorry, some changes could not be saved.
         </Message>
@@ -305,10 +314,20 @@ export default {
   display: flex;
   justify-content: flex-end;
   gap: 2px;
-  margin: 5px 0 0 0;
+  margin: 20px 0 0 0;
 }
 
 .mave-collection-editor-action-buttons Button {
   margin: 0 0 0 3px;
+}
+
+.mave-validation-errors-message:deep(.p-message-text) {
+  width: 100%;
+}
+
+.mave-validation-errors {
+  max-height: 100px;
+  overflow: auto;
+  width: 100%;
 }
 </style>

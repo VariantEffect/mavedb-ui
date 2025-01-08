@@ -225,7 +225,7 @@ export default {
   },
 
   mounted: async function() {
-    await this.checkUserAuthorization()
+    await this.checkAuthorization()
   },
 
   watch: {
@@ -240,10 +240,6 @@ export default {
   },
 
   methods: {
-    checkUserAuthorization: async function() {
-      await this.checkAuthorization()
-    },
-
     checkAuthorization: async function() {
       // Response should be true to get authorization
       const actions = ['delete', 'publish', 'update', 'add_score_set', 'add_role']

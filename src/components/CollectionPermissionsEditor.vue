@@ -51,7 +51,7 @@
             <span v-if="data.user.orcidId == userOrcidId">{{ data.role }}</span>
             <Dropdown
               v-if="!orcidIdsToRemove.includes(data.user.orcidId) && data.user.orcidId != userOrcidId"
-              class="mave-ollection-role-dropdown"
+              class="mave-collection-role-dropdown"
               option-label="title"
               option-value="value"
               :options="roleOptions"
@@ -361,7 +361,7 @@ export default {
   width: 100%;
 }
 
-.mave-ollection-role-dropdown:deep(.p-inputtext) {
+.mave-collection-role-dropdown:deep(.p-inputtext) {
   padding: 0 0.3em;
 }
 

@@ -23,7 +23,7 @@
       <div class="flex align-items-center gap-3 mb-3">
         <Dropdown
           v-model="selectedCollectionUrn"
-          class="w-full md:w-14rem"
+          class="w-full"
           option-label="name"
           option-value="urn"
           :options="editableCollections"

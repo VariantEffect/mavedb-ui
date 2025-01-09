@@ -3,6 +3,9 @@
     <div v-if="itemStatus=='Loaded'" class="mave-collection">
       <div class="mave-1000px-col">
         <div class="mave-screen-title-bar">
+          <Button v-if="userIsAuthorized.update && item.private" aria-label="Private collection" class="flex-i" icon="pi pi-lock" text title="Private collection" @click="privacyDialogVisible = true" />
+          <Button v-else-if="userIsAuthorized.update && !item.private" aria-label="Publicly visible" class="flex-i" icon="pi pi-lock-open" text title="Publicly visible" @click="privacyDialogVisible = true" />
+          <i v-else-if="item.private" class="flex-i pi pi-lock" />
           <div v-if="userIsAuthorized.update" class="flex-auto">
             <Inplace
               :active="displayCollectionNameEdit"
@@ -11,7 +14,6 @@
             >
               <template #display>
                 {{ item.name }}
-                <i v-if="item.private" class="pi pi-lock" title="Private collection" />
                 <CollectionBadge
                   v-if="item.badgeName"
                   :collection="item"
@@ -35,7 +37,6 @@
           <div v-else>
             <div class="mave-screen-title">
               {{ item.name }}
-              <i v-if="item.private" class="pi pi-lock" title="Private collection" />
               <CollectionBadge
                 v-if="item.badgeName"
                 :collection="item"
@@ -173,11 +174,27 @@
       <ItemNotFound model="collection" :item-id="itemId"/>
     </div>
   </DefaultLayout>
+  <Dialog
+    v-if="userIsAuthorized.update"
+    v-model:visible="privacyDialogVisible"
+    :close-on-escape="true"
+    header="Privacy"
+    modal
+    :style="{width: '25rem'}"
+  >
+    <p v-if="item.private">This collection is currently private. Only you and other users listed as admins, editors, or viewers can access it.</p>
+    <p v-else-if="item.badgeName">This collection is currently public and is an official collection of MaveDB.</p>
+    <p v-else>This collection is currently public. Any user who has the URL can access it.</p>
+
+    <Button v-if="item.private" icon="pi pi-lock-open" label="Make it public" severity="danger" @click="updatePrivacyWithConfirmation(false)" />
+    <Button v-else-if="!item.badgeName" icon="pi pi-lock" label="Make it private" severity="danger" @click="updatePrivacyWithConfirmation(true)" />
+  </Dialog>
 </template>
 
 <script>
 import axios from 'axios'
 import Button from 'primevue/button'
+import Dialog from 'primevue/dialog'
 import Inplace from 'primevue/inplace'
 import InputText from 'primevue/inputtext'
 import Textarea from 'primevue/textarea'
@@ -197,7 +214,7 @@ import useItem from '@/composition/item'
 export default {
   name: 'CollectionView',
 
-  components: { Button, CollectionBadge, CollectionDataSetEditor, CollectionPermissionsEditor, DefaultLayout, EntityLink, Inplace, InputText, ItemNotFound, PageLoading, Textarea },
+  components: { Button, CollectionBadge, CollectionDataSetEditor, CollectionPermissionsEditor, DefaultLayout, Dialog, EntityLink, Inplace, InputText, ItemNotFound, PageLoading, Textarea },
 
   props: {
     itemId: {
@@ -218,6 +235,7 @@ export default {
     displayCollectionNameEdit: false,
     editDescription: null,
     displayCollectionDescriptionEdit: false,
+    privacyDialogVisible: false
   }),
 
   setup: () => {
@@ -260,6 +278,10 @@ export default {
       }
     },
 
+    childComponentEditedCollection: function() {
+      this.reloadItem(this.itemId)
+    },
+
     deleteCollectionWithConfirmation: function() {
       const numOtherUsers = (this.item.admins || []).length + (this.item.editors || []).length
           + (this.item.viewers || []).length - 1
@@ -299,7 +321,7 @@ export default {
         this.displayCollectionNameEdit = false
       } else {
         const collectionPatch = {
-          "name": editedName
+          name: editedName
         }
         let response = null
         try {
@@ -326,7 +348,7 @@ export default {
         this.displayCollectionNameEdit = false
       } else {
         const collectionPatch = {
-          "description": editedDescription == '' ? null : editedDescription
+          description: editedDescription == '' ? null : editedDescription
         }
         let response = null
         try {
@@ -345,8 +367,58 @@ export default {
       }
     },
 
-    childComponentEditedCollection: function() {
-      this.reloadItem(this.itemId)
+    updatePrivacyWithConfirmation: function(newPrivate) {
+      if (newPrivate != this.item.private) {
+        if (newPrivate) {
+          this.$confirm.require({
+            message: 'After making it private, only users you designated as admins, editors, or viewers will be able to see it.',
+            header: `Are you sure you want to make this collection private?`,
+            icon: 'pi pi-exclamation-triangle',
+            accept: async () => {
+              if (this.item) {
+                let response = null
+                try {
+                  response = await axios.patch(`${config.apiBaseUrl}/collections/${this.item.urn}`, {private: true})
+                } catch (e) {
+                  response = e.response || { status: 500 }
+                }
+
+                if (response.status == 200) {
+                  this.reloadItem(this.itemId)
+                  this.$toast.add({severity: 'success', summary: 'The collection is now private.', life: 3000})
+                  this.privacyDialogVisible = false
+                } else  {
+                  this.$toast.add({severity: 'warn', summary: response.data?.detail || 'Sorry, the collection privacy setting could not be updated.', life: 3000})
+                }
+              }
+            }
+          })
+        } else {
+          this.$confirm.require({
+            message: 'After making it public, any user with the collection URL will be able to see it. Editing will still be limited to people you designated as admins or editors.',
+            header: `Are you sure you want to make this collection public?`,
+            icon: 'pi pi-exclamation-triangle',
+            accept: async () => {
+              if (this.item) {
+                let response = null
+                try {
+                  response = await axios.patch(`${config.apiBaseUrl}/collections/${this.item.urn}`, {private: false})
+                } catch (e) {
+                  response = e.response || { status: 500 }
+                }
+
+                if (response.status == 200) {
+                  this.reloadItem(this.itemId)
+                  this.$toast.add({severity: 'success', summary: 'The collection is now public.', life: 3000})
+                  this.privacyDialogVisible = false
+                } else  {
+                  this.$toast.add({severity: 'warn', summary: response.data?.detail || 'Sorry, the collection privacy setting could not be updated.', life: 3000})
+                }
+              }
+            }
+          })
+        }
+      }
     }
   }
 }

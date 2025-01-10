@@ -23,7 +23,6 @@ export default {
 
   computed: {
     // determine whether badgeName is a link to an img or not
-    // TODO if so, also get the badge's collection name to use as img alt?
     badgeNameIsLink: function() {
       // TODO make this a regex to also allow https
       return this.collection.badgeName?.startsWith("http://") || false

@@ -328,7 +328,24 @@ export default {
         }
       }
 
-      if (failedRemovalUserRoles.length == 0 && failedAdditionUserRoles.length == 0) {
+      const failedRoleChangeUserRoles = []
+      const userRoles = this.existingUserRoles.filter((ur) => ur.oldRole != null && ur.oldRole != ur.role)
+
+      for (const userRole of userRoles) {
+        try {
+          await axios.delete(`${config.apiBaseUrl}/collections/${this.collectionUrn}/${userRole.oldRole}s/${userRole.user.orcidId}`)
+          await axios.post(
+            `${config.apiBaseUrl}/collections/${this.collectionUrn}/${userRole.role}s`,
+            {orcid_id: userRole.user.orcidId}
+          )
+        } catch (error) {
+          console.log(error)
+          failedRoleChangeUserRoles.push(userRole)
+          this.errors.push(`${userRole.user.orcidId}: ${error.message}`)
+        }
+      }
+
+      if (failedRemovalUserRoles.length == 0 && failedAdditionUserRoles.length == 0 && failedRoleChangeUserRoles == 0) {
         this.dialogVisible = false
         this.$emit('saved')
       }

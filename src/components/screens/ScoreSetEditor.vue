@@ -787,14 +787,6 @@ import { TARGET_GENE_CATEGORIES, textForTargetGeneCategory } from '@/lib/target-
     components: { AutoComplete, Button, Card, Chips, Column, Checkbox, DataTable, DefaultLayout, Dropdown, EmailPrompt, EntityLink, FileUpload, InputGroup, InputGroupAddon, InputNumber, InputText, Message, Multiselect, ProgressSpinner, SelectButton, TabPanel, TabView, Textarea },
 
     setup: () => {
-      const editableExperiments = useItems({
-        itemTypeName: 'experiment',
-        options: {
-          filter: {
-            query: { l: { path: 'something' }, r: { constant: 'value' } }
-          }
-        }
-      })
       const publicationIdentifierSuggestions = useItems({ itemTypeName: 'publication-identifier-search' })
       const externalPublicationIdentifierSuggestions = useItems({ itemTypeName: 'external-publication-identifier-search' })
       const targetGeneIdentifierSuggestions = {}
@@ -812,7 +804,7 @@ import { TARGET_GENE_CATEGORIES, textForTargetGeneCategory } from '@/lib/target-
       return {
         ...useFormatters(),
         ...useItem({ itemTypeName: 'scoreSet' }),
-        editableExperiments: editableExperiments.items,
+        editableExperiments: ref([]),
         licenses: licenses.items,
         publicationIdentifierSuggestions: publicationIdentifierSuggestions.items,
         setPublicationIdentifierSearch: (text) => publicationIdentifierSuggestions.setRequestBody({ text }),
@@ -1056,6 +1048,10 @@ import { TARGET_GENE_CATEGORIES, textForTargetGeneCategory } from '@/lib/target-
       },
     },
 
+    mounted: async function() {
+      await this.loadEditableExperiment()
+    },
+
     methods: {
       //////////////////////////////////////////////////////////////////////////////////////////////////////////////////
       // Contributors
@@ -1291,6 +1287,16 @@ import { TARGET_GENE_CATEGORIES, textForTargetGeneCategory } from '@/lib/target-
       // Form fields
       ////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 
+      loadEditableExperiment: async function() {
+        try {
+          const response = await axios.post(`${config.apiBaseUrl}/me/experiments/search`, {metaAnalysis: false})
+          this.editableExperiments = response.data
+        } catch (error) {
+          console.error("Error loading experiments:", error)
+          this.editableExperiments = [] // Reset in case of an error
+        }
+      },
+      
       populateExperimentMetadata: function (event) {
         this.doiIdentifiers = event.value.doiIdentifiers
         this.publicationIdentifiers = _.concat(event.value.primaryPublicationIdentifiers, event.value.secondaryPublicationIdentifiers)

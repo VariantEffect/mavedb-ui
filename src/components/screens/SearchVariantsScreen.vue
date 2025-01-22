@@ -21,6 +21,7 @@
           ClinGen Allele ID:
           <a :href="allele['@id']">{{ allele['@id'] }}</a>
         </div>
+        <h2 v-if="canonicalAlleleName">{{ canonicalAlleleName }}</h2>
         <div class="mavedb-variant-search-result-subheading">Genomic Alleles</div>
         <DataTable
           :loading="loading"
@@ -74,6 +75,7 @@ export default defineComponent({
       // @ts-ignore
       searchText: this.$route.query.search as string | null,
       allele: null as any | null,
+      canonicalAlleleName: undefined as string | undefined,
       genomicAlleles: [] as Array<any>,
       transcriptAlleles: [] as Array<any>
     }
@@ -133,10 +135,12 @@ export default defineComponent({
           })
 
           this.allele = response.data
+          this.canonicalAlleleName = response.data?.communityStandardTitle?.[0] || undefined
           this.genomicAlleles = response.data?.genomicAlleles || []
           this.transcriptAlleles = response.data?.transcriptAlleles || []
         } catch (error) {
           this.allele = null
+          this.canonicalAlleleName = undefined
           this.genomicAlleles = []
           this.transcriptAlleles = []
           console.log(`Error while loading search results")`, error)

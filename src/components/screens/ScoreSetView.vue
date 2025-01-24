@@ -176,6 +176,7 @@
             <Button class="p-button-outlined p-button-sm" @click="downloadMetadata">Metadata</Button>&nbsp;
           </template>
           <Button class="p-button-outlined p-button-sm" @click="downloadMappedVariants()">Mapped Variants</Button>&nbsp;
+          <Button class="p-button-outlined p-button-sm" @click="downloadAnnotatedVariants()">Annotated Variants</Button>&nbsp;
           <Button class="p-button-outlined p-button-sm" @click="histogramExport()">Histogram</Button>&nbsp;
           <template v-if="heatmapExists">
             <Button class="p-button-outlined p-button-sm" @click="heatmapExport()">Heatmap</Button>&nbsp;
@@ -761,6 +762,30 @@ export default {
         anchor.click();
       } else {
         this.$toast.add({ severity: 'error', summary: 'No downloadable mapped variants text file', life: 3000 })
+      }
+    },
+    downloadAnnotatedVariants: async function() {
+      let response = null
+      try {
+        if (this.item) {
+          response = await axios.get(`${config.apiBaseUrl}/score-sets/${this.item.urn}/annotated-variants`)
+        }
+      }
+      catch (e) {
+        response = e.response || { status: 500 }
+      }
+      if (response.status == 200) {
+        //convert object to Json.
+        const file = JSON.stringify(response.data)
+        const anchor = document.createElement('a')
+
+        anchor.href = 'data:text/json;charset=utf-8,' + encodeURIComponent(file);
+        anchor.target = '_blank';
+        //file default name
+        anchor.download = this.item.urn + '_annotated_variants.json';
+        anchor.click();
+      } else {
+        this.$toast.add({ severity: 'error', summary: 'No downloadable annotated variants text file', life: 3000 })
       }
     },
     downloadMetadata: async function() {

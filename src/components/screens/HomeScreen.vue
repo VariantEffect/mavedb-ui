@@ -103,13 +103,13 @@
             </p>
             <blockquote>
                 Rubin, A.F., Stone, J., Bianchi, A.H. <i>et al.</i> MaveDB 2024: a curated community database with over seven million variant effects
-                from multiplexed functional assays. <i>Genome Biol</i> <b>26</b>, 13 (2025). <a href=https://doi.org/10.1186/s13059-025-03476-y>doi.org/10.1186/s13059-025-03476-y</a>
+                from multiplexed functional assays. <i>Genome Biol</i> <b>26</b>, 13 (2025). <a href=https://doi.org/10.1186/s13059-025-03476-y>https://doi.org/10.1186/s13059-025-03476-y</a>
             </blockquote>
             Previous MaveDB publications are listed below:
             <blockquote>
               Daniel Esposito, Jochen Weile, Jay Shendure, Lea M Starita, Anthony T Papenfuss, Frederick P Roth, Douglas M Fowler, Alan F Rubin.
               MaveDB: an open-source platform to distribute and interpret data from multiplexed assays of variant effect.
-              <i>Genome Biol</i> <b>20</b>, 223 (2019). <a href="https://doi.org/10.1186/s13059-019-1845-6">doi:10.1186/s13059-019-1845-6</a>
+              <i>Genome Biol</i> <b>20</b>, 223 (2019). <a href="https://doi.org/10.1186/s13059-019-1845-6">https://doi.org/10.1186/s13059-019-1845-6</a>
             </blockquote>
           </template>
         </Card>

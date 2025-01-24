@@ -1182,7 +1182,7 @@ import { TARGET_GENE_CATEGORIES, textForTargetGeneCategory } from '@/lib/target-
       },
 
       fetchTargetAccessionsByAssembly: async function (assembly) {
-        const url = `${config.apiBaseUrl}/transcripts/${assembly}/accessions`
+        const url = `${config.apiBaseUrl}/hgvs/${assembly}/accessions`
         try {
           const response = await axios.get(
             url,
@@ -1201,7 +1201,7 @@ import { TARGET_GENE_CATEGORIES, textForTargetGeneCategory } from '@/lib/target-
       },
 
       fetchTargetAccessionsByGene: async function (gene) {
-        const url = `${config.apiBaseUrl}/transcripts/gene/${gene}`
+        const url = `${config.apiBaseUrl}/hgvs/gene/${gene}`
         try {
           const response = await axios.get(
             url,
@@ -1231,7 +1231,7 @@ import { TARGET_GENE_CATEGORIES, textForTargetGeneCategory } from '@/lib/target-
           this.$toast.add({ severity: 'info', summary: `${this.targetGene.targetAccession.accession} is already a protein accession.`, life: 3000 })
           return
         }
-        const url = `${config.apiBaseUrl}/transcripts/protein/${this.targetGene.targetAccession.accession}`
+        const url = `${config.apiBaseUrl}/hgvs/protein/${this.targetGene.targetAccession.accession}`
         try {
           const response = await axios.get(
             url,
@@ -1296,7 +1296,7 @@ import { TARGET_GENE_CATEGORIES, textForTargetGeneCategory } from '@/lib/target-
           this.editableExperiments = [] // Reset in case of an error
         }
       },
-      
+
       populateExperimentMetadata: function (event) {
         this.doiIdentifiers = event.value.doiIdentifiers
         this.publicationIdentifiers = _.concat(event.value.primaryPublicationIdentifiers, event.value.secondaryPublicationIdentifiers)

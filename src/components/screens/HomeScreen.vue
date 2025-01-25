@@ -70,21 +70,6 @@
       </div>
       <div class="col-4">
         <Card>
-          <template #title>Citation</template>
-          <template #content>
-            <p>
-              MaveDB: an open-source platform to distribute and interpret data from multiplexed assays of variant Effect
-            </p>
-            <p>
-              Daniel Esposito, Jochen Weile, Jay Shendure, Lea M Starita, Anthony T Papenfuss, Frederick P Roth, Douglas M Fowler, Alan F Rubin
-            </p>
-            <p>
-              Genome Biol 20, 223 (2019) <a href="https://doi.org/10.1186/s13059-019-1845-6">doi:10.1186/s13059-019-1845-6</a>
-            </p>
-          </template>
-        </Card>
-        <br />
-        <Card>
           <template #title>News</template>
           <template #content>
             <ul>
@@ -106,6 +91,26 @@
                 can now be downloaded from <a href="https://doi.org/10.5281/zenodo.11201736" target="_blank">Zenodo</a>.
               </li>
             </ul>
+          </template>
+        </Card>
+      </div>
+      <div class="col-12">
+        <Card>
+          <template #title>Citing MaveDB</template>
+          <template #content>
+            <p>
+              To cite MaveDB, please cite our most recent publication:
+            </p>
+            <blockquote>
+                Rubin, A.F., Stone, J., Bianchi, A.H. <i>et al.</i> MaveDB 2024: a curated community database with over seven million variant effects
+                from multiplexed functional assays. <i>Genome Biol</i> <b>26</b>, 13 (2025). <a href=https://doi.org/10.1186/s13059-025-03476-y>https://doi.org/10.1186/s13059-025-03476-y</a>
+            </blockquote>
+            Previous MaveDB publications are listed below:
+            <blockquote>
+              Daniel Esposito, Jochen Weile, Jay Shendure, Lea M Starita, Anthony T Papenfuss, Frederick P Roth, Douglas M Fowler, Alan F Rubin.
+              MaveDB: an open-source platform to distribute and interpret data from multiplexed assays of variant effect.
+              <i>Genome Biol</i> <b>20</b>, 223 (2019). <a href="https://doi.org/10.1186/s13059-019-1845-6">https://doi.org/10.1186/s13059-019-1845-6</a>
+            </blockquote>
           </template>
         </Card>
       </div>

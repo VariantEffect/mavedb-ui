@@ -53,6 +53,13 @@
             <span>{{ item.title || 'Untitled score set' }}</span>
             <span v-if="item.urn" class="mave-score-set-urn">{{ item.urn }}</span>
           </div>
+          <div class="mave-collection-badges">
+            <CollectionBadge
+              v-for="officialCollection in item.officialCollections"
+              :collection="officialCollection"
+              :key="officialCollection.urn"
+            />
+          </div>
           <div v-if="userIsAuthenticated">
             <div v-if="!item.publishedDate" class="mave-screen-title-controls">
               <Button v-if="userIsAuthorized.update" class="p-button-sm" @click="editItem">Edit</Button>
@@ -174,6 +181,8 @@
             <Button class="p-button-outlined p-button-sm" @click="heatmapExport()">Heatmap</Button>&nbsp;
           </template>
         </div>
+        <CollectionAdder class="mave-save-to-collection-button" data-set-type="scoreSet" :data-set-urn="item.urn" />
+
         <div v-if="requestFromGalaxy == '1'"><br>Send files to <a :href="`${this.galaxyUrl}`">Galaxy</a> <Button class="p-button-outlined p-button-sm" @click="sendToGalaxy('scores')">Scores</Button>&nbsp;
           <template v-if="countColumns.length != 0">
             <Button class="p-button-outlined p-button-sm" @click="sendToGalaxy('counts')">Counts</Button>&nbsp;
@@ -410,6 +419,8 @@ import Message from 'primevue/message'
 import ProgressSpinner from 'primevue/progressspinner'
 import ScrollPanel from 'primevue/scrollpanel';
 
+import CollectionAdder from '@/components/CollectionAdder'
+import CollectionBadge from '@/components/CollectionBadge'
 import ScoreSetHeatmap from '@/components/ScoreSetHeatmap'
 import ScoreSetHistogram from '@/components/ScoreSetHistogram'
 import EntityLink from '@/components/common/EntityLink'
@@ -422,7 +433,6 @@ import useItem from '@/composition/item'
 import useRemoteData from '@/composition/remote-data'
 import config from '@/config'
 import { textForTargetGeneCategory } from '@/lib/target-genes';
-import {saveChartAsFile} from '@/lib/chart-export'
 import { parseScoresOrCounts } from '@/lib/scores'
 import { preferredVariantLabel, variantNotNullOrNA } from '@/lib/mave-hgvs';
 import { mapState } from 'vuex'
@@ -430,7 +440,7 @@ import { ref } from 'vue'
 
 export default {
   name: 'ScoreSetView',
-  components: { Accordion, AccordionTab, AutoComplete, Button, Chip, DefaultLayout, EntityLink, ScoreSetHeatmap, ScoreSetHistogram, TabView, TabPanel, Message, DataTable, Column, ProgressSpinner, ScrollPanel, PageLoading, ItemNotFound },
+  components: { Accordion, AccordionTab, AutoComplete, Button, Chip, CollectionAdder, CollectionBadge, DefaultLayout, EntityLink, ScoreSetHeatmap, ScoreSetHistogram, TabView, TabPanel, Message, DataTable, Column, ProgressSpinner, ScrollPanel, PageLoading, ItemNotFound },
   computed: {
     contributors: function() {
       return _.sortBy(
@@ -914,6 +924,13 @@ export default {
   width: 100%;
 }
 
+.mave-collection-badges {
+  flex: 1 1 auto;
+  padding: 0 0 0 7px;
+  font-size: 12px;
+  line-height: 29px;
+}
+
 /* Score set details */
 
 .mave-score-set-section-title {
@@ -963,5 +980,9 @@ export default {
 .samplify-data-table .samplify-data-table-progress {
   height: 50px;
   width: 50px;
+}
+
+.mave-save-to-collection-button {
+  margin: 1em 0;
 }
 </style>

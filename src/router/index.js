@@ -1,5 +1,7 @@
 import {createRouter, createWebHistory} from 'vue-router'
 
+import CollectionView from '@/components/screens/CollectionView'
+import CollectionsView from '@/components/screens/CollectionsView'
 import DashboardView from '@/components/screens/DashboardView'
 import DocumentationView from '@/components/screens/DocumentationView'
 import ExperimentCreator from '@/components/screens/ExperimentCreator'
@@ -102,6 +104,15 @@ const routes = [{
   props: (route) => ({
     itemId: route.params.urn,
   })
+}, {
+  path: '/collections',
+  name: 'collections',
+  component: CollectionsView
+}, {
+  path: '/collections/:urn',
+  name: 'collection',
+  component: CollectionView,
+  props: (route) => ({itemId: route.params.urn})
 }, ...config.CLINICAL_FEATURES_ENABLED ? [{
   path: '/variants/:urn',
   name: 'variant',

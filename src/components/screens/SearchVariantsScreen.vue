@@ -14,38 +14,52 @@
         </div>
       </div>
       <p v-if="!allele">
-        Enter an HGVS string above to obtain a ClinGen allele ID and its details.
+        Enter an HGVS string above to obtain a variant and its details.
       </p>
-      <div v-if="allele">
-        <div v-if="allele?.['@id']">
-          ClinGen Allele ID:
-          <a :href="allele['@id']">{{ allele['@id'] }}</a>
-        </div>
-        <h2 v-if="canonicalAlleleName">{{ canonicalAlleleName }}</h2>
-        <div class="mavedb-variant-search-result-subheading">Genomic Alleles</div>
-        <DataTable
-          :loading="loading"
-          striped-rows
-          :value="genomicAlleles"
-        >
-          <Column field="referenceGenome" header="Genome" />
-          <Column field="chromosome" header="Chromosome" />
-          <Column field="hgvs" header="HGVS" />
-        </DataTable>
-        <div class="mavedb-variant-search-result-subheading">Transcript Alleles</div>
-        <DataTable
-          :loading="loading"
-          striped-rows
-          :value="transcriptAlleles"
-        >
-          <Column header="Gene">
-            <template #body="{data}">
-              <a :href="data.gene">{{ data.geneSymbol || data.gene }}</a>
-            </template>
-          </Column>
-          <Column field="hgvs" header="NT HGVS" />
-          <Column field="proteinEffect.hgvs" header="Protein HGVS" />
-        </DataTable>
+      <div v-if="allele" class="col-12">
+        <Card>
+          <template #content>
+            <div class="variant-search-result">
+              <div class="variant-search-result-button">
+                <router-link to="/">
+                  <Button label="View in MaveMD" icon="pi pi-eye" />
+                </router-link>
+              </div>
+              <div class="variant-search-result-content">
+                <!-- TODO handle no canonical allele name or just leave blank? -->
+                <div class="variant-search-result-title">
+                  {{ canonicalAlleleName }}
+                </div>
+                <div v-if="allele?.['@id']" class="variant-search-result-subcontent">
+                  ClinGen Allele ID:
+                  <a :href="allele['@id']">{{ allele['@id'] }}</a>
+                </div>
+                <div v-if="grch38Hgvs" class="variant-search-result-subcontent">
+                  GRCh38 coordinates: {{ grch38Hgvs }}
+                </div>
+                <div v-if="grch37Hgvs" class="variant-search-result-subcontent">
+                  GRCh37 coordinates: {{ grch37Hgvs }}
+                </div>
+                <div v-if="maneCoordinates.length > 0" class="variant-search-result-subcontent">
+                  MANE transcript coordinates:
+                  <DataTable striped-rows showGridlines size="small" :value="maneCoordinates">
+                    <Column field="sequenceType" header="Sequence Type"></Column>
+                    <Column field="database" header="Database"></Column>
+                    <Column field="hgvs" header="Coordinates"></Column>
+                  </DataTable> 
+                </div>
+                <div v-if="variants.length > 0" class="variant-search-result-subcontent">
+                  MaveDB score sets containing variant:
+                  <li v-for="variant in variants" :key="variant.urn">
+                    <router-link :to="{name: 'scoreSet', params: {urn: variant.scoreSet.urn}, query: {variant: variant.urn}}">
+                      {{ variant.scoreSet.title }}
+                    </router-link>
+                  </li>
+                </div>
+              </div>
+            </div>
+          </template>
+        </Card>
       </div>
     </div>
   </DefaultLayout>
@@ -55,19 +69,23 @@
 
 import axios from 'axios'
 import _ from 'lodash'
+import Card from 'primevue/card'
 import Column from 'primevue/column'
 import DataTable from 'primevue/datatable'
 import IconField from 'primevue/iconfield'
 import InputIcon from 'primevue/inputicon'
 import InputText from 'primevue/inputtext'
-import DefaultLayout from '@/components/layout/DefaultLayout.vue'
 import Button from 'primevue/button'
 import {defineComponent} from 'vue'
 import {debounce} from 'vue-debounce'
 
+import config from '@/config'
+import DefaultLayout from '@/components/layout/DefaultLayout.vue'
+import EntityLink from '@/components/common/EntityLink.vue'
+
 export default defineComponent({
   name: 'SearchVariantsScreen',
-  components: {Column, DataTable, DefaultLayout, IconField, InputIcon, InputText, Button},
+  components: {Card, Column, DataTable, DefaultLayout, EntityLink, IconField, InputIcon, InputText, Button},
 
   data: function() {
     return {
@@ -77,7 +95,11 @@ export default defineComponent({
       allele: null as any | null,
       canonicalAlleleName: undefined as string | undefined,
       genomicAlleles: [] as Array<any>,
-      transcriptAlleles: [] as Array<any>
+      grch38Hgvs: undefined as string | undefined,
+      grch37Hgvs: undefined as string | undefined,
+      transcriptAlleles: [] as Array<any>,
+      maneCoordinates: [] as Array<any>,
+      variants: [] as Array<any>
     }
   },
 
@@ -102,6 +124,13 @@ export default defineComponent({
         }
       },
       immediate: true
+    },
+    allele: {
+      handler: async function(oldValue, newValue) {
+        if (oldValue != newValue) {
+          await this.mavedbClinGenAlleleIdSearch()
+        }
+      }
     }
   },
 
@@ -114,6 +143,7 @@ export default defineComponent({
       this.debouncedSearchFunction()
     },
     search: async function() {
+      this.variants = []
       this.$router.push({query: {
         ...(this.searchText && this.searchText.length > 0) ? {search: this.searchText} : {}
       }})
@@ -125,6 +155,9 @@ export default defineComponent({
       if (_.isEmpty(this.searchText)) {
         this.allele = null
         this.genomicAlleles = []
+        this.grch38Hgvs = undefined
+        this.grch37Hgvs = undefined
+        this.maneCoordinates = []
         this.transcriptAlleles = []
       } else {
         try {
@@ -137,18 +170,67 @@ export default defineComponent({
           this.allele = response.data
           this.canonicalAlleleName = response.data?.communityStandardTitle?.[0] || undefined
           this.genomicAlleles = response.data?.genomicAlleles || []
+          for (let i = 0; i < this.genomicAlleles.length; i++) {
+            // TODO currently just taking first entry from hgvs array, since that appears to be NC coordinates. check this assumption
+            if (this.genomicAlleles[i].referenceGenome === "GRCh38") {
+              this.grch38Hgvs = this.genomicAlleles[i].hgvs?.[0]
+            } else if (this.genomicAlleles[i].referenceGenome === "GRCh37") {
+              this.grch37Hgvs = this.genomicAlleles[i].hgvs?.[0]
+            }
+          }
           this.transcriptAlleles = response.data?.transcriptAlleles || []
+          for (let i = 0; i < this.transcriptAlleles.length; i++) {
+            if (this.transcriptAlleles[i].MANE !== undefined) {
+              // TODO may want to prioritize one of MANE select, MANE clinical, etc.
+              const mane = this.transcriptAlleles[i].MANE
+              for (const sequenceType of ["nucleotide", "protein"]) {
+                for (const database in mane[sequenceType]) {
+                  this.maneCoordinates.push({
+                    sequenceType: sequenceType,
+                    database: database,
+                    hgvs: mane[sequenceType][database].hgvs
+                  })
+                }
+              }
+            }
+            return
+          }
         } catch (error) {
           this.allele = null
           this.canonicalAlleleName = undefined
           this.genomicAlleles = []
+          this.grch38Hgvs = undefined
+          this.grch37Hgvs = undefined
+          this.maneCoordinates = []
           this.transcriptAlleles = []
-          console.log(`Error while loading search results")`, error)
+          console.log("Error while loading search results", error)
         }
       }
     },
     clear: function() {
       this.searchText = null
+    },
+    mavedbClinGenAlleleIdSearch: async function() {
+      if (this.allele == null) {
+        this.variants = []
+      } else {
+        try {
+          const response = await axios.post(
+            `${config.apiBaseUrl}/variants/clingen-allele-id-lookups`,
+            {
+              clingenAlleleIds: [this.allele?.['@id'].split('/').at(-1)]
+            }
+          )
+          if (response.data !== null && response.data.length > 0) {
+            this.variants = response.data[0]
+          } else {
+            this.variants = []
+          }
+        } catch (error) {
+          this.variants = []
+          console.log("Error while loading MaveDB search results for variant", error)
+        }
+      }
     }
   }
 })
@@ -220,6 +302,21 @@ export default defineComponent({
 .mavedb-variant-search-result-subheading {
   margin: 1em 0 0.5em 0;
   font-weight: bold;
+}
+
+.variant-search-result {
+  display: flex;
+  gap: 20px;
+}
+
+.variant-search-result-title {
+  font-weight: bold;
+  font-size: 20px;
+  margin-bottom: 10px;
+}
+
+.variant-search-result-subcontent {
+  margin-top: 5px;
 }
 
 </style>

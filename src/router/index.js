@@ -19,6 +19,7 @@ import SearchVariantsScreen from '@/components/screens/SearchVariantsScreen'
 import SearchView from '@/components/screens/SearchView'
 import SettingsScreen from '@/components/screens/SettingsScreen'
 import UsersView from '@/components/screens/UsersView'
+import VariantMeasurementScreen from '@/components/screens/VariantMeasurementScreen'
 import VariantScreen from '@/components/screens/VariantScreen'
 import StatisticsView from '@/components/screens/StatisticsView'
 import store from '@/store'
@@ -129,9 +130,16 @@ const routes = [{
   component: CollectionView,
   props: (route) => ({itemId: route.params.urn})
 }, ...config.CLINICAL_FEATURES_ENABLED ? [{
-  path: '/variants/:urn',
+  path: '/variants/:clingenAlleleId',
   name: 'variant',
   component: VariantScreen,
+  props: (route) => ({
+    clingenAlleleId: route.params.clingenAlleleId,
+  })
+}] : [], ...config.CLINICAL_FEATURES_ENABLED ? [{
+  path: '/variant-measurements/:urn',
+  name: 'variantMeasurement',
+  component: VariantMeasurementScreen,
   props: (route) => ({
     variantUrn: route.params.urn,
   })

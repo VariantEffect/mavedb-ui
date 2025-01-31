@@ -239,8 +239,11 @@ export default function makeHistogram(): Histogram {
   //////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 
   const prepareData = () => {
+    // Filter NaN entries from the data property. We're unable to place such scores on the histogram.
+    const filteredData = data.filter((d) => !isNaN(applyField(d, valueField)))
+
     // Bin all the data, regardless of what series each datum belongs to.
-    const overallBins = d3.bin<HistogramDatum, number>().thresholds(numBins).value((d) => applyField(d, valueField))(data)
+    const overallBins = d3.bin<HistogramDatum, number>().thresholds(numBins).value((d) => applyField(d, valueField))(filteredData)
     const thresholds = (overallBins.length > 0 ? [overallBins[0].x0, ...overallBins.map((bin) => bin.x1)] : [])
         .filter((t) => t != null)
     const domain: [number, number] = [thresholds[0] || 0, thresholds[thresholds.length - 1] || 0]
@@ -252,7 +255,7 @@ export default function makeHistogram(): Histogram {
           .thresholds(thresholds)
           .value((d) => applyField(d, valueField))
       series = seriesOptions.map((serieOptions, i) => ({
-        bins: binClassifier(data.filter((datum) => classifier(datum).includes(i))),
+        bins: binClassifier(filteredData.filter((datum) => classifier(datum).includes(i))),
         x0: null,
         x1: null,
         maxBinSize: 0,

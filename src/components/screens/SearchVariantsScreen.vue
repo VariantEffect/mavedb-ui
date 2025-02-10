@@ -16,12 +16,12 @@
       <p v-if="!allele">
         Enter an HGVS string above to obtain a variant and its details.
       </p>
-      <div v-if="allele" class="col-12">
+      <div v-if="allele && clingenAlleleId" class="col-12">
         <Card>
           <template #content>
             <div class="variant-search-result">
-              <div class="variant-search-result-button">
-                <router-link to="/">
+              <div v-if="variants.length > 0" class="variant-search-result-button">
+                <router-link :to="`/variants/${clingenAlleleId}`">
                   <Button label="View in MaveMD" icon="pi pi-eye" />
                 </router-link>
               </div>
@@ -48,7 +48,7 @@
                     <Column field="hgvs" header="Coordinates"></Column>
                   </DataTable> 
                 </div>
-                <div v-if="variants.length > 0" class="variant-search-result-subcontent">
+                <div v-if="variantsStatus == 'Loaded' && variants.length > 0" class="variant-search-result-subcontent">
                   MaveDB score sets containing variant:
                   <li v-for="variant in variants" :key="variant.urn">
                     <router-link :to="{name: 'scoreSet', params: {urn: variant.scoreSet.urn}, query: {variant: variant.urn}}">
@@ -56,6 +56,13 @@
                     </router-link>
                   </li>
                 </div>
+                <div v-if="variantsStatus == 'Loaded' && variants.length > 0" style="overflow: hidden;">
+                  <div v-for="variant in variants" :key="variant.urn" style="float: left; border: 1px solid #000; width: 300px; margin: 5px; padding: 5px;">
+                    <div style="border-bottom: 3px solid #000; font-weight: bold;">{{ variant.scoreSet.title }}</div>
+                    {{ variant.scoreSet?.experiment?.keywords }}
+                  </div>
+                </div>
+                <Message v-else-if="variantsStatus == 'Loaded'">No score sets containing this variant were found in MaveDB.</Message>
               </div>
             </div>
           </template>
@@ -76,6 +83,7 @@ import IconField from 'primevue/iconfield'
 import InputIcon from 'primevue/inputicon'
 import InputText from 'primevue/inputtext'
 import Button from 'primevue/button'
+import Message from 'primevue/message'
 import {defineComponent} from 'vue'
 import {debounce} from 'vue-debounce'
 
@@ -85,7 +93,7 @@ import EntityLink from '@/components/common/EntityLink.vue'
 
 export default defineComponent({
   name: 'SearchVariantsScreen',
-  components: {Card, Column, DataTable, DefaultLayout, EntityLink, IconField, InputIcon, InputText, Button},
+  components: {Card, Column, DataTable, DefaultLayout, EntityLink, IconField, InputIcon, InputText, Button, Message},
 
   data: function() {
     return {
@@ -99,11 +107,15 @@ export default defineComponent({
       grch37Hgvs: undefined as string | undefined,
       transcriptAlleles: [] as Array<any>,
       maneCoordinates: [] as Array<any>,
-      variants: [] as Array<any>
+      variants: [] as Array<any>,
+      variantsStatus: 'NotLoaded'
     }
   },
 
   computed: {
+    clingenAlleleId: function() {
+      return this.allele?.['@id']?.split('/')?.at(-1)
+    },
     debouncedSearchFunction: function() {
       return debounce(() => this.search(), '400ms')
     }
@@ -128,7 +140,7 @@ export default defineComponent({
     allele: {
       handler: async function(oldValue, newValue) {
         if (oldValue != newValue) {
-          await this.mavedbClinGenAlleleIdSearch()
+          await this.searchVariants()
         }
       }
     }
@@ -144,6 +156,7 @@ export default defineComponent({
     },
     search: async function() {
       this.variants = []
+      this.maneCoordinates = []
       this.$router.push({query: {
         ...(this.searchText && this.searchText.length > 0) ? {search: this.searchText} : {}
       }})
@@ -210,24 +223,29 @@ export default defineComponent({
     clear: function() {
       this.searchText = null
     },
-    mavedbClinGenAlleleIdSearch: async function() {
+    searchVariants: async function() {
       if (this.allele == null) {
+        this.variantsStatus = 'NotLoaded'
         this.variants = []
       } else {
+        this.variantsStatus = 'Loading'
         try {
           const response = await axios.post(
             `${config.apiBaseUrl}/variants/clingen-allele-id-lookups`,
             {
-              clingenAlleleIds: [this.allele?.['@id'].split('/').at(-1)]
+              clingenAlleleIds: [this.clingenAlleleId]
             }
           )
           if (response.data !== null && response.data.length > 0) {
             this.variants = response.data[0]
+            this.variantsStatus = 'Loaded'
           } else {
             this.variants = []
+            this.variantsStatus = 'Loaded'
           }
         } catch (error) {
           this.variants = []
+          this.variantsStatus = 'Error'
           console.log("Error while loading MaveDB search results for variant", error)
         }
       }

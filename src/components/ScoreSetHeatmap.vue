@@ -2,10 +2,12 @@
   <div v-if="heatmapVisible">
 
     <div style="text-align: center;">Functional Score by Variant</div>
-    <div id="mave-heatmap-container" class="heatmapContainer" ref="heatmapContainer">
-      <div id="mave-heatmap-scroll-container" class="heatmapScrollContainer" ref="heatmapScrollContainer">
-        <div id="mave-stacked-heatmap-container" class="mave-simple-variants-stacked-heatmap-container" ref="simpleVariantsStackedHeatmapContainer" />
-        <div id="mave-variants-heatmap-container" class="mave-simple-variants-heatmap-container" ref="simpleVariantsHeatmapContainer" />
+    <div class="mave-heatmap-wrapper">
+      <div id="mave-heatmap-container" class="heatmapContainer" ref="heatmapContainer">
+        <div id="mave-heatmap-scroll-container" class="heatmapScrollContainer" ref="heatmapScrollContainer">
+          <div id="mave-stacked-heatmap-container" class="mave-simple-variants-stacked-heatmap-container" ref="simpleVariantsStackedHeatmapContainer" />
+          <div id="mave-variants-heatmap-container" class="mave-simple-variants-heatmap-container" ref="simpleVariantsHeatmapContainer" />
+        </div>
       </div>
       <div class="mave-heatmap-controls">
         <span class="mave-heatmap-controls-title">Heatmap format</span>
@@ -478,7 +480,11 @@ export default {
   font-weight: bold;
 }
 
-.heatmapContainer:hover .mave-heatmap-controls {
+.mave-heatmap-wrapper {
+  position: relative;
+}
+
+.mave-heatmap-wrapper:hover .mave-heatmap-controls {
   display: flex;
   flex-direction: row;
 }

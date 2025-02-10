@@ -2,10 +2,22 @@
   <div v-if="heatmapVisible">
 
     <div style="text-align: center;">Functional Score by Variant</div>
-    <div id="mave-heatmap-container" class="heatmapContainer" ref="heatmapContainer">
-      <div id="mave-heatmap-scroll-container" class="heatmapScrollContainer" ref="heatmapScrollContainer">
-        <div id="mave-stacked-heatmap-container" class="mave-simple-variants-stacked-heatmap-container" ref="simpleVariantsStackedHeatmapContainer" />
-        <div id="mave-variants-heatmap-container" class="mave-simple-variants-heatmap-container" ref="simpleVariantsHeatmapContainer" />
+    <div class="mave-heatmap-wrapper">
+      <div id="mave-heatmap-container" class="heatmapContainer" ref="heatmapContainer">
+        <div id="mave-heatmap-scroll-container" class="heatmapScrollContainer" ref="heatmapScrollContainer">
+          <div id="mave-stacked-heatmap-container" class="mave-simple-variants-stacked-heatmap-container" ref="simpleVariantsStackedHeatmapContainer" />
+          <div id="mave-variants-heatmap-container" class="mave-simple-variants-heatmap-container" ref="simpleVariantsHeatmapContainer" />
+        </div>
+      </div>
+      <div class="mave-heatmap-controls">
+        <span class="mave-heatmap-controls-title">Heatmap format</span>
+        <SelectButton
+          v-model="layout"
+          :allow-empty="false"
+          option-label="title"
+          option-value="value"
+          :options="[{title: 'Normal', value: 'normal'}, {title: 'Compact', value: 'compact'}]"
+        />
       </div>
     </div>
     <div v-if="numComplexVariants > 0">{{numComplexVariants}} variants are complex and cannot be shown on this type of chart.</div>
@@ -14,8 +26,9 @@
 
 <script lang="ts">
 
-import _ from 'lodash'
 import * as d3 from 'd3'
+import _ from 'lodash'
+import SelectButton from 'primevue/selectbutton'
 
 import geneticCodes from '@/lib/genetic-codes'
 import makeHeatmap, {heatmapRowForNucleotideVariant, heatmapRowForProteinVariant, HEATMAP_AMINO_ACID_ROWS, HEATMAP_NUCLEOTIDE_ROWS, HeatmapDatum} from '@/lib/heatmap'
@@ -32,9 +45,11 @@ function stdev(array: number[]) {
   return Math.sqrt(array.map(x => Math.pow(x - mean, 2)).reduce((a, b) => a + b) / n)
 }
 
+type HeatmapLayout = 'normal' | 'compact'
+
 export default {
   name: 'ScoreSetHeatmap',
-
+  components: {SelectButton},
   emits: ['variantSelected', 'heatmapVisible', 'exportChart'],
 
   props: {
@@ -83,7 +98,8 @@ export default {
     simpleVariants: null,
     numComplexVariants: 0,
     heatmap: null as Heatmap | null,
-    stackedHeatmap: null as Heatmap | null
+    stackedHeatmap: null as Heatmap | null,
+    layout: 'normal' as HeatmapLayout
   }),
 
   computed: {
@@ -138,6 +154,13 @@ export default {
   },
 
   watch: {
+    layout: {
+      handler: function(newValue, oldValue) {
+        if (newValue != oldValue) {
+          this.renderOrRefreshHeatmaps()
+        }
+      }
+    },
     scores: {
       handler: function() {
         if (!this.scores) {
@@ -337,8 +360,13 @@ export default {
         return
       }
 
+      this.heatmap?.destroy()
+      this.stackedHeatmap?.destroy()
+
       this.drawHeatmap()
-      this.isNucleotideHeatmap ? null : this.drawStackedHeatmap()
+      if (!this.isNucleotideHeatmap && this.layout != 'compact') {
+        this.drawStackedHeatmap()
+      }
     },
 
     // Assumes that plate dimensions do not change.
@@ -352,6 +380,13 @@ export default {
         .yCoordinate(this.yCoord)
         .tooltipHtml(this.tooltipHtmlGetter)
         .datumSelected(this.variantSelected)
+
+      if (this.layout == 'compact') {
+        this.heatmap.nodeBorderRadius(0)
+          .nodePadding(0)
+          .nodeSize({width: 1, height: 20})
+          .skipXTicks(99)
+      }
 
       this.heatmap.data(this.simpleAndWtVariants)
         .valueField((d) => d.meanScore)
@@ -420,6 +455,39 @@ export default {
 </style>
 
 <style scoped>
+
+.mave-heatmap-controls {
+  display: none;
+  align-items: center;
+  gap: 10px;
+  position: absolute;
+  top: 100%;
+  z-index: 100;
+  width: 100%;
+  padding: 10px;
+  background-color: #eee;
+}
+
+.mave-heatmap-controls .p-selectbutton {
+  display: inline-block;
+}
+
+.mave-heatmap-controls * {
+  vertical-align: middle;
+}
+
+.mave-heatmap-controls-title {
+  font-weight: bold;
+}
+
+.mave-heatmap-wrapper {
+  position: relative;
+}
+
+.mave-heatmap-wrapper:hover .mave-heatmap-controls {
+  display: flex;
+  flex-direction: row;
+}
 
 .heatmapContainer {
   position: relative;

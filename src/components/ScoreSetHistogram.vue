@@ -150,7 +150,7 @@ export default defineComponent({
           return [{
             classifier: (d) =>
               _.intersection(PATHOGENIC_CLINICAL_SIGNIFICANCE_CLASSIFICATIONS, this.selectedClinicalSignificanceClassifications)
-                  .includes(d[CLNSIG_FIELD]),
+                  .includes(d[CLNSIG_FIELD]?.replace(' ', '_')),
             options: {
               color: '#e41a1c',
               title: 'Pathogenic/Likely Pathogenic'
@@ -158,7 +158,7 @@ export default defineComponent({
           }, {
             classifier: (d) =>
               _.intersection(BENIGN_CLINICAL_SIGNIFICANCE_CLASSIFICATIONS, this.selectedClinicalSignificanceClassifications)
-                  .includes(d[CLNSIG_FIELD]),
+                  .includes(d[CLNSIG_FIELD]?.replace(' ', '_')),
             options: {
               color: '#377eb8',
               title: 'Benign/Likely Benign'
@@ -171,7 +171,7 @@ export default defineComponent({
               classifier: (d) =>
                 _.intersection(PATHOGENIC_CLINICAL_SIGNIFICANCE_CLASSIFICATIONS, this.selectedClinicalSignificanceClassifications)
                     .includes(d[CLNSIG_FIELD])
-                    && CLINVAR_REVIEW_STATUS_STARS[d[CLNREVSTAT_FIELD]] >= this.minStarRating,
+                    && CLINVAR_REVIEW_STATUS_STARS[d[CLNREVSTAT_FIELD]?.replace(' ', '_')] >= this.minStarRating,
               options: {
                 color: '#e41a1c',
                 title: 'Pathogenic/Likely Pathogenic'
@@ -180,7 +180,7 @@ export default defineComponent({
               classifier: (d) =>
                 _.intersection(BENIGN_CLINICAL_SIGNIFICANCE_CLASSIFICATIONS, this.selectedClinicalSignificanceClassifications)
                     .includes(d[CLNSIG_FIELD])
-                    && CLINVAR_REVIEW_STATUS_STARS[d[CLNREVSTAT_FIELD]] >= this.minStarRating,
+                    && CLINVAR_REVIEW_STATUS_STARS[d[CLNREVSTAT_FIELD]?.replace(' ', '_')] >= this.minStarRating,
               options: {
                 color: '#377eb8',
                 title: 'Benign/Likely Benign'

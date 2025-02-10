@@ -114,6 +114,8 @@ export interface Heatmap {
   margins: Accessor<HeatmapMargins, Heatmap>
   rows: Accessor<HeatmapRowSpecification[], Heatmap>
   nodeSize: Accessor<HeatmapNodeSize, Heatmap>
+  nodeBorderRadius: Accessor<number, Heatmap>
+  nodePadding: Accessor<number, Heatmap>
 
   // Color
   lowerBoundColor: Accessor<string, Heatmap>
@@ -123,6 +125,7 @@ export interface Heatmap {
   // Axis controls
   drawX: Accessor<boolean, Heatmap>
   drawY: Accessor<boolean, Heatmap>
+  skipXTicks: Accessor<number, Heatmap>
 
   // Legend controls
   legendTitle: Accessor<string | null, Heatmap>
@@ -176,6 +179,8 @@ export default function makeHeatmap(): Heatmap {
 
   // Layout
   let margins: HeatmapMargins = { top: 20, right: 20, bottom: 30, left: 20 }
+  let nodeBorderRadius: number = 4
+  let nodePadding: number = .1
   let nodeSize: HeatmapNodeSize = { width: 20, height: 20}
   let rows: HeatmapRowSpecification[] = HEATMAP_AMINO_ACID_ROWS
 
@@ -187,6 +192,7 @@ export default function makeHeatmap(): Heatmap {
   // Axis controls
   let drawX: boolean = true
   let drawY: boolean = true
+  let skipXTicks: number = 1
 
   // Legend controls
   let legendTitle: string | null = null
@@ -229,7 +235,6 @@ export default function makeHeatmap(): Heatmap {
 
   /** Margins of the heatmap itself, after leaving space for other drawn elements. */
   let effectiveMargins: HeatmapMargins = { top: 0, right: 0, bottom: 0, left: 0 }
-  const padding: number = .1
 
   // D3 selections containing DOM elements
   let svg: d3.Selection<SVGSVGElement, any, any, any> | null = null
@@ -628,10 +633,10 @@ export default function makeHeatmap(): Heatmap {
         }
 
         // Set the Y scale. We are placing all row content starting at screen position 0 and continuing to the heatmap height.
-        yScale.range([0, height]).domain(_.range(0, rows.length)).padding(padding)
+        yScale.range([0, height]).domain(_.range(0, rows.length)).padding(nodePadding)
 
         // Set the X scale. We are placing idxLowerBound to idxUpperBound (all heatmap content) starting at screen position 0 and continuing to the effective heatmap width.
-        xScale.range([0, width - effectiveMargins.left]).domain((idxLowerBound && idxUpperBound ? _.range(idxLowerBound, idxUpperBound + 1) : [])).padding(padding)
+        xScale.range([0, width - effectiveMargins.left]).domain((idxLowerBound && idxUpperBound ? _.range(idxLowerBound, idxUpperBound + 1) : [])).padding(nodePadding)
 
         // Refresh the axes.
         if (drawX) {
@@ -642,9 +647,9 @@ export default function makeHeatmap(): Heatmap {
           .call(d3.axisBottom(xScale).ticks(0))
           .select('.domain').remove()
 
-          // Make all even-numbered x-axis labels invisible so they don't overlap at n > 100.
+          // Skip x-axis labels by making them invisible.
           svg.select('g.heatmap-bottom-axis').selectAll('g.tick')
-          .attr('class', (n) => (n % 2 === 0) ? 'heatmap-x-axis-invisible' : '')
+            .attr('class', (n) => (skipXTicks > 0 && (n % (skipXTicks + 1) === 1)) ? '' : 'heatmap-x-axis-invisible')
         }
         if (drawY) {
           svg.select('g.heatmap-y-axis-tick-labels')
@@ -669,8 +674,8 @@ export default function makeHeatmap(): Heatmap {
         chartedDatum.enter()
           .append('rect')
           .attr('class', d => `node-${xCoordinate(d)}-${yCoordinate(d)}`)
-          .attr('rx', 4)
-          .attr('ry', 4)
+          .attr('rx', nodeBorderRadius)
+          .attr('ry', nodeBorderRadius)
           .style('cursor', 'pointer')
           .style('opacity', 0.8)
           .on('mouseover', mouseover)
@@ -699,8 +704,8 @@ export default function makeHeatmap(): Heatmap {
         const heatmapCalculatedWidth = nodeSize.width * (content.columns ? content.columns : 0)
 
         // Total width/height, including all margins and additional elements.
-        const heatmapTotalWidth = ((margins.left + margins.right) + (drawLegend || alignViaLegend ? LEGEND_SIZE : 0) + heatmapCalculatedWidth) * (1 + padding)
-        const heatmapTotalHeight = ((margins.top + margins.bottom) + heatmapCalculatedHeight) * (1 + padding)
+        const heatmapTotalWidth = ((margins.left + margins.right) + (drawLegend || alignViaLegend ? LEGEND_SIZE : 0) + heatmapCalculatedWidth) * (1 + nodePadding)
+        const heatmapTotalHeight = ((margins.top + margins.bottom) + heatmapCalculatedHeight) * (1 + nodePadding)
 
         // Total width/height, less any provided margins.
         const drawableHeight = heatmapTotalHeight - margins.top - margins.bottom
@@ -827,6 +832,22 @@ export default function makeHeatmap(): Heatmap {
       return chart
     },
 
+    nodeBorderRadius: (value?: number) => {
+      if (value === undefined) {
+        return nodeBorderRadius
+      }
+      nodeBorderRadius = value
+      return chart
+    },
+
+    nodePadding: (value?: number) => {
+      if (value === undefined) {
+        return nodePadding
+      }
+      nodePadding = value
+      return chart
+    },
+
     nodeSize: (value?: HeatmapNodeSize) => {
       if (value === undefined) {
         return nodeSize
@@ -874,6 +895,15 @@ export default function makeHeatmap(): Heatmap {
       }
 
       drawY = value
+      return chart
+    },
+
+    skipXTicks: (value?: number) => {
+      if (value === undefined) {
+        return skipXTicks
+      }
+
+      skipXTicks = value
       return chart
     },
 

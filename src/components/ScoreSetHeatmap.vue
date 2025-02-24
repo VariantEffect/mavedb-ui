@@ -216,6 +216,9 @@ export default {
     xCoord: function(d: HeatmapDatum) {
       return d?.x
     },
+    accession: function(d: HeatmapDatum) {
+      return d?.details.accession
+    },
     yCoord: function(d: HeatmapDatum) {
       return d?.y
     },
@@ -378,6 +381,7 @@ export default {
         .rows(this.heatmapRows)
         .xCoordinate(this.xCoord)
         .yCoordinate(this.yCoord)
+        .accessorField(this.accession)
         .tooltipHtml(this.tooltipHtmlGetter)
         .datumSelected(this.variantSelected)
 
@@ -403,6 +407,7 @@ export default {
         .nodeSize({width: 20, height: 1})
         .xCoordinate(this.xCoord)
         .yCoordinate(this.vRank)
+        .accessorField(this.accession)
         .drawY(false)
         .drawLegend(false)
         .alignViaLegend(true)

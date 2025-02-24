@@ -175,7 +175,7 @@ export default {
           return 'Functionally normal'
         default:
           return undefined
-      } 
+      }
     },
     classifierCssClasses: function() {
       switch (this.classification) {

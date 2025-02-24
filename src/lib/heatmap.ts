@@ -87,7 +87,7 @@ export interface Heatmap {
 
   // Selection management
   clearSelection: () => void
-  selectDatum: (d: HeatmapDatum) => void
+  selectDatum: (datum: HeatmapDatum) => void
   selectDatumByIndex: (x: number, y: number) => void
 
   //////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
@@ -104,6 +104,7 @@ export interface Heatmap {
 
   // Data fields
   valueField: Accessor<FieldGetter<number>, Heatmap>
+  accessorField: Accessor<FieldGetter<string>, Heatmap>
   xCoordinate: Accessor<FieldGetter<number>, Heatmap>
   yCoordinate: Accessor<FieldGetter<number>, Heatmap>
   tooltipHtml: Accessor<((
@@ -164,6 +165,7 @@ export default function makeHeatmap(): Heatmap {
 
   // Data fields
   let valueField: FieldGetter<number> = (d) => d as number
+  let accessorField: FieldGetter<string> = (d) => d as string
   let xCoordinate: FieldGetter<number> = (d) => d as number
   let yCoordinate: FieldGetter<number> = (d) => d as number
   let tooltipHtml: ((
@@ -732,8 +734,9 @@ export default function makeHeatmap(): Heatmap {
       updateSelectionTooltipAfterRefresh()
     },
 
-    selectDatum: (d: HeatmapDatum) => {
-      refreshSelectedDatum(d, false)
+    selectDatum: (datum: HeatmapDatum) => {
+      const selectedDatum = data.find((d) => accessorField(d) == accessorField(datum))
+      refreshSelectedDatum(selectedDatum, false)
       updateSelectionTooltipAfterRefresh()
     },
 
@@ -795,6 +798,14 @@ export default function makeHeatmap(): Heatmap {
         return valueField
       }
       valueField = value
+      return chart
+    },
+
+    accessorField: (value?: FieldGetter<string>) => {
+      if (value === undefined) {
+        return accessorField
+      }
+      accessorField = value
       return chart
     },
 

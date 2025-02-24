@@ -385,18 +385,26 @@ export default {
         .tooltipHtml(this.tooltipHtmlGetter)
         .datumSelected(this.variantSelected)
 
+      if (!this.heatmap) {
+        return
+      }
+
       if (this.layout == 'compact') {
         this.heatmap.nodeBorderRadius(0)
           .nodePadding(0)
           .nodeSize({width: 1, height: 20})
           .skipXTicks(99)
-      }
 
       this.heatmap.data(this.simpleAndWtVariants)
         .valueField((d) => d.meanScore)
         .colorClassifier((variant) => variant.details.wt ? d3.color('#ddbb00') : variant.meanScore)
         .refresh()
-        .selectDatum(this.selectedVariant)
+
+      if (this.selectedVariant) {
+        this.heatmap.selectDatum(this.selectedVariant)
+      } else {
+        this.heatmap.clearSelection()
+      }
     },
 
     drawStackedHeatmap: function() {
@@ -413,11 +421,20 @@ export default {
         .alignViaLegend(true)
         .excludeDatum((d) => d.details.wt ? true : false)
 
+      if (!this.stackedHeatmap) {
+        return
+      }
+
       this.stackedHeatmap.data(this.simpleAndWtVariants)
         .valueField((d) => d.meanScore)
         .colorClassifier((variant) => variant.details.wt ? d3.color('#ddbb00') : variant.meanScore)
         .refresh()
-        .selectDatum(this.selectedVariant)
+
+      if (this.selectedVariant) {
+        this.stackedHeatmap.selectDatum(this.selectedVariant)
+      } else {
+        this.stackedHeatmap.clearSelection()
+      }
     },
 
     tooltipHtmlGetter: function(variant: HeatmapDatum) {

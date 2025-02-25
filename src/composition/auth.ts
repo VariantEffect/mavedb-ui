@@ -39,6 +39,7 @@ export default () => {
 
   const userIdToken = computed(() => orcidIdToken)
   const userIsAuthenticated = computed(() => orcidIsAuthenticated.value)
+  const userOrcidId = computed(() => orcidUserProfile.value?.sub)
   const userProfile = computed(() => orcidUserProfile.value)
   const roles = computed(() => store.state.auth.roles)
   const activeRoles = computed(() => store.state.auth.activeRoles)
@@ -54,6 +55,7 @@ export default () => {
     roles,
     userIdToken,
     userIsAuthenticated,
+    userOrcidId,
     userProfile,
 
     signIn,

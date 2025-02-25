@@ -1,5 +1,22 @@
 <template>
   <TabMenu class="mave-histogram-viz-select" v-if="hasTabBar" v-model:activeIndex="activeViz" :model="vizOptions" />
+  <div v-if="hasTabBar && showShaders" class="mave-histogram-controls">
+    <div class="flex flex-wrap gap-3">
+      Shader Options:
+      <div class="flex align-items-center gap-1">
+          <RadioButton v-model="activeShader" inputId="unsetShader" name="shader" value="null" />
+          <label for="unsetShader">No Shader</label>
+      </div>
+      <div class="flex items-center gap-2" v-if="scoreSet.scoreRanges">
+          <RadioButton v-model="activeShader" inputId="rangeShader" name="shader" value="range" />
+          <label for="rangeShader">Score Ranges</label>
+      </div>
+      <div class="flex items-center gap-2" v-if="scoreSet.scoreCalibrations">
+          <RadioButton v-model="activeShader" inputId="calibrationShader" name="shader" value="threshold" />
+          <label for="calibrationShader">Calibration Thresholds</label>
+      </div>
+    </div>
+  </div>
   <div v-if="showControls" class="mave-histogram-controls">
     <div class="mave-histogram-control">
       <label for="mave-histogram-star-select" class="mave-histogram-control-label">Minimum ClinVar review status 'gold stars': </label>
@@ -16,14 +33,20 @@
     </div>
   </div>
   <div class="mave-histogram-container" ref="histogramContainer" />
+  <div v-if="activeShader == 'range'">
+    <OddsPathTable :score-set="scoreSet" />
+  </div>
+  <div v-if="activeShader == 'threshold'">
+    <CalibrationTable :calibrations="scoreSet.scoreCalibrations" @calibration-selected="childComponentSelectedCalibrations" />
+  </div>
 </template>
 
 <script lang="ts">
-import * as d3 from 'd3'
-import { variantNotNullOrNA } from '@/lib/mave-hgvs'
 import { saveChartAsFile } from '@/lib/chart-export'
 import _ from 'lodash'
 import Checkbox from 'primevue/checkbox'
+import Dropdown from 'primevue/dropdown'
+import RadioButton from 'primevue/radiobutton'
 import Rating from 'primevue/rating'
 import TabMenu from 'primevue/tabmenu'
 import {defineComponent} from 'vue'
@@ -35,7 +58,11 @@ import {
   CLINVAR_REVIEW_STATUS_STARS,
   PATHOGENIC_CLINICAL_SIGNIFICANCE_CLASSIFICATIONS
 } from '@/lib/clinvar'
-import makeHistogram, {DEFAULT_SERIES_COLOR, Histogram, HistogramSerieOptions} from '@/lib/histogram'
+import makeHistogram, {DEFAULT_SERIES_COLOR, Histogram, HistogramSerieOptions, HistogramDatum} from '@/lib/histogram'
+import CalibrationTable from '@/components/CalibrationTable.vue'
+import { prepareThresholdsForHistogram } from '@/lib/calibrations'
+import { prepareRangesForHistogram } from '@/lib/ranges'
+import OddsPathTable from './OddsPathTable.vue'
 
 const CLNSIG_FIELD = 'mavedb_clnsig'
 const CLNREVSTAT_FIELD = 'mavedb_clnrevstat'
@@ -52,7 +79,7 @@ const DEFAULT_MIN_STAR_RATING = 1
 
 export default defineComponent({
   name: 'ScoreSetHistogram',
-  components: { Checkbox, Rating, TabMenu, },
+  components: { Checkbox, Dropdown, RadioButton, Rating, TabMenu, CalibrationTable, OddsPathTable },
 
   emits: ['exportChart'],
 
@@ -98,20 +125,27 @@ export default defineComponent({
     }
   },
 
-  data: () => ({
-    config: config,
+  data: function() {
+    const scoreSetHasRanges = config.CLINICAL_FEATURES_ENABLED && this.scoreSet.scoreRanges != null
 
-    activeViz: 0,
-    clinicalSignificanceClassificationOptions: CLINVAR_CLINICAL_SIGNIFICANCE_CLASSIFICATIONS,
-    customMinStarRating: DEFAULT_MIN_STAR_RATING,
-    customSelectedClinicalSignificanceClassifications: DEFAULT_CLINICAL_SIGNIFICANCE_CLASSIFICATIONS,
-    histogram: null as Histogram | null
-  }),
+    return {
+      config: config,
+
+      activeViz: 0,
+      activeShader: scoreSetHasRanges ? 'range' : 'null',
+      activeCalibrationKey: null,
+
+      clinicalSignificanceClassificationOptions: CLINVAR_CLINICAL_SIGNIFICANCE_CLASSIFICATIONS,
+      customMinStarRating: DEFAULT_MIN_STAR_RATING,
+      customSelectedClinicalSignificanceClassifications: DEFAULT_CLINICAL_SIGNIFICANCE_CLASSIFICATIONS,
+      histogram: null as Histogram | null,
+    }
+  },
 
   computed: {
     series: function() {
-      switch (this.activeViz) {
-        case 1: // Clinical view
+      switch (this.vizOptions[this.activeViz].view) {
+        case 'clinical':
 
           return [{
             classifier: (d) =>
@@ -131,7 +165,7 @@ export default defineComponent({
             }
           }]
 
-        case 2: // Custom
+        case 'custom':
           {
             const series = [{
               classifier: (d) =>
@@ -179,19 +213,40 @@ export default defineComponent({
             return series
           }
 
-        case 0: // Overall score distribution
-        default:
+        case 'calibrations':
+          return null
 
+        default: // Overall score distribution
           return null
       }
     },
 
     vizOptions: function() {
-      const options = [{label: 'Overall Distribution'}]
-      if (this.variants.some((v) => v[CLNSIG_FIELD] !== undefined)) {
-        options.push({label: 'Clinical View'})
-        options.push({label: 'Custom'})
+      const options = [{label: 'Overall Distribution', view: 'distribution'}]
+      const someVariantsHaveClinicalSignificance = this.variants.some((v) => v[CLNSIG_FIELD] !== undefined)
+
+      if (someVariantsHaveClinicalSignificance) {
+        options.push({label: 'Clinical View', view: 'clinical'})
       }
+
+      // custom view should always come last
+      if (someVariantsHaveClinicalSignificance) {
+        options.push({label: 'Custom', view: 'custom'})
+      }
+      return options
+    },
+
+    shaderOptions: function() {
+      const options = [{label: 'Hide Shaders', view: 'null'}]
+
+      if (this.scoreSet.scoreRanges) {
+        options.push({label: 'Score Ranges', view: 'range'})
+      }
+
+      if (this.scoreSet.scoreCalibrations) {
+        options.push({label: 'Calibration Thresholds', view: 'calibration'})
+      }
+
       return options
     },
 
@@ -200,7 +255,15 @@ export default defineComponent({
     },
 
     showControls: function() {
-      return this.activeViz == 2
+      return this.activeViz == this.vizOptions.findIndex(item => item.view === 'custom')
+    },
+
+    showShaders: function() {
+      return this.shaderOptions.length > 1
+    },
+
+    activeCalibration: function() {
+      return this.activeCalibrationKey ? this.scoreSet.scoreCalibrations[this.activeCalibrationKey] : null
     },
 
     minStarRating: function() {
@@ -304,12 +367,22 @@ export default defineComponent({
   watch: {
     variants: {
       handler: function() {
-        renderOrRefreshHistogram()
+        this.renderOrRefreshHistogram()
       }
     },
     series: {
       handler: function() {
         this.renderOrRefreshHistogram()
+      }
+    },
+    activeCalibration: {
+      handler: function() {
+        this.renderOrRefreshHistogram()
+      }
+    },
+    activeShader: {
+      handler: function() {
+          this.renderOrRefreshHistogram()
       }
     },
     externalSelection: {
@@ -332,7 +405,7 @@ export default defineComponent({
       handler: function() {
         this.renderOrRefreshHistogram()
       }
-    }
+    },
   },
 
   mount: function() {
@@ -354,6 +427,7 @@ export default defineComponent({
             .valueField((variant) => variant.score)
             .tooltipHtml(this.tooltipHtmlGetter)
       }
+
       let seriesClassifier: ((d: HistogramDatum) => number[]) | null = null
       if (this.series) {
         const seriesIndices = _.range(0, this.series.length)
@@ -361,36 +435,12 @@ export default defineComponent({
           seriesIndices.filter((seriesIndex) => this.series[seriesIndex].classifier(d))
       }
 
-      let ranges = []
-      if (this.config.CLINICAL_FEATURES_ENABLED) {
-        switch (this.scoreSet.urn) {
-          case 'urn:mavedb:00000097-0-1':
-            ranges = [{
-              min: -0.748,
-              max: 1.307,
-              color: '#4444ff',
-              title: 'Functionally normal'
-            }, {
-              min: -5.651,
-              max: -1.328,
-              color: '#ff4444',
-              title: 'Functionally abnormal'
-            }]
-            break
-          case 'urn:mavedb:00000050-a-1':
-            ranges = [{
-              min: -7.57,
-              max: 0,
-              color: '#4444ff',
-              title: 'Functionally normal'
-            }, {
-              min: 0,
-              max: 5.39,
-              color: '#ff4444',
-              title: 'Functionally abnormal'
-            }]
-            break
-        }
+      const histogramShaders = {}
+      if (this.scoreSet.scoreRanges) {
+        histogramShaders["range"] = prepareRangesForHistogram(this.scoreSet.scoreRanges)
+      }
+      if (this.activeCalibration) {
+        histogramShaders["threshold"] = prepareThresholdsForHistogram(this.activeCalibration)
       }
 
       this.histogram.data(this.variants)
@@ -398,15 +448,30 @@ export default defineComponent({
           .seriesClassifier(seriesClassifier)
           .title(this.hasTabBar ? null : 'Distribution of Functional Scores')
           .legendNote(this.activeViz == 0 ? null : 'ClinVar data from time of publication')
-          .ranges(ranges)
-          .refresh()
+          .shaders(histogramShaders)
 
       if (this.externalSelection) {
         this.histogram.selectDatum(this.externalSelection)
       } else {
         this.histogram.clearSelection()
       }
-    }
+
+      // Only render clinical specific viz options if such features are enabled.
+      this.histogram.renderShader(null)
+      if (this.config.CLINICAL_FEATURES_ENABLED) {
+        this.histogram.renderShader(this.activeShader)
+      }
+
+      this.histogram.refresh()
+    },
+
+    childComponentSelectedCalibrations: function(calibrationKey: string) {
+      this.activeCalibrationKey = calibrationKey
+    },
+
+    titleCase: (s) =>
+            s.replace (/^[-_]*(.)/, (_, c) => c.toUpperCase())       // Initial char (after -/_)
+            .replace (/[-_]+(.)/g, (_, c) => ' ' + c.toUpperCase()) // First char after each -/_
   }
 })
 </script>

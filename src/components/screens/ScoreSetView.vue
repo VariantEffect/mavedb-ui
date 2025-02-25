@@ -53,6 +53,13 @@
             <span>{{ item.title || 'Untitled score set' }}</span>
             <span v-if="item.urn" class="mave-score-set-urn">{{ item.urn }}</span>
           </div>
+          <div class="mave-collection-badges">
+            <CollectionBadge
+              v-for="officialCollection in item.officialCollections"
+              :collection="officialCollection"
+              :key="officialCollection.urn"
+            />
+          </div>
           <div v-if="userIsAuthenticated">
             <div v-if="!item.publishedDate" class="mave-screen-title-controls">
               <Button v-if="userIsAuthorized.update" class="p-button-sm" @click="editItem">Edit</Button>
@@ -110,24 +117,6 @@
             @heatmap-visible="heatmapVisibilityUpdated"
             @export-chart="setHeatmapExport" ref="heatmap"
           />
-        </div>
-        <table v-if="evidenceStrengths" class="mave-odds-path-table">
-          <tr>
-            <th>Odds Path Abnormal<sup>*</sup></th>
-            <th>Odds Path Normal<sup>*</sup></th>
-          </tr>
-          <tr v-if="evidenceStrengths.oddsOfPathogenicity">
-            <td>{{ evidenceStrengths.oddsOfPathogenicity.abnormal }}</td>
-            <td>{{ evidenceStrengths.oddsOfPathogenicity.normal }}</td>
-          </tr>
-          <tr>
-            <td :class="`mave-evidence-code-${evidenceStrengths.evidenceCodes.abnormal}`">{{ evidenceStrengths.evidenceCodes.abnormal }}</td>
-            <td :class="`mave-evidence-code-${evidenceStrengths.evidenceCodes.normal}`">{{ evidenceStrengths.evidenceCodes.normal }}</td>
-          </tr>
-        </table>
-        <div v-if="evidenceStrengths" style="font-style: italic; text-align: center; margin-bottom: 2em;"><sup>*</sup> Source: <a :href="evidenceStrengths.source" target="_blank">{{ evidenceStrengths.source }}</a></div>
-        <div v-if="evidenceStrengths?.exampleVariant" style="font-style: italic; text-align: center; margin-top: -1.5em; margin-bottom: 2em;">
-          <router-link :to="{name: 'variant', params: {urn: evidenceStrengths.exampleVariant.urn}}">Click here</router-link> for a preview of future clinical variant features.
         </div>
       </div>
       <div class="mave-1000px-col">
@@ -192,6 +181,8 @@
             <Button class="p-button-outlined p-button-sm" @click="heatmapExport()">Heatmap</Button>&nbsp;
           </template>
         </div>
+        <CollectionAdder class="mave-save-to-collection-button" data-set-type="scoreSet" :data-set-urn="item.urn" />
+
         <div v-if="requestFromGalaxy == '1'"><br>Send files to <a :href="`${this.galaxyUrl}`">Galaxy</a> <Button class="p-button-outlined p-button-sm" @click="sendToGalaxy('scores')">Scores</Button>&nbsp;
           <template v-if="countColumns.length != 0">
             <Button class="p-button-outlined p-button-sm" @click="sendToGalaxy('counts')">Counts</Button>&nbsp;
@@ -428,6 +419,8 @@ import Message from 'primevue/message'
 import ProgressSpinner from 'primevue/progressspinner'
 import ScrollPanel from 'primevue/scrollpanel';
 
+import CollectionAdder from '@/components/CollectionAdder'
+import CollectionBadge from '@/components/CollectionBadge'
 import ScoreSetHeatmap from '@/components/ScoreSetHeatmap'
 import ScoreSetHistogram from '@/components/ScoreSetHistogram'
 import EntityLink from '@/components/common/EntityLink'
@@ -440,7 +433,6 @@ import useItem from '@/composition/item'
 import useRemoteData from '@/composition/remote-data'
 import config from '@/config'
 import { textForTargetGeneCategory } from '@/lib/target-genes';
-import {saveChartAsFile} from '@/lib/chart-export'
 import { parseScoresOrCounts } from '@/lib/scores'
 import { preferredVariantLabel, variantNotNullOrNA } from '@/lib/mave-hgvs';
 import { mapState } from 'vuex'
@@ -448,47 +440,13 @@ import { ref } from 'vue'
 
 export default {
   name: 'ScoreSetView',
-  components: { Accordion, AccordionTab, AutoComplete, Button, Chip, DefaultLayout, EntityLink, ScoreSetHeatmap, ScoreSetHistogram, TabView, TabPanel, Message, DataTable, Column, ProgressSpinner, ScrollPanel, PageLoading, ItemNotFound },
+  components: { Accordion, AccordionTab, AutoComplete, Button, Chip, CollectionAdder, CollectionBadge, DefaultLayout, EntityLink, ScoreSetHeatmap, ScoreSetHistogram, TabView, TabPanel, Message, DataTable, Column, ProgressSpinner, ScrollPanel, PageLoading, ItemNotFound },
   computed: {
     contributors: function() {
       return _.sortBy(
         (this.item?.contributors || []).filter((c) => c.orcidId != this.item?.createdBy?.orcidId),
         ['familyName', 'givenName', 'orcidId']
       )
-    },
-    evidenceStrengths: function() {
-      if (this.config.CLINICAL_FEATURES_ENABLED) {
-        return {
-          'urn:mavedb:00000050-a-1': {
-            oddsOfPathogenicity: {
-              abnormal: 24.9,
-              normal: 0.043
-            },
-            evidenceCodes: {
-              abnormal: 'PS3_Strong',
-              normal: 'BS3_Strong'
-            },
-            source: 'https://pubmed.ncbi.nlm.nih.gov/36550560/'
-          },
-          'urn:mavedb:00000097-0-1': {
-            oddsOfPathogenicity: {
-              abnormal: 52.4,
-              normal: 0.02
-            },
-            evidenceCodes: {
-              abnormal: 'PS3_Strong',
-              normal: 'BS3_Strong'
-            },
-            source: 'https://pubmed.ncbi.nlm.nih.gov/34793697/',
-            exampleVariant: {
-              urn: 'urn:mavedb:00000097-0-1#1697',
-              name: 'NM_007294.4(BRCA1):c.5237A>C (p.His1746Pro)'
-            }
-          }
-        }[this.item.urn] || null
-      } else {
-        return null
-      }
     },
     isMetaDataEmpty: function() {
       //If extraMetadata is empty, return value will be true.
@@ -746,9 +704,9 @@ export default {
       let response = null
       try {
         if (this.item && download_type == "counts") {
-          response = await axios.get(`${config.apiBaseUrl}/score-sets/${this.item.urn}/counts`)
+          response = await axios.get(`${config.apiBaseUrl}/score-sets/${this.item.urn}/counts?drop_na_columns=true`)
         } else if (this.item && download_type == "scores") {
-          response = await axios.get(`${config.apiBaseUrl}/score-sets/${this.item.urn}/scores`)
+          response = await axios.get(`${config.apiBaseUrl}/score-sets/${this.item.urn}/scores?drop_na_columns=true`)
         }
       } catch (e) {
         response = e.response || { status: 500 }
@@ -966,6 +924,13 @@ export default {
   width: 100%;
 }
 
+.mave-collection-badges {
+  flex: 1 1 auto;
+  padding: 0 0 0 7px;
+  font-size: 12px;
+  line-height: 29px;
+}
+
 /* Score set details */
 
 .mave-score-set-section-title {
@@ -989,31 +954,6 @@ export default {
 
 .mave-contributor {
   margin: 0 0.5em;
-}
-
-/* Evidence strength */
-
-table.mave-odds-path-table {
-   border-collapse: collapse;
-   margin: 1em auto 0.5em auto;
-}
-
-table.mave-odds-path-table td,
-table.mave-odds-path-table th {
-   border: 1px solid gray;
-   padding: 0.5em 1em;
-   text-align: center;
-}
-
-table.mave-odds-path-table td.mave-evidence-code-PS3_Strong {
-   background-color: #b02418;
-   color: white;
-   font-weight: bold;
-}
-table.mave-odds-path-table td.mave-evidence-code-BS3_Strong {
-   background-color: #385492;
-   color: white;
-   font-weight: bold;
 }
 
 /* Formatting in Markdown blocks */
@@ -1040,5 +980,9 @@ table.mave-odds-path-table td.mave-evidence-code-BS3_Strong {
 .samplify-data-table .samplify-data-table-progress {
   height: 50px;
   width: 50px;
+}
+
+.mave-save-to-collection-button {
+  margin: 1em 0;
 }
 </style>

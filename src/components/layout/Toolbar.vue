@@ -120,6 +120,10 @@ export default {
           route: '/settings',
           available: ({authenticated}) => authenticated
         }, {
+          label: 'Collections',
+          route: '/collections',
+          available: ({authenticated}) => authenticated
+        }, {
           label: 'Sign out',
           command: () => this.signOut(),
           available: ({authenticated}) => authenticated

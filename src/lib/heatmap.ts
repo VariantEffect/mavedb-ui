@@ -237,7 +237,7 @@ export default function makeHeatmap(): Heatmap {
   let effectiveMargins: HeatmapMargins = { top: 0, right: 0, bottom: 0, left: 0 }
 
   // D3 selections containing DOM elements
-  let svg: d3.Selection<SVGSVGElement, any, any, any> | null = null
+  let svg: d3.Selection<SVGElement, any, any, any> | null = null
   let hoverTooltip: d3.Selection<HTMLDivElement, any, any, any> | null = null
   let selectionTooltip: d3.Selection<HTMLDivElement, any, any, any> | null = null
 

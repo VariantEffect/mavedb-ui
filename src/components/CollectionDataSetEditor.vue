@@ -1,4 +1,7 @@
 <template>
+  <template v-if="visible">
+    <EmailPrompt />
+  </template>
   <div class="collection-data-set-editor">
     <Button
       class="mave-collection-data-set-editor-button"
@@ -83,13 +86,14 @@ import Message from 'primevue/message'
 
 import useItem from '@/composition/item'
 import config from '@/config'
+import EmailPrompt from '@/components/common/EmailPrompt.vue'
 
 export default {
   name: 'CollectionDataSetEditor',
 
   emits: ['saved'],
 
-  components: {Button, Chips, Column, DataTable, Dialog, Message},
+  components: {Button, Chips, Column, DataTable, Dialog, EmailPrompt, Message},
 
   props: {
     collectionUrn: {

@@ -1,4 +1,7 @@
 <template>
+  <template v-if="dialogVisible">
+    <EmailPrompt />
+  </template>
   <div>
     <Button
       class="mave-collection-permissions-editor-button"
@@ -66,7 +69,7 @@
             <Button v-if="orcidIdsToRemove.includes(data.user.orcidId)" label="Restore" size="small" @click="restoreUserRole(data.user.orcidId)" />
           </template>
         </Column>
-      </DataTable> 
+      </DataTable>
       <div class="mave-collection-editor-action-buttons">
         <Button label="Cancel" severity="secondary" @click="dialogVisible = false" />
         <Button :disabled="!dirty" label="Save" @click="saveChanges" />
@@ -90,10 +93,11 @@ import config from '@/config'
 import useAuth from '@/composition/auth'
 import useItem from '@/composition/item'
 import {ORCID_ID_REGEX} from '@/lib/orcid'
+import EmailPrompt from '@/components/common/EmailPrompt.vue'
 
 export default {
   name: 'CollectionPermissionsEditor',
-  components: {Button, Column, DataTable, Dialog, Dropdown, InputText, SelectButton},
+  components: {Button, Column, DataTable, Dialog, Dropdown, EmailPrompt, InputText, SelectButton},
   emits: ['saved'],
 
   props: {

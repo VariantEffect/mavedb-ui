@@ -1,4 +1,7 @@
 <template>
+  <template v-if="dialogVisible">
+    <EmailPrompt />
+  </template>
   <div v-if="userIsAuthenticated" class="mave-collection-adder">
     <Button
       icon="pi pi-bookmark"
@@ -71,10 +74,11 @@ import Dropdown from 'primevue/dropdown'
 import config from '@/config'
 import CollectionCreator from '@/components/CollectionCreator'
 import useAuth from '@/composition/auth'
+import EmailPrompt from '@/components/common/EmailPrompt.vue'
 
 export default {
   name: 'CollectionAdder',
-  components: {Button, CollectionCreator, Dialog, Dropdown},
+  components: {Button, CollectionCreator, Dialog, Dropdown, EmailPrompt},
 
   props: {
     dataSetUrn: {

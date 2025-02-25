@@ -1,10 +1,11 @@
 <template>
+  <EmailPrompt />
   <div class="mave-collection-creator">
     <div class="flex flex-column gap-2">
       <label :for="$scopedId('name-input')">Collection name</label>
       <InputText :id="$scopedId('name-input')" v-model="collectionName" />
     </div>
-    
+
     <div class="flex flex-column gap-2">
       <label :for="$scopedId('description-input')">Description</label>
       <Textarea :id="$scopedId('description-input')" v-model="collectionDescription" />
@@ -90,10 +91,11 @@ import Textarea from 'primevue/textarea'
 
 import config from '@/config'
 import {ORCID_ID_REGEX} from '@/lib/orcid'
+import EmailPrompt from '@/components/common/EmailPrompt.vue'
 
 export default {
   name: 'CollectionCreator',
-  components: {Button, Column, DataTable, Dropdown, InputSwitch, InputText, SelectButton, Textarea},
+  components: {Button, Column, DataTable, Dropdown, EmailPrompt, InputSwitch, InputText, SelectButton, Textarea},
   emits: ['createdCollection', 'canceled'],
 
   data: () => ({
@@ -187,13 +189,13 @@ export default {
           life: 3000,
           severity: 'warn',
           summary: 'Must provide collection name'
-        })        
+        })
       } else {
         const newCollection = {
           name: collectionName,
           description: collectionDescription,
           private: !this.collectionPublic,
-          viewers: this.pendingUserRoles.filter((ur) => ur.role == 'viewer').map((ur) => ur.user), 
+          viewers: this.pendingUserRoles.filter((ur) => ur.role == 'viewer').map((ur) => ur.user),
           editors: this.pendingUserRoles.filter((ur) => ur.role == 'editor').map((ur) => ur.user),
           admins: this.pendingUserRoles.filter((ur) => ur.role == 'admin').map((ur) => ur.user)
         }

@@ -229,7 +229,7 @@
                         >
                           <template #chip="slotProps">
                             <div>
-                              <div>{{ slotProps.value.identifier }}</div>
+                              <div>{{ slotProps.value.identifier }}: {{ truncatePublicationTitle(slotProps.value.title) }}</div>
                             </div>
                           </template>
                           <template #item="slotProps">
@@ -897,6 +897,10 @@ export default {
         this.setPublicationIdentifierSearch(event.query)
         this.setExternalPublicationIdentifierSearch(event.query)
       }
+    },
+
+    truncatePublicationTitle: function(title) {
+      return title.length > 50 ? title.slice(0, 50) + "..." : title
     },
 
     acceptNewRawReadIdentifier: function() {

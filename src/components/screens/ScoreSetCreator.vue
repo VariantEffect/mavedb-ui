@@ -551,6 +551,20 @@
                   </div>
                 </div>
 
+                <div v-if="!isTargetSequence" class="mavedb-wizard-row">
+                  <div class="mavedb-wizard-help">
+                    <label :id="$scopedId('input-isBaseEditorData')">Does this score set reperesent base editor data?</label>
+                    <div class="mavedb-help-small">
+                      Base editor data is a type of functional assay that is similar in many respects to MAVE data. When uploading base editor data, you must
+                      also include a 'guide_sequence' column in your uploaded scores (and counts) file(s).
+                    </div>
+                  </div>
+                  <div class="mavedb-wizard-content">
+                    <InputSwitch v-model="isBaseEditor" :aria-labelledby="$scopedId('input-isBaseEditorData')"/>
+                    <div class="mavedb-switch-value">{{ isBaseEditor ? 'Yes, this score set represents base editor data.' : 'No, this score set does not represent base editor data.' }}</div>
+                  </div>
+                </div>
+
                 <div class="mavedb-wizard-row">
                   <div class="mavedb-wizard-help">
                     <label :id="$scopedId('input-scoreSetHasMultipleTargetsLabel')">Does this score set describe variants with respect to more than one target?</label>
@@ -1341,6 +1355,7 @@ export default {
     validationErrors: {},
 
     isTargetSequence: true,
+    isBaseEditor: false,
     isMultiTarget: false,
     isProvidingScoreRanges: false,
 
@@ -2236,6 +2251,10 @@ export default {
 
             if (!this.isTargetSequence && !target.isRelativeToChromosome) {
               targetGene.targetAccession.gene = targetGene.targetAccession.gene.name
+            }
+
+            if (!this.isTargetSequence) {
+              targetGene.targetAccession.isBaseEditor = this.isBaseEditor
             }
 
             return targetGene

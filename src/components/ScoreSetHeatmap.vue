@@ -394,6 +394,7 @@ export default {
           .nodePadding(0)
           .nodeSize({width: 1, height: 20})
           .skipXTicks(99)
+      }
 
       this.heatmap.data(this.simpleAndWtVariants)
         .valueField((d) => d.meanScore)

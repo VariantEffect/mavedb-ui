@@ -86,6 +86,9 @@
               ref="histogram"
             />
           </div>
+          <div v-else>
+            <ProgressSpinner class="mave-histogram-loading"/>
+          </div>
         </template>
       </Card>
     </div>
@@ -105,12 +108,13 @@ import useFormatters from '@/composition/formatters'
 import useRemoteData from '@/composition/remote-data'
 import config from '@/config'
 import {parseScoresOrCounts, ScoresOrCountsRow} from '@/lib/scores'
+import ProgressSpinner from 'primevue/progressspinner'
 
 type Classification = 'Functionally normal' | 'Functionally abnormal'
 
 export default {
   name: 'VariantMeasurementView',
-  components: {Card, DefaultLayout, ScoreSetHistogram},
+  components: {Card, DefaultLayout, ScoreSetHistogram, ProgressSpinner},
 
   props: {
     variantUrn: {
@@ -321,5 +325,11 @@ table.variant-info-table td {
 
 table.variant-info-table td:first-child {
   padding-left: 0;
+}
+
+.mave-histogram-loading {
+  position: absolute;
+  top: 50%;
+  left: 50%;
 }
 </style>

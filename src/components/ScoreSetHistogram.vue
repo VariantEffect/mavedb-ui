@@ -1,7 +1,7 @@
 <template>
   <TabMenu class="mave-histogram-viz-select" v-if="hasTabBar" v-model:activeIndex="activeViz" :model="vizOptions" />
   <div v-if="!refreshedClinicalControls || !associatedClinicalControls" style="font-size: x-small;">
-    <ProgressSpinner class="mave-component-loading" style="height: 12px; width: 12px;" />
+    <ProgressSpinner style="height: 12px; width: 12px;" />
     Loading clinical control options in the background. Additional histogram views will be available once loaded.
   </div>
   <div v-if="hasTabBar && showShaders" class="mave-histogram-controls">
@@ -626,11 +626,5 @@ export default defineComponent({
 }
 .mave-histogram-tooltip-variant-star-filled {
   color: #fdb81e
-}
-
-.mave-histogram-loading {
-    position: absolute;
-    top: 50%;
-    left: 50%;
 }
 </style>

@@ -278,6 +278,7 @@
               </template>
             </Card>
             <div v-if="itemStatus == 'NotLoaded' || this.item.private">
+              {{ scoreRanges }}
               <div v-if="scoreRanges">
                 <Card>
                   <template #title>Score ranges
@@ -1570,7 +1571,6 @@ import { TARGET_GENE_CATEGORIES, textForTargetGeneCategory } from '@/lib/target-
           this.extraMetadata = {}
           this.resetTarget()
           this.targetGenes = []
-          this.scoreRanges = {wtScore: null, ranges: []}
           this.scoreRangeBoundaryHelper = []
         }
       },
@@ -1587,7 +1587,9 @@ import { TARGET_GENE_CATEGORIES, textForTargetGeneCategory } from '@/lib/target-
         this.fileCleared('targetGeneTargetSequenceSequenceFile')
         this.referenceGenome = null
         this.targetGene = emptyTargetGene()
-        this.scoreRanges = {wtScore: null, ranges: []}
+        if (this.scoreRanges) {
+          this.scoreRanges = { wtScore: undefined, ranges: [] }
+        }
         this.scoreRangeBoundaryHelper = []
       },
 

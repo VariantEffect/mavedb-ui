@@ -1571,7 +1571,6 @@ import { TARGET_GENE_CATEGORIES, textForTargetGeneCategory } from '@/lib/target-
           this.extraMetadata = {}
           this.resetTarget()
           this.targetGenes = []
-          this.scoreRangeBoundaryHelper = []
         }
       },
 

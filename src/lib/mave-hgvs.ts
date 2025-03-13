@@ -42,7 +42,18 @@ type VariantLabel = {
  * properly represented as Ter and del in MaveHGVS.
  */
 const proVariantRegex = /^p\.([A-Za-z]{3})([0-9]+)([A-Za-z]{3}|=|\*|-)$/
-const ntVariantRegex = /^c|g|n\.([0-9]+)([ACGTacgt]{1})(>)([ACGTactg]{1})$/
+const ntVariantRegex = /^(c|g|n)\.([0-9]+)([ACGTacgt]{1})>([ACGTactg]{1})$/
+
+/**
+ * Parse a MaveHGVS variant and return its target name, or null if it has no target prefix.
+ *
+ * @param variant A MaveHGVS-pro variant string representing a single variation.
+ * @returns The target name, or null if the MaveHGVS string has no target prefix.
+ */
+export function getVariantTarget(variant: string): string | null {
+  const parts = variant.split(":")
+  return parts.length == 1 ? null : parts[0]
+}
 
 /**
  * Parse a MaveHGVS protein variant representing a variation at one locus.
@@ -55,8 +66,8 @@ export function parseSimpleProVariant(variant: string): SimpleProteinVariation |
   const variation = parts.length == 1 ? parts[0] : parts[1]
   const target = parts.length == 1 ? null : parts[0]
   const match = variation.match(proVariantRegex)
-  if (!match) {
-    // console.log(`WARNING: Unrecognized pro variant: ${variant}`)
+  if (!match || !match[1] || !match[2] || !match[3]) {
+    console.log(`WARNING: Unrecognized pro variant: ${variant}`)
     return null
   }
   return {
@@ -78,18 +89,17 @@ export function parseSimpleNtVariant(variant: string): SimpleProteinVariation | 
   const variation = parts.length == 1 ? parts[0] : parts[1]
   const target = parts.length == 1 ? null : parts[0]
   const match = variation.match(ntVariantRegex)
-  if (!match) {
-    // console.log(`WARNING: Unrecognized pro variant: ${variant}`)
+  if (!match || !match[2] || !match[3] || !match[4]) {
+    console.log(`WARNING: Unrecognized nt variant: ${variant}`)
     return null
   }
   return {
-    position: parseInt(match[1]),
-    original: match[2],
+    position: parseInt(match[2]),
+    original: match[3],
     substitution: match[4],
     target: target
   }
 }
-
 
 /**
  * Checks whether a provided variant is null or na
@@ -100,7 +110,6 @@ export function parseSimpleNtVariant(variant: string): SimpleProteinVariation | 
 export function variantNotNullOrNA(variant: string | null | undefined): boolean {
   return variant ? variant.toLowerCase() !== "na" : false
 }
-
 
 /**
  * Return the preferred variant label for a given variant. Protein variation is preferred

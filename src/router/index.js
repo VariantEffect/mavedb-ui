@@ -19,6 +19,7 @@ import SearchView from '@/components/screens/SearchView'
 import SettingsScreen from '@/components/screens/SettingsScreen'
 import UsersView from '@/components/screens/UsersView'
 import VariantScreen from '@/components/screens/VariantScreen'
+import StatisticsView from '@/components/screens/StatisticsView'
 import store from '@/store'
 
 import config from '@/config'
@@ -37,8 +38,7 @@ const routes = [{
     store.commit('setRouteProps', props);
     return props;
   }
-}, {
-  path: '/search',
+}, {  path: '/search',
   name: 'search',
   component: SearchView,
   meta: {
@@ -59,6 +59,13 @@ const routes = [{
 }, {
   path: '/users',
   component: UsersView
+}, {
+  path: '/statistics', // Add the new route
+  name: 'statistics',
+  component: StatisticsView,
+  meta: {
+    title: import.meta.env.VITE_SITE_TITLE + ' | Statistics'
+  }
 }, {
   path: '/experiments/:urn',
   name: 'experiment',

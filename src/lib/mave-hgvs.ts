@@ -36,13 +36,21 @@ type VariantLabel = {
 }
 
 /**
- * Regular expression for parsing simple MaveHGVS-pro and -nt expressions.
+ * Regular expression for parsing simple MaveHGVS-pro expressions representing a single variation at one locus.
  *
  * MaveHGVS doesn't allow single-character codes in substitutions, but for flexibility we allow * and - here. These are
  * properly represented as Ter and del in MaveHGVS.
  */
 const proVariantRegex = /^p\.([A-Za-z]{3})([0-9]+)([A-Za-z]{3}|=|\*|-)$/
-const ntVariantRegex = /^(c|g|n)\.([0-9]+)([ACGTacgt]{1})>([ACGTactg]{1})$/
+
+/**
+ * Regular expression for parsing simple MaveHGVS-nt expressions representing a single variation at one locus.
+ *
+ * We currently only support g. and n. prefixes.
+ *
+ * TODO (https://github.com/VariantEffect/mavedb-ui/issues/357) c. prefixes should be supported in the future.
+ */
+const ntVariantRegex = /^(g|n)\.([0-9]+)([ACGTacgt]{1})>([ACGTactg]{1})$/
 
 /**
  * Parse a MaveHGVS variant and return its target name, or null if it has no target prefix.

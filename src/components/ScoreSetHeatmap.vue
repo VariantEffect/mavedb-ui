@@ -34,13 +34,14 @@
 </template>
 
 <script lang="ts">
-
+import axios from 'axios'
 import * as d3 from 'd3'
 import _ from 'lodash'
 import Dropdown from 'primevue/dropdown'
 import SelectButton from 'primevue/selectbutton'
 import {PropType} from 'vue'
 
+import config from '@/config'
 import {saveChartAsFile} from '@/lib/chart-export'
 import geneticCodes from '@/lib/genetic-codes'
 import makeHeatmap, {
@@ -165,6 +166,9 @@ export default {
     simpleVariants: {} as {[target: string]: HeatmapVariant[]},
     numComplexVariantObservations: {} as {[target: string]: number},
 
+    // Target sequences
+    accessionBasedTargetSequences: null as {[target: string]: string} | null,
+
     // Heatmap visualizations
     heatmap: null as Heatmap | null,
     stackedHeatmap: null as Heatmap | null,
@@ -201,8 +205,7 @@ export default {
      */
     isNucleotideHeatmap: function(): boolean {
       const targetCategory = this.selectedTargetGene?.category
-      // return !this.allVariantsHaveHgvsPro && targetCategory != null && ['other_noncoding', 'regulatory'].includes(targetCategory)
-      return !this.allVariantsHaveHgvsPro && targetCategory != null && ['protein_coding', 'other_noncoding', 'regulatory'].includes(targetCategory)
+      return !this.allVariantsHaveHgvsPro && targetCategory != null && ['other_noncoding', 'regulatory'].includes(targetCategory)
     },
     heatmapRows: function(): HeatmapRowSpecification[] {
       return this.allVariantsHaveHgvsPro ? HEATMAP_AMINO_ACID_ROWS : HEATMAP_NUCLEOTIDE_ROWS
@@ -224,7 +227,7 @@ export default {
           this.prepareWtVariantsForSelectedTarget(this.selectedTargetName, this.wtSequenceForSelectedTarget) : []
     },
     heatmapVisible: function() {
-      return this.targetNameOptions.length > 0 && (!this.isNucleicAcidScoreSet || this.isNucleotideHeatmap)
+      return this.targetNameOptions.length > 0 && this.accessionBasedTargetSequences && (!this.isNucleicAcidScoreSet || this.isNucleotideHeatmap)
     },
     selectedVariant: function() {
       return this.externalSelection ? this.simpleAndWtVariantsForSelectedTarget.filter(
@@ -232,7 +235,7 @@ export default {
       )[0] : null
     },
     /**
-     * List of target names that can be selected in the dropdown.
+     * List of target names in the score set.
      *
      * Target names can be obtained either from the variant MaveHGVS strings or from the target names in the score set's
      * list of target genes. MaveDB's validation ensures that these are consistent, except when there is one target gene,
@@ -241,12 +244,21 @@ export default {
      *
      * If there is only one target, '' will be used as its target name, and the dropdown will not be shown.
      */
-    targetNameOptions: function(): string[] {
+    targetNames: function(): string[] {
       const targetNames = this.scoreSet?.targetGenes?.map((targetGene) => targetGene.name) || []
       if (targetNames.length == 1) {
         return ['']
       }
       return targetNames
+    },
+    /**
+     * List of target names that can be shown in the heatmap.
+     *
+     * This is a subset of targetNames, consisting of those targets that have at least one variant displayable on the
+     * heatmap.
+     */
+    targetNameOptions: function(): string[] {
+      return this.targetNames.filter((targetName) => (this.simpleVariants[targetName] || []).length > 0)
     },
     /**
      * Whether to ignore reference identifiers that occur as prefixes in variant MaveHGVS strings.
@@ -256,7 +268,7 @@ export default {
      * name.)
      */
     ignoreHgvsReferences: function(): boolean {
-      return this.targetNameOptions.length < 2
+      return this.targetNames.length < 2
     },
     wtScore: function() {
       if (!this.scoreSet?.scoreRanges) {
@@ -267,16 +279,9 @@ export default {
   },
 
   watch: {
-    layout: {
-      handler: function(newValue, oldValue) {
-        if (newValue != oldValue) {
-          this.renderOrRefreshHeatmaps()
-        }
-      }
-    },
-    scores: {
+    accessionBasedTargetSequences: {
       handler: function() {
-        if (!this.scores) {
+        if (!this.scores || !this.accessionBasedTargetSequences) {
           this.simpleVariants = {}
           this.numComplexVariantObservations = {}
           this.selectedTargetName = ''
@@ -289,7 +294,38 @@ export default {
           }
         }
 
-        this.renderOrRefreshHeatmaps()
+        //this.renderOrRefreshHeatmaps()
+      }
+    },
+    layout: {
+      handler: function(newValue, oldValue) {
+        if (newValue != oldValue) {
+          this.renderOrRefreshHeatmaps()
+        }
+      }
+    },
+    scores: {
+      handler: function() {
+        if (!this.scores || !this.accessionBasedTargetSequences) {
+          this.simpleVariants = {}
+          this.numComplexVariantObservations = {}
+          this.selectedTargetName = ''
+        } else {
+          const {simpleVariants, numComplexVariantObservations} = this.prepareVariants(this.scores)
+          this.simpleVariants = simpleVariants
+          this.numComplexVariantObservations = numComplexVariantObservations
+          if (!Object.keys(this.simpleVariants).includes(this.selectedTargetName)) {
+            this.selectedTargetName = this.targetNameOptions[0]
+          }
+        }
+
+        //this.renderOrRefreshHeatmaps()
+      },
+      immediate: true
+    },
+    scoreSet: {
+      handler: async function() {
+        await this.fetchAccessionBasedTargetSequences()
       },
       immediate: true
     },
@@ -409,12 +445,6 @@ export default {
       // Count of variants that do not appear to be complex but are don't have a valid substitution
       const numIgnoredVariantObservations: {[target: string]: number} = {}
 
-      const targetSequences = _.fromPairs(
-        this.targetNameOptions.map(
-          (targetName) => [targetName, this.getWtSequenceForTarget(targetName)]
-        )
-      )
-
       const simpleVariantObservations: {[target: string]: HeatmapVariantObservation[]} = _.groupBy(
         _.filter(
           variantObservations.map((variantObservation) => {
@@ -515,13 +545,12 @@ export default {
       if (this.ignoreHgvsReferences) {
         return this.scoreSet.targetGenes[0]
       }
-      console.log(this.scoreSet.targetGenes)
       return this.scoreSet.targetGenes.find((targetGene) => targetGene.name == targetName)
     },
 
     getWtSequenceForTarget: function(targetName: string) {
       const targetGene = this.getTargetGene(targetName)
-      const wtSequence = targetGene?.targetSequence?.sequence
+      const wtSequence = targetGene?.targetSequence?.sequence || this.accessionBasedTargetSequences?.[targetName]
       const wtSequenceType = targetGene?.targetSequence?.sequenceType
 
       if (!wtSequence) {
@@ -532,6 +561,38 @@ export default {
         return this.dnaToSingletons(wtSequence)
       } else {
         return this.translateDnaToAminoAcids1Char(wtSequence)
+      }
+    },
+
+    fetchAccessionBasedTargetSequences: async function() {
+      this.accessionBasedTargetSequences = null
+      const accessionBasedTargetSequences: {[targetName: string]: string} = {}
+      for (const targetName of this.targetNames) {
+        const targetGene = this.getTargetGene(targetName)
+        if (targetGene?.targetAccession) {
+          accessionBasedTargetSequences[targetName] =
+              await this.fetchAccessionBasedTargetSequence(targetGene?.targetAccession?.accession)
+          if (accessionBasedTargetSequences[targetName] == null) {
+            console.log(`Failed to fetch target sequence for target ${targetName} (accession: ${targetGene?.targetAccession?.accession})`)
+          }
+        }
+      }
+      this.accessionBasedTargetSequences = accessionBasedTargetSequences
+    },
+
+    fetchAccessionBasedTargetSequence: async function(targetName: string) {
+      let response = null
+      try {
+        response = await axios.get(`${config.apiBaseUrl}/hgvs/fetch/${targetName}`)
+      } catch (error) {
+        console.log(error)
+        response = error.response || {status: 500}
+      }
+      if (response?.data) {
+        console.log(response.data)
+        return response.data
+      } else {
+        return undefined
       }
     },
 
@@ -570,13 +631,17 @@ export default {
       this.heatmap?.destroy()
       this.stackedHeatmap?.destroy()
 
-      this.drawHeatmap()
-      if (!this.isNucleotideHeatmap && this.layout != 'compact') {
-        this.drawStackedHeatmap()
+      if (this.heatmapVisible) {
+        // Deferred to the next tick to ensure that the heatmap container has been rendered
+        this.$nextTick(() => {
+          this.drawHeatmap()
+          if (!this.isNucleotideHeatmap && this.layout != 'compact') {
+            this.drawStackedHeatmap()
+          }
+        })
       }
     },
 
-    // Assumes that plate dimensions do not change.
     drawHeatmap: function() {
       this.heatmap = makeHeatmap()
         .margins({top: 0, bottom: 25, left: 20, right: 20})

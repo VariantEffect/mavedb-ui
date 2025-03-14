@@ -450,7 +450,7 @@ export default {
     },
     isMetaDataEmpty: function() {
       //If extraMetadata is empty, return value will be true.
-      return Object.keys(this.item.extraMetadata).length === 0
+      return Object.keys(this.item.extraMetadata || {}).length === 0
     },
     scoreColumns: function() {
       const fixedColumns = ['hgvs_nt', 'hgvs_splice', 'hgvs_pro']

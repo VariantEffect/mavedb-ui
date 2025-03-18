@@ -79,14 +79,30 @@
                         </Card>
                     </div>
                 </div>
-                <Card class="statistics-tile-half">
+                <Card class="statistics-tile-2-2">
+                    <template #content>
+                        <div>
+                            <DataTable v-model:selection="selectedMappedTarget" :value="variantAndScoreSetDataForMappedTarget" selectionMode="single" sortField="scoreSets.length" :sortOrder="-1" :paginator="true" :rows="10" :rowsPerPageOptions="[10, 25, 50]">
+                                <Column field="target" header="Gene"></Column>
+                                <Column field="scoreSets.length" sortable header="Score Sets"></Column>
+                                <!-- <Column field="variants" header="Variants"></Column> -->
+                                <Column field="mappedVariants" sortable header="Mapped Variants">
+                                    <template #body="slotProps">
+                                        {{ new Intl.NumberFormat("en-US").format(slotProps.data.mappedVariants) }}
+                                    </template>
+                                </Column>
+                            </DataTable>
+                        </div>
+                    </template>
+                </Card>
+                <Card class="statistics-tile-2-2">
                     <template #content>
                         <div>
                             <Chart type="doughnut" :data="organismChartData" :options="organismChartOptions"></Chart>
                         </div>
                     </template>
                 </Card>
-                <Card class="statistics-tile-half">
+                <Card class="statistics-tile-2-2">
                     <template #content>
                         <div>
                             <Chart type="doughnut" :data="mappedTargetChartData" :options="mappedTargetChartOptions"></Chart>
@@ -104,9 +120,12 @@ import config from '@/config'
 import Carousel from 'primevue/carousel';
 import Card from 'primevue/card';
 import Chart from 'primevue/chart';
+import DataTable from 'primevue/datatable';
+import Column from 'primevue/column';
 import DefaultLayout from '../layout/DefaultLayout.vue';
 import SelectButton from 'primevue/selectbutton';
 import PageLoading from '../common/PageLoading.vue';
+import StatisticsSwarm from '../StatisticsSwarm.vue';
 import TimeSeriesLineChart from '../TimeSeriesLineChart.vue';
 
 import useItem from '@/composition/item'
@@ -125,24 +144,34 @@ export default {
 
             loading: true,
 
+            // Statistics container objects.
             scoreSetsByMonth: [],
+            mappedVariantsByScoreSet: {},
             experimentsByMonth: [],
             variantsByMonth: [],
             mappedTargetGeneCounts: {},
 
+            // Mapped metadata info for score sets.
+            scoreSetMappedTargets: {},
+
+            // Mapped target selection
+            selectedMappedTarget: null,
+
+            // Time series chart options.
             margins: {
                 top: 0,
                 right: 20,
                 bottom: 0,
                 left: 75
             },
-
             aggregationLevels: aggregationLevels,
             selectedAggregationLevel: aggregationLevels[1].value,
+
+            // Organism pie chart data.
             targetGeneOrganismFieldCounts: targetGeneOrganismStatistic.item,
         };
     },
-    components: {Carousel, Card, Chart, DefaultLayout, SelectButton, PageLoading, TimeSeriesLineChart},
+    components: {Carousel, Card, Column, Chart, DataTable, DefaultLayout, SelectButton, PageLoading, TimeSeriesLineChart, StatisticsSwarm},
     async mounted() {
         this.fetchStatistics();
     },
@@ -219,6 +248,34 @@ export default {
 
             return Object.values(merged);
         },
+        variantAndScoreSetDataForMappedTarget() {
+            const mappedVariantsByScoreSet = this.mappedVariantsByScoreSet;
+            const scoreSetMappedTargets = this.scoreSetMappedTargets;
+
+            const variantAndScoreSetData = {};
+
+            Object.entries(scoreSetMappedTargets).forEach(([scoreSet, mappedTargets]) => {
+                mappedTargets.forEach((target) => {
+                    if (!variantAndScoreSetData[target]) {
+                        variantAndScoreSetData[target] = {variants: 0, mappedVariants: 0, scoreSets: []};
+                    }
+                    variantAndScoreSetData[target].mappedVariants += mappedVariantsByScoreSet[scoreSet] || 0;
+                    variantAndScoreSetData[target].scoreSets.push(scoreSet);
+                })
+            });
+
+            return Object.entries(variantAndScoreSetData).map(([key, value]) => ({
+                target: key,
+                ...value
+            }));
+        },
+        mappedVariantDataForScoreSet(){
+            return Object.entries(this.mappedVariantsByScoreSet).map(([key, value]) => ({
+                scoreSet: key,
+                count: value,
+                target: this.scoreSetMappedTargets[key]
+            }));
+        },
         timeSeriesData() {
             return this.selectedAggregationLevel === 'month' ? this.monthlyMergedTimeSeriesData : this.yearlyMergedTimeSriesData;
         },
@@ -257,6 +314,9 @@ export default {
                     return {date: new Date(parsedDate.getUTCFullYear(), parsedDate.getUTCMonth()), count: experimentsData[date]}
                 });
 
+                const scoreSetsMappedVariantResponse = await fetch(`${config.apiBaseUrl}/statistics/record/score-set/mapped-variant/count`);
+                this.mappedVariantsByScoreSet = await scoreSetsMappedVariantResponse.json();
+
                 const variantsResponse = await fetch(`${config.apiBaseUrl}/statistics/variant/count?group=month`);
                 const variantsData = await variantsResponse.json();
                 this.variantsByMonth = Object.keys(variantsData).map(date => {
@@ -274,6 +334,9 @@ export default {
                 const mappedTargetGeneResponse = await fetch(`${config.apiBaseUrl}/statistics/target/mapped/gene`);
                 const mappedTargetGeneData = await mappedTargetGeneResponse.json();
                 this.mappedTargetGeneCounts = mappedTargetGeneData;
+
+                const scoreSetTargetGeneResponse = await fetch(`${config.apiBaseUrl}/score-sets/mapped-genes`);
+                this.scoreSetMappedTargets = await scoreSetTargetGeneResponse.json();
             } catch (error) {
                 console.error('Error fetching data:', error);
             } finally {
@@ -288,7 +351,6 @@ export default {
 
             // Sort in descending order.
             entries.sort((a,b) => b[1] - a[1])
-            console.log(entries)
 
             // Bundle up smaller categories into an 'Others' category.
             const top = entries.slice(0, numToShow)

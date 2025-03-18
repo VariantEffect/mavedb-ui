@@ -120,6 +120,9 @@
                   {{ keyword.keyword.description }}
                 </p>
               </Dialog> : <a :href="`${config.appBaseUrl}/search?keywords=${keyword.keyword.value}`">{{ keyword.keyword.value }}</a>
+              <div class="field" v-if="keyword.keyword.accession">
+                {{ keyword.keyword.accession }}
+              </div>
               <!--Present user's description-->
               <div class="field" v-if="keyword.description">
                 <div v-if="keyword.description.length >= 300">

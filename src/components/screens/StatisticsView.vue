@@ -1,5 +1,5 @@
 <template>
-    <DefaultLayout>
+    <DefaultLayout :withToolbar="!isEmbedded" :withEmailPrompt="!isEmbedded">
         <div v-if="loading"><PageLoading></PageLoading></div>
         <div v-else>
             <h1 style="font-size: 2em; color: #3f51b5;">MaveDB Site Statistics</h1>
@@ -168,6 +168,9 @@ export default {
         this.fetchStatistics();
     },
     computed: {
+        isEmbedded() {
+            return this.$route.query.embed === 'true';
+        },
         totalScoreSets() {
             return this.scoreSetsByMonth.reduce((acc, item) => acc + item.count, 0);
         },

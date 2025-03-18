@@ -278,7 +278,6 @@
               </template>
             </Card>
             <div v-if="itemStatus == 'NotLoaded' || this.item.private">
-              {{ scoreRanges }}
               <div v-if="scoreRanges">
                 <Card>
                   <template #title>Score ranges

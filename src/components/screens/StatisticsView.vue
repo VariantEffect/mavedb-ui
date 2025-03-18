@@ -34,6 +34,33 @@
                         </div>
                     </template>
                 </Card>
+                <Card class="statistics-tile-2-2">
+                    <template #content>
+                        <div>
+                            <DataTable :value="variantAndScoreSetDataForMappedTarget" sortField="scoreSets.length" :sortOrder="-1" :paginator="true" :rows="5" :rowsPerPageOptions="[5, 10, 25, 50]">
+                                <Column field="target" header="Gene">
+                                    <template #body="slotProps">
+                                        <a :href="`${config.appBaseUrl}/#/search?target-name=${slotProps.data.target}`">{{ slotProps.data.target }}</a>
+                                    </template>
+                                </Column>
+                                <Column field="scoreSets.length" sortable header="Score Sets"></Column>
+                                <!-- <Column field="variants" header="Variants"></Column> -->
+                                <Column field="mappedVariants" sortable header="Mapped Variants">
+                                    <template #body="slotProps">
+                                        {{ new Intl.NumberFormat("en-US").format(slotProps.data.mappedVariants) }}
+                                    </template>
+                                </Column>
+                            </DataTable>
+                        </div>
+                    </template>
+                </Card>
+                <Card class="statistics-tile-2-2">
+                    <template #content>
+                        <div>
+                            <Chart type="doughnut" :data="organismChartData" :options="organismChartOptions"></Chart>
+                        </div>
+                    </template>
+                </Card>
                 <div class="statistics-tile-full">
                     <div class="flowchart-container">
                         <Card>
@@ -79,36 +106,6 @@
                         </Card>
                     </div>
                 </div>
-                <Card class="statistics-tile-2-2">
-                    <template #content>
-                        <div>
-                            <DataTable v-model:selection="selectedMappedTarget" :value="variantAndScoreSetDataForMappedTarget" selectionMode="single" sortField="scoreSets.length" :sortOrder="-1" :paginator="true" :rows="10" :rowsPerPageOptions="[10, 25, 50]">
-                                <Column field="target" header="Gene"></Column>
-                                <Column field="scoreSets.length" sortable header="Score Sets"></Column>
-                                <!-- <Column field="variants" header="Variants"></Column> -->
-                                <Column field="mappedVariants" sortable header="Mapped Variants">
-                                    <template #body="slotProps">
-                                        {{ new Intl.NumberFormat("en-US").format(slotProps.data.mappedVariants) }}
-                                    </template>
-                                </Column>
-                            </DataTable>
-                        </div>
-                    </template>
-                </Card>
-                <Card class="statistics-tile-2-2">
-                    <template #content>
-                        <div>
-                            <Chart type="doughnut" :data="organismChartData" :options="organismChartOptions"></Chart>
-                        </div>
-                    </template>
-                </Card>
-                <Card class="statistics-tile-2-2">
-                    <template #content>
-                        <div>
-                            <Chart type="doughnut" :data="mappedTargetChartData" :options="mappedTargetChartOptions"></Chart>
-                        </div>
-                    </template>
-                </Card>
             </div>
         </div>
     </DefaultLayout>
@@ -125,7 +122,6 @@ import Column from 'primevue/column';
 import DefaultLayout from '../layout/DefaultLayout.vue';
 import SelectButton from 'primevue/selectbutton';
 import PageLoading from '../common/PageLoading.vue';
-import StatisticsSwarm from '../StatisticsSwarm.vue';
 import TimeSeriesLineChart from '../TimeSeriesLineChart.vue';
 
 import useItem from '@/composition/item'
@@ -149,13 +145,9 @@ export default {
             mappedVariantsByScoreSet: {},
             experimentsByMonth: [],
             variantsByMonth: [],
-            mappedTargetGeneCounts: {},
 
             // Mapped metadata info for score sets.
             scoreSetMappedTargets: {},
-
-            // Mapped target selection
-            selectedMappedTarget: null,
 
             // Time series chart options.
             margins: {
@@ -171,7 +163,7 @@ export default {
             targetGeneOrganismFieldCounts: targetGeneOrganismStatistic.item,
         };
     },
-    components: {Carousel, Card, Column, Chart, DataTable, DefaultLayout, SelectButton, PageLoading, TimeSeriesLineChart, StatisticsSwarm},
+    components: {Carousel, Card, Column, Chart, DataTable, DefaultLayout, SelectButton, PageLoading, TimeSeriesLineChart},
     async mounted() {
         this.fetchStatistics();
     },
@@ -189,7 +181,7 @@ export default {
             return this.mappedVariantsByMonth.reduce((acc, item) => acc + item.count, 0);
         },
         totalMappedTargetGenes() {
-            return Object.keys(this.mappedTargetGeneCounts).length;
+            return this.variantAndScoreSetDataForMappedTarget.length;
         },
         totalHumanScoreSets(){
             return this.targetGeneOrganismFieldCounts ? this.targetGeneOrganismFieldCounts["Homo sapiens"] : 0
@@ -215,6 +207,11 @@ export default {
                     statistic: this.totalMappedVariants,
                     title: "Mapped Variant Effect Measurements",
                     footer: "total created all time",
+                },
+                {
+                    statistic: this.totalMappedTargetGenes,
+                    title: "Genes with Mapped Measurements",
+                    footer: "distinct genes with variant mappings",
                 }
             ]
         },
@@ -288,12 +285,6 @@ export default {
         organismChartOptions: function() {
             return this.organismChartData ? this.setChartOptions('Target Organism', this.organismChartData, 'target-organism-name') : null
         },
-        mappedTargetChartData: function() {
-            return this.mappedTargetGeneCounts ? this.statisticsDictToChartData(this.mappedTargetGeneCounts) : null
-        },
-        mappedTargetChartOptions: function() {
-            return this.mappedTargetChartData ? this.setChartOptions('Mapped Target Genes', this.mappedTargetChartData, 'target-name') : null
-        },
     },
     methods: {
         async fetchStatistics() {
@@ -330,10 +321,6 @@ export default {
                     const parsedDate = new Date(date);
                     return {date: new Date(parsedDate.getUTCFullYear(), parsedDate.getUTCMonth()), count: mappedVariantsData[date]}
                 });
-
-                const mappedTargetGeneResponse = await fetch(`${config.apiBaseUrl}/statistics/target/mapped/gene`);
-                const mappedTargetGeneData = await mappedTargetGeneResponse.json();
-                this.mappedTargetGeneCounts = mappedTargetGeneData;
 
                 const scoreSetTargetGeneResponse = await fetch(`${config.apiBaseUrl}/score-sets/mapped-genes`);
                 this.scoreSetMappedTargets = await scoreSetTargetGeneResponse.json();
@@ -389,9 +376,8 @@ export default {
                 plugins: {
                     legend: {
                         display: true,
-                        position: 'right',
+                        position: 'bottom',
                         onClick: searchOnClick,
-                        width: 'max-content',
                     },
                     title: {
                         display: true,

@@ -290,6 +290,11 @@
             </div>
             <br>
           </div>
+          <div v-if="item.targetGenes[0].targetAccession">
+            <div v-if="item.targetGenes[0].targetAccession.isBaseEditor">
+              <strong>*This score set represents base editor data.</strong>
+            </div>
+          </div>
         </div>
 
         <div class="mave-score-set-section-title">Score Ranges</div>

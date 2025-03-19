@@ -98,6 +98,9 @@ export default {
         label: 'Search',
         route: '/search',
       }, {
+        label: 'Find a Variant',
+        route: '/search-variants',
+      }, {
         label: 'Documentation',
         route: '/docs'
       }, {

@@ -29,7 +29,7 @@
                                 <SelectButton v-model="selectedAggregationLevel" :options="aggregationLevels" optionLabel="label" optionValue="value" aria-labelledby="basic"/>
                             </div>
                         </div>
-                        <div>
+                        <div class="chart-container">
                             <TimeSeriesLineChart :data="timeSeriesData" :interpolateMissingDates="timeSeriesInterpolation" :level="selectedAggregationLevel"></TimeSeriesLineChart>
                         </div>
                     </template>
@@ -429,6 +429,12 @@ h1 {
     flex: 1 1 100%;
     margin-left: auto;
     margin-right: auto;
+}
+
+.chart-container {
+    height: 400px;
+    max-height: 400px;
+    overflow: hidden;
 }
 
 .flowchart-container {

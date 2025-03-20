@@ -925,7 +925,7 @@ export default {
 }
 
 .mave-collection-badges {
-  flex: 1 1 auto;
+  flex: 0 1 auto; /* Only take up space if present */
   padding: 0 0 0 7px;
   font-size: 12px;
   line-height: 29px;

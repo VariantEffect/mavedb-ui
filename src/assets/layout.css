@@ -15,9 +15,8 @@
 }
 
 .mave-screen-title-bar {
-  align-items: center;
+  align-items: flex-end;
   display: flex;
-  flex-direction: row;
   justify-content: space-between;
   font-size: 28px;
   padding: 0 0 5px 0;
@@ -27,15 +26,18 @@
 }
 
 .mave-screen-title {
-  flex: 0 0 auto;
-  display: block; /* Ensures the title takes up full width */
-  white-space: nowrap; /* Prevents text from wrapping */
-  overflow-x: auto; /* Horizontal scrolling */
-  max-width: 72%;
+  flex: 1 1 auto; /* Allow it to grow when possible */
+  display: flex;
+  flex-direction: column;
+  word-break: break-word;
+  white-space: normal;
+  overflow: visible;
 }
 
 .mave-screen-title-controls {
-  flex: 0 0 auto;
+  flex: 0 1 auto; /* Only take space if present */
+  align-self: flex-end;
+  display: flex;
 }
 
 .mave-screen-title-controls .p-button {

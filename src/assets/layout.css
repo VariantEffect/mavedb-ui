@@ -14,6 +14,14 @@
   overflow-x: hide;
 }
 
+.mave-collection-badges {
+  flex: 0 1 auto;
+  font-size: 12px;
+  line-height: 29px;
+  margin-right: 5px; 
+  padding: 0 0 0 7px;
+}
+
 .mave-screen-title-bar {
   align-items: flex-end;
   display: flex;
@@ -35,9 +43,10 @@
 }
 
 .mave-screen-title-controls {
-  flex: 0 1 auto; /* Only take space if present */
   align-self: flex-end;
   display: flex;
+  flex: 0 1 auto; /* Only take space if present */
+  width: max-content;
 }
 
 .mave-screen-title-controls .p-button {

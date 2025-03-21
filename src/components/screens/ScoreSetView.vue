@@ -924,13 +924,6 @@ export default {
   width: 100%;
 }
 
-.mave-collection-badges {
-  flex: 0 1 auto; /* Only take up space if present */
-  padding: 0 0 0 7px;
-  font-size: 12px;
-  line-height: 29px;
-}
-
 /* Score set details */
 
 .mave-score-set-section-title {

@@ -1146,6 +1146,7 @@ import { TARGET_GENE_CATEGORIES, textForTargetGeneCategory } from '@/lib/target-
 import {ORCID_ID_REGEX} from '@/lib/orcid'
 import { normalizeDoi, validateDoi} from '@/lib/identifiers'
 import useFormatters from '@/composition/formatters'
+import { beautifyString } from '@/lib/formats'
 
 const externalGeneDatabases = ['UniProt', 'Ensembl', 'RefSeq']
 
@@ -1326,7 +1327,8 @@ export default {
     targetGeneCategories: TARGET_GENE_CATEGORIES,
     rangeClassifications: [
       'Normal',
-      'Abnormal'
+      'Abnormal',
+      'Not Specified'
     ],
 
     progressVisible: false,
@@ -1760,6 +1762,8 @@ export default {
     scoreRangeWithWizardProperties(existingRange) {
       const scoreRange = this.emptyScoreRangeWizardObj()
       scoreRange.value = existingRange
+
+      scoreRange.value.classification = beautifyString(scoreRange.value.classification)
 
       return scoreRange
     },

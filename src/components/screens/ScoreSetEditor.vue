@@ -309,7 +309,7 @@
                                   <label :for="$scopedId(`input-scoreRangeLabel-${scoreIdx}`)">Label</label>
                                 </span>
                                 <span class="p-float-label" style="width:25%;">
-                                  <Dropdown v-model="scoreRange.classification" :options="rangeClassifications" style="width:25%;" :aria-labelledby="$scopedId(`input-scoreRangeClassification-${scoreIdx}`)"/>
+                                  <Dropdown v-model="scoreRange.classification" :options="rangeClassifications" optionLabel="label" optionValue="value" style="width:25%;" :aria-labelledby="$scopedId(`input-scoreRangeClassification-${scoreIdx}`)"/>
                                   <label :for="$scopedId(`input-scoreRangeClassification-${scoreIdx}`)">Classification</label>
                                 </span>
                               </InputGroup>
@@ -739,7 +739,6 @@
   import {normalizeDoi, normalizeIdentifier, normalizePubmedId, validateDoi, validateIdentifier, validatePubmedId} from '@/lib/identifiers'
   import {ORCID_ID_REGEX} from '@/lib/orcid'
   import useFormatters from '@/composition/formatters'
-  import { beautifyString } from '@/lib/formats'
 import { TARGET_GENE_CATEGORIES, textForTargetGeneCategory } from '@/lib/target-genes'
 
   const externalGeneDatabases = ['UniProt', 'Ensembl', 'RefSeq']
@@ -884,9 +883,9 @@ import { TARGET_GENE_CATEGORIES, textForTargetGeneCategory } from '@/lib/target-
       ],
       targetGeneCategories: TARGET_GENE_CATEGORIES,
       rangeClassifications: [
-        'Normal',
-        'Abnormal',
-        'Not Specified'
+        {value: "normal", label: "Normal"},
+        {value: "abnormal", label: "Abnormal"},
+        {value: "not_specified", label: "Not Specified"}
       ],
 
       progressVisible: false,
@@ -1548,7 +1547,6 @@ import { TARGET_GENE_CATEGORIES, textForTargetGeneCategory } from '@/lib/target-
           this.scoreRanges = this.item.scoreRanges
           this.scoreRangeBoundaryHelper = []
           this.scoreRanges?.ranges.forEach((range, idx) => {
-            this.scoreRanges.ranges[idx].classification = beautifyString(this.scoreRanges.ranges[idx].classification)
             this.scoreRangeBoundaryHelper.push(emptyScoreRangeBoundaryHelper())
             this.scoreRangeBoundaryHelper[idx].lowerBoundIsInfinity = this.scoreRanges.ranges[idx].range[0] === null
             this.scoreRangeBoundaryHelper[idx].upperBoundIsInfinity = this.scoreRanges.ranges[idx].range[1] === null

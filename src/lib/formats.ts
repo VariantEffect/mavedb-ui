@@ -13,7 +13,3 @@ export function formatInt(x: number | null) {
     maximumFractionDigits: 0
   })
 }
-
-export function beautifyString(x: string) {
-  return _.startCase(_.replace(x, /_/g, ' '))
-}

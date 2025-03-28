@@ -889,9 +889,10 @@
                   <div class="mavedb-wizard-help">
                     <label :id="$scopedId('input-isProvidingScoreRanges')">Will you be providing score ranges for this score set?</label>
                     <div class="mavedb-help-small">
-                      Score ranges provide additional clinical context to the scores you upload. If you provide score ranges, you must
-                      classify each range as denoting either normal or abnormal function, with at least one range of each type. You should
-                      also provide a wild type score within the normal range. This score is the expected score for wild type variants.
+                      Score ranges provide additional clinical context to the scores you upload. If you provide score ranges, you may
+                      classify each range as having either normal, abnormal, or an unspecified function. If you provide a range with normal
+                      function, you should also provide a wild type score that falls within the normal range. This score is the expected
+                      score for wild type variants.
                     </div>
                   </div>
                   <div class="mavedb-wizard-content">
@@ -960,9 +961,7 @@
                       <div class="mavedb-wizard-help">
                         <label :id="$scopedId(`input-rangeClassification-${rangeIdx}`)">How should this range be classified?</label>
                         <div class="mavedb-help-small">
-                          When providing score ranges, it is necessary to classify each range as either normal or abnormal. You may provide more
-                          than one range within each classification, but at least one of each is necessary.
-                        </div>
+                          You may classify a range as having either normal, abnormal, or an unspecified function.
                       </div>
                       <div class="mavedb-wizard-content">
                           <SelectButton v-model="rangeObj.value.classification" :id="$scopedId(`input-rangeClassification-${rangeIdx}`)"

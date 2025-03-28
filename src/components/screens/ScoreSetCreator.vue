@@ -962,6 +962,7 @@
                         <label :id="$scopedId(`input-rangeClassification-${rangeIdx}`)">How should this range be classified?</label>
                         <div class="mavedb-help-small">
                           You may classify a range as having either normal, abnormal, or an unspecified function.
+                        </div>
                       </div>
                       <div class="mavedb-wizard-content">
                           <SelectButton v-model="rangeObj.value.classification" :id="$scopedId(`input-rangeClassification-${rangeIdx}`)"

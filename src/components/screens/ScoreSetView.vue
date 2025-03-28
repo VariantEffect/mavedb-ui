@@ -118,7 +118,6 @@
             @export-chart="setHeatmapExport" ref="heatmap"
           />
         </div>
-        <div v-else class="no-heatmap-message">Insufficient score data to generate a heatmap. Consider uploading more variants with valid scores.</div>
       </div>
       <div class="mave-1000px-col">
         <div v-if="item.externalLinks?.ucscGenomeBrowser?.url">
@@ -461,15 +460,6 @@ export default {
       const fixedColumns = ['hgvs_nt', 'hgvs_splice', 'hgvs_pro']
       const showCountColumns = !_.isEmpty(this.item?.datasetColumns?.countColumns)
       return showCountColumns ? [...fixedColumns, ...this.item?.datasetColumns?.countColumns || []] : []
-    },
-    showHeatmap() {
-      // Threshold is 5%.
-      const sparsityThreshold = 0.05
-      const totalItems = this.scores.length
-      if (totalItems === 0) return false
-      // Count the number of valid scores
-      const validScoresCount = this.scores.filter((item) => item.score !== null && item.score !== undefined && item.score !== "" && item.score !== "NA" && !isNaN(item.score)).length
-      return (validScoresCount / totalItems) > sparsityThreshold
     },
     sortedMetaAnalyzesScoreSetUrns: function() {
       return _.sortBy(this.item?.metaAnalyzesScoreSetUrns || [])
@@ -989,15 +979,4 @@ export default {
   margin: 1em 0;
 }
 
-.no-heatmap-message {
-  padding: 10px;
-  background-color: #f8d7da;
-  color: #721c24;
-  border: 1px solid #f5c6cb;
-  border-radius: 4px;
-  text-align: center;
-  position: relative;
-  width: 1000px;
-  margin: 0 auto;
-}
 </style>

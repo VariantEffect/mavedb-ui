@@ -1367,13 +1367,13 @@ import { TARGET_GENE_CATEGORIES, textForTargetGeneCategory } from '@/lib/target-
 
         // Only accept the current search text if we haven't set an identifier. When the user starts typing, the current
         // identifier is cleared.
-        const currentIdentifier = this.targetGene.externalIdentifiers[dbName]?.identifier
+        const currentIdentifier = this.targetGene.externalIdentifiers[dbName]?.identifier?.identifier
         if (!currentIdentifier) {
           if (searchText == '') {
             this.targetGene.externalIdentifiers[dbName].identifier = null
           } else if (validateIdentifier(dbName, searchText)) {
             const identifier = normalizeIdentifier(dbName, searchText)
-            this.targetGene.externalIdentifiers[dbName].identifier = { identifier }
+            this.targetGene.externalIdentifiers[dbName].identifier = { identifier: identifier, dbName: dbName }
             input.modelValue = null
 
             // Clear the text input.

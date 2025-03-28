@@ -693,9 +693,9 @@
                             <AutoComplete style="width: 100%;"
                                 v-model="createdTargetGenes[targetIdx].targetGene.externalIdentifiers[dbName].identifier"
                                 :id="$scopedId(`input-${dbName.toLowerCase()}Identifier`)" field="identifier"
-                                :suggestions="targetGeneIdentifierSuggestionsList[dbName]" :forceSelection="true"
+                                :suggestions="targetGeneIdentifierSuggestionsList[dbName]" :forceSelection="false"
                                 @complete="searchTargetGeneIdentifiers(dbName, $event)"
-                                @change="addDefaultOffset(dbName, targetIdx)"
+                                @change="addDefaultOffset(dbName, targetIdx); externalIdentifierTextToObject(dbName, targetIdx, $event)"
                               />
                             <label :for="$scopedId(`input-${dbName.toLowerCase()}Identifier`)">{{ dbName }} identifier</label>
                           </div>
@@ -1971,6 +1971,20 @@ export default {
       const currentTargetGene = this.createdTargetGenes[targetIdx].targetGene
       if (!currentTargetGene.externalIdentifiers[dbName]?.offset){
         currentTargetGene.externalIdentifiers[dbName].offset = 0
+      }
+    },
+
+    externalIdentifierTextToObject: function (dbName, targetIdx, event) {
+      const currentTargetGene = this.createdTargetGenes[targetIdx].targetGene
+      const externalIdentifier = currentTargetGene.externalIdentifiers[dbName]
+
+      if (!event.value) {
+        externalIdentifier.identifier = null
+        return
+      }
+
+      if (!externalIdentifier.identifier?.identifier) {
+        externalIdentifier.identifier = { identifier: event.value, dbName: dbName }
       }
     },
 

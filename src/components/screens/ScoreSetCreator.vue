@@ -966,7 +966,7 @@
                       </div>
                       <div class="mavedb-wizard-content">
                           <SelectButton v-model="rangeObj.value.classification" :id="$scopedId(`input-rangeClassification-${rangeIdx}`)"
-                          :options="rangeClassifications" />
+                          :options="rangeClassifications" optionLabel="label" optionValue="value" />
                           <span v-if="validationErrors[`scoreRanges.ranges.${rangeIdx}.classification`]" class="mave-field-error">{{ validationErrors[`scoreRanges.ranges.${rangeIdx}.classification`] }}</span>
                       </div>
                     </div>
@@ -1325,8 +1325,9 @@ export default {
     ],
     targetGeneCategories: TARGET_GENE_CATEGORIES,
     rangeClassifications: [
-      'Normal',
-      'Abnormal'
+      {value: "normal", label: "Normal"},
+      {value: "abnormal", label: "Abnormal"},
+      {value: "not_specified", label: "Not Specified"}
     ],
 
     progressVisible: false,
@@ -1760,7 +1761,6 @@ export default {
     scoreRangeWithWizardProperties(existingRange) {
       const scoreRange = this.emptyScoreRangeWizardObj()
       scoreRange.value = existingRange
-
       return scoreRange
     },
 

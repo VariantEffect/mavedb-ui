@@ -309,7 +309,7 @@
                                   <label :for="$scopedId(`input-scoreRangeLabel-${scoreIdx}`)">Label</label>
                                 </span>
                                 <span class="p-float-label" style="width:25%;">
-                                  <Dropdown v-model="scoreRange.classification" :options="rangeClassifications" style="width:25%;" :aria-labelledby="$scopedId(`input-scoreRangeClassification-${scoreIdx}`)"/>
+                                  <Dropdown v-model="scoreRange.classification" :options="rangeClassifications" optionLabel="label" optionValue="value" style="width:25%;" :aria-labelledby="$scopedId(`input-scoreRangeClassification-${scoreIdx}`)"/>
                                   <label :for="$scopedId(`input-scoreRangeClassification-${scoreIdx}`)">Classification</label>
                                 </span>
                               </InputGroup>
@@ -883,8 +883,9 @@ import { TARGET_GENE_CATEGORIES, textForTargetGeneCategory } from '@/lib/target-
       ],
       targetGeneCategories: TARGET_GENE_CATEGORIES,
       rangeClassifications: [
-        'normal',
-        'abnormal'
+        {value: "normal", label: "Normal"},
+        {value: "abnormal", label: "Abnormal"},
+        {value: "not_specified", label: "Not Specified"}
       ],
 
       progressVisible: false,

@@ -693,9 +693,9 @@
                             <AutoComplete style="width: 100%;"
                                 v-model="createdTargetGenes[targetIdx].targetGene.externalIdentifiers[dbName].identifier"
                                 :id="$scopedId(`input-${dbName.toLowerCase()}Identifier`)" field="identifier"
-                                :suggestions="targetGeneIdentifierSuggestionsList[dbName]" :forceSelection="true"
+                                :suggestions="targetGeneIdentifierSuggestionsList[dbName]" :forceSelection="false"
                                 @complete="searchTargetGeneIdentifiers(dbName, $event)"
-                                @change="addDefaultOffset(dbName, targetIdx)"
+                                @change="addDefaultOffset(dbName, targetIdx); externalIdentifierTextToObject(dbName, targetIdx, $event)"
                               />
                             <label :for="$scopedId(`input-${dbName.toLowerCase()}Identifier`)">{{ dbName }} identifier</label>
                           </div>
@@ -889,9 +889,10 @@
                   <div class="mavedb-wizard-help">
                     <label :id="$scopedId('input-isProvidingScoreRanges')">Will you be providing score ranges for this score set?</label>
                     <div class="mavedb-help-small">
-                      Score ranges provide additional clinical context to the scores you upload. If you provide score ranges, you must
-                      classify each range as denoting either normal or abnormal function, with at least one range of each type. You should
-                      also provide a wild type score within the normal range. This score is the expected score for wild type variants.
+                      Score ranges provide additional clinical context to the scores you upload. If you provide score ranges, you may
+                      classify each range as having either normal, abnormal, or an unspecified function. If you provide a range with normal
+                      function, you should also provide a wild type score that falls within the normal range. This score is the expected
+                      score for wild type variants.
                     </div>
                   </div>
                   <div class="mavedb-wizard-content">
@@ -960,13 +961,11 @@
                       <div class="mavedb-wizard-help">
                         <label :id="$scopedId(`input-rangeClassification-${rangeIdx}`)">How should this range be classified?</label>
                         <div class="mavedb-help-small">
-                          When providing score ranges, it is necessary to classify each range as either normal or abnormal. You may provide more
-                          than one range within each classification, but at least one of each is necessary.
-                        </div>
+                          You may classify a range as having either normal, abnormal, or an unspecified function.
                       </div>
                       <div class="mavedb-wizard-content">
                           <SelectButton v-model="rangeObj.value.classification" :id="$scopedId(`input-rangeClassification-${rangeIdx}`)"
-                          :options="rangeClassifications" />
+                          :options="rangeClassifications" optionLabel="label" optionValue="value" />
                           <span v-if="validationErrors[`scoreRanges.ranges.${rangeIdx}.classification`]" class="mave-field-error">{{ validationErrors[`scoreRanges.ranges.${rangeIdx}.classification`] }}</span>
                       </div>
                     </div>
@@ -1325,8 +1324,9 @@ export default {
     ],
     targetGeneCategories: TARGET_GENE_CATEGORIES,
     rangeClassifications: [
-      'Normal',
-      'Abnormal'
+      {value: "normal", label: "Normal"},
+      {value: "abnormal", label: "Abnormal"},
+      {value: "not_specified", label: "Not Specified"}
     ],
 
     progressVisible: false,
@@ -1760,7 +1760,6 @@ export default {
     scoreRangeWithWizardProperties(existingRange) {
       const scoreRange = this.emptyScoreRangeWizardObj()
       scoreRange.value = existingRange
-
       return scoreRange
     },
 
@@ -1971,6 +1970,20 @@ export default {
       const currentTargetGene = this.createdTargetGenes[targetIdx].targetGene
       if (!currentTargetGene.externalIdentifiers[dbName]?.offset){
         currentTargetGene.externalIdentifiers[dbName].offset = 0
+      }
+    },
+
+    externalIdentifierTextToObject: function (dbName, targetIdx, event) {
+      const currentTargetGene = this.createdTargetGenes[targetIdx].targetGene
+      const externalIdentifier = currentTargetGene.externalIdentifiers[dbName]
+
+      if (!event.value) {
+        externalIdentifier.identifier = null
+        return
+      }
+
+      if (!externalIdentifier.identifier?.identifier) {
+        externalIdentifier.identifier = { identifier: event.value, dbName: dbName }
       }
     },
 

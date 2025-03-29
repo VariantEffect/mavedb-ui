@@ -424,13 +424,6 @@ export default {
   margin: 10px 0;
 }
 
-.mave-collection-badges {
-  flex: 1 1 auto;
-  padding: 0 0 0 7px;
-  font-size: 12px;
-  line-height: 29px;
-}
-
 /* Score set details */
 
 .mave-score-set-section-title {

@@ -309,7 +309,7 @@
                                   <label :for="$scopedId(`input-scoreRangeLabel-${scoreIdx}`)">Label</label>
                                 </span>
                                 <span class="p-float-label" style="width:25%;">
-                                  <Dropdown v-model="scoreRange.classification" :options="rangeClassifications" style="width:25%;" :aria-labelledby="$scopedId(`input-scoreRangeClassification-${scoreIdx}`)"/>
+                                  <Dropdown v-model="scoreRange.classification" :options="rangeClassifications" optionLabel="label" optionValue="value" style="width:25%;" :aria-labelledby="$scopedId(`input-scoreRangeClassification-${scoreIdx}`)"/>
                                   <label :for="$scopedId(`input-scoreRangeClassification-${scoreIdx}`)">Classification</label>
                                 </span>
                               </InputGroup>
@@ -883,8 +883,9 @@ import { TARGET_GENE_CATEGORIES, textForTargetGeneCategory } from '@/lib/target-
       ],
       targetGeneCategories: TARGET_GENE_CATEGORIES,
       rangeClassifications: [
-        'normal',
-        'abnormal'
+        {value: "normal", label: "Normal"},
+        {value: "abnormal", label: "Abnormal"},
+        {value: "not_specified", label: "Not Specified"}
       ],
 
       progressVisible: false,
@@ -1366,13 +1367,13 @@ import { TARGET_GENE_CATEGORIES, textForTargetGeneCategory } from '@/lib/target-
 
         // Only accept the current search text if we haven't set an identifier. When the user starts typing, the current
         // identifier is cleared.
-        const currentIdentifier = this.targetGene.externalIdentifiers[dbName]?.identifier
+        const currentIdentifier = this.targetGene.externalIdentifiers[dbName]?.identifier?.identifier
         if (!currentIdentifier) {
           if (searchText == '') {
             this.targetGene.externalIdentifiers[dbName].identifier = null
           } else if (validateIdentifier(dbName, searchText)) {
             const identifier = normalizeIdentifier(dbName, searchText)
-            this.targetGene.externalIdentifiers[dbName].identifier = { identifier }
+            this.targetGene.externalIdentifiers[dbName].identifier = { identifier: identifier, dbName: dbName }
             input.modelValue = null
 
             // Clear the text input.

@@ -40,6 +40,7 @@ import makeHeatmap, {heatmapRowForNucleotideVariant, heatmapRowForProteinVariant
 import {parseSimpleProVariant, parseSimpleNtVariant, variantNotNullOrNA} from '@/lib/mave-hgvs'
 import { saveChartAsFile } from '@/lib/chart-export'
 import { Heatmap } from '@/lib/heatmap'
+import {SPARSITY_THRESHOLD} from '@/lib/scoreSetHeatmap'
 
 function stdev(array: number[]) {
   if (!array || array.length === 0) {
@@ -160,15 +161,13 @@ export default {
       if (this.scores.length === 0) {
         return false
       }
-      // Threshold is 5%.
-      const sparsityThreshold = 0.05
       const validScoresCount = this.scores.length
       const totalItems = this.heatmapRange.length * this.heatmapRows.length 
       if (totalItems === 0) {
         return false
       }
       const sparsity = validScoresCount / totalItems
-      return sparsity > sparsityThreshold // A boolean value
+      return sparsity > SPARSITY_THRESHOLD // A boolean value
     },
   },
 

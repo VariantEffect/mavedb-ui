@@ -111,7 +111,7 @@ export default {
             const experimentUrnDisplay = experimentUrn;
             const experimentDescription = _.get(
               rows.data()[0],
-              "shortDescription",
+              "experiment.shortDescription",
               null
             );
             const url = self.$router.resolve({

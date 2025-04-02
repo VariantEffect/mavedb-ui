@@ -3,22 +3,27 @@
 
     <div style="text-align: center;">Functional Score by Variant</div>
     <div class="mave-heatmap-wrapper">
-      <div id="mave-heatmap-container" class="heatmapContainer" ref="heatmapContainer">
-        <div id="mave-heatmap-scroll-container" class="heatmapScrollContainer" ref="heatmapScrollContainer">
-          <div id="mave-stacked-heatmap-container" class="mave-simple-variants-stacked-heatmap-container" ref="simpleVariantsStackedHeatmapContainer" />
-          <div id="mave-variants-heatmap-container" class="mave-simple-variants-heatmap-container" ref="simpleVariantsHeatmapContainer" />
+      <template v-if="showHeatmap">
+        <div id="mave-heatmap-container" class="heatmapContainer" ref="heatmapContainer">
+          <div id="mave-heatmap-scroll-container" class="heatmapScrollContainer" ref="heatmapScrollContainer">
+            <div id="mave-stacked-heatmap-container" class="mave-simple-variants-stacked-heatmap-container" ref="simpleVariantsStackedHeatmapContainer" />
+            <div id="mave-variants-heatmap-container" class="mave-simple-variants-heatmap-container" ref="simpleVariantsHeatmapContainer" />
+          </div>
         </div>
-      </div>
-      <div class="mave-heatmap-controls">
-        <span class="mave-heatmap-controls-title">Heatmap format</span>
-        <SelectButton
-          v-model="layout"
-          :allow-empty="false"
-          option-label="title"
-          option-value="value"
-          :options="[{title: 'Normal', value: 'normal'}, {title: 'Compact', value: 'compact'}]"
-        />
-      </div>
+        <div class="mave-heatmap-controls">
+          <span class="mave-heatmap-controls-title">Heatmap format</span>
+          <SelectButton
+            v-model="layout"
+            :allow-empty="false"
+            option-label="title"
+            option-value="value"
+            :options="[{title: 'Normal', value: 'normal'}, {title: 'Compact', value: 'compact'}]"
+          />
+        </div>
+      </template>
+      <template v-else>
+        <div class="no-heatmap-message">Insufficient score data to generate a heatmap.</div>
+      </template>
     </div>
     <div v-if="numComplexVariants > 0">{{numComplexVariants}} variants are complex and cannot be shown on this type of chart.</div>
   </div>
@@ -35,6 +40,7 @@ import makeHeatmap, {heatmapRowForNucleotideVariant, heatmapRowForProteinVariant
 import {parseSimpleProVariant, parseSimpleNtVariant, variantNotNullOrNA} from '@/lib/mave-hgvs'
 import { saveChartAsFile } from '@/lib/chart-export'
 import { Heatmap } from '@/lib/heatmap'
+import {SPARSITY_THRESHOLD} from '@/lib/scoreSetHeatmap'
 
 function stdev(array: number[]) {
   if (!array || array.length === 0) {
@@ -150,6 +156,18 @@ export default {
       }
 
       return this.scoreSet.scoreRanges.wtScore
+    },
+    showHeatmap() {
+      if (this.scores.length === 0) {
+        return false
+      }
+      const validScoresCount = this.scores.length
+      const totalItems = this.heatmapRange.length * this.heatmapRows.length 
+      if (totalItems === 0) {
+        return false
+      }
+      const sparsity = validScoresCount / totalItems
+      return sparsity > SPARSITY_THRESHOLD // A boolean value
     },
   },
 
@@ -487,6 +505,18 @@ export default {
 .mave-heatmap-wrapper:hover .mave-heatmap-controls {
   display: flex;
   flex-direction: row;
+}
+
+.no-heatmap-message {
+  padding: 10px;
+  background-color: #f8d7da;
+  color: #721c24;
+  border: 1px solid #f5c6cb;
+  border-radius: 4px;
+  text-align: center;
+  position: relative;
+  width: 1000px;
+  margin: 0 auto;
 }
 
 .heatmapContainer {

@@ -1,17 +1,18 @@
 <template>
   <TabMenu class="mave-histogram-viz-select" v-if="hasTabBar" v-model:activeIndex="activeViz" :model="vizOptions" />
-  <div v-if="hasTabBar && showShaders" class="mave-histogram-controls">
+  <div v-if="!hasTabBar" style="text-align: center;">Distribution of Functional Scores</div>
+  <div v-if="!hasTabBar && showShaders" class="mave-histogram-controls">
     <div class="flex flex-wrap gap-3">
       Shader Options:
       <div class="flex align-items-center gap-1">
           <RadioButton v-model="activeShader" inputId="unsetShader" name="shader" value="null" />
           <label for="unsetShader">No Shader</label>
       </div>
-      <div class="flex items-center gap-2" v-if="scoreSet.scoreRanges">
+      <div class="flex align-items-center gap-2" v-if="scoreSet.scoreRanges">
           <RadioButton v-model="activeShader" inputId="rangeShader" name="shader" value="range" />
           <label for="rangeShader">Score Ranges</label>
       </div>
-      <div class="flex items-center gap-2" v-if="scoreSet.scoreCalibrations">
+      <div class="flex align-items-center gap-2" v-if="scoreSet.scoreCalibrations">
           <RadioButton v-model="activeShader" inputId="calibrationShader" name="shader" value="threshold" />
           <label for="calibrationShader">Calibration Thresholds</label>
       </div>
@@ -446,7 +447,6 @@ export default defineComponent({
       this.histogram.data(this.variants)
           .seriesOptions(this.series?.map((s) => s.options) || null)
           .seriesClassifier(seriesClassifier)
-          .title(this.hasTabBar ? null : 'Distribution of Functional Scores')
           .legendNote(this.activeViz == 0 ? null : 'ClinVar data from time of publication')
           .shaders(histogramShaders)
 
@@ -477,6 +477,12 @@ export default defineComponent({
 </script>
 
 <style scoped>
+.mave-histogram-controls {
+  display: flex;
+  flex-direction: column;
+  gap: 1rem;
+}
+
 .mave-histogram-control {
   display: flex;
   flex-wrap: wrap;

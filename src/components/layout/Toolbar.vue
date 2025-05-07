@@ -97,10 +97,10 @@ export default {
       }, {
         label: 'Search',
         route: '/search',
-      }, {
+      }, ...config.CLINICAL_FEATURES_ENABLED ? [{
         label: 'Find a Variant',
         route: '/search-variants',
-      }, {
+      }] : [], {
         label: 'Documentation',
         route: '/docs'
       }, {

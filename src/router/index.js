@@ -46,14 +46,14 @@ const routes = [{
   meta: {
     title: import.meta.env.VITE_SITE_TITLE + ' | Search'
   }
-}, {
+}, ...config.CLINICAL_FEATURES_ENABLED ? [{
   path: '/search-variants',
   name: 'search-variants',
   component: SearchVariantsScreen,
   meta: {
     title: import.meta.env.VITE_SITE_TITLE + ' | Search Variants'
   }
-}, {
+}] : [], {
   path: '/docs',
   component: DocumentationView,
   meta: {

@@ -640,6 +640,13 @@
                         </template>
                       </DataTable>
                     </span>
+
+                    <div class="field-column">
+                      <div class="field" style="margin-top: 1em;">
+                        <InputSwitch v-model="isBaseEditor" :aria-labelledby="$scopedId('input-isBaseEditorData')"/>
+                        <span style="margin-left: 1em;">{{ isBaseEditor ? 'This score set represents base editor data.' : 'This score set does not represent base editor data.' }}</span>
+                      </div>
+                    </div>
                   </div>
                   <span v-if="validationErrors['targetGenes']" class="mave-field-error">{{validationErrors['targetGenes']}}</span>
                   <div class="field">
@@ -720,6 +727,7 @@
   import InputGroupAddon from 'primevue/inputgroupaddon'
   import InputNumber from 'primevue/inputnumber'
   import InputText from 'primevue/inputtext'
+  import InputSwitch from 'primevue/inputswitch'
   import Message from 'primevue/message'
   import Multiselect from 'primevue/multiselect'
   import ProgressSpinner from 'primevue/progressspinner'
@@ -784,7 +792,7 @@ import { TARGET_GENE_CATEGORIES, textForTargetGeneCategory } from '@/lib/target-
 
   export default {
     name: 'ScoreSetEditor',
-    components: { AutoComplete, Button, Card, Chips, Column, Checkbox, DataTable, DefaultLayout, Dropdown, EmailPrompt, EntityLink, FileUpload, InputGroup, InputGroupAddon, InputNumber, InputText, Message, Multiselect, ProgressSpinner, SelectButton, TabPanel, TabView, Textarea },
+    components: { AutoComplete, Button, Card, Chips, Column, Checkbox, DataTable, DefaultLayout, Dropdown, EmailPrompt, EntityLink, FileUpload, InputGroup, InputGroupAddon, InputNumber, InputText, InputSwitch, Message, Multiselect, ProgressSpinner, SelectButton, TabPanel, TabView, Textarea },
 
     setup: () => {
       const publicationIdentifierSuggestions = useItems({ itemTypeName: 'publication-identifier-search' })
@@ -900,7 +908,9 @@ import { TARGET_GENE_CATEGORIES, textForTargetGeneCategory } from '@/lib/target-
       metaAnalyzesScoreSetSuggestions: [],
       supersededScoreSetSuggestions: [],
       targetGeneAccessionSuggestions: [],
-      validationErrors: {}
+      validationErrors: {},
+
+      isBaseEditor: false
     }),
 
     computed: {
@@ -1552,6 +1562,10 @@ import { TARGET_GENE_CATEGORIES, textForTargetGeneCategory } from '@/lib/target-
             this.scoreRangeBoundaryHelper[idx].upperBoundIsInfinity = this.scoreRanges.ranges[idx].range[1] === null
           })
           this.extraMetadata = this.item.extraMetadata
+
+          if (this.targetGenes[0]?.targetAccession) {
+            this.isBaseEditor = this.targetGenes[0].targetAccession.isBaseEditor
+          }
         } else {
           this.experiment = null
           this.licenseId = this.defaultLicenseId
@@ -1661,7 +1675,12 @@ import { TARGET_GENE_CATEGORIES, textForTargetGeneCategory } from '@/lib/target-
           dataUsagePolicy: this.dataUsagePolicy,
           extraMetadata: {},
           // eslint-disable-next-line no-unused-vars
-          targetGenes: this.targetGenes.map(({ index, ...target }) => target), // drop index property from target genes before save
+          targetGenes: this.targetGenes.map(({ index, ...target }) => {  // drop index property from target genes before save
+            if (target.targetAccession) {
+              target.targetAccession.isBaseEditor = this.isBaseEditor
+            }
+            return target
+          }),
           scoreRanges: this.scoreRanges
         }
         if (!this.item) {

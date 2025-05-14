@@ -441,7 +441,9 @@ export default defineComponent({
     },
     controlDbAndVersion: {
       handler: function() {
-        this.loadClinicalControls()
+        if (this.config.CLINICAL_FEATURES_ENABLED) {
+          this.loadClinicalControls()
+        }
       }
     },
     clinicalControls: {

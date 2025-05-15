@@ -411,6 +411,7 @@ export default function makeHeatmap(): Heatmap {
       .style('border-radius', '5px')
       .style('color', '#000')
       .style('padding', '5px')
+      .style('line-height', '1.5')
       .style('z-index', 2001)
 
     selectionTooltip = d3.select(_container)
@@ -423,6 +424,7 @@ export default function makeHeatmap(): Heatmap {
       .style('border-radius', '5px')
       .style('color', '#000')
       .style('padding', '5px')
+      .style('line-height', '1.5')
       .style('position', 'relative')
       .style('width', 'fit-content')
       .style('z-index', 1)
@@ -490,7 +492,7 @@ export default function makeHeatmap(): Heatmap {
       }
 
       // Show the tooltip under the datum node if it would overflow from the top of the heatmap container.
-      if (yCoordinate(selectedDatum) < rows.length / 4) {
+      if (rows.length < 4 || yCoordinate(selectedDatum) <= 2) {
         selectionTooltip
           .style('top', null)
           .style('bottom', _container.clientHeight - top - tooltipHeight + (0.5 * strokeWidth(true)) + 'px')

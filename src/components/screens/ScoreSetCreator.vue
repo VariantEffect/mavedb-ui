@@ -1408,7 +1408,12 @@ export default {
       return this.suggestionsForAutocomplete(this.supersededScoreSetSuggestions)
     },
     targetGeneSuggestionsList: function () {
-      return this.suggestionsForAutocomplete(this.targetGeneSuggestions)
+      const geneSuggestions = this.targetGeneSuggestions || []
+      const filteredGeneSuggestions = geneSuggestions.filter(gene => {
+        const seq = gene?.targetSequence
+        return seq && seq.sequence && seq.sequenceType
+      })
+      return this.suggestionsForAutocomplete(filteredGeneSuggestions)
     },
     taxonomySuggestionsList: function() {
       return this.suggestionsForAutocomplete(this.taxonomySuggestions)

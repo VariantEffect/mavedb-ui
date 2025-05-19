@@ -109,7 +109,13 @@
           />
         </div>
         <div v-if="showHeatmap" class="mave-score-set-heatmap-pane">
+          <ScoreSetVisualizer
+            :scoreSet="item"
+            :scores="scores"
+            ref="visualizer"
+          />
           <ScoreSetHeatmap
+            v-if="false"
             :scoreSet="item"
             :scores="scores"
             :externalSelection="variantToVisualize"
@@ -437,10 +443,11 @@ import { parseScoresOrCounts } from '@/lib/scores'
 import { preferredVariantLabel, variantNotNullOrNA } from '@/lib/mave-hgvs';
 import { mapState } from 'vuex'
 import { ref } from 'vue'
+import ScoreSetVisualizer from '../ScoreSetVisualizer.vue';
 
 export default {
   name: 'ScoreSetView',
-  components: { Accordion, AccordionTab, AutoComplete, Button, Chip, CollectionAdder, CollectionBadge, DefaultLayout, EntityLink, ScoreSetHeatmap, ScoreSetHistogram, TabView, TabPanel, Message, DataTable, Column, ProgressSpinner, ScrollPanel, PageLoading, ItemNotFound },
+  components: { Accordion, AccordionTab, AutoComplete, Button, Chip, CollectionAdder, CollectionBadge, DefaultLayout, EntityLink, ScoreSetHeatmap, ScoreSetHistogram, ScoreSetVisualizer, TabView, TabPanel, Message, DataTable, Column, ProgressSpinner, ScrollPanel, PageLoading, ItemNotFound },
   computed: {
     contributors: function() {
       return _.sortBy(

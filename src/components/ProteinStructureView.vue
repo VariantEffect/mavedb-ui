@@ -1,7 +1,13 @@
 <template>
-  <div class="mavedb-protein-structure-viewer-container" ref="container"></div>
+  <!-- <div class="mavedb-protein-structure-viewer-container" ref="container"></div>
   <Dropdown v-model="selectedPdb" :options="pdbs" optionLabel="id" />
-  <Dropdown v-model="colorScheme" :options="colorSchemeOptions" />
+  <Dropdown v-model="colorScheme" :options="colorSchemeOptions" /> -->
+
+  <span class="p-float-label">
+    <Dropdown :id="$scopedId('alphafold-id')" v-model="selectedAlphaFold" :options="alphaFolds" optionLabel="id" />
+    <label :for="$scopedId('alphafold-id')">AlphaFold ID</label>
+  </span>
+  <div id="pdbe-molstar-viewer-container" style="width: 100%; height: 600px; position: relative"></div>
 </template>
 
 <script>
@@ -34,7 +40,8 @@ export default {
 
   data: () => ({
     uniprotData: null,
-    selectedPdb: null,
+    // selectedPdb: null,
+    selectedAlphaFold: null,
     stage: null,
     mainComponent: null,
     colorScheme: 'bfactor',
@@ -66,20 +73,34 @@ export default {
   }),
 
   computed: {
-    pdbs: function() {
-      if (!this.uniprotData) {
-        return []
-      }
-      return $('entry dbReference[type="PDB"]', this.uniprotData).map((i, element) => {
-        const $element = $(element)
-        return {
-          id: $element.attr('id'),
-          method: $element.find('property[type="method"]').first().attr('value'),
-          resolution: $element.find('property[type="resolution"]').first().attr('value'),
-          chains: $element.find('property[type="chains"]').first().attr('value')
+    // pdbs: function() {
+    //   if (!this.uniprotData) {
+    //     return []
+    //   }
+    //   return $('entry dbReference[type="PDB"]', this.uniprotData).map((i, element) => {
+    //     const $element = $(element)
+    //     return {
+    //       id: $element.attr('id'),
+    //       method: $element.find('property[type="method"]').first().attr('value'),
+    //       resolution: $element.find('property[type="resolution"]').first().attr('value'),
+    //       chains: $element.find('property[type="chains"]').first().attr('value')
+    //     }
+    //   }).get().filter((pdb) => pdb.id != null)
+    // },
+    alphaFolds: function() {
+        if (!this.uniprotData) {
+          return []
         }
-      }).get().filter((pdb) => pdb.id != null)
-    }
+        return $('entry dbReference[type="AlphaFoldDB"]', this.uniprotData).map((i, element) => {
+          const $element = $(element)
+          return {
+            id: $element.attr('id'),
+            method: $element.find('property[type="method"]').first().attr('value'),
+            resolution: $element.find('property[type="resolution"]').first().attr('value'),
+            chains: $element.find('property[type="chains"]').first().attr('value')
+          }
+        }).get().filter((x) => x.id != null)
+    },
   },
 
   mounted: function() {
@@ -87,14 +108,25 @@ export default {
   },
 
   watch: {
-    pdbs: {
+    // pdbs: {
+    //   handler: function() {
+    //     let newSelectedPdb = null
+    //     if (this.selectedPdb) {
+    //       newSelectedPdb = this.pdbs.find((pdb) => pdb.id == newSelectedPdb.id)
+    //     }
+    //     if (!this.selectedPdb && this.pdbs.length > 0) {
+    //       this.selectedPdb = this.pdbs[0]
+    //     }
+    //   }
+    // },
+    alphaFolds: {
       handler: function() {
-        let newSelectedPdb = null
-        if (this.selectedPdb) {
-          newSelectedPdb = this.pdbs.find((pdb) => pdb.id == newSelectedPdb.id)
+        let newSelectedAlphaFold = null
+        if (this.selectedAlphaFold) {
+          newSelectedAlphaFold = this.alphaFolds.find((x) => x.id == newSelectedAlphaFold.id)
         }
-        if (!this.selectedPdb && this.pdbs.length > 0) {
-          this.selectedPdb = this.pdbs[0]
+        if (!this.selectedAlphaFold && this.alphaFolds.length > 0) {
+          this.selectedAlphaFold = this.alphaFolds[0]
         }
       }
     },
@@ -103,7 +135,12 @@ export default {
         this.refreshSelection()
       }
     },
-    selectedPdb: {
+    // selectedPdb: {
+    //   handler: function() {
+    //     this.render()
+    //   }
+    // },
+    selectedAlphaFold: {
       handler: function() {
         this.render()
       }
@@ -148,7 +185,8 @@ export default {
     },
 
     fetchUniprotData: async function() {
-      const response = await axios.get(`https://www.uniprot.org/uniprot/${this.uniprotId}.xml`)
+      //const response = await axios.get(`https://www.uniprot.org/uniprot/${this.uniprotId}.xml`,
+      const response = await axios.get(`https://rest.uniprot.org/uniprotkb/${this.uniprotId}.xml`)
       if (response.data) {
         const parser = new DOMParser()
         this.uniprotData = parser.parseFromString(response.data, 'text/xml')
@@ -158,38 +196,61 @@ export default {
     },
 
     render: function() {
-      const self = this
-      if (this.selectedPdb) {
-        if (!this.stage) {
-          this.stage = new NGL.Stage(this.$refs.container)
-          this.stage.signals.clicked.add((pickingProxy) => {
-            if (pickingProxy) {
-              const atom = pickingProxy.atom || pickingProxy.closestBondAtom
-              if (atom?.residueIndex != null) {
-                this.$emit('clickedResidue', {residueNumber: atom.residueIndex + 1})
-              }
-              // console.log(atom.qualifiedName())
-            }
-          })
-          this.stage.signals.hovered.add((pickingProxy) => {
-            if (pickingProxy) {
-              const atom = pickingProxy.atom || pickingProxy.closestBondAtom
-              if (atom?.residueIndex != null) {
-                this.$emit('hoveredOverResidue', {residueNumber: atom.residueIndex + 1})
-              }
-              // console.log(atom.qualifiedName())
-            }
-          })
-        }
-        // rcsb://1crn
-        this.stage.removeAllComponents()
-        this.stage.loadFile(`rcsb://${this.selectedPdb.id}`, /*{defaultRepresentation: true}*/).then((component) => {
-          this.mainComponent = component
-          component.addRepresentation('cartoon', {colorScheme: self.colorScheme})
-          //this.stage.autoView()
-        })
-      } else {
-        //
+      // const self = this
+      // if (this.selectedPdb) {
+        // if (!this.stage) {
+        //   this.stage = new NGL.Stage(this.$refs.container)
+        //   this.stage.signals.clicked.add((pickingProxy) => {
+        //     if (pickingProxy) {
+        //       const atom = pickingProxy.atom || pickingProxy.closestBondAtom
+        //       if (atom?.residueIndex != null) {
+        //         this.$emit('clickedResidue', {residueNumber: atom.residueIndex + 1})
+        //       }
+        //       // console.log(atom.qualifiedName())
+        //     }
+        //   })
+        //   this.stage.signals.hovered.add((pickingProxy) => {
+        //     if (pickingProxy) {
+        //       const atom = pickingProxy.atom || pickingProxy.closestBondAtom
+        //       if (atom?.residueIndex != null) {
+        //         this.$emit('hoveredOverResidue', {residueNumber: atom.residueIndex + 1})
+        //       }
+        //       // console.log(atom.qualifiedName())
+        //     }
+        //   })
+        // }
+        // // rcsb://1crn
+        // this.stage.removeAllComponents()
+        // this.stage.loadFile(`rcsb://${this.selectedPdb.id}`, /*{defaultRepresentation: true}*/).then((component) => {
+        //   this.mainComponent = component
+        //   component.addRepresentation('cartoon', {colorScheme: self.colorScheme})
+        //   //this.stage.autoView()
+        // })
+      // } else {
+      //   //
+      // }
+
+      if (this.selectedAlphaFold) {
+        const viewerInstance = new PDBeMolstarPlugin()
+        const options = {
+          customData: {
+            //url: 'https://alphafold.ebi.ac.uk/files/AF-O15552-F1-model_v1.cif',
+            url: `https://alphafold.ebi.ac.uk/files/AF-${this.selectedAlphaFold.id}-F1-model_v4.cif`,
+            format: 'cif',
+          },
+          alphafoldView: true,
+          bgColor: { r: 255, g: 255, b: 255 },
+          hideCanvasControls: [
+            'selection',
+            'animation',
+            'controlToggle',
+            'controlInfo',
+          ],
+          sequencePanel: true,
+          landscape: true,
+        };
+        const viewerContainer = document.getElementById('pdbe-molstar-viewer-container')
+        viewerInstance.render(viewerContainer, options)
       }
     }
   }

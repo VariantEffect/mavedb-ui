@@ -3,24 +3,35 @@
   <Dropdown v-model="selectedPdb" :options="pdbs" optionLabel="id" />
   <Dropdown v-model="colorScheme" :options="colorSchemeOptions" /> -->
 
-  <span class="p-float-label">
-    <Dropdown :id="$scopedId('alphafold-id')" v-model="selectedAlphaFold" :options="alphaFolds" optionLabel="id" />
-    <label :for="$scopedId('alphafold-id')">AlphaFold ID</label>
-  </span>
-  <div id="pdbe-molstar-viewer-container" style="width: 100%; height: 600px; position: relative"></div>
+  <div style="display:flex">
+    <span class="p-float-label" style="flex: 1">
+      <Button
+        style="flex: 1; margin:5px;"
+        :icon="`pi ${hidden ? 'pi-eye' : 'pi-eye-slash'}`"
+        class="p-button p-button-info"
+        v-tooltip="{ value: 'Toggle protein visualization', showDelay: 100, hideDelay: 100 }"
+        @click="hidden=!hidden"
+      />
+    </span>
+    <span v-show="!hidden" class="p-float-label" style="margin-top: 10px; margin-bottom:4px">
+      <Dropdown :id="$scopedId('alphafold-id')" style="height:3em" v-model="selectedAlphaFold" :options="alphaFolds" optionLabel="id" />
+      <label :for="$scopedId('alphafold-id')">AlphaFold ID</label>
+    </span>
+  </div>
+  <div v-show="!hidden" id="pdbe-molstar-viewer-container" style="width: 100%; height: 665px; position: relative"></div>
 </template>
 
 <script>
 
 import axios from 'axios'
 import $ from 'jquery'
-import * as NGL from 'ngl'
 import Dropdown from 'primevue/dropdown'
+import Button from 'primevue/button'
 
 export default {
   name: 'ProteinStructureView',
-  components: {Dropdown},
-  emits: ['hoveredOverResidue', 'clickedResidue'],
+  components: {Dropdown, Button},
+  emits: ['hoveredOverResidue', 'clickedResidue', 'isHidden'],
 
   props: {
     uniprotId: {
@@ -39,11 +50,12 @@ export default {
   },
 
   data: () => ({
+    hidden: true,
     uniprotData: null,
     // selectedPdb: null,
     selectedAlphaFold: null,
     stage: null,
-    mainComponent: null,
+    // mainComponent: null,
     colorScheme: 'bfactor',
     colorSchemeOptions: [
       'atomindex',
@@ -105,9 +117,15 @@ export default {
 
   mounted: function() {
     this.render()
+    this.$emit('isHidden', this.hidden)
   },
 
   watch: {
+    hidden: {
+      handler: function() {
+        this.$emit('isHidden', this.hidden)
+      }
+    },
     // pdbs: {
     //   handler: function() {
     //     let newSelectedPdb = null
@@ -159,30 +177,30 @@ export default {
   },
 
   methods: {
-    refreshSelection: function() {
-      if (this.stage && this.mainComponent) {
-        for (const representation of this.selectionRepresentations) {
-          console.log(representation)
-          //representation.setVisibility(false)
-          this.mainComponent.removeAllRepresentations()
-          this.mainComponent.removeRepresentation(representation)
-        }
-        this.selectionRepresentations = []
-        if (this.selectedResidueRange) {
-          // Get all atoms within 5 Angstroms.
-          var selection = new NGL.Selection(`${this.selectedResidueRange[0]}-${this.selectedResidueRange[1]}`);
-          var radius = 5
-          var atomSet = this.mainComponent.structure.getAtomSetWithinSelection( selection, radius );
-          // Expand selection to complete groups
-          var atomSet2 = this.mainComponent.structure.getAtomSetWithinGroup(atomSet)
-          this.selectionRepresentations.push(
-            this.mainComponent.addRepresentation('cartoon', {sele: atomSet2.toSeleString(), colorScheme: 'resname'})
-          )
-          console.log(this.selectionRepresentations)
-          //this.mainComponent.autoView()
-        }
-      }
-    },
+    // refreshSelection: function() {
+    //   if (this.stage && this.mainComponent) {
+    //     for (const representation of this.selectionRepresentations) {
+    //       console.log(representation)
+    //       //representation.setVisibility(false)
+    //       this.mainComponent.removeAllRepresentations()
+    //       this.mainComponent.removeRepresentation(representation)
+    //     }
+    //     this.selectionRepresentations = []
+    //     if (this.selectedResidueRange) {
+    //       // Get all atoms within 5 Angstroms.
+    //       var selection = new NGL.Selection(`${this.selectedResidueRange[0]}-${this.selectedResidueRange[1]}`);
+    //       var radius = 5
+    //       var atomSet = this.mainComponent.structure.getAtomSetWithinSelection( selection, radius );
+    //       // Expand selection to complete groups
+    //       var atomSet2 = this.mainComponent.structure.getAtomSetWithinGroup(atomSet)
+    //       this.selectionRepresentations.push(
+    //         this.mainComponent.addRepresentation('cartoon', {sele: atomSet2.toSeleString(), colorScheme: 'resname'})
+    //       )
+    //       console.log(this.selectionRepresentations)
+    //       //this.mainComponent.autoView()
+    //     }
+    //   }
+    // },
 
     fetchUniprotData: async function() {
       //const response = await axios.get(`https://www.uniprot.org/uniprot/${this.uniprotId}.xml`,
@@ -238,15 +256,16 @@ export default {
             url: `https://alphafold.ebi.ac.uk/files/AF-${this.selectedAlphaFold.id}-F1-model_v4.cif`,
             format: 'cif',
           },
-          alphafoldView: true,
+          // alphafoldView: true,
+          hideControls: true,
           bgColor: { r: 255, g: 255, b: 255 },
-          hideCanvasControls: [
-            'selection',
-            'animation',
-            'controlToggle',
-            'controlInfo',
-          ],
-          sequencePanel: true,
+          // hideCanvasControls: [
+          //   'selection',
+          //   'animation',
+          //   'controlToggle',
+          //   'controlInfo',
+          // ],
+          // sequencePanel: true,
           landscape: true,
         };
         const viewerContainer = document.getElementById('pdbe-molstar-viewer-container')

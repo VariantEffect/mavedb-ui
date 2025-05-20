@@ -18,6 +18,12 @@
           option-value="value"
           :options="[{title: 'Normal', value: 'normal'}, {title: 'Compact', value: 'compact'}]"
         />
+        <Button
+          v-if="showProteinStructureButton"
+          label="View protein structure"
+          class="p-button p-button-info"
+          @click="$emit('onDidClickShowProteinStructure')"
+        />
       </div>
     </div>
     <div v-if="numComplexVariants > 0">{{numComplexVariants}} variants are complex and cannot be shown on this type of chart.</div>
@@ -29,6 +35,7 @@
 import * as d3 from 'd3'
 import _ from 'lodash'
 import SelectButton from 'primevue/selectbutton'
+import Button from 'primevue/button'
 
 import geneticCodes from '@/lib/genetic-codes'
 import makeHeatmap, {heatmapRowForNucleotideVariant, heatmapRowForProteinVariant, HEATMAP_AMINO_ACID_ROWS, HEATMAP_NUCLEOTIDE_ROWS, HeatmapDatum} from '@/lib/heatmap'
@@ -49,8 +56,8 @@ type HeatmapLayout = 'normal' | 'compact'
 
 export default {
   name: 'ScoreSetHeatmap',
-  components: {SelectButton},
-  emits: ['variantSelected', 'heatmapVisible', 'exportChart'],
+  components: {SelectButton, Button},
+  emits: ['variantSelected', 'heatmapVisible', 'exportChart', 'onDidClickShowProteinStructure'],
 
   props: {
     margins: { // Margins must accommodate the axis labels
@@ -74,6 +81,10 @@ export default {
       type: Object,
       required: false,
       default: null
+    },
+    showProteinStructureButton: {
+      type: Boolean,
+      default: true,
     }
   },
 
@@ -95,6 +106,7 @@ export default {
 
   data: () => ({
     isMounted: false,
+    proteinStructureVisible: false,
     simpleVariants: null,
     numComplexVariants: 0,
     heatmap: null as Heatmap | null,
@@ -225,6 +237,10 @@ export default {
 
     exportChart() {
       saveChartAsFile(this.$refs.heatmapContainer, `${this.scoreSet.urn}-scores-heatmap`, 'mave-heatmap-container')
+    },
+
+    showProteinStructure() {
+      this.proteinStructureVisible = true
     },
 
     // We assume that there will only be one substitution variant for each target AA at a given position.

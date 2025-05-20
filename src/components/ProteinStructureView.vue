@@ -3,22 +3,11 @@
   <Dropdown v-model="selectedPdb" :options="pdbs" optionLabel="id" />
   <Dropdown v-model="colorScheme" :options="colorSchemeOptions" /> -->
 
-  <div style="display:flex">
-    <span class="p-float-label" style="flex: 1">
-      <Button
-        style="flex: 1; margin:5px;"
-        :icon="`pi ${hidden ? 'pi-eye' : 'pi-eye-slash'}`"
-        class="p-button p-button-info"
-        v-tooltip="{ value: 'Toggle protein visualization', showDelay: 100, hideDelay: 100 }"
-        @click="hidden=!hidden"
-      />
-    </span>
-    <span v-show="!hidden" class="p-float-label" style="margin-top: 10px; margin-bottom:4px">
-      <Dropdown :id="$scopedId('alphafold-id')" style="height:3em" v-model="selectedAlphaFold" :options="alphaFolds" optionLabel="id" />
-      <label :for="$scopedId('alphafold-id')">AlphaFold ID</label>
-    </span>
-  </div>
-  <div v-show="!hidden" id="pdbe-molstar-viewer-container" style="width: 100%; height: 665px; position: relative"></div>
+  <span v-if="alphaFolds?.length > 1" class="p-float-label" style="margin-top: 10px; margin-bottom:4px">
+    <Dropdown :id="$scopedId('alphafold-id')" style="height:3em" v-model="selectedAlphaFold" :options="alphaFolds" optionLabel="id" />
+    <label :for="$scopedId('alphafold-id')">AlphaFold ID</label>
+  </span>
+  <div id="pdbe-molstar-viewer-container" style="width: 100%; height: 100%; position: relative"></div>
 </template>
 
 <script>
@@ -26,18 +15,16 @@
 import axios from 'axios'
 import $ from 'jquery'
 import Dropdown from 'primevue/dropdown'
-import Button from 'primevue/button'
 
 export default {
   name: 'ProteinStructureView',
-  components: {Dropdown, Button},
-  emits: ['hoveredOverResidue', 'clickedResidue', 'isHidden'],
+  components: {Dropdown},
+  emits: ['hoveredOverResidue', 'clickedResidue'],
 
   props: {
     uniprotId: {
       type: String,
       required: true,
-      default: 'P02829'
     },
     selectedResidueRange: {
       type: Array,
@@ -50,7 +37,6 @@ export default {
   },
 
   data: () => ({
-    hidden: true,
     uniprotData: null,
     // selectedPdb: null,
     selectedAlphaFold: null,

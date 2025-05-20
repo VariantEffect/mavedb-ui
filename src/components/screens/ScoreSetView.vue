@@ -109,19 +109,15 @@
           />
         </div>
         <div v-if="showHeatmap" class="mave-score-set-heatmap-pane">
-          <ScoreSetVisualizer
-            :scoreSet="item"
-            :scores="scores"
-            ref="visualizer"
-          />
           <ScoreSetHeatmap
-            v-if="false"
             :scoreSet="item"
             :scores="scores"
             :externalSelection="variantToVisualize"
+            :showProteinStructureModal="uniprotId!=null"
             @variant-selected="childComponentSelectedVariant"
             @heatmap-visible="heatmapVisibilityUpdated"
             @export-chart="setHeatmapExport" ref="heatmap"
+            @on-did-click-show-protein-structure="showProteinStructureModal"
           />
         </div>
       </div>
@@ -283,7 +279,7 @@
             <div v-if="targetGene.externalIdentifiers?.[0]?.identifier">
               <div v-for="i in targetGene.externalIdentifiers" :key="i">
                 <div v-if="i.identifier.dbName === 'UniProt'"><strong>UniProt:</strong> {{ i.identifier.identifier }} <span
-                    v-if="i.offset != 0"> with offset {{ i.offset }}</span></div>
+                    v-if="i.offset != 0"> with offset {{ i.offset }}</span>{{ uniprotIds }}</div>
               </div>
               <div v-for="i in targetGene.externalIdentifiers" :key="i">
                 <div v-if="i.identifier.dbName === 'RefSeq'"><strong>RefSeq:</strong> {{ i.identifier.identifier }} <span
@@ -405,6 +401,19 @@
       <ItemNotFound model="score set" :itemId="itemId"/>
     </div>
   </DefaultLayout>
+  <Dialog
+    :visible="isScoreSetVisualizerVisible"
+    :header="item.title"
+    style="width: 100%; max-height: 100%;"
+    @update:visible="isScoreSetVisualizerVisible = $event"
+    >
+    <ScoreSetVisualizer
+      :scoreSet="item"
+      :scores="scores"
+      :uniprotId="uniprotId"
+      :externalSelection="variantToVisualize"
+    />
+    </Dialog>
 </template>
 
 <script>
@@ -424,6 +433,7 @@ import TabView from 'primevue/tabview'
 import Message from 'primevue/message'
 import ProgressSpinner from 'primevue/progressspinner'
 import ScrollPanel from 'primevue/scrollpanel';
+import Dialog from 'primevue/dialog'
 
 import CollectionAdder from '@/components/CollectionAdder'
 import CollectionBadge from '@/components/CollectionBadge'
@@ -447,8 +457,13 @@ import ScoreSetVisualizer from '../ScoreSetVisualizer.vue';
 
 export default {
   name: 'ScoreSetView',
-  components: { Accordion, AccordionTab, AutoComplete, Button, Chip, CollectionAdder, CollectionBadge, DefaultLayout, EntityLink, ScoreSetHeatmap, ScoreSetHistogram, ScoreSetVisualizer, TabView, TabPanel, Message, DataTable, Column, ProgressSpinner, ScrollPanel, PageLoading, ItemNotFound },
+  components: { Accordion, AccordionTab, AutoComplete, Button, Chip, Dialog, CollectionAdder, CollectionBadge, DefaultLayout, EntityLink, ScoreSetHeatmap, ScoreSetHistogram, ScoreSetVisualizer, TabView, TabPanel, Message, DataTable, Column, ProgressSpinner, ScrollPanel, PageLoading, ItemNotFound },
   computed: {
+    uniprotId: function() {
+      const firstTargetGeneExternalIdentifiers = _.get(_.first(this.item.targetGenes), 'externalIdentifiers') || []
+      const uniProtIdentifier = _.find(firstTargetGeneExternalIdentifiers, (x) => x.identifier.dbName == 'UniProt')
+      return _.get(uniProtIdentifier, 'identifier.identifier', null)
+    },
     contributors: function() {
       return _.sortBy(
         (this.item?.contributors || []).filter((c) => c.orcidId != this.item?.createdBy?.orcidId),
@@ -515,6 +530,7 @@ export default {
     countsTable: [],
     readMore: true,
     showHeatmap: true,
+    isScoreSetVisualizerVisible: false,
     heatmapExists: false,
     selectedVariant: null,
     userIsAuthorized: {
@@ -563,6 +579,9 @@ export default {
     },
   },
   methods: {
+    showProteinStructureModal: function() {
+      this.isScoreSetVisualizerVisible = true
+    },
     variantNotNullOrNA,
     checkUserAuthorization: async function() {
       await this.checkAuthorization()

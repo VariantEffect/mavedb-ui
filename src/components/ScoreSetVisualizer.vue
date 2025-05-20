@@ -1,13 +1,14 @@
 <template>
-  <Splitter ref="splitterRef" style="height:725px;">
+  <Splitter ref="splitterRef" style="border: 0px; height:fit-content;">
     <SplitterPanel size="50">
-      <div v-if="scores" class="mave-score-set-heatmap-pane">
+      <div class="mave-score-set-heatmap-pane" >
         <ScoreSetHeatmap
           ref="scoreSetHeatmap"
           :highlightedResidueRange="highlightedResidueRange"
           :scoreSet="scoreSet"
           :scores="scores"
           :selectedResidueRange="selectedResidueRange"
+          :showProteinStructureButton="false"
         />
       </div>
     </SplitterPanel>
@@ -16,10 +17,9 @@
           ref="proteinStructureViewer"
           :highlightedResidueRange="highlightedResidueRange"
           :selectedResidueRange="selectedResidueRange"
+          :uniprotId="uniprotId"
           @clickedResidue="didSelectResidue($event.residueNumber)"
           @hoveredOverResidue="didHighlightResidue($event.residueNumber)"
-          @clickedHideButton="hideProteinStructure"
-          @isHidden="hideProteinStructureView"
       />
     </SplitterPanel>
   </Splitter>
@@ -32,11 +32,10 @@ import ScoreSetHeatmap from '@/components/ScoreSetHeatmap'
 
 import Splitter from 'primevue/splitter'
 import SplitterPanel from 'primevue/splitterpanel'
-import Button from 'primevue/button'
 
 export default {
   name: 'ScoreSetVisualizer',
-  components: {ProteinStructureView, ScoreSetHeatmap, Splitter, SplitterPanel, Button},
+  components: {ProteinStructureView, ScoreSetHeatmap, Splitter, SplitterPanel},
 
   props: {
     scores: {
@@ -46,20 +45,20 @@ export default {
     scoreSet: {
       type: Object,
       required: true
+    },
+    uniprotId: {
+      type: String,
+      required: true
     }
   },
 
   data: () => ({
     highlightedResidueRange: null,
     selectedResidueRange: null,
-    hideProteinStructure: true,
     splitterRef: null,
   }),
 
   methods: {
-    hideProteinStructureView: function(event) {
-      this.$refs.proteinStructureViewer.$el.parentElement.style.maxWidth = event ? '3rem' : null
-    },
     didHighlightResidue: function(residueNumber) {
       console.log(residueNumber)
       this.didHighlightResidues(residueNumber, residueNumber + 1)

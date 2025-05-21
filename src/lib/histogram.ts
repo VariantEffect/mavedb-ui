@@ -714,7 +714,7 @@ export default function makeHistogram(): Histogram {
             .join('text')
             .attr('class', 'histogram-title')
             .attr('x', width / 2 )
-            .attr('y', -margins.top / 2 + 5)
+            .attr('y', -margins.top / 4)
             .style('text-anchor', 'middle')
             .text((d) => d)
 

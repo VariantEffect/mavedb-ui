@@ -1,6 +1,6 @@
 <template>
   <TabMenu class="mave-histogram-viz-select" v-if="hasTabBar" v-model:activeIndex="activeViz" :model="vizOptions" />
-  <div v-if="!hasTabBar && showShaders" class="mave-histogram-controls">
+  <div v-if="hasTabBar && showShaders" class="mave-histogram-controls">
     <div class="flex flex-wrap gap-3">
       Shader Options:
       <div class="flex align-items-center gap-1">
@@ -446,7 +446,7 @@ export default defineComponent({
       this.histogram.data(this.variants)
           .seriesOptions(this.series?.map((s) => s.options) || null)
           .seriesClassifier(seriesClassifier)
-          .title(this.hasTabBar ? null : 'Distribution of Functional Scores')
+          .title('Distribution of Functional Scores')
           .legendNote(this.activeViz == 0 ? null : 'ClinVar data from time of publication')
           .shaders(histogramShaders)
 

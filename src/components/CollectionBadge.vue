@@ -1,8 +1,9 @@
 <template>
   <div class="mave-collection-badge">
     <router-link :to="{name: 'collection', params: {urn: collection.urn}}">
-      <img v-if="badgeNameIsLink" :alt="collection.name" :src="collection.badgeName"/>
-      <Tag v-else :class="tagClassName" :value="collection.badgeName" rounded />
+      <img v-if="badgeIsBuiltIn" :alt="collection.name" :class="badgeClassName" :src="builtInBadgeImage"/>
+      <img v-else-if="badgeNameIsLink" :alt="collection.name" :class="badgeClassName" :src="collection.badgeName"/>
+      <Tag v-else :class="badgeClassName" :value="collection.badgeName" rounded />
     </router-link>
   </div>
 </template>
@@ -22,17 +23,27 @@ export default {
   },
 
   computed: {
+    badgeClassName: function() {
+      return {
+        IGVF: "mave-collection-badge-igvf"
+      }[this.collection.badgeName] || "mave-collection-badge-other"
+    },
+
+    badgeIsBuiltIn: function() {
+      return this.collection.badgeName === "IGVF"
+    },
+
     // determine whether badgeName is a link to an img or not
     badgeNameIsLink: function() {
       // TODO make this a regex to also allow https
       return this.collection.badgeName?.startsWith("http://") || false
     },
 
-    tagClassName: function() {
+    builtInBadgeImage: function() {
       return {
-        IGVF: "mave-collection-badge-igvf"
-      }[this.collection.badgeName] || "mave-collection-badge-other"
-    }
+        IGVF: new URL('../assets/igvf-tag.png', import.meta.url).href
+      }[this.collection.badgeName] || null
+    },
   }
 }
 </script>
@@ -45,7 +56,8 @@ export default {
 }
 
 .mave-collection-badge .mave-collection-badge-igvf {
-  background-color: rgb(227, 35, 176);
+  height: 30px;
+  vertical-align: middle;
 }
 
 .mave-collection-badge .mave-collection-badge-other {

@@ -35,7 +35,7 @@
       <p v-if="alleles.length === 0">
         Enter an HGVS string or variant definition above to obtain a variant and its details.
       </p>
-      <div v-for="allele in alleles" :key="allele.clingenAlleleId" class="col-12">
+      <div v-for="(allele, alleleIdx) in alleles" :key="allele.clingenAlleleId" class="col-12">
         <Card>
           <template #content>
             <div class="variant-search-result">
@@ -65,15 +65,23 @@
                     <Column field="sequenceType" header="Sequence Type"></Column>
                     <Column field="database" header="Database"></Column>
                     <Column field="hgvs" header="Coordinates"></Column>
-                  </DataTable> 
+                  </DataTable>
                 </div>
                 <div v-if="allele.variantsStatus == 'Loaded' && allele.variants.length > 0" class="variant-search-result-subcontent">
                   MaveDB score sets containing variant:
-                  <li v-for="variant in allele.variants" :key="variant.urn">
+                  <li v-for="variant in scoreSetListIsExpanded[alleleIdx] ? allele.variants : allele.variants.slice(0, defaultNumScoreSetsToShow)" :key="variant.urn">
                     <router-link :to="{name: 'scoreSet', params: {urn: variant.scoreSet.urn}, query: {variant: variant.urn}}">
                       {{ variant.scoreSet.title }}
                     </router-link>
                   </li>
+                  <Button v-if="allele.variants.length > defaultNumScoreSetsToShow"
+                    icon="pi pi-angle-down"
+                    class="p-button-text"
+                    style="width: fit-content;"
+                    @click="scoreSetListIsExpanded[alleleIdx] = !scoreSetListIsExpanded[alleleIdx]"
+                  >
+                    {{ scoreSetListIsExpanded[alleleIdx] ? 'Show less' : `Show ${allele.variants.length - defaultNumScoreSetsToShow} more` }}
+                  </Button>
                 </div>
                 <!-- <div v-if="allele.variantsStatus == 'Loaded' && allele.variants.length > 0" style="overflow: hidden;">
                   <div v-for="variant in allele.variants" :key="variant.urn" style="float: left; border: 1px solid #000; width: 300px; margin: 5px; padding: 5px;">
@@ -110,6 +118,8 @@ import {defineComponent} from 'vue'
 import config from '@/config'
 import DefaultLayout from '@/components/layout/DefaultLayout.vue'
 import EntityLink from '@/components/common/EntityLink.vue'
+
+const SCORE_SETS_TO_SHOW = 5
 
 export default defineComponent({
   name: 'SearchVariantsScreen',
@@ -151,8 +161,20 @@ export default defineComponent({
           'Val'
         ]
       },
-      alleles: [] as Array<any>
+      alleles: [] as Array<any>,
+      scoreSetListIsExpanded: [] as Array<boolean>,
+      defaultNumScoreSetsToShow: SCORE_SETS_TO_SHOW,
     }
+  },
+
+  watch: {
+    alleles: {
+      handler: function(newValue) {
+        if (newValue.length > 0) {
+          this.scoreSetListIsExpanded = newValue.map(() => false)
+        }
+      }
+    },
   },
 
   computed: {
@@ -333,7 +355,7 @@ export default defineComponent({
           this.alleles = []
           console.log("Error while loading search results", error)
         }
-      }  
+      }
     }
   }
 })

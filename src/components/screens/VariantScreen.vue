@@ -1,30 +1,30 @@
 <template>
   <DefaultLayout>
-    <div v-if="alleleTitle && variants.length > 1" class="mavedb-variant-title">Variant: {{ alleleTitle }}</div>
+    <h1 v-if="alleleTitle && variants.length > 1" class="mavedb-variant-title">Variant: {{ alleleTitle }}</h1>
     <ErrorView v-if="variantsStatus == 'Error'" />
     <PageLoading v-else-if="variantsStatus == 'Loading'" />
     <Message v-else-if="variants.length == 0">No variants found in MaveDB</Message>
     <div v-else :class="singleOrMultipleVariantsClassName">
-      <TabView
-        class="mavedb-variants-tabview"
-        :lazy="true"
-      >
-        <TabPanel
-          v-for="(variant, variantIndex) in variants"
-          v-model:activeIndex="activeVariantIndex"
-          :header="variant.url"
-          :key="variant.urn"
+        <TabView
+          class="mavedb-variants-tabview"
+          :lazy="true"
         >
-          <template #header>
-            <div v-if="variants.length > 1">
-              <div style="color: #000; font-weight: bold;">Measurement {{ variantIndex + 1 }}</div>
-              <div>{{ variantName(variant) }}</div>
-              <div>{{ variant.scoreSet.title }}</div>
-            </div>
-          </template>
-          <VariantMeasurementView :variantUrn="variant.urn" />
-        </TabPanel>
-      </TabView>
+          <TabPanel
+            v-for="(variant, variantIndex) in variants"
+            v-model:activeIndex="activeVariantIndex"
+            :header="variant.url"
+            :key="variant.urn"
+          >
+            <template #header>
+              <div v-if="variants.length > 1">
+                <div class="mavedb-variants-tabview-header-text" style="color: #000; font-weight: bold;">Measurement {{ variantIndex + 1 }}</div>
+                <div class="mavedb-variants-tabview-header-text">{{ variantName(variant) }}</div>
+                <div class="mavedb-variants-tabview-header-text">{{ variant.scoreSet.title }}</div>
+              </div>
+            </template>
+            <VariantMeasurementView :variantUrn="variant.urn" />
+          </TabPanel>
+        </TabView>
     </div>
   </DefaultLayout>
 </template>
@@ -71,7 +71,6 @@ export default {
       return undefined
     },
     clingenAlleleName: function() {
-      console.log(this.clingenAllele)
       return this.clingenAllele?.communityStandardTitle?.[0] || undefined
     },
     singleOrMultipleVariantsClassName: function() {
@@ -145,10 +144,13 @@ export default {
   display: none;
 }
 .mavedb-variant-title {
-  font-size: 30px;
   font-weight: bold;
+  font-size: 2em;
 }
 .mavedb-variants-tabview:deep(.p-tabview-panels) {
   background: transparent;
+}
+.mavedb-variants-tabview-header-text {
+  color: #3f51b5;
 }
 </style>

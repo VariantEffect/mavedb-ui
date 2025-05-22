@@ -53,7 +53,7 @@
 
 <script lang="ts">
 import { saveChartAsFile } from '@/lib/chart-export'
-import _, { range } from 'lodash'
+import _ from 'lodash'
 import Checkbox from 'primevue/checkbox'
 import Dropdown from 'primevue/dropdown'
 import RadioButton from 'primevue/radiobutton'

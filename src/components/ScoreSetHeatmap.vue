@@ -216,6 +216,9 @@ export default {
     xCoord: function(d: HeatmapDatum) {
       return d?.x
     },
+    accession: function(d: HeatmapDatum) {
+      return d?.details.accession
+    },
     yCoord: function(d: HeatmapDatum) {
       return d?.y
     },
@@ -378,8 +381,13 @@ export default {
         .rows(this.heatmapRows)
         .xCoordinate(this.xCoord)
         .yCoordinate(this.yCoord)
+        .accessorField(this.accession)
         .tooltipHtml(this.tooltipHtmlGetter)
         .datumSelected(this.variantSelected)
+
+      if (!this.heatmap) {
+        return
+      }
 
       if (this.layout == 'compact') {
         this.heatmap.nodeBorderRadius(0)
@@ -392,7 +400,12 @@ export default {
         .valueField((d) => d.meanScore)
         .colorClassifier((variant) => variant.details.wt ? d3.color('#ddbb00') : variant.meanScore)
         .refresh()
-        .selectDatum(this.selectedVariant)
+
+      if (this.selectedVariant) {
+        this.heatmap.selectDatum(this.selectedVariant)
+      } else {
+        this.heatmap.clearSelection()
+      }
     },
 
     drawStackedHeatmap: function() {
@@ -403,16 +416,26 @@ export default {
         .nodeSize({width: 20, height: 1})
         .xCoordinate(this.xCoord)
         .yCoordinate(this.vRank)
+        .accessorField(this.accession)
         .drawY(false)
         .drawLegend(false)
         .alignViaLegend(true)
         .excludeDatum((d) => d.details.wt ? true : false)
 
+      if (!this.stackedHeatmap) {
+        return
+      }
+
       this.stackedHeatmap.data(this.simpleAndWtVariants)
         .valueField((d) => d.meanScore)
         .colorClassifier((variant) => variant.details.wt ? d3.color('#ddbb00') : variant.meanScore)
         .refresh()
-        .selectDatum(this.selectedVariant)
+
+      if (this.selectedVariant) {
+        this.stackedHeatmap.selectDatum(this.selectedVariant)
+      } else {
+        this.stackedHeatmap.clearSelection()
+      }
     },
 
     tooltipHtmlGetter: function(variant: HeatmapDatum) {

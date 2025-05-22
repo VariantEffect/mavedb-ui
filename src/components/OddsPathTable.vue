@@ -19,7 +19,7 @@
         Source: <a :href="evidenceStrengths.source" target="_blank">{{ evidenceStrengths.source }}</a></div>
     <div v-if="evidenceStrengths?.exampleVariant"
         style="font-style: italic; text-align: center; margin-top: -1.5em; margin-bottom: 2em;">
-        <router-link :to="{ name: 'variant', params: { urn: evidenceStrengths.exampleVariant.urn } }">Click
+        <router-link :to="{ name: 'variantMeasurement', params: { urn: evidenceStrengths.exampleVariant.urn } }">Click
             here</router-link> for a preview of future clinical variant features.
     </div>
 </template>

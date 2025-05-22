@@ -2,11 +2,15 @@
   <div class="grid" style="margin: 10px 0;">
     <div v-if="variant" class="col-12">
       <Card>
-        <template #title>Variant: {{ variantName }}</template>
-        <template #content>
-          <div v-if="classification" :class="['variant-clinical-classifier', ...classifierCssClasses]">
-            {{ startCase(classification) }}
+        <template #title>
+          <div class="variant-title-container">
+            <div class="variant-title-name">Variant: {{ variantName }}</div>
+            <div v-if="classification" :class="['variant-clinical-classifier', ...classifierCssClasses]">
+              {{ startCase(classification) }}
+            </div>
           </div>
+        </template>
+        <template #content>
           <table class="variant-info-table">
             <tbody>
               <tr v-if="clingenAlleleName">
@@ -110,7 +114,7 @@ import config from '@/config'
 import {parseScoresOrCounts, ScoresOrCountsRow} from '@/lib/scores'
 import ProgressSpinner from 'primevue/progressspinner'
 
-type Classification = 'Functionally normal' | 'Functionally abnormal'
+type Classification = 'Functionally normal' | 'Functionally abnormal' | 'Not specified'
 
 export default {
   name: 'VariantMeasurementView',
@@ -177,6 +181,8 @@ export default {
           return 'Functionally abnormal'
         case 'normal':
           return 'Functionally normal'
+        case 'not_specified':
+          return 'Not specified'
         default:
           return undefined
       }
@@ -187,12 +193,14 @@ export default {
           return ['variant-clinical-classifier-functionally-abnormal']
         case 'Functionally normal':
           return ['variant-clinical-classifier-functionally-normal']
+        case 'Not specified':
+          return ['variant-clinical-classifier-not-specified']
         default:
           return []
       }
     },
     clingenAlleleId: function() {
-      return this.variant?.clingenAlleleId
+      return this.currentMappedVariant?.clingenAlleleId
     },
     clingenAlleleName: function() {
       return this.clingenAllele?.communityStandardTitle?.[0] || undefined
@@ -234,9 +242,9 @@ export default {
     },
     variantName: function() {
       return this.currentMappedVariant?.postMapped?.expressions?.[0]?.value
-          || this.variant?.hgvs_nt
-          || this.variant?.hgvs_pro
-          || this.variant?.hgvs_splice
+          || this.variant?.hgvsNt
+          || this.variant?.hgvsPro
+          || this.variant?.hgvsSplice
           || undefined
     },
     variantScoreRange: function() {
@@ -257,10 +265,13 @@ export default {
   },
 
   watch: {
-    clingenAlleleId: async function(newValue, oldValue) {
-      if (newValue != oldValue) {
-        this.clingenAllele = await this.fetchClinGenAllele(newValue)
-      }
+    clingenAlleleId:{
+      handler: async function(newValue, oldValue) {
+        if (newValue != oldValue) {
+          this.clingenAllele = await this.fetchClinGenAllele(newValue)
+        }
+      },
+      immediate: true
     },
     scoresData: {
       handler: function(newValue) {
@@ -301,9 +312,19 @@ export default {
   color: white;
   font-weight: bold;
   font-size: 30px;
-  margin: 0 auto 10px auto;
   padding: 0.1em 0.5em;
   display: inline-block;
+}
+
+.variant-title-name {
+  font-weight: bold;
+  font-size: 30px;
+}
+
+.variant-title-container {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
 }
 
 .variant-clinical-classifier-functionally-normal {
@@ -312,6 +333,10 @@ export default {
 
 .variant-clinical-classifier-functionally-abnormal {
   background-color: #b02418;
+}
+
+.variant-clinical-classifier-not-specified {
+  background-color: #919191;
 }
 
 table.variant-into-table {
@@ -328,7 +353,7 @@ table.variant-info-table td:first-child {
 }
 
 .mave-histogram-loading {
-  position: absolute;
+  position: relative;
   top: 50%;
   left: 50%;
 }

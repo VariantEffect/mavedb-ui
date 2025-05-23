@@ -432,13 +432,13 @@ export default function makeHeatmap(): Heatmap {
       if (svg) {
         const selectionBox = svg.select('g.heatmap-selection-rectangle').select('rect')
 
-        const startX = xScale(xCoordinate(selectionStartDatum)) as number
-        const startY = yScale(yCoordinate(selectionStartDatum)) as number
+        const startX = rangeSelectionMode == 'row' ? 0 : xScale(xCoordinate(selectionStartDatum)) as number
+        const startY = rangeSelectionMode == 'column' ? 0 : yScale(yCoordinate(selectionStartDatum)) as number
         const currentX = xScale(xCoordinate(d)) as number
         const currentY = yScale(yCoordinate(d)) as number
 
-        const width = Math.abs(currentX - startX) + nodeSize.width + 1
-        const height = Math.abs(currentY - startY) + nodeSize.height + 1
+        const width = rangeSelectionMode == 'row' ? nodeSize.width * (content.columns ?? 0) : Math.abs(currentX - startX) + nodeSize.width + 1
+        const height = rangeSelectionMode == 'column' ? nodeSize.height * (rows.length - 1) : Math.abs(currentY - startY) + nodeSize.height + 1
 
         selectionBox
           .attr('x', Math.min(currentX, startX))

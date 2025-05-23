@@ -279,7 +279,7 @@
             <div v-if="targetGene.externalIdentifiers?.[0]?.identifier">
               <div v-for="i in targetGene.externalIdentifiers" :key="i">
                 <div v-if="i.identifier.dbName === 'UniProt'"><strong>UniProt:</strong> {{ i.identifier.identifier }} <span
-                    v-if="i.offset != 0"> with offset {{ i.offset }}</span>{{ uniprotIds }}</div>
+                    v-if="i.offset != 0"> with offset {{ i.offset }}</span></div>
               </div>
               <div v-for="i in targetGene.externalIdentifiers" :key="i">
                 <div v-if="i.identifier.dbName === 'RefSeq'"><strong>RefSeq:</strong> {{ i.identifier.identifier }} <span

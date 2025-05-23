@@ -395,6 +395,7 @@ export default {
       this.heatmap = makeHeatmap()
         .margins({top: 0, bottom: 25, left: 20, right: 20})
         .legendTitle("Functional Score")
+        .rangeSelectionMode(this.mode === 'protein-viz' ? 'column' : null)
         .render(this.$refs.simpleVariantsHeatmapContainer)
         .rows(this.heatmapRows)
         .xCoordinate(this.xCoord)

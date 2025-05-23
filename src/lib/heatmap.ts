@@ -1,6 +1,6 @@
 import * as d3 from 'd3'
 import $ from 'jquery'
-import _, { filter, last } from 'lodash'
+import _, { filter, last, range } from 'lodash'
 
 import { AMINO_ACIDS, AMINO_ACIDS_BY_HYDROPHILIA } from './amino-acids.js'
 import { NUCLEOTIDE_BASES } from './nucleotides.js'
@@ -65,6 +65,8 @@ export interface HeatmapRowSpecification {
 export type HeatmapScores = any
 export type HeatmapDatum = any
 export type MappedDatum = { [key: number]: HeatmapDatum }
+
+type RangeSelectionMode = 'column' | 'row' | 'box' | null
 
 /**
  * The heatmap content. This consists of a mapping of rows which contain a list of ordered column contents.
@@ -132,12 +134,17 @@ export interface Heatmap {
   drawLegend: Accessor<boolean, Heatmap>
   alignViaLegend: Accessor<boolean, Heatmap>
 
+  // Selection mode
+  rangeSelectionMode: Accessor<RangeSelectionMode, Heatmap>
+
   //////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
   // Getters
   //////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 
   // Selection
   selectedDatum: Getter<HeatmapDatum | null>
+  selectionStartDatum: Getter<HeatmapDatum | null>
+  selectionEndDatum: Getter<HeatmapDatum | null>
 
   // Container
   container: Getter<HTMLElement | null>
@@ -199,6 +206,9 @@ export default function makeHeatmap(): Heatmap {
   let drawLegend: boolean = true
   let alignViaLegend: boolean = false
 
+  // Selection mode
+  let rangeSelectionMode: RangeSelectionMode = null
+
   //////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
   // Read-only properties
   //////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
@@ -213,6 +223,8 @@ export default function makeHeatmap(): Heatmap {
 
   // Selection
   let selectedDatum: HeatmapDatum | null = null
+  let selectionStartDatum: HeatmapDatum | null = null
+  let selectionEndDatum: HeatmapDatum | null = null
 
   // Container
   let _container: HTMLElement | null = null
@@ -315,6 +327,38 @@ export default function makeHeatmap(): Heatmap {
 
     // Hide the hover tooltip.
     hideTooltip(hoverTooltip)
+
+    // Remove the selection rectangle.
+    if (svg) svg.select('g.heatmap-selection-rectangle').selectAll('rect').remove()
+  }
+
+  const mousedown = function (event: MouseEvent, d: HeatmapDatum) {
+    if (rangeSelectionMode) {
+      selectionStartDatum = d
+      selectionEndDatum = null
+      if (svg) {
+        svg.select('g.heatmap-selection-rectangle').selectAll('rect').remove()
+
+        const x = xScale(xCoordinate(d)) as number
+        const y = yScale(yCoordinate(d)) as number
+        svg.select('g.heatmap-selection-rectangle')
+          .append('rect')
+          .attr('x', x)
+          .attr('y', y)
+          .attr('width', 4)
+          .attr('height', 4)
+          .style('fill', 'none')
+          .raise()
+      }
+    }
+  }
+
+  const mouseup = function (event: MouseEvent, d: HeatmapDatum) {
+    if (rangeSelectionMode) {
+      selectionEndDatum = d
+
+      updateRangeSelection()
+    }
   }
 
   const refreshSelectedDatum = function (d: HeatmapDatum | null, unset: boolean) {
@@ -334,6 +378,15 @@ export default function makeHeatmap(): Heatmap {
     }
   }
 
+  const updateRangeSelection = function () {
+    if (selectionStartDatum && selectionEndDatum) {
+      console.log(`selectedRange from ${selectionStartDatum.x}, ${selectionStartDatum.y}, ${selectionEndDatum.x}, ${selectionEndDatum.y}`)
+
+      if (rangeSelectionMode === 'column') {
+
+      }
+    }
+  }
   //////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
   // Scrolling
   //////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
@@ -355,20 +408,46 @@ export default function makeHeatmap(): Heatmap {
   //////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 
   const mouseover = (event: MouseEvent, d: HeatmapDatum) => {
-    const target = event.target
-    refreshHoverDatum(d)
+    if (!selectionStartDatum) {
+      const target = event.target
+      refreshHoverDatum(d)
 
-    if (target instanceof Element) {
-      showTooltip(hoverTooltip, hoverDatum)
+      if (target instanceof Element) {
+        showTooltip(hoverTooltip, hoverDatum)
+      }
     }
   }
 
-  const mousemove = (event: MouseEvent) => {
-    if (hoverTooltip) {
+  const mousemove = (event: MouseEvent, d: HeatmapDatum) => {
+    if (!selectionStartDatum && hoverTooltip) {
       // Move tooltip to be 30px to the right of the pointer.
       hoverTooltip
         .style('left', (d3.pointer(event, document.body)[0] + 30) + 'px')
         .style('top', (d3.pointer(event, document.body)[1]) + 'px')
+    } else if (selectionStartDatum && !selectionEndDatum){
+      hideHighlight(selectedDatum)
+      selectedDatum = null
+      hideTooltip(selectionTooltip)
+
+      if (svg) {
+        const selectionBox = svg.select('g.heatmap-selection-rectangle').select('rect')
+
+        const startX = xScale(xCoordinate(selectionStartDatum)) as number
+        const startY = yScale(yCoordinate(selectionStartDatum)) as number
+        const currentX = xScale(xCoordinate(d)) as number
+        const currentY = yScale(yCoordinate(d)) as number
+
+        const width = Math.abs(currentX - startX) + nodeSize.width + 1
+        const height = Math.abs(currentY - startY) + nodeSize.height + 1
+
+        selectionBox
+          .attr('x', Math.min(currentX, startX))
+          .attr('y', Math.min(currentY, startY))
+          .attr('width', width)
+          .attr('height', height)
+          .style('stroke-width', 2)
+          .style('stroke', '#d3a')
+      }
     }
   }
 
@@ -590,6 +669,8 @@ export default function makeHeatmap(): Heatmap {
           .attr('class', 'heatmap-hovers')
         mainGroup.append('g')
           .attr('class', 'heatmap-nodes')
+        mainGroup.append('g')
+          .attr('class', 'heatmap-selection-rectangle')
 
         if (alignViaLegend || drawLegend) {
           // Update the heatmap effective margins to take the legend into account.
@@ -681,6 +762,8 @@ export default function makeHeatmap(): Heatmap {
           .on('mouseover', mouseover)
           .on('mousemove', mousemove)
           .on('mouseleave', mouseleave)
+          .on('mousedown', mousedown)
+          .on('mouseup', mouseup)
           .on('click', click)
           .merge(chartedDatum)
           .attr('x', d => xScale(xCoordinate(d)))
@@ -934,11 +1017,22 @@ export default function makeHeatmap(): Heatmap {
       return chart
     },
 
+    rangeSelectionMode: (value?: RangeSelectionMode) => {
+      if (value === undefined) {
+        return rangeSelectionMode
+      }
+
+      rangeSelectionMode = value
+      return chart
+    },
+
     ////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
     // Getters
     ////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 
     selectedDatum: () => selectedDatum,
+    selectionStartDatum: () => selectionStartDatum,
+    selectionEndDatum: () => selectionEndDatum,
 
     container: () => _container,
 

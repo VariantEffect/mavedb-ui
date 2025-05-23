@@ -42,6 +42,7 @@ import makeHeatmap, {heatmapRowForNucleotideVariant, heatmapRowForProteinVariant
 import {parseSimpleProVariant, parseSimpleNtVariant, variantNotNullOrNA} from '@/lib/mave-hgvs'
 import { saveChartAsFile } from '@/lib/chart-export'
 import { Heatmap } from '@/lib/heatmap'
+import { PropType } from 'vue'
 
 function stdev(array: number[]) {
   if (!array || array.length === 0) {
@@ -85,7 +86,11 @@ export default {
     showProteinStructureButton: {
       type: Boolean,
       default: true,
-    }
+    },
+    mode: {
+      type: String as PropType<'standard' | 'protein-viz'>,
+      default: 'standard'
+    },
   },
 
   mounted: function() {
@@ -521,14 +526,23 @@ export default {
 
 .heatmapContainer:deep(.heatmap-y-axis-tick-labels) {
   font-size: 14px;
+  user-select: none;
 }
 
 .heatmapContainer:deep(.heatmap-color-bar-labels) {
   font-size: 14px;
+  user-select: none;
 }
 
 .heatmapContainer:deep(.heatmap-y-axis-tick-label-lg) {
   font-size: 22px;
+  user-select: none;
+}
+.heatmapContainer:deep(.heatmap-vertical-color-legend) {
+  user-select: none;
+}
+.heatmapContainer:deep(.heatmap-bottom-axis) {
+  user-select: none;
 }
 
 .heatmapContainer:deep(.heatmap-x-axis-invisible) {

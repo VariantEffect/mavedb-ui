@@ -1,6 +1,6 @@
 <template>
   <Splitter ref="splitterRef" style="border: 0px; height:fit-content;">
-    <SplitterPanel size="50">
+    <SplitterPanel :size="50">
       <div class="mave-score-set-heatmap-pane" >
         <ScoreSetHeatmap
           ref="scoreSetHeatmap"
@@ -9,10 +9,11 @@
           :scores="scores"
           :selectedResidueRange="selectedResidueRange"
           :showProteinStructureButton="false"
+          mode="protein-viz"
         />
       </div>
     </SplitterPanel>
-    <SplitterPanel size="50">
+    <SplitterPanel :size="50">
       <ProteinStructureView
           ref="proteinStructureViewer"
           :highlightedResidueRange="highlightedResidueRange"

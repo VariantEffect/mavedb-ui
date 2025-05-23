@@ -402,6 +402,7 @@
     </div>
   </DefaultLayout>
   <Dialog
+    v-if="item"
     :visible="isScoreSetVisualizerVisible"
     :header="item.title"
     style="width: 100%; max-height: 100%;"

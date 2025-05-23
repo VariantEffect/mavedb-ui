@@ -103,7 +103,6 @@ export default {
 
   mounted: function() {
     this.render()
-    this.$emit('isHidden', this.hidden)
   },
 
   watch: {

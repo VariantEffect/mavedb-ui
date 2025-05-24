@@ -478,7 +478,7 @@
                         <Multiselect ref="primaryPublicationIdentifiersInput" v-model="primaryPublicationIdentifiers"
                           :id="$scopedId('input-primaryPublicationIdentifiers')" :options="publicationIdentifiers"
                           optionLabel="identifier" placeholder="Select a primary publication (Where the dataset is described)"
-                          :selectionLimit="1">
+                          :selectionLimit="1" style="width: 100%;">
                           <template #option="slotProps">
                             <div class="field">
                               <div>Title: {{ slotProps.option.title }}</div>

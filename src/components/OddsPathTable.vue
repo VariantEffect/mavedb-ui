@@ -16,12 +16,13 @@
                     scoreSet.scoreRanges.oddsPath.evidenceStrengths.normal }}</td>
             </tr>
         </table>
-        <div v-if="scoreSet.scoreRanges.oddsPath.source" style="font-style: italic; text-align: center; margin-bottom: 2em;"><sup>*</sup>
-            Source: <a :href="scoreSet.scoreRanges.oddsPath.source" target="_blank">{{ scoreSet.scoreRanges.oddsPath.source }}</a></div>
+        <div v-if="oddsPathSource" style="font-style: italic; text-align: center; margin-bottom: 2em;"><sup>*</sup>
+            Source: <a :href="oddsPathSource.url" target="_blank">{{ oddsPathSource.url }}</a></div>
     </div>
 </template>
 
 <script lang="ts">
+import config from '@/config';
 import { defineComponent } from 'vue';
 
 export default defineComponent({
@@ -32,6 +33,27 @@ export default defineComponent({
             type: Object,
             required: true
         },
+    },
+
+    setup() {
+        return {
+            config: config,
+        }
+    },
+
+    computed: {
+        // When creating OddsPaths, the source is selected from the list of primary and secondary publications, so its presence in the score set's publication
+        // list should be guaranteed. To avoid an extra request, just look for the publication in the list of a score sets primary and secondary publications.
+        oddsPathSource() {
+            if (!this.scoreSet?.scoreRanges?.oddsPath?.source) {
+                return null
+            }
+
+            const oddsPathSource = this.scoreSet.scoreRanges.oddsPath.source[0];
+            return this.scoreSet.primaryPublicationIdentifiers.concat(this.scoreSet.secondaryPublicationIdentifiers).find((source) => {
+                return source.dbName === oddsPathSource.dbName && source.identifier === oddsPathSource.identifier
+            }) || null;
+        }
     },
 })
 </script>

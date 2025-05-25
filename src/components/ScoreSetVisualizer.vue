@@ -1,23 +1,21 @@
 <template>
-  <Splitter ref="splitterRef" style="border: 0px; height:fit-content;">
+  <Splitter ref="splitterRef" style="border: 0px;">
     <SplitterPanel :size="50">
       <div class="mave-score-set-heatmap-pane" >
         <ScoreSetHeatmap
           ref="scoreSetHeatmap"
-          :highlightedResidueRange="highlightedResidueRange"
           :scoreSet="scoreSet"
           :scores="scores"
-          :selectedResidueRange="selectedResidueRange"
           :showProteinStructureButton="false"
           mode="protein-viz"
+          @variantColumnRangesSelected="didSelectResidues"
         />
       </div>
     </SplitterPanel>
     <SplitterPanel :size="50">
       <ProteinStructureView
           ref="proteinStructureViewer"
-          :highlightedResidueRange="highlightedResidueRange"
-          :selectedResidueRange="selectedResidueRange"
+          :selectedResidueRanges="selectedResidueRanges"
           :uniprotId="uniprotId"
           @clickedResidue="didSelectResidue($event.residueNumber)"
           @hoveredOverResidue="didHighlightResidue($event.residueNumber)"
@@ -54,25 +52,16 @@ export default {
   },
 
   data: () => ({
-    highlightedResidueRange: null,
-    selectedResidueRange: null,
+    selectedResidueRanges: null,
     splitterRef: null,
   }),
 
   methods: {
-    didHighlightResidue: function(residueNumber) {
-      console.log(residueNumber)
-      this.didHighlightResidues(residueNumber, residueNumber + 1)
-    },
-    didHighlightResidues: function(start, end) {
-      this.highlightedResidueRange = [start, end]
-    },
-    didSelectResidue: function(residueNumber) {
-      console.log(residueNumber)
-      this.didSelectResidues(residueNumber, residueNumber + 1)
-    },
-    didSelectResidues: function(start, end) {
-      this.selectedResidueRange = [start, end]
+    // didSelectResidue: function(datum) {
+    //   this.didSelectResidues([{start: datum.x, end: datum.x}])
+    // },
+    didSelectResidues: function(ranges) {
+      this.selectedResidueRanges = ranges
     },
   }
 }

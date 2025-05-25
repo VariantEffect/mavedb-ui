@@ -102,6 +102,7 @@ export interface Heatmap {
   rowClassifier: Accessor<((d: HeatmapDatum) => number[]) | null, Heatmap>
   colorClassifier: Accessor<((d: HeatmapDatum) => number | d3.Color), Heatmap>
   datumSelected: Accessor<((d: HeatmapDatum) => void) | null, Heatmap>
+  rangeSelected: Accessor<((dStart: HeatmapDatum, dEnd: HeatmapDatum) => void) | null, Heatmap>
   excludeDatum: Accessor<((d: HeatmapDatum) => boolean), Heatmap>
 
   // Data fields
@@ -182,6 +183,7 @@ export default function makeHeatmap(): Heatmap {
   let rowClassifier: ((d: HeatmapDatum) => number[]) | null = null
   let colorClassifier: ((d: HeatmapDatum) => number | d3.Color) = valueField
   let datumSelected: ((d: HeatmapDatum) => void) | null = null
+  let rangeSelected: ((dStart: HeatmapDatum, dEnd: HeatmapDatum) => void) | null = null
   let excludeDatum: ((d: HeatmapDatum) => boolean) = (d) => false as boolean
 
   // Layout
@@ -225,6 +227,8 @@ export default function makeHeatmap(): Heatmap {
   let selectedDatum: HeatmapDatum | null = null
   let selectionStartDatum: HeatmapDatum | null = null
   let selectionEndDatum: HeatmapDatum | null = null
+
+  let selectionStartPoint: DOMPoint | null = null
 
   // Container
   let _container: HTMLElement | null = null
@@ -332,34 +336,130 @@ export default function makeHeatmap(): Heatmap {
     if (svg) svg.select('g.heatmap-selection-rectangle').selectAll('rect').remove()
   }
 
-  const mousedown = function (event: MouseEvent, d: HeatmapDatum) {
-    if (rangeSelectionMode) {
-      selectionStartDatum = d
-      selectionEndDatum = null
-      if (svg) {
-        svg.select('g.heatmap-selection-rectangle').selectAll('rect').remove()
+  const heatmapMainMousedown = function (event: MouseEvent) {
+    if (rangeSelectionMode && svg) {
+      const heatmapNodesElem = svg.select('g.heatmap-nodes').node()
+      const heatmapNodesRect = heatmapNodesElem.getBoundingClientRect()
 
-        const x = xScale(xCoordinate(d)) as number
-        const y = yScale(yCoordinate(d)) as number
-        svg.select('g.heatmap-selection-rectangle')
+      const y = rangeSelectionMode == 'column' ? heatmapNodesRect.top : event.y
+      const x = rangeSelectionMode == 'row' ? heatmapNodesRect.left : event.x
+      const pt = new DOMPoint(x, y)
+      const targetPt = pt.matrixTransform(heatmapNodesElem.getScreenCTM().inverse())
+
+      selectionStartPoint = targetPt
+
+      const xScaleStep = xScale.step()
+      const yScaleStep = yScale.step()
+
+      svg.select('g.heatmap-selection-rectangle')
           .append('rect')
-          .attr('x', x)
-          .attr('y', y)
+          .attr('x', Math.floor(targetPt.x / xScaleStep) * xScaleStep)
+          .attr('y', Math.floor(targetPt.y / yScaleStep) * yScaleStep)
           .attr('width', 4)
           .attr('height', 4)
           .style('fill', 'none')
           .raise()
+    }
+  }
+
+  const heatmapMainMouseup = function (event: MouseEvent) {
+    if (rangeSelectionMode && selectionStartPoint && svg) {
+
+      // convert the selection rectangle to heatmap coordinates
+      const heatmapSelectionRect = svg.select('g.heatmap-selection-rectangle').select('rect').node()
+      const heatmapSelectionBBox = heatmapSelectionRect.getBBox()
+
+      const xScaleStep = xScale.step()
+      const yScaleStep = yScale.step()
+
+      // offsets to adjust the selection rectangle coordinates to the center of the heatmap nodes.
+      const xOffsetNodeMidpoint = nodeSize.width * strokeWidth(true) * 0.5
+      const yOffsetNodeMidpoint = nodeSize.height * strokeWidth(true) * 0.5
+
+      // top left coordinates of the selection rectangle in heatmap coordinates.
+      const rangeStart = {
+        x: Math.floor((heatmapSelectionBBox.x + xOffsetNodeMidpoint) / xScaleStep) + 1,
+        y: Math.floor((heatmapSelectionBBox.y + yOffsetNodeMidpoint) / yScaleStep) + 1
+      }
+      // bottom right coordinates of the selection rectangle in heatmap coordinates.
+      const rangeEnd = {
+        x: Math.floor((heatmapSelectionBBox.x + heatmapSelectionBBox.width - xOffsetNodeMidpoint) / xScaleStep) + 1,
+        y: Math.floor((heatmapSelectionBBox.y + heatmapSelectionBBox.height - yOffsetNodeMidpoint) / yScaleStep) + 1
+      }
+      console.log('selection range from:', [rangeStart, rangeEnd])
+
+      selectionStartPoint = null
+    }
+  }
+
+  const heatmapMainMousemove = function (event: MouseEvent) {
+    if (rangeSelectionMode && selectionStartPoint) {
+      if (svg) {
+        const heatmapNodesElem = svg.select('g.heatmap-nodes').node()
+        const pt = new DOMPoint(event.x, event.y)
+        const targetPt = pt.matrixTransform(heatmapNodesElem.getScreenCTM().inverse())
+
+        const xScaleStep = xScale.step()
+        const yScaleStep = yScale.step()
+
+        // Adjust the target point to snap to the nearest grid point based on the scale step.
+        const adjTargetPt = new DOMPoint(
+          targetPt.x < selectionStartPoint.x ? Math.floor(targetPt.x / xScaleStep) * xScaleStep : Math.ceil(targetPt.x / xScaleStep) * xScaleStep,
+          targetPt.y < selectionStartPoint.y ? Math.floor(targetPt.y / yScaleStep) * yScaleStep : Math.ceil(targetPt.y / yScaleStep) * yScaleStep
+        )
+
+        const selectionRectWidth = rangeSelectionMode == 'row' ? width : Math.ceil(Math.abs(adjTargetPt.x - selectionStartPoint.x) / xScaleStep) * xScaleStep
+        const selectionRectHeight = rangeSelectionMode == 'column' ? height : Math.ceil(Math.abs(adjTargetPt.y - selectionStartPoint.y) / yScaleStep) * yScaleStep
+
+        svg.select('g.heatmap-selection-rectangle').select('rect')
+          .attr('x', Math.floor(Math.min(selectionStartPoint.x, targetPt.x) / xScaleStep) * xScaleStep)
+          .attr('y', Math.floor(Math.min(selectionStartPoint.y, targetPt.y) / yScaleStep) * yScaleStep)
+          .attr('width', selectionRectWidth)
+          .attr('height', selectionRectHeight)
+          .style('stroke-width', 2)
+          .style('stroke', '#d3a')
       }
     }
   }
 
-  const mouseup = function (event: MouseEvent, d: HeatmapDatum) {
-    if (rangeSelectionMode) {
-      selectionEndDatum = d
 
-      updateRangeSelection()
-    }
-  }
+  // const mousedown = function (event: MouseEvent, d: HeatmapDatum) {
+  //   if (rangeSelectionMode) {
+  //     selectionStartDatum = d
+  //     selectionEndDatum = null
+  //     if (svg) {
+  //       svg.select('g.heatmap-selection-rectangle').selectAll('rect').remove()
+
+  //       // console.log(event)
+  //       // const ctm = svg.getScreenCTM()
+  //       // const eventPt = svg.createSVGPoint()
+  //       // eventPt.x = event.clientX
+  //       // eventPt.y = event.clientY
+  //       // console.log(eventPt.matrixTransform(ctm.inverse()))
+
+  //       const x = xScale(xCoordinate(d)) as number
+  //       const y = yScale(yCoordinate(d)) as number
+  //       console.log(`mousedown at ${x}, ${y}`)
+
+  //       svg.select('g.heatmap-selection-rectangle')
+  //         .append('rect')
+  //         .attr('x', x)
+  //         .attr('y', y)
+  //         .attr('width', 4)
+  //         .attr('height', 4)
+  //         .style('fill', 'none')
+  //         .raise()
+  //     }
+  //   }
+  // }
+
+  // const mouseup = function (event: MouseEvent, d: HeatmapDatum) {
+  //   if (rangeSelectionMode) {
+  //     selectionEndDatum = d
+
+  //     updateRangeSelection()
+  //   }
+  // }
 
   const refreshSelectedDatum = function (d: HeatmapDatum | null, unset: boolean) {
     if (selectedDatum !== null) {
@@ -382,8 +482,21 @@ export default function makeHeatmap(): Heatmap {
     if (selectionStartDatum && selectionEndDatum) {
       console.log(`selectedRange from ${selectionStartDatum.x}, ${selectionStartDatum.y}, ${selectionEndDatum.x}, ${selectionEndDatum.y}`)
 
-      if (rangeSelectionMode === 'column') {
+      if (rangeSelectionMode === 'column' && content.columns) {
+        const minX = Math.min(selectionStartDatum.x, selectionEndDatum.x)
+        const maxX = Math.max(selectionStartDatum.x, selectionEndDatum.x)
 
+        const dStart = content[minX][1]
+        const dEnd = content[maxX][rows.length - 1]
+
+        console.log(dStart)
+        console.log(dEnd)
+        console.log(minX)
+        console.log(maxX)
+        console.log(`selectedRange from ${dStart.x}, ${dStart.y}, ${dEnd.x}, ${dEnd.y}`)
+        if (rangeSelected) {
+          rangeSelected(dStart, dEnd)
+        }
       }
     }
   }
@@ -424,31 +537,32 @@ export default function makeHeatmap(): Heatmap {
       hoverTooltip
         .style('left', (d3.pointer(event, document.body)[0] + 30) + 'px')
         .style('top', (d3.pointer(event, document.body)[1]) + 'px')
-    } else if (selectionStartDatum && !selectionEndDatum){
-      hideHighlight(selectedDatum)
-      selectedDatum = null
-      hideTooltip(selectionTooltip)
-
-      if (svg) {
-        const selectionBox = svg.select('g.heatmap-selection-rectangle').select('rect')
-
-        const startX = rangeSelectionMode == 'row' ? 0 : xScale(xCoordinate(selectionStartDatum)) as number
-        const startY = rangeSelectionMode == 'column' ? 0 : yScale(yCoordinate(selectionStartDatum)) as number
-        const currentX = xScale(xCoordinate(d)) as number
-        const currentY = yScale(yCoordinate(d)) as number
-
-        const width = rangeSelectionMode == 'row' ? nodeSize.width * (content.columns ?? 0) : Math.abs(currentX - startX) + nodeSize.width + 1
-        const height = rangeSelectionMode == 'column' ? nodeSize.height * (rows.length - 1) : Math.abs(currentY - startY) + nodeSize.height + 1
-
-        selectionBox
-          .attr('x', Math.min(currentX, startX))
-          .attr('y', Math.min(currentY, startY))
-          .attr('width', width)
-          .attr('height', height)
-          .style('stroke-width', 2)
-          .style('stroke', '#d3a')
-      }
     }
+    // else if (selectionStartDatum && !selectionEndDatum){
+    //   hideHighlight(selectedDatum)
+    //   selectedDatum = null
+    //   hideTooltip(selectionTooltip)
+
+    //   if (svg) {
+    //     const selectionBox = svg.select('g.heatmap-selection-rectangle').select('rect')
+
+    //     const startX = rangeSelectionMode == 'row' ? 0 : xScale(xCoordinate(selectionStartDatum)) as number
+    //     const startY = rangeSelectionMode == 'column' ? 0 : yScale(yCoordinate(selectionStartDatum)) as number
+    //     const currentX = xScale(xCoordinate(d)) as number
+    //     const currentY = yScale(yCoordinate(d)) as number
+
+    //     const width = rangeSelectionMode == 'row' ? nodeSize.width * (content.columns ?? 0) : Math.abs(currentX - startX) + nodeSize.width + 1
+    //     const height = rangeSelectionMode == 'column' ? nodeSize.height * (rows.length - 1) : Math.abs(currentY - startY) + nodeSize.height + 1
+
+    //     selectionBox
+    //       .attr('x', Math.min(currentX, startX))
+    //       .attr('y', Math.min(currentY, startY))
+    //       .attr('width', width)
+    //       .attr('height', height)
+    //       .style('stroke-width', 2)
+    //       .style('stroke', '#d3a')
+    //   }
+    // }
   }
 
   const mouseleave = (event: MouseEvent, d: HeatmapDatum) => {
@@ -762,8 +876,8 @@ export default function makeHeatmap(): Heatmap {
           .on('mouseover', mouseover)
           .on('mousemove', mousemove)
           .on('mouseleave', mouseleave)
-          .on('mousedown', mousedown)
-          .on('mouseup', mouseup)
+          //.on('mousedown', mousedown)
+          //.on('mouseup', mouseup)
           .on('click', click)
           .merge(chartedDatum)
           .attr('x', d => xScale(xCoordinate(d)))
@@ -800,6 +914,9 @@ export default function makeHeatmap(): Heatmap {
 
         svg.attr('height', heatmapTotalHeight)
           .attr('width', heatmapTotalWidth)
+          .on('mousedown', heatmapMainMousedown)
+          .on('mousemove', heatmapMainMousemove)
+          .on('mouseup', heatmapMainMouseup)
       }
       return chart
     },
@@ -862,6 +979,14 @@ export default function makeHeatmap(): Heatmap {
         return datumSelected
       }
       datumSelected = value
+      return chart
+    },
+
+    rangeSelected: (value?: ((dStart: HeatmapDatum, dEnd: HeatmapDatum) => void) | null) => {
+      if (value === undefined) {
+        return rangeSelected
+      }
+      rangeSelected = value
       return chart
     },
 

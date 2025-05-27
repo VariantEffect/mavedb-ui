@@ -161,7 +161,8 @@ export default {
             url: `https://alphafold.ebi.ac.uk/files/AF-${this.selectedAlphaFold.id}-F1-model_v4.cif`,
             format: 'cif',
           },
-          alphafoldView: true,
+          /** This applies AlphaFold confidence score colouring theme for AlphaFold model */
+          // alphafoldView: true,
           hideControls: true,
           bgColor: { r: 255, g: 255, b: 255 },
           // hideCanvasControls: [
@@ -175,6 +176,10 @@ export default {
         };
         const viewerContainer = document.getElementById('pdbe-molstar-viewer-container')
         viewerInstance.render(viewerContainer, options)
+        viewerInstance.events.loadComplete.subscribe(() => {
+            viewerInstance.plugin.layout.context.canvas3d.camera.state.fog = 0;
+            viewerInstance.plugin.layout.context.canvas3d.camera.state.clipFar = false;
+        })
         this.viewerInstance = viewerInstance
       }
     }
@@ -183,6 +188,11 @@ export default {
 
 </script>
 
+<style>
+.msp-plugin .msp-layout-standard {
+  border: 0;
+}
+</style>
 <style scoped>
 
 .mavedb-protein-structure-viewer-container {

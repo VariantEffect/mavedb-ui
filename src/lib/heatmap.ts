@@ -462,7 +462,7 @@ export default function makeHeatmap(): Heatmap {
   //////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 
   const mouseover = (event: MouseEvent, d: HeatmapDatum) => {
-    if (!selectionStartDatum) {
+    if (!selectionStartPoint) {
       const target = event.target
       refreshHoverDatum(d)
 

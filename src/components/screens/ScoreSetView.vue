@@ -401,20 +401,16 @@
       <ItemNotFound model="score set" :itemId="itemId"/>
     </div>
   </DefaultLayout>
-  <Dialog
-    v-if="item"
-    :visible="isScoreSetVisualizerVisible"
-    :header="item.title"
-    style="width: 100%; max-height: 100%;"
-    @update:visible="isScoreSetVisualizerVisible = $event"
-    >
-    <ScoreSetVisualizer
-      :scoreSet="item"
-      :scores="scores"
-      :uniprotId="uniprotId"
-      :externalSelection="variantToVisualize"
-    />
-    </Dialog>
+  <div class="card flex justify-content-center">
+      <Sidebar v-model:visible="isScoreSetVisualizerVisible" :header="item.title" position="full">
+          <ScoreSetVisualizer
+            :scoreSet="item"
+            :scores="scores"
+            :uniprotId="uniprotId"
+            :externalSelection="variantToVisualize"
+          />
+      </Sidebar>
+  </div>
 </template>
 
 <script>
@@ -435,6 +431,7 @@ import Message from 'primevue/message'
 import ProgressSpinner from 'primevue/progressspinner'
 import ScrollPanel from 'primevue/scrollpanel';
 import Dialog from 'primevue/dialog'
+import Sidebar from 'primevue/sidebar'
 
 import CollectionAdder from '@/components/CollectionAdder'
 import CollectionBadge from '@/components/CollectionBadge'
@@ -458,7 +455,7 @@ import ScoreSetVisualizer from '../ScoreSetVisualizer.vue';
 
 export default {
   name: 'ScoreSetView',
-  components: { Accordion, AccordionTab, AutoComplete, Button, Chip, Dialog, CollectionAdder, CollectionBadge, DefaultLayout, EntityLink, ScoreSetHeatmap, ScoreSetHistogram, ScoreSetVisualizer, TabView, TabPanel, Message, DataTable, Column, ProgressSpinner, ScrollPanel, PageLoading, ItemNotFound },
+  components: { Accordion, AccordionTab, AutoComplete, Button, Chip, Sidebar, CollectionAdder, CollectionBadge, DefaultLayout, EntityLink, ScoreSetHeatmap, ScoreSetHistogram, ScoreSetVisualizer, TabView, TabPanel, Message, DataTable, Column, ProgressSpinner, ScrollPanel, PageLoading, ItemNotFound },
   computed: {
     uniprotId: function() {
       const firstTargetGeneExternalIdentifiers = _.get(_.first(this.item.targetGenes), 'externalIdentifiers') || []

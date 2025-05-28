@@ -347,79 +347,64 @@
                             </span>
                           </div>
                           <span v-if="validationErrors[`scoreRanges.ranges.${scoreIdx}.range`]" class="mave-field-error">{{ validationErrors[`scoreRanges.ranges.${scoreIdx}.range`] }}</span>
+                          <div v-if="scoreRange.oddsPath">
+                            <Card>
+                              <template #title>OddsPath Ratio and Evidence Strength
+                                <Button icon="pi pi-times" severity="danger" aria-label="Delete odds path" rounded text style="float:right;" @click="removeOddsPath(scoreIdx)"/>
+                              </template>
+                              <template #content>
+                                <div>
+                                  <InputGroup>
+                                    <span class=p-float-label style="margin-right: 1em;">
+                                      <InputNumber v-model="scoreRange.oddsPath.ratio" :aria-labelledby="$scopedId('input-oddsPathRatio')" style="width:50%;" :minFractionDigits="1" :maxFractionDigits="10" />
+                                      <label :for="$scopedId('input-oddsPathRatio')"> OddsPath Ratio </label>
+                                    </span>
+                                    <span class=p-float-label>
+                                      <Dropdown v-model="scoreRange.oddsPath.evidence" :aria-labelledby="$scopedId('input-oddsPathEvidence')" style="width:50%;" :options="evidenceStrengths[scoreRange.classification]"></Dropdown>
+                                      <label :for="$scopedId('input-oddsPathEvidence')"> OddsPath Evidence Strength </label>
+                                    </span>
+                                  </InputGroup>
+                                  <span v-if="validationErrors[`scoreRanges.ranges.${scoreIdx}.oddsPath.ratio`]" class="mave-field-error">{{ validationErrors[`scoreRanges.ranges.${scoreIdx}.oddsPath.ratio`] }}</span>
+                                  <span v-if="validationErrors[`scoreRanges.ranges.${scoreIdx}.oddsPath.evidence`]" class="mave-field-error">{{ validationErrors[`scoreRanges.ranges.${scoreIdx}.oddsPath.evidence`] }}</span>
+                                </div>
+                              </template>
+                            </Card>
+                          </div>
+                          <div v-else>
+                            <Card>
+                              <template #title>Add Odds Path
+                                <Button icon="pi pi-plus" aria-label="Add Odds Path" rounded text style="float:right;" @click="addOddsPath(scoreIdx)"/>
+                              </template>
+                            </Card>
+                          </div>
                         </template>
                       </Card>
                     </div>
                     <div class="field" style="align-items: center; justify-content: center; display: flex">
                       <Button label="Add new score range" icon="pi pi-plus" aria-label="Add range" outlined raised text @click="addScoreRange()"/>
                     </div>
-                    <div v-if="scoreRanges.oddsPath">
-                      <Card>
-                        <template #title>OddsPath Ratios
-                          <Button icon="pi pi-times" severity="danger" aria-label="Delete odds path" rounded text style="float:right;" @click="removeOddsPath()"/>
-                        </template>
-                        <template #content>
-                          <div>
-                            <InputGroup>
-                              <span class=p-float-label style="margin-right: 1em;">
-                                <InputNumber v-model="scoreRanges.oddsPath.ratios.normal" :aria-labelledby="$scopedId('input-oddsPathNormal')" style="width:50%;" :minFractionDigits="1" :maxFractionDigits="10" />
-                                <label :for="$scopedId('input-oddsPathNormal')"> OddsPath Normal </label>
-                              </span>
-                              <span class=p-float-label>
-                                <Dropdown disabled v-model="scoreRanges.oddsPath.evidenceStrengths.normal" :aria-labelledby="$scopedId('input-oddsPathNormalEvidence')" style="width:50%;" :options="[scoreRanges.oddsPath.evidenceStrengths.normal]"></Dropdown>
-                                <label :for="$scopedId('input-oddsPathNormalEvidence')"> OddsPath Normal Evidence Strength </label>
-                              </span>
-                            </InputGroup>
-                            <span v-if="validationErrors[`scoreRanges.oddsPath.ratios.normal`]" class="mave-field-error">{{ validationErrors[`scoreRanges.oddsPath.ratios.normal`] }}</span>
-                            <span v-if="validationErrors[`scoreRanges.oddsPath.evidenceStrengths.normal`]" class="mave-field-error">{{ validationErrors[`scoreRanges.oddsPath.evidenceStrengths.normal`] }}</span>
-                          </div>
-                          <div>
-                            <InputGroup>
-                              <span class=p-float-label style="margin-right: 1em;">
-                                <InputNumber v-model="scoreRanges.oddsPath.ratios.abnormal" :aria-labelledby="$scopedId('input-oddsPathAbnormalRatio')" style="width:45%;" :minFractionDigits="1" :maxFractionDigits="10" />
-                                <label :for="$scopedId('input-oddsPathAbnormalRatio')"> OddsPath Abnormal </label>
-                              </span>
-                              <span class=p-float-label>
-                                <Dropdown disabled v-model="scoreRanges.oddsPath.evidenceStrengths.abnormal" :aria-labelledby="$scopedId('input-oddsPathAbnormalEvidence')" style="width:45%;" :options="[scoreRanges.oddsPath.evidenceStrengths.abnormal]"></Dropdown>
-                                <label :for="$scopedId('input-oddsPathAbnormalEvidence')"> OddsPath Abnormal Evidence Strength </label>
-                              </span>
-                            </InputGroup>
-                            <span v-if="validationErrors[`scoreRanges.oddsPath.ratios.abnormal`]" class="mave-field-error">{{ validationErrors[`scoreRanges.oddsPath.ratios.abnormal`] }}</span>
-                            <span v-if="validationErrors[`scoreRanges.oddsPath.evidenceStrengths.abnormal`]" class="mave-field-error">{{ validationErrors[`scoreRanges.oddsPath.evidenceStrengths.abnormal`] }}</span>
-                            <span v-if="validationErrors[`scoreRanges.oddsPath.ratios`]" class="mave-field-error">{{ validationErrors[`scoreRanges.oddsPath.ratios`] }}</span>
-                          </div>
-                          <div>
-                            <span class="p-float-label">
-                              <Multiselect ref="oddsPathPublicationIdentifiersInput" v-model="scoreRanges.oddsPath.source"
-                                :id="$scopedId('input-oddsPathPublicationIdentifiersInput')" :options="publicationIdentifiers"
-                                optionLabel="identifier" placeholder="Select a source for the OddsPath calculation."
-                                :selectionLimit="1" style="width: 100%;">
-                                <template #option="slotProps">
-                                  <div class="field">
-                                    <div>Title: {{ slotProps.option.title }}</div>
-                                    <div>DOI: {{ slotProps.option.doi }}</div>
-                                    <div>Identifier: {{ slotProps.option.identifier }}</div>
-                                    <div>Database: {{ slotProps.option.dbName }}</div>
-                                  </div>
-                                </template>
-                              </Multiselect>
-                              <label :for="$scopedId('input-oddsPathPublicationIdentifiersInput')">OddsPath Source (optional)</label>
-                            </span>
-                            <span v-if="validationErrors[`scoreRanges.oddsPath.evidenceStrengths.source`]" class="mave-field-error">{{
-                              validationErrors[`scoreRanges.oddsPath.evidenceStrengths.abnormal`] }}</span>
-                          </div>
-                        </template>
-                      </Card>
-                    </div>
-                    <div v-else>
-                      <Card>
-                        <template #title>Add Odds Path
-                          <Button icon="pi pi-plus" aria-label="Add Odds Path" rounded text style="float:right;" @click="addOddsPath()"/>
-                        </template>
-                      </Card>
-                    </div>
                   </template>
                 </Card>
+              </div>
+              <div v-if="scoreRanges.ranges.some(range => range.oddsPath)">
+                <span class="p-float-label">
+                  <Multiselect ref="oddsPathPublicationIdentifiersInput" v-model="scoreRanges.oddsPathSource"
+                    :id="$scopedId('input-oddsPathPublicationIdentifiersInput')" :options="publicationIdentifiers"
+                    optionLabel="identifier" placeholder="Select a source for the OddsPath calculation."
+                    :selectionLimit="1" style="width: 100%;">
+                    <template #option="slotProps">
+                      <div class="field">
+                        <div>Title: {{ slotProps.option.title }}</div>
+                        <div>DOI: {{ slotProps.option.doi }}</div>
+                        <div>Identifier: {{ slotProps.option.identifier }}</div>
+                        <div>Database: {{ slotProps.option.dbName }}</div>
+                      </div>
+                    </template>
+                  </Multiselect>
+                  <label :for="$scopedId('input-oddsPathPublicationIdentifiersInput')">OddsPath Source (optional)</label>
+                </span>
+                <span v-if="validationErrors[`scoreRanges.oddsPathSource`]" class="mave-field-error">{{
+                  validationErrors[`scoreRanges.oddsPathSource`] }}</span>
               </div>
               <div v-else>
                 <Card>
@@ -812,7 +797,8 @@
   import {normalizeDoi, normalizeIdentifier, normalizePubmedId, validateDoi, validateIdentifier, validatePubmedId} from '@/lib/identifiers'
   import {ORCID_ID_REGEX} from '@/lib/orcid'
   import useFormatters from '@/composition/formatters'
-import { TARGET_GENE_CATEGORIES, textForTargetGeneCategory } from '@/lib/target-genes'
+  import { TARGET_GENE_CATEGORIES, textForTargetGeneCategory } from '@/lib/target-genes'
+  import { ABNORMAL_RANGE_EVIDENCE, NORMAL_RANGE_EVIDENCE } from '@/lib/ranges'
 
   const externalGeneDatabases = ['UniProt', 'Ensembl', 'RefSeq']
 
@@ -845,6 +831,7 @@ import { TARGET_GENE_CATEGORIES, textForTargetGeneCategory } from '@/lib/target-
         description: null,
         range: [null, null],
         classification: null,
+        oddsPath: null,
       }
   }
 
@@ -946,7 +933,7 @@ import { TARGET_GENE_CATEGORIES, textForTargetGeneCategory } from '@/lib/target-
       scoreRanges: {
         wtScore: null,
         ranges: [],
-        oddsPath: null,
+        oddsPathSource: null,
       },
       scoreRangeBoundaryHelper: [],
 
@@ -961,6 +948,10 @@ import { TARGET_GENE_CATEGORIES, textForTargetGeneCategory } from '@/lib/target-
         {value: "abnormal", label: "Abnormal"},
         {value: "not_specified", label: "Not Specified"}
       ],
+      evidenceStrengths: {
+        normal: NORMAL_RANGE_EVIDENCE,
+        abnormal: ABNORMAL_RANGE_EVIDENCE
+      },
 
       progressVisible: false,
       serverSideValidationErrors: {},
@@ -1359,27 +1350,20 @@ import { TARGET_GENE_CATEGORIES, textForTargetGeneCategory } from '@/lib/target-
       },
 
       addScoreRanges: function() {
-        this.scoreRanges = {wtScore: null, ranges: [], oddsPath: null}
+        this.scoreRanges = {wtScore: null, ranges: [], oddsPathSource: null}
         this.scoreRangeBoundaryHelper = []
         this.scoreRanges.ranges.push(emptyScoreRange())
         this.scoreRangeBoundaryHelper.push(emptyScoreRangeBoundaryHelper())
       },
 
-      removeOddsPath: function() {
-        this.scoreRanges.oddsPath = null
+      removeOddsPath: function(rangeIdx) {
+        this.scoreRanges.ranges[rangeIdx].oddsPath = null
       },
 
-      addOddsPath: function() {
-        this.scoreRanges.oddsPath = {
-          ratios: {
-            normal: null,
-            abnormal: null,
-          },
-          evidenceStrengths: {
-            normal: "BS3_STRONG",
-            abnormal: "PS3_STRONG",
-          },
-          source: []
+      addOddsPath: function(rangeIdx) {
+        this.scoreRanges.ranges[rangeIdx].oddsPath = {
+          ratio: null,
+          evidence: null,
         }
       },
 
@@ -1652,13 +1636,12 @@ import { TARGET_GENE_CATEGORIES, textForTargetGeneCategory } from '@/lib/target-
           })
           this.extraMetadata = this.item.extraMetadata
 
-          if (this.item.scoreRanges?.oddsPath?.source) {
-            this.scoreRanges.oddsPath.source = this.publicationIdentifiers.filter((publication) => {
-              return this.item.scoreRanges.oddsPath.source.some((source) => {
+          if (this.item.scoreRanges?.oddsPathSource) {
+            this.scoreRanges.oddsPathSource = this.publicationIdentifiers.filter((publication) => {
+              return this.item.scoreRanges.oddsPathSource.some((source) => {
                 return publication.identifier === source.identifier && publication.dbName === source.dbName
               })
             })
-            console.log('Odds path source:', this.scoreRanges.oddsPath.source)
           }
 
           if (this.targetGenes[0]?.targetAccession) {
@@ -1782,11 +1765,7 @@ import { TARGET_GENE_CATEGORIES, textForTargetGeneCategory } from '@/lib/target-
           scoreRanges: this.scoreRanges ? {
             wtScore: this.scoreRanges.wtScore,
             ranges: this.scoreRanges.ranges,
-            oddsPath: this.scoreRanges.oddsPath ? {
-              ratios: this.scoreRanges.oddsPath.ratios,
-              evidenceStrengths: this.scoreRanges.oddsPath.evidenceStrengths,
-              source: this.scoreRanges.oddsPath.source ? this.scoreRanges.oddsPath.source.map((source) => _.pick(source, ['identifier', 'dbName'])) : null
-            } : null
+            oddsPathSource: this.scoreRanges.oddsPathSource.map((source) => _.pick(source, ['identifier', 'dbName']))
           } : null,
         }
         if (!this.item) {

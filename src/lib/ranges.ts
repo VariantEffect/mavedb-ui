@@ -4,6 +4,17 @@ export const NORMAL_RANGE_DEFAULT_COLOR = "#4444ff"
 export const ABNORMAL_RANGE_DEFAULT_COLOR = "#ff4444"
 export const NOT_SPECIFIED_RANGE_DEFAULT_COLOR = "#a6a600"
 
+export const NORMAL_RANGE_EVIDENCE = ["BS3_STRONG", "BS3_MODERATE", "BS3_SUPPORTING"]
+export const ABNORMAL_RANGE_EVIDENCE = ["PS3_STRONG", "PS3_MODERATE", "PS3_SUPPORTING"]
+export const EVIDENCE_STRENGTHS = {
+    "BS3_STRONG": 3,
+    "BS3_MODERATE": 2,
+    "BS3_SUPPORTING": 1,
+    "PS3_STRONG": -3,
+    "PS3_MODERATE": -2,
+    "PS3_SUPPORTING": -1
+}
+
 export interface ScoreSetRanges {
     wtScore: number
     ranges: Array<ScoreSetRange>

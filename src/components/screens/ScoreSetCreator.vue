@@ -1753,7 +1753,7 @@ export default {
               break
             }
           }
-          return !(this.isProvidingScoreRanges) || (allRangesCompleted && this.scoreRanges.wtScore)
+          return !(this.isProvidingScoreRanges) || (allRangesCompleted && this.scoreRanges.wtScore !== null)
         }
         default:
           return true

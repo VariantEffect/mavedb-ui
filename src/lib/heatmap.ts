@@ -338,6 +338,9 @@ export default function makeHeatmap(): Heatmap {
 
   const heatmapMainMousedown = function (event: MouseEvent) {
     if (rangeSelectionMode && svg) {
+      hideTooltip(hoverTooltip)
+      hideTooltip(selectionTooltip)
+
       const heatmapNodesElem = svg.select('g.heatmap-nodes').node()
       const heatmapNodesRect = heatmapNodesElem.getBoundingClientRect()
 

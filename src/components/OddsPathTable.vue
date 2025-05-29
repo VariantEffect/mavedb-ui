@@ -6,19 +6,19 @@
                 <th :colspan="normalRanges.length">Odds Path Normal<sup>*</sup></th>
             </tr>
             <tr>
-                <td v-for="range in abnormalRanges.concat(normalRanges)">
+                <td v-for="range in abnormalRanges.concat(normalRanges)" :key="range.label">
                     <span>{{ range.label }}</span>
                 </td>
             </tr>
             <tr>
-                <td v-for="range in abnormalRanges.concat(normalRanges)">
-                    <span v-if="range.oddsPath">{{ range.oddsPath.ratio }}</span>
+                <td v-for="range in abnormalRanges.concat(normalRanges)" :key="range.label">
+                    <span v-if="range.oddsPath?.ratio">{{ range.oddsPath.ratio }}</span>
                     <span v-else>Not Provided</span>
                 </td>
             </tr>
             <tr>
-                <td v-for="range in abnormalRanges.concat(normalRanges)" :class="`mave-evidence-code-${range.oddsPath?.evidence}`">
-                    <span v-if="range.oddsPath">{{ range.oddsPath.evidence }}</span>
+                <td v-for="range in abnormalRanges.concat(normalRanges)" :class="`mave-evidence-code-${range.oddsPath?.evidence}`" :key="range.label">
+                    <span v-if="range.oddsPath?.evidence">{{ range.oddsPath.evidence }}</span>
                     <span v-else>Not Provided</span>
                 </td>
             </tr>
@@ -31,7 +31,7 @@
 <script lang="ts">
 import config from '@/config';
 import { defineComponent } from 'vue';
-import { EVIDENCE_STRENGTHS } from '@/lib/ranges';
+import { EVIDENCE_STRENGTHS, ScoreSetRange } from '@/lib/ranges';
 
 export default defineComponent({
     name: "OddsPathTable",
@@ -64,40 +64,40 @@ export default defineComponent({
         },
 
         oddsPathExists() {
-            return this.scoreSet?.scoreRanges?.ranges.some(range => {
+            const ranges: ScoreSetRange[] = this.scoreSet?.scoreRanges?.ranges || [];
+            return ranges.some(range => {
                 return range.oddsPath;
             });
         },
 
         normalRanges() {
-            return this.scoreSet?.scoreRanges?.ranges.filter(range => {
+            const ranges: ScoreSetRange[] = this.scoreSet?.scoreRanges?.ranges || [];
+            return ranges.filter(range => {
                 return range.classification === 'normal';
-            }).sort((a, b) => {
-                if (a.oddsPath?.evidence && b.oddsPath?.evidence) {
-                    return EVIDENCE_STRENGTHS[b.oddsPath.evidence] - EVIDENCE_STRENGTHS[a.oddsPath.evidence];
-                } else if (a.oddsPath?.evidence) {
-                    return -1; // a has evidence, b does not
-                } else if (b.oddsPath?.evidence) {
-                    return 1; // b has evidence, a does not
-                }
-            });
+            }).sort((a, b) => this.sortScoreRangeByEvidence(a, b));;
         },
 
 
         abnormalRanges() {
-            return this.scoreSet?.scoreRanges?.ranges.filter(range => {
+            const ranges: ScoreSetRange[] = this.scoreSet?.scoreRanges?.ranges || [];
+            return ranges.filter(range => {
                 return range.classification === 'abnormal';
-            }).sort((a, b) => {
-                if (a.oddsPath?.evidence && b.oddsPath?.evidence) {
-                    return EVIDENCE_STRENGTHS[a.oddsPath.evidence] - EVIDENCE_STRENGTHS[b.oddsPath.evidence];
-                } else if (a.oddsPath?.evidence) {
-                    return -1; // a has evidence, b does not
-                } else if (b.oddsPath?.evidence) {
-                    return 1; // b has evidence, a does not
-                }
-            });;
+            }).sort((a, b) => this.sortScoreRangeByEvidence(b, a));;
         },
     },
+
+    methods: {
+        sortScoreRangeByEvidence(a: ScoreSetRange, b: ScoreSetRange): number {
+            if (a.oddsPath?.evidence && b.oddsPath?.evidence) {
+                return EVIDENCE_STRENGTHS[a.oddsPath.evidence] - EVIDENCE_STRENGTHS[b.oddsPath.evidence];
+            } else if (a.oddsPath?.evidence) {
+                return -1; // a has evidence, b does not
+            } else if (b.oddsPath?.evidence) {
+                return 1; // b has evidence, a does not
+            }
+            return 0;
+        },
+    }
 })
 </script>
 
@@ -114,6 +114,12 @@ table.mave-odds-path-table th {
     border: 1px solid gray;
     padding: 0.5em 1em;
     text-align: center;
+}
+
+table.mave-odds-path-table td.mave-evidence-code-PS3_VERY_STRONG {
+    background-color: #7b1910;
+    color: white;
+    font-weight: bold;
 }
 
 table.mave-odds-path-table td.mave-evidence-code-PS3_STRONG {
@@ -150,6 +156,13 @@ table.mave-odds-path-table td.mave-evidence-code-BS3_MODERATE {
 
 table.mave-odds-path-table td.mave-evidence-code-BS3_SUPPORTING {
     background-color: #c3cbde;
+    color: white;
+    font-weight: bold;
+}
+
+
+table.mave-odds-path-table td.mave-evidence-code-BS3_INDETERMINATE {
+    background-color: #d9cb00;
     color: white;
     font-weight: bold;
 }

@@ -1092,8 +1092,8 @@ import { TARGET_GENE_CATEGORIES, textForTargetGeneCategory } from '@/lib/target-
       newContributorsAdded: async function(event) {
         const newContributors = event.value
 
-        // Convert any strings to ORCID users without names.
-        this.contributors = this.contributors.map((c) => _.isString(c) ? {orcidId: c} : c)
+      // Convert any strings to ORCID users without names. Remove whitespace from new entries.
+      this.contributors = this.contributors.map((c) => _.isString(c) ? {orcidId: c.trim()} : c)
 
         // Validate and look up each new contributor.
         for (const newContributor of newContributors) {

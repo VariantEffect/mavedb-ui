@@ -347,6 +347,36 @@
                             </span>
                           </div>
                           <span v-if="validationErrors[`scoreRanges.ranges.${scoreIdx}.range`]" class="mave-field-error">{{ validationErrors[`scoreRanges.ranges.${scoreIdx}.range`] }}</span>
+                          <div v-if="scoreRange.oddsPath">
+                            <Card>
+                              <template #title>OddsPath Ratio and Evidence Strength
+                                <Button icon="pi pi-times" severity="danger" aria-label="Delete odds path" rounded text style="float:right;" @click="removeOddsPath(scoreIdx)"/>
+                              </template>
+                              <template #content>
+                                <div>
+                                  <InputGroup>
+                                    <span class=p-float-label style="margin-right: 1em;">
+                                      <InputNumber v-model="scoreRange.oddsPath.ratio" :aria-labelledby="$scopedId('input-oddsPathRatio')" style="width:50%;" :minFractionDigits="1" :maxFractionDigits="10" />
+                                      <label :for="$scopedId('input-oddsPathRatio')"> OddsPath Ratio </label>
+                                    </span>
+                                    <span class=p-float-label>
+                                      <Dropdown v-model="scoreRange.oddsPath.evidence" :aria-labelledby="$scopedId('input-oddsPathEvidence')" style="width:50%;" :options="evidenceStrengths[scoreRange.classification].concat(evidenceStrengths.indeterminate)"></Dropdown>
+                                      <label :for="$scopedId('input-oddsPathEvidence')"> OddsPath Evidence Strength (Optional) </label>
+                                    </span>
+                                  </InputGroup>
+                                  <span v-if="validationErrors[`scoreRanges.ranges.${scoreIdx}.oddsPath.ratio`]" class="mave-field-error">{{ validationErrors[`scoreRanges.ranges.${scoreIdx}.oddsPath.ratio`] }}</span>
+                                  <span v-if="validationErrors[`scoreRanges.ranges.${scoreIdx}.oddsPath.evidence`]" class="mave-field-error">{{ validationErrors[`scoreRanges.ranges.${scoreIdx}.oddsPath.evidence`] }}</span>
+                                </div>
+                              </template>
+                            </Card>
+                          </div>
+                          <div v-else>
+                            <Card>
+                              <template #title>Add Odds Path
+                                <Button icon="pi pi-plus" aria-label="Add Odds Path" rounded text style="float:right;" @click="addOddsPath(scoreIdx)"/>
+                              </template>
+                            </Card>
+                          </div>
                         </template>
                       </Card>
                     </div>
@@ -355,6 +385,26 @@
                     </div>
                   </template>
                 </Card>
+              </div>
+              <div v-if="scoreRanges.ranges.some(range => range.oddsPath)">
+                <span class="p-float-label">
+                  <Multiselect ref="oddsPathPublicationIdentifiersInput" v-model="scoreRanges.oddsPathSource"
+                    :id="$scopedId('input-oddsPathPublicationIdentifiersInput')" :options="publicationIdentifiers"
+                    optionLabel="identifier" placeholder="Select a source for the OddsPath calculation."
+                    :selectionLimit="1" style="width: 100%;">
+                    <template #option="slotProps">
+                      <div class="field">
+                        <div>Title: {{ slotProps.option.title }}</div>
+                        <div>DOI: {{ slotProps.option.doi }}</div>
+                        <div>Identifier: {{ slotProps.option.identifier }}</div>
+                        <div>Database: {{ slotProps.option.dbName }}</div>
+                      </div>
+                    </template>
+                  </Multiselect>
+                  <label :for="$scopedId('input-oddsPathPublicationIdentifiersInput')">OddsPath Source (optional)</label>
+                </span>
+                <span v-if="validationErrors[`scoreRanges.oddsPathSource`]" class="mave-field-error">{{
+                  validationErrors[`scoreRanges.oddsPathSource`] }}</span>
               </div>
               <div v-else>
                 <Card>
@@ -747,7 +797,8 @@
   import {normalizeDoi, normalizeIdentifier, normalizePubmedId, validateDoi, validateIdentifier, validatePubmedId} from '@/lib/identifiers'
   import {ORCID_ID_REGEX} from '@/lib/orcid'
   import useFormatters from '@/composition/formatters'
-import { TARGET_GENE_CATEGORIES, textForTargetGeneCategory } from '@/lib/target-genes'
+  import { TARGET_GENE_CATEGORIES, textForTargetGeneCategory } from '@/lib/target-genes'
+  import { ABNORMAL_RANGE_EVIDENCE, NORMAL_RANGE_EVIDENCE, INDETERMINATE_RANGE_EVIDENCE } from '@/lib/ranges'
 
   const externalGeneDatabases = ['UniProt', 'Ensembl', 'RefSeq']
 
@@ -780,6 +831,7 @@ import { TARGET_GENE_CATEGORIES, textForTargetGeneCategory } from '@/lib/target-
         description: null,
         range: [null, null],
         classification: null,
+        oddsPath: null,
       }
   }
 
@@ -881,6 +933,7 @@ import { TARGET_GENE_CATEGORIES, textForTargetGeneCategory } from '@/lib/target-
       scoreRanges: {
         wtScore: null,
         ranges: [],
+        oddsPathSource: null,
       },
       scoreRangeBoundaryHelper: [],
 
@@ -895,6 +948,11 @@ import { TARGET_GENE_CATEGORIES, textForTargetGeneCategory } from '@/lib/target-
         {value: "abnormal", label: "Abnormal"},
         {value: "not_specified", label: "Not Specified"}
       ],
+      evidenceStrengths: {
+        normal: NORMAL_RANGE_EVIDENCE,
+        abnormal: ABNORMAL_RANGE_EVIDENCE,
+        indeterminate: INDETERMINATE_RANGE_EVIDENCE,
+      },
 
       progressVisible: false,
       serverSideValidationErrors: {},
@@ -1293,10 +1351,21 @@ import { TARGET_GENE_CATEGORIES, textForTargetGeneCategory } from '@/lib/target-
       },
 
       addScoreRanges: function() {
-        this.scoreRanges = {wtScore: null, ranges: []}
+        this.scoreRanges = {wtScore: null, ranges: [], oddsPathSource: null}
         this.scoreRangeBoundaryHelper = []
         this.scoreRanges.ranges.push(emptyScoreRange())
         this.scoreRangeBoundaryHelper.push(emptyScoreRangeBoundaryHelper())
+      },
+
+      removeOddsPath: function(rangeIdx) {
+        this.scoreRanges.ranges[rangeIdx].oddsPath = null
+      },
+
+      addOddsPath: function(rangeIdx) {
+        this.scoreRanges.ranges[rangeIdx].oddsPath = {
+          ratio: null,
+          evidence: null,
+        }
       },
 
       ////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
@@ -1568,6 +1637,14 @@ import { TARGET_GENE_CATEGORIES, textForTargetGeneCategory } from '@/lib/target-
           })
           this.extraMetadata = this.item.extraMetadata
 
+          if (this.item.scoreRanges?.oddsPathSource) {
+            this.scoreRanges.oddsPathSource = this.publicationIdentifiers.filter((publication) => {
+              return this.item.scoreRanges.oddsPathSource.some((source) => {
+                return publication.identifier === source.identifier && publication.dbName === source.dbName
+              })
+            })
+          }
+
           if (this.targetGenes[0]?.targetAccession) {
             this.isBaseEditor = this.targetGenes[0].targetAccession.isBaseEditor
           }
@@ -1686,7 +1763,11 @@ import { TARGET_GENE_CATEGORIES, textForTargetGeneCategory } from '@/lib/target-
             }
             return target
           }),
-          scoreRanges: this.scoreRanges
+          scoreRanges: this.scoreRanges ? {
+            wtScore: this.scoreRanges.wtScore,
+            ranges: this.scoreRanges.ranges,
+            oddsPathSource: this.scoreRanges.oddsPathSource.map((source) => _.pick(source, ['identifier', 'dbName']))
+          } : null,
         }
         if (!this.item) {
           editedFields.supersededScoreSetUrn = this.supersededScoreSet ? this.supersededScoreSet.urn : null

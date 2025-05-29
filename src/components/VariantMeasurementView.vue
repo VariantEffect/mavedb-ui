@@ -211,32 +211,6 @@ export default {
     currentMappedVariant: function() {
       return (this.variant?.mappedVariants || []).find((mappedVariant: any) => mappedVariant.current)
     },
-    evidenceStrengths: function() {
-      return {
-        'urn:mavedb:00000050-a-1': {
-          oddsOfPathogenicity: {
-            abnormal: 24.9,
-            normal: 0.043
-          },
-          evidenceCodes: {
-            abnormal: 'PS3_Strong',
-            normal: 'BS3_Strong'
-          },
-          source: 'https://pubmed.ncbi.nlm.nih.gov/36550560/'
-        },
-        'urn:mavedb:00000097-0-1': {
-          oddsOfPathogenicity: {
-            abnormal: 52.4,
-            normal: 0.02
-          },
-          evidenceCodes: {
-            abnormal: 'PS3_Strong',
-            normal: 'BS3_Strong'
-          },
-          source: 'https://pubmed.ncbi.nlm.nih.gov/34793697/'
-        }
-      }[this.scoreSetUrn] || null
-    },
     scoreSetUrn: function() {
       return this.variant?.scoreSet?.urn
     },

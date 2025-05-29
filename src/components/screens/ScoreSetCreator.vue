@@ -478,7 +478,7 @@
                         <Multiselect ref="primaryPublicationIdentifiersInput" v-model="primaryPublicationIdentifiers"
                           :id="$scopedId('input-primaryPublicationIdentifiers')" :options="publicationIdentifiers"
                           optionLabel="identifier" placeholder="Select a primary publication (Where the dataset is described)"
-                          :selectionLimit="1">
+                          :selectionLimit="1" style="width: 100%;">
                           <template #option="slotProps">
                             <div class="field">
                               <div>Title: {{ slotProps.option.title }}</div>
@@ -1012,7 +1012,39 @@
                             <label for="upperBound" class="ml-2"> No upper bound </label>
                             <Checkbox :binary="true" v-model="rangeObj.infiniteUpper" inputId="upperBound" name="upper" @change="boundaryLimitUpdated(rangeIdx, 'upper')"/>
                           </span>
-                          <span style="float:left;" v-if="validationErrors[`scoreRanges.ranges.${rangeIdx}.range`]" class="mave-field-error">{{ validationErrors[`scoreRanges.ranges.${rangeIdx}.range`] }}</span>
+                          <span style="float:left;" v-if="validationErrors[`scoreRanges.ranges.${rangeIdx}.oddsPath.range`]" class="mave-field-error">{{ validationErrors[`scoreRanges.ranges.${rangeIdx}.oddsPath.range`] }}</span>
+                      </div>
+                    </div>
+                    <div v-if="rangeObj.value.classification === 'normal' || rangeObj.value.classification === 'abnormal'" class="mavedb-wizard-row">
+                      <div class="mavedb-wizard-help">
+                        <label :id="$scopedId('input-isProvidingOddsPath')">Will you be providing odds of pathogenicity (OddsPath) ratios for this score range?</label>
+                        <div class="mavedb-help-small">
+                          An OddsPath calculation can be determined by evaluating previously classified control variants against the scores in normal and abnormal ranges for an assay.
+                          For additional information about OddsPath, please see <a href="https://pubmed.ncbi.nlm.nih.gov/31892348/">PubMed 31892348</a>.
+                        </div>
+                      </div>
+                      <div class="mavedb-wizard-content">
+                        <InputSwitch v-model="rangeObj.isProvidingOddsPath" :aria-labelledby="$scopedId('input-isProvidingOddsPath')" />
+                        <div class="mavedb-switch-value">{{ rangeObj.isProvidingOddsPath ? 'Yes, I will be providing OddsPath data for this score range.' : 'No, I will not be providing OddsPath data for this score range.' }}</div>
+                      </div>
+                    </div>
+                    <div v-if="rangeObj.isProvidingOddsPath" class="mavedb-wizard-row">
+                      <div class="mavedb-wizard-help">
+                        <label :id="$scopedId('input-oddsPathRatio')">What is the OddsPath ratio and evidence strength for this score range?</label>
+                      </div>
+                      <div class="mavedb-wizard-content">
+                        <InputGroup>
+                          <span class=p-float-label style="margin-right: 1em;">
+                            <InputNumber v-model="rangeObj.value.oddsPath.ratio" :aria-labelledby="$scopedId('input-oddsPathRatio')" style="width:50%;" :minFractionDigits="1" :maxFractionDigits="10" />
+                            <label :for="$scopedId('input-oddsPathRatio')"> OddsPath Normal </label>
+                          </span>
+                          <span class=p-float-label>
+                            <Dropdown v-model="rangeObj.value.oddsPath.evidence" :aria-labelledby="$scopedId('input-oddsPathEvidence')" style="width:50%;" :options="evidenceStrengths[rangeObj.value.classification].concat(evidenceStrengths.indeterminate)"></Dropdown>
+                            <label :for="$scopedId('input-oddsPathEvidence')"> OddsPath Evidence Strength (optional) </label>
+                          </span>
+                        </InputGroup>
+                        <span v-if="validationErrors[`scoreRanges.ranges.${rangeIdx}.oddsPath.ratio`]" class="mave-field-error">{{ validationErrors[`scoreRanges.ranges.${rangeIdx}.oddsPath.ratio`] }}</span>
+                        <span v-if="validationErrors[`scoreRanges.ranges.${rangeIdx}.oddsPath.evidence`]" class="mave-field-error">{{ validationErrors[`scoreRanges.ranges.${rangeIdx}.oddsPath.evidence`] }}</span>
                       </div>
                     </div>
                   </div>
@@ -1022,6 +1054,33 @@
                     </div>
                   </div>
                 </div>
+                <div class="mavedb-wizard-row" v-if="scoreRanges.ranges.some(range => range.isProvidingOddsPath) && publicationIdentifiers.length">
+                    <div class="mavedb-wizard-help">
+                      <label>
+                        Of the previously provided publications, optionally select a publication to use as the source of the OddsPath.
+                      </label>
+                    </div>
+                    <div class="mavedb-wizard-content field">
+                      <span class="p-float-label">
+                        <Multiselect ref="oddsPathPublicationIdentifiersInput" v-model="scoreRanges.oddsPathSource"
+                          :id="$scopedId('input-oddsPathPublicationIdentifiersInput')" :options="publicationIdentifiers"
+                          optionLabel="identifier" placeholder="Select a source for the OddsPath calculation."
+                          :selectionLimit="1" style="width: 100%;">
+                          <template #option="slotProps">
+                            <div class="field">
+                              <div>Title: {{ slotProps.option.title }}</div>
+                              <div>DOI: {{ slotProps.option.doi }}</div>
+                              <div>Identifier: {{ slotProps.option.identifier }}</div>
+                              <div>Database: {{ slotProps.option.dbName }}</div>
+                            </div>
+                          </template>
+                        </Multiselect>
+                        <label :for="$scopedId('input-oddsPathPublicationIdentifiersInput')">OddsPath Source (optional)</label>
+                      </span>
+                      <span v-if="validationErrors[`scoreRanges.oddsPathSource`]" class="mave-field-error">{{
+                        validationErrors[`scoreRanges.oddsPathSource`] }}</span>
+                    </div>
+                  </div>
               </div>
               <div class="mavedb-wizard-step-controls-row">
                 <div class="flex justify-content-between mavedb-wizard-step-controls pt-5">
@@ -1160,6 +1219,7 @@ import { TARGET_GENE_CATEGORIES, textForTargetGeneCategory } from '@/lib/target-
 import {ORCID_ID_REGEX} from '@/lib/orcid'
 import { normalizeDoi, validateDoi} from '@/lib/identifiers'
 import useFormatters from '@/composition/formatters'
+import { NORMAL_RANGE_EVIDENCE, ABNORMAL_RANGE_EVIDENCE, INDETERMINATE_RANGE_EVIDENCE } from '@/lib/ranges'
 
 const externalGeneDatabases = ['UniProt', 'Ensembl', 'RefSeq']
 
@@ -1200,9 +1260,14 @@ function emptyScoreRangeWizardObj() {
       description: null,
       range: [null, null],
       classification: null,
+      oddsPath:{
+        ratio: null,
+        evidence: null,
+      },
     },
     infiniteLower: false,
-    infiniteUpper: false
+    infiniteUpper: false,
+    isProvidingOddsPath: false,
   }
 }
 
@@ -1330,6 +1395,7 @@ export default {
     scoreRanges: {
       wtScore: null,
       ranges: [],
+      oddsPathSource: [],
     },
 
     // Static sets of options:
@@ -1343,6 +1409,11 @@ export default {
       {value: "abnormal", label: "Abnormal"},
       {value: "not_specified", label: "Not Specified"}
     ],
+    evidenceStrengths: {
+      normal: NORMAL_RANGE_EVIDENCE,
+      abnormal: ABNORMAL_RANGE_EVIDENCE,
+      indeterminate: INDETERMINATE_RANGE_EVIDENCE,
+    },
 
     progressVisible: false,
     serverSideValidationErrors: {},
@@ -1577,9 +1648,8 @@ export default {
         if (newValue && this.scoreRanges.ranges.length === 0) {
           this.scoreRanges.ranges.push(emptyScoreRangeWizardObj())
         }
-        console.log(this.scoreRanges)
       }
-    }
+    },
   },
 
   mounted: async function() {
@@ -1684,7 +1754,7 @@ export default {
               break
             }
           }
-          return !(this.isProvidingScoreRanges) || (allRangesCompleted && this.scoreRanges.wtScore)
+          return !(this.isProvidingScoreRanges) || (allRangesCompleted && this.scoreRanges.wtScore !== null)
         }
         default:
           return true
@@ -2249,7 +2319,11 @@ export default {
 
         scoreRanges: {
           wtScore: this.scoreRanges.wtScore,
-          ranges: this.scoreRanges.ranges.map((range) => range.value)
+          ranges: this.scoreRanges.ranges.map((range) => {
+            range.value.oddsPath = range.isProvidingOddsPath ? range.value.oddsPath : null
+            return range.value
+          }),
+          oddsPathSource: this.scoreRanges.oddsPathSource.map((identifier) => _.pick(identifier, ['identifier', 'dbName']))
         },
 
         targetGenes: this.createdTargetGenes.map(
@@ -2298,7 +2372,7 @@ export default {
         this.item.publicationIdentifiers = []
         this.item.rawReadIdentifiers = []
         this.item.targetGenes = []
-        this.item.scoreRanges = {wtScore: null, ranges: []}
+        this.item.scoreRanges = {wtScore: null, ranges: [], oddsPathSource: []}
       }
 
       const editedItem = _.merge({}, this.item || {}, editedFields)

@@ -360,8 +360,8 @@
                                       <label :for="$scopedId('input-oddsPathRatio')"> OddsPath Ratio </label>
                                     </span>
                                     <span class=p-float-label>
-                                      <Dropdown v-model="scoreRange.oddsPath.evidence" :aria-labelledby="$scopedId('input-oddsPathEvidence')" style="width:50%;" :options="evidenceStrengths[scoreRange.classification]"></Dropdown>
-                                      <label :for="$scopedId('input-oddsPathEvidence')"> OddsPath Evidence Strength </label>
+                                      <Dropdown v-model="scoreRange.oddsPath.evidence" :aria-labelledby="$scopedId('input-oddsPathEvidence')" style="width:50%;" :options="evidenceStrengths[scoreRange.classification].concat(evidenceStrengths.indeterminate)"></Dropdown>
+                                      <label :for="$scopedId('input-oddsPathEvidence')"> OddsPath Evidence Strength (Optional) </label>
                                     </span>
                                   </InputGroup>
                                   <span v-if="validationErrors[`scoreRanges.ranges.${scoreIdx}.oddsPath.ratio`]" class="mave-field-error">{{ validationErrors[`scoreRanges.ranges.${scoreIdx}.oddsPath.ratio`] }}</span>
@@ -798,7 +798,7 @@
   import {ORCID_ID_REGEX} from '@/lib/orcid'
   import useFormatters from '@/composition/formatters'
   import { TARGET_GENE_CATEGORIES, textForTargetGeneCategory } from '@/lib/target-genes'
-  import { ABNORMAL_RANGE_EVIDENCE, NORMAL_RANGE_EVIDENCE } from '@/lib/ranges'
+  import { ABNORMAL_RANGE_EVIDENCE, NORMAL_RANGE_EVIDENCE, INDETERMINATE_RANGE_EVIDENCE } from '@/lib/ranges'
 
   const externalGeneDatabases = ['UniProt', 'Ensembl', 'RefSeq']
 
@@ -950,7 +950,8 @@
       ],
       evidenceStrengths: {
         normal: NORMAL_RANGE_EVIDENCE,
-        abnormal: ABNORMAL_RANGE_EVIDENCE
+        abnormal: ABNORMAL_RANGE_EVIDENCE,
+        indeterminate: INDETERMINATE_RANGE_EVIDENCE,
       },
 
       progressVisible: false,

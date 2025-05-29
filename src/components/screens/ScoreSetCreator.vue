@@ -1039,8 +1039,8 @@
                             <label :for="$scopedId('input-oddsPathRatio')"> OddsPath Normal </label>
                           </span>
                           <span class=p-float-label>
-                            <Dropdown v-model="rangeObj.value.oddsPath.evidence" :aria-labelledby="$scopedId('input-oddsPathEvidence')" style="width:50%;" :options="evidenceStrengths[rangeObj.value.classification]"></Dropdown>
-                            <label :for="$scopedId('input-oddsPathEvidence')"> OddsPath Evidence Strength </label>
+                            <Dropdown v-model="rangeObj.value.oddsPath.evidence" :aria-labelledby="$scopedId('input-oddsPathEvidence')" style="width:50%;" :options="evidenceStrengths[rangeObj.value.classification].concat(evidenceStrengths.indeterminate)"></Dropdown>
+                            <label :for="$scopedId('input-oddsPathEvidence')"> OddsPath Evidence Strength (optional) </label>
                           </span>
                         </InputGroup>
                         <span v-if="validationErrors[`scoreRanges.ranges.${rangeIdx}.oddsPath.ratio`]" class="mave-field-error">{{ validationErrors[`scoreRanges.ranges.${rangeIdx}.oddsPath.ratio`] }}</span>
@@ -1219,7 +1219,7 @@ import { TARGET_GENE_CATEGORIES, textForTargetGeneCategory } from '@/lib/target-
 import {ORCID_ID_REGEX} from '@/lib/orcid'
 import { normalizeDoi, validateDoi} from '@/lib/identifiers'
 import useFormatters from '@/composition/formatters'
-import { NORMAL_RANGE_EVIDENCE, ABNORMAL_RANGE_EVIDENCE } from '@/lib/ranges'
+import { NORMAL_RANGE_EVIDENCE, ABNORMAL_RANGE_EVIDENCE, INDETERMINATE_RANGE_EVIDENCE } from '@/lib/ranges'
 
 const externalGeneDatabases = ['UniProt', 'Ensembl', 'RefSeq']
 
@@ -1411,7 +1411,8 @@ export default {
     ],
     evidenceStrengths: {
       normal: NORMAL_RANGE_EVIDENCE,
-      abnormal: ABNORMAL_RANGE_EVIDENCE
+      abnormal: ABNORMAL_RANGE_EVIDENCE,
+      indeterminate: INDETERMINATE_RANGE_EVIDENCE,
     },
 
     progressVisible: false,

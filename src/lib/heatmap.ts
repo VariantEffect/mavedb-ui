@@ -331,13 +331,12 @@ export default function makeHeatmap(): Heatmap {
 
     // Hide the hover tooltip.
     hideTooltip(hoverTooltip)
-
-    // Remove the selection rectangle.
-    if (svg) svg.select('g.heatmap-selection-rectangle').selectAll('rect').remove()
   }
 
   const heatmapMainMousedown = function (event: MouseEvent) {
     if (rangeSelectionMode && svg) {
+      if (svg) svg.select('g.heatmap-selection-rectangle').selectAll('rect').remove()
+
       hideTooltip(hoverTooltip)
       hideTooltip(selectionTooltip)
 
@@ -368,6 +367,19 @@ export default function makeHeatmap(): Heatmap {
   const heatmapMainMouseup = function (event: MouseEvent) {
     if (rangeSelectionMode && selectionStartPoint && svg) {
 
+      const heatmapNodesElem = svg.select('g.heatmap-nodes').node()
+      const heatmapNodesRect = heatmapNodesElem.getBoundingClientRect()
+
+      const y = rangeSelectionMode == 'column' ? heatmapNodesRect.top : event.y
+      const x = rangeSelectionMode == 'row' ? heatmapNodesRect.left : event.x
+      const pt = new DOMPoint(x, y)
+      const selectionEndPoint = pt.matrixTransform(heatmapNodesElem.getScreenCTM().inverse())
+
+      // If the selection end point is the same as the selection start point, call mouse move to update the selection rectangle.
+      if (selectionStartPoint.x == selectionEndPoint.x && selectionStartPoint.y == selectionEndPoint.y) {
+        heatmapMainMousemove(event)
+      }
+
       // convert the selection rectangle to heatmap coordinates
       const heatmapSelectionRect = svg.select('g.heatmap-selection-rectangle').select('rect').node()
       const heatmapSelectionBBox = heatmapSelectionRect.getBBox()
@@ -393,8 +405,8 @@ export default function makeHeatmap(): Heatmap {
       if (rangeSelectionMode == 'column' && columnRangesSelected) {
         columnRangesSelected([{start: rangeStart.x, end: rangeEnd.x}])
       }
-      selectionStartPoint = null
     }
+    selectionStartPoint = null
   }
 
   const heatmapMainMousemove = function (event: MouseEvent) {

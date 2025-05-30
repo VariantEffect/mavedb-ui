@@ -402,7 +402,7 @@
     </div>
   </DefaultLayout>
   <div class="card flex justify-content-center">
-      <Sidebar v-model:visible="isScoreSetVisualizerVisible" :header="item.title" position="full">
+      <Sidebar class="scoreset-viz-sidebar" v-model:visible="isScoreSetVisualizerVisible" :header="item.title" position="full">
           <ScoreSetVisualizer
             :scoreSet="item"
             :scores="scores"
@@ -1001,5 +1001,12 @@ export default {
 
 .mave-save-to-collection-button {
   margin: 1em 0;
+}
+</style>
+
+<style>
+.scoreset-viz-sidebar .p-sidebar-header {
+  padding: 0 5px 0;
+  height: 2em;
 }
 </style>

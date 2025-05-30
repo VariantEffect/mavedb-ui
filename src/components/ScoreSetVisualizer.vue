@@ -1,5 +1,5 @@
 <template>
-  <Splitter ref="splitterRef" style="border: 0px;">
+  <Splitter ref="splitterRef" style="border: 0px;height: 100%;">
     <SplitterPanel :size="50">
       <div class="mave-score-set-heatmap-pane" >
         <ScoreSetHeatmap

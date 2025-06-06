@@ -157,16 +157,35 @@ export default {
 
       return this.scoreSet.scoreRanges.wtScore
     },
-    showHeatmap() {
+    showHeatmap: function() {
       if (this.scores.length === 0) {
         return false
       }
-      const validScoresCount = this.scores.length
-      const totalItems = this.heatmapRange.length * this.heatmapRows.length 
-      if (totalItems === 0) {
-        return false
+      const hasVariant = Array.from({ length: this.heatmapRows.length }, () =>
+        Array(this.heatmapRange.length).fill(false)
+      )
+
+      for (const variant of this.simpleVariants) {
+        if (
+          typeof variant.x === 'number' &&
+          typeof variant.y === 'number' &&
+          variant.x >= 0 && variant.x < this.heatmapRange.length &&
+          variant.y >= 0 && variant.y < this.heatmapRows.length
+        ) {
+          hasVariant[variant.y][variant.x] = true
+        }
       }
-      const sparsity = validScoresCount / totalItems
+      const totalItems = hasVariant.length * hasVariant[0].length
+
+      // count of actual positions that have a variant
+      let filledCount = 0
+      for (let row of hasVariant) {
+        for (let cell of row) {
+          if (cell) filledCount++
+        }
+      }
+      const sparsity = filledCount / totalItems
+
       return sparsity > SPARSITY_THRESHOLD // A boolean value
     },
   },

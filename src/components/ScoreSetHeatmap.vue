@@ -21,8 +21,11 @@
           />
         </div>
       </template>
-      <template v-else>
-        <div class="no-heatmap-message">Insufficient score data to generate a heatmap.</div>
+      <template v-else-if="scoreSet?.private">
+        <div class="no-heatmap-message">
+          <p><strong>No heatmap available.</strong> Insufficient score data to generate a heatmap.</p>
+          <p>A variant should be present at <strong>at least 5% of possible positions</strong> to generate a heatmap.</p>
+        </div>
       </template>
     </div>
     <div v-if="numComplexVariants > 0">{{numComplexVariants}} variants are complex and cannot be shown on this type of chart.</div>

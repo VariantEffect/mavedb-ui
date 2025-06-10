@@ -675,34 +675,50 @@ export default {
     },
     publishItem: async function() {
       let response = null
-      try {
-        if (this.item) {
-          response = await axios.post(`${config.apiBaseUrl}/score-sets/${this.item.urn}/publish`, this.item)
-          // make sure scroesets cannot be published twice API, but also remove the button on UI side
-        }
-      } catch (e) {
-        response = e.response || { status: 500 }
-      }
-
-      if (response.status == 200) {
-        // display toast message here
-        const publishedItem = response.data
-        if (this.item) {
-          console.log('Published item')
-          this.$router.replace({ path: `/score-sets/${publishedItem.urn}` })
-          this.$toast.add({ severity: 'success', summary: 'Your score set was successfully published.', life: 3000 })
-        }
-      } else if (response.data && response.data.detail) {
-        const formValidationErrors = {}
-        for (const error of response.data.detail) {
-          let path = error.loc
-          if (path[0] == 'body') {
-            path = path.slice(1)
+      this.$confirm.require({
+        message: 'Are you sure you want to publish this score set? Once published, you will be unable to edit scores, counts, or targets. You will also be unable to delete this score set.',
+        header: 'Confirm Score Set Publication',
+        icon: 'pi pi-exclamation-triangle',
+        acceptLabel: 'Publish',
+        rejectLabel: 'Cancel',
+        rejectClass: 'p-button-danger',
+        acceptIcon: 'pi pi-check',
+        rejectIcon: 'pi pi-times',
+        accept: async () => {
+          try {
+            if (this.item) {
+              response = await axios.post(`${config.apiBaseUrl}/score-sets/${this.item.urn}/publish`, this.item)
+              // make sure scroesets cannot be published twice API, but also remove the button on UI side
+            }
+          } catch (e) {
+            response = e.response || { status: 500 }
           }
-          path = path.join('.')
-          formValidationErrors[path] = error.msg
+
+          if (response.status == 200) {
+            // display toast message here
+            const publishedItem = response.data
+            if (this.item) {
+              console.log('Published item')
+              this.$router.replace({ path: `/score-sets/${publishedItem.urn}` })
+              this.$toast.add({ severity: 'success', summary: 'Your score set was successfully published.', life: 3000 })
+            }
+          } else if (response.data && response.data.detail) {
+            const formValidationErrors = {}
+            for (const error of response.data.detail) {
+              let path = error.loc
+              if (path[0] == 'body') {
+                path = path.slice(1)
+              }
+              path = path.join('.')
+              formValidationErrors[path] = error.msg
+            }
+          }
+        },
+        reject: () => {
+          //callback to execute when user rejects the action
+          //do nothing
         }
-      }
+      })
     },
     //Download scores or counts
     downloadFile: async function(download_type) {

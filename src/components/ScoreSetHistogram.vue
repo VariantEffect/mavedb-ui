@@ -1,6 +1,6 @@
 <template>
   <TabMenu class="mave-histogram-viz-select" v-if="hasTabBar" v-model:activeIndex="activeViz" :model="vizOptions" />
-  <div v-if="!refreshedClinicalControls || !associatedClinicalControls" style="font-size: x-small;">
+  <div v-if="clinicalControlsEnabled && (!refreshedClinicalControls || !associatedClinicalControls)" style="font-size: x-small;">
     <ProgressSpinner style="height: 12px; width: 12px;" />
     Loading clinical control options in the background. Additional histogram views will be available once loaded.
   </div>
@@ -146,6 +146,7 @@ export default defineComponent({
       clinicalControls: [] as ClinicalControl[],
       clinicalControlOptions: [] as ClinicalControlOption[],
       someVariantsHaveClinicalSignificance: false,
+      clinicalControlsEnabled: config.CLINICAL_FEATURES_ENABLED,
       refreshedClinicalControls: false,
       associatedClinicalControls: false,
 
@@ -381,7 +382,9 @@ export default defineComponent({
   watch: {
     scoreSet: {
       handler: async function() {
-        await this.loadClinicalControlOptions()
+        if (this.config.CLINICAL_FEATURES_ENABLED) {
+          await this.loadClinicalControlOptions()
+        }
         // Changes to clinical control options will trigger loading of clinical controls.
       },
       immediate: true,

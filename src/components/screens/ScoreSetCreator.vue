@@ -1743,9 +1743,19 @@ export default {
         }
         case ((step > 2) && (step < 3 + this.numTargets)): {
           const currentTargetGene = this.createdTargetGenes[step-3].targetGene
-          return currentTargetGene.name
+          if (this.isTargetSequence) {
+            return currentTargetGene.name
               && currentTargetGene.category
-              && (currentTargetGene.targetAccession.accession || (currentTargetGene.targetSequence.sequence && currentTargetGene.targetSequence.sequenceType))
+              && (currentTargetGene.targetSequence.sequence && currentTargetGene.targetSequence.sequenceType)
+              // Don't allow the user to advance if the taxonomy has been searched for but not selected,
+              && currentTargetGene.targetSequence.taxonomy?.id
+          } else {
+            return currentTargetGene.name
+              && currentTargetGene.category
+              && (currentTargetGene.targetAccession.accession
+                && (currentTargetGene.targetAccession.assembly || currentTargetGene.targetAccession.gene)
+              )
+          }
         }
         case (step == 3 + this.numTargets): {
           let allRangesCompleted = true

@@ -1,9 +1,8 @@
 <template>
   <div v-if="heatmapVisible">
-
-    <div style="text-align: center;">Functional Score by Variant</div>
     <div class="mave-heatmap-wrapper">
       <template v-if="showHeatmap">
+        <div style="text-align: center;">Functional Score by Variant</div>
         <div id="mave-heatmap-container" class="heatmapContainer" ref="heatmapContainer">
           <div id="mave-heatmap-scroll-container" class="heatmapScrollContainer" ref="heatmapScrollContainer">
             <div id="mave-stacked-heatmap-container" class="mave-simple-variants-stacked-heatmap-container" ref="simpleVariantsStackedHeatmapContainer" />
@@ -164,7 +163,8 @@ export default {
       if (this.scores.length === 0) {
         return false
       }
-      const hasVariant = Array.from({ length: this.heatmapRows.length }, () =>
+      // the early termination and wild type variants shouldn't effect the heatmap so that remove the final three rows.
+      const hasVariant = Array.from({ length: this.heatmapRows.length - 3 }, () =>
         Array(this.heatmapRange.length).fill(false)
       )
 
@@ -173,7 +173,7 @@ export default {
           typeof variant.x === 'number' &&
           typeof variant.y === 'number' &&
           variant.x >= 0 && variant.x < this.heatmapRange.length &&
-          variant.y >= 0 && variant.y < this.heatmapRows.length
+          variant.y >= 0 && variant.y < this.heatmapRows.length - 3
         ) {
           hasVariant[variant.y][variant.x] = true
         }

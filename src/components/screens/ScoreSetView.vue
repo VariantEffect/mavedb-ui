@@ -999,4 +999,5 @@ export default {
 .mave-save-to-collection-button {
   margin: 1em 0;
 }
+
 </style>

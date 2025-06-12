@@ -360,8 +360,14 @@
                                       <label :for="$scopedId('input-oddsPathRatio')"> OddsPath Ratio </label>
                                     </span>
                                     <span class=p-float-label>
-                                      <Dropdown v-model="scoreRange.oddsPath.evidence" :aria-labelledby="$scopedId('input-oddsPathEvidence')" style="width:50%;" :options="evidenceStrengths[scoreRange.classification].concat(evidenceStrengths.indeterminate)"></Dropdown>
-                                      <label :for="$scopedId('input-oddsPathEvidence')"> OddsPath Evidence Strength (Optional) </label>
+                                      <Dropdown
+                                        v-model="scoreRange.oddsPath.evidence"
+                                        :aria-labelledby="$scopedId('input-oddsPathEvidence')"
+                                        style="width:50%;"
+                                        :disabled="scoreRange.classification === null"
+                                        :options="scoreRange.classification ? evidenceStrengths[scoreRange.classification].concat(evidenceStrengths.indeterminate) : []"
+                                      />
+                                      <label :for="$scopedId('input-oddsPathEvidence')"> {{ scoreRange.classification === null ? "Select a range classification" : "OddsPath Evidence Strength (Optional)" }}  </label>
                                     </span>
                                   </InputGroup>
                                   <span v-if="validationErrors[`scoreRanges.ranges.${scoreIdx}.oddsPath.ratio`]" class="mave-field-error">{{ validationErrors[`scoreRanges.ranges.${scoreIdx}.oddsPath.ratio`] }}</span>
@@ -380,31 +386,31 @@
                         </template>
                       </Card>
                     </div>
-                    <div class="field" style="align-items: center; justify-content: center; display: flex">
+                    <div v-if="scoreRanges.ranges.some(range => range.oddsPath)">
+                      <span class="p-float-label">
+                        <Multiselect ref="oddsPathPublicationIdentifiersInput" v-model="scoreRanges.oddsPathSource"
+                          :id="$scopedId('input-oddsPathPublicationIdentifiersInput')" :options="publicationIdentifiers"
+                          optionLabel="identifier" placeholder="Select a source for the OddsPath calculation."
+                          :selectionLimit="1" style="width: 100%;">
+                          <template #option="slotProps">
+                            <div class="field">
+                              <div>Title: {{ slotProps.option.title }}</div>
+                              <div>DOI: {{ slotProps.option.doi }}</div>
+                              <div>Identifier: {{ slotProps.option.identifier }}</div>
+                              <div>Database: {{ slotProps.option.dbName }}</div>
+                            </div>
+                          </template>
+                        </Multiselect>
+                        <label :for="$scopedId('input-oddsPathPublicationIdentifiersInput')">OddsPath Source (optional)</label>
+                      </span>
+                      <span v-if="validationErrors[`scoreRanges.oddsPathSource`]" class="mave-field-error">{{
+                        validationErrors[`scoreRanges.oddsPathSource`] }}</span>
+                    </div>
+                    <div class="field" style="align-items: center; justify-content: center; display: flex; padding-top: 1%;">
                       <Button label="Add new score range" icon="pi pi-plus" aria-label="Add range" outlined raised text @click="addScoreRange()"/>
                     </div>
                   </template>
                 </Card>
-              </div>
-              <div v-if="scoreRanges.ranges.some(range => range.oddsPath)">
-                <span class="p-float-label">
-                  <Multiselect ref="oddsPathPublicationIdentifiersInput" v-model="scoreRanges.oddsPathSource"
-                    :id="$scopedId('input-oddsPathPublicationIdentifiersInput')" :options="publicationIdentifiers"
-                    optionLabel="identifier" placeholder="Select a source for the OddsPath calculation."
-                    :selectionLimit="1" style="width: 100%;">
-                    <template #option="slotProps">
-                      <div class="field">
-                        <div>Title: {{ slotProps.option.title }}</div>
-                        <div>DOI: {{ slotProps.option.doi }}</div>
-                        <div>Identifier: {{ slotProps.option.identifier }}</div>
-                        <div>Database: {{ slotProps.option.dbName }}</div>
-                      </div>
-                    </template>
-                  </Multiselect>
-                  <label :for="$scopedId('input-oddsPathPublicationIdentifiersInput')">OddsPath Source (optional)</label>
-                </span>
-                <span v-if="validationErrors[`scoreRanges.oddsPathSource`]" class="mave-field-error">{{
-                  validationErrors[`scoreRanges.oddsPathSource`] }}</span>
               </div>
               <div v-else>
                 <Card>

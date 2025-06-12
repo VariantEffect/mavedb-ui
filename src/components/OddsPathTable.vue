@@ -1,31 +1,37 @@
 <template>
-    <table v-if="evidenceStrengths" class="mave-odds-path-table">
-        <tr>
-            <th>Odds Path Abnormal<sup>*</sup></th>
-            <th>Odds Path Normal<sup>*</sup></th>
-        </tr>
-        <tr v-if="evidenceStrengths.oddsOfPathogenicity">
-            <td>{{ evidenceStrengths.oddsOfPathogenicity.abnormal }}</td>
-            <td>{{ evidenceStrengths.oddsOfPathogenicity.normal }}</td>
-        </tr>
-        <tr>
-            <td :class="`mave-evidence-code-${evidenceStrengths.evidenceCodes.abnormal}`">{{
-                evidenceStrengths.evidenceCodes.abnormal }}</td>
-            <td :class="`mave-evidence-code-${evidenceStrengths.evidenceCodes.normal}`">{{
-                evidenceStrengths.evidenceCodes.normal }}</td>
-        </tr>
-    </table>
-    <div v-if="evidenceStrengths" style="font-style: italic; text-align: center; margin-bottom: 2em;"><sup>*</sup>
-        Source: <a :href="evidenceStrengths.source" target="_blank">{{ evidenceStrengths.source }}</a></div>
-    <div v-if="evidenceStrengths?.exampleVariant"
-        style="font-style: italic; text-align: center; margin-top: -1.5em; margin-bottom: 2em;">
-        <router-link :to="{ name: 'variant', params: { urn: evidenceStrengths.exampleVariant.urn } }">Click
-            here</router-link> for a preview of future clinical variant features.
+    <div v-if="oddsPathExists">
+        <table class="mave-odds-path-table">
+            <tr>
+                <th :colspan="abnormalRanges.length">Odds Path Abnormal<sup>*</sup></th>
+                <th :colspan="normalRanges.length">Odds Path Normal<sup>*</sup></th>
+            </tr>
+            <tr>
+                <td v-for="range in abnormalRanges.concat(normalRanges)" :key="range.label">
+                    <span>{{ range.label }}</span>
+                </td>
+            </tr>
+            <tr>
+                <td v-for="range in abnormalRanges.concat(normalRanges)" :key="range.label">
+                    <span v-if="range.oddsPath?.ratio">{{ range.oddsPath.ratio }}</span>
+                    <span v-else>Not Provided</span>
+                </td>
+            </tr>
+            <tr>
+                <td v-for="range in abnormalRanges.concat(normalRanges)" :class="`mave-evidence-code-${range.oddsPath?.evidence}`" :key="range.label">
+                    <span v-if="range.oddsPath?.evidence">{{ range.oddsPath.evidence }}</span>
+                    <span v-else>Not Provided</span>
+                </td>
+            </tr>
+        </table>
+        <div v-if="oddsPathSource" style="font-style: italic; text-align: center; margin-bottom: 2em;"><sup>*</sup>
+            Source: <a :href="oddsPathSource.url" target="_blank">{{ oddsPathSource.url }}</a></div>
     </div>
 </template>
 
 <script lang="ts">
+import config from '@/config';
 import { defineComponent } from 'vue';
+import { EVIDENCE_STRENGTHS, ScoreSetRange } from '@/lib/ranges';
 
 export default defineComponent({
     name: "OddsPathTable",
@@ -37,37 +43,60 @@ export default defineComponent({
         },
     },
 
-    computed: {
-        evidenceStrengths: function () {
-            return {
-                'urn:mavedb:00000050-a-1': {
-                    oddsOfPathogenicity: {
-                        abnormal: 24.9,
-                        normal: 0.043
-                    },
-                    evidenceCodes: {
-                        abnormal: 'PS3_Strong',
-                        normal: 'BS3_Strong'
-                    },
-                    source: 'https://pubmed.ncbi.nlm.nih.gov/36550560/'
-                },
-                'urn:mavedb:00000097-0-1': {
-                    oddsOfPathogenicity: {
-                        abnormal: 52.4,
-                        normal: 0.02
-                    },
-                    evidenceCodes: {
-                        abnormal: 'PS3_Strong',
-                        normal: 'BS3_Strong'
-                    },
-                    source: 'https://pubmed.ncbi.nlm.nih.gov/34793697/',
-                    exampleVariant: {
-                        urn: 'urn:mavedb:00000097-0-1#1697',
-                        name: 'NM_007294.4(BRCA1):c.5237A>C (p.His1746Pro)'
-                    }
-                }
-            }[this.scoreSet.urn] || null
+    setup() {
+        return {
+            config: config,
         }
+    },
+
+    computed: {
+        // When creating OddsPaths, the source is selected from the list of primary and secondary publications, so its presence in the score set's publication
+        // list should be guaranteed. To avoid an extra request, just look for the publication in the list of a score sets primary and secondary publications.
+        oddsPathSource() {
+            if (!this.scoreSet?.scoreRanges?.oddsPathSource) {
+                return null
+            }
+
+            const oddsPathSource = this.scoreSet.scoreRanges.oddsPathSource[0];
+            return this.scoreSet.primaryPublicationIdentifiers.concat(this.scoreSet.secondaryPublicationIdentifiers).find((source) => {
+                return source.dbName === oddsPathSource.dbName && source.identifier === oddsPathSource.identifier
+            }) || null;
+        },
+
+        oddsPathExists() {
+            const ranges: ScoreSetRange[] = this.scoreSet?.scoreRanges?.ranges || [];
+            return ranges.some(range => {
+                return range.oddsPath;
+            });
+        },
+
+        normalRanges() {
+            const ranges: ScoreSetRange[] = this.scoreSet?.scoreRanges?.ranges || [];
+            return ranges.filter(range => {
+                return range.classification === 'normal';
+            }).sort((a, b) => this.sortScoreRangeByEvidence(a, b));;
+        },
+
+
+        abnormalRanges() {
+            const ranges: ScoreSetRange[] = this.scoreSet?.scoreRanges?.ranges || [];
+            return ranges.filter(range => {
+                return range.classification === 'abnormal';
+            }).sort((a, b) => this.sortScoreRangeByEvidence(b, a));;
+        },
+    },
+
+    methods: {
+        sortScoreRangeByEvidence(a: ScoreSetRange, b: ScoreSetRange): number {
+            if (a.oddsPath?.evidence && b.oddsPath?.evidence) {
+                return EVIDENCE_STRENGTHS[a.oddsPath.evidence] - EVIDENCE_STRENGTHS[b.oddsPath.evidence];
+            } else if (a.oddsPath?.evidence) {
+                return -1; // a has evidence, b does not
+            } else if (b.oddsPath?.evidence) {
+                return 1; // b has evidence, a does not
+            }
+            return 0;
+        },
     }
 })
 </script>
@@ -87,14 +116,59 @@ table.mave-odds-path-table th {
     text-align: center;
 }
 
-table.mave-odds-path-table td.mave-evidence-code-PS3_Strong {
+table.mave-odds-path-table td.mave-evidence-code-PS3_VERY_STRONG {
+    background-color: #7b1910;
+    color: white;
+    font-weight: bold;
+}
+
+table.mave-odds-path-table td.mave-evidence-code-PS3_STRONG {
     background-color: #b02418;
     color: white;
     font-weight: bold;
 }
 
-table.mave-odds-path-table td.mave-evidence-code-BS3_Strong {
+table.mave-odds-path-table td.mave-evidence-code-PS3_MODERATE {
+    background-color: #cf7b74;
+    color: white;
+    font-weight: bold;
+}
+
+
+table.mave-odds-path-table td.mave-evidence-code-PS3_SUPPORTING {
+    background-color: #e7bdb9;
+    color: white;
+    font-weight: bold;
+}
+
+table.mave-odds-path-table td.mave-evidence-code-BS3_STRONG {
     background-color: #385492;
+    color: white;
+    font-weight: bold;
+}
+
+table.mave-odds-path-table td.mave-evidence-code-BS3_MODERATE {
+    background-color: #7387b2
+    ;
+    color: white;
+    font-weight: bold;
+}
+
+table.mave-odds-path-table td.mave-evidence-code-BS3_SUPPORTING {
+    background-color: #c3cbde;
+    color: white;
+    font-weight: bold;
+}
+
+
+table.mave-odds-path-table td.mave-evidence-code-BS3_INDETERMINATE {
+    background-color: #d9cb00;
+    color: white;
+    font-weight: bold;
+}
+
+table.mave-odds-path-table td.mave-evidence-code-undefined {
+    background-color: #7b7b7b;
     color: white;
     font-weight: bold;
 }

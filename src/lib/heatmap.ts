@@ -87,7 +87,7 @@ export interface Heatmap {
 
   // Selection management
   clearSelection: () => void
-  selectDatum: (d: HeatmapDatum) => void
+  selectDatum: (datum: HeatmapDatum) => void
   selectDatumByIndex: (x: number, y: number) => void
 
   //////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
@@ -104,6 +104,7 @@ export interface Heatmap {
 
   // Data fields
   valueField: Accessor<FieldGetter<number>, Heatmap>
+  accessorField: Accessor<FieldGetter<string>, Heatmap>
   xCoordinate: Accessor<FieldGetter<number>, Heatmap>
   yCoordinate: Accessor<FieldGetter<number>, Heatmap>
   tooltipHtml: Accessor<((
@@ -164,6 +165,7 @@ export default function makeHeatmap(): Heatmap {
 
   // Data fields
   let valueField: FieldGetter<number> = (d) => d as number
+  let accessorField: FieldGetter<string> = (d) => d as string
   let xCoordinate: FieldGetter<number> = (d) => d as number
   let yCoordinate: FieldGetter<number> = (d) => d as number
   let tooltipHtml: ((
@@ -411,6 +413,7 @@ export default function makeHeatmap(): Heatmap {
       .style('border-radius', '5px')
       .style('color', '#000')
       .style('padding', '5px')
+      .style('line-height', '1.5')
       .style('z-index', 2001)
 
     selectionTooltip = d3.select(_container)
@@ -423,6 +426,7 @@ export default function makeHeatmap(): Heatmap {
       .style('border-radius', '5px')
       .style('color', '#000')
       .style('padding', '5px')
+      .style('line-height', '1.5')
       .style('position', 'relative')
       .style('width', 'fit-content')
       .style('z-index', 1)
@@ -490,7 +494,7 @@ export default function makeHeatmap(): Heatmap {
       }
 
       // Show the tooltip under the datum node if it would overflow from the top of the heatmap container.
-      if (yCoordinate(selectedDatum) < rows.length / 4) {
+      if (rows.length < 4 || yCoordinate(selectedDatum) <= 2) {
         selectionTooltip
           .style('top', null)
           .style('bottom', _container.clientHeight - top - tooltipHeight + (0.5 * strokeWidth(true)) + 'px')
@@ -732,8 +736,9 @@ export default function makeHeatmap(): Heatmap {
       updateSelectionTooltipAfterRefresh()
     },
 
-    selectDatum: (d: HeatmapDatum) => {
-      refreshSelectedDatum(d, false)
+    selectDatum: (datum: HeatmapDatum) => {
+      const selectedDatum = data.find((d) => accessorField(d) == accessorField(datum))
+      refreshSelectedDatum(selectedDatum, false)
       updateSelectionTooltipAfterRefresh()
     },
 
@@ -795,6 +800,14 @@ export default function makeHeatmap(): Heatmap {
         return valueField
       }
       valueField = value
+      return chart
+    },
+
+    accessorField: (value?: FieldGetter<string>) => {
+      if (value === undefined) {
+        return accessorField
+      }
+      accessorField = value
       return chart
     },
 

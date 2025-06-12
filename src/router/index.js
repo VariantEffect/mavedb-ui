@@ -15,9 +15,11 @@ import PublicationIdentifierView from '@/components/screens/PublicationIdentifie
 import ScoreSetCreator from '@/components/screens/ScoreSetCreator'
 import ScoreSetEditor from '@/components/screens/ScoreSetEditor'
 import ScoreSetView from '@/components/screens/ScoreSetView'
+import SearchVariantsScreen from '@/components/screens/SearchVariantsScreen'
 import SearchView from '@/components/screens/SearchView'
 import SettingsScreen from '@/components/screens/SettingsScreen'
 import UsersView from '@/components/screens/UsersView'
+import VariantMeasurementScreen from '@/components/screens/VariantMeasurementScreen'
 import VariantScreen from '@/components/screens/VariantScreen'
 import StatisticsView from '@/components/screens/StatisticsView'
 import store from '@/store'
@@ -44,7 +46,14 @@ const routes = [{
   meta: {
     title: import.meta.env.VITE_SITE_TITLE + ' | Search'
   }
-}, {
+}, ...config.CLINICAL_FEATURES_ENABLED ? [{
+  path: '/search-variants',
+  name: 'search-variants',
+  component: SearchVariantsScreen,
+  meta: {
+    title: import.meta.env.VITE_SITE_TITLE + ' | Search Variants'
+  }
+}] : [], {
   path: '/docs',
   component: DocumentationView,
   meta: {
@@ -121,9 +130,16 @@ const routes = [{
   component: CollectionView,
   props: (route) => ({itemId: route.params.urn})
 }, ...config.CLINICAL_FEATURES_ENABLED ? [{
-  path: '/variants/:urn',
+  path: '/variants/:clingenAlleleId',
   name: 'variant',
   component: VariantScreen,
+  props: (route) => ({
+    clingenAlleleId: route.params.clingenAlleleId,
+  })
+}] : [], ...config.CLINICAL_FEATURES_ENABLED ? [{
+  path: '/variant-measurements/:urn',
+  name: 'variantMeasurement',
+  component: VariantMeasurementScreen,
   props: (route) => ({
     variantUrn: route.params.urn,
   })

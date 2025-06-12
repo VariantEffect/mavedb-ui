@@ -1,5 +1,9 @@
 <template>
   <TabMenu class="mave-histogram-viz-select" v-if="hasTabBar" v-model:activeIndex="activeViz" :model="vizOptions" />
+  <div v-if="clinicalControlsEnabled && (!refreshedClinicalControls || !associatedClinicalControls)" style="font-size: x-small;">
+    <ProgressSpinner style="height: 12px; width: 12px;" />
+    Loading clinical control options in the background. Additional histogram views will be available once loaded.
+  </div>
   <div v-if="hasTabBar && showShaders" class="mave-histogram-controls">
     <div class="flex flex-wrap gap-3">
       Shader Options:
@@ -18,6 +22,12 @@
     </div>
   </div>
   <div v-if="showControls" class="mave-histogram-controls">
+    <div class="mave-histogram-control" v-if="clinicalControlOptions.length > 1">
+      <label for="mave-histogram-db-select" class="mave-histogram-control-label">Clinical control database: </label>
+      <Dropdown v-model="controlDb" :options="clinicalControlOptions" optionLabel="dbName" inputId="mave-histogram-db-select" style="align-items: center; height: 1.5rem;"/>
+      <label for="mave-histogram-version-select" class="mave-histogram-control-label">Clinical control version: </label>
+      <Dropdown v-model="controlVersion" :options="controlDb?.availableVersions" inputId="mave-histogram-version-select" style="align-items: center; height: 1.5rem;"/>
+    </div>
     <div class="mave-histogram-control">
       <label for="mave-histogram-star-select" class="mave-histogram-control-label">Minimum ClinVar review status 'gold stars': </label>
       <Rating v-model="customMinStarRating" :stars="4" style="display: inline" inputId="mave-histogram-star-select" />
@@ -47,39 +57,37 @@ import _ from 'lodash'
 import Checkbox from 'primevue/checkbox'
 import Dropdown from 'primevue/dropdown'
 import RadioButton from 'primevue/radiobutton'
+import ProgressSpinner from 'primevue/progressspinner'
 import Rating from 'primevue/rating'
 import TabMenu from 'primevue/tabmenu'
 import {defineComponent} from 'vue'
 import config from '@/config'
+import axios from 'axios'
 
 import {
   BENIGN_CLINICAL_SIGNIFICANCE_CLASSIFICATIONS,
   CLINVAR_CLINICAL_SIGNIFICANCE_CLASSIFICATIONS,
   CLINVAR_REVIEW_STATUS_STARS,
-  PATHOGENIC_CLINICAL_SIGNIFICANCE_CLASSIFICATIONS
-} from '@/lib/clinvar'
-import makeHistogram, {DEFAULT_SERIES_COLOR, Histogram, HistogramSerieOptions, HistogramDatum} from '@/lib/histogram'
+  DEFAULT_CLNSIG_FIELD,
+  DEFAULT_CLNREVSTAT_FIELD,
+  DEFAULT_CLINICAL_CONTROL_DB,
+  DEFAULT_CLINICAL_CONTROL_VERSION,
+  DEFAULT_CLINICAL_SIGNIFICANCE_CLASSIFICATIONS,
+  DEFAULT_MIN_STAR_RATING,
+  PATHOGENIC_CLINICAL_SIGNIFICANCE_CLASSIFICATIONS,
+  ClinicalControl,
+  ClinicalControlOption,
+} from '@/lib/clinical-controls'
+import makeHistogram, {DEFAULT_SERIES_COLOR, Histogram, HistogramSerieOptions, HistogramDatum, HistogramBin} from '@/lib/histogram'
 import CalibrationTable from '@/components/CalibrationTable.vue'
 import { prepareThresholdsForHistogram } from '@/lib/calibrations'
 import { prepareRangesForHistogram } from '@/lib/ranges'
 import OddsPathTable from './OddsPathTable.vue'
 
-const CLNSIG_FIELD = 'mavedb_clnsig'
-const CLNREVSTAT_FIELD = 'mavedb_clnrevstat'
-
-const DEFAULT_CLINICAL_SIGNIFICANCE_CLASSIFICATIONS = [
-  'Likely_pathogenic',
-  'Pathogenic',
-  'Pathogenic/Likely_pathogenic',
-  'Likely_benign',
-  'Benign',
-  'Benign/Likely_benign'
-]
-const DEFAULT_MIN_STAR_RATING = 1
 
 export default defineComponent({
   name: 'ScoreSetHistogram',
-  components: { Checkbox, Dropdown, RadioButton, Rating, TabMenu, CalibrationTable, OddsPathTable },
+  components: { Checkbox, Dropdown, RadioButton, Rating, TabMenu, CalibrationTable, OddsPathTable, ProgressSpinner },
 
   emits: ['exportChart'],
 
@@ -113,7 +121,7 @@ export default defineComponent({
     }
   },
 
-  mounted: function() {
+  mounted: async function() {
     this.renderOrRefreshHistogram()
     this.$emit('exportChart', this.exportChart)
   },
@@ -133,7 +141,17 @@ export default defineComponent({
 
       activeViz: 0,
       activeShader: scoreSetHasRanges ? 'range' : 'null',
-      activeCalibrationKey: null,
+      activeCalibrationKey: null as String | null,
+
+      clinicalControls: [] as ClinicalControl[],
+      clinicalControlOptions: [] as ClinicalControlOption[],
+      someVariantsHaveClinicalSignificance: false,
+      clinicalControlsEnabled: config.CLINICAL_FEATURES_ENABLED,
+      refreshedClinicalControls: false,
+      associatedClinicalControls: false,
+
+      controlDb: null as ClinicalControlOption | null,
+      controlVersion: null as String | null,
 
       clinicalSignificanceClassificationOptions: CLINVAR_CLINICAL_SIGNIFICANCE_CLASSIFICATIONS,
       customMinStarRating: DEFAULT_MIN_STAR_RATING,
@@ -148,17 +166,17 @@ export default defineComponent({
         case 'clinical':
 
           return [{
-            classifier: (d) =>
+            classifier: (d: HistogramDatum) =>
               _.intersection(PATHOGENIC_CLINICAL_SIGNIFICANCE_CLASSIFICATIONS, this.selectedClinicalSignificanceClassifications)
-                  .includes(d[CLNSIG_FIELD]),
+                  .includes(d.control?.[DEFAULT_CLNSIG_FIELD]),
             options: {
               color: '#e41a1c',
               title: 'Pathogenic/Likely Pathogenic'
             }
           }, {
-            classifier: (d) =>
+            classifier: (d: HistogramDatum) =>
               _.intersection(BENIGN_CLINICAL_SIGNIFICANCE_CLASSIFICATIONS, this.selectedClinicalSignificanceClassifications)
-                  .includes(d[CLNSIG_FIELD]),
+                  .includes(d.control?.[DEFAULT_CLNSIG_FIELD]),
             options: {
               color: '#377eb8',
               title: 'Benign/Likely Benign'
@@ -168,30 +186,30 @@ export default defineComponent({
         case 'custom':
           {
             const series = [{
-              classifier: (d) =>
+              classifier: (d: HistogramDatum) =>
                 _.intersection(PATHOGENIC_CLINICAL_SIGNIFICANCE_CLASSIFICATIONS, this.selectedClinicalSignificanceClassifications)
-                    .includes(d[CLNSIG_FIELD])
-                    && CLINVAR_REVIEW_STATUS_STARS[d[CLNREVSTAT_FIELD]] >= this.minStarRating,
+                    .includes(d.control?.[DEFAULT_CLNSIG_FIELD])
+                    && CLINVAR_REVIEW_STATUS_STARS[d.control?.[DEFAULT_CLNREVSTAT_FIELD]] >= this.minStarRating,
               options: {
                 color: '#e41a1c',
                 title: 'Pathogenic/Likely Pathogenic'
               }
             }, {
-              classifier: (d) =>
+              classifier: (d: HistogramDatum) =>
                 _.intersection(BENIGN_CLINICAL_SIGNIFICANCE_CLASSIFICATIONS, this.selectedClinicalSignificanceClassifications)
-                    .includes(d[CLNSIG_FIELD])
-                    && CLINVAR_REVIEW_STATUS_STARS[d[CLNREVSTAT_FIELD]] >= this.minStarRating,
+                    .includes(d.control?.[DEFAULT_CLNSIG_FIELD])
+                    && CLINVAR_REVIEW_STATUS_STARS[d.control?.[DEFAULT_CLNREVSTAT_FIELD]] >= this.minStarRating,
               options: {
                 color: '#377eb8',
                 title: 'Benign/Likely Benign'
               }
             }]
 
-            if (this.selectedClinicalSignificanceClassifications.includes('Uncertain_significance')) {
+            if (this.selectedClinicalSignificanceClassifications.includes('Uncertain significance')) {
               series.push({
-                classifier: (d) =>
-                  d[CLNSIG_FIELD] == 'Uncertain_significance'
-                      && CLINVAR_REVIEW_STATUS_STARS[d[CLNREVSTAT_FIELD]] >= this.minStarRating,
+                classifier: (d: HistogramDatum) =>
+                  d.control?.[DEFAULT_CLNSIG_FIELD] == 'Uncertain significance'
+                      && CLINVAR_REVIEW_STATUS_STARS[d.control?.[DEFAULT_CLNREVSTAT_FIELD]] >= this.minStarRating,
                 options: {
                   color: '#999999',
                   title: 'Uncertain significance'
@@ -199,10 +217,10 @@ export default defineComponent({
               })
             }
 
-            if (this.selectedClinicalSignificanceClassifications.includes('Conflicting_interpretations_of_pathogenicity')) {
+            if (this.selectedClinicalSignificanceClassifications.includes('Conflicting interpretations of pathogenicity')) {
               series.push({
-                classifier: (d) => d[CLNSIG_FIELD] == 'Conflicting_interpretations_of_pathogenicity'
-                    && CLINVAR_REVIEW_STATUS_STARS[d[CLNREVSTAT_FIELD]] >= this.minStarRating,
+                classifier: (d: HistogramDatum) => d.control?.[DEFAULT_CLNSIG_FIELD] == 'Conflicting interpretations of pathogenicity'
+                    && CLINVAR_REVIEW_STATUS_STARS[d.control?.[DEFAULT_CLNREVSTAT_FIELD]] >= this.minStarRating,
                 options: {
                   color: '#984ea3',
                   title: 'Conflicting interpretations'
@@ -213,9 +231,6 @@ export default defineComponent({
             return series
           }
 
-        case 'calibrations':
-          return null
-
         default: // Overall score distribution
           return null
       }
@@ -223,14 +238,13 @@ export default defineComponent({
 
     vizOptions: function() {
       const options = [{label: 'Overall Distribution', view: 'distribution'}]
-      const someVariantsHaveClinicalSignificance = this.variants.some((v) => v[CLNSIG_FIELD] !== undefined)
 
-      if (someVariantsHaveClinicalSignificance) {
+      if (this.someVariantsHaveClinicalSignificance) {
         options.push({label: 'Clinical View', view: 'clinical'})
       }
 
       // custom view should always come last
-      if (someVariantsHaveClinicalSignificance) {
+      if (this.someVariantsHaveClinicalSignificance) {
         options.push({label: 'Custom', view: 'custom'})
       }
       return options
@@ -241,10 +255,6 @@ export default defineComponent({
 
       if (this.scoreSet.scoreRanges) {
         options.push({label: 'Score Ranges', view: 'range'})
-      }
-
-      if (this.scoreSet.scoreCalibrations) {
-        options.push({label: 'Calibration Thresholds', view: 'calibration'})
       }
 
       return options
@@ -278,6 +288,10 @@ export default defineComponent({
         return DEFAULT_CLINICAL_SIGNIFICANCE_CLASSIFICATIONS
       }
       return this.customSelectedClinicalSignificanceClassifications
+    },
+
+    controlDbAndVersion() {
+      return `${this.controlDb?.dbName}|${this.controlVersion}`;
     },
 
     tooltipHtmlGetter: function() {
@@ -316,14 +330,15 @@ export default defineComponent({
               }
             }
           }
-          if (variant[CLNSIG_FIELD] && variant[CLNSIG_FIELD] != 'NA') {
-            const classification = CLINVAR_CLINICAL_SIGNIFICANCE_CLASSIFICATIONS.find((c) => c.name == variant[CLNSIG_FIELD])
+
+          if (variant.control?.[DEFAULT_CLNSIG_FIELD] && variant.control?.[DEFAULT_CLNSIG_FIELD] != 'NA') {
+            const classification = CLINVAR_CLINICAL_SIGNIFICANCE_CLASSIFICATIONS.find((c) => c.name == variant.control?.[DEFAULT_CLNSIG_FIELD])
             if (classification) {
               variantDescriptionParts.push(classification.description)
             }
           }
-          if (variant.mavedb_clnrevstat && variant.mavedb_clnrevstat != 'NA') {
-            const numStars = CLINVAR_REVIEW_STATUS_STARS[variant.mavedb_clnrevstat]
+          if (variant.control?.[DEFAULT_CLNREVSTAT_FIELD] && variant.control?.[DEFAULT_CLNREVSTAT_FIELD] != 'NA') {
+            const numStars = CLINVAR_REVIEW_STATUS_STARS[variant.control?.[DEFAULT_CLNREVSTAT_FIELD]]
             if (numStars != null) {
               // Create an array of 4 stars to hold clinical review status a la ClinVar.
               const stars = new Array(4).fill(
@@ -347,17 +362,17 @@ export default defineComponent({
           parts.push('')
       }
 
-        // Line 5: Bin range
         if (bin) {
+          // Line 5: Bin range
           parts.push(`Bin range: ${bin.x0} to ${bin.x1}`)
-        }
 
-        // Line 6:
-        bin.seriesBins.forEach((serieBin, i) => {
-          const label = allSeries[i].title ? allSeries[i].title : (allSeries.length > 1) ? `Series ${i + 1}` : null
-          parts.push(
-            (label ? `${label}: ` : '') + `${serieBin.length} variants in bin`)
-        })
+          // Line 6:
+          bin.seriesBins.forEach((serieBin, i) => {
+            const label = allSeries[i].title ? allSeries[i].title : (allSeries.length > 1) ? `Series ${i + 1}` : null
+            parts.push(
+              (label ? `${label}: ` : '') + `${serieBin.length} variants in bin`)
+          })
+        }
 
         return parts.length > 0 ? parts.join('<br />') : null
       }
@@ -365,6 +380,15 @@ export default defineComponent({
   },
 
   watch: {
+    scoreSet: {
+      handler: async function() {
+        if (this.config.CLINICAL_FEATURES_ENABLED) {
+          await this.loadClinicalControlOptions()
+        }
+        // Changes to clinical control options will trigger loading of clinical controls.
+      },
+      immediate: true,
+    },
     variants: {
       handler: function() {
         this.renderOrRefreshHistogram()
@@ -406,6 +430,31 @@ export default defineComponent({
         this.renderOrRefreshHistogram()
       }
     },
+    clinicalControlOptions: {
+      handler: function() {
+        if (!this.controlDb) {
+          let defaultControlDb = this.clinicalControlOptions.find((option) => option.dbName == DEFAULT_CLINICAL_CONTROL_DB)
+          this.controlDb = defaultControlDb ? defaultControlDb : this.clinicalControlOptions[0]
+        }
+        if (!this.controlVersion) {
+          let defaultControlVersion = this.controlDb?.availableVersions.find((version) => version == DEFAULT_CLINICAL_CONTROL_VERSION)
+          this.controlVersion = defaultControlVersion ? defaultControlVersion : this.controlDb?.availableVersions[0]
+        }
+      }
+    },
+    controlDbAndVersion: {
+      handler: function() {
+        if (this.config.CLINICAL_FEATURES_ENABLED) {
+          this.loadClinicalControls()
+        }
+      }
+    },
+    clinicalControls: {
+      handler: function() {
+        this.associateClinicalControlsWithVariants()
+        this.renderOrRefreshHistogram()
+      }
+    }
   },
 
   mount: function() {
@@ -425,7 +474,13 @@ export default defineComponent({
             .leftAxisLabel('Number of Variants')
             .numBins(30)
             .valueField((variant) => variant.score)
+            .accessorField((variant) => variant.accession)
             .tooltipHtml(this.tooltipHtmlGetter)
+      }
+
+      // benefits typing. The histogram will always be defined by now from the above.
+      if (!this.histogram) {
+        return
       }
 
       let seriesClassifier: ((d: HistogramDatum) => number[]) | null = null
@@ -435,20 +490,19 @@ export default defineComponent({
           seriesIndices.filter((seriesIndex) => this.series[seriesIndex].classifier(d))
       }
 
-      const histogramShaders = {}
-      if (this.scoreSet.scoreRanges) {
-        histogramShaders["range"] = prepareRangesForHistogram(this.scoreSet.scoreRanges)
-      }
-      if (this.activeCalibration) {
-        histogramShaders["threshold"] = prepareThresholdsForHistogram(this.activeCalibration)
+      const histogramShaders = {
+        range: this.scoreSet.scoreRanges ? prepareRangesForHistogram(this.scoreSet.scoreRanges) : null,
+        threshold: this.activeCalibration ? prepareThresholdsForHistogram(this.activeCalibration) : null
       }
 
       this.histogram.data(this.variants)
           .seriesOptions(this.series?.map((s) => s.options) || null)
           .seriesClassifier(seriesClassifier)
           .title('Distribution of Functional Scores')
-          .legendNote(this.activeViz == 0 ? null : 'ClinVar data from time of publication')
+          .legendNote(this.activeViz == 0 ? null : `${this.controlDb?.dbName} data from version ${this.controlVersion}`)
           .shaders(histogramShaders)
+
+      this.histogram.refresh()
 
       if (this.externalSelection) {
         this.histogram.selectDatum(this.externalSelection)
@@ -457,16 +511,77 @@ export default defineComponent({
       }
 
       // Only render clinical specific viz options if such features are enabled.
-      this.histogram.renderShader(null)
       if (this.config.CLINICAL_FEATURES_ENABLED) {
         this.histogram.renderShader(this.activeShader)
+      } else {
+        this.histogram.renderShader(null)
       }
-
-      this.histogram.refresh()
     },
 
     childComponentSelectedCalibrations: function(calibrationKey: string) {
       this.activeCalibrationKey = calibrationKey
+    },
+
+    loadClinicalControls: async function() {
+      this.refreshedClinicalControls = false
+      let queryString = '';
+      if (this.controlDb) {
+        queryString += `?db=${encodeURIComponent(this.controlDb.dbName)}`;
+      }
+      if (this.controlVersion) {
+        queryString += queryString ? `&version=${encodeURIComponent(this.controlVersion)}` : `?version=${encodeURIComponent(this.controlVersion)}`;
+      }
+
+      if (this.scoreSet) {
+        try {
+          const response = await axios.get(`${config.apiBaseUrl}/score-sets/${this.scoreSet.urn}/clinical-controls${queryString}`)
+          if (response.data) {
+            this.clinicalControls = response.data
+          }
+        } catch (error) {
+          this.$toast.add({severity: 'warn', summary: 'No clinical control variants are associated with variants belonging to this score set. Clinical features are disabled.', detail: error.detail, life: 3000})
+          this.associatedClinicalControls = true
+        }
+      }
+      this.refreshedClinicalControls = true
+    },
+
+    loadClinicalControlOptions: async function() {
+      if (this.scoreSet) {
+        try {
+          const response = await axios.get(`${config.apiBaseUrl}/score-sets/${this.scoreSet.urn}/clinical-controls/options`)
+          if (response.status == 200) {
+            this.clinicalControlOptions = response.data
+          }
+        } catch (error) {
+          this.$toast.add({severity: 'warn', summary: 'No clinical control variants are associated with variants belonging to this score set. Clinical features are disabled.', detail: error.detail, life: 3000})
+          // We still want to set the refreshed flag to true so that the loading spinner goes away.
+          this.refreshedClinicalControls = true
+          this.associatedClinicalControls = true
+        }
+      }
+    },
+
+    associateClinicalControlsWithVariants: function () {
+      let associatedAnyControlsWithVariants = false
+      this.associatedClinicalControls = false
+
+      for (const clinicalControl of this.clinicalControls) {
+        clinicalControl.mappedVariants.forEach(mappedVariant => {
+          const variant = this.variants.find(variant => variant.accession === mappedVariant.variantUrn);
+          if (variant) {
+            associatedAnyControlsWithVariants = true;
+            variant.control = clinicalControl;
+          }
+        });
+      }
+
+      this.associatedClinicalControls = true
+      this.someVariantsHaveClinicalSignificance = associatedAnyControlsWithVariants
+
+      if (!this.someVariantsHaveClinicalSignificance) {
+        this.$toast.add({severity: 'warn', summary: 'No clinical control variants are associated with variants belonging to this score set. Clinical features are disabled.'})
+      }
     },
 
     titleCase: (s) =>
@@ -487,6 +602,7 @@ export default defineComponent({
   display: flex;
   flex-wrap: wrap;
   gap: 1rem;
+  align-items: center;
 }
 
 .mave-histogram-viz-select {

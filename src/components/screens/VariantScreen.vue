@@ -1,220 +1,156 @@
 <template>
   <DefaultLayout>
-    <div class="grid" style="margin: 10px 0;">
-      <div v-if="item" class="col-12">
-        <Card>
-          <template #title>Variant: NM_007294.4(BRCA1):c.5237A>C (p.His1746Pro)</template>
-          <template #content>
-            <div class="variant-clinical-classifier variant-clinical-classifier-functionally-abnormal">
-              Functionally Abnormal
-            </div>
-            <table class="variant-info-table">
-              <tr>
-                <td>ClinVar allele ID:</td>
-                <td>
-                  <a href="https://www.ncbi.nlm.nih.gov/clinvar/variation/232790/?oq=%22NM_007294.4(BRCA1):c.5237A%3EC%20(p.His1746Pro)%22%5Bvarname%5D&m=NM_007294.4(BRCA1):c.5237A%3EC%20(p.His1746Pro)"
-                  target="_blank">235927</a>
-                </td>
-                <td colspan="3">&nbsp;</td>
-              </tr>
-              <tr>
-                <td>Variant type:</td>
-                <td>Single nucleotide variant</td>
-                <td style="width: 150px;">&nbsp;</td>
-                <td>Functional consequence:</td>
-                <td>Functionally Abnormal</td>
-              </tr>
-              <tr>
-                <td>Genomic location:</td>
-                <td>17:43057092 (GRCh38)<br />17:41209109 (GRCh37)</td>
-                <td style="width: 150px;">&nbsp;</td>
-                <td>Functional score:</td>
-                <td>2.57</td>
-              </tr>
-            </table>
-          </template>
-        </Card>
-      </div>
-      <div v-if="item" class="col-12">
-        <Card>
-          <!-- TODO: allow for multiple target genes? and maybe need more v-ifs in here -->
-          <template #title>BRCA1 Locus</template>
-          <template #content>
-            <div>Score set: <router-link :to="{name: 'scoreSet', params: {urn: scoreSetUrn}}">{{ item.title }}</router-link></div>
-            <div v-if="item && scores" class="mave-score-set-histogram-pane">
-              <ScoreSetHistogram :external-selection="variant" :score-set="item" :variants="scores" />
-            </div>
-            <table v-if="evidenceStrengths" class="mave-odds-path-table">
-              <tr>
-                <th>Odds Path Abnormal<sup>*</sup></th>
-                <th>Odds Path Normal<sup>*</sup></th>
-              </tr>
-              <tr v-if="evidenceStrengths.oddsOfPathogenicity">
-                <td>{{ evidenceStrengths.oddsOfPathogenicity.abnormal }}</td>
-                <td>{{ evidenceStrengths.oddsOfPathogenicity.normal }}</td>
-              </tr>
-              <tr>
-                <td :class="`mave-evidence-code-${evidenceStrengths.evidenceCodes.abnormal}`">{{ evidenceStrengths.evidenceCodes.abnormal }}</td>
-                <td :class="`mave-evidence-code-${evidenceStrengths.evidenceCodes.normal}`">{{ evidenceStrengths.evidenceCodes.normal }}</td>
-              </tr>
-            </table>
-            <div v-if="evidenceStrengths" style="font-style: italic; text-align: center; margin-bottom: 2em;"><sup>*</sup> Source: <a :href="evidenceStrengths.source" target="_blank">{{ evidenceStrengths.source }}</a></div>
-          </template>
-        </Card>
-      </div>
+    <h1 v-if="alleleTitle && variants.length > 1" class="mavedb-variant-title">Variant: {{ alleleTitle }}</h1>
+    <ErrorView v-if="variantsStatus == 'Error'" />
+    <PageLoading v-else-if="variantsStatus == 'Loading'" />
+    <Message v-else-if="variants.length == 0">No variants found in MaveDB</Message>
+    <div v-else :class="singleOrMultipleVariantsClassName">
+        <TabView
+          class="mavedb-variants-tabview"
+          :lazy="true"
+        >
+          <TabPanel
+            v-for="(variant, variantIndex) in variants"
+            v-model:activeIndex="activeVariantIndex"
+            :header="variant.url"
+            :key="variant.urn"
+          >
+            <template #header>
+              <div v-if="variants.length > 1">
+                <div class="mavedb-variants-tabview-header-text" style="color: #000; font-weight: bold;">Measurement {{ variantIndex + 1 }}</div>
+                <div class="mavedb-variants-tabview-header-text">{{ variantName(variant) }}</div>
+                <div class="mavedb-variants-tabview-header-text">{{ variant.scoreSet.title }}</div>
+              </div>
+            </template>
+            <VariantMeasurementView :variantUrn="variant.urn" />
+          </TabPanel>
+        </TabView>
     </div>
   </DefaultLayout>
 </template>
 
-<script>
+<script lang="ts">
+import axios from 'axios'
+import Button from 'primevue/button'
+import Message from 'primevue/message'
+import TabPanel from 'primevue/tabpanel'
+import TabView from 'primevue/tabview'
 
-import Card from 'primevue/card'
-
-import DefaultLayout from '@/components/layout/DefaultLayout'
-import ScoreSetHistogram from '@/components/ScoreSetHistogram'
-import useItem from '@/composition/item'
-import useRemoteData from '@/composition/remote-data'
+import ErrorView from '@/components/common/ErrorView.vue'
+import PageLoading from '@/components/common/PageLoading.vue'
+import DefaultLayout from '@/components/layout/DefaultLayout.vue'
+import VariantMeasurementView from '@/components/VariantMeasurementView.vue'
 import config from '@/config'
-import { parseScoresOrCounts } from '@/lib/scores'
 
 export default {
-  name: 'VariantScreen',
-  components: {Card, DefaultLayout, ScoreSetHistogram},
-  setup: () => {
-    const scoresRemoteData = useRemoteData()
+  name: 'VariantMeasurementScreen',
+  components: {Button, DefaultLayout, ErrorView, Message, PageLoading, TabPanel, TabView, VariantMeasurementView},
 
-    return {
-      config: config,
-
-      //...useFormatters(),
-      ...useItem({ itemTypeName: 'scoreSet' }),
-      scoresData: scoresRemoteData.data,
-      scoresDataStatus: scoresRemoteData.dataStatus,
-      setScoresDataUrl: scoresRemoteData.setDataUrl,
-      ensureScoresDataLoaded: scoresRemoteData.ensureDataLoaded,
-    }
-  },
   props: {
-    variantUrn: {
+    clingenAlleleId: {
       type: String,
-      default: 'urn:mavedb:00000097-0-1#1697'
+      required: true
     }
   },
-  data: () => ({
-    scores: null
-  }),
-  computed: {
-    evidenceStrengths: function() {
-      return {
-        'urn:mavedb:00000050-a-1': {
-          oddsOfPathogenicity: {
-            abnormal: 24.9,
-            normal: 0.043
-          },
-          evidenceCodes: {
-            abnormal: 'PS3_Strong',
-            normal: 'BS3_Strong'
-          },
-          source: 'https://pubmed.ncbi.nlm.nih.gov/36550560/'
-        },
-        'urn:mavedb:00000097-0-1': {
-          oddsOfPathogenicity: {
-            abnormal: 52.4,
-            normal: 0.02
-          },
-          evidenceCodes: {
-            abnormal: 'PS3_Strong',
-            normal: 'BS3_Strong'
-          },
-          source: 'https://pubmed.ncbi.nlm.nih.gov/34793697/'
-        }
-      }[this.item.urn] || null
-    },
-    scoreSetUrn: function() {
-      return this.variantUrn?.split('#')?.[0] || null
-    },
-    variant: function() {
-      return this.scores.find((s) => s.accession == 'urn:mavedb:00000097-0-1#1697')
-    }
-  },
-  watch: {
-    scoreSetUrn: {
-      handler: function(newValue, oldValue) {
-        if (newValue != oldValue) {
-          this.setItemId(newValue)
 
-          let scoresUrl = null
-          if (this.itemType && this.itemType.restCollectionName && newValue) {
-            scoresUrl = `${config.apiBaseUrl}/${this.itemType.restCollectionName}/${newValue}/scores`
-          }
-          this.setScoresDataUrl(scoresUrl)
-          this.ensureScoresDataLoaded()
+  data: () => ({
+    activeVariantIndex: 0,
+    clingenAllele: undefined as any,
+    variants: [] as any[],
+    variantsStatus: 'NotLoaded'
+  }),
+
+  computed: {
+    alleleTitle: function() {
+      if (this.clingenAlleleName) {
+        return this.clingenAlleleName
+      }
+      if (this.variants.length == 1) {
+        return this.variantName(this.variants[0])
+      }
+      return undefined
+    },
+    clingenAlleleName: function() {
+      return this.clingenAllele?.communityStandardTitle?.[0] || undefined
+    },
+    singleOrMultipleVariantsClassName: function() {
+      if (this.variants.length > 1) {
+        return 'mavedb-multiple-variants'
+      } else if (this.variants.length == 1) {
+        return 'mavedb-single-variant'
+      } else {
+        return 'mavedb-no-variants'
+      }
+    }
+  },
+
+  watch: {
+    clingenAlleleId: {
+      handler: async function(newValue, oldValue) {
+        if (newValue != oldValue) {
+          await this.fetchVariants()
+          await this.fetchClingenAllele()
         }
       },
       immediate: true
+    }
+  },
+
+  methods: {
+    currentMappedVariant: function(variant: any) {
+      return (variant.mappedVariants || []).find((mappedVariant: any) => mappedVariant.current)
     },
-    scoresData: {
-      handler: function(newValue) {
-        this.scores = newValue ? Object.freeze(parseScoresOrCounts(newValue)) : null
+
+    fetchClingenAllele: async function() {
+      this.clingenAllele = undefined
+      try {
+        const response = await axios.get(`https://reg.genome.network/allele/${this.clingenAlleleId}`)
+        this.clingenAllele = response.data
+      } catch (error) {
+        console.log(`Error while fetching ClinGen allele "${this.clingenAlleleId}"`, error)
+        return undefined
       }
+    },
+
+    fetchVariants: async function() {
+      this.variants = []
+      this.variantsStatus = 'Loading'
+      try {
+        const response = await axios.post(`${config.apiBaseUrl}/variants/clingen-allele-id-lookups`, {
+          clingenAlleleIds: [this.clingenAlleleId]
+        })
+
+        this.variants = response.data?.[0] || []
+        this.variantsStatus = 'Loaded'
+      } catch (error) {
+        console.log('Error while loading variants', error)
+        this.variantsStatus = 'Error'
+      }
+    },
+
+    variantName: function(variant: any) {
+      return this.currentMappedVariant(variant)?.postMapped?.expressions?.[0]?.value
+          || variant.hgvs_nt
+          || variant.hgvs_pro
+          || variant.hgvs_splice
+          || undefined
     }
   }
 }
-
 </script>
 
 <style scoped>
-
-.variant-clinical-classifier {
-  color: white;
+.mavedb-single-variant:deep(.p-tabview-nav-container) {
+  display: none;
+}
+.mavedb-variant-title {
   font-weight: bold;
-  font-size: 30px;
-  margin: 0 auto 10px auto;
-  padding: 0.1em 0.5em;
-  display: inline-block;
+  font-size: 2em;
 }
-
-.variant-clinical-classifier-functionally-abnormal {
-  background-color: #b02418;
+.mavedb-variants-tabview:deep(.p-tabview-panels) {
+  background: transparent;
 }
-
-table.variant-into-table {
-  border-collapse: collapse;
+.mavedb-variants-tabview-header-text {
+  color: #3f51b5;
 }
-
-table.variant-info-table td {
-  padding: 0.2em 0.5em 0.2em 50px;
-  vertical-align: top;
-}
-
-table.variant-info-table td:first-child {
-  padding-left: 0;
-}
-
-
-/* Evidence strength */
-
-table.mave-odds-path-table {
-   border-collapse: collapse;
-   margin: 1em auto 0.5em auto;
-}
-
-table.mave-odds-path-table td,
-table.mave-odds-path-table th {
-   border: 1px solid gray;
-   padding: 0.5em 1em;
-   text-align: center;
-}
-
-table.mave-odds-path-table td.mave-evidence-code-PS3_Strong { 
-   background-color: #b02418; 
-   color: white;
-   font-weight: bold;
-}
-table.mave-odds-path-table td.mave-evidence-code-BS3_Strong { 
-   background-color: #385492; 
-   color: white;
-   font-weight: bold;
-}
-
 </style>

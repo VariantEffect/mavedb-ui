@@ -502,7 +502,6 @@ export default defineComponent({
           .legendNote(this.activeViz == 0 ? null : `${this.controlDb?.dbName} data from version ${this.controlVersion}`)
           .shaders(histogramShaders)
 
-      this.histogram.refresh()
 
       if (this.externalSelection) {
         this.histogram.selectDatum(this.externalSelection)
@@ -516,6 +515,8 @@ export default defineComponent({
       } else {
         this.histogram.renderShader(null)
       }
+
+      this.histogram.refresh()
     },
 
     childComponentSelectedCalibrations: function(calibrationKey: string) {

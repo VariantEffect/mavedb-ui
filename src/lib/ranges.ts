@@ -4,9 +4,24 @@ export const NORMAL_RANGE_DEFAULT_COLOR = "#4444ff"
 export const ABNORMAL_RANGE_DEFAULT_COLOR = "#ff4444"
 export const NOT_SPECIFIED_RANGE_DEFAULT_COLOR = "#a6a600"
 
+export const INDETERMINATE_RANGE_EVIDENCE = ["INDETERMINATE"] as const
+export const NORMAL_RANGE_EVIDENCE = ["BS3_STRONG", "BS3_MODERATE", "BS3_SUPPORTING"] as const
+export const ABNORMAL_RANGE_EVIDENCE = ["PS3_VERY_STRONG", "PS3_STRONG", "PS3_MODERATE", "PS3_SUPPORTING"] as const
+export const EVIDENCE_STRENGTHS = {
+    "BS3_STRONG": 3,
+    "BS3_MODERATE": 2,
+    "BS3_SUPPORTING": 1,
+    "INDETERMINATE": 0,
+    "PS3_VERY_STRONG": 4,
+    "PS3_STRONG": -3,
+    "PS3_MODERATE": -2,
+    "PS3_SUPPORTING": -1
+}
+
 export interface ScoreSetRanges {
     wtScore: number
     ranges: Array<ScoreSetRange>
+    oddsPathSource: { identifier: string, dbName: string } | undefined
 }
 
 export interface ScoreSetRange {
@@ -14,6 +29,10 @@ export interface ScoreSetRange {
     description: string | undefined,
     classification: "normal" | "abnormal" | "not_specified",
     range: Array<number>
+    oddsPath: {
+        ratio: number,
+        evidence: typeof INDETERMINATE_RANGE_EVIDENCE[number] | typeof NORMAL_RANGE_EVIDENCE[number] | typeof ABNORMAL_RANGE_EVIDENCE[number] | undefined
+    } | undefined
 }
 
 export function prepareRangesForHistogram(scoreRanges: ScoreSetRanges): HistogramShader[] {

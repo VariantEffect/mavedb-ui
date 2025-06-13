@@ -233,7 +233,7 @@
                       <Multiselect ref="primaryPublicationIdentifiersInput" v-model="primaryPublicationIdentifiers"
                         :id="$scopedId('input-primaryPublicationIdentifiers')" :options="publicationIdentifiers"
                         optionLabel="identifier" placeholder="Select a primary publication (Where the dataset is described)"
-                        :selectionLimit="1">
+                        :selectionLimit="1" style="width: 100%;">
                         <template #option="slotProps">
                           <div class="field">
                             <div>Title: {{ slotProps.option.title }}</div>
@@ -347,10 +347,66 @@
                             </span>
                           </div>
                           <span v-if="validationErrors[`scoreRanges.ranges.${scoreIdx}.range`]" class="mave-field-error">{{ validationErrors[`scoreRanges.ranges.${scoreIdx}.range`] }}</span>
+                          <div v-if="scoreRange.oddsPath">
+                            <Card>
+                              <template #title>OddsPath Ratio and Evidence Strength
+                                <Button icon="pi pi-times" severity="danger" aria-label="Delete odds path" rounded text style="float:right;" @click="removeOddsPath(scoreIdx)"/>
+                              </template>
+                              <template #content>
+                                <div>
+                                  <InputGroup>
+                                    <span class=p-float-label style="margin-right: 1em;">
+                                      <InputNumber v-model="scoreRange.oddsPath.ratio" :aria-labelledby="$scopedId('input-oddsPathRatio')" style="width:50%;" :minFractionDigits="1" :maxFractionDigits="10" />
+                                      <label :for="$scopedId('input-oddsPathRatio')"> OddsPath Ratio </label>
+                                    </span>
+                                    <span class=p-float-label>
+                                      <Dropdown
+                                        v-model="scoreRange.oddsPath.evidence"
+                                        :aria-labelledby="$scopedId('input-oddsPathEvidence')"
+                                        style="width:50%;"
+                                        :disabled="scoreRange.classification === null"
+                                        :options="scoreRange.classification ? evidenceStrengths[scoreRange.classification].concat(evidenceStrengths.indeterminate) : []"
+                                      />
+                                      <label :for="$scopedId('input-oddsPathEvidence')"> {{ scoreRange.classification === null ? "Select a range classification" : "OddsPath Evidence Strength (Optional)" }}  </label>
+                                    </span>
+                                  </InputGroup>
+                                  <span v-if="validationErrors[`scoreRanges.ranges.${scoreIdx}.oddsPath.ratio`]" class="mave-field-error">{{ validationErrors[`scoreRanges.ranges.${scoreIdx}.oddsPath.ratio`] }}</span>
+                                  <span v-if="validationErrors[`scoreRanges.ranges.${scoreIdx}.oddsPath.evidence`]" class="mave-field-error">{{ validationErrors[`scoreRanges.ranges.${scoreIdx}.oddsPath.evidence`] }}</span>
+                                </div>
+                              </template>
+                            </Card>
+                          </div>
+                          <div v-else>
+                            <Card>
+                              <template #title>Add Odds Path
+                                <Button icon="pi pi-plus" aria-label="Add Odds Path" rounded text style="float:right;" @click="addOddsPath(scoreIdx)"/>
+                              </template>
+                            </Card>
+                          </div>
                         </template>
                       </Card>
                     </div>
-                    <div class="field" style="align-items: center; justify-content: center; display: flex">
+                    <div v-if="scoreRanges.ranges.some(range => range.oddsPath)">
+                      <span class="p-float-label">
+                        <Multiselect ref="oddsPathPublicationIdentifiersInput" v-model="scoreRanges.oddsPathSource"
+                          :id="$scopedId('input-oddsPathPublicationIdentifiersInput')" :options="publicationIdentifiers"
+                          optionLabel="identifier" placeholder="Select a source for the OddsPath calculation."
+                          :selectionLimit="1" style="width: 100%;">
+                          <template #option="slotProps">
+                            <div class="field">
+                              <div>Title: {{ slotProps.option.title }}</div>
+                              <div>DOI: {{ slotProps.option.doi }}</div>
+                              <div>Identifier: {{ slotProps.option.identifier }}</div>
+                              <div>Database: {{ slotProps.option.dbName }}</div>
+                            </div>
+                          </template>
+                        </Multiselect>
+                        <label :for="$scopedId('input-oddsPathPublicationIdentifiersInput')">OddsPath Source (optional)</label>
+                      </span>
+                      <span v-if="validationErrors[`scoreRanges.oddsPathSource`]" class="mave-field-error">{{
+                        validationErrors[`scoreRanges.oddsPathSource`] }}</span>
+                    </div>
+                    <div class="field" style="align-items: center; justify-content: center; display: flex; padding-top: 1%;">
                       <Button label="Add new score range" icon="pi pi-plus" aria-label="Add range" outlined raised text @click="addScoreRange()"/>
                     </div>
                   </template>
@@ -640,6 +696,13 @@
                         </template>
                       </DataTable>
                     </span>
+
+                    <div class="field-column">
+                      <div class="field" style="margin-top: 1em;">
+                        <InputSwitch v-model="isBaseEditor" :aria-labelledby="$scopedId('input-isBaseEditorData')"/>
+                        <span style="margin-left: 1em;">{{ isBaseEditor ? 'This score set represents base editor data.' : 'This score set does not represent base editor data.' }}</span>
+                      </div>
+                    </div>
                   </div>
                   <span v-if="validationErrors['targetGenes']" class="mave-field-error">{{validationErrors['targetGenes']}}</span>
                   <div class="field">
@@ -720,6 +783,7 @@
   import InputGroupAddon from 'primevue/inputgroupaddon'
   import InputNumber from 'primevue/inputnumber'
   import InputText from 'primevue/inputtext'
+  import InputSwitch from 'primevue/inputswitch'
   import Message from 'primevue/message'
   import Multiselect from 'primevue/multiselect'
   import ProgressSpinner from 'primevue/progressspinner'
@@ -739,7 +803,8 @@
   import {normalizeDoi, normalizeIdentifier, normalizePubmedId, validateDoi, validateIdentifier, validatePubmedId} from '@/lib/identifiers'
   import {ORCID_ID_REGEX} from '@/lib/orcid'
   import useFormatters from '@/composition/formatters'
-import { TARGET_GENE_CATEGORIES, textForTargetGeneCategory } from '@/lib/target-genes'
+  import { TARGET_GENE_CATEGORIES, textForTargetGeneCategory } from '@/lib/target-genes'
+  import { ABNORMAL_RANGE_EVIDENCE, NORMAL_RANGE_EVIDENCE, INDETERMINATE_RANGE_EVIDENCE } from '@/lib/ranges'
 
   const externalGeneDatabases = ['UniProt', 'Ensembl', 'RefSeq']
 
@@ -772,6 +837,7 @@ import { TARGET_GENE_CATEGORIES, textForTargetGeneCategory } from '@/lib/target-
         description: null,
         range: [null, null],
         classification: null,
+        oddsPath: null,
       }
   }
 
@@ -784,7 +850,7 @@ import { TARGET_GENE_CATEGORIES, textForTargetGeneCategory } from '@/lib/target-
 
   export default {
     name: 'ScoreSetEditor',
-    components: { AutoComplete, Button, Card, Chips, Column, Checkbox, DataTable, DefaultLayout, Dropdown, EmailPrompt, EntityLink, FileUpload, InputGroup, InputGroupAddon, InputNumber, InputText, Message, Multiselect, ProgressSpinner, SelectButton, TabPanel, TabView, Textarea },
+    components: { AutoComplete, Button, Card, Chips, Column, Checkbox, DataTable, DefaultLayout, Dropdown, EmailPrompt, EntityLink, FileUpload, InputGroup, InputGroupAddon, InputNumber, InputText, InputSwitch, Message, Multiselect, ProgressSpinner, SelectButton, TabPanel, TabView, Textarea },
 
     setup: () => {
       const publicationIdentifierSuggestions = useItems({ itemTypeName: 'publication-identifier-search' })
@@ -873,6 +939,7 @@ import { TARGET_GENE_CATEGORIES, textForTargetGeneCategory } from '@/lib/target-
       scoreRanges: {
         wtScore: null,
         ranges: [],
+        oddsPathSource: null,
       },
       scoreRangeBoundaryHelper: [],
 
@@ -887,6 +954,11 @@ import { TARGET_GENE_CATEGORIES, textForTargetGeneCategory } from '@/lib/target-
         {value: "abnormal", label: "Abnormal"},
         {value: "not_specified", label: "Not Specified"}
       ],
+      evidenceStrengths: {
+        normal: NORMAL_RANGE_EVIDENCE,
+        abnormal: ABNORMAL_RANGE_EVIDENCE,
+        indeterminate: INDETERMINATE_RANGE_EVIDENCE,
+      },
 
       progressVisible: false,
       serverSideValidationErrors: {},
@@ -900,7 +972,9 @@ import { TARGET_GENE_CATEGORIES, textForTargetGeneCategory } from '@/lib/target-
       metaAnalyzesScoreSetSuggestions: [],
       supersededScoreSetSuggestions: [],
       targetGeneAccessionSuggestions: [],
-      validationErrors: {}
+      validationErrors: {},
+
+      isBaseEditor: false
     }),
 
     computed: {
@@ -922,7 +996,12 @@ import { TARGET_GENE_CATEGORIES, textForTargetGeneCategory } from '@/lib/target-
         return this.suggestionsForAutocomplete(this.supersededScoreSetSuggestions)
       },
       targetGeneSuggestionsList: function () {
-        return this.suggestionsForAutocomplete(this.targetGeneSuggestions)
+        const geneSuggestions = this.targetGeneSuggestions || []
+        const filteredGeneSuggestions = geneSuggestions.filter(gene => {
+          const seq = gene?.targetSequence
+          return seq && seq.sequence && seq.sequenceType
+        })
+        return this.suggestionsForAutocomplete(filteredGeneSuggestions)
       },
       taxonomySuggestionsList: function() {
         return this.suggestionsForAutocomplete(this.taxonomySuggestions)
@@ -1077,8 +1156,8 @@ import { TARGET_GENE_CATEGORIES, textForTargetGeneCategory } from '@/lib/target-
       newContributorsAdded: async function(event) {
         const newContributors = event.value
 
-        // Convert any strings to ORCID users without names.
-        this.contributors = this.contributors.map((c) => _.isString(c) ? {orcidId: c} : c)
+      // Convert any strings to ORCID users without names. Remove whitespace from new entries.
+      this.contributors = this.contributors.map((c) => _.isString(c) ? {orcidId: c.trim()} : c)
 
         // Validate and look up each new contributor.
         for (const newContributor of newContributors) {
@@ -1278,10 +1357,21 @@ import { TARGET_GENE_CATEGORIES, textForTargetGeneCategory } from '@/lib/target-
       },
 
       addScoreRanges: function() {
-        this.scoreRanges = {wtScore: null, ranges: []}
+        this.scoreRanges = {wtScore: null, ranges: [], oddsPathSource: null}
         this.scoreRangeBoundaryHelper = []
         this.scoreRanges.ranges.push(emptyScoreRange())
         this.scoreRangeBoundaryHelper.push(emptyScoreRangeBoundaryHelper())
+      },
+
+      removeOddsPath: function(rangeIdx) {
+        this.scoreRanges.ranges[rangeIdx].oddsPath = null
+      },
+
+      addOddsPath: function(rangeIdx) {
+        this.scoreRanges.ranges[rangeIdx].oddsPath = {
+          ratio: null,
+          evidence: null,
+        }
       },
 
       ////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
@@ -1552,6 +1642,18 @@ import { TARGET_GENE_CATEGORIES, textForTargetGeneCategory } from '@/lib/target-
             this.scoreRangeBoundaryHelper[idx].upperBoundIsInfinity = this.scoreRanges.ranges[idx].range[1] === null
           })
           this.extraMetadata = this.item.extraMetadata
+
+          if (this.item.scoreRanges?.oddsPathSource) {
+            this.scoreRanges.oddsPathSource = this.publicationIdentifiers.filter((publication) => {
+              return this.item.scoreRanges.oddsPathSource.some((source) => {
+                return publication.identifier === source.identifier && publication.dbName === source.dbName
+              })
+            })
+          }
+
+          if (this.targetGenes[0]?.targetAccession) {
+            this.isBaseEditor = this.targetGenes[0].targetAccession.isBaseEditor
+          }
         } else {
           this.experiment = null
           this.licenseId = this.defaultLicenseId
@@ -1661,8 +1763,17 @@ import { TARGET_GENE_CATEGORIES, textForTargetGeneCategory } from '@/lib/target-
           dataUsagePolicy: this.dataUsagePolicy,
           extraMetadata: {},
           // eslint-disable-next-line no-unused-vars
-          targetGenes: this.targetGenes.map(({ index, ...target }) => target), // drop index property from target genes before save
-          scoreRanges: this.scoreRanges
+          targetGenes: this.targetGenes.map(({ index, ...target }) => {  // drop index property from target genes before save
+            if (target.targetAccession) {
+              target.targetAccession.isBaseEditor = this.isBaseEditor
+            }
+            return target
+          }),
+          scoreRanges: this.scoreRanges ? {
+            wtScore: this.scoreRanges.wtScore,
+            ranges: this.scoreRanges.ranges,
+            oddsPathSource: this.scoreRanges.oddsPathSource.map((source) => _.pick(source, ['identifier', 'dbName']))
+          } : null,
         }
         if (!this.item) {
           editedFields.supersededScoreSetUrn = this.supersededScoreSet ? this.supersededScoreSet.urn : null

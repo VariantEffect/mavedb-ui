@@ -176,6 +176,7 @@
             <Button class="p-button-outlined p-button-sm" @click="downloadMetadata">Metadata</Button>&nbsp;
           </template>
           <Button class="p-button-outlined p-button-sm" @click="downloadMappedVariants()">Mapped Variants</Button>&nbsp;
+          <SplitButton :buttonProps="{class: 'p-button-outlined p-button-sm'}" :menuButtonProps="{class: 'p-button-sm'}" label="Annotated Variants" @click="annotatedVariantDownloadOptions[0].command" :model="annotatedVariantDownloadOptions"></SplitButton>&nbsp;
           <Button class="p-button-outlined p-button-sm" @click="histogramExport()">Histogram</Button>&nbsp;
           <template v-if="heatmapExists">
             <Button class="p-button-outlined p-button-sm" @click="heatmapExport()">Heatmap</Button>&nbsp;
@@ -423,6 +424,7 @@ import TabView from 'primevue/tabview'
 import Message from 'primevue/message'
 import ProgressSpinner from 'primevue/progressspinner'
 import ScrollPanel from 'primevue/scrollpanel';
+import SplitButton from 'primevue/splitbutton'
 
 import CollectionAdder from '@/components/CollectionAdder'
 import CollectionBadge from '@/components/CollectionBadge'
@@ -445,8 +447,38 @@ import { ref } from 'vue'
 
 export default {
   name: 'ScoreSetView',
-  components: { Accordion, AccordionTab, AutoComplete, Button, Chip, CollectionAdder, CollectionBadge, DefaultLayout, EntityLink, ScoreSetHeatmap, ScoreSetHistogram, TabView, TabPanel, Message, DataTable, Column, ProgressSpinner, ScrollPanel, PageLoading, ItemNotFound },
+  components: { Accordion, AccordionTab, AutoComplete, Button, Chip, CollectionAdder, CollectionBadge, DefaultLayout, EntityLink, ScoreSetHeatmap, ScoreSetHistogram, TabView, TabPanel, Message, DataTable, Column, ProgressSpinner, ScrollPanel, SplitButton, PageLoading, ItemNotFound },
   computed: {
+    annotatedVariantDownloadOptions: function () {
+      const annotatatedVariantOptions = []
+
+      if (this.item?.scoreCalibrations) {
+        annotatatedVariantOptions.push({
+          label: 'Pathogenicity Evidence Line',
+          command: () => {
+            this.downloadAnnotatedVariants('pathogenicity-evidence-line')
+          }
+        })
+      }
+
+      if (this.item?.scoreRanges) {
+        annotatatedVariantOptions.push({
+          label: 'Functional Impact Statement',
+          command: () => {
+            this.downloadAnnotatedVariants('functional-impact-statement')
+          }
+        })
+      }
+
+      annotatatedVariantOptions.push({
+        label: 'Functional Impact Study Result',
+        command: () => {
+          this.downloadAnnotatedVariants('functional-study-result')
+        }
+      })
+
+      return annotatatedVariantOptions
+    },
     contributors: function() {
       return _.sortBy(
         (this.item?.contributors || []).filter((c) => c.orcidId != this.item?.createdBy?.orcidId),
@@ -519,7 +551,7 @@ export default {
       delete: false,
       publish: false,
       update: false,
-    }
+    },
   }),
   mounted: async function() {
     await this.checkUserAuthorization()
@@ -777,6 +809,30 @@ export default {
         anchor.click();
       } else {
         this.$toast.add({ severity: 'error', summary: 'No downloadable mapped variants text file', life: 3000 })
+      }
+    },
+    downloadAnnotatedVariants: async function(mappedVariantType) {
+      let response = null
+      try {
+        if (this.item) {
+          response = await axios.get(`${config.apiBaseUrl}/score-sets/${this.item.urn}/annotated-variants/${mappedVariantType}`)
+        }
+      }
+      catch (e) {
+        response = e.response || { status: 500 }
+      }
+      if (response.status == 200) {
+        //convert object to Json.
+        const file = JSON.stringify(response.data)
+        const anchor = document.createElement('a')
+
+        anchor.href = 'data:text/json;charset=utf-8,' + encodeURIComponent(file);
+        anchor.target = '_blank';
+        //file default name
+        anchor.download = this.item.urn + '_annotated_variants.json';
+        anchor.click();
+      } else {
+        this.$toast.add({ severity: 'error', summary: 'No downloadable annotated variants text file', life: 3000 })
       }
     },
     downloadMetadata: async function() {

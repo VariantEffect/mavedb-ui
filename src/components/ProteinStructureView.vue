@@ -177,8 +177,8 @@ export default {
         const viewerContainer = document.getElementById('pdbe-molstar-viewer-container')
         viewerInstance.render(viewerContainer, options)
         viewerInstance.events.loadComplete.subscribe(() => {
-            viewerInstance.plugin.layout.context.canvas3d.camera.state.fog = 0;
-            viewerInstance.plugin.layout.context.canvas3d.camera.state.clipFar = false;
+            viewerInstance.plugin.layout.context.canvas3d.camera.state.fog = 0
+            viewerInstance.plugin.layout.context.canvas3d.camera.state.clipFar = false
         })
         this.viewerInstance = viewerInstance
       }

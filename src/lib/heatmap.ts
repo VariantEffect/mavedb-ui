@@ -237,6 +237,9 @@ export default function makeHeatmap(): Heatmap {
   let height: number | null = null
   let width: number | null = null
 
+  let heatmapNodesElemDOMMatrix: DOMMatrix | null = null
+  let heatmapNodesElemBoundingRect: DOMRect | null = null
+
   // Color scale
   let colorScale: d3.ScaleLinear<string, number> | null = null
 
@@ -340,13 +343,14 @@ export default function makeHeatmap(): Heatmap {
       hideTooltip(hoverTooltip)
       hideTooltip(selectionTooltip)
 
-      const heatmapNodesElem = svg.select('g.heatmap-nodes').node()
-      const heatmapNodesRect = heatmapNodesElem.getBoundingClientRect()
+      const heatmapNodesElem = svg.select('g.heatmap-nodes').node() as SVGGraphicsElement
+      heatmapNodesElemBoundingRect = heatmapNodesElem.getBoundingClientRect()
+      heatmapNodesElemDOMMatrix = heatmapNodesElem.getScreenCTM()!.inverse()
 
-      const y = rangeSelectionMode == 'column' ? heatmapNodesRect.top : event.y
-      const x = rangeSelectionMode == 'row' ? heatmapNodesRect.left : event.x
+      const y = rangeSelectionMode == 'column' ? heatmapNodesElemBoundingRect?.top : event.y
+      const x = rangeSelectionMode == 'row' ? heatmapNodesElemBoundingRect?.left : event.x
       const pt = new DOMPoint(x, y)
-      const targetPt = pt.matrixTransform(heatmapNodesElem.getScreenCTM().inverse())
+      const targetPt = pt.matrixTransform(heatmapNodesElemDOMMatrix)
 
       selectionStartPoint = targetPt
 
@@ -367,21 +371,23 @@ export default function makeHeatmap(): Heatmap {
   const heatmapMainMouseup = function (event: MouseEvent) {
     if (rangeSelectionMode && selectionStartPoint && svg) {
 
-      const heatmapNodesElem = svg.select('g.heatmap-nodes').node()
-      const heatmapNodesRect = heatmapNodesElem.getBoundingClientRect()
-
-      const y = rangeSelectionMode == 'column' ? heatmapNodesRect.top : event.y
-      const x = rangeSelectionMode == 'row' ? heatmapNodesRect.left : event.x
+      const y = rangeSelectionMode == 'column' ? heatmapNodesElemBoundingRect?.top : event.y
+      const x = rangeSelectionMode == 'row' ? heatmapNodesElemBoundingRect?.left : event.x
       const pt = new DOMPoint(x, y)
-      const selectionEndPoint = pt.matrixTransform(heatmapNodesElem.getScreenCTM().inverse())
+      const selectionEndPoint = pt.matrixTransform(heatmapNodesElemDOMMatrix!)
 
       // If the selection end point is the same as the selection start point, call mouse move to update the selection rectangle.
+      // Othersiwse, clear the single datum selection.
       if (selectionStartPoint.x == selectionEndPoint.x && selectionStartPoint.y == selectionEndPoint.y) {
         heatmapMainMousemove(event)
+      } else {
+        hideHighlight(selectedDatum)
+        selectedDatum = null
+        hideTooltip(selectionTooltip)
       }
 
       // convert the selection rectangle to heatmap coordinates
-      const heatmapSelectionRect = svg.select('g.heatmap-selection-rectangle').select('rect').node()
+      const heatmapSelectionRect = svg.select('g.heatmap-selection-rectangle').select('rect').node() as SVGRectElement
       const heatmapSelectionBBox = heatmapSelectionRect.getBBox()
 
       const xScaleStep = xScale.step()
@@ -412,9 +418,8 @@ export default function makeHeatmap(): Heatmap {
   const heatmapMainMousemove = function (event: MouseEvent) {
     if (rangeSelectionMode && selectionStartPoint) {
       if (svg) {
-        const heatmapNodesElem = svg.select('g.heatmap-nodes').node()
         const pt = new DOMPoint(event.x, event.y)
-        const targetPt = pt.matrixTransform(heatmapNodesElem.getScreenCTM().inverse())
+        const targetPt = pt.matrixTransform(heatmapNodesElemDOMMatrix!)
 
         const xScaleStep = xScale.step()
         const yScaleStep = yScale.step()

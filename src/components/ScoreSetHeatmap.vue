@@ -119,6 +119,9 @@ export default {
     layout: 'normal' as HeatmapLayout
   }),
 
+  expose: ['simpleVariants', 'heatmap'],
+
+
   computed: {
     simpleAndWtVariants: function() {
       return [...this.simpleVariants || [], ...this.wtVariants || []]

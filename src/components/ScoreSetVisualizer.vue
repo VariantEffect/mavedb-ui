@@ -31,6 +31,7 @@ import ScoreSetHeatmap from '@/components/ScoreSetHeatmap'
 
 import Splitter from 'primevue/splitter'
 import SplitterPanel from 'primevue/splitterpanel'
+import _ from 'lodash'
 
 export default {
   name: 'ScoreSetVisualizer',
@@ -63,7 +64,30 @@ export default {
     didSelectResidues: function(ranges) {
       this.selectedResidueRanges = ranges
     },
-  }
-}
+  },
 
+  mounted: function(){
+    const simpleVariants = this.$refs.scoreSetHeatmap.simpleVariants
+    const heatmap = this.$refs.scoreSetHeatmap.heatmap
+    const heatmapColorScale = heatmap.colorScale()
+
+    const simpleVariantsCalcs = _(_.filter(simpleVariants, 'meanScore'))
+      .groupBy('x')
+      .map((simpleVariant, id) => ({
+        x: id,
+        meanScore: _.meanBy(simpleVariant, 'meanScore'),
+      }))
+      .value()
+
+    const simpleVariantsCalcsWithColor = _.map(simpleVariantsCalcs, (simpleVariant) => {
+      const color = heatmapColorScale(simpleVariant.meanScore)
+      return {
+        ...simpleVariant,
+        color: color,
+      }
+    })
+
+    console.log(simpleVariantsCalcsWithColor)
+  },
+}
 </script>

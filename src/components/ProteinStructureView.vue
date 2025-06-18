@@ -98,10 +98,13 @@ export default {
         const selectedRanges = newValue.map((x) => ({
           start_residue_number: x.start,
           end_residue_number: x.end,
-          color: { r: 255, g: 255, b: 0 },
+          color: null,
           focus: true
         }))
         this.viewerInstance.visual.select({data:[...this.selectionData.value, ...selectedRanges]})
+        this.viewerInstance.visual.highlight({
+            data: selectedRanges,
+        })
       },
       deep: true,
     },
@@ -175,15 +178,17 @@ export default {
           // ],
           // sequencePanel: true,
           landscape: true,
+          highlightColor: '#ffffff',
           selection: {
             data: this.selectionData.value,
-          }
+          },
         };
         const viewerContainer = document.getElementById('pdbe-molstar-viewer-container')
         viewerInstance.render(viewerContainer, options)
         viewerInstance.events.loadComplete.subscribe(() => {
             viewerInstance.plugin.layout.context.canvas3d.camera.state.fog = 0
             viewerInstance.plugin.layout.context.canvas3d.camera.state.clipFar = false
+            viewerInstance.visual.tooltips({data:this.selectionData.value})
         })
         this.viewerInstance = viewerInstance
       }

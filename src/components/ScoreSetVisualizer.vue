@@ -85,6 +85,8 @@ export default {
       .map((simpleVariant, id) => ({
         x: parseInt(id),
         meanScore: _.meanBy(simpleVariant, 'meanScore'),
+        maxMissenseScore: _.get(_.maxBy(_.filter(simpleVariant, (v) => v.y <= 19), 'meanScore'), 'meanScore'),
+        minMissenseScore: _.get(_.minBy(_.filter(simpleVariant, (v) => v.y <= 19), 'meanScore'), 'meanScore'),
       }))
       .value()
 
@@ -101,6 +103,7 @@ export default {
         start_residue_number: simpleVariant.x,
         end_residue_number: simpleVariant.x,
         color: this.rgbToHex(simpleVariant.color),
+        tooltip: `Mean score: ${simpleVariant.meanScore}\n\nMax missense score: ${simpleVariant.maxMissenseScore}\n\nMin missense score: ${simpleVariant.minMissenseScore}`,
       }
     })
   },

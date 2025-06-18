@@ -29,6 +29,10 @@ export default {
     highlightedResidueRange: {
       type: Array,
       default: null
+    },
+    selectionData: {
+      type: Array,
+      default: () => []
     }
   },
 
@@ -64,7 +68,7 @@ export default {
       'value',
       'volume'
     ],
-    selectionRepresentations: []
+    // selectionRepresentations: []
   }),
 
   computed: {
@@ -97,9 +101,7 @@ export default {
           color: { r: 255, g: 255, b: 0 },
           focus: true
         }))
-        if (newValue.length == 1) {
-          this.viewerInstance.visual.select({data: selectedRanges})
-        }
+        this.viewerInstance.visual.select({data:[...this.selectionData.value, ...selectedRanges]})
       },
       deep: true,
     },
@@ -173,6 +175,9 @@ export default {
           // ],
           // sequencePanel: true,
           landscape: true,
+          selection: {
+            data: this.selectionData.value,
+          }
         };
         const viewerContainer = document.getElementById('pdbe-molstar-viewer-container')
         viewerInstance.render(viewerContainer, options)

@@ -17,6 +17,7 @@
           ref="proteinStructureViewer"
           :selectedResidueRanges="selectedResidueRanges"
           :uniprotId="uniprotId"
+          :selectionData="selectionData"
           @clickedResidue="didSelectResidue($event.residueNumber)"
           @hoveredOverResidue="didHighlightResidue($event.residueNumber)"
       />
@@ -54,7 +55,7 @@ export default {
 
   data: () => ({
     selectedResidueRanges: null,
-    splitterRef: null,
+    selectionData: []
   }),
 
   methods: {
@@ -64,6 +65,14 @@ export default {
     didSelectResidues: function(ranges) {
       this.selectedResidueRanges = ranges
     },
+    rgbToHex: (rgb) => {
+      const nums = _.words(rgb, /[0-9]+/g)
+      const hex = _.map(nums, (num) => {
+        const as16 = _.parseInt(num).toString(16)
+        return `${_.size(as16) === 1 ? '0' : ''}${as16}`
+      })
+      return `#${hex.join('')}`
+    }
   },
 
   mounted: function(){
@@ -74,7 +83,7 @@ export default {
     const simpleVariantsCalcs = _(_.filter(simpleVariants, 'meanScore'))
       .groupBy('x')
       .map((simpleVariant, id) => ({
-        x: id,
+        x: parseInt(id),
         meanScore: _.meanBy(simpleVariant, 'meanScore'),
       }))
       .value()
@@ -87,7 +96,13 @@ export default {
       }
     })
 
-    console.log(simpleVariantsCalcsWithColor)
+    this.selectionData.value = _.map(simpleVariantsCalcsWithColor, (simpleVariant) => {
+      return {
+        start_residue_number: simpleVariant.x,
+        end_residue_number: simpleVariant.x,
+        color: this.rgbToHex(simpleVariant.color),
+      }
+    })
   },
 }
 </script>

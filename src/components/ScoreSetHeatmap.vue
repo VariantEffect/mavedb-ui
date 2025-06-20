@@ -119,7 +119,7 @@ export default {
     layout: 'normal' as HeatmapLayout
   }),
 
-  expose: ['simpleVariants', 'heatmap'],
+  expose: ['simpleVariants', 'heatmap', 'scrollToPosition'],
 
 
   computed: {
@@ -241,6 +241,13 @@ export default {
     },
     vRank: function(d: HeatmapDatum) {
       return d?.scoreRank
+    },
+
+    scrollToPosition: function(position: number) {
+      this.$refs.heatmapScrollContainer.scrollTo({
+        left: position,
+        behavior: 'smooth'
+      })
     },
 
     exportChart() {

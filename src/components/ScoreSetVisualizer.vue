@@ -8,7 +8,7 @@
           :scores="scores"
           :showProteinStructureButton="false"
           mode="protein-viz"
-          @variantColumnRangesSelected="didSelectResidues"
+          @variantColumnRangesSelected="didSelectHeatmapResidues"
         />
       </div>
     </SplitterPanel>
@@ -19,7 +19,7 @@
           :uniprotId="uniprotId"
           :selectionData="selectionData"
           :residueTooltips="residueTooltips"
-          @clickedResidue="didSelectResidue($event.residueNumber)"
+          @clickedResidue="didClickResidue($event.residueNumber)"
           @hoveredOverResidue="didHighlightResidue($event.residueNumber)"
       />
     </SplitterPanel>
@@ -61,10 +61,16 @@ export default {
   }),
 
   methods: {
-    // didSelectResidue: function(datum) {
-    //   this.didSelectResidues([{start: datum.x, end: datum.x}])
-    // },
-    didSelectResidues: function(ranges) {
+    didClickResidue: function(residueNumber) {
+      this.$refs.scoreSetHeatmap.heatmap.selectRangeByIndex({x: residueNumber, y: 0}, {x: residueNumber, y: 0})
+      const lastSelectedDOMPoint = this.$refs.scoreSetHeatmap.heatmap.lastSelectedDOMPoint()
+      this.$refs.scoreSetHeatmap.scrollToPosition(lastSelectedDOMPoint?.x)
+    },
+    didHighlightResidue: function(residueNumber) {
+      // TODO: Implement highlighting logic
+      // console.log('didHighlightResidue', residueNumber)
+    },
+    didSelectHeatmapResidues: function(ranges) {
       this.selectedResidueRanges = ranges
     },
     rgbToHex: (rgb) => {
@@ -117,3 +123,9 @@ export default {
   },
 }
 </script>
+<style scoped>
+.mave-score-set-heatmap-pane {
+  height: 100%;
+  overflow-y: scroll;
+}
+</style>

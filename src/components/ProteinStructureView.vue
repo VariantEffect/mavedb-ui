@@ -112,11 +112,6 @@ export default {
       },
       deep: true,
     },
-    hidden: {
-      handler: function() {
-        this.$emit('isHidden', this.hidden)
-      }
-    },
     alphaFoldData: {
       handler: function() {
         let newSelectedAlphaFold = null
@@ -193,6 +188,12 @@ export default {
             viewerInstance.plugin.layout.context.canvas3d.camera.state.fog = 0
             viewerInstance.plugin.layout.context.canvas3d.camera.state.clipFar = false
             viewerInstance.visual.tooltips({data:this.residueTooltips.value})
+        })
+        document.addEventListener('PDB.molstar.click', (e) => {
+          this.$emit('clickedResidue', e.eventData)
+        })
+        document.addEventListener('PDB.molstar.mouseover', (e) => {
+          this.$emit('hoveredOverResidue', e.eventData)
         })
         this.viewerInstance = viewerInstance
       }

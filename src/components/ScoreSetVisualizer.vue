@@ -117,7 +117,7 @@ export default {
       return {
         start_residue_number: simpleVariant.x,
         end_residue_number: simpleVariant.x,
-        tooltip: `Mean score: ${simpleVariant.meanScore}<br>Min missense score: ${simpleVariant.minMissenseScore}`
+        tooltip: `Mean score: ${simpleVariant.meanScore}<br>Min. missense score: ${simpleVariant.minMissenseScore}<br>Max. missense score: ${simpleVariant.maxMissenseScore}`
       }
     })
   },

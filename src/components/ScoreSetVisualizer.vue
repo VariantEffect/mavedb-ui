@@ -18,6 +18,7 @@
           :selectedResidueRanges="selectedResidueRanges"
           :uniprotId="uniprotId"
           :selectionData="selectionData"
+          :residueTooltips="residueTooltips"
           @clickedResidue="didSelectResidue($event.residueNumber)"
           @hoveredOverResidue="didHighlightResidue($event.residueNumber)"
       />
@@ -55,7 +56,8 @@ export default {
 
   data: () => ({
     selectedResidueRanges: null,
-    selectionData: []
+    selectionData: [],
+    residueTooltips: [],
   }),
 
   methods: {
@@ -103,7 +105,13 @@ export default {
         start_residue_number: simpleVariant.x,
         end_residue_number: simpleVariant.x,
         color: this.rgbToHex(simpleVariant.color),
-        tooltip: `Mean score: ${simpleVariant.meanScore}\n\nMax missense score: ${simpleVariant.maxMissenseScore}\n\nMin missense score: ${simpleVariant.minMissenseScore}`,
+      }
+    })
+    this.residueTooltips.value = _.map(simpleVariantsCalcsWithColor, (simpleVariant) => {
+      return {
+        start_residue_number: simpleVariant.x,
+        end_residue_number: simpleVariant.x,
+        tooltip: `Mean score: ${simpleVariant.meanScore}<br>Min missense score: ${simpleVariant.minMissenseScore}`
       }
     })
   },

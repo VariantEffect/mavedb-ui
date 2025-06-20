@@ -33,7 +33,11 @@ export default {
     selectionData: {
       type: Array,
       default: () => []
-    }
+    },
+    residueTooltips: {
+      type: Array,
+      default: () => []
+    },
   },
 
   data: () => ({
@@ -188,7 +192,7 @@ export default {
         viewerInstance.events.loadComplete.subscribe(() => {
             viewerInstance.plugin.layout.context.canvas3d.camera.state.fog = 0
             viewerInstance.plugin.layout.context.canvas3d.camera.state.clipFar = false
-            viewerInstance.visual.tooltips({data:this.selectionData.value})
+            viewerInstance.visual.tooltips({data:this.residueTooltips.value})
         })
         this.viewerInstance = viewerInstance
       }

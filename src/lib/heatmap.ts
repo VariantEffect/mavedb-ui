@@ -91,6 +91,7 @@ export interface Heatmap {
   clearSelection: () => void
   selectDatum: (d: HeatmapDatum) => void
   selectDatumByIndex: (x: number, y: number) => void
+  selectRangeByIndex: (start: {x: number, y: number}, end: {x: number, y: number}) => void
 
   //////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
   // Accessors
@@ -162,6 +163,9 @@ export interface Heatmap {
 
   // Color scale
   colorScale: Getter<d3.ScaleLinear<string, number> | null>
+
+  // User interaction
+  lastSelectedDOMPoint: Getter<DOMPoint | null>
 
 }
 
@@ -242,6 +246,9 @@ export default function makeHeatmap(): Heatmap {
 
   // Color scale
   let colorScale: d3.ScaleLinear<string, number> | null = null
+
+  // User interaction
+  let lastSelectedDOMPoint: DOMPoint | null = null
 
   //////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
   // Internal properties
@@ -353,7 +360,6 @@ export default function makeHeatmap(): Heatmap {
       const targetPt = pt.matrixTransform(heatmapNodesElemDOMMatrix)
 
       selectionStartPoint = targetPt
-
       const xScaleStep = xScale.step()
       const yScaleStep = yScale.step()
 
@@ -458,6 +464,54 @@ export default function makeHeatmap(): Heatmap {
 
     if (selectedDatum) {
       showHighlight(selectedDatum)
+    }
+  }
+
+  const refreshSelectedRange = function (start: {x: number, y: number}, end: {x: number, y: number}) {
+    hideHighlight(selectedDatum)
+    selectedDatum = null
+    hideTooltip(selectionTooltip)
+
+    if (svg){
+      svg.select('g.heatmap-selection-rectangle').selectAll('rect').remove()
+
+      const heatmapNodesElem = svg.select('g.heatmap-nodes').node() as SVGGraphicsElement
+      heatmapNodesElemBoundingRect = heatmapNodesElem.getBoundingClientRect()
+      heatmapNodesElemDOMMatrix = heatmapNodesElem.getScreenCTM()!.inverse()
+
+      const startNode = svg.select(`g.heatmap-nodes`).select(`rect.node-${start.x}-${start.y}`).node() as Element
+      const startNodeBoundingRect = startNode.getBoundingClientRect()
+
+      const endNode = svg.select(`g.heatmap-nodes`).select(`rect.node-${end.x}-${end.y}`).node() as Element
+      const endNodeBoundingRect = endNode.getBoundingClientRect()
+
+      const startY = rangeSelectionMode == 'column' ? heatmapNodesElemBoundingRect?.top : startNodeBoundingRect.y
+      const startX = rangeSelectionMode == 'row' ? heatmapNodesElemBoundingRect?.left : startNodeBoundingRect.x
+
+      const endY = rangeSelectionMode == 'column' ? heatmapNodesElemBoundingRect?.bottom : endNodeBoundingRect.bottom
+      const endX = rangeSelectionMode == 'row' ? heatmapNodesElemBoundingRect?.right : endNodeBoundingRect.right
+
+      const startPt = new DOMPoint(startX, startY)
+      const endPt = new DOMPoint(endX, endY)
+
+      const startTargetPt = startPt.matrixTransform(heatmapNodesElemDOMMatrix)
+      const endTargetPt = endPt.matrixTransform(heatmapNodesElemDOMMatrix)
+
+      const selectionRectWidth = rangeSelectionMode == 'row' ? width : endTargetPt.x - startTargetPt.x
+      const selectionRectHeight = rangeSelectionMode == 'column' ? height : endTargetPt.x - startTargetPt.x
+
+      svg.select('g.heatmap-selection-rectangle')
+          .append('rect')
+          .attr('x', startTargetPt.x)
+          .attr('y', startTargetPt.y)
+          .attr('width', selectionRectWidth)
+          .attr('height', selectionRectHeight)
+          .style('fill', 'none')
+          .style('stroke-width', 2)
+          .style('stroke', '#d3a')
+          .raise()
+
+      lastSelectedDOMPoint = startTargetPt
     }
   }
 
@@ -871,6 +925,10 @@ export default function makeHeatmap(): Heatmap {
       updateSelectionTooltipAfterRefresh()
     },
 
+    selectRangeByIndex: (start: {x: number, y: number}, end: {x: number, y: number}) => {
+      refreshSelectedRange(start, end)
+    },
+
     ////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
     // Accessors
     ////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
@@ -1100,6 +1158,8 @@ export default function makeHeatmap(): Heatmap {
     width: () => width,
 
     colorScale: () => colorScale,
+
+    lastSelectedDOMPoint: () => lastSelectedDOMPoint,
 
     lowerBound: () => lowerBound,
 

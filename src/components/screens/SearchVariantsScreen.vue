@@ -113,6 +113,7 @@ import InputText from 'primevue/inputtext'
 import Button from 'primevue/button'
 import Message from 'primevue/message'
 import {defineComponent} from 'vue'
+import { useRoute, useRouter } from 'vue-router'
 // import {debounce} from 'vue-debounce'
 
 import config from '@/config'
@@ -124,6 +125,11 @@ const SCORE_SETS_TO_SHOW = 5
 export default defineComponent({
   name: 'SearchVariantsScreen',
   components: {Card, Column, DataTable, DefaultLayout, Dropdown, EntityLink, IconField, InputIcon, InputText, Button, Message},
+  setup() {
+    const route = useRoute()
+    const router = useRouter()
+    return { route, router }
+  },
 
   data: function() {
     return {
@@ -175,6 +181,46 @@ export default defineComponent({
         }
       }
     },
+    '$route.query.search': {
+      immediate: true,
+      handler(newVal) {
+        if (typeof newVal === 'string') {
+          this.searchText = newVal
+        } else if (!newVal) {
+          this.searchText = ''
+        }
+      }
+    },
+    '$route.query.gene': {
+      immediate: true,
+      handler(newVal) {
+        this.inputGene = typeof newVal === 'string' ? newVal : ''
+      }
+    },
+    '$route.query.variantType': {
+      immediate: true,
+      handler(newVal) {
+        this.inputVariantType = typeof newVal === 'string' ? newVal : ''
+      }
+    },
+    '$route.query.variantPosition': {
+      immediate: true,
+      handler(newVal) {
+        this.inputVariantPosition = typeof newVal === 'string' ? newVal : ''
+      }
+    },
+    '$route.query.refAllele': {
+      immediate: true,
+      handler(newVal) {
+        this.inputReferenceAllele = typeof newVal === 'string' ? newVal : ''
+      }
+    },
+    '$route.query.altAllele': {
+      immediate: true,
+      handler(newVal) {
+        this.inputAlternateAllele = typeof newVal === 'string' ? newVal : ''
+      }
+    },
   },
 
   computed: {
@@ -196,6 +242,11 @@ export default defineComponent({
 
   methods: {
     hgvsSearch: async function() {
+      // Remove fuzzy search params from the URL
+      const { gene, variantType, variantPosition, refAllele, altAllele, ...rest } = this.route.query;
+      this.router.replace({
+        query: { ...rest, search: this.searchText || undefined }
+      })
       this.alleles = []
       this.loading = true;
       if (this.searchText !== null && this.searchText !== '') {
@@ -280,6 +331,18 @@ export default defineComponent({
       }
     },
     fuzzySearch: async function() {
+      // Remove HGVS search param from the URL
+      const { search, ...rest } = this.route.query;
+      this.router.replace({
+        query: {
+          ...rest,
+          gene: this.inputGene || undefined,
+          variantType: this.inputVariantType || undefined,
+          variantPosition: this.inputVariantPosition || undefined,
+          refAllele: this.inputReferenceAllele || undefined,
+          altAllele: this.inputAlternateAllele || undefined
+        }
+      })
       this.alleles = []
       this.loading = true;
       await this.fetchFuzzySearchResults()
@@ -357,7 +420,28 @@ export default defineComponent({
         }
       }
     }
+  },
+
+  mounted() {
+    // If HGVS search param is present, run HGVS search
+    if (this.route.query.search && String(this.route.query.search).trim() !== '') {
+      this.hgvsSearchVisible = true;
+      this.fuzzySearchVisible = false;
+      this.hgvsSearch();
+    } else if (
+      this.route.query.gene ||
+      this.route.query.variantType ||
+      this.route.query.variantPosition ||
+      this.route.query.refAllele ||
+      this.route.query.altAllele
+    ) {
+      // If any fuzzy search param is present, run fuzzy search
+      this.hgvsSearchVisible = false;
+      this.fuzzySearchVisible = true;
+      this.fuzzySearch();
+    }
   }
+
 })
 
 </script>

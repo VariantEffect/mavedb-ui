@@ -41,7 +41,7 @@
             <div class="variant-search-result">
               <div v-if="allele.variants.length > 0" class="variant-search-result-button">
                 <router-link :to="`/variants/${allele.clingenAlleleId}`">
-                  <Button label="View in MaveMD" icon="pi pi-eye" />
+                  <Button label="View in MaveDB Clinical View" icon="pi pi-eye" />
                 </router-link>
               </div>
               <div class="variant-search-result-content">

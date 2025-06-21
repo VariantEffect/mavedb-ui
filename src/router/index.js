@@ -8,6 +8,7 @@ import ExperimentCreator from '@/components/screens/ExperimentCreator'
 import ExperimentEditor from '@/components/screens/ExperimentEditor'
 import ExperimentView from '@/components/screens/ExperimentView'
 import ExperimentSetView from '@/components/screens/ExperimentSetView'
+import HelpScreen from '@/components/screens/HelpScreen'
 import HomeScreen from '@/components/screens/HomeScreen'
 import OidcCallback from '@/components/screens/OidcCallback'
 import OidcCallbackError from '@/components/screens/OidcCallbackError'
@@ -59,6 +60,9 @@ const routes = [{
   meta: {
     title: import.meta.env.VITE_SITE_TITLE + ' | Documentation'
   }
+}, {
+  path: '/help',
+  component: HelpScreen,
 }, {
   path: '/settings',
   component: SettingsScreen

@@ -105,8 +105,14 @@ export default {
         label: 'Find a Variant',
         route: '/search-variants',
       }] : [], {
-        label: 'Documentation',
-        route: '/docs'
+        label: 'Support',
+        items:[{
+          label: 'Get Help',
+          route: '/help',
+        }, {
+          label: 'Documentation',
+          route: '/docs',
+        },]
       }, {
         label: 'New experiment',
         route: '/create-experiment',

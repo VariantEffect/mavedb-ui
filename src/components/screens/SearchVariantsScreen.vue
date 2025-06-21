@@ -8,7 +8,7 @@
         <div class="flex flex-wrap justify-content-center gap-3">
           <IconField iconPosition="left">
             <InputIcon class="pi pi-search"></InputIcon>
-            <InputText v-model="searchText" ref="searchTextInput" type="search" class="p-inputtext-sm" placeholder="HGVS string" style="width: 500px;" />
+            <InputText v-model="searchText" @keyup.enter="hgvsSearch" ref="searchTextInput" type="search" class="p-inputtext-sm" placeholder="HGVS string" style="width: 500px;" />
           </IconField>
           <Button class="p-button-plain" @click="hgvsSearch">Search</Button>
         </div>

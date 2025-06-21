@@ -113,8 +113,17 @@ export default {
           route: '/search'
         },
         {
-          label: 'Documentation',
-          route: '/docs'
+          label: 'Support',
+          items: [
+            {
+              label: 'Get Help',
+              route: '/help'
+            },
+            {
+              label: 'Documentation',
+              route: '/docs'
+            }
+          ]
         },
         {
           label: 'New experiment',

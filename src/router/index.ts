@@ -73,7 +73,7 @@ const routes: RouteRecordRaw[] = [
   },
   {
     path: '/help',
-    component: HelpScreen,
+    component: HelpScreen
   },
   {
     path: '/settings',

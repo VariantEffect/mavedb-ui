@@ -22,6 +22,11 @@ export const AMINO_ACIDS = [
   {name: 'Valine', codes: {single: 'V', triple: 'VAL', dAminoAcidCode: 'd-VAL'}}
 ]
 
+export const AMINO_ACIDS_WITH_TER = [
+  ...AMINO_ACIDS,
+  {name: 'Termination', codes: {single: '*', triple: 'Ter'}}
+]
+
 /**
  * Single-letter amino acid codes, ordered from hydrophobic to hydrophilic.
  *

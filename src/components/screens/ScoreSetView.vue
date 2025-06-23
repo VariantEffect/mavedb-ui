@@ -98,6 +98,16 @@
               :style="{visibility: variantToVisualize ? 'visible' : 'hidden'}"
             />
           </span>
+          <span>
+            <template v-if="mode == 'raw'">
+              Viewing raw data.
+              <Button label="Switch to clinical view" rounded @click="mode = 'clinical'" />
+            </template>
+            <template v-if="mode == 'clinical'">
+              Currently in clinical mode.
+              <Button label="Switch to raw data view" rounded size="sm" @click="mode = 'raw'" />
+            </template>
+          </span>
         </div>
         <div class="mave-score-set-histogram-pane">
           <ScoreSetHistogram
@@ -108,15 +118,24 @@
             ref="histogram"
           />
         </div>
+        <!-- <ProteinStructureView
+            :highlightedResidueRange="highlightedResidueRange"
+            :selectedResidueRange="selectedResidueRange"
+            @clickedResidue="didSelectResidue($event.residueNumber)"
+            @hoveredOverResidue="didHighlightResidue($event.residueNumber)"
+        /> -->
         <div v-if="showHeatmap && !isScoreSetVisualizerVisible" class="mave-score-set-heatmap-pane">
           <ScoreSetHeatmap
-            :scoreSet="item"
-            :scores="scores"
-            :externalSelection="variantToVisualize"
+            ref="heatmap"
+            :coordinates="mode == 'clinical' ? 'mapped' : 'raw'"
+            :external-selection="variantToVisualize"
+            :score-set="item"
+            sequence-type="protein"
             :showProteinStructureButton="uniprotId!=null && config.CLINICAL_FEATURES_ENABLED"
-            @variant-selected="childComponentSelectedVariant"
+            :variants="heatmapVariants"
+            @export-chart="setHeatmapExport"
             @heatmap-visible="heatmapVisibilityUpdated"
-            @export-chart="setHeatmapExport" ref="heatmap"
+            @variant-selected="childComponentSelectedVariant"
             @on-did-click-show-protein-structure="showProteinStructureModal"
           />
         </div>
@@ -431,6 +450,7 @@ import Sidebar from 'primevue/sidebar'
 
 import CollectionAdder from '@/components/CollectionAdder'
 import CollectionBadge from '@/components/CollectionBadge'
+import ProteinStructureView from '@/components/ProteinStructureView'
 import ScoreSetHeatmap from '@/components/ScoreSetHeatmap'
 import ScoreSetHistogram from '@/components/ScoreSetHistogram'
 import EntityLink from '@/components/common/EntityLink'
@@ -442,16 +462,19 @@ import useFormatters from '@/composition/formatters'
 import useItem from '@/composition/item'
 import useRemoteData from '@/composition/remote-data'
 import config from '@/config'
+import {AMINO_ACIDS_WITH_TER} from '@/lib/amino-acids'
+import geneticCodes from '@/lib/genetic-codes'
 import { textForTargetGeneCategory } from '@/lib/target-genes';
 import { parseScoresOrCounts } from '@/lib/scores'
-import { preferredVariantLabel, variantNotNullOrNA } from '@/lib/mave-hgvs';
+import { parseSimpleNtVariant, parseSimpleProVariant, preferredVariantLabel, variantNotNullOrNA } from '@/lib/mave-hgvs';
+import {translateSimpleCodingVariants} from '@/lib/variants'
 import { mapState } from 'vuex'
 import { ref } from 'vue'
 import ScoreSetVisualizer from '../ScoreSetVisualizer.vue';
 
 export default {
   name: 'ScoreSetView',
-  components: { Accordion, AccordionTab, AutoComplete, Button, Chip, Sidebar, CollectionAdder, CollectionBadge, DefaultLayout, EntityLink, ScoreSetHeatmap, ScoreSetHistogram, ScoreSetVisualizer, TabView, TabPanel, Message, DataTable, Column, ProgressSpinner, ScrollPanel, SplitButton, PageLoading, ItemNotFound },
+  components: { Accordion, AccordionTab, AutoComplete, Button, Chip, Sidebar, CollectionAdder, CollectionBadge, DefaultLayout, EntityLink, ProteinStructureView, ScoreSetHeatmap, ScoreSetHistogram, ScoreSetVisualizer, TabView, TabPanel, Message, DataTable, Column, ProgressSpinner, ScrollPanel, SplitButton, PageLoading, ItemNotFound },
   computed: {
     annotatedVariantDownloadOptions: function () {
       const annotatatedVariantOptions = []
@@ -482,6 +505,15 @@ export default {
       })
 
       return annotatatedVariantOptions
+    },
+    heatmapVariants: function() {
+      switch (this.mode) {
+        case 'clinical':
+          return this.codingVariants
+        case 'raw':
+        default:
+          return this.scores
+      }
     },
     uniprotId: function() {
       // If there is only one target gene, return its UniProt ID that has been set from mapped metadata.
@@ -539,8 +571,10 @@ export default {
     }
   },
   data: () => ({
+    mode: 'clinical',
     scores: null,
     scoreColumns: [],
+    codingVariants: null,
     scoresTable: [],
     countColumns: [],
     countsTable: [],
@@ -567,7 +601,7 @@ export default {
 
           let scoresUrl = null
           if (this.itemType && this.itemType.restCollectionName && this.itemId) {
-            scoresUrl = `${config.apiBaseUrl}/${this.itemType.restCollectionName}/${this.itemId}/scores`
+            scoresUrl = `${config.apiBaseUrl}/${this.itemType.restCollectionName}/${this.itemId}/variants/data`
           }
           this.setScoresDataUrl(scoresUrl)
           this.ensureScoresDataLoaded()
@@ -583,7 +617,10 @@ export default {
     },
     scoresData: {
       handler: function(newValue) {
-        this.scores = newValue ? Object.freeze(parseScoresOrCounts(newValue)) : null
+        const scores = newValue ? parseScoresOrCounts(newValue) : null
+        const codingVariants = scores ? translateSimpleCodingVariants(scores) : null
+        this.scores = newValue ? Object.freeze(scores) : null
+        this.codingVariants = codingVariants ? Object.freeze(codingVariants) : null
         this.applyUrlState()
       }
     },
@@ -765,7 +802,8 @@ export default {
         if (this.item && download_type == "counts") {
           response = await axios.get(`${config.apiBaseUrl}/score-sets/${this.item.urn}/counts?drop_na_columns=true`)
         } else if (this.item && download_type == "scores") {
-          response = await axios.get(`${config.apiBaseUrl}/score-sets/${this.item.urn}/scores?drop_na_columns=true`)
+          response = await axios.get(`${config.apiBaseUrl}/score-sets/${this.item.urn}/variants/data?drop_na_columns=true`)
+          //response = await axios.get(`${config.apiBaseUrl}/score-sets/${this.item.urn}/scores?drop_na_columns=true`)
         }
       } catch (e) {
         response = e.response || { status: 500 }

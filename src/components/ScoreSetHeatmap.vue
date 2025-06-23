@@ -43,14 +43,15 @@ import * as d3 from 'd3'
 import _ from 'lodash'
 import SelectButton from 'primevue/selectbutton'
 import Button from 'primevue/button'
+import {PropType} from 'vue'
 
 import geneticCodes from '@/lib/genetic-codes'
 import makeHeatmap, {heatmapRowForNucleotideVariant, heatmapRowForProteinVariant, HEATMAP_AMINO_ACID_ROWS, HEATMAP_NUCLEOTIDE_ROWS, HeatmapDatum} from '@/lib/heatmap'
 import {parseSimpleProVariant, parseSimpleNtVariant, variantNotNullOrNA} from '@/lib/mave-hgvs'
 import { saveChartAsFile } from '@/lib/chart-export'
 import { Heatmap } from '@/lib/heatmap'
-import { PropType } from 'vue'
 import {SPARSITY_THRESHOLD} from '@/lib/scoreSetHeatmap'
+import { AMINO_ACIDS } from '@/lib/amino-acids'
 
 function stdev(array: number[]) {
   if (!array || array.length === 0) {
@@ -69,6 +70,15 @@ export default {
   emits: ['variantSelected', 'variantColumnRangesSelected', 'variantRowSelected', 'heatmapVisible', 'exportChart', 'onDidClickShowProteinStructure'],
 
   props: {
+    coordinates: {
+      type: String as PropType<'raw' | 'mapped'>,
+      default: 'raw'
+    },
+    externalSelection: {
+      type: Object,
+      required: false,
+      default: null
+    },
     margins: { // Margins must accommodate the axis labels
       type: Object,
       default: () => ({
@@ -77,10 +87,6 @@ export default {
         bottom: 20,
         left: 20
       })
-    },
-    scores: {
-      type: Array,
-      required: true
     },
     scoreSet: {
       type: Object,
@@ -98,6 +104,14 @@ export default {
       type: String as PropType<'standard' | 'protein-viz'>,
       default: 'standard'
     },
+    sequenceType: {
+      type: String as PropType<'dna' | 'protein'>,
+      default: 'protein'
+    },
+    variants: {
+      type: Array,
+      required: true
+    }
   },
 
   mounted: function() {
@@ -130,40 +144,121 @@ export default {
 
 
   computed: {
-    simpleAndWtVariants: function() {
-      return [...this.simpleVariants || [], ...this.wtVariants || []]
+    // isNucleotideHeatmap: function() {
+    //   const targetCategory = _.get(this.scoreSet, 'targetGenes[0].category')
+    //   const proteinVariantsAreDefined = this.scores.every((elem) => !isNaN(elem.hgvs_pro))
+    //   return !proteinVariantsAreDefined && (targetCategory === 'other_noncoding' || targetCategory == "regulatory")
+    // },
+    targetXRange: function() {
+      if (!this.simpleVariants || this.simpleVariants.length == 0) {
+        return {
+          start: 0,
+          length: 0
+        }
+      }
+      const xMin = _.min(this.simpleVariants.map((variant) => variant.x))
+      const xMax = _.max(this.simpleVariants.map((variant) => variant.x))
+      return {
+        start: xMin,
+        length: xMax - xMin + 1
+      }
     },
-    isNucleotideHeatmap: function() {
-      const targetCategory = _.get(this.scoreSet, 'targetGenes[0].category')
-      const proteinVariantsAreDefined = this.scores.every((elem) => !isNaN(elem.hgvs_pro))
-      return !proteinVariantsAreDefined && (targetCategory === 'other_noncoding' || targetCategory == "regulatory")
+    hgvsColumn: function() {
+      switch (this.coordinates) {
+        case 'mapped':
+          if (this.sequenceType == 'dna') {
+            return 'post_mapped_hgvs_c'
+          } else {
+            if (this.variants.some((v) => v.hgvs_pro_inferred != null)) {
+              return 'hgvs_pro_inferred'
+            }
+            return 'post_mapped_hgvs_p'
+          }
+        case 'raw':
+          return this.sequenceType == 'dna' ? 'hgvs_nt' : 'hgvs_pro'
+      }
     },
-    heatmapRows: function() {
-      return this.isNucleotideHeatmap ? HEATMAP_NUCLEOTIDE_ROWS : HEATMAP_AMINO_ACID_ROWS
+    targetResidueType: function() {
+      switch (this.targetType) {
+        case 'sequence':
+          switch (this.scoreSet?.targetGenes?.[0]?.targetSequence?.sequenceType) {
+            case 'dna':
+              return 'nt'
+            case 'protein':
+              return 'aa'
+            default:
+              console.log('WARNING: Invalid target sequence type')
+              return 'none'
+          }
+        case 'accession':
+          // Assume that all mapped variants are of the same type (NT or AA).
+          const firstHgvsString = this.simpleVariants?.[0]?.instances?.[0]?.details?.[this.hgvsColumn] || ''
+          if (parseSimpleNtVariant(firstHgvsString)) {
+            return 'nt'
+          }
+          if (parseSimpleProVariant(firstHgvsString)) {
+            return 'aa'
+          }
+          return 'none'
+        default:
+          return 'none'
+      }
     },
-    heatmapRowForVariant: function () {
-      return this.isNucleotideHeatmap ? heatmapRowForNucleotideVariant : heatmapRowForProteinVariant
+    targetType: function() {
+      const targetGenes: any[] = this.scoreSet?.targetGenes || []
+      if (targetGenes.length == 0) {
+        return 'none'
+      }
+      if (targetGenes.every((tg) => tg.targetSequence != null)) {
+        return 'sequence'
+      }
+      if (targetGenes.every((tg) => tg.targetAccession)) {
+        return 'accession'
+      }
+      return 'invalid'
     },
-    parseSimpleVariant: function () {
-      return this.isNucleotideHeatmap ? parseSimpleNtVariant : parseSimpleProVariant
+    targetSequence: function() {
+      switch (this.targetType) {
+        case 'sequence':
+          return this.scoreSet?.targetGenes?.[0]?.targetSequence?.sequence || ''
+        case 'accession':
+          return this.inferTargetSequenceFromVariants()
+        default:
+          return ''
+      }
     },
-    // TODO: Swapable Targets
-    heatmapRange: function() {
-      const wtSequence = _.get(this.scoreSet, 'targetGenes[0].targetSequence.sequence')
-      const wtSequenceType = _.get(this.scoreSet, 'targetGenes[0].targetSequence.sequenceType')
-
-      if (!wtSequence) {
-        return []
-      } else if (wtSequenceType === "protein") {
-        return _.toArray(wtSequence)
-      } else if (this.isNucleotideHeatmap) {
-        return this.dnaToSingletons(wtSequence)
+    wtResidueType: function() {
+      return this.sequenceType == 'dna' ? 'nt' : 'aa'
+    },
+    wtSequence: function() {
+      if (this.wtResidueType == this.targetResidueType) {
+        return _.toArray(this.targetSequence)
+      } else if (this.wtResidueType == 'aa' && this.targetResidueType == 'nt') {
+        return this.translateDnaToAminoAcids1Char(this.targetSequence)
       } else {
-        return this.translateDnaToAminoAcids1Char(wtSequence)
+        return []
       }
     },
     wtVariants: function() {
-      return this.heatmapRange ? this.prepareWtVariants(this.heatmapRange) : []
+      return this.wtSequence ? this.prepareWtVariants(this.wtSequence) : []
+    },
+    simpleAndWtVariants: function() {
+      return [...this.simpleVariants || [], ...this.wtVariants || []]
+    },
+
+
+    heatmapRows: function() {
+      return this.sequenceType == 'dna' ? HEATMAP_NUCLEOTIDE_ROWS : HEATMAP_AMINO_ACID_ROWS
+    },
+    heatmapRowForVariant: function () {
+      return this.sequenceType == 'dna' ? heatmapRowForNucleotideVariant : heatmapRowForProteinVariant
+    },
+    parseSimpleVariant: function () {
+      return this.sequenceType == 'dna' ? parseSimpleNtVariant : parseSimpleProVariant
+    },
+    // TODO: Swappable Targets
+    heatmapRange: function() {
+      return this.wtSequence
     },
     heatmapVisible: function() {
       return this.simpleVariants && this.simpleVariants.length
@@ -179,7 +274,7 @@ export default {
       return this.scoreSet.scoreRanges.wtScore
     },
     showHeatmap: function() {
-      if (this.scores.length === 0) {
+      if (this.variants.length === 0) {
         return false
       }
       // the early termination and wild type variants shouldn't effect the heatmap so that remove the final three rows.
@@ -208,8 +303,9 @@ export default {
       }
       const sparsity = filledCount / totalItems
 
-      return sparsity > SPARSITY_THRESHOLD // A boolean value
-    },
+      return true
+      // return sparsity > SPARSITY_THRESHOLD // A boolean value
+    }
   },
 
   watch: {
@@ -220,13 +316,27 @@ export default {
         }
       }
     },
-    scores: {
+    coordinates: {
       handler: function() {
-        if (!this.scores) {
+        if (!this.variants) {
           this.simpleVariants = null
           this.numComplexVariants = 0
         } else {
-          const {simpleVariants, numComplexVariants} = this.prepareSimpleVariants(this.scores)
+          const {simpleVariants, numComplexVariants} = this.prepareSimpleVariants(this.variants)
+          this.simpleVariants = simpleVariants
+          this.numComplexVariants = numComplexVariants
+        }
+
+        this.renderOrRefreshHeatmaps()
+      }
+    },
+    variants: {
+      handler: function() {
+        if (!this.variants) {
+          this.simpleVariants = null
+          this.numComplexVariants = 0
+        } else {
+          const {simpleVariants, numComplexVariants} = this.prepareSimpleVariants(this.variants)
           this.simpleVariants = simpleVariants
           this.numComplexVariants = numComplexVariants
         }
@@ -272,6 +382,23 @@ export default {
   },
 
   methods: {
+    inferTargetSequenceFromVariants: function() {
+      const unknownResidue = this.targetResidueType == 'aa' ? 'X' : 'N'
+      const targetSequenceArr = Array(this.targetXRange.length).fill(unknownResidue)
+      for (const variant of this.simpleVariants) {
+        const parsedVariant = this.parseSimpleVariant(variant.instances[0].details[this.hgvsColumn])
+        if (parsedVariant) {
+          let referenceAllele = parsedVariant?.original
+          if (referenceAllele && this.sequenceType == 'protein') {
+            referenceAllele = AMINO_ACIDS.find((aa) => aa.codes.triple == referenceAllele.toUpperCase())?.codes?.single
+          }
+          if (referenceAllele) {
+            targetSequenceArr[variant.x - this.targetXRange.start] = referenceAllele
+          }
+        }
+      }
+      return targetSequenceArr.join('')
+    },
     xCoord: function(d: HeatmapDatum) {
       return d?.x
     },
@@ -308,8 +435,8 @@ export default {
       })
     },
 
-    prepareWtVariants: function(heatmapRange) {
-      return heatmapRange.map((el, i) => el == null ? null : ({
+    prepareWtVariants: function(wtSequenceArr) {
+      return wtSequenceArr.map((el, i) => el == null ? null : ({
         x: i + 1,
         y: this.heatmapRows.length - 1 - this.heatmapRowForVariant(el),
         details: {
@@ -319,7 +446,7 @@ export default {
           .filter((x) => x != null)
     },
 
-    prepareSimpleVariantInstances: function(scores) {
+    prepareSimpleVariantInstances: function(variants) {
       let numComplexVariantInstances = 0
 
       // Count of variants that do not appear to be complex but are don't have a valid substitution
@@ -328,15 +455,15 @@ export default {
       const distinctAccessions = new Set()
 
       let simpleVariantInstances = _.filter(
-        scores.map((score) => {
-          const vToParse = this.isNucleotideHeatmap ? score.hgvs_nt : score.hgvs_pro
-          const variant = this.parseSimpleVariant(vToParse)
-          if (!variant) {
+        variants.map((variant) => {
+          const vToParse = variant[this.hgvsColumn]
+          const parsedVariant = vToParse ? this.parseSimpleVariant(vToParse) : null
+          if (!parsedVariant) {
             numComplexVariantInstances++
             return null
           }
-          if (variant.target) {
-            distinctAccessions.add(variant.target)
+          if (parsedVariant.target) {
+            distinctAccessions.add(parsedVariant.target)
           }
           // Don't display variants out of range from the provided sequence. This happens occassionally
           // with legacy variant data.
@@ -344,14 +471,14 @@ export default {
             numIgnoredVariantInstances++
             return null
           }
-          const row = this.heatmapRowForVariant(variant.substitution)
+          const row = this.heatmapRowForVariant(parsedVariant.substitution)
           if (row == null) {
             numIgnoredVariantInstances++
             return null
           }
-          const x = variant.position
+          const x = parsedVariant.position
           const y = this.heatmapRows.length - 1 - row
-          return {x, y, score: score.score, details: _.omit(score, 'score')}
+          return {x, y, score: variant.score, details: _.omit(variant, 'score')}
         }),
         (x) => x != null
       )
@@ -364,8 +491,8 @@ export default {
       return {simpleVariantInstances, numComplexVariantInstances, numIgnoredVariantInstances}
     },
 
-    prepareSimpleVariants: function(scores) {
-      const {simpleVariantInstances, numComplexVariantInstances} = this.prepareSimpleVariantInstances(scores)
+    prepareSimpleVariants: function(variants) {
+      const {simpleVariantInstances, numComplexVariantInstances} = this.prepareSimpleVariantInstances(variants)
 
       const simpleVariants = _.flatten(
         _.values(
@@ -444,10 +571,10 @@ export default {
       this.heatmap?.destroy()
       this.stackedHeatmap?.destroy()
 
-      if (!this.isNucleotideHeatmap && this.layout != 'compact') {
+      this.drawHeatmap()
+      if (this.sequenceType == 'protein' && this.layout != 'compact') {
         this.drawStackedHeatmap()
       }
-      this.drawHeatmap()
     },
 
     // Assumes that plate dimensions do not change.
@@ -524,10 +651,15 @@ export default {
     },
 
     tooltipHtmlGetter: function(variant: HeatmapDatum) {
-        const parts = []
-        if (variant.details.wt) {
-          parts.push('WT')
-        }
+      const parts = []
+      if (variant.details.wt) {
+        parts.push('WT')
+      }
+      if (this.coordinates == 'mapped' && this.sequenceType == 'dna' && variant.details.post_mapped_hgvs_c) {
+        parts.push(`Variant: ${variant.details.post_mapped_hgvs_c}`)
+      } else if (this.coordinates == 'mapped' && this.sequenceType == 'protein' && variant.details.post_mapped_hgvs_p) {
+        parts.push(`Variant: ${variant.details.post_mapped_hgvs_p}`)
+      } else {
         if (variantNotNullOrNA(variant.details.hgvs_nt)) {
           parts.push(`NT variant: ${variant.details.hgvs_nt}`)
         }
@@ -537,20 +669,21 @@ export default {
         if (variantNotNullOrNA(variant.details.hgvs_splice)) {
           parts.push(`Splice variant: ${variant.details.hgvs_splice}`)
         }
-        if (variant.numScores != null) {
-          parts.push(`# of observations: ${variant.numScores}`)
-        }
-        if (variant.numScores == 1) {
-            parts.push(`Score: ${variant.meanScore}`)
-        } else if (variant.numScores > 1) {
-          parts.push(`Mean score: ${variant.meanScore}`)
-          parts.push(`Score stdev: ${variant.scoreStdev}`)
-        }
-
-        return parts.length > 0 ? parts.join('<br />') : null
       }
+      if (variant.numScores != null) {
+        parts.push(`# of observations: ${variant.numScores}`)
+      }
+      if (variant.numScores == 1) {
+          parts.push(`Score: ${variant.meanScore}`)
+      } else if (variant.numScores > 1) {
+        parts.push(`Mean score: ${variant.meanScore}`)
+        parts.push(`Score stdev: ${variant.scoreStdev}`)
+      }
+
+      return parts.length > 0 ? parts.join('<br />') : null
     }
   }
+}
 
 </script>
 

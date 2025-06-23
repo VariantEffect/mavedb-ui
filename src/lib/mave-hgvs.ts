@@ -122,3 +122,13 @@ export function preferredVariantLabel(variant: SimpleMaveVariant): VariantLabel 
     return {mavedb_label: variant.accession}
   }
 }
+
+
+/**
+ * Regular expression for parsing a generic HGVS style variant.
+ *
+ * This should be used only for deciding whether a string is a valid HGVS variant, not for parsing it.
+ * It matches a string that starts with an identifier (e.g., "NM_001301717.2") followed by a colon and a description.
+ * The description can be anything (which isn't technically correct), including spaces and special characters.
+ */
+export const genericVariant = /^(?<identifier>[A-z_0-9.]+):(?<description>.*)$/gm

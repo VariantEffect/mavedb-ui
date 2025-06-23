@@ -268,7 +268,6 @@ export default defineComponent({
     },
     searchVariants: async function() {
       for (const allele of this.alleles) {
-        console.log(allele)
         allele.variantsStatus = 'Loading'
         try {
           const response = await axios.post(

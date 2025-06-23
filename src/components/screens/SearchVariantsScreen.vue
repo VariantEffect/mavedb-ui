@@ -113,6 +113,7 @@ import InputText from 'primevue/inputtext'
 import Button from 'primevue/button'
 import Message from 'primevue/message'
 import {defineComponent} from 'vue'
+import { useToast } from 'primevue/usetoast'
 // import {debounce} from 'vue-debounce'
 
 import config from '@/config'
@@ -124,6 +125,10 @@ const SCORE_SETS_TO_SHOW = 5
 export default defineComponent({
   name: 'SearchVariantsScreen',
   components: {Card, Column, DataTable, DefaultLayout, Dropdown, EntityLink, IconField, InputIcon, InputText, Button, Message},
+  setup() {
+    const toast = useToast()
+    return { toast }
+  },
 
   data: function() {
     return {
@@ -249,10 +254,16 @@ export default defineComponent({
           break
         }
         this.alleles.push(newAllele)
-      } catch (error) {
+      } catch (error: any) {
         // NOTE: not resetting alleles here, because any error will have occurred before pushing to alleles.
         // don't want to reset alleles because this function may be called in a loop to process several hgvs strings.
         console.log("Error while loading search results", error)
+        this.toast.add({
+          severity: 'error',
+          summary: error.response.data?.errorType && error.response.data?.description ? `${error.response.data?.errorType}: ${error.response.data?.description}` : 'Error fetching results',
+          detail: error.response.data?.message || 'Invalid HGVS string provided.',
+          life: 10000,
+        })
       }
     },
     searchVariants: async function() {
@@ -265,17 +276,22 @@ export default defineComponent({
               clingenAlleleIds: [allele.clingenAlleleId]
             }
           )
-          if (response.data !== null && response.data.length > 0) {
-            allele.variants = response.data[0]
-            allele.variantsStatus = 'Loaded'
-          } else {
-            allele.variants = []
-            allele.variantsStatus = 'Loaded'
-          }
-        } catch (error) {
+
+          allele.variants = response.data[0]
+          allele.variantsStatus = 'Loaded'
+        } catch (error: any) {
           allele.variants = []
-          allele.variantsStatus = 'Error'
           console.log("Error while loading MaveDB search results for variant", error)
+          if (error.response?.status === 404) {
+            allele.variantsStatus = 'Loaded'
+            this.toast.add({ severity: 'info', summary: 'No results found', detail: 'No variants match the provided search criteria.', life: 10000 })
+          } else if (error.response?.status >= 500) {
+            allele.variantsStatus = 'Error'
+            this.toast.add({ severity: 'error', summary: 'Server Error', detail: 'The server encountered an unexpected error. Please try again later.', life: 10000 })
+          } else {
+            allele.variantsStatus = 'Error'
+            this.toast.add({ severity: 'error', summary: 'Error fetching results', detail: 'An error occurred while fetching MaveDB variants.', life: 10000 })
+          }
         }
       }
     },
@@ -351,9 +367,15 @@ export default defineComponent({
           for (const hgvsString of hgvsStrings) {
             await this.fetchHgvsSearchResults(hgvsString.hgvsString, hgvsString.maneStatus)
           }
-        } catch (error) {
+        } catch (error: any) {
           this.alleles = []
           console.log("Error while loading search results", error)
+          this.toast.add({
+            severity: 'error',
+            summary: error.response.data?.errorType && error.response.data?.description ? `${error.response.data?.errorType}: ${error.response.data?.description}` : 'Error fetching results',
+            detail: error.response.data?.message || 'Invalid HGVS string provided.',
+            life: 10000,
+          })
         }
       }
     }

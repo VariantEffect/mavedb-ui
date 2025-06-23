@@ -23,7 +23,8 @@ const geneticCodes = {
         'T': ['ACA','ACC','ACG','ACT'],
         'V': ['GTA','GTC','GTG','GTT'],
         'W': ['TGG'],
-        'Y': ['TAC','TAT']
+        'Y': ['TAC','TAT'],
+        '*': ['TAA', 'TAG', 'TGA']
       }
     }
   }

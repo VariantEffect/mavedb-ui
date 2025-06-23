@@ -136,6 +136,10 @@
               and the
               <a href="https://brotmanbaty.org/">Brotman Baty Institute.</a>
             </p>
+            <p>
+              If you have questions, comments, or suggestions, check out the <router-link to="/help">Help & Support</router-link> page
+              for information about how to get in touch.
+            </p>
           </template>
         </Card>
       </div>

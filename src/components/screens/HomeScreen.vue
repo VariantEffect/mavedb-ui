@@ -35,6 +35,10 @@
                 format uploaded by investigators, which is often relative to synthetic target sequences.
               </li>
             </ul>
+            <p>
+              To provide feedback, please join our Zulip message board. Use <a href="https://mavedb.zulipchat.com/join/5cvqzctbnme2lqmjwnbjg4ty/">this link</a> to join the
+              organization. Once you have joined, you can create topics for discussion in the <a href="https://mavedb.zulipchat.com/#narrow/channel/511813-beta-testers">beta-testers channel</a>.
+            </p>
           </template>
         </Card>
       </div>
@@ -62,6 +66,10 @@
               <a href="https://www.wehi.edu.au/">Walter and Eliza Hall Institute of Medical Research</a>,
               and the
               <a href="https://brotmanbaty.org/">Brotman Baty Institute.</a>
+            </p>
+            <p>
+              If you have questions, comments, or suggestions, check out the <router-link to="/help">Help & Support</router-link> page
+              for information about how to get in touch.
             </p>
           </template>
         </Card>

@@ -1,6 +1,40 @@
 <template>
   <DefaultLayout>
     <div class="grid" style="margin: 10px 0;">
+      <div v-if="config.PREVIEW_SITE" class="col-12">
+        <Card>
+          <template #title>MaveDB Beta Test Site</template>
+          <template #content>
+            <p>
+              You are browsing MaveDB preview site for beta testers. This site presents unreleased features that may
+              have bugs, so if your purpose is not to test these features, please visit the main MaveDB site instead at
+              <a href="https://mavedb.org/">mavedb.org</a>.
+            </p>
+            <p>
+              If you are a beta tester, thanks in advance for your feedback! Please use the link in the toolbar to reach
+              our Zulip message board, where you can leave notes for the development team about searches you ran that
+              did not yield results, new features or changes that you would find valuable, and any other feedback you
+              may have.
+            </p>
+            <h3>Getting started</h3>
+            <ul>
+              <li>
+                Try searching for variants using HGVS strings like
+                <span class="mave-hgvs-example" v-tooltip.top="'Click to copy'" @click="copyText">ENST00000473961.6:c.-19-2A>T</span>
+                and
+                <span class="mave-hgvs-example" v-tooltip.top="'Click to copy'" @click="copyText">NP_000242.1:p.Asn566Thr</span>.
+                MaveDB supports a variety of HGVS formats for searching.
+              </li>
+              <li>
+                Browse to a score set like <a href="https://localhost:8081/score-sets/urn:mavedb:00000050-a-1">MSH2 LOF
+                Scores</a>. To support clinicians' needs, this view now includes information about ClinVar controls, as
+                well as the option to view variant details in coordinates relative to transcripts rather than in the
+                format uploaded by investigators, which is often relative to synthetic target sequences.
+              </li>
+            </ul>
+          </template>
+        </Card>
+      </div>
       <div class="col-8">
         <Card>
           <template #title>About</template>
@@ -121,15 +155,26 @@
 <script>
 
 import Card from 'primevue/card'
-//import InputText from 'primevue/inputtext'
 
-//import config from '@/config'
+import config from '@/config'
 import DefaultLayout from '@/components/layout/DefaultLayout'
 import HighlightsView from '@/components/common/HighlightsView.vue';
 
 export default {
   name: 'HomeScreen',
-  components: {Card, DefaultLayout, HighlightsView}
+  components: {Card, DefaultLayout, HighlightsView},
+  data: function() {
+    return {config}
+  },
+
+  methods: {
+    copyText: function(event, x) {
+      const element = event.target
+      if (element) {
+        navigator.clipboard.writeText(element.innerText)
+      }
+    }
+  }
 }
 
 </script>
@@ -143,6 +188,12 @@ td, th {
 
 ul {
   padding-left: 1em;
+}
+
+.mave-hgvs-example {
+  background: #eee;
+  padding: 0 3px;
+  cursor: pointer;
 }
 
 </style>

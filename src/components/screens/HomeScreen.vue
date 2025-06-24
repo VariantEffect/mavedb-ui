@@ -6,7 +6,7 @@
           <template #title>MaveDB Beta Test Site</template>
           <template #content>
             <p>
-              You are browsing MaveDB preview site for beta testers. This site presents unreleased features that may
+              You are browsing MaveDB's preview site for beta testers. This site presents unreleased features that may
               have bugs, so if your purpose is not to test these features, please visit the main MaveDB site instead at
               <a href="https://mavedb.org/">mavedb.org</a>.
             </p>

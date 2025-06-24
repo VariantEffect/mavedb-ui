@@ -655,21 +655,43 @@ export default {
       if (variant.details.wt) {
         parts.push('WT')
       }
-      if (this.coordinates == 'mapped' && this.sequenceType == 'dna' && variant.details.post_mapped_hgvs_c) {
-        parts.push(`Variant: ${variant.details.post_mapped_hgvs_c}`)
-      } else if (this.coordinates == 'mapped' && this.sequenceType == 'protein' && variant.details.post_mapped_hgvs_p) {
-        parts.push(`Variant: ${variant.details.post_mapped_hgvs_p}`)
-      } else {
-        if (variantNotNullOrNA(variant.details.hgvs_nt)) {
-          parts.push(`NT variant: ${variant.details.hgvs_nt}`)
-        }
-        if (variantNotNullOrNA(variant.details.hgvs_pro)) {
-          parts.push(`Protein variant: ${variant.details.hgvs_pro}`)
-        }
-        if (variantNotNullOrNA(variant.details.hgvs_splice)) {
-          parts.push(`Splice variant: ${variant.details.hgvs_splice}`)
+      const nameParts = []
+      if (this.coordinates == 'mapped') {
+        switch (this.sequenceType) {
+          case 'dna':
+            if (variantNotNullOrNA(variant.details.post_mapped_hgvs_c)) {
+              nameParts.push(`Variant: ${variant.details.post_mapped_hgvs_c}`)
+            }
+            if (variantNotNullOrNA(variant.details.post_mapped_hgvs_p)) {
+              nameParts.push(`Protein variant: ${variant.details.post_mapped_hgvs_p}`)
+            } else if (variantNotNullOrNA(variant.details.hgvs_pro_inferred)) {
+              nameParts.push(`Protein variant: ${variant.details.hgvs_pro_inferred}`)
+            }
+            break
+          case 'protein':
+          default:
+            if (variantNotNullOrNA(variant.details.post_mapped_hgvs_p)) {
+              nameParts.push(`Variant: ${variant.details.post_mapped_hgvs_p}`)
+            } else if (variantNotNullOrNA(variant.details.hgvs_pro_inferred)) {
+              nameParts.push(`Variant: ${variant.details.hgvs_pro_inferred}`)
+            }
+            if (variantNotNullOrNA(variant.details.post_mapped_hgvs_c)) {
+              nameParts.push(`NT variant: ${variant.details.post_mapped_hgvs_c}`)
+            }
         }
       }
+      if (nameParts.length == 0) {
+        if (variantNotNullOrNA(variant.details.hgvs_nt)) {
+          nameParts.push(`NT variant: ${variant.details.hgvs_nt}`)
+        }
+        if (variantNotNullOrNA(variant.details.hgvs_pro)) {
+          nameParts.push(`Protein variant: ${variant.details.hgvs_pro}`)
+        }
+        if (variantNotNullOrNA(variant.details.hgvs_splice)) {
+          nameParts.push(`Splice variant: ${variant.details.hgvs_splice}`)
+        }
+      }
+      parts.push(...nameParts)
       if (variant.numScores != null) {
         parts.push(`# of observations: ${variant.numScores}`)
       }

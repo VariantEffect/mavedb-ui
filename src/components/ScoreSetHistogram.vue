@@ -48,7 +48,7 @@ import InputSwitch from 'primevue/inputswitch'
 import ProgressSpinner from 'primevue/progressspinner'
 import Rating from 'primevue/rating'
 import TabMenu from 'primevue/tabmenu'
-import {defineComponent} from 'vue'
+import {defineComponent, PropType} from 'vue'
 import config from '@/config'
 import axios from 'axios'
 
@@ -81,6 +81,10 @@ export default defineComponent({
   emits: ['exportChart'],
 
   props: {
+    coordinates: {
+      type: String as PropType<'raw' | 'mapped'>,
+      default: 'raw'
+    },
     // Margins must accommodate the X axis label and title.
     margins: {
       type: Object,
@@ -346,13 +350,21 @@ export default defineComponent({
 
         if (variant) {
           // Line 1: Variant identifier
-          const variantLabel = variant.mavedb_label || (
-            variant.hgvs_pro ?
-              (variant.hgvs_nt ? `${variant.hgvs_pro} (${variant.hgvs_nt})` : variant.hgvs_pro)
-              : variant.hgvs_splice ?
-                (variant.hgvs_nt ? `${variant.hgvs_splice} (${variant.hgvs_nt})` : variant.hgvs_splice)
-                : variant.hgvs_nt
-          )
+          const {dnaHgvs, proteinHgvs, spliceHgvs} = this.coordinates == 'mapped' ?
+              {dnaHgvs: variant.post_mapped_hgvs_c, proteinHgvs: variant.post_mapped_hgvs_p || variant.hgvs_pro_inferred}
+              : {dnaHgvs: variant.hgvs_nt, proteinHgvs: variant.hgvs_pro, spliceHgvs: variant.hgvs_splice}
+          // const variantLabel = variant.mavedb_label || (
+          //   proteinHgvs ?
+          //     (dnaHgvs ? `${proteinHgvs} (${dnaHgvs})` : proteinHgvs)
+          //     : spliceHgvs ?
+          //       (dnaHgvs ? `${spliceHgvs} (${dnaHgvs})` : spliceHgvs)
+          //       : dnaHgvs
+          // )
+          const variantLabel = proteinHgvs ?
+              (dnaHgvs ? `${proteinHgvs} (${dnaHgvs})` : proteinHgvs)
+              : spliceHgvs ?
+                (dnaHgvs ? `${spliceHgvs} (${dnaHgvs})` : spliceHgvs)
+                : dnaHgvs
           if (variantLabel) {
             parts.push(variantLabel)
           }

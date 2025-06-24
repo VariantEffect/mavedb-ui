@@ -113,11 +113,12 @@
         </div>
         <div class="mave-score-set-histogram-pane">
           <ScoreSetHistogram
+            ref="histogram"
+            :external-selection="variantToVisualize"
+            :coordinates="mode == 'clinical' ? 'mapped' : 'raw'"
             :scoreSet="item"
             :variants="scores"
-            :externalSelection="variantToVisualize"
             @export-chart="setHistogramExport"
-            ref="histogram"
           />
         </div>
         <div v-if="showHeatmap && !isScoreSetVisualizerVisible" class="mave-score-set-heatmap-pane">

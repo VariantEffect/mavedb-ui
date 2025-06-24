@@ -116,6 +116,11 @@ export default {
         route: '/create-score-set',
         available: ({authenticated}) => authenticated
       }, {
+        label: 'Feedback',
+        target: '_blank',
+        url: 'https://mavedb.zulipchat.com/#narrow/channel/511813-beta-testers',
+        available: ({config}) => config.PREVIEW_SITE
+      }, {
         label: 'Users',
         route: '/users',
         available: ({roles}) => roles.includes('admin')
@@ -161,6 +166,7 @@ export default {
           item.items = newSubitems
         }
         const available = !item.available || item.available({
+          config: this.config,
           authenticated: this.userIsAuthenticated,
           roles: this.roles || []
         }) // && (!item.to || this.userMayAccessPath(item.to))

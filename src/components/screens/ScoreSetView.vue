@@ -120,12 +120,6 @@
             ref="histogram"
           />
         </div>
-        <!-- <ProteinStructureView
-            :highlightedResidueRange="highlightedResidueRange"
-            :selectedResidueRange="selectedResidueRange"
-            @clickedResidue="didSelectResidue($event.residueNumber)"
-            @hoveredOverResidue="didHighlightResidue($event.residueNumber)"
-        /> -->
         <div v-if="showHeatmap" class="mave-score-set-heatmap-pane">
           <ScoreSetHeatmap
             :coordinates="mode == 'clinical' ? 'mapped' : 'raw'"
@@ -446,7 +440,6 @@ import ScrollPanel from 'primevue/scrollpanel';
 
 import CollectionAdder from '@/components/CollectionAdder'
 import CollectionBadge from '@/components/CollectionBadge'
-import ProteinStructureView from '@/components/ProteinStructureView'
 import ScoreSetHeatmap from '@/components/ScoreSetHeatmap'
 import ScoreSetHistogram from '@/components/ScoreSetHistogram'
 import EntityLink from '@/components/common/EntityLink'
@@ -469,7 +462,7 @@ import { ref } from 'vue'
 
 export default {
   name: 'ScoreSetView',
-  components: { Accordion, AccordionTab, AutoComplete, Button, Chip, CollectionAdder, CollectionBadge, DefaultLayout, EntityLink, ProteinStructureView, ScoreSetHeatmap, ScoreSetHistogram, TabView, TabPanel, Message, DataTable, Column, ProgressSpinner, ScrollPanel, PageLoading, ItemNotFound },
+  components: { Accordion, AccordionTab, AutoComplete, Button, Chip, CollectionAdder, CollectionBadge, DefaultLayout, EntityLink, ScoreSetHeatmap, ScoreSetHistogram, TabView, TabPanel, Message, DataTable, Column, ProgressSpinner, ScrollPanel, PageLoading, ItemNotFound },
   computed: {
     heatmapVariants: function() {
       switch (this.mode) {

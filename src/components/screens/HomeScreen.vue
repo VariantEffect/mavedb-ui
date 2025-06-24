@@ -26,8 +26,11 @@
                 MaveDB supports a variety of HGVS formats for searching.
               </li>
               <li>
-                Browse to a score set like <a href="https://localhost:8081/score-sets/urn:mavedb:00000050-a-1">MSH2 LOF
-                Scores</a>. To support clinicians' needs, this view now includes information about ClinVar controls, as
+                Browse to a score set like
+                <router-link :to="{name: 'scoreSet', params: {urn: 'urn:mavedb:00000050-a-1'}}">
+                  MSH2 LOF Scores
+                </router-link>.
+                To support clinicians' needs, this view now includes information about ClinVar controls, as
                 well as the option to view variant details in coordinates relative to transcripts rather than in the
                 format uploaded by investigators, which is often relative to synthetic target sequences.
               </li>

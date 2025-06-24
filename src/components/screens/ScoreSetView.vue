@@ -98,6 +98,7 @@
               :style="{visibility: variantToVisualize ? 'visible' : 'hidden'}"
             />
           </span>
+          <!--
           <span>
             <template v-if="mode == 'raw'">
               Viewing raw data.
@@ -108,6 +109,7 @@
               <Button label="Switch to raw data view" rounded size="sm" @click="mode = 'raw'" />
             </template>
           </span>
+          -->
         </div>
         <div class="mave-score-set-histogram-pane">
           <ScoreSetHistogram

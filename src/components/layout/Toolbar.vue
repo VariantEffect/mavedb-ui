@@ -6,8 +6,8 @@
     </Message>
   </div>
   <div class="mavedb-toolbar">
-    <div class="mavedb-beta-banner">
-      Beta test site! For the production site, please visit <a href="https://mavedb.org.">mavedb.org</a>.
+    <div v-if="config.PREVIEW_SITE" class="mavedb-beta-banner">
+      This is a beta test site. For the production site, please visit <a href="https://mavedb.org.">mavedb.org</a>.
     </div>
     <Menubar :model="availableMenuItems" class="mavedb-menubar">
       <template #start>

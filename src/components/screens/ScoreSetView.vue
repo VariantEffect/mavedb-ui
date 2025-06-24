@@ -120,12 +120,6 @@
             ref="histogram"
           />
         </div>
-        <!-- <ProteinStructureView
-            :highlightedResidueRange="highlightedResidueRange"
-            :selectedResidueRange="selectedResidueRange"
-            @clickedResidue="didSelectResidue($event.residueNumber)"
-            @hoveredOverResidue="didHighlightResidue($event.residueNumber)"
-        /> -->
         <div v-if="showHeatmap && !isScoreSetVisualizerVisible" class="mave-score-set-heatmap-pane">
           <ScoreSetHeatmap
             ref="heatmap"
@@ -452,7 +446,6 @@ import Sidebar from 'primevue/sidebar'
 
 import CollectionAdder from '@/components/CollectionAdder'
 import CollectionBadge from '@/components/CollectionBadge'
-import ProteinStructureView from '@/components/ProteinStructureView'
 import ScoreSetHeatmap from '@/components/ScoreSetHeatmap'
 import ScoreSetHistogram from '@/components/ScoreSetHistogram'
 import EntityLink from '@/components/common/EntityLink'
@@ -476,7 +469,7 @@ import ScoreSetVisualizer from '../ScoreSetVisualizer.vue';
 
 export default {
   name: 'ScoreSetView',
-  components: { Accordion, AccordionTab, AutoComplete, Button, Chip, Sidebar, CollectionAdder, CollectionBadge, DefaultLayout, EntityLink, ProteinStructureView, ScoreSetHeatmap, ScoreSetHistogram, ScoreSetVisualizer, TabView, TabPanel, Message, DataTable, Column, ProgressSpinner, ScrollPanel, SplitButton, PageLoading, ItemNotFound },
+  components: { Accordion, AccordionTab, AutoComplete, Button, Chip, Sidebar, CollectionAdder, CollectionBadge, DefaultLayout, EntityLink, ScoreSetHeatmap, ScoreSetHistogram, ScoreSetVisualizer, TabView, TabPanel, Message, DataTable, Column, ProgressSpinner, ScrollPanel, SplitButton, PageLoading, ItemNotFound },
   computed: {
     annotatedVariantDownloadOptions: function () {
       const annotatatedVariantOptions = []

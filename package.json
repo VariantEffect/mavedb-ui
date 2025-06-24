@@ -1,6 +1,6 @@
 {
   "name": "mavedb-ui",
-  "version": "2025.2.0",
+  "version": "2025.2.1",
   "private": true,
   "scripts": {
     "build": "vite build --mode=${MODE=live}",

@@ -11,6 +11,8 @@
 import axios from 'axios'
 import $ from 'jquery'
 import Dropdown from 'primevue/dropdown'
+import { PDBeMolstarPlugin } from 'pdbe-molstar/lib/viewer'
+import 'pdbe-molstar/build/pdbe-molstar-light.css'
 
 export default {
   name: 'ProteinStructureView',

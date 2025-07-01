@@ -206,6 +206,7 @@ export default {
           selection: {
             data: this.selectionDataWithSelectedColorBy,
           },
+          selectInteraction: false,
         };
         const viewerContainer = document.getElementById('pdbe-molstar-viewer-container')
         viewerInstance.render(viewerContainer, options)
@@ -214,6 +215,7 @@ export default {
             viewerInstance.plugin.layout.context.canvas3d.camera.state.clipFar = false
             viewerInstance.visual.tooltips({data:this.residueTooltips.value})
         })
+
         document.addEventListener('PDB.molstar.click', (e) => {
           this.$emit('clickedResidue', e.eventData)
         })

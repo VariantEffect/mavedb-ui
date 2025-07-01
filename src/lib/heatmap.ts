@@ -804,10 +804,9 @@ export default function makeHeatmap(): Heatmap {
         prepareData()
 
         if (drawLegend) {
-          const legend = d3.select('g.heatmap-vertical-color-legend')
+          const legend = svg.select('g.heatmap-vertical-color-legend')
             .attr('width', LEGEND_SIZE)
             .attr('height', height)
-
           verticalColorLegend(
             legend, {
               color: colorScale,

@@ -99,10 +99,11 @@ export default {
       .value()
 
     const simpleVariantsCalcsWithColor = _.map(simpleVariantsCalcs, (simpleVariant) => {
-      const color = heatmapColorScale(simpleVariant.meanScore)
       return {
         ...simpleVariant,
-        color: color,
+        meanColor: heatmapColorScale(simpleVariant.meanScore),
+        maxMissenseColor: heatmapColorScale(simpleVariant.maxMissenseScore),
+        minMissenseColor: heatmapColorScale(simpleVariant.minMissenseScore),
       }
     })
 
@@ -110,7 +111,10 @@ export default {
       return {
         start_residue_number: simpleVariant.x,
         end_residue_number: simpleVariant.x,
-        color: this.rgbToHex(simpleVariant.color),
+        color: this.rgbToHex(simpleVariant.meanColor),
+        meanColor: this.rgbToHex(simpleVariant.meanColor),
+        maxMissenseColor: this.rgbToHex(simpleVariant.maxMissenseColor),
+        minMissenseColor: this.rgbToHex(simpleVariant.minMissenseColor),
       }
     })
     this.residueTooltips.value = _.map(simpleVariantsCalcsWithColor, (simpleVariant) => {

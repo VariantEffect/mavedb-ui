@@ -1,22 +1,30 @@
 <template>
-  <span v-if="alphaFoldData?.length > 1" class="p-float-label" style="margin-top: 10px; margin-bottom:4px">
-    <Dropdown :id="$scopedId('alphafold-id')" style="height:3em" v-model="selectedAlphaFold" :options="alphaFoldData" optionLabel="id" />
-    <label :for="$scopedId('alphafold-id')">AlphaFold ID</label>
-  </span>
-  <div id="pdbe-molstar-viewer-container" style="width: 100%; height: 100%; position: relative"></div>
-</template>
+  <div style="display:flex; flex-flow: column; height: 100%;">
+    <span v-if="alphaFoldData?.length > 1" class="p-float-label" style="margin-top: 10px; margin-bottom:4px">
+      <Dropdown :id="$scopedId('alphafold-id')" style="height:3em" v-model="selectedAlphaFold" :options="alphaFoldData" optionLabel="id" />
+      <label :for="$scopedId('alphafold-id')">AlphaFold ID</label>
+    </span>
+    <div class="flex">
+      <span class="ml-2">Color by:</span>
+      <SelectButton class="protein-viz-colorby-button ml-2" v-model="colorBy" optionLabel="name" optionValue="value" :options="[{ name: 'Mean score', value: 'meanScore' }, {name: 'Min. missense score', value: 'minMissenseScore'}, {name: 'Max. missense score', value: 'maxMissenseScore'}]" />
+    </div>
+    <div id="pdbe-molstar-viewer-container" style="flex: 1; position: relative"></div>
+  </div>
+  </template>
 
 <script>
 
 import axios from 'axios'
 import $ from 'jquery'
 import Dropdown from 'primevue/dropdown'
+import SelectButton from 'primevue/selectbutton'
 import { PDBeMolstarPlugin } from 'pdbe-molstar/lib/viewer'
 import 'pdbe-molstar/build/pdbe-molstar-light.css'
+import _ from 'lodash'
 
 export default {
   name: 'ProteinStructureView',
-  components: {Dropdown},
+  components: {Dropdown, SelectButton},
   emits: ['hoveredOverResidue', 'clickedResidue'],
 
   props: {
@@ -49,6 +57,7 @@ export default {
     selectedAlphaFold: null,
     stage: null,
     // mainComponent: null,
+    colorBy: 'meanScore',
     colorScheme: 'bfactor',
     colorSchemeOptions: [
       'atomindex',
@@ -78,6 +87,15 @@ export default {
   }),
 
   computed: {
+    selectionDataWithSelectedColorBy: function() {
+      return _.map(this.selectionData.value, (x) => ({
+          start_residue_number: x.start_residue_number,
+          end_residue_number: x.end_residue_number,
+          color: this.colorBy === 'meanScore' ? x.meanColor :
+                 this.colorBy === 'minMissenseScore' ? x.minMissenseColor :
+                 this.colorBy === 'maxMissenseScore' ? x.maxMissenseColor : null,
+        }))
+    },
     alphaFoldData: function() {
         if (!this.uniprotData) {
           return []
@@ -99,6 +117,11 @@ export default {
   },
 
   watch: {
+    colorBy: {
+      handler: function() {
+        this.viewerInstance.visual.select({data: this.selectionDataWithSelectedColorBy})
+      },
+    },
     selectedResidueRanges: {
       handler: function(newValue) {
         const selectedRanges = newValue.map((x) => ({
@@ -107,7 +130,7 @@ export default {
           color: null,
           focus: true
         }))
-        this.viewerInstance.visual.select({data:[...this.selectionData.value, ...selectedRanges]})
+        this.viewerInstance.visual.select({data:[...this.selectionDataWithSelectedColorBy, ...selectedRanges]})
         this.viewerInstance.visual.highlight({
             data: selectedRanges,
         })
@@ -181,7 +204,7 @@ export default {
           landscape: true,
           highlightColor: '#ffffff',
           selection: {
-            data: this.selectionData.value,
+            data: this.selectionDataWithSelectedColorBy,
           },
         };
         const viewerContainer = document.getElementById('pdbe-molstar-viewer-container')
@@ -209,12 +232,8 @@ export default {
 .msp-plugin .msp-layout-standard {
   border: 0;
 }
-</style>
-<style scoped>
-
-.mavedb-protein-structure-viewer-container {
-  height: 600px;
-  width: 600px;
+.protein-viz-colorby-button .p-button {
+  padding: 2px !important;
+  font-size: 0.8em;
 }
-
 </style>

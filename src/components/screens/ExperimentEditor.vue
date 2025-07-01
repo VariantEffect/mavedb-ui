@@ -242,7 +242,7 @@
                         v-model="keywordKeys[keyword.key]"
                         :id="$scopedId(`keyword-input-${keyword.key}`)"
                         :options="getKeywordOptions(keyword.option)"
-                        optionLabel="value"
+                        :optionLabel="(option) => formatKeywordOptionLabel(option)"
                         optionValue="value"
                         class="keyword-dropdown"
                       />
@@ -373,6 +373,11 @@ const KEYWORDS = [
     option: 'phenotypicMethodKeywordOptions',
   },
   {
+    key: 'Phenotypic Assay Mechanism',
+    descriptionLabel: 'Phenotypic Assay Mechanism Description',
+    option: 'phenotypicMechanismKeywordOptions',
+  },
+  {
     key: 'Phenotypic Assay Model System',
     descriptionLabel: 'Phenotypic Assay Model System Description',
     option: 'phenotypicModelSystemKeywordOptions',
@@ -419,6 +424,7 @@ export default {
     const deliveryMethodKeywordOptions = useItems({itemTypeName: `controlled-keywords-delivery-search`})
     const phenotypicDimensionalityKeywordOptions = useItems({itemTypeName: `controlled-keywords-phenotypic-dimensionality-search`})
     const phenotypicMethodKeywordOptions = useItems({itemTypeName: `controlled-keywords-phenotypic-method-search`})
+    const phenotypicMechanismKeywordOptions = useItems({itemTypeName: `controlled-keywords-phenotypic-mechanism-search`})
     const phenotypicModelSystemKeywordOptions = useItems({itemTypeName: `controlled-keywords-phenotypic-modle-system-search`})
     const phenotypicProfilingStrategyKeywordOptions = useItems({itemTypeName: `controlled-keywords-phenotypic-profiling-strategy-search`})
     const phenotypicSequencingTypeKeywordOptions = useItems({itemTypeName: `controlled-keywords-phenotypic-sequencing-type-search`})
@@ -437,6 +443,7 @@ export default {
       deliveryMethodKeywordOptions: deliveryMethodKeywordOptions.items,
       phenotypicDimensionalityKeywordOptions: phenotypicDimensionalityKeywordOptions.items,
       phenotypicMethodKeywordOptions: phenotypicMethodKeywordOptions.items,
+      phenotypicMechanismKeywordOptions: phenotypicMechanismKeywordOptions.items,
       phenotypicModelSystemKeywordOptions: phenotypicModelSystemKeywordOptions.items,
       phenotypicProfilingStrategyKeywordOptions: phenotypicProfilingStrategyKeywordOptions.items,
       phenotypicSequencingTypeKeywordOptions: phenotypicSequencingTypeKeywordOptions.items,
@@ -949,6 +956,10 @@ export default {
 
     get(...args) {
       return _.get(...args)
+    },
+
+    formatKeywordOptionLabel(option) {
+      return option.accession ? `${option.accession} - ${option.value}` : option.value;
     },
 
     getKeywordOptions(optionsName) {

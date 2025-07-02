@@ -619,6 +619,7 @@ export default function makeHeatmap(): Heatmap {
           .style('top', 0)
           .style('left', 0)
           .style('height', '100%')
+          .classed('exclude-from-export', true)
         const legendGroup = yAxisSvg.append('g')
           .attr('class', 'heatmap-legend')
           .attr('transform', `translate(${margins.left},${margins.top})`)

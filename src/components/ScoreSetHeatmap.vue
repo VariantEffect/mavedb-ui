@@ -417,7 +417,7 @@ export default {
       this.heatmap = makeHeatmap()
         .margins({top: 0, bottom: 25, left: 20, right: 20})
         .legendTitle("Functional Score")
-        .render(this.$refs.simpleVariantsHeatmapContainer)
+        .render(this.$refs.simpleVariantsHeatmapContainer, this.$refs.heatmapContainer)
         .rows(this.heatmapRows)
         .xCoordinate(this.xCoord)
         .yCoordinate(this.yCoord)

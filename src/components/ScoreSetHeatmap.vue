@@ -406,10 +406,10 @@ export default {
       this.heatmap?.destroy()
       this.stackedHeatmap?.destroy()
 
-      this.drawHeatmap()
       if (!this.isNucleotideHeatmap && this.layout != 'compact') {
         this.drawStackedHeatmap()
       }
+      this.drawHeatmap()
     },
 
     // Assumes that plate dimensions do not change.
@@ -568,21 +568,12 @@ export default {
   position: relative;
 }
 
-.heatmapLegendContainer {
-  float: left;
-  position: absolute;
-}
-
 .heatmapScrollContainer {
   overflow-x: auto;
   position: relative;
 }
 
 .heatmapContainer:deep(.heatmap-y-axis-tick-labels) {
-  font-size: 14px;
-}
-
-.heatmapContainer:deep(.heatmap-color-bar-labels) {
   font-size: 14px;
 }
 

@@ -1,5 +1,5 @@
 import * as d3 from 'd3'
-import _ from 'lodash'
+import _, { range } from 'lodash'
 
 import { AMINO_ACIDS, AMINO_ACIDS_BY_HYDROPHILIA } from './amino-acids.js'
 import { NUCLEOTIDE_BASES } from './nucleotides.js'
@@ -66,6 +66,7 @@ export type HeatmapDatum = any
 export type MappedDatum = { [key: number]: HeatmapDatum }
 
 type RangeSelectionMode = 'column' | 'row' | 'box' | null
+type AxisSelectionMode = 'x' | 'y' | null
 
 /**
  * The heatmap content. This consists of a mapping of rows which contain a list of ordered column contents.
@@ -103,6 +104,7 @@ export interface Heatmap {
   colorClassifier: Accessor<((d: HeatmapDatum) => number | d3.Color), Heatmap>
   datumSelected: Accessor<((d: HeatmapDatum) => void) | null, Heatmap>
   columnRangesSelected: Accessor<((ranges: Array<{start: number, end: number}>) => void) | null, Heatmap>
+  rowSelected: Accessor<((data: HeatmapDatum[]) => void) | null, Heatmap>
   excludeDatum: Accessor<((d: HeatmapDatum) => boolean), Heatmap>
 
   // Data fields
@@ -138,6 +140,7 @@ export interface Heatmap {
 
   // Selection mode
   rangeSelectionMode: Accessor<RangeSelectionMode, Heatmap>
+  axisSelectionMode: Accessor<AxisSelectionMode, Heatmap>
 
   //////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
   // Getters
@@ -147,6 +150,7 @@ export interface Heatmap {
   selectedDatum: Getter<HeatmapDatum | null>
   selectionStartDatum: Getter<HeatmapDatum | null>
   selectionEndDatum: Getter<HeatmapDatum | null>
+  selectedRows: Getter<number[] | null>
 
   // Container
   container: Getter<HTMLElement | null>
@@ -189,6 +193,7 @@ export default function makeHeatmap(): Heatmap {
   let colorClassifier: ((d: HeatmapDatum) => number | d3.Color) = valueField
   let datumSelected: ((d: HeatmapDatum) => void) | null = null
   let columnRangesSelected: ((ranges: Array<{start: number, end: number}>) => void) | null = null
+  let rowSelected: ((data: HeatmapDatum[]) => void) | null = null
   let excludeDatum: ((d: HeatmapDatum) => boolean) = (d) => false as boolean
 
   // Layout
@@ -215,6 +220,7 @@ export default function makeHeatmap(): Heatmap {
 
   // Selection mode
   let rangeSelectionMode: RangeSelectionMode = null
+  let axisSelectionMode: AxisSelectionMode = null
 
   //////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
   // Read-only properties
@@ -232,6 +238,7 @@ export default function makeHeatmap(): Heatmap {
   let selectedDatum: HeatmapDatum | null = null
   let selectionStartDatum: HeatmapDatum | null = null
   let selectionEndDatum: HeatmapDatum | null = null
+  let selectedRows: number[] | null = null
 
   let selectionStartPoint: DOMPoint | null = null
 
@@ -331,6 +338,26 @@ export default function makeHeatmap(): Heatmap {
   //////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
   // Clicking
   //////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+
+  const selectRow: (event: MouseEvent) => void = (event: MouseEvent) => {
+      const rowNumber = d3.select(event.target as SVGRectElement).datum() as number
+
+      if (svg) {
+        svg.select('g.heatmap-axis-selection-rectangle').selectAll('rect').remove()
+        svg.select('g.heatmap-axis-selection-rectangle')
+          .append('rect')
+          .attr('x', 0)
+          .attr('y', rowNumber * yScale.step() + (nodePadding * yScale.step()/2))
+          .attr('width', (content.columns ? content.columns : 0) * xScale.step())
+          .attr('height', yScale.step())
+          .style('fill', 'none')
+          .style('stroke-width', 2)
+          .style('stroke', '#808')
+          .raise()
+      }
+      if (rowSelected) rowSelected(data.filter((d: HeatmapDatum) => yCoordinate(d) === rowNumber))
+  }
+
 
   const click = function (event: MouseEvent, d: HeatmapDatum) {
     const target = event.target
@@ -779,6 +806,8 @@ export default function makeHeatmap(): Heatmap {
           .attr('class', 'heatmap-nodes')
         mainGroup.append('g')
           .attr('class', 'heatmap-selection-rectangle')
+        mainGroup.append('g')
+          .attr('class', 'heatmap-axis-selection-rectangle')
 
         if (alignViaLegend || drawLegend) {
           // Update the heatmap effective margins to take the legend into account.
@@ -891,14 +920,20 @@ export default function makeHeatmap(): Heatmap {
             .attr('class', (n) => rows[rows.length - 1 - n].cssClass || '')
 
           if (_wrapper && yAxisSvg) {
-            yAxisSvg.select('g.heatmap-y-axis-tick-labels')
+            const yAxisLabels = yAxisSvg.select('g.heatmap-y-axis-tick-labels')
             // @ts-ignore
             // Get the row's amino acid code or variation symbol
-            .call(d3.axisLeft(yScale)
+            yAxisLabels.call(d3.axisLeft(yScale)
               .tickSize(0)
               .tickFormat((n) => rows[rows.length - 1 - n].label)
-            )
-            .select('.domain').remove()
+            ).select('.domain').remove()
+
+            if (axisSelectionMode == 'y') {
+              yAxisLabels.style('cursor', 'pointer')
+                .on('click', function(event) {
+                  selectRow(event)
+                })
+            }
 
             // Apply row-specific CSS classes to Y-axis tick mark labels.
             yAxisSvg.selectAll('g.heatmap-y-axis-tick-labels g.tick')
@@ -1041,6 +1076,14 @@ export default function makeHeatmap(): Heatmap {
         return columnRangesSelected
       }
       columnRangesSelected = value
+      return chart
+    },
+
+    rowSelected: (value?: ((data: HeatmapDatum[]) => void) | null) => {
+      if (value === undefined) {
+        return rowSelected
+      }
+      rowSelected = value
       return chart
     },
 
@@ -1210,6 +1253,15 @@ export default function makeHeatmap(): Heatmap {
       }
 
       rangeSelectionMode = value
+      return chart
+    },
+
+    axisSelectionMode: (value?: AxisSelectionMode) => {
+      if (value === undefined) {
+        return axisSelectionMode
+      }
+
+      axisSelectionMode = value
       return chart
     },
 

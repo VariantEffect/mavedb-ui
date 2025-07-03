@@ -66,7 +66,7 @@ type HeatmapLayout = 'normal' | 'compact'
 export default {
   name: 'ScoreSetHeatmap',
   components: {SelectButton, Button},
-  emits: ['variantSelected', 'variantColumnRangesSelected', 'heatmapVisible', 'exportChart', 'onDidClickShowProteinStructure'],
+  emits: ['variantSelected', 'variantColumnRangesSelected', 'variantRowSelected', 'heatmapVisible', 'exportChart', 'onDidClickShowProteinStructure'],
 
   props: {
     margins: { // Margins must accommodate the axis labels
@@ -127,7 +127,7 @@ export default {
     layout: 'normal' as HeatmapLayout
   }),
 
-  expose: ['simpleVariants', 'heatmap', 'scrollToPosition'],
+  expose: ['simpleAndWtVariants', 'heatmap', 'scrollToPosition'],
 
 
   computed: {
@@ -433,6 +433,10 @@ export default {
       this.$emit('variantColumnRangesSelected', ranges)
     },
 
+    variantRowSelected: function(data: HeatmapDatum[]) {
+      this.$emit('variantRowSelected', data)
+    },
+
     renderOrRefreshHeatmaps: function() {
       if (!this.simpleAndWtVariants) {
         return
@@ -467,6 +471,8 @@ export default {
       if (this.mode == 'protein-viz') {
         this.heatmap.rangeSelectionMode('column')
           .columnRangesSelected(this.variantColumnRangesSelected)
+          .axisSelectionMode('y')
+          .rowSelected(this.variantRowSelected)
       }
 
       if (this.layout == 'compact') {

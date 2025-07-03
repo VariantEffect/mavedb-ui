@@ -1,30 +1,37 @@
 <template>
   <div v-if="heatmapVisible">
-
-    <div style="text-align: center;">Functional Score by Variant</div>
     <div class="mave-heatmap-wrapper">
-      <div id="mave-heatmap-container" class="heatmapContainer" ref="heatmapContainer">
-        <div id="mave-heatmap-scroll-container" class="heatmapScrollContainer" ref="heatmapScrollContainer">
-          <div id="mave-stacked-heatmap-container" class="mave-simple-variants-stacked-heatmap-container" ref="simpleVariantsStackedHeatmapContainer" />
-          <div id="mave-variants-heatmap-container" class="mave-simple-variants-heatmap-container" ref="simpleVariantsHeatmapContainer" />
+      <template v-if="showHeatmap">
+        <div style="text-align: center;">Functional Score by Variant</div>
+        <div id="mave-heatmap-container" class="heatmapContainer" ref="heatmapContainer">
+          <div id="mave-heatmap-scroll-container" class="heatmapScrollContainer" ref="heatmapScrollContainer">
+            <div id="mave-stacked-heatmap-container" class="mave-simple-variants-stacked-heatmap-container" ref="simpleVariantsStackedHeatmapContainer" />
+            <div id="mave-variants-heatmap-container" class="mave-simple-variants-heatmap-container" ref="simpleVariantsHeatmapContainer" />
+          </div>
         </div>
-      </div>
-      <div class="mave-heatmap-controls">
-        <span class="mave-heatmap-controls-title">Heatmap format</span>
-        <SelectButton
-          v-model="layout"
-          :allow-empty="false"
-          option-label="title"
-          option-value="value"
-          :options="[{title: 'Normal', value: 'normal'}, {title: 'Compact', value: 'compact'}]"
-        />
-        <Button
-          v-if="showProteinStructureButton"
-          label="View protein structure"
-          class="p-button p-button-info"
-          @click="$emit('onDidClickShowProteinStructure')"
-        />
-      </div>
+        <div class="mave-heatmap-controls">
+          <span class="mave-heatmap-controls-title">Heatmap format</span>
+          <SelectButton
+            v-model="layout"
+            :allow-empty="false"
+            option-label="title"
+            option-value="value"
+            :options="[{title: 'Normal', value: 'normal'}, {title: 'Compact', value: 'compact'}]"
+          />
+          <Button
+            v-if="showProteinStructureButton"
+            label="View protein structure"
+            class="p-button p-button-info"
+            @click="$emit('onDidClickShowProteinStructure')"
+          />
+        </div>
+      </template>
+      <template v-else-if="scoreSet?.private">
+        <div class="no-heatmap-message">
+          <p><strong>No heatmap available.</strong> Insufficient score data to generate a heatmap.</p>
+          <p>A variant should be present at <strong>at least 5% of possible positions</strong> to generate a heatmap.</p>
+        </div>
+      </template>
     </div>
     <div v-if="numComplexVariants > 0">{{numComplexVariants}} variants are complex and cannot be shown on this type of chart.</div>
   </div>
@@ -43,6 +50,7 @@ import {parseSimpleProVariant, parseSimpleNtVariant, variantNotNullOrNA} from '@
 import { saveChartAsFile } from '@/lib/chart-export'
 import { Heatmap } from '@/lib/heatmap'
 import { PropType } from 'vue'
+import {SPARSITY_THRESHOLD} from '@/lib/scoreSetHeatmap'
 
 function stdev(array: number[]) {
   if (!array || array.length === 0) {
@@ -171,6 +179,38 @@ export default {
 
       return this.scoreSet.scoreRanges.wtScore
     },
+    showHeatmap: function() {
+      if (this.scores.length === 0) {
+        return false
+      }
+      // the early termination and wild type variants shouldn't effect the heatmap so that remove the final three rows.
+      const hasVariant = Array.from({ length: this.heatmapRows.length - 3 }, () =>
+        Array(this.heatmapRange.length).fill(false)
+      )
+
+      for (const variant of this.simpleVariants) {
+        if (
+          typeof variant.x === 'number' &&
+          typeof variant.y === 'number' &&
+          variant.x >= 0 && variant.x < this.heatmapRange.length &&
+          variant.y >= 0 && variant.y < this.heatmapRows.length - 3
+        ) {
+          hasVariant[variant.y][variant.x] = true
+        }
+      }
+      const totalItems = hasVariant.length * hasVariant[0].length
+
+      // count of actual positions that have a variant
+      let filledCount = 0
+      for (let row of hasVariant) {
+        for (let cell of row) {
+          if (cell) filledCount++
+        }
+      }
+      const sparsity = filledCount / totalItems
+
+      return sparsity > SPARSITY_THRESHOLD // A boolean value
+    },
   },
 
   watch: {
@@ -235,6 +275,9 @@ export default {
   methods: {
     xCoord: function(d: HeatmapDatum) {
       return d?.x
+    },
+    accession: function(d: HeatmapDatum) {
+      return d?.details.accession
     },
     yCoord: function(d: HeatmapDatum) {
       return d?.y
@@ -413,13 +456,19 @@ export default {
         .rows(this.heatmapRows)
         .xCoordinate(this.xCoord)
         .yCoordinate(this.yCoord)
+        .accessorField(this.accession)
         .tooltipHtml(this.tooltipHtmlGetter)
         .datumSelected(this.variantSelected)
+
+      if (!this.heatmap) {
+        return
+      }
 
       if (this.mode == 'protein-viz') {
         this.heatmap.rangeSelectionMode('column')
           .columnRangesSelected(this.variantColumnRangesSelected)
       }
+
       if (this.layout == 'compact') {
         this.heatmap.nodeBorderRadius(0)
           .nodePadding(0)
@@ -431,7 +480,12 @@ export default {
         .valueField((d) => d.meanScore)
         .colorClassifier((variant) => variant.details.wt ? d3.color('#ddbb00') : variant.meanScore)
         .refresh()
-        .selectDatum(this.selectedVariant)
+
+      if (this.selectedVariant) {
+        this.heatmap.selectDatum(this.selectedVariant)
+      } else {
+        this.heatmap.clearSelection()
+      }
     },
 
     drawStackedHeatmap: function() {
@@ -442,16 +496,26 @@ export default {
         .nodeSize({width: 20, height: 1})
         .xCoordinate(this.xCoord)
         .yCoordinate(this.vRank)
+        .accessorField(this.accession)
         .drawY(false)
         .drawLegend(false)
         .alignViaLegend(true)
         .excludeDatum((d) => d.details.wt ? true : false)
 
+      if (!this.stackedHeatmap) {
+        return
+      }
+
       this.stackedHeatmap.data(this.simpleAndWtVariants)
         .valueField((d) => d.meanScore)
         .colorClassifier((variant) => variant.details.wt ? d3.color('#ddbb00') : variant.meanScore)
         .refresh()
-        .selectDatum(this.selectedVariant)
+
+      if (this.selectedVariant) {
+        this.stackedHeatmap.selectDatum(this.selectedVariant)
+      } else {
+        this.stackedHeatmap.clearSelection()
+      }
     },
 
     tooltipHtmlGetter: function(variant: HeatmapDatum) {
@@ -526,6 +590,18 @@ export default {
 .mave-heatmap-wrapper:hover .mave-heatmap-controls {
   display: flex;
   flex-direction: row;
+}
+
+.no-heatmap-message {
+  padding: 10px;
+  background-color: #f8d7da;
+  color: #721c24;
+  border: 1px solid #f5c6cb;
+  border-radius: 4px;
+  text-align: center;
+  position: relative;
+  width: 1000px;
+  margin: 0 auto;
 }
 
 .heatmapContainer {

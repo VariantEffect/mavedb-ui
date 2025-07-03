@@ -14,10 +14,6 @@
             >
               <template #display>
                 {{ item.name }}
-                <CollectionBadge
-                  v-if="item.badgeName"
-                  :collection="item"
-                />
               </template>
               <template #content>
                 <div class="flex mave-collection-name-editor">
@@ -37,11 +33,13 @@
           <div v-else>
             <div class="mave-screen-title">
               {{ item.name }}
-              <CollectionBadge
-                v-if="item.badgeName"
-                :collection="item"
-              />
             </div>
+          </div>
+          <div>
+            <CollectionBadge
+              v-if="item.badgeName"
+              :collection="item"
+            />
           </div>
           <div v-if="userIsAuthorized.delete" class="mave-screen-title-controls">
             <Button label="Delete" severity="danger" size="small" @click="deleteCollectionWithConfirmation" />

@@ -1,6 +1,5 @@
 import * as d3 from 'd3'
-import $ from 'jquery'
-import _, { filter, last, range } from 'lodash'
+import _ from 'lodash'
 
 import { AMINO_ACIDS, AMINO_ACIDS_BY_HYDROPHILIA } from './amino-acids.js'
 import { NUCLEOTIDE_BASES } from './nucleotides.js'
@@ -29,9 +28,9 @@ export const HEATMAP_NUCLEOTIDE_ROWS: HeatmapRowSpecification[] = [
 
 /** List of single-character codes for the heatmap's rows, from bottom to top. */
 export const HEATMAP_AMINO_ACID_ROWS: HeatmapRowSpecification[] = [
-  { code: '=', label: '=', cssClass: 'mave-heatmap-y-axis-tick-label-lg' },
+  { code: '=', label: '\uff1d' },
   { code: '*', label: '\uff0a' },
-  { code: '-', label: '-', cssClass: 'mave-heatmap-y-axis-tick-label-lg' },
+  { code: '-', label: '\uff0d' },
   ...AMINO_ACIDS_BY_HYDROPHILIA.map((aaCode) => ({ code: aaCode, label: aaCode }))
 ]
 
@@ -804,6 +803,8 @@ export default function makeHeatmap(): Heatmap {
           .style('top', 0)
           .style('left', 0)
           .style('height', '100%')
+          .style('z-index', 2002)
+          .style('background-color', '#f7f7f7')
           .classed('exclude-from-export', true)
         const legendGroup = yAxisSvg.append('g')
           .attr('class', 'heatmap-legend')
@@ -841,8 +842,7 @@ export default function makeHeatmap(): Heatmap {
               // Add padding to offset the legend to the top of the heatmap container, accounting for the stacked heatmap height or other content
               const paddingTop = _container.getBoundingClientRect().top - _wrapper.getBoundingClientRect().top
               yAxisSvg
-                .style('padding-top', paddingTop)
-                .style('background-color', '#f7f7f7')
+                .style('padding-top', `${paddingTop}px`)
               const legendAbsolute = yAxisSvg.select('g.heatmap-vertical-color-legend')
                 .attr('width', LEGEND_SIZE)
                 .attr('height', height)
@@ -908,7 +908,7 @@ export default function makeHeatmap(): Heatmap {
           if (svg && yAxisSvg) {
             // Set the width of the Y-axis SVG to accommodate legend and tick labels.
             const mainYAxisTickLabelsWidth = (svg?.select('g.heatmap-y-axis-tick-labels')?.node() as Element).getBoundingClientRect().width
-            if (mainYAxisTickLabelsWidth) yAxisSvg.style('width', LEGEND_SIZE + mainYAxisTickLabelsWidth + 5)
+            if (mainYAxisTickLabelsWidth) yAxisSvg.style('width', `${LEGEND_SIZE + mainYAxisTickLabelsWidth + 3}px`)
           }
         }
 

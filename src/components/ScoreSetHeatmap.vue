@@ -618,10 +618,6 @@ export default {
   user-select: none;
 }
 
-.heatmapContainer:deep(.heatmap-y-axis-tick-label-lg) {
-  font-size: 22px;
-  user-select: none;
-}
 .heatmapContainer:deep(.heatmap-vertical-color-legend) {
   user-select: none;
 }

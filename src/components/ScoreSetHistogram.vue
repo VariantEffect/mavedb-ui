@@ -140,7 +140,7 @@ export default defineComponent({
       config: config,
 
       activeViz: 0,
-      activeShader: scoreSetHasRanges ? 'range' : 'null',
+      activeShader: scoreSetHasRanges ? 'range' : 'notSet',
       activeCalibrationKey: null as String | null,
 
       clinicalControls: [] as ClinicalControl[],

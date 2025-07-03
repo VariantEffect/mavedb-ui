@@ -37,8 +37,12 @@ export async function saveChartAsFile(
 
   const extensionChosen = fileHandle.name.split('.').pop()
 
+
   if (extensionChosen === 'png') {
-    const pngBlob = await domtoimage.toBlob(svgContainer, { width: svgContainer.scrollWidth, height: svgContainer.scrollHeight })
+    const filter = (node: Node) => {
+        return (node as Element).classList.contains('exclude-from-export') ? false : true
+    }
+    const pngBlob = await domtoimage.toBlob(svgContainer, { filter: filter, width: svgContainer.scrollWidth, height: svgContainer.scrollHeight })
     await pngBlob.stream().pipeTo(await fileHandle.createWritable())
   } else {
     // use custom serializer to support images composed of multiple SVGs
@@ -59,6 +63,11 @@ export async function saveChartAsFile(
  */
 function serializeAsSvgString(svgElement: Element, containerElementClass?: string) {
   const svgClone = svgElement.cloneNode(true) as Element
+
+  const elements = svgClone.getElementsByClassName('exclude-from-export')
+  for (const element of Array.from(elements)) {
+    svgClone.removeChild(element)
+  }
 
   const cssStr = getCSSStyles(svgElement, containerElementClass)
 

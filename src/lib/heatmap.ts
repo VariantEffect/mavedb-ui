@@ -595,6 +595,9 @@ export default function makeHeatmap(): Heatmap {
         mainGroup.append('g')
           .attr('class', 'heatmap-nodes')
 
+        // TODO drawLegend is always set to true here. Setting to false via accessor method still results in left margin
+        // being adjusted to include LEGEND_SIZE. Consider moving this to refresh method and/or calculating legend size
+        // based on content.
         if (alignViaLegend || drawLegend) {
           // Update the heatmap effective margins to take the legend into account.
           effectiveMargins = {

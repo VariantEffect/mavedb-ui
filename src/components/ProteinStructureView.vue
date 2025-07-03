@@ -1,42 +1,63 @@
 <template>
-  <div class="mavedb-protein-structure-viewer-container" ref="container"></div>
-  <Dropdown v-model="selectedPdb" :options="pdbs" optionLabel="id" />
-  <Dropdown v-model="colorScheme" :options="colorSchemeOptions" />
-</template>
+  <div style="display:flex; flex-flow: column; height: 100%;">
+    <span v-if="alphaFoldData?.length > 1" class="p-float-label" style="margin-top: 10px; margin-bottom:4px">
+      <Dropdown :id="$scopedId('alphafold-id')" style="height:3em" v-model="selectedAlphaFold" :options="alphaFoldData" optionLabel="id" />
+      <label :for="$scopedId('alphafold-id')">AlphaFold ID</label>
+    </span>
+    <div class="flex">
+      <span class="ml-2">Color by:</span>
+      <SelectButton class="protein-viz-colorby-button ml-2" v-model="colorBy" optionLabel="name" optionValue="value" :options="[{ name: 'Mean score', value: 'meanScore' }, {name: 'Min. missense score', value: 'minMissenseScore'}, {name: 'Max. missense score', value: 'maxMissenseScore'}]" />
+    </div>
+    <div id="pdbe-molstar-viewer-container" style="flex: 1; position: relative"></div>
+  </div>
+  </template>
 
 <script>
 
 import axios from 'axios'
 import $ from 'jquery'
-import * as NGL from 'ngl'
 import Dropdown from 'primevue/dropdown'
+import SelectButton from 'primevue/selectbutton'
+import { PDBeMolstarPlugin } from 'pdbe-molstar/lib/viewer'
+import 'pdbe-molstar/build/pdbe-molstar-light.css'
+import _ from 'lodash'
 
 export default {
   name: 'ProteinStructureView',
-  components: {Dropdown},
+  components: {Dropdown, SelectButton},
   emits: ['hoveredOverResidue', 'clickedResidue'],
 
   props: {
     uniprotId: {
       type: String,
       required: true,
-      default: 'P02829'
     },
-    selectedResidueRange: {
+    selectedResidueRanges: {
       type: Array,
       default: null
     },
     highlightedResidueRange: {
       type: Array,
       default: null
-    }
+    },
+    selectionData: {
+      type: Array,
+      default: () => []
+    },
+    residueTooltips: {
+      type: Array,
+      default: () => []
+    },
   },
 
   data: () => ({
     uniprotData: null,
-    selectedPdb: null,
+    // selectedPdb: null,
+    viewerInstance: null,
+    selectedAlphaFold: null,
     stage: null,
-    mainComponent: null,
+    // mainComponent: null,
+    colorBy: 'meanScore',
     colorScheme: 'bfactor',
     colorSchemeOptions: [
       'atomindex',
@@ -62,24 +83,33 @@ export default {
       'value',
       'volume'
     ],
-    selectionRepresentations: []
+    // selectionRepresentations: []
   }),
 
   computed: {
-    pdbs: function() {
-      if (!this.uniprotData) {
-        return []
-      }
-      return $('entry dbReference[type="PDB"]', this.uniprotData).map((i, element) => {
-        const $element = $(element)
-        return {
-          id: $element.attr('id'),
-          method: $element.find('property[type="method"]').first().attr('value'),
-          resolution: $element.find('property[type="resolution"]').first().attr('value'),
-          chains: $element.find('property[type="chains"]').first().attr('value')
+    selectionDataWithSelectedColorBy: function() {
+      return _.map(this.selectionData.value, (x) => ({
+          start_residue_number: x.start_residue_number,
+          end_residue_number: x.end_residue_number,
+          color: this.colorBy === 'meanScore' ? x.meanColor :
+                 this.colorBy === 'minMissenseScore' ? x.minMissenseColor :
+                 this.colorBy === 'maxMissenseScore' ? x.maxMissenseColor : null,
+        }))
+    },
+    alphaFoldData: function() {
+        if (!this.uniprotData) {
+          return []
         }
-      }).get().filter((pdb) => pdb.id != null)
-    }
+        return $('entry dbReference[type="AlphaFoldDB"]', this.uniprotData).map((i, element) => {
+          const $element = $(element)
+          return {
+            id: $element.attr('id'),
+            method: $element.find('property[type="method"]').first().attr('value'),
+            resolution: $element.find('property[type="resolution"]').first().attr('value'),
+            chains: $element.find('property[type="chains"]').first().attr('value')
+          }
+        }).get().filter((x) => x.id != null)
+    },
   },
 
   mounted: function() {
@@ -87,14 +117,34 @@ export default {
   },
 
   watch: {
-    pdbs: {
+    colorBy: {
       handler: function() {
-        let newSelectedPdb = null
-        if (this.selectedPdb) {
-          newSelectedPdb = this.pdbs.find((pdb) => pdb.id == newSelectedPdb.id)
+        this.viewerInstance.visual.select({data: this.selectionDataWithSelectedColorBy})
+      },
+    },
+    selectedResidueRanges: {
+      handler: function(newValue) {
+        const selectedRanges = newValue.map((x) => ({
+          start_residue_number: x.start,
+          end_residue_number: x.end,
+          color: null,
+          focus: true
+        }))
+        this.viewerInstance.visual.select({data:[...this.selectionDataWithSelectedColorBy, ...selectedRanges]})
+        this.viewerInstance.visual.highlight({
+            data: selectedRanges,
+        })
+      },
+      deep: true,
+    },
+    alphaFoldData: {
+      handler: function() {
+        let newSelectedAlphaFold = null
+        if (this.selectedAlphaFold) {
+          newSelectedAlphaFold = this.alphaFoldData.find((x) => x.id == newSelectedAlphaFold.id)
         }
-        if (!this.selectedPdb && this.pdbs.length > 0) {
-          this.selectedPdb = this.pdbs[0]
+        if (!this.selectedAlphaFold && this.alphaFoldData.length > 0) {
+          this.selectedAlphaFold = this.alphaFoldData[0]
         }
       }
     },
@@ -103,7 +153,7 @@ export default {
         this.refreshSelection()
       }
     },
-    selectedPdb: {
+    selectedAlphaFold: {
       handler: function() {
         this.render()
       }
@@ -122,33 +172,8 @@ export default {
   },
 
   methods: {
-    refreshSelection: function() {
-      if (this.stage && this.mainComponent) {
-        for (const representation of this.selectionRepresentations) {
-          console.log(representation)
-          //representation.setVisibility(false)
-          this.mainComponent.removeAllRepresentations()
-          this.mainComponent.removeRepresentation(representation)
-        }
-        this.selectionRepresentations = []
-        if (this.selectedResidueRange) {
-          // Get all atoms within 5 Angstroms.
-          var selection = new NGL.Selection(`${this.selectedResidueRange[0]}-${this.selectedResidueRange[1]}`);
-          var radius = 5
-          var atomSet = this.mainComponent.structure.getAtomSetWithinSelection( selection, radius );
-          // Expand selection to complete groups
-          var atomSet2 = this.mainComponent.structure.getAtomSetWithinGroup(atomSet)
-          this.selectionRepresentations.push(
-            this.mainComponent.addRepresentation('cartoon', {sele: atomSet2.toSeleString(), colorScheme: 'resname'})
-          )
-          console.log(this.selectionRepresentations)
-          //this.mainComponent.autoView()
-        }
-      }
-    },
-
     fetchUniprotData: async function() {
-      const response = await axios.get(`https://www.uniprot.org/uniprot/${this.uniprotId}.xml`)
+      const response = await axios.get(`https://rest.uniprot.org/uniprotkb/${this.uniprotId}.xml`)
       if (response.data) {
         const parser = new DOMParser()
         this.uniprotData = parser.parseFromString(response.data, 'text/xml')
@@ -158,38 +183,46 @@ export default {
     },
 
     render: function() {
-      const self = this
-      if (this.selectedPdb) {
-        if (!this.stage) {
-          this.stage = new NGL.Stage(this.$refs.container)
-          this.stage.signals.clicked.add((pickingProxy) => {
-            if (pickingProxy) {
-              const atom = pickingProxy.atom || pickingProxy.closestBondAtom
-              if (atom?.residueIndex != null) {
-                this.$emit('clickedResidue', {residueNumber: atom.residueIndex + 1})
-              }
-              // console.log(atom.qualifiedName())
-            }
-          })
-          this.stage.signals.hovered.add((pickingProxy) => {
-            if (pickingProxy) {
-              const atom = pickingProxy.atom || pickingProxy.closestBondAtom
-              if (atom?.residueIndex != null) {
-                this.$emit('hoveredOverResidue', {residueNumber: atom.residueIndex + 1})
-              }
-              // console.log(atom.qualifiedName())
-            }
-          })
-        }
-        // rcsb://1crn
-        this.stage.removeAllComponents()
-        this.stage.loadFile(`rcsb://${this.selectedPdb.id}`, /*{defaultRepresentation: true}*/).then((component) => {
-          this.mainComponent = component
-          component.addRepresentation('cartoon', {colorScheme: self.colorScheme})
-          //this.stage.autoView()
+      if (this.selectedAlphaFold) {
+        const viewerInstance = new PDBeMolstarPlugin()
+        const options = {
+          customData: {
+            url: `https://alphafold.ebi.ac.uk/files/AF-${this.selectedAlphaFold.id}-F1-model_v4.cif`,
+            format: 'cif',
+          },
+          /** This applies AlphaFold confidence score colouring theme for AlphaFold model */
+          // alphafoldView: true,
+          hideControls: true,
+          bgColor: { r: 255, g: 255, b: 255 },
+          // hideCanvasControls: [
+          //   'selection',
+          //   'animation',
+          //   'controlToggle',
+          //   'controlInfo',
+          // ],
+          // sequencePanel: true,
+          landscape: true,
+          highlightColor: '#ffffff',
+          selection: {
+            data: this.selectionDataWithSelectedColorBy,
+          },
+          selectInteraction: false,
+        };
+        const viewerContainer = document.getElementById('pdbe-molstar-viewer-container')
+        viewerInstance.render(viewerContainer, options)
+        viewerInstance.events.loadComplete.subscribe(() => {
+            viewerInstance.plugin.layout.context.canvas3d.camera.state.fog = 0
+            viewerInstance.plugin.layout.context.canvas3d.camera.state.clipFar = false
+            viewerInstance.visual.tooltips({data:this.residueTooltips.value})
         })
-      } else {
-        //
+
+        document.addEventListener('PDB.molstar.click', (e) => {
+          this.$emit('clickedResidue', e.eventData)
+        })
+        document.addEventListener('PDB.molstar.mouseover', (e) => {
+          this.$emit('hoveredOverResidue', e.eventData)
+        })
+        this.viewerInstance = viewerInstance
       }
     }
   }
@@ -197,11 +230,12 @@ export default {
 
 </script>
 
-<style scoped>
-
-.mavedb-protein-structure-viewer-container {
-  height: 600px;
-  width: 600px;
+<style>
+.msp-plugin .msp-layout-standard {
+  border: 0;
 }
-
+.protein-viz-colorby-button .p-button {
+  padding: 2px !important;
+  font-size: 0.8em;
+}
 </style>

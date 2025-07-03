@@ -113,9 +113,11 @@
             :scoreSet="item"
             :scores="scores"
             :externalSelection="variantToVisualize"
+            :showProteinStructureModal="uniprotId!=null"
             @variant-selected="childComponentSelectedVariant"
             @heatmap-visible="heatmapVisibilityUpdated"
             @export-chart="setHeatmapExport" ref="heatmap"
+            @on-did-click-show-protein-structure="showProteinStructureModal"
           />
         </div>
       </div>
@@ -404,6 +406,16 @@
       <ItemNotFound model="score set" :itemId="itemId"/>
     </div>
   </DefaultLayout>
+  <div class="card flex justify-content-center">
+      <Sidebar class="scoreset-viz-sidebar" v-model:visible="isScoreSetVisualizerVisible" :header="item.title" position="full">
+          <ScoreSetVisualizer
+            :scoreSet="item"
+            :scores="scores"
+            :uniprotId="uniprotId"
+            :externalSelection="variantToVisualize"
+          />
+      </Sidebar>
+  </div>
 </template>
 
 <script>
@@ -423,6 +435,8 @@ import TabView from 'primevue/tabview'
 import Message from 'primevue/message'
 import ProgressSpinner from 'primevue/progressspinner'
 import ScrollPanel from 'primevue/scrollpanel';
+import Dialog from 'primevue/dialog'
+import Sidebar from 'primevue/sidebar'
 
 import CollectionAdder from '@/components/CollectionAdder'
 import CollectionBadge from '@/components/CollectionBadge'
@@ -442,11 +456,17 @@ import { parseScoresOrCounts } from '@/lib/scores'
 import { preferredVariantLabel, variantNotNullOrNA } from '@/lib/mave-hgvs';
 import { mapState } from 'vuex'
 import { ref } from 'vue'
+import ScoreSetVisualizer from '../ScoreSetVisualizer.vue';
 
 export default {
   name: 'ScoreSetView',
-  components: { Accordion, AccordionTab, AutoComplete, Button, Chip, CollectionAdder, CollectionBadge, DefaultLayout, EntityLink, ScoreSetHeatmap, ScoreSetHistogram, TabView, TabPanel, Message, DataTable, Column, ProgressSpinner, ScrollPanel, PageLoading, ItemNotFound },
+  components: { Accordion, AccordionTab, AutoComplete, Button, Chip, Sidebar, CollectionAdder, CollectionBadge, DefaultLayout, EntityLink, ScoreSetHeatmap, ScoreSetHistogram, ScoreSetVisualizer, TabView, TabPanel, Message, DataTable, Column, ProgressSpinner, ScrollPanel, PageLoading, ItemNotFound },
   computed: {
+    uniprotId: function() {
+      const firstTargetGeneExternalIdentifiers = _.get(_.first(this.item.targetGenes), 'externalIdentifiers') || []
+      const uniProtIdentifier = _.find(firstTargetGeneExternalIdentifiers, (x) => x.identifier.dbName == 'UniProt')
+      return _.get(uniProtIdentifier, 'identifier.identifier', null)
+    },
     contributors: function() {
       return _.sortBy(
         (this.item?.contributors || []).filter((c) => c.orcidId != this.item?.createdBy?.orcidId),
@@ -513,6 +533,7 @@ export default {
     countsTable: [],
     readMore: true,
     showHeatmap: true,
+    isScoreSetVisualizerVisible: false,
     heatmapExists: false,
     selectedVariant: null,
     userIsAuthorized: {
@@ -561,6 +582,9 @@ export default {
     },
   },
   methods: {
+    showProteinStructureModal: function() {
+      this.isScoreSetVisualizerVisible = true
+    },
     variantNotNullOrNA,
     checkUserAuthorization: async function() {
       await this.checkAuthorization()
@@ -1000,4 +1024,11 @@ export default {
   margin: 1em 0;
 }
 
+</style>
+
+<style>
+.scoreset-viz-sidebar .p-sidebar-header {
+  padding: 0 5px 0;
+  height: 2em;
+}
 </style>

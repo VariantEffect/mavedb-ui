@@ -1,6 +1,5 @@
 import * as d3 from 'd3'
-import $ from 'jquery'
-import _, { filter, last } from 'lodash'
+import _ from 'lodash'
 
 import { AMINO_ACIDS, AMINO_ACIDS_BY_HYDROPHILIA } from './amino-acids.js'
 import { NUCLEOTIDE_BASES } from './nucleotides.js'

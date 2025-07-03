@@ -619,6 +619,7 @@ export default function makeHeatmap(): Heatmap {
           .style('left', 0)
           .style('height', '100%')
           .style('z-index', 2002)
+          .style('background-color', '#f7f7f7')
           .classed('exclude-from-export', true)
         const legendGroup = yAxisSvg.append('g')
           .attr('class', 'heatmap-legend')
@@ -658,7 +659,6 @@ export default function makeHeatmap(): Heatmap {
               const paddingTop = _container.getBoundingClientRect().top - _wrapper.getBoundingClientRect().top
               yAxisSvg
                 .style('padding-top', `${paddingTop}px`)
-                .style('background-color', '#f7f7f7')
               const legendAbsolute = yAxisSvg.select('g.heatmap-vertical-color-legend')
                 .attr('width', LEGEND_SIZE)
                 .attr('height', height)

@@ -28,9 +28,9 @@ export const HEATMAP_NUCLEOTIDE_ROWS: HeatmapRowSpecification[] = [
 
 /** List of single-character codes for the heatmap's rows, from bottom to top. */
 export const HEATMAP_AMINO_ACID_ROWS: HeatmapRowSpecification[] = [
-  { code: '=', label: '=', cssClass: 'mave-heatmap-y-axis-tick-label-lg' },
+  { code: '=', label: '\uff1d' },
   { code: '*', label: '\uff0a' },
-  { code: '-', label: '-', cssClass: 'mave-heatmap-y-axis-tick-label-lg' },
+  { code: '-', label: '\uff0d' },
   ...AMINO_ACIDS_BY_HYDROPHILIA.map((aaCode) => ({ code: aaCode, label: aaCode }))
 ]
 

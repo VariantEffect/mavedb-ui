@@ -578,10 +578,6 @@ export default {
   font-size: 14px;
 }
 
-.heatmapContainer:deep(.heatmap-y-axis-tick-label-lg) {
-  font-size: 22px;
-}
-
 .heatmapContainer:deep(.heatmap-x-axis-invisible) {
   visibility: hidden;
 }

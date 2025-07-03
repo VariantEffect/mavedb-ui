@@ -657,7 +657,7 @@ export default function makeHeatmap(): Heatmap {
               // Add padding to offset the legend to the top of the heatmap container, accounting for the stacked heatmap height or other content
               const paddingTop = _container.getBoundingClientRect().top - _wrapper.getBoundingClientRect().top
               yAxisSvg
-                .style('padding-top', paddingTop)
+                .style('padding-top', `${paddingTop}px`)
                 .style('background-color', '#f7f7f7')
               const legendAbsolute = yAxisSvg.select('g.heatmap-vertical-color-legend')
                 .attr('width', LEGEND_SIZE)
@@ -724,7 +724,7 @@ export default function makeHeatmap(): Heatmap {
           if (svg && yAxisSvg) {
             // Set the width of the Y-axis SVG to accommodate legend and tick labels.
             const mainYAxisTickLabelsWidth = (svg?.select('g.heatmap-y-axis-tick-labels')?.node() as Element).getBoundingClientRect().width
-            if (mainYAxisTickLabelsWidth) yAxisSvg.style('width', LEGEND_SIZE + mainYAxisTickLabelsWidth + 5)
+            if (mainYAxisTickLabelsWidth) yAxisSvg.style('width', `${LEGEND_SIZE + mainYAxisTickLabelsWidth + 3}px`)
           }
         }
 

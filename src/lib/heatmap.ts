@@ -83,7 +83,7 @@ export interface Heatmap {
 
   // Chart lifecycle methods
   destroy: () => void
-  render: (container: HTMLElement) => Heatmap
+  render: (container: HTMLElement, wrapper?: HTMLElement) => Heatmap
   refresh: () => Heatmap
   resize: () => Heatmap
 
@@ -239,6 +239,9 @@ export default function makeHeatmap(): Heatmap {
   // Container
   let _container: HTMLElement | null = null
 
+  // Wrapper
+  let _wrapper: HTMLElement | null = null
+
   // Layout
   let height: number | null = null
   let width: number | null = null
@@ -266,6 +269,7 @@ export default function makeHeatmap(): Heatmap {
 
   // D3 selections containing DOM elements
   let svg: d3.Selection<SVGElement, any, any, any> | null = null
+  let yAxisSvg: d3.Selection<SVGElement, any, any, any> | null = null
   let hoverTooltip: d3.Selection<HTMLDivElement, any, any, any> | null = null
   let selectionTooltip: d3.Selection<HTMLDivElement, any, any, any> | null = null
 
@@ -751,8 +755,9 @@ export default function makeHeatmap(): Heatmap {
       content = {columns: undefined}
     },
 
-    render: (container: HTMLElement) => {
+    render: (container: HTMLElement, wrapper?: HTMLElement) => {
       _container = container
+      _wrapper = wrapper || null
 
       if (_container) {
         svg = d3.select(_container)
@@ -770,11 +775,7 @@ export default function makeHeatmap(): Heatmap {
         mainGroup.append('g')
           .attr('class', 'heatmap-bottom-axis')
         mainGroup.append('g')
-          .attr('class', 'heatmap-left-axis')
-        mainGroup.append('g')
           .attr('class', 'heatmap-y-axis-tick-labels')
-        mainGroup.append('g')
-          .attr('class', 'heatmap-hovers')
         mainGroup.append('g')
           .attr('class', 'heatmap-nodes')
         mainGroup.append('g')
@@ -794,6 +795,24 @@ export default function makeHeatmap(): Heatmap {
 
       } else {
         svg = null
+      }
+
+      if (_wrapper) {
+        yAxisSvg = d3.select(_wrapper)
+          .append('svg')
+          .style('position', 'absolute')
+          .style('top', 0)
+          .style('left', 0)
+          .style('height', '100%')
+          .classed('exclude-from-export', true)
+        const legendGroup = yAxisSvg.append('g')
+          .attr('class', 'heatmap-legend')
+          .attr('transform', `translate(${margins.left},${margins.top})`)
+        legendGroup.append('g')
+          .attr('class', 'heatmap-vertical-color-legend')
+        yAxisSvg.append('g')
+          .attr('class', 'heatmap-y-axis-tick-labels')
+          .attr('transform', `translate(${effectiveMargins.left}, ${effectiveMargins.top})`)
       }
 
       renderTooltips()
@@ -818,6 +837,24 @@ export default function makeHeatmap(): Heatmap {
               height: height,
               marginTop: 0,
             })
+            if (_wrapper && yAxisSvg) {
+              // Add padding to offset the legend to the top of the heatmap container, accounting for the stacked heatmap height or other content
+              const paddingTop = _container.getBoundingClientRect().top - _wrapper.getBoundingClientRect().top
+              yAxisSvg
+                .style('padding-top', paddingTop)
+                .style('background-color', '#f7f7f7')
+              const legendAbsolute = yAxisSvg.select('g.heatmap-vertical-color-legend')
+                .attr('width', LEGEND_SIZE)
+                .attr('height', height)
+
+              verticalColorLegend(
+                legendAbsolute, {
+                  color: colorScale,
+                  title: legendTitle,
+                  height: height,
+                  marginTop: 0,
+                })
+            }
         }
 
         // Set the Y scale. We are placing all row content starting at screen position 0 and continuing to the heatmap height.
@@ -852,6 +889,27 @@ export default function makeHeatmap(): Heatmap {
           // Apply row-specific CSS classes to Y-axis tick mark labels.
           svg.selectAll('g.heatmap-y-axis-tick-labels g.tick')
             .attr('class', (n) => rows[rows.length - 1 - n].cssClass || '')
+
+          if (_wrapper && yAxisSvg) {
+            yAxisSvg.select('g.heatmap-y-axis-tick-labels')
+            // @ts-ignore
+            // Get the row's amino acid code or variation symbol
+            .call(d3.axisLeft(yScale)
+              .tickSize(0)
+              .tickFormat((n) => rows[rows.length - 1 - n].label)
+            )
+            .select('.domain').remove()
+
+            // Apply row-specific CSS classes to Y-axis tick mark labels.
+            yAxisSvg.selectAll('g.heatmap-y-axis-tick-labels g.tick')
+              .attr('class', (n) => rows[rows.length - 1 - n].cssClass || '')
+          }
+
+          if (svg && yAxisSvg) {
+            // Set the width of the Y-axis SVG to accommodate legend and tick labels.
+            const mainYAxisTickLabelsWidth = (svg?.select('g.heatmap-y-axis-tick-labels')?.node() as Element).getBoundingClientRect().width
+            if (mainYAxisTickLabelsWidth) yAxisSvg.style('width', LEGEND_SIZE + mainYAxisTickLabelsWidth + 5)
+          }
         }
 
 

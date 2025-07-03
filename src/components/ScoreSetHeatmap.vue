@@ -441,10 +441,10 @@ export default {
       this.heatmap?.destroy()
       this.stackedHeatmap?.destroy()
 
-      this.drawHeatmap()
       if (!this.isNucleotideHeatmap && this.layout != 'compact') {
         this.drawStackedHeatmap()
       }
+      this.drawHeatmap()
     },
 
     // Assumes that plate dimensions do not change.
@@ -452,7 +452,7 @@ export default {
       this.heatmap = makeHeatmap()
         .margins({top: 0, bottom: 25, left: 20, right: 20})
         .legendTitle("Functional Score")
-        .render(this.$refs.simpleVariantsHeatmapContainer)
+        .render(this.$refs.simpleVariantsHeatmapContainer, this.$refs.heatmapContainer)
         .rows(this.heatmapRows)
         .xCoordinate(this.xCoord)
         .yCoordinate(this.yCoord)
@@ -608,22 +608,12 @@ export default {
   position: relative;
 }
 
-.heatmapLegendContainer {
-  float: left;
-  position: absolute;
-}
-
 .heatmapScrollContainer {
   overflow-x: auto;
   position: relative;
 }
 
 .heatmapContainer:deep(.heatmap-y-axis-tick-labels) {
-  font-size: 14px;
-  user-select: none;
-}
-
-.heatmapContainer:deep(.heatmap-color-bar-labels) {
   font-size: 14px;
   user-select: none;
 }

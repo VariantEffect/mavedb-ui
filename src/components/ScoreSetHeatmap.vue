@@ -570,6 +570,7 @@ export default {
 
 .heatmapScrollContainer {
   overflow-x: auto;
+  overflow-y: hidden;
   position: relative;
 }
 

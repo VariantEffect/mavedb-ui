@@ -8,7 +8,7 @@
     <div class="flex flex-wrap gap-3">
       Shader Options:
       <div class="flex align-items-center gap-1">
-          <RadioButton v-model="activeShader" inputId="unsetShader" name="shader" value="null" />
+          <RadioButton v-model="activeShader" inputId="unsetShader" name="shader" value="notSet" />
           <label for="unsetShader">No Shader</label>
       </div>
       <div class="flex align-items-center gap-2" v-if="scoreSet.scoreRanges">
@@ -511,7 +511,7 @@ export default defineComponent({
 
       // Only render clinical specific viz options if such features are enabled.
       if (this.config.CLINICAL_FEATURES_ENABLED) {
-        const shaderToRender = this.activeShader === 'null' ? null : this.activeShader
+        const shaderToRender = this.activeShader === 'notSet' ? null : this.activeShader
         this.histogram.renderShader(shaderToRender)
       } else {
         this.histogram.renderShader(null)

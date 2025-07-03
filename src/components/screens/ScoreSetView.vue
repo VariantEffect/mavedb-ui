@@ -108,7 +108,7 @@
             ref="histogram"
           />
         </div>
-        <div v-if="showHeatmap" class="mave-score-set-heatmap-pane">
+        <div v-if="showHeatmap && !isScoreSetVisualizerVisible" class="mave-score-set-heatmap-pane">
           <ScoreSetHeatmap
             :scoreSet="item"
             :scores="scores"

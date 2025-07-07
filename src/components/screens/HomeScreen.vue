@@ -35,6 +35,83 @@
                 format uploaded by investigators, which is often relative to synthetic target sequences.
               </li>
             </ul>
+            <h3>Curated score sets</h3>
+            <p>The following data sets have been curated and include score range information.</p>
+            <table>
+              <tr>
+                <th>Gene</th>
+                <th>Experiment or score set</th>
+              </tr>
+              <tr>
+                <td>ASPA</td>
+                <td>
+                  <router-link :to="{name: 'scoreSet', params: {urn: 'urn:mavedb:00000657-a-1'}}">Aspartoacylase (ASPA) cellular abundance</router-link><br />
+                  <router-link :to="{name: 'scoreSet', params: {urn: 'urn:mavedb:00000657-b-1'}}">Aspartoacylase (ASPA) cellular toxicity</router-link>
+                </td>
+              </tr>
+              <tr>
+                <td>BRCA1</td>
+                <td>
+                  <router-link :to="{name: 'scoreSet', params: {urn: 'urn:mavedb:00000097-0-2'}}">BRCA1 SGE Normalized Scores</router-link>
+                  <!--
+                  <router-link :to="{name: 'scoreSet', params: {urn: 'urn:mavedb:00001208-a-2'}}">Multiplex HDR assay of BRCA1</router-link><br />
+                  <router-link :to="{name: 'scoreSet', params: {urn: 'urn:mavedb:00001209-a-2'}}">Cisplatin resistance assay of BRCA1</router-link>
+                  -->
+                </td>
+              </tr>
+              <tr>
+                <td>BRCA2</td>
+                <td><router-link :to="{name: 'scoreSet', params: {urn: 'urn:mavedb:00001224-a-1'}}">Scores from arrayed screen of BRCA2 homology directed repair function in VC-8 cells</router-link></td>
+              </tr>
+              <tr>
+                <td>CHEK2</td>
+                <td><router-link :to="{name: 'scoreSet', params: {urn: 'urn:mavedb:00001205-a-1'}}">CHEK2 Yeast Complementation in MMS</router-link></td>
+              </tr>
+              <tr>
+                <td>FGFR</td>
+                <td><router-link :to="{name: 'experiment', params: {urn: 'urn:mavedb:00001220-a'}}">Saturation mutagenesis of FGFR kinase domains in MCF10A and NCI-H1581 cells</router-link></td>
+              </tr>
+              <tr>
+                <td>FKRP</td>
+                <td><router-link :to="{name: 'scoreSet', params: {urn: 'urn:mavedb:00001197-a-4'}}">FKRP variants effects on alpha-DG glycosylation</router-link></td>
+              </tr>
+              <tr>
+                <td>GCK</td>
+                <td>
+                  <router-link :to="{name: 'scoreSet', params: {urn: 'urn:mavedb:00000096-a-1'}}">GCK activity measured by complementation</router-link><br />
+                  <router-link :to="{name: 'scoreSet', params: {urn: 'urn:mavedb:00000096-b-1'}}">GCK abundance measured by DHFR-PCA</router-link>
+                </td>
+              </tr>
+              <tr>
+                <td>KCNH2</td>
+                <td>
+                  <router-link :to="{name: 'scoreSet', params: {urn: 'urn:mavedb:00001216-a-1'}}">KCNH2 MAVE Trafficking Scores</router-link><br />
+                  <router-link :to="{name: 'scoreSet', params: {urn: 'urn:mavedb:00001224-a-1'}}">Scores from arrayed screen of BRCA2 homology directed repair function in VC-8 cells</router-link><br />
+                  <router-link :to="{name: 'scoreSet', params: {urn: 'urn:mavedb:00001231-a-1'}}">Scores from cell surface expression deep mutational scan of KCNH2 in HEK293T cells</router-link>
+                </td>
+              </tr>
+              <tr>
+                <td>LARGE1</td>
+                <td><router-link :to="{name: 'scoreSet', params: {urn: 'urn:mavedb:00001197-a-4'}}">LARGE1 variants effects on alpha-DG glycosylation</router-link></td>
+              </tr>
+              <tr>
+                <td>MSH2</td>
+                <td><router-link :to="{name: 'scoreSet', params: {urn: 'urn:mavedb:00000050-a-1'}}">MSH2 LOF scores (HAP1)</router-link></td>
+              </tr>
+              <tr>
+                <td>OTC</td>
+                <td><router-link :to="{name: 'scoreSet', params: {urn: 'urn:mavedb:00000112-a-1'}}">SNV-accessible missense variant scores for OTC</router-link></td>
+              </tr>
+              <tr>
+                <td>TP53</td>
+                <td>
+                  <!--
+                  <router-link :to="{name: 'scoreSet', params: {urn: 'urn:mavedb:00001211-0-2'}}">Yeast-based functional assay of p53 (median transactivation)</router-link>
+                  -->
+                  <router-link :to="{name: 'scoreSet', params: {urn: 'urn:mavedb:00001234-0-1'}}">Median TP53 transcriptional activity scores</router-link>
+                </td>
+              </tr>
+            </table>
           </template>
         </Card>
       </div>

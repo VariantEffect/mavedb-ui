@@ -45,9 +45,13 @@
                 <td v-if="clinvarAlleleIds.length == 0" colspan="2">&nbsp;</td>
               </tr>
               <tr>
+                <td>&nbsp;</td>
+                <td>&nbsp;</td>
+                <!--
                 <td>Variant type:</td>
                 <td style="background: yellow;">Single nucleotide variant</td>
                 <td style="width: 150px;">&nbsp;</td>
+                -->
                 <td v-if="classification">Functional consequence:</td>
                 <td v-if="classification">{{ startCase(classification) }}</td>
                 <td v-if="!classification" colspan="2">&nbsp;</td>

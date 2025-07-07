@@ -6,12 +6,11 @@
     </span>
     <div class="flex">
       <span class="ml-2">Color by:</span>
-      <SelectButton class="protein-viz-colorby-button ml-2" v-model="colorBy" optionLabel="name" optionValue="value" :options="[{ name: 'Mean score', value: 'meanScore' }, {name: 'Min. missense score', value: 'minMissenseScore'}, {name: 'Max. missense score', value: 'maxMissenseScore'}]" />
+      <SelectButton class="protein-viz-colorby-button ml-2" v-model="colorBy" optionLabel="name" optionValue="value" :options="colorByOptions" />
     </div>
     <div id="pdbe-molstar-viewer-container" style="flex: 1; position: relative"></div>
   </div>
   </template>
-
 <script>
 
 import axios from 'axios'
@@ -21,6 +20,7 @@ import SelectButton from 'primevue/selectbutton'
 import { PDBeMolstarPlugin } from 'pdbe-molstar/lib/viewer'
 import 'pdbe-molstar/build/pdbe-molstar-light.css'
 import _ from 'lodash'
+import { watch, ref } from 'vue'
 
 export default {
   name: 'ProteinStructureView',
@@ -44,6 +44,10 @@ export default {
       type: Array,
       default: () => []
     },
+    rowSelected: {
+      type: Boolean,
+      default: false
+    },
     residueTooltips: {
       type: Array,
       default: () => []
@@ -52,12 +56,14 @@ export default {
 
   data: () => ({
     uniprotData: null,
-    // selectedPdb: null,
     viewerInstance: null,
     selectedAlphaFold: null,
     stage: null,
-    // mainComponent: null,
-    colorBy: 'meanScore',
+    colorByOptions: [
+      {name: 'Mean Score', value: 'mean.color'},
+      {name: 'Min Missense Score', value: 'minMissense.color'},
+      {name: 'Max Missense Score', value: 'maxMissense.color'},
+    ],
     colorScheme: 'bfactor',
     colorSchemeOptions: [
       'atomindex',
@@ -83,17 +89,14 @@ export default {
       'value',
       'volume'
     ],
-    // selectionRepresentations: []
   }),
 
   computed: {
     selectionDataWithSelectedColorBy: function() {
-      return _.map(this.selectionData.value, (x) => ({
+        return _.map(this.selectionData, (x) => ({
           start_residue_number: x.start_residue_number,
           end_residue_number: x.end_residue_number,
-          color: this.colorBy === 'meanScore' ? x.meanColor :
-                 this.colorBy === 'minMissenseScore' ? x.minMissenseColor :
-                 this.colorBy === 'maxMissenseScore' ? x.maxMissenseColor : null,
+          color: _.get(x, this.colorBy, '#000')
         }))
     },
     alphaFoldData: function() {
@@ -114,6 +117,22 @@ export default {
 
   mounted: function() {
     this.render()
+  },
+
+  setup(props) {
+    const colorBy = ref('mean.color')
+
+    watch(() => props.rowSelected, (newValue) => {
+      if (_.isNumber(newValue)) {
+        colorBy.value = [newValue, 'color']
+      } else {
+        colorBy.value = 'mean.color'
+      }
+    })
+
+    return {
+      colorBy,
+    }
   },
 
   watch: {

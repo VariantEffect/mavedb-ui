@@ -2282,10 +2282,10 @@ export default {
         this.secondaryPublicationIdentifiers = []
         this.extraMetadata = {}
 
-        this.scoreRanges = {wtScore: null, ranges: []}
+        this.scoreRanges = {wtScore: null, ranges: [], oddsPathSource: []}
         this.isProvidingScoreRanges = false
 
-        this.createdTargetGenes = [emptyTargetGeneWizardObj]
+        this.createdTargetGenes = [emptyTargetGeneWizardObj()]
         this.numTargets = 1
         this.isMultiTarget = false
         this.isTargetSequence = true

@@ -469,6 +469,7 @@ export default defineComponent({
     },
     clinicalControls: {
       handler: function() {
+        this.disassociateClinicalControlsWithVariants()
         this.associateClinicalControlsWithVariants()
         this.renderOrRefreshHistogram()
       }
@@ -591,13 +592,17 @@ export default defineComponent({
       }
     },
 
-    associateClinicalControlsWithVariants: function () {
-      let associatedAnyControlsWithVariants = false
+    disassociateClinicalControlsWithVariants: function () {
       this.associatedClinicalControls = false
+      this.someVariantsHaveClinicalSignificance = false
 
       for (const variant of this.variants) {
         variant.control = null
       }
+    },
+
+    associateClinicalControlsWithVariants: function()  {
+      let associatedAnyControlsWithVariants = false
 
       for (const clinicalControl of this.clinicalControls) {
         clinicalControl.mappedVariants.forEach(mappedVariant => {

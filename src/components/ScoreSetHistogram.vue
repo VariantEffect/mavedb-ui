@@ -145,6 +145,7 @@ export default defineComponent({
 
       clinicalControls: [] as ClinicalControl[],
       clinicalControlOptions: [] as ClinicalControlOption[],
+      clinicalControlCache: {} as Record<string, Record<string, ClinicalControl[]>>,
       someVariantsHaveClinicalSignificance: false,
       clinicalControlsEnabled: config.CLINICAL_FEATURES_ENABLED,
       refreshedClinicalControls: false,
@@ -449,6 +450,14 @@ export default defineComponent({
           let defaultControlVersion = this.controlDb?.availableVersions.find((version) => version == DEFAULT_CLINICAL_CONTROL_VERSION)
           this.controlVersion = defaultControlVersion ? defaultControlVersion : this.controlDb?.availableVersions[0]
         }
+        const cache: Record<string, Record<string, ClinicalControl[]>> = {}
+        for (const dbOption of this.clinicalControlOptions) {
+          cache[dbOption.dbName] = {}
+          for (const version of dbOption.availableVersions) {
+            cache[dbOption.dbName][version] = []
+          }
+        }
+        this.clinicalControlCache = cache
       }
     },
     controlDbAndVersion: {
@@ -533,6 +542,12 @@ export default defineComponent({
     },
 
     loadClinicalControls: async function() {
+      if (this.controlDb && this.controlVersion && this.clinicalControlCache[this.controlDb.dbName]?.[this.controlVersion].length > 0) {
+        this.clinicalControls = this.clinicalControlCache[this.controlDb.dbName][this.controlVersion]
+        this.refreshedClinicalControls = true
+        return
+      }
+
       this.refreshedClinicalControls = false
       let queryString = '';
       if (this.controlDb) {
@@ -547,6 +562,10 @@ export default defineComponent({
           const response = await axios.get(`${config.apiBaseUrl}/score-sets/${this.scoreSet.urn}/clinical-controls${queryString}`)
           if (response.data) {
             this.clinicalControls = response.data
+
+            if (this.controlDb && this.controlVersion) {
+              this.clinicalControlCache[this.controlDb.dbName][this.controlVersion] = response.data
+            }
           }
         } catch (error) {
           this.$toast.add({severity: 'warn', summary: 'No clinical control variants are associated with variants belonging to this score set. Clinical features are disabled.', detail: error.detail, life: 3000})
@@ -575,6 +594,10 @@ export default defineComponent({
     associateClinicalControlsWithVariants: function () {
       let associatedAnyControlsWithVariants = false
       this.associatedClinicalControls = false
+
+      for (const variant of this.variants) {
+        variant.control = null
+      }
 
       for (const clinicalControl of this.clinicalControls) {
         clinicalControl.mappedVariants.forEach(mappedVariant => {

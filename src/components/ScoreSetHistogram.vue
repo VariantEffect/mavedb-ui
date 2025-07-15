@@ -141,7 +141,7 @@ export default defineComponent({
 
       activeViz: 0,
       activeShader: scoreSetHasRanges ? 'range' : 'null',
-      activeCalibrationKey: null as String | null,
+      activeCalibrationKey: null as string | null,
 
       clinicalControls: [] as ClinicalControl[],
       clinicalControlOptions: [] as ClinicalControlOption[],
@@ -151,7 +151,7 @@ export default defineComponent({
       associatedClinicalControls: false,
 
       controlDb: null as ClinicalControlOption | null,
-      controlVersion: null as String | null,
+      controlVersion: null as string | null,
 
       clinicalSignificanceClassificationOptions: CLINVAR_CLINICAL_SIGNIFICANCE_CLASSIFICATIONS,
       customMinStarRating: DEFAULT_MIN_STAR_RATING,

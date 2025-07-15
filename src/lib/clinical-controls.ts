@@ -61,17 +61,17 @@ export const DEFAULT_CLINICAL_CONTROL_DB = 'ClinVar'
 export const DEFAULT_CLINICAL_CONTROL_VERSION = '11_2024'
 
 export interface ClinicalControlOption {
-  dbName: String,
-  availableVersions: String[]
+  dbName: string,
+  availableVersions: string[]
 }
 
 export interface ClinicalControl {
-  dbName: String,
-  dbVersion: String,
-  dbIdentifier: String,
-  clnsigField: String,
-  clnrevstatField: String,
-  geneSymbol: String,
+  dbName: string,
+  dbVersion: string,
+  dbIdentifier: string,
+  clnsigField: string,
+  clnrevstatField: string,
+  geneSymbol: string,
   modificationDate: Date,
   creationDate: Date,
   mappedVariants: Array<Object>,

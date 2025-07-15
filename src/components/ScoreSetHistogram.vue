@@ -22,7 +22,7 @@
     </div>
   </div>
   <div v-if="showControls" class="mave-histogram-controls">
-    <div class="mave-histogram-control" v-if="clinicalControlOptions.length > 1">
+    <div class="mave-histogram-control" v-if="showClinicalControlOptions">
       <label for="mave-histogram-db-select" class="mave-histogram-control-label">Clinical control database: </label>
       <Dropdown v-model="controlDb" :options="clinicalControlOptions" optionLabel="dbName" inputId="mave-histogram-db-select" style="align-items: center; height: 1.5rem;"/>
       <label for="mave-histogram-version-select" class="mave-histogram-control-label">Clinical control version: </label>
@@ -270,6 +270,15 @@ export default defineComponent({
 
     showShaders: function() {
       return this.shaderOptions.length > 1
+    },
+
+
+    showClinicalControlOptions: function() {
+      const hasMultipleDbs = this.clinicalControlOptions.length > 1
+      const hasSingleDbWithMultipleVersions = this.clinicalControlOptions.length == 1
+          && this.clinicalControlOptions[0].availableVersions.length > 1
+
+      return hasMultipleDbs || hasSingleDbWithMultipleVersions
     },
 
     activeCalibration: function() {

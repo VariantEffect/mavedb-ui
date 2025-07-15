@@ -66,7 +66,6 @@ import axios from 'axios'
 
 import {
   BENIGN_CLINICAL_SIGNIFICANCE_CLASSIFICATIONS,
-  CLINVAR_CLINICAL_SIGNIFICANCE_CLASSIFICATIONS,
   CLINVAR_REVIEW_STATUS_STARS,
   DEFAULT_CLNSIG_FIELD,
   DEFAULT_CLNREVSTAT_FIELD,
@@ -75,8 +74,12 @@ import {
   DEFAULT_CLINICAL_SIGNIFICANCE_CLASSIFICATIONS,
   DEFAULT_MIN_STAR_RATING,
   PATHOGENIC_CLINICAL_SIGNIFICANCE_CLASSIFICATIONS,
+  CONFLICTING_CLINICAL_SIGNIFICANCE_CLASSIFICATIONS,
   ClinicalControl,
   ClinicalControlOption,
+  clinvarClinicalSignificanceClassifications,
+  clinvarConflictingSignificanceClassificationForVersion,
+  conflictingClinicalSignificanceSeriesLabelForVersion,
 } from '@/lib/clinical-controls'
 import makeHistogram, {DEFAULT_SERIES_COLOR, Histogram, HistogramSerieOptions, HistogramDatum, HistogramBin} from '@/lib/histogram'
 import CalibrationTable from '@/components/CalibrationTable.vue'
@@ -154,7 +157,7 @@ export default defineComponent({
       controlDb: null as ClinicalControlOption | null,
       controlVersion: null as string | null,
 
-      clinicalSignificanceClassificationOptions: CLINVAR_CLINICAL_SIGNIFICANCE_CLASSIFICATIONS,
+      clinicalSignificanceClassificationOptions: clinvarClinicalSignificanceClassifications(this.controlVersion ? this.controlVersion : DEFAULT_CLINICAL_CONTROL_VERSION),
       customMinStarRating: DEFAULT_MIN_STAR_RATING,
       customSelectedClinicalSignificanceClassifications: DEFAULT_CLINICAL_SIGNIFICANCE_CLASSIFICATIONS,
       histogram: null as Histogram | null,
@@ -218,13 +221,17 @@ export default defineComponent({
               })
             }
 
-            if (this.selectedClinicalSignificanceClassifications.includes('Conflicting interpretations of pathogenicity')) {
+            // Account for both possible conflicting classifications.
+            if (this.selectedClinicalSignificanceClassifications.includes('Conflicting classifications of pathogenicity') ||
+                this.selectedClinicalSignificanceClassifications.includes('Conflicting interpretations of pathogenicity')
+            ) {
               series.push({
-                classifier: (d: HistogramDatum) => d.control?.[DEFAULT_CLNSIG_FIELD] == 'Conflicting interpretations of pathogenicity'
+                classifier: (d: HistogramDatum) => _.intersection(CONFLICTING_CLINICAL_SIGNIFICANCE_CLASSIFICATIONS, this.selectedClinicalSignificanceClassifications)
+                    .includes(d.control?.[DEFAULT_CLNSIG_FIELD])
                     && CLINVAR_REVIEW_STATUS_STARS[d.control?.[DEFAULT_CLNREVSTAT_FIELD]] >= this.minStarRating,
                 options: {
                   color: '#984ea3',
-                  title: 'Conflicting interpretations'
+                  title: conflictingClinicalSignificanceSeriesLabelForVersion(this.controlVersion ? this.controlVersion : DEFAULT_CLINICAL_CONTROL_VERSION)
                 }
               })
             }
@@ -344,7 +351,7 @@ export default defineComponent({
           const variantHasClinicalSignificance = variant.control && variant.control[DEFAULT_CLNSIG_FIELD] && variant.control[DEFAULT_CLNSIG_FIELD] != 'NA'
           const variantHasReviewStatus = variant.control && variant.control[DEFAULT_CLNREVSTAT_FIELD] && variant.control[DEFAULT_CLNREVSTAT_FIELD] != 'NA'
           if (variantHasClinicalSignificance) {
-            const classification = CLINVAR_CLINICAL_SIGNIFICANCE_CLASSIFICATIONS.find((c) => c.name == variant.control?.[DEFAULT_CLNSIG_FIELD])
+            const classification = clinvarClinicalSignificanceClassifications(this.controlVersion ? this.controlVersion : DEFAULT_CLINICAL_CONTROL_VERSION).find((c) => c.name == variant.control?.[DEFAULT_CLNSIG_FIELD])
             if (classification) {
               variantDescriptionParts.push(classification.description)
             }
@@ -441,6 +448,17 @@ export default defineComponent({
         this.renderOrRefreshHistogram()
       }
     },
+    clinicalSignificanceClassificationOptions: {
+      handler: function() {
+        // Ensure the conflicting significance remains selected even when the version changes its name.
+        this.customSelectedClinicalSignificanceClassifications = this.customSelectedClinicalSignificanceClassifications.map((classification) => {
+          if (CONFLICTING_CLINICAL_SIGNIFICANCE_CLASSIFICATIONS.includes(classification)) {
+            return clinvarConflictingSignificanceClassificationForVersion(this.controlVersion ? this.controlVersion : DEFAULT_CLINICAL_CONTROL_VERSION).name
+          }
+          return classification
+        })
+      }
+    },
     selectedClinicalSignificanceClassifications: {
       handler: function() {
         this.renderOrRefreshHistogram()
@@ -469,6 +487,7 @@ export default defineComponent({
     controlDbAndVersion: {
       handler: function() {
         if (this.config.CLINICAL_FEATURES_ENABLED) {
+          this.clinicalSignificanceClassificationOptions = clinvarClinicalSignificanceClassifications(this.controlVersion ? this.controlVersion : DEFAULT_CLINICAL_CONTROL_VERSION)
           this.loadClinicalControls()
         }
       }

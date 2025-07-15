@@ -341,13 +341,15 @@ export default defineComponent({
             }
           }
 
-          if (variant.control?.[DEFAULT_CLNSIG_FIELD] && variant.control?.[DEFAULT_CLNSIG_FIELD] != 'NA') {
+          const variantHasClinicalSignificance = variant.control && variant.control[DEFAULT_CLNSIG_FIELD] && variant.control[DEFAULT_CLNSIG_FIELD] != 'NA'
+          const variantHasReviewStatus = variant.control && variant.control[DEFAULT_CLNREVSTAT_FIELD] && variant.control[DEFAULT_CLNREVSTAT_FIELD] != 'NA'
+          if (variantHasClinicalSignificance) {
             const classification = CLINVAR_CLINICAL_SIGNIFICANCE_CLASSIFICATIONS.find((c) => c.name == variant.control?.[DEFAULT_CLNSIG_FIELD])
             if (classification) {
               variantDescriptionParts.push(classification.description)
             }
           }
-          if (variant.control?.[DEFAULT_CLNREVSTAT_FIELD] && variant.control?.[DEFAULT_CLNREVSTAT_FIELD] != 'NA') {
+          if (variantHasReviewStatus) {
             const numStars = CLINVAR_REVIEW_STATUS_STARS[variant.control?.[DEFAULT_CLNREVSTAT_FIELD]]
             if (numStars != null) {
               // Create an array of 4 stars to hold clinical review status a la ClinVar.
@@ -361,6 +363,10 @@ export default defineComponent({
           }
           if (variantDescriptionParts.length > 0) {
             parts.push(variantDescriptionParts.join(' '))
+          }
+          if (variantHasClinicalSignificance && variantHasReviewStatus) {
+            const clinVarLinkOut = `<a href="http://www.ncbi.nlm.nih.gov/clinvar/?term=${variant.control.dbIdentifier}[alleleid]" target="_blank">View in ClinVar</a>`
+            parts.push(clinVarLinkOut)
           }
 
           // Line 3: Score

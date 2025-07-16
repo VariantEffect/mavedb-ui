@@ -8,15 +8,15 @@
     <div class="flex flex-wrap gap-3">
       Shader Options:
       <div class="flex align-items-center gap-1">
-          <RadioButton v-model="activeShader" inputId="unsetShader" name="shader" value="null" />
+          <RadioButton v-model="activeShader" inputId="unsetShader" name="shader" value="null"/>
           <label for="unsetShader">No Shader</label>
       </div>
       <div class="flex align-items-center gap-2" v-if="scoreSet.scoreRanges">
-          <RadioButton v-model="activeShader" inputId="rangeShader" name="shader" value="range" />
+          <RadioButton v-model="activeShader" inputId="rangeShader" name="shader" value="range"/>
           <label for="rangeShader">Score Ranges</label>
       </div>
       <div class="flex align-items-center gap-2" v-if="scoreSet.scoreCalibrations">
-          <RadioButton v-model="activeShader" inputId="calibrationShader" name="shader" value="threshold" />
+          <RadioButton v-model="activeShader" inputId="calibrationShader" name="shader" value="threshold"/>
           <label for="calibrationShader">Calibration Thresholds</label>
       </div>
     </div>
@@ -24,19 +24,19 @@
   <div v-if="showControls" class="mave-histogram-controls">
     <div class="mave-histogram-control" v-if="showClinicalControlOptions">
       <label for="mave-histogram-db-select" class="mave-histogram-control-label">Clinical control database: </label>
-      <Dropdown v-model="controlDb" :options="clinicalControlOptions" optionLabel="dbName" inputId="mave-histogram-db-select" style="align-items: center; height: 1.5rem;"/>
+      <Dropdown v-model="controlDb" :options="clinicalControlOptions" optionLabel="dbName" inputId="mave-histogram-db-select" style="align-items: center; height: 1.5rem;" :disabled="!refreshedClinicalControls"/>
       <label for="mave-histogram-version-select" class="mave-histogram-control-label">Clinical control version: </label>
-      <Dropdown v-model="controlVersion" :options="controlDb?.availableVersions" inputId="mave-histogram-version-select" style="align-items: center; height: 1.5rem;"/>
+      <Dropdown v-model="controlVersion" :options="controlDb?.availableVersions" inputId="mave-histogram-version-select" style="align-items: center; height: 1.5rem;" :disabled="!refreshedClinicalControls"/>
     </div>
     <div class="mave-histogram-control">
       <label for="mave-histogram-star-select" class="mave-histogram-control-label">Minimum ClinVar review status 'gold stars': </label>
-      <Rating v-model="customMinStarRating" :stars="4" style="display: inline" inputId="mave-histogram-star-select" />
+      <Rating v-model="customMinStarRating" :stars="4" style="display: inline" inputId="mave-histogram-star-select" :disabled="!refreshedClinicalControls"/>
     </div>
     <div class="mave-histogram-control">
       <span class="mave-histogram-control-label">Include variants with classification: </span>
       <div class="flex flex-wrap gap-3">
         <div v-for="classification of clinicalSignificanceClassificationOptions" :key="classification.name" class="flex gap-1 align-items-center">
-          <Checkbox v-model="customSelectedClinicalSignificanceClassifications" :name="$scopedId('clinical-significance-inputs')" :value="classification.name" />
+          <Checkbox v-model="customSelectedClinicalSignificanceClassifications" :name="$scopedId('clinical-significance-inputs')" :value="classification.name" :disabled="!refreshedClinicalControls"/>
           <label :for="$scopedId('clinical-significance-inputs')">{{ classification.shortDescription }}</label>
         </div>
       </div>
@@ -166,6 +166,10 @@ export default defineComponent({
 
   computed: {
     series: function() {
+      if (!this.refreshedClinicalControls) {
+        return null
+      }
+
       switch (this.vizOptions[this.activeViz].view) {
         case 'clinical':
 
@@ -543,7 +547,7 @@ export default defineComponent({
           .seriesOptions(this.series?.map((s) => s.options) || null)
           .seriesClassifier(seriesClassifier)
           .title('Distribution of Functional Scores')
-          .legendNote(this.activeViz == 0 ? null : `${this.controlDb?.dbName} data from version ${this.controlVersion}`)
+          .legendNote(this.activeViz == 0 || !this.refreshedClinicalControls ? null : `${this.controlDb?.dbName} data from version ${this.controlVersion}`)
           .shaders(histogramShaders)
 
 

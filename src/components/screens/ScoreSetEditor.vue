@@ -1812,7 +1812,7 @@
             if (this.$refs.scoresFileUpload?.files?.length == 1) {
               await this.uploadData(savedItem)
             } else {
-              this.$router.replace({ path: `/score-sets/${this.item.urn}` })
+              this.$router.replace({ path: `/score-sets/submit-completion/${this.item.urn}` })
               this.$toast.add({ severity: 'success', summary: 'Your changes were saved.', life: 3000 })
             }
           } else {
@@ -1889,10 +1889,10 @@
             console.log('Imported score set data.')
             if (this.item) {
               // this.reloadItem()
-              this.$router.replace({ path: `/score-sets/${scoreSet.urn}` })
+              this.$router.replace({ path: `/score-sets/submit-completion/${scoreSet.urn}` })
               this.$toast.add({ severity: 'success', summary: 'Your changes were saved.', life: 3000 })
             } else {
-              this.$router.replace({ path: `/score-sets/${scoreSet.urn}` })
+              this.$router.replace({ path: `/score-sets/submit-completion/${scoreSet.urn}` })
               this.$toast.add({ severity: 'success', summary: 'The new score set was saved.', life: 3000 })
             }
           } else {

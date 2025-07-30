@@ -51,7 +51,8 @@ import {parseSimpleProVariant, parseSimpleNtVariant, variantNotNullOrNA} from '@
 import { saveChartAsFile } from '@/lib/chart-export'
 import { Heatmap } from '@/lib/heatmap'
 import {SPARSITY_THRESHOLD} from '@/lib/scoreSetHeatmap'
-import { AMINO_ACIDS } from '@/lib/amino-acids'
+import { AMINO_ACIDS, AMINO_ACIDS_WITH_TER } from '@/lib/amino-acids'
+import { NUCLEOTIDE_BASES } from '@/lib/nucleotides'
 
 function stdev(array: number[]) {
   if (!array || array.length === 0) {
@@ -435,15 +436,17 @@ export default {
       })
     },
 
-    prepareWtVariants: function(wtSequenceArr) {
-      return wtSequenceArr.map((el, i) => el == null ? null : ({
-        x: i + 1,
-        y: this.heatmapRows.length - 1 - this.heatmapRowForVariant(el),
-        details: {
-          wt: true
-        }
-      }))
-          .filter((x) => x != null)
+    prepareWtVariants: function(wtSequenceArr: string[]) {
+      const allowedResidues = this.sequenceType == 'protein' ? AMINO_ACIDS_WITH_TER.map((aa) => aa.codes.single) : NUCLEOTIDE_BASES.map((nt) => nt.codes.single)
+      return wtSequenceArr
+          .map((residue, i) => allowedResidues.includes(residue) ? {
+            x: i + 1,
+            y: this.heatmapRows.length - 1 - this.heatmapRowForVariant(residue),
+            details: {
+              wt: true
+            }
+          } : null)
+          .filter((variant) => variant != null)
     },
 
     prepareSimpleVariantInstances: function(variants) {

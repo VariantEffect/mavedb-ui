@@ -310,7 +310,12 @@ export default function makeHeatmap(): Heatmap {
         filteredData.push(datum)
       }
     }
-    content.columns = Object.keys(content).length - 1
+    if (Object.keys(content).length > 0) {
+      const xMin = Math.min(Object.keys(content).map(parseInt))
+      const xMax = Math.max(Object.keys(content).map(parseInt))
+      content.colummns = xMax - xMin + 1
+    }
+    content.columns = 0
     buildColorScale()
   }
 

@@ -463,9 +463,8 @@ export default {
   components: { Accordion, AccordionTab, AutoComplete, Button, Chip, Sidebar, CollectionAdder, CollectionBadge, DefaultLayout, EntityLink, ScoreSetHeatmap, ScoreSetHistogram, ScoreSetVisualizer, TabView, TabPanel, Message, DataTable, Column, ProgressSpinner, ScrollPanel, PageLoading, ItemNotFound },
   computed: {
     uniprotId: function() {
-      const firstTargetGeneExternalIdentifiers = _.get(_.first(this.item.targetGenes), 'externalIdentifiers') || []
-      const uniProtIdentifier = _.find(firstTargetGeneExternalIdentifiers, (x) => x.identifier.dbName == 'UniProt')
-      return _.get(uniProtIdentifier, 'identifier.identifier', null)
+      // If there is only one target gene, return its UniProt ID that has been set from mapped metadata.
+      return _.size(this.item.targetGenes) == 1 ? _.get(this.item.targetGenes, [0, 'uniprotIdFromMappedMetadata'], null) : null
     },
     contributors: function() {
       return _.sortBy(

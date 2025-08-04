@@ -233,7 +233,7 @@
                       <Multiselect ref="primaryPublicationIdentifiersInput" v-model="primaryPublicationIdentifiers"
                         :id="$scopedId('input-primaryPublicationIdentifiers')" :options="publicationIdentifiers"
                         optionLabel="identifier" placeholder="Select a primary publication (Where the dataset is described)"
-                        :selectionLimit="1">
+                        :selectionLimit="1" style="width: 100%;">
                         <template #option="slotProps">
                           <div class="field">
                             <div>Title: {{ slotProps.option.title }}</div>
@@ -280,79 +280,161 @@
             <div v-if="itemStatus == 'NotLoaded' || this.item.private">
               <div v-if="scoreRanges">
                 <Card>
-                  <template #title>Score ranges
+                  <template #title>Investigator Score ranges
                     <Button icon="pi pi-times" severity="danger" aria-label="Delete all ranges" rounded text style="float:right;" @click="removeScoreRanges()"/>
                   </template>
                   <template #content>
-                    <Card>
-                      <template #title>Wild Type Score</template>
-                      <template #content>
-                        <div style="padding-top: 1%;">
-                          <span class="p-float-label">
-                            <InputNumber v-model="scoreRanges.wtScore" :aria-labelledby="$scopedId('input-wtScore')" style="width:100%;" :minFractionDigits="1" :maxFractionDigits="10" />
-                            <label :for="$scopedId('input-wtScore')"> Wild Type Score </label>
-                          </span>
-                          <span v-if="validationErrors[`scoreRanges.wtScore`]" class="mave-field-error">{{ validationErrors[`scoreRanges.wtScore`] }}</span>
-                        </div>
-                      </template>
-                    </Card>
-                    <div v-for="(scoreRange, scoreIdx) of scoreRanges.ranges" :key="scoreIdx" class="mavedb-score-range-container">
                       <Card>
-                        <template #title>Range {{ scoreIdx+1 }}:
-                          <Button icon="pi pi-times" severity="danger" aria-label="Delete range" rounded text style="float:right;" @click="removeScoreRange(scoreIdx)"/>
-                        </template>
+                        <template #title>Baseline Score</template>
                         <template #content>
                           <div style="padding-top: 1%;">
-                              <InputGroup>
-                                <span class="p-float-label" style="width:75%;">
-                                  <InputText v-model="scoreRange.label" style="width:75%;" :aria-labelledby="$scopedId(`input-scoreRangeLabel-${scoreIdx}`)"></InputText>
-                                  <label :for="$scopedId(`input-scoreRangeLabel-${scoreIdx}`)">Label</label>
-                                </span>
-                                <span class="p-float-label" style="width:25%;">
-                                  <Dropdown v-model="scoreRange.classification" :options="rangeClassifications" style="width:25%;" :aria-labelledby="$scopedId(`input-scoreRangeClassification-${scoreIdx}`)"/>
-                                  <label :for="$scopedId(`input-scoreRangeClassification-${scoreIdx}`)">Classification</label>
-                                </span>
-                              </InputGroup>
-                              <span v-if="validationErrors[`scoreRanges.ranges.${scoreIdx}.label`]" class="mave-field-error">{{ validationErrors[`scoreRanges.ranges.${scoreIdx}.label`] }}</span>
-                              <span v-if="validationErrors[`scoreRanges.ranges.${scoreIdx}.classification`]" class="mave-field-error">{{ validationErrors[`scoreRanges.ranges.${scoreIdx}.classification`] }}</span>
-                          </div>
-                          <div style="padding-top: 2%;">
                             <span class="p-float-label">
-                              <Textarea v-model="scoreRange.description" style="width:100%;" :aria-labelledby="$scopedId(`input-scoreRangeDescription-${scoreIdx}`)"/>
-                              <label :for="$scopedId(`input-scoreRangeDescription-${scoreIdx}`)">Description (optional)</label>
+                              <InputNumber v-model="scoreRanges.investigatorProvided.baselineScore" :aria-labelledby="$scopedId('input-baselineScore')" style="width:100%;" :minFractionDigits="1" :maxFractionDigits="10" />
+                              <label :for="$scopedId('input-baselineScore')"> Baseline Score </label>
                             </span>
-                            <span v-if="validationErrors[`scoreRanges.ranges.${scoreIdx}.description`]" class="mave-field-error">{{ validationErrors[`scoreRanges.ranges.${scoreIdx}.description`] }}</span>
+                            <span v-if="validationErrors[`scoreRanges.investigatorProvided.baselineScore`]" class="mave-field-error">{{ validationErrors[`scoreRanges.investigatorProvided.baselineScore`] }}</span>
                           </div>
-                          <div>
-                            <InputGroup>
-                              <span class=p-float-label>
-                                <InputText v-model="scoreRange.range[0]" :aria-labelledby="$scopedId(`input-scoreRangeLower-${scoreIdx}`)" :disabled="scoreRangeBoundaryHelper[scoreIdx].lowerBoundIsInfinity"/>
-                                <label :for="$scopedId(`input-scoreRangeLower-${scoreIdx}`)"> {{ scoreRangeBoundaryHelper[scoreIdx].lowerBoundIsInfinity ? "-infinity" : "Lower Bound" }} </label>
-                              </span>
-                              <InputGroupAddon>to</InputGroupAddon>
-                              <span class=p-float-label>
-                                <InputText v-model="scoreRange.range[1]" :aria-labelledby="$scopedId(`input-scoreRangeUpper-${scoreIdx}`)" :disabled="scoreRangeBoundaryHelper[scoreIdx].upperBoundIsInfinity"/>
-                                <label :for="$scopedId(`input-scoreRangeUpper-${scoreIdx}`)"> {{ scoreRangeBoundaryHelper[scoreIdx].upperBoundIsInfinity ? "infinity" : "Upper Bound" }} </label>
-                              </span>
-                            </InputGroup>
-                          </div>
-                          <div>
-                            <span>
-                              <Checkbox v-model="scoreRangeBoundaryHelper[scoreIdx].lowerBoundIsInfinity" :binary="true" inputId="lowerBound" name="lower" @change="boundaryLimitUpdated(scoreIdx, 'lower')"/>
-                              <label for="lowerBound" class="ml-2"> No lower bound </label>
+                          <div style="padding-top: 1%;">
+                            <span class="p-float-label">
+                              <Textarea v-model="scoreRanges.investigatorProvided.baselineScoreDescription" style="width:100%;" :aria-labelledby="$scopedId(`input-baselineScoreDescription`)" />
+                              <label :for="$scopedId(`input-baselineScoreDescription`)">Baseline Score Description</label>
                             </span>
-                            <span style="float:right;">
-                              <label for="upperBound" class="ml-2"> No upper bound </label>
-                              <Checkbox v-model="scoreRangeBoundaryHelper[scoreIdx].upperBoundIsInfinity" :binary="true" inputId="upperBound" name="upper" @change="boundaryLimitUpdated(scoreIdx, 'upper')"/>
-                            </span>
+                            <span v-if="validationErrors[`scoreRanges.investigatorProvided.baselineScoreDescription`]" class="mave-field-error">{{ validationErrors[`scoreRanges.investigatorProvided.baselineScoreDescription`] }}</span>
                           </div>
-                          <span v-if="validationErrors[`scoreRanges.ranges.${scoreIdx}.range`]" class="mave-field-error">{{ validationErrors[`scoreRanges.ranges.${scoreIdx}.range`] }}</span>
+                          <div v-if="scoreRanges.investigatorProvided.ranges.some(range => range.oddsPath)">
+                            <span class="p-float-label">
+                              <Multiselect ref="scoreRangePublicationIdentifiersInput" v-model="scoreRanges.investigatorProvided.source"
+                                :id="$scopedId('input-scoreRangePublicationIdentifiersInput')" :options="publicationIdentifiers"
+                                optionLabel="identifier" placeholder="Select a source for the score ranges."
+                                :selectionLimit="1" style="width: 100%;">
+                                <template #option="slotProps">
+                                  <div class="field">
+                                    <div>Title: {{ slotProps.option.title }}</div>
+                                    <div>DOI: {{ slotProps.option.doi }}</div>
+                                    <div>Identifier: {{ slotProps.option.identifier }}</div>
+                                    <div>Database: {{ slotProps.option.dbName }}</div>
+                                  </div>
+                                </template>
+                              </Multiselect>
+                              <label :for="$scopedId('input-scoreRangePublicationIdentifiersInput')">Score Range Source (optional)</label>
+                            </span>
+                            <span v-if="validationErrors[`scoreRanges.investigatorProvided.source`]" class="mave-field-error">{{ validationErrors[`scoreRanges.investigatorProvided.source`] }}</span>
+                          </div>
                         </template>
                       </Card>
-                    </div>
-                    <div class="field" style="align-items: center; justify-content: center; display: flex">
-                      <Button label="Add new score range" icon="pi pi-plus" aria-label="Add range" outlined raised text @click="addScoreRange()"/>
-                    </div>
+                      <div v-for="(scoreRange, scoreIdx) of scoreRanges.investigatorProvided.ranges" :key="scoreIdx" class="mavedb-score-range-container">
+                        <Card>
+                          <template #title>Range {{ scoreIdx+1 }}:
+                            <Button icon="pi pi-times" severity="danger" aria-label="Delete range" rounded text style="float:right;" @click="removeScoreRange(scoreIdx)"/>
+                          </template>
+                          <template #content>
+                            <div style="padding-top: 1%;">
+                                <InputGroup>
+                                  <span class="p-float-label" style="width:75%;">
+                                    <InputText v-model="scoreRange.label" style="width:75%;" :aria-labelledby="$scopedId(`input-scoreRangeLabel-${scoreIdx}`)"></InputText>
+                                    <label :for="$scopedId(`input-scoreRangeLabel-${scoreIdx}`)">Label</label>
+                                  </span>
+                                  <span class="p-float-label" style="width:25%;">
+                                    <Dropdown v-model="scoreRange.classification" :options="rangeClassifications" optionLabel="label" optionValue="value" style="width:25%;" :aria-labelledby="$scopedId(`input-scoreRangeClassification-${scoreIdx}`)"/>
+                                    <label :for="$scopedId(`input-scoreRangeClassification-${scoreIdx}`)">Classification</label>
+                                  </span>
+                                </InputGroup>
+                                <span v-if="validationErrors[`scoreRanges.investigatorProvided.ranges.${scoreIdx}.label`]" class="mave-field-error">{{ validationErrors[`scoreRanges.investigatorProvided.ranges.${scoreIdx}.label`] }}</span>
+                                <span v-if="validationErrors[`scoreRanges.investigatorProvided.ranges.${scoreIdx}.classification`]" class="mave-field-error">{{ validationErrors[`scoreRanges.investigatorProvided.ranges.${scoreIdx}.classification`] }}</span>
+                            </div>
+                            <div style="padding-top: 2%;">
+                              <span class="p-float-label">
+                                <Textarea v-model="scoreRange.description" style="width:100%;" :aria-labelledby="$scopedId(`input-scoreRangeDescription-${scoreIdx}`)"/>
+                                <label :for="$scopedId(`input-scoreRangeDescription-${scoreIdx}`)">Description (optional)</label>
+                              </span>
+                              <span v-if="validationErrors[`scoreRanges.investigatorProvided.ranges.${scoreIdx}.description`]" class="mave-field-error">{{ validationErrors[`scoreRanges.investigatorProvided.ranges.${scoreIdx}.description`] }}</span>
+                            </div>
+                            <div>
+                              <InputGroup>
+                                <span class=p-float-label>
+                                  <InputText v-model="scoreRange.range[0]" :aria-labelledby="$scopedId(`input-scoreRangeLower-${scoreIdx}`)" :disabled="scoreRangeBoundaryHelper[scoreIdx].lowerBoundIsInfinity"/>
+                                  <label :for="$scopedId(`input-scoreRangeLower-${scoreIdx}`)"> {{ scoreRangeBoundaryHelper[scoreIdx].lowerBoundIsInfinity ? "-infinity" : "Lower Bound" }} </label>
+                                </span>
+                                <InputGroupAddon>to</InputGroupAddon>
+                                <span class=p-float-label>
+                                  <InputText v-model="scoreRange.range[1]" :aria-labelledby="$scopedId(`input-scoreRangeUpper-${scoreIdx}`)" :disabled="scoreRangeBoundaryHelper[scoreIdx].upperBoundIsInfinity"/>
+                                  <label :for="$scopedId(`input-scoreRangeUpper-${scoreIdx}`)"> {{ scoreRangeBoundaryHelper[scoreIdx].upperBoundIsInfinity ? "infinity" : "Upper Bound" }} </label>
+                                </span>
+                              </InputGroup>
+                            </div>
+                            <div>
+                              <span>
+                                <Checkbox v-model="scoreRangeBoundaryHelper[scoreIdx].lowerBoundIsInfinity" :binary="true" inputId="lowerBound" name="lower" @change="boundaryLimitUpdated(scoreIdx, 'lower')"/>
+                                <label for="lowerBound" class="ml-2"> No lower bound </label>
+                              </span>
+                              <span style="float:right;">
+                                <label for="upperBound" class="ml-2"> No upper bound </label>
+                                <Checkbox v-model="scoreRangeBoundaryHelper[scoreIdx].upperBoundIsInfinity" :binary="true" inputId="upperBound" name="upper" @change="boundaryLimitUpdated(scoreIdx, 'upper')"/>
+                              </span>
+                            </div>
+                            <span v-if="validationErrors[`scoreRanges.investigatorProvided.ranges.${scoreIdx}.range`]" class="mave-field-error">{{ validationErrors[`scoreRanges.investigatorProvided.ranges.${scoreIdx}.range`] }}</span>
+                            <div v-if="scoreRange.oddsPath">
+                              <Card>
+                                <template #title>OddsPath Ratio and Evidence Strength
+                                  <Button icon="pi pi-times" severity="danger" aria-label="Delete odds path" rounded text style="float:right;" @click="removeOddsPath(scoreIdx)"/>
+                                </template>
+                                <template #content>
+                                  <div>
+                                    <InputGroup>
+                                      <span class=p-float-label style="margin-right: 1em;">
+                                        <InputNumber v-model="scoreRange.oddsPath.ratio" :aria-labelledby="$scopedId('input-oddsPathRatio')" style="width:50%;" :minFractionDigits="1" :maxFractionDigits="10" />
+                                        <label :for="$scopedId('input-oddsPathRatio')"> OddsPath Ratio </label>
+                                      </span>
+                                      <span class=p-float-label>
+                                        <Dropdown
+                                          v-model="scoreRange.oddsPath.evidence"
+                                          :aria-labelledby="$scopedId('input-oddsPathEvidence')"
+                                          style="width:50%;"
+                                          :disabled="scoreRange.classification === null"
+                                          :options="scoreRange.classification ? evidenceStrengths[scoreRange.classification].concat(evidenceStrengths.indeterminate) : []"
+                                        />
+                                        <label :for="$scopedId('input-oddsPathEvidence')"> {{ scoreRange.classification === null ? "Select a range classification" : "OddsPath Evidence Strength (Optional)" }}  </label>
+                                      </span>
+                                    </InputGroup>
+                                    <span v-if="validationErrors[`scoreRanges.investigatorProvided.ranges.${scoreIdx}.oddsPath.ratio`]" class="mave-field-error">{{ validationErrors[`scoreRanges.investigatorProvided.ranges.${scoreIdx}.oddsPath.ratio`] }}</span>
+                                    <span v-if="validationErrors[`scoreRanges.investigatorProvided.ranges.${scoreIdx}.oddsPath.evidence`]" class="mave-field-error">{{ validationErrors[`scoreRanges.investigatorProvided.ranges.${scoreIdx}.oddsPath.evidence`] }}</span>
+                                  </div>
+                                </template>
+                              </Card>
+                            </div>
+                            <div v-else>
+                              <Card>
+                                <template #title>Add Odds Path
+                                  <Button icon="pi pi-plus" aria-label="Add Odds Path" rounded text style="float:right;" @click="addOddsPath(scoreIdx)"/>
+                                </template>
+                              </Card>
+                            </div>
+                          </template>
+                        </Card>
+                      </div>
+                      <div v-if="scoreRanges.investigatorProvided.ranges.some(range => range.oddsPath)">
+                        <span class="p-float-label">
+                          <Multiselect ref="oddsPathPublicationIdentifiersInput" v-model="scoreRanges.investigatorProvided.oddsPathSource"
+                            :id="$scopedId('input-oddsPathPublicationIdentifiersInput')" :options="publicationIdentifiers"
+                            optionLabel="identifier" placeholder="Select a source for the OddsPath calculation."
+                            :selectionLimit="1" style="width: 100%;">
+                            <template #option="slotProps">
+                              <div class="field">
+                                <div>Title: {{ slotProps.option.title }}</div>
+                                <div>DOI: {{ slotProps.option.doi }}</div>
+                                <div>Identifier: {{ slotProps.option.identifier }}</div>
+                                <div>Database: {{ slotProps.option.dbName }}</div>
+                              </div>
+                            </template>
+                          </Multiselect>
+                          <label :for="$scopedId('input-oddsPathPublicationIdentifiersInput')">OddsPath Source (optional)</label>
+                        </span>
+                        <span v-if="validationErrors[`scoreRanges.investigatorProvided.oddsPathSource`]" class="mave-field-error">{{
+                          validationErrors[`scoreRanges.investigatorProvided.oddsPathSource`] }}</span>
+                      </div>
+                      <div class="field" style="align-items: center; justify-content: center; display: flex; padding-top: 1%;">
+                        <Button label="Add new score range" icon="pi pi-plus" aria-label="Add range" outlined raised text @click="addScoreRange()"/>
+                      </div>
                   </template>
                 </Card>
               </div>
@@ -640,6 +722,13 @@
                         </template>
                       </DataTable>
                     </span>
+
+                    <div class="field-column">
+                      <div class="field" style="margin-top: 1em;">
+                        <InputSwitch v-model="isBaseEditor" :aria-labelledby="$scopedId('input-isBaseEditorData')"/>
+                        <span style="margin-left: 1em;">{{ isBaseEditor ? 'This score set represents base editor data.' : 'This score set does not represent base editor data.' }}</span>
+                      </div>
+                    </div>
                   </div>
                   <span v-if="validationErrors['targetGenes']" class="mave-field-error">{{validationErrors['targetGenes']}}</span>
                   <div class="field">
@@ -720,6 +809,7 @@
   import InputGroupAddon from 'primevue/inputgroupaddon'
   import InputNumber from 'primevue/inputnumber'
   import InputText from 'primevue/inputtext'
+  import InputSwitch from 'primevue/inputswitch'
   import Message from 'primevue/message'
   import Multiselect from 'primevue/multiselect'
   import ProgressSpinner from 'primevue/progressspinner'
@@ -739,7 +829,8 @@
   import {normalizeDoi, normalizeIdentifier, normalizePubmedId, validateDoi, validateIdentifier, validatePubmedId} from '@/lib/identifiers'
   import {ORCID_ID_REGEX} from '@/lib/orcid'
   import useFormatters from '@/composition/formatters'
-import { TARGET_GENE_CATEGORIES, textForTargetGeneCategory } from '@/lib/target-genes'
+  import { TARGET_GENE_CATEGORIES, textForTargetGeneCategory } from '@/lib/target-genes'
+  import { ABNORMAL_RANGE_EVIDENCE, NORMAL_RANGE_EVIDENCE, INDETERMINATE_RANGE_EVIDENCE } from '@/lib/ranges'
 
   const externalGeneDatabases = ['UniProt', 'Ensembl', 'RefSeq']
 
@@ -772,6 +863,7 @@ import { TARGET_GENE_CATEGORIES, textForTargetGeneCategory } from '@/lib/target-
         description: null,
         range: [null, null],
         classification: null,
+        oddsPath: null,
       }
   }
 
@@ -784,7 +876,7 @@ import { TARGET_GENE_CATEGORIES, textForTargetGeneCategory } from '@/lib/target-
 
   export default {
     name: 'ScoreSetEditor',
-    components: { AutoComplete, Button, Card, Chips, Column, Checkbox, DataTable, DefaultLayout, Dropdown, EmailPrompt, EntityLink, FileUpload, InputGroup, InputGroupAddon, InputNumber, InputText, Message, Multiselect, ProgressSpinner, SelectButton, TabPanel, TabView, Textarea },
+    components: { AutoComplete, Button, Card, Chips, Column, Checkbox, DataTable, DefaultLayout, Dropdown, EmailPrompt, EntityLink, FileUpload, InputGroup, InputGroupAddon, InputNumber, InputText, InputSwitch, Message, Multiselect, ProgressSpinner, SelectButton, TabPanel, TabView, Textarea },
 
     setup: () => {
       const publicationIdentifierSuggestions = useItems({ itemTypeName: 'publication-identifier-search' })
@@ -871,9 +963,15 @@ import { TARGET_GENE_CATEGORIES, textForTargetGeneCategory } from '@/lib/target-
       targetGenes: [],
 
       scoreRanges: {
-        wtScore: null,
-        ranges: [],
+        investigatorProvided: {
+          baselineScore: null,
+          baselineScoreDescription: null,
+          ranges: [],
+          oddsPathSource: [],
+          source: [],
+        }
       },
+      activeScoreRangeTab: 0,
       scoreRangeBoundaryHelper: [],
 
       // Static sets of options:
@@ -883,9 +981,15 @@ import { TARGET_GENE_CATEGORIES, textForTargetGeneCategory } from '@/lib/target-
       ],
       targetGeneCategories: TARGET_GENE_CATEGORIES,
       rangeClassifications: [
-        'normal',
-        'abnormal'
+        {value: "normal", label: "Normal"},
+        {value: "abnormal", label: "Abnormal"},
+        {value: "not_specified", label: "Not Specified"}
       ],
+      evidenceStrengths: {
+        normal: NORMAL_RANGE_EVIDENCE,
+        abnormal: ABNORMAL_RANGE_EVIDENCE,
+        indeterminate: INDETERMINATE_RANGE_EVIDENCE,
+      },
 
       progressVisible: false,
       serverSideValidationErrors: {},
@@ -899,7 +1003,9 @@ import { TARGET_GENE_CATEGORIES, textForTargetGeneCategory } from '@/lib/target-
       metaAnalyzesScoreSetSuggestions: [],
       supersededScoreSetSuggestions: [],
       targetGeneAccessionSuggestions: [],
-      validationErrors: {}
+      validationErrors: {},
+
+      isBaseEditor: false
     }),
 
     computed: {
@@ -921,7 +1027,12 @@ import { TARGET_GENE_CATEGORIES, textForTargetGeneCategory } from '@/lib/target-
         return this.suggestionsForAutocomplete(this.supersededScoreSetSuggestions)
       },
       targetGeneSuggestionsList: function () {
-        return this.suggestionsForAutocomplete(this.targetGeneSuggestions)
+        const geneSuggestions = this.targetGeneSuggestions || []
+        const filteredGeneSuggestions = geneSuggestions.filter(gene => {
+          const seq = gene?.targetSequence
+          return seq && seq.sequence && seq.sequenceType
+        })
+        return this.suggestionsForAutocomplete(filteredGeneSuggestions)
       },
       taxonomySuggestionsList: function() {
         return this.suggestionsForAutocomplete(this.taxonomySuggestions)
@@ -948,6 +1059,14 @@ import { TARGET_GENE_CATEGORIES, textForTargetGeneCategory } from '@/lib/target-
           return this.geneNames.map(name => ({ name }))
         }
       },
+      scoreRangeKeys: function () {
+        return Object.keys(this.scoreRanges).filter((key) => key != 'recordType').map((key) => {
+          return {
+            key: key,
+            label: key.charAt(0).toUpperCase() + key.slice(1).replace(/([A-Z])/g, ' $1')
+          }
+        })
+      }
     },
 
     watch: {
@@ -1076,8 +1195,8 @@ import { TARGET_GENE_CATEGORIES, textForTargetGeneCategory } from '@/lib/target-
       newContributorsAdded: async function(event) {
         const newContributors = event.value
 
-        // Convert any strings to ORCID users without names.
-        this.contributors = this.contributors.map((c) => _.isString(c) ? {orcidId: c} : c)
+      // Convert any strings to ORCID users without names. Remove whitespace from new entries.
+      this.contributors = this.contributors.map((c) => _.isString(c) ? {orcidId: c.trim()} : c)
 
         // Validate and look up each new contributor.
         for (const newContributor of newContributors) {
@@ -1252,7 +1371,7 @@ import { TARGET_GENE_CATEGORIES, textForTargetGeneCategory } from '@/lib/target-
       },
 
       boundaryLimitUpdated: function(rangeIdx, boundary) {
-        const updatedRange = this.scoreRanges.ranges[rangeIdx]
+        const updatedRange = this.scoreRanges.investigatorProvided.ranges[rangeIdx]
         if (boundary === "upper") {
           updatedRange.range[1] = null
         }
@@ -1262,12 +1381,12 @@ import { TARGET_GENE_CATEGORIES, textForTargetGeneCategory } from '@/lib/target-
       },
 
       addScoreRange: function() {
-        this.scoreRanges.ranges.push(emptyScoreRange())
+        this.scoreRanges.investigatorProvided.ranges.push(emptyScoreRange())
         this.scoreRangeBoundaryHelper.push(emptyScoreRangeBoundaryHelper())
       },
 
       removeScoreRange: function(rangeIdx) {
-        this.scoreRanges.ranges.splice(rangeIdx, 1)
+        this.scoreRanges.investigatorProvided.ranges.splice(rangeIdx, 1)
         this.scoreRangeBoundaryHelper.splice(rangeIdx, 1)
       },
 
@@ -1277,10 +1396,21 @@ import { TARGET_GENE_CATEGORIES, textForTargetGeneCategory } from '@/lib/target-
       },
 
       addScoreRanges: function() {
-        this.scoreRanges = {wtScore: null, ranges: []}
+        this.scoreRanges = {investigatorProvided: {baselineScore: null, baselineScoreDescription: null, ranges: [], oddsPathSource: [], source: []}}
         this.scoreRangeBoundaryHelper = []
-        this.scoreRanges.ranges.push(emptyScoreRange())
+        this.scoreRanges.investigatorProvided.ranges.push(emptyScoreRange())
         this.scoreRangeBoundaryHelper.push(emptyScoreRangeBoundaryHelper())
+      },
+
+      removeOddsPath: function(rangeIdx) {
+        this.scoreRanges.investigatorProvided.ranges[rangeIdx].oddsPath = null
+      },
+
+      addOddsPath: function(rangeIdx) {
+        this.scoreRanges.investigatorProvided.ranges[rangeIdx].oddsPath = {
+          ratio: null,
+          evidence: null,
+        }
       },
 
       ////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
@@ -1366,13 +1496,13 @@ import { TARGET_GENE_CATEGORIES, textForTargetGeneCategory } from '@/lib/target-
 
         // Only accept the current search text if we haven't set an identifier. When the user starts typing, the current
         // identifier is cleared.
-        const currentIdentifier = this.targetGene.externalIdentifiers[dbName]?.identifier
+        const currentIdentifier = this.targetGene.externalIdentifiers[dbName]?.identifier?.identifier
         if (!currentIdentifier) {
           if (searchText == '') {
             this.targetGene.externalIdentifiers[dbName].identifier = null
           } else if (validateIdentifier(dbName, searchText)) {
             const identifier = normalizeIdentifier(dbName, searchText)
-            this.targetGene.externalIdentifiers[dbName].identifier = { identifier }
+            this.targetGene.externalIdentifiers[dbName].identifier = { identifier: identifier, dbName: dbName }
             input.modelValue = null
 
             // Clear the text input.
@@ -1545,12 +1675,31 @@ import { TARGET_GENE_CATEGORIES, textForTargetGeneCategory } from '@/lib/target-
           this.targetGenes = this.item.targetGenes
           this.scoreRanges = this.item.scoreRanges
           this.scoreRangeBoundaryHelper = []
-          this.scoreRanges?.ranges.forEach((range, idx) => {
+          this.scoreRanges?.investigatorProvided.ranges.forEach((range, idx) => {
             this.scoreRangeBoundaryHelper.push(emptyScoreRangeBoundaryHelper())
-            this.scoreRangeBoundaryHelper[idx].lowerBoundIsInfinity = this.scoreRanges.ranges[idx].range[0] === null
-            this.scoreRangeBoundaryHelper[idx].upperBoundIsInfinity = this.scoreRanges.ranges[idx].range[1] === null
+            this.scoreRangeBoundaryHelper[idx].lowerBoundIsInfinity = this.scoreRanges.investigatorProvided.ranges[idx].range[0] === null
+            this.scoreRangeBoundaryHelper[idx].upperBoundIsInfinity = this.scoreRanges.investigatorProvided.ranges[idx].range[1] === null
           })
           this.extraMetadata = this.item.extraMetadata
+
+          if (this.item.scoreRanges?.investigatorProvided.oddsPathSource) {
+            this.scoreRanges.investigatorProvided.oddsPathSource = this.publicationIdentifiers.filter((publication) => {
+              return this.item.scoreRanges.investigatorProvided.oddsPathSource.some((source) => {
+                return publication.identifier === source.identifier && publication.dbName === source.dbName
+              })
+            })
+          }
+          if (this.item.scoreRanges?.investigatorProvided.source) {
+            this.scoreRanges.investigatorProvided.source = this.publicationIdentifiers.filter((publication) => {
+              return this.item.scoreRanges.investigatorProvided.source.some((source) => {
+                return publication.identifier === source.identifier && publication.dbName === source.dbName
+              })
+            })
+          }
+
+          if (this.targetGenes[0]?.targetAccession) {
+            this.isBaseEditor = this.targetGenes[0].targetAccession.isBaseEditor
+          }
         } else {
           this.experiment = null
           this.licenseId = this.defaultLicenseId
@@ -1568,10 +1717,10 @@ import { TARGET_GENE_CATEGORIES, textForTargetGeneCategory } from '@/lib/target-
           this.dataUsagePolicy = null
           this.taxonomy = null
           this.extraMetadata = {}
+          this.scoreRanges = { investigatorProvided: { baselineScore: undefined, baselineScoreDescription: undefined, ranges: [], oddsPathSource: [], source: [] } }
+          this.scoreRangeBoundaryHelper = []
           this.resetTarget()
           this.targetGenes = []
-          this.scoreRanges = {wtScore: null, ranges: []}
-          this.scoreRangeBoundaryHelper = []
         }
       },
 
@@ -1587,8 +1736,6 @@ import { TARGET_GENE_CATEGORIES, textForTargetGeneCategory } from '@/lib/target-
         this.fileCleared('targetGeneTargetSequenceSequenceFile')
         this.referenceGenome = null
         this.targetGene = emptyTargetGene()
-        this.scoreRanges = {wtScore: null, ranges: []}
-        this.scoreRangeBoundaryHelper = []
       },
 
       addTarget: function () {
@@ -1660,8 +1807,27 @@ import { TARGET_GENE_CATEGORIES, textForTargetGeneCategory } from '@/lib/target-
           dataUsagePolicy: this.dataUsagePolicy,
           extraMetadata: {},
           // eslint-disable-next-line no-unused-vars
-          targetGenes: this.targetGenes.map(({ index, ...target }) => target), // drop index property from target genes before save
-          scoreRanges: this.scoreRanges
+          targetGenes: this.targetGenes.map(({ index, ...target }) => {  // drop index property from target genes before save
+            if (target.targetAccession) {
+              target.targetAccession.isBaseEditor = this.isBaseEditor
+            }
+            return target
+          }),
+          scoreRanges: this.item.scoreRanges ? {
+            ...this.item.scoreRanges, // retain any existing score ranges. We only have edited investigator provided ranges so we handle them separately.
+          } : null,
+        }
+        if (this.scoreRanges) {
+          editedFields.scoreRanges = {
+            ...this.item.scoreRanges,
+            investigatorProvided: {
+              baselineScore: this.scoreRanges.investigatorProvided.baselineScore,
+              baselineScoreDescription: this.scoreRanges.investigatorProvided.baselineScoreDescription,
+              ranges: this.scoreRanges.investigatorProvided.ranges,
+              oddsPathSource: this.scoreRanges.investigatorProvided.oddsPathSource.map((source) => _.pick(source, ['identifier', 'dbName'])),
+              source: this.scoreRanges.investigatorProvided.source.map((source) => _.pick(source, ['identifier', 'dbName']))
+            }
+          }
         }
         if (!this.item) {
           editedFields.supersededScoreSetUrn = this.supersededScoreSet ? this.supersededScoreSet.urn : null

@@ -2,6 +2,7 @@ import * as d3 from 'd3'
 import $ from 'jquery'
 import _ from 'lodash'
 import { v4 as uuidv4 } from 'uuid';
+import { HeatmapDatum } from './heatmap';
 
 type FieldGetter<T> = ((d: HistogramDatum) => T) | string
 type Getter<T> = () => T
@@ -111,7 +112,7 @@ export interface Histogram {
   // Selection management
   clearSelection: () => void
   selectBin: (binIndex: number) => void
-  selectDatum: (d: HistogramDatum) => void
+  selectDatum: (datum: HistogramDatum) => void
 
   //////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
   // Accessors
@@ -125,6 +126,7 @@ export interface Histogram {
 
   // Data fields
   valueField: Accessor<FieldGetter<number>, Histogram>
+  accessorField: Accessor<FieldGetter<string>, Histogram>
   tooltipHtml: Accessor<((
     datum: HistogramDatum | null,
     bin: HistogramBin | null,
@@ -174,6 +176,7 @@ export default function makeHistogram(): Histogram {
 
   // Data fields
   let valueField: FieldGetter<number> = (d) => d as number
+  let accessionField: FieldGetter<string> = (d) => d as string
   let tooltipHtml: ((
     datum: HistogramDatum | null,
     bin: HistogramBin | null,
@@ -714,7 +717,7 @@ export default function makeHistogram(): Histogram {
             .join('text')
             .attr('class', 'histogram-title')
             .attr('x', width / 2 )
-            .attr('y', 4)
+            .attr('y', -margins.top / 4)
             .style('text-anchor', 'middle')
             .text((d) => d)
 
@@ -988,12 +991,11 @@ export default function makeHistogram(): Histogram {
       showSelectionTooltip()
     },
 
-    selectDatum: (d: HistogramDatum) => {
-      selectedDatum = d
-      const value = applyField(d, valueField)
+    selectDatum: (datum: HeatmapDatum) => {
+      selectedDatum = data.find((d) => applyField(d, accessionField) == applyField(datum, accessionField))
 
       // Also select the bin in which the datum falls.
-      const selectedBinIndex = findBinIndex(value)
+      const selectedBinIndex = findBinIndex(applyField(selectedDatum, valueField))
       selectedBin = selectedBinIndex == null ? null : bins[selectedBinIndex]
 
       refreshHighlighting()
@@ -1065,6 +1067,14 @@ export default function makeHistogram(): Histogram {
         return valueField
       }
       valueField = value
+      return chart
+    },
+
+    accessorField: (value?: FieldGetter<string>) => {
+      if (value === undefined) {
+        return accessionField
+      }
+      accessionField = value
       return chart
     },
 

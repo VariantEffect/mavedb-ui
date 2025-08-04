@@ -60,6 +60,7 @@ import { paths, components } from '@/schema/openapi'
 
 import type {LocationQueryValue} from "vue-router";
 import { textForTargetGeneCategory } from '@/lib/target-genes'
+import { routeToVariantSearchIfVariantIsSearchable } from '@/lib/search'
 
 type ShortScoreSet = components['schemas']['ShortScoreSet']
 type ShortTargetGene = components['schemas']['ShortTargetGene']
@@ -316,6 +317,12 @@ export default defineComponent({
       this.debouncedSearchFunction()
     },
     search: async function() {
+      // TODO#410 Because of the debounced search, this is super aggressive and will send the user to the variant search page as they are
+      // typing. I'm not sure that is the best user experience, but it seems unlikely people will actually be typing an HGVS string.
+      if (routeToVariantSearchIfVariantIsSearchable(this.searchText)) {
+        return
+      }
+
       this.$router.push({query: {
         ...(this.searchText && this.searchText.length > 0) ? {search: this.searchText} : {},
         ...(this.filterTargetNames.length > 0) ? {'target-name': this.filterTargetNames} : {},

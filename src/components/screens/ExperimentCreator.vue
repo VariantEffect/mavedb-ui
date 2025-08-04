@@ -37,7 +37,7 @@
                 <div class="mavedb-wizard-row">
                   <div class="mavedb-wizard-content-pane">
                     <Message severity="info">
-                      You are currently adding an experiment to a new experiment set. 
+                      You are currently adding an experiment to a new experiment set.
                       To add an experiment to an existing experiment set, navigate to the existing experiment set and click the "Add experiment" button.
                     </Message>
                   </div>
@@ -550,7 +550,7 @@ const KEYWORD_GROUPS = {
 
 export default {
   name: 'ExperimentEditor',
-  components: { 
+  components: {
     AutoComplete,
     Button,
     Card,
@@ -664,8 +664,8 @@ export default {
 
     stepFields: [
       [
-        'title', 'shortDescription', 'methodText', 'abstractText', 
-        'doiIdentifiers', 'contributors', 'publicationIdentifiers', 
+        'title', 'shortDescription', 'methodText', 'abstractText',
+        'doiIdentifiers', 'contributors', 'publicationIdentifiers',
         'primaryPublicationIdentifiers', 'rawReadIdentifiers', 'extraMetadata'
       ],
       ['keywords'],
@@ -755,8 +755,8 @@ export default {
     newContributorsAdded: async function(event) {
       const newContributors = event.value
 
-      // Convert any strings to ORCID users without names.
-      this.contributors = this.contributors.map((c) => _.isString(c) ? {orcidId: c} : c)
+      // Convert any strings to ORCID users without names. Remove whitespace from new entries.
+      this.contributors = this.contributors.map((c) => _.isString(c) ? {orcidId: c.trim()} : c)
 
       // Validate and look up each new contributor.
       for (const newContributor of newContributors) {
@@ -852,7 +852,7 @@ export default {
     ////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
     // Form fields
     ////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
-    
+
     acceptNewDoiIdentifier: function(event) {
       // Remove new string item from the model and add new structured item in its place if it validates and is not a duplicate.
       const idx = this.doiIdentifiers.findIndex((item) => typeof item === 'string' || item instanceof String)

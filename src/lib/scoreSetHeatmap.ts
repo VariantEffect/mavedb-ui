@@ -1,0 +1,1 @@
+export const SPARSITY_THRESHOLD = 0.05

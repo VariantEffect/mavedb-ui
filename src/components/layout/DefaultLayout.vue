@@ -1,8 +1,9 @@
 <template>
 
   <div class="mavedb-default-layout mavedb-fill-parent">
-    <Toolbar />
+    <Toolbar v-if="withToolbar" />
     <EmailPrompt
+      v-if="withEmailPrompt"
       title="Welcome to MaveDB!"
       dialog="We're glad you're here! We require a valid email address to upload data to MaveDB, so that we can get in touch if there are any issues. You may add an email now, or do so at any time on the 'Settings' page."
       :isFirstLoginPrompt="true"
@@ -38,6 +39,14 @@ export default {
     width: {
       type: String, // fixed or full
       default: 'fixed'
+    },
+    withToolbar: {
+      type: Boolean,
+      default: true
+    },
+    withEmailPrompt: {
+      type: Boolean,
+      default: true
     }
   },
 

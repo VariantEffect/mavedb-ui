@@ -119,9 +119,9 @@
                 <p class="m-0">
                   {{ keyword.keyword.description }}
                 </p>
-              </Dialog> : <a :href="`${config.appBaseUrl}/search?keywords=${keyword.keyword.value}`">{{ keyword.keyword.value }}</a>
-              <div class="field" v-if="keyword.keyword.accession">
-                {{ keyword.keyword.accession }}
+              </Dialog> : <a :href="`${config.appBaseUrl}/search?keywords=${keyword.keyword.label}`">{{ keyword.keyword.label }}</a>
+              <div class="field" v-if="keyword.keyword.code">
+                {{ keyword.keyword.code }}
               </div>
               <!--Present user's description-->
               <div class="field" v-if="keyword.description">

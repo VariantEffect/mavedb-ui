@@ -381,7 +381,7 @@
                         :id="$scopedId(`keyword-input-${keyword.key}`)"
                         :options="getKeywordOptions(keyword.option)"
                         :optionLabel="(option) => formatKeywordOptionLabel(option)"
-                        optionValue="value"
+                        optionValue="label"
                         class="keyword-dropdown"
                       />
                       <label :for="$scopedId(`keyword-input-${keyword.key}`)">{{ keyword.key }}</label>
@@ -1025,7 +1025,7 @@ export default {
         // Keywords could be an empty list now. Will modify it back to compulsory when we get final list.
         const setKeyword = (key) => {
           const keywordObj = this.item.keywords.find(keyword => keyword.keyword.key === key)
-          this.keywordKeys[key] = keywordObj ? keywordObj.keyword.value : null
+          this.keywordKeys[key] = keywordObj ? keywordObj.keyword.label : null
           this.keywordDescriptions[key] = keywordObj ? keywordObj.description : null
         }
         for (const k of KEYWORDS) {
@@ -1059,13 +1059,13 @@ export default {
       if (this.keywordGroups[methodKey]) {
         this.keywordGroups[methodKey].forEach((key) => {
           combinedKeywords.push({
-            "keyword": {"key": key, "value": this.keywordKeys[key]},
+            "keyword": {"key": key, "label": this.keywordKeys[key]},
             "description": this.keywordDescriptions[key],
           })
         })
       }
       const phenotypicKeywords = KEYWORDS.slice(5).map((keyword) => ({
-        "keyword": {"key": keyword.key, "value": this.keywordKeys[keyword.key]},
+        "keyword": {"key": keyword.key, "label": this.keywordKeys[keyword.key]},
         "description": this.keywordDescriptions[keyword.key],
       }))
       combinedKeywords.push(...phenotypicKeywords)
@@ -1186,7 +1186,7 @@ export default {
     },
 
     formatKeywordOptionLabel(option) {
-      return option.accession ? `${option.accession} - ${option.value}` : option.value;
+      return option.code ? `${option.code} - ${option.label}` : option.label;
     },
 
     getKeywordOptions(optionsName) {

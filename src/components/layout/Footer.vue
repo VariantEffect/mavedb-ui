@@ -73,7 +73,7 @@ export default {
     const footerLinks: (RouterLink | ExternalLink)[] = [
         ...routeFooterLinks,
         { type: 'external', href: 'https://mavedb.zulipchat.com/', label: 'Chat', target: '_blank', rel: 'noopener' },
-        { type: 'router', to: '/documentation', label: 'Docs' },
+        { type: 'router', to: '/docs', label: 'Documenation' },
         ...authFooterLink,
       ]
 

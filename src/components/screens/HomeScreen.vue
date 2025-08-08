@@ -68,10 +68,6 @@
                 <td><router-link :to="{name: 'scoreSet', params: {urn: 'urn:mavedb:00001205-a-1'}}">CHEK2 Yeast Complementation in MMS</router-link></td>
               </tr>
               <tr>
-                <td>FGFR</td>
-                <td><router-link :to="{name: 'experiment', params: {urn: 'urn:mavedb:00001220-a'}}">Saturation mutagenesis of FGFR kinase domains in MCF10A and NCI-H1581 cells</router-link></td>
-              </tr>
-              <tr>
                 <td>FKRP</td>
                 <td><router-link :to="{name: 'scoreSet', params: {urn: 'urn:mavedb:00001197-a-4'}}">FKRP variants effects on alpha-DG glycosylation</router-link></td>
               </tr>

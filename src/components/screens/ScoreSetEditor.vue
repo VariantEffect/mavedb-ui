@@ -342,37 +342,59 @@
                                 <span v-if="validationErrors[`scoreRanges.investigatorProvided.ranges.${scoreIdx}.label`]" class="mave-field-error">{{ validationErrors[`scoreRanges.investigatorProvided.ranges.${scoreIdx}.label`] }}</span>
                                 <span v-if="validationErrors[`scoreRanges.investigatorProvided.ranges.${scoreIdx}.classification`]" class="mave-field-error">{{ validationErrors[`scoreRanges.investigatorProvided.ranges.${scoreIdx}.classification`] }}</span>
                             </div>
-                            <div style="padding-top: 2%;">
+                            <div style="padding-top: 1%;">
                               <span class="p-float-label">
                                 <Textarea v-model="scoreRange.description" style="width:100%;" :aria-labelledby="$scopedId(`input-scoreRangeDescription-${scoreIdx}`)"/>
                                 <label :for="$scopedId(`input-scoreRangeDescription-${scoreIdx}`)">Description (optional)</label>
                               </span>
                               <span v-if="validationErrors[`scoreRanges.investigatorProvided.ranges.${scoreIdx}.description`]" class="mave-field-error">{{ validationErrors[`scoreRanges.investigatorProvided.ranges.${scoreIdx}.description`] }}</span>
                             </div>
-                            <div>
-                              <InputGroup>
-                                <span class=p-float-label>
-                                  <InputText v-model="scoreRange.range[0]" :aria-labelledby="$scopedId(`input-scoreRangeLower-${scoreIdx}`)" :disabled="scoreRangeBoundaryHelper[scoreIdx].lowerBoundIsInfinity"/>
-                                  <label :for="$scopedId(`input-scoreRangeLower-${scoreIdx}`)"> {{ scoreRangeBoundaryHelper[scoreIdx].lowerBoundIsInfinity ? "-infinity" : "Lower Bound" }} </label>
-                                </span>
+                            <div style="padding-top: 1%;">
+                              <InputGroup style="background-color: #fff;">
+                                  <Button
+                                    class="score-range-toggle-button"
+                                    @click="toggleInfinity(scoreIdx, 'lower')"
+                                    :outlined="!scoreRangeBoundaryHelper[scoreIdx].lowerBoundIsInfinity"
+                                  >
+                                    <FontAwesomeIcon icon="fa-solid fa-infinity" class="score-range-toggle-icon" />
+                                  </Button>
+                                  <Button
+                                    class="score-range-toggle-button"
+                                    @click="toggleBoundary(scoreIdx, 'lower')"
+                                    :outlined="!scoreRange.inclusiveLowerBound"
+                                    :disabled="scoreRangeBoundaryHelper[scoreIdx].lowerBoundIsInfinity"
+                                  >
+                                    <FontAwesomeIcon icon="fa-solid fa-circle-half-stroke" class="score-range-toggle-icon" />
+                                  </Button>
+                                  <span class="p-float-label">
+                                    <InputText v-model="scoreRange.range[0]" :aria-labelledby="$scopedId(`input-investigatorProvidedRangeLower-${scoreIdx}`)" :disabled="scoreRangeBoundaryHelper[scoreIdx].lowerBoundIsInfinity"/>
+                                    <label :for="$scopedId(`input-investigatorProvidedRangeLower-${scoreIdx}`)"> {{ scoreRangeBoundaryHelper[scoreIdx].lowerBoundIsInfinity ? "-infinity" : scoreRange.inclusiveLowerBound ? "Lower Bound (inclusive)" : "Lower Bound (exclusive)" }} </label>
+                                  </span>
                                 <InputGroupAddon>to</InputGroupAddon>
-                                <span class=p-float-label>
-                                  <InputText v-model="scoreRange.range[1]" :aria-labelledby="$scopedId(`input-scoreRangeUpper-${scoreIdx}`)" :disabled="scoreRangeBoundaryHelper[scoreIdx].upperBoundIsInfinity"/>
-                                  <label :for="$scopedId(`input-scoreRangeUpper-${scoreIdx}`)"> {{ scoreRangeBoundaryHelper[scoreIdx].upperBoundIsInfinity ? "infinity" : "Upper Bound" }} </label>
-                                </span>
+                                  <span class="p-float-label">
+                                    <InputText v-model="scoreRange.range[1]" :aria-labelledby="$scopedId(`input-investigatorProvidedRangeUpper-${scoreIdx}`)" :disabled="scoreRangeBoundaryHelper[scoreIdx].upperBoundIsInfinity"/>
+                                    <label :for="$scopedId(`input-investigatorProvidedRangeUpper-${scoreIdx}`)"> {{ scoreRangeBoundaryHelper[scoreIdx].upperBoundIsInfinity ? "infinity" : scoreRange.inclusiveUpperBound ? "Upper Bound (inclusive)" : "Upper Bound (exclusive)" }} </label>
+                                  </span>
+                                  <Button
+                                    class="score-range-toggle-button"
+                                    @click="toggleBoundary(scoreIdx, 'upper')"
+                                    :outlined="!scoreRange.inclusiveUpperBound"
+                                    :disabled="scoreRangeBoundaryHelper[scoreIdx].upperBoundIsInfinity"
+                                  >
+                                    <FontAwesomeIcon icon="fa-solid fa-circle-half-stroke" class="score-range-toggle-icon" />
+                                  </Button>
+                                  <Button
+                                    class="score-range-toggle-button"
+                                    @click="toggleInfinity(scoreIdx, 'upper')"
+                                    :outlined="!scoreRangeBoundaryHelper[scoreIdx].upperBoundIsInfinity"
+                                  >
+                                    <FontAwesomeIcon icon="fa-solid fa-infinity" class="score-range-toggle-icon" />
+                                  </Button>
                               </InputGroup>
                             </div>
-                            <div>
-                              <span>
-                                <Checkbox v-model="scoreRangeBoundaryHelper[scoreIdx].lowerBoundIsInfinity" :binary="true" inputId="lowerBound" name="lower" @change="boundaryLimitUpdated(scoreIdx, 'lower')"/>
-                                <label for="lowerBound" class="ml-2"> No lower bound </label>
-                              </span>
-                              <span style="float:right;">
-                                <label for="upperBound" class="ml-2"> No upper bound </label>
-                                <Checkbox v-model="scoreRangeBoundaryHelper[scoreIdx].upperBoundIsInfinity" :binary="true" inputId="upperBound" name="upper" @change="boundaryLimitUpdated(scoreIdx, 'upper')"/>
-                              </span>
-                            </div>
                             <span v-if="validationErrors[`scoreRanges.investigatorProvided.ranges.${scoreIdx}.range`]" class="mave-field-error">{{ validationErrors[`scoreRanges.investigatorProvided.ranges.${scoreIdx}.range`] }}</span>
+                            <span v-if="validationErrors[`scoreRanges.investigatorProvided.ranges.${scoreIdx}.inclusiveLowerBound`]" class="mave-field-error">{{ validationErrors[`scoreRanges.investigatorProvided.ranges.${scoreIdx}.inclusiveLowerBound`] }}</span>
+                            <span v-if="validationErrors[`scoreRanges.investigatorProvided.ranges.${scoreIdx}.inclusiveUpperBound`]" class="mave-field-error">{{ validationErrors[`scoreRanges.investigatorProvided.ranges.${scoreIdx}.inclusiveUpperBound`] }}</span>
                             <div v-if="scoreRange.oddsPath">
                               <Card>
                                 <template #title>OddsPath Ratio and Evidence Strength
@@ -432,6 +454,7 @@
                         <span v-if="validationErrors[`scoreRanges.investigatorProvided.oddsPathSource`]" class="mave-field-error">{{
                           validationErrors[`scoreRanges.investigatorProvided.oddsPathSource`] }}</span>
                       </div>
+                      <span v-if="validationErrors[`scoreRanges.investigatorProvided.ranges`]" class="mave-field-error">{{ validationErrors[`scoreRanges.investigatorProvided.ranges`] }}</span>
                       <div class="field" style="align-items: center; justify-content: center; display: flex; padding-top: 1%;">
                         <Button label="Add new score range" icon="pi pi-plus" aria-label="Add range" outlined raised text @click="addScoreRange()"/>
                       </div>
@@ -796,6 +819,7 @@
   import fasta from 'fasta-js'
   import _ from 'lodash'
   import {marked} from 'marked'
+  import { FontAwesomeIcon } from '@fortawesome/vue-fontawesome'
   import AutoComplete from 'primevue/autocomplete'
   import Button from 'primevue/button'
   import Card from 'primevue/card'
@@ -864,6 +888,8 @@
         range: [null, null],
         classification: null,
         oddsPath: null,
+        inclusiveLowerBound: true,
+        inclusiveUpperBound: false,
       }
   }
 
@@ -876,7 +902,7 @@
 
   export default {
     name: 'ScoreSetEditor',
-    components: { AutoComplete, Button, Card, Chips, Column, Checkbox, DataTable, DefaultLayout, Dropdown, EmailPrompt, EntityLink, FileUpload, InputGroup, InputGroupAddon, InputNumber, InputText, InputSwitch, Message, Multiselect, ProgressSpinner, SelectButton, TabPanel, TabView, Textarea },
+    components: { AutoComplete, Button, Card, Chips, Column, Checkbox, DataTable, DefaultLayout, Dropdown, EmailPrompt, EntityLink, FileUpload, FontAwesomeIcon, InputGroup, InputGroupAddon, InputNumber, InputText, InputSwitch, Message, Multiselect, ProgressSpinner, SelectButton, TabPanel, TabView, Textarea },
 
     setup: () => {
       const publicationIdentifierSuggestions = useItems({ itemTypeName: 'publication-identifier-search' })
@@ -969,6 +995,8 @@
           ranges: [],
           oddsPathSource: [],
           source: [],
+          inclusiveLowerBound: true,
+          inclusiveUpperBound: false,
         }
       },
       activeScoreRangeTab: 0,
@@ -1370,13 +1398,27 @@
         }
       },
 
-      boundaryLimitUpdated: function(rangeIdx, boundary) {
+      toggleBoundary: function(rangeIdx, boundary) {
         const updatedRange = this.scoreRanges.investigatorProvided.ranges[rangeIdx]
         if (boundary === "upper") {
-          updatedRange.range[1] = null
+          updatedRange.inclusiveUpperBound = !updatedRange.inclusiveUpperBound
         }
         else if (boundary == "lower") {
+          updatedRange.inclusiveLowerBound = !updatedRange.inclusiveLowerBound
+        }
+      },
+
+      toggleInfinity: function(rangeIdx, boundary) {
+        const updatedRange = this.scoreRanges.investigatorProvided.ranges[rangeIdx]
+        if (boundary === "upper") {
+          this.scoreRangeBoundaryHelper[rangeIdx].upperBoundIsInfinity = !this.scoreRangeBoundaryHelper[rangeIdx].upperBoundIsInfinity
+          updatedRange.range[1] = null
+          updatedRange.inclusiveUpperBound = false
+        }
+        else if (boundary == "lower") {
+          this.scoreRangeBoundaryHelper[rangeIdx].lowerBoundIsInfinity = !this.scoreRangeBoundaryHelper[rangeIdx].lowerBoundIsInfinity
           updatedRange.range[0] = null
+          updatedRange.inclusiveLowerBound = false
         }
       },
 
@@ -1717,7 +1759,19 @@
           this.dataUsagePolicy = null
           this.taxonomy = null
           this.extraMetadata = {}
-          this.scoreRanges = { investigatorProvided: { baselineScore: undefined, baselineScoreDescription: undefined, ranges: [], oddsPathSource: [], source: [] } }
+          this.scoreRanges = {
+            investigatorProvided: {
+              baselineScore: undefined,
+              baselineScoreDescription: undefined,
+              ranges: [],
+              oddsPathSource: [],
+              source: [],
+              infiniteUpper: false,
+              infiniteLower: false,
+              inclusiveLowerBound: true,
+              inclusiveUpperBound: false,
+            }
+          }
           this.scoreRangeBoundaryHelper = []
           this.resetTarget()
           this.targetGenes = []
@@ -2080,6 +2134,16 @@
 
   .p-dropdown-item:nth-child(even) .mave-taxonomy-organism-name {
     background: #e9e9e9;
+  }
+
+  .score-range-toggle-button {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+  }
+
+  .score-range-toggle-icon {
+    margin: 0 auto;
   }
 
   /* Cards */

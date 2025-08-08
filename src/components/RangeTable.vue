@@ -49,7 +49,9 @@
                     </tr>
                     <tr>
                         <td v-for="range in abnormalRanges.concat(normalRanges)" :key="range.label">
-                            <span>{{ range.range[0] !== null ? range.range[0] : "-Infinity" }} to {{ range.range[1] !== null ? range.range[1] : "Infinity" }}</span>
+                            <span>
+                                {{ range.inclusiveLowerBound ? '[' : '(' }}{{ range.range[0] !== null ? range.range[0] : "-Infinity" }}, {{ range.range[1] !== null ? range.range[1] : "Infinity" }}{{ range.inclusiveUpperBound ? ']' : ')' }}
+                            </span>
                         </td>
                     </tr>
                     <tr v-if="range && range.ranges.some((range: ScoreRange) => 'positiveLikelihoodRatio' in range)">

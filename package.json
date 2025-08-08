@@ -9,6 +9,11 @@
   },
   "dependencies": {
     "@fontsource/raleway": "^5.0.16",
+    "@fortawesome/fontawesome-svg-core": "^7.0.0",
+    "@fortawesome/free-brands-svg-icons": "^7.0.0",
+    "@fortawesome/free-regular-svg-icons": "^7.0.0",
+    "@fortawesome/free-solid-svg-icons": "^7.0.0",
+    "@fortawesome/vue-fontawesome": "^3.1.1",
     "axios": "^1.8.2",
     "chart.js": "^4.4.1",
     "d3": "^7.9.0",

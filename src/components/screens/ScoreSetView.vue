@@ -343,7 +343,7 @@
           <div v-if="item.numVariants > 10">Below is a sample of the first 10 variants (out of {{ item.numVariants }} total variants).
             Please download the file on the top page if you want to read the whole variants list.</div>
           <br />
-          <TabView style="height:585px">
+          <TabView>
             <TabPanel header="Scores">
               <!--Default table-layout is fixed meaning the cell widths do not depend on their content.
               If you require cells to scale based on their contents set autoLayout property to true.
@@ -352,7 +352,7 @@
               Autolayout, column can't be frozen but columns and rows can match
               We can keep the frozen codes first. Maybe we can figure the bug in the future-->
               <!---->
-              <div style="overflow-y: scroll; overflow-x: scroll; height:600px;">
+              <div style="overflow-y: scroll; overflow-x: scroll;">
                 <DataTable :value="scoresTable" :showGridlines="true" :stripedRows="true">
                   <Column v-for="column of scoreColumns.slice(0, 3)" :field="column" :header="column" :key="column"
                     style="overflow:hidden" headerStyle="background-color:#A1D8C8; font-weight: bold">
@@ -367,7 +367,7 @@
               </div>
             </TabPanel>
             <TabPanel header="Counts">
-              <div style="overflow-y: scroll; overflow-x: scroll; height:600px;">
+              <div style="overflow-y: scroll; overflow-x: scroll;">
                 <DataTable :value="countsTable" :showGridlines="true" :stripedRows="true">
                   <template v-if="countColumns.length == 0">No count data available.</template>
                   <template v-else>

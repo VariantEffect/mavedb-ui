@@ -187,6 +187,10 @@ export default {
       }
     },
 
+
+    clickedResidue: function(e) { this.$emit('clickedResidue', e.eventData) },
+    hoveredOverResidue: function(e) { this.$emit('hoveredOverResidue', e.eventData) },
+
     render: function() {
       if (this.selectedAlphaFold) {
         const viewerInstance = new PDBeMolstarPlugin()
@@ -221,16 +225,17 @@ export default {
             viewerInstance.visual.tooltips({data:this.residueTooltips})
         })
 
-        document.addEventListener('PDB.molstar.click', (e) => {
-          this.$emit('clickedResidue', e.eventData)
-        })
-        document.addEventListener('PDB.molstar.mouseover', (e) => {
-          this.$emit('hoveredOverResidue', e.eventData)
-        })
+        document.addEventListener('PDB.molstar.click', this.clickedResidue)
+        document.addEventListener('PDB.molstar.mouseover', this.hoveredOverResidue)
         this.viewerInstance = viewerInstance
       }
     }
-  }
+  },
+
+  beforeUnmount: function() {
+    document.removeEventListener('PDB.molstar.click', this.clickedResidue)
+    document.removeEventListener('PDB.molstar.mouseover', this.hoveredOverResidue)
+  },
 }
 
 </script>

@@ -8,7 +8,8 @@
       <span class="ml-2">Color by:</span>
       <SelectButton class="protein-viz-colorby-button ml-2" v-model="colorBy" optionLabel="name" optionValue="value" :options="colorByOptions" />
     </div>
-    <div id="pdbe-molstar-viewer-container" style="flex: 1; position: relative"></div>
+    <div v-show="selectedAlphaFold" id="pdbe-molstar-viewer-container" style="flex: 1; position: relative"></div>
+    <div v-if="!selectedAlphaFold" style="flex: 1; position: relative; margin: auto; align-content: center;"> No AlphaFold entry found</div>
   </div>
   </template>
 <script>
@@ -99,19 +100,11 @@ export default {
           return []
         }
         return $('entry dbReference[type="AlphaFoldDB"]', this.uniprotData).map((i, element) => {
-          const $element = $(element)
           return {
-            id: $element.attr('id'),
-            method: $element.find('property[type="method"]').first().attr('value'),
-            resolution: $element.find('property[type="resolution"]').first().attr('value'),
-            chains: $element.find('property[type="chains"]').first().attr('value')
+            id: $(element).attr('id'),
           }
         }).get().filter((x) => x.id != null)
     },
-  },
-
-  mounted: function() {
-    this.render()
   },
 
   setup(props) {
@@ -153,10 +146,6 @@ export default {
     },
     alphaFoldData: {
       handler: function() {
-        let newSelectedAlphaFold = null
-        if (this.selectedAlphaFold) {
-          newSelectedAlphaFold = this.alphaFoldData.find((x) => x.id == newSelectedAlphaFold.id)
-        }
         if (!this.selectedAlphaFold && this.alphaFoldData.length > 0) {
           this.selectedAlphaFold = this.alphaFoldData[0]
         }

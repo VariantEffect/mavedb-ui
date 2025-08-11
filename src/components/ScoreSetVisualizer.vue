@@ -123,7 +123,7 @@ export default {
       })
       .value()
 
-    this.residueTooltips.value = _.map(this.selectionData, (simpleVariant) => {
+    this.residueTooltips = _.map(this.selectionData, (simpleVariant) => {
       return {
         start_residue_number: simpleVariant.start_residue_number,
         end_residue_number: simpleVariant.end_residue_number,

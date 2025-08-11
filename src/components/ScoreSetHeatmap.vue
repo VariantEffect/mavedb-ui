@@ -93,7 +93,6 @@ export default {
     },
     showProteinStructureButton: {
       type: Boolean,
-      default: true,
     },
     mode: {
       type: String as PropType<'standard' | 'protein-viz'>,

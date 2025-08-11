@@ -113,7 +113,7 @@
             :scoreSet="item"
             :scores="scores"
             :externalSelection="variantToVisualize"
-            :showProteinStructureModal="uniprotId!=null"
+            :showProteinStructureButton="uniprotId!=null && config.CLINICAL_FEATURES_ENABLED"
             @variant-selected="childComponentSelectedVariant"
             @heatmap-visible="heatmapVisibilityUpdated"
             @export-chart="setHeatmapExport" ref="heatmap"

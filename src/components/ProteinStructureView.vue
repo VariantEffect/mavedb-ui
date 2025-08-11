@@ -36,17 +36,12 @@ export default {
       type: Array,
       default: null
     },
-    highlightedResidueRange: {
-      type: Array,
-      default: null
-    },
     selectionData: {
       type: Array,
       default: () => []
     },
     rowSelected: {
-      type: Boolean,
-      default: false
+      type: Number,
     },
     residueTooltips: {
       type: Array,
@@ -232,7 +227,7 @@ export default {
         viewerInstance.events.loadComplete.subscribe(() => {
             viewerInstance.plugin.layout.context.canvas3d.camera.state.fog = 0
             viewerInstance.plugin.layout.context.canvas3d.camera.state.clipFar = false
-            viewerInstance.visual.tooltips({data:this.residueTooltips.value})
+            viewerInstance.visual.tooltips({data:this.residueTooltips})
         })
 
         document.addEventListener('PDB.molstar.click', (e) => {

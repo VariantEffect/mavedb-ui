@@ -530,7 +530,7 @@ export default function makeHeatmap(): Heatmap {
       const endTargetPt = endPt.matrixTransform(heatmapNodesElemDOMMatrix)
 
       const selectionRectWidth = rangeSelectionMode == 'row' ? width : endTargetPt.x - startTargetPt.x
-      const selectionRectHeight = rangeSelectionMode == 'column' ? height : endTargetPt.x - startTargetPt.x
+      const selectionRectHeight = rangeSelectionMode == 'column' ? height : endTargetPt.y - startTargetPt.y
 
       svg.select('g.heatmap-selection-rectangle')
           .append('rect')

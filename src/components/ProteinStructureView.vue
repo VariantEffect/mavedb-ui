@@ -126,21 +126,23 @@ export default {
   watch: {
     colorBy: {
       handler: function() {
-        this.viewerInstance.visual.select({data: this.selectionDataWithSelectedColorBy})
+        if (this.viewerInstance) this.viewerInstance.visual.select({data: this.selectionDataWithSelectedColorBy})
       },
     },
     selectedResidueRanges: {
       handler: function(newValue) {
-        const selectedRanges = newValue.map((x) => ({
-          start_residue_number: x.start,
-          end_residue_number: x.end,
-          color: null,
-          focus: true
-        }))
-        this.viewerInstance.visual.select({data:[...this.selectionDataWithSelectedColorBy, ...selectedRanges]})
-        this.viewerInstance.visual.highlight({
-            data: selectedRanges,
-        })
+        if (this.viewerInstance) {
+          const selectedRanges = newValue.map((x) => ({
+            start_residue_number: x.start,
+            end_residue_number: x.end,
+            color: null,
+            focus: true
+          }))
+          this.viewerInstance.visual.select({data:[...this.selectionDataWithSelectedColorBy, ...selectedRanges]})
+          this.viewerInstance.visual.highlight({
+              data: selectedRanges,
+          })
+        }
       },
       deep: true,
     },

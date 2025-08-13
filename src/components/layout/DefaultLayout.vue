@@ -11,21 +11,22 @@
     <div :class="wrapperClasses">
       <div :class="mainClasses">
         <slot />
+        <Footer />
       </div>
     </div>
   </div>
-
 </template>
 
 <script>
 
 import Toolbar from '@/components/layout/Toolbar'
+import Footer from '@/components/layout/Footer.vue'
 import EmailPrompt from '@/components/common/EmailPrompt.vue'
 import '@fontsource/raleway'
 import '@/assets/app.css'
 
 export default {
-  components: {Toolbar, EmailPrompt},
+  components: {Footer, Toolbar, EmailPrompt},
 
   props: {
     height: {
@@ -121,6 +122,8 @@ export default {
 
 .mavedb-main {
   position: relative;
+  display: flex;
+  flex-direction: column;
 }
 
 .mavedb-main.mavedb-main-full-height {
@@ -133,6 +136,10 @@ export default {
 
 .mavedb-overflow-y-hidden {
   overflow-y: hidden;
+}
+
+.mavedb-dataset-footer {
+  margin-top: auto;
 }
 
 </style>

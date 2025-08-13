@@ -1,5 +1,5 @@
 import * as d3 from 'd3'
-import _ from 'lodash'
+import _, { range } from 'lodash'
 
 import { AMINO_ACIDS, AMINO_ACIDS_BY_HYDROPHILIA } from './amino-acids.js'
 import { NUCLEOTIDE_BASES } from './nucleotides.js'
@@ -65,6 +65,9 @@ export type HeatmapScores = any
 export type HeatmapDatum = any
 export type MappedDatum = { [key: number]: HeatmapDatum }
 
+type RangeSelectionMode = 'column' | 'row' | 'box' | null
+type AxisSelectionMode = 'x' | 'y' | null
+
 /**
  * The heatmap content. This consists of a mapping of rows which contain a list of ordered column contents.
 */
@@ -88,6 +91,7 @@ export interface Heatmap {
   clearSelection: () => void
   selectDatum: (datum: HeatmapDatum) => void
   selectDatumByIndex: (x: number, y: number) => void
+  selectRangeByIndex: (start: {x: number, y: number}, end: {x: number, y: number}) => void
 
   //////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
   // Accessors
@@ -99,6 +103,8 @@ export interface Heatmap {
   rowClassifier: Accessor<((d: HeatmapDatum) => number[]) | null, Heatmap>
   colorClassifier: Accessor<((d: HeatmapDatum) => number | d3.Color), Heatmap>
   datumSelected: Accessor<((d: HeatmapDatum) => void) | null, Heatmap>
+  columnRangesSelected: Accessor<((ranges: Array<{start: number, end: number}>) => void) | null, Heatmap>
+  rowSelected: Accessor<((data: HeatmapDatum[]) => void) | null, Heatmap>
   excludeDatum: Accessor<((d: HeatmapDatum) => boolean), Heatmap>
 
   // Data fields
@@ -132,12 +138,19 @@ export interface Heatmap {
   drawLegend: Accessor<boolean, Heatmap>
   alignViaLegend: Accessor<boolean, Heatmap>
 
+  // Selection mode
+  rangeSelectionMode: Accessor<RangeSelectionMode, Heatmap>
+  axisSelectionMode: Accessor<AxisSelectionMode, Heatmap>
+
   //////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
   // Getters
   //////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 
   // Selection
   selectedDatum: Getter<HeatmapDatum | null>
+  selectionStartDatum: Getter<HeatmapDatum | null>
+  selectionEndDatum: Getter<HeatmapDatum | null>
+  selectedRows: Getter<number[] | null>
 
   // Container
   container: Getter<HTMLElement | null>
@@ -154,6 +167,9 @@ export interface Heatmap {
 
   // Color scale
   colorScale: Getter<d3.ScaleLinear<string, number> | null>
+
+  // User interaction
+  lastSelectedDOMPoint: Getter<DOMPoint | null>
 
 }
 
@@ -176,6 +192,8 @@ export default function makeHeatmap(): Heatmap {
   let rowClassifier: ((d: HeatmapDatum) => number[]) | null = null
   let colorClassifier: ((d: HeatmapDatum) => number | d3.Color) = valueField
   let datumSelected: ((d: HeatmapDatum) => void) | null = null
+  let columnRangesSelected: ((ranges: Array<{start: number, end: number}>) => void) | null = null
+  let rowSelected: ((data: HeatmapDatum[]) => void) | null = null
   let excludeDatum: ((d: HeatmapDatum) => boolean) = (d) => false as boolean
 
   // Layout
@@ -200,6 +218,10 @@ export default function makeHeatmap(): Heatmap {
   let drawLegend: boolean = true
   let alignViaLegend: boolean = false
 
+  // Selection mode
+  let rangeSelectionMode: RangeSelectionMode = null
+  let axisSelectionMode: AxisSelectionMode = null
+
   //////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
   // Read-only properties
   //////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
@@ -214,6 +236,11 @@ export default function makeHeatmap(): Heatmap {
 
   // Selection
   let selectedDatum: HeatmapDatum | null = null
+  let selectionStartDatum: HeatmapDatum | null = null
+  let selectionEndDatum: HeatmapDatum | null = null
+  let selectedRows: number[] | null = null
+
+  let selectionStartPoint: DOMPoint | null = null
 
   // Container
   let _container: HTMLElement | null = null
@@ -225,8 +252,14 @@ export default function makeHeatmap(): Heatmap {
   let height: number | null = null
   let width: number | null = null
 
+  let heatmapNodesElemDOMMatrix: DOMMatrix | null = null
+  let heatmapNodesElemBoundingRect: DOMRect | null = null
+
   // Color scale
   let colorScale: d3.ScaleLinear<string, number> | null = null
+
+  // User interaction
+  let lastSelectedDOMPoint: DOMPoint | null = null
 
   //////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
   // Internal properties
@@ -306,6 +339,26 @@ export default function makeHeatmap(): Heatmap {
   // Clicking
   //////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 
+  const selectRow: (event: MouseEvent) => void = (event: MouseEvent) => {
+      const rowNumber = d3.select(event.target as SVGRectElement).datum() as number
+
+      if (svg) {
+        svg.select('g.heatmap-axis-selection-rectangle').selectAll('rect').remove()
+        svg.select('g.heatmap-axis-selection-rectangle')
+          .append('rect')
+          .attr('x', 0)
+          .attr('y', rowNumber * yScale.step() + (nodePadding * yScale.step()/2))
+          .attr('width', (content.columns ? content.columns : 0) * xScale.step())
+          .attr('height', yScale.step())
+          .style('fill', 'none')
+          .style('stroke-width', 2)
+          .style('stroke', '#808')
+          .raise()
+      }
+      if (rowSelected) rowSelected(data.filter((d: HeatmapDatum) => yCoordinate(d) === rowNumber))
+  }
+
+
   const click = function (event: MouseEvent, d: HeatmapDatum) {
     const target = event.target
     refreshSelectedDatum(d, true)
@@ -322,6 +375,113 @@ export default function makeHeatmap(): Heatmap {
     hideTooltip(hoverTooltip)
   }
 
+  const heatmapMainMousedown = function (event: MouseEvent) {
+    if (rangeSelectionMode && svg) {
+      if (svg) svg.select('g.heatmap-selection-rectangle').selectAll('rect').remove()
+
+      hideTooltip(hoverTooltip)
+      hideTooltip(selectionTooltip)
+
+      const heatmapNodesElem = svg.select('g.heatmap-nodes').node() as SVGGraphicsElement
+      heatmapNodesElemBoundingRect = heatmapNodesElem.getBoundingClientRect()
+      heatmapNodesElemDOMMatrix = heatmapNodesElem.getScreenCTM()!.inverse()
+
+      const y = rangeSelectionMode == 'column' ? heatmapNodesElemBoundingRect?.top : event.y
+      const x = rangeSelectionMode == 'row' ? heatmapNodesElemBoundingRect?.left : event.x
+      const pt = new DOMPoint(x, y)
+      const targetPt = pt.matrixTransform(heatmapNodesElemDOMMatrix)
+
+      selectionStartPoint = targetPt
+      const xScaleStep = xScale.step()
+      const yScaleStep = yScale.step()
+
+      svg.select('g.heatmap-selection-rectangle')
+          .append('rect')
+          .attr('x', Math.floor(targetPt.x / xScaleStep) * xScaleStep)
+          .attr('y', Math.floor(targetPt.y / yScaleStep) * yScaleStep)
+          .attr('width', 4)
+          .attr('height', 4)
+          .style('fill', 'none')
+          .raise()
+    }
+  }
+
+  const heatmapMainMouseup = function (event: MouseEvent) {
+    if (rangeSelectionMode && selectionStartPoint && svg) {
+
+      const y = rangeSelectionMode == 'column' ? heatmapNodesElemBoundingRect?.top : event.y
+      const x = rangeSelectionMode == 'row' ? heatmapNodesElemBoundingRect?.left : event.x
+      const pt = new DOMPoint(x, y)
+      const selectionEndPoint = pt.matrixTransform(heatmapNodesElemDOMMatrix!)
+
+      // If the selection end point is the same as the selection start point, call mouse move to update the selection rectangle.
+      // Othersiwse, clear the single datum selection.
+      if (selectionStartPoint.x == selectionEndPoint.x && selectionStartPoint.y == selectionEndPoint.y) {
+        heatmapMainMousemove(event)
+      } else {
+        hideHighlight(selectedDatum)
+        selectedDatum = null
+        hideTooltip(selectionTooltip)
+      }
+
+      // convert the selection rectangle to heatmap coordinates
+      const heatmapSelectionRect = svg.select('g.heatmap-selection-rectangle').select('rect').node() as SVGRectElement
+      const heatmapSelectionBBox = heatmapSelectionRect.getBBox()
+
+      const xScaleStep = xScale.step()
+      const yScaleStep = yScale.step()
+
+      // offsets to adjust the selection rectangle coordinates to the center of the heatmap nodes.
+      const xOffsetNodeMidpoint = nodeSize.width * strokeWidth(true) * 0.5
+      const yOffsetNodeMidpoint = nodeSize.height * strokeWidth(true) * 0.5
+
+      // top left coordinates of the selection rectangle in heatmap coordinates.
+      const rangeStart = {
+        x: Math.floor((heatmapSelectionBBox.x + xOffsetNodeMidpoint) / xScaleStep) + 1,
+        y: Math.floor((heatmapSelectionBBox.y + yOffsetNodeMidpoint) / yScaleStep) + 1
+      }
+      // bottom right coordinates of the selection rectangle in heatmap coordinates.
+      const rangeEnd = {
+        x: Math.floor((heatmapSelectionBBox.x + heatmapSelectionBBox.width - xOffsetNodeMidpoint) / xScaleStep) + 1,
+        y: Math.floor((heatmapSelectionBBox.y + heatmapSelectionBBox.height - yOffsetNodeMidpoint) / yScaleStep) + 1
+      }
+
+      if (rangeSelectionMode == 'column' && columnRangesSelected) {
+        columnRangesSelected([{start: rangeStart.x, end: rangeEnd.x}])
+      }
+    }
+    selectionStartPoint = null
+  }
+
+  const heatmapMainMousemove = function (event: MouseEvent) {
+    if (rangeSelectionMode && selectionStartPoint) {
+      if (svg) {
+        const pt = new DOMPoint(event.x, event.y)
+        const targetPt = pt.matrixTransform(heatmapNodesElemDOMMatrix!)
+
+        const xScaleStep = xScale.step()
+        const yScaleStep = yScale.step()
+
+        // Adjust the target point to snap to the nearest grid point based on the scale step.
+        const adjTargetPt = new DOMPoint(
+          targetPt.x < selectionStartPoint.x ? Math.floor(targetPt.x / xScaleStep) * xScaleStep : Math.ceil(targetPt.x / xScaleStep) * xScaleStep,
+          targetPt.y < selectionStartPoint.y ? Math.floor(targetPt.y / yScaleStep) * yScaleStep : Math.ceil(targetPt.y / yScaleStep) * yScaleStep
+        )
+
+        const selectionRectWidth = rangeSelectionMode == 'row' ? width : Math.ceil(Math.abs(adjTargetPt.x - selectionStartPoint.x) / xScaleStep) * xScaleStep
+        const selectionRectHeight = rangeSelectionMode == 'column' ? height : Math.ceil(Math.abs(adjTargetPt.y - selectionStartPoint.y) / yScaleStep) * yScaleStep
+
+        svg.select('g.heatmap-selection-rectangle').select('rect')
+          .attr('x', Math.floor(Math.min(selectionStartPoint.x, targetPt.x) / xScaleStep) * xScaleStep)
+          .attr('y', Math.floor(Math.min(selectionStartPoint.y, targetPt.y) / yScaleStep) * yScaleStep)
+          .attr('width', selectionRectWidth)
+          .attr('height', selectionRectHeight)
+          .style('stroke-width', 2)
+          .style('stroke', '#d3a')
+      }
+    }
+  }
+
   const refreshSelectedDatum = function (d: HeatmapDatum | null, unset: boolean) {
     if (selectedDatum !== null) {
       hideHighlight(selectedDatum)
@@ -336,6 +496,54 @@ export default function makeHeatmap(): Heatmap {
 
     if (selectedDatum) {
       showHighlight(selectedDatum)
+    }
+  }
+
+  const refreshSelectedRange = function (start: {x: number, y: number}, end: {x: number, y: number}) {
+    hideHighlight(selectedDatum)
+    selectedDatum = null
+    hideTooltip(selectionTooltip)
+
+    if (svg){
+      svg.select('g.heatmap-selection-rectangle').selectAll('rect').remove()
+
+      const heatmapNodesElem = svg.select('g.heatmap-nodes').node() as SVGGraphicsElement
+      heatmapNodesElemBoundingRect = heatmapNodesElem.getBoundingClientRect()
+      heatmapNodesElemDOMMatrix = heatmapNodesElem.getScreenCTM()!.inverse()
+
+      const startNode = svg.select(`g.heatmap-nodes`).select(`rect.node-${start.x}-${start.y}`).node() as Element
+      const startNodeBoundingRect = startNode.getBoundingClientRect()
+
+      const endNode = svg.select(`g.heatmap-nodes`).select(`rect.node-${end.x}-${end.y}`).node() as Element
+      const endNodeBoundingRect = endNode.getBoundingClientRect()
+
+      const startY = rangeSelectionMode == 'column' ? heatmapNodesElemBoundingRect?.top : startNodeBoundingRect.y
+      const startX = rangeSelectionMode == 'row' ? heatmapNodesElemBoundingRect?.left : startNodeBoundingRect.x
+
+      const endY = rangeSelectionMode == 'column' ? heatmapNodesElemBoundingRect?.bottom : endNodeBoundingRect.bottom
+      const endX = rangeSelectionMode == 'row' ? heatmapNodesElemBoundingRect?.right : endNodeBoundingRect.right
+
+      const startPt = new DOMPoint(startX, startY)
+      const endPt = new DOMPoint(endX, endY)
+
+      const startTargetPt = startPt.matrixTransform(heatmapNodesElemDOMMatrix)
+      const endTargetPt = endPt.matrixTransform(heatmapNodesElemDOMMatrix)
+
+      const selectionRectWidth = rangeSelectionMode == 'row' ? width : endTargetPt.x - startTargetPt.x
+      const selectionRectHeight = rangeSelectionMode == 'column' ? height : endTargetPt.y - startTargetPt.y
+
+      svg.select('g.heatmap-selection-rectangle')
+          .append('rect')
+          .attr('x', startTargetPt.x)
+          .attr('y', startTargetPt.y)
+          .attr('width', selectionRectWidth)
+          .attr('height', selectionRectHeight)
+          .style('fill', 'none')
+          .style('stroke-width', 2)
+          .style('stroke', '#d3a')
+          .raise()
+
+      lastSelectedDOMPoint = startTargetPt
     }
   }
 
@@ -360,16 +568,18 @@ export default function makeHeatmap(): Heatmap {
   //////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 
   const mouseover = (event: MouseEvent, d: HeatmapDatum) => {
-    const target = event.target
-    refreshHoverDatum(d)
+    if (!selectionStartPoint) {
+      const target = event.target
+      refreshHoverDatum(d)
 
-    if (target instanceof Element) {
-      showTooltip(hoverTooltip, hoverDatum)
+      if (target instanceof Element) {
+        showTooltip(hoverTooltip, hoverDatum)
+      }
     }
   }
 
-  const mousemove = (event: MouseEvent) => {
-    if (hoverTooltip) {
+  const mousemove = (event: MouseEvent, d: HeatmapDatum) => {
+    if (!selectionStartDatum && hoverTooltip) {
       // Move tooltip to be 30px to the right of the pointer.
       hoverTooltip
         .style('left', (d3.pointer(event, document.body)[0] + 30) + 'px')
@@ -594,6 +804,10 @@ export default function makeHeatmap(): Heatmap {
           .attr('class', 'heatmap-y-axis-tick-labels')
         mainGroup.append('g')
           .attr('class', 'heatmap-nodes')
+        mainGroup.append('g')
+          .attr('class', 'heatmap-selection-rectangle')
+        mainGroup.append('g')
+          .attr('class', 'heatmap-axis-selection-rectangle')
 
         // TODO drawLegend is always set to true here. Setting to false via accessor method still results in left margin
         // being adjusted to include LEGEND_SIZE. Consider moving this to refresh method and/or calculating legend size
@@ -649,7 +863,6 @@ export default function makeHeatmap(): Heatmap {
           const legend = svg.select('g.heatmap-vertical-color-legend')
             .attr('width', LEGEND_SIZE)
             .attr('height', height)
-
           verticalColorLegend(
             legend, {
               color: colorScale,
@@ -710,14 +923,20 @@ export default function makeHeatmap(): Heatmap {
             .attr('class', (n) => rows[rows.length - 1 - n].cssClass || '')
 
           if (_wrapper && yAxisSvg) {
-            yAxisSvg.select('g.heatmap-y-axis-tick-labels')
+            const yAxisLabels = yAxisSvg.select('g.heatmap-y-axis-tick-labels')
             // @ts-ignore
             // Get the row's amino acid code or variation symbol
-            .call(d3.axisLeft(yScale)
+            yAxisLabels.call(d3.axisLeft(yScale)
               .tickSize(0)
               .tickFormat((n) => rows[rows.length - 1 - n].label)
-            )
-            .select('.domain').remove()
+            ).select('.domain').remove()
+
+            if (axisSelectionMode == 'y') {
+              yAxisLabels.style('cursor', 'pointer')
+                .on('click', function(event) {
+                  selectRow(event)
+                })
+            }
 
             // Apply row-specific CSS classes to Y-axis tick mark labels.
             yAxisSvg.selectAll('g.heatmap-y-axis-tick-labels g.tick')
@@ -782,6 +1001,9 @@ export default function makeHeatmap(): Heatmap {
 
         svg.attr('height', heatmapTotalHeight)
           .attr('width', heatmapTotalWidth)
+          .on('mousedown', heatmapMainMousedown)
+          .on('mousemove', heatmapMainMousemove)
+          .on('mouseup', heatmapMainMouseup)
       }
       return chart
     },
@@ -801,6 +1023,10 @@ export default function makeHeatmap(): Heatmap {
       const selectedDatum = data.find((d) => accessorField(d) == accessorField(datum))
       refreshSelectedDatum(selectedDatum, false)
       updateSelectionTooltipAfterRefresh()
+    },
+
+    selectRangeByIndex: (start: {x: number, y: number}, end: {x: number, y: number}) => {
+      refreshSelectedRange(start, end)
     },
 
     ////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
@@ -845,6 +1071,22 @@ export default function makeHeatmap(): Heatmap {
         return datumSelected
       }
       datumSelected = value
+      return chart
+    },
+
+    columnRangesSelected: (value?: ((ranges: Array<{start: number, end: number}>) => void) | null) => {
+      if (value === undefined) {
+        return columnRangesSelected
+      }
+      columnRangesSelected = value
+      return chart
+    },
+
+    rowSelected: (value?: ((data: HeatmapDatum[]) => void) | null) => {
+      if (value === undefined) {
+        return rowSelected
+      }
+      rowSelected = value
       return chart
     },
 
@@ -1008,11 +1250,31 @@ export default function makeHeatmap(): Heatmap {
       return chart
     },
 
+    rangeSelectionMode: (value?: RangeSelectionMode) => {
+      if (value === undefined) {
+        return rangeSelectionMode
+      }
+
+      rangeSelectionMode = value
+      return chart
+    },
+
+    axisSelectionMode: (value?: AxisSelectionMode) => {
+      if (value === undefined) {
+        return axisSelectionMode
+      }
+
+      axisSelectionMode = value
+      return chart
+    },
+
     ////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
     // Getters
     ////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 
     selectedDatum: () => selectedDatum,
+    selectionStartDatum: () => selectionStartDatum,
+    selectionEndDatum: () => selectionEndDatum,
 
     container: () => _container,
 
@@ -1021,6 +1283,8 @@ export default function makeHeatmap(): Heatmap {
     width: () => width,
 
     colorScale: () => colorScale,
+
+    lastSelectedDOMPoint: () => lastSelectedDOMPoint,
 
     lowerBound: () => lowerBound,
 

@@ -39,6 +39,7 @@
     "moment": "^2.29.4",
     "native-file-system-adapter": "^3.0.1",
     "papaparse": "^5.4.1",
+    "pdbe-molstar": "^3.4.0",
     "pdfmake": "^0.2.8",
     "pinia": "^2.2.1",
     "pluralize": "^8.0.0",

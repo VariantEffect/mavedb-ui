@@ -2232,7 +2232,12 @@ export default {
                   'definition': 'gi|accession|description',
                   'delimiter': '|'
                 })*/
-                const fastaData = fastaParser.parse(text)
+                const rawFastaData = fastaParser.parse(text)
+                const fastaData = rawFastaData.map(entry => ({
+                  ...entry,
+                  id: entry.id.replace(/[\r\n]/g, ''),
+                  sequence: entry.sequence.replace(/[\r\n]/g, ''),
+                }))
                 if (fastaData.length == 0) {
                   this.createdTargetGenes[targetIdx].targetGene.targetSequence.sequence = null
                   this.clientSideValidationErrors['targetGene.targetSequence.sequence'] = 'The FASTA file contains no sequences.'
@@ -2346,7 +2351,7 @@ export default {
         }
         this.investigatorIsProvidingScoreRanges = false
 
-        this.createdTargetGenes = [emptyTargetGeneWizardObj]
+        this.createdTargetGenes = [emptyTargetGeneWizardObj()]
         this.numTargets = 1
         this.isMultiTarget = false
         this.isTargetSequence = true

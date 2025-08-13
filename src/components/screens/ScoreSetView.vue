@@ -108,14 +108,16 @@
             ref="histogram"
           />
         </div>
-        <div v-if="showHeatmap" class="mave-score-set-heatmap-pane">
+        <div v-if="showHeatmap && !isScoreSetVisualizerVisible" class="mave-score-set-heatmap-pane">
           <ScoreSetHeatmap
             :scoreSet="item"
             :scores="scores"
             :externalSelection="variantToVisualize"
+            :showProteinStructureButton="uniprotId!=null && config.CLINICAL_FEATURES_ENABLED"
             @variant-selected="childComponentSelectedVariant"
             @heatmap-visible="heatmapVisibilityUpdated"
             @export-chart="setHeatmapExport" ref="heatmap"
+            @on-did-click-show-protein-structure="showProteinStructureModal"
           />
         </div>
       </div>
@@ -329,7 +331,7 @@
           <div v-if="item.numVariants > 10">Below is a sample of the first 10 variants (out of {{ item.numVariants }} total variants).
             Please download the file on the top page if you want to read the whole variants list.</div>
           <br />
-          <TabView style="height:585px">
+          <TabView>
             <TabPanel header="Scores">
               <!--Default table-layout is fixed meaning the cell widths do not depend on their content.
               If you require cells to scale based on their contents set autoLayout property to true.
@@ -338,7 +340,7 @@
               Autolayout, column can't be frozen but columns and rows can match
               We can keep the frozen codes first. Maybe we can figure the bug in the future-->
               <!---->
-              <div style="overflow-y: scroll; overflow-x: scroll; height:600px;">
+              <div style="overflow-y: scroll; overflow-x: scroll;">
                 <DataTable :value="scoresTable" :showGridlines="true" :stripedRows="true">
                   <Column v-for="column of scoreColumns.slice(0, sliceNumInDataTable)" :field="column" :header="column" :key="column"
                     style="overflow:hidden" headerStyle="background-color:#A1D8C8; font-weight: bold">
@@ -353,7 +355,9 @@
               </div>
             </TabPanel>
             <TabPanel header="Counts">
-              <div style="overflow-y: scroll; overflow-x: scroll; height:600px;">
+
+              <div style="overflow-y: scroll; overflow-x: scroll;">
+                <DataTable :value="countsTable" :showGridlines="true" :stripedRows="true">
                   <template v-if="countColumns.length == 0">No count data available.</template>
                   <template v-else>
                     <DataTable :value="countsTable" :showGridlines="true" :stripedRows="true">
@@ -391,6 +395,16 @@
       <ItemNotFound model="score set" :itemId="itemId"/>
     </div>
   </DefaultLayout>
+  <div class="card flex justify-content-center">
+      <Sidebar class="scoreset-viz-sidebar" v-model:visible="isScoreSetVisualizerVisible" :header="item.title" position="full">
+          <ScoreSetVisualizer
+            :scoreSet="item"
+            :scores="scores"
+            :uniprotId="uniprotId"
+            :externalSelection="variantToVisualize"
+          />
+      </Sidebar>
+  </div>
 </template>
 
 <script>
@@ -410,6 +424,8 @@ import TabView from 'primevue/tabview'
 import Message from 'primevue/message'
 import ProgressSpinner from 'primevue/progressspinner'
 import ScrollPanel from 'primevue/scrollpanel';
+import Dialog from 'primevue/dialog'
+import Sidebar from 'primevue/sidebar'
 
 import CollectionAdder from '@/components/CollectionAdder'
 import CollectionBadge from '@/components/CollectionBadge'
@@ -429,11 +445,16 @@ import { parseScoresOrCounts } from '@/lib/scores'
 import { preferredVariantLabel, variantNotNullOrNA } from '@/lib/mave-hgvs';
 import { mapState } from 'vuex'
 import { ref } from 'vue'
+import ScoreSetVisualizer from '../ScoreSetVisualizer.vue';
 
 export default {
   name: 'ScoreSetView',
-  components: { Accordion, AccordionTab, AutoComplete, Button, Chip, CollectionAdder, CollectionBadge, DefaultLayout, EntityLink, ScoreSetHeatmap, ScoreSetHistogram, TabView, TabPanel, Message, DataTable, Column, ProgressSpinner, ScrollPanel, PageLoading, ItemNotFound },
+  components: { Accordion, AccordionTab, AutoComplete, Button, Chip, Sidebar, CollectionAdder, CollectionBadge, DefaultLayout, EntityLink, ScoreSetHeatmap, ScoreSetHistogram, ScoreSetVisualizer, TabView, TabPanel, Message, DataTable, Column, ProgressSpinner, ScrollPanel, PageLoading, ItemNotFound },
   computed: {
+    uniprotId: function() {
+      // If there is only one target gene, return its UniProt ID that has been set from mapped metadata.
+      return _.size(this.item.targetGenes) == 1 ? _.get(this.item.targetGenes, [0, 'uniprotIdFromMappedMetadata'], null) : null
+    },
     contributors: function() {
       return _.sortBy(
         (this.item?.contributors || []).filter((c) => c.orcidId != this.item?.createdBy?.orcidId),
@@ -494,6 +515,7 @@ export default {
     sliceNumInDataTable: 0,
     readMore: true,
     showHeatmap: true,
+    isScoreSetVisualizerVisible: false,
     heatmapExists: false,
     selectedVariant: null,
     userIsAuthorized: {
@@ -542,6 +564,9 @@ export default {
     },
   },
   methods: {
+    showProteinStructureModal: function() {
+      this.isScoreSetVisualizerVisible = true
+    },
     variantNotNullOrNA,
     checkUserAuthorization: async function() {
       await this.checkAuthorization()
@@ -986,4 +1011,11 @@ export default {
   margin: 1em 0;
 }
 
+</style>
+
+<style>
+.scoreset-viz-sidebar .p-sidebar-header {
+  padding: 0 5px 0;
+  height: 2em;
+}
 </style>

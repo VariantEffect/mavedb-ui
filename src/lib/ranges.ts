@@ -67,6 +67,8 @@ export interface ScoreRange {
     } | undefined
     positiveLikelihoodRatio?: number | undefined
     evidenceStrength?: number | undefined
+    inclusiveLowerBound: boolean
+    inclusiveUpperBound: boolean
 }
 
 export function prepareRangesForHistogram(scoreRanges: ScoreRanges): HistogramShader[] {

@@ -18,6 +18,13 @@ import 'primevue/resources/themes/mdc-light-indigo/theme.css'
 import 'primevue/resources/primevue.min.css'
 import 'primeicons/primeicons.css'
 
+/* add fontawesome core */
+/* import all the icons in Free Solid, Free Regular, and Brands styles */
+import { library } from '@fortawesome/fontawesome-svg-core'
+import { fas } from '@fortawesome/free-solid-svg-icons'
+import { far } from '@fortawesome/free-regular-svg-icons'
+import { fab } from '@fortawesome/free-brands-svg-icons'
+
 // Check localStorage in case the user is already logged in.
 initializeOrcidAuthentication()
 
@@ -47,6 +54,9 @@ createApp(App)
     .use(vueComponentId)
     .directive('tooltip', Tooltip)
     .mount('#app')
+
+// Add the FontAwesome icons to the library so that they can be used in components.
+library.add(fas, far, fab)
 
 initRestClient({apiBaseUrl: config.apiBaseUrl})
 

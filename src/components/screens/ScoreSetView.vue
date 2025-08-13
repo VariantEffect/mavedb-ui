@@ -299,20 +299,6 @@
           </div>
         </div>
 
-        <div class="mave-score-set-section-title">Score Ranges</div>
-        <div v-if="item.scoreRanges">
-          <div v-if="item.scoreRanges.wtScore"><strong>Wild Type Score:</strong> {{ item.scoreRanges.wtScore }}</div>
-          <br>
-          <div v-for="scoreRange of item.scoreRanges.ranges.sort((a, b) => a.range[0] - b.range[0])" :key="scoreRange">
-            <div v-if="scoreRange.label"><strong>Name:</strong> {{ scoreRange.label }}</div>
-            <div v-if="scoreRange.description"><strong>Description:</strong> {{ scoreRange.description }}</div>
-            <div v-if="scoreRange.classification"><strong>Classification:</strong> {{ scoreRange.classification }}</div>
-            <div v-if="scoreRange.range"><strong>Range:</strong> [{{ scoreRange.range[0] !== null ? scoreRange.range[0] : "-infinity" }}, {{ scoreRange.range[1] !== null ? scoreRange.range[1] : "infinity" }})</div>
-            <br>
-          </div>
-        </div>
-        <div v-else>Not specified</div>
-
         <div class="mave-score-set-section-title">External identifier</div>
         <strong>DOI: </strong>
         <div v-if="item.doiIdentifiers.length != 0">
@@ -356,12 +342,12 @@
               <!---->
               <div style="overflow-y: scroll; overflow-x: scroll;">
                 <DataTable :value="scoresTable" :showGridlines="true" :stripedRows="true">
-                  <Column v-for="column of scoreColumns.slice(0, 3)" :field="column" :header="column" :key="column"
+                  <Column v-for="column of scoreColumns.slice(0, sliceNumInDataTable)" :field="column" :header="column" :key="column"
                     style="overflow:hidden" headerStyle="background-color:#A1D8C8; font-weight: bold">
                     <!--:frozen="columnIsAllNa(scoresTable, column)"-->
                     <template #body="scoresTable">{{ scoresTable.data[column] }}</template>
                   </Column>
-                  <Column v-for="column of scoreColumns.slice(3, scoreColumns.length)" :field="column" :header="column"
+                  <Column v-for="column of scoreColumns.slice(sliceNumInDataTable, scoreColumns.length)" :field="column" :header="column"
                     :key="column" style="overflow:hidden" headerStyle="background-color:#A1D8C8; font-weight: bold">
                     <template #body="scoresTable">{{ convertToThreeDecimal(scoresTable.data[column]) }}</template>
                   </Column>
@@ -369,22 +355,25 @@
               </div>
             </TabPanel>
             <TabPanel header="Counts">
+
               <div style="overflow-y: scroll; overflow-x: scroll;">
                 <DataTable :value="countsTable" :showGridlines="true" :stripedRows="true">
                   <template v-if="countColumns.length == 0">No count data available.</template>
                   <template v-else>
-                    <Column v-for="column of countColumns.slice(0, 3)" :field="column" :header="column" :key="column"
-                      style="overflow:hidden" headerStyle="background-color:#A1D8C8; font-weight: bold">
-                      <!--:frozen="columnIsAllNa(countsTable, column)" bodyStyle="text-align:left"-->
-                      <template #body="countsTable">{{ countsTable.data[column] }}</template>
-                      <!--:style="{overflow: 'hidden'}"-->
-                    </Column>
-                    <Column v-for="column of countColumns.slice(3, countColumns.length)" :field="column" :header="column"
-                      :key="column" style="overflow:hidden" headerStyle="background-color:#A1D8C8; font-weight: bold">
-                      <template #body="countsTable">{{ convertToThreeDecimal(countsTable.data[column]) }}</template>
-                    </Column>
+                    <DataTable :value="countsTable" :showGridlines="true" :stripedRows="true">
+                      <Column v-for="column of countColumns.slice(0, sliceNumInDataTable)" :field="column" :header="column" :key="column"
+                        style="overflow:hidden" headerStyle="background-color:#A1D8C8; font-weight: bold">
+                        <!--:frozen="columnIsAllNa(countsTable, column)" bodyStyle="text-align:left"-->
+                        <template #body="countsTable">{{ countsTable.data[column] }}</template>
+                        <!--:style="{overflow: 'hidden'}"-->
+                      </Column>
+                      <Column v-for="column of countColumns.slice(sliceNumInDataTable, countColumns.length)" :field="column" :header="column"
+                        :key="column" style="overflow:hidden" headerStyle="background-color:#A1D8C8; font-weight: bold">
+                        <template #body="countsTable">{{ convertToThreeDecimal(countsTable.data[column]) }}</template>
+                      </Column>
+                    </DataTable>
                   </template>
-                </DataTable>
+
               </div>
               <!--<table>
                 <tr>
@@ -476,15 +465,6 @@ export default {
       //If extraMetadata is empty, return value will be true.
       return Object.keys(this.item.extraMetadata).length === 0
     },
-    scoreColumns: function() {
-      const fixedColumns = ['hgvs_nt', 'hgvs_splice', 'hgvs_pro']
-      return [...fixedColumns, ...this.item?.datasetColumns?.scoreColumns || []]
-    },
-    countColumns: function() {
-      const fixedColumns = ['hgvs_nt', 'hgvs_splice', 'hgvs_pro']
-      const showCountColumns = !_.isEmpty(this.item?.datasetColumns?.countColumns)
-      return showCountColumns ? [...fixedColumns, ...this.item?.datasetColumns?.countColumns || []] : []
-    },
     sortedMetaAnalyzesScoreSetUrns: function() {
       return _.sortBy(this.item?.metaAnalyzesScoreSetUrns || [])
     },
@@ -528,8 +508,11 @@ export default {
   },
   data: () => ({
     scores: null,
+    scoreColumns: [],
     scoresTable: [],
+    countColumns: [],
     countsTable: [],
+    sliceNumInDataTable: 0,
     readMore: true,
     showHeatmap: true,
     isScoreSetVisualizerVisible: false,
@@ -820,24 +803,29 @@ export default {
     },
     loadTableScores: async function() {
       if (this.item) {
-        const response = await axios.get(`${config.apiBaseUrl}/score-sets/${this.item.urn}/scores`)
+        const response = await axios.get(`${config.apiBaseUrl}/score-sets/${this.item.urn}/scores?drop_na_columns=true`)
         if (response.data) {
-          if (this.item.numVariants <= 10) {
-            this.scoresTable = parseScoresOrCounts(response.data)
-          } else {
-            this.scoresTable = parseScoresOrCounts(response.data).slice(0, 10)
-          }
+          const fixedColumns = ['hgvs_nt', 'hgvs_splice', 'hgvs_pro']
+
+          this.scoresTable = parseScoresOrCounts(response.data)
+          this.scoreColumns = Object.keys(this.scoresTable[0]).filter(col => col !== 'accession')  // drop 'accession'
+          this.sliceNumInDataTable = fixedColumns.filter(col => this.scoreColumns.includes(col)).length
+
+          this.scoresTable = this.item.numVariants <= 10 ? this.scoresTable : this.scoresTable.slice(0, 10)
         }
       }
     },
     loadTableCounts: async function() {
       if (this.item) {
-        const response = await axios.get(`${config.apiBaseUrl}/score-sets/${this.item.urn}/counts`)
+        const response = await axios.get(`${config.apiBaseUrl}/score-sets/${this.item.urn}/counts?drop_na_columns=true`)
         if (response.data) {
-          if (this.item.numVariants <= 10) {
-            this.countsTable = parseScoresOrCounts(response.data)
-          } else {
-            this.countsTable = parseScoresOrCounts(response.data).slice(0, 10)
+          this.countsTable = parseScoresOrCounts(response.data)
+          const columns = Object.keys(this.countsTable[0]).filter(col => col !== 'accession')  // drop 'accession'
+          // the response data have at lease one of the below column even though it doesn't have any other column.
+          const hasOtherColumns = columns.some(col => !['hgvs_nt', 'hgvs_splice', 'hgvs_pro'].includes(col))
+          if (hasOtherColumns) {
+            this.countColumns = columns
+            this.countsTable = this.item.numVariants <= 10 ? parsed : parsed.slice(0, 10)
           }
         }
       }

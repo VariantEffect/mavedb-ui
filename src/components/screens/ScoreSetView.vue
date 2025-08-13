@@ -373,7 +373,7 @@
                       </Column>
                     </DataTable>
                   </template>
-
+                </DataTable>
               </div>
               <!--<table>
                 <tr>

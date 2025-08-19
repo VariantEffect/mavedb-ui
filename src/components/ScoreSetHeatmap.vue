@@ -1,24 +1,37 @@
 <template>
   <div v-if="heatmapVisible">
-
-    <div style="text-align: center;">Functional Score by Variant</div>
     <div class="mave-heatmap-wrapper">
-      <div id="mave-heatmap-container" class="heatmapContainer" ref="heatmapContainer">
-        <div id="mave-heatmap-scroll-container" class="heatmapScrollContainer" ref="heatmapScrollContainer">
-          <div id="mave-stacked-heatmap-container" class="mave-simple-variants-stacked-heatmap-container" ref="simpleVariantsStackedHeatmapContainer" />
-          <div id="mave-variants-heatmap-container" class="mave-simple-variants-heatmap-container" ref="simpleVariantsHeatmapContainer" />
+      <template v-if="showHeatmap">
+        <div style="text-align: center;">Functional Score by Variant</div>
+        <div id="mave-heatmap-container" class="heatmapContainer" ref="heatmapContainer">
+          <div id="mave-heatmap-scroll-container" class="heatmapScrollContainer" ref="heatmapScrollContainer">
+            <div id="mave-stacked-heatmap-container" class="mave-simple-variants-stacked-heatmap-container" ref="simpleVariantsStackedHeatmapContainer" />
+            <div id="mave-variants-heatmap-container" class="mave-simple-variants-heatmap-container" ref="simpleVariantsHeatmapContainer" />
+          </div>
         </div>
-      </div>
-      <div class="mave-heatmap-controls">
-        <span class="mave-heatmap-controls-title">Heatmap format</span>
-        <SelectButton
-          v-model="layout"
-          :allow-empty="false"
-          option-label="title"
-          option-value="value"
-          :options="[{title: 'Normal', value: 'normal'}, {title: 'Compact', value: 'compact'}]"
-        />
-      </div>
+        <div class="mave-heatmap-controls">
+          <span class="mave-heatmap-controls-title">Heatmap format</span>
+          <SelectButton
+            v-model="layout"
+            :allow-empty="false"
+            option-label="title"
+            option-value="value"
+            :options="[{title: 'Normal', value: 'normal'}, {title: 'Compact', value: 'compact'}]"
+          />
+          <Button
+            v-if="showProteinStructureButton"
+            label="View protein structure"
+            class="p-button p-button-info"
+            @click="$emit('onDidClickShowProteinStructure')"
+          />
+        </div>
+      </template>
+      <template v-else-if="scoreSet?.private">
+        <div class="no-heatmap-message">
+          <p><strong>No heatmap available.</strong> Insufficient score data to generate a heatmap.</p>
+          <p>A variant should be present at <strong>at least 5% of possible positions</strong> to generate a heatmap.</p>
+        </div>
+      </template>
     </div>
     <div v-if="numComplexVariants > 0">{{numComplexVariants}} variants are complex and cannot be shown on this type of chart.</div>
   </div>
@@ -29,12 +42,15 @@
 import * as d3 from 'd3'
 import _ from 'lodash'
 import SelectButton from 'primevue/selectbutton'
+import Button from 'primevue/button'
 
 import geneticCodes from '@/lib/genetic-codes'
 import makeHeatmap, {heatmapRowForNucleotideVariant, heatmapRowForProteinVariant, HEATMAP_AMINO_ACID_ROWS, HEATMAP_NUCLEOTIDE_ROWS, HeatmapDatum} from '@/lib/heatmap'
 import {parseSimpleProVariant, parseSimpleNtVariant, variantNotNullOrNA} from '@/lib/mave-hgvs'
 import { saveChartAsFile } from '@/lib/chart-export'
 import { Heatmap } from '@/lib/heatmap'
+import { PropType } from 'vue'
+import {SPARSITY_THRESHOLD} from '@/lib/scoreSetHeatmap'
 
 function stdev(array: number[]) {
   if (!array || array.length === 0) {
@@ -49,8 +65,8 @@ type HeatmapLayout = 'normal' | 'compact'
 
 export default {
   name: 'ScoreSetHeatmap',
-  components: {SelectButton},
-  emits: ['variantSelected', 'heatmapVisible', 'exportChart'],
+  components: {SelectButton, Button},
+  emits: ['variantSelected', 'variantColumnRangesSelected', 'variantRowSelected', 'heatmapVisible', 'exportChart', 'onDidClickShowProteinStructure'],
 
   props: {
     margins: { // Margins must accommodate the axis labels
@@ -74,7 +90,14 @@ export default {
       type: Object,
       required: false,
       default: null
-    }
+    },
+    showProteinStructureButton: {
+      type: Boolean,
+    },
+    mode: {
+      type: String as PropType<'standard' | 'protein-viz'>,
+      default: 'standard'
+    },
   },
 
   mounted: function() {
@@ -95,12 +118,16 @@ export default {
 
   data: () => ({
     isMounted: false,
+    proteinStructureVisible: false,
     simpleVariants: null,
     numComplexVariants: 0,
     heatmap: null as Heatmap | null,
     stackedHeatmap: null as Heatmap | null,
     layout: 'normal' as HeatmapLayout
   }),
+
+  expose: ['simpleAndWtVariants', 'heatmap', 'scrollToPosition'],
+
 
   computed: {
     simpleAndWtVariants: function() {
@@ -150,6 +177,38 @@ export default {
       }
 
       return this.scoreSet.scoreRanges.wtScore
+    },
+    showHeatmap: function() {
+      if (this.scores.length === 0) {
+        return false
+      }
+      // the early termination and wild type variants shouldn't effect the heatmap so that remove the final three rows.
+      const hasVariant = Array.from({ length: this.heatmapRows.length - 3 }, () =>
+        Array(this.heatmapRange.length).fill(false)
+      )
+
+      for (const variant of this.simpleVariants) {
+        if (
+          typeof variant.x === 'number' &&
+          typeof variant.y === 'number' &&
+          variant.x >= 0 && variant.x < this.heatmapRange.length &&
+          variant.y >= 0 && variant.y < this.heatmapRows.length - 3
+        ) {
+          hasVariant[variant.y][variant.x] = true
+        }
+      }
+      const totalItems = hasVariant.length * hasVariant[0].length
+
+      // count of actual positions that have a variant
+      let filledCount = 0
+      for (let row of hasVariant) {
+        for (let cell of row) {
+          if (cell) filledCount++
+        }
+      }
+      const sparsity = filledCount / totalItems
+
+      return sparsity > SPARSITY_THRESHOLD // A boolean value
     },
   },
 
@@ -226,8 +285,19 @@ export default {
       return d?.scoreRank
     },
 
+    scrollToPosition: function(position: number) {
+      this.$refs.heatmapScrollContainer.scrollTo({
+        left: position,
+        behavior: 'smooth'
+      })
+    },
+
     exportChart() {
       saveChartAsFile(this.$refs.heatmapContainer, `${this.scoreSet.urn}-scores-heatmap`, 'mave-heatmap-container')
+    },
+
+    showProteinStructure() {
+      this.proteinStructureVisible = true
     },
 
     // We assume that there will only be one substitution variant for each target AA at a given position.
@@ -358,6 +428,14 @@ export default {
       }
     },
 
+    variantColumnRangesSelected: function(ranges: Array<{start: number, end: number}>) {
+      this.$emit('variantColumnRangesSelected', ranges)
+    },
+
+    variantRowSelected: function(data: HeatmapDatum[]) {
+      this.$emit('variantRowSelected', data)
+    },
+
     renderOrRefreshHeatmaps: function() {
       if (!this.simpleAndWtVariants) {
         return
@@ -366,10 +444,10 @@ export default {
       this.heatmap?.destroy()
       this.stackedHeatmap?.destroy()
 
-      this.drawHeatmap()
       if (!this.isNucleotideHeatmap && this.layout != 'compact') {
         this.drawStackedHeatmap()
       }
+      this.drawHeatmap()
     },
 
     // Assumes that plate dimensions do not change.
@@ -377,7 +455,7 @@ export default {
       this.heatmap = makeHeatmap()
         .margins({top: 0, bottom: 25, left: 20, right: 20})
         .legendTitle("Functional Score")
-        .render(this.$refs.simpleVariantsHeatmapContainer)
+        .render(this.$refs.simpleVariantsHeatmapContainer, this.$refs.heatmapContainer)
         .rows(this.heatmapRows)
         .xCoordinate(this.xCoord)
         .yCoordinate(this.yCoord)
@@ -387,6 +465,13 @@ export default {
 
       if (!this.heatmap) {
         return
+      }
+
+      if (this.mode == 'protein-viz') {
+        this.heatmap.rangeSelectionMode('column')
+          .columnRangesSelected(this.variantColumnRangesSelected)
+          .axisSelectionMode('y')
+          .rowSelected(this.variantRowSelected)
       }
 
       if (this.layout == 'compact') {
@@ -512,30 +597,38 @@ export default {
   flex-direction: row;
 }
 
+.no-heatmap-message {
+  padding: 10px;
+  background-color: #f8d7da;
+  color: #721c24;
+  border: 1px solid #f5c6cb;
+  border-radius: 4px;
+  text-align: center;
+  position: relative;
+  width: 1000px;
+  margin: 0 auto;
+}
+
 .heatmapContainer {
   position: relative;
 }
 
-.heatmapLegendContainer {
-  float: left;
-  position: absolute;
-}
-
 .heatmapScrollContainer {
   overflow-x: auto;
+  overflow-y: hidden;
   position: relative;
 }
 
 .heatmapContainer:deep(.heatmap-y-axis-tick-labels) {
   font-size: 14px;
+  user-select: none;
 }
 
-.heatmapContainer:deep(.heatmap-color-bar-labels) {
-  font-size: 14px;
+.heatmapContainer:deep(.heatmap-vertical-color-legend) {
+  user-select: none;
 }
-
-.heatmapContainer:deep(.heatmap-y-axis-tick-label-lg) {
-  font-size: 22px;
+.heatmapContainer:deep(.heatmap-bottom-axis) {
+  user-select: none;
 }
 
 .heatmapContainer:deep(.heatmap-x-axis-invisible) {

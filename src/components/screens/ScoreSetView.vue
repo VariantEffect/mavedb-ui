@@ -108,14 +108,16 @@
             ref="histogram"
           />
         </div>
-        <div v-if="showHeatmap" class="mave-score-set-heatmap-pane">
+        <div v-if="showHeatmap && !isScoreSetVisualizerVisible" class="mave-score-set-heatmap-pane">
           <ScoreSetHeatmap
             :scoreSet="item"
             :scores="scores"
             :externalSelection="variantToVisualize"
+            :showProteinStructureButton="uniprotId!=null && config.CLINICAL_FEATURES_ENABLED"
             @variant-selected="childComponentSelectedVariant"
             @heatmap-visible="heatmapVisibilityUpdated"
             @export-chart="setHeatmapExport" ref="heatmap"
+            @on-did-click-show-protein-structure="showProteinStructureModal"
           />
         </div>
       </div>
@@ -298,20 +300,6 @@
           </div>
         </div>
 
-        <div class="mave-score-set-section-title">Score Ranges</div>
-        <div v-if="item.scoreRanges">
-          <div v-if="item.scoreRanges.wtScore"><strong>Wild Type Score:</strong> {{ item.scoreRanges.wtScore }}</div>
-          <br>
-          <div v-for="scoreRange of item.scoreRanges.ranges.sort((a, b) => a.range[0] - b.range[0])" :key="scoreRange">
-            <div v-if="scoreRange.label"><strong>Name:</strong> {{ scoreRange.label }}</div>
-            <div v-if="scoreRange.description"><strong>Description:</strong> {{ scoreRange.description }}</div>
-            <div v-if="scoreRange.classification"><strong>Classification:</strong> {{ scoreRange.classification }}</div>
-            <div v-if="scoreRange.range"><strong>Range:</strong> [{{ scoreRange.range[0] !== null ? scoreRange.range[0] : "-infinity" }}, {{ scoreRange.range[1] !== null ? scoreRange.range[1] : "infinity" }})</div>
-            <br>
-          </div>
-        </div>
-        <div v-else>Not specified</div>
-
         <div class="mave-score-set-section-title">External identifier</div>
         <strong>DOI: </strong>
         <div v-if="item.doiIdentifiers.length != 0">
@@ -344,7 +332,7 @@
           <div v-if="item.numVariants > 10">Below is a sample of the first 10 variants (out of {{ item.numVariants }} total variants).
             Please download the file on the top page if you want to read the whole variants list.</div>
           <br />
-          <TabView style="height:585px">
+          <TabView>
             <TabPanel header="Scores">
               <!--Default table-layout is fixed meaning the cell widths do not depend on their content.
               If you require cells to scale based on their contents set autoLayout property to true.
@@ -353,14 +341,14 @@
               Autolayout, column can't be frozen but columns and rows can match
               We can keep the frozen codes first. Maybe we can figure the bug in the future-->
               <!---->
-              <div style="overflow-y: scroll; overflow-x: scroll; height:600px;">
+              <div style="overflow-y: scroll; overflow-x: scroll;">
                 <DataTable :value="scoresTable" :showGridlines="true" :stripedRows="true">
-                  <Column v-for="column of scoreColumns.slice(0, 3)" :field="column" :header="column" :key="column"
+                  <Column v-for="column of scoreColumns.slice(0, sliceNumInDataTable)" :field="column" :header="column" :key="column"
                     style="overflow:hidden" headerStyle="background-color:#A1D8C8; font-weight: bold">
                     <!--:frozen="columnIsAllNa(scoresTable, column)"-->
                     <template #body="scoresTable">{{ scoresTable.data[column] }}</template>
                   </Column>
-                  <Column v-for="column of scoreColumns.slice(3, scoreColumns.length)" :field="column" :header="column"
+                  <Column v-for="column of scoreColumns.slice(sliceNumInDataTable, scoreColumns.length)" :field="column" :header="column"
                     :key="column" style="overflow:hidden" headerStyle="background-color:#A1D8C8; font-weight: bold">
                     <template #body="scoresTable">{{ convertToThreeDecimal(scoresTable.data[column]) }}</template>
                   </Column>
@@ -368,20 +356,23 @@
               </div>
             </TabPanel>
             <TabPanel header="Counts">
-              <div style="overflow-y: scroll; overflow-x: scroll; height:600px;">
+
+              <div style="overflow-y: scroll; overflow-x: scroll;">
                 <DataTable :value="countsTable" :showGridlines="true" :stripedRows="true">
                   <template v-if="countColumns.length == 0">No count data available.</template>
                   <template v-else>
-                    <Column v-for="column of countColumns.slice(0, 3)" :field="column" :header="column" :key="column"
-                      style="overflow:hidden" headerStyle="background-color:#A1D8C8; font-weight: bold">
-                      <!--:frozen="columnIsAllNa(countsTable, column)" bodyStyle="text-align:left"-->
-                      <template #body="countsTable">{{ countsTable.data[column] }}</template>
-                      <!--:style="{overflow: 'hidden'}"-->
-                    </Column>
-                    <Column v-for="column of countColumns.slice(3, countColumns.length)" :field="column" :header="column"
-                      :key="column" style="overflow:hidden" headerStyle="background-color:#A1D8C8; font-weight: bold">
-                      <template #body="countsTable">{{ convertToThreeDecimal(countsTable.data[column]) }}</template>
-                    </Column>
+                    <DataTable :value="countsTable" :showGridlines="true" :stripedRows="true">
+                      <Column v-for="column of countColumns.slice(0, sliceNumInDataTable)" :field="column" :header="column" :key="column"
+                        style="overflow:hidden" headerStyle="background-color:#A1D8C8; font-weight: bold">
+                        <!--:frozen="columnIsAllNa(countsTable, column)" bodyStyle="text-align:left"-->
+                        <template #body="countsTable">{{ countsTable.data[column] }}</template>
+                        <!--:style="{overflow: 'hidden'}"-->
+                      </Column>
+                      <Column v-for="column of countColumns.slice(sliceNumInDataTable, countColumns.length)" :field="column" :header="column"
+                        :key="column" style="overflow:hidden" headerStyle="background-color:#A1D8C8; font-weight: bold">
+                        <template #body="countsTable">{{ convertToThreeDecimal(countsTable.data[column]) }}</template>
+                      </Column>
+                    </DataTable>
                   </template>
                 </DataTable>
               </div>
@@ -405,6 +396,16 @@
       <ItemNotFound model="score set" :itemId="itemId"/>
     </div>
   </DefaultLayout>
+  <div class="card flex justify-content-center">
+      <Sidebar class="scoreset-viz-sidebar" v-model:visible="isScoreSetVisualizerVisible" :header="item.title" position="full">
+          <ScoreSetVisualizer
+            :scoreSet="item"
+            :scores="scores"
+            :uniprotId="uniprotId"
+            :externalSelection="variantToVisualize"
+          />
+      </Sidebar>
+  </div>
 </template>
 
 <script>
@@ -425,6 +426,8 @@ import Message from 'primevue/message'
 import ProgressSpinner from 'primevue/progressspinner'
 import ScrollPanel from 'primevue/scrollpanel';
 import SplitButton from 'primevue/splitbutton'
+import Dialog from 'primevue/dialog'
+import Sidebar from 'primevue/sidebar'
 
 import CollectionAdder from '@/components/CollectionAdder'
 import CollectionBadge from '@/components/CollectionBadge'
@@ -444,10 +447,11 @@ import { parseScoresOrCounts } from '@/lib/scores'
 import { preferredVariantLabel, variantNotNullOrNA } from '@/lib/mave-hgvs';
 import { mapState } from 'vuex'
 import { ref } from 'vue'
+import ScoreSetVisualizer from '../ScoreSetVisualizer.vue';
 
 export default {
   name: 'ScoreSetView',
-  components: { Accordion, AccordionTab, AutoComplete, Button, Chip, CollectionAdder, CollectionBadge, DefaultLayout, EntityLink, ScoreSetHeatmap, ScoreSetHistogram, TabView, TabPanel, Message, DataTable, Column, ProgressSpinner, ScrollPanel, SplitButton, PageLoading, ItemNotFound },
+  components: { Accordion, AccordionTab, AutoComplete, Button, Chip, Sidebar, CollectionAdder, CollectionBadge, DefaultLayout, EntityLink, ScoreSetHeatmap, ScoreSetHistogram, ScoreSetVisualizer, TabView, TabPanel, Message, DataTable, Column, ProgressSpinner, ScrollPanel, SplitButton, PageLoading, ItemNotFound },
   computed: {
     annotatedVariantDownloadOptions: function () {
       const annotatatedVariantOptions = []
@@ -479,6 +483,10 @@ export default {
 
       return annotatatedVariantOptions
     },
+    uniprotId: function() {
+      // If there is only one target gene, return its UniProt ID that has been set from mapped metadata.
+      return _.size(this.item.targetGenes) == 1 ? _.get(this.item.targetGenes, [0, 'uniprotIdFromMappedMetadata'], null) : null
+    },
     contributors: function() {
       return _.sortBy(
         (this.item?.contributors || []).filter((c) => c.orcidId != this.item?.createdBy?.orcidId),
@@ -488,15 +496,6 @@ export default {
     isMetaDataEmpty: function() {
       //If extraMetadata is empty, return value will be true.
       return Object.keys(this.item.extraMetadata).length === 0
-    },
-    scoreColumns: function() {
-      const fixedColumns = ['hgvs_nt', 'hgvs_splice', 'hgvs_pro']
-      return [...fixedColumns, ...this.item?.datasetColumns?.scoreColumns || []]
-    },
-    countColumns: function() {
-      const fixedColumns = ['hgvs_nt', 'hgvs_splice', 'hgvs_pro']
-      const showCountColumns = !_.isEmpty(this.item?.datasetColumns?.countColumns)
-      return showCountColumns ? [...fixedColumns, ...this.item?.datasetColumns?.countColumns || []] : []
     },
     sortedMetaAnalyzesScoreSetUrns: function() {
       return _.sortBy(this.item?.metaAnalyzesScoreSetUrns || [])
@@ -541,10 +540,14 @@ export default {
   },
   data: () => ({
     scores: null,
+    scoreColumns: [],
     scoresTable: [],
+    countColumns: [],
     countsTable: [],
+    sliceNumInDataTable: 0,
     readMore: true,
     showHeatmap: true,
+    isScoreSetVisualizerVisible: false,
     heatmapExists: false,
     selectedVariant: null,
     userIsAuthorized: {
@@ -593,6 +596,9 @@ export default {
     },
   },
   methods: {
+    showProteinStructureModal: function() {
+      this.isScoreSetVisualizerVisible = true
+    },
     variantNotNullOrNA,
     checkUserAuthorization: async function() {
       await this.checkAuthorization()
@@ -707,34 +713,50 @@ export default {
     },
     publishItem: async function() {
       let response = null
-      try {
-        if (this.item) {
-          response = await axios.post(`${config.apiBaseUrl}/score-sets/${this.item.urn}/publish`, this.item)
-          // make sure scroesets cannot be published twice API, but also remove the button on UI side
-        }
-      } catch (e) {
-        response = e.response || { status: 500 }
-      }
-
-      if (response.status == 200) {
-        // display toast message here
-        const publishedItem = response.data
-        if (this.item) {
-          console.log('Published item')
-          this.$router.replace({ path: `/score-sets/${publishedItem.urn}` })
-          this.$toast.add({ severity: 'success', summary: 'Your score set was successfully published.', life: 3000 })
-        }
-      } else if (response.data && response.data.detail) {
-        const formValidationErrors = {}
-        for (const error of response.data.detail) {
-          let path = error.loc
-          if (path[0] == 'body') {
-            path = path.slice(1)
+      this.$confirm.require({
+        message: 'Are you sure you want to publish this score set? Once published, you will be unable to edit scores, counts, or targets. You will also be unable to delete this score set.',
+        header: 'Confirm Score Set Publication',
+        icon: 'pi pi-exclamation-triangle',
+        acceptLabel: 'Publish',
+        rejectLabel: 'Cancel',
+        rejectClass: 'p-button-danger',
+        acceptIcon: 'pi pi-check',
+        rejectIcon: 'pi pi-times',
+        accept: async () => {
+          try {
+            if (this.item) {
+              response = await axios.post(`${config.apiBaseUrl}/score-sets/${this.item.urn}/publish`, this.item)
+              // make sure scroesets cannot be published twice API, but also remove the button on UI side
+            }
+          } catch (e) {
+            response = e.response || { status: 500 }
           }
-          path = path.join('.')
-          formValidationErrors[path] = error.msg
+
+          if (response.status == 200) {
+            // display toast message here
+            const publishedItem = response.data
+            if (this.item) {
+              console.log('Published item')
+              this.$router.replace({ path: `/score-sets/${publishedItem.urn}` })
+              this.$toast.add({ severity: 'success', summary: 'Your score set was successfully published.', life: 3000 })
+            }
+          } else if (response.data && response.data.detail) {
+            const formValidationErrors = {}
+            for (const error of response.data.detail) {
+              let path = error.loc
+              if (path[0] == 'body') {
+                path = path.slice(1)
+              }
+              path = path.join('.')
+              formValidationErrors[path] = error.msg
+            }
+          }
+        },
+        reject: () => {
+          //callback to execute when user rejects the action
+          //do nothing
         }
-      }
+      })
     },
     //Download scores or counts
     downloadFile: async function(download_type) {
@@ -837,24 +859,29 @@ export default {
     },
     loadTableScores: async function() {
       if (this.item) {
-        const response = await axios.get(`${config.apiBaseUrl}/score-sets/${this.item.urn}/scores`)
+        const response = await axios.get(`${config.apiBaseUrl}/score-sets/${this.item.urn}/scores?drop_na_columns=true`)
         if (response.data) {
-          if (this.item.numVariants <= 10) {
-            this.scoresTable = parseScoresOrCounts(response.data)
-          } else {
-            this.scoresTable = parseScoresOrCounts(response.data).slice(0, 10)
-          }
+          const fixedColumns = ['hgvs_nt', 'hgvs_splice', 'hgvs_pro']
+
+          this.scoresTable = parseScoresOrCounts(response.data)
+          this.scoreColumns = Object.keys(this.scoresTable[0]).filter(col => col !== 'accession')  // drop 'accession'
+          this.sliceNumInDataTable = fixedColumns.filter(col => this.scoreColumns.includes(col)).length
+
+          this.scoresTable = this.item.numVariants <= 10 ? this.scoresTable : this.scoresTable.slice(0, 10)
         }
       }
     },
     loadTableCounts: async function() {
       if (this.item) {
-        const response = await axios.get(`${config.apiBaseUrl}/score-sets/${this.item.urn}/counts`)
+        const response = await axios.get(`${config.apiBaseUrl}/score-sets/${this.item.urn}/counts?drop_na_columns=true`)
         if (response.data) {
-          if (this.item.numVariants <= 10) {
-            this.countsTable = parseScoresOrCounts(response.data)
-          } else {
-            this.countsTable = parseScoresOrCounts(response.data).slice(0, 10)
+          this.countsTable = parseScoresOrCounts(response.data)
+          const columns = Object.keys(this.countsTable[0]).filter(col => col !== 'accession')  // drop 'accession'
+          // the response data have at lease one of the below column even though it doesn't have any other column.
+          const hasOtherColumns = columns.some(col => !['hgvs_nt', 'hgvs_splice', 'hgvs_pro'].includes(col))
+          if (hasOtherColumns) {
+            this.countColumns = columns
+            this.countsTable = this.item.numVariants <= 10 ? parsed : parsed.slice(0, 10)
           }
         }
       }
@@ -1038,5 +1065,13 @@ export default {
 
 .mave-save-to-collection-button {
   margin: 1em 0;
+}
+
+</style>
+
+<style>
+.scoreset-viz-sidebar .p-sidebar-header {
+  padding: 0 5px 0;
+  height: 2em;
 }
 </style>

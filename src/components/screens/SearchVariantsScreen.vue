@@ -8,7 +8,7 @@
         <div class="flex flex-wrap justify-content-center gap-3">
           <IconField iconPosition="left">
             <InputIcon class="pi pi-search"></InputIcon>
-            <InputText v-model="searchText" ref="searchTextInput" type="search" class="p-inputtext-sm" placeholder="HGVS string" style="width: 500px;" />
+            <InputText v-model="searchText" @keyup.enter="hgvsSearch" ref="searchTextInput" type="search" class="p-inputtext-sm" placeholder="HGVS string" style="width: 500px;" />
           </IconField>
           <Button class="p-button-plain" @click="hgvsSearch">Search</Button>
         </div>
@@ -41,7 +41,7 @@
             <div class="variant-search-result">
               <div v-if="allele.variants.length > 0" class="variant-search-result-button">
                 <router-link :to="`/variants/${allele.clingenAlleleId}`">
-                  <Button label="View in MaveMD" icon="pi pi-eye" />
+                  <Button label="View in MaveDB Clinical View" icon="pi pi-eye" />
                 </router-link>
               </div>
               <div class="variant-search-result-content">
@@ -113,6 +113,8 @@ import InputText from 'primevue/inputtext'
 import Button from 'primevue/button'
 import Message from 'primevue/message'
 import {defineComponent} from 'vue'
+import { useRoute, useRouter } from 'vue-router'
+import { useToast } from 'primevue/usetoast'
 // import {debounce} from 'vue-debounce'
 
 import config from '@/config'
@@ -124,6 +126,12 @@ const SCORE_SETS_TO_SHOW = 5
 export default defineComponent({
   name: 'SearchVariantsScreen',
   components: {Card, Column, DataTable, DefaultLayout, Dropdown, EntityLink, IconField, InputIcon, InputText, Button, Message},
+  setup() {
+    const route = useRoute()
+    const router = useRouter()
+    const toast = useToast()
+    return { route, router, toast }
+  },
 
   data: function() {
     return {
@@ -175,6 +183,46 @@ export default defineComponent({
         }
       }
     },
+    '$route.query.search': {
+      immediate: true,
+      handler(newVal) {
+        if (typeof newVal === 'string') {
+          this.searchText = newVal
+        } else if (!newVal) {
+          this.searchText = ''
+        }
+      }
+    },
+    '$route.query.gene': {
+      immediate: true,
+      handler(newVal) {
+        this.inputGene = typeof newVal === 'string' ? newVal : ''
+      }
+    },
+    '$route.query.variantType': {
+      immediate: true,
+      handler(newVal) {
+        this.inputVariantType = typeof newVal === 'string' ? newVal : ''
+      }
+    },
+    '$route.query.variantPosition': {
+      immediate: true,
+      handler(newVal) {
+        this.inputVariantPosition = typeof newVal === 'string' ? newVal : ''
+      }
+    },
+    '$route.query.refAllele': {
+      immediate: true,
+      handler(newVal) {
+        this.inputReferenceAllele = typeof newVal === 'string' ? newVal : ''
+      }
+    },
+    '$route.query.altAllele': {
+      immediate: true,
+      handler(newVal) {
+        this.inputAlternateAllele = typeof newVal === 'string' ? newVal : ''
+      }
+    },
   },
 
   computed: {
@@ -196,6 +244,11 @@ export default defineComponent({
 
   methods: {
     hgvsSearch: async function() {
+      // Remove fuzzy search params from the URL
+      const { gene, variantType, variantPosition, refAllele, altAllele, ...rest } = this.route.query;
+      this.router.replace({
+        query: { ...rest, search: this.searchText || undefined }
+      })
       this.alleles = []
       this.loading = true;
       if (this.searchText !== null && this.searchText !== '') {
@@ -249,10 +302,16 @@ export default defineComponent({
           break
         }
         this.alleles.push(newAllele)
-      } catch (error) {
+      } catch (error: any) {
         // NOTE: not resetting alleles here, because any error will have occurred before pushing to alleles.
         // don't want to reset alleles because this function may be called in a loop to process several hgvs strings.
         console.log("Error while loading search results", error)
+        this.toast.add({
+          severity: 'error',
+          summary: error.response.data?.errorType && error.response.data?.description ? `${error.response.data?.errorType}: ${error.response.data?.description}` : 'Error fetching results',
+          detail: error.response.data?.message || 'Invalid HGVS string provided.',
+          life: 10000,
+        })
       }
     },
     searchVariants: async function() {
@@ -265,21 +324,38 @@ export default defineComponent({
               clingenAlleleIds: [allele.clingenAlleleId]
             }
           )
-          if (response.data !== null && response.data.length > 0) {
-            allele.variants = response.data[0]
-            allele.variantsStatus = 'Loaded'
-          } else {
-            allele.variants = []
-            allele.variantsStatus = 'Loaded'
-          }
-        } catch (error) {
+
+          allele.variants = response.data[0]
+          allele.variantsStatus = 'Loaded'
+        } catch (error: any) {
           allele.variants = []
-          allele.variantsStatus = 'Error'
           console.log("Error while loading MaveDB search results for variant", error)
+          if (error.response?.status === 404) {
+            allele.variantsStatus = 'Loaded'
+            this.toast.add({ severity: 'info', summary: 'No results found', detail: 'No variants match the provided search criteria.', life: 10000 })
+          } else if (error.response?.status >= 500) {
+            allele.variantsStatus = 'Error'
+            this.toast.add({ severity: 'error', summary: 'Server Error', detail: 'The server encountered an unexpected error. Please try again later.', life: 10000 })
+          } else {
+            allele.variantsStatus = 'Error'
+            this.toast.add({ severity: 'error', summary: 'Error fetching results', detail: 'An error occurred while fetching MaveDB variants.', life: 10000 })
+          }
         }
       }
     },
     fuzzySearch: async function() {
+      // Remove HGVS search param from the URL
+      const { search, ...rest } = this.route.query;
+      this.router.replace({
+        query: {
+          ...rest,
+          gene: this.inputGene || undefined,
+          variantType: this.inputVariantType || undefined,
+          variantPosition: this.inputVariantPosition || undefined,
+          refAllele: this.inputReferenceAllele || undefined,
+          altAllele: this.inputAlternateAllele || undefined
+        }
+      })
       this.alleles = []
       this.loading = true;
       await this.fetchFuzzySearchResults()
@@ -351,13 +427,40 @@ export default defineComponent({
           for (const hgvsString of hgvsStrings) {
             await this.fetchHgvsSearchResults(hgvsString.hgvsString, hgvsString.maneStatus)
           }
-        } catch (error) {
+        } catch (error: any) {
           this.alleles = []
           console.log("Error while loading search results", error)
+          this.toast.add({
+            severity: 'error',
+            summary: error.response.data?.errorType && error.response.data?.description ? `${error.response.data?.errorType}: ${error.response.data?.description}` : 'Error fetching results',
+            detail: error.response.data?.message || 'Invalid HGVS string provided.',
+            life: 10000,
+          })
         }
       }
     }
+  },
+
+  mounted() {
+    // If HGVS search param is present, run HGVS search
+    if (this.route.query.search && String(this.route.query.search).trim() !== '') {
+      this.hgvsSearchVisible = true;
+      this.fuzzySearchVisible = false;
+      this.hgvsSearch();
+    } else if (
+      this.route.query.gene ||
+      this.route.query.variantType ||
+      this.route.query.variantPosition ||
+      this.route.query.refAllele ||
+      this.route.query.altAllele
+    ) {
+      // If any fuzzy search param is present, run fuzzy search
+      this.hgvsSearchVisible = false;
+      this.fuzzySearchVisible = true;
+      this.fuzzySearch();
+    }
   }
+
 })
 
 </script>

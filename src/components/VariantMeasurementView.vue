@@ -211,32 +211,6 @@ export default {
     currentMappedVariant: function() {
       return (this.variant?.mappedVariants || []).find((mappedVariant: any) => mappedVariant.current)
     },
-    evidenceStrengths: function() {
-      return {
-        'urn:mavedb:00000050-a-1': {
-          oddsOfPathogenicity: {
-            abnormal: 24.9,
-            normal: 0.043
-          },
-          evidenceCodes: {
-            abnormal: 'PS3_Strong',
-            normal: 'BS3_Strong'
-          },
-          source: 'https://pubmed.ncbi.nlm.nih.gov/36550560/'
-        },
-        'urn:mavedb:00000097-0-1': {
-          oddsOfPathogenicity: {
-            abnormal: 52.4,
-            normal: 0.02
-          },
-          evidenceCodes: {
-            abnormal: 'PS3_Strong',
-            normal: 'BS3_Strong'
-          },
-          source: 'https://pubmed.ncbi.nlm.nih.gov/34793697/'
-        }
-      }[this.scoreSetUrn] || null
-    },
     scoreSetUrn: function() {
       return this.variant?.scoreSet?.urn
     },
@@ -248,14 +222,24 @@ export default {
           || undefined
     },
     variantScoreRange: function() {
+      const operatorTable = {
+        '<': function(a: number, b: number) { return a < b; },
+        '<=': function(a: number, b: number) { return a <= b; },
+        '>': function(a: number, b: number) { return a > b; },
+        '>=': function(a: number, b: number) { return a >= b; },
+      }
+
       const score = this.variantScores?.score
       const scoreRanges = this.variant?.scoreSet?.scoreRanges?.ranges
       if (scoreRanges && score != null) {
-        return scoreRanges.find((scoreRange: any) =>
+        return scoreRanges.find((scoreRange: any) => {
+          const lowerOperator = scoreRange.inclusiveLowerBound ? '<=' : '<'
+          const upperOperator = scoreRange.inclusiveUpperBound ? '>=' : '>'
+
           scoreRange.range && scoreRange.range.length == 2
-          && (scoreRange.range[0] === null || scoreRange.range[0] <= score) // TODO What about exclusive interval ends?
-          && (scoreRange.range[1] === null || scoreRange.range[1] >= score)
-        )
+          && (scoreRange.range[0] === null || operatorTable[lowerOperator](scoreRange.range[0], score))
+          && (scoreRange.range[1] === null || operatorTable[upperOperator](scoreRange.range[1], score))
+        })
       }
       return undefined
     },

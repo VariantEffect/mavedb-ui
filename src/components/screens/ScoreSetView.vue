@@ -178,6 +178,7 @@
             <Button class="p-button-outlined p-button-sm" @click="downloadMetadata">Metadata</Button>&nbsp;
           </template>
           <Button class="p-button-outlined p-button-sm" @click="downloadMappedVariants()">Mapped Variants</Button>&nbsp;
+          <SplitButton :buttonProps="{class: 'p-button-outlined p-button-sm'}" :menuButtonProps="{class: 'p-button-sm'}" label="Annotated Variants" @click="annotatedVariantDownloadOptions[0].command" :model="annotatedVariantDownloadOptions"></SplitButton>&nbsp;
           <Button class="p-button-outlined p-button-sm" @click="histogramExport()">Histogram</Button>&nbsp;
           <template v-if="heatmapExists">
             <Button class="p-button-outlined p-button-sm" @click="heatmapExport()">Heatmap</Button>&nbsp;
@@ -424,6 +425,7 @@ import TabView from 'primevue/tabview'
 import Message from 'primevue/message'
 import ProgressSpinner from 'primevue/progressspinner'
 import ScrollPanel from 'primevue/scrollpanel';
+import SplitButton from 'primevue/splitbutton'
 import Dialog from 'primevue/dialog'
 import Sidebar from 'primevue/sidebar'
 
@@ -449,8 +451,38 @@ import ScoreSetVisualizer from '../ScoreSetVisualizer.vue';
 
 export default {
   name: 'ScoreSetView',
-  components: { Accordion, AccordionTab, AutoComplete, Button, Chip, Sidebar, CollectionAdder, CollectionBadge, DefaultLayout, EntityLink, ScoreSetHeatmap, ScoreSetHistogram, ScoreSetVisualizer, TabView, TabPanel, Message, DataTable, Column, ProgressSpinner, ScrollPanel, PageLoading, ItemNotFound },
+  components: { Accordion, AccordionTab, AutoComplete, Button, Chip, Sidebar, CollectionAdder, CollectionBadge, DefaultLayout, EntityLink, ScoreSetHeatmap, ScoreSetHistogram, ScoreSetVisualizer, TabView, TabPanel, Message, DataTable, Column, ProgressSpinner, ScrollPanel, SplitButton, PageLoading, ItemNotFound },
   computed: {
+    annotatedVariantDownloadOptions: function () {
+      const annotatatedVariantOptions = []
+
+      if (this.item?.scoreCalibrations) {
+        annotatatedVariantOptions.push({
+          label: 'Pathogenicity Evidence Line',
+          command: () => {
+            this.downloadAnnotatedVariants('pathogenicity-evidence-line')
+          }
+        })
+      }
+
+      if (this.item?.scoreRanges) {
+        annotatatedVariantOptions.push({
+          label: 'Functional Impact Statement',
+          command: () => {
+            this.downloadAnnotatedVariants('functional-impact-statement')
+          }
+        })
+      }
+
+      annotatatedVariantOptions.push({
+        label: 'Functional Impact Study Result',
+        command: () => {
+          this.downloadAnnotatedVariants('functional-study-result')
+        }
+      })
+
+      return annotatatedVariantOptions
+    },
     uniprotId: function() {
       // If there is only one target gene, return its UniProt ID that has been set from mapped metadata.
       return _.size(this.item.targetGenes) == 1 ? _.get(this.item.targetGenes, [0, 'uniprotIdFromMappedMetadata'], null) : null
@@ -522,7 +554,7 @@ export default {
       delete: false,
       publish: false,
       update: false,
-    }
+    },
   }),
   mounted: async function() {
     await this.checkUserAuthorization()
@@ -783,6 +815,30 @@ export default {
         anchor.click();
       } else {
         this.$toast.add({ severity: 'error', summary: 'No downloadable mapped variants text file', life: 3000 })
+      }
+    },
+    downloadAnnotatedVariants: async function(mappedVariantType) {
+      let response = null
+      try {
+        if (this.item) {
+          response = await axios.get(`${config.apiBaseUrl}/score-sets/${this.item.urn}/annotated-variants/${mappedVariantType}`)
+        }
+      }
+      catch (e) {
+        response = e.response || { status: 500 }
+      }
+      if (response.status == 200) {
+        //convert object to Json.
+        const file = JSON.stringify(response.data)
+        const anchor = document.createElement('a')
+
+        anchor.href = 'data:text/json;charset=utf-8,' + encodeURIComponent(file);
+        anchor.target = '_blank';
+        //file default name
+        anchor.download = this.item.urn + '_annotated_variants.json';
+        anchor.click();
+      } else {
+        this.$toast.add({ severity: 'error', summary: 'No downloadable annotated variants text file', life: 3000 })
       }
     },
     downloadMetadata: async function() {

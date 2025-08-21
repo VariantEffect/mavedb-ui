@@ -1709,16 +1709,16 @@
           })
           this.extraMetadata = this.item.extraMetadata
 
-          if (this.item.editedScoreRanges?.investigatorProvided.oddsPathSource) {
+          if (this.editedScoreRanges?.investigatorProvided.oddsPathSource) {
             this.editedScoreRanges.investigatorProvided.oddsPathSource = this.publicationIdentifiers.filter((publication) => {
-              return this.item.editedScoreRanges.investigatorProvided.oddsPathSource.some((source) => {
+              return this.editedScoreRanges.investigatorProvided.oddsPathSource.some((source) => {
                 return publication.identifier === source.identifier && publication.dbName === source.dbName
               })
             })
           }
-          if (this.item.editedScoreRanges?.investigatorProvided.source) {
+          if (this.editedScoreRanges?.investigatorProvided.source) {
             this.editedScoreRanges.investigatorProvided.source = this.publicationIdentifiers.filter((publication) => {
-              return this.item.editedScoreRanges.investigatorProvided.source.some((source) => {
+              return this.editedScoreRanges.investigatorProvided.source.some((source) => {
                 return publication.identifier === source.identifier && publication.dbName === source.dbName
               })
             })

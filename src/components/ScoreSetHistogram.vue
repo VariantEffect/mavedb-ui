@@ -73,7 +73,6 @@ import makeHistogram, {DEFAULT_SERIES_COLOR, Histogram, HistogramSerieOptions, H
 import { prepareRangesForHistogram, ScoreRanges, ScoreSetRanges } from '@/lib/ranges'
 import RangeTable from './RangeTable.vue'
 import {variantNotNullOrNA} from '@/lib/mave-hgvs'
-import { prepareRangesForHistogram } from '@/lib/ranges'
 
 
 function naToUndefined(x: string | null | undefined) {

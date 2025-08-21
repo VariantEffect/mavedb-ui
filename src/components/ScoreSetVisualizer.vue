@@ -4,10 +4,12 @@
       <div class="mave-score-set-heatmap-pane" >
         <ScoreSetHeatmap
           ref="scoreSetHeatmap"
-          :scoreSet="scoreSet"
-          :scores="scores"
-          :showProteinStructureButton="false"
+          coordinates="mapped"
           mode="protein-viz"
+          :scoreSet="scoreSet"
+          sequence-type="protein"
+          :variants="heatmapVariants"
+          :showProteinStructureButton="false"
           @variantColumnRangesSelected="didSelectHeatmapResidues"
           @variantRowSelected="didSelectHeatmapRow"
         />
@@ -42,6 +44,10 @@ export default {
   components: {ProteinStructureView, ScoreSetHeatmap, Splitter, SplitterPanel},
 
   props: {
+    heatmapVariants: {
+      type: Array,
+      required: true
+    },
     scores: {
       type: Array,
       required: true

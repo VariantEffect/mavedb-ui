@@ -412,13 +412,14 @@
       <ItemNotFound model="score set" :itemId="itemId"/>
     </div>
   </DefaultLayout>
-  <div class="card flex justify-content-center">
+  <div v-if="itemStatus=='Loaded'" class="card flex justify-content-center">
       <Sidebar class="scoreset-viz-sidebar" v-model:visible="isScoreSetVisualizerVisible" :header="item.title" position="full">
           <ScoreSetVisualizer
             :scoreSet="item"
             :scores="scores"
             :uniprotId="uniprotId"
             :externalSelection="variantToVisualize"
+            :heatmap-variants="heatmapVariants"
           />
       </Sidebar>
   </div>

@@ -222,14 +222,24 @@ export default {
           || undefined
     },
     variantScoreRange: function() {
+      const operatorTable = {
+        '<': function(a: number, b: number) { return a < b; },
+        '<=': function(a: number, b: number) { return a <= b; },
+        '>': function(a: number, b: number) { return a > b; },
+        '>=': function(a: number, b: number) { return a >= b; },
+      }
+
       const score = this.variantScores?.score
       const scoreRanges = this.variant?.scoreSet?.scoreRanges?.ranges
       if (scoreRanges && score != null) {
-        return scoreRanges.find((scoreRange: any) =>
+        return scoreRanges.find((scoreRange: any) => {
+          const lowerOperator = scoreRange.inclusiveLowerBound ? '<=' : '<'
+          const upperOperator = scoreRange.inclusiveUpperBound ? '>=' : '>'
+
           scoreRange.range && scoreRange.range.length == 2
-          && (scoreRange.range[0] === null || scoreRange.range[0] <= score) // TODO What about exclusive interval ends?
-          && (scoreRange.range[1] === null || scoreRange.range[1] >= score)
-        )
+          && (scoreRange.range[0] === null || operatorTable[lowerOperator](scoreRange.range[0], score))
+          && (scoreRange.range[1] === null || operatorTable[upperOperator](scoreRange.range[1], score))
+        })
       }
       return undefined
     },

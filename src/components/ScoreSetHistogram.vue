@@ -4,24 +4,13 @@
     <ProgressSpinner style="height: 12px; width: 12px;" />
     Loading clinical control options in the background. Additional histogram views will be available once loaded.
   </div>
-  <div v-if="hasTabBar && showShaders" class="mave-histogram-controls">
-    <div class="flex flex-wrap gap-3">
-      Shader Options:
-      <div class="flex align-items-center gap-1">
-          <RadioButton v-model="activeShader" inputId="unsetShader" name="shader" value="null"/>
-          <label for="unsetShader">No Shader</label>
-      </div>
-      <div class="flex align-items-center gap-2" v-if="scoreSet.scoreRanges">
-          <RadioButton v-model="activeShader" inputId="rangeShader" name="shader" value="range"/>
-          <label for="rangeShader">Score Ranges</label>
-      </div>
-      <div class="flex align-items-center gap-2" v-if="scoreSet.scoreCalibrations">
-          <RadioButton v-model="activeShader" inputId="calibrationShader" name="shader" value="threshold"/>
-          <label for="calibrationShader">Calibration Thresholds</label>
-      </div>
-    </div>
-  </div>
   <div v-if="showControls" class="mave-histogram-controls">
+    <div class="mave-histogram-control">
+      <label for="mave-histogram-show-ranges-switch" class="mave-histogram-control-label">{{ showRanges ? 'Hide Ranges:' : 'Show Ranges:' }}</label>
+      <InputSwitch v-model="showRanges" class="ml-3" inputId="mave-histogram-show-ranges-switch" />
+      <label for="mave-histogram-viz-select" class="mave-histogram-control-label">Select a set of ranges to shade: </label>
+      <Dropdown :disabled="!showRanges" v-model="activeRangeKey" :options="activeRangeOptions" optionLabel="label" inputId="mave-histogram-viz-select" style="align-items: center; height: 1.5rem;"/>
+    </div>
     <div class="mave-histogram-control" v-if="showClinicalControlOptions">
       <label for="mave-histogram-db-select" class="mave-histogram-control-label">Clinical control database: </label>
       <Dropdown v-model="controlDb" :options="clinicalControlOptions" optionLabel="dbName" inputId="mave-histogram-db-select" style="align-items: center; height: 1.5rem;" :disabled="!refreshedClinicalControls"/>
@@ -43,11 +32,10 @@
     </div>
   </div>
   <div class="mave-histogram-container" ref="histogramContainer" />
-  <div v-if="activeShader == 'range'">
-    <OddsPathTable :score-set="scoreSet" />
-  </div>
-  <div v-if="activeShader == 'threshold'">
-    <CalibrationTable :calibrations="scoreSet.scoreCalibrations" @calibration-selected="childComponentSelectedCalibrations" />
+  <!-- The child component will attempt to immediately emit the range which is active when it is created. Since Vue lifecycle events bubble up from child to parent, this causes this component to attempt
+   to create the histogram before the component is mounted when it doesn't have access to `this.$refs`. As a workaround, only render this child component once the histogram is ready. -->
+  <div v-if="showRanges" class="mave-range-table-container">
+    <RangeTable :range="activeRange" :range-name="activeRangeKey?.label" :sources="allSources" />
   </div>
 </template>
 
@@ -56,7 +44,7 @@ import { saveChartAsFile } from '@/lib/chart-export'
 import _ from 'lodash'
 import Checkbox from 'primevue/checkbox'
 import Dropdown from 'primevue/dropdown'
-import RadioButton from 'primevue/radiobutton'
+import InputSwitch from 'primevue/inputswitch'
 import ProgressSpinner from 'primevue/progressspinner'
 import Rating from 'primevue/rating'
 import TabMenu from 'primevue/tabmenu'
@@ -82,15 +70,13 @@ import {
   conflictingClinicalSignificanceSeriesLabelForVersion,
 } from '@/lib/clinical-controls'
 import makeHistogram, {DEFAULT_SERIES_COLOR, Histogram, HistogramSerieOptions, HistogramDatum, HistogramBin} from '@/lib/histogram'
-import CalibrationTable from '@/components/CalibrationTable.vue'
-import { prepareThresholdsForHistogram } from '@/lib/calibrations'
-import { prepareRangesForHistogram } from '@/lib/ranges'
-import OddsPathTable from './OddsPathTable.vue'
+import { prepareRangesForHistogram, ScoreRanges, ScoreSetRanges } from '@/lib/ranges'
+import RangeTable from './RangeTable.vue'
 
 
 export default defineComponent({
   name: 'ScoreSetHistogram',
-  components: { Checkbox, Dropdown, RadioButton, Rating, TabMenu, CalibrationTable, OddsPathTable, ProgressSpinner },
+  components: { Checkbox, Dropdown, InputSwitch, Rating, TabMenu, RangeTable, ProgressSpinner },
 
   emits: ['exportChart'],
 
@@ -127,6 +113,7 @@ export default defineComponent({
   mounted: async function() {
     this.renderOrRefreshHistogram()
     this.$emit('exportChart', this.exportChart)
+    this.activeRangeKey = this.defaultRangeKey()
   },
 
   beforeUnmount: function() {
@@ -143,8 +130,8 @@ export default defineComponent({
       config: config,
 
       activeViz: 0,
-      activeShader: scoreSetHasRanges ? 'range' : 'null',
-      activeCalibrationKey: null as string | null,
+      showRanges: scoreSetHasRanges,
+      activeRangeKey: null as { label: string; value: string } | null,
 
       clinicalControls: [] as ClinicalControl[],
       clinicalControlOptions: [] as ClinicalControlOption[],
@@ -262,14 +249,8 @@ export default defineComponent({
       return options
     },
 
-    shaderOptions: function() {
-      const options = [{label: 'Hide Shaders', view: 'null'}]
-
-      if (this.scoreSet.scoreRanges) {
-        options.push({label: 'Score Ranges', view: 'range'})
-      }
-
-      return options
+    rangesExist: function() {
+      return this.scoreSet.scoreRanges != null && Object.keys(this.scoreSet.scoreRanges).length > 0
     },
 
     hasTabBar: function() {
@@ -280,8 +261,20 @@ export default defineComponent({
       return this.activeViz == this.vizOptions.findIndex(item => item.view === 'custom')
     },
 
-    showShaders: function() {
-      return this.shaderOptions.length > 1
+    activeRanges: function(): ScoreSetRanges | null {
+      const rangeObjects = Object.entries(
+        this.scoreSet.scoreRanges || {}
+      ).filter(
+        ([k, v]) => typeof v === 'object' && !Array.isArray(v)
+      ).reduce(
+        (acc, [k, v]) => ({...acc, [k]: v}), {}
+      )
+
+      if (Object.keys(rangeObjects).length === 0) {
+        return null
+      } else {
+        return rangeObjects as ScoreSetRanges
+      }
     },
 
 
@@ -293,8 +286,35 @@ export default defineComponent({
       return hasMultipleDbs || hasSingleDbWithMultipleVersions
     },
 
-    activeCalibration: function() {
-      return this.activeCalibrationKey ? this.scoreSet.scoreCalibrations[this.activeCalibrationKey] : null
+    activeRangeOptions: function() {
+      if (!this.activeRanges) return []
+      return Object.keys(this.activeRanges).map((key) => {
+        return {
+          label: this.titleCase(key),
+          value: key
+        }
+      })
+    },
+
+    activeRange: function() {
+      if (!this.activeRangeKey?.value || !this.activeRanges) return null
+      return this.activeRanges[this.activeRangeKey?.value]
+    },
+
+    histogramShaders: function() {
+      const shaders: Record<string, any> = {'null': null} // No shader
+
+      if (!this.activeRanges) return shaders
+
+      for (const [key, value] of Object.entries(this.activeRanges)) {
+        shaders[key] = prepareRangesForHistogram(value as ScoreRanges)
+      }
+
+      return shaders
+    },
+
+    allSources: function() {
+      return (this.scoreSet.primaryPublicationIdentifiers || []).concat(this.scoreSet.secondaryPublicationIdentifiers || [])
     },
 
     minStarRating: function() {
@@ -426,14 +446,14 @@ export default defineComponent({
         this.renderOrRefreshHistogram()
       }
     },
-    activeCalibration: {
+    activeRange: {
       handler: function() {
         this.renderOrRefreshHistogram()
       }
     },
-    activeShader: {
+    showRanges: {
       handler: function() {
-          this.renderOrRefreshHistogram()
+        this.renderOrRefreshHistogram()
       }
     },
     externalSelection: {
@@ -538,17 +558,12 @@ export default defineComponent({
           seriesIndices.filter((seriesIndex) => this.series[seriesIndex].classifier(d))
       }
 
-      const histogramShaders = {
-        range: this.scoreSet.scoreRanges ? prepareRangesForHistogram(this.scoreSet.scoreRanges) : null,
-        threshold: this.activeCalibration ? prepareThresholdsForHistogram(this.activeCalibration) : null
-      }
-
       this.histogram.data(this.variants)
           .seriesOptions(this.series?.map((s) => s.options) || null)
           .seriesClassifier(seriesClassifier)
           .title('Distribution of Functional Scores')
           .legendNote(this.activeViz == 0 || !this.refreshedClinicalControls ? null : `${this.controlDb?.dbName} data from version ${this.controlVersion}`)
-          .shaders(histogramShaders)
+          .shaders(this.histogramShaders)
 
 
       if (this.externalSelection) {
@@ -558,17 +573,13 @@ export default defineComponent({
       }
 
       // Only render clinical specific viz options if such features are enabled.
-      if (this.config.CLINICAL_FEATURES_ENABLED) {
-        this.histogram.renderShader(this.activeShader)
+      if (this.config.CLINICAL_FEATURES_ENABLED && this.showRanges) {
+        this.histogram.renderShader(this.activeRangeKey?.value)
       } else {
         this.histogram.renderShader(null)
       }
 
       this.histogram.refresh()
-    },
-
-    childComponentSelectedCalibrations: function(calibrationKey: string) {
-      this.activeCalibrationKey = calibrationKey
     },
 
     loadClinicalControls: async function() {
@@ -651,9 +662,28 @@ export default defineComponent({
       }
     },
 
-    titleCase: (s) =>
-            s.replace (/^[-_]*(.)/, (_, c) => c.toUpperCase())       // Initial char (after -/_)
-            .replace (/[-_]+(.)/g, (_, c) => ' ' + c.toUpperCase()) // First char after each -/_
+    defaultRangeKey: function() {
+      if (this.activeRangeKey) {
+        return this.activeRangeKey
+      }
+
+      const defaultInvestigatorProvidedIndex = this.activeRangeOptions.findIndex((option) => option.value == 'investigatorProvided')
+
+      if (defaultInvestigatorProvidedIndex >= 0) {
+        return this.activeRangeOptions[defaultInvestigatorProvidedIndex]
+      }
+      else if (this.activeRangeOptions.length > 0) {
+        return this.activeRangeOptions[0]
+      }
+      else return null
+    },
+
+    titleCase(s: string) {
+    return s
+      .replace(/^[-_]*(.)/, (_, c) => c.toUpperCase())
+      .replace(/[-_]+(.)/g, (_, c) => ' ' + c.toUpperCase())
+      .replace(/([a-z])([A-Z])/g, '$1 $2');
+    },
   }
 })
 </script>

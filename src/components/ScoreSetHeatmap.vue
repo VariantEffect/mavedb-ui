@@ -574,10 +574,10 @@ export default {
       this.heatmap?.destroy()
       this.stackedHeatmap?.destroy()
 
-      this.drawHeatmap()
       if (this.sequenceType == 'protein' && this.layout != 'compact') {
         this.drawStackedHeatmap()
       }
+      this.drawHeatmap()
     },
 
     // Assumes that plate dimensions do not change.

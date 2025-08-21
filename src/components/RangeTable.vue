@@ -8,7 +8,7 @@
                             <span>{{ "Details for `" + rangeName + "` ranges" }}</span>
                         </td>
                     </tr>
-                    <tr v-if="range.baselineScore !== null">
+                    <tr v-if="range.baselineScore !== null && range.baselineScore !== undefined">
                         <td :colspan="totalRanges">
                             <span>Baseline Score: <strong>{{ range.baselineScore }}</strong></span>
                             <span v-if="range.baselineScoreDescription">
@@ -83,9 +83,9 @@
                         </td>
                     </tr>
                     <tr>
-                        <td :colspan="abnormalRanges.length">Odds Path Abnormal</td>
-                        <td :colspan="normalRanges.length">Odds Path Normal</td>
-                        <td :colspan="unspecifiedRanges.length">N/A</td>
+                        <td v-if="abnormalRanges.length" :colspan="abnormalRanges.length">Odds Path Abnormal</td>
+                        <td v-if="normalRanges.length" :colspan="normalRanges.length">Odds Path Normal</td>
+                        <td v-if="unspecifiedRanges.length" :colspan="unspecifiedRanges.length">N/A</td>
                     </tr>
                     <tr>
                         <td v-for="range in sortedRanges" :class="`mave-evidence-code-${range.oddsPath?.evidence}`" :key="range.label">

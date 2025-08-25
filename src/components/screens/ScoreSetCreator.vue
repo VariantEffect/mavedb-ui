@@ -749,7 +749,7 @@
                           style="width: 100%;"
                         >
                           <template #item="slotProps">
-                            {{slotProps.item.taxId}} - {{slotProps.item.organismName}} <template v-if="slotProps.item.commonName!=='NULL' && slotProps.item.commonName!== null">/ {{slotProps.item.commonName}}</template>
+                            {{slotProps.item.code}} - {{slotProps.item.organismName}} <template v-if="slotProps.item.commonName!=='NULL' && slotProps.item.commonName!== null">/ {{slotProps.item.commonName}}</template>
                           </template>
                         </AutoComplete>
                         <label :for="$scopedId('input-targetGeneTaxonomyLabel')">Taxonomy</label>

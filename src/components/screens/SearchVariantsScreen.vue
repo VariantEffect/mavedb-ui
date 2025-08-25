@@ -39,7 +39,7 @@
         <Card>
           <template #content>
             <div class="variant-search-result">
-              <div v-if="allele.variants.length > 0" class="variant-search-result-button">
+              <div v-if="allele.variants.nucleotide.length > 0 || allele.variants.protein.length > 0 || allele.variants.associatedNucleotide.length > 0" class="variant-search-result-button">
                 <router-link :to="`/variants/${allele.clingenAlleleId}`">
                   <Button label="View in MaveDB Clinical View" icon="pi pi-eye" />
                 </router-link>
@@ -67,21 +67,55 @@
                     <Column field="hgvs" header="Coordinates"></Column>
                   </DataTable>
                 </div>
-                <div v-if="allele.variantsStatus == 'Loaded' && allele.variants.length > 0" class="variant-search-result-subcontent">
-                  MaveDB score sets containing variant:
-                  <li v-for="variant in scoreSetListIsExpanded[alleleIdx] ? allele.variants : allele.variants.slice(0, defaultNumScoreSetsToShow)" :key="variant.urn">
-                    <router-link :to="{name: 'scoreSet', params: {urn: variant.scoreSet.urn}, query: {variant: variant.urn}}">
-                      {{ variant.scoreSet.title }}
-                    </router-link>
-                  </li>
-                  <Button v-if="allele.variants.length > defaultNumScoreSetsToShow"
-                    icon="pi pi-angle-down"
-                    class="p-button-text"
-                    style="width: fit-content;"
-                    @click="scoreSetListIsExpanded[alleleIdx] = !scoreSetListIsExpanded[alleleIdx]"
-                  >
-                    {{ scoreSetListIsExpanded[alleleIdx] ? 'Show less' : `Show ${allele.variants.length - defaultNumScoreSetsToShow} more` }}
-                  </Button>
+                <div v-if="allele.variantsStatus == 'Loaded' && (allele.variants.nucleotide.length > 0 || allele.variants.protein.length > 0 || allele.variants.associatedNucleotide.length > 0)">
+                  <div v-if="allele.variants.nucleotide.length > 0" class="variant-search-result-subcontent">
+                    MaveDB score sets measuring variant at the nucleotide level:
+                    <li v-for="variant in nucleotideScoreSetListIsExpanded[alleleIdx] ? allele.variants.nucleotide : allele.variants.nucleotide.slice(0, defaultNumScoreSetsToShow)" :key="variant.urn">
+                      <router-link :to="{name: 'scoreSet', params: {urn: variant.scoreSet.urn}, query: {variant: variant.urn}}">
+                        {{ variant.scoreSet.title }}
+                      </router-link>
+                    </li>
+                    <Button v-if="allele.variants.nucleotide.length > defaultNumScoreSetsToShow"
+                      icon="pi pi-angle-down"
+                      class="p-button-text"
+                      style="width: fit-content;"
+                      @click="nucleotideScoreSetListIsExpanded[alleleIdx] = !nucleotideScoreSetListIsExpanded[alleleIdx]"
+                    >
+                      {{ nucleotideScoreSetListIsExpanded[alleleIdx] ? 'Show less' : `Show ${allele.variants.nucleotide.length - defaultNumScoreSetsToShow} more` }}
+                    </Button>
+                  </div>
+                  <div v-if="allele.variants.protein.length > 0" class="variant-search-result-subcontent">
+                    MaveDB score sets measuring variant at the amino acid level:
+                    <li v-for="variant in proteinScoreSetListIsExpanded[alleleIdx] ? allele.variants.protein : allele.variants.protein.slice(0, defaultNumScoreSetsToShow)" :key="variant.urn">
+                      <router-link :to="{name: 'scoreSet', params: {urn: variant.scoreSet.urn}, query: {variant: variant.urn}}">
+                        {{ variant.scoreSet.title }}
+                      </router-link>
+                    </li>
+                    <Button v-if="allele.variants.protein.length > defaultNumScoreSetsToShow"
+                      icon="pi pi-angle-down"
+                      class="p-button-text"
+                      style="width: fit-content;"
+                      @click="proteinScoreSetListIsExpanded[alleleIdx] = !proteinScoreSetListIsExpanded[alleleIdx]"
+                    >
+                      {{ proteinScoreSetListIsExpanded[alleleIdx] ? 'Show less' : `Show ${allele.variants.protein.length - defaultNumScoreSetsToShow} more` }}
+                    </Button>
+                  </div>
+                  <div v-if="allele.variants.associatedNucleotide.length > 0" class="variant-search-result-subcontent">
+                    MaveDB score sets measuring a different nucleotide variant with an equivalent protein effect:
+                    <li v-for="variant in associatedNucleotideScoreSetListIsExpanded[alleleIdx] ? allele.variants.associatedNucleotide : allele.variants.nucleotide.slice(0, defaultNumScoreSetsToShow)" :key="variant.urn">
+                      <router-link :to="{name: 'scoreSet', params: {urn: variant.scoreSet.urn}, query: {variant: variant.urn}}">
+                        {{ variant.scoreSet.title }}
+                      </router-link>
+                    </li>
+                    <Button v-if="allele.variants.associatedNucleotide.length > defaultNumScoreSetsToShow"
+                      icon="pi pi-angle-down"
+                      class="p-button-text"
+                      style="width: fit-content;"
+                      @click="associatedNucleotideScoreSetListIsExpanded[alleleIdx] = !associatedNucleotideScoreSetListIsExpanded[alleleIdx]"
+                    >
+                      {{ associatedNucleotideScoreSetListIsExpanded[alleleIdx] ? 'Show less' : `Show ${allele.variants.associatedNucleotide.length - defaultNumScoreSetsToShow} more` }}
+                    </Button>
+                  </div>
                 </div>
                 <!-- <div v-if="allele.variantsStatus == 'Loaded' && allele.variants.length > 0" style="overflow: hidden;">
                   <div v-for="variant in allele.variants" :key="variant.urn" style="float: left; border: 1px solid #000; width: 300px; margin: 5px; padding: 5px;">
@@ -101,7 +135,7 @@
 
 <script lang="ts">
 
-import axios from 'axios'
+import axios, { all } from 'axios'
 import _ from 'lodash'
 import Card from 'primevue/card'
 import Column from 'primevue/column'
@@ -170,7 +204,9 @@ export default defineComponent({
         ]
       },
       alleles: [] as Array<any>,
-      scoreSetListIsExpanded: [] as Array<boolean>,
+      nucleotideScoreSetListIsExpanded: [] as Array<boolean>,
+      proteinScoreSetListIsExpanded: [] as Array<boolean>,
+      associatedNucleotideScoreSetListIsExpanded: [] as Array<boolean>,
       defaultNumScoreSetsToShow: SCORE_SETS_TO_SHOW,
     }
   },
@@ -179,7 +215,9 @@ export default defineComponent({
     alleles: {
       handler: function(newValue) {
         if (newValue.length > 0) {
-          this.scoreSetListIsExpanded = newValue.map(() => false)
+          this.nucleotideScoreSetListIsExpanded = newValue.map(() => false)
+          this.proteinScoreSetListIsExpanded = newValue.map(() => false)
+          this.associatedNucleotideScoreSetListIsExpanded = newValue.map(() => false)
         }
       }
     },
@@ -264,44 +302,138 @@ export default defineComponent({
             hgvs: hgvsString
           }
         })
-        const newAllele = {
-          clingenAlleleUrl: response.data?.['@id'],
-          clingenAlleleId: response.data?.['@id']?.split('/')?.at(-1),
-          canonicalAlleleName: response.data?.communityStandardTitle?.[0] || undefined,
-          maneStatus: maneStatus,
-          genomicAlleles: response.data?.genomicAlleles || [],
-          grch38Hgvs: null,
-          grch37Hgvs: null,
-          transcriptAlleles: response.data?.transcriptAlleles || [],
-          maneCoordinates: [] as Array<any>,
-          variantsStatus: 'NotLoaded',
-          variants: [] as Array<any>
-        }
-        for (let i = 0; i < newAllele.genomicAlleles.length; i++) {
-          // TODO currently just taking first entry from hgvs array, since that appears to be NC coordinates. check this assumption
-          if (newAllele.genomicAlleles[i].referenceGenome === "GRCh38") {
-            newAllele.grch38Hgvs = newAllele.genomicAlleles[i].hgvs?.[0]
-          } else if (newAllele.genomicAlleles[i].referenceGenome === "GRCh37") {
-            newAllele.grch37Hgvs = newAllele.genomicAlleles[i].hgvs?.[0]
-          }
-        }
-        for (let i = 0; i < newAllele.transcriptAlleles.length; i++) {
-          if (newAllele.transcriptAlleles[i].MANE !== undefined) {
-            // TODO may want to prioritize one of MANE select, MANE clinical, etc. For now, just grab the first mane transcript.
-            const mane = newAllele.transcriptAlleles[i].MANE
-            for (const sequenceType of ["nucleotide", "protein"]) {
-              for (const database in mane[sequenceType]) {
-                newAllele.maneCoordinates.push({
-                  sequenceType: sequenceType,
-                  database: database,
-                  hgvs: mane[sequenceType][database].hgvs
-                })
-              }
+        const clingenAlleleId = response.data?.['@id']?.split('/')?.at(-1)
+        if (clingenAlleleId && clingenAlleleId.startsWith('CA')) {
+          const newAllele = {
+            clingenAlleleUrl: response.data?.['@id'],
+            clingenAlleleId: clingenAlleleId,
+            canonicalAlleleName: response.data?.communityStandardTitle?.[0] || undefined,
+            maneStatus: maneStatus,
+            genomicAlleles: response.data?.genomicAlleles || [],
+            grch38Hgvs: null,
+            grch37Hgvs: null,
+            transcriptAlleles: response.data?.transcriptAlleles || [],
+            maneCoordinates: [] as Array<any>,
+            variantsStatus: 'NotLoaded',
+            variants: {
+              nucleotide: [] as Array<any>,
+              protein: [] as Array<any>,
+              associatedNucleotide: [] as Array<any>,
             }
           }
-          break
+          for (let i = 0; i < newAllele.genomicAlleles.length; i++) {
+            // TODO currently just taking first entry from hgvs array, since that appears to be NC coordinates. check this assumption
+            if (newAllele.genomicAlleles[i].referenceGenome === "GRCh38") {
+              newAllele.grch38Hgvs = newAllele.genomicAlleles[i].hgvs?.[0]
+            } else if (newAllele.genomicAlleles[i].referenceGenome === "GRCh37") {
+              newAllele.grch37Hgvs = newAllele.genomicAlleles[i].hgvs?.[0]
+            }
+          }
+          for (let i = 0; i < newAllele.transcriptAlleles.length; i++) {
+            if (newAllele.transcriptAlleles[i].MANE !== undefined) {
+              // TODO may want to prioritize one of MANE select, MANE clinical, etc. For now, just grab the first mane transcript.
+              const mane = newAllele.transcriptAlleles[i].MANE
+              for (const sequenceType of ["nucleotide", "protein"]) {
+                for (const database in mane[sequenceType]) {
+                  newAllele.maneCoordinates.push({
+                    sequenceType: sequenceType,
+                    database: database,
+                    hgvs: mane[sequenceType][database].hgvs
+                  })
+                }
+              }
+            }
+            break
+          }
+          this.alleles.push(newAllele)
+        } else if (clingenAlleleId && clingenAlleleId.startsWith('PA')) {
+          // Surface result on nucleotide-level variant if possible
+          // some PA IDs do not have associated CA IDs/matching registered transcripts
+          // because they are single amino acid variants caused by multi-nucleotide variants
+          // or delins nucleotide variants, and the more complex nucleotide variant has not
+          // been registered with ClinGen yet. in this case, use the PA ID
+
+          // get amino acid allele associated with the searched hgvs
+          // note, not sure if we should assume that the searched hgvs will appear here.
+          const aminoAcidAlleles = response.data?.aminoAcidAlleles || []
+          for (let i = 0; i < aminoAcidAlleles.length; i++) {
+            if (aminoAcidAlleles[i].hgvs?.includes(hgvsString)) {
+              const transcripts = aminoAcidAlleles[i]?.matchingRegisteredTranscripts || []
+              if (transcripts.length > 0) {
+                for (let j = 0; j < transcripts.length; j++) {
+                  const associatedClingenAlleleId = transcripts[j]?.['@id']?.split('/')?.at(-1)
+                  const associatedResponse = await axios.get(`https://reg.test.genome.network/allele/${associatedClingenAlleleId}`)
+                  const newAllele = {
+                    clingenAlleleUrl: associatedResponse.data?.['@id'],
+                    clingenAlleleId: associatedResponse.data?.['@id']?.split('/')?.at(-1),
+                    canonicalAlleleName: associatedResponse.data?.communityStandardTitle?.[0] || undefined,
+                    maneStatus: maneStatus,
+                    genomicAlleles: associatedResponse.data?.genomicAlleles || [],
+                    grch38Hgvs: null,
+                    grch37Hgvs: null,
+                    transcriptAlleles: associatedResponse.data?.transcriptAlleles || [],
+                    maneCoordinates: [] as Array<any>,
+                    variantsStatus: 'NotLoaded',
+                    variants: {
+                      nucleotide: [] as Array<any>,
+                      protein: [] as Array<any>,
+                      associatedNucleotide: [] as Array<any>,
+                    }
+                  }
+                  for (let i = 0; i < newAllele.genomicAlleles.length; i++) {
+                    // TODO currently just taking first entry from hgvs array, since that appears to be NC coordinates. check this assumption
+                    if (newAllele.genomicAlleles[i].referenceGenome === "GRCh38") {
+                      newAllele.grch38Hgvs = newAllele.genomicAlleles[i].hgvs?.[0]
+                    } else if (newAllele.genomicAlleles[i].referenceGenome === "GRCh37") {
+                      newAllele.grch37Hgvs = newAllele.genomicAlleles[i].hgvs?.[0]
+                    }
+                  }
+                  for (let i = 0; i < newAllele.transcriptAlleles.length; i++) {
+                    if (newAllele.transcriptAlleles[i].MANE !== undefined) {
+                      // TODO may want to prioritize one of MANE select, MANE clinical, etc. For now, just grab the first mane transcript.
+                      const mane = newAllele.transcriptAlleles[i].MANE
+                      for (const sequenceType of ["nucleotide", "protein"]) {
+                        for (const database in mane[sequenceType]) {
+                          newAllele.maneCoordinates.push({
+                            sequenceType: sequenceType,
+                            database: database,
+                            hgvs: mane[sequenceType][database].hgvs
+                          })
+                        }
+                      }
+                    }
+                    break
+                  }
+                  this.alleles.push(newAllele)
+                }
+              } else {
+                // no associated CA IDs, use PA ID as search result
+                // there is not as much info available for PA IDs
+                const newAllele = {
+                  clingenAlleleUrl: response.data?.['@id'],
+                  clingenAlleleId: response.data?.['@id']?.split('/')?.at(-1),
+                  canonicalAlleleName: hgvsString, // since we have already determined a match, just use supplied hgvs string as a name
+                  variantsStatus: 'NotLoaded',
+                  variants: {
+                    nucleotide: [] as Array<any>,
+                    protein: [] as Array<any>,
+                    associatedNucleotide: [] as Array<any>,
+                  },
+                  // the following fields are not available for PA IDs
+                  maneStatus: null,
+                  genomicAlleles: [],
+                  grch38Hgvs: null,
+                  grch37Hgvs: null,
+                  transcriptAlleles: [],
+                  maneCoordinates: [] as Array<any>,
+                }
+                this.alleles.push(newAllele)
+              }
+            }
+            // only expect one amino acid allele match
+            break
+          }   
         }
-        this.alleles.push(newAllele)
       } catch (error: any) {
         // NOTE: not resetting alleles here, because any error will have occurred before pushing to alleles.
         // don't want to reset alleles because this function may be called in a loop to process several hgvs strings.
@@ -325,8 +457,23 @@ export default defineComponent({
             }
           )
 
-          allele.variants = response.data[0]
+          // if CA ID, exact match = nucleotide
+          // else if PA ID, exact match = protein
+          if (allele.clingenAlleleId.startsWith('CA')) {
+            allele.variants.nucleotide = response.data[0]?.exactMatch?.variantEffectMeasurements || []
+            allele.variants.protein = (response.data[0]?.equivalentAa || [])
+              .flatMap((entry: any) => entry.variantEffectMeasurements || [])
+            allele.variants.associatedNucleotide = (response.data[0]?.equivalentNt || [])
+              .flatMap((entry: any) => entry.variantEffectMeasurements || [])
+          } else if (allele.clingenAlleleId.startsWith('PA')) {
+            allele.variants.protein = response.data[0]?.exactMatch?.variantEffectMeasurements || []
+            // note: since we weren't able to resolve PA ID to a CA ID, we don't expect any results for nt
+            allele.variants.nucleotide = (response.data[0]?.equivalentNt || [])
+              .flatMap((entry: any) => entry.variantEffectMeasurements || [])
+          }
           allele.variantsStatus = 'Loaded'
+          console.log("Variants:")
+          console.log(allele.variants)
         } catch (error: any) {
           allele.variants = []
           console.log("Error while loading MaveDB search results for variant", error)

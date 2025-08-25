@@ -12,17 +12,26 @@
           <TabPanel
             v-for="(variant, variantIndex) in variants"
             v-model:activeIndex="activeVariantIndex"
-            :header="variant.url"
-            :key="variant.urn"
+            :header="variant.content.url"
+            :key="variant.content.urn"
           >
             <template #header>
               <div v-if="variants.length > 1">
                 <div class="mavedb-variants-tabview-header-text" style="color: #000; font-weight: bold;">Measurement {{ variantIndex + 1 }}</div>
-                <div class="mavedb-variants-tabview-header-text">{{ variantName(variant) }}</div>
-                <div class="mavedb-variants-tabview-header-text">{{ variant.scoreSet.title }}</div>
+                <div v-if="variant.type == 'nucleotide'" class="mavedb-variants-tabview-header-text" style="color: #000; font-weight: bold;">
+                  Assayed at nucleotide level
+                </div>
+                <div v-else-if="variant.type == 'protein'" class="mavedb-variants-tabview-header-text" style="color: #000; font-weight: bold;">
+                  Assayed at protein level
+                </div>
+                <div v-else-if="variant.type == 'associatedNucleotide'" class="mavedb-variants-tabview-header-text" style="color: #000; font-weight: bold;">
+                  Other nucleotide-level variant with equivalent protein effect
+                </div>
+                <div class="mavedb-variants-tabview-header-text">{{ variantName(variant.content) }}</div>
+                <div class="mavedb-variants-tabview-header-text">{{ variant.content.scoreSet.title }}</div>
               </div>
             </template>
-            <VariantMeasurementView :variantUrn="variant.urn" />
+            <VariantMeasurementView :variantUrn="variant.content.urn" />
           </TabPanel>
         </TabView>
     </div>
@@ -119,8 +128,42 @@ export default {
         const response = await axios.post(`${config.apiBaseUrl}/variants/clingen-allele-id-lookups`, {
           clingenAlleleIds: [this.clingenAlleleId]
         })
-
-        this.variants = response.data?.[0] || []
+        if (this.clingenAlleleId.startsWith('CA')) {
+          const nucleotideVariants = (response.data[0]?.exactMatch?.variantEffectMeasurements || []).map((entry: any) => ({
+            content: entry,
+            type: 'nucleotide'
+          }))
+          const proteinVariants = (response.data[0]?.equivalentAa?.flatMap((entry: any) => entry.variantEffectMeasurements || []) || []).map((entry: any) => ({
+            content: entry,
+            type: 'protein'
+          }))
+          const associatedNucleotideVariants = (response.data[0]?.equivalentNt?.flatMap((entry: any) => entry.variantEffectMeasurements || []) || []).map((entry: any) => ({
+            content: entry,
+            type: 'associatedNucleotide'
+          }))
+          this.variants = [
+            ...nucleotideVariants,
+            ...proteinVariants,
+            ...associatedNucleotideVariants
+          ]
+          console.log("Variants:")
+          console.log(this.variants)
+        } else if (this.clingenAlleleId.startsWith('PA')) {
+          // do this separately because we want protein to show up first if protein page
+          const proteinVariants = (response.data[0]?.exactMatch?.variantEffectMeasurements || []).map((entry: any) => ({
+            content: entry,
+            type: 'protein'
+          }))
+          // note: since we weren't able to resolve PA ID to a CA ID, we don't expect any results for nt
+          const nucleotideVariants = (response.data[0]?.equivalentNt?.flatMap((entry: any) => entry.variantEffectMeasurements || []) || []).map((entry: any) => ({
+            content: entry,
+            type: 'nucleotide'
+          }))
+          this.variants = [
+            ...proteinVariants,
+            ...nucleotideVariants
+          ]
+        }
         this.variantsStatus = 'Loaded'
       } catch (error) {
         console.log('Error while loading variants', error)

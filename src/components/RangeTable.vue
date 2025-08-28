@@ -4,12 +4,12 @@
             <table class="mave-range-table" v-if="range">
                 <tbody>
                     <tr>
-                        <td :colspan="normalRanges.length + abnormalRanges.length" style="text-align: center; font-weight: bold; background-color: #f0f0f0;">
+                        <td :colspan="totalRanges" style="text-align: center; font-weight: bold; background-color: #f0f0f0;">
                             <span>{{ "Details for `" + rangeName + "` ranges" }}</span>
                         </td>
                     </tr>
-                    <tr v-if="range.baselineScore">
-                        <td :colspan="normalRanges.length + abnormalRanges.length">
+                    <tr v-if="range.baselineScore !== null && range.baselineScore !== undefined">
+                        <td :colspan="totalRanges">
                             <span>Baseline Score: <strong>{{ range.baselineScore }}</strong></span>
                             <span v-if="range.baselineScoreDescription">
                                 <Button
@@ -23,7 +23,7 @@
                         </td>
                     </tr>
                     <tr>
-                        <th v-for="range in abnormalRanges.concat(normalRanges)" :key="range.label">
+                        <th v-for="range in sortedRanges" :key="range.label">
                             <span>{{ range.label }}</span>
                             <span v-if="range.description">
                                 <Button
@@ -36,40 +36,42 @@
                             </span>
                         </th>
                     </tr>
-                    <tr v-if="abnormalRanges.concat(normalRanges).some((range: ScoreRange) => 'evidenceStrength' in range)">
-                        <td v-for="range in abnormalRanges.concat(normalRanges)" :key="range.label" :class="`mave-evidence-code-${evidenceCodeForEvidenceStrength(range.evidenceStrength)}`">
+                    <tr v-if="sortedRanges.some((range: ScoreRange) => 'evidenceStrength' in range)">
+                        <td v-for="range in sortedRanges" :key="range.label" :class="`mave-evidence-code-${evidenceCodeForEvidenceStrength(range.evidenceStrength)}`">
                             <span v-if="'evidenceStrength' in range">{{ evidenceCodeForEvidenceStrength(range.evidenceStrength) }}</span>
                             <span v-else>Not Provided</span>
                         </td>
                     </tr>
                     <tr v-else>
-                        <td v-for="range in abnormalRanges.concat(normalRanges)" :key="range.label" :class="`mave-classification-${range.classification}`">
+                        <td v-for="range in sortedRanges" :key="range.label" :class="`mave-classification-${range.classification}`">
                             <span>{{ titleCase(range.classification) }}</span>
                         </td>
                     </tr>
                     <tr>
-                        <td v-for="range in abnormalRanges.concat(normalRanges)" :key="range.label">
-                            <span>{{ range.range[0] !== null ? range.range[0] : "-Infinity" }} to {{ range.range[1] !== null ? range.range[1] : "Infinity" }}</span>
+                        <td v-for="range in sortedRanges" :key="range.label">
+                            <span>
+                                {{ range.inclusiveLowerBound ? '[' : '(' }}{{ range.range[0] !== null ? range.range[0] : "-Infinity" }}, {{ range.range[1] !== null ? range.range[1] : "Infinity" }}{{ range.inclusiveUpperBound ? ']' : ')' }}
+                            </span>
                         </td>
                     </tr>
                     <tr v-if="range && range.ranges.some((range: ScoreRange) => 'positiveLikelihoodRatio' in range)">
-                        <td v-for="range in abnormalRanges.concat(normalRanges)" :key="range.label">
+                        <td v-for="range in sortedRanges" :key="range.label">
                             <span v-if="'positiveLikelihoodRatio' in range">{{ range.positiveLikelihoodRatio }}</span>
                             <span v-else>Not Provided</span>
                         </td>
                     </tr>
                     <tr v-if="matchSource(range.source)">
-                        <td :colspan="abnormalRanges.length + normalRanges.length">
+                        <td :colspan="totalRanges">
                             <span>Source: <a :href="matchSource(range.source)?.url" target="_blank">{{ matchSource(range.source)?.url }}</a></span>
                         </td>
                     </tr>
                 </tbody>
                 <tbody v-if="activeRangeHasOddsPath">
                     <tr style="border: none;">
-                        <td :colspan="abnormalRanges.length + normalRanges.length" style="border: none; background: transparent; height: 1em;"></td>
+                        <td :colspan="totalRanges" style="border: none; background: transparent; height: 1em;"></td>
                     </tr>
                     <tr>
-                        <td :colspan="abnormalRanges.length + normalRanges.length" style="text-align: center; font-weight: bold; background-color: #f0f0f0;">
+                        <td :colspan="totalRanges" style="text-align: center; font-weight: bold; background-color: #f0f0f0;">
                             <span>Odds Path Calculations</span>
                             <Button
                                 class="p-button-help p-description-tooltip-button"
@@ -81,23 +83,26 @@
                         </td>
                     </tr>
                     <tr>
-                        <td :colspan="abnormalRanges.length">Odds Path Abnormal</td>
-                        <td :colspan="normalRanges.length">Odds Path Normal</td>
+                        <td v-if="abnormalRanges.length" :colspan="abnormalRanges.length">Odds Path Abnormal</td>
+                        <td v-if="normalRanges.length" :colspan="normalRanges.length">Odds Path Normal</td>
+                        <td v-if="unspecifiedRanges.length" :colspan="unspecifiedRanges.length">N/A</td>
                     </tr>
                     <tr>
-                        <td v-for="range in abnormalRanges.concat(normalRanges)" :class="`mave-evidence-code-${range.oddsPath?.evidence}`" :key="range.label">
+                        <td v-for="range in sortedRanges" :class="`mave-evidence-code-${range.oddsPath?.evidence}`" :key="range.label">
                             <span v-if="range.oddsPath?.evidence">{{ range.oddsPath.evidence }}</span>
+                            <span v-else-if="range.classification == 'not_specified'">N/A</span>
                             <span v-else>Not Provided</span>
                         </td>
                     </tr>
                     <tr>
-                        <td v-for="range in abnormalRanges.concat(normalRanges)" :key="range.label">
+                        <td v-for="range in sortedRanges" :key="range.label">
                             <span v-if="range.oddsPath?.ratio">{{ range.oddsPath.ratio }}</span>
+                            <span v-else-if="range.classification == 'not_specified'">N/A</span>
                             <span v-else>Not Provided</span>
                         </td>
                     </tr>
                     <tr v-if="matchSource(range.oddsPathSource)">
-                        <td :colspan="abnormalRanges.length + normalRanges.length">
+                        <td :colspan="totalRanges">
                             <span>Source: <a :href="matchSource(range.oddsPathSource)?.url" target="_blank">{{ matchSource(range.oddsPathSource)?.url }}</a></span>
                         </td>
                     </tr>
@@ -156,6 +161,20 @@ export default defineComponent({
             return range.classification === 'abnormal';
         }).sort((a, b) => this.sortScoreRangeByEvidence(b, a));
     },
+    unspecifiedRanges() {
+        if (!this.range) return [];
+        return this.range.ranges.filter(range => {
+            return range.classification === 'not_specified';
+        }).sort((a, b) => this.sortScoreRangeByEvidence(b, a));
+    },
+    totalRanges() {
+        if (!this.range) return 0;
+        return (this.abnormalRanges.length + this.normalRanges.length + this.unspecifiedRanges.length);
+    },
+    sortedRanges() {
+        if (!this.range) return [];
+        return this.normalRanges.concat(this.abnormalRanges).concat(this.unspecifiedRanges);
+    }
   },
   methods: {
     titleCase(s: string) {
@@ -225,7 +244,7 @@ table.mave-range-table td.mave-classification-abnormal {
 }
 
 table.mave-range-table td.mave-classification-not_specified {
-    background-color: #7b7b7b;
+    background-color: #a6a600;
     color: white;
     font-weight: bold;
 }

@@ -21,6 +21,7 @@ import SettingsScreen from '@/components/screens/SettingsScreen'
 import UsersView from '@/components/screens/UsersView'
 import VariantMeasurementScreen from '@/components/screens/VariantMeasurementScreen'
 import VariantScreen from '@/components/screens/VariantScreen'
+import WizardCompletionView from '@/components/screens/WizardCompletionView.vue'
 import StatisticsView from '@/components/screens/StatisticsView'
 import store from '@/store'
 
@@ -171,7 +172,13 @@ const routes = [{
   path: '/oidc-callback-error',
   name: 'oidcCallbackError',
   component: OidcCallbackError
-}]
+}, {
+  name: 'wizard-completion',
+  path: '/score-sets/submit-completion/:urn',
+  component: WizardCompletionView,
+  props: (route) => ({itemId: route.params.urn})
+}
+]
 
 const router = createRouter({
   history: createWebHistory(),

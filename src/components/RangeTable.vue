@@ -265,77 +265,66 @@ table.mave-range-table th {
 }
 
 table.mave-range-table td.mave-evidence-code-PS3_VERY_STRONG {
-    background-color: #7b1910;
-    color: white;
+    background-color: #943744;
     font-weight: bold;
 }
 
 table.mave-range-table td.mave-evidence-code-PS3_STRONG {
-    background-color: #b02418;
-    color: white;
+    background-color: #D68F99;
     font-weight: bold;
 }
 
 table.mave-range-table td.mave-evidence-code-PS3_MODERATE+ {
-    background-color: #ba6e68;
-    color: white;
+    background-color: #E6B1B8;
     font-weight: bold;
 }
 
 table.mave-range-table td.mave-evidence-code-PS3_MODERATE {
-    background-color: #cf7b74;
-    color: white;
+    background-color: #F0D0D5;
     font-weight: bold;
 }
 
 table.mave-range-table td.mave-evidence-code-PS3_SUPPORTING {
-    background-color: #e7bdb9;
-    color: white;
+    background-color: #F7E4E7;
     font-weight: bold;
 }
 
 
 table.mave-range-table td.mave-evidence-code-BS3_VERY_STRONG {
-    background-color: #2c4374;
-    color: white;
+    background-color: #7AB5D1;
     font-weight: bold;
 }
 
 table.mave-range-table td.mave-evidence-code-BS3_STRONG {
-    background-color: #385492;
-    color: white;
+    background-color: #E4F1F6;
     font-weight: bold;
 }
 
 table.mave-range-table td.mave-evidence-code-BS3_MODERATE+ {
-    background-color: #5f76a7;
-    color: white;
+    background-color: #EDF6FA;
     font-weight: bold;
 }
 
 table.mave-range-table td.mave-evidence-code-BS3_MODERATE {
-    background-color: #7387b2;
-    color: white;
+    background-color: #F4F9FC;
     font-weight: bold;
 }
 
 
 table.mave-range-table td.mave-evidence-code-BS3_SUPPORTING {
+    background-color: #F9FCFE;
+    font-weight: bold;
+}
+
+
+table.mave-range-table td.mave-evidence-code-INDETERMINATE {
     background-color: #c3cbde;
-    color: white;
     font-weight: bold;
 }
 
-
-table.mave-range-table td.mave-evidence-code-BS3_INDETERMINATE {
-    background-color: #d9cb00;
-    color: white;
-    font-weight: bold;
-}
 
 table.mave-range-table td.mave-evidence-code-undefined {
-    background-color: #7b7b7b;
-    color: white;
+    background-color: #E0E0E0;
     font-weight: bold;
 }
 

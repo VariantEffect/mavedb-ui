@@ -122,6 +122,96 @@
         </div>
       </div>
       <div class="mave-1000px-col">
+        <div class="nutrition-card">
+          <div class="nutrition-card-header">
+            <span class="nutrition-author">{{ item.primaryPublicationIdentifiers[0]?.authors[0].name }} et al. {{ item.targetGenes[0]?.name }} {{ item.primaryPublicationIdentifiers[0]?.publicationYear }}</span> 
+          </div>
+          <div class="nutrition-section">
+            <div class="nutrition-row">
+              <div class="nutrition-label">Gene (HGNC symbol)</div>
+              <div class="nutrition-value">{{ item.targetGenes[0]?.name }}</div>
+            </div>
+          </div>
+          <div class="nutrition-section-title">Assay Performance</div>
+          <div class="nutrition-section">
+            <div class="nutrition-row">
+              <div class="nutrition-label">Assay Type</div>
+              <div class="nutrition-value">
+                <div v-if="item.experiment.keywords?.some(k => k.keyword.key === 'Phenotypic Assay Method')">
+                {{ item.experiment.keywords.find(k => k.keyword.key === 'Phenotypic Assay Method').keyword.label }}
+                </div>
+                <div v-else>
+                  None
+                </div>
+              </div>
+            </div>
+            <div class="nutrition-row">
+              <div class="nutrition-label">Molecular Mechanism Assessed</div>
+              <div class="nutrition-value">
+                <div v-if="item.experiment.keywords?.some(k => k.keyword.key === 'Phenotypic Assay Mechanism')">
+                {{ item.experiment.keywords.find(k => k.keyword.key === 'Phenotypic Assay Mechanism').keyword.label }}
+                </div>
+                <div v-else>
+                  None
+                </div>
+              </div>
+            </div>
+            <div class="nutrition-row">
+              <div class="nutrition-label">Model System</div>
+              <div class="nutrition-value">
+                <div v-if="item.experiment.keywords?.some(k => k.keyword.key === 'Phenotypic Assay Model System')">
+                {{ item.experiment.keywords.find(k => k.keyword.key === 'Phenotypic Assay Model System').keyword.label }}
+                </div>
+                <div v-else>
+                  None
+                </div>
+              </div>
+            </div>
+            <div class="nutrition-row">
+              <div class="nutrition-label">Detects Splicing Variants?</div>
+              <div class="nutrition-value" :class="{ yellow: item.detectsSplicing === 'No' }">
+                {{ item.detectsSplicing || 'Yes' }}
+              </div>
+            </div>
+            <div class="nutrition-row">
+              <div class="nutrition-label">Detects NMD Variants?</div>
+              <div class="nutrition-value" :class="{ yellow: item.detectsNmd === 'No' }">
+                {{ item.detectsNmd || 'Yes' }}
+              </div>
+            </div>
+          </div>
+          <div class="nutrition-section-title">Clinical Performance</div>
+          <div class="nutrition-section">
+            <div class="nutrition-row">
+              <div class="nutrition-label">OddsPath – Normal</div>
+              <div class="nutrition-value">
+                <div class="nutrition-value" v-if="item.scoreRanges?.investigatorProvided?.ranges?.some(r => r.classification === 'normal')">
+                  {{ item.scoreRanges.investigatorProvided.ranges.find(r => r.classification === 'normal').oddsPath?.ratio }}
+                  <span class="badge strong blue">
+                    {{ item.scoreRanges.investigatorProvided.ranges.find(r => r.classification === 'normal').oddsPath?.evidence }}
+                  </span>
+                </div>
+                <div class="nutrition-value grey" v-else>
+                  Cannot calculate due to lack of Clinical Controls
+                </div>
+              </div>
+            </div>
+            <div class="nutrition-row">
+              <div class="nutrition-label">OddsPath – Abnormal</div>
+              <div class="nutrition-value">
+                <div class="nutrition-value" v-if="item.scoreRanges?.investigatorProvided?.ranges?.some(r => r.classification === 'abnormal')">
+                  {{ item.scoreRanges.investigatorProvided.ranges.find(r => r.classification === 'abnormal').oddsPath?.ratio }}
+                  <span class="badge strong red">
+                    {{ item.scoreRanges.investigatorProvided.ranges.find(r => r.classification === 'abnormal').oddsPath?.evidence }}
+                  </span>
+                </div>
+                <div class="nutrition-value grey" v-else>
+                  Cannot calculate due to lack of Clinical Controls
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
         <div v-if="item.externalLinks?.ucscGenomeBrowser?.url">
             <a :href="item.externalLinks.ucscGenomeBrowser.url" target="blank">
               <img src="@/assets/logo-ucsc-genome-browser.png" alt="UCSC Genome Browser" style="height: 20px;" />
@@ -1067,6 +1157,89 @@ export default {
   margin: 1em 0;
 }
 
+/* Nutrition label */
+
+.nutrition-author {
+  font-size: 21px;
+}
+
+.nutrition-card {
+  width: 500px;   /* fixed size */
+  border: 1px solid #000;
+  padding: 12px;
+  font-family: sans-serif;
+  font-size: 14px;
+  line-height: 1.4;
+}
+
+.nutrition-card-header {
+  font-weight: bold;
+  border-bottom: 3px solid #000;
+  padding-bottom: 4px;
+  margin-bottom: 8px;
+}
+
+.nutrition-section {
+  margin-bottom: 12px;
+}
+
+.nutrition-section-title {
+  font-weight: bold;
+  margin: 6px 0;
+  border-top: 1.5px solid #ccc;
+  border-bottom: 1.3px solid #c9c9c9;
+  padding-top: 4px;
+  font-size: 16px;
+}
+
+.nutrition-row {
+  display: flex;
+  justify-content: space-between;
+  margin: 2px 0;
+}
+
+.nutrition-label {
+  font-weight: bold;
+  flex: 1;
+}
+
+.nutrition-value {
+  flex: 1;
+  text-align: left;
+}
+
+.nutrition-value.yellow {
+  background: #fef3c7; /* light yellow */
+  padding: 2px 4px;
+  border-radius: 4px;
+}
+
+.nutrition-value.grey {
+  background: #f3f4f6; /* light grey */
+  padding: 2px 4px;
+  border-radius: 4px;
+  color: #374151; /* dimmed text */
+  font-size: 13px;
+}
+
+.badge {
+  display: inline-block;
+  padding: 2px 6px;
+  border-radius: 4px;
+  font-size: 12px;
+  font-weight: bold;
+  margin-left: 4px;
+}
+
+.badge.blue {
+  background: #1e40af;
+  color: white;
+}
+
+.badge.red {
+  background: #991b1b;
+  color: white;
+}
 </style>
 
 <style>

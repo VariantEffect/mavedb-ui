@@ -8,17 +8,17 @@ export const INDETERMINATE_RANGE_EVIDENCE = ["INDETERMINATE"] as const
 export const NORMAL_RANGE_EVIDENCE = ["BS3_STRONG", "BS3_MODERATE", "BS3_SUPPORTING"] as const
 export const ABNORMAL_RANGE_EVIDENCE = ["PS3_VERY_STRONG", "PS3_STRONG", "PS3_MODERATE", "PS3_SUPPORTING"] as const
 export const EVIDENCE_STRENGTHS = {
-    "BS3_STRONG": 4,
-    "BS3_MODERATE": 2,
-    "BS3_MODERATE+": 3,
-    "BS3_SUPPORTING": 1,
-    "BS3_VERY_STRONG": 8,
+    "BS3_STRONG": -4,
+    "BS3_MODERATE": -2,
+    "BS3_MODERATE+": -3,
+    "BS3_SUPPORTING": -1,
+    "BS3_VERY_STRONG": -8,
     "INDETERMINATE": 0,
-    "PS3_VERY_STRONG": -8,
-    "PS3_STRONG": -4,
-    "PS3_MODERATE+": -3,
-    "PS3_MODERATE": -2,
-    "PS3_SUPPORTING": -1
+    "PS3_VERY_STRONG": 8,
+    "PS3_STRONG": 4,
+    "PS3_MODERATE+": 3,
+    "PS3_MODERATE": 2,
+    "PS3_SUPPORTING": 1
 }
 export const EVIDENCE_STRENGTHS_REVERSED = Object.fromEntries(
     Object.entries(EVIDENCE_STRENGTHS).map(([key, value]) => [value, key])

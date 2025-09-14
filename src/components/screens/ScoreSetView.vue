@@ -98,24 +98,17 @@
               :style="{visibility: variantToVisualize ? 'visible' : 'hidden'}"
             />
           </span>
-          <!--
           <span>
-            <template v-if="mode == 'raw'">
-              Viewing raw data.
-              <Button label="Switch to clinical view" rounded @click="mode = 'clinical'" />
-            </template>
-            <template v-if="mode == 'clinical'">
-              Currently in clinical mode.
-              <Button label="Switch to raw data view" rounded size="sm" @click="mode = 'raw'" />
-            </template>
+            <span :style="{fontWeight: clinicalMode ? 'normal' : 'bold'}">Raw data</span>
+            <InputSwitch v-model="clinicalMode" :aria-label="`Click to change to ${clinicalMode ? 'raw data' : 'clinical view'}.`" />
+            <span :style="{fontWeight: clinicalMode ? 'bold' : 'normal'}">Mapped variant coordinates for clinical use</span>
           </span>
-          -->
         </div>
         <div class="mave-score-set-histogram-pane">
           <ScoreSetHistogram
             ref="histogram"
             :external-selection="variantToVisualize"
-            :coordinates="mode == 'clinical' ? 'mapped' : 'raw'"
+            :coordinates="clinicalMode ? 'mapped' : 'raw'"
             :scoreSet="item"
             :variants="scores"
             @export-chart="setHistogramExport"
@@ -124,7 +117,7 @@
         <div v-if="showHeatmap && !isScoreSetVisualizerVisible" class="mave-score-set-heatmap-pane">
           <ScoreSetHeatmap
             ref="heatmap"
-            :coordinates="mode == 'clinical' ? 'mapped' : 'raw'"
+            :coordinates="clinicalMode ? 'mapped' : 'raw'"
             :external-selection="variantToVisualize"
             :score-set="item"
             sequence-type="protein"
@@ -437,6 +430,7 @@ import Button from 'primevue/button'
 import Chip from 'primevue/chip'
 import Column from 'primevue/column'
 import DataTable from 'primevue/datatable'
+import InputSwitch from 'primevue/inputswitch'
 import TabPanel from 'primevue/tabpanel'
 import TabView from 'primevue/tabview'
 import Message from 'primevue/message'
@@ -471,7 +465,7 @@ import ScoreSetVisualizer from '../ScoreSetVisualizer.vue';
 
 export default {
   name: 'ScoreSetView',
-  components: { Accordion, AccordionTab, AutoComplete, Button, Chip, Sidebar, CollectionAdder, CollectionBadge, DefaultLayout, EntityLink, ScoreSetHeatmap, ScoreSetHistogram, ScoreSetVisualizer, TabView, TabPanel, Message, DataTable, Column, ProgressSpinner, ScrollPanel, SplitButton, PageLoading, ItemNotFound },
+  components: { Accordion, AccordionTab, AutoComplete, Button, Chip, InputSwitch, Sidebar, CollectionAdder, CollectionBadge, DefaultLayout, EntityLink, ScoreSetHeatmap, ScoreSetHistogram, ScoreSetVisualizer, TabView, TabPanel, Message, DataTable, Column, ProgressSpinner, ScrollPanel, SplitButton, PageLoading, ItemNotFound },
   computed: {
     annotatedVariantDownloadOptions: function () {
       const annotatatedVariantOptions = []
@@ -504,12 +498,10 @@ export default {
       return annotatatedVariantOptions
     },
     heatmapVariants: function() {
-      switch (this.mode) {
-        case 'clinical':
-          return this.codingVariants
-        case 'raw':
-        default:
-          return this.scores
+      if (this.clinicalMode) {
+        return this.codingVariants
+      } else {
+        return this.scores
       }
     },
     uniprotId: function() {
@@ -568,7 +560,7 @@ export default {
     }
   },
   data: () => ({
-    mode: 'clinical',
+    clinicalMode: true,
     scores: null,
     scoreColumns: [],
     codingVariants: null,

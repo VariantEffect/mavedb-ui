@@ -38,6 +38,7 @@
           <div v-else>Not specified</div>
         </div>
       </div>
+      <!--
       <div class="nutrition-row">
         <div class="nutrition-label">Detects Splicing Variants?</div>
         <div class="nutrition-value" :class="{ yellow: scoreSet.detectsSplicing === 'No' }">
@@ -50,6 +51,7 @@
           {{ scoreSet.detectsNmd || "Yes" }}
         </div>
       </div>
+      -->
       <div class="nutrition-row">
         <div class="nutrition-label">Number of Variants</div>
         <div class="nutrition-value">

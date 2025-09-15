@@ -48,7 +48,7 @@ import InputSwitch from 'primevue/inputswitch'
 import ProgressSpinner from 'primevue/progressspinner'
 import Rating from 'primevue/rating'
 import TabMenu from 'primevue/tabmenu'
-import {defineComponent} from 'vue'
+import {defineComponent, PropType} from 'vue'
 import config from '@/config'
 import axios from 'axios'
 
@@ -72,7 +72,15 @@ import {
 import makeHistogram, {DEFAULT_SERIES_COLOR, Histogram, HistogramSerieOptions, HistogramDatum, HistogramBin} from '@/lib/histogram'
 import { prepareRangesForHistogram, ScoreRanges, ScoreSetRanges } from '@/lib/ranges'
 import RangeTable from './RangeTable.vue'
+import {variantNotNullOrNA} from '@/lib/mave-hgvs'
 
+
+function naToUndefined(x: string | null | undefined) {
+  if (variantNotNullOrNA(x)) {
+    return x
+  }
+  return undefined
+}
 
 export default defineComponent({
   name: 'ScoreSetHistogram',
@@ -81,6 +89,10 @@ export default defineComponent({
   emits: ['exportChart'],
 
   props: {
+    coordinates: {
+      type: String as PropType<'raw' | 'mapped'>,
+      default: 'raw'
+    },
     // Margins must accommodate the X axis label and title.
     margins: {
       type: Object,
@@ -346,13 +358,30 @@ export default defineComponent({
 
         if (variant) {
           // Line 1: Variant identifier
-          const variantLabel = variant.mavedb_label || (
-            variant.hgvs_pro ?
-              (variant.hgvs_nt ? `${variant.hgvs_pro} (${variant.hgvs_nt})` : variant.hgvs_pro)
-              : variant.hgvs_splice ?
-                (variant.hgvs_nt ? `${variant.hgvs_splice} (${variant.hgvs_nt})` : variant.hgvs_splice)
-                : variant.hgvs_nt
-          )
+          const mappedDnaHgvs = naToUndefined(variant.post_mapped_hgvs_c)
+          const mappedProteinHgvs = naToUndefined(variant.post_mapped_hgvs_p) ?? naToUndefined(variant.hgvs_pro_inferred)
+          const unmappedDnaHgvs = naToUndefined(variant.hgvs_nt)
+          const unmappedProteinHgvs = naToUndefined(variant.hgvs_pro)
+          const unmappedSpliceHgvs = naToUndefined(variant.hgvs_splice)
+          // const variantLabel = variant.mavedb_label || (
+          //   proteinHgvs ?
+          //     (dnaHgvs ? `${proteinHgvs} (${dnaHgvs})` : proteinHgvs)
+          //     : spliceHgvs ?
+          //       (dnaHgvs ? `${spliceHgvs} (${dnaHgvs})` : spliceHgvs)
+          //       : dnaHgvs
+          // )
+          const mappedVariantLabel = mappedProteinHgvs ?
+              (mappedDnaHgvs ? `${mappedProteinHgvs} (${mappedDnaHgvs})` : mappedProteinHgvs)
+              : mappedDnaHgvs
+          const unmappedVariantLabel = unmappedProteinHgvs ?
+              (unmappedDnaHgvs ? `${unmappedProteinHgvs} (${unmappedDnaHgvs})` : unmappedProteinHgvs)
+              : unmappedSpliceHgvs ?
+                (unmappedDnaHgvs ? `${unmappedSpliceHgvs} (${unmappedDnaHgvs})` : unmappedSpliceHgvs)
+                : unmappedDnaHgvs
+          
+          const variantLabel = this.coordinates == 'mapped' ?
+              mappedVariantLabel ?? variant.mavedb_label ?? unmappedVariantLabel
+              : variant.mavedb_label ?? unmappedVariantLabel
           if (variantLabel) {
             parts.push(variantLabel)
           }

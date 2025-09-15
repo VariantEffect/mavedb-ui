@@ -6,10 +6,14 @@
     </Message>
   </div>
   <div class="mavedb-toolbar">
+    <div v-if="config.PREVIEW_SITE" class="mavedb-beta-banner">
+      This is a beta test site. For the production site, please visit <a href="https://mavedb.org.">mavedb.org</a>.
+    </div>
     <Menubar :model="availableMenuItems" class="mavedb-menubar">
       <template #start>
         <router-link to="/" class="mavedb-logo">
-          <img src="@/assets/logo-mavedb.png" alt="MaveDB" />
+          <img v-if="config.PREVIEW_SITE" src="@/assets/logo-mavedb-beta.png" alt="MaveDB Beta Site" />
+          <img v-else src="@/assets/logo-mavedb.png" alt="MaveDB" />
         </router-link>
         <div style="display: inline-block; margin-left: 40px;">
           <div class="p-inputgroup" style="max-width: 300px; width: 300px;">
@@ -112,6 +116,11 @@ export default {
         route: '/create-score-set',
         available: ({authenticated}) => authenticated
       }, {
+        label: 'Feedback',
+        target: '_blank',
+        url: 'https://mavedb.zulipchat.com/#narrow/channel/511813-beta-testers',
+        available: ({config}) => config.PREVIEW_SITE
+      }, {
         label: 'Users',
         route: '/users',
         available: ({roles}) => roles.includes('admin')
@@ -157,6 +166,7 @@ export default {
           item.items = newSubitems
         }
         const available = !item.available || item.available({
+          config: this.config,
           authenticated: this.userIsAuthenticated,
           roles: this.roles || []
         }) // && (!item.to || this.userMayAccessPath(item.to))
@@ -224,6 +234,16 @@ export default {
 
 .mavedb-menubar .mavedb-title {
   font-size: 2rem;
+}
+
+.mavedb-beta-banner {
+  background-color: #eb9c3f;
+  color: #fff;
+  text-align: center;
+}
+
+.mavedb-beta-banner a {
+  color: #fff;
 }
 
 </style>

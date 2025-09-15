@@ -292,25 +292,38 @@ export default function makeHeatmap(): Heatmap {
   //////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 
   const prepareData = () => {
-    for (let datum of data) {
+    let xMin: number | undefined = undefined
+    let xMax: number | undefined = undefined
+    for (const datum of data) {
       datum.isVisible = !excludeDatum(datum)
 
-      content[xCoordinate(datum)] = content[xCoordinate(datum)] || {}
-      content[xCoordinate(datum)][yCoordinate(datum)] = datum
+      const x = xCoordinate(datum)
+      if (xMin == undefined || x < xMin) {
+        xMin = x
+      }
+      if (xMax == undefined || x > xMax) {
+        xMax = x
+      }
+      content[x] = content[x] || {}
+      content[x][yCoordinate(datum)] = datum
 
       if (!isNaN(valueField(datum))) {
         lowerBound = lowerBound ? Math.min(lowerBound, valueField(datum)) : valueField(datum)
         upperBound = upperBound ? Math.max(upperBound, valueField(datum)) : valueField(datum)
       }
 
-      idxLowerBound = idxLowerBound ? Math.min(idxLowerBound, xCoordinate(datum)) : xCoordinate(datum)
-      idxUpperBound = idxUpperBound ? Math.max(idxUpperBound, xCoordinate(datum)) : xCoordinate(datum)
+      idxLowerBound = idxLowerBound ? Math.min(idxLowerBound, x) : x
+      idxUpperBound = idxUpperBound ? Math.max(idxUpperBound, x) : x
 
       if (datum.isVisible) {
         filteredData.push(datum)
       }
     }
-    content.columns = Object.keys(content).length - 1
+    if (xMin != undefined && xMax != undefined) {
+      content.columns = xMax - xMin + 1
+    } else {
+      content.columns = 0
+    }
     buildColorScale()
   }
 

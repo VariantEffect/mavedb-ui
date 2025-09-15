@@ -98,7 +98,7 @@
               :style="{visibility: variantToVisualize ? 'visible' : 'hidden'}"
             />
           </span>
-          <span>
+          <span v-if="config.CLINICAL_FEATURES_ENABLED">
             <span :style="{fontWeight: clinicalMode ? 'normal' : 'bold'}">Raw data</span>
             <InputSwitch v-model="clinicalMode" :aria-label="`Click to change to ${clinicalMode ? 'raw data' : 'clinical view'}.`" />
             <span :style="{fontWeight: clinicalMode ? 'bold' : 'normal'}">Mapped variant coordinates for clinical use</span>
@@ -568,7 +568,7 @@ export default {
     }
   },
   data: () => ({
-    clinicalMode: true,
+    clinicalMode: config.CLINICAL_FEATURES_ENABLED,
     scores: null,
     scoreColumns: [],
     codingVariants: null,

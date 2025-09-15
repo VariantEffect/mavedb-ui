@@ -1035,8 +1035,8 @@ export interface components {
     };
     /** SavedTaxonomy */
     SavedTaxonomy: {
-      /** Taxid */
-      taxId: number;
+      /** Code */
+      code: number;
       /** Organismname */
       organismName?: string;
       /** Commonname */
@@ -1435,8 +1435,8 @@ export interface components {
     TargetSequenceFields: "sequence" | "sequence-type";
     /** Taxonomy */
     Taxonomy: {
-      /** Taxid */
-      taxId: number;
+      /** Code */
+      code: number;
       /** Organismname */
       organismName?: string;
       /** Commonname */
@@ -1456,8 +1456,8 @@ export interface components {
     };
     /** TaxonomyCreate */
     TaxonomyCreate: {
-      /** Taxid */
-      taxId: number;
+      /** Code */
+      code: number;
       /** Organismname */
       organismName?: string;
       /** Commonname */

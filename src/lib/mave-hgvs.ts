@@ -31,6 +31,10 @@ interface SimpleProteinVariation {
   target: null | string
 }
 
+interface SimpleDnaVariation extends SimpleProteinVariation {
+  referenceType: 'c' | 'g' | 'n'
+}
+
 type VariantLabel = {
   mavedb_label: string
 }
@@ -42,7 +46,7 @@ type VariantLabel = {
  * properly represented as Ter and del in MaveHGVS.
  */
 const proVariantRegex = /^p\.([A-Za-z]{3})([0-9]+)([A-Za-z]{3}|=|\*|-)$/
-const ntVariantRegex = /^c|g|n\.([0-9]+)([ACGTacgt]{1})(>)([ACGTactg]{1})$/
+const ntVariantRegex = /^(c|g|n)\.([0-9]+)([ACGTacgt]{1})>([ACGTactg]{1})$/
 
 /**
  * Parse a MaveHGVS protein variant representing a variation at one locus.
@@ -73,7 +77,7 @@ export function parseSimpleProVariant(variant: string): SimpleProteinVariation |
  * @param variant A MaveHGVS-nt variant string representing a single variation.
  * @returns An object with properties indicating
  */
-export function parseSimpleNtVariant(variant: string): SimpleProteinVariation | null {
+export function parseSimpleNtVariant(variant: string): SimpleDnaVariation | null {
   const parts = variant.split(":")
   const variation = parts.length == 1 ? parts[0] : parts[1]
   const target = parts.length == 1 ? null : parts[0]
@@ -83,8 +87,9 @@ export function parseSimpleNtVariant(variant: string): SimpleProteinVariation | 
     return null
   }
   return {
-    position: parseInt(match[1]),
-    original: match[2],
+    position: parseInt(match[2]),
+    original: match[3],
+    referenceType: match[1] as 'c' | 'g' | 'n',
     substitution: match[4],
     target: target
   }

@@ -11,21 +11,21 @@
       <label for="mave-histogram-viz-select" class="mave-histogram-control-label">Select a set of ranges to shade: </label>
       <Dropdown :disabled="!showRanges" v-model="activeRangeKey" :options="activeRangeOptions" optionLabel="label" inputId="mave-histogram-viz-select" style="align-items: center; height: 1.5rem;"/>
     </div>
-    <div class="mave-histogram-control" v-if="clinicalControlOptions.length > 1">
+    <div class="mave-histogram-control" v-if="showClinicalControlOptions">
       <label for="mave-histogram-db-select" class="mave-histogram-control-label">Clinical control database: </label>
-      <Dropdown v-model="controlDb" :options="clinicalControlOptions" optionLabel="dbName" inputId="mave-histogram-db-select" style="align-items: center; height: 1.5rem;"/>
+      <Dropdown v-model="controlDb" :options="clinicalControlOptions" optionLabel="dbName" inputId="mave-histogram-db-select" style="align-items: center; height: 1.5rem;" :disabled="!refreshedClinicalControls"/>
       <label for="mave-histogram-version-select" class="mave-histogram-control-label">Clinical control version: </label>
-      <Dropdown v-model="controlVersion" :options="controlDb?.availableVersions" inputId="mave-histogram-version-select" style="align-items: center; height: 1.5rem;"/>
+      <Dropdown v-model="controlVersion" :options="controlDb?.availableVersions" inputId="mave-histogram-version-select" style="align-items: center; height: 1.5rem;" :disabled="!refreshedClinicalControls"/>
     </div>
     <div class="mave-histogram-control">
       <label for="mave-histogram-star-select" class="mave-histogram-control-label">Minimum ClinVar review status 'gold stars': </label>
-      <Rating v-model="customMinStarRating" :stars="4" style="display: inline" inputId="mave-histogram-star-select" />
+      <Rating v-model="customMinStarRating" :stars="4" style="display: inline" inputId="mave-histogram-star-select" :disabled="!refreshedClinicalControls"/>
     </div>
     <div class="mave-histogram-control">
       <span class="mave-histogram-control-label">Include variants with classification: </span>
       <div class="flex flex-wrap gap-3">
         <div v-for="classification of clinicalSignificanceClassificationOptions" :key="classification.name" class="flex gap-1 align-items-center">
-          <Checkbox v-model="customSelectedClinicalSignificanceClassifications" :name="$scopedId('clinical-significance-inputs')" :value="classification.name" />
+          <Checkbox v-model="customSelectedClinicalSignificanceClassifications" :name="$scopedId('clinical-significance-inputs')" :value="classification.name" :disabled="!refreshedClinicalControls"/>
           <label :for="$scopedId('clinical-significance-inputs')">{{ classification.shortDescription }}</label>
         </div>
       </div>
@@ -48,13 +48,12 @@ import InputSwitch from 'primevue/inputswitch'
 import ProgressSpinner from 'primevue/progressspinner'
 import Rating from 'primevue/rating'
 import TabMenu from 'primevue/tabmenu'
-import {defineComponent} from 'vue'
+import {defineComponent, PropType} from 'vue'
 import config from '@/config'
 import axios from 'axios'
 
 import {
   BENIGN_CLINICAL_SIGNIFICANCE_CLASSIFICATIONS,
-  CLINVAR_CLINICAL_SIGNIFICANCE_CLASSIFICATIONS,
   CLINVAR_REVIEW_STATUS_STARS,
   DEFAULT_CLNSIG_FIELD,
   DEFAULT_CLNREVSTAT_FIELD,
@@ -63,13 +62,25 @@ import {
   DEFAULT_CLINICAL_SIGNIFICANCE_CLASSIFICATIONS,
   DEFAULT_MIN_STAR_RATING,
   PATHOGENIC_CLINICAL_SIGNIFICANCE_CLASSIFICATIONS,
+  CONFLICTING_CLINICAL_SIGNIFICANCE_CLASSIFICATIONS,
   ClinicalControl,
   ClinicalControlOption,
+  clinvarClinicalSignificanceClassifications,
+  clinvarConflictingSignificanceClassificationForVersion,
+  conflictingClinicalSignificanceSeriesLabelForVersion,
 } from '@/lib/clinical-controls'
 import makeHistogram, {DEFAULT_SERIES_COLOR, Histogram, HistogramSerieOptions, HistogramDatum, HistogramBin} from '@/lib/histogram'
 import { prepareRangesForHistogram, ScoreRanges, ScoreSetRanges } from '@/lib/ranges'
 import RangeTable from './RangeTable.vue'
+import {variantNotNullOrNA} from '@/lib/mave-hgvs'
 
+
+function naToUndefined(x: string | null | undefined) {
+  if (variantNotNullOrNA(x)) {
+    return x
+  }
+  return undefined
+}
 
 export default defineComponent({
   name: 'ScoreSetHistogram',
@@ -78,6 +89,10 @@ export default defineComponent({
   emits: ['exportChart'],
 
   props: {
+    coordinates: {
+      type: String as PropType<'raw' | 'mapped'>,
+      default: 'raw'
+    },
     // Margins must accommodate the X axis label and title.
     margins: {
       type: Object,
@@ -132,6 +147,7 @@ export default defineComponent({
 
       clinicalControls: [] as ClinicalControl[],
       clinicalControlOptions: [] as ClinicalControlOption[],
+      clinicalControlCache: {} as Record<string, Record<string, ClinicalControl[]>>,
       someVariantsHaveClinicalSignificance: false,
       clinicalControlsEnabled: config.CLINICAL_FEATURES_ENABLED,
       refreshedClinicalControls: false,
@@ -140,7 +156,7 @@ export default defineComponent({
       controlDb: null as ClinicalControlOption | null,
       controlVersion: null as string | null,
 
-      clinicalSignificanceClassificationOptions: CLINVAR_CLINICAL_SIGNIFICANCE_CLASSIFICATIONS,
+      clinicalSignificanceClassificationOptions: clinvarClinicalSignificanceClassifications(this.controlVersion ? this.controlVersion : DEFAULT_CLINICAL_CONTROL_VERSION),
       customMinStarRating: DEFAULT_MIN_STAR_RATING,
       customSelectedClinicalSignificanceClassifications: DEFAULT_CLINICAL_SIGNIFICANCE_CLASSIFICATIONS,
       histogram: null as Histogram | null,
@@ -149,6 +165,10 @@ export default defineComponent({
 
   computed: {
     series: function() {
+      if (!this.refreshedClinicalControls) {
+        return null
+      }
+
       switch (this.vizOptions[this.activeViz].view) {
         case 'clinical':
 
@@ -204,13 +224,17 @@ export default defineComponent({
               })
             }
 
-            if (this.selectedClinicalSignificanceClassifications.includes('Conflicting interpretations of pathogenicity')) {
+            // Account for both possible conflicting classifications.
+            if (this.selectedClinicalSignificanceClassifications.includes('Conflicting classifications of pathogenicity') ||
+                this.selectedClinicalSignificanceClassifications.includes('Conflicting interpretations of pathogenicity')
+            ) {
               series.push({
-                classifier: (d: HistogramDatum) => d.control?.[DEFAULT_CLNSIG_FIELD] == 'Conflicting interpretations of pathogenicity'
+                classifier: (d: HistogramDatum) => _.intersection(CONFLICTING_CLINICAL_SIGNIFICANCE_CLASSIFICATIONS, this.selectedClinicalSignificanceClassifications)
+                    .includes(d.control?.[DEFAULT_CLNSIG_FIELD])
                     && CLINVAR_REVIEW_STATUS_STARS[d.control?.[DEFAULT_CLNREVSTAT_FIELD]] >= this.minStarRating,
                 options: {
                   color: '#984ea3',
-                  title: 'Conflicting interpretations'
+                  title: conflictingClinicalSignificanceSeriesLabelForVersion(this.controlVersion ? this.controlVersion : DEFAULT_CLINICAL_CONTROL_VERSION)
                 }
               })
             }
@@ -263,6 +287,15 @@ export default defineComponent({
       } else {
         return rangeObjects as ScoreSetRanges
       }
+    },
+
+
+    showClinicalControlOptions: function() {
+      const hasMultipleDbs = this.clinicalControlOptions.length > 1
+      const hasSingleDbWithMultipleVersions = this.clinicalControlOptions.length == 1
+          && this.clinicalControlOptions[0].availableVersions.length > 1
+
+      return hasMultipleDbs || hasSingleDbWithMultipleVersions
     },
 
     activeRangeOptions: function() {
@@ -325,13 +358,30 @@ export default defineComponent({
 
         if (variant) {
           // Line 1: Variant identifier
-          const variantLabel = variant.mavedb_label || (
-            variant.hgvs_pro ?
-              (variant.hgvs_nt ? `${variant.hgvs_pro} (${variant.hgvs_nt})` : variant.hgvs_pro)
-              : variant.hgvs_splice ?
-                (variant.hgvs_nt ? `${variant.hgvs_splice} (${variant.hgvs_nt})` : variant.hgvs_splice)
-                : variant.hgvs_nt
-          )
+          const mappedDnaHgvs = naToUndefined(variant.post_mapped_hgvs_c)
+          const mappedProteinHgvs = naToUndefined(variant.post_mapped_hgvs_p) ?? naToUndefined(variant.hgvs_pro_inferred)
+          const unmappedDnaHgvs = naToUndefined(variant.hgvs_nt)
+          const unmappedProteinHgvs = naToUndefined(variant.hgvs_pro)
+          const unmappedSpliceHgvs = naToUndefined(variant.hgvs_splice)
+          // const variantLabel = variant.mavedb_label || (
+          //   proteinHgvs ?
+          //     (dnaHgvs ? `${proteinHgvs} (${dnaHgvs})` : proteinHgvs)
+          //     : spliceHgvs ?
+          //       (dnaHgvs ? `${spliceHgvs} (${dnaHgvs})` : spliceHgvs)
+          //       : dnaHgvs
+          // )
+          const mappedVariantLabel = mappedProteinHgvs ?
+              (mappedDnaHgvs ? `${mappedProteinHgvs} (${mappedDnaHgvs})` : mappedProteinHgvs)
+              : mappedDnaHgvs
+          const unmappedVariantLabel = unmappedProteinHgvs ?
+              (unmappedDnaHgvs ? `${unmappedProteinHgvs} (${unmappedDnaHgvs})` : unmappedProteinHgvs)
+              : unmappedSpliceHgvs ?
+                (unmappedDnaHgvs ? `${unmappedSpliceHgvs} (${unmappedDnaHgvs})` : unmappedSpliceHgvs)
+                : unmappedDnaHgvs
+          
+          const variantLabel = this.coordinates == 'mapped' ?
+              mappedVariantLabel ?? variant.mavedb_label ?? unmappedVariantLabel
+              : variant.mavedb_label ?? unmappedVariantLabel
           if (variantLabel) {
             parts.push(variantLabel)
           }
@@ -351,13 +401,15 @@ export default defineComponent({
             }
           }
 
-          if (variant.control?.[DEFAULT_CLNSIG_FIELD] && variant.control?.[DEFAULT_CLNSIG_FIELD] != 'NA') {
-            const classification = CLINVAR_CLINICAL_SIGNIFICANCE_CLASSIFICATIONS.find((c) => c.name == variant.control?.[DEFAULT_CLNSIG_FIELD])
+          const variantHasClinicalSignificance = variant.control && variant.control[DEFAULT_CLNSIG_FIELD] && variant.control[DEFAULT_CLNSIG_FIELD] != 'NA'
+          const variantHasReviewStatus = variant.control && variant.control[DEFAULT_CLNREVSTAT_FIELD] && variant.control[DEFAULT_CLNREVSTAT_FIELD] != 'NA'
+          if (variantHasClinicalSignificance) {
+            const classification = clinvarClinicalSignificanceClassifications(this.controlVersion ? this.controlVersion : DEFAULT_CLINICAL_CONTROL_VERSION).find((c) => c.name == variant.control?.[DEFAULT_CLNSIG_FIELD])
             if (classification) {
               variantDescriptionParts.push(classification.description)
             }
           }
-          if (variant.control?.[DEFAULT_CLNREVSTAT_FIELD] && variant.control?.[DEFAULT_CLNREVSTAT_FIELD] != 'NA') {
+          if (variantHasReviewStatus) {
             const numStars = CLINVAR_REVIEW_STATUS_STARS[variant.control?.[DEFAULT_CLNREVSTAT_FIELD]]
             if (numStars != null) {
               // Create an array of 4 stars to hold clinical review status a la ClinVar.
@@ -371,6 +423,10 @@ export default defineComponent({
           }
           if (variantDescriptionParts.length > 0) {
             parts.push(variantDescriptionParts.join(' '))
+          }
+          if (variantHasClinicalSignificance && variantHasReviewStatus) {
+            const clinVarLinkOut = `<a href="http://www.ncbi.nlm.nih.gov/clinvar/?term=${variant.control.dbIdentifier}[alleleid]" target="_blank">View in ClinVar</a>`
+            parts.push(clinVarLinkOut)
           }
 
           // Line 3: Score
@@ -445,6 +501,17 @@ export default defineComponent({
         this.renderOrRefreshHistogram()
       }
     },
+    clinicalSignificanceClassificationOptions: {
+      handler: function() {
+        // Ensure the conflicting significance remains selected even when the version changes its name.
+        this.customSelectedClinicalSignificanceClassifications = this.customSelectedClinicalSignificanceClassifications.map((classification) => {
+          if (CONFLICTING_CLINICAL_SIGNIFICANCE_CLASSIFICATIONS.includes(classification)) {
+            return clinvarConflictingSignificanceClassificationForVersion(this.controlVersion ? this.controlVersion : DEFAULT_CLINICAL_CONTROL_VERSION).name
+          }
+          return classification
+        })
+      }
+    },
     selectedClinicalSignificanceClassifications: {
       handler: function() {
         this.renderOrRefreshHistogram()
@@ -460,17 +527,27 @@ export default defineComponent({
           let defaultControlVersion = this.controlDb?.availableVersions.find((version) => version == DEFAULT_CLINICAL_CONTROL_VERSION)
           this.controlVersion = defaultControlVersion ? defaultControlVersion : this.controlDb?.availableVersions[0]
         }
+        const cache: Record<string, Record<string, ClinicalControl[]>> = {}
+        for (const dbOption of this.clinicalControlOptions) {
+          cache[dbOption.dbName] = {}
+          for (const version of dbOption.availableVersions) {
+            cache[dbOption.dbName][version] = []
+          }
+        }
+        this.clinicalControlCache = cache
       }
     },
     controlDbAndVersion: {
       handler: function() {
         if (this.config.CLINICAL_FEATURES_ENABLED) {
+          this.clinicalSignificanceClassificationOptions = clinvarClinicalSignificanceClassifications(this.controlVersion ? this.controlVersion : DEFAULT_CLINICAL_CONTROL_VERSION)
           this.loadClinicalControls()
         }
       }
     },
     clinicalControls: {
       handler: function() {
+        this.disassociateClinicalControlsWithVariants()
         this.associateClinicalControlsWithVariants()
         this.renderOrRefreshHistogram()
       }
@@ -514,7 +591,7 @@ export default defineComponent({
           .seriesOptions(this.series?.map((s) => s.options) || null)
           .seriesClassifier(seriesClassifier)
           .title('Distribution of Functional Scores')
-          .legendNote(this.activeViz == 0 ? null : `${this.controlDb?.dbName} data from version ${this.controlVersion}`)
+          .legendNote(this.activeViz == 0 || !this.refreshedClinicalControls ? null : `${this.controlDb?.dbName} data from version ${this.controlVersion}`)
           .shaders(this.histogramShaders)
 
 
@@ -535,6 +612,12 @@ export default defineComponent({
     },
 
     loadClinicalControls: async function() {
+      if (this.controlDb && this.controlVersion && this.clinicalControlCache[this.controlDb.dbName]?.[this.controlVersion].length > 0) {
+        this.clinicalControls = this.clinicalControlCache[this.controlDb.dbName][this.controlVersion]
+        this.refreshedClinicalControls = true
+        return
+      }
+
       this.refreshedClinicalControls = false
       let queryString = '';
       if (this.controlDb) {
@@ -549,6 +632,10 @@ export default defineComponent({
           const response = await axios.get(`${config.apiBaseUrl}/score-sets/${this.scoreSet.urn}/clinical-controls${queryString}`)
           if (response.data) {
             this.clinicalControls = response.data
+
+            if (this.controlDb && this.controlVersion) {
+              this.clinicalControlCache[this.controlDb.dbName][this.controlVersion] = response.data
+            }
           }
         } catch (error) {
           this.$toast.add({severity: 'warn', summary: 'No clinical control variants are associated with variants belonging to this score set. Clinical features are disabled.', detail: error.detail, life: 3000})
@@ -574,9 +661,17 @@ export default defineComponent({
       }
     },
 
-    associateClinicalControlsWithVariants: function () {
-      let associatedAnyControlsWithVariants = false
+    disassociateClinicalControlsWithVariants: function () {
       this.associatedClinicalControls = false
+      this.someVariantsHaveClinicalSignificance = false
+
+      for (const variant of this.variants) {
+        variant.control = null
+      }
+    },
+
+    associateClinicalControlsWithVariants: function()  {
+      let associatedAnyControlsWithVariants = false
 
       for (const clinicalControl of this.clinicalControls) {
         clinicalControl.mappedVariants.forEach(mappedVariant => {

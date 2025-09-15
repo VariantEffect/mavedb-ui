@@ -119,7 +119,10 @@
                 <p class="m-0">
                   {{ keyword.keyword.description }}
                 </p>
-              </Dialog> : <a :href="`${config.appBaseUrl}/search?keywords=${keyword.keyword.value}`">{{ keyword.keyword.value }}</a>
+              </Dialog> : <a :href="`${config.appBaseUrl}/search?keywords=${keyword.keyword.label}`">{{ keyword.keyword.label }}</a>
+              <div class="field" v-if="keyword.keyword.code">
+                {{ keyword.keyword.code }}
+              </div>
               <!--Present user's description-->
               <div class="field" v-if="keyword.description">
                 <div v-if="keyword.description.length >= 300">
@@ -155,7 +158,7 @@
               </div>
 
               <div v-if="targetGene.targetSequence?.taxonomy?.url"><strong>Taxonomy ID:</strong>
-                &nbsp;<a :href="`${targetGene.targetSequence.taxonomy.url}`" target="blank">{{targetGene.targetSequence.taxonomy.taxId}}</a>
+                &nbsp;<a :href="`${targetGene.targetSequence.taxonomy.url}`" target="blank">{{targetGene.targetSequence.taxonomy.code}}</a>
                 </div>
               <div v-if="targetGene.targetSequence?.sequence" style="word-break: break-word">
                 <div v-if="targetGene.targetSequence.taxonomy?.organismName"><strong>Organism name:</strong>

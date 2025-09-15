@@ -90,6 +90,16 @@ const itemTypes = {
       }
     }
   },
+  'controlled-keywords-phenotypic-mechanism-search': {
+    name: 'controlled-keywords-phenotypic-assay-mechanism',
+    restCollectionName: 'controlled-keywords',
+    httpOptions: {
+      list: {
+        method: 'get',
+        url: `${config.apiBaseUrl}/controlled-keywords/phenotypic assay mechanism`
+      }
+    }
+  },
   'controlled-keywords-phenotypic-modle-system-search': {
     name: 'controlled-keywords-phenotypic-assay-model-system',
     restCollectionName: 'controlled-keywords',

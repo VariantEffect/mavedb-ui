@@ -122,53 +122,60 @@
         </div>
       </div>
       <div class="mave-1000px-col">
-        <div v-if="item.externalLinks?.ucscGenomeBrowser?.url">
-            <a :href="item.externalLinks.ucscGenomeBrowser.url" target="blank">
-              <img src="@/assets/logo-ucsc-genome-browser.png" alt="UCSC Genome Browser" style="height: 20px;" />
-              View this score set on the UCSC Genome Browser
-            </a>
-        </div>
-        <div v-if="item.creationDate">Created {{ formatDate(item.creationDate) }} <span v-if="item.createdBy">
-            <a :href="`https://orcid.org/${item.createdBy.orcidId}`" target="blank"><img src="@/assets/ORCIDiD_icon.png"
-                alt="ORCIDiD">{{ item.createdBy.firstName }} {{ item.createdBy.lastName }}</a></span>
-        </div>
-        <div v-if="item.modificationDate">Last updated {{ formatDate(item.modificationDate) }} <span v-if="item.modifiedBy">
-            <a :href="`https://orcid.org/${item.modifiedBy.orcidId}`" target="blank"><img src="@/assets/ORCIDiD_icon.png"
-                alt="ORCIDiD">{{ item.modifiedBy.firstName }} {{ item.modifiedBy.lastName }}</a></span>
-        </div>
-        <div v-if="contributors.length > 0">
-          Contributors
-          <a
-            v-for="contributor in contributors"
-            class="mave-contributor"
-            :href="`https://orcid.org/${contributor.orcidId}`"
-            :key="contributor.orcidId"
-            target="blank"
-          >
-            <img src="@/assets/ORCIDiD_icon.png" alt="ORCIDiD">
-            {{ contributor.givenName }} {{ contributor.familyName }}
-          </a>
-        </div>
-        <div v-if="item.publishedDate">Published {{ formatDate(item.publishedDate) }}</div>
-        <div v-if="item.license">
-          License:
-          <a v-if="item.license.link" :href="item.license.link">{{ item.license.longName || item.license.shortName }}</a>
-          <span v-else>{{ item.license.longName || item.license.shortName }}</span>
-        </div>
-        <div v-if="item.dataUsagePolicy">Data usage policy: {{ item.dataUsagePolicy }}</div>
-        <div v-if="item.experiment">Member of <router-link
-            :to="{ name: 'experiment', params: { urn: item.experiment.urn } }">{{ item.experiment.urn }}</router-link></div>
-        <div v-if="item.supersedingScoreSet">Current version <router-link
-            :to="{ name: 'scoreSet', params: { urn: item.supersedingScoreSet.urn } }">{{ item.supersedingScoreSet.urn }}</router-link>
-        </div>
-        <div v-else>Current version <router-link
-            :to="{ name: 'scoreSet', params: { urn: item.urn } }">{{ item.urn }}</router-link></div>
-        <div v-if="sortedMetaAnalyzesScoreSetUrns.length > 0">
-          Meta-analyzes
-          <template v-for="(urn, index) of sortedMetaAnalyzesScoreSetUrns" :key="urn">
-            <template v-if="index > 0"> · </template>
-            <EntityLink entityType="scoreSet" :urn="urn" />
-          </template>
+        <div class="clearfix">
+          <div v-if="config.CLINICAL_FEATURES_ENABLED" class="mavedb-assay-facts-container">
+            <AssayFactSheet :scoreSet = "item" />
+          </div>
+          <div>
+            <div v-if="item.creationDate">Created {{ formatDate(item.creationDate) }} <span v-if="item.createdBy">
+                <a :href="`https://orcid.org/${item.createdBy.orcidId}`" target="blank"><img src="@/assets/ORCIDiD_icon.png"
+                    alt="ORCIDiD">{{ item.createdBy.firstName }} {{ item.createdBy.lastName }}</a></span>
+            </div>
+            <div v-if="item.modificationDate">Last updated {{ formatDate(item.modificationDate) }} <span v-if="item.modifiedBy">
+                <a :href="`https://orcid.org/${item.modifiedBy.orcidId}`" target="blank"><img src="@/assets/ORCIDiD_icon.png"
+                    alt="ORCIDiD">{{ item.modifiedBy.firstName }} {{ item.modifiedBy.lastName }}</a></span>
+            </div>
+            <div v-if="contributors.length > 0">
+              Contributors
+              <a
+                v-for="contributor in contributors"
+                class="mave-contributor"
+                :href="`https://orcid.org/${contributor.orcidId}`"
+                :key="contributor.orcidId"
+                target="blank"
+              >
+                <img src="@/assets/ORCIDiD_icon.png" alt="ORCIDiD">
+                {{ contributor.givenName }} {{ contributor.familyName }}
+              </a>
+            </div>
+            <div v-if="item.publishedDate">Published {{ formatDate(item.publishedDate) }}</div>
+            <div v-if="item.license">
+              License:
+              <a v-if="item.license.link" :href="item.license.link">{{ item.license.longName || item.license.shortName }}</a>
+              <span v-else>{{ item.license.longName || item.license.shortName }}</span>
+            </div>
+            <div v-if="item.dataUsagePolicy">Data usage policy: {{ item.dataUsagePolicy }}</div>
+            <div v-if="item.experiment">Member of <router-link
+                :to="{ name: 'experiment', params: { urn: item.experiment.urn } }">{{ item.experiment.urn }}</router-link></div>
+            <div v-if="item.supersedingScoreSet">Current version <router-link
+                :to="{ name: 'scoreSet', params: { urn: item.supersedingScoreSet.urn } }">{{ item.supersedingScoreSet.urn }}</router-link>
+            </div>
+            <div v-else>Current version <router-link
+                :to="{ name: 'scoreSet', params: { urn: item.urn } }">{{ item.urn }}</router-link></div>
+            <div v-if="sortedMetaAnalyzesScoreSetUrns.length > 0">
+              Meta-analyzes
+              <template v-for="(urn, index) of sortedMetaAnalyzesScoreSetUrns" :key="urn">
+                <template v-if="index > 0"> · </template>
+                <EntityLink entityType="scoreSet" :urn="urn" />
+              </template>
+            </div>
+            <div v-if="item.externalLinks?.ucscGenomeBrowser?.url">
+              <a :href="item.externalLinks.ucscGenomeBrowser.url" target="blank">
+                <img src="@/assets/logo-ucsc-genome-browser.png" alt="UCSC Genome Browser" style="height: 20px;" />
+                View in the UCSC Genome Browser
+              </a>
+            </div>
+          </div>
         </div>
         <div>Download files and/or charts <Button class="p-button-outlined p-button-sm" @click="downloadFile('scores')">Scores</Button>&nbsp;
           <template v-if="countColumns.length != 0">
@@ -429,6 +436,7 @@ import SplitButton from 'primevue/splitbutton'
 import Dialog from 'primevue/dialog'
 import Sidebar from 'primevue/sidebar'
 
+import AssayFactSheet from '@/components/AssayFactSheet.vue'
 import CollectionAdder from '@/components/CollectionAdder'
 import CollectionBadge from '@/components/CollectionBadge'
 import ScoreSetHeatmap from '@/components/ScoreSetHeatmap'
@@ -451,7 +459,7 @@ import ScoreSetVisualizer from '../ScoreSetVisualizer.vue';
 
 export default {
   name: 'ScoreSetView',
-  components: { Accordion, AccordionTab, AutoComplete, Button, Chip, Sidebar, CollectionAdder, CollectionBadge, DefaultLayout, EntityLink, ScoreSetHeatmap, ScoreSetHistogram, ScoreSetVisualizer, TabView, TabPanel, Message, DataTable, Column, ProgressSpinner, ScrollPanel, SplitButton, PageLoading, ItemNotFound },
+  components: { Accordion, AccordionTab, AssayFactSheet, AutoComplete, Button, Chip, Sidebar, CollectionAdder, CollectionBadge, DefaultLayout, EntityLink, ScoreSetHeatmap, ScoreSetHistogram, ScoreSetVisualizer, TabView, TabPanel, Message, DataTable, Column, ProgressSpinner, ScrollPanel, SplitButton, PageLoading, ItemNotFound, AssayFactSheet },
   computed: {
     annotatedVariantDownloadOptions: function () {
       const annotatatedVariantOptions = []
@@ -1065,6 +1073,17 @@ export default {
 
 .mave-save-to-collection-button {
   margin: 1em 0;
+}
+
+.mavedb-assay-facts-container {
+  float: left;
+  margin: 0 1em 1em 0;
+}
+
+.clearfix::after {
+  display: block;
+  content: "";
+  clear: both;
 }
 
 </style>

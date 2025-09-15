@@ -380,8 +380,8 @@
                         v-model="keywordKeys[keyword.key]"
                         :id="$scopedId(`keyword-input-${keyword.key}`)"
                         :options="getKeywordOptions(keyword.option)"
-                        optionLabel="value"
-                        optionValue="value"
+                        :optionLabel="(option) => formatKeywordOptionLabel(option)"
+                        optionValue="label"
                         class="keyword-dropdown"
                       />
                       <label :for="$scopedId(`keyword-input-${keyword.key}`)">{{ keyword.key }}</label>
@@ -512,6 +512,11 @@ const KEYWORDS = [
     option: 'phenotypicMethodKeywordOptions',
   },
   {
+    key: 'Phenotypic Assay Mechanism',
+    descriptionLabel: 'Phenotypic Assay Mechanism Description',
+    option: 'phenotypicMechanismKeywordOptions',
+  },
+  {
     key: 'Phenotypic Assay Model System',
     descriptionLabel: 'Phenotypic Assay Model System Description',
     option: 'phenotypicModelSystemKeywordOptions',
@@ -577,6 +582,7 @@ export default {
     const deliveryMethodKeywordOptions = useItems({itemTypeName: `controlled-keywords-delivery-search`})
     const phenotypicDimensionalityKeywordOptions = useItems({itemTypeName: `controlled-keywords-phenotypic-dimensionality-search`})
     const phenotypicMethodKeywordOptions = useItems({itemTypeName: `controlled-keywords-phenotypic-method-search`})
+    const phenotypicMechanismKeywordOptions = useItems({itemTypeName: `controlled-keywords-phenotypic-mechanism-search`})
     const phenotypicModelSystemKeywordOptions = useItems({itemTypeName: `controlled-keywords-phenotypic-modle-system-search`})
     const phenotypicProfilingStrategyKeywordOptions = useItems({itemTypeName: `controlled-keywords-phenotypic-profiling-strategy-search`})
     const phenotypicSequencingTypeKeywordOptions = useItems({itemTypeName: `controlled-keywords-phenotypic-sequencing-type-search`})
@@ -595,6 +601,7 @@ export default {
       deliveryMethodKeywordOptions: deliveryMethodKeywordOptions.items,
       phenotypicDimensionalityKeywordOptions: phenotypicDimensionalityKeywordOptions.items,
       phenotypicMethodKeywordOptions: phenotypicMethodKeywordOptions.items,
+      phenotypicMechanismKeywordOptions: phenotypicMechanismKeywordOptions.items,
       phenotypicModelSystemKeywordOptions: phenotypicModelSystemKeywordOptions.items,
       phenotypicProfilingStrategyKeywordOptions: phenotypicProfilingStrategyKeywordOptions.items,
       phenotypicSequencingTypeKeywordOptions: phenotypicSequencingTypeKeywordOptions.items,
@@ -1018,7 +1025,7 @@ export default {
         // Keywords could be an empty list now. Will modify it back to compulsory when we get final list.
         const setKeyword = (key) => {
           const keywordObj = this.item.keywords.find(keyword => keyword.keyword.key === key)
-          this.keywordKeys[key] = keywordObj ? keywordObj.keyword.value : null
+          this.keywordKeys[key] = keywordObj ? keywordObj.keyword.label : null
           this.keywordDescriptions[key] = keywordObj ? keywordObj.description : null
         }
         for (const k of KEYWORDS) {
@@ -1027,7 +1034,7 @@ export default {
       } else {
         this.keywords = []
         this.keywordKeys = _.fromPairs(KEYWORDS.map((keyword) => [keyword.key, null]))
-        this.keywordKeys = _.fromPairs(KEYWORDS.map((keyword) => [keyword.key, null]))
+        this.keywordDescriptions = _.fromPairs(KEYWORDS.map((keyword) => [keyword.key, null]))
       }
     },
 
@@ -1052,13 +1059,13 @@ export default {
       if (this.keywordGroups[methodKey]) {
         this.keywordGroups[methodKey].forEach((key) => {
           combinedKeywords.push({
-            "keyword": {"key": key, "value": this.keywordKeys[key]},
+            "keyword": {"key": key, "label": this.keywordKeys[key]},
             "description": this.keywordDescriptions[key],
           })
         })
       }
       const phenotypicKeywords = KEYWORDS.slice(5).map((keyword) => ({
-        "keyword": {"key": keyword.key, "value": this.keywordKeys[keyword.key]},
+        "keyword": {"key": keyword.key, "label": this.keywordKeys[keyword.key]},
         "description": this.keywordDescriptions[keyword.key],
       }))
       combinedKeywords.push(...phenotypicKeywords)
@@ -1176,6 +1183,10 @@ export default {
 
     get(...args) {
       return _.get(...args)
+    },
+
+    formatKeywordOptionLabel(option) {
+      return option.code ? `${option.code} - ${option.label}` : option.label;
     },
 
     getKeywordOptions(optionsName) {

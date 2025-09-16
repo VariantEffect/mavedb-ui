@@ -142,19 +142,19 @@ export default defineComponent({
         if (!this.range) return [];
         return this.range.ranges.filter(range => {
             return range.classification === 'normal';
-        }).sort((a, b) => this.sortScoreRangeByEvidence(a, b));
+        }).sort(this.compareScoreRanges);
     },
     abnormalRanges() {
         if (!this.range) return [];
         return this.range.ranges.filter(range => {
             return range.classification === 'abnormal';
-        }).sort((a, b) => this.sortScoreRangeByEvidence(a, b));
+        }).sort(this.compareScoreRanges);
     },
     unspecifiedRanges() {
         if (!this.range) return [];
         return this.range.ranges.filter(range => {
             return range.classification === 'not_specified';
-        }).sort((a, b) => this.sortScoreRangeByEvidence(a, b));
+        }).sort(this.compareScoreRanges);
     },
     totalRanges() {
         if (!this.range) return 0;
@@ -162,7 +162,8 @@ export default defineComponent({
     },
     sortedRanges() {
         if (!this.range) return [];
-        return this.normalRanges.concat(this.abnormalRanges).concat(this.unspecifiedRanges);
+        return this.range.ranges.sort(this.compareScoreRanges)
+        // return this.normalRanges.concat(this.abnormalRanges).concat(this.unspecifiedRanges);
     }
   },
   methods: {
@@ -180,7 +181,26 @@ export default defineComponent({
       }
       return null
     },
-    sortScoreRangeByEvidence(a: ScoreRange, b: ScoreRange): number {
+    compareScores(a: number | undefined, b: number | undefined, infinityIsNegative: boolean = false) {
+        if (a == null && b == null) {
+            return 0
+        }
+        if (a == null) {
+            return infinityIsNegative ? -1 : 1
+        }
+        if (b == null) {
+            return infinityIsNegative ? 1 : -1
+        }
+        return a - b
+    },
+    compareScoreRanges(a: ScoreRange, b: ScoreRange): number {
+        let result = this.compareScores(a.range[0], b.range[0], true)
+        if (result == 0) {
+            result = this.compareScores(a.range[1], b.range[1], false)
+        }
+        return result
+    },
+    compareScoreRangesByEvidence(a: ScoreRange, b: ScoreRange): number {
         if (a.evidenceStrength && b.evidenceStrength) {
             return a.evidenceStrength - b.evidenceStrength;
         } else if (a.oddsPath?.evidence && b.oddsPath?.evidence) {

@@ -896,13 +896,13 @@ export default {
       if (this.item) {
         const response = await axios.get(`${config.apiBaseUrl}/score-sets/${this.item.urn}/scores?drop_na_columns=true`)
         if (response.data) {
-          const fixedColumns = ['hgvs_nt', 'hgvs_splice', 'hgvs_pro']
-
-          this.scoresTable = parseScoresOrCounts(response.data)
-          this.scoreColumns = Object.keys(this.scoresTable[0]).filter(col => col !== 'accession')  // drop 'accession'
-          this.sliceNumInDataTable = fixedColumns.filter(col => this.scoreColumns.includes(col)).length
-
-          this.scoresTable = this.item.numVariants <= 10 ? this.scoresTable : this.scoresTable.slice(0, 10)
+          const scoresData = parseScoresOrCounts(response.data)
+          if (scoresData.length > 0) {
+            this.scoreColumns = Object.keys(scoresData[0]).filter(col => col !== 'accession')  // Drop 'accession.'
+            const fixedColumns = ['hgvs_nt', 'hgvs_splice', 'hgvs_pro']
+            this.sliceNumInDataTable = fixedColumns.filter(col => this.scoreColumns.includes(col)).length
+            this.scoresTable = scoresData.slice(0, 10)
+          }
         }
       }
     },
@@ -910,13 +910,15 @@ export default {
       if (this.item) {
         const response = await axios.get(`${config.apiBaseUrl}/score-sets/${this.item.urn}/counts?drop_na_columns=true`)
         if (response.data) {
-          this.countsTable = parseScoresOrCounts(response.data)
-          const columns = Object.keys(this.countsTable[0]).filter(col => col !== 'accession')  // drop 'accession'
-          // the response data have at lease one of the below column even though it doesn't have any other column.
-          const hasOtherColumns = columns.some(col => !['hgvs_nt', 'hgvs_splice', 'hgvs_pro'].includes(col))
-          if (hasOtherColumns) {
-            this.countColumns = columns
-            this.countsTable = this.item.numVariants <= 10 ? parsed : parsed.slice(0, 10)
+          const countsData = parseScoresOrCounts(response.data)
+          if (countsData.length > 0) {
+            const columns = Object.keys(countsData[0]).filter(col => col !== 'accession')  // Drop 'accession.'
+            // The response has at least one of the below colums even if it doesn't have any other column.
+            const hasOtherColumns = columns.some(col => !['hgvs_nt', 'hgvs_splice', 'hgvs_pro'].includes(col))
+            if (hasOtherColumns) {
+              this.countColumns = columns
+              this.countsTable = countsData.slice(0, 10)
+            }
           }
         }
       }

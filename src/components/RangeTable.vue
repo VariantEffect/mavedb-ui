@@ -1,29 +1,23 @@
 <template>
     <Accordion expandIcon="pi pi-plus" collapseIcon="pi pi-minus">
         <AccordionTab header="Score Range Details" class="mave-range-table-tab">
-            <table class="mave-range-table" v-if="range">
-                <tbody>
-                    <tr>
-                        <td :colspan="totalRanges" style="text-align: center; font-weight: bold; background-color: #f0f0f0;">
-                            <span>{{ "Details for `" + rangeName + "` ranges" }}</span>
-                        </td>
-                    </tr>
-                    <tr v-if="range.baselineScore !== null && range.baselineScore !== undefined">
-                        <td :colspan="totalRanges">
-                            <span>Baseline Score: <strong>{{ range.baselineScore }}</strong></span>
-                            <span v-if="range.baselineScoreDescription">
-                                <Button
-                                    class="p-button-help p-description-tooltip-button"
-                                    v-tooltip.right="{ value: range.baselineScoreDescription, autoHide: false }"
-                                    icon="pi pi-info"
-                                    aria-label="Info"
-                                    rounded outlined
-                                />
-                            </span>
-                        </td>
-                    </tr>
-                    <tr>
-                        <th v-for="range in sortedRanges" :key="range.label">
+            <div v-if="range">
+                <div class="mavedb-ranges-title">{{ "Details for `" + rangeName + "` ranges" }}</div>
+                <div v-if="range.baselineScore !== null && range.baselineScore !== undefined" class="mavedb-ranges-baseline-score">
+                    <span>Baseline Score: <strong>{{ roundRangeBound(range.baselineScore) }}</strong></span>
+                    <span v-if="range.baselineScoreDescription">
+                        <Button
+                            class="p-button-help p-description-tooltip-button"
+                            v-tooltip.right="{ value: range.baselineScoreDescription, autoHide: false }"
+                            icon="pi pi-info"
+                            aria-label="Info"
+                            rounded outlined
+                        />
+                    </span>
+                </div>
+                <div class="mavedb-ranges-grid" v-if="range">
+                    <div v-for="range in sortedRanges" :key="range.label" class="mavedb-ranges-row" style="">
+                        <div>
                             <span>{{ range.label }}</span>
                             <span v-if="range.description">
                                 <Button
@@ -34,38 +28,33 @@
                                     rounded outlined
                                 />
                             </span>
-                        </th>
-                    </tr>
-                    <tr v-if="sortedRanges.some((range: ScoreRange) => 'evidenceStrength' in range)">
-                        <td v-for="range in sortedRanges" :key="range.label" :class="`mave-evidence-code-${evidenceCodeForEvidenceStrength(range.evidenceStrength)}`">
+                        </div>
+                        <div
+                            v-if="sortedRanges.some((r: ScoreRange) => 'evidenceStrength' in r)"
+                            :class="evidenceCodeClass(evidenceCodeForEvidenceStrength(range.evidenceStrength))"
+                        >
                             <span v-if="'evidenceStrength' in range">{{ evidenceCodeForEvidenceStrength(range.evidenceStrength) }}</span>
                             <span v-else>Not Provided</span>
-                        </td>
-                    </tr>
-                    <tr v-else>
-                        <td v-for="range in sortedRanges" :key="range.label" :class="`mave-classification-${range.classification}`">
+                        </div>
+                        <div v-else :class="`mave-classification-${range.classification}`">
                             <span>{{ titleCase(range.classification) }}</span>
-                        </td>
-                    </tr>
-                    <tr>
-                        <td v-for="range in sortedRanges" :key="range.label">
+                        </div>
+                        <div>
                             <span>
-                                {{ range.inclusiveLowerBound ? '[' : '(' }}{{ range.range[0] !== null ? range.range[0] : "-Infinity" }}, {{ range.range[1] !== null ? range.range[1] : "Infinity" }}{{ range.inclusiveUpperBound ? ']' : ')' }}
+                                {{ range.inclusiveLowerBound ? '[' : '(' }}{{ range.range[0] !== null ? roundRangeBound(range.range[0]) : "-∞" }}, {{ range.range[1] !== null ? roundRangeBound(range.range[1]) : "∞" }}{{ range.inclusiveUpperBound ? ']' : ')' }}
                             </span>
-                        </td>
-                    </tr>
-                    <tr v-if="range && range.ranges.some((range: ScoreRange) => 'positiveLikelihoodRatio' in range)">
-                        <td v-for="range in sortedRanges" :key="range.label">
-                            <span v-if="'positiveLikelihoodRatio' in range">{{ range.positiveLikelihoodRatio }}</span>
-                            <span v-else>Not Provided</span>
-                        </td>
-                    </tr>
-                    <tr v-if="matchSource(range.source)">
-                        <td :colspan="totalRanges">
-                            <span>Source: <a :href="matchSource(range.source)?.url" target="_blank">{{ matchSource(range.source)?.url }}</a></span>
-                        </td>
-                    </tr>
-                </tbody>
+                        </div>
+                    </div>
+                    <div v-if="sortedRanges.some((range: ScoreRange) => 'positiveLikelihoodRatio' in range)">
+                        <span v-if="'positiveLikelihoodRatio' in range">{{ range.positiveLikelihoodRatio }}</span>
+                        <span v-else>Not Provided</span>
+                    </div>
+                </div>
+                <div v-if="matchSource(range.source)" class="mavedb-ranges-source">
+                    <span>Source: <a :href="matchSource(range.source)?.url" target="_blank">{{ matchSource(range.source)?.url }}</a></span>
+                </div>
+            </div>
+            <table class="mave-range-table" v-if="range && activeRangeHasOddsPath">
                 <tbody v-if="activeRangeHasOddsPath">
                     <tr style="border: none;">
                         <td :colspan="totalRanges" style="border: none; background: transparent; height: 1em;"></td>
@@ -159,13 +148,13 @@ export default defineComponent({
         if (!this.range) return [];
         return this.range.ranges.filter(range => {
             return range.classification === 'abnormal';
-        }).sort((a, b) => this.sortScoreRangeByEvidence(b, a));
+        }).sort((a, b) => this.sortScoreRangeByEvidence(a, b));
     },
     unspecifiedRanges() {
         if (!this.range) return [];
         return this.range.ranges.filter(range => {
             return range.classification === 'not_specified';
-        }).sort((a, b) => this.sortScoreRangeByEvidence(b, a));
+        }).sort((a, b) => this.sortScoreRangeByEvidence(a, b));
     },
     totalRanges() {
         if (!this.range) return 0;
@@ -192,11 +181,13 @@ export default defineComponent({
       return null
     },
     sortScoreRangeByEvidence(a: ScoreRange, b: ScoreRange): number {
-        if (a.oddsPath?.evidence && b.oddsPath?.evidence) {
+        if (a.evidenceStrength && b.evidenceStrength) {
+            return a.evidenceStrength - b.evidenceStrength;
+        } else if (a.oddsPath?.evidence && b.oddsPath?.evidence) {
             return EVIDENCE_STRENGTHS[a.oddsPath.evidence] - EVIDENCE_STRENGTHS[b.oddsPath.evidence];
-        } else if (a.oddsPath?.evidence) {
+        } else if (a.evidenceStrength || a.oddsPath?.evidence) {
             return -1; // a has evidence, b does not
-        } else if (b.oddsPath?.evidence) {
+        } else if (b.evidenceStrength || b.oddsPath?.evidence) {
             return 1; // b has evidence, a does not
         }
         return 0;
@@ -204,6 +195,13 @@ export default defineComponent({
     evidenceCodeForEvidenceStrength(evidenceStrength: number | undefined): string | undefined {
         return evidenceStrength ? EVIDENCE_STRENGTHS_REVERSED[evidenceStrength] || undefined : undefined;
     },
+    evidenceCodeClass(evidenceCode: string | undefined) {
+        const sanitizedEvidenceCode = evidenceCode?.replace('+', '_PLUS') ?? 'NONE'
+        return `mave-evidence-code-${sanitizedEvidenceCode}`
+    },
+    roundRangeBound(rangeBound: number) {
+        return rangeBound.toPrecision(3)
+    }
   }
 })
 </script>
@@ -231,19 +229,19 @@ table.range-table th {
 }
 
 /* Classification colors */
-table.mave-range-table td.mave-classification-normal {
+.mave-classification-normal {
   background-color: #4444ff;
   color: white;
   font-weight: bold;
 }
 
-table.mave-range-table td.mave-classification-abnormal {
+.mave-classification-abnormal {
   background-color: #ff4444;
   color: white;
   font-weight: bold;
 }
 
-table.mave-range-table td.mave-classification-not_specified {
+.mave-classification-not_specified {
     background-color: #a6a600;
     color: white;
     font-weight: bold;
@@ -264,67 +262,63 @@ table.mave-range-table th {
     text-align: center;
 }
 
-table.mave-range-table td.mave-evidence-code-PS3_VERY_STRONG {
+.mave-evidence-code-PS3_VERY_STRONG {
     background-color: #943744;
     font-weight: bold;
 }
 
-table.mave-range-table td.mave-evidence-code-PS3_STRONG {
-    background-color: #D68F99;
+.mave-evidence-code-PS3_STRONG {
+    background-color: #b85c6b; /*D68F99;*/
     font-weight: bold;
 }
 
-table.mave-range-table td.mave-evidence-code-PS3_MODERATE+ {
-    background-color: #E6B1B8;
+.mave-evidence-code-PS3_MODERATE_PLUS {
+    background-color: #ca7682; /*#E6B1B8;*/
     font-weight: bold;
 }
 
-table.mave-range-table td.mave-evidence-code-PS3_MODERATE {
-    background-color: #F0D0D5;
+.mave-evidence-code-PS3_MODERATE {
+    background-color: #d68f99; /*#F0D0D5;*/
     font-weight: bold;
 }
 
-table.mave-range-table td.mave-evidence-code-PS3_SUPPORTING {
-    background-color: #F7E4E7;
+.mave-evidence-code-PS3_SUPPORTING {
+    background-color: #e6b1b8; /*F7E4E7;*/
     font-weight: bold;
 }
 
-
-table.mave-range-table td.mave-evidence-code-BS3_VERY_STRONG {
-    background-color: #7AB5D1;
+.mave-evidence-code-BS3_VERY_STRONG {
+    background-color: #4b91a6; /*#7AB5D1;*/
     font-weight: bold;
 }
 
-table.mave-range-table td.mave-evidence-code-BS3_STRONG {
-    background-color: #E4F1F6;
+.mave-evidence-code-BS3_STRONG {
+    background-color: #7ab5d1; /*#E4F1F6;*/
     font-weight: bold;
 }
 
-table.mave-range-table td.mave-evidence-code-BS3_MODERATE+ {
-    background-color: #EDF6FA;
+.mave-evidence-code-BS3_MODERATE_PLUS {
+    background-color: #99c8dc; /*#EDF6FA;*/
     font-weight: bold;
 }
 
-table.mave-range-table td.mave-evidence-code-BS3_MODERATE {
-    background-color: #F4F9FC;
+.mave-evidence-code-BS3_MODERATE {
+    background-color: #d0e8f0; /*#F4F9FC;*/
     font-weight: bold;
 }
 
-
-table.mave-range-table td.mave-evidence-code-BS3_SUPPORTING {
-    background-color: #F9FCFE;
+.mave-evidence-code-BS3_SUPPORTING {
+    background-color: #e4f1f6; /*#F9FCFE;*/
     font-weight: bold;
 }
 
-
-table.mave-range-table td.mave-evidence-code-INDETERMINATE {
-    background-color: #c3cbde;
+.mave-evidence-code-INDETERMINATE {
+    background-color: #e0e0e0; /*#c3cbde;*/
     font-weight: bold;
 }
 
-
-table.mave-range-table td.mave-evidence-code-undefined {
-    background-color: #E0E0E0;
+.mave-evidence-code-NONE {
+    background-color: #e0e0e0;
     font-weight: bold;
 }
 
@@ -373,6 +367,37 @@ table.mave-range-table td.mave-evidence-code-undefined {
     margin-left: 1em;
     margin-right: 1em;
     background: transparent;
+}
+
+/* Score ranges grid */
+
+.mavedb-ranges-title {
+    text-align: center;
+    font-weight: bold;
+    background: rgb(240, 240, 240);
+    border: 1px solid gray;
+}
+
+.mavedb-ranges-baseline-score,
+.mavedb-ranges-source {
+    text-align: center;
+    border: 1px solid gray;
+}
+
+.mavedb-ranges-grid {
+    display: grid;
+    box-sizing: border-box;
+    grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+    justify-content: center;
+    border-collapse: collapse;
+    grid-gap: 1px;
+    row-gap: 20px;
+}
+
+.mavedb-ranges-grid div {
+    text-align: center;
+    box-shadow:0 0 0 1px gray;
+    white-space: nowrap;
 }
 
 </style>

@@ -170,13 +170,21 @@ export default {
           if (this.sequenceType == 'dna') {
             return 'post_mapped_hgvs_c'
           } else {
-            if (this.variants.some((v) => v.hgvs_pro_inferred != null)) {
+            if (this.variants.some((v) => v.hgvs_pro_inferred != null && v.hgvs_pro_inferred != 'NA')) {
               return 'hgvs_pro_inferred'
             }
             return 'post_mapped_hgvs_p'
           }
         case 'raw':
-          return this.sequenceType == 'dna' ? 'hgvs_nt' : 'hgvs_pro'
+          if (this.sequenceType == 'dna') {
+            return 'hgvs_nt'
+          } else if (this.variants.some((v) => v.hgvs_pro != null && v.hgvs_pro != 'NA')) {
+            return 'hgvs_pro'
+          } else if (this.variants.some((v) => v.hgvs_pro_inferred != null && v.hgvs_pro_inferred != 'NA')) {
+            return 'hgvs_pro_inferred'
+          } else {
+            return 'hgvs_pro'
+          }
       }
     },
     targetResidueType: function() {
@@ -689,6 +697,8 @@ export default {
         }
         if (variantNotNullOrNA(variant.details.hgvs_pro)) {
           nameParts.push(`Protein variant: ${variant.details.hgvs_pro}`)
+        } else if (variantNotNullOrNA(variant.details.hgvs_pro_inferred)) {
+          nameParts.push(`Protein variant: ${variant.details.hgvs_pro_inferred}`)
         }
         if (variantNotNullOrNA(variant.details.hgvs_splice)) {
           nameParts.push(`Splice variant: ${variant.details.hgvs_splice}`)

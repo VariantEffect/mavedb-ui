@@ -46,14 +46,85 @@ import Button from 'primevue/button'
 import {defineComponent, PropType} from 'vue'
 
 import geneticCodes from '@/lib/genetic-codes'
-import makeHeatmap, {heatmapRowForNucleotideVariant, heatmapRowForProteinVariant, HEATMAP_AMINO_ACID_ROWS, HEATMAP_NUCLEOTIDE_ROWS, HeatmapDatum} from '@/lib/heatmap'
+import makeHeatmap, {HeatmapDatum, HeatmapRowSpecification} from '@/lib/heatmap'
 import {parseSimpleProVariant, parseSimpleNtVariant, variantNotNullOrNA} from '@/lib/mave-hgvs'
 import { saveChartAsFile } from '@/lib/chart-export'
 import { Heatmap } from '@/lib/heatmap'
-import {SPARSITY_THRESHOLD} from '@/lib/score-set-heatmap'
-import { AMINO_ACIDS, AMINO_ACIDS_WITH_TER } from '@/lib/amino-acids'
+// import {SPARSITY_THRESHOLD} from '@/lib/scoreSetHeatmap'
+import { AMINO_ACIDS, AMINO_ACIDS_WITH_TER, AMINO_ACIDS_BY_HYDROPHILIA } from '@/lib/amino-acids'
 import { NUCLEOTIDE_BASES } from '@/lib/nucleotides'
 import type {ScoreRange} from '@/lib/ranges'
+
+const HEATMAP_AMINO_ACID_ROWS: HeatmapRowSpecification[] = [
+  { code: '=', label: '\uff1d' },
+  { code: '*', label: '\uff0a' },
+  { code: '-', label: '\uff0d' },
+  ...AMINO_ACIDS_BY_HYDROPHILIA.map((aaCode) => ({ code: aaCode, label: aaCode }))
+]
+
+/** Codes used in the right part of a MaveHGVS-pro string representing a single variation in a protein sequence. */
+const MAVE_HGVS_PRO_CHANGE_CODES = [
+  { codes: { single: '=' } }, // Synonymous AA variant
+  { codes: { single: '*', triple: 'TER' } }, // Stop codon
+  { codes: { single: '-', triple: 'DEL' } } // Deletion
+]
+
+const HEATMAP_NUCLEOTIDE_ROWS: HeatmapRowSpecification[] = [
+  ...NUCLEOTIDE_BASES.map((ntCode) => ({ code: ntCode.codes.single, label: ntCode.codes.single }))
+]
+/**
+ * Given a MaveHGVS-pro amino acid code or code representing deletion, synonmyous variation, or stop codon, return the
+ * heatmap row number on which a single-AA variant should be displayed.
+ *
+ * @param aaCodeOrChange A one- or three-character code representing an amino acid or the result of a variation at a
+ *   single locus in a protein sequence. If not an amino acid code, it should be a code representing synonymous
+ *   variation (=), stop codon (*), or deletion (- or del).
+ * @returns The heatmap row number, from 0 (the bottom row) to 22 (the top row).
+ */
+function heatmapRowForProteinVariant(aaCodeOrChange: string): number | null {
+  const singleLetterCode = singleLetterAminoAcidOrHgvsCode(aaCodeOrChange)
+  const ranking = singleLetterCode ? HEATMAP_AMINO_ACID_ROWS.findIndex((rowSpec) => rowSpec.code == singleLetterCode) : null
+  return (ranking != null && ranking >= 0) ? ranking : null
+}
+
+/**
+ * Given a MaveHGVS-pro amino acid code or code representing deletion, synonmyous variation, or stop codon, return the
+ * corresponding single-character code (which is the code used in our heatmap's y-axis).
+ *
+ * @param aaCodeOrChange A one- or three-character code representing an amino acid or the result of a variation at a
+ *   single locus in a protein sequence. If not an amino acid code, it should be a code representing synonymous
+ *   variation (=), stop codon (*), or deletion (- or del).
+ * @return The one-character code representing the same amino acid or change, or null if the input was not a supported
+ *   amino acid or change.
+ */
+function singleLetterAminoAcidOrHgvsCode(aaCodeOrChange: string): string | null {
+  const code = aaCodeOrChange.toUpperCase()
+  if (code.length == 1) {
+    return code
+  }
+  if (code.length == 3) {
+    return AMINO_ACIDS.find((aa) => aa.codes.triple == code)?.codes?.single
+      || MAVE_HGVS_PRO_CHANGE_CODES.find((change) => change.codes.triple == code)?.codes?.single
+      || null
+  }
+  // TODO What about D-amino acids? The "d-" prefix has been capitalized at this point, so if we need to handle these,
+  // we should match against capitalized five-letter codes.
+  return null
+}
+
+/**
+ * Given a MaveHGVS-pro amino acid code or code representing deletion, synonmyous variation, or stop codon, return the
+ * heatmap row number on which a single-AA variant should be displayed.
+ *
+ * @param ntCodeOrChange A one-character code representing a nucleotide base or the result of a variation at a
+ *   single locus in a nucleotide sequence.
+ * @returns The heatmap row number, from 0 (the bottom row) to 3 (the top row).
+ */
+function heatmapRowForNucleotideVariant(ntCodeOrChange: string): number | null {
+  const singleLetterCode = ntCodeOrChange.toUpperCase()
+  const ranking = singleLetterCode ? HEATMAP_NUCLEOTIDE_ROWS.findIndex((rowSpec) => rowSpec.code == singleLetterCode) : null
+  return (ranking != null && ranking >= 0) ? ranking : null
+}
 
 function stdev(array: number[]) {
   if (!array || array.length === 0) {

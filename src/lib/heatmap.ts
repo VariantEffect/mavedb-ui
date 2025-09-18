@@ -10,7 +10,7 @@ export const DEFAULT_PIVOT_COLOR = '#FFFFFF'
 export const DEFAULT_MAXIMUM_COLOR = '#B00020'
 
 const LABEL_SIZE = 10
-const LEGEND_SIZE = 75
+const LEGEND_SIZE = 80
 
 /**
  * Margins of the heatmap content inside the SVG, expressed in screen units (pixels).
@@ -971,6 +971,11 @@ export default function makeHeatmap(): Heatmap {
               )
               .select('.domain')
               .remove()
+
+            // Center the text labels after the axis is created
+            yAxisLabels.selectAll('g.tick text')
+              .attr('text-anchor', 'middle')
+              .attr('x', -8)
 
             if (axisSelectionMode == 'y') {
               yAxisLabels.style('cursor', 'pointer').on('click', function (event) {

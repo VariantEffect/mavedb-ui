@@ -889,6 +889,7 @@ export default defineComponent({
         .yCoordinate(this.yCoord)
         .accessorField(this.accession)
         .tooltipHtml(this.tooltipHtmlGetter)
+        .tooltipTickLabelHtml(this.sequenceType == 'protein' ? this.tooltipTickLabelHtmlGetter : null)
         .datumSelected(this.variantSelected)
 
       if (!this.heatmap) {
@@ -955,6 +956,17 @@ export default defineComponent({
       } else {
         this.stackedHeatmap.clearSelection()
       }
+    },
+
+    tooltipTickLabelHtmlGetter: function(rowNumber: number) {
+      const currentRow = this.heatmapRows[this.heatmapRows.length - 1 - rowNumber]
+      if (this.sequenceType == 'protein') {
+        const aminoAcid = AMINO_ACIDS.find((aa) => aa.codes.single == currentRow.code)
+        if (aminoAcid) {
+          return `Name: ${aminoAcid.name} (${aminoAcid.codes.triple})<br/>Hydrophobicity: ${aminoAcid.hydrophobicity?.originalValue} (Kyte-Doolittle)<br/>Class: ${aminoAcid.class}`
+        }
+      }
+      return null
     },
 
     tooltipHtmlGetter: function(variant: HeatmapDatum) {

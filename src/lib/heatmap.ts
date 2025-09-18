@@ -120,6 +120,9 @@ export interface Heatmap {
   drawY: Accessor<boolean, Heatmap>
   drawYGroups: Accessor<boolean, Heatmap>
   skipXTicks: Accessor<number, Heatmap>
+  tooltipTickLabelHtml: Accessor<((
+    rowNumber: number | null,
+  ) => string | null) | null, Heatmap>
 
   // Legend controls
   legendTitle: Accessor<string | null, Heatmap>
@@ -200,6 +203,9 @@ export default function makeHeatmap(): Heatmap {
   let drawY: boolean = true
   let drawYGroups: boolean = false
   let skipXTicks: number = 1
+  let tooltipTickLabelHtml: ((
+    rowNumber: number | null,
+  ) => string | null) | null = null
 
   // Legend controls
   let legendTitle: string | null = null
@@ -644,6 +650,19 @@ export default function makeHeatmap(): Heatmap {
     }
   }
 
+  const mouseoverYAxisTickLabel = (event: MouseEvent, rowNumber: number | null) => {
+    const target = event.target
+    refreshHoverDatum(null)
+    hideTooltip(hoverTooltip)
+
+    if (hoverTooltip && target instanceof Element) {
+      showTickLabelTooltip(hoverTooltip, rowNumber)
+      hoverTooltip
+        .style('left', (d3.pointer(event, document.body)[0] + 30) + 'px')
+        .style('top', (d3.pointer(event, document.body)[1]) + 'px')
+    }
+  }
+
   //////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
   // Legend Management
   //////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
@@ -698,6 +717,22 @@ export default function makeHeatmap(): Heatmap {
       }
     }
   }
+
+  const showTickLabelTooltip = (
+    tooltip: d3.Selection<HTMLDivElement, any, any, any> | null,
+    rowNumber: number | null
+  ) => {
+      if (tooltipTickLabelHtml) {
+        const html = tooltipTickLabelHtml(
+          rowNumber
+        )
+
+        if (html && tooltip) {
+          tooltip.html(html)
+          tooltip.style('display', 'block')
+        }
+      }
+    }
 
   const hideTooltip = (tooltip: d3.Selection<HTMLDivElement, any, any, any> | null) => {
     if (tooltip) {
@@ -991,6 +1026,8 @@ export default function makeHeatmap(): Heatmap {
             yAxisLabels.selectAll('g.tick text')
               .attr('text-anchor', 'middle')
               .attr('x', -8)
+              .on('mouseover', mouseoverYAxisTickLabel)
+              .on('mouseleave', mouseleave)
 
             if (axisSelectionMode == 'y') {
               yAxisLabels.style('cursor', 'pointer')
@@ -1265,6 +1302,16 @@ export default function makeHeatmap(): Heatmap {
         return tooltipHtml
       }
       tooltipHtml = value
+      return chart
+    },
+
+    tooltipTickLabelHtml: (value?: ((
+      rowNumber: number | null,
+    ) => string | null) | null) => {
+      if (value === undefined) {
+        return tooltipTickLabelHtml
+      }
+      tooltipTickLabelHtml = value
       return chart
     },
 

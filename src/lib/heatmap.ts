@@ -92,7 +92,8 @@ export interface Heatmap {
   datumSelected: Accessor<((d: HeatmapDatum) => void) | null, Heatmap>
   columnRangesSelected: Accessor<((ranges: Array<{start: number; end: number}>) => void) | null, Heatmap>
   rowSelected: Accessor<((data: HeatmapDatum[]) => void) | null, Heatmap>
-  excludeDatum: Accessor<(d: HeatmapDatum) => boolean, Heatmap>
+  rowRangesSelected: Accessor<((ranges: Array<{start: number, end: number}>) => void) | null, Heatmap>
+  excludeDatum: Accessor<((d: HeatmapDatum) => boolean), Heatmap>
 
   // Data fields
   valueField: Accessor<FieldGetter<number>, Heatmap>
@@ -178,7 +179,8 @@ export default function makeHeatmap(): Heatmap {
   let datumSelected: ((d: HeatmapDatum) => void) | null = null
   let columnRangesSelected: ((ranges: Array<{start: number; end: number}>) => void) | null = null
   let rowSelected: ((data: HeatmapDatum[]) => void) | null = null
-  let excludeDatum: (d: HeatmapDatum) => boolean = (d) => false as boolean
+  let rowRangesSelected: ((ranges: Array<{start: number, end: number}>) => void) | null = null
+  let excludeDatum: ((d: HeatmapDatum) => boolean) = (d) => false as boolean
 
   // Layout
   let margins: HeatmapMargins = {top: 20, right: 20, bottom: 30, left: 20}
@@ -347,24 +349,38 @@ export default function makeHeatmap(): Heatmap {
   // Clicking
   //////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 
-  const selectRow: (event: MouseEvent) => void = (event: MouseEvent) => {
-    const rowNumber = d3.select(event.target as SVGRectElement).datum() as number
+  const selectRow: (rowNumber: number) => void = (rowNumber: number) => {
+      if (svg) {
+        svg.select('g.heatmap-axis-selection-rectangle').selectAll('rect').remove()
+        svg.select('g.heatmap-axis-selection-rectangle')
+          .append('rect')
+          .attr('x', 0)
+          .attr('y', rowNumber * yScale.step() + (nodePadding * yScale.step()/2))
+          .attr('width', (content.columns ? content.columns : 0) * xScale.step())
+          .attr('height', yScale.step())
+          .style('fill', 'none')
+          .style('stroke-width', 2)
+          .style('stroke', '#808')
+          .raise()
+      }
+      if (rowSelected) rowSelected(data.filter((d: HeatmapDatum) => yCoordinate(d) === rowNumber))
+  }
 
-    if (svg) {
-      svg.select('g.heatmap-axis-selection-rectangle').selectAll('rect').remove()
-      svg
-        .select('g.heatmap-axis-selection-rectangle')
-        .append('rect')
-        .attr('x', 0)
-        .attr('y', rowNumber * yScale.step() + (nodePadding * yScale.step()) / 2)
-        .attr('width', (content.columns ? content.columns : 0) * xScale.step())
-        .attr('height', yScale.step())
-        .style('fill', 'none')
-        .style('stroke-width', 2)
-        .style('stroke', '#808')
-        .raise()
-    }
-    if (rowSelected) rowSelected(data.filter((d: HeatmapDatum) => yCoordinate(d) === rowNumber))
+  const selectRowRange: (startRowNumber: number, rowCount: number) => void = (startRowNumber: number, rowCount: number) => {
+      if (svg) {
+        svg.select('g.heatmap-axis-selection-rectangle').selectAll('rect').remove()
+        svg.select('g.heatmap-axis-selection-rectangle')
+          .append('rect')
+          .attr('x', 0)
+          .attr('y', startRowNumber * yScale.step() + (nodePadding * yScale.step()/2))
+          .attr('width', (content.columns ? content.columns : 0) * xScale.step())
+          .attr('height', rowCount * yScale.step())
+          .style('fill', 'none')
+          .style('stroke-width', 2)
+          .style('stroke', '#808')
+          .raise()
+      }
+      if (rowRangesSelected) rowRangesSelected([{ start: startRowNumber, end: startRowNumber + rowCount - 1 }])
   }
 
   const click = function (event: MouseEvent, d: HeatmapDatum) {
@@ -885,8 +901,7 @@ export default function makeHeatmap(): Heatmap {
           .map((groupRows, groupCode) => ({
             groupCode,
             groupLabel: groupRows[0].groupLabel || groupCode,
-            startIndex: rows.findIndex(row => row.groupCode === groupCode),
-            endIndex: rows.findIndex(row => row.groupCode === groupCode) + groupRows.length - 1,
+            startRowNumber: rows.length - (rows.findIndex(row => row.groupCode === groupCode) + groupRows.length),
             rowCount: groupRows.length
           }))
           .filter(group => group.groupCode && group.groupCode !== 'undefined')
@@ -978,9 +993,15 @@ export default function makeHeatmap(): Heatmap {
               .attr('x', -8)
 
             if (axisSelectionMode == 'y') {
-              yAxisLabels.style('cursor', 'pointer').on('click', function (event) {
-                selectRow(event)
-              })
+              yAxisLabels.style('cursor', 'pointer')
+                .on('click', function(event) {
+                  const datum = d3.select(event.target).datum()
+                  if (_.isInteger(datum)) {
+                    selectRow(datum as number)
+                  } else if (_.isInteger((datum as any).startRowNumber) && _.isInteger((datum as any).rowCount)) {
+                      selectRowRange((datum as any).startRowNumber, (datum as any).rowCount)
+                  }
+                })
             }
 
             // Apply row-specific CSS classes to Y-axis tick mark labels.
@@ -1003,15 +1024,14 @@ export default function makeHeatmap(): Heatmap {
                   groupElementsWrapper.append('rect')
                     .attr('x', -40)
                     .attr('y', d => {
-                      const startY = yScale(rows.length - 1 - d.startIndex) + yScale.bandwidth() / 2
-                      const endY = yScale(rows.length - 1 - d.endIndex) + yScale.bandwidth() / 2
-                      return Math.min(startY, endY) - 8
+                      const startY = yScale(d.startRowNumber) + yScale.bandwidth() / 2
+                      return startY - (nodeSize.height / 2)
                     })
                     .attr('width', 20)
                     .attr('height', d => {
-                      const startY = yScale(rows.length - 1 - d.startIndex) + yScale.bandwidth() / 2
-                      const endY = yScale(rows.length - 1 - d.endIndex) + yScale.bandwidth() / 2
-                      return Math.abs(endY - startY) + 16
+                      const startY = yScale(d.startRowNumber) + yScale.bandwidth() / 2
+                      const endY = yScale(d.startRowNumber + d.rowCount - 1) + yScale.bandwidth() / 2
+                      return endY - startY + (nodeSize.height)
                     })
                     .attr('fill', '#ccc')
                     .attr('stroke-width', 1)
@@ -1022,8 +1042,8 @@ export default function makeHeatmap(): Heatmap {
                 groupElementsWrapper.append('text')
                   .attr('x', -30)
                   .attr('y', d => {
-                    const startY = yScale(rows.length - 1 - d.startIndex) + yScale.bandwidth() / 2
-                    const endY = yScale(rows.length - 1 - d.endIndex) + yScale.bandwidth() / 2
+                    const startY = yScale(d.startRowNumber) + yScale.bandwidth() / 2
+                    const endY = yScale(d.startRowNumber + d.rowCount - 1) + yScale.bandwidth() / 2
                     return (startY + endY) / 2
                   })
                   .attr('dy', '0.35em')
@@ -1032,8 +1052,8 @@ export default function makeHeatmap(): Heatmap {
                   .attr('font-size', '11px')
                   .attr('font-weight', 'bold')
                   .attr('transform', d => {
-                    const startY = yScale(rows.length - 1 - d.startIndex) + yScale.bandwidth() / 2
-                    const endY = yScale(rows.length - 1 - d.endIndex) + yScale.bandwidth() / 2
+                    const startY = yScale(d.startRowNumber) + yScale.bandwidth() / 2
+                    const endY = yScale(d.startRowNumber + d.rowCount - 1) + yScale.bandwidth() / 2
                     const centerY = (startY + endY) / 2
                     return `rotate(-90, -30, ${centerY})`
                   })
@@ -1192,7 +1212,15 @@ export default function makeHeatmap(): Heatmap {
       return chart
     },
 
-    excludeDatum: (value?: (d: HeatmapDatum) => boolean) => {
+    rowRangesSelected: (value?: ((ranges: Array<{start: number, end: number}>) => void) | null) => {
+      if (value === undefined) {
+        return rowRangesSelected
+      }
+      rowRangesSelected = value
+      return chart
+    },
+
+    excludeDatum: (value?: ((d: HeatmapDatum) => boolean)) => {
       if (value === undefined) {
         return excludeDatum
       }

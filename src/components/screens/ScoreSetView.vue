@@ -1,6 +1,6 @@
 <template>
   <DefaultLayout>
-    <div v-if="itemStatus == 'Loaded'" class="mavedb-score-set">
+    <div v-if="itemStatus == 'Loaded' && item" class="mavedb-score-set">
       <div class="mavedb-1000px-col">
         <ScoreSetProcessingStatus :score-set="item" />
         <div class="mave-screen-title-bar">
@@ -55,13 +55,13 @@
               @click="selectedVariant = null"
             />
           </span>
-          <span v-if="config.CLINICAL_FEATURES_ENABLED">
-            <span :style="{fontWeight: clinicalMode ? 'normal' : 'bold'}">Raw data</span>
+          <span v-if="config.CLINICAL_FEATURES_ENABLED" class="mavedb-clinical-mode-control-container">
+            <span :class="clinicalMode ? 'mavedb-clinical-mode-option-off' : 'mavedb-clinical-mode-option-on'">Raw data</span>
             <InputSwitch
               v-model="clinicalMode"
               :aria-label="`Click to change to ${clinicalMode ? 'raw data' : 'clinical view'}.`"
             />
-            <span :style="{fontWeight: clinicalMode ? 'bold' : 'normal'}"
+            <span :class="clinicalMode ? 'mavedb-clinical-mode-option-on' : 'mavedb-clinical-mode-option-off'"
               >Mapped variant coordinates for clinical use</span
             >
           </span>
@@ -98,75 +98,7 @@
             <AssayFactSheet :score-set="item" />
           </div>
           <div>
-            <div v-if="item.creationDate">
-              Created {{ formatDate(item.creationDate) }}
-              <span v-if="item.createdBy">
-                <a :href="`https://orcid.org/${item.createdBy.orcidId}`" target="blank"
-                  ><img src="@/assets/ORCIDiD_icon.png" alt="ORCIDiD" />{{ item.createdBy.firstName }}
-                  {{ item.createdBy.lastName }}</a
-                ></span
-              >
-            </div>
-            <div v-if="item.modificationDate">
-              Last updated {{ formatDate(item.modificationDate) }}
-              <span v-if="item.modifiedBy">
-                <a :href="`https://orcid.org/${item.modifiedBy.orcidId}`" target="blank"
-                  ><img src="@/assets/ORCIDiD_icon.png" alt="ORCIDiD" />{{ item.modifiedBy.firstName }}
-                  {{ item.modifiedBy.lastName }}</a
-                ></span
-              >
-            </div>
-            <div v-if="contributors.length > 0">
-              Contributors
-              <a
-                v-for="contributor in contributors"
-                :key="contributor.orcidId"
-                class="mave-contributor"
-                :href="`https://orcid.org/${contributor.orcidId}`"
-                target="blank"
-              >
-                <img src="@/assets/ORCIDiD_icon.png" alt="ORCIDiD" />
-                {{ contributor.givenName }} {{ contributor.familyName }}
-              </a>
-            </div>
-            <div v-if="item.publishedDate">Published {{ formatDate(item.publishedDate) }}</div>
-            <div v-if="item.license">
-              License:
-              <a v-if="item.license.link" :href="item.license.link">{{
-                item.license.longName || item.license.shortName
-              }}</a>
-              <span v-else>{{ item.license.longName || item.license.shortName }}</span>
-            </div>
-            <div v-if="item.dataUsagePolicy">Data usage policy: {{ item.dataUsagePolicy }}</div>
-            <div v-if="item.experiment">
-              Member of
-              <router-link :to="{name: 'experiment', params: {urn: item.experiment.urn}}">{{
-                item.experiment.urn
-              }}</router-link>
-            </div>
-            <div v-if="item.supersedingScoreSet">
-              Current version
-              <router-link :to="{name: 'scoreSet', params: {urn: item.supersedingScoreSet.urn}}">{{
-                item.supersedingScoreSet.urn
-              }}</router-link>
-            </div>
-            <div v-else>
-              Current version
-              <router-link :to="{name: 'scoreSet', params: {urn: item.urn}}">{{ item.urn }}</router-link>
-            </div>
-            <div v-if="sortedMetaAnalyzesScoreSetUrns.length > 0">
-              Meta-analyzes
-              <template v-for="(urn, index) of sortedMetaAnalyzesScoreSetUrns" :key="urn">
-                <template v-if="index > 0"> · </template>
-                <EntityLink entity-type="scoreSet" :urn="urn" />
-              </template>
-            </div>
-            <div v-if="item.externalLinks?.ucscGenomeBrowser?.url">
-              <a :href="item.externalLinks.ucscGenomeBrowser.url" target="blank">
-                <img src="@/assets/logo-ucsc-genome-browser.png" alt="UCSC Genome Browser" style="height: 20px" />
-                View in the UCSC Genome Browser
-              </a>
-            </div>
+            <ScoreSetSecondaryMetadata :score-set="item" />
           </div>
         </div>
         <div>
@@ -261,74 +193,7 @@
         <div v-if="item.targetGenes">
           <div class="mavedb-score-set-section-title">Targets</div>
           <div v-for="targetGene of item.targetGenes" :key="targetGene">
-            <div v-if="targetGene.name"><strong>Name:</strong> {{ targetGene.name }}</div>
-            <div v-if="targetGene.category">
-              <strong>Type:</strong> {{ textForTargetGeneCategory(targetGene.category) }}
-            </div>
-
-            <div v-if="targetGene.targetAccession?.accession" style="word-break: break-word">
-              <div v-if="targetGene.targetAccession?.assembly">
-                <strong>Assembly:</strong> {{ targetGene.targetAccession.assembly }}
-              </div>
-              <div v-if="targetGene.targetAccession?.gene">
-                <strong>HGNC:</strong> {{ targetGene.targetAccession.gene }}
-              </div>
-              <strong>Accession Number: </strong>
-              {{ targetGene.targetAccession.accession }}
-            </div>
-
-            <div v-if="targetGene.targetSequence?.taxonomy?.code">
-              <div v-if="targetGene.targetSequence.taxonomy?.url">
-                <strong>Taxonomy ID:</strong> &nbsp;<a
-                  :href="`${targetGene.targetSequence.taxonomy.url}`"
-                  target="blank"
-                  >{{ targetGene.targetSequence.taxonomy.code }}</a
-                >
-              </div>
-            </div>
-            <div v-if="targetGene.targetSequence?.sequence" style="word-break: break-word">
-              <div v-if="targetGene.targetSequence.taxonomy?.organismName">
-                <strong>Organism:</strong> {{ targetGene.targetSequence.taxonomy.organismName }}
-              </div>
-              <div v-if="targetGene.targetSequence.taxonomy?.commonName">
-                <strong>Common Name:</strong> {{ targetGene.targetSequence.taxonomy.commonName }}
-              </div>
-              <div v-if="targetGene.id"><strong>Target ID:</strong> {{ targetGene.id }}</div>
-              <strong>Reference sequence: </strong>
-              <template v-if="targetGene.targetSequence.sequence.length >= 500">
-                <template v-if="readMore == true"
-                  >{{ targetGene.targetSequence.sequence.substring(0, 500) + '....' }}
-                </template>
-                <template v-if="readMore == false">{{ targetGene.targetSequence.sequence }}</template>
-                <Button v-if="readMore == true" class="p-button-text p-button-sm p-button-info" @click="showMore"
-                  >Show more</Button
-                >
-                <Button v-if="readMore == false" class="p-button-text p-button-sm p-button-info" @click="showLess"
-                  >Show less</Button
-                > </template
-              ><template v-else>{{ targetGene.targetSequence.sequence }}</template>
-            </div>
-            <!--One for loop can't handle the order so separating them into three parts.-->
-            <div v-if="targetGene.externalIdentifiers?.[0]?.identifier">
-              <div v-for="i in targetGene.externalIdentifiers" :key="i">
-                <div v-if="i.identifier.dbName === 'UniProt'">
-                  <strong>UniProt:</strong> {{ i.identifier.identifier }}
-                  <span v-if="i.offset != 0"> with offset {{ i.offset }}</span>
-                </div>
-              </div>
-              <div v-for="i in targetGene.externalIdentifiers" :key="i">
-                <div v-if="i.identifier.dbName === 'RefSeq'">
-                  <strong>RefSeq:</strong> {{ i.identifier.identifier }}
-                  <span v-if="i.offset != 0"> with offset {{ i.offset }}</span>
-                </div>
-              </div>
-              <div v-for="i in targetGene.externalIdentifiers" :key="i">
-                <div v-if="i.identifier.dbName === 'Ensembl'">
-                  <strong>Ensembl:</strong> {{ i.identifier.identifier }}
-                  <span v-if="i.offset != 0"> with offset {{ i.offset }}</span>
-                </div>
-              </div>
-            </div>
+            <TargetGene :target-gene="targetGene" />
             <br />
           </div>
           <div v-if="item.targetGenes[0].targetAccession">
@@ -425,20 +290,19 @@ import ScoreSetHeatmap from '@/components/ScoreSetHeatmap'
 import ScoreSetHistogram from '@/components/ScoreSetHistogram'
 import ScoreSetPreviewTable from '@/components/ScoreSetPreviewTable'
 import ScoreSetProcessingStatus from '@/components/ScoreSetProcessingStatus'
+import ScoreSetSecondaryMetadata from '@/components/ScoreSetSecondaryMetadata'
 import ScoreSetVisualizer from '@/components/ScoreSetVisualizer'
-import EntityLink from '@/components/common/EntityLink'
+import TargetGene from '@/components/TargetGene'
 import ItemNotFound from '@/components/common/ItemNotFound'
 import PageLoading from '@/components/common/PageLoading'
 import DefaultLayout from '@/components/layout/DefaultLayout'
 import useScopedId from '@/composables/scoped-id'
 import useAuth from '@/composition/auth'
-import useFormatters from '@/composition/formatters'
 import useItem from '@/composition/item'
 import useRemoteData from '@/composition/remote-data'
 import config from '@/config'
 import {preferredVariantLabel, variantNotNullOrNA} from '@/lib/mave-hgvs'
 import {parseScoresOrCounts} from '@/lib/scores'
-import {textForTargetGeneCategory} from '@/lib/target-genes'
 import {translateSimpleCodingVariants} from '@/lib/variants'
 
 export default {
@@ -450,21 +314,22 @@ export default {
     AssayFactSheet,
     AutoComplete,
     Button,
-    InputSwitch,
-    Sidebar,
     CollectionAdder,
     CollectionBadge,
     DefaultLayout,
-    EntityLink,
+    InputSwitch,
+    ItemNotFound,
+    PageLoading,
     ScoreSetHeatmap,
     ScoreSetHistogram,
     ScoreSetVisualizer,
     ScoreSetPreviewTable,
     ScoreSetProcessingStatus,
+    ScoreSetSecondaryMetadata,
     ScrollPanel,
+    Sidebar,
     SplitButton,
-    PageLoading,
-    ItemNotFound
+    TargetGene
   },
 
   props: {
@@ -483,15 +348,13 @@ export default {
       config: config,
       userIsAuthenticated,
 
-      ...useFormatters(),
       ...useItem({itemTypeName: 'scoreSet'}),
       ...useScopedId(),
       scoresData: scoresRemoteData.data,
       scoresDataStatus: scoresRemoteData.dataStatus,
       setScoresDataUrl: scoresRemoteData.setDataUrl,
       ensureScoresDataLoaded: scoresRemoteData.ensureDataLoaded,
-      variantSearchSuggestions,
-      textForTargetGeneCategory: textForTargetGeneCategory
+      variantSearchSuggestions
     }
   },
 
@@ -560,18 +423,9 @@ export default {
         ? _.get(this.item.targetGenes, [0, 'uniprotIdFromMappedMetadata'], null)
         : null
     },
-    contributors: function () {
-      return _.sortBy(
-        (this.item?.contributors || []).filter((c) => c.orcidId != this.item?.createdBy?.orcidId),
-        ['familyName', 'givenName', 'orcidId']
-      )
-    },
     isMetaDataEmpty: function () {
       //If extraMetadata is empty, return value will be true.
       return Object.keys(this.item.extraMetadata).length === 0
-    },
-    sortedMetaAnalyzesScoreSetUrns: function () {
-      return _.sortBy(this.item?.metaAnalyzesScoreSetUrns || [])
     },
     variantToVisualize: function () {
       // While a user is autocompleting, `this.selectedVariant` is a string. Once selected, it will become an object and we can pass it as a prop.
@@ -956,14 +810,6 @@ export default {
         frozen = false
       }
       return frozen
-    },
-    showMore: function () {
-      this.readMore = false
-      return this.readMore
-    },
-    showLess: function () {
-      this.readMore = true
-      return this.readMore
     }
   }
 }
@@ -999,6 +845,16 @@ export default {
   width: 100%;
 }
 
+/* Controls */
+
+.mavedb-clinical-mode-control-container {
+  margin-left: 1em;
+}
+
+.mavedb-clinical-mode-option-on {
+  font-weight: bold;
+}
+
 /* Score set details */
 
 .mavedb-score-set-section-title {
@@ -1018,10 +874,6 @@ export default {
   font-size: 20px;
   color: gray;
   margin-left: 12px;
-}
-
-.mave-contributor {
-  margin: 0 0.5em;
 }
 
 /* Formatting in Markdown blocks */

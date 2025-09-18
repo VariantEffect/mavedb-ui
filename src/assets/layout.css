@@ -6,7 +6,7 @@
   overflow-y: auto;
 }
 
-.mave-1000px-col {
+.mavedb-1000px-col {
   position: relative;
   width: 1000px;
   margin: 0 auto;
@@ -42,17 +42,17 @@
   overflow: visible;
 }
 
-.mave-screen-title-controls {
+.mavedb-screen-title-controls {
   align-self: flex-end;
   display: flex;
   flex: 0 1 auto; /* Only take space if present */
   width: max-content;
 }
 
-.mave-screen-title-controls .p-button {
+.mavedb-screen-title-controls .p-button {
   margin-right: 10px;
 }
 
-.mave-screen-title-controls .p-button:last-child {
+.mavedb-screen-title-controls .p-button:last-child {
   margin-right: 0;
 }

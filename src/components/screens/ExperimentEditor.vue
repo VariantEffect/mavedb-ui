@@ -10,7 +10,7 @@
         <div class="col-12">
           <div v-if="itemStatus != 'NotLoaded'" class="mave-screen-title-bar">
             <div class="mave-screen-title">Edit experiment {{this.item.urn}}</div>
-            <div v-if="item" class="mave-screen-title-controls">
+            <div v-if="item" class="mavedb-screen-title-controls">
               <Button @click="validateAndSave">Save changes</Button>
               <Button @click="resetForm" class="p-button-help">Clear</Button>
               <Button @click="viewItem" class="p-button-warning">Cancel</Button>
@@ -18,7 +18,7 @@
           </div>
           <div v-else class="mave-screen-title-bar">
             <div class="mave-screen-title">Create a new experiment</div>
-            <div class="mave-screen-title-controls">
+            <div class="mavedb-screen-title-controls">
               <Button @click="validateAndSave">Save experiment</Button>
               <Button @click="resetForm" class="p-button-help">Clear</Button>
               <Button @click="backDashboard" class="p-button-warning">Cancel</Button>

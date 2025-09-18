@@ -1,7 +1,7 @@
 <template>
   <DefaultLayout>
     <div>
-      <div class="mave-1000px-col">
+      <div class="mavedb-1000px-col">
         <div class="mave-screen-title-bar">
           <div class="mave-screen-title">My saved collections</div>
         </div>

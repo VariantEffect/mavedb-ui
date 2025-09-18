@@ -1,7 +1,7 @@
 <template>
   <DefaultLayout>
     <div v-if="itemStatus=='Loaded'" class="mave-score-set">
-      <div class="mave-1000px-col">
+      <div class="mavedb-1000px-col">
         <div class="mave-screen-title-bar">
           <div class="mave-screen-title">
             {{ item.title || 'Untitled experiment' }}
@@ -14,7 +14,7 @@
             />
           </div>
           <div v-if="userIsAuthenticated">
-            <div class="mave-screen-title-controls">
+            <div class="mavedb-screen-title-controls">
               <Button v-if="userIsAuthorized.add_score_set" class="p-button-sm" @click="addScoreSet">Add a score set</Button>
               <Button v-if="userIsAuthorized.update" class="p-button-sm" @click="editItem">Edit</Button>
               <Button v-if="userIsAuthorized.delete" class="p-button-sm p-button-danger" @click="deleteItem">Delete</Button>
@@ -26,7 +26,7 @@
           <div v-if="item.urn" class="mave-score-set-urn">{{ item.urn }}</div>
         </h3>
       </div>
-      <div class="mave-1000px-col">
+      <div class="mavedb-1000px-col">
         <div v-if="item.creationDate">Created {{ formatDate(item.creationDate) }} <span v-if="item.createdBy">
             <a :href="`https://orcid.org/${item.createdBy.orcidId}`" target="blank"><img src="@/assets/ORCIDiD_icon.png"
                 alt="ORCIDiD">{{ item.createdBy.firstName }} {{ item.createdBy.lastName }}</a></span></div>
@@ -409,7 +409,7 @@ export default {
   overflow-y: auto;
 }
 
-.mave-1000px-col {
+.mavedb-1000px-col {
   position: relative;
   width: 1000px;
   margin: 0 auto;

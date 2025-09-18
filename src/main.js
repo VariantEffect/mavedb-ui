@@ -12,7 +12,6 @@ import {installAxiosAuthHeaderInterceptor, installAxiosUnauthorizedResponseInter
 import {initializeAuthentication as initializeOrcidAuthentication} from '@/lib/orcid'
 import router from '@/router'
 import store from '@/store'
-import vueComponentId from '@/vueComponentId'
 
 import 'primevue/resources/themes/mdc-light-indigo/theme.css'
 import 'primevue/resources/primevue.min.css'
@@ -51,7 +50,6 @@ createApp(App)
     .use(PrimeVue)
     .use(ConfirmationService)
     .use(ToastService)
-    .use(vueComponentId)
     .directive('tooltip', Tooltip)
     .mount('#app')
 

@@ -78,7 +78,7 @@
           <span class="p-float-label">
             <AutoComplete
               v-model="selectedVariant"
-              :id="$scopedId('variant-search')"
+              :id="scopedId('variant-search')"
               :suggestions="variantSearchSuggestions"
               optionLabel="mavedb_label"
               dropdown
@@ -88,7 +88,7 @@
               :virtualScrollerOptions="{ itemSize: 50 }"
               style="flex: 1;"
             />
-            <label :for="$scopedId('variant-search')">Search for a variant in this score set</label>
+            <label :for="scopedId('variant-search')">Search for a variant in this score set</label>
             <Button
               icon="pi pi-times"
               severity="danger"
@@ -456,6 +456,7 @@ import EntityLink from '@/components/common/EntityLink'
 import PageLoading from '@/components/common/PageLoading'
 import ItemNotFound from '@/components/common/ItemNotFound'
 import DefaultLayout from '@/components/layout/DefaultLayout'
+import useScopedId from '@/composables/scoped-id'
 import useAuth from '@/composition/auth'
 import useFormatters from '@/composition/formatters'
 import useItem from '@/composition/item'
@@ -553,6 +554,7 @@ export default {
 
       ...useFormatters(),
       ...useItem({ itemTypeName: 'scoreSet' }),
+      ...useScopedId(),
       scoresData: scoresRemoteData.data,
       scoresDataStatus: scoresRemoteData.dataStatus,
       setScoresDataUrl: scoresRemoteData.setDataUrl,

@@ -23,8 +23,8 @@
 </div>
 <div v-if="!field.group && !field.relatedItem && !field.list && !editing" class="sfs-form-item">
   <span class="p-float-label">
-    <div :id="$scopedId('input-' + field.name)" class="sfs-readonly-field-value">{{ formattedValue }}</div>
-    <label for="$scopedId('input-' + field.name)">{{ title }}</label>
+    <div :id="scopedId('input-' + field.name)" class="sfs-readonly-field-value">{{ formattedValue }}</div>
+    <label for="scopedId('input-' + field.name)">{{ title }}</label>
   </span>
 </div>
 <div v-if="!field.group && !field.relatedItem && !field.list && editing" class="sfs-form-item">
@@ -49,7 +49,7 @@
   </span>
   <span v-else-if="inputType == 'text' && field.autocomplete" class="p-float-label">
     <AutoComplete
-        :id="$scopedId('input-' + field.name)"
+        :id="scopedId('input-' + field.name)"
         :name="field.name"
         :class="fieldValidationInputClass"
         :disabled="field.readonly"
@@ -60,12 +60,12 @@
         @complete="generateSuggestions($event)"
         @keydown="onKeyDownInInput"
     />
-    <label :for="$scopedId('input-' + field.name)">{{ title }}</label>
+    <label :for="scopedId('input-' + field.name)">{{ title }}</label>
   </span>
   <span v-else-if="inputType == 'text'" class="p-float-label">
     <InputText
         type="text"
-        :id="$scopedId('input-' + field.name)"
+        :id="scopedId('input-' + field.name)"
         :name="field.name"
         :class="fieldValidationInputClass"
         :disabled="field.readonly"
@@ -74,11 +74,11 @@
         v-model="formattedValue"
         @keydown="onKeyDownInInput"
     />
-    <label :for="$scopedId('input-' + field.name)">{{ title }}</label>
+    <label :for="scopedId('input-' + field.name)">{{ title }}</label>
   </span>
   <span v-else-if="inputType == 'tags'" class="p-float-label">
     <Chips
-        :id="$scopedId('input-' + field.name)"
+        :id="scopedId('input-' + field.name)"
         :name="field.name"
         :addOnBlur="true"
         :allowDuplicate="false"
@@ -89,11 +89,11 @@
         v-model="formattedValue"
         @keydown="onKeyDownInInput"
     />
-    <label :for="$scopedId('input-' + field.name)">{{ title }}</label>
+    <label :for="scopedId('input-' + field.name)">{{ title }}</label>
   </span>
   <span v-else-if="inputType == 'taxonomy-classification-picker'" class="p-float-label">
     <Chips
-        :id="$scopedId('input-' + field.name)"
+        :id="scopedId('input-' + field.name)"
         :name="field.name"
         :addOnBlur="true"
         :allowDuplicate="false"
@@ -104,11 +104,11 @@
         v-model="formattedValue"
         @keydown="onKeyDownInInput"
     />
-    <label :for="$scopedId('input-' + field.name)">{{ title }}</label>
+    <label :for="scopedId('input-' + field.name)">{{ title }}</label>
   </span>
   <span v-else-if="inputType == 'multilineText'" class="p-float-label">
     <Textarea
-        :id="$scopedId('input-' + field.name)"
+        :id="scopedId('input-' + field.name)"
         :name="field.name"
         :class="fieldValidationInputClass"
         :disabled="field.readonly"
@@ -119,11 +119,11 @@
         v-model="formattedValue"
         @keydown="onKeyDownInInput"
     />
-    <label :for="$scopedId('input-' + field.name)">{{ title }}</label>
+    <label :for="scopedId('input-' + field.name)">{{ title }}</label>
   </span>
   <span v-else-if="inputType == 'checkbox'">
     <Checkbox
-        :id="$scopedId('input-' + field.name)"
+        :id="scopedId('input-' + field.name)"
         :name="field.name"
         :binary="true"
         :disabled="field.readonly"
@@ -131,11 +131,11 @@
         v-model="formattedValue"
         @keydown="onKeyDownInInput"
     />
-    <label :for="$scopedId('input-' + field.name)">{{ title }}</label>
+    <label :for="scopedId('input-' + field.name)">{{ title }}</label>
   </span>
   <span v-else-if="inputType == 'dateCalendar'" class="p-float-label">
     <Calendar
-        :id="$scopedId('input-' + field.name)"
+        :id="scopedId('input-' + field.name)"
         :name="field.name"
         :disabled="field.readonly"
         :inputClass="fieldValidationInputClass"
@@ -152,11 +152,11 @@
         @keydown="onKeyDownInInput"
     />
     <Button v-if="!field.readonly && !formattedValue" alt="Today" class="p-button-default p-button-sm p-button-text lims-calendar-now-button" icon="pi pi-calendar-times" title="Today" @click="setToToday"></Button>
-    <label :for="$scopedId('input-' + field.name)">{{ title }}</label>
+    <label :for="scopedId('input-' + field.name)">{{ title }}</label>
   </span>
   <span v-else-if="inputType == 'dateTimeCalendar'" class="p-float-label">
     <Calendar
-        :id="$scopedId('input-' + field.name)"
+        :id="scopedId('input-' + field.name)"
         :name="field.name"
         :disabled="field.readonly"
         :inputClass="fieldValidationInputClass"
@@ -171,11 +171,11 @@
         @keydown="onKeyDownInInput"
     />
     <Button v-if="!field.readonly && !formattedValue" alt="Now" class="p-button-default p-button-sm p-button-text lims-calendar-now-button" icon="pi pi-clock" title="Now" @click="setToNow"></Button>
-    <label :for="$scopedId('input-' + field.name)">{{ title }}</label>
+    <label :for="scopedId('input-' + field.name)">{{ title }}</label>
   </span>
   <span v-else-if="inputType == 'dropdown'" class="p-float-label">
     <Dropdown
-        :id="$scopedId('input-' + field.name)"
+        :id="scopedId('input-' + field.name)"
         :name="field.name"
         :class="fieldValidationInputClass"
         :disabled="field.readonly"
@@ -187,11 +187,11 @@
         v-model="formattedValue"
         @keydown="onKeyDownInInput"
     />
-    <label :for="$scopedId('input-' + field.name)">{{ title }}</label>
+    <label :for="scopedId('input-' + field.name)">{{ title }}</label>
   </span>
   <span v-else-if="inputType == 'listbox'" class="p-float-label">
     <Listbox
-        :id="$scopedId('input-' + field.name)"
+        :id="scopedId('input-' + field.name)"
         :name="field.name"
         :class="fieldValidationInputClass"
         :disabled="field.readonly"
@@ -205,7 +205,7 @@
         v-model="formattedValue"
         @keydown="onKeyDownInInput"
     />
-    <label :for="$scopedId('input-' + field.name)">{{ title }}</label>
+    <label :for="scopedId('input-' + field.name)">{{ title }}</label>
   </span>
   <small v-if="error != null" :class="errorCssClass">
     {{ formatError(error) }}
@@ -235,7 +235,9 @@ import InputText from 'primevue/inputtext'
 import Listbox from 'primevue/listbox'
 import Textarea from 'primevue/textarea'
 import {useField} from 'vee-validate'
+
 import PropertySheetListItem from '@/components/common/PropertySheetListItem'
+import useScopedId from '@/composables/scoped-id'
 // import {componentFromModule} from '@/lib/modules'
 // import modules from '@/modules'
 // import Items from '@/utilities/items'
@@ -284,6 +286,7 @@ export default {
       }
     }
     return {
+      ...useScopedId(),
       errors,
       validationMetadata,
       value

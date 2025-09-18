@@ -24,9 +24,18 @@
     <div class="mave-histogram-control">
       <span class="mave-histogram-control-label">Include variants with classification: </span>
       <div class="flex flex-wrap gap-3">
-        <div v-for="classification of clinicalSignificanceClassificationOptions" :key="classification.name" class="flex gap-1 align-items-center">
-          <Checkbox v-model="customSelectedClinicalSignificanceClassifications" :name="$scopedId('clinical-significance-inputs')" :value="classification.name" :disabled="!refreshedClinicalControls"/>
-          <label :for="$scopedId('clinical-significance-inputs')">{{ classification.shortDescription }}</label>
+        <div
+          v-for="classification of clinicalSignificanceClassificationOptions"
+          :key="classification.name"
+          class="flex gap-1 align-items-center"
+        >
+          <Checkbox
+            v-model="customSelectedClinicalSignificanceClassifications"
+            :name="scopedId('clinical-significance-inputs')"
+            :value="classification.name"
+            :disabled="!refreshedClinicalControls"
+          />
+          <label :for="scopedId('clinical-significance-inputs')">{{ classification.shortDescription }}</label>
         </div>
       </div>
     </div>
@@ -52,6 +61,7 @@ import {defineComponent, PropType} from 'vue'
 import config from '@/config'
 import axios from 'axios'
 
+import useScopedId from '@/composables/scoped-id'
 import {
   BENIGN_CLINICAL_SIGNIFICANCE_CLASSIFICATIONS,
   CLINVAR_REVIEW_STATUS_STARS,
@@ -134,6 +144,7 @@ export default defineComponent({
       this.histogram = null
     }
   },
+  setup: useScopedId,
 
   data: function() {
     const scoreSetHasRanges = config.CLINICAL_FEATURES_ENABLED && this.scoreSet.scoreRanges != null

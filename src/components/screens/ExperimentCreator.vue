@@ -52,8 +52,8 @@
                   </div>
                   <div class="mavedb-wizard-content field">
                     <span class="p-float-label">
-                      <InputText v-model="title" :id="$scopedId('input-title')"/>
-                      <label :for="$scopedId('input-title')">Title</label>
+                      <InputText v-model="title" :id="scopedId('input-title')"/>
+                      <label :for="scopedId('input-title')">Title</label>
                     </span>
                     <span v-if="validationErrors.title" class="mave-field-error">{{ validationErrors.title }}</span>
                   </div>
@@ -69,8 +69,8 @@
                   </div>
                   <div class="mavedb-wizard-content field">
                     <span class="p-float-label">
-                      <Textarea v-model="shortDescription" :id="$scopedId('input-shortDescription')" rows="4"/>
-                      <label :for="$scopedId('input-shortDescription')">Short description</label>
+                      <Textarea v-model="shortDescription" :id="scopedId('input-shortDescription')" rows="4"/>
+                      <label :for="scopedId('input-shortDescription')">Short description</label>
                     </span>
                     <span v-if="validationErrors.shortDescription" class="mave-field-error">{{
                       validationErrors.shortDescription }}</span>
@@ -91,8 +91,8 @@
                     <TabView>
                       <TabPanel header="Edit">
                         <span class="p-float-label">
-                          <Textarea v-model="abstractText" :id="$scopedId('input-abstractText')" rows="10" />
-                          <label :for="$scopedId('input-abstractText')">Abstract</label>
+                          <Textarea v-model="abstractText" :id="scopedId('input-abstractText')" rows="10" />
+                          <label :for="scopedId('input-abstractText')">Abstract</label>
                         </span>
                       </TabPanel>
                       <TabPanel header="Preview">
@@ -124,8 +124,8 @@
                     <TabView>
                       <TabPanel header="Edit">
                         <span class="p-float-label">
-                          <Textarea v-model="methodText" :id="$scopedId('input-methodText')" rows="10" />
-                          <label :for="$scopedId('input-methodText')">Methods</label>
+                          <Textarea v-model="methodText" :id="scopedId('input-methodText')" rows="10" />
+                          <label :for="scopedId('input-methodText')">Methods</label>
                         </span>
                       </TabPanel>
                       <TabPanel header="Preview">
@@ -137,7 +137,7 @@
                 </div>
                 <div class="mavedb-wizard-row">
                   <div class="mavedb-wizard-help">
-                    <label :id="$scopedId('input-doiIdentifiers')">
+                    <label :id="scopedId('input-doiIdentifiers')">
                       The DOIs of any digital resources associated with the experiment.
                     </label>
                     <div class="mavedb-help-small">
@@ -150,7 +150,7 @@
                       <Chips
                           ref="doiIdentifiersInput"
                           v-model="doiIdentifiers"
-                          :id="$scopedId('input-doiIdentifiers')"
+                          :id="scopedId('input-doiIdentifiers')"
                           :addOnBlur="true"
                           :allowDuplicate="false"
                           @add="acceptNewDoiIdentifier"
@@ -162,7 +162,7 @@
                             </div>
                         </template>
                       </Chips>
-                      <label :for="$scopedId('input-doiIdentifiers')">DOIs</label>
+                      <label :for="scopedId('input-doiIdentifiers')">DOIs</label>
                     </span>
                     <span v-if="validationErrors.doiIdentifiers" class="mave-field-error">{{validationErrors.doiIdentifiers}}</span>
                   </div>
@@ -183,7 +183,7 @@
                         <Chips
                           ref="contributorsInput"
                           v-model="contributors"
-                          :id="$scopedId('input-contributors')"
+                          :id="scopedId('input-contributors')"
                           :addOnBlur="true"
                           :allowDuplicate="false"
                           placeholder="Type or paste ORCID IDs here."
@@ -197,7 +197,7 @@
                             </div>
                           </template>
                         </Chips>
-                        <label :for="$scopedId('input-contributors')">Contributors</label>
+                        <label :for="scopedId('input-contributors')">Contributors</label>
                       </span>
                       <span v-if="validationErrors.contributors" class="mave-field-error">{{validationErrors.contributors}}</span>
                     </div>
@@ -219,7 +219,7 @@
                         <AutoComplete
                             ref="publicationIdentifiersInput"
                             v-model="publicationIdentifiers"
-                            :id="$scopedId('input-publicationIdentifiers')"
+                            :id="scopedId('input-publicationIdentifiers')"
                             :multiple="true"
                             :suggestions="publicationIdentifierSuggestionsList"
                             @complete="searchPublicationIdentifiers"
@@ -241,7 +241,7 @@
                             </div>
                           </template>
                         </AutoComplete>
-                        <label :for="$scopedId('input-publicationIdentifiers')">Publication identifiers</label>
+                        <label :for="scopedId('input-publicationIdentifiers')">Publication identifiers</label>
                       </span>
                       <span v-if="validationErrors.publicationIdentifiers" class="mave-field-error">{{validationErrors.publicationIdentifiers}}</span>
                     </div>
@@ -257,7 +257,7 @@
                         <Multiselect
                           ref="primaryPublicationIdentifiersInput"
                           v-model="primaryPublicationIdentifiers"
-                          :id="$scopedId('input-primaryPublicationIdentifiers')"
+                          :id="scopedId('input-primaryPublicationIdentifiers')"
                           :options="publicationIdentifiers"
                           optionLabel="identifier"
                           placeholder="Select a primary publication (Where the dataset is described)"
@@ -272,7 +272,7 @@
                                 </div>
                           </template>
                         </Multiselect>
-                        <label :for="$scopedId('input-primaryPublicationIdentifiers')">Primary publication</label>
+                        <label :for="scopedId('input-primaryPublicationIdentifiers')">Primary publication</label>
                       </span>
                       <span v-if="validationErrors.primaryPublicationIdentifiers" class="mave-field-error">{{
                         validationErrors.primaryPublicationIdentifiers }}</span>
@@ -298,7 +298,7 @@
                         <Chips
                             ref="rawReadIdentifiersInput"
                             v-model="rawReadIdentifiers"
-                            :id="$scopedId('input-rawReadIdentifiers')"
+                            :id="scopedId('input-rawReadIdentifiers')"
                             :addOnBlur="true"
                             :allowDuplicate="false"
                             @add="acceptNewRawReadIdentifier">
@@ -309,7 +309,7 @@
                               </div>
                           </template>
                         </Chips>
-                        <label :for="$scopedId('input-rawReadIdentifiers')">Raw Read</label>
+                        <label :for="scopedId('input-rawReadIdentifiers')">Raw Read</label>
                       </span>
                       <span v-if="validationErrors.rawReadIdentifiers" class="mave-field-error">{{validationErrors.rawReadIdentifiers}}</span>
                     </div>
@@ -323,7 +323,7 @@
                     <div class="mavedb-wizard-content field">
                       <span class="p-float-label">
                         <FileUpload
-                            :id="$scopedId('input-extraMetadataFile')"
+                            :id="scopedId('input-extraMetadataFile')"
                             :auto="false"
                             chooseLabel="Extra metadata"
                             :class="inputClasses.extraMetadataFile"
@@ -378,13 +378,13 @@
                     <span class="p-float-label field">
                       <Dropdown
                         v-model="keywordKeys[keyword.key]"
-                        :id="$scopedId(`keyword-input-${keyword.key}`)"
+                        :id="scopedId(`keyword-input-${keyword.key}`)"
                         :options="getKeywordOptions(keyword.option)"
                         :optionLabel="(option) => formatKeywordOptionLabel(option)"
                         optionValue="label"
                         class="keyword-dropdown"
                       />
-                      <label :for="$scopedId(`keyword-input-${keyword.key}`)">{{ keyword.key }}</label>
+                      <label :for="scopedId(`keyword-input-${keyword.key}`)">{{ keyword.key }}</label>
                       <Button
                         class="keyword-button"
                         rounded
@@ -409,10 +409,10 @@
                       <span class="p-float-label keyword-description-input">
                         <Textarea
                           v-model="keywordDescriptions[keyword.key]"
-                          :id="$scopedId('input-title')"
+                          :id="scopedId('input-title')"
                           rows="4"
                         />
-                        <label :for="$scopedId('input-title')">{{ keyword.descriptionLabel }} {{ keywordKeys[keyword.key] === 'Other' ? '(Required)' : '(Optional)' }}</label>
+                        <label :for="scopedId('input-title')">{{ keyword.descriptionLabel }} {{ keywordKeys[keyword.key] === 'Other' ? '(Required)' : '(Optional)' }}</label>
                       </span>
                       <span v-if="validationErrors[`keywordDescriptions.${keyword.key}`]" class="mave-field-error"> {{ validationErrors[`keywordDescriptions.${keyword.key}`] }}</span>
                     </div>
@@ -462,6 +462,7 @@ import {ref} from 'vue'
 
 import DefaultLayout from '@/components/layout/DefaultLayout'
 import EmailPrompt from '@/components/common/EmailPrompt'
+import useScopedId from '@/composables/scoped-id'
 import useAuth from '@/composition/auth'
 import useItem from '@/composition/item'
 import useItems from '@/composition/items'
@@ -593,6 +594,7 @@ export default {
       userProfile,
       ...useFormatters(),
       ...useItem({itemTypeName: 'experiment'}),
+      ...useScopedId(),
       variantLibraryKeywordOptions: variantLibraryKeywordOptions.items,
       endogenousSystemKeywordOptions: endogenousSystemKeywordOptions.items,
       endogenousMechanismKeywordOptions: endogenousMechanismKeywordOptions.items,

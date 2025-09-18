@@ -36,9 +36,9 @@
                 <div v-else>
                   <div class="field">
                     <span class="p-float-label">
-                      <Dropdown v-model="experiment" :id="$scopedId('input-experiment')" :options="editableExperiments"
+                      <Dropdown v-model="experiment" :id="scopedId('input-experiment')" :options="editableExperiments"
                         optionLabel="title" v-on:change="populateExperimentMetadata" style="width: 50%"/>
-                      <label :for="$scopedId('input-experiment')">Experiment</label>
+                      <label :for="scopedId('input-experiment')">Experiment</label>
                     </span>
                     <span v-if="validationErrors.experiment" class="mave-field-error">{{ validationErrors.experiment
                     }}</span>
@@ -52,13 +52,13 @@
                 <div v-if="itemStatus == 'NotLoaded'" class="field">
                   <span class="p-float-label">
                     <AutoComplete ref="supersededScoreSetInput" v-model="supersededScoreSet"
-                      :id="$scopedId('input-supersededScoreSet')" field="title" :forceSelection="true"
+                      :id="scopedId('input-supersededScoreSet')" field="title" :forceSelection="true"
                       :suggestions="supersededScoreSetSuggestionsList" @complete="searchSupersededScoreSets">
                       <template #item="slotProps">
                         {{ slotProps.item.urn }}: {{ slotProps.item.title }}
                       </template>
                     </AutoComplete>
-                    <label :for="$scopedId('input-supersededScoreSet')">Supersedes</label>
+                    <label :for="scopedId('input-supersededScoreSet')">Supersedes</label>
                   </span>
                   <span v-if="validationErrors.supersededScoreSetUrn" class="mave-field-error">{{
                     validationErrors.supersededScoreSetUrn }}</span>
@@ -72,13 +72,13 @@
                 <div v-if="itemStatus == 'NotLoaded'" class="field">
                   <span class="p-float-label">
                     <AutoComplete ref="metaAnalyzesScoreSetsInput" v-model="metaAnalyzesScoreSets"
-                      :id="$scopedId('input-metaAnalyzesScoreSets')" field="title" :forceSelection="true" :multiple="true"
+                      :id="scopedId('input-metaAnalyzesScoreSets')" field="title" :forceSelection="true" :multiple="true"
                       :suggestions="metaAnalyzesScoreSetSuggestionsList" @complete="searchMetaAnalyzesScoreSets">
                       <template #item="slotProps">
                         {{ slotProps.item.urn }}: {{ slotProps.item.title }}
                       </template>
                     </AutoComplete>
-                    <label :for="$scopedId('input-metaAnalyzesScoreSets')">Meta-analysis for</label>
+                    <label :for="scopedId('input-metaAnalyzesScoreSets')">Meta-analysis for</label>
                   </span>
                   <span v-if="validationErrors.metaAnalyzesScoreSetUrns" class="mave-field-error">{{
                     validationErrors.metaAnalyzesScoreSetUrns }}</span>
@@ -90,15 +90,15 @@
               <template #content>
                 <div class="field">
                   <span class="p-float-label">
-                    <InputText v-model="title" :id="$scopedId('input-title')" />
-                    <label :for="$scopedId('input-title')">Title</label>
+                    <InputText v-model="title" :id="scopedId('input-title')" />
+                    <label :for="scopedId('input-title')">Title</label>
                   </span>
                   <span v-if="validationErrors.title" class="mave-field-error">{{ validationErrors.title }}</span>
                 </div>
                 <div class="field">
                   <span class="p-float-label">
-                    <Textarea v-model="shortDescription" :id="$scopedId('input-shortDescription')" rows="4" />
-                    <label :for="$scopedId('input-shortDescription')">Short description</label>
+                    <Textarea v-model="shortDescription" :id="scopedId('input-shortDescription')" rows="4" />
+                    <label :for="scopedId('input-shortDescription')">Short description</label>
                   </span>
                   <span v-if="validationErrors.shortDescription" class="mave-field-error">{{
                     validationErrors.shortDescription }}</span>
@@ -107,8 +107,8 @@
                   <TabView>
                     <TabPanel header="Edit">
                       <span class="p-float-label">
-                        <Textarea v-model="abstractText" :id="$scopedId('input-abstractText')" rows="4" />
-                        <label :for="$scopedId('input-abstractText')">Abstract</label>
+                        <Textarea v-model="abstractText" :id="scopedId('input-abstractText')" rows="4" />
+                        <label :for="scopedId('input-abstractText')">Abstract</label>
                       </span>
                     </TabPanel>
                     <TabPanel header="Preview">
@@ -122,8 +122,8 @@
                   <TabView>
                     <TabPanel header="Edit">
                       <span class="p-float-label">
-                        <Textarea v-model="methodText" :id="$scopedId('input-methodText')" rows="4" />
-                        <label :for="$scopedId('input-methodText')">Methods</label>
+                        <Textarea v-model="methodText" :id="scopedId('input-methodText')" rows="4" />
+                        <label :for="scopedId('input-methodText')">Methods</label>
                       </span>
                     </TabPanel>
                     <TabPanel header="Preview">
@@ -137,7 +137,7 @@
                     <Chips
                       ref="contributorsInput"
                       v-model="contributors"
-                      :id="$scopedId('input-contributors')"
+                      :id="scopedId('input-contributors')"
                       :addOnBlur="true"
                       :allowDuplicate="false"
                       placeholder="Type or paste ORCID IDs here."
@@ -151,16 +151,16 @@
                         </div>
                       </template>
                     </Chips>
-                    <label :for="$scopedId('input-contributors')">Contributors</label>
+                    <label :for="scopedId('input-contributors')">Contributors</label>
                   </span>
                   <span v-if="validationErrors.contributors" class="mave-field-error">{{validationErrors.contributors}}</span>
                 </div>
                 <div v-if="itemStatus != 'NotLoaded'">
                   <div class="field">
                     <span class="p-float-label">
-                      <Dropdown v-model="licenseId" :id="$scopedId('input-targetLicenseId')" :options="selectableLicenses"
+                      <Dropdown v-model="licenseId" :id="scopedId('input-targetLicenseId')" :options="selectableLicenses"
                         optionLabel="longName" optionValue="id" style="width: 100%" />
-                      <label :for="$scopedId('input-targetLicenseId')">License</label>
+                      <label :for="scopedId('input-targetLicenseId')">License</label>
                     </span>
                     <span v-if="validationErrors.licenseId" class="mave-field-error">{{validationErrors.licenseId}}</span>
                   </div>
@@ -181,7 +181,7 @@
                       <Chips
                           ref="doiIdentifiersInput"
                           v-model="doiIdentifiers"
-                          :id="$scopedId('input-doiIdentifiers')"
+                          :id="scopedId('input-doiIdentifiers')"
                           :addOnBlur="true"
                           :allowDuplicate="false"
                           @add="acceptNewDoiIdentifier"
@@ -193,7 +193,7 @@
                             </div>
                         </template>
                       </Chips>
-                      <label :for="$scopedId('input-doiIdentifiers')">DOIs</label>
+                      <label :for="scopedId('input-doiIdentifiers')">DOIs</label>
                     </span>
                     <span v-if="validationErrors.doiIdentifiers" class="mave-field-error">{{validationErrors.doiIdentifiers}}</span>
                   </div>
@@ -202,7 +202,7 @@
                       <AutoComplete
                           ref="publicationIdentifiersInput"
                           v-model="publicationIdentifiers"
-                          :id="$scopedId('input-publicationIdentifiers')"
+                          :id="scopedId('input-publicationIdentifiers')"
                           :multiple="true"
                           :suggestions="publicationIdentifierSuggestionsList"
                           @complete="searchPublicationIdentifiers"
@@ -224,14 +224,14 @@
                           </div>
                         </template>
                       </AutoComplete>
-                      <label :for="$scopedId('input-publicationIdentifiers')">Publication identifiers</label>
+                      <label :for="scopedId('input-publicationIdentifiers')">Publication identifiers</label>
                     </span>
                     <span v-if="validationErrors.publicationIdentifiers" class="mave-field-error">{{validationErrors.publicationIdentifiers}}</span>
                   </div>
                   <div class="field">
                     <span class="p-float-label">
                       <Multiselect ref="primaryPublicationIdentifiersInput" v-model="primaryPublicationIdentifiers"
-                        :id="$scopedId('input-primaryPublicationIdentifiers')" :options="publicationIdentifiers"
+                        :id="scopedId('input-primaryPublicationIdentifiers')" :options="publicationIdentifiers"
                         optionLabel="identifier" placeholder="Select a primary publication (Where the dataset is described)"
                         :selectionLimit="1" style="width: 100%;">
                         <template #option="slotProps">
@@ -243,7 +243,7 @@
                           </div>
                         </template>
                       </Multiselect>
-                      <label :for="$scopedId('input-primaryPublicationIdentifiers')">Primary publication</label>
+                      <label :for="scopedId('input-primaryPublicationIdentifiers')">Primary publication</label>
                     </span>
                     <span v-if="validationErrors.primaryPublicationIdentifiers" class="mave-field-error">{{
                       validationErrors.primaryPublicationIdentifiers }}</span>
@@ -254,7 +254,7 @@
                   </Message>
                   <div class="field">
                     <span class="p-float-label">
-                      <FileUpload :id="$scopedId('input-extraMetadataFile')" :auto="false" chooseLabel="Extra metadata"
+                      <FileUpload :id="scopedId('input-extraMetadataFile')" :auto="false" chooseLabel="Extra metadata"
                         :class="inputClasses.extraMetadataFile" :customUpload="true" :fileLimit="1"
                         :showCancelButton="false" :showUploadButton="false" @remove="fileCleared('extraMetadataFile')"
                         @select="fileSelected('extraMetadataFile', $event)">
@@ -268,8 +268,8 @@
                   </div>
                   <div class="field">
                     <span class="p-float-label">
-                      <Textarea v-model="dataUsagePolicy" :id="$scopedId('input-dataUsagePolicy')" rows="4" />
-                      <label :for="$scopedId('input-dataUsagePolicy')">Data usage policy</label>
+                      <Textarea v-model="dataUsagePolicy" :id="scopedId('input-dataUsagePolicy')" rows="4" />
+                      <label :for="scopedId('input-dataUsagePolicy')">Data usage policy</label>
                     </span>
                     <span v-if="validationErrors.dataUsagePolicy" class="mave-field-error">{{
                       validationErrors.dataUsagePolicy }}</span>
@@ -289,22 +289,22 @@
                         <template #content>
                           <div style="padding-top: 1%;">
                             <span class="p-float-label">
-                              <InputNumber v-model="editedScoreRanges.investigatorProvided.baselineScore" :aria-labelledby="$scopedId('input-baselineScore')" style="width:100%;" :minFractionDigits="1" :maxFractionDigits="10" />
-                              <label :for="$scopedId('input-baselineScore')"> Baseline Score </label>
+                              <InputNumber v-model="editedScoreRanges.investigatorProvided.baselineScore" :aria-labelledby="scopedId('input-baselineScore')" style="width:100%;" :minFractionDigits="1" :maxFractionDigits="10" />
+                              <label :for="scopedId('input-baselineScore')"> Baseline Score </label>
                             </span>
                             <span v-if="validationErrors[`scoreRanges.investigatorProvided.baselineScore`]" class="mave-field-error">{{ validationErrors[`scoreRanges.investigatorProvided.baselineScore`] }}</span>
                           </div>
                           <div style="padding-top: 1%;">
                             <span class="p-float-label">
-                              <Textarea v-model="editedScoreRanges.investigatorProvided.baselineScoreDescription" style="width:100%;" :aria-labelledby="$scopedId(`input-baselineScoreDescription`)" />
-                              <label :for="$scopedId(`input-baselineScoreDescription`)">Baseline Score Description</label>
+                              <Textarea v-model="editedScoreRanges.investigatorProvided.baselineScoreDescription" style="width:100%;" :aria-labelledby="scopedId(`input-baselineScoreDescription`)" />
+                              <label :for="scopedId(`input-baselineScoreDescription`)">Baseline Score Description</label>
                             </span>
                             <span v-if="validationErrors[`scoreRanges.investigatorProvided.baselineScoreDescription`]" class="mave-field-error">{{ validationErrors[`scoreRanges.investigatorProvided.baselineScoreDescription`] }}</span>
                           </div>
                           <div v-if="editedScoreRanges.investigatorProvided.ranges.some(range => range.oddsPath)">
                             <span class="p-float-label">
                               <Multiselect ref="scoreRangePublicationIdentifiersInput" v-model="editedScoreRanges.investigatorProvided.source"
-                                :id="$scopedId('input-scoreRangePublicationIdentifiersInput')" :options="publicationIdentifiers"
+                                :id="scopedId('input-scoreRangePublicationIdentifiersInput')" :options="publicationIdentifiers"
                                 optionLabel="identifier" placeholder="Select a source for the score ranges."
                                 :selectionLimit="1" style="width: 100%;">
                                 <template #option="slotProps">
@@ -316,7 +316,7 @@
                                   </div>
                                 </template>
                               </Multiselect>
-                              <label :for="$scopedId('input-scoreRangePublicationIdentifiersInput')">Score Range Source (optional)</label>
+                              <label :for="scopedId('input-scoreRangePublicationIdentifiersInput')">Score Range Source (optional)</label>
                             </span>
                             <span v-if="validationErrors[`scoreRanges.investigatorProvided.source`]" class="mave-field-error">{{ validationErrors[`scoreRanges.investigatorProvided.source`] }}</span>
                           </div>
@@ -331,12 +331,12 @@
                             <div style="padding-top: 1%;">
                                 <InputGroup>
                                   <span class="p-float-label" style="width:75%;">
-                                    <InputText v-model="rangeObj.label" style="width:75%;" :aria-labelledby="$scopedId(`input-scoreRangeLabel-${rangeIdx}`)"></InputText>
-                                    <label :for="$scopedId(`input-scoreRangeLabel-${rangeIdx}`)">Label</label>
+                                    <InputText v-model="rangeObj.label" style="width:75%;" :aria-labelledby="scopedId(`input-scoreRangeLabel-${rangeIdx}`)"></InputText>
+                                    <label :for="scopedId(`input-scoreRangeLabel-${rangeIdx}`)">Label</label>
                                   </span>
                                   <span class="p-float-label" style="width:25%;">
-                                    <Dropdown v-model="rangeObj.classification" :options="rangeClassifications" optionLabel="label" optionValue="value" style="width:25%;" :aria-labelledby="$scopedId(`input-scoreRangeClassification-${rangeIdx}`)"/>
-                                    <label :for="$scopedId(`input-scoreRangeClassification-${rangeIdx}`)">Classification</label>
+                                    <Dropdown v-model="rangeObj.classification" :options="rangeClassifications" optionLabel="label" optionValue="value" style="width:25%;" :aria-labelledby="scopedId(`input-scoreRangeClassification-${rangeIdx}`)"/>
+                                    <label :for="scopedId(`input-scoreRangeClassification-${rangeIdx}`)">Classification</label>
                                   </span>
                                 </InputGroup>
                                 <span v-if="validationErrors[`scoreRanges.investigatorProvided.ranges.${rangeIdx}.label`]" class="mave-field-error">{{ validationErrors[`scoreRanges.investigatorProvided.ranges.${rangeIdx}.label`] }}</span>
@@ -344,8 +344,8 @@
                             </div>
                             <div style="padding-top: 1%;">
                               <span class="p-float-label">
-                                <Textarea v-model="rangeObj.description" style="width:100%;" :aria-labelledby="$scopedId(`input-scoreRangeDescription-${rangeIdx}`)"/>
-                                <label :for="$scopedId(`input-scoreRangeDescription-${rangeIdx}`)">Description (optional)</label>
+                                <Textarea v-model="rangeObj.description" style="width:100%;" :aria-labelledby="scopedId(`input-scoreRangeDescription-${rangeIdx}`)"/>
+                                <label :for="scopedId(`input-scoreRangeDescription-${rangeIdx}`)">Description (optional)</label>
                               </span>
                               <span v-if="validationErrors[`scoreRanges.investigatorProvided.ranges.${rangeIdx}.description`]" class="mave-field-error">{{ validationErrors[`scoreRanges.investigatorProvided.ranges.${rangeIdx}.description`] }}</span>
                             </div>
@@ -367,13 +367,13 @@
                                     <FontAwesomeIcon icon="fa-solid fa-circle-half-stroke" class="score-range-toggle-icon" />
                                   </Button>
                                   <span class="p-float-label">
-                                    <InputText v-model="rangeObj.range[0]" :aria-labelledby="$scopedId(`input-investigatorProvidedRangeLower-${rangeIdx}`)" :disabled="editedScoreRangeBoundaryHelper[rangeIdx].lowerBoundIsInfinity"/>
-                                    <label :for="$scopedId(`input-investigatorProvidedRangeLower-${rangeIdx}`)"> {{ editedScoreRangeBoundaryHelper[rangeIdx].lowerBoundIsInfinity ? "-infinity" : rangeObj.inclusiveLowerBound ? "Lower Bound (inclusive)" : "Lower Bound (exclusive)" }} </label>
+                                    <InputText v-model="rangeObj.range[0]" :aria-labelledby="scopedId(`input-investigatorProvidedRangeLower-${rangeIdx}`)" :disabled="editedScoreRangeBoundaryHelper[rangeIdx].lowerBoundIsInfinity"/>
+                                    <label :for="scopedId(`input-investigatorProvidedRangeLower-${rangeIdx}`)"> {{ editedScoreRangeBoundaryHelper[rangeIdx].lowerBoundIsInfinity ? "-infinity" : rangeObj.inclusiveLowerBound ? "Lower Bound (inclusive)" : "Lower Bound (exclusive)" }} </label>
                                   </span>
                                 <InputGroupAddon>to</InputGroupAddon>
                                   <span class="p-float-label">
-                                    <InputText v-model="rangeObj.range[1]" :aria-labelledby="$scopedId(`input-investigatorProvidedRangeUpper-${rangeIdx}`)" :disabled="editedScoreRangeBoundaryHelper[rangeIdx].upperBoundIsInfinity"/>
-                                    <label :for="$scopedId(`input-investigatorProvidedRangeUpper-${rangeIdx}`)"> {{ editedScoreRangeBoundaryHelper[rangeIdx].upperBoundIsInfinity ? "infinity" : rangeObj.inclusiveUpperBound ? "Upper Bound (inclusive)" : "Upper Bound (exclusive)" }} </label>
+                                    <InputText v-model="rangeObj.range[1]" :aria-labelledby="scopedId(`input-investigatorProvidedRangeUpper-${rangeIdx}`)" :disabled="editedScoreRangeBoundaryHelper[rangeIdx].upperBoundIsInfinity"/>
+                                    <label :for="scopedId(`input-investigatorProvidedRangeUpper-${rangeIdx}`)"> {{ editedScoreRangeBoundaryHelper[rangeIdx].upperBoundIsInfinity ? "infinity" : rangeObj.inclusiveUpperBound ? "Upper Bound (inclusive)" : "Upper Bound (exclusive)" }} </label>
                                   </span>
                                   <Button
                                     class="score-range-toggle-button"
@@ -404,18 +404,18 @@
                                   <div>
                                     <InputGroup>
                                       <span class=p-float-label style="margin-right: 1em;">
-                                        <InputNumber v-model="rangeObj.oddsPath.ratio" :aria-labelledby="$scopedId('input-oddsPathRatio')" style="width:50%;" :minFractionDigits="1" :maxFractionDigits="10" />
-                                        <label :for="$scopedId('input-oddsPathRatio')"> OddsPath Ratio </label>
+                                        <InputNumber v-model="rangeObj.oddsPath.ratio" :aria-labelledby="scopedId('input-oddsPathRatio')" style="width:50%;" :minFractionDigits="1" :maxFractionDigits="10" />
+                                        <label :for="scopedId('input-oddsPathRatio')"> OddsPath Ratio </label>
                                       </span>
                                       <span class=p-float-label>
                                         <Dropdown
                                           v-model="rangeObj.oddsPath.evidence"
-                                          :aria-labelledby="$scopedId('input-oddsPathEvidence')"
+                                          :aria-labelledby="scopedId('input-oddsPathEvidence')"
                                           style="width:50%;"
                                           :disabled="rangeObj.classification === null"
                                           :options="rangeObj.classification ? evidenceStrengths[rangeObj.classification].concat(evidenceStrengths.indeterminate) : []"
                                         />
-                                        <label :for="$scopedId('input-oddsPathEvidence')"> {{ rangeObj.classification === null ? "Select a range classification" : "OddsPath Evidence Strength (Optional)" }}  </label>
+                                        <label :for="scopedId('input-oddsPathEvidence')"> {{ rangeObj.classification === null ? "Select a range classification" : "OddsPath Evidence Strength (Optional)" }}  </label>
                                       </span>
                                     </InputGroup>
                                     <span v-if="validationErrors[`scoreRanges.investigatorProvided.ranges.${rangeIdx}.oddsPath.ratio`]" class="mave-field-error">{{ validationErrors[`scoreRanges.investigatorProvided.ranges.${rangeIdx}.oddsPath.ratio`] }}</span>
@@ -437,7 +437,7 @@
                       <div v-if="editedScoreRanges.investigatorProvided.ranges.some(range => range.oddsPath)">
                         <span class="p-float-label">
                           <Multiselect ref="oddsPathPublicationIdentifiersInput" v-model="editedScoreRanges.investigatorProvided.oddsPathSource"
-                            :id="$scopedId('input-oddsPathPublicationIdentifiersInput')" :options="publicationIdentifiers"
+                            :id="scopedId('input-oddsPathPublicationIdentifiersInput')" :options="publicationIdentifiers"
                             optionLabel="identifier" placeholder="Select a source for the OddsPath calculation."
                             :selectionLimit="1" style="width: 100%;">
                             <template #option="slotProps">
@@ -449,7 +449,7 @@
                               </div>
                             </template>
                           </Multiselect>
-                          <label :for="$scopedId('input-oddsPathPublicationIdentifiersInput')">OddsPath Source (optional)</label>
+                          <label :for="scopedId('input-oddsPathPublicationIdentifiersInput')">OddsPath Source (optional)</label>
                         </span>
                         <span v-if="validationErrors[`scoreRanges.investigatorProvided.oddsPathSource`]" class="mave-field-error">{{
                           validationErrors[`scoreRanges.investigatorProvided.oddsPathSource`] }}</span>
@@ -482,7 +482,7 @@
                         <div class="field">
                           <span class="p-float-label">
                             <AutoComplete ref="existingTargetGeneInput" v-model="existingTargetGene"
-                              :id="$scopedId('input-existingTargetGene')" field="name" :forceSelection="true"
+                              :id="scopedId('input-existingTargetGene')" field="name" :forceSelection="true"
                               :suggestions="targetGeneSuggestionsList" @complete="searchTargetGenes">
                               <template #item="slotProps">
                                 <div>
@@ -494,26 +494,26 @@
                                 </div>
                               </template>
                             </AutoComplete>
-                            <label :for="$scopedId('input-existingTargetGene')">Copy from an existing target gene</label>
+                            <label :for="scopedId('input-existingTargetGene')">Copy from an existing target gene</label>
                           </span>
                         </div>
                         <div class="field">
                           <span class="p-float-label">
-                            <InputText v-model="targetGene.name" :id="$scopedId('input-targetGeneName')" />
-                            <label :for="$scopedId('input-targetGeneName')">Target name</label>
+                            <InputText v-model="targetGene.name" :id="scopedId('input-targetGeneName')" />
+                            <label :for="scopedId('input-targetGeneName')">Target name</label>
                           </span>
                         </div>
                         <div class="field">
                           <span class="p-float-label">
                             <InputText v-model="targetGene.targetSequence.label"
-                              :id="$scopedId('input-targetSequenceLabel')" />
-                            <label :for="$scopedId('input-targetSequenceLabel')">Target label (only required when providing
+                              :id="scopedId('input-targetSequenceLabel')" />
+                            <label :for="scopedId('input-targetSequenceLabel')">Target label (only required when providing
                               multiple targets)</label>
                           </span>
                         </div>
                         <div class="field">
                           <span class="p-float-label">
-                            <SelectButton v-model="targetGene.category" :id="$scopedId('input-targetGeneCategory')"
+                            <SelectButton v-model="targetGene.category" :id="scopedId('input-targetGeneCategory')"
                               :options="targetGeneCategories" :optionLabel="textForTargetGeneCategory" />
                           </span>
                         </div>
@@ -522,22 +522,22 @@
                             <span class="p-float-label">
                               <AutoComplete :ref="`${dbName.toLowerCase()}IdentifierInput`"
                                 v-model="targetGene.externalIdentifiers[dbName].identifier"
-                                :id="$scopedId(`input-${dbName.toLowerCase()}Identifier`)" field="identifier"
+                                :id="scopedId(`input-${dbName.toLowerCase()}Identifier`)" field="identifier"
                                 :suggestions="targetGeneIdentifierSuggestionsList[dbName]"
                                 @blur="acceptNewTargetGeneIdentifier(dbName)"
                                 @complete="searchTargetGeneIdentifiers(dbName, $event)"
                                 @keyup.enter="acceptNewTargetGeneIdentifier(dbName)"
                                 @keyup.escape="clearTargetGeneIdentifierSearch(dbName)" />
-                              <label :for="$scopedId(`input-${dbName.toLowerCase()}Identifier`)">{{ dbName }}
+                              <label :for="scopedId(`input-${dbName.toLowerCase()}Identifier`)">{{ dbName }}
                                 identifier</label>
                             </span>
                           </div>
                           <div class="field-column">
                             <span class="p-float-label">
                               <InputNumber v-model="targetGene.externalIdentifiers[dbName].offset"
-                                :id="$scopedId(`input-${dbName.toLowerCase()}Offset`)" buttonLayout="stacked" :min="0"
+                                :id="scopedId(`input-${dbName.toLowerCase()}Offset`)" buttonLayout="stacked" :min="0"
                                 showButtons suffix=" bp" />
-                              <label :for="$scopedId(`input-${dbName.toLowerCase()}Offset`)">Offset</label>
+                              <label :for="scopedId(`input-${dbName.toLowerCase()}Offset`)">Offset</label>
                             </span>
                           </div>
                         </div>
@@ -547,7 +547,7 @@
                               ref="taxonomyInput"
                               v-model="taxonomy"
                               dropdown
-                              :id="$scopedId('input-targetSequenceTaxonomy')"
+                              :id="scopedId('input-targetSequenceTaxonomy')"
                               :suggestions="taxonomySuggestionsList"
                               field="organismName"
                               :multiple="false"
@@ -558,14 +558,14 @@
                                 {{slotProps.item.code}} - {{slotProps.item.organismName}} <template v-if="slotProps.item.commonName!=='NULL' && slotProps.item.commonName!== null">/ {{slotProps.item.commonName}}</template>
                               </template>
                             </AutoComplete>
-                            <label :for="$scopedId('input-targetSequenceTaxonomy')">Taxonomy</label>
+                            <label :for="scopedId('input-targetSequenceTaxonomy')">Taxonomy</label>
                           </span>
                           <span v-if="validationErrors['targetGene.targetSequence.taxonomy']" class="mave-field-error">{{validationErrors['targetGene.targetSequence.taxonomy']}}</span>
                         </div>
                         <div class="field">
                           <span class="p-float-label">
                             <FileUpload ref="sequenceFileUpload"
-                              :id="$scopedId('input-targetGeneTargetSequenceSequenceFile')" :auto="false"
+                              :id="scopedId('input-targetGeneTargetSequenceSequenceFile')" :auto="false"
                               chooseLabel="Reference sequence" :class="inputClasses.targetGeneTargetSequenceSequenceFile"
                               :customUpload="true" :fileLimit="1" :showCancelButton="false" :showUploadButton="false"
                               @remove="fileCleared('targetGeneTargetSequenceSequenceFile')"
@@ -579,7 +579,7 @@
                         <div class="field">
                           <span class="p-float-label">
                             <SelectButton v-model="targetGene.targetSequence.sequenceType"
-                              :id="$scopedId('input-targetGeneTargetSequenceSequenceType')" :options="sequenceTypes" />
+                              :id="scopedId('input-targetGeneTargetSequenceSequenceType')" :options="sequenceTypes" />
                           </span>
                         </div>
                         <div>
@@ -592,23 +592,23 @@
                         <div class="field field-columns">
                           <div class="field-column">
                             <span class="p-float-label">
-                              <InputText v-model="targetGene.name" :id="$scopedId('input-targetGeneName')" style="width: 100%"/>
-                              <label :for="$scopedId('input-targetGene')">Target gene name</label>
+                              <InputText v-model="targetGene.name" :id="scopedId('input-targetGeneName')" style="width: 100%"/>
+                              <label :for="scopedId('input-targetGene')">Target gene name</label>
                             </span>
                           </div>
                           <div class="field-column">
                             <span class="p-float-label">
                               <!-- Assembly is the reference genome property in coordinate cases -->
-                              <Dropdown v-model="assembly" :id="$scopedId('input-targetGeneAssembly')" :options="assemblies" style="width: 100%"/>
-                              <label :for="$scopedId('input-targetGeneAssembly')">Assembly</label>
+                              <Dropdown v-model="assembly" :id="scopedId('input-targetGeneAssembly')" :options="assemblies" style="width: 100%"/>
+                              <label :for="scopedId('input-targetGeneAssembly')">Assembly</label>
                             </span>
                           </div>
                           <div class="field-column">
                             <span class="p-float-label">
-                              <Dropdown v-model="geneName" :id="$scopedId('input-targetGeneGeneNames')"
+                              <Dropdown v-model="geneName" :id="scopedId('input-targetGeneGeneNames')"
                                 :options="geneNamesAsObject" optionLabel="name" filter
                                 :virtualScrollerOptions="{ itemSize: 50 }" @change="autofillGeneName" style="width: 100%"/>
-                              <label :for="$scopedId('input-targetGeneAssembly')">HGNC Name</label>
+                              <label :for="scopedId('input-targetGeneAssembly')">HGNC Name</label>
                             </span>
                           </div>
                         </div>
@@ -619,15 +619,15 @@
                           </span>
                           <span class="p-float-label">
                             <AutoComplete v-model="targetGene.targetAccession.accession"
-                              :id="$scopedId('input-targetGene-accession')"
+                              :id="scopedId('input-targetGene-accession')"
                               :suggestions="targetGeneAccessionSuggestionsList" :force-selection="true" :dropdown="true"
                               @complete="fetchTargetAccessions" />
-                            <label :for="$scopedId('input-targetGene-accession')">Accession/Transcript Identifier</label>
+                            <label :for="scopedId('input-targetGene-accession')">Accession/Transcript Identifier</label>
                           </span>
                         </div>
                         <div class="field">
                           <span class="p-float-label">
-                            <SelectButton v-model="targetGene.category" :id="$scopedId('input-targetGeneCategory')"
+                            <SelectButton v-model="targetGene.category" :id="scopedId('input-targetGeneCategory')"
                               :options="targetGeneCategories" :optionLabel="textForTargetGeneCategory" />
                           </span>
                         </div>
@@ -748,7 +748,7 @@
 
                     <div class="field-column">
                       <div class="field" style="margin-top: 1em;">
-                        <InputSwitch v-model="isBaseEditor" :aria-labelledby="$scopedId('input-isBaseEditorData')"/>
+                        <InputSwitch v-model="isBaseEditor" :aria-labelledby="scopedId('input-isBaseEditorData')"/>
                         <span style="margin-left: 1em;">{{ isBaseEditor ? 'This score set represents base editor data.' : 'This score set does not represent base editor data.' }}</span>
                       </div>
                     </div>
@@ -779,7 +779,7 @@
                   </div>
                   <div class="field">
                     <span class="p-float-label">
-                      <FileUpload ref="scoresFileUpload" :id="$scopedId('input-scoresFile')" :auto="false"
+                      <FileUpload ref="scoresFileUpload" :id="scopedId('input-scoresFile')" :auto="false"
                         chooseLabel="Scores file" :class="inputClasses.scoresFile || ''" :customUpload="true" :fileLimit="1"
                         :showCancelButton="false" :showUploadButton="false">
                         <template #empty>
@@ -792,7 +792,7 @@
                   </div>
                   <div class="field">
                     <span class="p-float-label">
-                      <FileUpload ref="countsFileUpload" :id="$scopedId('input-countsFile')" :auto="false"
+                      <FileUpload ref="countsFileUpload" :id="scopedId('input-countsFile')" :auto="false"
                         chooseLabel="Counts file" :class="inputClasses.countsFile || ''" :customUpload="true" :fileLimit="1"
                         :showCancelButton="false" :showUploadButton="false">
                         <template #empty>
@@ -852,6 +852,7 @@
   import config from '@/config'
   import {normalizeDoi, normalizeIdentifier, normalizePubmedId, validateDoi, validateIdentifier, validatePubmedId} from '@/lib/identifiers'
   import {ORCID_ID_REGEX} from '@/lib/orcid'
+  import useScopedId from '@/composables/scoped-id'
   import useFormatters from '@/composition/formatters'
   import { TARGET_GENE_CATEGORIES, textForTargetGeneCategory } from '@/lib/target-genes'
   import { ABNORMAL_RANGE_EVIDENCE, NORMAL_RANGE_EVIDENCE, INDETERMINATE_RANGE_EVIDENCE } from '@/lib/ranges'
@@ -922,6 +923,7 @@
       return {
         ...useFormatters(),
         ...useItem({ itemTypeName: 'scoreSet' }),
+        ...useScopedId(),
         editableExperiments: ref([]),
         licenses: licenses.items,
         publicationIdentifierSuggestions: publicationIdentifierSuggestions.items,

@@ -2,19 +2,19 @@
   <EmailPrompt />
   <div class="mave-collection-creator">
     <div class="flex flex-column gap-2">
-      <label :for="$scopedId('name-input')">Collection name</label>
-      <InputText :id="$scopedId('name-input')" v-model="collectionName" />
+      <label :for="scopedId('name-input')">Collection name</label>
+      <InputText :id="scopedId('name-input')" v-model="collectionName" />
     </div>
 
     <div class="flex flex-column gap-2">
-      <label :for="$scopedId('description-input')">Description</label>
-      <Textarea :id="$scopedId('description-input')" v-model="collectionDescription" />
+      <label :for="scopedId('description-input')">Description</label>
+      <Textarea :id="scopedId('description-input')" v-model="collectionDescription" />
     </div>
 
     <div class="flex flex-column gap-2">
-      <label :for="$scopedId('public-input')">Public</label>
-      <InputSwitch v-model="collectionPublic" :aria-labelledby="$scopedId('public-help')" :input-id="$scopedId('public-input')" />
-      <small :id="$scopedId('public-help')">Public collections are visible to others. Private collections are only visible to you and anyone to whom you grant permissions.</small>
+      <label :for="scopedId('public-input')">Public</label>
+      <InputSwitch v-model="collectionPublic" :aria-labelledby="scopedId('public-help')" :input-id="scopedId('public-input')" />
+      <small :id="scopedId('public-help')">Public collections are visible to others. Private collections are only visible to you and anyone to whom you grant permissions.</small>
     </div>
 
     <div class="mave-contributors-adder">
@@ -89,6 +89,7 @@ import InputText from 'primevue/inputtext'
 import SelectButton from 'primevue/selectbutton'
 import Textarea from 'primevue/textarea'
 
+import useScopedId from '@/composables/scoped-id'
 import config from '@/config'
 import {ORCID_ID_REGEX} from '@/lib/orcid'
 import EmailPrompt from '@/components/common/EmailPrompt.vue'
@@ -97,6 +98,8 @@ export default {
   name: 'CollectionCreator',
   components: {Button, Column, DataTable, Dropdown, EmailPrompt, InputSwitch, InputText, SelectButton, Textarea},
   emits: ['createdCollection', 'canceled'],
+
+  setup: useScopedId,
 
   data: () => ({
     collectionName: null,

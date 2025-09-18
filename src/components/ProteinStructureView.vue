@@ -1,8 +1,8 @@
 <template>
   <div style="display:flex; flex-flow: column; height: 100%;">
     <span v-if="alphaFoldData?.length > 1" class="p-float-label" style="margin-top: 10px; margin-bottom:4px">
-      <Dropdown :id="$scopedId('alphafold-id')" style="height:3em" v-model="selectedAlphaFold" :options="alphaFoldData" optionLabel="id" />
-      <label :for="$scopedId('alphafold-id')">AlphaFold ID</label>
+      <Dropdown :id="scopedId('alphafold-id')" style="height:3em" v-model="selectedAlphaFold" :options="alphaFoldData" optionLabel="id" />
+      <label :for="scopedId('alphafold-id')">AlphaFold ID</label>
     </span>
     <div class="flex">
       <span class="ml-2">Color by:</span>
@@ -22,6 +22,8 @@ import { PDBeMolstarPlugin } from 'pdbe-molstar/lib/viewer'
 import 'pdbe-molstar/build/pdbe-molstar-light.css'
 import _ from 'lodash'
 import { watch, ref } from 'vue'
+
+import useScopedId from '@/composables/scoped-id'
 
 export default {
   name: 'ProteinStructureView',
@@ -48,6 +50,23 @@ export default {
       type: Array,
       default: () => []
     },
+  },
+
+  setup(props) {
+    const colorBy = ref('mean.color')
+
+    watch(() => props.rowSelected, (newValue) => {
+      if (_.isNumber(newValue)) {
+        colorBy.value = [newValue, 'color']
+      } else {
+        colorBy.value = 'mean.color'
+      }
+    })
+
+    return {
+      ...useScopedId(),
+      colorBy
+    }
   },
 
   data: () => ({
@@ -105,22 +124,6 @@ export default {
           }
         }).get().filter((x) => x.id != null)
     },
-  },
-
-  setup(props) {
-    const colorBy = ref('mean.color')
-
-    watch(() => props.rowSelected, (newValue) => {
-      if (_.isNumber(newValue)) {
-        colorBy.value = [newValue, 'color']
-      } else {
-        colorBy.value = 'mean.color'
-      }
-    })
-
-    return {
-      colorBy,
-    }
   },
 
   watch: {

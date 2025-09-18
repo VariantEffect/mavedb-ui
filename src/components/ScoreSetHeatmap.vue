@@ -51,15 +51,24 @@ import {parseSimpleProVariant, parseSimpleNtVariant, variantNotNullOrNA} from '@
 import { saveChartAsFile } from '@/lib/chart-export'
 import { Heatmap } from '@/lib/heatmap'
 // import {SPARSITY_THRESHOLD} from '@/lib/scoreSetHeatmap'
-import { AMINO_ACIDS, AMINO_ACIDS_WITH_TER, AMINO_ACIDS_BY_HYDROPHILIA } from '@/lib/amino-acids'
+import { AMINO_ACIDS, AMINO_ACIDS_WITH_TER } from '@/lib/amino-acids'
 import { NUCLEOTIDE_BASES } from '@/lib/nucleotides'
 import type {ScoreRange} from '@/lib/ranges'
 
+const HEATMAP_AMINO_ACIDS_SORTED = _.sortBy(
+  AMINO_ACIDS,
+  [ (aa) => _.indexOf(['unique', 'aromatic', 'non-polar', 'polar-neutral', 'negative-charged', 'positive-charged'], aa.class), 'hydrophobicity.originalValue'],
+)
 const HEATMAP_AMINO_ACID_ROWS: HeatmapRowSpecification[] = [
   { code: '=', label: '\uff1d' },
   { code: '*', label: '\uff0a' },
   { code: '-', label: '\uff0d' },
-  ...AMINO_ACIDS_BY_HYDROPHILIA.map((aaCode) => ({ code: aaCode, label: aaCode }))
+  ...HEATMAP_AMINO_ACIDS_SORTED.map((aa) => ({
+      code: aa.codes.single,
+      label: aa.codes.single,
+      groupCode: aa.class,
+      groupLabel: aa.class == 'positive-charged' ? '(+)' : aa.class == 'negative-charged' ? '(-)' : aa.class,
+  }))
 ]
 
 /** Codes used in the right part of a MaveHGVS-pro string representing a single variation in a protein sequence. */
@@ -873,6 +882,7 @@ export default defineComponent({
       this.heatmap = makeHeatmap()
         .margins({top: 0, bottom: 25, left: 20, right: 20})
         .legendTitle("Functional Score")
+        .drawYGroups(this.sequenceType == 'dna' ? false : true)
         .render(this.$refs.simpleVariantsHeatmapContainer, this.$refs.heatmapContainer)
         .rows(this.heatmapRows)
         .xCoordinate(this.xCoord)

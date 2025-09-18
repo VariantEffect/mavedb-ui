@@ -77,7 +77,7 @@ export default {
           break
         case 'scroll':
         default:
-          classNames.push('mave-scroll-vertical')
+          classNames.push('mavedb-scroll-vertical')
       }
       return classNames
     }

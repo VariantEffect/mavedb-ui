@@ -399,24 +399,6 @@ export default {
 </script>
 
 <style scoped>
-/* General layout */
-
-.mave-full-height {
-  height: 100%;
-}
-
-.mave-scroll-vertical {
-  overflow-y: auto;
-}
-
-.mavedb-1000px-col {
-  position: relative;
-  width: 1000px;
-  margin: 0 auto;
-  text-align: left;
-  overflow-x: hide;
-}
-
 /* Score set */
 
 .mave-score-set {

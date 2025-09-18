@@ -1,6 +1,6 @@
 <template>
   <DefaultLayout>
-    <div v-if="itemStatus=='Loaded'" class="mave-full-height mave-score-set mave-scroll-vertical">
+    <div v-if="itemStatus=='Loaded'" class="mavedb-full-height mave-score-set mavedb-scroll-vertical">
       <div class="mavedb-1000px-col">
         <div class="mave-screen-title-bar">
           <div class="mave-screen-title">{{item.urn}}</div>
@@ -127,24 +127,6 @@ export default {
 </script>
 
 <style scoped>
-
-/* General layout */
-
-.mave-full-height {
-  height: 100%;
-}
-
-.mave-scroll-vertical {
-  overflow-y: auto;
-}
-
-.mavedb-1000px-col {
-  position: relative;
-  width: 1000px;
-  margin: 0 auto;
-  text-align: left;
-  overflow-x: hide;
-}
 
 /* Score set */
 

@@ -37,6 +37,10 @@ export interface HeatmapRowSpecification {
   label: string
   /** An optional CSS class name to apply to the row's tick mark label. */
   cssClass?: string
+  /** An optional group code. */
+  groupCode?: string
+  /** An optional label to display for this row's group, which is usually the same as the group code. */
+  groupLabel?: string
 }
 
 export type HeatmapScores = any
@@ -113,6 +117,7 @@ export interface Heatmap {
   // Axis controls
   drawX: Accessor<boolean, Heatmap>
   drawY: Accessor<boolean, Heatmap>
+  drawYGroups: Accessor<boolean, Heatmap>
   skipXTicks: Accessor<number, Heatmap>
 
   // Legend controls
@@ -191,6 +196,7 @@ export default function makeHeatmap(): Heatmap {
   // Axis controls
   let drawX: boolean = true
   let drawY: boolean = true
+  let drawYGroups: boolean = false
   let skipXTicks: number = 1
 
   // Legend controls
@@ -830,7 +836,7 @@ export default function makeHeatmap(): Heatmap {
           // Update the heatmap effective margins to take the legend into account.
           effectiveMargins = {
             ...margins,
-            left: margins.left + LEGEND_SIZE
+            left: margins.left + LEGEND_SIZE + (drawYGroups ? 10 : 0),
           }
         }
 
@@ -873,6 +879,19 @@ export default function makeHeatmap(): Heatmap {
         chart.resize()
         prepareData()
 
+        // Create group data for row groupCodes
+        const groupData = _.chain(rows)
+          .groupBy('groupCode')
+          .map((groupRows, groupCode) => ({
+            groupCode,
+            groupLabel: groupRows[0].groupLabel || groupCode,
+            startIndex: rows.findIndex(row => row.groupCode === groupCode),
+            endIndex: rows.findIndex(row => row.groupCode === groupCode) + groupRows.length - 1,
+            rowCount: groupRows.length
+          }))
+          .filter(group => group.groupCode && group.groupCode !== 'undefined')
+          .value()
+
         if (drawLegend) {
           const legend = svg.select('g.heatmap-vertical-color-legend').attr('width', LEGEND_SIZE).attr('height', height)
           verticalColorLegend(legend, {
@@ -910,8 +929,7 @@ export default function makeHeatmap(): Heatmap {
 
         // Refresh the axes.
         if (drawX) {
-          svg
-            .select('g.heatmap-bottom-axis')
+          svg.select('g.heatmap-bottom-axis')
             .style('font-size', 15)
             .attr('transform', `translate(0,${height})`)
             // @ts-ignore
@@ -926,18 +944,14 @@ export default function makeHeatmap(): Heatmap {
             .attr('class', (n) => (skipXTicks > 0 && n % (skipXTicks + 1) === 1 ? '' : 'heatmap-x-axis-invisible'))
         }
         if (drawY) {
-          svg
-            .select('g.heatmap-y-axis-tick-labels')
+          svg.select('g.heatmap-y-axis-tick-labels')
             // @ts-ignore
             // Get the row's amino acid code or variation symbol
-            .call(
-              d3
-                .axisLeft(yScale)
-                .tickSize(0)
-                .tickFormat((n) => rows[rows.length - 1 - n].label)
+            .call(d3.axisLeft(yScale)
+              .tickSize(0)
+              .tickFormat((n) => rows[rows.length - 1 - n].label)
             )
-            .select('.domain')
-            .remove()
+            .select('.domain').remove()
 
           // Apply row-specific CSS classes to Y-axis tick mark labels.
           svg
@@ -968,14 +982,63 @@ export default function makeHeatmap(): Heatmap {
             yAxisSvg
               .selectAll('g.heatmap-y-axis-tick-labels g.tick')
               .attr('class', (n) => rows[rows.length - 1 - n].cssClass || '')
-          }
 
-          if (svg && yAxisSvg) {
+            if (drawYGroups) {
+              // Add group elements for each groupCode in wrapper
+              if (groupData.length > 0) {
+                const groupElementsWrapper = yAxisSvg.select('g.heatmap-y-axis-tick-labels')
+                  .selectAll('g.group-label')
+                  .data(groupData)
+                  .enter()
+                  .append('g')
+                  .attr('class', 'group-label')
+                  .attr('data-group-code', d => d.groupCode)
+
+                  // Add background rectangle for each group
+                  groupElementsWrapper.append('rect')
+                    .attr('x', -40)
+                    .attr('y', d => {
+                      const startY = yScale(rows.length - 1 - d.startIndex) + yScale.bandwidth() / 2
+                      const endY = yScale(rows.length - 1 - d.endIndex) + yScale.bandwidth() / 2
+                      return Math.min(startY, endY) - 8
+                    })
+                    .attr('width', 20)
+                    .attr('height', d => {
+                      const startY = yScale(rows.length - 1 - d.startIndex) + yScale.bandwidth() / 2
+                      const endY = yScale(rows.length - 1 - d.endIndex) + yScale.bandwidth() / 2
+                      return Math.abs(endY - startY) + 16
+                    })
+                    .attr('fill', '#ccc')
+                    .attr('stroke-width', 1)
+                    .attr('rx', 3)
+                    .attr('ry', 3)
+
+                // Add group label text
+                groupElementsWrapper.append('text')
+                  .attr('x', -30)
+                  .attr('y', d => {
+                    const startY = yScale(rows.length - 1 - d.startIndex) + yScale.bandwidth() / 2
+                    const endY = yScale(rows.length - 1 - d.endIndex) + yScale.bandwidth() / 2
+                    return (startY + endY) / 2
+                  })
+                  .attr('dy', '0.35em')
+                  .attr('text-anchor', 'middle')
+                  .attr('fill', '#666')
+                  .attr('font-size', '11px')
+                  .attr('font-weight', 'bold')
+                  .attr('transform', d => {
+                    const startY = yScale(rows.length - 1 - d.startIndex) + yScale.bandwidth() / 2
+                    const endY = yScale(rows.length - 1 - d.endIndex) + yScale.bandwidth() / 2
+                    const centerY = (startY + endY) / 2
+                    return `rotate(-90, -30, ${centerY})`
+                  })
+                  .text(d => d.groupLabel)
+              }
+            }
+
             // Set the width of the Y-axis SVG to accommodate legend and tick labels.
-            const mainYAxisTickLabelsWidth = (
-              svg?.select('g.heatmap-y-axis-tick-labels')?.node() as Element
-            ).getBoundingClientRect().width
-            if (mainYAxisTickLabelsWidth) yAxisSvg.style('width', `${LEGEND_SIZE + mainYAxisTickLabelsWidth + 3}px`)
+            const mainYAxisTickLabelsWidth = (svg?.select('g.heatmap-y-axis-tick-labels')?.node() as Element).getBoundingClientRect().width
+            if (mainYAxisTickLabelsWidth) yAxisSvg.style('width', `${LEGEND_SIZE + (drawYGroups ? 10 : 0) + mainYAxisTickLabelsWidth + 3}px`)
           }
         }
 
@@ -1251,6 +1314,15 @@ export default function makeHeatmap(): Heatmap {
       }
 
       drawY = value
+      return chart
+    },
+
+    drawYGroups: (value?: boolean) => {
+      if (value === undefined) {
+        return drawYGroups
+      }
+
+      drawYGroups = value
       return chart
     },
 

@@ -3,46 +3,79 @@
     <div class="sfs-page-header-and-table">
       <div class="sfs-page-header">
         <div class="sfs-page-header-info">
-          <div class="sfs-title">{{title || titleCase(pluralize(entityType.commonTitle))}}</div>
-          <div v-if="draftBatch != null" class="sfs-draft-info">
-            Draft batch
-            <span v-if="draftBatch.history.creation.timestamp != null">started {{ draftBatchCreatedAtFormatted }}</span>
-          </div>
+          <div class="sfs-title">{{ title || titleCase(pluralize(entityType.commonTitle)) }}</div>
         </div>
         <div class="sfs-page-header-controls">
-          <SelectButton v-if="availableEntityTypes != null" v-model="currentEntityTypeName" :options="availableEntityTypes" class="sfs-detail-editor-view-choice" :optionLabel="pluralizeEntityTypeCommonTitle" optionValue="name" />
-          <FilterView v-if="entityType && filterProperties && !draftBatchId" v-model:filter="filter" :entityType="entityType" :filterProperties="filterProperties" :quickFilters="resolvedQuickFilters" />
-          <SelectButton v-if="allowDetailEditorViewChoice && ((detailEditorViews || []).length > 1)" v-model="userChosenEditorViewName" :options="detailEditorViews" class="sfs-detail-editor-view-choice" optionLabel="title" optionValue="name" />
-          <template v-if="draftBatchId != null">
-            <Button class="p-button-warning p-button-sm" label="Discard Draft" @click="discardDraftBatch" />
-            <Button class="p-button-secondary p-button-sm" label="Keep as Draft" @click="closeDraftBatch" />
-            <Button class="p-button-primary p-button-sm" label="Save Batch" @click="commitDraftBatch" />
-          </template>
-          <Button v-if="canCreate && draftBatchId == null" class="p-button-primary" :label="`Add ${indefiniteArticle(titleCase(entityType.commonTitle))}`" v-tooltip.top="keyboardShortcutText('cmd', 'M')" @click="addItem()" />
-          <Button v-if="canCreate && draftsEnabled && (draftBatchId == null)" class="p-button-primary" label="Start a Draft" @click="startDraftBatch" />
+          <SelectButton
+            v-if="availableEntityTypes != null"
+            v-model="currentEntityTypeName"
+            class="sfs-detail-editor-view-choice"
+            :option-label="pluralizeEntityTypeCommonTitle"
+            option-value="name"
+            :options="availableEntityTypes"
+          />
+          <FilterView
+            v-if="entityType && filterProperties"
+            v-model:filter="filter"
+            :entity-type="entityType"
+            :filter-properties="filterProperties"
+            :quick-filters="resolvedQuickFilters"
+          />
+          <SelectButton
+            v-if="allowDetailEditorViewChoice && (detailEditorViews || []).length > 1"
+            v-model="userChosenEditorViewName"
+            class="sfs-detail-editor-view-choice"
+            option-label="title"
+            option-value="name"
+            :options="detailEditorViews"
+          />
+          <Button
+            v-if="canCreate"
+            v-tooltip.top="keyboardShortcutText('cmd', 'M')"
+            class="p-button-primary"
+            :label="`Add ${indefiniteArticle(titleCase(entityType.commonTitle))}`"
+            @click="addItem()"
+          />
         </div>
       </div>
-      <ItemsTable v-if="entityType != null" ref="itemsTable" class="sfs-table" :entityType="entityType" :sortable="draftBatchId == null" :stateNamespace="stateNamespace" :tableOptions="tableOptions" :viewName="editedState.tableViewName" />
+      <ItemsTable
+        v-if="entityType != null"
+        ref="itemsTable"
+        class="sfs-table"
+        :entity-type="entityType"
+        :sortable="true"
+        :state-namespace="stateNamespace"
+        :table-options="tableOptions"
+        :view-name="editedState.tableViewName"
+      />
     </div>
-    <div v-if="canShowDetailViews && (detailComponent != null) && currentEntityTypeName && (detailItems.length == 1) && detailItems[0]._id" class="sfs-detail-view-pane" :style="detailViewStyle">
-      <component :entityTypeName="currentEntityTypeName" :is="detailComponent" :itemId="detailItems[0]._id" />
+    <div
+      v-if="
+        canShowDetailViews &&
+        detailComponent != null &&
+        currentEntityTypeName &&
+        detailItems.length == 1 &&
+        detailItems[0]._id
+      "
+      class="sfs-detail-view-pane"
+      :style="detailViewStyle"
+    >
+      <component :is="detailComponent" :entity-type-name="currentEntityTypeName" :item-id="detailItems[0]._id" />
     </div>
-    <PropertySheet v-if="canShowDetailViews && (detailComponent == null) && entityType && (detailItems.length > 0)" class="sfs-property-sheet" :autoAdvance="autoAdvanceDetailEditor" :editing="editingDetailItems" :entityType="entityType" :draftBatchId="draftBatchId" :items="detailItems" :stateNamespace="stateNamespace" :viewNames="currentDetailEditorViewNames" />
+    <PropertySheet
+      v-if="canShowDetailViews && detailComponent == null && entityType && detailItems.length > 0"
+      :auto-advance="autoAdvanceDetailEditor"
+      class="sfs-property-sheet"
+      :editing="editingDetailItems"
+      :entity-type="entityType"
+      :items="detailItems"
+      :state-namespace="stateNamespace"
+      :view-names="currentDetailEditorViewNames"
+    />
   </div>
-  <Dialog header="New Draft" v-model:visible="newDraftBatchSizeDialogVisible" :closable="false" closeOnEscape modal @hide="cancelNewDraftBatchSize">
-    How many {{pluralize(entityType.commonTitle)}} would you like to add to this batch?
-    <InputNumber v-model="newDraftBatchSize" mode="decimal" autofocus />
-    (You can always add more.)
-    <template #footer>
-      <Button label="Leave Empty" icon="pi pi-times" class="p-button-text" @click="cancelNewDraftBatchSize" />
-      <Button :label="`Add ${titleCase(pluralize(entityType.commonTitle))}`" icon="pi pi-check" @click="applyNewDraftBatchSize" />
-    </template>
-  </Dialog>
-  <DraftBatchesManager ref="draftBatchesManager" />
 </template>
 
 <script>
-
 import _ from 'lodash'
 import $ from 'jquery'
 import indefinite from 'indefinite'
@@ -53,140 +86,32 @@ import Dialog from 'primevue/dialog'
 import InputNumber from 'primevue/inputnumber'
 import SelectButton from 'primevue/selectbutton'
 import {ref} from 'vue'
-import { mapState, mapActions } from 'vuex'
-import DraftBatchesManager from '@/components/DraftBatchesManager'
+
 import ItemsTable from '@/components/common/ItemsTable'
 import PropertySheet from '@/components/common/PropertySheet'
-// import {validateDraftBatchItem} from '@/services/entity-types'
-import useDraftBatch from '@/composition/draft-batch'
 import useEntityTypes from '@/composition/entity-types'
 import useItems from '@/composition/items'
 import useKeyboardShortcuts from '@/composition/keyboard-shortcuts'
-// import {detailViewsForEntityType, tableViewsForEntityType} from '@/lib/modules'
 import FilterView from '@/components/common/FilterView'
 import {removeEmptyPropertiesAndElements} from '@/lib/objects'
 import {encodeState} from '@/lib/persistent-state'
 
 const isMac = () => navigator.userAgent.indexOf('Mac OS X') != -1
 
-function validateDraftBatchItem() {
-  return true
-}
-
-// TODO Add an option to allow inheriting parent entity types' views
-// TODO Merge views from the API with views from client-side modules. Merge all modules together too.
 function detailViewsForEntityType(entityType) {
-  /*
-  const views = mergeExceptArrays({}, entityType.views.detail || {})
-  for (const moduleName in modules) {
-    const module = modules[moduleName]
-    mergeExceptArrays(views, _.get(module, ['entity-types', entityType.name, 'views', 'detail']) || {})
-  }
-  return views
-  */
   return entityType?.views?.detail || {}
 }
 
-// TODO Add an option to allow inheriting parent entity types' views
-// TODO Merge views from the API with views from client-side modules. Merge all modules together too.
 function tableViewsForEntityType() {
-  /*
-  const views = mergeExceptArrays({}, entityType.views.table || {})
-  for (const moduleName in modules) {
-    const module = modules[moduleName]
-    mergeExceptArrays(views, _.get(module, ['entity-types', entityType.name, 'views', 'table']) || {})
-  }
-  return views
-  */
   return {}
 }
 
 export default {
   name: 'ItemsView',
 
-  setup: (props) => {
-    const currentEntityTypeName = ref(props.entityTypeName || (props.entityTypeNames ?  props.entityTypeNames[0] : null))
-    const draftBatchModule = useDraftBatch()
-
-    const filter = ref(null)
-
-    const fixedFilterQuery = (entityType) => {
-      if (!entityType) {
-        return null
-      }
-      const tableView = _.get(tableViewsForEntityType(entityType), props.tableViewName || 'default', null)
-      return _.get(tableView, 'fixedFilterQuery', null)
-    }
-
-    const referencePathsToExpand = (entityType) => {
-      if (!entityType) {
-        return null
-      }
-      const tableView = _.get(tableViewsForEntityType(entityType), props.tableViewName || 'default', null)
-      return _.get(tableView, 'referencePathsToExpand', [])
-    }
-
-    const filterQuery = (entityType) => {
-      if (!entityType) {
-        return null
-      }
-      const fixedQuery = fixedFilterQuery(entityType)
-      const userQuery = _.isFunction(filter.value) ? filter.value(entityType) : filter.value
-      const queries = [fixedQuery, userQuery].filter((q) => q != null)
-      if (queries.length == 0) {
-        return null
-      }
-      if (queries.length == 1) {
-        return queries[0]
-      }
-      return {and: queries}
-    }
-
-    const itemsStoreOptions = _.merge({
-      /* detail: {
-        allowMultiple: true,
-        autoFromMultipleSelection: true,
-        autoEdit: !!draftBatchModule.draftBatchId.value
-      }, */
-      loading: {
-        firstPageSize: 500
-      },
-      filter: {query: filterQuery},
-      referencePathsToExpand,
-      /* order: [
-        [{path: 'history.creation.timestamp'}, 'desc'],
-        [{path: 'history.creation.orderInBatch'}, 'desc']
-      ] */
-      restCollectionUrl: props.restCollectionUrl,
-    }, props.itemsStoreOptions)
-
-    return {
-      currentEntityTypeName,
-      filter,
-      filterQuery,
-      ...draftBatchModule,
-      ...useEntityTypes(),
-      ...useItems({
-        draftBatchId: draftBatchModule.draftBatchId,
-        itemTypeName: currentEntityTypeName.value || (props.entityTypeNames ?  props.entityTypeNames[0] : null),
-        // itemType: 
-        options: itemsStoreOptions
-        /* options: {
-          restCollectionUrl: props.restCollectionUrl,
-          filter: {query: filterQuery}
-        } */
-      }),
-      ...useKeyboardShortcuts()
-    }
-  },
-
-  components: {Button, Dialog, DraftBatchesManager, FilterView, InputNumber, PropertySheet, ItemsTable, SelectButton},
+  components: {Button, Dialog, FilterView, InputNumber, PropertySheet, ItemsTable, SelectButton},
 
   props: {
-    allowDrafts: {
-      type: Boolean,
-      default: true
-    },
     allowAutoAdvancingDetailEditor: {
       type: Boolean,
       default: true
@@ -256,17 +181,85 @@ export default {
     }
   },
 
-  data: function(props) {
-    let self = this
-    console.log(_.cloneDeep(props.state))
+  setup: (props) => {
+    const currentEntityTypeName = ref(props.entityTypeName || (props.entityTypeNames ? props.entityTypeNames[0] : null))
+
+    const filter = ref(null)
+
+    const fixedFilterQuery = (entityType) => {
+      if (!entityType) {
+        return null
+      }
+      const tableView = _.get(tableViewsForEntityType(entityType), props.tableViewName || 'default', null)
+      return _.get(tableView, 'fixedFilterQuery', null)
+    }
+
+    const referencePathsToExpand = (entityType) => {
+      if (!entityType) {
+        return null
+      }
+      const tableView = _.get(tableViewsForEntityType(entityType), props.tableViewName || 'default', null)
+      return _.get(tableView, 'referencePathsToExpand', [])
+    }
+
+    const filterQuery = (entityType) => {
+      if (!entityType) {
+        return null
+      }
+      const fixedQuery = fixedFilterQuery(entityType)
+      const userQuery = _.isFunction(filter.value) ? filter.value(entityType) : filter.value
+      const queries = [fixedQuery, userQuery].filter((q) => q != null)
+      if (queries.length == 0) {
+        return null
+      }
+      if (queries.length == 1) {
+        return queries[0]
+      }
+      return {and: queries}
+    }
+
+    const itemsStoreOptions = _.merge(
+      {
+        loading: {
+          firstPageSize: 500
+        },
+        filter: {query: filterQuery},
+        referencePathsToExpand,
+        /* order: [
+        [{path: 'history.creation.timestamp'}, 'desc'],
+        [{path: 'history.creation.orderInBatch'}, 'desc']
+      ] */
+        restCollectionUrl: props.restCollectionUrl
+      },
+      props.itemsStoreOptions
+    )
+
     return {
-      draftBatchCreatedAtFormatted: null,
-      headingRefreshTimer: null,
-      newDraftBatchSize: 20,
-      newDraftBatchSizeDialogVisible: false,
+      currentEntityTypeName,
+      filter,
+      filterQuery,
+      ...useEntityTypes(),
+      ...useItems({
+        itemTypeName: currentEntityTypeName.value || (props.entityTypeNames ? props.entityTypeNames[0] : null),
+        // itemType:
+        options: itemsStoreOptions
+        /* options: {
+          restCollectionUrl: props.restCollectionUrl,
+          filter: {query: filterQuery}
+        } */
+      }),
+      ...useKeyboardShortcuts()
+    }
+  },
+
+  data: function (props) {
+    // eslint-disable-next-line @typescript-eslint/no-this-alias
+    const self = this
+    return {
       editedState: _.cloneDeep(props.state),
       tableOptions: {
-        buttons: [ // TODO Make configurable
+        buttons: [
+          // TODO Make configurable
           'copy',
           'csv',
           'excel',
@@ -274,11 +267,18 @@ export default {
         ]
         //order: [[1, 'asc']] // TODO Configure in view
       },
-      userChosenEditorViewName: function() {
+      userChosenEditorViewName: function () {
         let viewName = null
         if (self.detailEditorViews.length > 0) {
-          const defaultViewNames = self.editingDetailItems ? self.defaultDetailEditorViewNames : self.displayOnlyDetailViewNames
-          viewName = _.first(_.intersection(defaultViewNames, self.detailEditorViews.map(viewOption => viewOption.name)))
+          const defaultViewNames = self.editingDetailItems
+            ? self.defaultDetailEditorViewNames
+            : self.displayOnlyDetailViewNames
+          viewName = _.first(
+            _.intersection(
+              defaultViewNames,
+              self.detailEditorViews.map((viewOption) => viewOption.name)
+            )
+          )
           if (viewName == null) {
             viewName = self.detailEditorViews[0].name
           }
@@ -289,19 +289,21 @@ export default {
   },
 
   computed: {
-    tableView: function() {
-      return this.entityType ? _.get(tableViewsForEntityType(this.entityType), this.editedState?.tableViewName || 'default', null) : null
+    tableView: function () {
+      return this.entityType
+        ? _.get(tableViewsForEntityType(this.entityType), this.editedState?.tableViewName || 'default', null)
+        : null
     },
-    filterProperties: function() {
+    filterProperties: function () {
       return this.tableView ? this.tableView.filterProperties : null
     },
-    resolvedQuickFilters: function() {
+    resolvedQuickFilters: function () {
       return this.quickFilters || (this.tableView ? this.tableView.quickFilters : null) || []
     },
-    detailViews: function() {
+    detailViews: function () {
       return !this.canShowDetailViews ? {} : this.entityType ? detailViewsForEntityType(this.entityType) : {}
     },
-    detailView: function() {
+    detailView: function () {
       if (!this.canShowDetailViews) {
         return null
       }
@@ -312,57 +314,51 @@ export default {
       }
       return null
     },
-    detailViewStyle: function() {
-      return this.detailView ?
-          {
-            ...this.detailView.preferredWidth ? {
-              flex: `0 0.1 ${this.detailView.preferredWidth}px`
-            } : null
+    detailViewStyle: function () {
+      return this.detailView
+        ? {
+            ...(this.detailView.preferredWidth
+              ? {
+                  flex: `0 0.1 ${this.detailView.preferredWidth}px`
+                }
+              : null)
           }
-          : null
+        : null
     },
-    detailComponent: function() {
+    detailComponent: function () {
       return this.detailView ? this.detailView.component : null
     },
-    availableEntityTypes: function() {
-      if (this.entityTypeNames && (this.entityTypeNames.length > 1) && this.entityTypes) {
+    availableEntityTypes: function () {
+      if (this.entityTypeNames && this.entityTypeNames.length > 1 && this.entityTypes) {
         return this.entityTypeNames.map((name) => this.getEntityType(name))
       }
       return null
     },
-    allowDetailEditorViewChoice: function() {
-      return this.canShowDetailViews && (this.detailEditorViews.length > 0) && (this.draftBatch != null)
+    allowDetailEditorViewChoice: function () {
+      return false
     },
-    autoAdvanceDetailEditor: function() {
-      return this.allowAutoAdvancingDetailEditor // && (this.draftBatch != null)
+    autoAdvanceDetailEditor: function () {
+      return this.allowAutoAdvancingDetailEditor
     },
-    currentDetailEditorViewNames: function() {
-      return this.allowDetailEditorViewChoice ? [this.userChosenEditorViewName] : (this.editingDetailItems ? this.defaultDetailEditorViewNames : this.displayOnlyDetailViewNames)
-    },
-    draftsEnabled: function() {
-      return this.allowDrafts && this.entityType && this.entityType.allowsDrafts
-    },
-    ...mapState('myDraftBatches', {
-      draftBatches: (state) => state.items
-    })
+    currentDetailEditorViewNames: function () {
+      return this.allowDetailEditorViewChoice
+        ? [this.userChosenEditorViewName]
+        : this.editingDetailItems
+          ? this.defaultDetailEditorViewNames
+          : this.displayOnlyDetailViewNames
+    }
   },
 
   watch: {
     currentEntityTypeName: {
-      handler: function(newValue, oldValue) {
+      handler: function (newValue, oldValue) {
         if (newValue != oldValue) {
           this.resetItems({entityTypeName: newValue})
         }
       }
     },
-    draftBatch: {
-      handler: function() {
-        this.refreshHeading()
-      },
-      immediate: true
-    },
     entityType: {
-      handler: function() {
+      handler: function () {
         console.log(this.entityType)
         if (this.ensureItemsStore()) {
           this.registerTableAsListNavigator()
@@ -373,22 +369,22 @@ export default {
     },
     filter: {
       immediate: true,
-      handler: function() {
+      handler: function () {
         const filterQuery = this.filterQuery(this.entityType)
         this.setQuery(filterQuery)
       }
     },
     state: {
-      handler: function() {
+      handler: function () {
         if (!_.isEqual(this.state, this.editedState)) {
           this.editedState = this.state
           console.log(this.editedState)
         }
       },
-      immediate: true,
+      immediate: true
     },
     editedState: {
-      handler: function() {
+      handler: function () {
         if (!_.isEqual(this.state, this.editedState)) {
           console.log('setting state ', this.editedState)
           const query = removeEmptyPropertiesAndElements({
@@ -402,7 +398,7 @@ export default {
       deep: true
     },
     stateNamespace: {
-      handler: function() {
+      handler: function () {
         if (this.ensureItemsStore()) {
           this.registerTableAsListNavigator()
           this.performInitialLoad()
@@ -411,29 +407,26 @@ export default {
       immediate: true
     },
     tableView: {
-      handler: function(newValue, oldValue) {
+      handler: function (newValue, oldValue) {
         if (newValue != oldValue) {
-          const buttons = [
-            'copy',
-            'csv',
-            'excel',
-            'print'
-          ]
+          const buttons = ['copy', 'csv', 'excel', 'print']
           if (!newValue) {
             this.filter = null
           } else {
             if (newValue.columnGroups) {
-              buttons.push(...[
-                ...(newValue?.columnGroups || []).map((columnGroup) => ({
-                  extend: 'columnToggle',
-                  text: columnGroup.title || 'Columns',
-                  columns: (columnGroup.columns || [])
+              buttons.push(
+                ...[
+                  ...(newValue?.columnGroups || []).map((columnGroup) => ({
+                    extend: 'columnToggle',
+                    text: columnGroup.title || 'Columns',
+                    columns: (columnGroup.columns || [])
                       .filter((column) => column.name)
                       .map((column) => `${column.name}:name`)
-                }))
-              ])
+                  }))
+                ]
+              )
             }
-            this.filter = this.draftBatchId ? null : this.defaultFilter === undefined ? newValue.defaultFilterQuery : this.defaultFilter
+            this.filter = this.defaultFilter === undefined ? newValue.defaultFilterQuery : this.defaultFilter
           }
           this.tableOptions = _.assign({}, this.tableOptions, {buttons})
         }
@@ -441,13 +434,13 @@ export default {
       immediate: true
     },
     tableViewName: {
-      handler: function() {
+      handler: function () {
         this.updateState()
       },
       immediate: true
     },
     itemsStoreReady: {
-      handler: function(newValue, oldValue) {
+      handler: function (newValue, oldValue) {
         if (newValue && !oldValue) {
           this.registerTableAsListNavigator()
           this.performInitialLoad()
@@ -456,133 +449,51 @@ export default {
     }
   },
 
-  created: function() {
-    const self = this
-    self.headingRefreshTimer = setInterval(this.refreshHeading, 60000)
-    self.onDidPressKey = function() {
-      let command = isMac() ? event.metaKey : event.ctrlKey
+  created: function () {
+    this.onDidPressKey = function () {
+      const command = isMac() ? event.metaKey : event.ctrlKey
       switch (event.key) {
-      case 'm':
-        if (command) {
-          event.preventDefault()
-          event.stopPropagation()
-          self.addItem()
-        }
-        break
-      default:
-        break
+        case 'm':
+          if (command) {
+            event.preventDefault()
+            event.stopPropagation()
+            self.addItem()
+          }
+          break
+        default:
+          break
       }
     }
     $(document).on('keydown', self.onDidPressKey)
     this.performInitialLoad()
   },
 
-  beforeUnmount: function() {
+  beforeUnmount: function () {
     $(document).off('keydown', this.onDidPressKey)
-    clearInterval(this.headingRefreshTimer)
 
     // TODO Does this actually get called before stateNamespace has changed?
     //this.deregisterListNavigator({name: 'Items', listNavigator: this.$refs.itemsTable})
   },
 
   methods: {
-    updateState: function() {
+    updateState: function () {
       this.editedState = {
         tableViewName: this.state.tableViewName || this.tableViewName
       }
     },
 
-    registerTableAsListNavigator: function() {
+    registerTableAsListNavigator: function () {
       if (this.$refs.itemsTable) {
         this.registerListNavigator({name: 'Items', listNavigator: this.$refs.itemsTable})
       }
     },
 
-    refreshHeading: function() {
-      const self = this
-      if (self.draftBatch && _.get(self.draftBatch, 'history.creation.timestamp')) {
-        self.draftBatchCreatedAtFormatted = self.formatRelativeDateTime(self.draftBatch.history.creation.timestamp)
-      } else {
-        self.draftBatchCreatedAtFormatted = null
-      }
-    },
-
-    applyNewDraftBatchSize: function() {
-      this.newDraftBatchSizeDialogVisible = false
-      if (this.newDraftBatchSize > 0) {
-        this.createDraftBatchItems(this.newDraftBatchSize)
-      }
-    },
-
-    cancelNewDraftBatchSize: function() {
-      this.newDraftBatchSizeDialogVisible = false
-    },
-
-    performInitialLoad: async function() {
-      let self = this
-      let promises = [self.loadItems()]
-      promises.push(self.ensureEntityTypesLoaded())
-      if (this.draftBatchId) {
-        promises.push(self.ensureDraftBatchesLoaded())
-      }
+    performInitialLoad: async function () {
+      const promises = [this.loadItems()]
       await Promise.all(promises)
-      if (self.draftBatchId && (self.items.length == 0)) {
-        self.newDraftBatchSizeDialogVisible = true
-      }
     },
 
-    closeDraftBatch: function() {
-      if (this.entityType && (this.draftBatchId != null)) {
-        this.$router.push({ path: `/${pluralize(this.entityType.name)}` })
-      }
-    },
-
-    commitDraftBatch: async function() {
-      if (this.entityType && this.draftBatchId) {
-        if (this.validateDraftBatch()) {
-          await this.$refs.draftBatchesManager.commitDraftBatch(this.draftBatchId)
-          this.$router.replace({path: `/${pluralize(this.entityType.name)}`})
-        } else {
-          this.setBatchSaveAttempted(true)
-        }
-      }
-    },
-
-    validateDraftBatch: function() {
-      let invalidItemIds = []
-      for (let item of this.items) {
-        if (!validateDraftBatchItem(this.entityType, item, this.items)) {
-          invalidItemIds.push(item._id)
-        }
-      }
-      this.setInvalidItemIds(invalidItemIds)
-      return invalidItemIds.length == 0
-    },
-
-    createDraftBatchItems: async function(numItems) {
-      let newItemIds = []
-      for (let i = 0; i < numItems; i++) {
-        const itemId = (await this.saveItem({item: {}}))._id
-        newItemIds.push(itemId)
-      }
-      this.selectItems({itemIds: newItemIds})
-    },
-
-    discardDraftBatch: async function() {
-      if (this.draftBatchId != null) {
-        await this.$refs.draftBatchesManager.deleteDraftBatch(this.draftBatchId)
-        this.$router.replace({path: `/${pluralize(this.entityType.name)}`})
-      }
-    },
-
-    startDraftBatch: async function() {
-      let draftBatchId = await this.$refs.draftBatchesManager.createDraftBatch({draftType: this.entityType.name})
-      if (this.entityType && draftBatchId) {
-        this.$router.push({path: `/draft-batches/${draftBatchId}/${pluralize(this.entityType.name)}`})
-      }
-    },
-
-    formatRelativeDateTime: function(dateTime) {
+    formatRelativeDateTime: function (dateTime) {
       return moment(dateTime).fromNow()
     },
 
@@ -590,30 +501,26 @@ export default {
     // String formatting functions for use in templates
     ////////////////////////////////////////////////////////////////////////////////////////////////////
 
-    pluralizeEntityTypeCommonTitle: function(entityType) {
+    pluralizeEntityTypeCommonTitle: function (entityType) {
       return _.startCase(pluralize(entityType.commonTitle))
     },
 
-    indefiniteArticle: function(...args) {
+    indefiniteArticle: function (...args) {
       return indefinite(...args)
     },
 
-    pluralize: function(...args) {
+    pluralize: function (...args) {
       return pluralize(...args)
     },
 
-    titleCase: function(s) {
+    titleCase: function (s) {
       return _.startCase(_.lowerCase(s))
-    },
-
-    ...mapActions('myDraftBatches', { ensureDraftBatchesLoaded: 'ensureItemsLoaded' }),
+    }
   }
 }
-
 </script>
 
 <style scoped>
-
 /* Table and property sheet */
 
 .sfs-table-and-property-sheet {
@@ -652,9 +559,6 @@ export default {
 
 .sfs-page-header .sfs-title:first-child:last-child {
   line-height: 37px;
-}
-
-.sfs-page-header .sfs-draft-info {
 }
 
 .sfs-page-header-controls {
@@ -705,5 +609,4 @@ export default {
   font-size: 0.875rem;
   padding: 0.499625rem 0.65625rem;
 }
-
 </style>

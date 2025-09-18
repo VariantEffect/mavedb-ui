@@ -1,6 +1,6 @@
 <template>
   <EmailPrompt />
-  <div class="mave-collection-creator">
+  <div class="mavedb-collection-creator">
     <div class="flex flex-column gap-2">
       <label :for="scopedId('name-input')">Collection name</label>
       <InputText :id="scopedId('name-input')" v-model="collectionName" />
@@ -13,27 +13,32 @@
 
     <div class="flex flex-column gap-2">
       <label :for="scopedId('public-input')">Public</label>
-      <InputSwitch v-model="collectionPublic" :aria-labelledby="scopedId('public-help')" :input-id="scopedId('public-input')" />
-      <small :id="scopedId('public-help')">Public collections are visible to others. Private collections are only visible to you and anyone to whom you grant permissions.</small>
+      <InputSwitch
+        v-model="collectionPublic"
+        :aria-labelledby="scopedId('public-help')"
+        :input-id="scopedId('public-input')"
+      />
+      <small :id="scopedId('public-help')"
+        >Public collections are visible to others. Private collections are only visible to you and anyone to whom you
+        grant permissions.</small
+      >
     </div>
 
     <div class="mave-contributors-adder">
-      <div class="mave-contributors-adder-title">
-        User permissions
-      </div>
+      <div class="mave-contributors-adder-title">User permissions</div>
       <InputText
         ref="userSearchInput"
         v-model="orcidIdsToAddStr"
-        class="mave-collection-add-users-search-input"
+        class="mavedb-collection-add-users-search-input"
         placeholder="Type or paste 1 or more ORCID IDs here."
         @keyup.enter="addUsers"
         @keyup.escape="clearUserSearch"
       />
-      <div class="mave-collection-user-role-add-controls">
+      <div class="mavedb-collection-user-role-add-controls">
         <SelectButton
           v-model="roleToAdd"
           :allow-empty="false"
-          class="mave-collection-role-to-add"
+          class="mavedb-collection-role-to-add"
           option-label="title"
           option-value="value"
           :options="roleOptions"
@@ -43,7 +48,11 @@
       <DataTable
         v-if="pendingUserRoles.length > 0"
         data-key="orcidId"
-        :multi-sort-meta="[{field: 'user.lastName', order: 1}, {field: 'user.firstName', order: 1}, {field: 'user.orcidId', order: 1}]"
+        :multi-sort-meta="[
+          {field: 'user.lastName', order: 1},
+          {field: 'user.firstName', order: 1},
+          {field: 'user.orcidId', order: 1}
+        ]"
         sort-mode="multiple"
         :value="pendingUserRoles"
       >
@@ -52,11 +61,11 @@
         <Column field="role" header="Role">
           <template #body="{data}">
             <Dropdown
-              class="mave-collection-role-dropdown"
+              class="mavedb-collection-role-dropdown"
+              :model-value="data.role"
               option-label="title"
               option-value="value"
               :options="roleOptions"
-              :model-value="data.role"
               @change="changeRole(data.user.orcidId, $event.value)"
             />
           </template>
@@ -69,11 +78,10 @@
       </DataTable>
     </div>
 
-    <div class="mave-collection-editor-action-buttons">
+    <div class="mavedb-collection-editor-action-buttons">
       <Button label="Cancel" severity="secondary" @click="cancel" />
       <Button label="Save" @click="saveCollection" />
     </div>
-
   </div>
 </template>
 
@@ -118,7 +126,7 @@ export default {
   }),
 
   methods: {
-    addUsers: async function() {
+    addUsers: async function () {
       const orcidIdsToAdd = _.without(this.orcidIdsToAddStr.split(/[ ,]+/g), '')
 
       const invalidOrcidIds = []
@@ -150,32 +158,32 @@ export default {
       this.orcidIdsToAddStr = invalidOrcidIds.join(' ')
     },
 
-    cancel: function() {
+    cancel: function () {
       this.$emit('canceled')
     },
 
-    changeRole: function(orcidId, newRole) {
+    changeRole: function (orcidId, newRole) {
       const userRole = this.pendingUserRoles.find((ur) => ur.user.orcidId == orcidId)
       if (userRole) {
         userRole.role = newRole
       }
     },
 
-    clearUserSearch: function() {
+    clearUserSearch: function () {
       this.$refs.userSearchinput.$refs.input.value = ''
     },
 
-    lookupUser: async function(orcidId) {
+    lookupUser: async function (orcidId) {
       let user = null
       try {
         user = (await axios.get(`${config.apiBaseUrl}/users/${orcidId}`)).data
-      } catch (err) {
+      } catch {
         // Assume that the error was 404 Not Found.
       }
       return user
     },
 
-    removeUserRole: function(orcidId) {
+    removeUserRole: function (orcidId) {
       // If the user as been added in this session, remove the pending user role.
       const pendingUserRoleIndex = this.pendingUserRoles.findIndex((ur) => ur.user.orcidId == orcidId)
       if (pendingUserRoleIndex >= 0) {
@@ -183,7 +191,7 @@ export default {
       }
     },
 
-    saveCollection: async function() {
+    saveCollection: async function () {
       const collectionName = this.collectionName?.trim()
       let collectionDescription = this.collectionDescription?.trim()
       collectionDescription = _.isEmpty(collectionDescription) ? null : collectionDescription
@@ -222,46 +230,46 @@ export default {
 </script>
 
 <style scoped>
-.mave-collection-add-users-search-input {
+.mavedb-collection-add-users-search-input {
   width: 100%;
 }
 
-.mave-collection-add-users-search-input:deep(.p-inputtext) {
+.mavedb-collection-add-users-search-input:deep(.p-inputtext) {
   width: 100%;
 }
 
-.mave-collection-role-to-add {
+.mavedb-collection-role-to-add {
   display: inline;
 }
 
-.mave-collection-user-role-add-controls {
+.mavedb-collection-user-role-add-controls {
   margin: 1em 0;
 }
 
-.mave-collection-user-role-add-controls .p-selectbutton {
+.mavedb-collection-user-role-add-controls .p-selectbutton {
   margin-right: 1em;
 }
 
-.mave-collection-user-role-add-controls:deep(*) {
+.mavedb-collection-user-role-add-controls:deep(*) {
   vertical-align: middle;
 }
 
-.mave-collection-role-dropdown:deep(.p-inputtext) {
+.mavedb-collection-role-dropdown:deep(.p-inputtext) {
   padding: 0 0.3em;
 }
 
-.mave-collection-creator > * {
+.mavedb-collection-creator > * {
   margin-bottom: 1em;
 }
 
-.mave-collection-editor-action-buttons {
+.mavedb-collection-editor-action-buttons {
   display: flex;
   justify-content: flex-end;
   gap: 2px;
   margin: 5px 0 0 0;
 }
 
-.mave-collection-editor-action-buttons Button {
+.mavedb-collection-editor-action-buttons Button {
   margin: 0 0 0 3px;
 }
 </style>

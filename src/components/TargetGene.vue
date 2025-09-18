@@ -30,7 +30,10 @@
     <template v-if="targetGene.targetSequence.sequence.length >= 500">
       <template v-if="showingFullSequence">{{ targetGene.targetSequence.sequence }}</template>
       <template v-else>{{ targetGene.targetSequence.sequence.substring(0, 500) + '....' }} </template>
-      <Button v-if="showingFullSequence" class="p-button-text p-button-sm p-button-info" @click="showFullSequence(false)"
+      <Button
+        v-if="showingFullSequence"
+        class="p-button-text p-button-sm p-button-info"
+        @click="showFullSequence(false)"
         >Show less</Button
       >
       <Button v-else class="p-button-text p-button-sm p-button-info" @click="showFullSequence(true)"
@@ -62,7 +65,7 @@
 </template>
 
 <script lang="ts" setup>
-import Button from 'primevue/Button'
+import Button from 'primevue/button'
 import {PropType, ref} from 'vue'
 
 import {textForTargetGeneCategory} from '@/lib/target-genes'
@@ -80,5 +83,4 @@ const showingFullSequence = ref(false)
 function showFullSequence(visible: boolean) {
   showingFullSequence.value = visible
 }
-
 </script>

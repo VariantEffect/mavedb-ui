@@ -3,11 +3,7 @@
     <EmailPrompt />
   </template>
   <div>
-    <Button
-      class="mave-collection-permissions-editor-button"
-      label="Edit"
-      @click="dialogVisible = true"
-    />
+    <Button class="mave-collection-permissions-editor-button" label="Edit" @click="dialogVisible = true" />
     <Dialog
       v-model:visible="dialogVisible"
       :close-on-escape="false"
@@ -37,36 +33,47 @@
       </div>
       <DataTable
         data-key="orcidId"
-        :multi-sort-meta="[{field: 'user.lastName', order: 1}, {field: 'user.firstName', order: 1}, {field: 'user.orcidId', order: 1}]"
-        sort-mode="multiple"
+        :multi-sort-meta="[
+          {field: 'user.lastName', order: 1},
+          {field: 'user.firstName', order: 1},
+          {field: 'user.orcidId', order: 1}
+        ]"
         :row-style="rowStyle"
+        sort-mode="multiple"
         :value="userRoles"
       >
         <Column field="user.orcidId" header="ORCID ID" />
-        <Column
-          :field="(userRole) => `${userRole.user.firstName} ${userRole.user.lastName}`"
-          header="Name"
-        />
+        <Column :field="(userRole) => `${userRole.user.firstName} ${userRole.user.lastName}`" header="Name" />
         <Column field="role" header="Role">
           <template #body="{data}">
-            <span v-if="orcidIdsToRemove.includes(data.user.orcidId)">{{data.role }} &nbsp;&rightarrow; None</span>
+            <span v-if="orcidIdsToRemove.includes(data.user.orcidId)">{{ data.role }} &nbsp;&rightarrow; None</span>
             <span v-if="data.oldRole">{{ data.oldRole }} &rightarrow;&nbsp;</span>
             <span v-if="data.user.orcidId == userOrcidId">{{ data.role }}</span>
             <Dropdown
               v-if="!orcidIdsToRemove.includes(data.user.orcidId) && data.user.orcidId != userOrcidId"
               class="mave-collection-role-dropdown"
+              :model-value="data.role"
               option-label="title"
               option-value="value"
               :options="roleOptions"
-              :model-value="data.role"
               @change="changeRole(data.user.orcidId, $event.value)"
             />
           </template>
         </Column>
         <Column>
           <template #body="{data}">
-            <Button v-if="data.user.orcidId != userOrcidId && !orcidIdsToRemove.includes(data.user.orcidId)" label="Remove" size="small" @click="removeUserRole(data.user.orcidId)" />
-            <Button v-if="orcidIdsToRemove.includes(data.user.orcidId)" label="Restore" size="small" @click="restoreUserRole(data.user.orcidId)" />
+            <Button
+              v-if="data.user.orcidId != userOrcidId && !orcidIdsToRemove.includes(data.user.orcidId)"
+              label="Remove"
+              size="small"
+              @click="removeUserRole(data.user.orcidId)"
+            />
+            <Button
+              v-if="orcidIdsToRemove.includes(data.user.orcidId)"
+              label="Restore"
+              size="small"
+              @click="restoreUserRole(data.user.orcidId)"
+            />
           </template>
         </Column>
       </DataTable>
@@ -97,21 +104,23 @@ import EmailPrompt from '@/components/common/EmailPrompt.vue'
 
 export default {
   name: 'CollectionPermissionsEditor',
+
   components: {Button, Column, DataTable, Dialog, Dropdown, EmailPrompt, InputText, SelectButton},
-  emits: ['saved'],
 
   props: {
     collectionUrn: {
       type: String,
       required: true
-    },
+    }
   },
+
+  emits: ['saved'],
 
   setup: () => {
     const {userOrcidId} = useAuth()
     return {
       userOrcidId,
-      ...useItem({itemTypeName: 'collection'}),
+      ...useItem({itemTypeName: 'collection'})
     }
   },
 
@@ -135,13 +144,15 @@ export default {
   }),
 
   computed: {
-    dirty: function() {
-      return this.pendingUserRoles.length > 0
-          || this.orcidIdsToRemove.length > 0
-          || this.existingUserRoles.some((ur) => ur.oldRole)
+    dirty: function () {
+      return (
+        this.pendingUserRoles.length > 0 ||
+        this.orcidIdsToRemove.length > 0 ||
+        this.existingUserRoles.some((ur) => ur.oldRole)
+      )
     },
 
-    userRoles: function() {
+    userRoles: function () {
       return [
         ...this.pendingUserRoles.map((ur) => ({...ur, state: 'pending'})),
         ...this.existingUserRoles.map((ur) => ({...ur, state: 'saved'}))
@@ -151,7 +162,7 @@ export default {
 
   watch: {
     collectionUrn: {
-      handler: function(newValue, oldValue) {
+      handler: function (newValue, oldValue) {
         if (newValue != oldValue) {
           this.setItemId(newValue)
         }
@@ -160,12 +171,12 @@ export default {
     },
 
     item: {
-      handler: function(newValue, oldValue) {
+      handler: function (newValue, oldValue) {
         if (!_.isEqual(newValue, oldValue)) {
           this.existingUserRoles = [
-            ...newValue?.admins?.map((user) => ({user, role: 'admin'})) || [],
-            ...newValue?.editors?.map((user) => ({user, role: 'editor'})) || [],
-            ...newValue?.viewers?.map((user) => ({user, role: 'viewer'})) || []
+            ...(newValue?.admins?.map((user) => ({user, role: 'admin'})) || []),
+            ...(newValue?.editors?.map((user) => ({user, role: 'editor'})) || []),
+            ...(newValue?.viewers?.map((user) => ({user, role: 'viewer'})) || [])
           ]
         }
       }
@@ -173,8 +184,8 @@ export default {
   },
 
   methods: {
-    addUsers: async function() {
-      const orcidIdsToAdd = _.without(this.orcidIdsToAddStr.split(/[ ,]+/g), )
+    addUsers: async function () {
+      const orcidIdsToAdd = _.without(this.orcidIdsToAddStr.split(/[ ,]+/g))
 
       const invalidOrcidIds = []
       for (const orcidId of orcidIdsToAdd) {
@@ -223,7 +234,7 @@ export default {
       this.orcidIdsToAddStr = invalidOrcidIds.join(' ')
     },
 
-    changeRole: function(orcidId, newRole) {
+    changeRole: function (orcidId, newRole) {
       const userRole = this.userRoles.find((ur) => ur.user.orcidId == orcidId)
       if (userRole) {
         if (userRole.state == 'saved') {
@@ -238,7 +249,9 @@ export default {
               userRole.role = newRole
             }
           }
-          const existingUserRoleIndex = this.existingUserRoles.findIndex((ur) => ur.user.orcidId == userRole.user.orcidId)
+          const existingUserRoleIndex = this.existingUserRoles.findIndex(
+            (ur) => ur.user.orcidId == userRole.user.orcidId
+          )
           this.existingUserRoles.splice(existingUserRoleIndex, 1, userRole)
         } else if (userRole.state == 'pending') {
           userRole.role = newRole
@@ -248,23 +261,23 @@ export default {
       }
     },
 
-    clearUserSearch: function() {
+    clearUserSearch: function () {
       this.$refs.userSearchinput.$refs.input.value = ''
     },
 
-    lookupUser: async function(orcidId) {
+    lookupUser: async function (orcidId) {
       // Look up MaveDB user by ORCID ID.
       let user = null
       try {
         user = (await axios.get(`${config.apiBaseUrl}/users/${orcidId}`)).data
-      } catch (err) {
+      } catch {
         // Assume that the error was 404 Not Found.
       }
 
       return user
     },
 
-    removeUserRole: function(orcidId) {
+    removeUserRole: function (orcidId) {
       const userRole = this.userRoles.find((ur) => ur.user.orcidId == orcidId)
       if (userRole) {
         if (userRole.state == 'saved') {
@@ -274,7 +287,9 @@ export default {
             userRole.role = userRole.oldRole
             userRole.oldRole = undefined
           }
-          const existingUserRoleIndex = this.existingUserRoles.findIndex((ur) => ur.user.orcidId == userRole.user.orcidId)
+          const existingUserRoleIndex = this.existingUserRoles.findIndex(
+            (ur) => ur.user.orcidId == userRole.user.orcidId
+          )
           this.existingUserRoles.splice(existingUserRoleIndex, 1, userRole)
         } else if (userRole.state == 'pending') {
           // If the user as been added in this session, remove the pending user role.
@@ -286,11 +301,11 @@ export default {
       }
     },
 
-    restoreUserRole: function(orcidId) {
+    restoreUserRole: function (orcidId) {
       this.orcidIdsToRemove = _.without(this.orcidIdsToRemove, orcidId)
     },
 
-    rowStyle: function(userRole) {
+    rowStyle: function (userRole) {
       if (userRole.state == 'pending') {
         return {backgroundColor: '#d1ffbd'} // Light green
       } else if (this.orcidIdsToRemove.includes(userRole.user.orcidId)) {
@@ -300,7 +315,7 @@ export default {
       }
     },
 
-    saveChanges: async function() {
+    saveChanges: async function () {
       this.errors = []
 
       const failedRemovalUserRoles = []
@@ -320,10 +335,9 @@ export default {
 
         for (const userRole of userRoles) {
           try {
-            await axios.post(
-              `${config.apiBaseUrl}/collections/${this.collectionUrn}/${role}s`,
-              {orcid_id: userRole.user.orcidId}
-            )
+            await axios.post(`${config.apiBaseUrl}/collections/${this.collectionUrn}/${role}s`, {
+              orcid_id: userRole.user.orcidId
+            })
           } catch (error) {
             console.log(error)
             failedAdditionUserRoles.push(userRole)
@@ -337,11 +351,12 @@ export default {
 
       for (const userRole of userRoles) {
         try {
-          await axios.delete(`${config.apiBaseUrl}/collections/${this.collectionUrn}/${userRole.oldRole}s/${userRole.user.orcidId}`)
-          await axios.post(
-            `${config.apiBaseUrl}/collections/${this.collectionUrn}/${userRole.role}s`,
-            {orcid_id: userRole.user.orcidId}
+          await axios.delete(
+            `${config.apiBaseUrl}/collections/${this.collectionUrn}/${userRole.oldRole}s/${userRole.user.orcidId}`
           )
+          await axios.post(`${config.apiBaseUrl}/collections/${this.collectionUrn}/${userRole.role}s`, {
+            orcid_id: userRole.user.orcidId
+          })
         } catch (error) {
           console.log(error)
           failedRoleChangeUserRoles.push(userRole)

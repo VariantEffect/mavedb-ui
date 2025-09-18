@@ -56,7 +56,9 @@
             />
           </span>
           <span v-if="config.CLINICAL_FEATURES_ENABLED" class="mavedb-clinical-mode-control-container">
-            <span :class="clinicalMode ? 'mavedb-clinical-mode-option-off' : 'mavedb-clinical-mode-option-on'">Raw data</span>
+            <span :class="clinicalMode ? 'mavedb-clinical-mode-option-off' : 'mavedb-clinical-mode-option-on'"
+              >Raw data</span
+            >
             <InputSwitch
               v-model="clinicalMode"
               :aria-label="`Click to change to ${clinicalMode ? 'raw data' : 'clinical view'}.`"
@@ -87,8 +89,8 @@
             :variants="heatmapVariants"
             @export-chart="setHeatmapExport"
             @heatmap-visible="heatmapVisibilityUpdated"
-            @variant-selected="childComponentSelectedVariant"
             @on-did-click-show-protein-structure="showProteinStructureModal"
+            @variant-selected="childComponentSelectedVariant"
           />
         </div>
       </div>
@@ -467,7 +469,7 @@ export default {
       }
     },
     selectedVariant: {
-      handler: function (newValue) {
+      handler: function () {
         this.$router.push({
           query: {
             ...(this.selectedVariant && this.selectedVariant.accession ? {variant: this.selectedVariant.accession} : {})
@@ -494,7 +496,7 @@ export default {
       const actions = ['delete', 'publish', 'update']
       try {
         for (const action of actions) {
-          let response = await axios.get(
+          const response = await axios.get(
             `${config.apiBaseUrl}/permissions/user-is-permitted/score-set/${this.itemId}/${action}`
           )
           this.userIsAuthorized[action] = response.data

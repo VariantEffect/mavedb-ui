@@ -1,6 +1,6 @@
 <template>
   <div>
-    <div class="mavedb-score-ranges-title">{{ scoreRangesName ? `${scoreRangesName} ranges` : 'Score ranges' }}</div>
+    <div class="mavedb-score-ranges-title">{{ scoreRangesName ?? 'Score ranges' }}</div>
     <div
       v-if="scoreRanges.baselineScore !== null && scoreRanges.baselineScore !== undefined"
       class="mavedb-score-ranges-baseline-score"

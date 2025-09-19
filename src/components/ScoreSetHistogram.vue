@@ -389,8 +389,12 @@ export default defineComponent({
     activeRangeOptions: function () {
       if (!this.activeRanges) return []
       return Object.keys(this.activeRanges).map((key) => {
+        const label = {
+          investigatorProvided: 'Investigator-provided functional classes',
+          pillarProject: 'Research Use Only: Zeiberg calibration'
+        }[key] || `${this.titleCase(key)} ranges`
         return {
-          label: this.titleCase(key),
+          label,
           value: key
         }
       })

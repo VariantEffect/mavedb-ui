@@ -149,7 +149,7 @@ type HeatmapLayout = 'normal' | 'compact'
 export default defineComponent({
   name: 'ScoreSetHeatmap',
   components: {SelectButton, Button},
-  emits: ['variantSelected', 'variantColumnRangesSelected', 'variantRowSelected', 'variantRowsSelected', 'heatmapVisible', 'exportChart', 'onDidClickShowProteinStructure'],
+  emits: ['variantSelected', 'variantColumnRangesSelected', 'variantRowSelected', 'variantRowGroupSelected', 'heatmapVisible', 'exportChart', 'onDidClickShowProteinStructure'],
 
   props: {
     coordinates: {
@@ -862,8 +862,8 @@ export default defineComponent({
     variantRowSelected: function(data: HeatmapDatum[]) {
       this.$emit('variantRowSelected', data)
     },
-    variantRowsSelected: function(data: HeatmapDatum[][]) {
-      this.$emit('variantRowsSelected', data)
+    variantRowGroupSelected: function(group: {groupCode: string, groupLabel: string | null, data: HeatmapDatum[][]}) {
+      this.$emit('variantRowGroupSelected', group)
     },
 
     renderOrRefreshHeatmaps: function() {
@@ -904,7 +904,7 @@ export default defineComponent({
           .columnRangesSelected(this.variantColumnRangesSelected)
           .axisSelectionMode('y')
           .rowSelected(this.variantRowSelected)
-          .rowsSelected(this.variantRowsSelected)
+          .rowGroupSelected(this.variantRowGroupSelected)
       }
 
       if (this.layout == 'compact') {

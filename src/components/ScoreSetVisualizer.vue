@@ -12,6 +12,7 @@
           :showProteinStructureButton="false"
           @variantColumnRangesSelected="didSelectHeatmapResidues"
           @variantRowSelected="didSelectHeatmapRow"
+          @variantRowGroupSelected="didSelectHeatmapRowGroup"
         />
       </div>
     </SplitterPanel>
@@ -23,6 +24,7 @@
           :selectionData="selectionData"
           :residueTooltips="residueTooltips"
           :rowSelected="rowSelected"
+          :rowGroupSelected="rowGroupSelected"
           @clickedResidue="didClickResidue($event.residueNumber)"
           @hoveredOverResidue="didHighlightResidue($event.residueNumber)"
       />
@@ -68,6 +70,7 @@ export default {
     selectionData: [],
     residueTooltips: [],
     rowSelected: null,
+    rowGroupSelected: null,
   }),
 
   methods: {
@@ -84,6 +87,9 @@ export default {
       this.selectedResidueRanges = ranges
     },
     didSelectHeatmapRow: function(data) {
+      this.rowSelected = null
+      this.rowGroupSelected = null
+
       const aaRows = this.$refs.scoreSetHeatmap.heatmapRows
       const rowNumber = _.get(data, '0.y', null)
       if (!_.isNumber(rowNumber)) return
@@ -93,6 +99,48 @@ export default {
       this.rowSelected = {
         rowNumber,
         label: aa?.name || selectedRow?.code,
+      }
+    },
+    didSelectHeatmapRowGroup: function(selectedGroup) {
+      const {groupCode, data} = selectedGroup
+
+      this.rowSelected = null
+      this.rowGroupSelected = null
+
+      const heatmapColorScale = this.$refs.scoreSetHeatmap?.heatmap?.colorScale()
+
+      if (heatmapColorScale) {
+        let meanScores
+        if (!data || data.length === 0 || data[0].length === 0) {
+          meanScores = []
+        } else {
+          meanScores = new Array(data[0].length)
+        }
+
+        const numRows = data.length
+        const numCols = data[0].length
+
+        for (let j = 0; j < numCols; j++) {
+          let scoreSum = 0
+          let scoreCount = 0
+          for (let i = 0; i < numRows; i++) {
+            if (_.has(data, [i, j, 'meanScore'])) {
+              scoreCount += 1
+              scoreSum += _.get(data, [i, j, 'meanScore'], 0)
+            }
+          }
+          meanScores[j] = scoreSum / scoreCount
+        }
+        meanScores.forEach((meanScore, index) => {
+          _.set(this.selectionData, [index, _.camelCase(groupCode)], {
+            score: meanScore,
+            color: _.isNumber(meanScore) ? this.rgbToHex(heatmapColorScale(meanScore)) : '#000',
+          })
+        })
+        this.rowGroupSelected = {
+          label: groupCode,
+          colorBy: `${_.camelCase(groupCode)}.color`,
+        }
       }
     },
     rgbToHex: (rgb) => {

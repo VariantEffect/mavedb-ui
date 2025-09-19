@@ -92,7 +92,7 @@ export interface Heatmap {
   datumSelected: Accessor<((d: HeatmapDatum) => void) | null, Heatmap>
   columnRangesSelected: Accessor<((ranges: Array<{start: number; end: number}>) => void) | null, Heatmap>
   rowSelected: Accessor<((data: HeatmapDatum[]) => void) | null, Heatmap>
-  rowsSelected: Accessor<((data: HeatmapDatum[][]) => void) | null, Heatmap>
+  rowGroupSelected: Accessor<((group: {groupCode: string | null, groupLabel: string | null, data: HeatmapDatum[][]}) => void) | null, Heatmap>
   excludeDatum: Accessor<((d: HeatmapDatum) => boolean), Heatmap>
 
   // Data fields
@@ -182,7 +182,7 @@ export default function makeHeatmap(): Heatmap {
   let datumSelected: ((d: HeatmapDatum) => void) | null = null
   let columnRangesSelected: ((ranges: Array<{start: number; end: number}>) => void) | null = null
   let rowSelected: ((data: HeatmapDatum[]) => void) | null = null
-  let rowsSelected: ((data: HeatmapDatum[][]) => void) | null = null
+  let rowGroupSelected: ((group: {groupCode: string | null, groupLabel: string | null, data: HeatmapDatum[][]}) => void) | null = null
   let excludeDatum: ((d: HeatmapDatum) => boolean) = (d) => false as boolean
 
   // Layout
@@ -372,29 +372,31 @@ export default function makeHeatmap(): Heatmap {
       if (rowSelected) rowSelected(data.filter((d: HeatmapDatum) => yCoordinate(d) === rowNumber))
   }
 
-  const selectRowRange: (startRowNumber: number, rowCount: number) => void = (startRowNumber: number, rowCount: number) => {
-      if (svg) {
-        svg.select('g.heatmap-axis-selection-rectangle').selectAll('rect').remove()
-        svg.select('g.heatmap-axis-selection-rectangle')
-          .append('rect')
-          .attr('x', 0)
-          .attr('y', startRowNumber * yScale.step() + (nodePadding * yScale.step()/2))
-          .attr('width', (content.columns ? content.columns : 0) * xScale.step())
-          .attr('height', rowCount * yScale.step())
-          .style('fill', 'none')
-          .style('stroke-width', 2)
-          .style('stroke', '#808')
-          .raise()
-      }
+  const selectRowGroup: (rowGroup: any) => void = (rowGroup: any) => {
+    const {startRowNumber, rowCount, groupLabel, groupCode} = rowGroup
 
-      if (rowsSelected) {
+    if (svg && _.isInteger(startRowNumber) && _.isInteger(rowCount)) {
+      svg.select('g.heatmap-axis-selection-rectangle').selectAll('rect').remove()
+      svg.select('g.heatmap-axis-selection-rectangle')
+        .append('rect')
+        .attr('x', 0)
+        .attr('y', startRowNumber * yScale.step() + (nodePadding * yScale.step()/2))
+        .attr('width', (content.columns ? content.columns : 0) * xScale.step())
+        .attr('height', rowCount * yScale.step())
+        .style('fill', 'none')
+        .style('stroke-width', 2)
+        .style('stroke', '#808')
+        .raise()
+
+      if (rowGroupSelected) {
         // return 2D array of data in the selected rows
         const selectedRows: HeatmapDatum[][] = []
         for (let i = startRowNumber; i < startRowNumber + rowCount; i++) {
           selectedRows.push(data.filter((d: HeatmapDatum) => yCoordinate(d) === i))
         }
-        rowsSelected(selectedRows)
+        rowGroupSelected({groupCode, groupLabel, data: selectedRows})
       }
+    }
   }
 
   const click = function (event: MouseEvent, d: HeatmapDatum) {
@@ -1044,7 +1046,8 @@ export default function makeHeatmap(): Heatmap {
                   if (_.isInteger(datum)) {
                     selectRow(datum as number)
                   } else if (_.isInteger((datum as any).startRowNumber) && _.isInteger((datum as any).rowCount)) {
-                      selectRowRange((datum as any).startRowNumber, (datum as any).rowCount)
+                      // selectRowRange((datum as any).startRowNumber, (datum as any).rowCount)
+                      selectRowGroup(datum)
                   }
                 })
             }
@@ -1257,11 +1260,11 @@ export default function makeHeatmap(): Heatmap {
       return chart
     },
 
-    rowsSelected: (value?: ((data: HeatmapDatum[][]) => void) | null) => {
+    rowGroupSelected: (value?: ((group: {groupCode: string | null, groupLabel: string | null, data: HeatmapDatum[][]}) => void) | null) => {
       if (value === undefined) {
-        return rowsSelected
+        return rowGroupSelected
       }
-      rowsSelected = value
+      rowGroupSelected = value
       return chart
     },
 

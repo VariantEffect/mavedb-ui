@@ -113,6 +113,10 @@ export default defineComponent({
     variants: {
       type: Array,
       required: true
+    },
+    forceBothClassificationColors: {
+      type: Boolean,
+      default: true
     }
   },
 
@@ -444,6 +448,15 @@ export default defineComponent({
         return null
       }
 
+      // Check whether both classifications (normal and abnormal) are assigned to intervals.
+      const abnormalPresent = _.some(intervals, (interval) => interval.classification == 'abnormal')
+      const normalPresent = _.some(intervals, (interval) => interval.classification == 'normal')
+      if (!abnormalPresent && !normalPresent) {
+        // This should not arise since we constructed intervals by looking only at normal and abnormal ranges.
+        return null
+      }
+      const missingClassification = !abnormalPresent ? 'abnormal' : !normalPresent ? 'normal' : undefined
+
       const controlPoints = []
       let previousIntervalClassification: string = 'none'
       for (const interval of intervals) {
@@ -458,12 +471,22 @@ export default defineComponent({
           // The first interval extends from -infinity. It should have finite max, since otherwise there would only be
           // one interval.
           // - If the minimum value lies in this interval, use it as the control point.
+          //   - If the forceBothClassificationColors option is true, and if the interval classification is neutral and
+          //     there is no normal or abnormal interval, give the missing classification to the control point, and
+          //     insert a second, neutral control point half-way between this and the max boundary.
+          //   - Otherwise just give the control point the interval's classification.
           // - Otherwise add a control point to support shading in the next interval. Arbitrarily place the control
           //   point so that its distance to the interval max mirrors the distance from that boundary to the minimum
           //   value.
           // Note that the case where minValue equals or is near interval.max is not handled very well.
           if (interval.max != null && minValue <= interval.max) {
-            controlPoints.push({value: minValue, colorKey: interval.classification})
+            if (this.forceBothClassificationColors && missingClassification && interval.classification == 'neutral'
+                && minValue < interval.max) {
+              controlPoints.push({value: minValue, colorKey: missingClassification})
+              controlPoints.push({value: (minValue + interval.max) / 2.0, colorKey: 'neutral'})
+            } else {
+              controlPoints.push({value: minValue, colorKey: interval.classification})
+            }
           } else if (interval.max != null) {
             controlPoints.push({value: 2 * interval.max - minValue, colorKey: interval.classification})
           }
@@ -474,14 +497,23 @@ export default defineComponent({
         } else if (interval.max == null) { // Only the last interval can have max == null.
           // The last interval extends to infinity. It should have finite max, since otherwise there would only be
           // one interval.
-          // - If the maximum value lies in this interval, use it as the control
-          // point. Otherwise ignore the interval.
+          // - If the maximum value lies in this interval, use it as the control point.
+          //   - If the forceBothClassificationColors option is true, and if the interval classification is neutral and
+          //     there is no normal or abnormal interval, give the missing classification to the control point, and
+          //     insert a second, neutral control point half-way between this and the min boundary.
+          //   - Otherwise just give the control point the interval's classification.
           // - If the maximum value lies in this interval, use it as the control point.
           // - Otherwise add a control point to support shading in the previous interval. Arbitrarily place the control
           //   point so that its distance to the interval min mirrors the distance from that boundary to the maximum value.
           // Note that the case where maxValue equals or is near interval.min is not handled very well.
           if (interval.min != null && maxValue >= interval.min) {
-            controlPoints.push({value: maxValue, colorKey: interval.classification})
+            if (this.forceBothClassificationColors && missingClassification && interval.classification == 'neutral'
+                && maxValue > interval.min) {
+              controlPoints.push({value: (maxValue + interval.min) / 2.0, colorKey: 'neutral'})
+              controlPoints.push({value: maxValue, colorKey: missingClassification})
+            } else {
+              controlPoints.push({value: maxValue, colorKey: interval.classification})
+            }
           } else if (interval.min != null) {
             controlPoints.push({value: 2 * interval.min - maxValue, colorKey: interval.classification})
           }

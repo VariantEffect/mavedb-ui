@@ -92,7 +92,7 @@ export interface Heatmap {
   datumSelected: Accessor<((d: HeatmapDatum) => void) | null, Heatmap>
   columnRangesSelected: Accessor<((ranges: Array<{start: number; end: number}>) => void) | null, Heatmap>
   rowSelected: Accessor<((data: HeatmapDatum[]) => void) | null, Heatmap>
-  rowRangesSelected: Accessor<((ranges: Array<{start: number, end: number}>) => void) | null, Heatmap>
+  rowsSelected: Accessor<((data: HeatmapDatum[][]) => void) | null, Heatmap>
   excludeDatum: Accessor<((d: HeatmapDatum) => boolean), Heatmap>
 
   // Data fields
@@ -182,7 +182,7 @@ export default function makeHeatmap(): Heatmap {
   let datumSelected: ((d: HeatmapDatum) => void) | null = null
   let columnRangesSelected: ((ranges: Array<{start: number; end: number}>) => void) | null = null
   let rowSelected: ((data: HeatmapDatum[]) => void) | null = null
-  let rowRangesSelected: ((ranges: Array<{start: number, end: number}>) => void) | null = null
+  let rowsSelected: ((data: HeatmapDatum[][]) => void) | null = null
   let excludeDatum: ((d: HeatmapDatum) => boolean) = (d) => false as boolean
 
   // Layout
@@ -386,7 +386,15 @@ export default function makeHeatmap(): Heatmap {
           .style('stroke', '#808')
           .raise()
       }
-      if (rowRangesSelected) rowRangesSelected([{ start: startRowNumber, end: startRowNumber + rowCount - 1 }])
+
+      if (rowsSelected) {
+        // return 2D array of data in the selected rows
+        const selectedRows: HeatmapDatum[][] = []
+        for (let i = startRowNumber; i < startRowNumber + rowCount; i++) {
+          selectedRows.push(data.filter((d: HeatmapDatum) => yCoordinate(d) === i))
+        }
+        rowsSelected(selectedRows)
+      }
   }
 
   const click = function (event: MouseEvent, d: HeatmapDatum) {
@@ -1249,11 +1257,11 @@ export default function makeHeatmap(): Heatmap {
       return chart
     },
 
-    rowRangesSelected: (value?: ((ranges: Array<{start: number, end: number}>) => void) | null) => {
+    rowsSelected: (value?: ((data: HeatmapDatum[][]) => void) | null) => {
       if (value === undefined) {
-        return rowRangesSelected
+        return rowsSelected
       }
-      rowRangesSelected = value
+      rowsSelected = value
       return chart
     },
 

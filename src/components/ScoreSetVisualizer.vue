@@ -38,6 +38,7 @@ import ScoreSetHeatmap from '@/components/ScoreSetHeatmap'
 import Splitter from 'primevue/splitter'
 import SplitterPanel from 'primevue/splitterpanel'
 import _ from 'lodash'
+import { AMINO_ACIDS } from '@/lib/amino-acids'
 
 export default {
   name: 'ScoreSetVisualizer',
@@ -83,7 +84,16 @@ export default {
       this.selectedResidueRanges = ranges
     },
     didSelectHeatmapRow: function(data) {
-      this.rowSelected = _.get(data, '0.y', null)
+      const aaRows = this.$refs.scoreSetHeatmap.heatmapRows
+      const rowNumber = _.get(data, '0.y', null)
+      if (!_.isNumber(rowNumber)) return
+
+      const selectedRow = aaRows[aaRows.length - rowNumber - 1]
+      const aa = AMINO_ACIDS.find((a) => a.codes?.single === selectedRow?.code)
+      this.rowSelected = {
+        rowNumber,
+        label: aa?.name || selectedRow?.code,
+      }
     },
     rgbToHex: (rgb) => {
       const nums = _.words(rgb, /[0-9]+/g)

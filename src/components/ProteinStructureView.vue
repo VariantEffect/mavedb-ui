@@ -44,7 +44,7 @@ export default {
       default: () => []
     },
     rowSelected: {
-      type: Number,
+      type: Object,
     },
     residueTooltips: {
       type: Array,
@@ -56,8 +56,8 @@ export default {
     const colorBy = ref('mean.color')
 
     watch(() => props.rowSelected, (newValue) => {
-      if (_.isNumber(newValue)) {
-        colorBy.value = [newValue, 'color']
+      if (_.isNumber(newValue?.rowNumber)) {
+        colorBy.value = [newValue.rowNumber, 'color']
       } else {
         colorBy.value = 'mean.color'
       }
@@ -74,11 +74,6 @@ export default {
     viewerInstance: null,
     selectedAlphaFold: null,
     stage: null,
-    colorByOptions: [
-      {name: 'Mean Score', value: 'mean.color'},
-      {name: 'Min Missense Score', value: 'minMissense.color'},
-      {name: 'Max Missense Score', value: 'maxMissense.color'},
-    ],
     colorScheme: 'bfactor',
     colorSchemeOptions: [
       'atomindex',
@@ -107,6 +102,17 @@ export default {
   }),
 
   computed: {
+    colorByOptions: function() {
+      const baseOptions = [
+        {name: 'Mean Score', value: 'mean.color'},
+        {name: 'Min Missense Score', value: 'minMissense.color'},
+        {name: 'Max Missense Score', value: 'maxMissense.color'},
+      ]
+      if (_.isNumber(this.rowSelected?.rowNumber) && this.rowSelected?.label) {
+        return [...baseOptions, {name: this.rowSelected.label, value: [this.rowSelected.rowNumber, 'color']}]
+      }
+      return baseOptions
+    },
     selectionDataWithSelectedColorBy: function() {
         return _.map(this.selectionData, (x) => ({
           start_residue_number: x.start_residue_number,

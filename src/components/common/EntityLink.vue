@@ -2,7 +2,7 @@
   <router-link v-if="routerLink" :to="routerLink">{{linkText}}</router-link>
 </template>
 
-<script>
+<script lang="ts">
 
 import _ from 'lodash'
 

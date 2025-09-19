@@ -50,7 +50,7 @@ import makeHeatmap, {heatmapRowForNucleotideVariant, heatmapRowForProteinVariant
 import {parseSimpleProVariant, parseSimpleNtVariant, variantNotNullOrNA} from '@/lib/mave-hgvs'
 import { saveChartAsFile } from '@/lib/chart-export'
 import { Heatmap } from '@/lib/heatmap'
-import {SPARSITY_THRESHOLD} from '@/lib/scoreSetHeatmap'
+import {SPARSITY_THRESHOLD} from '@/lib/score-set-heatmap'
 import { AMINO_ACIDS, AMINO_ACIDS_WITH_TER } from '@/lib/amino-acids'
 import { NUCLEOTIDE_BASES } from '@/lib/nucleotides'
 

@@ -55,7 +55,7 @@ const ntVariantRegex = /^(c|g|n)\.([0-9]+)([ACGTacgt]{1})>([ACGTactg]{1})$/
  * @returns An object with properties indicating
  */
 export function parseSimpleProVariant(variant: string): SimpleProteinVariation | null {
-  const parts = variant.split(":")
+  const parts = variant.split(':')
   const variation = parts.length == 1 ? parts[0] : parts[1]
   const target = parts.length == 1 ? null : parts[0]
   const match = variation.match(proVariantRegex)
@@ -78,7 +78,7 @@ export function parseSimpleProVariant(variant: string): SimpleProteinVariation |
  * @returns An object with properties indicating
  */
 export function parseSimpleNtVariant(variant: string): SimpleDnaVariation | null {
-  const parts = variant.split(":")
+  const parts = variant.split(':')
   const variation = parts.length == 1 ? parts[0] : parts[1]
   const target = parts.length == 1 ? null : parts[0]
   const match = variation.match(ntVariantRegex)
@@ -95,7 +95,6 @@ export function parseSimpleNtVariant(variant: string): SimpleDnaVariation | null
   }
 }
 
-
 /**
  * Checks whether a provided variant is null or na
  *
@@ -103,9 +102,8 @@ export function parseSimpleNtVariant(variant: string): SimpleDnaVariation | null
  * @returns a boolean indicating whether the variant is NA or null.
  */
 export function variantNotNullOrNA(variant: string | null | undefined): boolean {
-  return variant ? variant.toLowerCase() !== "na" : false
+  return variant ? variant.toLowerCase() !== 'na' : false
 }
-
 
 /**
  * Return the preferred variant label for a given variant. Protein variation is preferred
@@ -127,7 +125,6 @@ export function preferredVariantLabel(variant: SimpleMaveVariant): VariantLabel 
     return {mavedb_label: variant.accession}
   }
 }
-
 
 /**
  * Regular expression for parsing a generic HGVS style variant.

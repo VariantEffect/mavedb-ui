@@ -1,12 +1,11 @@
 <template>
-
   <div class="mavedb-default-layout mavedb-fill-parent">
     <Toolbar v-if="withToolbar" />
     <EmailPrompt
       v-if="withEmailPrompt"
-      title="Welcome to MaveDB!"
       dialog="We're glad you're here! We require a valid email address to upload data to MaveDB, so that we can get in touch if there are any issues. You may add an email now, or do so at any time on the 'Settings' page."
-      :isFirstLoginPrompt="true"
+      :is-first-login-prompt="true"
+      title="Welcome to MaveDB!"
     />
     <div :class="wrapperClasses">
       <div :class="mainClasses">
@@ -17,28 +16,31 @@
   </div>
 </template>
 
-<script>
+<script lang="ts">
+import '@fontsource/raleway'
 
-import Toolbar from '@/components/layout/Toolbar'
+import '@/assets/app.css'
+import Toolbar from '@/components/layout/Toolbar.vue'
 import Footer from '@/components/layout/Footer.vue'
 import EmailPrompt from '@/components/common/EmailPrompt.vue'
-import '@fontsource/raleway'
-import '@/assets/app.css'
+import { PropType } from 'vue'
 
 export default {
+  name: 'DefaultLayout',
+
   components: {Footer, Toolbar, EmailPrompt},
 
   props: {
     height: {
-      type: String, // default or full
+      type: String as PropType<'default' | 'full'>,
       default: 'full'
     },
     overflowY: {
-      type: String, // hidden or scroll
+      type: String as PropType<'hidden' | 'scroll'>,
       default: 'scroll'
     },
     width: {
-      type: String, // fixed or full
+      type: String as PropType<'fixed' | 'full'>,
       default: 'fixed'
     },
     withToolbar: {
@@ -52,7 +54,7 @@ export default {
   },
 
   computed: {
-    mainClasses: function() {
+    mainClasses: function () {
       const classNames = ['mavedb-main']
       switch (this.height) {
         case 'full':
@@ -61,7 +63,7 @@ export default {
       return classNames
     },
 
-    wrapperClasses: function() {
+    wrapperClasses: function () {
       const classNames = ['mavedb-main-wrapper']
       switch (this.width) {
         case 'full':
@@ -83,11 +85,9 @@ export default {
     }
   }
 }
-
 </script>
 
 <style scoped>
-
 .mavedb-default-layout {
   display: flex;
   flex-direction: column;
@@ -141,7 +141,6 @@ export default {
 .mavedb-dataset-footer {
   margin-top: auto;
 }
-
 </style>
 
 <style src="../../assets/layout.css"></style>

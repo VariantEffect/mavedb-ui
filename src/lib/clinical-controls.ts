@@ -14,43 +14,58 @@
  * as the terminology changed in 2025. The function `clinvarConflictingSignificanceClassification`
  * adjusts the label accordingly provided a ClinVar version.
  */
-export const CLINVAR_CLINICAL_SIGNIFICANCE_CLASSIFICATIONS = [{
-  name: 'Pathogenic',
-  description: 'Pathogenic variant',
-  shortDescription: 'Pathogenic'
-}, {
-  name: 'Likely pathogenic',
-  description: 'Likely pathogenic variant',
-  shortDescription: 'LP'
-}, {
-  name: 'Pathogenic/Likely pathogenic',
-  description: 'Pathogenic/Likely pathogenic variant (in different submissions)',
-  shortDescription: 'Path/LP (both)'
-}, {
-  name: 'Benign',
-  description: 'Benign variant',
-  shortDescription: 'Benign'
-}, {
-  name: 'Likely benign',
-  description: 'Likely benign variant',
-  shortDescription: 'LB'
-}, {
-  name: 'Benign/Likely benign',
-  description: 'Benign/Likely benign variant (in different submissions)',
-  shortDescription: 'B/LB (both)'
-}, {
-  name: 'Uncertain significance',
-  description: 'Variant of uncertain significance',
-  shortDescription: 'VUS'
-}]
+export const CLINVAR_CLINICAL_SIGNIFICANCE_CLASSIFICATIONS = [
+  {
+    name: 'Pathogenic',
+    description: 'Pathogenic variant',
+    shortDescription: 'Pathogenic'
+  },
+  {
+    name: 'Likely pathogenic',
+    description: 'Likely pathogenic variant',
+    shortDescription: 'LP'
+  },
+  {
+    name: 'Pathogenic/Likely pathogenic',
+    description: 'Pathogenic/Likely pathogenic variant (in different submissions)',
+    shortDescription: 'Path/LP (both)'
+  },
+  {
+    name: 'Benign',
+    description: 'Benign variant',
+    shortDescription: 'Benign'
+  },
+  {
+    name: 'Likely benign',
+    description: 'Likely benign variant',
+    shortDescription: 'LB'
+  },
+  {
+    name: 'Benign/Likely benign',
+    description: 'Benign/Likely benign variant (in different submissions)',
+    shortDescription: 'B/LB (both)'
+  },
+  {
+    name: 'Uncertain significance',
+    description: 'Variant of uncertain significance',
+    shortDescription: 'VUS'
+  }
+]
 
 export const BENIGN_CLINICAL_SIGNIFICANCE_CLASSIFICATIONS = ['Likely benign', 'Benign', 'Benign/Likely benign']
 
-export const PATHOGENIC_CLINICAL_SIGNIFICANCE_CLASSIFICATIONS = ['Likely pathogenic', 'Pathogenic', 'Pathogenic/Likely pathogenic']
+export const PATHOGENIC_CLINICAL_SIGNIFICANCE_CLASSIFICATIONS = [
+  'Likely pathogenic',
+  'Pathogenic',
+  'Pathogenic/Likely pathogenic'
+]
 
-export const CONFLICTING_CLINICAL_SIGNIFICANCE_CLASSIFICATIONS = ['Conflicting interpretations of pathogenicity', 'Conflicting classifications of pathogenicity']
+export const CONFLICTING_CLINICAL_SIGNIFICANCE_CLASSIFICATIONS = [
+  'Conflicting interpretations of pathogenicity',
+  'Conflicting classifications of pathogenicity'
+]
 
-export const CLINVAR_REVIEW_STATUS_STARS = {
+export const CLINVAR_REVIEW_STATUS_STARS: {[status: string]: number} = {
   'no assertion criteria provided': 0,
   'criteria provided, conflicting interpretations': 1,
   'criteria provided, conflicting classifications': 1,
@@ -76,22 +91,21 @@ export const DEFAULT_CLINICAL_CONTROL_DB = 'ClinVar'
 export const DEFAULT_CLINICAL_CONTROL_VERSION = '01_2025'
 
 export interface ClinicalControlOption {
-  dbName: string,
+  dbName: string
   availableVersions: string[]
 }
 
 export interface ClinicalControl {
-  dbName: string,
-  dbVersion: string,
-  dbIdentifier: string,
-  clnsigField: string,
-  clnrevstatField: string,
-  geneSymbol: string,
-  modificationDate: Date,
-  creationDate: Date,
-  mappedVariants: Array<Object>,
+  dbName: string
+  dbVersion: string
+  dbIdentifier: string
+  clnsigField: string
+  clnrevstatField: string
+  geneSymbol: string
+  modificationDate: Date
+  creationDate: Date
+  mappedVariants: Array<Object>
 }
-
 
 /**
  * Returns an array of ClinVar clinical significance classifications,
@@ -107,10 +121,14 @@ export interface ClinicalControl {
  * @param version - The ClinVar version string, expected to contain a year after an underscore (e.g., "v_2023").
  * @returns An array of clinical significance classification objects, including the appropriate "Conflicting" classification.
  */
-export function clinvarClinicalSignificanceClassifications(version: string): typeof CLINVAR_CLINICAL_SIGNIFICANCE_CLASSIFICATIONS {
-    return [...CLINVAR_CLINICAL_SIGNIFICANCE_CLASSIFICATIONS, clinvarConflictingSignificanceClassificationForVersion(version)]
+export function clinvarClinicalSignificanceClassifications(
+  version: string
+): typeof CLINVAR_CLINICAL_SIGNIFICANCE_CLASSIFICATIONS {
+  return [
+    ...CLINVAR_CLINICAL_SIGNIFICANCE_CLASSIFICATIONS,
+    clinvarConflictingSignificanceClassificationForVersion(version)
+  ]
 }
-
 
 /**
  * Returns the appropriate ClinVar conflicting significance classification object for a given version.
@@ -122,22 +140,25 @@ export function clinvarClinicalSignificanceClassifications(version: string): typ
  * @param version - The version string, expected to contain a year after an underscore (e.g., "clinvar_2025").
  * @returns An object with `name`, `description`, and `shortDescription` fields describing the conflicting classification.
  */
-export function clinvarConflictingSignificanceClassificationForVersion(version: string): { name: string, description: string, shortDescription: string } {
+export function clinvarConflictingSignificanceClassificationForVersion(version: string): {
+  name: string
+  description: string
+  shortDescription: string
+} {
   if (Number(version.split('_')[1]) > 2024) {
     return {
       name: 'Conflicting classifications of pathogenicity',
       description: 'Variant with conflicting classifications of pathogenicity',
-      shortDescription: 'Conflicting',
+      shortDescription: 'Conflicting'
     }
   } else {
     return {
       name: 'Conflicting interpretations of pathogenicity',
       description: 'Variant with conflicting interpretations of pathogenicity',
-      shortDescription: 'Conflicting',
+      shortDescription: 'Conflicting'
     }
   }
 }
-
 
 /**
  * Returns the appropriate label for conflicting clinical significance series based on the provided version string.

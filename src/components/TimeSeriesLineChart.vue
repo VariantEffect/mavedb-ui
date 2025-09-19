@@ -16,19 +16,19 @@ export default defineComponent({
       required: true
     },
     interpolateMissingDates: {
-      type: Boolean as PropType<boolean>,
+      type: Boolean,
       default: true
     },
     width: {
-      type: Number as PropType<number>,
+      type: Number,
       default: 800
     },
     height: {
-      type: Number as PropType<number>,
+      type: Number,
       default: 400
     },
     level: {
-      type: String as PropType<string>,
+      type: String,
       default: 'month'
     },
     margins: {

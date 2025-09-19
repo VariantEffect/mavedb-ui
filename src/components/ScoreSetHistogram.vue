@@ -1,5 +1,5 @@
 <template>
-  <TabMenu v-if="hasTabBar" v-model:active-index="activeViz" class="mave-histogram-viz-select" :model="vizOptions" />
+  <TabMenu v-if="hasTabBar" v-model:active-index="activeViz" class="mavedb-histogram-viz-select" :model="vizOptions" />
   <div
     v-if="clinicalControlsEnabled && (!refreshedClinicalControls || !associatedClinicalControls)"
     style="font-size: x-small"
@@ -7,57 +7,57 @@
     <ProgressSpinner style="height: 12px; width: 12px" />
     Loading clinical control options in the background. Additional histogram views will be available once loaded.
   </div>
-  <div v-if="showControls" class="mave-histogram-controls">
-    <div class="mave-histogram-control">
-      <label for="mave-histogram-show-ranges-switch" class="mave-histogram-control-label">{{
+  <div v-if="showControls" class="mavedb-histogram-controls">
+    <div class="mavedb-histogram-control">
+      <label class="mavedb-histogram-control-label" for="mavedb-histogram-show-ranges-switch">{{
         showRanges ? 'Hide Ranges:' : 'Show Ranges:'
       }}</label>
-      <InputSwitch v-model="showRanges" class="ml-3" inputId="mave-histogram-show-ranges-switch" />
-      <label for="mave-histogram-viz-select" class="mave-histogram-control-label"
+      <InputSwitch v-model="showRanges" class="ml-3" input-id="mavedb-histogram-show-ranges-switch" />
+      <label class="mavedb-histogram-control-label" for="mavedb-histogram-viz-select"
         >Select a set of ranges to shade:
       </label>
       <Dropdown
         v-model="activeRangeKey"
         :disabled="!showRanges"
-        :options="activeRangeOptions"
+        input-id="mavedb-histogram-viz-select"
         option-label="label"
-        input-id="mave-histogram-viz-select"
+        :options="activeRangeOptions"
         style="align-items: center; height: 1.5rem"
       />
     </div>
-    <div v-if="showClinicalControlOptions" class="mave-histogram-control">
-      <label for="mave-histogram-db-select" class="mave-histogram-control-label">Clinical control database: </label>
+    <div v-if="showClinicalControlOptions" class="mavedb-histogram-control">
+      <label class="mavedb-histogram-control-label" for="mavedb-histogram-db-select">Clinical control database: </label>
       <Dropdown
         v-model="controlDb"
-        :options="clinicalControlOptions"
-        option-label="dbName"
-        input-id="mave-histogram-db-select"
-        style="align-items: center; height: 1.5rem"
         :disabled="!refreshedClinicalControls"
+        input-id="mavedb-histogram-db-select"
+        option-label="dbName"
+        :options="clinicalControlOptions"
+        style="align-items: center; height: 1.5rem"
       />
-      <label for="mave-histogram-version-select" class="mave-histogram-control-label">Clinical control version: </label>
+      <label class="mavedb-histogram-control-label" for="mavedb-histogram-version-select">Clinical control version: </label>
       <Dropdown
         v-model="controlVersion"
-        :options="controlDb?.availableVersions"
-        input-id="mave-histogram-version-select"
-        style="align-items: center; height: 1.5rem"
         :disabled="!refreshedClinicalControls"
+        input-id="mavedb-histogram-version-select"
+        :options="controlDb?.availableVersions"
+        style="align-items: center; height: 1.5rem"
       />
     </div>
-    <div class="mave-histogram-control">
-      <label for="mave-histogram-star-select" class="mave-histogram-control-label"
+    <div class="mavedb-histogram-control">
+      <label class="mavedb-histogram-control-label" for="mavedb-histogram-star-select"
         >Minimum ClinVar review status 'gold stars':
       </label>
       <Rating
         v-model="customMinStarRating"
+        :disabled="!refreshedClinicalControls"
+        input-id="mavedb-histogram-star-select"
         :stars="4"
         style="display: inline"
-        input-id="mave-histogram-star-select"
-        :disabled="!refreshedClinicalControls"
       />
     </div>
-    <div class="mave-histogram-control">
-      <span class="mave-histogram-control-label">Include variants with classification: </span>
+    <div class="mavedb-histogram-control">
+      <span class="mavedb-histogram-control-label">Include variants with classification: </span>
       <div class="flex flex-wrap gap-3">
         <div
           v-for="classification of clinicalSignificanceClassificationOptions"
@@ -66,21 +66,21 @@
         >
           <Checkbox
             v-model="customSelectedClinicalSignificanceClassifications"
+            :disabled="!refreshedClinicalControls"
             :name="scopedId('clinical-significance-inputs')"
             :value="classification.name"
-            :disabled="!refreshedClinicalControls"
           />
           <label :for="scopedId('clinical-significance-inputs')">{{ classification.shortDescription }}</label>
         </div>
       </div>
     </div>
   </div>
-  <div ref="histogramContainer" class="mave-histogram-container" />
+  <div ref="histogramContainer" class="mavedb-histogram-container" />
   <!-- The child component will attempt to immediately emit the range which is active when it is created. Since Vue lifecycle events bubble up from child to parent, this causes this component to attempt
    to create the histogram before the component is mounted when it doesn't have access to `this.$refs`. As a workaround, only render this child component once the histogram is ready. -->
   <div v-if="showRanges && activeRange" class="mave-range-table-container">
     <Accordion collapse-icon="pi pi-minus" expand-icon="pi pi-plus">
-      <AccordionTab header="Score Range Details" class="mave-range-table-tab">
+      <AccordionTab class="mave-range-table-tab" header="Score Range Details">
         <RangeTable :score-ranges="activeRange" :score-ranges-name="activeRangeKey?.label" :sources="allSources" />
       </AccordionTab>
     </Accordion>
@@ -119,10 +119,7 @@ import {
   clinvarConflictingSignificanceClassificationForVersion,
   conflictingClinicalSignificanceSeriesLabelForVersion
 } from '@/lib/clinical-controls'
-import type {
-  ClinicalControl,
-  ClinicalControlOption
-} from '@/lib/clinical-controls'
+import type {ClinicalControl, ClinicalControlOption} from '@/lib/clinical-controls'
 import makeHistogram, {
   DEFAULT_SERIES_COLOR,
   Histogram,
@@ -191,7 +188,7 @@ export default defineComponent({
       })
     },
     numBins: {
-      type: Number as PropType<number>,
+      type: Number,
       default: 30
     },
     scoreSet: {
@@ -389,10 +386,11 @@ export default defineComponent({
     activeRangeOptions: function () {
       if (!this.activeRanges) return []
       return Object.keys(this.activeRanges).map((key) => {
-        const label = {
-          investigatorProvided: 'Investigator-provided functional classes',
-          pillarProject: 'Research Use Only: Zeiberg calibration'
-        }[key] || `${this.titleCase(key)} ranges`
+        const label =
+          {
+            investigatorProvided: 'Investigator-provided functional classes',
+            pillarProject: 'Research Use Only: Zeiberg calibration'
+          }[key] || `${this.titleCase(key)} ranges`
         return {
           label,
           value: key
@@ -496,7 +494,7 @@ export default defineComponent({
             for (const series of seriesContainingVariant) {
               if (series.title) {
                 variantDescriptionParts.push(
-                  '<span class="mave-histogram-tooltip-variant-color"' +
+                  '<span class="mavedb-histogram-tooltip-variant-color"' +
                     ` style="background-color: ${series.color || DEFAULT_SERIES_COLOR}"></span>`
                 )
               }
@@ -523,9 +521,9 @@ export default defineComponent({
               // Create an array of 4 stars to hold clinical review status a la ClinVar.
               const stars = new Array(4)
                 .fill(
-                  '<span class="mave-histogram-tooltip-variant-star mave-histogram-tooltip-variant-star-filled">★</span>'
+                  '<span class="mavedb-histogram-tooltip-variant-star mavedb-histogram-tooltip-variant-star-filled">★</span>'
                 )
-                .fill('<span class="mave-histogram-tooltip-variant-star">☆</span>', numStars)
+                .fill('<span class="mavedb-histogram-tooltip-variant-star">☆</span>', numStars)
               variantDescriptionParts.push(`(${stars.join('')})`)
             }
           }
@@ -630,13 +628,13 @@ export default defineComponent({
     clinicalControlOptions: {
       handler: function () {
         if (!this.controlDb) {
-          let defaultControlDb = this.clinicalControlOptions.find(
+          const defaultControlDb = this.clinicalControlOptions.find(
             (option) => option.dbName == DEFAULT_CLINICAL_CONTROL_DB
           )
           this.controlDb = defaultControlDb ? defaultControlDb : this.clinicalControlOptions[0]
         }
         if (!this.controlVersion) {
-          let defaultControlVersion = this.controlDb?.availableVersions.find(
+          const defaultControlVersion = this.controlDb?.availableVersions.find(
             (version) => version == DEFAULT_CLINICAL_CONTROL_VERSION
           )
           this.controlVersion = defaultControlVersion ? defaultControlVersion : this.controlDb?.availableVersions[0]
@@ -692,7 +690,7 @@ export default defineComponent({
       saveChartAsFile(
         this.$refs.histogramContainer,
         `${this.scoreSet.urn}-scores-histogram`,
-        'mave-histogram-container'
+        'mavedb-histogram-container'
       )
     },
 
@@ -881,25 +879,25 @@ export default defineComponent({
 </script>
 
 <style scoped>
-.mave-histogram-controls {
+.mavedb-histogram-controls {
   display: flex;
   flex-direction: column;
   gap: 1rem;
 }
 
-.mave-histogram-control {
+.mavedb-histogram-control {
   display: flex;
   flex-wrap: wrap;
   gap: 1rem;
   align-items: center;
 }
 
-.mave-histogram-viz-select {
+.mavedb-histogram-viz-select {
   padding-bottom: 16px;
 }
 
-.mave-histogram-viz-select:deep(.p-tabmenu-nav),
-.mave-histogram-viz-select:deep(.p-menuitem-link) {
+.mavedb-histogram-viz-select:deep(.p-tabmenu-nav),
+.mavedb-histogram-viz-select:deep(.p-menuitem-link) {
   background: transparent;
 }
 </style>
@@ -909,7 +907,7 @@ export default defineComponent({
   position: absolute;
 }
 
-.mave-histogram-tooltip-variant-color {
+.mavedb-histogram-tooltip-variant-color {
   display: inline-block;
   height: 12px;
   width: 12px;
@@ -917,14 +915,14 @@ export default defineComponent({
   border-radius: 100%;
 }
 
-.mave-histogram-container {
+.mavedb-histogram-container {
   height: 350px;
 }
 
-.mave-histogram-tooltip-variant-star {
+.mavedb-histogram-tooltip-variant-star {
   margin: 0 1.5px;
 }
-.mave-histogram-tooltip-variant-star-filled {
+.mavedb-histogram-tooltip-variant-star-filled {
   color: #fdb81e;
 }
 </style>

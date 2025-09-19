@@ -11,11 +11,11 @@
       <span v-if="scoreRanges.baselineScoreDescription">
         <Button
           v-tooltip.right="{value: scoreRanges.baselineScoreDescription, autoHide: false}"
+          aria-label="Info"
           class="p-button-help mavedb-help-tooltip-button"
           icon="pi pi-info"
-          aria-label="Info"
-          rounded
           outlined
+          rounded
         />
       </span>
     </div>
@@ -26,11 +26,11 @@
           <span v-if="range.description">
             <Button
               v-tooltip.right="{value: range.description, autoHide: false}"
+              aria-label="Info"
               class="p-button-help mavedb-help-tooltip-button"
               icon="pi pi-info"
-              aria-label="Info"
-              rounded
               outlined
+              rounded
             />
           </span>
         </div>
@@ -82,11 +82,11 @@
               escape: false,
               autoHide: false
             }"
+            aria-label="Info"
             class="p-button-help mavedb-help-tooltip-button"
             icon="pi pi-info"
-            aria-label="Info"
-            rounded
             outlined
+            rounded
           />
         </td>
       </tr>

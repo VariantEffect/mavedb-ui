@@ -70,7 +70,7 @@ function getJwtPayload(jwt: string) {
 
 export const idToken: Ref<string | null> = ref(null)
 export const isAuthenticated = computed(() => idToken.value != null)
-export const userProfile = computed((): OidcUserProfileBase => idToken.value ? getJwtPayload(idToken.value) : null)
+export const userProfile = computed((): OidcUserProfileBase => (idToken.value ? getJwtPayload(idToken.value) : null))
 
 /** Initialize the authentication mechanism by checking whether the user is already authenticated. */
 export function initializeAuthentication() {
@@ -104,7 +104,7 @@ function setIdToken(newIdToken: string) {
  */
 export function beginAuthentication() {
   const oauthBaseUrl = 'https://orcid.org/oauth'
-  const oauthProviderUrl = new URL(`${oauthBaseUrl}/authorize`);
+  const oauthProviderUrl = new URL(`${oauthBaseUrl}/authorize`)
 
   const oauthState = uuidv4() // Can be used to prevent CSRF attacks.
   oauthProviderUrl.searchParams.append('client_id', config.orcidClientId)
@@ -132,7 +132,7 @@ export async function continueAuthenticationFromRedirect() {
       redirectUri: `${appUrl}oidc-callback`
     })
   } catch (e: any) {
-    response = e.response || { status: 500 }
+    response = e.response || {status: 500}
   }
   if (response.status == 200) {
     const newIdToken = response.data?.idToken

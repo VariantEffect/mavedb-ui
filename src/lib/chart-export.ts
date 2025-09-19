@@ -1,5 +1,5 @@
 import {showSaveFilePicker} from 'native-file-system-adapter'
-import domtoimage from 'dom-to-image';
+import domtoimage from 'dom-to-image'
 
 const XMLNS = 'http://www.w3.org/2000/xmlns/'
 const XLINKNS = 'http://www.w3.org/1999/xlink'
@@ -23,26 +23,26 @@ const SVGNS = 'http://www.w3.org/2000/svg'
 export async function saveChartAsFile(
   svgContainer: HTMLElement,
   suggestedFilenameBase: string = 'mavedb-chart',
-  containerElementClass?: string,
+  containerElementClass?: string
 ) {
   const fileHandle = await showSaveFilePicker({
     _preferPolyfill: false,
     suggestedName: `${suggestedFilenameBase}.svg`,
-    types: [
-      {accept: {'image/svg+xml': ['.svg']}},
-      {accept: {'image/png': ['.png']}}
-    ],
+    types: [{accept: {'image/svg+xml': ['.svg']}}, {accept: {'image/png': ['.png']}}],
     excludeAcceptAllOption: false // default
   })
 
   const extensionChosen = fileHandle.name.split('.').pop()
 
-
   if (extensionChosen === 'png') {
     const filter = (node: Node) => {
-        return (node as Element).classList.contains('exclude-from-export') ? false : true
+      return (node as Element).classList.contains('exclude-from-export') ? false : true
     }
-    const pngBlob = await domtoimage.toBlob(svgContainer, { filter: filter, width: svgContainer.scrollWidth, height: svgContainer.scrollHeight })
+    const pngBlob = await domtoimage.toBlob(svgContainer, {
+      filter: filter,
+      width: svgContainer.scrollWidth,
+      height: svgContainer.scrollHeight
+    })
     await pngBlob.stream().pipeTo(await fileHandle.createWritable())
   } else {
     // use custom serializer to support images composed of multiple SVGs
@@ -73,7 +73,7 @@ function serializeAsSvgString(svgElement: Element, containerElementClass?: strin
 
   const styleElement = document.createElement('style')
   styleElement.setAttribute('type', 'text/css')
-  styleElement.innerHTML = cssStr;
+  styleElement.innerHTML = cssStr
   const refNode = svgClone.hasChildNodes() ? svgClone.children[0] : null
   svgClone.insertBefore(styleElement, refNode)
 
@@ -89,7 +89,7 @@ function serializeAsSvgString(svgElement: Element, containerElementClass?: strin
 
   svgClone.setAttributeNS(XMLNS, 'xmlns', SVGNS)
   svgClone.setAttributeNS(XMLNS, 'xmlns:xlink', XLINKNS)
-  const serializer = new window.XMLSerializer
+  const serializer = new window.XMLSerializer()
   const string = serializer.serializeToString(svgClone)
   return string
 }
@@ -126,7 +126,7 @@ function getCSSStyles(parentElement: Element, containerElementClass?: string): s
       if (!stylesheet.cssRules) {
         continue
       }
-    } catch(e: any) {
+    } catch (e: any) {
       if (e.name !== 'SecurityError') {
         throw e // for Firefox
       }
@@ -141,9 +141,10 @@ function getCSSStyles(parentElement: Element, containerElementClass?: string): s
         if (ruleMatches) {
           if (containerElementClass) {
             const regex = new RegExp(`^.*\\.${containerElementClass}(\\[[^\\]]+\\])? `)
-            const selectorParts = rule.selectorText.split(',')
-                .map((x) => x.trim())
-                .map((x) => x.replace(regex, ''))
+            const selectorParts = rule.selectorText
+              .split(',')
+              .map((x) => x.trim())
+              .map((x) => x.replace(regex, ''))
 
             const selectorText = selectorParts.join(', ')
             const ruleStr = `${selectorText} {${rule.style.cssText}}`
@@ -155,5 +156,5 @@ function getCSSStyles(parentElement: Element, containerElementClass?: string): s
       }
     }
   }
-  return extractedCSSRules.join(' ');
+  return extractedCSSRules.join(' ')
 }

@@ -43,7 +43,7 @@ import * as d3 from 'd3'
 import _ from 'lodash'
 import SelectButton from 'primevue/selectbutton'
 import Button from 'primevue/button'
-import {PropType} from 'vue'
+import {defineComponent, PropType} from 'vue'
 
 import geneticCodes from '@/lib/genetic-codes'
 import makeHeatmap, {heatmapRowForNucleotideVariant, heatmapRowForProteinVariant, HEATMAP_AMINO_ACID_ROWS, HEATMAP_NUCLEOTIDE_ROWS, HeatmapDatum} from '@/lib/heatmap'
@@ -53,6 +53,7 @@ import { Heatmap } from '@/lib/heatmap'
 import {SPARSITY_THRESHOLD} from '@/lib/score-set-heatmap'
 import { AMINO_ACIDS, AMINO_ACIDS_WITH_TER } from '@/lib/amino-acids'
 import { NUCLEOTIDE_BASES } from '@/lib/nucleotides'
+import type {ScoreRange} from '@/lib/ranges'
 
 function stdev(array: number[]) {
   if (!array || array.length === 0) {
@@ -65,7 +66,7 @@ function stdev(array: number[]) {
 
 type HeatmapLayout = 'normal' | 'compact'
 
-export default {
+export default defineComponent({
   name: 'ScoreSetHeatmap',
   components: {SelectButton, Button},
   emits: ['variantSelected', 'variantColumnRangesSelected', 'variantRowSelected', 'heatmapVisible', 'exportChart', 'onDidClickShowProteinStructure'],
@@ -314,6 +315,182 @@ export default {
 
       return true
       // return sparsity > SPARSITY_THRESHOLD // A boolean value
+    },
+    colorScaleDomainIntervals: function() {
+      // Start with all the ranges classified as normal or abnormal. We ignore other ranges, because they either lie
+      // outside the normal/abnormal ranges, so that they should be treated as neutral intervals, or they overlap
+      // with them, so that the normal or abnormal classification takes precedence.
+      const ranges = (this.scoreSet.scoreRanges?.investigatorProvided?.ranges || [])
+        .filter((range) => ['normal', 'abnormal'].includes(range.classification))
+      if (ranges.length === 0) {
+        return []
+      }
+
+      // Flatten all interval endpoints.
+      const endpoints: Array<{value: number | null, type: 'min' | 'max', range: ScoreRange}> = []
+      for (const range of ranges) {
+        endpoints.push({value: range.range[0], type: 'min', range})
+        endpoints.push({value: range.range[1], type: 'max', range})
+      }
+
+      // Sort endpoints. Null is -infinity when it's a minimum, infinity when it's a maximum.
+      endpoints.sort((a, b) => {
+        if (a.value === null && b.value === null) {
+          if (a.type == b.type) {
+            return 0
+          }
+          return a.type == 'min' ? -1 : 1
+        }
+        if (a.value === null) return a.type === 'min' ? -1 : 1
+        if (b.value === null) return b.type === 'min' ? 1 : -1
+        return a.value - b.value
+      })
+
+      // Build intervals from the endpoints.
+      const intervals: Array<{min: number | null, max: number | null, ranges: ScoreRange[]}> = []
+      let active: ScoreRange[] = []
+      let previousThreshold: number | null = null
+      for (const endpoint of endpoints) {
+        const currentThreshold = endpoint.value
+        if (previousThreshold !== currentThreshold) {
+          intervals.push({
+            min: previousThreshold,
+            max: currentThreshold,
+            ranges: [...active]
+          })
+          previousThreshold = currentThreshold
+        }
+        if (endpoint.type === 'min') {
+          active.push(endpoint.range)
+        } else {
+          active = active.filter(r => r !== endpoint.range)
+        }
+      }
+
+      // If the first or last interval does not extend to -/+ infinity, add a neutral interval to the beginning or end.
+      // This has an effect if a minimum or maximum value lies outside the range covered so far by intervals.
+      if (intervals.length > 0 && intervals[0].min != null) {
+        intervals.unshift({
+          min: null,
+          max: intervals[0].min,
+          ranges: []
+        })
+      }
+      if (intervals.length > 0 && intervals[intervals.length - 1].max != null) {
+        intervals.push({
+          min: intervals[intervals.length - 1].max,
+          max: null,
+          ranges: []
+        })
+      }
+
+      // Add final interval to infinity if needed
+      // if (active.length > 0) {
+      //   intervals.push({
+      //     min: previousThreshold,
+      //     max: null,
+      //     ranges: [...active]
+      //   })
+      // }
+
+      // Remove intervals where min === max.
+      const nonemptyIntervals = intervals.filter((i) => i.min !== i.max || (i.min == null && i.max == null))
+
+      // Classify each interval. If it belongs only to ranges classified as normal or abnormal, give it that
+      // classification. Otherwise give it a neutral classification. (The second case includes the subcase where normal
+      // and abnormal ranges overlap. This should not happen, but we treat it as best we can.)
+      const classifiedIntervals = nonemptyIntervals.map((interval) => {
+        const classifications = _.uniq(interval.ranges.map((range) => range.classification))
+        const classification = classifications.length == 1 ? classifications[0] : 'neutral'
+        return {
+          min: interval.min,
+          max: interval.max,
+          classification
+        }
+      })
+
+      // Merge adjacent intervals sharing the same classification. Otherwise we will have consecutive control points
+      // with the same color, and the regions between them will have a solid color.
+      const mergedIntervals = []
+      for (const interval of classifiedIntervals) {
+        if (
+          mergedIntervals.length > 0 &&
+          mergedIntervals[mergedIntervals.length - 1].classification === interval.classification
+        ) {
+          // Merge with previous interval
+          mergedIntervals[mergedIntervals.length - 1].max = interval.max
+        } else {
+          mergedIntervals.push({ ...interval })
+        }
+      }
+      return mergedIntervals
+    },
+    colorScaleDomain: function() {
+      const intervals = this.colorScaleDomainIntervals
+
+      // At least two intervals must be defined in order to set up the color scale this way. If there are no intervals
+      // or just a single interval from -infinity to infinity, we cannot give the colors any orientation. We also
+      // require at least one data point, since the min and max values are needed, and there is no need for a scale if
+      // the data set is empty.
+      if (intervals.length < 1 || this.simpleAndWtVariants.length == 0) {
+        return null
+      }
+
+      const scores = this.simpleAndWtVariants.map((v) => v.meanScore)
+      const minValue = _.min<number>(scores)
+      const maxValue = _.max<number>(scores)
+
+      if (minValue == null || maxValue == null) {
+        return null
+      }
+
+      const controlPoints = []
+      let previousIntervalClassification: string = 'none'
+      for (const interval of intervals) {
+        // If there is a transition directly from normal to abnormal or vice versa, insert a neutral control point at
+        // the boundary.
+        if (interval.min != null && (previousIntervalClassification == 'normal' && interval.classification == 'abnormal')
+            || (previousIntervalClassification == 'abnormal' && interval.classification == 'normal')) {
+          controlPoints.push({value: interval.min, colorKey: 'neutral'})
+        }
+
+        if (interval.min == null) { // Only the first interval can have min == null.
+          // The first interval extends from -infinity. It should have finite max, since otherwise there would only be
+          // one interval.
+          // - If the minimum value lies in this interval, use it as the control point.
+          // - Otherwise add a control point to support shading in the next interval. Arbitrarily place the control
+          //   point so that its distance to the interval max mirrors the distance from that boundary to the minimum
+          //   value.
+          // Note that the case where minValue equals or is near interval.max is not handled very well.
+          if (interval.max != null && minValue <= interval.max) {
+            controlPoints.push({value: minValue, colorKey: interval.classification})
+          } else if (interval.max != null) {
+            controlPoints.push({value: 2 * interval.max - minValue, colorKey: interval.classification})
+          }
+          // interval.max should not be null, because then 
+        } else if (interval.max != null) {
+          // The interval has finite min and max. Use the midpoint as a control point.
+          controlPoints.push({value: (interval.min + interval.max) / 2.0, colorKey: interval.classification})
+        } else if (interval.max == null) { // Only the last interval can have max == null.
+          // The last interval extends to infinity. It should have finite max, since otherwise there would only be
+          // one interval.
+          // - If the maximum value lies in this interval, use it as the control
+          // point. Otherwise ignore the interval.
+          // - If the maximum value lies in this interval, use it as the control point.
+          // - Otherwise add a control point to support shading in the previous interval. Arbitrarily place the control
+          //   point so that its distance to the interval min mirrors the distance from that boundary to the maximum value.
+          // Note that the case where maxValue equals or is near interval.min is not handled very well.
+          if (interval.min != null && maxValue >= interval.min) {
+            controlPoints.push({value: maxValue, colorKey: interval.classification})
+          } else if (interval.min != null) {
+            controlPoints.push({value: 2 * interval.min - maxValue, colorKey: interval.classification})
+          }
+        }
+
+        previousIntervalClassification = interval.classification
+      }
+
+      return controlPoints
     }
   },
 
@@ -619,6 +796,9 @@ export default {
           .skipXTicks(99)
       }
 
+      if (this.colorScaleDomain) {
+        this.heatmap.colorScaleControlPoints(this.colorScaleDomain)
+      }
       this.heatmap.data(this.simpleAndWtVariants)
         .valueField((d) => d.meanScore)
         .colorClassifier((variant) => variant.details.wt ? d3.color('#ddbb00') : variant.meanScore)
@@ -649,6 +829,9 @@ export default {
         return
       }
 
+      if (this.colorScaleDomain) {
+        this.stackedHeatmap.colorScaleControlPoints(this.colorScaleDomain)
+      }
       this.stackedHeatmap.data(this.simpleAndWtVariants)
         .valueField((d) => d.meanScore)
         .colorClassifier((variant) => variant.details.wt ? d3.color('#ddbb00') : variant.meanScore)
@@ -718,8 +901,7 @@ export default {
       return parts.length > 0 ? parts.join('<br />') : null
     }
   }
-}
-
+})
 </script>
 
 <style>

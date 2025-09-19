@@ -68,6 +68,11 @@ export type MappedDatum = {[key: number]: HeatmapDatum}
 type RangeSelectionMode = 'column' | 'row' | 'box' | null
 type AxisSelectionMode = 'x' | 'y' | null
 
+export interface HeatmapColorScaleControlPoint {
+  value: number
+  colorKey: string
+}
+
 /**
  * The heatmap content. This consists of a mapping of rows which contain a list of ordered column contents.
  */
@@ -122,6 +127,7 @@ export interface Heatmap {
   nodePadding: Accessor<number, Heatmap>
 
   // Color
+  colorScaleControlPoints: Accessor<HeatmapColorScaleControlPoint[] | null, Heatmap>
   lowerBoundColor: Accessor<string, Heatmap>
   pivotColor: Accessor<string, Heatmap>
   upperBoundColor: Accessor<string, Heatmap>
@@ -199,6 +205,7 @@ export default function makeHeatmap(): Heatmap {
   let rows: HeatmapRowSpecification[] = HEATMAP_AMINO_ACID_ROWS
 
   // Colors
+  let colorScaleControlPoints: HeatmapColorScaleControlPoint[] | null = null
   let lowerBoundColor: string = DEFAULT_MINIMUM_COLOR
   let pivotColor: string = DEFAULT_PIVOT_COLOR
   let upperBoundColor: string = DEFAULT_MAXIMUM_COLOR
@@ -332,13 +339,24 @@ export default function makeHeatmap(): Heatmap {
   }
 
   const buildColorScale = function () {
-    const imputedDomain = [
-      lowerBound ? lowerBound : 0,
-      ((lowerBound ? lowerBound : 0) + (upperBound ? upperBound : 1)) / 2,
-      upperBound ? upperBound : 1
-    ]
-    const imputedRange = [lowerBoundColor, pivotColor, upperBoundColor]
-    colorScale = d3.scaleLinear().domain(imputedDomain).range(imputedRange)
+    if (colorScaleControlPoints) {
+      const colors = {
+        'neutral': pivotColor,
+        'normal': lowerBoundColor,
+        'abnormal': upperBoundColor
+      }
+      colorScale = d3.scaleLinear()
+          .domain(colorScaleControlPoints.map((controlPoint) => controlPoint.value))
+          .range(colorScaleControlPoints.map((controlPoint) => colors[controlPoint.colorKey] ?? pivotColor))
+    } else {
+      const imputedDomain = [
+        lowerBound ? lowerBound : 0,
+        ((lowerBound ? lowerBound : 0) + (upperBound ? upperBound : 1)) / 2,
+        upperBound ? upperBound : 1
+      ]
+      const imputedRange = [lowerBoundColor, pivotColor, upperBoundColor]
+      colorScale = d3.scaleLinear().domain(imputedDomain).range(imputedRange)
+    }
   }
 
   //////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
@@ -1205,6 +1223,14 @@ export default function makeHeatmap(): Heatmap {
         return nodeSize
       }
       nodeSize = value
+      return chart
+    },
+
+    colorScaleControlPoints: (value?: HeatmapColorScaleControlPoint[] | null) => {
+      if (value === undefined) {
+        return colorScaleControlPoints
+      }
+      colorScaleControlPoints = value
       return chart
     },
 

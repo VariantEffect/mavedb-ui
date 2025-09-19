@@ -3,11 +3,7 @@
 import axios from 'axios'
 
 import config from '@/config'
-import {
-  idToken as orcidIdToken,
-  isAuthenticated as orcidIsAuthenticated,
-  signOut as orcidSignOut
-} from '@/lib/orcid'
+import {idToken as orcidIdToken, isAuthenticated as orcidIsAuthenticated, signOut as orcidSignOut} from '@/lib/orcid'
 import store from '@/store/index'
 import authStore from '@/store/modules/auth'
 
@@ -44,7 +40,7 @@ export function authHeader(): AuthorizationHeader {
  * Determine whether a URL refers to a MaveDB API endpoint.
  */
 function urlBelongsToApi(url: string) {
-  return (url.startsWith(config.apiBaseUrl))
+  return url.startsWith(config.apiBaseUrl)
 }
 
 /**
@@ -74,10 +70,12 @@ export function installAxiosUnauthorizedResponseInterceptor() {
   axios.interceptors.response.use(
     (response) => response,
     async (error) => {
-      if (error && !error.config?.isSessionCheck && error.response?.status && (
-        error.response?.status == 401 ||
-        error.response?.status == 403
-      )) {
+      if (
+        error &&
+        !error.config?.isSessionCheck &&
+        error.response?.status &&
+        (error.response?.status == 401 || error.response?.status == 403)
+      ) {
         try {
           // @ts-ignore: We need to pass a custom property in the request configuration.
           await axios.get(`${config.apiBaseUrl}/users/me`, {isSessionCheck: true})

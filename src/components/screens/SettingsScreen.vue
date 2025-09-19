@@ -8,9 +8,9 @@
       <template #content>
         <div class="field">
           <span class="p-float-label">
-            <InputText :id="$scopedId('input-email')" style="max-width: 400px; width: 100%;" v-model="email" type="text"
+            <InputText :id="scopedId('input-email')" style="max-width: 400px; width: 100%;" v-model="email" type="text"
               placeholder="Email" />
-            <label :for="$scopedId('input-email')">Email</label>
+            <label :for="scopedId('input-email')">Email</label>
           </span>
         </div>
         <div>
@@ -112,6 +112,7 @@ import store from '@/store/index'
 
 import config from '@/config'
 import DefaultLayout from '@/components/layout/DefaultLayout'
+import useScopedId from '@/composables/scoped-id'
 import useClipboard from '@/composition/clipboard'
 import useItem from '@/composition/item'
 import useItems from '@/composition/items'
@@ -132,6 +133,7 @@ export default {
       activeRoles,
       updateActiveRoles,
       ...useClipboard(),
+      ...useScopedId(),
       user,
       setUserId,
       saveUser,

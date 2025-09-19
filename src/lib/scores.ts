@@ -21,7 +21,7 @@ export function parseScoresOrCounts(csvData: string): ScoresOrCountsRow[] {
     skipEmptyLines: true,
     complete: (results) => {
       if (results.errors.length) {
-        console.error("Scores CSV data could not be parsed.", results.errors);
+        console.error('Scores CSV data could not be parsed.', results.errors)
       }
     }
   }).data

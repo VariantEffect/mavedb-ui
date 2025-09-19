@@ -1,18 +1,18 @@
 <template>
   <DefaultLayout>
-    <div v-if="itemStatus=='Loaded'" class="mave-full-height mave-score-set mave-scroll-vertical">
-      <div class="mave-1000px-col">
+    <div v-if="itemStatus=='Loaded'" class="mavedb-full-height mave-score-set mavedb-scroll-vertical">
+      <div class="mavedb-1000px-col">
         <div class="mave-screen-title-bar">
           <div class="mave-screen-title">{{item.urn}}</div>
           <div v-if="userIsAuthenticated & userIsAuthorized">
-            <div class="mave-screen-title-controls">
+            <div class="mavedb-screen-title-controls">
               <Button class="p-button-sm" @click="addExperiment">Add an experiment</Button>
             </div>
           </div>
         </div>
         <div class="mave-screen-title">Experiment set</div>
       </div>
-      <div class="mave-1000px-col">
+      <div class="mavedb-1000px-col">
         <div v-if="item.creationDate">Created {{formatDate(item.creationDate)}} </div>
         <div v-if="item.modificationDate">Last updated {{formatDate(item.modificationDate)}} </div>
         <div v-if="item.publishedDate">Published {{formatDate(item.publishedDate)}}</div>
@@ -127,24 +127,6 @@ export default {
 </script>
 
 <style scoped>
-
-/* General layout */
-
-.mave-full-height {
-  height: 100%;
-}
-
-.mave-scroll-vertical {
-  overflow-y: auto;
-}
-
-.mave-1000px-col {
-  position: relative;
-  width: 1000px;
-  margin: 0 auto;
-  text-align: left;
-  overflow-x: hide;
-}
 
 /* Score set */
 

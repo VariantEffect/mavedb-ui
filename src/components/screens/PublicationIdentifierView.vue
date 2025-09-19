@@ -1,12 +1,12 @@
 <template>
     <DefaultLayout>
-      <div v-if="itemStatus=='Loaded'" class="mave-publication mave-scroll-vertical">
-        <div class="mave-1000px-col">
+      <div v-if="itemStatus=='Loaded'" class="mave-publication mavedb-scroll-vertical">
+        <div class="mavedb-1000px-col">
           <div class="mave-screen-title-bar">
             <div class="mave-screen-title">{{ item.dbName }} {{ item.identifier }}: {{item.title}}</div>
           </div>
         </div>
-        <div class="mave-1000px-col">
+        <div class="mavedb-1000px-col">
           <div v-if="item.creationDate">Created {{formatDate(item.creationDate)}}, updated {{ formatDate(item.modificationDate) }} </div>
           <div v-if="item.publicationJournal">Published {{item.publicationYear}} in {{item.publicationJournal}} </div>
           <div v-if="item.doi">DOI:
@@ -21,7 +21,7 @@
           </div>
 
           <div class="mave-publication-section-title">Linked score sets</div>
-          <div class="mave-table-container">
+          <div class="mavedb-score-set-table-container">
             <ScoreSetTable
               :data="publishedScoresets"
               :language="language"
@@ -156,30 +156,14 @@
 
   <style scoped>
 
-  /* General layout */
+  /* Table */
 
-.mave-table-container {
+.mavedb-score-set-table-container {
   display: flex;
   flex-direction: column;
   position: relative;
   height: 100%;
 }
-
-  .mave-full-height {
-    height: 100%;
-  }
-
-  .mave-scroll-vertical {
-    overflow-y: auto;
-  }
-
-  .mave-1000px-col {
-    position: relative;
-    width: 1000px;
-    margin: 0 auto;
-    text-align: left;
-    overflow-x: hide;
-  }
 
   /* Publication */
 

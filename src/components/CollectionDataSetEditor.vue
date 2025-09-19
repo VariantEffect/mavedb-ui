@@ -3,11 +3,7 @@
     <EmailPrompt />
   </template>
   <div class="collection-data-set-editor">
-    <Button
-      class="mave-collection-data-set-editor-button"
-      label="Edit"
-      @click="visible = true"
-    />
+    <Button class="mavedb-collection-data-set-editor-button" label="Edit" @click="visible = true" />
     <Dialog
       v-model:visible="visible"
       :close-on-escape="false"
@@ -18,7 +14,7 @@
     >
       <div class="flex flex-column gap-2">
         <Button
-          class="mave-collection-remove-data-set-button"
+          class="mavedb-collection-remove-data-set-button"
           :disabled="!selectedDataSets || !selectedDataSets.length"
           icon="pi pi-trash"
           label="Remove"
@@ -29,10 +25,10 @@
           v-model:selection="selectedDataSets"
           data-key="urn"
           :row-style="rowStyle"
-          tableStyle="min-width: 50rem"
+          table-style="min-width: 50rem"
           :value="allDataSets"
         >
-          <Column selectionMode="multiple"></Column>
+          <Column selection-mode="multiple"></Column>
           <Column field="urn" header="URN"></Column>
           <Column field="title" header="Title"></Column>
         </DataTable>
@@ -46,29 +42,29 @@
             separator=" "
             @keyup.escape="unvalidatedUrnsToAdd = []"
           />
-          <Button class="flex-none mave-collection-add-data-set-button" icon="pi pi-plus" label="Add" @click="fetchDataSetsToAdd" />
+          <Button
+            class="flex-none mavedb-collection-add-data-set-button"
+            icon="pi pi-plus"
+            label="Add"
+            @click="fetchDataSetsToAdd"
+          />
         </div>
-        <Message class="mave-validation-errors-message" v-if="validationErrors.length > 0" severity="error">
+        <Message v-if="validationErrors.length > 0" class="mavedb-validation-errors-message" severity="error">
           There were validation errors
-          <div v-if="validationErrors.length > 0" class="mave-validation-errors">
-            <div v-for="errorMessage in validationErrors" class="mave-validation-error" :key="errorMessage">{{ errorMessage }}</div>
+          <div v-if="validationErrors.length > 0" class="mavedb-validation-errors">
+            <div v-for="errorMessage in validationErrors" :key="errorMessage" class="mavedb-validation-error">
+              {{ errorMessage }}
+            </div>
           </div>
         </Message>
-        <Message v-if="errors.length > 0" severity="error">
-          Sorry, some changes could not be saved.
-        </Message>
+        <Message v-if="errors.length > 0" severity="error"> Sorry, some changes could not be saved. </Message>
       </div>
-      <div class="mave-collection-editor-action-buttons">
+      <div class="mavedb-collection-editor-action-buttons">
         <Button label="Cancel" severity="secondary" @click="visible = false" />
         <Button label="Save" @click="saveChanges" />
       </div>
     </Dialog>
-    <Dialog
-      v-model:visible="unpreparedChangesDialogVisible"
-      :close-on-escape="true"
-      header="Warning"
-      modal
-    >
+    <Dialog v-model:visible="unpreparedChangesDialogVisible" :close-on-escape="true" header="Warning" modal>
       Please add your new data sets or clear the URNs box before saving changes.
     </Dialog>
   </div>
@@ -91,8 +87,6 @@ import EmailPrompt from '@/components/common/EmailPrompt.vue'
 export default {
   name: 'CollectionDataSetEditor',
 
-  emits: ['saved'],
-
   components: {Button, Chips, Column, DataTable, Dialog, EmailPrompt, Message},
 
   props: {
@@ -103,14 +97,12 @@ export default {
     dataSetType: {
       type: String,
       required: true
-    },
-  },
-
-  setup: () => {
-    return {
-      ...useItem({itemTypeName: 'collection'}),
     }
   },
+
+  emits: ['saved'],
+
+  setup: () => useItem({itemTypeName: 'collection'}),
 
   data: () => ({
     visible: false,
@@ -135,15 +127,15 @@ export default {
   computed: {
     allDataSets() {
       const savedDataSets = this.savedDataSets.map((dataSet) => ({...dataSet, saved: true}))
-      const newDataSets = this.dataSetsToAdd.map((dataSet) =>({...dataSet, saved: false}))
+      const newDataSets = this.dataSetsToAdd.map((dataSet) => ({...dataSet, saved: false}))
       return savedDataSets.concat(newDataSets)
     },
 
-    errors: function() {
+    errors: function () {
       return [...this.additionErrors, ...this.removalErrors]
     },
 
-    restCollectionParent: function() {
+    restCollectionParent: function () {
       if (this.dataSetType === 'experiment') {
         return 'experiments'
       } else {
@@ -151,14 +143,14 @@ export default {
       }
     },
 
-    savedDataSetUrns: function() {
+    savedDataSetUrns: function () {
       return this.item?.[`${this.dataSetType}Urns`] || []
     }
   },
 
   watch: {
     collectionUrn: {
-      handler: function(newValue, oldValue) {
+      handler: function (newValue, oldValue) {
         if (newValue != oldValue) {
           this.setItemId(newValue)
         }
@@ -167,7 +159,7 @@ export default {
     },
 
     savedDataSetUrns: {
-      handler: async function(newValue, oldValue) {
+      handler: async function (newValue, oldValue) {
         if (!_.isEqual(newValue, oldValue)) {
           await this.fetchSavedDataSets()
         }
@@ -177,7 +169,7 @@ export default {
   },
 
   methods: {
-    rowStyle: function(data) {
+    rowStyle: function (data) {
       if (this.urnsToRemove.includes(data.urn)) {
         return {backgroundColor: '#ffcccb'} // Light red
       } else if (data.saved === false) {
@@ -185,7 +177,7 @@ export default {
       }
     },
 
-    markDataSetsToRemove: function() {
+    markDataSetsToRemove: function () {
       for (const dataSetToRemove of this.selectedDataSets) {
         if (dataSetToRemove.saved) {
           this.urnsToRemove.push(dataSetToRemove.urn)
@@ -195,7 +187,7 @@ export default {
       }
     },
 
-    saveChanges: async function() {
+    saveChanges: async function () {
       if (this.unvalidatedUrnsToAdd.length > 0) {
         this.unpreparedChangesDialogVisible = true
         return
@@ -208,15 +200,13 @@ export default {
       for (const dataSetToAdd of this.dataSetsToAdd) {
         try {
           if (this.dataSetType == 'experiment') {
-            await axios.post(
-              `${config.apiBaseUrl}/collections/${this.collectionUrn}/experiments`,
-              {experiment_urn: dataSetToAdd.urn}
-            )
+            await axios.post(`${config.apiBaseUrl}/collections/${this.collectionUrn}/experiments`, {
+              experiment_urn: dataSetToAdd.urn
+            })
           } else if (this.dataSetType == 'scoreSet') {
-            await axios.post(
-              `${config.apiBaseUrl}/collections/${this.collectionUrn}/score-sets`,
-              {score_set_urn: dataSetToAdd.urn}
-            )
+            await axios.post(`${config.apiBaseUrl}/collections/${this.collectionUrn}/score-sets`, {
+              score_set_urn: dataSetToAdd.urn
+            })
           }
         } catch (error) {
           additionErrorUrns.push(dataSetToAdd.urn)
@@ -228,7 +218,9 @@ export default {
       const removalErrorUrns = []
       for (const urn of this.urnsToRemove) {
         try {
-          await axios.delete(`${config.apiBaseUrl}/collections/${this.collectionUrn}/${this.restCollectionParent}/${urn}`)
+          await axios.delete(
+            `${config.apiBaseUrl}/collections/${this.collectionUrn}/${this.restCollectionParent}/${urn}`
+          )
         } catch (error) {
           removalErrorUrns.push(urn)
           this.removalErrors.push(`${urn}: ${error.message || 'Could not be removed from the collection'}`)
@@ -238,19 +230,22 @@ export default {
 
       if (_.isEmpty(this.errors)) {
         this.visible = false
-        this.$toast.add({severity: 'success', summary: 'Successfully updated collection\'s experiments.', life: 3000})
+        this.$toast.add({severity: 'success', summary: "Successfully updated collection's experiments.", life: 3000})
       }
 
       // Always emit 'saved', because if any API calls succeed (even if others fail), we need to reload collection's data sets.
       this.$emit('saved')
     },
 
-    fetchDataSetsToAdd: async function() {
+    fetchDataSetsToAdd: async function () {
       this.validationErrors = []
       const invalidUrns = []
       for (let urn of this.unvalidatedUrnsToAdd) {
         urn = urn.trim()
-        if (this.item[`${this.dataSetType}Urns`].includes(urn) || this.dataSetsToAdd.some((dataSet) => dataSet.urn == urn)) {
+        if (
+          this.item[`${this.dataSetType}Urns`].includes(urn) ||
+          this.dataSetsToAdd.some((dataSet) => dataSet.urn == urn)
+        ) {
           // Silently ignore the data sets in the collection or already prepared for adding in this session.
         } else {
           // Fetch the data set.
@@ -271,7 +266,7 @@ export default {
       this.unvalidatedUrnsToAdd = invalidUrns
     },
 
-    fetchSavedDataSets: async function() {
+    fetchSavedDataSets: async function () {
       const savedDataSets = []
       for (const urn of this.savedDataSetUrns) {
         console.log(urn)
@@ -288,7 +283,7 @@ export default {
       this.savedDataSets = savedDataSets
     },
 
-    resetDataSetEditor: function() {
+    resetDataSetEditor: function () {
       this.unvalidatedUrnsToAdd = []
       this.dataSetsToAdd = []
       this.urnsToRemove = []
@@ -302,34 +297,34 @@ export default {
 </script>
 
 <style scoped>
-.mave-collection-data-set-editor-button {
+.mavedb-collection-data-set-editor-button {
   width: fit-content;
 }
 
-.mave-collection-add-data-set-button {
+.mavedb-collection-add-data-set-button {
   width: fit-content;
 }
 
-.mave-collection-remove-data-set-button {
+.mavedb-collection-remove-data-set-button {
   width: fit-content;
 }
 
-.mave-collection-editor-action-buttons {
+.mavedb-collection-editor-action-buttons {
   display: flex;
   justify-content: flex-end;
   gap: 2px;
   margin: 20px 0 0 0;
 }
 
-.mave-collection-editor-action-buttons Button {
+.mavedb-collection-editor-action-buttons Button {
   margin: 0 0 0 3px;
 }
 
-.mave-validation-errors-message:deep(.p-message-text) {
+.mavedb-validation-errors-message:deep(.p-message-text) {
   width: 100%;
 }
 
-.mave-validation-errors {
+.mavedb-validation-errors {
   max-height: 100px;
   overflow: auto;
   width: 100%;

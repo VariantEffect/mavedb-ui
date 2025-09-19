@@ -2,7 +2,6 @@
 import {createStore} from 'vuex'
 
 import authModule from '@/store/modules/auth'
-import layoutModule from '@/store/modules/layout'
 import toastModule from '@/store/modules/toast'
 
 // Unfortunately, typed Vuex stores are painful to use, especially with multiple modules. We'll continue using any for
@@ -28,7 +27,6 @@ const store = createStore({
   },
   modules: {
     auth: authModule,
-    layout: layoutModule,
     toast: toastModule
   }
 })

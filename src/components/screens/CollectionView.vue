@@ -1,7 +1,7 @@
 <template>
   <DefaultLayout>
     <div v-if="itemStatus=='Loaded'" class="mave-collection">
-      <div class="mave-1000px-col">
+      <div class="mavedb-1000px-col">
         <div class="mave-screen-title-bar">
           <Button v-if="userIsAuthorized.update && item.private" aria-label="Private collection" class="flex-i" icon="pi pi-lock" text title="Private collection" @click="privacyDialogVisible = true" />
           <Button v-else-if="userIsAuthorized.update && !item.private" aria-label="Publicly visible" class="flex-i" icon="pi pi-lock-open" text title="Publicly visible" @click="privacyDialogVisible = true" />
@@ -41,7 +41,7 @@
               :collection="item"
             />
           </div>
-          <div v-if="userIsAuthorized.delete" class="mave-screen-title-controls">
+          <div v-if="userIsAuthorized.delete" class="mavedb-screen-title-controls">
             <Button label="Delete" severity="danger" size="small" @click="deleteCollectionWithConfirmation" />
           </div>
         </div>
@@ -72,7 +72,7 @@
           <div v-if="item.description" class="mave-collection-description">{{ item.description }}</div>
         </div>
       </div>
-      <div class="mave-1000px-col">
+      <div class="mavedb-1000px-col">
         <div v-if="item.creationDate">Created {{ formatDate(item.creationDate) }} <span v-if="item.createdBy">
           <a :href="`https://orcid.org/${item.createdBy.orcidId}`" target="_blank"><img src="@/assets/ORCIDiD_icon.png"
             alt="ORCIDiD">{{ item.createdBy.firstName }} {{ item.createdBy.lastName }}</a></span></div>

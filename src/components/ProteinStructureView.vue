@@ -44,7 +44,10 @@ export default {
       default: () => []
     },
     rowSelected: {
-      type: Number,
+      type: Object,
+    },
+    rowGroupSelected: {
+      type: Object,
     },
     residueTooltips: {
       type: Array,
@@ -56,16 +59,20 @@ export default {
     const colorBy = ref('mean.color')
 
     watch(() => props.rowSelected, (newValue) => {
-      if (_.isNumber(newValue)) {
-        colorBy.value = [newValue, 'color']
-      } else {
-        colorBy.value = 'mean.color'
+      if (_.isNumber(newValue?.rowNumber)) {
+        colorBy.value = [newValue.rowNumber, 'color']
+      }
+    })
+
+    watch(() => props.rowGroupSelected, (newValue) => {
+      if (newValue?.colorBy && newValue.colorBy !== colorBy.value) {
+        colorBy.value = newValue.colorBy
       }
     })
 
     return {
       ...useScopedId(),
-      colorBy
+      colorBy,
     }
   },
 
@@ -74,11 +81,6 @@ export default {
     viewerInstance: null,
     selectedAlphaFold: null,
     stage: null,
-    colorByOptions: [
-      {name: 'Mean Score', value: 'mean.color'},
-      {name: 'Min Missense Score', value: 'minMissense.color'},
-      {name: 'Max Missense Score', value: 'maxMissense.color'},
-    ],
     colorScheme: 'bfactor',
     colorSchemeOptions: [
       'atomindex',
@@ -107,6 +109,19 @@ export default {
   }),
 
   computed: {
+    colorByOptions: function() {
+      const baseOptions = [
+        {name: 'Mean Score', value: 'mean.color'},
+        {name: 'Min Missense Score', value: 'minMissense.color'},
+        {name: 'Max Missense Score', value: 'maxMissense.color'},
+      ]
+      if (_.isNumber(this.rowSelected?.rowNumber) && this.rowSelected?.label) {
+        return [...baseOptions, {name: this.rowSelected.label, value: [this.rowSelected.rowNumber, 'color']}]
+      } else if (this.rowGroupSelected?.label && this.rowGroupSelected?.colorBy) {
+        return [...baseOptions, {name: this.rowGroupSelected.label, value: this.rowGroupSelected.colorBy}]
+      }
+      return baseOptions
+    },
     selectionDataWithSelectedColorBy: function() {
         return _.map(this.selectionData, (x) => ({
           start_residue_number: x.start_residue_number,

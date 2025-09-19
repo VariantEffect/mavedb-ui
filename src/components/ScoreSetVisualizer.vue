@@ -12,6 +12,7 @@
           :showProteinStructureButton="false"
           @variantColumnRangesSelected="didSelectHeatmapResidues"
           @variantRowSelected="didSelectHeatmapRow"
+          @variantRowGroupSelected="didSelectHeatmapRowGroup"
         />
       </div>
     </SplitterPanel>
@@ -23,6 +24,7 @@
           :selectionData="selectionData"
           :residueTooltips="residueTooltips"
           :rowSelected="rowSelected"
+          :rowGroupSelected="rowGroupSelected"
           @clickedResidue="didClickResidue($event.residueNumber)"
           @hoveredOverResidue="didHighlightResidue($event.residueNumber)"
       />
@@ -38,6 +40,7 @@ import ScoreSetHeatmap from '@/components/ScoreSetHeatmap'
 import Splitter from 'primevue/splitter'
 import SplitterPanel from 'primevue/splitterpanel'
 import _ from 'lodash'
+import { AMINO_ACIDS } from '@/lib/amino-acids'
 
 export default {
   name: 'ScoreSetVisualizer',
@@ -67,6 +70,7 @@ export default {
     selectionData: [],
     residueTooltips: [],
     rowSelected: null,
+    rowGroupSelected: null,
   }),
 
   methods: {
@@ -83,7 +87,54 @@ export default {
       this.selectedResidueRanges = ranges
     },
     didSelectHeatmapRow: function(data) {
-      this.rowSelected = _.get(data, '0.y', null)
+      this.rowSelected = null
+      this.rowGroupSelected = null
+
+      const aaRows = this.$refs.scoreSetHeatmap.heatmapRows
+      const rowNumber = _.get(data, '0.y', null)
+      if (!_.isNumber(rowNumber)) return
+
+      const selectedRow = aaRows[aaRows.length - rowNumber - 1]
+      const aa = AMINO_ACIDS.find((a) => a.codes?.single === selectedRow?.code)
+      this.rowSelected = {
+        rowNumber,
+        label: aa?.name || selectedRow?.code,
+      }
+    },
+    didSelectHeatmapRowGroup: function(selectedGroup) {
+      const {groupCode, data} = selectedGroup
+
+      this.rowSelected = null
+      this.rowGroupSelected = null
+
+      const heatmapColorScale = this.$refs.scoreSetHeatmap?.heatmap?.colorScale()
+
+      if (heatmapColorScale) {
+        const numRows = data.length
+        const maxX = _.max(_.map(data, (rowData) => _.max(_.map(rowData, 'x'))))
+        const minX = _.min(_.map(data, (rowData) => _.min(_.map(rowData, 'x'))))
+
+        for (let x = minX; x <= maxX; x++) {
+          let scoreSum = 0
+          let scoreCount = 0
+          for (let i = 0; i < numRows; i++) {
+            const cellData = _.find(data[i], (d) => d.x === x)
+            if (_.isNumber(cellData?.meanScore)) {
+              scoreCount += 1
+              scoreSum += cellData.meanScore
+            }
+          }
+          const meanScore = scoreSum / scoreCount
+          _.set(this.selectionData, [x-1, _.camelCase(groupCode)], {
+            score: meanScore,
+            color: _.isNumber(meanScore) ? this.rgbToHex(heatmapColorScale(meanScore)) : '#000',
+          })
+        }
+        this.rowGroupSelected = {
+          label: groupCode,
+          colorBy: `${_.camelCase(groupCode)}.color`,
+        }
+      }
     },
     rgbToHex: (rgb) => {
       const nums = _.words(rgb, /[0-9]+/g)

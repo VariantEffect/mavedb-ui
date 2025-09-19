@@ -1,8 +1,5 @@
 import * as d3 from 'd3'
-import _, {range} from 'lodash'
-
-import {AMINO_ACIDS, AMINO_ACIDS_BY_HYDROPHILIA} from './amino-acids.js'
-import {NUCLEOTIDE_BASES} from './nucleotides.js'
+import _ from 'lodash'
 
 type FieldGetter<T> = (d: HeatmapDatum) => T
 type Getter<T> = () => T
@@ -13,26 +10,7 @@ export const DEFAULT_PIVOT_COLOR = '#FFFFFF'
 export const DEFAULT_MAXIMUM_COLOR = '#B00020'
 
 const LABEL_SIZE = 10
-const LEGEND_SIZE = 75
-
-/** Codes used in the right part of a MaveHGVS-pro string representing a single variation in a protein sequence. */
-export const MAVE_HGVS_PRO_CHANGE_CODES = [
-  {codes: {single: '='}}, // Synonymous AA variant
-  {codes: {single: '*', triple: 'TER'}}, // Stop codon
-  {codes: {single: '-', triple: 'DEL'}} // Deletion
-]
-
-export const HEATMAP_NUCLEOTIDE_ROWS: HeatmapRowSpecification[] = [
-  ...NUCLEOTIDE_BASES.map((ntCode) => ({code: ntCode.codes.single, label: ntCode.codes.single}))
-]
-
-/** List of single-character codes for the heatmap's rows, from bottom to top. */
-export const HEATMAP_AMINO_ACID_ROWS: HeatmapRowSpecification[] = [
-  {code: '=', label: '\uff1d'},
-  {code: '*', label: '\uff0a'},
-  {code: '-', label: '\uff0d'},
-  ...AMINO_ACIDS_BY_HYDROPHILIA.map((aaCode) => ({code: aaCode, label: aaCode}))
-]
+const LEGEND_SIZE = 80
 
 /**
  * Margins of the heatmap content inside the SVG, expressed in screen units (pixels).
@@ -53,12 +31,16 @@ export interface HeatmapNodeSize {
 }
 
 export interface HeatmapRowSpecification {
-  /** A single-character amino acid code or single-character code from MAVE_HGVS_PRO_CHANGE_CODES. */
+  /** A single-character code for this row. */
   code: string
-  /** The tick mark label text to display for this change, which is usually the same as the code. */
+  /** The tick mark label text to display for this row, which is usually the same as the code. */
   label: string
   /** An optional CSS class name to apply to the row's tick mark label. */
   cssClass?: string
+  /** An optional group code. */
+  groupCode?: string
+  /** An optional label to display for this row's group, which is usually the same as the group code. */
+  groupLabel?: string
 }
 
 export type HeatmapScores = any
@@ -110,7 +92,8 @@ export interface Heatmap {
   datumSelected: Accessor<((d: HeatmapDatum) => void) | null, Heatmap>
   columnRangesSelected: Accessor<((ranges: Array<{start: number; end: number}>) => void) | null, Heatmap>
   rowSelected: Accessor<((data: HeatmapDatum[]) => void) | null, Heatmap>
-  excludeDatum: Accessor<(d: HeatmapDatum) => boolean, Heatmap>
+  rowGroupSelected: Accessor<((group: {groupCode: string | null, groupLabel: string | null, data: HeatmapDatum[][]}) => void) | null, Heatmap>
+  excludeDatum: Accessor<((d: HeatmapDatum) => boolean), Heatmap>
 
   // Data fields
   valueField: Accessor<FieldGetter<number>, Heatmap>
@@ -135,7 +118,11 @@ export interface Heatmap {
   // Axis controls
   drawX: Accessor<boolean, Heatmap>
   drawY: Accessor<boolean, Heatmap>
+  drawYGroups: Accessor<boolean, Heatmap>
   skipXTicks: Accessor<number, Heatmap>
+  tooltipTickLabelHtml: Accessor<((
+    rowNumber: number | null,
+  ) => string | null) | null, Heatmap>
 
   // Legend controls
   legendTitle: Accessor<string | null, Heatmap>
@@ -195,14 +182,15 @@ export default function makeHeatmap(): Heatmap {
   let datumSelected: ((d: HeatmapDatum) => void) | null = null
   let columnRangesSelected: ((ranges: Array<{start: number; end: number}>) => void) | null = null
   let rowSelected: ((data: HeatmapDatum[]) => void) | null = null
-  let excludeDatum: (d: HeatmapDatum) => boolean = (d) => false as boolean
+  let rowGroupSelected: ((group: {groupCode: string | null, groupLabel: string | null, data: HeatmapDatum[][]}) => void) | null = null
+  let excludeDatum: ((d: HeatmapDatum) => boolean) = (d) => false as boolean
 
   // Layout
   let margins: HeatmapMargins = {top: 20, right: 20, bottom: 30, left: 20}
   let nodeBorderRadius: number = 4
-  let nodePadding: number = 0.1
-  let nodeSize: HeatmapNodeSize = {width: 20, height: 20}
-  let rows: HeatmapRowSpecification[] = HEATMAP_AMINO_ACID_ROWS
+  let nodePadding: number = .1
+  let nodeSize: HeatmapNodeSize = { width: 20, height: 20}
+  let rows: HeatmapRowSpecification[] = []
 
   // Colors
   let colorScaleControlPoints: HeatmapColorScaleControlPoint[] | null = null
@@ -213,7 +201,11 @@ export default function makeHeatmap(): Heatmap {
   // Axis controls
   let drawX: boolean = true
   let drawY: boolean = true
+  let drawYGroups: boolean = false
   let skipXTicks: number = 1
+  let tooltipTickLabelHtml: ((
+    rowNumber: number | null,
+  ) => string | null) | null = null
 
   // Legend controls
   let legendTitle: string | null = null
@@ -363,24 +355,48 @@ export default function makeHeatmap(): Heatmap {
   // Clicking
   //////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 
-  const selectRow: (event: MouseEvent) => void = (event: MouseEvent) => {
-    const rowNumber = d3.select(event.target as SVGRectElement).datum() as number
+  const selectRow: (rowNumber: number) => void = (rowNumber: number) => {
+      if (svg) {
+        svg.select('g.heatmap-axis-selection-rectangle').selectAll('rect').remove()
+        svg.select('g.heatmap-axis-selection-rectangle')
+          .append('rect')
+          .attr('x', 0)
+          .attr('y', rowNumber * yScale.step() + (nodePadding * yScale.step()/2))
+          .attr('width', (content.columns ? content.columns : 0) * xScale.step())
+          .attr('height', yScale.step())
+          .style('fill', 'none')
+          .style('stroke-width', 2)
+          .style('stroke', '#808')
+          .raise()
+      }
+      if (rowSelected) rowSelected(data.filter((d: HeatmapDatum) => yCoordinate(d) === rowNumber))
+  }
 
-    if (svg) {
+  const selectRowGroup: (rowGroup: any) => void = (rowGroup: any) => {
+    const {startRowNumber, rowCount, groupLabel, groupCode} = rowGroup
+
+    if (svg && _.isInteger(startRowNumber) && _.isInteger(rowCount)) {
       svg.select('g.heatmap-axis-selection-rectangle').selectAll('rect').remove()
-      svg
-        .select('g.heatmap-axis-selection-rectangle')
+      svg.select('g.heatmap-axis-selection-rectangle')
         .append('rect')
         .attr('x', 0)
-        .attr('y', rowNumber * yScale.step() + (nodePadding * yScale.step()) / 2)
+        .attr('y', startRowNumber * yScale.step() + (nodePadding * yScale.step()/2))
         .attr('width', (content.columns ? content.columns : 0) * xScale.step())
-        .attr('height', yScale.step())
+        .attr('height', rowCount * yScale.step())
         .style('fill', 'none')
         .style('stroke-width', 2)
         .style('stroke', '#808')
         .raise()
+
+      if (rowGroupSelected) {
+        // return 2D array of data in the selected rows
+        const selectedRows: HeatmapDatum[][] = []
+        for (let i = startRowNumber; i < startRowNumber + rowCount; i++) {
+          selectedRows.push(data.filter((d: HeatmapDatum) => yCoordinate(d) === i))
+        }
+        rowGroupSelected({groupCode, groupLabel, data: selectedRows})
+      }
     }
-    if (rowSelected) rowSelected(data.filter((d: HeatmapDatum) => yCoordinate(d) === rowNumber))
   }
 
   const click = function (event: MouseEvent, d: HeatmapDatum) {
@@ -644,6 +660,19 @@ export default function makeHeatmap(): Heatmap {
     }
   }
 
+  const mouseoverYAxisTickLabel = (event: MouseEvent, rowNumber: number | null) => {
+    const target = event.target
+    refreshHoverDatum(null)
+    hideTooltip(hoverTooltip)
+
+    if (hoverTooltip && target instanceof Element) {
+      showTickLabelTooltip(hoverTooltip, rowNumber)
+      hoverTooltip
+        .style('left', (d3.pointer(event, document.body)[0] + 30) + 'px')
+        .style('top', (d3.pointer(event, document.body)[1]) + 'px')
+    }
+  }
+
   //////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
   // Legend Management
   //////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
@@ -698,6 +727,22 @@ export default function makeHeatmap(): Heatmap {
       }
     }
   }
+
+  const showTickLabelTooltip = (
+    tooltip: d3.Selection<HTMLDivElement, any, any, any> | null,
+    rowNumber: number | null
+  ) => {
+      if (tooltipTickLabelHtml) {
+        const html = tooltipTickLabelHtml(
+          rowNumber
+        )
+
+        if (html && tooltip) {
+          tooltip.html(html)
+          tooltip.style('display', 'block')
+        }
+      }
+    }
 
   const hideTooltip = (tooltip: d3.Selection<HTMLDivElement, any, any, any> | null) => {
     if (tooltip) {
@@ -852,7 +897,7 @@ export default function makeHeatmap(): Heatmap {
           // Update the heatmap effective margins to take the legend into account.
           effectiveMargins = {
             ...margins,
-            left: margins.left + LEGEND_SIZE
+            left: margins.left + LEGEND_SIZE + (drawYGroups ? 10 : 0),
           }
         }
 
@@ -895,6 +940,18 @@ export default function makeHeatmap(): Heatmap {
         chart.resize()
         prepareData()
 
+        // Create group data for row groupCodes
+        const groupData = _.chain(rows)
+          .groupBy('groupCode')
+          .map((groupRows, groupCode) => ({
+            groupCode,
+            groupLabel: groupRows[0].groupLabel || groupCode,
+            startRowNumber: rows.length - (rows.findIndex(row => row.groupCode === groupCode) + groupRows.length),
+            rowCount: groupRows.length
+          }))
+          .filter(group => group.groupCode && group.groupCode !== 'undefined')
+          .value()
+
         if (drawLegend) {
           const legend = svg.select('g.heatmap-vertical-color-legend').attr('width', LEGEND_SIZE).attr('height', height)
           verticalColorLegend(legend, {
@@ -932,8 +989,7 @@ export default function makeHeatmap(): Heatmap {
 
         // Refresh the axes.
         if (drawX) {
-          svg
-            .select('g.heatmap-bottom-axis')
+          svg.select('g.heatmap-bottom-axis')
             .style('font-size', 15)
             .attr('transform', `translate(0,${height})`)
             // @ts-ignore
@@ -948,18 +1004,14 @@ export default function makeHeatmap(): Heatmap {
             .attr('class', (n) => (skipXTicks > 0 && n % (skipXTicks + 1) === 1 ? '' : 'heatmap-x-axis-invisible'))
         }
         if (drawY) {
-          svg
-            .select('g.heatmap-y-axis-tick-labels')
+          svg.select('g.heatmap-y-axis-tick-labels')
             // @ts-ignore
             // Get the row's amino acid code or variation symbol
-            .call(
-              d3
-                .axisLeft(yScale)
-                .tickSize(0)
-                .tickFormat((n) => rows[rows.length - 1 - n].label)
+            .call(d3.axisLeft(yScale)
+              .tickSize(0)
+              .tickFormat((n) => rows[rows.length - 1 - n].label)
             )
-            .select('.domain')
-            .remove()
+            .select('.domain').remove()
 
           // Apply row-specific CSS classes to Y-axis tick mark labels.
           svg
@@ -980,24 +1032,86 @@ export default function makeHeatmap(): Heatmap {
               .select('.domain')
               .remove()
 
+            // Center the text labels after the axis is created
+            yAxisLabels.selectAll('g.tick text')
+              .attr('text-anchor', 'middle')
+              .attr('x', -8)
+              .on('mouseover', mouseoverYAxisTickLabel)
+              .on('mouseleave', mouseleave)
+
             if (axisSelectionMode == 'y') {
-              yAxisLabels.style('cursor', 'pointer').on('click', function (event) {
-                selectRow(event)
-              })
+              yAxisLabels.style('cursor', 'pointer')
+                .on('click', function(event) {
+                  const datum = d3.select(event.target).datum()
+                  if (_.isInteger(datum)) {
+                    selectRow(datum as number)
+                  } else if (_.isInteger((datum as any).startRowNumber) && _.isInteger((datum as any).rowCount)) {
+                      // selectRowRange((datum as any).startRowNumber, (datum as any).rowCount)
+                      selectRowGroup(datum)
+                  }
+                })
             }
 
             // Apply row-specific CSS classes to Y-axis tick mark labels.
             yAxisSvg
               .selectAll('g.heatmap-y-axis-tick-labels g.tick')
               .attr('class', (n) => rows[rows.length - 1 - n].cssClass || '')
-          }
 
-          if (svg && yAxisSvg) {
+            if (drawYGroups) {
+              // Add group elements for each groupCode in wrapper
+              if (groupData.length > 0) {
+                const groupElementsWrapper = yAxisSvg.select('g.heatmap-y-axis-tick-labels')
+                  .selectAll('g.group-label')
+                  .data(groupData)
+                  .enter()
+                  .append('g')
+                  .attr('class', 'group-label')
+                  .attr('data-group-code', d => d.groupCode)
+
+                  // Add background rectangle for each group
+                  groupElementsWrapper.append('rect')
+                    .attr('x', -40)
+                    .attr('y', d => {
+                      const startY = yScale(d.startRowNumber) + yScale.bandwidth() / 2
+                      return startY - (nodeSize.height / 2)
+                    })
+                    .attr('width', 20)
+                    .attr('height', d => {
+                      const startY = yScale(d.startRowNumber) + yScale.bandwidth() / 2
+                      const endY = yScale(d.startRowNumber + d.rowCount - 1) + yScale.bandwidth() / 2
+                      return endY - startY + (nodeSize.height)
+                    })
+                    .attr('fill', '#ccc')
+                    .attr('stroke-width', 1)
+                    .attr('rx', 3)
+                    .attr('ry', 3)
+
+                // Add group label text
+                groupElementsWrapper.append('text')
+                  .attr('x', -30)
+                  .attr('y', d => {
+                    const startY = yScale(d.startRowNumber) + yScale.bandwidth() / 2
+                    const endY = yScale(d.startRowNumber + d.rowCount - 1) + yScale.bandwidth() / 2
+                    return (startY + endY) / 2
+                  })
+                  .attr('dy', '0.35em')
+                  .attr('text-anchor', 'middle')
+                  .attr('fill', '#666')
+                  .attr('font-size', '11px')
+                  .attr('font-weight', 'bold')
+                  .attr('transform', d => {
+                    const startY = yScale(d.startRowNumber) + yScale.bandwidth() / 2
+                    const endY = yScale(d.startRowNumber + d.rowCount - 1) + yScale.bandwidth() / 2
+                    const centerY = (startY + endY) / 2
+                    return `rotate(-90, -30, ${centerY})`
+                  })
+                  .text(d => d.groupLabel)
+              }
+            }
+
             // Set the width of the Y-axis SVG to accommodate legend and tick labels.
-            const mainYAxisTickLabelsWidth = (
-              svg?.select('g.heatmap-y-axis-tick-labels')?.node() as Element
-            ).getBoundingClientRect().width
-            if (mainYAxisTickLabelsWidth) yAxisSvg.style('width', `${LEGEND_SIZE + mainYAxisTickLabelsWidth + 3}px`)
+            const mainYAxisTickLabelsWidth = (svg?.select('g.heatmap-y-axis-tick-labels')?.node() as Element).getBoundingClientRect().width
+            if (mainYAxisTickLabelsWidth) yAxisSvg.style('width', `${LEGEND_SIZE + (drawYGroups ? 10 : 0) + mainYAxisTickLabelsWidth + 3}px`)
           }
         }
 
@@ -1146,7 +1260,15 @@ export default function makeHeatmap(): Heatmap {
       return chart
     },
 
-    excludeDatum: (value?: (d: HeatmapDatum) => boolean) => {
+    rowGroupSelected: (value?: ((group: {groupCode: string | null, groupLabel: string | null, data: HeatmapDatum[][]}) => void) | null) => {
+      if (value === undefined) {
+        return rowGroupSelected
+      }
+      rowGroupSelected = value
+      return chart
+    },
+
+    excludeDatum: (value?: ((d: HeatmapDatum) => boolean)) => {
       if (value === undefined) {
         return excludeDatum
       }
@@ -1191,6 +1313,16 @@ export default function makeHeatmap(): Heatmap {
         return tooltipHtml
       }
       tooltipHtml = value
+      return chart
+    },
+
+    tooltipTickLabelHtml: (value?: ((
+      rowNumber: number | null,
+    ) => string | null) | null) => {
+      if (value === undefined) {
+        return tooltipTickLabelHtml
+      }
+      tooltipTickLabelHtml = value
       return chart
     },
 
@@ -1276,6 +1408,15 @@ export default function makeHeatmap(): Heatmap {
       return chart
     },
 
+    drawYGroups: (value?: boolean) => {
+      if (value === undefined) {
+        return drawYGroups
+      }
+
+      drawYGroups = value
+      return chart
+    },
+
     skipXTicks: (value?: number) => {
       if (value === undefined) {
         return skipXTicks
@@ -1358,66 +1499,6 @@ export default function makeHeatmap(): Heatmap {
   }
 
   return chart
-}
-
-/**
- * Given a MaveHGVS-pro amino acid code or code representing deletion, synonmyous variation, or stop codon, return the
- * corresponding single-character code (which is the code used in our heatmap's y-axis).
- *
- * @param aaCodeOrChange A one- or three-character code representing an amino acid or the result of a variation at a
- *   single locus in a protein sequence. If not an amino acid code, it should be a code representing synonymous
- *   variation (=), stop codon (*), or deletion (- or del).
- * @return The one-character code representing the same amino acid or change, or null if the input was not a supported
- *   amino acid or change.
- */
-export function singleLetterAminoAcidOrHgvsCode(aaCodeOrChange: string): string | null {
-  const code = aaCodeOrChange.toUpperCase()
-  if (code.length == 1) {
-    return code
-  }
-  if (code.length == 3) {
-    return (
-      AMINO_ACIDS.find((aa) => aa.codes.triple == code)?.codes?.single ||
-      MAVE_HGVS_PRO_CHANGE_CODES.find((change) => change.codes.triple == code)?.codes?.single ||
-      null
-    )
-  }
-  // TODO What about D-amino acids? The "d-" prefix has been capitalized at this point, so if we need to handle these,
-  // we should match against capitalized five-letter codes.
-  return null
-}
-
-/**
- * Given a MaveHGVS-pro amino acid code or code representing deletion, synonmyous variation, or stop codon, return the
- * heatmap row number on which a single-AA variant should be displayed.
- *
- * @param aaCodeOrChange A one- or three-character code representing an amino acid or the result of a variation at a
- *   single locus in a protein sequence. If not an amino acid code, it should be a code representing synonymous
- *   variation (=), stop codon (*), or deletion (- or del).
- * @returns The heatmap row number, from 0 (the bottom row) to 22 (the top row).
- */
-export function heatmapRowForProteinVariant(aaCodeOrChange: string): number | null {
-  const singleLetterCode = singleLetterAminoAcidOrHgvsCode(aaCodeOrChange)
-  const ranking = singleLetterCode
-    ? HEATMAP_AMINO_ACID_ROWS.findIndex((rowSpec) => rowSpec.code == singleLetterCode)
-    : null
-  return ranking != null && ranking >= 0 ? ranking : null
-}
-
-/**
- * Given a MaveHGVS-pro amino acid code or code representing deletion, synonmyous variation, or stop codon, return the
- * heatmap row number on which a single-AA variant should be displayed.
- *
- * @param ntCodeOrChange A one-character code representing a nucleotide base or the result of a variation at a
- *   single locus in a nucleotide sequence.
- * @returns The heatmap row number, from 0 (the bottom row) to 3 (the top row).
- */
-export function heatmapRowForNucleotideVariant(ntCodeOrChange: string): number | null {
-  const singleLetterCode = ntCodeOrChange.toUpperCase()
-  const ranking = singleLetterCode
-    ? HEATMAP_NUCLEOTIDE_ROWS.findIndex((rowSpec) => rowSpec.code == singleLetterCode)
-    : null
-  return ranking != null && ranking >= 0 ? ranking : null
 }
 
 /**

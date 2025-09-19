@@ -1,10 +1,7 @@
 <template>
-  <TabMenu v-if="hasTabBar" v-model:active-index="activeViz" class="mavedb-histogram-viz-select" :model="vizOptions" />
-  <div
-    v-if="clinicalControlsEnabled && (!refreshedClinicalControls || !associatedClinicalControls)"
-    style="font-size: x-small"
-  >
-    <ProgressSpinner style="height: 12px; width: 12px" />
+  <TabMenu class="mave-histogram-viz-select" v-if="hasTabBar" v-model:activeIndex="activeViz" :model="vizOptions" />
+  <div v-if="clinicalControlsEnabled && (!refreshedClinicalControls || !associatedClinicalControls)" style="font-size: small;">
+    <ProgressSpinner style="height: 24px; width: 24px;" />
     Loading clinical control options in the background. Additional histogram views will be available once loaded.
   </div>
   <div v-if="showControls" class="mavedb-histogram-controls">
@@ -463,25 +460,18 @@ export default defineComponent({
           //       (dnaHgvs ? `${spliceHgvs} (${dnaHgvs})` : spliceHgvs)
           //       : dnaHgvs
           // )
-          const mappedVariantLabel = mappedProteinHgvs
-            ? mappedDnaHgvs
-              ? `${mappedProteinHgvs} (${mappedDnaHgvs})`
-              : mappedProteinHgvs
-            : mappedDnaHgvs
-          const unmappedVariantLabel = unmappedProteinHgvs
-            ? unmappedDnaHgvs
-              ? `${unmappedProteinHgvs} (${unmappedDnaHgvs})`
-              : unmappedProteinHgvs
-            : unmappedSpliceHgvs
-              ? unmappedDnaHgvs
-                ? `${unmappedSpliceHgvs} (${unmappedDnaHgvs})`
-                : unmappedSpliceHgvs
-              : unmappedDnaHgvs
+          const mappedVariantLabel = mappedProteinHgvs ?
+              (mappedDnaHgvs ? `${mappedProteinHgvs} (${mappedDnaHgvs})` : mappedProteinHgvs)
+              : mappedDnaHgvs
+          const unmappedVariantLabel = unmappedProteinHgvs ?
+              (unmappedDnaHgvs ? `${unmappedProteinHgvs} (${unmappedDnaHgvs})` : unmappedProteinHgvs)
+              : unmappedSpliceHgvs ?
+                (unmappedDnaHgvs ? `${unmappedSpliceHgvs} (${unmappedDnaHgvs})` : unmappedSpliceHgvs)
+                : unmappedDnaHgvs
 
-          const variantLabel =
-            this.coordinates == 'mapped'
-              ? (mappedVariantLabel ?? variant.mavedb_label ?? unmappedVariantLabel)
-              : (variant.mavedb_label ?? unmappedVariantLabel)
+          const variantLabel = this.coordinates == 'mapped' ?
+              mappedVariantLabel ?? variant.mavedb_label ?? unmappedVariantLabel
+              : variant.mavedb_label ?? unmappedVariantLabel
           if (variantLabel) {
             parts.push(variantLabel)
           }

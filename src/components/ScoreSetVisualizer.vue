@@ -110,33 +110,26 @@ export default {
       const heatmapColorScale = this.$refs.scoreSetHeatmap?.heatmap?.colorScale()
 
       if (heatmapColorScale) {
-        let meanScores
-        if (!data || data.length === 0 || data[0].length === 0) {
-          meanScores = []
-        } else {
-          meanScores = new Array(data[0].length)
-        }
-
         const numRows = data.length
-        const numCols = data[0].length
+        const maxX = _.max(_.map(data, (rowData) => _.max(_.map(rowData, 'x'))))
+        const minX = _.min(_.map(data, (rowData) => _.min(_.map(rowData, 'x'))))
 
-        for (let j = 0; j < numCols; j++) {
+        for (let x = minX; x <= maxX; x++) {
           let scoreSum = 0
           let scoreCount = 0
           for (let i = 0; i < numRows; i++) {
-            if (_.has(data, [i, j, 'meanScore'])) {
+            const cellData = _.find(data[i], (d) => d.x === x)
+            if (_.isNumber(cellData?.meanScore)) {
               scoreCount += 1
-              scoreSum += _.get(data, [i, j, 'meanScore'], 0)
+              scoreSum += cellData.meanScore
             }
           }
-          meanScores[j] = scoreSum / scoreCount
-        }
-        meanScores.forEach((meanScore, index) => {
-          _.set(this.selectionData, [index, _.camelCase(groupCode)], {
+          const meanScore = scoreSum / scoreCount
+          _.set(this.selectionData, [x-1, _.camelCase(groupCode)], {
             score: meanScore,
             color: _.isNumber(meanScore) ? this.rgbToHex(heatmapColorScale(meanScore)) : '#000',
           })
-        })
+        }
         this.rowGroupSelected = {
           label: groupCode,
           colorBy: `${_.camelCase(groupCode)}.color`,

@@ -18,6 +18,7 @@
 
 <script lang="ts">
 import useAuth from '@/composition/auth'
+import {defineComponent} from 'vue'
 import {useRoute} from 'vue-router'
 
 interface FooterLink {
@@ -37,7 +38,7 @@ export interface ExternalLink extends FooterLink {
   rel?: string
 }
 
-export default {
+export default defineComponent({
   name: 'Footer',
 
   setup: () => {
@@ -81,7 +82,7 @@ export default {
       return this.footerLinks
     }
   }
-}
+})
 </script>
 
 <style scoped>

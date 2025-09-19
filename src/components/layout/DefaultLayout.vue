@@ -23,9 +23,9 @@ import '@/assets/app.css'
 import Toolbar from '@/components/layout/Toolbar.vue'
 import Footer from '@/components/layout/Footer.vue'
 import EmailPrompt from '@/components/common/EmailPrompt.vue'
-import { PropType } from 'vue'
+import {defineComponent, PropType} from 'vue'
 
-export default {
+export default defineComponent({
   name: 'DefaultLayout',
 
   components: {Footer, Toolbar, EmailPrompt},
@@ -84,7 +84,7 @@ export default {
       return classNames
     }
   }
-}
+})
 </script>
 
 <style scoped>

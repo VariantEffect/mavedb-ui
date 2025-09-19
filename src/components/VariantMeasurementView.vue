@@ -112,7 +112,7 @@
 import axios from 'axios'
 import Card from 'primevue/card'
 import {useRestResource} from 'rest-client-vue'
-import {watch} from 'vue'
+import {defineComponent, watch} from 'vue'
 
 import ScoreSetHistogram from '@/components/ScoreSetHistogram.vue'
 import useFormatters from '@/composition/formatters'
@@ -123,7 +123,7 @@ import ProgressSpinner from 'primevue/progressspinner'
 
 type Classification = 'Functionally normal' | 'Functionally abnormal' | 'Not specified'
 
-export default {
+export default defineComponent({
   name: 'VariantMeasurementView',
   components: {Card, ScoreSetHistogram, ProgressSpinner},
 
@@ -307,7 +307,7 @@ export default {
       }
     }
   }
-}
+})
 </script>
 
 <style scoped>

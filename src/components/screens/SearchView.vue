@@ -1,48 +1,89 @@
 <template>
   <DefaultLayout overflow-y="hidden">
     <div class="mavedb-search-view">
-      <div class="mavedb-search-header" style="display: none;">
+      <div class="mavedb-search-header" style="display: none">
         <h1>Search MaveDB Experiments and Score Sets</h1>
       </div>
       <div class="mavedb-search-form">
         <div class="flex flex-wrap justify-content-center gap-3">
-          <IconField iconPosition="left">
+          <IconField icon-position="left">
             <InputIcon class="pi pi-search"></InputIcon>
-            <InputText v-model="searchText" ref="searchTextInput" type="search" class="p-inputtext-sm" placeholder="Search" />
+            <InputText
+              ref="searchTextInput"
+              v-model="searchText"
+              class="p-inputtext-sm"
+              placeholder="Search"
+              type="search"
+            />
           </IconField>
           <Button class="p-button-plain" @click="clear">Clear All</Button>
         </div>
         <TabView class="mavedb-search-tabs">
           <TabPanel header="Target filters">
             <div class="mavedb-search-filters">
-              <SelectList v-model="filterTargetNames" :options="targetNameFilterOptions" class="mavedb-search-filter-option-picker" title="Target name"  />
-              <SelectList v-model="filterTargetTypes" :options="targetTypeFilterOptions" :optionLabel="textForTargetGeneCategory" class="mavedb-search-filter-option-picker" title="Target type"  />
-              <SelectList v-model="filterTargetOrganismNames" :options="targetOrganismFilterOptions" class="mavedb-search-filter-option-picker mavedb-organism-picker" title="Target organism"  />
-              <SelectList v-model="filterTargetAccession" :options="targetAccessionFilterOptions" class="mavedb-search-filter-option-picker mavedb-organism-picker" title="Target accession"  />
+              <SelectList
+                v-model="filterTargetNames"
+                class="mavedb-search-filter-option-picker"
+                :options="targetNameFilterOptions"
+                title="Target name"
+              />
+              <SelectList
+                v-model="filterTargetTypes"
+                class="mavedb-search-filter-option-picker"
+                :option-label="textForTargetGeneCategory"
+                :options="targetTypeFilterOptions"
+                title="Target type"
+              />
+              <SelectList
+                v-model="filterTargetOrganismNames"
+                class="mavedb-search-filter-option-picker mavedb-organism-picker"
+                :options="targetOrganismFilterOptions"
+                title="Target organism"
+              />
+              <SelectList
+                v-model="filterTargetAccession"
+                class="mavedb-search-filter-option-picker mavedb-organism-picker"
+                :options="targetAccessionFilterOptions"
+                title="Target accession"
+              />
             </div>
           </TabPanel>
           <TabPanel header="Publication filters">
             <div class="mavedb-search-filters">
-              <SelectList v-model="filterPublicationAuthors" :options="publicationAuthorFilterOptions" class="mavedb-search-filter-option-picker" title="Publication authors"  />
-              <SelectList v-model="filterPublicationDatabases" :options="publicationDatabaseFilterOptions" class="mavedb-search-filter-option-picker" title="Publication database"  />
-              <SelectList v-model="filterPublicationJournals" :options="publicationJournalFilterOptions" class="mavedb-search-filter-option-picker" title="Publication journal"  />
+              <SelectList
+                v-model="filterPublicationAuthors"
+                class="mavedb-search-filter-option-picker"
+                :options="publicationAuthorFilterOptions"
+                title="Publication authors"
+              />
+              <SelectList
+                v-model="filterPublicationDatabases"
+                class="mavedb-search-filter-option-picker"
+                :options="publicationDatabaseFilterOptions"
+                title="Publication database"
+              />
+              <SelectList
+                v-model="filterPublicationJournals"
+                class="mavedb-search-filter-option-picker"
+                :options="publicationJournalFilterOptions"
+                title="Publication journal"
+              />
             </div>
           </TabPanel>
         </TabView>
       </div>
       <ScoreSetTable
-          :data="publishedScoreSets"
-          :language="language"
-          :loading="loading"
-          :scrollX="true"
-          :scrollY="true"
+        :data="publishedScoreSets"
+        :language="language"
+        :loading="loading"
+        :scroll-x="true"
+        :scroll-y="true"
       />
     </div>
   </DefaultLayout>
 </template>
 
 <script lang="ts">
-
 import axios from 'axios'
 import IconField from 'primevue/iconfield'
 import InputIcon from 'primevue/inputicon'
@@ -55,12 +96,12 @@ import Button from 'primevue/button'
 import TabPanel from 'primevue/tabpanel'
 import TabView from 'primevue/tabview'
 import {debounce} from 'vue-debounce'
-import { defineComponent } from 'vue'
-import { paths, components } from '@/schema/openapi'
+import {defineComponent} from 'vue'
+import {paths, components} from '@/schema/openapi'
 
-import type {LocationQueryValue} from "vue-router";
-import { textForTargetGeneCategory } from '@/lib/target-genes'
-import { routeToVariantSearchIfVariantIsSearchable } from '@/lib/search'
+import type {LocationQueryValue} from 'vue-router'
+import {textForTargetGeneCategory} from '@/lib/target-genes'
+import {routeToVariantSearchIfVariantIsSearchable} from '@/lib/search'
 
 type ShortScoreSet = components['schemas']['ShortScoreSet']
 type ShortTargetGene = components['schemas']['ShortTargetGene']
@@ -68,8 +109,8 @@ type PublicationIdentifier = components['schemas']['SavedPublicationIdentifier']
 type SearchParams = paths['/api/v1/score-sets/search']['post']['requestBody']['content']['application/json']
 
 type FilterOptions = Array<{
-  value: string,
-  badge: number,
+  value: string
+  badge: number
 }>
 
 type ScoreSetMetadataFn = (scoreSet: ShortScoreSet) => Array<string>
@@ -79,12 +120,17 @@ function countScoreSetMetadata(scoreSets: Array<ShortScoreSet>, scoreSetMetadata
   }
 
   // Filter out empty string values.
-  const values = scoreSets.map(scoreSetMetadataFn).flat().filter((item) => !!item);
+  const values = scoreSets
+    .map(scoreSetMetadataFn)
+    .flat()
+    .filter((item) => !!item)
   const frequencies = values.reduce((counts, item) => {
     counts.set(item, (counts.get(item) || 0) + 1)
     return counts
   }, new Map<string, number>())
-  return Array.from(frequencies.keys()).sort().map((value) => ({value, badge: frequencies.get(value) || 0}))
+  return Array.from(frequencies.keys())
+    .sort()
+    .map((value) => ({value, badge: frequencies.get(value) || 0}))
 }
 type GeneMetadataFn = (targetGene: ShortTargetGene) => string
 function countTargetGeneMetadata(scoreSets: Array<ShortScoreSet>, geneMetadataFn: GeneMetadataFn): FilterOptions {
@@ -92,7 +138,10 @@ function countTargetGeneMetadata(scoreSets: Array<ShortScoreSet>, geneMetadataFn
 }
 
 type PublicationMetadataFn = (publicationIdentifier: PublicationIdentifier) => Array<string>
-function countPublicationMetadata(scoreSets: Array<ShortScoreSet>, publicationMetadataFn: PublicationMetadataFn): FilterOptions {
+function countPublicationMetadata(
+  scoreSets: Array<ShortScoreSet>,
+  publicationMetadataFn: PublicationMetadataFn
+): FilterOptions {
   return countScoreSetMetadata(scoreSets, (scoreSet) => {
     const primary = scoreSet.primaryPublicationIdentifiers.map(publicationMetadataFn).flat()
     const secondary = scoreSet.secondaryPublicationIdentifiers.map(publicationMetadataFn).flat()
@@ -107,16 +156,17 @@ function extractQueryParam(content: LocationQueryValue | LocationQueryValue[]): 
   // content will be an Array.
   if (Array.isArray(content)) {
     // Only return non-null values. Typescript can't intuit what our filter is doing here, so we tell it explicitly.
-    return content.filter((item) => !!item) as Array<string>;
+    return content.filter((item) => !!item) as Array<string>
   }
   return content ? [content] : []
 }
 
 export default defineComponent({
   name: 'SearchView',
+
   components: {DefaultLayout, ScoreSetTable, IconField, InputIcon, InputText, SelectList, TabView, TabPanel, Button},
 
-  data: function() {
+  data: function () {
     return {
       filterTargetNames: extractQueryParam(this.$route.query['target-name']) as Array<string>,
       filterTargetTypes: extractQueryParam(this.$route.query['target-type']) as Array<string>,
@@ -133,114 +183,120 @@ export default defineComponent({
       language: {
         emptyTable: 'Type in the search box above or use the filters to find a data set.'
       },
-      textForTargetGeneCategory: textForTargetGeneCategory,
+      textForTargetGeneCategory: textForTargetGeneCategory
     }
   },
+
   computed: {
-    debouncedSearchFunction: function() {
+    debouncedSearchFunction: function () {
       return debounce(() => this.search(), '400ms')
     },
-    targetNameFilterOptions: function() {
+    targetNameFilterOptions: function () {
       return countTargetGeneMetadata(this.publishedScoreSets, (targetGene) => targetGene.name)
     },
-    targetOrganismFilterOptions: function() {
-      return countTargetGeneMetadata(this.publishedScoreSets,
-        (targetGene) => targetGene.targetSequence?.taxonomy.organismName || '')
+    targetOrganismFilterOptions: function () {
+      return countTargetGeneMetadata(
+        this.publishedScoreSets,
+        (targetGene) => targetGene.targetSequence?.taxonomy.organismName || ''
+      )
     },
-    targetAccessionFilterOptions: function() {
-      return countTargetGeneMetadata(this.publishedScoreSets,
-        (targetGene) => targetGene.targetAccession?.accession || '')
+    targetAccessionFilterOptions: function () {
+      return countTargetGeneMetadata(
+        this.publishedScoreSets,
+        (targetGene) => targetGene.targetAccession?.accession || ''
+      )
     },
-    targetTypeFilterOptions: function() {
+    targetTypeFilterOptions: function () {
       return countTargetGeneMetadata(this.publishedScoreSets, (targetGene) => targetGene.category)
     },
-    publicationAuthorFilterOptions: function() {
-      return countPublicationMetadata(this.publishedScoreSets,
-        (publicationIdentifier) => publicationIdentifier.authors.map((author) => author.name))
+    publicationAuthorFilterOptions: function () {
+      return countPublicationMetadata(this.publishedScoreSets, (publicationIdentifier) =>
+        publicationIdentifier.authors.map((author) => author.name)
+      )
     },
-    publicationDatabaseFilterOptions: function() {
-      return countPublicationMetadata(this.publishedScoreSets,
-        (publicationIdentifier) => publicationIdentifier.dbName ? [publicationIdentifier.dbName] : [])
+    publicationDatabaseFilterOptions: function () {
+      return countPublicationMetadata(this.publishedScoreSets, (publicationIdentifier) =>
+        publicationIdentifier.dbName ? [publicationIdentifier.dbName] : []
+      )
     },
-    publicationJournalFilterOptions: function() {
-      return countPublicationMetadata(this.publishedScoreSets,
-        (publicationIdentifier) => publicationIdentifier.publicationJournal ? [publicationIdentifier.publicationJournal] : [])
-    },
+    publicationJournalFilterOptions: function () {
+      return countPublicationMetadata(this.publishedScoreSets, (publicationIdentifier) =>
+        publicationIdentifier.publicationJournal ? [publicationIdentifier.publicationJournal] : []
+      )
+    }
   },
-  mounted: async function() {
-    await this.search()
-  },
+
   watch: {
     filterTargetNames: {
-      handler: function(oldValue, newValue) {
+      handler: function (oldValue, newValue) {
         if (oldValue != newValue) {
           this.debouncedSearch()
         }
       }
     },
     filterTargetOrganismNames: {
-      handler: function(oldValue, newValue) {
+      handler: function (oldValue, newValue) {
         if (oldValue != newValue) {
           this.debouncedSearch()
         }
       }
     },
     filterTargetAccession: {
-      handler: function(oldValue, newValue) {
+      handler: function (oldValue, newValue) {
         if (oldValue != newValue) {
           this.debouncedSearch()
         }
       }
     },
     filterTargetTypes: {
-      handler: function(oldValue, newValue) {
+      handler: function (oldValue, newValue) {
         if (oldValue != newValue) {
           this.debouncedSearch()
         }
       }
     },
     filterPublicationAuthors: {
-      handler: function(oldValue, newValue) {
+      handler: function (oldValue, newValue) {
         if (oldValue != newValue) {
           this.debouncedSearch()
         }
       }
     },
     filterPublicationDatabases: {
-      handler: function(oldValue, newValue) {
+      handler: function (oldValue, newValue) {
         if (oldValue != newValue) {
           this.debouncedSearch()
         }
       }
     },
     filterPublicationJournals: {
-      handler: function(oldValue, newValue) {
+      handler: function (oldValue, newValue) {
         if (oldValue != newValue) {
           this.debouncedSearch()
         }
       }
     },
     filterKeywords: {
-      handler: function(oldValue, newValue) {
+      handler: function (oldValue, newValue) {
         if (oldValue != newValue) {
           this.debouncedSearch()
         }
       }
     },
     searchText: {
-      handler: function(oldValue, newValue) {
+      handler: function (oldValue, newValue) {
         if (oldValue != newValue) {
           this.debouncedSearch()
         }
       }
     },
     item: {
-      handler: function() {
+      handler: function () {
         this.clear()
       }
     },
     '$route.query.search': {
-      handler: function(newValue, oldValue) {
+      handler: function (newValue, oldValue) {
         if (newValue != oldValue) {
           this.searchText = newValue
         }
@@ -248,7 +304,7 @@ export default defineComponent({
       immediate: true
     },
     '$route.query.target-name': {
-      handler: function(newValue, oldValue) {
+      handler: function (newValue, oldValue) {
         if (newValue != oldValue) {
           this.filterTargetNames = extractQueryParam(newValue)
         }
@@ -256,7 +312,7 @@ export default defineComponent({
       immediate: true
     },
     '$route.query.target-type': {
-      handler: function(newValue, oldValue) {
+      handler: function (newValue, oldValue) {
         if (newValue != oldValue) {
           this.filterTargetTypes = extractQueryParam(newValue)
         }
@@ -264,7 +320,7 @@ export default defineComponent({
       immediate: true
     },
     '$route.query.target-organism-name': {
-      handler: function(newValue, oldValue) {
+      handler: function (newValue, oldValue) {
         if (newValue != oldValue) {
           this.filterTargetOrganismNames = extractQueryParam(newValue)
         }
@@ -272,7 +328,7 @@ export default defineComponent({
       immediate: true
     },
     '$route.query.target-accession': {
-      handler: function(newValue, oldValue) {
+      handler: function (newValue, oldValue) {
         if (newValue != oldValue) {
           this.filterTargetAccession = extractQueryParam(newValue)
         }
@@ -280,7 +336,7 @@ export default defineComponent({
       immediate: true
     },
     '$route.query.publication-author': {
-      handler: function(newValue, oldValue) {
+      handler: function (newValue, oldValue) {
         if (newValue != oldValue) {
           this.filterPublicationAuthors = extractQueryParam(newValue)
         }
@@ -288,7 +344,7 @@ export default defineComponent({
       immediate: true
     },
     '$route.query.publication-database': {
-      handler: function(newValue, oldValue) {
+      handler: function (newValue, oldValue) {
         if (newValue != oldValue) {
           this.filterPublicationDatabases = extractQueryParam(newValue)
         }
@@ -296,7 +352,7 @@ export default defineComponent({
       immediate: true
     },
     '$route.query.publication-journal': {
-      handler: function(newValue, oldValue) {
+      handler: function (newValue, oldValue) {
         if (newValue != oldValue) {
           this.filterPublicationJournals = extractQueryParam(newValue)
         }
@@ -304,7 +360,7 @@ export default defineComponent({
       immediate: true
     },
     '$route.query.keywords': {
-      handler: function(newValue, oldValue) {
+      handler: function (newValue, oldValue) {
         if (newValue != oldValue) {
           this.filterKeywords = extractQueryParam(newValue)
         }
@@ -312,54 +368,61 @@ export default defineComponent({
       immediate: true
     }
   },
+
+  mounted: async function () {
+    await this.search()
+  },
+
   methods: {
-    debouncedSearch: function() {
+    debouncedSearch: function () {
       this.debouncedSearchFunction()
     },
-    search: async function() {
+    search: async function () {
       // TODO#410 Because of the debounced search, this is super aggressive and will send the user to the variant search page as they are
       // typing. I'm not sure that is the best user experience, but it seems unlikely people will actually be typing an HGVS string.
       if (routeToVariantSearchIfVariantIsSearchable(this.searchText)) {
         return
       }
 
-      this.$router.push({query: {
-        ...(this.searchText && this.searchText.length > 0) ? {search: this.searchText} : {},
-        ...(this.filterTargetNames.length > 0) ? {'target-name': this.filterTargetNames} : {},
-        ...(this.filterTargetTypes.length > 0) ? {'target-type': this.filterTargetTypes} : {},
-        ...(this.filterTargetOrganismNames.length > 0) ? {'target-organism-name': this.filterTargetOrganismNames} : {},
-        ...(this.filterTargetAccession.length > 0) ? {'target-accession': this.filterTargetAccession} : {},
-        ...(this.filterPublicationAuthors.length > 0) ? {'publication-author': this.filterPublicationAuthors} : {},
-        ...(this.filterPublicationDatabases.length > 0) ? {'publication-database': this.filterPublicationDatabases} : {},
-        ...(this.filterPublicationJournals.length > 0) ? {'publication-journal': this.filterPublicationJournals} : {},
-        ...(this.filterKeywords.length > 0) ? {'keywords': this.filterKeywords} : {}
-      }})
-      this.loading = true;
+      this.$router.push({
+        query: {
+          ...(this.searchText && this.searchText.length > 0 ? {search: this.searchText} : {}),
+          ...(this.filterTargetNames.length > 0 ? {'target-name': this.filterTargetNames} : {}),
+          ...(this.filterTargetTypes.length > 0 ? {'target-type': this.filterTargetTypes} : {}),
+          ...(this.filterTargetOrganismNames.length > 0
+            ? {'target-organism-name': this.filterTargetOrganismNames}
+            : {}),
+          ...(this.filterTargetAccession.length > 0 ? {'target-accession': this.filterTargetAccession} : {}),
+          ...(this.filterPublicationAuthors.length > 0 ? {'publication-author': this.filterPublicationAuthors} : {}),
+          ...(this.filterPublicationDatabases.length > 0
+            ? {'publication-database': this.filterPublicationDatabases}
+            : {}),
+          ...(this.filterPublicationJournals.length > 0 ? {'publication-journal': this.filterPublicationJournals} : {}),
+          ...(this.filterKeywords.length > 0 ? {keywords: this.filterKeywords} : {})
+        }
+      })
+      this.loading = true
       await this.fetchSearchResults()
-      this.loading = false;
+      this.loading = false
     },
-    fetchSearchResults: async function() {
+    fetchSearchResults: async function () {
       try {
         const requestParams: SearchParams = {
-            text: this.searchText || undefined,
-            targets: this.filterTargetNames.length > 0 ? this.filterTargetNames : undefined,
-            targetOrganismNames: this.filterTargetOrganismNames.length > 0 ? this.filterTargetOrganismNames : undefined,
-            targetAccessions: this.filterTargetAccession.length > 0 ? this.filterTargetAccession : undefined,
-            targetTypes: this.filterTargetTypes.length > 0 ? this.filterTargetTypes : undefined,
-            authors: this.filterPublicationAuthors.length > 0 ? this.filterPublicationAuthors : undefined,
-            databases: this.filterPublicationDatabases.length > 0 ? this.filterPublicationDatabases : undefined,
-            journals: this.filterPublicationJournals.length > 0 ? this.filterPublicationJournals : undefined,
-            keywords: this.filterKeywords.length > 0 ? this.filterKeywords : undefined,
+          text: this.searchText || undefined,
+          targets: this.filterTargetNames.length > 0 ? this.filterTargetNames : undefined,
+          targetOrganismNames: this.filterTargetOrganismNames.length > 0 ? this.filterTargetOrganismNames : undefined,
+          targetAccessions: this.filterTargetAccession.length > 0 ? this.filterTargetAccession : undefined,
+          targetTypes: this.filterTargetTypes.length > 0 ? this.filterTargetTypes : undefined,
+          authors: this.filterPublicationAuthors.length > 0 ? this.filterPublicationAuthors : undefined,
+          databases: this.filterPublicationDatabases.length > 0 ? this.filterPublicationDatabases : undefined,
+          journals: this.filterPublicationJournals.length > 0 ? this.filterPublicationJournals : undefined,
+          keywords: this.filterKeywords.length > 0 ? this.filterKeywords : undefined
         }
-        let response = await axios.post(
-          `${config.apiBaseUrl}/score-sets/search`,
-          requestParams,
-          {
-            headers: {
-              accept: 'application/json'
-            }
+        let response = await axios.post(`${config.apiBaseUrl}/score-sets/search`, requestParams, {
+          headers: {
+            accept: 'application/json'
           }
-        )
+        })
         // TODO (#130) catch errors in response
         this.scoreSets = response.data || []
 
@@ -369,7 +432,7 @@ export default defineComponent({
         console.log(`Error while loading search results")`, err)
       }
     },
-    clear: function() {
+    clear: function () {
       this.searchText = null
       this.filterTargetNames = []
       this.filterTargetTypes = []
@@ -382,11 +445,9 @@ export default defineComponent({
     }
   }
 })
-
 </script>
 
 <style scoped>
-
 /* Layout */
 
 .mavedb-search-view {
@@ -446,5 +507,4 @@ export default defineComponent({
   margin: 0;
   padding: 0;
 }
-
 </style>

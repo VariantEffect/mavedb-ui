@@ -55,6 +55,7 @@ import Button from 'primevue/button'
 import Message from 'primevue/message'
 import TabPanel from 'primevue/tabpanel'
 import TabView from 'primevue/tabview'
+import {defineComponent} from 'vue'
 
 import ErrorView from '@/components/common/ErrorView.vue'
 import PageLoading from '@/components/common/PageLoading.vue'
@@ -62,7 +63,7 @@ import DefaultLayout from '@/components/layout/DefaultLayout.vue'
 import VariantMeasurementView from '@/components/VariantMeasurementView.vue'
 import config from '@/config'
 
-export default {
+export default defineComponent({
   name: 'VariantMeasurementScreen',
   components: {Button, DefaultLayout, ErrorView, Message, PageLoading, TabPanel, TabView, VariantMeasurementView},
 
@@ -193,7 +194,7 @@ export default {
       )
     }
   }
-}
+})
 </script>
 
 <style scoped>

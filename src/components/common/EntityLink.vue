@@ -1,10 +1,10 @@
 <template>
-  <router-link v-if="routerLink" :to="routerLink">{{linkText}}</router-link>
+  <router-link v-if="routerLink" :to="routerLink">{{ linkText }}</router-link>
 </template>
 
 <script lang="ts">
-
 import _ from 'lodash'
+import {defineComponent} from 'vue'
 
 import useItem from '@/composition/item'
 
@@ -15,7 +15,7 @@ import useItem from '@/composition/item'
  * recalculated using the "display" property.
  */
 // TODO This can be enhanced easily to show a preview in a pop-over view when the cursor hovers over the link.
-export default {
+export default defineComponent({
   name: 'SelectList',
   components: {},
 
@@ -45,14 +45,14 @@ export default {
 
   setup: (props) => useItem({itemTypeName: props.entityType}),
 
-  data: function() {
+  data: function () {
     return {
       selectedOptionValues: this.value
     }
   },
 
   computed: {
-    linkText: function() {
+    linkText: function () {
       if (!this.item) {
         return this.urn
       } else {
@@ -65,7 +65,7 @@ export default {
         }
       }
     },
-    routerLink: function() {
+    routerLink: function () {
       const name = {
         experiment: 'experiment',
         experimentSet: 'experimentSet',
@@ -80,12 +80,11 @@ export default {
 
   watch: {
     urn: {
-      handler: function() {
+      handler: function () {
         this.setItemId(this.urn)
       },
       immediate: true
     }
-  },
-}
-
+  }
+})
 </script>

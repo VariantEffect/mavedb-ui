@@ -10,6 +10,7 @@
 
 <script lang="ts">
 import Tag from 'primevue/tag'
+import {defineComponent} from 'vue'
 
 const BUILT_IN_BADGE_CLASSES: {[key: string]: string} = {
   IGVF: 'mavedb-collection-badge-igvf'
@@ -19,7 +20,7 @@ const BUILT_IN_BADGE_IMAGE_ASSETS: {[key: string]: string} = {
   IGVF: '../assets/igvf-tag.png'
 }
 
-export default {
+export default defineComponent({
   name: 'CollectionBadge',
   components: {Tag},
 
@@ -45,7 +46,7 @@ export default {
       return this.collection.badgeName?.startsWith('http://') || false
     }
   }
-}
+})
 </script>
 
 <style scoped>

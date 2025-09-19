@@ -5,10 +5,12 @@
 </template>
 
 <script lang="ts">
+import {defineComponent} from 'vue'
+
 import DefaultLayout from '@/components/layout/DefaultLayout.vue'
 import VariantMeasurementView from '@/components/VariantMeasurementView.vue'
 
-export default {
+export default defineComponent({
   name: 'VariantMeasurementScreen',
   components: {DefaultLayout, VariantMeasurementView},
 
@@ -18,5 +20,5 @@ export default {
       required: true
     }
   }
-}
+})
 </script>

@@ -116,7 +116,7 @@ export default defineComponent({
     },
     forceBothClassificationColors: {
       type: Boolean,
-      default: true
+      default: false
     }
   },
 

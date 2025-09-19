@@ -94,7 +94,10 @@
           />
         </div>
       </div>
-      <div class="mavedb-1000px-col">
+      <div v-else-if="scoresDataStatus=='Loading' || scoresDataStatus=='NotLoaded'">
+        <ProgressSpinner style="width: 36px; height: 36px; margin: 12px auto; display: block;" />
+      </div>
+      <div class="mave-1000px-col">
         <div class="clearfix">
           <div v-if="config.CLINICAL_FEATURES_ENABLED" class="mavedb-assay-facts-container">
             <AssayFactSheet :score-set="item" />
@@ -359,12 +362,11 @@ export default {
       variantSearchSuggestions
     }
   },
-
+ 
   data: () => ({
     clinicalMode: config.CLINICAL_FEATURES_ENABLED,
     scores: null,
     codingVariants: null,
-    readMore: true,
     showHeatmap: true,
     isScoreSetVisualizerVisible: false,
     heatmapExists: false,
@@ -372,8 +374,8 @@ export default {
     userIsAuthorized: {
       delete: false,
       publish: false,
-      update: false
-    }
+      update: false,
+    },
   }),
 
   computed: {

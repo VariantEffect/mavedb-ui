@@ -54,11 +54,11 @@ const routes: RouteRecordRaw[] = [
   ...(config.CLINICAL_FEATURES_ENABLED
     ? [
         {
-          path: '/search-variants',
-          name: 'search-variants',
+          path: '/mavemd',
+          name: 'mavemd',
           component: SearchVariantsScreen,
           meta: {
-            title: import.meta.env.VITE_SITE_TITLE + ' | Search Variants'
+            title: import.meta.env.VITE_SITE_TITLE + ' | MaveMD variant search'
           }
         }
       ]

@@ -16,8 +16,8 @@ export function routeToVariantSearchIfVariantIsSearchable(searchText: string | n
     const transcriptRegex = /^(N[CMPR]_|X[MR]_|ENST|ENSMUST|ENSMUST|XM_|XR_)[0-9]+(\.[0-9]+)?$/gm
     if (transcriptRegex.test(identifier)) {
       // Transcript: treat as normal HGVS
-      console.log(`Routing to search-variants with HGVS: ${hgvsMatches[0]}`)
-      router.push({name: 'search-variants', query: {search: hgvsMatches[0]}})
+      console.log(`Routing to mavemd with HGVS: ${hgvsMatches[0]}`)
+      router.push({name: 'mavemd', query: {search: hgvsMatches[0]}})
     } else {
       // Assume identifier is an HGNC gene symbol, parse description for fuzzy search
       // Example: BRCA1:c.123A>G or BRCA1:p.Arg123Gly
@@ -43,7 +43,7 @@ export function routeToVariantSearchIfVariantIsSearchable(searchText: string | n
       }
 
       router.push({
-        name: 'search-variants',
+        name: 'mavemd',
         query: {
           gene,
           variantType,

@@ -1,8 +1,11 @@
 <template>
-  <DefaultLayout>
-    <div class="mavedb-search-view">
-      <div class="mavedb-search-header" style="display: none">
-        <h1>Search MaveDB Variants</h1>
+  <DefaultLayout :overflow-y="alleles.length > 0 ? 'scroll' : 'hidden'">
+    <div :class="['mavedb-search-view', alleles.length > 0 ? 'mavedb-search-view-with-results' : 'mavedb-search-view-without-results']">
+      <div class="mavedb-search-header">
+        <h1>MaveMD</h1>
+      </div>
+      <div class="mavedb-mavemd-intro">
+        Search MaveDB for variants in the human genome
       </div>
       <div v-if="hgvsSearchVisible" class="mavedb-search-form">
         <div class="flex flex-wrap justify-content-center gap-3">
@@ -11,7 +14,7 @@
             <InputText
               ref="searchTextInput"
               v-model="searchText"
-              class="p-inputtext-sm"
+              class="p-inputtext-lg"
               placeholder="HGVS string"
               style="width: 500px"
               type="search"
@@ -63,7 +66,7 @@
           >
         </div>
       </div>
-      <p v-if="alleles.length === 0">
+      <p v-if="false && alleles.length === 0">
         Enter an HGVS string or variant definition above to obtain a variant and its details.
       </p>
       <div v-for="(allele, alleleIdx) in alleles" :key="allele.clingenAlleleId" class="col-12">
@@ -79,7 +82,7 @@
                 class="variant-search-result-button"
               >
                 <router-link :to="`/variants/${allele.clingenAlleleId}`">
-                  <Button icon="pi pi-eye" label="View in MaveDB Clinical View" />
+                  <Button icon="pi pi-eye" label="View in MaveMD Clinical View" />
                 </router-link>
               </div>
               <div class="variant-search-result-content">
@@ -742,6 +745,17 @@ export default defineComponent({
 </script>
 
 <style scoped>
+.mavedb-mavemd-intro {
+  font-size: 120%;
+  text-align: center;
+}
+
+.mavedb-search-view-without-results {
+  height: 100%;
+  display: flex;
+  flex-direction: column;
+}
+
 /* Layout */
 
 .mavedb-search-view {
@@ -749,6 +763,17 @@ export default defineComponent({
   flex-direction: column;
   position: relative;
   height: 100%;
+}
+
+.mavedb-search-view-without-results .mavedb-search-header {
+  flex: 0 0 auto;
+}
+
+.mavedb-search-view-without-results .mavedb-mavemd-intro {
+  flex: 0 0 auto;
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
 }
 
 .mavedb-search-header {
@@ -769,6 +794,14 @@ export default defineComponent({
   text-align: center;
   justify-content: center;
   gap: 3px;
+}
+
+.mavedb-search-view-without-results .mavedb-search-form {
+  flex: 1 0 auto;
+  max-height: 500px;
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
 }
 
 .mavedb-search-form-view-switch {

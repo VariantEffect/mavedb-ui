@@ -8,7 +8,9 @@
   </div>
   <div class="mavedb-toolbar">
     <div v-if="config.PREVIEW_SITE" class="mavedb-beta-banner">
-      This is a beta test site. For the production site, please visit <a href="https://mavedb.org.">mavedb.org</a>.
+      This is a beta test site. For the production site, please visit <a href="https://mavedb.org.">mavedb.org</a>. To
+      give feedback, please use our
+      <a href="https://mavedb.zulipchat.com/#narrow/channel/511813-beta-testers">Zulip message board</a>.
     </div>
     <Menubar class="mavedb-menubar" :model="availableMenuItems">
       <template #start>
@@ -113,8 +115,17 @@ export default {
           route: '/search'
         },
         {
-          label: 'Documentation',
-          route: '/docs'
+          label: 'Support',
+          items: [
+            {
+              label: 'Get Help',
+              route: '/help'
+            },
+            {
+              label: 'Documentation',
+              route: '/docs'
+            }
+          ]
         },
         {
           label: 'New experiment',
@@ -279,5 +290,6 @@ export default {
 
 .mavedb-beta-banner a {
   color: #fff;
+  text-decoration: underline;
 }
 </style>

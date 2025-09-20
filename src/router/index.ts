@@ -9,6 +9,7 @@ import ExperimentCreator from '@/components/screens/ExperimentCreator.vue'
 import ExperimentEditor from '@/components/screens/ExperimentEditor.vue'
 import ExperimentSetView from '@/components/screens/ExperimentSetView.vue'
 import ExperimentView from '@/components/screens/ExperimentView.vue'
+import HelpScreen from '@/components/screens/HelpScreen.vue'
 import HomeScreen from '@/components/screens/HomeScreen.vue'
 import OidcCallback from '@/components/screens/OidcCallback.vue'
 import OidcCallbackError from '@/components/screens/OidcCallbackError.vue'
@@ -69,6 +70,10 @@ const routes: RouteRecordRaw[] = [
     meta: {
       title: import.meta.env.VITE_SITE_TITLE + ' | Documentation'
     }
+  },
+  {
+    path: '/help',
+    component: HelpScreen
   },
   {
     path: '/settings',

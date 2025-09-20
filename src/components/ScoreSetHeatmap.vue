@@ -793,7 +793,7 @@ export default defineComponent({
         .map((residue, i) =>
           allowedResidues.includes(residue)
             ? {
-                x: i + 1,
+                x: i + this.targetXRange.start,
                 y: this.heatmapRows.length - 1 - this.heatmapRowForVariant(residue),
                 details: {
                   wt: true

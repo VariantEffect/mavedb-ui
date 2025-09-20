@@ -1,46 +1,45 @@
 <template>
-  <Splitter ref="splitterRef" style="border: 0px;height: 100%;">
+  <Splitter ref="splitterRef" style="border: 0px; height: 100%">
     <SplitterPanel :size="50">
-      <div class="mave-score-set-heatmap-pane" >
+      <div class="mave-score-set-heatmap-pane">
         <ScoreSetHeatmap
           ref="scoreSetHeatmap"
           coordinates="mapped"
           mode="protein-viz"
-          :scoreSet="scoreSet"
+          :score-set="scoreSet"
           sequence-type="protein"
+          :show-protein-structure-button="false"
           :variants="heatmapVariants"
-          :showProteinStructureButton="false"
-          @variantColumnRangesSelected="didSelectHeatmapResidues"
-          @variantRowSelected="didSelectHeatmapRow"
-          @variantRowGroupSelected="didSelectHeatmapRowGroup"
+          @variant-column-ranges-selected="didSelectHeatmapResidues"
+          @variant-row-group-selected="didSelectHeatmapRowGroup"
+          @variant-row-selected="didSelectHeatmapRow"
         />
       </div>
     </SplitterPanel>
     <SplitterPanel :size="50">
       <ProteinStructureView
-          ref="proteinStructureViewer"
-          :selectedResidueRanges="selectedResidueRanges"
-          :uniprotId="uniprotId"
-          :selectionData="selectionData"
-          :residueTooltips="residueTooltips"
-          :rowSelected="rowSelected"
-          :rowGroupSelected="rowGroupSelected"
-          @clickedResidue="didClickResidue($event.residueNumber)"
-          @hoveredOverResidue="didHighlightResidue($event.residueNumber)"
+        ref="proteinStructureViewer"
+        :residue-tooltips="residueTooltips"
+        :row-group-selected="rowGroupSelected"
+        :row-selected="rowSelected"
+        :selected-residue-ranges="selectedResidueRanges"
+        :selection-data="selectionData"
+        :uniprot-id="uniprotId"
+        @clicked-residue="didClickResidue($event.residueNumber)"
+        @hovered-over-residue="didHighlightResidue($event.residueNumber)"
       />
     </SplitterPanel>
   </Splitter>
 </template>
 
 <script>
-
 import ProteinStructureView from '@/components/ProteinStructureView'
 import ScoreSetHeatmap from '@/components/ScoreSetHeatmap'
 
 import Splitter from 'primevue/splitter'
 import SplitterPanel from 'primevue/splitterpanel'
 import _ from 'lodash'
-import { AMINO_ACIDS } from '@/lib/amino-acids'
+import {AMINO_ACIDS} from '@/lib/amino-acids'
 
 export default {
   name: 'ScoreSetVisualizer',
@@ -70,23 +69,66 @@ export default {
     selectionData: [],
     residueTooltips: [],
     rowSelected: null,
-    rowGroupSelected: null,
+    rowGroupSelected: null
   }),
 
+  mounted: function () {
+    const simpleAndWtVariants = this.$refs.scoreSetHeatmap.simpleAndWtVariants
+    const heatmap = this.$refs.scoreSetHeatmap.heatmap
+    const heatmapColorScale = heatmap.colorScale()
+
+    this.selectionData = _(simpleAndWtVariants)
+      .groupBy('x')
+      .map((simpleVariant, id) => {
+        const simpleVariantWithMeanScore = _.filter(simpleVariant, 'meanScore')
+        const meanScore = _.meanBy(simpleVariantWithMeanScore, 'meanScore')
+        const missenseVariants = _.filter(simpleVariantWithMeanScore, (v) => v.y <= 19)
+        const maxMissenseScore = _.get(_.maxBy(missenseVariants, 'meanScore'), 'meanScore')
+        const minMissenseScore = _.get(_.minBy(missenseVariants, 'meanScore'), 'meanScore')
+        const x = parseInt(id)
+        return {
+          start_residue_number: x,
+          end_residue_number: x,
+          ..._.mapValues(_.keyBy(simpleVariant, 'y'), (value) => {
+            if (value.details.wt) {
+              return {wt: true, score: value.meanScore, color: '#ddbb00'}
+            } else {
+              return {
+                score: value.meanScore,
+                color: value.meanScore ? this.rgbToHex(heatmapColorScale(value.meanScore)) : '#000'
+              }
+            }
+          }),
+          mean: {score: meanScore, color: this.rgbToHex(heatmapColorScale(meanScore))},
+          maxMissense: {score: maxMissenseScore, color: this.rgbToHex(heatmapColorScale(maxMissenseScore))},
+          minMissense: {score: minMissenseScore, color: this.rgbToHex(heatmapColorScale(minMissenseScore))}
+        }
+      })
+      .value()
+
+    this.residueTooltips = _.map(this.selectionData, (simpleVariant) => {
+      return {
+        start_residue_number: simpleVariant.start_residue_number,
+        end_residue_number: simpleVariant.end_residue_number,
+        tooltip: `Mean score: ${simpleVariant.mean.score}<br>Min. missense score: ${simpleVariant.minMissense.score}<br>Max. missense score: ${simpleVariant.maxMissense.score}`
+      }
+    })
+  },
+
   methods: {
-    didClickResidue: function(residueNumber) {
+    didClickResidue: function (residueNumber) {
       this.$refs.scoreSetHeatmap.heatmap.selectRangeByIndex({x: residueNumber, y: 0}, {x: residueNumber, y: 0})
       const lastSelectedDOMPoint = this.$refs.scoreSetHeatmap.heatmap.lastSelectedDOMPoint()
       this.$refs.scoreSetHeatmap.scrollToPosition(lastSelectedDOMPoint?.x)
     },
-    didHighlightResidue: function(residueNumber) {
+    didHighlightResidue: function (residueNumber) {
       // TODO: Implement highlighting logic
       // console.log('didHighlightResidue', residueNumber)
     },
-    didSelectHeatmapResidues: function(ranges) {
+    didSelectHeatmapResidues: function (ranges) {
       this.selectedResidueRanges = ranges
     },
-    didSelectHeatmapRow: function(data) {
+    didSelectHeatmapRow: function (data) {
       this.rowSelected = null
       this.rowGroupSelected = null
 
@@ -98,10 +140,10 @@ export default {
       const aa = AMINO_ACIDS.find((a) => a.codes?.single === selectedRow?.code)
       this.rowSelected = {
         rowNumber,
-        label: aa?.name || selectedRow?.code,
+        label: aa?.name || selectedRow?.code
       }
     },
-    didSelectHeatmapRowGroup: function(selectedGroup) {
+    didSelectHeatmapRowGroup: function (selectedGroup) {
       const {groupCode, data} = selectedGroup
 
       this.rowSelected = null
@@ -125,14 +167,14 @@ export default {
             }
           }
           const meanScore = scoreSum / scoreCount
-          _.set(this.selectionData, [x-1, _.camelCase(groupCode)], {
+          _.set(this.selectionData, [x - 1, _.camelCase(groupCode)], {
             score: meanScore,
-            color: _.isNumber(meanScore) ? this.rgbToHex(heatmapColorScale(meanScore)) : '#000',
+            color: _.isNumber(meanScore) ? this.rgbToHex(heatmapColorScale(meanScore)) : '#000'
           })
         }
         this.rowGroupSelected = {
           label: groupCode,
-          colorBy: `${_.camelCase(groupCode)}.color`,
+          colorBy: `${_.camelCase(groupCode)}.color`
         }
       }
     },
@@ -144,50 +186,7 @@ export default {
       })
       return `#${hex.join('')}`
     }
-  },
-
-  mounted: function(){
-    const simpleAndWtVariants = this.$refs.scoreSetHeatmap.simpleAndWtVariants
-    const heatmap = this.$refs.scoreSetHeatmap.heatmap
-    const heatmapColorScale = heatmap.colorScale()
-
-    this.selectionData = _(simpleAndWtVariants)
-      .groupBy('x')
-      .map((simpleVariant, id) => {
-        const simpleVariantWithMeanScore = _.filter(simpleVariant, 'meanScore')
-        const meanScore = _.meanBy(simpleVariantWithMeanScore, 'meanScore')
-        const missenseVariants = _.filter(simpleVariantWithMeanScore, (v) => v.y <= 19)
-        const maxMissenseScore = _.get(_.maxBy(missenseVariants, 'meanScore'), 'meanScore')
-        const minMissenseScore = _.get(_.minBy(missenseVariants, 'meanScore'), 'meanScore')
-        const x = parseInt(id)
-        return {
-          start_residue_number: x,
-          end_residue_number: x,
-          ..._.mapValues(_.keyBy(simpleVariant, 'y'), (value) => {
-            if (value.details.wt) {
-              return {wt: true, score: value.meanScore, color: '#ddbb00'}
-            } else {
-              return {
-                score: value.meanScore,
-                color: value.meanScore ? this.rgbToHex(heatmapColorScale(value.meanScore)) : '#000',
-              }
-            }
-          }),
-          mean: {score: meanScore, color: this.rgbToHex(heatmapColorScale(meanScore))},
-          maxMissense: {score: maxMissenseScore, color: this.rgbToHex(heatmapColorScale(maxMissenseScore))},
-          minMissense: {score: minMissenseScore, color: this.rgbToHex(heatmapColorScale(minMissenseScore))},
-        }
-      })
-      .value()
-
-    this.residueTooltips = _.map(this.selectionData, (simpleVariant) => {
-      return {
-        start_residue_number: simpleVariant.start_residue_number,
-        end_residue_number: simpleVariant.end_residue_number,
-        tooltip: `Mean score: ${simpleVariant.mean.score}<br>Min. missense score: ${simpleVariant.minMissense.score}<br>Max. missense score: ${simpleVariant.maxMissense.score}`
-      }
-    })
-  },
+  }
 }
 </script>
 <style scoped>

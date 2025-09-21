@@ -56,7 +56,7 @@
       <div class="mavedb-assay-facts-row">
         <div class="mavedb-assay-facts-label">Number of Variants</div>
         <div class="mavedb-assay-facts-value">
-          <div>{{ scoreSet.numVariants }}</div>
+          <div>{{ scoreSet.numVariants?.toLocaleString() }}</div>
         </div>
       </div>
     </div>
@@ -70,8 +70,10 @@
             class="mavedb-assay-facts-value"
           >
             {{
-              scoreSet.scoreRanges.investigatorProvided.ranges.find((r) => r.classification === 'normal').oddsPath
-                ?.ratio
+              roundOddsPath(
+                scoreSet.scoreRanges.investigatorProvided.ranges.find((r) => r.classification === 'normal').oddsPath
+                  ?.ratio
+              )
             }}
             <span class="mavedb-classification-badge mavedb-blue">
               {{
@@ -88,8 +90,10 @@
             class="mavedb-assay-facts-value"
           >
             {{
-              scoreSet.scoreRanges.investigatorProvided.ranges.find((r) => r.classification === 'abnormal').oddsPath
-                ?.ratio
+              roundOddsPath(
+                scoreSet.scoreRanges.investigatorProvided.ranges.find((r) => r.classification === 'abnormal').oddsPath
+                  ?.ratio
+              )
             }}
             <span class="mavedb-classification-badge mavedb-red strong">
               {{
@@ -130,6 +134,12 @@ export default defineComponent({
         return `${author} et al. ${gene} ${year}`
       }
       return `${gene} ${year}`
+    }
+  },
+
+  methods: {
+    roundOddsPath: function (oddsPath: number | undefined) {
+      return oddsPath?.toPrecision(5)
     }
   }
 })

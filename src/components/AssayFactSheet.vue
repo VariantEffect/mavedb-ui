@@ -39,20 +39,18 @@
           <div v-else>Not specified</div>
         </div>
       </div>
-      <!--
       <div class="mavedb-assay-facts-row">
         <div class="mavedb-assay-facts-label">Detects Splicing Variants?</div>
-        <div class="mavedb-assay-facts-value" :class="{ yellow: scoreSet.detectsSplicing === 'No' }">
-          {{ scoreSet.detectsSplicing || "Yes" }}
+        <div class="mavedb-assay-facts-value" :class="{yellow: !detectsSplicing}">
+          {{ detectsSplicing == null ? 'Not specified' : detectsSplicing ? 'Yes' : 'No' }}
         </div>
       </div>
       <div class="mavedb-assay-facts-row">
         <div class="mavedb-assay-facts-label">Detects NMD Variants?</div>
-        <div class="mavedb-assay-facts-value" :class="{ yellow: scoreSet.detectsNmd === 'No' }">
-          {{ scoreSet.detectsNmd || "Yes" }}
+        <div class="mavedb-assay-facts-value" :class="{yellow: !detectsNmd}">
+          {{ detectsNmd == null ? 'Not specified' : detectsNmd ? 'Yes' : 'No' }}
         </div>
       </div>
-      -->
       <div class="mavedb-assay-facts-row">
         <div class="mavedb-assay-facts-label">Number of Variants</div>
         <div class="mavedb-assay-facts-value">
@@ -134,6 +132,43 @@ export default defineComponent({
         return `${author} et al. ${gene} ${year}`
       }
       return `${gene} ${year}`
+    },
+
+    detectsNmd: function () {
+      const libraryCreationMethod = this.scoreSet.experiment?.keywords?.find(
+        (k) => k.keyword.key === 'Variant Library Creation Method'
+      )?.keyword?.label
+      switch (libraryCreationMethod) {
+        case 'Endogenous locus library method':
+          if (this.scoreSet.urn.startsWith('urn:mavedb:00001242')) {
+            return false
+          }
+          return true
+        case 'In vitro construct library method':
+          if (this.scoreSet.urn.startsWith('urn:mavedb:00001226')) {
+            return true
+          }
+          return false
+        default:
+          return null
+      }
+    },
+
+    detectsSplicing: function () {
+      const libraryCreationMethod = this.scoreSet.experiment?.keywords?.find(
+        (k) => k.keyword.key === 'Variant Library Creation Method'
+      )?.keyword?.label
+      switch (libraryCreationMethod) {
+        case 'Endogenous locus library method':
+          return true
+        case 'In vitro construct library method':
+          if (this.scoreSet.urn.startsWith('urn:mavedb:00001226')) {
+            return true
+          }
+          return false
+        default:
+          return null
+      }
     }
   },
 

@@ -1092,10 +1092,14 @@ export default defineComponent({
 
 <style scoped>
 .mavedb-heatmap-controls {
-  display: none;
+  display: flex;
+  flex-direction: row;
+
+  /* display: none; */
+  /* position: absolute; */
+
   align-items: center;
   gap: 10px;
-  position: absolute;
   top: 100%;
   z-index: 100;
   width: 100%;
@@ -1119,10 +1123,10 @@ export default defineComponent({
   position: relative;
 }
 
-.mavedb-heatmap-wrapper:hover .mavedb-heatmap-controls {
+/* .mavedb-heatmap-wrapper:hover .mavedb-heatmap-controls {
   display: flex;
   flex-direction: row;
-}
+} */
 
 .no-heatmap-message {
   padding: 10px;

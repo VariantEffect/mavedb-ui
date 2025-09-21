@@ -195,6 +195,7 @@ export default defineComponent({
 }
 
 .mavedb-assay-facts-value {
+  position: relative;
   flex: 1;
   text-align: left;
 }
@@ -214,7 +215,8 @@ export default defineComponent({
 /* Variant classification */
 
 .mavedb-classification-badge {
-  display: inline-block;
+  position: absolute;
+  left: 6em;
   padding: 2px 6px;
   border-radius: 4px;
   font-size: 12px;

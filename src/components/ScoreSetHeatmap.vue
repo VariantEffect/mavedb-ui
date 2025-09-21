@@ -829,7 +829,9 @@ export default defineComponent({
             numIgnoredVariantInstances++
             return null
           }
-          const row = this.heatmapRowForVariant(parsedVariant.substitution)
+          const row = this.heatmapRowForVariant(
+            parsedVariant.substitution == parsedVariant.original ? '=' : parsedVariant.substitution
+          )
           if (row == null) {
             numIgnoredVariantInstances++
             return null

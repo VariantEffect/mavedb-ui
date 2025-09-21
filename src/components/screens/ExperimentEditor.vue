@@ -9,7 +9,7 @@
       <div class="grid">
         <div class="col-12">
           <div v-if="itemStatus != 'NotLoaded'" class="mave-screen-title-bar">
-            <div class="mave-screen-title">Edit experiment {{this.item.urn}}</div>
+            <div class="mave-screen-title">Edit experiment {{ this.item.urn }}</div>
             <div v-if="item" class="mavedb-screen-title-controls">
               <Button @click="validateAndSave">Save changes</Button>
               <Button @click="resetForm" class="p-button-help">Clear</Button>
@@ -29,18 +29,26 @@
           <Card>
             <template #content>
               <div v-if="experimentSetUrn" class="field">
-                <label :for="scopedId('field-value-experiment-set')" style="font-weight: bold; margin-right: 5px;">Experiment set:</label>
+                <label :for="scopedId('field-value-experiment-set')" style="font-weight: bold; margin-right: 5px"
+                  >Experiment set:</label
+                >
                 <span :id="scopedId('field-value-experiment-set')">{{ experimentSetUrn }}</span>
-                <span v-if="validationErrors.experimentSetUrn" class="mave-field-error">{{validationErrors.experimentSetUrn}}</span>
+                <span v-if="validationErrors.experimentSetUrn" class="mave-field-error">{{
+                  validationErrors.experimentSetUrn
+                }}</span>
                 <div v-if="!item" class="mave-field-help">
-                  To add an experiment to a different set, please navigate to the experiment set first and click "Add experiment."
+                  To add an experiment to a different set, please navigate to the experiment set first and click "Add
+                  experiment."
                 </div>
               </div>
               <div class="field" v-else>
-                <label :for="scopedId('field-value-experiment-set')" style="font-weight: bold; margin-right: 5px;">Experiment set:</label>
+                <label :for="scopedId('field-value-experiment-set')" style="font-weight: bold; margin-right: 5px"
+                  >Experiment set:</label
+                >
                 <span :id="scopedId('field-value-experiment-set')">(New experiment set)</span>
                 <div class="mave-field-help">
-                  To add an experiment to an existing set, please navigate to the experiment set first and click "Add experiment."
+                  To add an experiment to an existing set, please navigate to the experiment set first and click "Add
+                  experiment."
                 </div>
               </div>
               <div class="field">
@@ -48,48 +56,52 @@
                   <InputText v-model="title" :id="scopedId('input-title')" />
                   <label :for="scopedId('input-title')">Title</label>
                 </span>
-                <span v-if="validationErrors.title" class="mave-field-error">{{validationErrors.title}}</span>
+                <span v-if="validationErrors.title" class="mave-field-error">{{ validationErrors.title }}</span>
               </div>
               <div class="field">
                 <span class="p-float-label">
                   <Textarea v-model="shortDescription" :id="scopedId('input-shortDescription')" rows="4" />
                   <label :for="scopedId('input-shortDescription')">Short description</label>
                 </span>
-                <span v-if="validationErrors.shortDescription" class="mave-field-error">{{validationErrors.shortDescription}}</span>
+                <span v-if="validationErrors.shortDescription" class="mave-field-error">{{
+                  validationErrors.shortDescription
+                }}</span>
               </div>
               <div class="field">
                 <span class="p-float-label">
                   <Chips
-                      ref="doiIdentifiersInput"
-                      v-model="doiIdentifiers"
-                      :id="scopedId('input-doiIdentifiers')"
-                      :addOnBlur="true"
-                      :allowDuplicate="false"
-                      @add="acceptNewDoiIdentifier"
-                      @keyup.escape="clearDoiIdentifierSearch"
-                    >
-                      <template #chip="slotProps">
-                        <div>
-                            <span>{{ slotProps.value.identifier }}</span>
-                        </div>
+                    ref="doiIdentifiersInput"
+                    v-model="doiIdentifiers"
+                    :id="scopedId('input-doiIdentifiers')"
+                    :addOnBlur="true"
+                    :allowDuplicate="false"
+                    @add="acceptNewDoiIdentifier"
+                    @keyup.escape="clearDoiIdentifierSearch"
+                  >
+                    <template #chip="slotProps">
+                      <div>
+                        <span>{{ slotProps.value.identifier }}</span>
+                      </div>
                     </template>
                   </Chips>
                   <label :for="scopedId('input-doiIdentifiers')">DOIs</label>
                 </span>
-                <span v-if="validationErrors.doiIdentifiers" class="mave-field-error">{{validationErrors.doiIdentifiers}}</span>
+                <span v-if="validationErrors.doiIdentifiers" class="mave-field-error">{{
+                  validationErrors.doiIdentifiers
+                }}</span>
               </div>
               <div class="field">
                 <span class="p-float-label">
                   <AutoComplete
-                      ref="publicationIdentifiersInput"
-                      v-model="publicationIdentifiers"
-                      :id="scopedId('input-publicationIdentifiers')"
-                      :multiple="true"
-                      :suggestions="publicationIdentifierSuggestionsList"
-                      @complete="searchPublicationIdentifiers"
-                      @item-select="acceptNewPublicationIdentifier"
-                      @keyup.escape="clearPublicationIdentifierSearch"
-                      option-label="identifier"
+                    ref="publicationIdentifiersInput"
+                    v-model="publicationIdentifiers"
+                    :id="scopedId('input-publicationIdentifiers')"
+                    :multiple="true"
+                    :suggestions="publicationIdentifierSuggestionsList"
+                    @complete="searchPublicationIdentifiers"
+                    @item-select="acceptNewPublicationIdentifier"
+                    @keyup.escape="clearPublicationIdentifierSearch"
+                    option-label="identifier"
                   >
                     <template #chip="slotProps">
                       <div>
@@ -98,19 +110,21 @@
                     </template>
                     <template #item="slotProps">
                       <div>
-                          <div>Title: {{ slotProps.item.title }}</div>
-                          <div>DOI: {{ slotProps.item.doi }}</div>
-                          <div>Identifier: {{ slotProps.item.identifier }}</div>
-                          <div>Database: {{ slotProps.item.dbName }}</div>
+                        <div>Title: {{ slotProps.item.title }}</div>
+                        <div>DOI: {{ slotProps.item.doi }}</div>
+                        <div>Identifier: {{ slotProps.item.identifier }}</div>
+                        <div>Database: {{ slotProps.item.dbName }}</div>
                       </div>
                     </template>
                   </AutoComplete>
                   <label :for="scopedId('input-publicationIdentifiers')">Publication identifiers</label>
                 </span>
-                <span v-if="validationErrors.publicationIdentifiers" class="mave-field-error">{{validationErrors.publicationIdentifiers}}</span>
+                <span v-if="validationErrors.publicationIdentifiers" class="mave-field-error">{{
+                  validationErrors.publicationIdentifiers
+                }}</span>
               </div>
               <div class="field">
-                <span class="p-float-label" style="display:block">
+                <span class="p-float-label" style="display: block">
                   <Multiselect
                     ref="primaryPublicationIdentifiersInput"
                     v-model="primaryPublicationIdentifiers"
@@ -121,58 +135,65 @@
                     :selectionLimit="1"
                   >
                     <template #option="slotProps">
-                          <div>
-                              <div>Title: {{ slotProps.option.title }}</div>
-                              <div>DOI: {{ slotProps.option.doi }}</div>
-                              <div>Identifier: {{ slotProps.option.identifier }}</div>
-                              <div>Database: {{ slotProps.option.dbName }}</div>
-                          </div>
+                      <div>
+                        <div>Title: {{ slotProps.option.title }}</div>
+                        <div>DOI: {{ slotProps.option.doi }}</div>
+                        <div>Identifier: {{ slotProps.option.identifier }}</div>
+                        <div>Database: {{ slotProps.option.dbName }}</div>
+                      </div>
                     </template>
                   </Multiselect>
                   <label :for="scopedId('input-primaryPublicationIdentifiers')">Primary publication</label>
                 </span>
-                <span v-if="validationErrors.primaryPublicationIdentifiers" class="mave-field-error">{{validationErrors.primaryPublicationIdentifiers}}</span>
+                <span v-if="validationErrors.primaryPublicationIdentifiers" class="mave-field-error">{{
+                  validationErrors.primaryPublicationIdentifiers
+                }}</span>
               </div>
               <div class="field">
                 <span class="p-float-label">
                   <Chips
-                      ref="rawReadIdentifiersInput"
-                      v-model="rawReadIdentifiers"
-                      :id="scopedId('input-rawReadIdentifiers')"
-                      :addOnBlur="true"
-                      :allowDuplicate="false"
-                      @add="acceptNewRawReadIdentifier">
-                      @keyup.escape="clearRawReadIdentifierSearch"
-                      <template #chip="slotProps">
-                        <div>
-                            <span>{{ slotProps.value.identifier }}</span>
-                        </div>
+                    ref="rawReadIdentifiersInput"
+                    v-model="rawReadIdentifiers"
+                    :id="scopedId('input-rawReadIdentifiers')"
+                    :addOnBlur="true"
+                    :allowDuplicate="false"
+                    @add="acceptNewRawReadIdentifier"
+                  >
+                    @keyup.escape="clearRawReadIdentifierSearch"
+                    <template #chip="slotProps">
+                      <div>
+                        <span>{{ slotProps.value.identifier }}</span>
+                      </div>
                     </template>
                   </Chips>
                   <label :for="scopedId('input-rawReadIdentifiers')">Raw Read</label>
                 </span>
-                <span v-if="validationErrors.rawReadIdentifiers" class="mave-field-error">{{validationErrors.rawReadIdentifiers}}</span>
+                <span v-if="validationErrors.rawReadIdentifiers" class="mave-field-error">{{
+                  validationErrors.rawReadIdentifiers
+                }}</span>
               </div>
               <div class="field">
                 <span class="p-float-label">
                   <FileUpload
-                      :id="scopedId('input-extraMetadataFile')"
-                      :auto="false"
-                      chooseLabel="Extra metadata"
-                      :class="inputClasses.extraMetadataFile"
-                      :customUpload="true"
-                      :fileLimit="1"
-                      :showCancelButton="false"
-                      :showUploadButton="false"
-                      @remove="fileCleared('extraMetadataFile')"
-                      @select="fileSelected('extraMetadataFile', $event)"
+                    :id="scopedId('input-extraMetadataFile')"
+                    :auto="false"
+                    chooseLabel="Extra metadata"
+                    :class="inputClasses.extraMetadataFile"
+                    :customUpload="true"
+                    :fileLimit="1"
+                    :showCancelButton="false"
+                    :showUploadButton="false"
+                    @remove="fileCleared('extraMetadataFile')"
+                    @select="fileSelected('extraMetadataFile', $event)"
                   >
                     <template #empty>
                       <p>Drop a JSON file here.</p>
                     </template>
                   </FileUpload>
                 </span>
-                <span v-if="validationErrors.extraMetadata" class="mave-field-error">{{validationErrors.extraMetadata}}</span>
+                <span v-if="validationErrors.extraMetadata" class="mave-field-error">{{
+                  validationErrors.extraMetadata
+                }}</span>
               </div>
               <div class="field">
                 <TabView>
@@ -186,7 +207,9 @@
                     <div v-html="markdownToHtml(abstractText)"></div>
                   </TabPanel>
                 </TabView>
-                <span v-if="validationErrors.abstractText" class="mave-field-error">{{validationErrors.abstractText}}</span>
+                <span v-if="validationErrors.abstractText" class="mave-field-error">{{
+                  validationErrors.abstractText
+                }}</span>
               </div>
               <div class="field">
                 <TabView>
@@ -200,7 +223,9 @@
                     <div v-html="markdownToHtml(methodText)"></div>
                   </TabPanel>
                 </TabView>
-                <span v-if="validationErrors.methodText" class="mave-field-error">{{validationErrors.methodText}}</span>
+                <span v-if="validationErrors.methodText" class="mave-field-error">{{
+                  validationErrors.methodText
+                }}</span>
               </div>
               <div class="field">
                 <span class="p-float-label">
@@ -216,14 +241,20 @@
                   >
                     <template #chip="slotProps">
                       <div>
-                        <div v-if="slotProps.value.givenName || slotProps.value.familyName">{{ slotProps.value.givenName }} {{ slotProps.value.familyName }} ({{ slotProps.value.orcidId }})</div>
+                        <div v-if="slotProps.value.givenName || slotProps.value.familyName">
+                          {{ slotProps.value.givenName }} {{ slotProps.value.familyName }} ({{
+                            slotProps.value.orcidId
+                          }})
+                        </div>
                         <div v-else>{{ slotProps.value.orcidId }}</div>
                       </div>
                     </template>
                   </Chips>
                   <label :for="scopedId('input-contributors')">Contributors</label>
                 </span>
-                <span v-if="validationErrors.contributors" class="mave-field-error">{{validationErrors.contributors}}</span>
+                <span v-if="validationErrors.contributors" class="mave-field-error">{{
+                  validationErrors.contributors
+                }}</span>
               </div>
             </template>
           </Card>
@@ -232,7 +263,7 @@
           <Card class="keyword-editor">
             <template #content>
               <div class="field">
-                <label style="font-weight: bold; margin-right: 3px;">Keywords</label>
+                <label style="font-weight: bold; margin-right: 3px">Keywords</label>
               </div>
               <div v-for="keyword in keywordData" :key="keyword.key">
                 <div v-if="keywordVisibility[keyword.key]">
@@ -252,34 +283,45 @@
                       class="keyword-description-button"
                       rounded
                       :disabled="!keywordKeys[keyword.key] || keywordKeys[keyword.key] == 'Other' ? true : null"
-                      :icon="(keywordTextVisible[keyword.key] || keywordKeys[keyword.key] === 'Other') ? 'pi pi-minus' : 'pi pi-file-edit'"
+                      :icon="
+                        keywordTextVisible[keyword.key] || keywordKeys[keyword.key] === 'Other'
+                          ? 'pi pi-minus'
+                          : 'pi pi-file-edit'
+                      "
                       @click="keywordToggleInput(keyword.key)"
                       aria-label="Filter"
                     />
-                    &nbsp;<i class="pi pi-info-circle" style="color: green; cursor: pointer;" @click="showDialog(keyword.key)"/>
+                    &nbsp;<i
+                      class="pi pi-info-circle"
+                      style="color: green; cursor: pointer"
+                      @click="showDialog(keyword.key)"
+                    />
                     <Dialog
                       v-model:visible="dialogVisible[keyword.key]"
                       modal
                       :header="keyword.key"
-                      :style="{ width: '50vw' }"
-                      :breakpoints="{ '1199px': '75vw', '575px': '90vw' }"
+                      :style="{width: '50vw'}"
+                      :breakpoints="{'1199px': '75vw', '575px': '90vw'}"
                     >
                       <p class="m-0">
                         {{ getKeywordOptions(keyword.option)[0].description }}
                       </p>
                     </Dialog>
-                    <span v-if="validationErrors[`keywords.${keyword.key}`]" class="mave-field-error">{{ validationErrors[`keywords.${keyword.key}`] }}</span>
+                    <span v-if="validationErrors[`keywords.${keyword.key}`]" class="mave-field-error">{{
+                      validationErrors[`keywords.${keyword.key}`]
+                    }}</span>
                   </div>
                   <div class="field" v-if="keywordTextVisible[keyword.key] || keywordKeys[keyword.key] === 'Other'">
                     <span class="p-float-label keyword-description-input">
-                      <Textarea
-                        v-model="keywordDescriptions[keyword.key]"
-                        :id="scopedId('input-title')"
-                        rows="4"
-                      />
-                      <label :for="scopedId('input-title')">{{ keyword.descriptionLabel }} {{ keywordKeys[keyword.key] === 'Other' ? '(Required)' : '(Optional)' }}</label>
+                      <Textarea v-model="keywordDescriptions[keyword.key]" :id="scopedId('input-title')" rows="4" />
+                      <label :for="scopedId('input-title')"
+                        >{{ keyword.descriptionLabel }}
+                        {{ keywordKeys[keyword.key] === 'Other' ? '(Required)' : '(Optional)' }}</label
+                      >
                     </span>
-                    <span v-if="validationErrors[`keywordDescriptions.${keyword.key}`]" class="mave-field-error"> {{ validationErrors[`keywordDescriptions.${keyword.key}`] }}</span>
+                    <span v-if="validationErrors[`keywordDescriptions.${keyword.key}`]" class="mave-field-error">
+                      {{ validationErrors[`keywordDescriptions.${keyword.key}`] }}</span
+                    >
                   </div>
                 </div>
               </div>
@@ -291,7 +333,7 @@
           </Card>
           <Card v-if="item?.scoreSetUrns">
             <template #content>
-              <div>{{item.scoreSetUrns?.length}} score sets loaded</div>
+              <div>{{ item.scoreSetUrns?.length }} score sets loaded</div>
             </template>
           </Card>
         </div>
@@ -302,7 +344,6 @@
 </template>
 
 <script>
-
 import axios from 'axios'
 import _ from 'lodash'
 import {marked} from 'marked'
@@ -328,7 +369,14 @@ import useAuth from '@/composition/auth'
 import useItem from '@/composition/item'
 import useItems from '@/composition/items'
 import config from '@/config'
-import {normalizeDoi, normalizePubmedId, normalizeRawRead, validateDoi, validatePubmedId, validateRawRead} from '@/lib/identifiers'
+import {
+  normalizeDoi,
+  normalizePubmedId,
+  normalizeRawRead,
+  validateDoi,
+  validatePubmedId,
+  validateRawRead
+} from '@/lib/identifiers'
 import {ORCID_ID_REGEX} from '@/lib/orcid'
 import useFormatters from '@/composition/formatters'
 
@@ -336,32 +384,32 @@ const KEYWORDS = [
   {
     key: 'Variant Library Creation Method',
     descriptionLabel: 'Variant Library Creation Method Description',
-    option: 'variantLibraryKeywordOptions',
+    option: 'variantLibraryKeywordOptions'
   },
   {
     key: 'Endogenous Locus Library Method System',
     descriptionLabel: 'Endogenous Locus Library Method System Description',
-    option: 'endogenousSystemKeywordOptions',
+    option: 'endogenousSystemKeywordOptions'
   },
   {
     key: 'Endogenous Locus Library Method Mechanism',
     descriptionLabel: 'Endogenous Locus Library Method Mechanism Description',
-    option: 'endogenousMechanismKeywordOptions',
+    option: 'endogenousMechanismKeywordOptions'
   },
   {
     key: 'In Vitro Construct Library Method System',
     descriptionLabel: 'In Vitro Construct Library Method System Description',
-    option: 'inVitroSystemKeywordOptions',
+    option: 'inVitroSystemKeywordOptions'
   },
   {
     key: 'In Vitro Construct Library Method Mechanism',
     descriptionLabel: 'In Vitro Construct Library Method Mechanism Description',
-    option: 'inVitroMechanismKeywordOptions',
+    option: 'inVitroMechanismKeywordOptions'
   },
   {
     key: 'Delivery method',
     descriptionLabel: 'Delivery method Description',
-    option: 'deliveryMethodKeywordOptions',
+    option: 'deliveryMethodKeywordOptions'
   },
   {
     key: 'Phenotypic Assay Dimensionality',
@@ -371,48 +419,64 @@ const KEYWORDS = [
   {
     key: 'Phenotypic Assay Method',
     descriptionLabel: 'Phenotypic Assay Method Description',
-    option: 'phenotypicMethodKeywordOptions',
+    option: 'phenotypicMethodKeywordOptions'
   },
   {
     key: 'Phenotypic Assay Mechanism',
     descriptionLabel: 'Phenotypic Assay Mechanism Description',
-    option: 'phenotypicMechanismKeywordOptions',
+    option: 'phenotypicMechanismKeywordOptions'
   },
   {
     key: 'Phenotypic Assay Model System',
     descriptionLabel: 'Phenotypic Assay Model System Description',
-    option: 'phenotypicModelSystemKeywordOptions',
+    option: 'phenotypicModelSystemKeywordOptions'
   },
   {
     key: 'Phenotypic Assay Profiling Strategy',
     descriptionLabel: 'Phenotypic Assay Profiling Strategy Description',
-    option: 'phenotypicProfilingStrategyKeywordOptions',
+    option: 'phenotypicProfilingStrategyKeywordOptions'
   },
   {
     key: 'Phenotypic Assay Sequencing Read Type',
     descriptionLabel: 'Phenotypic Assay Sequencing Read Type Description',
-    option: 'phenotypicSequencingTypeKeywordOptions',
+    option: 'phenotypicSequencingTypeKeywordOptions'
   }
 ]
 
 // Used for save function
 const KEYWORD_GROUPS = {
-    "Endogenous locus library method": [
-      "Variant Library Creation Method",
-      "Endogenous Locus Library Method System",
-      "Endogenous Locus Library Method Mechanism"
-    ],
-    "In vitro construct library method": [
-      "Variant Library Creation Method",
-      "In Vitro Construct Library Method System",
-      "In Vitro Construct Library Method Mechanism"
-    ],
-    "Other": ["Variant Library Creation Method"]
-  }
+  'Endogenous locus library method': [
+    'Variant Library Creation Method',
+    'Endogenous Locus Library Method System',
+    'Endogenous Locus Library Method Mechanism'
+  ],
+  'In vitro construct library method': [
+    'Variant Library Creation Method',
+    'In Vitro Construct Library Method System',
+    'In Vitro Construct Library Method Mechanism'
+  ],
+  Other: ['Variant Library Creation Method']
+}
 
 export default {
   name: 'ExperimentEditor',
-  components: { AutoComplete, Button, Card, Chips, Dialog, Dropdown, Multiselect, DefaultLayout, EmailPrompt, FileUpload, InputText, ProgressSpinner, TabPanel, TabView, Textarea },
+  components: {
+    AutoComplete,
+    Button,
+    Card,
+    Chips,
+    Dialog,
+    Dropdown,
+    Multiselect,
+    DefaultLayout,
+    EmailPrompt,
+    FileUpload,
+    InputText,
+    ProgressSpinner,
+    TabPanel,
+    TabView,
+    Textarea
+  },
 
   setup: () => {
     const {userProfile} = useAuth()
@@ -423,12 +487,22 @@ export default {
     const inVitroSystemKeywordOptions = useItems({itemTypeName: `controlled-keywords-in-vitro-system-search`})
     const inVitroMechanismKeywordOptions = useItems({itemTypeName: `controlled-keywords-in-vitro-mechanism-search`})
     const deliveryMethodKeywordOptions = useItems({itemTypeName: `controlled-keywords-delivery-search`})
-    const phenotypicDimensionalityKeywordOptions = useItems({itemTypeName: `controlled-keywords-phenotypic-dimensionality-search`})
+    const phenotypicDimensionalityKeywordOptions = useItems({
+      itemTypeName: `controlled-keywords-phenotypic-dimensionality-search`
+    })
     const phenotypicMethodKeywordOptions = useItems({itemTypeName: `controlled-keywords-phenotypic-method-search`})
-    const phenotypicMechanismKeywordOptions = useItems({itemTypeName: `controlled-keywords-phenotypic-mechanism-search`})
-    const phenotypicModelSystemKeywordOptions = useItems({itemTypeName: `controlled-keywords-phenotypic-modle-system-search`})
-    const phenotypicProfilingStrategyKeywordOptions = useItems({itemTypeName: `controlled-keywords-phenotypic-profiling-strategy-search`})
-    const phenotypicSequencingTypeKeywordOptions = useItems({itemTypeName: `controlled-keywords-phenotypic-sequencing-type-search`})
+    const phenotypicMechanismKeywordOptions = useItems({
+      itemTypeName: `controlled-keywords-phenotypic-mechanism-search`
+    })
+    const phenotypicModelSystemKeywordOptions = useItems({
+      itemTypeName: `controlled-keywords-phenotypic-modle-system-search`
+    })
+    const phenotypicProfilingStrategyKeywordOptions = useItems({
+      itemTypeName: `controlled-keywords-phenotypic-profiling-strategy-search`
+    })
+    const phenotypicSequencingTypeKeywordOptions = useItems({
+      itemTypeName: `controlled-keywords-phenotypic-sequencing-type-search`
+    })
 
     const publicationIdentifierSuggestions = useItems({itemTypeName: 'publication-identifier-search'})
     const externalPublicationIdentifierSuggestions = useItems({itemTypeName: 'external-publication-identifier-search'})
@@ -489,19 +563,23 @@ export default {
     serverSideValidationErrors: {},
     clientSideValidationErrors: {},
     inputClasses: {
-      extraMetadataFile: null,
+      extraMetadataFile: null
     },
     validationErrors: {
       keywords: _.fromPairs(KEYWORDS.map((keyword) => [keyword.key, null])),
-      keywordDescriptions: _.fromPairs(KEYWORDS.map((keyword) => [keyword.key, null])),
+      keywordDescriptions: _.fromPairs(KEYWORDS.map((keyword) => [keyword.key, null]))
     }
   }),
 
   computed: {
-    publicationIdentifierSuggestionsList: function() {
+    publicationIdentifierSuggestionsList: function () {
       // The PrimeVue AutoComplete doesn't seem to like it if we set the suggestion list to [].
       // This causes the drop-down to stop appearing when we later populate the list.
-      let publicationIdentifierSuggestions = _.unionBy(this.publicationIdentifierSuggestions, this.externalPublicationIdentifierSuggestions, 'identifier')
+      let publicationIdentifierSuggestions = _.unionBy(
+        this.publicationIdentifierSuggestions,
+        this.externalPublicationIdentifierSuggestions,
+        'identifier'
+      )
       if (!Array.isArray(publicationIdentifierSuggestions) || !publicationIdentifierSuggestions.length) {
         // array does not exist, is not an array, or is empty
         return [{}]
@@ -509,13 +587,17 @@ export default {
         return publicationIdentifierSuggestions
       }
     },
-    keywordVisibility: function() {
+    keywordVisibility: function () {
       return {
         ..._.fromPairs(KEYWORDS.map((keyword) => [keyword.key, true])),
-        'Endogenous Locus Library Method System': this.keywordKeys['Variant Library Creation Method'] == 'Endogenous locus library method',
-        'Endogenous Locus Library Method Mechanism': this.keywordKeys['Variant Library Creation Method'] == 'Endogenous locus library method',
-        'In Vitro Construct Library Method System': this.keywordKeys['Variant Library Creation Method'] == 'In vitro construct library method',
-        'In Vitro Construct Library Method Mechanism': this.keywordKeys['Variant Library Creation Method'] == 'In vitro construct library method',
+        'Endogenous Locus Library Method System':
+          this.keywordKeys['Variant Library Creation Method'] == 'Endogenous locus library method',
+        'Endogenous Locus Library Method Mechanism':
+          this.keywordKeys['Variant Library Creation Method'] == 'Endogenous locus library method',
+        'In Vitro Construct Library Method System':
+          this.keywordKeys['Variant Library Creation Method'] == 'In vitro construct library method',
+        'In Vitro Construct Library Method Mechanism':
+          this.keywordKeys['Variant Library Creation Method'] == 'In vitro construct library method'
       }
     },
     keywordData() {
@@ -528,17 +610,17 @@ export default {
 
   watch: {
     item: {
-      handler: function() {
+      handler: function () {
         this.resetForm()
       }
     },
     itemId: {
-      handler: function() {
+      handler: function () {
         this.setItemId(this.itemId)
       },
       immediate: true
     },
-    'keywordKeys.Variant Library Creation Method': function(newValue) {
+    'keywordKeys.Variant Library Creation Method': function (newValue) {
       if (newValue !== 'Endogenous locus library method') {
         this.keywordKeys['Endogenous Locus Library Method System'] = null
         this.keywordKeys['Endogenous Locus Library Method Mechanism'] = null
@@ -550,7 +632,7 @@ export default {
     }
   },
 
-  mounted: function() {
+  mounted: function () {
     this.resetForm()
   },
 
@@ -559,13 +641,13 @@ export default {
     // Contributors
     //////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 
-    clearContributorSearch: function() {
+    clearContributorSearch: function () {
       // This could change with a new PrimeVue version.
       const input = this.$refs.contributorsInput
       input.$refs.input.value = ''
     },
 
-    lookupOrcidUser: async function(orcidId) {
+    lookupOrcidUser: async function (orcidId) {
       let orcidUser = null
       try {
         orcidUser = (await axios.get(`${config.apiBaseUrl}/orcid/users/${orcidId}`)).data
@@ -575,11 +657,11 @@ export default {
       return orcidUser
     },
 
-    newContributorsAdded: async function(event) {
+    newContributorsAdded: async function (event) {
       const newContributors = event.value
 
       // Convert any strings to ORCID users without names. Remove whitespace from new entries.
-      this.contributors = this.contributors.map((c) => _.isString(c) ? {orcidId: c.trim()} : c)
+      this.contributors = this.contributors.map((c) => (_.isString(c) ? {orcidId: c.trim()} : c))
 
       // Validate and look up each new contributor.
       for (const newContributor of newContributors) {
@@ -633,7 +715,7 @@ export default {
     // Form fields
     ////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 
-    acceptNewDoiIdentifier: function(event) {
+    acceptNewDoiIdentifier: function (event) {
       // Remove new string item from the model and add new structured item in its place if it validates and is not a duplicate.
       const idx = this.doiIdentifiers.findIndex((item) => typeof item === 'string' || item instanceof String)
       if (idx == -1) {
@@ -644,22 +726,26 @@ export default {
       const newDoi = normalizeDoi(searchText)
       if (this.doiIdentifiers.find((item) => item.identifier == newDoi)) {
         this.doiIdentifiers.splice(idx, 1)
-        this.$toast.add({severity:'warn', summary: `DOI "${newDoi}" is already associated with this experiment`, life: 3000})
+        this.$toast.add({
+          severity: 'warn',
+          summary: `DOI "${newDoi}" is already associated with this experiment`,
+          life: 3000
+        })
       } else if (validateDoi(searchText)) {
-        this.doiIdentifiers.splice(idx, 1, { identifier: newDoi })
+        this.doiIdentifiers.splice(idx, 1, {identifier: newDoi})
       } else {
         this.doiIdentifiers.splice(idx, 1)
-        this.$toast.add({severity:'warn', summary: `"${searchText}" is not a valid DOI`, life: 3000})
+        this.$toast.add({severity: 'warn', summary: `"${searchText}" is not a valid DOI`, life: 3000})
       }
     },
 
-    clearDoiIdentifierSearch: function() {
+    clearDoiIdentifierSearch: function () {
       // This could change with a new Primevue version.
       const input = this.$refs.doiIdentifiersInput
       input.$refs.input.value = ''
     },
 
-    acceptNewPublicationIdentifier: function() {
+    acceptNewPublicationIdentifier: function () {
       // We assume the newest value is the right-most one here. That seems to always be true in this version of Primevue,
       // but that may change in the future.
       const newIdx = this.publicationIdentifiers.length - 1
@@ -668,17 +754,21 @@ export default {
       const newIdentifier = this.publicationIdentifiers[newIdx].identifier
       if (this.publicationIdentifiers.findIndex((pub) => pub.identifier == newIdentifier) < newIdx) {
         this.publicationIdentifiers.splice(newIdx, 1)
-        this.$toast.add({severity:'warn', summary: `Identifier "${newIdentifier}" is already associated with this experiment`, life: 3000})
+        this.$toast.add({
+          severity: 'warn',
+          summary: `Identifier "${newIdentifier}" is already associated with this experiment`,
+          life: 3000
+        })
       }
     },
 
-    clearPublicationIdentifierSearch: function() {
+    clearPublicationIdentifierSearch: function () {
       // This could change with a new Primevue version.
       const input = this.$refs.publicationIdentifiersInput
       input.$refs.focusInput.value = ''
     },
 
-    searchPublicationIdentifiers: function(event) {
+    searchPublicationIdentifiers: function (event) {
       const searchText = (event.query || '').trim()
       if (searchText.length > 0) {
         this.setPublicationIdentifierSearch(event.query)
@@ -686,7 +776,7 @@ export default {
       }
     },
 
-    acceptNewRawReadIdentifier: function() {
+    acceptNewRawReadIdentifier: function () {
       // Remove new string item from the model and add new structured item in its place if it validates and is not a duplicate.
       const idx = this.rawReadIdentifiers.findIndex((item) => typeof item === 'string' || item instanceof String)
       if (idx == -1) {
@@ -697,22 +787,26 @@ export default {
       const newRawRead = normalizeRawRead(searchText)
       if (this.rawReadIdentifiers.find((item) => item.identifier == newRawRead)) {
         this.rawReadIdentifiers.splice(idx, 1)
-        this.$toast.add({severity:'warn', summary: `Raw Read identifier "${newRawRead}" is already associated with this experiment`, life: 3000})
+        this.$toast.add({
+          severity: 'warn',
+          summary: `Raw Read identifier "${newRawRead}" is already associated with this experiment`,
+          life: 3000
+        })
       } else if (validateRawRead(searchText)) {
-        this.rawReadIdentifiers.splice(idx, 1, { identifier: newRawRead })
+        this.rawReadIdentifiers.splice(idx, 1, {identifier: newRawRead})
       } else {
         this.rawReadIdentifiers.splice(idx, 1)
-        this.$toast.add({severity:'warn', summary: `"${searchText}" is not a valid Raw Read identifier`, life: 3000})
+        this.$toast.add({severity: 'warn', summary: `"${searchText}" is not a valid Raw Read identifier`, life: 3000})
       }
     },
 
-    clearRawReadIdentifierSearch: function() {
+    clearRawReadIdentifierSearch: function () {
       // This could change with a new Primevue version.
       const input = this.$refs.rawReadIdentifiersInput
       input.$refs.input.value = ''
     },
 
-    fileCleared: function(inputName) {
+    fileCleared: function (inputName) {
       if (inputName == 'extraMetadataFile') {
         this.extraMetadata = null
         delete this.clientSideValidationErrors.extraMetadata
@@ -721,7 +815,7 @@ export default {
       this.mergeValidationErrors()
     },
 
-    fileSelected: async function(inputName, event) {
+    fileSelected: async function (inputName, event) {
       const file = event.files[0]
       if (file) {
         switch (inputName) {
@@ -731,7 +825,8 @@ export default {
               try {
                 this.extraMetadata = JSON.parse(text)
                 if (!_.isObject(this.extraMetadata) || _.isArray(this.extraMetadata)) {
-                  this.clientSideValidationErrors.extraMetadata = 'Extra metadata must be a JSON object (not an array or simple value).'
+                  this.clientSideValidationErrors.extraMetadata =
+                    'Extra metadata must be a JSON object (not an array or simple value).'
                 } else {
                   this.clientSideValidationErrors.extraMetadata = null
                 }
@@ -752,7 +847,7 @@ export default {
     // Validation
     ////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 
-    mergeValidationErrors: function() {
+    mergeValidationErrors: function () {
       this.validationErrors = _.merge({}, this.serverSideValidationErrors, this.clientSideValidationErrors)
     },
 
@@ -760,7 +855,7 @@ export default {
     // Converting between view model and form model
     ////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 
-    resetForm: function() {
+    resetForm: function () {
       if (this.item) {
         this.title = this.item.title
         this.shortDescription = this.item.shortDescription
@@ -771,7 +866,10 @@ export default {
         // So that the multiselect can populate correctly, build the primary publication identifiers
         // indirectly by filtering publication identifiers list for those publications we know to be
         // primary.
-        this.publicationIdentifiers = _.concat(this.item.primaryPublicationIdentifiers, this.item.secondaryPublicationIdentifiers)
+        this.publicationIdentifiers = _.concat(
+          this.item.primaryPublicationIdentifiers,
+          this.item.secondaryPublicationIdentifiers
+        )
         this.primaryPublicationIdentifiers = this.item.primaryPublicationIdentifiers.filter((publication) => {
           return this.publicationIdentifiers.some((primary) => {
             return primary.identifier === publication.identifier
@@ -785,7 +883,13 @@ export default {
         this.shortDescription = null
         this.abstractText = null
         this.methodText = null
-        this.contributors = [{orcidId: this.userProfile?.sub, givenName: this.userProfile?.given_name, familyName: this.userProfile?.family_name}]
+        this.contributors = [
+          {
+            orcidId: this.userProfile?.sub,
+            givenName: this.userProfile?.given_name,
+            familyName: this.userProfile?.family_name
+          }
+        ]
         this.doiIdentifiers = []
         this.primaryPublicationIdentifiers = []
         this.secondaryPublicationIdentifiers = []
@@ -796,11 +900,11 @@ export default {
       this.resetKeywords()
     },
 
-    resetKeywords: function() {
+    resetKeywords: function () {
       if (this.item && this.item.keywords.length !== 0) {
         // Keywords could be an empty list now. Will modify it back to compulsory when we get final list.
         const setKeyword = (key) => {
-          const keywordObj = this.item.keywords.find(keyword => keyword.keyword.key === key)
+          const keywordObj = this.item.keywords.find((keyword) => keyword.keyword.key === key)
           this.keywordKeys[key] = keywordObj ? keywordObj.keyword.label : null
           this.keywordDescriptions[key] = keywordObj ? keywordObj.description : null
         }
@@ -812,7 +916,7 @@ export default {
       }
     },
 
-    clearKeywords: function() {
+    clearKeywords: function () {
       this.keywords = []
       this.keywordKeys = _.fromPairs(KEYWORDS.map((keyword) => [keyword.key, null]))
       this.keywordDescriptions = _.fromPairs(KEYWORDS.map((keyword) => [keyword.key, null]))
@@ -825,28 +929,33 @@ export default {
     // TODO It would be nice to let the items state module handle saving.
     // Currently there is some special handling here, though, so we will leave that for a later refactoring.
 
-    save: async function() {
+    save: async function () {
       // Remove primary identifier from publications to construct secondary identifiers
-      const primaryPublicationIdentifiers = this.primaryPublicationIdentifiers.map((identifier) => _.pick(identifier, ['identifier', 'dbName']))
-      const secondaryPublicationIdentifiers = this.publicationIdentifiers.map(
-        (identifier) => _.pick(identifier, ['identifier', 'dbName'])
-      ).filter(
-          secondary => !primaryPublicationIdentifiers.some(primary => primary.identifier == secondary.identifier && primary.dbName == secondary.dbName)
+      const primaryPublicationIdentifiers = this.primaryPublicationIdentifiers.map((identifier) =>
+        _.pick(identifier, ['identifier', 'dbName'])
       )
+      const secondaryPublicationIdentifiers = this.publicationIdentifiers
+        .map((identifier) => _.pick(identifier, ['identifier', 'dbName']))
+        .filter(
+          (secondary) =>
+            !primaryPublicationIdentifiers.some(
+              (primary) => primary.identifier == secondary.identifier && primary.dbName == secondary.dbName
+            )
+        )
       // Keywods section
       const combinedKeywords = []
       const methodKey = this.keywordKeys['Variant Library Creation Method']
       if (this.keywordGroups[methodKey]) {
         this.keywordGroups[methodKey].forEach((key) => {
           combinedKeywords.push({
-            "keyword": {"key": key, "label": this.keywordKeys[key]},
-            "description": this.keywordDescriptions[key],
+            keyword: {key: key, label: this.keywordKeys[key]},
+            description: this.keywordDescriptions[key]
           })
         })
       }
       const phenotypicKeywords = KEYWORDS.slice(5).map((keyword) => ({
-        "keyword": {"key": keyword.key, "label": this.keywordKeys[keyword.key]},
-        "description": this.keywordDescriptions[keyword.key],
+        keyword: {key: keyword.key, label: this.keywordKeys[keyword.key]},
+        description: this.keywordDescriptions[keyword.key]
       }))
       combinedKeywords.push(...phenotypicKeywords)
       // Push all of the keyworeds to this.keywords directly will raise a bug if users choose Other option without typing anything.
@@ -866,7 +975,7 @@ export default {
         extraMetadata: {}
       }
       // empty item arrays so that deleted items aren't merged back into editedItem object
-      if(this.item) {
+      if (this.item) {
         this.item.contributors = []
         this.item.keywords = []
         this.item.doiIdentifiers = []
@@ -897,18 +1006,20 @@ export default {
           console.log('Updated item')
           //this.reloadItem()
           this.$router.replace({path: `/experiments/${savedItem.urn}`})
-          this.$toast.add({severity:'success', summary: 'Your changes were saved.', life: 3000})
+          this.$toast.add({severity: 'success', summary: 'Your changes were saved.', life: 3000})
         } else {
           console.log('Created item')
           this.$router.replace({path: `/experiments/${savedItem.urn}`})
-          this.$toast.add({severity:'success', summary: 'The new experiment was saved.', life: 3000})
+          this.$toast.add({severity: 'success', summary: 'The new experiment was saved.', life: 3000})
         }
       } else if (response.data && response.data.detail) {
         if (typeof response.data.detail === 'string' || response.data.detail instanceof String) {
           // Handle generic errors that are not surfaced by the API as objects
-          this.$toast.add({ severity: 'error', summary: `Encountered an error saving experiment: ${response.data.detail}` })
-        }
-        else {
+          this.$toast.add({
+            severity: 'error',
+            summary: `Encountered an error saving experiment: ${response.data.detail}`
+          })
+        } else {
           const formValidationErrors = {}
           for (const error of response.data.detail) {
             let path = error.loc
@@ -924,7 +1035,7 @@ export default {
       }
     },
 
-    validateAndSave: async function() {
+    validateAndSave: async function () {
       this.serverSideValidationErrors = {}
       this.mergeValidationErrors()
 
@@ -937,14 +1048,14 @@ export default {
     // Navigation
     ////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 
-    viewItem: function() {
+    viewItem: function () {
       if (this.item) {
         this.$router.replace({path: `/experiments/${this.item.urn}`})
       }
     },
 
     //Back to Dashboard
-    backDashboard: function() {
+    backDashboard: function () {
       this.$router.replace({path: `/dashboard`})
     },
 
@@ -952,7 +1063,7 @@ export default {
     // Rendering utilities
     ////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 
-    markdownToHtml: function(markdown) {
+    markdownToHtml: function (markdown) {
       return marked(markdown || '')
     },
 
@@ -961,40 +1072,38 @@ export default {
     },
 
     formatKeywordOptionLabel(option) {
-      return option.code ? `${option.code} - ${option.label}` : option.label;
+      return option.code ? `${option.code} - ${option.label}` : option.label
     },
 
     getKeywordOptions(optionsName) {
       return this[optionsName]
     },
 
-    keywordToggleInput: function(field) {
+    keywordToggleInput: function (field) {
       this.keywordTextVisible[field] = !this.keywordTextVisible[field]
     },
 
     showDialog: function (index) {
       this.dialogVisible[index] = true
-    },
+    }
   }
 }
-
 </script>
 
 <style scoped src="../../assets/forms.css"></style>
 
 <style scoped>
-
 /* Cards */
 
 .mave-experiment-editor:deep(.p-card) {
   margin: 1em 0;
-  background: rgba(0,0,0,0.05);
+  background: rgba(0, 0, 0, 0.05);
 }
 
 .mave-experiment-editor:deep(.p-card .p-card-title) {
   font-size: 1.2em;
   font-weight: normal;
-  color: #3f51B5;
+  color: #3f51b5;
   margin-bottom: 0;
 }
 
@@ -1042,5 +1151,4 @@ export default {
 .padded-button {
   margin-left: 5px;
 }
-
 </style>

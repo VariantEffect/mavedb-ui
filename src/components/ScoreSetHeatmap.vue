@@ -192,6 +192,10 @@ export default defineComponent({
         left: 20
       })
     },
+    hideStartAndStopLoss: {
+      type: Boolean,
+      default: false
+    },
     scoreSet: {
       type: Object,
       required: true
@@ -804,6 +808,34 @@ export default defineComponent({
         .filter((variant) => variant != null)
     },
 
+    isStartOrStopLoss: function (variant) {
+      console.log(variant)
+      const hgvsP = [variant.post_mapped_hgvs_p, variant.hgvs_pro_inferred, variant.hgvs_pro].find((hgvs) =>
+        variantNotNullOrNA(hgvs)
+      )
+      if (!hgvsP) {
+        return false
+      }
+      // TODO We may be reparsing the same variant that was just parsed in prepareSimpleVariantInstances.
+      const parsedVariant = parseSimpleProVariant(hgvsP)
+      if (!parsedVariant) {
+        return false
+      }
+      if (parsedVariant.position == 1 && parsedVariant.original == 'Met' && parsedVariant.substitution != 'Met') {
+        // Start loss
+        return true
+      }
+      if (
+        parsedVariant.position == 1 &&
+        (parsedVariant.original == 'Ter' || parsedVariant.original == '*') &&
+        parsedVariant.substitution != 'Ter' &&
+        parsedVariant.substitution != '*'
+      ) {
+        // Stop loss
+        return true
+      }
+    },
+
     prepareSimpleVariantInstances: function (variants) {
       let numComplexVariantInstances = 0
 
@@ -826,6 +858,12 @@ export default defineComponent({
           // Don't display variants out of range from the provided sequence. This happens occassionally
           // with legacy variant data.
           if (variant.position > this.heatmapRange.length) {
+            numIgnoredVariantInstances++
+            return null
+          }
+          // If hideStartAndStopLoss is set to true, omit start- and stop-loss variants. The parent component shouuld
+          // set this option when viewing scores in clinical mode from an assay using a synthetic target sequence.
+          if (this.hideStartAndStopLoss && this.isStartOrStopLoss(variant)) {
             numIgnoredVariantInstances++
             return null
           }

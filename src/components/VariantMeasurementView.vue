@@ -14,31 +14,39 @@
           <table class="variant-info-table">
             <tbody>
               <tr v-if="clingenAlleleName">
-                <td v-if="clingenAlleleId" colspan="5">
+                <td v-if="clingenAlleleName" colspan="5">
                   ClinGen community standard allele name: {{ clingenAlleleName }}
                 </td>
               </tr>
               <tr>
-                <td v-if="clingenAlleleId">ClinGen allele ID:</td>
                 <td v-if="clingenAlleleId">
+                  <span v-if="clingenAlleleId">ClinGen allele ID:</span>
+                  <span v-else>&nbsp;</span>
+                </td>
+                <td>
                   <a
+                    v-if="clingenAlleleId"
                     :href="`https://reg.clinicalgenome.org/redmine/projects/registry/genboree_registry/by_canonicalid?canonicalid=${clingenAlleleId}`"
                     target="_blank"
                   >
                     {{ clingenAlleleId }}
                   </a>
+                  <span v-else>&nbsp;</span>
                 </td>
-                <td v-if="!clingenAlleleId" colspan="2">&nbsp;</td>
-                <td>&nbsp;</td>
+                <td style="width: 150px">&nbsp;</td>
                 <td v-if="clinvarAlleleIds.length > 0">
-                  ClinVar allele {{ clinvarAlleleIds.length == 1 ? 'ID' : 'IDs' }}:
+                  <span v-if="clingenAlleleId">ClinVar allele {{ clinvarAlleleIds.length == 1 ? 'ID' : 'IDs' }}:</span>
+                  <span v-else>&nbsp;</span>
                 </td>
-                <td v-if="clinvarAlleleIds.length > 0">
-                  <div v-for="clinvarAlleleId in clinvarAlleleIds" :key="clinvarAlleleId">
-                    <a :href="`https://www.ncbi.nlm.nih.gov/clinvar/variation/${clinvarAlleleId}`" target="_blank">
-                      {{ clinvarAlleleId }}
-                    </a>
+                <td>
+                  <div v-if="clinvarAlleleIds.length > 0">
+                    <div v-for="clinvarAlleleId in clinvarAlleleIds" :key="clinvarAlleleId">
+                      <a :href="`https://www.ncbi.nlm.nih.gov/clinvar/variation/${clinvarAlleleId}`" target="_blank">
+                        {{ clinvarAlleleId }}
+                      </a>
+                    </div>
                   </div>
+                  <span v-else>&nbsp;</span>
                 </td>
                 <td v-if="clinvarAlleleIds.length == 0" colspan="2">&nbsp;</td>
               </tr>
@@ -50,32 +58,59 @@
                 <td style="background: yellow;">Single nucleotide variant</td>
                 <td style="width: 150px;">&nbsp;</td>
                 -->
-                <td v-if="classification">Functional consequence:</td>
-                <td v-if="classification">{{ startCase(classification) }}</td>
-                <td v-if="!classification" colspan="2">&nbsp;</td>
+                <td>&nbsp;</td>
+                <td v-if="classification">
+                  <span v-if="classification">Functional consequence:</span>
+                  <span v-else>&nbsp;</span>
+                </td>
+                <td>
+                  <span v-if="classification">{{ startCase(classification) }}</span>
+                  <span v-else>&nbsp;</span>
+                </td>
               </tr>
               <tr>
-                <td v-if="(clingenAllele?.genomicAlleles || []).length > 0">Genomic location:</td>
-                <td v-if="(clingenAllele?.genomicAlleles || []).length > 0">
-                  <div v-for="genomicAllele in clingenAllele?.genomicAlleles || []" :key="genomicAllele">
-                    <template
-                      v-if="
-                        genomicAllele.chromosome &&
-                        genomicAllele.coordinates?.[0]?.start &&
-                        genomicAllele.referenceGenome
-                      "
-                    >
-                      chr{{ genomicAllele.chromosome }}:{{ genomicAllele.coordinates?.[0]?.start }} ({{
-                        genomicAllele.referenceGenome
-                      }})
-                    </template>
-                  </div>
+                <td rowspan="2">
+                  <span v-if="(clingenAllele?.genomicAlleles || []).length > 0">Genomic location:</span>
+                  <span v-else>&nbsp;</span>
                 </td>
-                <td v-if="(clingenAllele?.genomicAlleles || []).length == 0" colspan="2">&nbsp;</td>
-                <td style="width: 150px">&nbsp;</td>
+                <td rowspan="2">
+                  <div v-if="(clingenAllele?.genomicAlleles || []).length > 0">
+                    <div v-for="genomicAllele in clingenAllele?.genomicAlleles || []" :key="genomicAllele">
+                      <template
+                        v-if="
+                          genomicAllele.chromosome &&
+                          genomicAllele.coordinates?.[0]?.start &&
+                          genomicAllele.referenceGenome
+                        "
+                      >
+                        chr{{ genomicAllele.chromosome }}:{{ genomicAllele.coordinates?.[0]?.start }} ({{
+                          genomicAllele.referenceGenome
+                        }})
+                      </template>
+                    </div>
+                  </div>
+                  <span v-else>&nbsp;</span>
+                </td>
+                <td>&nbsp;</td>
                 <td>Functional score:</td>
-                <td v-if="variantScores?.score">{{ variantScores?.score?.toPrecision(4) }}</td>
-                <td v-else>&nbsp;</td>
+                <td>
+                  <span v-if="variantScores?.score">{{ variantScores?.score?.toPrecision(4) }}</span>
+                  <span v-else>&nbsp;</span>
+                </td>
+              </tr>
+              <tr>
+                <td>&nbsp;</td>
+                <td>
+                  <span v-if="variantScoreRange?.oddsPath">OddsPath:</span>
+                  <span v-else>&nbsp;</span>
+                </td>
+                <td>
+                  <span v-if="variantScoreRange?.oddsPath?.ratio">{{ variantScoreRange.oddsPath.ratio.toPrecision(5) }}</span>
+                  <span v-if="variantScoreRange?.oddsPath?.evidence" :class="['mavedb-classification-badge', classificationBadgeColorClass, 'strong']">
+                    {{ variantScoreRange.oddsPath.evidence }}
+                  </span>
+                  <span v-else>&nbsp;</span>
+                </td>
               </tr>
             </tbody>
           </table>
@@ -248,13 +283,13 @@ export default defineComponent({
       }
 
       const score = this.variantScores?.score
-      const scoreRanges = this.variant?.scoreSet?.scoreRanges?.ranges
+      const scoreRanges = this.variant?.scoreSet?.scoreRanges?.investigatorProvided?.ranges
       if (scoreRanges && score != null) {
         return scoreRanges.find((scoreRange: any) => {
           const lowerOperator = scoreRange.inclusiveLowerBound ? '<=' : '<'
           const upperOperator = scoreRange.inclusiveUpperBound ? '>=' : '>'
 
-          scoreRange.range &&
+          return scoreRange.range &&
             scoreRange.range.length == 2 &&
             (scoreRange.range[0] === null || operatorTable[lowerOperator](scoreRange.range[0], score)) &&
             (scoreRange.range[1] === null || operatorTable[upperOperator](scoreRange.range[1], score))
@@ -264,6 +299,15 @@ export default defineComponent({
     },
     variantScores: function () {
       return (this.scores || []).find((s) => s.accession == this.variantUrn)
+    },
+    classificationBadgeColorClass: function () {
+      if (this.variantScoreRange?.oddsPath?.evidence?.startsWith('BS3')) {
+        return 'mavedb-blue'
+      }
+      if (this.variantScoreRange?.oddsPath?.evidence?.startsWith('PS3')) {
+        return 'mavedb-red'
+      }
+      return null
     }
   },
 
@@ -331,11 +375,11 @@ export default defineComponent({
 }
 
 .variant-clinical-classifier-functionally-normal {
-  background-color: #182fb0;
+  background-color: #1e40af /* #182fb0; */
 }
 
 .variant-clinical-classifier-functionally-abnormal {
-  background-color: #b02418;
+  background-color: #991b1b; /* #b02418; */
 }
 
 .variant-clinical-classifier-not-specified {
@@ -343,6 +387,7 @@ export default defineComponent({
 }
 
 table.variant-into-table {
+  width: 100%;
   border-collapse: collapse;
 }
 
@@ -359,5 +404,25 @@ table.variant-info-table td:first-child {
   position: relative;
   top: 50%;
   left: 50%;
+}
+
+/* Variant classification */
+
+.mavedb-classification-badge {
+  padding: 2px 6px;
+  border-radius: 4px;
+  font-size: 12px;
+  font-weight: bold;
+  margin-left: 1em;
+}
+
+.mavedb-classification-badge.mavedb-blue {
+  background: #1e40af;
+  color: white;
+}
+
+.mavedb-classification-badge.mavedb-red {
+  background: #991b1b;
+  color: white;
 }
 </style>

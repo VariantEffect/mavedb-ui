@@ -66,6 +66,14 @@
             <span :class="clinicalMode ? 'mavedb-clinical-mode-option-on' : 'mavedb-clinical-mode-option-off'"
               >Mapped variant coordinates for clinical use</span
             >
+            <Button
+              v-tooltip="clinicalModeHelpText"
+              aria-label="About raw vs. clinical mode"
+              class="p-button-help mavedb-help-tooltip-button"
+              icon="pi pi-info"
+              outlined
+              rounded
+            />
           </span>
         </div>
         <div class="mavedb-score-set-histogram-pane">
@@ -83,6 +91,7 @@
             ref="heatmap"
             :coordinates="clinicalMode ? 'mapped' : 'raw'"
             :external-selection="variantToVisualize"
+            :hide-start-and-stop-loss="hideStartAndStopLoss"
             :score-set="item"
             sequence-type="protein"
             :show-protein-structure-button="uniprotId != null && config.CLINICAL_FEATURES_ENABLED"
@@ -94,8 +103,8 @@
           />
         </div>
       </div>
-      <div v-else-if="scoresDataStatus=='Loading' || scoresDataStatus=='NotLoaded'">
-        <ProgressSpinner style="width: 36px; height: 36px; margin: 12px auto; display: block;" />
+      <div v-else-if="scoresDataStatus == 'Loading' || scoresDataStatus == 'NotLoaded'">
+        <ProgressSpinner style="width: 36px; height: 36px; margin: 12px auto; display: block" />
       </div>
       <div class="mave-1000px-col">
         <div class="clearfix">
@@ -362,7 +371,7 @@ export default {
       variantSearchSuggestions
     }
   },
- 
+
   data: () => ({
     clinicalMode: config.CLINICAL_FEATURES_ENABLED,
     scores: null,
@@ -374,11 +383,19 @@ export default {
     userIsAuthorized: {
       delete: false,
       publish: false,
-      update: false,
-    },
+      update: false
+    }
   }),
 
   computed: {
+    clinicalModeHelpText: function () {
+      if (this.item.targetGenes[0]?.targetSequence) {
+        // Message for score sets from experiments with synthetic target sequences
+        return 'In clinical mode, mapped variant coordinates are used when available, and start- and stop-loss codons are omitted because this score set was produced using a synthetic target sequence.'
+      } else {
+        return 'In clinical mode, mapped variant coordinates are used when available. For experiments with endogenously-edited targets, raw and mapped data are usually identical.'
+      }
+    },
     hasCounts: function () {
       const allCountColumns = this.item?.datasetColumns?.countColumns ?? []
       const countColumns = allCountColumns.filter((col) => col !== 'accession')
@@ -420,6 +437,11 @@ export default {
       } else {
         return this.scores
       }
+    },
+    hideStartAndStopLoss: function () {
+      // In clinical mode, when the target is not endogenously edited (so it has a target sequence), omit start- and
+      // stop-loss variants.
+      return this.clinicalMode && this.item.targetGenes[0]?.targetSequence
     },
     uniprotId: function () {
       // If there is only one target gene, return its UniProt ID that has been set from mapped metadata.
@@ -919,6 +941,29 @@ export default {
   display: block;
   content: '';
   clear: both;
+}
+
+.mavedb-help-tooltip-button {
+  height: 0.5rem;
+  width: 0.5rem;
+  vertical-align: middle;
+  /* Remove extra vertical margin/padding if any. */
+  margin-top: 0;
+  margin-bottom: 0;
+  /* Ensure that button is inline with text. */
+  display: inline-flex;
+  align-items: center;
+  background: none;
+}
+
+.mavedb-help-tooltip-button:focus,
+.mavedb-help-tooltip-button:active,
+.mavedb-help-tooltip-button.p-focus {
+  background: none;
+}
+
+.mavedb-help-tooltip-button:deep(.p-button-icon) {
+  font-size: 0.5rem;
 }
 </style>
 

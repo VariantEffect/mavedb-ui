@@ -1855,8 +1855,8 @@
             baselineScore: this.editedScoreRanges.investigatorProvided.baselineScore,
             baselineScoreDescription: this.editedScoreRanges.investigatorProvided.baselineScoreDescription,
             ranges: this.editedScoreRanges.investigatorProvided.ranges,
-            oddsPathSource: this.editedScoreRanges.investigatorProvided.oddsPathSource.map((source) => _.pick(source, ['identifier', 'dbName'])),
-            source: this.editedScoreRanges.investigatorProvided.source.map((source) => _.pick(source, ['identifier', 'dbName']))
+            oddsPathSource: this.editedScoreRanges.investigatorProvided.oddsPathSource?.map((source) => _.pick(source, ['identifier', 'dbName'])),
+            source: this.editedScoreRanges.investigatorProvided.source?.map((source) => _.pick(source, ['identifier', 'dbName']))
           }
         }
         else {

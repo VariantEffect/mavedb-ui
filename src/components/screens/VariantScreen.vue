@@ -211,4 +211,11 @@ export default defineComponent({
 .mavedb-variants-tabview-header-text {
   color: #3f51b5;
 }
+.mavedb-multiple-variants:deep(.p-tabview-header > a) {
+  border: 0 none;
+  background: transparent;
+}
+.mavedb-multiple-variants:deep(.p-tabview-header.p-highlight) {
+  background-color: rgba(63, 81, 181, 0.12);
+}
 </style>

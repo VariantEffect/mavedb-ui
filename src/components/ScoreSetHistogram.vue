@@ -393,7 +393,7 @@ export default defineComponent({
 
     activeRangeOptions: function () {
       if (!this.activeRanges) return []
-      return Object.keys(this.activeRanges).map((key) => {
+      const calibrationOptions = Object.keys(this.activeRanges).map((key) => {
         const label =
           {
             investigatorProvided: 'Investigator-provided functional classes',
@@ -404,6 +404,10 @@ export default defineComponent({
           value: key
         }
       })
+      return [
+        {label: 'None', value: null},
+        ...calibrationOptions
+      ]
     },
 
     activeRange: function () {
@@ -893,8 +897,10 @@ export default defineComponent({
       if (defaultInvestigatorProvidedIndex >= 0) {
         return this.activeRangeOptions[defaultInvestigatorProvidedIndex]
       } else if (this.activeRangeOptions.length > 0) {
-        return this.activeRangeOptions[0]
-      } else return null
+        return {label: 'None', value: null} // return this.activeRangeOptions[0]
+      } else {
+        return {label: 'None', value: null}
+      }
     },
 
     titleCase(s: string) {

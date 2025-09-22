@@ -330,27 +330,39 @@ export default defineComponent({
       }
       return 'invalid'
     },
-    targetSequence: function () {
+    targetSequenceAndStartPosition: function () {
       switch (this.targetType) {
         case 'sequence':
-          return this.scoreSet?.targetGenes?.[0]?.targetSequence?.sequence || ''
+          return [this.scoreSet?.targetGenes?.[0]?.targetSequence?.sequence || '', 1]
         case 'accession':
-          return this.inferTargetSequenceFromVariants()
+          return [this.inferTargetSequenceFromVariants(), this.targetXRange.start]
         default:
-          return ''
+          return ['', 1]
       }
+    },
+    targetSequence: function () {
+      return this.targetSequenceAndStartPosition[0]
+    },
+    targetSequenceStartPosition: function () {
+      return this.targetSequenceAndStartPosition[1]
     },
     wtResidueType: function () {
       return this.sequenceType == 'dna' ? 'nt' : 'aa'
     },
-    wtSequence: function () {
+    wtSequenceAndStartPosition: function () {
       if (this.wtResidueType == this.targetResidueType) {
-        return _.toArray(this.targetSequence)
+        return [_.toArray(this.targetSequence), this.targetSequenceStartPosition]
       } else if (this.wtResidueType == 'aa' && this.targetResidueType == 'nt') {
-        return this.translateDnaToAminoAcids1Char(this.targetSequence)
+        return [this.translateDnaToAminoAcids1Char(this.targetSequence), 1]
       } else {
-        return []
+        return [[], 1]
       }
+    },
+    wtSequence: function() {
+      return this.wtSequenceAndStartPosition[0]
+    },
+    wtSequenceStartPosition: function () {
+      return this.wtSequenceAndStartPosition[1]
     },
     wtVariants: function () {
       return this.wtSequence ? this.prepareWtVariants(this.wtSequence) : []
@@ -793,7 +805,9 @@ export default defineComponent({
         this.sequenceType == 'protein'
           ? AMINO_ACIDS_WITH_TER.map((aa) => aa.codes.single)
           : NUCLEOTIDE_BASES.map((nt) => nt.codes.single)
-      return wtSequenceArr
+      const visibleWtSequence = wtSequenceArr.slice(this.targetXRange.start - this.wtSequenceStartPosition, this.targetXRange.start + this.targetXRange.length)
+
+      return visibleWtSequence
         .map((residue, i) =>
           allowedResidues.includes(residue)
             ? {

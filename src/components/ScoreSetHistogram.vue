@@ -125,7 +125,8 @@ import makeHistogram, {
   HistogramBin
 } from '@/lib/histogram'
 import {prepareRangesForHistogram, ScoreRanges, ScoreSetRanges} from '@/lib/ranges'
-import {variantNotNullOrNA} from '@/lib/mave-hgvs'
+import {parseSimpleProVariant, variantNotNullOrNA} from '@/lib/mave-hgvs'
+import { AMINO_ACIDS } from '@/lib/amino-acids'
 
 function naToUndefined(x: string | null | undefined) {
   if (variantNotNullOrNA(x)) {
@@ -322,6 +323,16 @@ export default defineComponent({
                 title: conflictingClinicalSignificanceSeriesLabelForVersion(
                   this.controlVersion ? this.controlVersion : DEFAULT_CLINICAL_CONTROL_VERSION
                 )
+              }
+            })
+          }
+
+          if (this.selectedClinicalSignificanceClassifications.includes('Missense')) {
+            series.push({
+              classifier: (d: HistogramDatum) => this.variantIsMissense(d),
+              options: {
+                color: '#984ea3',
+                title: 'Missense'
               }
             })
           }
@@ -676,6 +687,34 @@ export default defineComponent({
   },
 
   methods: {
+    variantIsMissense(variant: Variant) {
+      const hgvsPro = this.getHgvsProFromVariant(variant)
+      if (!hgvsPro) {
+        return false
+      }
+      const parsedVariant = parseSimpleProVariant(hgvsPro)
+      if (!parsedVariant) {
+        return false
+      }
+      const refAllele = parsedVariant.original.toUpperCase()
+      const altAllele = parsedVariant.substitution.toUpperCase()
+      const refAlleleIsAA = AMINO_ACIDS.find((aa) => aa.codes.triple == refAllele)
+      const altAlleleIsAA = AMINO_ACIDS.find((aa) => aa.codes.triple == altAllele)
+      const startLoss = (parsedVariant.position == 1) && refAllele == 'MET'
+      return !!(refAlleleIsAA && altAlleleIsAA && !startLoss && refAllele != altAllele)
+    },
+    getHgvsProFromVariant(variant: Variant) {
+      if (variant.post_mapped_hgvs_p && variant.post_mapped_hgvs_p != 'NA') {
+        return variant.post_mapped_hgvs_p
+      }
+      if (variant.hgvs_pro_inferred && variant.hgvs_pro_inferred != 'NA') {
+        return variant.hgvs_pro_inferred
+      }
+      if (variant.hgvs_pro && variant.hgvs_pro != 'NA') {
+        return variant.hgvs_pro
+      }
+      return null
+    },
     exportChart() {
       saveChartAsFile(
         this.$refs.histogramContainer,

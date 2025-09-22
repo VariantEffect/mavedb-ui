@@ -126,7 +126,12 @@ export function clinvarClinicalSignificanceClassifications(
 ): typeof CLINVAR_CLINICAL_SIGNIFICANCE_CLASSIFICATIONS {
   return [
     ...CLINVAR_CLINICAL_SIGNIFICANCE_CLASSIFICATIONS,
-    clinvarConflictingSignificanceClassificationForVersion(version)
+    clinvarConflictingSignificanceClassificationForVersion(version),
+    {
+      name: 'Missense',
+      description: 'Missense variant',
+      shortDescription: 'Missense'
+    },
   ]
 }
 

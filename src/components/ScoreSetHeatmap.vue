@@ -755,7 +755,7 @@ export default defineComponent({
         this.$emit('heatmapVisible', newValue)
       },
       immediate: true
-    }
+    },
   },
 
   mounted: function () {
@@ -1020,7 +1020,7 @@ export default defineComponent({
       this.heatmap = makeHeatmap()
         .margins({top: 0, bottom: 25, left: 20, right: 20})
         .legendTitle('Functional Score')
-        .drawYGroups(this.sequenceType == 'dna' ? false : true)
+        .drawYGroups(this.sequenceType === 'protein')
         .render(this.$refs.simpleVariantsHeatmapContainer, this.$refs.heatmapContainer)
         .rows(this.heatmapRows)
         .xCoordinate(this.xCoord)
@@ -1066,6 +1066,7 @@ export default defineComponent({
     drawStackedHeatmap: function () {
       this.stackedHeatmap = makeHeatmap()
         .margins({top: 20, bottom: 25, left: 20, right: 20})
+        .drawYGroups(this.sequenceType === 'protein')
         .render(this.$refs.simpleVariantsStackedHeatmapContainer)
         .rows(this.heatmapRows)
         .nodeSize({width: 20, height: 1})

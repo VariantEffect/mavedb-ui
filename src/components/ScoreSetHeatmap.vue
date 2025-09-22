@@ -809,7 +809,6 @@ export default defineComponent({
     },
 
     isStartOrStopLoss: function (variant) {
-      console.log(variant)
       const hgvsP = [variant.post_mapped_hgvs_p, variant.hgvs_pro_inferred, variant.hgvs_pro].find((hgvs) =>
         variantNotNullOrNA(hgvs)
       )
@@ -910,10 +909,11 @@ export default defineComponent({
         // Assume that aside from score, the details are identical for each instance.
         simpleVariant.details = _.omit(simpleVariant.instances[0].details, 'score')
       }
-      this.prepareSimpleVariantScoreRanks(simpleVariants)
+      const simpleVariantsWithScores = simpleVariants.filter((v) => !_.isNaN(v.meanScore))
+      this.prepareSimpleVariantScoreRanks(simpleVariantsWithScores)
 
       return {
-        simpleVariants,
+        simpleVariants: simpleVariantsWithScores,
         // TODO Group these to identify instances of the same variant.
         numComplexVariants: numComplexVariantInstances
       }

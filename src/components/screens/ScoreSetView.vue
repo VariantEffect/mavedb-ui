@@ -93,7 +93,6 @@
             :external-selection="variantToVisualize"
             :hide-start-and-stop-loss="hideStartAndStopLoss"
             :score-set="item"
-            sequence-type="protein"
             :show-protein-structure-button="uniprotId != null && config.CLINICAL_FEATURES_ENABLED"
             :variants="heatmapVariants"
             @export-chart="setHeatmapExport"

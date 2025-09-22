@@ -4,10 +4,10 @@
       <div class="mave-score-set-heatmap-pane">
         <ScoreSetHeatmap
           ref="scoreSetHeatmap"
+          :allowed-sequence-types="['protein']"
           coordinates="mapped"
           mode="protein-viz"
           :score-set="scoreSet"
-          sequence-type="protein"
           :show-protein-structure-button="false"
           :variants="heatmapVariants"
           @variant-column-ranges-selected="didSelectHeatmapResidues"

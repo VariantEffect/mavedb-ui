@@ -13,7 +13,7 @@ export function decodeState(stateQueryParam) {
   }
   try {
     return JSON.parse(decode(stateQueryParam))
-  } catch (e) {
+  } catch {
     console.log('Invalid state query parameter', {stateQueryParam})
     return {}
   }

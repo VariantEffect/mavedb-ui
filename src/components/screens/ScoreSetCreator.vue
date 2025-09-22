@@ -7,7 +7,7 @@
     <div class="mave-score-set-editor">
       <div v-if="itemStatus != 'NotLoaded'" class="mave-screen-title-bar">
         <div class="mave-screen-title">Edit score set {{ this.item.urn }}</div>
-        <div v-if="item" class="mave-screen-title-controls">
+        <div v-if="item" class="mavedb-screen-title-controls">
           <Button @click="saveEditContent">Save changes</Button>
           <Button @click="resetForm" class="p-button-help">Clear</Button>
           <Button @click="viewItem" class="p-button-warning">Cancel</Button>
@@ -15,7 +15,7 @@
       </div>
       <div v-else class="mave-screen-title-bar">
         <div class="mave-screen-title">Create a new score set</div>
-        <div class="mave-screen-title-controls">
+        <div class="mavedb-screen-title-controls">
           <Button @click="validateAndSave">Save</Button>
           <Button @click="resetForm" class="p-button-help">Clear</Button>
           <Button @click="backDashboard" class="p-button-warning">Cancel</Button>
@@ -36,7 +36,7 @@
                 <div v-if="experimentUrn && this.experiment">
                   <div class="mavedb-wizard-row">
                     <div class="mavedb-wizard-help">
-                      <label :id="$scopedId('input-experiment')">
+                      <label :id="scopedId('input-experiment')">
                         Experiment: {{ experimentUrn }}
                       </label>
                       <div class="mavedb-help-small">
@@ -53,18 +53,18 @@
                 <div v-else>
                   <div class="mavedb-wizard-row">
                     <div class="mavedb-wizard-help">
-                      <label :id="$scopedId('input-superseding-score-set-label')">
+                      <label :id="scopedId('input-superseding-score-set-label')">
                         Does this score set correct errors in and replace a score set previously published on MaveDB that you created?
                       </label>
                     </div>
                     <div class="mavedb-wizard-content">
-                      <InputSwitch v-model="isSupersedingScoreSet" :aria-labelledby="$scopedId('input-superseding-score-set-label')" />
+                      <InputSwitch v-model="isSupersedingScoreSet" :aria-labelledby="scopedId('input-superseding-score-set-label')" />
                       <div class="mavedb-switch-value">{{ isSupersedingScoreSet ? 'Yes, this supersedes another score set' : 'No, this does not supersede another score set' }}</div>
                     </div>
                   </div>
                   <div class="mavedb-wizard-row">
                     <div class="mavedb-wizard-help">
-                      <label :id="$scopedId('input-is-meta-analysis-label')">Is this score set a meta-analysis?</label>
+                      <label :id="scopedId('input-is-meta-analysis-label')">Is this score set a meta-analysis?</label>
                       <div class="mavedb-help-small">
                         Meta-analyses are score sets derived from data in other score sets that were created by you or other users.
                         For example:
@@ -75,7 +75,7 @@
                       </div>
                     </div>
                     <div class="mavedb-wizard-content">
-                      <InputSwitch v-model="isMetaAnalysis" :aria-labelledby="$scopedId('input-is-meta-analysis-label')" />
+                      <InputSwitch v-model="isMetaAnalysis" :aria-labelledby="scopedId('input-is-meta-analysis-label')" />
                       <div class="mavedb-switch-value">{{ isMetaAnalysis ? 'Yes, this is a meta-analysis' : 'No, this is not a meta-analysis' }}</div>
                     </div>
                   </div>
@@ -98,7 +98,7 @@
                           <Dropdown
                             ref="experimentInput"
                             v-model="experiment"
-                            :id="$scopedId('input-experiment')"
+                            :id="scopedId('input-experiment')"
                             filter optionLabel="title"
                             :options="editableExperiments"
                             :virtualScrollerOptions="{ itemSize: 50 }"
@@ -114,7 +114,7 @@
                               </div>
                             </template>
                           </Dropdown>
-                          <label :for="$scopedId('input-experiment')">Experiment</label>
+                          <label :for="scopedId('input-experiment')">Experiment</label>
                         </span>
                         <span v-if="validationErrors.experiment" class="mave-field-error">{{ validationErrors.experiment }}</span>
                       </div>
@@ -135,7 +135,7 @@
                           <AutoComplete
                             ref="supersededScoreSetInput"
                             v-model="supersededScoreSet"
-                            :id="$scopedId('input-supersededScoreSet')"
+                            :id="scopedId('input-supersededScoreSet')"
                             field="title"
                             :forceSelection="true"
                             :suggestions="supersededScoreSetSuggestionsList"
@@ -146,7 +146,7 @@
                               {{ slotProps.item.urn }}: {{ slotProps.item.title }}
                             </template>
                           </AutoComplete>
-                          <label :for="$scopedId('input-supersededScoreSet')">Supersedes</label>
+                          <label :for="scopedId('input-supersededScoreSet')">Supersedes</label>
                         </span>
                         <span v-if="validationErrors.supersededScoreSetUrn" class="mave-field-error">{{
                           validationErrors.supersededScoreSetUrn }}</span>
@@ -168,13 +168,13 @@
                       <div v-if="itemStatus == 'NotLoaded'" class="field">
                         <span class="p-float-label">
                           <AutoComplete ref="metaAnalyzesScoreSetsInput" v-model="metaAnalyzesScoreSets"
-                            :id="$scopedId('input-metaAnalyzesScoreSets')" field="title" :forceSelection="true" :multiple="true"
+                            :id="scopedId('input-metaAnalyzesScoreSets')" field="title" :forceSelection="true" :multiple="true"
                             :suggestions="metaAnalyzesScoreSetSuggestionsList" @complete="searchMetaAnalyzesScoreSets">
                             <template #item="slotProps">
                               {{ slotProps.item.urn }}: {{ slotProps.item.title }}
                             </template>
                           </AutoComplete>
-                          <label :for="$scopedId('input-metaAnalyzesScoreSets')">Meta-analysis for</label>
+                          <label :for="scopedId('input-metaAnalyzesScoreSets')">Meta-analysis for</label>
                         </span>
                         <span v-if="validationErrors.metaAnalyzesScoreSetUrns" class="mave-field-error">{{
                           validationErrors.metaAnalyzesScoreSetUrns }}</span>
@@ -218,8 +218,8 @@
                   </div>
                   <div class="mavedb-wizard-content field">
                     <span class="p-float-label">
-                      <InputText v-model="title" :id="$scopedId('input-title')"/>
-                      <label :for="$scopedId('input-title')">Title</label>
+                      <InputText v-model="title" :id="scopedId('input-title')"/>
+                      <label :for="scopedId('input-title')">Title</label>
                     </span>
                     <span v-if="validationErrors.title" class="mave-field-error">{{ validationErrors.title }}</span>
                   </div>
@@ -236,8 +236,8 @@
                   </div>
                   <div class="mavedb-wizard-content field">
                     <span class="p-float-label">
-                      <Textarea v-model="shortDescription" :id="$scopedId('input-shortDescription')" rows="4"/>
-                      <label :for="$scopedId('input-shortDescription')">Short description</label>
+                      <Textarea v-model="shortDescription" :id="scopedId('input-shortDescription')" rows="4"/>
+                      <label :for="scopedId('input-shortDescription')">Short description</label>
                     </span>
                     <span v-if="validationErrors.shortDescription" class="mave-field-error">{{
                       validationErrors.shortDescription }}</span>
@@ -259,8 +259,8 @@
                     <TabView>
                       <TabPanel header="Edit">
                         <span class="p-float-label">
-                          <Textarea v-model="abstractText" :id="$scopedId('input-abstractText')" rows="10" />
-                          <label :for="$scopedId('input-abstractText')">Abstract</label>
+                          <Textarea v-model="abstractText" :id="scopedId('input-abstractText')" rows="10" />
+                          <label :for="scopedId('input-abstractText')">Abstract</label>
                         </span>
                       </TabPanel>
                       <TabPanel header="Preview">
@@ -297,8 +297,8 @@
                     <TabView>
                       <TabPanel header="Edit">
                         <span class="p-float-label">
-                          <Textarea v-model="methodText" :id="$scopedId('input-methodText')" rows="10" />
-                          <label :for="$scopedId('input-methodText')">Methods</label>
+                          <Textarea v-model="methodText" :id="scopedId('input-methodText')" rows="10" />
+                          <label :for="scopedId('input-methodText')">Methods</label>
                         </span>
                       </TabPanel>
                       <TabPanel header="Preview">
@@ -321,9 +321,9 @@
                     </div>
                     <div class="mavedb-wizard-content field">
                       <span class="p-float-label">
-                        <Dropdown v-model="licenseId" :id="$scopedId('input-targetLicenseId')" :options="licenses"
+                        <Dropdown v-model="licenseId" :id="scopedId('input-targetLicenseId')" :options="licenses"
                           optionLabel="longName" optionValue="id" style="min-width: 500px"/>
-                        <label :for="$scopedId('input-targetLicenseId')">License</label>
+                        <label :for="scopedId('input-targetLicenseId')">License</label>
                       </span>
                       <Message v-if="licenseId && licenses && licenses.find((l) => l.id == licenseId)?.shortName != 'CC0'"
                         severity="warn">
@@ -337,7 +337,7 @@
                       Would you like to define any additional restrictions governing the usage of data within this score set?
                     </div>
                     <div class="mavedb-wizard-content">
-                      <InputSwitch v-model="hasCustomUsagePolicy" :aria-labelledby="$scopedId('input-has-custom-usage-policy')" />
+                      <InputSwitch v-model="hasCustomUsagePolicy" :aria-labelledby="scopedId('input-has-custom-usage-policy')" />
                       <div class="mavedb-switch-value">{{ hasCustomUsagePolicy ? 'Yes, I would like to define additional usage guidelines' : 'No, I do not need to define additional usage guidenlines' }}</div>
                     </div>
                   </div>
@@ -353,8 +353,8 @@
                     </div>
                     <div class="mavedb-wizard-content field">
                       <span class="p-float-label">
-                        <Textarea v-model="dataUsagePolicy" :id="$scopedId('input-dataUsagePolicy')" rows="4" />
-                        <label :for="$scopedId('input-dataUsagePolicy')">Data usage guidelines</label>
+                        <Textarea v-model="dataUsagePolicy" :id="scopedId('input-dataUsagePolicy')" rows="4" />
+                        <label :for="scopedId('input-dataUsagePolicy')">Data usage guidelines</label>
                       </span>
                       <span v-if="validationErrors.dataUsagePolicy" class="mave-field-error">{{
                         validationErrors.dataUsagePolicy }}</span>
@@ -375,7 +375,7 @@
                         <Chips
                           ref="contributorsInput"
                           v-model="contributors"
-                          :id="$scopedId('input-contributors')"
+                          :id="scopedId('input-contributors')"
                           :addOnBlur="true"
                           :allowDuplicate="false"
                           placeholder="Type or paste ORCID IDs here."
@@ -389,14 +389,14 @@
                             </div>
                           </template>
                         </Chips>
-                        <label :for="$scopedId('input-contributors')">Contributors</label>
+                        <label :for="scopedId('input-contributors')">Contributors</label>
                       </span>
                       <span v-if="validationErrors.contributors" class="mave-field-error">{{validationErrors.contributors}}</span>
                     </div>
                   </div>
                   <div class="mavedb-wizard-row">
                     <div class="mavedb-wizard-help">
-                      <label :id="$scopedId('input-doiIdentifiers')">
+                      <label :id="scopedId('input-doiIdentifiers')">
                         The DOIs of any digital resources associated with the score set.
                       </label>
                       <div class="mavedb-help-small">
@@ -408,7 +408,7 @@
                       <span class="p-float-label">
                         <Chips
                             v-model="doiIdentifiers"
-                            :id="$scopedId('input-doiIdentifiers')"
+                            :id="scopedId('input-doiIdentifiers')"
                             :addOnBlur="true"
                             :allowDuplicate="false"
                             @add="acceptNewDoiIdentifier"
@@ -419,7 +419,7 @@
                             </div>
                           </template>
                         </Chips>
-                        <label :for="$scopedId('input-doiIdentifiers')">DOI identifiers</label>
+                        <label :for="scopedId('input-doiIdentifiers')">DOI identifiers</label>
                       </span>
                       <span v-if="validationErrors.doiIdentifiers" class="mave-field-error">{{validationErrors.doiIdentifiers}}</span>
                     </div>
@@ -440,7 +440,7 @@
                         <AutoComplete
                             ref="publicationIdentifiersInput"
                             v-model="publicationIdentifiers"
-                            :id="$scopedId('input-publicationIdentifiers')"
+                            :id="scopedId('input-publicationIdentifiers')"
                             :multiple="true"
                             :suggestions="publicationIdentifierSuggestionsList"
                             @complete="searchPublicationIdentifiers"
@@ -462,7 +462,7 @@
                             </div>
                           </template>
                         </AutoComplete>
-                        <label :for="$scopedId('input-publicationIdentifiers')">Publication identifiers</label>
+                        <label :for="scopedId('input-publicationIdentifiers')">Publication identifiers</label>
                       </span>
                       <span v-if="validationErrors.publicationIdentifiers" class="mave-field-error">{{validationErrors.publicationIdentifiers}}</span>
                     </div>
@@ -476,7 +476,7 @@
                     <div class="mavedb-wizard-content field">
                       <span class="p-float-label">
                         <Multiselect ref="primaryPublicationIdentifiersInput" v-model="primaryPublicationIdentifiers"
-                          :id="$scopedId('input-primaryPublicationIdentifiers')" :options="publicationIdentifiers"
+                          :id="scopedId('input-primaryPublicationIdentifiers')" :options="publicationIdentifiers"
                           optionLabel="identifier" placeholder="Select a primary publication (Where the dataset is described)"
                           :selectionLimit="1" style="width: 100%;">
                           <template #option="slotProps">
@@ -488,7 +488,7 @@
                             </div>
                           </template>
                         </Multiselect>
-                        <label :for="$scopedId('input-primaryPublicationIdentifiers')">Primary publication</label>
+                        <label :for="scopedId('input-primaryPublicationIdentifiers')">Primary publication</label>
                       </span>
                       <span v-if="validationErrors.primaryPublicationIdentifiers" class="mave-field-error">{{
                         validationErrors.primaryPublicationIdentifiers }}</span>
@@ -502,7 +502,7 @@
                     </div>
                     <div class="mavedb-wizard-content field">
                     <span class="p-float-label">
-                      <FileUpload :id="$scopedId('input-extraMetadataFile')" :auto="false" chooseLabel="Extra metadata"
+                      <FileUpload :id="scopedId('input-extraMetadataFile')" :auto="false" chooseLabel="Extra metadata"
                         :class="inputClasses.extraMetadataFile" :customUpload="true" :fileLimit="1"
                         :showCancelButton="false" :showUploadButton="false" @remove="fileCleared('extraMetadataFile')"
                         @select="fileSelected('extraMetadataFile', $event)">
@@ -538,7 +538,7 @@
                 <div class="mavedb-wizard-form-content-background"></div>
                 <div class="mavedb-wizard-row">
                   <div class="mavedb-wizard-help">
-                    <label :id="$scopedId('input-scoreSetIsSequenceBasedLabel')">Will you be uploading the target sequences used for your assay?</label>
+                    <label :id="scopedId('input-scoreSetIsSequenceBasedLabel')">Will you be uploading the target sequences used for your assay?</label>
                     <div class="mavedb-help-small">
                       The target sequence is the sequence that was mutagenized to create the variant library, such as in a cDNA-based deep mutational scan.
                       If your variants were generated by editing the genome directly (e.g., using saturation genome editing or base editing), you should provide
@@ -546,35 +546,35 @@
                     </div>
                   </div>
                   <div class="mavedb-wizard-content">
-                    <InputSwitch v-model="isTargetSequence" :aria-labelledby="$scopedId('input-scoreSetIsSequenceBasedLabel')" />
+                    <InputSwitch v-model="isTargetSequence" :aria-labelledby="scopedId('input-scoreSetIsSequenceBasedLabel')" />
                     <div class="mavedb-switch-value">{{ isTargetSequence ? 'Yes, variants are described relative to a target sequence.' : 'No, variants are described relative to a RefSeq or Ensembl accession (either a transcript or chromosome).' }}</div>
                   </div>
                 </div>
 
                 <div v-if="!isTargetSequence" class="mavedb-wizard-row">
                   <div class="mavedb-wizard-help">
-                    <label :id="$scopedId('input-isBaseEditorData')">Does this score set reperesent base editor data?</label>
+                    <label :id="scopedId('input-isBaseEditorData')">Does this score set reperesent base editor data?</label>
                     <div class="mavedb-help-small">
                       Base editor data is a type of functional assay that is similar in many respects to MAVE data. When uploading base editor data, you must
                       also include a 'guide_sequence' column in your uploaded scores (and counts) file(s).
                     </div>
                   </div>
                   <div class="mavedb-wizard-content">
-                    <InputSwitch v-model="isBaseEditor" :aria-labelledby="$scopedId('input-isBaseEditorData')"/>
+                    <InputSwitch v-model="isBaseEditor" :aria-labelledby="scopedId('input-isBaseEditorData')"/>
                     <div class="mavedb-switch-value">{{ isBaseEditor ? 'Yes, this score set represents base editor data.' : 'No, this score set does not represent base editor data.' }}</div>
                   </div>
                 </div>
 
                 <div class="mavedb-wizard-row">
                   <div class="mavedb-wizard-help">
-                    <label :id="$scopedId('input-scoreSetHasMultipleTargetsLabel')">Does this score set describe variants with respect to more than one target?</label>
+                    <label :id="scopedId('input-scoreSetHasMultipleTargetsLabel')">Does this score set describe variants with respect to more than one target?</label>
                     <div class="mavedb-help-small">
                       Some experiments might describe variants against two or more distinct target sequences. If this is the case, your variants will need to be described explicitly
                       from the target they came from.
                     </div>
                   </div>
                   <div class="mavedb-wizard-content">
-                    <InputSwitch v-model="isMultiTarget" :aria-labelledby="$scopedId('input-scoreSetHasMultipleTargetsLabel')" />
+                    <InputSwitch v-model="isMultiTarget" :aria-labelledby="scopedId('input-scoreSetHasMultipleTargetsLabel')" />
                     <div class="mavedb-switch-value">{{ isMultiTarget ? 'Yes, variants are described relative to multiple target sequences.' : 'No, variants are described relative to a single target sequence.' }}</div>
                   </div>
                 </div>
@@ -586,9 +586,9 @@
                   <div class="mavedb-wizard-content field">
                     <span class="p-float-label">
                       <InputNumber v-model="numTargets"
-                            :id="$scopedId(`input-numTargets`)" buttonLayout="stacked" :min="isMultiTarget ? 2 : 1"
+                            :id="scopedId(`input-numTargets`)" buttonLayout="stacked" :min="isMultiTarget ? 2 : 1"
                             showButtons suffix=" targets" />
-                      <label :for="$scopedId(`input-numTargets`)">Targets</label>
+                      <label :for="scopedId(`input-numTargets`)">Targets</label>
                     </span>
                   </div>
                 </div>
@@ -623,7 +623,7 @@
                   <div class="mavedb-wizard-content field">
                     <span class="p-float-label">
                     <AutoComplete ref="existingTargetGeneInput" v-model="createdTargetGenes[targetIdx].autofilledTargetGene"
-                      :id="$scopedId('input-existingTargetGene')" field="name" :forceSelection="true"
+                      :id="scopedId('input-existingTargetGene')" field="name" :forceSelection="true"
                       :suggestions="targetGeneSuggestionsList" @complete="searchTargetGenes" @item-select="autofillFromExistingTarget($event, targetIdx)">
                       <template #item="slotProps">
                         <div>
@@ -635,7 +635,7 @@
                         </div>
                       </template>
                     </AutoComplete>
-                    <label :for="$scopedId('input-existingTargetGene')">Copy from an existing target</label>
+                    <label :for="scopedId('input-existingTargetGene')">Copy from an existing target</label>
                     </span>
                   </div>
                 </div>
@@ -649,8 +649,8 @@
                   </div>
                   <div class="mavedb-wizard-content field">
                       <span class="p-float-label">
-                        <InputText v-model="createdTargetGenes[targetIdx].targetGene.name" :id="$scopedId('input-targetGeneName')" style="width: 100%" />
-                        <label :for="$scopedId('input-targetGeneName')">Target name</label>
+                        <InputText v-model="createdTargetGenes[targetIdx].targetGene.name" :id="scopedId('input-targetGeneName')" style="width: 100%" />
+                        <label :for="scopedId('input-targetGeneName')">Target name</label>
                       </span>
                       <span v-if="validationErrors[`targetGene.${targetIdx}.name`]" class="mave-field-error">{{ validationErrors[`targetGene.${targetIdx}.name`] }}</span>
                   </div>
@@ -667,8 +667,8 @@
                     </div>
                       <div class="mavedb-wizard-content field">
                         <span class="p-float-label">
-                          <InputText v-model="createdTargetGenes[targetIdx].targetGene.targetSequence.label" :id="$scopedId('input-targetGeneLabel')" style="width: 100%"/>
-                          <label :for="$scopedId('input-targetGeneLabel')">Target label</label>
+                          <InputText v-model="createdTargetGenes[targetIdx].targetGene.targetSequence.label" :id="scopedId('input-targetGeneLabel')" style="width: 100%"/>
+                          <label :for="scopedId('input-targetGeneLabel')">Target label</label>
                         </span>
                         <span v-if="validationErrors[`targetGene.${targetIdx}.targetSequence.label`]" class="mave-field-error">{{ validationErrors[`targetGene.${targetIdx}.targetSequence.label`] }}</span>
                     </div>
@@ -676,12 +676,12 @@
 
                   <div class="mavedb-wizard-row">
                     <div class="mavedb-wizard-help">
-                      <label :id="$scopedId('input-targetGeneCategory')">The functional category of the target</label>
+                      <label :id="scopedId('input-targetGeneCategory')">The functional category of the target</label>
                     </div>
                     <div class="mavedb-wizard-content">
                       <span class="p-float-label">
                         <span class="p-float-label">
-                          <SelectButton v-model="createdTargetGenes[targetIdx].targetGene.category" :id="$scopedId('input-targetGeneCategory')"
+                          <SelectButton v-model="createdTargetGenes[targetIdx].targetGene.category" :id="scopedId('input-targetGeneCategory')"
                             :options="targetGeneCategories" :optionLabel="textForTargetGeneCategory" />
                         </span>
                       </span>
@@ -691,7 +691,7 @@
 
                   <div class="mavedb-wizard-row" v-for="dbName of externalGeneDatabases" :key="dbName">
                     <div class="mavedb-wizard-help">
-                      <label :id="$scopedId(`input-targetGeneExternalDatabase${dbName}Label`)">Link this target to a {{dbName}} accession</label>
+                      <label :id="scopedId(`input-targetGeneExternalDatabase${dbName}Label`)">Link this target to a {{dbName}} accession</label>
                       <!-- only display this verbose help on the first of the external gene database selections. -->
                       <div class="mavedb-help-small" v-if="dbName === externalGeneDatabases[0]">
                         If the target sequence provided to MaveDB starts partway through the linked sequence (such as an assay targeting a single functional domain),
@@ -700,24 +700,24 @@
                       </div>
                     </div>
                     <div class="mavedb-wizard-content">
-                      <InputSwitch v-model="createdTargetGenes[targetIdx].linkedAccessions[dbName]" :aria-labelledby="$scopedId(`input-targetGeneExternalDatabase${dbName}Label`)" />
+                      <InputSwitch v-model="createdTargetGenes[targetIdx].linkedAccessions[dbName]" :aria-labelledby="scopedId(`input-targetGeneExternalDatabase${dbName}Label`)" />
                       <div class="mavedb-switch-value">{{ createdTargetGenes[targetIdx].linkedAccessions[dbName] ? `Yes, link this target to a ${dbName} accession.` : `No, do not link this target to a ${dbName} accession.` }}</div>
                       <div class="mavedb-wizard-subcontent field-columns" v-if="createdTargetGenes[targetIdx].linkedAccessions[dbName]">
                           <div class="p-float-label field-column">
                             <AutoComplete style="width: 100%;"
                                 v-model="createdTargetGenes[targetIdx].targetGene.externalIdentifiers[dbName].identifier"
-                                :id="$scopedId(`input-${dbName.toLowerCase()}Identifier`)" field="identifier"
+                                :id="scopedId(`input-${dbName.toLowerCase()}Identifier`)" field="identifier"
                                 :suggestions="targetGeneIdentifierSuggestionsList[dbName]" :forceSelection="false"
                                 @complete="searchTargetGeneIdentifiers(dbName, $event)"
                                 @change="addDefaultOffset(dbName, targetIdx); externalIdentifierTextToObject(dbName, targetIdx, $event)"
                               />
-                            <label :for="$scopedId(`input-${dbName.toLowerCase()}Identifier`)">{{ dbName }} identifier</label>
+                            <label :for="scopedId(`input-${dbName.toLowerCase()}Identifier`)">{{ dbName }} identifier</label>
                           </div>
                           <span class="p-float-label">
                             <InputNumber v-model="createdTargetGenes[targetIdx].targetGene.externalIdentifiers[dbName].offset"
-                              :id="$scopedId(`input-${dbName.toLowerCase()}Offset`)" buttonLayout="stacked" :min="0"
+                              :id="scopedId(`input-${dbName.toLowerCase()}Offset`)" buttonLayout="stacked" :min="0"
                               showButtons suffix=" bp" />
-                            <label :for="$scopedId(`input-${dbName.toLowerCase()}Offset`)">Offset</label>
+                            <label :for="scopedId(`input-${dbName.toLowerCase()}Offset`)">Offset</label>
                           </span>
                         </div>
                         <span v-if="validationErrors[`targetGene.${targetIdx}.externalIdentifiers.${dbName}`]" class="mave-field-error">{{ validationErrors[`targetGene.${targetIdx}.externalIdentifiers.${dbName}`] }}</span>
@@ -727,7 +727,7 @@
                   </div>
                   <div class="mavedb-wizard-row">
                     <div class="mavedb-wizard-help">
-                      <label :id="$scopedId('input-targetGeneTaxonomyLabel')">The taxonomy group to which this target belongs</label>
+                      <label :id="scopedId('input-targetGeneTaxonomyLabel')">The taxonomy group to which this target belongs</label>
                       <div class="mavedb-help-small">
                         For more details about taxonomy, see the <a target="_blank" href="https://www.ncbi.nlm.nih.gov/books/NBK53758/">NCBI taxonomy help page.</a>
                       </div>
@@ -738,7 +738,7 @@
                           ref="taxonomyInput"
                           v-model="createdTargetGenes[targetIdx].targetGene.targetSequence.taxonomy"
                           dropdown
-                          :id="$scopedId('input-targetGeneTaxonomyLabel')"
+                          :id="scopedId('input-targetGeneTaxonomyLabel')"
                           :suggestions="taxonomySuggestionsList"
                           field="organismName"
                           forceSelection
@@ -752,26 +752,26 @@
                             {{slotProps.item.code}} - {{slotProps.item.organismName}} <template v-if="slotProps.item.commonName!=='NULL' && slotProps.item.commonName!== null">/ {{slotProps.item.commonName}}</template>
                           </template>
                         </AutoComplete>
-                        <label :for="$scopedId('input-targetGeneTaxonomyLabel')">Taxonomy</label>
+                        <label :for="scopedId('input-targetGeneTaxonomyLabel')">Taxonomy</label>
                       </span>
                       <span v-if="validationErrors[`targetGene.${targetIdx}.targetSequence.taxonomy`]" class="mave-field-error">{{ validationErrors[`targetGene.${targetIdx}.targetSequence.taxonomy`] }}</span>
                     </div>
                   </div>
                   <div class="mavedb-wizard-row">
                     <div class="mavedb-wizard-help">
-                      <label :id="$scopedId('input-targetGeneSequenceTypeLabel')">The sequence type of the target</label>
+                      <label :id="scopedId('input-targetGeneSequenceTypeLabel')">The sequence type of the target</label>
                     </div>
                     <div class="mavedb-wizard-content">
                       <span class="p-float-label">
                         <SelectButton v-model="createdTargetGenes[targetIdx].targetGene.targetSequence.sequenceType"
-                          :id="$scopedId('input-targetGeneSequenceType')" :options="sequenceTypes" />
+                          :id="scopedId('input-targetGeneSequenceType')" :options="sequenceTypes" />
                       </span>
                       <span v-if="validationErrors[`targetGene.${targetIdx}.targetSequence.sequenceType`]" class="mave-field-error">{{ validationErrors[`targetGene.${targetIdx}.targetSequence.sequenceType`] }}</span>
                     </div>
                   </div>
                   <div class="mavedb-wizard-row">
                     <div class="mavedb-wizard-help">
-                      <label :id="$scopedId('input-targetGeneSequenceFileLabel')">The sequence of the target</label>
+                      <label :id="scopedId('input-targetGeneSequenceFileLabel')">The sequence of the target</label>
                       <div class="mavedb-help-small">
                         Variants will be validated against this sequence. Note that the first position in the sequence is numbered as position 1 when validating variants.
                       </div>
@@ -779,7 +779,7 @@
                     <div class="mavedb-wizard-content">
                       <span class="p-float-label">
                         <FileUpload ref="sequenceFileUpload"
-                          :id="$scopedId('input-targetGeneSequenceFileLabel')" :auto="false"
+                          :id="scopedId('input-targetGeneSequenceFileLabel')" :auto="false"
                           chooseLabel="Reference sequence" :class="inputClasses.targetGeneTargetSequenceSequenceFile"
                           :customUpload="true" :fileLimit="1" :showCancelButton="false" :showUploadButton="false"
                           @remove="fileCleared('targetGeneTargetSequenceSequenceFile', targetIdx)"
@@ -802,40 +802,40 @@
                 <div v-else>
                   <div class="mavedb-wizard-row">
                     <div class="mavedb-wizard-help">
-                      <label :id="$scopedId('input-targetDescribesChromosomeLabel')">Does this target represent a whole chromosome?</label>
+                      <label :id="scopedId('input-targetDescribesChromosomeLabel')">Does this target represent a whole chromosome?</label>
                       <div class="mavedb-help-small">
                         Some score sets might describe variants relative to an entire chromosome, while others will describe variants relative to a
                         RefSeq or Ensembl accession representing a gene.
                       </div>
                     </div>
                     <div class="mavedb-wizard-content">
-                      <InputSwitch v-model="createdTargetGenes[targetIdx].isRelativeToChromosome" :aria-labelledby="$scopedId('input-targetDescribesChromosomeLabel')" @change="refreshAccessionOptions(targetIdx)" />
+                      <InputSwitch v-model="createdTargetGenes[targetIdx].isRelativeToChromosome" :aria-labelledby="scopedId('input-targetDescribesChromosomeLabel')" @change="refreshAccessionOptions(targetIdx)" />
                       <div class="mavedb-switch-value">{{ createdTargetGenes[targetIdx].isRelativeToChromosome ? 'Yes, this target represents an entire chromosome.' : 'No, this target represents a gene.' }}</div>
                     </div>
                   </div>
                   <div v-if="createdTargetGenes[targetIdx].isRelativeToChromosome" class="mavedb-wizard-row">
                     <div class="mavedb-wizard-help">
-                      <label :id="$scopedId('input-targetGeneAssemblyLabel')">The assembly for this accession</label>
+                      <label :id="scopedId('input-targetGeneAssemblyLabel')">The assembly for this accession</label>
                     </div>
                     <div class="mavedb-wizard-content">
                       <span class="p-float-label">
                         <!-- Assembly is the reference genome property in coordinate cases -->
-                        <Dropdown v-model="createdTargetGenes[targetIdx].targetGene.targetAccession.assembly" :aria-labelledby="$scopedId('input-targetGeneAssemblyLabel')" :options="assemblies" style="width: 100%" @change="refreshAccessionOptions(targetIdx)"/>
-                        <label :for="$scopedId('input-targetGeneAssemblyLabel')">Assembly</label>
+                        <Dropdown v-model="createdTargetGenes[targetIdx].targetGene.targetAccession.assembly" :aria-labelledby="scopedId('input-targetGeneAssemblyLabel')" :options="assemblies" style="width: 100%" @change="refreshAccessionOptions(targetIdx)"/>
+                        <label :for="scopedId('input-targetGeneAssemblyLabel')">Assembly</label>
                       </span>
                       <span v-if="validationErrors[`targetGene.${targetIdx}.targetAccession.assembly`]" class="mave-field-error">{{ validationErrors[`targetGene.${targetIdx}.targetAccession.assembly`] }}</span>
                     </div>
                   </div>
                   <div v-else class="mavedb-wizard-row">
                     <div class="mavedb-wizard-help">
-                      <label :id="$scopedId('input-targetGeneGeneNameLabel')">The gene name for this accession</label>
+                      <label :id="scopedId('input-targetGeneGeneNameLabel')">The gene name for this accession</label>
                     </div>
                     <div class="mavedb-wizard-content">
                       <span class="p-float-label">
-                        <Dropdown v-model="createdTargetGenes[targetIdx].targetGene.targetAccession.gene" :id="$scopedId('input-targetGeneGeneNameLabel')"
+                        <Dropdown v-model="createdTargetGenes[targetIdx].targetGene.targetAccession.gene" :id="scopedId('input-targetGeneGeneNameLabel')"
                             :options="geneNamesAsObject" optionLabel="name" filter
                             :virtualScrollerOptions="{ itemSize: 50 }" @change="autofillGeneName($event, targetIdx)" style="width: 100%"/>
-                          <label :for="$scopedId('input-targetGeneGeneNameLabel')">HGNC Name</label>
+                          <label :for="scopedId('input-targetGeneGeneNameLabel')">HGNC Name</label>
                       </span>
                       <span v-if="validationErrors[`targetGene.${targetIdx}.targetAccession.gene`]" class="mave-field-error">{{ validationErrors[`targetGene.${targetIdx}.targetAccession.gene`] }}</span>
                     </div>
@@ -843,7 +843,7 @@
 
                   <div class="mavedb-wizard-row">
                     <div class="mavedb-wizard-help">
-                      <label :id="$scopedId('input-targetGeneAccessionLabel')">The accession identifier for this target</label>
+                      <label :id="scopedId('input-targetGeneAccessionLabel')">The accession identifier for this target</label>
                       <div class="mavedb-help-small">
                         This will be the sequence that your variants are described against. It may be a RefSeq or Ensemble identifier. Available accessions matching the
                         {{ createdTargetGenes[targetIdx].isRelativeToChromosome ? "assembly" : "gene name" }} will be displayed once one is selected.
@@ -852,10 +852,10 @@
                     <div class="mavedb-wizard-content">
                       <span class="p-float-label">
                         <AutoComplete v-model="createdTargetGenes[targetIdx].targetGene.targetAccession.accession"
-                          :id="$scopedId('input-targetGeneAccessionLabel')"
+                          :id="scopedId('input-targetGeneAccessionLabel')"
                           :suggestions="targetGeneAccessionSuggestionsList" :force-selection="true" :dropdown="true"
                           @complete="fetchTargetAccessions($event)" style="width: 100%"/>
-                        <label :for="$scopedId('input-targetGeneAccessionLabel')"> Accession Identifier </label>
+                        <label :for="scopedId('input-targetGeneAccessionLabel')"> Accession Identifier </label>
                       </span>
                       <div v-if="createdTargetGenes[targetIdx].targetGene.targetAccession.accession && !createdTargetGenes[targetIdx].targetGene.targetAccession.accession?.startsWith('NP')" class="mavedb-wizard-subcontent">
                         <Button @click="swapNucleotideProteinAccessions(targetIdx)" icon="pi pi-arrows-h"
@@ -866,12 +866,12 @@
                   </div>
                   <div class="mavedb-wizard-row">
                     <div class="mavedb-wizard-help">
-                      <label :id="$scopedId('input-targetGeneCategoryLabel')">The genetic category of the target</label>
+                      <label :id="scopedId('input-targetGeneCategoryLabel')">The genetic category of the target</label>
                     </div>
                     <div class="mavedb-wizard-content">
                       <span class="p-float-label">
                         <span class="p-float-label">
-                          <SelectButton v-model="createdTargetGenes[targetIdx].targetGene.category" :id="$scopedId('input-targetGeneCategoryLabel')"
+                          <SelectButton v-model="createdTargetGenes[targetIdx].targetGene.category" :id="scopedId('input-targetGeneCategoryLabel')"
                             :options="targetGeneCategories" :optionLabel="textForTargetGeneCategory" />
                         </span>
                       </span>
@@ -901,7 +901,7 @@
                 <div class="mavedb-wizard-form-content-background"></div>
                 <div class="mavedb-wizard-row">
                   <div class="mavedb-wizard-help">
-                    <label :id="$scopedId('input-investigatorIsProvidingScoreRanges')">Will you be providing score ranges for this score set?</label>
+                    <label :id="scopedId('input-investigatorIsProvidingScoreRanges')">Will you be providing score ranges for this score set?</label>
                     <div class="mavedb-help-small">
                       Score ranges provide additional clinical context to the scores you upload. If you provide score ranges, you may
                       classify each range as having either normal, abnormal, or an unspecified function. If you provide a range with normal
@@ -910,37 +910,37 @@
                     </div>
                   </div>
                   <div class="mavedb-wizard-content">
-                    <InputSwitch v-model="investigatorIsProvidingScoreRanges" :aria-labelledby="$scopedId('input-investigatorIsProvidingScoreRanges')" />
+                    <InputSwitch v-model="investigatorIsProvidingScoreRanges" :aria-labelledby="scopedId('input-investigatorIsProvidingScoreRanges')" />
                     <div class="mavedb-switch-value">{{ investigatorIsProvidingScoreRanges ? 'Yes, I will be providing score range data.' : 'No, I will not be providing score range data.' }}</div>
                   </div>
                 </div>
                 <div v-if="investigatorIsProvidingScoreRanges">
                   <div class="mavedb-wizard-row">
                     <div class="mavedb-wizard-help">
-                      <label :id="$scopedId('input-investigatorProvidedBaselineScore')">What is the baseline score for this score set?</label>
+                      <label :id="scopedId('input-investigatorProvidedBaselineScore')">What is the baseline score for this score set?</label>
                       <div class="mavedb-help-small">
                         This number should be within the range of normal scores for your score data.
                       </div>
                     </div>
                     <div class="mavedb-wizard-content">
                       <span class="p-float-label">
-                        <InputNumber v-model="scoreRanges.investigatorProvided.baselineScore" :aria-labelledby="$scopedId('input-investigatorProvidedBaselineScore')" style="width:100%;" :minFractionDigits="1" :maxFractionDigits="10" />
-                        <label :for="$scopedId('input-investigatorProvidedBaselineScore')"> Baseline Score </label>
+                        <InputNumber v-model="scoreRanges.investigatorProvided.baselineScore" :aria-labelledby="scopedId('input-investigatorProvidedBaselineScore')" style="width:100%;" :minFractionDigits="1" :maxFractionDigits="10" />
+                        <label :for="scopedId('input-investigatorProvidedBaselineScore')"> Baseline Score </label>
                       </span>
                       <span v-if="validationErrors[`scoreRanges.investigatorProvided.baselineScore`]" class="mave-field-error">{{ validationErrors[`scoreRanges.investigatorProvided.baselineScore`] }}</span>
                     </div>
                   </div>
                   <div class="mavedb-wizard-row">
                     <div class="mavedb-wizard-help">
-                      <label :id="$scopedId(`input-investigatorProvidedBaselineScoreDescription`)">Enter an (optional) description for the baseline score</label>
+                      <label :id="scopedId(`input-investigatorProvidedBaselineScoreDescription`)">Enter an (optional) description for the baseline score</label>
                       <div class="mavedb-help-small">
                         This description should provide additional details about the baseline score if necessary. e.g., "median synonymous value of the 95% of variants around the mean, normalized to 0."
                       </div>
                     </div>
                     <div class="mavedb-wizard-content">
                       <span class="p-float-label">
-                        <Textarea v-model="scoreRanges.investigatorProvided.baselineScoreDescription" :aria-labelledby="$scopedId(`input-investigatorProvidedBaselineScoreDescription`)" autoResize rows="5" style="width:100%;" />
-                        <label :for="$scopedId(`input-investigatorProvidedBaselineScoreDescription`)"> Baseline Score Description </label>
+                        <Textarea v-model="scoreRanges.investigatorProvided.baselineScoreDescription" :aria-labelledby="scopedId(`input-investigatorProvidedBaselineScoreDescription`)" autoResize rows="5" style="width:100%;" />
+                        <label :for="scopedId(`input-investigatorProvidedBaselineScoreDescription`)"> Baseline Score Description </label>
                       </span>
                       <span v-if="validationErrors[`scoreRanges.investigatorProvided.baselineScoreDescription`]" class="mave-field-error">{{ validationErrors[`scoreRanges.investigatorProvided.baselineScoreDescription`] }}</span>
                     </div>
@@ -954,7 +954,7 @@
                     <div class="mavedb-wizard-content field">
                       <span class="p-float-label">
                         <Multiselect ref="investigatorProvidedScoreRangesPublicationIdentifiersInput" v-model="scoreRanges.investigatorProvided.source"
-                          :id="$scopedId('input-investigatorProvidedScoreRangesPublicationIdentifiersInput')" :options="publicationIdentifiers"
+                          :id="scopedId('input-investigatorProvidedScoreRangesPublicationIdentifiersInput')" :options="publicationIdentifiers"
                           optionLabel="identifier" placeholder="Select a source for the score ranges."
                           :selectionLimit="1" style="width: 100%;">
                           <template #option="slotProps">
@@ -966,7 +966,7 @@
                             </div>
                           </template>
                         </Multiselect>
-                        <label :for="$scopedId('input-investigatorProvidedScoreRangesPublicationIdentifiersInput')">Score range source (optional)</label>
+                        <label :for="scopedId('input-investigatorProvidedScoreRangesPublicationIdentifiersInput')">Score range source (optional)</label>
                       </span>
                       <span v-if="validationErrors[`scoreRanges.investigatorProvided.source`]" class="mave-field-error">{{
                         validationErrors[`scoreRanges.investigatorProvided.source`] }}</span>
@@ -987,50 +987,50 @@
                     </div>
                     <div class="mavedb-wizard-row">
                       <div class="mavedb-wizard-help">
-                        <label :id="$scopedId(`input-investigatorProvidedRangeLabel-${rangeIdx}`)">Enter a label for this score range</label>
+                        <label :id="scopedId(`input-investigatorProvidedRangeLabel-${rangeIdx}`)">Enter a label for this score range</label>
                         <div class="mavedb-help-small">
                           This label will be used to describe this range on visualizations of this score data.
                         </div>
                       </div>
                       <div class="mavedb-wizard-content">
                         <span class="p-float-label">
-                          <InputText v-model="rangeObj.value.label" :aria-labelledby="$scopedId(`input-investigatorProvidedRangeLabel-${rangeIdx}`)" style="width:100%;" />
-                          <label :for="$scopedId(`input-investigatorProvidedRangeLabel-${rangeIdx}`)"> Score range label </label>
+                          <InputText v-model="rangeObj.value.label" :aria-labelledby="scopedId(`input-investigatorProvidedRangeLabel-${rangeIdx}`)" style="width:100%;" />
+                          <label :for="scopedId(`input-investigatorProvidedRangeLabel-${rangeIdx}`)"> Score range label </label>
                         </span>
                         <span v-if="validationErrors[`scoreRanges.investigatorProvided.ranges.${rangeIdx}.label`]" class="mave-field-error">{{ validationErrors[`scoreRanges.investigatorProvided.ranges.${rangeIdx}.label`] }}</span>
                       </div>
                     </div>
                     <div class="mavedb-wizard-row">
                       <div class="mavedb-wizard-help">
-                        <label :id="$scopedId(`input-investigatorProvidedRangeDescription-${rangeIdx}`)">Enter an (optional) description for this score range</label>
+                        <label :id="scopedId(`input-investigatorProvidedRangeDescription-${rangeIdx}`)">Enter an (optional) description for this score range</label>
                         <div class="mavedb-help-small">
                           This description should provide additional details about this score range if necessary.
                         </div>
                       </div>
                       <div class="mavedb-wizard-content">
                         <span class="p-float-label">
-                          <Textarea v-model="rangeObj.value.description" :aria-labelledby="$scopedId(`input-investigatorProvidedRangeDescription-${rangeIdx}`)" autoResize rows="5" style="width:100%;" />
-                          <label :for="$scopedId(`input-investigatorProvidedRangeDescription-${rangeIdx}`)"> Score range description </label>
+                          <Textarea v-model="rangeObj.value.description" :aria-labelledby="scopedId(`input-investigatorProvidedRangeDescription-${rangeIdx}`)" autoResize rows="5" style="width:100%;" />
+                          <label :for="scopedId(`input-investigatorProvidedRangeDescription-${rangeIdx}`)"> Score range description </label>
                         </span>
                         <span v-if="validationErrors[`scoreRanges.investigatorProvided.ranges.${rangeIdx}.description`]" class="mave-field-error">{{ validationErrors[`scoreRanges.investigatorProvided.ranges.${rangeIdx}.description`] }}</span>
                       </div>
                     </div>
                     <div class="mavedb-wizard-row">
                       <div class="mavedb-wizard-help">
-                        <label :id="$scopedId(`input-investigatorProvidedRangeClassification-${rangeIdx}`)">How should this range be classified?</label>
+                        <label :id="scopedId(`input-investigatorProvidedRangeClassification-${rangeIdx}`)">How should this range be classified?</label>
                         <div class="mavedb-help-small">
                           You may classify a range as having either normal, abnormal, or an unspecified function.
                         </div>
                       </div>
                       <div class="mavedb-wizard-content">
-                          <SelectButton v-model="rangeObj.value.classification" :id="$scopedId(`input-investigatorProvidedRangeClassification-${rangeIdx}`)"
+                          <SelectButton v-model="rangeObj.value.classification" :id="scopedId(`input-investigatorProvidedRangeClassification-${rangeIdx}`)"
                           :options="rangeClassifications" optionLabel="label" optionValue="value" />
                           <span v-if="validationErrors[`scoreRanges.investigatorProvided.ranges.${rangeIdx}.classification`]" class="mave-field-error">{{ validationErrors[`scoreRanges.investigatorProvided.ranges.${rangeIdx}.classification`] }}</span>
                       </div>
                     </div>
                     <div class="mavedb-wizard-row">
                       <div class="mavedb-wizard-help">
-                        <label :id="$scopedId(`input-investigatorProvidedRangeBoundaries-${rangeIdx}`)">What are the upper and lower bounds of this score range?</label>
+                        <label :id="scopedId(`input-investigatorProvidedRangeBoundaries-${rangeIdx}`)">What are the upper and lower bounds of this score range?</label>
                         <div class="mavedb-help-small">
                           Score range boundaries should not overlap with the boundaries of other score ranges. Use the toggles to indicate whether the lower or upper bound is inclusive or
                           does not have a upper or lower bound. If a range does not have an upper or lower bound, the value will be treated as either positive or negative infinity.
@@ -1054,13 +1054,13 @@
                                 <FontAwesomeIcon icon="fa-solid fa-circle-half-stroke" class="score-range-toggle-icon" />
                               </Button>
                               <span class="p-float-label">
-                                <InputText v-model="rangeObj.value.range[0]" :aria-labelledby="$scopedId(`input-investigatorProvidedRangeLower-${rangeIdx}`)" :disabled="rangeObj.value.infiniteLower"/>
-                                <label :for="$scopedId(`input-investigatorProvidedRangeLower-${rangeIdx}`)"> {{ rangeObj.infiniteLower ? "-infinity" : rangeObj.value.inclusiveLowerBound ? "Lower Bound (inclusive)" : "Lower Bound (exclusive)" }} </label>
+                                <InputText v-model="rangeObj.value.range[0]" :aria-labelledby="scopedId(`input-investigatorProvidedRangeLower-${rangeIdx}`)" :disabled="rangeObj.value.infiniteLower"/>
+                                <label :for="scopedId(`input-investigatorProvidedRangeLower-${rangeIdx}`)"> {{ rangeObj.infiniteLower ? "-infinity" : rangeObj.value.inclusiveLowerBound ? "Lower Bound (inclusive)" : "Lower Bound (exclusive)" }} </label>
                               </span>
                             <InputGroupAddon>to</InputGroupAddon>
                               <span class="p-float-label">
-                                <InputText v-model="rangeObj.value.range[1]" :aria-labelledby="$scopedId(`input-investigatorProvidedRangeUpper-${rangeIdx}`)" :disabled="rangeObj.value.infiniteUpper"/>
-                                <label :for="$scopedId(`input-investigatorProvidedRangeUpper-${rangeIdx}`)"> {{ rangeObj.infiniteUpper ? "infinity" : rangeObj.value.inclusiveUpperBound ? "Upper Bound (inclusive)" : "Upper Bound (exclusive)" }} </label>
+                                <InputText v-model="rangeObj.value.range[1]" :aria-labelledby="scopedId(`input-investigatorProvidedRangeUpper-${rangeIdx}`)" :disabled="rangeObj.value.infiniteUpper"/>
+                                <label :for="scopedId(`input-investigatorProvidedRangeUpper-${rangeIdx}`)"> {{ rangeObj.infiniteUpper ? "infinity" : rangeObj.value.inclusiveUpperBound ? "Upper Bound (inclusive)" : "Upper Bound (exclusive)" }} </label>
                               </span>
                               <Button
                                 class="score-range-toggle-button"
@@ -1083,30 +1083,30 @@
                     </div>
                     <div v-if="rangeObj.value.classification === 'normal' || rangeObj.value.classification === 'abnormal'" class="mavedb-wizard-row">
                       <div class="mavedb-wizard-help">
-                        <label :id="$scopedId('input-investigatorIsProvidingOddsPath')">Will you be providing odds of pathogenicity (OddsPath) ratios for this score range?</label>
+                        <label :id="scopedId('input-investigatorIsProvidingOddsPath')">Will you be providing odds of pathogenicity (OddsPath) ratios for this score range?</label>
                         <div class="mavedb-help-small">
                           An OddsPath calculation can be determined by evaluating previously classified control variants against the scores in normal and abnormal ranges for an assay.
                           For additional information about OddsPath, please see <a href="https://pubmed.ncbi.nlm.nih.gov/31892348/">PubMed 31892348</a>.
                         </div>
                       </div>
                       <div class="mavedb-wizard-content">
-                        <InputSwitch v-model="rangeObj.isProvidingOddsPath" :aria-labelledby="$scopedId('input-investigatorIsProvidingOddsPath')" />
+                        <InputSwitch v-model="rangeObj.isProvidingOddsPath" :aria-labelledby="scopedId('input-investigatorIsProvidingOddsPath')" />
                         <div class="mavedb-switch-value">{{ rangeObj.isProvidingOddsPath ? 'Yes, I will be providing OddsPath data for this score range.' : 'No, I will not be providing OddsPath data for this score range.' }}</div>
                       </div>
                     </div>
                     <div v-if="rangeObj.isProvidingOddsPath" class="mavedb-wizard-row">
                       <div class="mavedb-wizard-help">
-                        <label :id="$scopedId('input-investigatorProvidedOddsPathRatio')">What is the OddsPath ratio and evidence strength for this score range?</label>
+                        <label :id="scopedId('input-investigatorProvidedOddsPathRatio')">What is the OddsPath ratio and evidence strength for this score range?</label>
                       </div>
                       <div class="mavedb-wizard-content">
                         <InputGroup>
                           <span class=p-float-label style="margin-right: 1em;">
-                            <InputNumber v-model="rangeObj.value.oddsPath.ratio" :aria-labelledby="$scopedId('input-investigatorProvidedOddsPathRatio')" style="width:50%;" :minFractionDigits="1" :maxFractionDigits="10" />
-                            <label :for="$scopedId('input-oddsPathRatio')"> OddsPath Normal </label>
+                            <InputNumber v-model="rangeObj.value.oddsPath.ratio" :aria-labelledby="scopedId('input-investigatorProvidedOddsPathRatio')" style="width:50%;" :minFractionDigits="1" :maxFractionDigits="10" />
+                            <label :for="scopedId('input-oddsPathRatio')"> OddsPath Normal </label>
                           </span>
                           <span class=p-float-label>
-                            <Dropdown v-model="rangeObj.value.oddsPath.evidence" :aria-labelledby="$scopedId('input-investigatorProvidedOddsPathEvidence')" style="width:50%;" :options="evidenceStrengths[rangeObj.value.classification].concat(evidenceStrengths.indeterminate)"></Dropdown>
-                            <label :for="$scopedId('input-investigatorProvidedOddsPathEvidence')"> OddsPath Evidence Strength (optional) </label>
+                            <Dropdown v-model="rangeObj.value.oddsPath.evidence" :aria-labelledby="scopedId('input-investigatorProvidedOddsPathEvidence')" style="width:50%;" :options="evidenceStrengths[rangeObj.value.classification].concat(evidenceStrengths.indeterminate)"></Dropdown>
+                            <label :for="scopedId('input-investigatorProvidedOddsPathEvidence')"> OddsPath Evidence Strength (optional) </label>
                           </span>
                         </InputGroup>
                         <span v-if="validationErrors[`scoreRanges.investigatorProvided.ranges.${rangeIdx}.oddsPath.ratio`]" class="mave-field-error">{{ validationErrors[`scoreRanges.investigatorProvided.ranges.${rangeIdx}.oddsPath.ratio`] }}</span>
@@ -1129,7 +1129,7 @@
                     <div class="mavedb-wizard-content field">
                       <span class="p-float-label">
                         <Multiselect ref="investigatorProvidedOddsPathPublicationIdentifiersInput" v-model="scoreRanges.investigatorProvided.oddsPathSource"
-                          :id="$scopedId('input-investigatorProvidedOddsPathPublicationIdentifiersInput')" :options="publicationIdentifiers"
+                          :id="scopedId('input-investigatorProvidedOddsPathPublicationIdentifiersInput')" :options="publicationIdentifiers"
                           optionLabel="identifier" placeholder="Select a source for the OddsPath calculation."
                           :selectionLimit="1" style="width: 100%;">
                           <template #option="slotProps">
@@ -1141,7 +1141,7 @@
                             </div>
                           </template>
                         </Multiselect>
-                        <label :for="$scopedId('input-investigatorProvidedOddsPathPublicationIdentifiersInput')">OddsPath Source (optional)</label>
+                        <label :for="scopedId('input-investigatorProvidedOddsPathPublicationIdentifiersInput')">OddsPath Source (optional)</label>
                       </span>
                       <span v-if="validationErrors[`scoreRanges.investigatorProvided.oddsPathSource`]" class="mave-field-error">{{
                         validationErrors[`scoreRanges.investigatorProvided.oddsPathSource`] }}</span>
@@ -1184,10 +1184,10 @@
                   <div class="mavedb-wizard-help">
                     <div v-if="item">
                       <div>{{ formatInt(item.numVariants) }} variants are included in this score set.</div>
-                      <label :id="$scopedId('input-scoresFile')">Load a new scores file to replace existing variants</label>
+                      <label :id="scopedId('input-scoresFile')">Load a new scores file to replace existing variants</label>
                     </div>
                     <div v-else>
-                      <label :id="$scopedId('input-scoresFile')">Load a scores file</label>
+                      <label :id="scopedId('input-scoresFile')">Load a scores file</label>
                     </div>
                     <div class="mavedb-help-small">
                       This file is required and should be a CSV file, with each row of the table describing a single variant. For more information about what this file can include and how it should be formatted, please take a look at
@@ -1196,7 +1196,7 @@
                   </div>
                   <div class="mavedb-wizard-content">
                     <span class="p-float-label">
-                      <FileUpload ref="scoresFileUpload" :id="$scopedId('input-scoresFile')" :auto="false"
+                      <FileUpload ref="scoresFileUpload" :id="scopedId('input-scoresFile')" :auto="false"
                         chooseLabel="Scores file" :class="inputClasses.scoresFile || ''" :customUpload="true" :fileLimit="1"
                         :showCancelButton="false" :showUploadButton="false">
                         <template #empty>
@@ -1209,14 +1209,14 @@
                 </div>
                 <div class="mavedb-wizard-row">
                   <div class="mavedb-wizard-help">
-                    <label :id="$scopedId('input-countsFile')">Load a counts file</label>
+                    <label :id="scopedId('input-countsFile')">Load a counts file</label>
                     <div class="mavedb-help-small">
                       This file is optional, but recommended. There are no required columns for your count data, but you should describe the meaning of any columns in your methods section.
                     </div>
                   </div>
                   <div class="mavedb-wizard-content">
                     <span class="p-float-label">
-                      <FileUpload ref="countsFileUpload" :id="$scopedId('input-countsFile')" :auto="false"
+                      <FileUpload ref="countsFileUpload" :id="scopedId('input-countsFile')" :auto="false"
                         chooseLabel="Counts file" :class="inputClasses.countsFile || ''" :customUpload="true" :fileLimit="1"
                         :showCancelButton="false" :showUploadButton="false">
                         <template #empty>
@@ -1285,6 +1285,7 @@ import config from '@/config'
 import { TARGET_GENE_CATEGORIES, textForTargetGeneCategory } from '@/lib/target-genes'
 import {ORCID_ID_REGEX} from '@/lib/orcid'
 import { normalizeDoi, validateDoi} from '@/lib/identifiers'
+import useScopedId from '@/composables/scoped-id'
 import useFormatters from '@/composition/formatters'
 import { NORMAL_RANGE_EVIDENCE, ABNORMAL_RANGE_EVIDENCE, INDETERMINATE_RANGE_EVIDENCE } from '@/lib/ranges'
 
@@ -1393,6 +1394,7 @@ export default {
 
       ...useFormatters(),
       ...useItem({ itemTypeName: 'scoreSet' }),
+      ...useScopedId(),
       editableExperiments: ref([]),
       licenses: licenses.items,
       publicationIdentifierSuggestions: publicationIdentifierSuggestions.items,

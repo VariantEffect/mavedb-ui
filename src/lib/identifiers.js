@@ -6,18 +6,18 @@ const RAW_READ_REGEX = /^[A-Z]+[0-9]+$/
 const RAW_READ_PREFIXES = ['http://www.ebi.ac.uk/', 'http://www.ncbi.nlm.nih.gov/', 'sra']
 
 export function normalizeDoi(s) {
-    if (s) {
-      s = s.trim()
-      for (const protocol of DOI_PREFIXES) {
-        if (s.startsWith(protocol)) {
-          s = s.slice(protocol.length)
-          break
-        }
+  if (s) {
+    s = s.trim()
+    for (const protocol of DOI_PREFIXES) {
+      if (s.startsWith(protocol)) {
+        s = s.slice(protocol.length)
+        break
       }
     }
-    return s
   }
-  
+  return s
+}
+
 export function validateDoi(s) {
   s = normalizeDoi(s)
   if (s) {
@@ -27,18 +27,18 @@ export function validateDoi(s) {
 }
 
 export function normalizePubmedId(s) {
-    if (s) {
-      s = s.trim()
-      for (const protocol of PUBMED_PREFIXES) {
-        if (s.startsWith(protocol)) {
-          s = s.slice(protocol.length)
-          break
-        }
+  if (s) {
+    s = s.trim()
+    for (const protocol of PUBMED_PREFIXES) {
+      if (s.startsWith(protocol)) {
+        s = s.slice(protocol.length)
+        break
       }
     }
-    return s
   }
-  
+  return s
+}
+
 export function validatePubmedId(s) {
   s = normalizePubmedId(s)
   if (s) {
@@ -46,7 +46,7 @@ export function validatePubmedId(s) {
   }
   return false
 }
- 
+
 export function normalizeIdentifier(dbName, s) {
   if (s) {
     s = s.trim()
@@ -76,9 +76,9 @@ export function normalizeRawRead(s) {
 }
 
 export function validateRawRead(s) {
-s = normalizeRawRead(s)
-if (s) {
-  return RAW_READ_REGEX.test(s)
-}
-return false
+  s = normalizeRawRead(s)
+  if (s) {
+    return RAW_READ_REGEX.test(s)
+  }
+  return false
 }

@@ -4,14 +4,19 @@
   </template>
   <div v-if="userIsAuthenticated" class="mave-collection-adder">
     <Button
-      icon="pi pi-bookmark"
       class="mave-save-to-collection-button"
+      icon="pi pi-bookmark"
       label="Save to a collection"
       @click="dialogVisible = true"
     />
     <div v-if="collectionsContainingDataSet.length > 0" class="mave-collection-bookmarks">
       Member of:
-      <router-link v-for="collection in collectionsContainingDataSet" class="mave-collection-bookmark" :key="collection" :to="{name: 'collection', params: {urn: collection.urn}}">
+      <router-link
+        v-for="collection in collectionsContainingDataSet"
+        :key="collection"
+        class="mave-collection-bookmark"
+        :to="{name: 'collection', params: {urn: collection.urn}}"
+      >
         <i class="pi pi-bookmark-fill" />
         {{ collection.name }}
       </router-link>
@@ -56,10 +61,7 @@
       modal
       :style="{maxWidth: '90%', width: '50rem'}"
     >
-      <CollectionCreator
-        @canceled="creatorVisible = false"
-        @created-collection="childComponentCreatedCollection"
-      />
+      <CollectionCreator @canceled="creatorVisible = false" @created-collection="childComponentCreatedCollection" />
     </Dialog>
   </div>
 </template>
@@ -108,26 +110,25 @@ export default {
   }),
 
   computed: {
-    collectionsContainingDataSet: function() {
-      return [...this.myCollections.admin, ...this.myCollections.editor, ...this.myCollections.viewer].filter((collection) =>
-        (collection[this.dataSetType == 'scoreSet' ? 'scoreSetUrns' : 'experimentUrns'] || []).includes(this.dataSetUrn)
+    collectionsContainingDataSet: function () {
+      return [...this.myCollections.admin, ...this.myCollections.editor, ...this.myCollections.viewer].filter(
+        (collection) =>
+          (collection[this.dataSetType == 'scoreSet' ? 'scoreSetUrns' : 'experimentUrns'] || []).includes(
+            this.dataSetUrn
+          )
       )
     },
 
-    editableCollections: function() {
+    editableCollections: function () {
       const adminCollections = this.myCollections['admin']
       const editorCollections = this.myCollections['editor']
       return adminCollections.concat(editorCollections)
     }
   },
 
-  mounted: async function() {
-    this.fetchMyCollections()
-  },
-
   watch: {
     userOrcidId: {
-      handler: function(newValue, oldValue) {
+      handler: function (newValue, oldValue) {
         if (newValue != oldValue) {
           this.fetchMyCollections()
         }
@@ -135,23 +136,27 @@ export default {
     }
   },
 
+  mounted: async function () {
+    this.fetchMyCollections()
+  },
+
   methods: {
-    childComponentCreatedCollection: function(collection) {
+    childComponentCreatedCollection: function (collection) {
       this.creatorVisible = false
       this.myCollections.admin.push(collection)
       this.selectedCollectionUrn = collection.urn
     },
 
-    collectionSharingInfo: function(collection) {
-      const numUsers = (collection.admins || []).length + (collection.editors || []).length
-          + (collection.viewers || []).length
+    collectionSharingInfo: function (collection) {
+      const numUsers =
+        (collection.admins || []).length + (collection.editors || []).length + (collection.viewers || []).length
       if (numUsers > 1) {
         return `Shared with ${numUsers - 1} other ${pluralize('user', numUsers - 1)}`
       }
       return null
     },
 
-    fetchMyCollections: async function() {
+    fetchMyCollections: async function () {
       this.myCollections = {
         admin: [],
         editor: [],
@@ -171,23 +176,22 @@ export default {
       }
     },
 
-    saveToCollection: async function() {
-      if (this.dataSetType === "scoreSet") {
+    saveToCollection: async function () {
+      if (this.dataSetType === 'scoreSet') {
         this.saveScoreSetToCollection(this.dataSetUrn)
-      } else if (this.dataSetType === "experiment") {
+      } else if (this.dataSetType === 'experiment') {
         this.saveExperimentToCollection(this.dataSetUrn)
       }
       this.dialogVisible = false
       await this.fetchMyCollections()
     },
 
-    saveScoreSetToCollection: async function(scoreSetUrn) {
+    saveScoreSetToCollection: async function (scoreSetUrn) {
       let response = null
       try {
-        response = await axios.post(
-          `${config.apiBaseUrl}/collections/${this.selectedCollectionUrn}/score-sets`,
-          {scoreSetUrn}
-        )
+        response = await axios.post(`${config.apiBaseUrl}/collections/${this.selectedCollectionUrn}/score-sets`, {
+          scoreSetUrn
+        })
       } catch (error) {
         console.log(error)
         response = error.response || {status: 500}
@@ -196,25 +200,32 @@ export default {
       if (response.status == 200) {
         this.$toast.add({severity: 'success', summary: 'Score set saved to collection.', life: 3000})
       } else {
-        this.$toast.add({severity: 'warn', summary: response.data?.detail || 'Sorry, saving the score set to the collection failed.', life: 3000})
+        this.$toast.add({
+          severity: 'warn',
+          summary: response.data?.detail || 'Sorry, saving the score set to the collection failed.',
+          life: 3000
+        })
       }
     },
 
-    saveExperimentToCollection: async function(experimentUrn) {
+    saveExperimentToCollection: async function (experimentUrn) {
       let response = null
       try {
-        response = await axios.post(
-          `${config.apiBaseUrl}/collections/${this.selectedCollectionUrn}/experiments`,
-          {experimentUrn}
-        )
+        response = await axios.post(`${config.apiBaseUrl}/collections/${this.selectedCollectionUrn}/experiments`, {
+          experimentUrn
+        })
       } catch (error) {
         response = error.response || {status: 500}
       }
 
       if (response.status == 200) {
-        this.$toast.add({ severity: 'success', summary: 'Experiment saved to collection.', life: 3000 })
+        this.$toast.add({severity: 'success', summary: 'Experiment saved to collection.', life: 3000})
       } else if (response.data && response.data.detail) {
-        this.$toast.add({severity: 'warn', summary: response.data?.detail || 'Sorry, saving the experiment to the collection failed.', life: 3000})
+        this.$toast.add({
+          severity: 'warn',
+          summary: response.data?.detail || 'Sorry, saving the experiment to the collection failed.',
+          life: 3000
+        })
       }
     }
   }

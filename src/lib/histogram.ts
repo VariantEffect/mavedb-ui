@@ -1,8 +1,8 @@
 import * as d3 from 'd3'
 import $ from 'jquery'
 import _ from 'lodash'
-import { v4 as uuidv4 } from 'uuid';
-import { HeatmapDatum } from './heatmap';
+import {v4 as uuidv4} from 'uuid'
+import {HeatmapDatum} from './heatmap'
 
 type FieldGetter<T> = ((d: HistogramDatum) => T) | string
 type Getter<T> = () => T
@@ -43,7 +43,7 @@ interface HistogramSerie {
   maxBinSize: number
 
   /** A list of points describing the series bars' silhouette. */
-  line: [number, number][],
+  line: [number, number][]
 
   options: HistogramSerieOptions
 }
@@ -73,7 +73,7 @@ export interface HistogramShader {
   title: string | null
 
   /** The alignment of the title of this region. */
-  align: "left" | "right" | "center" | null
+  align: 'left' | 'right' | 'center' | null
 
   /** The color of this shaded region. */
   color: string | null
@@ -127,12 +127,16 @@ export interface Histogram {
   // Data fields
   valueField: Accessor<FieldGetter<number>, Histogram>
   accessorField: Accessor<FieldGetter<string>, Histogram>
-  tooltipHtml: Accessor<((
-    datum: HistogramDatum | null,
-    bin: HistogramBin | null,
-    seriesContainingDatum: HistogramSerieOptions[],
-    allSeries: HistogramSerieOptions[]
-  ) => string | null) | null, Histogram>
+  tooltipHtml: Accessor<
+    | ((
+        datum: HistogramDatum | null,
+        bin: HistogramBin | null,
+        seriesContainingDatum: HistogramSerieOptions[],
+        allSeries: HistogramSerieOptions[]
+      ) => string | null)
+    | null,
+    Histogram
+  >
 
   // Layout
   margins: Accessor<HistogramMargins, Histogram>
@@ -177,12 +181,14 @@ export default function makeHistogram(): Histogram {
   // Data fields
   let valueField: FieldGetter<number> = (d) => d as number
   let accessionField: FieldGetter<string> = (d) => d as string
-  let tooltipHtml: ((
-    datum: HistogramDatum | null,
-    bin: HistogramBin | null,
-    seriesContainingDatum: HistogramSerieOptions[],
-    allSeries: HistogramSerieOptions[]
-  ) => string | null) | null = null
+  let tooltipHtml:
+    | ((
+        datum: HistogramDatum | null,
+        bin: HistogramBin | null,
+        seriesContainingDatum: HistogramSerieOptions[],
+        allSeries: HistogramSerieOptions[]
+      ) => string | null)
+    | null = null
 
   // Layout
   let margins: HistogramMargins = {top: 20, right: 20, bottom: 30, left: 20}
@@ -246,17 +252,22 @@ export default function makeHistogram(): Histogram {
     const filteredData = data.filter((d) => !isNaN(applyField(d, valueField)))
 
     // Bin all the data, regardless of what series each datum belongs to.
-    const overallBins = d3.bin<HistogramDatum, number>().thresholds(numBins).value((d) => applyField(d, valueField))(filteredData)
-    const thresholds = (overallBins.length > 0 ? [overallBins[0].x0, ...overallBins.map((bin) => bin.x1)] : [])
-        .filter((t) => t != null)
+    const overallBins = d3
+      .bin<HistogramDatum, number>()
+      .thresholds(numBins)
+      .value((d) => applyField(d, valueField))(filteredData)
+    const thresholds = (overallBins.length > 0 ? [overallBins[0].x0, ...overallBins.map((bin) => bin.x1)] : []).filter(
+      (t) => t != null
+    )
     const domain: [number, number] = [thresholds[0] || 0, thresholds[thresholds.length - 1] || 0]
 
     const classifier = seriesClassifier // Make this a const so that TypeScript will be certain it remains non-null.
     if (seriesOptions && classifier) {
-      const binClassifier = d3.bin<HistogramDatum, number>()
-          .domain(domain)
-          .thresholds(thresholds)
-          .value((d) => applyField(d, valueField))
+      const binClassifier = d3
+        .bin<HistogramDatum, number>()
+        .domain(domain)
+        .thresholds(thresholds)
+        .value((d) => applyField(d, valueField))
       series = seriesOptions.map((serieOptions, i) => ({
         bins: binClassifier(filteredData.filter((datum) => classifier(datum).includes(i))),
         x0: null,
@@ -266,16 +277,18 @@ export default function makeHistogram(): Histogram {
         options: serieOptions
       }))
     } else {
-      series = [{
-        bins: overallBins,
-        x0: null,
-        x1: null,
-        maxBinSize: 0,
-        line: [],
-        options: seriesOptions?.[0] || {
-          color: '#999999'
+      series = [
+        {
+          bins: overallBins,
+          x0: null,
+          x1: null,
+          maxBinSize: 0,
+          line: [],
+          options: seriesOptions?.[0] || {
+            color: '#999999'
+          }
         }
-      }]
+      ]
     }
 
     for (const serie of series) {
@@ -308,40 +321,40 @@ export default function makeHistogram(): Histogram {
   const findBinIndex = (x: number) => {
     // The lower threshold of a bin is inclusive, the upper exclusive: [X0, x1).
     const index = bins.findIndex((bin) => bin.x0 <= x && x < bin.x1)
-    return (index == -1) ? null : index
+    return index == -1 ? null : index
   }
 
   function applyField<T>(d: HistogramDatum, field: FieldGetter<T>) {
     return _.isString(field) ? (_.get(d, field) as T) : (field(d) as T)
   }
 
-
   //////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
   // Canvas placement calculations
   //////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 
   const alignTextInRegion = (min: number, max: number, align: string | null) => {
-    switch(align){
-      case "left":
+    switch (align) {
+      case 'left':
         return min
-      case "right":
+      case 'right':
         return max
       default:
         return (min + max) / 2
     }
   }
 
-  const padTextInElement = (elem: d3.Selection<d3.BaseType | SVGGElement, HistogramShader, d3.BaseType, any>, align: string | null, text: string | null) => {
-    const tempText = elem.append('g')
-        .append('text')
-        .style('visibility', 'hidden')
-        .text(text)
-    const textWidth = (tempText.node()?.getBoundingClientRect()?.width || 0)
+  const padTextInElement = (
+    elem: d3.Selection<d3.BaseType | SVGGElement, HistogramShader, d3.BaseType, any>,
+    align: string | null,
+    text: string | null
+  ) => {
+    const tempText = elem.append('g').append('text').style('visibility', 'hidden').text(text)
+    const textWidth = tempText.node()?.getBoundingClientRect()?.width || 0
 
     switch (align) {
-      case "left":
+      case 'left':
         return 10
-      case "right":
+      case 'right':
         return -textWidth
       default:
         return 0
@@ -371,8 +384,8 @@ export default function makeHistogram(): Histogram {
     if (tooltip) {
       // Move tooltip to be 50px to the right of the pointer.
       tooltip
-          .style('left', (d3.pointer(event, document.body)[0] + 50) + 'px')
-          .style('top', (d3.pointer(event, document.body)[1]) + 'px')
+        .style('left', d3.pointer(event, document.body)[0] + 50 + 'px')
+        .style('top', d3.pointer(event, document.body)[1] + 'px')
     }
   }
 
@@ -396,31 +409,33 @@ export default function makeHistogram(): Histogram {
   //////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 
   const renderTooltips = () => {
-    tooltip = d3.select(document.body)
-        .append('div')
-        .style('display', 'none')
-        .attr('class', 'histogram-tooltip')
-        .style('background-color', '#fff')
-        .style('border', 'solid')
-        .style('border-width', '2px')
-        .style('border-radius', '5px')
-        .style('color', '#000')
-        .style('padding', '5px')
-        .style('z-index', 2001)
+    tooltip = d3
+      .select(document.body)
+      .append('div')
+      .style('display', 'none')
+      .attr('class', 'histogram-tooltip')
+      .style('background-color', '#fff')
+      .style('border', 'solid')
+      .style('border-width', '2px')
+      .style('border-radius', '5px')
+      .style('color', '#000')
+      .style('padding', '5px')
+      .style('z-index', 2001)
 
-    selectionTooltip = d3.select(_container)
-          .append('div')
-          .style('display', 'none')
-          .attr('class', 'histogram-selection-tooltip')
-          .style('background-color', 'white')
-          .style('border', 'solid')
-          .style('border-width', '2px')
-          .style('border-radius', '5px')
-          .style('color', '#000')
-          .style('padding', '5px')
-          .style('position', 'relative')
-          .style('width', 'fit-content')
-          .style('z-index', 1)
+    selectionTooltip = d3
+      .select(_container)
+      .append('div')
+      .style('display', 'none')
+      .attr('class', 'histogram-selection-tooltip')
+      .style('background-color', 'white')
+      .style('border', 'solid')
+      .style('border-width', '2px')
+      .style('border-radius', '5px')
+      .style('color', '#000')
+      .style('padding', '5px')
+      .style('position', 'relative')
+      .style('width', 'fit-content')
+      .style('z-index', 1)
   }
 
   const showTooltip = (
@@ -429,11 +444,13 @@ export default function makeHistogram(): Histogram {
     datum: HistogramDatum | null
   ) => {
     if (tooltipHtml) {
-      const seriesContainingDatum = datum ?
-          (series && seriesClassifier) ?
-          seriesClassifier(datum).map((seriesIndex) => series[seriesIndex])
-          : series[0] ? [series[0]] : []
-          : []
+      const seriesContainingDatum = datum
+        ? series && seriesClassifier
+          ? seriesClassifier(datum).map((seriesIndex) => series[seriesIndex])
+          : series[0]
+            ? [series[0]]
+            : []
+        : []
       const html = tooltipHtml(
         datum,
         bin,
@@ -464,7 +481,7 @@ export default function makeHistogram(): Histogram {
     }
   }
 
-  const positionSelectionTooltip = function() {
+  const positionSelectionTooltip = function () {
     if (selectionTooltip && selectedBin) {
       const documentWidth = document.body.clientWidth
 
@@ -473,10 +490,10 @@ export default function makeHistogram(): Histogram {
       let top = -(yScale(0) - yScale(selectedBin.yMax)) - effectiveMargins.bottom
 
       selectionTooltip
-          // Add a small buffer area to the left side of the tooltip so it doesn't overlap with the bin.
-          .style('left', `${left + 5}px`)
-          // Ensure the tooltip doesn't extend outside of the histogram container.
-          .style('max-width', `${documentWidth - left}px`)
+        // Add a small buffer area to the left side of the tooltip so it doesn't overlap with the bin.
+        .style('left', `${left + 5}px`)
+        // Ensure the tooltip doesn't extend outside of the histogram container.
+        .style('max-width', `${documentWidth - left}px`)
 
       // Having set the max width, get the height and border.
       const tooltipHeight = selectionTooltip.node()?.clientHeight || 0
@@ -488,11 +505,11 @@ export default function makeHistogram(): Histogram {
       }
 
       selectionTooltip
-          // Add a small buffer to the vertical placement of the tooltip so it doesn't overlap with the axis.
-          .style('top', `${top - 15}px`)
-          // A pretty silly workaround for the fact that this div is relatively positioned and would otherwise take up
-          // space in the document flow.
-          .style('margin-bottom', `${-height - (topBorderWidth * 2)}px`)
+        // Add a small buffer to the vertical placement of the tooltip so it doesn't overlap with the axis.
+        .style('top', `${top - 15}px`)
+        // A pretty silly workaround for the fact that this div is relatively positioned and would otherwise take up
+        // space in the document flow.
+        .style('margin-bottom', `${-height - topBorderWidth * 2}px`)
     }
   }
 
@@ -532,8 +549,7 @@ export default function makeHistogram(): Histogram {
 
   const refreshHighlighting = () => {
     if (svg) {
-      svg.selectAll('.histogram-hover-highlight')
-          .style('opacity', (d) => hoverOpacity(d as HistogramBin))
+      svg.selectAll('.histogram-hover-highlight').style('opacity', (d) => hoverOpacity(d as HistogramBin))
     }
   }
 
@@ -619,29 +635,20 @@ export default function makeHistogram(): Histogram {
       _container = container
 
       if (_container) {
-        svg = d3.select(_container)
-            .html(null)
-            .append('svg')
+        svg = d3.select(_container).html(null).append('svg')
         svg.append('defs')
-        const mainGroup = svg.append('g')
-            .attr('class', 'histogram-main')
-            .attr('transform', `translate(${margins.left},${margins.top})`)
-        mainGroup.append('g')
-          .attr('class', 'histogram-shaders')
-        mainGroup.append('g')
-          .attr('class', 'histogram-shader-thresholds')
-        mainGroup.append('g')
-            .attr('class', 'histogram-bars')
-        mainGroup.append('g')
-            .attr('class', 'histogram-left-axis')
-        mainGroup.append('g')
-            .attr('class', 'histogram-bottom-axis')
-        mainGroup.append('g')
-            .attr('class', 'histogram-legend-background')
-        mainGroup.append('g')
-            .attr('class', 'histogram-legend')
-        mainGroup.append('g')
-            .attr('class', 'histogram-hovers')
+        const mainGroup = svg
+          .append('g')
+          .attr('class', 'histogram-main')
+          .attr('transform', `translate(${margins.left},${margins.top})`)
+        mainGroup.append('g').attr('class', 'histogram-shaders')
+        mainGroup.append('g').attr('class', 'histogram-shader-thresholds')
+        mainGroup.append('g').attr('class', 'histogram-bars')
+        mainGroup.append('g').attr('class', 'histogram-left-axis')
+        mainGroup.append('g').attr('class', 'histogram-bottom-axis')
+        mainGroup.append('g').attr('class', 'histogram-legend-background')
+        mainGroup.append('g').attr('class', 'histogram-legend')
+        mainGroup.append('g').attr('class', 'histogram-hovers')
       } else {
         svg = null
       }
@@ -664,15 +671,12 @@ export default function makeHistogram(): Histogram {
         // axis width (i.e. with the longest numbers in the counts.
         //
         // Also leave 5% breathing room at the top of the chart.
-        const yMax = (d3.max(series, (s) => s.maxBinSize) || 0) * 1.10
+        const yMax = (d3.max(series, (s) => s.maxBinSize) || 0) * 1.1
         const chartHasContent = yMax > 0
-        yScale.domain([0, yMax])
-            .range([height, 0])
+        yScale.domain([0, yMax]).range([height, 0])
 
         // Add temporary y axis and measure its width
-        const tempYAxis = svg.append('g')
-            .style('visibility', 'hidden')
-            .call(d3.axisLeft(yScale).ticks(10))
+        const tempYAxis = svg.append('g').style('visibility', 'hidden').call(d3.axisLeft(yScale).ticks(10))
         const yAxisWidthWithLabel = (tempYAxis.node()?.getBoundingClientRect()?.width || 0) + LABEL_SIZE
         tempYAxis.remove()
 
@@ -684,63 +688,64 @@ export default function makeHistogram(): Histogram {
         width = _container.clientWidth - (effectiveMargins.left + effectiveMargins.right)
 
         // Update the main group's margins inside the SVG.
-        svg.select('g.histogram-main')
-            .attr('transform', `translate(${effectiveMargins.left}, ${effectiveMargins.top})`)
+        svg.select('g.histogram-main').attr('transform', `translate(${effectiveMargins.left}, ${effectiveMargins.top})`)
 
         // Set the X scale. Expand its domain from that of the data by the size of the first and last bin. Assume that
         // all bins are of equal size.
         if (bins.length > 0) {
           const firstBinInfo = bins[0]
           const lastBinInfo = bins[bins.length - 1]
-          xScale.domain([
-            firstBinInfo.x0 - (firstBinInfo.x1 - firstBinInfo.x0),
-            lastBinInfo.x1 * 2 - lastBinInfo.x0
-          ])
+          xScale.domain([firstBinInfo.x0 - (firstBinInfo.x1 - firstBinInfo.x0), lastBinInfo.x1 * 2 - lastBinInfo.x0])
         } else {
           xScale.domain([0, 0])
         }
         xScale.range([0, width])
 
         // Refresh the axes.
-        svg.select('g.histogram-bottom-axis')
-            .attr('transform', `translate(0,${height})`)
-            // @ts-ignore
-            .call(d3.axisBottom(xScale).ticks(10))
-        svg.select('g.histogram-left-axis')
-            // @ts-ignore
-            .call(d3.axisLeft(yScale).ticks(10))
+        svg
+          .select('g.histogram-bottom-axis')
+          .attr('transform', `translate(0,${height})`)
+          // @ts-ignore
+          .call(d3.axisBottom(xScale).ticks(10))
+        svg
+          .select('g.histogram-left-axis')
+          // @ts-ignore
+          .call(d3.axisLeft(yScale).ticks(10))
 
         // Refresh the chart title.
-        svg.select('g.histogram-main')
-            .selectAll('text.histogram-title')
-            .data(title ? [title] : [], (d) => d as any)
-            .join('text')
-            .attr('class', 'histogram-title')
-            .attr('x', width / 2 )
-            .attr('y', -margins.top / 4)
-            .style('text-anchor', 'middle')
-            .text((d) => d)
+        svg
+          .select('g.histogram-main')
+          .selectAll('text.histogram-title')
+          .data(title ? [title] : [], (d) => d as any)
+          .join('text')
+          .attr('class', 'histogram-title')
+          .attr('x', width / 2)
+          .attr('y', -margins.top / 4)
+          .style('text-anchor', 'middle')
+          .text((d) => d)
 
         // Refresh the axis labels.
-        svg.select('g.histogram-main')
-            .selectAll('text.histogram-bottom-axis-label')
-            .data(bottomAxisLabel ? [bottomAxisLabel] : [], (d) => d as any)
-            .join('text')
-            .attr('class', 'histogram-axis-label histogram-bottom-axis-label')
-            .attr('font-size', LABEL_SIZE)
-            .attr('x', width / 2)
-            .attr('y', height + 25)
-            .style('text-anchor', 'middle')
-            .text((d) => d)
-        svg.select('g.histogram-main')
-            .selectAll('text.histogram-left-axis-label')
-            .data(leftAxisLabel ? [leftAxisLabel] : [], (d) => d as any)
-            .join('text')
-            .attr('class', 'histogram-axis-label histogram-left-axis-label')
-            .attr('font-size', LABEL_SIZE)
-            .attr('transform', `translate(${-(yAxisWidthWithLabel - LABEL_SIZE / 2)}, ${height / 2}) rotate(-90)`)
-            .style('text-anchor', 'middle')
-            .text((d) => d)
+        svg
+          .select('g.histogram-main')
+          .selectAll('text.histogram-bottom-axis-label')
+          .data(bottomAxisLabel ? [bottomAxisLabel] : [], (d) => d as any)
+          .join('text')
+          .attr('class', 'histogram-axis-label histogram-bottom-axis-label')
+          .attr('font-size', LABEL_SIZE)
+          .attr('x', width / 2)
+          .attr('y', height + 25)
+          .style('text-anchor', 'middle')
+          .text((d) => d)
+        svg
+          .select('g.histogram-main')
+          .selectAll('text.histogram-left-axis-label')
+          .data(leftAxisLabel ? [leftAxisLabel] : [], (d) => d as any)
+          .join('text')
+          .attr('class', 'histogram-axis-label histogram-left-axis-label')
+          .attr('font-size', LABEL_SIZE)
+          .attr('transform', `translate(${-(yAxisWidthWithLabel - LABEL_SIZE / 2)}, ${height / 2}) rotate(-90)`)
+          .style('text-anchor', 'middle')
+          .text((d) => d)
 
         // Refresh the legend, which is displayed when there is more than one serie.
         const legendX = 32
@@ -750,134 +755,143 @@ export default function makeHistogram(): Histogram {
         const legendCircleWidth = 7
         const legendSpacing = 5
         const legend = svg.select('g.histogram-legend')
-        const legendItem = legend.selectAll('g.histogram-legend-item')
-            .data(chartHasContent && series.length > 1 ? series : [])
-            .join(
-              (enter) => {
-                const g = enter.append('g')
-                    .attr('class', 'histogram-legend-item')
-                g.append('circle')
-                    .attr('r', legendCircleWidth)
-                    .attr('cx', legendX)
-                    //.attr('cy', (d, i) => legendY + i * legendItemHeight)
-                    //.style('fill', (d) => d.options.color)
-                g.append('text')
-                    .attr('x', legendX + legendCircleWidth + legendSpacing)
-                    .attr('y', (_d: HistogramSerie, i) => legendY + i * legendItemHeight + legendSpacing)
-                    .style('font-size', legendFontSize)
-                    //.text((d, i) => d.options.title || `Series ${i + 1}`)
-                return g
-              },
-              (update) => update,
-              (exit) => exit.remove()
-            )
-        legendItem.select('circle')
-            // @ts-ignore
-            .attr('cy', (_d: HistogramSerie, i) => legendY + i * legendItemHeight)
-            // @ts-ignore
-            .style('fill', (d: HistogramSerie) => d.options.color)
-        legendItem.select('text')
-            // @ts-ignore
-            .text((d: HistogramSerie, i) => d.options.title || `Series ${i + 1}`)
+        const legendItem = legend
+          .selectAll('g.histogram-legend-item')
+          .data(chartHasContent && series.length > 1 ? series : [])
+          .join(
+            (enter) => {
+              const g = enter.append('g').attr('class', 'histogram-legend-item')
+              g.append('circle').attr('r', legendCircleWidth).attr('cx', legendX)
+              //.attr('cy', (d, i) => legendY + i * legendItemHeight)
+              //.style('fill', (d) => d.options.color)
+              g.append('text')
+                .attr('x', legendX + legendCircleWidth + legendSpacing)
+                .attr('y', (_d: HistogramSerie, i) => legendY + i * legendItemHeight + legendSpacing)
+                .style('font-size', legendFontSize)
+              //.text((d, i) => d.options.title || `Series ${i + 1}`)
+              return g
+            },
+            (update) => update,
+            (exit) => exit.remove()
+          )
+        legendItem
+          .select('circle')
+          // @ts-ignore
+          .attr('cy', (_d: HistogramSerie, i) => legendY + i * legendItemHeight)
+          // @ts-ignore
+          .style('fill', (d: HistogramSerie) => d.options.color)
+        legendItem
+          .select('text')
+          // @ts-ignore
+          .text((d: HistogramSerie, i) => d.options.title || `Series ${i + 1}`)
 
         // The client may have specified a line of text to display below the legend.
-        legend.selectAll('text.histogram-legend-note')
-            .data(chartHasContent && legendNote ? [legendNote] : [])
-            .join('text')
-            .attr('class', 'histogram-legend-note')
-            .attr('font-size', legendFontSize)
-            .attr('x', legendX - legendCircleWidth)
-            .attr('y', legendY + (series.length == 1 ? 0 : series.length) * legendItemHeight + legendSpacing - 1)
-            .text((d) => d)
+        legend
+          .selectAll('text.histogram-legend-note')
+          .data(chartHasContent && legendNote ? [legendNote] : [])
+          .join('text')
+          .attr('class', 'histogram-legend-note')
+          .attr('font-size', legendFontSize)
+          .attr('x', legendX - legendCircleWidth)
+          .attr('y', legendY + (series.length == 1 ? 0 : series.length) * legendItemHeight + legendSpacing - 1)
+          .text((d) => d)
 
         // Add a background for the legend, for visibility.
         const legendBounds = (legend.node() as SVGGraphicsElement | null)?.getBBox()
-        svg.select('g.histogram-legend-background')
-            .selectAll('rect.histogram-legend-background')
-            .data(legendBounds ? [legendBounds] : [])
-            .join('rect')
-            .attr('class', 'histogram-legend-background')
-            .attr('fill', '#ffffff')
-            .attr('fill-opacity', '.6')
-            .attr('y', (d) => d.x - 5 - margins.top)
-            .attr('x', (d) => d.x - 5)
-            .attr('height', (d) => d.height + 10)
-            .attr('width', (d) => d.width + 10)
+        svg
+          .select('g.histogram-legend-background')
+          .selectAll('rect.histogram-legend-background')
+          .data(legendBounds ? [legendBounds] : [])
+          .join('rect')
+          .attr('class', 'histogram-legend-background')
+          .attr('fill', '#ffffff')
+          .attr('fill-opacity', '.6')
+          .attr('y', (d) => d.x - 5 - margins.top)
+          .attr('x', (d) => d.x - 5)
+          .attr('height', (d) => d.height + 10)
+          .attr('width', (d) => d.width + 10)
 
-        svg.selectAll('text.histogram-no-data-message')
-            .data(chartHasContent ? [] : ['No data'])
-            .join('text')
-            .attr('class', 'histogram-no-data-message')
-            .attr('x', width / 2 )
-            .attr('y', height / 2 )
-            .style('text-anchor', 'middle')
-            .text((d) => d)
+        svg
+          .selectAll('text.histogram-no-data-message')
+          .data(chartHasContent ? [] : ['No data'])
+          .join('text')
+          .attr('class', 'histogram-no-data-message')
+          .attr('x', width / 2)
+          .attr('y', height / 2)
+          .style('text-anchor', 'middle')
+          .text((d) => d)
 
-        const path = d3.line((d) => xScale(d[0]), (d) => yScale(d[1]))
+        const path = d3.line(
+          (d) => xScale(d[0]),
+          (d) => yScale(d[1])
+        )
 
-        const seriesLine = svg.select('g.histogram-bars')
-            .selectAll('g.histogram-line')
-            .data(chartHasContent ? series : [], (d) => d as any)
+        const seriesLine = svg
+          .select('g.histogram-bars')
+          .selectAll('g.histogram-line')
+          .data(chartHasContent ? series : [], (d) => d as any)
+          // @ts-ignore
+          .join(
             // @ts-ignore
-            .join(
-              // @ts-ignore
-              (enter) => {
-                const g = enter.append('g')
-                    .attr('class', 'histogram-line')
-                g.append('path')
-                return g
-              },
-              (update) => update,
-              (exit) => exit.remove()
-            )
-        seriesLine.select('path')
-            .attr('class', 'histogram-line')
-            .attr('fill', (d) => d.options.color)
-            .attr('fill-opacity', '.25')
-            .attr('stroke', (d) => d.options.color)
-            .attr('stroke-width', 1.5)
-            .attr('d', (d) => path(d.line))
+            (enter) => {
+              const g = enter.append('g').attr('class', 'histogram-line')
+              g.append('path')
+              return g
+            },
+            (update) => update,
+            (exit) => exit.remove()
+          )
+        seriesLine
+          .select('path')
+          .attr('class', 'histogram-line')
+          .attr('fill', (d) => d.options.color)
+          .attr('fill-opacity', '.25')
+          .attr('stroke', (d) => d.options.color)
+          .attr('stroke-width', 1.5)
+          .attr('d', (d) => path(d.line))
 
         // Refresh the hover and highlight boxes.
-        const hovers = svg.select('g.histogram-hovers')
-            .selectAll('g.histogram-hover')
-            .data(bins, (d) => d as any)
-            .join('g')
-            .attr('class', 'histogram-hover')
-            .on('mouseover', mouseover)
-            .on('mousemove', mousemove)
-            .on('mouseleave', mouseleave)
+        const hovers = svg
+          .select('g.histogram-hovers')
+          .selectAll('g.histogram-hover')
+          .data(bins, (d) => d as any)
+          .join('g')
+          .attr('class', 'histogram-hover')
+          .on('mouseover', mouseover)
+          .on('mousemove', mousemove)
+          .on('mouseleave', mouseleave)
 
         // Hover target is the full height of the chart.
-        hovers.append('rect')
-            .attr('class', () => `histogram-hover-target`)
-            .attr('x', (d) => xScale(d.x0))
-            .attr('width', (d) => xScale(d.x1) - xScale(d.x0))
-            .attr('y', () => yScale(yMax))
-            .attr('height', () => yScale(0) - yScale(yMax))
-            .style('fill', 'transparent')  // Necessary for mouse events to fire.
+        hovers
+          .append('rect')
+          .attr('class', () => `histogram-hover-target`)
+          .attr('x', (d) => xScale(d.x0))
+          .attr('width', (d) => xScale(d.x1) - xScale(d.x0))
+          .attr('y', () => yScale(yMax))
+          .attr('height', () => yScale(0) - yScale(yMax))
+          .style('fill', 'transparent') // Necessary for mouse events to fire.
 
         // However, only the largest bin is highlighted on hover.
-        hovers.append('rect')
-            .attr('class', () => `histogram-hover-highlight`)
-            .attr('x', (d) => xScale(d.x0))
-            .attr('width', (d) => xScale(d.x1) - xScale(d.x0))
-            .attr('y', (d) => yScale(d.yMax))
-            .attr('height', (d) => yScale(0) - yScale(d.yMax))
-            .style('fill', 'none')
-            .style('stroke', 'black')
-            .style('stroke-width', 1.5)
-            .style('opacity', d => hoverOpacity(d))
+        hovers
+          .append('rect')
+          .attr('class', () => `histogram-hover-highlight`)
+          .attr('x', (d) => xScale(d.x0))
+          .attr('width', (d) => xScale(d.x1) - xScale(d.x0))
+          .attr('y', (d) => yScale(d.yMax))
+          .attr('height', (d) => yScale(0) - yScale(d.yMax))
+          .style('fill', 'none')
+          .style('stroke', 'black')
+          .style('stroke-width', 1.5)
+          .style('opacity', (d) => hoverOpacity(d))
 
         // Refresh the shaded regions.
         const activeShader = shaders && renderShader ? shaders[renderShader] : null
 
-        svg.select('defs')
-          .selectAll('linearGradient')
-          .remove()
+        svg.select('defs').selectAll('linearGradient').remove()
 
         // Select the active shader elements.
-        const shaderG = svg.select('g.histogram-shaders')
+        const shaderG = svg
+          .select('g.histogram-shaders')
           .selectAll('g.histogram-shader')
           .data(chartHasContent && activeShader ? activeShader : [])
           .join(
@@ -889,54 +903,67 @@ export default function makeHistogram(): Histogram {
             },
             (update) => update,
             (exit) => exit.remove()
-        )
+          )
 
         if (activeShader) {
           // Add the gradients for the active shader.
-          svg.select('defs')
-          .selectAll('linearGradient')
-          .data(activeShader)
-          .join(
-            (enter) => {
-              const gradient = enter.append('linearGradient')
-                  .attr('id', (d) => {d.gradientUUID = uuidv4(); return `histogram-gradient-${d.gradientUUID}`})
-                  .attr('gradientTransform', 'rotate(45)')
-              gradient.append('stop')
-                  .attr('offset', '0')
-                  .attr('stop-color', (d) => d.color || DEFAULT_SERIES_COLOR)
-                  .attr('stop-opacity', (d) => d.startOpacity || '0.15')
-              gradient.append('stop')
-                  .attr('offset', '100%')
-                  .attr('stop-color', (d) => d.color || DEFAULT_SERIES_COLOR)
-                  .attr('stop-opacity', (d) => d.stopOpacity || '0.05')
+          svg
+            .select('defs')
+            .selectAll('linearGradient')
+            .data(activeShader)
+            .join((enter) => {
+              const gradient = enter
+                .append('linearGradient')
+                .attr('id', (d) => {
+                  d.gradientUUID = uuidv4()
+                  return `histogram-gradient-${d.gradientUUID}`
+                })
+                .attr('gradientTransform', 'rotate(45)')
+              gradient
+                .append('stop')
+                .attr('offset', '0')
+                .attr('stop-color', (d) => d.color || DEFAULT_SERIES_COLOR)
+                .attr('stop-opacity', (d) => d.startOpacity || '0.15')
+              gradient
+                .append('stop')
+                .attr('offset', '100%')
+                .attr('stop-color', (d) => d.color || DEFAULT_SERIES_COLOR)
+                .attr('stop-opacity', (d) => d.stopOpacity || '0.05')
 
               return gradient
-            }
-          )
+            })
 
           // Draw each shader region according to the shader definition.
-          shaderG.attr('class', 'histogram-shader')
-            .style('fill', (d) => `url(#histogram-gradient-${d.gradientUUID})`)
-          shaderG.select('polygon')
-            .attr('points', (d) => shaderPolygon(d, yMax).map(([x, y]) => `${xScale(x)},${yScale(y)}`).join(' '))
-          shaderG.select('text')
+          shaderG.attr('class', 'histogram-shader').style('fill', (d) => `url(#histogram-gradient-${d.gradientUUID})`)
+          shaderG.select('polygon').attr('points', (d) =>
+            shaderPolygon(d, yMax)
+              .map(([x, y]) => `${xScale(x)},${yScale(y)}`)
+              .join(' ')
+          )
+          shaderG
+            .select('text')
             .attr('class', 'histogram-shader-title')
             .style('fill', (d) => d.thresholdColor || '#000000')
             .attr('x', (d) => {
               const span = visibleShaderRegion(d)
-              return xScale(alignTextInRegion(span.min, span.max, d.align)) + padTextInElement(shaderG, d.align, d.title)
+              return (
+                xScale(alignTextInRegion(span.min, span.max, d.align)) + padTextInElement(shaderG, d.align, d.title)
+              )
             })
             .attr('y', 15)
             .style('text-anchor', 'middle')
-            .style('visibility', (d) => d.title ? 'visible' : 'hidden')
+            .style('visibility', (d) => (d.title ? 'visible' : 'hidden'))
             .text((d) => d.title)
 
           // Draw the shader thresholds.
-          const shaderThresholds = activeShader.map((region) => [
-            ...(region.min != null && region.min > xScale.domain()[0]) ? [{x: region.min, region}] : [],
-            ...(region.max != null && region.max < xScale.domain()[1]) ? [{x: region.max, region}] : [],
-          ]).flat()
-          svg.select('g.histogram-shader-thresholds')
+          const shaderThresholds = activeShader
+            .map((region) => [
+              ...(region.min != null && region.min > xScale.domain()[0] ? [{x: region.min, region}] : []),
+              ...(region.max != null && region.max < xScale.domain()[1] ? [{x: region.max, region}] : [])
+            ])
+            .flat()
+          svg
+            .select('g.histogram-shader-thresholds')
             .selectAll('path.histogram-shader-threshold')
             .data(chartHasContent ? shaderThresholds : [])
             .join('path')
@@ -946,17 +973,18 @@ export default function makeHistogram(): Histogram {
             .attr('stroke-width', 1.5)
             .attr('d', (d) => {
               const intersectedBinIndex = findBinIndex(d.x)
-              let yMin = (intersectedBinIndex == null) ? yScale.domain()[0] : bins[intersectedBinIndex].yMax
+              let yMin = intersectedBinIndex == null ? yScale.domain()[0] : bins[intersectedBinIndex].yMax
               if (intersectedBinIndex != null && intersectedBinIndex > 0 && d.x == bins[intersectedBinIndex].x0) {
                 yMin = Math.max(yMin, bins[intersectedBinIndex - 1].x1)
               }
-              return path([[d.x, 0], [d.x, yMax]])
+              return path([
+                [d.x, 0],
+                [d.x, yMax]
+              ])
             })
         } else {
           shaderG.remove()
-          svg.select('g.histogram-shader-thresholds')
-            .selectAll('path.histogram-shader-threshold')
-            .remove()
+          svg.select('g.histogram-shader-thresholds').selectAll('path.histogram-shader-threshold').remove()
         }
       }
 
@@ -971,8 +999,7 @@ export default function makeHistogram(): Histogram {
         const widthWithMargins = $(_container).width() || 500
         height = heightWithMargins - margins.top - margins.bottom
         width = widthWithMargins - margins.left - margins.right
-        svg.attr('height', heightWithMargins)
-            .attr('width', widthWithMargins)
+        svg.attr('height', heightWithMargins).attr('width', widthWithMargins)
       }
       return chart
     },
@@ -1045,8 +1072,7 @@ export default function makeHistogram(): Histogram {
       // Don't allow rendering of a shader which does not have a shader definition.
       if (!shaders && value) {
         return renderShader
-      }
-      else if (shaders && value && !(value in shaders)) {
+      } else if (shaders && value && !(value in shaders)) {
         return renderShader
       }
 
@@ -1078,12 +1104,16 @@ export default function makeHistogram(): Histogram {
       return chart
     },
 
-    tooltipHtml: (value?: ((
-      datum: HistogramDatum | null,
-      bin: HistogramBin | null,
-      seriesContainingDatum: HistogramSerieOptions[],
-      allSeries: HistogramSerieOptions[]
-    ) => string | null) | null) => {
+    tooltipHtml: (
+      value?:
+        | ((
+            datum: HistogramDatum | null,
+            bin: HistogramBin | null,
+            seriesContainingDatum: HistogramSerieOptions[],
+            allSeries: HistogramSerieOptions[]
+          ) => string | null)
+        | null
+    ) => {
       if (value === undefined) {
         return tooltipHtml
       }

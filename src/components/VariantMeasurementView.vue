@@ -1,5 +1,5 @@
 <template>
-  <div class="grid" style="margin: 10px 0;">
+  <div class="grid" style="margin: 10px 0">
     <div v-if="variant" class="col-12">
       <Card>
         <template #title>
@@ -14,7 +14,9 @@
           <table class="variant-info-table">
             <tbody>
               <tr v-if="clingenAlleleName">
-                <td v-if="clingenAlleleId" colspan="5">ClinGen community standard allele name: {{ clingenAlleleName }}</td>
+                <td v-if="clingenAlleleId" colspan="5">
+                  ClinGen community standard allele name: {{ clingenAlleleName }}
+                </td>
               </tr>
               <tr>
                 <td v-if="clingenAlleleId">ClinGen allele ID:</td>
@@ -28,16 +30,12 @@
                 </td>
                 <td v-if="!clingenAlleleId" colspan="2">&nbsp;</td>
                 <td>&nbsp;</td>
-                <td v-if="clinvarAlleleIds.length > 0">ClinVar allele {{ clinvarAlleleIds.length == 1 ? 'ID' : 'IDs' }}:</td>
                 <td v-if="clinvarAlleleIds.length > 0">
-                  <div
-                    v-for="clinvarAlleleId in clinvarAlleleIds"
-                    :key="clinvarAlleleId"
-                  >
-                    <a
-                      :href="`https://www.ncbi.nlm.nih.gov/clinvar/variation/${clinvarAlleleId}`"
-                      target="_blank"
-                    >
+                  ClinVar allele {{ clinvarAlleleIds.length == 1 ? 'ID' : 'IDs' }}:
+                </td>
+                <td v-if="clinvarAlleleIds.length > 0">
+                  <div v-for="clinvarAlleleId in clinvarAlleleIds" :key="clinvarAlleleId">
+                    <a :href="`https://www.ncbi.nlm.nih.gov/clinvar/variation/${clinvarAlleleId}`" target="_blank">
                       {{ clinvarAlleleId }}
                     </a>
                   </div>
@@ -60,13 +58,21 @@
                 <td v-if="(clingenAllele?.genomicAlleles || []).length > 0">Genomic location:</td>
                 <td v-if="(clingenAllele?.genomicAlleles || []).length > 0">
                   <div v-for="genomicAllele in clingenAllele?.genomicAlleles || []" :key="genomicAllele">
-                    <template v-if="genomicAllele.chromosome && genomicAllele.coordinates?.[0]?.start && genomicAllele.referenceGenome">
-                      chr{{ genomicAllele.chromosome }}:{{ genomicAllele.coordinates?.[0]?.start }} ({{ genomicAllele.referenceGenome }})
+                    <template
+                      v-if="
+                        genomicAllele.chromosome &&
+                        genomicAllele.coordinates?.[0]?.start &&
+                        genomicAllele.referenceGenome
+                      "
+                    >
+                      chr{{ genomicAllele.chromosome }}:{{ genomicAllele.coordinates?.[0]?.start }} ({{
+                        genomicAllele.referenceGenome
+                      }})
                     </template>
                   </div>
                 </td>
                 <td v-if="(clingenAllele?.genomicAlleles || []).length == 0" colspan="2">&nbsp;</td>
-                <td style="width: 150px;">&nbsp;</td>
+                <td style="width: 150px">&nbsp;</td>
                 <td>Functional score:</td>
                 <td v-if="variantScores?.score">{{ variantScores?.score?.toPrecision(4) }}</td>
                 <td v-else>&nbsp;</td>
@@ -87,15 +93,14 @@
         <template #content>
           <div v-if="scores" class="mave-score-set-histogram-pane">
             <ScoreSetHistogram
+              ref="histogram"
               :external-selection="variantScores"
               :score-set="variant.scoreSet"
               :variants="scores"
-              @export-chart="setHistogramExport"
-              ref="histogram"
             />
           </div>
           <div v-else>
-            <ProgressSpinner class="mave-histogram-loading"/>
+            <ProgressSpinner class="mave-histogram-loading" />
           </div>
         </template>
       </Card>
@@ -105,13 +110,11 @@
 
 <script lang="ts">
 import axios from 'axios'
-import _ from 'lodash'
 import Card from 'primevue/card'
 import {useRestResource} from 'rest-client-vue'
-import {watch} from 'vue'
+import {defineComponent, watch} from 'vue'
 
-import DefaultLayout from '@/components/layout/DefaultLayout'
-import ScoreSetHistogram from '@/components/ScoreSetHistogram'
+import ScoreSetHistogram from '@/components/ScoreSetHistogram.vue'
 import useFormatters from '@/composition/formatters'
 import useRemoteData from '@/composition/remote-data'
 import config from '@/config'
@@ -120,9 +123,9 @@ import ProgressSpinner from 'primevue/progressspinner'
 
 type Classification = 'Functionally normal' | 'Functionally abnormal' | 'Not specified'
 
-export default {
+export default defineComponent({
   name: 'VariantMeasurementView',
-  components: {Card, DefaultLayout, ScoreSetHistogram, ProgressSpinner},
+  components: {Card, ScoreSetHistogram, ProgressSpinner},
 
   props: {
     variantUrn: {
@@ -132,11 +135,7 @@ export default {
   },
 
   setup: (props) => {
-    const {
-      data: scoresData,
-      setDataUrl: setScoresDataUrl,
-      ensureDataLoaded: ensureScoresDataLoaded
-    } = useRemoteData()
+    const {data: scoresData, setDataUrl: setScoresDataUrl, ensureDataLoaded: ensureScoresDataLoaded} = useRemoteData()
 
     const {
       resource: variant,
@@ -153,12 +152,15 @@ export default {
       }
     })
 
-    watch(() => props.variantUrn, (newValue, oldValue) => {
-      if (newValue != oldValue) {
-        setVariantId(encodeURIComponent(newValue))
-        setVariantEnabled(newValue != null)
+    watch(
+      () => props.variantUrn,
+      (newValue, oldValue) => {
+        if (newValue != oldValue) {
+          setVariantId(encodeURIComponent(newValue))
+          setVariantEnabled(newValue != null)
+        }
       }
-    })
+    )
 
     return {
       ...useFormatters(),
@@ -168,7 +170,7 @@ export default {
 
       scoresData,
       setScoresDataUrl,
-      ensureScoresDataLoaded,
+      ensureScoresDataLoaded
     }
   },
 
@@ -178,7 +180,7 @@ export default {
   }),
 
   computed: {
-    classification: function(): Classification | undefined {
+    classification: function (): Classification | undefined {
       const scoreRangeClassification = this.variantScoreRange?.classification
       switch (scoreRangeClassification) {
         case 'abnormal':
@@ -191,7 +193,7 @@ export default {
           return undefined
       }
     },
-    classifierCssClasses: function() {
+    classifierCssClasses: function () {
       switch (this.classification) {
         case 'Functionally abnormal':
           return ['variant-clinical-classifier-functionally-abnormal']
@@ -203,34 +205,46 @@ export default {
           return []
       }
     },
-    clingenAlleleId: function() {
+    clingenAlleleId: function () {
       return this.currentMappedVariant?.clingenAlleleId
     },
-    clingenAlleleName: function() {
+    clingenAlleleName: function () {
       return this.clingenAllele?.communityStandardTitle?.[0] || undefined
     },
-    clinvarAlleleIds: function(): string[] {
-      return (this.clingenAllele?.externalRecords?.ClinVarAlleles || []).map((clinvarAllele: any) => clinvarAllele.alleleId)
+    clinvarAlleleIds: function (): string[] {
+      return (this.clingenAllele?.externalRecords?.ClinVarAlleles || []).map(
+        (clinvarAllele: any) => clinvarAllele.alleleId
+      )
     },
-    currentMappedVariant: function() {
+    currentMappedVariant: function () {
       return (this.variant?.mappedVariants || []).find((mappedVariant: any) => mappedVariant.current)
     },
-    scoreSetUrn: function() {
+    scoreSetUrn: function () {
       return this.variant?.scoreSet?.urn
     },
-    variantName: function() {
-      return this.currentMappedVariant?.postMapped?.expressions?.[0]?.value
-          || this.variant?.hgvsNt
-          || this.variant?.hgvsPro
-          || this.variant?.hgvsSplice
-          || undefined
+    variantName: function () {
+      return (
+        this.currentMappedVariant?.postMapped?.expressions?.[0]?.value ||
+        this.variant?.hgvsNt ||
+        this.variant?.hgvsPro ||
+        this.variant?.hgvsSplice ||
+        undefined
+      )
     },
-    variantScoreRange: function() {
+    variantScoreRange: function () {
       const operatorTable = {
-        '<': function(a: number, b: number) { return a < b; },
-        '<=': function(a: number, b: number) { return a <= b; },
-        '>': function(a: number, b: number) { return a > b; },
-        '>=': function(a: number, b: number) { return a >= b; },
+        '<': function (a: number, b: number) {
+          return a < b
+        },
+        '<=': function (a: number, b: number) {
+          return a <= b
+        },
+        '>': function (a: number, b: number) {
+          return a > b
+        },
+        '>=': function (a: number, b: number) {
+          return a >= b
+        }
       }
 
       const score = this.variantScores?.score
@@ -240,21 +254,22 @@ export default {
           const lowerOperator = scoreRange.inclusiveLowerBound ? '<=' : '<'
           const upperOperator = scoreRange.inclusiveUpperBound ? '>=' : '>'
 
-          scoreRange.range && scoreRange.range.length == 2
-          && (scoreRange.range[0] === null || operatorTable[lowerOperator](scoreRange.range[0], score))
-          && (scoreRange.range[1] === null || operatorTable[upperOperator](scoreRange.range[1], score))
+          scoreRange.range &&
+            scoreRange.range.length == 2 &&
+            (scoreRange.range[0] === null || operatorTable[lowerOperator](scoreRange.range[0], score)) &&
+            (scoreRange.range[1] === null || operatorTable[upperOperator](scoreRange.range[1], score))
         })
       }
       return undefined
     },
-    variantScores: function() {
+    variantScores: function () {
       return (this.scores || []).find((s) => s.accession == this.variantUrn)
     }
   },
 
   watch: {
-    clingenAlleleId:{
-      handler: async function(newValue, oldValue) {
+    clingenAlleleId: {
+      handler: async function (newValue, oldValue) {
         if (newValue != oldValue) {
           this.clingenAllele = await this.fetchClinGenAllele(newValue)
         }
@@ -262,12 +277,12 @@ export default {
       immediate: true
     },
     scoresData: {
-      handler: function(newValue) {
+      handler: function (newValue) {
         this.scores = newValue ? Object.freeze(parseScoresOrCounts(newValue)) : []
       }
     },
     scoreSetUrn: {
-      handler: function(newValue, oldValue) {
+      handler: function (newValue, oldValue) {
         if (newValue != oldValue) {
           const scoresUrl = newValue ? `${config.apiBaseUrl}/score-sets/${newValue}/scores` : null
           this.setScoresDataUrl(scoresUrl)
@@ -279,7 +294,7 @@ export default {
   },
 
   methods: {
-    fetchClinGenAllele: async function(clinGenAlleleId: string) {
+    fetchClinGenAllele: async function (clinGenAlleleId: string) {
       if (!clinGenAlleleId) {
         return undefined
       }
@@ -292,7 +307,7 @@ export default {
       }
     }
   }
-}
+})
 </script>
 
 <style scoped>

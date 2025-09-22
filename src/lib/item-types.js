@@ -140,17 +140,17 @@ const itemTypes = {
       }
     }
   },
-  'experiment': {
+  experiment: {
     name: 'experiment', // TODO Redundant, change this structure
     restCollectionName: 'experiments',
     primaryKey: 'urn'
   },
-  'experimentSet': {
+  experimentSet: {
     name: 'experimentSet',
     restCollectionName: 'experiment-sets',
     primaryKey: 'urn'
   },
-  'license': {
+  license: {
     name: 'license', // TODO Redundant, change this structure
     restCollectionName: 'licenses'
   },
@@ -164,7 +164,7 @@ const itemTypes = {
       }
     }
   },
-  'pubmedPublicationIdentifier': {
+  pubmedPublicationIdentifier: {
     name: 'pubmedPublicationIdentifier', // TODO Redundant, change this structure
     restCollectionName: 'publication-identifiers',
     primaryKey: 'identifier',
@@ -175,7 +175,7 @@ const itemTypes = {
       }
     }
   },
-  'biorxivPublicationIdentifier': {
+  biorxivPublicationIdentifier: {
     name: 'biorxivPublicationIdentifier', // TODO Redundant, change this structure
     restCollectionName: 'publication-identifiers',
     primaryKey: 'identifier',
@@ -186,7 +186,7 @@ const itemTypes = {
       }
     }
   },
-  'medrxivPublicationIdentifier': {
+  medrxivPublicationIdentifier: {
     name: 'medrxivPublicationIdentifier', // TODO Redundant, change this structure
     restCollectionName: 'publication-identifiers',
     primaryKey: 'identifier',
@@ -197,7 +197,7 @@ const itemTypes = {
       }
     }
   },
-  'crossrefPublicationIdentifier': {
+  crossrefPublicationIdentifier: {
     name: 'crossrefPublicationIdentifier', // TODO Redundant, change this structure
     restCollectionName: 'publication-identifiers',
     primaryKey: 'identifier',
@@ -238,7 +238,7 @@ const itemTypes = {
       }
     }
   },
-  'assemblies': {
+  assemblies: {
     name: 'assemblies', // TODO Redundant, change this structure
     restCollectionName: 'hgvs/assemblies'
   },
@@ -246,12 +246,12 @@ const itemTypes = {
     name: 'gene-names', // TODO Redundant, change this structure
     restCollectionName: 'hgvs/genes'
   },
-  'scoreSet': {
+  scoreSet: {
     name: 'scoreSet', // TODO Redundant, change this structure
     restCollectionName: 'score-sets',
     primaryKey: 'urn'
   },
-  'collection': {
+  collection: {
     name: 'collection',
     restCollectionName: 'collections',
     primaryKey: 'urn'
@@ -266,7 +266,7 @@ const itemTypes = {
       }
     }
   },
-  'taxonomy': {
+  taxonomy: {
     name: 'taxonomy', // TODO Redundant, change this structure
     restCollectionName: 'taxonomies'
   },
@@ -332,7 +332,7 @@ const itemTypes = {
       }
     }
   },
-  'user': {
+  user: {
     name: 'user',
     restCollectionName: 'users',
     title: 'user',
@@ -372,7 +372,7 @@ const itemTypes = {
       }
     }
   },
-  'me': {
+  me: {
     name: 'me',
     restCollectionName: 'users',
     primaryKey: () => 'me'

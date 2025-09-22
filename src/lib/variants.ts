@@ -1,8 +1,8 @@
 import _ from 'lodash'
 
-import {parseSimpleNtVariant, parseSimpleProVariant} from "./mave-hgvs"
+import {parseSimpleNtVariant, parseSimpleProVariant} from './mave-hgvs'
 import geneticCodes from './genetic-codes'
-import { AMINO_ACIDS_WITH_TER } from './amino-acids'
+import {AMINO_ACIDS_WITH_TER} from './amino-acids'
 
 type ReferenceType = 'c' | 'p'
 
@@ -12,10 +12,10 @@ interface SequenceRange {
 }
 
 const HGVS_REFERENCE_TYPES = {
-  'c': {
+  c: {
     parsedPostMappedHgvsField: 'parsedPostMappedHgvsC'
   },
-  'p': {
+  p: {
     parsedPostMappedHgvsField: 'parsedPostMappedHgvsP'
   }
 }
@@ -176,19 +176,27 @@ export function translateSimpleCodingVariants(variants: any[]) {
   if (codingSequence && referenceType == 'c') {
     for (const v of simpleCodingVariants) {
       if (v.parsedPostMappedHgvsC) {
-        v.hgvs_pro_inferred = translateSimpleCodingHgvsNtVariant(v.parsedPostMappedHgvsC, codingSequence, codingSequenceRange)
+        v.hgvs_pro_inferred = translateSimpleCodingHgvsNtVariant(
+          v.parsedPostMappedHgvsC,
+          codingSequence,
+          codingSequenceRange
+        )
       }
     }
   }
   return simpleCodingVariants
 }
 
-function translateSimpleCodingHgvsNtVariant(parsedHgvs: any, codingSequence: string, codingSequenceRange: SequenceRange) {
+function translateSimpleCodingHgvsNtVariant(
+  parsedHgvs: any,
+  codingSequence: string,
+  codingSequenceRange: SequenceRange
+) {
   const offsetInCodon = (parsedHgvs.position - 1) % 3
   const codonStartPosition = parsedHgvs.position - offsetInCodon
   const aaPosition = Math.floor((codonStartPosition - 1) / 3) + 1
   const codon = codingSequence.substr(codonStartPosition - codingSequenceRange.start - 1, 3)
-  if ((codon.length != 3) || codon.includes('N')) {
+  if (codon.length != 3 || codon.includes('N')) {
     return null
   }
   const codonArr = codon.split('')
@@ -196,9 +204,13 @@ function translateSimpleCodingHgvsNtVariant(parsedHgvs: any, codingSequence: str
   const variantCodon = codonArr.join('')
   // @ts-expect-error codonToAa is not reflected in the type yet
   const originalAaResidue = geneticCodes.standard.dna.codonToAa[codon]
-// @ts-expect-error codonToAa is not reflected in the type yet
+  // @ts-expect-error codonToAa is not reflected in the type yet
   const variantAaResidue = geneticCodes.standard.dna.codonToAa[variantCodon]
-  const originalAaTriple = _.startCase(AMINO_ACIDS_WITH_TER.find((aa) => aa.codes.single == originalAaResidue)?.codes?.triple?.toLowerCase())
-  const variantAaTriple = _.startCase(AMINO_ACIDS_WITH_TER.find((aa) => aa.codes.single == variantAaResidue)?.codes?.triple?.toLowerCase())
+  const originalAaTriple = _.startCase(
+    AMINO_ACIDS_WITH_TER.find((aa) => aa.codes.single == originalAaResidue)?.codes?.triple?.toLowerCase()
+  )
+  const variantAaTriple = _.startCase(
+    AMINO_ACIDS_WITH_TER.find((aa) => aa.codes.single == variantAaResidue)?.codes?.triple?.toLowerCase()
+  )
   return `p.${originalAaTriple}${aaPosition}${variantAaTriple}`
 }

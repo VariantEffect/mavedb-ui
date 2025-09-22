@@ -1,27 +1,27 @@
 <template>
-  <TabMenu class="mave-histogram-viz-select" v-if="hasTabBar" v-model:activeIndex="activeViz" :model="vizOptions" />
+  <div class="mavedb-histogram-controls">
+    <TabMenu class="mave-histogram-viz-select" v-if="hasTabBar" v-model:activeIndex="activeViz" :model="vizOptions" />
+    <div v-if="showRanges" class="mavedb-histogram-custom-controls">
+      <div class="mavedb-histogram-control">
+        <label class="mavedb-histogram-control-label" for="mavedb-histogram-viz-select"
+          >Select a set of ranges to shade:
+        </label>
+        <Dropdown
+          v-model="activeRangeKey"
+          :disabled="!showRanges"
+          input-id="mavedb-histogram-viz-select"
+          option-label="label"
+          :options="activeRangeOptions"
+          style="align-items: center; height: 1.5rem"
+        />
+      </div>
+    </div>
+  </div>
   <div v-if="clinicalControlsEnabled && (!refreshedClinicalControls || !associatedClinicalControls)" style="font-size: small;">
     <ProgressSpinner style="height: 24px; width: 24px;" />
     Loading clinical control options in the background. Additional histogram views will be available once loaded.
   </div>
-  <div v-if="showControls" class="mavedb-histogram-controls">
-    <div class="mavedb-histogram-control">
-      <label class="mavedb-histogram-control-label" for="mavedb-histogram-show-ranges-switch">{{
-        showRanges ? 'Hide Ranges:' : 'Show Ranges:'
-      }}</label>
-      <InputSwitch v-model="showRanges" class="ml-3" input-id="mavedb-histogram-show-ranges-switch" />
-      <label class="mavedb-histogram-control-label" for="mavedb-histogram-viz-select"
-        >Select a set of ranges to shade:
-      </label>
-      <Dropdown
-        v-model="activeRangeKey"
-        :disabled="!showRanges"
-        input-id="mavedb-histogram-viz-select"
-        option-label="label"
-        :options="activeRangeOptions"
-        style="align-items: center; height: 1.5rem"
-      />
-    </div>
+  <div v-if="showControls" class="mavedb-histogram-custom-controls">
     <div v-if="showClinicalControlOptions" class="mavedb-histogram-control">
       <label class="mavedb-histogram-control-label" for="mavedb-histogram-db-select">Clinical control database: </label>
       <Dropdown
@@ -915,6 +915,18 @@ export default defineComponent({
 
 <style scoped>
 .mavedb-histogram-controls {
+  display: flex;
+  flex-direction: row;
+  justify-content: space-between;
+  align-items: center;
+  background: #fff;
+}
+
+.mavedb-histogram-controls div:only-child {
+  margin-left: auto;
+}
+
+.mavedb-histogram-custom-controls {
   display: flex;
   flex-direction: column;
   gap: 1rem;

@@ -506,7 +506,7 @@ export default {
   font-size: 20px;
 }
 
-.mave-score-set-abstract::v-deep code {
+.mave-score-set-abstract:deep(code) {
   color: #987cb8;
   font-size: 87.5%;
   word-wrap: break-word;

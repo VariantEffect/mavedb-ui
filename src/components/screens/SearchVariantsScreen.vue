@@ -835,11 +835,11 @@ export default defineComponent({
   width: 24%;
 }
 
-.mavedb-organism-picker::v-deep .p-listbox-item {
+.mavedb-organism-picker:deep(.p-listbox-item) {
   font-style: italic;
 }
 
-.mavedb-organism-picker::v-deep .p-listbox-item .p-badge {
+.mavedb-organism-picker:deep(.p-listbox-item .p-badge) {
   font-style: normal;
 }
 

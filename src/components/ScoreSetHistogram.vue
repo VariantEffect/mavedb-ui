@@ -4,7 +4,7 @@
     <div v-if="showRanges" class="mavedb-histogram-custom-controls">
       <div class="mavedb-histogram-control">
         <label class="mavedb-histogram-control-label" for="mavedb-histogram-viz-select"
-          >Select a set of ranges to shade:
+          >Thresholds:
         </label>
         <Dropdown
           v-model="activeRangeKey"

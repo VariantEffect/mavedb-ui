@@ -2,7 +2,7 @@
   <DefaultLayout :overflow-y="alleles.length > 0 ? 'scroll' : 'hidden'">
     <div :class="['mavedb-search-view', alleles.length > 0 ? 'mavedb-search-view-with-results' : 'mavedb-search-view-without-results']">
       <div class="mavedb-search-header">
-        <h1>MaveMD</h1>
+        <img alt="MaveMD" class="mavedb-mavemd-logo" src="@/assets/mavemd-logo.png" />
       </div>
       <div class="mavedb-mavemd-intro">
         Search MaveDB for variants in the human genome
@@ -745,6 +745,11 @@ export default defineComponent({
 </script>
 
 <style scoped>
+.mavedb-mavemd-logo {
+  height: 150px;
+  margin: 1em 0 0 0;
+}
+
 .mavedb-mavemd-intro {
   font-size: 120%;
   text-align: center;

@@ -814,13 +814,13 @@ export default defineComponent({
             }
           }
         } catch (error) {
-          this.$toast.add({
-            severity: 'warn',
-            summary:
-              'No clinical control variants are associated with variants belonging to this score set. Clinical features are disabled.',
-            detail: error.detail,
-            life: 3000
-          })
+          // this.$toast.add({
+          //   severity: 'warn',
+          //   summary:
+          //     'No clinical control variants are associated with variants belonging to this score set. Clinical features are disabled.',
+          //   detail: error.detail,
+          //   life: 3000
+          // })
           this.associatedClinicalControls = true
         }
       }
@@ -837,13 +837,13 @@ export default defineComponent({
             this.clinicalControlOptions = response.data
           }
         } catch (error) {
-          this.$toast.add({
-            severity: 'warn',
-            summary:
-              'No clinical control variants are associated with variants belonging to this score set. Clinical features are disabled.',
-            detail: error.detail,
-            life: 3000
-          })
+          // this.$toast.add({
+          //   severity: 'warn',
+          //   summary:
+          //     'No clinical control variants are associated with variants belonging to this score set. Clinical features are disabled.',
+          //   detail: error.detail,
+          //   life: 3000
+          // })
           // We still want to set the refreshed flag to true so that the loading spinner goes away.
           this.refreshedClinicalControls = true
           this.associatedClinicalControls = true
@@ -876,13 +876,13 @@ export default defineComponent({
       this.associatedClinicalControls = true
       this.someVariantsHaveClinicalSignificance = associatedAnyControlsWithVariants
 
-      if (!this.someVariantsHaveClinicalSignificance) {
-        this.$toast.add({
-          severity: 'warn',
-          summary:
-            'No clinical control variants are associated with variants belonging to this score set. Clinical features are disabled.'
-        })
-      }
+    //   if (!this.someVariantsHaveClinicalSignificance) {
+    //     this.$toast.add({
+    //       severity: 'warn',
+    //       summary:
+    //         'No clinical control variants are associated with variants belonging to this score set. Clinical features are disabled.'
+    //     })
+    //   }
     },
 
     defaultRangeKey: function () {

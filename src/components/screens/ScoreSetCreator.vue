@@ -931,10 +931,7 @@
                             :force-selection="false"
                             style="width: 100%"
                             :suggestions="targetGeneIdentifierSuggestionsList[dbName]"
-                            @change="
-                              addDefaultOffset(dbName, targetIdx)
-                              externalIdentifierTextToObject(dbName, targetIdx, $event)
-                            "
+                            @change="externalTargetIdentifierChanged(dbName, targetIdx, $event)"
                             @complete="searchTargetGeneIdentifiers(dbName, $event)"
                           />
                           <label :for="scopedId(`input-${dbName.toLowerCase()}Identifier`)"
@@ -2731,6 +2728,11 @@ export default {
 
     populateSupersededScoreSetMetadata: function (event) {
       this.contributors = event.value.contributors || []
+    },
+
+    externalTargetIdentifierChanged: function (dbName, targetIdx, event) {
+      this.addDefaultOffset(this.dbName, targetIdx)
+      this.externalIdentifierTextToObject(dbName, targetIdx, event)
     },
 
     acceptNewDoiIdentifier: function () {

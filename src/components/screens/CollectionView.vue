@@ -26,10 +26,7 @@
             <Inplace
               :active="displayCollectionNameEdit"
               class="mave-screen-collection-title"
-              @open="
-                displayCollectionNameEdit = true
-                editName = item.name
-              "
+              @open="editCollectionName"
             >
               <template #display>
                 {{ item.name }}
@@ -70,10 +67,7 @@
           <Inplace
             :active="displayCollectionDescriptionEdit"
             class="mave-collection-description"
-            @open="
-              displayCollectionDescriptionEdit = true
-              editDescription = item.description
-            "
+            @open="editCollectionDescription"
           >
             <template #display>
               {{ item.description || '(Click here to add description)' }}
@@ -375,6 +369,16 @@ export default {
           }
         }
       })
+    },
+
+    editCollectionDescription: function () {
+      this.displayCollectionDescriptionEdit = true
+      this.editDescription = this.item.description
+    },
+
+    editCollectionName: function () {
+      this.displayCollectionNameEdit = true
+      this.editName = this.item.name
     },
 
     saveCollectionName: async function () {

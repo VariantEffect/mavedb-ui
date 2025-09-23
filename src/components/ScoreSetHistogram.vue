@@ -13,7 +13,6 @@
           style="align-items: center; height: 1.5rem"
         />
       </div>
-      ƒ
     </div>
   </div>
   <div

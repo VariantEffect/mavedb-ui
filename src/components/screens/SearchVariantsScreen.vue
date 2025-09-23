@@ -1,12 +1,15 @@
 <template>
   <DefaultLayout :overflow-y="alleles.length > 0 ? 'scroll' : 'hidden'">
-    <div :class="['mavedb-search-view', alleles.length > 0 ? 'mavedb-search-view-with-results' : 'mavedb-search-view-without-results']">
+    <div
+      :class="[
+        'mavedb-search-view',
+        alleles.length > 0 ? 'mavedb-search-view-with-results' : 'mavedb-search-view-without-results'
+      ]"
+    >
       <div class="mavedb-search-header">
         <img alt="MaveMD" class="mavedb-mavemd-logo" src="@/assets/mavemd-logo.png" />
       </div>
-      <div class="mavedb-mavemd-intro">
-        Search MaveDB for variants in the human genome
-      </div>
+      <div class="mavedb-mavemd-intro">Search MaveDB for variants in the human genome</div>
       <div v-if="hgvsSearchVisible" class="mavedb-search-form">
         <div class="flex flex-wrap justify-content-center gap-3">
           <IconField icon-position="left">
@@ -25,11 +28,7 @@
         </div>
         <div class="mavedb-search-form-view-switch">
           Don't have a versioned reference sequence identifier? Click here to perform a fuzzy search instead:
-          <Button
-            class="p-button-plain"
-            @click="showSearch('fuzzy')"
-            >Fuzzy Search</Button
-          >
+          <Button class="p-button-plain" @click="showSearch('fuzzy')">Fuzzy Search</Button>
         </div>
       </div>
       <div v-if="fuzzySearchVisible" class="mavedb-search-form">
@@ -59,11 +58,7 @@
         </div>
         <div class="mavedb-search-form-view-switch">
           Click here to return to HGVS search:
-          <Button
-            class="p-button-plain"
-            @click="showSearch('hgvs')"
-            >HGVS Search</Button
-          >
+          <Button class="p-button-plain" @click="showSearch('hgvs')">HGVS Search</Button>
         </div>
       </div>
       <p v-if="false && alleles.length === 0">

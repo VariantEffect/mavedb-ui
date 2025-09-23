@@ -18,16 +18,18 @@
               <div class="mavedb-assay-facts-value">
                 <div>
                   <a
-                      :href="`https://reg.clinicalgenome.org/redmine/projects/registry/genboree_registry/by_canonicalid?canonicalid=${clingenAlleleId}`"
-                      target="_blank"
-                    >
-                      {{ clingenAlleleId }}
-                    </a>
+                    :href="`https://reg.clinicalgenome.org/redmine/projects/registry/genboree_registry/by_canonicalid?canonicalid=${clingenAlleleId}`"
+                    target="_blank"
+                  >
+                    {{ clingenAlleleId }}
+                  </a>
                 </div>
               </div>
             </div>
             <div v-if="clinvarAlleleIds.length > 0" class="mavedb-assay-facts-row">
-              <div class="mavedb-assay-facts-label">ClinVar allele {{ clinvarAlleleIds.length == 1 ? 'ID' : 'IDs' }}</div>
+              <div class="mavedb-assay-facts-label">
+                ClinVar allele {{ clinvarAlleleIds.length == 1 ? 'ID' : 'IDs' }}
+              </div>
               <div class="mavedb-assay-facts-value">
                 <div v-for="clinvarAlleleId in clinvarAlleleIds" :key="clinvarAlleleId">
                   <a :href="`https://www.ncbi.nlm.nih.gov/clinvar/variation/${clinvarAlleleId}`" target="_blank">
@@ -50,9 +52,7 @@
                 <div v-for="genomicAllele in clingenAllele?.genomicAlleles || []" :key="genomicAllele">
                   <template
                     v-if="
-                      genomicAllele.chromosome &&
-                      genomicAllele.coordinates?.[0]?.start &&
-                      genomicAllele.referenceGenome
+                      genomicAllele.chromosome && genomicAllele.coordinates?.[0]?.start && genomicAllele.referenceGenome
                     "
                   >
                     chr{{ genomicAllele.chromosome }}:{{ genomicAllele.coordinates?.[0]?.start }} ({{
@@ -74,8 +74,13 @@
             <div v-if="variantScoreRange?.oddsPath" class="mavedb-assay-facts-row">
               <div class="mavedb-assay-facts-label">OddsPath</div>
               <div class="mavedb-assay-facts-value">
-                <span v-if="variantScoreRange?.oddsPath?.ratio">{{ variantScoreRange.oddsPath.ratio.toPrecision(5) }}</span>
-                <span v-if="variantScoreRange?.oddsPath?.evidence" :class="['mavedb-classification-badge', classificationBadgeColorClass, 'strong']">
+                <span v-if="variantScoreRange?.oddsPath?.ratio">{{
+                  variantScoreRange.oddsPath.ratio.toPrecision(5)
+                }}</span>
+                <span
+                  v-if="variantScoreRange?.oddsPath?.evidence"
+                  :class="['mavedb-classification-badge', classificationBadgeColorClass, 'strong']"
+                >
                   {{ variantScoreRange.oddsPath.evidence }}
                 </span>
               </div>
@@ -258,10 +263,12 @@ export default defineComponent({
           const lowerOperator = scoreRange.inclusiveLowerBound ? '<=' : '<'
           const upperOperator = scoreRange.inclusiveUpperBound ? '>=' : '>'
 
-          return scoreRange.range &&
+          return (
+            scoreRange.range &&
             scoreRange.range.length == 2 &&
             (scoreRange.range[0] === null || operatorTable[lowerOperator](scoreRange.range[0], score)) &&
             (scoreRange.range[1] === null || operatorTable[upperOperator](scoreRange.range[1], score))
+          )
         })
       }
       return undefined
@@ -344,7 +351,7 @@ export default defineComponent({
 }
 
 .variant-clinical-classifier-functionally-normal {
-  background-color: #1e40af /* #182fb0; */
+  background-color: #1e40af; /* #182fb0; */
 }
 
 .variant-clinical-classifier-functionally-abnormal {
@@ -399,7 +406,6 @@ table.variant-info-table td:first-child {
   background: #991b1b;
   color: white;
 }
-
 
 .mavedb-assay-facts-card {
   width: 580px; /* fixed size */

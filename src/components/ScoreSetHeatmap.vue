@@ -3,17 +3,17 @@
     <div class="mavedb-heatmap-wrapper">
       <template v-if="showHeatmap">
         <div style="text-align: center">Functional Score by Variant</div>
-        <div id="mavedb-heatmap-container" class="heatmapContainer" ref="heatmapContainer">
-          <div id="mavedb-heatmap-scroll-container" class="heatmapScrollContainer" ref="heatmapScrollContainer">
+        <div id="mavedb-heatmap-container" ref="heatmapContainer" class="heatmapContainer">
+          <div id="mavedb-heatmap-scroll-container" ref="heatmapScrollContainer" class="heatmapScrollContainer">
             <div
               id="mave-stacked-heatmap-container"
-              class="mave-simple-variants-stacked-heatmap-container"
               ref="simpleVariantsStackedHeatmapContainer"
+              class="mave-simple-variants-stacked-heatmap-container"
             />
             <div
               id="mave-variants-heatmap-container"
-              class="mave-simple-variants-heatmap-container"
               ref="simpleVariantsHeatmapContainer"
+              class="mave-simple-variants-heatmap-container"
             />
           </div>
         </div>
@@ -39,8 +39,8 @@
           />
           <Button
             v-if="showProteinStructureButton && sequenceType == 'protein'"
-            label="View protein structure"
             class="p-button p-button-info"
+            label="View protein structure"
             @click="$emit('onDidClickShowProteinStructure')"
           />
         </div>
@@ -82,6 +82,7 @@ const HEATMAP_AMINO_ACIDS_SORTED = _.sortBy(AMINO_ACIDS, [
     _.indexOf(['unique', 'aromatic', 'non-polar', 'polar-neutral', 'negative-charged', 'positive-charged'], aa.class),
   'hydrophobicity.originalValue'
 ])
+
 const HEATMAP_AMINO_ACID_ROWS: HeatmapRowSpecification[] = [
   {code: '=', label: '\uff1d'},
   {code: '*', label: '\uff0a'},
@@ -104,6 +105,7 @@ const MAVE_HGVS_PRO_CHANGE_CODES = [
 const HEATMAP_NUCLEOTIDE_ROWS: HeatmapRowSpecification[] = [
   ...NUCLEOTIDE_BASES.map((ntCode) => ({code: ntCode.codes.single, label: ntCode.codes.single}))
 ]
+
 /**
  * Given a MaveHGVS-pro amino acid code or code representing deletion, synonmyous variation, or stop codon, return the
  * heatmap row number on which a single-AA variant should be displayed.
@@ -281,19 +283,24 @@ export default defineComponent({
           return this.hgvsProColumn
       }
     },
-    sequenceTypeOptions: function() {
+    sequenceTypeOptions: function () {
       return [
-        ...this.dnaHeatmapAvailable && (!this.allowedSequenceTypes || this.allowedSequenceTypes.includes('dna')) ? [{title: 'DNA', value: 'dna'}] : [],
-        ...this.proteinHeatmapAvailable && (!this.allowedSequenceTypes || this.allowedSequenceTypes.includes('protein')) ? [{title: 'Protein', value: 'protein'}] : []
+        ...(this.dnaHeatmapAvailable && (!this.allowedSequenceTypes || this.allowedSequenceTypes.includes('dna'))
+          ? [{title: 'DNA', value: 'dna'}]
+          : []),
+        ...(this.proteinHeatmapAvailable &&
+        (!this.allowedSequenceTypes || this.allowedSequenceTypes.includes('protein'))
+          ? [{title: 'Protein', value: 'protein'}]
+          : [])
       ]
     },
-    dnaHeatmapAvailable: function() {
+    dnaHeatmapAvailable: function () {
       return this.variants.some((v) => v[this.hgvsNtColumn] != null && v[this.hgvsNtColumn] != 'NA')
     },
-    proteinHeatmapAvailable: function() {
+    proteinHeatmapAvailable: function () {
       return this.variants.some((v) => v[this.hgvsProColumn] != null && v[this.hgvsProColumn] != 'NA')
     },
-    hgvsNtColumn: function() {
+    hgvsNtColumn: function () {
       switch (this.coordinates) {
         case 'mapped':
           console.log(this.variants[0])
@@ -391,7 +398,7 @@ export default defineComponent({
         return [[], 1]
       }
     },
-    wtSequence: function() {
+    wtSequence: function () {
       return this.wtSequenceAndStartPosition[0]
     },
     wtSequenceStartPosition: function () {
@@ -767,7 +774,7 @@ export default defineComponent({
         this.$emit('heatmapVisible', newValue)
       },
       immediate: true
-    },
+    }
   },
 
   mounted: function () {
@@ -845,7 +852,10 @@ export default defineComponent({
         this.sequenceType == 'protein'
           ? AMINO_ACIDS_WITH_TER.map((aa) => aa.codes.single)
           : NUCLEOTIDE_BASES.map((nt) => nt.codes.single)
-      const visibleWtSequence = wtSequenceArr.slice(this.targetXRange.start - this.wtSequenceStartPosition, this.targetXRange.start + this.targetXRange.length)
+      const visibleWtSequence = wtSequenceArr.slice(
+        this.targetXRange.start - this.wtSequenceStartPosition,
+        this.targetXRange.start + this.targetXRange.length
+      )
 
       return visibleWtSequence
         .map((residue, i) =>

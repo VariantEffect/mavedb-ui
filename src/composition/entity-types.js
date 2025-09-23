@@ -65,9 +65,8 @@ export default () => {
 
   const ensureEntityTypesStore = () => {}
   const ensureEntityTypesLoaded = () => {}
-  const getEntityType = (entityTypeName) => entityTypes.value ?
-      entityTypes.value.find((et) => et.name == entityTypeName)
-      : null
+  const getEntityType = (entityTypeName) =>
+    entityTypes.value ? entityTypes.value.find((et) => et.name == entityTypeName) : null
 
   return {
     // Data

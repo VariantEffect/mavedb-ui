@@ -1,7 +1,6 @@
 import _ from 'lodash'
 
 export default () => {
-
   const isMac = navigator.userAgent.indexOf('Mac OS X') != -1
 
   const macKeyboardShortcutGlyphs = {
@@ -12,15 +11,16 @@ export default () => {
   }
 
   const keyboardShortcutText = (...keys) => {
-    return keys.map(key => (key == 'cmd') ? (isMac ? 'cmd' : 'ctrl') : key)
-        .map(key => {
-          if (isMac && _.has(macKeyboardShortcutGlyphs, key)) {
-            return macKeyboardShortcutGlyphs[key]
-          }
-          return key
-        })
-        .map(key => _.upperFirst(key))
-        .join('-')
+    return keys
+      .map((key) => (key == 'cmd' ? (isMac ? 'cmd' : 'ctrl') : key))
+      .map((key) => {
+        if (isMac && _.has(macKeyboardShortcutGlyphs, key)) {
+          return macKeyboardShortcutGlyphs[key]
+        }
+        return key
+      })
+      .map((key) => _.upperFirst(key))
+      .join('-')
   }
 
   return {
@@ -31,5 +31,4 @@ export default () => {
     // Methods
     keyboardShortcutText
   }
-
 }

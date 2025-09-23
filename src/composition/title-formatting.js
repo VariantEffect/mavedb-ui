@@ -4,16 +4,16 @@ import pluralize from 'pluralize'
 
 export default () => {
   return {
-    indefiniteArticle: function(...args) {
+    indefiniteArticle: function (...args) {
       return indefinite(...args)
     },
-    pluralize: function(...args) {
+    pluralize: function (...args) {
       return pluralize(...args)
     },
-    pluralizeEntityTypeCommonTitle: function(entityType) {
+    pluralizeEntityTypeCommonTitle: function (entityType) {
       return _.startCase(pluralize(entityType.commonTitle))
     },
-    titleCase: function(s) {
+    titleCase: function (s) {
       return _.startCase(_.lowerCase(s))
     }
   }

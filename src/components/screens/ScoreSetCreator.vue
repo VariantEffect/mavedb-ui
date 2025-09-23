@@ -1,31 +1,36 @@
 <template>
   <EmailPrompt
     dialog="You must add an email address to your account to create or edit a score set. You can do so below, or on the 'Settings' page."
-    :isFirstLoginPrompt="false"
+    :is-first-login-prompt="false"
   />
   <DefaultLayout>
     <div class="mave-score-set-editor">
       <div v-if="itemStatus != 'NotLoaded'" class="mave-screen-title-bar">
-        <div class="mave-screen-title">Edit score set {{ this.item.urn }}</div>
+        <div class="mave-screen-title">Edit score set {{ item.urn }}</div>
         <div v-if="item" class="mavedb-screen-title-controls">
           <Button @click="saveEditContent">Save changes</Button>
-          <Button @click="resetForm" class="p-button-help">Clear</Button>
-          <Button @click="viewItem" class="p-button-warning">Cancel</Button>
+          <Button class="p-button-help" @click="resetForm">Clear</Button>
+          <Button class="p-button-warning" @click="viewItem">Cancel</Button>
         </div>
       </div>
       <div v-else class="mave-screen-title-bar">
         <div class="mave-screen-title">Create a new score set</div>
         <div class="mavedb-screen-title-controls">
           <Button @click="validateAndSave">Save</Button>
-          <Button @click="resetForm" class="p-button-help">Clear</Button>
-          <Button @click="backDashboard" class="p-button-warning">Cancel</Button>
+          <Button class="p-button-help" @click="resetForm">Clear</Button>
+          <Button class="p-button-warning" @click="backDashboard">Cancel</Button>
         </div>
       </div>
       <div class="mavedb-wizard">
-        <Stepper v-model:activeStep="activeWizardStep">
+        <Stepper v-model:active-step="activeWizardStep">
           <StepperPanel>
             <template #header="{index, clickCallback}">
-              <button class="p-stepper-action" :disabled="maxWizardStepEntered < index || maxWizardStepValidated < index - 1" role="tab" @click="clickCallback">
+              <button
+                class="p-stepper-action"
+                :disabled="maxWizardStepEntered < index || maxWizardStepValidated < index - 1"
+                role="tab"
+                @click="clickCallback"
+              >
                 <span class="p-stepper-number">{{ index + 1 }}</span>
                 <span class="p-stepper-title">Parent experiment and context</span>
               </button>
@@ -33,41 +38,50 @@
             <template #content="{nextCallback: showNextWizardStep}">
               <div class="mavedb-wizard-form">
                 <div class="mavedb-wizard-form-content-background"></div>
-                <div v-if="experimentUrn && this.experiment">
+                <div v-if="experimentUrn && experiment">
                   <div class="mavedb-wizard-row">
                     <div class="mavedb-wizard-help">
-                      <label :id="scopedId('input-experiment')">
-                        Experiment: {{ experimentUrn }}
-                      </label>
+                      <label :id="scopedId('input-experiment')"> Experiment: {{ experimentUrn }} </label>
                       <div class="mavedb-help-small">
-                        To add a score set to a different experiment, supercede a score set or add a score set to meta-analysis, please navigate to "New score set".
-                        For more on the relationship between score sets and experiments, see the
-                        <a target="_blank" :href="`${config.appBaseUrl}/docs/mavedb/record_types.html#record-types`">documentation</a>.
+                        To add a score set to a different experiment, supercede a score set or add a score set to
+                        meta-analysis, please navigate to "New score set". For more on the relationship between score
+                        sets and experiments, see the
+                        <a :href="`${config.appBaseUrl}/docs/mavedb/record_types.html#record-types`" target="_blank"
+                          >documentation</a
+                        >.
                       </div>
                     </div>
-                    <div class="mavedb-wizard-content">
-                      Experiment title: {{ this.experiment.title }}
-                    </div>
+                    <div class="mavedb-wizard-content">Experiment title: {{ experiment.title }}</div>
                   </div>
                 </div>
                 <div v-else>
                   <div class="mavedb-wizard-row">
                     <div class="mavedb-wizard-help">
                       <label :id="scopedId('input-superseding-score-set-label')">
-                        Does this score set correct errors in and replace a score set previously published on MaveDB that you created?
+                        Does this score set correct errors in and replace a score set previously published on MaveDB
+                        that you created?
                       </label>
                     </div>
                     <div class="mavedb-wizard-content">
-                      <InputSwitch v-model="isSupersedingScoreSet" :aria-labelledby="scopedId('input-superseding-score-set-label')" />
-                      <div class="mavedb-switch-value">{{ isSupersedingScoreSet ? 'Yes, this supersedes another score set' : 'No, this does not supersede another score set' }}</div>
+                      <InputSwitch
+                        v-model="isSupersedingScoreSet"
+                        :aria-labelledby="scopedId('input-superseding-score-set-label')"
+                      />
+                      <div class="mavedb-switch-value">
+                        {{
+                          isSupersedingScoreSet
+                            ? 'Yes, this supersedes another score set'
+                            : 'No, this does not supersede another score set'
+                        }}
+                      </div>
                     </div>
                   </div>
                   <div class="mavedb-wizard-row">
                     <div class="mavedb-wizard-help">
                       <label :id="scopedId('input-is-meta-analysis-label')">Is this score set a meta-analysis?</label>
                       <div class="mavedb-help-small">
-                        Meta-analyses are score sets derived from data in other score sets that were created by you or other users.
-                        For example:
+                        Meta-analyses are score sets derived from data in other score sets that were created by you or
+                        other users. For example:
                         <ul>
                           <li>a score set that combines data from two other score sets to produce new scores, or</li>
                           <li>a score set that adds imputed missing values to the scores in another score set.</li>
@@ -75,8 +89,13 @@
                       </div>
                     </div>
                     <div class="mavedb-wizard-content">
-                      <InputSwitch v-model="isMetaAnalysis" :aria-labelledby="scopedId('input-is-meta-analysis-label')" />
-                      <div class="mavedb-switch-value">{{ isMetaAnalysis ? 'Yes, this is a meta-analysis' : 'No, this is not a meta-analysis' }}</div>
+                      <InputSwitch
+                        v-model="isMetaAnalysis"
+                        :aria-labelledby="scopedId('input-is-meta-analysis-label')"
+                      />
+                      <div class="mavedb-switch-value">
+                        {{ isMetaAnalysis ? 'Yes, this is a meta-analysis' : 'No, this is not a meta-analysis' }}
+                      </div>
                     </div>
                   </div>
                   <div v-if="!isSupersedingScoreSet && !isMetaAnalysis" class="mavedb-wizard-row">
@@ -84,60 +103,68 @@
                       To which experiment does this score set belong?
                       <div class="mavedb-help-small">
                         For more on the relationship between score sets and experiments, see the
-                        <a target="_blank" :href="`${config.appBaseUrl}/docs/mavedb/record_types.html#record-types`">documentation</a>.
+                        <a :href="`${config.appBaseUrl}/docs/mavedb/record_types.html#record-types`" target="_blank"
+                          >documentation</a
+                        >.
                       </div>
                     </div>
                     <div class="mavedb-wizard-content">
                       <div v-if="itemStatus != 'NotLoaded' && item.experiment">
                         Experiment:
-                        <router-link :to="{ name: 'experiment', params: { urn: item.experiment.urn } }">{{ item.experiment.title
+                        <router-link :to="{name: 'experiment', params: {urn: item.experiment.urn}}">{{
+                          item.experiment.title
                         }}</router-link>
                       </div>
-                      <div v-else style="position: relative;">
+                      <div v-else style="position: relative">
                         <span class="p-float-label">
                           <Dropdown
+                            :id="scopedId('input-experiment')"
                             ref="experimentInput"
                             v-model="experiment"
-                            :id="scopedId('input-experiment')"
-                            filter optionLabel="title"
+                            filter
+                            option-label="title"
                             :options="editableExperiments"
-                            :virtualScrollerOptions="{ itemSize: 50 }"
+                            style="width: 100%"
+                            :virtual-scroller-options="{itemSize: 50}"
                             @change="populateExperimentMetadata"
-                            style="width: 100%;"
                           >
                             <template #option="slotProps">
                               {{ slotProps.option.urn }}: {{ slotProps.option.title }}
                             </template>
                             <template #empty>
-                              <div style="padding: 10px; text-align:center;">
-                                No experiments found.
-                              </div>
+                              <div style="padding: 10px; text-align: center">No experiments found.</div>
                             </template>
                           </Dropdown>
                           <label :for="scopedId('input-experiment')">Experiment</label>
                         </span>
-                        <span v-if="validationErrors.experiment" class="mave-field-error">{{ validationErrors.experiment }}</span>
+                        <span v-if="validationErrors.experiment" class="mave-field-error">{{
+                          validationErrors.experiment
+                        }}</span>
                       </div>
                     </div>
                   </div>
                   <div v-if="isSupersedingScoreSet" class="mavedb-wizard-row">
                     <div class="mavedb-wizard-help">
                       What score set does this supersede?
-                      <div class="mavedb-help-small">Type the superseded score set's MaveDB URN here and select it from the list.</div>
+                      <div class="mavedb-help-small">
+                        Type the superseded score set's MaveDB URN here and select it from the list.
+                      </div>
                     </div>
                     <div class="mavedb-wizard-content">
                       <div v-if="itemStatus != 'NotLoaded' && supersedesScoreSet">
                         Supersedes:
-                        <router-link :to="{ name: 'scoreSet', params: { urn: supersedesScoreSet.urn } }">{{ supersedesScoreSet.title }}</router-link>
+                        <router-link :to="{name: 'scoreSet', params: {urn: supersedesScoreSet.urn}}">{{
+                          supersedesScoreSet.title
+                        }}</router-link>
                       </div>
                       <div v-if="itemStatus == 'NotLoaded'" class="field">
                         <span class="p-float-label">
                           <AutoComplete
+                            :id="scopedId('input-supersededScoreSet')"
                             ref="supersededScoreSetInput"
                             v-model="supersededScoreSet"
-                            :id="scopedId('input-supersededScoreSet')"
                             field="title"
-                            :forceSelection="true"
+                            :force-selection="true"
                             :suggestions="supersededScoreSetSuggestionsList"
                             @change="populateSupersededScoreSetMetadata"
                             @complete="searchSupersededScoreSets"
@@ -149,27 +176,41 @@
                           <label :for="scopedId('input-supersededScoreSet')">Supersedes</label>
                         </span>
                         <span v-if="validationErrors.supersededScoreSetUrn" class="mave-field-error">{{
-                          validationErrors.supersededScoreSetUrn }}</span>
+                          validationErrors.supersededScoreSetUrn
+                        }}</span>
                       </div>
                     </div>
                   </div>
                   <div v-if="isMetaAnalysis" class="mavedb-wizard-row">
                     <div class="mavedb-wizard-help">
                       What score set(s) does this score set analyze?
-                      <div class="mavedb-help-small">Type a score set's MaveDB URN here and select it from the list. You may choose more than one score set.</div>
+                      <div class="mavedb-help-small">
+                        Type a score set's MaveDB URN here and select it from the list. You may choose more than one
+                        score set.
+                      </div>
                     </div>
                     <div class="mavedb-wizard-content">
                       <div v-if="itemStatus != 'NotLoaded' && item?.metaAnalyzesScoreSetUrns?.length > 0">
                         Meta-analysis for:<br />
-                        <div v-for="metaAnalyzesScoreSetUrn of item.metaAnalyzesScoreSetUrns" :key="metaAnalyzesScoreSetUrn">
-                          <EntityLink entityType="scoreSet" :urn="metaAnalyzesScoreSetUrn"></EntityLink>
+                        <div
+                          v-for="metaAnalyzesScoreSetUrn of item.metaAnalyzesScoreSetUrns"
+                          :key="metaAnalyzesScoreSetUrn"
+                        >
+                          <EntityLink entity-type="scoreSet" :urn="metaAnalyzesScoreSetUrn"></EntityLink>
                         </div>
                       </div>
                       <div v-if="itemStatus == 'NotLoaded'" class="field">
                         <span class="p-float-label">
-                          <AutoComplete ref="metaAnalyzesScoreSetsInput" v-model="metaAnalyzesScoreSets"
-                            :id="scopedId('input-metaAnalyzesScoreSets')" field="title" :forceSelection="true" :multiple="true"
-                            :suggestions="metaAnalyzesScoreSetSuggestionsList" @complete="searchMetaAnalyzesScoreSets">
+                          <AutoComplete
+                            :id="scopedId('input-metaAnalyzesScoreSets')"
+                            ref="metaAnalyzesScoreSetsInput"
+                            v-model="metaAnalyzesScoreSets"
+                            field="title"
+                            :force-selection="true"
+                            :multiple="true"
+                            :suggestions="metaAnalyzesScoreSetSuggestionsList"
+                            @complete="searchMetaAnalyzesScoreSets"
+                          >
                             <template #item="slotProps">
                               {{ slotProps.item.urn }}: {{ slotProps.item.title }}
                             </template>
@@ -177,7 +218,8 @@
                           <label :for="scopedId('input-metaAnalyzesScoreSets')">Meta-analysis for</label>
                         </span>
                         <span v-if="validationErrors.metaAnalyzesScoreSetUrns" class="mave-field-error">{{
-                          validationErrors.metaAnalyzesScoreSetUrns }}</span>
+                          validationErrors.metaAnalyzesScoreSetUrns
+                        }}</span>
                       </div>
                     </div>
                   </div>
@@ -185,14 +227,25 @@
               </div>
               <div class="mavedb-wizard-step-controls-row">
                 <div class="flex justify-content-end mavedb-wizard-step-controls pt-4">
-                  <Button label="Next" :disabled="this.maxWizardStepValidated < activeWizardStep" icon="pi pi-arrow-right" iconPos="right" @click="showNextWizardStepIfValid(showNextWizardStep)" />
+                  <Button
+                    :disabled="maxWizardStepValidated < activeWizardStep"
+                    icon="pi pi-arrow-right"
+                    icon-pos="right"
+                    label="Next"
+                    @click="showNextWizardStepIfValid(showNextWizardStep)"
+                  />
                 </div>
               </div>
             </template>
           </StepperPanel>
           <StepperPanel>
             <template #header="{index, clickCallback}">
-              <button class="p-stepper-action" :disabled="maxWizardStepEntered < index || maxWizardStepValidated < index - 1" role="tab" @click="clickCallback">
+              <button
+                class="p-stepper-action"
+                :disabled="maxWizardStepEntered < index || maxWizardStepValidated < index - 1"
+                role="tab"
+                @click="clickCallback"
+              >
                 <span class="p-stepper-number">{{ index + 1 }}</span>
                 <span class="p-stepper-title">Score set information</span>
               </button>
@@ -200,17 +253,19 @@
             <template #content="{prevCallback: showPreviousWizardStep, nextCallback: showNextWizardStep}">
               <div class="mavedb-wizard-form">
                 <div class="mavedb-wizard-form-content-background"></div>
-                <div class="mavedb-wizard-row" v-if="experiment">
+                <div v-if="experiment" class="mavedb-wizard-row">
                   <div class="mavedb-wizard-content-pane">
                     <Message severity="info">
-                      Some fields were autopopulated based on the selected experiment and should be inspected to ensure they
-                      are still relevant to this score set.
+                      Some fields were autopopulated based on the selected experiment and should be inspected to ensure
+                      they are still relevant to this score set.
                     </Message>
                   </div>
                 </div>
                 <div class="mavedb-wizard-row">
                   <div class="mavedb-wizard-help">
-                    <label>A short title for the score set, to be displayed at the top of the score set's own page.</label>
+                    <label
+                      >A short title for the score set, to be displayed at the top of the score set's own page.</label
+                    >
                     <div class="mavedb-help-small">
                       Examples: CBS low-B6 imputed and refined, NUDT15 protein stability assay, Arrestin-1 binding,
                       SpCas9 positive selection
@@ -218,7 +273,7 @@
                   </div>
                   <div class="mavedb-wizard-content field">
                     <span class="p-float-label">
-                      <InputText v-model="title" :id="scopedId('input-title')"/>
+                      <InputText :id="scopedId('input-title')" v-model="title" />
                       <label :for="scopedId('input-title')">Title</label>
                     </span>
                     <span v-if="validationErrors.title" class="mave-field-error">{{ validationErrors.title }}</span>
@@ -227,7 +282,8 @@
                 <div class="mavedb-wizard-row">
                   <div class="mavedb-wizard-help">
                     <label>
-                      A high-level description of the score set in one or two sentences, to be displayed in search results.
+                      A high-level description of the score set in one or two sentences, to be displayed in search
+                      results.
                     </label>
                     <div class="mavedb-help-small">
                       Example: A Deep Mutational Scan of the human cystathionine-beta-synthase (CBS) using functional
@@ -236,60 +292,71 @@
                   </div>
                   <div class="mavedb-wizard-content field">
                     <span class="p-float-label">
-                      <Textarea v-model="shortDescription" :id="scopedId('input-shortDescription')" rows="4"/>
+                      <Textarea :id="scopedId('input-shortDescription')" v-model="shortDescription" rows="4" />
                       <label :for="scopedId('input-shortDescription')">Short description</label>
                     </span>
                     <span v-if="validationErrors.shortDescription" class="mave-field-error">{{
-                      validationErrors.shortDescription }}</span>
+                      validationErrors.shortDescription
+                    }}</span>
                   </div>
                 </div>
                 <div class="mavedb-wizard-row">
                   <div class="mavedb-wizard-help">
-                    <label>
-                      The motivation for and approach of the score set.
-                    </label>
+                    <label> The motivation for and approach of the score set. </label>
                     <div class="mavedb-help-small">
-                      May be formatted using <a target="_blank" href="https://daringfireball.net/projects/markdown/syntax">Markdown</a>.
-                      It is common for a score set to have the same abstract text as the experiment that it belongs to.
-                      The focus should be on the MAVE data, rather than the full research contribution, so use your judgement
-                      when deciding what details are relevant.
+                      May be formatted using
+                      <a href="https://daringfireball.net/projects/markdown/syntax" target="_blank">Markdown</a>. It is
+                      common for a score set to have the same abstract text as the experiment that it belongs to. The
+                      focus should be on the MAVE data, rather than the full research contribution, so use your
+                      judgement when deciding what details are relevant.
                     </div>
                   </div>
                   <div class="mavedb-wizard-content field">
                     <TabView>
                       <TabPanel header="Edit">
                         <span class="p-float-label">
-                          <Textarea v-model="abstractText" :id="scopedId('input-abstractText')" rows="10" />
+                          <Textarea :id="scopedId('input-abstractText')" v-model="abstractText" rows="10" />
                           <label :for="scopedId('input-abstractText')">Abstract</label>
                         </span>
                       </TabPanel>
                       <TabPanel header="Preview">
+                        <!-- eslint-disable-next-line vue/no-v-html -->
                         <div class="mavedb-wizard-rendered-markdown" v-html="markdownToHtml(abstractText)"></div>
                       </TabPanel>
                     </TabView>
-                    <span v-if="validationErrors.abstractText" class="mave-field-error">{{ validationErrors.abstractText
+                    <span v-if="validationErrors.abstractText" class="mave-field-error">{{
+                      validationErrors.abstractText
                     }}</span>
                   </div>
                 </div>
                 <div class="mavedb-wizard-row">
                   <div class="mavedb-wizard-help">
                     <label>
-                      A condensed description of the data analysis, starting from raw sequence data,
-                      suitable for a specialist audience of MAVE researchers.
+                      A condensed description of the data analysis, starting from raw sequence data, suitable for a
+                      specialist audience of MAVE researchers.
                     </label>
                     <div class="mavedb-help-small">
-                      May be formatted using <a target="_blank" href="https://daringfireball.net/projects/markdown/syntax">Markdown</a>.
-                      Should include:
+                      May be formatted using
+                      <a href="https://daringfireball.net/projects/markdown/syntax" target="_blank">Markdown</a>. Should
+                      include:
                       <ul>
                         <template v-if="isMetaAnalysis">
-                          <li>a description of how the scores in this score set were generated from the data in the analyzed score sets, and</li>
+                          <li>
+                            a description of how the scores in this score set were generated from the data in the
+                            analyzed score sets, and
+                          </li>
                         </template>
                         <template v-else>
-                          <li>a description of how scores were generated from raw data, including any normalization,</li>
+                          <li>
+                            a description of how scores were generated from raw data, including any normalization,
+                          </li>
                           <li>the sequence read filtering approach used,</li>
                           <li>details of how replicates were combined (if applicable), and</li>
                         </template>
-                        <li>a description of any additional data columns included in the score and count tables, including column naming conventions.</li>
+                        <li>
+                          a description of any additional data columns included in the score and count tables, including
+                          column naming conventions.
+                        </li>
                       </ul>
                     </div>
                   </div>
@@ -297,18 +364,21 @@
                     <TabView>
                       <TabPanel header="Edit">
                         <span class="p-float-label">
-                          <Textarea v-model="methodText" :id="scopedId('input-methodText')" rows="10" />
+                          <Textarea :id="scopedId('input-methodText')" v-model="methodText" rows="10" />
                           <label :for="scopedId('input-methodText')">Methods</label>
                         </span>
                       </TabPanel>
                       <TabPanel header="Preview">
+                        <!-- eslint-disable-next-line vue/no-v-html -->
                         <div class="mavedb-wizard-rendered-markdown" v-html="markdownToHtml(methodText)"></div>
                       </TabPanel>
                     </TabView>
-                    <span v-if="validationErrors.methodText" class="mave-field-error">{{ validationErrors.methodText }}</span>
+                    <span v-if="validationErrors.methodText" class="mave-field-error">{{
+                      validationErrors.methodText
+                    }}</span>
                   </div>
                 </div>
-                <div v-if="itemStatus == 'NotLoaded' || this.item.private == true">
+                <div v-if="itemStatus == 'NotLoaded' || item.private == true">
                   <div class="mavedb-wizard-row">
                     <div class="mavedb-wizard-help">
                       <label>
@@ -316,48 +386,66 @@
                       </label>
                       <div class="mavedb-help-small">
                         For more on data licensing in MaveDB, see the
-                        <a target="_blank" :href="`${config.appBaseUrl}/docs/mavedb/data_licensing.html#data-licensing`">documentation</a>.
+                        <a :href="`${config.appBaseUrl}/docs/mavedb/data_licensing.html#data-licensing`" target="_blank"
+                          >documentation</a
+                        >.
                       </div>
                     </div>
                     <div class="mavedb-wizard-content field">
                       <span class="p-float-label">
-                        <Dropdown v-model="licenseId" :id="scopedId('input-targetLicenseId')" :options="licenses"
-                          optionLabel="longName" optionValue="id" style="min-width: 500px"/>
+                        <Dropdown
+                          :id="scopedId('input-targetLicenseId')"
+                          v-model="licenseId"
+                          option-label="longName"
+                          option-value="id"
+                          :options="licenses"
+                          style="min-width: 500px"
+                        />
                         <label :for="scopedId('input-targetLicenseId')">License</label>
                       </span>
-                      <Message v-if="licenseId && licenses && licenses.find((l) => l.id == licenseId)?.shortName != 'CC0'"
-                        severity="warn">
-                        Choosing a license with these restrictions may cause your score set to be excluded from data federation
-                        and aggregation by MaveDB collaborators.
+                      <Message
+                        v-if="licenseId && licenses && licenses.find((l) => l.id == licenseId)?.shortName != 'CC0'"
+                        severity="warn"
+                      >
+                        Choosing a license with these restrictions may cause your score set to be excluded from data
+                        federation and aggregation by MaveDB collaborators.
                       </Message>
                     </div>
                   </div>
                   <div class="mavedb-wizard-row">
                     <div class="mavedb-wizard-help">
-                      Would you like to define any additional restrictions governing the usage of data within this score set?
+                      Would you like to define any additional restrictions governing the usage of data within this score
+                      set?
                     </div>
                     <div class="mavedb-wizard-content">
-                      <InputSwitch v-model="hasCustomUsagePolicy" :aria-labelledby="scopedId('input-has-custom-usage-policy')" />
-                      <div class="mavedb-switch-value">{{ hasCustomUsagePolicy ? 'Yes, I would like to define additional usage guidelines' : 'No, I do not need to define additional usage guidenlines' }}</div>
+                      <InputSwitch
+                        v-model="hasCustomUsagePolicy"
+                        :aria-labelledby="scopedId('input-has-custom-usage-policy')"
+                      />
+                      <div class="mavedb-switch-value">
+                        {{
+                          hasCustomUsagePolicy
+                            ? 'Yes, I would like to define additional usage guidelines'
+                            : 'No, I do not need to define additional usage guidenlines'
+                        }}
+                      </div>
                     </div>
                   </div>
-                  <div v-if="hasCustomUsagePolicy"
-                    class="mavedb-wizard-row">
+                  <div v-if="hasCustomUsagePolicy" class="mavedb-wizard-row">
                     <div class="mavedb-wizard-help">
-                      <label>
-                        Any additional guidelines governing the usage of the data in this score set.
-                      </label>
+                      <label> Any additional guidelines governing the usage of the data in this score set. </label>
                       <div class="mavedb-help-small">
                         This may assert, for example, the original author's right to publish the data first.
                       </div>
                     </div>
                     <div class="mavedb-wizard-content field">
                       <span class="p-float-label">
-                        <Textarea v-model="dataUsagePolicy" :id="scopedId('input-dataUsagePolicy')" rows="4" />
+                        <Textarea :id="scopedId('input-dataUsagePolicy')" v-model="dataUsagePolicy" rows="4" />
                         <label :for="scopedId('input-dataUsagePolicy')">Data usage guidelines</label>
                       </span>
                       <span v-if="validationErrors.dataUsagePolicy" class="mave-field-error">{{
-                        validationErrors.dataUsagePolicy }}</span>
+                        validationErrors.dataUsagePolicy
+                      }}</span>
                     </div>
                   </div>
                   <div class="mavedb-wizard-row">
@@ -366,32 +454,36 @@
                         Contributors who may edit this score set. Enter each contributor's
                         <a href="https://orcid.org" target="_blank">ORCID</a> ID and confirm their name.
                       </label>
-                      <div class="mavedb-help-small">
-                        Examples: 1111-1111-1111-1111
-                      </div>
+                      <div class="mavedb-help-small">Examples: 1111-1111-1111-1111</div>
                     </div>
                     <div class="mavedb-wizard-content field">
                       <span class="p-float-label">
                         <Chips
+                          :id="scopedId('input-contributors')"
                           ref="contributorsInput"
                           v-model="contributors"
-                          :id="scopedId('input-contributors')"
-                          :addOnBlur="true"
-                          :allowDuplicate="false"
+                          :add-on-blur="true"
+                          :allow-duplicate="false"
                           placeholder="Type or paste ORCID IDs here."
                           @add="newContributorsAdded"
                           @keyup.escape="clearContributorSearch"
                         >
                           <template #chip="slotProps">
                             <div>
-                              <div v-if="slotProps.value.givenName || slotProps.value.familyName">{{ slotProps.value.givenName }} {{ slotProps.value.familyName }} ({{ slotProps.value.orcidId }})</div>
+                              <div v-if="slotProps.value.givenName || slotProps.value.familyName">
+                                {{ slotProps.value.givenName }} {{ slotProps.value.familyName }} ({{
+                                  slotProps.value.orcidId
+                                }})
+                              </div>
                               <div v-else>{{ slotProps.value.orcidId }}</div>
                             </div>
                           </template>
                         </Chips>
                         <label :for="scopedId('input-contributors')">Contributors</label>
                       </span>
-                      <span v-if="validationErrors.contributors" class="mave-field-error">{{validationErrors.contributors}}</span>
+                      <span v-if="validationErrors.contributors" class="mave-field-error">{{
+                        validationErrors.contributors
+                      }}</span>
                     </div>
                   </div>
                   <div class="mavedb-wizard-row">
@@ -400,18 +492,18 @@
                         The DOIs of any digital resources associated with the score set.
                       </label>
                       <div class="mavedb-help-small">
-                        Please note: If you would like to associate publications with this score set via their DOI, please do not do so here.
-                        Instead, use the publication identifiers field below.
+                        Please note: If you would like to associate publications with this score set via their DOI,
+                        please do not do so here. Instead, use the publication identifiers field below.
                       </div>
                     </div>
                     <div class="mavedb-wizard-content field">
                       <span class="p-float-label">
                         <Chips
-                            v-model="doiIdentifiers"
-                            :id="scopedId('input-doiIdentifiers')"
-                            :addOnBlur="true"
-                            :allowDuplicate="false"
-                            @add="acceptNewDoiIdentifier"
+                          :id="scopedId('input-doiIdentifiers')"
+                          v-model="doiIdentifiers"
+                          :add-on-blur="true"
+                          :allow-duplicate="false"
+                          @add="acceptNewDoiIdentifier"
                         >
                           <template #chip="slotProps">
                             <div>
@@ -421,64 +513,75 @@
                         </Chips>
                         <label :for="scopedId('input-doiIdentifiers')">DOI identifiers</label>
                       </span>
-                      <span v-if="validationErrors.doiIdentifiers" class="mave-field-error">{{validationErrors.doiIdentifiers}}</span>
+                      <span v-if="validationErrors.doiIdentifiers" class="mave-field-error">{{
+                        validationErrors.doiIdentifiers
+                      }}</span>
                     </div>
                   </div>
                   <div class="mavedb-wizard-row">
                     <div class="mavedb-wizard-help">
                       <label>
-                        Any publications associated with the score set.
-                        You can search for publications to add by DOI, PubMed ID, bioRxiv ID, or medRxiv ID.
+                        Any publications associated with the score set. You can search for publications to add by DOI,
+                        PubMed ID, bioRxiv ID, or medRxiv ID.
                       </label>
                       <div class="mavedb-help-small">
-                        Example searches: https://doi.org/10.1038/s41467-023-43041-4 (DOI as link), 10.1038/s41467-023-43041-4 (DOI),
-                        38057330 (a Pubmed ID), 2022.06.10.22276179 (a bioRxiv or medRxiv ID)
+                        Example searches: https://doi.org/10.1038/s41467-023-43041-4 (DOI as link),
+                        10.1038/s41467-023-43041-4 (DOI), 38057330 (a Pubmed ID), 2022.06.10.22276179 (a bioRxiv or
+                        medRxiv ID)
                       </div>
                     </div>
                     <div class="mavedb-wizard-content field">
                       <span class="p-float-label">
                         <AutoComplete
-                            ref="publicationIdentifiersInput"
-                            v-model="publicationIdentifiers"
-                            :id="scopedId('input-publicationIdentifiers')"
-                            :multiple="true"
-                            :suggestions="publicationIdentifierSuggestionsList"
-                            @complete="searchPublicationIdentifiers"
-                            @item-select="acceptNewPublicationIdentifier"
-                            @keyup.escape="clearPublicationIdentifierSearch"
-                            option-label="identifier"
+                          :id="scopedId('input-publicationIdentifiers')"
+                          ref="publicationIdentifiersInput"
+                          v-model="publicationIdentifiers"
+                          :multiple="true"
+                          option-label="identifier"
+                          :suggestions="publicationIdentifierSuggestionsList"
+                          @complete="searchPublicationIdentifiers"
+                          @item-select="acceptNewPublicationIdentifier"
+                          @keyup.escape="clearPublicationIdentifierSearch"
                         >
                           <template #chip="slotProps">
                             <div>
-                              <div>{{ slotProps.value.identifier }}: {{ truncatePublicationTitle(slotProps.value.title) }}</div>
+                              <div>
+                                {{ slotProps.value.identifier }}: {{ truncatePublicationTitle(slotProps.value.title) }}
+                              </div>
                             </div>
                           </template>
                           <template #item="slotProps">
                             <div>
-                                <div>Title: {{ slotProps.item.title }}</div>
-                                <div>DOI: {{ slotProps.item.doi }}</div>
-                                <div>Identifier: {{ slotProps.item.identifier }}</div>
-                                <div>Database: {{ slotProps.item.dbName }}</div>
+                              <div>Title: {{ slotProps.item.title }}</div>
+                              <div>DOI: {{ slotProps.item.doi }}</div>
+                              <div>Identifier: {{ slotProps.item.identifier }}</div>
+                              <div>Database: {{ slotProps.item.dbName }}</div>
                             </div>
                           </template>
                         </AutoComplete>
                         <label :for="scopedId('input-publicationIdentifiers')">Publication identifiers</label>
                       </span>
-                      <span v-if="validationErrors.publicationIdentifiers" class="mave-field-error">{{validationErrors.publicationIdentifiers}}</span>
+                      <span v-if="validationErrors.publicationIdentifiers" class="mave-field-error">{{
+                        validationErrors.publicationIdentifiers
+                      }}</span>
                     </div>
                   </div>
-                  <div class="mavedb-wizard-row" v-if="publicationIdentifiers.length > 1">
+                  <div v-if="publicationIdentifiers.length > 1" class="mavedb-wizard-row">
                     <div class="mavedb-wizard-help">
-                      <label>
-                        Of the above publications, the primary publication that describes the score set.
-                      </label>
+                      <label> Of the above publications, the primary publication that describes the score set. </label>
                     </div>
                     <div class="mavedb-wizard-content field">
                       <span class="p-float-label">
-                        <Multiselect ref="primaryPublicationIdentifiersInput" v-model="primaryPublicationIdentifiers"
-                          :id="scopedId('input-primaryPublicationIdentifiers')" :options="publicationIdentifiers"
-                          optionLabel="identifier" placeholder="Select a primary publication (Where the dataset is described)"
-                          :selectionLimit="1" style="width: 100%;">
+                        <Multiselect
+                          :id="scopedId('input-primaryPublicationIdentifiers')"
+                          ref="primaryPublicationIdentifiersInput"
+                          v-model="primaryPublicationIdentifiers"
+                          option-label="identifier"
+                          :options="publicationIdentifiers"
+                          placeholder="Select a primary publication (Where the dataset is described)"
+                          :selection-limit="1"
+                          style="width: 100%"
+                        >
                           <template #option="slotProps">
                             <div class="field">
                               <div>Title: {{ slotProps.option.title }}</div>
@@ -491,44 +594,63 @@
                         <label :for="scopedId('input-primaryPublicationIdentifiers')">Primary publication</label>
                       </span>
                       <span v-if="validationErrors.primaryPublicationIdentifiers" class="mave-field-error">{{
-                        validationErrors.primaryPublicationIdentifiers }}</span>
+                        validationErrors.primaryPublicationIdentifiers
+                      }}</span>
                     </div>
                   </div>
                   <div class="mavedb-wizard-row">
                     <div class="mavedb-wizard-help">
-                      <label>
-                        Any additional metadata about the score set, as a JSON file.
-                      </label>
+                      <label> Any additional metadata about the score set, as a JSON file. </label>
                     </div>
                     <div class="mavedb-wizard-content field">
-                    <span class="p-float-label">
-                      <FileUpload :id="scopedId('input-extraMetadataFile')" :auto="false" chooseLabel="Extra metadata"
-                        :class="inputClasses.extraMetadataFile" :customUpload="true" :fileLimit="1"
-                        :showCancelButton="false" :showUploadButton="false" @remove="fileCleared('extraMetadataFile')"
-                        @select="fileSelected('extraMetadataFile', $event)">
-                        <template #empty>
-                          <p>Upload a JSON file here.</p>
-                        </template>
-                      </FileUpload>
-                    </span>
-                    <span v-if="validationErrors.extraMetadata" class="mave-field-error">{{ validationErrors.extraMetadata
-                    }}</span>
+                      <span class="p-float-label">
+                        <FileUpload
+                          :id="scopedId('input-extraMetadataFile')"
+                          :auto="false"
+                          choose-label="Extra metadata"
+                          :class="inputClasses.extraMetadataFile"
+                          :custom-upload="true"
+                          :file-limit="1"
+                          :show-cancel-button="false"
+                          :show-upload-button="false"
+                          @remove="fileCleared('extraMetadataFile')"
+                          @select="fileSelected('extraMetadataFile', $event)"
+                        >
+                          <template #empty>
+                            <p>Upload a JSON file here.</p>
+                          </template>
+                        </FileUpload>
+                      </span>
+                      <span v-if="validationErrors.extraMetadata" class="mave-field-error">{{
+                        validationErrors.extraMetadata
+                      }}</span>
                     </div>
                   </div>
                 </div>
               </div>
               <div class="mavedb-wizard-step-controls-row">
                 <div class="flex justify-content-between mavedb-wizard-step-controls pt-4">
-                  <Button label="Back" severity="secondary" icon="pi pi-arrow-left" @click="showPreviousWizardStep" />
-                  <Button label="Next" :disabled="this.maxWizardStepValidated < activeWizardStep" icon="pi pi-arrow-right" iconPos="right" @click="showNextWizardStepIfValid(showNextWizardStep)" />
+                  <Button icon="pi pi-arrow-left" label="Back" severity="secondary" @click="showPreviousWizardStep" />
+                  <Button
+                    :disabled="maxWizardStepValidated < activeWizardStep"
+                    icon="pi pi-arrow-right"
+                    icon-pos="right"
+                    label="Next"
+                    @click="showNextWizardStepIfValid(showNextWizardStep)"
+                  />
                 </div>
               </div>
             </template>
           </StepperPanel>
 
-          <StepperPanel v-if="itemStatus == 'NotLoaded' || this.item.private">
+          <StepperPanel v-if="itemStatus == 'NotLoaded' || item.private">
             <template #header="{index, clickCallback}">
-              <button class="p-stepper-action" :disabled="maxWizardStepEntered < index || maxWizardStepValidated < index - 1" role="tab" @click="clickCallback">
+              <button
+                class="p-stepper-action"
+                :disabled="maxWizardStepEntered < index || maxWizardStepValidated < index - 1"
+                role="tab"
+                @click="clickCallback"
+              >
                 <span class="p-stepper-number">{{ index + 1 }}</span>
                 <span class="p-stepper-title">Targets</span>
               </button>
@@ -538,44 +660,76 @@
                 <div class="mavedb-wizard-form-content-background"></div>
                 <div class="mavedb-wizard-row">
                   <div class="mavedb-wizard-help">
-                    <label :id="scopedId('input-scoreSetIsSequenceBasedLabel')">Will you be uploading the target sequences used for your assay?</label>
+                    <label :id="scopedId('input-scoreSetIsSequenceBasedLabel')"
+                      >Will you be uploading the target sequences used for your assay?</label
+                    >
                     <div class="mavedb-help-small">
-                      The target sequence is the sequence that was mutagenized to create the variant library, such as in a cDNA-based deep mutational scan.
-                      If your variants were generated by editing the genome directly (e.g., using saturation genome editing or base editing), you should provide
-                      an Ensembl or RefSeq accession instead of uploading the target locus sequence as your own target.
+                      The target sequence is the sequence that was mutagenized to create the variant library, such as in
+                      a cDNA-based deep mutational scan. If your variants were generated by editing the genome directly
+                      (e.g., using saturation genome editing or base editing), you should provide an Ensembl or RefSeq
+                      accession instead of uploading the target locus sequence as your own target.
                     </div>
                   </div>
                   <div class="mavedb-wizard-content">
-                    <InputSwitch v-model="isTargetSequence" :aria-labelledby="scopedId('input-scoreSetIsSequenceBasedLabel')" />
-                    <div class="mavedb-switch-value">{{ isTargetSequence ? 'Yes, variants are described relative to a target sequence.' : 'No, variants are described relative to a RefSeq or Ensembl accession (either a transcript or chromosome).' }}</div>
+                    <InputSwitch
+                      v-model="isTargetSequence"
+                      :aria-labelledby="scopedId('input-scoreSetIsSequenceBasedLabel')"
+                    />
+                    <div class="mavedb-switch-value">
+                      {{
+                        isTargetSequence
+                          ? 'Yes, variants are described relative to a target sequence.'
+                          : 'No, variants are described relative to a RefSeq or Ensembl accession (either a transcript or chromosome).'
+                      }}
+                    </div>
                   </div>
                 </div>
 
                 <div v-if="!isTargetSequence" class="mavedb-wizard-row">
                   <div class="mavedb-wizard-help">
-                    <label :id="scopedId('input-isBaseEditorData')">Does this score set reperesent base editor data?</label>
+                    <label :id="scopedId('input-isBaseEditorData')"
+                      >Does this score set reperesent base editor data?</label
+                    >
                     <div class="mavedb-help-small">
-                      Base editor data is a type of functional assay that is similar in many respects to MAVE data. When uploading base editor data, you must
-                      also include a 'guide_sequence' column in your uploaded scores (and counts) file(s).
+                      Base editor data is a type of functional assay that is similar in many respects to MAVE data. When
+                      uploading base editor data, you must also include a 'guide_sequence' column in your uploaded
+                      scores (and counts) file(s).
                     </div>
                   </div>
                   <div class="mavedb-wizard-content">
-                    <InputSwitch v-model="isBaseEditor" :aria-labelledby="scopedId('input-isBaseEditorData')"/>
-                    <div class="mavedb-switch-value">{{ isBaseEditor ? 'Yes, this score set represents base editor data.' : 'No, this score set does not represent base editor data.' }}</div>
+                    <InputSwitch v-model="isBaseEditor" :aria-labelledby="scopedId('input-isBaseEditorData')" />
+                    <div class="mavedb-switch-value">
+                      {{
+                        isBaseEditor
+                          ? 'Yes, this score set represents base editor data.'
+                          : 'No, this score set does not represent base editor data.'
+                      }}
+                    </div>
                   </div>
                 </div>
 
                 <div class="mavedb-wizard-row">
                   <div class="mavedb-wizard-help">
-                    <label :id="scopedId('input-scoreSetHasMultipleTargetsLabel')">Does this score set describe variants with respect to more than one target?</label>
+                    <label :id="scopedId('input-scoreSetHasMultipleTargetsLabel')"
+                      >Does this score set describe variants with respect to more than one target?</label
+                    >
                     <div class="mavedb-help-small">
-                      Some experiments might describe variants against two or more distinct target sequences. If this is the case, your variants will need to be described explicitly
-                      from the target they came from.
+                      Some experiments might describe variants against two or more distinct target sequences. If this is
+                      the case, your variants will need to be described explicitly from the target they came from.
                     </div>
                   </div>
                   <div class="mavedb-wizard-content">
-                    <InputSwitch v-model="isMultiTarget" :aria-labelledby="scopedId('input-scoreSetHasMultipleTargetsLabel')" />
-                    <div class="mavedb-switch-value">{{ isMultiTarget ? 'Yes, variants are described relative to multiple target sequences.' : 'No, variants are described relative to a single target sequence.' }}</div>
+                    <InputSwitch
+                      v-model="isMultiTarget"
+                      :aria-labelledby="scopedId('input-scoreSetHasMultipleTargetsLabel')"
+                    />
+                    <div class="mavedb-switch-value">
+                      {{
+                        isMultiTarget
+                          ? 'Yes, variants are described relative to multiple target sequences.'
+                          : 'No, variants are described relative to a single target sequence.'
+                      }}
+                    </div>
                   </div>
                 </div>
 
@@ -585,9 +739,14 @@
                   </div>
                   <div class="mavedb-wizard-content field">
                     <span class="p-float-label">
-                      <InputNumber v-model="numTargets"
-                            :id="scopedId(`input-numTargets`)" buttonLayout="stacked" :min="isMultiTarget ? 2 : 1"
-                            showButtons suffix=" targets" />
+                      <InputNumber
+                        :id="scopedId(`input-numTargets`)"
+                        v-model="numTargets"
+                        button-layout="stacked"
+                        :min="isMultiTarget ? 2 : 1"
+                        show-buttons
+                        suffix=" targets"
+                      />
                       <label :for="scopedId(`input-numTargets`)">Targets</label>
                     </span>
                   </div>
@@ -595,8 +754,14 @@
               </div>
               <div class="mavedb-wizard-step-controls-row">
                 <div class="flex justify-content-between mavedb-wizard-step-controls pt-4">
-                  <Button label="Back" severity="secondary" icon="pi pi-arrow-left" @click="showPreviousWizardStep" />
-                  <Button label="Next" :disabled="this.maxWizardStepValidated < activeWizardStep" icon="pi pi-arrow-right" iconPos="right" @click="showNextWizardStepIfValid(showNextWizardStep)" />
+                  <Button icon="pi pi-arrow-left" label="Back" severity="secondary" @click="showPreviousWizardStep" />
+                  <Button
+                    :disabled="maxWizardStepValidated < activeWizardStep"
+                    icon="pi pi-arrow-right"
+                    icon-pos="right"
+                    label="Next"
+                    @click="showNextWizardStepIfValid(showNextWizardStep)"
+                  />
                 </div>
               </div>
             </template>
@@ -605,7 +770,12 @@
           <!-- Annoyingly, `idx in numTargets` is 1-indexed. -->
           <StepperPanel v-for="(targetNum, targetIdx) in numTargets" :key="targetIdx">
             <template #header="{index, clickCallback}">
-              <button class="p-stepper-action" :disabled="maxWizardStepEntered < index || maxWizardStepValidated < index - 1" role="tab" @click="clickCallback">
+              <button
+                class="p-stepper-action"
+                :disabled="maxWizardStepEntered < index || maxWizardStepValidated < index - 1"
+                role="tab"
+                @click="clickCallback"
+              >
                 <span class="p-stepper-number">{{ index + 1 }}</span>
                 <span class="p-stepper-title">Target {{ targetNum }}</span>
               </button>
@@ -617,25 +787,38 @@
                   <div class="mavedb-wizard-help">
                     <label>Copy target from a previously created target</label>
                     <div class="mavedb-help-small">
-                      Use this autocomplete field to find an existing target from one of your published or unpublished score sets in MaveDB and fill this target with its metadata. You'll still be able to edit any fields below.
+                      Use this autocomplete field to find an existing target from one of your published or unpublished
+                      score sets in MaveDB and fill this target with its metadata. You'll still be able to edit any
+                      fields below.
                     </div>
                   </div>
                   <div class="mavedb-wizard-content field">
                     <span class="p-float-label">
-                    <AutoComplete ref="existingTargetGeneInput" v-model="createdTargetGenes[targetIdx].autofilledTargetGene"
-                      :id="scopedId('input-existingTargetGene')" field="name" :forceSelection="true"
-                      :suggestions="targetGeneSuggestionsList" @complete="searchTargetGenes" @item-select="autofillFromExistingTarget($event, targetIdx)">
-                      <template #item="slotProps">
-                        <div>
+                      <AutoComplete
+                        :id="scopedId('input-existingTargetGene')"
+                        ref="existingTargetGeneInput"
+                        v-model="createdTargetGenes[targetIdx].autofilledTargetGene"
+                        field="name"
+                        :force-selection="true"
+                        :suggestions="targetGeneSuggestionsList"
+                        @complete="searchTargetGenes"
+                        @item-select="autofillFromExistingTarget($event, targetIdx)"
+                      >
+                        <template #item="slotProps">
+                          <div>
                             <div>Name: {{ slotProps.item.name }}</div>
                             <div>Category: {{ textForTargetGeneCategory(slotProps.item.category) }}</div>
-                            <div v-for="externalIdentifier of slotProps.item.externalIdentifiers" :key=externalIdentifier.identifier>
-                              {{ externalIdentifier.identifier.dbName }}: {{ externalIdentifier.identifier.identifier }}, Offset: {{ externalIdentifier.offset }}
+                            <div
+                              v-for="externalIdentifier of slotProps.item.externalIdentifiers"
+                              :key="externalIdentifier.identifier"
+                            >
+                              {{ externalIdentifier.identifier.dbName }}:
+                              {{ externalIdentifier.identifier.identifier }}, Offset: {{ externalIdentifier.offset }}
                             </div>
-                        </div>
-                      </template>
-                    </AutoComplete>
-                    <label :for="scopedId('input-existingTargetGene')">Copy from an existing target</label>
+                          </div>
+                        </template>
+                      </AutoComplete>
+                      <label :for="scopedId('input-existingTargetGene')">Copy from an existing target</label>
                     </span>
                   </div>
                 </div>
@@ -643,16 +826,23 @@
                   <div class="mavedb-wizard-help">
                     <label>The name of the target</label>
                     <div class="mavedb-help-small">
-                      This name will be used to identify the target on the score set page and can be used to autofill from this target in the future.
-                      Most users choose to name this target after the associated gene, if applicable.
+                      This name will be used to identify the target on the score set page and can be used to autofill
+                      from this target in the future. Most users choose to name this target after the associated gene,
+                      if applicable.
                     </div>
                   </div>
                   <div class="mavedb-wizard-content field">
-                      <span class="p-float-label">
-                        <InputText v-model="createdTargetGenes[targetIdx].targetGene.name" :id="scopedId('input-targetGeneName')" style="width: 100%" />
-                        <label :for="scopedId('input-targetGeneName')">Target name</label>
-                      </span>
-                      <span v-if="validationErrors[`targetGene.${targetIdx}.name`]" class="mave-field-error">{{ validationErrors[`targetGene.${targetIdx}.name`] }}</span>
+                    <span class="p-float-label">
+                      <InputText
+                        :id="scopedId('input-targetGeneName')"
+                        v-model="createdTargetGenes[targetIdx].targetGene.name"
+                        style="width: 100%"
+                      />
+                      <label :for="scopedId('input-targetGeneName')">Target name</label>
+                    </span>
+                    <span v-if="validationErrors[`targetGene.${targetIdx}.name`]" class="mave-field-error">{{
+                      validationErrors[`targetGene.${targetIdx}.name`]
+                    }}</span>
                   </div>
                 </div>
 
@@ -661,16 +851,25 @@
                     <div class="mavedb-wizard-help">
                       <label>The label of the target</label>
                       <div class="mavedb-help-small">
-                        This label is what you use in your variants file to indicate which of your targets the variant is described relative to.
-                        Because it is used with MAVE-HGVS strings, it may not contain any spaces or colons.
+                        This label is what you use in your variants file to indicate which of your targets the variant
+                        is described relative to. Because it is used with MAVE-HGVS strings, it may not contain any
+                        spaces or colons.
                       </div>
                     </div>
-                      <div class="mavedb-wizard-content field">
-                        <span class="p-float-label">
-                          <InputText v-model="createdTargetGenes[targetIdx].targetGene.targetSequence.label" :id="scopedId('input-targetGeneLabel')" style="width: 100%"/>
-                          <label :for="scopedId('input-targetGeneLabel')">Target label</label>
-                        </span>
-                        <span v-if="validationErrors[`targetGene.${targetIdx}.targetSequence.label`]" class="mave-field-error">{{ validationErrors[`targetGene.${targetIdx}.targetSequence.label`] }}</span>
+                    <div class="mavedb-wizard-content field">
+                      <span class="p-float-label">
+                        <InputText
+                          :id="scopedId('input-targetGeneLabel')"
+                          v-model="createdTargetGenes[targetIdx].targetGene.targetSequence.label"
+                          style="width: 100%"
+                        />
+                        <label :for="scopedId('input-targetGeneLabel')">Target label</label>
+                      </span>
+                      <span
+                        v-if="validationErrors[`targetGene.${targetIdx}.targetSequence.label`]"
+                        class="mave-field-error"
+                        >{{ validationErrors[`targetGene.${targetIdx}.targetSequence.label`] }}</span
+                      >
                     </div>
                   </div>
 
@@ -681,80 +880,140 @@
                     <div class="mavedb-wizard-content">
                       <span class="p-float-label">
                         <span class="p-float-label">
-                          <SelectButton v-model="createdTargetGenes[targetIdx].targetGene.category" :id="scopedId('input-targetGeneCategory')"
-                            :options="targetGeneCategories" :optionLabel="textForTargetGeneCategory" />
+                          <SelectButton
+                            :id="scopedId('input-targetGeneCategory')"
+                            v-model="createdTargetGenes[targetIdx].targetGene.category"
+                            :option-label="textForTargetGeneCategory"
+                            :options="targetGeneCategories"
+                          />
                         </span>
                       </span>
-                      <span v-if="validationErrors[`targetGene.${targetIdx}.category`]" class="mave-field-error">{{ validationErrors[`targetGene.${targetIdx}.category`] }}</span>
+                      <span v-if="validationErrors[`targetGene.${targetIdx}.category`]" class="mave-field-error">{{
+                        validationErrors[`targetGene.${targetIdx}.category`]
+                      }}</span>
                     </div>
                   </div>
 
-                  <div class="mavedb-wizard-row" v-for="dbName of externalGeneDatabases" :key="dbName">
+                  <div v-for="dbName of externalGeneDatabases" :key="dbName" class="mavedb-wizard-row">
                     <div class="mavedb-wizard-help">
-                      <label :id="scopedId(`input-targetGeneExternalDatabase${dbName}Label`)">Link this target to a {{dbName}} accession</label>
+                      <label :id="scopedId(`input-targetGeneExternalDatabase${dbName}Label`)"
+                        >Link this target to a {{ dbName }} accession</label
+                      >
                       <!-- only display this verbose help on the first of the external gene database selections. -->
-                      <div class="mavedb-help-small" v-if="dbName === externalGeneDatabases[0]">
-                        If the target sequence provided to MaveDB starts partway through the linked sequence (such as an assay targeting a single functional domain),
-                        the target should also have an “offset”. The offset is the integer value that should be added to the MaveDB coordinates (which are relative
-                        to the target sequence) in order to match the coordinates in the linked sequence.
+                      <div v-if="dbName === externalGeneDatabases[0]" class="mavedb-help-small">
+                        If the target sequence provided to MaveDB starts partway through the linked sequence (such as an
+                        assay targeting a single functional domain), the target should also have an “offset”. The offset
+                        is the integer value that should be added to the MaveDB coordinates (which are relative to the
+                        target sequence) in order to match the coordinates in the linked sequence.
                       </div>
                     </div>
                     <div class="mavedb-wizard-content">
-                      <InputSwitch v-model="createdTargetGenes[targetIdx].linkedAccessions[dbName]" :aria-labelledby="scopedId(`input-targetGeneExternalDatabase${dbName}Label`)" />
-                      <div class="mavedb-switch-value">{{ createdTargetGenes[targetIdx].linkedAccessions[dbName] ? `Yes, link this target to a ${dbName} accession.` : `No, do not link this target to a ${dbName} accession.` }}</div>
-                      <div class="mavedb-wizard-subcontent field-columns" v-if="createdTargetGenes[targetIdx].linkedAccessions[dbName]">
-                          <div class="p-float-label field-column">
-                            <AutoComplete style="width: 100%;"
-                                v-model="createdTargetGenes[targetIdx].targetGene.externalIdentifiers[dbName].identifier"
-                                :id="scopedId(`input-${dbName.toLowerCase()}Identifier`)" field="identifier"
-                                :suggestions="targetGeneIdentifierSuggestionsList[dbName]" :forceSelection="false"
-                                @complete="searchTargetGeneIdentifiers(dbName, $event)"
-                                @change="addDefaultOffset(dbName, targetIdx); externalIdentifierTextToObject(dbName, targetIdx, $event)"
-                              />
-                            <label :for="scopedId(`input-${dbName.toLowerCase()}Identifier`)">{{ dbName }} identifier</label>
-                          </div>
-                          <span class="p-float-label">
-                            <InputNumber v-model="createdTargetGenes[targetIdx].targetGene.externalIdentifiers[dbName].offset"
-                              :id="scopedId(`input-${dbName.toLowerCase()}Offset`)" buttonLayout="stacked" :min="0"
-                              showButtons suffix=" bp" />
-                            <label :for="scopedId(`input-${dbName.toLowerCase()}Offset`)">Offset</label>
-                          </span>
+                      <InputSwitch
+                        v-model="createdTargetGenes[targetIdx].linkedAccessions[dbName]"
+                        :aria-labelledby="scopedId(`input-targetGeneExternalDatabase${dbName}Label`)"
+                      />
+                      <div class="mavedb-switch-value">
+                        {{
+                          createdTargetGenes[targetIdx].linkedAccessions[dbName]
+                            ? `Yes, link this target to a ${dbName} accession.`
+                            : `No, do not link this target to a ${dbName} accession.`
+                        }}
+                      </div>
+                      <div
+                        v-if="createdTargetGenes[targetIdx].linkedAccessions[dbName]"
+                        class="mavedb-wizard-subcontent field-columns"
+                      >
+                        <div class="p-float-label field-column">
+                          <AutoComplete
+                            :id="scopedId(`input-${dbName.toLowerCase()}Identifier`)"
+                            v-model="createdTargetGenes[targetIdx].targetGene.externalIdentifiers[dbName].identifier"
+                            field="identifier"
+                            :force-selection="false"
+                            style="width: 100%"
+                            :suggestions="targetGeneIdentifierSuggestionsList[dbName]"
+                            @change="
+                              addDefaultOffset(dbName, targetIdx)
+                              externalIdentifierTextToObject(dbName, targetIdx, $event)
+                            "
+                            @complete="searchTargetGeneIdentifiers(dbName, $event)"
+                          />
+                          <label :for="scopedId(`input-${dbName.toLowerCase()}Identifier`)"
+                            >{{ dbName }} identifier</label
+                          >
                         </div>
-                        <span v-if="validationErrors[`targetGene.${targetIdx}.externalIdentifiers.${dbName}`]" class="mave-field-error">{{ validationErrors[`targetGene.${targetIdx}.externalIdentifiers.${dbName}`] }}</span>
-                        <span v-if="validationErrors[`targetGene.${targetIdx}.externalIdentifiers.${dbName}.identifier`]" class="mave-field-error">{{ validationErrors[`targetGene.${targetIdx}.externalIdentifiers.${dbName}.identifier`] }}</span>
-                        <span v-if="validationErrors[`targetGene.${targetIdx}.externalIdentifiers.${dbName}.offset`]" class="mave-field-error">{{ validationErrors[`targetGene.${targetIdx}.externalIdentifiers.${dbName}.offset`] }}</span>
+                        <span class="p-float-label">
+                          <InputNumber
+                            :id="scopedId(`input-${dbName.toLowerCase()}Offset`)"
+                            v-model="createdTargetGenes[targetIdx].targetGene.externalIdentifiers[dbName].offset"
+                            button-layout="stacked"
+                            :min="0"
+                            show-buttons
+                            suffix=" bp"
+                          />
+                          <label :for="scopedId(`input-${dbName.toLowerCase()}Offset`)">Offset</label>
+                        </span>
+                      </div>
+                      <span
+                        v-if="validationErrors[`targetGene.${targetIdx}.externalIdentifiers.${dbName}`]"
+                        class="mave-field-error"
+                        >{{ validationErrors[`targetGene.${targetIdx}.externalIdentifiers.${dbName}`] }}</span
+                      >
+                      <span
+                        v-if="validationErrors[`targetGene.${targetIdx}.externalIdentifiers.${dbName}.identifier`]"
+                        class="mave-field-error"
+                        >{{
+                          validationErrors[`targetGene.${targetIdx}.externalIdentifiers.${dbName}.identifier`]
+                        }}</span
+                      >
+                      <span
+                        v-if="validationErrors[`targetGene.${targetIdx}.externalIdentifiers.${dbName}.offset`]"
+                        class="mave-field-error"
+                        >{{ validationErrors[`targetGene.${targetIdx}.externalIdentifiers.${dbName}.offset`] }}</span
+                      >
                     </div>
                   </div>
                   <div class="mavedb-wizard-row">
                     <div class="mavedb-wizard-help">
-                      <label :id="scopedId('input-targetGeneTaxonomyLabel')">The taxonomy group to which this target belongs</label>
+                      <label :id="scopedId('input-targetGeneTaxonomyLabel')"
+                        >The taxonomy group to which this target belongs</label
+                      >
                       <div class="mavedb-help-small">
-                        For more details about taxonomy, see the <a target="_blank" href="https://www.ncbi.nlm.nih.gov/books/NBK53758/">NCBI taxonomy help page.</a>
+                        For more details about taxonomy, see the
+                        <a href="https://www.ncbi.nlm.nih.gov/books/NBK53758/" target="_blank"
+                          >NCBI taxonomy help page.</a
+                        >
                       </div>
                     </div>
                     <div class="mavedb-wizard-content">
                       <span class="p-float-label">
                         <AutoComplete
+                          :id="scopedId('input-targetGeneTaxonomyLabel')"
                           ref="taxonomyInput"
                           v-model="createdTargetGenes[targetIdx].targetGene.targetSequence.taxonomy"
                           dropdown
-                          :id="scopedId('input-targetGeneTaxonomyLabel')"
-                          :suggestions="taxonomySuggestionsList"
                           field="organismName"
-                          forceSelection
+                          force-selection
                           :multiple="false"
                           :options="taxonomies"
+                          style="width: 100%"
+                          :suggestions="taxonomySuggestionsList"
                           @complete="searchTaxonomies"
                           @keyup.escape="clearTaxonomySearch"
-                          style="width: 100%;"
                         >
                           <template #item="slotProps">
-                            {{slotProps.item.code}} - {{slotProps.item.organismName}} <template v-if="slotProps.item.commonName!=='NULL' && slotProps.item.commonName!== null">/ {{slotProps.item.commonName}}</template>
+                            {{ slotProps.item.code }} - {{ slotProps.item.organismName }}
+                            <template v-if="slotProps.item.commonName !== 'NULL' && slotProps.item.commonName !== null"
+                              >/ {{ slotProps.item.commonName }}</template
+                            >
                           </template>
                         </AutoComplete>
                         <label :for="scopedId('input-targetGeneTaxonomyLabel')">Taxonomy</label>
                       </span>
-                      <span v-if="validationErrors[`targetGene.${targetIdx}.targetSequence.taxonomy`]" class="mave-field-error">{{ validationErrors[`targetGene.${targetIdx}.targetSequence.taxonomy`] }}</span>
+                      <span
+                        v-if="validationErrors[`targetGene.${targetIdx}.targetSequence.taxonomy`]"
+                        class="mave-field-error"
+                        >{{ validationErrors[`targetGene.${targetIdx}.targetSequence.taxonomy`] }}</span
+                      >
                     </div>
                   </div>
                   <div class="mavedb-wizard-row">
@@ -763,54 +1022,99 @@
                     </div>
                     <div class="mavedb-wizard-content">
                       <span class="p-float-label">
-                        <SelectButton v-model="createdTargetGenes[targetIdx].targetGene.targetSequence.sequenceType"
-                          :id="scopedId('input-targetGeneSequenceType')" :options="sequenceTypes" />
+                        <SelectButton
+                          :id="scopedId('input-targetGeneSequenceType')"
+                          v-model="createdTargetGenes[targetIdx].targetGene.targetSequence.sequenceType"
+                          :options="sequenceTypes"
+                        />
                       </span>
-                      <span v-if="validationErrors[`targetGene.${targetIdx}.targetSequence.sequenceType`]" class="mave-field-error">{{ validationErrors[`targetGene.${targetIdx}.targetSequence.sequenceType`] }}</span>
+                      <span
+                        v-if="validationErrors[`targetGene.${targetIdx}.targetSequence.sequenceType`]"
+                        class="mave-field-error"
+                        >{{ validationErrors[`targetGene.${targetIdx}.targetSequence.sequenceType`] }}</span
+                      >
                     </div>
                   </div>
                   <div class="mavedb-wizard-row">
                     <div class="mavedb-wizard-help">
                       <label :id="scopedId('input-targetGeneSequenceFileLabel')">The sequence of the target</label>
                       <div class="mavedb-help-small">
-                        Variants will be validated against this sequence. Note that the first position in the sequence is numbered as position 1 when validating variants.
+                        Variants will be validated against this sequence. Note that the first position in the sequence
+                        is numbered as position 1 when validating variants.
                       </div>
                     </div>
                     <div class="mavedb-wizard-content">
                       <span class="p-float-label">
-                        <FileUpload ref="sequenceFileUpload"
-                          :id="scopedId('input-targetGeneSequenceFileLabel')" :auto="false"
-                          chooseLabel="Reference sequence" :class="inputClasses.targetGeneTargetSequenceSequenceFile"
-                          :customUpload="true" :fileLimit="1" :showCancelButton="false" :showUploadButton="false"
+                        <FileUpload
+                          :id="scopedId('input-targetGeneSequenceFileLabel')"
+                          ref="sequenceFileUpload"
+                          :auto="false"
+                          choose-label="Reference sequence"
+                          :class="inputClasses.targetGeneTargetSequenceSequenceFile"
+                          :custom-upload="true"
+                          :file-limit="1"
+                          :show-cancel-button="false"
+                          :show-upload-button="false"
                           @remove="fileCleared('targetGeneTargetSequenceSequenceFile', targetIdx)"
-                          @select="fileSelected('targetGeneTargetSequenceSequenceFile', $event, targetIdx)" >
+                          @select="fileSelected('targetGeneTargetSequenceSequenceFile', $event, targetIdx)"
+                        >
                           <template #empty>
-                            <div v-if="createdTargetGenes[targetIdx].targetGene.targetSequence.sequence != null" >
-                              <Textarea v-model="createdTargetGenes[targetIdx].targetGene.targetSequence.sequence" rows=5 disabled style="width:100%; max-width:60em; word-wrap:break-word; font-family: monospace;" />
-                              <small>This sequence was set by the autofilled target. To use a different sequence, upload a new FASTA file.</small>
+                            <div v-if="createdTargetGenes[targetIdx].targetGene.targetSequence.sequence != null">
+                              <Textarea
+                                v-model="createdTargetGenes[targetIdx].targetGene.targetSequence.sequence"
+                                disabled
+                                rows="5"
+                                style="width: 100%; max-width: 60em; word-wrap: break-word; font-family: monospace"
+                              />
+                              <small
+                                >This sequence was set by the autofilled target. To use a different sequence, upload a
+                                new FASTA file.</small
+                              >
                             </div>
                             <div v-else>
-                              <p>Drop a <a target="_blank" href="https://blast.ncbi.nlm.nih.gov/doc/blast-topics/#fasta">FASTA</a> file here</p>
+                              <p>
+                                Drop a
+                                <a href="https://blast.ncbi.nlm.nih.gov/doc/blast-topics/#fasta" target="_blank"
+                                  >FASTA</a
+                                >
+                                file here
+                              </p>
                             </div>
                           </template>
                         </FileUpload>
                       </span>
-                      <span v-if="validationErrors[`targetGene.${targetIdx}.targetSequence.sequence`]" class="mave-field-error">{{ validationErrors[`targetGene.${targetIdx}.targetSequence.sequence`] }}</span>
+                      <span
+                        v-if="validationErrors[`targetGene.${targetIdx}.targetSequence.sequence`]"
+                        class="mave-field-error"
+                        >{{ validationErrors[`targetGene.${targetIdx}.targetSequence.sequence`] }}</span
+                      >
                     </div>
                   </div>
                 </div>
                 <div v-else>
                   <div class="mavedb-wizard-row">
                     <div class="mavedb-wizard-help">
-                      <label :id="scopedId('input-targetDescribesChromosomeLabel')">Does this target represent a whole chromosome?</label>
+                      <label :id="scopedId('input-targetDescribesChromosomeLabel')"
+                        >Does this target represent a whole chromosome?</label
+                      >
                       <div class="mavedb-help-small">
-                        Some score sets might describe variants relative to an entire chromosome, while others will describe variants relative to a
-                        RefSeq or Ensembl accession representing a gene.
+                        Some score sets might describe variants relative to an entire chromosome, while others will
+                        describe variants relative to a RefSeq or Ensembl accession representing a gene.
                       </div>
                     </div>
                     <div class="mavedb-wizard-content">
-                      <InputSwitch v-model="createdTargetGenes[targetIdx].isRelativeToChromosome" :aria-labelledby="scopedId('input-targetDescribesChromosomeLabel')" @change="refreshAccessionOptions(targetIdx)" />
-                      <div class="mavedb-switch-value">{{ createdTargetGenes[targetIdx].isRelativeToChromosome ? 'Yes, this target represents an entire chromosome.' : 'No, this target represents a gene.' }}</div>
+                      <InputSwitch
+                        v-model="createdTargetGenes[targetIdx].isRelativeToChromosome"
+                        :aria-labelledby="scopedId('input-targetDescribesChromosomeLabel')"
+                        @change="refreshAccessionOptions(targetIdx)"
+                      />
+                      <div class="mavedb-switch-value">
+                        {{
+                          createdTargetGenes[targetIdx].isRelativeToChromosome
+                            ? 'Yes, this target represents an entire chromosome.'
+                            : 'No, this target represents a gene.'
+                        }}
+                      </div>
                     </div>
                   </div>
                   <div v-if="createdTargetGenes[targetIdx].isRelativeToChromosome" class="mavedb-wizard-row">
@@ -820,10 +1124,20 @@
                     <div class="mavedb-wizard-content">
                       <span class="p-float-label">
                         <!-- Assembly is the reference genome property in coordinate cases -->
-                        <Dropdown v-model="createdTargetGenes[targetIdx].targetGene.targetAccession.assembly" :aria-labelledby="scopedId('input-targetGeneAssemblyLabel')" :options="assemblies" style="width: 100%" @change="refreshAccessionOptions(targetIdx)"/>
+                        <Dropdown
+                          v-model="createdTargetGenes[targetIdx].targetGene.targetAccession.assembly"
+                          :aria-labelledby="scopedId('input-targetGeneAssemblyLabel')"
+                          :options="assemblies"
+                          style="width: 100%"
+                          @change="refreshAccessionOptions(targetIdx)"
+                        />
                         <label :for="scopedId('input-targetGeneAssemblyLabel')">Assembly</label>
                       </span>
-                      <span v-if="validationErrors[`targetGene.${targetIdx}.targetAccession.assembly`]" class="mave-field-error">{{ validationErrors[`targetGene.${targetIdx}.targetAccession.assembly`] }}</span>
+                      <span
+                        v-if="validationErrors[`targetGene.${targetIdx}.targetAccession.assembly`]"
+                        class="mave-field-error"
+                        >{{ validationErrors[`targetGene.${targetIdx}.targetAccession.assembly`] }}</span
+                      >
                     </div>
                   </div>
                   <div v-else class="mavedb-wizard-row">
@@ -832,36 +1146,70 @@
                     </div>
                     <div class="mavedb-wizard-content">
                       <span class="p-float-label">
-                        <Dropdown v-model="createdTargetGenes[targetIdx].targetGene.targetAccession.gene" :id="scopedId('input-targetGeneGeneNameLabel')"
-                            :options="geneNamesAsObject" optionLabel="name" filter
-                            :virtualScrollerOptions="{ itemSize: 50 }" @change="autofillGeneName($event, targetIdx)" style="width: 100%"/>
-                          <label :for="scopedId('input-targetGeneGeneNameLabel')">HGNC Name</label>
+                        <Dropdown
+                          :id="scopedId('input-targetGeneGeneNameLabel')"
+                          v-model="createdTargetGenes[targetIdx].targetGene.targetAccession.gene"
+                          filter
+                          option-label="name"
+                          :options="geneNamesAsObject"
+                          style="width: 100%"
+                          :virtual-scroller-options="{itemSize: 50}"
+                          @change="autofillGeneName($event, targetIdx)"
+                        />
+                        <label :for="scopedId('input-targetGeneGeneNameLabel')">HGNC Name</label>
                       </span>
-                      <span v-if="validationErrors[`targetGene.${targetIdx}.targetAccession.gene`]" class="mave-field-error">{{ validationErrors[`targetGene.${targetIdx}.targetAccession.gene`] }}</span>
+                      <span
+                        v-if="validationErrors[`targetGene.${targetIdx}.targetAccession.gene`]"
+                        class="mave-field-error"
+                        >{{ validationErrors[`targetGene.${targetIdx}.targetAccession.gene`] }}</span
+                      >
                     </div>
                   </div>
 
                   <div class="mavedb-wizard-row">
                     <div class="mavedb-wizard-help">
-                      <label :id="scopedId('input-targetGeneAccessionLabel')">The accession identifier for this target</label>
+                      <label :id="scopedId('input-targetGeneAccessionLabel')"
+                        >The accession identifier for this target</label
+                      >
                       <div class="mavedb-help-small">
-                        This will be the sequence that your variants are described against. It may be a RefSeq or Ensemble identifier. Available accessions matching the
-                        {{ createdTargetGenes[targetIdx].isRelativeToChromosome ? "assembly" : "gene name" }} will be displayed once one is selected.
+                        This will be the sequence that your variants are described against. It may be a RefSeq or
+                        Ensemble identifier. Available accessions matching the
+                        {{ createdTargetGenes[targetIdx].isRelativeToChromosome ? 'assembly' : 'gene name' }} will be
+                        displayed once one is selected.
                       </div>
                     </div>
                     <div class="mavedb-wizard-content">
                       <span class="p-float-label">
-                        <AutoComplete v-model="createdTargetGenes[targetIdx].targetGene.targetAccession.accession"
+                        <AutoComplete
                           :id="scopedId('input-targetGeneAccessionLabel')"
-                          :suggestions="targetGeneAccessionSuggestionsList" :force-selection="true" :dropdown="true"
-                          @complete="fetchTargetAccessions($event)" style="width: 100%"/>
+                          v-model="createdTargetGenes[targetIdx].targetGene.targetAccession.accession"
+                          :dropdown="true"
+                          :force-selection="true"
+                          style="width: 100%"
+                          :suggestions="targetGeneAccessionSuggestionsList"
+                          @complete="fetchTargetAccessions($event)"
+                        />
                         <label :for="scopedId('input-targetGeneAccessionLabel')"> Accession Identifier </label>
                       </span>
-                      <div v-if="createdTargetGenes[targetIdx].targetGene.targetAccession.accession && !createdTargetGenes[targetIdx].targetGene.targetAccession.accession?.startsWith('NP')" class="mavedb-wizard-subcontent">
-                        <Button @click="swapNucleotideProteinAccessions(targetIdx)" icon="pi pi-arrows-h"
-                          label="Switch to Protein Accession" severity="info" />
+                      <div
+                        v-if="
+                          createdTargetGenes[targetIdx].targetGene.targetAccession.accession &&
+                          !createdTargetGenes[targetIdx].targetGene.targetAccession.accession?.startsWith('NP')
+                        "
+                        class="mavedb-wizard-subcontent"
+                      >
+                        <Button
+                          icon="pi pi-arrows-h"
+                          label="Switch to Protein Accession"
+                          severity="info"
+                          @click="swapNucleotideProteinAccessions(targetIdx)"
+                        />
                       </div>
-                      <span v-if="validationErrors[`targetGene.${targetIdx}.targetAccession.accession`]" class="mave-field-error">{{ validationErrors[`targetGene.${targetIdx}.targetAccession.accession`] }}</span>
+                      <span
+                        v-if="validationErrors[`targetGene.${targetIdx}.targetAccession.accession`]"
+                        class="mave-field-error"
+                        >{{ validationErrors[`targetGene.${targetIdx}.targetAccession.accession`] }}</span
+                      >
                     </div>
                   </div>
                   <div class="mavedb-wizard-row">
@@ -871,27 +1219,44 @@
                     <div class="mavedb-wizard-content">
                       <span class="p-float-label">
                         <span class="p-float-label">
-                          <SelectButton v-model="createdTargetGenes[targetIdx].targetGene.category" :id="scopedId('input-targetGeneCategoryLabel')"
-                            :options="targetGeneCategories" :optionLabel="textForTargetGeneCategory" />
+                          <SelectButton
+                            :id="scopedId('input-targetGeneCategoryLabel')"
+                            v-model="createdTargetGenes[targetIdx].targetGene.category"
+                            :option-label="textForTargetGeneCategory"
+                            :options="targetGeneCategories"
+                          />
                         </span>
                       </span>
-                      <span v-if="validationErrors[`targetGene.${targetIdx}.category`]" class="mave-field-error">{{ validationErrors[`targetGene.${targetIdx}.category`] }}</span>
+                      <span v-if="validationErrors[`targetGene.${targetIdx}.category`]" class="mave-field-error">{{
+                        validationErrors[`targetGene.${targetIdx}.category`]
+                      }}</span>
                     </div>
                   </div>
                 </div>
               </div>
               <div class="mavedb-wizard-step-controls-row">
                 <div class="flex justify-content-between mavedb-wizard-step-controls pt-4">
-                  <Button label="Back" severity="secondary" icon="pi pi-arrow-left" @click="showPreviousWizardStep" />
-                  <Button label="Next" :disabled="this.maxWizardStepValidated < activeWizardStep" icon="pi pi-arrow-right" iconPos="right" @click="showNextWizardStepIfValid(showNextWizardStep)" />
+                  <Button icon="pi pi-arrow-left" label="Back" severity="secondary" @click="showPreviousWizardStep" />
+                  <Button
+                    :disabled="maxWizardStepValidated < activeWizardStep"
+                    icon="pi pi-arrow-right"
+                    icon-pos="right"
+                    label="Next"
+                    @click="showNextWizardStepIfValid(showNextWizardStep)"
+                  />
                 </div>
               </div>
             </template>
           </StepperPanel>
 
-          <StepperPanel v-if="itemStatus == 'NotLoaded' || this.item.private" header="Score Ranges">
+          <StepperPanel v-if="itemStatus == 'NotLoaded' || item.private" header="Score Ranges">
             <template #header="{index, clickCallback}">
-              <button class="p-stepper-action" :disabled="maxWizardStepEntered < index || maxWizardStepValidated < index - 1" role="tab" @click="clickCallback">
+              <button
+                class="p-stepper-action"
+                :disabled="maxWizardStepEntered < index || maxWizardStepValidated < index - 1"
+                role="tab"
+                @click="clickCallback"
+              >
                 <span class="p-stepper-number">{{ index + 1 }}</span>
                 <span class="p-stepper-title">Score Ranges</span>
               </button>
@@ -901,62 +1266,107 @@
                 <div class="mavedb-wizard-form-content-background"></div>
                 <div class="mavedb-wizard-row">
                   <div class="mavedb-wizard-help">
-                    <label :id="scopedId('input-investigatorIsProvidingScoreRanges')">Will you be providing score ranges for this score set?</label>
+                    <label :id="scopedId('input-investigatorIsProvidingScoreRanges')"
+                      >Will you be providing score ranges for this score set?</label
+                    >
                     <div class="mavedb-help-small">
-                      Score ranges provide additional clinical context to the scores you upload. If you provide score ranges, you may
-                      classify each range as having either normal, abnormal, or an unspecified function. If you provide a range with normal
-                      function, you should also provide a baseline score that falls within the normal range. This score is the expected
-                      score for baseline variants.
+                      Score ranges provide additional clinical context to the scores you upload. If you provide score
+                      ranges, you may classify each range as having either normal, abnormal, or an unspecified function.
+                      If you provide a range with normal function, you should also provide a baseline score that falls
+                      within the normal range. This score is the expected score for baseline variants.
                     </div>
                   </div>
                   <div class="mavedb-wizard-content">
-                    <InputSwitch v-model="investigatorIsProvidingScoreRanges" :aria-labelledby="scopedId('input-investigatorIsProvidingScoreRanges')" />
-                    <div class="mavedb-switch-value">{{ investigatorIsProvidingScoreRanges ? 'Yes, I will be providing score range data.' : 'No, I will not be providing score range data.' }}</div>
+                    <InputSwitch
+                      v-model="investigatorIsProvidingScoreRanges"
+                      :aria-labelledby="scopedId('input-investigatorIsProvidingScoreRanges')"
+                    />
+                    <div class="mavedb-switch-value">
+                      {{
+                        investigatorIsProvidingScoreRanges
+                          ? 'Yes, I will be providing score range data.'
+                          : 'No, I will not be providing score range data.'
+                      }}
+                    </div>
                   </div>
                 </div>
                 <div v-if="investigatorIsProvidingScoreRanges">
                   <div class="mavedb-wizard-row">
                     <div class="mavedb-wizard-help">
-                      <label :id="scopedId('input-investigatorProvidedBaselineScore')">What is the baseline score for this score set?</label>
+                      <label :id="scopedId('input-investigatorProvidedBaselineScore')"
+                        >What is the baseline score for this score set?</label
+                      >
                       <div class="mavedb-help-small">
                         This number should be within the range of normal scores for your score data.
                       </div>
                     </div>
                     <div class="mavedb-wizard-content">
                       <span class="p-float-label">
-                        <InputNumber v-model="scoreRanges.investigatorProvided.baselineScore" :aria-labelledby="scopedId('input-investigatorProvidedBaselineScore')" style="width:100%;" :minFractionDigits="1" :maxFractionDigits="10" />
+                        <InputNumber
+                          v-model="scoreRanges.investigatorProvided.baselineScore"
+                          :aria-labelledby="scopedId('input-investigatorProvidedBaselineScore')"
+                          :max-fraction-digits="10"
+                          :min-fraction-digits="1"
+                          style="width: 100%"
+                        />
                         <label :for="scopedId('input-investigatorProvidedBaselineScore')"> Baseline Score </label>
                       </span>
-                      <span v-if="validationErrors[`scoreRanges.investigatorProvided.baselineScore`]" class="mave-field-error">{{ validationErrors[`scoreRanges.investigatorProvided.baselineScore`] }}</span>
+                      <span
+                        v-if="validationErrors[`scoreRanges.investigatorProvided.baselineScore`]"
+                        class="mave-field-error"
+                        >{{ validationErrors[`scoreRanges.investigatorProvided.baselineScore`] }}</span
+                      >
                     </div>
                   </div>
                   <div class="mavedb-wizard-row">
                     <div class="mavedb-wizard-help">
-                      <label :id="scopedId(`input-investigatorProvidedBaselineScoreDescription`)">Enter an (optional) description for the baseline score</label>
+                      <label :id="scopedId(`input-investigatorProvidedBaselineScoreDescription`)"
+                        >Enter an (optional) description for the baseline score</label
+                      >
                       <div class="mavedb-help-small">
-                        This description should provide additional details about the baseline score if necessary. e.g., "median synonymous value of the 95% of variants around the mean, normalized to 0."
+                        This description should provide additional details about the baseline score if necessary. e.g.,
+                        "median synonymous value of the 95% of variants around the mean, normalized to 0."
                       </div>
                     </div>
                     <div class="mavedb-wizard-content">
                       <span class="p-float-label">
-                        <Textarea v-model="scoreRanges.investigatorProvided.baselineScoreDescription" :aria-labelledby="scopedId(`input-investigatorProvidedBaselineScoreDescription`)" autoResize rows="5" style="width:100%;" />
-                        <label :for="scopedId(`input-investigatorProvidedBaselineScoreDescription`)"> Baseline Score Description </label>
+                        <Textarea
+                          v-model="scoreRanges.investigatorProvided.baselineScoreDescription"
+                          :aria-labelledby="scopedId(`input-investigatorProvidedBaselineScoreDescription`)"
+                          auto-resize
+                          rows="5"
+                          style="width: 100%"
+                        />
+                        <label :for="scopedId(`input-investigatorProvidedBaselineScoreDescription`)">
+                          Baseline Score Description
+                        </label>
                       </span>
-                      <span v-if="validationErrors[`scoreRanges.investigatorProvided.baselineScoreDescription`]" class="mave-field-error">{{ validationErrors[`scoreRanges.investigatorProvided.baselineScoreDescription`] }}</span>
+                      <span
+                        v-if="validationErrors[`scoreRanges.investigatorProvided.baselineScoreDescription`]"
+                        class="mave-field-error"
+                        >{{ validationErrors[`scoreRanges.investigatorProvided.baselineScoreDescription`] }}</span
+                      >
                     </div>
                   </div>
-                  <div class="mavedb-wizard-row" v-if="publicationIdentifiers.length">
+                  <div v-if="publicationIdentifiers.length" class="mavedb-wizard-row">
                     <div class="mavedb-wizard-help">
                       <label>
-                        Of the previously provided publications, optionally select a publication to use as the source of the score ranges.
+                        Of the previously provided publications, optionally select a publication to use as the source of
+                        the score ranges.
                       </label>
                     </div>
                     <div class="mavedb-wizard-content field">
                       <span class="p-float-label">
-                        <Multiselect ref="investigatorProvidedScoreRangesPublicationIdentifiersInput" v-model="scoreRanges.investigatorProvided.source"
-                          :id="scopedId('input-investigatorProvidedScoreRangesPublicationIdentifiersInput')" :options="publicationIdentifiers"
-                          optionLabel="identifier" placeholder="Select a source for the score ranges."
-                          :selectionLimit="1" style="width: 100%;">
+                        <Multiselect
+                          :id="scopedId('input-investigatorProvidedScoreRangesPublicationIdentifiersInput')"
+                          ref="investigatorProvidedScoreRangesPublicationIdentifiersInput"
+                          v-model="scoreRanges.investigatorProvided.source"
+                          option-label="identifier"
+                          :options="publicationIdentifiers"
+                          placeholder="Select a source for the score ranges."
+                          :selection-limit="1"
+                          style="width: 100%"
+                        >
                           <template #option="slotProps">
                             <div class="field">
                               <div>Title: {{ slotProps.option.title }}</div>
@@ -966,10 +1376,15 @@
                             </div>
                           </template>
                         </Multiselect>
-                        <label :for="scopedId('input-investigatorProvidedScoreRangesPublicationIdentifiersInput')">Score range source (optional)</label>
+                        <label :for="scopedId('input-investigatorProvidedScoreRangesPublicationIdentifiersInput')"
+                          >Score range source (optional)</label
+                        >
                       </span>
-                      <span v-if="validationErrors[`scoreRanges.investigatorProvided.source`]" class="mave-field-error">{{
-                        validationErrors[`scoreRanges.investigatorProvided.source`] }}</span>
+                      <span
+                        v-if="validationErrors[`scoreRanges.investigatorProvided.source`]"
+                        class="mave-field-error"
+                        >{{ validationErrors[`scoreRanges.investigatorProvided.source`] }}</span
+                      >
                     </div>
                   </div>
                 </div>
@@ -978,188 +1393,355 @@
                     <div class="mavedb-wizard-row">
                       <div class="mavedb-wizard-content">
                         <div>
-                          Score Range {{  rangeIdx + 1 }}
-                          <Button label="Remove" severity="danger" icon="pi pi-times" style="float:right;" @click="removeScoreRange(rangeIdx)"></Button>
+                          Score Range {{ rangeIdx + 1 }}
+                          <Button
+                            icon="pi pi-times"
+                            label="Remove"
+                            severity="danger"
+                            style="float: right"
+                            @click="removeScoreRange(rangeIdx)"
+                          ></Button>
                         </div>
-                        <hr>
-                        <span v-if="validationErrors[`scoreRanges.investigatorProvided.ranges.${rangeIdx}`]" class="mave-field-error">{{ validationErrors[`scoreRanges.investigatorProvided.ranges.${rangeIdx}`] }}</span>
+                        <hr />
+                        <span
+                          v-if="validationErrors[`scoreRanges.investigatorProvided.ranges.${rangeIdx}`]"
+                          class="mave-field-error"
+                          >{{ validationErrors[`scoreRanges.investigatorProvided.ranges.${rangeIdx}`] }}</span
+                        >
                       </div>
                     </div>
                     <div class="mavedb-wizard-row">
                       <div class="mavedb-wizard-help">
-                        <label :id="scopedId(`input-investigatorProvidedRangeLabel-${rangeIdx}`)">Enter a label for this score range</label>
+                        <label :id="scopedId(`input-investigatorProvidedRangeLabel-${rangeIdx}`)"
+                          >Enter a label for this score range</label
+                        >
                         <div class="mavedb-help-small">
                           This label will be used to describe this range on visualizations of this score data.
                         </div>
                       </div>
                       <div class="mavedb-wizard-content">
                         <span class="p-float-label">
-                          <InputText v-model="rangeObj.value.label" :aria-labelledby="scopedId(`input-investigatorProvidedRangeLabel-${rangeIdx}`)" style="width:100%;" />
-                          <label :for="scopedId(`input-investigatorProvidedRangeLabel-${rangeIdx}`)"> Score range label </label>
+                          <InputText
+                            v-model="rangeObj.value.label"
+                            :aria-labelledby="scopedId(`input-investigatorProvidedRangeLabel-${rangeIdx}`)"
+                            style="width: 100%"
+                          />
+                          <label :for="scopedId(`input-investigatorProvidedRangeLabel-${rangeIdx}`)">
+                            Score range label
+                          </label>
                         </span>
-                        <span v-if="validationErrors[`scoreRanges.investigatorProvided.ranges.${rangeIdx}.label`]" class="mave-field-error">{{ validationErrors[`scoreRanges.investigatorProvided.ranges.${rangeIdx}.label`] }}</span>
+                        <span
+                          v-if="validationErrors[`scoreRanges.investigatorProvided.ranges.${rangeIdx}.label`]"
+                          class="mave-field-error"
+                          >{{ validationErrors[`scoreRanges.investigatorProvided.ranges.${rangeIdx}.label`] }}</span
+                        >
                       </div>
                     </div>
                     <div class="mavedb-wizard-row">
                       <div class="mavedb-wizard-help">
-                        <label :id="scopedId(`input-investigatorProvidedRangeDescription-${rangeIdx}`)">Enter an (optional) description for this score range</label>
+                        <label :id="scopedId(`input-investigatorProvidedRangeDescription-${rangeIdx}`)"
+                          >Enter an (optional) description for this score range</label
+                        >
                         <div class="mavedb-help-small">
                           This description should provide additional details about this score range if necessary.
                         </div>
                       </div>
                       <div class="mavedb-wizard-content">
                         <span class="p-float-label">
-                          <Textarea v-model="rangeObj.value.description" :aria-labelledby="scopedId(`input-investigatorProvidedRangeDescription-${rangeIdx}`)" autoResize rows="5" style="width:100%;" />
-                          <label :for="scopedId(`input-investigatorProvidedRangeDescription-${rangeIdx}`)"> Score range description </label>
+                          <Textarea
+                            v-model="rangeObj.value.description"
+                            :aria-labelledby="scopedId(`input-investigatorProvidedRangeDescription-${rangeIdx}`)"
+                            auto-resize
+                            rows="5"
+                            style="width: 100%"
+                          />
+                          <label :for="scopedId(`input-investigatorProvidedRangeDescription-${rangeIdx}`)">
+                            Score range description
+                          </label>
                         </span>
-                        <span v-if="validationErrors[`scoreRanges.investigatorProvided.ranges.${rangeIdx}.description`]" class="mave-field-error">{{ validationErrors[`scoreRanges.investigatorProvided.ranges.${rangeIdx}.description`] }}</span>
+                        <span
+                          v-if="validationErrors[`scoreRanges.investigatorProvided.ranges.${rangeIdx}.description`]"
+                          class="mave-field-error"
+                          >{{
+                            validationErrors[`scoreRanges.investigatorProvided.ranges.${rangeIdx}.description`]
+                          }}</span
+                        >
                       </div>
                     </div>
                     <div class="mavedb-wizard-row">
                       <div class="mavedb-wizard-help">
-                        <label :id="scopedId(`input-investigatorProvidedRangeClassification-${rangeIdx}`)">How should this range be classified?</label>
+                        <label :id="scopedId(`input-investigatorProvidedRangeClassification-${rangeIdx}`)"
+                          >How should this range be classified?</label
+                        >
                         <div class="mavedb-help-small">
                           You may classify a range as having either normal, abnormal, or an unspecified function.
                         </div>
                       </div>
                       <div class="mavedb-wizard-content">
-                          <SelectButton v-model="rangeObj.value.classification" :id="scopedId(`input-investigatorProvidedRangeClassification-${rangeIdx}`)"
-                          :options="rangeClassifications" optionLabel="label" optionValue="value" />
-                          <span v-if="validationErrors[`scoreRanges.investigatorProvided.ranges.${rangeIdx}.classification`]" class="mave-field-error">{{ validationErrors[`scoreRanges.investigatorProvided.ranges.${rangeIdx}.classification`] }}</span>
+                        <SelectButton
+                          :id="scopedId(`input-investigatorProvidedRangeClassification-${rangeIdx}`)"
+                          v-model="rangeObj.value.classification"
+                          option-label="label"
+                          option-value="value"
+                          :options="rangeClassifications"
+                        />
+                        <span
+                          v-if="validationErrors[`scoreRanges.investigatorProvided.ranges.${rangeIdx}.classification`]"
+                          class="mave-field-error"
+                          >{{
+                            validationErrors[`scoreRanges.investigatorProvided.ranges.${rangeIdx}.classification`]
+                          }}</span
+                        >
                       </div>
                     </div>
                     <div class="mavedb-wizard-row">
                       <div class="mavedb-wizard-help">
-                        <label :id="scopedId(`input-investigatorProvidedRangeBoundaries-${rangeIdx}`)">What are the upper and lower bounds of this score range?</label>
+                        <label :id="scopedId(`input-investigatorProvidedRangeBoundaries-${rangeIdx}`)"
+                          >What are the upper and lower bounds of this score range?</label
+                        >
                         <div class="mavedb-help-small">
-                          Score range boundaries should not overlap with the boundaries of other score ranges. Use the toggles to indicate whether the lower or upper bound is inclusive or
-                          does not have a upper or lower bound. If a range does not have an upper or lower bound, the value will be treated as either positive or negative infinity.
+                          Score range boundaries should not overlap with the boundaries of other score ranges. Use the
+                          toggles to indicate whether the lower or upper bound is inclusive or does not have a upper or
+                          lower bound. If a range does not have an upper or lower bound, the value will be treated as
+                          either positive or negative infinity.
                         </div>
                       </div>
                       <div class="mavedb-wizard-content">
-                          <InputGroup>
-                              <Button
-                                class="score-range-toggle-button"
-                                @click="toggleInfinity(rangeIdx, 'lower')"
-                                :outlined="!rangeObj.infiniteLower"
-                              >
-                                <FontAwesomeIcon icon="fa-solid fa-infinity" class="score-range-toggle-icon" />
-                              </Button>
-                              <Button
-                                class="score-range-toggle-button"
-                                @click="toggleBoundary(rangeIdx, 'lower')"
-                                :outlined="!rangeObj.value.inclusiveLowerBound"
-                                :disabled="rangeObj.infiniteLower"
-                              >
-                                <FontAwesomeIcon icon="fa-solid fa-circle-half-stroke" class="score-range-toggle-icon" />
-                              </Button>
-                              <span class="p-float-label">
-                                <InputText v-model="rangeObj.value.range[0]" :aria-labelledby="scopedId(`input-investigatorProvidedRangeLower-${rangeIdx}`)" :disabled="rangeObj.value.infiniteLower"/>
-                                <label :for="scopedId(`input-investigatorProvidedRangeLower-${rangeIdx}`)"> {{ rangeObj.infiniteLower ? "-infinity" : rangeObj.value.inclusiveLowerBound ? "Lower Bound (inclusive)" : "Lower Bound (exclusive)" }} </label>
-                              </span>
-                            <InputGroupAddon>to</InputGroupAddon>
-                              <span class="p-float-label">
-                                <InputText v-model="rangeObj.value.range[1]" :aria-labelledby="scopedId(`input-investigatorProvidedRangeUpper-${rangeIdx}`)" :disabled="rangeObj.value.infiniteUpper"/>
-                                <label :for="scopedId(`input-investigatorProvidedRangeUpper-${rangeIdx}`)"> {{ rangeObj.infiniteUpper ? "infinity" : rangeObj.value.inclusiveUpperBound ? "Upper Bound (inclusive)" : "Upper Bound (exclusive)" }} </label>
-                              </span>
-                              <Button
-                                class="score-range-toggle-button"
-                                @click="toggleBoundary(rangeIdx, 'upper')"
-                                :outlined="!rangeObj.value.inclusiveUpperBound"
-                                :disabled="rangeObj.infiniteUpper"
-                              >
-                                <FontAwesomeIcon icon="fa-solid fa-circle-half-stroke" class="score-range-toggle-icon" />
-                              </Button>
-                              <Button
-                                class="score-range-toggle-button"
-                                @click="toggleInfinity(rangeIdx, 'upper')"
-                                :outlined="!rangeObj.infiniteUpper"
-                              >
-                                <FontAwesomeIcon icon="fa-solid fa-infinity" class="score-range-toggle-icon" />
-                              </Button>
-                          </InputGroup>
-                          <span style="float:left;" v-if="validationErrors[`scoreRanges.investigatorProvided.ranges.${rangeIdx}.oddsPath.range`]" class="mave-field-error">{{ validationErrors[`scoreRanges.investigatorProvided.ranges.${rangeIdx}.oddsPath.range`] }}</span>
+                        <InputGroup>
+                          <Button
+                            class="score-range-toggle-button"
+                            :outlined="!rangeObj.infiniteLower"
+                            @click="toggleInfinity(rangeIdx, 'lower')"
+                          >
+                            <FontAwesomeIcon class="score-range-toggle-icon" icon="fa-solid fa-infinity" />
+                          </Button>
+                          <Button
+                            class="score-range-toggle-button"
+                            :disabled="rangeObj.infiniteLower"
+                            :outlined="!rangeObj.value.inclusiveLowerBound"
+                            @click="toggleBoundary(rangeIdx, 'lower')"
+                          >
+                            <FontAwesomeIcon class="score-range-toggle-icon" icon="fa-solid fa-circle-half-stroke" />
+                          </Button>
+                          <span class="p-float-label">
+                            <InputText
+                              v-model="rangeObj.value.range[0]"
+                              :aria-labelledby="scopedId(`input-investigatorProvidedRangeLower-${rangeIdx}`)"
+                              :disabled="rangeObj.value.infiniteLower"
+                            />
+                            <label :for="scopedId(`input-investigatorProvidedRangeLower-${rangeIdx}`)">
+                              {{
+                                rangeObj.infiniteLower
+                                  ? '-infinity'
+                                  : rangeObj.value.inclusiveLowerBound
+                                    ? 'Lower Bound (inclusive)'
+                                    : 'Lower Bound (exclusive)'
+                              }}
+                            </label>
+                          </span>
+                          <InputGroupAddon>to</InputGroupAddon>
+                          <span class="p-float-label">
+                            <InputText
+                              v-model="rangeObj.value.range[1]"
+                              :aria-labelledby="scopedId(`input-investigatorProvidedRangeUpper-${rangeIdx}`)"
+                              :disabled="rangeObj.value.infiniteUpper"
+                            />
+                            <label :for="scopedId(`input-investigatorProvidedRangeUpper-${rangeIdx}`)">
+                              {{
+                                rangeObj.infiniteUpper
+                                  ? 'infinity'
+                                  : rangeObj.value.inclusiveUpperBound
+                                    ? 'Upper Bound (inclusive)'
+                                    : 'Upper Bound (exclusive)'
+                              }}
+                            </label>
+                          </span>
+                          <Button
+                            class="score-range-toggle-button"
+                            :disabled="rangeObj.infiniteUpper"
+                            :outlined="!rangeObj.value.inclusiveUpperBound"
+                            @click="toggleBoundary(rangeIdx, 'upper')"
+                          >
+                            <FontAwesomeIcon class="score-range-toggle-icon" icon="fa-solid fa-circle-half-stroke" />
+                          </Button>
+                          <Button
+                            class="score-range-toggle-button"
+                            :outlined="!rangeObj.infiniteUpper"
+                            @click="toggleInfinity(rangeIdx, 'upper')"
+                          >
+                            <FontAwesomeIcon class="score-range-toggle-icon" icon="fa-solid fa-infinity" />
+                          </Button>
+                        </InputGroup>
+                        <span
+                          v-if="validationErrors[`scoreRanges.investigatorProvided.ranges.${rangeIdx}.oddsPath.range`]"
+                          class="mave-field-error"
+                          style="float: left"
+                          >{{
+                            validationErrors[`scoreRanges.investigatorProvided.ranges.${rangeIdx}.oddsPath.range`]
+                          }}</span
+                        >
                       </div>
                     </div>
-                    <div v-if="rangeObj.value.classification === 'normal' || rangeObj.value.classification === 'abnormal'" class="mavedb-wizard-row">
+                    <div
+                      v-if="rangeObj.value.classification === 'normal' || rangeObj.value.classification === 'abnormal'"
+                      class="mavedb-wizard-row"
+                    >
                       <div class="mavedb-wizard-help">
-                        <label :id="scopedId('input-investigatorIsProvidingOddsPath')">Will you be providing odds of pathogenicity (OddsPath) ratios for this score range?</label>
+                        <label :id="scopedId('input-investigatorIsProvidingOddsPath')"
+                          >Will you be providing odds of pathogenicity (OddsPath) ratios for this score range?</label
+                        >
                         <div class="mavedb-help-small">
-                          An OddsPath calculation can be determined by evaluating previously classified control variants against the scores in normal and abnormal ranges for an assay.
-                          For additional information about OddsPath, please see <a href="https://pubmed.ncbi.nlm.nih.gov/31892348/">PubMed 31892348</a>.
+                          An OddsPath calculation can be determined by evaluating previously classified control variants
+                          against the scores in normal and abnormal ranges for an assay. For additional information
+                          about OddsPath, please see
+                          <a href="https://pubmed.ncbi.nlm.nih.gov/31892348/">PubMed 31892348</a>.
                         </div>
                       </div>
                       <div class="mavedb-wizard-content">
-                        <InputSwitch v-model="rangeObj.isProvidingOddsPath" :aria-labelledby="scopedId('input-investigatorIsProvidingOddsPath')" />
-                        <div class="mavedb-switch-value">{{ rangeObj.isProvidingOddsPath ? 'Yes, I will be providing OddsPath data for this score range.' : 'No, I will not be providing OddsPath data for this score range.' }}</div>
+                        <InputSwitch
+                          v-model="rangeObj.isProvidingOddsPath"
+                          :aria-labelledby="scopedId('input-investigatorIsProvidingOddsPath')"
+                        />
+                        <div class="mavedb-switch-value">
+                          {{
+                            rangeObj.isProvidingOddsPath
+                              ? 'Yes, I will be providing OddsPath data for this score range.'
+                              : 'No, I will not be providing OddsPath data for this score range.'
+                          }}
+                        </div>
                       </div>
                     </div>
                     <div v-if="rangeObj.isProvidingOddsPath" class="mavedb-wizard-row">
                       <div class="mavedb-wizard-help">
-                        <label :id="scopedId('input-investigatorProvidedOddsPathRatio')">What is the OddsPath ratio and evidence strength for this score range?</label>
+                        <label :id="scopedId('input-investigatorProvidedOddsPathRatio')"
+                          >What is the OddsPath ratio and evidence strength for this score range?</label
+                        >
                       </div>
                       <div class="mavedb-wizard-content">
                         <InputGroup>
-                          <span class=p-float-label style="margin-right: 1em;">
-                            <InputNumber v-model="rangeObj.value.oddsPath.ratio" :aria-labelledby="scopedId('input-investigatorProvidedOddsPathRatio')" style="width:50%;" :minFractionDigits="1" :maxFractionDigits="10" />
+                          <span class="p-float-label" style="margin-right: 1em">
+                            <InputNumber
+                              v-model="rangeObj.value.oddsPath.ratio"
+                              :aria-labelledby="scopedId('input-investigatorProvidedOddsPathRatio')"
+                              :max-fraction-digits="10"
+                              :min-fraction-digits="1"
+                              style="width: 50%"
+                            />
                             <label :for="scopedId('input-oddsPathRatio')"> OddsPath Normal </label>
                           </span>
-                          <span class=p-float-label>
-                            <Dropdown v-model="rangeObj.value.oddsPath.evidence" :aria-labelledby="scopedId('input-investigatorProvidedOddsPathEvidence')" style="width:50%;" :options="evidenceStrengths[rangeObj.value.classification].concat(evidenceStrengths.indeterminate)"></Dropdown>
-                            <label :for="scopedId('input-investigatorProvidedOddsPathEvidence')"> OddsPath Evidence Strength (optional) </label>
+                          <span class="p-float-label">
+                            <Dropdown
+                              v-model="rangeObj.value.oddsPath.evidence"
+                              :aria-labelledby="scopedId('input-investigatorProvidedOddsPathEvidence')"
+                              :options="
+                                evidenceStrengths[rangeObj.value.classification].concat(evidenceStrengths.indeterminate)
+                              "
+                              style="width: 50%"
+                            ></Dropdown>
+                            <label :for="scopedId('input-investigatorProvidedOddsPathEvidence')">
+                              OddsPath Evidence Strength (optional)
+                            </label>
                           </span>
                         </InputGroup>
-                        <span v-if="validationErrors[`scoreRanges.investigatorProvided.ranges.${rangeIdx}.oddsPath.ratio`]" class="mave-field-error">{{ validationErrors[`scoreRanges.investigatorProvided.ranges.${rangeIdx}.oddsPath.ratio`] }}</span>
-                        <span v-if="validationErrors[`scoreRanges.investigatorProvided.ranges.${rangeIdx}.oddsPath.evidence`]" class="mave-field-error">{{ validationErrors[`scoreRanges.investigatorProvided.ranges.${rangeIdx}.oddsPath.evidence`] }}</span>
+                        <span
+                          v-if="validationErrors[`scoreRanges.investigatorProvided.ranges.${rangeIdx}.oddsPath.ratio`]"
+                          class="mave-field-error"
+                          >{{
+                            validationErrors[`scoreRanges.investigatorProvided.ranges.${rangeIdx}.oddsPath.ratio`]
+                          }}</span
+                        >
+                        <span
+                          v-if="
+                            validationErrors[`scoreRanges.investigatorProvided.ranges.${rangeIdx}.oddsPath.evidence`]
+                          "
+                          class="mave-field-error"
+                          >{{
+                            validationErrors[`scoreRanges.investigatorProvided.ranges.${rangeIdx}.oddsPath.evidence`]
+                          }}</span
+                        >
                       </div>
                     </div>
                   </div>
                   <div class="mavedb-wizard-row">
                     <div class="mavedb-wizard-content">
-                      <Button label="Add another range" icon="pi pi-plus" style="float:right;" @click="addScoreRange"></Button>
+                      <Button
+                        icon="pi pi-plus"
+                        label="Add another range"
+                        style="float: right"
+                        @click="addScoreRange"
+                      ></Button>
                     </div>
                   </div>
                 </div>
-                <div class="mavedb-wizard-row" v-if="scoreRanges.investigatorProvided.ranges.some(range => range.isProvidingOddsPath) && publicationIdentifiers.length">
-                    <div class="mavedb-wizard-help">
-                      <label>
-                        Of the previously provided publications, optionally select a publication to use as the source of the OddsPath.
-                      </label>
-                    </div>
-                    <div class="mavedb-wizard-content field">
-                      <span class="p-float-label">
-                        <Multiselect ref="investigatorProvidedOddsPathPublicationIdentifiersInput" v-model="scoreRanges.investigatorProvided.oddsPathSource"
-                          :id="scopedId('input-investigatorProvidedOddsPathPublicationIdentifiersInput')" :options="publicationIdentifiers"
-                          optionLabel="identifier" placeholder="Select a source for the OddsPath calculation."
-                          :selectionLimit="1" style="width: 100%;">
-                          <template #option="slotProps">
-                            <div class="field">
-                              <div>Title: {{ slotProps.option.title }}</div>
-                              <div>DOI: {{ slotProps.option.doi }}</div>
-                              <div>Identifier: {{ slotProps.option.identifier }}</div>
-                              <div>Database: {{ slotProps.option.dbName }}</div>
-                            </div>
-                          </template>
-                        </Multiselect>
-                        <label :for="scopedId('input-investigatorProvidedOddsPathPublicationIdentifiersInput')">OddsPath Source (optional)</label>
-                      </span>
-                      <span v-if="validationErrors[`scoreRanges.investigatorProvided.oddsPathSource`]" class="mave-field-error">{{
-                        validationErrors[`scoreRanges.investigatorProvided.oddsPathSource`] }}</span>
-                    </div>
+                <div
+                  v-if="
+                    scoreRanges.investigatorProvided.ranges.some((range) => range.isProvidingOddsPath) &&
+                    publicationIdentifiers.length
+                  "
+                  class="mavedb-wizard-row"
+                >
+                  <div class="mavedb-wizard-help">
+                    <label>
+                      Of the previously provided publications, optionally select a publication to use as the source of
+                      the OddsPath.
+                    </label>
                   </div>
+                  <div class="mavedb-wizard-content field">
+                    <span class="p-float-label">
+                      <Multiselect
+                        :id="scopedId('input-investigatorProvidedOddsPathPublicationIdentifiersInput')"
+                        ref="investigatorProvidedOddsPathPublicationIdentifiersInput"
+                        v-model="scoreRanges.investigatorProvided.oddsPathSource"
+                        option-label="identifier"
+                        :options="publicationIdentifiers"
+                        placeholder="Select a source for the OddsPath calculation."
+                        :selection-limit="1"
+                        style="width: 100%"
+                      >
+                        <template #option="slotProps">
+                          <div class="field">
+                            <div>Title: {{ slotProps.option.title }}</div>
+                            <div>DOI: {{ slotProps.option.doi }}</div>
+                            <div>Identifier: {{ slotProps.option.identifier }}</div>
+                            <div>Database: {{ slotProps.option.dbName }}</div>
+                          </div>
+                        </template>
+                      </Multiselect>
+                      <label :for="scopedId('input-investigatorProvidedOddsPathPublicationIdentifiersInput')"
+                        >OddsPath Source (optional)</label
+                      >
+                    </span>
+                    <span
+                      v-if="validationErrors[`scoreRanges.investigatorProvided.oddsPathSource`]"
+                      class="mave-field-error"
+                      >{{ validationErrors[`scoreRanges.investigatorProvided.oddsPathSource`] }}</span
+                    >
+                  </div>
+                </div>
               </div>
               <div class="mavedb-wizard-step-controls-row">
                 <div class="flex justify-content-between mavedb-wizard-step-controls pt-5">
-                  <Button label="Back" severity="secondary" icon="pi pi-arrow-left" @click="showPreviousWizardStep" />
-                  <Button label="Next" :disabled="this.maxWizardStepValidated < activeWizardStep" icon="pi pi-arrow-right" iconPos="right" @click="showNextWizardStepIfValid(showNextWizardStep)" />
+                  <Button icon="pi pi-arrow-left" label="Back" severity="secondary" @click="showPreviousWizardStep" />
+                  <Button
+                    :disabled="maxWizardStepValidated < activeWizardStep"
+                    icon="pi pi-arrow-right"
+                    icon-pos="right"
+                    label="Next"
+                    @click="showNextWizardStepIfValid(showNextWizardStep)"
+                  />
                 </div>
               </div>
             </template>
           </StepperPanel>
 
-          <StepperPanel v-if="itemStatus == 'NotLoaded' || this.item.private" header="Variant scores">
+          <StepperPanel v-if="itemStatus == 'NotLoaded' || item.private" header="Variant scores">
             <template #header="{index, clickCallback}">
-              <button class="p-stepper-action" :disabled="maxWizardStepEntered < index || maxWizardStepValidated < index - 1" role="tab" @click="clickCallback">
+              <button
+                class="p-stepper-action"
+                :disabled="maxWizardStepEntered < index || maxWizardStepValidated < index - 1"
+                role="tab"
+                @click="clickCallback"
+              >
                 <span class="p-stepper-number">{{ index + 1 }}</span>
                 <span class="p-stepper-title">Variant scores</span>
               </button>
@@ -1170,68 +1752,100 @@
                 <div class="mavedb-wizard-row">
                   <div class="mavedb-wizard-content">
                     <Message v-if="createdTargetGenes[0]?.targetAccession?.accession" severity="info">
-                      When defining variants against an accession based target, uploaded variant coordinates should be fully
-                      qualified with respect to target names or target accessions (e.g: NC_000001.1:c.1A>C).
+                      When defining variants against an accession based target, uploaded variant coordinates should be
+                      fully qualified with respect to target names or target accessions (e.g: NC_000001.1:c.1A>C).
                     </Message>
                     <Message v-else-if="numTargets > 1" severity="info">
                       When defining variants against multiple targets, uploaded variant coordinates should be fully
                       qualified with respect to target names or target accessions.
                     </Message>
                   </div>
-
                 </div>
                 <div class="mavedb-wizard-row">
                   <div class="mavedb-wizard-help">
                     <div v-if="item">
                       <div>{{ formatInt(item.numVariants) }} variants are included in this score set.</div>
-                      <label :id="scopedId('input-scoresFile')">Load a new scores file to replace existing variants</label>
+                      <label :id="scopedId('input-scoresFile')"
+                        >Load a new scores file to replace existing variants</label
+                      >
                     </div>
                     <div v-else>
                       <label :id="scopedId('input-scoresFile')">Load a scores file</label>
                     </div>
                     <div class="mavedb-help-small">
-                      This file is required and should be a CSV file, with each row of the table describing a single variant. For more information about what this file can include and how it should be formatted, please take a look at
-                      <a target="_blank" :href="`${config.appBaseUrl}/docs/mavedb/data_formats.html#data-table-formats`">our documentation</a>.
+                      This file is required and should be a CSV file, with each row of the table describing a single
+                      variant. For more information about what this file can include and how it should be formatted,
+                      please take a look at
+                      <a :href="`${config.appBaseUrl}/docs/mavedb/data_formats.html#data-table-formats`" target="_blank"
+                        >our documentation</a
+                      >.
                     </div>
                   </div>
                   <div class="mavedb-wizard-content">
                     <span class="p-float-label">
-                      <FileUpload ref="scoresFileUpload" :id="scopedId('input-scoresFile')" :auto="false"
-                        chooseLabel="Scores file" :class="inputClasses.scoresFile || ''" :customUpload="true" :fileLimit="1"
-                        :showCancelButton="false" :showUploadButton="false">
+                      <FileUpload
+                        :id="scopedId('input-scoresFile')"
+                        ref="scoresFileUpload"
+                        :auto="false"
+                        choose-label="Scores file"
+                        :class="inputClasses.scoresFile || ''"
+                        :custom-upload="true"
+                        :file-limit="1"
+                        :show-cancel-button="false"
+                        :show-upload-button="false"
+                      >
                         <template #empty>
                           <p>Drop a file here.</p>
                         </template>
                       </FileUpload>
                     </span>
-                    <span v-if="validationErrors.scoresFile" class="mave-field-error">{{ validationErrors.scoresFile}}</span>
+                    <span v-if="validationErrors.scoresFile" class="mave-field-error">{{
+                      validationErrors.scoresFile
+                    }}</span>
                   </div>
                 </div>
                 <div class="mavedb-wizard-row">
                   <div class="mavedb-wizard-help">
                     <label :id="scopedId('input-countsFile')">Load a counts file</label>
                     <div class="mavedb-help-small">
-                      This file is optional, but recommended. There are no required columns for your count data, but you should describe the meaning of any columns in your methods section.
+                      This file is optional, but recommended. There are no required columns for your count data, but you
+                      should describe the meaning of any columns in your methods section.
                     </div>
                   </div>
                   <div class="mavedb-wizard-content">
                     <span class="p-float-label">
-                      <FileUpload ref="countsFileUpload" :id="scopedId('input-countsFile')" :auto="false"
-                        chooseLabel="Counts file" :class="inputClasses.countsFile || ''" :customUpload="true" :fileLimit="1"
-                        :showCancelButton="false" :showUploadButton="false">
+                      <FileUpload
+                        :id="scopedId('input-countsFile')"
+                        ref="countsFileUpload"
+                        :auto="false"
+                        choose-label="Counts file"
+                        :class="inputClasses.countsFile || ''"
+                        :custom-upload="true"
+                        :file-limit="1"
+                        :show-cancel-button="false"
+                        :show-upload-button="false"
+                      >
                         <template #empty>
                           <p>Drop a file here.</p>
                         </template>
                       </FileUpload>
                     </span>
-                    <span v-if="validationErrors.countsFile" class="mave-field-error">{{ validationErrors.countsFile}}</span>
+                    <span v-if="validationErrors.countsFile" class="mave-field-error">{{
+                      validationErrors.countsFile
+                    }}</span>
                   </div>
                 </div>
               </div>
               <div class="mavedb-wizard-step-controls-row">
                 <div class="flex justify-content-between mavedb-wizard-step-controls pt-4">
-                  <Button label="Back" severity="secondary" icon="pi pi-arrow-left" @click="showPreviousWizardStep" />
-                  <Button label="Save" :disabled="this.maxWizardStepValidated < activeWizardStep" icon="pi pi-arrow-right" iconPos="right" @click="item ? saveEditContent() : validateAndSave()" />
+                  <Button icon="pi pi-arrow-left" label="Back" severity="secondary" @click="showPreviousWizardStep" />
+                  <Button
+                    :disabled="maxWizardStepValidated < activeWizardStep"
+                    icon="pi pi-arrow-right"
+                    icon-pos="right"
+                    label="Save"
+                    @click="item ? saveEditContent() : validateAndSave()"
+                  />
                 </div>
               </div>
             </template>
@@ -1244,25 +1858,21 @@
 </template>
 
 <script>
-
 import axios from 'axios'
 import fasta from 'fasta-js'
 import _ from 'lodash'
 import {marked} from 'marked'
-import { FontAwesomeIcon } from '@fortawesome/vue-fontawesome'
+import {FontAwesomeIcon} from '@fortawesome/vue-fontawesome'
 import AutoComplete from 'primevue/autocomplete'
 import Button from 'primevue/button'
-import Card from 'primevue/card'
 import Chips from 'primevue/chips'
-import Checkbox from 'primevue/checkbox'
-import Column from 'primevue/column'
 import Dropdown from 'primevue/dropdown'
 import FileUpload from 'primevue/fileupload'
+import InputGroup from 'primevue/inputgroup'
+import InputGroupAddon from 'primevue/inputgroupaddon'
 import InputNumber from 'primevue/inputnumber'
 import InputSwitch from 'primevue/inputswitch'
 import InputText from 'primevue/inputtext'
-import InputGroup from 'primevue/inputgroup'
-import InputGroupAddon from 'primevue/inputgroupaddon'
 import Message from 'primevue/message'
 import Multiselect from 'primevue/multiselect'
 import ProgressSpinner from 'primevue/progressspinner'
@@ -1272,22 +1882,20 @@ import StepperPanel from 'primevue/stepperpanel'
 import TabPanel from 'primevue/tabpanel'
 import TabView from 'primevue/tabview'
 import Textarea from 'primevue/textarea'
-import DataTable from 'primevue/datatable'
-import {useRestResource} from 'rest-client-vue'
 import {ref} from 'vue'
 
 import EntityLink from '@/components/common/EntityLink'
-import DefaultLayout from '@/components/layout/DefaultLayout'
 import EmailPrompt from '@/components/common/EmailPrompt'
+import DefaultLayout from '@/components/layout/DefaultLayout'
+import useScopedId from '@/composables/scoped-id'
+import useFormatters from '@/composition/formatters'
 import useItem from '@/composition/item'
 import useItems from '@/composition/items'
 import config from '@/config'
-import { TARGET_GENE_CATEGORIES, textForTargetGeneCategory } from '@/lib/target-genes'
+import {normalizeDoi, validateDoi} from '@/lib/identifiers'
 import {ORCID_ID_REGEX} from '@/lib/orcid'
-import { normalizeDoi, validateDoi} from '@/lib/identifiers'
-import useScopedId from '@/composables/scoped-id'
-import useFormatters from '@/composition/formatters'
-import { NORMAL_RANGE_EVIDENCE, ABNORMAL_RANGE_EVIDENCE, INDETERMINATE_RANGE_EVIDENCE } from '@/lib/ranges'
+import {NORMAL_RANGE_EVIDENCE, ABNORMAL_RANGE_EVIDENCE, INDETERMINATE_RANGE_EVIDENCE} from '@/lib/ranges'
+import {TARGET_GENE_CATEGORIES, textForTargetGeneCategory} from '@/lib/target-genes'
 
 const externalGeneDatabases = ['UniProt', 'Ensembl', 'RefSeq']
 
@@ -1303,7 +1911,7 @@ function emptyTargetGeneWizardObj() {
         sequence: null,
         label: null,
         reference: null,
-        taxonomy: null,
+        taxonomy: null
       },
       targetAccession: {
         accession: null,
@@ -1311,12 +1919,10 @@ function emptyTargetGeneWizardObj() {
         gene: null
       },
       externalIdentifiers: _.fromPairs(
-        externalGeneDatabases.map((dbName) => [dbName, { identifier: null, offset: null }])
+        externalGeneDatabases.map((dbName) => [dbName, {identifier: null, offset: null}])
       )
     },
-    linkedAccessions: _.fromPairs(
-      externalGeneDatabases.map((dbName) => [dbName, false])
-    ),
+    linkedAccessions: _.fromPairs(externalGeneDatabases.map((dbName) => [dbName, false])),
     autofilledTargetGene: null
   }
 }
@@ -1330,14 +1936,14 @@ function emptyScoreRangeWizardObj() {
       classification: null,
       inclusiveLowerBound: true,
       inclusiveUpperBound: false,
-      oddsPath:{
+      oddsPath: {
         ratio: null,
-        evidence: null,
-      },
+        evidence: null
+      }
     },
     infiniteLower: false,
     infiniteUpper: false,
-    isProvidingOddsPath: false,
+    isProvidingOddsPath: false
   }
 }
 
@@ -1346,11 +1952,7 @@ export default {
   components: {
     AutoComplete,
     Button,
-    Card,
     Chips,
-    Checkbox,
-    Column,
-    DataTable,
     DefaultLayout,
     Dropdown,
     EmailPrompt,
@@ -1370,55 +1972,7 @@ export default {
     StepperPanel,
     TabPanel,
     TabView,
-    Textarea,
-  },
-
-  setup: () => {
-    const publicationIdentifierSuggestions = useItems({ itemTypeName: 'publication-identifier-search' })
-    const externalPublicationIdentifierSuggestions = useItems({ itemTypeName: 'external-publication-identifier-search' })
-
-    const targetGeneIdentifierSuggestions = {}
-    for (const dbName of externalGeneDatabases) {
-      targetGeneIdentifierSuggestions[dbName] = useItems({ itemTypeName: `${dbName.toLowerCase()}-identifier-search` })
-    }
-
-    const licenses = useItems({itemTypeName: 'active-license'})
-    const taxonomies = useItems({itemTypeName: 'taxonomy'})
-    const taxonomySuggestions = useItems({itemTypeName: 'taxonomy-search'})
-    const geneNames = useItems({ itemTypeName: 'gene-names' })
-    const assemblies = useItems({ itemTypeName: 'assemblies' })
-    const targetGeneSuggestions = useItems({ itemTypeName: 'target-gene-search' })
-
-    return {
-      config: config,
-
-      ...useFormatters(),
-      ...useItem({ itemTypeName: 'scoreSet' }),
-      ...useScopedId(),
-      editableExperiments: ref([]),
-      licenses: licenses.items,
-      publicationIdentifierSuggestions: publicationIdentifierSuggestions.items,
-      setPublicationIdentifierSearch: (text) => publicationIdentifierSuggestions.setRequestBody({ text }),
-      externalPublicationIdentifierSuggestions: externalPublicationIdentifierSuggestions.items,
-      setExternalPublicationIdentifierSearch: (text) => externalPublicationIdentifierSuggestions.setRequestBody({ text }),
-      targetGeneSuggestions: targetGeneSuggestions.items,
-      setTargetGeneSearch: (text) => targetGeneSuggestions.setRequestBody({ text }),
-      targetGeneIdentifierSuggestions: ref({
-        ..._.mapValues(targetGeneIdentifierSuggestions, (itemsModule) => itemsModule.items)
-      }),
-      setTargetGeneIdentifierSearch: _.mapValues(targetGeneIdentifierSuggestions, (itemsModule) =>
-        (text) => {
-          itemsModule.setRequestBody({ text })
-          itemsModule.ensureItemsLoaded()
-        }
-      ),
-      taxonomies: taxonomies.items,
-      taxonomySuggestions: taxonomySuggestions.items,
-      setTaxonomySearch: (text) => taxonomySuggestions.setRequestBody({text}),
-      assemblies: assemblies.items,
-      geneNames: geneNames.items,
-      textForTargetGeneCategory: textForTargetGeneCategory
-    }
+    Textarea
   },
 
   props: {
@@ -1429,6 +1983,52 @@ export default {
     itemId: {
       type: String,
       required: false
+    }
+  },
+
+  setup: () => {
+    const publicationIdentifierSuggestions = useItems({itemTypeName: 'publication-identifier-search'})
+    const externalPublicationIdentifierSuggestions = useItems({itemTypeName: 'external-publication-identifier-search'})
+
+    const targetGeneIdentifierSuggestions = {}
+    for (const dbName of externalGeneDatabases) {
+      targetGeneIdentifierSuggestions[dbName] = useItems({itemTypeName: `${dbName.toLowerCase()}-identifier-search`})
+    }
+
+    const licenses = useItems({itemTypeName: 'active-license'})
+    const taxonomies = useItems({itemTypeName: 'taxonomy'})
+    const taxonomySuggestions = useItems({itemTypeName: 'taxonomy-search'})
+    const geneNames = useItems({itemTypeName: 'gene-names'})
+    const assemblies = useItems({itemTypeName: 'assemblies'})
+    const targetGeneSuggestions = useItems({itemTypeName: 'target-gene-search'})
+
+    return {
+      config: config,
+
+      ...useFormatters(),
+      ...useItem({itemTypeName: 'scoreSet'}),
+      ...useScopedId(),
+      editableExperiments: ref([]),
+      licenses: licenses.items,
+      publicationIdentifierSuggestions: publicationIdentifierSuggestions.items,
+      setPublicationIdentifierSearch: (text) => publicationIdentifierSuggestions.setRequestBody({text}),
+      externalPublicationIdentifierSuggestions: externalPublicationIdentifierSuggestions.items,
+      setExternalPublicationIdentifierSearch: (text) => externalPublicationIdentifierSuggestions.setRequestBody({text}),
+      targetGeneSuggestions: targetGeneSuggestions.items,
+      setTargetGeneSearch: (text) => targetGeneSuggestions.setRequestBody({text}),
+      targetGeneIdentifierSuggestions: ref({
+        ..._.mapValues(targetGeneIdentifierSuggestions, (itemsModule) => itemsModule.items)
+      }),
+      setTargetGeneIdentifierSearch: _.mapValues(targetGeneIdentifierSuggestions, (itemsModule) => (text) => {
+        itemsModule.setRequestBody({text})
+        itemsModule.ensureItemsLoaded()
+      }),
+      taxonomies: taxonomies.items,
+      taxonomySuggestions: taxonomySuggestions.items,
+      setTaxonomySearch: (text) => taxonomySuggestions.setRequestBody({text}),
+      assemblies: assemblies.items,
+      geneNames: geneNames.items,
+      textForTargetGeneCategory: textForTargetGeneCategory
     }
   },
 
@@ -1470,25 +2070,22 @@ export default {
         baselineScoreDescription: null,
         ranges: [],
         oddsPathSource: [],
-        source: [],
+        source: []
       }
     },
 
     // Static sets of options:
-    sequenceTypes: [
-      'DNA',
-      'protein'
-    ],
+    sequenceTypes: ['DNA', 'protein'],
     targetGeneCategories: TARGET_GENE_CATEGORIES,
     rangeClassifications: [
-      {value: "normal", label: "Normal"},
-      {value: "abnormal", label: "Abnormal"},
-      {value: "not_specified", label: "Not Specified"}
+      {value: 'normal', label: 'Normal'},
+      {value: 'abnormal', label: 'Abnormal'},
+      {value: 'not_specified', label: 'Not Specified'}
     ],
     evidenceStrengths: {
       normal: NORMAL_RANGE_EVIDENCE,
       abnormal: ABNORMAL_RANGE_EVIDENCE,
-      indeterminate: INDETERMINATE_RANGE_EVIDENCE,
+      indeterminate: INDETERMINATE_RANGE_EVIDENCE
     },
 
     progressVisible: false,
@@ -1519,18 +2116,24 @@ export default {
     stepFields: [
       ['experiment', 'supersededScoreSetUrn', 'metaAnalyzesScoreSetUrns'],
       [
-        'title', 'shortDescription', 'methodText', 'abstractText',
-        'publicationIdentifiers', 'primaryPublicationIdentifiers', 'extraMetadata', 'dataUsagePolicy'
+        'title',
+        'shortDescription',
+        'methodText',
+        'abstractText',
+        'publicationIdentifiers',
+        'primaryPublicationIdentifiers',
+        'extraMetadata',
+        'dataUsagePolicy'
       ],
       ['targets'],
       ['targetGene'],
       ['scoreRanges'],
-      ['scoresFile', 'countsFile'],
-    ],
+      ['scoresFile', 'countsFile']
+    ]
   }),
 
   computed: {
-    maxWizardStepValidated: function() {
+    maxWizardStepValidated: function () {
       const numSteps = 5 + this.numTargets
       // This yields the index of the maximum step validated, -1 if step 0 is not valid, and -2 if all steps are valid.
       const maxStepValidated = _.findIndex(_.range(0, numSteps), (step) => !this.validateWizardStep(step)) - 1
@@ -1549,20 +2152,22 @@ export default {
       return this.suggestionsForAutocomplete(this.metaAnalyzesScoreSetSuggestions)
     },
     publicationIdentifierSuggestionsList: function () {
-      return this.suggestionsForAutocomplete(_.unionBy(this.publicationIdentifierSuggestions, this.externalPublicationIdentifierSuggestions, 'identifier'))
+      return this.suggestionsForAutocomplete(
+        _.unionBy(this.publicationIdentifierSuggestions, this.externalPublicationIdentifierSuggestions, 'identifier')
+      )
     },
     supersededScoreSetSuggestionsList: function () {
       return this.suggestionsForAutocomplete(this.supersededScoreSetSuggestions)
     },
     targetGeneSuggestionsList: function () {
       const geneSuggestions = this.targetGeneSuggestions || []
-      const filteredGeneSuggestions = geneSuggestions.filter(gene => {
+      const filteredGeneSuggestions = geneSuggestions.filter((gene) => {
         const seq = gene?.targetSequence
         return seq && seq.sequence && seq.sequenceType
       })
       return this.suggestionsForAutocomplete(filteredGeneSuggestions)
     },
-    taxonomySuggestionsList: function() {
+    taxonomySuggestionsList: function () {
       return this.suggestionsForAutocomplete(this.taxonomySuggestions)
     },
     targetGeneAccessionSuggestionsList: function () {
@@ -1579,11 +2184,10 @@ export default {
       // When this is fixed, we'll need to also remove object accessors in other miscellaneous helpers below.
       if (!this.geneNames || this.geneNames.length == 0) {
         return [{}]
+      } else {
+        return this.geneNames.map((name) => ({name}))
       }
-      else {
-        return this.geneNames.map(name => ({ name }))
-      }
-    },
+    }
   },
 
   watch: {
@@ -1595,7 +2199,7 @@ export default {
           try {
             response = await axios.get(`${config.apiBaseUrl}/experiments/${this.experimentUrn}`)
           } catch (e) {
-              response = e.response || { status: 500 }
+            response = e.response || {status: 500}
           }
 
           if (response.status == 200) {
@@ -1603,7 +2207,7 @@ export default {
             this.populateExperimentMetadata({value: this.experiment})
             this.activeWizardStep = 0
           } else {
-              this.$toast.add({ severity: 'error', summary: `Could not fetch experiment with urn ${this.experimentUrn}` })
+            this.$toast.add({severity: 'error', summary: `Could not fetch experiment with urn ${this.experimentUrn}`})
           }
         }
       }
@@ -1635,8 +2239,7 @@ export default {
               label: null,
               taxonomy: null
             }
-          }
-          else {
+          } else {
             this.taxonomy = targetGene.targetSequence.taxonomy
           }
           if (!targetGene.targetAccession) {
@@ -1652,8 +2255,9 @@ export default {
           }
           const autopopulatedExternalIdentifiers = {}
           for (const dbName of externalGeneDatabases) {
-            autopopulatedExternalIdentifiers[dbName] = (targetGene.externalIdentifiers || [])
-              .find(({ identifier }) => identifier?.dbName == dbName) || {
+            autopopulatedExternalIdentifiers[dbName] = (targetGene.externalIdentifiers || []).find(
+              ({identifier}) => identifier?.dbName == dbName
+            ) || {
               identifier: null,
               offset: null
             }
@@ -1661,10 +2265,10 @@ export default {
           targetGene.externalIdentifiers = autopopulatedExternalIdentifiers
           this.targetGene = targetGene
         }
-      },
+      }
     },
     publicationIdentifiers: {
-      handler: function(newValue, oldValue) {
+      handler: function (newValue, oldValue) {
         if (newValue.length == 1) {
           this.primaryPublicationIdentifiers = newValue
         } else if (newValue.length == 0 || (newValue.length > 1 && oldValue.length == 1)) {
@@ -1694,7 +2298,7 @@ export default {
     isMultiTarget: {
       handler: function (newValue, oldValue) {
         if (newValue == oldValue) {
-          return;
+          return
         }
         if (newValue) {
           this.numTargets = 2
@@ -1706,7 +2310,7 @@ export default {
     numTargets: {
       handler: function (newValue, oldValue) {
         if (newValue == oldValue) {
-          return;
+          return
         }
         if (this.createdTargetGenes.length < this.numTargets) {
           for (let i = this.createdTargetGenes.length; i < this.numTargets; i++) {
@@ -1715,7 +2319,7 @@ export default {
           }
         } else if (this.createdTargetGenes.length > this.numTargets) {
           this.createdTargetGenes = this.createdTargetGenes.slice(0, this.numTargets)
-          this.stepFields.splice(3, oldValue-newValue)
+          this.stepFields.splice(3, oldValue - newValue)
         }
       }
     },
@@ -1725,10 +2329,10 @@ export default {
           this.scoreRanges.investigatorProvided.ranges.push(emptyScoreRangeWizardObj())
         }
       }
-    },
+    }
   },
 
-  mounted: async function() {
+  mounted: async function () {
     await this.loadEditableExperiment()
   },
 
@@ -1737,27 +2341,27 @@ export default {
     // Contributors
     //////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 
-    clearContributorSearch: function() {
+    clearContributorSearch: function () {
       // This could change with a new PrimeVue version.
       const input = this.$refs.contributorsInput
       input.$refs.input.value = ''
     },
 
-    lookupOrcidUser: async function(orcidId) {
+    lookupOrcidUser: async function (orcidId) {
       let orcidUser = null
       try {
         orcidUser = (await axios.get(`${config.apiBaseUrl}/orcid/users/${orcidId}`)).data
-      } catch (err) {
+      } catch {
         // Assume that the error was 404 Not Found.
       }
       return orcidUser
     },
 
-    newContributorsAdded: async function(event) {
+    newContributorsAdded: async function (event) {
       const newContributors = event.value
 
       // Convert any strings to ORCID users without names. Remove whitespace from new entries.
-      this.contributors = this.contributors.map((c) => _.isString(c) ? {orcidId: c.trim()} : c)
+      this.contributors = this.contributors.map((c) => (_.isString(c) ? {orcidId: c.trim()} : c))
 
       // Validate and look up each new contributor.
       for (const newContributor of newContributors) {
@@ -1799,7 +2403,7 @@ export default {
       }
     },
 
-    validateWizardStep: function(step) {
+    validateWizardStep: function (step) {
       // Later, this may depend on server-side validation.
       switch (true) {
         case step == 0: {
@@ -1807,9 +2411,11 @@ export default {
           // - The score set is a meta-analysis and at least one meta-analyzed score set has been chosen..
           // - The score set is a superseding score set, and the superseded score set has been chosen.
           // - Or the score set is neither, and its parent experiment has been chosen in dropdown or from experiment view page.
-          return !!(this.isMetaAnalysis && this.metaAnalyzesScoreSets.length > 0)
-              || !!(this.isSupersedingScoreSet && this.supersededScoreSet)
-              || !!(!this.isMetaAnalysis && !this.isSupersedingScoreSet && this.experiment || this.experimentUrn)
+          return (
+            !!(this.isMetaAnalysis && this.metaAnalyzesScoreSets.length > 0) ||
+            !!(this.isSupersedingScoreSet && this.supersededScoreSet) ||
+            !!((!this.isMetaAnalysis && !this.isSupersedingScoreSet && this.experiment) || this.experimentUrn)
+          )
         }
         case step == 1: {
           return this.title && this.shortDescription && this.abstractText && this.methodText
@@ -1817,38 +2423,50 @@ export default {
         case step == 2: {
           return this.numTargets > 0
         }
-        case ((step > 2) && (step < 3 + this.numTargets)): {
-          const currentTargetGene = this.createdTargetGenes[step-3].targetGene
+        case step > 2 && step < 3 + this.numTargets: {
+          const currentTargetGene = this.createdTargetGenes[step - 3].targetGene
           if (this.isTargetSequence) {
-            return currentTargetGene.name
-              && currentTargetGene.category
-              && (currentTargetGene.targetSequence.sequence && currentTargetGene.targetSequence.sequenceType)
+            return (
+              currentTargetGene.name &&
+              currentTargetGene.category &&
+              currentTargetGene.targetSequence.sequence &&
+              currentTargetGene.targetSequence.sequenceType &&
               // Don't allow the user to advance if the taxonomy has been searched for but not selected,
-              && currentTargetGene.targetSequence.taxonomy?.id
+              currentTargetGene.targetSequence.taxonomy?.id
+            )
           } else {
-            return currentTargetGene.name
-              && currentTargetGene.category
-              && (currentTargetGene.targetAccession.accession
-                && (currentTargetGene.targetAccession.assembly || currentTargetGene.targetAccession.gene)
-              )
+            return (
+              currentTargetGene.name &&
+              currentTargetGene.category &&
+              currentTargetGene.targetAccession.accession &&
+              (currentTargetGene.targetAccession.assembly || currentTargetGene.targetAccession.gene)
+            )
           }
         }
-        case (step == 3 + this.numTargets): {
+        case step == 3 + this.numTargets: {
           let allInvestigatorProvidedRangesCompleted = true
           for (const scoreRange of this.scoreRanges.investigatorProvided.ranges) {
-            if (!scoreRange.value.label || !scoreRange.value.classification || (!scoreRange.value.range[0] && !scoreRange.infiniteLower) || (!scoreRange.value.range[1] && !scoreRange.infiniteUpper)) {
+            if (
+              !scoreRange.value.label ||
+              !scoreRange.value.classification ||
+              (!scoreRange.value.range[0] && !scoreRange.infiniteLower) ||
+              (!scoreRange.value.range[1] && !scoreRange.infiniteUpper)
+            ) {
               allInvestigatorProvidedRangesCompleted = false
               break
             }
           }
-          return !(this.investigatorIsProvidingScoreRanges) || (allInvestigatorProvidedRangesCompleted && this.scoreRanges.investigatorProvided.baselineScore !== null)
+          return (
+            !this.investigatorIsProvidingScoreRanges ||
+            (allInvestigatorProvidedRangesCompleted && this.scoreRanges.investigatorProvided.baselineScore !== null)
+          )
         }
         default:
           return true
       }
     },
 
-    minStepWithError: function() {
+    minStepWithError: function () {
       const numSteps = this.stepFields.length
       for (let i = 0; i < numSteps; i++) {
         if (this.wizardStepHasError(i)) {
@@ -1856,13 +2474,13 @@ export default {
           if (i > 2 && i < 3 + this.numTargets) {
             return this.minTargetGeneStepWithError + 3
           }
-          return i;
+          return i
         }
       }
       return numSteps - 1
     },
 
-    wizardStepHasError: function(step) {
+    wizardStepHasError: function (step) {
       if (step >= this.stepFields.length) {
         return false
       }
@@ -1876,7 +2494,7 @@ export default {
       })
     },
 
-    showNextWizardStepIfValid: function(navigate) {
+    showNextWizardStepIfValid: function (navigate) {
       if (this.maxWizardStepValidated >= this.activeWizardStep) {
         this.maxWizardStepEntered = Math.max(this.maxWizardStepEntered, this.activeWizardStep + 1)
         navigate()
@@ -1950,21 +2568,30 @@ export default {
       }
 
       if (currentTarget.isRelativeToChromosome && currentTarget.targetGene.targetAccession.assembly) {
-        this.accessionSuggestions = await this.fetchTargetAccessionsByAssembly(currentTarget.targetGene.targetAccession.assembly)
-      }
-      else if (!currentTarget.isRelativeToChromosome && currentTarget.targetGene.targetAccession.gene) {
-        this.accessionSuggestions = await this.fetchTargetAccessionsByGene(currentTarget.targetGene.targetAccession.gene.name)
+        this.accessionSuggestions = await this.fetchTargetAccessionsByAssembly(
+          currentTarget.targetGene.targetAccession.assembly
+        )
+      } else if (!currentTarget.isRelativeToChromosome && currentTarget.targetGene.targetAccession.gene) {
+        this.accessionSuggestions = await this.fetchTargetAccessionsByGene(
+          currentTarget.targetGene.targetAccession.gene.name
+        )
       }
 
       if (!this.accessionSuggestions) {
-        this.$toast.add({ severity: 'warn', summary: `No accession identifiers were found for ${currentTarget.isRelativeToChromosome ? currentTarget.targetGene.targetAccession.assembly : currentTarget.targetGene.targetAccession.gene.name}`, life: 3000 })
+        this.$toast.add({
+          severity: 'warn',
+          summary: `No accession identifiers were found for ${currentTarget.isRelativeToChromosome ? currentTarget.targetGene.targetAccession.assembly : currentTarget.targetGene.targetAccession.gene.name}`,
+          life: 3000
+        })
       }
     },
 
     fetchTargetAccessions: async function (event) {
       const searchText = (event.query || '').trim()
       if (searchText.length > 0) {
-          this.accessionSuggestions = this.accessionSuggestions.filter(s => s?.toLowerCase().includes(searchText.toLowerCase()))
+        this.accessionSuggestions = this.accessionSuggestions.filter((s) =>
+          s?.toLowerCase().includes(searchText.toLowerCase())
+        )
       }
     },
 
@@ -1978,29 +2605,33 @@ export default {
 
     swapNucleotideProteinAccessions: async function (targetIdx) {
       const currentTargetGene = this.createdTargetGenes[targetIdx].targetGene
-      if (currentTargetGene.targetAccession.accession.startsWith("NP")) {
+      if (currentTargetGene.targetAccession.accession.startsWith('NP')) {
         // Don't do anything if we already are operating on a protein transcript
-        this.$toast.add({ severity: 'info', summary: `${currentTargetGene.targetAccession.accession} is already a protein accession.`, life: 3000 })
+        this.$toast.add({
+          severity: 'info',
+          summary: `${currentTargetGene.targetAccession.accession} is already a protein accession.`,
+          life: 3000
+        })
         return
       }
       const url = `${config.apiBaseUrl}/hgvs/protein/${currentTargetGene.targetAccession.accession}`
       try {
-        const response = await axios.get(
-          url,
-          {
-            headers: {
-              accept: 'application/json'
-            }
+        const response = await axios.get(url, {
+          headers: {
+            accept: 'application/json'
           }
-        )
+        })
         // TODO (#130) catch errors in response
         currentTargetGene.targetAccession.accession = response.data
       } catch (err) {
         if (err.response.status == 404) {
-          this.$toast.add({ severity: 'error', summary: err.response.data.detail, life: 3000 })
+          this.$toast.add({severity: 'error', summary: err.response.data.detail, life: 3000})
         } else {
-          this.$toast.add({ severity: 'error', summary: `Could not fetch protein accession for ${currentTargetGene.targetAccession.accession}`})
-          console.log("Request to swap protein accession failed", err)
+          this.$toast.add({
+            severity: 'error',
+            summary: `Could not fetch protein accession for ${currentTargetGene.targetAccession.accession}`
+          })
+          console.log('Request to swap protein accession failed', err)
         }
       }
     },
@@ -2008,14 +2639,11 @@ export default {
     fetchTargetAccessionsByAssembly: async function (assembly) {
       const url = `${config.apiBaseUrl}/hgvs/${assembly.trim()}/accessions`
       try {
-        const response = await axios.get(
-          url,
-          {
-            headers: {
-              accept: 'application/json'
-            }
+        const response = await axios.get(url, {
+          headers: {
+            accept: 'application/json'
           }
-        )
+        })
         // TODO (#130) catch errors in response
         return response.data || []
       } catch (err) {
@@ -2027,14 +2655,11 @@ export default {
     fetchTargetAccessionsByGene: async function (gene) {
       const url = `${config.apiBaseUrl}/hgvs/gene/${gene.trim()}`
       try {
-        const response = await axios.get(
-          url,
-          {
-            headers: {
-              accept: 'application/json'
-            }
+        const response = await axios.get(url, {
+          headers: {
+            accept: 'application/json'
           }
-        )
+        })
         // TODO (#130) catch errors in response
         return response.data || []
       } catch (err) {
@@ -2042,35 +2667,33 @@ export default {
       }
     },
 
-    toggleBoundary: function(rangeIdx, boundary) {
+    toggleBoundary: function (rangeIdx, boundary) {
       const updatedRange = this.scoreRanges.investigatorProvided.ranges[rangeIdx]
-      if (boundary === "upper") {
+      if (boundary === 'upper') {
         updatedRange.value.inclusiveUpperBound = !updatedRange.value.inclusiveUpperBound
-      }
-      else if (boundary == "lower") {
+      } else if (boundary == 'lower') {
         updatedRange.value.inclusiveLowerBound = !updatedRange.value.inclusiveLowerBound
       }
     },
 
-    toggleInfinity: function(rangeIdx, boundary) {
+    toggleInfinity: function (rangeIdx, boundary) {
       const updatedRange = this.scoreRanges.investigatorProvided.ranges[rangeIdx]
-      if (boundary === "upper") {
+      if (boundary === 'upper') {
         updatedRange.infiniteUpper = !updatedRange.infiniteUpper
         updatedRange.value.range[1] = null
         updatedRange.value.inclusiveUpperBound = false
-      }
-      else if (boundary == "lower") {
+      } else if (boundary == 'lower') {
         updatedRange.infiniteLower = !updatedRange.infiniteLower
         updatedRange.value.range[0] = null
         updatedRange.value.inclusiveLowerBound = false
       }
     },
 
-    addScoreRange: function() {
+    addScoreRange: function () {
       this.scoreRanges.investigatorProvided.ranges.push(emptyScoreRangeWizardObj())
     },
 
-    removeScoreRange: function(rangeIdx) {
+    removeScoreRange: function (rangeIdx) {
       this.scoreRanges.investigatorProvided.ranges.splice(rangeIdx, 1)
       if (this.scoreRanges.investigatorProvided.ranges.length === 0) {
         this.investigatorIsProvidingScoreRanges = false
@@ -2081,12 +2704,12 @@ export default {
     // Form fields
     ////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 
-    loadEditableExperiment: async function() {
+    loadEditableExperiment: async function () {
       try {
         const response = await axios.post(`${config.apiBaseUrl}/me/experiments/search`, {metaAnalysis: false})
         this.editableExperiments = response.data
       } catch (error) {
-        console.error("Error loading experiments:", error)
+        console.error('Error loading experiments:', error)
         this.editableExperiments = [] // Reset in case of an error
       }
     },
@@ -2095,7 +2718,10 @@ export default {
       this.abstractText = event.value.abstractText
       this.contributors = event.value.contributors || []
       this.doiIdentifiers = event.value.doiIdentifiers
-      this.publicationIdentifiers = _.concat(event.value.primaryPublicationIdentifiers, event.value.secondaryPublicationIdentifiers)
+      this.publicationIdentifiers = _.concat(
+        event.value.primaryPublicationIdentifiers,
+        event.value.secondaryPublicationIdentifiers
+      )
       this.primaryPublicationIdentifiers = event.value.primaryPublicationIdentifiers.filter((primary) => {
         return this.publicationIdentifiers.some((publication) => {
           return primary.identifier === publication.identifier
@@ -2103,11 +2729,11 @@ export default {
       })
     },
 
-    populateSupersededScoreSetMetadata: function(event) {
+    populateSupersededScoreSetMetadata: function (event) {
       this.contributors = event.value.contributors || []
     },
 
-    acceptNewDoiIdentifier: function() {
+    acceptNewDoiIdentifier: function () {
       // Remove new string item from the model and add new structured item in its place if it validates and is not a duplicate.
       const idx = this.doiIdentifiers.findIndex((item) => typeof item === 'string' || item instanceof String)
       if (idx == -1) {
@@ -2118,16 +2744,20 @@ export default {
       const newDoi = normalizeDoi(searchText)
       if (this.doiIdentifiers.find((item) => item.identifier == newDoi)) {
         this.doiIdentifiers.splice(idx, 1)
-        this.$toast.add({severity:'warn', summary: `DOI "${newDoi}" is already associated with this score set`, life: 3000})
+        this.$toast.add({
+          severity: 'warn',
+          summary: `DOI "${newDoi}" is already associated with this score set`,
+          life: 3000
+        })
       } else if (validateDoi(searchText)) {
-        this.doiIdentifiers.splice(idx, 1, { identifier: newDoi })
+        this.doiIdentifiers.splice(idx, 1, {identifier: newDoi})
       } else {
         this.doiIdentifiers.splice(idx, 1)
-        this.$toast.add({severity:'warn', summary: `"${searchText}" is not a valid DOI`, life: 3000})
+        this.$toast.add({severity: 'warn', summary: `"${searchText}" is not a valid DOI`, life: 3000})
       }
     },
 
-    acceptNewPublicationIdentifier: function() {
+    acceptNewPublicationIdentifier: function () {
       // We assume the newest value is the right-most one here. That seems to always be true in this version of Primevue,
       // but that may change in the future.
       const newIdx = this.publicationIdentifiers.length - 1
@@ -2136,11 +2766,15 @@ export default {
       const newIdentifier = this.publicationIdentifiers[newIdx].identifier
       if (this.publicationIdentifiers.findIndex((pub) => pub.identifier == newIdentifier) < newIdx) {
         this.publicationIdentifiers.splice(newIdx, 1)
-        this.$toast.add({severity:'warn', summary: `Identifier "${newIdentifier}" is already associated with this experiment`, life: 3000})
+        this.$toast.add({
+          severity: 'warn',
+          summary: `Identifier "${newIdentifier}" is already associated with this experiment`,
+          life: 3000
+        })
       }
     },
 
-    clearPublicationIdentifierSearch: function() {
+    clearPublicationIdentifierSearch: function () {
       // This could change with a new Primevue version.
       const input = this.$refs.publicationIdentifiersInput
       input.$refs.focusInput.value = ''
@@ -2154,13 +2788,13 @@ export default {
       }
     },
 
-    truncatePublicationTitle: function(title) {
-      return title.length > 50 ? title.slice(0, 50) + "..." : title
+    truncatePublicationTitle: function (title) {
+      return title.length > 50 ? title.slice(0, 50) + '...' : title
     },
 
     addDefaultOffset: function (dbName, targetIdx) {
       const currentTargetGene = this.createdTargetGenes[targetIdx].targetGene
-      if (!currentTargetGene.externalIdentifiers[dbName]?.offset){
+      if (!currentTargetGene.externalIdentifiers[dbName]?.offset) {
         currentTargetGene.externalIdentifiers[dbName].offset = 0
       }
     },
@@ -2175,7 +2809,7 @@ export default {
       }
 
       if (!externalIdentifier.identifier?.identifier) {
-        externalIdentifier.identifier = { identifier: event.value, dbName: dbName }
+        externalIdentifier.identifier = {identifier: event.value, dbName: dbName}
       }
     },
 
@@ -2193,7 +2827,7 @@ export default {
       }
     },
 
-    autofillFromExistingTarget: function(event, targetIdx) {
+    autofillFromExistingTarget: function (event, targetIdx) {
       const autofilledTargetGene = this.createdTargetGenes[targetIdx].autofilledTargetGene
 
       this.resetTarget(targetIdx)
@@ -2205,8 +2839,9 @@ export default {
       if (this.isTargetSequence) {
         createdTarget.targetGene.targetSequence = autofilledTargetGene.targetSequence
         // dna comes back from the API as a lower cased string. Make it upper case to match the button definition.
-        if (createdTarget.targetGene.targetSequence.sequenceType == "dna") {
-          createdTarget.targetGene.targetSequence.sequenceType = createdTarget.targetGene.targetSequence.sequenceType.toUpperCase()
+        if (createdTarget.targetGene.targetSequence.sequenceType == 'dna') {
+          createdTarget.targetGene.targetSequence.sequenceType =
+            createdTarget.targetGene.targetSequence.sequenceType.toUpperCase()
         }
       } else {
         createdTarget.targetGene.targetAccession = autofilledTargetGene.targetAccession
@@ -2220,12 +2855,12 @@ export default {
       createdTarget.autofilledTargetGene = autofilledTargetGene
     },
 
-    clearTaxonomySearch: function() {
+    clearTaxonomySearch: function () {
       const input = this.$refs.taxonomyInput
       input.inputTextValue = null
     },
 
-    searchTaxonomies: function(event) {
+    searchTaxonomies: function (event) {
       // if no search text, then return all taxonomy list. Otherwise, return the searching results.
       // If not do in this way, dropdown button can't work.
       this.setTaxonomySearch(event.query)
@@ -2254,7 +2889,8 @@ export default {
               try {
                 this.extraMetadata = JSON.parse(text)
                 if (!_.isObject(this.extraMetadata) || _.isArray(this.extraMetadata)) {
-                  this.clientSideValidationErrors.extraMetadata = 'Extra metadata must be a JSON object (not an array or simple value).'
+                  this.clientSideValidationErrors.extraMetadata =
+                    'Extra metadata must be a JSON object (not an array or simple value).'
                 } else {
                   this.clientSideValidationErrors.extraMetadata = null
                 }
@@ -2275,24 +2911,27 @@ export default {
                   'delimiter': '|'
                 })*/
                 const rawFastaData = fastaParser.parse(text)
-                const fastaData = rawFastaData.map(entry => ({
+                const fastaData = rawFastaData.map((entry) => ({
                   ...entry,
                   id: entry.id.replace(/[\r\n]/g, ''),
-                  sequence: entry.sequence.replace(/[\r\n]/g, ''),
+                  sequence: entry.sequence.replace(/[\r\n]/g, '')
                 }))
                 if (fastaData.length == 0) {
                   this.createdTargetGenes[targetIdx].targetGene.targetSequence.sequence = null
-                  this.clientSideValidationErrors['targetGene.targetSequence.sequence'] = 'The FASTA file contains no sequences.'
+                  this.clientSideValidationErrors['targetGene.targetSequence.sequence'] =
+                    'The FASTA file contains no sequences.'
                 } else if (fastaData.length > 1) {
                   this.createdTargetGenes[targetIdx].targetGene.targetSequence.sequence = null
-                  this.clientSideValidationErrors['targetGene.targetSequence.sequence'] = 'The FASTA file contains more than one sequence.'
+                  this.clientSideValidationErrors['targetGene.targetSequence.sequence'] =
+                    'The FASTA file contains more than one sequence.'
                 } else {
                   this.createdTargetGenes[targetIdx].targetGene.targetSequence.sequence = fastaData[0].sequence
                   this.clientSideValidationErrors['targetGene.targetSequence.sequence'] = null
                 }
               } catch (e) {
                 this.createdTargetGenes[targetIdx].targetGene.targetSequence.sequence = null
-                this.clientSideValidationErrors['targetGene.targetSequence.sequence'] = 'The file was not a valid FASTA file.'
+                this.clientSideValidationErrors['targetGene.targetSequence.sequence'] =
+                  'The file was not a valid FASTA file.'
                 console.log('Reference sequence file was not a valid FASTA file.')
               }
             }
@@ -2322,9 +2961,7 @@ export default {
         this.isSupersedingScoreSet = this.supersededScoreSet ? true : false
         // metaAnalyzesScoreSets is only used when editing a new score set, so we don't need to populate it from URNs.
         this.metaAnalyzesScoreSets = []
-        this.isMetaAnalysis = false,
-
-        this.title = this.item.title
+        ;((this.isMetaAnalysis = false), (this.title = this.item.title))
         this.shortDescription = this.item.shortDescription
         this.abstractText = this.item.abstractText
         this.methodText = this.item.methodText
@@ -2336,7 +2973,10 @@ export default {
         this.doiIdentifiers = this.item.doiIdentifiers
         // So that the multiselect can populate correctly, build the primary publication identifiers
         // indirectly by filtering a merged list of secondary and primary publication identifiers
-        this.publicationIdentifiers = _.concat(this.item.primaryPublicationIdentifiers, this.item.secondaryPublicationIdentifiers)
+        this.publicationIdentifiers = _.concat(
+          this.item.primaryPublicationIdentifiers,
+          this.item.secondaryPublicationIdentifiers
+        )
         this.primaryPublicationIdentifiers = this.item.primaryPublicationIdentifiers.filter((publication) => {
           return this.publicationIdentifiers.some((primary) => {
             return primary.identifier === publication.identifier
@@ -2349,14 +2989,16 @@ export default {
           investigatorProvided: {
             baselineScore: this.item.scoreRanges?.ranges?.investigatorProvided?.baselineScore,
             baselineScoreDescription: this.item.scoreRanges?.ranges?.investigatorProvided?.baselineScoreDescription,
-            ranges: this.item.scoreRanges?.ranges?.investigatorProvided?.ranges.map(range => this.scoreRangeWithWizardProperties(range)),
+            ranges: this.item.scoreRanges?.ranges?.investigatorProvided?.ranges.map((range) =>
+              this.scoreRangeWithWizardProperties(range)
+            ),
             oddsPathSource: this.item.scoreRanges?.ranges?.investigatorProvided?.oddsPathSource || [],
             source: this.item.scoreRanges?.ranges?.investigatorProvided?.source || []
-          },
+          }
         }
         this.investigatorIsProvidingScoreRanges = this.scoreRanges.length > 0
 
-        this.createdTargetGenes = this.item.targetGenes.map(target => this.targetGeneWithWizardProperties(target))
+        this.createdTargetGenes = this.item.targetGenes.map((target) => this.targetGeneWithWizardProperties(target))
         this.numTargets = this.createdTargetGenes.length
         this.isMultiTarget = this.numTargets == 1 ? false : true
         this.isTargetSequence = this.createdTargetGenes[0].targetGene?.targetSequence ? true : false
@@ -2365,9 +3007,7 @@ export default {
         this.supersededScoreSet = null
         this.isSupersedingScoreSet = false
         this.metaAnalyzesScoreSets = []
-        this.isMetaAnalysis = false,
-
-        this.title = null
+        ;((this.isMetaAnalysis = false), (this.title = null))
         this.shortDescription = null
         this.abstractText = null
         this.methodText = null
@@ -2418,12 +3058,17 @@ export default {
 
     save: async function () {
       // Remove primary identifier from publications to construct secondary identifiers
-      const primaryPublicationIdentifiers = this.primaryPublicationIdentifiers.map((identifier) => _.pick(identifier, ['identifier', 'dbName']))
-      const secondaryPublicationIdentifiers = this.publicationIdentifiers.map(
-        (identifier) => _.pick(identifier, ['identifier', 'dbName'])
-      ).filter(
-        secondary => !primaryPublicationIdentifiers.some(primary => primary.identifier == secondary.identifier && primary.dbName == secondary.dbName)
+      const primaryPublicationIdentifiers = this.primaryPublicationIdentifiers.map((identifier) =>
+        _.pick(identifier, ['identifier', 'dbName'])
       )
+      const secondaryPublicationIdentifiers = this.publicationIdentifiers
+        .map((identifier) => _.pick(identifier, ['identifier', 'dbName']))
+        .filter(
+          (secondary) =>
+            !primaryPublicationIdentifiers.some(
+              (primary) => primary.identifier == secondary.identifier && primary.dbName == secondary.dbName
+            )
+        )
 
       const editedFields = {
         experimentUrn: this.experimentUrn ? this.experimentUrn : this.experiment?.urn,
@@ -2448,38 +3093,40 @@ export default {
               range.value.oddsPath = range.isProvidingOddsPath ? range.value.oddsPath : null
               return range.value
             }),
-            oddsPathSource: this.scoreRanges.investigatorProvided.oddsPathSource.map((identifier) => _.pick(identifier, ['identifier', 'dbName'])),
-            source: this.scoreRanges.investigatorProvided.source.map((identifier) => _.pick(identifier, ['identifier', 'dbName'])),
-          },
+            oddsPathSource: this.scoreRanges.investigatorProvided.oddsPathSource.map((identifier) =>
+              _.pick(identifier, ['identifier', 'dbName'])
+            ),
+            source: this.scoreRanges.investigatorProvided.source.map((identifier) =>
+              _.pick(identifier, ['identifier', 'dbName'])
+            )
+          }
         },
 
-        targetGenes: this.createdTargetGenes.map(
-          (target) => {
-            const targetGene = {
-              name: target.targetGene.name,
-              category: target.targetGene.category,
-              targetSequence: this.isTargetSequence ? target.targetGene.targetSequence : null,
-              targetAccession: !this.isTargetSequence ? target.targetGene.targetAccession : null,
-              externalIdentifiers: []
-            }
-
-            for (const [db, linked] of Object.entries(target.linkedAccessions)) {
-              if (linked) {
-                targetGene.externalIdentifiers.push(target.targetGene.externalIdentifiers[db])
-              }
-            }
-
-            if (!this.isTargetSequence && !target.isRelativeToChromosome) {
-              targetGene.targetAccession.gene = targetGene.targetAccession.gene.name
-            }
-
-            if (!this.isTargetSequence) {
-              targetGene.targetAccession.isBaseEditor = this.isBaseEditor
-            }
-
-            return targetGene
+        targetGenes: this.createdTargetGenes.map((target) => {
+          const targetGene = {
+            name: target.targetGene.name,
+            category: target.targetGene.category,
+            targetSequence: this.isTargetSequence ? target.targetGene.targetSequence : null,
+            targetAccession: !this.isTargetSequence ? target.targetGene.targetAccession : null,
+            externalIdentifiers: []
           }
-        )
+
+          for (const [db, linked] of Object.entries(target.linkedAccessions)) {
+            if (linked) {
+              targetGene.externalIdentifiers.push(target.targetGene.externalIdentifiers[db])
+            }
+          }
+
+          if (!this.isTargetSequence && !target.isRelativeToChromosome) {
+            targetGene.targetAccession.gene = targetGene.targetAccession.gene.name
+          }
+
+          if (!this.isTargetSequence) {
+            targetGene.targetAccession.isBaseEditor = this.isBaseEditor
+          }
+
+          return targetGene
+        })
       }
       if (!this.investigatorIsProvidingScoreRanges) {
         delete editedFields.scoreRanges
@@ -2487,11 +3134,10 @@ export default {
       if (!this.item) {
         editedFields.supersededScoreSetUrn = this.supersededScoreSet ? this.supersededScoreSet.urn : null
         editedFields.metaAnalyzesScoreSetUrns = this.metaAnalyzesScoreSets.map((s) => s.urn)
-        if ( editedFields.metaAnalyzesScoreSetUrns.length===0 && editedFields.supersededScoreSetUrn ) {
+        if (editedFields.metaAnalyzesScoreSetUrns.length === 0 && editedFields.supersededScoreSetUrn) {
           editedFields.experimentUrn = this.supersededScoreSet.experiment.urn
         }
-      }
-      else {
+      } else {
         // empty item arrays so that deleted items aren't merged back into editedItem object
         this.item.contributors = []
         this.item.doiIdentifiers = []
@@ -2521,8 +3167,8 @@ export default {
           response = await axios.post(`${config.apiBaseUrl}/score-sets/`, editedItem)
         }
       } catch (e) {
-        response = e.response || { status: 500 }
-        this.$toast.add({ severity: 'error', summary: 'Error', life: 3000 })
+        response = e.response || {status: 500}
+        this.$toast.add({severity: 'error', summary: 'Error', life: 3000})
       }
       this.progressVisible = false
       if (response.status == 200) {
@@ -2532,8 +3178,8 @@ export default {
           if (this.$refs.scoresFileUpload?.files?.length == 1) {
             await this.uploadData(savedItem)
           } else {
-            this.$router.replace({ path: `/score-sets/submit-completion/${this.item.urn}` })
-            this.$toast.add({ severity: 'success', summary: 'Your changes were saved.', life: 3000 })
+            this.$router.replace({path: `/score-sets/submit-completion/${this.item.urn}`})
+            this.$toast.add({severity: 'success', summary: 'Your changes were saved.', life: 3000})
           }
         } else {
           console.log('Created item')
@@ -2543,9 +3189,11 @@ export default {
         const formValidationErrors = {}
         if (typeof response.data.detail === 'string' || response.data.detail instanceof String) {
           // Handle generic errors that are not surfaced by the API as objects
-          this.$toast.add({ severity: 'error', summary: `Encountered an error saving score set: ${response.data.detail}` })
-        }
-        else {
+          this.$toast.add({
+            severity: 'error',
+            summary: `Encountered an error saving score set: ${response.data.detail}`
+          })
+        } else {
           for (const error of response.data.detail) {
             console.log(error)
             let path = error.loc
@@ -2553,7 +3201,7 @@ export default {
               path = path.slice(1)
             }
 
-            if (_.isEqual(_.slice(path, 0, 1), ['targetGene'])){
+            if (_.isEqual(_.slice(path, 0, 1), ['targetGene'])) {
               this.minTargetGeneStepWithError = Math.min(this.minTargetGeneStepWithError, path[1])
 
               // Map errors on indexed external gene identifiers to inputs named for the identifier's database.
@@ -2562,7 +3210,13 @@ export default {
                 const identifierOffset = editedFields.targetGenes[path[1]].externalIdentifiers[identifierIndex]
                 // Potentially incorrect to fall back on index of the external gene database to induce the name, but displaying the error in the wrong spot is
                 // preferable to not displaying the error.
-                path.splice(3, 2, identifierOffset?.identifier?.dbName ? identifierOffset.identifier.dbName : this.externalGeneDatabases[identifierIndex])
+                path.splice(
+                  3,
+                  2,
+                  identifierOffset?.identifier?.dbName
+                    ? identifierOffset.identifier.dbName
+                    : this.externalGeneDatabases[identifierIndex]
+                )
               }
             }
 
@@ -2578,7 +3232,7 @@ export default {
 
     uploadData: async function (scoreSet) {
       if (this.$refs.scoresFileUpload.files.length != 1) {
-        this.validationErrors = { scores: 'Required' }
+        this.validationErrors = {scores: 'Required'}
       } else {
         const formData = new FormData()
         formData.append('scores_file', this.$refs.scoresFileUpload.files[0])
@@ -2588,17 +3242,13 @@ export default {
         this.progressVisible = true
         let response
         try {
-          response = await axios.post(
-            `${config.apiBaseUrl}/score-sets/${scoreSet.urn}/variants/data`,
-            formData,
-            {
-              headers: {
-                'Content-Type': 'multipart/form-data'
-              }
+          response = await axios.post(`${config.apiBaseUrl}/score-sets/${scoreSet.urn}/variants/data`, formData, {
+            headers: {
+              'Content-Type': 'multipart/form-data'
             }
-          )
+          })
         } catch (e) {
-          response = e.response || { status: 500 }
+          response = e.response || {status: 500}
         }
         this.progressVisible = false
 
@@ -2606,14 +3256,18 @@ export default {
           console.log('Imported score set data.')
           if (this.item) {
             // this.reloadItem()
-            this.$router.replace({ path: `/score-sets/submit-completion/${scoreSet.urn}` })
-            this.$toast.add({ severity: 'success', summary: 'Your changes were saved.', life: 3000 })
+            this.$router.replace({path: `/score-sets/submit-completion/${scoreSet.urn}`})
+            this.$toast.add({severity: 'success', summary: 'Your changes were saved.', life: 3000})
           } else {
-            this.$router.replace({ path: `/score-sets/submit-completion/${scoreSet.urn}` })
-            this.$toast.add({ severity: 'success', summary: 'The new score set was saved.', life: 3000 })
+            this.$router.replace({path: `/score-sets/submit-completion/${scoreSet.urn}`})
+            this.$toast.add({severity: 'success', summary: 'The new score set was saved.', life: 3000})
           }
         } else {
-          this.$toast.add({ severity: 'error', summary: `The score and count files could not be imported. ${response.data.detail}`, life: 3000 })
+          this.$toast.add({
+            severity: 'error',
+            summary: `The score and count files could not be imported. ${response.data.detail}`,
+            life: 3000
+          })
           // Delete the score set if just created.
           // Warn if the score set already exists.
         }
@@ -2650,13 +3304,13 @@ export default {
 
     viewItem: function () {
       if (this.item) {
-        this.$router.replace({ path: `/score-sets/${this.item.urn}` })
+        this.$router.replace({path: `/score-sets/${this.item.urn}`})
       }
     },
 
     //Back to Dashboard
     backDashboard: function () {
-      this.$router.replace({ path: `/dashboard` })
+      this.$router.replace({path: `/dashboard`})
     },
 
     ////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
@@ -2670,17 +3324,13 @@ export default {
     get(...args) {
       return _.get(...args)
     }
-
   }
 }
-
 </script>
 
-<style scoped src="../../assets/forms.css">
-</style>
+<style scoped src="../../assets/forms.css"></style>
 
 <style scoped>
-
 .mavedb-wizard:deep(.p-stepper) {
   min-width: 1180px; /* Design is not responsive past this point. */
 }
@@ -2713,7 +3363,7 @@ export default {
 
 /* Clear floats after each wizard form row. */
 .mavedb-wizard-row:after {
-  content: "";
+  content: '';
   clear: both;
   display: table;
 }
@@ -2759,7 +3409,7 @@ export default {
 }
 
 .mavedb-wizard-step-controls-row:after {
-  content: "";
+  content: '';
   clear: both;
   display: table;
 }
@@ -2870,13 +3520,13 @@ export default {
 .mave-score-set-editor:deep(.p-card .p-card-title) {
   font-size: 1.2em;
   font-weight: normal;
-  color: #3f51B5;
+  color: #3f51b5;
   margin-bottom: 0;
 }
 
 .dropdown-option-group {
   font-weight: bold;
-  color: #3f51B5;
+  color: #3f51b5;
   margin-bottom: 0;
 }
 
@@ -2894,16 +3544,23 @@ export default {
 }
 
 .mave-taxonomy-dropdown-panel.p-dropdown-panel .p-dropdown-items .p-dropdown-item {
-
   padding: 0;
 }
 
-.mave-taxonomy-dropdown-panel.p-dropdown-panel .p-dropdown-items .p-dropdown-item:not(.p-highlight):not(.p-disabled):hover {
+.mave-taxonomy-dropdown-panel.p-dropdown-panel
+  .p-dropdown-items
+  .p-dropdown-item:not(.p-highlight):not(.p-disabled):hover {
   background: #eef;
 }
 
-.mave-taxonomy-dropdown-panel.p-dropdown-panel .p-dropdown-items .p-dropdown-item:not(.p-highlight):not(.p-disabled):hover .mave-taxonomy-common-name,
-.mave-taxonomy-dropdown-panel.p-dropdown-panel .p-dropdown-items .p-dropdown-item:not(.p-highlight):not(.p-disabled):hover .mave-taxonomy-organism-name {
+.mave-taxonomy-dropdown-panel.p-dropdown-panel
+  .p-dropdown-items
+  .p-dropdown-item:not(.p-highlight):not(.p-disabled):hover
+  .mave-taxonomy-common-name,
+.mave-taxonomy-dropdown-panel.p-dropdown-panel
+  .p-dropdown-items
+  .p-dropdown-item:not(.p-highlight):not(.p-disabled):hover
+  .mave-taxonomy-organism-name {
   background: #eef;
 }
 </style>

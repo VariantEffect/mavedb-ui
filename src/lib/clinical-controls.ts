@@ -104,7 +104,7 @@ export interface ClinicalControl {
   geneSymbol: string
   modificationDate: Date
   creationDate: Date
-  mappedVariants: Array<Object>
+  mappedVariants: Array<object>
 }
 
 /**
@@ -131,7 +131,7 @@ export function clinvarClinicalSignificanceClassifications(
       name: 'Missense',
       description: 'Missense variant',
       shortDescription: 'Missense'
-    },
+    }
   ]
 }
 

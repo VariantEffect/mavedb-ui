@@ -1,9 +1,9 @@
 <template>
   <DefaultLayout>
-    <div v-if="itemStatus=='Loaded'" class="mavedb-full-height mave-score-set mavedb-scroll-vertical">
+    <div v-if="itemStatus == 'Loaded'" class="mavedb-full-height mave-score-set mavedb-scroll-vertical">
       <div class="mavedb-1000px-col">
         <div class="mave-screen-title-bar">
-          <div class="mave-screen-title">{{item.urn}}</div>
+          <div class="mave-screen-title">{{ item.urn }}</div>
           <div v-if="userIsAuthenticated & userIsAuthorized">
             <div class="mavedb-screen-title-controls">
               <Button class="p-button-sm" @click="addExperiment">Add an experiment</Button>
@@ -13,32 +13,35 @@
         <div class="mave-screen-title">Experiment set</div>
       </div>
       <div class="mavedb-1000px-col">
-        <div v-if="item.creationDate">Created {{formatDate(item.creationDate)}} </div>
-        <div v-if="item.modificationDate">Last updated {{formatDate(item.modificationDate)}} </div>
-        <div v-if="item.publishedDate">Published {{formatDate(item.publishedDate)}}</div>
+        <div v-if="item.creationDate">Created {{ formatDate(item.creationDate) }}</div>
+        <div v-if="item.modificationDate">Last updated {{ formatDate(item.modificationDate) }}</div>
+        <div v-if="item.publishedDate">Published {{ formatDate(item.publishedDate) }}</div>
         <div class="mave-score-set-section-title">Experiments</div>
-          <div v-if="item.experiments.length!=0">
-            <ul style="list-style-type:square">
-              <li v-for="ex in item.experiments" :key="ex">
-                <router-link :to="{name: 'experiment', params: {urn: ex.urn}}">{{ex.urn}}</router-link>
-                <div><strong>{{ex.title}}</strong></div> {{ex.shortDescription}} <p/>
-              </li>
-            </ul>
-          </div>
-          <div v-else>No associated experiment</div>
+        <div v-if="item.experiments.length != 0">
+          <ul style="list-style-type: square">
+            <li v-for="ex in item.experiments" :key="ex">
+              <router-link :to="{name: 'experiment', params: {urn: ex.urn}}">{{ ex.urn }}</router-link>
+              <div>
+                <strong>{{ ex.title }}</strong>
+              </div>
+              {{ ex.shortDescription }}
+              <p />
+            </li>
+          </ul>
+        </div>
+        <div v-else>No associated experiment</div>
       </div>
     </div>
-    <div v-else-if="itemStatus=='Loading' || itemStatus=='NotLoaded'">
-      <PageLoading/>
+    <div v-else-if="itemStatus == 'Loading' || itemStatus == 'NotLoaded'">
+      <PageLoading />
     </div>
     <div v-else>
-      <ItemNotFound model="experiment set" :itemId="itemId"/>
+      <ItemNotFound :item-id="itemId" model="experiment set" />
     </div>
   </DefaultLayout>
 </template>
 
 <script>
-
 import _ from 'lodash'
 import axios from 'axios'
 import {marked} from 'marked'
@@ -46,15 +49,23 @@ import Button from 'primevue/button'
 import config from '@/config'
 
 import DefaultLayout from '@/components/layout/DefaultLayout'
-import PageLoading from '@/components/common/PageLoading'
 import ItemNotFound from '@/components/common/ItemNotFound'
+import PageLoading from '@/components/common/PageLoading'
 import useAuth from '@/composition/auth'
 import useItem from '@/composition/item'
 import useFormatters from '@/composition/formatters'
 
 export default {
   name: 'ExperimentSetView',
+
   components: {Button, DefaultLayout, PageLoading, ItemNotFound},
+
+  props: {
+    itemId: {
+      type: String,
+      required: true
+    }
+  },
 
   setup: () => {
     const {userIsAuthenticated} = useAuth()
@@ -66,27 +77,16 @@ export default {
     }
   },
 
-  props: {
-    itemId: {
-      type: String,
-      required: true
-    }
-  },
-
-  data () {
+  data() {
     return {
       associatedExperiments: [],
       userIsAuthorized: false
     }
   },
 
-  mounted: async function() {
-    await this.checkUserAuthorization()
-  },
-
   watch: {
     itemId: {
-      handler: function(newValue, oldValue) {
+      handler: function (newValue, oldValue) {
         if (newValue != oldValue) {
           this.setItemId(newValue)
           console.log(newValue)
@@ -96,38 +96,39 @@ export default {
     }
   },
 
-  methods: {
+  mounted: async function () {
+    await this.checkUserAuthorization()
+  },
 
-    addExperiment: function() {
+  methods: {
+    addExperiment: function () {
       this.$router.push({name: 'createExperimentInExperimentSet', params: {urn: this.item.urn}})
     },
-    checkUserAuthorization: async function() {
+    checkUserAuthorization: async function () {
       await this.checkAuthorization()
     },
-    checkAuthorization: async function() {
+    checkAuthorization: async function () {
       try {
         // this response should be true to get authorization
-        let response = await axios.get(`${config.apiBaseUrl}/permissions/user-is-permitted/experiment-set/${this.itemId}/add_experiment`)
+        const response = await axios.get(
+          `${config.apiBaseUrl}/permissions/user-is-permitted/experiment-set/${this.itemId}/add_experiment`
+        )
         this.userIsAuthorized = response.data
       } catch (err) {
         console.log(`Error to get authorization:`, err)
       }
     },
-    markdownToHtml: function(markdown) {
+    markdownToHtml: function (markdown) {
       return marked(markdown)
     },
     get(...args) {
       return _.get(...args)
     }
   }
-
 }
-
-
 </script>
 
 <style scoped>
-
 /* Score set */
 
 .mave-score-set {

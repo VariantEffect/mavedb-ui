@@ -9,16 +9,33 @@
           <DataTable
             class="mave-collections-table"
             data-key="urn"
-            :multi-sort-meta="[{field: 'role', order: 1}, {field: 'name', order: 1}]"
+            :multi-sort-meta="[
+              {field: 'role', order: 1},
+              {field: 'name', order: 1}
+            ]"
             sort-mode="multiple"
             :value="collections"
           >
             <Column field="name" header="Collection name" :sortable="true">
-              <template #body="{data}"><router-link :to="{name: 'collection', params: {urn: data.urn}}">{{data.name}}</router-link></template>
+              <template #body="{data}"
+                ><router-link :to="{name: 'collection', params: {urn: data.urn}}">{{
+                  data.name
+                }}</router-link></template
+              >
             </Column>
             <Column class="mave-collection-description" field="description" header="Description" :sortable="true" />
-            <Column body-class="mave-align-center" :field="(c) => (c.experimentUrns || []).length" header="Experiments" :sortable="true" />
-            <Column body-class="mave-align-center" :field="(c) => (c.scoreSetUrns || []).length" header="Score&nbsp;sets" :sortable="true" />
+            <Column
+              body-class="mave-align-center"
+              :field="(c) => (c.experimentUrns || []).length"
+              header="Experiments"
+              :sortable="true"
+            />
+            <Column
+              body-class="mave-align-center"
+              :field="(c) => (c.scoreSetUrns || []).length"
+              header="Score&nbsp;sets"
+              :sortable="true"
+            />
             <Column field="role" header="Permissions" :sortable="true" />
             <Column field="modificationDate" header="Last modified" :sortable="true">
               <template #body="{data}">{{ formatDate(data.modificationDate) }}</template>
@@ -44,10 +61,7 @@
     modal
     :style="{maxWidth: '90%', width: '50rem'}"
   >
-    <CollectionCreator
-      @canceled="creatorVisible = false"
-      @created-collection="childComponentCreatedCollection"
-    />
+    <CollectionCreator @canceled="creatorVisible = false" @created-collection="childComponentCreatedCollection" />
   </Dialog>
 </template>
 
@@ -59,8 +73,8 @@ import DataTable from 'primevue/datatable'
 import Dialog from 'primevue/dialog'
 
 import CollectionCreator from '@/components/CollectionCreator'
-import PageLoading from '@/components/common/PageLoading'
 import DefaultLayout from '@/components/layout/DefaultLayout'
+import PageLoading from '@/components/common/PageLoading'
 import useFormatters from '@/composition/formatters'
 import config from '@/config'
 
@@ -77,17 +91,17 @@ export default {
     creatorVisible: false
   }),
 
-  mounted: async function() {
+  mounted: async function () {
     await this.fetchData()
   },
 
   methods: {
-    childComponentCreatedCollection: function() {
+    childComponentCreatedCollection: function () {
       this.creatorVisible = false
       this.fetchData()
     },
 
-    fetchData: async function() {
+    fetchData: async function () {
       this.collectionsStatus = 'Loading'
       this.collections = []
 

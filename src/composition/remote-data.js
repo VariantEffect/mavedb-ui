@@ -7,10 +7,7 @@ import makeRemoteDataModule from '@/store/modules/remote-data'
 
 // const DEFAULT_OPTIONS = {}
 
-export default ({
-  stateNamespace: initialStateNamespace = null,
-  options: initialOptions = {}
-} = {}) => {
+export default ({stateNamespace: initialStateNamespace = null, options: initialOptions = {}} = {}) => {
   const store = useStore()
 
   const remoteDataStoreReady = ref(false)
@@ -18,10 +15,7 @@ export default ({
   const configStateNamespace = ref(initialStateNamespace)
   const configOptions = ref(initialOptions)
 
-  const resetData = ({
-    stateNamespace = null,
-    options = null
-  } = {}) => {
+  const resetData = ({stateNamespace = null, options = null} = {}) => {
     configStateNamespace.value = stateNamespace
     if (options != null) {
       configOptions.value = options
@@ -78,13 +72,18 @@ export default ({
         return null
       }
     }),
-    remoteDataStatus: computed(() => remoteDataStoreReady.value ? _.get(store.state, `${stateNamespace.value}.dataStatus`) : 'NotLoaded'),
+    remoteDataStatus: computed(() =>
+      remoteDataStoreReady.value ? _.get(store.state, `${stateNamespace.value}.dataStatus`) : 'NotLoaded'
+    ),
 
     // Methods
     resetData,
     ensureRemoteDataStore,
-    ensureDataLoaded: (payload) => remoteDataStoreReady.value ? store.dispatch(`${stateNamespace.value}/ensureDataLoaded`, payload) : null,
-    loadData: (payload) => remoteDataStoreReady.value ? store.dispatch(`${stateNamespace.value}/loadData`, payload) : null,
-    setDataUrl: (payload) => remoteDataStoreReady.value ? store.dispatch(`${stateNamespace.value}/setDataUrl`, payload) : null
+    ensureDataLoaded: (payload) =>
+      remoteDataStoreReady.value ? store.dispatch(`${stateNamespace.value}/ensureDataLoaded`, payload) : null,
+    loadData: (payload) =>
+      remoteDataStoreReady.value ? store.dispatch(`${stateNamespace.value}/loadData`, payload) : null,
+    setDataUrl: (payload) =>
+      remoteDataStoreReady.value ? store.dispatch(`${stateNamespace.value}/setDataUrl`, payload) : null
   }
 }

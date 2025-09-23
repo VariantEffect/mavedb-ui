@@ -2,26 +2,26 @@
   <DefaultLayout>
     <EmailPrompt
       dialog="You must add an email address to your account to create or edit an experiment. You can do so below, or on the 'Settings' page."
-      :isFirstLoginPrompt="false"
+      :is-first-login-prompt="false"
     />
     {{ experimentSetUrn }}
     <div class="mave-experiment-editor">
       <div class="grid">
         <div class="col-12">
           <div v-if="itemStatus != 'NotLoaded'" class="mave-screen-title-bar">
-            <div class="mave-screen-title">Edit experiment {{ this.item.urn }}</div>
+            <div class="mave-screen-title">Edit experiment {{ item.urn }}</div>
             <div v-if="item" class="mavedb-screen-title-controls">
               <Button @click="validateAndSave">Save changes</Button>
-              <Button @click="resetForm" class="p-button-help">Clear</Button>
-              <Button @click="viewItem" class="p-button-warning">Cancel</Button>
+              <Button class="p-button-help" @click="resetForm">Clear</Button>
+              <Button class="p-button-warning" @click="viewItem">Cancel</Button>
             </div>
           </div>
           <div v-else class="mave-screen-title-bar">
             <div class="mave-screen-title">Create a new experiment</div>
             <div class="mavedb-screen-title-controls">
               <Button @click="validateAndSave">Save experiment</Button>
-              <Button @click="resetForm" class="p-button-help">Clear</Button>
-              <Button @click="backDashboard" class="p-button-warning">Cancel</Button>
+              <Button class="p-button-help" @click="resetForm">Clear</Button>
+              <Button class="p-button-warning" @click="backDashboard">Cancel</Button>
             </div>
           </div>
         </div>
@@ -41,7 +41,7 @@
                   experiment."
                 </div>
               </div>
-              <div class="field" v-else>
+              <div v-else class="field">
                 <label :for="scopedId('field-value-experiment-set')" style="font-weight: bold; margin-right: 5px"
                   >Experiment set:</label
                 >
@@ -53,14 +53,14 @@
               </div>
               <div class="field">
                 <span class="p-float-label">
-                  <InputText v-model="title" :id="scopedId('input-title')" />
+                  <InputText :id="scopedId('input-title')" v-model="title" />
                   <label :for="scopedId('input-title')">Title</label>
                 </span>
                 <span v-if="validationErrors.title" class="mave-field-error">{{ validationErrors.title }}</span>
               </div>
               <div class="field">
                 <span class="p-float-label">
-                  <Textarea v-model="shortDescription" :id="scopedId('input-shortDescription')" rows="4" />
+                  <Textarea :id="scopedId('input-shortDescription')" v-model="shortDescription" rows="4" />
                   <label :for="scopedId('input-shortDescription')">Short description</label>
                 </span>
                 <span v-if="validationErrors.shortDescription" class="mave-field-error">{{
@@ -70,11 +70,11 @@
               <div class="field">
                 <span class="p-float-label">
                   <Chips
+                    :id="scopedId('input-doiIdentifiers')"
                     ref="doiIdentifiersInput"
                     v-model="doiIdentifiers"
-                    :id="scopedId('input-doiIdentifiers')"
-                    :addOnBlur="true"
-                    :allowDuplicate="false"
+                    :add-on-blur="true"
+                    :allow-duplicate="false"
                     @add="acceptNewDoiIdentifier"
                     @keyup.escape="clearDoiIdentifierSearch"
                   >
@@ -93,15 +93,15 @@
               <div class="field">
                 <span class="p-float-label">
                   <AutoComplete
+                    :id="scopedId('input-publicationIdentifiers')"
                     ref="publicationIdentifiersInput"
                     v-model="publicationIdentifiers"
-                    :id="scopedId('input-publicationIdentifiers')"
                     :multiple="true"
+                    option-label="identifier"
                     :suggestions="publicationIdentifierSuggestionsList"
                     @complete="searchPublicationIdentifiers"
                     @item-select="acceptNewPublicationIdentifier"
                     @keyup.escape="clearPublicationIdentifierSearch"
-                    option-label="identifier"
                   >
                     <template #chip="slotProps">
                       <div>
@@ -126,13 +126,13 @@
               <div class="field">
                 <span class="p-float-label" style="display: block">
                   <Multiselect
+                    :id="scopedId('input-primaryPublicationIdentifiers')"
                     ref="primaryPublicationIdentifiersInput"
                     v-model="primaryPublicationIdentifiers"
-                    :id="scopedId('input-primaryPublicationIdentifiers')"
+                    option-label="identifier"
                     :options="publicationIdentifiers"
-                    optionLabel="identifier"
                     placeholder="Select a primary publication (Where the dataset is described)"
-                    :selectionLimit="1"
+                    :selection-limit="1"
                   >
                     <template #option="slotProps">
                       <div>
@@ -152,11 +152,11 @@
               <div class="field">
                 <span class="p-float-label">
                   <Chips
+                    :id="scopedId('input-rawReadIdentifiers')"
                     ref="rawReadIdentifiersInput"
                     v-model="rawReadIdentifiers"
-                    :id="scopedId('input-rawReadIdentifiers')"
-                    :addOnBlur="true"
-                    :allowDuplicate="false"
+                    :add-on-blur="true"
+                    :allow-duplicate="false"
                     @add="acceptNewRawReadIdentifier"
                   >
                     @keyup.escape="clearRawReadIdentifierSearch"
@@ -177,12 +177,12 @@
                   <FileUpload
                     :id="scopedId('input-extraMetadataFile')"
                     :auto="false"
-                    chooseLabel="Extra metadata"
+                    choose-label="Extra metadata"
                     :class="inputClasses.extraMetadataFile"
-                    :customUpload="true"
-                    :fileLimit="1"
-                    :showCancelButton="false"
-                    :showUploadButton="false"
+                    :custom-upload="true"
+                    :file-limit="1"
+                    :show-cancel-button="false"
+                    :show-upload-button="false"
                     @remove="fileCleared('extraMetadataFile')"
                     @select="fileSelected('extraMetadataFile', $event)"
                   >
@@ -199,11 +199,12 @@
                 <TabView>
                   <TabPanel header="Edit">
                     <span class="p-float-label">
-                      <Textarea v-model="abstractText" :id="scopedId('input-abstractText')" rows="4" />
+                      <Textarea :id="scopedId('input-abstractText')" v-model="abstractText" rows="4" />
                       <label :for="scopedId('input-abstractText')">Abstract</label>
                     </span>
                   </TabPanel>
                   <TabPanel header="Preview">
+                    <!-- eslint-disable-next-line vue/no-v-html -->
                     <div v-html="markdownToHtml(abstractText)"></div>
                   </TabPanel>
                 </TabView>
@@ -215,11 +216,12 @@
                 <TabView>
                   <TabPanel header="Edit">
                     <span class="p-float-label">
-                      <Textarea v-model="methodText" :id="scopedId('input-methodText')" rows="4" />
+                      <Textarea :id="scopedId('input-methodText')" v-model="methodText" rows="4" />
                       <label :for="scopedId('input-methodText')">Methods</label>
                     </span>
                   </TabPanel>
                   <TabPanel header="Preview">
+                    <!-- eslint-disable-next-line vue/no-v-html -->
                     <div v-html="markdownToHtml(methodText)"></div>
                   </TabPanel>
                 </TabView>
@@ -230,11 +232,11 @@
               <div class="field">
                 <span class="p-float-label">
                   <Chips
+                    :id="scopedId('input-contributors')"
                     ref="contributorsInput"
                     v-model="contributors"
-                    :id="scopedId('input-contributors')"
-                    :addOnBlur="true"
-                    :allowDuplicate="false"
+                    :add-on-blur="true"
+                    :allow-duplicate="false"
                     placeholder="Type or paste ORCID IDs here."
                     @add="newContributorsAdded"
                     @keyup.escape="clearContributorSearch"
@@ -270,26 +272,26 @@
                   <div class="field">
                     <span class="p-float-label">
                       <Dropdown
-                        v-model="keywordKeys[keyword.key]"
                         :id="scopedId(`keyword-input-${keyword.key}`)"
-                        :options="getKeywordOptions(keyword.option)"
-                        :optionLabel="(option) => formatKeywordOptionLabel(option)"
-                        optionValue="label"
+                        v-model="keywordKeys[keyword.key]"
                         class="keyword-dropdown"
+                        :option-label="(option) => formatKeywordOptionLabel(option)"
+                        option-value="label"
+                        :options="getKeywordOptions(keyword.option)"
                       />
                       <label :for="scopedId(`keyword-input-${keyword.key}`)">{{ keyword.key }}</label>
                     </span>
                     <Button
+                      aria-label="Filter"
                       class="keyword-description-button"
-                      rounded
                       :disabled="!keywordKeys[keyword.key] || keywordKeys[keyword.key] == 'Other' ? true : null"
                       :icon="
                         keywordTextVisible[keyword.key] || keywordKeys[keyword.key] === 'Other'
                           ? 'pi pi-minus'
                           : 'pi pi-file-edit'
                       "
+                      rounded
                       @click="keywordToggleInput(keyword.key)"
-                      aria-label="Filter"
                     />
                     &nbsp;<i
                       class="pi pi-info-circle"
@@ -298,10 +300,10 @@
                     />
                     <Dialog
                       v-model:visible="dialogVisible[keyword.key]"
-                      modal
-                      :header="keyword.key"
-                      :style="{width: '50vw'}"
                       :breakpoints="{'1199px': '75vw', '575px': '90vw'}"
+                      :header="keyword.key"
+                      modal
+                      :style="{width: '50vw'}"
                     >
                       <p class="m-0">
                         {{ getKeywordOptions(keyword.option)[0].description }}
@@ -311,9 +313,9 @@
                       validationErrors[`keywords.${keyword.key}`]
                     }}</span>
                   </div>
-                  <div class="field" v-if="keywordTextVisible[keyword.key] || keywordKeys[keyword.key] === 'Other'">
+                  <div v-if="keywordTextVisible[keyword.key] || keywordKeys[keyword.key] === 'Other'" class="field">
                     <span class="p-float-label keyword-description-input">
-                      <Textarea v-model="keywordDescriptions[keyword.key]" :id="scopedId('input-title')" rows="4" />
+                      <Textarea :id="scopedId('input-title')" v-model="keywordDescriptions[keyword.key]" rows="4" />
                       <label :for="scopedId('input-title')"
                         >{{ keyword.descriptionLabel }}
                         {{ keywordKeys[keyword.key] === 'Other' ? '(Required)' : '(Optional)' }}</label
@@ -360,25 +362,17 @@ import ProgressSpinner from 'primevue/progressspinner'
 import TabPanel from 'primevue/tabpanel'
 import TabView from 'primevue/tabview'
 import Textarea from 'primevue/textarea'
-import {useRestResource} from 'rest-client-vue'
 
 import DefaultLayout from '@/components/layout/DefaultLayout'
 import EmailPrompt from '@/components/common/EmailPrompt'
 import useScopedId from '@/composables/scoped-id'
 import useAuth from '@/composition/auth'
+import useFormatters from '@/composition/formatters'
 import useItem from '@/composition/item'
 import useItems from '@/composition/items'
 import config from '@/config'
-import {
-  normalizeDoi,
-  normalizePubmedId,
-  normalizeRawRead,
-  validateDoi,
-  validatePubmedId,
-  validateRawRead
-} from '@/lib/identifiers'
+import {normalizeDoi, normalizeRawRead, validateDoi, validateRawRead} from '@/lib/identifiers'
 import {ORCID_ID_REGEX} from '@/lib/orcid'
-import useFormatters from '@/composition/formatters'
 
 const KEYWORDS = [
   {
@@ -460,6 +454,7 @@ const KEYWORD_GROUPS = {
 
 export default {
   name: 'ExperimentEditor',
+
   components: {
     AutoComplete,
     Button,
@@ -476,6 +471,17 @@ export default {
     TabPanel,
     TabView,
     Textarea
+  },
+
+  props: {
+    experimentSetUrn: {
+      type: String,
+      required: false
+    },
+    itemId: {
+      type: String,
+      required: false
+    }
   },
 
   setup: () => {
@@ -530,17 +536,6 @@ export default {
     }
   },
 
-  props: {
-    experimentSetUrn: {
-      type: String,
-      required: false
-    },
-    itemId: {
-      type: String,
-      required: false
-    }
-  },
-
   data: () => ({
     // Form fields
     title: null,
@@ -575,7 +570,7 @@ export default {
     publicationIdentifierSuggestionsList: function () {
       // The PrimeVue AutoComplete doesn't seem to like it if we set the suggestion list to [].
       // This causes the drop-down to stop appearing when we later populate the list.
-      let publicationIdentifierSuggestions = _.unionBy(
+      const publicationIdentifierSuggestions = _.unionBy(
         this.publicationIdentifierSuggestions,
         this.externalPublicationIdentifierSuggestions,
         'identifier'
@@ -651,7 +646,7 @@ export default {
       let orcidUser = null
       try {
         orcidUser = (await axios.get(`${config.apiBaseUrl}/orcid/users/${orcidId}`)).data
-      } catch (err) {
+      } catch {
         // Assume that the error was 404 Not Found.
       }
       return orcidUser
@@ -715,7 +710,7 @@ export default {
     // Form fields
     ////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 
-    acceptNewDoiIdentifier: function (event) {
+    acceptNewDoiIdentifier: function () {
       // Remove new string item from the model and add new structured item in its place if it validates and is not a duplicate.
       const idx = this.doiIdentifiers.findIndex((item) => typeof item === 'string' || item instanceof String)
       if (idx == -1) {
@@ -830,7 +825,7 @@ export default {
                 } else {
                   this.clientSideValidationErrors.extraMetadata = null
                 }
-              } catch (e) {
+              } catch {
                 this.extraMetadata = null
                 this.clientSideValidationErrors.extraMetadata = 'The file did not contain valid JSON text.'
                 console.log('Extra metadata file did not contain valid JSON text.')

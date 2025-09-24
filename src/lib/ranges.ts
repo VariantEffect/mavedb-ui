@@ -1,4 +1,4 @@
-import {HistogramShader} from '@/lib/histogram'
+import { HistogramShader } from '@/lib/histogram'
 
 export const NORMAL_RANGE_DEFAULT_COLOR = '#4444ff'
 export const ABNORMAL_RANGE_DEFAULT_COLOR = '#ff4444'
@@ -45,15 +45,17 @@ export interface ScoreSetRanges {
 }
 
 export interface ScoreRanges {
+  title: string
+  researchUseOnly: boolean
   baselineScore?: number
   baselineScoreDescription?: string | undefined
-  oddsPathSource?: [{identifier: string; dbName: string}] | undefined
+  oddsPathSource?: [{ identifier: string; dbName: string }] | undefined
 
   priorProbabilityPathogenicity?: number | undefined
   parameterSets?: Array<pillarProjectParameterSet>
 
   ranges: Array<ScoreRange>
-  source?: [{identifier: string; dbName: string}] | undefined
+  source?: [{ identifier: string; dbName: string }] | undefined
 }
 
 export interface ScoreRange {
@@ -62,15 +64,15 @@ export interface ScoreRange {
   classification: 'normal' | 'abnormal' | 'not_specified'
   range: Array<number>
   oddsPath?:
-    | {
-        ratio: number
-        evidence:
-          | (typeof INDETERMINATE_RANGE_EVIDENCE)[number]
-          | (typeof NORMAL_RANGE_EVIDENCE)[number]
-          | (typeof ABNORMAL_RANGE_EVIDENCE)[number]
-          | undefined
-      }
+  | {
+    ratio: number
+    evidence:
+    | (typeof INDETERMINATE_RANGE_EVIDENCE)[number]
+    | (typeof NORMAL_RANGE_EVIDENCE)[number]
+    | (typeof ABNORMAL_RANGE_EVIDENCE)[number]
     | undefined
+  }
+  | undefined
   positiveLikelihoodRatio?: number | undefined
   evidenceStrength?: number | undefined
   inclusiveLowerBound: boolean

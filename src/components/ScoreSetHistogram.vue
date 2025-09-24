@@ -395,17 +395,28 @@ export default defineComponent({
 
     activeRangeOptions: function () {
       if (!this.activeRanges) return []
-      const calibrationOptions = Object.keys(this.activeRanges).map((key) => {
-        const label =
-          {
-            investigatorProvided: 'Investigator-provided functional classes',
-            pillarProject: 'Research Use Only: Zeiberg calibration'
-          }[key] || `${this.titleCase(key)} ranges`
+
+      const calibrationOptions = Object.entries(this.activeRanges).map(([key, value]) => {
+        const label = value.researchUseOnly
+          ? `Research Use Only: ${value.title}`
+          : value.title
         return {
           label,
           value: key
         }
       })
+
+      // Sort options: research use only at the end, alphabetically otherwise
+      calibrationOptions.sort((a, b) => {
+        const aIsResearchOnly = this.activeRanges?.[a.value]?.researchUseOnly || false
+        const bIsResearchOnly = this.activeRanges?.[b.value]?.researchUseOnly || false
+
+        if (aIsResearchOnly && !bIsResearchOnly) return 1
+        if (!aIsResearchOnly && bIsResearchOnly) return -1
+
+        return a.label.localeCompare(b.label)
+      })
+
       return [{label: 'None', value: null}, ...calibrationOptions]
     },
 

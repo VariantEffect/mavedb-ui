@@ -74,6 +74,24 @@
         </div>
       </div>
     </div>
+    <div class="mavedb-histogram-control">
+      <span class="mavedb-histogram-control-label">Variants by protein effect: </span>
+      <div class="flex flex-wrap gap-3">
+        <div
+          v-for="typeOption of variantTypeOptions"
+          :key="typeOption.name"
+          class="flex gap-1 align-items-center"
+        >
+          <Checkbox
+            v-model="customSelectedVariantTypeFilters"
+            :disabled="!refreshedClinicalControls"
+            :name="scopedId('variant-type-inputs')"
+            :value="typeOption.name"
+          />
+          <label :for="scopedId('variant-type-inputs')">{{ typeOption.shortDescription }}</label>
+        </div>
+      </div>
+    </div>
   </div>
   <div ref="histogramContainer" class="mavedb-histogram-container" />
   <!-- The child component will attempt to immediately emit the range which is active when it is created. Since Vue lifecycle events bubble up from child to parent, this causes this component to attempt
@@ -97,7 +115,7 @@ import Dropdown from 'primevue/dropdown'
 import ProgressSpinner from 'primevue/progressspinner'
 import Rating from 'primevue/rating'
 import TabMenu from 'primevue/tabmenu'
-import {defineComponent, PropType} from 'vue'
+import {defineComponent, PropType, ref} from 'vue'
 
 import RangeTable from '@/components/RangeTable.vue'
 import useScopedId from '@/composables/scoped-id'
@@ -212,8 +230,26 @@ export default defineComponent({
       clinicalSignificanceClassificationOptions: clinvarClinicalSignificanceClassifications(
         DEFAULT_CLINICAL_CONTROL_VERSION
       ),
+      variantTypeOptions: [
+        {
+          name: 'Synonymous',
+          description: 'Show all synonymous variants',
+          shortDescription: 'Synonymous variants'
+        },
+        {
+          name: 'Missense',
+          description: 'Show all missense variants',
+          shortDescription: 'Missense variants'
+        },
+        {
+          name: 'Nonsense',
+          description: 'Show all nonsense variants',
+          shortDescription: 'Nonsense variants'
+        },
+      ],
       customMinStarRating: DEFAULT_MIN_STAR_RATING,
       customSelectedClinicalSignificanceClassifications: DEFAULT_CLINICAL_SIGNIFICANCE_CLASSIFICATIONS,
+      customSelectedVariantTypeFilters: [] as typeof this.variantTypeOptions[0]['name'][],
       histogram: null as Histogram | null
     }
   },
@@ -312,12 +348,32 @@ export default defineComponent({
             })
           }
 
-          if (this.selectedClinicalSignificanceClassifications.includes('Missense')) {
+          if (this.selectedVariantTypeFilters.includes('Missense')) {
             series.push({
               classifier: (d: HistogramDatum) => this.variantIsMissense(d),
               options: {
-                color: '#984ea3',
+                color: '#a36e4e',
                 title: 'Missense'
+              }
+            })
+          }
+
+          if (this.selectedVariantTypeFilters.includes('Synonymous')) {
+            series.push({
+              classifier: (d: HistogramDatum) => this.variantIsSynonymous(d),
+              options: {
+                color: '#59a34e',
+                title: 'Synonymous'
+              }
+            })
+          }
+
+          if (this.selectedVariantTypeFilters.includes('Nonsense')) {
+            series.push({
+              classifier: (d: HistogramDatum) => this.variantIsNonsense(d),
+              options: {
+                color: '#a3984e',
+                title: 'Nonsense'
               }
             })
           }
@@ -438,6 +494,13 @@ export default defineComponent({
         return DEFAULT_CLINICAL_SIGNIFICANCE_CLASSIFICATIONS
       }
       return this.customSelectedClinicalSignificanceClassifications
+    },
+
+    selectedVariantTypeFilters: function () {
+      if (this.activeViz == 1) {
+        return []
+      }
+      return this.customSelectedVariantTypeFilters
     },
 
     controlDbAndVersion() {
@@ -707,6 +770,34 @@ export default defineComponent({
       const startLoss = parsedVariant.position == 1 && refAllele == 'MET'
       return !!(refAlleleIsAA && altAlleleIsAA && !startLoss && refAllele != altAllele)
     },
+    variantIsSynonymous(variant: Variant) {
+      const hgvsPro = this.getHgvsProFromVariant(variant)
+      if (!hgvsPro) {
+        return false
+      }
+      const parsedVariant = parseSimpleProVariant(hgvsPro)
+      if (!parsedVariant) {
+        return false
+      }
+      const refAllele = parsedVariant.original.toUpperCase()
+      const altAllele = parsedVariant.substitution.toUpperCase()
+      const refAlleleIsAA = AMINO_ACIDS.find((aa) => aa.codes.triple == refAllele)
+      const altAlleleIsAA = AMINO_ACIDS.find((aa) => aa.codes.triple == altAllele)
+      return !!(refAlleleIsAA && altAlleleIsAA && refAllele == altAllele)
+    },
+    variantIsNonsense(variant: Variant) {
+      const hgvsPro = this.getHgvsProFromVariant(variant)
+      if (!hgvsPro) {
+        return false
+      }
+      const parsedVariant = parseSimpleProVariant(hgvsPro)
+      if (!parsedVariant) {
+        return false
+      }
+      const altAllele = parsedVariant.substitution.toUpperCase()
+      return altAllele == 'TER' || altAllele == '*'
+    },
+
     getHgvsProFromVariant(variant: Variant) {
       if (variant.post_mapped_hgvs_p && variant.post_mapped_hgvs_p != 'NA') {
         return variant.post_mapped_hgvs_p

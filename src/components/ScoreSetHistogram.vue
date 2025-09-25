@@ -57,6 +57,24 @@
       />
     </div>
     <div class="mavedb-histogram-control">
+      <span class="mavedb-histogram-control-label">Include variants with protein effect: </span>
+      <div class="flex flex-wrap gap-3">
+        <div
+          v-for="typeOption of variantTypeOptions"
+          :key="typeOption.name"
+          class="flex gap-1 align-items-center"
+        >
+          <Checkbox
+            v-model="customSelectedControlVariantTypeFilters"
+            :disabled="!refreshedClinicalControls"
+            :name="scopedId('variant-type-inputs')"
+            :value="typeOption.name"
+          />
+          <label :for="scopedId('variant-type-inputs')">{{ typeOption.shortDescription }}</label>
+        </div>
+      </div>
+    </div>
+    <div class="mavedb-histogram-control">
       <span class="mavedb-histogram-control-label">Include variants with classification: </span>
       <div class="flex flex-wrap gap-3">
         <div
@@ -250,6 +268,7 @@ export default defineComponent({
       customMinStarRating: DEFAULT_MIN_STAR_RATING,
       customSelectedClinicalSignificanceClassifications: DEFAULT_CLINICAL_SIGNIFICANCE_CLASSIFICATIONS,
       customSelectedVariantTypeFilters: [] as typeof this.variantTypeOptions[0]['name'][],
+      customSelectedControlVariantTypeFilters: ['Synonymous', 'Missense', 'Nonsense'],
       histogram: null as Histogram | null
     }
   },
@@ -287,6 +306,31 @@ export default defineComponent({
             }
           ]
 
+        case 'effect':
+          return [
+            {
+              classifier: (d: HistogramDatum) => this.variantIsMissense(d),
+              options: {
+                color: '#a36e4e',
+                title: 'Missense'
+              }
+            },
+            {
+              classifier: (d: HistogramDatum) => this.variantIsSynonymous(d),
+              options: {
+                color: '#59a34e',
+                title: 'Synonymous'
+              }
+            },
+            {
+              classifier: (d: HistogramDatum) => this.variantIsNonsense(d),
+              options: {
+                color: '#a3984e',
+                title: 'Nonsense'
+              }
+            }
+          ]
+
         case 'custom': {
           const series = [
             {
@@ -295,7 +339,7 @@ export default defineComponent({
                   PATHOGENIC_CLINICAL_SIGNIFICANCE_CLASSIFICATIONS,
                   this.selectedClinicalSignificanceClassifications
                 ).includes(d.control?.[DEFAULT_CLNSIG_FIELD]) &&
-                CLINVAR_REVIEW_STATUS_STARS[d.control?.[DEFAULT_CLNREVSTAT_FIELD]] >= this.minStarRating,
+                CLINVAR_REVIEW_STATUS_STARS[d.control?.[DEFAULT_CLNREVSTAT_FIELD]] >= this.minStarRating && this.filterControlVariantByEffect(d),
               options: {
                 color: '#e41a1c',
                 title: 'Pathogenic/Likely Pathogenic'
@@ -307,7 +351,7 @@ export default defineComponent({
                   BENIGN_CLINICAL_SIGNIFICANCE_CLASSIFICATIONS,
                   this.selectedClinicalSignificanceClassifications
                 ).includes(d.control?.[DEFAULT_CLNSIG_FIELD]) &&
-                CLINVAR_REVIEW_STATUS_STARS[d.control?.[DEFAULT_CLNREVSTAT_FIELD]] >= this.minStarRating,
+                CLINVAR_REVIEW_STATUS_STARS[d.control?.[DEFAULT_CLNREVSTAT_FIELD]] >= this.minStarRating  && this.filterControlVariantByEffect(d),
               options: {
                 color: '#377eb8',
                 title: 'Benign/Likely Benign'
@@ -319,7 +363,7 @@ export default defineComponent({
             series.push({
               classifier: (d: Variant) =>
                 d.control?.[DEFAULT_CLNSIG_FIELD] == 'Uncertain significance' &&
-                (CLINVAR_REVIEW_STATUS_STARS[d.control?.[DEFAULT_CLNREVSTAT_FIELD]] ?? -1) >= this.minStarRating,
+                (CLINVAR_REVIEW_STATUS_STARS[d.control?.[DEFAULT_CLNREVSTAT_FIELD]] ?? -1) >= this.minStarRating  && this.filterControlVariantByEffect(d),
               options: {
                 color: '#999999',
                 title: 'Uncertain significance'
@@ -338,7 +382,7 @@ export default defineComponent({
                   CONFLICTING_CLINICAL_SIGNIFICANCE_CLASSIFICATIONS,
                   this.selectedClinicalSignificanceClassifications
                 ).includes(d.control?.[DEFAULT_CLNSIG_FIELD]) &&
-                CLINVAR_REVIEW_STATUS_STARS[d.control?.[DEFAULT_CLNREVSTAT_FIELD]] >= this.minStarRating,
+                CLINVAR_REVIEW_STATUS_STARS[d.control?.[DEFAULT_CLNREVSTAT_FIELD]] >= this.minStarRating  && this.filterControlVariantByEffect(d),
               options: {
                 color: '#984ea3',
                 title: conflictingClinicalSignificanceSeriesLabelForVersion(
@@ -391,6 +435,11 @@ export default defineComponent({
 
       if (this.someVariantsHaveClinicalSignificance) {
         options.push({label: 'Clinical View', view: 'clinical'})
+      }
+
+      // crude to be based on clinical significance. may be a better option for viz control
+      if (this.someVariantsHaveClinicalSignificance) {
+        options.push({label: 'Protein Effect View', view: 'effect'})
       }
 
       // custom view should always come last
@@ -496,9 +545,16 @@ export default defineComponent({
       return this.customSelectedClinicalSignificanceClassifications
     },
 
-    selectedVariantTypeFilters: function () {
+    selectedControlVariantTypeFilters: function () {
       if (this.activeViz == 1) {
-        return []
+        return ['Synonymous', 'Missense', 'Nonsense']
+      }
+      return this.customSelectedControlVariantTypeFilters
+    },
+
+    selectedVariantTypeFilters: function () {
+      if (this.activeViz == 2) {
+        return ['Synonymous', 'Missense', 'Nonsense']
       }
       return this.customSelectedVariantTypeFilters
     },
@@ -693,6 +749,16 @@ export default defineComponent({
         this.renderOrRefreshHistogram()
       }
     },
+    selectedVariantTypeFilters: {
+      handler: function () {
+        this.renderOrRefreshHistogram()
+      }
+    },
+    selectedControlVariantTypeFilters: {
+      handler: function () {
+        this.renderOrRefreshHistogram()
+      }
+    },
     clinicalControlOptions: {
       handler: function () {
         if (!this.controlDb) {
@@ -782,8 +848,7 @@ export default defineComponent({
       const refAllele = parsedVariant.original.toUpperCase()
       const altAllele = parsedVariant.substitution.toUpperCase()
       const refAlleleIsAA = AMINO_ACIDS.find((aa) => aa.codes.triple == refAllele)
-      const altAlleleIsAA = AMINO_ACIDS.find((aa) => aa.codes.triple == altAllele)
-      return !!(refAlleleIsAA && altAlleleIsAA && refAllele == altAllele)
+      return !!(refAlleleIsAA && (refAllele == altAllele || altAllele == "="))
     },
     variantIsNonsense(variant: Variant) {
       const hgvsPro = this.getHgvsProFromVariant(variant)
@@ -797,7 +862,13 @@ export default defineComponent({
       const altAllele = parsedVariant.substitution.toUpperCase()
       return altAllele == 'TER' || altAllele == '*'
     },
-
+    filterControlVariantByEffect(variant: Variant) {
+      return (
+        (this.selectedControlVariantTypeFilters.includes('Missense') && this.variantIsMissense(variant)) ||
+        (this.selectedControlVariantTypeFilters.includes('Synonymous') && this.variantIsSynonymous(variant)) ||
+        (this.selectedControlVariantTypeFilters.includes('Nonsense') && this.variantIsNonsense(variant))
+      )
+    },
     getHgvsProFromVariant(variant: Variant) {
       if (variant.post_mapped_hgvs_p && variant.post_mapped_hgvs_p != 'NA') {
         return variant.post_mapped_hgvs_p

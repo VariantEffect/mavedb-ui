@@ -1,7 +1,7 @@
 /**
  * An object holding parsed values from a simple MaveHGVS-pro string representing a variation at one locus in a protein.
  */
-interface SimpleMaveVariant {
+export interface SimpleMaveVariant {
   /** The MaveDB Accession for a variant. */
   accession: string
   /** The nucleotide HGVS string. */
@@ -15,7 +15,7 @@ interface SimpleMaveVariant {
 /**
  * An object holding parsed values from a simple MaveHGVS-pro string representing a variation at one locus in a protein.
  */
-interface SimpleProteinVariation {
+export interface SimpleProteinVariation {
   /** The numeric position from a MaveHGVS-pro string. */
   position: number
   /** The substring of a MaveHGVS-pro string representing the wild-type amino acid or stop codon at this position. */
@@ -31,7 +31,7 @@ interface SimpleProteinVariation {
   target: null | string
 }
 
-interface SimpleDnaVariation extends SimpleProteinVariation {
+export interface SimpleDnaVariation extends SimpleProteinVariation {
   referenceType: 'c' | 'g' | 'n'
 }
 

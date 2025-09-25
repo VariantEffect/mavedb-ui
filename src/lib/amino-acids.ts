@@ -137,3 +137,37 @@ export const AMINO_ACIDS_WITH_TER = [...AMINO_ACIDS, {name: 'Termination', codes
  * standard hydrophobicity scale.
  */
 export const AMINO_ACIDS_BY_HYDROPHILIA = Array.from('PCGQNTSEDKHRWYFMILVA')
+
+/** Codes used in the right part of a MaveHGVS-pro string representing a single variation in a protein sequence. */
+export const MAVE_HGVS_PRO_CHANGE_CODES = [
+  {codes: {single: '='}}, // Synonymous AA variant
+  {codes: {single: '*', triple: 'TER'}}, // Stop codon
+  {codes: {single: '-', triple: 'DEL'}} // Deletion
+]
+
+/**
+ * Given a MaveHGVS-pro amino acid code or code representing deletion, synonmyous variation, or stop codon, return the
+ * corresponding single-character code (which is the code used in our heatmap's y-axis).
+ *
+ * @param aaCodeOrChange A one- or three-character code representing an amino acid or the result of a variation at a
+ *   single locus in a protein sequence. If not an amino acid code, it should be a code representing synonymous
+ *   variation (=), stop codon (*), or deletion (- or del).
+ * @return The one-character code representing the same amino acid or change, or null if the input was not a supported
+ *   amino acid or change.
+ */
+export function singleLetterAminoAcidOrHgvsCode(aaCodeOrChange: string): string | null {
+  const code = aaCodeOrChange.toUpperCase()
+  if (code.length == 1) {
+    return code
+  }
+  if (code.length == 3) {
+    return (
+      AMINO_ACIDS.find((aa) => aa.codes.triple == code)?.codes?.single ||
+      MAVE_HGVS_PRO_CHANGE_CODES.find((change) => change.codes.triple == code)?.codes?.single ||
+      null
+    )
+  }
+  // TODO What about D-amino acids? The "d-" prefix has been capitalized at this point, so if we need to handle these,
+  // we should match against capitalized five-letter codes.
+  return null
+}

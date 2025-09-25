@@ -357,6 +357,7 @@
                       <span class="p-float-label">
                         <FileUpload
                           :id="scopedId('input-extraMetadataFile')"
+                          accept="application/json"
                           :auto="false"
                           choose-label="Extra metadata"
                           :class="inputClasses.extraMetadataFile"

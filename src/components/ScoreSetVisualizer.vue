@@ -73,7 +73,7 @@ export default {
   }),
 
   mounted: function () {
-    const simpleAndWtVariants = this.$refs.scoreSetHeatmap.simpleAndWtVariants
+    const simpleAndWtVariants = this.$refs.scoreSetHeatmap.heatmapData
     const heatmap = this.$refs.scoreSetHeatmap.heatmap
     const heatmapColorScale = heatmap.colorScale()
 
@@ -90,7 +90,7 @@ export default {
           start_residue_number: x,
           end_residue_number: x,
           ..._.mapValues(_.keyBy(simpleVariant, 'y'), (value) => {
-            if (value.details.wt) {
+            if (value.wt) {
               return {wt: true, score: value.meanScore, color: '#ddbb00'}
             } else {
               return {

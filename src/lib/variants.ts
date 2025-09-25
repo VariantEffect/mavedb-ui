@@ -1,17 +1,48 @@
 import _ from 'lodash'
 
-import {parseSimpleNtVariant, parseSimpleProVariant} from './mave-hgvs'
+import {parseSimpleNtVariant, parseSimpleProVariant, SimpleDnaVariation, SimpleProteinVariation} from './mave-hgvs'
 import geneticCodes from './genetic-codes'
-import {AMINO_ACIDS_WITH_TER} from './amino-acids'
+import {AMINO_ACIDS_WITH_TER, singleLetterAminoAcidOrHgvsCode} from './amino-acids'
+import {DEFAULT_CLNREVSTAT_FIELD, DEFAULT_CLNSIG_FIELD} from './clinical-controls'
 
-type ReferenceType = 'c' | 'p'
+export type HgvsReferenceSequenceType = 'c' | 'p' // | 'n'
 
-interface SequenceRange {
+export interface SequenceRange {
   start: number
   length: number
 }
 
-const HGVS_REFERENCE_TYPES = {
+export interface ClinicalControlVariant {
+  [DEFAULT_CLNSIG_FIELD]: string
+  [DEFAULT_CLNREVSTAT_FIELD]: string
+}
+
+export interface RawVariant {
+  accession: string
+  score?: number
+  control?: ClinicalControlVariant
+  hgvs_nt?: string
+  hgvs_pro?: string
+  hgvs_splice?: string
+  post_mapped_hgvs_c?: string
+  post_mapped_hgvs_p?: string
+  mavedb_label?: string
+}
+
+export interface VariantPropertiesAddedByPreparingCodingVariants {
+  // Added by prepareSimpleCodingVariants.
+  parsedPostMappedHgvsC?: SimpleDnaVariation
+  parsedPostMappedHgvsP?: SimpleProteinVariation
+}
+
+export interface Variant extends RawVariant, VariantPropertiesAddedByPreparingCodingVariants {
+  // Added by translateSimpleCodingVariants
+  translated_hgvs_p?: string
+}
+
+export const HGVS_REFERENCE_SEQUENCE_TYPES: {
+  [type: HgvsReferenceSequenceType]: {parsedPostMappedHgvsField: keyof VariantPropertiesAddedByPreparingCodingVariants}
+} = {
   c: {
     parsedPostMappedHgvsField: 'parsedPostMappedHgvsC'
   },
@@ -20,8 +51,18 @@ const HGVS_REFERENCE_TYPES = {
   }
 }
 
-function getParsedPostMappedHgvs(variant: any, type: ReferenceType) {
-  return variant[HGVS_REFERENCE_TYPES[type].parsedPostMappedHgvsField]
+export interface ParsedPostMappedVariantProperties {
+  [type: string]: keyof VariantPropertiesAddedByPreparingCodingVariants
+}
+
+export const PARSED_POST_MAPPED_VARIANT_PROPERTIES: ParsedPostMappedVariantProperties = {
+  c: 'parsedPostMappedHgvsC',
+  p: 'parsedPostMappedHgvsP'
+}
+
+function getParsedPostMappedHgvs(variant: Variant, type: HgvsReferenceSequenceType) {
+  const field = PARSED_POST_MAPPED_VARIANT_PROPERTIES[type]
+  return field ? variant[field] : undefined
 }
 
 /**
@@ -30,9 +71,12 @@ function getParsedPostMappedHgvs(variant: any, type: ReferenceType) {
  * When a mapped c. or p. string is not present but unmapped c. or p. strings are present and have references, use them
  * instead. This is a temporary measure until we have more thorough access to mapped c. and p. strings.
  *
+ * Notice that this function alters members of the variants array by adding parsedPostMappedHgvsC and
+ * parsedPostMappedHgvsP properties.
+ *
  * @param variants The variants to modify.
  */
-export function prepareSimpleCodingVariants(variants: any[]) {
+export function parseSimpleCodingVariants(variants: Variant[]) {
   for (const v of variants) {
     if (v.post_mapped_hgvs_c) {
       const parsedHgvs = parseSimpleNtVariant(v.post_mapped_hgvs_c)
@@ -76,7 +120,7 @@ export function prepareSimpleCodingVariants(variants: any[]) {
 
 export function filterVariantsForTargetInference(variants: any[]) {
   // Use p. variants unless there are c. variants that don't have p. strings.
-  let referenceType: ReferenceType = 'p'
+  let referenceType: HgvsReferenceSequenceType = 'p'
   if (variants.some((v) => !v.parsedPostMappedHgvsP && v.parsedPostMappedHgvsC)) {
     referenceType = 'c'
   }
@@ -88,119 +132,233 @@ export function filterVariantsForTargetInference(variants: any[]) {
   }
 }
 
-function getTargetRange(simpleVariants: any[], referenceType: ReferenceType): SequenceRange {
+/**
+ * Determine the range of substitution positions in a set of variants. Ignore variants that are not simple
+ * substitutions.
+ *
+ * This function presumes that any simple substitutions in the set of variants have their parsed HGVS
+ * (parsedPostMappedHgvsC or parsedPostMappedHgvsP, depending on referenceType) property set.
+ *
+ * @param simpleVariants A list of variants
+ * @param referenceType The type of reference (c for coding DNA nucleotide sequence or p for protein amino acid
+ *   sequence) with respect to which positions are given. This determines which HGVS property of the variants,
+ *   parsedPostMappedHgvsC or parsedPostMappedHgvsP, is used to obtain positions.
+ * @returns An object with start and length properties representing the range of positions of variation. The length is
+ *   0 if there are no variants.
+ */
+function getReferenceRange(variants: Variant[], referenceType: HgvsReferenceSequenceType): SequenceRange {
   // Assume that all variants have the same residue type and reference.
-  if (simpleVariants.length == 0) {
+  if (variants.length == 0) {
     return {
       start: 0,
       length: 0
     }
   }
-  const positionMin = _.min(simpleVariants.map((v) => getParsedPostMappedHgvs(v, referenceType)?.position))
-  const positionMax = _.max(simpleVariants.map((v) => getParsedPostMappedHgvs(v, referenceType)?.position))
+  const positionMin = _.min(variants.map((v) => getParsedPostMappedHgvs(v, referenceType)?.position)) ?? 0
+  const positionMax = _.max(variants.map((v) => getParsedPostMappedHgvs(v, referenceType)?.position)) ?? 0
   return {
     start: positionMin,
     length: positionMax - positionMin + 1
   }
 }
 
-export function inferCodingSequenceFromVariants(variants: any[], referenceType: ReferenceType) {
-  if (variants.length == 0) {
-    return {
-      codingSequence: null,
-      codingSequenceRange: null
-    }
-  }
+/**
+ * Infer a coding DNA sequence from variants with parsed c. HGVS strings.
+ *
+ * This function looks at each variant's parsedPostMappedHgvsC property and constructs a DNA reference sequence from the
+ * references alleles, wherever parsedPostMappedHgvsC is populated. The returned coding sequence is accompanied by an
+ * object specifying the range of positions it describes. For instance, if the 5'-most variant is c.101A>C, then the
+ * reference sequence will begin with "A," and range.start will be 101. For any position at which no reference allele
+ * can be found among the variants, the reference will have an "N."
+ *
+ * If no variants have parsedPostMappedHgvsC set, then an empty coding sequence is returned.
+ *
+ * If two reference alleles any position disagree, a warning is logged, and an empty coding sequence is returned.
+ *
+ * @param variants An array of variants from which to infer a coding sequence.
+ * @returns
+ */
+// export function inferCodingSequenceFromVariants(variants: Variant[]) {
+//   if (variants.length == 0) {
+//     return {
+//       codingSequence: '',
+//       codingSequenceRange: {start: 0, length: 0}
+//     }
+//   }
 
-  if (referenceType != 'c') {
-    return {
-      codingSequence: null,
-      codingSequenceRange: null
-    }
-  }
+//   const codingRange = getReferenceRange(variants, 'c')
+//   const codingSequenceArr = Array(codingRange.length).fill('N')
+//   let codingSequenceFound = false
+//   for (const variant of variants) {
+//     const parsedHgvs = variant.parsedPostMappedHgvsC
+//     if (!parsedHgvs) {
+//       continue
+//     }
+//     if (codingSequenceArr[parsedHgvs.position - codingRange.start] == 'N') {
+//       codingSequenceArr[parsedHgvs.position - codingRange.start] = parsedHgvs.original
+//     } else if (codingSequenceArr[parsedHgvs.position - codingRange.start] != parsedHgvs.original) {
+//       console.log(
+//         `WARNING: Two variants with simple c. strings at position parsedHgvs.position have different reference alleles.`
+//       )
+//       return {
+//         codingSequence: '',
+//         codingSequenceRange: {start: 0, length: 0}
+//       }
+//     }
+//     codingSequenceFound = true
+//   }
+//   if (codingSequenceFound) {
+//     return {
+//       codingSequence: codingSequenceArr.join(''),
+//       codingSequenceRange: codingRange
+//     }
+//   } else {
+//     return {
+//       codingSequence: '',
+//       codingSequenceRange: {start: 0, length: 0}
+//     }
+//   }
+// }
 
-  const codingRange = getTargetRange(variants, 'c')
-  console.log(codingRange)
-  const codingSequenceArr = Array(codingRange.length).fill('N')
-  let codingSequenceFound = false
-  for (const variant of variants) {
-    const parsedHgvs = getParsedPostMappedHgvs(variant, 'c')
-    if (!parsedHgvs) {
-      continue
-    }
-    if (codingSequenceArr[parsedHgvs.position - codingRange.start] == 'N') {
-      codingSequenceArr[parsedHgvs.position - codingRange.start] = parsedHgvs.original
-    }
-    codingSequenceFound = true
-  }
-  if (codingSequenceFound) {
+/**
+ * Infer a DNA or protein reference sequence from variants with parsed HGVS strings.
+ *
+ * This function looks at each variant's parsedPostMappedHgvsC or parsedPostMappedHgvsP property (depending on the
+ * specified reference type) and constructs a DNA reference sequence from the references alleles, wherever the parsed
+ * HGVS property is populated. The returned reference sequence is accompanied by an object specifying the range of
+ * positions it describes. For instance, if the 5'-most variant is c.101A>C, then the reference sequence will begin with
+ * "A," and range.start will be 101. For any position at which no reference allele can be found among the variants, the
+ * reference will have an "N" (for DNA sequences) or an "X" (for protein sequences).
+ *
+ * If no variants have their parsed HGVS property set, then an empty coding sequence is returned.
+ *
+ * @param variants An array of variants from which to infer a coding sequence.
+ * @param referenceType The HGVS reference type, which may be "c" or "p." Any other reference types, including "g" and
+ *   "n," will yield an empty reference sequence.
+ * @returns TODO
+ */
+export function inferReferenceSequenceFromVariants(variants: Variant[], referenceType: HgvsReferenceSequenceType) {
+  if (variants.length == 0 || !['c', 'p'].includes(referenceType)) {
     return {
-      codingSequence: codingSequenceArr.join(''),
-      codingSequenceRange: codingRange
-    }
-  } else {
-    return {
-      codingSequence: null,
-      codingSequenceRange: null
+      referenceSequence: '',
+      referenceSequenceResidueType: referenceType == 'p' ? 'aa' : 'nt',
+      referenceSequenceRange: {start: 0, length: 0}
     }
   }
-}
-
-export function inferTargetSequenceFromVariants(variants: any[], referenceType: ReferenceType) {
-  if (variants.length == 0) {
-    return ''
-  }
-  const targetRange = getTargetRange(variants, referenceType)
+  const referenceSequenceRange = getReferenceRange(variants, referenceType)
   const unknownResidue = referenceType == 'p' ? 'X' : 'N'
-  const targetSequenceArr = Array(targetRange.length).fill(unknownResidue)
+  const referenceSequenceArr = Array(referenceSequenceRange.length).fill(unknownResidue)
   for (const variant of variants) {
     const parsedHgvs = getParsedPostMappedHgvs(variant, referenceType)
     if (!parsedHgvs) {
       continue
     }
-    if (targetSequenceArr[parsedHgvs.position - targetRange.start] == unknownResidue) {
-      targetSequenceArr[parsedHgvs.position - targetRange.start] = parsedHgvs.original
+    if (referenceSequenceArr[parsedHgvs.position - referenceSequenceRange.start] == unknownResidue) {
+      const referenceAllele = parsedHgvs.original
+      const referenceAllele1Char =
+        referenceType == 'p' ? singleLetterAminoAcidOrHgvsCode(referenceAllele) : referenceAllele
+      if (referenceAllele1Char != null) {
+        referenceSequenceArr[parsedHgvs.position - referenceSequenceRange.start] = referenceAllele1Char
+      }
+      // Uncomment to validate that all reference alleles at a position are identical. To do this, we also have to move
+      // the definition of referenceAllele1Char up, and we wind up running singleLetterAminoAcidOrHgvsCode for many more
+      // variants.
+
+      // } else if (referenceAllele1Char != referenceSequenceArr[parsedHgvs.position - referenceSequenceRange.start]) {
+      //   console.log(
+      //     `WARNING: Two variants with simple HGVS strings have different reference alleles at position ${parsedHgvs.position}.`
+      //   )
+      //   return {
+      //     referenceSequence: '',
+      //     referenceSequenceResidueType: referenceType == 'p' ? 'aa' : 'nt',
+      //     referenceSequenceRange: {start: 0, length: 0}
+      //   }
     }
   }
   return {
-    targetSequence: targetSequenceArr.join(''),
-    targetSequenceResidueType: referenceType == 'p' ? 'aa' : 'nt',
-    targetRange
+    referenceSequence: referenceSequenceArr.join(''),
+    referenceSequenceResidueType: referenceType == 'p' ? 'aa' : 'nt',
+    referenceSequenceRange
   }
 }
 
-export function translateSimpleCodingVariants(variants: any[]) {
-  prepareSimpleCodingVariants(variants)
-  const {referenceType, variants: simpleCodingVariants} = filterVariantsForTargetInference(variants)
-  const {codingSequence, codingSequenceRange} = inferCodingSequenceFromVariants(simpleCodingVariants, referenceType)
-  if (codingSequence && referenceType == 'c') {
-    for (const v of simpleCodingVariants) {
+/**
+ * Translate simple coding variants, adding an translated_hgvs_p column and setting parsedPostMappedHgvsP.
+ *
+ * This function looks at the parsedPostMappedHgvsC and parsedPostMappedHgvsP properties of every variant in the list.
+ * If no variant with parsedPostMappedHgvsC lacks parsedPostMappedHgvsP, then there is nothing to translate, and this
+ * function does nothing.
+ *
+ * If there is something to translate, then it calls inferCodingSequenceFromVariants to construct a coding sequence from
+ * the already-parsed c. HGVS strings. It uses this to translate every variant for which the reference sequence has a
+ * complete codon, and for which parsedPostMappedHgvsC is not already populated.
+ *
+ * In every variant that is successfully translated, two properties are set:
+ * - hgvs_pro_translated is the translated HGVS string with a "p." reference type.
+ * - parsedPostMappedHgvsP is set to a persed version of the HGVS string.
+ *
+ * Typically, parseSimpleCodingVariants should be called before this function in order to populate the variants'
+ * parsedPostMappedHgvsC and parsedPostMappedHgvsP properties.
+ *
+ * Notice that this function alters members of the variants array by setting their translated_hgvs_p and
+ * parsedPostMappedHgvsC properties.
+ *
+ * @param variants The array of variants to translate.
+ */
+export function translateSimpleCodingVariants(variants: Variant[]) {
+  const {referenceSequence: codingSequence, referenceSequenceRange: codingSequenceRange} =
+    inferReferenceSequenceFromVariants(variants, 'c')
+  if (codingSequence.length > 0) {
+    for (const v of variants) {
       if (v.parsedPostMappedHgvsC) {
-        v.hgvs_pro_inferred = translateSimpleCodingHgvsNtVariant(
+        const translatedHgvsP = translateSimpleCodingHgvsCVariant(
           v.parsedPostMappedHgvsC,
           codingSequence,
           codingSequenceRange
         )
+        if (translatedHgvsP) {
+          const parsedHgvsP = parseSimpleProVariant(translatedHgvsP)
+          if (parsedHgvsP) {
+            v.translated_hgvs_p = translatedHgvsP
+            v.parsedPostMappedHgvsP = parsedHgvsP
+          }
+        }
       }
     }
   }
-  return simpleCodingVariants
 }
 
-function translateSimpleCodingHgvsNtVariant(
-  parsedHgvs: any,
-  codingSequence: string,
-  codingSequenceRange: SequenceRange
+/**
+ * Translate one simple coding DNA variant.
+ *
+ * @param parsedHgvsC The variant's parsed HGVS "c." string.
+ * @param codingReferenceSequence All or part of the DNA reference sequence from an open reading frame. The variant's
+ *   reference allele is assumed to agree with the reference and is not checked.
+ * @param codingSequenceRange The range of nucleotide positions represented by the refernce sequence, relative to the
+ *   reference used by the parsed HGVS expression. If the reference contains the whole ORF, then this will be 1, but
+ *   it may be higher if the reference only represents part of the ORF.
+ * @returns
+ */
+function translateSimpleCodingHgvsCVariant(
+  parsedHgvsC: SimpleDnaVariation,
+  codingReferenceSequence: string,
+  codingReferenceSequenceRange: SequenceRange
 ) {
-  const offsetInCodon = (parsedHgvs.position - 1) % 3
-  const codonStartPosition = parsedHgvs.position - offsetInCodon
+  const offsetInCodon = (parsedHgvsC.position - 1) % 3
+  const codonStartPosition = parsedHgvsC.position - offsetInCodon
   const aaPosition = Math.floor((codonStartPosition - 1) / 3) + 1
-  const codon = codingSequence.substr(codonStartPosition - codingSequenceRange.start, 3)
+  if (codonStartPosition < codingReferenceSequenceRange.start) {
+    return undefined
+  }
+  const codon = codingReferenceSequence.substring(
+    codonStartPosition - codingReferenceSequenceRange.start,
+    codonStartPosition - codingReferenceSequenceRange.start + 3
+  )
   if (codon.length != 3 || codon.includes('N')) {
-    return null
+    return undefined
   }
   const codonArr = codon.split('')
-  codonArr[offsetInCodon] = parsedHgvs.substitution
+  codonArr[offsetInCodon] = parsedHgvsC.substitution
   const variantCodon = codonArr.join('')
   // @ts-expect-error codonToAa is not reflected in the type yet
   const originalAaResidue = geneticCodes.standard.dna.codonToAa[codon]

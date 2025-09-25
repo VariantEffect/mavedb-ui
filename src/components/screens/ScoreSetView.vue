@@ -374,7 +374,6 @@ export default {
   data: () => ({
     clinicalMode: config.CLINICAL_FEATURES_ENABLED,
     variants: null,
-    // codingVariants: null,
     showHeatmap: true,
     isScoreSetVisualizerVisible: false,
     heatmapExists: false,
@@ -430,13 +429,6 @@ export default {
 
       return annotatatedVariantOptions
     },
-    // heatmapVariants: function () {
-    //   if (this.clinicalMode) {
-    //     return this.codingVariants
-    //   } else {
-    //     return this.scores
-    //   }
-    // },
     hideStartAndStopLoss: function () {
       // In clinical mode, when the target is not endogenously edited (so it has a target sequence), omit start- and
       // stop-loss variants.
@@ -488,10 +480,8 @@ export default {
         if (variants) {
           parseSimpleCodingVariants(variants)
           translateSimpleCodingVariants(variants)
-          //const codingVariants = scores ? translateSimpleCodingVariants(scores) : null
         }
         this.variants = variants ? Object.freeze(variants) : null
-        // this.codingVariants = codingVariants ? Object.freeze(codingVariants) : null
         this.applyUrlState()
       }
     },

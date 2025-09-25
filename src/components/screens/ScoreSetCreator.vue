@@ -1183,7 +1183,7 @@
                           :dropdown="true"
                           :force-selection="true"
                           style="width: 100%"
-                          :suggestions="targetGeneAccessionSuggestionsList"
+                          :suggestions="accessionSuggestions"
                           @complete="fetchTargetAccessions($event)"
                         />
                         <label :for="scopedId('input-targetGeneAccessionLabel')"> Accession Identifier </label>
@@ -2167,12 +2167,6 @@ export default {
     taxonomySuggestionsList: function () {
       return this.suggestionsForAutocomplete(this.taxonomySuggestions)
     },
-    targetGeneAccessionSuggestionsList: function () {
-      if (!this.accessionSuggestions || this.accessionSuggestions.length == 0) {
-        return ['']
-      }
-      return this.accessionSuggestions
-    },
     defaultLicenseId: function () {
       return this.licenses ? this.licenses.find((license) => license.shortName == 'CC0')?.id : null
     },
@@ -2558,6 +2552,7 @@ export default {
 
     refreshAccessionOptions: async function (targetIdx) {
       const currentTarget = this.createdTargetGenes[targetIdx]
+      this.accessionSuggestions = []
 
       // if we are refreshing the accession options, we can't retain the currently selected accession
       if (currentTarget.targetGene.targetAccession.accession) {
@@ -2575,6 +2570,7 @@ export default {
       }
 
       if (!this.accessionSuggestions) {
+        this.accessionSuggestions = []
         this.$toast.add({
           severity: 'warn',
           summary: `No accession identifiers were found for ${currentTarget.isRelativeToChromosome ? currentTarget.targetGene.targetAccession.assembly : currentTarget.targetGene.targetAccession.gene.name}`,
@@ -2589,6 +2585,8 @@ export default {
         this.accessionSuggestions = this.accessionSuggestions.filter((s) =>
           s?.toLowerCase().includes(searchText.toLowerCase())
         )
+      } else {
+          this.accessionSuggestions = [...this.accessionSuggestions] // PrimeVue AutoComplete quirk
       }
     },
 

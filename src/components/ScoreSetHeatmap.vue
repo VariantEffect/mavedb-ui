@@ -74,6 +74,7 @@ import {
   PARSED_POST_MAPPED_VARIANT_PROPERTIES,
   HgvsReferenceSequenceType,
   inferReferenceSequenceFromVariants,
+  isStartOrStopLoss,
   Variant
 } from '@/lib/variants'
 
@@ -95,6 +96,7 @@ interface VariantClassHeatmapDatum {
   /** One variant in the class. All of its properties are shared by the other variants except its score, which should be ignored. */
   instance?: Variant
 }
+// import {SPARSITY_THRESHOLD} from '@/lib/score-set-heatmap'
 
 const HEATMAP_AMINO_ACIDS_SORTED = _.sortBy(AMINO_ACIDS, [
   (aa) =>
@@ -445,7 +447,7 @@ export default defineComponent({
     parseSimpleVariant: function () {
       return this.sequenceType == 'dna' ? parseSimpleNtVariant : parseSimpleProVariant
     },
- 
+
     ////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
     // Variants to display
     ////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
@@ -615,7 +617,7 @@ export default defineComponent({
 
     colorScaleDomain: function () {
       const baselineScore = this.scoreSet.scoreRanges?.investigatorProvided?.baselineScore
-      
+
       const scores = this.heatmapData.map((v) => v.meanScore).filter((score) => score != null)
       const minValue = _.min<number>(scores)
       const maxValue = _.max<number>(scores)
@@ -997,7 +999,7 @@ export default defineComponent({
           }
           // If hideStartAndStopLoss is set to true, omit start- and stop-loss variants. The parent component shouuld
           // set this option when viewing scores in clinical mode from an assay using a synthetic target sequence.
-          if (this.hideStartAndStopLoss && this.isStartOrStopLoss(variant)) {
+          if (this.hideStartAndStopLoss && isStartOrStopLoss(variant)) {
             numIgnoredVariants++
             return null
           }
@@ -1280,33 +1282,6 @@ export default defineComponent({
 
     showProteinStructure() {
       this.proteinStructureVisible = true
-    },
-
-    isStartOrStopLoss: function (variant) {
-      const hgvsP = [variant.post_mapped_hgvs_p, variant.translated_hgvs_p, variant.hgvs_pro].find((hgvs) =>
-        variantNotNullOrNA(hgvs)
-      )
-      if (!hgvsP) {
-        return false
-      }
-      // TODO We may be reparsing a variant.
-      const parsedVariant = parseSimpleProVariant(hgvsP)
-      if (!parsedVariant) {
-        return false
-      }
-      if (parsedVariant.position == 1 && parsedVariant.original == 'Met' && parsedVariant.substitution != 'Met') {
-        // Start loss
-        return true
-      }
-      if (
-        parsedVariant.position == 1 &&
-        (parsedVariant.original == 'Ter' || parsedVariant.original == '*') &&
-        parsedVariant.substitution != 'Ter' &&
-        parsedVariant.substitution != '*'
-      ) {
-        // Stop loss
-        return true
-      }
     },
 
     translateDnaToAminoAcids1Char: function (dna) {

@@ -606,6 +606,7 @@
                       <span class="p-float-label">
                         <FileUpload
                           :id="scopedId('input-extraMetadataFile')"
+                          accept="application/json"
                           :auto="false"
                           choose-label="Extra metadata"
                           :class="inputClasses.extraMetadataFile"
@@ -1783,6 +1784,7 @@
                       <FileUpload
                         :id="scopedId('input-scoresFile')"
                         ref="scoresFileUpload"
+                        accept="text/csv"
                         :auto="false"
                         choose-label="Scores file"
                         :class="inputClasses.scoresFile || ''"
@@ -1814,6 +1816,7 @@
                       <FileUpload
                         :id="scopedId('input-countsFile')"
                         ref="countsFileUpload"
+                        accept="text/csv"
                         :auto="false"
                         choose-label="Counts file"
                         :class="inputClasses.countsFile || ''"

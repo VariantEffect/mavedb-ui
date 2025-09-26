@@ -55,6 +55,41 @@ export interface ParsedPostMappedVariantProperties {
   [type: string]: keyof VariantPropertiesAddedByPreparingCodingVariants
 }
 
+export const VARIANT_EFFECT_TYPE_OPTIONS = [
+  {
+    name: 'Synonymous',
+    description: 'Show all synonymous variants',
+    shortDescription: 'Synonymous variants'
+  },
+  {
+    name: 'Missense',
+    description: 'Show all missense variants',
+    shortDescription: 'Missense variants'
+  },
+  {
+    name: 'Nonsense',
+    description: 'Show all nonsense variants',
+    shortDescription: 'Nonsense variants'
+  },
+  {
+    name: 'Start/Stop Loss',
+    description: 'Show all start/stop loss variants',
+    shortDescription: 'Start/Stop Loss variants'
+  },
+  {
+    name: 'Other',
+    description: 'Show all other variant types',
+    shortDescription: 'Others'
+  }
+]
+
+export const DEFAULT_VARIANT_EFFECT_TYPES = [
+  'Missense',
+  'Nonsense',
+  'Synonymous',
+  'Other',
+]
+
 export const PARSED_POST_MAPPED_VARIANT_PROPERTIES: ParsedPostMappedVariantProperties = {
   c: 'parsedPostMappedHgvsC',
   g: 'parsedPostMappedHgvsC',
@@ -65,6 +100,7 @@ function getParsedPostMappedHgvs(variant: Variant, type: HgvsReferenceSequenceTy
   const field = PARSED_POST_MAPPED_VARIANT_PROPERTIES[type]
   return field ? variant[field] : undefined
 }
+
 
 /**
  * Add parsed post-mapped HGVS c. and p. strings to variants wherever possible.

@@ -23,93 +23,99 @@
     Loading clinical control options in the background. Additional histogram views will be available once loaded.
   </div>
   <div v-if="showControls" class="mavedb-histogram-custom-controls">
-    <div v-if="showClinicalControlOptions" class="mavedb-histogram-control">
-      <label class="mavedb-histogram-control-label" for="mavedb-histogram-db-select">Clinical control database: </label>
-      <Dropdown
-        v-model="controlDb"
-        :disabled="!refreshedClinicalControls"
-        input-id="mavedb-histogram-db-select"
-        option-label="dbName"
-        :options="clinicalControlOptions"
-        style="align-items: center; height: 1.5rem"
-      />
-      <label class="mavedb-histogram-control-label" for="mavedb-histogram-version-select"
+    <fieldset class="mavedb-histogram-controls-panel">
+      <legend>Clinical Series Options</legend>
+      <div v-if="showClinicalControlOptions" class="mavedb-histogram-control">
+        <label class="mavedb-histogram-control-label" for="mavedb-histogram-db-select">Clinical control database: </label>
+        <Dropdown
+          v-model="controlDb"
+          :disabled="!refreshedClinicalControls"
+          input-id="mavedb-histogram-db-select"
+          option-label="dbName"
+          :options="clinicalControlOptions"
+          style="align-items: center; height: 1.5rem"
+        />
+        <label class="mavedb-histogram-control-label" for="mavedb-histogram-version-select"
         >Clinical control version:
-      </label>
-      <Dropdown
-        v-model="controlVersion"
-        :disabled="!refreshedClinicalControls"
-        input-id="mavedb-histogram-version-select"
-        :options="controlDb?.availableVersions"
-        style="align-items: center; height: 1.5rem"
-      />
-    </div>
-    <div class="mavedb-histogram-control">
-      <label class="mavedb-histogram-control-label" for="mavedb-histogram-star-select"
-        >Minimum ClinVar review status 'gold stars':
-      </label>
-      <Rating
-        v-model="customMinStarRating"
-        :disabled="!refreshedClinicalControls"
-        input-id="mavedb-histogram-star-select"
-        :stars="4"
-        style="display: inline"
-      />
-    </div>
-    <div class="mavedb-histogram-control">
-      <span class="mavedb-histogram-control-label">Include variants with protein effect: </span>
-      <div class="flex flex-wrap gap-3">
-        <div
-          v-for="typeOption of variantTypeOptions"
-          :key="typeOption.name"
-          class="flex gap-1 align-items-center"
-        >
-          <Checkbox
-            v-model="customSelectedControlVariantTypeFilters"
-            :disabled="!refreshedClinicalControls"
-            :name="scopedId('variant-type-inputs')"
-            :value="typeOption.name"
-          />
-          <label :for="scopedId('variant-type-inputs')">{{ typeOption.shortDescription }}</label>
+        </label>
+        <Dropdown
+          v-model="controlVersion"
+          :disabled="!refreshedClinicalControls"
+          input-id="mavedb-histogram-version-select"
+          :options="controlDb?.availableVersions"
+          style="align-items: center; height: 1.5rem"
+        />
+      </div>
+      <div class="mavedb-histogram-control">
+        <label class="mavedb-histogram-control-label" for="mavedb-histogram-star-select">
+          Minimum ClinVar review status 'gold stars':
+        </label>
+        <Rating
+          v-model="customMinStarRating"
+          :disabled="!refreshedClinicalControls"
+          input-id="mavedb-histogram-star-select"
+          :stars="4"
+          style="display: inline"
+        />
+      </div>
+      <div class="mavedb-histogram-control">
+        <span class="mavedb-histogram-control-label">Limit to variants with protein effect: </span>
+        <div class="flex flex-wrap gap-3">
+          <div
+            v-for="typeOption of variantTypeOptions"
+            :key="typeOption.name"
+            class="flex gap-1 align-items-center"
+          >
+            <Checkbox
+              v-model="customSelectedControlVariantTypeFilters"
+              :disabled="!refreshedClinicalControls || (typeOption.name === 'Start/Stop Loss' && clinicalModeActive)"
+              :name="scopedId('variant-type-inputs')"
+              :value="typeOption.name"
+            />
+            <label :for="scopedId('variant-type-inputs')">{{ typeOption.shortDescription }}</label>
+          </div>
         </div>
       </div>
-    </div>
-    <div class="mavedb-histogram-control">
-      <span class="mavedb-histogram-control-label">Include variants with classification: </span>
-      <div class="flex flex-wrap gap-3">
-        <div
-          v-for="classification of clinicalSignificanceClassificationOptions"
-          :key="classification.name"
-          class="flex gap-1 align-items-center"
-        >
-          <Checkbox
-            v-model="customSelectedClinicalSignificanceClassifications"
-            :disabled="!refreshedClinicalControls"
-            :name="scopedId('clinical-significance-inputs')"
-            :value="classification.name"
-          />
-          <label :for="scopedId('clinical-significance-inputs')">{{ classification.shortDescription }}</label>
+      <div class="mavedb-histogram-control">
+        <span class="mavedb-histogram-control-label">Include variants with classification: </span>
+        <div class="flex flex-wrap gap-3">
+          <div
+            v-for="classification of clinicalSignificanceClassificationOptions"
+            :key="classification.name"
+            class="flex gap-1 align-items-center"
+          >
+            <Checkbox
+              v-model="customSelectedClinicalSignificanceClassifications"
+              :disabled="!refreshedClinicalControls"
+              :name="scopedId('clinical-significance-inputs')"
+              :value="classification.name"
+            />
+            <label :for="scopedId('clinical-significance-inputs')">{{ classification.shortDescription }}</label>
+          </div>
         </div>
       </div>
-    </div>
-    <div class="mavedb-histogram-control">
-      <span class="mavedb-histogram-control-label">Variants by protein effect: </span>
-      <div class="flex flex-wrap gap-3">
-        <div
-          v-for="typeOption of variantTypeOptions"
-          :key="typeOption.name"
-          class="flex gap-1 align-items-center"
-        >
-          <Checkbox
-            v-model="customSelectedVariantTypeFilters"
-            :disabled="!refreshedClinicalControls"
-            :name="scopedId('variant-type-inputs')"
-            :value="typeOption.name"
-          />
-          <label :for="scopedId('variant-type-inputs')">{{ typeOption.shortDescription }}</label>
+    </fieldset>
+    <fieldset class="mavedb-histogram-controls-panel">
+      <legend>Protein Effect Series Options</legend>
+      <div class="mavedb-histogram-control">
+        <span class="mavedb-histogram-control-label">Variants by protein effect: </span>
+        <div class="flex flex-wrap gap-3">
+          <div
+            v-for="typeOption of variantTypeOptions"
+            :key="typeOption.name"
+            class="flex gap-1 align-items-center"
+          >
+            <Checkbox
+              v-model="customSelectedVariantTypeFilters"
+              :disabled="!refreshedClinicalControls || (typeOption.name === 'Start/Stop Loss' && clinicalModeActive)"
+              :name="scopedId('variant-type-inputs')"
+              :value="typeOption.name"
+            />
+            <label :for="scopedId('variant-type-inputs')">{{ typeOption.shortDescription }}</label>
+          </div>
         </div>
       </div>
-    </div>
+    </fieldset>
   </div>
   <div ref="histogramContainer" class="mavedb-histogram-container" />
   <!-- The child component will attempt to immediately emit the range which is active when it is created. Since Vue lifecycle events bubble up from child to parent, this causes this component to attempt
@@ -165,7 +171,7 @@ import makeHistogram, {
 } from '@/lib/histogram'
 import {prepareRangesForHistogram, ScoreRanges, ScoreSetRanges} from '@/lib/ranges'
 import {parseSimpleProVariant, variantNotNullOrNA} from '@/lib/mave-hgvs'
-import {Variant} from '@/lib/variants'
+import { DEFAULT_VARIANT_EFFECT_TYPES, isStartOrStopLoss, VARIANT_EFFECT_TYPE_OPTIONS, Variant } from '@/lib/variants'
 
 function naToUndefined(x: string | null | undefined) {
   if (variantNotNullOrNA(x)) {
@@ -230,7 +236,6 @@ export default defineComponent({
 
   data: function () {
     const scoreSetHasRanges = config.CLINICAL_FEATURES_ENABLED && this.scoreSet.scoreRanges != null
-
     return {
       config: config,
 
@@ -252,27 +257,11 @@ export default defineComponent({
       clinicalSignificanceClassificationOptions: clinvarClinicalSignificanceClassifications(
         DEFAULT_CLINICAL_CONTROL_VERSION
       ),
-      variantTypeOptions: [
-        {
-          name: 'Synonymous',
-          description: 'Show all synonymous variants',
-          shortDescription: 'Synonymous variants'
-        },
-        {
-          name: 'Missense',
-          description: 'Show all missense variants',
-          shortDescription: 'Missense variants'
-        },
-        {
-          name: 'Nonsense',
-          description: 'Show all nonsense variants',
-          shortDescription: 'Nonsense variants'
-        },
-      ],
+      variantTypeOptions: VARIANT_EFFECT_TYPE_OPTIONS,
       customMinStarRating: DEFAULT_MIN_STAR_RATING,
       customSelectedClinicalSignificanceClassifications: DEFAULT_CLINICAL_SIGNIFICANCE_CLASSIFICATIONS,
-      customSelectedVariantTypeFilters: [] as typeof this.variantTypeOptions[0]['name'][],
-      customSelectedControlVariantTypeFilters: ['Synonymous', 'Missense', 'Nonsense'],
+      customSelectedVariantTypeFilters: [] as string[],
+      customSelectedControlVariantTypeFilters: DEFAULT_VARIANT_EFFECT_TYPES,
       histogram: null as Histogram | null
     }
   },
@@ -331,6 +320,20 @@ export default defineComponent({
               options: {
                 color: '#a3984e',
                 title: 'Nonsense'
+              }
+            },
+            ...(this.clinicalModeActive ? [] : [{
+              classifier: (d: HistogramDatum) => isStartOrStopLoss(d),
+              options: {
+              color: '#6d4ea3',
+              title: 'Start/Stop Loss'
+              }
+            }]),
+            {
+              classifier: (d: HistogramDatum) => this.variantIsOther(d),
+              options: {
+                color: '#999999',
+                title: 'Other'
               }
             }
           ]
@@ -422,6 +425,26 @@ export default defineComponent({
               options: {
                 color: '#a3984e',
                 title: 'Nonsense'
+              }
+            })
+          }
+
+          if (this.selectedVariantTypeFilters.includes('Start/Stop Loss')) {
+            series.push({
+              classifier: (d: HistogramDatum) => isStartOrStopLoss(d),
+              options: {
+                color: '#6d4ea3',
+                title: 'Start/Stop Loss'
+              }
+            })
+          }
+
+          if (this.selectedVariantTypeFilters.includes('Other')) {
+            series.push({
+              classifier: (d: HistogramDatum) => this.variantIsOther(d),
+              options: {
+                color: '#999999',
+                title: 'Other'
               }
             })
           }
@@ -734,6 +757,11 @@ export default defineComponent({
         this.renderOrRefreshHistogram()
       }
     },
+    clinicalModeActive: {
+      handler: function () {
+        this.renderOrRefreshHistogram()
+      }
+    },
     clinicalSignificanceClassificationOptions: {
       handler: function () {
         // Ensure the conflicting significance remains selected even when the version changes its name.
@@ -866,11 +894,21 @@ export default defineComponent({
       const altAllele = parsedVariant.substitution.toUpperCase()
       return altAllele == 'TER' || altAllele == '*'
     },
+    variantIsOther(variant: Variant) {
+      return (
+        !this.variantIsMissense(variant) &&
+        !this.variantIsSynonymous(variant) &&
+        !this.variantIsNonsense(variant) &&
+        !isStartOrStopLoss(variant)
+      )
+    },
     filterControlVariantByEffect(variant: Variant) {
       return (
         (this.selectedControlVariantTypeFilters.includes('Missense') && this.variantIsMissense(variant)) ||
         (this.selectedControlVariantTypeFilters.includes('Synonymous') && this.variantIsSynonymous(variant)) ||
-        (this.selectedControlVariantTypeFilters.includes('Nonsense') && this.variantIsNonsense(variant))
+        (this.selectedControlVariantTypeFilters.includes('Nonsense') && this.variantIsNonsense(variant)) ||
+        (this.selectedControlVariantTypeFilters.includes('Start/Stop Loss') && isStartOrStopLoss(variant)) ||
+        (this.selectedControlVariantTypeFilters.includes('Other') && !this.variantIsMissense(variant) && !this.variantIsSynonymous(variant) && !this.variantIsNonsense(variant) && !isStartOrStopLoss(variant))
       )
     },
     getHgvsProFromVariant(variant: Variant) {
@@ -1080,6 +1118,16 @@ export default defineComponent({
 </script>
 
 <style scoped>
+.mavedb-histogram-controls-panel {
+  border: 2px solid #d7d7d7;
+  padding: 0.5rem 1rem;
+  border-radius: 5px;
+  background: #fafafa;
+  display: flex;
+  flex-direction: column;
+  gap: 0.5rem;
+}
+
 .mavedb-histogram-controls {
   display: flex;
   flex-direction: row;

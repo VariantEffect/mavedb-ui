@@ -546,6 +546,7 @@ export default defineComponent({
     heatmapRows: function () {
       return this.sequenceType == 'dna' ? HEATMAP_NUCLEOTIDE_ROWS : HEATMAP_AMINO_ACID_ROWS
     },
+
     heatmapRowForSubstitution: function () {
       return this.sequenceType == 'dna' ? heatmapRowForNucleotideVariant : heatmapRowForProteinVariant
     },
@@ -596,10 +597,6 @@ export default defineComponent({
 
     parseSimpleVariant: function () {
       return this.sequenceType == 'dna' ? parseSimpleNtVariant : parseSimpleProVariant
-    },
-    // TODO: Swappable Targets
-    heatmapRange: function () {
-      return this.wtSequence
     },
     selectedVariant: function () {
       return this.externalSelection
@@ -893,12 +890,15 @@ export default defineComponent({
       immediate: true
     },
 
-    sequenceTypeOptions: function (newValue, oldValue) {
-      if (!_.isEqual(newValue, oldValue)) {
-        if (!newValue.includes(this.sequenceType)) {
-          this.sequenceType = newValue[0]
+    sequenceTypeOptions: {
+      handler: function (newValue, oldValue) {
+        if (!_.isEqual(newValue, oldValue)) {
+          if (!newValue.find((option) => option.value == this.sequenceType)) {
+            this.sequenceType = newValue[0].value
+          }
         }
-      }
+      },
+      immediate: true
     }
   },
 

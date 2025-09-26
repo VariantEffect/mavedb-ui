@@ -57,6 +57,7 @@ export interface ParsedPostMappedVariantProperties {
 
 export const PARSED_POST_MAPPED_VARIANT_PROPERTIES: ParsedPostMappedVariantProperties = {
   c: 'parsedPostMappedHgvsC',
+  g: 'parsedPostMappedHgvsC',
   p: 'parsedPostMappedHgvsP'
 }
 
@@ -89,7 +90,8 @@ export function parseSimpleCodingVariants(variants: Variant[]) {
     } else if (v.hgvs_nt) {
       // If a mapped HGVS c. string is missing but the raw HGVS string is a c. string with reference, us it instead.
       const parsedHgvs = parseSimpleNtVariant(v.hgvs_nt)
-      if (parsedHgvs && parsedHgvs.referenceType == 'c' && parsedHgvs.target) {
+      // Treat g. and n. the same as c. for now.
+      if (parsedHgvs && ['c', 'g', 'n'].includes(parsedHgvs.referenceType)) { //} && parsedHgvs.target) {
         v.post_mapped_hgvs_c = v.hgvs_nt
         v.parsedPostMappedHgvsC = parsedHgvs
         v.parsedPostMappedHgvsC.residueType = 'nt'
@@ -310,7 +312,8 @@ export function translateSimpleCodingVariants(variants: Variant[]) {
     inferReferenceSequenceFromVariants(variants, 'c')
   if (codingSequence.length > 0) {
     for (const v of variants) {
-      if (v.parsedPostMappedHgvsC) {
+      // We can only translate c. variants.
+      if (v.parsedPostMappedHgvsC && v.parsedPostMappedHgvsC.referenceType == 'c') {
         const translatedHgvsP = translateSimpleCodingHgvsCVariant(
           v.parsedPostMappedHgvsC,
           codingSequence,

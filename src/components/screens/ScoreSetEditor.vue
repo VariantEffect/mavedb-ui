@@ -4,23 +4,15 @@
     :is-first-login-prompt="false"
   />
   <DefaultLayout>
-    <div class="mave-score-set-editor">
+    <div v-if="itemId && itemStatus == 'Loaded'" class="mave-score-set-editor">
       <div class="grid">
         <div class="col-12">
-          <div v-if="itemStatus != 'NotLoaded'" class="mave-screen-title-bar">
+          <div class="mave-screen-title-bar">
             <div class="mave-screen-title">Edit score set {{ item.urn }}</div>
-            <div v-if="item" class="mavedb-screen-title-controls">
-              <Button @click="saveEditContent">Save changes</Button>
-              <Button class="p-button-help" @click="resetForm">Clear</Button>
-              <Button class="p-button-warning" @click="viewItem">Cancel</Button>
-            </div>
-          </div>
-          <div v-else class="mave-screen-title-bar">
-            <div class="mave-screen-title">Create a new score set</div>
             <div class="mavedb-screen-title-controls">
-              <Button @click="validateAndSave">Save</Button>
-              <Button class="p-button-help" @click="resetForm">Clear</Button>
-              <Button class="p-button-warning" @click="backDashboard">Cancel</Button>
+              <Button @click="saveEditContent">Save changes</Button>
+              <Button class="p-button-help" @click="resetForm">Reset</Button>
+              <Button class="p-button-warning" @click="viewItem">Cancel</Button>
             </div>
           </div>
         </div>
@@ -28,7 +20,7 @@
           <Card>
             <template #title>Parent experiment and context</template>
             <template #content>
-              <div v-if="itemStatus != 'NotLoaded' && item.experiment">
+              <div v-if="item.experiment">
                 Experiment:
                 <router-link :to="{name: 'experiment', params: {urn: item.experiment.urn}}">{{
                   item.experiment.title
@@ -52,56 +44,17 @@
                   }}</span>
                 </div>
               </div>
-              <div v-if="itemStatus != 'NotLoaded' && supersedesScoreSet">
+              <div v-if="supersedesScoreSet">
                 Supersedes:
                 <router-link :to="{name: 'scoreSet', params: {urn: supersedesScoreSet.urn}}">{{
                   supersedesScoreSet.title
                 }}</router-link>
               </div>
-              <div v-if="itemStatus == 'NotLoaded'" class="field">
-                <span class="p-float-label">
-                  <AutoComplete
-                    :id="scopedId('input-supersededScoreSet')"
-                    ref="supersededScoreSetInput"
-                    v-model="supersededScoreSet"
-                    field="title"
-                    :force-selection="true"
-                    :suggestions="supersededScoreSetSuggestionsList"
-                    @complete="searchSupersededScoreSets"
-                  >
-                    <template #item="slotProps"> {{ slotProps.item.urn }}: {{ slotProps.item.title }} </template>
-                  </AutoComplete>
-                  <label :for="scopedId('input-supersededScoreSet')">Supersedes</label>
-                </span>
-                <span v-if="validationErrors.supersededScoreSetUrn" class="mave-field-error">{{
-                  validationErrors.supersededScoreSetUrn
-                }}</span>
-              </div>
-              <div v-if="itemStatus != 'NotLoaded' && item?.metaAnalyzesScoreSetUrns?.length > 0">
+              <div v-if="item?.metaAnalyzesScoreSetUrns?.length > 0">
                 Meta-analysis for:<br />
                 <div v-for="metaAnalyzesScoreSetUrn of item.metaAnalyzesScoreSetUrns" :key="metaAnalyzesScoreSetUrn">
                   <EntityLink entity-type="scoreSet" :urn="metaAnalyzesScoreSetUrn"></EntityLink>
                 </div>
-              </div>
-              <div v-if="itemStatus == 'NotLoaded'" class="field">
-                <span class="p-float-label">
-                  <AutoComplete
-                    :id="scopedId('input-metaAnalyzesScoreSets')"
-                    ref="metaAnalyzesScoreSetsInput"
-                    v-model="metaAnalyzesScoreSets"
-                    field="title"
-                    :force-selection="true"
-                    :multiple="true"
-                    :suggestions="metaAnalyzesScoreSetSuggestionsList"
-                    @complete="searchMetaAnalyzesScoreSets"
-                  >
-                    <template #item="slotProps"> {{ slotProps.item.urn }}: {{ slotProps.item.title }} </template>
-                  </AutoComplete>
-                  <label :for="scopedId('input-metaAnalyzesScoreSets')">Meta-analysis for</label>
-                </span>
-                <span v-if="validationErrors.metaAnalyzesScoreSetUrns" class="mave-field-error">{{
-                  validationErrors.metaAnalyzesScoreSetUrns
-                }}</span>
               </div>
             </template>
           </Card>
@@ -187,7 +140,7 @@
                   validationErrors.contributors
                 }}</span>
               </div>
-              <div v-if="itemStatus != 'NotLoaded'">
+              <div>
                 <div class="field">
                   <span class="p-float-label">
                     <Dropdown
@@ -339,7 +292,7 @@
               </div>
             </template>
           </Card>
-          <div v-if="itemStatus == 'NotLoaded' || item.private">
+          <div v-if="item.private">
             <div v-if="editedScoreRanges.investigatorProvided">
               <Card>
                 <template #title
@@ -758,7 +711,7 @@
         </div>
 
         <div class="col-12 md:col-6">
-          <div v-if="itemStatus == 'NotLoaded' || item.private">
+          <div v-if="item.private">
             <Card>
               <template #title>Targets</template>
               <template #content>
@@ -1374,7 +1327,7 @@ export default {
   props: {
     itemId: {
       type: String,
-      required: false
+      required: true
     }
   },
 
@@ -2200,7 +2153,7 @@ export default {
         })
         this.extraMetadata = this.item.extraMetadata
 
-        if (this.editedScoreRanges?.investigatorProvided.oddsPathSource) {
+        if (this.editedScoreRanges?.investigatorProvided?.oddsPathSource) {
           this.editedScoreRanges.investigatorProvided.oddsPathSource = this.publicationIdentifiers.filter(
             (publication) => {
               return this.editedScoreRanges.investigatorProvided.oddsPathSource.some((source) => {
@@ -2209,7 +2162,7 @@ export default {
             }
           )
         }
-        if (this.editedScoreRanges?.investigatorProvided.source) {
+        if (this.editedScoreRanges?.investigatorProvided?.source) {
           this.editedScoreRanges.investigatorProvided.source = this.publicationIdentifiers.filter((publication) => {
             return this.editedScoreRanges.investigatorProvided.source.some((source) => {
               return publication.identifier === source.identifier && publication.dbName === source.dbName
@@ -2220,29 +2173,6 @@ export default {
         if (this.targetGenes[0]?.targetAccession) {
           this.isBaseEditor = this.targetGenes[0].targetAccession.isBaseEditor
         }
-      } else {
-        this.experiment = null
-        this.licenseId = this.defaultLicenseId
-        this.metaAnalyzesScoreSets = []
-        this.supersededScoreSet = null
-        this.title = null
-        this.shortDescription = null
-        this.abstractText = null
-        this.methodText = null
-        this.contributors = []
-        this.doiIdentifiers = []
-        this.primaryPublicationIdentifiers = []
-        this.secondaryPublicationIdentifiers = []
-        this.publicationIdentifiers = []
-        this.dataUsagePolicy = null
-        this.taxonomy = null
-        this.extraMetadata = {}
-        this.editedScoreRanges = {
-          investigatorProvided: null
-        }
-        this.editedScoreRangeBoundaryHelper = []
-        this.resetTarget()
-        this.targetGenes = []
       }
     },
 
@@ -2309,6 +2239,10 @@ export default {
     // Currently there is some special handling here, though, so we will leave that for a later refactoring.
 
     save: async function () {
+      if (!this.item) {
+        this.$toast.add({ severity: 'error', summary: 'No score set to save.' })
+        return
+      }
       // Remove primary identifier from publications to construct secondary identifiers
       const primaryPublicationIdentifiers = this.primaryPublicationIdentifiers.map((identifier) =>
         _.pick(identifier, ['identifier', 'dbName'])
@@ -2376,30 +2310,22 @@ export default {
       ) {
         editedFields.scoreRanges = null
       }
-      if (!this.item) {
-        editedFields.supersededScoreSetUrn = this.supersededScoreSet ? this.supersededScoreSet.urn : null
-        editedFields.metaAnalyzesScoreSetUrns = this.metaAnalyzesScoreSets.map((s) => s.urn)
-      } else {
-        // empty item arrays so that deleted items aren't merged back into editedItem object
-        this.item.contributors = []
-        this.item.doiIdentifiers = []
-        this.item.primaryPublicationIdentifiers = []
-        this.item.publicationIdentifiers = []
-        this.item.rawReadIdentifiers = []
-        this.item.targetGenes = []
-        this.item.scoreRanges = null
-      }
 
-      const editedItem = _.merge({}, this.item || {}, editedFields)
+      // empty item arrays so that deleted items aren't merged back into editedItem object
+      this.item.contributors = []
+      this.item.doiIdentifiers = []
+      this.item.primaryPublicationIdentifiers = []
+      this.item.publicationIdentifiers = []
+      this.item.rawReadIdentifiers = []
+      this.item.targetGenes = []
+      this.item.scoreRanges = null
+
+      const editedItem = _.merge({}, this.item, editedFields)
 
       this.progressVisible = true
       let response = null
       try {
-        if (this.item) {
-          response = await axios.put(`${config.apiBaseUrl}/score-sets/${this.item.urn}`, editedItem)
-        } else {
-          response = await axios.post(`${config.apiBaseUrl}/score-sets/`, editedItem)
-        }
+        response = await axios.put(`${config.apiBaseUrl}/score-sets/${this.item.urn}`, editedItem)
       } catch (e) {
         response = e.response || {status: 500}
         this.$toast.add({severity: 'error', summary: 'Error', life: 3000})
@@ -2408,16 +2334,11 @@ export default {
       if (response.status == 200) {
         const savedItem = response.data
         this.validationErrors = {}
-        if (this.item) {
-          if (this.$refs.scoresFileUpload?.files?.length == 1) {
-            await this.uploadData(savedItem)
-          } else {
-            this.$router.replace({path: `/score-sets/${this.item.urn}`})
-            this.$toast.add({severity: 'success', summary: 'Your changes were saved.', life: 3000})
-          }
-        } else {
-          console.log('Created item')
+        if (this.$refs.scoresFileUpload?.files?.length == 1) {
           await this.uploadData(savedItem)
+        } else {
+          this.$router.replace({path: `/score-sets/${this.item.urn}`})
+          this.$toast.add({severity: 'success', summary: 'Your changes were saved.', life: 3000})
         }
       } else if (response.data && response.data.detail) {
         const formValidationErrors = {}
@@ -2465,6 +2386,10 @@ export default {
     },
 
     uploadData: async function (scoreSet) {
+      if (!this.item) {
+        this.$toast.add({ severity: 'error', summary: 'No score set to upload data to.' })
+        return
+      }
       if (this.$refs.scoresFileUpload.files.length != 1) {
         this.validationErrors = {scores: 'Required'}
       } else {
@@ -2488,14 +2413,9 @@ export default {
 
         if (response.status == 200) {
           console.log('Imported score set data.')
-          if (this.item) {
-            // this.reloadItem()
-            this.$router.replace({path: `/score-sets/${scoreSet.urn}`})
-            this.$toast.add({severity: 'success', summary: 'Your changes were saved.', life: 3000})
-          } else {
-            this.$router.replace({path: `/score-sets/${scoreSet.urn}`})
-            this.$toast.add({severity: 'success', summary: 'The new score set was saved.', life: 3000})
-          }
+          // this.reloadItem()
+          this.$router.replace({path: `/score-sets/${scoreSet.urn}`})
+          this.$toast.add({severity: 'success', summary: 'Your changes were saved.', life: 3000})
         } else {
           this.$toast.add({
             severity: 'error',
@@ -2514,9 +2434,6 @@ export default {
       const hasScoresFile = this.$refs.scoresFileUpload.files.length == 1
       const hasCountsFile = this.$refs.countsFileUpload.files.length == 1
       if (hasCountsFile && !hasScoresFile) {
-        this.clientSideValidationErrors.scoresFile = 'Required'
-      }
-      if (!this.item && !hasScoresFile) {
         this.clientSideValidationErrors.scoresFile = 'Required'
       }
 

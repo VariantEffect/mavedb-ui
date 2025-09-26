@@ -171,7 +171,7 @@ import makeHistogram, {
 } from '@/lib/histogram'
 import {prepareRangesForHistogram, ScoreRanges, ScoreSetRanges} from '@/lib/ranges'
 import {parseSimpleProVariant, variantNotNullOrNA} from '@/lib/mave-hgvs'
-import { DEFAULT_VARIANT_EFFECT_TYPES, isStartOrStopLoss, VARIANT_EFFECT_TYPE_OPTIONS, Variant } from '@/lib/variants'
+import { DEFAULT_VARIANT_EFFECT_TYPES, isStartOrStopLoss, variantIsMissense, variantIsNonsense, variantIsOther, variantIsSynonymous, VARIANT_EFFECT_TYPE_OPTIONS, Variant } from '@/lib/variants'
 
 function naToUndefined(x: string | null | undefined) {
   if (variantNotNullOrNA(x)) {
@@ -302,21 +302,21 @@ export default defineComponent({
         case 'effect':
           return [
             {
-              classifier: (d: HistogramDatum) => this.variantIsMissense(d),
+              classifier: (d: HistogramDatum) => variantIsMissense(d),
               options: {
                 color: '#a36e4e',
                 title: 'Missense'
               }
             },
             {
-              classifier: (d: HistogramDatum) => this.variantIsSynonymous(d),
+              classifier: (d: HistogramDatum) => variantIsSynonymous(d),
               options: {
                 color: '#59a34e',
                 title: 'Synonymous'
               }
             },
             {
-              classifier: (d: HistogramDatum) => this.variantIsNonsense(d),
+              classifier: (d: HistogramDatum) => variantIsNonsense(d),
               options: {
                 color: '#a3984e',
                 title: 'Nonsense'
@@ -330,7 +330,7 @@ export default defineComponent({
               }
             }]),
             {
-              classifier: (d: HistogramDatum) => this.variantIsOther(d),
+              classifier: (d: HistogramDatum) => variantIsOther(d),
               options: {
                 color: '#709090',
                 title: 'Other'
@@ -401,7 +401,7 @@ export default defineComponent({
 
           if (this.selectedVariantTypeFilters.includes('Missense')) {
             series.push({
-              classifier: (d: HistogramDatum) => this.variantIsMissense(d),
+              classifier: (d: HistogramDatum) => variantIsMissense(d),
               options: {
                 color: '#a36e4e',
                 title: 'Missense'
@@ -411,7 +411,7 @@ export default defineComponent({
 
           if (this.selectedVariantTypeFilters.includes('Synonymous')) {
             series.push({
-              classifier: (d: HistogramDatum) => this.variantIsSynonymous(d),
+              classifier: (d: HistogramDatum) => variantIsSynonymous(d),
               options: {
                 color: '#59a34e',
                 title: 'Synonymous'
@@ -421,7 +421,7 @@ export default defineComponent({
 
           if (this.selectedVariantTypeFilters.includes('Nonsense')) {
             series.push({
-              classifier: (d: HistogramDatum) => this.variantIsNonsense(d),
+              classifier: (d: HistogramDatum) => variantIsNonsense(d),
               options: {
                 color: '#a3984e',
                 title: 'Nonsense'
@@ -441,7 +441,7 @@ export default defineComponent({
 
           if (this.selectedVariantTypeFilters.includes('Other')) {
             series.push({
-              classifier: (d: HistogramDatum) => this.variantIsOther(d),
+              classifier: (d: HistogramDatum) => variantIsOther(d),
               options: {
                 color: '#709090',
                 title: 'Other'
@@ -852,76 +852,14 @@ export default defineComponent({
   },
 
   methods: {
-    variantIsMissense(variant: Variant) {
-      const hgvsPro = this.getHgvsProFromVariant(variant)
-      if (!hgvsPro) {
-        return false
-      }
-      const parsedVariant = parseSimpleProVariant(hgvsPro)
-      if (!parsedVariant) {
-        return false
-      }
-      const refAllele = parsedVariant.original.toUpperCase()
-      const altAllele = parsedVariant.substitution.toUpperCase()
-      const refAlleleIsAA = AMINO_ACIDS.find((aa) => aa.codes.triple == refAllele)
-      const altAlleleIsAA = AMINO_ACIDS.find((aa) => aa.codes.triple == altAllele)
-      const startLoss = parsedVariant.position == 1 && refAllele == 'MET'
-      return !!(refAlleleIsAA && altAlleleIsAA && !startLoss && refAllele != altAllele)
-    },
-    variantIsSynonymous(variant: Variant) {
-      const hgvsPro = this.getHgvsProFromVariant(variant)
-      if (!hgvsPro) {
-        return false
-      }
-      const parsedVariant = parseSimpleProVariant(hgvsPro)
-      if (!parsedVariant) {
-        return false
-      }
-      const refAllele = parsedVariant.original.toUpperCase()
-      const altAllele = parsedVariant.substitution.toUpperCase()
-      const refAlleleIsAA = AMINO_ACIDS.find((aa) => aa.codes.triple == refAllele)
-      return !!(refAlleleIsAA && (refAllele == altAllele || altAllele == "="))
-    },
-    variantIsNonsense(variant: Variant) {
-      const hgvsPro = this.getHgvsProFromVariant(variant)
-      if (!hgvsPro) {
-        return false
-      }
-      const parsedVariant = parseSimpleProVariant(hgvsPro)
-      if (!parsedVariant) {
-        return false
-      }
-      const altAllele = parsedVariant.substitution.toUpperCase()
-      return altAllele == 'TER' || altAllele == '*'
-    },
-    variantIsOther(variant: Variant) {
-      return (
-        !this.variantIsMissense(variant) &&
-        !this.variantIsSynonymous(variant) &&
-        !this.variantIsNonsense(variant) &&
-        !isStartOrStopLoss(variant)
-      )
-    },
     filterControlVariantByEffect(variant: Variant) {
       return (
-        (this.selectedControlVariantTypeFilters.includes('Missense') && this.variantIsMissense(variant)) ||
-        (this.selectedControlVariantTypeFilters.includes('Synonymous') && this.variantIsSynonymous(variant)) ||
-        (this.selectedControlVariantTypeFilters.includes('Nonsense') && this.variantIsNonsense(variant)) ||
+        (this.selectedControlVariantTypeFilters.includes('Missense') && variantIsMissense(variant)) ||
+        (this.selectedControlVariantTypeFilters.includes('Synonymous') && variantIsSynonymous(variant)) ||
+        (this.selectedControlVariantTypeFilters.includes('Nonsense') && variantIsNonsense(variant)) ||
         (this.selectedControlVariantTypeFilters.includes('Start/Stop Loss') && isStartOrStopLoss(variant)) ||
-        (this.selectedControlVariantTypeFilters.includes('Other') && !this.variantIsMissense(variant) && !this.variantIsSynonymous(variant) && !this.variantIsNonsense(variant) && !isStartOrStopLoss(variant))
+        (this.selectedControlVariantTypeFilters.includes('Other') && !variantIsMissense(variant) && !this.variantIsSynonymous(variant) && !this.variantIsNonsense(variant) && !isStartOrStopLoss(variant))
       )
-    },
-    getHgvsProFromVariant(variant: Variant) {
-      if (variant.post_mapped_hgvs_p && variant.post_mapped_hgvs_p != 'NA') {
-        return variant.post_mapped_hgvs_p
-      }
-      if (variant.translated_hgvs_p && variant.translated_hgvs_p != 'NA') {
-        return variant.translated_hgvs_p
-      }
-      if (variant.hgvs_pro && variant.hgvs_pro != 'NA') {
-        return variant.hgvs_pro
-      }
-      return null
     },
     exportChart() {
       saveChartAsFile(

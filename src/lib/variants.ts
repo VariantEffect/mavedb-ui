@@ -2,7 +2,7 @@ import _ from 'lodash'
 
 import { parseSimpleNtVariant, parseSimpleProVariant, SimpleDnaVariation, SimpleProteinVariation, variantNotNullOrNA } from './mave-hgvs'
 import geneticCodes from './genetic-codes'
-import { AMINO_ACIDS_WITH_TER, singleLetterAminoAcidOrHgvsCode } from './amino-acids'
+import { AMINO_ACIDS, AMINO_ACIDS_WITH_TER, singleLetterAminoAcidOrHgvsCode } from './amino-acids'
 import { DEFAULT_CLNREVSTAT_FIELD, DEFAULT_CLNSIG_FIELD } from './clinical-controls'
 
 export type HgvsReferenceSequenceType = 'c' | 'p' // | 'n'
@@ -467,4 +467,71 @@ export function isStartOrStopLoss(variant: any) {
   }
 
   return false
+}
+
+function getHgvsProFromVariant(variant: Variant) {
+  if (variant.post_mapped_hgvs_p && variant.post_mapped_hgvs_p != 'NA') {
+    return variant.post_mapped_hgvs_p
+  }
+  if (variant.hgvs_pro_inferred && variant.hgvs_pro_inferred != 'NA') {
+    return variant.hgvs_pro_inferred
+  }
+  if (variant.hgvs_pro && variant.hgvs_pro != 'NA') {
+    return variant.hgvs_pro
+  }
+  return null
+}
+
+export function variantIsMissense(variant: Variant) {
+  const hgvsPro = getHgvsProFromVariant(variant)
+  if (!hgvsPro) {
+    return false
+  }
+  const parsedVariant = parseSimpleProVariant(hgvsPro)
+  if (!parsedVariant) {
+    return false
+  }
+  const refAllele = parsedVariant.original.toUpperCase()
+  const altAllele = parsedVariant.substitution.toUpperCase()
+  const refAlleleIsAA = AMINO_ACIDS.find((aa) => aa.codes.triple == refAllele)
+  const altAlleleIsAA = AMINO_ACIDS.find((aa) => aa.codes.triple == altAllele)
+  const startLoss = parsedVariant.position == 1 && refAllele == 'MET'
+  return !!(refAlleleIsAA && altAlleleIsAA && !startLoss && refAllele != altAllele)
+}
+
+export function variantIsSynonymous(variant: Variant) {
+  const hgvsPro = getHgvsProFromVariant(variant)
+  if (!hgvsPro) {
+    return false
+  }
+  const parsedVariant = parseSimpleProVariant(hgvsPro)
+  if (!parsedVariant) {
+    return false
+  }
+  const refAllele = parsedVariant.original.toUpperCase()
+  const altAllele = parsedVariant.substitution.toUpperCase()
+  const refAlleleIsAA = AMINO_ACIDS.find((aa) => aa.codes.triple == refAllele)
+  return !!(refAlleleIsAA && (refAllele == altAllele || altAllele == "="))
+}
+
+export function variantIsNonsense(variant: Variant) {
+  const hgvsPro = getHgvsProFromVariant(variant)
+  if (!hgvsPro) {
+    return false
+  }
+  const parsedVariant = parseSimpleProVariant(hgvsPro)
+  if (!parsedVariant) {
+    return false
+  }
+  const altAllele = parsedVariant.substitution.toUpperCase()
+  return altAllele == 'TER' || altAllele == '*'
+}
+
+export function variantIsOther(variant: Variant) {
+  return (
+    !variantIsMissense(variant) &&
+    !variantIsSynonymous(variant) &&
+    !variantIsNonsense(variant) &&
+    !isStartOrStopLoss(variant)
+  )
 }

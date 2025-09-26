@@ -5,18 +5,9 @@
   />
   <DefaultLayout>
     <div class="mave-score-set-editor">
-      <div v-if="itemStatus != 'NotLoaded'" class="mave-screen-title-bar">
-        <div class="mave-screen-title">Edit score set {{ item.urn }}</div>
-        <div v-if="item" class="mavedb-screen-title-controls">
-          <Button @click="saveEditContent">Save changes</Button>
-          <Button class="p-button-help" @click="resetForm">Clear</Button>
-          <Button class="p-button-warning" @click="viewItem">Cancel</Button>
-        </div>
-      </div>
-      <div v-else class="mave-screen-title-bar">
+      <div class="mave-screen-title-bar">
         <div class="mave-screen-title">Create a new score set</div>
         <div class="mavedb-screen-title-controls">
-          <Button @click="validateAndSave">Save</Button>
           <Button class="p-button-help" @click="resetForm">Clear</Button>
           <Button class="p-button-warning" @click="backDashboard">Cancel</Button>
         </div>
@@ -109,13 +100,7 @@
                       </div>
                     </div>
                     <div class="mavedb-wizard-content">
-                      <div v-if="itemStatus != 'NotLoaded' && item.experiment">
-                        Experiment:
-                        <router-link :to="{name: 'experiment', params: {urn: item.experiment.urn}}">{{
-                          item.experiment.title
-                        }}</router-link>
-                      </div>
-                      <div v-else style="position: relative">
+                      <div style="position: relative">
                         <span class="p-float-label">
                           <Dropdown
                             :id="scopedId('input-experiment')"
@@ -151,13 +136,7 @@
                       </div>
                     </div>
                     <div class="mavedb-wizard-content">
-                      <div v-if="itemStatus != 'NotLoaded' && supersedesScoreSet">
-                        Supersedes:
-                        <router-link :to="{name: 'scoreSet', params: {urn: supersedesScoreSet.urn}}">{{
-                          supersedesScoreSet.title
-                        }}</router-link>
-                      </div>
-                      <div v-if="itemStatus == 'NotLoaded'" class="field">
+                      <div class="field">
                         <span class="p-float-label">
                           <AutoComplete
                             :id="scopedId('input-supersededScoreSet')"
@@ -190,16 +169,7 @@
                       </div>
                     </div>
                     <div class="mavedb-wizard-content">
-                      <div v-if="itemStatus != 'NotLoaded' && item?.metaAnalyzesScoreSetUrns?.length > 0">
-                        Meta-analysis for:<br />
-                        <div
-                          v-for="metaAnalyzesScoreSetUrn of item.metaAnalyzesScoreSetUrns"
-                          :key="metaAnalyzesScoreSetUrn"
-                        >
-                          <EntityLink entity-type="scoreSet" :urn="metaAnalyzesScoreSetUrn"></EntityLink>
-                        </div>
-                      </div>
-                      <div v-if="itemStatus == 'NotLoaded'" class="field">
+                      <div class="field">
                         <span class="p-float-label">
                           <AutoComplete
                             :id="scopedId('input-metaAnalyzesScoreSets')"
@@ -378,7 +348,7 @@
                     }}</span>
                   </div>
                 </div>
-                <div v-if="itemStatus == 'NotLoaded' || item.private == true">
+                <div>
                   <div class="mavedb-wizard-row">
                     <div class="mavedb-wizard-help">
                       <label>
@@ -644,7 +614,7 @@
             </template>
           </StepperPanel>
 
-          <StepperPanel v-if="itemStatus == 'NotLoaded' || item.private">
+          <StepperPanel>
             <template #header="{index, clickCallback}">
               <button
                 class="p-stepper-action"
@@ -1244,7 +1214,7 @@
             </template>
           </StepperPanel>
 
-          <StepperPanel v-if="itemStatus == 'NotLoaded' || item.private" header="Score Ranges">
+          <StepperPanel header="Score Ranges">
             <template #header="{index, clickCallback}">
               <button
                 class="p-stepper-action"
@@ -1729,7 +1699,7 @@
             </template>
           </StepperPanel>
 
-          <StepperPanel v-if="itemStatus == 'NotLoaded' || item.private" header="Variant scores">
+          <StepperPanel header="Variant scores">
             <template #header="{index, clickCallback}">
               <button
                 class="p-stepper-action"
@@ -1758,13 +1728,7 @@
                 </div>
                 <div class="mavedb-wizard-row">
                   <div class="mavedb-wizard-help">
-                    <div v-if="item">
-                      <div>{{ formatInt(item.numVariants) }} variants are included in this score set.</div>
-                      <label :id="scopedId('input-scoresFile')"
-                        >Load a new scores file to replace existing variants</label
-                      >
-                    </div>
-                    <div v-else>
+                    <div>
                       <label :id="scopedId('input-scoresFile')">Load a scores file</label>
                     </div>
                     <div class="mavedb-help-small">
@@ -1795,9 +1759,7 @@
                         </template>
                       </FileUpload>
                     </span>
-                    <span v-if="validationErrors.scoresFile" class="mave-field-error">{{
-                      validationErrors.scoresFile
-                    }}</span>
+                    <span v-if="validationErrors.scoresFile" class="mave-field-error">{{validationErrors.scoresFile}}</span>
                   </div>
                 </div>
                 <div class="mavedb-wizard-row">
@@ -1827,7 +1789,7 @@
                         </template>
                       </FileUpload>
                     </span>
-                    <span v-if="validationErrors.countsFile" class="mave-field-error">{{ validationErrors.scoresColumnMetadataFile}}</span>
+                    <span v-if="validationErrors.countsFile" class="mave-field-error">{{validationErrors.scoresColumnMetadataFile}}</span>
                   </div>
                 </div>
                 <div class="mavedb-wizard-row">
@@ -1900,7 +1862,7 @@
                     icon="pi pi-arrow-right"
                     icon-pos="right"
                     label="Save"
-                    @click="item ? saveEditContent() : validateAndSave()"
+                    @click="validateAndSave()"
                   />
                 </div>
               </div>
@@ -1946,7 +1908,6 @@ import EmailPrompt from '@/components/common/EmailPrompt'
 import DefaultLayout from '@/components/layout/DefaultLayout'
 import useScopedId from '@/composables/scoped-id'
 import useFormatters from '@/composition/formatters'
-import useItem from '@/composition/item'
 import useItems from '@/composition/items'
 import config from '@/config'
 import {normalizeDoi, validateDoi} from '@/lib/identifiers'
@@ -2005,7 +1966,7 @@ function emptyScoreRangeWizardObj() {
 }
 
 export default {
-  name: 'ScoreSetEditor',
+  name: 'ScoreSetCreator',
   components: {
     AutoComplete,
     Button,
@@ -2035,12 +1996,9 @@ export default {
   props: {
     experimentUrn: {
       type: String,
-      required: false
+      required: false,
+      default: null,
     },
-    itemId: {
-      type: String,
-      required: false
-    }
   },
 
   setup: () => {
@@ -2065,7 +2023,6 @@ export default {
       config: config,
 
       ...useFormatters(),
-      ...useItem({itemTypeName: 'scoreSet'}),
       ...useScopedId(),
       editableExperiments: ref([]),
       licenses: licenses.items,
@@ -2329,17 +2286,6 @@ export default {
           this.primaryPublicationIdentifiers = []
         }
       }
-    },
-    item: {
-      handler: function () {
-        this.resetForm()
-      }
-    },
-    itemId: {
-      handler: function () {
-        this.setItemId(this.itemId)
-      },
-      immediate: true
     },
     defaultLicenseId: {
       handler: function () {
@@ -3020,93 +2966,56 @@ export default {
     ////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 
     resetForm: function () {
-      if (this.item) {
-        this.experiment = this.item.experiment
-        this.supersededScoreSet = this.item.supersededScoreSet
-        this.isSupersedingScoreSet = this.supersededScoreSet ? true : false
-        // metaAnalyzesScoreSets is only used when editing a new score set, so we don't need to populate it from URNs.
-        this.metaAnalyzesScoreSets = []
-        ;((this.isMetaAnalysis = false), (this.title = this.item.title))
-        this.shortDescription = this.item.shortDescription
-        this.abstractText = this.item.abstractText
-        this.methodText = this.item.methodText
-        this.licenseId = this.item.license.id
-        this.dataUsagePolicy = this.item.dataUsagePolicy
-        this.hasCustomUsagePolicy = this.dataUsagePolicy ? true : false
+      this.experiment = null
+      this.supersededScoreSet = null
+      this.isSupersedingScoreSet = false
+      this.metaAnalyzesScoreSets = []
+      this.isMetaAnalysis = false
+      this.title = null
+      this.shortDescription = null
+      this.abstractText = null
+      this.methodText = null
+      this.licenseId = this.defaultLicenseId
+      this.hasCustomUsagePolicy = false
+      this.dataUsagePolicy = null
 
-        this.contributors = _.sortBy(this.item.contributors, ['familyName', 'givenName', 'orcidId'])
-        this.doiIdentifiers = this.item.doiIdentifiers
-        // So that the multiselect can populate correctly, build the primary publication identifiers
-        // indirectly by filtering a merged list of secondary and primary publication identifiers
-        this.publicationIdentifiers = _.concat(
-          this.item.primaryPublicationIdentifiers,
-          this.item.secondaryPublicationIdentifiers
-        )
-        this.primaryPublicationIdentifiers = this.item.primaryPublicationIdentifiers.filter((publication) => {
-          return this.publicationIdentifiers.some((primary) => {
-            return primary.identifier === publication.identifier
-          })
-        })
-        this.secondaryPublicationIdentifiers = this.item.secondaryPublicationIdentifiers
-        this.extraMetadata = this.item.extraMetadata
+      this.contributors = []
+      this.doiIdentifiers = []
+      this.publicationIdentifiers = []
+      this.primaryPublicationIdentifiers = []
+      this.secondaryPublicationIdentifiers = []
+      this.extraMetadata = {}
 
-        this.scoreRanges = {
-          investigatorProvided: {
-            baselineScore: this.item.scoreRanges?.ranges?.investigatorProvided?.baselineScore,
-            baselineScoreDescription: this.item.scoreRanges?.ranges?.investigatorProvided?.baselineScoreDescription,
-            ranges: this.item.scoreRanges?.ranges?.investigatorProvided?.ranges.map((range) =>
-              this.scoreRangeWithWizardProperties(range)
-            ),
-            oddsPathSource: this.item.scoreRanges?.ranges?.investigatorProvided?.oddsPathSource || [],
-            source: this.item.scoreRanges?.ranges?.investigatorProvided?.source || []
-          }
+      this.scoreRanges = {
+        investigatorProvided: {
+          baselineScore: null,
+          baselineScoreDescription: null,
+          infiniteUpper: false,
+          infiniteLower: false,
+          inclusiveLowerBound: true,
+          inclusiveUpperBound: false,
+          ranges: [],
+          oddsPathSource: [],
+          source: []
         }
-        this.investigatorIsProvidingScoreRanges = this.scoreRanges.length > 0
-
-        this.createdTargetGenes = this.item.targetGenes.map((target) => this.targetGeneWithWizardProperties(target))
-        this.numTargets = this.createdTargetGenes.length
-        this.isMultiTarget = this.numTargets == 1 ? false : true
-        this.isTargetSequence = this.createdTargetGenes[0].targetGene?.targetSequence ? true : false
-      } else {
-        this.experiment = null
-        this.supersededScoreSet = null
-        this.isSupersedingScoreSet = false
-        this.metaAnalyzesScoreSets = []
-        ;((this.isMetaAnalysis = false), (this.title = null))
-        this.shortDescription = null
-        this.abstractText = null
-        this.methodText = null
-        this.licenseId = this.defaultLicenseId
-        this.hasCustomUsagePolicy = false
-        this.dataUsagePolicy = null
-
-        this.contributors = []
-        this.doiIdentifiers = []
-        this.publicationIdentifiers = []
-        this.primaryPublicationIdentifiers = []
-        this.secondaryPublicationIdentifiers = []
-        this.extraMetadata = {}
-
-        this.scoreRanges = {
-          investigatorProvided: {
-            baselineScore: null,
-            baselineScoreDescription: null,
-            infiniteUpper: false,
-            infiniteLower: false,
-            inclusiveLowerBound: true,
-            inclusiveUpperBound: false,
-            ranges: [],
-            oddsPathSource: [],
-            source: []
-          }
-        }
-        this.investigatorIsProvidingScoreRanges = false
-
-        this.createdTargetGenes = [emptyTargetGeneWizardObj()]
-        this.numTargets = 1
-        this.isMultiTarget = false
-        this.isTargetSequence = true
       }
+      this.investigatorIsProvidingScoreRanges = false
+
+      this.createdTargetGenes = [emptyTargetGeneWizardObj()]
+      this.numTargets = 1
+      this.isMultiTarget = false
+      this.isTargetSequence = true
+      this.isBaseEditor = false
+
+      // clear validation errors
+      this.clientSideValidationErrors = {}
+      this.serverSideValidationErrors = {}
+      this.validationErrors = {}
+
+      // set form to step 0
+      this.activeWizardStep = 0
+      this.maxWizardStepValidated = 0
+      this.maxWizardStepEntered = 0
     },
 
     resetTarget: function (targetIdx) {

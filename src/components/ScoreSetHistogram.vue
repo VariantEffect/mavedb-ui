@@ -139,13 +139,12 @@ import Dropdown from 'primevue/dropdown'
 import ProgressSpinner from 'primevue/progressspinner'
 import Rating from 'primevue/rating'
 import TabMenu from 'primevue/tabmenu'
-import {defineComponent, PropType, ref} from 'vue'
+import { defineComponent, PropType } from 'vue'
 
 import RangeTable from '@/components/RangeTable.vue'
 import useScopedId from '@/composables/scoped-id'
 import config from '@/config'
-import {AMINO_ACIDS} from '@/lib/amino-acids'
-import {saveChartAsFile} from '@/lib/chart-export'
+import { saveChartAsFile } from '@/lib/chart-export'
 import {
   BENIGN_CLINICAL_SIGNIFICANCE_CLASSIFICATIONS,
   CLINVAR_REVIEW_STATUS_STARS,
@@ -169,8 +168,8 @@ import makeHistogram, {
   HistogramDatum,
   HistogramBin
 } from '@/lib/histogram'
-import {prepareRangesForHistogram, ScoreRanges, ScoreSetRanges} from '@/lib/ranges'
-import {parseSimpleProVariant, variantNotNullOrNA} from '@/lib/mave-hgvs'
+import { prepareRangesForHistogram, ScoreRanges, ScoreSetRanges } from '@/lib/ranges'
+import { variantNotNullOrNA } from '@/lib/mave-hgvs'
 import { DEFAULT_VARIANT_EFFECT_TYPES, isStartOrStopLoss, variantIsMissense, variantIsNonsense, variantIsOther, variantIsSynonymous, VARIANT_EFFECT_TYPE_OPTIONS, Variant } from '@/lib/variants'
 
 function naToUndefined(x: string | null | undefined) {

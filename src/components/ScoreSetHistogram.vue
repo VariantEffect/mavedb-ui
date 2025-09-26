@@ -217,6 +217,10 @@ export default defineComponent({
     variants: {
       type: Array as PropType<Variant[]>,
       required: true
+    },
+    clinicalModeActive: {
+      type: Boolean,
+      default: false
     }
   },
 

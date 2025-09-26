@@ -84,6 +84,7 @@
             :score-set="item"
             :variants="variants"
             @export-chart="setHistogramExport"
+            :clinical-mode-active="clinicalMode"
           />
         </div>
         <div v-if="showHeatmap && !isScoreSetVisualizerVisible" class="mavedb-score-set-heatmap-pane">

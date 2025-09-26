@@ -859,7 +859,7 @@ export default defineComponent({
         (this.selectedControlVariantTypeFilters.includes('Synonymous') && variantIsSynonymous(variant)) ||
         (this.selectedControlVariantTypeFilters.includes('Nonsense') && variantIsNonsense(variant)) ||
         (this.selectedControlVariantTypeFilters.includes('Start/Stop Loss') && isStartOrStopLoss(variant)) ||
-        (this.selectedControlVariantTypeFilters.includes('Other') && !variantIsMissense(variant) && !this.variantIsSynonymous(variant) && !this.variantIsNonsense(variant) && !isStartOrStopLoss(variant))
+        (this.selectedControlVariantTypeFilters.includes('Other') && !variantIsMissense(variant) && !variantIsSynonymous(variant) && !variantIsNonsense(variant) && !isStartOrStopLoss(variant))
       )
     },
     exportChart() {

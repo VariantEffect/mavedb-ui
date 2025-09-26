@@ -1190,10 +1190,7 @@
                         <label :for="scopedId('input-targetGeneAccessionLabel')"> Accession Identifier </label>
                       </span>
                       <div
-                        v-if="
-                          createdTargetGenes[targetIdx].targetGene.targetAccession.accession &&
-                          !createdTargetGenes[targetIdx].targetGene.targetAccession.accession?.startsWith('NP')
-                        "
+                        v-if="showSwitchToProteinAccessionButton(targetIdx)"
                         class="mavedb-wizard-subcontent"
                       >
                         <Button
@@ -2945,6 +2942,12 @@ export default {
       this.mergeValidationErrors()
     },
 
+    showSwitchToProteinAccessionButton: function (targetIdx) {
+      const regex = /^(NP|ENSP|XP).*$/
+      return this.createdTargetGenes[targetIdx].targetGene.targetAccession.accession &&
+        !this.createdTargetGenes[targetIdx].isRelativeToChromosome &&
+        !regex.test(this.createdTargetGenes[targetIdx].targetGene.targetAccession.accession)
+    },
     ////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
     // Validation
     ////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////

@@ -96,7 +96,6 @@ interface VariantClassHeatmapDatum {
   /** One variant in the class. All of its properties are shared by the other variants except its score, which should be ignored. */
   instance?: Variant
 }
-// import {SPARSITY_THRESHOLD} from '@/lib/score-set-heatmap'
 
 const HEATMAP_AMINO_ACIDS_SORTED = _.sortBy(AMINO_ACIDS, [
   (aa) =>

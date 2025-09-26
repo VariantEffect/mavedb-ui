@@ -3,7 +3,6 @@ declare namespace Config {
   let appBaseUrl: string
   let orcidClientId: string
   let CLINICAL_FEATURES_ENABLED: boolean
-
 }
 
 export default Config

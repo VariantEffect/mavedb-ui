@@ -1,13 +1,22 @@
 <template>
   <DefaultLayout :overflow-y="alleles.length > 0 ? 'scroll' : 'hidden'">
-    <div :class="['mavedb-search-view', alleles.length > 0 ? 'mavedb-search-view-with-results' : 'mavedb-search-view-without-results']">
-      <div class="mavedb-search-header">
-        <h1>MaveMD</h1>
+    <div
+      :class="[
+        'mavedb-search-view',
+        alleles.length > 0 ? 'mavedb-search-view-with-results' : 'mavedb-search-view-without-results'
+      ]"
+    >
+      <div class="mavedb-page-title">
+        <img alt="MaveMD" class="mavedb-mavemd-logo" src="@/assets/mavemd-logo.png" />
       </div>
       <div class="mavedb-mavemd-intro">
-        Search MaveDB for variants in the human genome
+        MaveMD (MAVEs for MeDicine) is an interface that integrates ClinVar and the ClinGen Allele Registry, displays
+        clinical evidence calibrations, provides intuitive visualizations, and exports structured evidence compatible
+        with ACMG/AMP variant classification guidelines. MaveMD currently contains 438,318 variant effect measurements
+        mapped to the human genome from 74 MAVE datasets spanning 32 disease-associated genes.
       </div>
       <div v-if="hgvsSearchVisible" class="mavedb-search-form">
+        <div class="mavedb-search-heading">Search MaveDB for human gene variants</div>
         <div class="flex flex-wrap justify-content-center gap-3">
           <IconField icon-position="left">
             <InputIcon class="pi pi-search"></InputIcon>
@@ -25,14 +34,11 @@
         </div>
         <div class="mavedb-search-form-view-switch">
           Don't have a versioned reference sequence identifier? Click here to perform a fuzzy search instead:
-          <Button
-            class="p-button-plain"
-            @click="showSearch('fuzzy')"
-            >Fuzzy Search</Button
-          >
+          <Button class="p-button-plain" @click="showSearch('fuzzy')">Fuzzy Search</Button>
         </div>
       </div>
       <div v-if="fuzzySearchVisible" class="mavedb-search-form">
+        <div class="mavedb-search-heading">Search MaveDB for human gene variants</div>
         <div class="flex flex-wrap justify-content-center gap-3">
           <InputText v-model="inputGene" class="mavedb-fuzzy-search-form-component" placeholder="Gene symbol (HGNC)" />
           <Dropdown
@@ -59,11 +65,7 @@
         </div>
         <div class="mavedb-search-form-view-switch">
           Click here to return to HGVS search:
-          <Button
-            class="p-button-plain"
-            @click="showSearch('hgvs')"
-            >HGVS Search</Button
-          >
+          <Button class="p-button-plain" @click="showSearch('hgvs')">HGVS Search</Button>
         </div>
       </div>
       <p v-if="false && alleles.length === 0">
@@ -745,9 +747,26 @@ export default defineComponent({
 </script>
 
 <style scoped>
-.mavedb-mavemd-intro {
-  font-size: 120%;
+.mavedb-search-view {
+  display: flex;
+  flex-direction: column;
+  position: relative;
+  height: 100%;
+}
+.mavedb-page-title {
   text-align: center;
+}
+
+.mavedb-mavemd-logo {
+  height: 150px;
+  margin: 1em 0 0 0;
+}
+
+.mavedb-mavemd-intro {
+  display: none;
+  flex: 0 0 auto;
+  text-align: left;
+  font-size: 110%;
 }
 
 .mavedb-search-view-without-results {
@@ -756,44 +775,30 @@ export default defineComponent({
   flex-direction: column;
 }
 
-/* Layout */
-
-.mavedb-search-view {
-  display: flex;
-  flex-direction: column;
-  position: relative;
-  height: 100%;
-}
-
-.mavedb-search-view-without-results .mavedb-search-header {
+.mavedb-search-view-without-results .mavedb-page-title {
   flex: 0 0 auto;
 }
 
 .mavedb-search-view-without-results .mavedb-mavemd-intro {
-  flex: 0 0 auto;
-  display: flex;
+  display: block;
   flex-direction: column;
   justify-content: center;
-}
-
-.mavedb-search-header {
-  flex: 0 0 auto;
-  text-align: center;
-}
-
-.mavedb-search-header h1 {
-  font-size: 20px;
-  text-align: center;
 }
 
 .mavedb-search-form {
   /* flex: 0 0 auto; */
   display: flex;
+  flex-direction: column;
   flex-wrap: wrap;
   padding: 10px 0;
   text-align: center;
   justify-content: center;
   gap: 3px;
+}
+
+.mavedb-search-heading {
+  font-size: 120%;
+  text-align: center;
 }
 
 .mavedb-search-view-without-results .mavedb-search-form {
@@ -835,11 +840,11 @@ export default defineComponent({
   width: 24%;
 }
 
-.mavedb-organism-picker::v-deep .p-listbox-item {
+.mavedb-organism-picker:deep(.p-listbox-item) {
   font-style: italic;
 }
 
-.mavedb-organism-picker::v-deep .p-listbox-item .p-badge {
+.mavedb-organism-picker:deep(.p-listbox-item .p-badge) {
   font-style: normal;
 }
 

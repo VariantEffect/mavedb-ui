@@ -12,7 +12,6 @@ export default () => {
     }),
 
     mutations: {
-
       loadedData(state, {dataUrl, data}) {
         if (state.dataUrl != dataUrl) {
           state.dataUrl = dataUrl
@@ -51,11 +50,9 @@ export default () => {
           state.datasStatus = 'NotLoaded'
         }
       }
-
     },
 
     actions: {
-
       reset() {
         // TODO
       },
@@ -64,14 +61,11 @@ export default () => {
         if (dataUrl) {
           commit('loadingData', {dataUrl})
           try {
-            let response = await axios.get(
-              dataUrl,
-              {
-                /* headers: {
+            let response = await axios.get(dataUrl, {
+              /* headers: {
                   accept: 'application/json'
                 } */
-              }
-            )
+            })
             // TODO (#130) catch errors in response
             commit('loadedData', {data: response.data || null})
           } catch (err) {
@@ -87,13 +81,12 @@ export default () => {
       },
 
       async setDataUrl({commit, dispatch, state}, dataUrl) {
-        if (!_.isEqual(dataUrl, state.dataUrl) && (state.dataStatus != 'NotLoaded')) {
+        if (!_.isEqual(dataUrl, state.dataUrl) && state.dataStatus != 'NotLoaded') {
           await dispatch('loadData', {dataUrl})
         } else {
           commit('setUrl', {dataUrl})
         }
       }
-
     }
   }
 }

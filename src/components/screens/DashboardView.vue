@@ -4,23 +4,23 @@
     <TabView>
       <TabPanel header="Published">
         <div class="mavedb-search-view">
-          <div class="mavedb-search-header" style="display: none;">
+          <div class="mavedb-search-header" style="display: none">
             <h1>Search MaveDB Experiments and Score Sets</h1>
           </div>
           <h2 class="mave-score-set-section-title">Published Score sets</h2>
           <div class="mavedb-search-form">
             <span class="p-input-icon-left">
               <i class="pi pi-search" />
-              <InputText v-model="searchText" ref="searchTextInput" type="text" placeholder="Search" @change="search" />
+              <InputText ref="searchTextInput" v-model="searchText" placeholder="Search" type="text" @change="search" />
             </span>
           </div>
-          <ScoreSetTable :data="publishedScoreSets" :language="language" :scrollX="true" :scrollY="true" />
+          <ScoreSetTable :data="publishedScoreSets" :language="language" :scroll-x="true" :scroll-y="true" />
         </div>
       </TabPanel>
       <TabPanel header="Unpublished">
         <div class="mavedb-search-view">
           <h2 class="mave-score-set-section-title">Unpublished Score sets</h2>
-          <ScoreSetTable :data="unpublishedScoreSets" :language="language" :scrollX="true" :scrollY="true" />
+          <ScoreSetTable :data="unpublishedScoreSets" :language="language" :scroll-x="true" :scroll-y="true" />
         </div>
       </TabPanel>
     </TabView>
@@ -28,7 +28,6 @@
 </template>
 
 <script>
-
 import axios from 'axios'
 import InputText from 'primevue/inputtext'
 
@@ -41,9 +40,8 @@ import TabPanel from 'primevue/tabpanel'
 
 export default {
   name: 'HomeView',
-  components: { DefaultLayout, ScoreSetTable, InputText, TabView, TabPanel },
-  computed: {
-  },
+
+  components: {DefaultLayout, ScoreSetTable, InputText, TabView, TabPanel},
 
   data: function () {
     return {
@@ -55,12 +53,10 @@ export default {
       displayedUnplublishedScoreSets: false,
       language: {
         emptyTable: 'You do not have any score sets matching the request.'
-      },
+      }
     }
   },
-  mounted: async function () {
-    await this.search()
-  },
+
   watch: {
     searchText: {
       handler: function (oldValue, newValue) {
@@ -70,6 +66,11 @@ export default {
       }
     }
   },
+
+  mounted: async function () {
+    await this.search()
+  },
+
   methods: {
     search: async function () {
       await this.fetchSearchResults()
@@ -84,10 +85,10 @@ export default {
     fetchSearchResults: async function () {
       try {
         // this response should be true to get published data
-        let response = await axios.post(
+        const response = await axios.post(
           `${config.apiBaseUrl}/me/score-sets/search`,
           {
-            text: this.searchText || null,
+            text: this.searchText || null
           },
           {
             headers: {
@@ -104,8 +105,7 @@ export default {
           if (this.scoreSets[i].publishedDate == null) {
             // do not add to unpublished score sets if it is already populated
             this.unpublishedScoreSets.push(this.scoreSets[i])
-          }
-          else {
+          } else {
             this.publishedScoreSets.push(this.scoreSets[i])
           }
         }
@@ -113,9 +113,8 @@ export default {
         console.log(`Error while loading search results")`, err)
       }
     }
-  },
+  }
 }
-
 </script>
 
 <style scoped>
@@ -125,7 +124,7 @@ export default {
 }
 
 /* (B) OPTIONAL COSMETICS */
-.flex-wrap>* {
+.flex-wrap > * {
   box-sizing: border-box;
   width: 50%;
   padding: 10px;
@@ -155,5 +154,4 @@ export default {
   padding: 10px 0;
   text-align: center;
 }
-
 </style>

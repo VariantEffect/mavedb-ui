@@ -20,9 +20,9 @@
             <ul>
               <li>
                 Try searching for variants using HGVS strings like
-                <span class="mave-hgvs-example" v-tooltip.top="'Click to copy'" @click="copyText">ENST00000473961.6:c.-19-2A>T</span>
+                <span v-tooltip.top="'Click to copy'" class="mave-hgvs-example" @click="copyText">ENST00000473961.6:c.-19-2A>T</span>
                 and
-                <span class="mave-hgvs-example" v-tooltip.top="'Click to copy'" @click="copyText">NP_000242.1:p.Asn566Thr</span>.
+                <span v-tooltip.top="'Click to copy'" class="mave-hgvs-example" @click="copyText">NP_000242.1:p.Asn566Thr</span>.
                 MaveDB supports a variety of HGVS formats for searching.
               </li>
               <li>
@@ -196,7 +196,7 @@
                 <p>
                   Example:
                   <a href="https://genome.ucsc.edu/cgi-bin/hgTracks?db=hg38&position=chr17:43051063-43051117&hubUrl=https://public.gi.ucsc.edu/~cline/mavedb/hub/hub.txt&Variant_Effect_Maps_hideKids=1&BRCA1_00000097-s-1=dense" target="_blank">
-                    <img src="@/assets/logo-ucsc-genome-browser.png" alt="UCSC Genome Browser" style="height: 20px;" />
+                    <img alt="UCSC Genome Browser" src="@/assets/logo-ucsc-genome-browser.png" style="height: 20px;" />
                     UCSC Genome Browser
                   </a>
                   track for
@@ -237,7 +237,6 @@
 </template>
 
 <script>
-
 import Card from 'primevue/card'
 
 import config from '@/config'
@@ -252,7 +251,7 @@ export default {
   },
 
   methods: {
-    copyText: function(event, x) {
+    copyText: function(event) {
       const element = event.target
       if (element) {
         navigator.clipboard.writeText(element.innerText)
@@ -260,11 +259,9 @@ export default {
     }
   }
 }
-
 </script>
 
 <style scoped>
-
 td, th {
   padding: 0 5px;
   vertical-align: top;
@@ -279,5 +276,4 @@ ul {
   padding: 0 3px;
   cursor: pointer;
 }
-
 </style>

@@ -3,22 +3,30 @@
     <div class="mavedb-heatmap-wrapper">
       <template v-if="showHeatmap">
         <div style="text-align: center">Functional Score by Variant</div>
-        <div id="mavedb-heatmap-container" class="heatmapContainer" ref="heatmapContainer">
-          <div id="mavedb-heatmap-scroll-container" class="heatmapScrollContainer" ref="heatmapScrollContainer">
+        <div id="mavedb-heatmap-container" ref="heatmapContainer" class="heatmapContainer">
+          <div id="mavedb-heatmap-scroll-container" ref="heatmapScrollContainer" class="heatmapScrollContainer">
             <div
               id="mave-stacked-heatmap-container"
-              class="mave-simple-variants-stacked-heatmap-container"
               ref="simpleVariantsStackedHeatmapContainer"
+              class="mave-simple-variants-stacked-heatmap-container"
             />
             <div
               id="mave-variants-heatmap-container"
-              class="mave-simple-variants-heatmap-container"
               ref="simpleVariantsHeatmapContainer"
+              class="mave-simple-variants-heatmap-container"
             />
           </div>
         </div>
         <div class="mavedb-heatmap-controls">
           <span class="mavedb-heatmap-controls-title">Heatmap format</span>
+          <SelectButton
+            v-if="sequenceTypeOptions.length > 1"
+            v-model="sequenceType"
+            :allow-empty="false"
+            option-label="title"
+            option-value="value"
+            :options="sequenceTypeOptions"
+          />
           <SelectButton
             v-model="layout"
             :allow-empty="false"
@@ -30,9 +38,9 @@
             ]"
           />
           <Button
-            v-if="showProteinStructureButton"
-            label="View protein structure"
+            v-if="showProteinStructureButton && sequenceType == 'protein'"
             class="p-button p-button-info"
+            label="View protein structure"
             @click="$emit('onDidClickShowProteinStructure')"
           />
         </div>
@@ -74,6 +82,7 @@ const HEATMAP_AMINO_ACIDS_SORTED = _.sortBy(AMINO_ACIDS, [
     _.indexOf(['unique', 'aromatic', 'non-polar', 'polar-neutral', 'negative-charged', 'positive-charged'], aa.class),
   'hydrophobicity.originalValue'
 ])
+
 const HEATMAP_AMINO_ACID_ROWS: HeatmapRowSpecification[] = [
   {code: '=', label: '\uff1d'},
   {code: '*', label: '\uff0a'},
@@ -96,6 +105,7 @@ const MAVE_HGVS_PRO_CHANGE_CODES = [
 const HEATMAP_NUCLEOTIDE_ROWS: HeatmapRowSpecification[] = [
   ...NUCLEOTIDE_BASES.map((ntCode) => ({code: ntCode.codes.single, label: ntCode.codes.single}))
 ]
+
 /**
  * Given a MaveHGVS-pro amino acid code or code representing deletion, synonmyous variation, or stop codon, return the
  * heatmap row number on which a single-AA variant should be displayed.
@@ -200,11 +210,6 @@ export default defineComponent({
       type: Object,
       required: true
     },
-    externalSelection: {
-      type: Object,
-      required: false,
-      default: null
-    },
     showProteinStructureButton: {
       type: Boolean
     },
@@ -212,9 +217,9 @@ export default defineComponent({
       type: String as PropType<'standard' | 'protein-viz'>,
       default: 'standard'
     },
-    sequenceType: {
-      type: String as PropType<'dna' | 'protein'>,
-      default: 'protein'
+    allowedSequenceTypes: {
+      type: Array as PropType<('dna' | 'protein')[] | undefined>,
+      default: undefined
     },
     variants: {
       type: Array,
@@ -241,6 +246,7 @@ export default defineComponent({
     proteinStructureVisible: false,
     simpleVariants: null,
     numComplexVariants: 0,
+    sequenceType: 'protein' as 'dna' | 'protein',
     heatmap: null as Heatmap | null,
     stackedHeatmap: null as Heatmap | null,
     layout: 'normal' as HeatmapLayout
@@ -269,20 +275,54 @@ export default defineComponent({
       }
     },
     hgvsColumn: function () {
+      switch (this.sequenceType) {
+        case 'dna':
+          return this.hgvsNtColumn
+        case 'protein':
+        default:
+          return this.hgvsProColumn
+      }
+    },
+    sequenceTypeOptions: function () {
+      return [
+        ...(this.dnaHeatmapAvailable && (!this.allowedSequenceTypes || this.allowedSequenceTypes.includes('dna'))
+          ? [{title: 'DNA', value: 'dna'}]
+          : []),
+        ...(this.proteinHeatmapAvailable &&
+        (!this.allowedSequenceTypes || this.allowedSequenceTypes.includes('protein'))
+          ? [{title: 'Protein', value: 'protein'}]
+          : [])
+      ]
+    },
+    dnaHeatmapAvailable: function () {
+      return this.variants.some((v) => v[this.hgvsNtColumn] != null && v[this.hgvsNtColumn] != 'NA')
+    },
+    proteinHeatmapAvailable: function () {
+      return this.variants.some((v) => v[this.hgvsProColumn] != null && v[this.hgvsProColumn] != 'NA')
+    },
+    hgvsNtColumn: function () {
       switch (this.coordinates) {
         case 'mapped':
-          if (this.sequenceType == 'dna') {
+          console.log(this.variants[0])
+          if (this.variants.some((v) => v.post_mapped_hgvs_c != null && v.post_mapped_hgvs_c != 'NA')) {
             return 'post_mapped_hgvs_c'
-          } else {
-            if (this.variants.some((v) => v.hgvs_pro_inferred != null && v.hgvs_pro_inferred != 'NA')) {
-              return 'hgvs_pro_inferred'
-            }
-            return 'post_mapped_hgvs_p'
           }
+          return 'hgvs_nt'
         case 'raw':
-          if (this.sequenceType == 'dna') {
-            return 'hgvs_nt'
-          } else if (this.variants.some((v) => v.hgvs_pro != null && v.hgvs_pro != 'NA')) {
+        default:
+          return 'hgvs_nt'
+      }
+    },
+    hgvsProColumn: function () {
+      switch (this.coordinates) {
+        case 'mapped':
+          if (this.variants.some((v) => v.hgvs_pro_inferred != null && v.hgvs_pro_inferred != 'NA')) {
+            return 'hgvs_pro_inferred'
+          }
+          return 'post_mapped_hgvs_p'
+        case 'raw':
+        default:
+          if (this.variants.some((v) => v.hgvs_pro != null && v.hgvs_pro != 'NA')) {
             return 'hgvs_pro'
           } else if (this.variants.some((v) => v.hgvs_pro_inferred != null && v.hgvs_pro_inferred != 'NA')) {
             return 'hgvs_pro_inferred'
@@ -330,27 +370,39 @@ export default defineComponent({
       }
       return 'invalid'
     },
-    targetSequence: function () {
+    targetSequenceAndStartPosition: function () {
       switch (this.targetType) {
         case 'sequence':
-          return this.scoreSet?.targetGenes?.[0]?.targetSequence?.sequence || ''
+          return [this.scoreSet?.targetGenes?.[0]?.targetSequence?.sequence || '', 1]
         case 'accession':
-          return this.inferTargetSequenceFromVariants()
+          return [this.inferTargetSequenceFromVariants(), this.targetXRange.start]
         default:
-          return ''
+          return ['', 1]
       }
+    },
+    targetSequence: function () {
+      return this.targetSequenceAndStartPosition[0]
+    },
+    targetSequenceStartPosition: function () {
+      return this.targetSequenceAndStartPosition[1]
     },
     wtResidueType: function () {
       return this.sequenceType == 'dna' ? 'nt' : 'aa'
     },
-    wtSequence: function () {
+    wtSequenceAndStartPosition: function () {
       if (this.wtResidueType == this.targetResidueType) {
-        return _.toArray(this.targetSequence)
+        return [_.toArray(this.targetSequence), this.targetSequenceStartPosition]
       } else if (this.wtResidueType == 'aa' && this.targetResidueType == 'nt') {
-        return this.translateDnaToAminoAcids1Char(this.targetSequence)
+        return [this.translateDnaToAminoAcids1Char(this.targetSequence), 1]
       } else {
-        return []
+        return [[], 1]
       }
+    },
+    wtSequence: function () {
+      return this.wtSequenceAndStartPosition[0]
+    },
+    wtSequenceStartPosition: function () {
+      return this.wtSequenceAndStartPosition[1]
     },
     wtVariants: function () {
       return this.wtSequence ? this.prepareWtVariants(this.wtSequence) : []
@@ -646,6 +698,13 @@ export default defineComponent({
   },
 
   watch: {
+    sequenceTypeOptions: function (newValue, oldValue) {
+      if (!_.isEqual(newValue, oldValue)) {
+        if (!newValue.includes(this.sequenceType)) {
+          this.sequenceType = newValue[0]
+        }
+      }
+    },
     layout: {
       handler: function (newValue, oldValue) {
         if (newValue != oldValue) {
@@ -793,7 +852,12 @@ export default defineComponent({
         this.sequenceType == 'protein'
           ? AMINO_ACIDS_WITH_TER.map((aa) => aa.codes.single)
           : NUCLEOTIDE_BASES.map((nt) => nt.codes.single)
-      return wtSequenceArr
+      const visibleWtSequence = wtSequenceArr.slice(
+        this.targetXRange.start - this.wtSequenceStartPosition,
+        this.targetXRange.start + this.targetXRange.length
+      )
+
+      return visibleWtSequence
         .map((residue, i) =>
           allowedResidues.includes(residue)
             ? {
@@ -980,7 +1044,7 @@ export default defineComponent({
       this.heatmap = makeHeatmap()
         .margins({top: 0, bottom: 25, left: 20, right: 20})
         .legendTitle('Functional Score')
-        .drawYGroups(this.sequenceType == 'dna' ? false : true)
+        .drawYGroups(this.sequenceType === 'protein')
         .render(this.$refs.simpleVariantsHeatmapContainer, this.$refs.heatmapContainer)
         .rows(this.heatmapRows)
         .xCoordinate(this.xCoord)
@@ -1026,6 +1090,7 @@ export default defineComponent({
     drawStackedHeatmap: function () {
       this.stackedHeatmap = makeHeatmap()
         .margins({top: 20, bottom: 25, left: 20, right: 20})
+        .drawYGroups(this.sequenceType === 'protein')
         .render(this.$refs.simpleVariantsStackedHeatmapContainer)
         .rows(this.heatmapRows)
         .nodeSize({width: 20, height: 1})

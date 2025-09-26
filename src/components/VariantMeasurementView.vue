@@ -1,86 +1,94 @@
 <template>
   <div class="grid" style="margin: 10px 0">
     <div v-if="variant" class="col-12">
-      <Card>
-        <template #title>
-          <div class="variant-title-container">
-            <div class="variant-title-name">Variant: {{ variantName }}</div>
-            <div v-if="classification" :class="['variant-clinical-classifier', ...classifierCssClasses]">
-              {{ startCase(classification) }}
+      <div class="col-12 mavedb-variant-and-assay-fact-sheet-container">
+        <div class="mavedb-assay-facts-card">
+          <div class="mavedb-assay-facts-card-header">
+            <span class="mavedb-assay-facts-author">Variant: {{ variantName }}</span>
+          </div>
+          <div class="mavedb-assay-facts-section mavedb-assay-facts-bottom-separator">
+            <div v-if="clingenAlleleName" class="mavedb-assay-facts-row">
+              <div class="mavedb-assay-facts-label">ClinGen community standard allele name</div>
+              <div class="mavedb-assay-facts-value">{{ clingenAlleleName }}</div>
             </div>
           </div>
-        </template>
-        <template #content>
-          <table class="variant-info-table">
-            <tbody>
-              <tr v-if="clingenAlleleName">
-                <td v-if="clingenAlleleId" colspan="5">
-                  ClinGen community standard allele name: {{ clingenAlleleName }}
-                </td>
-              </tr>
-              <tr>
-                <td v-if="clingenAlleleId">ClinGen allele ID:</td>
-                <td v-if="clingenAlleleId">
+          <div class="mavedb-assay-facts-section">
+            <div v-if="clingenAlleleId" class="mavedb-assay-facts-row">
+              <div class="mavedb-assay-facts-label">ClinGen allele ID</div>
+              <div class="mavedb-assay-facts-value">
+                <div>
                   <a
                     :href="`https://reg.clinicalgenome.org/redmine/projects/registry/genboree_registry/by_canonicalid?canonicalid=${clingenAlleleId}`"
                     target="_blank"
                   >
                     {{ clingenAlleleId }}
                   </a>
-                </td>
-                <td v-if="!clingenAlleleId" colspan="2">&nbsp;</td>
-                <td>&nbsp;</td>
-                <td v-if="clinvarAlleleIds.length > 0">
-                  ClinVar allele {{ clinvarAlleleIds.length == 1 ? 'ID' : 'IDs' }}:
-                </td>
-                <td v-if="clinvarAlleleIds.length > 0">
-                  <div v-for="clinvarAlleleId in clinvarAlleleIds" :key="clinvarAlleleId">
-                    <a :href="`https://www.ncbi.nlm.nih.gov/clinvar/variation/${clinvarAlleleId}`" target="_blank">
-                      {{ clinvarAlleleId }}
-                    </a>
-                  </div>
-                </td>
-                <td v-if="clinvarAlleleIds.length == 0" colspan="2">&nbsp;</td>
-              </tr>
-              <tr>
-                <td>&nbsp;</td>
-                <td>&nbsp;</td>
-                <!--
-                <td>Variant type:</td>
-                <td style="background: yellow;">Single nucleotide variant</td>
-                <td style="width: 150px;">&nbsp;</td>
-                -->
-                <td v-if="classification">Functional consequence:</td>
-                <td v-if="classification">{{ startCase(classification) }}</td>
-                <td v-if="!classification" colspan="2">&nbsp;</td>
-              </tr>
-              <tr>
-                <td v-if="(clingenAllele?.genomicAlleles || []).length > 0">Genomic location:</td>
-                <td v-if="(clingenAllele?.genomicAlleles || []).length > 0">
-                  <div v-for="genomicAllele in clingenAllele?.genomicAlleles || []" :key="genomicAllele">
-                    <template
-                      v-if="
-                        genomicAllele.chromosome &&
-                        genomicAllele.coordinates?.[0]?.start &&
-                        genomicAllele.referenceGenome
-                      "
-                    >
-                      chr{{ genomicAllele.chromosome }}:{{ genomicAllele.coordinates?.[0]?.start }} ({{
-                        genomicAllele.referenceGenome
-                      }})
-                    </template>
-                  </div>
-                </td>
-                <td v-if="(clingenAllele?.genomicAlleles || []).length == 0" colspan="2">&nbsp;</td>
-                <td style="width: 150px">&nbsp;</td>
-                <td>Functional score:</td>
-                <td v-if="variantScores?.score">{{ variantScores?.score?.toPrecision(4) }}</td>
-                <td v-else>&nbsp;</td>
-              </tr>
-            </tbody>
-          </table>
-        </template>
-      </Card>
+                </div>
+              </div>
+            </div>
+            <div v-if="clinvarAlleleIds.length > 0" class="mavedb-assay-facts-row">
+              <div class="mavedb-assay-facts-label">
+                ClinVar allele {{ clinvarAlleleIds.length == 1 ? 'ID' : 'IDs' }}
+              </div>
+              <div class="mavedb-assay-facts-value">
+                <div v-for="clinvarAlleleId in clinvarAlleleIds" :key="clinvarAlleleId">
+                  <a :href="`https://www.ncbi.nlm.nih.gov/clinvar/variation/${clinvarAlleleId}`" target="_blank">
+                    {{ clinvarAlleleId }}
+                  </a>
+                </div>
+              </div>
+            </div>
+            <div v-if="classification" class="mavedb-assay-facts-row">
+              <div class="mavedb-assay-facts-label">Functional consequence</div>
+              <div class="mavedb-assay-facts-value">
+                <div :class="['variant-clinical-classifier', ...classifierCssClasses]">
+                  {{ startCase(classification) }}
+                </div>
+              </div>
+            </div>
+            <div v-if="(clingenAllele?.genomicAlleles || []).length > 0" class="mavedb-assay-facts-row">
+              <div class="mavedb-assay-facts-label">Genomic location</div>
+              <div class="mavedb-assay-facts-value">
+                <div v-for="genomicAllele in clingenAllele?.genomicAlleles || []" :key="genomicAllele">
+                  <template
+                    v-if="
+                      genomicAllele.chromosome && genomicAllele.coordinates?.[0]?.start && genomicAllele.referenceGenome
+                    "
+                  >
+                    chr{{ genomicAllele.chromosome }}:{{ genomicAllele.coordinates?.[0]?.start }} ({{
+                      genomicAllele.referenceGenome
+                    }})
+                  </template>
+                </div>
+              </div>
+            </div>
+          </div>
+          <div class="mavedb-assay-facts-section-title">Classification</div>
+          <div class="mavedb-assay-facts-section">
+            <div v-if="variantScores?.score" class="mavedb-assay-facts-row">
+              <div class="mavedb-assay-facts-label">Functional score</div>
+              <div class="mavedb-assay-facts-value">
+                {{ variantScores?.score && variantScores?.score != 'NA' ? variantScores.score.toPrecision(4) : 'N/A' }}
+              </div>
+            </div>
+            <div v-if="variantScoreRange?.oddsPath" class="mavedb-assay-facts-row">
+              <div class="mavedb-assay-facts-label">OddsPath</div>
+              <div class="mavedb-assay-facts-value">
+                <span v-if="variantScoreRange?.oddsPath?.ratio">{{
+                  variantScoreRange.oddsPath.ratio.toPrecision(5)
+                }}</span>
+                <span
+                  v-if="variantScoreRange?.oddsPath?.evidence"
+                  :class="['mavedb-classification-badge', classificationBadgeColorClass, 'strong']"
+                >
+                  {{ variantScoreRange.oddsPath.evidence }}
+                </span>
+              </div>
+            </div>
+          </div>
+        </div>
+        <AssayFactSheet v-if="variant?.scoreSet" :score-set="variant.scoreSet" />
+      </div>
     </div>
     <div v-if="variant?.scoreSet" class="col-12">
       <Card>
@@ -114,6 +122,7 @@ import Card from 'primevue/card'
 import {useRestResource} from 'rest-client-vue'
 import {defineComponent, watch} from 'vue'
 
+import AssayFactSheet from '@/components/AssayFactSheet.vue'
 import ScoreSetHistogram from '@/components/ScoreSetHistogram.vue'
 import useFormatters from '@/composition/formatters'
 import useRemoteData from '@/composition/remote-data'
@@ -125,7 +134,7 @@ type Classification = 'Functionally normal' | 'Functionally abnormal' | 'Not spe
 
 export default defineComponent({
   name: 'VariantMeasurementView',
-  components: {Card, ScoreSetHistogram, ProgressSpinner},
+  components: {AssayFactSheet, Card, ScoreSetHistogram, ProgressSpinner},
 
   props: {
     variantUrn: {
@@ -248,22 +257,33 @@ export default defineComponent({
       }
 
       const score = this.variantScores?.score
-      const scoreRanges = this.variant?.scoreSet?.scoreRanges?.ranges
+      const scoreRanges = this.variant?.scoreSet?.scoreRanges?.investigatorProvided?.ranges
       if (scoreRanges && score != null) {
         return scoreRanges.find((scoreRange: any) => {
           const lowerOperator = scoreRange.inclusiveLowerBound ? '<=' : '<'
           const upperOperator = scoreRange.inclusiveUpperBound ? '>=' : '>'
 
-          scoreRange.range &&
+          return (
+            scoreRange.range &&
             scoreRange.range.length == 2 &&
             (scoreRange.range[0] === null || operatorTable[lowerOperator](scoreRange.range[0], score)) &&
             (scoreRange.range[1] === null || operatorTable[upperOperator](scoreRange.range[1], score))
+          )
         })
       }
       return undefined
     },
     variantScores: function () {
       return (this.scores || []).find((s) => s.accession == this.variantUrn)
+    },
+    classificationBadgeColorClass: function () {
+      if (this.variantScoreRange?.oddsPath?.evidence?.startsWith('BS3')) {
+        return 'mavedb-blue'
+      }
+      if (this.variantScoreRange?.oddsPath?.evidence?.startsWith('PS3')) {
+        return 'mavedb-red'
+      }
+      return null
     }
   },
 
@@ -314,8 +334,8 @@ export default defineComponent({
 .variant-clinical-classifier {
   color: white;
   font-weight: bold;
-  font-size: 30px;
-  padding: 0.1em 0.5em;
+  font-size: 120%;
+  padding: 0.1em 0.1em;
   display: inline-block;
 }
 
@@ -331,11 +351,11 @@ export default defineComponent({
 }
 
 .variant-clinical-classifier-functionally-normal {
-  background-color: #182fb0;
+  background-color: #1e40af; /* #182fb0; */
 }
 
 .variant-clinical-classifier-functionally-abnormal {
-  background-color: #b02418;
+  background-color: #991b1b; /* #b02418; */
 }
 
 .variant-clinical-classifier-not-specified {
@@ -343,6 +363,7 @@ export default defineComponent({
 }
 
 table.variant-into-table {
+  width: 100%;
   border-collapse: collapse;
 }
 
@@ -359,5 +380,94 @@ table.variant-info-table td:first-child {
   position: relative;
   top: 50%;
   left: 50%;
+}
+
+.mavedb-variant-and-assay-fact-sheet-container {
+  display: flex;
+  flex-direction: row;
+}
+
+/* Variant classification */
+
+.mavedb-classification-badge {
+  padding: 2px 6px;
+  border-radius: 4px;
+  font-size: 12px;
+  font-weight: bold;
+  margin-left: 1em;
+}
+
+.mavedb-classification-badge.mavedb-blue {
+  background: #1e40af;
+  color: white;
+}
+
+.mavedb-classification-badge.mavedb-red {
+  background: #991b1b;
+  color: white;
+}
+
+.mavedb-assay-facts-card {
+  width: 580px; /* fixed size */
+  border: 1px solid #000;
+  padding: 12px;
+  font-family: sans-serif;
+  font-size: 14px;
+  line-height: 1.4;
+}
+
+.mavedb-assay-facts-card-header {
+  font-weight: bold;
+  border-bottom: 3px solid #000;
+  padding-bottom: 4px;
+  margin-bottom: 8px;
+}
+
+.mavedb-assay-facts-section {
+  margin-bottom: 12px;
+}
+
+.mavedb-assay-facts-section-title {
+  font-weight: bold;
+  margin: 6px 0;
+  border-top: 1px solid #3e3d3dbb;
+  padding-top: 4px;
+  font-size: 16px;
+  font-weight: bold;
+}
+
+.mavedb-assay-facts-row {
+  display: flex;
+  justify-content: space-between;
+  margin: 2px 0;
+}
+
+.mavedb-assay-facts-bottom-separator {
+  border-bottom: 1px solid #3e3d3dbb;
+}
+
+/* Assay facts data */
+
+.mavedb-assay-facts-label {
+  font-weight: bold;
+  flex: 1;
+}
+
+.mavedb-assay-facts-value {
+  position: relative;
+  flex: 1;
+  text-align: left;
+}
+
+.mavedb-assay-facts-value.yellow {
+  background: #fef3c7;
+  padding: 2px 4px;
+  border-radius: 4px;
+}
+
+/* Specific fields */
+
+.mavedb-assay-facts-author {
+  font-size: 21px;
 }
 </style>

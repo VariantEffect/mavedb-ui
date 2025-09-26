@@ -3,7 +3,7 @@
     Created {{ formatDate(scoreSet.creationDate) }}
     <span v-if="scoreSet.createdBy">
       <a :href="`https://orcid.org/${scoreSet.createdBy.orcidId}`" target="blank"
-        ><img src="@/assets/ORCIDiD_icon.png" alt="ORCIDiD" />{{ scoreSet.createdBy.firstName }}
+        ><img alt="ORCIDiD" src="@/assets/ORCIDiD_icon.png" />{{ scoreSet.createdBy.firstName }}
         {{ scoreSet.createdBy.lastName }}</a
       ></span
     >
@@ -12,7 +12,7 @@
     Last updated {{ formatDate(scoreSet.modificationDate) }}
     <span v-if="scoreSet.modifiedBy">
       <a :href="`https://orcid.org/${scoreSet.modifiedBy.orcidId}`" target="blank"
-        ><img src="@/assets/ORCIDiD_icon.png" alt="ORCIDiD" />{{ scoreSet.modifiedBy.firstName }}
+        ><img alt="ORCIDiD" src="@/assets/ORCIDiD_icon.png" />{{ scoreSet.modifiedBy.firstName }}
         {{ scoreSet.modifiedBy.lastName }}</a
       ></span
     >
@@ -26,7 +26,7 @@
       :href="`https://orcid.org/${contributor.orcidId}`"
       target="blank"
     >
-      <img src="@/assets/ORCIDiD_icon.png" alt="ORCIDiD" />
+      <img alt="ORCIDiD" src="@/assets/ORCIDiD_icon.png" />
       {{ contributor.givenName }} {{ contributor.familyName }}
     </a>
   </div>
@@ -64,7 +64,7 @@
   </div>
   <div v-if="scoreSet.externalLinks?.ucscGenomeBrowser?.url">
     <a :href="scoreSet.externalLinks.ucscGenomeBrowser.url" target="blank">
-      <img src="@/assets/logo-ucsc-genome-browser.png" alt="UCSC Genome Browser" style="height: 20px" />
+      <img alt="UCSC Genome Browser" src="@/assets/logo-ucsc-genome-browser.png" style="height: 20px" />
       View in the UCSC Genome Browser
     </a>
   </div>

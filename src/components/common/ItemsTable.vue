@@ -456,20 +456,20 @@ export default {
 
 /* Table */
 
-.sfs-items-table >>> .dataTables_scrollBody table {
+.sfs-items-table:deep(.dataTables_scrollBody table) {
   margin-bottom: 10px;
 }
 
 /* Table controls */
 
-.sfs-items-table >>> .dt-buttons,
-.sfs-items-table >>> .dataTables_filter {
+.sfs-items-table:deep(.dt-buttons),
+.sfs-items-table:deep(.dataTables_filter) {
   font-size: 12px;
 }
 
 /* Cells */
 
-.sfs-items-table >>> th {
+.sfs-items-table:deep(th) {
   background: #e8e8e8;
   font-weight: 400;
   color: #131313;
@@ -482,32 +482,32 @@ export default {
   font-size: 12px;
 }
 
-.sfs-items-table.sfs-nowrap >>> th {
+.sfs-items-table.sfs-nowrap:deep(th) {
   max-width: 300px;
 }
 
-.sfs-items-table >>> table.dataTable tbody td {
+.sfs-items-table:deep(table.dataTable tbody td) {
   padding: 5px 4px;
 }
 
-.sfs-items-table >>> table.dataTable tbody td a {
+.sfs-items-table:deep(table.dataTable tbody td a) {
   text-decoration: none;
 }
 
-.sfs-items-table >>> td,
-.sfs-items-table >>> .align-left {
+.sfs-items-table:deep(td),
+.sfs-items-table:deep(.align-left) {
   text-align: left;
 }
 
-.sfs-items-table >>> .align-center {
+.sfs-items-table:deep(.align-center) {
   text-align: center;
 }
 
-.sfs-items-table >>> .align-right {
+.sfs-items-table:deep(.align-right) {
   text-align: right;
 }
 
-.sfs-items-table.sfs-nowrap >>> table.dataTable tbody td {
+.sfs-items-table.sfs-nowrap:deep(table.dataTable tbody td) {
   max-width: 300px;
   overflow: hidden;
   text-overflow: ellipsis;
@@ -515,33 +515,33 @@ export default {
 }
 
 /*
-.sfs-items-table >>> td.status-positive {
+.sfs-items-table:deep(td.status-positive {
   background-color: #b3ffb3; /*#14b314;* /
 }
 
-.sfs-items-table >>> td.status-positive-control-passed {
+.sfs-items-table:deep(td.status-positive-control-passed {
   color: rgb(51, 51, 255);
 }
 */
 
-.sfs-items-table >>> .samplify-data-table table.dataTable.stripe tbody tr.sfs-invalid,
-.sfs-items-table >>> .samplify-data-table table.dataTable.stripe tbody tr.sfs-invalid.odd,
-.sfs-items-table >>> .samplify-data-table table.dataTable.display tbody tr.sfs-invalid.odd {
+.sfs-items-table:deep(.samplify-data-table table.dataTable.stripe tbody tr.sfs-invalid),
+.sfs-items-table:deep(.samplify-data-table table.dataTable.stripe tbody tr.sfs-invalid.odd),
+.sfs-items-table:deep(.samplify-data-table table.dataTable.display tbody tr.sfs-invalid.odd) {
   background: #fdd;
 }
 
-.sfs-items-table >>> .samplify-data-table table.dataTable.stripe tbody tr.sfs-invalid.even,
-.sfs-items-table >>> .samplify-data-table table.dataTable.display tbody tr.sfs-invalid.even {
+.sfs-items-table:deep(.samplify-data-table table.dataTable.stripe tbody tr.sfs-invalid.even),
+.sfs-items-table:deep(.samplify-data-table table.dataTable.display tbody tr.sfs-invalid.even) {
   background: #fcc;
 }
 
-.sfs-items-table >>> .samplify-data-table table.dataTable.stripe tbody tr.sfs-invalid:hover,
-.sfs-items-table >>> .samplify-data-table table.dataTable.display tbody tr.sfs-invalid:hover {
+.sfs-items-table:deep(.samplify-data-table table.dataTable.stripe tbody tr.sfs-invalid:hover),
+.sfs-items-table:deep(.samplify-data-table table.dataTable.display tbody tr.sfs-invalid:hover) {
   background: #abd6ff;
 }
 
-.sfs-items-table >>> .samplify-data-table table.dataTable.stripe tbody tr.sfs-invalid.selected,
-.sfs-items-table >>> .samplify-data-table table.dataTable.display tbody tr.sfs-invalid.selected {
+.sfs-items-table:deep(.samplify-data-table table.dataTable.stripe tbody tr.sfs-invalid.selected),
+.sfs-items-table:deep(.samplify-data-table table.dataTable.display tbody tr.sfs-invalid.selected) {
   background: #faa;
 }
 

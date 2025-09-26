@@ -1,17 +1,17 @@
 <template>
   <DefaultLayout height="full" overflow-y="hidden" width="full">
-    <ItemsView entityTypeName="user" />
+    <ItemsView entity-type-name="user" />
   </DefaultLayout>
 </template>
 
-<script>
+<script lang="ts">
+import {defineComponent} from 'vue'
 
-import ItemsView from '@/components/common/ItemsView'
-import DefaultLayout from '@/components/layout/DefaultLayout'
+import ItemsView from '@/components/common/ItemsView.vue'
+import DefaultLayout from '@/components/layout/DefaultLayout.vue'
 
-export default {
+export default defineComponent({
   name: 'HomeView',
   components: {DefaultLayout, ItemsView}
-}
-
+})
 </script>

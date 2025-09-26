@@ -195,7 +195,7 @@ function translateSimpleCodingHgvsNtVariant(
   const offsetInCodon = (parsedHgvs.position - 1) % 3
   const codonStartPosition = parsedHgvs.position - offsetInCodon
   const aaPosition = Math.floor((codonStartPosition - 1) / 3) + 1
-  const codon = codingSequence.substr(codonStartPosition - codingSequenceRange.start - 1, 3)
+  const codon = codingSequence.substr(codonStartPosition - codingSequenceRange.start, 3)
   if (codon.length != 3 || codon.includes('N')) {
     return null
   }

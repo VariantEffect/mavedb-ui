@@ -131,44 +131,44 @@ export default {
 }
 
 /* Override control bar padding applied in FlexDataTable. */
-.mavedb-table-view::v-deep .samplify-data-table .dataTables_wrapper {
+.mavedb-table-view:deep(.samplify-data-table .dataTables_wrapper) {
   padding-top: 0;
 }
 
 /* Override background applied in FlexDataTable. */
-.mavedb-table-view::v-deep .samplify-data-table .dataTables_wrapper {
+.mavedb-table-view:deep(.samplify-data-table .dataTables_wrapper) {
   background-color: #fff;
 }
 
-.mavedb-table-view::v-deep .samplify-data-table thead th {
+.mavedb-table-view:deep(.samplify-data-table thead th) {
   background-color: #dadff1;
 }
 
-.mavedb-table-view::v-deep .samplify-data-table td,
-.mavedb-table-view::v-deep .samplify-data-table th {
+.mavedb-table-view:deep(.samplify-data-table td),
+.mavedb-table-view:deep(.samplify-data-table th) {
   padding: 0.75rem;
   border: 1px solid #fff;
   font-size: 14px;
 }
 
-.mavedb-table-view::v-deep .samplify-data-table td:first-child {
+.mavedb-table-view:deep(.samplify-data-table td:first-child) {
   padding-left: 2em;
 }
 
-.mavedb-table-view::v-deep .samplify-data-table td:last-child {
+.mavedb-table-view:deep(.samplify-data-table td:last-child) {
   font-style: italic;
 }
 
-.mavedb-table-view::v-deep .samplify-data-table tr.samplify-data-table-group-row {
+.mavedb-table-view:deep(.samplify-data-table tr.samplify-data-table-group-row) {
   background-color: #eeeeee;
   font-weight: bold;
 }
 
-.mavedb-table-view::v-deep .samplify-data-table tr.samplify-data-table-group-row td:first-child {
+.mavedb-table-view:deep(.samplify-data-table tr.samplify-data-table-group-row td:first-child) {
   padding-left: 0.75rem;
 }
 
-.mavedb-table-view::v-deep .samplify-data-table tr.samplify-data-table-group-row td:last-child {
+.mavedb-table-view:deep(.samplify-data-table tr.samplify-data-table-group-row td:last-child) {
   font-style: normal;
 }
 </style>

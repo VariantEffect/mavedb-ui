@@ -21,7 +21,7 @@ export function routeToVariantSearchIfVariantIsSearchable(searchText: string | n
     } else {
       // Assume identifier is an HGNC gene symbol, parse description for fuzzy search
       // Example: BRCA1:c.123A>G or BRCA1:p.Arg123Gly
-      let gene = identifier
+      const gene = identifier
       let variantType = ''
       let variantPosition = ''
       let refAllele = ''

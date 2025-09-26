@@ -59,16 +59,14 @@ export default ({
   const draftBatchId = computed(() => configDraftBatchId.value)
 
   const itemType = computed(
-    () => configItemType.value
-        || (configItemTypeName.value && itemTypes[configItemTypeName.value])
-        || null
+    () => configItemType.value || (configItemTypeName.value && itemTypes[configItemTypeName.value]) || null
   )
 
-  const makeOptionsConcrete = function(options) {
+  const makeOptionsConcrete = function (options) {
     const filterQuery = _.get(options, 'filter.query')
     const referencePathsToExpand = _.get(options, 'referencePathsToExpand')
 
-    const concreteFilterQuery = computed(() => _.isFunction(filterQuery) ? filterQuery(itemType.value) : filterQuery)
+    const concreteFilterQuery = computed(() => (_.isFunction(filterQuery) ? filterQuery(itemType.value) : filterQuery))
     const concreteReferencePathsToExpand = computed(() => {
       return _.isFunction(referencePathsToExpand) ? referencePathsToExpand(itemType.value) : referencePathsToExpand
     })
@@ -88,13 +86,14 @@ export default ({
   )*/
 
   const stateNamespace = computed(
-    () => configStateNamespace.value
-        || (itemType.value && itemType.value.name && (
-          draftBatchId.value ?
-              `draftBatches/${draftBatchId.value}/${pluralize(itemType.value.name)}/${uuidv4()}`
-              : `${pluralize(itemType.value.name)}/${uuidv4()}`
-        ))
-        || null
+    () =>
+      configStateNamespace.value ||
+      (itemType.value &&
+        itemType.value.name &&
+        (draftBatchId.value
+          ? `draftBatches/${draftBatchId.value}/${pluralize(itemType.value.name)}/${uuidv4()}`
+          : `${pluralize(itemType.value.name)}/${uuidv4()}`)) ||
+      null
   )
 
   // TODO Should we support more complex requests, e.g. a POST request that returns a list of items? It might be
@@ -107,9 +106,9 @@ export default ({
     if (!itemType.value || !itemType.value.restCollectionName) {
       return null
     }
-    return draftBatchId.value ?
-        `${config.apiBaseUrl}/draft-batches/${draftBatchId.value}/${itemType.value.restCollectionName}/`
-        : `${config.apiBaseUrl}/${itemType.value.restCollectionName}/`
+    return draftBatchId.value
+      ? `${config.apiBaseUrl}/draft-batches/${draftBatchId.value}/${itemType.value.restCollectionName}/`
+      : `${config.apiBaseUrl}/${itemType.value.restCollectionName}/`
   })
 
   const httpOptions = computed(() => {
@@ -123,19 +122,27 @@ export default ({
         switchedStore = true
         itemsStoreReady.value = true
       } else {
-        const options = _.mergeWith({}, DEFAULT_OPTIONS, concreteOptions.value, {httpOptions}, (currentValue, sourceValue) => {
-          // Allow empty arrays to take precedence over defaults.
-          if (_.isArray(sourceValue) && sourceValue.length == 0 && (currentValue == null || _.isArray(currentValue))) {
-            return sourceValue
+        const options = _.mergeWith(
+          {},
+          DEFAULT_OPTIONS,
+          concreteOptions.value,
+          {httpOptions},
+          (currentValue, sourceValue) => {
+            // Allow empty arrays to take precedence over defaults.
+            if (
+              _.isArray(sourceValue) &&
+              sourceValue.length == 0 &&
+              (currentValue == null || _.isArray(currentValue))
+            ) {
+              return sourceValue
+            }
+            return undefined
           }
-          return undefined
-        })
+        )
         if (itemType?.value?.primaryKey) {
           options.primaryKey = itemType.value.primaryKey
         }
-        store.registerModule(stateNamespace.value,
-          makeItemsModule(restCollectionUrl.value, options)
-        )
+        store.registerModule(stateNamespace.value, makeItemsModule(restCollectionUrl.value, options))
         switchedStore = true
         itemsStoreReady.value = true
       }
@@ -170,9 +177,15 @@ export default ({
     draftBatchId,
     itemsStoreReady,
     stateNamespace,
-    detailItems: computed(() => itemsStoreReady.value ? _.get(store.state, `${stateNamespace.value}.detailItems`) : []),
-    editingDetailItems: computed(() => itemsStoreReady.value ? _.get(store.state, `${stateNamespace.value}.editingDetailItems`) : false),
-    invalidItems: computed(() => itemsStoreReady.value ? _.get(store.state, `${stateNamespace.value}.invalidItems`) : []),
+    detailItems: computed(() =>
+      itemsStoreReady.value ? _.get(store.state, `${stateNamespace.value}.detailItems`) : []
+    ),
+    editingDetailItems: computed(() =>
+      itemsStoreReady.value ? _.get(store.state, `${stateNamespace.value}.editingDetailItems`) : false
+    ),
+    invalidItems: computed(() =>
+      itemsStoreReady.value ? _.get(store.state, `${stateNamespace.value}.invalidItems`) : []
+    ),
     // items: computed(() => itemsStoreReady.value ? _.get(store.state, `${stateNamespace.value}.items`) : []),
     items: computed(() => {
       if (itemsStoreReady.value) {
@@ -182,26 +195,41 @@ export default ({
         return []
       }
     }),
-    itemsStatus: computed(() => itemsStoreReady.value ? _.get(store.state, `${stateNamespace.value}.itemsStatus`) : 'NotLoaded'),
-    selectedItems: computed(() => itemsStoreReady.value ? _.get(store.state, `${stateNamespace.value}.selectedItems`) : []),
+    itemsStatus: computed(() =>
+      itemsStoreReady.value ? _.get(store.state, `${stateNamespace.value}.itemsStatus`) : 'NotLoaded'
+    ),
+    selectedItems: computed(() =>
+      itemsStoreReady.value ? _.get(store.state, `${stateNamespace.value}.selectedItems`) : []
+    ),
 
     // Methods
     resetItems,
     ensureItemsStore,
-    addItem: (payload) => itemsStoreReady.value ? store.dispatch(`${stateNamespace.value}/addItem`, payload) : null,
-    deregisterListNavigator: (payload) => itemsStoreReady.value ? store.dispatch(`${stateNamespace.value}/deregisterListNavigator`, payload) : null,
-    ensureItemsLoaded: (payload) => itemsStoreReady.value ? store.dispatch(`${stateNamespace.value}/ensureItemsLoaded`, payload) : null,
-    invalidateItems: (payload) => itemsStoreReady.value ? store.dispatch(`${stateNamespace.value}/invalidateItems`, payload) : null,
-    loadItems: (payload) => itemsStoreReady.value ? store.dispatch(`${stateNamespace.value}/beginLoadingItems`, payload) : null, // TODO Change to loadItems
-    registerListNavigator: (payload) => itemsStoreReady.value ? store.dispatch(`${stateNamespace.value}/registerListNavigator`, payload) : null,
-    saveItem: (payload) => itemsStoreReady.value ? store.dispatch(`${stateNamespace.value}/saveItem`, payload) : null,
-    saveItems: (payload) => itemsStoreReady.value ? store.dispatch(`${stateNamespace.value}/saveItems`, payload) : null,
-    selectItems: (payload) => itemsStoreReady.value ? store.dispatch(`${stateNamespace.value}/selectItems`, payload) : null,
-    setBatchSaveAttempted: (payload) => itemsStoreReady.value ? store.dispatch(`${stateNamespace.value}/setBatchSaveAttempted`, payload) : null,
-    setInvalidItemIds: (payload) => itemsStoreReady.value ? store.dispatch(`${stateNamespace.value}/setInvalidItemIds`, payload) : null,
-    setItemIds: (payload) => itemsStoreReady.value ? store.dispatch(`${stateNamespace.value}/setItemIds`, payload) : null,
+    addItem: (payload) => (itemsStoreReady.value ? store.dispatch(`${stateNamespace.value}/addItem`, payload) : null),
+    deregisterListNavigator: (payload) =>
+      itemsStoreReady.value ? store.dispatch(`${stateNamespace.value}/deregisterListNavigator`, payload) : null,
+    ensureItemsLoaded: (payload) =>
+      itemsStoreReady.value ? store.dispatch(`${stateNamespace.value}/ensureItemsLoaded`, payload) : null,
+    invalidateItems: (payload) =>
+      itemsStoreReady.value ? store.dispatch(`${stateNamespace.value}/invalidateItems`, payload) : null,
+    loadItems: (payload) =>
+      itemsStoreReady.value ? store.dispatch(`${stateNamespace.value}/beginLoadingItems`, payload) : null, // TODO Change to loadItems
+    registerListNavigator: (payload) =>
+      itemsStoreReady.value ? store.dispatch(`${stateNamespace.value}/registerListNavigator`, payload) : null,
+    saveItem: (payload) => (itemsStoreReady.value ? store.dispatch(`${stateNamespace.value}/saveItem`, payload) : null),
+    saveItems: (payload) =>
+      itemsStoreReady.value ? store.dispatch(`${stateNamespace.value}/saveItems`, payload) : null,
+    selectItems: (payload) =>
+      itemsStoreReady.value ? store.dispatch(`${stateNamespace.value}/selectItems`, payload) : null,
+    setBatchSaveAttempted: (payload) =>
+      itemsStoreReady.value ? store.dispatch(`${stateNamespace.value}/setBatchSaveAttempted`, payload) : null,
+    setInvalidItemIds: (payload) =>
+      itemsStoreReady.value ? store.dispatch(`${stateNamespace.value}/setInvalidItemIds`, payload) : null,
+    setItemIds: (payload) =>
+      itemsStoreReady.value ? store.dispatch(`${stateNamespace.value}/setItemIds`, payload) : null,
     setQuery: setQuery,
-    setRequestBody: (payload) => itemsStoreReady.value ? store.dispatch(`${stateNamespace.value}/setRequestBody`, payload) : null
+    setRequestBody: (payload) =>
+      itemsStoreReady.value ? store.dispatch(`${stateNamespace.value}/setRequestBody`, payload) : null
     // setQuery: (payload) => itemsStoreReady.value ? store.dispatch(`${stateNamespace.value}/setQuery`, payload) : null
   }
 }

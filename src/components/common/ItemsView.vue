@@ -605,7 +605,7 @@ export default {
 }
 
 /* Match .p-button-sm (almost). */
-.sfs-detail-editor-view-choice >>> .p-button {
+.sfs-detail-editor-view-choice:deep(.p-button) {
   font-size: 0.875rem;
   padding: 0.499625rem 0.65625rem;
 }

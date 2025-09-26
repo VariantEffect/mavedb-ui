@@ -1297,23 +1297,23 @@ export default {
   display: inline-block
 }
 
-.sfs-property-sheet-form >>> .sfs-form-group {
+.sfs-property-sheet-form:deep(.sfs-form-group) {
 
 }
 
-.sfs-property-sheet-form::v-deep .sfs-form-item {
+.sfs-property-sheet-form:deep(.sfs-form-item) {
   float: left;
   margin: 10px 0 10px 16px;
 }
 
-.sfs-property-sheet-form >>> .sfs-form-item .p-calendar,
-.sfs-property-sheet-form >>> .sfs-form-item .p-dropdown,
-.sfs-property-sheet-form >>> .sfs-form-item .p-inputtext {
+.sfs-property-sheet-form:deep(.sfs-form-item .p-calendar),
+.sfs-property-sheet-form:deep(.sfs-form-item .p-dropdown),
+.sfs-property-sheet-form:deep(.sfs-form-item .p-inputtext) {
   width: 268px;
   /*width: 100%;*/
 }
 
-.sfs-property-sheet-form >>> .sfs-form-item .p-error {
+.sfs-property-sheet-form:deep(.sfs-form-item .p-error) {
   display: inline-block;
   max-width: 268px;
 }
@@ -1329,13 +1329,13 @@ export default {
   color: #c60;
 }
 
-.sfs-property-sheet-form >>> .sfs-form-item .p-warning {
+.sfs-property-sheet-form:deep(.sfs-form-item .p-warning) {
   display: inline-block;
   max-width: 268px;
   color: #c60
 }
 
-.sfs-property-sheet-form >>> .sfs-slow-down-warning {
+.sfs-property-sheet-form:deep(.sfs-slow-down-warning) {
   display: block;
   background-color: yellow;
   color: red;
@@ -1343,22 +1343,22 @@ export default {
   max-width: 268px;
 }
 
-.sfs-property-sheet-form >>> .sfs-form-item textarea.p-inputtext {
+.sfs-property-sheet-form:deep(.sfs-form-item textarea.p-inputtext) {
   width: 552px;
 }
 
-.sfs-property-sheet-form >>> .sfs-form-item .p-calendar .p-inputtext.sfs-dirty,
-.sfs-property-sheet-form >>> .sfs-form-item .p-dropdown.sfs-dirty,
-.sfs-property-sheet-form >>> .sfs-form-item input.p-inputtext.sfs-dirty {
+.sfs-property-sheet-form:deep(.sfs-form-item .p-calendar .p-inputtext.sfs-dirty),
+.sfs-property-sheet-form:deep(.sfs-form-item .p-dropdown.sfs-dirty),
+.sfs-property-sheet-form:deep(.sfs-form-item input.p-inputtext.sfs-dirty) {
   border-bottom-color: #fbc02d;
 }
 
-.sfs-property-sheet-form >>> .sfs-form-item .p-calendar .p-inputtext.p-invalid {
+.sfs-property-sheet-form:deep(.sfs-form-item .p-calendar .p-inputtext.p-invalid) {
   background-image: none;
   border-bottom-color: #b00020;
 }
 
-.sfs-property-sheet-form >>> .sfs-form-item .p-dropdown-label {
+.sfs-property-sheet-form:deep(.sfs-form-item .p-dropdown-label) {
 }
 
 .sfs-property-sheet-global-validation-errors {

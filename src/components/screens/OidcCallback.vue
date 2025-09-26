@@ -9,12 +9,12 @@ export default {
   name: 'OidcCallback',
   created() {
     continueAuthenticationFromRedirect()
-        .then((redirectPath) => {
-          this.$router.push(redirectPath)
-        })
-        .catch((err) => {
-          this.$router.push('/oidc-callback-error')
-        })
+      .then((redirectPath) => {
+        this.$router.push(redirectPath)
+      })
+      .catch(() => {
+        this.$router.push('/oidc-callback-error')
+      })
   }
 }
 </script>

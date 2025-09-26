@@ -859,6 +859,11 @@ export default function makeHeatmap(): Heatmap {
         svg.remove()
         svg = null
       }
+      if (_wrapper) {
+        yAxisSvg?.remove()
+        yAxisSvg = null
+        _wrapper = null
+      }
       if (hoverTooltip) {
         hoverTooltip.remove()
         hoverTooltip = null

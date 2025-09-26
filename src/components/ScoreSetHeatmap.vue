@@ -609,8 +609,47 @@ export default defineComponent({
         : null
     },
 
+    ////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+    // Heatmap coloring based only on range of scores and baseline score from investigator-provided ranges, if any
+    ////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 
-    colorScaleDomainIntervals: function () {
+    colorScaleDomain: function () {
+      const baselineScore = this.scoreSet.scoreRanges?.investigatorProvided?.baselineScore
+      
+      const scores = this.heatmapData.map((v) => v.meanScore).filter((score) => score != null)
+      const minValue = _.min<number>(scores)
+      const maxValue = _.max<number>(scores)
+
+      if (minValue == null || maxValue == null) {
+        return null
+      }
+
+      if (baselineScore != null) {
+        let maxDistanceFromBaseline = Math.max(Math.abs(minValue - baselineScore), Math.abs(maxValue - baselineScore))
+        if (maxDistanceFromBaseline == 0.0) {
+          // If min and max both equal baseline, set an arbitrary range; it will not matter.
+          maxDistanceFromBaseline = 1.0
+        }
+        return [
+          {value: baselineScore - maxDistanceFromBaseline, colorKey: 'min'},
+          {value: baselineScore, colorKey: 'baseline'},
+          {value: baselineScore + maxDistanceFromBaseline, colorKey: 'max'}
+        ]
+      } else {
+        const meanValue = _.mean([minValue, maxValue])
+        return [
+          {value: minValue, colorKey: 'min'},
+          {value: meanValue, colorKey: 'baseline'},
+          {value: maxValue, colorKey: 'max'}
+        ]
+      }
+    },
+
+    ////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+    // Heatmap coloring based on functional class score ranges (unused)
+    ////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+
+    functionalClassBasedColorScaleDomainIntervals: function () {
       // Start with all the ranges classified as normal or abnormal. We ignore other ranges, because they either lie
       // outside the normal/abnormal ranges, so that they should be treated as neutral intervals, or they overlap
       // with them, so that the normal or abnormal classification takes precedence.
@@ -720,8 +759,9 @@ export default defineComponent({
       }
       return mergedIntervals
     },
-    colorScaleDomain: function () {
-      const intervals = this.colorScaleDomainIntervals
+
+    functionalClassBasedColorScaleDomain: function () {
+      const intervals = this.functionalClassBasedColorScaleDomainIntervals
 
       // At least two intervals must be defined in order to set up the color scale this way. If there are no intervals
       // or just a single interval from -infinity to infinity, we cannot give the colors any orientation. We also
@@ -731,7 +771,7 @@ export default defineComponent({
         return null
       }
 
-      const scores = this.heatmapData.map((v) => v.meanScore)
+      const scores = this.heatmapData.map((v) => v.meanScore).filter((score) => score != null)
       const minValue = _.min<number>(scores)
       const maxValue = _.max<number>(scores)
 
@@ -1020,7 +1060,7 @@ export default defineComponent({
 
     rankVariantClassScores(variantClassData: VariantClassHeatmapDatum[]) {
       _.mapValues(_.groupBy(variantClassData, 'x'), (variantClassesInColumn) => {
-        const variantsSortedByScore = _.sortBy(variantClassesInColumn, 'meanScore')
+        const variantsSortedByScore = _.reverse(_.sortBy(variantClassesInColumn, 'meanScore'))
         variantClassesInColumn.forEach((v) => (v.scoreRank = variantsSortedByScore.indexOf(v)))
       })
     },
@@ -1132,6 +1172,8 @@ export default defineComponent({
     },
 
     drawHeatmap: function () {
+      // See https://cran.r-project.org/web/packages/khroma/vignettes/tol.html#prgn for the palette.
+
       this.heatmap = makeHeatmap()
         .margins({top: 0, bottom: 25, left: 20, right: 20})
         .legendTitle('Functional Score')
@@ -1143,6 +1185,9 @@ export default defineComponent({
         .accessorField(this.accession)
         .tooltipHtml(this.tooltipHtmlGetter)
         .tooltipTickLabelHtml(this.sequenceType == 'protein' ? this.tooltipTickLabelHtmlGetter : null)
+        .pivotColor('#f7f7f7')
+        .lowerBoundColor('#762a83')
+        .upperBoundColor('#1b7837')
         .datumSelected(this.variantSelected)
 
       if (!this.heatmap) {
@@ -1168,7 +1213,8 @@ export default defineComponent({
       this.heatmap
         .data(this.heatmapData)
         .valueField((v: VariantClassHeatmapDatum) => v.meanScore)
-        .colorClassifier((v: VariantClassHeatmapDatum) => (v.wt ? d3.color('#ddbb00') : v.meanScore))
+        // WT color was previously #ddbb00.
+        .colorClassifier((v: VariantClassHeatmapDatum) => (v.wt ? d3.color('#ffee99') : v.meanScore))
         .refresh()
 
       if (this.selectedVariant) {
@@ -1192,6 +1238,9 @@ export default defineComponent({
         .drawLegend(false)
         .alignViaLegend(true)
         .excludeDatum((v: VariantClassHeatmapDatum) => (v.wt ? true : false))
+        .pivotColor('#f7f7f7')
+        .lowerBoundColor('#762a83')
+        .upperBoundColor('#1b7837')
 
       if (!this.stackedHeatmap) {
         return
@@ -1203,7 +1252,8 @@ export default defineComponent({
       this.stackedHeatmap
         .data(this.heatmapData)
         .valueField((v: VariantClassHeatmapDatum) => v.meanScore)
-        .colorClassifier((v: VariantClassHeatmapDatum) => (v.wt ? d3.color('#ddbb00') : v.meanScore))
+        // WT color was previously #ddbb00.
+        .colorClassifier((v: VariantClassHeatmapDatum) => (v.wt ? d3.color('#ffee99') : v.meanScore))
         .refresh()
 
       if (this.selectedVariant) {

@@ -442,6 +442,10 @@ export default defineComponent({
       }
     },
 
+    parseSimpleVariant: function () {
+      return this.sequenceType == 'dna' ? parseSimpleNtVariant : parseSimpleProVariant
+    },
+ 
     ////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
     // Variants to display
     ////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
@@ -595,21 +599,16 @@ export default defineComponent({
     //   // return sparsity > SPARSITY_THRESHOLD // A boolean value
     // },
 
-    parseSimpleVariant: function () {
-      return this.sequenceType == 'dna' ? parseSimpleNtVariant : parseSimpleProVariant
-    },
+    ////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+    // Selection
+    ////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+
     selectedVariant: function () {
       return this.externalSelection
         ? this.heatmapData.filter((variant) => variant.instance?.accession == this.externalSelection.accession)[0]
         : null
     },
-    wtScore: function () {
-      if (!this.scoreSet?.scoreRanges) {
-        return null
-      }
 
-      return this.scoreSet.scoreRanges.wtScore
-    },
 
     colorScaleDomainIntervals: function () {
       // Start with all the ranges classified as normal or abnormal. We ignore other ranges, because they either lie

@@ -4,23 +4,15 @@
     :is-first-login-prompt="false"
   />
   <DefaultLayout>
-    <div class="mave-score-set-editor">
+    <div v-if="itemId && itemStatus == 'Loaded'" class="mave-score-set-editor">
       <div class="grid">
         <div class="col-12">
-          <div v-if="itemStatus != 'NotLoaded'" class="mave-screen-title-bar">
+          <div class="mave-screen-title-bar">
             <div class="mave-screen-title">Edit score set {{ item.urn }}</div>
-            <div v-if="item" class="mavedb-screen-title-controls">
-              <Button @click="saveEditContent">Save changes</Button>
-              <Button class="p-button-help" @click="resetForm">Clear</Button>
-              <Button class="p-button-warning" @click="viewItem">Cancel</Button>
-            </div>
-          </div>
-          <div v-else class="mave-screen-title-bar">
-            <div class="mave-screen-title">Create a new score set</div>
             <div class="mavedb-screen-title-controls">
-              <Button @click="validateAndSave">Save</Button>
-              <Button class="p-button-help" @click="resetForm">Clear</Button>
-              <Button class="p-button-warning" @click="backDashboard">Cancel</Button>
+              <Button @click="saveEditContent">Save changes</Button>
+              <Button class="p-button-help" @click="resetForm">Reset</Button>
+              <Button class="p-button-warning" @click="viewItem">Cancel</Button>
             </div>
           </div>
         </div>
@@ -28,7 +20,7 @@
           <Card>
             <template #title>Parent experiment and context</template>
             <template #content>
-              <div v-if="itemStatus != 'NotLoaded' && item.experiment">
+              <div v-if="item.experiment">
                 Experiment:
                 <router-link :to="{name: 'experiment', params: {urn: item.experiment.urn}}">{{
                   item.experiment.title
@@ -52,56 +44,17 @@
                   }}</span>
                 </div>
               </div>
-              <div v-if="itemStatus != 'NotLoaded' && supersedesScoreSet">
+              <div v-if="supersedesScoreSet">
                 Supersedes:
                 <router-link :to="{name: 'scoreSet', params: {urn: supersedesScoreSet.urn}}">{{
                   supersedesScoreSet.title
                 }}</router-link>
               </div>
-              <div v-if="itemStatus == 'NotLoaded'" class="field">
-                <span class="p-float-label">
-                  <AutoComplete
-                    :id="scopedId('input-supersededScoreSet')"
-                    ref="supersededScoreSetInput"
-                    v-model="supersededScoreSet"
-                    field="title"
-                    :force-selection="true"
-                    :suggestions="supersededScoreSetSuggestionsList"
-                    @complete="searchSupersededScoreSets"
-                  >
-                    <template #item="slotProps"> {{ slotProps.item.urn }}: {{ slotProps.item.title }} </template>
-                  </AutoComplete>
-                  <label :for="scopedId('input-supersededScoreSet')">Supersedes</label>
-                </span>
-                <span v-if="validationErrors.supersededScoreSetUrn" class="mave-field-error">{{
-                  validationErrors.supersededScoreSetUrn
-                }}</span>
-              </div>
-              <div v-if="itemStatus != 'NotLoaded' && item?.metaAnalyzesScoreSetUrns?.length > 0">
+              <div v-if="item?.metaAnalyzesScoreSetUrns?.length > 0">
                 Meta-analysis for:<br />
                 <div v-for="metaAnalyzesScoreSetUrn of item.metaAnalyzesScoreSetUrns" :key="metaAnalyzesScoreSetUrn">
                   <EntityLink entity-type="scoreSet" :urn="metaAnalyzesScoreSetUrn"></EntityLink>
                 </div>
-              </div>
-              <div v-if="itemStatus == 'NotLoaded'" class="field">
-                <span class="p-float-label">
-                  <AutoComplete
-                    :id="scopedId('input-metaAnalyzesScoreSets')"
-                    ref="metaAnalyzesScoreSetsInput"
-                    v-model="metaAnalyzesScoreSets"
-                    field="title"
-                    :force-selection="true"
-                    :multiple="true"
-                    :suggestions="metaAnalyzesScoreSetSuggestionsList"
-                    @complete="searchMetaAnalyzesScoreSets"
-                  >
-                    <template #item="slotProps"> {{ slotProps.item.urn }}: {{ slotProps.item.title }} </template>
-                  </AutoComplete>
-                  <label :for="scopedId('input-metaAnalyzesScoreSets')">Meta-analysis for</label>
-                </span>
-                <span v-if="validationErrors.metaAnalyzesScoreSetUrns" class="mave-field-error">{{
-                  validationErrors.metaAnalyzesScoreSetUrns
-                }}</span>
               </div>
             </template>
           </Card>
@@ -187,7 +140,7 @@
                   validationErrors.contributors
                 }}</span>
               </div>
-              <div v-if="itemStatus != 'NotLoaded'">
+              <div>
                 <div class="field">
                   <span class="p-float-label">
                     <Dropdown
@@ -339,7 +292,7 @@
               </div>
             </template>
           </Card>
-          <div v-if="itemStatus == 'NotLoaded' || item.private">
+          <div v-if="item.private">
             <div v-if="editedScoreRanges.investigatorProvided">
               <Card>
                 <template #title
@@ -758,7 +711,7 @@
         </div>
 
         <div class="col-12 md:col-6">
-          <div v-if="itemStatus == 'NotLoaded' || item.private">
+          <div v-if="item.private">
             <Card>
               <template #title>Targets</template>
               <template #content>
@@ -2197,7 +2150,7 @@ export default {
         })
         this.extraMetadata = this.item.extraMetadata
 
-        if (this.editedScoreRanges?.investigatorProvided.oddsPathSource) {
+        if (this.editedScoreRanges?.investigatorProvided?.oddsPathSource) {
           this.editedScoreRanges.investigatorProvided.oddsPathSource = this.publicationIdentifiers.filter(
             (publication) => {
               return this.editedScoreRanges.investigatorProvided.oddsPathSource.some((source) => {
@@ -2206,7 +2159,7 @@ export default {
             }
           )
         }
-        if (this.editedScoreRanges?.investigatorProvided.source) {
+        if (this.editedScoreRanges?.investigatorProvided?.source) {
           this.editedScoreRanges.investigatorProvided.source = this.publicationIdentifiers.filter((publication) => {
             return this.editedScoreRanges.investigatorProvided.source.some((source) => {
               return publication.identifier === source.identifier && publication.dbName === source.dbName
@@ -2217,29 +2170,6 @@ export default {
         if (this.targetGenes[0]?.targetAccession) {
           this.isBaseEditor = this.targetGenes[0].targetAccession.isBaseEditor
         }
-      } else {
-        this.experiment = null
-        this.licenseId = this.defaultLicenseId
-        this.metaAnalyzesScoreSets = []
-        this.supersededScoreSet = null
-        this.title = null
-        this.shortDescription = null
-        this.abstractText = null
-        this.methodText = null
-        this.contributors = []
-        this.doiIdentifiers = []
-        this.primaryPublicationIdentifiers = []
-        this.secondaryPublicationIdentifiers = []
-        this.publicationIdentifiers = []
-        this.dataUsagePolicy = null
-        this.taxonomy = null
-        this.extraMetadata = {}
-        this.editedScoreRanges = {
-          investigatorProvided: null
-        }
-        this.editedScoreRangeBoundaryHelper = []
-        this.resetTarget()
-        this.targetGenes = []
       }
     },
 

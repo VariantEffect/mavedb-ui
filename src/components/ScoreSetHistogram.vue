@@ -129,6 +129,7 @@ import makeHistogram, {
 } from '@/lib/histogram'
 import {prepareRangesForHistogram, ScoreRanges, ScoreSetRanges} from '@/lib/ranges'
 import {parseSimpleProVariant, variantNotNullOrNA} from '@/lib/mave-hgvs'
+import {Variant} from '@/lib/variants'
 
 function naToUndefined(x: string | null | undefined) {
   if (variantNotNullOrNA(x)) {
@@ -142,24 +143,6 @@ interface Margins {
   right: number
   bottom: number
   left: number
-}
-
-interface Variant {
-  accession: string
-  score?: number
-  control?: ClinicalControlVariant
-  hgvs_nt?: string
-  hgvs_pro?: string
-  hgvs_splice?: string
-  post_mapped_hgvs_c?: string
-  post_mapped_hgvs_p?: string
-  hgvs_pro_inferred?: string
-  mavedb_label?: string
-}
-
-interface ClinicalControlVariant {
-  [DEFAULT_CLNSIG_FIELD]: string
-  [DEFAULT_CLNREVSTAT_FIELD]: string
 }
 
 export default defineComponent({
@@ -474,7 +457,7 @@ export default defineComponent({
           // Line 1: Variant identifier
           const mappedDnaHgvs = naToUndefined(variant.post_mapped_hgvs_c)
           const mappedProteinHgvs =
-            naToUndefined(variant.post_mapped_hgvs_p) ?? naToUndefined(variant.hgvs_pro_inferred)
+            naToUndefined(variant.post_mapped_hgvs_p) ?? naToUndefined(variant.translated_hgvs_p)
           const unmappedDnaHgvs = naToUndefined(variant.hgvs_nt)
           const unmappedProteinHgvs = naToUndefined(variant.hgvs_pro)
           const unmappedSpliceHgvs = naToUndefined(variant.hgvs_splice)
@@ -728,8 +711,8 @@ export default defineComponent({
       if (variant.post_mapped_hgvs_p && variant.post_mapped_hgvs_p != 'NA') {
         return variant.post_mapped_hgvs_p
       }
-      if (variant.hgvs_pro_inferred && variant.hgvs_pro_inferred != 'NA') {
-        return variant.hgvs_pro_inferred
+      if (variant.translated_hgvs_p && variant.translated_hgvs_p != 'NA') {
+        return variant.translated_hgvs_p
       }
       if (variant.hgvs_pro && variant.hgvs_pro != 'NA') {
         return variant.hgvs_pro

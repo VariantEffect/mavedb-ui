@@ -334,9 +334,15 @@ export default function makeHeatmap(): Heatmap {
   const buildColorScale = function () {
     if (colorScaleControlPoints) {
       const colors = {
+        // Color keys for coloring based on functional class ranges
         neutral: pivotColor,
         normal: lowerBoundColor,
-        abnormal: upperBoundColor
+        abnormal: upperBoundColor,
+
+        // Color keys for coloring based only on baseline or mean value
+        baseline: pivotColor,
+        min: lowerBoundColor,
+        max: upperBoundColor
       }
       colorScale = d3
         .scaleLinear()

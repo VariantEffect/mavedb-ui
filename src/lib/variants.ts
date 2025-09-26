@@ -430,9 +430,6 @@ function translateSimpleCodingHgvsCVariant(
  * Notes:
  * - The function currently infers start-loss strictly when position == 1 and original is 'Met'.
  *
- * Performance considerations:
- * - A TODO in the source notes possible redundant parsing if the same HGVS string was already parsed earlier
- *   (e.g., in prepareSimpleVariantInstances). Caching parsed results or passing a pre-parsed object could reduce overhead.
  *
  * Parameter requirements:
  * - variant should be an object containing at least one of the HGVS protein fields listed above.
@@ -442,14 +439,7 @@ function translateSimpleCodingHgvsCVariant(
  * @returns true if the variant is classified as start-loss or stop-loss; false (or undefined) otherwise.
  */
 export function isStartOrStopLoss(variant: any) {
-  const hgvsP = [variant.post_mapped_hgvs_p, variant.hgvs_pro_inferred, variant.hgvs_pro].find((hgvs) =>
-    variantNotNullOrNA(hgvs)
-  )
-  if (!hgvsP) {
-    return false
-  }
-  // TODO We may be reparsing the same variant that was just parsed in prepareSimpleVariantInstances.
-  const parsedVariant = parseSimpleProVariant(hgvsP)
+  const parsedVariant = variant.parsedPostMappedHgvsP
   if (!parsedVariant) {
     return false
   }
@@ -469,25 +459,8 @@ export function isStartOrStopLoss(variant: any) {
   return false
 }
 
-function getHgvsProFromVariant(variant: Variant) {
-  if (variant.post_mapped_hgvs_p && variant.post_mapped_hgvs_p != 'NA') {
-    return variant.post_mapped_hgvs_p
-  }
-  if (variant.hgvs_pro_inferred && variant.hgvs_pro_inferred != 'NA') {
-    return variant.hgvs_pro_inferred
-  }
-  if (variant.hgvs_pro && variant.hgvs_pro != 'NA') {
-    return variant.hgvs_pro
-  }
-  return null
-}
-
 export function variantIsMissense(variant: Variant) {
-  const hgvsPro = getHgvsProFromVariant(variant)
-  if (!hgvsPro) {
-    return false
-  }
-  const parsedVariant = parseSimpleProVariant(hgvsPro)
+  const parsedVariant = variant.parsedPostMappedHgvsP
   if (!parsedVariant) {
     return false
   }
@@ -500,11 +473,7 @@ export function variantIsMissense(variant: Variant) {
 }
 
 export function variantIsSynonymous(variant: Variant) {
-  const hgvsPro = getHgvsProFromVariant(variant)
-  if (!hgvsPro) {
-    return false
-  }
-  const parsedVariant = parseSimpleProVariant(hgvsPro)
+  const parsedVariant = variant.parsedPostMappedHgvsP
   if (!parsedVariant) {
     return false
   }
@@ -515,11 +484,7 @@ export function variantIsSynonymous(variant: Variant) {
 }
 
 export function variantIsNonsense(variant: Variant) {
-  const hgvsPro = getHgvsProFromVariant(variant)
-  if (!hgvsPro) {
-    return false
-  }
-  const parsedVariant = parseSimpleProVariant(hgvsPro)
+  const parsedVariant = variant.parsedPostMappedHgvsP
   if (!parsedVariant) {
     return false
   }

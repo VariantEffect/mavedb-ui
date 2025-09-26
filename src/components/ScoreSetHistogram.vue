@@ -332,7 +332,7 @@ export default defineComponent({
             {
               classifier: (d: HistogramDatum) => this.variantIsOther(d),
               options: {
-                color: '#999999',
+                color: '#709090',
                 title: 'Other'
               }
             }
@@ -443,7 +443,7 @@ export default defineComponent({
             series.push({
               classifier: (d: HistogramDatum) => this.variantIsOther(d),
               options: {
-                color: '#999999',
+                color: '#709090',
                 title: 'Other'
               }
             })

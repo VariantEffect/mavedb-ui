@@ -1802,10 +1802,39 @@
                 </div>
                 <div class="mavedb-wizard-row">
                   <div class="mavedb-wizard-help">
+                    <label :for="scopedId('input-scoresColumnMetadataFile')">Load a scores column metadata file</label>
+                    <div class="mavedb-help-small">
+                      This file is optional, but recommended.
+                    </div>
+                  </div>
+                  <div class="mavedb-wizard-content">
+                    <span class="p-float-label">
+                      <FileUpload
+                        :id="scopedId('input-scoresColumnMetadataFile')"
+                        ref="scoresColumnMetadataFileUpload"
+                        accept="application/json"
+                        :auto="false"
+                        choose-label="Scores column metadata file"
+                        :class="inputClasses.countsFile || ''"
+                        :custom-upload="true"
+                        :disabled="!($refs.scoresFileUpload?.files?.length == 1)"
+                        :file-limit="1"
+                        :show-cancel-button="false"
+                        :show-upload-button="false"
+                      >
+                        <template #empty>
+                          <p>Drop a file here.</p>
+                        </template>
+                      </FileUpload>
+                    </span>
+                    <span v-if="validationErrors.countsFile" class="mave-field-error">{{ validationErrors.scoresColumnMetadataFile}}</span>
+                  </div>
+                </div>
+                <div class="mavedb-wizard-row">
+                  <div class="mavedb-wizard-help">
                     <label :id="scopedId('input-countsFile')">Load a counts file</label>
                     <div class="mavedb-help-small">
-                      This file is optional, but recommended. There are no required columns for your count data, but you
-                      should describe the meaning of any columns in your methods section.
+                      This file is optional, but recommended. There are no required columns for your count data, but you should describe the meaning of any columns by uploading a column metadata file and providing any additional information in your methods section.
                     </div>
                   </div>
                   <div class="mavedb-wizard-content">
@@ -1831,6 +1860,36 @@
                       validationErrors.countsFile
                     }}</span>
                   </div>
+                </div>
+              </div>
+              <div class="mavedb-wizard-row">
+                <div class="mavedb-wizard-help">
+                  <label :for="scopedId('input-countsColumnMetadataFile')">Load a counts column metadata file</label>
+                  <div class="mavedb-help-small">
+                    This file is optional, but recommended.
+                  </div>
+                </div>
+                <div class="mavedb-wizard-content">
+                  <span class="p-float-label">
+                    <FileUpload
+                      :id="scopedId('input-countsColumnMetadataFile')"
+                      ref="countsColumnMetadataFileUpload"
+                      accept="application/json"
+                      :auto="false"
+                      choose-label="Counts column metadata file"
+                      :class="inputClasses.countsFile || ''"
+                      :custom-upload="true"
+                      :disabled="!($refs.countsFileUpload?.files?.length == 1)"
+                      :file-limit="1"
+                      :show-cancel-button="false"
+                      :show-upload-button="false"
+                    >
+                      <template #empty>
+                        <p>Drop a file here.</p>
+                      </template>
+                    </FileUpload>
+                  </span>
+                  <span v-if="validationErrors.countsFile" class="mave-field-error">{{ validationErrors.countsColumnMetadataFile}}</span>
                 </div>
               </div>
               <div class="mavedb-wizard-step-controls-row">
@@ -3244,6 +3303,12 @@ export default {
         formData.append('scores_file', this.$refs.scoresFileUpload.files[0])
         if (this.$refs.countsFileUpload.files.length == 1) {
           formData.append('counts_file', this.$refs.countsFileUpload.files[0])
+        }
+        if (this.$refs.scoresColumnMetadataFileUpload.files.length == 1) {
+          formData.append('scores_column_metadata_file', this.$refs.scoresColumnMetadataFileUpload.files[0])
+        }
+        if (this.$refs.countsColumnMetadataFileUpload.files.length == 1) {
+          formData.append('counts_column_metadata_file', this.$refs.countsColumnMetadataFileUpload.files[0])
         }
         this.progressVisible = true
         let response

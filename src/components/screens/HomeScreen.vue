@@ -82,7 +82,6 @@
                 <td>KCNH2</td>
                 <td>
                   <router-link :to="{name: 'scoreSet', params: {urn: 'urn:mavedb:00001216-a-1'}}">KCNH2 MAVE Trafficking Scores</router-link><br />
-                  <router-link :to="{name: 'scoreSet', params: {urn: 'urn:mavedb:00001224-a-1'}}">Scores from arrayed screen of BRCA2 homology directed repair function in VC-8 cells</router-link><br />
                   <router-link :to="{name: 'scoreSet', params: {urn: 'urn:mavedb:00001231-a-1'}}">Scores from cell surface expression deep mutational scan of KCNH2 in HEK293T cells</router-link>
                 </td>
               </tr>

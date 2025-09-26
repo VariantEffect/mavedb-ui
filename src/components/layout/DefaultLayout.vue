@@ -10,9 +10,10 @@
     <div :class="wrapperClasses">
       <div :class="mainClasses">
         <slot />
-        <Footer />
+        <Footer v-if="footer == 'flow'" />
       </div>
     </div>
+    <Footer v-if="footer == 'pinned'" class="mavedb-footer-pinned" />
   </div>
 </template>
 
@@ -31,6 +32,10 @@ export default defineComponent({
   components: {Footer, Toolbar, EmailPrompt},
 
   props: {
+    footer: {
+      type: String as PropType<'flow' | 'pinned'>,
+      default: 'flow'
+    },
     height: {
       type: String as PropType<'default' | 'full'>,
       default: 'full'
@@ -59,6 +64,7 @@ export default defineComponent({
       switch (this.height) {
         case 'full':
           classNames.push('mavedb-main-full-height')
+          break
       }
       return classNames
     },
@@ -132,6 +138,7 @@ export default defineComponent({
   bottom: 0;
   left: 0;
   right: 0;
+  height: 100%;
 }
 
 .mavedb-overflow-y-hidden {
@@ -140,6 +147,10 @@ export default defineComponent({
 
 .mavedb-dataset-footer {
   margin-top: auto;
+}
+
+.mavedb-footer-pinned {
+
 }
 </style>
 

@@ -68,7 +68,7 @@
             <div v-if="variantScores?.score" class="mavedb-assay-facts-row">
               <div class="mavedb-assay-facts-label">Functional score</div>
               <div class="mavedb-assay-facts-value">
-                {{ variantScores?.score?.toPrecision(4) }}
+                {{ variantScores?.score && variantScores?.score != 'NA' ? variantScores.score.toPrecision(4) : 'N/A' }}
               </div>
             </div>
             <div v-if="variantScoreRange?.oddsPath" class="mavedb-assay-facts-row">

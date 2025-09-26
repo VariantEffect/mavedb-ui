@@ -68,7 +68,7 @@
           >
             <Checkbox
               v-model="customSelectedControlVariantTypeFilters"
-              :disabled="!refreshedClinicalControls || (typeOption.name === 'Start/Stop Loss' && clinicalModeActive)"
+              :disabled="!refreshedClinicalControls"
               :name="scopedId('variant-type-inputs')"
               :value="typeOption.name"
             />
@@ -107,7 +107,7 @@
           >
             <Checkbox
               v-model="customSelectedVariantTypeFilters"
-              :disabled="!refreshedClinicalControls || (typeOption.name === 'Start/Stop Loss' && clinicalModeActive)"
+              :disabled="!refreshedClinicalControls"
               :name="scopedId('variant-type-inputs')"
               :value="typeOption.name"
             />
@@ -223,7 +223,7 @@ export default defineComponent({
       type: Array as PropType<Variant[]>,
       required: true
     },
-    clinicalModeActive: {
+    hideStartAndStopLossByDefault: {
       type: Boolean,
       default: false
     }
@@ -260,7 +260,9 @@ export default defineComponent({
       customMinStarRating: DEFAULT_MIN_STAR_RATING,
       customSelectedClinicalSignificanceClassifications: DEFAULT_CLINICAL_SIGNIFICANCE_CLASSIFICATIONS,
       customSelectedVariantTypeFilters: [] as string[],
-      customSelectedControlVariantTypeFilters: DEFAULT_VARIANT_EFFECT_TYPES,
+      customSelectedControlVariantTypeFilters: DEFAULT_VARIANT_EFFECT_TYPES.concat(
+        this.hideStartAndStopLossByDefault ? [] : ['Start/Stop Loss']
+      ),
       histogram: null as Histogram | null
     }
   },
@@ -321,7 +323,7 @@ export default defineComponent({
                 title: 'Nonsense'
               }
             },
-            ...(this.clinicalModeActive ? [] : [{
+            ...(this.hideStartAndStopLossByDefault ? [] : [{
               classifier: (d: HistogramDatum) => isStartOrStopLoss(d),
               options: {
               color: '#6d4ea3',
@@ -756,7 +758,7 @@ export default defineComponent({
         this.renderOrRefreshHistogram()
       }
     },
-    clinicalModeActive: {
+    hideStartAndStopLossByDefault: {
       handler: function () {
         this.renderOrRefreshHistogram()
       }

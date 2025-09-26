@@ -1,9 +1,9 @@
 import _ from 'lodash'
 
-import {parseSimpleNtVariant, parseSimpleProVariant, SimpleDnaVariation, SimpleProteinVariation} from './mave-hgvs'
+import { parseSimpleNtVariant, parseSimpleProVariant, SimpleDnaVariation, SimpleProteinVariation, variantNotNullOrNA } from './mave-hgvs'
 import geneticCodes from './genetic-codes'
-import {AMINO_ACIDS_WITH_TER, singleLetterAminoAcidOrHgvsCode} from './amino-acids'
-import {DEFAULT_CLNREVSTAT_FIELD, DEFAULT_CLNSIG_FIELD} from './clinical-controls'
+import { AMINO_ACIDS, AMINO_ACIDS_WITH_TER, singleLetterAminoAcidOrHgvsCode } from './amino-acids'
+import { DEFAULT_CLNREVSTAT_FIELD, DEFAULT_CLNSIG_FIELD } from './clinical-controls'
 
 export type HgvsReferenceSequenceType = 'c' | 'p' // | 'n'
 
@@ -41,7 +41,7 @@ export interface Variant extends RawVariant, VariantPropertiesAddedByPreparingCo
 }
 
 export const HGVS_REFERENCE_SEQUENCE_TYPES: {
-  [type: HgvsReferenceSequenceType]: {parsedPostMappedHgvsField: keyof VariantPropertiesAddedByPreparingCodingVariants}
+  [type: HgvsReferenceSequenceType]: { parsedPostMappedHgvsField: keyof VariantPropertiesAddedByPreparingCodingVariants }
 } = {
   c: {
     parsedPostMappedHgvsField: 'parsedPostMappedHgvsC'
@@ -55,6 +55,41 @@ export interface ParsedPostMappedVariantProperties {
   [type: string]: keyof VariantPropertiesAddedByPreparingCodingVariants
 }
 
+export const VARIANT_EFFECT_TYPE_OPTIONS = [
+  {
+    name: 'Synonymous',
+    description: 'Show all synonymous variants',
+    shortDescription: 'Synonymous variants'
+  },
+  {
+    name: 'Missense',
+    description: 'Show all missense variants',
+    shortDescription: 'Missense variants'
+  },
+  {
+    name: 'Nonsense',
+    description: 'Show all nonsense variants',
+    shortDescription: 'Nonsense variants'
+  },
+  {
+    name: 'Start/Stop Loss',
+    description: 'Show all start/stop loss variants',
+    shortDescription: 'Start/Stop Loss variants'
+  },
+  {
+    name: 'Other',
+    description: 'Show all other variant types',
+    shortDescription: 'Others'
+  }
+]
+
+export const DEFAULT_VARIANT_EFFECT_TYPES = [
+  'Missense',
+  'Nonsense',
+  'Synonymous',
+  'Other',
+]
+
 export const PARSED_POST_MAPPED_VARIANT_PROPERTIES: ParsedPostMappedVariantProperties = {
   c: 'parsedPostMappedHgvsC',
   g: 'parsedPostMappedHgvsC',
@@ -65,6 +100,7 @@ function getParsedPostMappedHgvs(variant: Variant, type: HgvsReferenceSequenceTy
   const field = PARSED_POST_MAPPED_VARIANT_PROPERTIES[type]
   return field ? variant[field] : undefined
 }
+
 
 /**
  * Add parsed post-mapped HGVS c. and p. strings to variants wherever possible.
@@ -242,7 +278,7 @@ export function inferReferenceSequenceFromVariants(variants: Variant[], referenc
     return {
       referenceSequence: '',
       referenceSequenceResidueType: referenceType == 'p' ? 'aa' : 'nt',
-      referenceSequenceRange: {start: 0, length: 0}
+      referenceSequenceRange: { start: 0, length: 0 }
     }
   }
   const referenceSequenceRange = getReferenceRange(variants, referenceType)
@@ -306,7 +342,7 @@ export function inferReferenceSequenceFromVariants(variants: Variant[], referenc
  * @param variants The array of variants to translate.
  */
 export function translateSimpleCodingVariants(variants: Variant[]) {
-  const {referenceSequence: codingSequence, referenceSequenceRange: codingSequenceRange} =
+  const { referenceSequence: codingSequence, referenceSequenceRange: codingSequenceRange } =
     inferReferenceSequenceFromVariants(variants, 'c')
   if (codingSequence.length > 0) {
     for (const v of variants) {
@@ -372,4 +408,95 @@ function translateSimpleCodingHgvsCVariant(
     AMINO_ACIDS_WITH_TER.find((aa) => aa.codes.single == variantAaResidue)?.codes?.triple?.toLowerCase()
   )
   return `p.${originalAaTriple}${aaPosition}${variantAaTriple}`
+}
+
+
+
+/**
+ * Determines whether a given variant represents either a start-loss (loss of the initiator methionine)
+ * or a stop-loss (loss of a terminal stop/termination signal) event based on its protein-level HGVS notation.
+ *
+ * Detection logic:
+ * 1. Selects the first available, non-null / non-"NA" protein HGVS string from:
+ *    - variant.post_mapped_hgvs_p
+ *    - variant.hgvs_pro_inferred
+ *    - variant.hgvs_pro
+ * 2. Parses the HGVS protein string via parseSimpleProVariant (external utility).
+ * 3. Returns:
+ *    - true if the variant alters the initiator methionine at position 1 (original == 'Met') to a different residue.
+ *    - true if the variant alters a termination symbol at position 1 (original == 'Ter' or '*') to a non-stop residue.
+ * 4. Returns false if no suitable HGVS string is found, parsing fails, or the criteria above are not met.
+ *
+ * Notes:
+ * - The function currently infers start-loss strictly when position == 1 and original is 'Met'.
+ *
+ *
+ * Parameter requirements:
+ * - variant should be an object containing at least one of the HGVS protein fields listed above.
+ * - External helpers required: variantNotNullOrNA, parseSimpleProVariant.
+ *
+ * @param variant Arbitrary variant-like object holding HGVS protein annotations.
+ * @returns true if the variant is classified as start-loss or stop-loss; false (or undefined) otherwise.
+ */
+export function isStartOrStopLoss(variant: any) {
+  const parsedVariant = variant.parsedPostMappedHgvsP
+  if (!parsedVariant) {
+    return false
+  }
+  if (parsedVariant.position == 1 && parsedVariant.original == 'Met' && parsedVariant.substitution != 'Met') {
+    // Start loss
+    return true
+  }
+  if (
+    (parsedVariant.original == 'Ter' || parsedVariant.original == '*') &&
+    parsedVariant.substitution != 'Ter' &&
+    parsedVariant.substitution != '*'
+  ) {
+    // Stop loss
+    return true
+  }
+
+  return false
+}
+
+export function variantIsMissense(variant: Variant) {
+  const parsedVariant = variant.parsedPostMappedHgvsP
+  if (!parsedVariant) {
+    return false
+  }
+  const refAllele = parsedVariant.original.toUpperCase()
+  const altAllele = parsedVariant.substitution.toUpperCase()
+  const refAlleleIsAA = AMINO_ACIDS.find((aa) => aa.codes.triple == refAllele)
+  const altAlleleIsAA = AMINO_ACIDS.find((aa) => aa.codes.triple == altAllele)
+  const startLoss = parsedVariant.position == 1 && refAllele == 'MET'
+  return !!(refAlleleIsAA && altAlleleIsAA && !startLoss && refAllele != altAllele)
+}
+
+export function variantIsSynonymous(variant: Variant) {
+  const parsedVariant = variant.parsedPostMappedHgvsP
+  if (!parsedVariant) {
+    return false
+  }
+  const refAllele = parsedVariant.original.toUpperCase()
+  const altAllele = parsedVariant.substitution.toUpperCase()
+  const refAlleleIsAA = AMINO_ACIDS.find((aa) => aa.codes.triple == refAllele)
+  return !!(refAlleleIsAA && (refAllele == altAllele || altAllele == "="))
+}
+
+export function variantIsNonsense(variant: Variant) {
+  const parsedVariant = variant.parsedPostMappedHgvsP
+  if (!parsedVariant) {
+    return false
+  }
+  const altAllele = parsedVariant.substitution.toUpperCase()
+  return altAllele == 'TER' || altAllele == '*'
+}
+
+export function variantIsOther(variant: Variant) {
+  return (
+    !variantIsMissense(variant) &&
+    !variantIsSynonymous(variant) &&
+    !variantIsNonsense(variant) &&
+    !isStartOrStopLoss(variant)
+  )
 }

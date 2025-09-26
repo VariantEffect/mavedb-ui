@@ -43,7 +43,7 @@
           @click="$emit('onDidClickShowProteinStructure')"
         />
       </div>
-      <div v-if="numComplexVariants2 > 0">{{ numComplexVariants2 }} variants cannot be shown on this chart.</div>
+      <div v-if="numComplexVariants > 0">{{ numComplexVariants }} variants cannot be shown on this chart.</div>
     </template>
     <template v-else-if="scoreSet?.private">
       <div class="no-heatmap-message">
@@ -233,7 +233,6 @@ export default defineComponent({
   data: () => ({
     isMounted: false,
     proteinStructureVisible: false,
-    simpleVariants: null,
     sequenceType: 'protein' as 'dna' | 'protein',
     heatmap: null as Heatmap | null,
     stackedHeatmap: null as Heatmap | null,
@@ -321,7 +320,7 @@ export default defineComponent({
             targetSequenceOffset: 1
           }
         case 'accession':
-          return this.inferredTargetSequenceAndOffset2
+          return this.inferredTargetSequenceAndOffset
         default:
           return {
             targetSequence: '',
@@ -342,7 +341,7 @@ export default defineComponent({
     // Inferring a target sequence from variants
     ////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 
-    inferredTargetSequenceAndOffset2: function () {
+    inferredTargetSequenceAndOffset: function () {
       const {referenceSequence, referenceSequenceRange} = inferReferenceSequenceFromVariants(
         this.variants,
         this.targetResidueType == 'aa' ? 'p' : 'c'
@@ -353,12 +352,12 @@ export default defineComponent({
       }
     },
 
-    inferredTargetSequence2: function () {
-      return this.inferredTargetSequenceAndOffset2.targetSequence
+    inferredTargetSequence: function () {
+      return this.inferredTargetSequenceAndOffset.targetSequence
     },
 
-    inferredTargetSequenceOffset2: function () {
-      return this.inferredTargetSequenceAndOffset2.targetSequenceOffset
+    inferredTargetSequenceOffset: function () {
+      return this.inferredTargetSequenceAndOffset.targetSequenceOffset
     },
 
     ////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
@@ -458,7 +457,7 @@ export default defineComponent({
       }
     },
 
-    simpleVariants2: function () {
+    simpleVariants: function () {
       if (this.hgvsReferenceSequenceType == null) {
         return []
       }
@@ -469,8 +468,8 @@ export default defineComponent({
       return this.variants.filter((v) => v[parsedHgvsProperty] != null)
     },
 
-    numComplexVariants2: function () {
-      return this.variants.length - this.simpleVariants2.length
+    numComplexVariants: function () {
+      return this.variants.length - this.simpleVariants.length
     },
 
     ////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
@@ -478,7 +477,7 @@ export default defineComponent({
     ////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 
     simpleVariantClassesForHeatmapWithStatistics: function () {
-      const {simpleVariantHeatmapData, numIgnoredVariants} = this.prepareSimpleVariantHeatmapData(this.simpleVariants2)
+      const {simpleVariantHeatmapData, numIgnoredVariants} = this.prepareSimpleVariantHeatmapData(this.simpleVariants)
       const simpleVariantClassHeatmapData = this.prepareSimpleVariantClassHeatmapData(simpleVariantHeatmapData)
       return {simpleVariantClassHeatmapData, numIgnoredVariants}
     },
@@ -839,13 +838,6 @@ export default defineComponent({
   watch: {
     coordinates: {
       handler: function () {
-        // if (!this.variants) {
-        //   this.simpleVariants = null
-        // } else {
-        //   const {simpleVariants, numComplexVariants} = this.prepareSimpleVariants(this.variants)
-        //   this.simpleVariants = simpleVariants
-        // }
-
         this.renderOrRefreshHeatmaps()
       }
     },
@@ -877,29 +869,9 @@ export default defineComponent({
 
     sequenceType: {
       handler: function () {
-        // if (!this.variants) {
-        //   this.simpleVariants = null
-        // } else {
-        //   const {simpleVariants, numComplexVariants} = this.prepareSimpleVariants(this.variants)
-        //   this.simpleVariants = simpleVariants
-        // }
-
         this.renderOrRefreshHeatmaps()
       }
     },
-    // variants: {
-    //   handler: function () {
-    //     // if (!this.variants) {
-    //     //   this.simpleVariants = null
-    //     // } else {
-    //     //   const {simpleVariants, numComplexVariants} = this.prepareSimpleVariants(this.variants)
-    //     //   this.simpleVariants = simpleVariants
-    //     // }
-
-    //     this.renderOrRefreshHeatmaps()
-    //   },
-    //   immediate: true
-    // },
 
     selectedVariant: {
       handler: function (newValue) {

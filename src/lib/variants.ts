@@ -79,18 +79,17 @@ function getParsedPostMappedHgvs(variant: Variant, type: HgvsReferenceSequenceTy
  */
 export function parseSimpleCodingVariants(variants: Variant[]) {
   for (const v of variants) {
-    if (v.post_mapped_hgvs_c) {
+    if (v.post_mapped_hgvs_c && v.post_mapped_hgvs_c != 'NA') {
       const parsedHgvs = parseSimpleNtVariant(v.post_mapped_hgvs_c)
       if (parsedHgvs && parsedHgvs.referenceType == 'c') {
-        // v.clinicalHgvs = v.post_mapped_hgvs_c
         v.parsedPostMappedHgvsC = parsedHgvs
         v.parsedPostMappedHgvsC.residueType = 'nt'
         v.parsedPostMappedHgvsC.origin = 'mapped'
       }
-    } else if (v.hgvs_nt) {
+    } else if (v.hgvs_nt && v.hgvs_nt != 'NA') {
       // If a mapped HGVS c. string is missing but the raw HGVS string is a c. string with reference, us it instead.
       const parsedHgvs = parseSimpleNtVariant(v.hgvs_nt)
-      // Treat g. and n. the same as c. for now.
+      // Treat g. and n. the same as c. for now, and allow there to be no accession.
       if (parsedHgvs && ['c', 'g', 'n'].includes(parsedHgvs.referenceType)) { //} && parsedHgvs.target) {
         v.post_mapped_hgvs_c = v.hgvs_nt
         v.parsedPostMappedHgvsC = parsedHgvs
@@ -99,19 +98,18 @@ export function parseSimpleCodingVariants(variants: Variant[]) {
       }
     }
 
-    if (v.post_mapped_hgvs_p) {
-      // v.clinicalHgvsP = v.post_mapped_hgvs_p
+    if (v.post_mapped_hgvs_p && v.post_mapped_hgvs_p != 'NA') {
       const parsedHgvs = parseSimpleProVariant(v.post_mapped_hgvs_p)
       if (parsedHgvs) {
-        // v.clinicalHgvsP = v.post_mapped_hgvs_p
         v.parsedPostMappedHgvsP = parsedHgvs
         v.parsedPostMappedHgvsP.residueType = 'aa'
         v.parsedPostMappedHgvsP.origin = 'mapped'
       }
-    } else if (v.hgvs_p) {
-      const parsedHgvs = parseSimpleProVariant(v.hgvs_p)
-      if (parsedHgvs && parsedHgvs.target) {
-        v.post_mapped_hgvs_p = v.hgvs_p
+    } else if (v.hgvs_pro && v.hgvs_pro != 'NA') {
+      const parsedHgvs = parseSimpleProVariant(v.hgvs_pro)
+      // Allow there to be no accession.
+      if (parsedHgvs) {
+        v.post_mapped_hgvs_p = v.hgvs_pro
         v.parsedPostMappedHgvsP = parsedHgvs
         v.parsedPostMappedHgvsP.residueType = 'aa'
         v.parsedPostMappedHgvsP.origin = 'unmapped'
@@ -313,7 +311,7 @@ export function translateSimpleCodingVariants(variants: Variant[]) {
   if (codingSequence.length > 0) {
     for (const v of variants) {
       // We can only translate c. variants.
-      if (v.parsedPostMappedHgvsC && v.parsedPostMappedHgvsC.referenceType == 'c') {
+      if (!v.parsedPostMappedHgvsP && v.parsedPostMappedHgvsC && v.parsedPostMappedHgvsC.referenceType == 'c') {
         const translatedHgvsP = translateSimpleCodingHgvsCVariant(
           v.parsedPostMappedHgvsC,
           codingSequence,

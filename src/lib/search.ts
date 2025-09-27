@@ -18,6 +18,7 @@ export function routeToVariantSearchIfVariantIsSearchable(searchText: string | n
       // Transcript: treat as normal HGVS
       console.log(`Routing to mavemd with HGVS: ${hgvsMatches[0]}`)
       router.push({name: 'mavemd', query: {search: hgvsMatches[0]}})
+      return true
     } else {
       // Assume identifier is an HGNC gene symbol, parse description for fuzzy search
       // Example: BRCA1:c.123A>G or BRCA1:p.Arg123Gly
@@ -40,20 +41,26 @@ export function routeToVariantSearchIfVariantIsSearchable(searchText: string | n
           variantPosition = fuzzyMatch[3] || ''
           altAllele = fuzzyMatch[4] || ''
         }
-      }
 
-      router.push({
-        name: 'mavemd',
-        query: {
-          gene,
-          variantType,
-          variantPosition,
-          refAllele,
-          altAllele
-        }
-      })
+        router.push({
+          name: 'mavemd',
+          query: {
+            gene,
+            variantType,
+            variantPosition,
+            refAllele,
+            altAllele
+          }
+        })
+        return true
+      } else {
+        // The search looks like an HGVS string but with an invalid accession, and it's not a p. or c. string preceded by
+        // a gene name. Forward to the variant search screen, which will deal with the problem.
+        console.log(`Routing to mavemd with HGVS: ${hgvsMatches[0]}`)
+        router.push({name: 'mavemd', query: {search: hgvsMatches[0]}})
+        return true
+      }
     }
-    return true
   }
   return false
 }

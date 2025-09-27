@@ -65,7 +65,7 @@ export const CONFLICTING_CLINICAL_SIGNIFICANCE_CLASSIFICATIONS = [
   'Conflicting classifications of pathogenicity'
 ]
 
-export const CLINVAR_REVIEW_STATUS_STARS: {[status: string]: number} = {
+export const CLINVAR_REVIEW_STATUS_STARS: { [status: string]: number } = {
   'no assertion criteria provided': 0,
   'criteria provided, conflicting interpretations': 1,
   'criteria provided, conflicting classifications': 1,
@@ -127,11 +127,6 @@ export function clinvarClinicalSignificanceClassifications(
   return [
     ...CLINVAR_CLINICAL_SIGNIFICANCE_CLASSIFICATIONS,
     clinvarConflictingSignificanceClassificationForVersion(version),
-    {
-      name: 'Missense',
-      description: 'Missense variant',
-      shortDescription: 'Missense'
-    }
   ]
 }
 

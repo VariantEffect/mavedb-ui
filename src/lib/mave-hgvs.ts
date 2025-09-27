@@ -133,4 +133,4 @@ export function preferredVariantLabel(variant: SimpleMaveVariant): VariantLabel 
  * It matches a string that starts with an identifier (e.g., "NM_001301717.2") followed by a colon and a description.
  * The description can be anything (which isn't technically correct), including spaces and special characters.
  */
-export const genericVariant = /^(?<identifier>[A-z_0-9.]+):(?<description>.*)$/gm
+export const genericVariant = /^(?<identifier>[A-z_0-9.]+):(?<description>.*)$/m

@@ -1,9 +1,13 @@
 <template>
-  <DefaultLayout :footer="searchResultsVisible ? 'flow' : 'pinned'" height="full" :overflow-y="true || searchResultsVisible ? 'scroll' : 'hidden'">
+  <DefaultLayout
+    :footer="searchResultsVisible ? 'flow' : 'pinned'"
+    height="full"
+    :overflow-y="true || searchResultsVisible ? 'scroll' : 'hidden'"
+  >
     <div
       :class="[
         'mavedb-search-view',
-        alleles.length > 0 ? 'mavedb-search-view-with-results' : 'mavedb-search-view-without-results'
+        searchResultsVisible ? 'mavedb-search-view-with-results' : 'mavedb-search-view-without-results'
       ]"
     >
       <div class="mavedb-page-title">
@@ -32,7 +36,13 @@
           </IconField>
           <Button class="p-button-plain" @click="hgvsSearch">Search</Button>
           <div class="mavedb-clear-search-button-container">
-            <Button class="p-button-plain" icon="pi pi-times" rounded @click="clearSearch" />
+            <Button
+              class="p-button-plain"
+              :disabled="!searchIsClearable"
+              icon="pi pi-times"
+              rounded
+              @click="clearSearch"
+            />
           </div>
         </div>
         <div class="mavedb-search-form-view-switch">
@@ -71,7 +81,13 @@
           />
           <Button class="p-button-plain" @click="fuzzySearch">Search</Button>
           <div class="mavedb-clear-search-button-container">
-            <Button class="p-button-plain" icon="pi pi-times" rounded @click="clearSearch" />
+            <Button
+              class="p-button-plain"
+              :disabled="!searchIsClearable"
+              icon="pi pi-times"
+              rounded
+              @click="clearSearch"
+            />
           </div>
         </div>
         <div class="mavedb-search-form-view-switch">
@@ -80,8 +96,16 @@
         </div>
       </div>
       <div v-if="!searchResultsVisible" class="mavedb-expander-container">
-        <Button class="mavedb-expander-toggle" :label="guideExpanded ? 'Show less' : 'Show more'" text @click="toggleGuide" />
-        <div v-if="!searchResultsVisible" :class="['mavedb-expander', ...guideExpanded ? ['mavedb-expander-expanded'] : []]">
+        <Button
+          class="mavedb-expander-toggle"
+          :label="guideExpanded ? 'Show less' : 'Show more'"
+          text
+          @click="toggleGuide"
+        />
+        <div
+          v-if="!searchResultsVisible"
+          :class="['mavedb-expander', ...(guideExpanded ? ['mavedb-expander-expanded'] : [])]"
+        >
           <p>
             Try searching for variants using HGVS strings like
             <span v-tooltip.top="'Click to search'" class="mavedb-search-example" @click="searchForText"
@@ -100,106 +124,230 @@
             <tr>
               <td>ASPA</td>
               <td>
-                <router-link :to="{name: 'scoreSet', params: {urn: 'urn:mavedb:00000657-a-1'}}"
-                  >Aspartoacylase (ASPA) cellular abundance</router-link
-                ><br />
-                <router-link :to="{name: 'scoreSet', params: {urn: 'urn:mavedb:00000657-b-1'}}"
-                  >Aspartoacylase (ASPA) cellular toxicity</router-link
-                >
+                <EntityLink entity-type="scoreSet" urn="urn:mavedb:00000657-a-1" /><br /><EntityLink
+                  entity-type="scoreSet"
+                  urn="urn:mavedb:00000657-b-1"
+                />
               </td>
             </tr>
             <tr>
               <td>BRCA1</td>
               <td>
-                <router-link :to="{name: 'scoreSet', params: {urn: 'urn:mavedb:00000097-0-2'}}"
-                  >BRCA1 SGE Normalized Scores</router-link
-                >
-                <!--
-                <router-link :to="{name: 'scoreSet', params: {urn: 'urn:mavedb:00001208-a-2'}}">Multiplex HDR assay of BRCA1</router-link><br />
-                <router-link :to="{name: 'scoreSet', params: {urn: 'urn:mavedb:00001209-a-2'}}">Cisplatin resistance assay of BRCA1</router-link>
-                -->
+                <EntityLink entity-type="scoreSet" urn="urn:mavedb:00001222-a-1" /><br /><EntityLink
+                  entity-type="scoreSet"
+                  urn="urn:mavedb:00001222-b-1"
+                />
+                <br /><EntityLink entity-type="scoreSet" urn="urn:mavedb:00000097-0-2" />
               </td>
             </tr>
             <tr>
               <td>BRCA2</td>
+              <td><EntityLink entity-type="scoreSet" urn="urn:mavedb:00001224-a-1" /></td>
+            </tr>
+            <tr>
+              <td>CALM1, CALM2, and CALM3</td>
+              <td><EntityLink entity-type="scoreSet" urn="urn:mavedb:00000001-c-1" /></td>
+            </tr>
+            <tr>
+              <td>CARD11</td>
               <td>
-                <router-link :to="{name: 'scoreSet', params: {urn: 'urn:mavedb:00001224-a-1'}}"
-                  >Scores from arrayed screen of BRCA2 homology directed repair function in VC-8 cells</router-link
-                >
+                <EntityLink entity-type="scoreSet" urn="urn:mavedb:00001226-a-1" /><br /><EntityLink
+                  entity-type="scoreSet"
+                  urn="urn:mavedb:00001226-b-1"
+                />
+              </td>
+            </tr>
+            <tr>
+              <td>CBS</td>
+              <td>
+                <EntityLink entity-type="scoreSet" urn="urn:mavedb:00000005-a-6" /><br /><EntityLink
+                  entity-type="scoreSet"
+                  urn="urn:mavedb:00000005-a-5"
+                />
               </td>
             </tr>
             <tr>
               <td>CHEK2</td>
+              <td><EntityLink entity-type="scoreSet" urn="urn:mavedb:00001205-a-1" /></td>
+            </tr>
+            <tr>
+              <td>CRX</td>
+              <td><EntityLink entity-type="scoreSet" urn="urn:mavedb:00001227-a-1" /></td>
+            </tr>
+            <tr>
+              <td>DDX3X</td>
+              <td><EntityLink entity-type="scoreSet" urn="urn:mavedb:00001228-a-1" /></td>
+            </tr>
+            <tr>
+              <td>F9</td>
               <td>
-                <router-link :to="{name: 'scoreSet', params: {urn: 'urn:mavedb:00001205-a-1'}}"
-                  >CHEK2 Yeast Complementation in MMS</router-link
-                >
+                <EntityLink entity-type="scoreSet" urn="urn:mavedb:00001200-d-1" /><br /><EntityLink
+                  entity-type="scoreSet"
+                  urn="urn:mavedb:00001200-e-1"
+                />
+                <br /><EntityLink entity-type="scoreSet" urn="urn:mavedb:00001200-b-1" /><br /><EntityLink
+                  entity-type="scoreSet"
+                  urn="urn:mavedb:00001200-c-1"
+                /><br /><EntityLink entity-type="scoreSet" urn="urn:mavedb:00001200-a-1" />
               </td>
             </tr>
             <tr>
               <td>FKRP</td>
-              <td>
-                <router-link :to="{name: 'scoreSet', params: {urn: 'urn:mavedb:00001197-a-4'}}"
-                  >FKRP variants effects on alpha-DG glycosylation</router-link
-                >
-              </td>
+              <td><EntityLink entity-type="scoreSet" urn="urn:mavedb:00001197-a-4" /></td>
             </tr>
             <tr>
               <td>GCK</td>
+              <td><EntityLink entity-type="scoreSet" urn="urn:mavedb:00000096-a-1" /></td>
+            </tr>
+            <tr>
+              <td>GCK</td>
+              <td><EntityLink entity-type="scoreSet" urn="urn:mavedb:00000096-b-1" /></td>
+            </tr>
+            <tr>
+              <td>HMBS</td>
+              <td><EntityLink entity-type="scoreSet" urn="urn:mavedb:00000108-a-3" /></td>
+            </tr>
+            <tr>
+              <td>HMBS</td>
               <td>
-                <router-link :to="{name: 'scoreSet', params: {urn: 'urn:mavedb:00000096-a-1'}}"
-                  >GCK activity measured by complementation</router-link
-                ><br />
-                <router-link :to="{name: 'scoreSet', params: {urn: 'urn:mavedb:00000096-b-1'}}"
-                  >GCK abundance measured by DHFR-PCA</router-link
-                >
+                <EntityLink entity-type="scoreSet" urn="urn:mavedb:00000108-a-2" /><br /><EntityLink
+                  entity-type="scoreSet"
+                  urn="urn:mavedb:00000108-a-1"
+                />
+              </td>
+            </tr>
+            <tr>
+              <td>JAG1</td>
+              <td><EntityLink entity-type="scoreSet" urn="urn:mavedb:00001198-a-1" /></td>
+            </tr>
+            <tr>
+              <td>KCNE1</td>
+              <td>
+                <EntityLink entity-type="scoreSet" urn="urn:mavedb:00000674-a-4" /><br /><EntityLink
+                  entity-type="scoreSet"
+                  urn="urn:mavedb:00000674-a-3"
+                /><br /><EntityLink entity-type="scoreSet" urn="urn:mavedb:00000674-a-2" />
               </td>
             </tr>
             <tr>
               <td>KCNH2</td>
+              <td><EntityLink entity-type="scoreSet" urn="urn:mavedb:00001230-a-1" /></td>
+            </tr>
+            <tr>
+              <td>KCNH2</td>
               <td>
-                <router-link :to="{name: 'scoreSet', params: {urn: 'urn:mavedb:00001216-a-1'}}"
-                  >KCNH2 MAVE Trafficking Scores</router-link
-                ><br />
-                <router-link :to="{name: 'scoreSet', params: {urn: 'urn:mavedb:00001231-a-1'}}"
-                  >Scores from cell surface expression deep mutational scan of KCNH2 in HEK293T cells</router-link
-                >
+                <EntityLink entity-type="scoreSet" urn="urn:mavedb:00001229-a-1" /><br /><EntityLink
+                  entity-type="scoreSet"
+                  urn="urn:mavedb:00001231-a-1"
+                />
+              </td>
+            </tr>
+            <tr>
+              <td>KCNQ4</td>
+              <td>
+                <EntityLink entity-type="scoreSet" urn="urn:mavedb:00000094-a-2" /><br /><EntityLink
+                  entity-type="scoreSet"
+                  urn="urn:mavedb:00000094-a-3"
+                />
               </td>
             </tr>
             <tr>
               <td>LARGE1</td>
-              <td>
-                <router-link :to="{name: 'scoreSet', params: {urn: 'urn:mavedb:00001197-a-4'}}"
-                  >LARGE1 variants effects on alpha-DG glycosylation</router-link
-                >
-              </td>
+              <td><EntityLink entity-type="scoreSet" urn="urn:mavedb:00001197-a-3" /></td>
             </tr>
             <tr>
               <td>MSH2</td>
-              <td>
-                <router-link :to="{name: 'scoreSet', params: {urn: 'urn:mavedb:00000050-a-1'}}"
-                  >MSH2 LOF scores (HAP1)</router-link
-                >
-              </td>
+              <td><EntityLink entity-type="scoreSet" urn="urn:mavedb:00000050-a-1" /></td>
+            </tr>
+            <tr>
+              <td>NDUFAF6</td>
+              <td><EntityLink entity-type="scoreSet" urn="urn:mavedb:00000663-a-1" /></td>
             </tr>
             <tr>
               <td>OTC</td>
+              <td><EntityLink entity-type="scoreSet" urn="urn:mavedb:00000112-a-1" /></td>
+            </tr>
+            <tr>
+              <td>PAX6</td>
               <td>
-                <router-link :to="{name: 'scoreSet', params: {urn: 'urn:mavedb:00000112-a-1'}}"
-                  >SNV-accessible missense variant scores for OTC</router-link
-                >
+                <EntityLink entity-type="scoreSet" urn="urn:mavedb:00000665-a-2" /><br /><EntityLink
+                  entity-type="scoreSet"
+                  urn="urn:mavedb:00000665-a-4"
+                /><br /><EntityLink entity-type="scoreSet" urn="urn:mavedb:00000665-a-1" /><br /><EntityLink
+                  entity-type="scoreSet"
+                  urn="urn:mavedb:00000665-a-3"
+                />
+              </td>
+            </tr>
+            <tr>
+              <td>PTEN</td>
+              <td>
+                <EntityLink entity-type="scoreSet" urn="urn:mavedb:00000013-a-1" /><br /><EntityLink
+                  entity-type="scoreSet"
+                  urn="urn:mavedb:00000054-a-1"
+                />
+              </td>
+            </tr>
+            <tr>
+              <td>RHO</td>
+              <td><EntityLink entity-type="scoreSet" urn="urn:mavedb:00000099-a-1" /></td>
+            </tr>
+            <tr>
+              <td>SCN5A</td>
+              <td>
+                <EntityLink entity-type="scoreSet" urn="urn:mavedb:00000098-a-1" /><br /><EntityLink
+                  entity-type="scoreSet"
+                  urn="urn:mavedb:00001233-a-1"
+                />
+              </td>
+            </tr>
+            <tr>
+              <td>SGCB</td>
+              <td><EntityLink entity-type="scoreSet" urn="urn:mavedb:00000659-a-1" /></td>
+            </tr>
+            <tr>
+              <td>TARDBP</td>
+              <td>
+                <EntityLink entity-type="scoreSet" urn="urn:mavedb:00000060-a-1" /><br /><EntityLink
+                  entity-type="scoreSet"
+                  urn="urn:mavedb:00000060-a-2"
+                />
               </td>
             </tr>
             <tr>
               <td>TP53</td>
               <td>
-                <!--
-                <router-link :to="{name: 'scoreSet', params: {urn: 'urn:mavedb:00001211-0-2'}}">Yeast-based functional assay of p53 (median transactivation)</router-link>
-                -->
-                <router-link :to="{name: 'scoreSet', params: {urn: 'urn:mavedb:00001234-0-1'}}"
-                  >Median TP53 transcriptional activity scores</router-link
-                >
+                <EntityLink entity-type="scoreSet" urn="urn:mavedb:00001235-a-1" /><br /><EntityLink
+                  entity-type="scoreSet"
+                  urn="urn:mavedb:00001236-0-1"
+                /><br /><EntityLink entity-type="scoreSet" urn="urn:mavedb:00001234-0-1" /><br /><EntityLink
+                  entity-type="scoreSet"
+                  urn="urn:mavedb:00000068-0-1"
+                /><br /><EntityLink entity-type="scoreSet" urn="urn:mavedb:00000068-c-1" /><br /><EntityLink
+                  entity-type="scoreSet"
+                  urn="urn:mavedb:00000068-b-1"
+                /><br /><EntityLink entity-type="scoreSet" urn="urn:mavedb:00000068-a-1" /><br /><EntityLink
+                  entity-type="scoreSet"
+                  urn="urn:mavedb:00001234-e-1"
+                /><br /><EntityLink entity-type="scoreSet" urn="urn:mavedb:00001234-c-1" /><br /><EntityLink
+                  entity-type="scoreSet"
+                  urn="urn:mavedb:00001234-f-1"
+                /><br /><EntityLink entity-type="scoreSet" urn="urn:mavedb:00001234-d-1" /><br /><EntityLink
+                  entity-type="scoreSet"
+                  urn="urn:mavedb:00001234-b-1"
+                /><br /><EntityLink entity-type="scoreSet" urn="urn:mavedb:00001234-g-1" /><br /><EntityLink
+                  entity-type="scoreSet"
+                  urn="urn:mavedb:00001234-h-1"
+                /><br /><EntityLink entity-type="scoreSet" urn="urn:mavedb:00001234-a-1" />
               </td>
+            </tr>
+            <tr>
+              <td>TPK1</td>
+              <td><EntityLink entity-type="scoreSet" urn="urn:mavedb:00000001-d-1" /></td>
+            </tr>
+            <tr>
+              <td>VHL</td>
+              <td><EntityLink entity-type="scoreSet" urn="urn:mavedb:00000675-a-1" /></td>
             </tr>
           </table>
         </div>
@@ -381,6 +529,7 @@ import {useRoute, useRouter} from 'vue-router'
 import {useToast} from 'primevue/usetoast'
 
 import config from '@/config'
+import EntityLink from '@/components/common/EntityLink.vue'
 import DefaultLayout from '@/components/layout/DefaultLayout.vue'
 
 const SCORE_SETS_TO_SHOW = 5
@@ -394,6 +543,7 @@ export default defineComponent({
     DataTable,
     DefaultLayout,
     Dropdown,
+    EntityLink,
     IconField,
     InputIcon,
     InputText,
@@ -455,6 +605,17 @@ export default defineComponent({
   },
 
   computed: {
+    searchIsClearable: function () {
+      console.log(this.searchText)
+      return (
+        !_.isEmpty(this.searchText) ||
+        !_.isEmpty(this.inputGene) ||
+        !_.isEmpty(this.inputVariantType) ||
+        !_.isEmpty(this.inputVariantPosition) ||
+        !_.isEmpty(this.inputReferenceAllele) ||
+        !_.isEmpty(this.inputAlternateAllele)
+      )
+    },
     // clingenAlleleId: function() {
     //   return this.allele?.['@id']?.split('/')?.at(-1)
     // },
@@ -544,7 +705,7 @@ export default defineComponent({
   },
 
   methods: {
-    toggleGuide: function() {
+    toggleGuide: function () {
       this.guideExpanded = !this.guideExpanded
     },
     searchForText: function (event) {
@@ -910,12 +1071,6 @@ export default defineComponent({
 </script>
 
 <style scoped>
-.mavedb-search-view {
-  display: flex;
-  flex-direction: column;
-  position: relative;
-  height: 100%;
-}
 .mavedb-page-title {
   text-align: center;
 }
@@ -932,10 +1087,15 @@ export default defineComponent({
   font-size: 110%;
 }
 
+.mavedb-search-view {
+  position: relative;
+}
+
 .mavedb-search-view-without-results {
-  height: 100%;
   display: flex;
   flex-direction: column;
+  height: 100%;
+  display: flex;
 }
 
 .mavedb-search-view-without-results .mavedb-page-title {
@@ -1076,7 +1236,8 @@ export default defineComponent({
   margin: 0 0 0.5lh 0;
 }
 
-td, th {
+td,
+th {
   padding: 0 5px;
   vertical-align: top;
 }

@@ -84,6 +84,7 @@
             :score-set="item"
             :variants="variants"
             @export-chart="setHistogramExport"
+            :hide-start-and-stop-loss-by-default="hideStartAndStopLoss"
           />
         </div>
         <div v-if="showHeatmap && !isScoreSetVisualizerVisible" class="mavedb-score-set-heatmap-pane">

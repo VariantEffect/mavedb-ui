@@ -22,7 +22,6 @@ export default (collectionUrl, {primaryKey = '_id'} = {}) => {
     }),
 
     mutations: {
-
       loadedItem(state, {item}) {
         if (state.itemId != getPrimaryKeyValue(item, primaryKey)) {
           state.itemId = getPrimaryKeyValue(item, primaryKey)
@@ -61,11 +60,9 @@ export default (collectionUrl, {primaryKey = '_id'} = {}) => {
           state.itemsStatus = 'NotLoaded'
         }
       }
-
     },
 
     actions: {
-
       async reloadItem({dispatch, state}) {
         if (state.itemId) {
           await dispatch('loadItem', {itemId: state.itemId})
@@ -81,14 +78,11 @@ export default (collectionUrl, {primaryKey = '_id'} = {}) => {
           commit('loadingItem', {itemId})
           const url = `${collectionUrl}${itemId}` // ended in / before
           try {
-            let response = await axios.get(
-              url,
-              {
-                headers: {
-                  accept: 'application/json'
-                }
+            let response = await axios.get(url, {
+              headers: {
+                accept: 'application/json'
               }
-            )
+            })
             // TODO (#130) catch errors in response
             commit('loadedItem', {item: response.data || null})
           } catch (err) {
@@ -126,13 +120,12 @@ export default (collectionUrl, {primaryKey = '_id'} = {}) => {
       },
 
       async setItemId({commit, dispatch, state}, itemId) {
-        if (!_.isEqual(itemId, state.itemId) && (state.itemStatus != 'NotLoaded')) {
+        if (!_.isEqual(itemId, state.itemId) && state.itemStatus != 'NotLoaded') {
           await dispatch('loadItem', {itemId})
         } else {
           commit('setItemId', {itemId})
         }
       }
-
     }
   }
 }

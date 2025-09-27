@@ -5,27 +5,30 @@ import jsog from 'jsog'
 // TODO Allow collectionUrl=false as a way of indicating that no data should be fetched.
 
 export default (collectionUrl, options = {}) => {
-  options = _.merge({
-    primaryKey: '_id',
-    httpOptions: {},
-    requestBody: null,
-    filter: null,
-    order: null,
-    limit: null,
-    referencePathsToExpand: [],
-    detail: {
-      allowMultiple: false,
-      autoEdit: false,
-      autoFromSingleInsertion: true,
-      autoFromSingleSelection: true,
-      autoFromMultipleSelection: false,
-      constrainToSelection: true
+  options = _.merge(
+    {
+      primaryKey: '_id',
+      httpOptions: {},
+      requestBody: null,
+      filter: null,
+      order: null,
+      limit: null,
+      referencePathsToExpand: [],
+      detail: {
+        allowMultiple: false,
+        autoEdit: false,
+        autoFromSingleInsertion: true,
+        autoFromSingleSelection: true,
+        autoFromMultipleSelection: false,
+        constrainToSelection: true
+      },
+      loading: {
+        firstPageSize: null, //(options.order != null) ? 500 : null,
+        pageSize: 5000
+      }
     },
-    loading: {
-      firstPageSize: null, //(options.order != null) ? 500 : null,
-      pageSize: 5000
-    }
-  }, options)
+    options
+  )
 
   function getPrimaryKeyValue(item) {
     if (item == null) {
@@ -39,7 +42,10 @@ export default (collectionUrl, options = {}) => {
 
   function sortItems(items, state) {
     if (items && _.get(state, 'filter.itemIds') && !state.order) {
-      return _.filter(state.filter.itemIds.map((id) => items.find((item) => getPrimaryKeyValue(item) == id)), Boolean)
+      return _.filter(
+        state.filter.itemIds.map((id) => items.find((item) => getPrimaryKeyValue(item) == id)),
+        Boolean
+      )
     }
     return items
   }
@@ -70,7 +76,6 @@ export default (collectionUrl, options = {}) => {
     },
 
     mutations: {
-
       reset(state) {
         _.merge(state, {
           items: null,
@@ -93,17 +98,17 @@ export default (collectionUrl, options = {}) => {
         if (['Loaded', 'LoadingMore'].includes(state.itemsStatus)) {
           // Assume that each item ID only occurs once in the list.
 
-          var index = state.items.findIndex(x => getPrimaryKeyValue(x) == itemId)
+          var index = state.items.findIndex((x) => getPrimaryKeyValue(x) == itemId)
           if (index >= 0) {
             state.items.splice(index, 1)
           }
 
-          index = state.selectedItems.findIndex(x => getPrimaryKeyValue(x) == itemId)
+          index = state.selectedItems.findIndex((x) => getPrimaryKeyValue(x) == itemId)
           if (index >= 0) {
             state.selectedItems.splice(index, 1)
           }
 
-          index = state.detailItems.findIndex(x => getPrimaryKeyValue(x) == itemId)
+          index = state.detailItems.findIndex((x) => getPrimaryKeyValue(x) == itemId)
           if (index >= 0) {
             state.detailItems.splice(index, 1)
             if (state.detailItems.length == 0) {
@@ -124,7 +129,11 @@ export default (collectionUrl, options = {}) => {
             state.items.push(frozenItem)
           }
 
-          if (options.detail.autoFromSingleInsertion && ((state.detailItems.length == 0) || ((state.detailItems.length == 1) && (getPrimaryKeyValue(state.detailItems[0]) == null)))) {
+          if (
+            options.detail.autoFromSingleInsertion &&
+            (state.detailItems.length == 0 ||
+              (state.detailItems.length == 1 && getPrimaryKeyValue(state.detailItems[0]) == null))
+          ) {
             state.detailItems = [frozenItem]
             state.editingDetailItems = options.detail.autoEdit
           }
@@ -136,18 +145,18 @@ export default (collectionUrl, options = {}) => {
         if (['Loaded', 'LoadingMore'].includes(state.itemsStatus)) {
           const frozenItem = Object.freeze(item)
 
-          var index = state.items.findIndex(x => getPrimaryKeyValue(x) == getPrimaryKeyValue(item))
+          var index = state.items.findIndex((x) => getPrimaryKeyValue(x) == getPrimaryKeyValue(item))
           // Assume that each item ID only occurs once in the list.
           if (index >= 0) {
             state.items[index] = frozenItem
           }
 
-          index = state.selectedItems.findIndex(x => getPrimaryKeyValue(x) == getPrimaryKeyValue(item))
+          index = state.selectedItems.findIndex((x) => getPrimaryKeyValue(x) == getPrimaryKeyValue(item))
           if (index >= 0) {
             state.selectedItems[index] = frozenItem
           }
 
-          index = state.detailItems.findIndex(x => getPrimaryKeyValue(x) == getPrimaryKeyValue(item))
+          index = state.detailItems.findIndex((x) => getPrimaryKeyValue(x) == getPrimaryKeyValue(item))
           if (index >= 0) {
             state.detailItems[index] = frozenItem
           }
@@ -158,18 +167,18 @@ export default (collectionUrl, options = {}) => {
         if (['Loaded', 'LoadingMore'].includes(state.itemsStatus)) {
           const frozenItem = Object.freeze(item)
 
-          var index = state.items.findIndex(x => getPrimaryKeyValue(x) == getPrimaryKeyValue(item))
+          var index = state.items.findIndex((x) => getPrimaryKeyValue(x) == getPrimaryKeyValue(item))
           // Assume that each item ID only occurs once in the list.
           if (index >= 0) {
             state.items[index] = frozenItem
           }
 
-          index = state.selectedItems.findIndex(x => getPrimaryKeyValue(x) == getPrimaryKeyValue(item))
+          index = state.selectedItems.findIndex((x) => getPrimaryKeyValue(x) == getPrimaryKeyValue(item))
           if (index >= 0) {
             state.selectedItems[index] = frozenItem
           }
 
-          index = state.detailItems.findIndex(x => getPrimaryKeyValue(x) == getPrimaryKeyValue(item))
+          index = state.detailItems.findIndex((x) => getPrimaryKeyValue(x) == getPrimaryKeyValue(item))
           if (index >= 0) {
             state.detailItems[index] = frozenItem
           }
@@ -177,12 +186,15 @@ export default (collectionUrl, options = {}) => {
       },
 
       loadedItems(state, {items, finished}) {
-        state.items = sortItems(items.map(item => Object.freeze(item)), state)
+        state.items = sortItems(
+          items.map((item) => Object.freeze(item)),
+          state
+        )
         state.itemsStatus = finished ? 'Loaded' : 'LoadingMore'
       },
 
       loadedMoreItems(state, {items, finished}) {
-        state.items.push(...items.map(item => Object.freeze(item)))
+        state.items.push(...items.map((item) => Object.freeze(item)))
         state.itemsStatus = finished ? 'Loaded' : 'LoadingMore'
       },
 
@@ -230,13 +242,18 @@ export default (collectionUrl, options = {}) => {
       },
 
       setInvalidItemIds(state, invalidItemIds) {
-        if (!_.isEqual(invalidItemIds, state.invalidItems.map(x => getPrimaryKeyValue(x)))) {
-          state.invalidItems = invalidItemIds.map(id => state.items.find(i => getPrimaryKeyValue(i) == id))
+        if (
+          !_.isEqual(
+            invalidItemIds,
+            state.invalidItems.map((x) => getPrimaryKeyValue(x))
+          )
+        ) {
+          state.invalidItems = invalidItemIds.map((id) => state.items.find((i) => getPrimaryKeyValue(i) == id))
         }
       },
 
       removeEditor(state, editor) {
-        _.remove(state.editors, x => x == editor)
+        _.remove(state.editors, (x) => x == editor)
       },
 
       addEditor(state, editor) {
@@ -246,7 +263,7 @@ export default (collectionUrl, options = {}) => {
       },
 
       clearListNavigator(state, {name, listNavigator}) {
-        if ((listNavigator == null) || (state.listNavigators[name] == listNavigator)) {
+        if (listNavigator == null || state.listNavigators[name] == listNavigator) {
           state.listNavigators[name] = undefined
         }
       },
@@ -258,19 +275,28 @@ export default (collectionUrl, options = {}) => {
       },
 
       setSelection(state, {selectedItemIds, edit}) {
-        if (!_.isEqual(selectedItemIds, state.selectedItems.map(x => getPrimaryKeyValue(x)))) {
+        if (
+          !_.isEqual(
+            selectedItemIds,
+            state.selectedItems.map((x) => getPrimaryKeyValue(x))
+          )
+        ) {
           // Check whether the transition is allowed. If an editor is open, we cannot change the detail view.
           let allowed = true
           if (state.editors.length > 0) {
-            if (options.detail.autoFromSingleSelection && (state.selectedItems.length == 1)) {
+            if (options.detail.autoFromSingleSelection && state.selectedItems.length == 1) {
               allowed = false
-            } else if (options.detail.autoFromMultipleSelection && options.detail.allowMultiple && (state.selectedItems.length > 1)) {
+            } else if (
+              options.detail.autoFromMultipleSelection &&
+              options.detail.allowMultiple &&
+              state.selectedItems.length > 1
+            ) {
               allowed = false
             } else if (options.detail.constrainToSelection) {
-              const selectedItemIds = state.selectedItems.map(x => getPrimaryKeyValue(x))
-              const detailItemIds = state.detailItems.map(x => getPrimaryKeyValue(x))
-              const newDetailItemIds = detailItemIds.filter(id => selectedItemIds.includes(id))
-              if (state.detailItems.filter(x => !newDetailItemIds.includes(getPrimaryKeyValue(x))).length > 0) {
+              const selectedItemIds = state.selectedItems.map((x) => getPrimaryKeyValue(x))
+              const detailItemIds = state.detailItems.map((x) => getPrimaryKeyValue(x))
+              const newDetailItemIds = detailItemIds.filter((id) => selectedItemIds.includes(id))
+              if (state.detailItems.filter((x) => !newDetailItemIds.includes(getPrimaryKeyValue(x))).length > 0) {
                 allowed = false
               }
             }
@@ -280,38 +306,50 @@ export default (collectionUrl, options = {}) => {
             return
           }
 
-          state.selectedItems = selectedItemIds.map((id) => state.items.find(i => getPrimaryKeyValue(i) == id))
+          state.selectedItems = selectedItemIds.map((id) => state.items.find((i) => getPrimaryKeyValue(i) == id))
 
-          if (options.detail.autoFromSingleSelection && (state.selectedItems.length == 1)) {
+          if (options.detail.autoFromSingleSelection && state.selectedItems.length == 1) {
             const selectedItem = state.selectedItems[0]
-            if ((state.detailItems.length != 1) || (getPrimaryKeyValue(state.detailItems[0]) != getPrimaryKeyValue(selectedItem))) {
+            if (
+              state.detailItems.length != 1 ||
+              getPrimaryKeyValue(state.detailItems[0]) != getPrimaryKeyValue(selectedItem)
+            ) {
               state.detailItems = [selectedItem]
             }
-          } else if (options.detail.autoFromMultipleSelection && options.detail.allowMultiple && (state.selectedItems.length > 1)) {
-            if (!_.isEqual(state.selectedItems.map(x => getPrimaryKeyValue(x)), state.detailItems.map(x => getPrimaryKeyValue(x)))) {
+          } else if (
+            options.detail.autoFromMultipleSelection &&
+            options.detail.allowMultiple &&
+            state.selectedItems.length > 1
+          ) {
+            if (
+              !_.isEqual(
+                state.selectedItems.map((x) => getPrimaryKeyValue(x)),
+                state.detailItems.map((x) => getPrimaryKeyValue(x))
+              )
+            ) {
               state.detailItems = _.clone(state.selectedItems) // TODO Will this cause any problem involving the array's reactive proxy?
             }
           } else if (options.detail.constrainToSelection) {
-            const selectedItemIds = state.selectedItems.map(x => getPrimaryKeyValue(x))
-            const detailItemIds = state.detailItems.map(x => getPrimaryKeyValue(x))
-            const newDetailItemIds = detailItemIds.filter(id => selectedItemIds.includes(id))
+            const selectedItemIds = state.selectedItems.map((x) => getPrimaryKeyValue(x))
+            const detailItemIds = state.detailItems.map((x) => getPrimaryKeyValue(x))
+            const newDetailItemIds = detailItemIds.filter((id) => selectedItemIds.includes(id))
             if (!_.isEqual(newDetailItemIds, detailItemIds)) {
-              state.detailItems = state.detailItems.filter(x => newDetailItemIds.includes(getPrimaryKeyValue(x)))
+              state.detailItems = state.detailItems.filter((x) => newDetailItemIds.includes(getPrimaryKeyValue(x)))
             }
           }
 
           if (state.detailItems.length == 0) {
             state.editingDetailItems = false
           } else {
-            state.editingDetailItems = (edit !== undefined) ? edit : (state.editingDetailItems || options.detail.autoEdit)
+            state.editingDetailItems = edit !== undefined ? edit : state.editingDetailItems || options.detail.autoEdit
           }
         }
       },
 
       showSelectionAsDetail(state, {edit}) {
-        if ((state.selectedItems.length <= 1) || options.detail.allowMultiple) {
-          const selectedItemIds = state.selectedItems.map(x => getPrimaryKeyValue(x))
-          const detailItemIds = state.detailItems.map(x => getPrimaryKeyValue(x))
+        if (state.selectedItems.length <= 1 || options.detail.allowMultiple) {
+          const selectedItemIds = state.selectedItems.map((x) => getPrimaryKeyValue(x))
+          const detailItemIds = state.detailItems.map((x) => getPrimaryKeyValue(x))
           if (!_.isEqual(selectedItemIds, detailItemIds)) {
             state.detailItems = _.clone(state.selectedItems) // TODO Will this cause any problem involving the array's reactive proxy?
           }
@@ -319,7 +357,7 @@ export default (collectionUrl, options = {}) => {
           if (state.detailItems.length == 0) {
             state.editingDetailItems = false
           } else {
-            state.editingDetailItems = (edit !== undefined) ? edit : (state.editingDetailItems || options.detail.autoEdit)
+            state.editingDetailItems = edit !== undefined ? edit : state.editingDetailItems || options.detail.autoEdit
           }
         }
       },
@@ -353,11 +391,9 @@ export default (collectionUrl, options = {}) => {
           state.editingDetailItems = false
         }
       }
-
     },
 
     actions: {
-
       reset({commit}) {
         commit('reset')
       },
@@ -392,7 +428,8 @@ export default (collectionUrl, options = {}) => {
         }
         const filterQueryParts = []
         if (_.get(state, 'filter.itemIds')) {
-          if (_.isString(options.primaryKey)) { // TODO And if not, we can't support this type of filter.
+          if (_.isString(options.primaryKey)) {
+            // TODO And if not, we can't support this type of filter.
             filterQueryParts.push({l: {path: options.primaryKey}, r: {constant: state.filter.itemIds}, operator: 'in'})
           }
         }
@@ -400,7 +437,7 @@ export default (collectionUrl, options = {}) => {
           filterQueryParts.push(_.get(state, 'filter.query'))
         }
         if (filterQueryParts.length > 0) {
-          const filterQuery = (filterQueryParts.length == 1) ? filterQueryParts[0] : {and: filterQueryParts}
+          const filterQuery = filterQueryParts.length == 1 ? filterQueryParts[0] : {and: filterQueryParts}
           queryParams.q = JSON.stringify(filterQuery)
         }
         if (_.get(state, 'order')) {
@@ -410,30 +447,35 @@ export default (collectionUrl, options = {}) => {
           queryParams.r = JSON.stringify(_.get(state, 'referencePathsToExpand'))
         }
         const currentPageSize =
-          _.get(state, 'filter.itemIds') && !_.get(state, 'order') ?
+          _.get(state, 'filter.itemIds') && !_.get(state, 'order')
+            ? null
+            : firstPageSize ||
+              _.get(options, 'loading.firstPageSize') ||
+              pageSize ||
+              _.get(options, 'loading.pageSize') ||
               null
-              : (firstPageSize || _.get(options, 'loading.firstPageSize'))
-                  || (pageSize || _.get(options, 'loading.pageSize'))
-                  || null
-        const limit = (currentPageSize != null || options.limit != null) ?
-            _.min(_.filter([currentPageSize, options.limit], (x) => x != null)) : null
+        const limit =
+          currentPageSize != null || options.limit != null
+            ? _.min(_.filter([currentPageSize, options.limit], (x) => x != null))
+            : null
         if (limit != null) {
           queryParams.offset = 0
           queryParams.limit = limit
         }
-        const queryStr = _.map(queryParams, (value, key) => `${encodeURIComponent(key)}=${encodeURIComponent(value)}`).join('&')
+        const queryStr = _.map(
+          queryParams,
+          (value, key) => `${encodeURIComponent(key)}=${encodeURIComponent(value)}`
+        ).join('&')
         const httpOptions = _.get(state, 'httpOptions.list', {})
         const collectionListUrl = httpOptions.url || collectionUrl
         const [collectionListUrlPath, collectionListUrlQuery] = collectionListUrl.split('?', 2)
-        const fullQueryStr = [collectionListUrlQuery, queryStr]
-            .filter((x) => x != null)
-            .join('&')
+        const fullQueryStr = [collectionListUrlQuery, queryStr].filter((x) => x != null).join('&')
         const url = _.isEmpty(fullQueryStr) ? collectionListUrlPath : `${collectionListUrlPath}?${fullQueryStr}`
         try {
           let response = await axios({
             method: httpOptions.method || 'get',
             url,
-            ...state.requestBody ? {data: state.requestBody} : {}
+            ...(state.requestBody ? {data: state.requestBody} : {})
           })
           const newOptions = {
             namedFilter: _.get(state, 'filter.namedFilter'),
@@ -447,7 +489,8 @@ export default (collectionUrl, options = {}) => {
             console.log(`Discarding items fetched by obsolete query from ${collectionUrl}.`)
           } else {
             const items = response.data // jsog.decode(_.get(response, 'data.data', []))
-            let finished = ((currentPageSize == null) || (items.length < limit)) || (options.limit && items.length >= options.limit)
+            let finished =
+              currentPageSize == null || items.length < limit || (options.limit && items.length >= options.limit)
             console.log(`Loaded ${items.length} items from ${collectionUrl}`)
             commit('loadedItems', {items, finished})
             if (!finished) {
@@ -491,12 +534,19 @@ export default (collectionUrl, options = {}) => {
         }
         queryParams.offset = offset
         const currentPageSize = pageSize || _.get(options, 'loading.pageSize') || null
-        const limit = (currentPageSize != null || options.limit != null) ?
-            _.min(_.filter([currentPageSize, options.limit == null ? null : options.limit - offset], (x) => x != null)) : null
+        const limit =
+          currentPageSize != null || options.limit != null
+            ? _.min(
+                _.filter([currentPageSize, options.limit == null ? null : options.limit - offset], (x) => x != null)
+              )
+            : null
         if (currentPageSize != null) {
           queryParams.limit = limit
         }
-        const queryString = _.map(queryParams, (value, key) => `${encodeURIComponent(key)}=${encodeURIComponent(value)}`).join('&')
+        const queryString = _.map(
+          queryParams,
+          (value, key) => `${encodeURIComponent(key)}=${encodeURIComponent(value)}`
+        ).join('&')
         const httpOptions = _.get(state, 'httpOptions.list', {})
         const collectionListUrl = httpOptions.url || collectionUrl
         const url = _.isEmpty(queryString) ? collectionListUrl : `${collectionListUrl}?${queryString}`
@@ -504,7 +554,7 @@ export default (collectionUrl, options = {}) => {
           let response = await axios({
             method: httpOptions.method || 'get',
             url,
-            ...state.requestBody ? {data: state.requestBody} : {}
+            ...(state.requestBody ? {data: state.requestBody} : {})
           })
           const newOptions = {
             namedFilter: _.get(state, 'filter.namedFilter'),
@@ -521,7 +571,8 @@ export default (collectionUrl, options = {}) => {
             // const items = _.get(response, 'data.data', [])
             const items = jsog.decode(_.get(response, 'data.data', []))
             const totalLength = (state.items ? state.items.length : 0) + items.length
-            let finished = ((currentPageSize == null) || (items.length < limit)) || (options.limit && totalLength >= options.limit)
+            let finished =
+              currentPageSize == null || items.length < limit || (options.limit && totalLength >= options.limit)
             console.log(`Loaded ${items.length} more items from ${collectionUrl}`)
             commit('loadedMoreItems', {items, finished})
             if (!finished) {
@@ -555,7 +606,7 @@ export default (collectionUrl, options = {}) => {
         const id = getPrimaryKeyValue(item)
         let response = await axios({
           method: id ? 'put' : 'post',
-          url: collectionUrl + (id ? ('/' + id) : ''),
+          url: collectionUrl + (id ? '/' + id : ''),
           data: item
         })
         // TODO handle error responses
@@ -582,8 +633,8 @@ export default (collectionUrl, options = {}) => {
         // TODO handle error responses
         if (response.status == 200) {
           let newItems = response.data
-          const createdItems = createdItemIndices.map(i => newItems[i]).filter((item) => item != null)
-          const updatedItems = updatedItemIndices.map(i => newItems[i]).filter((item) => item != null)
+          const createdItems = createdItemIndices.map((i) => newItems[i]).filter((item) => item != null)
+          const updatedItems = updatedItemIndices.map((i) => newItems[i]).filter((item) => item != null)
           // We could have a combined mutator like this:
           /*
           commit('savedItems', {
@@ -620,7 +671,9 @@ export default (collectionUrl, options = {}) => {
       },
 
       deselectItems({commit, state}, {itemIds}) {
-        let newSelectedItemIds = state.selectedItems.map(x => getPrimaryKeyValue(x)).filter(id => !itemIds.includes(id))
+        let newSelectedItemIds = state.selectedItems
+          .map((x) => getPrimaryKeyValue(x))
+          .filter((id) => !itemIds.includes(id))
         commit('setSelection', {selectedItemIds: newSelectedItemIds})
       },
 
@@ -651,7 +704,7 @@ export default (collectionUrl, options = {}) => {
       },
 
       selectItems({commit, state}, {itemIds, addToSelection, edit}) {
-        const oldSelectedItemIds = state.selectedItems.map(x => getPrimaryKeyValue(x))
+        const oldSelectedItemIds = state.selectedItems.map((x) => getPrimaryKeyValue(x))
         let newSelectedItemIds = itemIds
         if (addToSelection) {
           let addedItemIds = _.difference(itemIds, oldSelectedItemIds)
@@ -686,18 +739,18 @@ export default (collectionUrl, options = {}) => {
 
       async setQuery({commit, dispatch, state}, query) {
         // if (!_.isEqual(query, _.get(state.filter, 'query'))) {
-          let newFilter = _.cloneDeep(state.filter) || {}
-          if (query !== null) {
-            newFilter.query = query
-          } else {
-            _.unset(newFilter, 'query')
-          }
+        let newFilter = _.cloneDeep(state.filter) || {}
+        if (query !== null) {
+          newFilter.query = query
+        } else {
+          _.unset(newFilter, 'query')
+        }
 
-          const previousItemsStatus = state.itemsStatus
-          commit('setFilter', newFilter)
-          if (previousItemsStatus != 'NotLoaded') {
-            await dispatch('beginLoadingItems')
-          }
+        const previousItemsStatus = state.itemsStatus
+        commit('setFilter', newFilter)
+        if (previousItemsStatus != 'NotLoaded') {
+          await dispatch('beginLoadingItems')
+        }
         // }
       },
 
@@ -721,7 +774,6 @@ export default (collectionUrl, options = {}) => {
           }
         }
       }
-
     }
   }
 }

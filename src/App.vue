@@ -5,10 +5,9 @@
 </template>
 
 <script>
-
+import 'primeflex/primeflex.css'
 import ConfirmDialog from 'primevue/confirmdialog'
 import Toast from 'primevue/toast'
-import 'primeflex/primeflex.css'
 import {mapActions, mapState} from 'vuex'
 
 export default {
@@ -17,7 +16,7 @@ export default {
   watch: {
     toasts: {
       deep: true,
-      handler: function(newValue) {
+      handler: function (newValue) {
         if (newValue.length > 0) {
           this.$toast.add(newValue[0])
           this.removeDequeuedToasts(1)
@@ -27,7 +26,6 @@ export default {
   },
   methods: mapActions('toast', ['removeDequeuedToasts'])
 }
-
 </script>
 
 <style>

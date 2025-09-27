@@ -22,11 +22,7 @@ export default ({
   const configStateNamespace = ref(initialStateNamespace)
   const configOptions = ref(initialOptions)
 
-  const resetItem = ({
-    itemTypeName = null,
-    stateNamespace = null,
-    options = null
-  } = {}) => {
+  const resetItem = ({itemTypeName = null, stateNamespace = null, options = null} = {}) => {
     configItemTypeName.value = itemTypeName
     configStateNamespace.value = stateNamespace
     if (options != null) {
@@ -34,9 +30,7 @@ export default ({
     }
   }
 
-  const itemType = computed(
-    () => (configItemTypeName.value && itemTypes[configItemTypeName.value]) || null
-  )
+  const itemType = computed(() => (configItemTypeName.value && itemTypes[configItemTypeName.value]) || null)
 
   const stateNamespace = computed(() => {
     if (configStateNamespace.value) {
@@ -54,11 +48,13 @@ export default ({
         switchedStore = true
         itemStoreReady.value = true
       } else {
-        const restCollectionUrl = httpOptions.url ? `${httpOptions.url}/` : `${config.apiBaseUrl}/${itemType.value.restCollectionName}/`
+        const restCollectionUrl = httpOptions.url
+          ? `${httpOptions.url}/`
+          : `${config.apiBaseUrl}/${itemType.value.restCollectionName}/`
         store.registerModule(
           stateNamespace.value,
           makeItemModule(restCollectionUrl, {
-            ...itemType.value.primaryKey ? {primaryKey: itemType.value.primaryKey} : null
+            ...(itemType.value.primaryKey ? {primaryKey: itemType.value.primaryKey} : null)
           }) // _.merge({}, DEFAULT_OPTIONS, configOptions.value)
         )
         switchedStore = true
@@ -94,15 +90,19 @@ export default ({
         return null
       }
     }),
-    itemStatus: computed(() => itemStoreReady.value ? _.get(store.state, `${stateNamespace.value}.itemStatus`) : 'NotLoaded'),
+    itemStatus: computed(() =>
+      itemStoreReady.value ? _.get(store.state, `${stateNamespace.value}.itemStatus`) : 'NotLoaded'
+    ),
 
     // Methods
     resetItem,
     ensureItemStore,
-    ensureItemLoaded: (payload) => itemStoreReady.value ? store.dispatch(`${stateNamespace.value}/ensureItemLoaded`, payload) : null,
-    loadItem: (payload) => itemStoreReady.value ? store.dispatch(`${stateNamespace.value}/loadItem`, payload) : null,
-    reloadItem: (payload) => itemStoreReady.value ? store.dispatch(`${stateNamespace.value}/reloadItem`, payload) : null,
-    saveItem: (payload) => itemStoreReady.value ? store.dispatch(`${stateNamespace.value}/saveItem`, payload) : null,
-    setItemId: (payload) => itemStoreReady.value ? store.dispatch(`${stateNamespace.value}/setItemId`, payload) : null
+    ensureItemLoaded: (payload) =>
+      itemStoreReady.value ? store.dispatch(`${stateNamespace.value}/ensureItemLoaded`, payload) : null,
+    loadItem: (payload) => (itemStoreReady.value ? store.dispatch(`${stateNamespace.value}/loadItem`, payload) : null),
+    reloadItem: (payload) =>
+      itemStoreReady.value ? store.dispatch(`${stateNamespace.value}/reloadItem`, payload) : null,
+    saveItem: (payload) => (itemStoreReady.value ? store.dispatch(`${stateNamespace.value}/saveItem`, payload) : null),
+    setItemId: (payload) => (itemStoreReady.value ? store.dispatch(`${stateNamespace.value}/setItemId`, payload) : null)
   }
 }

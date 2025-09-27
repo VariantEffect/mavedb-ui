@@ -16,7 +16,6 @@ const module = {
   },
 
   actions: {
-
     reset() {
       // TODO
     },
@@ -34,7 +33,6 @@ const module = {
     togglePaneVisibility({commit, state}, paneName) {
       commit('setPaneVisibility', {paneName, visible: !state[paneName].visible})
     }
-
   }
 }
 

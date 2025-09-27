@@ -1,27 +1,28 @@
 <template>
-  <TabMenu class="mave-histogram-viz-select" v-if="hasTabBar" v-model:activeIndex="activeViz" :model="vizOptions" />
-  <div v-if="clinicalControlsEnabled && (!refreshedClinicalControls || !associatedClinicalControls)" style="font-size: small;">
-    <ProgressSpinner style="height: 24px; width: 24px;" />
+  <div class="mavedb-histogram-controls">
+    <TabMenu v-if="hasTabBar" v-model:active-index="activeViz" class="mave-histogram-viz-select" :model="vizOptions" />
+    <div v-if="showRanges" class="mavedb-histogram-custom-controls">
+      <div class="mavedb-histogram-control">
+        <label class="mavedb-histogram-control-label" for="mavedb-histogram-viz-select">Thresholds: </label>
+        <Dropdown
+          v-model="activeRangeKey"
+          :disabled="!showRanges"
+          input-id="mavedb-histogram-viz-select"
+          option-label="label"
+          :options="activeRangeOptions"
+          style="align-items: center; height: 1.5rem"
+        />
+      </div>
+    </div>
+  </div>
+  <div
+    v-if="clinicalControlsEnabled && (!refreshedClinicalControls || !associatedClinicalControls)"
+    style="font-size: small"
+  >
+    <ProgressSpinner style="height: 24px; width: 24px" />
     Loading clinical control options in the background. Additional histogram views will be available once loaded.
   </div>
-  <div v-if="showControls" class="mavedb-histogram-controls">
-    <div class="mavedb-histogram-control">
-      <label class="mavedb-histogram-control-label" for="mavedb-histogram-show-ranges-switch">{{
-        showRanges ? 'Hide Ranges:' : 'Show Ranges:'
-      }}</label>
-      <InputSwitch v-model="showRanges" class="ml-3" input-id="mavedb-histogram-show-ranges-switch" />
-      <label class="mavedb-histogram-control-label" for="mavedb-histogram-viz-select"
-        >Select a set of ranges to shade:
-      </label>
-      <Dropdown
-        v-model="activeRangeKey"
-        :disabled="!showRanges"
-        input-id="mavedb-histogram-viz-select"
-        option-label="label"
-        :options="activeRangeOptions"
-        style="align-items: center; height: 1.5rem"
-      />
-    </div>
+  <div v-if="showControls" class="mavedb-histogram-custom-controls">
     <div v-if="showClinicalControlOptions" class="mavedb-histogram-control">
       <label class="mavedb-histogram-control-label" for="mavedb-histogram-db-select">Clinical control database: </label>
       <Dropdown
@@ -32,7 +33,9 @@
         :options="clinicalControlOptions"
         style="align-items: center; height: 1.5rem"
       />
-      <label class="mavedb-histogram-control-label" for="mavedb-histogram-version-select">Clinical control version: </label>
+      <label class="mavedb-histogram-control-label" for="mavedb-histogram-version-select"
+        >Clinical control version:
+      </label>
       <Dropdown
         v-model="controlVersion"
         :disabled="!refreshedClinicalControls"
@@ -85,21 +88,21 @@
 </template>
 
 <script lang="ts">
+import axios from 'axios'
 import _ from 'lodash'
 import Accordion from 'primevue/accordion'
 import AccordionTab from 'primevue/accordiontab'
 import Checkbox from 'primevue/checkbox'
 import Dropdown from 'primevue/dropdown'
-import InputSwitch from 'primevue/inputswitch'
 import ProgressSpinner from 'primevue/progressspinner'
 import Rating from 'primevue/rating'
 import TabMenu from 'primevue/tabmenu'
 import {defineComponent, PropType} from 'vue'
-import config from '@/config'
-import axios from 'axios'
 
 import RangeTable from '@/components/RangeTable.vue'
 import useScopedId from '@/composables/scoped-id'
+import config from '@/config'
+import {AMINO_ACIDS} from '@/lib/amino-acids'
 import {saveChartAsFile} from '@/lib/chart-export'
 import {
   BENIGN_CLINICAL_SIGNIFICANCE_CLASSIFICATIONS,
@@ -125,7 +128,7 @@ import makeHistogram, {
   HistogramBin
 } from '@/lib/histogram'
 import {prepareRangesForHistogram, ScoreRanges, ScoreSetRanges} from '@/lib/ranges'
-import {variantNotNullOrNA} from '@/lib/mave-hgvs'
+import {parseSimpleProVariant, variantNotNullOrNA} from '@/lib/mave-hgvs'
 
 function naToUndefined(x: string | null | undefined) {
   if (variantNotNullOrNA(x)) {
@@ -162,7 +165,7 @@ interface ClinicalControlVariant {
 export default defineComponent({
   name: 'ScoreSetHistogram',
 
-  components: {Accordion, AccordionTab, Checkbox, Dropdown, InputSwitch, Rating, TabMenu, RangeTable, ProgressSpinner},
+  components: {Accordion, AccordionTab, Checkbox, Dropdown, Rating, TabMenu, RangeTable, ProgressSpinner},
 
   props: {
     coordinates: {
@@ -326,6 +329,16 @@ export default defineComponent({
             })
           }
 
+          if (this.selectedClinicalSignificanceClassifications.includes('Missense')) {
+            series.push({
+              classifier: (d: HistogramDatum) => this.variantIsMissense(d),
+              options: {
+                color: '#984ea3',
+                title: 'Missense'
+              }
+            })
+          }
+
           return series
         }
 
@@ -382,17 +395,29 @@ export default defineComponent({
 
     activeRangeOptions: function () {
       if (!this.activeRanges) return []
-      return Object.keys(this.activeRanges).map((key) => {
-        const label =
-          {
-            investigatorProvided: 'Investigator-provided functional classes',
-            pillarProject: 'Research Use Only: Zeiberg calibration'
-          }[key] || `${this.titleCase(key)} ranges`
+
+      const calibrationOptions = Object.entries(this.activeRanges).map(([key, value]) => {
+        const label = value.researchUseOnly
+          ? `Research Use Only: ${value.title}`
+          : value.title
         return {
           label,
           value: key
         }
       })
+
+      // Sort options: research use only at the end, alphabetically otherwise
+      calibrationOptions.sort((a, b) => {
+        const aIsResearchOnly = this.activeRanges?.[a.value]?.researchUseOnly || false
+        const bIsResearchOnly = this.activeRanges?.[b.value]?.researchUseOnly || false
+
+        if (aIsResearchOnly && !bIsResearchOnly) return 1
+        if (!aIsResearchOnly && bIsResearchOnly) return -1
+
+        return a.label.localeCompare(b.label)
+      })
+
+      return [{label: 'None', value: null}, ...calibrationOptions]
     },
 
     activeRange: function () {
@@ -460,18 +485,25 @@ export default defineComponent({
           //       (dnaHgvs ? `${spliceHgvs} (${dnaHgvs})` : spliceHgvs)
           //       : dnaHgvs
           // )
-          const mappedVariantLabel = mappedProteinHgvs ?
-              (mappedDnaHgvs ? `${mappedProteinHgvs} (${mappedDnaHgvs})` : mappedProteinHgvs)
-              : mappedDnaHgvs
-          const unmappedVariantLabel = unmappedProteinHgvs ?
-              (unmappedDnaHgvs ? `${unmappedProteinHgvs} (${unmappedDnaHgvs})` : unmappedProteinHgvs)
-              : unmappedSpliceHgvs ?
-                (unmappedDnaHgvs ? `${unmappedSpliceHgvs} (${unmappedDnaHgvs})` : unmappedSpliceHgvs)
-                : unmappedDnaHgvs
+          const mappedVariantLabel = mappedProteinHgvs
+            ? mappedDnaHgvs
+              ? `${mappedProteinHgvs} (${mappedDnaHgvs})`
+              : mappedProteinHgvs
+            : mappedDnaHgvs
+          const unmappedVariantLabel = unmappedProteinHgvs
+            ? unmappedDnaHgvs
+              ? `${unmappedProteinHgvs} (${unmappedDnaHgvs})`
+              : unmappedProteinHgvs
+            : unmappedSpliceHgvs
+              ? unmappedDnaHgvs
+                ? `${unmappedSpliceHgvs} (${unmappedDnaHgvs})`
+                : unmappedSpliceHgvs
+              : unmappedDnaHgvs
 
-          const variantLabel = this.coordinates == 'mapped' ?
-              mappedVariantLabel ?? variant.mavedb_label ?? unmappedVariantLabel
-              : variant.mavedb_label ?? unmappedVariantLabel
+          const variantLabel =
+            this.coordinates == 'mapped'
+              ? (mappedVariantLabel ?? variant.mavedb_label ?? unmappedVariantLabel)
+              : (variant.mavedb_label ?? unmappedVariantLabel)
           if (variantLabel) {
             parts.push(variantLabel)
           }
@@ -676,6 +708,34 @@ export default defineComponent({
   },
 
   methods: {
+    variantIsMissense(variant: Variant) {
+      const hgvsPro = this.getHgvsProFromVariant(variant)
+      if (!hgvsPro) {
+        return false
+      }
+      const parsedVariant = parseSimpleProVariant(hgvsPro)
+      if (!parsedVariant) {
+        return false
+      }
+      const refAllele = parsedVariant.original.toUpperCase()
+      const altAllele = parsedVariant.substitution.toUpperCase()
+      const refAlleleIsAA = AMINO_ACIDS.find((aa) => aa.codes.triple == refAllele)
+      const altAlleleIsAA = AMINO_ACIDS.find((aa) => aa.codes.triple == altAllele)
+      const startLoss = parsedVariant.position == 1 && refAllele == 'MET'
+      return !!(refAlleleIsAA && altAlleleIsAA && !startLoss && refAllele != altAllele)
+    },
+    getHgvsProFromVariant(variant: Variant) {
+      if (variant.post_mapped_hgvs_p && variant.post_mapped_hgvs_p != 'NA') {
+        return variant.post_mapped_hgvs_p
+      }
+      if (variant.hgvs_pro_inferred && variant.hgvs_pro_inferred != 'NA') {
+        return variant.hgvs_pro_inferred
+      }
+      if (variant.hgvs_pro && variant.hgvs_pro != 'NA') {
+        return variant.hgvs_pro
+      }
+      return null
+    },
     exportChart() {
       saveChartAsFile(
         this.$refs.histogramContainer,
@@ -770,14 +830,14 @@ export default defineComponent({
               this.clinicalControlCache[this.controlDb.dbName][this.controlVersion] = response.data
             }
           }
-        } catch (error) {
-          this.$toast.add({
-            severity: 'warn',
-            summary:
-              'No clinical control variants are associated with variants belonging to this score set. Clinical features are disabled.',
-            detail: error.detail,
-            life: 3000
-          })
+        } catch {
+          // this.$toast.add({
+          //   severity: 'warn',
+          //   summary:
+          //     'No clinical control variants are associated with variants belonging to this score set. Clinical features are disabled.',
+          //   detail: error.detail,
+          //   life: 3000
+          // })
           this.associatedClinicalControls = true
         }
       }
@@ -793,14 +853,14 @@ export default defineComponent({
           if (response.status == 200) {
             this.clinicalControlOptions = response.data
           }
-        } catch (error) {
-          this.$toast.add({
-            severity: 'warn',
-            summary:
-              'No clinical control variants are associated with variants belonging to this score set. Clinical features are disabled.',
-            detail: error.detail,
-            life: 3000
-          })
+        } catch {
+          // this.$toast.add({
+          //   severity: 'warn',
+          //   summary:
+          //     'No clinical control variants are associated with variants belonging to this score set. Clinical features are disabled.',
+          //   detail: error.detail,
+          //   life: 3000
+          // })
           // We still want to set the refreshed flag to true so that the loading spinner goes away.
           this.refreshedClinicalControls = true
           this.associatedClinicalControls = true
@@ -833,13 +893,13 @@ export default defineComponent({
       this.associatedClinicalControls = true
       this.someVariantsHaveClinicalSignificance = associatedAnyControlsWithVariants
 
-      if (!this.someVariantsHaveClinicalSignificance) {
-        this.$toast.add({
-          severity: 'warn',
-          summary:
-            'No clinical control variants are associated with variants belonging to this score set. Clinical features are disabled.'
-        })
-      }
+      //   if (!this.someVariantsHaveClinicalSignificance) {
+      //     this.$toast.add({
+      //       severity: 'warn',
+      //       summary:
+      //         'No clinical control variants are associated with variants belonging to this score set. Clinical features are disabled.'
+      //     })
+      //   }
     },
 
     defaultRangeKey: function () {
@@ -854,8 +914,10 @@ export default defineComponent({
       if (defaultInvestigatorProvidedIndex >= 0) {
         return this.activeRangeOptions[defaultInvestigatorProvidedIndex]
       } else if (this.activeRangeOptions.length > 0) {
-        return this.activeRangeOptions[0]
-      } else return null
+        return {label: 'None', value: null} // return this.activeRangeOptions[0]
+      } else {
+        return {label: 'None', value: null}
+      }
     },
 
     titleCase(s: string) {
@@ -870,6 +932,18 @@ export default defineComponent({
 
 <style scoped>
 .mavedb-histogram-controls {
+  display: flex;
+  flex-direction: row;
+  justify-content: space-between;
+  align-items: center;
+  background: #fff;
+}
+
+.mavedb-histogram-controls div:only-child {
+  margin-left: auto;
+}
+
+.mavedb-histogram-custom-controls {
   display: flex;
   flex-direction: column;
   gap: 1rem;

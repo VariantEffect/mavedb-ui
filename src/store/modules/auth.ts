@@ -18,7 +18,7 @@ const module = {
   state: {
     userProfile: null,
     roles: [],
-    activeRoles: ['ordinary user'],
+    activeRoles: ['ordinary user']
   },
 
   mutations: {
@@ -36,7 +36,7 @@ const module = {
   },
 
   actions: {
-    async userChanged({commit, state}: {commit: any, dispatch: any, getters: any, state: any}, newUserProfile: any) {
+    async userChanged({commit, state}: {commit: any; dispatch: any; getters: any; state: any}, newUserProfile: any) {
       if (!_.isEqual(newUserProfile, state.userProfile)) {
         commit('setUserProfile', newUserProfile)
         if (!newUserProfile) {
@@ -53,7 +53,10 @@ const module = {
       }
     },
 
-    async activeRolesChanged({commit, state}: {commit: any, dispatch: any, getters: any, state: any}, newActiveRoles: string[]) {
+    async activeRolesChanged(
+      {commit, state}: {commit: any; dispatch: any; getters: any; state: any},
+      newActiveRoles: string[]
+    ) {
       if (!_.isEqual(newActiveRoles, state.activeRoles)) {
         commit('setActiveRoles', newActiveRoles)
       }

@@ -1,9 +1,13 @@
 <template>
-  <DefaultLayout :overflow-y="alleles.length > 0 ? 'scroll' : 'hidden'">
+  <DefaultLayout
+    :footer="searchResultsVisible ? 'flow' : 'pinned'"
+    height="full"
+    :overflow-y="true || searchResultsVisible ? 'scroll' : 'hidden'"
+  >
     <div
       :class="[
         'mavedb-search-view',
-        alleles.length > 0 ? 'mavedb-search-view-with-results' : 'mavedb-search-view-without-results'
+        searchResultsVisible ? 'mavedb-search-view-with-results' : 'mavedb-search-view-without-results'
       ]"
     >
       <div class="mavedb-page-title">
@@ -31,6 +35,15 @@
             />
           </IconField>
           <Button class="p-button-plain" @click="hgvsSearch">Search</Button>
+          <div class="mavedb-clear-search-button-container">
+            <Button
+              class="p-button-plain"
+              :disabled="!searchIsClearable"
+              icon="pi pi-times"
+              rounded
+              @click="clearSearch"
+            />
+          </div>
         </div>
         <div class="mavedb-search-form-view-switch">
           Don't have a versioned reference sequence identifier? Click here to perform a fuzzy search instead:
@@ -39,8 +52,13 @@
       </div>
       <div v-if="fuzzySearchVisible" class="mavedb-search-form">
         <div class="mavedb-search-heading">Search MaveDB for human gene variants</div>
-        <div class="flex flex-wrap justify-content-center gap-3">
-          <InputText v-model="inputGene" class="mavedb-fuzzy-search-form-component" placeholder="Gene symbol (HGNC)" />
+        <div class="align-items-stretch flex flex-wrap justify-content-center gap-0">
+          <InputText
+            v-model="inputGene"
+            class="mavedb-fuzzy-search-form-component"
+            placeholder="Gene symbol (HGNC)"
+            type="search"
+          />
           <Dropdown
             v-model="inputVariantType"
             class="mavedb-fuzzy-search-form-component"
@@ -62,165 +80,433 @@
             placeholder="Alternate allele"
           />
           <Button class="p-button-plain" @click="fuzzySearch">Search</Button>
+          <div class="mavedb-clear-search-button-container">
+            <Button
+              class="p-button-plain"
+              :disabled="!searchIsClearable"
+              icon="pi pi-times"
+              rounded
+              @click="clearSearch"
+            />
+          </div>
         </div>
         <div class="mavedb-search-form-view-switch">
           Click here to return to HGVS search:
           <Button class="p-button-plain" @click="showSearch('hgvs')">HGVS Search</Button>
         </div>
       </div>
-      <p v-if="false && alleles.length === 0">
-        Enter an HGVS string or variant definition above to obtain a variant and its details.
-      </p>
-      <div v-for="(allele, alleleIdx) in alleles" :key="allele.clingenAlleleId" class="col-12">
-        <Card>
-          <template #content>
-            <div class="variant-search-result">
-              <div
-                v-if="
-                  allele.variants.nucleotide.length > 0 ||
-                  allele.variants.protein.length > 0 ||
-                  allele.variants.associatedNucleotide.length > 0
-                "
-                class="variant-search-result-button"
-              >
-                <router-link :to="`/variants/${allele.clingenAlleleId}`">
-                  <Button icon="pi pi-eye" label="View in MaveMD Clinical View" />
-                </router-link>
-              </div>
-              <div class="variant-search-result-content">
-                <!-- TODO handle no canonical allele name or just leave blank? -->
-                <div class="variant-search-result-title">
-                  {{ allele.canonicalAlleleName }}
-                </div>
-                <div v-if="allele.clingenAlleleUrl" class="variant-search-result-subcontent">
-                  ClinGen Allele ID:
-                  <a :href="allele.clingenAlleleUrl">{{ allele.clingenAlleleUrl }}</a>
-                </div>
-                <div v-if="allele.grch38Hgvs" class="variant-search-result-subcontent">
-                  GRCh38 coordinates: {{ allele.grch38Hgvs }}
-                </div>
-                <div v-if="allele.grch37Hgvs" class="variant-search-result-subcontent">
-                  GRCh37 coordinates: {{ allele.grch37Hgvs }}
-                </div>
-                <div v-if="allele.maneCoordinates.length > 0" class="variant-search-result-subcontent">
-                  MANE transcript coordinates:
-                  <DataTable show-gridlines size="small" striped-rows :value="allele.maneCoordinates">
-                    <Column field="sequenceType" header="Sequence Type"></Column>
-                    <Column field="database" header="Database"></Column>
-                    <Column field="hgvs" header="Coordinates"></Column>
-                  </DataTable>
-                </div>
+      <div v-if="!searchResultsVisible" class="mavedb-expander-container">
+        <Button
+          class="mavedb-expander-toggle"
+          :label="guideExpanded ? 'Show less' : 'Show more'"
+          text
+          @click="toggleGuide"
+        />
+        <div
+          v-if="!searchResultsVisible"
+          :class="['mavedb-expander', ...(guideExpanded ? ['mavedb-expander-expanded'] : [])]"
+        >
+          <p>
+            Try searching for variants using HGVS strings like
+            <span v-tooltip.top="'Click to search'" class="mavedb-search-example" @click="searchForText"
+              >ENST00000473961.6:c.-19-2A>T</span
+            >
+            and
+            <span v-tooltip.top="'Click to search'" class="mavedb-search-example" @click="searchForText"
+              >NP_000242.1:p.Asn566Thr</span
+            >. MaveDB supports a variety of HGVS formats for searching. Or browse these curated data sets:
+          </p>
+          <table>
+            <tr>
+              <th>Gene</th>
+              <th>Experiment or score set</th>
+            </tr>
+            <tr>
+              <td>ASPA</td>
+              <td>
+                <EntityLink entity-type="scoreSet" urn="urn:mavedb:00000657-a-1" /><br /><EntityLink
+                  entity-type="scoreSet"
+                  urn="urn:mavedb:00000657-b-1"
+                />
+              </td>
+            </tr>
+            <tr>
+              <td>BRCA1</td>
+              <td>
+                <EntityLink entity-type="scoreSet" urn="urn:mavedb:00001222-a-1" /><br /><EntityLink
+                  entity-type="scoreSet"
+                  urn="urn:mavedb:00001222-b-1"
+                />
+                <br /><EntityLink entity-type="scoreSet" urn="urn:mavedb:00000097-0-2" />
+              </td>
+            </tr>
+            <tr>
+              <td>BRCA2</td>
+              <td><EntityLink entity-type="scoreSet" urn="urn:mavedb:00001224-a-1" /></td>
+            </tr>
+            <tr>
+              <td>CALM1, CALM2, and CALM3</td>
+              <td><EntityLink entity-type="scoreSet" urn="urn:mavedb:00000001-c-1" /></td>
+            </tr>
+            <tr>
+              <td>CARD11</td>
+              <td>
+                <EntityLink entity-type="scoreSet" urn="urn:mavedb:00001226-a-1" /><br /><EntityLink
+                  entity-type="scoreSet"
+                  urn="urn:mavedb:00001226-b-1"
+                />
+              </td>
+            </tr>
+            <tr>
+              <td>CBS</td>
+              <td>
+                <EntityLink entity-type="scoreSet" urn="urn:mavedb:00000005-a-6" /><br /><EntityLink
+                  entity-type="scoreSet"
+                  urn="urn:mavedb:00000005-a-5"
+                />
+              </td>
+            </tr>
+            <tr>
+              <td>CHEK2</td>
+              <td><EntityLink entity-type="scoreSet" urn="urn:mavedb:00001205-a-1" /></td>
+            </tr>
+            <tr>
+              <td>CRX</td>
+              <td><EntityLink entity-type="scoreSet" urn="urn:mavedb:00001227-a-1" /></td>
+            </tr>
+            <tr>
+              <td>DDX3X</td>
+              <td><EntityLink entity-type="scoreSet" urn="urn:mavedb:00001228-a-1" /></td>
+            </tr>
+            <tr>
+              <td>F9</td>
+              <td>
+                <EntityLink entity-type="scoreSet" urn="urn:mavedb:00001200-d-1" /><br /><EntityLink
+                  entity-type="scoreSet"
+                  urn="urn:mavedb:00001200-e-1"
+                />
+                <br /><EntityLink entity-type="scoreSet" urn="urn:mavedb:00001200-b-1" /><br /><EntityLink
+                  entity-type="scoreSet"
+                  urn="urn:mavedb:00001200-c-1"
+                /><br /><EntityLink entity-type="scoreSet" urn="urn:mavedb:00001200-a-1" />
+              </td>
+            </tr>
+            <tr>
+              <td>FKRP</td>
+              <td><EntityLink entity-type="scoreSet" urn="urn:mavedb:00001197-a-4" /></td>
+            </tr>
+            <tr>
+              <td>GCK</td>
+              <td><EntityLink entity-type="scoreSet" urn="urn:mavedb:00000096-a-1" /></td>
+            </tr>
+            <tr>
+              <td>GCK</td>
+              <td><EntityLink entity-type="scoreSet" urn="urn:mavedb:00000096-b-1" /></td>
+            </tr>
+            <tr>
+              <td>HMBS</td>
+              <td><EntityLink entity-type="scoreSet" urn="urn:mavedb:00000108-a-3" /></td>
+            </tr>
+            <tr>
+              <td>HMBS</td>
+              <td>
+                <EntityLink entity-type="scoreSet" urn="urn:mavedb:00000108-a-2" /><br /><EntityLink
+                  entity-type="scoreSet"
+                  urn="urn:mavedb:00000108-a-1"
+                />
+              </td>
+            </tr>
+            <tr>
+              <td>JAG1</td>
+              <td><EntityLink entity-type="scoreSet" urn="urn:mavedb:00001198-a-1" /></td>
+            </tr>
+            <tr>
+              <td>KCNE1</td>
+              <td>
+                <EntityLink entity-type="scoreSet" urn="urn:mavedb:00000674-a-4" /><br /><EntityLink
+                  entity-type="scoreSet"
+                  urn="urn:mavedb:00000674-a-3"
+                /><br /><EntityLink entity-type="scoreSet" urn="urn:mavedb:00000674-a-2" />
+              </td>
+            </tr>
+            <tr>
+              <td>KCNH2</td>
+              <td><EntityLink entity-type="scoreSet" urn="urn:mavedb:00001230-a-1" /></td>
+            </tr>
+            <tr>
+              <td>KCNH2</td>
+              <td>
+                <EntityLink entity-type="scoreSet" urn="urn:mavedb:00001229-a-1" /><br /><EntityLink
+                  entity-type="scoreSet"
+                  urn="urn:mavedb:00001231-a-1"
+                />
+              </td>
+            </tr>
+            <tr>
+              <td>KCNQ4</td>
+              <td>
+                <EntityLink entity-type="scoreSet" urn="urn:mavedb:00000094-a-2" /><br /><EntityLink
+                  entity-type="scoreSet"
+                  urn="urn:mavedb:00000094-a-3"
+                />
+              </td>
+            </tr>
+            <tr>
+              <td>LARGE1</td>
+              <td><EntityLink entity-type="scoreSet" urn="urn:mavedb:00001197-a-3" /></td>
+            </tr>
+            <tr>
+              <td>MSH2</td>
+              <td><EntityLink entity-type="scoreSet" urn="urn:mavedb:00000050-a-1" /></td>
+            </tr>
+            <tr>
+              <td>NDUFAF6</td>
+              <td><EntityLink entity-type="scoreSet" urn="urn:mavedb:00000663-a-1" /></td>
+            </tr>
+            <tr>
+              <td>OTC</td>
+              <td><EntityLink entity-type="scoreSet" urn="urn:mavedb:00000112-a-1" /></td>
+            </tr>
+            <tr>
+              <td>PAX6</td>
+              <td>
+                <EntityLink entity-type="scoreSet" urn="urn:mavedb:00000665-a-2" /><br /><EntityLink
+                  entity-type="scoreSet"
+                  urn="urn:mavedb:00000665-a-4"
+                /><br /><EntityLink entity-type="scoreSet" urn="urn:mavedb:00000665-a-1" /><br /><EntityLink
+                  entity-type="scoreSet"
+                  urn="urn:mavedb:00000665-a-3"
+                />
+              </td>
+            </tr>
+            <tr>
+              <td>PTEN</td>
+              <td>
+                <EntityLink entity-type="scoreSet" urn="urn:mavedb:00000013-a-1" /><br /><EntityLink
+                  entity-type="scoreSet"
+                  urn="urn:mavedb:00000054-a-1"
+                />
+              </td>
+            </tr>
+            <tr>
+              <td>RHO</td>
+              <td><EntityLink entity-type="scoreSet" urn="urn:mavedb:00000099-a-1" /></td>
+            </tr>
+            <tr>
+              <td>SCN5A</td>
+              <td>
+                <EntityLink entity-type="scoreSet" urn="urn:mavedb:00000098-a-1" /><br /><EntityLink
+                  entity-type="scoreSet"
+                  urn="urn:mavedb:00001233-a-1"
+                />
+              </td>
+            </tr>
+            <tr>
+              <td>SGCB</td>
+              <td><EntityLink entity-type="scoreSet" urn="urn:mavedb:00000659-a-1" /></td>
+            </tr>
+            <tr>
+              <td>TARDBP</td>
+              <td>
+                <EntityLink entity-type="scoreSet" urn="urn:mavedb:00000060-a-1" /><br /><EntityLink
+                  entity-type="scoreSet"
+                  urn="urn:mavedb:00000060-a-2"
+                />
+              </td>
+            </tr>
+            <tr>
+              <td>TP53</td>
+              <td>
+                <EntityLink entity-type="scoreSet" urn="urn:mavedb:00001235-a-1" /><br /><EntityLink
+                  entity-type="scoreSet"
+                  urn="urn:mavedb:00001236-0-1"
+                /><br /><EntityLink entity-type="scoreSet" urn="urn:mavedb:00001234-0-1" /><br /><EntityLink
+                  entity-type="scoreSet"
+                  urn="urn:mavedb:00000068-0-1"
+                /><br /><EntityLink entity-type="scoreSet" urn="urn:mavedb:00000068-c-1" /><br /><EntityLink
+                  entity-type="scoreSet"
+                  urn="urn:mavedb:00000068-b-1"
+                /><br /><EntityLink entity-type="scoreSet" urn="urn:mavedb:00000068-a-1" /><br /><EntityLink
+                  entity-type="scoreSet"
+                  urn="urn:mavedb:00001234-e-1"
+                /><br /><EntityLink entity-type="scoreSet" urn="urn:mavedb:00001234-c-1" /><br /><EntityLink
+                  entity-type="scoreSet"
+                  urn="urn:mavedb:00001234-f-1"
+                /><br /><EntityLink entity-type="scoreSet" urn="urn:mavedb:00001234-d-1" /><br /><EntityLink
+                  entity-type="scoreSet"
+                  urn="urn:mavedb:00001234-b-1"
+                /><br /><EntityLink entity-type="scoreSet" urn="urn:mavedb:00001234-g-1" /><br /><EntityLink
+                  entity-type="scoreSet"
+                  urn="urn:mavedb:00001234-h-1"
+                /><br /><EntityLink entity-type="scoreSet" urn="urn:mavedb:00001234-a-1" />
+              </td>
+            </tr>
+            <tr>
+              <td>TPK1</td>
+              <td><EntityLink entity-type="scoreSet" urn="urn:mavedb:00000001-d-1" /></td>
+            </tr>
+            <tr>
+              <td>VHL</td>
+              <td><EntityLink entity-type="scoreSet" urn="urn:mavedb:00000675-a-1" /></td>
+            </tr>
+          </table>
+        </div>
+      </div>
+      <div v-if="searchResultsVisible">
+        <div v-for="(allele, alleleIdx) in alleles" :key="allele.clingenAlleleId" class="col-12">
+          <Card>
+            <template #content>
+              <div class="variant-search-result">
                 <div
                   v-if="
-                    allele.variantsStatus == 'Loaded' &&
-                    (allele.variants.nucleotide.length > 0 ||
-                      allele.variants.protein.length > 0 ||
-                      allele.variants.associatedNucleotide.length > 0)
+                    allele.variants.nucleotide.length > 0 ||
+                    allele.variants.protein.length > 0 ||
+                    allele.variants.associatedNucleotide.length > 0
                   "
+                  class="variant-search-result-button"
                 >
-                  <div v-if="allele.variants.nucleotide.length > 0" class="variant-search-result-subcontent">
-                    MaveDB score sets measuring variant at the nucleotide level:
-                    <li
-                      v-for="variant in nucleotideScoreSetListIsExpanded[alleleIdx]
-                        ? allele.variants.nucleotide
-                        : allele.variants.nucleotide.slice(0, defaultNumScoreSetsToShow)"
-                      :key="variant.urn"
-                    >
-                      <router-link
-                        :to="{name: 'scoreSet', params: {urn: variant.scoreSet.urn}, query: {variant: variant.urn}}"
-                      >
-                        {{ variant.scoreSet.title }}
-                      </router-link>
-                    </li>
-                    <Button
-                      v-if="allele.variants.nucleotide.length > defaultNumScoreSetsToShow"
-                      class="p-button-text"
-                      icon="pi pi-angle-down"
-                      style="width: fit-content"
-                      @click="
-                        nucleotideScoreSetListIsExpanded[alleleIdx] = !nucleotideScoreSetListIsExpanded[alleleIdx]
-                      "
-                    >
-                      {{
-                        nucleotideScoreSetListIsExpanded[alleleIdx]
-                          ? 'Show less'
-                          : `Show ${allele.variants.nucleotide.length - defaultNumScoreSetsToShow} more`
-                      }}
-                    </Button>
-                  </div>
-                  <div v-if="allele.variants.protein.length > 0" class="variant-search-result-subcontent">
-                    MaveDB score sets measuring variant at the amino acid level:
-                    <li
-                      v-for="variant in proteinScoreSetListIsExpanded[alleleIdx]
-                        ? allele.variants.protein
-                        : allele.variants.protein.slice(0, defaultNumScoreSetsToShow)"
-                      :key="variant.urn"
-                    >
-                      <router-link
-                        :to="{name: 'scoreSet', params: {urn: variant.scoreSet.urn}, query: {variant: variant.urn}}"
-                      >
-                        {{ variant.scoreSet.title }}
-                      </router-link>
-                    </li>
-                    <Button
-                      v-if="allele.variants.protein.length > defaultNumScoreSetsToShow"
-                      class="p-button-text"
-                      icon="pi pi-angle-down"
-                      style="width: fit-content"
-                      @click="proteinScoreSetListIsExpanded[alleleIdx] = !proteinScoreSetListIsExpanded[alleleIdx]"
-                    >
-                      {{
-                        proteinScoreSetListIsExpanded[alleleIdx]
-                          ? 'Show less'
-                          : `Show ${allele.variants.protein.length - defaultNumScoreSetsToShow} more`
-                      }}
-                    </Button>
-                  </div>
-                  <div v-if="allele.variants.associatedNucleotide.length > 0" class="variant-search-result-subcontent">
-                    MaveDB score sets measuring a different nucleotide variant with an equivalent protein effect:
-                    <li
-                      v-for="variant in associatedNucleotideScoreSetListIsExpanded[alleleIdx]
-                        ? allele.variants.associatedNucleotide
-                        : allele.variants.nucleotide.slice(0, defaultNumScoreSetsToShow)"
-                      :key="variant.urn"
-                    >
-                      <router-link
-                        :to="{name: 'scoreSet', params: {urn: variant.scoreSet.urn}, query: {variant: variant.urn}}"
-                      >
-                        {{ variant.scoreSet.title }}
-                      </router-link>
-                    </li>
-                    <Button
-                      v-if="allele.variants.associatedNucleotide.length > defaultNumScoreSetsToShow"
-                      class="p-button-text"
-                      icon="pi pi-angle-down"
-                      style="width: fit-content"
-                      @click="
-                        associatedNucleotideScoreSetListIsExpanded[alleleIdx] =
-                          !associatedNucleotideScoreSetListIsExpanded[alleleIdx]
-                      "
-                    >
-                      {{
-                        associatedNucleotideScoreSetListIsExpanded[alleleIdx]
-                          ? 'Show less'
-                          : `Show ${allele.variants.associatedNucleotide.length - defaultNumScoreSetsToShow} more`
-                      }}
-                    </Button>
-                  </div>
+                  <router-link :to="`/variants/${allele.clingenAlleleId}`">
+                    <Button icon="pi pi-eye" label="View in MaveMD Clinical View" />
+                  </router-link>
                 </div>
-                <!-- <div v-if="allele.variantsStatus == 'Loaded' && allele.variants.length > 0" style="overflow: hidden;">
-                  <div v-for="variant in allele.variants" :key="variant.urn" style="float: left; border: 1px solid #000; width: 300px; margin: 5px; padding: 5px;">
-                    <div style="border-bottom: 3px solid #000; font-weight: bold;">{{ variant.scoreSet.title }}</div>
-                    {{ variant.scoreSet?.experiment?.keywords }}
+                <div class="variant-search-result-content">
+                  <!-- TODO handle no canonical allele name or just leave blank? -->
+                  <div class="variant-search-result-title">
+                    {{ allele.canonicalAlleleName }}
                   </div>
-                </div> -->
-                <Message v-else-if="allele.variantsStatus == 'Loaded'"
-                  >No score sets containing this variant were found in MaveDB.</Message
-                >
+                  <div v-if="allele.clingenAlleleUrl" class="variant-search-result-subcontent">
+                    ClinGen Allele ID:
+                    <a :href="allele.clingenAlleleUrl">{{ allele.clingenAlleleUrl }}</a>
+                  </div>
+                  <div v-if="allele.grch38Hgvs" class="variant-search-result-subcontent">
+                    GRCh38 coordinates: {{ allele.grch38Hgvs }}
+                  </div>
+                  <div v-if="allele.grch37Hgvs" class="variant-search-result-subcontent">
+                    GRCh37 coordinates: {{ allele.grch37Hgvs }}
+                  </div>
+                  <div v-if="allele.maneCoordinates.length > 0" class="variant-search-result-subcontent">
+                    MANE transcript coordinates:
+                    <DataTable show-gridlines size="small" striped-rows :value="allele.maneCoordinates">
+                      <Column field="sequenceType" header="Sequence Type"></Column>
+                      <Column field="database" header="Database"></Column>
+                      <Column field="hgvs" header="Coordinates"></Column>
+                    </DataTable>
+                  </div>
+                  <div
+                    v-if="
+                      allele.variantsStatus == 'Loaded' &&
+                      (allele.variants.nucleotide.length > 0 ||
+                        allele.variants.protein.length > 0 ||
+                        allele.variants.associatedNucleotide.length > 0)
+                    "
+                  >
+                    <div v-if="allele.variants.nucleotide.length > 0" class="variant-search-result-subcontent">
+                      MaveDB score sets measuring variant at the nucleotide level:
+                      <li
+                        v-for="variant in nucleotideScoreSetListIsExpanded[alleleIdx]
+                          ? allele.variants.nucleotide
+                          : allele.variants.nucleotide.slice(0, defaultNumScoreSetsToShow)"
+                        :key="variant.urn"
+                      >
+                        <router-link
+                          :to="{name: 'scoreSet', params: {urn: variant.scoreSet.urn}, query: {variant: variant.urn}}"
+                        >
+                          {{ variant.scoreSet.title }}
+                        </router-link>
+                      </li>
+                      <Button
+                        v-if="allele.variants.nucleotide.length > defaultNumScoreSetsToShow"
+                        class="p-button-text"
+                        icon="pi pi-angle-down"
+                        style="width: fit-content"
+                        @click="
+                          nucleotideScoreSetListIsExpanded[alleleIdx] = !nucleotideScoreSetListIsExpanded[alleleIdx]
+                        "
+                      >
+                        {{
+                          nucleotideScoreSetListIsExpanded[alleleIdx]
+                            ? 'Show less'
+                            : `Show ${allele.variants.nucleotide.length - defaultNumScoreSetsToShow} more`
+                        }}
+                      </Button>
+                    </div>
+                    <div v-if="allele.variants.protein.length > 0" class="variant-search-result-subcontent">
+                      MaveDB score sets measuring variant at the amino acid level:
+                      <li
+                        v-for="variant in proteinScoreSetListIsExpanded[alleleIdx]
+                          ? allele.variants.protein
+                          : allele.variants.protein.slice(0, defaultNumScoreSetsToShow)"
+                        :key="variant.urn"
+                      >
+                        <router-link
+                          :to="{name: 'scoreSet', params: {urn: variant.scoreSet.urn}, query: {variant: variant.urn}}"
+                        >
+                          {{ variant.scoreSet.title }}
+                        </router-link>
+                      </li>
+                      <Button
+                        v-if="allele.variants.protein.length > defaultNumScoreSetsToShow"
+                        class="p-button-text"
+                        icon="pi pi-angle-down"
+                        style="width: fit-content"
+                        @click="proteinScoreSetListIsExpanded[alleleIdx] = !proteinScoreSetListIsExpanded[alleleIdx]"
+                      >
+                        {{
+                          proteinScoreSetListIsExpanded[alleleIdx]
+                            ? 'Show less'
+                            : `Show ${allele.variants.protein.length - defaultNumScoreSetsToShow} more`
+                        }}
+                      </Button>
+                    </div>
+                    <div
+                      v-if="allele.variants.associatedNucleotide.length > 0"
+                      class="variant-search-result-subcontent"
+                    >
+                      MaveDB score sets measuring a different nucleotide variant with an equivalent protein effect:
+                      <li
+                        v-for="variant in associatedNucleotideScoreSetListIsExpanded[alleleIdx]
+                          ? allele.variants.associatedNucleotide
+                          : allele.variants.nucleotide.slice(0, defaultNumScoreSetsToShow)"
+                        :key="variant.urn"
+                      >
+                        <router-link
+                          :to="{name: 'scoreSet', params: {urn: variant.scoreSet.urn}, query: {variant: variant.urn}}"
+                        >
+                          {{ variant.scoreSet.title }}
+                        </router-link>
+                      </li>
+                      <Button
+                        v-if="allele.variants.associatedNucleotide.length > defaultNumScoreSetsToShow"
+                        class="p-button-text"
+                        icon="pi pi-angle-down"
+                        style="width: fit-content"
+                        @click="
+                          associatedNucleotideScoreSetListIsExpanded[alleleIdx] =
+                            !associatedNucleotideScoreSetListIsExpanded[alleleIdx]
+                        "
+                      >
+                        {{
+                          associatedNucleotideScoreSetListIsExpanded[alleleIdx]
+                            ? 'Show less'
+                            : `Show ${allele.variants.associatedNucleotide.length - defaultNumScoreSetsToShow} more`
+                        }}
+                      </Button>
+                    </div>
+                  </div>
+                  <!-- <div v-if="allele.variantsStatus == 'Loaded' && allele.variants.length > 0" style="overflow: hidden;">
+                    <div v-for="variant in allele.variants" :key="variant.urn" style="float: left; border: 1px solid #000; width: 300px; margin: 5px; padding: 5px;">
+                      <div style="border-bottom: 3px solid #000; font-weight: bold;">{{ variant.scoreSet.title }}</div>
+                      {{ variant.scoreSet?.experiment?.keywords }}
+                    </div>
+                  </div> -->
+                  <Message v-else-if="allele.variantsStatus == 'Loaded'"
+                    >No score sets containing this variant were found in MaveDB.</Message
+                  >
+                </div>
               </div>
-            </div>
-          </template>
-        </Card>
+            </template>
+          </Card>
+        </div>
       </div>
     </div>
   </DefaultLayout>
@@ -243,6 +529,7 @@ import {useRoute, useRouter} from 'vue-router'
 import {useToast} from 'primevue/usetoast'
 
 import config from '@/config'
+import EntityLink from '@/components/common/EntityLink.vue'
 import DefaultLayout from '@/components/layout/DefaultLayout.vue'
 
 const SCORE_SETS_TO_SHOW = 5
@@ -256,6 +543,7 @@ export default defineComponent({
     DataTable,
     DefaultLayout,
     Dropdown,
+    EntityLink,
     IconField,
     InputIcon,
     InputText,
@@ -275,6 +563,7 @@ export default defineComponent({
       loading: false,
       hgvsSearchVisible: true,
       fuzzySearchVisible: false,
+      searchResultsVisible: false,
       searchText: null as string | null,
       inputGene: null as string | null,
       inputVariantType: null as string | null,
@@ -310,11 +599,23 @@ export default defineComponent({
       nucleotideScoreSetListIsExpanded: [] as Array<boolean>,
       proteinScoreSetListIsExpanded: [] as Array<boolean>,
       associatedNucleotideScoreSetListIsExpanded: [] as Array<boolean>,
-      defaultNumScoreSetsToShow: SCORE_SETS_TO_SHOW
+      defaultNumScoreSetsToShow: SCORE_SETS_TO_SHOW,
+      guideExpanded: false
     }
   },
 
   computed: {
+    searchIsClearable: function () {
+      console.log(this.searchText)
+      return (
+        !_.isEmpty(this.searchText) ||
+        !_.isEmpty(this.inputGene) ||
+        !_.isEmpty(this.inputVariantType) ||
+        !_.isEmpty(this.inputVariantPosition) ||
+        !_.isEmpty(this.inputReferenceAllele) ||
+        !_.isEmpty(this.inputAlternateAllele)
+      )
+    },
     // clingenAlleleId: function() {
     //   return this.allele?.['@id']?.split('/')?.at(-1)
     // },
@@ -404,11 +705,33 @@ export default defineComponent({
   },
 
   methods: {
+    toggleGuide: function () {
+      this.guideExpanded = !this.guideExpanded
+    },
+    searchForText: function (event) {
+      const element = event.target
+      if (element) {
+        this.showSearch('hgvs')
+        this.searchText = element.innerText
+        this.hgvsSearch()
+      }
+    },
+    clearSearch() {
+      this.searchText = null
+      this.inputGene = null
+      this.inputVariantType = null
+      this.inputVariantPosition = null
+      this.inputReferenceAllele = null
+      this.inputAlternateAllele = null
+      this.searchResultsVisible = false
+      this.alleles = []
+    },
     showSearch(searchType: 'fuzzy' | 'hgvs' = 'hgvs') {
       this.hgvsSearchVisible = searchType == 'hgvs'
       this.fuzzySearchVisible = searchType == 'fuzzy'
     },
     hgvsSearch: async function () {
+      this.searchResultsVisible = true
       // Remove fuzzy search params from the URL
       const {gene, variantType, variantPosition, refAllele, altAllele, ...rest} = this.route.query
       this.router.replace({
@@ -638,6 +961,7 @@ export default defineComponent({
       }
     },
     fuzzySearch: async function () {
+      this.searchResultsVisible = true
       // Remove HGVS search param from the URL
       const {search, ...rest} = this.route.query
       this.router.replace({
@@ -747,12 +1071,6 @@ export default defineComponent({
 </script>
 
 <style scoped>
-.mavedb-search-view {
-  display: flex;
-  flex-direction: column;
-  position: relative;
-  height: 100%;
-}
 .mavedb-page-title {
   text-align: center;
 }
@@ -769,10 +1087,15 @@ export default defineComponent({
   font-size: 110%;
 }
 
+.mavedb-search-view {
+  position: relative;
+}
+
 .mavedb-search-view-without-results {
-  height: 100%;
   display: flex;
   flex-direction: column;
+  height: 100%;
+  display: flex;
 }
 
 .mavedb-search-view-without-results .mavedb-page-title {
@@ -818,7 +1141,7 @@ export default defineComponent({
 }
 
 .mavedb-fuzzy-search-form-component {
-  margin: 0 10px;
+  margin: 0 5px;
 }
 
 .mavedb-search-tabs {
@@ -874,5 +1197,48 @@ export default defineComponent({
 
 .variant-search-result-subcontent {
   margin-top: 5px;
+}
+
+.mavedb-search-example {
+  background: #eee;
+  padding: 0 3px;
+  cursor: pointer;
+}
+
+.mavedb-clear-search-button-container {
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+  margin: 0 0 0 5px;
+}
+
+.mavedb-expander-container {
+  position: relative;
+  padding: 0 0 2em 0;
+}
+
+.mavedb-expander {
+  margin: 0;
+  max-height: 9lh;
+  overflow-y: hidden;
+}
+
+.mavedb-expander-expanded {
+  max-height: none;
+}
+
+.mavedb-expander-toggle {
+  position: absolute;
+  bottom: 0;
+}
+
+.mavedb-expander p {
+  margin: 0 0 0.5lh 0;
+}
+
+td,
+th {
+  padding: 0 5px;
+  vertical-align: top;
 }
 </style>

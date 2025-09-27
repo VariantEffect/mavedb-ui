@@ -13,8 +13,8 @@ export function routeToVariantSearchIfVariantIsSearchable(searchText: string | n
     const description = hgvsMatches.groups.description
 
     // Regex for RefSeq/Ensembl transcript IDs
-    const transcriptRegex = /^(N[CMPR]_|X[MR]_|ENST|ENSMUST|ENSMUST|XM_|XR_)[0-9]+(\.[0-9]+)?$/gm
-    if (transcriptRegex.test(identifier)) {
+    const accessionRegex = /^(N[CMPR]_|X[MR]_|ENST|ENSMUST|ENSMUST|ENSP)[0-9]+(\.[0-9]+)?$/gm
+    if (accessionRegex.test(identifier)) {
       // Transcript: treat as normal HGVS
       console.log(`Routing to mavemd with HGVS: ${hgvsMatches[0]}`)
       router.push({name: 'mavemd', query: {search: hgvsMatches[0]}})

@@ -527,6 +527,7 @@ import Message from 'primevue/message'
 import {defineComponent} from 'vue'
 import {useRoute, useRouter} from 'vue-router'
 import {useToast} from 'primevue/usetoast'
+import {useHead} from '@unhead/vue'
 
 import config from '@/config'
 import EntityLink from '@/components/common/EntityLink.vue'
@@ -552,6 +553,8 @@ export default defineComponent({
   },
 
   setup() {
+    useHead({title: 'MaveMD variant search'})
+
     const route = useRoute()
     const router = useRouter()
     const toast = useToast()

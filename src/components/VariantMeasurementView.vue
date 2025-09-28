@@ -121,6 +121,7 @@ import axios from 'axios'
 import Card from 'primevue/card'
 import {useRestResource} from 'rest-client-vue'
 import {defineComponent, watch} from 'vue'
+import {useHead} from '@unhead/vue'
 
 import AssayFactSheet from '@/components/AssayFactSheet.vue'
 import ScoreSetHistogram from '@/components/ScoreSetHistogram.vue'
@@ -144,6 +145,7 @@ export default defineComponent({
   },
 
   setup: (props) => {
+    const head = useHead()
     const {data: scoresData, setDataUrl: setScoresDataUrl, ensureDataLoaded: ensureScoresDataLoaded} = useRemoteData()
 
     const {
@@ -172,6 +174,7 @@ export default defineComponent({
     )
 
     return {
+      head,
       ...useFormatters(),
 
       config: config,
@@ -310,6 +313,11 @@ export default defineComponent({
         }
       },
       immediate: true
+    },
+    variantName: {
+      handler: function (newValue) {
+        this.head.patch({title: newValue ? `Variant ${newValue}` : 'Variant'})
+      }
     }
   },
 

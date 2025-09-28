@@ -46,7 +46,7 @@ import _ from 'lodash'
 import axios from 'axios'
 import {marked} from 'marked'
 import Button from 'primevue/button'
-import config from '@/config'
+import {useHead} from '@unhead/vue'
 
 import DefaultLayout from '@/components/layout/DefaultLayout'
 import ItemNotFound from '@/components/common/ItemNotFound'
@@ -54,6 +54,7 @@ import PageLoading from '@/components/common/PageLoading'
 import useAuth from '@/composition/auth'
 import useItem from '@/composition/item'
 import useFormatters from '@/composition/formatters'
+import config from '@/config'
 
 export default {
   name: 'ExperimentSetView',
@@ -68,6 +69,7 @@ export default {
   },
 
   setup: () => {
+    useHead({title: 'Experiment set'})
     const {userIsAuthenticated} = useAuth()
 
     return {

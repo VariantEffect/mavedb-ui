@@ -459,20 +459,20 @@ export default defineComponent({
     },
 
     vizOptions: function () {
-      const options = [{label: 'Overall Distribution', view: 'distribution'}]
+      const options = [{label: 'Overall Distribution', view: 'distribution', clinicalControlLegendNoteEnabled: false}]
 
       if (this.someVariantsHaveClinicalSignificance) {
-        options.push({label: 'Clinical View', view: 'clinical'})
+        options.push({label: 'Clinical View', view: 'clinical', clinicalControlLegendNoteEnabled: true})
       }
 
       // crude to be based on clinical significance. may be a better option for viz control
       if (this.someVariantsHaveClinicalSignificance) {
-        options.push({label: 'Protein Effect View', view: 'effect'})
+        options.push({label: 'Protein Effect View', view: 'effect', clinicalControlLegendNoteEnabled: false})
       }
 
       // custom view should always come last
       if (this.someVariantsHaveClinicalSignificance) {
-        options.push({label: 'Custom', view: 'custom'})
+        options.push({label: 'Custom', view: 'custom', clinicalControlLegendNoteEnabled: true})
       }
       return options
     },
@@ -900,9 +900,9 @@ export default defineComponent({
         .seriesClassifier(seriesClassifier)
         .title('Distribution of Functional Scores')
         .legendNote(
-          this.activeViz == 0 || !this.refreshedClinicalControls
-            ? null
-            : `${this.controlDb?.dbName} data from version ${this.controlVersion}`
+          this.vizOptions[this.activeViz]?.clinicalControlLegendNoteEnabled && this.refreshedClinicalControls
+            ? `${this.controlDb?.dbName} data from version ${this.controlVersion}`
+            : null
         )
         .shaders(this.histogramShaders)
 

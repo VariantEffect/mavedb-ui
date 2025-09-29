@@ -133,7 +133,7 @@ export default defineComponent({
 
   computed: {
     firstAuthor: function () {
-      const firstAuthor = this.scoreSet.primaryPublicationIdentifiers[0]?.authors[0].name
+      const firstAuthor = this.scoreSet.primaryPublicationIdentifiers[0]?.authors.find((author) => author.primary)
       const firstAuthorLastName = _.isEmpty(firstAuthor) ? undefined : firstAuthor.split(',')[0]
       return firstAuthorLastName
     },

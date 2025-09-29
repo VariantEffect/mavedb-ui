@@ -468,7 +468,7 @@ export default {
     item: {
       handler: function (newValue) {
         this.head.patch({
-          title: getScoreSetShortName(newValue)
+          title: newValue ? getScoreSetShortName(newValue) : undefined
         })
       }
     },

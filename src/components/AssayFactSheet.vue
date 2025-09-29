@@ -119,6 +119,7 @@
 import _ from 'lodash'
 import {defineComponent, PropType} from 'vue'
 
+import {getScoreSetFirstAuthor} from '@/lib/score-sets'
 import type {components} from '@/schema/openapi'
 
 export default defineComponent({
@@ -133,9 +134,8 @@ export default defineComponent({
 
   computed: {
     firstAuthor: function () {
-      const firstAuthor = this.scoreSet.primaryPublicationIdentifiers[0]?.authors.find((author) => author.primary)
-      const firstAuthorLastName = _.isEmpty(firstAuthor) ? undefined : firstAuthor.split(',')[0]
-      return firstAuthorLastName
+      const firstAuthor = getScoreSetFirstAuthor(this.scoreSet)
+      return !firstAuthor || _.isEmpty(firstAuthor?.name) ? undefined : firstAuthor.name.split(',')[0]
     },
 
     numAuthors: function () {

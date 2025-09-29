@@ -143,6 +143,7 @@ export default defineComponent({
     },
 
     geneAndYear: function () {
+      // TODO VariantEffect/mavedb-api#450
       const gene = this.scoreSet.targetGenes?.[0]?.name
       const year = this.scoreSet.primaryPublicationIdentifiers[0]?.publicationYear
       const parts = [gene, year?.toString()].filter((x) => x != null)

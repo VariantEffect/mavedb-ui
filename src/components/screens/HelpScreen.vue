@@ -43,12 +43,18 @@
 
 <script lang="ts">
 import {defineComponent} from 'vue'
+import {useHead} from '@unhead/vue'
 
 import DefaultLayout from '@/components/layout/DefaultLayout.vue'
 
 export default defineComponent({
   name: 'HelpScreen',
-  components: {DefaultLayout}
+
+  components: {DefaultLayout},
+
+  setup: () => {
+    useHead({title: 'Help'})
+  }
 })
 </script>
 

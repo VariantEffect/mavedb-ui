@@ -131,21 +131,24 @@ import Button from 'primevue/button'
 import Card from 'primevue/card'
 import Checkbox from 'primevue/checkbox'
 import InputText from 'primevue/inputtext'
+import {useHead} from '@unhead/vue'
 
-import config from '@/config'
 import DefaultLayout from '@/components/layout/DefaultLayout'
 import useScopedId from '@/composables/scoped-id'
+import useAuth from '@/composition/auth'
 import useClipboard from '@/composition/clipboard'
 import useItem from '@/composition/item'
 import useItems from '@/composition/items'
-
-import useAuth from '@/composition/auth'
+import config from '@/config'
 
 export default {
   name: 'HomeView',
+
   components: {Button, Card, DefaultLayout, InputText, Checkbox},
 
   setup: () => {
+    useHead({title: 'Settings'})
+
     const {item: user, setItemId: setUserId, saveItem: saveUser} = useItem({itemTypeName: 'me'})
     const {items: accessKeys, invalidateItems: invalidateAccessKeys} = useItems({itemTypeName: 'my-access-key'})
     const {activeRoles, updateActiveRoles} = useAuth()

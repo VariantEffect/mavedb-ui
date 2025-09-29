@@ -56,6 +56,7 @@ import Message from 'primevue/message'
 import TabPanel from 'primevue/tabpanel'
 import TabView from 'primevue/tabview'
 import {defineComponent} from 'vue'
+import {useHead} from '@unhead/vue'
 
 import ErrorView from '@/components/common/ErrorView.vue'
 import PageLoading from '@/components/common/PageLoading.vue'
@@ -73,6 +74,10 @@ export default defineComponent({
       required: true
     }
   },
+
+  setup: () => ({
+    head: useHead({title: 'Variant search results'})
+  }),
 
   data: () => ({
     activeVariantIndex: 0,
@@ -114,6 +119,13 @@ export default defineComponent({
         }
       },
       immediate: true
+    },
+    clingenAlleleName: {
+      handler: async function (newValue) {
+        this.head.patch({
+          title: newValue ? `Variant ${newValue}` : 'Variant'
+        })
+      }
     }
   },
 

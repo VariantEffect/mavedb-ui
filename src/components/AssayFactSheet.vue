@@ -1,7 +1,15 @@
 <template>
   <div class="mavedb-assay-facts-card">
     <div class="mavedb-assay-facts-card-header">
-      <span class="mavedb-assay-facts-author">{{ authorLine }}</span>
+      <span class="mavedb-assay-facts-heading">
+        <template v-if="firstAuthor">{{ firstAuthor }}</template>
+        <span v-if="firstAuthor && numAuthors > 1" class="mavedb-assay-facts-heading-et-al">&nbsp;et al.</span>
+        <template v-if="geneAndYear"><template v-if="firstAuthor">&nbsp;</template>{{ geneAndYear }}</template>
+        <span v-if="(firstAuthor || geneAndYear) && journal" class="mavedb-assay-facts-heading-journal"
+          >&nbsp;{{ journal }}</span
+        >
+        <template v-if="missingAuthorGeneAndYear">Score set</template>
+      </span>
     </div>
     <div class="mavedb-assay-facts-section mavedb-assay-facts-bottom-separator">
       <div class="mavedb-assay-facts-row">
@@ -119,8 +127,10 @@
 </template>
 
 <script lang="ts">
+import _ from 'lodash'
 import {defineComponent, PropType} from 'vue'
 
+import {getScoreSetFirstAuthor} from '@/lib/score-sets'
 import type {components} from '@/schema/openapi'
 
 export default defineComponent({
@@ -134,15 +144,29 @@ export default defineComponent({
   },
 
   computed: {
-    authorLine: function () {
-      const author = this.scoreSet.primaryPublicationIdentifiers[0]?.authors[0].name
-      const gene = this.scoreSet.targetGenes?.[0]?.name || ''
-      const year = this.scoreSet.primaryPublicationIdentifiers[0]?.publicationYear || ''
+    firstAuthor: function () {
+      const firstAuthor = getScoreSetFirstAuthor(this.scoreSet)
+      return !firstAuthor || _.isEmpty(firstAuthor?.name) ? undefined : firstAuthor.name.split(',')[0]
+    },
 
-      if (author && author.length > 0) {
-        return `${author} et al. ${gene} ${year}`
-      }
-      return `${gene} ${year}`
+    numAuthors: function () {
+      return this.scoreSet.primaryPublicationIdentifiers[0]?.authors.length ?? 0
+    },
+
+    geneAndYear: function () {
+      // TODO VariantEffect/mavedb-api#450
+      const gene = this.scoreSet.targetGenes?.[0]?.name
+      const year = this.scoreSet.primaryPublicationIdentifiers[0]?.publicationYear
+      const parts = [gene, year?.toString()].filter((x) => x != null)
+      return parts.length > 0 ? parts.join(' ') : undefined
+    },
+
+    missingAuthorGeneAndYear: function () {
+      return !this.firstAuthor && !this.geneAndYear
+    },
+
+    journal: function () {
+      return this.scoreSet.primaryPublicationIdentifiers[0]?.publicationJournal
     },
 
     detectsNmd: function () {
@@ -252,10 +276,15 @@ export default defineComponent({
   border-radius: 4px;
 }
 
-/* Specific fields */
+/* Heading */
 
-.mavedb-assay-facts-author {
+.mavedb-assay-facts-heading {
   font-size: 21px;
+}
+
+.mavedb-assay-facts-heading-et-al,
+.mavedb-assay-facts-heading-journal {
+  font-style: italic;
 }
 
 /* Variant classification */

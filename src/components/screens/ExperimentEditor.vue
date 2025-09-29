@@ -362,6 +362,7 @@ import ProgressSpinner from 'primevue/progressspinner'
 import TabPanel from 'primevue/tabpanel'
 import TabView from 'primevue/tabview'
 import Textarea from 'primevue/textarea'
+import {useHead} from '@unhead/vue'
 
 import DefaultLayout from '@/components/layout/DefaultLayout'
 import EmailPrompt from '@/components/common/EmailPrompt'
@@ -485,6 +486,8 @@ export default {
   },
 
   setup: () => {
+    useHead({title: 'Edit experiment'})
+
     const {userProfile} = useAuth()
 
     const variantLibraryKeywordOptions = useItems({itemTypeName: `controlled-keywords-variant-search`})

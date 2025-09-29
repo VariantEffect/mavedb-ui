@@ -1285,6 +1285,7 @@ import TabPanel from 'primevue/tabpanel'
 import TabView from 'primevue/tabview'
 import Textarea from 'primevue/textarea'
 import {ref} from 'vue'
+import {useHead} from '@unhead/vue'
 
 import EmailPrompt from '@/components/common/EmailPrompt'
 import EntityLink from '@/components/common/EntityLink'
@@ -1378,6 +1379,8 @@ export default {
   },
 
   setup: () => {
+    useHead({title: 'Edit score set'})
+
     const publicationIdentifierSuggestions = useItems({itemTypeName: 'publication-identifier-search'})
     const externalPublicationIdentifierSuggestions = useItems({itemTypeName: 'external-publication-identifier-search'})
     const targetGeneIdentifierSuggestions = {}

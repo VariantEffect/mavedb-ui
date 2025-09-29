@@ -296,6 +296,7 @@ import Sidebar from 'primevue/sidebar'
 import SplitButton from 'primevue/splitbutton'
 import {ref} from 'vue'
 import {mapState} from 'vuex'
+import {useHead} from '@unhead/vue'
 
 import AssayFactSheet from '@/components/AssayFactSheet'
 import CollectionAdder from '@/components/CollectionAdder'
@@ -316,6 +317,7 @@ import useItem from '@/composition/item'
 import useRemoteData from '@/composition/remote-data'
 import config from '@/config'
 import {preferredVariantLabel, variantNotNullOrNA} from '@/lib/mave-hgvs'
+import {getScoreSetShortName} from '@/lib/score-sets'
 import {parseScoresOrCounts} from '@/lib/scores'
 import {parseSimpleCodingVariants, translateSimpleCodingVariants} from '@/lib/variants'
 
@@ -354,11 +356,14 @@ export default {
   },
 
   setup: () => {
+    const head = useHead()
+
     const {userIsAuthenticated} = useAuth()
     const scoresRemoteData = useRemoteData()
     const variantSearchSuggestions = ref([])
 
     return {
+      head,
       config: config,
       userIsAuthenticated,
 
@@ -460,6 +465,13 @@ export default {
   },
 
   watch: {
+    item: {
+      handler: function (newValue) {
+        this.head.patch({
+          title: newValue ? getScoreSetShortName(newValue) : undefined
+        })
+      }
+    },
     itemId: {
       handler: function (newValue, oldValue) {
         if (newValue != oldValue) {

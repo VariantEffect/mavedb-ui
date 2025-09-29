@@ -45,6 +45,7 @@ import DefaultLayout from '@/components/layout/DefaultLayout'
 import ItemNotFound from '@/components/common/ItemNotFound'
 import useAuth from '@/composition/auth'
 import useItem from '@/composition/item'
+import {useHead} from '@unhead/vue'
 
 export default {
   name: 'WizardCompletionView',
@@ -59,6 +60,8 @@ export default {
   },
 
   setup: () => {
+    useHead({title: 'Score set saved!'})
+
     const {userIsAuthenticated} = useAuth()
 
     return {

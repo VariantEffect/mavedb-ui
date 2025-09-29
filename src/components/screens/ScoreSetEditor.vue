@@ -1177,9 +1177,28 @@
                       </template>
                     </FileUpload>
                   </span>
-                  <span v-if="validationErrors.scoresFile" class="mave-field-error">{{
-                    validationErrors.scoresFile
-                  }}</span>
+                  <span v-if="validationErrors.scoresFile" class="mave-field-error">{{validationErrors.scoresFile}}</span>
+                </div>
+                <div class="field">
+                  <span class="p-float-label">
+                    <FileUpload
+                      :id="scopedId('input-scoresColumnMetadataFile')"
+                      ref="scoresColumnMetadataFileUpload"
+                      accept="application/json"
+                      :auto="false"
+                      choose-label="Scores column metadata file"
+                      :class="inputClasses.scoresColumnMetadataFile || ''"
+                      :custom-upload="true"
+                      :file-limit="1"
+                      :show-cancel-button="false"
+                      :show-upload-button="false"
+                    >
+                      <template #empty>
+                        <p>Drop a JSON file here.</p>
+                      </template>
+                    </FileUpload>
+                  </span>
+                  <span v-if="validationErrors.scoresColumnMetadataFile" class="mave-field-error">{{validationErrors.scoresColumnMetadataFile}}</span>
                 </div>
                 <div class="field">
                   <span class="p-float-label">
@@ -1200,9 +1219,28 @@
                       </template>
                     </FileUpload>
                   </span>
-                  <span v-if="validationErrors.countsFile" class="mave-field-error">{{
-                    validationErrors.countsFile
-                  }}</span>
+                  <span v-if="validationErrors.countsFile" class="mave-field-error">{{validationErrors.countsFile}}</span>
+                </div>
+                <div class="field">
+                  <span class="p-float-label">
+                    <FileUpload
+                      :id="scopedId('input-countsColumnMetadataFile')"
+                      ref="countsColumnMetadataFileUpload"
+                      accept="application/json"
+                      :auto="false"
+                      choose-label="Counts column metadata file"
+                      :class="inputClasses.countsColumnMetadataFile || ''"
+                      :custom-upload="true"
+                      :file-limit="1"
+                      :show-cancel-button="false"
+                      :show-upload-button="false"
+                    >
+                      <template #empty>
+                        <p>Drop a JSON file here.</p>
+                      </template>
+                    </FileUpload>
+                  </span>
+                  <span v-if="validationErrors.countsColumnMetadataFile" class="mave-field-error">{{validationErrors.countsColumnMetadataFile}}</span>
                 </div>
               </template>
             </Card>
@@ -2400,6 +2438,12 @@ export default {
         formData.append('scores_file', this.$refs.scoresFileUpload.files[0])
         if (this.$refs.countsFileUpload.files.length == 1) {
           formData.append('counts_file', this.$refs.countsFileUpload.files[0])
+        }
+        if (this.$refs.scoresColumnMetadataFileUpload.files.length == 1) {
+          formData.append('scores_column_metadata_file', this.$refs.scoresColumnMetadataFileUpload.files[0])
+        }
+        if (this.$refs.countsColumnMetadataFileUpload.files.length == 1) {
+          formData.append('counts_column_metadata_file', this.$refs.countsColumnMetadataFileUpload.files[0])
         }
         this.progressVisible = true
         let response

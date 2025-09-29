@@ -2096,7 +2096,7 @@ export default {
                   this.clientSideValidationErrors.extraMetadata =
                     'Extra metadata must be a JSON object (not an array or simple value).'
                 } else {
-                  this.clientSideValidationErrors.extraMetadata = null
+                  delete this.clientSideValidationErrors.extraMetadata
                 }
               } catch {
                 this.extraMetadata = null
@@ -2125,7 +2125,7 @@ export default {
                     'The FASTA file contains more than one sequence.'
                 } else {
                   this.targetGene.targetSequence.sequence = fastaData[0].sequence
-                  this.clientSideValidationErrors['targetGene.targetSequence.sequence'] = null
+                  delete this.clientSideValidationErrors['targetGene.targetSequence.sequence']
                 }
               } catch {
                 this.targetGene.targetSequence.sequence = null

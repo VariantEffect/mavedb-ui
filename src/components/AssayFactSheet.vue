@@ -20,6 +20,17 @@
         </div>
       </div>
       <div class="mavedb-assay-facts-row">
+        <div class="mavedb-assay-facts-label">Molecular Mechanism Assessed</div>
+        <div class="mavedb-assay-facts-value">
+          <div v-if="scoreSet.experiment.keywords?.some((k) => k.keyword.key === 'Molecular Mechanism Assessed')">
+            {{
+              scoreSet.experiment.keywords.find((k) => k.keyword.key === 'Molecular Mechanism Assessed').keyword.label
+            }}
+          </div>
+          <div v-else>Not specified</div>
+        </div>
+      </div>
+      <div class="mavedb-assay-facts-row">
         <div class="mavedb-assay-facts-label">Variant Consequences Detected</div>
         <div class="mavedb-assay-facts-value">
           <div v-if="scoreSet.experiment.keywords?.some((k) => k.keyword.key === 'Phenotypic Assay Mechanism')">

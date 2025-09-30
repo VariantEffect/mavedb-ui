@@ -205,15 +205,11 @@
             </tr>
             <tr>
               <td>HMBS</td>
-              <td><EntityLink entity-type="scoreSet" urn="urn:mavedb:00000108-a-3" /></td>
-            </tr>
-            <tr>
-              <td>HMBS</td>
               <td>
-                <EntityLink entity-type="scoreSet" urn="urn:mavedb:00000108-a-2" /><br /><EntityLink
+                <EntityLink entity-type="scoreSet" urn="urn:mavedb:00000108-a-3" /><br /><EntityLink
                   entity-type="scoreSet"
-                  urn="urn:mavedb:00000108-a-1"
-                />
+                  urn="urn:mavedb:00000108-a-2"
+                /><br /><EntityLink entity-type="scoreSet" urn="urn:mavedb:00000108-a-1" />
               </td>
             </tr>
             <tr>
@@ -231,11 +227,8 @@
             </tr>
             <tr>
               <td>KCNH2</td>
-              <td><EntityLink entity-type="scoreSet" urn="urn:mavedb:00001230-a-1" /></td>
-            </tr>
-            <tr>
-              <td>KCNH2</td>
               <td>
+                <EntityLink entity-type="scoreSet" urn="urn:mavedb:00001230-a-1" /><br />
                 <EntityLink entity-type="scoreSet" urn="urn:mavedb:00001229-a-1" /><br /><EntityLink
                   entity-type="scoreSet"
                   urn="urn:mavedb:00001231-a-1"

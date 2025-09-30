@@ -415,7 +415,7 @@ export default defineComponent({
             })
           }
 
-          if (this.selectedVariantTypeFilters.includes('Missense')) {
+          if (this.proteinEffectOptionsAvailable && this.selectedVariantTypeFilters.includes('Missense')) {
             series.push({
               classifier: (d: HistogramDatum) => variantIsMissense(d),
               options: {
@@ -425,7 +425,7 @@ export default defineComponent({
             })
           }
 
-          if (this.selectedVariantTypeFilters.includes('Synonymous')) {
+          if (this.proteinEffectOptionsAvailable && this.selectedVariantTypeFilters.includes('Synonymous')) {
             series.push({
               classifier: (d: HistogramDatum) => variantIsSynonymous(d),
               options: {
@@ -435,7 +435,7 @@ export default defineComponent({
             })
           }
 
-          if (this.selectedVariantTypeFilters.includes('Nonsense')) {
+          if (this.proteinEffectOptionsAvailable && this.selectedVariantTypeFilters.includes('Nonsense')) {
             series.push({
               classifier: (d: HistogramDatum) => variantIsNonsense(d),
               options: {
@@ -445,7 +445,7 @@ export default defineComponent({
             })
           }
 
-          if (this.selectedVariantTypeFilters.includes('Start/Stop Loss')) {
+          if (this.proteinEffectOptionsAvailable && this.selectedVariantTypeFilters.includes('Start/Stop Loss')) {
             series.push({
               classifier: (d: HistogramDatum) => isStartOrStopLoss(d),
               options: {
@@ -455,7 +455,7 @@ export default defineComponent({
             })
           }
 
-          if (this.selectedVariantTypeFilters.includes('Other')) {
+          if (this.proteinEffectOptionsAvailable && this.selectedVariantTypeFilters.includes('Other')) {
             series.push({
               classifier: (d: HistogramDatum) => variantIsOther(d),
               options: {

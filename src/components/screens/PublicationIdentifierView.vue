@@ -131,7 +131,8 @@ export default {
           }
         )
         // TODO (#130) catch errors in response
-        this.scoreSets = response.data || []
+        // TODO Handle the case where there were more matching score sets than the search result limit.
+        this.scoreSets = response.data?.scoreSets || []
 
         // reset published score sets search results when using search bar
         this.publishedScoresets = []

@@ -32,6 +32,13 @@ export interface SimpleProteinVariation {
 }
 
 export interface SimpleDnaVariation extends SimpleProteinVariation {
+  /**
+   * The numeric position from a MaveHGVS-nt string where the position is a simple numeral.
+   *
+   * Non-numeric positions are used for UTRs and introns in c. notation.
+   */
+  position: number | undefined
+  positionStr: string
   referenceType: 'c' | 'g' | 'n'
 }
 
@@ -46,7 +53,7 @@ type VariantLabel = {
  * properly represented as Ter and del in MaveHGVS.
  */
 const proVariantRegex = /^p\.([A-Za-z]{3})([0-9]+)([A-Za-z]{3}|=|\*|-)$/
-const ntVariantRegex = /^(c|g|n)\.([0-9]+)([ACGTacgt]{1})>([ACGTactg]{1})$/
+const ntVariantRegex = /^(c|g|n)\.([0-9*-+]+)([ACGTacgt]{1})>([ACGTactg]{1})$/
 
 /**
  * Parse a MaveHGVS protein variant representing a variation at one locus.
@@ -71,6 +78,8 @@ export function parseSimpleProVariant(variant: string): SimpleProteinVariation |
   }
 }
 
+const noncodingCdotPositionRegex = /^\d+$/m
+
 /**
  * Parse a MaveHGVS nucleotide variant representing a variation at one locus.
  *
@@ -86,8 +95,10 @@ export function parseSimpleNtVariant(variant: string): SimpleDnaVariation | null
     // console.log(`WARNING: Unrecognized pro variant: ${variant}`)
     return null
   }
+  const positionIsNumeric = match[2] && noncodingCdotPositionRegex.test(match[2])
   return {
-    position: parseInt(match[2]),
+    position: positionIsNumeric ? parseInt(match[2]) : undefined,
+    positionStr: match[2],
     original: match[3],
     referenceType: match[1] as 'c' | 'g' | 'n',
     substitution: match[4],

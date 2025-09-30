@@ -1007,6 +1007,7 @@ export default function makeHistogram(): Histogram {
       }
 
       updateSelectionAfterRefresh()
+      refreshHighlighting()
 
       return chart
     },

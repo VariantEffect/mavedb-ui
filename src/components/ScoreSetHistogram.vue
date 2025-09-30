@@ -1,7 +1,7 @@
 <template>
   <div class="mavedb-histogram-controls">
     <TabMenu v-if="hasTabBar" v-model:active-index="activeViz" class="mave-histogram-viz-select" :model="vizOptions" />
-    <div v-if="showRanges" class="mavedb-histogram-custom-controls">
+    <div v-if="showRanges" class="mavedb-histogram-thresholds-control">
       <div class="mavedb-histogram-control">
         <label class="mavedb-histogram-control-label" for="mavedb-histogram-viz-select">Thresholds: </label>
         <Dropdown
@@ -1084,16 +1084,20 @@ export default defineComponent({
   gap: 0.5rem;
 }
 
+.mavedb-histogram-thresholds-control {
+  margin-left: auto
+}
+
+.mavedb-histogram-thresholds-control:first-child {
+  margin-left: 0
+}
+
 .mavedb-histogram-controls {
   display: flex;
   flex-direction: row;
   justify-content: space-between;
   align-items: center;
   background: #fff;
-}
-
-.mavedb-histogram-controls div:only-child {
-  margin-left: auto;
 }
 
 .mavedb-histogram-custom-controls {

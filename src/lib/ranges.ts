@@ -1,4 +1,4 @@
-import { HistogramShader } from '@/lib/histogram'
+import { HistogramBin, HistogramShader } from '@/lib/histogram'
 
 export const NORMAL_RANGE_DEFAULT_COLOR = '#4444ff'
 export const ABNORMAL_RANGE_DEFAULT_COLOR = '#ff4444'
@@ -86,7 +86,7 @@ export function prepareRangesForHistogram(scoreRanges: ScoreRanges): HistogramSh
     const scoreRange: HistogramShader = {
       min: range.range[0],
       max: range.range[1],
-      title: range.label,
+      title: range.evidenceStrength ? EVIDENCE_STRENGTHS_REVERSED[range.evidenceStrength] : range.label,
       align: 'center',
       color: getRangeColor(range),
       thresholdColor: getRangeColor(range),
@@ -110,4 +110,47 @@ function getRangeColor(range: ScoreRange): string {
   } else {
     return '#000000'
   }
+}
+
+/**
+ * Determines whether a shader range overlaps a histogram bin.
+ *
+ * The comparison treats both the shader range and the bin as half-open intervals:
+ * overlap requires that the shader's minimum be strictly less than the bin's
+ * upper bound (x1) and the shader's maximum be strictly greater than the bin's
+ * lower bound (x0). Consequently, a range that only "touches" a bin at the upper
+ * boundary point (e.g., range.max === bin.x0) is NOT considered an overlap.
+ *
+ * Unspecified (undefined) range endpoints are treated as unbounded in that
+ * direction (i.e., min defaults to -Infinity and max defaults to +Infinity),
+ * allowing the function to represent half-unbounded or fully unbounded ranges.
+ *
+ * @param range - A HistogramShader object whose optional `min` and `max`
+ * numeric properties define the (potentially unbounded) shader interval.
+ * @param bin - A HistogramBin object with numeric `x0` (lower bound) and `x1`
+ * (upper bound) defining the bin interval.
+ * @returns True if the shader range and the bin have a non-empty half-open
+ * intersection; false otherwise.
+ *
+ * @example
+ * // Given a bin [0, 10) (conceptually) with x0 = 0, x1 = 10:
+ * shaderOverlapsBin({ min: -5, max: 2 }, bin)    // true (overlaps lower part)
+ * shaderOverlapsBin({ min: 10, max: 20 }, bin)   // true (touches at 10 only)
+ * shaderOverlapsBin({ min: 0, max: 10 }, bin)    // true (spans the bin)
+ * shaderOverlapsBin({ min: 10 }, bin)            // false (starts exactly at x1)
+ * shaderOverlapsBin({ max: 0 }, bin)             // false (ends exactly at x0)
+ * shaderOverlapsBin({}, bin)                     // true (unbounded overlaps)
+ *
+ * @remarks
+ * Our HistogramBin objects don't currently have information on whether bounds are
+ * inclusive or exclusive, so we treat them as strictly open intervals [x0, x1). This
+ * is consistent with how the histogram bins are defined, but may be inconsistent with
+ * the ranges themselves. Once we have that information, we may want to revisit this logic
+ * to handle inclusive bounds properly.
+ */
+export function shaderOverlapsBin(range: HistogramShader, bin: HistogramBin): boolean {
+  const rangeMin = range.min ?? -Infinity
+  const rangeMax = range.max ?? Infinity
+
+  return rangeMin < bin.x1 && rangeMax >= bin.x0
 }

@@ -119,229 +119,36 @@
           <table>
             <tr>
               <th>Gene</th>
-              <th>Experiment or score set</th>
+              <th>Score set</th>
+              <th>Publication</th>
             </tr>
-            <tr>
-              <td>ASPA</td>
-              <td>
-                <EntityLink entity-type="scoreSet" urn="urn:mavedb:00000657-a-1" /><br /><EntityLink
-                  entity-type="scoreSet"
-                  urn="urn:mavedb:00000657-b-1"
-                />
-              </td>
-            </tr>
-            <tr>
-              <td>BRCA1</td>
-              <td>
-                <EntityLink entity-type="scoreSet" urn="urn:mavedb:00001222-a-1" /><br /><EntityLink
-                  entity-type="scoreSet"
-                  urn="urn:mavedb:00001222-b-1"
-                />
-                <br /><EntityLink entity-type="scoreSet" urn="urn:mavedb:00000097-0-2" />
-              </td>
-            </tr>
-            <tr>
-              <td>BRCA2</td>
-              <td><EntityLink entity-type="scoreSet" urn="urn:mavedb:00001224-a-1" /></td>
-            </tr>
-            <tr>
-              <td>CALM1, CALM2, and CALM3</td>
-              <td><EntityLink entity-type="scoreSet" urn="urn:mavedb:00000001-c-1" /></td>
-            </tr>
-            <tr>
-              <td>CARD11</td>
-              <td>
-                <EntityLink entity-type="scoreSet" urn="urn:mavedb:00001226-a-1" /><br /><EntityLink
-                  entity-type="scoreSet"
-                  urn="urn:mavedb:00001226-b-1"
-                />
-              </td>
-            </tr>
-            <tr>
-              <td>CBS</td>
-              <td>
-                <EntityLink entity-type="scoreSet" urn="urn:mavedb:00000005-a-6" /><br /><EntityLink
-                  entity-type="scoreSet"
-                  urn="urn:mavedb:00000005-a-5"
-                />
-              </td>
-            </tr>
-            <tr>
-              <td>CHEK2</td>
-              <td><EntityLink entity-type="scoreSet" urn="urn:mavedb:00001205-a-1" /></td>
-            </tr>
-            <tr>
-              <td>CRX</td>
-              <td><EntityLink entity-type="scoreSet" urn="urn:mavedb:00001227-a-1" /></td>
-            </tr>
-            <tr>
-              <td>DDX3X</td>
-              <td><EntityLink entity-type="scoreSet" urn="urn:mavedb:00001228-a-1" /></td>
-            </tr>
-            <tr>
-              <td>F9</td>
-              <td>
-                <EntityLink entity-type="scoreSet" urn="urn:mavedb:00001200-d-1" /><br /><EntityLink
-                  entity-type="scoreSet"
-                  urn="urn:mavedb:00001200-e-1"
-                />
-                <br /><EntityLink entity-type="scoreSet" urn="urn:mavedb:00001200-b-1" /><br /><EntityLink
-                  entity-type="scoreSet"
-                  urn="urn:mavedb:00001200-c-1"
-                /><br /><EntityLink entity-type="scoreSet" urn="urn:mavedb:00001200-a-1" />
-              </td>
-            </tr>
-            <tr>
-              <td>FKRP</td>
-              <td><EntityLink entity-type="scoreSet" urn="urn:mavedb:00001197-a-4" /></td>
-            </tr>
-            <tr>
-              <td>GCK</td>
-              <td><EntityLink entity-type="scoreSet" urn="urn:mavedb:00000096-a-1" /></td>
-            </tr>
-            <tr>
-              <td>GCK</td>
-              <td><EntityLink entity-type="scoreSet" urn="urn:mavedb:00000096-b-1" /></td>
-            </tr>
-            <tr>
-              <td>HMBS</td>
-              <td>
-                <EntityLink entity-type="scoreSet" urn="urn:mavedb:00000108-a-3" /><br /><EntityLink
-                  entity-type="scoreSet"
-                  urn="urn:mavedb:00000108-a-2"
-                /><br /><EntityLink entity-type="scoreSet" urn="urn:mavedb:00000108-a-1" />
-              </td>
-            </tr>
-            <tr>
-              <td>JAG1</td>
-              <td><EntityLink entity-type="scoreSet" urn="urn:mavedb:00001198-a-1" /></td>
-            </tr>
-            <tr>
-              <td>KCNE1</td>
-              <td>
-                <EntityLink entity-type="scoreSet" urn="urn:mavedb:00000674-a-4" /><br /><EntityLink
-                  entity-type="scoreSet"
-                  urn="urn:mavedb:00000674-a-3"
-                /><br /><EntityLink entity-type="scoreSet" urn="urn:mavedb:00000674-a-2" />
-              </td>
-            </tr>
-            <tr>
-              <td>KCNH2</td>
-              <td>
-                <EntityLink entity-type="scoreSet" urn="urn:mavedb:00001230-a-1" /><br />
-                <EntityLink entity-type="scoreSet" urn="urn:mavedb:00001229-a-1" /><br /><EntityLink
-                  entity-type="scoreSet"
-                  urn="urn:mavedb:00001231-a-1"
-                />
-              </td>
-            </tr>
-            <tr>
-              <td>KCNQ4</td>
-              <td>
-                <EntityLink entity-type="scoreSet" urn="urn:mavedb:00000094-a-2" /><br /><EntityLink
-                  entity-type="scoreSet"
-                  urn="urn:mavedb:00000094-a-3"
-                />
-              </td>
-            </tr>
-            <tr>
-              <td>LARGE1</td>
-              <td><EntityLink entity-type="scoreSet" urn="urn:mavedb:00001197-a-3" /></td>
-            </tr>
-            <tr>
-              <td>MSH2</td>
-              <td><EntityLink entity-type="scoreSet" urn="urn:mavedb:00000050-a-1" /></td>
-            </tr>
-            <tr>
-              <td>NDUFAF6</td>
-              <td><EntityLink entity-type="scoreSet" urn="urn:mavedb:00000663-a-1" /></td>
-            </tr>
-            <tr>
-              <td>OTC</td>
-              <td><EntityLink entity-type="scoreSet" urn="urn:mavedb:00000112-a-1" /></td>
-            </tr>
-            <tr>
-              <td>PAX6</td>
-              <td>
-                <EntityLink entity-type="scoreSet" urn="urn:mavedb:00000665-a-2" /><br /><EntityLink
-                  entity-type="scoreSet"
-                  urn="urn:mavedb:00000665-a-4"
-                /><br /><EntityLink entity-type="scoreSet" urn="urn:mavedb:00000665-a-1" /><br /><EntityLink
-                  entity-type="scoreSet"
-                  urn="urn:mavedb:00000665-a-3"
-                />
-              </td>
-            </tr>
-            <tr>
-              <td>PTEN</td>
-              <td>
-                <EntityLink entity-type="scoreSet" urn="urn:mavedb:00000013-a-1" /><br /><EntityLink
-                  entity-type="scoreSet"
-                  urn="urn:mavedb:00000054-a-1"
-                />
-              </td>
-            </tr>
-            <tr>
-              <td>RHO</td>
-              <td><EntityLink entity-type="scoreSet" urn="urn:mavedb:00000099-a-1" /></td>
-            </tr>
-            <tr>
-              <td>SCN5A</td>
-              <td>
-                <EntityLink entity-type="scoreSet" urn="urn:mavedb:00000098-a-1" /><br /><EntityLink
-                  entity-type="scoreSet"
-                  urn="urn:mavedb:00001233-a-1"
-                />
-              </td>
-            </tr>
-            <tr>
-              <td>SGCB</td>
-              <td><EntityLink entity-type="scoreSet" urn="urn:mavedb:00000659-a-1" /></td>
-            </tr>
-            <tr>
-              <td>TARDBP</td>
-              <td>
-                <EntityLink entity-type="scoreSet" urn="urn:mavedb:00000060-a-1" /><br /><EntityLink
-                  entity-type="scoreSet"
-                  urn="urn:mavedb:00000060-a-2"
-                />
-              </td>
-            </tr>
-            <tr>
-              <td>TP53</td>
-              <td>
-                <EntityLink entity-type="scoreSet" urn="urn:mavedb:00001235-a-1" /><br /><EntityLink
-                  entity-type="scoreSet"
-                  urn="urn:mavedb:00001236-0-1"
-                /><br /><EntityLink entity-type="scoreSet" urn="urn:mavedb:00001234-0-1" /><br /><EntityLink
-                  entity-type="scoreSet"
-                  urn="urn:mavedb:00000068-0-1"
-                /><br /><EntityLink entity-type="scoreSet" urn="urn:mavedb:00000068-c-1" /><br /><EntityLink
-                  entity-type="scoreSet"
-                  urn="urn:mavedb:00000068-b-1"
-                /><br /><EntityLink entity-type="scoreSet" urn="urn:mavedb:00000068-a-1" /><br /><EntityLink
-                  entity-type="scoreSet"
-                  urn="urn:mavedb:00001234-e-1"
-                /><br /><EntityLink entity-type="scoreSet" urn="urn:mavedb:00001234-c-1" /><br /><EntityLink
-                  entity-type="scoreSet"
-                  urn="urn:mavedb:00001234-f-1"
-                /><br /><EntityLink entity-type="scoreSet" urn="urn:mavedb:00001234-d-1" /><br /><EntityLink
-                  entity-type="scoreSet"
-                  urn="urn:mavedb:00001234-b-1"
-                /><br /><EntityLink entity-type="scoreSet" urn="urn:mavedb:00001234-g-1" /><br /><EntityLink
-                  entity-type="scoreSet"
-                  urn="urn:mavedb:00001234-h-1"
-                /><br /><EntityLink entity-type="scoreSet" urn="urn:mavedb:00001234-a-1" />
-              </td>
-            </tr>
-            <tr>
-              <td>TPK1</td>
-              <td><EntityLink entity-type="scoreSet" urn="urn:mavedb:00000001-d-1" /></td>
-            </tr>
-            <tr>
-              <td>VHL</td>
-              <td><EntityLink entity-type="scoreSet" urn="urn:mavedb:00000675-a-1" /></td>
-            </tr>
+            <template v-for="{gene, urns} in maveMdScoreSetsGroupedByGene" :key="gene">
+              <tr>
+                <td :rowspan="urns.length">{{ gene }}</td>
+                <td>
+                  <router-link :to="{name: 'scoreSet', params: {urn: urns[0]}}">{{
+                    maveMdScoreSets[urns[0]]?.title || urns[0]
+                  }}</router-link>
+                </td>
+                <td>
+                  <router-link v-if="maveMdScoreSets[urns[0]]" :to="{name: 'scoreSet', params: {urn: urns[0]}}">{{
+                    getScoreSetShortName(maveMdScoreSets[urns[0]]!)
+                  }}</router-link>
+                </td>
+              </tr>
+              <tr v-for="urn in urns.slice(1)" :key="urn">
+                <td>
+                  <router-link :to="{name: 'scoreSet', params: {urn}}">{{
+                    maveMdScoreSets[urn]?.title || urn
+                  }}</router-link>
+                </td>
+                <td>
+                  <router-link v-if="maveMdScoreSets[urn]" :to="{name: 'scoreSet', params: {urn}}">{{
+                    getScoreSetShortName(maveMdScoreSets[urn]!)
+                  }}</router-link>
+                </td>
+              </tr>
+            </template>
           </table>
         </div>
       </div>
@@ -523,10 +330,14 @@ import {useToast} from 'primevue/usetoast'
 import {useHead} from '@unhead/vue'
 
 import config from '@/config'
-import EntityLink from '@/components/common/EntityLink.vue'
 import DefaultLayout from '@/components/layout/DefaultLayout.vue'
+import {MAVE_MD_SCORE_SETS} from '@/lib/mavemd'
+import {components} from '@/schema/openapi'
+import {getScoreSetShortName} from '@/lib/score-sets'
 
 const SCORE_SETS_TO_SHOW = 5
+
+type ScoreSet = components['schemas']['ScoreSet']
 
 export default defineComponent({
   name: 'SearchVariantsScreen',
@@ -537,7 +348,6 @@ export default defineComponent({
     DataTable,
     DefaultLayout,
     Dropdown,
-    EntityLink,
     IconField,
     InputIcon,
     InputText,
@@ -596,13 +406,25 @@ export default defineComponent({
       proteinScoreSetListIsExpanded: [] as Array<boolean>,
       associatedNucleotideScoreSetListIsExpanded: [] as Array<boolean>,
       defaultNumScoreSetsToShow: SCORE_SETS_TO_SHOW,
-      guideExpanded: false
+      guideExpanded: false,
+      maveMdScoreSetUrns: MAVE_MD_SCORE_SETS,
+      maveMdScoreSets: {} as {[urn: string]: ScoreSet | undefined},
+      numMaveMdScoreSetRetries: 0
     }
   },
 
   computed: {
+    maveMdScoreSetsGroupedByGene: function () {
+      return _(this.maveMdScoreSetUrns)
+        .groupBy('gene')
+        .toPairs()
+        .map((geneAndScoreSetSpecs) => ({
+          gene: geneAndScoreSetSpecs[0],
+          urns: geneAndScoreSetSpecs[1].map((scoreSetSpec) => scoreSetSpec.urn)
+        }))
+        .value()
+    },
     searchIsClearable: function () {
-      console.log(this.searchText)
       return (
         !_.isEmpty(this.searchText) ||
         !_.isEmpty(this.inputGene) ||
@@ -698,13 +520,37 @@ export default defineComponent({
       this.fuzzySearchVisible = true
       this.fuzzySearch()
     }
+
+    this.fetchMaveMdScoreSets()
   },
 
   methods: {
+    getScoreSetShortName: function (scoreSet: ScoreSet) {
+      return getScoreSetShortName(scoreSet)
+    },
+    fetchMaveMdScoreSets: async function () {
+      let hasFailures = false
+      for (const scoreSetSpec of this.maveMdScoreSetUrns) {
+        if (!this.maveMdScoreSets[scoreSetSpec.urn]) {
+          try {
+            const scoreSet = (await axios.get(`${config.apiBaseUrl}/score-sets/${scoreSetSpec.urn}`)).data
+            this.maveMdScoreSets[scoreSetSpec.urn] = scoreSet
+          } catch {
+            hasFailures = true
+          }
+        }
+      }
+      if (hasFailures && this.numMaveMdScoreSetRetries < 10) {
+        this.numMaveMdScoreSetRetries++
+        setTimeout(() => {
+          this.fetchMaveMdScoreSets()
+        }, 5000)
+      }
+    },
     toggleGuide: function () {
       this.guideExpanded = !this.guideExpanded
     },
-    searchForText: function (event) {
+    searchForText: function (event: PointerEvent) {
       const element = event.target
       if (element) {
         this.showSearch('hgvs')

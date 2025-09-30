@@ -1089,11 +1089,11 @@ export default defineComponent({
 }
 
 .mavedb-histogram-thresholds-control {
-  margin-left: auto
+  margin-left: auto;
 }
 
 .mavedb-histogram-thresholds-control:first-child {
-  margin-left: 0
+  margin-left: 0;
 }
 
 .mavedb-histogram-controls {

@@ -2,7 +2,7 @@ import { HistogramShader } from '@/lib/histogram'
 
 export const NORMAL_RANGE_DEFAULT_COLOR = '#4444ff'
 export const ABNORMAL_RANGE_DEFAULT_COLOR = '#ff4444'
-export const NOT_SPECIFIED_RANGE_DEFAULT_COLOR = '#a6a600'
+export const NOT_SPECIFIED_RANGE_DEFAULT_COLOR = '#646464'
 
 export const INDETERMINATE_RANGE_EVIDENCE = ['INDETERMINATE'] as const
 export const NORMAL_RANGE_EVIDENCE = ['BS3_STRONG', 'BS3_MODERATE', 'BS3_SUPPORTING'] as const

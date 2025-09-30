@@ -18,59 +18,65 @@
           </IconField>
           <Button class="p-button-plain" @click="clear">Clear All</Button>
         </div>
-        <TabView class="mavedb-search-tabs">
-          <TabPanel header="Target filters">
-            <div class="mavedb-search-filters">
-              <SelectList
-                v-model="filterTargetNames"
-                class="mavedb-search-filter-option-picker"
-                :options="targetNameFilterOptions"
-                title="Target name"
-              />
-              <SelectList
-                v-model="filterTargetTypes"
-                class="mavedb-search-filter-option-picker"
-                :option-label="textForTargetGeneCategory"
-                :options="targetTypeFilterOptions"
-                title="Target type"
-              />
-              <SelectList
-                v-model="filterTargetOrganismNames"
-                class="mavedb-search-filter-option-picker mavedb-organism-picker"
-                :options="targetOrganismFilterOptions"
-                title="Target organism"
-              />
-              <SelectList
-                v-model="filterTargetAccession"
-                class="mavedb-search-filter-option-picker mavedb-organism-picker"
-                :options="targetAccessionFilterOptions"
-                title="Target accession"
-              />
-            </div>
-          </TabPanel>
-          <TabPanel header="Publication filters">
-            <div class="mavedb-search-filters">
-              <SelectList
-                v-model="filterPublicationAuthors"
-                class="mavedb-search-filter-option-picker"
-                :options="publicationAuthorFilterOptions"
-                title="Publication authors"
-              />
-              <SelectList
-                v-model="filterPublicationDatabases"
-                class="mavedb-search-filter-option-picker"
-                :options="publicationDatabaseFilterOptions"
-                title="Publication database"
-              />
-              <SelectList
-                v-model="filterPublicationJournals"
-                class="mavedb-search-filter-option-picker"
-                :options="publicationJournalFilterOptions"
-                title="Publication journal"
-              />
-            </div>
-          </TabPanel>
-        </TabView>
+        <div class="mavedb-search-tab-view-container">
+          <TabView class="mavedb-search-tabs">
+            <TabPanel header="Target filters">
+              <div class="mavedb-search-filters">
+                <SelectList
+                  v-model="filterTargetNames"
+                  class="mavedb-search-filter-option-picker"
+                  :options="targetNameFilterOptions"
+                  title="Target name"
+                />
+                <SelectList
+                  v-model="filterTargetTypes"
+                  class="mavedb-search-filter-option-picker"
+                  :option-label="textForTargetGeneCategory"
+                  :options="targetTypeFilterOptions"
+                  title="Target type"
+                />
+                <SelectList
+                  v-model="filterTargetOrganismNames"
+                  class="mavedb-search-filter-option-picker mavedb-organism-picker"
+                  :options="targetOrganismFilterOptions"
+                  title="Target organism"
+                />
+                <SelectList
+                  v-model="filterTargetAccession"
+                  class="mavedb-search-filter-option-picker mavedb-organism-picker"
+                  :options="targetAccessionFilterOptions"
+                  title="Target accession"
+                />
+              </div>
+            </TabPanel>
+            <TabPanel header="Publication filters">
+              <div class="mavedb-search-filters">
+                <SelectList
+                  v-model="filterPublicationAuthors"
+                  class="mavedb-search-filter-option-picker"
+                  :options="publicationAuthorFilterOptions"
+                  title="Publication authors"
+                />
+                <SelectList
+                  v-model="filterPublicationDatabases"
+                  class="mavedb-search-filter-option-picker"
+                  :options="publicationDatabaseFilterOptions"
+                  title="Publication database"
+                />
+                <SelectList
+                  v-model="filterPublicationJournals"
+                  class="mavedb-search-filter-option-picker"
+                  :options="publicationJournalFilterOptions"
+                  title="Publication journal"
+                />
+              </div>
+            </TabPanel>
+          </TabView>
+          <div v-if="publishedScoreSets.length < numTotalSearchResults" class="mavedb-search-tab-view-tabs-right">
+            Showing {{ publishedScoreSets.length.toLocaleString() }} of
+            {{ numTotalSearchResults.toLocaleString() }} results. Try adding more filters to narrow your search.
+          </div>
+        </div>
       </div>
       <ScoreSetTable
         :data="publishedScoreSets"
@@ -109,13 +115,16 @@ type ShortTargetGene = components['schemas']['ShortTargetGene']
 type PublicationIdentifier = components['schemas']['SavedPublicationIdentifier']
 type SearchParams = paths['/api/v1/score-sets/search']['post']['requestBody']['content']['application/json']
 
-type FilterOptions = Array<{
+interface FilterOption {
   value: string
   badge: number
-}>
+}
 
 type ScoreSetMetadataFn = (scoreSet: ShortScoreSet) => Array<string>
-function countScoreSetMetadata(scoreSets: Array<ShortScoreSet>, scoreSetMetadataFn: ScoreSetMetadataFn): FilterOptions {
+function countScoreSetMetadata(
+  scoreSets: Array<ShortScoreSet>,
+  scoreSetMetadataFn: ScoreSetMetadataFn
+): FilterOption[] {
   if (!scoreSets.length) {
     return []
   }
@@ -134,7 +143,7 @@ function countScoreSetMetadata(scoreSets: Array<ShortScoreSet>, scoreSetMetadata
     .map((value) => ({value, badge: frequencies.get(value) || 0}))
 }
 type GeneMetadataFn = (targetGene: ShortTargetGene) => string
-function countTargetGeneMetadata(scoreSets: Array<ShortScoreSet>, geneMetadataFn: GeneMetadataFn): FilterOptions {
+function countTargetGeneMetadata(scoreSets: Array<ShortScoreSet>, geneMetadataFn: GeneMetadataFn): FilterOption[] {
   return countScoreSetMetadata(scoreSets, (scoreSet) => [...new Set<string>(scoreSet.targetGenes.map(geneMetadataFn))])
 }
 
@@ -142,7 +151,7 @@ type PublicationMetadataFn = (publicationIdentifier: PublicationIdentifier) => A
 function countPublicationMetadata(
   scoreSets: Array<ShortScoreSet>,
   publicationMetadataFn: PublicationMetadataFn
-): FilterOptions {
+): FilterOption[] {
   return countScoreSetMetadata(scoreSets, (scoreSet) => {
     const primary = scoreSet.primaryPublicationIdentifiers.map(publicationMetadataFn).flat()
     const secondary = scoreSet.secondaryPublicationIdentifiers.map(publicationMetadataFn).flat()
@@ -189,46 +198,20 @@ export default defineComponent({
       language: {
         emptyTable: 'Type in the search box above or use the filters to find a data set.'
       },
-      textForTargetGeneCategory: textForTargetGeneCategory
+      textForTargetGeneCategory: textForTargetGeneCategory,
+      targetNameFilterOptions: [] as FilterOption[],
+      targetOrganismFilterOptions: [] as FilterOption[],
+      targetAccessionFilterOptions: [] as FilterOption[],
+      targetTypeFilterOptions: [] as FilterOption[],
+      publicationAuthorFilterOptions: [] as FilterOption[],
+      publicationDatabaseFilterOptions: [] as FilterOption[],
+      publicationJournalFilterOptions: [] as FilterOption[]
     }
   },
 
   computed: {
     debouncedSearchFunction: function () {
       return debounce(() => this.search(), '400ms')
-    },
-    targetNameFilterOptions: function () {
-      return countTargetGeneMetadata(this.publishedScoreSets, (targetGene) => targetGene.name)
-    },
-    targetOrganismFilterOptions: function () {
-      return countTargetGeneMetadata(
-        this.publishedScoreSets,
-        (targetGene) => targetGene.targetSequence?.taxonomy.organismName || ''
-      )
-    },
-    targetAccessionFilterOptions: function () {
-      return countTargetGeneMetadata(
-        this.publishedScoreSets,
-        (targetGene) => targetGene.targetAccession?.accession || ''
-      )
-    },
-    targetTypeFilterOptions: function () {
-      return countTargetGeneMetadata(this.publishedScoreSets, (targetGene) => targetGene.category)
-    },
-    publicationAuthorFilterOptions: function () {
-      return countPublicationMetadata(this.publishedScoreSets, (publicationIdentifier) =>
-        publicationIdentifier.authors.map((author) => author.name)
-      )
-    },
-    publicationDatabaseFilterOptions: function () {
-      return countPublicationMetadata(this.publishedScoreSets, (publicationIdentifier) =>
-        publicationIdentifier.dbName ? [publicationIdentifier.dbName] : []
-      )
-    },
-    publicationJournalFilterOptions: function () {
-      return countPublicationMetadata(this.publishedScoreSets, (publicationIdentifier) =>
-        publicationIdentifier.publicationJournal ? [publicationIdentifier.publicationJournal] : []
-      )
     }
   },
 
@@ -436,8 +419,71 @@ export default defineComponent({
 
         // reset published score sets search results when using search bar
         this.publishedScoreSets = this.scoreSets.filter((scoreSet) => !!scoreSet.publishedDate)
+
+        this.$nextTick(() => this.fetchFilterOptions())
       } catch (err) {
         console.log(`Error while loading search results")`, err)
+      }
+    },
+    fetchFilterOptions: async function () {
+      try {
+        const requestParams: SearchParams = {
+          text: this.searchText || undefined,
+          targets: this.filterTargetNames.length > 0 ? this.filterTargetNames : undefined,
+          targetOrganismNames: this.filterTargetOrganismNames.length > 0 ? this.filterTargetOrganismNames : undefined,
+          targetAccessions: this.filterTargetAccession.length > 0 ? this.filterTargetAccession : undefined,
+          targetTypes: this.filterTargetTypes.length > 0 ? this.filterTargetTypes : undefined,
+          authors: this.filterPublicationAuthors.length > 0 ? this.filterPublicationAuthors : undefined,
+          databases: this.filterPublicationDatabases.length > 0 ? this.filterPublicationDatabases : undefined,
+          journals: this.filterPublicationJournals.length > 0 ? this.filterPublicationJournals : undefined,
+          keywords: this.filterKeywords.length > 0 ? this.filterKeywords : undefined
+        }
+        const response = await axios.post(`${config.apiBaseUrl}/score-sets/search/filter-options`, requestParams, {
+          headers: {
+            accept: 'application/json'
+          }
+        })
+        // TODO (#130) catch errors in response
+        const {
+          targetAccessions,
+          targetGeneCategories,
+          targetGeneNames,
+          targetOrganismNames,
+          publicationAuthorNames,
+          publicationDbNames,
+          publicationJournals
+        } = response.data
+
+        this.targetAccessionFilterOptions = (targetAccessions || []).map((option) => ({
+          value: option.value,
+          badge: option.count
+        }))
+        this.targetNameFilterOptions = (targetGeneNames || []).map((option) => ({
+          value: option.value,
+          badge: option.count
+        }))
+        this.targetOrganismFilterOptions = (targetOrganismNames || []).map((option) => ({
+          value: option.value,
+          badge: option.count
+        }))
+        this.targetTypeFilterOptions = (targetGeneCategories || []).map((option) => ({
+          value: option.value,
+          badge: option.count
+        }))
+        this.publicationAuthorFilterOptions = (publicationAuthorNames || []).map((option) => ({
+          value: option.value,
+          badge: option.count
+        }))
+        this.publicationDatabaseFilterOptions = (publicationDbNames || []).map((option) => ({
+          value: option.value,
+          badge: option.count
+        }))
+        this.publicationJournalFilterOptions = (publicationJournals || []).map((option) => ({
+          value: option.value,
+          badge: option.count
+        }))
+      } catch (err) {
+        console.log(`Error while loading filter options")`, err)
       }
     },
     clear: function () {
@@ -514,5 +560,20 @@ export default defineComponent({
   right: 8px;
   margin: 0;
   padding: 0;
+}
+
+/* Placing custom content to the right of a TabView's tabs */
+
+.mavedb-search-tab-view-container {
+  position: relative;
+}
+
+.mavedb-search-tab-view-container .mavedb-search-tab-view-tabs-right {
+  position: absolute;
+  top: 0;
+  right: 0;
+  margin: 10px 0;
+  padding: 0.75rem 1.25rem;
+  line-height: 1;
 }
 </style>

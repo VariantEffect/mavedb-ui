@@ -185,6 +185,7 @@ export default defineComponent({
       searchText: this.$route.query.search as string | null,
       scoreSets: [] as Array<ShortScoreSet>,
       publishedScoreSets: [] as Array<ShortScoreSet>,
+      numTotalSearchResults: 0,
       language: {
         emptyTable: 'Type in the search box above or use the filters to find a data set.'
       },
@@ -423,13 +424,15 @@ export default defineComponent({
           journals: this.filterPublicationJournals.length > 0 ? this.filterPublicationJournals : undefined,
           keywords: this.filterKeywords.length > 0 ? this.filterKeywords : undefined
         }
-        let response = await axios.post(`${config.apiBaseUrl}/score-sets/search`, requestParams, {
+        const response = await axios.post(`${config.apiBaseUrl}/score-sets/search`, requestParams, {
           headers: {
             accept: 'application/json'
           }
         })
         // TODO (#130) catch errors in response
-        this.scoreSets = response.data || []
+        const {scoreSets, numScoreSets} = response.data || {scoreSets: [], numScoreSets: 0}
+        this.scoreSets = scoreSets
+        this.numTotalSearchResults = numScoreSets
 
         // reset published score sets search results when using search bar
         this.publishedScoreSets = this.scoreSets.filter((scoreSet) => !!scoreSet.publishedDate)

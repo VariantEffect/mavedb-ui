@@ -100,7 +100,7 @@ export default {
             }
           }
         )
-        this.scoreSets = response.data || []
+        this.scoreSets = response.data?.scoreSets || []
         // reset published score sets search results when using search bar
         this.publishedScoreSets = []
         this.unpublishedScoreSets = []

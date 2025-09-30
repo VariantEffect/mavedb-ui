@@ -2539,7 +2539,7 @@ export default {
           }
         )
         // TODO (#130) catch errors in response
-        return response.data || []
+        return response.data?.scoreSets || []
       } catch (err) {
         console.log(`Error while loading search results")`, err)
         return []

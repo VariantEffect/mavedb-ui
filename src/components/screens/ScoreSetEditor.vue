@@ -259,8 +259,16 @@
                 </Message>
                 <div class="field">
                   <span class="p-float-label">
+                    <div v-if="extraMetadata">
+                      <span class="mr-2"> Extra metadata</span>
+                      <i class="pi pi-check mr-3"></i>
+                      <Button v-tooltip="{ value: 'View extra metadata'}" class="p-button-info mr-2" icon="pi pi-eye"  @click="jsonToDisplay = JSON.stringify(extraMetadata, null, 2)"></Button>
+                      <Button v-tooltip="{ value: 'Delete extra metadata'}" class="p-button-danger mr-2" icon="pi pi-times"  @click="fileCleared('extraMetadataFile')"></Button>
+                    </div>
                     <FileUpload
+                      v-else
                       :id="scopedId('input-extraMetadataFile')"
+                      :key="inputExtraMetadataFileKey"
                       accept="application/json"
                       :auto="false"
                       choose-label="Extra metadata"
@@ -1249,6 +1257,17 @@
       </div>
     </div>
     <ProgressSpinner v-if="progressVisible" class="mave-progress" />
+    <Dialog
+      v-model:visible="jsonToDisplay"
+      :close-on-escape="true"
+      modal
+      :style="{maxWidth: '90%', width: '50rem'}"
+      @close="jsonToDisplay = null"
+    >
+    <span style="white-space: pre-wrap; font-family: monospace">
+    {{jsonToDisplay}}
+    </span>
+    </Dialog>
   </DefaultLayout>
 </template>
 
@@ -1278,6 +1297,7 @@ import SelectButton from 'primevue/selectbutton'
 import TabPanel from 'primevue/tabpanel'
 import TabView from 'primevue/tabview'
 import Textarea from 'primevue/textarea'
+import Dialog from 'primevue/dialog'
 import {ref} from 'vue'
 import {useHead} from '@unhead/vue'
 
@@ -1362,7 +1382,8 @@ export default {
     SelectButton,
     TabPanel,
     TabView,
-    Textarea
+    Textarea,
+    Dialog
   },
 
   props: {
@@ -1445,7 +1466,9 @@ export default {
     geneNameDropdownValue: null,
     targetOptions: ['Assembly', 'HGNC'],
     targetAutocomplete: 'HGNC',
-    extraMetadata: {},
+    extraMetadata: null,
+    inputExtraMetadataFileKey: 0,
+    jsonToDisplay: null,
 
     existingTargetGene: null,
     targetGenes: [],
@@ -2074,6 +2097,8 @@ export default {
       if (inputName == 'extraMetadataFile') {
         this.extraMetadata = null
         delete this.clientSideValidationErrors.extraMetadata
+        this.inputExtraMetadataFileKey += 1 // force re-mount of file upload component, otherwise button doesn't re-appear
+        this.jsonToDisplay = null
       }
       // ensure files are cleared from sequence loader even when remove button not used
       else if (inputName == 'targetGeneTargetSequenceSequenceFile') {
@@ -2099,7 +2124,6 @@ export default {
                   delete this.clientSideValidationErrors.extraMetadata
                 }
               } catch {
-                this.extraMetadata = null
                 this.clientSideValidationErrors.extraMetadata = 'The file did not contain valid JSON text.'
                 console.log('Extra metadata file did not contain valid JSON text.')
               }
@@ -2192,7 +2216,7 @@ export default {
           this.editedScoreRangeBoundaryHelper[idx].upperBoundIsInfinity =
             this.editedScoreRanges.investigatorProvided.ranges[idx].range[1] === null
         })
-        this.extraMetadata = this.item.extraMetadata
+        this.extraMetadata = !_.isEmpty(this.item.extraMetadata) ? this.item.extraMetadata : null
 
         if (this.editedScoreRanges?.investigatorProvided?.oddsPathSource) {
           this.editedScoreRanges.investigatorProvided.oddsPathSource = this.publicationIdentifiers.filter(
@@ -2308,7 +2332,7 @@ export default {
         primaryPublicationIdentifiers: primaryPublicationIdentifiers,
         secondaryPublicationIdentifiers: secondaryPublicationIdentifiers,
         dataUsagePolicy: this.dataUsagePolicy,
-        extraMetadata: {},
+        extraMetadata: this.extraMetadata || {},
         // eslint-disable-next-line no-unused-vars
         targetGenes: this.targetGenes.map(({index, ...target}) => {
           // drop index property from target genes before save
@@ -2359,7 +2383,10 @@ export default {
       this.item.publicationIdentifiers = []
       this.item.rawReadIdentifiers = []
       this.item.targetGenes = []
+
+      // clear objects so that deleted values aren't merged back into editedItem object
       this.item.scoreRanges = null
+      this.item.extraMetadata = null
 
       const editedItem = _.merge({}, this.item, editedFields)
 

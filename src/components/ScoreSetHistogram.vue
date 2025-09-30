@@ -305,35 +305,35 @@ export default defineComponent({
             {
               classifier: (d: HistogramDatum) => variantIsMissense(d),
               options: {
-                color: '#a36e4e',
+                color: '#ffcd3a',
                 title: 'Missense'
               }
             },
             {
               classifier: (d: HistogramDatum) => variantIsSynonymous(d),
               options: {
-                color: '#59a34e',
+                color: '#6aa84f',
                 title: 'Synonymous'
               }
             },
             {
               classifier: (d: HistogramDatum) => variantIsNonsense(d),
               options: {
-                color: '#a3984e',
+                color: '#681a1a',
                 title: 'Nonsense'
               }
             },
             ...(this.hideStartAndStopLossByDefault ? [] : [{
               classifier: (d: HistogramDatum) => isStartOrStopLoss(d),
               options: {
-              color: '#6d4ea3',
+              color: '#cd3aff',
               title: 'Start/Stop Loss'
               }
             }]),
             {
               classifier: (d: HistogramDatum) => variantIsOther(d),
               options: {
-                color: '#709090',
+                color: '#3affcd',
                 title: 'Other'
               }
             }
@@ -404,7 +404,7 @@ export default defineComponent({
             series.push({
               classifier: (d: HistogramDatum) => variantIsMissense(d),
               options: {
-                color: '#a36e4e',
+                color: '#ffcd3a',
                 title: 'Missense'
               }
             })
@@ -414,7 +414,7 @@ export default defineComponent({
             series.push({
               classifier: (d: HistogramDatum) => variantIsSynonymous(d),
               options: {
-                color: '#59a34e',
+                color: '#6aa84f',
                 title: 'Synonymous'
               }
             })
@@ -424,7 +424,7 @@ export default defineComponent({
             series.push({
               classifier: (d: HistogramDatum) => variantIsNonsense(d),
               options: {
-                color: '#a3984e',
+                color: '#681a1a',
                 title: 'Nonsense'
               }
             })
@@ -434,7 +434,7 @@ export default defineComponent({
             series.push({
               classifier: (d: HistogramDatum) => isStartOrStopLoss(d),
               options: {
-                color: '#6d4ea3',
+                color: '#cd3aff',
                 title: 'Start/Stop Loss'
               }
             })
@@ -444,7 +444,7 @@ export default defineComponent({
             series.push({
               classifier: (d: HistogramDatum) => variantIsOther(d),
               options: {
-                color: '#709090',
+                color: '#3affcd',
                 title: 'Other'
               }
             })

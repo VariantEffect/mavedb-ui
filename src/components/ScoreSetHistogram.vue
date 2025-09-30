@@ -867,6 +867,10 @@ export default defineComponent({
 
   methods: {
     filterControlVariantByEffect(variant: Variant) {
+      // Do not filter control variants unless we have protein consequences for all coding variants.
+      if (!this.proteinEffectOptionsAvailable) {
+        return true
+      }
       return (
         (this.selectedControlVariantTypeFilters.includes('Missense') && variantIsMissense(variant)) ||
         (this.selectedControlVariantTypeFilters.includes('Synonymous') && variantIsSynonymous(variant)) ||

@@ -951,12 +951,6 @@ export default defineComponent({
         )
         .shaders(this.histogramShaders)
 
-      if (this.externalSelection) {
-        this.histogram.selectDatum(this.externalSelection)
-      } else {
-        this.histogram.clearSelection()
-      }
-
       // Only render clinical specific viz options if such features are enabled.
       if (this.config.CLINICAL_FEATURES_ENABLED && this.showRanges) {
         this.histogram.renderShader(this.activeRangeKey?.value)
@@ -965,6 +959,12 @@ export default defineComponent({
       }
 
       this.histogram.refresh()
+
+      if (this.externalSelection) {
+        this.histogram.selectDatum(this.externalSelection)
+      } else {
+        this.histogram.clearSelection()
+      }
     },
 
     loadClinicalControls: async function () {

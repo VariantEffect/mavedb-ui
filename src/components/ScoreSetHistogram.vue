@@ -312,21 +312,21 @@ export default defineComponent({
             {
               classifier: (d: HistogramDatum) => variantIsMissense(d),
               options: {
-                color: '#a36e4e',
+                color: '#ffcd3a',
                 title: 'Missense'
               }
             },
             {
               classifier: (d: HistogramDatum) => variantIsSynonymous(d),
               options: {
-                color: '#59a34e',
+                color: '#6aa84f',
                 title: 'Synonymous'
               }
             },
             {
               classifier: (d: HistogramDatum) => variantIsNonsense(d),
               options: {
-                color: '#a3984e',
+                color: '#681a1a',
                 title: 'Nonsense'
               }
             },
@@ -336,7 +336,7 @@ export default defineComponent({
                   {
                     classifier: (d: HistogramDatum) => isStartOrStopLoss(d),
                     options: {
-                      color: '#6d4ea3',
+                      color: '#cd3aff',
                       title: 'Start/Stop Loss'
                     }
                   }
@@ -344,7 +344,7 @@ export default defineComponent({
             {
               classifier: (d: HistogramDatum) => variantIsOther(d),
               options: {
-                color: '#709090',
+                color: '#3affcd',
                 title: 'Other'
               }
             }
@@ -419,7 +419,7 @@ export default defineComponent({
             series.push({
               classifier: (d: HistogramDatum) => variantIsMissense(d),
               options: {
-                color: '#a36e4e',
+                color: '#ffcd3a',
                 title: 'Missense'
               }
             })
@@ -429,7 +429,7 @@ export default defineComponent({
             series.push({
               classifier: (d: HistogramDatum) => variantIsSynonymous(d),
               options: {
-                color: '#59a34e',
+                color: '#6aa84f',
                 title: 'Synonymous'
               }
             })
@@ -439,7 +439,7 @@ export default defineComponent({
             series.push({
               classifier: (d: HistogramDatum) => variantIsNonsense(d),
               options: {
-                color: '#a3984e',
+                color: '#681a1a',
                 title: 'Nonsense'
               }
             })
@@ -449,7 +449,7 @@ export default defineComponent({
             series.push({
               classifier: (d: HistogramDatum) => isStartOrStopLoss(d),
               options: {
-                color: '#6d4ea3',
+                color: '#cd3aff',
                 title: 'Start/Stop Loss'
               }
             })
@@ -459,7 +459,7 @@ export default defineComponent({
             series.push({
               classifier: (d: HistogramDatum) => variantIsOther(d),
               options: {
-                color: '#709090',
+                color: '#3affcd',
                 title: 'Other'
               }
             })
@@ -474,20 +474,20 @@ export default defineComponent({
     },
 
     vizOptions: function () {
-      const options = [{label: 'Overall Distribution', view: 'distribution'}]
+      const options = [{label: 'Overall Distribution', view: 'distribution', clinicalControlLegendNoteEnabled: false}]
 
       if (this.someVariantsHaveClinicalSignificance) {
-        options.push({label: 'Clinical View', view: 'clinical'})
+        options.push({label: 'Clinical View', view: 'clinical', clinicalControlLegendNoteEnabled: true})
       }
 
       // crude to be based on clinical significance. may be a better option for viz control
       if (this.proteinEffectOptionsAvailable) {
-        options.push({label: 'Protein Effect View', view: 'effect'})
+        options.push({label: 'Protein Effect View', view: 'effect', clinicalControlLegendNoteEnabled: false})
       }
 
       // custom view should always come last
       if (this.someVariantsHaveClinicalSignificance) {
-        options.push({label: 'Custom', view: 'custom'})
+        options.push({label: 'Custom', view: 'custom', clinicalControlLegendNoteEnabled: true})
       }
       return options
     },
@@ -921,9 +921,9 @@ export default defineComponent({
         .seriesClassifier(seriesClassifier)
         .title('Distribution of Functional Scores')
         .legendNote(
-          this.activeViz == 0 || !this.refreshedClinicalControls
-            ? null
-            : `${this.controlDb?.dbName} data from version ${this.controlVersion}`
+          this.vizOptions[this.activeViz]?.clinicalControlLegendNoteEnabled && this.refreshedClinicalControls
+            ? `${this.controlDb?.dbName} data from version ${this.controlVersion}`
+            : null
         )
         .shaders(this.histogramShaders)
 

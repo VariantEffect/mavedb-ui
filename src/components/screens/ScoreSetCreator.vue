@@ -2695,9 +2695,6 @@ export default {
 
     removeScoreRange: function (rangeIdx) {
       this.scoreRanges.investigatorProvided.ranges.splice(rangeIdx, 1)
-      if (this.scoreRanges.investigatorProvided.ranges.length === 0) {
-        this.investigatorIsProvidingScoreRanges = false
-      }
     },
 
     ////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////

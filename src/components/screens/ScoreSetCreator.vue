@@ -1764,7 +1764,7 @@
                 </div>
                 <div class="mavedb-wizard-row">
                   <div class="mavedb-wizard-help">
-                    <label :for="scopedId('input-scoresColumnMetadataFile')">Load a scores column metadata file</label>
+                    <label :for="scopedId('input-scoreColumnsMetadataFile')">Load a scores column metadata file</label>
                     <div class="mavedb-help-small">
                       This file is optional, but recommended.
                     </div>
@@ -1772,8 +1772,8 @@
                   <div class="mavedb-wizard-content">
                     <span class="p-float-label">
                       <FileUpload
-                        :id="scopedId('input-scoresColumnMetadataFile')"
-                        ref="scoresColumnMetadataFileUpload"
+                        :id="scopedId('input-scoreColumnsMetadataFile')"
+                        ref="scoreColumnsMetadataFileUpload"
                         accept="application/json"
                         :auto="false"
                         choose-label="Scores column metadata file"
@@ -1783,13 +1783,15 @@
                         :file-limit="1"
                         :show-cancel-button="false"
                         :show-upload-button="false"
+                        @remove="fileCleared('scoreColumnsMetadataFile')"
+                        @select="fileSelected('scoreColumnsMetadataFile', $event)"
                       >
                         <template #empty>
                           <p>Drop a file here.</p>
                         </template>
                       </FileUpload>
                     </span>
-                    <span v-if="validationErrors.countsFile" class="mave-field-error">{{validationErrors.scoresColumnMetadataFile}}</span>
+                    <span v-if="validationErrors.countsFile" class="mave-field-error">{{validationErrors.scoreColumnsMetadataFile}}</span>
                   </div>
                 </div>
                 <div class="mavedb-wizard-row">
@@ -1826,7 +1828,7 @@
               </div>
               <div class="mavedb-wizard-row">
                 <div class="mavedb-wizard-help">
-                  <label :for="scopedId('input-countsColumnMetadataFile')">Load a counts column metadata file</label>
+                  <label :for="scopedId('input-countColumnsMetadataFile')">Load a counts column metadata file</label>
                   <div class="mavedb-help-small">
                     This file is optional, but recommended.
                   </div>
@@ -1834,8 +1836,8 @@
                 <div class="mavedb-wizard-content">
                   <span class="p-float-label">
                     <FileUpload
-                      :id="scopedId('input-countsColumnMetadataFile')"
-                      ref="countsColumnMetadataFileUpload"
+                      :id="scopedId('input-countColumnsMetadataFile')"
+                      ref="countColumnsMetadataFileUpload"
                       accept="application/json"
                       :auto="false"
                       choose-label="Counts column metadata file"
@@ -1845,13 +1847,15 @@
                       :file-limit="1"
                       :show-cancel-button="false"
                       :show-upload-button="false"
+                      @remove="fileCleared('countColumnsMetadataFile')"
+                      @select="fileSelected('countColumnsMetadataFile', $event)"
                     >
                       <template #empty>
                         <p>Drop a file here.</p>
                       </template>
                     </FileUpload>
                   </span>
-                  <span v-if="validationErrors.countsFile" class="mave-field-error">{{ validationErrors.countsColumnMetadataFile}}</span>
+                  <span v-if="validationErrors.countsFile" class="mave-field-error">{{ validationErrors.countColumnsMetadataFile}}</span>
                 </div>
               </div>
               <div class="mavedb-wizard-step-controls-row">
@@ -2071,7 +2075,9 @@ export default {
     primaryPublicationIdentifiers: [],
     secondaryPublicationIdentifiers: [],
     publicationIdentifiers: [],
-    extraMetadata: {},
+    extraMetadata: null,
+    countColumnsMetadata: null,
+    scoreColumnsMetadata: null,
 
     createdTargetGenes: [emptyTargetGeneWizardObj()],
     numTargets: 1,
@@ -2110,7 +2116,9 @@ export default {
     inputClasses: {
       countsFile: null,
       extraMetadataFile: null,
-      scoresFile: null
+      scoresFile: null,
+      countColumnsMetadataFile: null,
+      scoreColumnsMetadataFile: null
     },
     externalGeneDatabases,
     validationErrors: {},
@@ -2144,7 +2152,7 @@ export default {
       ['targets'],
       ['targetGene'],
       ['scoreRanges'],
-      ['scoresFile', 'countsFile']
+      ['scoresFile', 'countsFile', 'scoreColumnsMetadataFile', 'countColumnsMetadataFile']
     ]
   }),
 
@@ -2875,6 +2883,10 @@ export default {
       if (inputName == 'extraMetadataFile') {
         this.extraMetadata = null
         delete this.clientSideValidationErrors.extraMetadata
+      } else if (inputName == 'countColumnsMetadataFile') {
+        this.countColumnsMetadata = null
+      } else if (inputName == 'scoreColumnsMetadataFile') {
+        this.scoreColumnsMetadata = null
       }
       // ensure files are cleared from sequence loader even when remove button not used
       else if (inputName == 'targetGeneTargetSequenceSequenceFile') {
@@ -2884,31 +2896,57 @@ export default {
       this.mergeValidationErrors()
     },
 
+    validateJsonObject: function(data, fieldName) {
+      if (!_.isObject(data) || _.isArray(data)) {
+        this.clientSideValidationErrors[fieldName] =
+          `${_.startCase(fieldName)} must be a JSON object (not an array or simple value).`
+      } else {
+        delete this.clientSideValidationErrors[fieldName]
+      }
+    },
+
     fileSelected: async function (inputName, event, targetIdx) {
       const file = event.files[0]
       if (file) {
+        const text = await file.text()
         switch (inputName) {
           case 'extraMetadataFile':
             {
-              const text = await file.text()
               try {
                 this.extraMetadata = JSON.parse(text)
-                if (!_.isObject(this.extraMetadata) || _.isArray(this.extraMetadata)) {
-                  this.clientSideValidationErrors.extraMetadata =
-                    'Extra metadata must be a JSON object (not an array or simple value).'
-                } else {
-                  delete this.clientSideValidationErrors.extraMetadata
-                }
-              } catch (e) {
+                this.validateExtraMetadata(this.extraMetadata, 'extraMetadata')
+              } catch {
                 this.extraMetadata = null
                 this.clientSideValidationErrors.extraMetadata = 'The file did not contain valid JSON text.'
                 console.log('Extra metadata file did not contain valid JSON text.')
               }
             }
             break
+          case 'countColumnsMetadataFile':
+            {
+              try {
+                this.countColumnsMetadata = JSON.parse(text)
+                this.validateJsonObject(this.countColumnsMetadata, 'countColumnsMetadata')
+              } catch {
+                this.countColumnsMetadata = null
+                this.clientSideValidationErrors.countColumnsMetadata = 'The file did not contain valid JSON text.'
+                console.log('Count columns metadata file did not contain valid JSON text.')
+              }
+            }
+          case 'scoreColumnsMetadataFile':
+            {
+              try {
+                this.scoreColumnsMetadata = JSON.parse(text)
+                this.validateJsonObject(this.scoreColumnsMetadata, 'scoreColumnsMetadata')
+              } catch {
+                this.scoreColumnsMetadata = null
+                this.clientSideValidationErrors.scoreColumnsMetadata = 'The file did not contain valid JSON text.'
+                console.log('Score columns metadata file did not contain valid JSON text.')
+              }
+            }
+            break
           case 'targetGeneTargetSequenceSequenceFile':
             {
-              const text = await file.text()
               try {
                 const fastaParser = new fasta()
                 /*new Fasta({
@@ -2984,7 +3022,9 @@ export default {
       this.publicationIdentifiers = []
       this.primaryPublicationIdentifiers = []
       this.secondaryPublicationIdentifiers = []
-      this.extraMetadata = {}
+      this.extraMetadata = null
+      this.countColumnsMetadata = null
+      this.scoreColumnsMetadata = null
 
       this.scoreRanges = {
         investigatorProvided: {
@@ -3057,7 +3097,11 @@ export default {
         primaryPublicationIdentifiers: primaryPublicationIdentifiers,
         secondaryPublicationIdentifiers: secondaryPublicationIdentifiers,
         dataUsagePolicy: this.hasCustomUsagePolicy ? this.dataUsagePolicy : null,
-        extraMetadata: {},
+        extraMetadata: this.extraMetadata || {},
+        datasetColumns: {
+          scoreColumnsMetadata: this.scoreColumnsMetadata || {},
+          countColumnsMetadata: this.countColumnsMetadata || {}
+        },
 
         scoreRanges: {
           investigatorProvided: {
@@ -3105,41 +3149,16 @@ export default {
       if (!this.investigatorIsProvidingScoreRanges) {
         delete editedFields.scoreRanges
       }
-      if (!this.item) {
-        editedFields.supersededScoreSetUrn = this.supersededScoreSet ? this.supersededScoreSet.urn : null
-        editedFields.metaAnalyzesScoreSetUrns = this.metaAnalyzesScoreSets.map((s) => s.urn)
-        if (editedFields.metaAnalyzesScoreSetUrns.length === 0 && editedFields.supersededScoreSetUrn) {
-          editedFields.experimentUrn = this.supersededScoreSet.experiment.urn
-        }
-      } else {
-        // empty item arrays so that deleted items aren't merged back into editedItem object
-        this.item.contributors = []
-        this.item.doiIdentifiers = []
-        this.item.primaryPublicationIdentifiers = []
-        this.item.publicationIdentifiers = []
-        this.item.rawReadIdentifiers = []
-        this.item.targetGenes = []
-        this.item.scoreRanges = {
-          investigatorProvided: {
-            baselineScore: null,
-            baselineScoreDescription: null,
-            ranges: [],
-            oddsPathSource: [],
-            source: []
-          }
-        }
+      editedFields.supersededScoreSetUrn = this.supersededScoreSet ? this.supersededScoreSet.urn : null
+      editedFields.metaAnalyzesScoreSetUrns = this.metaAnalyzesScoreSets.map((s) => s.urn)
+      if (editedFields.metaAnalyzesScoreSetUrns.length === 0 && editedFields.supersededScoreSetUrn) {
+        editedFields.experimentUrn = this.supersededScoreSet.experiment.urn
       }
-
-      const editedItem = _.merge({}, this.item || {}, editedFields)
 
       this.progressVisible = true
       let response = null
       try {
-        if (this.item) {
-          response = await axios.put(`${config.apiBaseUrl}/score-sets/${this.item.urn}`, editedItem)
-        } else {
-          response = await axios.post(`${config.apiBaseUrl}/score-sets/`, editedItem)
-        }
+        response = await axios.post(`${config.apiBaseUrl}/score-sets/`, editedFields)
       } catch (e) {
         response = e.response || {status: 500}
         this.$toast.add({severity: 'error', summary: 'Error', life: 3000})
@@ -3148,17 +3167,8 @@ export default {
       if (response.status == 200) {
         const savedItem = response.data
         this.validationErrors = {}
-        if (this.item) {
-          if (this.$refs.scoresFileUpload?.files?.length == 1) {
-            await this.uploadData(savedItem)
-          } else {
-            this.$router.replace({path: `/score-sets/submit-completion/${this.item.urn}`})
-            this.$toast.add({severity: 'success', summary: 'Your changes were saved.', life: 3000})
-          }
-        } else {
-          console.log('Created item')
-          await this.uploadData(savedItem)
-        }
+        console.log('Created item')
+        await this.uploadData(savedItem)
       } else if (response.data && response.data.detail) {
         const formValidationErrors = {}
         if (typeof response.data.detail === 'string' || response.data.detail instanceof String) {
@@ -3213,12 +3223,6 @@ export default {
         if (this.$refs.countsFileUpload.files.length == 1) {
           formData.append('counts_file', this.$refs.countsFileUpload.files[0])
         }
-        if (this.$refs.scoresColumnMetadataFileUpload.files.length == 1) {
-          formData.append('scores_column_metadata_file', this.$refs.scoresColumnMetadataFileUpload.files[0])
-        }
-        if (this.$refs.countsColumnMetadataFileUpload.files.length == 1) {
-          formData.append('counts_column_metadata_file', this.$refs.countsColumnMetadataFileUpload.files[0])
-        }
         this.progressVisible = true
         let response
         try {
@@ -3234,14 +3238,8 @@ export default {
 
         if (response.status == 200) {
           console.log('Imported score set data.')
-          if (this.item) {
-            // this.reloadItem()
-            this.$router.replace({path: `/score-sets/submit-completion/${scoreSet.urn}`})
-            this.$toast.add({severity: 'success', summary: 'Your changes were saved.', life: 3000})
-          } else {
-            this.$router.replace({path: `/score-sets/submit-completion/${scoreSet.urn}`})
-            this.$toast.add({severity: 'success', summary: 'The new score set was saved.', life: 3000})
-          }
+          this.$router.replace({path: `/score-sets/submit-completion/${scoreSet.urn}`})
+          this.$toast.add({severity: 'success', summary: 'The new score set was saved.', life: 3000})
         } else {
           this.$toast.add({
             severity: 'error',
@@ -3262,7 +3260,7 @@ export default {
       if (hasCountsFile && !hasScoresFile) {
         this.clientSideValidationErrors.scoresFile = 'Required'
       }
-      if (!this.item && !hasScoresFile) {
+      if (!hasScoresFile) {
         this.clientSideValidationErrors.scoresFile = 'Required'
       }
 
@@ -3281,12 +3279,6 @@ export default {
     ////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
     // Navigation
     ////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
-
-    viewItem: function () {
-      if (this.item) {
-        this.$router.replace({path: `/score-sets/${this.item.urn}`})
-      }
-    },
 
     //Back to Dashboard
     backDashboard: function () {

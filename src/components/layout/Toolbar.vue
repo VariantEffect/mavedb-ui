@@ -115,6 +115,10 @@ export default {
           route: '/search'
         },
         {
+          label: 'About',
+          route: '/about'
+        },
+        {
           label: 'Support',
           items: [
             {

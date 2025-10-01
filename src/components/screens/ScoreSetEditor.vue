@@ -1189,24 +1189,34 @@
                 </div>
                 <div class="field">
                   <span class="p-float-label">
+                    <div v-if="scoreColumnsMetadata">
+                      <span class="mr-2">Scores column metadata</span>
+                      <i class="pi pi-check mr-3"></i>
+                      <Button v-tooltip="{ value: 'View scores column metadata'}" class="p-button-info mr-2" icon="pi pi-eye"  @click="jsonToDisplay = JSON.stringify(scoreColumnsMetadata, null, 2)"></Button>
+                      <Button v-tooltip="{ value: 'Delete scores column metadata'}" class="p-button-danger mr-2" icon="pi pi-times"  @click="fileCleared('scoreColumnsMetadataFile')"></Button>
+                    </div>
                     <FileUpload
-                      :id="scopedId('input-scoresColumnMetadataFile')"
-                      ref="scoresColumnMetadataFileUpload"
+                      v-else
+                      :id="scopedId('input-scoreColumnsMetadataFile')"
+                      :key="inputScoreColumnsMetadataFileKey"
+                      ref="scoreColumnsMetadataFileUpload"
                       accept="application/json"
                       :auto="false"
                       choose-label="Scores column metadata file"
-                      :class="inputClasses.scoresColumnMetadataFile || ''"
+                      :class="inputClasses.scoreColumnsMetadataFile || ''"
                       :custom-upload="true"
                       :file-limit="1"
                       :show-cancel-button="false"
                       :show-upload-button="false"
+                      @remove="fileCleared('scoreColumnsMetadataFile')"
+                      @select="fileSelected('scoreColumnsMetadataFile', $event)"
                     >
                       <template #empty>
                         <p>Drop a JSON file here.</p>
                       </template>
                     </FileUpload>
                   </span>
-                  <span v-if="validationErrors.scoresColumnMetadataFile" class="mave-field-error">{{validationErrors.scoresColumnMetadataFile}}</span>
+                  <span v-if="validationErrors.scoreColumnsMetadataFile" class="mave-field-error">{{validationErrors.scoreColumnsMetadataFile}}</span>
                 </div>
                 <div class="field">
                   <span class="p-float-label">
@@ -1231,24 +1241,34 @@
                 </div>
                 <div class="field">
                   <span class="p-float-label">
+                    <div v-if="countColumnsMetadata">
+                      <span class="mr-2">Counts column metadata</span>
+                      <i class="pi pi-check mr-3"></i>
+                      <Button v-tooltip="{ value: 'View counts column metadata'}" class="p-button-info mr-2" icon="pi pi-eye"  @click="jsonToDisplay = JSON.stringify(countColumnsMetadata, null, 2)"></Button>
+                      <Button v-tooltip="{ value: 'Delete counts column metadata'}" class="p-button-danger mr-2" icon="pi pi-times"  @click="fileCleared('countColumnsMetadataFile')"></Button>
+                    </div>
                     <FileUpload
-                      :id="scopedId('input-countsColumnMetadataFile')"
-                      ref="countsColumnMetadataFileUpload"
+                      v-else
+                      :id="scopedId('input-countColumnsMetadataFile')"
+                      :key="inputCountColumnsMetadataFileKey"
+                      ref="countColumnsMetadataFileUpload"
                       accept="application/json"
                       :auto="false"
                       choose-label="Counts column metadata file"
-                      :class="inputClasses.countsColumnMetadataFile || ''"
+                      :class="inputClasses.countColumnsMetadataFile || ''"
                       :custom-upload="true"
                       :file-limit="1"
                       :show-cancel-button="false"
                       :show-upload-button="false"
+                      @remove="fileCleared('countColumnsMetadataFile')"
+                      @select="fileSelected('countColumnsMetadataFile', $event)"
                     >
                       <template #empty>
                         <p>Drop a JSON file here.</p>
                       </template>
                     </FileUpload>
                   </span>
-                  <span v-if="validationErrors.countsColumnMetadataFile" class="mave-field-error">{{validationErrors.countsColumnMetadataFile}}</span>
+                  <span v-if="validationErrors.countColumnsMetadataFile" class="mave-field-error">{{validationErrors.countColumnsMetadataFile}}</span>
                 </div>
               </template>
             </Card>
@@ -1467,7 +1487,11 @@ export default {
     targetOptions: ['Assembly', 'HGNC'],
     targetAutocomplete: 'HGNC',
     extraMetadata: null,
+    scoreColumnsMetadata: null,
+    countColumnsMetadata: null,
     inputExtraMetadataFileKey: 0,
+    inputScoreColumnsMetadataFileKey: 0,
+    inputCountColumnsMetadataFileKey: 0,
     jsonToDisplay: null,
 
     existingTargetGene: null,
@@ -2094,11 +2118,19 @@ export default {
     },
 
     fileCleared: function (inputName) {
+      this.jsonToDisplay = null
       if (inputName == 'extraMetadataFile') {
         this.extraMetadata = null
         delete this.clientSideValidationErrors.extraMetadata
         this.inputExtraMetadataFileKey += 1 // force re-mount of file upload component, otherwise button doesn't re-appear
-        this.jsonToDisplay = null
+      } else if (inputName == 'scoreColumnsMetadataFile') {
+        this.scoreColumnsMetadata = null
+        delete this.clientSideValidationErrors.scoreColumnsMetadata
+        this.inputScoreColumnsMetadataFileKey += 1
+      } else if (inputName == 'countColumnsMetadataFile') {
+        this.countColumnsMetadata = null
+        delete this.clientSideValidationErrors.countColumnsMetadata
+        this.inputCountColumnsMetadataFileKey += 1
       }
       // ensure files are cleared from sequence loader even when remove button not used
       else if (inputName == 'targetGeneTargetSequenceSequenceFile') {
@@ -2108,30 +2140,55 @@ export default {
       this.mergeValidationErrors()
     },
 
+    validateJsonObject: function(data, fieldName) {
+      if (!_.isObject(data) || _.isArray(data)) {
+        this.clientSideValidationErrors[fieldName] =
+          `${_.startCase(fieldName)} must be a JSON object (not an array or simple value).`
+      } else {
+        delete this.clientSideValidationErrors[fieldName]
+      }
+    },
+
     fileSelected: async function (inputName, event) {
       const file = event.files[0]
       if (file) {
+        const text = await file.text()
         switch (inputName) {
           case 'extraMetadataFile':
             {
-              const text = await file.text()
               try {
                 this.extraMetadata = JSON.parse(text)
-                if (!_.isObject(this.extraMetadata) || _.isArray(this.extraMetadata)) {
-                  this.clientSideValidationErrors.extraMetadata =
-                    'Extra metadata must be a JSON object (not an array or simple value).'
-                } else {
-                  delete this.clientSideValidationErrors.extraMetadata
-                }
+                this.validateJsonObject(this.extraMetadata, 'extraMetadata')
               } catch {
                 this.clientSideValidationErrors.extraMetadata = 'The file did not contain valid JSON text.'
                 console.log('Extra metadata file did not contain valid JSON text.')
               }
             }
             break
+          case 'scoreColumnsMetadataFile':
+            {
+              try {
+                this.scoreColumnsMetadata = JSON.parse(text)
+                this.validateJsonObject(this.scoreColumnsMetadata, 'scoreColumnsMetadata')
+              } catch {
+                this.clientSideValidationErrors.scoreColumnsMetadata = 'The file did not contain valid JSON text.'
+                console.log('Scores column metadata file did not contain valid JSON text.')
+              }
+            }
+            break
+          case 'countColumnsMetadataFile':
+            {
+              try {
+                this.countColumnsMetadata = JSON.parse(text)
+                this.validateJsonObject(this.countColumnsMetadata, 'countColumnsMetadata')
+              } catch {
+                this.clientSideValidationErrors.countColumnsMetadata = 'The file did not contain valid JSON text.'
+                console.log('Counts column metadata file did not contain valid JSON text.')
+              }
+            }
+            break
           case 'targetGeneTargetSequenceSequenceFile':
             {
-              const text = await file.text()
               try {
                 const fastaParser = new fasta()
                 /*new Fasta({
@@ -2217,6 +2274,8 @@ export default {
             this.editedScoreRanges.investigatorProvided.ranges[idx].range[1] === null
         })
         this.extraMetadata = !_.isEmpty(this.item.extraMetadata) ? this.item.extraMetadata : null
+        this.scoreColumnsMetadata = !_.isEmpty(this.item.datasetColumns?.scoreColumnsMetadata) ? this.item.datasetColumns.scoreColumnsMetadata : null
+        this.countColumnsMetadata = !_.isEmpty(this.item.datasetColumns?.countColumnsMetadata) ? this.item.datasetColumns.countColumnsMetadata : null
 
         if (this.editedScoreRanges?.investigatorProvided?.oddsPathSource) {
           this.editedScoreRanges.investigatorProvided.oddsPathSource = this.publicationIdentifiers.filter(
@@ -2333,6 +2392,11 @@ export default {
         secondaryPublicationIdentifiers: secondaryPublicationIdentifiers,
         dataUsagePolicy: this.dataUsagePolicy,
         extraMetadata: this.extraMetadata || {},
+        datasetColumns: {
+          ...this.item.datasetColumns,
+          scoreColumnsMetadata: this.scoreColumnsMetadata || {},
+          countColumnsMetadata: this.countColumnsMetadata || {}
+        },
         // eslint-disable-next-line no-unused-vars
         targetGenes: this.targetGenes.map(({index, ...target}) => {
           // drop index property from target genes before save
@@ -2387,6 +2451,7 @@ export default {
       // clear objects so that deleted values aren't merged back into editedItem object
       this.item.scoreRanges = null
       this.item.extraMetadata = null
+      this.item.datasetColumns = null
 
       const editedItem = _.merge({}, this.item, editedFields)
 
@@ -2466,11 +2531,11 @@ export default {
         if (this.$refs.countsFileUpload.files.length == 1) {
           formData.append('counts_file', this.$refs.countsFileUpload.files[0])
         }
-        if (this.$refs.scoresColumnMetadataFileUpload.files.length == 1) {
-          formData.append('scores_column_metadata_file', this.$refs.scoresColumnMetadataFileUpload.files[0])
+        if (this.$refs.scoreColumnsMetadataFileUpload.files.length == 1) {
+          formData.append('scores_column_metadata_file', this.$refs.scoreColumnsMetadataFileUpload.files[0])
         }
-        if (this.$refs.countsColumnMetadataFileUpload.files.length == 1) {
-          formData.append('counts_column_metadata_file', this.$refs.countsColumnMetadataFileUpload.files[0])
+        if (this.$refs.countColumnsMetadataFileUpload.files.length == 1) {
+          formData.append('counts_column_metadata_file', this.$refs.countColumnsMetadataFileUpload.files[0])
         }
         this.progressVisible = true
         let response

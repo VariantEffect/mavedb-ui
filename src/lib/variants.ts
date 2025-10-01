@@ -1,9 +1,13 @@
 import _ from 'lodash'
 
-import { parseSimpleNtVariant, parseSimpleProVariant, SimpleDnaVariation, SimpleProteinVariation, variantNotNullOrNA } from './mave-hgvs'
-import geneticCodes from './genetic-codes'
-import { AMINO_ACIDS, AMINO_ACIDS_WITH_TER, singleLetterAminoAcidOrHgvsCode } from './amino-acids'
-import { DEFAULT_CLNREVSTAT_FIELD, DEFAULT_CLNSIG_FIELD } from './clinical-controls'
+import {AMINO_ACIDS, AMINO_ACIDS_WITH_TER, singleLetterAminoAcidOrHgvsCode} from '@/lib/amino-acids'
+import {DEFAULT_CLNREVSTAT_FIELD, DEFAULT_CLNSIG_FIELD} from '@/lib/clinical-controls'
+import geneticCodes from '@/lib/genetic-codes'
+import {parseSimpleNtVariant, parseSimpleProVariant} from '@/lib/mave-hgvs'
+import type {SimpleDnaVariation, SimpleProteinVariation} from '@/lib/mave-hgvs'
+import {components} from '@/schema/openapi'
+
+type ScoreSet = components['schemas']['ScoreSet']
 
 export type HgvsReferenceSequenceType = 'c' | 'p' // | 'n'
 
@@ -41,7 +45,7 @@ export interface Variant extends RawVariant, VariantPropertiesAddedByPreparingCo
 }
 
 export const HGVS_REFERENCE_SEQUENCE_TYPES: {
-  [type: HgvsReferenceSequenceType]: { parsedPostMappedHgvsField: keyof VariantPropertiesAddedByPreparingCodingVariants }
+  [type: HgvsReferenceSequenceType]: {parsedPostMappedHgvsField: keyof VariantPropertiesAddedByPreparingCodingVariants}
 } = {
   c: {
     parsedPostMappedHgvsField: 'parsedPostMappedHgvsC'
@@ -83,12 +87,7 @@ export const VARIANT_EFFECT_TYPE_OPTIONS = [
   }
 ]
 
-export const DEFAULT_VARIANT_EFFECT_TYPES = [
-  'Missense',
-  'Nonsense',
-  'Synonymous',
-  'Other',
-]
+export const DEFAULT_VARIANT_EFFECT_TYPES = ['Missense', 'Nonsense', 'Synonymous', 'Other']
 
 export const PARSED_POST_MAPPED_VARIANT_PROPERTIES: ParsedPostMappedVariantProperties = {
   c: 'parsedPostMappedHgvsC',
@@ -100,7 +99,6 @@ function getParsedPostMappedHgvs(variant: Variant, type: HgvsReferenceSequenceTy
   const field = PARSED_POST_MAPPED_VARIANT_PROPERTIES[type]
   return field ? variant[field] : undefined
 }
-
 
 /**
  * Add parsed post-mapped HGVS c. and p. strings to variants wherever possible.
@@ -126,7 +124,8 @@ export function parseSimpleCodingVariants(variants: Variant[]) {
       // If a mapped HGVS c. string is missing but the raw HGVS string is a c. string with reference, us it instead.
       const parsedHgvs = parseSimpleNtVariant(v.hgvs_nt)
       // Treat g. and n. the same as c. for now, and allow there to be no accession.
-      if (parsedHgvs && ['c', 'g', 'n'].includes(parsedHgvs.referenceType)) { //} && parsedHgvs.target) {
+      if (parsedHgvs && ['c', 'g', 'n'].includes(parsedHgvs.referenceType)) {
+        //} && parsedHgvs.target) {
         v.post_mapped_hgvs_c = v.hgvs_nt
         v.parsedPostMappedHgvsC = parsedHgvs
         v.parsedPostMappedHgvsC.residueType = 'nt'
@@ -199,64 +198,6 @@ function getReferenceRange(variants: Variant[], referenceType: HgvsReferenceSequ
 }
 
 /**
- * Infer a coding DNA sequence from variants with parsed c. HGVS strings.
- *
- * This function looks at each variant's parsedPostMappedHgvsC property and constructs a DNA reference sequence from the
- * references alleles, wherever parsedPostMappedHgvsC is populated. The returned coding sequence is accompanied by an
- * object specifying the range of positions it describes. For instance, if the 5'-most variant is c.101A>C, then the
- * reference sequence will begin with "A," and range.start will be 101. For any position at which no reference allele
- * can be found among the variants, the reference will have an "N."
- *
- * If no variants have parsedPostMappedHgvsC set, then an empty coding sequence is returned.
- *
- * If two reference alleles any position disagree, a warning is logged, and an empty coding sequence is returned.
- *
- * @param variants An array of variants from which to infer a coding sequence.
- * @returns
- */
-// export function inferCodingSequenceFromVariants(variants: Variant[]) {
-//   if (variants.length == 0) {
-//     return {
-//       codingSequence: '',
-//       codingSequenceRange: {start: 0, length: 0}
-//     }
-//   }
-
-//   const codingRange = getReferenceRange(variants, 'c')
-//   const codingSequenceArr = Array(codingRange.length).fill('N')
-//   let codingSequenceFound = false
-//   for (const variant of variants) {
-//     const parsedHgvs = variant.parsedPostMappedHgvsC
-//     if (!parsedHgvs) {
-//       continue
-//     }
-//     if (codingSequenceArr[parsedHgvs.position - codingRange.start] == 'N') {
-//       codingSequenceArr[parsedHgvs.position - codingRange.start] = parsedHgvs.original
-//     } else if (codingSequenceArr[parsedHgvs.position - codingRange.start] != parsedHgvs.original) {
-//       console.log(
-//         `WARNING: Two variants with simple c. strings at position parsedHgvs.position have different reference alleles.`
-//       )
-//       return {
-//         codingSequence: '',
-//         codingSequenceRange: {start: 0, length: 0}
-//       }
-//     }
-//     codingSequenceFound = true
-//   }
-//   if (codingSequenceFound) {
-//     return {
-//       codingSequence: codingSequenceArr.join(''),
-//       codingSequenceRange: codingRange
-//     }
-//   } else {
-//     return {
-//       codingSequence: '',
-//       codingSequenceRange: {start: 0, length: 0}
-//     }
-//   }
-// }
-
-/**
  * Infer a DNA or protein reference sequence from variants with parsed HGVS strings.
  *
  * This function looks at each variant's parsedPostMappedHgvsC or parsedPostMappedHgvsP property (depending on the
@@ -278,7 +219,7 @@ export function inferReferenceSequenceFromVariants(variants: Variant[], referenc
     return {
       referenceSequence: '',
       referenceSequenceResidueType: referenceType == 'p' ? 'aa' : 'nt',
-      referenceSequenceRange: { start: 0, length: 0 }
+      referenceSequenceRange: {start: 0, length: 0}
     }
   }
   const referenceSequenceRange = getReferenceRange(variants, referenceType)
@@ -286,7 +227,7 @@ export function inferReferenceSequenceFromVariants(variants: Variant[], referenc
   const referenceSequenceArr = Array(referenceSequenceRange.length).fill(unknownResidue)
   for (const variant of variants) {
     const parsedHgvs = getParsedPostMappedHgvs(variant, referenceType)
-    if (!parsedHgvs) {
+    if (!parsedHgvs || parsedHgvs.position == null) {
       continue
     }
     if (referenceSequenceArr[parsedHgvs.position - referenceSequenceRange.start] == unknownResidue) {
@@ -342,7 +283,7 @@ export function inferReferenceSequenceFromVariants(variants: Variant[], referenc
  * @param variants The array of variants to translate.
  */
 export function translateSimpleCodingVariants(variants: Variant[]) {
-  const { referenceSequence: codingSequence, referenceSequenceRange: codingSequenceRange } =
+  const {referenceSequence: codingSequence, referenceSequenceRange: codingSequenceRange} =
     inferReferenceSequenceFromVariants(variants, 'c')
   if (codingSequence.length > 0) {
     for (const v of variants) {
@@ -381,6 +322,9 @@ function translateSimpleCodingHgvsCVariant(
   codingReferenceSequence: string,
   codingReferenceSequenceRange: SequenceRange
 ) {
+  if (parsedHgvsC.position == null) {
+    return undefined
+  }
   const offsetInCodon = (parsedHgvsC.position - 1) % 3
   const codonStartPosition = parsedHgvsC.position - offsetInCodon
   const aaPosition = Math.floor((codonStartPosition - 1) / 3) + 1
@@ -409,8 +353,6 @@ function translateSimpleCodingHgvsCVariant(
   )
   return `p.${originalAaTriple}${aaPosition}${variantAaTriple}`
 }
-
-
 
 /**
  * Determines whether a given variant represents either a start-loss (loss of the initiator methionine)
@@ -480,7 +422,7 @@ export function variantIsSynonymous(variant: Variant) {
   const refAllele = parsedVariant.original.toUpperCase()
   const altAllele = parsedVariant.substitution.toUpperCase()
   const refAlleleIsAA = AMINO_ACIDS.find((aa) => aa.codes.triple == refAllele)
-  return !!(refAlleleIsAA && (refAllele == altAllele || altAllele == "="))
+  return !!(refAlleleIsAA && (refAllele == altAllele || altAllele == '='))
 }
 
 export function variantIsNonsense(variant: Variant) {
@@ -498,5 +440,24 @@ export function variantIsOther(variant: Variant) {
     !variantIsSynonymous(variant) &&
     !variantIsNonsense(variant) &&
     !isStartOrStopLoss(variant)
+  )
+}
+
+/**
+ * Check that this application is able to determine the protein consequence of every variant.
+ *
+ * This means that every variant either has a parseable protein HGVS string or is known to be non-coding.
+ *
+ * Here we distinguish known a non-coding variant by the facts that (a) it has a parsed HGVS c. string and (b) the
+ * position in this string is not an integer.
+ *
+ * @param variants A list of variants.
+ * @returns True if every variant has a protein consequence determinable by this application.
+ */
+export function allCodingVariantsHaveProteinConsequence(variants: Variant[]) {
+  return variants.every(
+    (v) =>
+      v.parsedPostMappedHgvsP != null ||
+      (v.parsedPostMappedHgvsC?.referenceType == 'c' && v.parsedPostMappedHgvsC?.position == null)
   )
 }

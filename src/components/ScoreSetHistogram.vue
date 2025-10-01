@@ -1,7 +1,7 @@
 <template>
   <div class="mavedb-histogram-controls">
     <TabMenu v-if="hasTabBar" v-model:active-index="activeViz" class="mave-histogram-viz-select" :model="vizOptions" />
-    <div v-if="showRanges" class="mavedb-histogram-custom-controls">
+    <div v-if="showRanges" class="mavedb-histogram-thresholds-control">
       <div class="mavedb-histogram-control">
         <label class="mavedb-histogram-control-label" for="mavedb-histogram-viz-select">Thresholds: </label>
         <Dropdown
@@ -26,7 +26,9 @@
     <fieldset class="mavedb-histogram-controls-panel">
       <legend>Clinical Series Options</legend>
       <div v-if="showClinicalControlOptions" class="mavedb-histogram-control">
-        <label class="mavedb-histogram-control-label" for="mavedb-histogram-db-select">Clinical control database: </label>
+        <label class="mavedb-histogram-control-label" for="mavedb-histogram-db-select"
+          >Clinical control database:
+        </label>
         <Dropdown
           v-model="controlDb"
           :disabled="!refreshedClinicalControls"
@@ -36,7 +38,7 @@
           style="align-items: center; height: 1.5rem"
         />
         <label class="mavedb-histogram-control-label" for="mavedb-histogram-version-select"
-        >Clinical control version:
+          >Clinical control version:
         </label>
         <Dropdown
           v-model="controlVersion"
@@ -58,14 +60,10 @@
           style="display: inline"
         />
       </div>
-      <div class="mavedb-histogram-control">
+      <div v-if="proteinEffectOptionsAvailable" class="mavedb-histogram-control">
         <span class="mavedb-histogram-control-label">Limit to variants with protein effect: </span>
         <div class="flex flex-wrap gap-3">
-          <div
-            v-for="typeOption of variantTypeOptions"
-            :key="typeOption.name"
-            class="flex gap-1 align-items-center"
-          >
+          <div v-for="typeOption of variantTypeOptions" :key="typeOption.name" class="flex gap-1 align-items-center">
             <Checkbox
               v-model="customSelectedControlVariantTypeFilters"
               :disabled="!refreshedClinicalControls"
@@ -95,16 +93,12 @@
         </div>
       </div>
     </fieldset>
-    <fieldset class="mavedb-histogram-controls-panel">
+    <fieldset v-if="proteinEffectOptionsAvailable" class="mavedb-histogram-controls-panel">
       <legend>Protein Effect Series Options</legend>
       <div class="mavedb-histogram-control">
         <span class="mavedb-histogram-control-label">Variants by protein effect: </span>
         <div class="flex flex-wrap gap-3">
-          <div
-            v-for="typeOption of variantTypeOptions"
-            :key="typeOption.name"
-            class="flex gap-1 align-items-center"
-          >
+          <div v-for="typeOption of variantTypeOptions" :key="typeOption.name" class="flex gap-1 align-items-center">
             <Checkbox
               v-model="customSelectedVariantTypeFilters"
               :disabled="!refreshedClinicalControls"
@@ -139,12 +133,12 @@ import Dropdown from 'primevue/dropdown'
 import ProgressSpinner from 'primevue/progressspinner'
 import Rating from 'primevue/rating'
 import TabMenu from 'primevue/tabmenu'
-import { defineComponent, PropType } from 'vue'
+import {defineComponent, PropType} from 'vue'
 
 import RangeTable from '@/components/RangeTable.vue'
 import useScopedId from '@/composables/scoped-id'
 import config from '@/config'
-import { saveChartAsFile } from '@/lib/chart-export'
+import {saveChartAsFile} from '@/lib/chart-export'
 import {
   BENIGN_CLINICAL_SIGNIFICANCE_CLASSIFICATIONS,
   CLINVAR_REVIEW_STATUS_STARS,
@@ -169,9 +163,19 @@ import makeHistogram, {
   HistogramBin,
   HistogramShader
 } from '@/lib/histogram'
-import { prepareRangesForHistogram, ScoreRanges, ScoreSetRanges, shaderOverlapsBin } from '@/lib/ranges'
-import { variantNotNullOrNA } from '@/lib/mave-hgvs'
-import { DEFAULT_VARIANT_EFFECT_TYPES, isStartOrStopLoss, variantIsMissense, variantIsNonsense, variantIsOther, variantIsSynonymous, VARIANT_EFFECT_TYPE_OPTIONS, Variant } from '@/lib/variants'
+import {prepareRangesForHistogram, shaderOverlapsBin, ScoreRanges, ScoreSetRanges} from '@/lib/ranges'
+import {variantNotNullOrNA} from '@/lib/mave-hgvs'
+import {
+  DEFAULT_VARIANT_EFFECT_TYPES,
+  isStartOrStopLoss,
+  variantIsMissense,
+  variantIsNonsense,
+  variantIsOther,
+  variantIsSynonymous,
+  VARIANT_EFFECT_TYPE_OPTIONS,
+  Variant,
+  allCodingVariantsHaveProteinConsequence
+} from '@/lib/variants'
 
 function naToUndefined(x: string | null | undefined) {
   if (variantNotNullOrNA(x)) {
@@ -269,6 +273,9 @@ export default defineComponent({
   },
 
   computed: {
+    proteinEffectOptionsAvailable: function () {
+      return allCodingVariantsHaveProteinConsequence(this.variants)
+    },
     series: function () {
       if (!this.refreshedClinicalControls) {
         return null
@@ -306,35 +313,39 @@ export default defineComponent({
             {
               classifier: (d: HistogramDatum) => variantIsMissense(d),
               options: {
-                color: '#a36e4e',
+                color: '#ffcd3a',
                 title: 'Missense'
               }
             },
             {
               classifier: (d: HistogramDatum) => variantIsSynonymous(d),
               options: {
-                color: '#59a34e',
+                color: '#6aa84f',
                 title: 'Synonymous'
               }
             },
             {
               classifier: (d: HistogramDatum) => variantIsNonsense(d),
               options: {
-                color: '#a3984e',
+                color: '#681a1a',
                 title: 'Nonsense'
               }
             },
-            ...(this.hideStartAndStopLossByDefault ? [] : [{
-              classifier: (d: HistogramDatum) => isStartOrStopLoss(d),
-              options: {
-              color: '#6d4ea3',
-              title: 'Start/Stop Loss'
-              }
-            }]),
+            ...(this.hideStartAndStopLossByDefault
+              ? []
+              : [
+                  {
+                    classifier: (d: HistogramDatum) => isStartOrStopLoss(d),
+                    options: {
+                      color: '#cd3aff',
+                      title: 'Start/Stop Loss'
+                    }
+                  }
+                ]),
             {
               classifier: (d: HistogramDatum) => variantIsOther(d),
               options: {
-                color: '#709090',
+                color: '#3affcd',
                 title: 'Other'
               }
             }
@@ -348,7 +359,8 @@ export default defineComponent({
                   PATHOGENIC_CLINICAL_SIGNIFICANCE_CLASSIFICATIONS,
                   this.selectedClinicalSignificanceClassifications
                 ).includes(d.control?.[DEFAULT_CLNSIG_FIELD]) &&
-                CLINVAR_REVIEW_STATUS_STARS[d.control?.[DEFAULT_CLNREVSTAT_FIELD]] >= this.minStarRating && this.filterControlVariantByEffect(d),
+                CLINVAR_REVIEW_STATUS_STARS[d.control?.[DEFAULT_CLNREVSTAT_FIELD]] >= this.minStarRating &&
+                this.filterControlVariantByEffect(d),
               options: {
                 color: '#e41a1c',
                 title: 'Pathogenic/Likely Pathogenic'
@@ -360,7 +372,8 @@ export default defineComponent({
                   BENIGN_CLINICAL_SIGNIFICANCE_CLASSIFICATIONS,
                   this.selectedClinicalSignificanceClassifications
                 ).includes(d.control?.[DEFAULT_CLNSIG_FIELD]) &&
-                CLINVAR_REVIEW_STATUS_STARS[d.control?.[DEFAULT_CLNREVSTAT_FIELD]] >= this.minStarRating  && this.filterControlVariantByEffect(d),
+                CLINVAR_REVIEW_STATUS_STARS[d.control?.[DEFAULT_CLNREVSTAT_FIELD]] >= this.minStarRating &&
+                this.filterControlVariantByEffect(d),
               options: {
                 color: '#377eb8',
                 title: 'Benign/Likely Benign'
@@ -372,7 +385,8 @@ export default defineComponent({
             series.push({
               classifier: (d: Variant) =>
                 d.control?.[DEFAULT_CLNSIG_FIELD] == 'Uncertain significance' &&
-                (CLINVAR_REVIEW_STATUS_STARS[d.control?.[DEFAULT_CLNREVSTAT_FIELD]] ?? -1) >= this.minStarRating  && this.filterControlVariantByEffect(d),
+                (CLINVAR_REVIEW_STATUS_STARS[d.control?.[DEFAULT_CLNREVSTAT_FIELD]] ?? -1) >= this.minStarRating &&
+                this.filterControlVariantByEffect(d),
               options: {
                 color: '#999999',
                 title: 'Uncertain significance'
@@ -391,7 +405,8 @@ export default defineComponent({
                   CONFLICTING_CLINICAL_SIGNIFICANCE_CLASSIFICATIONS,
                   this.selectedClinicalSignificanceClassifications
                 ).includes(d.control?.[DEFAULT_CLNSIG_FIELD]) &&
-                CLINVAR_REVIEW_STATUS_STARS[d.control?.[DEFAULT_CLNREVSTAT_FIELD]] >= this.minStarRating  && this.filterControlVariantByEffect(d),
+                CLINVAR_REVIEW_STATUS_STARS[d.control?.[DEFAULT_CLNREVSTAT_FIELD]] >= this.minStarRating &&
+                this.filterControlVariantByEffect(d),
               options: {
                 color: '#984ea3',
                 title: conflictingClinicalSignificanceSeriesLabelForVersion(
@@ -401,51 +416,51 @@ export default defineComponent({
             })
           }
 
-          if (this.selectedVariantTypeFilters.includes('Missense')) {
+          if (this.proteinEffectOptionsAvailable && this.selectedVariantTypeFilters.includes('Missense')) {
             series.push({
               classifier: (d: HistogramDatum) => variantIsMissense(d),
               options: {
-                color: '#a36e4e',
+                color: '#ffcd3a',
                 title: 'Missense'
               }
             })
           }
 
-          if (this.selectedVariantTypeFilters.includes('Synonymous')) {
+          if (this.proteinEffectOptionsAvailable && this.selectedVariantTypeFilters.includes('Synonymous')) {
             series.push({
               classifier: (d: HistogramDatum) => variantIsSynonymous(d),
               options: {
-                color: '#59a34e',
+                color: '#6aa84f',
                 title: 'Synonymous'
               }
             })
           }
 
-          if (this.selectedVariantTypeFilters.includes('Nonsense')) {
+          if (this.proteinEffectOptionsAvailable && this.selectedVariantTypeFilters.includes('Nonsense')) {
             series.push({
               classifier: (d: HistogramDatum) => variantIsNonsense(d),
               options: {
-                color: '#a3984e',
+                color: '#681a1a',
                 title: 'Nonsense'
               }
             })
           }
 
-          if (this.selectedVariantTypeFilters.includes('Start/Stop Loss')) {
+          if (this.proteinEffectOptionsAvailable && this.selectedVariantTypeFilters.includes('Start/Stop Loss')) {
             series.push({
               classifier: (d: HistogramDatum) => isStartOrStopLoss(d),
               options: {
-                color: '#6d4ea3',
+                color: '#cd3aff',
                 title: 'Start/Stop Loss'
               }
             })
           }
 
-          if (this.selectedVariantTypeFilters.includes('Other')) {
+          if (this.proteinEffectOptionsAvailable && this.selectedVariantTypeFilters.includes('Other')) {
             series.push({
               classifier: (d: HistogramDatum) => variantIsOther(d),
               options: {
-                color: '#709090',
+                color: '#3affcd',
                 title: 'Other'
               }
             })
@@ -460,20 +475,20 @@ export default defineComponent({
     },
 
     vizOptions: function () {
-      const options = [{label: 'Overall Distribution', view: 'distribution'}]
+      const options = [{label: 'Overall Distribution', view: 'distribution', clinicalControlLegendNoteEnabled: false}]
 
       if (this.someVariantsHaveClinicalSignificance) {
-        options.push({label: 'Clinical View', view: 'clinical'})
+        options.push({label: 'Clinical View', view: 'clinical', clinicalControlLegendNoteEnabled: true})
       }
 
       // crude to be based on clinical significance. may be a better option for viz control
-      if (this.someVariantsHaveClinicalSignificance) {
-        options.push({label: 'Protein Effect View', view: 'effect'})
+      if (this.proteinEffectOptionsAvailable) {
+        options.push({label: 'Protein Effect View', view: 'effect', clinicalControlLegendNoteEnabled: false})
       }
 
       // custom view should always come last
       if (this.someVariantsHaveClinicalSignificance) {
-        options.push({label: 'Custom', view: 'custom'})
+        options.push({label: 'Custom', view: 'custom', clinicalControlLegendNoteEnabled: true})
       }
       return options
     },
@@ -514,9 +529,7 @@ export default defineComponent({
       if (!this.activeRanges) return []
 
       const calibrationOptions = Object.entries(this.activeRanges).map(([key, value]) => {
-        const label = value.researchUseOnly
-          ? `Research Use Only: ${value.title}`
-          : value.title
+        const label = value.researchUseOnly ? `Research Use Only: ${value.title}` : value.title
         return {
           label,
           value: key
@@ -899,12 +912,20 @@ export default defineComponent({
 
   methods: {
     filterControlVariantByEffect(variant: Variant) {
+      // Do not filter control variants unless we have protein consequences for all coding variants.
+      if (!this.proteinEffectOptionsAvailable) {
+        return true
+      }
       return (
         (this.selectedControlVariantTypeFilters.includes('Missense') && variantIsMissense(variant)) ||
         (this.selectedControlVariantTypeFilters.includes('Synonymous') && variantIsSynonymous(variant)) ||
         (this.selectedControlVariantTypeFilters.includes('Nonsense') && variantIsNonsense(variant)) ||
         (this.selectedControlVariantTypeFilters.includes('Start/Stop Loss') && isStartOrStopLoss(variant)) ||
-        (this.selectedControlVariantTypeFilters.includes('Other') && !variantIsMissense(variant) && !variantIsSynonymous(variant) && !variantIsNonsense(variant) && !isStartOrStopLoss(variant))
+        (this.selectedControlVariantTypeFilters.includes('Other') &&
+          !variantIsMissense(variant) &&
+          !variantIsSynonymous(variant) &&
+          !variantIsNonsense(variant) &&
+          !isStartOrStopLoss(variant))
       )
     },
     exportChart() {
@@ -945,9 +966,9 @@ export default defineComponent({
         .seriesClassifier(seriesClassifier)
         .title('Distribution of Functional Scores')
         .legendNote(
-          this.activeViz == 0 || !this.refreshedClinicalControls
-            ? null
-            : `${this.controlDb?.dbName} data from version ${this.controlVersion}`
+          this.vizOptions[this.activeViz]?.clinicalControlLegendNoteEnabled && this.refreshedClinicalControls
+            ? `${this.controlDb?.dbName} data from version ${this.controlVersion}`
+            : null
         )
         .shaders(this.histogramShaders)
 
@@ -1112,16 +1133,20 @@ export default defineComponent({
   gap: 0.5rem;
 }
 
+.mavedb-histogram-thresholds-control {
+  margin-left: auto;
+}
+
+.mavedb-histogram-thresholds-control:first-child {
+  margin-left: 0;
+}
+
 .mavedb-histogram-controls {
   display: flex;
   flex-direction: row;
   justify-content: space-between;
   align-items: center;
   background: #fff;
-}
-
-.mavedb-histogram-controls div:only-child {
-  margin-left: auto;
 }
 
 .mavedb-histogram-custom-controls {

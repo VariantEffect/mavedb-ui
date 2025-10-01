@@ -1,118 +1,12 @@
 <template>
   <DefaultLayout>
     <div class="grid" style="margin: 10px 0;">
-      <div v-if="config.PREVIEW_SITE" class="col-12">
-        <Card>
-          <template #title>MaveDB Beta Test Site</template>
-          <template #content>
-            <p>
-              You are browsing MaveDB's preview site for beta testers. This site presents unreleased features that may
-              have bugs, so if your purpose is not to test these features, please visit the main MaveDB site instead at
-              <a href="https://mavedb.org/">mavedb.org</a>.
-            </p>
-            <p>
-              If you are a beta tester, thanks in advance for your feedback! Please use the link in the toolbar to reach
-              our Zulip message board, where you can leave notes for the development team about searches you ran that
-              did not yield results, new features or changes that you would find valuable, and any other feedback you
-              may have.
-            </p>
-            <h3>Getting started</h3>
-            <ul>
-              <li>
-                Try searching for variants using HGVS strings like
-                <span v-tooltip.top="'Click to copy'" class="mave-hgvs-example" @click="copyText">ENST00000473961.6:c.-19-2A>T</span>
-                and
-                <span v-tooltip.top="'Click to copy'" class="mave-hgvs-example" @click="copyText">NP_000242.1:p.Asn566Thr</span>.
-                MaveDB supports a variety of HGVS formats for searching.
-              </li>
-              <li>
-                Browse to a score set like
-                <router-link :to="{name: 'scoreSet', params: {urn: 'urn:mavedb:00000050-a-1'}}">
-                  MSH2 LOF Scores
-                </router-link>.
-                To support clinicians' needs, this view now includes information about ClinVar controls, as
-                well as the option to view variant details in coordinates relative to transcripts rather than in the
-                format uploaded by investigators, which is often relative to synthetic target sequences.
-              </li>
-            </ul>
-            <h3>Curated score sets</h3>
-            <p>The following data sets have been curated and include score range information.</p>
-            <table>
-              <tr>
-                <th>Gene</th>
-                <th>Experiment or score set</th>
-              </tr>
-              <tr>
-                <td>ASPA</td>
-                <td>
-                  <router-link :to="{name: 'scoreSet', params: {urn: 'urn:mavedb:00000657-a-1'}}">Aspartoacylase (ASPA) cellular abundance</router-link><br />
-                  <router-link :to="{name: 'scoreSet', params: {urn: 'urn:mavedb:00000657-b-1'}}">Aspartoacylase (ASPA) cellular toxicity</router-link>
-                </td>
-              </tr>
-              <tr>
-                <td>BRCA1</td>
-                <td>
-                  <router-link :to="{name: 'scoreSet', params: {urn: 'urn:mavedb:00000097-0-2'}}">BRCA1 SGE Normalized Scores</router-link>
-                  <!--
-                  <router-link :to="{name: 'scoreSet', params: {urn: 'urn:mavedb:00001208-a-2'}}">Multiplex HDR assay of BRCA1</router-link><br />
-                  <router-link :to="{name: 'scoreSet', params: {urn: 'urn:mavedb:00001209-a-2'}}">Cisplatin resistance assay of BRCA1</router-link>
-                  -->
-                </td>
-              </tr>
-              <tr>
-                <td>BRCA2</td>
-                <td><router-link :to="{name: 'scoreSet', params: {urn: 'urn:mavedb:00001224-a-1'}}">Scores from arrayed screen of BRCA2 homology directed repair function in VC-8 cells</router-link></td>
-              </tr>
-              <tr>
-                <td>CHEK2</td>
-                <td><router-link :to="{name: 'scoreSet', params: {urn: 'urn:mavedb:00001205-a-1'}}">CHEK2 Yeast Complementation in MMS</router-link></td>
-              </tr>
-              <tr>
-                <td>FKRP</td>
-                <td><router-link :to="{name: 'scoreSet', params: {urn: 'urn:mavedb:00001197-a-4'}}">FKRP variants effects on alpha-DG glycosylation</router-link></td>
-              </tr>
-              <tr>
-                <td>GCK</td>
-                <td>
-                  <router-link :to="{name: 'scoreSet', params: {urn: 'urn:mavedb:00000096-a-1'}}">GCK activity measured by complementation</router-link><br />
-                  <router-link :to="{name: 'scoreSet', params: {urn: 'urn:mavedb:00000096-b-1'}}">GCK abundance measured by DHFR-PCA</router-link>
-                </td>
-              </tr>
-              <tr>
-                <td>KCNH2</td>
-                <td>
-                  <router-link :to="{name: 'scoreSet', params: {urn: 'urn:mavedb:00001216-a-1'}}">KCNH2 MAVE Trafficking Scores</router-link><br />
-                  <router-link :to="{name: 'scoreSet', params: {urn: 'urn:mavedb:00001231-a-1'}}">Scores from cell surface expression deep mutational scan of KCNH2 in HEK293T cells</router-link>
-                </td>
-              </tr>
-              <tr>
-                <td>LARGE1</td>
-                <td><router-link :to="{name: 'scoreSet', params: {urn: 'urn:mavedb:00001197-a-4'}}">LARGE1 variants effects on alpha-DG glycosylation</router-link></td>
-              </tr>
-              <tr>
-                <td>MSH2</td>
-                <td><router-link :to="{name: 'scoreSet', params: {urn: 'urn:mavedb:00000050-a-1'}}">MSH2 LOF scores (HAP1)</router-link></td>
-              </tr>
-              <tr>
-                <td>OTC</td>
-                <td><router-link :to="{name: 'scoreSet', params: {urn: 'urn:mavedb:00000112-a-1'}}">SNV-accessible missense variant scores for OTC</router-link></td>
-              </tr>
-              <tr>
-                <td>TP53</td>
-                <td>
-                  <!--
-                  <router-link :to="{name: 'scoreSet', params: {urn: 'urn:mavedb:00001211-0-2'}}">Yeast-based functional assay of p53 (median transactivation)</router-link>
-                  -->
-                  <router-link :to="{name: 'scoreSet', params: {urn: 'urn:mavedb:00001234-0-1'}}">Median TP53 transcriptional activity scores</router-link>
-                </td>
-              </tr>
-            </table>
-            <p>
-              To provide feedback, please join our Zulip message board. Use <a href="https://mavedb.zulipchat.com/join/5cvqzctbnme2lqmjwnbjg4ty/">this link</a> to join the
-              organization. Once you have joined, you can create topics for discussion in the <a href="https://mavedb.zulipchat.com/#narrow/channel/511813-beta-testers">beta-testers channel</a>.
-            </p>
-          </template>
-        </Card>
+      <div class="col-12">
+        <p class="mavedb-mavemd-notice">
+          <router-link to="/mavemd"><img alt="MaveMD" class="mavedb-mavemd-logo" src="@/assets/mavemd-logo.png" /></router-link>
+          &nbsp;
+          Looking for the new MaveMD clinical features? <router-link to="/mavemd">Click here.</router-link>
+        </p>
       </div>
       <div class="col-8">
         <Card>
@@ -274,5 +168,14 @@ ul {
   background: #eee;
   padding: 0 3px;
   cursor: pointer;
+}
+
+.mavedb-mavemd-notice {
+  text-align: center; font-size: 120%;
+}
+
+.mavedb-mavemd-logo {
+  height: 40px;
+  vertical-align: middle;
 }
 </style>

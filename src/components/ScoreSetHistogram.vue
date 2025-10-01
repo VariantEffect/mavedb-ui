@@ -160,9 +160,10 @@ import makeHistogram, {
   Histogram,
   HistogramSerieOptions,
   HistogramDatum,
-  HistogramBin
+  HistogramBin,
+  HistogramShader
 } from '@/lib/histogram'
-import {prepareRangesForHistogram, ScoreRanges, ScoreSetRanges} from '@/lib/ranges'
+import {prepareRangesForHistogram, shaderOverlapsBin, ScoreRanges, ScoreSetRanges} from '@/lib/ranges'
 import {variantNotNullOrNA} from '@/lib/mave-hgvs'
 import {
   DEFAULT_VARIANT_EFFECT_TYPES,
@@ -700,9 +701,19 @@ export default defineComponent({
             parts.push(clinVarLinkOut)
           }
 
-          // Line 3: Score
+          // Line 3: Score and classification
           if (variant.score) {
-            parts.push(`Score: ${variant.score.toPrecision(4)}`)
+            let binClassificationLabel = ''
+            if (bin && this.activeRangeKey && this.activeRange) {
+              // TODO#491: Refactor this calculation into the creation of variant objects so we may just access the property of the variant which tells us its classification.
+              const binClassification = this.histogramShaders[this.activeRangeKey.value]?.find(
+                (range: HistogramShader) => shaderOverlapsBin(range, bin)
+              )
+
+              binClassificationLabel = `<span class="mavedb-range-classification-badge" style="margin-left: 6px; background-color:${binClassification.color}; color:white;">${binClassification.title}</span>`
+            }
+
+            parts.push(`Score: ${variant.score.toPrecision(4)} ${binClassificationLabel}`)
           }
 
           // Line 4: Blank line
@@ -713,7 +724,41 @@ export default defineComponent({
           // Line 5: Bin range
           parts.push(`Bin range: ${bin.x0} to ${bin.x1}`)
 
-          // Line 6:
+          //Line 6: Bin Classification
+          if (this.activeRangeKey && this.activeRange) {
+            // TODO#491: Refactor this calculation into the creation of histogram bins so we don't need to repeat it every time we construct a tooltip.
+            const binClassifications = this.histogramShaders[this.activeRangeKey.value]?.filter(
+              (range: HistogramShader) => shaderOverlapsBin(range, bin)
+            ).sort(
+              (a: HistogramShader, b: HistogramShader) => (a.min ? a.min : -Infinity) - (b.min ? b.min : -Infinity)
+            ) || []
+
+            if (binClassifications.length > 0) {
+                const binClassificationLabels = binClassifications.map((binClassification: HistogramShader) => {
+                const rangeMin = binClassification.min ?? -Infinity
+                const rangeMax = binClassification.max ?? Infinity
+
+                const spanStart = Math.max(bin.x0, rangeMin).toPrecision(3)
+                const spanEnd = Math.min(bin.x1, rangeMax).toPrecision(3)
+
+                const binSpansMultipleShaders = (bin.x0 < rangeMin || bin.x1 > rangeMax)
+
+                return `<span class="mavedb-range-classification-badge" style="background-color:${binClassification.color}; color:white;">${binClassification.title} ${binSpansMultipleShaders ? `(${spanStart} to ${spanEnd})` : ''}</span>`
+              })
+
+              // If the bin spans many classifications, show the first two and then the rest on a new line.
+              if (binClassificationLabels.length <= 2) {
+                parts.push(`Bin classification(s): ${binClassificationLabels.join(', ')}`)
+              } else {
+                parts.push(`Bin classification(s): ${binClassificationLabels.slice(0, 2).join(', ')},`)
+                parts.push(binClassificationLabels.slice(2).join(', '))
+              }
+            }
+          } else {
+              parts.push('Bin classification(s): N/A')
+            }
+
+          // Line 7: Bin series counts
           bin.seriesBins.forEach((serieBin, i) => {
             const label = allSeries[i].title ? allSeries[i].title : allSeries.length > 1 ? `Series ${i + 1}` : null
             parts.push((label ? `${label}: ` : '') + `${serieBin.length} variants in bin`)
@@ -927,12 +972,6 @@ export default defineComponent({
         )
         .shaders(this.histogramShaders)
 
-      if (this.externalSelection) {
-        this.histogram.selectDatum(this.externalSelection)
-      } else {
-        this.histogram.clearSelection()
-      }
-
       // Only render clinical specific viz options if such features are enabled.
       if (this.config.CLINICAL_FEATURES_ENABLED && this.showRanges) {
         this.histogram.renderShader(this.activeRangeKey?.value)
@@ -941,6 +980,12 @@ export default defineComponent({
       }
 
       this.histogram.refresh()
+
+      if (this.externalSelection) {
+        this.histogram.selectDatum(this.externalSelection)
+      } else {
+        this.histogram.clearSelection()
+      }
     },
 
     loadClinicalControls: async function () {
@@ -1149,5 +1194,12 @@ export default defineComponent({
 }
 .mavedb-histogram-tooltip-variant-star-filled {
   color: #fdb81e;
+}
+
+.mavedb-range-classification-badge {
+  padding: 2px 2px;
+  border-radius: 4px;
+  font-size: 14px;
+  font-weight: bold;
 }
 </style>

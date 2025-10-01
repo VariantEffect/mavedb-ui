@@ -150,6 +150,7 @@ export interface Histogram {
   // Shaded regions
   shaders: Accessor<HistogramShaderRegions | null, Histogram>
   renderShader: Accessor<string | null, Histogram>
+  renderShaderTitles: Accessor<'show' | 'hide' | 'auto', Histogram>
 
   //////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
   // Getters
@@ -202,6 +203,7 @@ export default function makeHistogram(): Histogram {
   // Shaded regions
   let shaders: HistogramShaderRegions | null = null
   let renderShader: string | null = null
+  let renderShaderTitles: 'show' | 'hide' | 'auto' = 'auto'
 
   //////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
   // Read-only properties
@@ -952,8 +954,24 @@ export default function makeHistogram(): Histogram {
             })
             .attr('y', 15)
             .style('text-anchor', 'middle')
-            .style('visibility', (d) => (d.title ? 'visible' : 'hidden'))
+            .style('visibility', (d) => (renderShaderTitles !== 'hide' && d.title ? 'visible' : 'hidden'))
             .text((d) => d.title)
+
+            // Hide shader titles which do not fit inside their region if the user has requested automatic title rendering.
+            if (renderShaderTitles === 'auto') {
+              shaderG
+                .select('text')
+                .each(function (d) {
+                  const node = this as SVGTextElement
+                  const span = visibleShaderRegion(d)
+                  const regionPixelWidth = xScale(span.max) - xScale(span.min)
+                  const textWidth = node.getBBox().width
+
+                  if (textWidth > regionPixelWidth) {
+                    d3.select(node).style('visibility', 'hidden')
+                  }
+                })
+            }
 
           // Draw the shader thresholds.
           const shaderThresholds = activeShader
@@ -989,6 +1007,7 @@ export default function makeHistogram(): Histogram {
       }
 
       updateSelectionAfterRefresh()
+      refreshHighlighting()
 
       return chart
     },
@@ -1077,6 +1096,14 @@ export default function makeHistogram(): Histogram {
       }
 
       renderShader = value
+      return chart
+    },
+
+    renderShaderTitles: (value?: 'show' | 'hide' | 'auto') => {
+      if (value === undefined) {
+        return renderShaderTitles
+      }
+      renderShaderTitles = value
       return chart
     },
 

@@ -334,6 +334,7 @@ import DefaultLayout from '@/components/layout/DefaultLayout.vue'
 import {MAVE_MD_SCORE_SETS} from '@/lib/mavemd'
 import {components} from '@/schema/openapi'
 import {getScoreSetShortName} from '@/lib/score-sets'
+import {clinVarHgvsSearchStringRegex} from '@/lib/mave-hgvs'
 
 const SCORE_SETS_TO_SHOW = 5
 
@@ -587,11 +588,17 @@ export default defineComponent({
       this.loading = false
       await this.searchVariants()
     },
-    fetchHgvsSearchResults: async function (hgvsString: string, maneStatus: string | null = null) {
+    fetchHgvsSearchResults: async function (hgvsSearch: string, maneStatus: string | null = null) {
+      // Strip gene symbol and/or protein consequence from ClinVar-style variant names to obtain valid HGVS. If the
+      // search string doesn't match the pattern, leave it as is and let the rest of the search code handle any format
+      // problem.
+      const match = clinVarHgvsSearchStringRegex.exec(hgvsSearch.trim())
+      const hgvsStr = match ? `${match.groups!.identifier}:${match.groups!.description}` : hgvsSearch.trim()
+
       try {
         const response = await axios.get('https://reg.test.genome.network/allele', {
           params: {
-            hgvs: hgvsString
+            hgvs: hgvsStr
           }
         })
         const clingenAlleleId = response.data?.['@id']?.split('/')?.at(-1)
@@ -706,7 +713,7 @@ export default defineComponent({
                 const newAllele = {
                   clingenAlleleUrl: response.data?.['@id'],
                   clingenAlleleId: response.data?.['@id']?.split('/')?.at(-1),
-                  canonicalAlleleName: hgvsString, // since we have already determined a match, just use supplied hgvs string as a name
+                  canonicalAlleleName: hgvsStr, // since we have already determined a match, just use supplied hgvs string as a name
                   variantsStatus: 'NotLoaded',
                   variants: {
                     nucleotide: [] as Array<any>,

@@ -328,6 +328,11 @@ table.mavedb-odds-path-table th {
   font-weight: bold;
 }
 
+.mave-classification-not_provided {
+  background-color: #ffffff;
+  font-style: italic;
+}
+
 /* Evidence strengths */
 
 .mave-evidence-code-PS3_VERY_STRONG {

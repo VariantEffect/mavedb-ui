@@ -239,7 +239,13 @@ export default defineComponent({
   setup: useScopedId,
 
   data: function () {
-    const scoreSetHasRanges = config.CLINICAL_FEATURES_ENABLED && this.scoreSet.scoreRanges != null
+    const scoreSetHasRanges =
+      config.CLINICAL_FEATURES_ENABLED &&
+      this.scoreSet.scoreRanges != null &&
+      Object.values(this.scoreSet.scoreRanges).some(
+        (v: any) => v && typeof v === 'object' && Array.isArray((v as any).ranges) && (v as any).ranges.length > 0
+      )
+
     return {
       config: config,
 

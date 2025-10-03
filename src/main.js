@@ -5,6 +5,8 @@ import ToastService from 'primevue/toastservice'
 import Tooltip from 'primevue/tooltip'
 import {initRestClient} from 'rest-client-vue'
 import {createApp} from 'vue'
+import {createHead} from '@unhead/vue/client'
+import {TemplateParamsPlugin} from 'unhead/plugins'
 
 import App from '@/App.vue'
 import config from '@/config'
@@ -43,10 +45,24 @@ router.beforeEach((to) => {
   }
 })
 
+const head = createHead({
+  plugins: [TemplateParamsPlugin],
+  init: [
+    {
+      titleTemplate: '%siteName %separator %s',
+      templateParams: {
+        separator: '|',
+        siteName: import.meta.env.VITE_SITE_TITLE
+      }
+    }
+  ]
+})
+
 createApp(App)
   .use(router)
   .use(store)
   .use(createPinia())
+  .use(head)
   .use(PrimeVue)
   .use(ConfirmationService)
   .use(ToastService)

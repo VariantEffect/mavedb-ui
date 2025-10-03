@@ -148,6 +148,7 @@ import DefaultLayout from '../layout/DefaultLayout.vue'
 import SelectButton from 'primevue/selectbutton'
 import PageLoading from '../common/PageLoading.vue'
 import TimeSeriesLineChart from '../TimeSeriesLineChart.vue'
+import {useHead} from '@unhead/vue'
 
 import useItem from '@/composition/item'
 import config from '@/config'
@@ -155,6 +156,10 @@ import config from '@/config'
 export default {
   name: 'StatisticsView',
   components: {Carousel, Card, Column, Chart, DataTable, DefaultLayout, SelectButton, PageLoading, TimeSeriesLineChart},
+
+  setup: () => {
+   useHead({title: 'Database statistics'})
+  },
 
   data() {
     const aggregationLevels = [

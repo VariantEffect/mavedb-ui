@@ -71,6 +71,7 @@ import Button from 'primevue/button'
 import Column from 'primevue/column'
 import DataTable from 'primevue/datatable'
 import Dialog from 'primevue/dialog'
+import {useHead} from '@unhead/vue'
 
 import CollectionCreator from '@/components/CollectionCreator'
 import DefaultLayout from '@/components/layout/DefaultLayout'
@@ -83,7 +84,10 @@ export default {
 
   components: {Button, CollectionCreator, Column, DataTable, DefaultLayout, Dialog, PageLoading},
 
-  setup: useFormatters,
+  setup: () => {
+    useHead({title: 'My saved collections'})
+    return useFormatters()
+  },
 
   data: () => ({
     collections: [],

@@ -30,18 +30,22 @@
 <script>
 import axios from 'axios'
 import InputText from 'primevue/inputtext'
+import TabPanel from 'primevue/tabpanel'
+import TabView from 'primevue/tabview'
+import {useHead} from '@unhead/vue'
 
 import config from '@/config'
 import ScoreSetTable from '@/components/ScoreSetTable.vue'
 import DefaultLayout from '@/components/layout/DefaultLayout'
 
-import TabView from 'primevue/tabview'
-import TabPanel from 'primevue/tabpanel'
-
 export default {
   name: 'HomeView',
 
   components: {DefaultLayout, ScoreSetTable, InputText, TabView, TabPanel},
+
+  setup: () => {
+    useHead({title: 'My dashboard'})
+  },
 
   data: function () {
     return {

@@ -97,11 +97,12 @@ import TabPanel from 'primevue/tabpanel'
 import TabView from 'primevue/tabview'
 import {debounce} from 'vue-debounce'
 import {defineComponent} from 'vue'
-import {paths, components} from '@/schema/openapi'
+import {useHead} from '@unhead/vue'
 
 import type {LocationQueryValue} from 'vue-router'
 import {textForTargetGeneCategory} from '@/lib/target-genes'
 import {routeToVariantSearchIfVariantIsSearchable} from '@/lib/search'
+import {paths, components} from '@/schema/openapi'
 
 type ShortScoreSet = components['schemas']['ShortScoreSet']
 type ShortTargetGene = components['schemas']['ShortTargetGene']
@@ -165,6 +166,10 @@ export default defineComponent({
   name: 'SearchView',
 
   components: {DefaultLayout, ScoreSetTable, IconField, InputIcon, InputText, SelectList, TabView, TabPanel, Button},
+
+  setup: () => {
+    useHead({title: 'Search data sets'})
+  },
 
   data: function () {
     return {

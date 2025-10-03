@@ -1,7 +1,7 @@
 import Papa from 'papaparse'
 
 export interface ScoresOrCountsRow {
-  score?: number
+  score?: number | 'NA'
   [key: string]: any
 }
 

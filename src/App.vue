@@ -12,7 +12,9 @@ import {mapActions, mapState} from 'vuex'
 
 export default {
   components: {ConfirmDialog, Toast},
+
   computed: mapState('toast', ['toasts']),
+
   watch: {
     toasts: {
       deep: true,
@@ -24,6 +26,7 @@ export default {
       }
     }
   },
+
   methods: mapActions('toast', ['removeDequeuedToasts'])
 }
 </script>

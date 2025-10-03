@@ -30,7 +30,7 @@
         </div>
         <div v-if="item.shortDescription" class="mavedb-score-set-description">{{ item.shortDescription }}</div>
       </div>
-      <div v-if="scores?.length">
+      <div v-if="variants?.length">
         <div class="mavedb-score-set-variant-search">
           <span class="p-float-label">
             <AutoComplete
@@ -82,8 +82,9 @@
             :coordinates="clinicalMode ? 'mapped' : 'raw'"
             :external-selection="variantToVisualize"
             :score-set="item"
-            :variants="scores"
+            :variants="variants"
             @export-chart="setHistogramExport"
+            :hide-start-and-stop-loss-by-default="hideStartAndStopLoss"
           />
         </div>
         <div v-if="showHeatmap && !isScoreSetVisualizerVisible" class="mavedb-score-set-heatmap-pane">
@@ -94,7 +95,7 @@
             :hide-start-and-stop-loss="hideStartAndStopLoss"
             :score-set="item"
             :show-protein-structure-button="uniprotId != null && config.CLINICAL_FEATURES_ENABLED"
-            :variants="heatmapVariants"
+            :variants="variants"
             @export-chart="setHeatmapExport"
             @heatmap-visible="heatmapVisibilityUpdated"
             @on-did-click-show-protein-structure="showProteinStructureModal"
@@ -272,9 +273,9 @@
     >
       <ScoreSetVisualizer
         :external-selection="variantToVisualize"
-        :heatmap-variants="heatmapVariants"
+        :heatmap-variants="variants"
         :score-set="item"
-        :scores="scores"
+        :scores="variants"
         :uniprot-id="uniprotId"
       />
     </Sidebar>
@@ -295,6 +296,7 @@ import Sidebar from 'primevue/sidebar'
 import SplitButton from 'primevue/splitbutton'
 import {ref} from 'vue'
 import {mapState} from 'vuex'
+import {useHead} from '@unhead/vue'
 
 import AssayFactSheet from '@/components/AssayFactSheet'
 import CollectionAdder from '@/components/CollectionAdder'
@@ -315,8 +317,9 @@ import useItem from '@/composition/item'
 import useRemoteData from '@/composition/remote-data'
 import config from '@/config'
 import {preferredVariantLabel, variantNotNullOrNA} from '@/lib/mave-hgvs'
+import {getScoreSetShortName} from '@/lib/score-sets'
 import {parseScoresOrCounts} from '@/lib/scores'
-import {translateSimpleCodingVariants} from '@/lib/variants'
+import {parseSimpleCodingVariants, translateSimpleCodingVariants} from '@/lib/variants'
 
 export default {
   name: 'ScoreSetView',
@@ -353,11 +356,14 @@ export default {
   },
 
   setup: () => {
+    const head = useHead()
+
     const {userIsAuthenticated} = useAuth()
     const scoresRemoteData = useRemoteData()
     const variantSearchSuggestions = ref([])
 
     return {
+      head,
       config: config,
       userIsAuthenticated,
 
@@ -373,8 +379,7 @@ export default {
 
   data: () => ({
     clinicalMode: config.CLINICAL_FEATURES_ENABLED,
-    scores: null,
-    codingVariants: null,
+    variants: null,
     showHeatmap: true,
     isScoreSetVisualizerVisible: false,
     heatmapExists: false,
@@ -430,13 +435,6 @@ export default {
 
       return annotatatedVariantOptions
     },
-    heatmapVariants: function () {
-      if (this.clinicalMode) {
-        return this.codingVariants
-      } else {
-        return this.scores
-      }
-    },
     hideStartAndStopLoss: function () {
       // In clinical mode, when the target is not endogenously edited (so it has a target sequence), omit start- and
       // stop-loss variants.
@@ -467,6 +465,13 @@ export default {
   },
 
   watch: {
+    item: {
+      handler: function (newValue) {
+        this.head.patch({
+          title: newValue ? getScoreSetShortName(newValue) : undefined
+        })
+      }
+    },
     itemId: {
       handler: function (newValue, oldValue) {
         if (newValue != oldValue) {
@@ -484,10 +489,12 @@ export default {
     },
     scoresData: {
       handler: function (newValue) {
-        const scores = newValue ? parseScoresOrCounts(newValue) : null
-        const codingVariants = scores ? translateSimpleCodingVariants(scores) : null
-        this.scores = newValue ? Object.freeze(scores) : null
-        this.codingVariants = codingVariants ? Object.freeze(codingVariants) : null
+        const variants = newValue ? parseScoresOrCounts(newValue) : null
+        if (variants) {
+          parseSimpleCodingVariants(variants)
+          translateSimpleCodingVariants(variants)
+        }
+        this.variants = variants ? Object.freeze(variants) : null
         this.applyUrlState()
       }
     },
@@ -776,7 +783,7 @@ export default {
     },
     variantSearch: function (event) {
       const matches = []
-      for (const variant of this.scores) {
+      for (const variant of this.variants) {
         if (variantNotNullOrNA(variant.hgvs_nt) && variant.hgvs_nt.toLowerCase().includes(event.query.toLowerCase())) {
           matches.push(Object.assign(variant, {mavedb_label: variant.hgvs_nt}))
         } else if (
@@ -808,12 +815,12 @@ export default {
         return
       }
 
-      const selectedVariant = this.scores.find((v) => v.accession == variant.accession)
+      const selectedVariant = this.variants.find((v) => v.accession == variant.accession)
       this.selectedVariant = Object.assign(selectedVariant, preferredVariantLabel(selectedVariant))
     },
     applyUrlState: function () {
       if (this.$route.query.variant) {
-        const selectedVariant = this.scores.find((v) => v.accession == this.$route.query.variant)
+        const selectedVariant = this.variants.find((v) => v.accession == this.$route.query.variant)
         this.selectedVariant = Object.assign(selectedVariant, preferredVariantLabel(selectedVariant))
       }
     },

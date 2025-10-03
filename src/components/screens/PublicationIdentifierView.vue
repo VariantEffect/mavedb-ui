@@ -42,6 +42,7 @@
 <script>
 import _ from 'lodash'
 import {marked} from 'marked'
+import {useHead} from '@unhead/vue'
 
 import DefaultLayout from '@/components/layout/DefaultLayout'
 import ScoreSetTable from '@/components/ScoreSetTable'
@@ -72,7 +73,8 @@ export default {
   },
 
   setup: (props) => {
-    console.log(props)
+    useHead({title: 'Publication details'})
+
     return {
       ...useFormatters(),
       ...useItem({itemTypeName: props.name})

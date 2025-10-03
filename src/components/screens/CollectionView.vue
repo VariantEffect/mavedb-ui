@@ -235,6 +235,7 @@ import Dialog from 'primevue/dialog'
 import Inplace from 'primevue/inplace'
 import InputText from 'primevue/inputtext'
 import Textarea from 'primevue/textarea'
+import {useHead} from '@unhead/vue'
 
 import EntityLink from '@/components/common/EntityLink'
 import CollectionBadge from '@/components/CollectionBadge'
@@ -274,8 +275,10 @@ export default {
   },
 
   setup: () => {
+    const head = useHead({title: 'Collection'})
     const {userIsAuthenticated} = useAuth()
     return {
+      head,
       config: config,
       userIsAuthenticated,
 
@@ -300,6 +303,12 @@ export default {
   }),
 
   watch: {
+    item: {
+      handler: function (newValue) {
+        this.head.patch({title: newValue?.name || 'Collection'})
+      }
+    },
+
     itemId: {
       handler: function (newValue, oldValue) {
         if (newValue != oldValue) {

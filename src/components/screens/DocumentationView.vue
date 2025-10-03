@@ -24,13 +24,20 @@
 
 <script lang="ts">
 import {defineComponent} from 'vue'
+import {useHead} from '@unhead/vue'
 
 import DefaultLayout from '@/components/layout/DefaultLayout.vue'
 import config from '@/config'
 
 export default defineComponent({
   name: 'DocumentationView',
+
   components: {DefaultLayout},
+
+  setup: () => {
+    useHead({title: 'Documentation'})
+  },
+
   computed: {
     apiDocumentationUrl: function () {
       return new URL('/docs', config.apiBaseUrl)

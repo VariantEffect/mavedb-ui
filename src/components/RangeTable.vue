@@ -20,7 +20,7 @@
       </span>
     </div>
     <div class="mavedb-score-ranges-grid">
-      <div v-for="range in sortedRanges" :key="range.label" class="mavedb-score-ranges-row" style="">
+      <div v-if="sortedRanges.length > 0" v-for="range in sortedRanges" :key="range.label" class="mavedb-score-ranges-row" style="">
         <div>
           <span>{{ range.label }}</span>
           <span v-if="range.description">
@@ -52,6 +52,11 @@
             }}{{ range.inclusiveUpperBound ? ']' : ')' }}
           </span>
         </div>
+      </div>
+      <div v-else class="mave-classification-not_provided">
+        <span style="text-align: center; font-style: italic">
+          Ranges have not been provided.
+        </span>
       </div>
       <div v-if="sortedRanges.some((range: ScoreRange) => 'positiveLikelihoodRatio' in range)">
         <span v-if="'positiveLikelihoodRatio' in range">{{ range.positiveLikelihoodRatio }}</span>
@@ -316,6 +321,11 @@ table.mavedb-odds-path-table th {
   background-color: #a6a600;
   color: white;
   font-weight: bold;
+}
+
+.mave-classification-not_provided {
+  background-color: #ffffff;
+  font-style: italic;
 }
 
 /* Evidence strengths */

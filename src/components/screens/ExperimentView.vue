@@ -288,6 +288,7 @@ import {marked} from 'marked'
 import 'primeicons/primeicons.css'
 import Button from 'primevue/button'
 import Dialog from 'primevue/dialog'
+import {useHead} from '@unhead/vue'
 
 import CollectionAdder from '@/components/CollectionAdder'
 import CollectionBadge from '@/components/CollectionBadge'
@@ -312,8 +313,10 @@ export default {
   },
 
   setup: () => {
+    const head = useHead()
     const {userIsAuthenticated} = useAuth()
     return {
+      head,
       config: config,
 
       ...useFormatters(),
@@ -345,6 +348,12 @@ export default {
   },
 
   watch: {
+    item: {
+      handler: function (newValue) {
+        this.head.patch({title: newValue?.title ?? 'Untitled experiment'})
+      }
+    },
+
     itemId: {
       handler: function (newValue, oldValue) {
         if (newValue != oldValue) {

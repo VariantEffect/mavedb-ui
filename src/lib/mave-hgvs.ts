@@ -138,10 +138,27 @@ export function preferredVariantLabel(variant: SimpleMaveVariant): VariantLabel 
 }
 
 /**
- * Regular expression for parsing a generic HGVS style variant.
+ * Regular expression for regognizing HGVS search strings.
  *
  * This should be used only for deciding whether a string is a valid HGVS variant, not for parsing it.
  * It matches a string that starts with an identifier (e.g., "NM_001301717.2") followed by a colon and a description.
- * The description can be anything (which isn't technically correct), including spaces and special characters.
+ * A gene symbol in parentheses may optionally appear between the identifier and the colon, and spaces in this part
+ * are ignored. The description can be anything (which isn't technically correct), including spaces and special
+ * characters.
+ *
+ * The parenthesized gene symbol isn't part of the HGVS standard but is common in HGVS-like variant names from ClinVar
+ * and ClinGen. We include it here because this expression is used to distinguish HGVS(-like) strings from other search
+ * strings.
  */
-export const genericVariant = /^(?<identifier>[A-z_0-9.]+):(?<description>.*)$/m
+export const hgvsSearchStringRegex =
+  /^(?<identifier>[A-z_0-9.]+) *(\((?<gene>[A-Za-z0-9_]+\@?)\))? *:(?<description>.*)$/m
+
+/**
+ * Regular expression for removing gene symbol and protein consequence from CLinVar-style variant names, to obtain
+ * valid HGVS that can be used in ClinGen searches.
+ *
+ * If a protein consequence is included, though, it must be preceded by at least one space. Otherwise we would need a
+ * more complex pattern to distinguish this case from parentheses that may occur in the HGVS description itself.
+ */
+export const clinVarHgvsSearchStringRegex =
+  /^(?<identifier>[A-z_0-9.]+) *(\((?<gene>[A-Za-z0-9_]+\@?)\))? *:(?<description>\S*)( +\((?<proteinConsequence>.*)\))?$/m

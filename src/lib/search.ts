@@ -1,5 +1,5 @@
 import router from '@/router'
-import {genericVariant} from './mave-hgvs'
+import {hgvsSearchStringRegex} from './mave-hgvs'
 
 export function routeToVariantSearchIfVariantIsSearchable(searchText: string | null | undefined): boolean {
   if (!searchText || searchText.trim() === '') {
@@ -7,7 +7,7 @@ export function routeToVariantSearchIfVariantIsSearchable(searchText: string | n
   }
 
   searchText = searchText.trim()
-  const hgvsMatches = genericVariant.exec(searchText)
+  const hgvsMatches = hgvsSearchStringRegex.exec(searchText)
   if (hgvsMatches && hgvsMatches.groups) {
     const identifier = hgvsMatches.groups.identifier
     const description = hgvsMatches.groups.description

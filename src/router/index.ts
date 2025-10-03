@@ -1,6 +1,7 @@
 import {createRouter, createWebHistory} from 'vue-router'
 import type {RouteLocationNormalized, RouteRecordRaw} from 'vue-router'
 
+import AboutView from '@/components/screens/AboutView.vue'
 import CollectionView from '@/components/screens/CollectionView.vue'
 import CollectionsView from '@/components/screens/CollectionsView.vue'
 import DashboardView from '@/components/screens/DashboardView.vue'
@@ -61,6 +62,10 @@ const routes: RouteRecordRaw[] = [
   {
     path: '/docs',
     component: DocumentationView
+  },
+  {
+    path: '/about',
+    component: AboutView
   },
   {
     path: '/help',

@@ -55,7 +55,7 @@
       </div>
       <div v-else class="mave-classification-not_provided">
         <span style="text-align: center; font-style: italic">
-          Ranges for '{{ scoreRangesName ?? 'Score ranges' }}' have not been provided.
+          Ranges have not been provided.
         </span>
       </div>
       <div v-if="sortedRanges.some((range: ScoreRange) => 'positiveLikelihoodRatio' in range)">

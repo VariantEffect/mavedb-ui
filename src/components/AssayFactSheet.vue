@@ -79,22 +79,22 @@
     </div>
     <div class="mavedb-assay-facts-section-title">Clinical Performance</div>
     <div class="mavedb-assay-facts-section">
-      <div v-if="scoreSet.scoreRanges?.investigatorProvided?.ranges[0]?.oddsPath?.ratio">
+      <div v-if="primaryScoreRange?.ranges[0]?.oddsPath?.ratio">
         <div class="mavedb-assay-facts-row">
           <div class="mavedb-assay-facts-label">OddsPath – Normal</div>
           <div
-            v-if="scoreSet.scoreRanges?.investigatorProvided?.ranges?.some((r) => r.classification === 'normal')"
+            v-if="primaryScoreRange?.ranges?.some((r) => r.classification === 'normal')"
             class="mavedb-assay-facts-value"
           >
             {{
               roundOddsPath(
-                scoreSet.scoreRanges.investigatorProvided.ranges.find((r) => r.classification === 'normal').oddsPath
+                primaryScoreRange?.ranges.find((r) => r.classification === 'normal').oddsPath
                   ?.ratio
               )
             }}
             <span class="mavedb-classification-badge mavedb-blue">
               {{
-                scoreSet.scoreRanges.investigatorProvided.ranges.find((r) => r.classification === 'normal').oddsPath
+                primaryScoreRange?.ranges.find((r) => r.classification === 'normal').oddsPath
                   ?.evidence
               }}
             </span>
@@ -103,18 +103,18 @@
         <div class="mavedb-assay-facts-row">
           <div class="mavedb-assay-facts-label">OddsPath – Abnormal</div>
           <div
-            v-if="scoreSet.scoreRanges?.investigatorProvided?.ranges?.some((r) => r.classification === 'abnormal')"
+            v-if="primaryScoreRange?.ranges?.some((r) => r.classification === 'abnormal')"
             class="mavedb-assay-facts-value"
           >
             {{
               roundOddsPath(
-                scoreSet.scoreRanges.investigatorProvided.ranges.find((r) => r.classification === 'abnormal').oddsPath
+                primaryScoreRange?.ranges.find((r) => r.classification === 'abnormal').oddsPath
                   ?.ratio
               )
             }}
             <span class="mavedb-classification-badge mavedb-red strong">
               {{
-                scoreSet.scoreRanges.investigatorProvided.ranges.find((r) => r.classification === 'abnormal').oddsPath
+                primaryScoreRange?.ranges.find((r) => r.classification === 'abnormal').oddsPath
                   ?.evidence
               }}
             </span>
@@ -204,7 +204,18 @@ export default defineComponent({
         default:
           return null
       }
-    }
+    },
+
+    primaryScoreRange: function () {
+      if (this.scoreSet.scoreRanges == null) {
+        return null
+      }
+
+      return Object.values(this.scoreSet.scoreRanges).filter(
+          (sr) => sr?.primary
+        )[0] || this.scoreSet.scoreRanges?.investigatorProvided || null
+    },
+
   },
 
   methods: {

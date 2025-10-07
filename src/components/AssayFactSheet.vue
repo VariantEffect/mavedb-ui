@@ -145,7 +145,7 @@
 import _ from 'lodash'
 import {defineComponent, PropType} from 'vue'
 
-import {getScoreSetFirstAuthor} from '@/lib/score-sets'
+import {getScoreSetFirstAuthor, matchSources} from '@/lib/score-sets'
 import type {components} from '@/schema/openapi'
 
 export default defineComponent({
@@ -240,7 +240,7 @@ export default defineComponent({
     },
     oddsPathSources() {
       console.log(this.primaryScoreRange)
-      return this.matchSources(this.primaryScoreRange?.oddsPathSource)
+      return matchSources(this.primaryScoreRange?.oddsPathSource, this.sources)
     },
     sources: function () {
       return this.scoreSet.primaryPublicationIdentifiers.concat(this.scoreSet.secondaryPublicationIdentifiers)
@@ -250,18 +250,6 @@ export default defineComponent({
   methods: {
     roundOddsPath: function (oddsPath: number | undefined) {
       return oddsPath?.toPrecision(5)
-    },
-    matchSources(
-      sourceArr: Array<{dbName: string; identifier: string}> | undefined
-    ): {dbName: string; identifier: string; url: string}[] | null {
-      console.log(sourceArr, this.sources)
-      if (!Array.isArray(sourceArr) || !this.sources) return null
-      const matchedSources = []
-      for (const source of sourceArr) {
-        const match = this.sources.find((s) => s.dbName === source.dbName && s.identifier === source.identifier)
-        if (match) matchedSources.push(match)
-      }
-      return matchedSources.length > 0 ? matchedSources : null
     },
   }
 })

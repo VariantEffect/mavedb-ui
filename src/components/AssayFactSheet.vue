@@ -77,13 +77,15 @@
         </div>
       </div>
     </div>
-    <div class="mavedb-assay-facts-section-title">Clinical Performance</div>
+    <div class="mavedb-assay-facts-section-title">
+      Clinical Performance<sup v-if="!primaryScoreRangeIsInvestigatorProvided">*</sup>
+    </div>
     <div class="mavedb-assay-facts-section">
-      <div v-if="primaryScoreRange?.ranges[0]?.oddsPath?.ratio">
+      <div v-if="primaryScoreRange?.ranges.some((r) => r.oddsPath)">
         <div class="mavedb-assay-facts-row">
           <div class="mavedb-assay-facts-label">OddsPath – Normal</div>
           <div
-            v-if="primaryScoreRange?.ranges?.some((r) => r.classification === 'normal')"
+            v-if="primaryScoreRange?.ranges?.some((r) => r.classification === 'normal' && r.oddsPath)"
             class="mavedb-assay-facts-value"
           >
             {{
@@ -103,7 +105,7 @@
         <div class="mavedb-assay-facts-row">
           <div class="mavedb-assay-facts-label">OddsPath – Abnormal</div>
           <div
-            v-if="primaryScoreRange?.ranges?.some((r) => r.classification === 'abnormal')"
+            v-if="primaryScoreRange?.ranges?.some((r) => r.classification === 'abnormal' && r.oddsPath)"
             class="mavedb-assay-facts-value"
           >
             {{
@@ -119,6 +121,17 @@
               }}
             </span>
           </div>
+        </div>
+        <div v-if="!primaryScoreRangeIsInvestigatorProvided" style="font-size: 10px; margin-top: 4px">
+            <sup>*</sup>OddsPath data from non-primary source(s):
+            <template v-if="oddsPathSources">
+              (
+              <template v-for="(s,i) in oddsPathSources" :key="s.url">
+              <a :href="s.url" rel="noopener" target="_blank">{{ s.url }}</a><span v-if="i < oddsPathSources.length - 1">, </span>
+              </template>
+              ).
+            </template>
+            <template v-else>.</template>
         </div>
       </div>
       <div v-else>OddsPath values are not provided for this score set.</div>

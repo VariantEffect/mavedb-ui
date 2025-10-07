@@ -40,13 +40,16 @@ export interface pillarProjectParameterSet {
 // but we allow their implicit possibility as well.
 export interface ScoreSetRanges {
   investigatorProvided: ScoreRanges
-  pillarProject: ScoreRanges
+  zeibergCalibration: ScoreRanges
+  scottCalibration: ScoreRanges
+  fayerCalibration: ScoreRanges
   [key: string]: ScoreRanges
 }
 
 export interface ScoreRanges {
   title: string
   researchUseOnly: boolean
+  primary?: boolean
   baselineScore?: number
   baselineScoreDescription?: string | undefined
   oddsPathSource?: [{ identifier: string; dbName: string }] | undefined

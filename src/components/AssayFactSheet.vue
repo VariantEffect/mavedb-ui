@@ -101,6 +101,7 @@
               }}
             </span>
           </div>
+          <div v-else class="mavedb-assay-facts-value">OddsPath normal not provided</div>
         </div>
         <div class="mavedb-assay-facts-row">
           <div class="mavedb-assay-facts-label">OddsPath – Abnormal</div>
@@ -121,6 +122,7 @@
               }}
             </span>
           </div>
+          <div v-else class="mavedb-assay-facts-value">OddsPath abnormal not provided</div>
         </div>
         <div v-if="!primaryScoreRangeIsInvestigatorProvided" style="font-size: 10px; margin-top: 4px">
             <sup>*</sup>OddsPath data from non-primary source(s):
@@ -229,12 +231,38 @@ export default defineComponent({
         )[0] || this.scoreSet.scoreRanges?.investigatorProvided || null
     },
 
+    primaryScoreRangeIsInvestigatorProvided: function () {
+      if (this.scoreSet.scoreRanges == null) {
+        return false
+      }
+
+      return this.primaryScoreRange === this.scoreSet.scoreRanges?.investigatorProvided
+    },
+    oddsPathSources() {
+      console.log(this.primaryScoreRange)
+      return this.matchSources(this.primaryScoreRange?.oddsPathSource)
+    },
+    sources: function () {
+      return this.scoreSet.primaryPublicationIdentifiers.concat(this.scoreSet.secondaryPublicationIdentifiers)
+    }
   },
 
   methods: {
     roundOddsPath: function (oddsPath: number | undefined) {
       return oddsPath?.toPrecision(5)
-    }
+    },
+    matchSources(
+      sourceArr: Array<{dbName: string; identifier: string}> | undefined
+    ): {dbName: string; identifier: string; url: string}[] | null {
+      console.log(sourceArr, this.sources)
+      if (!Array.isArray(sourceArr) || !this.sources) return null
+      const matchedSources = []
+      for (const source of sourceArr) {
+        const match = this.sources.find((s) => s.dbName === source.dbName && s.identifier === source.identifier)
+        if (match) matchedSources.push(match)
+      }
+      return matchedSources.length > 0 ? matchedSources : null
+    },
   }
 })
 </script>

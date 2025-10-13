@@ -40,23 +40,30 @@
   </div>
   <div v-if="scoreSet.dataUsagePolicy">Data usage policy: {{ scoreSet.dataUsagePolicy }}</div>
   <div v-if="scoreSet.experiment">
-    Member of
+    Member of:
     <router-link :to="{name: 'experiment', params: {urn: scoreSet.experiment.urn}}">{{
       scoreSet.experiment.urn
     }}</router-link>
   </div>
   <div v-if="scoreSet.supersedingScoreSet">
-    Current version
+    Current version:
     <router-link :to="{name: 'scoreSet', params: {urn: scoreSet.supersedingScoreSet.urn}}">{{
       scoreSet.supersedingScoreSet.urn
     }}</router-link>
   </div>
   <div v-else>
-    Current version
+    Current version:
     <router-link :to="{name: 'scoreSet', params: {urn: scoreSet.urn}}">{{ scoreSet.urn }}</router-link>
   </div>
+  <div v-if="sortedMetaAnalyzedByScoreSetUrns.length > 0">
+    Meta-analyzed by:
+    <template v-for="(urn, index) of sortedMetaAnalyzedByScoreSetUrns" :key="urn">
+      <template v-if="index > 0"> · </template>
+      <EntityLink entity-type="scoreSet" :urn="urn" />
+    </template>
+  </div>
   <div v-if="sortedMetaAnalyzesScoreSetUrns.length > 0">
-    Meta-analyzes
+    Meta-analyzes:
     <template v-for="(urn, index) of sortedMetaAnalyzesScoreSetUrns" :key="urn">
       <template v-if="index > 0"> · </template>
       <EntityLink entity-type="scoreSet" :urn="urn" />
@@ -95,6 +102,7 @@ const contributors = computed(() => {
 })
 
 const sortedMetaAnalyzesScoreSetUrns = computed(() => _.sortBy(props.scoreSet.metaAnalyzesScoreSetUrns || []))
+const sortedMetaAnalyzedByScoreSetUrns = computed(() => _.sortBy(props.scoreSet.metaAnalyzedByScoreSetUrns || []))
 </script>
 
 <style scoped>

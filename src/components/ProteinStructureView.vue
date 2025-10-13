@@ -247,7 +247,7 @@ export default {
         const viewerInstance = new PDBeMolstarPlugin()
         const options = {
           customData: {
-            url: `https://alphafold.ebi.ac.uk/files/AF-${this.selectedAlphaFold.id}-F1-model_v4.cif`,
+            url: `https://alphafold.ebi.ac.uk/files/AF-${this.selectedAlphaFold.id}-F1-model_v6.cif`,
             format: 'cif'
           },
           /** This applies AlphaFold confidence score colouring theme for AlphaFold model */

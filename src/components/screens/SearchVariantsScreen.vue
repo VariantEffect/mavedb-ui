@@ -656,7 +656,7 @@ export default defineComponent({
           // note, not sure if we should assume that the searched hgvs will appear here.
           const aminoAcidAlleles = response.data?.aminoAcidAlleles || []
           for (let i = 0; i < aminoAcidAlleles.length; i++) {
-            if (aminoAcidAlleles[i].hgvs?.includes(hgvsString)) {
+            if (aminoAcidAlleles[i].hgvs?.includes(hgvsSearch)) {
               const transcripts = aminoAcidAlleles[i]?.matchingRegisteredTranscripts || []
               if (transcripts.length > 0) {
                 for (let j = 0; j < transcripts.length; j++) {

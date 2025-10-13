@@ -131,7 +131,7 @@ export default {
           }
         )
         // TODO (#130) catch errors in response
-        this.scoreSets = response.data || []
+        this.scoreSets = response.data?.scoreSets || []
 
         // reset published score sets search results when using search bar
         this.publishedScoresets = []

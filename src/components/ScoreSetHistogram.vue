@@ -117,7 +117,7 @@
   <div v-if="showRanges && activeRange" class="mave-range-table-container">
     <Accordion collapse-icon="pi pi-minus" expand-icon="pi pi-plus">
       <AccordionTab class="mave-range-table-tab" header="Score Range Details">
-        <RangeTable :score-ranges="activeRange" :score-ranges-name="activeRangeKey?.label" :sources="allSources" />
+        <RangeTable :score-ranges="activeRange" :score-ranges-name="activeRangeKey.label" :sources="allSources" />
       </AccordionTab>
     </Accordion>
   </div>
@@ -251,7 +251,7 @@ export default defineComponent({
 
       activeViz: 0,
       showRanges: scoreSetHasRanges,
-      activeRangeKey: null as {label: string; value: string} | null,
+      activeRangeKey: {label: 'None', value: null} as {label: string; value: string | null},
 
       clinicalControls: [] as ClinicalControl[],
       clinicalControlOptions: [] as ClinicalControlOption[],
@@ -710,7 +710,7 @@ export default defineComponent({
           // Line 3: Score and classification
           if (variant.score) {
             let binClassificationLabel = ''
-            if (bin && this.activeRangeKey && this.activeRange) {
+            if (bin && this.activeRangeKey.value && this.activeRange) {
               // TODO#491: Refactor this calculation into the creation of variant objects so we may just access the property of the variant which tells us its classification.
               const binClassification = this.histogramShaders[this.activeRangeKey.value]?.find(
                 (range: HistogramShader) => shaderOverlapsBin(range, bin)
@@ -731,7 +731,7 @@ export default defineComponent({
           parts.push(`Bin range: ${bin.x0} to ${bin.x1}`)
 
           //Line 6: Bin Classification
-          if (this.activeRangeKey && this.activeRange) {
+          if (this.activeRangeKey.value && this.activeRange) {
             // TODO#491: Refactor this calculation into the creation of histogram bins so we don't need to repeat it every time we construct a tooltip.
             const binClassifications = this.histogramShaders[this.activeRangeKey.value]?.filter(
               (range: HistogramShader) => shaderOverlapsBin(range, bin)
@@ -980,7 +980,7 @@ export default defineComponent({
 
       // Only render clinical specific viz options if such features are enabled.
       if (this.config.CLINICAL_FEATURES_ENABLED && this.showRanges) {
-        this.histogram.renderShader(this.activeRangeKey?.value)
+        this.histogram.renderShader(this.activeRangeKey.value)
       } else {
         this.histogram.renderShader(null)
       }
@@ -1101,18 +1101,18 @@ export default defineComponent({
     },
 
     defaultRangeKey: function () {
-      if (this.activeRangeKey) {
+      if (this.activeRangeKey.value) {
         return this.activeRangeKey
       }
 
-      const defaultInvestigatorProvidedIndex = this.activeRangeOptions.findIndex(
-        (option) => option.value == 'investigatorProvided'
-      )
+      const primaryRange = this.activeRanges ? Object.entries(this.activeRanges).find(([, v]) => v.primary) : null
+      const primaryRangeKey = primaryRange ? primaryRange[0] : null
 
-      if (defaultInvestigatorProvidedIndex >= 0) {
-        return this.activeRangeOptions[defaultInvestigatorProvidedIndex]
+      // use the primary range if it exists, otherwise use investigatorProvided if it exists, otherwise none.
+      if (primaryRangeKey) {
+        return this.activeRangeOptions.find((option) => option.value === primaryRangeKey) || {label: 'None', value: null}
       } else if (this.activeRangeOptions.length > 0) {
-        return {label: 'None', value: null} // return this.activeRangeOptions[0]
+        return this.activeRangeOptions.find((option) => option.value === "investigatorProvided") || {label: 'None', value: null}
       } else {
         return {label: 'None', value: null}
       }

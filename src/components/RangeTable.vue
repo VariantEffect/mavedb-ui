@@ -136,6 +136,10 @@ import Button from 'primevue/button'
 import {defineComponent, PropType} from 'vue'
 
 import {EVIDENCE_STRENGTHS_REVERSED, ScoreRanges, ScoreRange} from '@/lib/ranges'
+import {matchSources} from '@/lib/score-sets'
+import {components} from '@/schema/openapi'
+
+type PublicationIdentifiers = components['schemas']['ScoreSet']['primaryPublicationIdentifiers'][0]
 
 export default defineComponent({
   name: 'RangeTable',
@@ -152,7 +156,7 @@ export default defineComponent({
       required: true
     },
     sources: {
-      type: Array as PropType<{dbName: string; identifier: string; url: string}[]>,
+      type: Array as PropType<PublicationIdentifiers[]>,
       required: false,
       default: () => []
     }
@@ -198,10 +202,10 @@ export default defineComponent({
       return [...this.scoreRanges.ranges].sort(this.compareScoreRanges)
     },
     thresholdSources() {
-      return this.matchSources(this.scoreRanges.source)
+      return matchSources(this.scoreRanges.source, this.sources)
     },
     oddsPathSources() {
-      return this.matchSources(this.scoreRanges.oddsPathSource)
+      return matchSources(this.scoreRanges.oddsPathSource, this.sources)
     }
   },
 
@@ -237,17 +241,6 @@ export default defineComponent({
         .replace(/^[-_]*(.)/, (_, c) => c.toUpperCase())
         .replace(/[-_]+(.)/g, (_, c) => ' ' + c.toUpperCase())
         .replace(/([a-z])([A-Z])/g, '$1 $2')
-    },
-    matchSources(
-      sourceArr: Array<{dbName: string; identifier: string}> | undefined
-    ): {dbName: string; identifier: string; url: string}[] | null {
-      if (!Array.isArray(sourceArr) || !this.sources) return null
-      const matchedSources = []
-      for (const source of sourceArr) {
-        const match = this.sources.find((s) => s.dbName === source.dbName && s.identifier === source.identifier)
-        if (match) matchedSources.push(match)
-      }
-      return matchedSources.length > 0 ? matchedSources : null
     },
     roundOddsPath(rangeBound: number) {
       return rangeBound.toPrecision(3)

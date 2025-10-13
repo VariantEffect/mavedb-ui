@@ -79,7 +79,7 @@
       </tr>
       <tr>
         <td :colspan="sortedRanges.length" style="text-align: center; font-weight: bold; background-color: #f0f0f0">
-          <span>Odds Path Calculations</span>
+          <span>OddsPath Calculations</span>
           <Button
             v-tooltip.right="{
               value:
@@ -97,12 +97,12 @@
       </tr>
       <tr>
         <td v-for="range in sortedRanges" :key="range">
-          <span v-if="range.classification == 'abnormal'">Odds Path Abnormal</span>
-          <span v-else-if="range.classification == 'normal'">Odds Path Normal</span>
+          <span v-if="range.classification == 'abnormal'">OddsPath Abnormal</span>
+          <span v-else-if="range.classification == 'normal'">OddsPath Normal</span>
           <span v-else>N/A</span>
         </td>
-        <!-- <td v-if="abnormalRanges.length" :colspan="abnormalRanges.length">Odds Path Abnormal</td>
-        <td v-if="normalRanges.length" :colspan="normalRanges.length">Odds Path Normal</td>
+        <!-- <td v-if="abnormalRanges.length" :colspan="abnormalRanges.length">OddsPath Abnormal</td>
+        <td v-if="normalRanges.length" :colspan="normalRanges.length">OddsPath Normal</td>
         <td v-if="unspecifiedRanges.length" :colspan="unspecifiedRanges.length">N/A</td> -->
       </tr>
       <tr>

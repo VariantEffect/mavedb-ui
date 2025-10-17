@@ -34,8 +34,8 @@
     </TabPanel>
     <TabPanel header="Counts">
       <div style="overflow-y: scroll; overflow-x: scroll">
-        <DataTable :show-gridlines="true" :striped-rows="true" :value="countsTableData">
-          <template #empty>No count data available.</template>
+        <template v-if="!countsTableData || countsTableData.length === 0"> No count data available. </template>
+        <DataTable v-else :show-gridlines="true" :striped-rows="true" :value="countsTableData">
           <Column
             v-for="column of countColumns.slice(0, numTextColsInScoresTable)"
             :key="column"

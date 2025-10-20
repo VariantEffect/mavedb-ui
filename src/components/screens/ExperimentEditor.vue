@@ -101,6 +101,7 @@
                     :suggestions="publicationIdentifierSuggestionsList"
                     @complete="searchPublicationIdentifiers"
                     @item-select="acceptNewPublicationIdentifier"
+                    @item-unselect="removePublicationIdentifier"
                     @keyup.escape="clearPublicationIdentifierSearch"
                   >
                     <template #chip="slotProps">
@@ -757,6 +758,17 @@ export default {
           summary: `Identifier "${newIdentifier}" is already associated with this experiment`,
           life: 3000
         })
+      }
+    },
+
+    removePublicationIdentifier: function (event) {
+      // If we are removing a primary publication identifier, also remove it from that list.
+      const removedIdentifier = event.value.identifier
+      const primaryIdx = this.primaryPublicationIdentifiers.findIndex(
+        (pub) => pub.identifier == removedIdentifier
+      )
+      if (primaryIdx != -1) {
+        this.primaryPublicationIdentifiers.splice(primaryIdx, 1)
       }
     },
 

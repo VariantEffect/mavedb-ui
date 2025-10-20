@@ -1198,8 +1198,6 @@
                     <FileUpload
                       v-else
                       :id="scopedId('input-scoreColumnsMetadataFile')"
-                      :key="inputScoreColumnsMetadataFileKey"
-                      ref="scoreColumnsMetadataFileUpload"
                       accept="application/json"
                       :auto="false"
                       choose-label="Scores column metadata file"
@@ -1250,8 +1248,6 @@
                     <FileUpload
                       v-else
                       :id="scopedId('input-countColumnsMetadataFile')"
-                      :key="inputCountColumnsMetadataFileKey"
-                      ref="countColumnsMetadataFileUpload"
                       accept="application/json"
                       :auto="false"
                       choose-label="Counts column metadata file"
@@ -1490,8 +1486,8 @@ export default {
     scoreColumnsMetadata: null,
     countColumnsMetadata: null,
     inputExtraMetadataFileKey: 0,
-    inputScoreColumnsMetadataFileKey: 0,
-    inputCountColumnsMetadataFileKey: 0,
+    // inputScoreColumnsMetadataFileKey: 0,
+    // inputCountColumnsMetadataFileKey: 0,
     jsonToDisplay: null,
 
     existingTargetGene: null,
@@ -1523,7 +1519,9 @@ export default {
     inputClasses: {
       countsFile: null,
       extraMetadataFile: null,
-      scoresFile: null
+      scoresFile: null,
+      scoreColumnsMetadataFile: null,
+      countColumnsMetadataFile: null,
     },
     externalGeneDatabases,
     metaAnalyzesScoreSetSuggestions: [],
@@ -2392,12 +2390,9 @@ export default {
         secondaryPublicationIdentifiers: secondaryPublicationIdentifiers,
         dataUsagePolicy: this.dataUsagePolicy,
         extraMetadata: this.extraMetadata || {},
-        datasetColumns: {
-          ...this.item.datasetColumns,
-          scoreColumnsMetadata: this.scoreColumnsMetadata || {},
-          countColumnsMetadata: this.countColumnsMetadata || {}
-        },
-        // eslint-disable-next-line no-unused-vars
+        scoreColumnsMetadata: this.scoreColumnsMetadata || {},
+        countColumnsMetadata: this.countColumnsMetadata || {},
+        // eslint-disable-next-line @typescript-eslint/no-unused-vars
         targetGenes: this.targetGenes.map(({index, ...target}) => {
           // drop index property from target genes before save
           if (target.targetAccession) {
@@ -2451,35 +2446,64 @@ export default {
       // clear objects so that deleted values aren't merged back into editedItem object
       this.item.scoreRanges = null
       this.item.extraMetadata = null
-      this.item.datasetColumns = null
+      //this.item.datasetColumns = null
 
-      const editedItem = _.merge({}, this.item, editedFields)
+      // const editedItem = _.merge({}, this.item, editedFields)
+      const editedItem = editedFields
 
       this.progressVisible = true
       let response = null
+
+      // convert editedItem to multi-part form data
+      const formData = new FormData()
+      for (const key in editedItem) {
+        if (_.isArray(editedItem[key]) || _.isObject(editedItem[key])) {
+          formData.append(_.snakeCase(key), JSON.stringify(editedItem[key]))
+        } else if (_.has(editedItem, key) && editedItem[key] !== null && editedItem[key] !== undefined) {
+          formData.append(_.snakeCase(key), editedItem[key])
+        }
+      }
+
+      // Add upload files to form data
+      if (this.$refs.scoresFileUpload.files.length == 1) {
+        formData.append('scores_file', this.$refs.scoresFileUpload.files[0])
+      }
+      if (this.$refs.countsFileUpload.files.length == 1) {
+        formData.append('counts_file', this.$refs.countsFileUpload.files[0])
+      }
+      // if (this.$refs.scoreColumnsMetadataFileUpload.files.length == 1) {
+      //   formData.append('score_columns_metadata_file', this.$refs.scoreColumnsMetadataFileUpload.files[0])
+      // }
+      // if (this.$refs.countColumnsMetadataFileUpload.files.length == 1) {
+      //   formData.append('count_columns_metadata_file', this.$refs.countColumnsMetadataFileUpload.files[0])
+      // }
+
       try {
-        response = await axios.put(`${config.apiBaseUrl}/score-sets/${this.item.urn}`, editedItem)
+        this.progressVisible = true
+        response = await axios.patch(`${config.apiBaseUrl}/score-sets-with-variants/${this.item.urn}`, formData, {
+          headers: {
+            'Content-Type': 'multipart/form-data'
+          }
+        })
+        this.progressVisible = false
+
       } catch (e) {
         response = e.response || {status: 500}
         this.$toast.add({severity: 'error', summary: 'Error', life: 3000})
       }
       this.progressVisible = false
       if (response.status == 200) {
-        const savedItem = response.data
         this.validationErrors = {}
-        if (this.$refs.scoresFileUpload?.files?.length == 1) {
-          await this.uploadData(savedItem)
-        } else {
-          this.$router.replace({path: `/score-sets/${this.item.urn}`})
-          this.$toast.add({severity: 'success', summary: 'Your changes were saved.', life: 3000})
-        }
+        this.$router.replace({path: `/score-sets/${this.item.urn}`})
+        this.$toast.add({severity: 'success', summary: 'Your changes were saved.', life: 3000})
       } else if (response.data && response.data.detail) {
         const formValidationErrors = {}
         if (typeof response.data.detail === 'string' || response.data.detail instanceof String) {
           // Handle generic errors that are not surfaced by the API as objects
           this.$toast.add({
             severity: 'error',
-            summary: `Encountered an error saving score set: ${response.data.detail}`
+            summary: `Encountered an error saving score set: ${response.data.detail}`,
+            life: 10000,
           })
         } else {
           for (const error of response.data.detail) {
@@ -2515,55 +2539,6 @@ export default {
         }
         this.serverSideValidationErrors = formValidationErrors
         this.mergeValidationErrors()
-      }
-    },
-
-    uploadData: async function (scoreSet) {
-      if (!this.item) {
-        this.$toast.add({ severity: 'error', summary: 'No score set to upload data to.' })
-        return
-      }
-      if (this.$refs.scoresFileUpload.files.length != 1) {
-        this.validationErrors = {scores: 'Required'}
-      } else {
-        const formData = new FormData()
-        formData.append('scores_file', this.$refs.scoresFileUpload.files[0])
-        if (this.$refs.countsFileUpload.files.length == 1) {
-          formData.append('counts_file', this.$refs.countsFileUpload.files[0])
-        }
-        if (this.$refs.scoreColumnsMetadataFileUpload.files.length == 1) {
-          formData.append('scores_column_metadata_file', this.$refs.scoreColumnsMetadataFileUpload.files[0])
-        }
-        if (this.$refs.countColumnsMetadataFileUpload.files.length == 1) {
-          formData.append('counts_column_metadata_file', this.$refs.countColumnsMetadataFileUpload.files[0])
-        }
-        this.progressVisible = true
-        let response
-        try {
-          response = await axios.post(`${config.apiBaseUrl}/score-sets/${scoreSet.urn}/variants/data`, formData, {
-            headers: {
-              'Content-Type': 'multipart/form-data'
-            }
-          })
-        } catch (e) {
-          response = e.response || {status: 500}
-        }
-        this.progressVisible = false
-
-        if (response.status == 200) {
-          console.log('Imported score set data.')
-          // this.reloadItem()
-          this.$router.replace({path: `/score-sets/${scoreSet.urn}`})
-          this.$toast.add({severity: 'success', summary: 'Your changes were saved.', life: 3000})
-        } else {
-          this.$toast.add({
-            severity: 'error',
-            summary: `The score and count files could not be imported. ${response.data.detail}`,
-            life: 3000
-          })
-          // Delete the score set if just created.
-          // Warn if the score set already exists.
-        }
       }
     },
 

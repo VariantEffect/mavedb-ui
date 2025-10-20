@@ -37,6 +37,7 @@ import 'pdbe-molstar/build/pdbe-molstar-light.css'
 import _ from 'lodash'
 import {watch, ref} from 'vue'
 
+import config from '@/config'
 import useScopedId from '@/composables/scoped-id'
 
 export default {
@@ -242,12 +243,21 @@ export default {
       this.$emit('hoveredOverResidue', e.eventData)
     },
 
-    render: function () {
+    render: async function () {
       if (this.selectedAlphaFold) {
+        let alphafoldFilesVersion
+        try {
+          const response = await axios.get(`${config.apiBaseUrl}/alphafold-files/version`)
+          alphafoldFilesVersion = response.data.version
+        } catch (error) {
+          console.error('Error fetching AlphaFold files version:', error)
+          return
+        }
+
         const viewerInstance = new PDBeMolstarPlugin()
         const options = {
           customData: {
-            url: `https://alphafold.ebi.ac.uk/files/AF-${this.selectedAlphaFold.id}-F1-model_v6.cif`,
+            url: `https://alphafold.ebi.ac.uk/files/AF-${this.selectedAlphaFold.id}-F1-model_${alphafoldFilesVersion}.cif`,
             format: 'cif'
           },
           /** This applies AlphaFold confidence score colouring theme for AlphaFold model */

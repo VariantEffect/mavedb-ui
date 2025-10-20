@@ -116,7 +116,7 @@
    to create the histogram before the component is mounted when it doesn't have access to `this.$refs`. As a workaround, only render this child component once the histogram is ready. -->
   <div v-if="showCalibrations && activeCalibration && activeCalibration.value" class="mave-range-table-container">
     <Accordion :active-index="0" collapse-icon="pi pi-minus" expand-icon="pi pi-plus">
-      <AccordionTab class="mave-range-table-tab" header="Score Range Details">
+      <AccordionTab class="mave-range-table-tab" header="Score Ranges and Clinical Evidence Strength">
         <CalibrationTable
           :score-calibration="activeCalibration.value"
           :score-calibration-name="activeCalibration.label"

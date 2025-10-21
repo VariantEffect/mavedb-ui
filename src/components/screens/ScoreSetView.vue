@@ -686,10 +686,7 @@ export default {
         if (this.item && download_type == 'counts') {
           response = await axios.get(`${config.apiBaseUrl}/score-sets/${this.item.urn}/counts?drop_na_columns=true`)
         } else if (this.item && download_type == 'scores') {
-          response = await axios.get(
-            `${config.apiBaseUrl}/score-sets/${this.item.urn}/variants/data?drop_na_columns=true`
-          )
-          //response = await axios.get(`${config.apiBaseUrl}/score-sets/${this.item.urn}/scores?drop_na_columns=true`)
+          response = await axios.get(`${config.apiBaseUrl}/score-sets/${this.item.urn}/scores?drop_na_columns=true`)
         }
       } catch (e) {
         response = e.response || {status: 500}

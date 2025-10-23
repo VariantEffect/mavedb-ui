@@ -172,6 +172,9 @@
     <div v-else-if="['NotLoaded', 'Loading'].includes(itemStatus)" class="p-m-4">
       <PageLoading />
     </div>
+    <v-else>
+      <ItemNotFound :item-id="itemId" :item-type="'Score Set'" />
+    </v-else>
   </DefaultLayout>
   <PrimeDialog
     v-model:visible="editorVisible"
@@ -223,6 +226,7 @@ import {useConfirm} from 'primevue/useconfirm'
 import CalibrationEditor, {DraftScoreCalibration} from '../CalibrationEditor.vue'
 import {ref} from 'vue'
 import PrimeDialog from 'primevue/dialog'
+import ItemNotFound from '../common/ItemNotFound.vue'
 
 interface CalibrationAuthorizations {
   update: boolean
@@ -238,6 +242,7 @@ export default {
     PrimeButton,
     DefaultLayout,
     DataTable,
+    ItemNotFound,
     Column,
     Tag,
     PageLoading,

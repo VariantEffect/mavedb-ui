@@ -1,15 +1,15 @@
 <template>
   <div class="mavedb-histogram-controls">
     <TabMenu v-if="hasTabBar" v-model:active-index="activeViz" class="mave-histogram-viz-select" :model="vizOptions" />
-    <div v-if="showRanges" class="mavedb-histogram-thresholds-control">
+    <div v-if="showCalibrations" class="mavedb-histogram-thresholds-control">
       <div class="mavedb-histogram-control">
         <label class="mavedb-histogram-control-label" for="mavedb-histogram-viz-select">Thresholds: </label>
         <Dropdown
-          v-model="activeRangeKey"
-          :disabled="!showRanges"
+          v-model="activeCalibration"
+          :disabled="!showCalibrations"
           input-id="mavedb-histogram-viz-select"
           option-label="label"
-          :options="activeRangeOptions"
+          :options="activeCalibrationOptions"
           style="align-items: center; height: 1.5rem"
         />
       </div>
@@ -114,10 +114,13 @@
   <div ref="histogramContainer" class="mavedb-histogram-container" />
   <!-- The child component will attempt to immediately emit the range which is active when it is created. Since Vue lifecycle events bubble up from child to parent, this causes this component to attempt
    to create the histogram before the component is mounted when it doesn't have access to `this.$refs`. As a workaround, only render this child component once the histogram is ready. -->
-  <div v-if="showRanges && activeRange" class="mave-range-table-container">
-    <Accordion collapse-icon="pi pi-minus" expand-icon="pi pi-plus">
+  <div v-if="showCalibrations && activeCalibration && activeCalibration.value" class="mave-range-table-container">
+    <Accordion :active-index="0" collapse-icon="pi pi-minus" expand-icon="pi pi-plus">
       <AccordionTab class="mave-range-table-tab" header="Score Range Details">
-        <RangeTable :score-ranges="activeRange" :score-ranges-name="activeRangeKey.label" :sources="allSources" />
+        <CalibrationTable
+          :score-calibration="activeCalibration.value"
+          :score-calibration-name="activeCalibration.label"
+        />
       </AccordionTab>
     </Accordion>
   </div>
@@ -135,7 +138,7 @@ import Rating from 'primevue/rating'
 import TabMenu from 'primevue/tabmenu'
 import {defineComponent, PropType} from 'vue'
 
-import RangeTable from '@/components/RangeTable.vue'
+import CalibrationTable from '@/components/CalibrationTable.vue'
 import useScopedId from '@/composables/scoped-id'
 import config from '@/config'
 import {saveChartAsFile} from '@/lib/chart-export'
@@ -163,7 +166,7 @@ import makeHistogram, {
   HistogramBin,
   HistogramShader
 } from '@/lib/histogram'
-import {prepareRangesForHistogram, shaderOverlapsBin, ScoreRanges, ScoreSetRanges} from '@/lib/ranges'
+import {prepareCalibrationsForHistogram, shaderOverlapsBin, PersistedScoreCalibration} from '@/lib/calibrations'
 import {variantNotNullOrNA} from '@/lib/mave-hgvs'
 import {
   DEFAULT_VARIANT_EFFECT_TYPES,
@@ -194,7 +197,7 @@ interface Margins {
 export default defineComponent({
   name: 'ScoreSetHistogram',
 
-  components: {Accordion, AccordionTab, Checkbox, Dropdown, Rating, TabMenu, RangeTable, ProgressSpinner},
+  components: {Accordion, AccordionTab, Checkbox, Dropdown, Rating, TabMenu, CalibrationTable, ProgressSpinner},
 
   props: {
     coordinates: {
@@ -231,27 +234,38 @@ export default defineComponent({
     hideStartAndStopLossByDefault: {
       type: Boolean,
       default: false
+    },
+    selectedCalibration: {
+      type: String,
+      default: null,
+      required: false
     }
   },
 
-  emits: ['exportChart'],
+  emits: ['exportChart', 'calibrationChanged'],
 
-  setup: useScopedId,
+  setup: () => {
+    return {
+      ...useScopedId()
+    }
+  },
 
   data: function () {
-    const scoreSetHasRanges =
+    const scoreSetHasCalibrations =
       config.CLINICAL_FEATURES_ENABLED &&
-      this.scoreSet.scoreRanges != null &&
-      Object.values(this.scoreSet.scoreRanges).some(
-        (v: any) => v && typeof v === 'object' && Array.isArray((v as any).ranges) && (v as any).ranges.length > 0
-      )
+      this.scoreSet.scoreCalibrations != null &&
+      this.scoreSet.scoreCalibrations.length > 0
 
     return {
       config: config,
 
       activeViz: 0,
-      showRanges: scoreSetHasRanges,
-      activeRangeKey: {label: 'None', value: null} as {label: string; value: string | null},
+      showCalibrations: scoreSetHasCalibrations,
+      activeCalibrationUrn: this.selectedCalibration,
+      activeCalibration: {label: 'None', value: null} as {
+        label: string
+        value: PersistedScoreCalibration | null
+      },
 
       clinicalControls: [] as ClinicalControl[],
       clinicalControlOptions: [] as ClinicalControlOption[],
@@ -499,8 +513,8 @@ export default defineComponent({
       return options
     },
 
-    rangesExist: function () {
-      return this.scoreSet.scoreRanges != null && Object.keys(this.scoreSet.scoreRanges).length > 0
+    calibrationsExist: function () {
+      return this.scoreSet.scoreCalibrations != null && this.scoreSet.scoreCalibrations > 0
     },
 
     hasTabBar: function () {
@@ -511,15 +525,18 @@ export default defineComponent({
       return this.activeViz == this.vizOptions.findIndex((item) => item.view === 'custom')
     },
 
-    activeRanges: function (): ScoreSetRanges | null {
-      const rangeObjects = Object.entries(this.scoreSet.scoreRanges || {})
-        .filter(([k, v]) => typeof v === 'object' && !Array.isArray(v))
-        .reduce((acc, [k, v]) => ({...acc, [k]: v}), {})
+    scoreCalibrations: function (): {[key: string]: PersistedScoreCalibration} | null {
+      const calibrationObjects: Record<string, PersistedScoreCalibration> = {}
+      if (this.scoreSet.scoreCalibrations) {
+        for (const calibration of this.scoreSet.scoreCalibrations) {
+          calibrationObjects[calibration.urn] = calibration
+        }
+      }
 
-      if (Object.keys(rangeObjects).length === 0) {
+      if (Object.keys(calibrationObjects).length === 0) {
         return null
       } else {
-        return rangeObjects as ScoreSetRanges
+        return calibrationObjects
       }
     },
 
@@ -531,21 +548,21 @@ export default defineComponent({
       return hasMultipleDbs || hasSingleDbWithMultipleVersions
     },
 
-    activeRangeOptions: function () {
-      if (!this.activeRanges) return []
+    activeCalibrationOptions: function () {
+      if (!this.scoreCalibrations) return []
 
-      const calibrationOptions = Object.entries(this.activeRanges).map(([key, value]) => {
+      const calibrationOptions = Object.entries(this.scoreCalibrations).map(([, value]) => {
         const label = value.researchUseOnly ? `Research Use Only: ${value.title}` : value.title
         return {
           label,
-          value: key
+          value
         }
       })
 
       // Sort options: research use only at the end, alphabetically otherwise
       calibrationOptions.sort((a, b) => {
-        const aIsResearchOnly = this.activeRanges?.[a.value]?.researchUseOnly || false
-        const bIsResearchOnly = this.activeRanges?.[b.value]?.researchUseOnly || false
+        const aIsResearchOnly = a.value?.researchUseOnly || false
+        const bIsResearchOnly = b.value?.researchUseOnly || false
 
         if (aIsResearchOnly && !bIsResearchOnly) return 1
         if (!aIsResearchOnly && bIsResearchOnly) return -1
@@ -556,18 +573,13 @@ export default defineComponent({
       return [{label: 'None', value: null}, ...calibrationOptions]
     },
 
-    activeRange: function () {
-      if (!this.activeRangeKey?.value || !this.activeRanges) return null
-      return this.activeRanges[this.activeRangeKey?.value]
-    },
-
     histogramShaders: function () {
       const shaders: Record<string, any> = {null: null} // No shader
 
-      if (!this.activeRanges) return shaders
+      if (!this.scoreCalibrations) return shaders
 
-      for (const [key, value] of Object.entries(this.activeRanges)) {
-        shaders[key] = prepareRangesForHistogram(value as ScoreRanges)
+      for (const [key, value] of Object.entries(this.scoreCalibrations)) {
+        shaders[key] = prepareCalibrationsForHistogram(value as PersistedScoreCalibration)
       }
 
       return shaders
@@ -710,10 +722,10 @@ export default defineComponent({
           // Line 3: Score and classification
           if (variant.score) {
             let binClassificationLabel = ''
-            if (bin && this.activeRangeKey.value && this.activeRange) {
+            if (bin && this.activeCalibration && this.activeCalibration.value?.urn) {
               // TODO#491: Refactor this calculation into the creation of variant objects so we may just access the property of the variant which tells us its classification.
-              const binClassification = this.histogramShaders[this.activeRangeKey.value]?.find(
-                (range: HistogramShader) => shaderOverlapsBin(range, bin)
+              const binClassification = this.histogramShaders[this.activeCalibration.value.urn]?.find(
+                (calibration: HistogramShader) => shaderOverlapsBin(calibration, bin)
               )
 
               binClassificationLabel = `<span class="mavedb-range-classification-badge" style="margin-left: 6px; background-color:${binClassification.color}; color:white;">${binClassification.title}</span>`
@@ -731,24 +743,24 @@ export default defineComponent({
           parts.push(`Bin range: ${bin.x0} to ${bin.x1}`)
 
           //Line 6: Bin Classification
-          if (this.activeRangeKey.value && this.activeRange) {
+          if (this.activeCalibration && this.activeCalibration.value?.urn) {
             // TODO#491: Refactor this calculation into the creation of histogram bins so we don't need to repeat it every time we construct a tooltip.
             const binClassifications =
-              this.histogramShaders[this.activeRangeKey.value]
-                ?.filter((range: HistogramShader) => shaderOverlapsBin(range, bin))
+              this.histogramShaders[this.activeCalibration.value.urn]
+                ?.filter((calibration: HistogramShader) => shaderOverlapsBin(calibration, bin))
                 .sort(
                   (a: HistogramShader, b: HistogramShader) => (a.min ? a.min : -Infinity) - (b.min ? b.min : -Infinity)
                 ) || []
 
             if (binClassifications.length > 0) {
               const binClassificationLabels = binClassifications.map((binClassification: HistogramShader) => {
-                const rangeMin = binClassification.min ?? -Infinity
-                const rangeMax = binClassification.max ?? Infinity
+                const calibrationMin = binClassification.min ?? -Infinity
+                const calibrationMax = binClassification.max ?? Infinity
 
-                const spanStart = Math.max(bin.x0, rangeMin).toPrecision(3)
-                const spanEnd = Math.min(bin.x1, rangeMax).toPrecision(3)
+                const spanStart = Math.max(bin.x0, calibrationMin).toPrecision(3)
+                const spanEnd = Math.min(bin.x1, calibrationMax).toPrecision(3)
 
-                const binSpansMultipleShaders = bin.x0 < rangeMin || bin.x1 > rangeMax
+                const binSpansMultipleShaders = bin.x0 < calibrationMin || bin.x1 > calibrationMax
                 const multipleShaderRangeText = spanStart != spanEnd ? ` (${spanStart}-${spanEnd})` : `(${spanStart})`
 
                 return `<span class="mavedb-range-classification-badge" style="background-color:${binClassification.color}; color:white;">${binClassification.title} ${binSpansMultipleShaders ? `${multipleShaderRangeText}` : ''}</span>`
@@ -798,12 +810,13 @@ export default defineComponent({
         this.renderOrRefreshHistogram()
       }
     },
-    activeRange: {
+    activeCalibration: {
       handler: function () {
         this.renderOrRefreshHistogram()
+        this.$emit('calibrationChanged', this.activeCalibration ? this.activeCalibration.value?.urn : null)
       }
     },
-    showRanges: {
+    showCalibrations: {
       handler: function () {
         this.renderOrRefreshHistogram()
       }
@@ -898,6 +911,19 @@ export default defineComponent({
         this.associateClinicalControlsWithVariants()
         this.renderOrRefreshHistogram()
       }
+    },
+    selectedCalibration: {
+      handler: function (newValue) {
+        if (!newValue) {
+          this.activeCalibration = {label: 'None', value: null}
+          return
+        }
+
+        this.activeCalibration = this.activeCalibrationOptions.find((option) => option.value?.urn === newValue) || {
+          label: 'None',
+          value: null
+        }
+      }
     }
   },
 
@@ -908,7 +934,7 @@ export default defineComponent({
   mounted: async function () {
     this.renderOrRefreshHistogram()
     this.$emit('exportChart', this.exportChart)
-    this.activeRangeKey = this.defaultRangeKey()
+    this.activeCalibration = this.chooseDefaultCalibration()
   },
 
   beforeUnmount: function () {
@@ -981,8 +1007,8 @@ export default defineComponent({
         .shaders(this.histogramShaders)
 
       // Only render clinical specific viz options if such features are enabled.
-      if (this.config.CLINICAL_FEATURES_ENABLED && this.showRanges) {
-        this.histogram.renderShader(this.activeRangeKey.value)
+      if (this.config.CLINICAL_FEATURES_ENABLED && this.showCalibrations) {
+        this.histogram.renderShader(this.activeCalibration.value?.urn)
       } else {
         this.histogram.renderShader(null)
       }
@@ -1102,22 +1128,31 @@ export default defineComponent({
       //   }
     },
 
-    defaultRangeKey: function () {
-      if (this.activeRangeKey.value) {
-        return this.activeRangeKey
+    chooseDefaultCalibration: function () {
+      if (this.activeCalibration?.value) {
+        return this.activeCalibration
       }
 
-      const primaryRange = this.activeRanges ? Object.entries(this.activeRanges).find(([, v]) => v.primary) : null
-      const primaryRangeKey = primaryRange ? primaryRange[0] : null
-
-      // use the primary range if it exists, otherwise use investigatorProvided if it exists, otherwise none.
-      if (primaryRangeKey) {
-        return this.activeRangeOptions.find((option) => option.value === primaryRangeKey) || {label: 'None', value: null}
-      } else if (this.activeRangeOptions.length > 0) {
-        return this.activeRangeOptions.find((option) => option.value === "investigatorProvided") || {label: 'None', value: null}
-      } else {
-        return {label: 'None', value: null}
+      if (this.selectedCalibration) {
+        const matchingCalibration = this.activeCalibrationOptions.find(
+          (option) => option.value?.urn === this.selectedCalibration
+        )
+        if (matchingCalibration) {
+          return {
+            ...matchingCalibration
+          }
+        }
       }
+
+      const primaryCalibration = this.activeCalibrationOptions.find((option) => option.value?.primary === true)
+
+      // Always default to showing the primary range if none is selected and a primary range exists.
+      if (primaryCalibration) {
+        return primaryCalibration
+      }
+
+      // otherwise don't set a default calibration
+      return {label: 'None', value: null}
     },
 
     titleCase(s: string) {

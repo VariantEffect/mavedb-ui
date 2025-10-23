@@ -69,7 +69,7 @@ import makeHeatmap from '@/lib/heatmap'
 import type {Heatmap, HeatmapDatum, HeatmapRowSpecification} from '@/lib/heatmap'
 import {parseSimpleProVariant, parseSimpleNtVariant, variantNotNullOrNA} from '@/lib/mave-hgvs'
 import {NUCLEOTIDE_BASES} from '@/lib/nucleotides'
-import type {ScoreRange} from '@/lib/ranges'
+import type {FunctionalRange, PersistedScoreCalibration} from '@/lib/calibrations'
 import {
   PARSED_POST_MAPPED_VARIANT_PROPERTIES,
   HgvsReferenceSequenceType,
@@ -611,11 +611,13 @@ export default defineComponent({
     },
 
     ////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
-    // Heatmap coloring based only on range of scores and baseline score from investigator-provided ranges, if any
+    // Heatmap coloring based only on range of scores and baseline score from primary score calibration, if any
     ////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 
     colorScaleDomain: function () {
-      const baselineScore = this.scoreSet.scoreRanges?.investigatorProvided?.baselineScore
+      const baselineScore = this.scoreSet.scoreCalibration?.find(
+        (calibration: PersistedScoreCalibration) => calibration.primary
+      )?.baselineScore
 
       const scores = this.heatmapData.map((v) => v.meanScore).filter((score) => score != null)
       const minValue = _.min<number>(scores)
@@ -654,15 +656,16 @@ export default defineComponent({
       // Start with all the ranges classified as normal or abnormal. We ignore other ranges, because they either lie
       // outside the normal/abnormal ranges, so that they should be treated as neutral intervals, or they overlap
       // with them, so that the normal or abnormal classification takes precedence.
-      const ranges = (this.scoreSet.scoreRanges?.investigatorProvided?.ranges || []).filter((range) =>
-        ['normal', 'abnormal'].includes(range.classification)
-      )
+      const ranges = (
+        this.scoreSet.scoreCalibrations?.find((calibration: PersistedScoreCalibration) => calibration.primary)
+          ?.functionalRanges || []
+      ).filter((range: FunctionalRange) => ['normal', 'abnormal'].includes(range.classification))
       if (ranges.length === 0) {
         return []
       }
 
       // Flatten all interval endpoints.
-      const endpoints: Array<{value: number | null; type: 'min' | 'max'; range: ScoreRange}> = []
+      const endpoints: Array<{value: number | null; type: 'min' | 'max'; range: FunctionalRange}> = []
       for (const range of ranges) {
         endpoints.push({value: range.range[0], type: 'min', range})
         endpoints.push({value: range.range[1], type: 'max', range})
@@ -682,8 +685,8 @@ export default defineComponent({
       })
 
       // Build intervals from the endpoints.
-      const intervals: Array<{min: number | null; max: number | null; ranges: ScoreRange[]}> = []
-      let active: ScoreRange[] = []
+      const intervals: Array<{min: number | null; max: number | null; ranges: FunctionalRange[]}> = []
+      let active: FunctionalRange[] = []
       let previousThreshold: number | null = null
       for (const endpoint of endpoints) {
         const currentThreshold = endpoint.value

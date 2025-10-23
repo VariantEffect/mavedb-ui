@@ -1,5 +1,6 @@
 import router from '@/router'
 import {hgvsSearchStringRegex} from './mave-hgvs'
+import {clinGenAlleleIdRegex, rsIdRegex} from './mavemd'
 
 export function routeToVariantSearchIfVariantIsSearchable(searchText: string | null | undefined): boolean {
   if (!searchText || searchText.trim() === '') {
@@ -7,6 +8,18 @@ export function routeToVariantSearchIfVariantIsSearchable(searchText: string | n
   }
 
   searchText = searchText.trim()
+  if (clinGenAlleleIdRegex.test(searchText)) {
+    console.log(`Routing to mavemd with ClinGen Allele ID: ${searchText}`)
+    router.push({name: 'mavemd', query: {search:searchText}})
+    return true
+  }
+
+  if (rsIdRegex.test(searchText)) {
+    console.log(`Routing to mavemd with RS ID: ${searchText}`)
+    router.push({name: 'mavemd', query: {search: searchText}})
+    return true
+  }
+
   const hgvsMatches = hgvsSearchStringRegex.exec(searchText)
   if (hgvsMatches && hgvsMatches.groups) {
     const identifier = hgvsMatches.groups.identifier

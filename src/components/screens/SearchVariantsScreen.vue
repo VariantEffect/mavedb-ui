@@ -19,7 +19,7 @@
         with ACMG/AMP variant classification guidelines. MaveMD currently contains 438,318 variant effect measurements
         mapped to the human genome from 74 MAVE datasets spanning 32 disease-associated genes.
       </div>
-      <div v-if="hgvsSearchVisible" class="mavedb-search-form">
+      <div v-if="defaultSearchVisible" class="mavedb-search-form">
         <div class="mavedb-search-heading">Search MaveDB for human gene variants</div>
         <div class="flex flex-wrap justify-content-center gap-3">
           <IconField icon-position="left">
@@ -28,13 +28,13 @@
               ref="searchTextInput"
               v-model="searchText"
               class="p-inputtext-lg"
-              placeholder="HGVS string"
+              placeholder="HGVS, ClinGen Allele ID, dbSNP rsID, etc."
               style="width: 500px"
               type="search"
-              @keyup.enter="hgvsSearch"
+              @keyup.enter="defaultSearch"
             />
           </IconField>
-          <Button class="p-button-plain" @click="hgvsSearch">Search</Button>
+          <Button class="p-button-plain" @click="defaultSearch">Search</Button>
           <div class="mavedb-clear-search-button-container">
             <Button
               class="p-button-plain"
@@ -48,6 +48,34 @@
         <div class="mavedb-search-form-view-switch">
           Don't have a versioned reference sequence identifier? Click here to perform a fuzzy search instead:
           <Button class="p-button-plain" @click="showSearch('fuzzy')">Fuzzy Search</Button>
+        </div>
+        <div class="mavedb-search-suggestions">
+          <p>
+            Examples of supported searches:
+            <ul>
+              <li>
+                HGVS:
+                <span v-tooltip.top="'Click to search'" class="mavedb-search-example" @click="searchForText">ENST00000473961.6:c.-19-2A>T</span>
+                •
+                <span v-tooltip.top="'Click to search'" class="mavedb-search-example" @click="searchForText">NP_000242.1:p.Asn566Thr</span>
+                (supports a variety of HGVS formats)
+              </li>
+              <li>
+                ClinGen Allele IDs:
+                <span v-tooltip.top="'Click to search'" class="mavedb-search-example" @click="searchForText">CA916081178</span>
+                •
+                <span v-tooltip.top="'Click to search'" class="mavedb-search-example" @click="searchForText">PA321212</span>
+              </li>
+              <li>
+                dbSNP rsIDs:
+                <span v-tooltip.top="'Click to search'" class="mavedb-search-example" @click="searchForText">rs369602258</span>
+              </li>
+              <li>
+                ClinVar Variation IDs:
+                <span v-tooltip.top="'Click to search'" class="mavedb-search-example" @click="searchForText">214835</span>
+              </li>
+            </ul>
+          </p>
         </div>
       </div>
       <div v-if="fuzzySearchVisible" class="mavedb-search-form">
@@ -91,7 +119,7 @@
           </div>
         </div>
         <div class="mavedb-search-form-view-switch">
-          Click here to return to HGVS search:
+          Click here to return to default search:
           <Button class="p-button-plain" @click="showSearch('hgvs')">HGVS Search</Button>
         </div>
       </div>
@@ -106,16 +134,6 @@
           v-if="!searchResultsVisible"
           :class="['mavedb-expander', ...(guideExpanded ? ['mavedb-expander-expanded'] : [])]"
         >
-          <p>
-            Try searching for variants using HGVS strings like
-            <span v-tooltip.top="'Click to search'" class="mavedb-search-example" @click="searchForText"
-              >ENST00000473961.6:c.-19-2A>T</span
-            >
-            and
-            <span v-tooltip.top="'Click to search'" class="mavedb-search-example" @click="searchForText"
-              >NP_000242.1:p.Asn566Thr</span
-            >. MaveDB supports a variety of HGVS formats for searching. Or browse these curated data sets:
-          </p>
           <table>
             <tr>
               <th>Gene</th>
@@ -331,10 +349,10 @@ import {useHead} from '@unhead/vue'
 
 import config from '@/config'
 import DefaultLayout from '@/components/layout/DefaultLayout.vue'
-import {MAVE_MD_SCORE_SETS} from '@/lib/mavemd'
+import {clinGenAlleleIdRegex, clinVarVariationIdRegex, rsIdRegex, MAVE_MD_SCORE_SETS} from '@/lib/mavemd'
 import {components} from '@/schema/openapi'
 import {getScoreSetShortName} from '@/lib/score-sets'
-import {clinVarHgvsSearchStringRegex} from '@/lib/mave-hgvs'
+import {hgvsSearchStringRegex} from '@/lib/mave-hgvs'
 
 const SCORE_SETS_TO_SHOW = 5
 
@@ -368,7 +386,7 @@ export default defineComponent({
   data: function () {
     return {
       loading: false,
-      hgvsSearchVisible: true,
+      defaultSearchVisible: true,
       fuzzySearchVisible: false,
       searchResultsVisible: false,
       searchText: null as string | null,
@@ -504,11 +522,11 @@ export default defineComponent({
   },
 
   mounted() {
-    // If HGVS search param is present, run HGVS search
+    // If search param is present, run default search
     if (this.route.query.search && String(this.route.query.search).trim() !== '') {
-      this.hgvsSearchVisible = true
+      this.defaultSearchVisible = true
       this.fuzzySearchVisible = false
-      this.hgvsSearch()
+      this.defaultSearch()
     } else if (
       this.route.query.gene ||
       this.route.query.variantType ||
@@ -517,7 +535,7 @@ export default defineComponent({
       this.route.query.altAllele
     ) {
       // If any fuzzy search param is present, run fuzzy search
-      this.hgvsSearchVisible = false
+      this.defaultSearchVisible = false
       this.fuzzySearchVisible = true
       this.fuzzySearch()
     }
@@ -554,9 +572,9 @@ export default defineComponent({
     searchForText: function (event: PointerEvent) {
       const element = event.target
       if (element) {
-        this.showSearch('hgvs')
+        this.showSearch('default')
         this.searchText = element.innerText
-        this.hgvsSearch()
+        this.defaultSearch()
       }
     },
     clearSearch() {
@@ -569,11 +587,11 @@ export default defineComponent({
       this.searchResultsVisible = false
       this.alleles = []
     },
-    showSearch(searchType: 'fuzzy' | 'hgvs' = 'hgvs') {
-      this.hgvsSearchVisible = searchType == 'hgvs'
+    showSearch(searchType: 'fuzzy' | 'default' = 'default') {
+      this.defaultSearchVisible = searchType == 'default'
       this.fuzzySearchVisible = searchType == 'fuzzy'
     },
-    hgvsSearch: async function () {
+    defaultSearch: async function () {
       this.searchResultsVisible = true
       // Remove fuzzy search params from the URL
       const {gene, variantType, variantPosition, refAllele, altAllele, ...rest} = this.route.query
@@ -583,156 +601,202 @@ export default defineComponent({
       this.alleles = []
       this.loading = true
       if (this.searchText !== null && this.searchText !== '') {
-        await this.fetchHgvsSearchResults(this.searchText)
+        await this.fetchDefaultSearchResults(this.searchText)
       }
       this.loading = false
       await this.searchVariants()
     },
-    fetchHgvsSearchResults: async function (hgvsSearch: string, maneStatus: string | null = null) {
+    fetchDefaultSearchResults: async function (searchString: string, maneStatus: string | null = null) {
       // Strip gene symbol and/or protein consequence from ClinVar-style variant names to obtain valid HGVS. If the
       // search string doesn't match the pattern, leave it as is and let the rest of the search code handle any format
       // problem.
-      const match = clinVarHgvsSearchStringRegex.exec(hgvsSearch.trim())
-      const hgvsStr = match ? `${match.groups!.identifier}:${match.groups!.description}` : hgvsSearch.trim()
+
+      let searchType
+      let searchStr = searchString.trim()
+
+      // Determine search type
+      if (hgvsSearchStringRegex.test(searchStr)) {
+        searchType = 'hgvs'
+        const hgvsMatch = hgvsSearchStringRegex.exec(searchStr)
+        if (hgvsMatch) {
+          searchStr = `${hgvsMatch.groups!.identifier}:${hgvsMatch.groups!.description}`
+        }
+      } else if (rsIdRegex.test(searchStr)) {
+        searchType = 'dbSnpRsId'
+      } else if (clinGenAlleleIdRegex.test(searchStr)) {
+        searchType = 'clinGenAlleleId'
+      } else if (clinVarVariationIdRegex.test(searchStr)) {
+        searchType = 'clinVarVariationId'
+      } else {
+        this.toast.add({
+          severity: 'error',
+          summary: 'Invalid search',
+          detail: 'Please provide a valid HGVS string, ClinGen Allele ID, dbSNP rsID, or ClinVar Variation ID.',
+          life: 10000
+        })
+        return
+      }
 
       try {
-        const response = await axios.get('https://reg.test.genome.network/allele', {
-          params: {
-            hgvs: hgvsStr
-          }
-        })
-        const clingenAlleleId = response.data?.['@id']?.split('/')?.at(-1)
-        if (clingenAlleleId && clingenAlleleId.startsWith('CA')) {
-          const newAllele = {
-            clingenAlleleUrl: response.data?.['@id'],
-            clingenAlleleId: clingenAlleleId,
-            canonicalAlleleName: response.data?.communityStandardTitle?.[0] || undefined,
-            maneStatus: maneStatus,
-            genomicAlleles: response.data?.genomicAlleles || [],
-            grch38Hgvs: null,
-            grch37Hgvs: null,
-            transcriptAlleles: response.data?.transcriptAlleles || [],
-            maneCoordinates: [] as Array<any>,
-            variantsStatus: 'NotLoaded',
-            variants: {
-              nucleotide: [] as Array<any>,
-              protein: [] as Array<any>,
-              associatedNucleotide: [] as Array<any>
+        let response
+        if (searchType === 'clinGenAlleleId') {
+          response = await axios.get(`https://reg.genome.network/allele/${searchStr}`)
+        } else if (searchType === 'dbSnpRsId') {
+          response = await axios.get('https://reg.genome.network/alleles', {
+            params: {
+              'dbSNP.rs': searchStr
             }
-          }
-          for (let i = 0; i < newAllele.genomicAlleles.length; i++) {
-            // TODO currently just taking first entry from hgvs array, since that appears to be NC coordinates. check this assumption
-            if (newAllele.genomicAlleles[i].referenceGenome === 'GRCh38') {
-              newAllele.grch38Hgvs = newAllele.genomicAlleles[i].hgvs?.[0]
-            } else if (newAllele.genomicAlleles[i].referenceGenome === 'GRCh37') {
-              newAllele.grch37Hgvs = newAllele.genomicAlleles[i].hgvs?.[0]
+          })
+        } else if (searchType === 'clinVarVariationId') {
+          response = await axios.get('https://reg.genome.network/alleles', {
+            params: {
+              'ClinVar.variationId': searchStr
             }
-          }
-          for (let i = 0; i < newAllele.transcriptAlleles.length; i++) {
-            if (newAllele.transcriptAlleles[i].MANE !== undefined) {
-              // TODO may want to prioritize one of MANE select, MANE clinical, etc. For now, just grab the first mane transcript.
-              const mane = newAllele.transcriptAlleles[i].MANE
-              for (const sequenceType of ['nucleotide', 'protein']) {
-                for (const database in mane[sequenceType]) {
-                  newAllele.maneCoordinates.push({
-                    sequenceType: sequenceType,
-                    database: database,
-                    hgvs: mane[sequenceType][database].hgvs
-                  })
-                }
+          })
+        } else {
+          response = await axios.get('https://reg.genome.network/allele', {
+            params: {
+              hgvs: searchStr
+            }
+          })
+        }
+        // determine if response data is a single allele or a list of alleles
+        const results = Array.isArray(response.data) ? response.data : [response.data]
+
+        for (const result of results) {
+          const clingenAlleleId = result['@id']?.split('/')?.at(-1)
+          if (clingenAlleleId && clingenAlleleId.startsWith('CA')) {
+            const newAllele = {
+              clingenAlleleUrl: result?.['@id'],
+              clingenAlleleId: clingenAlleleId,
+              canonicalAlleleName: result?.communityStandardTitle?.[0] || undefined,
+              maneStatus: maneStatus,
+              genomicAlleles: result?.genomicAlleles || [],
+              grch38Hgvs: null,
+              grch37Hgvs: null,
+              transcriptAlleles: result?.transcriptAlleles || [],
+              maneCoordinates: [] as Array<any>,
+              variantsStatus: 'NotLoaded',
+              variants: {
+                nucleotide: [] as Array<any>,
+                protein: [] as Array<any>,
+                associatedNucleotide: [] as Array<any>
               }
             }
-            break
-          }
-          this.alleles.push(newAllele)
-        } else if (clingenAlleleId && clingenAlleleId.startsWith('PA')) {
-          // Surface result on nucleotide-level variant if possible
-          // some PA IDs do not have associated CA IDs/matching registered transcripts
-          // because they are single amino acid variants caused by multi-nucleotide variants
-          // or delins nucleotide variants, and the more complex nucleotide variant has not
-          // been registered with ClinGen yet. in this case, use the PA ID
+            for (let i = 0; i < newAllele.genomicAlleles.length; i++) {
+              // TODO currently just taking first entry from hgvs array, since that appears to be NC coordinates. check this assumption
+              if (newAllele.genomicAlleles[i].referenceGenome === 'GRCh38') {
+                newAllele.grch38Hgvs = newAllele.genomicAlleles[i].hgvs?.[0]
+              } else if (newAllele.genomicAlleles[i].referenceGenome === 'GRCh37') {
+                newAllele.grch37Hgvs = newAllele.genomicAlleles[i].hgvs?.[0]
+              }
+            }
+            for (let i = 0; i < newAllele.transcriptAlleles.length; i++) {
+              if (newAllele.transcriptAlleles[i].MANE !== undefined) {
+                // TODO may want to prioritize one of MANE select, MANE clinical, etc. For now, just grab the first mane transcript.
+                const mane = newAllele.transcriptAlleles[i].MANE
+                for (const sequenceType of ['nucleotide', 'protein']) {
+                  for (const database in mane[sequenceType]) {
+                    newAllele.maneCoordinates.push({
+                      sequenceType: sequenceType,
+                      database: database,
+                      hgvs: mane[sequenceType][database].hgvs
+                    })
+                  }
+                }
+              }
+              break
+            }
+            this.alleles.push(newAllele)
+          } else if (clingenAlleleId && clingenAlleleId.startsWith('PA')) {
+            // Surface result on nucleotide-level variant if possible
+            // some PA IDs do not have associated CA IDs/matching registered transcripts
+            // because they are single amino acid variants caused by multi-nucleotide variants
+            // or delins nucleotide variants, and the more complex nucleotide variant has not
+            // been registered with ClinGen yet. in this case, use the PA ID
 
-          // get amino acid allele associated with the searched hgvs
-          // note, not sure if we should assume that the searched hgvs will appear here.
-          const aminoAcidAlleles = response.data?.aminoAcidAlleles || []
-          for (let i = 0; i < aminoAcidAlleles.length; i++) {
-            if (aminoAcidAlleles[i].hgvs?.includes(hgvsSearch)) {
-              const transcripts = aminoAcidAlleles[i]?.matchingRegisteredTranscripts || []
-              if (transcripts.length > 0) {
-                for (let j = 0; j < transcripts.length; j++) {
-                  const associatedClingenAlleleId = transcripts[j]?.['@id']?.split('/')?.at(-1)
-                  const associatedResponse = await axios.get(
-                    `https://reg.test.genome.network/allele/${associatedClingenAlleleId}`
-                  )
+            // get amino acid allele associated with the searched hgvs
+            // note, not sure if we should assume that the searched hgvs will appear here.
+            const aminoAcidAlleles = result?.aminoAcidAlleles || []
+            for (let i = 0; i < aminoAcidAlleles.length; i++) {
+              if (searchType !== 'hgvs' || aminoAcidAlleles[i].hgvs?.includes(searchString)) {
+                const transcripts = aminoAcidAlleles[i]?.matchingRegisteredTranscripts || []
+                if (transcripts.length > 0) {
+                  for (let j = 0; j < transcripts.length; j++) {
+                    const associatedClingenAlleleId = transcripts[j]?.['@id']?.split('/')?.at(-1)
+                    const associatedResponse = await axios.get(
+                      `https://reg.genome.network/allele/${associatedClingenAlleleId}`
+                    )
+                    const newAllele = {
+                      clingenAlleleUrl: associatedResponse.data?.['@id'],
+                      clingenAlleleId: associatedResponse.data?.['@id']?.split('/')?.at(-1),
+                      canonicalAlleleName: associatedResponse.data?.communityStandardTitle?.[0] || undefined,
+                      maneStatus: maneStatus,
+                      genomicAlleles: associatedResponse.data?.genomicAlleles || [],
+                      grch38Hgvs: null,
+                      grch37Hgvs: null,
+                      transcriptAlleles: associatedResponse.data?.transcriptAlleles || [],
+                      maneCoordinates: [] as Array<any>,
+                      variantsStatus: 'NotLoaded',
+                      variants: {
+                        nucleotide: [] as Array<any>,
+                        protein: [] as Array<any>,
+                        associatedNucleotide: [] as Array<any>
+                      }
+                    }
+                    for (let i = 0; i < newAllele.genomicAlleles.length; i++) {
+                      // TODO currently just taking first entry from hgvs array, since that appears to be NC coordinates. check this assumption
+                      if (newAllele.genomicAlleles[i].referenceGenome === 'GRCh38') {
+                        newAllele.grch38Hgvs = newAllele.genomicAlleles[i].hgvs?.[0]
+                      } else if (newAllele.genomicAlleles[i].referenceGenome === 'GRCh37') {
+                        newAllele.grch37Hgvs = newAllele.genomicAlleles[i].hgvs?.[0]
+                      }
+                    }
+                    for (let i = 0; i < newAllele.transcriptAlleles.length; i++) {
+                      if (newAllele.transcriptAlleles[i].MANE !== undefined) {
+                        // TODO may want to prioritize one of MANE select, MANE clinical, etc. For now, just grab the first mane transcript.
+                        const mane = newAllele.transcriptAlleles[i].MANE
+                        for (const sequenceType of ['nucleotide', 'protein']) {
+                          for (const database in mane[sequenceType]) {
+                            newAllele.maneCoordinates.push({
+                              sequenceType: sequenceType,
+                              database: database,
+                              hgvs: mane[sequenceType][database].hgvs
+                            })
+                          }
+                        }
+                      }
+                      break
+                    }
+                    this.alleles.push(newAllele)
+                  }
+                } else {
+                  // no associated CA IDs, use PA ID as search result
+                  // there is not as much info available for PA IDs
                   const newAllele = {
-                    clingenAlleleUrl: associatedResponse.data?.['@id'],
-                    clingenAlleleId: associatedResponse.data?.['@id']?.split('/')?.at(-1),
-                    canonicalAlleleName: associatedResponse.data?.communityStandardTitle?.[0] || undefined,
-                    maneStatus: maneStatus,
-                    genomicAlleles: associatedResponse.data?.genomicAlleles || [],
-                    grch38Hgvs: null,
-                    grch37Hgvs: null,
-                    transcriptAlleles: associatedResponse.data?.transcriptAlleles || [],
-                    maneCoordinates: [] as Array<any>,
+                    clingenAlleleUrl: result?.['@id'],
+                    clingenAlleleId: result?.['@id']?.split('/')?.at(-1),
+                    canonicalAlleleName: searchStr, // since we have already determined a match, just use supplied search string as a name
                     variantsStatus: 'NotLoaded',
                     variants: {
                       nucleotide: [] as Array<any>,
                       protein: [] as Array<any>,
                       associatedNucleotide: [] as Array<any>
-                    }
-                  }
-                  for (let i = 0; i < newAllele.genomicAlleles.length; i++) {
-                    // TODO currently just taking first entry from hgvs array, since that appears to be NC coordinates. check this assumption
-                    if (newAllele.genomicAlleles[i].referenceGenome === 'GRCh38') {
-                      newAllele.grch38Hgvs = newAllele.genomicAlleles[i].hgvs?.[0]
-                    } else if (newAllele.genomicAlleles[i].referenceGenome === 'GRCh37') {
-                      newAllele.grch37Hgvs = newAllele.genomicAlleles[i].hgvs?.[0]
-                    }
-                  }
-                  for (let i = 0; i < newAllele.transcriptAlleles.length; i++) {
-                    if (newAllele.transcriptAlleles[i].MANE !== undefined) {
-                      // TODO may want to prioritize one of MANE select, MANE clinical, etc. For now, just grab the first mane transcript.
-                      const mane = newAllele.transcriptAlleles[i].MANE
-                      for (const sequenceType of ['nucleotide', 'protein']) {
-                        for (const database in mane[sequenceType]) {
-                          newAllele.maneCoordinates.push({
-                            sequenceType: sequenceType,
-                            database: database,
-                            hgvs: mane[sequenceType][database].hgvs
-                          })
-                        }
-                      }
-                    }
-                    break
+                    },
+                    // the following fields are not available for PA IDs
+                    maneStatus: null,
+                    genomicAlleles: [],
+                    grch38Hgvs: null,
+                    grch37Hgvs: null,
+                    transcriptAlleles: [],
+                    maneCoordinates: [] as Array<any>
                   }
                   this.alleles.push(newAllele)
                 }
-              } else {
-                // no associated CA IDs, use PA ID as search result
-                // there is not as much info available for PA IDs
-                const newAllele = {
-                  clingenAlleleUrl: response.data?.['@id'],
-                  clingenAlleleId: response.data?.['@id']?.split('/')?.at(-1),
-                  canonicalAlleleName: hgvsStr, // since we have already determined a match, just use supplied hgvs string as a name
-                  variantsStatus: 'NotLoaded',
-                  variants: {
-                    nucleotide: [] as Array<any>,
-                    protein: [] as Array<any>,
-                    associatedNucleotide: [] as Array<any>
-                  },
-                  // the following fields are not available for PA IDs
-                  maneStatus: null,
-                  genomicAlleles: [],
-                  grch38Hgvs: null,
-                  grch37Hgvs: null,
-                  transcriptAlleles: [],
-                  maneCoordinates: [] as Array<any>
-                }
-                this.alleles.push(newAllele)
               }
+              // only expect one amino acid allele match
+              break
             }
-            // only expect one amino acid allele match
-            break
           }
         }
       } catch (error: any) {
@@ -745,7 +809,7 @@ export default defineComponent({
             error.response.data?.errorType && error.response.data?.description
               ? `${error.response.data?.errorType}: ${error.response.data?.description}`
               : 'Error fetching results',
-          detail: error.response.data?.message || 'Invalid HGVS string provided.',
+          detail: error.response.data?.message || 'Invalid search.',
           life: 10000
         })
       }
@@ -847,7 +911,7 @@ export default defineComponent({
           // TODO validate variant position input: can't be 0, can only include *, - (if c.) and digits
 
           // retrieve clingen gene id
-          const geneResponse = await axios.get('https://reg.test.genome.network/gene', {
+          const geneResponse = await axios.get('https://reg.genome.network/gene', {
             params: {
               'HGNC.symbol': geneSymbol
             }
@@ -874,7 +938,7 @@ export default defineComponent({
           // which could be done if variant input type is c.
           // const clingenGeneId = geneResponse.data?.['@id']?.split('/')?.at(-1)
           // // retrieve refseq transcripts associated with clingen allele id
-          // const transcriptResponse = await axios.get('https://reg.test.genome.network/refseqs', {
+          // const transcriptResponse = await axios.get('https://reg.genome.network/refseqs', {
           //   params: {
           //     gene: clingenGeneId
           //   }
@@ -898,7 +962,7 @@ export default defineComponent({
 
           // fetch clingen allele id results for each hgvs string
           for (const hgvsString of hgvsStrings) {
-            await this.fetchHgvsSearchResults(hgvsString.hgvsString, hgvsString.maneStatus)
+            await this.fetchDefaultSearchResults(hgvsString.hgvsString, hgvsString.maneStatus)
           }
         } catch (error: any) {
           this.alleles = []
@@ -1010,6 +1074,11 @@ export default defineComponent({
 .mavedb-search-filter-option-picker {
   max-width: 300px;
   width: 24%;
+}
+
+.mavedb-search-suggestions {
+  display:flex;
+  justify-content: center;
 }
 
 .mavedb-organism-picker:deep(.p-listbox-item) {

@@ -22,13 +22,20 @@
       <div v-if="defaultSearchVisible" class="mavedb-search-form">
         <div class="mavedb-search-heading">Search MaveDB for human gene variants</div>
         <div class="flex flex-wrap justify-content-center gap-3">
+          <Dropdown
+            v-model="searchType"
+            option-label="name"
+            option-value="code"
+            :options="searchTypeOptions"
+            placeholder="Select search type"
+          />
           <IconField icon-position="left">
             <InputIcon class="pi pi-search"></InputIcon>
             <InputText
               ref="searchTextInput"
               v-model="searchText"
               class="p-inputtext-lg"
-              placeholder="HGVS, ClinGen Allele ID, dbSNP rsID, etc."
+              placeholder="Enter a value"
               style="width: 500px"
               type="search"
               @keyup.enter="defaultSearch"
@@ -55,24 +62,24 @@
             <ul>
               <li>
                 HGVS:
-                <span v-tooltip.top="'Click to search'" class="mavedb-search-example" @click="searchForText">ENST00000473961.6:c.-19-2A>T</span>
+                <span v-tooltip.top="'Click to search'" class="mavedb-search-example" @click="searchForText($event, 'hgvs')">ENST00000473961.6:c.-19-2A>T</span>
                 •
-                <span v-tooltip.top="'Click to search'" class="mavedb-search-example" @click="searchForText">NP_000242.1:p.Asn566Thr</span>
+                <span v-tooltip.top="'Click to search'" class="mavedb-search-example" @click="searchForText($event, 'hgvs')">NP_000242.1:p.Asn566Thr</span>
                 (supports a variety of HGVS formats)
               </li>
               <li>
                 ClinGen Allele IDs:
-                <span v-tooltip.top="'Click to search'" class="mavedb-search-example" @click="searchForText">CA916081178</span>
+                <span v-tooltip.top="'Click to search'" class="mavedb-search-example" @click="searchForText($event, 'clinGenAlleleId')">CA916081178</span>
                 •
-                <span v-tooltip.top="'Click to search'" class="mavedb-search-example" @click="searchForText">PA321212</span>
+                <span v-tooltip.top="'Click to search'" class="mavedb-search-example" @click="searchForText($event, 'clinGenAlleleId')">PA321212</span>
               </li>
               <li>
                 dbSNP rsIDs:
-                <span v-tooltip.top="'Click to search'" class="mavedb-search-example" @click="searchForText">rs369602258</span>
+                <span v-tooltip.top="'Click to search'" class="mavedb-search-example" @click="searchForText($event, 'dbSnpRsId')">rs369602258</span>
               </li>
               <li>
                 ClinVar Variation IDs:
-                <span v-tooltip.top="'Click to search'" class="mavedb-search-example" @click="searchForText">214835</span>
+                <span v-tooltip.top="'Click to search'" class="mavedb-search-example" @click="searchForText($event, 'clinVarVariationId')">214835</span>
               </li>
             </ul>
           </p>
@@ -119,8 +126,8 @@
           </div>
         </div>
         <div class="mavedb-search-form-view-switch">
-          Click here to return to default search:
-          <Button class="p-button-plain" @click="showSearch('hgvs')">HGVS Search</Button>
+          Click here to return to standard search:
+          <Button class="p-button-plain" @click="showSearch('default')">Standard Search</Button>
         </div>
       </div>
       <div v-if="!searchResultsVisible" class="mavedb-expander-container">
@@ -352,7 +359,7 @@ import DefaultLayout from '@/components/layout/DefaultLayout.vue'
 import {clinGenAlleleIdRegex, clinVarVariationIdRegex, rsIdRegex, MAVE_MD_SCORE_SETS} from '@/lib/mavemd'
 import {components} from '@/schema/openapi'
 import {getScoreSetShortName} from '@/lib/score-sets'
-import {hgvsSearchStringRegex} from '@/lib/mave-hgvs'
+import {clinVarHgvsSearchStringRegex, hgvsSearchStringRegex} from '@/lib/mave-hgvs'
 
 const SCORE_SETS_TO_SHOW = 5
 
@@ -390,6 +397,13 @@ export default defineComponent({
       fuzzySearchVisible: false,
       searchResultsVisible: false,
       searchText: null as string | null,
+      searchType: null as string | null,
+      searchTypeOptions: [
+        {code: 'hgvs', name: 'HGVS'},
+        {code: 'clinGenAlleleId', name: 'ClinGen Allele ID'},
+        {code: 'dbSnpRsId', name: 'dbSNP rsID'},
+        {code: 'clinVarVariationId', name: 'ClinVar Variation ID'},
+      ],
       inputGene: null as string | null,
       inputVariantType: null as string | null,
       inputVariantPosition: null as string | null,
@@ -479,6 +493,15 @@ export default defineComponent({
         }
       }
     },
+    searchType: {
+      handler(newVal, oldVal) {
+        if (newVal !== oldVal) {
+          this.router.replace({
+            query: {search: this.searchText || undefined, searchType: newVal}
+          })
+        }
+      }
+    },
     '$route.query.search': {
       immediate: true,
       handler(newVal) {
@@ -486,6 +509,16 @@ export default defineComponent({
           this.searchText = newVal
         } else if (!newVal) {
           this.searchText = ''
+        }
+      }
+    },
+    '$route.query.searchType': {
+      immediate: true,
+      handler(newVal) {
+        if (typeof newVal === 'string') {
+          this.searchType = newVal
+        } else if (!newVal) {
+          this.searchType = 'hgvs'
         }
       }
     },
@@ -569,13 +602,15 @@ export default defineComponent({
     toggleGuide: function () {
       this.guideExpanded = !this.guideExpanded
     },
-    searchForText: function (event: PointerEvent) {
+    searchForText: function (event: PointerEvent, searchType: string) {
       const element = event.target
+      this.searchType = searchType
       if (element) {
         this.showSearch('default')
         this.searchText = element.innerText
         this.defaultSearch()
       }
+      this.router.replace({query: {searchType: this.searchType, search: this.searchText}})
     },
     clearSearch() {
       this.searchText = null
@@ -587,9 +622,11 @@ export default defineComponent({
       this.searchResultsVisible = false
       this.alleles = []
     },
-    showSearch(searchType: 'fuzzy' | 'default' = 'default') {
-      this.defaultSearchVisible = searchType == 'default'
-      this.fuzzySearchVisible = searchType == 'fuzzy'
+    showSearch(searchMethod: 'fuzzy' | 'default' = 'default') {
+
+      this.defaultSearchVisible = searchMethod == 'default'
+      this.fuzzySearchVisible = searchMethod == 'fuzzy'
+
     },
     defaultSearch: async function () {
       this.searchResultsVisible = true
@@ -607,53 +644,69 @@ export default defineComponent({
       await this.searchVariants()
     },
     fetchDefaultSearchResults: async function (searchString: string, maneStatus: string | null = null) {
-      // Strip gene symbol and/or protein consequence from ClinVar-style variant names to obtain valid HGVS. If the
-      // search string doesn't match the pattern, leave it as is and let the rest of the search code handle any format
-      // problem.
-
-      let searchType
+      const searchType = this.searchType
       let searchStr = searchString.trim()
-
-      // Determine search type
-      if (hgvsSearchStringRegex.test(searchStr)) {
-        searchType = 'hgvs'
-        const hgvsMatch = hgvsSearchStringRegex.exec(searchStr)
-        if (hgvsMatch) {
-          searchStr = `${hgvsMatch.groups!.identifier}:${hgvsMatch.groups!.description}`
-        }
-      } else if (rsIdRegex.test(searchStr)) {
-        searchType = 'dbSnpRsId'
-      } else if (clinGenAlleleIdRegex.test(searchStr)) {
-        searchType = 'clinGenAlleleId'
-      } else if (clinVarVariationIdRegex.test(searchStr)) {
-        searchType = 'clinVarVariationId'
-      } else {
-        this.toast.add({
-          severity: 'error',
-          summary: 'Invalid search',
-          detail: 'Please provide a valid HGVS string, ClinGen Allele ID, dbSNP rsID, or ClinVar Variation ID.',
-          life: 10000
-        })
-        return
-      }
 
       try {
         let response
         if (searchType === 'clinGenAlleleId') {
+          if (!clinGenAlleleIdRegex.test(searchStr)) {
+            this.toast.add({
+              severity: 'error',
+              summary: 'Invalid search',
+              detail: 'Please provide a valid ClinGen Allele ID.',
+              life: 10000
+            })
+            return
+          }
           response = await axios.get(`https://reg.genome.network/allele/${searchStr}`)
         } else if (searchType === 'dbSnpRsId') {
+          if (!rsIdRegex.test(searchStr)) {
+            this.toast.add({
+              severity: 'error',
+              summary: 'Invalid search',
+              detail: 'Please provide a valid dbSNP rsID.',
+              life: 10000
+            })
+            return
+          }
           response = await axios.get('https://reg.genome.network/alleles', {
             params: {
               'dbSNP.rs': searchStr
             }
           })
         } else if (searchType === 'clinVarVariationId') {
+          if (!clinVarVariationIdRegex.test(searchStr)) {
+            this.toast.add({
+              severity: 'error',
+              summary: 'Invalid search',
+              detail: 'Please provide a valid ClinVar Variation ID.',
+              life: 10000
+            })
+            return
+          }
           response = await axios.get('https://reg.genome.network/alleles', {
             params: {
               'ClinVar.variationId': searchStr
             }
           })
         } else {
+          if (!hgvsSearchStringRegex.test(searchStr)) {
+            this.toast.add({
+              severity: 'error',
+              summary: 'Invalid search',
+              detail: 'Please provide a valid HGVS string.',
+              life: 10000
+            })
+            return
+          }
+          // Strip gene symbol and/or protein consequence from ClinVar-style variant names to obtain valid HGVS. If the
+          // search string doesn't match the pattern, leave it as is and let the rest of the search code handle any format
+          // problem.
+          const match = clinVarHgvsSearchStringRegex.exec(searchStr)
+          if (match) {
+            searchStr = `${match.groups!.identifier}:${match.groups!.description}`
+          }
           response = await axios.get('https://reg.genome.network/allele', {
             params: {
               hgvs: searchStr
@@ -876,7 +929,7 @@ export default defineComponent({
     fuzzySearch: async function () {
       this.searchResultsVisible = true
       // Remove HGVS search param from the URL
-      const {search, ...rest} = this.route.query
+      const {search, searchType, ...rest} = this.route.query
       this.router.replace({
         query: {
           ...rest,
@@ -973,7 +1026,7 @@ export default defineComponent({
               error.response.data?.errorType && error.response.data?.description
                 ? `${error.response.data?.errorType}: ${error.response.data?.description}`
                 : 'Error fetching results',
-            detail: error.response.data?.message || 'Invalid HGVS string provided.',
+            detail: error.response.data?.message || 'Invalid search.',
             life: 10000
           })
         }

@@ -10,13 +10,13 @@ export function routeToVariantSearchIfVariantIsSearchable(searchText: string | n
   searchText = searchText.trim()
   if (clinGenAlleleIdRegex.test(searchText)) {
     console.log(`Routing to mavemd with ClinGen Allele ID: ${searchText}`)
-    router.push({name: 'mavemd', query: {search:searchText}})
+    router.push({name: 'mavemd', query: {search:searchText, searchType: 'clinGenAlleleId'}})
     return true
   }
 
   if (rsIdRegex.test(searchText)) {
     console.log(`Routing to mavemd with RS ID: ${searchText}`)
-    router.push({name: 'mavemd', query: {search: searchText}})
+    router.push({name: 'mavemd', query: {search: searchText, searchType: 'dbSnpRsId'}})
     return true
   }
 
@@ -30,7 +30,7 @@ export function routeToVariantSearchIfVariantIsSearchable(searchText: string | n
     if (accessionRegex.test(identifier)) {
       // Transcript: treat as normal HGVS
       console.log(`Routing to mavemd with HGVS: ${hgvsMatches[0]}`)
-      router.push({name: 'mavemd', query: {search: hgvsMatches[0]}})
+      router.push({name: 'mavemd', query: {search: hgvsMatches[0], searchType: 'hgvs'}})
       return true
     } else {
       // Assume identifier is an HGNC gene symbol, parse description for fuzzy search
@@ -62,7 +62,7 @@ export function routeToVariantSearchIfVariantIsSearchable(searchText: string | n
             variantType,
             variantPosition,
             refAllele,
-            altAllele
+            altAllele,
           }
         })
         return true
@@ -70,7 +70,7 @@ export function routeToVariantSearchIfVariantIsSearchable(searchText: string | n
         // The search looks like an HGVS string but with an invalid accession, and it's not a p. or c. string preceded by
         // a gene name. Forward to the variant search screen, which will deal with the problem.
         console.log(`Routing to mavemd with HGVS: ${hgvsMatches[0]}`)
-        router.push({name: 'mavemd', query: {search: hgvsMatches[0]}})
+        router.push({name: 'mavemd', query: {search: hgvsMatches[0], searchType: 'hgvs'}})
         return true
       }
     }

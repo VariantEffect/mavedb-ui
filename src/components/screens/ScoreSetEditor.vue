@@ -339,422 +339,6 @@
               </div>
             </template>
           </Card>
-          <div v-if="itemStatus == 'NotLoaded' || item.private">
-            <div v-if="editedScoreRanges.investigatorProvided">
-              <Card>
-                <template #title
-                  >Investigator Score ranges
-                  <Button
-                    aria-label="Delete all ranges"
-                    icon="pi pi-times"
-                    rounded
-                    severity="danger"
-                    style="float: right"
-                    text
-                    @click="removeEditedScoreRanges()"
-                  />
-                </template>
-                <template #content>
-                  <Card>
-                    <template #title>Baseline Score</template>
-                    <template #content>
-                      <div style="padding-top: 1%">
-                        <span class="p-float-label">
-                          <InputNumber
-                            v-model="editedScoreRanges.investigatorProvided.baselineScore"
-                            :aria-labelledby="scopedId('input-baselineScore')"
-                            :max-fraction-digits="10"
-                            :min-fraction-digits="1"
-                            style="width: 100%"
-                          />
-                          <label :for="scopedId('input-baselineScore')"> Baseline Score </label>
-                        </span>
-                        <span
-                          v-if="validationErrors[`scoreRanges.investigatorProvided.baselineScore`]"
-                          class="mave-field-error"
-                          >{{ validationErrors[`scoreRanges.investigatorProvided.baselineScore`] }}</span
-                        >
-                      </div>
-                      <div style="padding-top: 1%">
-                        <span class="p-float-label">
-                          <Textarea
-                            v-model="editedScoreRanges.investigatorProvided.baselineScoreDescription"
-                            :aria-labelledby="scopedId(`input-baselineScoreDescription`)"
-                            style="width: 100%"
-                          />
-                          <label :for="scopedId(`input-baselineScoreDescription`)">Baseline Score Description</label>
-                        </span>
-                        <span
-                          v-if="validationErrors[`scoreRanges.investigatorProvided.baselineScoreDescription`]"
-                          class="mave-field-error"
-                          >{{ validationErrors[`scoreRanges.investigatorProvided.baselineScoreDescription`] }}</span
-                        >
-                      </div>
-                      <div v-if="editedScoreRanges.investigatorProvided.ranges.some((range) => range.oddsPath)">
-                        <span class="p-float-label">
-                          <Multiselect
-                            :id="scopedId('input-scoreRangePublicationIdentifiersInput')"
-                            ref="scoreRangePublicationIdentifiersInput"
-                            v-model="editedScoreRanges.investigatorProvided.source"
-                            option-label="identifier"
-                            :options="publicationIdentifiers"
-                            placeholder="Select a source for the score ranges."
-                            :selection-limit="1"
-                            style="width: 100%"
-                          >
-                            <template #option="slotProps">
-                              <div class="field">
-                                <div>Title: {{ slotProps.option.title }}</div>
-                                <div>DOI: {{ slotProps.option.doi }}</div>
-                                <div>Identifier: {{ slotProps.option.identifier }}</div>
-                                <div>Database: {{ slotProps.option.dbName }}</div>
-                              </div>
-                            </template>
-                          </Multiselect>
-                          <label :for="scopedId('input-scoreRangePublicationIdentifiersInput')"
-                            >Score Range Source (optional)</label
-                          >
-                        </span>
-                        <span
-                          v-if="validationErrors[`scoreRanges.investigatorProvided.source`]"
-                          class="mave-field-error"
-                          >{{ validationErrors[`scoreRanges.investigatorProvided.source`] }}</span
-                        >
-                      </div>
-                    </template>
-                  </Card>
-                  <div
-                    v-for="(rangeObj, rangeIdx) of editedScoreRanges.investigatorProvided.ranges"
-                    :key="rangeIdx"
-                    class="mavedb-score-range-container"
-                  >
-                    <Card>
-                      <template #title
-                        >Range {{ rangeIdx + 1 }}:
-                        <Button
-                          aria-label="Delete range"
-                          icon="pi pi-times"
-                          rounded
-                          severity="danger"
-                          style="float: right"
-                          text
-                          @click="removeEditedScoreRange(rangeIdx)"
-                        />
-                      </template>
-                      <template #content>
-                        <div style="padding-top: 1%">
-                          <InputGroup>
-                            <span class="p-float-label" style="width: 75%">
-                              <InputText
-                                v-model="rangeObj.label"
-                                :aria-labelledby="scopedId(`input-scoreRangeLabel-${rangeIdx}`)"
-                                style="width: 75%"
-                              ></InputText>
-                              <label :for="scopedId(`input-scoreRangeLabel-${rangeIdx}`)">Label</label>
-                            </span>
-                            <span class="p-float-label" style="width: 25%">
-                              <Dropdown
-                                v-model="rangeObj.classification"
-                                :aria-labelledby="scopedId(`input-scoreRangeClassification-${rangeIdx}`)"
-                                option-label="label"
-                                option-value="value"
-                                :options="rangeClassifications"
-                                style="width: 25%"
-                              />
-                              <label :for="scopedId(`input-scoreRangeClassification-${rangeIdx}`)"
-                                >Classification</label
-                              >
-                            </span>
-                          </InputGroup>
-                          <span
-                            v-if="validationErrors[`scoreRanges.investigatorProvided.ranges.${rangeIdx}.label`]"
-                            class="mave-field-error"
-                            >{{ validationErrors[`scoreRanges.investigatorProvided.ranges.${rangeIdx}.label`] }}</span
-                          >
-                          <span
-                            v-if="
-                              validationErrors[`scoreRanges.investigatorProvided.ranges.${rangeIdx}.classification`]
-                            "
-                            class="mave-field-error"
-                            >{{
-                              validationErrors[`scoreRanges.investigatorProvided.ranges.${rangeIdx}.classification`]
-                            }}</span
-                          >
-                        </div>
-                        <div style="padding-top: 1%">
-                          <span class="p-float-label">
-                            <Textarea
-                              v-model="rangeObj.description"
-                              :aria-labelledby="scopedId(`input-scoreRangeDescription-${rangeIdx}`)"
-                              style="width: 100%"
-                            />
-                            <label :for="scopedId(`input-scoreRangeDescription-${rangeIdx}`)"
-                              >Description (optional)</label
-                            >
-                          </span>
-                          <span
-                            v-if="validationErrors[`scoreRanges.investigatorProvided.ranges.${rangeIdx}.description`]"
-                            class="mave-field-error"
-                            >{{
-                              validationErrors[`scoreRanges.investigatorProvided.ranges.${rangeIdx}.description`]
-                            }}</span
-                          >
-                        </div>
-                        <div style="padding-top: 1%">
-                          <InputGroup style="background-color: #fff">
-                            <Button
-                              class="score-range-toggle-button"
-                              :outlined="!editedScoreRangeBoundaryHelper[rangeIdx].lowerBoundIsInfinity"
-                              @click="toggleInfinity(rangeIdx, 'lower')"
-                            >
-                              <FontAwesomeIcon class="score-range-toggle-icon" icon="fa-solid fa-infinity" />
-                            </Button>
-                            <Button
-                              class="score-range-toggle-button"
-                              :disabled="editedScoreRangeBoundaryHelper[rangeIdx].lowerBoundIsInfinity"
-                              :outlined="!rangeObj.inclusiveLowerBound"
-                              @click="toggleBoundary(rangeIdx, 'lower')"
-                            >
-                              <FontAwesomeIcon class="score-range-toggle-icon" icon="fa-solid fa-circle-half-stroke" />
-                            </Button>
-                            <span class="p-float-label">
-                              <InputText
-                                v-model="rangeObj.range[0]"
-                                :aria-labelledby="scopedId(`input-investigatorProvidedRangeLower-${rangeIdx}`)"
-                                :disabled="editedScoreRangeBoundaryHelper[rangeIdx].lowerBoundIsInfinity"
-                              />
-                              <label :for="scopedId(`input-investigatorProvidedRangeLower-${rangeIdx}`)">
-                                {{
-                                  editedScoreRangeBoundaryHelper[rangeIdx].lowerBoundIsInfinity
-                                    ? '-infinity'
-                                    : rangeObj.inclusiveLowerBound
-                                      ? 'Lower Bound (inclusive)'
-                                      : 'Lower Bound (exclusive)'
-                                }}
-                              </label>
-                            </span>
-                            <InputGroupAddon>to</InputGroupAddon>
-                            <span class="p-float-label">
-                              <InputText
-                                v-model="rangeObj.range[1]"
-                                :aria-labelledby="scopedId(`input-investigatorProvidedRangeUpper-${rangeIdx}`)"
-                                :disabled="editedScoreRangeBoundaryHelper[rangeIdx].upperBoundIsInfinity"
-                              />
-                              <label :for="scopedId(`input-investigatorProvidedRangeUpper-${rangeIdx}`)">
-                                {{
-                                  editedScoreRangeBoundaryHelper[rangeIdx].upperBoundIsInfinity
-                                    ? 'infinity'
-                                    : rangeObj.inclusiveUpperBound
-                                      ? 'Upper Bound (inclusive)'
-                                      : 'Upper Bound (exclusive)'
-                                }}
-                              </label>
-                            </span>
-                            <Button
-                              class="score-range-toggle-button"
-                              :disabled="editedScoreRangeBoundaryHelper[rangeIdx].upperBoundIsInfinity"
-                              :outlined="!rangeObj.inclusiveUpperBound"
-                              @click="toggleBoundary(rangeIdx, 'upper')"
-                            >
-                              <FontAwesomeIcon class="score-range-toggle-icon" icon="fa-solid fa-circle-half-stroke" />
-                            </Button>
-                            <Button
-                              class="score-range-toggle-button"
-                              :outlined="!editedScoreRangeBoundaryHelper[rangeIdx].upperBoundIsInfinity"
-                              @click="toggleInfinity(rangeIdx, 'upper')"
-                            >
-                              <FontAwesomeIcon class="score-range-toggle-icon" icon="fa-solid fa-infinity" />
-                            </Button>
-                          </InputGroup>
-                        </div>
-                        <span
-                          v-if="validationErrors[`scoreRanges.investigatorProvided.ranges.${rangeIdx}.range`]"
-                          class="mave-field-error"
-                          >{{ validationErrors[`scoreRanges.investigatorProvided.ranges.${rangeIdx}.range`] }}</span
-                        >
-                        <span
-                          v-if="
-                            validationErrors[`scoreRanges.investigatorProvided.ranges.${rangeIdx}.inclusiveLowerBound`]
-                          "
-                          class="mave-field-error"
-                          >{{
-                            validationErrors[`scoreRanges.investigatorProvided.ranges.${rangeIdx}.inclusiveLowerBound`]
-                          }}</span
-                        >
-                        <span
-                          v-if="
-                            validationErrors[`scoreRanges.investigatorProvided.ranges.${rangeIdx}.inclusiveUpperBound`]
-                          "
-                          class="mave-field-error"
-                          >{{
-                            validationErrors[`scoreRanges.investigatorProvided.ranges.${rangeIdx}.inclusiveUpperBound`]
-                          }}</span
-                        >
-                        <div v-if="rangeObj.oddsPath">
-                          <Card>
-                            <template #title
-                              >OddsPath Ratio and Evidence Strength
-                              <Button
-                                aria-label="Delete OddsPath"
-                                icon="pi pi-times"
-                                rounded
-                                severity="danger"
-                                style="float: right"
-                                text
-                                @click="removeOddsPath(rangeIdx)"
-                              />
-                            </template>
-                            <template #content>
-                              <div>
-                                <InputGroup>
-                                  <span class="p-float-label" style="margin-right: 1em">
-                                    <InputNumber
-                                      v-model="rangeObj.oddsPath.ratio"
-                                      :aria-labelledby="scopedId('input-oddsPathRatio')"
-                                      :max-fraction-digits="10"
-                                      :min-fraction-digits="1"
-                                      style="width: 50%"
-                                    />
-                                    <label :for="scopedId('input-oddsPathRatio')"> OddsPath Ratio </label>
-                                  </span>
-                                  <span class="p-float-label">
-                                    <Dropdown
-                                      v-model="rangeObj.oddsPath.evidence"
-                                      :aria-labelledby="scopedId('input-oddsPathEvidence')"
-                                      :disabled="rangeObj.classification === null"
-                                      :options="
-                                        rangeObj.classification
-                                          ? evidenceStrengths[rangeObj.classification].concat(
-                                              evidenceStrengths.indeterminate
-                                            )
-                                          : []
-                                      "
-                                      style="width: 50%"
-                                    />
-                                    <label :for="scopedId('input-oddsPathEvidence')">
-                                      {{
-                                        rangeObj.classification === null
-                                          ? 'Select a range classification'
-                                          : 'OddsPath Evidence Strength (Optional)'
-                                      }}
-                                    </label>
-                                  </span>
-                                </InputGroup>
-                                <span
-                                  v-if="
-                                    validationErrors[
-                                      `scoreRanges.investigatorProvided.ranges.${rangeIdx}.oddsPath.ratio`
-                                    ]
-                                  "
-                                  class="mave-field-error"
-                                  >{{
-                                    validationErrors[
-                                      `scoreRanges.investigatorProvided.ranges.${rangeIdx}.oddsPath.ratio`
-                                    ]
-                                  }}</span
-                                >
-                                <span
-                                  v-if="
-                                    validationErrors[
-                                      `scoreRanges.investigatorProvided.ranges.${rangeIdx}.oddsPath.evidence`
-                                    ]
-                                  "
-                                  class="mave-field-error"
-                                  >{{
-                                    validationErrors[
-                                      `scoreRanges.investigatorProvided.ranges.${rangeIdx}.oddsPath.evidence`
-                                    ]
-                                  }}</span
-                                >
-                              </div>
-                            </template>
-                          </Card>
-                        </div>
-                        <div v-else>
-                          <Card>
-                            <template #title
-                              >Add OddsPath
-                              <Button
-                                aria-label="Add OddsPath"
-                                icon="pi pi-plus"
-                                rounded
-                                style="float: right"
-                                text
-                                @click="addOddsPath(rangeIdx)"
-                              />
-                            </template>
-                          </Card>
-                        </div>
-                      </template>
-                    </Card>
-                  </div>
-                  <div v-if="editedScoreRanges.investigatorProvided.ranges.some((range) => range.oddsPath)">
-                    <span class="p-float-label">
-                      <Multiselect
-                        :id="scopedId('input-oddsPathPublicationIdentifiersInput')"
-                        ref="oddsPathPublicationIdentifiersInput"
-                        v-model="editedScoreRanges.investigatorProvided.oddsPathSource"
-                        option-label="identifier"
-                        :options="publicationIdentifiers"
-                        placeholder="Select a source for the OddsPath calculation."
-                        :selection-limit="1"
-                        style="width: 100%"
-                      >
-                        <template #option="slotProps">
-                          <div class="field">
-                            <div>Title: {{ slotProps.option.title }}</div>
-                            <div>DOI: {{ slotProps.option.doi }}</div>
-                            <div>Identifier: {{ slotProps.option.identifier }}</div>
-                            <div>Database: {{ slotProps.option.dbName }}</div>
-                          </div>
-                        </template>
-                      </Multiselect>
-                      <label :for="scopedId('input-oddsPathPublicationIdentifiersInput')"
-                        >OddsPath Source (optional)</label
-                      >
-                    </span>
-                    <span
-                      v-if="validationErrors[`scoreRanges.investigatorProvided.oddsPathSource`]"
-                      class="mave-field-error"
-                      >{{ validationErrors[`scoreRanges.investigatorProvided.oddsPathSource`] }}</span
-                    >
-                  </div>
-                  <span v-if="validationErrors[`scoreRanges.investigatorProvided.ranges`]" class="mave-field-error">{{
-                    validationErrors[`scoreRanges.investigatorProvided.ranges`]
-                  }}</span>
-                  <div
-                    class="field"
-                    style="align-items: center; justify-content: center; display: flex; padding-top: 1%"
-                  >
-                    <Button
-                      aria-label="Add range"
-                      icon="pi pi-plus"
-                      label="Add new score range"
-                      outlined
-                      raised
-                      text
-                      @click="addEditedScoreRange()"
-                    />
-                  </div>
-                </template>
-              </Card>
-            </div>
-            <div v-else>
-              <Card>
-                <template #title
-                  >Add Score Ranges
-                  <Button
-                    aria-label="Add score ranges"
-                    icon="pi pi-plus"
-                    rounded
-                    style="float: right"
-                    text
-                    @click="addEditedScoreRanges()"
-                  />
-                </template>
-              </Card>
-            </div>
-          </div>
         </div>
 
         <div class="col-12 md:col-6">
@@ -1297,7 +881,7 @@ import useItems from '@/composition/items'
 import config from '@/config'
 import {normalizeDoi, normalizeIdentifier, validateDoi, validateIdentifier} from '@/lib/identifiers'
 import {ORCID_ID_REGEX} from '@/lib/orcid'
-import {ABNORMAL_RANGE_EVIDENCE, NORMAL_RANGE_EVIDENCE, INDETERMINATE_RANGE_EVIDENCE} from '@/lib/ranges'
+import {ABNORMAL_CALIBRATION_EVIDENCE, NORMAL_CALIBRATION_EVIDENCE, INDETERMINATE_CALIBRATION_EVIDENCE} from '@/lib/calibrations'
 import {TARGET_GENE_CATEGORIES, textForTargetGeneCategory} from '@/lib/target-genes'
 
 const externalGeneDatabases = ['UniProt', 'Ensembl', 'RefSeq']
@@ -1456,9 +1040,6 @@ export default {
     existingTargetGene: null,
     targetGenes: [],
 
-    editedScoreRanges: {
-      investigatorProvided: null
-    },
     activeEditedScoreRangeTab: 0,
     editedScoreRangeBoundaryHelper: [],
 
@@ -1470,11 +1051,6 @@ export default {
       {value: 'abnormal', label: 'Abnormal'},
       {value: 'not_specified', label: 'Not Specified'}
     ],
-    evidenceStrengths: {
-      normal: NORMAL_RANGE_EVIDENCE,
-      abnormal: ABNORMAL_RANGE_EVIDENCE,
-      indeterminate: INDETERMINATE_RANGE_EVIDENCE
-    },
 
     progressVisible: false,
     serverSideValidationErrors: {},
@@ -1847,69 +1423,6 @@ export default {
       }
     },
 
-    toggleBoundary: function (rangeIdx, boundary) {
-      const updatedRange = this.editedScoreRanges.investigatorProvided.ranges[rangeIdx]
-      if (boundary === 'upper') {
-        updatedRange.inclusiveUpperBound = !updatedRange.inclusiveUpperBound
-      } else if (boundary == 'lower') {
-        updatedRange.inclusiveLowerBound = !updatedRange.inclusiveLowerBound
-      }
-    },
-
-    toggleInfinity: function (rangeIdx, boundary) {
-      const updatedRange = this.editedScoreRanges.investigatorProvided.ranges[rangeIdx]
-      if (boundary === 'upper') {
-        this.editedScoreRangeBoundaryHelper[rangeIdx].upperBoundIsInfinity =
-          !this.editedScoreRangeBoundaryHelper[rangeIdx].upperBoundIsInfinity
-        updatedRange.range[1] = null
-        updatedRange.inclusiveUpperBound = false
-      } else if (boundary == 'lower') {
-        this.editedScoreRangeBoundaryHelper[rangeIdx].lowerBoundIsInfinity =
-          !this.editedScoreRangeBoundaryHelper[rangeIdx].lowerBoundIsInfinity
-        updatedRange.range[0] = null
-        updatedRange.inclusiveLowerBound = false
-      }
-    },
-
-    addEditedScoreRange: function () {
-      this.editedScoreRanges.investigatorProvided.ranges.push(emptyEditedScoreRange())
-      this.editedScoreRangeBoundaryHelper.push(emptyEditedScoreRangeBoundaryHelper())
-    },
-
-    removeEditedScoreRange: function (rangeIdx) {
-      this.editedScoreRanges.investigatorProvided.ranges.splice(rangeIdx, 1)
-      this.editedScoreRangeBoundaryHelper.splice(rangeIdx, 1)
-    },
-
-    removeEditedScoreRanges: function () {
-      this.editedScoreRanges = null
-      this.editedScoreRangeBoundaryHelper = null
-    },
-
-    addEditedScoreRanges: function () {
-      this.editedScoreRanges.investigatorProvided = {
-        baselineScore: null,
-        baselineScoreDescription: null,
-        ranges: [],
-        oddsPathSource: [],
-        source: []
-      }
-      this.editedScoreRangeBoundaryHelper = []
-      this.editedScoreRanges.investigatorProvided.ranges.push(emptyEditedScoreRange())
-      this.editedScoreRangeBoundaryHelper.push(emptyEditedScoreRangeBoundaryHelper())
-    },
-
-    removeOddsPath: function (rangeIdx) {
-      this.editedScoreRanges.investigatorProvided.ranges[rangeIdx].oddsPath = null
-    },
-
-    addOddsPath: function (rangeIdx) {
-      this.editedScoreRanges.investigatorProvided.ranges[rangeIdx].oddsPath = {
-        ratio: null,
-        evidence: null
-      }
-    },
-
     ////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
     // Form fields
     ////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
@@ -2188,34 +1701,8 @@ export default {
         this.targetGene = emptyTargetGene()
         this.assembly = this.item.assembly
         this.targetGenes = this.item.targetGenes
-        // Only allow investigator provided ranges to be edited
-        this.editedScoreRanges = {investigatorProvided: this.item.scoreRanges?.investigatorProvided || null}
-        this.editedScoreRangeBoundaryHelper = []
-        this.editedScoreRanges?.investigatorProvided?.ranges.forEach((range, idx) => {
-          this.editedScoreRangeBoundaryHelper.push(emptyEditedScoreRangeBoundaryHelper())
-          this.editedScoreRangeBoundaryHelper[idx].lowerBoundIsInfinity =
-            this.editedScoreRanges.investigatorProvided.ranges[idx].range[0] === null
-          this.editedScoreRangeBoundaryHelper[idx].upperBoundIsInfinity =
-            this.editedScoreRanges.investigatorProvided.ranges[idx].range[1] === null
-        })
         this.extraMetadata = this.item.extraMetadata
 
-        if (this.editedScoreRanges?.investigatorProvided.oddsPathSource) {
-          this.editedScoreRanges.investigatorProvided.oddsPathSource = this.publicationIdentifiers.filter(
-            (publication) => {
-              return this.editedScoreRanges.investigatorProvided.oddsPathSource.some((source) => {
-                return publication.identifier === source.identifier && publication.dbName === source.dbName
-              })
-            }
-          )
-        }
-        if (this.editedScoreRanges?.investigatorProvided.source) {
-          this.editedScoreRanges.investigatorProvided.source = this.publicationIdentifiers.filter((publication) => {
-            return this.editedScoreRanges.investigatorProvided.source.some((source) => {
-              return publication.identifier === source.identifier && publication.dbName === source.dbName
-            })
-          })
-        }
 
         if (this.targetGenes[0]?.targetAccession) {
           this.isBaseEditor = this.targetGenes[0].targetAccession.isBaseEditor
@@ -2237,9 +1724,6 @@ export default {
         this.dataUsagePolicy = null
         this.taxonomy = null
         this.extraMetadata = {}
-        this.editedScoreRanges = {
-          investigatorProvided: null
-        }
         this.editedScoreRangeBoundaryHelper = []
         this.resetTarget()
         this.targetGenes = []
@@ -2342,39 +1826,6 @@ export default {
           }
           return target
         }),
-        // Retain existing score ranges. We will merge the edited ranges with the existing ones.
-        scoreRanges: this.item.scoreRanges
-          ? {
-              ...this.item.scoreRanges
-            }
-          : {}
-      }
-      // We should check any edited score range key we allow users to edit. Presently, this is only the investigator provided ranges.
-      if (this.editedScoreRanges?.investigatorProvided) {
-        editedFields.scoreRanges.investigatorProvided = {
-          baselineScore: this.editedScoreRanges.investigatorProvided.baselineScore,
-          baselineScoreDescription: this.editedScoreRanges.investigatorProvided.baselineScoreDescription,
-          ranges: this.editedScoreRanges.investigatorProvided.ranges,
-          oddsPathSource: this.editedScoreRanges.investigatorProvided.oddsPathSource?.map((source) =>
-            _.pick(source, ['identifier', 'dbName'])
-          ),
-          source: this.editedScoreRanges.investigatorProvided.source?.map((source) =>
-            _.pick(source, ['identifier', 'dbName'])
-          )
-        }
-      } else {
-        if (editedFields.scoreRanges && editedFields.scoreRanges.investigatorProvided !== undefined) {
-          delete editedFields.scoreRanges.investigatorProvided
-        }
-      }
-      // If no score ranges are objects, then set to null.
-      if (
-        editedFields.scoreRanges &&
-        Object.values(editedFields.scoreRanges).every(
-          (val) => typeof val !== 'object' || val === null || Array.isArray(val)
-        )
-      ) {
-        editedFields.scoreRanges = null
       }
       if (!this.item) {
         editedFields.supersededScoreSetUrn = this.supersededScoreSet ? this.supersededScoreSet.urn : null
@@ -2387,7 +1838,6 @@ export default {
         this.item.publicationIdentifiers = []
         this.item.rawReadIdentifiers = []
         this.item.targetGenes = []
-        this.item.scoreRanges = null
       }
 
       const editedItem = _.merge({}, this.item || {}, editedFields)

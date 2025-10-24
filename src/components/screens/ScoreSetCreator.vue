@@ -1246,7 +1246,7 @@
             </template>
           </StepperPanel>
 
-          <StepperPanel v-if="itemStatus == 'NotLoaded' || item.private" header="Score Ranges">
+          <StepperPanel v-if="itemStatus == 'NotLoaded' || item.private" header="Score Calibrations">
             <template #header="{index, clickCallback}">
               <button
                 class="p-stepper-action"
@@ -1255,7 +1255,7 @@
                 @click="clickCallback"
               >
                 <span class="p-stepper-number">{{ index + 1 }}</span>
-                <span class="p-stepper-title">Score Ranges</span>
+                <span class="p-stepper-title">Score Calibrations</span>
               </button>
             </template>
             <template #content="{prevCallback: showPreviousWizardStep, nextCallback: showNextWizardStep}">
@@ -1263,457 +1263,36 @@
                 <div class="mavedb-wizard-form-content-background"></div>
                 <div class="mavedb-wizard-row">
                   <div class="mavedb-wizard-help">
-                    <label :id="scopedId('input-investigatorIsProvidingScoreRanges')"
-                      >Will you be providing score ranges for this score set?</label
+                    <label :id="scopedId('input-investigatorIsProvidingScoreCalibrations')"
+                      >Will you be providing score calibrations for this score set?</label
                     >
                     <div class="mavedb-help-small">
-                      Score ranges provide additional clinical context to the scores you upload. If you provide score
-                      ranges, you may classify each range as having either normal, abnormal, or an unspecified function.
-                      If you provide a range with normal function, you should also provide a baseline score that falls
-                      within the normal range. This score is the expected score for baseline variants.
+                      Score calibrations provide additional clinical context to the scores you upload. If you provide
+                      score calibrations, you may classify each range as having either normal, abnormal, or an
+                      unspecified function. If you provide a range with normal function, you should also provide a
+                      baseline score that falls within the normal range. This score is the expected score for baseline
+                      variants.
                     </div>
                   </div>
                   <div class="mavedb-wizard-content">
                     <InputSwitch
-                      v-model="investigatorIsProvidingScoreRanges"
-                      :aria-labelledby="scopedId('input-investigatorIsProvidingScoreRanges')"
+                      v-model="investigatorIsProvidingScoreCalibrations"
+                      :aria-labelledby="scopedId('input-investigatorIsProvidingScoreCalibrations')"
                     />
                     <div class="mavedb-switch-value">
                       {{
-                        investigatorIsProvidingScoreRanges
+                        investigatorIsProvidingScoreCalibrations
                           ? 'Yes, I will be providing score range data.'
                           : 'No, I will not be providing score range data.'
                       }}
                     </div>
                   </div>
                 </div>
-                <div v-if="investigatorIsProvidingScoreRanges">
-                  <div class="mavedb-wizard-row">
-                    <div class="mavedb-wizard-help">
-                      <label :id="scopedId('input-investigatorProvidedBaselineScore')"
-                        >What is the baseline score for this score set?</label
-                      >
-                      <div class="mavedb-help-small">
-                        This number should be within the range of normal scores for your score data.
-                      </div>
-                    </div>
-                    <div class="mavedb-wizard-content">
-                      <span class="p-float-label">
-                        <InputNumber
-                          v-model="scoreRanges.investigatorProvided.baselineScore"
-                          :aria-labelledby="scopedId('input-investigatorProvidedBaselineScore')"
-                          :max-fraction-digits="10"
-                          :min-fraction-digits="1"
-                          style="width: 100%"
-                        />
-                        <label :for="scopedId('input-investigatorProvidedBaselineScore')"> Baseline Score </label>
-                      </span>
-                      <span
-                        v-if="validationErrors[`scoreRanges.investigatorProvided.baselineScore`]"
-                        class="mave-field-error"
-                        >{{ validationErrors[`scoreRanges.investigatorProvided.baselineScore`] }}</span
-                      >
-                    </div>
-                  </div>
-                  <div class="mavedb-wizard-row">
-                    <div class="mavedb-wizard-help">
-                      <label :id="scopedId(`input-investigatorProvidedBaselineScoreDescription`)"
-                        >Enter an (optional) description for the baseline score</label
-                      >
-                      <div class="mavedb-help-small">
-                        This description should provide additional details about the baseline score if necessary. e.g.,
-                        "median synonymous value of the 95% of variants around the mean, normalized to 0."
-                      </div>
-                    </div>
-                    <div class="mavedb-wizard-content">
-                      <span class="p-float-label">
-                        <Textarea
-                          v-model="scoreRanges.investigatorProvided.baselineScoreDescription"
-                          :aria-labelledby="scopedId(`input-investigatorProvidedBaselineScoreDescription`)"
-                          auto-resize
-                          rows="5"
-                          style="width: 100%"
-                        />
-                        <label :for="scopedId(`input-investigatorProvidedBaselineScoreDescription`)">
-                          Baseline Score Description
-                        </label>
-                      </span>
-                      <span
-                        v-if="validationErrors[`scoreRanges.investigatorProvided.baselineScoreDescription`]"
-                        class="mave-field-error"
-                        >{{ validationErrors[`scoreRanges.investigatorProvided.baselineScoreDescription`] }}</span
-                      >
-                    </div>
-                  </div>
-                  <div v-if="publicationIdentifiers.length" class="mavedb-wizard-row">
-                    <div class="mavedb-wizard-help">
-                      <label>
-                        Of the previously provided publications, optionally select a publication to use as the source of
-                        the score ranges.
-                      </label>
-                    </div>
-                    <div class="mavedb-wizard-content field">
-                      <span class="p-float-label">
-                        <Multiselect
-                          :id="scopedId('input-investigatorProvidedScoreRangesPublicationIdentifiersInput')"
-                          ref="investigatorProvidedScoreRangesPublicationIdentifiersInput"
-                          v-model="scoreRanges.investigatorProvided.source"
-                          option-label="identifier"
-                          :options="publicationIdentifiers"
-                          placeholder="Select a source for the score ranges."
-                          :selection-limit="1"
-                          style="width: 100%"
-                        >
-                          <template #option="slotProps">
-                            <div class="field">
-                              <div>Title: {{ slotProps.option.title }}</div>
-                              <div>DOI: {{ slotProps.option.doi }}</div>
-                              <div>Identifier: {{ slotProps.option.identifier }}</div>
-                              <div>Database: {{ slotProps.option.dbName }}</div>
-                            </div>
-                          </template>
-                        </Multiselect>
-                        <label :for="scopedId('input-investigatorProvidedScoreRangesPublicationIdentifiersInput')"
-                          >Score range source (optional)</label
-                        >
-                      </span>
-                      <span
-                        v-if="validationErrors[`scoreRanges.investigatorProvided.source`]"
-                        class="mave-field-error"
-                        >{{ validationErrors[`scoreRanges.investigatorProvided.source`] }}</span
-                      >
-                    </div>
-                  </div>
-                </div>
-                <div v-if="investigatorIsProvidingScoreRanges">
-                  <div v-for="(rangeObj, rangeIdx) in scoreRanges.investigatorProvided.ranges" :key="rangeIdx">
-                    <div class="mavedb-wizard-row">
-                      <div class="mavedb-wizard-content">
-                        <div>
-                          Score Range {{ rangeIdx + 1 }}
-                          <Button
-                            icon="pi pi-times"
-                            label="Remove"
-                            severity="danger"
-                            style="float: right"
-                            @click="removeScoreRange(rangeIdx)"
-                          ></Button>
-                        </div>
-                        <hr />
-                        <span
-                          v-if="validationErrors[`scoreRanges.investigatorProvided.ranges.${rangeIdx}`]"
-                          class="mave-field-error"
-                          >{{ validationErrors[`scoreRanges.investigatorProvided.ranges.${rangeIdx}`] }}</span
-                        >
-                      </div>
-                    </div>
-                    <div class="mavedb-wizard-row">
-                      <div class="mavedb-wizard-help">
-                        <label :id="scopedId(`input-investigatorProvidedRangeLabel-${rangeIdx}`)"
-                          >Enter a label for this score range</label
-                        >
-                        <div class="mavedb-help-small">
-                          This label will be used to describe this range on visualizations of this score data.
-                        </div>
-                      </div>
-                      <div class="mavedb-wizard-content">
-                        <span class="p-float-label">
-                          <InputText
-                            v-model="rangeObj.value.label"
-                            :aria-labelledby="scopedId(`input-investigatorProvidedRangeLabel-${rangeIdx}`)"
-                            style="width: 100%"
-                          />
-                          <label :for="scopedId(`input-investigatorProvidedRangeLabel-${rangeIdx}`)">
-                            Score range label
-                          </label>
-                        </span>
-                        <span
-                          v-if="validationErrors[`scoreRanges.investigatorProvided.ranges.${rangeIdx}.label`]"
-                          class="mave-field-error"
-                          >{{ validationErrors[`scoreRanges.investigatorProvided.ranges.${rangeIdx}.label`] }}</span
-                        >
-                      </div>
-                    </div>
-                    <div class="mavedb-wizard-row">
-                      <div class="mavedb-wizard-help">
-                        <label :id="scopedId(`input-investigatorProvidedRangeDescription-${rangeIdx}`)"
-                          >Enter an (optional) description for this score range</label
-                        >
-                        <div class="mavedb-help-small">
-                          This description should provide additional details about this score range if necessary.
-                        </div>
-                      </div>
-                      <div class="mavedb-wizard-content">
-                        <span class="p-float-label">
-                          <Textarea
-                            v-model="rangeObj.value.description"
-                            :aria-labelledby="scopedId(`input-investigatorProvidedRangeDescription-${rangeIdx}`)"
-                            auto-resize
-                            rows="5"
-                            style="width: 100%"
-                          />
-                          <label :for="scopedId(`input-investigatorProvidedRangeDescription-${rangeIdx}`)">
-                            Score range description
-                          </label>
-                        </span>
-                        <span
-                          v-if="validationErrors[`scoreRanges.investigatorProvided.ranges.${rangeIdx}.description`]"
-                          class="mave-field-error"
-                          >{{
-                            validationErrors[`scoreRanges.investigatorProvided.ranges.${rangeIdx}.description`]
-                          }}</span
-                        >
-                      </div>
-                    </div>
-                    <div class="mavedb-wizard-row">
-                      <div class="mavedb-wizard-help">
-                        <label :id="scopedId(`input-investigatorProvidedRangeClassification-${rangeIdx}`)"
-                          >How should this range be classified?</label
-                        >
-                        <div class="mavedb-help-small">
-                          You may classify a range as having either normal, abnormal, or an unspecified function.
-                        </div>
-                      </div>
-                      <div class="mavedb-wizard-content">
-                        <SelectButton
-                          :id="scopedId(`input-investigatorProvidedRangeClassification-${rangeIdx}`)"
-                          v-model="rangeObj.value.classification"
-                          option-label="label"
-                          option-value="value"
-                          :options="rangeClassifications"
-                        />
-                        <span
-                          v-if="validationErrors[`scoreRanges.investigatorProvided.ranges.${rangeIdx}.classification`]"
-                          class="mave-field-error"
-                          >{{
-                            validationErrors[`scoreRanges.investigatorProvided.ranges.${rangeIdx}.classification`]
-                          }}</span
-                        >
-                      </div>
-                    </div>
-                    <div class="mavedb-wizard-row">
-                      <div class="mavedb-wizard-help">
-                        <label :id="scopedId(`input-investigatorProvidedRangeBoundaries-${rangeIdx}`)"
-                          >What are the upper and lower bounds of this score range?</label
-                        >
-                        <div class="mavedb-help-small">
-                          Score range boundaries should not overlap with the boundaries of other score ranges. Use the
-                          toggles to indicate whether the lower or upper bound is inclusive or does not have a upper or
-                          lower bound. If a range does not have an upper or lower bound, the value will be treated as
-                          either positive or negative infinity.
-                        </div>
-                      </div>
-                      <div class="mavedb-wizard-content">
-                        <InputGroup>
-                          <Button
-                            class="score-range-toggle-button"
-                            :outlined="!rangeObj.infiniteLower"
-                            @click="toggleInfinity(rangeIdx, 'lower')"
-                          >
-                            <FontAwesomeIcon class="score-range-toggle-icon" icon="fa-solid fa-infinity" />
-                          </Button>
-                          <Button
-                            class="score-range-toggle-button"
-                            :disabled="rangeObj.infiniteLower"
-                            :outlined="!rangeObj.value.inclusiveLowerBound"
-                            @click="toggleBoundary(rangeIdx, 'lower')"
-                          >
-                            <FontAwesomeIcon class="score-range-toggle-icon" icon="fa-solid fa-circle-half-stroke" />
-                          </Button>
-                          <span class="p-float-label">
-                            <InputText
-                              v-model="rangeObj.value.range[0]"
-                              :aria-labelledby="scopedId(`input-investigatorProvidedRangeLower-${rangeIdx}`)"
-                              :disabled="rangeObj.value.infiniteLower"
-                            />
-                            <label :for="scopedId(`input-investigatorProvidedRangeLower-${rangeIdx}`)">
-                              {{
-                                rangeObj.infiniteLower
-                                  ? '-infinity'
-                                  : rangeObj.value.inclusiveLowerBound
-                                    ? 'Lower Bound (inclusive)'
-                                    : 'Lower Bound (exclusive)'
-                              }}
-                            </label>
-                          </span>
-                          <InputGroupAddon>to</InputGroupAddon>
-                          <span class="p-float-label">
-                            <InputText
-                              v-model="rangeObj.value.range[1]"
-                              :aria-labelledby="scopedId(`input-investigatorProvidedRangeUpper-${rangeIdx}`)"
-                              :disabled="rangeObj.value.infiniteUpper"
-                            />
-                            <label :for="scopedId(`input-investigatorProvidedRangeUpper-${rangeIdx}`)">
-                              {{
-                                rangeObj.infiniteUpper
-                                  ? 'infinity'
-                                  : rangeObj.value.inclusiveUpperBound
-                                    ? 'Upper Bound (inclusive)'
-                                    : 'Upper Bound (exclusive)'
-                              }}
-                            </label>
-                          </span>
-                          <Button
-                            class="score-range-toggle-button"
-                            :disabled="rangeObj.infiniteUpper"
-                            :outlined="!rangeObj.value.inclusiveUpperBound"
-                            @click="toggleBoundary(rangeIdx, 'upper')"
-                          >
-                            <FontAwesomeIcon class="score-range-toggle-icon" icon="fa-solid fa-circle-half-stroke" />
-                          </Button>
-                          <Button
-                            class="score-range-toggle-button"
-                            :outlined="!rangeObj.infiniteUpper"
-                            @click="toggleInfinity(rangeIdx, 'upper')"
-                          >
-                            <FontAwesomeIcon class="score-range-toggle-icon" icon="fa-solid fa-infinity" />
-                          </Button>
-                        </InputGroup>
-                        <span
-                          v-if="validationErrors[`scoreRanges.investigatorProvided.ranges.${rangeIdx}.oddsPath.range`]"
-                          class="mave-field-error"
-                          style="float: left"
-                          >{{
-                            validationErrors[`scoreRanges.investigatorProvided.ranges.${rangeIdx}.oddsPath.range`]
-                          }}</span
-                        >
-                      </div>
-                    </div>
-                    <div
-                      v-if="rangeObj.value.classification === 'normal' || rangeObj.value.classification === 'abnormal'"
-                      class="mavedb-wizard-row"
-                    >
-                      <div class="mavedb-wizard-help">
-                        <label :id="scopedId('input-investigatorIsProvidingOddsPath')"
-                          >Will you be providing odds of pathogenicity (OddsPath) ratios for this score range?</label
-                        >
-                        <div class="mavedb-help-small">
-                          An OddsPath calculation can be determined by evaluating previously classified control variants
-                          against the scores in normal and abnormal ranges for an assay. For additional information
-                          about OddsPath, please see
-                          <a href="https://pubmed.ncbi.nlm.nih.gov/31892348/">PubMed 31892348</a>.
-                        </div>
-                      </div>
-                      <div class="mavedb-wizard-content">
-                        <InputSwitch
-                          v-model="rangeObj.isProvidingOddsPath"
-                          :aria-labelledby="scopedId('input-investigatorIsProvidingOddsPath')"
-                        />
-                        <div class="mavedb-switch-value">
-                          {{
-                            rangeObj.isProvidingOddsPath
-                              ? 'Yes, I will be providing OddsPath data for this score range.'
-                              : 'No, I will not be providing OddsPath data for this score range.'
-                          }}
-                        </div>
-                      </div>
-                    </div>
-                    <div v-if="rangeObj.isProvidingOddsPath" class="mavedb-wizard-row">
-                      <div class="mavedb-wizard-help">
-                        <label :id="scopedId('input-investigatorProvidedOddsPathRatio')"
-                          >What is the OddsPath ratio and evidence strength for this score range?</label
-                        >
-                      </div>
-                      <div class="mavedb-wizard-content">
-                        <InputGroup>
-                          <span class="p-float-label" style="margin-right: 1em">
-                            <InputNumber
-                              v-model="rangeObj.value.oddsPath.ratio"
-                              :aria-labelledby="scopedId('input-investigatorProvidedOddsPathRatio')"
-                              :max-fraction-digits="10"
-                              :min-fraction-digits="1"
-                              style="width: 50%"
-                            />
-                            <label :for="scopedId('input-oddsPathRatio')"> OddsPath Normal </label>
-                          </span>
-                          <span class="p-float-label">
-                            <Dropdown
-                              v-model="rangeObj.value.oddsPath.evidence"
-                              :aria-labelledby="scopedId('input-investigatorProvidedOddsPathEvidence')"
-                              :options="
-                                evidenceStrengths[rangeObj.value.classification].concat(evidenceStrengths.indeterminate)
-                              "
-                              style="width: 50%"
-                            ></Dropdown>
-                            <label :for="scopedId('input-investigatorProvidedOddsPathEvidence')">
-                              OddsPath Evidence Strength (optional)
-                            </label>
-                          </span>
-                        </InputGroup>
-                        <span
-                          v-if="validationErrors[`scoreRanges.investigatorProvided.ranges.${rangeIdx}.oddsPath.ratio`]"
-                          class="mave-field-error"
-                          >{{
-                            validationErrors[`scoreRanges.investigatorProvided.ranges.${rangeIdx}.oddsPath.ratio`]
-                          }}</span
-                        >
-                        <span
-                          v-if="
-                            validationErrors[`scoreRanges.investigatorProvided.ranges.${rangeIdx}.oddsPath.evidence`]
-                          "
-                          class="mave-field-error"
-                          >{{
-                            validationErrors[`scoreRanges.investigatorProvided.ranges.${rangeIdx}.oddsPath.evidence`]
-                          }}</span
-                        >
-                      </div>
-                    </div>
-                  </div>
-                  <div class="mavedb-wizard-row">
-                    <div class="mavedb-wizard-content">
-                      <Button
-                        icon="pi pi-plus"
-                        label="Add another range"
-                        style="float: right"
-                        @click="addScoreRange"
-                      ></Button>
-                    </div>
-                  </div>
-                </div>
-                <div
-                  v-if="
-                    scoreRanges.investigatorProvided.ranges.some((range) => range.isProvidingOddsPath) &&
-                    publicationIdentifiers.length
-                  "
-                  class="mavedb-wizard-row"
-                >
-                  <div class="mavedb-wizard-help">
-                    <label>
-                      Of the previously provided publications, optionally select a publication to use as the source of
-                      the OddsPath.
-                    </label>
-                  </div>
-                  <div class="mavedb-wizard-content field">
-                    <span class="p-float-label">
-                      <Multiselect
-                        :id="scopedId('input-investigatorProvidedOddsPathPublicationIdentifiersInput')"
-                        ref="investigatorProvidedOddsPathPublicationIdentifiersInput"
-                        v-model="scoreRanges.investigatorProvided.oddsPathSource"
-                        option-label="identifier"
-                        :options="publicationIdentifiers"
-                        placeholder="Select a source for the OddsPath calculation."
-                        :selection-limit="1"
-                        style="width: 100%"
-                      >
-                        <template #option="slotProps">
-                          <div class="field">
-                            <div>Title: {{ slotProps.option.title }}</div>
-                            <div>DOI: {{ slotProps.option.doi }}</div>
-                            <div>Identifier: {{ slotProps.option.identifier }}</div>
-                            <div>Database: {{ slotProps.option.dbName }}</div>
-                          </div>
-                        </template>
-                      </Multiselect>
-                      <label :for="scopedId('input-investigatorProvidedOddsPathPublicationIdentifiersInput')"
-                        >OddsPath Source (optional)</label
-                      >
-                    </span>
-                    <span
-                      v-if="validationErrors[`scoreRanges.investigatorProvided.oddsPathSource`]"
-                      class="mave-field-error"
-                      >{{ validationErrors[`scoreRanges.investigatorProvided.oddsPathSource`] }}</span
-                    >
-                  </div>
+                <div v-if="investigatorIsProvidingScoreCalibrations">
+                  <CalibrationEditor
+                    :calibration-draft-ref="calibrationCreateDraft"
+                    :validation-errors="calibrationValidationErrors || {}"
+                  />
                 </div>
               </div>
               <div class="mavedb-wizard-step-controls-row">
@@ -1882,6 +1461,7 @@ import Textarea from 'primevue/textarea'
 import {ref} from 'vue'
 import {useHead} from '@unhead/vue'
 
+import CalibrationEditor from '@/components/CalibrationEditor.vue'
 import EntityLink from '@/components/common/EntityLink'
 import EmailPrompt from '@/components/common/EmailPrompt'
 import DefaultLayout from '@/components/layout/DefaultLayout'
@@ -1892,7 +1472,11 @@ import useItems from '@/composition/items'
 import config from '@/config'
 import {normalizeDoi, validateDoi} from '@/lib/identifiers'
 import {ORCID_ID_REGEX} from '@/lib/orcid'
-import {NORMAL_RANGE_EVIDENCE, ABNORMAL_RANGE_EVIDENCE, INDETERMINATE_RANGE_EVIDENCE} from '@/lib/ranges'
+import {
+  NORMAL_CALIBRATION_EVIDENCE,
+  ABNORMAL_CALIBRATION_EVIDENCE,
+  INDETERMINATE_CALIBRATION_EVIDENCE
+} from '@/lib/calibrations'
 import {TARGET_GENE_CATEGORIES, textForTargetGeneCategory} from '@/lib/target-genes'
 
 const externalGeneDatabases = ['UniProt', 'Ensembl', 'RefSeq']
@@ -1950,6 +1534,7 @@ export default {
   components: {
     AutoComplete,
     Button,
+    CalibrationEditor,
     Chips,
     DefaultLayout,
     Dropdown,
@@ -2002,6 +1587,8 @@ export default {
     const assemblies = useItems({itemTypeName: 'assemblies'})
     const targetGeneSuggestions = useItems({itemTypeName: 'target-gene-search'})
 
+    const calibrationCreateDraft = ref({value: null})
+
     return {
       config: config,
 
@@ -2028,7 +1615,8 @@ export default {
       setTaxonomySearch: (text) => taxonomySuggestions.setRequestBody({text}),
       assemblies: assemblies.items,
       geneNames: geneNames.items,
-      textForTargetGeneCategory: textForTargetGeneCategory
+      textForTargetGeneCategory: textForTargetGeneCategory,
+      calibrationCreateDraft: calibrationCreateDraft
     }
   },
 
@@ -2064,16 +1652,6 @@ export default {
     geneNameSuggestions: [],
     accessionSuggestions: [],
 
-    scoreRanges: {
-      investigatorProvided: {
-        baselineScore: null,
-        baselineScoreDescription: null,
-        ranges: [],
-        oddsPathSource: [],
-        source: []
-      }
-    },
-
     // Static sets of options:
     sequenceTypes: ['DNA', 'protein'],
     targetGeneCategories: TARGET_GENE_CATEGORIES,
@@ -2083,12 +1661,13 @@ export default {
       {value: 'not_specified', label: 'Not Specified'}
     ],
     evidenceStrengths: {
-      normal: NORMAL_RANGE_EVIDENCE,
-      abnormal: ABNORMAL_RANGE_EVIDENCE,
-      indeterminate: INDETERMINATE_RANGE_EVIDENCE
+      normal: NORMAL_CALIBRATION_EVIDENCE,
+      abnormal: ABNORMAL_CALIBRATION_EVIDENCE,
+      indeterminate: INDETERMINATE_CALIBRATION_EVIDENCE
     },
 
     progressVisible: false,
+    calibrationValidationErrors: {},
     serverSideValidationErrors: {},
     clientSideValidationErrors: {},
     inputClasses: {
@@ -2102,7 +1681,7 @@ export default {
     isTargetSequence: true,
     isBaseEditor: false,
     isMultiTarget: false,
-    investigatorIsProvidingScoreRanges: false,
+    investigatorIsProvidingScoreCalibrations: false,
 
     // track this separately, since it is a pain to reconstruct steps from target paths (targetGenes.**step**.rest.of.error.path)
     minTargetGeneStepWithError: Infinity,
@@ -2127,7 +1706,7 @@ export default {
       ],
       ['targets'],
       ['targetGene'],
-      ['scoreRanges'],
+      ['scoreCalibrations'],
       ['scoresFile', 'countsFile']
     ]
   }),
@@ -2322,13 +1901,6 @@ export default {
           this.stepFields.splice(3, oldValue - newValue)
         }
       }
-    },
-    investigatorIsProvidingScoreRanges: {
-      handler: function (newValue) {
-        if (newValue && this.scoreRanges.investigatorProvided.ranges.length === 0) {
-          this.scoreRanges.investigatorProvided.ranges.push(emptyScoreRangeWizardObj())
-        }
-      }
     }
   },
 
@@ -2444,21 +2016,19 @@ export default {
           }
         }
         case step == 3 + this.numTargets: {
-          let allInvestigatorProvidedRangesCompleted = true
-          for (const scoreRange of this.scoreRanges.investigatorProvided.ranges) {
-            if (
-              !scoreRange.value.label ||
-              !scoreRange.value.classification ||
-              (!scoreRange.value.range[0] && !scoreRange.infiniteLower) ||
-              (!scoreRange.value.range[1] && !scoreRange.infiniteUpper)
-            ) {
-              allInvestigatorProvidedRangesCompleted = false
+          let allInvestigatorProvidedCalibrationsCompleted = true
+          if (!this.calibrationCreateDraft.value?.functionalRanges) {
+            return false
+          }
+          for (const scoreRange of this.calibrationCreateDraft.value.functionalRanges) {
+            if (!scoreRange.label || !scoreRange.classification) {
+              allInvestigatorProvidedCalibrationsCompleted = false
               break
             }
           }
           return (
-            !this.investigatorIsProvidingScoreRanges ||
-            (allInvestigatorProvidedRangesCompleted && this.scoreRanges.investigatorProvided.baselineScore !== null)
+            !this.investigatorIsProvidingScoreCalibrations ||
+            (allInvestigatorProvidedCalibrationsCompleted && this.calibrationCreateDraft.value.baselineScore !== null)
           )
         }
         default:
@@ -2665,36 +2235,6 @@ export default {
       } catch (err) {
         console.log(`Error while loading search results")`, err)
       }
-    },
-
-    toggleBoundary: function (rangeIdx, boundary) {
-      const updatedRange = this.scoreRanges.investigatorProvided.ranges[rangeIdx]
-      if (boundary === 'upper') {
-        updatedRange.value.inclusiveUpperBound = !updatedRange.value.inclusiveUpperBound
-      } else if (boundary == 'lower') {
-        updatedRange.value.inclusiveLowerBound = !updatedRange.value.inclusiveLowerBound
-      }
-    },
-
-    toggleInfinity: function (rangeIdx, boundary) {
-      const updatedRange = this.scoreRanges.investigatorProvided.ranges[rangeIdx]
-      if (boundary === 'upper') {
-        updatedRange.infiniteUpper = !updatedRange.infiniteUpper
-        updatedRange.value.range[1] = null
-        updatedRange.value.inclusiveUpperBound = false
-      } else if (boundary == 'lower') {
-        updatedRange.infiniteLower = !updatedRange.infiniteLower
-        updatedRange.value.range[0] = null
-        updatedRange.value.inclusiveLowerBound = false
-      }
-    },
-
-    addScoreRange: function () {
-      this.scoreRanges.investigatorProvided.ranges.push(emptyScoreRangeWizardObj())
-    },
-
-    removeScoreRange: function (rangeIdx) {
-      this.scoreRanges.investigatorProvided.ranges.splice(rangeIdx, 1)
     },
 
     ////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
@@ -2987,18 +2527,9 @@ export default {
         this.secondaryPublicationIdentifiers = this.item.secondaryPublicationIdentifiers
         this.extraMetadata = this.item.extraMetadata
 
-        this.scoreRanges = {
-          investigatorProvided: {
-            baselineScore: this.item.scoreRanges?.ranges?.investigatorProvided?.baselineScore,
-            baselineScoreDescription: this.item.scoreRanges?.ranges?.investigatorProvided?.baselineScoreDescription,
-            ranges: this.item.scoreRanges?.ranges?.investigatorProvided?.ranges.map((range) =>
-              this.scoreRangeWithWizardProperties(range)
-            ),
-            oddsPathSource: this.item.scoreRanges?.ranges?.investigatorProvided?.oddsPathSource || [],
-            source: this.item.scoreRanges?.ranges?.investigatorProvided?.source || []
-          }
-        }
-        this.investigatorIsProvidingScoreRanges = this.scoreRanges.length > 0
+        this.scoreCalibrations = this.investigatorIsProvidingScoreCalibrations
+          ? [this.calibrationCreateDraft.value]
+          : []
 
         this.createdTargetGenes = this.item.targetGenes.map((target) => this.targetGeneWithWizardProperties(target))
         this.numTargets = this.createdTargetGenes.length
@@ -3023,21 +2554,7 @@ export default {
         this.primaryPublicationIdentifiers = []
         this.secondaryPublicationIdentifiers = []
         this.extraMetadata = {}
-
-        this.scoreRanges = {
-          investigatorProvided: {
-            baselineScore: null,
-            baselineScoreDescription: null,
-            infiniteUpper: false,
-            infiniteLower: false,
-            inclusiveLowerBound: true,
-            inclusiveUpperBound: false,
-            ranges: [],
-            oddsPathSource: [],
-            source: []
-          }
-        }
-        this.investigatorIsProvidingScoreRanges = false
+        this.investigatorIsProvidingScoreCalibrations = false
 
         this.createdTargetGenes = [emptyTargetGeneWizardObj()]
         this.numTargets = 1
@@ -3087,22 +2604,7 @@ export default {
         dataUsagePolicy: this.hasCustomUsagePolicy ? this.dataUsagePolicy : null,
         extraMetadata: {},
 
-        scoreRanges: {
-          investigatorProvided: {
-            baselineScore: this.scoreRanges.investigatorProvided.baselineScore,
-            baselineScoreDescription: this.scoreRanges.investigatorProvided.baselineScoreDescription,
-            ranges: this.scoreRanges.investigatorProvided.ranges.map((range) => {
-              range.value.oddsPath = range.isProvidingOddsPath ? range.value.oddsPath : null
-              return range.value
-            }),
-            oddsPathSource: this.scoreRanges.investigatorProvided.oddsPathSource.map((identifier) =>
-              _.pick(identifier, ['identifier', 'dbName'])
-            ),
-            source: this.scoreRanges.investigatorProvided.source.map((identifier) =>
-              _.pick(identifier, ['identifier', 'dbName'])
-            )
-          }
-        },
+        scoreCalibrations: this.investigatorIsProvidingScoreCalibrations ? [this.calibrationCreateDraft.value] : [],
 
         targetGenes: this.createdTargetGenes.map((target) => {
           const targetGene = {
@@ -3130,9 +2632,6 @@ export default {
           return targetGene
         })
       }
-      if (!this.investigatorIsProvidingScoreRanges) {
-        delete editedFields.scoreRanges
-      }
       if (!this.item) {
         editedFields.supersededScoreSetUrn = this.supersededScoreSet ? this.supersededScoreSet.urn : null
         editedFields.metaAnalyzesScoreSetUrns = this.metaAnalyzesScoreSets.map((s) => s.urn)
@@ -3147,15 +2646,7 @@ export default {
         this.item.publicationIdentifiers = []
         this.item.rawReadIdentifiers = []
         this.item.targetGenes = []
-        this.item.scoreRanges = {
-          investigatorProvided: {
-            baselineScore: null,
-            baselineScoreDescription: null,
-            ranges: [],
-            oddsPathSource: [],
-            source: []
-          }
-        }
+        this.item.scoreCalibrations = []
       }
 
       const editedItem = _.merge({}, this.item || {}, editedFields)
@@ -3170,7 +2661,7 @@ export default {
         }
       } catch (e) {
         response = e.response || {status: 500}
-        this.$toast.add({severity: 'error', summary: 'Error', life: 3000})
+        this.$toast.add({severity: 'error', summary: 'Encountered an error while saving score set.', life: 3000})
       }
       this.progressVisible = false
       if (response.status == 200) {
@@ -3197,10 +2688,22 @@ export default {
           })
         } else {
           for (const error of response.data.detail) {
-            console.log(error)
+
+            // Induce custom error paths for model level validation errors.
             let path = error.loc
             if (path[0] == 'body') {
               path = path.slice(1)
+            }
+
+            let customPath = error.ctx.error.custom_loc
+            if (customPath) {
+              if (customPath[0] == 'body') {
+                customPath = customPath.slice(1)
+              }
+            }
+
+            if (customPath) {
+              path = path.concat(customPath)
             }
 
             if (_.isEqual(_.slice(path, 0, 1), ['targetGene'])) {
@@ -3220,6 +2723,12 @@ export default {
                     : this.externalGeneDatabases[identifierIndex]
                 )
               }
+            }
+
+            // Add calibration errors to a separate object which is consumed by the calibration sub-component.
+            if (_.isEqual(_.slice(path, 0, 1), ['scoreCalibrations'])) {
+              // The second path element is an array index, which is irrelevant here as we only supply one calibration on score set creation.
+              this.calibrationValidationErrors = {...this.calibrationValidationErrors, [path.slice(2).join('.')]: error.msg}
             }
 
             path = path.join('.')
@@ -3354,7 +2863,7 @@ export default {
   top: 0;
   bottom: 0;
   right: 0;
-  width: 676px;
+  width: 60%;
   background-color: #fff;
 }
 
@@ -3373,7 +2882,7 @@ export default {
 /* The help block for one wizard form row. */
 .mavedb-wizard-help {
   float: left;
-  width: 480px;
+  width: 40%;
   padding: 22px 10px 10px 10px;
 }
 
@@ -3389,7 +2898,7 @@ export default {
 /* Form content for one wizard form row. */
 .mavedb-wizard-content {
   float: right;
-  width: 676px;
+  width: 60%;
   padding: 22px 10px 10px 10px;
   background-color: #fff;
 }
@@ -3400,7 +2909,7 @@ export default {
 
 .mavedb-wizard-content-pane {
   float: right;
-  width: 676px;
+  width: 60%;
   padding: 0 10px;
   background-color: #fff;
 }

@@ -56,7 +56,12 @@
           Don't have a versioned reference sequence identifier? Click here to perform a fuzzy search instead:
           <Button class="p-button-plain" @click="showSearch('fuzzy')">Fuzzy Search</Button>
         </div>
-        <div class="mavedb-search-suggestions">
+        <div class="mavedb-examples-button-container">
+          <Button class="p-button-plain p-button-text" @click="searchSuggestionsVisible = !searchSuggestionsVisible">
+            {{ searchSuggestionsVisible ? 'Hide search examples' : 'Show search examples' }}
+          </Button>
+        </div>
+        <div v-if="searchSuggestionsVisible" class="mavedb-search-suggestions">
           <p>
             Examples of supported searches:
             <ul>
@@ -177,7 +182,7 @@
           </table>
         </div>
       </div>
-      <div v-if="searchResultsVisible">
+      <div ref="searchResults" v-if="searchResultsVisible">
         <div v-for="(allele, alleleIdx) in alleles" :key="allele.clingenAlleleId" class="col-12">
           <Card>
             <template #content>
@@ -394,6 +399,7 @@ export default defineComponent({
     return {
       loading: false,
       defaultSearchVisible: true,
+      searchSuggestionsVisible: false,
       fuzzySearchVisible: false,
       searchResultsVisible: false,
       searchText: null as string | null,
@@ -852,6 +858,12 @@ export default defineComponent({
             }
           }
         }
+        if (this.alleles.length > 0) {
+          this.$refs.searchResults.scrollIntoView({
+            behavior: "smooth",
+            block: "start"
+          })
+        }
       } catch (error: any) {
         // NOTE: not resetting alleles here, because any error will have occurred before pushing to alleles.
         // don't want to reset alleles because this function may be called in a loop to process several hgvs strings.
@@ -1104,6 +1116,16 @@ export default defineComponent({
   text-align: center;
   gap: 5px;
   justify-content: center;
+}
+
+.mavedb-examples-button-container {
+  display: flex;
+  justify-content: center;
+  margin: 8px 0;
+}
+
+.mavedb-examples-button-container .p-button {
+  width: fit-content;
 }
 
 .mavedb-fuzzy-search-form-component {

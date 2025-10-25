@@ -67,3 +67,18 @@ export const MAVE_MD_SCORE_SETS = [
   {gene: 'TPK1', urn: 'urn:mavedb:00000001-d-1'},
   {gene: 'VHL', urn: 'urn:mavedb:00000675-a-1'}
 ]
+
+/**
+ * Regular expression for valid CA or PA ids that can be used in ClinGen searches.
+ */
+export const clinGenAlleleIdRegex = /^(CA|PA)[0-9]+$/mi
+
+/**
+ * Regular expression for valid ClinVar Variation IDs that can be used in ClinGen searches.
+ */
+export const clinVarVariationIdRegex = /^[0-9]+$/m
+
+/**
+ * Regular expression for valid Reference SNP cluster IDs that can be used in ClinGen searches.
+ */
+export const rsIdRegex = /^rs[0-9]+$/mi

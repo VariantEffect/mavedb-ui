@@ -28,6 +28,7 @@
             option-value="code"
             :options="searchTypeOptions"
             placeholder="Select search type"
+            :style="{ width: '13rem' }"
           />
           <IconField icon-position="left">
             <InputIcon class="pi pi-search"></InputIcon>
@@ -65,26 +66,13 @@
           <p>
             Examples of supported searches:
             <ul>
-              <li>
-                HGVS:
-                <span v-tooltip.top="'Click to search'" class="mavedb-search-example" @click="searchForText($event, 'hgvs')">ENST00000473961.6:c.-19-2A>T</span>
-                •
-                <span v-tooltip.top="'Click to search'" class="mavedb-search-example" @click="searchForText($event, 'hgvs')">NP_000242.1:p.Asn566Thr</span>
-                (supports a variety of HGVS formats)
-              </li>
-              <li>
-                ClinGen Allele IDs:
-                <span v-tooltip.top="'Click to search'" class="mavedb-search-example" @click="searchForText($event, 'clinGenAlleleId')">CA916081178</span>
-                •
-                <span v-tooltip.top="'Click to search'" class="mavedb-search-example" @click="searchForText($event, 'clinGenAlleleId')">PA321212</span>
-              </li>
-              <li>
-                dbSNP rsIDs:
-                <span v-tooltip.top="'Click to search'" class="mavedb-search-example" @click="searchForText($event, 'dbSnpRsId')">rs369602258</span>
-              </li>
-              <li>
-                ClinVar Variation IDs:
-                <span v-tooltip.top="'Click to search'" class="mavedb-search-example" @click="searchForText($event, 'clinVarVariationId')">214835</span>
+              <li v-for="option in searchTypeOptions" :key="option.code">
+                {{ option.name }}
+                <template v-for="(example, index) in option.examples" :key="example">
+                  <span v-if="index > 0">•</span>
+                  <span v-tooltip.top="'Click to search'" class="mavedb-search-example" @click="searchForText($event, option.code)">{{ example }}</span>
+                </template>
+                <template v-if="option.code=='hgvs'">(supports a variety of HGVS formats)</template>
               </li>
             </ul>
           </p>
@@ -405,10 +393,10 @@ export default defineComponent({
       searchText: null as string | null,
       searchType: null as string | null,
       searchTypeOptions: [
-        {code: 'hgvs', name: 'HGVS'},
-        {code: 'clinGenAlleleId', name: 'ClinGen Allele ID'},
-        {code: 'dbSnpRsId', name: 'dbSNP rsID'},
-        {code: 'clinVarVariationId', name: 'ClinVar Variation ID'},
+        {code: 'hgvs', name: 'HGVS', examples: ['ENST00000473961.6:c.-19-2A>T', 'NP_000242.1:p.Asn566Thr']},
+        {code: 'clinGenAlleleId', name: 'ClinGen Allele ID', examples: ['CA10590195', 'PA2579983208']},
+        {code: 'dbSnpRsId', name: 'dbSNP rsID', examples: ['rs900082291', '900082291']},
+        {code: 'clinVarVariationId', name: 'ClinVar Variation ID', examples: ['869058']},
       ],
       inputGene: null as string | null,
       inputVariantType: null as string | null,
@@ -660,18 +648,18 @@ export default defineComponent({
             this.toast.add({
               severity: 'error',
               summary: 'Invalid search',
-              detail: 'Please provide a valid ClinGen Allele ID.',
+              detail: `Please provide a valid ClinGen Allele ID (e.g. ${_.join(_.find(this.searchTypeOptions, { code: searchType })?.examples, ', ')})`,
               life: 10000
             })
             return
           }
           response = await axios.get(`https://reg.genome.network/allele/${searchStr}`)
         } else if (searchType === 'dbSnpRsId') {
-          if (!rsIdRegex.test(searchStr)) {
+          if (!rsIdRegex.test(searchStr) && !rsIdRegex.test(`rs${searchStr}`)) {
             this.toast.add({
               severity: 'error',
               summary: 'Invalid search',
-              detail: 'Please provide a valid dbSNP rsID.',
+              detail: `Please provide a valid dbSNP rsID (e.g. ${_.join(_.find(this.searchTypeOptions, { code: searchType })?.examples, ', ')})`,
               life: 10000
             })
             return
@@ -686,7 +674,7 @@ export default defineComponent({
             this.toast.add({
               severity: 'error',
               summary: 'Invalid search',
-              detail: 'Please provide a valid ClinVar Variation ID.',
+              detail: `Please provide a valid ClinVar Variation ID (e.g. ${_.join(_.find(this.searchTypeOptions, { code: searchType })?.examples, ', ')})`,
               life: 10000
             })
             return
@@ -701,7 +689,7 @@ export default defineComponent({
             this.toast.add({
               severity: 'error',
               summary: 'Invalid search',
-              detail: 'Please provide a valid HGVS string.',
+              detail: `Please provide a valid HGVS string (e.g. ${_.join(_.find(this.searchTypeOptions, { code: searchType })?.examples, ', ')})`,
               life: 10000
             })
             return

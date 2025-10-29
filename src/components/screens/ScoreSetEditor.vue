@@ -2508,7 +2508,7 @@ export default {
         } else {
           for (const error of response.data.detail) {
             console.log(error)
-            let path = error.loc
+            let path = _.map(error.loc, _.camelCase)
             if (path[0] == 'body') {
               path = path.slice(1)
             }

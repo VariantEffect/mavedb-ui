@@ -136,8 +136,14 @@
           <template v-if="heatmapExists">
             <Button class="p-button-outlined p-button-sm" @click="heatmapExport()">Heatmap</Button>&nbsp;
           </template>
-          <Button class="p-button-outlined p-button-sm" @click="showOptions = !showOptions"> Custom Data </Button>
-          <div v-if="showOptions">
+          <Button class="p-button-outlined p-button-sm" @click="showOptions()"> Custom Data </Button>
+          <Dialog
+            v-model:visible="optionsVisible"
+            :breakpoints="{'1199px': '75vw', '575px': '90vw'}"
+            header="Data Options"
+            modal
+            :style="{width: '50vw'}"
+          >
             <div v-for="dataOption of dataTypeOptions" :key="dataOption.value" class="flex gap-1 align-items-center">
               <Checkbox
                 :id="scopedId('input-' + dataOption.value)"
@@ -149,7 +155,7 @@
             <Button class="p-button-outlined p-button-sm" label="Download" @click="downloadMultipleData"
               >Download</Button
             >
-          </div>
+          </Dialog>
           <br />
         </div>
         <CollectionAdder class="mave-save-to-collection-button" data-set-type="scoreSet" :data-set-urn="item.urn" />
@@ -306,6 +312,7 @@ import AccordionTab from 'primevue/accordiontab'
 import AutoComplete from 'primevue/autocomplete'
 import Button from 'primevue/button'
 import Checkbox from 'primevue/checkbox'
+import Dialog from 'primevue/dialog'
 import InputSwitch from 'primevue/inputswitch'
 import ScrollPanel from 'primevue/scrollpanel'
 import Sidebar from 'primevue/sidebar'
@@ -350,6 +357,7 @@ export default {
     CollectionAdder,
     CollectionBadge,
     DefaultLayout,
+    Dialog,
     InputSwitch,
     ItemNotFound,
     PageLoading,
@@ -399,7 +407,7 @@ export default {
     variants: null,
     selectedDataOptions: [],
     showHeatmap: true,
-    showOptions: false,
+    optionsVisible: false,
     isScoreSetVisualizerVisible: false,
     heatmapExists: false,
     selectedVariant: null,
@@ -853,7 +861,7 @@ export default {
       let includeCustomColumns = false
       for (const option of this.selectedDataOptions) {
         if (['scores', 'counts'].includes(option)) {
-          params.append('data_types', option)
+          params.append('namespaces', option)
         }
         if (option === 'mappedHgvs') {
           params.append('include_post_mapped_hgvs', 'true')
@@ -894,7 +902,7 @@ export default {
           formValidationErrors[path] = error.msg
         }
       }
-      this.showOptions = false
+      this.optionsVisible = false
     },
     childComponentSelectedVariant: function (variant) {
       if (variant == null) {
@@ -932,6 +940,9 @@ export default {
         frozen = false
       }
       return frozen
+    },
+    showOptions: function () {
+      this.optionsVisible = true
     }
   }
 }

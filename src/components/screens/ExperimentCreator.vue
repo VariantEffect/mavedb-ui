@@ -357,6 +357,7 @@
                       <span class="p-float-label">
                         <FileUpload
                           :id="scopedId('input-extraMetadataFile')"
+                          accept="application/json"
                           :auto="false"
                           choose-label="Extra metadata"
                           :class="inputClasses.extraMetadataFile"
@@ -1054,7 +1055,7 @@ export default {
                   this.clientSideValidationErrors.extraMetadata =
                     'Extra metadata must be a JSON object (not an array or simple value).'
                 } else {
-                  this.clientSideValidationErrors.extraMetadata = null
+                  delete this.clientSideValidationErrors.extraMetadata
                 }
               } catch {
                 this.extraMetadata = null
@@ -1237,6 +1238,7 @@ export default {
           this.$toast.add({severity: 'success', summary: 'The new experiment was saved.', life: 3000})
         }
       } else if (response.data && response.data.detail) {
+        this.serverSideValidationErrors = {}
         if (typeof response.data.detail === 'string' || response.data.detail instanceof String) {
           // Handle generic errors that are not surfaced by the API as objects
           this.$toast.add({
@@ -1254,9 +1256,7 @@ export default {
             formValidationErrors[path] = error.msg
           }
           this.serverSideValidationErrors = formValidationErrors
-          this.mergeValidationErrors()
         }
-        this.serverSideValidationErrors = formValidationErrors
         this.mergeValidationErrors()
         this.activeWizardStep = this.minStepWithError()
       }

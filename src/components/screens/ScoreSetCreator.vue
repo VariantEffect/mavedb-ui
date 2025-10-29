@@ -3223,6 +3223,12 @@ export default {
         if (this.$refs.countsFileUpload.files.length == 1) {
           formData.append('counts_file', this.$refs.countsFileUpload.files[0])
         }
+        if (this.scoreColumnsMetadata) {
+          formData.append('score_columns_metadata', JSON.stringify(this.scoreColumnsMetadata))
+        }
+        if (this.countColumnsMetadata) {
+          formData.append('count_columns_metadata', JSON.stringify(this.countColumnsMetadata))
+        }
         this.progressVisible = true
         let response
         try {

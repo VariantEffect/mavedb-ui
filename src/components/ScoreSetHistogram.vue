@@ -513,10 +513,6 @@ export default defineComponent({
       return options
     },
 
-    calibrationsExist: function () {
-      return this.scoreSet.scoreCalibrations != null && this.scoreSet.scoreCalibrations > 0
-    },
-
     hasTabBar: function () {
       return this.config.CLINICAL_FEATURES_ENABLED && this.vizOptions.length > 1
     },
@@ -527,7 +523,7 @@ export default defineComponent({
 
     scoreCalibrations: function (): {[key: string]: PersistedScoreCalibration} | null {
       const calibrationObjects: Record<string, PersistedScoreCalibration> = {}
-      if (this.scoreSet.scoreCalibrations) {
+      if (this.scoreSet.scoreCalibrations != null && this.scoreSet.scoreCalibrations > 0) {
         for (const calibration of this.scoreSet.scoreCalibrations) {
           calibrationObjects[calibration.urn] = calibration
         }
@@ -1133,6 +1129,10 @@ export default defineComponent({
         return this.activeCalibration
       }
 
+      if (!this.scoreCalibrations) {
+        return {label: 'None', value: null}
+      }
+
       if (this.selectedCalibration) {
         const matchingCalibration = this.activeCalibrationOptions.find(
           (option) => option.value?.urn === this.selectedCalibration
@@ -1144,14 +1144,42 @@ export default defineComponent({
         }
       }
 
+      // Always default to showing the primary calibration if none is selected and one exists.
       const primaryCalibration = this.activeCalibrationOptions.find((option) => option.value?.primary === true)
-
-      // Always default to showing the primary range if none is selected and a primary range exists.
       if (primaryCalibration) {
         return primaryCalibration
       }
 
-      // otherwise don't set a default calibration
+      // If no primary, prefer investigator provided calibrations
+      const investigatorProvided = this.activeCalibrationOptions.find(
+        (option) => option.value?.investigatorProvided === true
+      )
+      if (investigatorProvided) {
+        return investigatorProvided
+      }
+
+      // Next, prefer any calibration that is not research use only
+      const nonResearchUseOnly = this.activeCalibrationOptions.find(
+        (option) => option.value != null && option.value.researchUseOnly !== true
+      )
+      if (nonResearchUseOnly) {
+        return nonResearchUseOnly
+      }
+
+      // Next, prefer any calibration that has any functional ranges defined
+      const anyWithRanges = this.activeCalibrationOptions.find(
+        (option) => option.value?.functionalRanges && option.value.functionalRanges.length > 0
+      )
+      if (anyWithRanges) {
+        return anyWithRanges
+      }
+
+      // Next, prefer any calibration at all
+      const anyCalibration = this.activeCalibrationOptions.find((option) => option.value != null)
+      if (anyCalibration) {
+        return anyCalibration
+      }
+
       return {label: 'None', value: null}
     },
 

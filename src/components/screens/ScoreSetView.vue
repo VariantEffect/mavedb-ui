@@ -139,6 +139,7 @@
           <Button class="p-button-outlined p-button-sm" @click="showOptions()"> Custom Data </Button>
           <Dialog
             v-model:visible="optionsVisible"
+            :base-z-index="901"
             :breakpoints="{'1199px': '75vw', '575px': '90vw'}"
             header="Data Options"
             modal

@@ -1,8 +1,9 @@
 import _ from 'lodash'
 
-import type {components} from '@/schema/openapi'
+import type { components } from '@/schema/openapi'
 
 type ScoreSet = components['schemas']['ScoreSet']
+type PublicationIdentifier = components['schemas']['ScoreSet']['primaryPublicationIdentifiers'][0]
 type Author = components["schemas"]["PublicationAuthors"]
 
 /**
@@ -50,4 +51,38 @@ export function getScoreSetShortName(scoreSet: ScoreSet): string {
   const year = scoreSet.primaryPublicationIdentifiers[0]?.publicationYear
   const parts = [authors, gene, year?.toString()].filter((x) => x != null)
   return parts.length > 0 ? parts.join(' ') : (scoreSet.title ?? scoreSet.shortDescription ?? 'Score set')
+}
+
+
+
+/**
+ * Filters a collection of publication identifier objects and returns only those
+ * that match the dbName + identifier pairs provided in a source array.
+ *
+ * Each element in sourceArr is treated as a (dbName, identifier) criterion. The
+ * function searches the sources list for exact matches (both dbName and
+ * identifier must match) and returns the subset that satisfies at least one
+ * criterion. If no matches are found, or if either input is missing/invalid,
+ * null is returned.
+ *
+ * Matching preserves the original objects from the sources list (it does not
+ * clone or transform them) and maintains the order in which matching criteria
+ * appear in sourceArr (not the original order in sources).
+ *
+ *
+ * @param sourceArr An array of (dbName, identifier) pairs to match against the sources list. If not an array, the function returns null.
+ * @param sources A list of publication identifiers to search (e.g., fetched from an API). Must support Array.prototype.find; if undefined, returns null.
+ * @returns An array of matched publication identifiers (in the order of the matching criteria) or null if there are no matches or inputs are invalid.
+ */
+export function matchSources(
+  sourceArr: Array<{ dbName: string; identifier: string }> | undefined,
+  sources: PublicationIdentifier[] | undefined
+): PublicationIdentifier[] | null {
+  if (!Array.isArray(sourceArr) || !sources) return null
+  const matchedSources = []
+  for (const source of sourceArr) {
+    const match = sources.find((s) => s.dbName === source.dbName && s.identifier === source.identifier)
+    if (match) matchedSources.push(match)
+  }
+  return matchedSources.length > 0 ? matchedSources : null
 }

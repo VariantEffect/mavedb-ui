@@ -152,9 +152,12 @@
               />
               <label :for="scopedId('input-' + dataOption.value)">{{ dataOption.label }}</label>
             </div>
+            <p />
             <Button class="p-button-outlined p-button-sm" label="Download" @click="downloadMultipleData"
               >Download</Button
             >
+            &nbsp;
+            <Button class="p-button-warning p-button-sm" label="Cancel" @click="optionsVisible = false">Cancel</Button>
           </Dialog>
           <br />
         </div>

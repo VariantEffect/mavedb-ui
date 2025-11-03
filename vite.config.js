@@ -3,9 +3,10 @@ import {resolve} from 'path'
 import {defineConfig} from 'vite'
 import vue from '@vitejs/plugin-vue'
 import basicSsl from '@vitejs/plugin-basic-ssl'
+import tailwindcss from '@tailwindcss/vite'
 
 export default defineConfig({
-  plugins: [vue(), basicSsl()],
+  plugins: [vue(), basicSsl(), tailwindcss()],
   resolve: {
     alias: {
       '@': fileURLToPath(new URL('./src', import.meta.url))

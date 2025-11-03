@@ -1,3 +1,5 @@
+@import "tailwindcss";
+
 * {
   text-rendering: optimizeLegibility;
   font-family: 'Raleway', sans-serif;

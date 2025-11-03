@@ -516,7 +516,6 @@ import Message from 'primevue/message'
 import Multiselect from 'primevue/multiselect'
 import ProgressSpinner from 'primevue/progressspinner'
 import Stepper from 'primevue/stepper'
-import StepperPanel from 'primevue/stepperpanel'
 import TabPanel from 'primevue/tabpanel'
 import TabView from 'primevue/tabview'
 import Textarea from 'primevue/textarea'
@@ -632,7 +631,6 @@ export default {
     Multiselect,
     ProgressSpinner,
     Stepper,
-    StepperPanel,
     TabPanel,
     TabView,
     Textarea

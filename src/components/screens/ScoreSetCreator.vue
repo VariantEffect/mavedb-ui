@@ -1491,7 +1491,6 @@ import Multiselect from 'primevue/multiselect'
 import ProgressSpinner from 'primevue/progressspinner'
 import SelectButton from 'primevue/selectbutton'
 import Stepper from 'primevue/stepper'
-import StepperPanel from 'primevue/stepperpanel'
 import TabPanel from 'primevue/tabpanel'
 import TabView from 'primevue/tabview'
 import Textarea from 'primevue/textarea'
@@ -1563,7 +1562,6 @@ export default {
     ProgressSpinner,
     SelectButton,
     Stepper,
-    StepperPanel,
     TabPanel,
     TabView,
     Textarea

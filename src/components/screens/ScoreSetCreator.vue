@@ -42,7 +42,12 @@
                         >.
                       </div>
                     </div>
-                    <div class="mavedb-wizard-content">Experiment title: {{ experiment.title }}</div>
+                    <div class="mavedb-wizard-content">
+                      Experiment title:
+                      <router-link :to="{name: 'experiment', params: {urn: experimentUrn}}">
+                        {{experiment.title}}
+                      </router-link>
+                    </div>
                   </div>
                 </div>
                 <div v-else>

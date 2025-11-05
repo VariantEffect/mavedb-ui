@@ -1766,7 +1766,7 @@
                   <div class="mavedb-wizard-help">
                     <label :for="scopedId('input-scoreColumnsMetadataFile')">Load a scores column metadata file</label>
                     <div class="mavedb-help-small">
-                      This file is optional, but recommended.
+                      This file is optional, but recommended. If provided, it should be a JSON file containing a single object. The keys of that object should be limited to columns of the score data, while values should include a string description and an optional string details.
                     </div>
                   </div>
                   <div class="mavedb-wizard-content">
@@ -1777,7 +1777,7 @@
                         accept="application/json"
                         :auto="false"
                         choose-label="Scores column metadata file"
-                        :class="inputClasses.countsFile || ''"
+                        :class="inputClasses.scoreColumnsMetadataFile || ''"
                         :custom-upload="true"
                         :disabled="!($refs.scoresFileUpload?.files?.length == 1)"
                         :file-limit="1"
@@ -1791,7 +1791,7 @@
                         </template>
                       </FileUpload>
                     </span>
-                    <span v-if="validationErrors.countsFile" class="mave-field-error">{{validationErrors.scoreColumnsMetadataFile}}</span>
+                    <span v-if="validationErrors.scoreColumnsMetadataFile" class="mave-field-error">{{validationErrors.scoreColumnsMetadataFile}}</span>
                   </div>
                 </div>
                 <div class="mavedb-wizard-row">
@@ -1830,7 +1830,7 @@
                 <div class="mavedb-wizard-help">
                   <label :for="scopedId('input-countColumnsMetadataFile')">Load a counts column metadata file</label>
                   <div class="mavedb-help-small">
-                    This file is optional, but recommended.
+                    This file is optional, but recommended. If provided, it should be a JSON file containing a single object. The keys of that object should be limited to columns of the count data, while values should include a string description and an optional string details.
                   </div>
                 </div>
                 <div class="mavedb-wizard-content">
@@ -1841,7 +1841,7 @@
                       accept="application/json"
                       :auto="false"
                       choose-label="Counts column metadata file"
-                      :class="inputClasses.countsFile || ''"
+                      :class="inputClasses.countColumnsMetadataFile || ''"
                       :custom-upload="true"
                       :disabled="!($refs.countsFileUpload?.files?.length == 1)"
                       :file-limit="1"
@@ -1855,7 +1855,7 @@
                       </template>
                     </FileUpload>
                   </span>
-                  <span v-if="validationErrors.countsFile" class="mave-field-error">{{ validationErrors.countColumnsMetadataFile}}</span>
+                  <span v-if="validationErrors.countColumnsMetadataFile" class="mave-field-error">{{ validationErrors.countColumnsMetadataFile}}</span>
                 </div>
               </div>
               <div class="mavedb-wizard-step-controls-row">
@@ -2914,7 +2914,7 @@ export default {
             {
               try {
                 this.extraMetadata = JSON.parse(text)
-                this.validateExtraMetadata(this.extraMetadata, 'extraMetadata')
+                this.validateJsonObject(this.extraMetadata, 'extraMetadata')
               } catch {
                 this.extraMetadata = null
                 this.clientSideValidationErrors.extraMetadata = 'The file did not contain valid JSON text.'
@@ -2933,6 +2933,7 @@ export default {
                 console.log('Count columns metadata file did not contain valid JSON text.')
               }
             }
+            break
           case 'scoreColumnsMetadataFile':
             {
               try {

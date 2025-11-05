@@ -405,7 +405,8 @@ export default defineComponent({
           authors: this.filterPublicationAuthors.length > 0 ? this.filterPublicationAuthors : undefined,
           databases: this.filterPublicationDatabases.length > 0 ? this.filterPublicationDatabases : undefined,
           journals: this.filterPublicationJournals.length > 0 ? this.filterPublicationJournals : undefined,
-          keywords: this.filterKeywords.length > 0 ? this.filterKeywords : undefined
+          keywords: this.filterKeywords.length > 0 ? this.filterKeywords : undefined,
+          limit: 100
         }
         const response = await axios.post(`${config.apiBaseUrl}/score-sets/search`, requestParams, {
           headers: {

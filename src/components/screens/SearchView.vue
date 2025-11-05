@@ -406,6 +406,7 @@ export default defineComponent({
           databases: this.filterPublicationDatabases.length > 0 ? this.filterPublicationDatabases : undefined,
           journals: this.filterPublicationJournals.length > 0 ? this.filterPublicationJournals : undefined,
           keywords: this.filterKeywords.length > 0 ? this.filterKeywords : undefined,
+          includeExperimentScoreSetUrnsAndCount: false,
           limit: 100
         }
         const response = await axios.post(`${config.apiBaseUrl}/score-sets/search`, requestParams, {

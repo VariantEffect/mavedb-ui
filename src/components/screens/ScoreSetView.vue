@@ -80,12 +80,25 @@
           <ScoreSetHistogram
             ref="histogram"
             :coordinates="clinicalMode ? 'mapped' : 'raw'"
+            :default-histogram="'distribution'"
             :external-selection="variantToVisualize"
+            :hide-start-and-stop-loss-by-default="hideStartAndStopLoss"
             :score-set="item"
             :variants="variants"
             @export-chart="setHistogramExport"
-            :hide-start-and-stop-loss-by-default="hideStartAndStopLoss"
           />
+          <template v-if="hasClinicalVariants">
+            <ScoreSetHistogram
+              ref="histogram"
+              :coordinates="clinicalMode ? 'mapped' : 'raw'"
+              :default-histogram="'clinical'"
+              :external-selection="variantToVisualize"
+              :hide-start-and-stop-loss-by-default="hideStartAndStopLoss"
+              :score-set="item"
+              :variants="variants"
+              @export-chart="setHistogramExport"
+            />
+          </template>
         </div>
         <div v-if="showHeatmap && !isScoreSetVisualizerVisible" class="mavedb-score-set-heatmap-pane">
           <ScoreSetHeatmap
@@ -382,6 +395,7 @@ export default {
     variants: null,
     showHeatmap: true,
     isScoreSetVisualizerVisible: false,
+    hasClinicalVariants: false,
     heatmapExists: false,
     selectedVariant: null,
     userIsAuthorized: {
@@ -511,6 +525,7 @@ export default {
 
   mounted: async function () {
     await this.checkUserAuthorization()
+    await this.checkClinicalVariants()
   },
 
   methods: {
@@ -534,6 +549,18 @@ export default {
       } catch (err) {
         console.log(`Error to get authorization:`, err)
       }
+    },
+    checkClinicalVariants: async function () {
+      if (this.item) {
+        try {
+          const response = await axios.get(`${config.apiBaseUrl}/score-sets/${this.item.urn}/clinical-controls/options`)
+          if (response.status == 200) {
+            this.hasClinicalVariants = true
+          }
+        } catch (err) {
+          console.log(`Error to get clinical variants:`, err)
+        }
+      } 
     },
     editItem: function () {
       if (this.item) {
@@ -686,10 +713,7 @@ export default {
         if (this.item && download_type == 'counts') {
           response = await axios.get(`${config.apiBaseUrl}/score-sets/${this.item.urn}/counts?drop_na_columns=true`)
         } else if (this.item && download_type == 'scores') {
-          response = await axios.get(
-            `${config.apiBaseUrl}/score-sets/${this.item.urn}/variants/data?drop_na_columns=true`
-          )
-          //response = await axios.get(`${config.apiBaseUrl}/score-sets/${this.item.urn}/scores?drop_na_columns=true`)
+          response = await axios.get(`${config.apiBaseUrl}/score-sets/${this.item.urn}/scores?drop_na_columns=true`)
         }
       } catch (e) {
         response = e.response || {status: 500}

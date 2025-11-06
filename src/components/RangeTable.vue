@@ -20,56 +20,56 @@
       </span>
     </div>
     <div class="mavedb-score-ranges-grid">
-      <div v-if="sortedRanges.length > 0" v-for="range in sortedRanges" :key="range.label" class="mavedb-score-ranges-row" style="">
-        <div>
-          <span>{{ range.label }}</span>
-          <span v-if="range.description">
-            <Button
-              v-tooltip.right="{value: range.description, autoHide: false}"
-              aria-label="Info"
-              class="p-button-help mavedb-help-tooltip-button"
-              icon="pi pi-info"
-              outlined
-              rounded
-            />
-          </span>
+      <template v-if="sortedRanges.length > 0">
+        <div v-for="range in sortedRanges" :key="range.label" class="mavedb-score-ranges-row" style="">
+          <div>
+            <span>{{ range.label }}</span>
+            <span v-if="range.description">
+              <Button
+                v-tooltip.right="{value: range.description, autoHide: false}"
+                aria-label="Info"
+                class="p-button-help mavedb-help-tooltip-button"
+                icon="pi pi-info"
+                outlined
+                rounded
+              />
+            </span>
+          </div>
+          <div
+            v-if="sortedRanges.some((r: ScoreRange) => 'evidenceStrength' in r)"
+            :class="evidenceCodeClass(evidenceCodeForEvidenceStrength(range.evidenceStrength))"
+          >
+            <span v-if="'evidenceStrength' in range">{{
+              evidenceCodeForEvidenceStrength(range.evidenceStrength)
+            }}</span>
+            <span v-else>Not Provided</span>
+          </div>
+          <div v-else :class="`mave-classification-${range.classification}`">
+            <span>{{ titleCase(range.classification) }}</span>
+          </div>
+          <div>
+            <span>
+              {{ range.inclusiveLowerBound ? '[' : '('
+              }}{{ range.range[0] !== null ? roundRangeBound(range.range[0]) : '-∞' }},
+              {{ range.range[1] !== null ? roundRangeBound(range.range[1]) : '∞'
+              }}{{ range.inclusiveUpperBound ? ']' : ')' }}
+            </span>
+          </div>
+          <div v-if="sortedRanges.some((range: ScoreRange) => 'positiveLikelihoodRatio' in range)">
+            <span v-if="'positiveLikelihoodRatio' in range">PLR: {{ range.positiveLikelihoodRatio }}</span>
+            <span v-else>Not Provided</span>
+          </div>
         </div>
-        <div
-          v-if="sortedRanges.some((r: ScoreRange) => 'evidenceStrength' in r)"
-          :class="evidenceCodeClass(evidenceCodeForEvidenceStrength(range.evidenceStrength))"
-        >
-          <span v-if="'evidenceStrength' in range">{{ evidenceCodeForEvidenceStrength(range.evidenceStrength) }}</span>
-          <span v-else>Not Provided</span>
-        </div>
-        <div v-else :class="`mave-classification-${range.classification}`">
-          <span>{{ titleCase(range.classification) }}</span>
-        </div>
-        <div>
-          <span>
-            {{ range.inclusiveLowerBound ? '[' : '('
-            }}{{ range.range[0] !== null ? roundRangeBound(range.range[0]) : '-∞' }},
-            {{ range.range[1] !== null ? roundRangeBound(range.range[1]) : '∞'
-            }}{{ range.inclusiveUpperBound ? ']' : ')' }}
-          </span>
-        </div>
-      </div>
+      </template>
       <div v-else class="mave-classification-not_provided">
-        <span style="text-align: center; font-style: italic">
-          Ranges have not been provided.
-        </span>
-      </div>
-      <div v-if="sortedRanges.some((range: ScoreRange) => 'positiveLikelihoodRatio' in range)">
-        <span v-if="'positiveLikelihoodRatio' in range">{{ range.positiveLikelihoodRatio }}</span>
-        <span v-else>Not Provided</span>
+        <span style="text-align: center; font-style: italic"> Ranges have not been provided. </span>
       </div>
     </div>
-    <div v-if="matchSource(scoreRanges.source)" class="mavedb-score-ranges-citation">
-      <span
-        >Source:
-        <a :href="matchSource(scoreRanges.source)?.url" target="_blank">{{
-          matchSource(scoreRanges.source)?.url
-        }}</a></span
-      >
+    <div v-if="thresholdSources" class="mavedb-score-ranges-citation">
+      Source(s):
+      <span v-for="(source, i) in thresholdSources" :key="source.dbName + ':' + source.identifier">
+        <a :href="source.url" target="_blank">{{ source.url }}</a><span v-if="i < thresholdSources.length - 1">, </span>
+      </span>
     </div>
   </div>
   <table v-if="activeRangeHasOddsPath" class="mavedb-odds-path-table">
@@ -79,7 +79,7 @@
       </tr>
       <tr>
         <td :colspan="sortedRanges.length" style="text-align: center; font-weight: bold; background-color: #f0f0f0">
-          <span>Odds Path Calculations</span>
+          <span>OddsPath Calculations</span>
           <Button
             v-tooltip.right="{
               value:
@@ -97,12 +97,12 @@
       </tr>
       <tr>
         <td v-for="range in sortedRanges" :key="range">
-          <span v-if="range.classification == 'abnormal'">Odds Path Abnormal</span>
-          <span v-else-if="range.classification == 'normal'">Odds Path Normal</span>
+          <span v-if="range.classification == 'abnormal'">OddsPath Abnormal</span>
+          <span v-else-if="range.classification == 'normal'">OddsPath Normal</span>
           <span v-else>N/A</span>
         </td>
-        <!-- <td v-if="abnormalRanges.length" :colspan="abnormalRanges.length">Odds Path Abnormal</td>
-        <td v-if="normalRanges.length" :colspan="normalRanges.length">Odds Path Normal</td>
+        <!-- <td v-if="abnormalRanges.length" :colspan="abnormalRanges.length">OddsPath Abnormal</td>
+        <td v-if="normalRanges.length" :colspan="normalRanges.length">OddsPath Normal</td>
         <td v-if="unspecifiedRanges.length" :colspan="unspecifiedRanges.length">N/A</td> -->
       </tr>
       <tr>
@@ -119,14 +119,12 @@
           <span v-else>Not Provided</span>
         </td>
       </tr>
-      <tr v-if="matchSource(scoreRanges.oddsPathSource)">
+      <tr v-if="oddsPathSources">
         <td :colspan="sortedRanges.length">
-          <span
-            >Source:
-            <a :href="matchSource(scoreRanges.oddsPathSource)?.url" target="_blank">{{
-              matchSource(scoreRanges.oddsPathSource)?.url
-            }}</a></span
-          >
+          Source(s):
+          <span v-for="(source, i) in oddsPathSources" :key="source.dbName + ':' + source.identifier">
+            <a :href="source.url" target="_blank">{{ source.url }}</a><span v-if="i < oddsPathSources.length - 1">, </span>
+          </span>
         </td>
       </tr>
     </tbody>
@@ -198,6 +196,12 @@ export default defineComponent({
     },
     sortedRanges() {
       return [...this.scoreRanges.ranges].sort(this.compareScoreRanges)
+    },
+    thresholdSources() {
+      return this.matchSources(this.scoreRanges.source)
+    },
+    oddsPathSources() {
+      return this.matchSources(this.scoreRanges.oddsPathSource)
     }
   },
 
@@ -234,15 +238,16 @@ export default defineComponent({
         .replace(/[-_]+(.)/g, (_, c) => ' ' + c.toUpperCase())
         .replace(/([a-z])([A-Z])/g, '$1 $2')
     },
-    matchSource(
+    matchSources(
       sourceArr: Array<{dbName: string; identifier: string}> | undefined
-    ): {dbName: string; identifier: string; url: string} | null {
+    ): {dbName: string; identifier: string; url: string}[] | null {
       if (!Array.isArray(sourceArr) || !this.sources) return null
+      const matchedSources = []
       for (const source of sourceArr) {
         const match = this.sources.find((s) => s.dbName === source.dbName && s.identifier === source.identifier)
-        if (match) return match
+        if (match) matchedSources.push(match)
       }
-      return null
+      return matchedSources.length > 0 ? matchedSources : null
     },
     roundOddsPath(rangeBound: number) {
       return rangeBound.toPrecision(3)
@@ -318,7 +323,7 @@ table.mavedb-odds-path-table th {
 }
 
 .mave-classification-not_specified {
-  background-color: #a6a600;
+  background-color: #646464;
   color: white;
   font-weight: bold;
 }

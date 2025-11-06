@@ -37,6 +37,7 @@ import 'pdbe-molstar/build/pdbe-molstar-light.css'
 import _ from 'lodash'
 import {watch, ref} from 'vue'
 
+import config from '@/config'
 import useScopedId from '@/composables/scoped-id'
 
 export default {
@@ -242,12 +243,34 @@ export default {
       this.$emit('hoveredOverResidue', e.eventData)
     },
 
-    render: function () {
+    render: async function () {
       if (this.selectedAlphaFold) {
+        let alphafoldCifUrl
+        try {
+          const response = await axios.get(`${config.apiBaseUrl}/alphafold-files/version`)
+          const alphafoldFilesVersion = response.data.version
+          alphafoldCifUrl = `https://alphafold.ebi.ac.uk/files/AF-${this.selectedAlphaFold.id}-F1-model_${alphafoldFilesVersion}.cif`
+        } catch (error) {
+          this.$toast.add({severity: 'error', summary: 'Error', detail: 'Failed to fetch AlphaFold version'})
+          return
+        }
+
+        // verify that the alphafoldCifUrl exists by verifying 200 or 304 status
+        try {
+          const response = await fetch(alphafoldCifUrl, { method: 'HEAD' })
+          if (response.status !== 200 && response.status !== 304) {
+            this.$toast.add({severity: 'error', summary: 'Error', detail: 'Failed to fetch AlphaFold structure'})
+            return
+          }
+        } catch (error) {
+          this.$toast.add({severity: 'error', summary: 'Error', detail: 'Failed to fetch AlphaFold structure'})
+          return
+        }
+
         const viewerInstance = new PDBeMolstarPlugin()
         const options = {
           customData: {
-            url: `https://alphafold.ebi.ac.uk/files/AF-${this.selectedAlphaFold.id}-F1-model_v4.cif`,
+            url: alphafoldCifUrl,
             format: 'cif'
           },
           /** This applies AlphaFold confidence score colouring theme for AlphaFold model */

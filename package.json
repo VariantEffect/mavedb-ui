@@ -1,6 +1,6 @@
 {
   "name": "mavedb-ui",
-  "version": "2025.3.0",
+  "version": "2025.4.5",
   "private": true,
   "type": "module",
   "scripts": {

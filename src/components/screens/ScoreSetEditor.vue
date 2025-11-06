@@ -595,7 +595,7 @@
                             <template #title
                               >OddsPath Ratio and Evidence Strength
                               <Button
-                                aria-label="Delete odds path"
+                                aria-label="Delete OddsPath"
                                 icon="pi pi-times"
                                 rounded
                                 severity="danger"
@@ -673,9 +673,9 @@
                         <div v-else>
                           <Card>
                             <template #title
-                              >Add Odds Path
+                              >Add OddsPath
                               <Button
-                                aria-label="Add Odds Path"
+                                aria-label="Add OddsPath"
                                 icon="pi pi-plus"
                                 rounded
                                 style="float: right"
@@ -1753,7 +1753,7 @@ export default {
           }
         )
         // TODO (#130) catch errors in response
-        return response.data || []
+        return response.data?.scoreSets || []
       } catch (err) {
         console.log(`Error while loading search results")`, err)
         return []

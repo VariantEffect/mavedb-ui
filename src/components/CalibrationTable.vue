@@ -190,6 +190,9 @@
       </tr>
     </tbody>
   </table>
+  <div v-else style="text-align: center; margin-top: 1em; font-style: italic; font-size: 0.9em;">
+    No OddsPath calculations have been provided for these score ranges.
+  </div>
 </template>
 
 <script lang="ts">

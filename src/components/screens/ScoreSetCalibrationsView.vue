@@ -172,9 +172,9 @@
     <div v-else-if="['NotLoaded', 'Loading'].includes(itemStatus)" class="p-m-4">
       <PageLoading />
     </div>
-    <v-else>
+    <div v-else>
       <ItemNotFound :item-id="itemId" :item-type="'Score Set'" />
-    </v-else>
+    </div>
   </DefaultLayout>
   <PrimeDialog
     v-model:visible="editorVisible"

@@ -1,6 +1,6 @@
-import { HistogramBin, HistogramShader } from '@/lib/histogram'
-import { PublicationIdentifier } from './publication'
-import { User } from './user'
+import {HistogramBin, HistogramShader} from '@/lib/histogram'
+import {PublicationIdentifier} from './publication'
+import {User} from './user'
 
 export const NORMAL_RANGE_DEFAULT_COLOR = '#4444ff'
 export const ABNORMAL_RANGE_DEFAULT_COLOR = '#ff4444'
@@ -12,22 +12,29 @@ export const PATHOGENIC_CRITERION = 'PS3'
 export const EVIDENCE_STRENGTH_AS_POINTS = {
   VERY_STRONG: 8,
   STRONG: 4,
-  "MODERATE+": 3,
+  'MODERATE+': 3,
   MODERATE: 2,
   SUPPORTING: 1
 }
 
 export const INDETERMINATE_CALIBRATION_EVIDENCE = ['INDETERMINATE'] as const
 export const EVIDENCE_STRENGTH = EVIDENCE_STRENGTH_AS_POINTS ? Object.keys(EVIDENCE_STRENGTH_AS_POINTS) : []
-export const NORMAL_CALIBRATION_EVIDENCE = EVIDENCE_STRENGTH_AS_POINTS ? Object.keys(EVIDENCE_STRENGTH_AS_POINTS).map(key => `${BENIGN_CRITERION}_${key}`) : []
-export const ABNORMAL_CALIBRATION_EVIDENCE = EVIDENCE_STRENGTH_AS_POINTS ? Object.keys(EVIDENCE_STRENGTH_AS_POINTS).map(key => `${PATHOGENIC_CRITERION}_${key}`) : []
+export const NORMAL_CALIBRATION_EVIDENCE = EVIDENCE_STRENGTH_AS_POINTS
+  ? Object.keys(EVIDENCE_STRENGTH_AS_POINTS).map((key) => `${BENIGN_CRITERION}_${key}`)
+  : []
+export const ABNORMAL_CALIBRATION_EVIDENCE = EVIDENCE_STRENGTH_AS_POINTS
+  ? Object.keys(EVIDENCE_STRENGTH_AS_POINTS).map((key) => `${PATHOGENIC_CRITERION}_${key}`)
+  : []
 
-export const EVIDENCE_STRENGTHS = EVIDENCE_STRENGTH_AS_POINTS ? Object.fromEntries(
-  Object.entries(EVIDENCE_STRENGTH_AS_POINTS).map(([key, value]) => [`${BENIGN_CRITERION}_${key}`, value * -1])
-    .concat(
-      Object.entries(EVIDENCE_STRENGTH_AS_POINTS).map(([key, value]) => [`${PATHOGENIC_CRITERION}_${key}`, value])
+export const EVIDENCE_STRENGTHS = EVIDENCE_STRENGTH_AS_POINTS
+  ? Object.fromEntries(
+      Object.entries(EVIDENCE_STRENGTH_AS_POINTS)
+        .map(([key, value]) => [`${BENIGN_CRITERION}_${key}`, value * -1])
+        .concat(
+          Object.entries(EVIDENCE_STRENGTH_AS_POINTS).map(([key, value]) => [`${PATHOGENIC_CRITERION}_${key}`, value])
+        )
     )
-) : {}
+  : {}
 
 export const EVIDENCE_STRENGTHS_REVERSED = Object.fromEntries(
   Object.entries(EVIDENCE_STRENGTHS).map(([key, value]) => [value, key])
@@ -50,7 +57,7 @@ export interface DraftScoreCalibration {
   baselineScore?: number | null
   baselineScoreDescription?: string | null
 
-  functionalRanges: Array<FunctionalRange> | null
+  functionalRanges?: Array<FunctionalRange> | null
 
   thresholdSources: PublicationIdentifier[]
   classificationSources: PublicationIdentifier[]
@@ -86,7 +93,6 @@ export interface FunctionalRange {
   positiveLikelihoodRatio?: number | null
   oddspathsRatio?: number | null
 }
-
 
 /**
  * Prepares a list of histogram shader configuration objects from persisted score calibration data.
@@ -130,7 +136,9 @@ export function prepareCalibrationsForHistogram(scoreCalibrations: PersistedScor
     const scoreRange: HistogramShader = {
       min: range.range[0],
       max: range.range[1],
-      title: range.acmgClassification?.evidenceStrength ? EVIDENCE_STRENGTHS_REVERSED[range.acmgClassification.evidenceStrength] : range.label,
+      title: range.acmgClassification?.evidenceStrength
+        ? EVIDENCE_STRENGTHS_REVERSED[range.acmgClassification.evidenceStrength]
+        : range.label,
       align: 'center',
       color: getRangeColor(range),
       thresholdColor: getRangeColor(range),
@@ -143,7 +151,6 @@ export function prepareCalibrationsForHistogram(scoreCalibrations: PersistedScor
   })
   return preparedCalibrations
 }
-
 
 /**
  * Derives the display color associated with a functional range classification.

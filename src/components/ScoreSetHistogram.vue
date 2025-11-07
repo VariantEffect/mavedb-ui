@@ -528,7 +528,7 @@ export default defineComponent({
 
     scoreCalibrations: function (): {[key: string]: PersistedScoreCalibration} | null {
       const calibrationObjects: Record<string, PersistedScoreCalibration> = {}
-      if (this.scoreSet.scoreCalibrations != null && this.scoreSet.scoreCalibrations > 0) {
+      if (this.scoreSet.scoreCalibrations != null && this.scoreSet.scoreCalibrations.length > 0) {
         for (const calibration of this.scoreSet.scoreCalibrations) {
           calibrationObjects[calibration.urn] = calibration
         }

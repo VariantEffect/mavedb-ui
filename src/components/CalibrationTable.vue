@@ -8,7 +8,7 @@
       </caption>
       <tbody>
         <!-- Baseline score row (if provided) -->
-        <tr v-if="scoreCalibration.baselineScore !== null && scoreCalibration.baselineScore !== undefined">
+        <tr v-if="baselineScoreIsDefined">
           <th class="mavedb-calibration-row-header" scope="row">Baseline score</th>
           <td :colspan="dynamicScoreRangesColumnCount - 1" style="text-align: center">
             <span class="monospaced-type">{{ roundRangeBound(scoreCalibration.baselineScore) }}</span>
@@ -332,6 +332,9 @@ export default defineComponent({
         return []
       }
       return [...this.scoreCalibration.functionalRanges].sort(this.comparescoreCalibration)
+    },
+    baselineScoreIsDefined() {
+      return this.scoreCalibration.baselineScore !== null && this.scoreCalibration.baselineScore !== undefined
     }
   },
 

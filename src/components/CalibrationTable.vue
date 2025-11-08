@@ -113,7 +113,7 @@
           "
         >
           <td :colspan="dynamicScoreRangesColumnCount" style="text-align: center; font-style: italic; font-size: 0.9em">
-            No evidence strengths have been reported for this calibration.
+            No evidence strengths have been reported for this calibration{{ scoreCalibration.notes ? '*' : '' }}.
           </td>
         </tr>
         <!-- Threshold sources row (if provided) -->
@@ -224,16 +224,16 @@
         <tr v-if="sortedRanges.length === 0">
           <td
             class="mave-classification-not_provided"
-            :colspan="dynamicScoreRangesColumnCount"
+            :colspan="baselineScoreIsDefined ? dynamicScoreRangesColumnCount + 1 : dynamicScoreRangesColumnCount"
             style="text-align: center; font-style: italic"
           >
-            Ranges have not been provided.
+            Ranges have not been provided{{ scoreCalibration.notes ? '*' : '' }}.
           </td>
         </tr>
       </tbody>
     </table>
+    <div v-if="scoreCalibration.notes" class="mavedb-calibration-caption-notes">*{{ scoreCalibration.notes }}</div>
   </div>
-  <!-- Single unified table now includes evidence rows; removed duplicate second table -->
 </template>
 
 <script lang="ts">
@@ -401,6 +401,16 @@ table.mavedb-calibration-table {
   border-top: 1px solid gray;
   border-left: 1px solid gray;
   border-right: 1px solid gray;
+}
+
+.mavedb-calibration-caption-notes {
+  display: block;
+  font-size: 0.9em;
+  line-height: 1.2;
+  font-weight: normal;
+  margin-top: 0.25em;
+  font-style: italic;
+  color: #333;
 }
 
 .mavedb-calibration-row-header {

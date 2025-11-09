@@ -47,13 +47,7 @@
           <td
             v-for="range in sortedRanges"
             :key="range.label + '-classification'"
-            :class="
-              anyRangeHasEvidenceStrength
-                ? range.acmgClassification?.points
-                  ? evidenceCodeClass(evidenceCodeForEvidenceStrength(range.acmgClassification?.points))
-                  : ''
-                : `mave-classification-${range.classification}`
-            "
+            :class="`mave-classification-${range.classification}`"
           >
             <span>{{ range.classification ? titleCase(range.classification) : 'Not Provided' }}</span>
           </td>

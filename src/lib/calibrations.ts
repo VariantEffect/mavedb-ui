@@ -136,9 +136,7 @@ export function prepareCalibrationsForHistogram(scoreCalibrations: PersistedScor
     const scoreRange: HistogramShader = {
       min: range.range[0],
       max: range.range[1],
-      title: range.acmgClassification?.evidenceStrength
-        ? EVIDENCE_STRENGTHS_REVERSED[range.acmgClassification.evidenceStrength]
-        : range.label,
+      title: range.label,
       align: 'center',
       color: getRangeColor(range),
       thresholdColor: getRangeColor(range),

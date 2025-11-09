@@ -76,8 +76,8 @@
                 : '' + ' monospaced-type'
             "
           >
-            <span v-if="range.acmgClassification?.evidenceStrength">
-              {{ range.acmgClassification.criterion }}_{{ range.acmgClassification.evidenceStrength.toUpperCase() }}
+            <span v-if="range.acmgClassification?.evidenceStrength" class="evidence-code">
+              {{ formattedEvidenceCode(range) }}
             </span>
             <span v-else> — </span>
           </td>
@@ -370,6 +370,15 @@ export default defineComponent({
     },
     roundRangeBound(rangeBound: number) {
       return rangeBound.toPrecision(3)
+    },
+    formattedEvidenceCode(range: FunctionalRange) {
+      if (!range.acmgClassification?.evidenceStrength) {
+        return ''
+      }
+      const criterion = range.acmgClassification.criterion
+      const strength = range.acmgClassification.evidenceStrength.toUpperCase()
+      // Inject zero-width space after underscores to allow wrapping only at underscores
+      return `${criterion}_${strength}`.replace(/_/g, '_\u200b')
     }
   }
 })
@@ -411,7 +420,7 @@ table.mavedb-calibration-table {
   font-weight: bold;
   text-align: left;
   background-color: #fafafa;
-  white-space: nowrap;
+  white-space: normal;
 }
 
 table.mavedb-calibration-table td,
@@ -420,6 +429,9 @@ table.mavedb-calibration-table th {
   padding: 0.5em 1em;
   text-align: center;
   vertical-align: middle;
+  /* Restrict wrapping to natural breakpoints (spaces); underscores get ZWSP injected in evidence codes */
+  overflow-wrap: normal;
+  word-break: normal;
 }
 
 /* Unified sources row styling */
@@ -444,6 +456,12 @@ table.mavedb-calibration-table td.mavedb-calibration-sources-cell {
 .mavedb-calibration-sources-cell .citation-list a {
   white-space: nowrap;
 }
+
+/* Evidence code text: zero-width spaces inserted after underscores in formattedEvidenceCode */
+.evidence-code {
+  white-space: normal;
+}
+
 .mavedb-calibration-sources-cell .sources-separator {
   margin: 0 0.15em;
   color: #666;
@@ -583,5 +601,23 @@ table.mavedb-calibration-table td.mavedb-calibration-sources-cell {
 .p-accordion:deep(.p-accordion-content) {
   border-bottom: black 1px solid;
   background: none;
+}
+
+/* 
+ Responsive wrapping: allow table cells to wrap more aggressively below 800px
+ TODO#XXX: To be perfectly honest, this looks pretty bad but the histogram already looks
+ bad on small screens so we can address both issues in a future redesign.
+ */
+@media (max-width: 1000px) {
+  table.mavedb-calibration-table td,
+  table.mavedb-calibration-table th {
+    /* Permit wrapping at underscores and long tokens by adding additional break opportunities */
+    overflow-wrap: anywhere;
+    word-break: break-word;
+  }
+  /* Keep evidence codes wrapping only at injected ZWSP but still allow cell to flow to multiple lines */
+  .evidence-code {
+    white-space: normal;
+  }
 }
 </style>

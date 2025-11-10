@@ -140,7 +140,7 @@
                 <th style="width: 12%">Gene</th>
                 <th style="width: 50%">Score set</th>
                 <th style="width: 25%">Publication</th>
-                <th style="width: 13%"># Calibrations</th>
+                <th style="width: 13%">Calibrations w. evidence / Total</th>
               </tr>
             </thead>
             <tbody>
@@ -157,15 +157,15 @@
                       getScoreSetShortName(maveMdScoreSets[urns[0]]!)
                     }}</router-link>
                   </td>
-                  <td>
+                  <td style="text-align: center">
                     <router-link :to="{name: 'scoreSetCalibrations', params: {urn: urns[0]}}"
-                      >{{ maveMdScoreSets[urns[0]]?.scoreCalibrations.length || 0 }} ({{
+                      >{{
                         maveMdScoreSets[urns[0]]?.scoreCalibrations.filter(
                           (calibration) =>
                             calibration.functionalRanges?.filter((range) => range.acmgClassification).length > 0
                         ).length || 0
                       }}
-                      w/ evidence classifications)
+                      / {{ maveMdScoreSets[urns[0]]?.scoreCalibrations.length || 0 }}
                     </router-link>
                   </td>
                 </tr>
@@ -175,20 +175,20 @@
                       maveMdScoreSets[urn]?.title || urn
                     }}</router-link>
                   </td>
-                  <td>
+                  <td style>
                     <router-link v-if="maveMdScoreSets[urn]" :to="{name: 'scoreSet', params: {urn}}">{{
                       getScoreSetShortName(maveMdScoreSets[urn]!)
                     }}</router-link>
                   </td>
-                  <td>
-                    <router-link :to="{name: 'scoreSetCalibrations', params: {urn: urns[0]}}"
-                      >{{ maveMdScoreSets[urn]?.scoreCalibrations.length || 0 }} ({{
+                  <td style="text-align: center">
+                    <router-link :to="{name: 'scoreSetCalibrations', params: {urn: urns[0]}}">
+                      {{
                         maveMdScoreSets[urn]?.scoreCalibrations.filter(
                           (calibration) =>
                             calibration.functionalRanges?.filter((range) => range.acmgClassification).length > 0
                         ).length || 0
                       }}
-                      w/ evidence classifications)
+                      / {{ maveMdScoreSets[urn]?.scoreCalibrations.length || 0 }}
                     </router-link>
                   </td>
                 </tr>

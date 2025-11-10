@@ -605,7 +605,7 @@ table.mavedb-calibration-table td.mavedb-calibration-sources-cell {
 
 /* 
  Responsive wrapping: allow table cells to wrap more aggressively below 800px
- TODO#XXX: To be perfectly honest, this looks pretty bad but the histogram already looks
+ TODO#563: To be perfectly honest, this looks pretty bad but the histogram already looks
  bad on small screens so we can address both issues in a future redesign.
  */
 @media (max-width: 1000px) {

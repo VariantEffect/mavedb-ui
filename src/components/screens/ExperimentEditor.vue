@@ -177,6 +177,7 @@
                 <span class="p-float-label">
                   <FileUpload
                     :id="scopedId('input-extraMetadataFile')"
+                    accept="application/json"
                     :auto="false"
                     choose-label="Extra metadata"
                     :class="inputClasses.extraMetadataFile"
@@ -838,7 +839,7 @@ export default {
                   this.clientSideValidationErrors.extraMetadata =
                     'Extra metadata must be a JSON object (not an array or simple value).'
                 } else {
-                  this.clientSideValidationErrors.extraMetadata = null
+                  delete this.clientSideValidationErrors.extraMetadata
                 }
               } catch {
                 this.extraMetadata = null

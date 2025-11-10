@@ -265,7 +265,6 @@ export default defineComponent({
 
       activeViz: 0,
       showCalibrations: scoreSetHasCalibrations,
-      activeCalibrationUrn: this.selectedCalibration,
       activeCalibration: {label: 'None', value: null} as {
         label: string
         value: PersistedScoreCalibration | null
@@ -723,7 +722,7 @@ export default defineComponent({
           // Line 3: Score and classification
           if (variant.score) {
             let binClassificationLabel = ''
-            if (bin && this.activeCalibration && this.activeCalibration.value?.urn) {
+            if (bin && this.activeCalibration.value?.urn) {
               // TODO#491: Refactor this calculation into the creation of variant objects so we may just access the property of the variant which tells us its classification.
               const binClassification = this.histogramShaders[this.activeCalibration.value.urn]?.find(
                 (calibration: HistogramShader) => shaderOverlapsBin(calibration, bin)
@@ -744,7 +743,7 @@ export default defineComponent({
           parts.push(`Bin range: ${bin.x0} to ${bin.x1}`)
 
           //Line 6: Bin Classification
-          if (this.activeCalibration && this.activeCalibration.value?.urn) {
+          if (this.activeCalibration.value?.urn) {
             // TODO#491: Refactor this calculation into the creation of histogram bins so we don't need to repeat it every time we construct a tooltip.
             const binClassifications =
               this.histogramShaders[this.activeCalibration.value.urn]
@@ -814,7 +813,7 @@ export default defineComponent({
     activeCalibration: {
       handler: function () {
         this.renderOrRefreshHistogram()
-        this.$emit('calibrationChanged', this.activeCalibration ? this.activeCalibration.value?.urn : null)
+        this.$emit('calibrationChanged', this.activeCalibration.value?.urn ?? null)
       }
     },
     showCalibrations: {
@@ -1020,7 +1019,7 @@ export default defineComponent({
 
       // Only render clinical specific viz options if such features are enabled.
       if (this.config.CLINICAL_FEATURES_ENABLED && this.showCalibrations) {
-        this.histogram.renderShader(this.activeCalibration.value?.urn)
+        this.histogram.renderShader(this.activeCalibration.value ? this.activeCalibration.value.urn : null)
       } else {
         this.histogram.renderShader(null)
       }
@@ -1141,7 +1140,7 @@ export default defineComponent({
     },
 
     chooseDefaultCalibration: function () {
-      if (this.activeCalibration?.value) {
+      if (this.activeCalibration.value) {
         return this.activeCalibration
       }
 

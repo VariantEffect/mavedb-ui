@@ -112,18 +112,6 @@
     </fieldset>
   </div>
   <div ref="histogramContainer" class="mavedb-histogram-container" />
-  <!-- The child component will attempt to immediately emit the range which is active when it is created. Since Vue lifecycle events bubble up from child to parent, this causes this component to attempt
-   to create the histogram before the component is mounted when it doesn't have access to `this.$refs`. As a workaround, only render this child component once the histogram is ready. -->
-  <div v-if="showCalibrations && activeCalibration && activeCalibration.value" class="mave-range-table-container">
-    <Accordion :active-index="0" collapse-icon="pi pi-minus" expand-icon="pi pi-plus">
-      <AccordionTab class="mave-range-table-tab" header="Score Ranges and Clinical Evidence Strength">
-        <CalibrationTable
-          :score-calibration="activeCalibration.value"
-          :score-calibration-name="activeCalibration.label"
-        />
-      </AccordionTab>
-    </Accordion>
-  </div>
 </template>
 
 <script lang="ts">
@@ -138,7 +126,6 @@ import Rating from 'primevue/rating'
 import TabMenu from 'primevue/tabmenu'
 import {defineComponent, PropType} from 'vue'
 
-import CalibrationTable from '@/components/CalibrationTable.vue'
 import useScopedId from '@/composables/scoped-id'
 import config from '@/config'
 import {saveChartAsFile} from '@/lib/chart-export'
@@ -197,7 +184,7 @@ interface Margins {
 export default defineComponent({
   name: 'ScoreSetHistogram',
 
-  components: {Accordion, AccordionTab, Checkbox, Dropdown, Rating, TabMenu, CalibrationTable, ProgressSpinner},
+  components: {Accordion, AccordionTab, Checkbox, Dropdown, Rating, TabMenu, ProgressSpinner},
 
   props: {
     coordinates: {

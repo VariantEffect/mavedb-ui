@@ -109,10 +109,15 @@
               :external-selection="variantToVisualize"
               :hide-start-and-stop-loss-by-default="hideStartAndStopLoss"
               :score-set="item"
+              :selected-calibration="selectedCalibration"
               :variants="variants"
+              @calibration-changed="childComponentSelectedCalibration"
               @export-chart="setHistogramExport"
             />
           </template>
+        </div>
+        <div v-if="selectedCalibrationObject" class="mavedb-score-set-calibration-table">
+          <CalibrationTable :score-calibration="selectedCalibrationObject" />
         </div>
         <div v-if="showHeatmap && !isScoreSetVisualizerVisible" class="mavedb-score-set-heatmap-pane">
           <ScoreSetHeatmap
@@ -198,7 +203,7 @@
           </Dialog>
           <br />
         </div>
-        <CollectionAdder class="mave-save-to-collection-button" data-set-type="scoreSet" :data-set-urn="item.urn" />
+        <CollectionAdder data-set-type="scoreSet" :data-set-urn="item.urn" />
 
         <div v-if="requestFromGalaxy == '1'">
           <br />Send files to <a :href="galaxyUrl">Galaxy</a>
@@ -384,6 +389,7 @@ import Button from 'primevue/button'
 import Checkbox from 'primevue/checkbox'
 import Dialog from 'primevue/dialog'
 import InputSwitch from 'primevue/inputswitch'
+import ProgressSpinner from 'primevue/progressspinner'
 import ProgressBar from 'primevue/progressbar'
 import PrimeDialog from 'primevue/dialog'
 import ScrollPanel from 'primevue/scrollpanel'
@@ -397,6 +403,7 @@ import AssayFactSheet from '@/components/AssayFactSheet'
 import CalibrationEditor from '../CalibrationEditor.vue'
 import CollectionAdder from '@/components/CollectionAdder'
 import CollectionBadge from '@/components/CollectionBadge'
+import CalibrationTable from '@/components/CalibrationTable'
 import ScoreSetHeatmap from '@/components/ScoreSetHeatmap'
 import ScoreSetHistogram from '@/components/ScoreSetHistogram'
 import ScoreSetPreviewTable from '@/components/ScoreSetPreviewTable'
@@ -426,6 +433,7 @@ export default {
     AssayFactSheet,
     AutoComplete,
     Button,
+    CalibrationTable,
     CalibrationEditor,
     Checkbox,
     CollectionAdder,
@@ -436,6 +444,7 @@ export default {
     ItemNotFound,
     PageLoading,
     ProgressBar,
+    ProgressSpinner,
     PrimeDialog,
     ScoreSetHeatmap,
     ScoreSetHistogram,
@@ -565,7 +574,13 @@ export default {
     hideStartAndStopLoss: function () {
       // In clinical mode, when the target is not endogenously edited (so it has a target sequence), omit start- and
       // stop-loss variants.
-      return this.clinicalMode && this.item.targetGenes[0]?.targetSequence
+      return this.clinicalMode && !!this.item.targetGenes[0]?.targetSequence
+    },
+    selectedCalibrationObject: function () {
+      if (this.item && this.item.scoreCalibrations && this.selectedCalibration) {
+        return this.item.scoreCalibrations.find((calibration) => calibration.urn === this.selectedCalibration)
+      }
+      return null
     },
     uniprotId: function () {
       // If there is only one target gene, return its UniProt ID that has been set from mapped metadata.

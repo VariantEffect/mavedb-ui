@@ -3,7 +3,7 @@
     <table class="mavedb-calibration-table">
       <caption class="mavedb-calibration-caption">
         {{
-          scoreCalibrationName ?? 'Score ranges'
+          calibrationNameToDisplay
         }}
       </caption>
       <tbody>
@@ -246,10 +246,6 @@ export default defineComponent({
     scoreCalibration: {
       type: Object as PropType<PersistedScoreCalibration>,
       required: true
-    },
-    scoreCalibrationName: {
-      type: String as PropType<string | undefined | null>,
-      required: true
     }
   },
 
@@ -264,24 +260,38 @@ export default defineComponent({
 
   computed: {
     anyRangeHasEvidenceStrength(): boolean {
-      return this.scoreCalibration?.functionalRanges?.some(
+      if (!this.scoreCalibration.functionalRanges) {
+        return false
+      }
+
+      return this.scoreCalibration.functionalRanges.some(
         (r: FunctionalRange) => r.acmgClassification && 'points' in r.acmgClassification
       )
     },
     anyRangeHasEvidenceCode(): boolean {
-      return this.scoreCalibration?.functionalRanges?.some(
-        (r: FunctionalRange) => r.acmgClassification?.evidenceStrength
-      )
+      if (!this.scoreCalibration.functionalRanges) {
+        return false
+      }
+
+      return this.scoreCalibration.functionalRanges.some((r: FunctionalRange) => r.acmgClassification?.evidenceStrength)
     },
     anyRangeHasOddsPaths(): boolean {
-      return this.scoreCalibration?.functionalRanges?.some((r: FunctionalRange) => r.oddspathsRatio !== undefined)
+      if (!this.scoreCalibration.functionalRanges) {
+        return false
+      }
+
+      return this.scoreCalibration.functionalRanges.some((r: FunctionalRange) => r.oddspathsRatio !== undefined)
     },
     anyRangeHasPLR(): boolean {
-      return this.scoreCalibration?.functionalRanges?.some((r: FunctionalRange) => 'positiveLikelihoodRatio' in r)
+      if (!this.scoreCalibration.functionalRanges) {
+        return false
+      }
+
+      return this.scoreCalibration.functionalRanges.some((r: FunctionalRange) => 'positiveLikelihoodRatio' in r)
     },
     dynamicScoreRangesColumnCount(): number {
       // 1 header column + number of range columns
-      const rangeCount = this.scoreCalibration?.functionalRanges?.length || 0
+      const rangeCount = this.scoreCalibration.functionalRanges?.length || 0
       return 1 + rangeCount
     },
     hasAnySources(): boolean {
@@ -329,6 +339,11 @@ export default defineComponent({
     },
     baselineScoreIsDefined() {
       return this.scoreCalibration.baselineScore !== null && this.scoreCalibration.baselineScore !== undefined
+    },
+    calibrationNameToDisplay() {
+      return this.scoreCalibration.researchUseOnly
+        ? `Research Use Only: ${this.scoreCalibration.title}`
+        : (this.scoreCalibration.title ?? 'Score ranges')
     }
   },
 

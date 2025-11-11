@@ -152,14 +152,23 @@
             <Button class="p-button-outlined p-button-sm" @click="downloadMetadata">Metadata</Button>&nbsp;
           </template>
           <Button class="p-button-outlined p-button-sm" @click="downloadMappedVariants()">Mapped Variants</Button>&nbsp;
-          <SplitButton
-            :button-props="{class: 'p-button-outlined p-button-sm'}"
-            label="Annotated Variants"
-            :menu-button-props="{class: 'p-button-sm'}"
-            :model="annotatedVariantDownloadOptions"
-            @click="annotatedVariantDownloadOptions[0].command"
-          ></SplitButton
-          >&nbsp; <Button class="p-button-outlined p-button-sm" @click="histogramExport()">Histogram</Button>&nbsp;
+          <div style="display: inline-block; position: relative">
+            <SplitButton
+              :button-props="{class: 'p-button-outlined p-button-sm'}"
+              :disabled="annotatedDownloadInProgress"
+              label="Annotated Variants"
+              :menu-button-props="{class: 'p-button-sm'}"
+              :model="annotatedVariantDownloadOptions"
+              @click="annotatedVariantDownloadOptions[0].command"
+            ></SplitButton>
+            <div
+              v-if="annotatedDownloadInProgress"
+              style="position: absolute; left: 0; right: 0; top: 100%; margin-top: 4px"
+            >
+              <ProgressBar show-value style="height: 1.5em" :value="annotatedDownloadProgress" />
+            </div>
+          </div>
+          &nbsp; <Button class="p-button-outlined p-button-sm" @click="histogramExport()">Histogram</Button>&nbsp;
           <template v-if="heatmapExists">
             <Button class="p-button-outlined p-button-sm" @click="heatmapExport()">Heatmap</Button>&nbsp;
           </template>
@@ -375,6 +384,7 @@ import Button from 'primevue/button'
 import Checkbox from 'primevue/checkbox'
 import Dialog from 'primevue/dialog'
 import InputSwitch from 'primevue/inputswitch'
+import ProgressBar from 'primevue/progressbar'
 import PrimeDialog from 'primevue/dialog'
 import ScrollPanel from 'primevue/scrollpanel'
 import Sidebar from 'primevue/sidebar'
@@ -425,6 +435,7 @@ export default {
     InputSwitch,
     ItemNotFound,
     PageLoading,
+    ProgressBar,
     PrimeDialog,
     ScoreSetHeatmap,
     ScoreSetHistogram,
@@ -489,7 +500,10 @@ export default {
       publish: false,
       update: false,
       addCalibration: false
-    }
+    },
+    annotatedDownloadInProgress: false,
+    annotatedDownloadProgress: 0,
+    streamController: null
   }),
 
   computed: {
@@ -525,7 +539,7 @@ export default {
         annotatatedVariantOptions.push({
           label: 'Pathogenicity Evidence Line',
           command: () => {
-            this.downloadAnnotatedVariants('pathogenicity-evidence-line')
+            this.streamVariantAnnotations('pathogenicity-evidence-line')
           }
         })
       }
@@ -534,7 +548,7 @@ export default {
         annotatatedVariantOptions.push({
           label: 'Functional Impact Statement',
           command: () => {
-            this.downloadAnnotatedVariants('functional-impact-statement')
+            this.streamVariantAnnotations('functional-impact-statement')
           }
         })
       }
@@ -542,7 +556,7 @@ export default {
       annotatatedVariantOptions.push({
         label: 'Functional Impact Study Result',
         command: () => {
-          this.downloadAnnotatedVariants('functional-study-result')
+          this.streamVariantAnnotations('functional-study-result')
         }
       })
 
@@ -878,29 +892,82 @@ export default {
         this.$toast.add({severity: 'error', summary: 'No downloadable mapped variants text file', life: 3000})
       }
     },
-    downloadAnnotatedVariants: async function (mappedVariantType) {
-      let response = null
-      try {
-        if (this.item) {
-          response = await axios.get(
-            `${config.apiBaseUrl}/score-sets/${this.item.urn}/annotated-variants/${mappedVariantType}`
-          )
-        }
-      } catch (e) {
-        response = e.response || {status: 500}
-      }
-      if (response.status == 200) {
-        //convert object to Json.
-        const file = JSON.stringify(response.data)
-        const anchor = document.createElement('a')
+    streamVariantAnnotations: async function (annotationType) {
+      this.abortStream()
+      this.streamController = new AbortController()
 
-        anchor.href = 'data:text/json;charset=utf-8,' + encodeURIComponent(file)
-        anchor.target = '_blank'
-        //file default name
-        anchor.download = this.item.urn + '_annotated_variants.json'
-        anchor.click()
-      } else {
-        this.$toast.add({severity: 'error', summary: 'No downloadable annotated variants text file', life: 3000})
+      try {
+        this.annotatedDownloadInProgress = true
+        const response = await fetch(
+          `${config.apiBaseUrl}/score-sets/${this.item.urn}/annotated-variants/${annotationType}`,
+          {
+            signal: this.streamController.signal,
+            headers: {
+              Accept: 'application/x-ndjson'
+            }
+          }
+        )
+
+        if (!response.ok) {
+          throw new Error(`HTTP ${response.status}: ${response.statusText}`)
+        }
+
+        // Extract metadata from headers to build progress bar
+        const metadata = {
+          totalCount: parseInt(response.headers.get('X-Total-Count') || '0'),
+          processingStarted: response.headers.get('X-Processing-Started') || '',
+          streamType: response.headers.get('X-Stream-Type') || 'unknown'
+        }
+
+        const reader = response.body?.getReader()
+        if (!reader) {
+          throw new Error('Response body is not readable')
+        }
+
+        const decoder = new TextDecoder()
+        const chunks = []
+        let processedCount = 0
+
+        while (true) {
+          const {done, value} = await reader.read()
+
+          if (done) {
+            const allChunks = chunks.join('')
+            // Download the accumulated data as a file
+            const finalData = allChunks.trim()
+            const blob = new Blob([finalData], {type: 'application/x-ndjson'})
+            const url = URL.createObjectURL(blob)
+            const anchor = document.createElement('a')
+            anchor.href = url
+            anchor.download = `${this.item.urn}_annotated_variants_${annotationType}.ndjson`
+            anchor.click()
+            URL.revokeObjectURL(url)
+            break
+          }
+
+          const chunk = decoder.decode(value)
+          chunks.push(chunk)
+          const lines = chunk.split('\n')
+          processedCount += lines.length
+          this.annotatedDownloadProgress = Math.round((processedCount / metadata.totalCount) * 100)
+        }
+      } catch (error) {
+        this.$toast.add({
+          severity: 'error',
+          summary: `Error downloading annotated variants: ${error.message}`,
+          life: 5000
+        })
+      } finally {
+        this.streamController = null
+        this.annotatedDownloadInProgress = false
+        this.annotatedDownloadProgress = 0
+      }
+    },
+    abortStream: function () {
+      if (this.streamController) {
+        this.streamController.abort()
+        this.annotatedDownloadInProgress = false
+        this.annotatedDownloadProgress = 0
       }
     },
     downloadMetadata: async function () {

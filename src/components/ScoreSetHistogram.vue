@@ -738,23 +738,25 @@ export default defineComponent({
           //Line 6: Bin Classification
           if (this.activeRangeKey && this.activeRange) {
             // TODO#491: Refactor this calculation into the creation of histogram bins so we don't need to repeat it every time we construct a tooltip.
-            const binClassifications = this.histogramShaders[this.activeRangeKey.value]?.filter(
-              (range: HistogramShader) => shaderOverlapsBin(range, bin)
-            ).sort(
-              (a: HistogramShader, b: HistogramShader) => (a.min ? a.min : -Infinity) - (b.min ? b.min : -Infinity)
-            ) || []
+            const binClassifications =
+              this.histogramShaders[this.activeRangeKey.value]
+                ?.filter((range: HistogramShader) => shaderOverlapsBin(range, bin))
+                .sort(
+                  (a: HistogramShader, b: HistogramShader) => (a.min ? a.min : -Infinity) - (b.min ? b.min : -Infinity)
+                ) || []
 
             if (binClassifications.length > 0) {
-                const binClassificationLabels = binClassifications.map((binClassification: HistogramShader) => {
+              const binClassificationLabels = binClassifications.map((binClassification: HistogramShader) => {
                 const rangeMin = binClassification.min ?? -Infinity
                 const rangeMax = binClassification.max ?? Infinity
 
                 const spanStart = Math.max(bin.x0, rangeMin).toPrecision(3)
                 const spanEnd = Math.min(bin.x1, rangeMax).toPrecision(3)
 
-                const binSpansMultipleShaders = (bin.x0 < rangeMin || bin.x1 > rangeMax)
+                const binSpansMultipleShaders = bin.x0 < rangeMin || bin.x1 > rangeMax
+                const multipleShaderRangeText = spanStart != spanEnd ? ` (${spanStart}-${spanEnd})` : `(${spanStart})`
 
-                return `<span class="mavedb-range-classification-badge" style="background-color:${binClassification.color}; color:white;">${binClassification.title} ${binSpansMultipleShaders ? `(${spanStart} to ${spanEnd})` : ''}</span>`
+                return `<span class="mavedb-range-classification-badge" style="background-color:${binClassification.color}; color:white;">${binClassification.title} ${binSpansMultipleShaders ? `${multipleShaderRangeText}` : ''}</span>`
               })
 
               // If the bin spans many classifications, show the first two and then the rest on a new line.
@@ -766,8 +768,8 @@ export default defineComponent({
               }
             }
           } else {
-              parts.push('Bin classification(s): N/A')
-            }
+            parts.push('Bin classification(s): N/A')
+          }
 
           // Line 7: Bin series counts
           bin.seriesBins.forEach((serieBin, i) => {

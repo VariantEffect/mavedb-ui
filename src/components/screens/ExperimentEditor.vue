@@ -101,6 +101,7 @@
                     :suggestions="publicationIdentifierSuggestionsList"
                     @complete="searchPublicationIdentifiers"
                     @item-select="acceptNewPublicationIdentifier"
+                    @item-unselect="removePublicationIdentifier"
                     @keyup.escape="clearPublicationIdentifierSearch"
                   >
                     <template #chip="slotProps">
@@ -176,6 +177,7 @@
                 <span class="p-float-label">
                   <FileUpload
                     :id="scopedId('input-extraMetadataFile')"
+                    accept="application/json"
                     :auto="false"
                     choose-label="Extra metadata"
                     :class="inputClasses.extraMetadataFile"
@@ -760,6 +762,17 @@ export default {
       }
     },
 
+    removePublicationIdentifier: function (event) {
+      // If we are removing a primary publication identifier, also remove it from that list.
+      const removedIdentifier = event.value.identifier
+      const primaryIdx = this.primaryPublicationIdentifiers.findIndex(
+        (pub) => pub.identifier == removedIdentifier
+      )
+      if (primaryIdx != -1) {
+        this.primaryPublicationIdentifiers.splice(primaryIdx, 1)
+      }
+    },
+
     clearPublicationIdentifierSearch: function () {
       // This could change with a new Primevue version.
       const input = this.$refs.publicationIdentifiersInput
@@ -826,7 +839,7 @@ export default {
                   this.clientSideValidationErrors.extraMetadata =
                     'Extra metadata must be a JSON object (not an array or simple value).'
                 } else {
-                  this.clientSideValidationErrors.extraMetadata = null
+                  delete this.clientSideValidationErrors.extraMetadata
                 }
               } catch {
                 this.extraMetadata = null

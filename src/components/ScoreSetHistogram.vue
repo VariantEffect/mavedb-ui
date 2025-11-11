@@ -748,7 +748,7 @@ export default defineComponent({
                 const spanEnd = Math.min(bin.x1, calibrationMax).toPrecision(3)
 
                 const binSpansMultipleShaders = bin.x0 < calibrationMin || bin.x1 > calibrationMax
-                const multipleShaderRangeText = spanStart != spanEnd ? ` (${spanStart}-${spanEnd})` : `(${spanStart})`
+                const multipleShaderRangeText = spanStart != spanEnd ? `(${spanStart} to ${spanEnd})` : `(${spanStart})`
 
                 return `<span class="mavedb-range-classification-badge" style="background-color:${binClassification.color}; color:white;">${binClassification.title} ${binSpansMultipleShaders ? `${multipleShaderRangeText}` : ''}</span>`
               })

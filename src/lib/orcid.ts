@@ -70,7 +70,9 @@ function getJwtPayload(jwt: string) {
 
 export const idToken: Ref<string | null> = ref(null)
 export const isAuthenticated = computed(() => idToken.value != null)
-export const userProfile = computed((): OidcUserProfileBase => (idToken.value ? getJwtPayload(idToken.value) : null))
+export const userProfile = computed((): OidcUserProfileBase | null =>
+  idToken.value ? getJwtPayload(idToken.value) : null
+)
 
 /** Initialize the authentication mechanism by checking whether the user is already authenticated. */
 export function initializeAuthentication() {
@@ -131,15 +133,28 @@ export async function continueAuthenticationFromRedirect() {
       code,
       redirectUri: `${appUrl}oidc-callback`
     })
-  } catch (e: any) {
-    response = e.response || {status: 500}
+  } catch (e: unknown) {
+    response = (e as {response?: {status: number}}).response || {status: 500}
   }
   if (response.status == 200) {
-    const newIdToken = response.data?.idToken
-    setIdToken(newIdToken)
-    return '/'
+    const newIdToken = (response as {data?: {idToken: string}}).data?.idToken
+    if (newIdToken) {
+      setIdToken(newIdToken)
+
+      // Check if there's a saved redirect path from before session expiry, sanitizing it first.
+      const redirectPathRaw = localStorage.getItem('redirectAfterLogin')
+      localStorage.removeItem('redirectAfterLogin')
+      const redirectPath = sanitizeRedirectPath(redirectPathRaw)
+      if (redirectPath) {
+        return redirectPath
+      }
+
+      return '/'
+    } else {
+      throw new Error('Authentication succeeded but no ID token was received')
+    }
   } else {
-    throw 'Authentication error'
+    throw new Error('Authentication error')
   }
 }
 
@@ -151,4 +166,55 @@ export async function continueAuthenticationFromRedirect() {
  */
 export function signOut() {
   clearIdToken()
+
+  // clear any pending post-auth redirect when the user signs out manually.
+  try {
+    localStorage.removeItem('redirectAfterLogin')
+  } catch {
+    /* ignore storage errors */
+  }
+}
+
+/**
+ * Sanitize a previously stored redirect path to mitigate open redirect attacks.
+ * Only allow simple root-relative paths.
+ */
+function sanitizeRedirectPath(raw: string | null): string | null {
+  if (!raw) return null
+  if (raw.length > 1024) return null
+
+  let decoded: string
+  try {
+    decoded = decodeURIComponent(raw)
+  } catch {
+    return null
+  }
+
+  // Disallow control characters (CR or LF) that could be used for header injection in some contexts
+  if (/[\r\n]/.test(decoded)) return null
+
+  // Must start with single '/'
+  if (!decoded.startsWith('/')) return null
+  if (decoded.startsWith('//')) return null
+
+  // Disallow embedded schemes or attempts like '/http://example.com'
+  if (/https?:/i.test(decoded.split('?')[0])) return null
+
+  // Collapse multiple slashes for comparison and use the normalized path for all checks and return value
+  let normalized = decoded.replace(/\/+/g, '/').replace(/\/\.\//g, '/')
+  // Remove any leading '/./' sequences
+  normalized = normalized.replace(/^\/\.\//g, '/')
+
+  // Basic directory traversal prevention: block '/../' sequences after normalization
+  if (/\.\./.test(normalized)) return null
+
+  // Final origin verification: construct a URL relative to current origin and ensure it resolves within same origin.
+  try {
+    const testUrl = new URL(normalized, window.location.origin)
+    if (testUrl.origin !== window.location.origin) return null
+  } catch {
+    return null
+  }
+
+  return normalized
 }

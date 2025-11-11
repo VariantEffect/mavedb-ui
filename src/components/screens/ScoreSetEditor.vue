@@ -4,23 +4,15 @@
     :is-first-login-prompt="false"
   />
   <DefaultLayout>
-    <div class="mave-score-set-editor">
+    <div v-if="itemId && itemStatus == 'Loaded'" class="mave-score-set-editor">
       <div class="grid">
         <div class="col-12">
-          <div v-if="itemStatus != 'NotLoaded'" class="mave-screen-title-bar">
+          <div class="mave-screen-title-bar">
             <div class="mave-screen-title">Edit score set {{ item.urn }}</div>
-            <div v-if="item" class="mavedb-screen-title-controls">
-              <Button @click="saveEditContent">Save changes</Button>
-              <Button class="p-button-help" @click="resetForm">Clear</Button>
-              <Button class="p-button-warning" @click="viewItem">Cancel</Button>
-            </div>
-          </div>
-          <div v-else class="mave-screen-title-bar">
-            <div class="mave-screen-title">Create a new score set</div>
             <div class="mavedb-screen-title-controls">
-              <Button @click="validateAndSave">Save</Button>
-              <Button class="p-button-help" @click="resetForm">Clear</Button>
-              <Button class="p-button-warning" @click="backDashboard">Cancel</Button>
+              <Button @click="saveEditContent">Save changes</Button>
+              <Button class="p-button-help" @click="resetForm">Reset</Button>
+              <Button class="p-button-warning" @click="viewItem">Cancel</Button>
             </div>
           </div>
         </div>
@@ -28,7 +20,7 @@
           <Card>
             <template #title>Parent experiment and context</template>
             <template #content>
-              <div v-if="itemStatus != 'NotLoaded' && item.experiment">
+              <div v-if="item.experiment">
                 Experiment:
                 <router-link :to="{name: 'experiment', params: {urn: item.experiment.urn}}">{{
                   item.experiment.title
@@ -52,56 +44,17 @@
                   }}</span>
                 </div>
               </div>
-              <div v-if="itemStatus != 'NotLoaded' && supersedesScoreSet">
+              <div v-if="supersedesScoreSet">
                 Supersedes:
                 <router-link :to="{name: 'scoreSet', params: {urn: supersedesScoreSet.urn}}">{{
                   supersedesScoreSet.title
                 }}</router-link>
               </div>
-              <div v-if="itemStatus == 'NotLoaded'" class="field">
-                <span class="p-float-label">
-                  <AutoComplete
-                    :id="scopedId('input-supersededScoreSet')"
-                    ref="supersededScoreSetInput"
-                    v-model="supersededScoreSet"
-                    field="title"
-                    :force-selection="true"
-                    :suggestions="supersededScoreSetSuggestionsList"
-                    @complete="searchSupersededScoreSets"
-                  >
-                    <template #item="slotProps"> {{ slotProps.item.urn }}: {{ slotProps.item.title }} </template>
-                  </AutoComplete>
-                  <label :for="scopedId('input-supersededScoreSet')">Supersedes</label>
-                </span>
-                <span v-if="validationErrors.supersededScoreSetUrn" class="mave-field-error">{{
-                  validationErrors.supersededScoreSetUrn
-                }}</span>
-              </div>
-              <div v-if="itemStatus != 'NotLoaded' && item?.metaAnalyzesScoreSetUrns?.length > 0">
+              <div v-if="item?.metaAnalyzesScoreSetUrns?.length > 0">
                 Meta-analysis for:<br />
                 <div v-for="metaAnalyzesScoreSetUrn of item.metaAnalyzesScoreSetUrns" :key="metaAnalyzesScoreSetUrn">
                   <EntityLink entity-type="scoreSet" :urn="metaAnalyzesScoreSetUrn"></EntityLink>
                 </div>
-              </div>
-              <div v-if="itemStatus == 'NotLoaded'" class="field">
-                <span class="p-float-label">
-                  <AutoComplete
-                    :id="scopedId('input-metaAnalyzesScoreSets')"
-                    ref="metaAnalyzesScoreSetsInput"
-                    v-model="metaAnalyzesScoreSets"
-                    field="title"
-                    :force-selection="true"
-                    :multiple="true"
-                    :suggestions="metaAnalyzesScoreSetSuggestionsList"
-                    @complete="searchMetaAnalyzesScoreSets"
-                  >
-                    <template #item="slotProps"> {{ slotProps.item.urn }}: {{ slotProps.item.title }} </template>
-                  </AutoComplete>
-                  <label :for="scopedId('input-metaAnalyzesScoreSets')">Meta-analysis for</label>
-                </span>
-                <span v-if="validationErrors.metaAnalyzesScoreSetUrns" class="mave-field-error">{{
-                  validationErrors.metaAnalyzesScoreSetUrns
-                }}</span>
               </div>
             </template>
           </Card>
@@ -187,7 +140,7 @@
                   validationErrors.contributors
                 }}</span>
               </div>
-              <div v-if="itemStatus != 'NotLoaded'">
+              <div>
                 <div class="field">
                   <span class="p-float-label">
                     <Dropdown
@@ -251,6 +204,7 @@
                       :suggestions="publicationIdentifierSuggestionsList"
                       @complete="searchPublicationIdentifiers"
                       @item-select="acceptNewPublicationIdentifier"
+                      @item-unselect="removePublicationIdentifier"
                       @keyup.escape="clearPublicationIdentifierSearch"
                     >
                       <template #chip="slotProps">
@@ -306,8 +260,27 @@
                 </Message>
                 <div class="field">
                   <span class="p-float-label">
+                    <div v-if="extraMetadata">
+                      <span class="mr-2"> Extra metadata</span>
+                      <i class="pi pi-check mr-3"></i>
+                      <Button
+                        v-tooltip="{value: 'View extra metadata'}"
+                        class="p-button-info mr-2"
+                        icon="pi pi-eye"
+                        @click="jsonToDisplay = JSON.stringify(extraMetadata, null, 2)"
+                      ></Button>
+                      <Button
+                        v-tooltip="{value: 'Delete extra metadata'}"
+                        class="p-button-danger mr-2"
+                        icon="pi pi-times"
+                        @click="fileCleared('extraMetadataFile')"
+                      ></Button>
+                    </div>
                     <FileUpload
+                      v-else
                       :id="scopedId('input-extraMetadataFile')"
+                      :key="inputExtraMetadataFileKey"
+                      accept="application/json"
                       :auto="false"
                       choose-label="Extra metadata"
                       :class="inputClasses.extraMetadataFile"
@@ -342,7 +315,7 @@
         </div>
 
         <div class="col-12 md:col-6">
-          <div v-if="itemStatus == 'NotLoaded' || item.private">
+          <div v-if="item.private">
             <Card>
               <template #title>Targets</template>
               <template #content>
@@ -793,6 +766,7 @@
                     <FileUpload
                       :id="scopedId('input-scoresFile')"
                       ref="scoresFileUpload"
+                      accept="text/csv"
                       :auto="false"
                       choose-label="Scores file"
                       :class="inputClasses.scoresFile || ''"
@@ -812,9 +786,51 @@
                 </div>
                 <div class="field">
                   <span class="p-float-label">
+                    <div v-if="scoreColumnsMetadata">
+                      <span class="mr-2">Scores column metadata</span>
+                      <i class="pi pi-check mr-3"></i>
+                      <Button
+                        v-tooltip="{value: 'View scores column metadata'}"
+                        class="p-button-info mr-2"
+                        icon="pi pi-eye"
+                        @click="jsonToDisplay = JSON.stringify(scoreColumnsMetadata, null, 2)"
+                      ></Button>
+                      <Button
+                        v-tooltip="{value: 'Delete scores column metadata'}"
+                        class="p-button-danger mr-2"
+                        icon="pi pi-times"
+                        @click="fileCleared('scoreColumnsMetadataFile')"
+                      ></Button>
+                    </div>
+                    <FileUpload
+                      v-else
+                      :id="scopedId('input-scoreColumnsMetadataFile')"
+                      accept="application/json"
+                      :auto="false"
+                      choose-label="Scores column metadata file"
+                      :class="inputClasses.scoreColumnsMetadataFile || ''"
+                      :custom-upload="true"
+                      :file-limit="1"
+                      :show-cancel-button="false"
+                      :show-upload-button="false"
+                      @remove="fileCleared('scoreColumnsMetadataFile')"
+                      @select="fileSelected('scoreColumnsMetadataFile', $event)"
+                    >
+                      <template #empty>
+                        <p>Drop a JSON file here.</p>
+                      </template>
+                    </FileUpload>
+                  </span>
+                  <span v-if="validationErrors.scoreColumnsMetadataFile" class="mave-field-error">{{
+                    validationErrors.scoreColumnsMetadataFile
+                  }}</span>
+                </div>
+                <div class="field">
+                  <span class="p-float-label">
                     <FileUpload
                       :id="scopedId('input-countsFile')"
                       ref="countsFileUpload"
+                      accept="text/csv"
                       :auto="false"
                       choose-label="Counts file"
                       :class="inputClasses.countsFile || ''"
@@ -832,6 +848,47 @@
                     validationErrors.countsFile
                   }}</span>
                 </div>
+                <div class="field">
+                  <span class="p-float-label">
+                    <div v-if="countColumnsMetadata">
+                      <span class="mr-2">Counts column metadata</span>
+                      <i class="pi pi-check mr-3"></i>
+                      <Button
+                        v-tooltip="{value: 'View counts column metadata'}"
+                        class="p-button-info mr-2"
+                        icon="pi pi-eye"
+                        @click="jsonToDisplay = JSON.stringify(countColumnsMetadata, null, 2)"
+                      ></Button>
+                      <Button
+                        v-tooltip="{value: 'Delete counts column metadata'}"
+                        class="p-button-danger mr-2"
+                        icon="pi pi-times"
+                        @click="fileCleared('countColumnsMetadataFile')"
+                      ></Button>
+                    </div>
+                    <FileUpload
+                      v-else
+                      :id="scopedId('input-countColumnsMetadataFile')"
+                      accept="application/json"
+                      :auto="false"
+                      choose-label="Counts column metadata file"
+                      :class="inputClasses.countColumnsMetadataFile || ''"
+                      :custom-upload="true"
+                      :file-limit="1"
+                      :show-cancel-button="false"
+                      :show-upload-button="false"
+                      @remove="fileCleared('countColumnsMetadataFile')"
+                      @select="fileSelected('countColumnsMetadataFile', $event)"
+                    >
+                      <template #empty>
+                        <p>Drop a JSON file here.</p>
+                      </template>
+                    </FileUpload>
+                  </span>
+                  <span v-if="validationErrors.countColumnsMetadataFile" class="mave-field-error">{{
+                    validationErrors.countColumnsMetadataFile
+                  }}</span>
+                </div>
               </template>
             </Card>
           </div>
@@ -839,13 +896,23 @@
       </div>
     </div>
     <ProgressSpinner v-if="progressVisible" class="mave-progress" />
+    <Dialog
+      v-model:visible="jsonToDisplay"
+      :close-on-escape="true"
+      modal
+      :style="{maxWidth: '90%', width: '50rem'}"
+      @close="jsonToDisplay = null"
+    >
+      <span style="white-space: pre-wrap; font-family: monospace">
+        {{ jsonToDisplay }}
+      </span>
+    </Dialog>
   </DefaultLayout>
 </template>
 
 <script>
 import axios from 'axios'
 import fasta from 'fasta-js'
-import {FontAwesomeIcon} from '@fortawesome/vue-fontawesome'
 import _ from 'lodash'
 import {marked} from 'marked'
 import AutoComplete from 'primevue/autocomplete'
@@ -856,8 +923,6 @@ import Column from 'primevue/column'
 import DataTable from 'primevue/datatable'
 import Dropdown from 'primevue/dropdown'
 import FileUpload from 'primevue/fileupload'
-import InputGroup from 'primevue/inputgroup'
-import InputGroupAddon from 'primevue/inputgroupaddon'
 import InputNumber from 'primevue/inputnumber'
 import InputText from 'primevue/inputtext'
 import InputSwitch from 'primevue/inputswitch'
@@ -868,6 +933,7 @@ import SelectButton from 'primevue/selectbutton'
 import TabPanel from 'primevue/tabpanel'
 import TabView from 'primevue/tabview'
 import Textarea from 'primevue/textarea'
+import Dialog from 'primevue/dialog'
 import {ref} from 'vue'
 import {useHead} from '@unhead/vue'
 
@@ -881,7 +947,6 @@ import useItems from '@/composition/items'
 import config from '@/config'
 import {normalizeDoi, normalizeIdentifier, validateDoi, validateIdentifier} from '@/lib/identifiers'
 import {ORCID_ID_REGEX} from '@/lib/orcid'
-import {ABNORMAL_CALIBRATION_EVIDENCE, NORMAL_CALIBRATION_EVIDENCE, INDETERMINATE_CALIBRATION_EVIDENCE} from '@/lib/calibrations'
 import {TARGET_GENE_CATEGORIES, textForTargetGeneCategory} from '@/lib/target-genes'
 
 const externalGeneDatabases = ['UniProt', 'Ensembl', 'RefSeq']
@@ -907,25 +972,6 @@ function emptyTargetGene() {
   }
 }
 
-function emptyEditedScoreRange() {
-  return {
-    label: null,
-    description: null,
-    range: [null, null],
-    classification: null,
-    oddsPath: null,
-    inclusiveLowerBound: true,
-    inclusiveUpperBound: false
-  }
-}
-
-function emptyEditedScoreRangeBoundaryHelper() {
-  return {
-    lowerBoundIsInfinity: false,
-    upperBoundIsInfinity: false
-  }
-}
-
 export default {
   name: 'ScoreSetEditor',
   components: {
@@ -940,9 +986,6 @@ export default {
     EmailPrompt,
     EntityLink,
     FileUpload,
-    FontAwesomeIcon,
-    InputGroup,
-    InputGroupAddon,
     InputNumber,
     InputText,
     InputSwitch,
@@ -952,13 +995,14 @@ export default {
     SelectButton,
     TabPanel,
     TabView,
-    Textarea
+    Textarea,
+    Dialog
   },
 
   props: {
     itemId: {
       type: String,
-      required: false
+      required: true
     }
   },
 
@@ -1035,13 +1079,16 @@ export default {
     geneNameDropdownValue: null,
     targetOptions: ['Assembly', 'HGNC'],
     targetAutocomplete: 'HGNC',
-    extraMetadata: {},
+    extraMetadata: null,
+    scoreColumnsMetadata: null,
+    countColumnsMetadata: null,
+    inputExtraMetadataFileKey: 0,
+    // inputScoreColumnsMetadataFileKey: 0,
+    // inputCountColumnsMetadataFileKey: 0,
+    jsonToDisplay: null,
 
     existingTargetGene: null,
     targetGenes: [],
-
-    activeEditedScoreRangeTab: 0,
-    editedScoreRangeBoundaryHelper: [],
 
     // Static sets of options:
     sequenceTypes: ['DNA', 'protein'],
@@ -1058,7 +1105,9 @@ export default {
     inputClasses: {
       countsFile: null,
       extraMetadataFile: null,
-      scoresFile: null
+      scoresFile: null,
+      scoreColumnsMetadataFile: null,
+      countColumnsMetadataFile: null
     },
     externalGeneDatabases,
     metaAnalyzesScoreSetSuggestions: [],
@@ -1329,7 +1378,7 @@ export default {
           }
         )
         // TODO (#130) catch errors in response
-        return response.data || []
+        return response.data?.scoreSets || []
       } catch (err) {
         console.log(`Error while loading search results")`, err)
         return []
@@ -1497,6 +1546,15 @@ export default {
       }
     },
 
+    removePublicationIdentifier: function (event) {
+      // If we are removing a primary publication identifier, also remove it from that list.
+      const removedIdentifier = event.value.identifier
+      const primaryIdx = this.primaryPublicationIdentifiers.findIndex((pub) => pub.identifier == removedIdentifier)
+      if (primaryIdx != -1) {
+        this.primaryPublicationIdentifiers.splice(primaryIdx, 1)
+      }
+    },
+
     clearPublicationIdentifierSearch: function () {
       // This could change with a new Primevue version.
       const input = this.$refs.publicationIdentifiersInput
@@ -1590,9 +1648,19 @@ export default {
     },
 
     fileCleared: function (inputName) {
+      this.jsonToDisplay = null
       if (inputName == 'extraMetadataFile') {
         this.extraMetadata = null
         delete this.clientSideValidationErrors.extraMetadata
+        this.inputExtraMetadataFileKey += 1 // force re-mount of file upload component, otherwise button doesn't re-appear
+      } else if (inputName == 'scoreColumnsMetadataFile') {
+        this.scoreColumnsMetadata = null
+        delete this.clientSideValidationErrors.scoreColumnsMetadata
+        this.inputScoreColumnsMetadataFileKey += 1
+      } else if (inputName == 'countColumnsMetadataFile') {
+        this.countColumnsMetadata = null
+        delete this.clientSideValidationErrors.countColumnsMetadata
+        this.inputCountColumnsMetadataFileKey += 1
       }
       // ensure files are cleared from sequence loader even when remove button not used
       else if (inputName == 'targetGeneTargetSequenceSequenceFile') {
@@ -1602,31 +1670,55 @@ export default {
       this.mergeValidationErrors()
     },
 
+    validateJsonObject: function (data, fieldName) {
+      if (!_.isObject(data) || _.isArray(data)) {
+        this.clientSideValidationErrors[fieldName] =
+          `${_.startCase(fieldName)} must be a JSON object (not an array or simple value).`
+      } else {
+        delete this.clientSideValidationErrors[fieldName]
+      }
+    },
+
     fileSelected: async function (inputName, event) {
       const file = event.files[0]
       if (file) {
+        const text = await file.text()
         switch (inputName) {
           case 'extraMetadataFile':
             {
-              const text = await file.text()
               try {
                 this.extraMetadata = JSON.parse(text)
-                if (!_.isObject(this.extraMetadata) || _.isArray(this.extraMetadata)) {
-                  this.clientSideValidationErrors.extraMetadata =
-                    'Extra metadata must be a JSON object (not an array or simple value).'
-                } else {
-                  this.clientSideValidationErrors.extraMetadata = null
-                }
+                this.validateJsonObject(this.extraMetadata, 'extraMetadata')
               } catch {
-                this.extraMetadata = null
                 this.clientSideValidationErrors.extraMetadata = 'The file did not contain valid JSON text.'
                 console.log('Extra metadata file did not contain valid JSON text.')
               }
             }
             break
+          case 'scoreColumnsMetadataFile':
+            {
+              try {
+                this.scoreColumnsMetadata = JSON.parse(text)
+                this.validateJsonObject(this.scoreColumnsMetadata, 'scoreColumnsMetadata')
+              } catch {
+                this.clientSideValidationErrors.scoreColumnsMetadata = 'The file did not contain valid JSON text.'
+                console.log('Scores column metadata file did not contain valid JSON text.')
+              }
+            }
+            break
+          case 'countColumnsMetadataFile':
+            {
+              try {
+                this.countColumnsMetadata = JSON.parse(text)
+                this.validateJsonObject(this.countColumnsMetadata, 'countColumnsMetadata')
+              } catch {
+                this.clientSideValidationErrors.countColumnsMetadata = 'The file did not contain valid JSON text.'
+                console.log('Counts column metadata file did not contain valid JSON text.')
+              }
+            }
+            break
           case 'targetGeneTargetSequenceSequenceFile':
             {
-              const text = await file.text()
               try {
                 const fastaParser = new fasta()
                 /*new Fasta({
@@ -1644,7 +1736,7 @@ export default {
                     'The FASTA file contains more than one sequence.'
                 } else {
                   this.targetGene.targetSequence.sequence = fastaData[0].sequence
-                  this.clientSideValidationErrors['targetGene.targetSequence.sequence'] = null
+                  delete this.clientSideValidationErrors['targetGene.targetSequence.sequence']
                 }
               } catch {
                 this.targetGene.targetSequence.sequence = null
@@ -1701,32 +1793,17 @@ export default {
         this.targetGene = emptyTargetGene()
         this.assembly = this.item.assembly
         this.targetGenes = this.item.targetGenes
-        this.extraMetadata = this.item.extraMetadata
-
+        this.extraMetadata = !_.isEmpty(this.item.extraMetadata) ? this.item.extraMetadata : null
+        this.scoreColumnsMetadata = !_.isEmpty(this.item.datasetColumns?.scoreColumnsMetadata)
+          ? this.item.datasetColumns.scoreColumnsMetadata
+          : null
+        this.countColumnsMetadata = !_.isEmpty(this.item.datasetColumns?.countColumnsMetadata)
+          ? this.item.datasetColumns.countColumnsMetadata
+          : null
 
         if (this.targetGenes[0]?.targetAccession) {
           this.isBaseEditor = this.targetGenes[0].targetAccession.isBaseEditor
         }
-      } else {
-        this.experiment = null
-        this.licenseId = this.defaultLicenseId
-        this.metaAnalyzesScoreSets = []
-        this.supersededScoreSet = null
-        this.title = null
-        this.shortDescription = null
-        this.abstractText = null
-        this.methodText = null
-        this.contributors = []
-        this.doiIdentifiers = []
-        this.primaryPublicationIdentifiers = []
-        this.secondaryPublicationIdentifiers = []
-        this.publicationIdentifiers = []
-        this.dataUsagePolicy = null
-        this.taxonomy = null
-        this.extraMetadata = {}
-        this.editedScoreRangeBoundaryHelper = []
-        this.resetTarget()
-        this.targetGenes = []
       }
     },
 
@@ -1793,6 +1870,10 @@ export default {
     // Currently there is some special handling here, though, so we will leave that for a later refactoring.
 
     save: async function () {
+      if (!this.item) {
+        this.$toast.add({severity: 'error', summary: 'No score set to save.'})
+        return
+      }
       // Remove primary identifier from publications to construct secondary identifiers
       const primaryPublicationIdentifiers = this.primaryPublicationIdentifiers.map((identifier) =>
         _.pick(identifier, ['identifier', 'dbName'])
@@ -1817,70 +1898,91 @@ export default {
         primaryPublicationIdentifiers: primaryPublicationIdentifiers,
         secondaryPublicationIdentifiers: secondaryPublicationIdentifiers,
         dataUsagePolicy: this.dataUsagePolicy,
-        extraMetadata: {},
-        // eslint-disable-next-line no-unused-vars
+        extraMetadata: this.extraMetadata || {},
+        scoreColumnsMetadata: this.scoreColumnsMetadata || {},
+        countColumnsMetadata: this.countColumnsMetadata || {},
+        // eslint-disable-next-line @typescript-eslint/no-unused-vars
         targetGenes: this.targetGenes.map(({index, ...target}) => {
           // drop index property from target genes before save
           if (target.targetAccession) {
             target.targetAccession.isBaseEditor = this.isBaseEditor
           }
           return target
-        }),
-      }
-      if (!this.item) {
-        editedFields.supersededScoreSetUrn = this.supersededScoreSet ? this.supersededScoreSet.urn : null
-        editedFields.metaAnalyzesScoreSetUrns = this.metaAnalyzesScoreSets.map((s) => s.urn)
-      } else {
-        // empty item arrays so that deleted items aren't merged back into editedItem object
-        this.item.contributors = []
-        this.item.doiIdentifiers = []
-        this.item.primaryPublicationIdentifiers = []
-        this.item.publicationIdentifiers = []
-        this.item.rawReadIdentifiers = []
-        this.item.targetGenes = []
+        })
       }
 
-      const editedItem = _.merge({}, this.item || {}, editedFields)
+      // empty item arrays so that deleted items aren't merged back into editedItem object
+      this.item.contributors = []
+      this.item.doiIdentifiers = []
+      this.item.primaryPublicationIdentifiers = []
+      this.item.publicationIdentifiers = []
+      this.item.rawReadIdentifiers = []
+      this.item.targetGenes = []
+
+      // clear objects so that deleted values aren't merged back into editedItem object
+      this.item.extraMetadata = null
+      //this.item.datasetColumns = null
+
+      // const editedItem = _.merge({}, this.item, editedFields)
+      const editedItem = editedFields
 
       this.progressVisible = true
       let response = null
-      try {
-        if (this.item) {
-          response = await axios.put(`${config.apiBaseUrl}/score-sets/${this.item.urn}`, editedItem)
-        } else {
-          response = await axios.post(`${config.apiBaseUrl}/score-sets/`, editedItem)
+
+      // convert editedItem to multi-part form data
+      const formData = new FormData()
+      for (const key in editedItem) {
+        if (_.isArray(editedItem[key]) || _.isObject(editedItem[key])) {
+          formData.append(_.snakeCase(key), JSON.stringify(editedItem[key]))
+        } else if (_.has(editedItem, key) && editedItem[key] !== null && editedItem[key] !== undefined) {
+          formData.append(_.snakeCase(key), editedItem[key])
         }
+      }
+
+      // Add upload files to form data
+      if (this.$refs.scoresFileUpload.files.length == 1) {
+        formData.append('scores_file', this.$refs.scoresFileUpload.files[0])
+      }
+      if (this.$refs.countsFileUpload.files.length == 1) {
+        formData.append('counts_file', this.$refs.countsFileUpload.files[0])
+      }
+      // if (this.$refs.scoreColumnsMetadataFileUpload.files.length == 1) {
+      //   formData.append('score_columns_metadata_file', this.$refs.scoreColumnsMetadataFileUpload.files[0])
+      // }
+      // if (this.$refs.countColumnsMetadataFileUpload.files.length == 1) {
+      //   formData.append('count_columns_metadata_file', this.$refs.countColumnsMetadataFileUpload.files[0])
+      // }
+
+      try {
+        this.progressVisible = true
+        response = await axios.patch(`${config.apiBaseUrl}/score-sets-with-variants/${this.item.urn}`, formData, {
+          headers: {
+            'Content-Type': 'multipart/form-data'
+          }
+        })
+        this.progressVisible = false
       } catch (e) {
         response = e.response || {status: 500}
         this.$toast.add({severity: 'error', summary: 'Error', life: 3000})
       }
       this.progressVisible = false
       if (response.status == 200) {
-        const savedItem = response.data
         this.validationErrors = {}
-        if (this.item) {
-          if (this.$refs.scoresFileUpload?.files?.length == 1) {
-            await this.uploadData(savedItem)
-          } else {
-            this.$router.replace({path: `/score-sets/${this.item.urn}`})
-            this.$toast.add({severity: 'success', summary: 'Your changes were saved.', life: 3000})
-          }
-        } else {
-          console.log('Created item')
-          await this.uploadData(savedItem)
-        }
+        this.$router.replace({path: `/score-sets/${this.item.urn}`})
+        this.$toast.add({severity: 'success', summary: 'Your changes were saved.', life: 3000})
       } else if (response.data && response.data.detail) {
         const formValidationErrors = {}
         if (typeof response.data.detail === 'string' || response.data.detail instanceof String) {
           // Handle generic errors that are not surfaced by the API as objects
           this.$toast.add({
             severity: 'error',
-            summary: `Encountered an error saving score set: ${response.data.detail}`
+            summary: `Encountered an error saving score set: ${response.data.detail}`,
+            life: 10000
           })
         } else {
           for (const error of response.data.detail) {
             console.log(error)
-            let path = error.loc
+            let path = _.map(error.loc, _.camelCase)
             if (path[0] == 'body') {
               path = path.slice(1)
             }
@@ -1914,59 +2016,12 @@ export default {
       }
     },
 
-    uploadData: async function (scoreSet) {
-      if (this.$refs.scoresFileUpload.files.length != 1) {
-        this.validationErrors = {scores: 'Required'}
-      } else {
-        const formData = new FormData()
-        formData.append('scores_file', this.$refs.scoresFileUpload.files[0])
-        if (this.$refs.countsFileUpload.files.length == 1) {
-          formData.append('counts_file', this.$refs.countsFileUpload.files[0])
-        }
-        this.progressVisible = true
-        let response
-        try {
-          response = await axios.post(`${config.apiBaseUrl}/score-sets/${scoreSet.urn}/variants/data`, formData, {
-            headers: {
-              'Content-Type': 'multipart/form-data'
-            }
-          })
-        } catch (e) {
-          response = e.response || {status: 500}
-        }
-        this.progressVisible = false
-
-        if (response.status == 200) {
-          console.log('Imported score set data.')
-          if (this.item) {
-            // this.reloadItem()
-            this.$router.replace({path: `/score-sets/${scoreSet.urn}`})
-            this.$toast.add({severity: 'success', summary: 'Your changes were saved.', life: 3000})
-          } else {
-            this.$router.replace({path: `/score-sets/${scoreSet.urn}`})
-            this.$toast.add({severity: 'success', summary: 'The new score set was saved.', life: 3000})
-          }
-        } else {
-          this.$toast.add({
-            severity: 'error',
-            summary: `The score and count files could not be imported. ${response.data.detail}`,
-            life: 3000
-          })
-          // Delete the score set if just created.
-          // Warn if the score set already exists.
-        }
-      }
-    },
-
     validateAndSave: async function () {
       this.clientSideValidationErrors = {}
 
       const hasScoresFile = this.$refs.scoresFileUpload.files.length == 1
       const hasCountsFile = this.$refs.countsFileUpload.files.length == 1
       if (hasCountsFile && !hasScoresFile) {
-        this.clientSideValidationErrors.scoresFile = 'Required'
-      }
-      if (!this.item && !hasScoresFile) {
         this.clientSideValidationErrors.scoresFile = 'Required'
       }
 

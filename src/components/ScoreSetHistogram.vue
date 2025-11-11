@@ -204,6 +204,10 @@ export default defineComponent({
       type: String as PropType<'raw' | 'mapped'>,
       default: 'raw'
     },
+    defaultHistogram: {
+      type: String,
+      default: 'distribution'
+    },
     externalSelection: {
       type: Object,
       default: null,
@@ -266,6 +270,7 @@ export default defineComponent({
         label: string
         value: PersistedScoreCalibration | null
       },
+      defaultVizApplied: false,
 
       clinicalControls: [] as ClinicalControl[],
       clinicalControlOptions: [] as ClinicalControlOption[],
@@ -920,6 +925,17 @@ export default defineComponent({
           value: null
         }
       }
+    },
+    vizOptions: {
+      handler(newOptions) {
+        if (this.defaultVizApplied) return
+        const idx = newOptions.findIndex((opt) => opt.view === this.defaultHistogram)
+        if (idx >= 0) {
+          this.activeViz = idx
+          this.defaultVizApplied = true
+        }
+      },
+      immediate: true
     }
   },
 

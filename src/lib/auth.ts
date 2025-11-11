@@ -3,9 +3,28 @@
 import axios from 'axios'
 
 import config from '@/config'
-import {idToken as orcidIdToken, isAuthenticated as orcidIsAuthenticated, signOut as orcidSignOut} from '@/lib/orcid'
+import {
+  idToken as orcidIdToken,
+  isAuthenticated as orcidIsAuthenticated,
+  signOut as orcidSignOut,
+  beginAuthentication as orcidBeginAuthentication
+} from '@/lib/orcid'
 import store from '@/store/index'
 import authStore from '@/store/modules/auth'
+
+const PUBLIC_PATHS = [
+  '/',
+  '/search',
+  '/about',
+  '/help',
+  '/docs',
+  '/oidc-callback',
+  '/oidc-callback-error',
+  '/statistics',
+  '/mavemd',
+  '/publication-identifiers',
+  '/variants'
+]
 
 export interface AuthorizationHeader {
   /** The Authorization header value, typically a bearer token having the form "Bearer: <token>". */
@@ -44,6 +63,20 @@ function urlBelongsToApi(url: string) {
 }
 
 /**
+ * Determine whether a given path is publicly accessible without authentication.
+ */
+function isPublicPath(path: string) {
+  return PUBLIC_PATHS.some((publicPath) => {
+    if (path === publicPath) return true
+    if (path.startsWith(publicPath)) {
+      const nextChar = path.charAt(publicPath.length)
+      return nextChar === '/' || nextChar === '?' || nextChar === '#'
+    }
+    return false
+  })
+}
+
+/**
  * Add a bearer authorization token to all requests to the MaveDB API made using Axios.
  *
  * Call this function at application startup time (or page load time, in a single-page application) to supply MaveDB
@@ -77,19 +110,44 @@ export function installAxiosUnauthorizedResponseInterceptor() {
         (error.response?.status == 401 || error.response?.status == 403)
       ) {
         try {
-          // @ts-ignore: We need to pass a custom property in the request configuration.
+          // @ts-expect-error: We need to pass a custom property in the request configuration.
           await axios.get(`${config.apiBaseUrl}/users/me`, {isSessionCheck: true})
-        } catch (error: any) {
-          if (error.response?.status == 401 || error.response?.status == 403) {
+        } catch (sessionCheckError: unknown) {
+          const checkError = sessionCheckError as {response?: {status?: number}}
+          if (checkError.response?.status == 401 || checkError.response?.status == 403) {
             // The user's session has expired. This may happen after several requests issued around the same time, so
             // only take action if the user has not yet been signed out.
             if (orcidIsAuthenticated.value) {
               orcidSignOut()
-              store.dispatch('toast/enqueueToast', {
-                severity: 'info',
-                summary: 'Your ORCID session has ended. Please log in again.',
-                life: 5000
-              })
+
+              // Only auto-redirect if the user is NOT on a known public page
+              // Since the API returns 404 for private content (security), we can't distinguish
+              // between "doesn't exist" and "private", so we use route-based detection
+              // TODO#558: Implement more accurate content visibility detection
+              // - Add API endpoint for content metadata (exists, requiresAuth, contentType)
+              // - Or use client-side heuristics (referrer, existing store data)
+              // - This would eliminate false positives/negatives in edge cases
+              const currentFullPath = window.location.pathname + window.location.search + window.location.hash
+
+              if (!isPublicPath(currentFullPath)) {
+                localStorage.setItem('redirectAfterLogin', currentFullPath)
+                store.dispatch('toast/enqueueToast', {
+                  severity: 'warn',
+                  summary: 'Your ORCID session has ended. Redirecting to login...',
+                  life: 1500
+                })
+
+                setTimeout(() => {
+                  orcidBeginAuthentication()
+                }, 1500)
+              } else {
+                // For public pages, just show a toast without auto-redirect
+                store.dispatch('toast/enqueueToast', {
+                  severity: 'warn',
+                  summary: 'Your ORCID session has ended. Please log in again if needed.',
+                  life: 5000
+                })
+              }
             }
           }
         }

@@ -5,18 +5,9 @@
   />
   <DefaultLayout>
     <div class="mave-score-set-editor">
-      <div v-if="itemStatus != 'NotLoaded'" class="mave-screen-title-bar">
-        <div class="mave-screen-title">Edit score set {{ item.urn }}</div>
-        <div v-if="item" class="mavedb-screen-title-controls">
-          <Button @click="saveEditContent">Save changes</Button>
-          <Button class="p-button-help" @click="resetForm">Clear</Button>
-          <Button class="p-button-warning" @click="viewItem">Cancel</Button>
-        </div>
-      </div>
-      <div v-else class="mave-screen-title-bar">
+      <div class="mave-screen-title-bar">
         <div class="mave-screen-title">Create a new score set</div>
         <div class="mavedb-screen-title-controls">
-          <Button @click="validateAndSave">Save</Button>
           <Button class="p-button-help" @click="resetForm">Clear</Button>
           <Button class="p-button-warning" @click="backDashboard">Cancel</Button>
         </div>
@@ -51,7 +42,12 @@
                         >.
                       </div>
                     </div>
-                    <div class="mavedb-wizard-content">Experiment title: {{ experiment.title }}</div>
+                    <div class="mavedb-wizard-content">
+                      Experiment title:
+                      <router-link :to="{name: 'experiment', params: {urn: experimentUrn}}">
+                        {{ experiment.title }}
+                      </router-link>
+                    </div>
                   </div>
                 </div>
                 <div v-else>
@@ -109,13 +105,7 @@
                       </div>
                     </div>
                     <div class="mavedb-wizard-content">
-                      <div v-if="itemStatus != 'NotLoaded' && item.experiment">
-                        Experiment:
-                        <router-link :to="{name: 'experiment', params: {urn: item.experiment.urn}}">{{
-                          item.experiment.title
-                        }}</router-link>
-                      </div>
-                      <div v-else style="position: relative">
+                      <div style="position: relative">
                         <span class="p-float-label">
                           <Dropdown
                             :id="scopedId('input-experiment')"
@@ -151,13 +141,7 @@
                       </div>
                     </div>
                     <div class="mavedb-wizard-content">
-                      <div v-if="itemStatus != 'NotLoaded' && supersedesScoreSet">
-                        Supersedes:
-                        <router-link :to="{name: 'scoreSet', params: {urn: supersedesScoreSet.urn}}">{{
-                          supersedesScoreSet.title
-                        }}</router-link>
-                      </div>
-                      <div v-if="itemStatus == 'NotLoaded'" class="field">
+                      <div class="field">
                         <span class="p-float-label">
                           <AutoComplete
                             :id="scopedId('input-supersededScoreSet')"
@@ -190,16 +174,7 @@
                       </div>
                     </div>
                     <div class="mavedb-wizard-content">
-                      <div v-if="itemStatus != 'NotLoaded' && item?.metaAnalyzesScoreSetUrns?.length > 0">
-                        Meta-analysis for:<br />
-                        <div
-                          v-for="metaAnalyzesScoreSetUrn of item.metaAnalyzesScoreSetUrns"
-                          :key="metaAnalyzesScoreSetUrn"
-                        >
-                          <EntityLink entity-type="scoreSet" :urn="metaAnalyzesScoreSetUrn"></EntityLink>
-                        </div>
-                      </div>
-                      <div v-if="itemStatus == 'NotLoaded'" class="field">
+                      <div class="field">
                         <span class="p-float-label">
                           <AutoComplete
                             :id="scopedId('input-metaAnalyzesScoreSets')"
@@ -378,7 +353,7 @@
                     }}</span>
                   </div>
                 </div>
-                <div v-if="itemStatus == 'NotLoaded' || item.private == true">
+                <div>
                   <div class="mavedb-wizard-row">
                     <div class="mavedb-wizard-help">
                       <label>
@@ -607,6 +582,7 @@
                       <span class="p-float-label">
                         <FileUpload
                           :id="scopedId('input-extraMetadataFile')"
+                          accept="application/json"
                           :auto="false"
                           choose-label="Extra metadata"
                           :class="inputClasses.extraMetadataFile"
@@ -644,7 +620,7 @@
             </template>
           </StepperPanel>
 
-          <StepperPanel v-if="itemStatus == 'NotLoaded' || item.private">
+          <StepperPanel>
             <template #header="{index, clickCallback}">
               <button
                 class="p-stepper-action"
@@ -1184,18 +1160,12 @@
                           :dropdown="true"
                           :force-selection="true"
                           style="width: 100%"
-                          :suggestions="targetGeneAccessionSuggestionsList"
+                          :suggestions="accessionSuggestions"
                           @complete="fetchTargetAccessions($event)"
                         />
                         <label :for="scopedId('input-targetGeneAccessionLabel')"> Accession Identifier </label>
                       </span>
-                      <div
-                        v-if="
-                          createdTargetGenes[targetIdx].targetGene.targetAccession.accession &&
-                          !createdTargetGenes[targetIdx].targetGene.targetAccession.accession?.startsWith('NP')
-                        "
-                        class="mavedb-wizard-subcontent"
-                      >
+                      <div v-if="showSwitchToProteinAccessionButton(targetIdx)" class="mavedb-wizard-subcontent">
                         <Button
                           icon="pi pi-arrows-h"
                           label="Switch to Protein Accession"
@@ -1247,7 +1217,7 @@
             </template>
           </StepperPanel>
 
-          <StepperPanel v-if="itemStatus == 'NotLoaded' || item.private" header="Score Ranges">
+          <StepperPanel header="Score Calibrations">
             <template #header="{index, clickCallback}">
               <button
                 class="p-stepper-action"
@@ -1256,7 +1226,7 @@
                 @click="clickCallback"
               >
                 <span class="p-stepper-number">{{ index + 1 }}</span>
-                <span class="p-stepper-title">Score Ranges</span>
+                <span class="p-stepper-title">Score Calibrations</span>
               </button>
             </template>
             <template #content="{prevCallback: showPreviousWizardStep, nextCallback: showNextWizardStep}">
@@ -1264,457 +1234,36 @@
                 <div class="mavedb-wizard-form-content-background"></div>
                 <div class="mavedb-wizard-row">
                   <div class="mavedb-wizard-help">
-                    <label :id="scopedId('input-investigatorIsProvidingScoreRanges')"
-                      >Will you be providing score ranges for this score set?</label
+                    <label :id="scopedId('input-investigatorIsProvidingScoreCalibrations')"
+                      >Will you be providing score calibrations for this score set?</label
                     >
                     <div class="mavedb-help-small">
-                      Score ranges provide additional clinical context to the scores you upload. If you provide score
-                      ranges, you may classify each range as having either normal, abnormal, or an unspecified function.
-                      If you provide a range with normal function, you should also provide a baseline score that falls
-                      within the normal range. This score is the expected score for baseline variants.
+                      Score calibrations provide additional clinical context to the scores you upload. If you provide
+                      score calibrations, you may classify each range as having either normal, abnormal, or an
+                      unspecified function. If you provide a range with normal function, you should also provide a
+                      baseline score that falls within the normal range. This score is the expected score for baseline
+                      variants.
                     </div>
                   </div>
                   <div class="mavedb-wizard-content">
                     <InputSwitch
-                      v-model="investigatorIsProvidingScoreRanges"
-                      :aria-labelledby="scopedId('input-investigatorIsProvidingScoreRanges')"
+                      v-model="investigatorIsProvidingScoreCalibrations"
+                      :aria-labelledby="scopedId('input-investigatorIsProvidingScoreCalibrations')"
                     />
                     <div class="mavedb-switch-value">
                       {{
-                        investigatorIsProvidingScoreRanges
+                        investigatorIsProvidingScoreCalibrations
                           ? 'Yes, I will be providing score range data.'
                           : 'No, I will not be providing score range data.'
                       }}
                     </div>
                   </div>
                 </div>
-                <div v-if="investigatorIsProvidingScoreRanges">
-                  <div class="mavedb-wizard-row">
-                    <div class="mavedb-wizard-help">
-                      <label :id="scopedId('input-investigatorProvidedBaselineScore')"
-                        >What is the baseline score for this score set?</label
-                      >
-                      <div class="mavedb-help-small">
-                        This number should be within the range of normal scores for your score data.
-                      </div>
-                    </div>
-                    <div class="mavedb-wizard-content">
-                      <span class="p-float-label">
-                        <InputNumber
-                          v-model="scoreRanges.investigatorProvided.baselineScore"
-                          :aria-labelledby="scopedId('input-investigatorProvidedBaselineScore')"
-                          :max-fraction-digits="10"
-                          :min-fraction-digits="1"
-                          style="width: 100%"
-                        />
-                        <label :for="scopedId('input-investigatorProvidedBaselineScore')"> Baseline Score </label>
-                      </span>
-                      <span
-                        v-if="validationErrors[`scoreRanges.investigatorProvided.baselineScore`]"
-                        class="mave-field-error"
-                        >{{ validationErrors[`scoreRanges.investigatorProvided.baselineScore`] }}</span
-                      >
-                    </div>
-                  </div>
-                  <div class="mavedb-wizard-row">
-                    <div class="mavedb-wizard-help">
-                      <label :id="scopedId(`input-investigatorProvidedBaselineScoreDescription`)"
-                        >Enter an (optional) description for the baseline score</label
-                      >
-                      <div class="mavedb-help-small">
-                        This description should provide additional details about the baseline score if necessary. e.g.,
-                        "median synonymous value of the 95% of variants around the mean, normalized to 0."
-                      </div>
-                    </div>
-                    <div class="mavedb-wizard-content">
-                      <span class="p-float-label">
-                        <Textarea
-                          v-model="scoreRanges.investigatorProvided.baselineScoreDescription"
-                          :aria-labelledby="scopedId(`input-investigatorProvidedBaselineScoreDescription`)"
-                          auto-resize
-                          rows="5"
-                          style="width: 100%"
-                        />
-                        <label :for="scopedId(`input-investigatorProvidedBaselineScoreDescription`)">
-                          Baseline Score Description
-                        </label>
-                      </span>
-                      <span
-                        v-if="validationErrors[`scoreRanges.investigatorProvided.baselineScoreDescription`]"
-                        class="mave-field-error"
-                        >{{ validationErrors[`scoreRanges.investigatorProvided.baselineScoreDescription`] }}</span
-                      >
-                    </div>
-                  </div>
-                  <div v-if="publicationIdentifiers.length" class="mavedb-wizard-row">
-                    <div class="mavedb-wizard-help">
-                      <label>
-                        Of the previously provided publications, optionally select a publication to use as the source of
-                        the score ranges.
-                      </label>
-                    </div>
-                    <div class="mavedb-wizard-content field">
-                      <span class="p-float-label">
-                        <Multiselect
-                          :id="scopedId('input-investigatorProvidedScoreRangesPublicationIdentifiersInput')"
-                          ref="investigatorProvidedScoreRangesPublicationIdentifiersInput"
-                          v-model="scoreRanges.investigatorProvided.source"
-                          option-label="identifier"
-                          :options="publicationIdentifiers"
-                          placeholder="Select a source for the score ranges."
-                          :selection-limit="1"
-                          style="width: 100%"
-                        >
-                          <template #option="slotProps">
-                            <div class="field">
-                              <div>Title: {{ slotProps.option.title }}</div>
-                              <div>DOI: {{ slotProps.option.doi }}</div>
-                              <div>Identifier: {{ slotProps.option.identifier }}</div>
-                              <div>Database: {{ slotProps.option.dbName }}</div>
-                            </div>
-                          </template>
-                        </Multiselect>
-                        <label :for="scopedId('input-investigatorProvidedScoreRangesPublicationIdentifiersInput')"
-                          >Score range source (optional)</label
-                        >
-                      </span>
-                      <span
-                        v-if="validationErrors[`scoreRanges.investigatorProvided.source`]"
-                        class="mave-field-error"
-                        >{{ validationErrors[`scoreRanges.investigatorProvided.source`] }}</span
-                      >
-                    </div>
-                  </div>
-                </div>
-                <div v-if="investigatorIsProvidingScoreRanges">
-                  <div v-for="(rangeObj, rangeIdx) in scoreRanges.investigatorProvided.ranges" :key="rangeIdx">
-                    <div class="mavedb-wizard-row">
-                      <div class="mavedb-wizard-content">
-                        <div>
-                          Score Range {{ rangeIdx + 1 }}
-                          <Button
-                            icon="pi pi-times"
-                            label="Remove"
-                            severity="danger"
-                            style="float: right"
-                            @click="removeScoreRange(rangeIdx)"
-                          ></Button>
-                        </div>
-                        <hr />
-                        <span
-                          v-if="validationErrors[`scoreRanges.investigatorProvided.ranges.${rangeIdx}`]"
-                          class="mave-field-error"
-                          >{{ validationErrors[`scoreRanges.investigatorProvided.ranges.${rangeIdx}`] }}</span
-                        >
-                      </div>
-                    </div>
-                    <div class="mavedb-wizard-row">
-                      <div class="mavedb-wizard-help">
-                        <label :id="scopedId(`input-investigatorProvidedRangeLabel-${rangeIdx}`)"
-                          >Enter a label for this score range</label
-                        >
-                        <div class="mavedb-help-small">
-                          This label will be used to describe this range on visualizations of this score data.
-                        </div>
-                      </div>
-                      <div class="mavedb-wizard-content">
-                        <span class="p-float-label">
-                          <InputText
-                            v-model="rangeObj.value.label"
-                            :aria-labelledby="scopedId(`input-investigatorProvidedRangeLabel-${rangeIdx}`)"
-                            style="width: 100%"
-                          />
-                          <label :for="scopedId(`input-investigatorProvidedRangeLabel-${rangeIdx}`)">
-                            Score range label
-                          </label>
-                        </span>
-                        <span
-                          v-if="validationErrors[`scoreRanges.investigatorProvided.ranges.${rangeIdx}.label`]"
-                          class="mave-field-error"
-                          >{{ validationErrors[`scoreRanges.investigatorProvided.ranges.${rangeIdx}.label`] }}</span
-                        >
-                      </div>
-                    </div>
-                    <div class="mavedb-wizard-row">
-                      <div class="mavedb-wizard-help">
-                        <label :id="scopedId(`input-investigatorProvidedRangeDescription-${rangeIdx}`)"
-                          >Enter an (optional) description for this score range</label
-                        >
-                        <div class="mavedb-help-small">
-                          This description should provide additional details about this score range if necessary.
-                        </div>
-                      </div>
-                      <div class="mavedb-wizard-content">
-                        <span class="p-float-label">
-                          <Textarea
-                            v-model="rangeObj.value.description"
-                            :aria-labelledby="scopedId(`input-investigatorProvidedRangeDescription-${rangeIdx}`)"
-                            auto-resize
-                            rows="5"
-                            style="width: 100%"
-                          />
-                          <label :for="scopedId(`input-investigatorProvidedRangeDescription-${rangeIdx}`)">
-                            Score range description
-                          </label>
-                        </span>
-                        <span
-                          v-if="validationErrors[`scoreRanges.investigatorProvided.ranges.${rangeIdx}.description`]"
-                          class="mave-field-error"
-                          >{{
-                            validationErrors[`scoreRanges.investigatorProvided.ranges.${rangeIdx}.description`]
-                          }}</span
-                        >
-                      </div>
-                    </div>
-                    <div class="mavedb-wizard-row">
-                      <div class="mavedb-wizard-help">
-                        <label :id="scopedId(`input-investigatorProvidedRangeClassification-${rangeIdx}`)"
-                          >How should this range be classified?</label
-                        >
-                        <div class="mavedb-help-small">
-                          You may classify a range as having either normal, abnormal, or an unspecified function.
-                        </div>
-                      </div>
-                      <div class="mavedb-wizard-content">
-                        <SelectButton
-                          :id="scopedId(`input-investigatorProvidedRangeClassification-${rangeIdx}`)"
-                          v-model="rangeObj.value.classification"
-                          option-label="label"
-                          option-value="value"
-                          :options="rangeClassifications"
-                        />
-                        <span
-                          v-if="validationErrors[`scoreRanges.investigatorProvided.ranges.${rangeIdx}.classification`]"
-                          class="mave-field-error"
-                          >{{
-                            validationErrors[`scoreRanges.investigatorProvided.ranges.${rangeIdx}.classification`]
-                          }}</span
-                        >
-                      </div>
-                    </div>
-                    <div class="mavedb-wizard-row">
-                      <div class="mavedb-wizard-help">
-                        <label :id="scopedId(`input-investigatorProvidedRangeBoundaries-${rangeIdx}`)"
-                          >What are the upper and lower bounds of this score range?</label
-                        >
-                        <div class="mavedb-help-small">
-                          Score range boundaries should not overlap with the boundaries of other score ranges. Use the
-                          toggles to indicate whether the lower or upper bound is inclusive or does not have a upper or
-                          lower bound. If a range does not have an upper or lower bound, the value will be treated as
-                          either positive or negative infinity.
-                        </div>
-                      </div>
-                      <div class="mavedb-wizard-content">
-                        <InputGroup>
-                          <Button
-                            class="score-range-toggle-button"
-                            :outlined="!rangeObj.infiniteLower"
-                            @click="toggleInfinity(rangeIdx, 'lower')"
-                          >
-                            <FontAwesomeIcon class="score-range-toggle-icon" icon="fa-solid fa-infinity" />
-                          </Button>
-                          <Button
-                            class="score-range-toggle-button"
-                            :disabled="rangeObj.infiniteLower"
-                            :outlined="!rangeObj.value.inclusiveLowerBound"
-                            @click="toggleBoundary(rangeIdx, 'lower')"
-                          >
-                            <FontAwesomeIcon class="score-range-toggle-icon" icon="fa-solid fa-circle-half-stroke" />
-                          </Button>
-                          <span class="p-float-label">
-                            <InputText
-                              v-model="rangeObj.value.range[0]"
-                              :aria-labelledby="scopedId(`input-investigatorProvidedRangeLower-${rangeIdx}`)"
-                              :disabled="rangeObj.value.infiniteLower"
-                            />
-                            <label :for="scopedId(`input-investigatorProvidedRangeLower-${rangeIdx}`)">
-                              {{
-                                rangeObj.infiniteLower
-                                  ? '-infinity'
-                                  : rangeObj.value.inclusiveLowerBound
-                                    ? 'Lower Bound (inclusive)'
-                                    : 'Lower Bound (exclusive)'
-                              }}
-                            </label>
-                          </span>
-                          <InputGroupAddon>to</InputGroupAddon>
-                          <span class="p-float-label">
-                            <InputText
-                              v-model="rangeObj.value.range[1]"
-                              :aria-labelledby="scopedId(`input-investigatorProvidedRangeUpper-${rangeIdx}`)"
-                              :disabled="rangeObj.value.infiniteUpper"
-                            />
-                            <label :for="scopedId(`input-investigatorProvidedRangeUpper-${rangeIdx}`)">
-                              {{
-                                rangeObj.infiniteUpper
-                                  ? 'infinity'
-                                  : rangeObj.value.inclusiveUpperBound
-                                    ? 'Upper Bound (inclusive)'
-                                    : 'Upper Bound (exclusive)'
-                              }}
-                            </label>
-                          </span>
-                          <Button
-                            class="score-range-toggle-button"
-                            :disabled="rangeObj.infiniteUpper"
-                            :outlined="!rangeObj.value.inclusiveUpperBound"
-                            @click="toggleBoundary(rangeIdx, 'upper')"
-                          >
-                            <FontAwesomeIcon class="score-range-toggle-icon" icon="fa-solid fa-circle-half-stroke" />
-                          </Button>
-                          <Button
-                            class="score-range-toggle-button"
-                            :outlined="!rangeObj.infiniteUpper"
-                            @click="toggleInfinity(rangeIdx, 'upper')"
-                          >
-                            <FontAwesomeIcon class="score-range-toggle-icon" icon="fa-solid fa-infinity" />
-                          </Button>
-                        </InputGroup>
-                        <span
-                          v-if="validationErrors[`scoreRanges.investigatorProvided.ranges.${rangeIdx}.oddsPath.range`]"
-                          class="mave-field-error"
-                          style="float: left"
-                          >{{
-                            validationErrors[`scoreRanges.investigatorProvided.ranges.${rangeIdx}.oddsPath.range`]
-                          }}</span
-                        >
-                      </div>
-                    </div>
-                    <div
-                      v-if="rangeObj.value.classification === 'normal' || rangeObj.value.classification === 'abnormal'"
-                      class="mavedb-wizard-row"
-                    >
-                      <div class="mavedb-wizard-help">
-                        <label :id="scopedId('input-investigatorIsProvidingOddsPath')"
-                          >Will you be providing odds of pathogenicity (OddsPath) ratios for this score range?</label
-                        >
-                        <div class="mavedb-help-small">
-                          An OddsPath calculation can be determined by evaluating previously classified control variants
-                          against the scores in normal and abnormal ranges for an assay. For additional information
-                          about OddsPath, please see
-                          <a href="https://pubmed.ncbi.nlm.nih.gov/31892348/">PubMed 31892348</a>.
-                        </div>
-                      </div>
-                      <div class="mavedb-wizard-content">
-                        <InputSwitch
-                          v-model="rangeObj.isProvidingOddsPath"
-                          :aria-labelledby="scopedId('input-investigatorIsProvidingOddsPath')"
-                        />
-                        <div class="mavedb-switch-value">
-                          {{
-                            rangeObj.isProvidingOddsPath
-                              ? 'Yes, I will be providing OddsPath data for this score range.'
-                              : 'No, I will not be providing OddsPath data for this score range.'
-                          }}
-                        </div>
-                      </div>
-                    </div>
-                    <div v-if="rangeObj.isProvidingOddsPath" class="mavedb-wizard-row">
-                      <div class="mavedb-wizard-help">
-                        <label :id="scopedId('input-investigatorProvidedOddsPathRatio')"
-                          >What is the OddsPath ratio and evidence strength for this score range?</label
-                        >
-                      </div>
-                      <div class="mavedb-wizard-content">
-                        <InputGroup>
-                          <span class="p-float-label" style="margin-right: 1em">
-                            <InputNumber
-                              v-model="rangeObj.value.oddsPath.ratio"
-                              :aria-labelledby="scopedId('input-investigatorProvidedOddsPathRatio')"
-                              :max-fraction-digits="10"
-                              :min-fraction-digits="1"
-                              style="width: 50%"
-                            />
-                            <label :for="scopedId('input-oddsPathRatio')"> OddsPath Normal </label>
-                          </span>
-                          <span class="p-float-label">
-                            <Dropdown
-                              v-model="rangeObj.value.oddsPath.evidence"
-                              :aria-labelledby="scopedId('input-investigatorProvidedOddsPathEvidence')"
-                              :options="
-                                evidenceStrengths[rangeObj.value.classification].concat(evidenceStrengths.indeterminate)
-                              "
-                              style="width: 50%"
-                            ></Dropdown>
-                            <label :for="scopedId('input-investigatorProvidedOddsPathEvidence')">
-                              OddsPath Evidence Strength (optional)
-                            </label>
-                          </span>
-                        </InputGroup>
-                        <span
-                          v-if="validationErrors[`scoreRanges.investigatorProvided.ranges.${rangeIdx}.oddsPath.ratio`]"
-                          class="mave-field-error"
-                          >{{
-                            validationErrors[`scoreRanges.investigatorProvided.ranges.${rangeIdx}.oddsPath.ratio`]
-                          }}</span
-                        >
-                        <span
-                          v-if="
-                            validationErrors[`scoreRanges.investigatorProvided.ranges.${rangeIdx}.oddsPath.evidence`]
-                          "
-                          class="mave-field-error"
-                          >{{
-                            validationErrors[`scoreRanges.investigatorProvided.ranges.${rangeIdx}.oddsPath.evidence`]
-                          }}</span
-                        >
-                      </div>
-                    </div>
-                  </div>
-                  <div class="mavedb-wizard-row">
-                    <div class="mavedb-wizard-content">
-                      <Button
-                        icon="pi pi-plus"
-                        label="Add another range"
-                        style="float: right"
-                        @click="addScoreRange"
-                      ></Button>
-                    </div>
-                  </div>
-                </div>
-                <div
-                  v-if="
-                    scoreRanges.investigatorProvided.ranges.some((range) => range.isProvidingOddsPath) &&
-                    publicationIdentifiers.length
-                  "
-                  class="mavedb-wizard-row"
-                >
-                  <div class="mavedb-wizard-help">
-                    <label>
-                      Of the previously provided publications, optionally select a publication to use as the source of
-                      the OddsPath.
-                    </label>
-                  </div>
-                  <div class="mavedb-wizard-content field">
-                    <span class="p-float-label">
-                      <Multiselect
-                        :id="scopedId('input-investigatorProvidedOddsPathPublicationIdentifiersInput')"
-                        ref="investigatorProvidedOddsPathPublicationIdentifiersInput"
-                        v-model="scoreRanges.investigatorProvided.oddsPathSource"
-                        option-label="identifier"
-                        :options="publicationIdentifiers"
-                        placeholder="Select a source for the OddsPath calculation."
-                        :selection-limit="1"
-                        style="width: 100%"
-                      >
-                        <template #option="slotProps">
-                          <div class="field">
-                            <div>Title: {{ slotProps.option.title }}</div>
-                            <div>DOI: {{ slotProps.option.doi }}</div>
-                            <div>Identifier: {{ slotProps.option.identifier }}</div>
-                            <div>Database: {{ slotProps.option.dbName }}</div>
-                          </div>
-                        </template>
-                      </Multiselect>
-                      <label :for="scopedId('input-investigatorProvidedOddsPathPublicationIdentifiersInput')"
-                        >OddsPath Source (optional)</label
-                      >
-                    </span>
-                    <span
-                      v-if="validationErrors[`scoreRanges.investigatorProvided.oddsPathSource`]"
-                      class="mave-field-error"
-                      >{{ validationErrors[`scoreRanges.investigatorProvided.oddsPathSource`] }}</span
-                    >
-                  </div>
+                <div v-if="investigatorIsProvidingScoreCalibrations">
+                  <CalibrationEditor
+                    :calibration-draft-ref="calibrationCreateDraft"
+                    :validation-errors="calibrationValidationErrors || {}"
+                  />
                 </div>
               </div>
               <div class="mavedb-wizard-step-controls-row">
@@ -1732,7 +1281,7 @@
             </template>
           </StepperPanel>
 
-          <StepperPanel v-if="itemStatus == 'NotLoaded' || item.private" header="Variant scores">
+          <StepperPanel header="Variant scores">
             <template #header="{index, clickCallback}">
               <button
                 class="p-stepper-action"
@@ -1761,13 +1310,7 @@
                 </div>
                 <div class="mavedb-wizard-row">
                   <div class="mavedb-wizard-help">
-                    <div v-if="item">
-                      <div>{{ formatInt(item.numVariants) }} variants are included in this score set.</div>
-                      <label :id="scopedId('input-scoresFile')"
-                        >Load a new scores file to replace existing variants</label
-                      >
-                    </div>
-                    <div v-else>
+                    <div>
                       <label :id="scopedId('input-scoresFile')">Load a scores file</label>
                     </div>
                     <div class="mavedb-help-small">
@@ -1784,6 +1327,7 @@
                       <FileUpload
                         :id="scopedId('input-scoresFile')"
                         ref="scoresFileUpload"
+                        accept="text/csv"
                         :auto="false"
                         choose-label="Scores file"
                         :class="inputClasses.scoresFile || ''"
@@ -1804,10 +1348,47 @@
                 </div>
                 <div class="mavedb-wizard-row">
                   <div class="mavedb-wizard-help">
+                    <label :for="scopedId('input-scoreColumnsMetadataFile')">Load a scores column metadata file</label>
+                    <div class="mavedb-help-small">
+                      This file is optional, but recommended. If provided, it should be a JSON file containing a single
+                      object. The keys of that object should be limited to columns of the score data, while values
+                      should include a string description and an optional string details.
+                    </div>
+                  </div>
+                  <div class="mavedb-wizard-content">
+                    <span class="p-float-label">
+                      <FileUpload
+                        :id="scopedId('input-scoreColumnsMetadataFile')"
+                        ref="scoreColumnsMetadataFileUpload"
+                        accept="application/json"
+                        :auto="false"
+                        choose-label="Scores column metadata file"
+                        :class="inputClasses.scoreColumnsMetadataFile || ''"
+                        :custom-upload="true"
+                        :disabled="!($refs.scoresFileUpload?.files?.length == 1)"
+                        :file-limit="1"
+                        :show-cancel-button="false"
+                        :show-upload-button="false"
+                        @remove="fileCleared('scoreColumnsMetadataFile')"
+                        @select="fileSelected('scoreColumnsMetadataFile', $event)"
+                      >
+                        <template #empty>
+                          <p>Drop a file here.</p>
+                        </template>
+                      </FileUpload>
+                    </span>
+                    <span v-if="validationErrors.scoreColumnsMetadataFile" class="mave-field-error">{{
+                      validationErrors.scoreColumnsMetadataFile
+                    }}</span>
+                  </div>
+                </div>
+                <div class="mavedb-wizard-row">
+                  <div class="mavedb-wizard-help">
                     <label :id="scopedId('input-countsFile')">Load a counts file</label>
                     <div class="mavedb-help-small">
                       This file is optional, but recommended. There are no required columns for your count data, but you
-                      should describe the meaning of any columns in your methods section.
+                      should describe the meaning of any columns by uploading a column metadata file and providing any
+                      additional information in your methods section.
                     </div>
                   </div>
                   <div class="mavedb-wizard-content">
@@ -1815,6 +1396,7 @@
                       <FileUpload
                         :id="scopedId('input-countsFile')"
                         ref="countsFileUpload"
+                        accept="text/csv"
                         :auto="false"
                         choose-label="Counts file"
                         :class="inputClasses.countsFile || ''"
@@ -1834,6 +1416,42 @@
                   </div>
                 </div>
               </div>
+              <div class="mavedb-wizard-row">
+                <div class="mavedb-wizard-help">
+                  <label :for="scopedId('input-countColumnsMetadataFile')">Load a counts column metadata file</label>
+                  <div class="mavedb-help-small">
+                    This file is optional, but recommended. If provided, it should be a JSON file containing a single
+                    object. The keys of that object should be limited to columns of the count data, while values should
+                    include a string description and an optional string details.
+                  </div>
+                </div>
+                <div class="mavedb-wizard-content">
+                  <span class="p-float-label">
+                    <FileUpload
+                      :id="scopedId('input-countColumnsMetadataFile')"
+                      ref="countColumnsMetadataFileUpload"
+                      accept="application/json"
+                      :auto="false"
+                      choose-label="Counts column metadata file"
+                      :class="inputClasses.countColumnsMetadataFile || ''"
+                      :custom-upload="true"
+                      :disabled="!($refs.countsFileUpload?.files?.length == 1)"
+                      :file-limit="1"
+                      :show-cancel-button="false"
+                      :show-upload-button="false"
+                      @remove="fileCleared('countColumnsMetadataFile')"
+                      @select="fileSelected('countColumnsMetadataFile', $event)"
+                    >
+                      <template #empty>
+                        <p>Drop a file here.</p>
+                      </template>
+                    </FileUpload>
+                  </span>
+                  <span v-if="validationErrors.countColumnsMetadataFile" class="mave-field-error">{{
+                    validationErrors.countColumnsMetadataFile
+                  }}</span>
+                </div>
+              </div>
               <div class="mavedb-wizard-step-controls-row">
                 <div class="flex justify-content-between mavedb-wizard-step-controls pt-4">
                   <Button icon="pi pi-arrow-left" label="Back" severity="secondary" @click="showPreviousWizardStep" />
@@ -1842,7 +1460,7 @@
                     icon="pi pi-arrow-right"
                     icon-pos="right"
                     label="Save"
-                    @click="item ? saveEditContent() : validateAndSave()"
+                    @click="validateAndSave()"
                   />
                 </div>
               </div>
@@ -1860,14 +1478,11 @@ import axios from 'axios'
 import fasta from 'fasta-js'
 import _ from 'lodash'
 import {marked} from 'marked'
-import {FontAwesomeIcon} from '@fortawesome/vue-fontawesome'
 import AutoComplete from 'primevue/autocomplete'
 import Button from 'primevue/button'
 import Chips from 'primevue/chips'
 import Dropdown from 'primevue/dropdown'
 import FileUpload from 'primevue/fileupload'
-import InputGroup from 'primevue/inputgroup'
-import InputGroupAddon from 'primevue/inputgroupaddon'
 import InputNumber from 'primevue/inputnumber'
 import InputSwitch from 'primevue/inputswitch'
 import InputText from 'primevue/inputtext'
@@ -1883,17 +1498,20 @@ import Textarea from 'primevue/textarea'
 import {ref} from 'vue'
 import {useHead} from '@unhead/vue'
 
-import EntityLink from '@/components/common/EntityLink'
+import CalibrationEditor from '@/components/CalibrationEditor.vue'
 import EmailPrompt from '@/components/common/EmailPrompt'
 import DefaultLayout from '@/components/layout/DefaultLayout'
 import useScopedId from '@/composables/scoped-id'
 import useFormatters from '@/composition/formatters'
-import useItem from '@/composition/item'
 import useItems from '@/composition/items'
 import config from '@/config'
 import {normalizeDoi, validateDoi} from '@/lib/identifiers'
 import {ORCID_ID_REGEX} from '@/lib/orcid'
-import {NORMAL_RANGE_EVIDENCE, ABNORMAL_RANGE_EVIDENCE, INDETERMINATE_RANGE_EVIDENCE} from '@/lib/ranges'
+import {
+  NORMAL_CALIBRATION_EVIDENCE,
+  ABNORMAL_CALIBRATION_EVIDENCE,
+  INDETERMINATE_CALIBRATION_EVIDENCE
+} from '@/lib/calibrations'
 import {TARGET_GENE_CATEGORIES, textForTargetGeneCategory} from '@/lib/target-genes'
 
 const externalGeneDatabases = ['UniProt', 'Ensembl', 'RefSeq']
@@ -1926,43 +1544,20 @@ function emptyTargetGeneWizardObj() {
   }
 }
 
-function emptyScoreRangeWizardObj() {
-  return {
-    value: {
-      label: null,
-      description: null,
-      range: [null, null],
-      classification: null,
-      inclusiveLowerBound: true,
-      inclusiveUpperBound: false,
-      oddsPath: {
-        ratio: null,
-        evidence: null
-      }
-    },
-    infiniteLower: false,
-    infiniteUpper: false,
-    isProvidingOddsPath: false
-  }
-}
-
 export default {
-  name: 'ScoreSetEditor',
+  name: 'ScoreSetCreator',
   components: {
     AutoComplete,
     Button,
+    CalibrationEditor,
     Chips,
     DefaultLayout,
     Dropdown,
     EmailPrompt,
-    EntityLink,
     FileUpload,
-    FontAwesomeIcon,
     InputNumber,
     InputSwitch,
     InputText,
-    InputGroup,
-    InputGroupAddon,
     Message,
     Multiselect,
     ProgressSpinner,
@@ -1977,11 +1572,8 @@ export default {
   props: {
     experimentUrn: {
       type: String,
-      required: false
-    },
-    itemId: {
-      type: String,
-      required: false
+      required: false,
+      default: null
     }
   },
 
@@ -2003,11 +1595,12 @@ export default {
     const assemblies = useItems({itemTypeName: 'assemblies'})
     const targetGeneSuggestions = useItems({itemTypeName: 'target-gene-search'})
 
+    const calibrationCreateDraft = ref({value: null})
+
     return {
       config: config,
 
       ...useFormatters(),
-      ...useItem({itemTypeName: 'scoreSet'}),
       ...useScopedId(),
       editableExperiments: ref([]),
       licenses: licenses.items,
@@ -2029,7 +1622,8 @@ export default {
       setTaxonomySearch: (text) => taxonomySuggestions.setRequestBody({text}),
       assemblies: assemblies.items,
       geneNames: geneNames.items,
-      textForTargetGeneCategory: textForTargetGeneCategory
+      textForTargetGeneCategory: textForTargetGeneCategory,
+      calibrationCreateDraft: calibrationCreateDraft
     }
   },
 
@@ -2056,7 +1650,9 @@ export default {
     primaryPublicationIdentifiers: [],
     secondaryPublicationIdentifiers: [],
     publicationIdentifiers: [],
-    extraMetadata: {},
+    extraMetadata: null,
+    countColumnsMetadata: null,
+    scoreColumnsMetadata: null,
 
     createdTargetGenes: [emptyTargetGeneWizardObj()],
     numTargets: 1,
@@ -2064,16 +1660,6 @@ export default {
     assemblySuggestions: [],
     geneNameSuggestions: [],
     accessionSuggestions: [],
-
-    scoreRanges: {
-      investigatorProvided: {
-        baselineScore: null,
-        baselineScoreDescription: null,
-        ranges: [],
-        oddsPathSource: [],
-        source: []
-      }
-    },
 
     // Static sets of options:
     sequenceTypes: ['DNA', 'protein'],
@@ -2084,18 +1670,21 @@ export default {
       {value: 'not_specified', label: 'Not Specified'}
     ],
     evidenceStrengths: {
-      normal: NORMAL_RANGE_EVIDENCE,
-      abnormal: ABNORMAL_RANGE_EVIDENCE,
-      indeterminate: INDETERMINATE_RANGE_EVIDENCE
+      normal: NORMAL_CALIBRATION_EVIDENCE,
+      abnormal: ABNORMAL_CALIBRATION_EVIDENCE,
+      indeterminate: INDETERMINATE_CALIBRATION_EVIDENCE
     },
 
     progressVisible: false,
+    calibrationValidationErrors: {},
     serverSideValidationErrors: {},
     clientSideValidationErrors: {},
     inputClasses: {
       countsFile: null,
       extraMetadataFile: null,
-      scoresFile: null
+      scoresFile: null,
+      countColumnsMetadataFile: null,
+      scoreColumnsMetadataFile: null
     },
     externalGeneDatabases,
     validationErrors: {},
@@ -2103,7 +1692,7 @@ export default {
     isTargetSequence: true,
     isBaseEditor: false,
     isMultiTarget: false,
-    investigatorIsProvidingScoreRanges: false,
+    investigatorIsProvidingScoreCalibrations: false,
 
     // track this separately, since it is a pain to reconstruct steps from target paths (targetGenes.**step**.rest.of.error.path)
     minTargetGeneStepWithError: Infinity,
@@ -2128,8 +1717,8 @@ export default {
       ],
       ['targets'],
       ['targetGene'],
-      ['scoreRanges'],
-      ['scoresFile', 'countsFile']
+      ['scoreCalibrations'],
+      ['scoresFile', 'countsFile', 'scoreColumnsMetadataFile', 'countColumnsMetadataFile']
     ]
   }),
 
@@ -2170,12 +1759,6 @@ export default {
     },
     taxonomySuggestionsList: function () {
       return this.suggestionsForAutocomplete(this.taxonomySuggestions)
-    },
-    targetGeneAccessionSuggestionsList: function () {
-      if (!this.accessionSuggestions || this.accessionSuggestions.length == 0) {
-        return ['']
-      }
-      return this.accessionSuggestions
     },
     defaultLicenseId: function () {
       return this.licenses ? this.licenses.find((license) => license.shortName == 'CC0')?.id : null
@@ -2278,17 +1861,6 @@ export default {
         }
       }
     },
-    item: {
-      handler: function () {
-        this.resetForm()
-      }
-    },
-    itemId: {
-      handler: function () {
-        this.setItemId(this.itemId)
-      },
-      immediate: true
-    },
     defaultLicenseId: {
       handler: function () {
         if (this.licenseId == null) {
@@ -2321,13 +1893,6 @@ export default {
         } else if (this.createdTargetGenes.length > this.numTargets) {
           this.createdTargetGenes = this.createdTargetGenes.slice(0, this.numTargets)
           this.stepFields.splice(3, oldValue - newValue)
-        }
-      }
-    },
-    investigatorIsProvidingScoreRanges: {
-      handler: function (newValue) {
-        if (newValue && this.scoreRanges.investigatorProvided.ranges.length === 0) {
-          this.scoreRanges.investigatorProvided.ranges.push(emptyScoreRangeWizardObj())
         }
       }
     }
@@ -2445,21 +2010,19 @@ export default {
           }
         }
         case step == 3 + this.numTargets: {
-          let allInvestigatorProvidedRangesCompleted = true
-          for (const scoreRange of this.scoreRanges.investigatorProvided.ranges) {
-            if (
-              !scoreRange.value.label ||
-              !scoreRange.value.classification ||
-              (!scoreRange.value.range[0] && !scoreRange.infiniteLower) ||
-              (!scoreRange.value.range[1] && !scoreRange.infiniteUpper)
-            ) {
-              allInvestigatorProvidedRangesCompleted = false
+          let allInvestigatorProvidedCalibrationsCompleted = true
+          if (!this.calibrationCreateDraft.value?.functionalRanges) {
+            return false
+          }
+          for (const scoreRange of this.calibrationCreateDraft.value.functionalRanges) {
+            if (!scoreRange.label || !scoreRange.classification) {
+              allInvestigatorProvidedCalibrationsCompleted = false
               break
             }
           }
           return (
-            !this.investigatorIsProvidingScoreRanges ||
-            (allInvestigatorProvidedRangesCompleted && this.scoreRanges.investigatorProvided.baselineScore !== null)
+            !this.investigatorIsProvidingScoreCalibrations ||
+            (allInvestigatorProvidedCalibrationsCompleted && this.calibrationCreateDraft.value.baselineScore !== null)
           )
         }
         default:
@@ -2554,14 +2117,9 @@ export default {
       return targetGene
     },
 
-    scoreRangeWithWizardProperties(existingRange) {
-      const scoreRange = this.emptyScoreRangeWizardObj()
-      scoreRange.value = existingRange
-      return scoreRange
-    },
-
     refreshAccessionOptions: async function (targetIdx) {
       const currentTarget = this.createdTargetGenes[targetIdx]
+      this.accessionSuggestions = []
 
       // if we are refreshing the accession options, we can't retain the currently selected accession
       if (currentTarget.targetGene.targetAccession.accession) {
@@ -2579,6 +2137,7 @@ export default {
       }
 
       if (!this.accessionSuggestions) {
+        this.accessionSuggestions = []
         this.$toast.add({
           severity: 'warn',
           summary: `No accession identifiers were found for ${currentTarget.isRelativeToChromosome ? currentTarget.targetGene.targetAccession.assembly : currentTarget.targetGene.targetAccession.gene.name}`,
@@ -2593,6 +2152,8 @@ export default {
         this.accessionSuggestions = this.accessionSuggestions.filter((s) =>
           s?.toLowerCase().includes(searchText.toLowerCase())
         )
+      } else {
+        this.accessionSuggestions = [...this.accessionSuggestions] // PrimeVue AutoComplete quirk
       }
     },
 
@@ -2666,36 +2227,6 @@ export default {
       } catch (err) {
         console.log(`Error while loading search results")`, err)
       }
-    },
-
-    toggleBoundary: function (rangeIdx, boundary) {
-      const updatedRange = this.scoreRanges.investigatorProvided.ranges[rangeIdx]
-      if (boundary === 'upper') {
-        updatedRange.value.inclusiveUpperBound = !updatedRange.value.inclusiveUpperBound
-      } else if (boundary == 'lower') {
-        updatedRange.value.inclusiveLowerBound = !updatedRange.value.inclusiveLowerBound
-      }
-    },
-
-    toggleInfinity: function (rangeIdx, boundary) {
-      const updatedRange = this.scoreRanges.investigatorProvided.ranges[rangeIdx]
-      if (boundary === 'upper') {
-        updatedRange.infiniteUpper = !updatedRange.infiniteUpper
-        updatedRange.value.range[1] = null
-        updatedRange.value.inclusiveUpperBound = false
-      } else if (boundary == 'lower') {
-        updatedRange.infiniteLower = !updatedRange.infiniteLower
-        updatedRange.value.range[0] = null
-        updatedRange.value.inclusiveLowerBound = false
-      }
-    },
-
-    addScoreRange: function () {
-      this.scoreRanges.investigatorProvided.ranges.push(emptyScoreRangeWizardObj())
-    },
-
-    removeScoreRange: function (rangeIdx) {
-      this.scoreRanges.investigatorProvided.ranges.splice(rangeIdx, 1)
     },
 
     ////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
@@ -2780,9 +2311,7 @@ export default {
     removePublicationIdentifier: function (event) {
       // If we are removing a primary publication identifier, also remove it from that list.
       const removedIdentifier = event.value.identifier
-      const primaryIdx = this.primaryPublicationIdentifiers.findIndex(
-        (pub) => pub.identifier == removedIdentifier
-      )
+      const primaryIdx = this.primaryPublicationIdentifiers.findIndex((pub) => pub.identifier == removedIdentifier)
       if (primaryIdx != -1) {
         this.primaryPublicationIdentifiers.splice(primaryIdx, 1)
       }
@@ -2884,6 +2413,10 @@ export default {
       if (inputName == 'extraMetadataFile') {
         this.extraMetadata = null
         delete this.clientSideValidationErrors.extraMetadata
+      } else if (inputName == 'countColumnsMetadataFile') {
+        this.countColumnsMetadata = null
+      } else if (inputName == 'scoreColumnsMetadataFile') {
+        this.scoreColumnsMetadata = null
       }
       // ensure files are cleared from sequence loader even when remove button not used
       else if (inputName == 'targetGeneTargetSequenceSequenceFile') {
@@ -2893,31 +2426,58 @@ export default {
       this.mergeValidationErrors()
     },
 
+    validateJsonObject: function (data, fieldName) {
+      if (!_.isObject(data) || _.isArray(data)) {
+        this.clientSideValidationErrors[fieldName] =
+          `${_.startCase(fieldName)} must be a JSON object (not an array or simple value).`
+      } else {
+        delete this.clientSideValidationErrors[fieldName]
+      }
+    },
+
     fileSelected: async function (inputName, event, targetIdx) {
       const file = event.files[0]
       if (file) {
+        const text = await file.text()
         switch (inputName) {
           case 'extraMetadataFile':
             {
-              const text = await file.text()
               try {
                 this.extraMetadata = JSON.parse(text)
-                if (!_.isObject(this.extraMetadata) || _.isArray(this.extraMetadata)) {
-                  this.clientSideValidationErrors.extraMetadata =
-                    'Extra metadata must be a JSON object (not an array or simple value).'
-                } else {
-                  this.clientSideValidationErrors.extraMetadata = null
-                }
-              } catch (e) {
+                this.validateJsonObject(this.extraMetadata, 'extraMetadata')
+              } catch {
                 this.extraMetadata = null
                 this.clientSideValidationErrors.extraMetadata = 'The file did not contain valid JSON text.'
                 console.log('Extra metadata file did not contain valid JSON text.')
               }
             }
             break
+          case 'countColumnsMetadataFile':
+            {
+              try {
+                this.countColumnsMetadata = JSON.parse(text)
+                this.validateJsonObject(this.countColumnsMetadata, 'countColumnsMetadata')
+              } catch {
+                this.countColumnsMetadata = null
+                this.clientSideValidationErrors.countColumnsMetadata = 'The file did not contain valid JSON text.'
+                console.log('Count columns metadata file did not contain valid JSON text.')
+              }
+            }
+            break
+          case 'scoreColumnsMetadataFile':
+            {
+              try {
+                this.scoreColumnsMetadata = JSON.parse(text)
+                this.validateJsonObject(this.scoreColumnsMetadata, 'scoreColumnsMetadata')
+              } catch {
+                this.scoreColumnsMetadata = null
+                this.clientSideValidationErrors.scoreColumnsMetadata = 'The file did not contain valid JSON text.'
+                console.log('Score columns metadata file did not contain valid JSON text.')
+              }
+            }
+            break
           case 'targetGeneTargetSequenceSequenceFile':
             {
-              const text = await file.text()
               try {
                 const fastaParser = new fasta()
                 /*new Fasta({
@@ -2940,7 +2500,7 @@ export default {
                     'The FASTA file contains more than one sequence.'
                 } else {
                   this.createdTargetGenes[targetIdx].targetGene.targetSequence.sequence = fastaData[0].sequence
-                  this.clientSideValidationErrors['targetGene.targetSequence.sequence'] = null
+                  delete this.clientSideValidationErrors['targetGene.targetSequence.sequence']
                 }
               } catch (e) {
                 this.createdTargetGenes[targetIdx].targetGene.targetSequence.sequence = null
@@ -2956,6 +2516,14 @@ export default {
       this.mergeValidationErrors()
     },
 
+    showSwitchToProteinAccessionButton: function (targetIdx) {
+      const regex = /^(NP|ENSP|XP).*$/
+      return (
+        this.createdTargetGenes[targetIdx].targetGene.targetAccession.accession &&
+        !this.createdTargetGenes[targetIdx].isRelativeToChromosome &&
+        !regex.test(this.createdTargetGenes[targetIdx].targetGene.targetAccession.accession)
+      )
+    },
     ////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
     // Validation
     ////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
@@ -2969,93 +2537,46 @@ export default {
     ////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 
     resetForm: function () {
-      if (this.item) {
-        this.experiment = this.item.experiment
-        this.supersededScoreSet = this.item.supersededScoreSet
-        this.isSupersedingScoreSet = this.supersededScoreSet ? true : false
-        // metaAnalyzesScoreSets is only used when editing a new score set, so we don't need to populate it from URNs.
-        this.metaAnalyzesScoreSets = []
-        ;((this.isMetaAnalysis = false), (this.title = this.item.title))
-        this.shortDescription = this.item.shortDescription
-        this.abstractText = this.item.abstractText
-        this.methodText = this.item.methodText
-        this.licenseId = this.item.license.id
-        this.dataUsagePolicy = this.item.dataUsagePolicy
-        this.hasCustomUsagePolicy = this.dataUsagePolicy ? true : false
+      this.experiment = null
+      this.supersededScoreSet = null
+      this.isSupersedingScoreSet = false
+      this.metaAnalyzesScoreSets = []
+      this.isMetaAnalysis = false
+      this.title = null
+      this.shortDescription = null
+      this.abstractText = null
+      this.methodText = null
+      this.licenseId = this.defaultLicenseId
+      this.hasCustomUsagePolicy = false
+      this.dataUsagePolicy = null
 
-        this.contributors = _.sortBy(this.item.contributors, ['familyName', 'givenName', 'orcidId'])
-        this.doiIdentifiers = this.item.doiIdentifiers
-        // So that the multiselect can populate correctly, build the primary publication identifiers
-        // indirectly by filtering a merged list of secondary and primary publication identifiers
-        this.publicationIdentifiers = _.concat(
-          this.item.primaryPublicationIdentifiers,
-          this.item.secondaryPublicationIdentifiers
-        )
-        this.primaryPublicationIdentifiers = this.item.primaryPublicationIdentifiers.filter((publication) => {
-          return this.publicationIdentifiers.some((primary) => {
-            return primary.identifier === publication.identifier
-          })
-        })
-        this.secondaryPublicationIdentifiers = this.item.secondaryPublicationIdentifiers
-        this.extraMetadata = this.item.extraMetadata
+      this.contributors = []
+      this.doiIdentifiers = []
+      this.publicationIdentifiers = []
+      this.primaryPublicationIdentifiers = []
+      this.secondaryPublicationIdentifiers = []
+      this.extraMetadata = null
+      this.countColumnsMetadata = null
+      this.scoreColumnsMetadata = null
 
-        this.scoreRanges = {
-          investigatorProvided: {
-            baselineScore: this.item.scoreRanges?.ranges?.investigatorProvided?.baselineScore,
-            baselineScoreDescription: this.item.scoreRanges?.ranges?.investigatorProvided?.baselineScoreDescription,
-            ranges: this.item.scoreRanges?.ranges?.investigatorProvided?.ranges.map((range) =>
-              this.scoreRangeWithWizardProperties(range)
-            ),
-            oddsPathSource: this.item.scoreRanges?.ranges?.investigatorProvided?.oddsPathSource || [],
-            source: this.item.scoreRanges?.ranges?.investigatorProvided?.source || []
-          }
-        }
-        this.investigatorIsProvidingScoreRanges = this.scoreRanges.length > 0
+      this.scoreCalibrations = this.investigatorIsProvidingScoreCalibrations ? [this.calibrationCreateDraft.value] : []
+      this.investigatorIsProvidingScoreCalibrations = false
 
-        this.createdTargetGenes = this.item.targetGenes.map((target) => this.targetGeneWithWizardProperties(target))
-        this.numTargets = this.createdTargetGenes.length
-        this.isMultiTarget = this.numTargets == 1 ? false : true
-        this.isTargetSequence = this.createdTargetGenes[0].targetGene?.targetSequence ? true : false
-      } else {
-        this.experiment = null
-        this.supersededScoreSet = null
-        this.isSupersedingScoreSet = false
-        this.metaAnalyzesScoreSets = []
-        ;((this.isMetaAnalysis = false), (this.title = null))
-        this.shortDescription = null
-        this.abstractText = null
-        this.methodText = null
-        this.licenseId = this.defaultLicenseId
-        this.hasCustomUsagePolicy = false
-        this.dataUsagePolicy = null
+      this.createdTargetGenes = [emptyTargetGeneWizardObj()]
+      this.numTargets = 1
+      this.isMultiTarget = false
+      this.isTargetSequence = true
+      this.isBaseEditor = false
 
-        this.contributors = []
-        this.doiIdentifiers = []
-        this.publicationIdentifiers = []
-        this.primaryPublicationIdentifiers = []
-        this.secondaryPublicationIdentifiers = []
-        this.extraMetadata = {}
+      // clear validation errors
+      this.clientSideValidationErrors = {}
+      this.serverSideValidationErrors = {}
+      this.validationErrors = {}
 
-        this.scoreRanges = {
-          investigatorProvided: {
-            baselineScore: null,
-            baselineScoreDescription: null,
-            infiniteUpper: false,
-            infiniteLower: false,
-            inclusiveLowerBound: true,
-            inclusiveUpperBound: false,
-            ranges: [],
-            oddsPathSource: [],
-            source: []
-          }
-        }
-        this.investigatorIsProvidingScoreRanges = false
-
-        this.createdTargetGenes = [emptyTargetGeneWizardObj()]
-        this.numTargets = 1
-        this.isMultiTarget = false
-        this.isTargetSequence = true
-      }
+      // set form to step 0
+      this.activeWizardStep = 0
+      this.maxWizardStepValidated = 0
+      this.maxWizardStepEntered = 0
     },
 
     resetTarget: function (targetIdx) {
@@ -3097,24 +2618,13 @@ export default {
         primaryPublicationIdentifiers: primaryPublicationIdentifiers,
         secondaryPublicationIdentifiers: secondaryPublicationIdentifiers,
         dataUsagePolicy: this.hasCustomUsagePolicy ? this.dataUsagePolicy : null,
-        extraMetadata: {},
-
-        scoreRanges: {
-          investigatorProvided: {
-            baselineScore: this.scoreRanges.investigatorProvided.baselineScore,
-            baselineScoreDescription: this.scoreRanges.investigatorProvided.baselineScoreDescription,
-            ranges: this.scoreRanges.investigatorProvided.ranges.map((range) => {
-              range.value.oddsPath = range.isProvidingOddsPath ? range.value.oddsPath : null
-              return range.value
-            }),
-            oddsPathSource: this.scoreRanges.investigatorProvided.oddsPathSource.map((identifier) =>
-              _.pick(identifier, ['identifier', 'dbName'])
-            ),
-            source: this.scoreRanges.investigatorProvided.source.map((identifier) =>
-              _.pick(identifier, ['identifier', 'dbName'])
-            )
-          }
+        extraMetadata: this.extraMetadata || {},
+        datasetColumns: {
+          scoreColumnsMetadata: this.scoreColumnsMetadata || {},
+          countColumnsMetadata: this.countColumnsMetadata || {}
         },
+
+        scoreCalibrations: this.investigatorIsProvidingScoreCalibrations ? [this.calibrationCreateDraft.value] : [],
 
         targetGenes: this.createdTargetGenes.map((target) => {
           const targetGene = {
@@ -3142,63 +2652,27 @@ export default {
           return targetGene
         })
       }
-      if (!this.investigatorIsProvidingScoreRanges) {
-        delete editedFields.scoreRanges
-      }
-      if (!this.item) {
-        editedFields.supersededScoreSetUrn = this.supersededScoreSet ? this.supersededScoreSet.urn : null
-        editedFields.metaAnalyzesScoreSetUrns = this.metaAnalyzesScoreSets.map((s) => s.urn)
-        if (editedFields.metaAnalyzesScoreSetUrns.length === 0 && editedFields.supersededScoreSetUrn) {
-          editedFields.experimentUrn = this.supersededScoreSet.experiment.urn
-        }
-      } else {
-        // empty item arrays so that deleted items aren't merged back into editedItem object
-        this.item.contributors = []
-        this.item.doiIdentifiers = []
-        this.item.primaryPublicationIdentifiers = []
-        this.item.publicationIdentifiers = []
-        this.item.rawReadIdentifiers = []
-        this.item.targetGenes = []
-        this.item.scoreRanges = {
-          investigatorProvided: {
-            baselineScore: null,
-            baselineScoreDescription: null,
-            ranges: [],
-            oddsPathSource: [],
-            source: []
-          }
-        }
-      }
 
-      const editedItem = _.merge({}, this.item || {}, editedFields)
+      editedFields.supersededScoreSetUrn = this.supersededScoreSet ? this.supersededScoreSet.urn : null
+      editedFields.metaAnalyzesScoreSetUrns = this.metaAnalyzesScoreSets.map((s) => s.urn)
+      if (editedFields.metaAnalyzesScoreSetUrns.length === 0 && editedFields.supersededScoreSetUrn) {
+        editedFields.experimentUrn = this.supersededScoreSet.experiment.urn
+      }
 
       this.progressVisible = true
       let response = null
       try {
-        if (this.item) {
-          response = await axios.put(`${config.apiBaseUrl}/score-sets/${this.item.urn}`, editedItem)
-        } else {
-          response = await axios.post(`${config.apiBaseUrl}/score-sets/`, editedItem)
-        }
+        response = await axios.post(`${config.apiBaseUrl}/score-sets/`, editedFields)
       } catch (e) {
         response = e.response || {status: 500}
-        this.$toast.add({severity: 'error', summary: 'Error', life: 3000})
+        this.$toast.add({severity: 'error', summary: 'Encountered an error while saving score set.', life: 3000})
       }
       this.progressVisible = false
       if (response.status == 200) {
         const savedItem = response.data
         this.validationErrors = {}
-        if (this.item) {
-          if (this.$refs.scoresFileUpload?.files?.length == 1) {
-            await this.uploadData(savedItem)
-          } else {
-            this.$router.replace({path: `/score-sets/submit-completion/${this.item.urn}`})
-            this.$toast.add({severity: 'success', summary: 'Your changes were saved.', life: 3000})
-          }
-        } else {
-          console.log('Created item')
-          await this.uploadData(savedItem)
-        }
+        console.log('Created item')
+        await this.uploadData(savedItem)
       } else if (response.data && response.data.detail) {
         const formValidationErrors = {}
         if (typeof response.data.detail === 'string' || response.data.detail instanceof String) {
@@ -3209,10 +2683,21 @@ export default {
           })
         } else {
           for (const error of response.data.detail) {
-            console.log(error)
+            // Induce custom error paths for model level validation errors.
             let path = error.loc
             if (path[0] == 'body') {
               path = path.slice(1)
+            }
+
+            let customPath = error.ctx.error.custom_loc
+            if (customPath) {
+              if (customPath[0] == 'body') {
+                customPath = customPath.slice(1)
+              }
+            }
+
+            if (customPath) {
+              path = path.concat(customPath)
             }
 
             if (_.isEqual(_.slice(path, 0, 1), ['targetGene'])) {
@@ -3231,6 +2716,15 @@ export default {
                     ? identifierOffset.identifier.dbName
                     : this.externalGeneDatabases[identifierIndex]
                 )
+              }
+            }
+
+            // Add calibration errors to a separate object which is consumed by the calibration sub-component.
+            if (_.isEqual(_.slice(path, 0, 1), ['scoreCalibrations'])) {
+              // The second path element is an array index, which is irrelevant here as we only supply one calibration on score set creation.
+              this.calibrationValidationErrors = {
+                ...this.calibrationValidationErrors,
+                [path.slice(2).join('.')]: error.msg
               }
             }
 
@@ -3253,6 +2747,12 @@ export default {
         if (this.$refs.countsFileUpload.files.length == 1) {
           formData.append('counts_file', this.$refs.countsFileUpload.files[0])
         }
+        if (this.scoreColumnsMetadata) {
+          formData.append('score_columns_metadata', JSON.stringify(this.scoreColumnsMetadata))
+        }
+        if (this.countColumnsMetadata) {
+          formData.append('count_columns_metadata', JSON.stringify(this.countColumnsMetadata))
+        }
         this.progressVisible = true
         let response
         try {
@@ -3268,14 +2768,8 @@ export default {
 
         if (response.status == 200) {
           console.log('Imported score set data.')
-          if (this.item) {
-            // this.reloadItem()
-            this.$router.replace({path: `/score-sets/submit-completion/${scoreSet.urn}`})
-            this.$toast.add({severity: 'success', summary: 'Your changes were saved.', life: 3000})
-          } else {
-            this.$router.replace({path: `/score-sets/submit-completion/${scoreSet.urn}`})
-            this.$toast.add({severity: 'success', summary: 'The new score set was saved.', life: 3000})
-          }
+          this.$router.replace({path: `/score-sets/submit-completion/${scoreSet.urn}`})
+          this.$toast.add({severity: 'success', summary: 'The new score set was saved.', life: 3000})
         } else {
           this.$toast.add({
             severity: 'error',
@@ -3296,7 +2790,7 @@ export default {
       if (hasCountsFile && !hasScoresFile) {
         this.clientSideValidationErrors.scoresFile = 'Required'
       }
-      if (!this.item && !hasScoresFile) {
+      if (!hasScoresFile) {
         this.clientSideValidationErrors.scoresFile = 'Required'
       }
 
@@ -3315,12 +2809,6 @@ export default {
     ////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
     // Navigation
     ////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
-
-    viewItem: function () {
-      if (this.item) {
-        this.$router.replace({path: `/score-sets/${this.item.urn}`})
-      }
-    },
 
     //Back to Dashboard
     backDashboard: function () {
@@ -3366,7 +2854,7 @@ export default {
   top: 0;
   bottom: 0;
   right: 0;
-  width: 676px;
+  width: 60%;
   background-color: #fff;
 }
 
@@ -3385,7 +2873,7 @@ export default {
 /* The help block for one wizard form row. */
 .mavedb-wizard-help {
   float: left;
-  width: 480px;
+  width: 40%;
   padding: 22px 10px 10px 10px;
 }
 
@@ -3401,7 +2889,7 @@ export default {
 /* Form content for one wizard form row. */
 .mavedb-wizard-content {
   float: right;
-  width: 676px;
+  width: 60%;
   padding: 22px 10px 10px 10px;
   background-color: #fff;
 }
@@ -3412,7 +2900,7 @@ export default {
 
 .mavedb-wizard-content-pane {
   float: right;
-  width: 676px;
+  width: 60%;
   padding: 0 10px;
   background-color: #fff;
 }

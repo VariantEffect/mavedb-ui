@@ -77,48 +77,63 @@
         </div>
       </div>
     </div>
-    <div class="mavedb-assay-facts-section-title">Clinical Performance</div>
+    <div class="mavedb-assay-facts-section-title">
+      Clinical Performance<sup v-if="!primaryScoreRangeIsInvestigatorProvided">*</sup>
+    </div>
     <div class="mavedb-assay-facts-section">
-      <div v-if="scoreSet.scoreRanges?.investigatorProvided?.ranges[0]?.oddsPath?.ratio">
+      <div v-if="primaryScoreRange?.ranges.some((r) => r.oddsPath)">
         <div class="mavedb-assay-facts-row">
           <div class="mavedb-assay-facts-label">OddsPath – Normal</div>
           <div
-            v-if="scoreSet.scoreRanges?.investigatorProvided?.ranges?.some((r) => r.classification === 'normal')"
+            v-if="primaryScoreRange?.ranges?.some((r) => r.classification === 'normal' && r.oddsPath)"
             class="mavedb-assay-facts-value"
           >
             {{
               roundOddsPath(
-                scoreSet.scoreRanges.investigatorProvided.ranges.find((r) => r.classification === 'normal').oddsPath
+                primaryScoreRange?.ranges.find((r) => r.classification === 'normal').oddsPath
                   ?.ratio
               )
             }}
             <span class="mavedb-classification-badge mavedb-blue">
               {{
-                scoreSet.scoreRanges.investigatorProvided.ranges.find((r) => r.classification === 'normal').oddsPath
+                primaryScoreRange?.ranges.find((r) => r.classification === 'normal').oddsPath
                   ?.evidence
               }}
             </span>
           </div>
+          <div v-else class="mavedb-assay-facts-value">OddsPath normal not provided</div>
         </div>
         <div class="mavedb-assay-facts-row">
           <div class="mavedb-assay-facts-label">OddsPath – Abnormal</div>
           <div
-            v-if="scoreSet.scoreRanges?.investigatorProvided?.ranges?.some((r) => r.classification === 'abnormal')"
+            v-if="primaryScoreRange?.ranges?.some((r) => r.classification === 'abnormal' && r.oddsPath)"
             class="mavedb-assay-facts-value"
           >
             {{
               roundOddsPath(
-                scoreSet.scoreRanges.investigatorProvided.ranges.find((r) => r.classification === 'abnormal').oddsPath
+                primaryScoreRange?.ranges.find((r) => r.classification === 'abnormal').oddsPath
                   ?.ratio
               )
             }}
             <span class="mavedb-classification-badge mavedb-red strong">
               {{
-                scoreSet.scoreRanges.investigatorProvided.ranges.find((r) => r.classification === 'abnormal').oddsPath
+                primaryScoreRange?.ranges.find((r) => r.classification === 'abnormal').oddsPath
                   ?.evidence
               }}
             </span>
           </div>
+          <div v-else class="mavedb-assay-facts-value">OddsPath abnormal not provided</div>
+        </div>
+        <div v-if="!primaryScoreRangeIsInvestigatorProvided" style="font-size: 10px; margin-top: 4px">
+            <sup>*</sup>OddsPath data from non-primary source(s):
+            <template v-if="oddsPathSources">
+              (
+              <template v-for="(s,i) in oddsPathSources" :key="s.url">
+              <a :href="s.url" rel="noopener" target="_blank">{{ s.url }}</a><span v-if="i < oddsPathSources.length - 1">, </span>
+              </template>
+              ).
+            </template>
+            <template v-else>.</template>
         </div>
       </div>
       <div v-else>OddsPath values are not provided for this score set.</div>
@@ -130,7 +145,7 @@
 import _ from 'lodash'
 import {defineComponent, PropType} from 'vue'
 
-import {getScoreSetFirstAuthor} from '@/lib/score-sets'
+import {getScoreSetFirstAuthor, matchSources} from '@/lib/score-sets'
 import type {components} from '@/schema/openapi'
 
 export default defineComponent({
@@ -204,13 +219,38 @@ export default defineComponent({
         default:
           return null
       }
+    },
+
+    primaryScoreRange: function () {
+      if (this.scoreSet.scoreRanges == null) {
+        return null
+      }
+
+      return Object.values(this.scoreSet.scoreRanges).filter(
+          (sr) => sr?.primary
+        )[0] || this.scoreSet.scoreRanges?.investigatorProvided || null
+    },
+
+    primaryScoreRangeIsInvestigatorProvided: function () {
+      if (this.scoreSet.scoreRanges == null) {
+        return false
+      }
+
+      return this.primaryScoreRange === this.scoreSet.scoreRanges?.investigatorProvided
+    },
+    oddsPathSources() {
+      console.log(this.primaryScoreRange)
+      return matchSources(this.primaryScoreRange?.oddsPathSource, this.sources)
+    },
+    sources: function () {
+      return this.scoreSet.primaryPublicationIdentifiers.concat(this.scoreSet.secondaryPublicationIdentifiers)
     }
   },
 
   methods: {
     roundOddsPath: function (oddsPath: number | undefined) {
       return oddsPath?.toPrecision(5)
-    }
+    },
   }
 })
 </script>

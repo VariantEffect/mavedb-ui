@@ -7,55 +7,147 @@
 export interface paths {
   "/api/v1/users/me/access-keys": {
     /**
-     * List My Access Keys
+     * List my access keys
      * @description List the current user's access keys.
      */
     get: operations["list_my_access_keys_api_v1_users_me_access_keys_get"];
     /**
-     * Create My Access Key
+     * Create a new access key for myself
      * @description Create a new access key for the current user, with the default user role.
      */
     post: operations["create_my_access_key_api_v1_users_me_access_keys_post"];
   };
   "/api/v1/users/me/access-keys/{role}": {
     /**
-     * Create My Access Key With Role
+     * Create a new access key for myself with a specified role
      * @description Create a new access key for the current user, with the specified role.
      */
     post: operations["create_my_access_key_with_role_api_v1_users_me_access_keys__role__post"];
   };
   "/api/v1/users/me/access-keys/{key_id}": {
     /**
-     * Delete My Access Key
+     * Delete one of my access keys
      * @description Delete one of the current user's access keys.
      */
     delete: operations["delete_my_access_key_api_v1_users_me_access_keys__key_id__delete"];
   };
   "/api/v1/api/version": {
     /**
-     * Show Version
-     * @description Describe the API version.
+     * Show API version
+     * @description Describe the API version and project.
      */
     get: operations["show_version_api_v1_api_version_get"];
   };
+  "/api/v1/users/me/collections": {
+    /**
+     * List my collections
+     * @description List the current user's collections. These are all the collections the user either owns or
+     * is listed as a contributor (in any role).
+     */
+    get: operations["list_my_collections_api_v1_users_me_collections_get"];
+  };
+  "/api/v1/collections/{urn}": {
+    /**
+     * Fetch a collection by URN
+     * @description Fetch a single collection by URN.
+     */
+    get: operations["fetch_collection_api_v1_collections__urn__get"];
+    /**
+     * Delete a collection
+     * @description Delete a collection.
+     */
+    delete: operations["delete_collection_api_v1_collections__urn__delete"];
+    /**
+     * Update a collection
+     * @description Modify a collection's metadata.
+     */
+    patch: operations["update_collection_api_v1_collections__urn__patch"];
+  };
+  "/api/v1/collections/": {
+    /**
+     * Create a collection
+     * @description Create a new collection owned by the current user.
+     */
+    post: operations["create_collection_api_v1_collections__post"];
+  };
+  "/api/v1/collections/{collection_urn}/score-sets": {
+    /**
+     * Add a score set to a collection
+     * @description Add an existing score set to an existing collection.
+     */
+    post: operations["add_score_set_to_collection_api_v1_collections__collection_urn__score_sets_post"];
+  };
+  "/api/v1/collections/{collection_urn}/score-sets/{score_set_urn}": {
+    /**
+     * Remove a score set from a collection
+     * @description Remove a score set from an existing collection. The score set will be preserved in the database. This endpoint will only remove
+     * the association between the score set and the collection.
+     */
+    delete: operations["delete_score_set_from_collection_api_v1_collections__collection_urn__score_sets__score_set_urn__delete"];
+  };
+  "/api/v1/collections/{collection_urn}/experiments": {
+    /**
+     * Add an experiment to a collection
+     * @description Add an existing experiment to an existing collection.
+     */
+    post: operations["add_experiment_to_collection_api_v1_collections__collection_urn__experiments_post"];
+  };
+  "/api/v1/collections/{collection_urn}/experiments/{experiment_urn}": {
+    /**
+     * Remove an experiment from a collection
+     * @description Remove an experiment from an existing collection. The experiment will be preserved in the database. This endpoint will only remove
+     * the association between the experiment and the collection.
+     */
+    delete: operations["delete_experiment_from_collection_api_v1_collections__collection_urn__experiments__experiment_urn__delete"];
+  };
+  "/api/v1/collections/{urn}/{role}s": {
+    /**
+     * Add a user to a collection role
+     * @description Add an existing user to a collection under the specified role.
+     * If a user is already in a role for this collection, this will remove the user from any other roles in this collection.
+     */
+    post: operations["add_user_to_collection_role_api_v1_collections__urn___role_s_post"];
+  };
+  "/api/v1/collections/{urn}/{role}s/{orcid_id}": {
+    /**
+     * Remove a user from a collection role
+     * @description Remove a user from a collection role. Both the user and the role should be provided explicitly and match
+     * the current assignment.
+     */
+    delete: operations["remove_user_from_collection_role_api_v1_collections__urn___role_s__orcid_id__delete"];
+  };
+  "/api/v1/controlled-keywords/{key}": {
+    /**
+     * Fetch keywords by category
+     * @description Fetch the controlled keywords for a given key.
+     */
+    get: operations["fetch_keywords_by_key_api_v1_controlled_keywords__key__get"];
+  };
+  "/api/v1/controlled-keywords/search/{key}/{value}": {
+    /**
+     * Search keyword by key and value
+     * @description Search controlled keywords by key and label.
+     */
+    post: operations["search_keyword_by_key_and_value_api_v1_controlled_keywords_search__key___value__post"];
+  };
   "/api/v1/doi-identifiers/search": {
     /**
-     * Search Doi Identifiers
-     * @description Search DOI identifiers.
+     * Search DOI identifiers
+     * @description Search DOI identifiers based on the provided text.
      */
     post: operations["search_doi_identifiers_api_v1_doi_identifiers_search_post"];
   };
   "/api/v1/experiment-sets/{urn}": {
     /**
-     * Fetch Experiment Set
+     * Fetch experiment set by URN
      * @description Fetch a single experiment set by URN.
      */
     get: operations["fetch_experiment_set_api_v1_experiment_sets__urn__get"];
   };
   "/api/v1/experiments/": {
     /**
-     * List Experiments
-     * @description List experiments.
+     * List experiments
+     * @description List all experiments viewable by the current user.
      */
     get: operations["list_experiments_api_v1_experiments__get"];
     /**
@@ -66,21 +158,21 @@ export interface paths {
   };
   "/api/v1/experiments/search": {
     /**
-     * Search Experiments
+     * Search experiments
      * @description Search experiments.
      */
     post: operations["search_experiments_api_v1_experiments_search_post"];
   };
   "/api/v1/me/experiments/search": {
     /**
-     * Search My Experiments
+     * Search my experiments
      * @description Search experiments created by the current user..
      */
     post: operations["search_my_experiments_api_v1_me_experiments_search_post"];
   };
   "/api/v1/experiments/{urn}": {
     /**
-     * Fetch Experiment
+     * Fetch experiment by URN
      * @description Fetch a single experiment by URN.
      */
     get: operations["fetch_experiment_api_v1_experiments__urn__get"];
@@ -90,224 +182,362 @@ export interface paths {
      */
     put: operations["update_experiment_api_v1_experiments__urn__put"];
     /**
-     * Delete Experiment
-     * @description Delete a experiment .
-     *
-     * Raises
-     *
-     * Returns
-     * _______
-     * Does not return anything
-     * string : HTTP code 200 successful but returning content
-     * or
-     * communitcate to client whether the operation succeeded
-     * 204 if successful but not returning content - likely going with this
+     * Delete an experiment
+     * @description Delete an experiment.
      */
     delete: operations["delete_experiment_api_v1_experiments__urn__delete"];
   };
   "/api/v1/experiments/{urn}/score-sets": {
     /**
-     * Get Experiment Score Sets
+     * Get score sets for an experiment
      * @description Get all score sets belonging to an experiment.
      */
     get: operations["get_experiment_score_sets_api_v1_experiments__urn__score_sets_get"];
   };
   "/api/v1/hgvs/fetch/{accession}": {
     /**
-     * Hgvs Fetch
-     * @description List stored sequences
+     * Fetch stored sequence by accession
+     * @description Fetches a stored genomic sequence by its accession identifier.
      */
     get: operations["hgvs_fetch_api_v1_hgvs_fetch__accession__get"];
   };
   "/api/v1/hgvs/validate": {
     /**
-     * Hgvs Validate
-     * @description Validate a provided variant
+     * Validate a provided variant
+     * @description Validate the provided HGVS variant string.
      */
     post: operations["hgvs_validate_api_v1_hgvs_validate_post"];
   };
   "/api/v1/hgvs/assemblies": {
     /**
-     * List Assemblies
-     * @description List stored assemblies
+     * List stored assemblies
+     * @description List stored genomic assemblies
      */
     get: operations["list_assemblies_api_v1_hgvs_assemblies_get"];
   };
   "/api/v1/hgvs/{assembly}/accessions": {
     /**
-     * List Accessions
-     * @description List stored accessions
+     * List stored accessions for an assembly
+     * @description List stored accessions for a specified assembly
      */
     get: operations["list_accessions_api_v1_hgvs__assembly__accessions_get"];
   };
   "/api/v1/hgvs/genes": {
     /**
-     * List Genes
-     * @description List stored genes
+     * List stored genes
+     * @description Lists the HGNC names for stored genes
      */
     get: operations["list_genes_api_v1_hgvs_genes_get"];
   };
   "/api/v1/hgvs/genes/{gene}": {
     /**
-     * Gene Info
-     * @description List stored gene information for a specified gene
+     * Show stored gene information
+     * @description Shows all gene metadata for a particular gene
      */
     get: operations["gene_info_api_v1_hgvs_genes__gene__get"];
   };
-  "/api/v1/hgvs/transcripts/gene/{gene}": {
+  "/api/v1/hgvs/gene/{gene}": {
     /**
-     * List Transcripts For Gene
-     * @description List transcripts associated with a particular gene
+     * List transcripts for gene
+     * @description Lists the transcripts associated with a particular gene
      */
-    get: operations["list_transcripts_for_gene_api_v1_hgvs_transcripts_gene__gene__get"];
+    get: operations["list_transcripts_for_gene_api_v1_hgvs_gene__gene__get"];
   };
-  "/api/v1/hgvs/transcripts/{transcript}": {
+  "/api/v1/hgvs/{transcript}": {
     /**
-     * Transcript Info
-     * @description List transcript information for a particular transcript
+     * Show transcript information
+     * @description Shows all transcript metadata for a particular transcript
      */
-    get: operations["transcript_info_api_v1_hgvs_transcripts__transcript__get"];
+    get: operations["transcript_info_api_v1_hgvs__transcript__get"];
   };
-  "/api/v1/hgvs/transcripts/protein/{transcript}": {
+  "/api/v1/hgvs/protein/{transcript}": {
     /**
-     * Convert To Protein
-     * @description Convert a provided transcript from it's nucleotide accession identifier to its protein accession identifier
+     * Convert transcript to protein accession
+     * @description Convert a provided transcript from it's nucleotide accession identifier to its protein accession
      */
-    get: operations["convert_to_protein_api_v1_hgvs_transcripts_protein__transcript__get"];
+    get: operations["convert_to_protein_api_v1_hgvs_protein__transcript__get"];
   };
   "/api/v1/licenses/": {
     /**
-     * List Licenses
-     * @description List licenses.
+     * List all licenses
+     * @description List all supported licenses.
      */
     get: operations["list_licenses_api_v1_licenses__get"];
   };
+  "/api/v1/licenses/active": {
+    /**
+     * List active licenses
+     * @description List all active licenses.
+     */
+    get: operations["list_active_licenses_api_v1_licenses_active_get"];
+  };
   "/api/v1/licenses/{item_id}": {
     /**
-     * Fetch License
+     * Fetch license by ID
      * @description Fetch a single license by ID.
      */
     get: operations["fetch_license_api_v1_licenses__item_id__get"];
   };
   "/api/v1/mapped-variants/{urn}": {
     /**
-     * Show Mapped Variant
-     * @description Fetch a mapped variant by URN.
+     * Fetch mapped variant by URN
+     * @description Fetch a single mapped variant by URN.
      */
     get: operations["show_mapped_variant_api_v1_mapped_variants__urn__get"];
   };
+  "/api/v1/mapped-variants/{urn}/va/study-result": {
+    /**
+     * Construct a VA-Spec StudyResult from a mapped variant
+     * @description Construct a single VA-Spec StudyResult from a mapped variant by URN.
+     */
+    get: operations["show_mapped_variant_study_result_api_v1_mapped_variants__urn__va_study_result_get"];
+  };
+  "/api/v1/mapped-variants/{urn}/va/functional-impact": {
+    /**
+     * Construct a VA-Spec Statement from a mapped variant
+     * @description Construct a single VA-Spec Statement from a mapped variant by URN.
+     */
+    get: operations["show_mapped_variant_functional_impact_statement_api_v1_mapped_variants__urn__va_functional_impact_get"];
+  };
+  "/api/v1/mapped-variants/{urn}/va/clinical-evidence": {
+    /**
+     * Construct a VA-Spec EvidenceLine from a mapped variant
+     * @description Construct a list of VA-Spec EvidenceLine(s) from a mapped variant by URN.
+     */
+    get: operations["show_mapped_variant_acmg_evidence_line_api_v1_mapped_variants__urn__va_clinical_evidence_get"];
+  };
+  "/api/v1/mapped-variants/vrs/{identifier}": {
+    /**
+     * Fetch mapped variants by VRS identifier
+     * @description Fetch a single mapped variant by GA4GH identifier.
+     */
+    get: operations["show_mapped_variants_by_identifier_api_v1_mapped_variants_vrs__identifier__get"];
+  };
+  "/api/v1/orcid/users/{orcid_id}": {
+    /**
+     * Look up an ORCID user by ORCID ID
+     * @description Look an ORCID user up by ORCID ID.
+     *
+     * This capability is needed when adding contributors to an experiment or score set, who may not necessarily be MaveDB
+     * users.
+     *
+     * Access is limited to signed-in users to prevent abuse.
+     */
+    get: operations["lookup_orcid_user_api_v1_orcid_users__orcid_id__get"];
+  };
+  "/api/v1/permissions/user-is-permitted/{model_name}/{urn}/{action}": {
+    /**
+     * Check user permissions on a resource
+     * @description Check whether users have permission to perform a given action on a resource.
+     */
+    get: operations["check_permission_api_v1_permissions_user_is_permitted__model_name___urn___action__get"];
+  };
   "/api/v1/publication-identifiers/": {
     /**
-     * List Publications
-     * @description List stored all stored publications.
+     * List publications
+     * @description List all stored publications.
      */
     get: operations["list_publications_api_v1_publication_identifiers__get"];
   };
   "/api/v1/publication-identifiers/{identifier}": {
     /**
-     * Fetch Publication By Identifier
-     * @description Fetch a single publication by identifier.
+     * Fetch publication by identifier
+     * @description Fetch a single saved publication by identifier.
      */
     get: operations["fetch_publication_by_identifier_api_v1_publication_identifiers__identifier__get"];
   };
   "/api/v1/publication-identifiers/{db_name}/{identifier}": {
     /**
-     * Fetch Publication By Dbname And Identifier
-     * @description Fetch a single publication by db name and identifier.
+     * Fetch publication by db name and identifier
+     * @description Fetch a single saved publication by db name and identifier.
      */
     get: operations["fetch_publication_by_dbname_and_identifier_api_v1_publication_identifiers__db_name___identifier__get"];
   };
   "/api/v1/publication-identifiers/journals": {
     /**
-     * List Publication Journal Names
-     * @description List distinct journal names, in alphabetical order.
+     * List publication journal names
+     * @description List distinct saved journal names, in alphabetical order.
      */
     get: operations["list_publication_journal_names_api_v1_publication_identifiers_journals_get"];
   };
   "/api/v1/publication-identifiers/databases": {
     /**
-     * List Publication Database Names
-     * @description List distinct database names, in alphabetical order.
+     * List publication database names
+     * @description List distinct saved database names, in alphabetical order.
      */
     get: operations["list_publication_database_names_api_v1_publication_identifiers_databases_get"];
   };
   "/api/v1/publication-identifiers/search/identifier": {
     /**
-     * Search Publication Identifier Identifiers
-     * @description Search publication identifiers via a TextSearch query.
+     * Search publication identifiers
+     * @description Search saved publication identifiers via a TextSearch query.
      */
     post: operations["search_publication_identifier_identifiers_api_v1_publication_identifiers_search_identifier_post"];
   };
   "/api/v1/publication-identifiers/search/doi": {
     /**
-     * Search Publication Identifier Dois
-     * @description Search publication DOIs via a TextSearch query.
+     * Search publication DOIs
+     * @description Search saved publication DOIs via a TextSearch query.
      */
     post: operations["search_publication_identifier_dois_api_v1_publication_identifiers_search_doi_post"];
   };
   "/api/v1/publication-identifiers/search": {
     /**
-     * Search Publication Identifiers
-     * @description Search publication identifiers via a TextSearch query, returning substring matches on DOI and Identifier.
+     * Search publication identifiers and DOIs
+     * @description Search saved publication identifiers via a TextSearch query, returning substring matches on DOI and Identifier.
      */
     post: operations["search_publication_identifiers_api_v1_publication_identifiers_search_post"];
   };
   "/api/v1/publication-identifiers/search/{identifier}": {
     /**
-     * Search Publications By Identifier
-     * @description Search publication identifiers via their identifier.
+     * Search publication identifiers by their identifier
+     * @description Search saved publication identifiers via their identifier.
      */
     get: operations["search_publications_by_identifier_api_v1_publication_identifiers_search__identifier__get"];
   };
   "/api/v1/publication-identifiers/search/{db_name}/{identifier}": {
     /**
-     * Search Publications By Identifier And Db
-     * @description Search publication identifiers via their identifier and database.
+     * Search publication identifiers by their identifier and database
+     * @description Search all saved publication identifiers via their identifier and database.
      */
     get: operations["search_publications_by_identifier_and_db_api_v1_publication_identifiers_search__db_name___identifier__get"];
   };
   "/api/v1/publication-identifiers/search-external": {
     /**
-     * Search External Publication Identifiers
-     * @description Search external publication identifiers via a TextSearch query.
-     * Technically, this should be some sort of accepted publication identifier.
+     * Search external publication identifiers
+     * @description Search external publication identifiers via a TextSearch query. The provided text is searched against multiple external publication databases,
+     * and should be a valid identifier in at least one of those databases.
      */
     post: operations["search_external_publication_identifiers_api_v1_publication_identifiers_search_external_post"];
   };
   "/api/v1/raw-read-identifiers/search": {
     /**
-     * Search Raw Read Identifiers
+     * Search Raw Read identifiers
      * @description Search Raw Read identifiers.
      */
     post: operations["search_raw_read_identifiers_api_v1_raw_read_identifiers_search_post"];
   };
+  "/api/v1/refget/sequence/service-info": {
+    /**
+     * Get Refget service information
+     * @description Returns information about the refget service.
+     */
+    get: operations["service_info_api_v1_refget_sequence_service_info_get"];
+  };
+  "/api/v1/refget/sequence/{alias}/metadata": {
+    /**
+     * Get Refget sequence metadata
+     * @description Show metadata for a particular Refget sequence with the provided alias.
+     */
+    get: operations["get_metadata_api_v1_refget_sequence__alias__metadata_get"];
+  };
+  "/api/v1/refget/sequence/{alias}": {
+    /**
+     * Get Refget sequence
+     * @description Get a Refget sequence by alias.
+     */
+    get: operations["get_sequence_api_v1_refget_sequence__alias__get"];
+  };
+  "/api/v1/score-calibrations/{urn}": {
+    /**
+     * Get Score Calibration
+     * @description Retrieve a score calibration by its URN.
+     */
+    get: operations["get_score_calibration_api_v1_score_calibrations__urn__get"];
+    /**
+     * Modify Score Calibration Route
+     * @description Modify an existing score calibration by its URN.
+     */
+    put: operations["modify_score_calibration_route_api_v1_score_calibrations__urn__put"];
+    /**
+     * Delete Score Calibration Route
+     * @description Delete an existing score calibration by its URN.
+     */
+    delete: operations["delete_score_calibration_route_api_v1_score_calibrations__urn__delete"];
+  };
+  "/api/v1/score-calibrations/score-set/{score_set_urn}": {
+    /**
+     * Get Score Calibrations For Score Set
+     * @description Retrieve all score calibrations for a given score set URN.
+     */
+    get: operations["get_score_calibrations_for_score_set_api_v1_score_calibrations_score_set__score_set_urn__get"];
+  };
+  "/api/v1/score-calibrations/score-set/{score_set_urn}/primary": {
+    /**
+     * Get Primary Score Calibrations For Score Set
+     * @description Retrieve the primary score calibration for a given score set URN.
+     */
+    get: operations["get_primary_score_calibrations_for_score_set_api_v1_score_calibrations_score_set__score_set_urn__primary_get"];
+  };
+  "/api/v1/score-calibrations/": {
+    /**
+     * Create Score Calibration Route
+     * @description Create a new score calibration.
+     *
+     * The score set URN must be provided to associate the calibration with an existing score set.
+     * The user must have write permission on the associated score set.
+     */
+    post: operations["create_score_calibration_route_api_v1_score_calibrations__post"];
+  };
+  "/api/v1/score-calibrations/{urn}/promote-to-primary": {
+    /**
+     * Promote Score Calibration To Primary Route
+     * @description Promote a score calibration to be the primary calibration for its associated score set.
+     */
+    post: operations["promote_score_calibration_to_primary_route_api_v1_score_calibrations__urn__promote_to_primary_post"];
+  };
+  "/api/v1/score-calibrations/{urn}/demote-from-primary": {
+    /**
+     * Demote Score Calibration From Primary Route
+     * @description Demote a score calibration from being the primary calibration for its associated score set.
+     */
+    post: operations["demote_score_calibration_from_primary_route_api_v1_score_calibrations__urn__demote_from_primary_post"];
+  };
+  "/api/v1/score-calibrations/{urn}/publish": {
+    /**
+     * Publish Score Calibration Route
+     * @description Publish a score calibration, making it publicly visible.
+     */
+    post: operations["publish_score_calibration_route_api_v1_score_calibrations__urn__publish_post"];
+  };
   "/api/v1/score-sets/search": {
     /**
-     * Search Score Sets
+     * Search score sets
      * @description Search score sets.
      */
     post: operations["search_score_sets_api_v1_score_sets_search_post"];
   };
+  "/api/v1/score-sets/search/filter-options": {
+    /** Get Filter Options For Search */
+    post: operations["get_filter_options_for_search_api_v1_score_sets_search_filter_options_post"];
+  };
+  "/api/v1/score-sets/mapped-genes": {
+    /**
+     * Get score set to mapped gene symbol mapping
+     * @description Get a mapping of score set URNs to mapped gene symbols.
+     */
+    get: operations["score_set_mapped_gene_mapping_api_v1_score_sets_mapped_genes_get"];
+  };
   "/api/v1/me/score-sets/search": {
     /**
-     * Search My Score Sets
+     * Search my score sets
      * @description Search score sets created by the current user..
      */
     post: operations["search_my_score_sets_api_v1_me_score_sets_search_post"];
   };
   "/api/v1/score-sets/{urn}": {
     /**
-     * Show Score Set
+     * Fetch score set by URN
      * @description Fetch a single score set by URN.
      */
     get: operations["show_score_set_api_v1_score_sets__urn__get"];
     /**
-     * Update Score Set
+     * Update a score set
      * @description Update a score set.
      */
     put: operations["update_score_set_api_v1_score_sets__urn__put"];
     /**
-     * Delete Score Set
+     * Delete a score set
      * @description Delete a score set.
      *
      * Raises
@@ -322,9 +552,51 @@ export interface paths {
      */
     delete: operations["delete_score_set_api_v1_score_sets__urn__delete"];
   };
+  "/api/v1/score-sets/{urn}/variants/data": {
+    /**
+     * Get score set variant data in CSV format
+     * @description Return tabular variant data from a score set, identified by URN, in CSV format.
+     *
+     * This differs from get_score_set_scores_csv() in that it returns only the HGVS columns, score column, and mapped HGVS
+     * string.
+     *
+     * TODO (https://github.com/VariantEffect/mavedb-api/issues/446) We may add another function for ClinVar and gnomAD.
+     * export endpoint, with options governing which columns to include.
+     *
+     * Parameters
+     * __________
+     * urn : str
+     *     The URN of the score set to fetch variants from.
+     * start : Optional[int]
+     *     The index to start from. If None, starts from the beginning.
+     * limit : Optional[int]
+     *     The maximum number of variants to return. If None, returns all variants.
+     * namespaces: List[Literal["scores", "counts"]]
+     *     The namespaces of all columns except for accession, hgvs_nt, hgvs_pro, and hgvs_splice.
+     *     We may add ClinVar and gnomAD in the future.
+     * drop_na_columns : bool, optional
+     *     Whether to drop columns that contain only NA values. Defaults to False.
+     * db : Session
+     *     The database session to use.
+     * user_data : Optional[UserData]
+     *     The user data of the current user. If None, no user-specific permissions are checked.
+     *
+     * Returns
+     * _______
+     * str
+     *     The CSV string containing the variant data.
+     */
+    get: operations["get_score_set_variants_csv_api_v1_score_sets__urn__variants_data_get"];
+    /**
+     * Upload score and variant count files for a score set
+     * @description Upload scores and variant count files for a score set, and initiate processing these files to
+     * create variants.
+     */
+    post: operations["upload_score_set_variant_data_api_v1_score_sets__urn__variants_data_post"];
+  };
   "/api/v1/score-sets/{urn}/scores": {
     /**
-     * Get Score Set Scores Csv
+     * Get score set scores in CSV format
      * @description Return scores from a score set, identified by URN, in CSV format.
      * If no start and limit, all of variants of this score set will be returned.
      * Example path:
@@ -336,7 +608,7 @@ export interface paths {
   };
   "/api/v1/score-sets/{urn}/counts": {
     /**
-     * Get Score Set Counts Csv
+     * Get score set counts in CSV format
      * @description Return counts from a score set, identified by URN, in CSV format.
      * If no start and limit, all of variants of this score set will be returned.
      * Example path:
@@ -348,25 +620,159 @@ export interface paths {
   };
   "/api/v1/score-sets/{urn}/mapped-variants": {
     /**
-     * Get Score Set Mapped Variants
+     * Get mapped variants from score set by URN
      * @description Return mapped variants from a score set, identified by URN.
      */
     get: operations["get_score_set_mapped_variants_api_v1_score_sets__urn__mapped_variants_get"];
   };
+  "/api/v1/score-sets/{urn}/annotated-variants/pathogenicity-evidence-line": {
+    /**
+     * Get pathogenicity evidence line annotations for mapped variants within a score set
+     * @description Retrieve annotated variants with pathogenicity evidence for a given score set.
+     *
+     * This endpoint streams pathogenicity evidence lines for all current mapped variants
+     * associated with a specific score set. The response is returned as newline-delimited
+     * JSON (NDJSON) format for efficient processing of large datasets.
+     *
+     * NDJSON Response Format:
+     *     Each line in the response corresponds to a mapped variant and contains a JSON
+     *     object with the following structure:
+     *     ```
+     *     {
+     *         "variant_urn": "<URN of the mapped variant>",
+     *         "annotation": {
+     *             ... // Pathogenicity evidence line details
+     *         }
+     *     }
+     *     ```
+     *
+     * Args:
+     *     urn (str): The Uniform Resource Name (URN) of the score set to retrieve
+     *         annotated variants for.
+     *     db (Session, optional): Database session dependency. Defaults to Depends(deps.get_db).
+     *     user_data (Optional[UserData], optional): Current user data for permission checking.
+     *         Defaults to Depends(get_current_user).
+     *
+     * Returns:
+     *     Any: StreamingResponse containing newline-delimited JSON with pathogenicity
+     *         evidence lines for each mapped variant. Response includes headers with
+     *         total count, processing start time, and stream type information.
+     *
+     * Raises:
+     *     HTTPException: 404 error if the score set with the given URN is not found.
+     *     HTTPException: 404 error if no mapped variants are associated with the score set.
+     *     HTTPException: 403 error if the user lacks READ permissions for the score set.
+     *
+     * Note:
+     *     This function logs the request context and validates user permissions before
+     *     processing. Only current (non-historical) mapped variants are included in
+     *     the response.
+     */
+    get: operations["get_score_set_annotated_variants_api_v1_score_sets__urn__annotated_variants_pathogenicity_evidence_line_get"];
+  };
+  "/api/v1/score-sets/{urn}/annotated-variants/functional-impact-statement": {
+    /**
+     * Get functional impact statement annotations for mapped variants within a score set
+     * @description Retrieve functional impact statements for annotated variants in a score set.
+     *
+     * This endpoint streams functional impact statements for all current mapped variants
+     * associated with a specific score set. The response is delivered as newline-delimited
+     * JSON (NDJSON) format.
+     *
+     * NDJSON Response Format:
+     *     Each line in the response corresponds to a mapped variant and contains a JSON
+     *     object with the following structure:
+     *     ```
+     *     {
+     *         "variant_urn": "<URN of the mapped variant>",
+     *         "annotation": {
+     *             ... // Functional impact statement details
+     *         }
+     *     }
+     *     ```
+     *
+     * Args:
+     *     urn (str): The unique resource name (URN) identifying the score set.
+     *     db (Session): Database session dependency for querying data.
+     *     user_data (Optional[UserData]): Current authenticated user data for permission checks.
+     *
+     * Returns:
+     *     StreamingResponse: NDJSON stream containing functional impact statements for each
+     *         mapped variant. Response includes headers with total count, processing start time,
+     *         and stream type information.
+     *
+     * Raises:
+     *     HTTPException:
+     *         - 404 if the score set with the given URN is not found
+     *         - 404 if no mapped variants are associated with the score set
+     *         - 403 if the user lacks READ permission for the score set
+     *
+     * Note:
+     *     Only current (non-historical) mapped variants are included in the response.
+     *     The function requires appropriate read permissions on the score set.
+     */
+    get: operations["get_score_set_annotated_variants_functional_statement_api_v1_score_sets__urn__annotated_variants_functional_impact_statement_get"];
+  };
+  "/api/v1/score-sets/{urn}/annotated-variants/functional-study-result": {
+    /**
+     * Get functional study result annotations for mapped variants within a score set
+     * @description Retrieve functional study results for annotated variants in a score set.
+     *
+     * This endpoint streams functional study result annotations for all current mapped variants
+     * associated with a specific score set. The results are returned as newline-delimited JSON
+     * (NDJSON) format for efficient streaming of large datasets.
+     *
+     * NDJSON Response Format:
+     *     Each line in the response corresponds to a mapped variant and contains a JSON
+     *     object with the following structure:
+     *     ```
+     *     {
+     *         "variant_urn": "<URN of the mapped variant>",
+     *         "annotation": {
+     *             ... // Functional study result details
+     *         }
+     *     }
+     *     ```
+     *
+     * Args:
+     *     urn (str): The URN (Uniform Resource Name) of the score set to retrieve variants for.
+     *     db (Session): Database session dependency for querying the database.
+     *     user_data (Optional[UserData]): Current user data for permission validation.
+     *
+     * Returns:
+     *     StreamingResponse: A streaming response containing functional study results in NDJSON format.
+     *         Headers include:
+     *         - X-Total-Count: Total number of mapped variants being streamed
+     *         - X-Processing-Started: ISO timestamp when processing began
+     *         - X-Stream-Type: Set to "functional-study-result"
+     *         - Access-Control-Expose-Headers: Exposed headers for CORS
+     *
+     * Raises:
+     *     HTTPException:
+     *         - 404 if the score set with the given URN is not found
+     *         - 404 if no mapped variants are associated with the score set
+     *         - 403 if the user lacks READ permission for the score set
+     *
+     * Notes:
+     *     - Only returns current mapped variants (MappedVariant.current == True)
+     *     - Eagerly loads related ScoreSet data including publications, users, license, and experiment
+     *     - Logs requests and errors for monitoring and debugging purposes
+     */
+    get: operations["get_score_set_annotated_variants_functional_study_result_api_v1_score_sets__urn__annotated_variants_functional_study_result_get"];
+  };
   "/api/v1/score-sets/": {
     /**
-     * Create Score Set
+     * Create a score set
      * @description Create a score set.
      */
     post: operations["create_score_set_api_v1_score_sets__post"];
   };
-  "/api/v1/score-sets/{urn}/variants/data": {
+  "/api/v1/score-sets-with-variants/{urn}": {
     /**
-     * Upload Score Set Variant Data
-     * @description Upload scores and variant count files for a score set, and initiate processing these files to
-     * create variants.
+     * Update score ranges / calibrations for a score set
+     * @description Update a score set and variants.
      */
-    post: operations["upload_score_set_variant_data_api_v1_score_sets__urn__variants_data_post"];
+    patch: operations["update_score_set_with_variants_api_v1_score_sets_with_variants__urn__patch"];
   };
   "/api/v1/score-sets/{urn}/publish": {
     /**
@@ -375,121 +781,300 @@ export interface paths {
      */
     post: operations["publish_score_set_api_v1_score_sets__urn__publish_post"];
   };
-  "/api/v1/statistics/target/accession/{field}": {
+  "/api/v1/score-sets/{urn}/clinical-controls": {
     /**
-     * Target Accessions By Field
-     * @description Returns a dictionary of counts for the distinct values of the provided `field` (member of the `target_accessions` table).
-     * Don't include any NULL field values.
+     * Get clinical controls for a score set
+     * @description Fetch relevant clinical controls for a given score set.
      */
-    get: operations["target_accessions_by_field_api_v1_statistics_target_accession__field__get"];
+    get: operations["get_clinical_controls_for_score_set_api_v1_score_sets__urn__clinical_controls_get"];
   };
-  "/api/v1/statistics/target/sequence/{field}": {
+  "/api/v1/score-sets/{urn}/clinical-controls/options": {
     /**
-     * Target Sequences By Field
-     * @description Returns a dictionary of counts for the distinct values of the provided `field` (member of the `target_sequences` table).
-     * Don't include any NULL field values.
+     * Get clinical control options for a score set
+     * @description Fetch clinical control options for a given score set.
      */
-    get: operations["target_sequences_by_field_api_v1_statistics_target_sequence__field__get"];
+    get: operations["get_clinical_controls_options_for_score_set_api_v1_score_sets__urn__clinical_controls_options_get"];
   };
-  "/api/v1/statistics/target/gene/{field}": {
+  "/api/v1/score-sets/{urn}/gnomad-variants": {
     /**
-     * Target Genes By Field
-     * @description Returns a dictionary of counts for the distinct values of the provided `field` (member of the `target_sequences` table).
-     * Don't include any NULL field values. Each field here is handled individually because of the unique structure of this
-     * target gene object- fields might require information from both TargetGene subtypes (accession and sequence).
+     * Get gnomad variants for a score set
+     * @description Fetch relevant gnomad variants for a given score set.
      */
-    get: operations["target_genes_by_field_api_v1_statistics_target_gene__field__get"];
+    get: operations["get_gnomad_variants_for_score_set_api_v1_score_sets__urn__gnomad_variants_get"];
   };
-  "/api/v1/statistics/record/{model}/{field}": {
+  "/api/v1/seqrepo/sequence/{alias}": {
+    /** Get sequence by alias */
+    get: operations["get_sequence_api_v1_seqrepo_sequence__alias__get"];
+  };
+  "/api/v1/seqrepo/metadata/{alias}": {
+    /** Get sequence metadata by alias */
+    get: operations["get_metadata_api_v1_seqrepo_metadata__alias__get"];
+  };
+  "/api/v1/seqrepo/version": {
+    /** Get SeqRepo version information */
+    get: operations["get_versions_api_v1_seqrepo_version_get"];
+  };
+  "/api/v1/statistics/record/{record}/keywords": {
     /**
-     * Record Object Statistics
-     * @description Resolve a dictionary of statistics based on the provided model name and model field.
+     * Get keyword statistics for a record
+     * @description Returns a dictionary of counts for the distinct values of the `value` field (member of the `controlled_keywords` table).
+     * Don't include any NULL field values. Don't include any keywords from unpublished experiments.
+     */
+    get: operations["experiment_keyword_statistics_api_v1_statistics_record__record__keywords_get"];
+  };
+  "/api/v1/statistics/record/{record}/publication-identifiers": {
+    /**
+     * Get publication identifier statistics for a record
+     * @description Returns a dictionary of counts for the distinct values of the `identifier` field (member of the `publication_identifiers` table).
+     * Don't include any publication identifiers from unpublished experiments.
+     */
+    get: operations["experiment_publication_identifier_statistics_api_v1_statistics_record__record__publication_identifiers_get"];
+  };
+  "/api/v1/statistics/record/{record}/raw-read-identifiers": {
+    /**
+     * Get raw read identifier statistics for a record
+     * @description Returns a dictionary of counts for the distinct values of the `identifier` field (member of the `raw_read_identifiers` table).
+     * Don't include any raw read identifiers from unpublished experiments.
+     */
+    get: operations["experiment_raw_read_identifier_statistics_api_v1_statistics_record__record__raw_read_identifiers_get"];
+  };
+  "/api/v1/statistics/record/{record}/doi-identifiers": {
+    /**
+     * Get DOI identifier statistics for a record
+     * @description Returns a dictionary of counts for the distinct values of the `identifier` field (member of the `doi_identifiers` table).
+     * Don't include any DOI identifiers from unpublished experiments.
+     */
+    get: operations["experiment_doi_identifiers_statistics_api_v1_statistics_record__record__doi_identifiers_get"];
+  };
+  "/api/v1/statistics/record/{record}/created-by": {
+    /**
+     * Get created by statistics for a record
+     * @description Returns a dictionary of counts for the distinct values of the `username` field (member of the `users` table).
+     * Don't include any usernames from unpublished experiments.
+     */
+    get: operations["experiment_created_by_statistics_api_v1_statistics_record__record__created_by_get"];
+  };
+  "/api/v1/statistics/record/{model}/published/count": {
+    /**
+     * Get published record counts
+     * @description Returns a dictionary of counts for the number of published records of the `model` parameter.
+     * Optionally, group the counts by the published month or year.
+     */
+    get: operations["record_counts_api_v1_statistics_record__model__published_count_get"];
+  };
+  "/api/v1/statistics/record/score-set/variant/count": {
+    /**
+     * Get variant statistics for score sets
+     * @description Returns a dictionary of counts for the number of published and distinct variants in the database contained
+     * within a given record.
+     */
+    get: operations["record_variant_counts_api_v1_statistics_record_score_set_variant_count_get"];
+  };
+  "/api/v1/statistics/record/score-set/mapped-variant/count": {
+    /**
+     * Get mapped variant statistics for score sets
+     * @description Returns a dictionary of counts for the number of published and distinct mapped variants in the database contained
+     * within a given record.
+     */
+    get: operations["record_mapped_variant_counts_api_v1_statistics_record_score_set_mapped_variant_count_get"];
+  };
+  "/api/v1/statistics/target/accession/accession": {
+    /**
+     * Get target accession statistics for accessions
+     * @description Returns a dictionary of counts for the distinct values of the `accession` field (member of the `target_accessions` table).
+     * Don't include any NULL field values. Don't include any targets from unpublished score sets.
+     */
+    get: operations["target_accessions_accession_counts_api_v1_statistics_target_accession_accession_get"];
+  };
+  "/api/v1/statistics/target/accession/assembly": {
+    /**
+     * Get target accession statistics for assemblies
+     * @description Returns a dictionary of counts for the distinct values of the `assembly` field (member of the `target_accessions` table).
+     * Don't include any NULL field values. Don't include any targets from unpublished score sets.
+     */
+    get: operations["target_accessions_assembly_counts_api_v1_statistics_target_accession_assembly_get"];
+  };
+  "/api/v1/statistics/target/accession/gene": {
+    /**
+     * Get target accession statistics for genes
+     * @description Returns a dictionary of counts for the distinct values of the `gene` field (member of the `target_accessions` table).
+     * Don't include any NULL field values. Don't include any targets from unpublished score sets.
+     */
+    get: operations["target_accessions_gene_counts_api_v1_statistics_target_accession_gene_get"];
+  };
+  "/api/v1/statistics/target/sequence/sequence": {
+    /**
+     * Get target sequence statistics for sequences
+     * @description Returns a dictionary of counts for the distinct values of the `sequence` field (member of the `target_sequences` table).
+     * Don't include any NULL field values. Don't include any targets from unpublished score sets.
+     */
+    get: operations["target_sequences_sequence_counts_api_v1_statistics_target_sequence_sequence_get"];
+  };
+  "/api/v1/statistics/target/sequence/sequence-type": {
+    /**
+     * Get target sequence statistics for sequence types
+     * @description Returns a dictionary of counts for the distinct values of the `sequence_type` field (member of the `target_sequences` table).
+     * Don't include any NULL field values. Don't include any targets from unpublished score sets.
+     */
+    get: operations["target_sequences_sequence_type_counts_api_v1_statistics_target_sequence_sequence_type_get"];
+  };
+  "/api/v1/statistics/target/gene/category": {
+    /**
+     * Get target gene statistics for categories
+     * @description Returns a dictionary of counts for the distinct values of the `category` field (member of the `target_sequences` table).
+     * Don't include any NULL field values. Don't include any targets from unpublished score sets.
+     */
+    get: operations["target_genes_category_counts_api_v1_statistics_target_gene_category_get"];
+  };
+  "/api/v1/statistics/target/gene/organism": {
+    /**
+     * Get target gene statistics for organisms
+     * @description Returns a dictionary of counts for the distinct values of the `organism` field (member of the `taxonomies` table).
+     * Don't include any NULL field values. Don't include any targets from unpublished score sets.
      *
-     * Model names and fields should be members of the Enum classes defined above. Providing an invalid model name or
-     * model field will yield a 422 Unprocessable Entity error with details about valid enum values.
+     * NOTE: For now (and perhaps forever), all accession based targets are human genomic sequences (ie: of taxonomy `Homo sapiens`).
+     *       It is possible this assumption changes if we add mouse (or other non-human) genomes to MaveDB.
      */
-    get: operations["record_object_statistics_api_v1_statistics_record__model___field__get"];
+    get: operations["target_genes_organism_counts_api_v1_statistics_target_gene_organism_get"];
+  };
+  "/api/v1/statistics/target/gene/ensembl-identifier": {
+    /**
+     * Get target gene statistics for Ensembl identifiers
+     * @description Returns a dictionary of counts for the distinct values of the `identifier` field (member of the `ensembl_identifiers` table).
+     * Don't include any NULL field values. Don't include any targets from unpublished score sets.
+     */
+    get: operations["target_genes_ensembl_identifier_counts_api_v1_statistics_target_gene_ensembl_identifier_get"];
+  };
+  "/api/v1/statistics/target/gene/refseq-identifier": {
+    /**
+     * Get target gene statistics for RefSeq identifiers
+     * @description Returns a dictionary of counts for the distinct values of the `identifier` field (member of the `refseq_identifiers` table).
+     * Don't include any NULL field values. Don't include any targets from unpublished score sets.
+     */
+    get: operations["target_genes_refseq_identifier_counts_api_v1_statistics_target_gene_refseq_identifier_get"];
+  };
+  "/api/v1/statistics/target/gene/uniprot-identifier": {
+    /**
+     * Get target gene statistics for UniProt identifiers
+     * @description Returns a dictionary of counts for the distinct values of the `identifier` field (member of the `uniprot_identifiers` table).
+     * Don't include any NULL field values. Don't include any targets from unpublished score sets.
+     */
+    get: operations["target_genes_uniprot_identifier_counts_api_v1_statistics_target_gene_uniprot_identifier_get"];
+  };
+  "/api/v1/statistics/target/mapped/gene": {
+    /**
+     * Get mapped target gene statistics for genes
+     * @description Returns a dictionary of counts for the distinct values of the `gene` property within the `post_mapped_metadata`
+     * field (member of the `target_gene` table). Don't include any NULL field values. Don't include any targets from
+     * unpublished score sets.
+     */
+    get: operations["mapped_target_gene_counts_api_v1_statistics_target_mapped_gene_get"];
+  };
+  "/api/v1/statistics/variant/count": {
+    /**
+     * Get variant statistics
+     * @description Returns a dictionary of counts for the number of published and distinct variants in the database.
+     * Optionally, group the counts by the day on which the score set (and by extension, the variant) was published.
+     */
+    get: operations["variant_counts_api_v1_statistics_variant_count_get"];
+  };
+  "/api/v1/statistics/mapped-variant/count": {
+    /**
+     * Get mapped variant statistics
+     * @description Returns a dictionary of counts for the number of published and distinct variants in the database.
+     * Optionally, group the counts by the day on which the score set (and by extension, the variant) was published.
+     * Optionally, return the count of all mapped variants, not just the current/most up to date ones.
+     */
+    get: operations["mapped_variant_counts_api_v1_statistics_mapped_variant_count_get"];
   };
   "/api/v1/target-gene-identifiers/search": {
     /**
-     * Search Target Gene Identifiers
+     * Search target gene identifiers
      * @description Search target gene identifiers.
      */
     post: operations["search_target_gene_identifiers_api_v1_target_gene_identifiers_search_post"];
   };
-  "/api/v1/target-genes/": {
+  "/api/v1/me/target-genes/search": {
     /**
-     * List Target Genes
-     * @description List target genes.
+     * Search my target genes
+     * @description Search my target genes.
      */
-    get: operations["list_target_genes_api_v1_target_genes__get"];
+    post: operations["search_my_target_genes_api_v1_me_target_genes_search_post"];
+  };
+  "/api/v1/target-genes": {
+    /**
+     * List target genes
+     * @description List target genes.
+     * Selectinload is more efficient if we need more queries search.
+     */
+    get: operations["list_target_genes_api_v1_target_genes_get"];
   };
   "/api/v1/target-genes/names": {
     /**
-     * List Target Gene Names
+     * List target gene names
      * @description List distinct target gene names, in alphabetical order.
      */
     get: operations["list_target_gene_names_api_v1_target_genes_names_get"];
   };
   "/api/v1/target-genes/categories": {
     /**
-     * List Target Gene Categories
+     * List target gene categories
      * @description List distinct target genes categories, in alphabetical order.
      */
     get: operations["list_target_gene_categories_api_v1_target_genes_categories_get"];
   };
   "/api/v1/target-genes/{item_id}": {
     /**
-     * Fetch Target Gene
-     * @description Fetch a single target gene by ID.
+     * Fetch target gene by ID
+     * @description Fetch a single target gene by ID. Only check the permission
      */
     get: operations["fetch_target_gene_api_v1_target_genes__item_id__get"];
   };
   "/api/v1/target-genes/search": {
     /**
-     * Search Target Genes
+     * Search target genes
      * @description Search target genes.
      */
     post: operations["search_target_genes_api_v1_target_genes_search_post"];
   };
   "/api/v1/taxonomies/": {
     /**
-     * List Taxonomies
+     * List taxonomies
      * @description List taxonomies.
      */
     get: operations["list_taxonomies_api_v1_taxonomies__get"];
   };
   "/api/v1/taxonomies/speciesNames": {
     /**
-     * List Taxonomy Organism Names
+     * List species names
      * @description List distinct species names, in alphabetical order.
      */
     get: operations["list_taxonomy_organism_names_api_v1_taxonomies_speciesNames_get"];
   };
   "/api/v1/taxonomies/commonNames": {
     /**
-     * List Taxonomy Common Names
+     * List common names
      * @description List distinct common names, in alphabetical order.
      */
     get: operations["list_taxonomy_common_names_api_v1_taxonomies_commonNames_get"];
   };
   "/api/v1/taxonomies/{item_id}": {
     /**
-     * Fetch Taxonomy
+     * Fetch taxonomy by ID
      * @description Fetch a single taxonomy by ID.
      */
     get: operations["fetch_taxonomy_api_v1_taxonomies__item_id__get"];
   };
-  "/api/v1/taxonomies/tax-id/{item_id}": {
+  "/api/v1/taxonomies/code/{item_id}": {
     /**
-     * Fetch Taxonomy By Tax Id
-     * @description Fetch a single taxonomy by tax_id.
+     * Fetch taxonomy by code
+     * @description Fetch a single taxonomy by code.
      */
-    get: operations["fetch_taxonomy_by_tax_id_api_v1_taxonomies_tax_id__item_id__get"];
+    get: operations["fetch_taxonomy_by_code_api_v1_taxonomies_code__item_id__get"];
   };
   "/api/v1/taxonomies/search": {
     /**
-     * Search Taxonomies
+     * Search taxonomies
      * @description Search Taxonomy.
      * If no search text, return the whole taxonomy list so that front end Taxonomy component can get data to show in dropdown button.
      */
@@ -497,43 +1082,71 @@ export interface paths {
   };
   "/api/v1/users/": {
     /**
-     * List Users
+     * List users
      * @description List users.
      */
     get: operations["list_users_api_v1_users__get"];
   };
   "/api/v1/users/me": {
     /**
-     * Show Me
+     * Show my user
      * @description Return the current user.
      */
     get: operations["show_me_api_v1_users_me_get"];
     /**
-     * Update Me
+     * Update my user
      * @description Update the current user.
      */
     put: operations["update_me_api_v1_users_me_put"];
   };
   "/api/v1/users/{id}": {
     /**
-     * Show User
-     * @description Fetch a single user by ID.
+     * Show user by ID
+     * @description Fetch a single user by ID. Returns admin view of requested user.
      */
-    get: operations["show_user_api_v1_users__id__get"];
+    get: operations["show_user_admin_api_v1_users__id__get"];
+  };
+  "/api/v1/users/{orcid_id}": {
+    /**
+     * Show user by Orcid ID
+     * @description Fetch a single user by Orcid ID. Returns limited view of user.
+     */
+    get: operations["show_user_api_v1_users__orcid_id__get"];
   };
   "/api/v1/users/me/has-logged-in": {
     /**
-     * User Has Logged In
-     * @description Update the current user's.
+     * Mark that the current user has logged in
+     * @description Update the current users log in state.
      */
     put: operations["user_has_logged_in_api_v1_users_me_has_logged_in_put"];
   };
   "/api/v1/users//{id}": {
     /**
-     * Update User
+     * Update user by ID
      * @description Update a user.
      */
     put: operations["update_user_api_v1_users___id__put"];
+  };
+  "/api/v1/variants/clingen-allele-id-lookups": {
+    /**
+     * Lookup variants by ClinGen Allele IDs
+     * @description Lookup variants by ClinGen Allele IDs.
+     */
+    post: operations["lookup_variants_api_v1_variants_clingen_allele_id_lookups_post"];
+  };
+  "/api/v1/variants/{urn}": {
+    /**
+     * Fetch variant by URN
+     * @description Fetch a single variant by URN.
+     */
+    get: operations["get_variant_api_v1_variants__urn__get"];
+  };
+  "/api/v1/alphafold-files/version": {
+    /**
+     * Proxy Alphafold Index
+     * @description Proxy the AlphaFold files index (XML document).
+     */
+    get: operations["proxy_alphafold_index_api_v1_alphafold_files_version_get"];
   };
 }
 
@@ -541,20 +1154,138 @@ export type webhooks = Record<string, never>;
 
 export interface components {
   schemas: {
+    /**
+     * ACMGClassification
+     * @description Complete ACMG classification model returned by the API.
+     */
+    ACMGClassification: {
+      criterion?: components["schemas"]["ACMGCriterion"] | null;
+      evidenceStrength?: components["schemas"]["StrengthOfEvidenceProvided"] | null;
+      /** Points */
+      points?: number | null;
+      /** Recordtype */
+      recordType?: string;
+    };
+    /**
+     * ACMGClassificationCreate
+     * @description Model used to create a new ACMG classification.
+     */
+    ACMGClassificationCreate: {
+      criterion?: components["schemas"]["ACMGCriterion"] | null;
+      evidenceStrength?: components["schemas"]["StrengthOfEvidenceProvided"] | null;
+      /** Points */
+      points?: number | null;
+    };
+    /**
+     * ACMGClassificationModify
+     * @description Model used to modify an existing ACMG classification.
+     */
+    ACMGClassificationModify: {
+      criterion?: components["schemas"]["ACMGCriterion"] | null;
+      evidenceStrength?: components["schemas"]["StrengthOfEvidenceProvided"] | null;
+      /** Points */
+      points?: number | null;
+    };
+    /**
+     * ACMGCriterion
+     * @description Enum for ACMG criteria codes.
+     * @enum {string}
+     */
+    ACMGCriterion: "PVS1" | "PS1" | "PS2" | "PS3" | "PS4" | "PM1" | "PM2" | "PM3" | "PM4" | "PM5" | "PM6" | "PP1" | "PP2" | "PP3" | "PP4" | "PP5" | "BA1" | "BS1" | "BS2" | "BS3" | "BS4" | "BP1" | "BP2" | "BP3" | "BP4" | "BP5" | "BP6" | "BP7";
     /** AccessKey */
     AccessKey: {
       /** Keyid */
       keyId: string;
       /** Name */
-      name?: string;
+      name?: string | null;
+      /** Expirationdate */
+      expirationDate?: string | null;
+      /** Creationtime */
+      creationTime?: string | null;
+      /** Recordtype */
+      recordType?: string;
+      role?: components["schemas"]["UserRole"] | null;
+    };
+    /**
+     * Action
+     * @enum {string}
+     */
+    Action: "lookup" | "read" | "update" | "delete" | "add_experiment" | "add_score_set" | "set_scores" | "add_role" | "publish" | "add_badge" | "change_rank";
+    /** AddExperimentToCollectionRequest */
+    AddExperimentToCollectionRequest: {
+      /** Experimenturn */
+      experimentUrn: string;
+    };
+    /** AddScoreSetToCollectionRequest */
+    AddScoreSetToCollectionRequest: {
+      /** Scoreseturn */
+      scoreSetUrn: string;
+    };
+    /** AddUserToCollectionRoleRequest */
+    AddUserToCollectionRoleRequest: {
+      /** Orcidid */
+      orcidId: string;
+    };
+    /**
+     * Adjacency
+     * @description The `Adjacency` class represents the adjoining of the end of a sequence with the
+     * beginning of an adjacent sequence, potentially with an intervening linker sequence.
+     */
+    Adjacency: {
       /**
-       * Expirationdate
-       * Format: date
+       * Id
+       * @description The 'logical' identifier of the Entity in the system of record, e.g. a UUID.  This 'id' is unique within a given system, but may or may not be globally unique outside the system. It is used within a system to reference an object from another.
        */
-      expirationDate?: string;
-      /** Createdat */
-      createdAt?: string;
-      role?: components["schemas"]["UserRole"];
+      id?: string | null;
+      /**
+       * Type
+       * @description MUST be "Adjacency".
+       * @default Adjacency
+       * @constant
+       */
+      type?: "Adjacency";
+      /**
+       * Name
+       * @description A primary name for the entity.
+       */
+      name?: string | null;
+      /**
+       * Description
+       * @description A free-text description of the Entity.
+       */
+      description?: string | null;
+      /**
+       * Aliases
+       * @description Alternative name(s) for the Entity.
+       */
+      aliases?: string[] | null;
+      /**
+       * Extensions
+       * @description A list of extensions to the Entity, that allow for capture of information not directly supported by elements defined in the model.
+       */
+      extensions?: components["schemas"]["Extension"][] | null;
+      /**
+       * Digest
+       * @description A sha512t24u digest created using the VRS Computed Identifier algorithm.
+       */
+      digest?: string | null;
+      /** Expressions */
+      expressions?: components["schemas"]["Expression"][] | null;
+      /**
+       * Adjoinedsequences
+       * @description The terminal sequence or pair of adjoined sequences that defines in the adjacency.
+       */
+      adjoinedSequences: (components["schemas"]["iriReference"] | components["schemas"]["SequenceLocation"])[];
+      /**
+       * Linker
+       * @description The sequence found between adjoined sequences.
+       */
+      linker?: components["schemas"]["LiteralSequenceExpression"] | components["schemas"]["ReferenceLengthExpression"] | components["schemas"]["LengthExpression"] | null;
+      /**
+       * Homology
+       * @description A flag indicating if coordinate ambiguity in the adjoined sequences is from sequence homology (true) or other uncertainty, such as instrument ambiguity (false).
+       */
+      homology?: boolean | null;
     };
     /**
      * AdminUser
@@ -564,13 +1295,16 @@ export interface components {
       /** Orcidid */
       orcidId: string;
       /** Firstname */
-      firstName?: string;
+      firstName?: string | null;
       /** Lastname */
-      lastName?: string;
+      lastName?: string | null;
+      /** Recordtype */
+      recordType?: string;
       /** Email */
-      email?: string;
+      email?: string | null;
       /** Isfirstlogin */
       isFirstLogin: boolean;
+      /** Roles */
       roles: components["schemas"]["UserRole"][];
       /** Id */
       id: number;
@@ -581,12 +1315,113 @@ export interface components {
      */
     AdminUserUpdate: {
       /** Email */
-      email?: string;
+      email?: string | null;
       /** Firstname */
-      firstName?: string;
+      firstName?: string | null;
       /** Lastname */
-      lastName?: string;
-      roles?: components["schemas"]["UserRole"][];
+      lastName?: string | null;
+      /** Roles */
+      roles?: components["schemas"]["UserRole"][] | null;
+    };
+    /**
+     * Agent
+     * @description An autonomous actor (person, organization, or software agent) that bears some
+     * form of responsibility for an activity taking place, for the existence of an entity,
+     * or for another agent's activity.
+     */
+    Agent: {
+      /**
+       * Id
+       * @description The 'logical' identifier of the Entity in the system of record, e.g. a UUID.  This 'id' is unique within a given system, but may or may not be globally unique outside the system. It is used within a system to reference an object from another.
+       */
+      id?: string | null;
+      /**
+       * Type
+       * @description MUST be 'Agent'.
+       * @default Agent
+       * @constant
+       */
+      type?: "Agent";
+      /**
+       * Name
+       * @description The given name of the Agent.
+       */
+      name?: string | null;
+      /**
+       * Description
+       * @description A free-text description of the Entity.
+       */
+      description?: string | null;
+      /**
+       * Aliases
+       * @description Alternative name(s) for the Entity.
+       */
+      aliases?: string[] | null;
+      /**
+       * Extensions
+       * @description A list of extensions to the Entity, that allow for capture of information not directly supported by elements defined in the model.
+       */
+      extensions?: components["schemas"]["Extension"][] | null;
+      /**
+       * Agenttype
+       * @description A specific type of agent the Agent object represents. Recommended subtypes include codes for `person`, `organization`, or `software`.
+       */
+      agentType?: string | null;
+    };
+    /**
+     * Allele
+     * @description The state of a molecule at a `Location`.
+     */
+    Allele: {
+      /**
+       * Id
+       * @description The 'logical' identifier of the Entity in the system of record, e.g. a UUID.  This 'id' is unique within a given system, but may or may not be globally unique outside the system. It is used within a system to reference an object from another.
+       */
+      id?: string | null;
+      /**
+       * Type
+       * @description MUST be "Allele"
+       * @default Allele
+       * @constant
+       */
+      type?: "Allele";
+      /**
+       * Name
+       * @description A primary name for the entity.
+       */
+      name?: string | null;
+      /**
+       * Description
+       * @description A free-text description of the Entity.
+       */
+      description?: string | null;
+      /**
+       * Aliases
+       * @description Alternative name(s) for the Entity.
+       */
+      aliases?: string[] | null;
+      /**
+       * Extensions
+       * @description A list of extensions to the Entity, that allow for capture of information not directly supported by elements defined in the model.
+       */
+      extensions?: components["schemas"]["Extension"][] | null;
+      /**
+       * Digest
+       * @description A sha512t24u digest created using the VRS Computed Identifier algorithm.
+       */
+      digest?: string | null;
+      /** Expressions */
+      expressions?: components["schemas"]["Expression"][] | null;
+      /**
+       * Location
+       * @description The location of the Allele
+       */
+      location: components["schemas"]["iriReference"] | components["schemas"]["SequenceLocation"];
+      /**
+       * State
+       * @description An expression of the sequence state
+       */
+      state: components["schemas"]["LiteralSequenceExpression"] | components["schemas"]["ReferenceLengthExpression"] | components["schemas"]["LengthExpression"];
     };
     /** ApiVersion */
     ApiVersion: {
@@ -595,18 +1430,716 @@ export interface components {
       /** Version */
       version: string;
     };
+    /** Body_update_score_set_with_variants_api_v1_score_sets_with_variants__urn__patch */
+    Body_update_score_set_with_variants_api_v1_score_sets_with_variants__urn__patch: {
+      /** Counts File */
+      counts_file?: string | null;
+      /** Scores File */
+      scores_file?: string | null;
+    };
     /** Body_upload_score_set_variant_data_api_v1_score_sets__urn__variants_data_post */
     Body_upload_score_set_variant_data_api_v1_score_sets__urn__variants_data_post: {
+      /** Counts File */
+      counts_file?: string | null;
+      /** Scores File */
+      scores_file?: string | null;
+    };
+    /**
+     * CategoricalVariant
+     * @description A representation of a categorically-defined domain for variation, in which
+     * individual Constraintual variation instances may be members of the domain.
+     */
+    CategoricalVariant: {
       /**
-       * Counts File
-       * Format: binary
+       * Id
+       * @description The 'logical' identifier of the Entity in the system of record, e.g. a UUID.  This 'id' is unique within a given system, but may or may not be globally unique outside the system. It is used within a system to reference an object from another.
        */
-      counts_file?: string;
+      id?: string | null;
       /**
-       * Scores File
-       * Format: binary
+       * Type
+       * @description MUST be 'CategoricalVariant'
+       * @default CategoricalVariant
+       * @constant
        */
-      scores_file: string;
+      type?: "CategoricalVariant";
+      /**
+       * Name
+       * @description A primary name for the entity.
+       */
+      name: string;
+      /**
+       * Description
+       * @description A free-text description of the Entity.
+       */
+      description?: string | null;
+      /**
+       * Aliases
+       * @description Alternative name(s) for the Entity.
+       */
+      aliases?: string[] | null;
+      /**
+       * Extensions
+       * @description A list of extensions to the Entity, that allow for capture of information not directly supported by elements defined in the model.
+       */
+      extensions?: components["schemas"]["Extension"][] | null;
+      /**
+       * Members
+       * @description A non-exhaustive list of VRS Variations that satisfy the constraints of this categorical variant.
+       */
+      members?: (({
+          type: "CategoricalVariant";
+        } & (Omit<components["schemas"]["Variation"], "type"> | components["schemas"]["iriReference"]))[]) | null;
+      /** Constraints */
+      constraints?: components["schemas"]["Constraint"][] | null;
+      /**
+       * Mappings
+       * @description A list of mappings to concepts in terminologies or code systems. Each mapping should include a coding and a relation.
+       */
+      mappings?: components["schemas"]["ConceptMapping"][] | null;
+    };
+    /**
+     * CisPhasedBlock
+     * @description An ordered set of co-occurring `Variation` on the same molecule.
+     */
+    CisPhasedBlock: {
+      /**
+       * Id
+       * @description The 'logical' identifier of the Entity in the system of record, e.g. a UUID.  This 'id' is unique within a given system, but may or may not be globally unique outside the system. It is used within a system to reference an object from another.
+       */
+      id?: string | null;
+      /**
+       * Type
+       * @description MUST be "CisPhasedBlock"
+       * @default CisPhasedBlock
+       * @constant
+       */
+      type?: "CisPhasedBlock";
+      /**
+       * Name
+       * @description A primary name for the entity.
+       */
+      name?: string | null;
+      /**
+       * Description
+       * @description A free-text description of the Entity.
+       */
+      description?: string | null;
+      /**
+       * Aliases
+       * @description Alternative name(s) for the Entity.
+       */
+      aliases?: string[] | null;
+      /**
+       * Extensions
+       * @description A list of extensions to the Entity, that allow for capture of information not directly supported by elements defined in the model.
+       */
+      extensions?: components["schemas"]["Extension"][] | null;
+      /**
+       * Digest
+       * @description A sha512t24u digest created using the VRS Computed Identifier algorithm.
+       */
+      digest?: string | null;
+      /** Expressions */
+      expressions?: components["schemas"]["Expression"][] | null;
+      /**
+       * Members
+       * @description A list of Alleles that are found in-cis on a shared molecule.
+       */
+      members: (components["schemas"]["Allele"] | components["schemas"]["iriReference"])[];
+      /** @description An optional Sequence Reference on which all of the in-cis Alleles are found. When defined, this may be used to implicitly define the `sequenceReference` attribute for each of the CisPhasedBlock member Alleles. */
+      sequenceReference?: components["schemas"]["SequenceReference"] | null;
+    };
+    /**
+     * ClingenAlleleIdVariantLookupResponse
+     * @description Response model for a variant lookup by ClinGen allele ID
+     */
+    ClingenAlleleIdVariantLookupResponse: {
+      /** Clingenalleleid */
+      clingenAlleleId: string;
+      exactMatch?: components["schemas"]["Variant"] | null;
+      /**
+       * Equivalentnt
+       * @default []
+       */
+      equivalentNt?: components["schemas"]["Variant"][];
+      /**
+       * Equivalentaa
+       * @default []
+       */
+      equivalentAa?: components["schemas"]["Variant"][];
+    };
+    /**
+     * ClingenAlleleIdVariantLookupsRequest
+     * @description A request to search for variants matching a list of ClinGen allele IDs
+     */
+    ClingenAlleleIdVariantLookupsRequest: {
+      /** Clingenalleleids */
+      clingenAlleleIds: string[];
+    };
+    /** ClinicalControlOptions */
+    ClinicalControlOptions: {
+      /** Dbname */
+      dbName: string;
+      /** Availableversions */
+      availableVersions: string[];
+    };
+    /** ClinicalControlWithMappedVariants */
+    ClinicalControlWithMappedVariants: {
+      /** Dbidentifier */
+      dbIdentifier: string;
+      /** Genesymbol */
+      geneSymbol: string;
+      /** Clinicalsignificance */
+      clinicalSignificance: string;
+      /** Clinicalreviewstatus */
+      clinicalReviewStatus: string;
+      /** Dbversion */
+      dbVersion: string;
+      /** Dbname */
+      dbName: string;
+      /** Id */
+      id: number;
+      /**
+       * Modificationdate
+       * Format: date
+       */
+      modificationDate: string;
+      /**
+       * Creationdate
+       * Format: date
+       */
+      creationDate: string;
+      /** Recordtype */
+      recordType?: string;
+      /** Mappedvariants */
+      mappedVariants: components["schemas"]["MappedVariantForClinicalControl"][];
+    };
+    /**
+     * Coding
+     * @description A structured representation of a code for a defined concept in a terminology or
+     * code system.
+     */
+    Coding: {
+      /**
+       * Id
+       * @description The 'logical' identifier of the data element in the system of record, e.g. a UUID.  This 'id' is unique within a given system, but may or may not be globally unique outside the system. It is used within a system to reference an object from another.
+       */
+      id?: string | null;
+      /**
+       * Extensions
+       * @description A list of extensions to the Entity, that allow for capture of information not directly supported by elements defined in the model.
+       */
+      extensions?: components["schemas"]["Extension"][] | null;
+      /**
+       * Name
+       * @description The human-readable name for the coded concept, as defined by the code system.
+       */
+      name?: string | null;
+      /**
+       * System
+       * @description The terminology/code system that defined the code. May be reported as a free-text name (e.g. 'Sequence Ontology'), but it is preferable to provide a uri/url for the system.
+       */
+      system: string;
+      /**
+       * Systemversion
+       * @description Version of the terminology or code system that provided the code.
+       */
+      systemVersion?: string | null;
+      code: components["schemas"]["code"];
+      /**
+       * Iris
+       * @description A list of IRIs that are associated with the coding. This can be used to provide additional context or to link to additional information about the concept.
+       */
+      iris?: components["schemas"]["iriReference"][] | null;
+    };
+    /**
+     * CohortAlleleFrequencyStudyResult
+     * @description A StudyResult that reports measures related to the frequency of an Allele in a cohort
+     */
+    CohortAlleleFrequencyStudyResult: {
+      /**
+       * Id
+       * @description The 'logical' identifier of the Entity in the system of record, e.g. a UUID.  This 'id' is unique within a given system, but may or may not be globally unique outside the system. It is used within a system to reference an object from another.
+       */
+      id?: string | null;
+      /**
+       * Type
+       * @description MUST be 'CohortAlleleFrequencyStudyResult'.
+       * @default CohortAlleleFrequencyStudyResult
+       * @constant
+       */
+      type?: "CohortAlleleFrequencyStudyResult";
+      /**
+       * Name
+       * @description A primary name for the entity.
+       */
+      name?: string | null;
+      /**
+       * Description
+       * @description A free-text description of the Entity.
+       */
+      description?: string | null;
+      /**
+       * Aliases
+       * @description Alternative name(s) for the Entity.
+       */
+      aliases?: string[] | null;
+      /**
+       * Extensions
+       * @description A list of extensions to the Entity, that allow for capture of information not directly supported by elements defined in the model.
+       */
+      extensions?: components["schemas"]["Extension"][] | null;
+      /**
+       * Specifiedby
+       * @description A specification that describes all or part of the process that led to creation of the Information Entity
+       */
+      specifiedBy?: components["schemas"]["Method"] | components["schemas"]["iriReference"] | null;
+      /**
+       * Contributions
+       * @description Specific actions taken by an Agent toward the creation, modification, validation, or deprecation of an Information Entity.
+       */
+      contributions?: components["schemas"]["Contribution"][] | null;
+      /**
+       * Reportedin
+       * @description A document in which the the Information Entity is reported.
+       */
+      reportedIn?: ((components["schemas"]["Document"] | components["schemas"]["iriReference"])[]) | null;
+      /** @description The dataset from which the CohortAlleleFrequencyStudyResult was reported. */
+      sourceDataSet?: components["schemas"]["DataSet"] | null;
+      /**
+       * Ancillaryresults
+       * @description An object in which implementers can define custom fields to capture additional results derived from analysis of primary data items captured in standard attributes in the main body of the Study Result. e.g. in a Cohort Allele Frequency Study Result, this maybe a grpMaxFAF95 calculation, or homozygote/heterozygote calls derived from analyzing raw allele count data.
+       */
+      ancillaryResults?: Record<string, never> | null;
+      /**
+       * Qualitymeasures
+       * @description An object in which implementers can define custom fields to capture metadata about the quality/provenance of the primary data items captured in standard attributes in the main body of the Study Result. e.g. a sequencing coverage metric in a Cohort Allele Frequency Study Result.
+       */
+      qualityMeasures?: Record<string, never> | null;
+      /**
+       * Focusallele
+       * @description The Allele for which frequency results are reported.
+       */
+      focusAllele: components["schemas"]["Allele"] | components["schemas"]["iriReference"];
+      /**
+       * Focusallelecount
+       * @description The number of occurrences of the focusAllele in the cohort.
+       */
+      focusAlleleCount: number;
+      /**
+       * Locusallelecount
+       * @description The number of occurrences of all alleles at the locus in the cohort.
+       */
+      locusAlleleCount: number;
+      /**
+       * Focusallelefrequency
+       * @description The frequency of the focusAllele in the cohort.
+       */
+      focusAlleleFrequency: number;
+      /** @description The cohort from which the frequency was derived. */
+      cohort: components["schemas"]["StudyGroup"];
+      /**
+       * Subcohortfrequency
+       * @description A list of CohortAlleleFrequency objects describing subcohorts of the cohort currently being described. Subcohorts can be further subdivided into more subcohorts. This enables, for example, the description of different ancestry groups and sexes among those ancestry groups.
+       */
+      subCohortFrequency?: components["schemas"]["CohortAlleleFrequencyStudyResult"][] | null;
+    };
+    /** Collection */
+    Collection: {
+      /**
+       * Private
+       * @description Whether the collection is visible to all MaveDB users. If set during collection update, input ignored unless requesting user is collection admin.
+       */
+      private: boolean;
+      /** Name */
+      name: string;
+      /** Description */
+      description?: string | null;
+      /**
+       * Badgename
+       * @description Badge name. Input ignored unless requesting user has MaveDB admin privileges.
+       */
+      badgeName?: string | null;
+      /** Recordtype */
+      recordType?: string;
+      /** Urn */
+      urn: string;
+      createdBy?: components["schemas"]["User"] | null;
+      modifiedBy?: components["schemas"]["User"] | null;
+      /** Experimenturns */
+      experimentUrns: string[];
+      /** Scoreseturns */
+      scoreSetUrns: string[];
+      /** Admins */
+      admins: components["schemas"]["User"][];
+      /** Viewers */
+      viewers: components["schemas"]["User"][];
+      /** Editors */
+      editors: components["schemas"]["User"][];
+      /**
+       * Creationdate
+       * Format: date
+       */
+      creationDate: string;
+      /**
+       * Modificationdate
+       * Format: date
+       */
+      modificationDate: string;
+    };
+    /** CollectionBundle */
+    CollectionBundle: {
+      /** Admin */
+      admin: components["schemas"]["Collection"][];
+      /** Editor */
+      editor: components["schemas"]["Collection"][];
+      /** Viewer */
+      viewer: components["schemas"]["Collection"][];
+    };
+    /** CollectionCreate */
+    CollectionCreate: {
+      /**
+       * Private
+       * @description Whether the collection is visible to all MaveDB users. If set during collection update, input ignored unless requesting user is collection admin.
+       */
+      private: boolean;
+      /** Name */
+      name: string;
+      /** Description */
+      description?: string | null;
+      /**
+       * Badgename
+       * @description Badge name. Input ignored unless requesting user has MaveDB admin privileges.
+       */
+      badgeName?: string | null;
+      /**
+       * Experimenturns
+       * @default []
+       */
+      experimentUrns?: string[] | null;
+      /**
+       * Scoreseturns
+       * @default []
+       */
+      scoreSetUrns?: string[] | null;
+      /**
+       * Viewers
+       * @default []
+       */
+      viewers?: components["schemas"]["ContributorCreate"][] | null;
+      /**
+       * Editors
+       * @default []
+       */
+      editors?: components["schemas"]["ContributorCreate"][] | null;
+      /**
+       * Admins
+       * @default []
+       */
+      admins?: components["schemas"]["ContributorCreate"][] | null;
+    };
+    /** CollectionModify */
+    CollectionModify: {
+      /**
+       * Private
+       * @description Whether the collection is visible to all MaveDB users. If set during collection update, input ignored unless requesting user is collection admin.
+       */
+      private?: boolean | null;
+      /** Name */
+      name?: string | null;
+      /** Description */
+      description?: string | null;
+      /**
+       * Badgename
+       * @description Badge name. Input ignored unless requesting user has MaveDB admin privileges.
+       */
+      badgeName?: string | null;
+    };
+    /**
+     * ConceptMapping
+     * @description A mapping to a concept in a terminology or code system.
+     */
+    ConceptMapping: {
+      /**
+       * Id
+       * @description The 'logical' identifier of the data element in the system of record, e.g. a UUID.  This 'id' is unique within a given system, but may or may not be globally unique outside the system. It is used within a system to reference an object from another.
+       */
+      id?: string | null;
+      /**
+       * Extensions
+       * @description A list of extensions to the Entity, that allow for capture of information not directly supported by elements defined in the model.
+       */
+      extensions?: components["schemas"]["Extension"][] | null;
+      /** @description A structured representation of a code for a defined concept in a terminology or code system. */
+      coding: components["schemas"]["Coding"];
+      /** @description A mapping relation between concepts as defined by the Simple Knowledge Organization System (SKOS). */
+      relation: components["schemas"]["Relation"];
+    };
+    /**
+     * Condition
+     * @description A single condition (disease, phenotype, or trait), or a set of conditions (ConditionSet).
+     */
+    Condition: components["schemas"]["ConditionSet"] | components["schemas"]["MappableConcept"];
+    /**
+     * ConditionSet
+     * @description A set of conditions (diseases, phenotypes, traits) that occur together or are
+     * related, depending on the membership operator, and may manifest together in the
+     * same patient or individually in a different subset of participants in a research
+     * study.
+     */
+    ConditionSet: {
+      /**
+       * Id
+       * @description The 'logical' identifier of the data element in the system of record, e.g. a UUID.  This 'id' is unique within a given system, but may or may not be globally unique outside the system. It is used within a system to reference an object from another.
+       */
+      id?: string | null;
+      /**
+       * Extensions
+       * @description A list of extensions to the Entity, that allow for capture of information not directly supported by elements defined in the model.
+       */
+      extensions?: components["schemas"]["Extension"][] | null;
+      /**
+       * Conditions
+       * @description A list of conditions (diseases, phenotypes, traits) that are co-occurring or related, depending on the membership operator.
+       */
+      conditions: (components["schemas"]["MappableConcept"] | components["schemas"]["ConditionSet"])[];
+      /** @description The logical relationship between members of the set, that indicates how they manifest in patients/research subjects. The value 'AND' indicates that all conditions in the set co-occur together in a given patient or subject. The value 'OR' indicates that only one condition in the set manifests in each participant interrogated in a given study. */
+      membershipOperator: components["schemas"]["MembershipOperator"];
+    };
+    /**
+     * Constraint
+     * @description Constraints are used to construct an intensional semantics of categorical variant types.
+     */
+    Constraint: components["schemas"]["DefiningAlleleConstraint"] | components["schemas"]["DefiningLocationConstraint"] | components["schemas"]["CopyCountConstraint"] | components["schemas"]["CopyChangeConstraint"] | components["schemas"]["FeatureContextConstraint"];
+    /**
+     * Contribution
+     * @description An action taken by an agent in contributing to the creation, modification,
+     * assessment, or deprecation of a particular entity (e.g. a Statement, EvidenceLine,
+     * DataSet, Publication, etc.)
+     */
+    Contribution: {
+      /**
+       * Id
+       * @description The 'logical' identifier of the Entity in the system of record, e.g. a UUID.  This 'id' is unique within a given system, but may or may not be globally unique outside the system. It is used within a system to reference an object from another.
+       */
+      id?: string | null;
+      /**
+       * Type
+       * @description MUST be 'Contribution'.
+       * @default Contribution
+       * @constant
+       */
+      type?: "Contribution";
+      /**
+       * Name
+       * @description A primary name for the entity.
+       */
+      name?: string | null;
+      /**
+       * Description
+       * @description A free-text description of the Entity.
+       */
+      description?: string | null;
+      /**
+       * Aliases
+       * @description Alternative name(s) for the Entity.
+       */
+      aliases?: string[] | null;
+      /**
+       * Extensions
+       * @description A list of extensions to the Entity, that allow for capture of information not directly supported by elements defined in the model.
+       */
+      extensions?: components["schemas"]["Extension"][] | null;
+      /** @description The agent that made the contribution. */
+      contributor?: components["schemas"]["Agent"] | null;
+      /**
+       * Activitytype
+       * @description The specific type of activity performed or role played by an agent in making the contribution (e.g. for a publication, agents may contribute as a primary author, editor, figure designer, data generator, etc.). Values of this property may be framed as activities, or as contribution roles (e.g. using terms from the Contribution Role Ontology (CRO)).
+       */
+      activityType?: string | null;
+      /**
+       * Date
+       * @description When the contributing activity was completed.
+       */
+      date?: string | null;
+    };
+    /**
+     * ContributionRole
+     * @enum {string}
+     */
+    ContributionRole: "admin" | "editor" | "viewer";
+    /**
+     * Contributor
+     * @description Contributor view model.
+     */
+    Contributor: {
+      /** Orcidid */
+      orcidId: string;
+      /** Recordtype */
+      recordType?: string;
+      /** Givenname */
+      givenName?: string | null;
+      /** Familyname */
+      familyName?: string | null;
+    };
+    /**
+     * ContributorCreate
+     * @description View model for creating a new contributor or looking one up.
+     */
+    ContributorCreate: {
+      /** Orcidid */
+      orcidId: string;
+    };
+    /**
+     * CopyChange
+     * @description MUST use one of the defined enumerations that are based on the corresponding EFO
+     * ontological terms for copy number variation. See Implementation Guidance for more
+     * details.
+     * @enum {string}
+     */
+    CopyChange: "complete genomic loss" | "high-level loss" | "low-level loss" | "loss" | "regional base ploidy" | "gain" | "low-level gain" | "high-level gain";
+    /**
+     * CopyChangeConstraint
+     * @description A representation of copy number change
+     */
+    CopyChangeConstraint: {
+      /**
+       * Type
+       * @description MUST be 'CopyChangeConstraint'
+       * @default CopyChangeConstraint
+       * @constant
+       */
+      type?: "CopyChangeConstraint";
+      /** @description The relative assessment of the change in copies that members of this categorical variant satisfies. */
+      copyChange: components["schemas"]["CopyChange"];
+    };
+    /**
+     * CopyCountConstraint
+     * @description The exact or range of copies that members of this categorical variant must
+     * satisfy.
+     */
+    CopyCountConstraint: {
+      /**
+       * Type
+       * @description MUST be 'CopyCountConstraint'
+       * @default CopyCountConstraint
+       * @constant
+       */
+      type?: "CopyCountConstraint";
+      /**
+       * Copies
+       * @description The precise value or range of copies members of this categorical variant must satisfy.
+       */
+      copies: number | components["schemas"]["Range"];
+    };
+    /**
+     * CopyNumberChange
+     * @description An assessment of the copy number of a `Location` within a system
+     * (e.g. genome, cell, etc.) relative to a baseline ploidy.
+     */
+    CopyNumberChange: {
+      /**
+       * Id
+       * @description The 'logical' identifier of the Entity in the system of record, e.g. a UUID.  This 'id' is unique within a given system, but may or may not be globally unique outside the system. It is used within a system to reference an object from another.
+       */
+      id?: string | null;
+      /**
+       * Type
+       * @description MUST be "CopyNumberChange"
+       * @default CopyNumberChange
+       * @constant
+       */
+      type?: "CopyNumberChange";
+      /**
+       * Name
+       * @description A primary name for the entity.
+       */
+      name?: string | null;
+      /**
+       * Description
+       * @description A free-text description of the Entity.
+       */
+      description?: string | null;
+      /**
+       * Aliases
+       * @description Alternative name(s) for the Entity.
+       */
+      aliases?: string[] | null;
+      /**
+       * Extensions
+       * @description A list of extensions to the Entity, that allow for capture of information not directly supported by elements defined in the model.
+       */
+      extensions?: components["schemas"]["Extension"][] | null;
+      /**
+       * Digest
+       * @description A sha512t24u digest created using the VRS Computed Identifier algorithm.
+       */
+      digest?: string | null;
+      /** Expressions */
+      expressions?: components["schemas"]["Expression"][] | null;
+      /**
+       * Location
+       * @description The location of the subject of the copy change.
+       */
+      location: components["schemas"]["iriReference"] | components["schemas"]["SequenceLocation"];
+      /** @description MUST use one of the defined enumerations that are based on the corresponding EFO ontological terms for copy number variation. See Implementation Guidance for more details. */
+      copyChange: components["schemas"]["CopyChange"];
+    };
+    /**
+     * CopyNumberCount
+     * @description The absolute count of discrete copies of a `Location`, within a system
+     * (e.g. genome, cell, etc.).
+     */
+    CopyNumberCount: {
+      /**
+       * Id
+       * @description The 'logical' identifier of the Entity in the system of record, e.g. a UUID.  This 'id' is unique within a given system, but may or may not be globally unique outside the system. It is used within a system to reference an object from another.
+       */
+      id?: string | null;
+      /**
+       * Type
+       * @description MUST be "CopyNumberCount"
+       * @default CopyNumberCount
+       * @constant
+       */
+      type?: "CopyNumberCount";
+      /**
+       * Name
+       * @description A primary name for the entity.
+       */
+      name?: string | null;
+      /**
+       * Description
+       * @description A free-text description of the Entity.
+       */
+      description?: string | null;
+      /**
+       * Aliases
+       * @description Alternative name(s) for the Entity.
+       */
+      aliases?: string[] | null;
+      /**
+       * Extensions
+       * @description A list of extensions to the Entity, that allow for capture of information not directly supported by elements defined in the model.
+       */
+      extensions?: components["schemas"]["Extension"][] | null;
+      /**
+       * Digest
+       * @description A sha512t24u digest created using the VRS Computed Identifier algorithm.
+       */
+      digest?: string | null;
+      /** Expressions */
+      expressions?: components["schemas"]["Expression"][] | null;
+      /**
+       * Location
+       * @description The location of the subject of the copy count.
+       */
+      location: components["schemas"]["iriReference"] | components["schemas"]["SequenceLocation"];
+      /**
+       * Copies
+       * @description The integral number of copies of the subject in a system
+       */
+      copies: components["schemas"]["Range"] | number;
     };
     /**
      * CurrentUser
@@ -616,13 +2149,16 @@ export interface components {
       /** Orcidid */
       orcidId: string;
       /** Firstname */
-      firstName?: string;
+      firstName?: string | null;
       /** Lastname */
-      lastName?: string;
+      lastName?: string | null;
+      /** Recordtype */
+      recordType?: string;
       /** Email */
-      email?: string;
+      email?: string | null;
       /** Isfirstlogin */
       isFirstLogin: boolean;
+      /** Roles */
       roles: components["schemas"]["UserRole"][];
     };
     /**
@@ -631,7 +2167,272 @@ export interface components {
      */
     CurrentUserUpdate: {
       /** Email */
-      email?: string;
+      email?: string | null;
+    };
+    /**
+     * DataSet
+     * @description A collection of related data items or records that are organized together in a
+     * common format or structure, to enable their computational manipulation as a unit.
+     */
+    DataSet: {
+      /**
+       * Id
+       * @description The 'logical' identifier of the Entity in the system of record, e.g. a UUID.  This 'id' is unique within a given system, but may or may not be globally unique outside the system. It is used within a system to reference an object from another.
+       */
+      id?: string | null;
+      /**
+       * Type
+       * @description MUST be 'DataSet'.
+       * @default DataSet
+       * @constant
+       */
+      type?: "DataSet";
+      /**
+       * Name
+       * @description A primary name for the entity.
+       */
+      name?: string | null;
+      /**
+       * Description
+       * @description A free-text description of the Entity.
+       */
+      description?: string | null;
+      /**
+       * Aliases
+       * @description Alternative name(s) for the Entity.
+       */
+      aliases?: string[] | null;
+      /**
+       * Extensions
+       * @description A list of extensions to the Entity, that allow for capture of information not directly supported by elements defined in the model.
+       */
+      extensions?: components["schemas"]["Extension"][] | null;
+      /**
+       * Datasettype
+       * @description A specific type of data set the DataSet instance represents (e.g. a 'clinical data set', a 'sequencing data set', a 'gene expression data set', a 'genome annotation data set')
+       */
+      datasetType?: string | null;
+      /**
+       * Reportedin
+       * @description A document in which the the Method is reported.
+       */
+      reportedIn?: components["schemas"]["Document"] | components["schemas"]["iriReference"] | null;
+      /**
+       * Releasedate
+       * @description Indicates the date a version of a DataSet was formally released.
+       */
+      releaseDate?: string | null;
+      /**
+       * Version
+       * @description The version of the DataSet, as assigned by its creator.
+       */
+      version?: string | null;
+      /** @description A specific license that dictates legal permissions for how a data set can be used (by whom, where, for what purposes, with what additional requirements, etc.) */
+      license?: components["schemas"]["MappableConcept"] | null;
+    };
+    /**
+     * DatasetColumnMetadata
+     * @description Metadata for individual dataset columns.
+     */
+    DatasetColumnMetadata: {
+      /** Description */
+      description: string;
+      /** Details */
+      details?: string | null;
+    };
+    /** DatasetColumns */
+    DatasetColumns: {
+      /** Scorecolumns */
+      scoreColumns?: string[] | null;
+      /** Countcolumns */
+      countColumns?: string[] | null;
+      /** Scorecolumnsmetadata */
+      scoreColumnsMetadata?: {
+        [key: string]: components["schemas"]["DatasetColumnMetadata"];
+      } | null;
+      /** Countcolumnsmetadata */
+      countColumnsMetadata?: {
+        [key: string]: components["schemas"]["DatasetColumnMetadata"];
+      } | null;
+      /** Recordtype */
+      recordType?: string;
+    };
+    /**
+     * DefiningAlleleConstraint
+     * @description The defining allele and its associated relationships that are congruent with
+     * member variants.
+     */
+    DefiningAlleleConstraint: {
+      /**
+       * Type
+       * @description MUST be 'DefiningAlleleConstraint'
+       * @default DefiningAlleleConstraint
+       * @constant
+       */
+      type?: "DefiningAlleleConstraint";
+      /** Allele */
+      allele: components["schemas"]["Allele"] | components["schemas"]["iriReference"];
+      /**
+       * Relations
+       * @description Defined relationships from which members relate to the defining allele.
+       */
+      relations?: components["schemas"]["MappableConcept"][] | null;
+    };
+    /**
+     * DefiningLocationConstraint
+     * @description The defining location and its associated relationships that are congruent with
+     * member locations.
+     */
+    DefiningLocationConstraint: {
+      /**
+       * Type
+       * @description MUST be 'DefiningLocationConstraint'
+       * @default DefiningLocationConstraint
+       * @constant
+       */
+      type?: "DefiningLocationConstraint";
+      /** Location */
+      location: components["schemas"]["SequenceLocation"] | components["schemas"]["iriReference"];
+      /**
+       * Relations
+       * @description Defined relationships from which members relate to the defining location.
+       */
+      relations?: components["schemas"]["MappableConcept"][] | null;
+      /** @description A characteristic of the location that is used to match the defining location to member locations. */
+      matchCharacteristic: components["schemas"]["MappableConcept"];
+    };
+    /**
+     * DerivativeMolecule
+     * @description The "Derivative Molecule" data class is a structure for describing a derivate
+     * molecule composed from multiple sequence components.
+     */
+    DerivativeMolecule: {
+      /**
+       * Id
+       * @description The 'logical' identifier of the Entity in the system of record, e.g. a UUID.  This 'id' is unique within a given system, but may or may not be globally unique outside the system. It is used within a system to reference an object from another.
+       */
+      id?: string | null;
+      /**
+       * Type
+       * @description MUST be "DerivativeMolecule".
+       * @default DerivativeMolecule
+       * @constant
+       */
+      type?: "DerivativeMolecule";
+      /**
+       * Name
+       * @description A primary name for the entity.
+       */
+      name?: string | null;
+      /**
+       * Description
+       * @description A free-text description of the Entity.
+       */
+      description?: string | null;
+      /**
+       * Aliases
+       * @description Alternative name(s) for the Entity.
+       */
+      aliases?: string[] | null;
+      /**
+       * Extensions
+       * @description A list of extensions to the Entity, that allow for capture of information not directly supported by elements defined in the model.
+       */
+      extensions?: components["schemas"]["Extension"][] | null;
+      /**
+       * Digest
+       * @description A sha512t24u digest created using the VRS Computed Identifier algorithm.
+       */
+      digest?: string | null;
+      /** Expressions */
+      expressions?: components["schemas"]["Expression"][] | null;
+      /**
+       * Components
+       * @description The molecular components that constitute the derivative molecule.
+       */
+      components: (components["schemas"]["iriReference"] | components["schemas"]["Allele"] | components["schemas"]["CisPhasedBlock"] | components["schemas"]["Terminus"] | components["schemas"]["TraversalBlock"])[];
+      /**
+       * Circular
+       * @description A boolean indicating whether the molecule represented by the sequence is circular (true) or linear (false).
+       */
+      circular?: boolean | null;
+    };
+    /**
+     * DiagnosticPredicate
+     * @description Define constraints for diagnostic predicate
+     * @enum {string}
+     */
+    DiagnosticPredicate: "isDiagnosticInclusionCriterionFor" | "isDiagnosticExclusionCriterionFor";
+    /**
+     * Direction
+     * @description A term indicating whether the Statement supports, disputes, or remains neutral
+     * w.r.t. the validity of the Proposition it evaluates.
+     * @enum {string}
+     */
+    Direction: "supports" | "neutral" | "disputes";
+    /**
+     * Document
+     * @description A collection of information, usually in a text-based or graphic human-readable
+     * form, intended to be read and understood together as a whole.
+     */
+    Document: {
+      /**
+       * Id
+       * @description The 'logical' identifier of the Entity in the system of record, e.g. a UUID.  This 'id' is unique within a given system, but may or may not be globally unique outside the system. It is used within a system to reference an object from another.
+       */
+      id?: string | null;
+      /**
+       * Type
+       * @description Must be 'Document'
+       * @default Document
+       * @constant
+       */
+      type?: "Document";
+      /**
+       * Name
+       * @description A primary name for the entity.
+       */
+      name?: string | null;
+      /**
+       * Description
+       * @description A free-text description of the Entity.
+       */
+      description?: string | null;
+      /**
+       * Aliases
+       * @description Alternative name(s) for the Entity.
+       */
+      aliases?: string[] | null;
+      /**
+       * Extensions
+       * @description A list of extensions to the Entity, that allow for capture of information not directly supported by elements defined in the model.
+       */
+      extensions?: components["schemas"]["Extension"][] | null;
+      /**
+       * Documenttype
+       * @description A specific type of document that a Document instance represents (e.g.  'publication', 'patent', 'pathology report')
+       */
+      documentType?: string | null;
+      /**
+       * Title
+       * @description The official title given to the document by its authors.
+       */
+      title?: string | null;
+      /**
+       * Urls
+       * @description One or more URLs from which the content of the Document can be retrieved.
+       */
+      urls?: string[] | null;
+      /**
+       * Doi
+       * @description A [Digital Object Identifier](https://www.doi.org/the-identifier/what-is-a-doi/) for the document.
+       */
+      doi?: string | null;
+      /**
+       * Pmid
+       * @description A [PubMed unique identifier](https://en.wikipedia.org/wiki/PubMed#PubMed_identifier) for the document.
+       */
+      pmid?: string | null;
     };
     /** DoiIdentifier */
     DoiIdentifier: {
@@ -639,6 +2440,8 @@ export interface components {
       identifier: string;
       /** Id */
       id: number;
+      /** Recordtype */
+      recordType?: string;
       /** Url */
       url: string;
     };
@@ -647,6 +2450,87 @@ export interface components {
       /** Identifier */
       identifier: string;
     };
+    /**
+     * EvidenceLine
+     * @description An independent, evidence-based argument that may support or refute the validity
+     * of a specific Proposition. The strength and direction of this argument is based on
+     * an interpretation of one or more pieces of information as evidence for or against
+     * the target Proposition.
+     */
+    EvidenceLine: {
+      /**
+       * Id
+       * @description The 'logical' identifier of the Entity in the system of record, e.g. a UUID.  This 'id' is unique within a given system, but may or may not be globally unique outside the system. It is used within a system to reference an object from another.
+       */
+      id?: string | null;
+      /**
+       * Type
+       * @description MUST be 'EvidenceLine'.
+       * @default EvidenceLine
+       * @constant
+       */
+      type?: "EvidenceLine";
+      /**
+       * Name
+       * @description A primary name for the entity.
+       */
+      name?: string | null;
+      /**
+       * Description
+       * @description A free-text description of the Entity.
+       */
+      description?: string | null;
+      /**
+       * Aliases
+       * @description Alternative name(s) for the Entity.
+       */
+      aliases?: string[] | null;
+      /**
+       * Extensions
+       * @description A list of extensions to the Entity, that allow for capture of information not directly supported by elements defined in the model.
+       */
+      extensions?: components["schemas"]["Extension"][] | null;
+      /**
+       * Specifiedby
+       * @description A specification that describes all or part of the process that led to creation of the Information Entity
+       */
+      specifiedBy?: components["schemas"]["Method"] | components["schemas"]["iriReference"] | null;
+      /**
+       * Contributions
+       * @description Specific actions taken by an Agent toward the creation, modification, validation, or deprecation of an Information Entity.
+       */
+      contributions?: components["schemas"]["Contribution"][] | null;
+      /**
+       * Reportedin
+       * @description A document in which the the Information Entity is reported.
+       */
+      reportedIn?: ((components["schemas"]["Document"] | components["schemas"]["iriReference"])[]) | null;
+      /**
+       * Targetproposition
+       * @description The possible fact against which evidence items contained in an Evidence Line were collectively evaluated, in determining the overall strength and direction of support they provide. For example, in an ACMG Guideline-based assessment of variant pathogenicity, the support provided by distinct lines of evidence are assessed against a target proposition that the variant is pathogenic for a specific disease.
+       */
+      targetProposition?: {
+        type: "EvidenceLine";
+      } & (components["schemas"]["Proposition"] | Omit<components["schemas"]["SubjectVariantProposition"], "type"> | null);
+      /**
+       * Hasevidenceitems
+       * @description An individual piece of information that was evaluated as evidence in building the argument represented by an Evidence Line.
+       */
+      hasEvidenceItems?: {
+          type: "EvidenceLine";
+        }[] | null;
+      /** @description The direction of support that the Evidence Line is determined to provide toward its target Proposition (supports, disputes, neutral) */
+      directionOfEvidenceProvided: components["schemas"]["Direction"];
+      /** @description The strength of support that an Evidence Line is determined to provide for or against its target Proposition, evaluated relative to the direction indicated by the directionOfEvidenceProvided value. */
+      strengthOfEvidenceProvided?: components["schemas"]["MappableConcept"] | null;
+      /**
+       * Scoreofevidenceprovided
+       * @description A quantitative score indicating the strength of support that an Evidence Line is determined to provide for or against its target Proposition, evaluated relative to the direction indicated by the directionOfEvidenceProvided value.
+       */
+      scoreOfEvidenceProvided?: number | null;
+      /** @description A term summarizing the overall outcome of the evidence assessment represented by the Evidence Line, in terms of the direction and strength of support it provides for or against the target Proposition. */
+      evidenceOutcome?: components["schemas"]["MappableConcept"] | null;
+    };
     /** Experiment */
     Experiment: {
       /** Title */
@@ -654,11 +2538,13 @@ export interface components {
       /** Shortdescription */
       shortDescription: string;
       /** Abstracttext */
-      abstractText?: string;
+      abstractText?: string | null;
       /** Methodtext */
-      methodText?: string;
+      methodText?: string | null;
       /** Extrametadata */
-      extraMetadata?: Record<string, never>;
+      extraMetadata?: Record<string, never> | null;
+      /** Recordtype */
+      recordType?: string;
       /** Urn */
       urn: string;
       createdBy: components["schemas"]["User"];
@@ -673,11 +2559,8 @@ export interface components {
        * Format: date
        */
       modificationDate: string;
-      /**
-       * Publisheddate
-       * Format: date
-       */
-      publishedDate?: string;
+      /** Publisheddate */
+      publishedDate?: string | null;
       /** Experimentseturn */
       experimentSetUrn: string;
       /** Doiidentifiers */
@@ -688,12 +2571,38 @@ export interface components {
       secondaryPublicationIdentifiers: components["schemas"]["PublicationIdentifier"][];
       /** Rawreadidentifiers */
       rawReadIdentifiers: components["schemas"]["RawReadIdentifier"][];
+      /** Contributors */
+      contributors: components["schemas"]["Contributor"][];
       /** Keywords */
-      keywords: string[];
+      keywords: components["schemas"]["ExperimentControlledKeyword"][];
       /** Scoreseturns */
       scoreSetUrns: string[];
+      /** Numscoresets */
+      numScoreSets?: number | null;
       /** Processingstate */
-      processingState?: string;
+      processingState?: string | null;
+      /** Officialcollections */
+      officialCollections: components["schemas"]["OfficialCollection"][];
+    };
+    /**
+     * ExperimentControlledKeyword
+     * @description Keyword view model for non-admin clients.
+     */
+    ExperimentControlledKeyword: {
+      keyword: components["schemas"]["KeywordBase"];
+      /** Description */
+      description?: string | null;
+      /** Recordtype */
+      recordType?: string;
+    };
+    /**
+     * ExperimentControlledKeywordCreate
+     * @description View model for creating a new keyword.
+     */
+    ExperimentControlledKeywordCreate: {
+      keyword: components["schemas"]["KeywordCreate"];
+      /** Description */
+      description?: string | null;
     };
     /** ExperimentCreate */
     ExperimentCreate: {
@@ -706,35 +2615,36 @@ export interface components {
       /** Methodtext */
       methodText: string;
       /** Extrametadata */
-      extraMetadata?: Record<string, never>;
+      extraMetadata?: Record<string, never> | null;
+      /** Contributors */
+      contributors?: components["schemas"]["ContributorCreate"][] | null;
       /** Keywords */
-      keywords?: string[];
+      keywords?: components["schemas"]["ExperimentControlledKeywordCreate"][] | null;
       /** Doiidentifiers */
-      doiIdentifiers?: components["schemas"]["DoiIdentifierCreate"][];
+      doiIdentifiers?: components["schemas"]["DoiIdentifierCreate"][] | null;
       /** Primarypublicationidentifiers */
-      primaryPublicationIdentifiers?: components["schemas"]["PublicationIdentifierCreate"][];
+      primaryPublicationIdentifiers?: components["schemas"]["PublicationIdentifierCreate"][] | null;
       /** Secondarypublicationidentifiers */
-      secondaryPublicationIdentifiers?: components["schemas"]["PublicationIdentifierCreate"][];
+      secondaryPublicationIdentifiers?: components["schemas"]["PublicationIdentifierCreate"][] | null;
       /** Rawreadidentifiers */
-      rawReadIdentifiers?: components["schemas"]["RawReadIdentifierCreate"][];
+      rawReadIdentifiers?: components["schemas"]["RawReadIdentifierCreate"][] | null;
       /** Experimentseturn */
-      experimentSetUrn?: string;
+      experimentSetUrn?: string | null;
     };
     /** ExperimentSet */
     ExperimentSet: {
       /** Urn */
       urn: string;
-      /**
-       * Publisheddate
-       * Format: date
-       */
-      publishedDate?: string;
+      /** Publisheddate */
+      publishedDate?: string | null;
       /** Id */
       id: number;
+      /** Recordtype */
+      recordType?: string;
       /** Experiments */
       experiments: components["schemas"]["Experiment"][];
-      createdBy?: components["schemas"]["User"];
-      modifiedBy?: components["schemas"]["User"];
+      createdBy?: components["schemas"]["User"] | null;
+      modifiedBy?: components["schemas"]["User"] | null;
       /**
        * Creationdate
        * Format: date
@@ -745,6 +2655,10 @@ export interface components {
        * Format: date
        */
       modificationDate: string;
+      /** Contributors */
+      contributors: components["schemas"]["Contributor"][];
+      /** Numexperiments */
+      numExperiments?: number | null;
     };
     /** ExperimentUpdate */
     ExperimentUpdate: {
@@ -757,32 +2671,243 @@ export interface components {
       /** Methodtext */
       methodText: string;
       /** Extrametadata */
-      extraMetadata?: Record<string, never>;
+      extraMetadata?: Record<string, never> | null;
+      /** Contributors */
+      contributors?: components["schemas"]["ContributorCreate"][] | null;
       /** Keywords */
-      keywords?: string[];
+      keywords?: components["schemas"]["ExperimentControlledKeywordCreate"][] | null;
       /** Doiidentifiers */
-      doiIdentifiers?: components["schemas"]["DoiIdentifierCreate"][];
+      doiIdentifiers?: components["schemas"]["DoiIdentifierCreate"][] | null;
       /** Primarypublicationidentifiers */
-      primaryPublicationIdentifiers?: components["schemas"]["PublicationIdentifierCreate"][];
+      primaryPublicationIdentifiers?: components["schemas"]["PublicationIdentifierCreate"][] | null;
       /** Secondarypublicationidentifiers */
-      secondaryPublicationIdentifiers?: components["schemas"]["PublicationIdentifierCreate"][];
+      secondaryPublicationIdentifiers?: components["schemas"]["PublicationIdentifierCreate"][] | null;
       /** Rawreadidentifiers */
-      rawReadIdentifiers?: components["schemas"]["RawReadIdentifierCreate"][];
+      rawReadIdentifiers?: components["schemas"]["RawReadIdentifierCreate"][] | null;
+    };
+    /**
+     * ExperimentalVariantFunctionalImpactProposition
+     * @description A Proposition describing the impact of a variant on the function sequence feature
+     * (typically a gene or gene product).
+     */
+    ExperimentalVariantFunctionalImpactProposition: {
+      /**
+       * Id
+       * @description The 'logical' identifier of the Entity in the system of record, e.g. a UUID.  This 'id' is unique within a given system, but may or may not be globally unique outside the system. It is used within a system to reference an object from another.
+       */
+      id?: string | null;
+      /**
+       * Type
+       * @description MUST be 'ExperimentalVariantFunctionalImpactProposition'.
+       * @default ExperimentalVariantFunctionalImpactProposition
+       * @constant
+       */
+      type?: "ExperimentalVariantFunctionalImpactProposition";
+      /**
+       * Name
+       * @description A primary name for the entity.
+       */
+      name?: string | null;
+      /**
+       * Description
+       * @description A free-text description of the Entity.
+       */
+      description?: string | null;
+      /**
+       * Aliases
+       * @description Alternative name(s) for the Entity.
+       */
+      aliases?: string[] | null;
+      /**
+       * Extensions
+       * @description A list of extensions to the Entity, that allow for capture of information not directly supported by elements defined in the model.
+       */
+      extensions?: components["schemas"]["Extension"][] | null;
+      /**
+       * Subjectvariant
+       * @description A variant that is the subject of the Proposition.
+       */
+      subjectVariant: {
+        type: "ExperimentalVariantFunctionalImpactProposition";
+      } & (Omit<components["schemas"]["MolecularVariation"], "type"> | components["schemas"]["CategoricalVariant"] | components["schemas"]["iriReference"]);
+      /**
+       * Predicate
+       * @description The relationship the Proposition describes between the subject variant and object sequence feature whose function it may alter. MUST be 'impactsFunctionOf'.
+       * @default impactsFunctionOf
+       * @constant
+       */
+      predicate?: "impactsFunctionOf";
+      /**
+       * Objectsequencefeature
+       * @description The sequence feature (typically a gene or gene product) on whose function the impact of the subject variant is reported.
+       */
+      objectSequenceFeature: components["schemas"]["iriReference"] | components["schemas"]["MappableConcept"];
+      /**
+       * Experimentalcontextqualifier
+       * @description An assay in which the reported variant functional impact was determined - providing a specific experimental context in which this effect is asserted to hold.
+       */
+      experimentalContextQualifier?: components["schemas"]["iriReference"] | components["schemas"]["Document"] | Record<string, never> | null;
+    };
+    /**
+     * ExperimentalVariantFunctionalImpactStudyResult
+     * @description A StudyResult that reports a functional impact score from a variant functional assay or study.
+     */
+    ExperimentalVariantFunctionalImpactStudyResult: {
+      /**
+       * Id
+       * @description The 'logical' identifier of the Entity in the system of record, e.g. a UUID.  This 'id' is unique within a given system, but may or may not be globally unique outside the system. It is used within a system to reference an object from another.
+       */
+      id?: string | null;
+      /**
+       * Type
+       * @description MUST be 'ExperimentalVariantFunctionalImpactStudyResult'.
+       * @default ExperimentalVariantFunctionalImpactStudyResult
+       * @constant
+       */
+      type?: "ExperimentalVariantFunctionalImpactStudyResult";
+      /**
+       * Name
+       * @description A primary name for the entity.
+       */
+      name?: string | null;
+      /**
+       * Description
+       * @description A free-text description of the Entity.
+       */
+      description?: string | null;
+      /**
+       * Aliases
+       * @description Alternative name(s) for the Entity.
+       */
+      aliases?: string[] | null;
+      /**
+       * Extensions
+       * @description A list of extensions to the Entity, that allow for capture of information not directly supported by elements defined in the model.
+       */
+      extensions?: components["schemas"]["Extension"][] | null;
+      /**
+       * Specifiedby
+       * @description The assay that was performed to generate the reported functional impact score.
+       */
+      specifiedBy?: components["schemas"]["Method"] | components["schemas"]["iriReference"] | null;
+      /**
+       * Contributions
+       * @description Specific actions taken by an Agent toward the creation, modification, validation, or deprecation of an Information Entity.
+       */
+      contributions?: components["schemas"]["Contribution"][] | null;
+      /**
+       * Reportedin
+       * @description A document in which the the Information Entity is reported.
+       */
+      reportedIn?: ((components["schemas"]["Document"] | components["schemas"]["iriReference"])[]) | null;
+      /** @description The full data set that provided the reported the functional impact score. */
+      sourceDataSet?: components["schemas"]["DataSet"] | null;
+      /**
+       * Ancillaryresults
+       * @description An object in which implementers can define custom fields to capture additional results derived from analysis of primary data items captured in standard attributes in the main body of the Study Result. e.g. in a Cohort Allele Frequency Study Result, this maybe a grpMaxFAF95 calculation, or homozygote/heterozygote calls derived from analyzing raw allele count data.
+       */
+      ancillaryResults?: Record<string, never> | null;
+      /**
+       * Qualitymeasures
+       * @description An object in which implementers can define custom fields to capture metadata about the quality/provenance of the primary data items captured in standard attributes in the main body of the Study Result. e.g. a sequencing coverage metric in a Cohort Allele Frequency Study Result.
+       */
+      qualityMeasures?: Record<string, never> | null;
+      /**
+       * Focusvariant
+       * @description The genetic variant for which a functional impact score is generated.
+       */
+      focusVariant: {
+        type: "ExperimentalVariantFunctionalImpactStudyResult";
+      } & (Omit<components["schemas"]["MolecularVariation"], "type"> | components["schemas"]["iriReference"]);
+      /**
+       * Functionalimpactscore
+       * @description The score of the variant impact measured in the assay or study.
+       */
+      functionalImpactScore?: number | null;
     };
     /** ExperimentsSearch */
     ExperimentsSearch: {
       /** Published */
-      published?: boolean;
+      published?: boolean | null;
       /** Authors */
-      authors?: string[];
+      authors?: string[] | null;
       /** Databases */
-      databases?: string[];
+      databases?: string[] | null;
       /** Journals */
-      journals?: string[];
+      journals?: string[] | null;
       /** Publicationidentifiers */
-      publicationIdentifiers?: string[];
+      publicationIdentifiers?: string[] | null;
+      /** Keywords */
+      keywords?: string[] | null;
       /** Text */
-      text?: string;
+      text?: string | null;
+      /** Metaanalysis */
+      metaAnalysis?: boolean | null;
+    };
+    /**
+     * Expression
+     * @description Representation of a variation by a specified nomenclature or syntax for a
+     * Variation object. Common examples of expressions for the description of molecular
+     * variation include the HGVS and ISCN nomenclatures.
+     */
+    Expression: {
+      /**
+       * Id
+       * @description The 'logical' identifier of the data element in the system of record, e.g. a UUID.  This 'id' is unique within a given system, but may or may not be globally unique outside the system. It is used within a system to reference an object from another.
+       */
+      id?: string | null;
+      /**
+       * Extensions
+       * @description A list of extensions to the Entity, that allow for capture of information not directly supported by elements defined in the model.
+       */
+      extensions?: components["schemas"]["Extension"][] | null;
+      /** @description The syntax used to describe the variation. The value should be one of the supported syntaxes. */
+      syntax: components["schemas"]["Syntax"];
+      /**
+       * Value
+       * @description The expression of the variation in the specified syntax. The value should be a valid expression in the specified syntax.
+       */
+      value: string;
+      /**
+       * Syntax Version
+       * @description The version of the syntax used to describe the variation. This is particularly important for HGVS expressions, as the syntax has evolved over time.
+       */
+      syntax_version?: string | null;
+    };
+    /**
+     * Extension
+     * @description The Extension class provides entities with a means to include additional
+     * attributes that are outside of the specified standard but needed by a given content
+     * provider or system implementer. These extensions are not expected to be natively
+     * understood, but may be used for pre-negotiated exchange of message attributes
+     * between systems.
+     */
+    Extension: {
+      /**
+       * Id
+       * @description The 'logical' identifier of the data element in the system of record, e.g. a UUID.  This 'id' is unique within a given system, but may or may not be globally unique outside the system. It is used within a system to reference an object from another.
+       */
+      id?: string | null;
+      /**
+       * Extensions
+       * @description A list of extensions to the Entity, that allow for capture of information not directly supported by elements defined in the model.
+       */
+      extensions?: components["schemas"]["Extension"][] | null;
+      /**
+       * Name
+       * @description A name for the Extension. Should be indicative of its meaning and/or the type of information it value represents.
+       */
+      name: string;
+      /**
+       * Value
+       * @description The value of the Extension - can be any primitive or structured object
+       */
+      value: number | string | boolean | Record<string, never> | unknown[] | null;
+      /**
+       * Description
+       * @description A description of the meaning or utility of the Extension, to explain the type of information it is meant to hold.
+       */
+      description?: string | null;
     };
     /** ExternalGeneIdentifier */
     ExternalGeneIdentifier: {
@@ -790,12 +2915,14 @@ export interface components {
       dbName: string;
       /** Identifier */
       identifier: string;
+      /** Recordtype */
+      recordType?: string;
       /** Dbversion */
-      dbVersion?: string;
+      dbVersion?: string | null;
       /** Url */
-      url?: string;
+      url?: string | null;
       /** Referencehtml */
-      referenceHtml?: string;
+      referenceHtml?: string | null;
     };
     /** ExternalGeneIdentifierCreate */
     ExternalGeneIdentifierCreate: {
@@ -809,6 +2936,8 @@ export interface components {
       identifier: components["schemas"]["ExternalGeneIdentifier"];
       /** Offset */
       offset: number;
+      /** Recordtype */
+      recordType?: string;
     };
     /** ExternalGeneIdentifierOffsetCreate */
     ExternalGeneIdentifierOffsetCreate: {
@@ -816,33 +2945,306 @@ export interface components {
       /** Offset */
       offset: number;
     };
+    /** ExternalLink */
+    ExternalLink: {
+      /** Url */
+      url?: string | null;
+    };
     /** ExternalPublicationIdentifier */
     ExternalPublicationIdentifier: {
       /** Identifier */
       identifier: string;
       /** Dbname */
-      dbName?: string;
+      dbName?: string | null;
+      /** Recordtype */
+      recordType?: string;
       /** Title */
       title: string;
       /** Authors */
       authors: components["schemas"]["PublicationAuthors"][];
       /** Abstract */
-      abstract?: string;
+      abstract?: string | null;
       /** Doi */
-      doi?: string;
+      doi?: string | null;
       /** Publicationyear */
-      publicationYear?: number;
+      publicationYear?: number | null;
       /** Publicationjournal */
-      publicationJournal?: string;
+      publicationJournal?: string | null;
       /** Url */
-      url?: string;
+      url?: string | null;
       /** Referencehtml */
-      referenceHtml?: string;
+      referenceHtml?: string | null;
     };
+    /**
+     * FeatureContextConstraint
+     * @description The feature that members of this categorical variant are associated with.
+     */
+    FeatureContextConstraint: {
+      /**
+       * Type
+       * @description MUST be 'FeatureContextConstraint'
+       * @default FeatureContextConstraint
+       * @constant
+       */
+      type?: "FeatureContextConstraint";
+      /** @description A feature identifier. */
+      featureContext: components["schemas"]["MappableConcept"];
+    };
+    /**
+     * FunctionalRange
+     * @description Complete functional range model returned by the API.
+     */
+    FunctionalRange: {
+      /** Label */
+      label: string;
+      /** Description */
+      description?: string | null;
+      /**
+       * Classification
+       * @default not_specified
+       * @enum {string}
+       */
+      classification?: "normal" | "abnormal" | "not_specified";
+      /** Range */
+      range: [number | null, number | null];
+      /**
+       * Inclusivelowerbound
+       * @default true
+       */
+      inclusiveLowerBound?: boolean;
+      /**
+       * Inclusiveupperbound
+       * @default false
+       */
+      inclusiveUpperBound?: boolean;
+      acmgClassification?: components["schemas"]["ACMGClassification"] | null;
+      /** Oddspathsratio */
+      oddspathsRatio?: number | null;
+      /** Positivelikelihoodratio */
+      positiveLikelihoodRatio?: number | null;
+      /** Recordtype */
+      recordType?: string;
+    };
+    /**
+     * FunctionalRangeCreate
+     * @description Model used to create a new functional range.
+     */
+    FunctionalRangeCreate: {
+      /** Label */
+      label: string;
+      /** Description */
+      description?: string | null;
+      /**
+       * Classification
+       * @default not_specified
+       * @enum {string}
+       */
+      classification?: "normal" | "abnormal" | "not_specified";
+      /** Range */
+      range: [number | null, number | null];
+      /**
+       * Inclusivelowerbound
+       * @default true
+       */
+      inclusiveLowerBound?: boolean;
+      /**
+       * Inclusiveupperbound
+       * @default false
+       */
+      inclusiveUpperBound?: boolean;
+      acmgClassification?: components["schemas"]["ACMGClassificationCreate"] | null;
+      /** Oddspathsratio */
+      oddspathsRatio?: number | null;
+      /** Positivelikelihoodratio */
+      positiveLikelihoodRatio?: number | null;
+    };
+    /**
+     * FunctionalRangeModify
+     * @description Model used to modify an existing functional range.
+     */
+    FunctionalRangeModify: {
+      /** Label */
+      label: string;
+      /** Description */
+      description?: string | null;
+      /**
+       * Classification
+       * @default not_specified
+       * @enum {string}
+       */
+      classification?: "normal" | "abnormal" | "not_specified";
+      /** Range */
+      range: [number | null, number | null];
+      /**
+       * Inclusivelowerbound
+       * @default true
+       */
+      inclusiveLowerBound?: boolean;
+      /**
+       * Inclusiveupperbound
+       * @default false
+       */
+      inclusiveUpperBound?: boolean;
+      acmgClassification?: components["schemas"]["ACMGClassificationModify"] | null;
+      /** Oddspathsratio */
+      oddspathsRatio?: number | null;
+      /** Positivelikelihoodratio */
+      positiveLikelihoodRatio?: number | null;
+    };
+    /**
+     * GnomADVariantWithMappedVariants
+     * @description GnomAD variant view model with mapped variants for non-admin clients.
+     */
+    GnomADVariantWithMappedVariants: {
+      /** Dbname */
+      dbName: string;
+      /** Dbidentifier */
+      dbIdentifier: string;
+      /** Dbversion */
+      dbVersion: string;
+      /** Allelecount */
+      alleleCount: number;
+      /** Allelenumber */
+      alleleNumber: number;
+      /** Allelefrequency */
+      alleleFrequency: number;
+      /** Faf95Max */
+      faf95Max: number | null;
+      /** Faf95Maxancestry */
+      faf95MaxAncestry: string | null;
+      /** Recordtype */
+      recordType?: string;
+      /** Id */
+      id: number;
+      /**
+       * Creationdate
+       * Format: date
+       */
+      creationDate: string;
+      /**
+       * Modificationdate
+       * Format: date
+       */
+      modificationDate: string;
+      /** Mappedvariants */
+      mappedVariants: components["schemas"]["MappedVariant"][];
+    };
+    /**
+     * GroupBy
+     * @enum {string}
+     */
+    GroupBy: "month" | "year";
     /** HTTPValidationError */
     HTTPValidationError: {
       /** Detail */
       detail?: components["schemas"]["ValidationError"][];
+    };
+    /**
+     * Keyword
+     * @description Keyword view model for non-admin clients.
+     */
+    Keyword: {
+      /** Key */
+      key: string;
+      /** Label */
+      label?: string | null;
+      /** System */
+      system?: string | null;
+      /** Code */
+      code?: string | null;
+      /** Version */
+      version?: string | null;
+      /** Special */
+      special?: boolean | null;
+      /** Description */
+      description?: string | null;
+      /** Recordtype */
+      recordType?: string;
+    };
+    /**
+     * KeywordBase
+     * @description Base class for keyword view models.
+     * Keywords may have key but no value if users don't choose anything from dropdown menu.
+     * TODO#273: Controlled keywords are required once the final list is confirmed.
+     */
+    KeywordBase: {
+      /** Key */
+      key: string;
+      /** Label */
+      label?: string | null;
+      /** System */
+      system?: string | null;
+      /** Code */
+      code?: string | null;
+      /** Version */
+      version?: string | null;
+      /** Special */
+      special?: boolean | null;
+      /** Description */
+      description?: string | null;
+    };
+    /**
+     * KeywordCreate
+     * @description View model for creating a new keyword.
+     */
+    KeywordCreate: {
+      /** Key */
+      key: string;
+      /** Label */
+      label?: string | null;
+      /** System */
+      system?: string | null;
+      /** Code */
+      code?: string | null;
+      /** Version */
+      version?: string | null;
+      /** Special */
+      special?: boolean | null;
+      /** Description */
+      description?: string | null;
+    };
+    /**
+     * LengthExpression
+     * @description A sequence expressed only by its length.
+     */
+    LengthExpression: {
+      /**
+       * Id
+       * @description The 'logical' identifier of the Entity in the system of record, e.g. a UUID.  This 'id' is unique within a given system, but may or may not be globally unique outside the system. It is used within a system to reference an object from another.
+       */
+      id?: string | null;
+      /**
+       * Type
+       * @description MUST be "LengthExpression"
+       * @default LengthExpression
+       * @constant
+       */
+      type?: "LengthExpression";
+      /**
+       * Name
+       * @description A primary name for the entity.
+       */
+      name?: string | null;
+      /**
+       * Description
+       * @description A free-text description of the Entity.
+       */
+      description?: string | null;
+      /**
+       * Aliases
+       * @description Alternative name(s) for the Entity.
+       */
+      aliases?: string[] | null;
+      /**
+       * Extensions
+       * @description A list of extensions to the Entity, that allow for capture of information not directly supported by elements defined in the model.
+       */
+      extensions?: components["schemas"]["Extension"][] | null;
+      /**
+       * Length
+       * @description The length of the sequence.
+       */
+      length?: components["schemas"]["Range"] | number | null;
     };
     /**
      * License
@@ -853,12 +3255,16 @@ export interface components {
       longName: string;
       /** Shortname */
       shortName: string;
+      /** Active */
+      active: boolean;
       /** Link */
-      link?: string;
+      link?: string | null;
       /** Version */
-      version?: string;
+      version?: string | null;
       /** Id */
       id: number;
+      /** Recordtype */
+      recordType?: string;
       /** Text */
       text: string;
       /**
@@ -872,40 +3278,304 @@ export interface components {
        */
       modificationDate: string;
     };
+    /**
+     * LiteralSequenceExpression
+     * @description An explicit expression of a Sequence.
+     */
+    LiteralSequenceExpression: {
+      /**
+       * Id
+       * @description The 'logical' identifier of the Entity in the system of record, e.g. a UUID.  This 'id' is unique within a given system, but may or may not be globally unique outside the system. It is used within a system to reference an object from another.
+       */
+      id?: string | null;
+      /**
+       * Type
+       * @description MUST be "LiteralSequenceExpression"
+       * @default LiteralSequenceExpression
+       * @constant
+       */
+      type?: "LiteralSequenceExpression";
+      /**
+       * Name
+       * @description A primary name for the entity.
+       */
+      name?: string | null;
+      /**
+       * Description
+       * @description A free-text description of the Entity.
+       */
+      description?: string | null;
+      /**
+       * Aliases
+       * @description Alternative name(s) for the Entity.
+       */
+      aliases?: string[] | null;
+      /**
+       * Extensions
+       * @description A list of extensions to the Entity, that allow for capture of information not directly supported by elements defined in the model.
+       */
+      extensions?: components["schemas"]["Extension"][] | null;
+      /** @description the literal sequence */
+      sequence: components["schemas"]["sequenceString"];
+    };
+    /**
+     * MappableConcept
+     * @description A concept based on a primaryCoding and/or name that may be mapped to one or more other `Codings`.
+     */
+    MappableConcept: {
+      /**
+       * Id
+       * @description The 'logical' identifier of the data element in the system of record, e.g. a UUID.  This 'id' is unique within a given system, but may or may not be globally unique outside the system. It is used within a system to reference an object from another.
+       */
+      id?: string | null;
+      /**
+       * Extensions
+       * @description A list of extensions to the Entity, that allow for capture of information not directly supported by elements defined in the model.
+       */
+      extensions?: components["schemas"]["Extension"][] | null;
+      /**
+       * Concepttype
+       * @description A term indicating the type of concept being represented by the MappableConcept.
+       */
+      conceptType?: string | null;
+      /**
+       * Name
+       * @description A primary name for the concept.
+       */
+      name?: string | null;
+      /** @description A primary coding for the concept. */
+      primaryCoding?: components["schemas"]["Coding"] | null;
+      /**
+       * Mappings
+       * @description A list of mappings to concepts in terminologies or code systems. Each mapping should include a coding and a relation.
+       */
+      mappings?: components["schemas"]["ConceptMapping"][] | null;
+    };
     /** MappedVariant */
     MappedVariant: {
       /** Premapped */
       preMapped?: unknown;
       /** Postmapped */
       postMapped?: unknown;
-      /** Variantid */
-      variantId: number;
+      /** Vrsversion */
+      vrsVersion?: string | null;
+      /** Errormessage */
+      errorMessage?: string | null;
+      /**
+       * Modificationdate
+       * Format: date
+       */
+      modificationDate: string;
+      /**
+       * Mappeddate
+       * Format: date
+       */
+      mappedDate: string;
+      /** Mappingapiversion */
+      mappingApiVersion: string;
+      /** Current */
+      current: boolean;
+      /** Varianturn */
+      variantUrn: string;
       /** Id */
       id: number;
+      /** Clingenalleleid */
+      clingenAlleleId?: string | null;
+      /** Recordtype */
+      recordType?: string;
     };
+    /** MappedVariantForClinicalControl */
+    MappedVariantForClinicalControl: {
+      /** Varianturn */
+      variantUrn: string;
+    };
+    /**
+     * MappingState
+     * @enum {string}
+     */
+    MappingState: "incomplete" | "processing" | "failed" | "complete" | "pending_variant_processing" | "not_attempted" | "queued";
+    /**
+     * MembershipOperator
+     * @description The logical relationship between members of the set, that indicates how they
+     * manifest in patients/research subjects.
+     * The value 'AND' indicates that all conditions in the set co-occur together in a
+     * given patient or subject.
+     * The value 'OR' indicates that only one condition in the set manifests in each
+     * participant interrogated in a given study.
+     * @enum {string}
+     */
+    MembershipOperator: "AND" | "OR";
+    /**
+     * Method
+     * @description A set of instructions that specify how to achieve some objective.
+     */
+    Method: {
+      /**
+       * Id
+       * @description The 'logical' identifier of the Entity in the system of record, e.g. a UUID.  This 'id' is unique within a given system, but may or may not be globally unique outside the system. It is used within a system to reference an object from another.
+       */
+      id?: string | null;
+      /**
+       * Type
+       * @description MUST be 'Method'.
+       * @default Method
+       * @constant
+       */
+      type?: "Method";
+      /**
+       * Name
+       * @description A primary name for the entity.
+       */
+      name?: string | null;
+      /**
+       * Description
+       * @description A free-text description of the Entity.
+       */
+      description?: string | null;
+      /**
+       * Aliases
+       * @description Alternative name(s) for the Entity.
+       */
+      aliases?: string[] | null;
+      /**
+       * Extensions
+       * @description A list of extensions to the Entity, that allow for capture of information not directly supported by elements defined in the model.
+       */
+      extensions?: components["schemas"]["Extension"][] | null;
+      /**
+       * Methodtype
+       * @description A specific type of method that a Method instance represents (e.g. 'Variant Interpretation Guideline', or 'Experimental Protocol').
+       */
+      methodType?: string | null;
+      /**
+       * Reportedin
+       * @description A document in which the the Method is reported.
+       */
+      reportedIn?: components["schemas"]["Document"] | components["schemas"]["iriReference"] | null;
+    };
+    /**
+     * ModelName
+     * @enum {string}
+     */
+    ModelName: "collection" | "experiment" | "experiment-set" | "score-set" | "score-calibration";
+    /**
+     * MolecularVariation
+     * @description A `variation` on a contiguous molecule.
+     */
+    MolecularVariation: components["schemas"]["Allele"] | components["schemas"]["CisPhasedBlock"] | components["schemas"]["Adjacency"] | components["schemas"]["Terminus"] | components["schemas"]["DerivativeMolecule"];
+    /**
+     * MoleculeType
+     * @description Molecule types as `defined by RefSeq <https://www.ncbi.nlm.nih.gov/books/NBK21091/>`_ (see Table 1).
+     * @enum {string}
+     */
+    MoleculeType: "genomic" | "RNA" | "mRNA" | "protein";
     /** NewAccessKey */
     NewAccessKey: {
       /** Keyid */
       keyId: string;
       /** Name */
-      name?: string;
-      /**
-       * Expirationdate
-       * Format: date
-       */
-      expirationDate?: string;
-      /** Createdat */
-      createdAt?: string;
-      role?: components["schemas"]["UserRole"];
+      name?: string | null;
+      /** Expirationdate */
+      expirationDate?: string | null;
+      /** Creationtime */
+      creationTime?: string | null;
+      /** Recordtype */
+      recordType?: string;
+      role?: components["schemas"]["UserRole"] | null;
       /** Privatekey */
       privateKey: string;
     };
+    /** OfficialCollection */
+    OfficialCollection: {
+      /** Badgename */
+      badgeName: string;
+      /** Name */
+      name: string;
+      /** Urn */
+      urn: string;
+    };
+    /** OrcidUser */
+    OrcidUser: {
+      /** Recordtype */
+      recordType?: string;
+      /** Orcidid */
+      orcidId: string;
+      /** Givenname */
+      givenName?: string | null;
+      /** Familyname */
+      familyName?: string | null;
+    };
+    /**
+     * Orientation
+     * @description The orientation of the molecular variation component.
+     * @enum {string}
+     */
+    Orientation: "forward" | "reverse_complement";
     /**
      * ProcessingState
-     * @description An enumeration.
-     * @enum {unknown}
+     * @enum {string}
      */
     ProcessingState: "incomplete" | "processing" | "failed" | "success";
+    /**
+     * PrognosticPredicate
+     * @description Define constraints for prognostic predicate
+     * @enum {string}
+     */
+    PrognosticPredicate: "associatedWithBetterOutcomeFor" | "associatedWithWorseOutcomeFor";
+    /**
+     * Proposition
+     * @description An abstract entity representing a possible fact that may be true or false. As
+     * abstract entities, Propositions capture a 'sharable' piece of meaning whose identify
+     * and existence is independent of space and time, or whether it is ever asserted to be
+     * true by some agent.
+     */
+    Proposition: {
+      /**
+       * Id
+       * @description The 'logical' identifier of the Entity in the system of record, e.g. a UUID.  This 'id' is unique within a given system, but may or may not be globally unique outside the system. It is used within a system to reference an object from another.
+       */
+      id?: string | null;
+      /**
+       * Type
+       * @description The name of the class that is instantiated by a data object representing the Entity.
+       */
+      type: string;
+      /**
+       * Name
+       * @description A primary name for the entity.
+       */
+      name?: string | null;
+      /**
+       * Description
+       * @description A free-text description of the Entity.
+       */
+      description?: string | null;
+      /**
+       * Aliases
+       * @description Alternative name(s) for the Entity.
+       */
+      aliases?: string[] | null;
+      /**
+       * Extensions
+       * @description A list of extensions to the Entity, that allow for capture of information not directly supported by elements defined in the model.
+       */
+      extensions?: components["schemas"]["Extension"][] | null;
+      /**
+       * Subject
+       * @description The Entity or concept about which the Proposition is made.
+       */
+      subject: Record<string, never>;
+      /**
+       * Predicate
+       * @description The relationship declared to hold between the subject and the object of the Proposition.
+       */
+      predicate: string;
+      /**
+       * Object
+       * @description An Entity or concept that is related to the subject of a Proposition via its predicate.
+       */
+      object: Record<string, never>;
+    };
     /** PublicationAuthors */
     PublicationAuthors: {
       /** Name */
@@ -913,28 +3583,35 @@ export interface components {
       /** Primary */
       primary: boolean;
     };
+    /**
+     * PublicationDataBases
+     * @enum {string}
+     */
+    PublicationDataBases: "PubMed" | "bioRxiv" | "medRxiv" | "Crossref";
     /** PublicationIdentifier */
     PublicationIdentifier: {
       /** Identifier */
       identifier: string;
       /** Dbname */
-      dbName?: string;
+      dbName?: string | null;
+      /** Recordtype */
+      recordType?: string;
       /** Title */
       title: string;
       /** Authors */
       authors: components["schemas"]["PublicationAuthors"][];
       /** Abstract */
-      abstract?: string;
+      abstract?: string | null;
       /** Doi */
-      doi?: string;
+      doi?: string | null;
       /** Publicationyear */
-      publicationYear?: number;
+      publicationYear?: number | null;
       /** Publicationjournal */
-      publicationJournal?: string;
+      publicationJournal?: string | null;
       /** Url */
-      url?: string;
+      url?: string | null;
       /** Referencehtml */
-      referenceHtml?: string;
+      referenceHtml?: string | null;
       /** Id */
       id: number;
     };
@@ -943,14 +3620,21 @@ export interface components {
       /** Identifier */
       identifier: string;
       /** Dbname */
-      dbName?: string;
+      dbName?: string | null;
     };
+    /**
+     * Range
+     * @description An inclusive range of values bounded by one or more integers.
+     */
+    Range: (number | null)[];
     /** RawReadIdentifier */
     RawReadIdentifier: {
       /** Identifier */
       identifier: string;
       /** Id */
       id: number;
+      /** Recordtype */
+      recordType?: string;
       /** Url */
       url: string;
     };
@@ -960,48 +3644,270 @@ export interface components {
       identifier: string;
     };
     /**
-     * RecordFields
-     * @description An enumeration.
-     * @enum {string}
-     */
-    RecordFields: "publication-identifiers" | "keywords" | "doi-identifiers" | "raw-read-identifiers" | "created-by";
-    /**
      * RecordNames
-     * @description An enumeration.
      * @enum {string}
      */
     RecordNames: "experiment" | "score-set";
+    /**
+     * ReferenceLengthExpression
+     * @description An expression of a length of a sequence from a repeating reference.
+     */
+    ReferenceLengthExpression: {
+      /**
+       * Id
+       * @description The 'logical' identifier of the Entity in the system of record, e.g. a UUID.  This 'id' is unique within a given system, but may or may not be globally unique outside the system. It is used within a system to reference an object from another.
+       */
+      id?: string | null;
+      /**
+       * Type
+       * @description MUST be "ReferenceLengthExpression"
+       * @default ReferenceLengthExpression
+       * @constant
+       */
+      type?: "ReferenceLengthExpression";
+      /**
+       * Name
+       * @description A primary name for the entity.
+       */
+      name?: string | null;
+      /**
+       * Description
+       * @description A free-text description of the Entity.
+       */
+      description?: string | null;
+      /**
+       * Aliases
+       * @description Alternative name(s) for the Entity.
+       */
+      aliases?: string[] | null;
+      /**
+       * Extensions
+       * @description A list of extensions to the Entity, that allow for capture of information not directly supported by elements defined in the model.
+       */
+      extensions?: components["schemas"]["Extension"][] | null;
+      /**
+       * Length
+       * @description The number of residues in the expressed sequence.
+       */
+      length: components["schemas"]["Range"] | number;
+      /** @description the literal Sequence encoded by the Reference Length Expression. */
+      sequence?: components["schemas"]["sequenceString"] | null;
+      /**
+       * Repeatsubunitlength
+       * @description The number of residues in the repeat subunit.
+       */
+      repeatSubunitLength: number;
+    };
+    /** RefgetAlias */
+    RefgetAlias: {
+      /**
+       * Naming Authority
+       * @description Name of the authority, which issued the given alias
+       */
+      naming_authority: string;
+      /**
+       * Alias
+       * @description Free text alias for a given sequence
+       */
+      alias: string;
+    };
+    /** RefgetImplementationInfo */
+    RefgetImplementationInfo: {
+      /**
+       * Identifier Types
+       * @description An array of strings listing the type of name space that are supported.
+       */
+      identifier_types: string[];
+      /**
+       * Algorithms
+       * @description An array of strings listing the digest algorithms that are supported.
+       */
+      algorithms: string[];
+      /**
+       * Circular Supported
+       * @description Indicates if the service supports circular location queries.
+       */
+      circular_supported: boolean;
+      /**
+       * Subsequence Limit
+       * @description Maximum length of sequence which may be requested using start and/or end query parameters.
+       */
+      subsequence_limit?: number | null;
+    };
+    /** RefgetMetadata */
+    RefgetMetadata: {
+      /**
+       * Id
+       * @description Unique sequence identifier
+       */
+      id: string;
+      /**
+       * Md5
+       * @description MD5 checksum of the reference sequence.
+       */
+      MD5?: string | null;
+      /**
+       * Trunc512
+       * @description Truncated, to 48 characters, SHA-512 checksum of the reference sequence encoded as a HEX string. No longer a preferred serialisation of the SHA-512.
+       */
+      trunc512?: string | null;
+      /**
+       * Ga4Gh
+       * @description A ga4gh identifier used to identify the sequence. This is a [base64url](defined in RFC4648 Â§5) representation of the 1st 24 bytes from a SHA-512 digest of normalised sequence. This is the preferred method of representing the SHA-512 sequence digest.
+       */
+      ga4gh: string | null;
+      /**
+       * Length
+       * @description A decimal integer of the length of the reference sequence.
+       */
+      length: number;
+      /**
+       * Aliases
+       * @description List of aliases for the sequence.
+       */
+      aliases: components["schemas"]["RefgetAlias"][];
+    };
+    /** RefgetMetadataResponse */
+    RefgetMetadataResponse: {
+      metadata: components["schemas"]["RefgetMetadata"];
+    };
+    /** RefgetServiceInfo */
+    RefgetServiceInfo: {
+      /**
+       * Name
+       * @description Name of this service.
+       */
+      name: string;
+      /**
+       * Version
+       * @description Version of this service.
+       */
+      version: string;
+      /**
+       * Seqrepo Dependency Version
+       * @description Version of the SeqRepo dependency used by this service.
+       */
+      seqrepo_dependency_version: string;
+      /**
+       * Seqrepo Data Version
+       * @description Version of the SeqRepo data instance used by this service.
+       */
+      seqrepo_data_version: string;
+      /**
+       * Description
+       * @description Description of this service.
+       */
+      description: string;
+      refget: components["schemas"]["RefgetImplementationInfo"];
+    };
+    /**
+     * Relation
+     * @description A mapping relation between concepts as defined by the Simple Knowledge
+     * Organization System (SKOS).
+     * @enum {string}
+     */
+    Relation: "closeMatch" | "exactMatch" | "broadMatch" | "narrowMatch" | "relatedMatch";
+    /**
+     * ResidueAlphabet
+     * @description The interpretation of the character codes referred to by the refget accession,
+     * where "aa" specifies an amino acid character set, and "na" specifies a nucleic acid
+     * character set.
+     * @enum {string}
+     */
+    ResidueAlphabet: "aa" | "na";
+    /**
+     * SavedACMGClassification
+     * @description Persisted ACMG classification model (includes record type metadata).
+     */
+    SavedACMGClassification: {
+      criterion?: components["schemas"]["ACMGCriterion"] | null;
+      evidenceStrength?: components["schemas"]["StrengthOfEvidenceProvided"] | null;
+      /** Points */
+      points?: number | null;
+      /** Recordtype */
+      recordType?: string;
+    };
     /** SavedDoiIdentifier */
     SavedDoiIdentifier: {
       /** Identifier */
       identifier: string;
       /** Id */
       id: number;
+      /** Recordtype */
+      recordType?: string;
       /** Url */
       url: string;
+    };
+    /**
+     * SavedExperimentControlledKeyword
+     * @description Base class for keyword view models representing saved records.
+     */
+    SavedExperimentControlledKeyword: {
+      keyword: components["schemas"]["KeywordBase"];
+      /** Description */
+      description?: string | null;
+      /** Recordtype */
+      recordType?: string;
+    };
+    /**
+     * SavedFunctionalRange
+     * @description Persisted functional range model (includes record type metadata).
+     */
+    SavedFunctionalRange: {
+      /** Label */
+      label: string;
+      /** Description */
+      description?: string | null;
+      /**
+       * Classification
+       * @default not_specified
+       * @enum {string}
+       */
+      classification?: "normal" | "abnormal" | "not_specified";
+      /** Range */
+      range: [number | null, number | null];
+      /**
+       * Inclusivelowerbound
+       * @default true
+       */
+      inclusiveLowerBound?: boolean;
+      /**
+       * Inclusiveupperbound
+       * @default false
+       */
+      inclusiveUpperBound?: boolean;
+      acmgClassification?: components["schemas"]["SavedACMGClassification"] | null;
+      /** Oddspathsratio */
+      oddspathsRatio?: number | null;
+      /** Positivelikelihoodratio */
+      positiveLikelihoodRatio?: number | null;
+      /** Recordtype */
+      recordType?: string;
     };
     /** SavedPublicationIdentifier */
     SavedPublicationIdentifier: {
       /** Identifier */
       identifier: string;
       /** Dbname */
-      dbName?: string;
+      dbName?: string | null;
+      /** Recordtype */
+      recordType?: string;
       /** Title */
       title: string;
       /** Authors */
       authors: components["schemas"]["PublicationAuthors"][];
       /** Abstract */
-      abstract?: string;
+      abstract?: string | null;
       /** Doi */
-      doi?: string;
+      doi?: string | null;
       /** Publicationyear */
-      publicationYear?: number;
+      publicationYear?: number | null;
       /** Publicationjournal */
-      publicationJournal?: string;
+      publicationJournal?: string | null;
       /** Url */
-      url?: string;
+      url?: string | null;
       /** Referencehtml */
-      referenceHtml?: string;
+      referenceHtml?: string | null;
       /** Id */
       id: number;
     };
@@ -1011,6 +3917,8 @@ export interface components {
       identifier: string;
       /** Id */
       id: number;
+      /** Recordtype */
+      recordType?: string;
       /** Url */
       url: string;
     };
@@ -1018,10 +3926,14 @@ export interface components {
     SavedTargetAccession: {
       /** Accession */
       accession: string;
+      /** Isbaseeditor */
+      isBaseEditor: boolean;
       /** Assembly */
-      assembly?: string;
+      assembly?: string | null;
       /** Gene */
-      gene?: string;
+      gene?: string | null;
+      /** Recordtype */
+      recordType?: string;
     };
     /** SavedTargetSequence */
     SavedTargetSequence: {
@@ -1030,7 +3942,9 @@ export interface components {
       /** Sequence */
       sequence: string;
       /** Label */
-      label?: string;
+      label?: string | null;
+      /** Recordtype */
+      recordType?: string;
       taxonomy: components["schemas"]["SavedTaxonomy"];
     };
     /** SavedTaxonomy */
@@ -1038,19 +3952,21 @@ export interface components {
       /** Code */
       code: number;
       /** Organismname */
-      organismName?: string;
+      organismName?: string | null;
       /** Commonname */
-      commonName?: string;
+      commonName?: string | null;
       /** Rank */
-      rank?: string;
+      rank?: string | null;
       /** Hasdescribedspeciesname */
-      hasDescribedSpeciesName?: boolean;
+      hasDescribedSpeciesName?: boolean | null;
       /** Articlereference */
-      articleReference?: string;
-      /** Genomeid */
-      genomeId?: number;
+      articleReference?: string | null;
+      /** Genomeidentifierid */
+      genomeIdentifierId?: number | null;
       /** Id */
       id: number;
+      /** Recordtype */
+      recordType?: string;
       /** Url */
       url: string;
     };
@@ -1062,9 +3978,197 @@ export interface components {
       /** Orcidid */
       orcidId: string;
       /** Firstname */
-      firstName?: string;
+      firstName?: string | null;
       /** Lastname */
-      lastName?: string;
+      lastName?: string | null;
+      /** Recordtype */
+      recordType?: string;
+    };
+    /**
+     * ScoreCalibration
+     * @description Complete score calibration model returned by the API.
+     */
+    ScoreCalibration: {
+      /** Title */
+      title: string;
+      /**
+       * Researchuseonly
+       * @default false
+       */
+      researchUseOnly?: boolean;
+      /** Baselinescore */
+      baselineScore?: number | null;
+      /** Baselinescoredescription */
+      baselineScoreDescription?: string | null;
+      /** Notes */
+      notes?: string | null;
+      /** Functionalranges */
+      functionalRanges?: components["schemas"]["FunctionalRange"][] | null;
+      /** Thresholdsources */
+      thresholdSources?: components["schemas"]["PublicationIdentifier"][] | null;
+      /** Classificationsources */
+      classificationSources?: components["schemas"]["PublicationIdentifier"][] | null;
+      /** Methodsources */
+      methodSources?: components["schemas"]["PublicationIdentifier"][] | null;
+      /** Calibrationmetadata */
+      calibrationMetadata?: Record<string, never> | null;
+      /** Recordtype */
+      recordType?: string;
+      /** Id */
+      id: number;
+      /** Urn */
+      urn: string;
+      /** Scoresetid */
+      scoreSetId: number;
+      /** Investigatorprovided */
+      investigatorProvided: boolean;
+      /**
+       * Primary
+       * @default false
+       */
+      primary?: boolean;
+      /**
+       * Private
+       * @default true
+       */
+      private?: boolean;
+      createdBy?: components["schemas"]["User"] | null;
+      modifiedBy?: components["schemas"]["User"] | null;
+      /**
+       * Creationdate
+       * Format: date
+       */
+      creationDate: string;
+      /**
+       * Modificationdate
+       * Format: date
+       */
+      modificationDate: string;
+    };
+    /**
+     * ScoreCalibrationCreate
+     * @description Model used to create a new score calibration.
+     */
+    ScoreCalibrationCreate: {
+      /** Title */
+      title: string;
+      /**
+       * Researchuseonly
+       * @default false
+       */
+      researchUseOnly?: boolean;
+      /** Baselinescore */
+      baselineScore?: number | null;
+      /** Baselinescoredescription */
+      baselineScoreDescription?: string | null;
+      /** Notes */
+      notes?: string | null;
+      /** Functionalranges */
+      functionalRanges?: components["schemas"]["FunctionalRangeCreate"][] | null;
+      /** Thresholdsources */
+      thresholdSources?: components["schemas"]["PublicationIdentifierCreate"][] | null;
+      /** Classificationsources */
+      classificationSources?: components["schemas"]["PublicationIdentifierCreate"][] | null;
+      /** Methodsources */
+      methodSources?: components["schemas"]["PublicationIdentifierCreate"][] | null;
+      /** Calibrationmetadata */
+      calibrationMetadata?: Record<string, never> | null;
+      /** Scoreseturn */
+      scoreSetUrn?: string | null;
+    };
+    /**
+     * ScoreCalibrationModify
+     * @description Model used to modify an existing score calibration.
+     */
+    ScoreCalibrationModify: {
+      /** Title */
+      title: string;
+      /**
+       * Researchuseonly
+       * @default false
+       */
+      researchUseOnly?: boolean;
+      /** Baselinescore */
+      baselineScore?: number | null;
+      /** Baselinescoredescription */
+      baselineScoreDescription?: string | null;
+      /** Notes */
+      notes?: string | null;
+      /** Functionalranges */
+      functionalRanges?: components["schemas"]["FunctionalRangeModify"][] | null;
+      /** Thresholdsources */
+      thresholdSources?: components["schemas"]["PublicationIdentifierCreate"][] | null;
+      /** Classificationsources */
+      classificationSources?: components["schemas"]["PublicationIdentifierCreate"][] | null;
+      /** Methodsources */
+      methodSources?: components["schemas"]["PublicationIdentifierCreate"][] | null;
+      /** Calibrationmetadata */
+      calibrationMetadata?: Record<string, never> | null;
+      /** Scoreseturn */
+      scoreSetUrn?: string | null;
+    };
+    /**
+     * ScoreCalibrationWithScoreSetUrn
+     * @description Complete score calibration model returned by the API, with score_set_urn.
+     */
+    ScoreCalibrationWithScoreSetUrn: {
+      /** Title */
+      title: string;
+      /**
+       * Researchuseonly
+       * @default false
+       */
+      researchUseOnly?: boolean;
+      /** Baselinescore */
+      baselineScore?: number | null;
+      /** Baselinescoredescription */
+      baselineScoreDescription?: string | null;
+      /** Notes */
+      notes?: string | null;
+      /** Functionalranges */
+      functionalRanges?: components["schemas"]["SavedFunctionalRange"][] | null;
+      /** Thresholdsources */
+      thresholdSources?: components["schemas"]["SavedPublicationIdentifier"][] | null;
+      /** Classificationsources */
+      classificationSources?: components["schemas"]["SavedPublicationIdentifier"][] | null;
+      /** Methodsources */
+      methodSources?: components["schemas"]["SavedPublicationIdentifier"][] | null;
+      /** Calibrationmetadata */
+      calibrationMetadata?: Record<string, never> | null;
+      /** Recordtype */
+      recordType?: string;
+      /** Id */
+      id: number;
+      /** Urn */
+      urn: string;
+      /** Scoresetid */
+      scoreSetId: number;
+      /** Investigatorprovided */
+      investigatorProvided: boolean;
+      /**
+       * Primary
+       * @default false
+       */
+      primary?: boolean;
+      /**
+       * Private
+       * @default true
+       */
+      private?: boolean;
+      createdBy?: components["schemas"]["SavedUser"] | null;
+      modifiedBy?: components["schemas"]["SavedUser"] | null;
+      /**
+       * Creationdate
+       * Format: date
+       */
+      creationDate: string;
+      /**
+       * Modificationdate
+       * Format: date
+       */
+      modificationDate: string;
+      /** Scoreseturn */
+      scoreSetUrn: string;
     };
     /**
      * ScoreSet
@@ -1080,16 +4184,18 @@ export interface components {
       /** Shortdescription */
       shortDescription: string;
       /** Extrametadata */
-      extraMetadata?: Record<string, never>;
+      extraMetadata?: Record<string, never> | null;
       /** Datausagepolicy */
-      dataUsagePolicy?: string;
+      dataUsagePolicy?: string | null;
+      /** Recordtype */
+      recordType?: string;
       /** Urn */
       urn: string;
       /** Numvariants */
       numVariants: number;
       license: components["schemas"]["ShortLicense"];
-      supersededScoreSet?: components["schemas"]["ShorterScoreSet"];
-      supersedingScoreSet?: components["schemas"]["ShorterScoreSet"];
+      supersededScoreSet?: components["schemas"]["ShorterScoreSet"] | null;
+      supersedingScoreSet?: components["schemas"]["ShorterScoreSet"] | null;
       /** Metaanalyzesscoreseturns */
       metaAnalyzesScoreSetUrns: string[];
       /** Metaanalyzedbyscoreseturns */
@@ -1100,11 +4206,8 @@ export interface components {
       primaryPublicationIdentifiers: components["schemas"]["PublicationIdentifier"][];
       /** Secondarypublicationidentifiers */
       secondaryPublicationIdentifiers: components["schemas"]["PublicationIdentifier"][];
-      /**
-       * Publisheddate
-       * Format: date
-       */
-      publishedDate?: string;
+      /** Publisheddate */
+      publishedDate?: string | null;
       /**
        * Creationdate
        * Format: date
@@ -1115,20 +4218,30 @@ export interface components {
        * Format: date
        */
       modificationDate: string;
-      createdBy?: components["schemas"]["User"];
-      modifiedBy?: components["schemas"]["User"];
+      createdBy?: components["schemas"]["User"] | null;
+      modifiedBy?: components["schemas"]["User"] | null;
       /** Targetgenes */
       targetGenes: components["schemas"]["TargetGene"][];
-      /** Datasetcolumns */
-      datasetColumns: Record<string, never>;
-      /** Keywords */
-      keywords: string[];
+      datasetColumns?: components["schemas"]["DatasetColumns"] | null;
+      /** Externallinks */
+      externalLinks: {
+        [key: string]: components["schemas"]["ExternalLink"];
+      };
+      /** Contributors */
+      contributors: components["schemas"]["Contributor"][];
+      /** Scorecalibrations */
+      scoreCalibrations?: components["schemas"]["ScoreCalibration"][] | null;
       experiment: components["schemas"]["Experiment"];
+      /** Officialcollections */
+      officialCollections: components["schemas"]["OfficialCollection"][];
       /** Private */
       private: boolean;
-      processingState?: components["schemas"]["ProcessingState"];
+      processingState?: components["schemas"]["ProcessingState"] | null;
       /** Processingerrors */
-      processingErrors?: Record<string, never>;
+      processingErrors?: Record<string, never> | null;
+      mappingState?: components["schemas"]["MappingState"] | null;
+      /** Mappingerrors */
+      mappingErrors?: Record<string, never> | null;
     };
     /**
      * ScoreSetCreate
@@ -1144,31 +4257,33 @@ export interface components {
       /** Shortdescription */
       shortDescription: string;
       /** Extrametadata */
-      extraMetadata?: Record<string, never>;
+      extraMetadata?: Record<string, never> | null;
       /** Datausagepolicy */
-      dataUsagePolicy?: string;
-      /** Keywords */
-      keywords?: string[];
+      dataUsagePolicy?: string | null;
+      /** Contributors */
+      contributors?: components["schemas"]["ContributorCreate"][] | null;
       /** Primarypublicationidentifiers */
-      primaryPublicationIdentifiers?: components["schemas"]["PublicationIdentifierCreate"][];
+      primaryPublicationIdentifiers?: components["schemas"]["PublicationIdentifierCreate"][] | null;
       /** Secondarypublicationidentifiers */
-      secondaryPublicationIdentifiers?: components["schemas"]["PublicationIdentifierCreate"][];
+      secondaryPublicationIdentifiers?: components["schemas"]["PublicationIdentifierCreate"][] | null;
       /** Doiidentifiers */
-      doiIdentifiers?: components["schemas"]["DoiIdentifierCreate"][];
+      doiIdentifiers?: components["schemas"]["DoiIdentifierCreate"][] | null;
       /** Targetgenes */
       targetGenes: components["schemas"]["TargetGeneCreate"][];
       /** Experimenturn */
-      experimentUrn?: string;
+      experimentUrn?: string | null;
       /** Licenseid */
       licenseId: number;
       /** Supersededscoreseturn */
-      supersededScoreSetUrn?: string;
+      supersededScoreSetUrn?: string | null;
       /** Metaanalyzesscoreseturns */
-      metaAnalyzesScoreSetUrns?: string[];
+      metaAnalyzesScoreSetUrns?: string[] | null;
+      /** Scorecalibrations */
+      scoreCalibrations?: components["schemas"]["ScoreCalibrationCreate"][] | null;
     };
     /**
      * ScoreSetUpdate
-     * @description View model for updating a score set.
+     * @description View model for updating a score set that includes custom validators.
      */
     ScoreSetUpdate: {
       /** Title */
@@ -1180,44 +4295,237 @@ export interface components {
       /** Shortdescription */
       shortDescription: string;
       /** Extrametadata */
-      extraMetadata?: Record<string, never>;
+      extraMetadata?: Record<string, never> | null;
       /** Datausagepolicy */
-      dataUsagePolicy?: string;
-      /** Keywords */
-      keywords?: string[];
+      dataUsagePolicy?: string | null;
+      /** Contributors */
+      contributors?: components["schemas"]["ContributorCreate"][] | null;
       /** Primarypublicationidentifiers */
-      primaryPublicationIdentifiers?: components["schemas"]["PublicationIdentifierCreate"][];
+      primaryPublicationIdentifiers?: components["schemas"]["PublicationIdentifierCreate"][] | null;
       /** Secondarypublicationidentifiers */
-      secondaryPublicationIdentifiers?: components["schemas"]["PublicationIdentifierCreate"][];
+      secondaryPublicationIdentifiers?: components["schemas"]["PublicationIdentifierCreate"][] | null;
       /** Doiidentifiers */
-      doiIdentifiers?: components["schemas"]["DoiIdentifierCreate"][];
+      doiIdentifiers?: components["schemas"]["DoiIdentifierCreate"][] | null;
       /** Targetgenes */
       targetGenes: components["schemas"]["TargetGeneCreate"][];
       /** Licenseid */
-      licenseId?: number;
+      licenseId?: number | null;
     };
     /** ScoreSetsSearch */
     ScoreSetsSearch: {
       /** Published */
-      published?: boolean;
+      published?: boolean | null;
       /** Targets */
-      targets?: string[];
+      targets?: string[] | null;
       /** Targetorganismnames */
-      targetOrganismNames?: string[];
+      targetOrganismNames?: string[] | null;
       /** Targettypes */
-      targetTypes?: string[];
+      targetTypes?: string[] | null;
       /** Targetaccessions */
-      targetAccessions?: string[];
+      targetAccessions?: string[] | null;
       /** Authors */
-      authors?: string[];
+      authors?: string[] | null;
       /** Databases */
-      databases?: string[];
+      databases?: string[] | null;
       /** Journals */
-      journals?: string[];
+      journals?: string[] | null;
       /** Publicationidentifiers */
-      publicationIdentifiers?: string[];
+      publicationIdentifiers?: string[] | null;
+      /** Keywords */
+      keywords?: string[] | null;
       /** Text */
-      text?: string;
+      text?: string | null;
+      /**
+       * Includeexperimentscoreseturnsandcount
+       * @default true
+       */
+      includeExperimentScoreSetUrnsAndCount?: boolean | null;
+      /** Offset */
+      offset?: number | null;
+      /** Limit */
+      limit?: number | null;
+    };
+    /** ScoreSetsSearchFilterOption */
+    ScoreSetsSearchFilterOption: {
+      /** Value */
+      value: string;
+      /** Count */
+      count: number;
+    };
+    /** ScoreSetsSearchFilterOptionsResponse */
+    ScoreSetsSearchFilterOptionsResponse: {
+      /** Targetgenecategories */
+      targetGeneCategories: components["schemas"]["ScoreSetsSearchFilterOption"][];
+      /** Targetgenenames */
+      targetGeneNames: components["schemas"]["ScoreSetsSearchFilterOption"][];
+      /** Targetorganismnames */
+      targetOrganismNames: components["schemas"]["ScoreSetsSearchFilterOption"][];
+      /** Targetaccessions */
+      targetAccessions: components["schemas"]["ScoreSetsSearchFilterOption"][];
+      /** Publicationauthornames */
+      publicationAuthorNames: components["schemas"]["ScoreSetsSearchFilterOption"][];
+      /** Publicationdbnames */
+      publicationDbNames: components["schemas"]["ScoreSetsSearchFilterOption"][];
+      /** Publicationjournals */
+      publicationJournals: components["schemas"]["ScoreSetsSearchFilterOption"][];
+    };
+    /** ScoreSetsSearchResponse */
+    ScoreSetsSearchResponse: {
+      /** Scoresets */
+      scoreSets: components["schemas"]["ShortScoreSet"][];
+      /** Numscoresets */
+      numScoreSets: number;
+    };
+    /** SeqRepoMetadata */
+    SeqRepoMetadata: {
+      /**
+       * Added
+       * Format: date-time
+       * @description Date the sequence was added to SeqRepo (ISO format)
+       */
+      added: string;
+      /**
+       * Aliases
+       * @description List of aliases for the sequence, formatted as 'namespace:alias'
+       */
+      aliases: string[];
+      /**
+       * Alphabet
+       * @description Alphabet of the sequence (e.g., 'ACGMNRT')
+       */
+      alphabet: string;
+      /**
+       * Length
+       * @description Length of the sequence
+       */
+      length: number;
+    };
+    /** SeqRepoVersions */
+    SeqRepoVersions: {
+      /**
+       * Seqrepo Data Version
+       * @description Version of the SeqRepo data instance
+       */
+      seqrepo_data_version: string;
+      /**
+       * Seqrepo Dependency Version
+       * @description Version of the bioutils.seqrepo dependency
+       */
+      seqrepo_dependency_version: string;
+    };
+    /**
+     * SequenceLocation
+     * @description A `Location` defined by an interval on a `Sequence`.
+     */
+    SequenceLocation: {
+      /**
+       * Id
+       * @description The 'logical' identifier of the Entity in the system of record, e.g. a UUID.  This 'id' is unique within a given system, but may or may not be globally unique outside the system. It is used within a system to reference an object from another.
+       */
+      id?: string | null;
+      /**
+       * Type
+       * @description MUST be "SequenceLocation"
+       * @default SequenceLocation
+       * @constant
+       */
+      type?: "SequenceLocation";
+      /**
+       * Name
+       * @description A primary name for the entity.
+       */
+      name?: string | null;
+      /**
+       * Description
+       * @description A free-text description of the Entity.
+       */
+      description?: string | null;
+      /**
+       * Aliases
+       * @description Alternative name(s) for the Entity.
+       */
+      aliases?: string[] | null;
+      /**
+       * Extensions
+       * @description A list of extensions to the Entity, that allow for capture of information not directly supported by elements defined in the model.
+       */
+      extensions?: components["schemas"]["Extension"][] | null;
+      /**
+       * Digest
+       * @description A sha512t24u digest created using the VRS Computed Identifier algorithm.
+       */
+      digest?: string | null;
+      /**
+       * Sequencereference
+       * @description A reference to a SequenceReference on which the location is defined.
+       */
+      sequenceReference?: components["schemas"]["iriReference"] | components["schemas"]["SequenceReference"] | null;
+      /**
+       * Start
+       * @description The start coordinate or range of the SequenceLocation. The minimum value of this coordinate or range is 0. For locations on linear sequences, this MUST represent a coordinate or range less than or equal to the value of `end`. For circular sequences, `start` is greater than `end` when the location spans the sequence 0 coordinate.
+       */
+      start?: components["schemas"]["Range"] | number | null;
+      /**
+       * End
+       * @description The end coordinate or range of the SequenceLocation. The minimum value of this coordinate or range is 0. For locations on linear sequences, this MUST represent a coordinate or range greater than or equal to the value of `start`. For circular sequences, `end` is less than `start` when the location spans the sequence 0 coordinate.
+       */
+      end?: components["schemas"]["Range"] | number | null;
+      /** @description The literal sequence encoded by the `sequenceReference` at these coordinates. */
+      sequence?: components["schemas"]["sequenceString"] | null;
+    };
+    /**
+     * SequenceReference
+     * @description A sequence of nucleic or amino acid character codes.
+     */
+    SequenceReference: {
+      /**
+       * Id
+       * @description The 'logical' identifier of the Entity in the system of record, e.g. a UUID.  This 'id' is unique within a given system, but may or may not be globally unique outside the system. It is used within a system to reference an object from another.
+       */
+      id?: string | null;
+      /**
+       * Type
+       * @description MUST be "SequenceReference"
+       * @default SequenceReference
+       * @constant
+       */
+      type?: "SequenceReference";
+      /**
+       * Name
+       * @description A primary name for the entity.
+       */
+      name?: string | null;
+      /**
+       * Description
+       * @description A free-text description of the Entity.
+       */
+      description?: string | null;
+      /**
+       * Aliases
+       * @description Alternative name(s) for the Entity.
+       */
+      aliases?: string[] | null;
+      /**
+       * Extensions
+       * @description A list of extensions to the Entity, that allow for capture of information not directly supported by elements defined in the model.
+       */
+      extensions?: components["schemas"]["Extension"][] | null;
+      /**
+       * Refgetaccession
+       * @description A [GA4GH RefGet](http://samtools.github.io/hts-specs/refget.html) identifier for the referenced sequence, using the sha512t24u digest.
+       */
+      refgetAccession: string;
+      /** @description The interpretation of the character codes referred to by the refget accession, where "aa" specifies an amino acid character set, and "na" specifies a nucleic acid character set. */
+      residueAlphabet?: components["schemas"]["ResidueAlphabet"] | null;
+      /**
+       * Circular
+       * @description A boolean indicating whether the molecule represented by the sequence is circular (true) or linear (false).
+       */
+      circular?: boolean | null;
+      /** @description A sequenceString that is a literal representation of the referenced sequence. */
+      sequence?: components["schemas"]["sequenceString"] | null;
+      /** @description Molecule types as [defined by RefSeq](https://www.ncbi.nlm.nih.gov/books/NBK21091/) (see Table 1). MUST be one of 'genomic', 'RNA', 'mRNA', or 'protein'. */
+      moleculeType?: components["schemas"]["MoleculeType"] | null;
     };
     /** ShortExperiment */
     ShortExperiment: {
@@ -1226,11 +4534,13 @@ export interface components {
       /** Shortdescription */
       shortDescription: string;
       /** Abstracttext */
-      abstractText?: string;
+      abstractText?: string | null;
       /** Methodtext */
-      methodText?: string;
+      methodText?: string | null;
       /** Extrametadata */
-      extraMetadata?: Record<string, never>;
+      extraMetadata?: Record<string, never> | null;
+      /** Recordtype */
+      recordType?: string;
       /** Urn */
       urn: string;
       createdBy: components["schemas"]["SavedUser"];
@@ -1245,11 +4555,8 @@ export interface components {
        * Format: date
        */
       modificationDate: string;
-      /**
-       * Publisheddate
-       * Format: date
-       */
-      publishedDate?: string;
+      /** Publisheddate */
+      publishedDate?: string | null;
       /** Experimentseturn */
       experimentSetUrn: string;
       /** Doiidentifiers */
@@ -1260,12 +4567,14 @@ export interface components {
       secondaryPublicationIdentifiers: components["schemas"]["SavedPublicationIdentifier"][];
       /** Rawreadidentifiers */
       rawReadIdentifiers: components["schemas"]["SavedRawReadIdentifier"][];
+      /** Contributors */
+      contributors: components["schemas"]["Contributor"][];
       /** Keywords */
-      keywords: string[];
+      keywords: components["schemas"]["SavedExperimentControlledKeyword"][];
       /** Scoreseturns */
       scoreSetUrns: string[];
       /** Processingstate */
-      processingState?: string;
+      processingState?: string | null;
     };
     /**
      * ShortLicense
@@ -1276,12 +4585,16 @@ export interface components {
       longName: string;
       /** Shortname */
       shortName: string;
+      /** Active */
+      active: boolean;
       /** Link */
-      link?: string;
+      link?: string | null;
       /** Version */
-      version?: string;
+      version?: string | null;
       /** Id */
       id: number;
+      /** Recordtype */
+      recordType?: string;
     };
     /**
      * ShortScoreSet
@@ -1296,13 +4609,10 @@ export interface components {
       title: string;
       /** Shortdescription */
       shortDescription: string;
-      /**
-       * Publisheddate
-       * Format: date
-       */
-      publishedDate?: string;
+      /** Publisheddate */
+      publishedDate?: string | null;
       /** Replacesid */
-      replacesId?: number;
+      replacesId?: number | null;
       /** Numvariants */
       numVariants: number;
       experiment: components["schemas"]["Experiment"];
@@ -1325,6 +4635,8 @@ export interface components {
       targetGenes: components["schemas"]["ShortTargetGene"][];
       /** Private */
       private: boolean;
+      /** Recordtype */
+      recordType?: string;
     };
     /**
      * ShortTargetGene
@@ -1333,44 +4645,205 @@ export interface components {
     ShortTargetGene: {
       /** Name */
       name: string;
-      /** Category */
-      category: string;
+      category: components["schemas"]["TargetCategory"];
       /** Externalidentifiers */
       externalIdentifiers: components["schemas"]["ExternalGeneIdentifierOffset"][];
       /** Id */
       id: number;
-      targetSequence?: components["schemas"]["SavedTargetSequence"];
-      targetAccession?: components["schemas"]["SavedTargetAccession"];
+      /** Recordtype */
+      recordType?: string;
+      targetSequence?: components["schemas"]["SavedTargetSequence"] | null;
+      targetAccession?: components["schemas"]["SavedTargetAccession"] | null;
+      /** Uniprotidfrommappedmetadata */
+      uniprotIdFromMappedMetadata?: string | null;
     };
     /** ShorterScoreSet */
     ShorterScoreSet: {
       /** Urn */
       urn: string;
+      /** Recordtype */
+      recordType?: string;
     };
+    /**
+     * Statement
+     * @description A claim of purported truth as made by a particular agent, on a particular
+     * occasion. Statements may be used to put forth a possible fact (i.e. a 'Proposition')
+     * as true or false, or to provide a more nuanced assessment of the level of confidence
+     * or evidence supporting a particular Proposition.
+     */
+    Statement: {
+      /**
+       * Id
+       * @description The 'logical' identifier of the Entity in the system of record, e.g. a UUID.  This 'id' is unique within a given system, but may or may not be globally unique outside the system. It is used within a system to reference an object from another.
+       */
+      id?: string | null;
+      /**
+       * Type
+       * @description MUST be 'Statement'.
+       * @default Statement
+       * @constant
+       */
+      type?: "Statement";
+      /**
+       * Name
+       * @description A primary name for the entity.
+       */
+      name?: string | null;
+      /**
+       * Description
+       * @description A free-text description of the Entity.
+       */
+      description?: string | null;
+      /**
+       * Aliases
+       * @description Alternative name(s) for the Entity.
+       */
+      aliases?: string[] | null;
+      /**
+       * Extensions
+       * @description A list of extensions to the Entity, that allow for capture of information not directly supported by elements defined in the model.
+       */
+      extensions?: components["schemas"]["Extension"][] | null;
+      /**
+       * Specifiedby
+       * @description A specification that describes all or part of the process that led to creation of the Information Entity
+       */
+      specifiedBy?: components["schemas"]["Method"] | components["schemas"]["iriReference"] | null;
+      /**
+       * Contributions
+       * @description Specific actions taken by an Agent toward the creation, modification, validation, or deprecation of an Information Entity.
+       */
+      contributions?: components["schemas"]["Contribution"][] | null;
+      /**
+       * Reportedin
+       * @description A document in which the the Information Entity is reported.
+       */
+      reportedIn?: ((components["schemas"]["Document"] | components["schemas"]["iriReference"])[]) | null;
+      /**
+       * Proposition
+       * @description A possible fact, the validity of which is assessed and reported by the Statement. A Statement can put forth the proposition as being true, false, or uncertain, and may provide an assessment of the level of confidence/evidence supporting this claim.
+       */
+      proposition: components["schemas"]["ExperimentalVariantFunctionalImpactProposition"] | components["schemas"]["VariantDiagnosticProposition"] | components["schemas"]["VariantOncogenicityProposition"] | components["schemas"]["VariantPathogenicityProposition"] | components["schemas"]["VariantPrognosticProposition"] | components["schemas"]["VariantTherapeuticResponseProposition"];
+      /** @description A term indicating whether the Statement supports, disputes, or remains neutral w.r.t. the validity of the Proposition it evaluates. */
+      direction: components["schemas"]["Direction"];
+      /** @description A term used to report the strength of a Proposition's assessment in the direction indicated (i.e. how strongly supported or disputed the Proposition is believed to be).  Implementers may choose to frame a strength assessment in terms of how *confident* an agent is that the Proposition is true or false, or in terms of the *strength of all evidence* they believe supports or disputes it. */
+      strength?: components["schemas"]["MappableConcept"] | null;
+      /**
+       * Score
+       * @description A quantitative score that indicates the strength of a Proposition's assessment in the direction indicated (i.e. how strongly supported or disputed the Proposition is believed to be). Depending on its implementation, a score may reflect how *confident* that agent is that the Proposition is true or false, or the *strength of evidence* they believe supports or disputes it. Instructions for how to interpret the meaning of a given score may be gleaned from the method or document referenced in 'specifiedBy' attribute.
+       */
+      score?: number | null;
+      /** @description A single term or phrase summarizing the outcome of direction and strength assessments of a Statement's Proposition, in terms of a classification of its subject. */
+      classification?: components["schemas"]["MappableConcept"] | null;
+      /**
+       * Hasevidencelines
+       * @description An evidence-based argument that supports or disputes the validity of the proposition that a Statement assesses or puts forth as true. The strength and direction of this argument (whether it supports or disputes the proposition, and how strongly) is based on an interpretation of one or more pieces of information as evidence (i.e. 'Evidence Items).
+       */
+      hasEvidenceLines?: ((components["schemas"]["EvidenceLine"] | components["schemas"]["iriReference"])[]) | null;
+    };
+    /**
+     * StrengthOfEvidenceProvided
+     * @description Enum for strength of evidence provided.
+     * @enum {string}
+     */
+    StrengthOfEvidenceProvided: "very_strong" | "strong" | "moderate_plus" | "moderate" | "supporting";
+    /**
+     * StudyGroup
+     * @description A collection of individuals or specimens from the same taxonomic class, selected
+     * for analysis in a scientific study based on their exhibiting one or more common
+     * characteristics  (e.g. species, race, age, gender, disease state, income). May be
+     * referred to as a 'cohort' or 'population' in specific research settings.
+     */
+    StudyGroup: {
+      /**
+       * Id
+       * @description The 'logical' identifier of the Entity in the system of record, e.g. a UUID.  This 'id' is unique within a given system, but may or may not be globally unique outside the system. It is used within a system to reference an object from another.
+       */
+      id?: string | null;
+      /**
+       * Type
+       * @description Must be 'StudyGroup'
+       * @default StudyGroup
+       * @constant
+       */
+      type?: "StudyGroup";
+      /**
+       * Name
+       * @description A primary name for the entity.
+       */
+      name?: string | null;
+      /**
+       * Description
+       * @description A free-text description of the Entity.
+       */
+      description?: string | null;
+      /**
+       * Aliases
+       * @description Alternative name(s) for the Entity.
+       */
+      aliases?: string[] | null;
+      /**
+       * Extensions
+       * @description A list of extensions to the Entity, that allow for capture of information not directly supported by elements defined in the model.
+       */
+      extensions?: components["schemas"]["Extension"][] | null;
+      /**
+       * Membercount
+       * @description The total number of individual members in the StudyGroup.
+       */
+      memberCount?: number | null;
+      /**
+       * Characteristics
+       * @description A feature or role shared by all members of the StudyGroup, representing a criterion for membership in the group.
+       */
+      characteristics?: components["schemas"]["MappableConcept"][] | null;
+    };
+    /**
+     * StudyResult
+     * @description A collection of data items from a single study that pertain to a particular subject or experimental unit in the study, along with optional provenance information describing how these data items were generated.
+     */
+    StudyResult: components["schemas"]["CohortAlleleFrequencyStudyResult"] | components["schemas"]["ExperimentalVariantFunctionalImpactStudyResult"];
+    /**
+     * SubjectVariantProposition
+     * @description A `Proposition` that has a variant as the subject.
+     */
+    SubjectVariantProposition: components["schemas"]["ExperimentalVariantFunctionalImpactProposition"] | components["schemas"]["VariantPathogenicityProposition"] | components["schemas"]["VariantDiagnosticProposition"] | components["schemas"]["VariantPrognosticProposition"] | components["schemas"]["VariantOncogenicityProposition"] | components["schemas"]["VariantTherapeuticResponseProposition"];
+    /**
+     * Syntax
+     * @description The syntax used to describe the variation. The value should be one of the
+     * supported syntaxes.
+     * @enum {string}
+     */
+    Syntax: "hgvs.c" | "hgvs.p" | "hgvs.g" | "hgvs.m" | "hgvs.n" | "hgvs.r" | "iscn" | "gnomad" | "spdi";
     /** TargetAccession */
     TargetAccession: {
       /** Accession */
       accession: string;
+      /** Isbaseeditor */
+      isBaseEditor: boolean;
       /** Assembly */
-      assembly?: string;
+      assembly?: string | null;
       /** Gene */
-      gene?: string;
+      gene?: string | null;
+      /** Recordtype */
+      recordType?: string;
     };
     /** TargetAccessionCreate */
     TargetAccessionCreate: {
       /** Accession */
       accession: string;
+      /** Isbaseeditor */
+      isBaseEditor: boolean;
       /** Assembly */
-      assembly?: string;
+      assembly?: string | null;
       /** Gene */
-      gene?: string;
+      gene?: string | null;
     };
     /**
-     * TargetAccessionFields
-     * @description An enumeration.
+     * TargetCategory
      * @enum {string}
      */
-    TargetAccessionFields: "accession" | "assembly" | "gene";
+    TargetCategory: "protein_coding" | "regulatory" | "other_noncoding";
     /**
      * TargetGene
      * @description Target gene view model containing a complete set of properties visible to non-admin users.
@@ -1378,14 +4851,17 @@ export interface components {
     TargetGene: {
       /** Name */
       name: string;
-      /** Category */
-      category: string;
+      category: components["schemas"]["TargetCategory"];
       /** Externalidentifiers */
       externalIdentifiers: components["schemas"]["ExternalGeneIdentifierOffset"][];
       /** Id */
       id: number;
-      targetSequence?: components["schemas"]["TargetSequence"];
-      targetAccession?: components["schemas"]["TargetAccession"];
+      /** Recordtype */
+      recordType?: string;
+      targetSequence?: components["schemas"]["TargetSequence"] | null;
+      targetAccession?: components["schemas"]["TargetAccession"] | null;
+      /** Uniprotidfrommappedmetadata */
+      uniprotIdFromMappedMetadata?: string | null;
     };
     /**
      * TargetGeneCreate
@@ -1394,19 +4870,33 @@ export interface components {
     TargetGeneCreate: {
       /** Name */
       name: string;
-      /** Category */
-      category: string;
+      category: components["schemas"]["TargetCategory"];
       /** Externalidentifiers */
       externalIdentifiers: components["schemas"]["ExternalGeneIdentifierOffsetCreate"][];
-      targetSequence?: components["schemas"]["TargetSequenceCreate"];
-      targetAccession?: components["schemas"]["TargetAccessionCreate"];
+      targetSequence?: components["schemas"]["TargetSequenceCreate"] | null;
+      targetAccession?: components["schemas"]["TargetAccessionCreate"] | null;
     };
     /**
-     * TargetGeneFields
-     * @description An enumeration.
-     * @enum {string}
+     * TargetGeneWithScoreSetUrn
+     * @description Target gene view model containing its score set urn.
      */
-    TargetGeneFields: "category" | "organism" | "ensembl-identifier" | "refseq-identifier" | "uniprot-identifier";
+    TargetGeneWithScoreSetUrn: {
+      /** Name */
+      name: string;
+      category: components["schemas"]["TargetCategory"];
+      /** Externalidentifiers */
+      externalIdentifiers: components["schemas"]["ExternalGeneIdentifierOffset"][];
+      /** Id */
+      id: number;
+      /** Recordtype */
+      recordType?: string;
+      targetSequence?: components["schemas"]["TargetSequence"] | null;
+      targetAccession?: components["schemas"]["TargetAccession"] | null;
+      /** Uniprotidfrommappedmetadata */
+      uniprotIdFromMappedMetadata?: string | null;
+      /** Scoreseturn */
+      scoreSetUrn: string;
+    };
     /** TargetSequence */
     TargetSequence: {
       /** Sequencetype */
@@ -1414,7 +4904,9 @@ export interface components {
       /** Sequence */
       sequence: string;
       /** Label */
-      label?: string;
+      label?: string | null;
+      /** Recordtype */
+      recordType?: string;
       taxonomy: components["schemas"]["Taxonomy"];
     };
     /** TargetSequenceCreate */
@@ -1424,33 +4916,29 @@ export interface components {
       /** Sequence */
       sequence: string;
       /** Label */
-      label?: string;
+      label?: string | null;
       taxonomy: components["schemas"]["TaxonomyCreate"];
     };
-    /**
-     * TargetSequenceFields
-     * @description An enumeration.
-     * @enum {string}
-     */
-    TargetSequenceFields: "sequence" | "sequence-type";
     /** Taxonomy */
     Taxonomy: {
       /** Code */
       code: number;
       /** Organismname */
-      organismName?: string;
+      organismName?: string | null;
       /** Commonname */
-      commonName?: string;
+      commonName?: string | null;
       /** Rank */
-      rank?: string;
+      rank?: string | null;
       /** Hasdescribedspeciesname */
-      hasDescribedSpeciesName?: boolean;
+      hasDescribedSpeciesName?: boolean | null;
       /** Articlereference */
-      articleReference?: string;
-      /** Genomeid */
-      genomeId?: number;
+      articleReference?: string | null;
+      /** Genomeidentifierid */
+      genomeIdentifierId?: number | null;
       /** Id */
       id: number;
+      /** Recordtype */
+      recordType?: string;
       /** Url */
       url: string;
     };
@@ -1459,22 +4947,153 @@ export interface components {
       /** Code */
       code: number;
       /** Organismname */
-      organismName?: string;
+      organismName?: string | null;
       /** Commonname */
-      commonName?: string;
+      commonName?: string | null;
       /** Rank */
-      rank?: string;
+      rank?: string | null;
       /** Hasdescribedspeciesname */
-      hasDescribedSpeciesName?: boolean;
+      hasDescribedSpeciesName?: boolean | null;
       /** Articlereference */
-      articleReference?: string;
-      /** Genomeid */
-      genomeId?: number;
+      articleReference?: string | null;
+      /** Genomeidentifierid */
+      genomeIdentifierId?: number | null;
+    };
+    /**
+     * Terminus
+     * @description The `Terminus` data class provides a structure for describing the end
+     * (terminus) of a sequence. Structurally similar to Adjacency but the linker sequence
+     * is not allowed and it removes the unnecessary array structure.
+     */
+    Terminus: {
+      /**
+       * Id
+       * @description The 'logical' identifier of the Entity in the system of record, e.g. a UUID.  This 'id' is unique within a given system, but may or may not be globally unique outside the system. It is used within a system to reference an object from another.
+       */
+      id?: string | null;
+      /**
+       * Type
+       * @description MUST be "Terminus".
+       * @default Terminus
+       * @constant
+       */
+      type?: "Terminus";
+      /**
+       * Name
+       * @description A primary name for the entity.
+       */
+      name?: string | null;
+      /**
+       * Description
+       * @description A free-text description of the Entity.
+       */
+      description?: string | null;
+      /**
+       * Aliases
+       * @description Alternative name(s) for the Entity.
+       */
+      aliases?: string[] | null;
+      /**
+       * Extensions
+       * @description A list of extensions to the Entity, that allow for capture of information not directly supported by elements defined in the model.
+       */
+      extensions?: components["schemas"]["Extension"][] | null;
+      /**
+       * Digest
+       * @description A sha512t24u digest created using the VRS Computed Identifier algorithm.
+       */
+      digest?: string | null;
+      /** Expressions */
+      expressions?: components["schemas"]["Expression"][] | null;
+      /**
+       * Location
+       * @description The location of the terminus.
+       */
+      location: components["schemas"]["iriReference"] | components["schemas"]["SequenceLocation"];
     };
     /** TextSearch */
     TextSearch: {
       /** Text */
-      text?: string;
+      text?: string | null;
+    };
+    /**
+     * Therapeutic
+     * @description An individual therapy (drug, procedure, behavioral intervention, etc.), or group of therapies (TherapyGroup).
+     */
+    Therapeutic: components["schemas"]["TherapyGroup"] | components["schemas"]["MappableConcept"];
+    /**
+     * TherapeuticResponsePredicate
+     * @description Define constraints for therapeutic response predicate
+     * @enum {string}
+     */
+    TherapeuticResponsePredicate: "predictsSensitivityTo" | "predictsResistanceTo";
+    /**
+     * TherapyGroup
+     * @description A group of two or more therapies that are applied in combination to a single
+     * patient/subject, or applied individually to a different subset of participants in a
+     * research study
+     */
+    TherapyGroup: {
+      /**
+       * Id
+       * @description The 'logical' identifier of the data element in the system of record, e.g. a UUID.  This 'id' is unique within a given system, but may or may not be globally unique outside the system. It is used within a system to reference an object from another.
+       */
+      id?: string | null;
+      /**
+       * Extensions
+       * @description A list of extensions to the Entity, that allow for capture of information not directly supported by elements defined in the model.
+       */
+      extensions?: components["schemas"]["Extension"][] | null;
+      /**
+       * Therapies
+       * @description A list of therapies that are applied to treat a condition.
+       */
+      therapies: components["schemas"]["MappableConcept"][];
+      /** @description The logical relationship between members of the group, that indicates how they were applied in treating participants in a study.  The value 'AND' indicates that all therapies in the group were applied in combination to a given patient or subject. The value 'OR' indicates that each therapy was applied individually to a distinct subset of participants in the cohort that was interrogated in a given study. */
+      membershipOperator: components["schemas"]["MembershipOperator"];
+    };
+    /**
+     * TraversalBlock
+     * @description A component used to describe the orientation of applicable molecular variation
+     * within a DerivativeMolecule.
+     */
+    TraversalBlock: {
+      /**
+       * Id
+       * @description The 'logical' identifier of the Entity in the system of record, e.g. a UUID.  This 'id' is unique within a given system, but may or may not be globally unique outside the system. It is used within a system to reference an object from another.
+       */
+      id?: string | null;
+      /**
+       * Type
+       * @description MUST be "TraversalBlock".
+       * @default TraversalBlock
+       * @constant
+       */
+      type?: "TraversalBlock";
+      /**
+       * Name
+       * @description A primary name for the entity.
+       */
+      name?: string | null;
+      /**
+       * Description
+       * @description A free-text description of the Entity.
+       */
+      description?: string | null;
+      /**
+       * Aliases
+       * @description Alternative name(s) for the Entity.
+       */
+      aliases?: string[] | null;
+      /**
+       * Extensions
+       * @description A list of extensions to the Entity, that allow for capture of information not directly supported by elements defined in the model.
+       */
+      extensions?: components["schemas"]["Extension"][] | null;
+      /** @description The orientation of the molecular variation component. */
+      orientation?: components["schemas"]["Orientation"] | null;
+      /** @description The unoriented molecular variation component. */
+      component?: components["schemas"]["Adjacency"] | null;
     };
     /**
      * User
@@ -1484,16 +5103,17 @@ export interface components {
       /** Orcidid */
       orcidId: string;
       /** Firstname */
-      firstName?: string;
+      firstName?: string | null;
       /** Lastname */
-      lastName?: string;
+      lastName?: string | null;
+      /** Recordtype */
+      recordType?: string;
     };
     /**
      * UserRole
-     * @description An enumeration.
-     * @enum {unknown}
+     * @enum {string}
      */
-    UserRole: "admin";
+    UserRole: "admin" | "mapper";
     /** ValidationError */
     ValidationError: {
       /** Location */
@@ -1503,6 +5123,515 @@ export interface components {
       /** Error Type */
       type: string;
     };
+    /**
+     * Variant
+     * @description View model for a variant, defined by its ClinGen allele id, with associated variant effect measurements
+     */
+    Variant: {
+      /** Clingenalleleid */
+      clingenAlleleId: string;
+      /** Varianteffectmeasurements */
+      variantEffectMeasurements: components["schemas"]["VariantEffectMeasurementWithShortScoreSet"][];
+    };
+    /**
+     * VariantDiagnosticProposition
+     * @description A Proposition about whether a variant is associated with a disease (a diagnostic
+     * inclusion criterion), or absence of a disease (diagnostic exclusion criterion).
+     */
+    VariantDiagnosticProposition: {
+      /**
+       * Id
+       * @description The 'logical' identifier of the Entity in the system of record, e.g. a UUID.  This 'id' is unique within a given system, but may or may not be globally unique outside the system. It is used within a system to reference an object from another.
+       */
+      id?: string | null;
+      /**
+       * Type
+       * @description MUST be 'VariantDiagnosticProposition'.
+       * @default VariantDiagnosticProposition
+       * @constant
+       */
+      type?: "VariantDiagnosticProposition";
+      /**
+       * Name
+       * @description A primary name for the entity.
+       */
+      name?: string | null;
+      /**
+       * Description
+       * @description A free-text description of the Entity.
+       */
+      description?: string | null;
+      /**
+       * Aliases
+       * @description Alternative name(s) for the Entity.
+       */
+      aliases?: string[] | null;
+      /**
+       * Extensions
+       * @description A list of extensions to the Entity, that allow for capture of information not directly supported by elements defined in the model.
+       */
+      extensions?: components["schemas"]["Extension"][] | null;
+      /**
+       * Subjectvariant
+       * @description A variant that is the subject of the Proposition.
+       */
+      subjectVariant: {
+        type: "VariantDiagnosticProposition";
+      } & (Omit<components["schemas"]["MolecularVariation"], "type"> | components["schemas"]["CategoricalVariant"] | components["schemas"]["iriReference"]);
+      /**
+       * Genecontextqualifier
+       * @description Reports a gene impacted by the variant, which may contribute to the association described in the Proposition.
+       */
+      geneContextQualifier?: components["schemas"]["MappableConcept"] | components["schemas"]["iriReference"] | null;
+      /**
+       * Alleleoriginqualifier
+       * @description Reports whether the Proposition should be interpreted in the context of a heritable 'germline' variant, an acquired 'somatic' variant in a tumor,  post-zygotic 'mosaic' variant. While these are the most commonly reported allele origins, other more nuanced concepts can be captured  (e.g. 'maternal' vs 'paternal' allele origin'). In practice, populating this field may be complicated by the fact that some sources report allele origin based on the type of tissue that was sequenced to identify the variant, and others use it more generally to specify a category of variant for which the proposition holds. The stated intent of this attribute is the latter. However, if an implementer is not sure about which is reported in their data, it may be safer to create an Extension to hold this information, where they can explicitly acknowledge this ambiguity.
+       */
+      alleleOriginQualifier?: components["schemas"]["MappableConcept"] | components["schemas"]["iriReference"] | null;
+      /** @description The relationship the Proposition describes between the subject variant and object Condition. MUST be one of 'isDiagnosticInclusionCriterionFor' or 'isDiagnosticExclusionCriterionFor'. */
+      predicate: components["schemas"]["DiagnosticPredicate"];
+      /**
+       * Objectcondition
+       * @description The disease that is evaluated for diagnosis.
+       */
+      objectCondition: components["schemas"]["Condition"] | components["schemas"]["iriReference"];
+    };
+    /**
+     * VariantEffectMeasurementWithScoreSet
+     * @description Variant effect measurement view model with mapped variants and score set
+     */
+    VariantEffectMeasurementWithScoreSet: {
+      /** Urn */
+      urn?: string | null;
+      /** Data */
+      data: unknown;
+      /** Scoresetid */
+      scoreSetId: number;
+      /** Hgvsnt */
+      hgvsNt?: string | null;
+      /** Hgvspro */
+      hgvsPro?: string | null;
+      /** Hgvssplice */
+      hgvsSplice?: string | null;
+      /**
+       * Creationdate
+       * Format: date
+       */
+      creationDate: string;
+      /**
+       * Modificationdate
+       * Format: date
+       */
+      modificationDate: string;
+      /** Id */
+      id: number;
+      /** Recordtype */
+      recordType?: string;
+      scoreSet: components["schemas"]["ScoreSet"];
+      /** Mappedvariants */
+      mappedVariants: components["schemas"]["MappedVariant"][];
+    };
+    /**
+     * VariantEffectMeasurementWithShortScoreSet
+     * @description Variant effect measurement view model with mapped variants and a limited set of score set details
+     */
+    VariantEffectMeasurementWithShortScoreSet: {
+      /** Urn */
+      urn?: string | null;
+      /** Data */
+      data: unknown;
+      /** Scoresetid */
+      scoreSetId: number;
+      /** Hgvsnt */
+      hgvsNt?: string | null;
+      /** Hgvspro */
+      hgvsPro?: string | null;
+      /** Hgvssplice */
+      hgvsSplice?: string | null;
+      /**
+       * Creationdate
+       * Format: date
+       */
+      creationDate: string;
+      /**
+       * Modificationdate
+       * Format: date
+       */
+      modificationDate: string;
+      /** Id */
+      id: number;
+      /** Recordtype */
+      recordType?: string;
+      scoreSet: components["schemas"]["ShortScoreSet"];
+      /** Mappedvariants */
+      mappedVariants: components["schemas"]["MappedVariant"][];
+    };
+    /**
+     * VariantOncogenicityProposition
+     * @description A proposition describing the role of a variant in causing a tumor type.
+     */
+    VariantOncogenicityProposition: {
+      /**
+       * Id
+       * @description The 'logical' identifier of the Entity in the system of record, e.g. a UUID.  This 'id' is unique within a given system, but may or may not be globally unique outside the system. It is used within a system to reference an object from another.
+       */
+      id?: string | null;
+      /**
+       * Type
+       * @description MUST be 'VariantOncogenicityProposition'.
+       * @default VariantOncogenicityProposition
+       * @constant
+       */
+      type?: "VariantOncogenicityProposition";
+      /**
+       * Name
+       * @description A primary name for the entity.
+       */
+      name?: string | null;
+      /**
+       * Description
+       * @description A free-text description of the Entity.
+       */
+      description?: string | null;
+      /**
+       * Aliases
+       * @description Alternative name(s) for the Entity.
+       */
+      aliases?: string[] | null;
+      /**
+       * Extensions
+       * @description A list of extensions to the Entity, that allow for capture of information not directly supported by elements defined in the model.
+       */
+      extensions?: components["schemas"]["Extension"][] | null;
+      /**
+       * Subjectvariant
+       * @description A variant that is the subject of the Proposition.
+       */
+      subjectVariant: {
+        type: "VariantOncogenicityProposition";
+      } & (Omit<components["schemas"]["MolecularVariation"], "type"> | components["schemas"]["CategoricalVariant"] | components["schemas"]["iriReference"]);
+      /**
+       * Genecontextqualifier
+       * @description Reports a gene impacted by the variant, which may contribute to the association described in the Proposition.
+       */
+      geneContextQualifier?: components["schemas"]["MappableConcept"] | components["schemas"]["iriReference"] | null;
+      /**
+       * Alleleoriginqualifier
+       * @description Reports whether the Proposition should be interpreted in the context of a heritable 'germline' variant, an acquired 'somatic' variant in a tumor,  post-zygotic 'mosaic' variant. While these are the most commonly reported allele origins, other more nuanced concepts can be captured  (e.g. 'maternal' vs 'paternal' allele origin'). In practice, populating this field may be complicated by the fact that some sources report allele origin based on the type of tissue that was sequenced to identify the variant, and others use it more generally to specify a category of variant for which the proposition holds. The stated intent of this attribute is the latter. However, if an implementer is not sure about which is reported in their data, it may be safer to create an Extension to hold this information, where they can explicitly acknowledge this ambiguity.
+       */
+      alleleOriginQualifier?: components["schemas"]["MappableConcept"] | components["schemas"]["iriReference"] | null;
+      /**
+       * Predicate
+       * @description The relationship the Proposition describes between the subject variant and object tumor type. MUST be 'isOncogenicFor'.
+       * @default isOncogenicFor
+       * @constant
+       */
+      predicate?: "isOncogenicFor";
+      /**
+       * Objecttumortype
+       * @description The tumor type for which the variant impact is evaluated.
+       */
+      objectTumorType: components["schemas"]["Condition"] | components["schemas"]["iriReference"];
+    };
+    /**
+     * VariantPathogenicityEvidenceLine
+     * @description An Evidence Line that describes how a specific type of information was
+     * interpreted as evidence for or againtst a variant's pathogenicity. In the ACMG
+     * Framework, evidence is assessed by determining if a specific criterion (e.g. 'PM2')
+     * with a default strength (e.g. 'moderate') is 'met' or 'not met', and in some cases
+     * adjusting the default strength based on the quality and abundance of evidence.
+     */
+    VariantPathogenicityEvidenceLine: {
+      /**
+       * Id
+       * @description The 'logical' identifier of the Entity in the system of record, e.g. a UUID.  This 'id' is unique within a given system, but may or may not be globally unique outside the system. It is used within a system to reference an object from another.
+       */
+      id?: string | null;
+      /**
+       * Type
+       * @description MUST be 'EvidenceLine'.
+       * @default EvidenceLine
+       * @constant
+       */
+      type?: "EvidenceLine";
+      /**
+       * Name
+       * @description A primary name for the entity.
+       */
+      name?: string | null;
+      /**
+       * Description
+       * @description A free-text description of the Entity.
+       */
+      description?: string | null;
+      /**
+       * Aliases
+       * @description Alternative name(s) for the Entity.
+       */
+      aliases?: string[] | null;
+      /**
+       * Extensions
+       * @description A list of extensions to the Entity, that allow for capture of information not directly supported by elements defined in the model.
+       */
+      extensions?: components["schemas"]["Extension"][] | null;
+      /**
+       * Specifiedby
+       * @description The guidelines that were followed to assess variant information as evidence for or against the assessed variant's pathogenicity.
+       */
+      specifiedBy: components["schemas"]["Method"] | components["schemas"]["iriReference"];
+      /**
+       * Contributions
+       * @description Specific actions taken by an Agent toward the creation, modification, validation, or deprecation of an Information Entity.
+       */
+      contributions?: components["schemas"]["Contribution"][] | null;
+      /**
+       * Reportedin
+       * @description A document in which the the Information Entity is reported.
+       */
+      reportedIn?: ((components["schemas"]["Document"] | components["schemas"]["iriReference"])[]) | null;
+      /** @description A Variant Pathogenicity Proposition against which specific information was assessed, in determining the strength and direction of support this information provides as evidence. */
+      targetProposition?: components["schemas"]["VariantPathogenicityProposition"] | null;
+      /**
+       * Hasevidenceitems
+       * @description An individual piece of information that was evaluated as evidence in building the argument represented by an Evidence Line.
+       */
+      hasEvidenceItems?: {
+          type: "VariantPathogenicityEvidenceLine";
+        }[] | null;
+      /** @description The direction of support that the Evidence Line is determined to provide toward its target Proposition (supports, disputes, neutral) */
+      directionOfEvidenceProvided: components["schemas"]["Direction"];
+      /** @description The strength of support that an Evidence Line is determined to provide for or against the proposed pathogenicity of the assessed variant. Strength is evaluated relative to the direction indicated by the 'directionOfEvidenceProvided' attribute. The indicated enumeration constrains the nested MappableConcept.primaryCoding > Coding.code attribute when capturing evidence strength. Conditional requirement: if directionOfEvidenceProvided is either 'supports' or 'disputes', then this attribute is required. If it is 'none', then this attribute is not allowed. */
+      strengthOfEvidenceProvided?: components["schemas"]["MappableConcept"] | null;
+      /**
+       * Scoreofevidenceprovided
+       * @description A quantitative score indicating the strength of support that an Evidence Line is determined to provide for or against its target Proposition, evaluated relative to the direction indicated by the directionOfEvidenceProvided value.
+       */
+      scoreOfEvidenceProvided?: number | null;
+      /** @description A term summarizing the overall outcome of the evidence assessment represented by the Evidence Line, in terms of the direction and strength of support it provides for or against the target Proposition. */
+      evidenceOutcome?: components["schemas"]["MappableConcept"] | null;
+    };
+    /**
+     * VariantPathogenicityProposition
+     * @description A proposition describing the role of a variant in causing a heritable condition.
+     */
+    VariantPathogenicityProposition: {
+      /**
+       * Id
+       * @description The 'logical' identifier of the Entity in the system of record, e.g. a UUID.  This 'id' is unique within a given system, but may or may not be globally unique outside the system. It is used within a system to reference an object from another.
+       */
+      id?: string | null;
+      /**
+       * Type
+       * @description Must be 'VariantPathogenicityProposition'
+       * @default VariantPathogenicityProposition
+       * @constant
+       */
+      type?: "VariantPathogenicityProposition";
+      /**
+       * Name
+       * @description A primary name for the entity.
+       */
+      name?: string | null;
+      /**
+       * Description
+       * @description A free-text description of the Entity.
+       */
+      description?: string | null;
+      /**
+       * Aliases
+       * @description Alternative name(s) for the Entity.
+       */
+      aliases?: string[] | null;
+      /**
+       * Extensions
+       * @description A list of extensions to the Entity, that allow for capture of information not directly supported by elements defined in the model.
+       */
+      extensions?: components["schemas"]["Extension"][] | null;
+      /**
+       * Subjectvariant
+       * @description A variant that is the subject of the Proposition.
+       */
+      subjectVariant: {
+        type: "VariantPathogenicityProposition";
+      } & (Omit<components["schemas"]["MolecularVariation"], "type"> | components["schemas"]["CategoricalVariant"] | components["schemas"]["iriReference"]);
+      /**
+       * Genecontextqualifier
+       * @description Reports a gene impacted by the variant, which may contribute to the association described in the Proposition.
+       */
+      geneContextQualifier?: components["schemas"]["MappableConcept"] | components["schemas"]["iriReference"] | null;
+      /**
+       * Alleleoriginqualifier
+       * @description Reports whether the Proposition should be interpreted in the context of a heritable 'germline' variant, an acquired 'somatic' variant in a tumor,  post-zygotic 'mosaic' variant. While these are the most commonly reported allele origins, other more nuanced concepts can be captured  (e.g. 'maternal' vs 'paternal' allele origin'). In practice, populating this field may be complicated by the fact that some sources report allele origin based on the type of tissue that was sequenced to identify the variant, and others use it more generally to specify a category of variant for which the proposition holds. The stated intent of this attribute is the latter. However, if an implementer is not sure about which is reported in their data, it may be safer to create an Extension to hold this information, where they can explicitly acknowledge this ambiguity.
+       */
+      alleleOriginQualifier?: components["schemas"]["MappableConcept"] | components["schemas"]["iriReference"] | null;
+      /**
+       * Predicate
+       * @description The relationship the Proposition describes between the subject variant and object condition. MUST be 'isCausalFor'.
+       * @default isCausalFor
+       * @constant
+       */
+      predicate?: "isCausalFor";
+      /**
+       * Objectcondition
+       * @description The Condition for which the variant impact is stated.
+       */
+      objectCondition: components["schemas"]["Condition"] | components["schemas"]["iriReference"];
+      /** @description Reports the penetrance of the pathogenic effect - i.e. the extent to which the variant impact is expressed by individuals carrying it as a measure of the proportion of carriers exhibiting the condition. */
+      penetranceQualifier?: components["schemas"]["MappableConcept"] | null;
+      /** @description Reports a pattern of inheritance expected for the pathogenic effect of the variant. Consider using terms or codes from community terminologies here - e.g. terms from the 'Mode of inheritance' branch of the Human Phenotype Ontology such as HP:0000006 (autosomal dominant inheritance). */
+      modeOfInheritanceQualifier?: components["schemas"]["MappableConcept"] | null;
+    };
+    /**
+     * VariantPrognosticProposition
+     * @description A Proposition about whether a variant is associated with an improved or worse outcome for a disease.
+     */
+    VariantPrognosticProposition: {
+      /**
+       * Id
+       * @description The 'logical' identifier of the Entity in the system of record, e.g. a UUID.  This 'id' is unique within a given system, but may or may not be globally unique outside the system. It is used within a system to reference an object from another.
+       */
+      id?: string | null;
+      /**
+       * Type
+       * @description MUST be 'VariantPrognosticProposition'.
+       * @default VariantPrognosticProposition
+       * @constant
+       */
+      type?: "VariantPrognosticProposition";
+      /**
+       * Name
+       * @description A primary name for the entity.
+       */
+      name?: string | null;
+      /**
+       * Description
+       * @description A free-text description of the Entity.
+       */
+      description?: string | null;
+      /**
+       * Aliases
+       * @description Alternative name(s) for the Entity.
+       */
+      aliases?: string[] | null;
+      /**
+       * Extensions
+       * @description A list of extensions to the Entity, that allow for capture of information not directly supported by elements defined in the model.
+       */
+      extensions?: components["schemas"]["Extension"][] | null;
+      /**
+       * Subjectvariant
+       * @description A variant that is the subject of the Proposition.
+       */
+      subjectVariant: {
+        type: "VariantPrognosticProposition";
+      } & (Omit<components["schemas"]["MolecularVariation"], "type"> | components["schemas"]["CategoricalVariant"] | components["schemas"]["iriReference"]);
+      /**
+       * Genecontextqualifier
+       * @description Reports a gene impacted by the variant, which may contribute to the association described in the Proposition.
+       */
+      geneContextQualifier?: components["schemas"]["MappableConcept"] | components["schemas"]["iriReference"] | null;
+      /**
+       * Alleleoriginqualifier
+       * @description Reports whether the Proposition should be interpreted in the context of a heritable 'germline' variant, an acquired 'somatic' variant in a tumor,  post-zygotic 'mosaic' variant. While these are the most commonly reported allele origins, other more nuanced concepts can be captured  (e.g. 'maternal' vs 'paternal' allele origin'). In practice, populating this field may be complicated by the fact that some sources report allele origin based on the type of tissue that was sequenced to identify the variant, and others use it more generally to specify a category of variant for which the proposition holds. The stated intent of this attribute is the latter. However, if an implementer is not sure about which is reported in their data, it may be safer to create an Extension to hold this information, where they can explicitly acknowledge this ambiguity.
+       */
+      alleleOriginQualifier?: components["schemas"]["MappableConcept"] | components["schemas"]["iriReference"] | null;
+      /** @description The relationship the Proposition describes between the subject variant and object Condition. MUST be one of 'associatedWithBetterOutcomeFor' or 'associatedWithWorseOutcomeFor'. */
+      predicate: components["schemas"]["PrognosticPredicate"];
+      /**
+       * Objectcondition
+       * @description The disease that is evaluated for outcome.
+       */
+      objectCondition: components["schemas"]["Condition"] | components["schemas"]["iriReference"];
+    };
+    /**
+     * VariantTherapeuticResponseProposition
+     * @description A Proposition about the role of a variant in modulating the response of a neoplasm to drug
+     * administration or other therapeutic procedures.
+     */
+    VariantTherapeuticResponseProposition: {
+      /**
+       * Id
+       * @description The 'logical' identifier of the Entity in the system of record, e.g. a UUID.  This 'id' is unique within a given system, but may or may not be globally unique outside the system. It is used within a system to reference an object from another.
+       */
+      id?: string | null;
+      /**
+       * Type
+       * @description MUST be 'VariantTherapeuticResponseProposition'.
+       * @default VariantTherapeuticResponseProposition
+       * @constant
+       */
+      type?: "VariantTherapeuticResponseProposition";
+      /**
+       * Name
+       * @description A primary name for the entity.
+       */
+      name?: string | null;
+      /**
+       * Description
+       * @description A free-text description of the Entity.
+       */
+      description?: string | null;
+      /**
+       * Aliases
+       * @description Alternative name(s) for the Entity.
+       */
+      aliases?: string[] | null;
+      /**
+       * Extensions
+       * @description A list of extensions to the Entity, that allow for capture of information not directly supported by elements defined in the model.
+       */
+      extensions?: components["schemas"]["Extension"][] | null;
+      /**
+       * Subjectvariant
+       * @description A variant that is the subject of the Proposition.
+       */
+      subjectVariant: {
+        type: "VariantTherapeuticResponseProposition";
+      } & (Omit<components["schemas"]["MolecularVariation"], "type"> | components["schemas"]["CategoricalVariant"] | components["schemas"]["iriReference"]);
+      /**
+       * Genecontextqualifier
+       * @description Reports a gene impacted by the variant, which may contribute to the association described in the Proposition.
+       */
+      geneContextQualifier?: components["schemas"]["MappableConcept"] | components["schemas"]["iriReference"] | null;
+      /**
+       * Alleleoriginqualifier
+       * @description Reports whether the Proposition should be interpreted in the context of a heritable 'germline' variant, an acquired 'somatic' variant in a tumor,  post-zygotic 'mosaic' variant. While these are the most commonly reported allele origins, other more nuanced concepts can be captured  (e.g. 'maternal' vs 'paternal' allele origin'). In practice, populating this field may be complicated by the fact that some sources report allele origin based on the type of tissue that was sequenced to identify the variant, and others use it more generally to specify a category of variant for which the proposition holds. The stated intent of this attribute is the latter. However, if an implementer is not sure about which is reported in their data, it may be safer to create an Extension to hold this information, where they can explicitly acknowledge this ambiguity.
+       */
+      alleleOriginQualifier?: components["schemas"]["MappableConcept"] | components["schemas"]["iriReference"] | null;
+      /** @description The relationship the Proposition describes between the subject variant and object theapeutic. MUST be one of 'predictsSensitivityTo' or 'predictsResistanceTo'. */
+      predicate: components["schemas"]["TherapeuticResponsePredicate"];
+      /**
+       * Objecttherapeutic
+       * @description A drug administration or other therapeutic procedure that the neoplasm is intended to respond to.
+       */
+      objectTherapeutic: components["schemas"]["Therapeutic"] | components["schemas"]["iriReference"];
+      /**
+       * Conditionqualifier
+       * @description Reports the disease context in which the variant's association with therapeutic sensitivity or resistance is evaluated. Note that this is a required qualifier in therapeutic response propositions.
+       */
+      conditionQualifier: components["schemas"]["Condition"] | components["schemas"]["iriReference"];
+    };
+    /**
+     * Variation
+     * @description A representation of the state of one or more biomolecules.
+     */
+    Variation: components["schemas"]["Allele"] | components["schemas"]["CisPhasedBlock"] | components["schemas"]["Adjacency"] | components["schemas"]["Terminus"] | components["schemas"]["DerivativeMolecule"] | components["schemas"]["CopyNumberChange"] | components["schemas"]["CopyNumberCount"];
+    /**
+     * code
+     * @description Indicates that the value is taken from a set of controlled strings defined elsewhere. Technically, a code is restricted to a string which has at least one character and no leading or  trailing whitespace, and where there is no whitespace other than single spaces in the contents.
+     * @example ENSG00000139618
+     */
+    code: string;
+    /**
+     * iriReference
+     * @description An IRI Reference (either an IRI or a relative-reference), according to `RFC3986 section 4.1 <https://datatracker.ietf.org/doc/html/rfc3986#section-4.1>`_ and `RFC3987 section 2.1 <https://datatracker.ietf.org/doc/html/rfc3987#section-2.1>`_. MAY be a JSON Pointer as an IRI fragment, as described by `RFC6901 section 6 <https://datatracker.ietf.org/doc/html/rfc6901#section-6>`_.
+     */
+    iriReference: string;
+    /**
+     * sequenceString
+     * @description A character string of Residues that represents a biological sequence using the conventional sequence order (5'-to-3' for nucleic acid sequences, and amino-to-carboxyl for amino acid sequences). IUPAC ambiguity codes are permitted in Sequence Strings.
+     */
+    sequenceString: string;
   };
   responses: never;
   parameters: never;
@@ -1518,13 +5647,13 @@ export type external = Record<string, never>;
 export interface operations {
 
   /**
-   * List My Access Keys
+   * List my access keys
    * @description List the current user's access keys.
    */
   list_my_access_keys_api_v1_users_me_access_keys_get: {
     parameters: {
       header?: {
-        "x-active-roles"?: string;
+        "x-active-roles"?: string | null;
       };
     };
     responses: {
@@ -1534,7 +5663,15 @@ export interface operations {
           "application/json": components["schemas"]["AccessKey"][];
         };
       };
-      /** @description Not Found */
+      /** @description Authentication required. */
+      401: {
+        content: never;
+      };
+      /** @description Forbidden. Insufficient permissions. */
+      403: {
+        content: never;
+      };
+      /** @description Resource not found. */
       404: {
         content: never;
       };
@@ -1544,20 +5681,20 @@ export interface operations {
           "application/json": components["schemas"]["HTTPValidationError"];
         };
       };
-      /** @description Internal Server Error */
+      /** @description Internal server error. */
       500: {
         content: never;
       };
     };
   };
   /**
-   * Create My Access Key
+   * Create a new access key for myself
    * @description Create a new access key for the current user, with the default user role.
    */
   create_my_access_key_api_v1_users_me_access_keys_post: {
     parameters: {
       header?: {
-        "x-active-roles"?: string;
+        "x-active-roles"?: string | null;
       };
     };
     responses: {
@@ -1567,7 +5704,15 @@ export interface operations {
           "application/json": components["schemas"]["NewAccessKey"];
         };
       };
-      /** @description Not Found */
+      /** @description Authentication required. */
+      401: {
+        content: never;
+      };
+      /** @description Forbidden. Insufficient permissions. */
+      403: {
+        content: never;
+      };
+      /** @description Resource not found. */
       404: {
         content: never;
       };
@@ -1577,20 +5722,20 @@ export interface operations {
           "application/json": components["schemas"]["HTTPValidationError"];
         };
       };
-      /** @description Internal Server Error */
+      /** @description Internal server error. */
       500: {
         content: never;
       };
     };
   };
   /**
-   * Create My Access Key With Role
+   * Create a new access key for myself with a specified role
    * @description Create a new access key for the current user, with the specified role.
    */
   create_my_access_key_with_role_api_v1_users_me_access_keys__role__post: {
     parameters: {
       header?: {
-        "x-active-roles"?: string;
+        "x-active-roles"?: string | null;
       };
       path: {
         role: components["schemas"]["UserRole"];
@@ -1603,7 +5748,15 @@ export interface operations {
           "application/json": components["schemas"]["NewAccessKey"];
         };
       };
-      /** @description Not Found */
+      /** @description Authentication required. */
+      401: {
+        content: never;
+      };
+      /** @description Forbidden. Insufficient permissions. */
+      403: {
+        content: never;
+      };
+      /** @description Resource not found. */
       404: {
         content: never;
       };
@@ -1613,20 +5766,20 @@ export interface operations {
           "application/json": components["schemas"]["HTTPValidationError"];
         };
       };
-      /** @description Internal Server Error */
+      /** @description Internal server error. */
       500: {
         content: never;
       };
     };
   };
   /**
-   * Delete My Access Key
+   * Delete one of my access keys
    * @description Delete one of the current user's access keys.
    */
   delete_my_access_key_api_v1_users_me_access_keys__key_id__delete: {
     parameters: {
       header?: {
-        "x-active-roles"?: string;
+        "x-active-roles"?: string | null;
       };
       path: {
         key_id: string;
@@ -1639,7 +5792,15 @@ export interface operations {
           "application/json": unknown;
         };
       };
-      /** @description Not Found */
+      /** @description Authentication required. */
+      401: {
+        content: never;
+      };
+      /** @description Forbidden. Insufficient permissions. */
+      403: {
+        content: never;
+      };
+      /** @description Resource not found. */
       404: {
         content: never;
       };
@@ -1649,15 +5810,15 @@ export interface operations {
           "application/json": components["schemas"]["HTTPValidationError"];
         };
       };
-      /** @description Internal Server Error */
+      /** @description Internal server error. */
       500: {
         content: never;
       };
     };
   };
   /**
-   * Show Version
-   * @description Describe the API version.
+   * Show API version
+   * @description Describe the API version and project.
    */
   show_version_api_v1_api_version_get: {
     responses: {
@@ -1667,15 +5828,625 @@ export interface operations {
           "application/json": components["schemas"]["ApiVersion"];
         };
       };
-      /** @description Not Found */
+      /** @description Resource not found. */
       404: {
+        content: never;
+      };
+      /** @description Internal server error. */
+      500: {
         content: never;
       };
     };
   };
   /**
-   * Search Doi Identifiers
-   * @description Search DOI identifiers.
+   * List my collections
+   * @description List the current user's collections. These are all the collections the user either owns or
+   * is listed as a contributor (in any role).
+   */
+  list_my_collections_api_v1_users_me_collections_get: {
+    parameters: {
+      header?: {
+        "x-active-roles"?: string | null;
+      };
+    };
+    responses: {
+      /** @description Successful Response */
+      200: {
+        content: {
+          "application/json": components["schemas"]["CollectionBundle"];
+        };
+      };
+      /** @description Authentication required. */
+      401: {
+        content: never;
+      };
+      /** @description Forbidden. Insufficient permissions. */
+      403: {
+        content: never;
+      };
+      /** @description Resource not found. */
+      404: {
+        content: never;
+      };
+      /** @description Validation Error */
+      422: {
+        content: {
+          "application/json": components["schemas"]["HTTPValidationError"];
+        };
+      };
+      /** @description Internal server error. */
+      500: {
+        content: never;
+      };
+    };
+  };
+  /**
+   * Fetch a collection by URN
+   * @description Fetch a single collection by URN.
+   */
+  fetch_collection_api_v1_collections__urn__get: {
+    parameters: {
+      header?: {
+        "x-active-roles"?: string | null;
+      };
+      path: {
+        urn: string;
+      };
+    };
+    responses: {
+      /** @description Successful Response */
+      200: {
+        content: {
+          "application/json": components["schemas"]["Collection"];
+        };
+      };
+      /** @description Authentication required. */
+      401: {
+        content: never;
+      };
+      /** @description Forbidden. Insufficient permissions. */
+      403: {
+        content: never;
+      };
+      /** @description Resource not found. */
+      404: {
+        content: never;
+      };
+      /** @description Validation Error */
+      422: {
+        content: {
+          "application/json": components["schemas"]["HTTPValidationError"];
+        };
+      };
+      /** @description Internal server error. */
+      500: {
+        content: never;
+      };
+    };
+  };
+  /**
+   * Delete a collection
+   * @description Delete a collection.
+   */
+  delete_collection_api_v1_collections__urn__delete: {
+    parameters: {
+      header?: {
+        "x-active-roles"?: string | null;
+      };
+      path: {
+        urn: string;
+      };
+    };
+    responses: {
+      /** @description Successful Response */
+      200: {
+        content: {
+          "application/json": unknown;
+        };
+      };
+      /** @description Authentication required. */
+      401: {
+        content: never;
+      };
+      /** @description Forbidden. Insufficient permissions. */
+      403: {
+        content: never;
+      };
+      /** @description Resource not found. */
+      404: {
+        content: never;
+      };
+      /** @description Validation Error */
+      422: {
+        content: {
+          "application/json": components["schemas"]["HTTPValidationError"];
+        };
+      };
+      /** @description Internal server error. */
+      500: {
+        content: never;
+      };
+    };
+  };
+  /**
+   * Update a collection
+   * @description Modify a collection's metadata.
+   */
+  update_collection_api_v1_collections__urn__patch: {
+    parameters: {
+      header?: {
+        "x-active-roles"?: string | null;
+      };
+      path: {
+        urn: string;
+      };
+    };
+    requestBody: {
+      content: {
+        "application/json": components["schemas"]["CollectionModify"];
+      };
+    };
+    responses: {
+      /** @description Successful Response */
+      200: {
+        content: {
+          "application/json": components["schemas"]["Collection"];
+        };
+      };
+      /** @description Bad request. Check parameters and payload. */
+      400: {
+        content: never;
+      };
+      /** @description Authentication required. */
+      401: {
+        content: never;
+      };
+      /** @description Forbidden. Insufficient permissions. */
+      403: {
+        content: never;
+      };
+      /** @description Resource not found. */
+      404: {
+        content: never;
+      };
+      /** @description Validation Error */
+      422: {
+        content: {
+          "application/json": components["schemas"]["HTTPValidationError"];
+        };
+      };
+      /** @description Internal server error. */
+      500: {
+        content: never;
+      };
+    };
+  };
+  /**
+   * Create a collection
+   * @description Create a new collection owned by the current user.
+   */
+  create_collection_api_v1_collections__post: {
+    parameters: {
+      header?: {
+        "x-active-roles"?: string | null;
+      };
+    };
+    requestBody: {
+      content: {
+        "application/json": components["schemas"]["CollectionCreate"];
+      };
+    };
+    responses: {
+      /** @description Successful Response */
+      200: {
+        content: {
+          "application/json": components["schemas"]["Collection"];
+        };
+      };
+      /** @description Bad request. Check parameters and payload. */
+      400: {
+        content: never;
+      };
+      /** @description Authentication required. */
+      401: {
+        content: never;
+      };
+      /** @description Forbidden. Insufficient permissions. */
+      403: {
+        content: never;
+      };
+      /** @description Resource not found. */
+      404: {
+        content: never;
+      };
+      /** @description Validation Error */
+      422: {
+        content: {
+          "application/json": components["schemas"]["HTTPValidationError"];
+        };
+      };
+      /** @description Internal server error. */
+      500: {
+        content: never;
+      };
+    };
+  };
+  /**
+   * Add a score set to a collection
+   * @description Add an existing score set to an existing collection.
+   */
+  add_score_set_to_collection_api_v1_collections__collection_urn__score_sets_post: {
+    parameters: {
+      header?: {
+        "x-active-roles"?: string | null;
+      };
+      path: {
+        collection_urn: string;
+      };
+    };
+    requestBody: {
+      content: {
+        "application/json": components["schemas"]["AddScoreSetToCollectionRequest"];
+      };
+    };
+    responses: {
+      /** @description Successful Response */
+      200: {
+        content: {
+          "application/json": components["schemas"]["Collection"];
+        };
+      };
+      /** @description Not authenticated */
+      401: {
+        content: never;
+      };
+      /** @description User lacks necessary permissions */
+      403: {
+        content: never;
+      };
+      /** @description Resource not found. */
+      404: {
+        content: never;
+      };
+      /** @description Validation Error */
+      422: {
+        content: {
+          "application/json": components["schemas"]["HTTPValidationError"];
+        };
+      };
+      /** @description Internal server error. */
+      500: {
+        content: never;
+      };
+    };
+  };
+  /**
+   * Remove a score set from a collection
+   * @description Remove a score set from an existing collection. The score set will be preserved in the database. This endpoint will only remove
+   * the association between the score set and the collection.
+   */
+  delete_score_set_from_collection_api_v1_collections__collection_urn__score_sets__score_set_urn__delete: {
+    parameters: {
+      header?: {
+        "x-active-roles"?: string | null;
+      };
+      path: {
+        collection_urn: string;
+        score_set_urn: string;
+      };
+    };
+    responses: {
+      /** @description Successful Response */
+      200: {
+        content: {
+          "application/json": components["schemas"]["Collection"];
+        };
+      };
+      /** @description Authentication required. */
+      401: {
+        content: never;
+      };
+      /** @description Forbidden. Insufficient permissions. */
+      403: {
+        content: never;
+      };
+      /** @description Resource not found. */
+      404: {
+        content: never;
+      };
+      /** @description Conflict with current resource state. */
+      409: {
+        content: never;
+      };
+      /** @description Validation Error */
+      422: {
+        content: {
+          "application/json": components["schemas"]["HTTPValidationError"];
+        };
+      };
+      /** @description Internal server error. */
+      500: {
+        content: never;
+      };
+    };
+  };
+  /**
+   * Add an experiment to a collection
+   * @description Add an existing experiment to an existing collection.
+   */
+  add_experiment_to_collection_api_v1_collections__collection_urn__experiments_post: {
+    parameters: {
+      header?: {
+        "x-active-roles"?: string | null;
+      };
+      path: {
+        collection_urn: string;
+      };
+    };
+    requestBody: {
+      content: {
+        "application/json": components["schemas"]["AddExperimentToCollectionRequest"];
+      };
+    };
+    responses: {
+      /** @description Successful Response */
+      200: {
+        content: {
+          "application/json": components["schemas"]["Collection"];
+        };
+      };
+      /** @description Authentication required. */
+      401: {
+        content: never;
+      };
+      /** @description Forbidden. Insufficient permissions. */
+      403: {
+        content: never;
+      };
+      /** @description Resource not found. */
+      404: {
+        content: never;
+      };
+      /** @description Validation Error */
+      422: {
+        content: {
+          "application/json": components["schemas"]["HTTPValidationError"];
+        };
+      };
+      /** @description Internal server error. */
+      500: {
+        content: never;
+      };
+    };
+  };
+  /**
+   * Remove an experiment from a collection
+   * @description Remove an experiment from an existing collection. The experiment will be preserved in the database. This endpoint will only remove
+   * the association between the experiment and the collection.
+   */
+  delete_experiment_from_collection_api_v1_collections__collection_urn__experiments__experiment_urn__delete: {
+    parameters: {
+      header?: {
+        "x-active-roles"?: string | null;
+      };
+      path: {
+        collection_urn: string;
+        experiment_urn: string;
+      };
+    };
+    responses: {
+      /** @description Successful Response */
+      200: {
+        content: {
+          "application/json": components["schemas"]["Collection"];
+        };
+      };
+      /** @description Authentication required. */
+      401: {
+        content: never;
+      };
+      /** @description Forbidden. Insufficient permissions. */
+      403: {
+        content: never;
+      };
+      /** @description Resource not found. */
+      404: {
+        content: never;
+      };
+      /** @description Conflict with current resource state. */
+      409: {
+        content: never;
+      };
+      /** @description Validation Error */
+      422: {
+        content: {
+          "application/json": components["schemas"]["HTTPValidationError"];
+        };
+      };
+      /** @description Internal server error. */
+      500: {
+        content: never;
+      };
+    };
+  };
+  /**
+   * Add a user to a collection role
+   * @description Add an existing user to a collection under the specified role.
+   * If a user is already in a role for this collection, this will remove the user from any other roles in this collection.
+   */
+  add_user_to_collection_role_api_v1_collections__urn___role_s_post: {
+    parameters: {
+      header?: {
+        "x-active-roles"?: string | null;
+      };
+      path: {
+        urn: string;
+        role: components["schemas"]["ContributionRole"];
+      };
+    };
+    requestBody: {
+      content: {
+        "application/json": components["schemas"]["AddUserToCollectionRoleRequest"];
+      };
+    };
+    responses: {
+      /** @description Successful Response */
+      200: {
+        content: {
+          "application/json": components["schemas"]["Collection"];
+        };
+      };
+      /** @description Authentication required. */
+      401: {
+        content: never;
+      };
+      /** @description Forbidden. Insufficient permissions. */
+      403: {
+        content: never;
+      };
+      /** @description Resource not found. */
+      404: {
+        content: never;
+      };
+      /** @description Conflict with current resource state. */
+      409: {
+        content: never;
+      };
+      /** @description Validation Error */
+      422: {
+        content: {
+          "application/json": components["schemas"]["HTTPValidationError"];
+        };
+      };
+      /** @description Internal server error. */
+      500: {
+        content: never;
+      };
+    };
+  };
+  /**
+   * Remove a user from a collection role
+   * @description Remove a user from a collection role. Both the user and the role should be provided explicitly and match
+   * the current assignment.
+   */
+  remove_user_from_collection_role_api_v1_collections__urn___role_s__orcid_id__delete: {
+    parameters: {
+      header?: {
+        "x-active-roles"?: string | null;
+      };
+      path: {
+        urn: string;
+        role: components["schemas"]["ContributionRole"];
+        orcid_id: string;
+      };
+    };
+    responses: {
+      /** @description Successful Response */
+      200: {
+        content: {
+          "application/json": components["schemas"]["Collection"];
+        };
+      };
+      /** @description Authentication required. */
+      401: {
+        content: never;
+      };
+      /** @description Forbidden. Insufficient permissions. */
+      403: {
+        content: never;
+      };
+      /** @description Resource not found. */
+      404: {
+        content: never;
+      };
+      /** @description Conflict with current resource state. */
+      409: {
+        content: never;
+      };
+      /** @description Validation Error */
+      422: {
+        content: {
+          "application/json": components["schemas"]["HTTPValidationError"];
+        };
+      };
+      /** @description Internal server error. */
+      500: {
+        content: never;
+      };
+    };
+  };
+  /**
+   * Fetch keywords by category
+   * @description Fetch the controlled keywords for a given key.
+   */
+  fetch_keywords_by_key_api_v1_controlled_keywords__key__get: {
+    parameters: {
+      path: {
+        key: string;
+      };
+    };
+    responses: {
+      /** @description Successful Response */
+      200: {
+        content: {
+          "application/json": components["schemas"]["Keyword"][];
+        };
+      };
+      /** @description Resource not found. */
+      404: {
+        content: never;
+      };
+      /** @description Validation Error */
+      422: {
+        content: {
+          "application/json": components["schemas"]["HTTPValidationError"];
+        };
+      };
+      /** @description Internal server error. */
+      500: {
+        content: never;
+      };
+    };
+  };
+  /**
+   * Search keyword by key and value
+   * @description Search controlled keywords by key and label.
+   */
+  search_keyword_by_key_and_value_api_v1_controlled_keywords_search__key___value__post: {
+    parameters: {
+      query: {
+        label: string;
+      };
+      path: {
+        key: string;
+      };
+    };
+    responses: {
+      /** @description Successful Response */
+      200: {
+        content: {
+          "application/json": components["schemas"]["Keyword"];
+        };
+      };
+      /** @description Resource not found. */
+      404: {
+        content: never;
+      };
+      /** @description Validation Error */
+      422: {
+        content: {
+          "application/json": components["schemas"]["HTTPValidationError"];
+        };
+      };
+      /** @description Internal server error. */
+      500: {
+        content: never;
+      };
+    };
+  };
+  /**
+   * Search DOI identifiers
+   * @description Search DOI identifiers based on the provided text.
    */
   search_doi_identifiers_api_v1_doi_identifiers_search_post: {
     requestBody: {
@@ -1690,7 +6461,11 @@ export interface operations {
           "application/json": components["schemas"]["DoiIdentifier"][];
         };
       };
-      /** @description Not found */
+      /** @description Bad request. Check parameters and payload. */
+      400: {
+        content: never;
+      };
+      /** @description Resource not found. */
       404: {
         content: never;
       };
@@ -1700,14 +6475,21 @@ export interface operations {
           "application/json": components["schemas"]["HTTPValidationError"];
         };
       };
+      /** @description Internal server error. */
+      500: {
+        content: never;
+      };
     };
   };
   /**
-   * Fetch Experiment Set
+   * Fetch experiment set by URN
    * @description Fetch a single experiment set by URN.
    */
   fetch_experiment_set_api_v1_experiment_sets__urn__get: {
     parameters: {
+      header?: {
+        "x-active-roles"?: string | null;
+      };
       path: {
         urn: string;
       };
@@ -1719,7 +6501,15 @@ export interface operations {
           "application/json": components["schemas"]["ExperimentSet"];
         };
       };
-      /** @description Not Found */
+      /** @description Authentication required. */
+      401: {
+        content: never;
+      };
+      /** @description Forbidden. Insufficient permissions. */
+      403: {
+        content: never;
+      };
+      /** @description Resource not found. */
       404: {
         content: never;
       };
@@ -1729,20 +6519,23 @@ export interface operations {
           "application/json": components["schemas"]["HTTPValidationError"];
         };
       };
+      /** @description Internal server error. */
+      500: {
+        content: never;
+      };
     };
   };
   /**
-   * List Experiments
-   * @description List experiments.
+   * List experiments
+   * @description List all experiments viewable by the current user.
    */
   list_experiments_api_v1_experiments__get: {
     parameters: {
       query?: {
-        editable?: boolean;
-        q?: string;
+        editable?: boolean | null;
       };
       header?: {
-        "x-active-roles"?: string;
+        "x-active-roles"?: string | null;
       };
     };
     responses: {
@@ -1752,7 +6545,15 @@ export interface operations {
           "application/json": components["schemas"]["Experiment"][];
         };
       };
-      /** @description Not found */
+      /** @description Authentication required. */
+      401: {
+        content: never;
+      };
+      /** @description Forbidden. Insufficient permissions. */
+      403: {
+        content: never;
+      };
+      /** @description Resource not found. */
       404: {
         content: never;
       };
@@ -1761,6 +6562,10 @@ export interface operations {
         content: {
           "application/json": components["schemas"]["HTTPValidationError"];
         };
+      };
+      /** @description Internal server error. */
+      500: {
+        content: never;
       };
     };
   };
@@ -1771,7 +6576,7 @@ export interface operations {
   create_experiment_api_v1_experiments__post: {
     parameters: {
       header?: {
-        "x-active-roles"?: string;
+        "x-active-roles"?: string | null;
       };
     };
     requestBody: {
@@ -1786,18 +6591,44 @@ export interface operations {
           "application/json": components["schemas"]["Experiment"];
         };
       };
-      /** @description Not found */
+      /** @description Authentication required. */
+      401: {
+        content: never;
+      };
+      /** @description Forbidden. Insufficient permissions. */
+      403: {
+        content: never;
+      };
+      /** @description Resource not found. */
       404: {
         content: never;
       };
-      /** @description Unprocessable Entity */
+      /** @description Validation Error */
       422: {
+        content: {
+          "application/json": components["schemas"]["HTTPValidationError"];
+        };
+      };
+      /** @description Internal server error. */
+      500: {
+        content: never;
+      };
+      /** @description Bad gateway. Upstream responded invalidly. */
+      502: {
+        content: never;
+      };
+      /** @description Service unavailable. Temporary overload or maintenance. */
+      503: {
+        content: never;
+      };
+      /** @description Gateway timeout. Upstream did not respond in time. */
+      504: {
         content: never;
       };
     };
   };
   /**
-   * Search Experiments
+   * Search experiments
    * @description Search experiments.
    */
   search_experiments_api_v1_experiments_search_post: {
@@ -1813,7 +6644,7 @@ export interface operations {
           "application/json": components["schemas"]["ShortExperiment"][];
         };
       };
-      /** @description Not found */
+      /** @description Resource not found. */
       404: {
         content: never;
       };
@@ -1823,16 +6654,20 @@ export interface operations {
           "application/json": components["schemas"]["HTTPValidationError"];
         };
       };
+      /** @description Internal server error. */
+      500: {
+        content: never;
+      };
     };
   };
   /**
-   * Search My Experiments
+   * Search my experiments
    * @description Search experiments created by the current user..
    */
   search_my_experiments_api_v1_me_experiments_search_post: {
     parameters: {
       header?: {
-        "x-active-roles"?: string;
+        "x-active-roles"?: string | null;
       };
     };
     requestBody: {
@@ -1847,7 +6682,15 @@ export interface operations {
           "application/json": components["schemas"]["ShortExperiment"][];
         };
       };
-      /** @description Not found */
+      /** @description Authentication required. */
+      401: {
+        content: never;
+      };
+      /** @description Forbidden. Insufficient permissions. */
+      403: {
+        content: never;
+      };
+      /** @description Resource not found. */
       404: {
         content: never;
       };
@@ -1857,16 +6700,20 @@ export interface operations {
           "application/json": components["schemas"]["HTTPValidationError"];
         };
       };
+      /** @description Internal server error. */
+      500: {
+        content: never;
+      };
     };
   };
   /**
-   * Fetch Experiment
+   * Fetch experiment by URN
    * @description Fetch a single experiment by URN.
    */
   fetch_experiment_api_v1_experiments__urn__get: {
     parameters: {
       header?: {
-        "x-active-roles"?: string;
+        "x-active-roles"?: string | null;
       };
       path: {
         urn: string;
@@ -1879,7 +6726,15 @@ export interface operations {
           "application/json": components["schemas"]["Experiment"];
         };
       };
-      /** @description Not Found */
+      /** @description Authentication required. */
+      401: {
+        content: never;
+      };
+      /** @description Forbidden. Insufficient permissions. */
+      403: {
+        content: never;
+      };
+      /** @description Resource not found. */
       404: {
         content: never;
       };
@@ -1888,6 +6743,10 @@ export interface operations {
         content: {
           "application/json": components["schemas"]["HTTPValidationError"];
         };
+      };
+      /** @description Internal server error. */
+      500: {
+        content: never;
       };
     };
   };
@@ -1898,7 +6757,7 @@ export interface operations {
   update_experiment_api_v1_experiments__urn__put: {
     parameters: {
       header?: {
-        "x-active-roles"?: string;
+        "x-active-roles"?: string | null;
       };
       path: {
         urn: string;
@@ -1916,34 +6775,50 @@ export interface operations {
           "application/json": components["schemas"]["Experiment"];
         };
       };
-      /** @description Not found */
+      /** @description Authentication required. */
+      401: {
+        content: never;
+      };
+      /** @description Forbidden. Insufficient permissions. */
+      403: {
+        content: never;
+      };
+      /** @description Resource not found. */
       404: {
         content: never;
       };
-      /** @description Unprocessable Entity */
+      /** @description Validation Error */
       422: {
+        content: {
+          "application/json": components["schemas"]["HTTPValidationError"];
+        };
+      };
+      /** @description Internal server error. */
+      500: {
+        content: never;
+      };
+      /** @description Bad gateway. Upstream responded invalidly. */
+      502: {
+        content: never;
+      };
+      /** @description Service unavailable. Temporary overload or maintenance. */
+      503: {
+        content: never;
+      };
+      /** @description Gateway timeout. Upstream did not respond in time. */
+      504: {
         content: never;
       };
     };
   };
   /**
-   * Delete Experiment
-   * @description Delete a experiment .
-   *
-   * Raises
-   *
-   * Returns
-   * _______
-   * Does not return anything
-   * string : HTTP code 200 successful but returning content
-   * or
-   * communitcate to client whether the operation succeeded
-   * 204 if successful but not returning content - likely going with this
+   * Delete an experiment
+   * @description Delete an experiment.
    */
   delete_experiment_api_v1_experiments__urn__delete: {
     parameters: {
       header?: {
-        "x-active-roles"?: string;
+        "x-active-roles"?: string | null;
       };
       path: {
         urn: string;
@@ -1956,24 +6831,38 @@ export interface operations {
           "application/json": unknown;
         };
       };
-      /** @description Not found */
+      /** @description Authentication required. */
+      401: {
+        content: never;
+      };
+      /** @description Forbidden. Insufficient permissions. */
+      403: {
+        content: never;
+      };
+      /** @description Resource not found. */
       404: {
         content: never;
       };
-      /** @description Unprocessable Entity */
+      /** @description Validation Error */
       422: {
+        content: {
+          "application/json": components["schemas"]["HTTPValidationError"];
+        };
+      };
+      /** @description Internal server error. */
+      500: {
         content: never;
       };
     };
   };
   /**
-   * Get Experiment Score Sets
+   * Get score sets for an experiment
    * @description Get all score sets belonging to an experiment.
    */
   get_experiment_score_sets_api_v1_experiments__urn__score_sets_get: {
     parameters: {
       header?: {
-        "x-active-roles"?: string;
+        "x-active-roles"?: string | null;
       };
       path: {
         urn: string;
@@ -1986,7 +6875,15 @@ export interface operations {
           "application/json": components["schemas"]["ScoreSet"][];
         };
       };
-      /** @description Not Found */
+      /** @description Authentication required. */
+      401: {
+        content: never;
+      };
+      /** @description Forbidden. Insufficient permissions. */
+      403: {
+        content: never;
+      };
+      /** @description Resource not found. */
       404: {
         content: never;
       };
@@ -1996,11 +6893,15 @@ export interface operations {
           "application/json": components["schemas"]["HTTPValidationError"];
         };
       };
+      /** @description Internal server error. */
+      500: {
+        content: never;
+      };
     };
   };
   /**
-   * Hgvs Fetch
-   * @description List stored sequences
+   * Fetch stored sequence by accession
+   * @description Fetches a stored genomic sequence by its accession identifier.
    */
   hgvs_fetch_api_v1_hgvs_fetch__accession__get: {
     parameters: {
@@ -2015,7 +6916,7 @@ export interface operations {
           "application/json": string;
         };
       };
-      /** @description Not found */
+      /** @description Resource not found. */
       404: {
         content: never;
       };
@@ -2025,11 +6926,15 @@ export interface operations {
           "application/json": components["schemas"]["HTTPValidationError"];
         };
       };
+      /** @description Internal server error. */
+      500: {
+        content: never;
+      };
     };
   };
   /**
-   * Hgvs Validate
-   * @description Validate a provided variant
+   * Validate a provided variant
+   * @description Validate the provided HGVS variant string.
    */
   hgvs_validate_api_v1_hgvs_validate_post: {
     requestBody: {
@@ -2046,7 +6951,11 @@ export interface operations {
           "application/json": boolean;
         };
       };
-      /** @description Not found */
+      /** @description Bad request. Check parameters and payload. */
+      400: {
+        content: never;
+      };
+      /** @description Resource not found. */
       404: {
         content: never;
       };
@@ -2056,11 +6965,15 @@ export interface operations {
           "application/json": components["schemas"]["HTTPValidationError"];
         };
       };
+      /** @description Internal server error. */
+      500: {
+        content: never;
+      };
     };
   };
   /**
-   * List Assemblies
-   * @description List stored assemblies
+   * List stored assemblies
+   * @description List stored genomic assemblies
    */
   list_assemblies_api_v1_hgvs_assemblies_get: {
     responses: {
@@ -2070,15 +6983,19 @@ export interface operations {
           "application/json": string[];
         };
       };
-      /** @description Not found */
+      /** @description Resource not found. */
       404: {
+        content: never;
+      };
+      /** @description Internal server error. */
+      500: {
         content: never;
       };
     };
   };
   /**
-   * List Accessions
-   * @description List stored accessions
+   * List stored accessions for an assembly
+   * @description List stored accessions for a specified assembly
    */
   list_accessions_api_v1_hgvs__assembly__accessions_get: {
     parameters: {
@@ -2093,7 +7010,7 @@ export interface operations {
           "application/json": string[];
         };
       };
-      /** @description Not found */
+      /** @description Resource not found. */
       404: {
         content: never;
       };
@@ -2103,11 +7020,15 @@ export interface operations {
           "application/json": components["schemas"]["HTTPValidationError"];
         };
       };
+      /** @description Internal server error. */
+      500: {
+        content: never;
+      };
     };
   };
   /**
-   * List Genes
-   * @description List stored genes
+   * List stored genes
+   * @description Lists the HGNC names for stored genes
    */
   list_genes_api_v1_hgvs_genes_get: {
     responses: {
@@ -2117,15 +7038,19 @@ export interface operations {
           "application/json": unknown[];
         };
       };
-      /** @description Not found */
+      /** @description Resource not found. */
       404: {
+        content: never;
+      };
+      /** @description Internal server error. */
+      500: {
         content: never;
       };
     };
   };
   /**
-   * Gene Info
-   * @description List stored gene information for a specified gene
+   * Show stored gene information
+   * @description Shows all gene metadata for a particular gene
    */
   gene_info_api_v1_hgvs_genes__gene__get: {
     parameters: {
@@ -2140,7 +7065,7 @@ export interface operations {
           "application/json": Record<string, never>;
         };
       };
-      /** @description Not found */
+      /** @description Resource not found. */
       404: {
         content: never;
       };
@@ -2150,13 +7075,17 @@ export interface operations {
           "application/json": components["schemas"]["HTTPValidationError"];
         };
       };
+      /** @description Internal server error. */
+      500: {
+        content: never;
+      };
     };
   };
   /**
-   * List Transcripts For Gene
-   * @description List transcripts associated with a particular gene
+   * List transcripts for gene
+   * @description Lists the transcripts associated with a particular gene
    */
-  list_transcripts_for_gene_api_v1_hgvs_transcripts_gene__gene__get: {
+  list_transcripts_for_gene_api_v1_hgvs_gene__gene__get: {
     parameters: {
       path: {
         gene: string;
@@ -2169,7 +7098,7 @@ export interface operations {
           "application/json": string[];
         };
       };
-      /** @description Not found */
+      /** @description Resource not found. */
       404: {
         content: never;
       };
@@ -2179,13 +7108,17 @@ export interface operations {
           "application/json": components["schemas"]["HTTPValidationError"];
         };
       };
+      /** @description Internal server error. */
+      500: {
+        content: never;
+      };
     };
   };
   /**
-   * Transcript Info
-   * @description List transcript information for a particular transcript
+   * Show transcript information
+   * @description Shows all transcript metadata for a particular transcript
    */
-  transcript_info_api_v1_hgvs_transcripts__transcript__get: {
+  transcript_info_api_v1_hgvs__transcript__get: {
     parameters: {
       path: {
         transcript: string;
@@ -2198,7 +7131,7 @@ export interface operations {
           "application/json": Record<string, never>;
         };
       };
-      /** @description Not found */
+      /** @description Resource not found. */
       404: {
         content: never;
       };
@@ -2208,13 +7141,17 @@ export interface operations {
           "application/json": components["schemas"]["HTTPValidationError"];
         };
       };
+      /** @description Internal server error. */
+      500: {
+        content: never;
+      };
     };
   };
   /**
-   * Convert To Protein
-   * @description Convert a provided transcript from it's nucleotide accession identifier to its protein accession identifier
+   * Convert transcript to protein accession
+   * @description Convert a provided transcript from it's nucleotide accession identifier to its protein accession
    */
-  convert_to_protein_api_v1_hgvs_transcripts_protein__transcript__get: {
+  convert_to_protein_api_v1_hgvs_protein__transcript__get: {
     parameters: {
       path: {
         transcript: string;
@@ -2227,7 +7164,7 @@ export interface operations {
           "application/json": string;
         };
       };
-      /** @description Not found */
+      /** @description Resource not found. */
       404: {
         content: never;
       };
@@ -2237,11 +7174,15 @@ export interface operations {
           "application/json": components["schemas"]["HTTPValidationError"];
         };
       };
+      /** @description Internal server error. */
+      500: {
+        content: never;
+      };
     };
   };
   /**
-   * List Licenses
-   * @description List licenses.
+   * List all licenses
+   * @description List all supported licenses.
    */
   list_licenses_api_v1_licenses__get: {
     responses: {
@@ -2251,14 +7192,40 @@ export interface operations {
           "application/json": components["schemas"]["ShortLicense"][];
         };
       };
-      /** @description Not Found */
+      /** @description Resource not found. */
       404: {
+        content: never;
+      };
+      /** @description Internal server error. */
+      500: {
         content: never;
       };
     };
   };
   /**
-   * Fetch License
+   * List active licenses
+   * @description List all active licenses.
+   */
+  list_active_licenses_api_v1_licenses_active_get: {
+    responses: {
+      /** @description Successful Response */
+      200: {
+        content: {
+          "application/json": components["schemas"]["ShortLicense"][];
+        };
+      };
+      /** @description Resource not found. */
+      404: {
+        content: never;
+      };
+      /** @description Internal server error. */
+      500: {
+        content: never;
+      };
+    };
+  };
+  /**
+   * Fetch license by ID
    * @description Fetch a single license by ID.
    */
   fetch_license_api_v1_licenses__item_id__get: {
@@ -2274,7 +7241,7 @@ export interface operations {
           "application/json": components["schemas"]["License"];
         };
       };
-      /** @description Not Found */
+      /** @description Resource not found. */
       404: {
         content: never;
       };
@@ -2284,14 +7251,21 @@ export interface operations {
           "application/json": components["schemas"]["HTTPValidationError"];
         };
       };
+      /** @description Internal server error. */
+      500: {
+        content: never;
+      };
     };
   };
   /**
-   * Show Mapped Variant
-   * @description Fetch a mapped variant by URN.
+   * Fetch mapped variant by URN
+   * @description Fetch a single mapped variant by URN.
    */
   show_mapped_variant_api_v1_mapped_variants__urn__get: {
     parameters: {
+      header?: {
+        "x-active-roles"?: string | null;
+      };
       path: {
         urn: string;
       };
@@ -2303,7 +7277,15 @@ export interface operations {
           "application/json": components["schemas"]["MappedVariant"];
         };
       };
-      /** @description Not Found */
+      /** @description Authentication required. */
+      401: {
+        content: never;
+      };
+      /** @description Forbidden. Insufficient permissions. */
+      403: {
+        content: never;
+      };
+      /** @description Resource not found. */
       404: {
         content: never;
       };
@@ -2313,15 +7295,302 @@ export interface operations {
           "application/json": components["schemas"]["HTTPValidationError"];
         };
       };
-      /** @description Internal Server Error */
+      /** @description Internal server error. */
       500: {
         content: never;
       };
     };
   };
   /**
-   * List Publications
-   * @description List stored all stored publications.
+   * Construct a VA-Spec StudyResult from a mapped variant
+   * @description Construct a single VA-Spec StudyResult from a mapped variant by URN.
+   */
+  show_mapped_variant_study_result_api_v1_mapped_variants__urn__va_study_result_get: {
+    parameters: {
+      header?: {
+        "x-active-roles"?: string | null;
+      };
+      path: {
+        urn: string;
+      };
+    };
+    responses: {
+      /** @description Successful Response */
+      200: {
+        content: {
+          "application/json": components["schemas"]["ExperimentalVariantFunctionalImpactStudyResult"];
+        };
+      };
+      /** @description Authentication required. */
+      401: {
+        content: never;
+      };
+      /** @description Forbidden. Insufficient permissions. */
+      403: {
+        content: never;
+      };
+      /** @description Resource not found. */
+      404: {
+        content: never;
+      };
+      /** @description Validation Error */
+      422: {
+        content: {
+          "application/json": components["schemas"]["HTTPValidationError"];
+        };
+      };
+      /** @description Internal server error. */
+      500: {
+        content: never;
+      };
+    };
+  };
+  /**
+   * Construct a VA-Spec Statement from a mapped variant
+   * @description Construct a single VA-Spec Statement from a mapped variant by URN.
+   */
+  show_mapped_variant_functional_impact_statement_api_v1_mapped_variants__urn__va_functional_impact_get: {
+    parameters: {
+      header?: {
+        "x-active-roles"?: string | null;
+      };
+      path: {
+        urn: string;
+      };
+    };
+    responses: {
+      /** @description Successful Response */
+      200: {
+        content: {
+          "application/json": components["schemas"]["Statement"];
+        };
+      };
+      /** @description Authentication required. */
+      401: {
+        content: never;
+      };
+      /** @description Forbidden. Insufficient permissions. */
+      403: {
+        content: never;
+      };
+      /** @description Resource not found. */
+      404: {
+        content: never;
+      };
+      /** @description Validation Error */
+      422: {
+        content: {
+          "application/json": components["schemas"]["HTTPValidationError"];
+        };
+      };
+      /** @description Internal server error. */
+      500: {
+        content: never;
+      };
+    };
+  };
+  /**
+   * Construct a VA-Spec EvidenceLine from a mapped variant
+   * @description Construct a list of VA-Spec EvidenceLine(s) from a mapped variant by URN.
+   */
+  show_mapped_variant_acmg_evidence_line_api_v1_mapped_variants__urn__va_clinical_evidence_get: {
+    parameters: {
+      header?: {
+        "x-active-roles"?: string | null;
+      };
+      path: {
+        urn: string;
+      };
+    };
+    responses: {
+      /** @description Successful Response */
+      200: {
+        content: {
+          "application/json": components["schemas"]["VariantPathogenicityEvidenceLine"];
+        };
+      };
+      /** @description Authentication required. */
+      401: {
+        content: never;
+      };
+      /** @description Forbidden. Insufficient permissions. */
+      403: {
+        content: never;
+      };
+      /** @description Resource not found. */
+      404: {
+        content: never;
+      };
+      /** @description Validation Error */
+      422: {
+        content: {
+          "application/json": components["schemas"]["HTTPValidationError"];
+        };
+      };
+      /** @description Internal server error. */
+      500: {
+        content: never;
+      };
+    };
+  };
+  /**
+   * Fetch mapped variants by VRS identifier
+   * @description Fetch a single mapped variant by GA4GH identifier.
+   */
+  show_mapped_variants_by_identifier_api_v1_mapped_variants_vrs__identifier__get: {
+    parameters: {
+      query?: {
+        only_current?: boolean;
+      };
+      header?: {
+        "x-active-roles"?: string | null;
+      };
+      path: {
+        /** @description String, a valid GA4GH digest based identifier. */
+        identifier: string;
+      };
+    };
+    responses: {
+      /** @description Successful Response */
+      200: {
+        content: {
+          "application/json": components["schemas"]["MappedVariant"][];
+        };
+      };
+      /** @description Authentication required. */
+      401: {
+        content: never;
+      };
+      /** @description Forbidden. Insufficient permissions. */
+      403: {
+        content: never;
+      };
+      /** @description Resource not found. */
+      404: {
+        content: never;
+      };
+      /** @description Validation Error */
+      422: {
+        content: {
+          "application/json": components["schemas"]["HTTPValidationError"];
+        };
+      };
+      /** @description Internal server error. */
+      500: {
+        content: never;
+      };
+    };
+  };
+  /**
+   * Look up an ORCID user by ORCID ID
+   * @description Look an ORCID user up by ORCID ID.
+   *
+   * This capability is needed when adding contributors to an experiment or score set, who may not necessarily be MaveDB
+   * users.
+   *
+   * Access is limited to signed-in users to prevent abuse.
+   */
+  lookup_orcid_user_api_v1_orcid_users__orcid_id__get: {
+    parameters: {
+      header?: {
+        "x-active-roles"?: string | null;
+      };
+      path: {
+        orcid_id: string;
+      };
+    };
+    responses: {
+      /** @description Successful Response */
+      200: {
+        content: {
+          "application/json": components["schemas"]["OrcidUser"];
+        };
+      };
+      /** @description Authentication required. */
+      401: {
+        content: never;
+      };
+      /** @description Forbidden. Insufficient permissions. */
+      403: {
+        content: never;
+      };
+      /** @description Resource not found. */
+      404: {
+        content: never;
+      };
+      /** @description Validation Error */
+      422: {
+        content: {
+          "application/json": components["schemas"]["HTTPValidationError"];
+        };
+      };
+      /** @description Internal server error. */
+      500: {
+        content: never;
+      };
+      /** @description Bad gateway. Upstream responded invalidly. */
+      502: {
+        content: never;
+      };
+      /** @description Service unavailable. Temporary overload or maintenance. */
+      503: {
+        content: never;
+      };
+      /** @description Gateway timeout. Upstream did not respond in time. */
+      504: {
+        content: never;
+      };
+    };
+  };
+  /**
+   * Check user permissions on a resource
+   * @description Check whether users have permission to perform a given action on a resource.
+   */
+  check_permission_api_v1_permissions_user_is_permitted__model_name___urn___action__get: {
+    parameters: {
+      header?: {
+        "x-active-roles"?: string | null;
+      };
+      path: {
+        model_name: components["schemas"]["ModelName"];
+        urn: string;
+        action: components["schemas"]["Action"];
+      };
+    };
+    responses: {
+      /** @description Successful Response */
+      200: {
+        content: {
+          "application/json": boolean;
+        };
+      };
+      /** @description Authentication required. */
+      401: {
+        content: never;
+      };
+      /** @description Forbidden. Insufficient permissions. */
+      403: {
+        content: never;
+      };
+      /** @description Resource not found. */
+      404: {
+        content: never;
+      };
+      /** @description Validation Error */
+      422: {
+        content: {
+          "application/json": components["schemas"]["HTTPValidationError"];
+        };
+      };
+      /** @description Internal server error. */
+      500: {
+        content: never;
+      };
+    };
+  };
+  /**
+   * List publications
+   * @description List all stored publications.
    */
   list_publications_api_v1_publication_identifiers__get: {
     responses: {
@@ -2331,15 +7600,19 @@ export interface operations {
           "application/json": components["schemas"]["PublicationIdentifier"][];
         };
       };
-      /** @description Not found */
+      /** @description Resource not found. */
       404: {
+        content: never;
+      };
+      /** @description Internal server error. */
+      500: {
         content: never;
       };
     };
   };
   /**
-   * Fetch Publication By Identifier
-   * @description Fetch a single publication by identifier.
+   * Fetch publication by identifier
+   * @description Fetch a single saved publication by identifier.
    */
   fetch_publication_by_identifier_api_v1_publication_identifiers__identifier__get: {
     parameters: {
@@ -2354,7 +7627,7 @@ export interface operations {
           "application/json": components["schemas"]["PublicationIdentifier"];
         };
       };
-      /** @description Not Found */
+      /** @description Resource not found. */
       404: {
         content: never;
       };
@@ -2364,16 +7637,20 @@ export interface operations {
           "application/json": components["schemas"]["HTTPValidationError"];
         };
       };
+      /** @description Internal server error. */
+      500: {
+        content: never;
+      };
     };
   };
   /**
-   * Fetch Publication By Dbname And Identifier
-   * @description Fetch a single publication by db name and identifier.
+   * Fetch publication by db name and identifier
+   * @description Fetch a single saved publication by db name and identifier.
    */
   fetch_publication_by_dbname_and_identifier_api_v1_publication_identifiers__db_name___identifier__get: {
     parameters: {
       path: {
-        db_name: string;
+        db_name: components["schemas"]["PublicationDataBases"];
         identifier: string;
       };
     };
@@ -2384,7 +7661,7 @@ export interface operations {
           "application/json": components["schemas"]["PublicationIdentifier"];
         };
       };
-      /** @description Not Found */
+      /** @description Resource not found. */
       404: {
         content: never;
       };
@@ -2394,11 +7671,15 @@ export interface operations {
           "application/json": components["schemas"]["HTTPValidationError"];
         };
       };
+      /** @description Internal server error. */
+      500: {
+        content: never;
+      };
     };
   };
   /**
-   * List Publication Journal Names
-   * @description List distinct journal names, in alphabetical order.
+   * List publication journal names
+   * @description List distinct saved journal names, in alphabetical order.
    */
   list_publication_journal_names_api_v1_publication_identifiers_journals_get: {
     responses: {
@@ -2408,15 +7689,19 @@ export interface operations {
           "application/json": string[];
         };
       };
-      /** @description Not Found */
+      /** @description Resource not found. */
       404: {
+        content: never;
+      };
+      /** @description Internal server error. */
+      500: {
         content: never;
       };
     };
   };
   /**
-   * List Publication Database Names
-   * @description List distinct database names, in alphabetical order.
+   * List publication database names
+   * @description List distinct saved database names, in alphabetical order.
    */
   list_publication_database_names_api_v1_publication_identifiers_databases_get: {
     responses: {
@@ -2426,15 +7711,19 @@ export interface operations {
           "application/json": string[];
         };
       };
-      /** @description Not Found */
+      /** @description Resource not found. */
       404: {
+        content: never;
+      };
+      /** @description Internal server error. */
+      500: {
         content: never;
       };
     };
   };
   /**
-   * Search Publication Identifier Identifiers
-   * @description Search publication identifiers via a TextSearch query.
+   * Search publication identifiers
+   * @description Search saved publication identifiers via a TextSearch query.
    */
   search_publication_identifier_identifiers_api_v1_publication_identifiers_search_identifier_post: {
     requestBody: {
@@ -2449,7 +7738,11 @@ export interface operations {
           "application/json": components["schemas"]["PublicationIdentifier"][];
         };
       };
-      /** @description Not found */
+      /** @description Bad request */
+      400: {
+        content: never;
+      };
+      /** @description Resource not found. */
       404: {
         content: never;
       };
@@ -2459,11 +7752,15 @@ export interface operations {
           "application/json": components["schemas"]["HTTPValidationError"];
         };
       };
+      /** @description Internal server error. */
+      500: {
+        content: never;
+      };
     };
   };
   /**
-   * Search Publication Identifier Dois
-   * @description Search publication DOIs via a TextSearch query.
+   * Search publication DOIs
+   * @description Search saved publication DOIs via a TextSearch query.
    */
   search_publication_identifier_dois_api_v1_publication_identifiers_search_doi_post: {
     requestBody: {
@@ -2478,7 +7775,11 @@ export interface operations {
           "application/json": components["schemas"]["PublicationIdentifier"][];
         };
       };
-      /** @description Not found */
+      /** @description Bad request. Check parameters and payload. */
+      400: {
+        content: never;
+      };
+      /** @description Resource not found. */
       404: {
         content: never;
       };
@@ -2488,11 +7789,15 @@ export interface operations {
           "application/json": components["schemas"]["HTTPValidationError"];
         };
       };
+      /** @description Internal server error. */
+      500: {
+        content: never;
+      };
     };
   };
   /**
-   * Search Publication Identifiers
-   * @description Search publication identifiers via a TextSearch query, returning substring matches on DOI and Identifier.
+   * Search publication identifiers and DOIs
+   * @description Search saved publication identifiers via a TextSearch query, returning substring matches on DOI and Identifier.
    */
   search_publication_identifiers_api_v1_publication_identifiers_search_post: {
     requestBody: {
@@ -2507,7 +7812,11 @@ export interface operations {
           "application/json": components["schemas"]["PublicationIdentifier"][];
         };
       };
-      /** @description Not found */
+      /** @description Bad request */
+      400: {
+        content: never;
+      };
+      /** @description Resource not found. */
       404: {
         content: never;
       };
@@ -2517,11 +7826,15 @@ export interface operations {
           "application/json": components["schemas"]["HTTPValidationError"];
         };
       };
+      /** @description Internal server error. */
+      500: {
+        content: never;
+      };
     };
   };
   /**
-   * Search Publications By Identifier
-   * @description Search publication identifiers via their identifier.
+   * Search publication identifiers by their identifier
+   * @description Search saved publication identifiers via their identifier.
    */
   search_publications_by_identifier_api_v1_publication_identifiers_search__identifier__get: {
     parameters: {
@@ -2536,7 +7849,7 @@ export interface operations {
           "application/json": components["schemas"]["PublicationIdentifier"];
         };
       };
-      /** @description Not Found */
+      /** @description Resource not found. */
       404: {
         content: never;
       };
@@ -2546,15 +7859,15 @@ export interface operations {
           "application/json": components["schemas"]["HTTPValidationError"];
         };
       };
-      /** @description Internal Server Error */
+      /** @description Internal server error. */
       500: {
         content: never;
       };
     };
   };
   /**
-   * Search Publications By Identifier And Db
-   * @description Search publication identifiers via their identifier and database.
+   * Search publication identifiers by their identifier and database
+   * @description Search all saved publication identifiers via their identifier and database.
    */
   search_publications_by_identifier_and_db_api_v1_publication_identifiers_search__db_name___identifier__get: {
     parameters: {
@@ -2567,10 +7880,10 @@ export interface operations {
       /** @description Successful Response */
       200: {
         content: {
-          "application/json": components["schemas"]["PublicationIdentifier"];
+          "application/json": components["schemas"]["PublicationIdentifier"][];
         };
       };
-      /** @description Not Found */
+      /** @description Resource not found. */
       404: {
         content: never;
       };
@@ -2580,16 +7893,16 @@ export interface operations {
           "application/json": components["schemas"]["HTTPValidationError"];
         };
       };
-      /** @description Internal Server Error */
+      /** @description Internal server error. */
       500: {
         content: never;
       };
     };
   };
   /**
-   * Search External Publication Identifiers
-   * @description Search external publication identifiers via a TextSearch query.
-   * Technically, this should be some sort of accepted publication identifier.
+   * Search external publication identifiers
+   * @description Search external publication identifiers via a TextSearch query. The provided text is searched against multiple external publication databases,
+   * and should be a valid identifier in at least one of those databases.
    */
   search_external_publication_identifiers_api_v1_publication_identifiers_search_external_post: {
     requestBody: {
@@ -2604,7 +7917,11 @@ export interface operations {
           "application/json": components["schemas"]["ExternalPublicationIdentifier"][];
         };
       };
-      /** @description Not found */
+      /** @description Bad request. Check parameters and payload. */
+      400: {
+        content: never;
+      };
+      /** @description Resource not found. */
       404: {
         content: never;
       };
@@ -2614,10 +7931,26 @@ export interface operations {
           "application/json": components["schemas"]["HTTPValidationError"];
         };
       };
+      /** @description Internal server error. */
+      500: {
+        content: never;
+      };
+      /** @description Bad gateway. Upstream responded invalidly. */
+      502: {
+        content: never;
+      };
+      /** @description Service unavailable. Temporary overload or maintenance. */
+      503: {
+        content: never;
+      };
+      /** @description Gateway timeout. Upstream did not respond in time. */
+      504: {
+        content: never;
+      };
     };
   };
   /**
-   * Search Raw Read Identifiers
+   * Search Raw Read identifiers
    * @description Search Raw Read identifiers.
    */
   search_raw_read_identifiers_api_v1_raw_read_identifiers_search_post: {
@@ -2633,7 +7966,11 @@ export interface operations {
           "application/json": components["schemas"]["RawReadIdentifier"][];
         };
       };
-      /** @description Not found */
+      /** @description Bad request. Check parameters and payload. */
+      400: {
+        content: never;
+      };
+      /** @description Resource not found. */
       404: {
         content: never;
       };
@@ -2643,26 +7980,52 @@ export interface operations {
           "application/json": components["schemas"]["HTTPValidationError"];
         };
       };
+      /** @description Internal server error. */
+      500: {
+        content: never;
+      };
     };
   };
   /**
-   * Search Score Sets
-   * @description Search score sets.
+   * Get Refget service information
+   * @description Returns information about the refget service.
    */
-  search_score_sets_api_v1_score_sets_search_post: {
-    requestBody: {
-      content: {
-        "application/json": components["schemas"]["ScoreSetsSearch"];
+  service_info_api_v1_refget_sequence_service_info_get: {
+    responses: {
+      /** @description Successful Response */
+      200: {
+        content: {
+          "application/json": components["schemas"]["RefgetServiceInfo"];
+        };
+      };
+      /** @description Resource not found. */
+      404: {
+        content: never;
+      };
+      /** @description Internal server error. */
+      500: {
+        content: never;
+      };
+    };
+  };
+  /**
+   * Get Refget sequence metadata
+   * @description Show metadata for a particular Refget sequence with the provided alias.
+   */
+  get_metadata_api_v1_refget_sequence__alias__metadata_get: {
+    parameters: {
+      path: {
+        alias: string;
       };
     };
     responses: {
       /** @description Successful Response */
       200: {
         content: {
-          "application/json": components["schemas"]["ShortScoreSet"][];
+          "application/json": components["schemas"]["RefgetMetadataResponse"];
         };
       };
-      /** @description not found */
+      /** @description Resource not found. */
       404: {
         content: never;
       };
@@ -2672,32 +8035,56 @@ export interface operations {
           "application/json": components["schemas"]["HTTPValidationError"];
         };
       };
+      /** @description Internal server error. */
+      500: {
+        content: never;
+      };
     };
   };
   /**
-   * Search My Score Sets
-   * @description Search score sets created by the current user..
+   * Get Refget sequence
+   * @description Get a Refget sequence by alias.
    */
-  search_my_score_sets_api_v1_me_score_sets_search_post: {
+  get_sequence_api_v1_refget_sequence__alias__get: {
     parameters: {
-      header?: {
-        "x-active-roles"?: string;
+      query?: {
+        /** @description Request a subsequence of the data (0-based). */
+        start?: number | null;
+        /** @description Request a subsequence of the data by specifying the end. */
+        end?: number | null;
       };
-    };
-    requestBody: {
-      content: {
-        "application/json": components["schemas"]["ScoreSetsSearch"];
+      header?: {
+        /** @description Specify a substring as a single HTTP Range. One byte range is permitted, and is 0-based inclusive. For example, 'Range: bytes=0-9' corresponds to '?start=0&end=10'. */
+        Range?: string | null;
+      };
+      path: {
+        alias: string;
       };
     };
     responses: {
-      /** @description Successful Response */
+      /** @description OK: Full sequence returned */
       200: {
         content: {
-          "application/json": components["schemas"]["ShortScoreSet"][];
+          "application/json": unknown;
+          "text/plain": unknown;
         };
       };
-      /** @description not found */
+      /** @description Partial Content: Partial sequence returned */
+      206: {
+        content: {
+          "text/plain": unknown;
+        };
+      };
+      /** @description Bad request. Check parameters and payload. */
+      400: {
+        content: never;
+      };
+      /** @description Resource not found. */
       404: {
+        content: never;
+      };
+      /** @description Requested range not satisfiable. */
+      416: {
         content: never;
       };
       /** @description Validation Error */
@@ -2706,16 +8093,24 @@ export interface operations {
           "application/json": components["schemas"]["HTTPValidationError"];
         };
       };
+      /** @description Internal server error. */
+      500: {
+        content: never;
+      };
+      /** @description Not implemented. The server does not support the functionality required. */
+      501: {
+        content: never;
+      };
     };
   };
   /**
-   * Show Score Set
-   * @description Fetch a single score set by URN.
+   * Get Score Calibration
+   * @description Retrieve a score calibration by its URN.
    */
-  show_score_set_api_v1_score_sets__urn__get: {
+  get_score_calibration_api_v1_score_calibrations__urn__get: {
     parameters: {
       header?: {
-        "x-active-roles"?: string;
+        "x-active-roles"?: string | null;
       };
       path: {
         urn: string;
@@ -2725,7 +8120,7 @@ export interface operations {
       /** @description Successful Response */
       200: {
         content: {
-          "application/json": components["schemas"]["ScoreSet"];
+          "application/json": components["schemas"]["ScoreCalibrationWithScoreSetUrn"];
         };
       };
       /** @description Not Found */
@@ -2738,20 +8133,493 @@ export interface operations {
           "application/json": components["schemas"]["HTTPValidationError"];
         };
       };
-      /** @description Internal Server Error */
+    };
+  };
+  /**
+   * Modify Score Calibration Route
+   * @description Modify an existing score calibration by its URN.
+   */
+  modify_score_calibration_route_api_v1_score_calibrations__urn__put: {
+    parameters: {
+      header?: {
+        "x-active-roles"?: string | null;
+      };
+      path: {
+        urn: string;
+      };
+    };
+    requestBody: {
+      content: {
+        "application/json": components["schemas"]["ScoreCalibrationModify"];
+      };
+    };
+    responses: {
+      /** @description Successful Response */
+      200: {
+        content: {
+          "application/json": components["schemas"]["ScoreCalibrationWithScoreSetUrn"];
+        };
+      };
+      /** @description Not Found */
+      404: {
+        content: never;
+      };
+      /** @description Validation Error */
+      422: {
+        content: {
+          "application/json": components["schemas"]["HTTPValidationError"];
+        };
+      };
+    };
+  };
+  /**
+   * Delete Score Calibration Route
+   * @description Delete an existing score calibration by its URN.
+   */
+  delete_score_calibration_route_api_v1_score_calibrations__urn__delete: {
+    parameters: {
+      header?: {
+        "x-active-roles"?: string | null;
+      };
+      path: {
+        urn: string;
+      };
+    };
+    responses: {
+      /** @description Successful Response */
+      204: {
+        content: never;
+      };
+      /** @description Not Found */
+      404: {
+        content: never;
+      };
+      /** @description Validation Error */
+      422: {
+        content: {
+          "application/json": components["schemas"]["HTTPValidationError"];
+        };
+      };
+    };
+  };
+  /**
+   * Get Score Calibrations For Score Set
+   * @description Retrieve all score calibrations for a given score set URN.
+   */
+  get_score_calibrations_for_score_set_api_v1_score_calibrations_score_set__score_set_urn__get: {
+    parameters: {
+      header?: {
+        "x-active-roles"?: string | null;
+      };
+      path: {
+        score_set_urn: string;
+      };
+    };
+    responses: {
+      /** @description Successful Response */
+      200: {
+        content: {
+          "application/json": components["schemas"]["ScoreCalibrationWithScoreSetUrn"][];
+        };
+      };
+      /** @description Not Found */
+      404: {
+        content: never;
+      };
+      /** @description Validation Error */
+      422: {
+        content: {
+          "application/json": components["schemas"]["HTTPValidationError"];
+        };
+      };
+    };
+  };
+  /**
+   * Get Primary Score Calibrations For Score Set
+   * @description Retrieve the primary score calibration for a given score set URN.
+   */
+  get_primary_score_calibrations_for_score_set_api_v1_score_calibrations_score_set__score_set_urn__primary_get: {
+    parameters: {
+      header?: {
+        "x-active-roles"?: string | null;
+      };
+      path: {
+        score_set_urn: string;
+      };
+    };
+    responses: {
+      /** @description Successful Response */
+      200: {
+        content: {
+          "application/json": components["schemas"]["ScoreCalibrationWithScoreSetUrn"];
+        };
+      };
+      /** @description Not Found */
+      404: {
+        content: never;
+      };
+      /** @description Validation Error */
+      422: {
+        content: {
+          "application/json": components["schemas"]["HTTPValidationError"];
+        };
+      };
+    };
+  };
+  /**
+   * Create Score Calibration Route
+   * @description Create a new score calibration.
+   *
+   * The score set URN must be provided to associate the calibration with an existing score set.
+   * The user must have write permission on the associated score set.
+   */
+  create_score_calibration_route_api_v1_score_calibrations__post: {
+    parameters: {
+      header?: {
+        "x-active-roles"?: string | null;
+      };
+    };
+    requestBody: {
+      content: {
+        "application/json": components["schemas"]["ScoreCalibrationCreate"];
+      };
+    };
+    responses: {
+      /** @description Successful Response */
+      200: {
+        content: {
+          "application/json": components["schemas"]["ScoreCalibrationWithScoreSetUrn"];
+        };
+      };
+      /** @description Not Found */
+      404: {
+        content: never;
+      };
+      /** @description Validation Error */
+      422: {
+        content: {
+          "application/json": components["schemas"]["HTTPValidationError"];
+        };
+      };
+    };
+  };
+  /**
+   * Promote Score Calibration To Primary Route
+   * @description Promote a score calibration to be the primary calibration for its associated score set.
+   */
+  promote_score_calibration_to_primary_route_api_v1_score_calibrations__urn__promote_to_primary_post: {
+    parameters: {
+      query?: {
+        /** @description Whether to demote any existing primary calibration */
+        demoteExistingPrimary?: boolean;
+      };
+      header?: {
+        "x-active-roles"?: string | null;
+      };
+      path: {
+        urn: string;
+      };
+    };
+    responses: {
+      /** @description Successful Response */
+      200: {
+        content: {
+          "application/json": components["schemas"]["ScoreCalibrationWithScoreSetUrn"];
+        };
+      };
+      /** @description Not Found */
+      404: {
+        content: never;
+      };
+      /** @description Validation Error */
+      422: {
+        content: {
+          "application/json": components["schemas"]["HTTPValidationError"];
+        };
+      };
+    };
+  };
+  /**
+   * Demote Score Calibration From Primary Route
+   * @description Demote a score calibration from being the primary calibration for its associated score set.
+   */
+  demote_score_calibration_from_primary_route_api_v1_score_calibrations__urn__demote_from_primary_post: {
+    parameters: {
+      header?: {
+        "x-active-roles"?: string | null;
+      };
+      path: {
+        urn: string;
+      };
+    };
+    responses: {
+      /** @description Successful Response */
+      200: {
+        content: {
+          "application/json": components["schemas"]["ScoreCalibrationWithScoreSetUrn"];
+        };
+      };
+      /** @description Not Found */
+      404: {
+        content: never;
+      };
+      /** @description Validation Error */
+      422: {
+        content: {
+          "application/json": components["schemas"]["HTTPValidationError"];
+        };
+      };
+    };
+  };
+  /**
+   * Publish Score Calibration Route
+   * @description Publish a score calibration, making it publicly visible.
+   */
+  publish_score_calibration_route_api_v1_score_calibrations__urn__publish_post: {
+    parameters: {
+      header?: {
+        "x-active-roles"?: string | null;
+      };
+      path: {
+        urn: string;
+      };
+    };
+    responses: {
+      /** @description Successful Response */
+      200: {
+        content: {
+          "application/json": components["schemas"]["ScoreCalibrationWithScoreSetUrn"];
+        };
+      };
+      /** @description Not Found */
+      404: {
+        content: never;
+      };
+      /** @description Validation Error */
+      422: {
+        content: {
+          "application/json": components["schemas"]["HTTPValidationError"];
+        };
+      };
+    };
+  };
+  /**
+   * Search score sets
+   * @description Search score sets.
+   */
+  search_score_sets_api_v1_score_sets_search_post: {
+    parameters: {
+      header?: {
+        "x-active-roles"?: string | null;
+      };
+    };
+    requestBody: {
+      content: {
+        "application/json": components["schemas"]["ScoreSetsSearch"];
+      };
+    };
+    responses: {
+      /** @description Successful Response */
+      200: {
+        content: {
+          "application/json": components["schemas"]["ScoreSetsSearchResponse"];
+        };
+      };
+      /** @description Authentication required. */
+      401: {
+        content: never;
+      };
+      /** @description Forbidden. Insufficient permissions. */
+      403: {
+        content: never;
+      };
+      /** @description Resource not found. */
+      404: {
+        content: never;
+      };
+      /** @description Validation Error */
+      422: {
+        content: {
+          "application/json": components["schemas"]["HTTPValidationError"];
+        };
+      };
+      /** @description Internal server error. */
+      500: {
+        content: never;
+      };
+    };
+  };
+  /** Get Filter Options For Search */
+  get_filter_options_for_search_api_v1_score_sets_search_filter_options_post: {
+    requestBody: {
+      content: {
+        "application/json": components["schemas"]["ScoreSetsSearch"];
+      };
+    };
+    responses: {
+      /** @description Successful Response */
+      200: {
+        content: {
+          "application/json": components["schemas"]["ScoreSetsSearchFilterOptionsResponse"];
+        };
+      };
+      /** @description Resource not found. */
+      404: {
+        content: never;
+      };
+      /** @description Validation Error */
+      422: {
+        content: {
+          "application/json": components["schemas"]["HTTPValidationError"];
+        };
+      };
+      /** @description Internal server error. */
       500: {
         content: never;
       };
     };
   };
   /**
-   * Update Score Set
+   * Get score set to mapped gene symbol mapping
+   * @description Get a mapping of score set URNs to mapped gene symbols.
+   */
+  score_set_mapped_gene_mapping_api_v1_score_sets_mapped_genes_get: {
+    parameters: {
+      header?: {
+        "x-active-roles"?: string | null;
+      };
+    };
+    responses: {
+      /** @description Successful Response */
+      200: {
+        content: {
+          "application/json": {
+            [key: string]: string[];
+          };
+        };
+      };
+      /** @description Authentication required. */
+      401: {
+        content: never;
+      };
+      /** @description Forbidden. Insufficient permissions. */
+      403: {
+        content: never;
+      };
+      /** @description Resource not found. */
+      404: {
+        content: never;
+      };
+      /** @description Validation Error */
+      422: {
+        content: {
+          "application/json": components["schemas"]["HTTPValidationError"];
+        };
+      };
+      /** @description Internal server error. */
+      500: {
+        content: never;
+      };
+    };
+  };
+  /**
+   * Search my score sets
+   * @description Search score sets created by the current user..
+   */
+  search_my_score_sets_api_v1_me_score_sets_search_post: {
+    parameters: {
+      header?: {
+        "x-active-roles"?: string | null;
+      };
+    };
+    requestBody: {
+      content: {
+        "application/json": components["schemas"]["ScoreSetsSearch"];
+      };
+    };
+    responses: {
+      /** @description Successful Response */
+      200: {
+        content: {
+          "application/json": components["schemas"]["ScoreSetsSearchResponse"];
+        };
+      };
+      /** @description Authentication required. */
+      401: {
+        content: never;
+      };
+      /** @description Forbidden. Insufficient permissions. */
+      403: {
+        content: never;
+      };
+      /** @description Resource not found. */
+      404: {
+        content: never;
+      };
+      /** @description Validation Error */
+      422: {
+        content: {
+          "application/json": components["schemas"]["HTTPValidationError"];
+        };
+      };
+      /** @description Internal server error. */
+      500: {
+        content: never;
+      };
+    };
+  };
+  /**
+   * Fetch score set by URN
+   * @description Fetch a single score set by URN.
+   */
+  show_score_set_api_v1_score_sets__urn__get: {
+    parameters: {
+      header?: {
+        "x-active-roles"?: string | null;
+      };
+      path: {
+        urn: string;
+      };
+    };
+    responses: {
+      /** @description Successful Response */
+      200: {
+        content: {
+          "application/json": components["schemas"]["ScoreSet"];
+        };
+      };
+      /** @description Authentication required. */
+      401: {
+        content: never;
+      };
+      /** @description Forbidden. Insufficient permissions. */
+      403: {
+        content: never;
+      };
+      /** @description Resource not found. */
+      404: {
+        content: never;
+      };
+      /** @description Validation Error */
+      422: {
+        content: {
+          "application/json": components["schemas"]["HTTPValidationError"];
+        };
+      };
+      /** @description Internal server error. */
+      500: {
+        content: never;
+      };
+    };
+  };
+  /**
+   * Update a score set
    * @description Update a score set.
    */
   update_score_set_api_v1_score_sets__urn__put: {
     parameters: {
       header?: {
-        "x-active-roles"?: string;
+        "x-active-roles"?: string | null;
       };
       path: {
         urn: string;
@@ -2769,18 +8637,48 @@ export interface operations {
           "application/json": components["schemas"]["ScoreSet"];
         };
       };
-      /** @description not found */
+      /** @description Authentication required. */
+      401: {
+        content: never;
+      };
+      /** @description Forbidden. Insufficient permissions. */
+      403: {
+        content: never;
+      };
+      /** @description Resource not found. */
       404: {
         content: never;
       };
-      /** @description Unprocessable Entity */
+      /** @description Conflict with current resource state. */
+      409: {
+        content: never;
+      };
+      /** @description Validation Error */
       422: {
+        content: {
+          "application/json": components["schemas"]["HTTPValidationError"];
+        };
+      };
+      /** @description Internal server error. */
+      500: {
+        content: never;
+      };
+      /** @description Bad gateway. Upstream responded invalidly. */
+      502: {
+        content: never;
+      };
+      /** @description Service unavailable. Temporary overload or maintenance. */
+      503: {
+        content: never;
+      };
+      /** @description Gateway timeout. Upstream did not respond in time. */
+      504: {
         content: never;
       };
     };
   };
   /**
-   * Delete Score Set
+   * Delete a score set
    * @description Delete a score set.
    *
    * Raises
@@ -2796,7 +8694,7 @@ export interface operations {
   delete_score_set_api_v1_score_sets__urn__delete: {
     parameters: {
       header?: {
-        "x-active-roles"?: string;
+        "x-active-roles"?: string | null;
       };
       path: {
         urn: string;
@@ -2809,18 +8707,175 @@ export interface operations {
           "application/json": unknown;
         };
       };
-      /** @description not found */
+      /** @description Authentication required. */
+      401: {
+        content: never;
+      };
+      /** @description Forbidden. Insufficient permissions. */
+      403: {
+        content: never;
+      };
+      /** @description Resource not found. */
       404: {
         content: never;
       };
-      /** @description Unprocessable Entity */
+      /** @description Validation Error */
       422: {
+        content: {
+          "application/json": components["schemas"]["HTTPValidationError"];
+        };
+      };
+      /** @description Internal server error. */
+      500: {
         content: never;
       };
     };
   };
   /**
-   * Get Score Set Scores Csv
+   * Get score set variant data in CSV format
+   * @description Return tabular variant data from a score set, identified by URN, in CSV format.
+   *
+   * This differs from get_score_set_scores_csv() in that it returns only the HGVS columns, score column, and mapped HGVS
+   * string.
+   *
+   * TODO (https://github.com/VariantEffect/mavedb-api/issues/446) We may add another function for ClinVar and gnomAD.
+   * export endpoint, with options governing which columns to include.
+   *
+   * Parameters
+   * __________
+   * urn : str
+   *     The URN of the score set to fetch variants from.
+   * start : Optional[int]
+   *     The index to start from. If None, starts from the beginning.
+   * limit : Optional[int]
+   *     The maximum number of variants to return. If None, returns all variants.
+   * namespaces: List[Literal["scores", "counts"]]
+   *     The namespaces of all columns except for accession, hgvs_nt, hgvs_pro, and hgvs_splice.
+   *     We may add ClinVar and gnomAD in the future.
+   * drop_na_columns : bool, optional
+   *     Whether to drop columns that contain only NA values. Defaults to False.
+   * db : Session
+   *     The database session to use.
+   * user_data : Optional[UserData]
+   *     The user data of the current user. If None, no user-specific permissions are checked.
+   *
+   * Returns
+   * _______
+   * str
+   *     The CSV string containing the variant data.
+   */
+  get_score_set_variants_csv_api_v1_score_sets__urn__variants_data_get: {
+    parameters: {
+      query?: {
+        /** @description Start index for pagination */
+        start?: number;
+        /** @description Maximum number of variants to return */
+        limit?: number;
+        /** @description One or more data types to include: scores, counts, clinVar, gnomAD */
+        namespaces?: ("scores" | "counts")[];
+        drop_na_columns?: boolean | null;
+        include_custom_columns?: boolean | null;
+        include_post_mapped_hgvs?: boolean | null;
+      };
+      header?: {
+        "x-active-roles"?: string | null;
+      };
+      path: {
+        urn: string;
+      };
+    };
+    responses: {
+      /** @description Variant data in CSV format, with four fixed columns (accession, hgvs_nt, hgvs_pro, and hgvs_splice), plus score columns defined by the score set. */
+      200: {
+        content: {
+          "application/json": unknown;
+          "text/csv": unknown;
+        };
+      };
+      /** @description Bad request. Check parameters and payload. */
+      400: {
+        content: never;
+      };
+      /** @description Authentication required. */
+      401: {
+        content: never;
+      };
+      /** @description Forbidden. Insufficient permissions. */
+      403: {
+        content: never;
+      };
+      /** @description Resource not found. */
+      404: {
+        content: never;
+      };
+      /** @description Validation Error */
+      422: {
+        content: {
+          "application/json": components["schemas"]["HTTPValidationError"];
+        };
+      };
+      /** @description Internal server error. */
+      500: {
+        content: never;
+      };
+    };
+  };
+  /**
+   * Upload score and variant count files for a score set
+   * @description Upload scores and variant count files for a score set, and initiate processing these files to
+   * create variants.
+   */
+  upload_score_set_variant_data_api_v1_score_sets__urn__variants_data_post: {
+    parameters: {
+      header?: {
+        "x-active-roles"?: string | null;
+      };
+      path: {
+        urn: string;
+      };
+    };
+    requestBody?: {
+      content: {
+        "multipart/form-data": components["schemas"]["Body_upload_score_set_variant_data_api_v1_score_sets__urn__variants_data_post"];
+      };
+    };
+    responses: {
+      /** @description Successful Response */
+      200: {
+        content: {
+          "application/json": components["schemas"]["ScoreSet"];
+        };
+      };
+      /** @description Bad request. Check parameters and payload. */
+      400: {
+        content: never;
+      };
+      /** @description Authentication required. */
+      401: {
+        content: never;
+      };
+      /** @description Forbidden. Insufficient permissions. */
+      403: {
+        content: never;
+      };
+      /** @description Resource not found. */
+      404: {
+        content: never;
+      };
+      /** @description Validation Error */
+      422: {
+        content: {
+          "application/json": components["schemas"]["HTTPValidationError"];
+        };
+      };
+      /** @description Internal server error. */
+      500: {
+        content: never;
+      };
+    };
+  };
+  /**
+   * Get score set scores in CSV format
    * @description Return scores from a score set, identified by URN, in CSV format.
    * If no start and limit, all of variants of this score set will be returned.
    * Example path:
@@ -2835,9 +8890,10 @@ export interface operations {
         start?: number;
         /** @description Number of variants to return */
         limit?: number;
+        drop_na_columns?: boolean | null;
       };
       header?: {
-        "x-active-roles"?: string;
+        "x-active-roles"?: string | null;
       };
       path: {
         urn: string;
@@ -2851,7 +8907,19 @@ export interface operations {
           "text/csv": unknown;
         };
       };
-      /** @description not found */
+      /** @description Bad request. Check parameters and payload. */
+      400: {
+        content: never;
+      };
+      /** @description Authentication required. */
+      401: {
+        content: never;
+      };
+      /** @description Forbidden. Insufficient permissions. */
+      403: {
+        content: never;
+      };
+      /** @description Resource not found. */
       404: {
         content: never;
       };
@@ -2861,10 +8929,14 @@ export interface operations {
           "application/json": components["schemas"]["HTTPValidationError"];
         };
       };
+      /** @description Internal server error. */
+      500: {
+        content: never;
+      };
     };
   };
   /**
-   * Get Score Set Counts Csv
+   * Get score set counts in CSV format
    * @description Return counts from a score set, identified by URN, in CSV format.
    * If no start and limit, all of variants of this score set will be returned.
    * Example path:
@@ -2879,9 +8951,10 @@ export interface operations {
         start?: number;
         /** @description Number of variants to return */
         limit?: number;
+        drop_na_columns?: boolean | null;
       };
       header?: {
-        "x-active-roles"?: string;
+        "x-active-roles"?: string | null;
       };
       path: {
         urn: string;
@@ -2895,7 +8968,19 @@ export interface operations {
           "text/csv": unknown;
         };
       };
-      /** @description not found */
+      /** @description Bad request. Check parameters and payload. */
+      400: {
+        content: never;
+      };
+      /** @description Authentication required. */
+      401: {
+        content: never;
+      };
+      /** @description Forbidden. Insufficient permissions. */
+      403: {
+        content: never;
+      };
+      /** @description Resource not found. */
       404: {
         content: never;
       };
@@ -2905,16 +8990,20 @@ export interface operations {
           "application/json": components["schemas"]["HTTPValidationError"];
         };
       };
+      /** @description Internal server error. */
+      500: {
+        content: never;
+      };
     };
   };
   /**
-   * Get Score Set Mapped Variants
+   * Get mapped variants from score set by URN
    * @description Return mapped variants from a score set, identified by URN.
    */
   get_score_set_mapped_variants_api_v1_score_sets__urn__mapped_variants_get: {
     parameters: {
       header?: {
-        "x-active-roles"?: string;
+        "x-active-roles"?: string | null;
       };
       path: {
         urn: string;
@@ -2927,7 +9016,15 @@ export interface operations {
           "application/json": components["schemas"]["MappedVariant"][];
         };
       };
-      /** @description not found */
+      /** @description Authentication required. */
+      401: {
+        content: never;
+      };
+      /** @description Forbidden. Insufficient permissions. */
+      403: {
+        content: never;
+      };
+      /** @description Resource not found. */
       404: {
         content: never;
       };
@@ -2937,16 +9034,275 @@ export interface operations {
           "application/json": components["schemas"]["HTTPValidationError"];
         };
       };
+      /** @description Internal server error. */
+      500: {
+        content: never;
+      };
     };
   };
   /**
-   * Create Score Set
+   * Get pathogenicity evidence line annotations for mapped variants within a score set
+   * @description Retrieve annotated variants with pathogenicity evidence for a given score set.
+   *
+   * This endpoint streams pathogenicity evidence lines for all current mapped variants
+   * associated with a specific score set. The response is returned as newline-delimited
+   * JSON (NDJSON) format for efficient processing of large datasets.
+   *
+   * NDJSON Response Format:
+   *     Each line in the response corresponds to a mapped variant and contains a JSON
+   *     object with the following structure:
+   *     ```
+   *     {
+   *         "variant_urn": "<URN of the mapped variant>",
+   *         "annotation": {
+   *             ... // Pathogenicity evidence line details
+   *         }
+   *     }
+   *     ```
+   *
+   * Args:
+   *     urn (str): The Uniform Resource Name (URN) of the score set to retrieve
+   *         annotated variants for.
+   *     db (Session, optional): Database session dependency. Defaults to Depends(deps.get_db).
+   *     user_data (Optional[UserData], optional): Current user data for permission checking.
+   *         Defaults to Depends(get_current_user).
+   *
+   * Returns:
+   *     Any: StreamingResponse containing newline-delimited JSON with pathogenicity
+   *         evidence lines for each mapped variant. Response includes headers with
+   *         total count, processing start time, and stream type information.
+   *
+   * Raises:
+   *     HTTPException: 404 error if the score set with the given URN is not found.
+   *     HTTPException: 404 error if no mapped variants are associated with the score set.
+   *     HTTPException: 403 error if the user lacks READ permissions for the score set.
+   *
+   * Note:
+   *     This function logs the request context and validates user permissions before
+   *     processing. Only current (non-historical) mapped variants are included in
+   *     the response.
+   */
+  get_score_set_annotated_variants_api_v1_score_sets__urn__annotated_variants_pathogenicity_evidence_line_get: {
+    parameters: {
+      header?: {
+        "x-active-roles"?: string | null;
+      };
+      path: {
+        urn: string;
+      };
+    };
+    responses: {
+      /** @description Stream pathogenicity evidence line annotations for mapped variants. */
+      200: {
+        content: {
+          "application/json": {
+            [key: string]: components["schemas"]["VariantPathogenicityEvidenceLine"] | null;
+          };
+          "application/x-ndjson": unknown;
+        };
+      };
+      /** @description Authentication required. */
+      401: {
+        content: never;
+      };
+      /** @description Forbidden. Insufficient permissions. */
+      403: {
+        content: never;
+      };
+      /** @description Resource not found. */
+      404: {
+        content: never;
+      };
+      /** @description Validation Error */
+      422: {
+        content: {
+          "application/json": components["schemas"]["HTTPValidationError"];
+        };
+      };
+      /** @description Internal server error. */
+      500: {
+        content: never;
+      };
+    };
+  };
+  /**
+   * Get functional impact statement annotations for mapped variants within a score set
+   * @description Retrieve functional impact statements for annotated variants in a score set.
+   *
+   * This endpoint streams functional impact statements for all current mapped variants
+   * associated with a specific score set. The response is delivered as newline-delimited
+   * JSON (NDJSON) format.
+   *
+   * NDJSON Response Format:
+   *     Each line in the response corresponds to a mapped variant and contains a JSON
+   *     object with the following structure:
+   *     ```
+   *     {
+   *         "variant_urn": "<URN of the mapped variant>",
+   *         "annotation": {
+   *             ... // Functional impact statement details
+   *         }
+   *     }
+   *     ```
+   *
+   * Args:
+   *     urn (str): The unique resource name (URN) identifying the score set.
+   *     db (Session): Database session dependency for querying data.
+   *     user_data (Optional[UserData]): Current authenticated user data for permission checks.
+   *
+   * Returns:
+   *     StreamingResponse: NDJSON stream containing functional impact statements for each
+   *         mapped variant. Response includes headers with total count, processing start time,
+   *         and stream type information.
+   *
+   * Raises:
+   *     HTTPException:
+   *         - 404 if the score set with the given URN is not found
+   *         - 404 if no mapped variants are associated with the score set
+   *         - 403 if the user lacks READ permission for the score set
+   *
+   * Note:
+   *     Only current (non-historical) mapped variants are included in the response.
+   *     The function requires appropriate read permissions on the score set.
+   */
+  get_score_set_annotated_variants_functional_statement_api_v1_score_sets__urn__annotated_variants_functional_impact_statement_get: {
+    parameters: {
+      header?: {
+        "x-active-roles"?: string | null;
+      };
+      path: {
+        urn: string;
+      };
+    };
+    responses: {
+      /** @description Stream functional impact statement annotations for mapped variants. */
+      200: {
+        content: {
+          "application/json": {
+            [key: string]: components["schemas"]["Statement"] | null;
+          };
+          "application/x-ndjson": unknown;
+        };
+      };
+      /** @description Authentication required. */
+      401: {
+        content: never;
+      };
+      /** @description Forbidden. Insufficient permissions. */
+      403: {
+        content: never;
+      };
+      /** @description Resource not found. */
+      404: {
+        content: never;
+      };
+      /** @description Validation Error */
+      422: {
+        content: {
+          "application/json": components["schemas"]["HTTPValidationError"];
+        };
+      };
+      /** @description Internal server error. */
+      500: {
+        content: never;
+      };
+    };
+  };
+  /**
+   * Get functional study result annotations for mapped variants within a score set
+   * @description Retrieve functional study results for annotated variants in a score set.
+   *
+   * This endpoint streams functional study result annotations for all current mapped variants
+   * associated with a specific score set. The results are returned as newline-delimited JSON
+   * (NDJSON) format for efficient streaming of large datasets.
+   *
+   * NDJSON Response Format:
+   *     Each line in the response corresponds to a mapped variant and contains a JSON
+   *     object with the following structure:
+   *     ```
+   *     {
+   *         "variant_urn": "<URN of the mapped variant>",
+   *         "annotation": {
+   *             ... // Functional study result details
+   *         }
+   *     }
+   *     ```
+   *
+   * Args:
+   *     urn (str): The URN (Uniform Resource Name) of the score set to retrieve variants for.
+   *     db (Session): Database session dependency for querying the database.
+   *     user_data (Optional[UserData]): Current user data for permission validation.
+   *
+   * Returns:
+   *     StreamingResponse: A streaming response containing functional study results in NDJSON format.
+   *         Headers include:
+   *         - X-Total-Count: Total number of mapped variants being streamed
+   *         - X-Processing-Started: ISO timestamp when processing began
+   *         - X-Stream-Type: Set to "functional-study-result"
+   *         - Access-Control-Expose-Headers: Exposed headers for CORS
+   *
+   * Raises:
+   *     HTTPException:
+   *         - 404 if the score set with the given URN is not found
+   *         - 404 if no mapped variants are associated with the score set
+   *         - 403 if the user lacks READ permission for the score set
+   *
+   * Notes:
+   *     - Only returns current mapped variants (MappedVariant.current == True)
+   *     - Eagerly loads related ScoreSet data including publications, users, license, and experiment
+   *     - Logs requests and errors for monitoring and debugging purposes
+   */
+  get_score_set_annotated_variants_functional_study_result_api_v1_score_sets__urn__annotated_variants_functional_study_result_get: {
+    parameters: {
+      header?: {
+        "x-active-roles"?: string | null;
+      };
+      path: {
+        urn: string;
+      };
+    };
+    responses: {
+      /** @description Stream functional study result annotations for mapped variants. */
+      200: {
+        content: {
+          "application/json": {
+            [key: string]: components["schemas"]["ExperimentalVariantFunctionalImpactStudyResult"] | null;
+          };
+          "application/x-ndjson": unknown;
+        };
+      };
+      /** @description Authentication required. */
+      401: {
+        content: never;
+      };
+      /** @description Forbidden. Insufficient permissions. */
+      403: {
+        content: never;
+      };
+      /** @description Resource not found. */
+      404: {
+        content: never;
+      };
+      /** @description Validation Error */
+      422: {
+        content: {
+          "application/json": components["schemas"]["HTTPValidationError"];
+        };
+      };
+      /** @description Internal server error. */
+      500: {
+        content: never;
+      };
+    };
+  };
+  /**
+   * Create a score set
    * @description Create a score set.
    */
   create_score_set_api_v1_score_sets__post: {
     parameters: {
       header?: {
-        "x-active-roles"?: string;
+        "x-active-roles"?: string | null;
       };
     };
     requestBody: {
@@ -2961,33 +9317,62 @@ export interface operations {
           "application/json": components["schemas"]["ScoreSet"];
         };
       };
-      /** @description not found */
+      /** @description Authentication required. */
+      401: {
+        content: never;
+      };
+      /** @description Forbidden. Insufficient permissions. */
+      403: {
+        content: never;
+      };
+      /** @description Resource not found. */
       404: {
         content: never;
       };
-      /** @description Unprocessable Entity */
+      /** @description Conflict with current resource state. */
+      409: {
+        content: never;
+      };
+      /** @description Validation Error */
       422: {
+        content: {
+          "application/json": components["schemas"]["HTTPValidationError"];
+        };
+      };
+      /** @description Internal server error. */
+      500: {
+        content: never;
+      };
+      /** @description Bad gateway. Upstream responded invalidly. */
+      502: {
+        content: never;
+      };
+      /** @description Service unavailable. Temporary overload or maintenance. */
+      503: {
+        content: never;
+      };
+      /** @description Gateway timeout. Upstream did not respond in time. */
+      504: {
         content: never;
       };
     };
   };
   /**
-   * Upload Score Set Variant Data
-   * @description Upload scores and variant count files for a score set, and initiate processing these files to
-   * create variants.
+   * Update score ranges / calibrations for a score set
+   * @description Update a score set and variants.
    */
-  upload_score_set_variant_data_api_v1_score_sets__urn__variants_data_post: {
+  update_score_set_with_variants_api_v1_score_sets_with_variants__urn__patch: {
     parameters: {
       header?: {
-        "x-active-roles"?: string;
+        "x-active-roles"?: string | null;
       };
       path: {
         urn: string;
       };
     };
-    requestBody: {
+    requestBody?: {
       content: {
-        "multipart/form-data": components["schemas"]["Body_upload_score_set_variant_data_api_v1_score_sets__urn__variants_data_post"];
+        "multipart/form-data": components["schemas"]["Body_update_score_set_with_variants_api_v1_score_sets_with_variants__urn__patch"];
       };
     };
     responses: {
@@ -2997,12 +9382,30 @@ export interface operations {
           "application/json": components["schemas"]["ScoreSet"];
         };
       };
-      /** @description not found */
+      /** @description Bad request. Check parameters and payload. */
+      400: {
+        content: never;
+      };
+      /** @description Authentication required. */
+      401: {
+        content: never;
+      };
+      /** @description Forbidden. Insufficient permissions. */
+      403: {
+        content: never;
+      };
+      /** @description Resource not found. */
       404: {
         content: never;
       };
-      /** @description Unprocessable Entity */
+      /** @description Validation Error */
       422: {
+        content: {
+          "application/json": components["schemas"]["HTTPValidationError"];
+        };
+      };
+      /** @description Internal server error. */
+      500: {
         content: never;
       };
     };
@@ -3014,7 +9417,7 @@ export interface operations {
   publish_score_set_api_v1_score_sets__urn__publish_post: {
     parameters: {
       header?: {
-        "x-active-roles"?: string;
+        "x-active-roles"?: string | null;
       };
       path: {
         urn: string;
@@ -3027,8 +9430,20 @@ export interface operations {
           "application/json": components["schemas"]["ScoreSet"];
         };
       };
-      /** @description not found */
+      /** @description Authentication required. */
+      401: {
+        content: never;
+      };
+      /** @description Forbidden. Insufficient permissions. */
+      403: {
+        content: never;
+      };
+      /** @description Resource not found. */
       404: {
+        content: never;
+      };
+      /** @description Conflict with current resource state. */
+      409: {
         content: never;
       };
       /** @description Validation Error */
@@ -3037,29 +9452,45 @@ export interface operations {
           "application/json": components["schemas"]["HTTPValidationError"];
         };
       };
+      /** @description Internal server error. */
+      500: {
+        content: never;
+      };
     };
   };
   /**
-   * Target Accessions By Field
-   * @description Returns a dictionary of counts for the distinct values of the provided `field` (member of the `target_accessions` table).
-   * Don't include any NULL field values.
+   * Get clinical controls for a score set
+   * @description Fetch relevant clinical controls for a given score set.
    */
-  target_accessions_by_field_api_v1_statistics_target_accession__field__get: {
+  get_clinical_controls_for_score_set_api_v1_score_sets__urn__clinical_controls_get: {
     parameters: {
+      query?: {
+        db?: string | null;
+        version?: string | null;
+      };
+      header?: {
+        "x-active-roles"?: string | null;
+      };
       path: {
-        field: components["schemas"]["TargetAccessionFields"];
+        urn: string;
       };
     };
     responses: {
       /** @description Successful Response */
       200: {
         content: {
-          "application/json": {
-            [key: string]: number;
-          };
+          "application/json": components["schemas"]["ClinicalControlWithMappedVariants"][];
         };
       };
-      /** @description Not found */
+      /** @description Authentication required. */
+      401: {
+        content: never;
+      };
+      /** @description Forbidden. Insufficient permissions. */
+      403: {
+        content: never;
+      };
+      /** @description Resource not found. */
       404: {
         content: never;
       };
@@ -3069,29 +9500,41 @@ export interface operations {
           "application/json": components["schemas"]["HTTPValidationError"];
         };
       };
+      /** @description Internal server error. */
+      500: {
+        content: never;
+      };
     };
   };
   /**
-   * Target Sequences By Field
-   * @description Returns a dictionary of counts for the distinct values of the provided `field` (member of the `target_sequences` table).
-   * Don't include any NULL field values.
+   * Get clinical control options for a score set
+   * @description Fetch clinical control options for a given score set.
    */
-  target_sequences_by_field_api_v1_statistics_target_sequence__field__get: {
+  get_clinical_controls_options_for_score_set_api_v1_score_sets__urn__clinical_controls_options_get: {
     parameters: {
+      header?: {
+        "x-active-roles"?: string | null;
+      };
       path: {
-        field: components["schemas"]["TargetSequenceFields"];
+        urn: string;
       };
     };
     responses: {
       /** @description Successful Response */
       200: {
         content: {
-          "application/json": {
-            [key: string]: number;
-          };
+          "application/json": components["schemas"]["ClinicalControlOptions"][];
         };
       };
-      /** @description Not found */
+      /** @description Authentication required. */
+      401: {
+        content: never;
+      };
+      /** @description Forbidden. Insufficient permissions. */
+      403: {
+        content: never;
+      };
+      /** @description Resource not found. */
       404: {
         content: never;
       };
@@ -3101,30 +9544,44 @@ export interface operations {
           "application/json": components["schemas"]["HTTPValidationError"];
         };
       };
+      /** @description Internal server error. */
+      500: {
+        content: never;
+      };
     };
   };
   /**
-   * Target Genes By Field
-   * @description Returns a dictionary of counts for the distinct values of the provided `field` (member of the `target_sequences` table).
-   * Don't include any NULL field values. Each field here is handled individually because of the unique structure of this
-   * target gene object- fields might require information from both TargetGene subtypes (accession and sequence).
+   * Get gnomad variants for a score set
+   * @description Fetch relevant gnomad variants for a given score set.
    */
-  target_genes_by_field_api_v1_statistics_target_gene__field__get: {
+  get_gnomad_variants_for_score_set_api_v1_score_sets__urn__gnomad_variants_get: {
     parameters: {
+      query?: {
+        version?: string | null;
+      };
+      header?: {
+        "x-active-roles"?: string | null;
+      };
       path: {
-        field: components["schemas"]["TargetGeneFields"];
+        urn: string;
       };
     };
     responses: {
       /** @description Successful Response */
       200: {
         content: {
-          "application/json": {
-            [key: string]: number;
-          };
+          "application/json": components["schemas"]["GnomADVariantWithMappedVariants"][];
         };
       };
-      /** @description Not found */
+      /** @description Authentication required. */
+      401: {
+        content: never;
+      };
+      /** @description Forbidden. Insufficient permissions. */
+      403: {
+        content: never;
+      };
+      /** @description Resource not found. */
       404: {
         content: never;
       };
@@ -3134,20 +9591,105 @@ export interface operations {
           "application/json": components["schemas"]["HTTPValidationError"];
         };
       };
+      /** @description Internal server error. */
+      500: {
+        content: never;
+      };
+    };
+  };
+  /** Get sequence by alias */
+  get_sequence_api_v1_seqrepo_sequence__alias__get: {
+    parameters: {
+      query?: {
+        start?: number | null;
+        end?: number | null;
+      };
+      path: {
+        alias: string;
+      };
+    };
+    responses: {
+      /** @description Successful response */
+      200: {
+        content: {
+          "application/json": unknown;
+          "text/plain": unknown;
+        };
+      };
+      /** @description Resource not found. */
+      404: {
+        content: never;
+      };
+      /** @description Validation Error */
+      422: {
+        content: {
+          "application/json": components["schemas"]["HTTPValidationError"];
+        };
+      };
+      /** @description Internal server error. */
+      500: {
+        content: never;
+      };
+    };
+  };
+  /** Get sequence metadata by alias */
+  get_metadata_api_v1_seqrepo_metadata__alias__get: {
+    parameters: {
+      path: {
+        alias: string;
+      };
+    };
+    responses: {
+      /** @description Successful Response */
+      200: {
+        content: {
+          "application/json": components["schemas"]["SeqRepoMetadata"];
+        };
+      };
+      /** @description Resource not found. */
+      404: {
+        content: never;
+      };
+      /** @description Validation Error */
+      422: {
+        content: {
+          "application/json": components["schemas"]["HTTPValidationError"];
+        };
+      };
+      /** @description Internal server error. */
+      500: {
+        content: never;
+      };
+    };
+  };
+  /** Get SeqRepo version information */
+  get_versions_api_v1_seqrepo_version_get: {
+    responses: {
+      /** @description Successful Response */
+      200: {
+        content: {
+          "application/json": components["schemas"]["SeqRepoVersions"];
+        };
+      };
+      /** @description Resource not found. */
+      404: {
+        content: never;
+      };
+      /** @description Internal server error. */
+      500: {
+        content: never;
+      };
     };
   };
   /**
-   * Record Object Statistics
-   * @description Resolve a dictionary of statistics based on the provided model name and model field.
-   *
-   * Model names and fields should be members of the Enum classes defined above. Providing an invalid model name or
-   * model field will yield a 422 Unprocessable Entity error with details about valid enum values.
+   * Get keyword statistics for a record
+   * @description Returns a dictionary of counts for the distinct values of the `value` field (member of the `controlled_keywords` table).
+   * Don't include any NULL field values. Don't include any keywords from unpublished experiments.
    */
-  record_object_statistics_api_v1_statistics_record__model___field__get: {
+  experiment_keyword_statistics_api_v1_statistics_record__record__keywords_get: {
     parameters: {
       path: {
-        model: components["schemas"]["RecordNames"];
-        field: components["schemas"]["RecordFields"];
+        record: components["schemas"]["RecordNames"];
       };
     };
     responses: {
@@ -3163,7 +9705,7 @@ export interface operations {
           };
         };
       };
-      /** @description Not found */
+      /** @description Resource not found. */
       404: {
         content: never;
       };
@@ -3173,10 +9715,602 @@ export interface operations {
           "application/json": components["schemas"]["HTTPValidationError"];
         };
       };
+      /** @description Internal server error. */
+      500: {
+        content: never;
+      };
     };
   };
   /**
-   * Search Target Gene Identifiers
+   * Get publication identifier statistics for a record
+   * @description Returns a dictionary of counts for the distinct values of the `identifier` field (member of the `publication_identifiers` table).
+   * Don't include any publication identifiers from unpublished experiments.
+   */
+  experiment_publication_identifier_statistics_api_v1_statistics_record__record__publication_identifiers_get: {
+    parameters: {
+      path: {
+        record: components["schemas"]["RecordNames"];
+      };
+    };
+    responses: {
+      /** @description Successful Response */
+      200: {
+        content: {
+          "application/json": {
+            [key: string]: {
+              [key: string]: number;
+            };
+          };
+        };
+      };
+      /** @description Resource not found. */
+      404: {
+        content: never;
+      };
+      /** @description Validation Error */
+      422: {
+        content: {
+          "application/json": components["schemas"]["HTTPValidationError"];
+        };
+      };
+      /** @description Internal server error. */
+      500: {
+        content: never;
+      };
+    };
+  };
+  /**
+   * Get raw read identifier statistics for a record
+   * @description Returns a dictionary of counts for the distinct values of the `identifier` field (member of the `raw_read_identifiers` table).
+   * Don't include any raw read identifiers from unpublished experiments.
+   */
+  experiment_raw_read_identifier_statistics_api_v1_statistics_record__record__raw_read_identifiers_get: {
+    parameters: {
+      path: {
+        record: components["schemas"]["RecordNames"];
+      };
+    };
+    responses: {
+      /** @description Successful Response */
+      200: {
+        content: {
+          "application/json": {
+            [key: string]: number;
+          };
+        };
+      };
+      /** @description Resource not found. */
+      404: {
+        content: never;
+      };
+      /** @description Validation Error */
+      422: {
+        content: {
+          "application/json": components["schemas"]["HTTPValidationError"];
+        };
+      };
+      /** @description Internal server error. */
+      500: {
+        content: never;
+      };
+    };
+  };
+  /**
+   * Get DOI identifier statistics for a record
+   * @description Returns a dictionary of counts for the distinct values of the `identifier` field (member of the `doi_identifiers` table).
+   * Don't include any DOI identifiers from unpublished experiments.
+   */
+  experiment_doi_identifiers_statistics_api_v1_statistics_record__record__doi_identifiers_get: {
+    parameters: {
+      path: {
+        record: components["schemas"]["RecordNames"];
+      };
+    };
+    responses: {
+      /** @description Successful Response */
+      200: {
+        content: {
+          "application/json": {
+            [key: string]: number;
+          };
+        };
+      };
+      /** @description Resource not found. */
+      404: {
+        content: never;
+      };
+      /** @description Validation Error */
+      422: {
+        content: {
+          "application/json": components["schemas"]["HTTPValidationError"];
+        };
+      };
+      /** @description Internal server error. */
+      500: {
+        content: never;
+      };
+    };
+  };
+  /**
+   * Get created by statistics for a record
+   * @description Returns a dictionary of counts for the distinct values of the `username` field (member of the `users` table).
+   * Don't include any usernames from unpublished experiments.
+   */
+  experiment_created_by_statistics_api_v1_statistics_record__record__created_by_get: {
+    parameters: {
+      path: {
+        record: components["schemas"]["RecordNames"];
+      };
+    };
+    responses: {
+      /** @description Successful Response */
+      200: {
+        content: {
+          "application/json": {
+            [key: string]: number;
+          };
+        };
+      };
+      /** @description Resource not found. */
+      404: {
+        content: never;
+      };
+      /** @description Validation Error */
+      422: {
+        content: {
+          "application/json": components["schemas"]["HTTPValidationError"];
+        };
+      };
+      /** @description Internal server error. */
+      500: {
+        content: never;
+      };
+    };
+  };
+  /**
+   * Get published record counts
+   * @description Returns a dictionary of counts for the number of published records of the `model` parameter.
+   * Optionally, group the counts by the published month or year.
+   */
+  record_counts_api_v1_statistics_record__model__published_count_get: {
+    parameters: {
+      query?: {
+        group?: components["schemas"]["GroupBy"] | null;
+      };
+      path: {
+        model: components["schemas"]["RecordNames"];
+      };
+    };
+    responses: {
+      /** @description Successful Response */
+      200: {
+        content: {
+          "application/json": {
+            [key: string]: number;
+          };
+        };
+      };
+      /** @description Resource not found. */
+      404: {
+        content: never;
+      };
+      /** @description Validation Error */
+      422: {
+        content: {
+          "application/json": components["schemas"]["HTTPValidationError"];
+        };
+      };
+      /** @description Internal server error. */
+      500: {
+        content: never;
+      };
+    };
+  };
+  /**
+   * Get variant statistics for score sets
+   * @description Returns a dictionary of counts for the number of published and distinct variants in the database contained
+   * within a given record.
+   */
+  record_variant_counts_api_v1_statistics_record_score_set_variant_count_get: {
+    responses: {
+      /** @description Successful Response */
+      200: {
+        content: {
+          "application/json": {
+            [key: string]: number;
+          };
+        };
+      };
+      /** @description Resource not found. */
+      404: {
+        content: never;
+      };
+      /** @description Internal server error. */
+      500: {
+        content: never;
+      };
+    };
+  };
+  /**
+   * Get mapped variant statistics for score sets
+   * @description Returns a dictionary of counts for the number of published and distinct mapped variants in the database contained
+   * within a given record.
+   */
+  record_mapped_variant_counts_api_v1_statistics_record_score_set_mapped_variant_count_get: {
+    responses: {
+      /** @description Successful Response */
+      200: {
+        content: {
+          "application/json": {
+            [key: string]: number;
+          };
+        };
+      };
+      /** @description Resource not found. */
+      404: {
+        content: never;
+      };
+      /** @description Internal server error. */
+      500: {
+        content: never;
+      };
+    };
+  };
+  /**
+   * Get target accession statistics for accessions
+   * @description Returns a dictionary of counts for the distinct values of the `accession` field (member of the `target_accessions` table).
+   * Don't include any NULL field values. Don't include any targets from unpublished score sets.
+   */
+  target_accessions_accession_counts_api_v1_statistics_target_accession_accession_get: {
+    responses: {
+      /** @description Successful Response */
+      200: {
+        content: {
+          "application/json": {
+            [key: string]: number;
+          };
+        };
+      };
+      /** @description Resource not found. */
+      404: {
+        content: never;
+      };
+      /** @description Internal server error. */
+      500: {
+        content: never;
+      };
+    };
+  };
+  /**
+   * Get target accession statistics for assemblies
+   * @description Returns a dictionary of counts for the distinct values of the `assembly` field (member of the `target_accessions` table).
+   * Don't include any NULL field values. Don't include any targets from unpublished score sets.
+   */
+  target_accessions_assembly_counts_api_v1_statistics_target_accession_assembly_get: {
+    responses: {
+      /** @description Successful Response */
+      200: {
+        content: {
+          "application/json": {
+            [key: string]: number;
+          };
+        };
+      };
+      /** @description Resource not found. */
+      404: {
+        content: never;
+      };
+      /** @description Internal server error. */
+      500: {
+        content: never;
+      };
+    };
+  };
+  /**
+   * Get target accession statistics for genes
+   * @description Returns a dictionary of counts for the distinct values of the `gene` field (member of the `target_accessions` table).
+   * Don't include any NULL field values. Don't include any targets from unpublished score sets.
+   */
+  target_accessions_gene_counts_api_v1_statistics_target_accession_gene_get: {
+    responses: {
+      /** @description Successful Response */
+      200: {
+        content: {
+          "application/json": {
+            [key: string]: number;
+          };
+        };
+      };
+      /** @description Resource not found. */
+      404: {
+        content: never;
+      };
+      /** @description Internal server error. */
+      500: {
+        content: never;
+      };
+    };
+  };
+  /**
+   * Get target sequence statistics for sequences
+   * @description Returns a dictionary of counts for the distinct values of the `sequence` field (member of the `target_sequences` table).
+   * Don't include any NULL field values. Don't include any targets from unpublished score sets.
+   */
+  target_sequences_sequence_counts_api_v1_statistics_target_sequence_sequence_get: {
+    responses: {
+      /** @description Successful Response */
+      200: {
+        content: {
+          "application/json": {
+            [key: string]: number;
+          };
+        };
+      };
+      /** @description Resource not found. */
+      404: {
+        content: never;
+      };
+      /** @description Internal server error. */
+      500: {
+        content: never;
+      };
+    };
+  };
+  /**
+   * Get target sequence statistics for sequence types
+   * @description Returns a dictionary of counts for the distinct values of the `sequence_type` field (member of the `target_sequences` table).
+   * Don't include any NULL field values. Don't include any targets from unpublished score sets.
+   */
+  target_sequences_sequence_type_counts_api_v1_statistics_target_sequence_sequence_type_get: {
+    responses: {
+      /** @description Successful Response */
+      200: {
+        content: {
+          "application/json": {
+            [key: string]: number;
+          };
+        };
+      };
+      /** @description Resource not found. */
+      404: {
+        content: never;
+      };
+      /** @description Internal server error. */
+      500: {
+        content: never;
+      };
+    };
+  };
+  /**
+   * Get target gene statistics for categories
+   * @description Returns a dictionary of counts for the distinct values of the `category` field (member of the `target_sequences` table).
+   * Don't include any NULL field values. Don't include any targets from unpublished score sets.
+   */
+  target_genes_category_counts_api_v1_statistics_target_gene_category_get: {
+    responses: {
+      /** @description Successful Response */
+      200: {
+        content: {
+          "application/json": {
+            [key: string]: number;
+          };
+        };
+      };
+      /** @description Resource not found. */
+      404: {
+        content: never;
+      };
+      /** @description Internal server error. */
+      500: {
+        content: never;
+      };
+    };
+  };
+  /**
+   * Get target gene statistics for organisms
+   * @description Returns a dictionary of counts for the distinct values of the `organism` field (member of the `taxonomies` table).
+   * Don't include any NULL field values. Don't include any targets from unpublished score sets.
+   *
+   * NOTE: For now (and perhaps forever), all accession based targets are human genomic sequences (ie: of taxonomy `Homo sapiens`).
+   *       It is possible this assumption changes if we add mouse (or other non-human) genomes to MaveDB.
+   */
+  target_genes_organism_counts_api_v1_statistics_target_gene_organism_get: {
+    responses: {
+      /** @description Successful Response */
+      200: {
+        content: {
+          "application/json": {
+            [key: string]: number;
+          };
+        };
+      };
+      /** @description Resource not found. */
+      404: {
+        content: never;
+      };
+      /** @description Internal server error. */
+      500: {
+        content: never;
+      };
+    };
+  };
+  /**
+   * Get target gene statistics for Ensembl identifiers
+   * @description Returns a dictionary of counts for the distinct values of the `identifier` field (member of the `ensembl_identifiers` table).
+   * Don't include any NULL field values. Don't include any targets from unpublished score sets.
+   */
+  target_genes_ensembl_identifier_counts_api_v1_statistics_target_gene_ensembl_identifier_get: {
+    responses: {
+      /** @description Successful Response */
+      200: {
+        content: {
+          "application/json": {
+            [key: string]: number;
+          };
+        };
+      };
+      /** @description Resource not found. */
+      404: {
+        content: never;
+      };
+      /** @description Internal server error. */
+      500: {
+        content: never;
+      };
+    };
+  };
+  /**
+   * Get target gene statistics for RefSeq identifiers
+   * @description Returns a dictionary of counts for the distinct values of the `identifier` field (member of the `refseq_identifiers` table).
+   * Don't include any NULL field values. Don't include any targets from unpublished score sets.
+   */
+  target_genes_refseq_identifier_counts_api_v1_statistics_target_gene_refseq_identifier_get: {
+    responses: {
+      /** @description Successful Response */
+      200: {
+        content: {
+          "application/json": {
+            [key: string]: number;
+          };
+        };
+      };
+      /** @description Resource not found. */
+      404: {
+        content: never;
+      };
+      /** @description Internal server error. */
+      500: {
+        content: never;
+      };
+    };
+  };
+  /**
+   * Get target gene statistics for UniProt identifiers
+   * @description Returns a dictionary of counts for the distinct values of the `identifier` field (member of the `uniprot_identifiers` table).
+   * Don't include any NULL field values. Don't include any targets from unpublished score sets.
+   */
+  target_genes_uniprot_identifier_counts_api_v1_statistics_target_gene_uniprot_identifier_get: {
+    responses: {
+      /** @description Successful Response */
+      200: {
+        content: {
+          "application/json": {
+            [key: string]: number;
+          };
+        };
+      };
+      /** @description Resource not found. */
+      404: {
+        content: never;
+      };
+      /** @description Internal server error. */
+      500: {
+        content: never;
+      };
+    };
+  };
+  /**
+   * Get mapped target gene statistics for genes
+   * @description Returns a dictionary of counts for the distinct values of the `gene` property within the `post_mapped_metadata`
+   * field (member of the `target_gene` table). Don't include any NULL field values. Don't include any targets from
+   * unpublished score sets.
+   */
+  mapped_target_gene_counts_api_v1_statistics_target_mapped_gene_get: {
+    responses: {
+      /** @description Successful Response */
+      200: {
+        content: {
+          "application/json": {
+            [key: string]: number;
+          };
+        };
+      };
+      /** @description Resource not found. */
+      404: {
+        content: never;
+      };
+      /** @description Internal server error. */
+      500: {
+        content: never;
+      };
+    };
+  };
+  /**
+   * Get variant statistics
+   * @description Returns a dictionary of counts for the number of published and distinct variants in the database.
+   * Optionally, group the counts by the day on which the score set (and by extension, the variant) was published.
+   */
+  variant_counts_api_v1_statistics_variant_count_get: {
+    parameters: {
+      query?: {
+        group?: components["schemas"]["GroupBy"] | null;
+      };
+    };
+    responses: {
+      /** @description Successful Response */
+      200: {
+        content: {
+          "application/json": {
+            [key: string]: number;
+          };
+        };
+      };
+      /** @description Resource not found. */
+      404: {
+        content: never;
+      };
+      /** @description Validation Error */
+      422: {
+        content: {
+          "application/json": components["schemas"]["HTTPValidationError"];
+        };
+      };
+      /** @description Internal server error. */
+      500: {
+        content: never;
+      };
+    };
+  };
+  /**
+   * Get mapped variant statistics
+   * @description Returns a dictionary of counts for the number of published and distinct variants in the database.
+   * Optionally, group the counts by the day on which the score set (and by extension, the variant) was published.
+   * Optionally, return the count of all mapped variants, not just the current/most up to date ones.
+   */
+  mapped_variant_counts_api_v1_statistics_mapped_variant_count_get: {
+    parameters: {
+      query?: {
+        group?: components["schemas"]["GroupBy"] | null;
+        onlyCurrent?: boolean;
+      };
+    };
+    responses: {
+      /** @description Successful Response */
+      200: {
+        content: {
+          "application/json": {
+            [key: string]: number;
+          };
+        };
+      };
+      /** @description Resource not found. */
+      404: {
+        content: never;
+      };
+      /** @description Validation Error */
+      422: {
+        content: {
+          "application/json": components["schemas"]["HTTPValidationError"];
+        };
+      };
+      /** @description Internal server error. */
+      500: {
+        content: never;
+      };
+    };
+  };
+  /**
+   * Search target gene identifiers
    * @description Search target gene identifiers.
    */
   search_target_gene_identifiers_api_v1_target_gene_identifiers_search_post: {
@@ -3197,7 +10331,11 @@ export interface operations {
           "application/json": components["schemas"]["ExternalGeneIdentifier"][];
         };
       };
-      /** @description Not found */
+      /** @description Bad request. Check parameters and payload. */
+      400: {
+        content: never;
+      };
+      /** @description Resource not found. */
       404: {
         content: never;
       };
@@ -3207,28 +10345,102 @@ export interface operations {
           "application/json": components["schemas"]["HTTPValidationError"];
         };
       };
-    };
-  };
-  /**
-   * List Target Genes
-   * @description List target genes.
-   */
-  list_target_genes_api_v1_target_genes__get: {
-    responses: {
-      /** @description Successful Response */
-      200: {
-        content: {
-          "application/json": components["schemas"]["TargetGene"][];
-        };
-      };
-      /** @description Not Found */
-      404: {
+      /** @description Internal server error. */
+      500: {
         content: never;
       };
     };
   };
   /**
-   * List Target Gene Names
+   * Search my target genes
+   * @description Search my target genes.
+   */
+  search_my_target_genes_api_v1_me_target_genes_search_post: {
+    parameters: {
+      header?: {
+        "x-active-roles"?: string | null;
+      };
+    };
+    requestBody: {
+      content: {
+        "application/json": components["schemas"]["TextSearch"];
+      };
+    };
+    responses: {
+      /** @description Successful Response */
+      200: {
+        content: {
+          "application/json": components["schemas"]["TargetGeneWithScoreSetUrn"][];
+        };
+      };
+      /** @description Authentication required. */
+      401: {
+        content: never;
+      };
+      /** @description Forbidden. Insufficient permissions. */
+      403: {
+        content: never;
+      };
+      /** @description Resource not found. */
+      404: {
+        content: never;
+      };
+      /** @description Validation Error */
+      422: {
+        content: {
+          "application/json": components["schemas"]["HTTPValidationError"];
+        };
+      };
+      /** @description Internal server error. */
+      500: {
+        content: never;
+      };
+    };
+  };
+  /**
+   * List target genes
+   * @description List target genes.
+   * Selectinload is more efficient if we need more queries search.
+   */
+  list_target_genes_api_v1_target_genes_get: {
+    parameters: {
+      header?: {
+        "x-active-roles"?: string | null;
+      };
+    };
+    responses: {
+      /** @description Successful Response */
+      200: {
+        content: {
+          "application/json": components["schemas"]["TargetGeneWithScoreSetUrn"][];
+        };
+      };
+      /** @description Authentication required. */
+      401: {
+        content: never;
+      };
+      /** @description Forbidden. Insufficient permissions. */
+      403: {
+        content: never;
+      };
+      /** @description Resource not found. */
+      404: {
+        content: never;
+      };
+      /** @description Validation Error */
+      422: {
+        content: {
+          "application/json": components["schemas"]["HTTPValidationError"];
+        };
+      };
+      /** @description Internal server error. */
+      500: {
+        content: never;
+      };
+    };
+  };
+  /**
+   * List target gene names
    * @description List distinct target gene names, in alphabetical order.
    */
   list_target_gene_names_api_v1_target_genes_names_get: {
@@ -3239,14 +10451,18 @@ export interface operations {
           "application/json": string[];
         };
       };
-      /** @description Not Found */
+      /** @description Resource not found. */
       404: {
+        content: never;
+      };
+      /** @description Internal server error. */
+      500: {
         content: never;
       };
     };
   };
   /**
-   * List Target Gene Categories
+   * List target gene categories
    * @description List distinct target genes categories, in alphabetical order.
    */
   list_target_gene_categories_api_v1_target_genes_categories_get: {
@@ -3257,18 +10473,25 @@ export interface operations {
           "application/json": string[];
         };
       };
-      /** @description Not Found */
+      /** @description Resource not found. */
       404: {
+        content: never;
+      };
+      /** @description Internal server error. */
+      500: {
         content: never;
       };
     };
   };
   /**
-   * Fetch Target Gene
-   * @description Fetch a single target gene by ID.
+   * Fetch target gene by ID
+   * @description Fetch a single target gene by ID. Only check the permission
    */
   fetch_target_gene_api_v1_target_genes__item_id__get: {
     parameters: {
+      header?: {
+        "x-active-roles"?: string | null;
+      };
       path: {
         item_id: number;
       };
@@ -3277,10 +10500,10 @@ export interface operations {
       /** @description Successful Response */
       200: {
         content: {
-          "application/json": components["schemas"]["TargetGene"];
+          "application/json": components["schemas"]["TargetGeneWithScoreSetUrn"];
         };
       };
-      /** @description Not Found */
+      /** @description Resource not found. */
       404: {
         content: never;
       };
@@ -3290,13 +10513,22 @@ export interface operations {
           "application/json": components["schemas"]["HTTPValidationError"];
         };
       };
+      /** @description Internal server error. */
+      500: {
+        content: never;
+      };
     };
   };
   /**
-   * Search Target Genes
+   * Search target genes
    * @description Search target genes.
    */
   search_target_genes_api_v1_target_genes_search_post: {
+    parameters: {
+      header?: {
+        "x-active-roles"?: string | null;
+      };
+    };
     requestBody: {
       content: {
         "application/json": components["schemas"]["TextSearch"];
@@ -3306,10 +10538,18 @@ export interface operations {
       /** @description Successful Response */
       200: {
         content: {
-          "application/json": components["schemas"]["TargetGene"][];
+          "application/json": components["schemas"]["TargetGeneWithScoreSetUrn"][];
         };
       };
-      /** @description Not found */
+      /** @description Authentication required. */
+      401: {
+        content: never;
+      };
+      /** @description Forbidden. Insufficient permissions. */
+      403: {
+        content: never;
+      };
+      /** @description Resource not found. */
       404: {
         content: never;
       };
@@ -3319,10 +10559,14 @@ export interface operations {
           "application/json": components["schemas"]["HTTPValidationError"];
         };
       };
+      /** @description Internal server error. */
+      500: {
+        content: never;
+      };
     };
   };
   /**
-   * List Taxonomies
+   * List taxonomies
    * @description List taxonomies.
    */
   list_taxonomies_api_v1_taxonomies__get: {
@@ -3333,14 +10577,18 @@ export interface operations {
           "application/json": components["schemas"]["Taxonomy"][];
         };
       };
-      /** @description Not Found */
+      /** @description Resource not found. */
       404: {
+        content: never;
+      };
+      /** @description Internal server error. */
+      500: {
         content: never;
       };
     };
   };
   /**
-   * List Taxonomy Organism Names
+   * List species names
    * @description List distinct species names, in alphabetical order.
    */
   list_taxonomy_organism_names_api_v1_taxonomies_speciesNames_get: {
@@ -3351,14 +10599,18 @@ export interface operations {
           "application/json": string[];
         };
       };
-      /** @description Not Found */
+      /** @description Resource not found. */
       404: {
+        content: never;
+      };
+      /** @description Internal server error. */
+      500: {
         content: never;
       };
     };
   };
   /**
-   * List Taxonomy Common Names
+   * List common names
    * @description List distinct common names, in alphabetical order.
    */
   list_taxonomy_common_names_api_v1_taxonomies_commonNames_get: {
@@ -3369,14 +10621,18 @@ export interface operations {
           "application/json": string[];
         };
       };
-      /** @description Not Found */
+      /** @description Resource not found. */
       404: {
+        content: never;
+      };
+      /** @description Internal server error. */
+      500: {
         content: never;
       };
     };
   };
   /**
-   * Fetch Taxonomy
+   * Fetch taxonomy by ID
    * @description Fetch a single taxonomy by ID.
    */
   fetch_taxonomy_api_v1_taxonomies__item_id__get: {
@@ -3392,7 +10648,7 @@ export interface operations {
           "application/json": components["schemas"]["Taxonomy"];
         };
       };
-      /** @description Not Found */
+      /** @description Resource not found. */
       404: {
         content: never;
       };
@@ -3402,13 +10658,17 @@ export interface operations {
           "application/json": components["schemas"]["HTTPValidationError"];
         };
       };
+      /** @description Internal server error. */
+      500: {
+        content: never;
+      };
     };
   };
   /**
-   * Fetch Taxonomy By Tax Id
-   * @description Fetch a single taxonomy by tax_id.
+   * Fetch taxonomy by code
+   * @description Fetch a single taxonomy by code.
    */
-  fetch_taxonomy_by_tax_id_api_v1_taxonomies_tax_id__item_id__get: {
+  fetch_taxonomy_by_code_api_v1_taxonomies_code__item_id__get: {
     parameters: {
       path: {
         item_id: number;
@@ -3421,7 +10681,7 @@ export interface operations {
           "application/json": components["schemas"]["Taxonomy"];
         };
       };
-      /** @description Not Found */
+      /** @description Resource not found. */
       404: {
         content: never;
       };
@@ -3431,10 +10691,14 @@ export interface operations {
           "application/json": components["schemas"]["HTTPValidationError"];
         };
       };
+      /** @description Internal server error. */
+      500: {
+        content: never;
+      };
     };
   };
   /**
-   * Search Taxonomies
+   * Search taxonomies
    * @description Search Taxonomy.
    * If no search text, return the whole taxonomy list so that front end Taxonomy component can get data to show in dropdown button.
    */
@@ -3451,7 +10715,7 @@ export interface operations {
           "application/json": components["schemas"]["Taxonomy"][];
         };
       };
-      /** @description Not found */
+      /** @description Resource not found. */
       404: {
         content: never;
       };
@@ -3461,16 +10725,20 @@ export interface operations {
           "application/json": components["schemas"]["HTTPValidationError"];
         };
       };
+      /** @description Internal server error. */
+      500: {
+        content: never;
+      };
     };
   };
   /**
-   * List Users
+   * List users
    * @description List users.
    */
   list_users_api_v1_users__get: {
     parameters: {
       header?: {
-        "x-active-roles"?: string;
+        "x-active-roles"?: string | null;
       };
     };
     responses: {
@@ -3480,7 +10748,15 @@ export interface operations {
           "application/json": components["schemas"]["AdminUser"][];
         };
       };
-      /** @description Not Found */
+      /** @description Authentication required. */
+      401: {
+        content: never;
+      };
+      /** @description Forbidden. Insufficient permissions. */
+      403: {
+        content: never;
+      };
+      /** @description Resource not found. */
       404: {
         content: never;
       };
@@ -3490,16 +10766,20 @@ export interface operations {
           "application/json": components["schemas"]["HTTPValidationError"];
         };
       };
+      /** @description Internal server error. */
+      500: {
+        content: never;
+      };
     };
   };
   /**
-   * Show Me
+   * Show my user
    * @description Return the current user.
    */
   show_me_api_v1_users_me_get: {
     parameters: {
       header?: {
-        "x-active-roles"?: string;
+        "x-active-roles"?: string | null;
       };
     };
     responses: {
@@ -3509,7 +10789,15 @@ export interface operations {
           "application/json": components["schemas"]["CurrentUser"];
         };
       };
-      /** @description Not Found */
+      /** @description Authentication required. */
+      401: {
+        content: never;
+      };
+      /** @description Forbidden. Insufficient permissions. */
+      403: {
+        content: never;
+      };
+      /** @description Resource not found. */
       404: {
         content: never;
       };
@@ -3519,20 +10807,20 @@ export interface operations {
           "application/json": components["schemas"]["HTTPValidationError"];
         };
       };
-      /** @description Internal Server Error */
+      /** @description Internal server error. */
       500: {
         content: never;
       };
     };
   };
   /**
-   * Update Me
+   * Update my user
    * @description Update the current user.
    */
   update_me_api_v1_users_me_put: {
     parameters: {
       header?: {
-        "x-active-roles"?: string;
+        "x-active-roles"?: string | null;
       };
     };
     requestBody: {
@@ -3547,7 +10835,15 @@ export interface operations {
           "application/json": components["schemas"]["CurrentUser"];
         };
       };
-      /** @description Not Found */
+      /** @description Authentication required. */
+      401: {
+        content: never;
+      };
+      /** @description Forbidden. Insufficient permissions. */
+      403: {
+        content: never;
+      };
+      /** @description Resource not found. */
       404: {
         content: never;
       };
@@ -3557,20 +10853,20 @@ export interface operations {
           "application/json": components["schemas"]["HTTPValidationError"];
         };
       };
-      /** @description Internal Server Error */
+      /** @description Internal server error. */
       500: {
         content: never;
       };
     };
   };
   /**
-   * Show User
-   * @description Fetch a single user by ID.
+   * Show user by ID
+   * @description Fetch a single user by ID. Returns admin view of requested user.
    */
-  show_user_api_v1_users__id__get: {
+  show_user_admin_api_v1_users__id__get: {
     parameters: {
       header?: {
-        "x-active-roles"?: string;
+        "x-active-roles"?: string | null;
       };
       path: {
         id: number;
@@ -3583,7 +10879,15 @@ export interface operations {
           "application/json": components["schemas"]["AdminUser"];
         };
       };
-      /** @description Not Found */
+      /** @description Authentication required. */
+      401: {
+        content: never;
+      };
+      /** @description Forbidden. Insufficient permissions. */
+      403: {
+        content: never;
+      };
+      /** @description Resource not found. */
       404: {
         content: never;
       };
@@ -3593,20 +10897,64 @@ export interface operations {
           "application/json": components["schemas"]["HTTPValidationError"];
         };
       };
-      /** @description Internal Server Error */
+      /** @description Internal server error. */
       500: {
         content: never;
       };
     };
   };
   /**
-   * User Has Logged In
-   * @description Update the current user's.
+   * Show user by Orcid ID
+   * @description Fetch a single user by Orcid ID. Returns limited view of user.
+   */
+  show_user_api_v1_users__orcid_id__get: {
+    parameters: {
+      header?: {
+        "x-active-roles"?: string | null;
+      };
+      path: {
+        orcid_id: string;
+      };
+    };
+    responses: {
+      /** @description Successful Response */
+      200: {
+        content: {
+          "application/json": components["schemas"]["User"];
+        };
+      };
+      /** @description Authentication required. */
+      401: {
+        content: never;
+      };
+      /** @description Forbidden. Insufficient permissions. */
+      403: {
+        content: never;
+      };
+      /** @description Resource not found. */
+      404: {
+        content: never;
+      };
+      /** @description Validation Error */
+      422: {
+        content: {
+          "application/json": components["schemas"]["HTTPValidationError"];
+        };
+      };
+      /** @description Internal server error. */
+      500: {
+        content: never;
+      };
+    };
+  };
+  /**
+   * Mark that the current user has logged in
+   * @description Update the current users log in state.
    */
   user_has_logged_in_api_v1_users_me_has_logged_in_put: {
     parameters: {
       header?: {
-        "x-active-roles"?: string;
+        "x-active-roles"?: string | null;
       };
     };
     responses: {
@@ -3616,7 +10964,15 @@ export interface operations {
           "application/json": components["schemas"]["CurrentUser"];
         };
       };
-      /** @description Not Found */
+      /** @description Authentication required. */
+      401: {
+        content: never;
+      };
+      /** @description Forbidden. Insufficient permissions. */
+      403: {
+        content: never;
+      };
+      /** @description Resource not found. */
       404: {
         content: never;
       };
@@ -3626,20 +10982,20 @@ export interface operations {
           "application/json": components["schemas"]["HTTPValidationError"];
         };
       };
-      /** @description Internal Server Error */
+      /** @description Internal server error. */
       500: {
         content: never;
       };
     };
   };
   /**
-   * Update User
+   * Update user by ID
    * @description Update a user.
    */
   update_user_api_v1_users___id__put: {
     parameters: {
       header?: {
-        "x-active-roles"?: string;
+        "x-active-roles"?: string | null;
       };
       path: {
         id: number;
@@ -3657,7 +11013,15 @@ export interface operations {
           "application/json": components["schemas"]["AdminUser"];
         };
       };
-      /** @description Not Found */
+      /** @description Authentication required. */
+      401: {
+        content: never;
+      };
+      /** @description Forbidden. Insufficient permissions. */
+      403: {
+        content: never;
+      };
+      /** @description Resource not found. */
       404: {
         content: never;
       };
@@ -3667,8 +11031,120 @@ export interface operations {
           "application/json": components["schemas"]["HTTPValidationError"];
         };
       };
-      /** @description Internal Server Error */
+      /** @description Internal server error. */
       500: {
+        content: never;
+      };
+    };
+  };
+  /**
+   * Lookup variants by ClinGen Allele IDs
+   * @description Lookup variants by ClinGen Allele IDs.
+   */
+  lookup_variants_api_v1_variants_clingen_allele_id_lookups_post: {
+    parameters: {
+      header?: {
+        "x-active-roles"?: string | null;
+      };
+    };
+    requestBody: {
+      content: {
+        "application/json": components["schemas"]["ClingenAlleleIdVariantLookupsRequest"];
+      };
+    };
+    responses: {
+      /** @description Successful Response */
+      200: {
+        content: {
+          "application/json": components["schemas"]["ClingenAlleleIdVariantLookupResponse"][];
+        };
+      };
+      /** @description Bad request. Check parameters and payload. */
+      400: {
+        content: never;
+      };
+      /** @description Authentication required. */
+      401: {
+        content: never;
+      };
+      /** @description Forbidden. Insufficient permissions. */
+      403: {
+        content: never;
+      };
+      /** @description Resource not found. */
+      404: {
+        content: never;
+      };
+      /** @description Validation Error */
+      422: {
+        content: {
+          "application/json": components["schemas"]["HTTPValidationError"];
+        };
+      };
+      /** @description Internal server error. */
+      500: {
+        content: never;
+      };
+    };
+  };
+  /**
+   * Fetch variant by URN
+   * @description Fetch a single variant by URN.
+   */
+  get_variant_api_v1_variants__urn__get: {
+    parameters: {
+      header?: {
+        "x-active-roles"?: string | null;
+      };
+      path: {
+        urn: string;
+      };
+    };
+    responses: {
+      /** @description Successful Response */
+      200: {
+        content: {
+          "application/json": components["schemas"]["VariantEffectMeasurementWithScoreSet"];
+        };
+      };
+      /** @description Authentication required. */
+      401: {
+        content: never;
+      };
+      /** @description Forbidden. Insufficient permissions. */
+      403: {
+        content: never;
+      };
+      /** @description Resource not found. */
+      404: {
+        content: never;
+      };
+      /** @description Validation Error */
+      422: {
+        content: {
+          "application/json": components["schemas"]["HTTPValidationError"];
+        };
+      };
+      /** @description Internal server error. */
+      500: {
+        content: never;
+      };
+    };
+  };
+  /**
+   * Proxy Alphafold Index
+   * @description Proxy the AlphaFold files index (XML document).
+   */
+  proxy_alphafold_index_api_v1_alphafold_files_version_get: {
+    responses: {
+      /** @description Successful Response */
+      200: {
+        content: {
+          "application/json": unknown;
+        };
+      };
+      /** @description Not found */
+      404: {
         content: never;
       };
     };

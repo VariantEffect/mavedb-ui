@@ -149,6 +149,31 @@
           <template v-if="heatmapExists">
             <Button class="p-button-outlined p-button-sm" @click="heatmapExport()">Heatmap</Button>&nbsp;
           </template>
+          <Button class="p-button-outlined p-button-sm" @click="showOptions()"> Custom Data </Button>
+          <Dialog
+            v-model:visible="optionsVisible"
+            :base-z-index="901"
+            :breakpoints="{'1199px': '75vw', '575px': '90vw'}"
+            header="Data Options"
+            modal
+            :style="{width: '50vw'}"
+          >
+            <div v-for="dataOption of dataTypeOptions" :key="dataOption.value" class="flex gap-1 align-items-center">
+              <Checkbox
+                :id="scopedId('input-' + dataOption.value)"
+                v-model="selectedDataOptions"
+                :value="dataOption.value"
+              />
+              <label :for="scopedId('input-' + dataOption.value)">{{ dataOption.label }}</label>
+            </div>
+            <p />
+            <Button class="p-button-outlined p-button-sm" label="Download" @click="downloadMultipleData"
+              >Download</Button
+            >
+            &nbsp;
+            <Button class="p-button-warning p-button-sm" label="Cancel" @click="optionsVisible = false">Cancel</Button>
+          </Dialog>
+          <br />
         </div>
         <CollectionAdder class="mave-save-to-collection-button" data-set-type="scoreSet" :data-set-urn="item.urn" />
 
@@ -303,6 +328,8 @@ import Accordion from 'primevue/accordion'
 import AccordionTab from 'primevue/accordiontab'
 import AutoComplete from 'primevue/autocomplete'
 import Button from 'primevue/button'
+import Checkbox from 'primevue/checkbox'
+import Dialog from 'primevue/dialog'
 import InputSwitch from 'primevue/inputswitch'
 import ScrollPanel from 'primevue/scrollpanel'
 import Sidebar from 'primevue/sidebar'
@@ -343,9 +370,11 @@ export default {
     AssayFactSheet,
     AutoComplete,
     Button,
+    Checkbox,
     CollectionAdder,
     CollectionBadge,
     DefaultLayout,
+    Dialog,
     InputSwitch,
     ItemNotFound,
     PageLoading,
@@ -393,7 +422,9 @@ export default {
   data: () => ({
     clinicalMode: config.CLINICAL_FEATURES_ENABLED,
     variants: null,
+    selectedDataOptions: [],
     showHeatmap: true,
+    optionsVisible: false,
     isScoreSetVisualizerVisible: false,
     hasClinicalVariants: false,
     heatmapExists: false,
@@ -418,6 +449,18 @@ export default {
       const allCountColumns = this.item?.datasetColumns?.countColumns ?? []
       const countColumns = allCountColumns.filter((col) => col !== 'accession')
       return countColumns.length > 0
+    },
+    dataTypeOptions: function () {
+      const options = [
+        {label: 'Scores', value: 'scores'},
+        {label: 'Mapped HGVS', value: 'mappedHgvs'},
+        {label: 'Custom columns', value: 'includeCustomColumns'},
+        {label: 'Without NA columns', value: 'dropNaColumns'}
+      ]
+      if (this.hasCounts) {
+        options.splice(1, 0, {label: 'Counts', value: 'counts'})
+      }
+      return options
     },
     annotatedVariantDownloadOptions: function () {
       const annotatatedVariantOptions = []
@@ -830,6 +873,65 @@ export default {
 
       this.variantSearchSuggestions = matches
     },
+    downloadMultipleData: async function () {
+      if (this.selectedDataOptions.length === 0) {
+        this.$toast.add({
+          severity: 'warn',
+          summary: 'No data selected',
+          detail: 'Please select at least one data type.',
+          life: 3000
+        })
+        return
+      }
+
+      const baseUrl = new URL(`${config.apiBaseUrl}/score-sets/${this.item.urn}/variants/data`)
+      const params = new URLSearchParams(baseUrl.params)
+      let includeCustomColumns = false
+      for (const option of this.selectedDataOptions) {
+        if (['scores', 'counts'].includes(option)) {
+          params.append('namespaces', option)
+        }
+        if (option === 'mappedHgvs') {
+          params.append('include_post_mapped_hgvs', 'true')
+        }
+        if (option === 'counts' || option === 'includeCustomColumns') {
+          includeCustomColumns = true
+        }
+        if (option === 'dropNaColumns') {
+          params.append('drop_na_columns', 'true')
+        }
+      }
+      if (includeCustomColumns) {
+        params.append('include_custom_columns', 'true')
+      }
+      let response = null
+      try {
+        if (this.item) {
+          response = await axios.get(`${baseUrl}?${params.toString()}`)
+        }
+      } catch (e) {
+        response = e.response || {status: 500}
+      }
+      if (response.status == 200) {
+        const file = response.data
+        const anchor = document.createElement('a')
+        anchor.href = 'data:text/csv;charset=utf-8,' + encodeURIComponent(file)
+        anchor.target = '_blank'
+        anchor.download = this.item.urn + '.csv'
+        anchor.click()
+      } else if (response.data && response.data.detail) {
+        const formValidationErrors = {}
+        for (const error of response.data.detail) {
+          let path = error.loc
+          if (path[0] == 'body') {
+            path = path.slice(1)
+          }
+          path = path.join('.')
+          formValidationErrors[path] = error.msg
+        }
+      }
+      this.optionsVisible = false
+    },
     childComponentSelectedVariant: function (variant) {
       if (variant == null) {
         this.selectedVariant = null
@@ -866,6 +968,9 @@ export default {
         frozen = false
       }
       return frozen
+    },
+    showOptions: function () {
+      this.optionsVisible = true
     }
   }
 }

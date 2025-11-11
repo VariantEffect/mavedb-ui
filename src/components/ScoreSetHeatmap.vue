@@ -1017,7 +1017,7 @@ export default defineComponent({
           return {
             x,
             y,
-            score: variant.score,
+            score: variant.scores.score,
             variant
           }
         }),

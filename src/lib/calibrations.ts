@@ -223,3 +223,31 @@ export function shaderOverlapsBin(range: HistogramShader, bin: HistogramBin): bo
 
   return rangeMin < bin.x1 && rangeMax >= bin.x0
 }
+
+/**
+ * Determines whether a variant score falls within the specified functional range.
+ *
+ * @param functionalRange - The functional range object containing min/max bounds and inclusivity flags
+ * @param variantScore - The numeric score of the variant to check, or null if no score available
+ * @returns True if the variant score is within the functional range bounds, false otherwise
+ *
+ * @remarks
+ * - Returns false immediately if variantScore is null
+ * - Handles open ranges where min or max can be null (unbounded)
+ * - Respects inclusivity settings for both lower and upper bounds
+ * - Lower bound check uses >= if inclusive, > if exclusive
+ * - Upper bound check uses <= if inclusive, < if exclusive
+ */
+export function functionalRangeContainsVariant(functionalRange: FunctionalRange, variantScore: number | null): boolean {
+  if (variantScore === null) {
+    return false
+  }
+
+  const [min, max] = functionalRange.range
+
+  const lowerOk = min === null ? true : functionalRange.inclusiveLowerBound ? variantScore >= min : variantScore > min
+
+  const upperOk = max === null ? true : functionalRange.inclusiveUpperBound ? variantScore <= max : variantScore < max
+
+  return lowerOk && upperOk
+}

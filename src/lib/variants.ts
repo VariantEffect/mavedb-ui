@@ -23,11 +23,19 @@ export interface ClinicalControlVariant {
 
 export interface RawVariant {
   accession: string
-  score?: number
-  control?: ClinicalControlVariant
   hgvs_nt?: string
   hgvs_pro?: string
   hgvs_splice?: string
+
+  scores: {
+    score: number | 'NA'
+    [key: string]: any
+  }
+  counts?: {
+    [key: string]: any
+  }
+
+  control?: ClinicalControlVariant
   post_mapped_hgvs_c?: string
   post_mapped_hgvs_p?: string
   mavedb_label?: string

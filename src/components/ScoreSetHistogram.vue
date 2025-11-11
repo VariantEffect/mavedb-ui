@@ -707,7 +707,7 @@ export default defineComponent({
           }
 
           // Line 3: Score and classification
-          if (variant.score) {
+          if (variant.scores.score) {
             let binClassificationLabel = ''
             if (bin && this.activeCalibration.value?.urn) {
               // TODO#491: Refactor this calculation into the creation of variant objects so we may just access the property of the variant which tells us its classification.
@@ -718,7 +718,7 @@ export default defineComponent({
               binClassificationLabel = `<span class="mavedb-range-classification-badge" style="margin-left: 6px; background-color:${binClassification.color}; color:white;">${binClassification.title}</span>`
             }
 
-            parts.push(`Score: ${variant.score.toPrecision(4)} ${binClassificationLabel}`)
+            parts.push(`Score: ${variant.scores.score.toPrecision(4)} ${binClassificationLabel}`)
           }
 
           // Line 4: Blank line
@@ -975,7 +975,7 @@ export default defineComponent({
           .bottomAxisLabel('Functional Score')
           .leftAxisLabel('Number of Variants')
           .numBins(30)
-          .valueField((variant: Variant) => variant.score)
+          .valueField((variant: Variant) => variant.scores.score)
           .accessorField((variant: Variant) => variant.accession)
           .tooltipHtml(this.tooltipHtmlGetter)
       }

@@ -41,7 +41,7 @@
             <div v-if="classification" class="mavedb-assay-facts-row">
               <div class="mavedb-assay-facts-label">Functional consequence</div>
               <div class="mavedb-assay-facts-value">
-                <div :class="['variant-clinical-classifier', ...classifierCssClasses]">
+                <div :class="['mavedb-classification-badge', ...classifierCssClasses]">
                   {{ startCase(classification) }}
                 </div>
               </div>
@@ -65,24 +65,28 @@
           </div>
           <div class="mavedb-assay-facts-section-title">Classification</div>
           <div class="mavedb-assay-facts-section">
-            <div v-if="variantScores?.score" class="mavedb-assay-facts-row">
+            <div v-if="variantScores?.scores?.score" class="mavedb-assay-facts-row">
               <div class="mavedb-assay-facts-label">Functional score</div>
               <div class="mavedb-assay-facts-value">
-                {{ variantScores?.score && variantScores?.score != 'NA' ? variantScores.score.toPrecision(4) : 'N/A' }}
+                {{
+                  variantScores?.scores?.score && variantScores.scores.score != 'NA'
+                    ? variantScores.scores.score.toPrecision(4)
+                    : 'N/A'
+                }}
               </div>
             </div>
-            <div v-if="variantScoreRange?.oddsPath" class="mavedb-assay-facts-row">
-              <div class="mavedb-assay-facts-label">OddsPath</div>
+            <div v-if="formattedEvidenceCode" class="mavedb-assay-facts-row">
+              <div class="mavedb-assay-facts-label">ACMG code</div>
               <div class="mavedb-assay-facts-value">
-                <span v-if="variantScoreRange?.oddsPath?.ratio">{{
-                  variantScoreRange.oddsPath.ratio.toPrecision(5)
-                }}</span>
-                <span
-                  v-if="variantScoreRange?.oddsPath?.evidence"
-                  :class="['mavedb-classification-badge', classificationBadgeColorClass, 'strong']"
-                >
-                  {{ variantScoreRange.oddsPath.evidence }}
+                <span :class="['mavedb-classification-badge', ...evidenceCodeCssClass]">
+                  {{ formattedEvidenceCode }}
                 </span>
+              </div>
+            </div>
+            <div v-if="variantScoreRange?.oddspathsRatio" class="mavedb-assay-facts-row">
+              <div class="mavedb-assay-facts-label">OddsPaths ratio</div>
+              <div class="mavedb-assay-facts-value">
+                {{ variantScoreRange.oddspathsRatio }}
               </div>
             </div>
           </div>
@@ -104,11 +108,16 @@
               ref="histogram"
               :external-selection="variantScores"
               :score-set="variant.scoreSet"
+              :selected-calibration="selectedCalibration"
               :variants="scores"
+              @calibration-changed="updateCalibration"
             />
           </div>
           <div v-else>
             <ProgressSpinner class="mave-histogram-loading" />
+          </div>
+          <div v-if="selectedCalibrationObject">
+            <CalibrationTable :score-calibration="selectedCalibrationObject" />
           </div>
         </template>
       </Card>
@@ -130,12 +139,14 @@ import useRemoteData from '@/composition/remote-data'
 import config from '@/config'
 import {parseScoresOrCounts, ScoresOrCountsRow} from '@/lib/scores'
 import ProgressSpinner from 'primevue/progressspinner'
+import {FunctionalRange, functionalRangeContainsVariant, PersistedScoreCalibration} from '@/lib/calibrations'
+import CalibrationTable from './CalibrationTable.vue'
 
 type Classification = 'Functionally normal' | 'Functionally abnormal' | 'Not specified'
 
 export default defineComponent({
   name: 'VariantMeasurementView',
-  components: {AssayFactSheet, Card, ScoreSetHistogram, ProgressSpinner},
+  components: {AssayFactSheet, CalibrationTable, Card, ScoreSetHistogram, ProgressSpinner},
 
   props: {
     variantUrn: {
@@ -188,7 +199,8 @@ export default defineComponent({
 
   data: () => ({
     clingenAllele: null as any,
-    scores: null as readonly ScoresOrCountsRow[] | null
+    scores: null as readonly ScoresOrCountsRow[] | null,
+    selectedCalibration: null as string | null
   }),
 
   computed: {
@@ -217,6 +229,24 @@ export default defineComponent({
           return []
       }
     },
+    formattedEvidenceCode() {
+      if (!this.variantScoreRange?.acmgClassification?.evidenceStrength) {
+        return ''
+      }
+
+      const criterion = this.variantScoreRange.acmgClassification.criterion
+      const strength = this.variantScoreRange.acmgClassification.evidenceStrength.toUpperCase()
+      return `${criterion}_${strength}`
+    },
+    evidenceCodeCssClass() {
+      if (!this.variantScoreRange?.acmgClassification?.evidenceStrength) {
+        return ''
+      }
+
+      const criterion = this.variantScoreRange.acmgClassification.criterion
+      const strength = this.variantScoreRange.acmgClassification.evidenceStrength.toUpperCase()
+      return [`mave-evidence-code-${criterion}_${strength}`]
+    },
     clingenAlleleId: function () {
       return this.currentMappedVariant?.clingenAlleleId
     },
@@ -244,49 +274,43 @@ export default defineComponent({
       )
     },
     variantScoreRange: function () {
-      const operatorTable = {
-        '<': function (a: number, b: number) {
-          return a < b
-        },
-        '<=': function (a: number, b: number) {
-          return a <= b
-        },
-        '>': function (a: number, b: number) {
-          return a > b
-        },
-        '>=': function (a: number, b: number) {
-          return a >= b
-        }
+      if (!this.selectedCalibrationObject?.functionalRanges) {
+        return null
       }
 
-      const score = this.variantScores?.score
-      const scoreRanges = this.variant?.scoreSet?.scoreRanges?.investigatorProvided?.ranges
-      if (scoreRanges && score != null) {
-        return scoreRanges.find((scoreRange: any) => {
-          const lowerOperator = scoreRange.inclusiveLowerBound ? '<=' : '<'
-          const upperOperator = scoreRange.inclusiveUpperBound ? '>=' : '>'
-
-          return (
-            scoreRange.range &&
-            scoreRange.range.length == 2 &&
-            (scoreRange.range[0] === null || operatorTable[lowerOperator](scoreRange.range[0], score)) &&
-            (scoreRange.range[1] === null || operatorTable[upperOperator](scoreRange.range[1], score))
-          )
-        })
+      const variantScore = this.variantScores?.scores?.score
+      if (variantScore == null || variantScore === 'NA') {
+        return null
       }
-      return undefined
+
+      const range = this.selectedCalibrationObject.functionalRanges.find((range: FunctionalRange) =>
+        functionalRangeContainsVariant(range, variantScore)
+      )
+
+      return range
     },
     variantScores: function () {
       return (this.scores || []).find((s) => s.accession == this.variantUrn)
     },
     classificationBadgeColorClass: function () {
-      if (this.variantScoreRange?.oddsPath?.evidence?.startsWith('BS3')) {
+      if (this.variantScoreRange?.acmgClassification?.criterion?.startsWith('BS3')) {
         return 'mavedb-blue'
       }
-      if (this.variantScoreRange?.oddsPath?.evidence?.startsWith('PS3')) {
+      if (this.variantScoreRange?.acmgClassification?.criterion?.startsWith('PS3')) {
         return 'mavedb-red'
       }
       return null
+    },
+    selectedCalibrationObject: function (): PersistedScoreCalibration | null {
+      if (!this.selectedCalibration || !this.variant?.scoreSet?.scoreCalibrations) {
+        return null
+      }
+
+      return (
+        this.variant.scoreSet.scoreCalibrations.find(
+          (calibration: PersistedScoreCalibration) => calibration.urn === this.selectedCalibration
+        ) || null
+      )
     }
   },
 
@@ -307,7 +331,7 @@ export default defineComponent({
     scoreSetUrn: {
       handler: function (newValue, oldValue) {
         if (newValue != oldValue) {
-          const scoresUrl = newValue ? `${config.apiBaseUrl}/score-sets/${newValue}/scores` : null
+          const scoresUrl = newValue ? `${config.apiBaseUrl}/score-sets/${newValue}/variants/data` : null
           this.setScoresDataUrl(scoresUrl)
           this.ensureScoresDataLoaded()
         }
@@ -333,20 +357,15 @@ export default defineComponent({
         console.log(`Error while fetching ClinGen allele "${clinGenAlleleId}"`, error)
         return undefined
       }
+    },
+    updateCalibration: function (calibration: string | null) {
+      this.selectedCalibration = calibration
     }
   }
 })
 </script>
 
 <style scoped>
-.variant-clinical-classifier {
-  color: white;
-  font-weight: bold;
-  font-size: 120%;
-  padding: 0.1em 0.1em;
-  display: inline-block;
-}
-
 .variant-title-name {
   font-weight: bold;
   font-size: 30px;
@@ -402,7 +421,11 @@ table.variant-info-table td:first-child {
   border-radius: 4px;
   font-size: 12px;
   font-weight: bold;
-  margin-left: 1em;
+  color: white;
+  font-weight: bold;
+  padding: 0.25em 0.5em;
+  font-size: 1.1em;
+  display: inline-block;
 }
 
 .mavedb-classification-badge.mavedb-blue {
@@ -413,6 +436,63 @@ table.variant-info-table td:first-child {
 .mavedb-classification-badge.mavedb-red {
   background: #991b1b;
   color: white;
+}
+
+/* Evidence Strengths */
+
+.mave-evidence-code-PS3_VERY_STRONG {
+  background-color: #943744;
+  font-weight: bold;
+}
+
+.mave-evidence-code-PS3_STRONG {
+  background-color: #b85c6b;
+  font-weight: bold;
+}
+
+.mave-evidence-code-PS3_MODERATE_PLUS {
+  background-color: #ca7682;
+  font-weight: bold;
+}
+
+.mave-evidence-code-PS3_MODERATE {
+  background-color: #d68f99;
+  font-weight: bold;
+}
+
+.mave-evidence-code-PS3_SUPPORTING {
+  background-color: #e6b1b8;
+  font-weight: bold;
+}
+
+.mave-evidence-code-BS3_SUPPORTING {
+  background-color: #e4f1f6;
+  font-weight: bold;
+}
+
+.mave-evidence-code-BS3_MODERATE {
+  background-color: #d0e8f0;
+  font-weight: bold;
+}
+
+.mave-evidence-code-BS3_MODERATE_PLUS {
+  background-color: #99c8dc;
+  font-weight: bold;
+}
+
+.mave-evidence-code-BS3_STRONG {
+  background-color: #7ab5d1;
+  font-weight: bold;
+}
+
+.mave-evidence-code-BS3_VERY_STRONG {
+  background-color: #4b91a6;
+  font-weight: bold;
+}
+
+.mave-evidence-code-INDETERMINATE {
+  background-color: #e0e0e0;
+  font-weight: bold;
 }
 
 .mavedb-assay-facts-card {

@@ -22,7 +22,7 @@
         <div class="mavedb-assay-facts-label">Assay Type</div>
         <div class="mavedb-assay-facts-value">
           <div v-if="scoreSet.experiment.keywords?.some((k) => k.keyword.key === 'Phenotypic Assay Method')">
-            {{ scoreSet.experiment.keywords.find((k) => k.keyword.key === 'Phenotypic Assay Method').keyword.label }}
+            {{ scoreSet.experiment.keywords.find((k) => k.keyword.key === 'Phenotypic Assay Method')?.keyword.label }}
           </div>
           <div v-else>Not specified</div>
         </div>
@@ -32,7 +32,7 @@
         <div class="mavedb-assay-facts-value">
           <div v-if="scoreSet.experiment.keywords?.some((k) => k.keyword.key === 'Molecular Mechanism Assessed')">
             {{
-              scoreSet.experiment.keywords.find((k) => k.keyword.key === 'Molecular Mechanism Assessed').keyword.label
+              scoreSet.experiment.keywords.find((k) => k.keyword.key === 'Molecular Mechanism Assessed')?.keyword.label
             }}
           </div>
           <div v-else>Not specified</div>
@@ -42,7 +42,9 @@
         <div class="mavedb-assay-facts-label">Variant Consequences Detected</div>
         <div class="mavedb-assay-facts-value">
           <div v-if="scoreSet.experiment.keywords?.some((k) => k.keyword.key === 'Phenotypic Assay Mechanism')">
-            {{ scoreSet.experiment.keywords.find((k) => k.keyword.key === 'Phenotypic Assay Mechanism').keyword.label }}
+            {{
+              scoreSet.experiment.keywords.find((k) => k.keyword.key === 'Phenotypic Assay Mechanism')?.keyword.label
+            }}
           </div>
           <div v-else>Not specified</div>
         </div>
@@ -52,7 +54,7 @@
         <div class="mavedb-assay-facts-value">
           <div v-if="scoreSet.experiment.keywords?.some((k) => k.keyword.key === 'Phenotypic Assay Model System')">
             {{
-              scoreSet.experiment.keywords.find((k) => k.keyword.key === 'Phenotypic Assay Model System').keyword.label
+              scoreSet.experiment.keywords.find((k) => k.keyword.key === 'Phenotypic Assay Model System')?.keyword.label
             }}
           </div>
           <div v-else>Not specified</div>
@@ -81,24 +83,25 @@
       Clinical Performance<sup v-if="!primaryScoreRangeIsInvestigatorProvided">*</sup>
     </div>
     <div class="mavedb-assay-facts-section">
-      <div v-if="primaryScoreRange?.ranges.some((r) => r.oddsPath)">
+      <div v-if="primaryScoreRange?.functionalRanges?.some((r) => r.oddspathsRatio)">
         <div class="mavedb-assay-facts-row">
           <div class="mavedb-assay-facts-label">OddsPath – Normal</div>
           <div
-            v-if="primaryScoreRange?.ranges?.some((r) => r.classification === 'normal' && r.oddsPath)"
+            v-if="primaryScoreRange?.functionalRanges?.some((r) => r.classification === 'normal' && r.oddspathsRatio)"
             class="mavedb-assay-facts-value"
           >
-            {{
-              roundOddsPath(
-                primaryScoreRange?.ranges.find((r) => r.classification === 'normal').oddsPath
-                  ?.ratio
-              )
-            }}
-            <span class="mavedb-classification-badge mavedb-blue">
-              {{
-                primaryScoreRange?.ranges.find((r) => r.classification === 'normal').oddsPath
-                  ?.evidence
-              }}
+            {{ roundOddsPath(normalScoreRange?.oddspathsRatio) }}
+            <span
+              :class="[
+                'mavedb-classification-badge',
+                `mave-evidence-code-${
+                  normalScoreRange?.acmgClassification
+                    ? formatEvidenceCodeForScoreRange(normalScoreRange)
+                    : 'INDETERMINATE'
+                }`
+              ]"
+            >
+              {{ formatEvidenceCodeForScoreRange(normalScoreRange) }}
             </span>
           </div>
           <div v-else class="mavedb-assay-facts-value">OddsPath normal not provided</div>
@@ -106,34 +109,36 @@
         <div class="mavedb-assay-facts-row">
           <div class="mavedb-assay-facts-label">OddsPath – Abnormal</div>
           <div
-            v-if="primaryScoreRange?.ranges?.some((r) => r.classification === 'abnormal' && r.oddsPath)"
+            v-if="primaryScoreRange?.functionalRanges?.some((r) => r.classification === 'abnormal' && r.oddspathsRatio)"
             class="mavedb-assay-facts-value"
           >
-            {{
-              roundOddsPath(
-                primaryScoreRange?.ranges.find((r) => r.classification === 'abnormal').oddsPath
-                  ?.ratio
-              )
-            }}
-            <span class="mavedb-classification-badge mavedb-red strong">
-              {{
-                primaryScoreRange?.ranges.find((r) => r.classification === 'abnormal').oddsPath
-                  ?.evidence
-              }}
+            {{ roundOddsPath(abnormalScoreRange?.oddspathsRatio) }}
+            <span
+              :class="[
+                'mavedb-classification-badge',
+                `mave-evidence-code-${
+                  abnormalScoreRange?.acmgClassification
+                    ? formatEvidenceCodeForScoreRange(abnormalScoreRange)
+                    : 'INDETERMINATE'
+                }`
+              ]"
+            >
+              {{ formatEvidenceCodeForScoreRange(abnormalScoreRange) }}
             </span>
           </div>
           <div v-else class="mavedb-assay-facts-value">OddsPath abnormal not provided</div>
         </div>
         <div v-if="!primaryScoreRangeIsInvestigatorProvided" style="font-size: 10px; margin-top: 4px">
-            <sup>*</sup>OddsPath data from non-primary source(s):
-            <template v-if="oddsPathSources">
-              (
-              <template v-for="(s,i) in oddsPathSources" :key="s.url">
-              <a :href="s.url" rel="noopener" target="_blank">{{ s.url }}</a><span v-if="i < oddsPathSources.length - 1">, </span>
-              </template>
-              ).
+          <sup>*</sup>OddsPath data from non-primary source(s):
+          <template v-if="oddsPathSources">
+            (
+            <template v-for="(s, i) in oddsPathSources" :key="s.url">
+              <a :href="s.url" rel="noopener" target="_blank">{{ shortCitationForPublication(s) }}</a
+              ><span v-if="i < oddsPathSources.length - 1">, </span>
             </template>
-            <template v-else>.</template>
+            ).
+          </template>
+          <template v-else>.</template>
         </div>
       </div>
       <div v-else>OddsPath values are not provided for this score set.</div>
@@ -145,7 +150,8 @@
 import _ from 'lodash'
 import {defineComponent, PropType} from 'vue'
 
-import {getScoreSetFirstAuthor, matchSources} from '@/lib/score-sets'
+import {getScoreSetFirstAuthor} from '@/lib/score-sets'
+import {shortCitationForPublication} from '@/lib/publication'
 import type {components} from '@/schema/openapi'
 
 export default defineComponent({
@@ -155,6 +161,12 @@ export default defineComponent({
     scoreSet: {
       type: Object as PropType<components['schemas']['ScoreSet']>,
       required: true
+    }
+  },
+
+  setup() {
+    return {
+      shortCitationForPublication
     }
   },
 
@@ -220,27 +232,32 @@ export default defineComponent({
           return null
       }
     },
-
     primaryScoreRange: function () {
-      if (this.scoreSet.scoreRanges == null) {
+      if (this.scoreSet.scoreCalibrations == null) {
         return null
       }
 
-      return Object.values(this.scoreSet.scoreRanges).filter(
-          (sr) => sr?.primary
-        )[0] || this.scoreSet.scoreRanges?.investigatorProvided || null
+      return (
+        Object.values(this.scoreSet.scoreCalibrations).filter((sr) => sr?.primary)[0] ||
+        this.scoreSet.scoreCalibrations?.find((sr) => sr?.investigatorProvided) ||
+        null
+      )
     },
-
     primaryScoreRangeIsInvestigatorProvided: function () {
-      if (this.scoreSet.scoreRanges == null) {
+      if (this.scoreSet.scoreCalibrations == null) {
         return false
       }
 
-      return this.primaryScoreRange === this.scoreSet.scoreRanges?.investigatorProvided
+      return this.primaryScoreRange === this.scoreSet.scoreCalibrations?.find((sr) => sr?.investigatorProvided)
+    },
+    abnormalScoreRange: function () {
+      return this.primaryScoreRange?.functionalRanges?.find((r) => r.classification === 'abnormal') || null
+    },
+    normalScoreRange: function () {
+      return this.primaryScoreRange?.functionalRanges?.find((r) => r.classification === 'normal') || null
     },
     oddsPathSources() {
-      console.log(this.primaryScoreRange)
-      return matchSources(this.primaryScoreRange?.oddsPathSource, this.sources)
+      return this.primaryScoreRange?.classificationSources
     },
     sources: function () {
       return this.scoreSet.primaryPublicationIdentifiers.concat(this.scoreSet.secondaryPublicationIdentifiers)
@@ -248,9 +265,18 @@ export default defineComponent({
   },
 
   methods: {
-    roundOddsPath: function (oddsPath: number | undefined) {
+    roundOddsPath: function (oddsPath: number | null | undefined) {
       return oddsPath?.toPrecision(5)
     },
+    formatEvidenceCodeForScoreRange: function (functionalRange: components['schemas']['FunctionalRange'] | null) {
+      if (!functionalRange?.acmgClassification?.evidenceStrength) {
+        return ''
+      }
+
+      const criterion = functionalRange.acmgClassification.criterion
+      const strength = functionalRange.acmgClassification.evidenceStrength.toUpperCase()
+      return `${criterion}_${strength}`
+    }
   }
 })
 </script>
@@ -347,5 +373,62 @@ export default defineComponent({
 .mavedb-classification-badge.mavedb-red {
   background: #991b1b;
   color: white;
+}
+
+/* Evidence Strengths */
+
+.mave-evidence-code-PS3_VERY_STRONG {
+  background-color: #943744;
+  font-weight: bold;
+}
+
+.mave-evidence-code-PS3_STRONG {
+  background-color: #b85c6b;
+  font-weight: bold;
+}
+
+.mave-evidence-code-PS3_MODERATE_PLUS {
+  background-color: #ca7682;
+  font-weight: bold;
+}
+
+.mave-evidence-code-PS3_MODERATE {
+  background-color: #d68f99;
+  font-weight: bold;
+}
+
+.mave-evidence-code-PS3_SUPPORTING {
+  background-color: #e6b1b8;
+  font-weight: bold;
+}
+
+.mave-evidence-code-BS3_SUPPORTING {
+  background-color: #e4f1f6;
+  font-weight: bold;
+}
+
+.mave-evidence-code-BS3_MODERATE {
+  background-color: #d0e8f0;
+  font-weight: bold;
+}
+
+.mave-evidence-code-BS3_MODERATE_PLUS {
+  background-color: #99c8dc;
+  font-weight: bold;
+}
+
+.mave-evidence-code-BS3_STRONG {
+  background-color: #7ab5d1;
+  font-weight: bold;
+}
+
+.mave-evidence-code-BS3_VERY_STRONG {
+  background-color: #4b91a6;
+  font-weight: bold;
+}
+
+.mave-evidence-code-INDETERMINATE {
+  background-color: #e0e0e0;
+  font-weight: bold;
 }
 </style>

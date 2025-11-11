@@ -15,17 +15,29 @@
               :collection="officialCollection"
             />
           </div>
-          <div v-if="userIsAuthenticated">
-            <div v-if="!item.publishedDate" class="mavedb-screen-title-controls">
-              <Button v-if="userIsAuthorized.update" class="p-button-sm" @click="editItem">Edit</Button>
-              <Button v-if="userIsAuthorized.publish" class="p-button-sm" @click="publishItem">Publish</Button>
-              <Button v-if="userIsAuthorized.delete" class="p-button-sm p-button-danger" @click="deleteItem"
+          <div v-if="userIsAuthenticated" class="mavedb-screen-title-controls">
+            <Button
+              class="p-butto p-button-sm"
+              icon="pi pi-external-link"
+              label="Score set calibrations"
+              @click="$router.push({path: `/score-sets/${item.urn}/calibrations`})"
+            />
+            <Button
+              v-if="userIsAuthorized.addCalibration"
+              class="p-button p-button-sm"
+              @click="calibrationEditorVisible = true"
+              >Add calibration</Button
+            >
+            <template v-if="!item.publishedDate">
+              <Button v-if="userIsAuthorized.update" class="p-button p-button-sm" @click="editItem">Edit</Button>
+              <Button v-if="userIsAuthorized.publish" class="p-button p-button-sm" @click="publishItem">Publish</Button>
+              <Button v-if="userIsAuthorized.delete" class="p-button p-button-sm p-button-danger" @click="deleteItem"
                 >Delete</Button
               >
-            </div>
-            <div v-if="item.publishedDate" class="mavedb-screen-title-controls">
-              <Button v-if="userIsAuthorized.update" class="p-button-sm" @click="editItem">Edit</Button>
-            </div>
+            </template>
+            <template v-if="item.publishedDate">
+              <Button v-if="userIsAuthorized.update" class="p-button p-button-sm" @click="editItem">Edit</Button>
+            </template>
           </div>
         </div>
         <div v-if="item.shortDescription" class="mavedb-score-set-description">{{ item.shortDescription }}</div>
@@ -84,7 +96,9 @@
             :external-selection="variantToVisualize"
             :hide-start-and-stop-loss-by-default="hideStartAndStopLoss"
             :score-set="item"
+            :selected-calibration="selectedCalibration"
             :variants="variants"
+            @calibration-changed="childComponentSelectedCalibration"
             @export-chart="setHistogramExport"
           />
           <template v-if="hasClinicalVariants">
@@ -318,6 +332,36 @@
       />
     </Sidebar>
   </div>
+  <!-- Set z-index to ensure dialog appears above heatmap color legend -->
+  <PrimeDialog
+    v-model:visible="calibrationEditorVisible"
+    :base-z-index="2003"
+    :close-on-escape="true"
+    header="Create New Calibration"
+    modal
+    :style="{maxWidth: '90%', width: '75rem'}"
+  >
+    <CalibrationEditor
+      :calibration-draft-ref="calibrationDraftRef"
+      :score-set-urn="item.urn"
+      :validation-errors="editorValidationErrors"
+      @canceled="calibrationEditorVisible = false"
+    />
+    <template #footer>
+      <Button
+        class="p-button p-component p-button-secondary"
+        icon="pi pi-times"
+        label="Close"
+        @click="calibrationEditorVisible = false"
+      />
+      <Button
+        class="p-button p-component p-button-success"
+        icon="pi pi-save"
+        label="Save Changes"
+        @click="saveCreatedCalibration"
+      />
+    </template>
+  </PrimeDialog>
 </template>
 
 <script>
@@ -331,6 +375,7 @@ import Button from 'primevue/button'
 import Checkbox from 'primevue/checkbox'
 import Dialog from 'primevue/dialog'
 import InputSwitch from 'primevue/inputswitch'
+import PrimeDialog from 'primevue/dialog'
 import ScrollPanel from 'primevue/scrollpanel'
 import Sidebar from 'primevue/sidebar'
 import SplitButton from 'primevue/splitbutton'
@@ -339,6 +384,7 @@ import {mapState} from 'vuex'
 import {useHead} from '@unhead/vue'
 
 import AssayFactSheet from '@/components/AssayFactSheet'
+import CalibrationEditor from '../CalibrationEditor.vue'
 import CollectionAdder from '@/components/CollectionAdder'
 import CollectionBadge from '@/components/CollectionBadge'
 import ScoreSetHeatmap from '@/components/ScoreSetHeatmap'
@@ -370,6 +416,7 @@ export default {
     AssayFactSheet,
     AutoComplete,
     Button,
+    CalibrationEditor,
     Checkbox,
     CollectionAdder,
     CollectionBadge,
@@ -378,6 +425,7 @@ export default {
     InputSwitch,
     ItemNotFound,
     PageLoading,
+    PrimeDialog,
     ScoreSetHeatmap,
     ScoreSetHistogram,
     ScoreSetVisualizer,
@@ -403,11 +451,17 @@ export default {
     const {userIsAuthenticated} = useAuth()
     const scoresRemoteData = useRemoteData()
     const variantSearchSuggestions = ref([])
+    const calibrationDraftRef = ref({value: null})
+    const editorValidationErrors = ref({})
+    const selectedCalibration = ref(null)
 
     return {
       head,
       config: config,
       userIsAuthenticated,
+      calibrationDraftRef,
+      editorValidationErrors,
+      selectedCalibration,
 
       ...useItem({itemTypeName: 'scoreSet'}),
       ...useScopedId(),
@@ -429,10 +483,12 @@ export default {
     hasClinicalVariants: false,
     heatmapExists: false,
     selectedVariant: null,
+    calibrationEditorVisible: false,
     userIsAuthorized: {
       delete: false,
       publish: false,
-      update: false
+      update: false,
+      addCalibration: false
     }
   }),
 
@@ -474,7 +530,7 @@ export default {
         })
       }
 
-      if (this.item?.scoreRanges) {
+      if (this.item?.scoreCalibrations) {
         annotatatedVariantOptions.push({
           label: 'Functional Impact Statement',
           command: () => {
@@ -513,6 +569,9 @@ export default {
     },
     urlVariant: function () {
       return this.$route.query.variant
+    },
+    urlCalibration: function () {
+      return this.$route.query.calibration
     },
     ...mapState({
       galaxyUrl: (state) => state.routeProps.galaxyUrl,
@@ -555,15 +614,8 @@ export default {
         this.applyUrlState()
       }
     },
-    selectedVariant: {
-      handler: function () {
-        this.$router.push({
-          query: {
-            ...(this.selectedVariant && this.selectedVariant.accession ? {variant: this.selectedVariant.accession} : {})
-          }
-        })
-      }
-    }
+    selectedVariant: 'refreshUrlState',
+    selectedCalibration: 'refreshUrlState'
   },
 
   mounted: async function () {
@@ -572,6 +624,23 @@ export default {
   },
 
   methods: {
+    refreshUrlState: async function () {
+      const query = {...this.$route.query}
+
+      if (this.selectedVariant) {
+        query.variant = this.selectedVariant.accession
+      } else {
+        delete query.variant
+      }
+
+      if (this.selectedCalibration) {
+        query.calibration = this.selectedCalibration
+      } else {
+        delete query.calibration
+      }
+
+      await this.$router.replace({path: this.$route.path, query: query})
+    },
     showProteinStructureModal: function () {
       this.isScoreSetVisualizerVisible = true
     },
@@ -589,6 +658,8 @@ export default {
           )
           this.userIsAuthorized[action] = response.data
         }
+        // If a user can update, they can also add calibrations
+        this.userIsAuthorized.addCalibration = this.userIsAuthorized.update
       } catch (err) {
         console.log(`Error to get authorization:`, err)
       }
@@ -603,7 +674,7 @@ export default {
         } catch (err) {
           console.log(`Error to get clinical variants:`, err)
         }
-      } 
+      }
     },
     editItem: function () {
       if (this.item) {
@@ -944,10 +1015,17 @@ export default {
       const selectedVariant = this.variants.find((v) => v.accession == variant.accession)
       this.selectedVariant = Object.assign(selectedVariant, preferredVariantLabel(selectedVariant))
     },
+    childComponentSelectedCalibration: function (calibration) {
+      this.selectedCalibration = calibration
+    },
     applyUrlState: function () {
       if (this.$route.query.variant) {
         const selectedVariant = this.variants.find((v) => v.accession == this.$route.query.variant)
         this.selectedVariant = Object.assign(selectedVariant, preferredVariantLabel(selectedVariant))
+      }
+      if (this.$route.query.calibration) {
+        const selectedCalibration = this.$route.query.calibration
+        this.selectedCalibration = selectedCalibration
       }
     },
     heatmapVisibilityUpdated: function (visible) {
@@ -968,6 +1046,42 @@ export default {
         frozen = false
       }
       return frozen
+    },
+    saveCreatedCalibration: async function () {
+      if (this.calibrationDraftRef.value) {
+        let response = null
+        try {
+          response = await axios.post(`${config.apiBaseUrl}/score-calibrations`, this.calibrationDraftRef.value)
+        } catch (e) {
+          response = e.response || {status: 500}
+        }
+
+        if (response.status == 200) {
+          const createdCalibration = response.data
+          this.$toast.add({severity: 'success', summary: 'Your calibration was successfully created.', life: 3000})
+          this.calibrationEditorVisible = false
+          // Reset draft
+          this.calibrationDraftRef.value = null
+          // Reload item to get the new calibration and then select it
+          await this.reloadItem()
+          this.selectedCalibration = createdCalibration.urn
+        } else if (response.data && response.data.detail) {
+          const formValidationErrors = {}
+          for (const error of response.data.detail) {
+            let path = error.loc
+            if (path[0] == 'body') {
+              path = path.slice(1)
+            }
+            let customPath = error.ctx.custom_loc
+            if (customPath && customPath[0] == 'body') {
+              customPath = customPath.slice(1)
+            }
+            path = path.join('.')
+            formValidationErrors[path] = error.msg
+          }
+          this.editorValidationErrors = formValidationErrors
+        }
+      }
     },
     showOptions: function () {
       this.optionsVisible = true

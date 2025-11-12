@@ -34,10 +34,13 @@ export interface RawVariant {
   counts?: {
     [key: string]: any
   }
+  mavedb?: {
+    post_mapped_hgvs_c?: string
+    post_mapped_hgvs_p?: string
+    post_mapped_vrs_digest?: string
+  }
 
   control?: ClinicalControlVariant
-  post_mapped_hgvs_c?: string
-  post_mapped_hgvs_p?: string
   mavedb_label?: string
 }
 
@@ -121,8 +124,11 @@ function getParsedPostMappedHgvs(variant: Variant, type: HgvsReferenceSequenceTy
  */
 export function parseSimpleCodingVariants(variants: Variant[]) {
   for (const v of variants) {
-    if (v.post_mapped_hgvs_c && v.post_mapped_hgvs_c != 'NA') {
-      const parsedHgvs = parseSimpleNtVariant(v.post_mapped_hgvs_c)
+    // Create the mavedb namespace if it doesn't exist.
+    if (!v.mavedb) v.mavedb = {}
+
+    if (v.mavedb.post_mapped_hgvs_c && v.mavedb.post_mapped_hgvs_c != 'NA') {
+      const parsedHgvs = parseSimpleNtVariant(v.mavedb.post_mapped_hgvs_c)
       if (parsedHgvs && parsedHgvs.referenceType == 'c') {
         v.parsedPostMappedHgvsC = parsedHgvs
         v.parsedPostMappedHgvsC.residueType = 'nt'
@@ -134,15 +140,15 @@ export function parseSimpleCodingVariants(variants: Variant[]) {
       // Treat g. and n. the same as c. for now, and allow there to be no accession.
       if (parsedHgvs && ['c', 'g', 'n'].includes(parsedHgvs.referenceType)) {
         //} && parsedHgvs.target) {
-        v.post_mapped_hgvs_c = v.hgvs_nt
+        v.mavedb.post_mapped_hgvs_c = v.hgvs_nt
         v.parsedPostMappedHgvsC = parsedHgvs
         v.parsedPostMappedHgvsC.residueType = 'nt'
         v.parsedPostMappedHgvsC.origin = 'unmapped'
       }
     }
 
-    if (v.post_mapped_hgvs_p && v.post_mapped_hgvs_p != 'NA') {
-      const parsedHgvs = parseSimpleProVariant(v.post_mapped_hgvs_p)
+    if (v.mavedb.post_mapped_hgvs_p && v.mavedb.post_mapped_hgvs_p != 'NA') {
+      const parsedHgvs = parseSimpleProVariant(v.mavedb.post_mapped_hgvs_p)
       if (parsedHgvs) {
         v.parsedPostMappedHgvsP = parsedHgvs
         v.parsedPostMappedHgvsP.residueType = 'aa'
@@ -152,7 +158,7 @@ export function parseSimpleCodingVariants(variants: Variant[]) {
       const parsedHgvs = parseSimpleProVariant(v.hgvs_pro)
       // Allow there to be no accession.
       if (parsedHgvs) {
-        v.post_mapped_hgvs_p = v.hgvs_pro
+        v.mavedb.post_mapped_hgvs_p = v.hgvs_pro
         v.parsedPostMappedHgvsP = parsedHgvs
         v.parsedPostMappedHgvsP.residueType = 'aa'
         v.parsedPostMappedHgvsP.origin = 'unmapped'

@@ -621,9 +621,9 @@ export default defineComponent({
 
         if (variant) {
           // Line 1: Variant identifier
-          const mappedDnaHgvs = naToUndefined(variant.post_mapped_hgvs_c)
+          const mappedDnaHgvs = naToUndefined(variant.mavedb?.post_mapped_hgvs_c)
           const mappedProteinHgvs =
-            naToUndefined(variant.post_mapped_hgvs_p) ?? naToUndefined(variant.translated_hgvs_p)
+            naToUndefined(variant.mavedb?.post_mapped_hgvs_p) ?? naToUndefined(variant.translated_hgvs_p)
           const unmappedDnaHgvs = naToUndefined(variant.hgvs_nt)
           const unmappedProteinHgvs = naToUndefined(variant.hgvs_pro)
           const unmappedSpliceHgvs = naToUndefined(variant.hgvs_splice)

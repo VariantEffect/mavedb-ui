@@ -246,11 +246,11 @@ export default defineComponent({
     ////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 
     dnaHeatmapAvailable: function () {
-      return this.variants.some((v) => v[this.hgvsNtColumn] != null && v[this.hgvsNtColumn] != 'NA')
+      return this.variants.some((v) => this.getHgvsNtValue(v) != null && this.getHgvsNtValue(v) != 'NA')
     },
 
     proteinHeatmapAvailable: function () {
-      return this.variants.some((v) => v[this.hgvsProColumn] != null && v[this.hgvsProColumn] != 'NA')
+      return this.variants.some((v) => this.getHgvsProValue(v) != null && this.getHgvsProValue(v) != 'NA')
     },
 
     sequenceTypeOptions: function () {
@@ -414,7 +414,7 @@ export default defineComponent({
     hgvsNtColumn: function () {
       switch (this.coordinates) {
         case 'mapped':
-          if (this.variants.some((v) => v.post_mapped_hgvs_c != null && v.post_mapped_hgvs_c != 'NA')) {
+          if (this.variants.some((v) => v.mavedb?.post_mapped_hgvs_c != null && v.mavedb?.post_mapped_hgvs_c != 'NA')) {
             return 'post_mapped_hgvs_c'
           }
           return 'hgvs_nt'
@@ -935,6 +935,8 @@ export default defineComponent({
 
     sequenceTypeOptions: {
       handler: function (newValue, oldValue) {
+        console.log('sequenceTypeOptions changed:', newValue)
+        console.log('old value:', oldValue)
         if (!_.isEqual(newValue, oldValue)) {
           if (!newValue.find((option) => option.value == this.sequenceType)) {
             this.sequenceType = newValue[0].value
@@ -962,6 +964,48 @@ export default defineComponent({
   },
 
   methods: {
+    ////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+    // HGVS value accessors
+    ////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+
+    /**
+     * Get the HGVS nucleotide value from a variant, handling nested properties.
+     */
+    getHgvsNtValue: function (variant: Variant) {
+      switch (this.coordinates) {
+        case 'mapped':
+          if (variant.mavedb?.post_mapped_hgvs_c != null && variant.mavedb?.post_mapped_hgvs_c != 'NA') {
+            return variant.mavedb.post_mapped_hgvs_c
+          }
+          return variant.hgvs_nt
+        case 'raw':
+        default:
+          return variant.hgvs_nt
+      }
+    },
+
+    /**
+     * Get the HGVS protein value from a variant, handling nested properties.
+     */
+    getHgvsProValue: function (variant: Variant) {
+      switch (this.coordinates) {
+        case 'mapped':
+          if (variant.translated_hgvs_p != null && variant.translated_hgvs_p != 'NA') {
+            return variant.translated_hgvs_p
+          }
+          return variant.mavedb?.post_mapped_hgvs_p
+        case 'raw':
+        default:
+          if (variant.hgvs_pro != null && variant.hgvs_pro != 'NA') {
+            return variant.hgvs_pro
+          } else if (variant.translated_hgvs_p != null && variant.translated_hgvs_p != 'NA') {
+            return variant.translated_hgvs_p
+          } else {
+            return variant.hgvs_pro
+          }
+      }
+    },
+
     ////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
     // Heatmap data preparation
     ////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
@@ -1097,24 +1141,24 @@ export default defineComponent({
       if (this.coordinates == 'mapped') {
         switch (this.sequenceType) {
           case 'dna':
-            if (variantNotNullOrNA(v.instance?.post_mapped_hgvs_c)) {
-              nameParts.push(`Variant: ${v.instance?.post_mapped_hgvs_c}`)
+            if (variantNotNullOrNA(v.instance?.mavedb?.post_mapped_hgvs_c)) {
+              nameParts.push(`Variant: ${v.instance?.mavedb?.post_mapped_hgvs_c}`)
             }
-            if (variantNotNullOrNA(v.instance?.post_mapped_hgvs_p)) {
-              nameParts.push(`Protein variant: ${v.instance?.post_mapped_hgvs_p}`)
+            if (variantNotNullOrNA(v.instance?.mavedb?.post_mapped_hgvs_p)) {
+              nameParts.push(`Protein variant: ${v.instance?.mavedb?.post_mapped_hgvs_p}`)
             } else if (variantNotNullOrNA(v.instance?.translated_hgvs_p)) {
               nameParts.push(`Protein variant: ${v.instance?.translated_hgvs_p}`)
             }
             break
           case 'protein':
           default:
-            if (variantNotNullOrNA(v.instance?.post_mapped_hgvs_p)) {
-              nameParts.push(`Variant: ${v.instance?.post_mapped_hgvs_p}`)
+            if (variantNotNullOrNA(v.instance?.mavedb?.post_mapped_hgvs_p)) {
+              nameParts.push(`Variant: ${v.instance?.mavedb?.post_mapped_hgvs_p}`)
             } else if (variantNotNullOrNA(v.instance?.translated_hgvs_p)) {
               nameParts.push(`Variant: ${v.instance?.translated_hgvs_p}`)
             }
-            if (variantNotNullOrNA(v.instance?.post_mapped_hgvs_c)) {
-              nameParts.push(`NT variant: ${v.instance?.post_mapped_hgvs_c}`)
+            if (variantNotNullOrNA(v.instance?.mavedb?.post_mapped_hgvs_c)) {
+              nameParts.push(`NT variant: ${v.instance?.mavedb?.post_mapped_hgvs_c}`)
             }
         }
       }

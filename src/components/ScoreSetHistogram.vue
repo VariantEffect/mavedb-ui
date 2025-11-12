@@ -112,18 +112,6 @@
     </fieldset>
   </div>
   <div ref="histogramContainer" class="mavedb-histogram-container" />
-  <!-- The child component will attempt to immediately emit the range which is active when it is created. Since Vue lifecycle events bubble up from child to parent, this causes this component to attempt
-   to create the histogram before the component is mounted when it doesn't have access to `this.$refs`. As a workaround, only render this child component once the histogram is ready. -->
-  <div v-if="showCalibrations && activeCalibration && activeCalibration.value" class="mave-range-table-container">
-    <Accordion :active-index="0" collapse-icon="pi pi-minus" expand-icon="pi pi-plus">
-      <AccordionTab class="mave-range-table-tab" header="Score Ranges and Clinical Evidence Strength">
-        <CalibrationTable
-          :score-calibration="activeCalibration.value"
-          :score-calibration-name="activeCalibration.label"
-        />
-      </AccordionTab>
-    </Accordion>
-  </div>
 </template>
 
 <script lang="ts">
@@ -138,7 +126,6 @@ import Rating from 'primevue/rating'
 import TabMenu from 'primevue/tabmenu'
 import {defineComponent, PropType} from 'vue'
 
-import CalibrationTable from '@/components/CalibrationTable.vue'
 import useScopedId from '@/composables/scoped-id'
 import config from '@/config'
 import {saveChartAsFile} from '@/lib/chart-export'
@@ -197,7 +184,7 @@ interface Margins {
 export default defineComponent({
   name: 'ScoreSetHistogram',
 
-  components: {Accordion, AccordionTab, Checkbox, Dropdown, Rating, TabMenu, CalibrationTable, ProgressSpinner},
+  components: {Accordion, AccordionTab, Checkbox, Dropdown, Rating, TabMenu, ProgressSpinner},
 
   props: {
     coordinates: {
@@ -265,7 +252,6 @@ export default defineComponent({
 
       activeViz: 0,
       showCalibrations: scoreSetHasCalibrations,
-      activeCalibrationUrn: this.selectedCalibration,
       activeCalibration: {label: 'None', value: null} as {
         label: string
         value: PersistedScoreCalibration | null
@@ -528,7 +514,7 @@ export default defineComponent({
 
     scoreCalibrations: function (): {[key: string]: PersistedScoreCalibration} | null {
       const calibrationObjects: Record<string, PersistedScoreCalibration> = {}
-      if (this.scoreSet.scoreCalibrations != null && this.scoreSet.scoreCalibrations > 0) {
+      if (this.scoreSet.scoreCalibrations != null && this.scoreSet.scoreCalibrations.length > 0) {
         for (const calibration of this.scoreSet.scoreCalibrations) {
           calibrationObjects[calibration.urn] = calibration
         }
@@ -635,9 +621,9 @@ export default defineComponent({
 
         if (variant) {
           // Line 1: Variant identifier
-          const mappedDnaHgvs = naToUndefined(variant.post_mapped_hgvs_c)
+          const mappedDnaHgvs = naToUndefined(variant.mavedb?.post_mapped_hgvs_c)
           const mappedProteinHgvs =
-            naToUndefined(variant.post_mapped_hgvs_p) ?? naToUndefined(variant.translated_hgvs_p)
+            naToUndefined(variant.mavedb?.post_mapped_hgvs_p) ?? naToUndefined(variant.translated_hgvs_p)
           const unmappedDnaHgvs = naToUndefined(variant.hgvs_nt)
           const unmappedProteinHgvs = naToUndefined(variant.hgvs_pro)
           const unmappedSpliceHgvs = naToUndefined(variant.hgvs_splice)
@@ -721,9 +707,9 @@ export default defineComponent({
           }
 
           // Line 3: Score and classification
-          if (variant.score) {
+          if (variant.scores.score) {
             let binClassificationLabel = ''
-            if (bin && this.activeCalibration && this.activeCalibration.value?.urn) {
+            if (bin && this.activeCalibration.value?.urn) {
               // TODO#491: Refactor this calculation into the creation of variant objects so we may just access the property of the variant which tells us its classification.
               const binClassification = this.histogramShaders[this.activeCalibration.value.urn]?.find(
                 (calibration: HistogramShader) => shaderOverlapsBin(calibration, bin)
@@ -732,7 +718,7 @@ export default defineComponent({
               binClassificationLabel = `<span class="mavedb-range-classification-badge" style="margin-left: 6px; background-color:${binClassification.color}; color:white;">${binClassification.title}</span>`
             }
 
-            parts.push(`Score: ${variant.score.toPrecision(4)} ${binClassificationLabel}`)
+            parts.push(`Score: ${variant.scores.score.toPrecision(4)} ${binClassificationLabel}`)
           }
 
           // Line 4: Blank line
@@ -744,7 +730,7 @@ export default defineComponent({
           parts.push(`Bin range: ${bin.x0} to ${bin.x1}`)
 
           //Line 6: Bin Classification
-          if (this.activeCalibration && this.activeCalibration.value?.urn) {
+          if (this.activeCalibration.value?.urn) {
             // TODO#491: Refactor this calculation into the creation of histogram bins so we don't need to repeat it every time we construct a tooltip.
             const binClassifications =
               this.histogramShaders[this.activeCalibration.value.urn]
@@ -762,7 +748,7 @@ export default defineComponent({
                 const spanEnd = Math.min(bin.x1, calibrationMax).toPrecision(3)
 
                 const binSpansMultipleShaders = bin.x0 < calibrationMin || bin.x1 > calibrationMax
-                const multipleShaderRangeText = spanStart != spanEnd ? ` (${spanStart}-${spanEnd})` : `(${spanStart})`
+                const multipleShaderRangeText = spanStart != spanEnd ? `(${spanStart} to ${spanEnd})` : `(${spanStart})`
 
                 return `<span class="mavedb-range-classification-badge" style="background-color:${binClassification.color}; color:white;">${binClassification.title} ${binSpansMultipleShaders ? `${multipleShaderRangeText}` : ''}</span>`
               })
@@ -814,7 +800,7 @@ export default defineComponent({
     activeCalibration: {
       handler: function () {
         this.renderOrRefreshHistogram()
-        this.$emit('calibrationChanged', this.activeCalibration ? this.activeCalibration.value?.urn : null)
+        this.$emit('calibrationChanged', this.activeCalibration.value?.urn ?? null)
       }
     },
     showCalibrations: {
@@ -989,7 +975,7 @@ export default defineComponent({
           .bottomAxisLabel('Functional Score')
           .leftAxisLabel('Number of Variants')
           .numBins(30)
-          .valueField((variant: Variant) => variant.score)
+          .valueField((variant: Variant) => variant.scores.score)
           .accessorField((variant: Variant) => variant.accession)
           .tooltipHtml(this.tooltipHtmlGetter)
       }
@@ -1020,7 +1006,7 @@ export default defineComponent({
 
       // Only render clinical specific viz options if such features are enabled.
       if (this.config.CLINICAL_FEATURES_ENABLED && this.showCalibrations) {
-        this.histogram.renderShader(this.activeCalibration.value?.urn)
+        this.histogram.renderShader(this.activeCalibration.value ? this.activeCalibration.value.urn : null)
       } else {
         this.histogram.renderShader(null)
       }
@@ -1141,7 +1127,7 @@ export default defineComponent({
     },
 
     chooseDefaultCalibration: function () {
-      if (this.activeCalibration?.value) {
+      if (this.activeCalibration.value) {
         return this.activeCalibration
       }
 

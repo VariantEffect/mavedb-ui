@@ -53,7 +53,24 @@
             </Column>
             <Column field="notes" header="Notes">
               <template #body="{data}">
-                <span class="truncate multi-line" :title="data.notes">{{ data.notes || '—' }}</span>
+                <span
+                  :class="expandedNotes[data.id] ? 'expanded multi-line' : 'truncate multi-line'"
+                  :title="data.notes"
+                >
+                  {{ data.notes || '—' }}
+                </span>
+                <PrimeButton
+                  v-if="data.notes && data.notes.length > 100 && !expandedNotes[data.id]"
+                  class="p-button p-component p-button-text p-button-sm"
+                  label="See more"
+                  @click="expandedNotes[data.id] = true"
+                />
+                <PrimeButton
+                  v-if="data.notes && expandedNotes[data.id]"
+                  class="p-button p-component p-button-text p-button-sm"
+                  label="See less"
+                  @click="expandedNotes[data.id] = false"
+                />
               </template>
             </Column>
             <Column body-class="mave-align-center" field="private" header="Published" :sortable="true">
@@ -172,9 +189,9 @@
     <div v-else-if="['NotLoaded', 'Loading'].includes(itemStatus)" class="p-m-4">
       <PageLoading />
     </div>
-    <v-else>
+    <div v-else>
       <ItemNotFound :item-id="itemId" :item-type="'Score Set'" />
-    </v-else>
+    </div>
   </DefaultLayout>
   <PrimeDialog
     v-model:visible="editorVisible"
@@ -291,7 +308,9 @@ export default {
   data() {
     return {
       // Expanded calibration rows (PrimeVue expects raw row objects)
-      expandedRows: [] as Array<Record<string, unknown>>
+      expandedRows: [] as Array<Record<string, unknown>>,
+      // Expanded notes state per calibration ID
+      expandedNotes: {} as Record<string, boolean>
     }
   },
   computed: {
@@ -636,6 +655,10 @@ export default {
   overflow: hidden;
   text-overflow: ellipsis;
   white-space: nowrap;
+}
+.expanded {
+  max-height: none !important;
+  -webkit-line-clamp: none !important;
 }
 .multi-line {
   white-space: normal;

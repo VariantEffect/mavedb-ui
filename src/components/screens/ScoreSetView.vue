@@ -90,29 +90,40 @@
         </div>
         <div class="mavedb-score-set-histogram-pane">
           <ScoreSetHistogram
-            ref="histogram"
+            ref="distHistogram"
             :coordinates="clinicalMode ? 'mapped' : 'raw'"
             :default-histogram="'distribution'"
             :external-selection="variantToVisualize"
             :hide-start-and-stop-loss-by-default="hideStartAndStopLoss"
             :score-set="item"
-            :selected-calibration="selectedCalibration"
+            :selected-calibration="selectedCalibrations[0]"
             :variants="variants"
-            @calibration-changed="childComponentSelectedCalibration"
+            @calibration-changed="(calibration) => childComponentSelectedCalibration(calibration, 0)"
             @export-chart="setHistogramExport"
           />
+          <div
+            v-if="selectedCalibrationObjects[0] && !sameCalibrationSelected"
+            class="mavedb-score-set-calibration-table"
+          >
+            <CalibrationTable :score-calibration="selectedCalibrationObjects[0]" />
+          </div>
           <template v-if="hasClinicalVariants">
             <ScoreSetHistogram
-              ref="histogram"
+              ref="clinicalHistogram"
               :coordinates="clinicalMode ? 'mapped' : 'raw'"
               :default-histogram="'clinical'"
               :external-selection="variantToVisualize"
               :hide-start-and-stop-loss-by-default="hideStartAndStopLoss"
               :score-set="item"
+              :selected-calibration="selectedCalibrations[1]"
               :variants="variants"
+              @calibration-changed="(calibration) => childComponentSelectedCalibration(calibration, 1)"
               @export-chart="setHistogramExport"
             />
           </template>
+        </div>
+        <div v-if="selectedCalibrationObjects[1]" class="mavedb-score-set-calibration-table">
+          <CalibrationTable :score-calibration="selectedCalibrationObjects[1]" />
         </div>
         <div v-if="showHeatmap && !isScoreSetVisualizerVisible" class="mavedb-score-set-heatmap-pane">
           <ScoreSetHeatmap
@@ -198,7 +209,7 @@
           </Dialog>
           <br />
         </div>
-        <CollectionAdder class="mave-save-to-collection-button" data-set-type="scoreSet" :data-set-urn="item.urn" />
+        <CollectionAdder data-set-type="scoreSet" :data-set-urn="item.urn" />
 
         <div v-if="requestFromGalaxy == '1'">
           <br />Send files to <a :href="galaxyUrl">Galaxy</a>
@@ -384,6 +395,7 @@ import Button from 'primevue/button'
 import Checkbox from 'primevue/checkbox'
 import Dialog from 'primevue/dialog'
 import InputSwitch from 'primevue/inputswitch'
+import ProgressSpinner from 'primevue/progressspinner'
 import ProgressBar from 'primevue/progressbar'
 import PrimeDialog from 'primevue/dialog'
 import ScrollPanel from 'primevue/scrollpanel'
@@ -397,6 +409,7 @@ import AssayFactSheet from '@/components/AssayFactSheet'
 import CalibrationEditor from '../CalibrationEditor.vue'
 import CollectionAdder from '@/components/CollectionAdder'
 import CollectionBadge from '@/components/CollectionBadge'
+import CalibrationTable from '@/components/CalibrationTable'
 import ScoreSetHeatmap from '@/components/ScoreSetHeatmap'
 import ScoreSetHistogram from '@/components/ScoreSetHistogram'
 import ScoreSetPreviewTable from '@/components/ScoreSetPreviewTable'
@@ -426,6 +439,7 @@ export default {
     AssayFactSheet,
     AutoComplete,
     Button,
+    CalibrationTable,
     CalibrationEditor,
     Checkbox,
     CollectionAdder,
@@ -436,6 +450,7 @@ export default {
     ItemNotFound,
     PageLoading,
     ProgressBar,
+    ProgressSpinner,
     PrimeDialog,
     ScoreSetHeatmap,
     ScoreSetHistogram,
@@ -464,7 +479,7 @@ export default {
     const variantSearchSuggestions = ref([])
     const calibrationDraftRef = ref({value: null})
     const editorValidationErrors = ref({})
-    const selectedCalibration = ref(null)
+    const selectedCalibrations = ref([null, null])
 
     return {
       head,
@@ -472,7 +487,7 @@ export default {
       userIsAuthenticated,
       calibrationDraftRef,
       editorValidationErrors,
-      selectedCalibration,
+      selectedCalibrations,
 
       ...useItem({itemTypeName: 'scoreSet'}),
       ...useScopedId(),
@@ -565,7 +580,25 @@ export default {
     hideStartAndStopLoss: function () {
       // In clinical mode, when the target is not endogenously edited (so it has a target sequence), omit start- and
       // stop-loss variants.
-      return this.clinicalMode && this.item.targetGenes[0]?.targetSequence
+      return this.clinicalMode && !!this.item.targetGenes[0]?.targetSequence
+    },
+    selectedCalibrationObjects: function () {
+      if (this.item && this.item.scoreCalibrations && this.selectedCalibrations) {
+        return this.selectedCalibrations.map((calibrationUrn) =>
+          this.item.scoreCalibrations.find((calibration) => calibration.urn === calibrationUrn)
+        )
+      }
+      return this.selectedCalibrations.map(() => null)
+    },
+    sameCalibrationSelected: function () {
+      const cal1 = this.selectedCalibrations[0]
+      for (const cal of this.selectedCalibrations) {
+        if (cal !== cal1) {
+          return false
+        }
+      }
+
+      return true
     },
     uniprotId: function () {
       // If there is only one target gene, return its UniProt ID that has been set from mapped metadata.
@@ -609,7 +642,7 @@ export default {
 
           let scoresUrl = null
           if (this.itemType && this.itemType.restCollectionName && this.itemId) {
-            scoresUrl = `${config.apiBaseUrl}/${this.itemType.restCollectionName}/${this.itemId}/variants/data`
+            scoresUrl = `${config.apiBaseUrl}/${this.itemType.restCollectionName}/${this.itemId}/variants/data?include_post_mapped_hgvs=true`
           }
           this.setScoresDataUrl(scoresUrl)
           this.ensureScoresDataLoaded()
@@ -629,7 +662,10 @@ export default {
       }
     },
     selectedVariant: 'refreshUrlState',
-    selectedCalibration: 'refreshUrlState'
+    selectedCalibrations: {
+      handler: 'refreshUrlState',
+      deep: true
+    }
   },
 
   mounted: async function () {
@@ -647,8 +683,12 @@ export default {
         delete query.variant
       }
 
-      if (this.selectedCalibration) {
-        query.calibration = this.selectedCalibration
+      if (this.selectedCalibrations && this.selectedCalibrations.length > 0) {
+        if (this.sameCalibrationSelected) {
+          query.calibration = this.selectedCalibrations[0]
+        } else {
+          delete query.calibration
+        }
       } else {
         delete query.calibration
       }
@@ -1082,8 +1122,8 @@ export default {
       const selectedVariant = this.variants.find((v) => v.accession == variant.accession)
       this.selectedVariant = Object.assign(selectedVariant, preferredVariantLabel(selectedVariant))
     },
-    childComponentSelectedCalibration: function (calibration) {
-      this.selectedCalibration = calibration
+    childComponentSelectedCalibration: function (calibration, idx) {
+      this.selectedCalibrations[idx] = calibration
     },
     applyUrlState: function () {
       if (this.$route.query.variant) {
@@ -1092,7 +1132,7 @@ export default {
       }
       if (this.$route.query.calibration) {
         const selectedCalibration = this.$route.query.calibration
-        this.selectedCalibration = selectedCalibration
+        this.selectedCalibrations = this.selectedCalibrations.map(() => selectedCalibration)
       }
     },
     heatmapVisibilityUpdated: function (visible) {
@@ -1131,7 +1171,7 @@ export default {
           this.calibrationDraftRef.value = null
           // Reload item to get the new calibration and then select it
           await this.reloadItem()
-          this.selectedCalibration = createdCalibration.urn
+          this.selectedCalibrations = this.selectedCalibrations.map(() => createdCalibration.urn)
         } else if (response.data && response.data.detail) {
           const formValidationErrors = {}
           for (const error of response.data.detail) {

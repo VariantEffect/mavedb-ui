@@ -1,33 +1,47 @@
 <template>
   <div>
-    <table class="mavedb-calibration-table">
-      <caption class="mavedb-calibration-caption">
-        {{
-          calibrationNameToDisplay
-        }}
-      </caption>
-      <tbody>
-        <!-- Baseline score row (if provided) -->
-        <tr v-if="baselineScoreIsDefined">
-          <th class="mavedb-calibration-row-header" scope="row">Baseline score</th>
-          <td :colspan="dynamicScoreRangesColumnCount - 1" style="text-align: center">
-            <span class="monospaced-type">{{ roundRangeBound(scoreCalibration.baselineScore) }}</span>
-            <span v-if="scoreCalibration.baselineScoreDescription">
-              <PrimeButton
-                v-tooltip.right="{value: scoreCalibration.baselineScoreDescription, autoHide: false}"
-                aria-label="Info"
-                class="p-button-help mavedb-help-tooltip-button"
-                icon="pi pi-info"
-                outlined
-                rounded
-              />
-            </span>
-          </td>
-        </tr>
-        <!-- Header row describing columns -->
-        <tr v-if="sortedRanges.length > 0">
-          <th class="mavedb-calibration-row-header" scope="row">Range label</th>
-          <td v-for="range in sortedRanges" :key="range.label">
+    <!-- Main caption -->
+    <div class="mavedb-calibration-caption-standalone">
+      {{ calibrationNameToDisplay }}
+    </div>
+
+    <!-- Baseline score (if provided) - always spans full width -->
+    <div v-if="baselineScoreIsDefined" class="mavedb-baseline-score">
+      <strong>Baseline score:</strong>
+      <span class="monospaced-type">{{ roundRangeBound(scoreCalibration.baselineScore || 0) }}</span>
+      <span v-if="scoreCalibration.baselineScoreDescription">
+        <PrimeButton
+          v-tooltip.right="{value: scoreCalibration.baselineScoreDescription, autoHide: false}"
+          aria-label="Info"
+          class="p-button-help mavedb-help-tooltip-button"
+          icon="pi pi-info"
+          outlined
+          rounded
+        />
+      </span>
+    </div>
+
+    <!-- Chunked table sections -->
+    <div
+      v-if="sortedRanges.length > 0"
+      class="mavedb-calibration-chunks"
+      :class="{'has-baseline': baselineScoreIsDefined}"
+    >
+      <div v-for="(chunk, chunkIndex) in rangeChunks" :key="`chunk-${chunkIndex}`" class="mavedb-calibration-chunk">
+        <div class="mavedb-calibration-grid" :style="chunkGridStyle(chunk.length)">
+          <!-- Range label row -->
+          <div class="mavedb-calibration-row-header grid-row-header" :class="{'chunk-separator-top': chunkIndex > 0}">
+            Range label
+          </div>
+          <div
+            v-for="(range, rangeIndex) in chunk"
+            :key="range.label"
+            class="grid-data-cell"
+            :class="{
+              'chunk-separator-top': chunkIndex > 0,
+              'last-column': rangeIndex === chunk.length - 1
+            }"
+          >
             <span>{{ range.label }}</span>
             <span v-if="range.description">
               <PrimeButton
@@ -39,193 +53,243 @@
                 rounded
               />
             </span>
-          </td>
-        </tr>
-        <!-- Classification row -->
-        <tr v-if="sortedRanges.length > 0">
-          <th class="mavedb-calibration-row-header" scope="row">Classification</th>
-          <td
-            v-for="range in sortedRanges"
+          </div>
+
+          <!-- Classification row -->
+          <div class="mavedb-calibration-row-header grid-row-header">Classification</div>
+          <div
+            v-for="(range, rangeIndex) in chunk"
             :key="range.label + '-classification'"
-            :class="`mave-classification-${range.classification}`"
+            :class="[
+              'grid-data-cell',
+              `mave-classification-${range.classification}`,
+              {'last-column': rangeIndex === chunk.length - 1}
+            ]"
           >
             <span>{{ range.classification ? titleCase(range.classification) : 'Not Provided' }}</span>
-          </td>
-        </tr>
-        <!-- Numeric interval row -->
-        <tr v-if="sortedRanges.length > 0">
-          <th class="mavedb-calibration-row-header" scope="row">Numeric interval</th>
-          <td v-for="range in sortedRanges" :key="range.label + '-interval'" class="monospaced-type">
+          </div>
+
+          <!-- Numeric interval row -->
+          <div
+            class="mavedb-calibration-row-header grid-row-header"
+            :class="{'last-row': isLastRowInChunk('interval')}"
+          >
+            Numeric interval
+          </div>
+          <div
+            v-for="(range, rangeIndex) in chunk"
+            :key="range.label + '-interval'"
+            :class="[
+              'grid-data-cell',
+              'monospaced-type',
+              {
+                'last-column': rangeIndex === chunk.length - 1,
+                'last-row': isLastRowInChunk('interval')
+              }
+            ]"
+          >
             <span>
               {{ range.inclusiveLowerBound ? '[' : '('
               }}{{ range.range[0] !== null ? roundRangeBound(range.range[0]) : '-∞' }},
               {{ range.range[1] !== null ? roundRangeBound(range.range[1]) : '∞'
               }}{{ range.inclusiveUpperBound ? ']' : ')' }}
             </span>
-          </td>
-        </tr>
-        <!-- Evidence strength row (criterion + strength) -->
-        <tr v-if="anyRangeHasEvidenceCode">
-          <th class="mavedb-calibration-row-header" scope="row">Evidence strength</th>
-          <td
-            v-for="range in sortedRanges"
-            :key="range.label + '-evidence-code'"
-            :class="
-              range.acmgClassification?.evidenceStrength
-                ? `mave-evidence-code-${range.acmgClassification?.criterion}_${range.acmgClassification?.evidenceStrength?.toUpperCase()}`
-                : '' + ' monospaced-type'
-            "
-          >
-            <span v-if="range.acmgClassification?.evidenceStrength" class="evidence-code">
-              {{ formattedEvidenceCode(range) }}
+          </div>
+
+          <!-- Evidence strength row (if any ranges have evidence codes) -->
+          <template v-if="anyRangeHasEvidenceCode">
+            <div
+              class="mavedb-calibration-row-header grid-row-header"
+              :class="{'last-row': isLastRowInChunk('evidence')}"
+            >
+              Evidence strength
+            </div>
+            <div
+              v-for="(range, rangeIndex) in chunk"
+              :key="range.label + '-evidence-code'"
+              :class="[
+                'grid-data-cell',
+                'evidence-strength-cell',
+                range.acmgClassification?.evidenceStrength
+                  ? `mave-evidence-code-${range.acmgClassification?.criterion}_${range.acmgClassification?.evidenceStrength?.toUpperCase()}`
+                  : '',
+                {
+                  'last-column': rangeIndex === chunk.length - 1,
+                  'last-row': isLastRowInChunk('evidence')
+                }
+              ]"
+            >
+              <span v-if="range.acmgClassification?.evidenceStrength" class="evidence-code">
+                {{ formattedEvidenceCode(range) }}
+              </span>
+              <span v-else> — </span>
+            </div>
+          </template>
+
+          <!-- OddsPaths ratio row (if any ranges have OddsPaths) -->
+          <template v-if="anyRangeHasOddsPaths">
+            <div
+              class="mavedb-calibration-row-header grid-row-header"
+              :class="{'last-row': isLastRowInChunk('oddspaths')}"
+            >
+              OddsPaths ratio
+            </div>
+            <div
+              v-for="(range, rangeIndex) in chunk"
+              :key="range.label + '-oddspaths'"
+              :class="[
+                'grid-data-cell',
+                {
+                  'last-column': rangeIndex === chunk.length - 1,
+                  'last-row': isLastRowInChunk('oddspaths')
+                }
+              ]"
+            >
+              <template v-if="range.oddspathsRatio">
+                <span class="monospaced-type">{{ roundOddsPath(range.oddspathsRatio) }}</span>
+              </template>
+              <span v-else> — </span>
+            </div>
+          </template>
+
+          <!-- PLR row (if any ranges have PLR) -->
+          <template v-if="anyRangeHasPLR">
+            <div class="mavedb-calibration-row-header grid-row-header" :class="{'last-row': isLastRowInChunk('plr')}">
+              Positive Likelihood Ratio (PLR)
+            </div>
+            <div
+              v-for="(range, rangeIndex) in chunk"
+              :key="range.label + '-plr'"
+              :class="[
+                'grid-data-cell',
+                {
+                  'last-column': rangeIndex === chunk.length - 1,
+                  'last-row': isLastRowInChunk('plr')
+                }
+              ]"
+            >
+              <span v-if="'positiveLikelihoodRatio' in range">{{ range.positiveLikelihoodRatio }}</span>
+              <span v-else>Not Provided</span>
+            </div>
+          </template>
+        </div>
+      </div>
+    </div>
+
+    <!-- Evidence absence message (if ranges exist but no evidence details) -->
+    <div
+      v-if="
+        sortedRanges.length > 0 && !anyRangeHasEvidenceStrength && !anyRangeHasEvidenceCode && !anyRangeHasOddsPaths
+      "
+      class="grid-full-width-message"
+    >
+      No evidence strengths have been reported for this calibration{{ scoreCalibration.notes ? '*' : '' }}.
+    </div>
+
+    <!-- Calibration sources section -->
+    <div v-if="hasAnySources" class="mavedb-calibration-sources-cell">
+      <!-- Threshold sources group -->
+      <template v-if="scoreCalibration.thresholdSources && scoreCalibration.thresholdSources.length > 0">
+        <span aria-label="Threshold sources" class="sources-group" role="group">
+          <PrimeButton
+            v-tooltip.left="{
+              value: 'The threshold source(s) describes the source of the score threshold used in this calibration.',
+              autoHide: false
+            }"
+            aria-label="Threshold sources info"
+            class="p-button-help mavedb-help-tooltip-button"
+            icon="pi pi-info"
+            outlined
+            rounded
+          />
+          <strong>Thresholds:</strong>
+          <span class="citation-list">
+            <span
+              v-for="(source, i) in scoreCalibration.thresholdSources"
+              :key="'threshold:' + source.dbName + ':' + source.identifier"
+            >
+              <a :href="source.url" target="_blank">{{ shortCitationForPublication(source) }}</a
+              ><span v-if="i < scoreCalibration.thresholdSources.length - 1">, </span>
             </span>
-            <span v-else> — </span>
-          </td>
-        </tr>
-        <!-- OddsPaths ratio row -->
-        <tr v-if="anyRangeHasOddsPaths">
-          <th class="mavedb-calibration-row-header" scope="row">OddsPaths ratio</th>
-          <td v-for="range in sortedRanges" :key="range.label + '-oddspaths'">
-            <template v-if="range.oddspathsRatio">
-              <span class="monospaced-type">{{ roundOddsPath(range.oddspathsRatio) }}</span>
-            </template>
-            <span v-else> — </span>
-          </td>
-        </tr>
-        <!-- PLR row (conditional) -->
-        <tr v-if="anyRangeHasPLR">
-          <th class="mavedb-calibration-row-header" scope="row">Positive Likelihood Ratio (PLR)</th>
-          <td v-for="range in sortedRanges" :key="range.label + '-plr'">
-            <span v-if="'positiveLikelihoodRatio' in range">{{ range.positiveLikelihoodRatio }}</span>
-            <span v-else>Not Provided</span>
-          </td>
-        </tr>
-        <!-- Evidence absence message (if ranges exist but no evidence details) -->
-        <tr
-          v-if="
-            sortedRanges.length > 0 && !anyRangeHasEvidenceStrength && !anyRangeHasEvidenceCode && !anyRangeHasOddsPaths
-          "
-        >
-          <td :colspan="dynamicScoreRangesColumnCount" style="text-align: center; font-style: italic; font-size: 0.9em">
-            No evidence strengths have been reported for this calibration{{ scoreCalibration.notes ? '*' : '' }}.
-          </td>
-        </tr>
-        <!-- Threshold sources row (if provided) -->
-        <!-- Unified Sources row -->
-        <tr v-if="hasAnySources">
-          <td class="mavedb-calibration-sources-cell" :colspan="dynamicScoreRangesColumnCount">
-            <!-- Threshold sources group -->
-            <template v-if="scoreCalibration.thresholdSources && scoreCalibration.thresholdSources.length > 0">
-              <span aria-label="Threshold sources" class="sources-group" role="group">
-                <PrimeButton
-                  v-tooltip.left="{
-                    value:
-                      'The threshold source(s) describes the source of the score threshold used in this calibration.',
-                    autoHide: false
-                  }"
-                  aria-label="Threshold sources info"
-                  class="p-button-help mavedb-help-tooltip-button"
-                  icon="pi pi-info"
-                  outlined
-                  rounded
-                />
-                <strong>Thresholds:</strong>
-                <span class="citation-list">
-                  <span
-                    v-for="(source, i) in scoreCalibration.thresholdSources"
-                    :key="'threshold:' + source.dbName + ':' + source.identifier"
-                  >
-                    <a :href="source.url" target="_blank">{{ shortCitationForPublication(source) }}</a
-                    ><span v-if="i < scoreCalibration.thresholdSources.length - 1">, </span>
-                  </span>
-                </span>
-              </span>
-            </template>
-            <!-- Separator between groups -->
+          </span>
+        </span>
+      </template>
+      <!-- Separator between groups -->
+      <span
+        v-if="
+          scoreCalibration.thresholdSources?.length &&
+          (scoreCalibration.methodSources?.length || scoreCalibration.classificationSources?.length)
+        "
+        aria-hidden="true"
+        class="sources-separator"
+        >—</span
+      >
+      <!-- Method sources group -->
+      <template v-if="scoreCalibration.methodSources && scoreCalibration.methodSources.length > 0">
+        <span aria-label="Method sources" class="sources-group" role="group">
+          <PrimeButton
+            v-tooltip.left="{
+              value: 'The method source(s) describe the method by which evidence strengths were obtained.',
+              autoHide: false
+            }"
+            aria-label="Method sources info"
+            class="p-button-help mavedb-help-tooltip-button"
+            icon="pi pi-info"
+            outlined
+            rounded
+          />
+          <strong>Method:</strong>
+          <span class="citation-list">
             <span
-              v-if="
-                scoreCalibration.thresholdSources?.length &&
-                (scoreCalibration.methodSources?.length || scoreCalibration.classificationSources?.length)
-              "
-              aria-hidden="true"
-              class="sources-separator"
-              >—</span
+              v-for="(source, i) in scoreCalibration.methodSources"
+              :key="'method:' + source.dbName + ':' + source.identifier"
             >
-            <!-- Method sources group -->
-            <template v-if="scoreCalibration.methodSources && scoreCalibration.methodSources.length > 0">
-              <span aria-label="Method sources" class="sources-group" role="group">
-                <PrimeButton
-                  v-tooltip.left="{
-                    value: 'The method source(s) describe the method by which evidence strengths were obtained.',
-                    autoHide: false
-                  }"
-                  aria-label="Method sources info"
-                  class="p-button-help mavedb-help-tooltip-button"
-                  icon="pi pi-info"
-                  outlined
-                  rounded
-                />
-                <strong>Method:</strong>
-                <span class="citation-list">
-                  <span
-                    v-for="(source, i) in scoreCalibration.methodSources"
-                    :key="'method:' + source.dbName + ':' + source.identifier"
-                  >
-                    <a :href="source.url" target="_blank">{{ shortCitationForPublication(source) }}</a
-                    ><span v-if="i < scoreCalibration.methodSources.length - 1">, </span>
-                  </span>
-                </span>
-              </span>
-            </template>
+              <a :href="source.url" target="_blank">{{ shortCitationForPublication(source) }}</a
+              ><span v-if="i < scoreCalibration.methodSources.length - 1">, </span>
+            </span>
+          </span>
+        </span>
+      </template>
+      <span
+        v-if="scoreCalibration.methodSources?.length && scoreCalibration.classificationSources?.length"
+        aria-hidden="true"
+        class="sources-separator"
+        >—</span
+      >
+      <!-- Evidence calculation sources group -->
+      <template v-if="scoreCalibration.classificationSources && scoreCalibration.classificationSources.length > 0">
+        <span aria-label="Evidence calculation sources" class="sources-group" role="group">
+          <PrimeButton
+            v-tooltip.left="{
+              value:
+                'Evidence calculation source(s) describe the source of the evidence strengths for each functional range.',
+              autoHide: false
+            }"
+            aria-label="Evidence calculation sources info"
+            class="p-button-help mavedb-help-tooltip-button"
+            icon="pi pi-info"
+            outlined
+            rounded
+          />
+          <strong>Evidence calcs:</strong>
+          <span class="citation-list">
             <span
-              v-if="scoreCalibration.methodSources?.length && scoreCalibration.classificationSources?.length"
-              aria-hidden="true"
-              class="sources-separator"
-              >—</span
+              v-for="(source, i) in scoreCalibration.classificationSources"
+              :key="'calc:' + source.dbName + ':' + source.identifier"
             >
-            <!-- Evidence calculation sources group -->
-            <template
-              v-if="scoreCalibration.classificationSources && scoreCalibration.classificationSources.length > 0"
-            >
-              <span aria-label="Evidence calculation sources" class="sources-group" role="group">
-                <PrimeButton
-                  v-tooltip.left="{
-                    value:
-                      'Evidence calculation source(s) describe the source of the evidence strengths for each functional range.',
-                    autoHide: false
-                  }"
-                  aria-label="Evidence calculation sources info"
-                  class="p-button-help mavedb-help-tooltip-button"
-                  icon="pi pi-info"
-                  outlined
-                  rounded
-                />
-                <strong>Evidence calcs:</strong>
-                <span class="citation-list">
-                  <span
-                    v-for="(source, i) in scoreCalibration.classificationSources"
-                    :key="'calc:' + source.dbName + ':' + source.identifier"
-                  >
-                    <a :href="source.url" target="_blank">{{ shortCitationForPublication(source) }}</a
-                    ><span v-if="i < scoreCalibration.classificationSources.length - 1">, </span>
-                  </span>
-                </span>
-              </span>
-            </template>
-          </td>
-        </tr>
-        <!-- Empty state row -->
-        <tr v-if="sortedRanges.length === 0">
-          <td
-            class="mave-classification-not_provided"
-            :colspan="baselineScoreIsDefined ? dynamicScoreRangesColumnCount + 1 : dynamicScoreRangesColumnCount"
-            style="text-align: center; font-style: italic"
-          >
-            Ranges have not been provided{{ scoreCalibration.notes ? '*' : '' }}.
-          </td>
-        </tr>
-      </tbody>
-    </table>
+              <a :href="source.url" target="_blank">{{ shortCitationForPublication(source) }}</a
+              ><span v-if="i < scoreCalibration.classificationSources.length - 1">, </span>
+            </span>
+          </span>
+        </span>
+      </template>
+    </div>
+
+    <!-- Empty state -->
+    <div v-if="sortedRanges.length === 0" class="mave-classification-not_provided grid-full-width-message">
+      Ranges have not been provided{{ scoreCalibration.notes ? '*' : '' }}.
+    </div>
+
     <div v-if="scoreCalibration.notes" class="mavedb-calibration-caption-notes">*{{ scoreCalibration.notes }}</div>
   </div>
 </template>
@@ -235,7 +299,7 @@ import PrimeButton from 'primevue/button'
 import {defineComponent, PropType} from 'vue'
 
 import {shortCitationForPublication} from '@/lib/publication'
-import {EVIDENCE_STRENGTHS_REVERSED, PersistedScoreCalibration, FunctionalRange} from '@/lib/calibrations'
+import {PersistedScoreCalibration, FunctionalRange} from '@/lib/calibrations'
 
 export default defineComponent({
   name: 'CalibrationTable',
@@ -268,6 +332,7 @@ export default defineComponent({
         (r: FunctionalRange) => r.acmgClassification && 'points' in r.acmgClassification
       )
     },
+
     anyRangeHasEvidenceCode(): boolean {
       if (!this.scoreCalibration.functionalRanges) {
         return false
@@ -275,6 +340,7 @@ export default defineComponent({
 
       return this.scoreCalibration.functionalRanges.some((r: FunctionalRange) => r.acmgClassification?.evidenceStrength)
     },
+
     anyRangeHasOddsPaths(): boolean {
       if (!this.scoreCalibration.functionalRanges) {
         return false
@@ -282,6 +348,7 @@ export default defineComponent({
 
       return this.scoreCalibration.functionalRanges.some((r: FunctionalRange) => r.oddspathsRatio !== undefined)
     },
+
     anyRangeHasPLR(): boolean {
       if (!this.scoreCalibration.functionalRanges) {
         return false
@@ -289,11 +356,7 @@ export default defineComponent({
 
       return this.scoreCalibration.functionalRanges.some((r: FunctionalRange) => 'positiveLikelihoodRatio' in r)
     },
-    dynamicScoreRangesColumnCount(): number {
-      // 1 header column + number of range columns
-      const rangeCount = this.scoreCalibration.functionalRanges?.length || 0
-      return 1 + rangeCount
-    },
+
     hasAnySources(): boolean {
       return !!(
         (this.scoreCalibration.thresholdSources && this.scoreCalibration.thresholdSources.length > 0) ||
@@ -301,53 +364,73 @@ export default defineComponent({
         (this.scoreCalibration.classificationSources && this.scoreCalibration.classificationSources.length > 0)
       )
     },
-    normalRanges() {
-      if (!this.scoreCalibration.functionalRanges) {
-        return []
-      }
-      return this.scoreCalibration.functionalRanges
-        .filter((range) => {
-          return range.classification === 'normal'
-        })
-        .sort(this.comparescoreCalibration)
-    },
-    abnormalRanges() {
-      if (!this.scoreCalibration.functionalRanges) {
-        return []
-      }
-      return this.scoreCalibration.functionalRanges
-        .filter((range) => {
-          return range.classification === 'abnormal'
-        })
-        .sort(this.comparescoreCalibration)
-    },
-    unspecifiedRanges() {
-      if (!this.scoreCalibration.functionalRanges) {
-        return []
-      }
-      return this.scoreCalibration.functionalRanges
-        .filter((range) => {
-          return range.classification === 'not_specified'
-        })
-        .sort(this.comparescoreCalibration)
-    },
+
     sortedRanges() {
       if (!this.scoreCalibration.functionalRanges) {
         return []
       }
       return [...this.scoreCalibration.functionalRanges].sort(this.comparescoreCalibration)
     },
+
     baselineScoreIsDefined() {
       return this.scoreCalibration.baselineScore !== null && this.scoreCalibration.baselineScore !== undefined
     },
+
     calibrationNameToDisplay() {
       return this.scoreCalibration.researchUseOnly
         ? `Research Use Only: ${this.scoreCalibration.title}`
         : (this.scoreCalibration.title ?? 'Score ranges')
+    },
+
+    chunkSize() {
+      // Determine how many columns per chunk based on screen width
+      if (typeof window === 'undefined') return 4 // SSR fallback
+      if (window.innerWidth < 600) return 2
+      if (window.innerWidth < 900) return 3
+      return 4
+    },
+
+    rangeChunks() {
+      if (!this.sortedRanges.length) {
+        return []
+      }
+
+      const chunks = []
+      for (let i = 0; i < this.sortedRanges.length; i += this.chunkSize) {
+        chunks.push(this.sortedRanges.slice(i, i + this.chunkSize))
+      }
+      return chunks
     }
   },
 
   methods: {
+    chunkGridStyle(chunkLength: number) {
+      // If there is only one chunk, use all columns for proportional sizing. If multiple chunks, use fixed chunk size.
+      // for visual consistency across chunks.
+      const maxChunkSize = this.rangeChunks.length > 1 ? this.chunkSize : chunkLength
+
+      // Use proportional widths that fill the full container
+      const headerPortion = 1
+      const totalDataPortion = maxChunkSize
+      const totalPortion = headerPortion + totalDataPortion
+
+      const headerWidth = `${(headerPortion / totalPortion) * 100}%`
+      const dataWidth = `${(1 / totalPortion) * 100}%`
+
+      return {
+        gridTemplateColumns: `${headerWidth} repeat(${chunkLength}, ${dataWidth})`
+      }
+    },
+
+    isLastRowInChunk(rowType: string): boolean {
+      // Determine if this row type is the last one to be rendered
+      // Order: Range label, Classification, Numeric interval, Evidence strength, OddsPaths, PLR
+      if (this.anyRangeHasPLR) return rowType === 'plr'
+      if (this.anyRangeHasOddsPaths) return rowType === 'oddspaths'
+      if (this.anyRangeHasEvidenceCode) return rowType === 'evidence'
+      return rowType === 'interval' // Numeric interval is always present
+    },
+
     comparescoreCalibration(a: FunctionalRange, b: FunctionalRange): number {
       let result = this.compareScores(a.range[0], b.range[0], true)
       if (result == 0) {
@@ -355,6 +438,7 @@ export default defineComponent({
       }
       return result
     },
+
     compareScores(a: number | null, b: number | null, infinityIsNegative: boolean = false) {
       if (a == null && b == null) {
         return 0
@@ -367,25 +451,22 @@ export default defineComponent({
       }
       return a - b
     },
-    evidenceCodeClass(evidenceCode: string | undefined) {
-      const sanitizedEvidenceCode = evidenceCode?.replace('+', '_PLUS') ?? 'NONE'
-      return `mave-evidence-code-${sanitizedEvidenceCode}`
-    },
-    evidenceCodeForEvidenceStrength(evidenceStrength: number | undefined): string | undefined {
-      return evidenceStrength ? EVIDENCE_STRENGTHS_REVERSED[evidenceStrength] || undefined : undefined
-    },
+
     titleCase(s: string) {
       return s
         .replace(/^[-_]*(.)/, (_, c) => c.toUpperCase())
         .replace(/[-_]+(.)/g, (_, c) => ' ' + c.toUpperCase())
         .replace(/([a-z])([A-Z])/g, '$1 $2')
     },
+
     roundOddsPath(rangeBound: number) {
       return rangeBound.toPrecision(3)
     },
+
     roundRangeBound(rangeBound: number) {
       return rangeBound.toPrecision(3)
     },
+
     formattedEvidenceCode(range: FunctionalRange) {
       if (!range.acmgClassification?.evidenceStrength) {
         return ''
@@ -400,25 +481,175 @@ export default defineComponent({
 </script>
 
 <style scoped>
-/* Unified calibration table styling */
-table.mavedb-calibration-table {
-  border-collapse: collapse;
-  margin: 0.5em auto 0.5em auto;
-  line-height: normal;
-  border: 1px solid gray;
-  width: 100%;
-}
-
-.mavedb-calibration-caption {
-  caption-side: top;
+/* Standalone caption styling */
+.mavedb-calibration-caption-standalone {
   text-align: center;
   font-weight: 600;
   font-size: 1.25em;
-  padding: 0.4em 0.2em;
+  padding: 0.6em 0.4em;
   background: #f0f0f0;
-  border-top: 1px solid gray;
+  border: 1px solid gray;
+  border-bottom: 1px solid gray;
+}
+
+/* Baseline score styling */
+.mavedb-baseline-score {
+  text-align: center;
+  padding: 0.5em 1em;
+  background: #fafafa;
+  border: 1px solid gray;
+  border-top: 0;
+  border-bottom: 1px solid gray;
+}
+
+/* Chunked layout container */
+.mavedb-calibration-chunks {
+  display: flex;
+  flex-direction: column;
+  gap: 0; /* Remove gap to create unified appearance */
+  border: 1px solid gray;
+  border-top: 0; /* Continue from baseline score or caption */
+}
+
+.mavedb-calibration-chunk {
+  /* Remove individual chunk borders */
+  border: none;
+}
+
+/* Add extra thick separator line between chunks for clear visual grouping */
+.chunk-separator-top {
+  border-top: 6px solid #333 !important;
+}
+
+/* Extend thick border to the right edge using a pseudo-element */
+.mavedb-calibration-chunk:not(:first-child) {
+  position: relative;
+}
+
+.mavedb-calibration-chunk:not(:first-child)::before {
+  content: '';
+  position: absolute;
+  top: 0;
+  left: 0;
+  right: 0;
+  height: 6px;
+  background-color: #333;
+  z-index: 1;
+}
+
+/* Grid styling for each chunk */
+.mavedb-calibration-grid {
+  display: grid;
+  gap: 0;
+  line-height: normal;
+  width: 100%;
+}
+
+.grid-row-header {
+  font-weight: bold;
+  text-align: left;
+  background-color: #fafafa;
+  white-space: normal;
+  border-right: 1px solid gray;
+  border-bottom: 1px solid gray;
+  border-top: 0;
+  border-left: 0;
+  padding: 0.5em 1em;
+  display: flex;
+  align-items: center;
+}
+
+.grid-data-cell {
+  border-right: 1px solid gray;
+  border-bottom: 1px solid gray;
+  border-top: 0;
+  border-left: 0;
+  padding: 0.5em 1em;
+  text-align: center;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  /* Better text wrapping for evidence codes */
+  overflow-wrap: normal;
+  word-break: normal;
+  min-height: 2.5em;
+}
+
+/* Remove right border from all cells in the last column of each chunk */
+.grid-data-cell.last-column {
+  border-right: 0 !important;
+}
+
+/* Remove bottom border from last row of final chunk only to connect seamlessly with sources */
+.mavedb-calibration-chunk:last-child .grid-data-cell.last-row,
+.mavedb-calibration-chunk:last-child .grid-row-header.last-row {
+  border-bottom: 0 !important;
+}
+
+/* Add right border to the last cell in the final chunk */
+.mavedb-calibration-chunk:last-child .grid-data-cell.last-column {
+  border-right: 1px solid gray !important;
+}
+
+/* Special styling for evidence strength cells to prevent overlap */
+.evidence-strength-cell {
+  min-width: 100px;
+  font-size: 0.9em;
+  padding: 0.4em 0.6em;
+}
+
+/* Full-width message styling */
+.grid-full-width-message {
+  padding: 0.5em 1em;
+  text-align: center;
+  font-style: italic;
+  font-size: 0.9em;
+  background: #f9f9f9;
+  border-bottom: 1px solid gray;
   border-left: 1px solid gray;
   border-right: 1px solid gray;
+  border-top: 0;
+}
+
+/* Sources styling */
+.mavedb-calibration-sources-cell {
+  text-align: left;
+  font-size: 0.85em;
+  line-height: 1.5;
+  background: #f9f9f9;
+  padding: 0.5em 1em;
+  border-bottom: 1px solid gray;
+  border-left: 1px solid gray;
+  border-right: 1px solid gray;
+  border-top: 0;
+}
+
+.mavedb-calibration-sources-cell .sources-label {
+  font-weight: 600;
+  margin-right: 0.15em;
+}
+
+.mavedb-calibration-sources-cell .sources-group {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.25em;
+  margin-right: 0.3em;
+  flex-wrap: wrap;
+}
+
+.mavedb-calibration-sources-cell .citation-list a {
+  white-space: nowrap;
+}
+
+.evidence-code {
+  white-space: normal;
+  word-break: break-word;
+}
+
+.mavedb-calibration-sources-cell .sources-separator {
+  margin: 0 0.15em;
+  color: #666;
+  font-weight: 600;
 }
 
 .mavedb-calibration-caption-notes {
@@ -431,60 +662,7 @@ table.mavedb-calibration-table {
   color: #333;
 }
 
-.mavedb-calibration-row-header {
-  font-weight: bold;
-  text-align: left;
-  background-color: #fafafa;
-  white-space: normal;
-}
-
-table.mavedb-calibration-table td,
-table.mavedb-calibration-table th {
-  border: 1px solid gray;
-  padding: 0.5em 1em;
-  text-align: center;
-  vertical-align: middle;
-  /* Restrict wrapping to natural breakpoints (spaces); underscores get ZWSP injected in evidence codes */
-  overflow-wrap: normal;
-  word-break: normal;
-}
-
-/* Unified sources row styling */
-/* More specific selector to override generic td center alignment */
-table.mavedb-calibration-table td.mavedb-calibration-sources-cell {
-  text-align: left;
-  font-size: 0.85em;
-  line-height: 1.5;
-  background: #f9f9f9;
-}
-.mavedb-calibration-sources-cell .sources-label {
-  font-weight: 600;
-  margin-right: 0.15em;
-}
-.mavedb-calibration-sources-cell .sources-group {
-  display: inline-flex;
-  align-items: center;
-  gap: 0.25em;
-  margin-right: 0.3em;
-  flex-wrap: wrap;
-}
-.mavedb-calibration-sources-cell .citation-list a {
-  white-space: nowrap;
-}
-
-/* Evidence code text: zero-width spaces inserted after underscores in formattedEvidenceCode */
-.evidence-code {
-  white-space: normal;
-}
-
-.mavedb-calibration-sources-cell .sources-separator {
-  margin: 0 0.15em;
-  color: #666;
-  font-weight: 600;
-}
-
 /* Investigator-supplied functional classifications */
-
 .mave-classification-normal {
   background-color: #4444ff;
   color: white;
@@ -509,29 +687,33 @@ table.mavedb-calibration-table td.mavedb-calibration-sources-cell {
 }
 
 /* Evidence strengths */
-
 .mave-evidence-code-PS3_VERY_STRONG {
   background-color: #943744;
+  color: white;
   font-weight: bold;
 }
 
 .mave-evidence-code-PS3_STRONG {
   background-color: #b85c6b;
+  color: white;
   font-weight: bold;
 }
 
 .mave-evidence-code-PS3_MODERATE_PLUS {
   background-color: #ca7682;
+  color: white;
   font-weight: bold;
 }
 
 .mave-evidence-code-PS3_MODERATE {
   background-color: #d68f99;
+  color: white;
   font-weight: bold;
 }
 
 .mave-evidence-code-PS3_SUPPORTING {
   background-color: #e6b1b8;
+  color: white;
   font-weight: bold;
 }
 
@@ -547,16 +729,19 @@ table.mavedb-calibration-table td.mavedb-calibration-sources-cell {
 
 .mave-evidence-code-BS3_MODERATE_PLUS {
   background-color: #99c8dc;
+  color: white;
   font-weight: bold;
 }
 
 .mave-evidence-code-BS3_STRONG {
   background-color: #7ab5d1;
+  color: white;
   font-weight: bold;
 }
 
 .mave-evidence-code-BS3_VERY_STRONG {
   background-color: #4b91a6;
+  color: white;
   font-weight: bold;
 }
 
@@ -568,24 +753,19 @@ table.mavedb-calibration-table td.mavedb-calibration-sources-cell {
 /* Monospace (or at least tabular) numerals for ranges and OddsPath ratios */
 .monospaced-type,
 .monospaced-type > span {
-  /* Prefer true monospace; fall back gracefully */
   font-family:
     ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, 'Liberation Mono', 'Courier New', monospace !important;
-  /* If a proportional UI font still leaks in, force tabular digits */
   font-variant-numeric: tabular-nums;
 }
 
 /* Tooltips */
-
 .mavedb-help-tooltip-button {
   margin-left: 0.6rem;
   height: 0.5rem;
   width: 0.5rem;
   vertical-align: middle;
-  /* Remove extra vertical margin/padding if any. */
   margin-top: 0;
   margin-bottom: 0;
-  /* Ensure that button is inline with text. */
   display: inline-flex;
   align-items: center;
   background: none;
@@ -601,38 +781,40 @@ table.mavedb-calibration-table td.mavedb-calibration-sources-cell {
   font-size: 0.5rem;
 }
 
-/* Accordion style overrides for blending with background */
-.p-accordion:deep(.p-accordion-header .p-accordion-header-link) {
-  background: none;
-}
-.p-accordion:deep(.p-accordion-tab) {
-  border: black 1px solid;
-}
-.p-accordion:deep(.p-accordion-tab-active) {
-  border-top: black 1px solid;
-  border-left: black 1px solid;
-  border-right: black 1px solid;
-}
-.p-accordion:deep(.p-accordion-content) {
-  border-bottom: black 1px solid;
-  background: none;
-}
+/* Responsive behavior */
+@media (max-width: 900px) {
+  .evidence-strength-cell {
+    min-width: 80px;
+    font-size: 0.8em;
+    padding: 0.3em 0.4em;
+  }
 
-/* 
- Responsive wrapping: allow table cells to wrap more aggressively below 800px
- TODO#563: To be perfectly honest, this looks pretty bad but the histogram already looks
- bad on small screens so we can address both issues in a future redesign.
- */
-@media (max-width: 1000px) {
-  table.mavedb-calibration-table td,
-  table.mavedb-calibration-table th {
-    /* Permit wrapping at underscores and long tokens by adding additional break opportunities */
+  .grid-data-cell,
+  .grid-row-header {
+    padding: 0.4em 0.6em;
+  }
+
+  .evidence-code {
     overflow-wrap: anywhere;
     word-break: break-word;
   }
-  /* Keep evidence codes wrapping only at injected ZWSP but still allow cell to flow to multiple lines */
-  .evidence-code {
-    white-space: normal;
+}
+
+@media (max-width: 600px) {
+  .mavedb-calibration-chunks {
+    gap: 0.5em;
+  }
+
+  .evidence-strength-cell {
+    min-width: 60px;
+    font-size: 0.75em;
+    padding: 0.25em 0.3em;
+  }
+
+  .grid-data-cell,
+  .grid-row-header {
+    padding: 0.3em 0.4em;
+    font-size: 0.9em;
   }
 }
 </style>

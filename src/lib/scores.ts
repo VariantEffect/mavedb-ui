@@ -38,7 +38,7 @@ function transformNamespacedColumns(row: ScoresOrCountsRow): ScoresOrCountsRow {
  *   column names. Column names with dots (e.g., "namespace.colname") will be transformed into nested objects.
  * @returns The parsed data, as an array of objects with keys from the column names.
  */
-export function parseScoresOrCounts(csvData: string): ScoresOrCountsRow[] {
+export function parseScoresOrCounts(csvData: string, namespaced: boolean): ScoresOrCountsRow[] {
   csvData = csvData.replace(/(^|\n|\r) *#[^\n\r]*(\n|\r|\r\n|$)/g, '$1')
   const rows = Papa.parse<ScoresOrCountsRow>(csvData, {
     dynamicTyping: true,
@@ -52,5 +52,9 @@ export function parseScoresOrCounts(csvData: string): ScoresOrCountsRow[] {
     }
   }).data
 
-  return rows.map((row) => transformNamespacedColumns(row))
+  if (namespaced) {
+    return rows.map((row) => transformNamespacedColumns(row))
+  }
+
+  return rows
 }

@@ -325,7 +325,7 @@ export default defineComponent({
     },
     scoresData: {
       handler: function (newValue) {
-        this.scores = newValue ? Object.freeze(parseScoresOrCounts(newValue)) : []
+        this.scores = newValue ? Object.freeze(parseScoresOrCounts(newValue, true)) : []
       }
     },
     scoreSetUrn: {

@@ -123,7 +123,7 @@ async function fetchScores() {
       `${config.apiBaseUrl}/score-sets/${props.scoreSet.urn}/scores?drop_na_columns=true`
     )
     if (response.data) {
-      scoresData.value = parseScoresOrCounts(response.data)
+      scoresData.value = parseScoresOrCounts(response.data, false)
     }
   }
 }
@@ -135,7 +135,7 @@ async function fetchCounts() {
       `${config.apiBaseUrl}/score-sets/${props.scoreSet.urn}/counts?drop_na_columns=true`
     )
     if (response.data) {
-      countsData.value = parseScoresOrCounts(response.data)
+      countsData.value = parseScoresOrCounts(response.data, false)
     }
   }
 }

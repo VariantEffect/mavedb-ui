@@ -664,7 +664,7 @@ export default {
     },
     scoresData: {
       handler: function (newValue) {
-        const variants = newValue ? parseScoresOrCounts(newValue) : null
+        const variants = newValue ? parseScoresOrCounts(newValue, true) : null
         if (variants) {
           parseSimpleCodingVariants(variants)
           translateSimpleCodingVariants(variants)

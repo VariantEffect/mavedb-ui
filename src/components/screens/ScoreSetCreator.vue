@@ -2010,19 +2010,26 @@ export default {
           }
         }
         case step == 3 + this.numTargets: {
-          let allInvestigatorProvidedCalibrationsCompleted = true
-          if (!this.calibrationCreateDraft.value?.functionalRanges) {
-            return false
+          if (!this.investigatorIsProvidingScoreCalibrations) {
+            return true
           }
-          for (const scoreRange of this.calibrationCreateDraft.value.functionalRanges) {
+
+          // If a user has begun to provide functional ranges, ensure that they have provided at least a label, classification
+          // and min/max value for all functional ranges.
+          for (const scoreRange of (this.calibrationCreateDraft.value?.functionalRanges || []).entries()) {
             if (!scoreRange.label || !scoreRange.classification) {
-              allInvestigatorProvidedCalibrationsCompleted = false
-              break
+              return false
             }
+            // Since infinite bounds are handled by null values, it's not trivial to check the bounds are complete. We'll leave
+            // that validation to the server for now.
           }
+
+          // Allow progress if all functional ranges have minimum info, and at least one of the following is true:
+          // - At least one functional range has been provided.
+          // - A baseline score has been provided.
           return (
-            !this.investigatorIsProvidingScoreCalibrations ||
-            (allInvestigatorProvidedCalibrationsCompleted && this.calibrationCreateDraft.value.baselineScore !== null)
+            this.calibrationCreateDraft.value?.functionalRanges.length ||
+            this.calibrationCreateDraft.value?.baselineScore !== null
           )
         }
         default:

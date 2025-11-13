@@ -989,9 +989,7 @@ export default {
     removePublicationIdentifier: function (event) {
       // If we are removing a primary publication identifier, also remove it from that list.
       const removedIdentifier = event.value.identifier
-      const primaryIdx = this.primaryPublicationIdentifiers.findIndex(
-        (pub) => pub.identifier == removedIdentifier
-      )
+      const primaryIdx = this.primaryPublicationIdentifiers.findIndex((pub) => pub.identifier == removedIdentifier)
       if (primaryIdx != -1) {
         this.primaryPublicationIdentifiers.splice(primaryIdx, 1)
       }
@@ -1078,6 +1076,7 @@ export default {
             break
         }
         this.inputClasses[inputName] = 'mave-file-input-full'
+        console.log(this.extraMetadata)
       }
       this.mergeValidationErrors()
     },
@@ -1207,7 +1206,7 @@ export default {
         primaryPublicationIdentifiers: primaryPublicationIdentifiers,
         secondaryPublicationIdentifiers: secondaryPublicationIdentifiers,
         rawReadIdentifiers: this.rawReadIdentifiers.map((identifier) => _.pick(identifier, 'identifier')),
-        extraMetadata: {}
+        extraMetadata: this.extraMetadata
       }
       // empty item arrays so that deleted items aren't merged back into editedItem object
       if (this.item) {

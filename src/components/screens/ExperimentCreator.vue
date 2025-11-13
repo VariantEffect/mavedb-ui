@@ -1260,6 +1260,10 @@ export default {
           const formValidationErrors = {}
           for (const error of response.data.detail) {
             let path = error.loc
+            if (error?.ctx?.error?.custom_loc) {
+              path = error.ctx.error.custom_loc
+            }
+
             if (path[0] == 'body') {
               path = path.slice(1)
             }

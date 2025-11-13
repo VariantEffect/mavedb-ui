@@ -1940,10 +1940,10 @@ export default {
       }
 
       // Add upload files to form data
-      if (this.$refs.scoresFileUpload.files.length == 1) {
+      if (this.$refs.scoresFileUpload?.files.length == 1) {
         formData.append('scores_file', this.$refs.scoresFileUpload.files[0])
       }
-      if (this.$refs.countsFileUpload.files.length == 1) {
+      if (this.$refs.countsFileUpload?.files.length == 1) {
         formData.append('counts_file', this.$refs.countsFileUpload.files[0])
       }
       // if (this.$refs.scoreColumnsMetadataFileUpload.files.length == 1) {
@@ -2019,8 +2019,8 @@ export default {
     validateAndSave: async function () {
       this.clientSideValidationErrors = {}
 
-      const hasScoresFile = this.$refs.scoresFileUpload.files.length == 1
-      const hasCountsFile = this.$refs.countsFileUpload.files.length == 1
+      const hasScoresFile = this.$refs.scoresFileUpload?.files.length == 1
+      const hasCountsFile = this.$refs.countsFileUpload?.files.length == 1
       if (hasCountsFile && !hasScoresFile) {
         this.clientSideValidationErrors.scoresFile = 'Required'
       }

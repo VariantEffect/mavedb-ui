@@ -708,17 +708,21 @@ export default defineComponent({
 
           // Line 3: Score and classification
           if (variant.scores.score) {
-            let binClassificationLabel = ''
+            let binClassificationLabel = null
             if (bin && this.activeCalibration.value?.urn) {
               // TODO#491: Refactor this calculation into the creation of variant objects so we may just access the property of the variant which tells us its classification.
               const binClassification = this.histogramShaders[this.activeCalibration.value.urn]?.find(
                 (calibration: HistogramShader) => shaderOverlapsBin(calibration, bin)
               )
 
-              binClassificationLabel = `<span class="mavedb-range-classification-badge" style="margin-left: 6px; background-color:${binClassification.color}; color:white;">${binClassification.title}</span>`
+              if (binClassification) {
+                binClassificationLabel = `<span class="mavedb-range-classification-badge" style="margin-left: 6px; background-color:${binClassification.color}; color:white;">${binClassification.title}</span>`
+              }
             }
 
-            parts.push(`Score: ${variant.scores.score.toPrecision(4)} ${binClassificationLabel}`)
+            if (binClassificationLabel) {
+              parts.push(`Score: ${variant.scores.score.toPrecision(4)} ${binClassificationLabel}`)
+            }
           }
 
           // Line 4: Blank line

@@ -141,7 +141,7 @@
           />
         </div>
       </div>
-      <div v-else style="display: flex; justify-content: center; width: 100%">
+      <div v-else-if="scoresDataStatus !== 'Loaded'" style="display: flex; justify-content: center; width: 100%">
         <div
           style="
             display: flex;
@@ -504,7 +504,7 @@ export default {
       ...useItem({itemTypeName: 'scoreSet'}),
       ...useScopedId(),
       scoresData: scoresRemoteData.data,
-      scoresDataStatus: scoresRemoteData.dataStatus,
+      scoresDataStatus: scoresRemoteData.remoteDataStatus,
       setScoresDataUrl: scoresRemoteData.setDataUrl,
       ensureScoresDataLoaded: scoresRemoteData.ensureDataLoaded,
       variantSearchSuggestions

@@ -8,7 +8,7 @@
     <!-- Baseline score (if provided) - always spans full width -->
     <div v-if="baselineScoreIsDefined" class="mavedb-baseline-score">
       <strong>Baseline score: </strong>
-      <span class="monospaced-type">{{ roundRangeBound(scoreCalibration.baselineScore || 0) }}</span>
+      <span class="monospaced-type">{{ roundForCalibrationTable(scoreCalibration.baselineScore || 0) }}</span>
       <span v-if="scoreCalibration.baselineScoreDescription">
         <PrimeButton
           v-tooltip.right="{value: scoreCalibration.baselineScoreDescription, autoHide: false}"
@@ -90,8 +90,8 @@
           >
             <span>
               {{ range.inclusiveLowerBound ? '[' : '('
-              }}{{ range.range[0] !== null ? roundRangeBound(range.range[0]) : '-∞' }},
-              {{ range.range[1] !== null ? roundRangeBound(range.range[1]) : '∞'
+              }}{{ range.range[0] !== null ? roundForCalibrationTable(range.range[0]) : '-∞' }},
+              {{ range.range[1] !== null ? roundForCalibrationTable(range.range[1]) : '∞'
               }}{{ range.inclusiveUpperBound ? ']' : ')' }}
             </span>
           </div>
@@ -146,7 +146,7 @@
               ]"
             >
               <template v-if="range.oddspathsRatio">
-                <span class="monospaced-type">{{ roundOddsPath(range.oddspathsRatio) }}</span>
+                <span class="monospaced-type">{{ roundForCalibrationTable(range.oddspathsRatio) }}</span>
               </template>
               <span v-else> — </span>
             </div>
@@ -459,12 +459,8 @@ export default defineComponent({
         .replace(/([a-z])([A-Z])/g, '$1 $2')
     },
 
-    roundOddsPath(rangeBound: number) {
-      return rangeBound.toPrecision(3)
-    },
-
-    roundRangeBound(rangeBound: number) {
-      return rangeBound.toPrecision(3)
+    roundForCalibrationTable(value: number | string) {
+      return parseFloat(String(value)).toFixed(2)
     },
 
     formattedEvidenceCode(range: FunctionalRange) {

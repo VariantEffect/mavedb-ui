@@ -283,8 +283,12 @@
         class="mavedb-wizard-row"
       >
         <div class="mavedb-wizard-help">
-          <label :id="scopedId('input-investigatorIsProvidingClassification')">Provide an evidence strength for this functional range?</label>
-          <div class="mavedb-help-small">Optionally, you can provide a description of the evidence supporting this classification.</div>
+          <label :id="scopedId('input-investigatorIsProvidingClassification')"
+            >Provide an evidence strength for this functional range?</label
+          >
+          <div class="mavedb-help-small">
+            Optionally, you can provide a description of the evidence supporting this classification.
+          </div>
         </div>
         <div class="mavedb-wizard-content">
           <InputSwitch
@@ -903,8 +907,11 @@ export default {
   methods: {
     loadEditableScoreSets: async function () {
       try {
-        const response = await axios.post(`${config.apiBaseUrl}/me/score-sets/search`, {metaAnalysis: false})
-        this.editableScoreSets = response.data
+        const response = await axios.post(`${config.apiBaseUrl}/me/score-sets/search`, {
+          metaAnalysis: false,
+          includeExperimentScoreSetUrnsAndCount: false
+        })
+        this.editableScoreSets = response.data.scoreSets || []
       } catch (error) {
         console.error('Error loading score sets:', error)
         this.editableScoreSets = [] // Reset in case of an error

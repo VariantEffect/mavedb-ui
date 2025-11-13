@@ -90,9 +90,10 @@
           >
             <span>
               {{ range.inclusiveLowerBound ? '[' : '('
-              }}{{ range.range[0] !== null ? roundForCalibrationTable(range.range[0]) : '-∞' }},
-              {{ range.range[1] !== null ? roundForCalibrationTable(range.range[1]) : '∞'
-              }}{{ range.inclusiveUpperBound ? ']' : ')' }}
+              }}<template v-if="range.range[0] !== null">{{ roundForCalibrationTable(range.range[0]) }}</template
+              ><span v-else><span class="minus-symbol">&minus;</span><span class="infinity-symbol">&infin;</span></span
+              >, <template v-if="range.range[1] !== null">{{ roundForCalibrationTable(range.range[1]) }}</template
+              ><span v-else class="infinity-symbol">&infin;</span>{{ range.inclusiveUpperBound ? ']' : ')' }}
             </span>
           </div>
 
@@ -752,6 +753,18 @@ export default defineComponent({
   font-family:
     ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, 'Liberation Mono', 'Courier New', monospace !important;
   font-variant-numeric: tabular-nums;
+}
+
+/* Make infinity symbols larger and align (infinity baseline is different) */
+.infinity-symbol {
+  font-size: 1.4em;
+  vertical-align: -0.1em;
+}
+
+/* Make minus symbols larger for appropriate scale with infinity symbol and align */
+.minus-symbol {
+  font-size: 1.3em;
+  vertical-align: -0.05em;
 }
 
 /* Tooltips */

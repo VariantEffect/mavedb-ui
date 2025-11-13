@@ -2016,7 +2016,7 @@ export default {
 
           // If a user has begun to provide functional ranges, ensure that they have provided at least a label, classification
           // and min/max value for all functional ranges.
-          for (const scoreRange of (this.calibrationCreateDraft.value?.functionalRanges || []).entries()) {
+          for (const scoreRange of this.calibrationCreateDraft.value?.functionalRanges || []) {
             if (!scoreRange.label || !scoreRange.classification) {
               return false
             }

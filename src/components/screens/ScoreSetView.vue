@@ -101,26 +101,26 @@
             @calibration-changed="(calibration) => childComponentSelectedCalibration(calibration, 0)"
             @export-chart="setHistogramExport"
           />
-          <div
-            v-if="selectedCalibrationObjects[0] && !sameCalibrationSelected"
-            class="mavedb-score-set-calibration-table"
-          >
-            <CalibrationTable :score-calibration="selectedCalibrationObjects[0]" />
-          </div>
-          <template v-if="hasClinicalVariants">
-            <ScoreSetHistogram
-              ref="clinicalHistogram"
-              :coordinates="clinicalMode ? 'mapped' : 'raw'"
-              :default-histogram="'clinical'"
-              :external-selection="variantToVisualize"
-              :hide-start-and-stop-loss-by-default="hideStartAndStopLoss"
-              :score-set="item"
-              :selected-calibration="selectedCalibrations[1]"
-              :variants="variants"
-              @calibration-changed="(calibration) => childComponentSelectedCalibration(calibration, 1)"
-              @export-chart="setHistogramExport"
-            />
-          </template>
+        </div>
+        <div
+          v-if="selectedCalibrationObjects[0] && !sameCalibrationSelected"
+          class="mavedb-score-set-calibration-table"
+        >
+          <CalibrationTable :score-calibration="selectedCalibrationObjects[0]" />
+        </div>
+        <div v-if="hasClinicalVariants" class="mavedb-score-set-histogram-pane">
+          <ScoreSetHistogram
+            ref="clinicalHistogram"
+            :coordinates="clinicalMode ? 'mapped' : 'raw'"
+            :default-histogram="'clinical'"
+            :external-selection="variantToVisualize"
+            :hide-start-and-stop-loss-by-default="hideStartAndStopLoss"
+            :score-set="item"
+            :selected-calibration="selectedCalibrations[1]"
+            :variants="variants"
+            @calibration-changed="(calibration) => childComponentSelectedCalibration(calibration, 1)"
+            @export-chart="setHistogramExport"
+          />
         </div>
         <div v-if="selectedCalibrationObjects[1]" class="mavedb-score-set-calibration-table">
           <CalibrationTable :score-calibration="selectedCalibrationObjects[1]" />
@@ -141,8 +141,20 @@
           />
         </div>
       </div>
-      <div v-else-if="scoresDataStatus == 'Loading' || scoresDataStatus == 'NotLoaded'">
-        <ProgressSpinner style="width: 36px; height: 36px; margin: 12px auto; display: block" />
+      <div v-else style="display: flex; justify-content: center; width: 100%">
+        <div
+          style="
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            margin: 12px auto;
+            max-width: fit-content;
+            text-align: center;
+          "
+        >
+          <ProgressSpinner style="width: 36px; height: 36px; margin-right: 8px" />
+          <span style="line-height: 36px; font-weight: bold">Loading variants...</span>
+        </div>
       </div>
       <div class="mave-1000px-col">
         <div class="clearfix">
@@ -1209,8 +1221,7 @@ export default {
 }
 
 .mavedb-score-set-variant-search {
-  margin-top: 40px;
-  margin-bottom: 8px;
+  margin: 40px 0 0 0;
   display: flex;
   justify-content: center;
 }
@@ -1225,6 +1236,18 @@ export default {
 .p-float-label {
   display: flex;
   width: 100%;
+}
+
+/* Histogram */
+
+.mavedb-score-set-histogram-pane {
+  margin: 10px 0;
+}
+
+/* Calibration table */
+
+.mavedb-score-set-calibration-pane {
+  margin: 10px 0;
 }
 
 /* Controls */

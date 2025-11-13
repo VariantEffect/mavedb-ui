@@ -7,7 +7,7 @@
 
     <!-- Baseline score (if provided) - always spans full width -->
     <div v-if="baselineScoreIsDefined" class="mavedb-baseline-score">
-      <strong>Baseline score:</strong>
+      <strong>Baseline score: </strong>
       <span class="monospaced-type">{{ roundRangeBound(scoreCalibration.baselineScore || 0) }}</span>
       <span v-if="scoreCalibration.baselineScoreDescription">
         <PrimeButton

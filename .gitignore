@@ -132,5 +132,8 @@ venv.bak/
 # Sphinx documentation build cache
 .doctrees/
 
+# IDEs and editors
+.vscode/
+
 # OS X folder view option files
 *.DS_Store

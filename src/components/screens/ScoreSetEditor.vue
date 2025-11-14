@@ -4,23 +4,15 @@
     :is-first-login-prompt="false"
   />
   <DefaultLayout>
-    <div class="mave-score-set-editor">
+    <div v-if="itemId && itemStatus == 'Loaded'" class="mave-score-set-editor">
       <div class="grid">
         <div class="col-12">
-          <div v-if="itemStatus != 'NotLoaded'" class="mave-screen-title-bar">
+          <div class="mave-screen-title-bar">
             <div class="mave-screen-title">Edit score set {{ item.urn }}</div>
-            <div v-if="item" class="mavedb-screen-title-controls">
-              <Button @click="saveEditContent">Save changes</Button>
-              <Button class="p-button-help" @click="resetForm">Clear</Button>
-              <Button class="p-button-warning" @click="viewItem">Cancel</Button>
-            </div>
-          </div>
-          <div v-else class="mave-screen-title-bar">
-            <div class="mave-screen-title">Create a new score set</div>
             <div class="mavedb-screen-title-controls">
-              <Button @click="validateAndSave">Save</Button>
-              <Button class="p-button-help" @click="resetForm">Clear</Button>
-              <Button class="p-button-warning" @click="backDashboard">Cancel</Button>
+              <Button @click="saveEditContent">Save changes</Button>
+              <Button class="p-button-help" @click="resetForm">Reset</Button>
+              <Button class="p-button-warning" @click="viewItem">Cancel</Button>
             </div>
           </div>
         </div>
@@ -28,7 +20,7 @@
           <Card>
             <template #title>Parent experiment and context</template>
             <template #content>
-              <div v-if="itemStatus != 'NotLoaded' && item.experiment">
+              <div v-if="item.experiment">
                 Experiment:
                 <router-link :to="{name: 'experiment', params: {urn: item.experiment.urn}}">{{
                   item.experiment.title
@@ -52,56 +44,17 @@
                   }}</span>
                 </div>
               </div>
-              <div v-if="itemStatus != 'NotLoaded' && supersedesScoreSet">
+              <div v-if="supersedesScoreSet">
                 Supersedes:
                 <router-link :to="{name: 'scoreSet', params: {urn: supersedesScoreSet.urn}}">{{
                   supersedesScoreSet.title
                 }}</router-link>
               </div>
-              <div v-if="itemStatus == 'NotLoaded'" class="field">
-                <span class="p-float-label">
-                  <AutoComplete
-                    :id="scopedId('input-supersededScoreSet')"
-                    ref="supersededScoreSetInput"
-                    v-model="supersededScoreSet"
-                    field="title"
-                    :force-selection="true"
-                    :suggestions="supersededScoreSetSuggestionsList"
-                    @complete="searchSupersededScoreSets"
-                  >
-                    <template #item="slotProps"> {{ slotProps.item.urn }}: {{ slotProps.item.title }} </template>
-                  </AutoComplete>
-                  <label :for="scopedId('input-supersededScoreSet')">Supersedes</label>
-                </span>
-                <span v-if="validationErrors.supersededScoreSetUrn" class="mave-field-error">{{
-                  validationErrors.supersededScoreSetUrn
-                }}</span>
-              </div>
-              <div v-if="itemStatus != 'NotLoaded' && item?.metaAnalyzesScoreSetUrns?.length > 0">
+              <div v-if="item?.metaAnalyzesScoreSetUrns?.length > 0">
                 Meta-analysis for:<br />
                 <div v-for="metaAnalyzesScoreSetUrn of item.metaAnalyzesScoreSetUrns" :key="metaAnalyzesScoreSetUrn">
                   <EntityLink entity-type="scoreSet" :urn="metaAnalyzesScoreSetUrn"></EntityLink>
                 </div>
-              </div>
-              <div v-if="itemStatus == 'NotLoaded'" class="field">
-                <span class="p-float-label">
-                  <AutoComplete
-                    :id="scopedId('input-metaAnalyzesScoreSets')"
-                    ref="metaAnalyzesScoreSetsInput"
-                    v-model="metaAnalyzesScoreSets"
-                    field="title"
-                    :force-selection="true"
-                    :multiple="true"
-                    :suggestions="metaAnalyzesScoreSetSuggestionsList"
-                    @complete="searchMetaAnalyzesScoreSets"
-                  >
-                    <template #item="slotProps"> {{ slotProps.item.urn }}: {{ slotProps.item.title }} </template>
-                  </AutoComplete>
-                  <label :for="scopedId('input-metaAnalyzesScoreSets')">Meta-analysis for</label>
-                </span>
-                <span v-if="validationErrors.metaAnalyzesScoreSetUrns" class="mave-field-error">{{
-                  validationErrors.metaAnalyzesScoreSetUrns
-                }}</span>
               </div>
             </template>
           </Card>
@@ -187,7 +140,7 @@
                   validationErrors.contributors
                 }}</span>
               </div>
-              <div v-if="itemStatus != 'NotLoaded'">
+              <div>
                 <div class="field">
                   <span class="p-float-label">
                     <Dropdown
@@ -251,6 +204,7 @@
                       :suggestions="publicationIdentifierSuggestionsList"
                       @complete="searchPublicationIdentifiers"
                       @item-select="acceptNewPublicationIdentifier"
+                      @item-unselect="removePublicationIdentifier"
                       @keyup.escape="clearPublicationIdentifierSearch"
                     >
                       <template #chip="slotProps">
@@ -306,8 +260,27 @@
                 </Message>
                 <div class="field">
                   <span class="p-float-label">
+                    <div v-if="extraMetadata">
+                      <span class="mr-2"> Extra metadata</span>
+                      <i class="pi pi-check mr-3"></i>
+                      <Button
+                        v-tooltip="{value: 'View extra metadata'}"
+                        class="p-button-info mr-2"
+                        icon="pi pi-eye"
+                        @click="jsonToDisplay = JSON.stringify(extraMetadata, null, 2)"
+                      ></Button>
+                      <Button
+                        v-tooltip="{value: 'Delete extra metadata'}"
+                        class="p-button-danger mr-2"
+                        icon="pi pi-times"
+                        @click="fileCleared('extraMetadataFile')"
+                      ></Button>
+                    </div>
                     <FileUpload
+                      v-else
                       :id="scopedId('input-extraMetadataFile')"
+                      :key="inputExtraMetadataFileKey"
+                      accept="application/json"
                       :auto="false"
                       choose-label="Extra metadata"
                       :class="inputClasses.extraMetadataFile"
@@ -339,426 +312,10 @@
               </div>
             </template>
           </Card>
-          <div v-if="itemStatus == 'NotLoaded' || item.private">
-            <div v-if="editedScoreRanges.investigatorProvided">
-              <Card>
-                <template #title
-                  >Investigator Score ranges
-                  <Button
-                    aria-label="Delete all ranges"
-                    icon="pi pi-times"
-                    rounded
-                    severity="danger"
-                    style="float: right"
-                    text
-                    @click="removeEditedScoreRanges()"
-                  />
-                </template>
-                <template #content>
-                  <Card>
-                    <template #title>Baseline Score</template>
-                    <template #content>
-                      <div style="padding-top: 1%">
-                        <span class="p-float-label">
-                          <InputNumber
-                            v-model="editedScoreRanges.investigatorProvided.baselineScore"
-                            :aria-labelledby="scopedId('input-baselineScore')"
-                            :max-fraction-digits="10"
-                            :min-fraction-digits="1"
-                            style="width: 100%"
-                          />
-                          <label :for="scopedId('input-baselineScore')"> Baseline Score </label>
-                        </span>
-                        <span
-                          v-if="validationErrors[`scoreRanges.investigatorProvided.baselineScore`]"
-                          class="mave-field-error"
-                          >{{ validationErrors[`scoreRanges.investigatorProvided.baselineScore`] }}</span
-                        >
-                      </div>
-                      <div style="padding-top: 1%">
-                        <span class="p-float-label">
-                          <Textarea
-                            v-model="editedScoreRanges.investigatorProvided.baselineScoreDescription"
-                            :aria-labelledby="scopedId(`input-baselineScoreDescription`)"
-                            style="width: 100%"
-                          />
-                          <label :for="scopedId(`input-baselineScoreDescription`)">Baseline Score Description</label>
-                        </span>
-                        <span
-                          v-if="validationErrors[`scoreRanges.investigatorProvided.baselineScoreDescription`]"
-                          class="mave-field-error"
-                          >{{ validationErrors[`scoreRanges.investigatorProvided.baselineScoreDescription`] }}</span
-                        >
-                      </div>
-                      <div v-if="editedScoreRanges.investigatorProvided.ranges.some((range) => range.oddsPath)">
-                        <span class="p-float-label">
-                          <Multiselect
-                            :id="scopedId('input-scoreRangePublicationIdentifiersInput')"
-                            ref="scoreRangePublicationIdentifiersInput"
-                            v-model="editedScoreRanges.investigatorProvided.source"
-                            option-label="identifier"
-                            :options="publicationIdentifiers"
-                            placeholder="Select a source for the score ranges."
-                            :selection-limit="1"
-                            style="width: 100%"
-                          >
-                            <template #option="slotProps">
-                              <div class="field">
-                                <div>Title: {{ slotProps.option.title }}</div>
-                                <div>DOI: {{ slotProps.option.doi }}</div>
-                                <div>Identifier: {{ slotProps.option.identifier }}</div>
-                                <div>Database: {{ slotProps.option.dbName }}</div>
-                              </div>
-                            </template>
-                          </Multiselect>
-                          <label :for="scopedId('input-scoreRangePublicationIdentifiersInput')"
-                            >Score Range Source (optional)</label
-                          >
-                        </span>
-                        <span
-                          v-if="validationErrors[`scoreRanges.investigatorProvided.source`]"
-                          class="mave-field-error"
-                          >{{ validationErrors[`scoreRanges.investigatorProvided.source`] }}</span
-                        >
-                      </div>
-                    </template>
-                  </Card>
-                  <div
-                    v-for="(rangeObj, rangeIdx) of editedScoreRanges.investigatorProvided.ranges"
-                    :key="rangeIdx"
-                    class="mavedb-score-range-container"
-                  >
-                    <Card>
-                      <template #title
-                        >Range {{ rangeIdx + 1 }}:
-                        <Button
-                          aria-label="Delete range"
-                          icon="pi pi-times"
-                          rounded
-                          severity="danger"
-                          style="float: right"
-                          text
-                          @click="removeEditedScoreRange(rangeIdx)"
-                        />
-                      </template>
-                      <template #content>
-                        <div style="padding-top: 1%">
-                          <InputGroup>
-                            <span class="p-float-label" style="width: 75%">
-                              <InputText
-                                v-model="rangeObj.label"
-                                :aria-labelledby="scopedId(`input-scoreRangeLabel-${rangeIdx}`)"
-                                style="width: 75%"
-                              ></InputText>
-                              <label :for="scopedId(`input-scoreRangeLabel-${rangeIdx}`)">Label</label>
-                            </span>
-                            <span class="p-float-label" style="width: 25%">
-                              <Dropdown
-                                v-model="rangeObj.classification"
-                                :aria-labelledby="scopedId(`input-scoreRangeClassification-${rangeIdx}`)"
-                                option-label="label"
-                                option-value="value"
-                                :options="rangeClassifications"
-                                style="width: 25%"
-                              />
-                              <label :for="scopedId(`input-scoreRangeClassification-${rangeIdx}`)"
-                                >Classification</label
-                              >
-                            </span>
-                          </InputGroup>
-                          <span
-                            v-if="validationErrors[`scoreRanges.investigatorProvided.ranges.${rangeIdx}.label`]"
-                            class="mave-field-error"
-                            >{{ validationErrors[`scoreRanges.investigatorProvided.ranges.${rangeIdx}.label`] }}</span
-                          >
-                          <span
-                            v-if="
-                              validationErrors[`scoreRanges.investigatorProvided.ranges.${rangeIdx}.classification`]
-                            "
-                            class="mave-field-error"
-                            >{{
-                              validationErrors[`scoreRanges.investigatorProvided.ranges.${rangeIdx}.classification`]
-                            }}</span
-                          >
-                        </div>
-                        <div style="padding-top: 1%">
-                          <span class="p-float-label">
-                            <Textarea
-                              v-model="rangeObj.description"
-                              :aria-labelledby="scopedId(`input-scoreRangeDescription-${rangeIdx}`)"
-                              style="width: 100%"
-                            />
-                            <label :for="scopedId(`input-scoreRangeDescription-${rangeIdx}`)"
-                              >Description (optional)</label
-                            >
-                          </span>
-                          <span
-                            v-if="validationErrors[`scoreRanges.investigatorProvided.ranges.${rangeIdx}.description`]"
-                            class="mave-field-error"
-                            >{{
-                              validationErrors[`scoreRanges.investigatorProvided.ranges.${rangeIdx}.description`]
-                            }}</span
-                          >
-                        </div>
-                        <div style="padding-top: 1%">
-                          <InputGroup style="background-color: #fff">
-                            <Button
-                              class="score-range-toggle-button"
-                              :outlined="!editedScoreRangeBoundaryHelper[rangeIdx].lowerBoundIsInfinity"
-                              @click="toggleInfinity(rangeIdx, 'lower')"
-                            >
-                              <FontAwesomeIcon class="score-range-toggle-icon" icon="fa-solid fa-infinity" />
-                            </Button>
-                            <Button
-                              class="score-range-toggle-button"
-                              :disabled="editedScoreRangeBoundaryHelper[rangeIdx].lowerBoundIsInfinity"
-                              :outlined="!rangeObj.inclusiveLowerBound"
-                              @click="toggleBoundary(rangeIdx, 'lower')"
-                            >
-                              <FontAwesomeIcon class="score-range-toggle-icon" icon="fa-solid fa-circle-half-stroke" />
-                            </Button>
-                            <span class="p-float-label">
-                              <InputText
-                                v-model="rangeObj.range[0]"
-                                :aria-labelledby="scopedId(`input-investigatorProvidedRangeLower-${rangeIdx}`)"
-                                :disabled="editedScoreRangeBoundaryHelper[rangeIdx].lowerBoundIsInfinity"
-                              />
-                              <label :for="scopedId(`input-investigatorProvidedRangeLower-${rangeIdx}`)">
-                                {{
-                                  editedScoreRangeBoundaryHelper[rangeIdx].lowerBoundIsInfinity
-                                    ? '-infinity'
-                                    : rangeObj.inclusiveLowerBound
-                                      ? 'Lower Bound (inclusive)'
-                                      : 'Lower Bound (exclusive)'
-                                }}
-                              </label>
-                            </span>
-                            <InputGroupAddon>to</InputGroupAddon>
-                            <span class="p-float-label">
-                              <InputText
-                                v-model="rangeObj.range[1]"
-                                :aria-labelledby="scopedId(`input-investigatorProvidedRangeUpper-${rangeIdx}`)"
-                                :disabled="editedScoreRangeBoundaryHelper[rangeIdx].upperBoundIsInfinity"
-                              />
-                              <label :for="scopedId(`input-investigatorProvidedRangeUpper-${rangeIdx}`)">
-                                {{
-                                  editedScoreRangeBoundaryHelper[rangeIdx].upperBoundIsInfinity
-                                    ? 'infinity'
-                                    : rangeObj.inclusiveUpperBound
-                                      ? 'Upper Bound (inclusive)'
-                                      : 'Upper Bound (exclusive)'
-                                }}
-                              </label>
-                            </span>
-                            <Button
-                              class="score-range-toggle-button"
-                              :disabled="editedScoreRangeBoundaryHelper[rangeIdx].upperBoundIsInfinity"
-                              :outlined="!rangeObj.inclusiveUpperBound"
-                              @click="toggleBoundary(rangeIdx, 'upper')"
-                            >
-                              <FontAwesomeIcon class="score-range-toggle-icon" icon="fa-solid fa-circle-half-stroke" />
-                            </Button>
-                            <Button
-                              class="score-range-toggle-button"
-                              :outlined="!editedScoreRangeBoundaryHelper[rangeIdx].upperBoundIsInfinity"
-                              @click="toggleInfinity(rangeIdx, 'upper')"
-                            >
-                              <FontAwesomeIcon class="score-range-toggle-icon" icon="fa-solid fa-infinity" />
-                            </Button>
-                          </InputGroup>
-                        </div>
-                        <span
-                          v-if="validationErrors[`scoreRanges.investigatorProvided.ranges.${rangeIdx}.range`]"
-                          class="mave-field-error"
-                          >{{ validationErrors[`scoreRanges.investigatorProvided.ranges.${rangeIdx}.range`] }}</span
-                        >
-                        <span
-                          v-if="
-                            validationErrors[`scoreRanges.investigatorProvided.ranges.${rangeIdx}.inclusiveLowerBound`]
-                          "
-                          class="mave-field-error"
-                          >{{
-                            validationErrors[`scoreRanges.investigatorProvided.ranges.${rangeIdx}.inclusiveLowerBound`]
-                          }}</span
-                        >
-                        <span
-                          v-if="
-                            validationErrors[`scoreRanges.investigatorProvided.ranges.${rangeIdx}.inclusiveUpperBound`]
-                          "
-                          class="mave-field-error"
-                          >{{
-                            validationErrors[`scoreRanges.investigatorProvided.ranges.${rangeIdx}.inclusiveUpperBound`]
-                          }}</span
-                        >
-                        <div v-if="rangeObj.oddsPath">
-                          <Card>
-                            <template #title
-                              >OddsPath Ratio and Evidence Strength
-                              <Button
-                                aria-label="Delete OddsPath"
-                                icon="pi pi-times"
-                                rounded
-                                severity="danger"
-                                style="float: right"
-                                text
-                                @click="removeOddsPath(rangeIdx)"
-                              />
-                            </template>
-                            <template #content>
-                              <div>
-                                <InputGroup>
-                                  <span class="p-float-label" style="margin-right: 1em">
-                                    <InputNumber
-                                      v-model="rangeObj.oddsPath.ratio"
-                                      :aria-labelledby="scopedId('input-oddsPathRatio')"
-                                      :max-fraction-digits="10"
-                                      :min-fraction-digits="1"
-                                      style="width: 50%"
-                                    />
-                                    <label :for="scopedId('input-oddsPathRatio')"> OddsPath Ratio </label>
-                                  </span>
-                                  <span class="p-float-label">
-                                    <Dropdown
-                                      v-model="rangeObj.oddsPath.evidence"
-                                      :aria-labelledby="scopedId('input-oddsPathEvidence')"
-                                      :disabled="rangeObj.classification === null"
-                                      :options="
-                                        rangeObj.classification
-                                          ? evidenceStrengths[rangeObj.classification].concat(
-                                              evidenceStrengths.indeterminate
-                                            )
-                                          : []
-                                      "
-                                      style="width: 50%"
-                                    />
-                                    <label :for="scopedId('input-oddsPathEvidence')">
-                                      {{
-                                        rangeObj.classification === null
-                                          ? 'Select a range classification'
-                                          : 'OddsPath Evidence Strength (Optional)'
-                                      }}
-                                    </label>
-                                  </span>
-                                </InputGroup>
-                                <span
-                                  v-if="
-                                    validationErrors[
-                                      `scoreRanges.investigatorProvided.ranges.${rangeIdx}.oddsPath.ratio`
-                                    ]
-                                  "
-                                  class="mave-field-error"
-                                  >{{
-                                    validationErrors[
-                                      `scoreRanges.investigatorProvided.ranges.${rangeIdx}.oddsPath.ratio`
-                                    ]
-                                  }}</span
-                                >
-                                <span
-                                  v-if="
-                                    validationErrors[
-                                      `scoreRanges.investigatorProvided.ranges.${rangeIdx}.oddsPath.evidence`
-                                    ]
-                                  "
-                                  class="mave-field-error"
-                                  >{{
-                                    validationErrors[
-                                      `scoreRanges.investigatorProvided.ranges.${rangeIdx}.oddsPath.evidence`
-                                    ]
-                                  }}</span
-                                >
-                              </div>
-                            </template>
-                          </Card>
-                        </div>
-                        <div v-else>
-                          <Card>
-                            <template #title
-                              >Add OddsPath
-                              <Button
-                                aria-label="Add OddsPath"
-                                icon="pi pi-plus"
-                                rounded
-                                style="float: right"
-                                text
-                                @click="addOddsPath(rangeIdx)"
-                              />
-                            </template>
-                          </Card>
-                        </div>
-                      </template>
-                    </Card>
-                  </div>
-                  <div v-if="editedScoreRanges.investigatorProvided.ranges.some((range) => range.oddsPath)">
-                    <span class="p-float-label">
-                      <Multiselect
-                        :id="scopedId('input-oddsPathPublicationIdentifiersInput')"
-                        ref="oddsPathPublicationIdentifiersInput"
-                        v-model="editedScoreRanges.investigatorProvided.oddsPathSource"
-                        option-label="identifier"
-                        :options="publicationIdentifiers"
-                        placeholder="Select a source for the OddsPath calculation."
-                        :selection-limit="1"
-                        style="width: 100%"
-                      >
-                        <template #option="slotProps">
-                          <div class="field">
-                            <div>Title: {{ slotProps.option.title }}</div>
-                            <div>DOI: {{ slotProps.option.doi }}</div>
-                            <div>Identifier: {{ slotProps.option.identifier }}</div>
-                            <div>Database: {{ slotProps.option.dbName }}</div>
-                          </div>
-                        </template>
-                      </Multiselect>
-                      <label :for="scopedId('input-oddsPathPublicationIdentifiersInput')"
-                        >OddsPath Source (optional)</label
-                      >
-                    </span>
-                    <span
-                      v-if="validationErrors[`scoreRanges.investigatorProvided.oddsPathSource`]"
-                      class="mave-field-error"
-                      >{{ validationErrors[`scoreRanges.investigatorProvided.oddsPathSource`] }}</span
-                    >
-                  </div>
-                  <span v-if="validationErrors[`scoreRanges.investigatorProvided.ranges`]" class="mave-field-error">{{
-                    validationErrors[`scoreRanges.investigatorProvided.ranges`]
-                  }}</span>
-                  <div
-                    class="field"
-                    style="align-items: center; justify-content: center; display: flex; padding-top: 1%"
-                  >
-                    <Button
-                      aria-label="Add range"
-                      icon="pi pi-plus"
-                      label="Add new score range"
-                      outlined
-                      raised
-                      text
-                      @click="addEditedScoreRange()"
-                    />
-                  </div>
-                </template>
-              </Card>
-            </div>
-            <div v-else>
-              <Card>
-                <template #title
-                  >Add Score Ranges
-                  <Button
-                    aria-label="Add score ranges"
-                    icon="pi pi-plus"
-                    rounded
-                    style="float: right"
-                    text
-                    @click="addEditedScoreRanges()"
-                  />
-                </template>
-              </Card>
-            </div>
-          </div>
         </div>
 
         <div class="col-12 md:col-6">
-          <div v-if="itemStatus == 'NotLoaded' || item.private">
+          <div v-if="item.private">
             <Card>
               <template #title>Targets</template>
               <template #content>
@@ -1209,6 +766,7 @@
                     <FileUpload
                       :id="scopedId('input-scoresFile')"
                       ref="scoresFileUpload"
+                      accept="text/csv"
                       :auto="false"
                       choose-label="Scores file"
                       :class="inputClasses.scoresFile || ''"
@@ -1228,9 +786,51 @@
                 </div>
                 <div class="field">
                   <span class="p-float-label">
+                    <div v-if="scoreColumnsMetadata">
+                      <span class="mr-2">Scores column metadata</span>
+                      <i class="pi pi-check mr-3"></i>
+                      <Button
+                        v-tooltip="{value: 'View scores column metadata'}"
+                        class="p-button-info mr-2"
+                        icon="pi pi-eye"
+                        @click="jsonToDisplay = JSON.stringify(scoreColumnsMetadata, null, 2)"
+                      ></Button>
+                      <Button
+                        v-tooltip="{value: 'Delete scores column metadata'}"
+                        class="p-button-danger mr-2"
+                        icon="pi pi-times"
+                        @click="fileCleared('scoreColumnsMetadataFile')"
+                      ></Button>
+                    </div>
+                    <FileUpload
+                      v-else
+                      :id="scopedId('input-scoreColumnsMetadataFile')"
+                      accept="application/json"
+                      :auto="false"
+                      choose-label="Scores column metadata file"
+                      :class="inputClasses.scoreColumnsMetadataFile || ''"
+                      :custom-upload="true"
+                      :file-limit="1"
+                      :show-cancel-button="false"
+                      :show-upload-button="false"
+                      @remove="fileCleared('scoreColumnsMetadataFile')"
+                      @select="fileSelected('scoreColumnsMetadataFile', $event)"
+                    >
+                      <template #empty>
+                        <p>Drop a JSON file here.</p>
+                      </template>
+                    </FileUpload>
+                  </span>
+                  <span v-if="validationErrors.scoreColumnsMetadataFile" class="mave-field-error">{{
+                    validationErrors.scoreColumnsMetadataFile
+                  }}</span>
+                </div>
+                <div class="field">
+                  <span class="p-float-label">
                     <FileUpload
                       :id="scopedId('input-countsFile')"
                       ref="countsFileUpload"
+                      accept="text/csv"
                       :auto="false"
                       choose-label="Counts file"
                       :class="inputClasses.countsFile || ''"
@@ -1248,6 +848,47 @@
                     validationErrors.countsFile
                   }}</span>
                 </div>
+                <div class="field">
+                  <span class="p-float-label">
+                    <div v-if="countColumnsMetadata">
+                      <span class="mr-2">Counts column metadata</span>
+                      <i class="pi pi-check mr-3"></i>
+                      <Button
+                        v-tooltip="{value: 'View counts column metadata'}"
+                        class="p-button-info mr-2"
+                        icon="pi pi-eye"
+                        @click="jsonToDisplay = JSON.stringify(countColumnsMetadata, null, 2)"
+                      ></Button>
+                      <Button
+                        v-tooltip="{value: 'Delete counts column metadata'}"
+                        class="p-button-danger mr-2"
+                        icon="pi pi-times"
+                        @click="fileCleared('countColumnsMetadataFile')"
+                      ></Button>
+                    </div>
+                    <FileUpload
+                      v-else
+                      :id="scopedId('input-countColumnsMetadataFile')"
+                      accept="application/json"
+                      :auto="false"
+                      choose-label="Counts column metadata file"
+                      :class="inputClasses.countColumnsMetadataFile || ''"
+                      :custom-upload="true"
+                      :file-limit="1"
+                      :show-cancel-button="false"
+                      :show-upload-button="false"
+                      @remove="fileCleared('countColumnsMetadataFile')"
+                      @select="fileSelected('countColumnsMetadataFile', $event)"
+                    >
+                      <template #empty>
+                        <p>Drop a JSON file here.</p>
+                      </template>
+                    </FileUpload>
+                  </span>
+                  <span v-if="validationErrors.countColumnsMetadataFile" class="mave-field-error">{{
+                    validationErrors.countColumnsMetadataFile
+                  }}</span>
+                </div>
               </template>
             </Card>
           </div>
@@ -1255,13 +896,23 @@
       </div>
     </div>
     <ProgressSpinner v-if="progressVisible" class="mave-progress" />
+    <Dialog
+      v-model:visible="jsonToDisplay"
+      :close-on-escape="true"
+      modal
+      :style="{maxWidth: '90%', width: '50rem'}"
+      @close="jsonToDisplay = null"
+    >
+      <span style="white-space: pre-wrap; font-family: monospace">
+        {{ jsonToDisplay }}
+      </span>
+    </Dialog>
   </DefaultLayout>
 </template>
 
 <script>
 import axios from 'axios'
 import fasta from 'fasta-js'
-import {FontAwesomeIcon} from '@fortawesome/vue-fontawesome'
 import _ from 'lodash'
 import {marked} from 'marked'
 import AutoComplete from 'primevue/autocomplete'
@@ -1272,8 +923,6 @@ import Column from 'primevue/column'
 import DataTable from 'primevue/datatable'
 import Dropdown from 'primevue/dropdown'
 import FileUpload from 'primevue/fileupload'
-import InputGroup from 'primevue/inputgroup'
-import InputGroupAddon from 'primevue/inputgroupaddon'
 import InputNumber from 'primevue/inputnumber'
 import InputText from 'primevue/inputtext'
 import InputSwitch from 'primevue/inputswitch'
@@ -1284,6 +933,7 @@ import SelectButton from 'primevue/selectbutton'
 import TabPanel from 'primevue/tabpanel'
 import TabView from 'primevue/tabview'
 import Textarea from 'primevue/textarea'
+import Dialog from 'primevue/dialog'
 import {ref} from 'vue'
 import {useHead} from '@unhead/vue'
 
@@ -1297,7 +947,6 @@ import useItems from '@/composition/items'
 import config from '@/config'
 import {normalizeDoi, normalizeIdentifier, validateDoi, validateIdentifier} from '@/lib/identifiers'
 import {ORCID_ID_REGEX} from '@/lib/orcid'
-import {ABNORMAL_RANGE_EVIDENCE, NORMAL_RANGE_EVIDENCE, INDETERMINATE_RANGE_EVIDENCE} from '@/lib/ranges'
 import {TARGET_GENE_CATEGORIES, textForTargetGeneCategory} from '@/lib/target-genes'
 
 const externalGeneDatabases = ['UniProt', 'Ensembl', 'RefSeq']
@@ -1323,25 +972,6 @@ function emptyTargetGene() {
   }
 }
 
-function emptyEditedScoreRange() {
-  return {
-    label: null,
-    description: null,
-    range: [null, null],
-    classification: null,
-    oddsPath: null,
-    inclusiveLowerBound: true,
-    inclusiveUpperBound: false
-  }
-}
-
-function emptyEditedScoreRangeBoundaryHelper() {
-  return {
-    lowerBoundIsInfinity: false,
-    upperBoundIsInfinity: false
-  }
-}
-
 export default {
   name: 'ScoreSetEditor',
   components: {
@@ -1356,9 +986,6 @@ export default {
     EmailPrompt,
     EntityLink,
     FileUpload,
-    FontAwesomeIcon,
-    InputGroup,
-    InputGroupAddon,
     InputNumber,
     InputText,
     InputSwitch,
@@ -1368,13 +995,14 @@ export default {
     SelectButton,
     TabPanel,
     TabView,
-    Textarea
+    Textarea,
+    Dialog
   },
 
   props: {
     itemId: {
       type: String,
-      required: false
+      required: true
     }
   },
 
@@ -1451,16 +1079,16 @@ export default {
     geneNameDropdownValue: null,
     targetOptions: ['Assembly', 'HGNC'],
     targetAutocomplete: 'HGNC',
-    extraMetadata: {},
+    extraMetadata: null,
+    scoreColumnsMetadata: null,
+    countColumnsMetadata: null,
+    inputExtraMetadataFileKey: 0,
+    // inputScoreColumnsMetadataFileKey: 0,
+    // inputCountColumnsMetadataFileKey: 0,
+    jsonToDisplay: null,
 
     existingTargetGene: null,
     targetGenes: [],
-
-    editedScoreRanges: {
-      investigatorProvided: null
-    },
-    activeEditedScoreRangeTab: 0,
-    editedScoreRangeBoundaryHelper: [],
 
     // Static sets of options:
     sequenceTypes: ['DNA', 'protein'],
@@ -1470,11 +1098,6 @@ export default {
       {value: 'abnormal', label: 'Abnormal'},
       {value: 'not_specified', label: 'Not Specified'}
     ],
-    evidenceStrengths: {
-      normal: NORMAL_RANGE_EVIDENCE,
-      abnormal: ABNORMAL_RANGE_EVIDENCE,
-      indeterminate: INDETERMINATE_RANGE_EVIDENCE
-    },
 
     progressVisible: false,
     serverSideValidationErrors: {},
@@ -1482,7 +1105,9 @@ export default {
     inputClasses: {
       countsFile: null,
       extraMetadataFile: null,
-      scoresFile: null
+      scoresFile: null,
+      scoreColumnsMetadataFile: null,
+      countColumnsMetadataFile: null
     },
     externalGeneDatabases,
     metaAnalyzesScoreSetSuggestions: [],
@@ -1753,7 +1378,7 @@ export default {
           }
         )
         // TODO (#130) catch errors in response
-        return response.data || []
+        return response.data?.scoreSets || []
       } catch (err) {
         console.log(`Error while loading search results")`, err)
         return []
@@ -1847,69 +1472,6 @@ export default {
       }
     },
 
-    toggleBoundary: function (rangeIdx, boundary) {
-      const updatedRange = this.editedScoreRanges.investigatorProvided.ranges[rangeIdx]
-      if (boundary === 'upper') {
-        updatedRange.inclusiveUpperBound = !updatedRange.inclusiveUpperBound
-      } else if (boundary == 'lower') {
-        updatedRange.inclusiveLowerBound = !updatedRange.inclusiveLowerBound
-      }
-    },
-
-    toggleInfinity: function (rangeIdx, boundary) {
-      const updatedRange = this.editedScoreRanges.investigatorProvided.ranges[rangeIdx]
-      if (boundary === 'upper') {
-        this.editedScoreRangeBoundaryHelper[rangeIdx].upperBoundIsInfinity =
-          !this.editedScoreRangeBoundaryHelper[rangeIdx].upperBoundIsInfinity
-        updatedRange.range[1] = null
-        updatedRange.inclusiveUpperBound = false
-      } else if (boundary == 'lower') {
-        this.editedScoreRangeBoundaryHelper[rangeIdx].lowerBoundIsInfinity =
-          !this.editedScoreRangeBoundaryHelper[rangeIdx].lowerBoundIsInfinity
-        updatedRange.range[0] = null
-        updatedRange.inclusiveLowerBound = false
-      }
-    },
-
-    addEditedScoreRange: function () {
-      this.editedScoreRanges.investigatorProvided.ranges.push(emptyEditedScoreRange())
-      this.editedScoreRangeBoundaryHelper.push(emptyEditedScoreRangeBoundaryHelper())
-    },
-
-    removeEditedScoreRange: function (rangeIdx) {
-      this.editedScoreRanges.investigatorProvided.ranges.splice(rangeIdx, 1)
-      this.editedScoreRangeBoundaryHelper.splice(rangeIdx, 1)
-    },
-
-    removeEditedScoreRanges: function () {
-      this.editedScoreRanges = null
-      this.editedScoreRangeBoundaryHelper = null
-    },
-
-    addEditedScoreRanges: function () {
-      this.editedScoreRanges.investigatorProvided = {
-        baselineScore: null,
-        baselineScoreDescription: null,
-        ranges: [],
-        oddsPathSource: [],
-        source: []
-      }
-      this.editedScoreRangeBoundaryHelper = []
-      this.editedScoreRanges.investigatorProvided.ranges.push(emptyEditedScoreRange())
-      this.editedScoreRangeBoundaryHelper.push(emptyEditedScoreRangeBoundaryHelper())
-    },
-
-    removeOddsPath: function (rangeIdx) {
-      this.editedScoreRanges.investigatorProvided.ranges[rangeIdx].oddsPath = null
-    },
-
-    addOddsPath: function (rangeIdx) {
-      this.editedScoreRanges.investigatorProvided.ranges[rangeIdx].oddsPath = {
-        ratio: null,
-        evidence: null
-      }
-    },
-
     ////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
     // Form fields
     ////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
@@ -1981,6 +1543,15 @@ export default {
           summary: `Identifier "${newIdentifier}" is already associated with this experiment`,
           life: 3000
         })
+      }
+    },
+
+    removePublicationIdentifier: function (event) {
+      // If we are removing a primary publication identifier, also remove it from that list.
+      const removedIdentifier = event.value.identifier
+      const primaryIdx = this.primaryPublicationIdentifiers.findIndex((pub) => pub.identifier == removedIdentifier)
+      if (primaryIdx != -1) {
+        this.primaryPublicationIdentifiers.splice(primaryIdx, 1)
       }
     },
 
@@ -2077,9 +1648,19 @@ export default {
     },
 
     fileCleared: function (inputName) {
+      this.jsonToDisplay = null
       if (inputName == 'extraMetadataFile') {
         this.extraMetadata = null
         delete this.clientSideValidationErrors.extraMetadata
+        this.inputExtraMetadataFileKey += 1 // force re-mount of file upload component, otherwise button doesn't re-appear
+      } else if (inputName == 'scoreColumnsMetadataFile') {
+        this.scoreColumnsMetadata = null
+        delete this.clientSideValidationErrors.scoreColumnsMetadata
+        this.inputScoreColumnsMetadataFileKey += 1
+      } else if (inputName == 'countColumnsMetadataFile') {
+        this.countColumnsMetadata = null
+        delete this.clientSideValidationErrors.countColumnsMetadata
+        this.inputCountColumnsMetadataFileKey += 1
       }
       // ensure files are cleared from sequence loader even when remove button not used
       else if (inputName == 'targetGeneTargetSequenceSequenceFile') {
@@ -2089,31 +1670,55 @@ export default {
       this.mergeValidationErrors()
     },
 
+    validateJsonObject: function (data, fieldName) {
+      if (!_.isObject(data) || _.isArray(data)) {
+        this.clientSideValidationErrors[fieldName] =
+          `${_.startCase(fieldName)} must be a JSON object (not an array or simple value).`
+      } else {
+        delete this.clientSideValidationErrors[fieldName]
+      }
+    },
+
     fileSelected: async function (inputName, event) {
       const file = event.files[0]
       if (file) {
+        const text = await file.text()
         switch (inputName) {
           case 'extraMetadataFile':
             {
-              const text = await file.text()
               try {
                 this.extraMetadata = JSON.parse(text)
-                if (!_.isObject(this.extraMetadata) || _.isArray(this.extraMetadata)) {
-                  this.clientSideValidationErrors.extraMetadata =
-                    'Extra metadata must be a JSON object (not an array or simple value).'
-                } else {
-                  this.clientSideValidationErrors.extraMetadata = null
-                }
+                this.validateJsonObject(this.extraMetadata, 'extraMetadata')
               } catch {
-                this.extraMetadata = null
                 this.clientSideValidationErrors.extraMetadata = 'The file did not contain valid JSON text.'
                 console.log('Extra metadata file did not contain valid JSON text.')
               }
             }
             break
+          case 'scoreColumnsMetadataFile':
+            {
+              try {
+                this.scoreColumnsMetadata = JSON.parse(text)
+                this.validateJsonObject(this.scoreColumnsMetadata, 'scoreColumnsMetadata')
+              } catch {
+                this.clientSideValidationErrors.scoreColumnsMetadata = 'The file did not contain valid JSON text.'
+                console.log('Scores column metadata file did not contain valid JSON text.')
+              }
+            }
+            break
+          case 'countColumnsMetadataFile':
+            {
+              try {
+                this.countColumnsMetadata = JSON.parse(text)
+                this.validateJsonObject(this.countColumnsMetadata, 'countColumnsMetadata')
+              } catch {
+                this.clientSideValidationErrors.countColumnsMetadata = 'The file did not contain valid JSON text.'
+                console.log('Counts column metadata file did not contain valid JSON text.')
+              }
+            }
+            break
           case 'targetGeneTargetSequenceSequenceFile':
             {
-              const text = await file.text()
               try {
                 const fastaParser = new fasta()
                 /*new Fasta({
@@ -2131,7 +1736,7 @@ export default {
                     'The FASTA file contains more than one sequence.'
                 } else {
                   this.targetGene.targetSequence.sequence = fastaData[0].sequence
-                  this.clientSideValidationErrors['targetGene.targetSequence.sequence'] = null
+                  delete this.clientSideValidationErrors['targetGene.targetSequence.sequence']
                 }
               } catch {
                 this.targetGene.targetSequence.sequence = null
@@ -2188,61 +1793,17 @@ export default {
         this.targetGene = emptyTargetGene()
         this.assembly = this.item.assembly
         this.targetGenes = this.item.targetGenes
-        // Only allow investigator provided ranges to be edited
-        this.editedScoreRanges = {investigatorProvided: this.item.scoreRanges?.investigatorProvided || null}
-        this.editedScoreRangeBoundaryHelper = []
-        this.editedScoreRanges?.investigatorProvided?.ranges.forEach((range, idx) => {
-          this.editedScoreRangeBoundaryHelper.push(emptyEditedScoreRangeBoundaryHelper())
-          this.editedScoreRangeBoundaryHelper[idx].lowerBoundIsInfinity =
-            this.editedScoreRanges.investigatorProvided.ranges[idx].range[0] === null
-          this.editedScoreRangeBoundaryHelper[idx].upperBoundIsInfinity =
-            this.editedScoreRanges.investigatorProvided.ranges[idx].range[1] === null
-        })
-        this.extraMetadata = this.item.extraMetadata
-
-        if (this.editedScoreRanges?.investigatorProvided.oddsPathSource) {
-          this.editedScoreRanges.investigatorProvided.oddsPathSource = this.publicationIdentifiers.filter(
-            (publication) => {
-              return this.editedScoreRanges.investigatorProvided.oddsPathSource.some((source) => {
-                return publication.identifier === source.identifier && publication.dbName === source.dbName
-              })
-            }
-          )
-        }
-        if (this.editedScoreRanges?.investigatorProvided.source) {
-          this.editedScoreRanges.investigatorProvided.source = this.publicationIdentifiers.filter((publication) => {
-            return this.editedScoreRanges.investigatorProvided.source.some((source) => {
-              return publication.identifier === source.identifier && publication.dbName === source.dbName
-            })
-          })
-        }
+        this.extraMetadata = !_.isEmpty(this.item.extraMetadata) ? this.item.extraMetadata : null
+        this.scoreColumnsMetadata = !_.isEmpty(this.item.datasetColumns?.scoreColumnsMetadata)
+          ? this.item.datasetColumns.scoreColumnsMetadata
+          : null
+        this.countColumnsMetadata = !_.isEmpty(this.item.datasetColumns?.countColumnsMetadata)
+          ? this.item.datasetColumns.countColumnsMetadata
+          : null
 
         if (this.targetGenes[0]?.targetAccession) {
           this.isBaseEditor = this.targetGenes[0].targetAccession.isBaseEditor
         }
-      } else {
-        this.experiment = null
-        this.licenseId = this.defaultLicenseId
-        this.metaAnalyzesScoreSets = []
-        this.supersededScoreSet = null
-        this.title = null
-        this.shortDescription = null
-        this.abstractText = null
-        this.methodText = null
-        this.contributors = []
-        this.doiIdentifiers = []
-        this.primaryPublicationIdentifiers = []
-        this.secondaryPublicationIdentifiers = []
-        this.publicationIdentifiers = []
-        this.dataUsagePolicy = null
-        this.taxonomy = null
-        this.extraMetadata = {}
-        this.editedScoreRanges = {
-          investigatorProvided: null
-        }
-        this.editedScoreRangeBoundaryHelper = []
-        this.resetTarget()
-        this.targetGenes = []
       }
     },
 
@@ -2309,6 +1870,10 @@ export default {
     // Currently there is some special handling here, though, so we will leave that for a later refactoring.
 
     save: async function () {
+      if (!this.item) {
+        this.$toast.add({severity: 'error', summary: 'No score set to save.'})
+        return
+      }
       // Remove primary identifier from publications to construct secondary identifiers
       const primaryPublicationIdentifiers = this.primaryPublicationIdentifiers.map((identifier) =>
         _.pick(identifier, ['identifier', 'dbName'])
@@ -2333,104 +1898,91 @@ export default {
         primaryPublicationIdentifiers: primaryPublicationIdentifiers,
         secondaryPublicationIdentifiers: secondaryPublicationIdentifiers,
         dataUsagePolicy: this.dataUsagePolicy,
-        extraMetadata: {},
-        // eslint-disable-next-line no-unused-vars
+        extraMetadata: this.extraMetadata || {},
+        scoreColumnsMetadata: this.scoreColumnsMetadata || {},
+        countColumnsMetadata: this.countColumnsMetadata || {},
+        // eslint-disable-next-line @typescript-eslint/no-unused-vars
         targetGenes: this.targetGenes.map(({index, ...target}) => {
           // drop index property from target genes before save
           if (target.targetAccession) {
             target.targetAccession.isBaseEditor = this.isBaseEditor
           }
           return target
-        }),
-        // Retain existing score ranges. We will merge the edited ranges with the existing ones.
-        scoreRanges: this.item.scoreRanges
-          ? {
-              ...this.item.scoreRanges
-            }
-          : {}
-      }
-      // We should check any edited score range key we allow users to edit. Presently, this is only the investigator provided ranges.
-      if (this.editedScoreRanges?.investigatorProvided) {
-        editedFields.scoreRanges.investigatorProvided = {
-          baselineScore: this.editedScoreRanges.investigatorProvided.baselineScore,
-          baselineScoreDescription: this.editedScoreRanges.investigatorProvided.baselineScoreDescription,
-          ranges: this.editedScoreRanges.investigatorProvided.ranges,
-          oddsPathSource: this.editedScoreRanges.investigatorProvided.oddsPathSource?.map((source) =>
-            _.pick(source, ['identifier', 'dbName'])
-          ),
-          source: this.editedScoreRanges.investigatorProvided.source?.map((source) =>
-            _.pick(source, ['identifier', 'dbName'])
-          )
-        }
-      } else {
-        if (editedFields.scoreRanges && editedFields.scoreRanges.investigatorProvided !== undefined) {
-          delete editedFields.scoreRanges.investigatorProvided
-        }
-      }
-      // If no score ranges are objects, then set to null.
-      if (
-        editedFields.scoreRanges &&
-        Object.values(editedFields.scoreRanges).every(
-          (val) => typeof val !== 'object' || val === null || Array.isArray(val)
-        )
-      ) {
-        editedFields.scoreRanges = null
-      }
-      if (!this.item) {
-        editedFields.supersededScoreSetUrn = this.supersededScoreSet ? this.supersededScoreSet.urn : null
-        editedFields.metaAnalyzesScoreSetUrns = this.metaAnalyzesScoreSets.map((s) => s.urn)
-      } else {
-        // empty item arrays so that deleted items aren't merged back into editedItem object
-        this.item.contributors = []
-        this.item.doiIdentifiers = []
-        this.item.primaryPublicationIdentifiers = []
-        this.item.publicationIdentifiers = []
-        this.item.rawReadIdentifiers = []
-        this.item.targetGenes = []
-        this.item.scoreRanges = null
+        })
       }
 
-      const editedItem = _.merge({}, this.item || {}, editedFields)
+      // empty item arrays so that deleted items aren't merged back into editedItem object
+      this.item.contributors = []
+      this.item.doiIdentifiers = []
+      this.item.primaryPublicationIdentifiers = []
+      this.item.publicationIdentifiers = []
+      this.item.rawReadIdentifiers = []
+      this.item.targetGenes = []
+
+      // clear objects so that deleted values aren't merged back into editedItem object
+      this.item.extraMetadata = null
+      //this.item.datasetColumns = null
+
+      // const editedItem = _.merge({}, this.item, editedFields)
+      const editedItem = editedFields
 
       this.progressVisible = true
       let response = null
-      try {
-        if (this.item) {
-          response = await axios.put(`${config.apiBaseUrl}/score-sets/${this.item.urn}`, editedItem)
-        } else {
-          response = await axios.post(`${config.apiBaseUrl}/score-sets/`, editedItem)
+
+      // convert editedItem to multi-part form data
+      const formData = new FormData()
+      for (const key in editedItem) {
+        if (_.isArray(editedItem[key]) || _.isObject(editedItem[key])) {
+          formData.append(_.snakeCase(key), JSON.stringify(editedItem[key]))
+        } else if (_.has(editedItem, key) && editedItem[key] !== null && editedItem[key] !== undefined) {
+          formData.append(_.snakeCase(key), editedItem[key])
         }
+      }
+
+      // Add upload files to form data
+      if (this.$refs.scoresFileUpload?.files.length == 1) {
+        formData.append('scores_file', this.$refs.scoresFileUpload.files[0])
+      }
+      if (this.$refs.countsFileUpload?.files.length == 1) {
+        formData.append('counts_file', this.$refs.countsFileUpload.files[0])
+      }
+      // if (this.$refs.scoreColumnsMetadataFileUpload.files.length == 1) {
+      //   formData.append('score_columns_metadata_file', this.$refs.scoreColumnsMetadataFileUpload.files[0])
+      // }
+      // if (this.$refs.countColumnsMetadataFileUpload.files.length == 1) {
+      //   formData.append('count_columns_metadata_file', this.$refs.countColumnsMetadataFileUpload.files[0])
+      // }
+
+      try {
+        this.progressVisible = true
+        response = await axios.patch(`${config.apiBaseUrl}/score-sets-with-variants/${this.item.urn}`, formData, {
+          headers: {
+            'Content-Type': 'multipart/form-data'
+          }
+        })
+        this.progressVisible = false
       } catch (e) {
         response = e.response || {status: 500}
         this.$toast.add({severity: 'error', summary: 'Error', life: 3000})
       }
       this.progressVisible = false
       if (response.status == 200) {
-        const savedItem = response.data
         this.validationErrors = {}
-        if (this.item) {
-          if (this.$refs.scoresFileUpload?.files?.length == 1) {
-            await this.uploadData(savedItem)
-          } else {
-            this.$router.replace({path: `/score-sets/${this.item.urn}`})
-            this.$toast.add({severity: 'success', summary: 'Your changes were saved.', life: 3000})
-          }
-        } else {
-          console.log('Created item')
-          await this.uploadData(savedItem)
-        }
+        this.$router.replace({path: `/score-sets/${this.item.urn}`})
+        this.$toast.add({severity: 'success', summary: 'Your changes were saved.', life: 3000})
       } else if (response.data && response.data.detail) {
         const formValidationErrors = {}
         if (typeof response.data.detail === 'string' || response.data.detail instanceof String) {
           // Handle generic errors that are not surfaced by the API as objects
           this.$toast.add({
             severity: 'error',
-            summary: `Encountered an error saving score set: ${response.data.detail}`
+            summary: `Encountered an error saving score set: ${response.data.detail}`,
+            life: 10000
           })
         } else {
           for (const error of response.data.detail) {
             console.log(error)
-            let path = error.loc
+            let path = _.map(error.loc, _.camelCase)
             if (path[0] == 'body') {
               path = path.slice(1)
             }
@@ -2464,59 +2016,12 @@ export default {
       }
     },
 
-    uploadData: async function (scoreSet) {
-      if (this.$refs.scoresFileUpload.files.length != 1) {
-        this.validationErrors = {scores: 'Required'}
-      } else {
-        const formData = new FormData()
-        formData.append('scores_file', this.$refs.scoresFileUpload.files[0])
-        if (this.$refs.countsFileUpload.files.length == 1) {
-          formData.append('counts_file', this.$refs.countsFileUpload.files[0])
-        }
-        this.progressVisible = true
-        let response
-        try {
-          response = await axios.post(`${config.apiBaseUrl}/score-sets/${scoreSet.urn}/variants/data`, formData, {
-            headers: {
-              'Content-Type': 'multipart/form-data'
-            }
-          })
-        } catch (e) {
-          response = e.response || {status: 500}
-        }
-        this.progressVisible = false
-
-        if (response.status == 200) {
-          console.log('Imported score set data.')
-          if (this.item) {
-            // this.reloadItem()
-            this.$router.replace({path: `/score-sets/${scoreSet.urn}`})
-            this.$toast.add({severity: 'success', summary: 'Your changes were saved.', life: 3000})
-          } else {
-            this.$router.replace({path: `/score-sets/${scoreSet.urn}`})
-            this.$toast.add({severity: 'success', summary: 'The new score set was saved.', life: 3000})
-          }
-        } else {
-          this.$toast.add({
-            severity: 'error',
-            summary: `The score and count files could not be imported. ${response.data.detail}`,
-            life: 3000
-          })
-          // Delete the score set if just created.
-          // Warn if the score set already exists.
-        }
-      }
-    },
-
     validateAndSave: async function () {
       this.clientSideValidationErrors = {}
 
-      const hasScoresFile = this.$refs.scoresFileUpload.files.length == 1
-      const hasCountsFile = this.$refs.countsFileUpload.files.length == 1
+      const hasScoresFile = this.$refs.scoresFileUpload?.files.length == 1
+      const hasCountsFile = this.$refs.countsFileUpload?.files.length == 1
       if (hasCountsFile && !hasScoresFile) {
-        this.clientSideValidationErrors.scoresFile = 'Required'
-      }
-      if (!this.item && !hasScoresFile) {
         this.clientSideValidationErrors.scoresFile = 'Required'
       }
 

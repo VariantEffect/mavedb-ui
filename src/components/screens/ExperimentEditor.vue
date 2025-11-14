@@ -101,6 +101,7 @@
                     :suggestions="publicationIdentifierSuggestionsList"
                     @complete="searchPublicationIdentifiers"
                     @item-select="acceptNewPublicationIdentifier"
+                    @item-unselect="removePublicationIdentifier"
                     @keyup.escape="clearPublicationIdentifierSearch"
                   >
                     <template #chip="slotProps">
@@ -173,29 +174,6 @@
                 }}</span>
               </div>
               <div class="field">
-                <span class="p-float-label">
-                  <FileUpload
-                    :id="scopedId('input-extraMetadataFile')"
-                    :auto="false"
-                    choose-label="Extra metadata"
-                    :class="inputClasses.extraMetadataFile"
-                    :custom-upload="true"
-                    :file-limit="1"
-                    :show-cancel-button="false"
-                    :show-upload-button="false"
-                    @remove="fileCleared('extraMetadataFile')"
-                    @select="fileSelected('extraMetadataFile', $event)"
-                  >
-                    <template #empty>
-                      <p>Drop a JSON file here.</p>
-                    </template>
-                  </FileUpload>
-                </span>
-                <span v-if="validationErrors.extraMetadata" class="mave-field-error">{{
-                  validationErrors.extraMetadata
-                }}</span>
-              </div>
-              <div class="field">
                 <TabView>
                   <TabPanel header="Edit">
                     <span class="p-float-label">
@@ -256,6 +234,47 @@
                 </span>
                 <span v-if="validationErrors.contributors" class="mave-field-error">{{
                   validationErrors.contributors
+                }}</span>
+              </div>
+              <div class="field">
+                <span class="p-float-label">
+                  <div v-if="extraMetadata">
+                    <span class="mr-2">Extra metadata</span>
+                    <i class="pi pi-check mr-3"></i>
+                    <Button
+                      v-tooltip="{value: 'View extra metadata'}"
+                      class="p-button-info mr-2"
+                      icon="pi pi-eye"
+                      @click="jsonToDisplay = JSON.stringify(extraMetadata, null, 2)"
+                    ></Button>
+                    <Button
+                      v-tooltip="{value: 'Delete extra metadata'}"
+                      class="p-button-danger mr-2"
+                      icon="pi pi-times"
+                      @click="fileCleared('extraMetadataFile')"
+                    ></Button>
+                  </div>
+                  <FileUpload
+                    v-else
+                    :id="scopedId('input-extraMetadataFile')"
+                    accept="application/json"
+                    :auto="false"
+                    choose-label="Extra metadata"
+                    :class="inputClasses.extraMetadataFile"
+                    :custom-upload="true"
+                    :file-limit="1"
+                    :show-cancel-button="false"
+                    :show-upload-button="false"
+                    @remove="fileCleared('extraMetadataFile')"
+                    @select="fileSelected('extraMetadataFile', $event)"
+                  >
+                    <template #empty>
+                      <p>Drop a JSON file here.</p>
+                    </template>
+                  </FileUpload>
+                </span>
+                <span v-if="validationErrors.extraMetadata" class="mave-field-error">{{
+                  validationErrors.extraMetadata
                 }}</span>
               </div>
             </template>
@@ -342,6 +361,17 @@
       </div>
     </div>
     <ProgressSpinner v-if="progressVisible" class="mave-progress" />
+    <Dialog
+      v-model:visible="jsonToDisplay"
+      :close-on-escape="true"
+      modal
+      :style="{maxWidth: '90%', width: '50rem'}"
+      @close="jsonToDisplay = null"
+    >
+      <span style="white-space: pre-wrap; font-family: monospace">
+        {{ jsonToDisplay }}
+      </span>
+    </Dialog>
   </DefaultLayout>
 </template>
 
@@ -566,7 +596,8 @@ export default {
     validationErrors: {
       keywords: _.fromPairs(KEYWORDS.map((keyword) => [keyword.key, null])),
       keywordDescriptions: _.fromPairs(KEYWORDS.map((keyword) => [keyword.key, null]))
-    }
+    },
+    jsonToDisplay: null
   }),
 
   computed: {
@@ -760,6 +791,15 @@ export default {
       }
     },
 
+    removePublicationIdentifier: function (event) {
+      // If we are removing a primary publication identifier, also remove it from that list.
+      const removedIdentifier = event.value.identifier
+      const primaryIdx = this.primaryPublicationIdentifiers.findIndex((pub) => pub.identifier == removedIdentifier)
+      if (primaryIdx != -1) {
+        this.primaryPublicationIdentifiers.splice(primaryIdx, 1)
+      }
+    },
+
     clearPublicationIdentifierSearch: function () {
       // This could change with a new Primevue version.
       const input = this.$refs.publicationIdentifiersInput
@@ -826,7 +866,7 @@ export default {
                   this.clientSideValidationErrors.extraMetadata =
                     'Extra metadata must be a JSON object (not an array or simple value).'
                 } else {
-                  this.clientSideValidationErrors.extraMetadata = null
+                  delete this.clientSideValidationErrors.extraMetadata
                 }
               } catch {
                 this.extraMetadata = null
@@ -970,7 +1010,7 @@ export default {
         primaryPublicationIdentifiers: primaryPublicationIdentifiers,
         secondaryPublicationIdentifiers: secondaryPublicationIdentifiers,
         rawReadIdentifiers: this.rawReadIdentifiers.map((identifier) => _.pick(identifier, 'identifier')),
-        extraMetadata: {}
+        extraMetadata: this.extraMetadata
       }
       // empty item arrays so that deleted items aren't merged back into editedItem object
       if (this.item) {
@@ -1021,6 +1061,10 @@ export default {
           const formValidationErrors = {}
           for (const error of response.data.detail) {
             let path = error.loc
+            if (error?.ctx?.error?.custom_loc) {
+              path = error.ctx.error.custom_loc
+            }
+
             if (path[0] == 'body') {
               path = path.slice(1)
             }

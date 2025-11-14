@@ -15,17 +15,29 @@
               :collection="officialCollection"
             />
           </div>
-          <div v-if="userIsAuthenticated">
-            <div v-if="!item.publishedDate" class="mavedb-screen-title-controls">
-              <Button v-if="userIsAuthorized.update" class="p-button-sm" @click="editItem">Edit</Button>
-              <Button v-if="userIsAuthorized.publish" class="p-button-sm" @click="publishItem">Publish</Button>
-              <Button v-if="userIsAuthorized.delete" class="p-button-sm p-button-danger" @click="deleteItem"
+          <div v-if="userIsAuthenticated" class="mavedb-screen-title-controls">
+            <Button
+              class="p-butto p-button-sm"
+              icon="pi pi-external-link"
+              label="Score set calibrations"
+              @click="$router.push({path: `/score-sets/${item.urn}/calibrations`})"
+            />
+            <Button
+              v-if="userIsAuthorized.addCalibration"
+              class="p-button p-button-sm"
+              @click="calibrationEditorVisible = true"
+              >Add calibration</Button
+            >
+            <template v-if="!item.publishedDate">
+              <Button v-if="userIsAuthorized.update" class="p-button p-button-sm" @click="editItem">Edit</Button>
+              <Button v-if="userIsAuthorized.publish" class="p-button p-button-sm" @click="publishItem">Publish</Button>
+              <Button v-if="userIsAuthorized.delete" class="p-button p-button-sm p-button-danger" @click="deleteItem"
                 >Delete</Button
               >
-            </div>
-            <div v-if="item.publishedDate" class="mavedb-screen-title-controls">
-              <Button v-if="userIsAuthorized.update" class="p-button-sm" @click="editItem">Edit</Button>
-            </div>
+            </template>
+            <template v-if="item.publishedDate">
+              <Button v-if="userIsAuthorized.update" class="p-button p-button-sm" @click="editItem">Edit</Button>
+            </template>
           </div>
         </div>
         <div v-if="item.shortDescription" class="mavedb-score-set-description">{{ item.shortDescription }}</div>
@@ -78,14 +90,40 @@
         </div>
         <div class="mavedb-score-set-histogram-pane">
           <ScoreSetHistogram
-            ref="histogram"
+            ref="distHistogram"
             :coordinates="clinicalMode ? 'mapped' : 'raw'"
+            :default-histogram="'distribution'"
             :external-selection="variantToVisualize"
-            :score-set="item"
-            :variants="variants"
-            @export-chart="setHistogramExport"
             :hide-start-and-stop-loss-by-default="hideStartAndStopLoss"
+            :score-set="item"
+            :selected-calibration="selectedCalibrations[0]"
+            :variants="variants"
+            @calibration-changed="(calibration) => childComponentSelectedCalibration(calibration, 0)"
+            @export-chart="setHistogramExport"
           />
+        </div>
+        <div
+          v-if="selectedCalibrationObjects[0] && !sameCalibrationSelected"
+          class="mavedb-score-set-calibration-table"
+        >
+          <CalibrationTable :score-calibration="selectedCalibrationObjects[0]" />
+        </div>
+        <div v-if="hasClinicalVariants" class="mavedb-score-set-histogram-pane">
+          <ScoreSetHistogram
+            ref="clinicalHistogram"
+            :coordinates="clinicalMode ? 'mapped' : 'raw'"
+            :default-histogram="'clinical'"
+            :external-selection="variantToVisualize"
+            :hide-start-and-stop-loss-by-default="hideStartAndStopLoss"
+            :score-set="item"
+            :selected-calibration="selectedCalibrations[1]"
+            :variants="variants"
+            @calibration-changed="(calibration) => childComponentSelectedCalibration(calibration, 1)"
+            @export-chart="setHistogramExport"
+          />
+        </div>
+        <div v-if="selectedCalibrationObjects[1]" class="mavedb-score-set-calibration-table">
+          <CalibrationTable :score-calibration="selectedCalibrationObjects[1]" />
         </div>
         <div v-if="showHeatmap && !isScoreSetVisualizerVisible" class="mavedb-score-set-heatmap-pane">
           <ScoreSetHeatmap
@@ -103,8 +141,20 @@
           />
         </div>
       </div>
-      <div v-else-if="scoresDataStatus == 'Loading' || scoresDataStatus == 'NotLoaded'">
-        <ProgressSpinner style="width: 36px; height: 36px; margin: 12px auto; display: block" />
+      <div v-else-if="scoresDataStatus !== 'Loaded'" style="display: flex; justify-content: center; width: 100%">
+        <div
+          style="
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            margin: 12px auto;
+            max-width: fit-content;
+            text-align: center;
+          "
+        >
+          <ProgressSpinner style="width: 36px; height: 36px; margin-right: 8px" />
+          <span style="line-height: 36px; font-weight: bold">Loading variants...</span>
+        </div>
       </div>
       <div class="mave-1000px-col">
         <div class="clearfix">
@@ -125,19 +175,53 @@
             <Button class="p-button-outlined p-button-sm" @click="downloadMetadata">Metadata</Button>&nbsp;
           </template>
           <Button class="p-button-outlined p-button-sm" @click="downloadMappedVariants()">Mapped Variants</Button>&nbsp;
-          <SplitButton
-            :button-props="{class: 'p-button-outlined p-button-sm'}"
-            label="Annotated Variants"
-            :menu-button-props="{class: 'p-button-sm'}"
-            :model="annotatedVariantDownloadOptions"
-            @click="annotatedVariantDownloadOptions[0].command"
-          ></SplitButton
-          >&nbsp; <Button class="p-button-outlined p-button-sm" @click="histogramExport()">Histogram</Button>&nbsp;
+          <div style="display: inline-block; position: relative">
+            <SplitButton
+              :button-props="{class: 'p-button-outlined p-button-sm'}"
+              :disabled="annotatedDownloadInProgress"
+              label="Annotated Variants"
+              :menu-button-props="{class: 'p-button-sm'}"
+              :model="annotatedVariantDownloadOptions"
+              @click="annotatedVariantDownloadOptions[0].command"
+            ></SplitButton>
+            <div
+              v-if="annotatedDownloadInProgress"
+              style="position: absolute; left: 0; right: 0; top: 100%; margin-top: 4px"
+            >
+              <ProgressBar show-value style="height: 1.5em" :value="annotatedDownloadProgress" />
+            </div>
+          </div>
+          &nbsp; <Button class="p-button-outlined p-button-sm" @click="histogramExport()">Histogram</Button>&nbsp;
           <template v-if="heatmapExists">
             <Button class="p-button-outlined p-button-sm" @click="heatmapExport()">Heatmap</Button>&nbsp;
           </template>
+          <Button class="p-button-outlined p-button-sm" @click="showOptions()"> Custom Data </Button>
+          <Dialog
+            v-model:visible="optionsVisible"
+            :base-z-index="901"
+            :breakpoints="{'1199px': '75vw', '575px': '90vw'}"
+            header="Data Options"
+            modal
+            :style="{width: '50vw'}"
+          >
+            <div v-for="dataOption of dataTypeOptions" :key="dataOption.value" class="flex gap-1 align-items-center">
+              <Checkbox
+                :id="scopedId('input-' + dataOption.value)"
+                v-model="selectedDataOptions"
+                :value="dataOption.value"
+              />
+              <label :for="scopedId('input-' + dataOption.value)">{{ dataOption.label }}</label>
+            </div>
+            <p />
+            <Button class="p-button-outlined p-button-sm" label="Download" @click="downloadMultipleData"
+              >Download</Button
+            >
+            &nbsp;
+            <Button class="p-button-warning p-button-sm" label="Cancel" @click="optionsVisible = false">Cancel</Button>
+          </Dialog>
+          <br />
         </div>
-        <CollectionAdder class="mave-save-to-collection-button" data-set-type="scoreSet" :data-set-urn="item.urn" />
+        <CollectionAdder data-set-type="scoreSet" :data-set-urn="item.urn" />
 
         <div v-if="requestFromGalaxy == '1'">
           <br />Send files to <a :href="galaxyUrl">Galaxy</a>
@@ -280,6 +364,36 @@
       />
     </Sidebar>
   </div>
+  <!-- Set z-index to ensure dialog appears above heatmap color legend -->
+  <PrimeDialog
+    v-model:visible="calibrationEditorVisible"
+    :base-z-index="2003"
+    :close-on-escape="true"
+    header="Create New Calibration"
+    modal
+    :style="{maxWidth: '90%', width: '75rem'}"
+  >
+    <CalibrationEditor
+      :calibration-draft-ref="calibrationDraftRef"
+      :score-set-urn="item.urn"
+      :validation-errors="editorValidationErrors"
+      @canceled="calibrationEditorVisible = false"
+    />
+    <template #footer>
+      <Button
+        class="p-button p-component p-button-secondary"
+        icon="pi pi-times"
+        label="Close"
+        @click="calibrationEditorVisible = false"
+      />
+      <Button
+        class="p-button p-component p-button-success"
+        icon="pi pi-save"
+        label="Save Changes"
+        @click="saveCreatedCalibration"
+      />
+    </template>
+  </PrimeDialog>
 </template>
 
 <script>
@@ -290,7 +404,12 @@ import Accordion from 'primevue/accordion'
 import AccordionTab from 'primevue/accordiontab'
 import AutoComplete from 'primevue/autocomplete'
 import Button from 'primevue/button'
+import Checkbox from 'primevue/checkbox'
+import Dialog from 'primevue/dialog'
 import InputSwitch from 'primevue/inputswitch'
+import ProgressSpinner from 'primevue/progressspinner'
+import ProgressBar from 'primevue/progressbar'
+import PrimeDialog from 'primevue/dialog'
 import ScrollPanel from 'primevue/scrollpanel'
 import Sidebar from 'primevue/sidebar'
 import SplitButton from 'primevue/splitbutton'
@@ -299,8 +418,10 @@ import {mapState} from 'vuex'
 import {useHead} from '@unhead/vue'
 
 import AssayFactSheet from '@/components/AssayFactSheet'
+import CalibrationEditor from '../CalibrationEditor.vue'
 import CollectionAdder from '@/components/CollectionAdder'
 import CollectionBadge from '@/components/CollectionBadge'
+import CalibrationTable from '@/components/CalibrationTable'
 import ScoreSetHeatmap from '@/components/ScoreSetHeatmap'
 import ScoreSetHistogram from '@/components/ScoreSetHistogram'
 import ScoreSetPreviewTable from '@/components/ScoreSetPreviewTable'
@@ -330,12 +451,19 @@ export default {
     AssayFactSheet,
     AutoComplete,
     Button,
+    CalibrationTable,
+    CalibrationEditor,
+    Checkbox,
     CollectionAdder,
     CollectionBadge,
     DefaultLayout,
+    Dialog,
     InputSwitch,
     ItemNotFound,
     PageLoading,
+    ProgressBar,
+    ProgressSpinner,
+    PrimeDialog,
     ScoreSetHeatmap,
     ScoreSetHistogram,
     ScoreSetVisualizer,
@@ -361,16 +489,22 @@ export default {
     const {userIsAuthenticated} = useAuth()
     const scoresRemoteData = useRemoteData()
     const variantSearchSuggestions = ref([])
+    const calibrationDraftRef = ref({value: null})
+    const editorValidationErrors = ref({})
+    const selectedCalibrations = ref([null, null])
 
     return {
       head,
       config: config,
       userIsAuthenticated,
+      calibrationDraftRef,
+      editorValidationErrors,
+      selectedCalibrations,
 
       ...useItem({itemTypeName: 'scoreSet'}),
       ...useScopedId(),
       scoresData: scoresRemoteData.data,
-      scoresDataStatus: scoresRemoteData.dataStatus,
+      scoresDataStatus: scoresRemoteData.remoteDataStatus,
       setScoresDataUrl: scoresRemoteData.setDataUrl,
       ensureScoresDataLoaded: scoresRemoteData.ensureDataLoaded,
       variantSearchSuggestions
@@ -380,15 +514,23 @@ export default {
   data: () => ({
     clinicalMode: config.CLINICAL_FEATURES_ENABLED,
     variants: null,
+    selectedDataOptions: [],
     showHeatmap: true,
+    optionsVisible: false,
     isScoreSetVisualizerVisible: false,
+    hasClinicalVariants: false,
     heatmapExists: false,
     selectedVariant: null,
+    calibrationEditorVisible: false,
     userIsAuthorized: {
       delete: false,
       publish: false,
-      update: false
-    }
+      update: false,
+      addCalibration: false
+    },
+    annotatedDownloadInProgress: false,
+    annotatedDownloadProgress: 0,
+    streamController: null
   }),
 
   computed: {
@@ -405,6 +547,18 @@ export default {
       const countColumns = allCountColumns.filter((col) => col !== 'accession')
       return countColumns.length > 0
     },
+    dataTypeOptions: function () {
+      const options = [
+        {label: 'Scores', value: 'scores'},
+        {label: 'Mapped HGVS', value: 'mappedHgvs'},
+        {label: 'Custom columns', value: 'includeCustomColumns'},
+        {label: 'Without NA columns', value: 'dropNaColumns'}
+      ]
+      if (this.hasCounts) {
+        options.splice(1, 0, {label: 'Counts', value: 'counts'})
+      }
+      return options
+    },
     annotatedVariantDownloadOptions: function () {
       const annotatatedVariantOptions = []
 
@@ -412,16 +566,16 @@ export default {
         annotatatedVariantOptions.push({
           label: 'Pathogenicity Evidence Line',
           command: () => {
-            this.downloadAnnotatedVariants('pathogenicity-evidence-line')
+            this.streamVariantAnnotations('pathogenicity-evidence-line')
           }
         })
       }
 
-      if (this.item?.scoreRanges) {
+      if (this.item?.scoreCalibrations) {
         annotatatedVariantOptions.push({
           label: 'Functional Impact Statement',
           command: () => {
-            this.downloadAnnotatedVariants('functional-impact-statement')
+            this.streamVariantAnnotations('functional-impact-statement')
           }
         })
       }
@@ -429,7 +583,7 @@ export default {
       annotatatedVariantOptions.push({
         label: 'Functional Impact Study Result',
         command: () => {
-          this.downloadAnnotatedVariants('functional-study-result')
+          this.streamVariantAnnotations('functional-study-result')
         }
       })
 
@@ -438,7 +592,25 @@ export default {
     hideStartAndStopLoss: function () {
       // In clinical mode, when the target is not endogenously edited (so it has a target sequence), omit start- and
       // stop-loss variants.
-      return this.clinicalMode && this.item.targetGenes[0]?.targetSequence
+      return this.clinicalMode && !!this.item.targetGenes[0]?.targetSequence
+    },
+    selectedCalibrationObjects: function () {
+      if (this.item && this.item.scoreCalibrations && this.selectedCalibrations) {
+        return this.selectedCalibrations.map((calibrationUrn) =>
+          this.item.scoreCalibrations.find((calibration) => calibration.urn === calibrationUrn)
+        )
+      }
+      return this.selectedCalibrations.map(() => null)
+    },
+    sameCalibrationSelected: function () {
+      const cal1 = this.selectedCalibrations[0]
+      for (const cal of this.selectedCalibrations) {
+        if (cal !== cal1) {
+          return false
+        }
+      }
+
+      return true
     },
     uniprotId: function () {
       // If there is only one target gene, return its UniProt ID that has been set from mapped metadata.
@@ -456,6 +628,9 @@ export default {
     },
     urlVariant: function () {
       return this.$route.query.variant
+    },
+    urlCalibration: function () {
+      return this.$route.query.calibration
     },
     ...mapState({
       galaxyUrl: (state) => state.routeProps.galaxyUrl,
@@ -479,7 +654,7 @@ export default {
 
           let scoresUrl = null
           if (this.itemType && this.itemType.restCollectionName && this.itemId) {
-            scoresUrl = `${config.apiBaseUrl}/${this.itemType.restCollectionName}/${this.itemId}/variants/data`
+            scoresUrl = `${config.apiBaseUrl}/${this.itemType.restCollectionName}/${this.itemId}/variants/data?include_post_mapped_hgvs=true`
           }
           this.setScoresDataUrl(scoresUrl)
           this.ensureScoresDataLoaded()
@@ -489,7 +664,7 @@ export default {
     },
     scoresData: {
       handler: function (newValue) {
-        const variants = newValue ? parseScoresOrCounts(newValue) : null
+        const variants = newValue ? parseScoresOrCounts(newValue, true) : null
         if (variants) {
           parseSimpleCodingVariants(variants)
           translateSimpleCodingVariants(variants)
@@ -498,22 +673,40 @@ export default {
         this.applyUrlState()
       }
     },
-    selectedVariant: {
-      handler: function () {
-        this.$router.push({
-          query: {
-            ...(this.selectedVariant && this.selectedVariant.accession ? {variant: this.selectedVariant.accession} : {})
-          }
-        })
-      }
+    selectedVariant: 'refreshUrlState',
+    selectedCalibrations: {
+      handler: 'refreshUrlState',
+      deep: true
     }
   },
 
   mounted: async function () {
     await this.checkUserAuthorization()
+    await this.checkClinicalVariants()
   },
 
   methods: {
+    refreshUrlState: async function () {
+      const query = {...this.$route.query}
+
+      if (this.selectedVariant) {
+        query.variant = this.selectedVariant.accession
+      } else {
+        delete query.variant
+      }
+
+      if (this.selectedCalibrations && this.selectedCalibrations.length > 0) {
+        if (this.sameCalibrationSelected) {
+          query.calibration = this.selectedCalibrations[0]
+        } else {
+          delete query.calibration
+        }
+      } else {
+        delete query.calibration
+      }
+
+      await this.$router.replace({path: this.$route.path, query: query})
+    },
     showProteinStructureModal: function () {
       this.isScoreSetVisualizerVisible = true
     },
@@ -531,8 +724,22 @@ export default {
           )
           this.userIsAuthorized[action] = response.data
         }
+        // If a user can update, they can also add calibrations
+        this.userIsAuthorized.addCalibration = this.userIsAuthorized.update
       } catch (err) {
         console.log(`Error to get authorization:`, err)
+      }
+    },
+    checkClinicalVariants: async function () {
+      if (this.item) {
+        try {
+          const response = await axios.get(`${config.apiBaseUrl}/score-sets/${this.item.urn}/clinical-controls/options`)
+          if (response.status == 200) {
+            this.hasClinicalVariants = true
+          }
+        } catch (err) {
+          console.log(`Error to get clinical variants:`, err)
+        }
       }
     },
     editItem: function () {
@@ -737,29 +944,82 @@ export default {
         this.$toast.add({severity: 'error', summary: 'No downloadable mapped variants text file', life: 3000})
       }
     },
-    downloadAnnotatedVariants: async function (mappedVariantType) {
-      let response = null
-      try {
-        if (this.item) {
-          response = await axios.get(
-            `${config.apiBaseUrl}/score-sets/${this.item.urn}/annotated-variants/${mappedVariantType}`
-          )
-        }
-      } catch (e) {
-        response = e.response || {status: 500}
-      }
-      if (response.status == 200) {
-        //convert object to Json.
-        const file = JSON.stringify(response.data)
-        const anchor = document.createElement('a')
+    streamVariantAnnotations: async function (annotationType) {
+      this.abortStream()
+      this.streamController = new AbortController()
 
-        anchor.href = 'data:text/json;charset=utf-8,' + encodeURIComponent(file)
-        anchor.target = '_blank'
-        //file default name
-        anchor.download = this.item.urn + '_annotated_variants.json'
-        anchor.click()
-      } else {
-        this.$toast.add({severity: 'error', summary: 'No downloadable annotated variants text file', life: 3000})
+      try {
+        this.annotatedDownloadInProgress = true
+        const response = await fetch(
+          `${config.apiBaseUrl}/score-sets/${this.item.urn}/annotated-variants/${annotationType}`,
+          {
+            signal: this.streamController.signal,
+            headers: {
+              Accept: 'application/x-ndjson'
+            }
+          }
+        )
+
+        if (!response.ok) {
+          throw new Error(`HTTP ${response.status}: ${response.statusText}`)
+        }
+
+        // Extract metadata from headers to build progress bar
+        const metadata = {
+          totalCount: parseInt(response.headers.get('X-Total-Count') || '0'),
+          processingStarted: response.headers.get('X-Processing-Started') || '',
+          streamType: response.headers.get('X-Stream-Type') || 'unknown'
+        }
+
+        const reader = response.body?.getReader()
+        if (!reader) {
+          throw new Error('Response body is not readable')
+        }
+
+        const decoder = new TextDecoder()
+        const chunks = []
+        let processedCount = 0
+
+        while (true) {
+          const {done, value} = await reader.read()
+
+          if (done) {
+            const allChunks = chunks.join('')
+            // Download the accumulated data as a file
+            const finalData = allChunks.trim()
+            const blob = new Blob([finalData], {type: 'application/x-ndjson'})
+            const url = URL.createObjectURL(blob)
+            const anchor = document.createElement('a')
+            anchor.href = url
+            anchor.download = `${this.item.urn}_annotated_variants_${annotationType}.ndjson`
+            anchor.click()
+            URL.revokeObjectURL(url)
+            break
+          }
+
+          const chunk = decoder.decode(value)
+          chunks.push(chunk)
+          const lines = chunk.split('\n')
+          processedCount += lines.length
+          this.annotatedDownloadProgress = Math.round((processedCount / metadata.totalCount) * 100)
+        }
+      } catch (error) {
+        this.$toast.add({
+          severity: 'error',
+          summary: `Error downloading annotated variants: ${error.message}`,
+          life: 5000
+        })
+      } finally {
+        this.streamController = null
+        this.annotatedDownloadInProgress = false
+        this.annotatedDownloadProgress = 0
+      }
+    },
+    abortStream: function () {
+      if (this.streamController) {
+        this.streamController.abort()
+        this.annotatedDownloadInProgress = false
+        this.annotatedDownloadProgress = 0
       }
     },
     downloadMetadata: async function () {
@@ -803,6 +1063,65 @@ export default {
 
       this.variantSearchSuggestions = matches
     },
+    downloadMultipleData: async function () {
+      if (this.selectedDataOptions.length === 0) {
+        this.$toast.add({
+          severity: 'warn',
+          summary: 'No data selected',
+          detail: 'Please select at least one data type.',
+          life: 3000
+        })
+        return
+      }
+
+      const baseUrl = new URL(`${config.apiBaseUrl}/score-sets/${this.item.urn}/variants/data`)
+      const params = new URLSearchParams(baseUrl.params)
+      let includeCustomColumns = false
+      for (const option of this.selectedDataOptions) {
+        if (['scores', 'counts'].includes(option)) {
+          params.append('namespaces', option)
+        }
+        if (option === 'mappedHgvs') {
+          params.append('include_post_mapped_hgvs', 'true')
+        }
+        if (option === 'counts' || option === 'includeCustomColumns') {
+          includeCustomColumns = true
+        }
+        if (option === 'dropNaColumns') {
+          params.append('drop_na_columns', 'true')
+        }
+      }
+      if (includeCustomColumns) {
+        params.append('include_custom_columns', 'true')
+      }
+      let response = null
+      try {
+        if (this.item) {
+          response = await axios.get(`${baseUrl}?${params.toString()}`)
+        }
+      } catch (e) {
+        response = e.response || {status: 500}
+      }
+      if (response.status == 200) {
+        const file = response.data
+        const anchor = document.createElement('a')
+        anchor.href = 'data:text/csv;charset=utf-8,' + encodeURIComponent(file)
+        anchor.target = '_blank'
+        anchor.download = this.item.urn + '.csv'
+        anchor.click()
+      } else if (response.data && response.data.detail) {
+        const formValidationErrors = {}
+        for (const error of response.data.detail) {
+          let path = error.loc
+          if (path[0] == 'body') {
+            path = path.slice(1)
+          }
+          path = path.join('.')
+          formValidationErrors[path] = error.msg
+        }
+      }
+      this.optionsVisible = false
+    },
     childComponentSelectedVariant: function (variant) {
       if (variant == null) {
         this.selectedVariant = null
@@ -815,10 +1134,17 @@ export default {
       const selectedVariant = this.variants.find((v) => v.accession == variant.accession)
       this.selectedVariant = Object.assign(selectedVariant, preferredVariantLabel(selectedVariant))
     },
+    childComponentSelectedCalibration: function (calibration, idx) {
+      this.selectedCalibrations[idx] = calibration
+    },
     applyUrlState: function () {
       if (this.$route.query.variant) {
         const selectedVariant = this.variants.find((v) => v.accession == this.$route.query.variant)
         this.selectedVariant = Object.assign(selectedVariant, preferredVariantLabel(selectedVariant))
+      }
+      if (this.$route.query.calibration) {
+        const selectedCalibration = this.$route.query.calibration
+        this.selectedCalibrations = this.selectedCalibrations.map(() => selectedCalibration)
       }
     },
     heatmapVisibilityUpdated: function (visible) {
@@ -839,6 +1165,45 @@ export default {
         frozen = false
       }
       return frozen
+    },
+    saveCreatedCalibration: async function () {
+      if (this.calibrationDraftRef.value) {
+        let response = null
+        try {
+          response = await axios.post(`${config.apiBaseUrl}/score-calibrations`, this.calibrationDraftRef.value)
+        } catch (e) {
+          response = e.response || {status: 500}
+        }
+
+        if (response.status == 200) {
+          const createdCalibration = response.data
+          this.$toast.add({severity: 'success', summary: 'Your calibration was successfully created.', life: 3000})
+          this.calibrationEditorVisible = false
+          // Reset draft
+          this.calibrationDraftRef.value = null
+          // Reload item to get the new calibration and then select it
+          await this.reloadItem()
+          this.selectedCalibrations = this.selectedCalibrations.map(() => createdCalibration.urn)
+        } else if (response.data && response.data.detail) {
+          const formValidationErrors = {}
+          for (const error of response.data.detail) {
+            let path = error.loc
+            if (path[0] == 'body') {
+              path = path.slice(1)
+            }
+            let customPath = error.ctx.custom_loc
+            if (customPath && customPath[0] == 'body') {
+              customPath = customPath.slice(1)
+            }
+            path = path.join('.')
+            formValidationErrors[path] = error.msg
+          }
+          this.editorValidationErrors = formValidationErrors
+        }
+      }
+    },
+    showOptions: function () {
+      this.optionsVisible = true
     }
   }
 }
@@ -856,8 +1221,7 @@ export default {
 }
 
 .mavedb-score-set-variant-search {
-  margin-top: 40px;
-  margin-bottom: 8px;
+  margin: 40px 0 0 0;
   display: flex;
   justify-content: center;
 }
@@ -872,6 +1236,18 @@ export default {
 .p-float-label {
   display: flex;
   width: 100%;
+}
+
+/* Histogram */
+
+.mavedb-score-set-histogram-pane {
+  margin: 10px 0;
+}
+
+/* Calibration table */
+
+.mavedb-score-set-calibration-pane {
+  margin: 10px 0;
 }
 
 /* Controls */

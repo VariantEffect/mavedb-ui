@@ -249,6 +249,7 @@
                           :suggestions="publicationIdentifierSuggestionsList"
                           @complete="searchPublicationIdentifiers"
                           @item-select="acceptNewPublicationIdentifier"
+                          @item-unselect="removePublicationIdentifier"
                           @keyup.escape="clearPublicationIdentifierSearch"
                         >
                           <template #chip="slotProps">
@@ -357,6 +358,7 @@
                       <span class="p-float-label">
                         <FileUpload
                           :id="scopedId('input-extraMetadataFile')"
+                          accept="application/json"
                           :auto="false"
                           choose-label="Extra metadata"
                           :class="inputClasses.extraMetadataFile"
@@ -984,6 +986,15 @@ export default {
       }
     },
 
+    removePublicationIdentifier: function (event) {
+      // If we are removing a primary publication identifier, also remove it from that list.
+      const removedIdentifier = event.value.identifier
+      const primaryIdx = this.primaryPublicationIdentifiers.findIndex((pub) => pub.identifier == removedIdentifier)
+      if (primaryIdx != -1) {
+        this.primaryPublicationIdentifiers.splice(primaryIdx, 1)
+      }
+    },
+
     clearPublicationIdentifierSearch: function () {
       // This could change with a new Primevue version.
       const input = this.$refs.publicationIdentifiersInput
@@ -1054,7 +1065,7 @@ export default {
                   this.clientSideValidationErrors.extraMetadata =
                     'Extra metadata must be a JSON object (not an array or simple value).'
                 } else {
-                  this.clientSideValidationErrors.extraMetadata = null
+                  delete this.clientSideValidationErrors.extraMetadata
                 }
               } catch {
                 this.extraMetadata = null
@@ -1065,6 +1076,7 @@ export default {
             break
         }
         this.inputClasses[inputName] = 'mave-file-input-full'
+        console.log(this.extraMetadata)
       }
       this.mergeValidationErrors()
     },
@@ -1194,7 +1206,7 @@ export default {
         primaryPublicationIdentifiers: primaryPublicationIdentifiers,
         secondaryPublicationIdentifiers: secondaryPublicationIdentifiers,
         rawReadIdentifiers: this.rawReadIdentifiers.map((identifier) => _.pick(identifier, 'identifier')),
-        extraMetadata: {}
+        extraMetadata: this.extraMetadata
       }
       // empty item arrays so that deleted items aren't merged back into editedItem object
       if (this.item) {
@@ -1237,6 +1249,7 @@ export default {
           this.$toast.add({severity: 'success', summary: 'The new experiment was saved.', life: 3000})
         }
       } else if (response.data && response.data.detail) {
+        this.serverSideValidationErrors = {}
         if (typeof response.data.detail === 'string' || response.data.detail instanceof String) {
           // Handle generic errors that are not surfaced by the API as objects
           this.$toast.add({
@@ -1247,6 +1260,10 @@ export default {
           const formValidationErrors = {}
           for (const error of response.data.detail) {
             let path = error.loc
+            if (error?.ctx?.error?.custom_loc) {
+              path = error.ctx.error.custom_loc
+            }
+
             if (path[0] == 'body') {
               path = path.slice(1)
             }
@@ -1254,9 +1271,7 @@ export default {
             formValidationErrors[path] = error.msg
           }
           this.serverSideValidationErrors = formValidationErrors
-          this.mergeValidationErrors()
         }
-        this.serverSideValidationErrors = formValidationErrors
         this.mergeValidationErrors()
         this.activeWizardStep = this.minStepWithError()
       }

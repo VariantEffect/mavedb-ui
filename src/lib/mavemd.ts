@@ -2,8 +2,8 @@ export const MAVE_MD_SCORE_SETS = [
   {gene: 'ASPA', urn: 'urn:mavedb:00000657-a-1'},
   {gene: 'ASPA', urn: 'urn:mavedb:00000657-b-1'},
   {gene: 'BRCA1', urn: 'urn:mavedb:00000097-0-2'},
-  {gene: 'BRCA1', urn: 'urn:mavedb:00001222-a-1'},
-  {gene: 'BRCA1', urn: 'urn:mavedb:00001222-b-1'},
+  {gene: 'BRCA1', urn: 'urn:mavedb:00001222-a-2'},
+  {gene: 'BRCA1', urn: 'urn:mavedb:00001222-b-2'},
   {gene: 'BRCA2', urn: 'urn:mavedb:00001224-a-1'},
   {gene: 'CALM1, CALM2, and CALM3', urn: 'urn:mavedb:00000001-c-1'},
   {gene: 'CARD11', urn: 'urn:mavedb:00001226-a-1'},
@@ -11,40 +11,40 @@ export const MAVE_MD_SCORE_SETS = [
   {gene: 'CBS', urn: 'urn:mavedb:00000005-a-5'},
   {gene: 'CBS', urn: 'urn:mavedb:00000005-a-6'},
   {gene: 'CHEK2', urn: 'urn:mavedb:00001205-a-1'},
-  {gene: 'CRX', urn: 'urn:mavedb:00001227-a-1'},
+  {gene: 'CRX', urn: 'urn:mavedb:00001227-a-2'},
   {gene: 'DDX3X', urn: 'urn:mavedb:00001228-a-1'},
   {gene: 'F9', urn: 'urn:mavedb:00001200-a-1'},
   {gene: 'F9', urn: 'urn:mavedb:00001200-b-1'},
   {gene: 'F9', urn: 'urn:mavedb:00001200-c-1'},
   {gene: 'F9', urn: 'urn:mavedb:00001200-d-1'},
   {gene: 'F9', urn: 'urn:mavedb:00001200-e-1'},
-  {gene: 'FKRP', urn: 'urn:mavedb:00001197-a-4'},
+  {gene: 'FKRP', urn: 'urn:mavedb:00001197-a-5'},
   {gene: 'GCK', urn: 'urn:mavedb:00000096-a-1'},
   {gene: 'GCK', urn: 'urn:mavedb:00000096-b-1'},
   {gene: 'HMBS', urn: 'urn:mavedb:00000108-a-1'},
-  {gene: 'HMBS', urn: 'urn:mavedb:00000108-a-2'},
-  {gene: 'HMBS', urn: 'urn:mavedb:00000108-a-3'},
+  {gene: 'HMBS', urn: 'urn:mavedb:00000108-b-1'},
+  {gene: 'HMBS', urn: 'urn:mavedb:00000108-0-1'},
   {gene: 'JAG1', urn: 'urn:mavedb:00001198-a-1'},
   {gene: 'KCNE1', urn: 'urn:mavedb:00000674-a-2'},
-  {gene: 'KCNE1', urn: 'urn:mavedb:00000674-a-3'},
-  {gene: 'KCNE1', urn: 'urn:mavedb:00000674-a-4'},
-  {gene: 'KCNH2', urn: 'urn:mavedb:00001229-a-1'},
-  {gene: 'KCNH2', urn: 'urn:mavedb:00001230-a-1'},
-  {gene: 'KCNH2', urn: 'urn:mavedb:00001231-a-1'},
+  {gene: 'KCNE1', urn: 'urn:mavedb:00000674-b-1'},
+  {gene: 'KCNE1', urn: 'urn:mavedb:00000674-c-1'},
+  {gene: 'KCNH2', urn: 'urn:mavedb:00001229-a-2'},
+  {gene: 'KCNH2', urn: 'urn:mavedb:00001230-a-2'},
+  {gene: 'KCNH2', urn: 'urn:mavedb:00001231-a-2'},
   {gene: 'KCNQ4', urn: 'urn:mavedb:00000094-a-2'},
   {gene: 'KCNQ4', urn: 'urn:mavedb:00000094-a-3'},
-  {gene: 'LARGE1', urn: 'urn:mavedb:00001197-a-3'},
+  {gene: 'LARGE1', urn: 'urn:mavedb:00001254-a-1'},
   {gene: 'MSH2', urn: 'urn:mavedb:00000050-a-1'},
   {gene: 'NDUFAF6', urn: 'urn:mavedb:00000663-a-1'},
   {gene: 'OTC', urn: 'urn:mavedb:00000112-a-1'},
   {gene: 'PAX6', urn: 'urn:mavedb:00000665-a-1'},
-  {gene: 'PAX6', urn: 'urn:mavedb:00000665-a-2'},
-  {gene: 'PAX6', urn: 'urn:mavedb:00000665-a-3'},
-  {gene: 'PAX6', urn: 'urn:mavedb:00000665-a-4'},
+  {gene: 'PAX6', urn: 'urn:mavedb:00000665-b-1'},
+  {gene: 'PAX6', urn: 'urn:mavedb:00000665-c-1'},
+  {gene: 'PAX6', urn: 'urn:mavedb:00000665-d-1'},
   {gene: 'PTEN', urn: 'urn:mavedb:00000013-a-1'},
   {gene: 'PTEN', urn: 'urn:mavedb:00000054-a-1'},
   {gene: 'RHO', urn: 'urn:mavedb:00000099-a-1'},
-  {gene: 'SCN5A', urn: 'urn:mavedb:00000098-a-1'},
+  {gene: 'SCN5A', urn: 'urn:mavedb:00000098-a-2'},
   {gene: 'SCN5A', urn: 'urn:mavedb:00001233-a-1'},
   {gene: 'SGCB', urn: 'urn:mavedb:00000659-a-1'},
   {gene: 'TARDBP', urn: 'urn:mavedb:00000060-a-1'},
@@ -64,6 +64,21 @@ export const MAVE_MD_SCORE_SETS = [
   {gene: 'TP53', urn: 'urn:mavedb:00001234-h-1'},
   {gene: 'TP53', urn: 'urn:mavedb:00001235-a-1'},
   {gene: 'TP53', urn: 'urn:mavedb:00001236-0-1'},
-  {gene: 'TPK1', urn: 'urn:mavedb:00000001-d-1'},
+  {gene: 'TPK1', urn: 'urn:mavedb:00001251-a-1'},
   {gene: 'VHL', urn: 'urn:mavedb:00000675-a-1'}
 ]
+
+/**
+ * Regular expression for valid CA or PA ids that can be used in ClinGen searches.
+ */
+export const clinGenAlleleIdRegex = /^(CA|PA)[0-9]+$/im
+
+/**
+ * Regular expression for valid ClinVar Variation IDs that can be used in ClinGen searches.
+ */
+export const clinVarVariationIdRegex = /^[0-9]+$/m
+
+/**
+ * Regular expression for valid Reference SNP cluster IDs that can be used in ClinGen searches.
+ */
+export const rsIdRegex = /^rs[0-9]+$/im

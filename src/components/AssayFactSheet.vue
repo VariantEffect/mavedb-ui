@@ -266,7 +266,7 @@ export default defineComponent({
 
   methods: {
     roundOddsPath: function (oddsPath: number | null | undefined) {
-      return oddsPath?.toPrecision(5)
+      return oddsPath?.toFixed(3)
     },
     formatEvidenceCodeForScoreRange: function (functionalRange: components['schemas']['FunctionalRange'] | null) {
       if (!functionalRange?.acmgClassification?.evidenceStrength) {

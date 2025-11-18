@@ -255,18 +255,6 @@ export default {
           return
         }
 
-        // verify that the alphafoldCifUrl exists by verifying 200 or 304 status
-        try {
-          const response = await fetch(alphafoldCifUrl, { method: 'HEAD' })
-          if (response.status !== 200 && response.status !== 304) {
-            this.$toast.add({severity: 'error', summary: 'Error', detail: 'Failed to fetch AlphaFold structure'})
-            return
-          }
-        } catch (error) {
-          this.$toast.add({severity: 'error', summary: 'Error', detail: 'Failed to fetch AlphaFold structure'})
-          return
-        }
-
         const viewerInstance = new PDBeMolstarPlugin()
         const options = {
           customData: {
@@ -294,9 +282,14 @@ export default {
         const viewerContainer = document.getElementById('pdbe-molstar-viewer-container')
         viewerInstance.render(viewerContainer, options)
         viewerInstance.events.loadComplete.subscribe(() => {
-          viewerInstance.plugin.layout.context.canvas3d.camera.state.fog = 0
-          viewerInstance.plugin.layout.context.canvas3d.camera.state.clipFar = false
-          viewerInstance.visual.tooltips({data: this.residueTooltips})
+          // if structureRefMap is empty, it means AlphaFold structure failed to load
+          if (!_.size(viewerInstance.structureRefMap)) {
+            this.$toast.add({severity: 'error', summary: 'Error', detail: 'Failed to load AlphaFold structure'})
+          } else {
+            viewerInstance.plugin.layout.context.canvas3d.camera.state.fog = 0
+            viewerInstance.plugin.layout.context.canvas3d.camera.state.clipFar = false
+            viewerInstance.visual.tooltips({data: this.residueTooltips})
+          }
         })
 
         document.addEventListener('PDB.molstar.click', this.clickedResidue)

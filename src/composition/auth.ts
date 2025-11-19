@@ -13,6 +13,7 @@ import _ from 'lodash'
 import {computed, watch} from 'vue'
 // @ts-expect-error It's troublesome to get types for useStore; see store/index.ts for more details.
 import {useStore} from 'vuex'
+import {useRouter} from 'vue-router'
 
 import {
   beginAuthentication as orcidBeginAuthentication,
@@ -26,6 +27,14 @@ export default () => {
   const store = useStore()
 
   const signIn = () => orcidBeginAuthentication()
+
+  const redirect = sessionStorage.getItem("postLoginRedirect")
+
+  if (redirect) {
+    const router = useRouter()
+    router.push({ name: redirect })
+    sessionStorage.removeItem("postLoginRedirect")
+  }
 
   // Sign the user out. We do not perform a server-side OIDC logout, because ORCID does not support it by providing a
   // logout URL. We simply remove the authentication information from the client. The user's browser will remain logged

@@ -72,6 +72,17 @@
             </table>
           </template>
         </Card>
+        <Card class="mt-4">
+          <template #title>Upload Your Data</template>
+          <template #content>
+            <Button class="p-button-sm" @click="addExperiment"
+              >Add an experiment</Button
+            >&nbsp;&nbsp;
+            <Button class="p-button-sm" @click="addScoreSet"
+                >Add a score set</Button
+              >
+          </template>
+        </Card>
       </div>
       <div class="col-12">
         <HighlightsView model="ScoreSet"></HighlightsView>
@@ -130,15 +141,46 @@
 </template>
 
 <script>
+import Button from 'primevue/button'
 import Card from 'primevue/card'
 
 import config from '@/config'
 import DefaultLayout from '@/components/layout/DefaultLayout'
 import HighlightsView from '@/components/common/HighlightsView.vue';
 
+import {useRouter} from 'vue-router'
+import useAuth from '@/composition/auth'
+
 export default {
   name: 'HomeScreen',
-  components: {Card, DefaultLayout, HighlightsView},
+  components: {Button, Card, DefaultLayout, HighlightsView},
+  setup() {
+    const router = useRouter()
+    const { userIsAuthenticated, signIn } = useAuth()
+
+    const addScoreSet = () => {
+      if (userIsAuthenticated.value) {
+        router.push({ name: 'createScoreSet' })
+      } else {
+        sessionStorage.setItem("postLoginRedirect", "createScoreSet")
+        signIn()
+      }
+    }
+    const addExperiment = () => {
+      if (userIsAuthenticated.value) {
+        router.push({ name: 'createExperiment' })
+      } else {
+        sessionStorage.setItem("postLoginRedirect", "createExperiment")
+        signIn()
+      }
+    }
+    return { 
+      addScoreSet, 
+      addExperiment,
+      userIsAuthenticated
+    }
+  },
+
   data: function() {
     return {config}
   },

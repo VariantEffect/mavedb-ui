@@ -1006,9 +1006,9 @@ export default defineComponent({
 
       // Only render clinical specific viz options if such features are enabled.
       if (this.config.CLINICAL_FEATURES_ENABLED && this.showCalibrations) {
-        this.histogram.renderShader(this.activeCalibration.value ? this.activeCalibration.value.urn : null)
+        this.histogram.shaderDisplay(this.activeCalibration.value ? {histogram: this.activeCalibration.value.urn} : {})
       } else {
-        this.histogram.renderShader(null)
+        this.histogram.shaderDisplay({})
       }
 
       this.histogram.refresh()

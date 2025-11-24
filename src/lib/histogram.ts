@@ -2,7 +2,6 @@ import * as d3 from 'd3'
 import $ from 'jquery'
 import _ from 'lodash'
 import {v4 as uuidv4} from 'uuid'
-import {HeatmapDatum} from './heatmap'
 
 type FieldGetter<T> = ((d: HistogramDatum) => T) | string
 type Getter<T> = () => T
@@ -98,6 +97,14 @@ export interface HistogramShaderRegions {
   [key: string]: HistogramShader[]
 }
 
+/** An object configuring which shaders are displayed where */
+export interface HistogramShaderDisplay {
+  /** Key of the shader to show on the histogram */
+  histogram?: string
+  /** Keys of shaders to show below the histogram, in order from top to bottom */
+  bottom?: string[]
+}
+
 export interface Histogram {
   //////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
   // Methods
@@ -113,6 +120,7 @@ export interface Histogram {
   clearSelection: () => void
   selectBin: (binIndex: number) => void
   selectDatum: (datum: HistogramDatum) => void
+  selectScore: (score: number | null | undefined) => void
 
   //////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
   // Accessors
@@ -148,8 +156,8 @@ export interface Histogram {
   legendNote: Accessor<string | null, Histogram>
 
   // Shaded regions
+  shaderDisplay: Accessor<HistogramShaderDisplay | null, Histogram>
   shaders: Accessor<HistogramShaderRegions | null, Histogram>
-  renderShader: Accessor<string | null, Histogram>
   renderShaderTitles: Accessor<'show' | 'hide' | 'auto', Histogram>
 
   //////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
@@ -159,6 +167,7 @@ export interface Histogram {
   // Selection
   selectedBin: Getter<HistogramBin | null>
   selectedDatum: Getter<HistogramDatum | null>
+  selectedScore: Getter<number | null>
 
   // Container
   container: Getter<HTMLElement | null>
@@ -201,8 +210,8 @@ export default function makeHistogram(): Histogram {
   let legendNote: string | null = null
 
   // Shaded regions
+  let shaderDisplay: HistogramShaderDisplay | null = null
   let shaders: HistogramShaderRegions | null = null
-  let renderShader: string | null = null
   let renderShaderTitles: 'show' | 'hide' | 'auto' = 'auto'
 
   //////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
@@ -210,8 +219,9 @@ export default function makeHistogram(): Histogram {
   //////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 
   // Selection
-  let selectedDatum: HistogramDatum | null = null
   let selectedBin: HistogramBin | null = null
+  let selectedDatum: HistogramDatum | null = null
+  let selectedScore: number | null = null
 
   // Container
   let _container: HTMLElement | null = null
@@ -556,13 +566,35 @@ export default function makeHistogram(): Histogram {
   }
 
   ////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+  // Score selection marker
+  ////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+
+  const refreshScoreSelectionMarker = () => {
+    if (svg) {
+      const scoreSelectionMarkerSel = svg
+        .select('.histogram-score-selections')
+        .selectAll('g.histogram-score-selection')
+        .data(selectedScore ? [selectedScore] : [], (d) => d)
+        .join('g')
+        .attr('class', 'histogram-score-selection')
+      scoreSelectionMarkerSel
+        .append('line')
+        .attr('x1', (d) => xScale(d))
+        .attr('x2', (d) => xScale(d))
+        .attr('y1', yScale.range()[0])
+        .attr('y2', yScale.range()[1])
+        .style('stroke', '#ff8800')
+        .style('stroke-width', 3)
+    }
+  }
+
+  ////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
   // Shaders
   ////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 
-  const shaderPolygon = (shaderRegion: HistogramShader, yMax: number) => {
+  const shaderPolygon = (shaderRegion: HistogramShader, yMin: number, yMax: number, renderingOnHistogram: boolean) => {
     const points = []
     const {min: xMin, max: xMax} = visibleShaderRegion(shaderRegion)
-    const yMin = yScale.domain()[0]
 
     // Start at the top left.
     points.push([xMin, yMax])
@@ -571,24 +603,27 @@ export default function makeHistogram(): Histogram {
     let x = xMin
 
     // First trace any portion to the left of the bins.
-    if (bins.length == 0 || x < bins[0].x0) {
-      points.push([x, yMin]) // Bottom left, if outside all bins
-      if (bins.length > 0) {
-        x = Math.min(bins[0].x1, xMax)
-        points.push([x, yMin]) // Base of first bin, or end of range if entire range is to the left of all bins
+    if (renderingOnHistogram) {
+      // First trace any portion to the left of the bins.
+      if (bins.length == 0 || x < bins[0].x0) {
+        points.push([x, yMin]) // Bottom left, if outside all bins
+        if (bins.length > 0) {
+          x = Math.min(bins[0].x1, xMax)
+          points.push([x, yMin]) // Base of first bin, or end of range if entire range is to the left of all bins
+        }
       }
-    }
 
-    // Trace the portion above bins.
-    const startBinIndex = findBinIndex(x)
-    const xMaxBinIndex = findBinIndex(xMax)
-    const endBinIndex = xMaxBinIndex == null ? bins.length - 1 : xMaxBinIndex
-    if (x < xMax && startBinIndex != null) {
-      for (let binIndex = startBinIndex; binIndex <= endBinIndex; binIndex++) {
-        const bin = bins[binIndex]
-        points.push([x, bin.yMax])
-        x = Math.min(bin.x1, xMax)
-        points.push([x, bin.yMax])
+      // Trace the portion above bins.
+      const startBinIndex = findBinIndex(x)
+      const xMaxBinIndex = findBinIndex(xMax)
+      const endBinIndex = xMaxBinIndex == null ? bins.length - 1 : xMaxBinIndex
+      if (x < xMax && startBinIndex != null) {
+        for (let binIndex = startBinIndex; binIndex <= endBinIndex; binIndex++) {
+          const bin = bins[binIndex]
+          points.push([x, bin.yMax])
+          x = Math.min(bin.x1, xMax)
+          points.push([x, bin.yMax])
+        }
       }
     }
 
@@ -645,12 +680,14 @@ export default function makeHistogram(): Histogram {
           .attr('transform', `translate(${margins.left},${margins.top})`)
         mainGroup.append('g').attr('class', 'histogram-shaders')
         mainGroup.append('g').attr('class', 'histogram-shader-thresholds')
+        mainGroup.append('g').attr('class', 'histogram-outside-shaders')
         mainGroup.append('g').attr('class', 'histogram-bars')
         mainGroup.append('g').attr('class', 'histogram-left-axis')
         mainGroup.append('g').attr('class', 'histogram-bottom-axis')
         mainGroup.append('g').attr('class', 'histogram-legend-background')
         mainGroup.append('g').attr('class', 'histogram-legend')
         mainGroup.append('g').attr('class', 'histogram-hovers')
+        mainGroup.append('g').attr('class', 'histogram-score-selections')
       } else {
         svg = null
       }
@@ -668,6 +705,14 @@ export default function makeHistogram(): Histogram {
 
         //resizeTo Container()
 
+        // Leave space for any shaders displayed under the chart.
+        const outsideShaderHeight = 40
+        const outsideShaderHeadingHeight = 20
+        const outsideShaderSpacing = 40
+        const numBottomShaders = (shaderDisplay?.bottom ?? []).length
+        const bottomShadersHeight =
+          numBottomShaders * (outsideShaderHeight + outsideShaderHeadingHeight + outsideShaderSpacing)
+
         // Calculate space required for y axis and label for the largest possible number of bin members. We will need to
         // re-scale the y-axis for displaying smaller numbers but this will give us enough space for the y-axis at maximum
         // axis width (i.e. with the longest numbers in the counts.
@@ -675,7 +720,7 @@ export default function makeHistogram(): Histogram {
         // Also leave 5% breathing room at the top of the chart.
         const yMax = (d3.max(series, (s) => s.maxBinSize) || 0) * 1.1
         const chartHasContent = yMax > 0
-        yScale.domain([0, yMax]).range([height, 0])
+        yScale.domain([0, yMax]).range([height - bottomShadersHeight, 0])
 
         // Add temporary y axis and measure its width
         const tempYAxis = svg.append('g').style('visibility', 'hidden').call(d3.axisLeft(yScale).ticks(10))
@@ -685,9 +730,11 @@ export default function makeHistogram(): Histogram {
         // Calculate final margins using calculated width.
         effectiveMargins = {
           ...margins,
+          bottom: margins.bottom + bottomShadersHeight,
           left: margins.left + yAxisWidthWithLabel
         }
         width = _container.clientWidth - (effectiveMargins.left + effectiveMargins.right)
+        height = _container.clientHeight - (effectiveMargins.top + effectiveMargins.bottom)
 
         // Update the main group's margins inside the SVG.
         svg.select('g.histogram-main').attr('transform', `translate(${effectiveMargins.left}, ${effectiveMargins.top})`)
@@ -823,18 +870,24 @@ export default function makeHistogram(): Histogram {
           .style('text-anchor', 'middle')
           .text((d) => d)
 
-        const path = d3.line(
+        // Line generator for shaded ranges within the histogram. For these, both x- and y-coordinates must be scaled
+        // to match the chart's scales.
+        const histogramScaledPath = d3.line(
           (d) => xScale(d[0]),
           (d) => yScale(d[1])
+        )
+        // Line generator for shaded ranges outside the histogram. For these, only the x-coordinage must be scaled to
+        // match the chart's x-axis scale. The y-coordinate of these ranges will be given in SVG coordinates.
+        const xScaledPath = d3.line(
+          (d) => xScale(d[0]),
+          (d) => d[1]
         )
 
         const seriesLine = svg
           .select('g.histogram-bars')
           .selectAll('g.histogram-line')
           .data(chartHasContent ? series : [], (d) => d as any)
-          // @ts-ignore
           .join(
-            // @ts-ignore
             (enter) => {
               const g = enter.append('g').attr('class', 'histogram-line')
               g.append('path')
@@ -850,7 +903,7 @@ export default function makeHistogram(): Histogram {
           .attr('fill-opacity', '.25')
           .attr('stroke', (d) => d.options.color)
           .attr('stroke-width', 1.5)
-          .attr('d', (d) => path(d.line))
+          .attr('d', (d) => histogramScaledPath(d.line))
 
         // Refresh the hover and highlight boxes.
         const hovers = svg
@@ -886,82 +939,129 @@ export default function makeHistogram(): Histogram {
           .style('stroke-width', 1.5)
           .style('opacity', (d) => hoverOpacity(d))
 
-        // Refresh the shaded regions.
-        const activeShader = shaders && renderShader ? shaders[renderShader] : null
+        function clearShaderGradients() {
+          if (svg) {
+            svg.select('defs').selectAll('linearGradient').remove()
+          }
+        }
 
-        svg.select('defs').selectAll('linearGradient').remove()
-
-        // Select the active shader elements.
-        const shaderG = svg
-          .select('g.histogram-shaders')
-          .selectAll('g.histogram-shader')
-          .data(chartHasContent && activeShader ? activeShader : [])
-          .join(
-            (enter) => {
-              const g = enter.append('g')
-              g.append('polygon')
-              g.append('text')
-              return g
-            },
-            (update) => update,
-            (exit) => exit.remove()
-          )
-
-        if (activeShader) {
-          // Add the gradients for the active shader.
-          svg
-            .select('defs')
-            .selectAll('linearGradient')
-            .data(activeShader)
-            .join((enter) => {
-              const gradient = enter
-                .append('linearGradient')
-                .attr('id', (d) => {
-                  d.gradientUUID = uuidv4()
-                  return `histogram-gradient-${d.gradientUUID}`
-                })
-                .attr('gradientTransform', 'rotate(45)')
-              gradient
-                .append('stop')
-                .attr('offset', '0')
-                .attr('stop-color', (d) => d.color || DEFAULT_SERIES_COLOR)
-                .attr('stop-opacity', (d) => d.startOpacity || '0.15')
-              gradient
-                .append('stop')
-                .attr('offset', '100%')
-                .attr('stop-color', (d) => d.color || DEFAULT_SERIES_COLOR)
-                .attr('stop-opacity', (d) => d.stopOpacity || '0.05')
-
-              return gradient
-            })
-
-          // Draw each shader region according to the shader definition.
-          shaderG.attr('class', 'histogram-shader').style('fill', (d) => `url(#histogram-gradient-${d.gradientUUID})`)
-          shaderG.select('polygon').attr('points', (d) =>
-            shaderPolygon(d, yMax)
-              .map(([x, y]) => `${xScale(x)},${yScale(y)}`)
-              .join(' ')
-          )
-          shaderG
-            .select('text')
-            .attr('class', 'histogram-shader-title')
-            .style('fill', (d) => d.thresholdColor || '#000000')
-            .attr('x', (d) => {
-              const span = visibleShaderRegion(d)
-              return (
-                xScale(alignTextInRegion(span.min, span.max, d.align)) + padTextInElement(shaderG, d.align, d.title)
+        function renderShader(
+          shader: HistogramShaderRegions | null,
+          shaderContainerSelection,
+          thresholdsContainerSelection,
+          renderingOnHistogram: boolean
+        ) {
+          if (svg) {
+            // Select the active shader elements.
+            const shaderG = shaderContainerSelection
+              .selectAll('g.histogram-shader')
+              .data(chartHasContent && shader ? shader : [])
+              .join(
+                (enter) => {
+                  const g = enter.append('g')
+                  g.append('polygon')
+                  g.append('text').attr('class', 'histogram-shader-title')
+                  g.append('text').attr('class', 'histogram-shader-title-line-2')
+                  return g
+                },
+                (update) => update,
+                (exit) => exit.remove()
               )
-            })
-            .attr('y', 15)
-            .style('text-anchor', 'middle')
-            .style('visibility', (d) => (renderShaderTitles !== 'hide' && d.title ? 'visible' : 'hidden'))
-            .text((d) => d.title)
 
-            // Hide shader titles which do not fit inside their region if the user has requested automatic title rendering.
-            if (renderShaderTitles === 'auto') {
+            if (shader) {
+              if (renderingOnHistogram) {
+                // Add the gradients for the active shader.
+                svg
+                  .select('defs')
+                  .selectAll('linearGradient')
+                  .data(shader)
+                  .join((enter) => {
+                    const gradient = enter
+                      .append('linearGradient')
+                      .attr('id', (d) => {
+                        d.gradientUUID = uuidv4()
+                        return `histogram-gradient-${d.gradientUUID}`
+                      })
+                      .attr('gradientTransform', 'rotate(45)')
+                    gradient
+                      .append('stop')
+                      .attr('offset', '0')
+                      .attr('stop-color', (d) => d.color || DEFAULT_SERIES_COLOR)
+                      .attr('stop-opacity', (d) => d.startOpacity || '0.15')
+                    gradient
+                      .append('stop')
+                      .attr('offset', '100%')
+                      .attr('stop-color', (d) => d.color || DEFAULT_SERIES_COLOR)
+                      .attr('stop-opacity', (d) => d.stopOpacity || '0.05')
+
+                    return gradient
+                  })
+
+                shaderG
+                  .attr('class', 'histogram-shader')
+                  .style('fill', (d) => `url(#histogram-gradient-${d.gradientUUID})`)
+              } else {
+                shaderG.attr('class', 'histogram-shader').style('fill', (d) => d.color)
+              }
+
+              shaderG.select('polygon').attr('points', (d) => {
+                const points = shaderPolygon(
+                  d,
+                  renderingOnHistogram ? yScale.domain()[0] : 0,
+                  renderingOnHistogram ? yMax : outsideShaderHeight,
+                  renderingOnHistogram
+                )
+                if (renderingOnHistogram) {
+                  return points.map(([x, y]) => `${xScale(x)},${yScale(y)}`).join(' ')
+                } else {
+                  return points.map(([x, y]) => `${xScale(x)},${y}`).join(' ')
+                }
+              })
               shaderG
-                .select('text')
-                .each(function (d) {
+                .select('text.histogram-shader-title')
+                .attr('class', 'histogram-shader-title')
+                .style('fill', (d) => d.textColor || '#000000')
+                .attr('x', (d) => {
+                  const span = visibleShaderRegion(d)
+                  return (
+                    xScale(alignTextInRegion(span.min, span.max, d.align)) + padTextInElement(shaderG, d.align, d.title)
+                  )
+                })
+                .attr('y', 15)
+                .style('text-anchor', 'middle')
+                .style('visibility', (d) => (d.title ? 'visible' : 'hidden'))
+                .text((d) => {
+                  const span = visibleShaderRegion(d)
+                  if (span.max > span.min) {
+                    return d.title
+                  }
+                  return ''
+                })
+              shaderG
+                .select('text.histogram-shader-title-line-2')
+                .attr('class', 'histogram-shader-title-line-2')
+                .style('fill', (d) => d.textColor || '#000000')
+                .attr('x', (d) => {
+                  const span = visibleShaderRegion(d)
+                  return (
+                    xScale(alignTextInRegion(span.min, span.max, d.align)) + padTextInElement(shaderG, d.align, d.title)
+                  )
+                })
+                .attr('y', 35)
+                .style('text-anchor', 'middle')
+                .style('visibility', (d) => (d.title ? 'visible' : 'hidden'))
+                .text((d) => {
+                  const span = visibleShaderRegion(d)
+                  if (span.max > span.min) {
+                    return d.titleLine2 ?? ''
+                  }
+                  return ''
+                })
+
+              // Hide shader titles which do not fit inside their region if the user has requested automatic title rendering.
+              // Note that this hides lines 1 and 2 separately for now.
+              if (renderShaderTitles === 'auto') {
+                shaderG.select('text').each(function (d) {
                   const node = this as SVGTextElement
                   const span = visibleShaderRegion(d)
                   const regionPixelWidth = xScale(span.max) - xScale(span.min)
@@ -971,43 +1071,100 @@ export default function makeHistogram(): Histogram {
                     d3.select(node).style('visibility', 'hidden')
                   }
                 })
-            }
-
-          // Draw the shader thresholds.
-          const shaderThresholds = activeShader
-            .map((region) => [
-              ...(region.min != null && region.min > xScale.domain()[0] ? [{x: region.min, region}] : []),
-              ...(region.max != null && region.max < xScale.domain()[1] ? [{x: region.max, region}] : [])
-            ])
-            .flat()
-          svg
-            .select('g.histogram-shader-thresholds')
-            .selectAll('path.histogram-shader-threshold')
-            .data(chartHasContent ? shaderThresholds : [])
-            .join('path')
-            .attr('class', 'histogram-shader-threshold')
-            .attr('stroke', (d) => d.region.thresholdColor || DEFAULT_SHADER_COLOR)
-            .attr('stroke-dasharray', '4 4')
-            .attr('stroke-width', 1.5)
-            .attr('d', (d) => {
-              const intersectedBinIndex = findBinIndex(d.x)
-              let yMin = intersectedBinIndex == null ? yScale.domain()[0] : bins[intersectedBinIndex].yMax
-              if (intersectedBinIndex != null && intersectedBinIndex > 0 && d.x == bins[intersectedBinIndex].x0) {
-                yMin = Math.max(yMin, bins[intersectedBinIndex - 1].x1)
               }
-              return path([
-                [d.x, 0],
-                [d.x, yMax]
-              ])
-            })
-        } else {
-          shaderG.remove()
-          svg.select('g.histogram-shader-thresholds').selectAll('path.histogram-shader-threshold').remove()
+
+              // Draw the shader thresholds.
+              const shaderThresholds = shader
+                .map((region) => [
+                  ...(region.min != null && region.min > xScale.domain()[0] && region.min < xScale.domain()[1]
+                    ? [{x: region.min, region}]
+                    : []),
+                  ...(region.max != null && region.max > xScale.domain()[0] && region.max < xScale.domain()[1]
+                    ? [{x: region.max, region}]
+                    : [])
+                ])
+                .flat()
+              thresholdsContainerSelection
+                .selectAll('path.histogram-shader-threshold')
+                .data(chartHasContent ? shaderThresholds : [])
+                .join('path')
+                .attr('class', 'histogram-shader-threshold')
+                .style('visibility', (d) => (d.region.thresholdColor ? 'visible' : 'hidden'))
+                .attr('stroke', (d) => d.region.thresholdColor || DEFAULT_SHADER_COLOR)
+                .attr('stroke-dasharray', '4 4')
+                .attr('stroke-width', 1.5)
+                .attr('d', (d) => {
+                  if (renderingOnHistogram) {
+                    const intersectedBinIndex = findBinIndex(d.x)
+                    let yMin = intersectedBinIndex == null ? yScale.domain()[0] : bins[intersectedBinIndex].yMax
+                    if (intersectedBinIndex != null && intersectedBinIndex > 0 && d.x == bins[intersectedBinIndex].x0) {
+                      yMin = Math.max(yMin, bins[intersectedBinIndex - 1].x1)
+                    }
+                    return histogramScaledPath([
+                      [d.x, 0],
+                      [d.x, yMax]
+                    ])
+                  } else {
+                    return xScaledPath([
+                      [d.x, 0],
+                      [d.x, outsideShaderHeight]
+                    ])
+                  }
+                })
+            } else {
+              shaderG.remove()
+              thresholdsContainerSelection.selectAll('path.histogram-shader-threshold').remove()
+            }
+          }
         }
+
+        // Clear any shader gradients.
+        clearShaderGradients()
+
+        // Render the shader that appears on the histogram, if any.
+        const histogramShader = shaders && shaderDisplay?.histogram ? shaders[shaderDisplay?.histogram] : null
+        renderShader(
+          histogramShader,
+          svg.select('g.histogram-shaders'),
+          svg.select('g.histogram-shader-thresholds'),
+          true
+        )
+
+        // Render any shaders configured to appear outside the histogram.
+        svg
+          .select('g.histogram-outside-shaders')
+          .selectAll('path.histogram-shader-threshold')
+          .data(
+            chartHasContent
+              ? (shaderDisplay?.bottom ?? []).map((key) => ({shaderKey: key, shaders: shaders?.[key]}))
+              : []
+          )
+          .join(
+            (enter) => {
+              const g = enter.append('g').attr('class', 'histogram-outside-shader')
+              g.append('text').attr('transform', 'translate(0, -10)')
+              return g
+            },
+            (update) => update,
+            (exit) => exit.remove()
+          )
+        svg
+          .select('g.histogram-outside-shaders')
+          .selectAll('g.histogram-outside-shader')
+          .each(function (d: HistogramShaderRegions, i: number) {
+            const g = d3.select(this)
+            g.attr(
+              'transform',
+              `translate(0, ${height + margins.bottom + i * outsideShaderHeight + (i + 1) * (outsideShaderHeadingHeight + outsideShaderSpacing)})`
+            )
+            g.select('text').text(d.shaderKey)
+
+            renderShader(d.shaders, g, g, false)
+          })
       }
 
       updateSelectionAfterRefresh()
-      refreshHighlighting()
+      refreshScoreSelectionMarker()
 
       return chart
     },
@@ -1026,7 +1183,9 @@ export default function makeHistogram(): Histogram {
     clearSelection: () => {
       selectedBin = null
       selectedDatum = null
+      selectedScore = null
       refreshHighlighting()
+      refreshScoreSelectionMarker()
       hideSelectionTooltip()
     },
 
@@ -1037,7 +1196,7 @@ export default function makeHistogram(): Histogram {
       showSelectionTooltip()
     },
 
-    selectDatum: (datum: HeatmapDatum) => {
+    selectDatum: (datum: HistogramDatum) => {
       selectedDatum = data.find((d) => applyField(d, accessionField) == applyField(datum, accessionField))
 
       // Also select the bin in which the datum falls.
@@ -1046,6 +1205,12 @@ export default function makeHistogram(): Histogram {
 
       refreshHighlighting()
       showSelectionTooltip()
+    },
+
+    selectScore: (score: number | null | undefined) => {
+      selectedScore = score == null ? null : score
+
+      refreshScoreSelectionMarker()
     },
 
     ////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
@@ -1084,18 +1249,20 @@ export default function makeHistogram(): Histogram {
       return chart
     },
 
-    renderShader: (value?: string | null) => {
+    shaderDisplay: (value?: HistogramShaderDisplay | null) => {
       if (value === undefined) {
-        return renderShader
+        return shaderDisplay
       }
       // Don't allow rendering of a shader which does not have a shader definition.
       if (!shaders && value) {
-        return renderShader
-      } else if (shaders && value && !(value in shaders)) {
-        return renderShader
+        return shaderDisplay
+      } else if (shaders && value?.histogram && !(value?.histogram in shaders)) {
+        return shaderDisplay
+      } else if (shaders && value?.bottom && !value.bottom.every((key) => key in shaders)) {
+        return shaderDisplay
       }
 
-      renderShader = value
+      shaderDisplay = value
       return chart
     },
 
@@ -1195,6 +1362,8 @@ export default function makeHistogram(): Histogram {
     selectedBin: () => selectedBin,
 
     selectedDatum: () => selectedDatum,
+
+    selectedScore: () => selectedScore,
 
     container: () => _container,
 

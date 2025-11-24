@@ -440,12 +440,19 @@ export default {
         if (!model) {
           model = 'search'
         }
-
-        if (element.text == 'Others') {
-          return
+        let organismName
+        if (Array.isArray(element) && element.length == 1) {
+          const elementIndex = element[0].index
+          organismName = data.labels[elementIndex]
+        } else {
+          organismName = element.text
         }
 
-        window.open(`${config.appBaseUrl}/#/search?${model}=${element.text}`)
+        if (!organismName || organismName == 'Others') {
+          return
+        }
+        window.open(`${config.appBaseUrl}/#/search?${model}=${organismName}`)
+
       }
 
       return {

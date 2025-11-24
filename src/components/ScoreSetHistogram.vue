@@ -124,11 +124,15 @@ import Dropdown from 'primevue/dropdown'
 import ProgressSpinner from 'primevue/progressspinner'
 import Rating from 'primevue/rating'
 import TabMenu from 'primevue/tabmenu'
-import {defineComponent, PropType} from 'vue'
+import type {PropType} from 'vue'
+import {defineComponent} from 'vue'
 
 import useScopedId from '@/composables/scoped-id'
 import config from '@/config'
+import type {PersistedScoreCalibration} from '@/lib/calibrations'
+import {prepareCalibrationsForHistogram, shaderOverlapsBin} from '@/lib/calibrations'
 import {saveChartAsFile} from '@/lib/chart-export'
+import type {ClinicalControl, ClinicalControlOption} from '@/lib/clinical-controls'
 import {
   BENIGN_CLINICAL_SIGNIFICANCE_CLASSIFICATIONS,
   CLINVAR_REVIEW_STATUS_STARS,
@@ -144,17 +148,10 @@ import {
   clinvarConflictingSignificanceClassificationForVersion,
   conflictingClinicalSignificanceSeriesLabelForVersion
 } from '@/lib/clinical-controls'
-import type {ClinicalControl, ClinicalControlOption} from '@/lib/clinical-controls'
-import makeHistogram, {
-  DEFAULT_SERIES_COLOR,
-  Histogram,
-  HistogramSerieOptions,
-  HistogramDatum,
-  HistogramBin,
-  HistogramShader
-} from '@/lib/histogram'
-import {prepareCalibrationsForHistogram, shaderOverlapsBin, PersistedScoreCalibration} from '@/lib/calibrations'
+import type {Histogram, HistogramSerieOptions, HistogramDatum, HistogramBin, HistogramShader} from '@/lib/histogram'
+import makeHistogram, {DEFAULT_SERIES_COLOR} from '@/lib/histogram'
 import {variantNotNullOrNA} from '@/lib/mave-hgvs'
+import type {Variant} from '@/lib/variants'
 import {
   DEFAULT_VARIANT_EFFECT_TYPES,
   isStartOrStopLoss,
@@ -163,7 +160,6 @@ import {
   variantIsOther,
   variantIsSynonymous,
   VARIANT_EFFECT_TYPE_OPTIONS,
-  Variant,
   allCodingVariantsHaveProteinConsequence
 } from '@/lib/variants'
 

@@ -19,12 +19,13 @@
 
 <script lang="ts">
 import '@fontsource/raleway'
+import type {PropType} from 'vue'
+import {defineComponent} from 'vue'
 
 import '@/assets/app.css'
 import Toolbar from '@/components/layout/Toolbar.vue'
 import Footer from '@/components/layout/Footer.vue'
 import EmailPrompt from '@/components/common/EmailPrompt.vue'
-import {defineComponent, PropType} from 'vue'
 
 export default defineComponent({
   name: 'DefaultLayout',

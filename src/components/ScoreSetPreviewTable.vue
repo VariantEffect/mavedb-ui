@@ -70,11 +70,12 @@ import Column from 'primevue/column'
 import DataTable from 'primevue/datatable'
 import TabView from 'primevue/tabview'
 import TabPanel from 'primevue/tabpanel'
-import {computed, ref, watch} from 'vue'
 import type {PropType, Ref} from 'vue'
+import {computed, ref, watch} from 'vue'
 
 import type {components} from '@/schema/openapi'
-import {parseScoresOrCounts, ScoresOrCountsRow} from '@/lib/scores'
+import type {ScoresOrCountsRow} from '@/lib/scores'
+import {parseScoresOrCounts} from '@/lib/scores'
 import config from '@/config'
 
 const props = defineProps({

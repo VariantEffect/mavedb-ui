@@ -59,8 +59,8 @@ import * as d3 from 'd3'
 import _ from 'lodash'
 import Button from 'primevue/button'
 import SelectButton from 'primevue/selectbutton'
-import {defineComponent} from 'vue'
 import type {PropType} from 'vue'
+import {defineComponent} from 'vue'
 
 import {AMINO_ACIDS, AMINO_ACIDS_WITH_TER, singleLetterAminoAcidOrHgvsCode} from '@/lib/amino-acids'
 import {saveChartAsFile} from '@/lib/chart-export'
@@ -70,12 +70,11 @@ import type {Heatmap, HeatmapDatum, HeatmapRowSpecification} from '@/lib/heatmap
 import {parseSimpleProVariant, parseSimpleNtVariant, variantNotNullOrNA} from '@/lib/mave-hgvs'
 import {NUCLEOTIDE_BASES} from '@/lib/nucleotides'
 import type {FunctionalRange, PersistedScoreCalibration} from '@/lib/calibrations'
+import type {HgvsReferenceSequenceType, Variant} from '@/lib/variants'
 import {
   PARSED_POST_MAPPED_VARIANT_PROPERTIES,
-  HgvsReferenceSequenceType,
   inferReferenceSequenceFromVariants,
-  isStartOrStopLoss,
-  Variant
+  isStartOrStopLoss
 } from '@/lib/variants'
 
 interface VariantHeatmapDatum {

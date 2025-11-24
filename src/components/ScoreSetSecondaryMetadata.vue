@@ -79,7 +79,8 @@
 
 <script lang="ts" setup>
 import _ from 'lodash'
-import {computed, PropType} from 'vue'
+import type {PropType} from 'vue'
+import {computed} from 'vue'
 
 import EntityLink from '@/components/common/EntityLink.vue'
 import useFormatters from '@/composition/formatters'

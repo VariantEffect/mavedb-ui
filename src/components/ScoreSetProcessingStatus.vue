@@ -72,7 +72,7 @@
 
 <script lang="ts" setup>
 import Message from 'primevue/message'
-import {PropType} from 'vue'
+import type {PropType} from 'vue'
 
 import type {components} from '@/schema/openapi'
 

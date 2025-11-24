@@ -1,10 +1,10 @@
 import _ from 'lodash'
 
-import type { components } from '@/schema/openapi'
+import type {components} from '@/schema/openapi'
 
 type ScoreSet = components['schemas']['ScoreSet']
 type PublicationIdentifier = components['schemas']['ScoreSet']['primaryPublicationIdentifiers'][0]
-type Author = components["schemas"]["PublicationAuthors"]
+type Author = components['schemas']['PublicationAuthors']
 
 /**
  * Get the first author of a score set.
@@ -53,8 +53,6 @@ export function getScoreSetShortName(scoreSet: ScoreSet): string {
   return parts.length > 0 ? parts.join(' ') : (scoreSet.title ?? scoreSet.shortDescription ?? 'Score set')
 }
 
-
-
 /**
  * Filters a collection of publication identifier objects and returns only those
  * that match the dbName + identifier pairs provided in a source array.
@@ -75,7 +73,7 @@ export function getScoreSetShortName(scoreSet: ScoreSet): string {
  * @returns An array of matched publication identifiers (in the order of the matching criteria) or null if there are no matches or inputs are invalid.
  */
 export function matchSources(
-  sourceArr: Array<{ dbName: string; identifier: string }> | undefined,
+  sourceArr: Array<{dbName: string; identifier: string}> | undefined,
   sources: PublicationIdentifier[] | undefined
 ): PublicationIdentifier[] | null {
   if (!Array.isArray(sourceArr) || !sources) return null

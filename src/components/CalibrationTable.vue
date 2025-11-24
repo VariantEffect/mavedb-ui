@@ -297,10 +297,11 @@
 
 <script lang="ts">
 import PrimeButton from 'primevue/button'
-import {defineComponent, PropType} from 'vue'
+import type {PropType} from 'vue'
+import {defineComponent} from 'vue'
 
+import type {PersistedScoreCalibration, FunctionalRange} from '@/lib/calibrations'
 import {shortCitationForPublication} from '@/lib/publication'
-import {PersistedScoreCalibration, FunctionalRange} from '@/lib/calibrations'
 
 export default defineComponent({
   name: 'CalibrationTable',

@@ -66,7 +66,8 @@
 
 <script lang="ts" setup>
 import Button from 'primevue/button'
-import {PropType, ref} from 'vue'
+import type {PropType} from 'vue'
+import {ref} from 'vue'
 
 import {textForTargetGeneCategory} from '@/lib/target-genes'
 import type {components} from '@/schema/openapi'

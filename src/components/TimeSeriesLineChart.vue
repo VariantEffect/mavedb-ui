@@ -4,7 +4,8 @@
 
 <script lang="ts">
 import * as d3 from 'd3'
-import {defineComponent, PropType, ref} from 'vue'
+import type {PropType} from 'vue'
+import {defineComponent, ref} from 'vue'
 import makeLineChart, {BarLineChartDatum, BarLineChartMargins} from '@/lib/bar-line-chart'
 
 export default defineComponent({

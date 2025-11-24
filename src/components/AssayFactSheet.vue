@@ -148,7 +148,8 @@
 
 <script lang="ts">
 import _ from 'lodash'
-import {defineComponent, PropType} from 'vue'
+import type {PropType} from 'vue'
+import {defineComponent} from 'vue'
 
 import {getScoreSetFirstAuthor} from '@/lib/score-sets'
 import {shortCitationForPublication} from '@/lib/publication'

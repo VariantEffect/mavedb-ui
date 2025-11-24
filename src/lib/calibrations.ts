@@ -1,6 +1,6 @@
-import {HistogramBin, HistogramShader} from '@/lib/histogram'
-import {PublicationIdentifier} from './publication'
-import {User} from './user'
+import type {HistogramBin, HistogramShader} from '@/lib/histogram'
+import type {PublicationIdentifier} from '@/lib/publication'
+import type {User} from '@/lib/user'
 
 export const NORMAL_RANGE_DEFAULT_COLOR = '#4444ff'
 export const ABNORMAL_RANGE_DEFAULT_COLOR = '#ff4444'

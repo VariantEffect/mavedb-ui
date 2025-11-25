@@ -228,6 +228,10 @@
                 v-model="rangeObj.range[0]"
                 :aria-labelledby="scopedId(`input-investigatorProvidedRangeLower-${rangeIdx}`)"
                 :disabled="functionalRangeHelpers[rangeIdx].infiniteLower"
+                :max-fraction-digits="10"
+                :min-fraction-digits="0"
+                mode="decimal"
+                step="any"
               />
               <label :for="scopedId(`input-investigatorProvidedRangeLower-${rangeIdx}`)">{{
                 functionalRangeHelpers[rangeIdx].infiniteLower
@@ -243,6 +247,10 @@
                 v-model="rangeObj.range[1]"
                 :aria-labelledby="scopedId(`input-investigatorProvidedRangeUpper-${rangeIdx}`)"
                 :disabled="functionalRangeHelpers[rangeIdx].infiniteUpper"
+                :max-fraction-digits="10"
+                :min-fraction-digits="0"
+                mode="decimal"
+                step="any"
               />
               <label :for="scopedId(`input-investigatorProvidedRangeUpper-${rangeIdx}`)">{{
                 functionalRangeHelpers[rangeIdx].infiniteUpper

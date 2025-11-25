@@ -63,7 +63,7 @@ export interface HistogramBin {
 }
 
 /** The definition for a shaded region */
-export interface HistogramShader {
+export interface HistogramShaderRegion {
   /** The minimum and maximum x positions of this shaded region. */
   min: number | null
   max: number | null
@@ -92,8 +92,21 @@ export interface HistogramShader {
   gradientUUID: string | undefined
 }
 
-/** An object containing definitions of each of the possible shaded regions on this Histogram. */
-export interface HistogramShaderRegions {
+/** An object describing one histogram shader, including a set of regions to shade. */
+export interface HistogramShader {
+  /**
+   * Title to display above all the shaded regions. This is ignored for the main shader shown directly on the
+   * histogram.
+   */
+  title?: string
+  /** Tooltip text to display when the cursor hovers over the title. */
+  tooltipText?: string
+  /** Shader regions */
+  regions: HistogramShaderRegion[]
+}
+
+/** An object containing definitions of each of the possible shaders for this histogram. */
+export interface HistogramShaders {
   [key: string]: HistogramShader[]
 }
 
@@ -946,7 +959,7 @@ export default function makeHistogram(): Histogram {
         }
 
         function renderShader(
-          shader: HistogramShaderRegions | null,
+          regions: HistogramShaderRegion[] | null,
           shaderContainerSelection,
           thresholdsContainerSelection,
           renderingOnHistogram: boolean
@@ -955,7 +968,7 @@ export default function makeHistogram(): Histogram {
             // Select the active shader elements.
             const shaderG = shaderContainerSelection
               .selectAll('g.histogram-shader')
-              .data(chartHasContent && shader ? shader : [])
+              .data(chartHasContent && regions ? regions : [])
               .join(
                 (enter) => {
                   const g = enter.append('g')
@@ -968,13 +981,13 @@ export default function makeHistogram(): Histogram {
                 (exit) => exit.remove()
               )
 
-            if (shader) {
+            if (regions) {
               if (renderingOnHistogram) {
                 // Add the gradients for the active shader.
                 svg
                   .select('defs')
                   .selectAll('linearGradient')
-                  .data(shader)
+                  .data(regions)
                   .join((enter) => {
                     const gradient = enter
                       .append('linearGradient')
@@ -1074,7 +1087,7 @@ export default function makeHistogram(): Histogram {
               }
 
               // Draw the shader thresholds.
-              const shaderThresholds = shader
+              const shaderThresholds = regions
                 .map((region) => [
                   ...(region.min != null && region.min > xScale.domain()[0] && region.min < xScale.domain()[1]
                     ? [{x: region.min, region}]
@@ -1122,9 +1135,9 @@ export default function makeHistogram(): Histogram {
         clearShaderGradients()
 
         // Render the shader that appears on the histogram, if any.
-        const histogramShader = shaders && shaderDisplay?.histogram ? shaders[shaderDisplay?.histogram] : null
+        const histogramShaderRegions = shaders && shaderDisplay?.histogram ? shaders[shaderDisplay?.histogram]?.regions : null
         renderShader(
-          histogramShader,
+          histogramShaderRegions,
           svg.select('g.histogram-shaders'),
           svg.select('g.histogram-shader-thresholds'),
           true
@@ -1136,7 +1149,7 @@ export default function makeHistogram(): Histogram {
           .selectAll('path.histogram-shader-threshold')
           .data(
             chartHasContent
-              ? (shaderDisplay?.bottom ?? []).map((key) => ({shaderKey: key, shaders: shaders?.[key]}))
+              ? (shaderDisplay?.bottom ?? []).map((key) => ({title: shaders?.[key]?.title, tooltipText: shaders?.[key]?.tooltipText, regions: shaders?.[key]?.regions}))
               : []
           )
           .join(
@@ -1151,15 +1164,15 @@ export default function makeHistogram(): Histogram {
         svg
           .select('g.histogram-outside-shaders')
           .selectAll('g.histogram-outside-shader')
-          .each(function (d: HistogramShaderRegions, i: number) {
+          .each(function (d: HistogramShader, i: number) {
             const g = d3.select(this)
             g.attr(
               'transform',
               `translate(0, ${height + margins.bottom + i * outsideShaderHeight + (i + 1) * (outsideShaderHeadingHeight + outsideShaderSpacing)})`
             )
-            g.select('text').text(d.shaderKey)
+            g.select('text').text(d.title ?? '')
 
-            renderShader(d.shaders, g, g, false)
+            renderShader(d.regions, g, g, false)
           })
       }
 

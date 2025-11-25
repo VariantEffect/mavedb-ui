@@ -562,7 +562,9 @@ export default defineComponent({
       if (!this.scoreCalibrations) return shaders
 
       for (const [key, value] of Object.entries(this.scoreCalibrations)) {
-        shaders[key] = prepareCalibrationsForHistogram(value as PersistedScoreCalibration)
+        shaders[key] = {
+          regions: prepareCalibrationsForHistogram(value as PersistedScoreCalibration)
+        }
       }
 
       return shaders

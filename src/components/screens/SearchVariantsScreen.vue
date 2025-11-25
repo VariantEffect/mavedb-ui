@@ -135,38 +135,65 @@
           :class="['mavedb-expander', ...(guideExpanded ? ['mavedb-expander-expanded'] : [])]"
         >
           <table>
-            <tr>
-              <th>Gene</th>
-              <th>Score set</th>
-              <th>Publication</th>
-            </tr>
-            <template v-for="{gene, urns} in maveMdScoreSetsGroupedByGene" :key="gene">
+            <thead>
               <tr>
-                <td :rowspan="urns.length">{{ gene }}</td>
-                <td>
-                  <router-link :to="{name: 'scoreSet', params: {urn: urns[0]}}">{{
-                    maveMdScoreSets[urns[0]]?.title || urns[0]
-                  }}</router-link>
-                </td>
-                <td>
-                  <router-link v-if="maveMdScoreSets[urns[0]]" :to="{name: 'scoreSet', params: {urn: urns[0]}}">{{
-                    getScoreSetShortName(maveMdScoreSets[urns[0]]!)
-                  }}</router-link>
-                </td>
+                <th style="width: 12%">Gene</th>
+                <th style="width: 50%">Score set</th>
+                <th style="width: 25%">Publication</th>
+                <th style="width: 13%">Calibrations w. evidence / Total</th>
               </tr>
-              <tr v-for="urn in urns.slice(1)" :key="urn">
-                <td>
-                  <router-link :to="{name: 'scoreSet', params: {urn}}">{{
-                    maveMdScoreSets[urn]?.title || urn
-                  }}</router-link>
-                </td>
-                <td>
-                  <router-link v-if="maveMdScoreSets[urn]" :to="{name: 'scoreSet', params: {urn}}">{{
-                    getScoreSetShortName(maveMdScoreSets[urn]!)
-                  }}</router-link>
-                </td>
-              </tr>
-            </template>
+            </thead>
+            <tbody>
+              <template v-for="{gene, urns} in maveMdScoreSetsGroupedByGene" :key="gene">
+                <tr>
+                  <td :rowspan="urns.length">{{ gene }}</td>
+                  <td>
+                    <router-link :to="{name: 'scoreSet', params: {urn: urns[0]}}">{{
+                      maveMdScoreSets[urns[0]]?.title || urns[0]
+                    }}</router-link>
+                  </td>
+                  <td>
+                    <router-link v-if="maveMdScoreSets[urns[0]]" :to="{name: 'scoreSet', params: {urn: urns[0]}}">{{
+                      getScoreSetShortName(maveMdScoreSets[urns[0]]!)
+                    }}</router-link>
+                  </td>
+                  <td style="text-align: center">
+                    <router-link :to="{name: 'scoreSetCalibrations', params: {urn: urns[0]}}"
+                      >{{
+                        maveMdScoreSets[urns[0]]?.scoreCalibrations.filter(
+                          (calibration) =>
+                            calibration.functionalRanges?.filter((range) => range.acmgClassification).length > 0
+                        ).length || 0
+                      }}
+                      / {{ maveMdScoreSets[urns[0]]?.scoreCalibrations.length || 0 }}
+                    </router-link>
+                  </td>
+                </tr>
+                <tr v-for="urn in urns.slice(1)" :key="urn">
+                  <td>
+                    <router-link :to="{name: 'scoreSet', params: {urn}}">{{
+                      maveMdScoreSets[urn]?.title || urn
+                    }}</router-link>
+                  </td>
+                  <td style>
+                    <router-link v-if="maveMdScoreSets[urn]" :to="{name: 'scoreSet', params: {urn}}">{{
+                      getScoreSetShortName(maveMdScoreSets[urn]!)
+                    }}</router-link>
+                  </td>
+                  <td style="text-align: center">
+                    <router-link :to="{name: 'scoreSetCalibrations', params: {urn: urns[0]}}">
+                      {{
+                        maveMdScoreSets[urn]?.scoreCalibrations.filter(
+                          (calibration) =>
+                            calibration.functionalRanges?.filter((range) => range.acmgClassification).length > 0
+                        ).length || 0
+                      }}
+                      / {{ maveMdScoreSets[urn]?.scoreCalibrations.length || 0 }}
+                    </router-link>
+                  </td>
+                </tr>
+              </template>
+            </tbody>
           </table>
         </div>
       </div>

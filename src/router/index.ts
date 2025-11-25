@@ -1,5 +1,5 @@
-import {createRouter, createWebHistory} from 'vue-router'
-import type {RouteLocationNormalized, RouteRecordRaw} from 'vue-router'
+import { createRouter, createWebHistory } from 'vue-router'
+import type { RouteLocationNormalized, RouteRecordRaw } from 'vue-router'
 
 import AboutView from '@/components/screens/AboutView.vue'
 import CollectionView from '@/components/screens/CollectionView.vue'
@@ -15,6 +15,7 @@ import HomeScreen from '@/components/screens/HomeScreen.vue'
 import OidcCallback from '@/components/screens/OidcCallback.vue'
 import OidcCallbackError from '@/components/screens/OidcCallbackError.vue'
 import PublicationIdentifierView from '@/components/screens/PublicationIdentifierView.vue'
+import ScoreSetCalibrationsView from '@/components/screens/ScoreSetCalibrationsView.vue'
 import ScoreSetCreator from '@/components/screens/ScoreSetCreator.vue'
 import ScoreSetEditor from '@/components/screens/ScoreSetEditor.vue'
 import ScoreSetView from '@/components/screens/ScoreSetView.vue'
@@ -36,7 +37,7 @@ const routes: RouteRecordRaw[] = [
     name: 'home',
     component: HomeScreen,
     props: (route) => {
-      const {galaxyUrl, toolId, requestFromGalaxy} = route.query
+      const { galaxyUrl, toolId, requestFromGalaxy } = route.query
       const props = {
         galaxyUrl,
         toolId,
@@ -53,12 +54,12 @@ const routes: RouteRecordRaw[] = [
   },
   ...(config.CLINICAL_FEATURES_ENABLED
     ? [
-        {
-          path: '/mavemd',
-          name: 'mavemd',
-          component: SearchVariantsScreen
-        }
-      ]
+      {
+        path: '/mavemd',
+        name: 'mavemd',
+        component: SearchVariantsScreen
+      }
+    ]
     : []),
   {
     path: '/docs',
@@ -97,7 +98,7 @@ const routes: RouteRecordRaw[] = [
     path: '/experiments/:urn',
     name: 'experiment',
     component: ExperimentView,
-    props: (route) => ({itemId: route.params.urn})
+    props: (route) => ({ itemId: route.params.urn })
   },
   {
     name: 'createExperiment',
@@ -129,7 +130,7 @@ const routes: RouteRecordRaw[] = [
     path: '/experiment-sets/:urn',
     name: 'experimentSet',
     component: ExperimentSetView,
-    props: (route) => ({itemId: route.params.urn})
+    props: (route) => ({ itemId: route.params.urn })
   },
   {
     path: '/experiment-sets/:urn/create-experiment',
@@ -150,6 +151,14 @@ const routes: RouteRecordRaw[] = [
     name: 'scoreSet',
     component: ScoreSetView,
     props: (route) => ({
+      itemId: route.params.urn,
+    })
+  },
+  {
+    path: '/score-sets/:urn/calibrations',
+    name: 'scoreSetCalibrations',
+    component: ScoreSetCalibrationsView,
+    props: (route) => ({
       itemId: route.params.urn
     })
   },
@@ -163,55 +172,55 @@ const routes: RouteRecordRaw[] = [
     path: '/collections/:urn',
     name: 'collection',
     component: CollectionView,
-    props: (route) => ({itemId: route.params.urn})
+    props: (route) => ({ itemId: route.params.urn })
   },
   ...(config.CLINICAL_FEATURES_ENABLED
     ? [
-        {
-          path: '/variants/:clingenAlleleId',
-          name: 'variant',
-          component: VariantScreen,
-          props: (route) => ({
-            clingenAlleleId: route.params.clingenAlleleId
-          })
-        }
-      ]
+      {
+        path: '/variants/:clingenAlleleId',
+        name: 'variant',
+        component: VariantScreen,
+        props: (route: RouteLocationNormalized) => ({
+          clingenAlleleId: route.params.clingenAlleleId
+        })
+      }
+    ]
     : []),
   ...(config.CLINICAL_FEATURES_ENABLED
     ? [
-        {
-          path: '/variant-measurements/:urn',
-          name: 'variantMeasurement',
-          component: VariantMeasurementScreen,
-          props: (route: RouteLocationNormalized) => ({
-            variantUrn: route.params.urn
-          })
-        }
-      ]
+      {
+        path: '/variant-measurements/:urn',
+        name: 'variantMeasurement',
+        component: VariantMeasurementScreen,
+        props: (route: RouteLocationNormalized) => ({
+          variantUrn: route.params.urn
+        })
+      }
+    ]
     : []),
   {
     name: 'pubmedPublicationIdentifier',
     path: '/publication-identifiers/pubmed/:identifier',
     component: PublicationIdentifierView,
-    props: (route) => ({itemId: route.params.identifier, name: route.name, dbId: 'PubMed'})
+    props: (route) => ({ itemId: route.params.identifier, name: route.name, dbId: 'PubMed' })
   },
   {
     name: 'biorxivPublicationIdentifier',
     path: '/publication-identifiers/biorxiv/:identifier',
     component: PublicationIdentifierView,
-    props: (route) => ({itemId: route.params.identifier, name: route.name, dbId: 'bioRxiv'})
+    props: (route) => ({ itemId: route.params.identifier, name: route.name, dbId: 'bioRxiv' })
   },
   {
     name: 'medrxivPublicationIdentifier',
     path: '/publication-identifiers/medrxiv/:identifier',
     component: PublicationIdentifierView,
-    props: (route) => ({itemId: route.params.identifier, name: route.name, dbId: 'medRxiv'})
+    props: (route) => ({ itemId: route.params.identifier, name: route.name, dbId: 'medRxiv' })
   },
   {
     name: 'crossrefPublicationIdentifier',
     path: '/publication-identifiers/crossref/:identifier',
     component: PublicationIdentifierView,
-    props: (route) => ({itemId: route.params.identifier, name: route.name, dbId: 'Crossref'})
+    props: (route) => ({ itemId: route.params.identifier, name: route.name, dbId: 'Crossref' })
   },
   {
     path: '/oidc-callback',
@@ -227,7 +236,7 @@ const routes: RouteRecordRaw[] = [
     name: 'wizard-completion',
     path: '/score-sets/submit-completion/:urn',
     component: WizardCompletionView,
-    props: (route) => ({itemId: route.params.urn})
+    props: (route) => ({ itemId: route.params.urn })
   }
 ]
 

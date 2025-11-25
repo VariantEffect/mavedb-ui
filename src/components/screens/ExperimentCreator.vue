@@ -1086,6 +1086,7 @@ export default {
             break
         }
         this.inputClasses[inputName] = 'mave-file-input-full'
+        console.log(this.extraMetadata)
       }
       this.mergeValidationErrors()
     },
@@ -1215,7 +1216,7 @@ export default {
         primaryPublicationIdentifiers: primaryPublicationIdentifiers,
         secondaryPublicationIdentifiers: secondaryPublicationIdentifiers,
         rawReadIdentifiers: this.rawReadIdentifiers.map((identifier) => _.pick(identifier, 'identifier')),
-        extraMetadata: {}
+        extraMetadata: this.extraMetadata
       }
       // empty item arrays so that deleted items aren't merged back into editedItem object
       if (this.item) {
@@ -1269,6 +1270,10 @@ export default {
           const formValidationErrors = {}
           for (const error of response.data.detail) {
             let path = error.loc
+            if (error?.ctx?.error?.custom_loc) {
+              path = error.ctx.error.custom_loc
+            }
+
             if (path[0] == 'body') {
               path = path.slice(1)
             }

@@ -4,7 +4,10 @@
     :is-first-login-prompt="false"
   />
   {{ experimentSetUrn }}
-  <DefaultLayout>
+  <DefaultLayout v-if="!userIsAuthenticated">
+    <p>You may <a href="#" @click.prevent="signInCreateExp">sign in</a> to upload data.</p>
+  </DefaultLayout>
+  <DefaultLayout v-else>
     <div class="mave-experiment-editor">
       <div v-if="itemStatus != 'NotLoaded'" class="mave-screen-title-bar">
         <div class="mave-screen-title">Edit experiment {{ item.urn }}</div>
@@ -647,7 +650,12 @@ export default {
   setup: () => {
     useHead({title: 'New experiment'})
 
-    const {userProfile} = useAuth()
+    const {signIn, userIsAuthenticated, userProfile} = useAuth()
+
+    const signInCreateExp = () => {
+      sessionStorage.setItem('postLoginRedirect', 'createExperiment')
+      signIn()
+    }
 
     const variantLibraryKeywordOptions = useItems({itemTypeName: `controlled-keywords-variant-search`})
     const endogenousSystemKeywordOptions = useItems({itemTypeName: `controlled-keywords-endo-system-search`})
@@ -675,6 +683,8 @@ export default {
     const publicationIdentifierSuggestions = useItems({itemTypeName: 'publication-identifier-search'})
     const externalPublicationIdentifierSuggestions = useItems({itemTypeName: 'external-publication-identifier-search'})
     return {
+      signInCreateExp,
+      userIsAuthenticated,
       userProfile,
       ...useFormatters(),
       ...useItem({itemTypeName: 'experiment'}),
@@ -989,9 +999,7 @@ export default {
     removePublicationIdentifier: function (event) {
       // If we are removing a primary publication identifier, also remove it from that list.
       const removedIdentifier = event.value.identifier
-      const primaryIdx = this.primaryPublicationIdentifiers.findIndex(
-        (pub) => pub.identifier == removedIdentifier
-      )
+      const primaryIdx = this.primaryPublicationIdentifiers.findIndex((pub) => pub.identifier == removedIdentifier)
       if (primaryIdx != -1) {
         this.primaryPublicationIdentifiers.splice(primaryIdx, 1)
       }

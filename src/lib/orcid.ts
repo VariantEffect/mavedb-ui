@@ -137,7 +137,10 @@ export async function continueAuthenticationFromRedirect() {
   if (response.status == 200) {
     const newIdToken = response.data?.idToken
     setIdToken(newIdToken)
-    return '/'
+    const redirect = localStorage.getItem('redirectAfterLogin')
+    localStorage.removeItem('redirectAfterLogin')
+    // return redirect path OR default home
+    return redirect || '/'
   } else {
     throw 'Authentication error'
   }

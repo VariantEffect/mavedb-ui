@@ -22,6 +22,7 @@ import SearchVariantsScreen from '@/components/screens/SearchVariantsScreen.vue'
 import SearchView from '@/components/screens/SearchView.vue'
 import SettingsScreen from '@/components/screens/SettingsScreen.vue'
 import StatisticsView from '@/components/screens/StatisticsView.vue'
+import {beginAuthentication, isAuthenticated} from '@/lib/orcid'
 import UsersView from '@/components/screens/UsersView.vue'
 import VariantMeasurementScreen from '@/components/screens/VariantMeasurementScreen.vue'
 import VariantScreen from '@/components/screens/VariantScreen.vue'
@@ -73,15 +74,19 @@ const routes: RouteRecordRaw[] = [
   },
   {
     path: '/settings',
-    component: SettingsScreen
+    component: SettingsScreen,
+    meta: {requiresAuth: true}
   },
   {
     path: '/dashboard',
-    component: DashboardView
+    name: 'dashboard',
+    component: DashboardView,
+    meta: {requiresAuth: true}
   },
   {
     path: '/users',
-    component: UsersView
+    component: UsersView,
+    meta: {requiresAuth: true}
   },
   {
     path: '/statistics',
@@ -97,24 +102,28 @@ const routes: RouteRecordRaw[] = [
   {
     name: 'createExperiment',
     path: '/create-experiment',
-    component: ExperimentCreator
+    component: ExperimentCreator,
+    meta: {requiresAuth: true}
   },
   {
     path: '/experiments/:urn/edit',
     name: '/editExperiment',
     component: ExperimentEditor,
-    props: (route) => ({itemId: route.params.urn})
+    props: (route) => ({itemId: route.params.urn}),
+    meta: {requiresAuth: true}
   },
   {
     path: '/create-score-set',
     name: 'createScoreSet',
-    component: ScoreSetCreator
+    component: ScoreSetCreator,
+    meta: {requiresAuth: true}
   },
   {
     path: '/experiment/:urn/create-score-set',
     name: 'createScoreSetInExperiment',
     component: ScoreSetCreator,
-    props: (route) => ({experimentUrn: route.params.urn})
+    props: (route) => ({experimentUrn: route.params.urn}),
+    meta: {requiresAuth: true}
   },
   {
     path: '/experiment-sets/:urn',
@@ -126,13 +135,15 @@ const routes: RouteRecordRaw[] = [
     path: '/experiment-sets/:urn/create-experiment',
     name: 'createExperimentInExperimentSet',
     component: ExperimentEditor,
-    props: (route) => ({experimentSetUrn: route.params.urn})
+    props: (route) => ({experimentSetUrn: route.params.urn}),
+    meta: {requiresAuth: true}
   },
   {
     path: '/score-sets/:urn/edit',
     name: 'editScoreSet',
     component: ScoreSetEditor,
-    props: (route) => ({itemId: route.params.urn})
+    props: (route) => ({itemId: route.params.urn}),
+    meta: {requiresAuth: true}
   },
   {
     path: '/score-sets/:urn',
@@ -145,7 +156,8 @@ const routes: RouteRecordRaw[] = [
   {
     path: '/collections',
     name: 'collections',
-    component: CollectionsView
+    component: CollectionsView,
+    meta: {requiresAuth: true}
   },
   {
     path: '/collections/:urn',
@@ -225,3 +237,17 @@ const router = createRouter({
 })
 
 export default router
+
+// ---- authentication guard ----
+router.beforeEach((to: RouteLocationNormalized, _from: RouteLocationNormalized, next) => {
+  if (to.meta.requiresAuth) {
+    if (!isAuthenticated.value) {
+      localStorage.setItem('redirectAfterLogin', to.fullPath)
+      beginAuthentication()
+    } else {
+      next()
+    }
+  } else {
+    next()
+  }
+})

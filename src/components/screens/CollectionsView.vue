@@ -1,5 +1,8 @@
 <template>
-  <DefaultLayout>
+  <DefaultLayout v-if="!userIsAuthenticated">
+    <p>You may <a href="#" @click.prevent="signInCollection">sign in</a> to view or add your collections.</p>
+  </DefaultLayout>
+  <DefaultLayout v-else>
     <div>
       <div class="mavedb-1000px-col">
         <div class="mave-screen-title-bar">
@@ -76,6 +79,7 @@ import {useHead} from '@unhead/vue'
 import CollectionCreator from '@/components/CollectionCreator'
 import DefaultLayout from '@/components/layout/DefaultLayout'
 import PageLoading from '@/components/common/PageLoading'
+import useAuth from '@/composition/auth'
 import useFormatters from '@/composition/formatters'
 import config from '@/config'
 
@@ -86,7 +90,17 @@ export default {
 
   setup: () => {
     useHead({title: 'My saved collections'})
-    return useFormatters()
+    const {signIn, userIsAuthenticated} = useAuth()
+    const signInCollection = () => {
+      sessionStorage.setItem('postLoginRedirect', 'collections')
+      signIn()
+    }
+
+    return {
+      signInCollection,
+      userIsAuthenticated,
+      ...useFormatters(),
+    }
   },
 
   data: () => ({

@@ -1,5 +1,8 @@
 <template>
-  <DefaultLayout>
+  <DefaultLayout v-if="!userIsAuthenticated">
+    <p>You may <a href="#" @click.prevent="signInDashboard">sign in</a> to view your data.</p>
+  </DefaultLayout>
+  <DefaultLayout v-else>
     <h1>Welcome to MaveDB</h1>
     <TabView>
       <TabPanel header="Published">
@@ -37,6 +40,7 @@ import {useHead} from '@unhead/vue'
 import config from '@/config'
 import ScoreSetTable from '@/components/ScoreSetTable.vue'
 import DefaultLayout from '@/components/layout/DefaultLayout'
+import useAuth from '@/composition/auth'
 
 export default {
   name: 'HomeView',
@@ -45,6 +49,16 @@ export default {
 
   setup: () => {
     useHead({title: 'My dashboard'})
+    const {signIn, userIsAuthenticated} = useAuth()
+    const signInDashboard = () => {
+      sessionStorage.setItem('postLoginRedirect', 'dashboard')
+      signIn()
+    }
+
+    return {
+      signInDashboard,
+      userIsAuthenticated
+    }
   },
 
   data: function () {

@@ -28,12 +28,12 @@ export default () => {
 
   const signIn = () => orcidBeginAuthentication()
 
-  const redirect = sessionStorage.getItem("postLoginRedirect")
+  const redirect = sessionStorage.getItem('postLoginRedirect')
 
   if (redirect) {
     const router = useRouter()
-    router.push({ name: redirect })
-    sessionStorage.removeItem("postLoginRedirect")
+    router.push({name: redirect})
+    sessionStorage.removeItem('postLoginRedirect')
   }
 
   // Sign the user out. We do not perform a server-side OIDC logout, because ORCID does not support it by providing a

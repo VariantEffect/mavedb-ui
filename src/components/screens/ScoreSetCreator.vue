@@ -1231,6 +1231,7 @@
                 </div>
                 <div v-if="investigatorIsProvidingScoreCalibrations">
                   <CalibrationEditor
+                    :allow-class-based="false"
                     :calibration-draft-ref="calibrationCreateDraft"
                     :validation-errors="calibrationValidationErrors || {}"
                   />
@@ -1985,7 +1986,7 @@ export default {
 
           // If a user has begun to provide functional ranges, ensure that they have provided at least a label, classification
           // and min/max value for all functional ranges.
-          for (const scoreRange of this.calibrationCreateDraft.value?.functionalRanges || []) {
+          for (const scoreRange of this.calibrationCreateDraft.value?.functionalClassifications || []) {
             if (!scoreRange.label || !scoreRange.classification) {
               return false
             }
@@ -1997,7 +1998,7 @@ export default {
           // - At least one functional range has been provided.
           // - A baseline score has been provided.
           return (
-            this.calibrationCreateDraft.value?.functionalRanges.length ||
+            this.calibrationCreateDraft.value?.functionalClassifications.length ||
             this.calibrationCreateDraft.value?.baselineScore !== null
           )
         }

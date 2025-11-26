@@ -21,8 +21,18 @@
       <div class="mavedb-assay-facts-row">
         <div class="mavedb-assay-facts-label">Assay Type</div>
         <div class="mavedb-assay-facts-value">
-          <div v-if="scoreSet.experiment.keywords?.some((k) => k.keyword.key === 'Phenotypic Assay Method')">
-            {{ scoreSet.experiment.keywords.find((k) => k.keyword.key === 'Phenotypic Assay Method')?.keyword.label }}
+          <div
+            v-if="
+              scoreSet.experiment.keywords?.some(
+                (k: components['schemas']['ExperimentControlledKeyword']) => k.keyword.key === 'Phenotypic Assay Method'
+              )
+            "
+          >
+            {{
+              scoreSet.experiment.keywords.find(
+                (k: components['schemas']['ExperimentControlledKeyword']) => k.keyword.key === 'Phenotypic Assay Method'
+              )?.keyword.label
+            }}
           </div>
           <div v-else>Not specified</div>
         </div>
@@ -30,9 +40,19 @@
       <div class="mavedb-assay-facts-row">
         <div class="mavedb-assay-facts-label">Molecular Mechanism Assessed</div>
         <div class="mavedb-assay-facts-value">
-          <div v-if="scoreSet.experiment.keywords?.some((k) => k.keyword.key === 'Molecular Mechanism Assessed')">
+          <div
+            v-if="
+              scoreSet.experiment.keywords?.some(
+                (k: components['schemas']['ExperimentControlledKeyword']) =>
+                  k.keyword.key === 'Molecular Mechanism Assessed'
+              )
+            "
+          >
             {{
-              scoreSet.experiment.keywords.find((k) => k.keyword.key === 'Molecular Mechanism Assessed')?.keyword.label
+              scoreSet.experiment.keywords.find(
+                (k: components['schemas']['ExperimentControlledKeyword']) =>
+                  k.keyword.key === 'Molecular Mechanism Assessed'
+              )?.keyword.label
             }}
           </div>
           <div v-else>Not specified</div>
@@ -41,9 +61,19 @@
       <div class="mavedb-assay-facts-row">
         <div class="mavedb-assay-facts-label">Variant Consequences Detected</div>
         <div class="mavedb-assay-facts-value">
-          <div v-if="scoreSet.experiment.keywords?.some((k) => k.keyword.key === 'Phenotypic Assay Mechanism')">
+          <div
+            v-if="
+              scoreSet.experiment.keywords?.some(
+                (k: components['schemas']['ExperimentControlledKeyword']) =>
+                  k.keyword.key === 'Phenotypic Assay Mechanism'
+              )
+            "
+          >
             {{
-              scoreSet.experiment.keywords.find((k) => k.keyword.key === 'Phenotypic Assay Mechanism')?.keyword.label
+              scoreSet.experiment.keywords.find(
+                (k: components['schemas']['ExperimentControlledKeyword']) =>
+                  k.keyword.key === 'Phenotypic Assay Mechanism'
+              )?.keyword.label
             }}
           </div>
           <div v-else>Not specified</div>
@@ -52,9 +82,19 @@
       <div class="mavedb-assay-facts-row">
         <div class="mavedb-assay-facts-label">Model System</div>
         <div class="mavedb-assay-facts-value">
-          <div v-if="scoreSet.experiment.keywords?.some((k) => k.keyword.key === 'Phenotypic Assay Model System')">
+          <div
+            v-if="
+              scoreSet.experiment.keywords?.some(
+                (k: components['schemas']['ExperimentControlledKeyword']) =>
+                  k.keyword.key === 'Phenotypic Assay Model System'
+              )
+            "
+          >
             {{
-              scoreSet.experiment.keywords.find((k) => k.keyword.key === 'Phenotypic Assay Model System')?.keyword.label
+              scoreSet.experiment.keywords.find(
+                (k: components['schemas']['ExperimentControlledKeyword']) =>
+                  k.keyword.key === 'Phenotypic Assay Model System'
+              )?.keyword.label
             }}
           </div>
           <div v-else>Not specified</div>
@@ -83,11 +123,23 @@
       Clinical Performance<sup v-if="!primaryScoreRangeIsInvestigatorProvided">*</sup>
     </div>
     <div class="mavedb-assay-facts-section">
-      <div v-if="primaryScoreRange?.functionalRanges?.some((r) => r.oddspathsRatio)">
+      <div
+        v-if="
+          primaryScoreRange?.functionalClassifications?.some(
+            (r: components['schemas']['mavedb__view_models__score_calibration__FunctionalClassification']) =>
+              r.oddspathsRatio
+          )
+        "
+      >
         <div class="mavedb-assay-facts-row">
           <div class="mavedb-assay-facts-label">OddsPath – Normal</div>
           <div
-            v-if="primaryScoreRange?.functionalRanges?.some((r) => r.classification === 'normal' && r.oddspathsRatio)"
+            v-if="
+              primaryScoreRange?.functionalClassifications?.some(
+                (r: components['schemas']['mavedb__view_models__score_calibration__FunctionalClassification']) =>
+                  r.functionalClassification === 'normal' && r.oddspathsRatio
+              )
+            "
             class="mavedb-assay-facts-value"
           >
             {{ roundOddsPath(normalScoreRange?.oddspathsRatio) }}
@@ -109,7 +161,12 @@
         <div class="mavedb-assay-facts-row">
           <div class="mavedb-assay-facts-label">OddsPath – Abnormal</div>
           <div
-            v-if="primaryScoreRange?.functionalRanges?.some((r) => r.classification === 'abnormal' && r.oddspathsRatio)"
+            v-if="
+              primaryScoreRange?.functionalClassifications?.some(
+                (r: components['schemas']['mavedb__view_models__score_calibration__FunctionalClassification']) =>
+                  r.functionalClassification === 'abnormal' && r.oddspathsRatio
+              )
+            "
             class="mavedb-assay-facts-value"
           >
             {{ roundOddsPath(abnormalScoreRange?.oddspathsRatio) }}
@@ -251,10 +308,15 @@ export default defineComponent({
       return this.primaryScoreRange === this.scoreSet.scoreCalibrations?.find((sr) => sr?.investigatorProvided)
     },
     abnormalScoreRange: function () {
-      return this.primaryScoreRange?.functionalRanges?.find((r) => r.classification === 'abnormal') || null
+      return (
+        this.primaryScoreRange?.functionalClassifications?.find((r) => r.functionalClassification === 'abnormal') ||
+        null
+      )
     },
     normalScoreRange: function () {
-      return this.primaryScoreRange?.functionalRanges?.find((r) => r.classification === 'normal') || null
+      return (
+        this.primaryScoreRange?.functionalClassifications?.find((r) => r.functionalClassification === 'normal') || null
+      )
     },
     oddsPathSources() {
       return this.primaryScoreRange?.classificationSources
@@ -268,13 +330,17 @@ export default defineComponent({
     roundOddsPath: function (oddsPath: number | null | undefined) {
       return oddsPath?.toFixed(3)
     },
-    formatEvidenceCodeForScoreRange: function (functionalRange: components['schemas']['FunctionalRange'] | null) {
-      if (!functionalRange?.acmgClassification?.evidenceStrength) {
+    formatEvidenceCodeForScoreRange: function (
+      functionalClassification:
+        | components['schemas']['mavedb__view_models__score_calibration__FunctionalClassification']
+        | null
+    ) {
+      if (!functionalClassification?.acmgClassification?.evidenceStrength) {
         return ''
       }
 
-      const criterion = functionalRange.acmgClassification.criterion
-      const strength = functionalRange.acmgClassification.evidenceStrength.toUpperCase()
+      const criterion = functionalClassification.acmgClassification.criterion
+      const strength = functionalClassification.acmgClassification.evidenceStrength.toUpperCase()
       return `${criterion}_${strength}`
     }
   }

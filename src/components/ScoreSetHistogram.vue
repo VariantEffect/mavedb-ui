@@ -117,8 +117,6 @@
 <script lang="ts">
 import axios from 'axios'
 import _ from 'lodash'
-import Accordion from 'primevue/accordion'
-import AccordionTab from 'primevue/accordiontab'
 import Checkbox from 'primevue/checkbox'
 import Dropdown from 'primevue/dropdown'
 import ProgressSpinner from 'primevue/progressspinner'
@@ -153,7 +151,7 @@ import makeHistogram, {
   HistogramBin,
   HistogramShader
 } from '@/lib/histogram'
-import {prepareCalibrationsForHistogram, shaderOverlapsBin, PersistedScoreCalibration} from '@/lib/calibrations'
+import {prepareCalibrationsForHistogram, shaderOverlapsBin} from '@/lib/calibrations'
 import {variantNotNullOrNA} from '@/lib/mave-hgvs'
 import {
   DEFAULT_VARIANT_EFFECT_TYPES,
@@ -166,6 +164,7 @@ import {
   Variant,
   allCodingVariantsHaveProteinConsequence
 } from '@/lib/variants'
+import {components} from '@/schema/openapi'
 
 function naToUndefined(x: string | null | undefined) {
   if (variantNotNullOrNA(x)) {
@@ -184,7 +183,7 @@ interface Margins {
 export default defineComponent({
   name: 'ScoreSetHistogram',
 
-  components: {Accordion, AccordionTab, Checkbox, Dropdown, Rating, TabMenu, ProgressSpinner},
+  components: {Checkbox, Dropdown, Rating, TabMenu, ProgressSpinner},
 
   props: {
     coordinates: {
@@ -254,7 +253,7 @@ export default defineComponent({
       showCalibrations: scoreSetHasCalibrations,
       activeCalibration: {label: 'None', value: null} as {
         label: string
-        value: PersistedScoreCalibration | null
+        value: components['schemas']['ScoreCalibration'] | null
       },
       defaultVizApplied: false,
 
@@ -512,8 +511,8 @@ export default defineComponent({
       return this.activeViz == this.vizOptions.findIndex((item) => item.view === 'custom')
     },
 
-    scoreCalibrations: function (): {[key: string]: PersistedScoreCalibration} | null {
-      const calibrationObjects: Record<string, PersistedScoreCalibration> = {}
+    scoreCalibrations: function (): {[key: string]: components['schemas']['ScoreCalibration']} | null {
+      const calibrationObjects: Record<string, components['schemas']['ScoreCalibration']> = {}
       if (this.scoreSet.scoreCalibrations != null && this.scoreSet.scoreCalibrations.length > 0) {
         for (const calibration of this.scoreSet.scoreCalibrations) {
           calibrationObjects[calibration.urn] = calibration
@@ -561,12 +560,12 @@ export default defineComponent({
     },
 
     histogramShaders: function () {
-      const shaders: Record<string, any> = {null: null} // No shader
+      const shaders: Record<string, HistogramShader[] | null> = {null: null} // No shader
 
       if (!this.scoreCalibrations) return shaders
 
       for (const [key, value] of Object.entries(this.scoreCalibrations)) {
-        shaders[key] = prepareCalibrationsForHistogram(value as PersistedScoreCalibration)
+        shaders[key] = prepareCalibrationsForHistogram(value as components['schemas']['ScoreCalibration'])
       }
 
       return shaders
@@ -1174,7 +1173,7 @@ export default defineComponent({
 
       // Next, prefer any calibration that has any functional ranges defined
       const anyWithRanges = this.activeCalibrationOptions.find(
-        (option) => option.value?.functionalRanges && option.value.functionalRanges.length > 0
+        (option) => option.value?.functionalClassifications && option.value.functionalClassifications.length > 0
       )
       if (anyWithRanges) {
         return anyWithRanges

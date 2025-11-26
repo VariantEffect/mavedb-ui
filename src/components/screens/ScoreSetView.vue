@@ -1272,7 +1272,7 @@ export default {
 /* Histogram */
 
 .mavedb-score-set-histogram-pane {
-  margin: 10px 0;
+  margin: 10px;
 }
 
 /* Calibration table */

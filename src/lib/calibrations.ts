@@ -55,8 +55,7 @@ export const EVIDENCE_STRENGTHS_REVERSED = Object.fromEntries(
  * The function is resilient to an empty `functionalClassifications` array and will return an empty list in that case.
  * The order of shaders in the output array matches the order of functional classifications in the input.
  *
- * If a functional classification lacks a defined range but includes variants, the range is calculated from the variant scores.
- * If a functional classification lacks both a defined range and variant scores, it is skipped.
+ * If a functional classification lacks a defined range, it is skipped.
  *
  * Performance: O(n) where n = number of functional classifications.
  *
@@ -84,42 +83,13 @@ export function prepareCalibrationsForHistogram(
   }
 
   scoreCalibrations.functionalClassifications.forEach((classification) => {
-    const range = [null, null] as [number | null, number | null]
-    if (classification.range) {
-      range[0] = classification.range[0]
-      range[1] = classification.range[1]
-    } else {
-      if (classification.variants && classification.variants.length > 0) {
-        const scores = classification.variants
-          .map((v) => {
-            if (
-              v.data &&
-              typeof v.data === 'object' &&
-              'score_data' in v.data &&
-              v.data.score_data &&
-              typeof v.data.score_data === 'object'
-            ) {
-              return (v.data as {score_data?: {score?: number}}).score_data?.score
-            }
-            return undefined
-          })
-          .filter((s): s is number => typeof s === 'number' && !isNaN(s))
-        if (scores.length > 0) {
-          const minScore = Math.min(...scores)
-          const maxScore = Math.max(...scores)
-          range[0] = minScore
-          range[1] = maxScore
-        }
-      }
-    }
-
-    if ((range[0] === null && range[1] === null) || range[0] == range[1]) {
+    if (!classification.range) {
       return
     }
 
     const scoreClassification: HistogramShader = {
-      min: range[0],
-      max: range[1],
+      min: classification.range[0],
+      max: classification.range[1],
       title: classification.label,
       align: 'center',
       color: getRangeColor(classification),

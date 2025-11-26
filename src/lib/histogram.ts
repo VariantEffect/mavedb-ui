@@ -10,6 +10,20 @@ type Accessor<T, Self> = (value?: T) => T | Self
 
 export const DEFAULT_SHADER_COLOR = '#333333'
 export const DEFAULT_SERIES_COLOR = '#333333'
+export const CATEGORICAL_SERIES_COLORS = [
+  '#1f77b4', // blue
+  '#ff7f0e', // orange
+  '#2ca02c', // green
+  '#d62728', // red
+  '#9467bd', // purple
+  '#8c564b', // brown
+  '#e377c2', // pink
+  '#7f7f7f', // gray
+  '#bcbd22', // olive
+  '#17becf', // cyan
+  '#aec7e8', // light blue
+  '#ffbb78' // light orange
+]
 const LABEL_SIZE = 10
 
 /**
@@ -957,21 +971,19 @@ export default function makeHistogram(): Histogram {
             .style('visibility', (d) => (renderShaderTitles !== 'hide' && d.title ? 'visible' : 'hidden'))
             .text((d) => d.title)
 
-            // Hide shader titles which do not fit inside their region if the user has requested automatic title rendering.
-            if (renderShaderTitles === 'auto') {
-              shaderG
-                .select('text')
-                .each(function (d) {
-                  const node = this as SVGTextElement
-                  const span = visibleShaderRegion(d)
-                  const regionPixelWidth = xScale(span.max) - xScale(span.min)
-                  const textWidth = node.getBBox().width
+          // Hide shader titles which do not fit inside their region if the user has requested automatic title rendering.
+          if (renderShaderTitles === 'auto') {
+            shaderG.select('text').each(function (d) {
+              const node = this as SVGTextElement
+              const span = visibleShaderRegion(d)
+              const regionPixelWidth = xScale(span.max) - xScale(span.min)
+              const textWidth = node.getBBox().width
 
-                  if (textWidth > regionPixelWidth) {
-                    d3.select(node).style('visibility', 'hidden')
-                  }
-                })
-            }
+              if (textWidth > regionPixelWidth) {
+                d3.select(node).style('visibility', 'hidden')
+              }
+            })
+          }
 
           // Draw the shader thresholds.
           const shaderThresholds = activeShader

@@ -102,6 +102,12 @@ export default defineComponent({
       if (this.variants.length == 1) {
         return this.variantName(this.variants[0])
       }
+      const names = this.variants
+        .map((v) => this.variantName(v.content))
+        .filter((name) => name != null && name !== undefined)
+      if (names.length > 0 && names.every((n) => n === names[0])) {
+        return names[0]
+      }
       return undefined
     },
     clingenAlleleName: function () {

@@ -481,8 +481,9 @@
         <label>Class name CSV</label>
         <div class="mavedb-help-small">
           Since you are providing categorical class names, please upload a CSV file mapping variants to these classes.
-          This file should have two columns:<br />
-          - <code>variant_urn</code>: The URN of the variant <br />
+          This file should contain the following columns:<br />
+          - One of: `<code>variant_urn</code>`, `<code>hgvs_nt</code>`, `<code>hgvs_pro</code>`: The URN or HGVS
+          notation of the variant. This column should be unique. <br />
           - <code>class_name</code>: The name of the class associated with the variant
         </div>
       </div>

@@ -139,8 +139,9 @@ import useRemoteData from '@/composition/remote-data'
 import config from '@/config'
 import {parseScoresOrCounts, ScoresOrCountsRow} from '@/lib/scores'
 import ProgressSpinner from 'primevue/progressspinner'
-import {FunctionalRange, functionalRangeContainsVariant, PersistedScoreCalibration} from '@/lib/calibrations'
+import {functionalClassificationContainsVariant} from '@/lib/calibrations'
 import CalibrationTable from './CalibrationTable.vue'
+import {components} from '@/schema/openapi'
 
 type Classification = 'Functionally normal' | 'Functionally abnormal' | 'Not specified'
 
@@ -274,7 +275,7 @@ export default defineComponent({
       )
     },
     variantScoreRange: function () {
-      if (!this.selectedCalibrationObject?.functionalRanges) {
+      if (!this.selectedCalibrationObject?.functionalClassifications) {
         return null
       }
 
@@ -283,8 +284,9 @@ export default defineComponent({
         return null
       }
 
-      const range = this.selectedCalibrationObject.functionalRanges.find((range: FunctionalRange) =>
-        functionalRangeContainsVariant(range, variantScore)
+      const range = this.selectedCalibrationObject.functionalClassifications.find(
+        (range: components['schemas']['mavedb__view_models__score_calibration__FunctionalClassification']) =>
+          functionalClassificationContainsVariant(range, variantScore)
       )
 
       return range
@@ -301,14 +303,14 @@ export default defineComponent({
       }
       return null
     },
-    selectedCalibrationObject: function (): PersistedScoreCalibration | null {
+    selectedCalibrationObject: function (): components['schemas']['ScoreCalibration'] | null {
       if (!this.selectedCalibration || !this.variant?.scoreSet?.scoreCalibrations) {
         return null
       }
 
       return (
         this.variant.scoreSet.scoreCalibrations.find(
-          (calibration: PersistedScoreCalibration) => calibration.urn === this.selectedCalibration
+          (calibration: components['schemas']['ScoreCalibration']) => calibration.urn === this.selectedCalibration
         ) || null
       )
     }

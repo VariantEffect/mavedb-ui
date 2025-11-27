@@ -375,6 +375,7 @@
   >
     <CalibrationEditor
       :calibration-draft-ref="calibrationDraftRef"
+      :classes-draft-ref="calibrationDraftClassesFileRef"
       :score-set-urn="item.urn"
       :validation-errors="editorValidationErrors"
       @canceled="calibrationEditorVisible = false"
@@ -490,6 +491,7 @@ export default {
     const scoresRemoteData = useRemoteData()
     const variantSearchSuggestions = ref([])
     const calibrationDraftRef = ref({value: null})
+    const calibrationDraftClassesFileRef = ref < {value: File | null} > {value: null}
     const editorValidationErrors = ref({})
     const selectedCalibrations = ref([null, null])
 
@@ -498,6 +500,7 @@ export default {
       config: config,
       userIsAuthenticated,
       calibrationDraftRef,
+      calibrationDraftClassesFileRef,
       editorValidationErrors,
       selectedCalibrations,
 
@@ -1170,7 +1173,20 @@ export default {
       if (this.calibrationDraftRef.value) {
         let response = null
         try {
-          response = await axios.post(`${config.apiBaseUrl}/score-calibrations`, this.calibrationDraftRef.value)
+          const draft = this.calibrationDraftRef.value
+          const draftClassesFile = this.calibrationDraftClassesFileRef.value
+
+          const formData = new FormData()
+          formData.append('calibration_json', JSON.stringify(draft))
+          if (draftClassesFile) {
+            formData.append('classes_file', draftClassesFile)
+          }
+
+          response = await axios.post(`${config.apiBaseUrl}/score-calibrations`, formData, {
+            headers: {
+              'Content-Type': 'multipart/form-data'
+            }
+          })
         } catch (e) {
           response = e.response || {status: 500}
         }
@@ -1191,7 +1207,7 @@ export default {
             if (path[0] == 'body') {
               path = path.slice(1)
             }
-            let customPath = error.ctx.custom_loc
+            let customPath = error.ctx?.custom_loc
             if (customPath && customPath[0] == 'body') {
               customPath = customPath.slice(1)
             }
@@ -1241,7 +1257,7 @@ export default {
 /* Histogram */
 
 .mavedb-score-set-histogram-pane {
-  margin: 10px 0;
+  margin: 10px;
 }
 
 /* Calibration table */

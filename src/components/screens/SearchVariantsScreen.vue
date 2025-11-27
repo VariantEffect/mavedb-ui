@@ -161,8 +161,8 @@
                     <router-link :to="{name: 'scoreSetCalibrations', params: {urn: urns[0]}}"
                       >{{
                         maveMdScoreSets[urns[0]]?.scoreCalibrations.filter(
-                          (calibration) =>
-                            calibration.functionalRanges?.filter((range) => range.acmgClassification).length > 0
+                          (calibration: components['schemas']['ScoreCalibration']) =>
+                            Array.isArray(calibration.functionalClassifications) && calibration.functionalClassifications.filter((range) => range.acmgClassification).length > 0
                         ).length || 0
                       }}
                       / {{ maveMdScoreSets[urns[0]]?.scoreCalibrations.length || 0 }}
@@ -184,8 +184,8 @@
                     <router-link :to="{name: 'scoreSetCalibrations', params: {urn: urns[0]}}">
                       {{
                         maveMdScoreSets[urn]?.scoreCalibrations.filter(
-                          (calibration) =>
-                            calibration.functionalRanges?.filter((range) => range.acmgClassification).length > 0
+                          (calibration: components['schemas']['ScoreCalibration']) =>
+                            Array.isArray(calibration.functionalClassifications) && calibration.functionalClassifications.filter((range) => range.acmgClassification).length > 0
                         ).length || 0
                       }}
                       / {{ maveMdScoreSets[urn]?.scoreCalibrations.length || 0 }}
@@ -197,7 +197,7 @@
           </table>
         </div>
       </div>
-      <div ref="searchResults" v-if="searchResultsVisible">
+      <div v-if="searchResultsVisible" ref="searchResults">
         <div v-for="(allele, alleleIdx) in alleles" :key="allele.clingenAlleleId" class="col-12">
           <Card>
             <template #content>

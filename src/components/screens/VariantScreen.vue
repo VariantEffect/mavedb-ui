@@ -5,13 +5,8 @@
     <PageLoading v-else-if="variantsStatus == 'Loading'" />
     <Message v-else-if="variants.length == 0">No variants found in MaveDB</Message>
     <div v-else :class="singleOrMultipleVariantsClassName">
-      <TabView class="mavedb-variants-tabview" :lazy="true">
-        <TabPanel
-          v-for="(variant, variantIndex) in variants"
-          :key="variant.content.urn"
-          v-model:active-index="activeVariantIndex"
-          :header="variant.content.url"
-        >
+      <TabView v-model:active-index="activeVariantIndex" class="mavedb-variants-tabview" :lazy="true">
+        <TabPanel v-for="(variant, variantIndex) in variants" :key="variant.content.urn" :header="variant.content.url">
           <template #header>
             <div v-if="variants.length > 1">
               <div class="mavedb-variants-tabview-header-text" style="color: #000; font-weight: bold">

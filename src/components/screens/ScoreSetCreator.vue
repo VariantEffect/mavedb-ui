@@ -3,10 +3,7 @@
     dialog="You must add an email address to your account to create or edit a score set. You can do so below, or on the 'Settings' page."
     :is-first-login-prompt="false"
   />
-  <DefaultLayout v-if="!userIsAuthenticated">
-    <p>You may <a href="#" @click.prevent="signInCreateScoreSet">sign in</a> to upload data.</p>
-  </DefaultLayout>
-  <DefaultLayout v-else>
+  <DefaultLayout :require-auth="true">
     <div class="mave-score-set-editor">
       <div class="mave-screen-title-bar">
         <div class="mave-screen-title">Create a new score set</div>
@@ -1504,7 +1501,6 @@ import {useHead} from '@unhead/vue'
 import CalibrationEditor from '@/components/CalibrationEditor.vue'
 import EmailPrompt from '@/components/common/EmailPrompt'
 import DefaultLayout from '@/components/layout/DefaultLayout'
-import useAuth from '@/composition/auth'
 import useScopedId from '@/composables/scoped-id'
 import useFormatters from '@/composition/formatters'
 import useItems from '@/composition/items'
@@ -1584,13 +1580,6 @@ export default {
   setup: () => {
     useHead({title: 'New score set'})
 
-    const {signIn, userIsAuthenticated} = useAuth()
-
-    const signInCreateScoreSet = () => {
-      sessionStorage.setItem('postLoginRedirect', 'createScoreSet')
-      signIn()
-    }
-
     const publicationIdentifierSuggestions = useItems({itemTypeName: 'publication-identifier-search'})
     const externalPublicationIdentifierSuggestions = useItems({itemTypeName: 'external-publication-identifier-search'})
 
@@ -1611,8 +1600,6 @@ export default {
     return {
       config: config,
 
-      signInCreateScoreSet,
-      userIsAuthenticated,
       ...useFormatters(),
       ...useScopedId(),
       editableExperiments: ref([]),

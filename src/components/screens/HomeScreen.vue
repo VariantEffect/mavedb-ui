@@ -156,28 +156,17 @@ export default {
   components: {Button, Card, DefaultLayout, HighlightsView},
   setup() {
     const router = useRouter()
-    const { userIsAuthenticated, signIn } = useAuth()
-
     const addScoreSet = () => {
-      if (userIsAuthenticated.value) {
         router.push({ name: 'createScoreSet' })
-      } else {
         sessionStorage.setItem("postLoginRedirect", "createScoreSet")
-        signIn()
-      }
     }
     const addExperiment = () => {
-      if (userIsAuthenticated.value) {
         router.push({ name: 'createExperiment' })
-      } else {
         sessionStorage.setItem("postLoginRedirect", "createExperiment")
-        signIn()
-      }
     }
     return { 
       addScoreSet, 
       addExperiment,
-      userIsAuthenticated
     }
   },
 

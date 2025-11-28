@@ -4,10 +4,7 @@
     :is-first-login-prompt="false"
   />
   {{ experimentSetUrn }}
-  <DefaultLayout v-if="!userIsAuthenticated">
-    <p>You may <a href="#" @click.prevent="signInCreateExp">sign in</a> to upload data.</p>
-  </DefaultLayout>
-  <DefaultLayout v-else>
+  <DefaultLayout :require-auth="true">
     <div class="mave-experiment-editor">
       <div v-if="itemStatus != 'NotLoaded'" class="mave-screen-title-bar">
         <div class="mave-screen-title">Edit experiment {{ item.urn }}</div>
@@ -650,12 +647,7 @@ export default {
   setup: () => {
     useHead({title: 'New experiment'})
 
-    const {signIn, userIsAuthenticated, userProfile} = useAuth()
-
-    const signInCreateExp = () => {
-      sessionStorage.setItem('postLoginRedirect', 'createExperiment')
-      signIn()
-    }
+    const {userProfile} = useAuth()
 
     const variantLibraryKeywordOptions = useItems({itemTypeName: `controlled-keywords-variant-search`})
     const endogenousSystemKeywordOptions = useItems({itemTypeName: `controlled-keywords-endo-system-search`})
@@ -683,8 +675,6 @@ export default {
     const publicationIdentifierSuggestions = useItems({itemTypeName: 'publication-identifier-search'})
     const externalPublicationIdentifierSuggestions = useItems({itemTypeName: 'external-publication-identifier-search'})
     return {
-      signInCreateExp,
-      userIsAuthenticated,
       userProfile,
       ...useFormatters(),
       ...useItem({itemTypeName: 'experiment'}),

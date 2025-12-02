@@ -158,11 +158,9 @@ export default {
     const router = useRouter()
     const addScoreSet = () => {
         router.push({ name: 'createScoreSet' })
-        sessionStorage.setItem("postLoginRedirect", "createScoreSet")
     }
     const addExperiment = () => {
         router.push({ name: 'createExperiment' })
-        sessionStorage.setItem("postLoginRedirect", "createExperiment")
     }
     return { 
       addScoreSet, 

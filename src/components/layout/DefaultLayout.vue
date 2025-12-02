@@ -11,7 +11,7 @@
       <div :class="mainClasses">
         <template v-if="requireAuth && !userIsAuthenticated">
           <div class="login-box">
-            <p>You may <a href="#" @click.prevent="signIn">sign in</a> to view this page.</p>
+            <p>You may <a href="#" @click.prevent="signInWithRedirect">sign in</a> to view this page.</p>
           </div>
         </template>
         <!-- Public pages -->
@@ -74,8 +74,15 @@ export default defineComponent({
   setup: () => {
     const {signIn, userIsAuthenticated} = useAuth()
 
+    const signInWithRedirect = () => {
+      const currentFullPath = window.location.pathname + window.location.search + window.location.hash
+      localStorage.setItem('redirectAfterLogin', currentFullPath)
+      signIn()
+    }
+
     return {
       signIn,
+      signInWithRedirect,
       userIsAuthenticated
     }
   },

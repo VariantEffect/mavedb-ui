@@ -1,5 +1,5 @@
 <template>
-  <DefaultLayout>
+  <DefaultLayout :require-auth="true">
     <div>
       <div class="mavedb-1000px-col">
         <div class="mave-screen-title-bar">
@@ -86,7 +86,10 @@ export default {
 
   setup: () => {
     useHead({title: 'My saved collections'})
-    return useFormatters()
+    
+    return {
+      ...useFormatters(),
+    }
   },
 
   data: () => ({

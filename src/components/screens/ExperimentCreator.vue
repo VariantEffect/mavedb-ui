@@ -4,7 +4,7 @@
     :is-first-login-prompt="false"
   />
   {{ experimentSetUrn }}
-  <DefaultLayout>
+  <DefaultLayout :require-auth="true">
     <div class="mave-experiment-editor">
       <div v-if="itemStatus != 'NotLoaded'" class="mave-screen-title-bar">
         <div class="mave-screen-title">Edit experiment {{ item.urn }}</div>

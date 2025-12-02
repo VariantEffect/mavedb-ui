@@ -3,7 +3,7 @@
     dialog="You must add an email address to your account to create or edit a score set. You can do so below, or on the 'Settings' page."
     :is-first-login-prompt="false"
   />
-  <DefaultLayout>
+  <DefaultLayout :require-auth="true">
     <div class="mave-score-set-editor">
       <div class="mave-screen-title-bar">
         <div class="mave-screen-title">Create a new score set</div>

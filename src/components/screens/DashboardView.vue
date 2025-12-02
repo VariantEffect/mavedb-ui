@@ -1,5 +1,5 @@
 <template>
-  <DefaultLayout>
+  <DefaultLayout :require-auth="true">
     <h1>Welcome to MaveDB</h1>
     <TabView>
       <TabPanel header="Published">

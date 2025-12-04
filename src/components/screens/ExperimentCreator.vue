@@ -560,9 +560,14 @@ const KEYWORDS = [
     option: 'inVitroMechanismKeywordOptions'
   },
   {
-    key: 'Delivery method',
+    key: 'Delivery Method',
     descriptionLabel: 'Delivery method Description',
     option: 'deliveryMethodKeywordOptions'
+  },
+  {
+    key: 'Molecular Mechanism Assessed',
+    descriptionLabel: 'Molecular Mechanism Assessed Description',
+    option: 'molecularMechanismAssessedKeywordOptions'
   },
   {
     key: 'Phenotypic Assay Dimensionality',
@@ -655,6 +660,9 @@ export default {
     const inVitroSystemKeywordOptions = useItems({itemTypeName: `controlled-keywords-in-vitro-system-search`})
     const inVitroMechanismKeywordOptions = useItems({itemTypeName: `controlled-keywords-in-vitro-mechanism-search`})
     const deliveryMethodKeywordOptions = useItems({itemTypeName: `controlled-keywords-delivery-search`})
+    const molecularMechanismAssessedKeywordOptions = useItems({
+      itemTypeName: `controlled-keywords-molecular-mechanism-assessed-search`
+    })
     const phenotypicDimensionalityKeywordOptions = useItems({
       itemTypeName: `controlled-keywords-phenotypic-dimensionality-search`
     })
@@ -685,6 +693,7 @@ export default {
       inVitroSystemKeywordOptions: inVitroSystemKeywordOptions.items,
       inVitroMechanismKeywordOptions: inVitroMechanismKeywordOptions.items,
       deliveryMethodKeywordOptions: deliveryMethodKeywordOptions.items,
+      molecularMechanismAssessedKeywordOptions: molecularMechanismAssessedKeywordOptions.items,
       phenotypicDimensionalityKeywordOptions: phenotypicDimensionalityKeywordOptions.items,
       phenotypicMethodKeywordOptions: phenotypicMethodKeywordOptions.items,
       phenotypicMechanismKeywordOptions: phenotypicMechanismKeywordOptions.items,

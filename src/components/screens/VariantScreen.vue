@@ -151,9 +151,9 @@ export default defineComponent({
       }
     },
     annotatedVariantDownloadOptions: function () {
-      const annotatatedVariantOptions = []
+      const annotatedVariantOptions = []
       if (this.activeVariant?.scoreSet?.scoreCalibrations) {
-        annotatatedVariantOptions.push({
+        annotatedVariantOptions.push({
           label: 'Pathogenicity evidence line',
           command: () => {
             this.fetchVariantAnnotations('clinical-evidence')
@@ -162,7 +162,7 @@ export default defineComponent({
       }
 
       if (this.activeVariant?.scoreSet?.scoreCalibrations) {
-        annotatatedVariantOptions.push({
+        annotatedVariantOptions.push({
           label: 'Functional impact statement',
           command: () => {
             this.fetchVariantAnnotations('functional-impact')
@@ -170,14 +170,14 @@ export default defineComponent({
         })
       }
 
-      annotatatedVariantOptions.push({
+      annotatedVariantOptions.push({
         label: 'Functional impact study result',
         command: () => {
           this.fetchVariantAnnotations('study-result')
         }
       })
 
-      return annotatatedVariantOptions
+      return annotatedVariantOptions
     }
   },
 

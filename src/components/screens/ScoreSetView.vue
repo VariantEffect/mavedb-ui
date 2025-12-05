@@ -575,10 +575,10 @@ export default {
       return options
     },
     annotatedVariantDownloadOptions: function () {
-      const annotatatedVariantOptions = []
+      const annotatedVariantOptions = []
 
       if (this.item?.scoreCalibrations) {
-        annotatatedVariantOptions.push({
+        annotatedVariantOptions.push({
           label: 'Pathogenicity Evidence Line',
           command: () => {
             this.streamVariantAnnotations('pathogenicity-evidence-line')
@@ -587,7 +587,7 @@ export default {
       }
 
       if (this.item?.scoreCalibrations) {
-        annotatatedVariantOptions.push({
+        annotatedVariantOptions.push({
           label: 'Functional Impact Statement',
           command: () => {
             this.streamVariantAnnotations('functional-impact-statement')
@@ -595,14 +595,14 @@ export default {
         })
       }
 
-      annotatatedVariantOptions.push({
+      annotatedVariantOptions.push({
         label: 'Functional Impact Study Result',
         command: () => {
           this.streamVariantAnnotations('functional-study-result')
         }
       })
 
-      return annotatatedVariantOptions
+      return annotatedVariantOptions
     },
     hideStartAndStopLoss: function () {
       // In clinical mode, when the target is not endogenously edited (so it has a target sequence), omit start- and

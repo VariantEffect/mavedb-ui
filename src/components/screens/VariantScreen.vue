@@ -289,6 +289,20 @@ export default defineComponent({
         anchor.download = this.activeVariant.urn + '_' + annotationType + '.json'
         anchor.click()
       } catch (error) {
+        let serverMessage = ''
+        if (error && error.response && error.response.data) {
+          if (typeof error.response.data === 'string') {
+            serverMessage = error.response.data
+          } else if (error.response.data.detail) {
+            serverMessage = error.response.data.detail
+          } else {
+            serverMessage = JSON.stringify(error.response.data)
+          }
+        } else if (error && error.message) {
+          serverMessage = error.message
+        } else {
+          serverMessage = 'Unknown error.'
+        }
         console.log(
           `Error while fetching variant annotations of type "${annotationType}" for variant "${this.activeVariant.urn}"`,
           error
@@ -296,7 +310,7 @@ export default defineComponent({
         this.$toast?.add({
           severity: 'error',
           summary: 'Download failed',
-          detail: `Could not fetch variant annotation. ${error.message}.`,
+          detail: `Could not fetch variant annotation: ${serverMessage}`,
           life: 4000
         })
       }

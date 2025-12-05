@@ -70,6 +70,16 @@ const itemTypes = {
       }
     }
   },
+  'controlled-keywords-molecular-mechanism-assessed-search': {
+    name: 'controlled-keywords-molecular-mechanism-assessed',
+    restCollectionName: 'controlled-keywords',
+    httpOptions: {
+      list: {
+        method: 'get',
+        url: `${config.apiBaseUrl}/controlled-keywords/molecular mechanism assessed`
+      }
+    }
+  },
   'controlled-keywords-phenotypic-dimensionality-search': {
     name: 'controlled-keywords-phenotypic-assay-dimensionality',
     restCollectionName: 'controlled-keywords',

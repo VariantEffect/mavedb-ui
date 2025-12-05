@@ -10,7 +10,7 @@
         searchResultsVisible ? 'mavedb-search-view-with-results' : 'mavedb-search-view-without-results'
       ]"
     >
-      <div class="mavedb-page-title">
+      <div class="flex justify-content-center">
         <img alt="MaveMD" class="mavedb-mavemd-logo" src="@/assets/mavemd-logo.png" />
       </div>
       <div class="mavedb-mavemd-intro">
@@ -1064,10 +1064,6 @@ export default defineComponent({
 </script>
 
 <style scoped>
-.mavedb-page-title {
-  text-align: center;
-}
-
 .mavedb-mavemd-logo {
   height: 150px;
   margin: 1em 0 0 0;
@@ -1089,10 +1085,6 @@ export default defineComponent({
   flex-direction: column;
   height: 100%;
   display: flex;
-}
-
-.mavedb-search-view-without-results .mavedb-page-title {
-  flex: 0 0 auto;
 }
 
 .mavedb-search-view-without-results .mavedb-mavemd-intro {
@@ -1177,19 +1169,6 @@ export default defineComponent({
 
 .mavedb-organism-picker:deep(.p-listbox-item .p-badge) {
   font-style: normal;
-}
-
-.mavedb-search-clear-button {
-  position: absolute;
-  top: 12px;
-  right: 8px;
-  margin: 0;
-  padding: 0;
-}
-
-.mavedb-variant-search-result-subheading {
-  margin: 1em 0 0.5em 0;
-  font-weight: bold;
 }
 
 .variant-search-result {

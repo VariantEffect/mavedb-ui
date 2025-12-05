@@ -272,8 +272,4 @@ export default {
 .mave-collection-option-sharing {
   color: #999;
 }
-
-.mave-create-collection-button {
-  display: inline;
-}
 </style>

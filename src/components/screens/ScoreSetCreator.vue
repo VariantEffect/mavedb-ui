@@ -3049,25 +3049,4 @@ export default {
   right: 5px;
   z-index: 1001;
 }
-
-.mave-taxonomy-dropdown-panel.p-dropdown-panel .p-dropdown-items .p-dropdown-item {
-  padding: 0;
-}
-
-.mave-taxonomy-dropdown-panel.p-dropdown-panel
-  .p-dropdown-items
-  .p-dropdown-item:not(.p-highlight):not(.p-disabled):hover {
-  background: #eef;
-}
-
-.mave-taxonomy-dropdown-panel.p-dropdown-panel
-  .p-dropdown-items
-  .p-dropdown-item:not(.p-highlight):not(.p-disabled):hover
-  .mave-taxonomy-common-name,
-.mave-taxonomy-dropdown-panel.p-dropdown-panel
-  .p-dropdown-items
-  .p-dropdown-item:not(.p-highlight):not(.p-disabled):hover
-  .mave-taxonomy-organism-name {
-  background: #eef;
-}
 </style>

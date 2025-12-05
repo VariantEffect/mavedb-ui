@@ -548,10 +548,12 @@ export default defineComponent({
   width: 24%;
 }
 
+.mavedb-search-filter-option-picker:deep(.p-listbox-option) > div {
+  width: 100%;
+}
 .mavedb-organism-picker:deep(.p-listbox-item) {
   font-style: italic;
 }
-
 .mavedb-organism-picker:deep(.p-listbox-item .p-badge) {
   font-style: normal;
 }

@@ -23,14 +23,14 @@
             <InputText
               ref="searchTextInput"
               v-model="searchText"
-              class="p-inputtext-sm"
+              class="p-inputtext-sm !rounded-r-none"
               placeholder="Search"
               style="width: 200px"
               type="search"
               @keyup.enter="search"
             />
             <Button
-              class="p-button-default p-button-sm"
+              class="p-button-default p-button-sm !rounded-l-none pt-1 pb-2"
               :enabled="searchText && searchText.length > 0"
               icon="pi pi-search"
               @click="search"
@@ -280,10 +280,6 @@ export default {
 
 .mavedb-menubar.p-menubar:deep(.p-menubar-root-list > .p-menuitem > .p-menuitem-link .p-menuitem-icon.pi) {
   margin-right: 0.5rem;
-}
-
-.mavedb-menubar .mavedb-title {
-  font-size: 2rem;
 }
 
 .mavedb-beta-banner {

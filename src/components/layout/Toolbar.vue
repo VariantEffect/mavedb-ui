@@ -19,20 +19,21 @@
           <img v-else alt="MaveDB" src="@/assets/logo-mavedb.png" />
         </router-link>
         <div style="display: inline-block; margin-left: 40px">
-          <div class="p-inputgroup" style="max-width: 300px; width: 300px">
+          <div class="p-inputgroup" style="max-width: 300px; width: 300px; display: flex; align-items: stretch;">
             <InputText
               ref="searchTextInput"
               v-model="searchText"
               class="p-inputtext-sm !rounded-r-none"
               placeholder="Search"
-              style="width: 200px"
+              style="width: 200px; height: auto;"
               type="search"
               @keyup.enter="search"
             />
             <Button
-              class="p-button-default p-button-sm !rounded-l-none pt-1 pb-2"
+              class="p-button-default p-button-sm !rounded-l-none"
               :enabled="searchText && searchText.length > 0"
               icon="pi pi-search"
+              style="height: auto;"
               @click="search"
             />
           </div>

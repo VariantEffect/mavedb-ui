@@ -1141,7 +1141,7 @@ export default {
 }
 </script>
 
-<style scoped src="../../assets/forms.css"></style>
+<style src="../../assets/forms.css"></style>
 
 <style scoped>
 /* Cards */
@@ -1170,7 +1170,7 @@ export default {
 /* Keywords */
 
 .keyword-dropdown {
-  width: 450px;
+  width: 450px !important;
   height: 45px;
 }
 
@@ -1181,8 +1181,10 @@ export default {
 
 .keyword-description-button {
   margin-left: 8px;
-  height: 32px;
-  width: 32px;
+  height: 32px !important;
+  width: 32px !important;
+  min-width: 32px !important;
+  padding: 0 !important;
 }
 
 .keyword-description-button:deep(.p-button-icon) {
@@ -1201,5 +1203,9 @@ export default {
 
 .padded-button {
   margin-left: 5px;
+}
+
+.p-inputwrapper, .p-textarea, .p-inputtext {
+  width: 100%;
 }
 </style>

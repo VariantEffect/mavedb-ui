@@ -29,3 +29,59 @@ body .p-button {
 .p-badge {
   text-align: center;
 }
+
+
+/* Float label styles to match PrimeVue 3 theme */
+
+.p-float-label {
+  position: relative;
+  display: block;
+}
+/* Base label positioning - add missing properties to existing rule */
+.p-float-label > label {
+  position: absolute;
+  left: 0.75rem;
+  top: 1.5rem;
+  transform: translateY(-50%);
+  color: rgba(0, 0, 0, 0.6);
+  transition-duration: 0.2s;
+  transition-property: top, transform, font-size, color, background-color;
+  pointer-events: none;
+  font-size: 1rem;
+  line-height: 1;
+  z-index: 1;
+}
+
+/* Enhanced focused/filled label positioning */
+.p-float-label input:focus ~ label,
+.p-float-label input.p-filled ~ label,
+.p-float-label textarea:focus ~ label,
+.p-float-label textarea.p-filled ~ label,
+.p-float-label .p-inputwrapper-focus ~ label,
+.p-float-label .p-inputwrapper-filled ~ label {
+  top: -0.5rem !important;
+  transform: none;
+  font-size: 0.75rem;
+  background-color: #ffffff;
+  padding: 2px 4px;
+  margin-left: -4px;
+  margin-top: 0;
+}
+
+/* Hide placeholder text in float label components since label acts as placeholder */
+.p-float-label input::placeholder,
+.p-float-label textarea::placeholder,
+.p-float-label .p-chips-multiple-container input::placeholder {
+  color: transparent !important;
+}
+
+/* Show placeholder text when label is floated (focused or filled) */
+.p-float-label input:focus::placeholder,
+.p-float-label input.p-filled::placeholder,
+.p-float-label textarea:focus::placeholder,
+.p-float-label textarea.p-filled::placeholder,
+.p-float-label .p-inputwrapper-focus input::placeholder,
+.p-float-label .p-inputwrapper-filled input::placeholder,
+.p-float-label .p-chips-multiple-container input:focus::placeholder {
+  color: rgba(0, 0, 0, 0.6) !important;
+}

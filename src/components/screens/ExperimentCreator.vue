@@ -10,7 +10,7 @@
         <div class="mave-screen-title">Edit experiment {{ item.urn }}</div>
         <div v-if="item" class="mavedb-screen-title-controls">
           <Button @click="saveEditContent">Save changes</Button>
-          <Button class="p-button-help" @click="resetForm">Clear</Button>
+          <Button severity="help" @click="resetForm">Clear</Button>
           <Button class="p-button-warning" @click="viewItem">Cancel</Button>
         </div>
       </div>
@@ -18,30 +18,23 @@
         <div class="mave-screen-title">Create a new experiment</div>
         <div class="mavedb-screen-title-controls">
           <Button @click="validateAndSave">Save</Button>
-          <Button class="p-button-help" @click="resetForm">Clear</Button>
+          <Button severity="help" @click="resetForm">Clear</Button>
           <Button class="p-button-warning" @click="backDashboard">Cancel</Button>
         </div>
       </div>
       <div class="mavedb-wizard">
-        <Stepper v-model:active-step="activeWizardStep">
-          <StepperPanel>
-            <template #header="{index, clickCallback}">
-              <button
-                class="p-stepper-action"
-                :disabled="maxWizardStepEntered < index || maxWizardStepValidated < index - 1"
-                role="tab"
-                @click="clickCallback"
-              >
-                <span class="p-stepper-number">{{ index + 1 }}</span>
-                <span class="p-stepper-title">Experiment information</span>
-              </button>
-            </template>
-            <template #content="{nextCallback: showNextWizardStep}">
+        <Stepper v-model:value="activeWizardStep">
+          <StepList>
+              <Step :value="1">Experiment information</Step>
+              <Step :disabled="maxWizardStepEntered < activeWizardStep || maxWizardStepValidated < activeWizardStep - 1" :value="2">Keywords</Step>
+          </StepList>
+          <StepPanels>
+            <StepPanel v-slot="{ value, activateCallback }" :value="1">
               <div class="mavedb-wizard-form">
                 <div class="mavedb-wizard-form-content-background"></div>
                 <div class="mavedb-wizard-row">
                   <div class="mavedb-wizard-content-pane">
-                    <Message severity="info">
+                    <Message closable severity="info">
                       You are currently adding an experiment to a new experiment set. To add an experiment to an
                       existing experiment set, navigate to the existing experiment set and click the "Add experiment"
                       button.
@@ -99,18 +92,24 @@
                     </div>
                   </div>
                   <div class="mavedb-wizard-content field">
-                    <TabView>
-                      <TabPanel header="Edit">
-                        <span class="p-float-label">
-                          <Textarea :id="scopedId('input-abstractText')" v-model="abstractText" rows="10" />
-                          <label :for="scopedId('input-abstractText')">Abstract</label>
-                        </span>
-                      </TabPanel>
-                      <TabPanel header="Preview">
-                        <!-- eslint-disable-next-line vue/no-v-html -->
-                        <div class="mavedb-wizard-rendered-markdown" v-html="markdownToHtml(abstractText)"></div>
-                      </TabPanel>
-                    </TabView>
+                    <Tabs value="0">
+                      <TabList>
+                        <Tab value="0"> Edit </Tab>
+                        <Tab value="1"> Preview </Tab>
+                      </TabList>
+                      <TabPanels>
+                        <TabPanel header="Edit" value="0">
+                          <span class="p-float-label">
+                            <Textarea :id="scopedId('input-abstractText')" v-model="abstractText" rows="10" />
+                            <label :for="scopedId('input-abstractText')">Abstract</label>
+                          </span>
+                        </TabPanel>
+                        <TabPanel header="Preview" value="1">
+                          <!-- eslint-disable-next-line vue/no-v-html -->
+                          <div class="mavedb-wizard-rendered-markdown" v-html="markdownToHtml(abstractText)"></div>
+                        </TabPanel>
+                      </TabPanels>
+                    </Tabs>
                     <span v-if="validationErrors.abstractText" class="mave-field-error">{{
                       validationErrors.abstractText
                     }}</span>
@@ -135,18 +134,24 @@
                     </div>
                   </div>
                   <div class="mavedb-wizard-content field">
-                    <TabView>
-                      <TabPanel header="Edit">
-                        <span class="p-float-label">
-                          <Textarea :id="scopedId('input-methodText')" v-model="methodText" rows="10" />
-                          <label :for="scopedId('input-methodText')">Methods</label>
-                        </span>
-                      </TabPanel>
-                      <TabPanel header="Preview">
-                        <!-- eslint-disable-next-line vue/no-v-html -->
-                        <div class="mavedb-wizard-rendered-markdown" v-html="markdownToHtml(methodText)"></div>
-                      </TabPanel>
-                    </TabView>
+                    <Tabs value="0">
+                      <TabList>
+                        <Tab value="0"> Edit </Tab>
+                        <Tab value="1"> Preview </Tab>
+                      </TabList>
+                      <TabPanels>
+                        <TabPanel header="Edit" value="0">
+                          <span class="p-float-label">
+                            <Textarea :id="scopedId('input-methodText')" v-model="methodText" rows="10" />
+                            <label :for="scopedId('input-methodText')">Methods</label>
+                          </span>
+                        </TabPanel>
+                        <TabPanel header="Preview" value="1">
+                          <!-- eslint-disable-next-line vue/no-v-html -->
+                          <div class="mavedb-wizard-rendered-markdown" v-html="markdownToHtml(methodText)"></div>
+                        </TabPanel>
+                      </TabPanels>
+                    </Tabs>
                     <span v-if="validationErrors.methodText" class="mave-field-error">{{
                       validationErrors.methodText
                     }}</span>
@@ -388,26 +393,13 @@
                     icon="pi pi-arrow-right"
                     icon-pos="right"
                     label="Next"
-                    @click="showNextWizardStepIfValid(showNextWizardStep)"
+                    @click="showNextWizardStepIfValid(activateCallback)"
                   />
                 </div>
               </div>
-            </template>
-          </StepperPanel>
-          <StepperPanel v-if="itemStatus == 'NotLoaded' || item.private" header="Keywords">
-            <template #header="{index, clickCallback}">
-              <button
-                class="p-stepper-action"
-                :disabled="maxWizardStepEntered < index || maxWizardStepValidated < index - 1"
-                role="tab"
-                @click="clickCallback"
-              >
-                <span class="p-stepper-number">{{ index + 1 }}</span>
-                <span class="p-stepper-title">Keywords</span>
-              </button>
-            </template>
-            <template #content="{prevCallback: showPreviousWizardStep}">
-              <Message>
+            </StepPanel>
+            <StepPanel v-if="itemStatus == 'NotLoaded' || item.private" v-slot="{ activateCallback }" :value="2">
+              <Message closable>
                 Experiments can be tagged with optional keywords. In a future release, the keyword vocabulary will
                 become restricted and keyword selection will be mandatory.
               </Message>
@@ -482,9 +474,9 @@
               </div>
               <div class="mavedb-wizard-step-controls-row">
                 <div class="flex justify-content-between mavedb-wizard-step-controls pt-4">
-                  <Button icon="pi pi-arrow-left" label="Back" severity="secondary" @click="showPreviousWizardStep" />
+                  <Button icon="pi pi-arrow-left" label="Back" severity="secondary" @click="activateCallback(activeWizardStep - 1)" />
                   <Button
-                    :disabled="maxWizardStepValidated < activeWizardStep"
+                    :disabled="maxWizardStepValidated == -2"
                     icon="pi pi-arrow-right"
                     icon-pos="right"
                     label="Save"
@@ -492,8 +484,8 @@
                   />
                 </div>
               </div>
-            </template>
-          </StepperPanel>
+            </StepPanel>
+          </StepPanels>
         </Stepper>
       </div>
     </div>
@@ -516,8 +508,15 @@ import Message from 'primevue/message'
 import Multiselect from 'primevue/multiselect'
 import ProgressSpinner from 'primevue/progressspinner'
 import Stepper from 'primevue/stepper'
+import StepPanel from 'primevue/steppanel'
+import StepPanels from 'primevue/steppanels'
+import StepList from 'primevue/steplist'
+import Step from 'primevue/step'
+import Tabs from 'primevue/tabs'
+import Tab from 'primevue/tab'
+import TabList from 'primevue/tablist'
+import TabPanels from 'primevue/tabpanels'
 import TabPanel from 'primevue/tabpanel'
-import TabView from 'primevue/tabview'
 import Textarea from 'primevue/textarea'
 import {useHead} from '@unhead/vue'
 
@@ -631,8 +630,15 @@ export default {
     Multiselect,
     ProgressSpinner,
     Stepper,
+    StepPanel,
+    StepPanels,
+    StepList,
+    Step,
+    Tabs,
+    Tab,
+    TabList,
+    TabPanels,
     TabPanel,
-    TabView,
     Textarea
   },
 
@@ -735,10 +741,10 @@ export default {
     },
 
     /** The currently active step. */
-    activeWizardStep: 0,
+    activeWizardStep: 1,
 
     /** The highest step that the user has entered. This can be used to prevent the user from jumping ahead. */
-    maxWizardStepEntered: 0,
+    maxWizardStepEntered: 1,
 
     stepFields: [
       [
@@ -912,12 +918,12 @@ export default {
 
     minStepWithError: function () {
       const numSteps = this.stepFields.length
-      for (let i = 0; i < numSteps; i++) {
+      for (let i = 1; i < numSteps + 1; i++) {
         if (this.wizardStepHasError(i)) {
           return i
         }
       }
-      return numSteps - 1
+      return numSteps
     },
 
     wizardStepHasError: function (step) {
@@ -938,7 +944,7 @@ export default {
     showNextWizardStepIfValid: function (navigate) {
       if (this.maxWizardStepValidated >= this.activeWizardStep) {
         this.maxWizardStepEntered = Math.max(this.maxWizardStepEntered, this.activeWizardStep + 1)
-        navigate()
+        navigate(this.activeWizardStep + 1)
       }
     },
 
@@ -1339,7 +1345,7 @@ export default {
 }
 </script>
 
-<style scoped src="../../assets/forms.css"></style>
+<style src="../../assets/forms.css"></style>
 
 <style scoped>
 /* Cards */
@@ -1370,8 +1376,10 @@ export default {
 
 .keyword-button {
   margin-left: 8px;
-  height: 32px;
-  width: 32px;
+  height: 32px !important;
+  width: 32px !important;
+  min-width: 32px !important;
+  padding: 0 !important;
 }
 
 .keyword-button:deep(.p-button-icon) {
@@ -1401,6 +1409,7 @@ export default {
 .mavedb-wizard-form {
   position: relative;
   z-index: 0;
+  background-color: #f7f7f7;
 }
 
 /* Give the right side of the wizard a white background, without gaps between rows. */
@@ -1452,7 +1461,7 @@ export default {
 .mavedb-wizard-content-pane {
   float: right;
   width: 676px;
-  padding: 0 10px;
+  padding: 10px 10px;
   background-color: #fff;
 }
 
@@ -1471,6 +1480,7 @@ export default {
 .mavedb-wizard-step-controls {
   padding-left: 10px;
   max-width: 100vw;
+  background-color: #f7f7f7;
 }
 
 .field:deep(.mavedb-wizard-rendered-markdown) {
@@ -1488,5 +1498,16 @@ export default {
   bottom: 5px;
   right: 5px;
   z-index: 1001;
+}
+
+.p-inputwrapper, .p-textarea, .p-inputtext {
+  width: 100%;
+}
+
+/* Fix list bullets in help text */
+.mavedb-help-small ul {
+  list-style-type: disc;
+  list-style-position: inside;
+  padding-left: 1rem;
 }
 </style>

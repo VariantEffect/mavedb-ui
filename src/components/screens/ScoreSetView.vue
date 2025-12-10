@@ -311,6 +311,15 @@
           </ul>
         </div>
         <template v-else>No associated DOIs<br /></template>
+        <strong>Raw reads: </strong>
+        <div v-if="item.experiment.rawReadIdentifiers.length != 0">
+          <ul style="list-style-type: square">
+            <li v-for="(read, i) of item.experiment.rawReadIdentifiers" :key="i">
+              <a :href="`${read.url}`" target="blank">{{ read.identifier }}</a>
+            </li>
+          </ul>
+        </div>
+        <template v-else>No associated raw reads<br /></template>
 
         <div id="variants" class="mavedb-score-set-section-title">Variants</div>
         <div v-if="item.processingState == 'failed' && item.processingErrors.detail">

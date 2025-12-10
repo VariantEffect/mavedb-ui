@@ -9,9 +9,7 @@ copyright = "2017-2025, MaveDB Developers"
 author = "MaveDB Developers"
 
 # The full version, including alpha/beta/rc tags
-release = os.getenv("MAVEDB_VERSION")
-if release is None:
-    raise ValueError("$MAVEDB_VERSION not set")
+release = json.load(open("../../../package.json", "rt"))["version"]
 
 
 # -- General configuration ---------------------------------------------------

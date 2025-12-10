@@ -8,15 +8,31 @@ Source code is available from the `MaveDB GitHub`_ under the
 `AGPLv3 license <https://www.gnu.org/licenses/agpl-3.0.en.html>`_.
 To report issues or request new features, please use the `MaveDB issue tracker`_.
 
+.. _index:
+
 .. toctree::
    :maxdepth: 2
 
+   getting_started
    accounts
+   record_types/index
+   targets
+   score_calibrations
+   data_formats
+   controlled_vocabulary
+   variant_mapping
    upload_guide
    publishing
-   record_types
-   data_formats
-   target_sequences
+   data_set_search
+   bulk_downloads
+   collections
+   mavemd/index
+   assay_facts
+   visualizations
+   api/index
+   external_integrations
    accession_numbers
-   data_licensing
+   faqs
    citation
+
+.. _end-index:

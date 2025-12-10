@@ -1,0 +1,175 @@
+<!DOCTYPE html>
+
+<html lang="en" data-content_root="./">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" /><meta name="viewport" content="width=device-width, initial-scale=1" />
+
+    <title>Variant Mapping &#8212; MaveDB 2025.5.2 documentation</title>
+    <link rel="stylesheet" type="text/css" href="_static/pygments.css?v=4848ba22" />
+    <link rel="stylesheet" type="text/css" href="_static/pyramid.css?v=a5b9c134" />
+    <link rel="stylesheet" type="text/css" href="_static/graphviz.css?v=eafc0fe6" />
+    <link rel="stylesheet" type="text/css" href="_static/styles.css?v=1cacb62a" />
+    <script src="_static/documentation_options.js?v=ea53f692"></script>
+    <script src="_static/doctools.js?v=888ff710"></script>
+    <script src="_static/sphinx_highlight.js?v=dc90522c"></script>
+    <link rel="index" title="Index" href="genindex.html" />
+    <link rel="search" title="Search" href="search.html" />
+    <link rel="next" title="Depositing your data into MaveDB" href="upload_guide.html" />
+    <link rel="prev" title="MAVE controlled vocabulary" href="controlled_vocabulary.html" />
+<link rel="stylesheet" href="https://fonts.googleapis.com/css?family=Neuton&amp;subset=latin" type="text/css" media="screen" charset="utf-8" />
+<link rel="stylesheet" href="https://fonts.googleapis.com/css?family=Nobile:regular,italic,bold,bolditalic&amp;subset=latin" type="text/css" media="screen" charset="utf-8" />
+<!--[if lte IE 6]>
+<link rel="stylesheet" href="_static/ie6.css" type="text/css" media="screen" charset="utf-8" />
+<![endif]-->
+
+  </head><body>
+
+    <div class="related" role="navigation" aria-label="related navigation">
+      <h3>Navigation</h3>
+      <ul>
+        <li class="right" style="margin-right: 10px">
+          <a href="genindex.html" title="General Index"
+             accesskey="I">index</a></li>
+        <li class="right" >
+          <a href="upload_guide.html" title="Depositing your data into MaveDB"
+             accesskey="N">next</a> |</li>
+        <li class="right" >
+          <a href="controlled_vocabulary.html" title="MAVE controlled vocabulary"
+             accesskey="P">previous</a> |</li>
+        <li class="nav-item nav-item-0"><a href="index.html">MaveDB 2025.5.2 documentation</a> &#187;</li>
+        <li class="nav-item nav-item-this"><a href="">Variant Mapping</a></li> 
+      </ul>
+    </div>  
+
+    <div class="document">
+      <div class="documentwrapper">
+        <div class="bodywrapper">
+          <div class="body" role="main">
+            
+  <section id="variant-mapping">
+<h1>Variant Mapping<a class="headerlink" href="#variant-mapping" title="Link to this heading">¶</a></h1>
+<p id="variant-mapping-intro">MaveDB uses the variant descriptions provided in the score and count data tables
+to map variants to genomic coordinates. This mapping allows MaveDB to integrate with
+external resources such as <a class="reference internal" href="external_integrations.html#clingen"><span class="std std-ref">ClinGen</span></a>, <a class="reference internal" href="external_integrations.html#clinvar"><span class="std std-ref">ClinVar</span></a>, and <a class="reference internal" href="external_integrations.html#gnomad"><span class="std std-ref">gnomAD</span></a>.</p>
+<div class="admonition note">
+<p class="admonition-title">Note</p>
+<p>Variant mapping is only performed for datasets with a human target sequence.</p>
+</div>
+<p>This process was made possible by a novel method for mapping MAVE data written by
+<a class="reference external" href="http://dx.doi.org/10.1186/s13059-025-03647-x">Arbesfeld et al. (2025)</a>. The method
+is described in detail in the linked publication, and summarized briefly below.</p>
+<section id="mapping-process">
+<span id="end-variant-mapping-intro"></span><h2>Mapping process<a class="headerlink" href="#mapping-process" title="Link to this heading">¶</a></h2>
+<p id="id1">Variants are mapped to genomic coordinates upon upload of a score set. The mapping process involves the following steps:</p>
+<ol class="arabic simple">
+<li><p><strong>Target sequence alignment</strong>: The target sequence provided with the score set is aligned to the reference genome using
+<a class="reference external" href="https://genome.ucsc.edu/FAQ/FAQblat.html">BLAT</a>. This step determines the genomic location of the target sequence and
+identifies the corresponding transcript(s).</p></li>
+<li><p><strong>Transcript selection</strong>: If multiple candidate transcripts are identified in the alignment step, the most appropriate transcript
+is selected. Where possible, we prioritize MANE Select transcripts, followed by RefSeq Select transcripts, and then the longest
+matching transcript.</p></li>
+<li><p><strong>Variant translation</strong>: Each variant in the score and count data tables is converted from MAVE-HGVS format to standard HGVS format
+and translated with respect to the selected transcript. This step accounts for any offset between the target sequence and the transcript.</p></li>
+<li><p><strong>VRS translation</strong>: The HGVS variant descriptions are then converted to <a class="reference external" href="https://vrs.ga4gh.org/en/stable/">GA4GH VRS</a> format
+using the <a class="reference external" href="https://github.com/ga4gh/vrs-python">VRS-Python</a> library. This standardized representation facilitates interoperability
+with other genomic databases and tools, as well as standardizing all output variant representations for future mapped variation.</p></li>
+</ol>
+<div class="admonition note">
+<p class="admonition-title">Note</p>
+<p>In some cases, variants may not be successfully mapped due to issues such as ambiguous target sequences,
+complex variant types, or discrepancies between the target and reference genome. MaveDB logs these instances
+and provides feedback to data contributors to help resolve mapping issues.</p>
+<p>Although some mapping failures
+represent true limitations of the data, others can be addressed by correcting errors in the submitted variants
+or target sequences.</p>
+<p><strong>It is highly recommended that data contributors review the mapping results after uploading a score set
+to ensure that variants have been accurately mapped.</strong> Contributors can view mapping results on the score set page and download a report of mapped and unmapped variants.</p>
+<p>Mapping failures do not prevent datasets from being published in MaveDB, but mapped variants
+are required for certain features such as <span class="xref std std-ref">variant search</span>, linkages with
+certain <a class="reference internal" href="external_integrations.html#external-integrations"><span class="std std-ref">external resources</span></a>, and inclusion in <a class="reference internal" href="mavemd/index.html#mavemd"><span class="std std-ref">MaveMD</span></a>.</p>
+</div>
+</section>
+<section id="mapping-integrations">
+<span id="end-mapping-process"></span><h2>Mapping integrations<a class="headerlink" href="#mapping-integrations" title="Link to this heading">¶</a></h2>
+<p id="id2">Mapped variants are integral to MaveDB’s integration with <a class="reference internal" href="external_integrations.html#external-integrations"><span class="std std-ref">external data sources</span></a>. Whereas variants prior to mapping
+are only described with respect to the target sequence, mapped variants can be linked to
+genomic coordinates and transcripts, enabling connections to resources such as ClinVar, gnomAD,
+and ClinGen. Mapped variants also enable MaveDB to provide
+<a class="reference external" href="https://vrs.ga4gh.org/en/stable/">GA4GH VRS</a> representations of variants for download and programmatic access via the MaveDB API.</p>
+<p>This mapping and the integrations they facilitate enhance the utility of MaveDB and power MaveMD by enabling features
+like <a class="reference internal" href="mavemd/variant_search.html#variant-search"><span class="std std-ref">variant search</span></a> and <a class="reference internal" href="score_calibrations.html#score-calibrations"><span class="std std-ref">score calibrations</span></a>.</p>
+</section>
+</section>
+
+
+            <div class="clearer"></div>
+          </div>
+        </div>
+      </div>
+      <div class="sphinxsidebar" role="navigation" aria-label="main navigation">
+        <div class="sphinxsidebarwrapper">
+  <div>
+    <h3><a href="index.html">Table of Contents</a></h3>
+    <ul>
+<li><a class="reference internal" href="#">Variant Mapping</a><ul>
+<li><a class="reference internal" href="#mapping-process">Mapping process</a></li>
+<li><a class="reference internal" href="#mapping-integrations">Mapping integrations</a></li>
+</ul>
+</li>
+</ul>
+
+  </div>
+  <div>
+    <h4>Previous topic</h4>
+    <p class="topless"><a href="controlled_vocabulary.html"
+                          title="previous chapter">MAVE controlled vocabulary</a></p>
+  </div>
+  <div>
+    <h4>Next topic</h4>
+    <p class="topless"><a href="upload_guide.html"
+                          title="next chapter">Depositing your data into MaveDB</a></p>
+  </div>
+  <div role="note" aria-label="source link">
+    <h3>This Page</h3>
+    <ul class="this-page-menu">
+      <li><a href="_sources/variant_mapping.rst.txt"
+            rel="nofollow">Show Source</a></li>
+    </ul>
+   </div>
+<div id="searchbox" style="display: none" role="search">
+  <h3 id="searchlabel">Quick search</h3>
+    <div class="searchformwrapper">
+    <form class="search" action="search.html" method="get">
+      <input type="text" name="q" aria-labelledby="searchlabel" autocomplete="off" autocorrect="off" autocapitalize="off" spellcheck="false"/>
+      <input type="submit" value="Go" />
+    </form>
+    </div>
+</div>
+<script>document.getElementById('searchbox').style.display = "block"</script>
+        </div>
+      </div>
+      <div class="clearer"></div>
+    </div>
+    <div class="related" role="navigation" aria-label="related navigation">
+      <h3>Navigation</h3>
+      <ul>
+        <li class="right" style="margin-right: 10px">
+          <a href="genindex.html" title="General Index"
+             >index</a></li>
+        <li class="right" >
+          <a href="upload_guide.html" title="Depositing your data into MaveDB"
+             >next</a> |</li>
+        <li class="right" >
+          <a href="controlled_vocabulary.html" title="MAVE controlled vocabulary"
+             >previous</a> |</li>
+        <li class="nav-item nav-item-0"><a href="index.html">MaveDB 2025.5.2 documentation</a> &#187;</li>
+        <li class="nav-item nav-item-this"><a href="">Variant Mapping</a></li> 
+      </ul>
+    </div>
+    <div class="footer" role="contentinfo">
+    &#169; Copyright 2017-2025, MaveDB Developers.
+      Created using <a href="https://www.sphinx-doc.org/">Sphinx</a> 7.2.6.
+    </div>
+  </body>
+</html>

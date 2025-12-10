@@ -1,0 +1,235 @@
+<!DOCTYPE html>
+
+<html lang="en" data-content_root="../">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" /><meta name="viewport" content="width=device-width, initial-scale=1" />
+
+    <title>Score sets &#8212; MaveDB 2025.5.2 documentation</title>
+    <link rel="stylesheet" type="text/css" href="../_static/pygments.css?v=4848ba22" />
+    <link rel="stylesheet" type="text/css" href="../_static/pyramid.css?v=a5b9c134" />
+    <link rel="stylesheet" type="text/css" href="../_static/graphviz.css?v=eafc0fe6" />
+    <link rel="stylesheet" type="text/css" href="../_static/styles.css?v=1cacb62a" />
+    <script src="../_static/documentation_options.js?v=ea53f692"></script>
+    <script src="../_static/doctools.js?v=888ff710"></script>
+    <script src="../_static/sphinx_highlight.js?v=dc90522c"></script>
+    <link rel="index" title="Index" href="../genindex.html" />
+    <link rel="search" title="Search" href="../search.html" />
+    <link rel="next" title="Targets" href="../targets.html" />
+    <link rel="prev" title="Experiments" href="experiments.html" />
+<link rel="stylesheet" href="https://fonts.googleapis.com/css?family=Neuton&amp;subset=latin" type="text/css" media="screen" charset="utf-8" />
+<link rel="stylesheet" href="https://fonts.googleapis.com/css?family=Nobile:regular,italic,bold,bolditalic&amp;subset=latin" type="text/css" media="screen" charset="utf-8" />
+<!--[if lte IE 6]>
+<link rel="stylesheet" href="../_static/ie6.css" type="text/css" media="screen" charset="utf-8" />
+<![endif]-->
+
+  </head><body>
+
+    <div class="related" role="navigation" aria-label="related navigation">
+      <h3>Navigation</h3>
+      <ul>
+        <li class="right" style="margin-right: 10px">
+          <a href="../genindex.html" title="General Index"
+             accesskey="I">index</a></li>
+        <li class="right" >
+          <a href="../targets.html" title="Targets"
+             accesskey="N">next</a> |</li>
+        <li class="right" >
+          <a href="experiments.html" title="Experiments"
+             accesskey="P">previous</a> |</li>
+        <li class="nav-item nav-item-0"><a href="../index.html">MaveDB 2025.5.2 documentation</a> &#187;</li>
+          <li class="nav-item nav-item-1"><a href="index.html" accesskey="U">Record types</a> &#187;</li>
+        <li class="nav-item nav-item-this"><a href="">Score sets</a></li> 
+      </ul>
+    </div>  
+
+    <div class="document">
+      <div class="documentwrapper">
+        <div class="bodywrapper">
+          <div class="body" role="main">
+            
+  <section id="score-sets">
+<h1>Score sets<a class="headerlink" href="#score-sets" title="Link to this heading">¶</a></h1>
+<p id="score-set-intro">Score sets are records that describe the scores generated from the raw data described in their associated experiment
+and the principal way that users will interact with the data deposited into MaveDB.
+This includes all steps following the high-throughput sequencing step, including read filtering, read counting, and
+score calculations (<a class="reference external" href="https://www.mavedb.org/#/score-sets/urn:mavedb:00000003-a-1/">example score set</a>). All score sets
+must be associated with an existing experiment.</p>
+<p>Multiple score sets should be used when distinct methods were used to calculate scores for raw data described by the
+experiment.
+The most common use case for multiple score sets is when scores are calculated at nucleotide resolution and amino
+acid resolution for deep mutational scanning data.</p>
+<p>When uploading results based on imputation or complex normalization,
+it’s recommended to upload a more raw form of the scores (e.g. enrichment ratios) as a normal score set,
+and then use <a class="reference internal" href="#id1"><span class="std std-ref">meta-analysis score sets</span></a> to describe the imputed or normalized results.</p>
+<p id="end-score-set-intro">To assign a new score set to an existing experiment, use the dropdown at the top of the score set form.</p>
+<section id="meta-analysis-score-sets">
+<h2>Meta-analysis score sets<a class="headerlink" href="#meta-analysis-score-sets" title="Link to this heading">¶</a></h2>
+<p id="id1">Meta-analysis score sets have all the same attributes as a regular score set,
+but they are linked to existing score sets rather than an existing experiment
+(<a class="reference external" href="https://www.mavedb.org/#/score-sets/urn:mavedb:00000055-0-1/">example meta-analysis score set</a>).</p>
+</section>
+<section id="score-set-contributors">
+<span id="end-meta-analysis-score-sets"></span><h2>Score set contributors<a class="headerlink" href="#score-set-contributors" title="Link to this heading">¶</a></h2>
+<p>When a record in MaveDB is created and assigned a temporary accession number,
+it is only accessible to the “owner” user.</p>
+<p>The owner can add additional users to the record by editing the record and
+specifying that user’s <a class="reference external" href="https://orcid.org/">ORCID iD</a> in the Contributors field.
+The prospective contributor must have logged into MaveDB at least once.</p>
+<div class="admonition note">
+<p class="admonition-title">Note</p>
+<p>Contributors added to a dataset will not automatically be added as contributors to associated records.
+You will need to add them separately in each record form.</p>
+<p>For instance, contributors added to an experiment will not automatically be added as contributors to associated score sets, nor will
+contributors added to a score set be added to the associated experiment. You will need to add them separately in each record form.</p>
+</div>
+<p>Contributors have the same permissions on the dataset as the owner, with the exception that
+users added to a record as contributors will not be able to delete the record. This permission is reserved
+for the record owner and MaveDB administrators only.</p>
+</section>
+<section id="deprecating-data">
+<h2>Deprecating data<a class="headerlink" href="#deprecating-data" title="Link to this heading">¶</a></h2>
+<p>If you need to fix an error after a dataset becomes public and is no longer editable,
+MaveDB supports the deprecation of score sets.
+When creating a new score set, the user can specify an existing score set to replace.</p>
+</section>
+<section id="score-set-metadata">
+<h2>Score set metadata<a class="headerlink" href="#score-set-metadata" title="Link to this heading">¶</a></h2>
+<dl id="id2">
+<dt><strong>Title</strong></dt><dd><p>The title of the score set, to be displayed at the top of the score set record page.</p>
+</dd>
+<dt><strong>Short description</strong></dt><dd><p>A brief summary of the score set. This should be one or two sentences that summarize the score set and are displayed
+in search results to give users an overview of the score set.</p>
+</dd>
+<dt><strong>Abstract</strong></dt><dd><p>A longer description of the score set, including the motivation for performing the analysis and a summary of the approach taken.
+The focus should be on describing the score set rather than the full study.
+This field supports <a class="reference external" href="https://daringfireball.net/projects/markdown/">Markdown</a> formatting.</p>
+<blockquote>
+<div><div class="admonition note">
+<p class="admonition-title">Note</p>
+<p>It is common for experiments and score sets from the same study to share the same abstract text.</p>
+</div>
+</div></blockquote>
+</dd>
+<dt><strong>Methods</strong></dt><dd><p>A detailed description of the data analysis methods used to generate the scores from the raw sequence data.
+This field should include information on:</p>
+<ul class="simple">
+<li><p>Sequence read filtering approach</p></li>
+<li><p>Description of the statistical model for converting counts to scores, including normalization</p></li>
+<li><p>Description of additional data columns included in the score or count tables, including column naming conventions</p></li>
+<li><p>Details of how replicates were combined (if applicable)</p></li>
+</ul>
+</dd>
+<dt><strong>License and Data usage guidelines</strong></dt><dd><p>The license under which the score set data is made available and any additional data usage guidelines.</p>
+<div class="admonition seealso">
+<p class="admonition-title">See also</p>
+<p>See the <a class="reference internal" href="../publishing.html#data-licensing"><span class="std std-ref">licenses section</span></a> for more information on available licenses.</p>
+</div>
+</dd>
+<dt><strong>Contributors</strong></dt><dd><p>A list of the people who contributed to the score set.
+Each contributor should be identified by their ORCID iD.</p>
+</dd>
+<dt><strong>DOIs</strong></dt><dd><p>A list of <a class="reference external" href="https://www.doi.org/">Digital Object Identifiers (DOIs)</a> for any digital resources associated with the score set.</p>
+<div class="admonition warning">
+<p class="admonition-title">Warning</p>
+<p>DOIs for publications should not be provided here; instead, they should be included in the publication identifiers section.</p>
+</div>
+</dd>
+<dt><strong>Publication identifiers</strong></dt><dd><p>A list of identifiers for publications associated with the score set. These may be DOIs, PubMed IDs, bioRxiv IDs, or medRxiv IDs.</p>
+<p>You will also have the option to indicate a primary publication for the score set. This publication will be more prominently displayed
+and should describe the research contribution to which this score set is most closely related.</p>
+</dd>
+<dt><strong>Extra metadata</strong></dt><dd><p>An optional JSON object containing additional metadata about the score set. This may include information such as analysis parameters,
+software versions, or other details specific to the score set. If you are providing additional metadata,,
+it should be clearly described in the methods section.</p>
+</dd>
+<dt><strong>Targets</strong></dt><dd><p>One or more <a class="reference internal" href="../targets.html#targets"><span class="std std-ref">targets</span></a> associated with this score set.
+Each score set must be associated with at least one target.
+For experiments that describe variants relative to two or more distinct sequences,
+such as protein-protein interaction assays that measure the effects of variants in both interacting proteins,
+multiple targets may be associated with a single score set.</p>
+</dd>
+<dt><strong>Score calibrations</strong></dt><dd><p>An optional list of score calibrations that provide additional context for interpreting the scores in this score set.
+For more information, see the <a class="reference internal" href="../score_calibrations.html#score-calibrations"><span class="std std-ref">Score calibrations</span></a> section.</p>
+</dd>
+<dt><strong>Variant scores and counts</strong></dt><dd><p>The variant scores and optional counts data tables associated with this score set.
+For more information on the expected data formats, see the <a class="reference internal" href="../data_formats.html#data-table-formats"><span class="std std-ref">Data table formats</span></a> section.</p>
+</dd>
+</dl>
+</section>
+</section>
+
+
+            <div class="clearer"></div>
+          </div>
+        </div>
+      </div>
+      <div class="sphinxsidebar" role="navigation" aria-label="main navigation">
+        <div class="sphinxsidebarwrapper">
+  <div>
+    <h3><a href="../index.html">Table of Contents</a></h3>
+    <ul>
+<li><a class="reference internal" href="#">Score sets</a><ul>
+<li><a class="reference internal" href="#meta-analysis-score-sets">Meta-analysis score sets</a></li>
+<li><a class="reference internal" href="#score-set-contributors">Score set contributors</a></li>
+<li><a class="reference internal" href="#deprecating-data">Deprecating data</a></li>
+<li><a class="reference internal" href="#score-set-metadata">Score set metadata</a></li>
+</ul>
+</li>
+</ul>
+
+  </div>
+  <div>
+    <h4>Previous topic</h4>
+    <p class="topless"><a href="experiments.html"
+                          title="previous chapter">Experiments</a></p>
+  </div>
+  <div>
+    <h4>Next topic</h4>
+    <p class="topless"><a href="../targets.html"
+                          title="next chapter">Targets</a></p>
+  </div>
+  <div role="note" aria-label="source link">
+    <h3>This Page</h3>
+    <ul class="this-page-menu">
+      <li><a href="../_sources/record_types/score_sets.rst.txt"
+            rel="nofollow">Show Source</a></li>
+    </ul>
+   </div>
+<div id="searchbox" style="display: none" role="search">
+  <h3 id="searchlabel">Quick search</h3>
+    <div class="searchformwrapper">
+    <form class="search" action="../search.html" method="get">
+      <input type="text" name="q" aria-labelledby="searchlabel" autocomplete="off" autocorrect="off" autocapitalize="off" spellcheck="false"/>
+      <input type="submit" value="Go" />
+    </form>
+    </div>
+</div>
+<script>document.getElementById('searchbox').style.display = "block"</script>
+        </div>
+      </div>
+      <div class="clearer"></div>
+    </div>
+    <div class="related" role="navigation" aria-label="related navigation">
+      <h3>Navigation</h3>
+      <ul>
+        <li class="right" style="margin-right: 10px">
+          <a href="../genindex.html" title="General Index"
+             >index</a></li>
+        <li class="right" >
+          <a href="../targets.html" title="Targets"
+             >next</a> |</li>
+        <li class="right" >
+          <a href="experiments.html" title="Experiments"
+             >previous</a> |</li>
+        <li class="nav-item nav-item-0"><a href="../index.html">MaveDB 2025.5.2 documentation</a> &#187;</li>
+          <li class="nav-item nav-item-1"><a href="index.html" >Record types</a> &#187;</li>
+        <li class="nav-item nav-item-this"><a href="">Score sets</a></li> 
+      </ul>
+    </div>
+    <div class="footer" role="contentinfo">
+    &#169; Copyright 2017-2025, MaveDB Developers.
+      Created using <a href="https://www.sphinx-doc.org/">Sphinx</a> 7.2.6.
+    </div>
+  </body>
+</html>

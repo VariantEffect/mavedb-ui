@@ -4846,7 +4846,7 @@
 
 .p-tag {
   background: #3F51B5;
-  color: #ffffff;
+  color: #ffffff !important;
   font-size: 0.75rem;
   font-weight: 700;
   padding: 0.25rem 0.4rem;

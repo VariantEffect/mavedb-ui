@@ -71,7 +71,8 @@ body .p-button {
 /* Hide placeholder text in float label components since label acts as placeholder */
 .p-float-label input::placeholder,
 .p-float-label textarea::placeholder,
-.p-float-label .p-chips-multiple-container input::placeholder {
+.p-float-label .p-chips-multiple-container input::placeholder,
+.p-float-label .p-multiselect-label {
   color: transparent !important;
 }
 
@@ -82,6 +83,7 @@ body .p-button {
 .p-float-label textarea.p-filled::placeholder,
 .p-float-label .p-inputwrapper-focus input::placeholder,
 .p-float-label .p-inputwrapper-filled input::placeholder,
-.p-float-label .p-chips-multiple-container input:focus::placeholder {
+.p-float-label .p-chips-multiple-container input:focus::placeholder,
+.p-float-label .p-multiselect:focus-within .p-multiselect-label {
   color: rgba(0, 0, 0, 0.6) !important;
 }

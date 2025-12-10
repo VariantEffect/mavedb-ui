@@ -13,1459 +13,1474 @@
         </div>
       </div>
       <div class="mavedb-wizard">
-        <Stepper v-model:active-step="activeWizardStep">
-          <StepperPanel>
-            <template #header="{index, clickCallback}">
-              <button
-                class="p-stepper-action"
-                :disabled="maxWizardStepEntered < index || maxWizardStepValidated < index - 1"
-                role="tab"
-                @click="clickCallback"
-              >
-                <span class="p-stepper-number">{{ index + 1 }}</span>
-                <span class="p-stepper-title">Parent experiment and context</span>
-              </button>
-            </template>
-            <template #content="{nextCallback: showNextWizardStep}">
-              <div class="mavedb-wizard-form">
-                <div class="mavedb-wizard-form-content-background"></div>
-                <div v-if="experimentUrn && experiment">
-                  <div class="mavedb-wizard-row">
-                    <div class="mavedb-wizard-help">
-                      <label :id="scopedId('input-experiment')"> Experiment: {{ experimentUrn }} </label>
-                      <div class="mavedb-help-small">
-                        To add a score set to a different experiment, supercede a score set or add a score set to
-                        meta-analysis, please navigate to "New score set". For more on the relationship between score
-                        sets and experiments, see the
-                        <a :href="`${config.appBaseUrl}/docs/mavedb/record_types.html#record-types`" target="_blank"
-                          >documentation</a
-                        >.
+        <Stepper v-model:value="activeWizardStep">
+          <StepList>
+            <Step :value="0">Parent experiment and context</Step>
+            <Step :value="1">Score set information</Step>
+            <Step :value="2">Targets</Step>
+            <Step v-for="(targetNum, targetIdx) in numTargets" :key="targetIdx" :value="targetIdx + 3">Target {{ targetIdx + 1 }}</Step>
+            <Step :value="numTargets + 3">Score Calibration</Step>
+            <Step :value="numTargets + 4">Variant Scores</Step>
+          </StepList>
+          <StepPanels>
+            <StepPanel v-slot="{ activateCallback }" :value="0">
+              <!-- <template #header="{index, clickCallback}">
+                <button
+                  class="p-stepper-action"
+                  :disabled="maxWizardStepEntered < index || maxWizardStepValidated < index - 1"
+                  role="tab"
+                  @click="clickCallback"
+                >
+                  <span class="p-stepper-number">{{ index + 1 }}</span>
+                  <span class="p-stepper-title">Parent experiment and context</span>
+                </button>
+              </template> -->
+              <!-- <template #content="{nextCallback: showNextWizardStep}"> -->
+                <div class="mavedb-wizard-form">
+                  <div class="mavedb-wizard-form-content-background"></div>
+                  <div v-if="experimentUrn && experiment">
+                    <div class="mavedb-wizard-row">
+                      <div class="mavedb-wizard-help">
+                        <label :id="scopedId('input-experiment')"> Experiment: {{ experimentUrn }} </label>
+                        <div class="mavedb-help-small">
+                          To add a score set to a different experiment, supercede a score set or add a score set to
+                          meta-analysis, please navigate to "New score set". For more on the relationship between score
+                          sets and experiments, see the
+                          <a :href="`${config.appBaseUrl}/docs/mavedb/record_types.html#record-types`" target="_blank"
+                            >documentation</a
+                          >.
+                        </div>
                       </div>
-                    </div>
-                    <div class="mavedb-wizard-content">
-                      Experiment title:
-                      <router-link :to="{name: 'experiment', params: {urn: experimentUrn}}">
-                        {{ experiment.title }}
-                      </router-link>
-                    </div>
-                  </div>
-                </div>
-                <div v-else>
-                  <div class="mavedb-wizard-row">
-                    <div class="mavedb-wizard-help">
-                      <label :id="scopedId('input-superseding-score-set-label')">
-                        Does this score set correct errors in and replace a score set previously published on MaveDB
-                        that you created?
-                      </label>
-                    </div>
-                    <div class="mavedb-wizard-content">
-                      <InputSwitch
-                        v-model="isSupersedingScoreSet"
-                        :aria-labelledby="scopedId('input-superseding-score-set-label')"
-                      />
-                      <div class="mavedb-switch-value">
-                        {{
-                          isSupersedingScoreSet
-                            ? 'Yes, this supersedes another score set'
-                            : 'No, this does not supersede another score set'
-                        }}
+                      <div class="mavedb-wizard-content">
+                        Experiment title:
+                        <router-link :to="{name: 'experiment', params: {urn: experimentUrn}}">
+                          {{ experiment.title }}
+                        </router-link>
                       </div>
                     </div>
                   </div>
-                  <div class="mavedb-wizard-row">
-                    <div class="mavedb-wizard-help">
-                      <label :id="scopedId('input-is-meta-analysis-label')">Is this score set a meta-analysis?</label>
-                      <div class="mavedb-help-small">
-                        Meta-analyses are score sets derived from data in other score sets that were created by you or
-                        other users. For example:
-                        <ul>
-                          <li>a score set that combines data from two other score sets to produce new scores, or</li>
-                          <li>a score set that adds imputed missing values to the scores in another score set.</li>
-                        </ul>
+                  <div v-else>
+                    <div class="mavedb-wizard-row">
+                      <div class="mavedb-wizard-help">
+                        <label :id="scopedId('input-superseding-score-set-label')">
+                          Does this score set correct errors in and replace a score set previously published on MaveDB
+                          that you created?
+                        </label>
                       </div>
-                    </div>
-                    <div class="mavedb-wizard-content">
-                      <InputSwitch
-                        v-model="isMetaAnalysis"
-                        :aria-labelledby="scopedId('input-is-meta-analysis-label')"
-                      />
-                      <div class="mavedb-switch-value">
-                        {{ isMetaAnalysis ? 'Yes, this is a meta-analysis' : 'No, this is not a meta-analysis' }}
-                      </div>
-                    </div>
-                  </div>
-                  <div v-if="!isSupersedingScoreSet && !isMetaAnalysis" class="mavedb-wizard-row">
-                    <div class="mavedb-wizard-help">
-                      To which experiment does this score set belong?
-                      <div class="mavedb-help-small">
-                        For more on the relationship between score sets and experiments, see the
-                        <a :href="`${config.appBaseUrl}/docs/mavedb/record_types.html#record-types`" target="_blank"
-                          >documentation</a
-                        >.
-                      </div>
-                    </div>
-                    <div class="mavedb-wizard-content">
-                      <div style="position: relative">
-                        <span class="p-float-label">
-                          <Dropdown
-                            :id="scopedId('input-experiment')"
-                            ref="experimentInput"
-                            v-model="experiment"
-                            filter
-                            option-label="title"
-                            :options="editableExperiments"
-                            style="width: 100%"
-                            :virtual-scroller-options="{itemSize: 50}"
-                            @change="populateExperimentMetadata"
-                          >
-                            <template #option="slotProps">
-                              {{ slotProps.option.urn }}: {{ slotProps.option.title }}
-                            </template>
-                            <template #empty>
-                              <div style="padding: 10px; text-align: center">No experiments found.</div>
-                            </template>
-                          </Dropdown>
-                          <label :for="scopedId('input-experiment')">Experiment</label>
-                        </span>
-                        <span v-if="validationErrors.experiment" class="mave-field-error">{{
-                          validationErrors.experiment
-                        }}</span>
-                      </div>
-                    </div>
-                  </div>
-                  <div v-if="isSupersedingScoreSet" class="mavedb-wizard-row">
-                    <div class="mavedb-wizard-help">
-                      What score set does this supersede?
-                      <div class="mavedb-help-small">
-                        Type the superseded score set's MaveDB URN here and select it from the list.
-                      </div>
-                    </div>
-                    <div class="mavedb-wizard-content">
-                      <div class="field">
-                        <span class="p-float-label">
-                          <AutoComplete
-                            :id="scopedId('input-supersededScoreSet')"
-                            ref="supersededScoreSetInput"
-                            v-model="supersededScoreSet"
-                            field="title"
-                            :force-selection="true"
-                            :suggestions="supersededScoreSetSuggestionsList"
-                            @change="populateSupersededScoreSetMetadata"
-                            @complete="searchSupersededScoreSets"
-                          >
-                            <template #item="slotProps">
-                              {{ slotProps.item.urn }}: {{ slotProps.item.title }}
-                            </template>
-                          </AutoComplete>
-                          <label :for="scopedId('input-supersededScoreSet')">Supersedes</label>
-                        </span>
-                        <span v-if="validationErrors.supersededScoreSetUrn" class="mave-field-error">{{
-                          validationErrors.supersededScoreSetUrn
-                        }}</span>
-                      </div>
-                    </div>
-                  </div>
-                  <div v-if="isMetaAnalysis" class="mavedb-wizard-row">
-                    <div class="mavedb-wizard-help">
-                      What score set(s) does this score set analyze?
-                      <div class="mavedb-help-small">
-                        Type a score set's MaveDB URN here and select it from the list. You may choose more than one
-                        score set.
-                      </div>
-                    </div>
-                    <div class="mavedb-wizard-content">
-                      <div class="field">
-                        <span class="p-float-label">
-                          <AutoComplete
-                            :id="scopedId('input-metaAnalyzesScoreSets')"
-                            ref="metaAnalyzesScoreSetsInput"
-                            v-model="metaAnalyzesScoreSets"
-                            field="title"
-                            :force-selection="true"
-                            :multiple="true"
-                            :suggestions="metaAnalyzesScoreSetSuggestionsList"
-                            @complete="searchMetaAnalyzesScoreSets"
-                          >
-                            <template #item="slotProps">
-                              {{ slotProps.item.urn }}: {{ slotProps.item.title }}
-                            </template>
-                          </AutoComplete>
-                          <label :for="scopedId('input-metaAnalyzesScoreSets')">Meta-analysis for</label>
-                        </span>
-                        <span v-if="validationErrors.metaAnalyzesScoreSetUrns" class="mave-field-error">{{
-                          validationErrors.metaAnalyzesScoreSetUrns
-                        }}</span>
-                      </div>
-                    </div>
-                  </div>
-                </div>
-              </div>
-              <div class="mavedb-wizard-step-controls-row">
-                <div class="flex justify-content-end mavedb-wizard-step-controls pt-4">
-                  <Button
-                    :disabled="maxWizardStepValidated < activeWizardStep"
-                    icon="pi pi-arrow-right"
-                    icon-pos="right"
-                    label="Next"
-                    @click="showNextWizardStepIfValid(showNextWizardStep)"
-                  />
-                </div>
-              </div>
-            </template>
-          </StepperPanel>
-          <StepperPanel>
-            <template #header="{index, clickCallback}">
-              <button
-                class="p-stepper-action"
-                :disabled="maxWizardStepEntered < index || maxWizardStepValidated < index - 1"
-                role="tab"
-                @click="clickCallback"
-              >
-                <span class="p-stepper-number">{{ index + 1 }}</span>
-                <span class="p-stepper-title">Score set information</span>
-              </button>
-            </template>
-            <template #content="{prevCallback: showPreviousWizardStep, nextCallback: showNextWizardStep}">
-              <div class="mavedb-wizard-form">
-                <div class="mavedb-wizard-form-content-background"></div>
-                <div v-if="experiment" class="mavedb-wizard-row">
-                  <div class="mavedb-wizard-content-pane">
-                    <Message severity="info">
-                      Some fields were autopopulated based on the selected experiment and should be inspected to ensure
-                      they are still relevant to this score set.
-                    </Message>
-                  </div>
-                </div>
-                <div class="mavedb-wizard-row">
-                  <div class="mavedb-wizard-help">
-                    <label
-                      >A short title for the score set, to be displayed at the top of the score set's own page.</label
-                    >
-                    <div class="mavedb-help-small">
-                      Examples: CBS low-B6 imputed and refined, NUDT15 protein stability assay, Arrestin-1 binding,
-                      SpCas9 positive selection
-                    </div>
-                  </div>
-                  <div class="mavedb-wizard-content field">
-                    <span class="p-float-label">
-                      <InputText :id="scopedId('input-title')" v-model="title" />
-                      <label :for="scopedId('input-title')">Title</label>
-                    </span>
-                    <span v-if="validationErrors.title" class="mave-field-error">{{ validationErrors.title }}</span>
-                  </div>
-                </div>
-                <div class="mavedb-wizard-row">
-                  <div class="mavedb-wizard-help">
-                    <label>
-                      A high-level description of the score set in one or two sentences, to be displayed in search
-                      results.
-                    </label>
-                    <div class="mavedb-help-small">
-                      Example: A Deep Mutational Scan of the human cystathionine-beta-synthase (CBS) using functional
-                      complementation in yeast via DMS-TileSeq at low levels of Vitamin B6.
-                    </div>
-                  </div>
-                  <div class="mavedb-wizard-content field">
-                    <span class="p-float-label">
-                      <Textarea :id="scopedId('input-shortDescription')" v-model="shortDescription" rows="4" />
-                      <label :for="scopedId('input-shortDescription')">Short description</label>
-                    </span>
-                    <span v-if="validationErrors.shortDescription" class="mave-field-error">{{
-                      validationErrors.shortDescription
-                    }}</span>
-                  </div>
-                </div>
-                <div class="mavedb-wizard-row">
-                  <div class="mavedb-wizard-help">
-                    <label> The motivation for and approach of the score set. </label>
-                    <div class="mavedb-help-small">
-                      May be formatted using
-                      <a href="https://daringfireball.net/projects/markdown/syntax" target="_blank">Markdown</a>. It is
-                      common for a score set to have the same abstract text as the experiment that it belongs to. The
-                      focus should be on the MAVE data, rather than the full research contribution, so use your
-                      judgement when deciding what details are relevant.
-                    </div>
-                  </div>
-                  <div class="mavedb-wizard-content field">
-                    <TabView>
-                      <TabPanel header="Edit">
-                        <span class="p-float-label">
-                          <Textarea :id="scopedId('input-abstractText')" v-model="abstractText" rows="10" />
-                          <label :for="scopedId('input-abstractText')">Abstract</label>
-                        </span>
-                      </TabPanel>
-                      <TabPanel header="Preview">
-                        <!-- eslint-disable-next-line vue/no-v-html -->
-                        <div class="mavedb-wizard-rendered-markdown" v-html="markdownToHtml(abstractText)"></div>
-                      </TabPanel>
-                    </TabView>
-                    <span v-if="validationErrors.abstractText" class="mave-field-error">{{
-                      validationErrors.abstractText
-                    }}</span>
-                  </div>
-                </div>
-                <div class="mavedb-wizard-row">
-                  <div class="mavedb-wizard-help">
-                    <label>
-                      A condensed description of the data analysis, starting from raw sequence data, suitable for a
-                      specialist audience of MAVE researchers.
-                    </label>
-                    <div class="mavedb-help-small">
-                      May be formatted using
-                      <a href="https://daringfireball.net/projects/markdown/syntax" target="_blank">Markdown</a>. Should
-                      include:
-                      <ul>
-                        <template v-if="isMetaAnalysis">
-                          <li>
-                            a description of how the scores in this score set were generated from the data in the
-                            analyzed score sets, and
-                          </li>
-                        </template>
-                        <template v-else>
-                          <li>
-                            a description of how scores were generated from raw data, including any normalization,
-                          </li>
-                          <li>the sequence read filtering approach used,</li>
-                          <li>details of how replicates were combined (if applicable), and</li>
-                        </template>
-                        <li>
-                          a description of any additional data columns included in the score and count tables, including
-                          column naming conventions.
-                        </li>
-                      </ul>
-                    </div>
-                  </div>
-                  <div class="mavedb-wizard-content field">
-                    <TabView>
-                      <TabPanel header="Edit">
-                        <span class="p-float-label">
-                          <Textarea :id="scopedId('input-methodText')" v-model="methodText" rows="10" />
-                          <label :for="scopedId('input-methodText')">Methods</label>
-                        </span>
-                      </TabPanel>
-                      <TabPanel header="Preview">
-                        <!-- eslint-disable-next-line vue/no-v-html -->
-                        <div class="mavedb-wizard-rendered-markdown" v-html="markdownToHtml(methodText)"></div>
-                      </TabPanel>
-                    </TabView>
-                    <span v-if="validationErrors.methodText" class="mave-field-error">{{
-                      validationErrors.methodText
-                    }}</span>
-                  </div>
-                </div>
-                <div>
-                  <div class="mavedb-wizard-row">
-                    <div class="mavedb-wizard-help">
-                      <label>
-                        The license under which the data in the score set is made available to the public.
-                      </label>
-                      <div class="mavedb-help-small">
-                        For more on data licensing in MaveDB, see the
-                        <a :href="`${config.appBaseUrl}/docs/mavedb/data_licensing.html#data-licensing`" target="_blank"
-                          >documentation</a
-                        >.
-                      </div>
-                    </div>
-                    <div class="mavedb-wizard-content field">
-                      <span class="p-float-label">
-                        <Dropdown
-                          :id="scopedId('input-targetLicenseId')"
-                          v-model="licenseId"
-                          option-label="longName"
-                          option-value="id"
-                          :options="licenses"
-                          style="min-width: 500px"
+                      <div class="mavedb-wizard-content">
+                        <InputSwitch
+                          v-model="isSupersedingScoreSet"
+                          :aria-labelledby="scopedId('input-superseding-score-set-label')"
                         />
-                        <label :for="scopedId('input-targetLicenseId')">License</label>
-                      </span>
-                      <Message
-                        v-if="licenseId && licenses && licenses.find((l) => l.id == licenseId)?.shortName != 'CC0'"
-                        severity="warn"
-                      >
-                        Choosing a license with these restrictions may cause your score set to be excluded from data
-                        federation and aggregation by MaveDB collaborators.
+                        <div class="mavedb-switch-value">
+                          {{
+                            isSupersedingScoreSet
+                              ? 'Yes, this supersedes another score set'
+                              : 'No, this does not supersede another score set'
+                          }}
+                        </div>
+                      </div>
+                    </div>
+                    <div class="mavedb-wizard-row">
+                      <div class="mavedb-wizard-help">
+                        <label :id="scopedId('input-is-meta-analysis-label')">Is this score set a meta-analysis?</label>
+                        <div class="mavedb-help-small">
+                          Meta-analyses are score sets derived from data in other score sets that were created by you or
+                          other users. For example:
+                          <ul>
+                            <li>a score set that combines data from two other score sets to produce new scores, or</li>
+                            <li>a score set that adds imputed missing values to the scores in another score set.</li>
+                          </ul>
+                        </div>
+                      </div>
+                      <div class="mavedb-wizard-content">
+                        <InputSwitch
+                          v-model="isMetaAnalysis"
+                          :aria-labelledby="scopedId('input-is-meta-analysis-label')"
+                        />
+                        <div class="mavedb-switch-value">
+                          {{ isMetaAnalysis ? 'Yes, this is a meta-analysis' : 'No, this is not a meta-analysis' }}
+                        </div>
+                      </div>
+                    </div>
+                    <div v-if="!isSupersedingScoreSet && !isMetaAnalysis" class="mavedb-wizard-row">
+                      <div class="mavedb-wizard-help">
+                        To which experiment does this score set belong?
+                        <div class="mavedb-help-small">
+                          For more on the relationship between score sets and experiments, see the
+                          <a :href="`${config.appBaseUrl}/docs/mavedb/record_types.html#record-types`" target="_blank"
+                            >documentation</a
+                          >.
+                        </div>
+                      </div>
+                      <div class="mavedb-wizard-content">
+                        <div style="position: relative">
+                          <span class="p-float-label">
+                            <Dropdown
+                              :id="scopedId('input-experiment')"
+                              ref="experimentInput"
+                              v-model="experiment"
+                              filter
+                              option-label="title"
+                              :options="editableExperiments"
+                              style="width: 100%"
+                              :virtual-scroller-options="{itemSize: 50}"
+                              @change="populateExperimentMetadata"
+                            >
+                              <template #option="slotProps">
+                                {{ slotProps.option.urn }}: {{ slotProps.option.title }}
+                              </template>
+                              <template #empty>
+                                <div style="padding: 10px; text-align: center">No experiments found.</div>
+                              </template>
+                            </Dropdown>
+                            <label :for="scopedId('input-experiment')">Experiment</label>
+                          </span>
+                          <span v-if="validationErrors.experiment" class="mave-field-error">{{
+                            validationErrors.experiment
+                          }}</span>
+                        </div>
+                      </div>
+                    </div>
+                    <div v-if="isSupersedingScoreSet" class="mavedb-wizard-row">
+                      <div class="mavedb-wizard-help">
+                        What score set does this supersede?
+                        <div class="mavedb-help-small">
+                          Type the superseded score set's MaveDB URN here and select it from the list.
+                        </div>
+                      </div>
+                      <div class="mavedb-wizard-content">
+                        <div class="field">
+                          <span class="p-float-label">
+                            <AutoComplete
+                              :id="scopedId('input-supersededScoreSet')"
+                              ref="supersededScoreSetInput"
+                              v-model="supersededScoreSet"
+                              field="title"
+                              :force-selection="true"
+                              :suggestions="supersededScoreSetSuggestionsList"
+                              @change="populateSupersededScoreSetMetadata"
+                              @complete="searchSupersededScoreSets"
+                            >
+                              <template #item="slotProps">
+                                {{ slotProps.item.urn }}: {{ slotProps.item.title }}
+                              </template>
+                            </AutoComplete>
+                            <label :for="scopedId('input-supersededScoreSet')">Supersedes</label>
+                          </span>
+                          <span v-if="validationErrors.supersededScoreSetUrn" class="mave-field-error">{{
+                            validationErrors.supersededScoreSetUrn
+                          }}</span>
+                        </div>
+                      </div>
+                    </div>
+                    <div v-if="isMetaAnalysis" class="mavedb-wizard-row">
+                      <div class="mavedb-wizard-help">
+                        What score set(s) does this score set analyze?
+                        <div class="mavedb-help-small">
+                          Type a score set's MaveDB URN here and select it from the list. You may choose more than one
+                          score set.
+                        </div>
+                      </div>
+                      <div class="mavedb-wizard-content">
+                        <div class="field">
+                          <span class="p-float-label">
+                            <AutoComplete
+                              :id="scopedId('input-metaAnalyzesScoreSets')"
+                              ref="metaAnalyzesScoreSetsInput"
+                              v-model="metaAnalyzesScoreSets"
+                              field="title"
+                              :force-selection="true"
+                              :multiple="true"
+                              :suggestions="metaAnalyzesScoreSetSuggestionsList"
+                              @complete="searchMetaAnalyzesScoreSets"
+                            >
+                              <template #item="slotProps">
+                                {{ slotProps.item.urn }}: {{ slotProps.item.title }}
+                              </template>
+                            </AutoComplete>
+                            <label :for="scopedId('input-metaAnalyzesScoreSets')">Meta-analysis for</label>
+                          </span>
+                          <span v-if="validationErrors.metaAnalyzesScoreSetUrns" class="mave-field-error">{{
+                            validationErrors.metaAnalyzesScoreSetUrns
+                          }}</span>
+                        </div>
+                      </div>
+                    </div>
+                  </div>
+                </div>
+                <div class="mavedb-wizard-step-controls-row">
+                  <div class="flex justify-content-end mavedb-wizard-step-controls pt-4">
+                    <Button
+                      :disabled="maxWizardStepValidated < activeWizardStep"
+                      icon="pi pi-arrow-right"
+                      icon-pos="right"
+                      label="Next"
+                      @click="showNextWizardStepIfValid(activateCallback)"
+                    />
+                  </div>
+                </div>
+              <!-- </template> -->
+            </StepPanel>
+            <StepPanel v-slot="{ activateCallback }" :value="1" >
+              <!-- <template #header="{index, clickCallback}">
+                <button
+                  class="p-stepper-action"
+                  :disabled="maxWizardStepEntered < index || maxWizardStepValidated < index - 1"
+                  role="tab"
+                  @click="clickCallback"
+                >
+                  <span class="p-stepper-number">{{ index + 1 }}</span>
+                  <span class="p-stepper-title">Score set information</span>
+                </button>
+              </template> -->
+              <!-- <template #content="{prevCallback: showPreviousWizardStep, nextCallback: showNextWizardStep}"> -->
+                <div class="mavedb-wizard-form">
+                  <div class="mavedb-wizard-form-content-background"></div>
+                  <div v-if="experiment" class="mavedb-wizard-row">
+                    <div class="mavedb-wizard-content-pane">
+                      <Message closable severity="info">
+                        Some fields were autopopulated based on the selected experiment and should be inspected to ensure
+                        they are still relevant to this score set.
                       </Message>
                     </div>
                   </div>
                   <div class="mavedb-wizard-row">
                     <div class="mavedb-wizard-help">
-                      Would you like to define any additional restrictions governing the usage of data within this score
-                      set?
+                      <label
+                        >A short title for the score set, to be displayed at the top of the score set's own page.</label
+                      >
+                      <div class="mavedb-help-small">
+                        Examples: CBS low-B6 imputed and refined, NUDT15 protein stability assay, Arrestin-1 binding,
+                        SpCas9 positive selection
+                      </div>
+                    </div>
+                    <div class="mavedb-wizard-content field">
+                      <span class="p-float-label">
+                        <InputText :id="scopedId('input-title')" v-model="title" />
+                        <label :for="scopedId('input-title')">Title</label>
+                      </span>
+                      <span v-if="validationErrors.title" class="mave-field-error">{{ validationErrors.title }}</span>
+                    </div>
+                  </div>
+                  <div class="mavedb-wizard-row">
+                    <div class="mavedb-wizard-help">
+                      <label>
+                        A high-level description of the score set in one or two sentences, to be displayed in search
+                        results.
+                      </label>
+                      <div class="mavedb-help-small">
+                        Example: A Deep Mutational Scan of the human cystathionine-beta-synthase (CBS) using functional
+                        complementation in yeast via DMS-TileSeq at low levels of Vitamin B6.
+                      </div>
+                    </div>
+                    <div class="mavedb-wizard-content field">
+                      <span class="p-float-label">
+                        <Textarea :id="scopedId('input-shortDescription')" v-model="shortDescription" rows="4" />
+                        <label :for="scopedId('input-shortDescription')">Short description</label>
+                      </span>
+                      <span v-if="validationErrors.shortDescription" class="mave-field-error">{{
+                        validationErrors.shortDescription
+                      }}</span>
+                    </div>
+                  </div>
+                  <div class="mavedb-wizard-row">
+                    <div class="mavedb-wizard-help">
+                      <label> The motivation for and approach of the score set. </label>
+                      <div class="mavedb-help-small">
+                        May be formatted using
+                        <a href="https://daringfireball.net/projects/markdown/syntax" target="_blank">Markdown</a>. It is
+                        common for a score set to have the same abstract text as the experiment that it belongs to. The
+                        focus should be on the MAVE data, rather than the full research contribution, so use your
+                        judgement when deciding what details are relevant.
+                      </div>
+                    </div>
+                    <div class="mavedb-wizard-content field">
+                      <Tabs value="0">
+                        <TabList>
+                          <Tab value="0">Edit</Tab>
+                          <Tab value="1">Preview</Tab>
+                        </TabList>
+                        <TabPanels>
+                          <TabPanel header="Edit" value="0">
+                            <span class="p-float-label">
+                              <Textarea :id="scopedId('input-abstractText')" v-model="abstractText" rows="10" />
+                              <label :for="scopedId('input-abstractText')">Abstract</label>
+                            </span>
+                          </TabPanel>
+                          <TabPanel header="Preview" value="1">
+                            <!-- eslint-disable-next-line vue/no-v-html -->
+                            <div class="mavedb-wizard-rendered-markdown" v-html="markdownToHtml(abstractText)"></div>
+                          </TabPanel>
+                        </TabPanels>
+                      </Tabs>
+                      <span v-if="validationErrors.abstractText" class="mave-field-error">{{
+                        validationErrors.abstractText
+                      }}</span>
+                    </div>
+                  </div>
+                  <div class="mavedb-wizard-row">
+                    <div class="mavedb-wizard-help">
+                      <label>
+                        A condensed description of the data analysis, starting from raw sequence data, suitable for a
+                        specialist audience of MAVE researchers.
+                      </label>
+                      <div class="mavedb-help-small">
+                        May be formatted using
+                        <a href="https://daringfireball.net/projects/markdown/syntax" target="_blank">Markdown</a>. Should
+                        include:
+                        <ul>
+                          <template v-if="isMetaAnalysis">
+                            <li>
+                              a description of how the scores in this score set were generated from the data in the
+                              analyzed score sets, and
+                            </li>
+                          </template>
+                          <template v-else>
+                            <li>
+                              a description of how scores were generated from raw data, including any normalization,
+                            </li>
+                            <li>the sequence read filtering approach used,</li>
+                            <li>details of how replicates were combined (if applicable), and</li>
+                          </template>
+                          <li>
+                            a description of any additional data columns included in the score and count tables, including
+                            column naming conventions.
+                          </li>
+                        </ul>
+                      </div>
+                    </div>
+                    <div class="mavedb-wizard-content field">
+                      <TabView>
+                        <TabPanel header="Edit">
+                          <span class="p-float-label">
+                            <Textarea :id="scopedId('input-methodText')" v-model="methodText" rows="10" />
+                            <label :for="scopedId('input-methodText')">Methods</label>
+                          </span>
+                        </TabPanel>
+                        <TabPanel header="Preview">
+                          <!-- eslint-disable-next-line vue/no-v-html -->
+                          <div class="mavedb-wizard-rendered-markdown" v-html="markdownToHtml(methodText)"></div>
+                        </TabPanel>
+                      </TabView>
+                      <span v-if="validationErrors.methodText" class="mave-field-error">{{
+                        validationErrors.methodText
+                      }}</span>
+                    </div>
+                  </div>
+                  <div>
+                    <div class="mavedb-wizard-row">
+                      <div class="mavedb-wizard-help">
+                        <label>
+                          The license under which the data in the score set is made available to the public.
+                        </label>
+                        <div class="mavedb-help-small">
+                          For more on data licensing in MaveDB, see the
+                          <a :href="`${config.appBaseUrl}/docs/mavedb/data_licensing.html#data-licensing`" target="_blank"
+                            >documentation</a
+                          >.
+                        </div>
+                      </div>
+                      <div class="mavedb-wizard-content field">
+                        <span class="p-float-label">
+                          <Dropdown
+                            :id="scopedId('input-targetLicenseId')"
+                            v-model="licenseId"
+                            option-label="longName"
+                            option-value="id"
+                            :options="licenses"
+                            style="min-width: 500px"
+                          />
+                          <label :for="scopedId('input-targetLicenseId')">License</label>
+                        </span>
+                        <Message
+                          v-if="licenseId && licenses && licenses.find((l) => l.id == licenseId)?.shortName != 'CC0'"
+                          closable
+                          severity="warn"
+                        >
+                          Choosing a license with these restrictions may cause your score set to be excluded from data
+                          federation and aggregation by MaveDB collaborators.
+                        </Message>
+                      </div>
+                    </div>
+                    <div class="mavedb-wizard-row">
+                      <div class="mavedb-wizard-help">
+                        Would you like to define any additional restrictions governing the usage of data within this score
+                        set?
+                      </div>
+                      <div class="mavedb-wizard-content">
+                        <InputSwitch
+                          v-model="hasCustomUsagePolicy"
+                          :aria-labelledby="scopedId('input-has-custom-usage-policy')"
+                        />
+                        <div class="mavedb-switch-value">
+                          {{
+                            hasCustomUsagePolicy
+                              ? 'Yes, I would like to define additional usage guidelines'
+                              : 'No, I do not need to define additional usage guidenlines'
+                          }}
+                        </div>
+                      </div>
+                    </div>
+                    <div v-if="hasCustomUsagePolicy" class="mavedb-wizard-row">
+                      <div class="mavedb-wizard-help">
+                        <label> Any additional guidelines governing the usage of the data in this score set. </label>
+                        <div class="mavedb-help-small">
+                          This may assert, for example, the original author's right to publish the data first.
+                        </div>
+                      </div>
+                      <div class="mavedb-wizard-content field">
+                        <span class="p-float-label">
+                          <Textarea :id="scopedId('input-dataUsagePolicy')" v-model="dataUsagePolicy" rows="4" />
+                          <label :for="scopedId('input-dataUsagePolicy')">Data usage guidelines</label>
+                        </span>
+                        <span v-if="validationErrors.dataUsagePolicy" class="mave-field-error">{{
+                          validationErrors.dataUsagePolicy
+                        }}</span>
+                      </div>
+                    </div>
+                    <div class="mavedb-wizard-row">
+                      <div class="mavedb-wizard-help">
+                        <label>
+                          Contributors who may edit this score set. Enter each contributor's
+                          <a href="https://orcid.org" target="_blank">ORCID</a> ID and confirm their name.
+                        </label>
+                        <div class="mavedb-help-small">Examples: 1111-1111-1111-1111</div>
+                      </div>
+                      <div class="mavedb-wizard-content field">
+                        <span class="p-float-label">
+                          <Chips
+                            :id="scopedId('input-contributors')"
+                            ref="contributorsInput"
+                            v-model="contributors"
+                            :add-on-blur="true"
+                            :allow-duplicate="false"
+                            placeholder="Type or paste ORCID IDs here."
+                            @add="newContributorsAdded"
+                            @keyup.escape="clearContributorSearch"
+                          >
+                            <template #chip="slotProps">
+                              <div>
+                                <div v-if="slotProps.value.givenName || slotProps.value.familyName">
+                                  {{ slotProps.value.givenName }} {{ slotProps.value.familyName }} ({{
+                                    slotProps.value.orcidId
+                                  }})
+                                </div>
+                                <div v-else>{{ slotProps.value.orcidId }}</div>
+                              </div>
+                            </template>
+                          </Chips>
+                          <label :for="scopedId('input-contributors')">Contributors</label>
+                        </span>
+                        <span v-if="validationErrors.contributors" class="mave-field-error">{{
+                          validationErrors.contributors
+                        }}</span>
+                      </div>
+                    </div>
+                    <div class="mavedb-wizard-row">
+                      <div class="mavedb-wizard-help">
+                        <label :id="scopedId('input-doiIdentifiers')">
+                          The DOIs of any digital resources associated with the score set.
+                        </label>
+                        <div class="mavedb-help-small">
+                          Please note: If you would like to associate publications with this score set via their DOI,
+                          please do not do so here. Instead, use the publication identifiers field below.
+                        </div>
+                      </div>
+                      <div class="mavedb-wizard-content field">
+                        <span class="p-float-label">
+                          <Chips
+                            :id="scopedId('input-doiIdentifiers')"
+                            v-model="doiIdentifiers"
+                            :add-on-blur="true"
+                            :allow-duplicate="false"
+                            @add="acceptNewDoiIdentifier"
+                          >
+                            <template #chip="slotProps">
+                              <div>
+                                <div>{{ slotProps.value.identifier }}</div>
+                              </div>
+                            </template>
+                          </Chips>
+                          <label :for="scopedId('input-doiIdentifiers')">DOI identifiers</label>
+                        </span>
+                        <span v-if="validationErrors.doiIdentifiers" class="mave-field-error">{{
+                          validationErrors.doiIdentifiers
+                        }}</span>
+                      </div>
+                    </div>
+                    <div class="mavedb-wizard-row">
+                      <div class="mavedb-wizard-help">
+                        <label>
+                          Any publications associated with the score set. You can search for publications to add by DOI,
+                          PubMed ID, bioRxiv ID, or medRxiv ID.
+                        </label>
+                        <div class="mavedb-help-small">
+                          Example searches: https://doi.org/10.1038/s41467-023-43041-4 (DOI as link),
+                          10.1038/s41467-023-43041-4 (DOI), 38057330 (a Pubmed ID), 2022.06.10.22276179 (a bioRxiv or
+                          medRxiv ID)
+                        </div>
+                      </div>
+                      <div class="mavedb-wizard-content field">
+                        <span class="p-float-label">
+                          <AutoComplete
+                            :id="scopedId('input-publicationIdentifiers')"
+                            ref="publicationIdentifiersInput"
+                            v-model="publicationIdentifiers"
+                            :multiple="true"
+                            option-label="identifier"
+                            :suggestions="publicationIdentifierSuggestionsList"
+                            @complete="searchPublicationIdentifiers"
+                            @item-select="acceptNewPublicationIdentifier"
+                            @item-unselect="removePublicationIdentifier"
+                            @keyup.escape="clearPublicationIdentifierSearch"
+                          >
+                            <template #chip="slotProps">
+                              <div>
+                                <div>
+                                  {{ slotProps.value.identifier }}: {{ truncatePublicationTitle(slotProps.value.title) }}
+                                </div>
+                              </div>
+                            </template>
+                            <template #item="slotProps">
+                              <div>
+                                <div>Title: {{ slotProps.item.title }}</div>
+                                <div>DOI: {{ slotProps.item.doi }}</div>
+                                <div>Identifier: {{ slotProps.item.identifier }}</div>
+                                <div>Database: {{ slotProps.item.dbName }}</div>
+                              </div>
+                            </template>
+                          </AutoComplete>
+                          <label :for="scopedId('input-publicationIdentifiers')">Publication identifiers</label>
+                        </span>
+                        <span v-if="validationErrors.publicationIdentifiers" class="mave-field-error">{{
+                          validationErrors.publicationIdentifiers
+                        }}</span>
+                      </div>
+                    </div>
+                    <div v-if="publicationIdentifiers.length > 1" class="mavedb-wizard-row">
+                      <div class="mavedb-wizard-help">
+                        <label> Of the above publications, the primary publication that describes the score set. </label>
+                      </div>
+                      <div class="mavedb-wizard-content field">
+                        <span class="p-float-label">
+                          <Multiselect
+                            :id="scopedId('input-primaryPublicationIdentifiers')"
+                            ref="primaryPublicationIdentifiersInput"
+                            v-model="primaryPublicationIdentifiers"
+                            option-label="identifier"
+                            :options="publicationIdentifiers"
+                            placeholder="Select a primary publication (Where the dataset is described)"
+                            :selection-limit="1"
+                            style="width: 100%"
+                          >
+                            <template #option="slotProps">
+                              <div class="field">
+                                <div>Title: {{ slotProps.option.title }}</div>
+                                <div>DOI: {{ slotProps.option.doi }}</div>
+                                <div>Identifier: {{ slotProps.option.identifier }}</div>
+                                <div>Database: {{ slotProps.option.dbName }}</div>
+                              </div>
+                            </template>
+                          </Multiselect>
+                          <label :for="scopedId('input-primaryPublicationIdentifiers')">Primary publication</label>
+                        </span>
+                        <span v-if="validationErrors.primaryPublicationIdentifiers" class="mave-field-error">{{
+                          validationErrors.primaryPublicationIdentifiers
+                        }}</span>
+                      </div>
+                    </div>
+                    <div class="mavedb-wizard-row">
+                      <div class="mavedb-wizard-help">
+                        <label> Any additional metadata about the score set, as a JSON file. </label>
+                      </div>
+                      <div class="mavedb-wizard-content field">
+                        <span class="p-float-label">
+                          <FileUpload
+                            :id="scopedId('input-extraMetadataFile')"
+                            accept="application/json"
+                            :auto="false"
+                            choose-label="Extra metadata"
+                            :class="inputClasses.extraMetadataFile"
+                            :custom-upload="true"
+                            :file-limit="1"
+                            :show-cancel-button="false"
+                            :show-upload-button="false"
+                            @remove="fileCleared('extraMetadataFile')"
+                            @select="fileSelected('extraMetadataFile', $event)"
+                          >
+                            <template #empty>
+                              <p>Upload a JSON file here.</p>
+                            </template>
+                          </FileUpload>
+                        </span>
+                        <span v-if="validationErrors.extraMetadata" class="mave-field-error">{{
+                          validationErrors.extraMetadata
+                        }}</span>
+                      </div>
+                    </div>
+                  </div>
+                </div>
+                <div class="mavedb-wizard-step-controls-row">
+                  <div class="flex justify-content-between mavedb-wizard-step-controls pt-4">
+                    <Button icon="pi pi-arrow-left" label="Back" severity="secondary" @click="activateCallback(activeWizardStep - 1)" />
+                    <Button
+                      :disabled="maxWizardStepValidated < activeWizardStep"
+                      icon="pi pi-arrow-right"
+                      icon-pos="right"
+                      label="Next"
+                      @click="showNextWizardStepIfValid(activateCallback)"
+                    />
+                  </div>
+                </div>
+              <!-- </template> -->
+            </StepPanel>
+
+            <StepPanel v-slot="{ activateCallback }" :value="2" >
+              <!-- <template #header="{index, clickCallback}">
+                <button
+                  class="p-stepper-action"
+                  :disabled="maxWizardStepEntered < index || maxWizardStepValidated < index - 1"
+                  role="tab"
+                  @click="clickCallback"
+                >
+                  <span class="p-stepper-number">{{ index + 1 }}</span>
+                  <span class="p-stepper-title">Targets</span>
+                </button>
+              </template> -->
+              <!-- <template #content="{prevCallback: showPreviousWizardStep, nextCallback: showNextWizardStep}"> -->
+                <div class="mavedb-wizard-form">
+                  <div class="mavedb-wizard-form-content-background"></div>
+                  <div class="mavedb-wizard-row">
+                    <div class="mavedb-wizard-help">
+                      <label :id="scopedId('input-scoreSetIsSequenceBasedLabel')"
+                        >Will you be uploading the target sequences used for your assay?</label
+                      >
+                      <div class="mavedb-help-small">
+                        The target sequence is the sequence that was mutagenized to create the variant library, such as in
+                        a cDNA-based deep mutational scan. If your variants were generated by editing the genome directly
+                        (e.g., using saturation genome editing or base editing), you should provide an Ensembl or RefSeq
+                        accession instead of uploading the target locus sequence as your own target.
+                      </div>
                     </div>
                     <div class="mavedb-wizard-content">
                       <InputSwitch
-                        v-model="hasCustomUsagePolicy"
-                        :aria-labelledby="scopedId('input-has-custom-usage-policy')"
+                        v-model="isTargetSequence"
+                        :aria-labelledby="scopedId('input-scoreSetIsSequenceBasedLabel')"
                       />
                       <div class="mavedb-switch-value">
                         {{
-                          hasCustomUsagePolicy
-                            ? 'Yes, I would like to define additional usage guidelines'
-                            : 'No, I do not need to define additional usage guidenlines'
+                          isTargetSequence
+                            ? 'Yes, variants are described relative to a target sequence.'
+                            : 'No, variants are described relative to a RefSeq or Ensembl accession (either a transcript or chromosome).'
                         }}
                       </div>
                     </div>
                   </div>
-                  <div v-if="hasCustomUsagePolicy" class="mavedb-wizard-row">
+
+                  <div v-if="!isTargetSequence" class="mavedb-wizard-row">
                     <div class="mavedb-wizard-help">
-                      <label> Any additional guidelines governing the usage of the data in this score set. </label>
+                      <label :id="scopedId('input-isBaseEditorData')"
+                        >Does this score set reperesent base editor data?</label
+                      >
                       <div class="mavedb-help-small">
-                        This may assert, for example, the original author's right to publish the data first.
+                        Base editor data is a type of functional assay that is similar in many respects to MAVE data. When
+                        uploading base editor data, you must also include a 'guide_sequence' column in your uploaded
+                        scores (and counts) file(s).
                       </div>
                     </div>
-                    <div class="mavedb-wizard-content field">
-                      <span class="p-float-label">
-                        <Textarea :id="scopedId('input-dataUsagePolicy')" v-model="dataUsagePolicy" rows="4" />
-                        <label :for="scopedId('input-dataUsagePolicy')">Data usage guidelines</label>
-                      </span>
-                      <span v-if="validationErrors.dataUsagePolicy" class="mave-field-error">{{
-                        validationErrors.dataUsagePolicy
-                      }}</span>
-                    </div>
-                  </div>
-                  <div class="mavedb-wizard-row">
-                    <div class="mavedb-wizard-help">
-                      <label>
-                        Contributors who may edit this score set. Enter each contributor's
-                        <a href="https://orcid.org" target="_blank">ORCID</a> ID and confirm their name.
-                      </label>
-                      <div class="mavedb-help-small">Examples: 1111-1111-1111-1111</div>
-                    </div>
-                    <div class="mavedb-wizard-content field">
-                      <span class="p-float-label">
-                        <Chips
-                          :id="scopedId('input-contributors')"
-                          ref="contributorsInput"
-                          v-model="contributors"
-                          :add-on-blur="true"
-                          :allow-duplicate="false"
-                          placeholder="Type or paste ORCID IDs here."
-                          @add="newContributorsAdded"
-                          @keyup.escape="clearContributorSearch"
-                        >
-                          <template #chip="slotProps">
-                            <div>
-                              <div v-if="slotProps.value.givenName || slotProps.value.familyName">
-                                {{ slotProps.value.givenName }} {{ slotProps.value.familyName }} ({{
-                                  slotProps.value.orcidId
-                                }})
-                              </div>
-                              <div v-else>{{ slotProps.value.orcidId }}</div>
-                            </div>
-                          </template>
-                        </Chips>
-                        <label :for="scopedId('input-contributors')">Contributors</label>
-                      </span>
-                      <span v-if="validationErrors.contributors" class="mave-field-error">{{
-                        validationErrors.contributors
-                      }}</span>
-                    </div>
-                  </div>
-                  <div class="mavedb-wizard-row">
-                    <div class="mavedb-wizard-help">
-                      <label :id="scopedId('input-doiIdentifiers')">
-                        The DOIs of any digital resources associated with the score set.
-                      </label>
-                      <div class="mavedb-help-small">
-                        Please note: If you would like to associate publications with this score set via their DOI,
-                        please do not do so here. Instead, use the publication identifiers field below.
+                    <div class="mavedb-wizard-content">
+                      <InputSwitch v-model="isBaseEditor" :aria-labelledby="scopedId('input-isBaseEditorData')" />
+                      <div class="mavedb-switch-value">
+                        {{
+                          isBaseEditor
+                            ? 'Yes, this score set represents base editor data.'
+                            : 'No, this score set does not represent base editor data.'
+                        }}
                       </div>
                     </div>
-                    <div class="mavedb-wizard-content field">
-                      <span class="p-float-label">
-                        <Chips
-                          :id="scopedId('input-doiIdentifiers')"
-                          v-model="doiIdentifiers"
-                          :add-on-blur="true"
-                          :allow-duplicate="false"
-                          @add="acceptNewDoiIdentifier"
-                        >
-                          <template #chip="slotProps">
-                            <div>
-                              <div>{{ slotProps.value.identifier }}</div>
-                            </div>
-                          </template>
-                        </Chips>
-                        <label :for="scopedId('input-doiIdentifiers')">DOI identifiers</label>
-                      </span>
-                      <span v-if="validationErrors.doiIdentifiers" class="mave-field-error">{{
-                        validationErrors.doiIdentifiers
-                      }}</span>
-                    </div>
                   </div>
+
                   <div class="mavedb-wizard-row">
                     <div class="mavedb-wizard-help">
-                      <label>
-                        Any publications associated with the score set. You can search for publications to add by DOI,
-                        PubMed ID, bioRxiv ID, or medRxiv ID.
-                      </label>
+                      <label :id="scopedId('input-scoreSetHasMultipleTargetsLabel')"
+                        >Does this score set describe variants with respect to more than one target?</label
+                      >
                       <div class="mavedb-help-small">
-                        Example searches: https://doi.org/10.1038/s41467-023-43041-4 (DOI as link),
-                        10.1038/s41467-023-43041-4 (DOI), 38057330 (a Pubmed ID), 2022.06.10.22276179 (a bioRxiv or
-                        medRxiv ID)
+                        Some experiments might describe variants against two or more distinct target sequences. If this is
+                        the case, your variants will need to be described explicitly from the target they came from.
+                      </div>
+                    </div>
+                    <div class="mavedb-wizard-content">
+                      <InputSwitch
+                        v-model="isMultiTarget"
+                        :aria-labelledby="scopedId('input-scoreSetHasMultipleTargetsLabel')"
+                      />
+                      <div class="mavedb-switch-value">
+                        {{
+                          isMultiTarget
+                            ? 'Yes, variants are described relative to multiple target sequences.'
+                            : 'No, variants are described relative to a single target sequence.'
+                        }}
+                      </div>
+                    </div>
+                  </div>
+
+                  <div v-if="isMultiTarget" class="mavedb-wizard-row">
+                    <div class="mavedb-wizard-help">
+                      <label>How many targets will be included with this score set?</label>
+                    </div>
+                    <div class="mavedb-wizard-content field">
+                      <span class="p-float-label">
+                        <InputNumber
+                          :id="scopedId(`input-numTargets`)"
+                          v-model="numTargets"
+                          button-layout="stacked"
+                          :min="isMultiTarget ? 2 : 1"
+                          show-buttons
+                          suffix=" targets"
+                        />
+                        <label :for="scopedId(`input-numTargets`)">Targets</label>
+                      </span>
+                    </div>
+                  </div>
+                </div>
+                <div class="mavedb-wizard-step-controls-row">
+                  <div class="flex justify-content-between mavedb-wizard-step-controls pt-4">
+                    <Button icon="pi pi-arrow-left" label="Back" severity="secondary" @click="activateCallback(activeWizardStep - 1)" />
+                    <Button
+                      :disabled="maxWizardStepValidated < activeWizardStep"
+                      icon="pi pi-arrow-right"
+                      icon-pos="right"
+                      label="Next"
+                      @click="showNextWizardStepIfValid(activateCallback)"
+                    />
+                  </div>
+                </div>
+              <!-- </template> -->
+            </StepPanel>
+            <StepPanel v-slot="{ activateCallback }" v-for="(targetNum, targetIdx) in numTargets" :key="targetIdx" :value="targetIdx + 3">
+              <!-- <template #header="{index, clickCallback}">
+                <button
+                  class="p-stepper-action"
+                  :disabled="maxWizardStepEntered < index || maxWizardStepValidated < index - 1"
+                  role="tab"
+                  @click="clickCallback"
+                >
+                  <span class="p-stepper-number">{{ index + 1 }}</span>
+                  <span class="p-stepper-title">Target {{ targetNum }}</span>
+                </button>
+              </template> -->
+              <!-- <template #content="{prevCallback: showPreviousWizardStep, nextCallback: showNextWizardStep}"> -->
+                <div class="mavedb-wizard-form">
+                  <div class="mavedb-wizard-form-content-background"></div>
+                  <div v-if="isTargetSequence" class="mavedb-wizard-row">
+                    <div class="mavedb-wizard-help">
+                      <label>Copy target from a previously created target</label>
+                      <div class="mavedb-help-small">
+                        Use this autocomplete field to find an existing target from one of your published or unpublished
+                        score sets in MaveDB and fill this target with its metadata. You'll still be able to edit any
+                        fields below.
                       </div>
                     </div>
                     <div class="mavedb-wizard-content field">
                       <span class="p-float-label">
                         <AutoComplete
-                          :id="scopedId('input-publicationIdentifiers')"
-                          ref="publicationIdentifiersInput"
-                          v-model="publicationIdentifiers"
-                          :multiple="true"
-                          option-label="identifier"
-                          :suggestions="publicationIdentifierSuggestionsList"
-                          @complete="searchPublicationIdentifiers"
-                          @item-select="acceptNewPublicationIdentifier"
-                          @item-unselect="removePublicationIdentifier"
-                          @keyup.escape="clearPublicationIdentifierSearch"
+                          :id="scopedId('input-existingTargetGene')"
+                          ref="existingTargetGeneInput"
+                          v-model="createdTargetGenes[targetIdx].autofilledTargetGene"
+                          field="name"
+                          :force-selection="true"
+                          :suggestions="targetGeneSuggestionsList"
+                          @complete="searchTargetGenes"
+                          @item-select="autofillFromExistingTarget($event, targetIdx)"
                         >
-                          <template #chip="slotProps">
+                          <template #item="slotProps">
                             <div>
-                              <div>
-                                {{ slotProps.value.identifier }}: {{ truncatePublicationTitle(slotProps.value.title) }}
+                              <div>Name: {{ slotProps.item.name }}</div>
+                              <div>Category: {{ textForTargetGeneCategory(slotProps.item.category) }}</div>
+                              <div
+                                v-for="externalIdentifier of slotProps.item.externalIdentifiers"
+                                :key="externalIdentifier.identifier"
+                              >
+                                {{ externalIdentifier.identifier.dbName }}:
+                                {{ externalIdentifier.identifier.identifier }}, Offset: {{ externalIdentifier.offset }}
                               </div>
                             </div>
                           </template>
-                          <template #item="slotProps">
-                            <div>
-                              <div>Title: {{ slotProps.item.title }}</div>
-                              <div>DOI: {{ slotProps.item.doi }}</div>
-                              <div>Identifier: {{ slotProps.item.identifier }}</div>
-                              <div>Database: {{ slotProps.item.dbName }}</div>
-                            </div>
-                          </template>
                         </AutoComplete>
-                        <label :for="scopedId('input-publicationIdentifiers')">Publication identifiers</label>
+                        <label :for="scopedId('input-existingTargetGene')">Copy from an existing target</label>
                       </span>
-                      <span v-if="validationErrors.publicationIdentifiers" class="mave-field-error">{{
-                        validationErrors.publicationIdentifiers
-                      }}</span>
-                    </div>
-                  </div>
-                  <div v-if="publicationIdentifiers.length > 1" class="mavedb-wizard-row">
-                    <div class="mavedb-wizard-help">
-                      <label> Of the above publications, the primary publication that describes the score set. </label>
-                    </div>
-                    <div class="mavedb-wizard-content field">
-                      <span class="p-float-label">
-                        <Multiselect
-                          :id="scopedId('input-primaryPublicationIdentifiers')"
-                          ref="primaryPublicationIdentifiersInput"
-                          v-model="primaryPublicationIdentifiers"
-                          option-label="identifier"
-                          :options="publicationIdentifiers"
-                          placeholder="Select a primary publication (Where the dataset is described)"
-                          :selection-limit="1"
-                          style="width: 100%"
-                        >
-                          <template #option="slotProps">
-                            <div class="field">
-                              <div>Title: {{ slotProps.option.title }}</div>
-                              <div>DOI: {{ slotProps.option.doi }}</div>
-                              <div>Identifier: {{ slotProps.option.identifier }}</div>
-                              <div>Database: {{ slotProps.option.dbName }}</div>
-                            </div>
-                          </template>
-                        </Multiselect>
-                        <label :for="scopedId('input-primaryPublicationIdentifiers')">Primary publication</label>
-                      </span>
-                      <span v-if="validationErrors.primaryPublicationIdentifiers" class="mave-field-error">{{
-                        validationErrors.primaryPublicationIdentifiers
-                      }}</span>
                     </div>
                   </div>
                   <div class="mavedb-wizard-row">
                     <div class="mavedb-wizard-help">
-                      <label> Any additional metadata about the score set, as a JSON file. </label>
-                    </div>
-                    <div class="mavedb-wizard-content field">
-                      <span class="p-float-label">
-                        <FileUpload
-                          :id="scopedId('input-extraMetadataFile')"
-                          accept="application/json"
-                          :auto="false"
-                          choose-label="Extra metadata"
-                          :class="inputClasses.extraMetadataFile"
-                          :custom-upload="true"
-                          :file-limit="1"
-                          :show-cancel-button="false"
-                          :show-upload-button="false"
-                          @remove="fileCleared('extraMetadataFile')"
-                          @select="fileSelected('extraMetadataFile', $event)"
-                        >
-                          <template #empty>
-                            <p>Upload a JSON file here.</p>
-                          </template>
-                        </FileUpload>
-                      </span>
-                      <span v-if="validationErrors.extraMetadata" class="mave-field-error">{{
-                        validationErrors.extraMetadata
-                      }}</span>
-                    </div>
-                  </div>
-                </div>
-              </div>
-              <div class="mavedb-wizard-step-controls-row">
-                <div class="flex justify-content-between mavedb-wizard-step-controls pt-4">
-                  <Button icon="pi pi-arrow-left" label="Back" severity="secondary" @click="showPreviousWizardStep" />
-                  <Button
-                    :disabled="maxWizardStepValidated < activeWizardStep"
-                    icon="pi pi-arrow-right"
-                    icon-pos="right"
-                    label="Next"
-                    @click="showNextWizardStepIfValid(showNextWizardStep)"
-                  />
-                </div>
-              </div>
-            </template>
-          </StepperPanel>
-
-          <StepperPanel>
-            <template #header="{index, clickCallback}">
-              <button
-                class="p-stepper-action"
-                :disabled="maxWizardStepEntered < index || maxWizardStepValidated < index - 1"
-                role="tab"
-                @click="clickCallback"
-              >
-                <span class="p-stepper-number">{{ index + 1 }}</span>
-                <span class="p-stepper-title">Targets</span>
-              </button>
-            </template>
-            <template #content="{prevCallback: showPreviousWizardStep, nextCallback: showNextWizardStep}">
-              <div class="mavedb-wizard-form">
-                <div class="mavedb-wizard-form-content-background"></div>
-                <div class="mavedb-wizard-row">
-                  <div class="mavedb-wizard-help">
-                    <label :id="scopedId('input-scoreSetIsSequenceBasedLabel')"
-                      >Will you be uploading the target sequences used for your assay?</label
-                    >
-                    <div class="mavedb-help-small">
-                      The target sequence is the sequence that was mutagenized to create the variant library, such as in
-                      a cDNA-based deep mutational scan. If your variants were generated by editing the genome directly
-                      (e.g., using saturation genome editing or base editing), you should provide an Ensembl or RefSeq
-                      accession instead of uploading the target locus sequence as your own target.
-                    </div>
-                  </div>
-                  <div class="mavedb-wizard-content">
-                    <InputSwitch
-                      v-model="isTargetSequence"
-                      :aria-labelledby="scopedId('input-scoreSetIsSequenceBasedLabel')"
-                    />
-                    <div class="mavedb-switch-value">
-                      {{
-                        isTargetSequence
-                          ? 'Yes, variants are described relative to a target sequence.'
-                          : 'No, variants are described relative to a RefSeq or Ensembl accession (either a transcript or chromosome).'
-                      }}
-                    </div>
-                  </div>
-                </div>
-
-                <div v-if="!isTargetSequence" class="mavedb-wizard-row">
-                  <div class="mavedb-wizard-help">
-                    <label :id="scopedId('input-isBaseEditorData')"
-                      >Does this score set reperesent base editor data?</label
-                    >
-                    <div class="mavedb-help-small">
-                      Base editor data is a type of functional assay that is similar in many respects to MAVE data. When
-                      uploading base editor data, you must also include a 'guide_sequence' column in your uploaded
-                      scores (and counts) file(s).
-                    </div>
-                  </div>
-                  <div class="mavedb-wizard-content">
-                    <InputSwitch v-model="isBaseEditor" :aria-labelledby="scopedId('input-isBaseEditorData')" />
-                    <div class="mavedb-switch-value">
-                      {{
-                        isBaseEditor
-                          ? 'Yes, this score set represents base editor data.'
-                          : 'No, this score set does not represent base editor data.'
-                      }}
-                    </div>
-                  </div>
-                </div>
-
-                <div class="mavedb-wizard-row">
-                  <div class="mavedb-wizard-help">
-                    <label :id="scopedId('input-scoreSetHasMultipleTargetsLabel')"
-                      >Does this score set describe variants with respect to more than one target?</label
-                    >
-                    <div class="mavedb-help-small">
-                      Some experiments might describe variants against two or more distinct target sequences. If this is
-                      the case, your variants will need to be described explicitly from the target they came from.
-                    </div>
-                  </div>
-                  <div class="mavedb-wizard-content">
-                    <InputSwitch
-                      v-model="isMultiTarget"
-                      :aria-labelledby="scopedId('input-scoreSetHasMultipleTargetsLabel')"
-                    />
-                    <div class="mavedb-switch-value">
-                      {{
-                        isMultiTarget
-                          ? 'Yes, variants are described relative to multiple target sequences.'
-                          : 'No, variants are described relative to a single target sequence.'
-                      }}
-                    </div>
-                  </div>
-                </div>
-
-                <div v-if="isMultiTarget" class="mavedb-wizard-row">
-                  <div class="mavedb-wizard-help">
-                    <label>How many targets will be included with this score set?</label>
-                  </div>
-                  <div class="mavedb-wizard-content field">
-                    <span class="p-float-label">
-                      <InputNumber
-                        :id="scopedId(`input-numTargets`)"
-                        v-model="numTargets"
-                        button-layout="stacked"
-                        :min="isMultiTarget ? 2 : 1"
-                        show-buttons
-                        suffix=" targets"
-                      />
-                      <label :for="scopedId(`input-numTargets`)">Targets</label>
-                    </span>
-                  </div>
-                </div>
-              </div>
-              <div class="mavedb-wizard-step-controls-row">
-                <div class="flex justify-content-between mavedb-wizard-step-controls pt-4">
-                  <Button icon="pi pi-arrow-left" label="Back" severity="secondary" @click="showPreviousWizardStep" />
-                  <Button
-                    :disabled="maxWizardStepValidated < activeWizardStep"
-                    icon="pi pi-arrow-right"
-                    icon-pos="right"
-                    label="Next"
-                    @click="showNextWizardStepIfValid(showNextWizardStep)"
-                  />
-                </div>
-              </div>
-            </template>
-          </StepperPanel>
-
-          <!-- Annoyingly, `idx in numTargets` is 1-indexed. -->
-          <StepperPanel v-for="(targetNum, targetIdx) in numTargets" :key="targetIdx">
-            <template #header="{index, clickCallback}">
-              <button
-                class="p-stepper-action"
-                :disabled="maxWizardStepEntered < index || maxWizardStepValidated < index - 1"
-                role="tab"
-                @click="clickCallback"
-              >
-                <span class="p-stepper-number">{{ index + 1 }}</span>
-                <span class="p-stepper-title">Target {{ targetNum }}</span>
-              </button>
-            </template>
-            <template #content="{prevCallback: showPreviousWizardStep, nextCallback: showNextWizardStep}">
-              <div class="mavedb-wizard-form">
-                <div class="mavedb-wizard-form-content-background"></div>
-                <div v-if="isTargetSequence" class="mavedb-wizard-row">
-                  <div class="mavedb-wizard-help">
-                    <label>Copy target from a previously created target</label>
-                    <div class="mavedb-help-small">
-                      Use this autocomplete field to find an existing target from one of your published or unpublished
-                      score sets in MaveDB and fill this target with its metadata. You'll still be able to edit any
-                      fields below.
-                    </div>
-                  </div>
-                  <div class="mavedb-wizard-content field">
-                    <span class="p-float-label">
-                      <AutoComplete
-                        :id="scopedId('input-existingTargetGene')"
-                        ref="existingTargetGeneInput"
-                        v-model="createdTargetGenes[targetIdx].autofilledTargetGene"
-                        field="name"
-                        :force-selection="true"
-                        :suggestions="targetGeneSuggestionsList"
-                        @complete="searchTargetGenes"
-                        @item-select="autofillFromExistingTarget($event, targetIdx)"
-                      >
-                        <template #item="slotProps">
-                          <div>
-                            <div>Name: {{ slotProps.item.name }}</div>
-                            <div>Category: {{ textForTargetGeneCategory(slotProps.item.category) }}</div>
-                            <div
-                              v-for="externalIdentifier of slotProps.item.externalIdentifiers"
-                              :key="externalIdentifier.identifier"
-                            >
-                              {{ externalIdentifier.identifier.dbName }}:
-                              {{ externalIdentifier.identifier.identifier }}, Offset: {{ externalIdentifier.offset }}
-                            </div>
-                          </div>
-                        </template>
-                      </AutoComplete>
-                      <label :for="scopedId('input-existingTargetGene')">Copy from an existing target</label>
-                    </span>
-                  </div>
-                </div>
-                <div class="mavedb-wizard-row">
-                  <div class="mavedb-wizard-help">
-                    <label>The name of the target</label>
-                    <div class="mavedb-help-small">
-                      This name will be used to identify the target on the score set page and can be used to autofill
-                      from this target in the future. Most users choose to name this target after the associated gene,
-                      if applicable.
-                    </div>
-                  </div>
-                  <div class="mavedb-wizard-content field">
-                    <span class="p-float-label">
-                      <InputText
-                        :id="scopedId('input-targetGeneName')"
-                        v-model="createdTargetGenes[targetIdx].targetGene.name"
-                        style="width: 100%"
-                      />
-                      <label :for="scopedId('input-targetGeneName')">Target name</label>
-                    </span>
-                    <span v-if="validationErrors[`targetGene.${targetIdx}.name`]" class="mave-field-error">{{
-                      validationErrors[`targetGene.${targetIdx}.name`]
-                    }}</span>
-                  </div>
-                </div>
-
-                <div v-if="isTargetSequence">
-                  <div v-if="numTargets > 1" class="mavedb-wizard-row">
-                    <div class="mavedb-wizard-help">
-                      <label>The label of the target</label>
+                      <label>The name of the target</label>
                       <div class="mavedb-help-small">
-                        This label is what you use in your variants file to indicate which of your targets the variant
-                        is described relative to. Because it is used with MAVE-HGVS strings, it may not contain any
-                        spaces or colons.
+                        This name will be used to identify the target on the score set page and can be used to autofill
+                        from this target in the future. Most users choose to name this target after the associated gene,
+                        if applicable.
                       </div>
                     </div>
                     <div class="mavedb-wizard-content field">
                       <span class="p-float-label">
                         <InputText
-                          :id="scopedId('input-targetGeneLabel')"
-                          v-model="createdTargetGenes[targetIdx].targetGene.targetSequence.label"
+                          :id="scopedId('input-targetGeneName')"
+                          v-model="createdTargetGenes[targetIdx].targetGene.name"
                           style="width: 100%"
                         />
-                        <label :for="scopedId('input-targetGeneLabel')">Target label</label>
+                        <label :for="scopedId('input-targetGeneName')">Target name</label>
                       </span>
-                      <span
-                        v-if="validationErrors[`targetGene.${targetIdx}.targetSequence.label`]"
-                        class="mave-field-error"
-                        >{{ validationErrors[`targetGene.${targetIdx}.targetSequence.label`] }}</span
-                      >
-                    </div>
-                  </div>
-
-                  <div class="mavedb-wizard-row">
-                    <div class="mavedb-wizard-help">
-                      <label :id="scopedId('input-targetGeneCategory')">The functional category of the target</label>
-                    </div>
-                    <div class="mavedb-wizard-content">
-                      <span class="p-float-label">
-                        <span class="p-float-label">
-                          <SelectButton
-                            :id="scopedId('input-targetGeneCategory')"
-                            v-model="createdTargetGenes[targetIdx].targetGene.category"
-                            :option-label="textForTargetGeneCategory"
-                            :options="targetGeneCategories"
-                          />
-                        </span>
-                      </span>
-                      <span v-if="validationErrors[`targetGene.${targetIdx}.category`]" class="mave-field-error">{{
-                        validationErrors[`targetGene.${targetIdx}.category`]
+                      <span v-if="validationErrors[`targetGene.${targetIdx}.name`]" class="mave-field-error">{{
+                        validationErrors[`targetGene.${targetIdx}.name`]
                       }}</span>
                     </div>
                   </div>
 
-                  <div v-for="dbName of externalGeneDatabases" :key="dbName" class="mavedb-wizard-row">
+                  <div v-if="isTargetSequence">
+                    <div v-if="numTargets > 1" class="mavedb-wizard-row">
+                      <div class="mavedb-wizard-help">
+                        <label>The label of the target</label>
+                        <div class="mavedb-help-small">
+                          This label is what you use in your variants file to indicate which of your targets the variant
+                          is described relative to. Because it is used with MAVE-HGVS strings, it may not contain any
+                          spaces or colons.
+                        </div>
+                      </div>
+                      <div class="mavedb-wizard-content field">
+                        <span class="p-float-label">
+                          <InputText
+                            :id="scopedId('input-targetGeneLabel')"
+                            v-model="createdTargetGenes[targetIdx].targetGene.targetSequence.label"
+                            style="width: 100%"
+                          />
+                          <label :for="scopedId('input-targetGeneLabel')">Target label</label>
+                        </span>
+                        <span
+                          v-if="validationErrors[`targetGene.${targetIdx}.targetSequence.label`]"
+                          class="mave-field-error"
+                          >{{ validationErrors[`targetGene.${targetIdx}.targetSequence.label`] }}</span
+                        >
+                      </div>
+                    </div>
+
+                    <div class="mavedb-wizard-row">
+                      <div class="mavedb-wizard-help">
+                        <label :id="scopedId('input-targetGeneCategory')">The functional category of the target</label>
+                      </div>
+                      <div class="mavedb-wizard-content">
+                        <span class="p-float-label">
+                          <span class="p-float-label">
+                            <SelectButton
+                              :id="scopedId('input-targetGeneCategory')"
+                              v-model="createdTargetGenes[targetIdx].targetGene.category"
+                              :option-label="textForTargetGeneCategory"
+                              :options="targetGeneCategories"
+                            />
+                          </span>
+                        </span>
+                        <span v-if="validationErrors[`targetGene.${targetIdx}.category`]" class="mave-field-error">{{
+                          validationErrors[`targetGene.${targetIdx}.category`]
+                        }}</span>
+                      </div>
+                    </div>
+
+                    <div v-for="dbName of externalGeneDatabases" :key="dbName" class="mavedb-wizard-row">
+                      <div class="mavedb-wizard-help">
+                        <label :id="scopedId(`input-targetGeneExternalDatabase${dbName}Label`)"
+                          >Link this target to a {{ dbName }} accession</label
+                        >
+                        <!-- only display this verbose help on the first of the external gene database selections. -->
+                        <div v-if="dbName === externalGeneDatabases[0]" class="mavedb-help-small">
+                          If the target sequence provided to MaveDB starts partway through the linked sequence (such as an
+                          assay targeting a single functional domain), the target should also have an “offset”. The offset
+                          is the integer value that should be added to the MaveDB coordinates (which are relative to the
+                          target sequence) in order to match the coordinates in the linked sequence.
+                        </div>
+                      </div>
+                      <div class="mavedb-wizard-content">
+                        <InputSwitch
+                          v-model="createdTargetGenes[targetIdx].linkedAccessions[dbName]"
+                          :aria-labelledby="scopedId(`input-targetGeneExternalDatabase${dbName}Label`)"
+                        />
+                        <div class="mavedb-switch-value">
+                          {{
+                            createdTargetGenes[targetIdx].linkedAccessions[dbName]
+                              ? `Yes, link this target to a ${dbName} accession.`
+                              : `No, do not link this target to a ${dbName} accession.`
+                          }}
+                        </div>
+                        <div
+                          v-if="createdTargetGenes[targetIdx].linkedAccessions[dbName]"
+                          class="mavedb-wizard-subcontent field-columns"
+                        >
+                          <div class="p-float-label field-column">
+                            <AutoComplete
+                              :id="scopedId(`input-${dbName.toLowerCase()}Identifier`)"
+                              v-model="createdTargetGenes[targetIdx].targetGene.externalIdentifiers[dbName].identifier"
+                              field="identifier"
+                              :force-selection="false"
+                              style="width: 100%"
+                              :suggestions="targetGeneIdentifierSuggestionsList[dbName]"
+                              @change="externalTargetIdentifierChanged(dbName, targetIdx, $event)"
+                              @complete="searchTargetGeneIdentifiers(dbName, $event)"
+                            />
+                            <label :for="scopedId(`input-${dbName.toLowerCase()}Identifier`)"
+                              >{{ dbName }} identifier</label
+                            >
+                          </div>
+                          <span class="p-float-label">
+                            <InputNumber
+                              :id="scopedId(`input-${dbName.toLowerCase()}Offset`)"
+                              v-model="createdTargetGenes[targetIdx].targetGene.externalIdentifiers[dbName].offset"
+                              button-layout="stacked"
+                              :min="0"
+                              show-buttons
+                              suffix=" bp"
+                            />
+                            <label :for="scopedId(`input-${dbName.toLowerCase()}Offset`)">Offset</label>
+                          </span>
+                        </div>
+                        <span
+                          v-if="validationErrors[`targetGene.${targetIdx}.externalIdentifiers.${dbName}`]"
+                          class="mave-field-error"
+                          >{{ validationErrors[`targetGene.${targetIdx}.externalIdentifiers.${dbName}`] }}</span
+                        >
+                        <span
+                          v-if="validationErrors[`targetGene.${targetIdx}.externalIdentifiers.${dbName}.identifier`]"
+                          class="mave-field-error"
+                          >{{
+                            validationErrors[`targetGene.${targetIdx}.externalIdentifiers.${dbName}.identifier`]
+                          }}</span
+                        >
+                        <span
+                          v-if="validationErrors[`targetGene.${targetIdx}.externalIdentifiers.${dbName}.offset`]"
+                          class="mave-field-error"
+                          >{{ validationErrors[`targetGene.${targetIdx}.externalIdentifiers.${dbName}.offset`] }}</span
+                        >
+                      </div>
+                    </div>
+                    <div class="mavedb-wizard-row">
+                      <div class="mavedb-wizard-help">
+                        <label :id="scopedId('input-targetGeneTaxonomyLabel')"
+                          >The taxonomy group to which this target belongs</label
+                        >
+                        <div class="mavedb-help-small">
+                          For more details about taxonomy, see the
+                          <a href="https://www.ncbi.nlm.nih.gov/books/NBK53758/" target="_blank"
+                            >NCBI taxonomy help page.</a
+                          >
+                        </div>
+                      </div>
+                      <div class="mavedb-wizard-content">
+                        <span class="p-float-label">
+                          <AutoComplete
+                            :id="scopedId('input-targetGeneTaxonomyLabel')"
+                            ref="taxonomyInput"
+                            v-model="createdTargetGenes[targetIdx].targetGene.targetSequence.taxonomy"
+                            dropdown
+                            field="organismName"
+                            force-selection
+                            :multiple="false"
+                            :options="taxonomies"
+                            style="width: 100%"
+                            :suggestions="taxonomySuggestionsList"
+                            @complete="searchTaxonomies"
+                            @keyup.escape="clearTaxonomySearch"
+                          >
+                            <template #item="slotProps">
+                              {{ slotProps.item.code }} - {{ slotProps.item.organismName }}
+                              <template v-if="slotProps.item.commonName !== 'NULL' && slotProps.item.commonName !== null"
+                                >/ {{ slotProps.item.commonName }}</template
+                              >
+                            </template>
+                          </AutoComplete>
+                          <label :for="scopedId('input-targetGeneTaxonomyLabel')">Taxonomy</label>
+                        </span>
+                        <span
+                          v-if="validationErrors[`targetGene.${targetIdx}.targetSequence.taxonomy`]"
+                          class="mave-field-error"
+                          >{{ validationErrors[`targetGene.${targetIdx}.targetSequence.taxonomy`] }}</span
+                        >
+                      </div>
+                    </div>
+                    <div class="mavedb-wizard-row">
+                      <div class="mavedb-wizard-help">
+                        <label :id="scopedId('input-targetGeneSequenceTypeLabel')">The sequence type of the target</label>
+                      </div>
+                      <div class="mavedb-wizard-content">
+                        <span class="p-float-label">
+                          <SelectButton
+                            :id="scopedId('input-targetGeneSequenceType')"
+                            v-model="createdTargetGenes[targetIdx].targetGene.targetSequence.sequenceType"
+                            :options="sequenceTypes"
+                          />
+                        </span>
+                        <span
+                          v-if="validationErrors[`targetGene.${targetIdx}.targetSequence.sequenceType`]"
+                          class="mave-field-error"
+                          >{{ validationErrors[`targetGene.${targetIdx}.targetSequence.sequenceType`] }}</span
+                        >
+                      </div>
+                    </div>
+                    <div class="mavedb-wizard-row">
+                      <div class="mavedb-wizard-help">
+                        <label :id="scopedId('input-targetGeneSequenceFileLabel')">The sequence of the target</label>
+                        <div class="mavedb-help-small">
+                          Variants will be validated against this sequence. Note that the first position in the sequence
+                          is numbered as position 1 when validating variants.
+                        </div>
+                      </div>
+                      <div class="mavedb-wizard-content">
+                        <span class="p-float-label">
+                          <FileUpload
+                            :id="scopedId('input-targetGeneSequenceFileLabel')"
+                            ref="sequenceFileUpload"
+                            :auto="false"
+                            choose-label="Reference sequence"
+                            :class="inputClasses.targetGeneTargetSequenceSequenceFile"
+                            :custom-upload="true"
+                            :file-limit="1"
+                            :show-cancel-button="false"
+                            :show-upload-button="false"
+                            @remove="fileCleared('targetGeneTargetSequenceSequenceFile', targetIdx)"
+                            @select="fileSelected('targetGeneTargetSequenceSequenceFile', $event, targetIdx)"
+                          >
+                            <template #empty>
+                              <div v-if="createdTargetGenes[targetIdx].targetGene.targetSequence.sequence != null">
+                                <Textarea
+                                  v-model="createdTargetGenes[targetIdx].targetGene.targetSequence.sequence"
+                                  disabled
+                                  rows="5"
+                                  style="width: 100%; max-width: 60em; word-wrap: break-word; font-family: monospace"
+                                />
+                                <small
+                                  >This sequence was set by the autofilled target. To use a different sequence, upload a
+                                  new FASTA file.</small
+                                >
+                              </div>
+                              <div v-else>
+                                <p>
+                                  Drop a
+                                  <a href="https://blast.ncbi.nlm.nih.gov/doc/blast-topics/#fasta" target="_blank"
+                                    >FASTA</a
+                                  >
+                                  file here
+                                </p>
+                              </div>
+                            </template>
+                          </FileUpload>
+                        </span>
+                        <span
+                          v-if="validationErrors[`targetGene.${targetIdx}.targetSequence.sequence`]"
+                          class="mave-field-error"
+                          >{{ validationErrors[`targetGene.${targetIdx}.targetSequence.sequence`] }}</span
+                        >
+                      </div>
+                    </div>
+                  </div>
+                  <div v-else>
+                    <div class="mavedb-wizard-row">
+                      <div class="mavedb-wizard-help">
+                        <label :id="scopedId('input-targetDescribesChromosomeLabel')"
+                          >Does this target represent a whole chromosome?</label
+                        >
+                        <div class="mavedb-help-small">
+                          Some score sets might describe variants relative to an entire chromosome, while others will
+                          describe variants relative to a RefSeq or Ensembl accession representing a gene.
+                        </div>
+                      </div>
+                      <div class="mavedb-wizard-content">
+                        <InputSwitch
+                          v-model="createdTargetGenes[targetIdx].isRelativeToChromosome"
+                          :aria-labelledby="scopedId('input-targetDescribesChromosomeLabel')"
+                          @change="refreshAccessionOptions(targetIdx)"
+                        />
+                        <div class="mavedb-switch-value">
+                          {{
+                            createdTargetGenes[targetIdx].isRelativeToChromosome
+                              ? 'Yes, this target represents an entire chromosome.'
+                              : 'No, this target represents a gene.'
+                          }}
+                        </div>
+                      </div>
+                    </div>
+                    <div v-if="createdTargetGenes[targetIdx].isRelativeToChromosome" class="mavedb-wizard-row">
+                      <div class="mavedb-wizard-help">
+                        <label :id="scopedId('input-targetGeneAssemblyLabel')">The assembly for this accession</label>
+                      </div>
+                      <div class="mavedb-wizard-content">
+                        <span class="p-float-label">
+                          <!-- Assembly is the reference genome property in coordinate cases -->
+                          <Dropdown
+                            v-model="createdTargetGenes[targetIdx].targetGene.targetAccession.assembly"
+                            :aria-labelledby="scopedId('input-targetGeneAssemblyLabel')"
+                            :options="assemblies"
+                            style="width: 100%"
+                            @change="refreshAccessionOptions(targetIdx)"
+                          />
+                          <label :for="scopedId('input-targetGeneAssemblyLabel')">Assembly</label>
+                        </span>
+                        <span
+                          v-if="validationErrors[`targetGene.${targetIdx}.targetAccession.assembly`]"
+                          class="mave-field-error"
+                          >{{ validationErrors[`targetGene.${targetIdx}.targetAccession.assembly`] }}</span
+                        >
+                      </div>
+                    </div>
+                    <div v-else class="mavedb-wizard-row">
+                      <div class="mavedb-wizard-help">
+                        <label :id="scopedId('input-targetGeneGeneNameLabel')">The gene name for this accession</label>
+                      </div>
+                      <div class="mavedb-wizard-content">
+                        <span class="p-float-label">
+                          <Dropdown
+                            :id="scopedId('input-targetGeneGeneNameLabel')"
+                            v-model="createdTargetGenes[targetIdx].targetGene.targetAccession.gene"
+                            filter
+                            option-label="name"
+                            :options="geneNamesAsObject"
+                            style="width: 100%"
+                            :virtual-scroller-options="{itemSize: 50}"
+                            @change="autofillGeneName($event, targetIdx)"
+                          />
+                          <label :for="scopedId('input-targetGeneGeneNameLabel')">HGNC Name</label>
+                        </span>
+                        <span
+                          v-if="validationErrors[`targetGene.${targetIdx}.targetAccession.gene`]"
+                          class="mave-field-error"
+                          >{{ validationErrors[`targetGene.${targetIdx}.targetAccession.gene`] }}</span
+                        >
+                      </div>
+                    </div>
+
+                    <div class="mavedb-wizard-row">
+                      <div class="mavedb-wizard-help">
+                        <label :id="scopedId('input-targetGeneAccessionLabel')"
+                          >The accession identifier for this target</label
+                        >
+                        <div class="mavedb-help-small">
+                          This will be the sequence that your variants are described against. It may be a RefSeq or
+                          Ensemble identifier. Available accessions matching the
+                          {{ createdTargetGenes[targetIdx].isRelativeToChromosome ? 'assembly' : 'gene name' }} will be
+                          displayed once one is selected.
+                        </div>
+                      </div>
+                      <div class="mavedb-wizard-content">
+                        <span class="p-float-label">
+                          <AutoComplete
+                            :id="scopedId('input-targetGeneAccessionLabel')"
+                            v-model="createdTargetGenes[targetIdx].targetGene.targetAccession.accession"
+                            :dropdown="true"
+                            :force-selection="true"
+                            style="width: 100%"
+                            :suggestions="accessionSuggestions"
+                            @complete="fetchTargetAccessions($event)"
+                          />
+                          <label :for="scopedId('input-targetGeneAccessionLabel')"> Accession Identifier </label>
+                        </span>
+                        <div v-if="showSwitchToProteinAccessionButton(targetIdx)" class="mavedb-wizard-subcontent">
+                          <Button
+                            icon="pi pi-arrows-h"
+                            label="Switch to Protein Accession"
+                            severity="info"
+                            @click="swapNucleotideProteinAccessions(targetIdx)"
+                          />
+                        </div>
+                        <span
+                          v-if="validationErrors[`targetGene.${targetIdx}.targetAccession.accession`]"
+                          class="mave-field-error"
+                          >{{ validationErrors[`targetGene.${targetIdx}.targetAccession.accession`] }}</span
+                        >
+                      </div>
+                    </div>
+                    <div class="mavedb-wizard-row">
+                      <div class="mavedb-wizard-help">
+                        <label :id="scopedId('input-targetGeneCategoryLabel')">The genetic category of the target</label>
+                      </div>
+                      <div class="mavedb-wizard-content">
+                        <span class="p-float-label">
+                          <span class="p-float-label">
+                            <SelectButton
+                              :id="scopedId('input-targetGeneCategoryLabel')"
+                              v-model="createdTargetGenes[targetIdx].targetGene.category"
+                              :option-label="textForTargetGeneCategory"
+                              :options="targetGeneCategories"
+                            />
+                          </span>
+                        </span>
+                        <span v-if="validationErrors[`targetGene.${targetIdx}.category`]" class="mave-field-error">{{
+                          validationErrors[`targetGene.${targetIdx}.category`]
+                        }}</span>
+                      </div>
+                    </div>
+                  </div>
+                </div>
+                <div class="mavedb-wizard-step-controls-row">
+                  <div class="flex justify-content-between mavedb-wizard-step-controls pt-4">
+                    <Button icon="pi pi-arrow-left" label="Back" severity="secondary" @click="activateCallback(activeWizardStep - 1)" />
+                    <Button
+                      :disabled="maxWizardStepValidated < activeWizardStep"
+                      icon="pi pi-arrow-right"
+                      icon-pos="right"
+                      label="Next"
+                      @click="showNextWizardStepIfValid(activateCallback)"
+                    />
+                  </div>
+                </div>
+              <!-- </template> -->
+            </StepPanel>
+
+            <StepPanel v-slot="{ activateCallback }" :value="numTargets + 3">
+              <!-- <template #header="{index, clickCallback}">
+                <button
+                  class="p-stepper-action"
+                  :disabled="maxWizardStepEntered < index || maxWizardStepValidated < index - 1"
+                  role="tab"
+                  @click="clickCallback"
+                >
+                  <span class="p-stepper-number">{{ index + 1 }}</span>
+                  <span class="p-stepper-title">Score Calibrations</span>
+                </button>
+              </template> -->
+              <!-- <template #content="{prevCallback: showPreviousWizardStep, nextCallback: showNextWizardStep}"> -->
+                <div class="mavedb-wizard-form">
+                  <div class="mavedb-wizard-form-content-background"></div>
+                  <div class="mavedb-wizard-row">
                     <div class="mavedb-wizard-help">
-                      <label :id="scopedId(`input-targetGeneExternalDatabase${dbName}Label`)"
-                        >Link this target to a {{ dbName }} accession</label
+                      <label :id="scopedId('input-investigatorIsProvidingScoreCalibrations')"
+                        >Will you be providing score calibrations for this score set?</label
                       >
-                      <!-- only display this verbose help on the first of the external gene database selections. -->
-                      <div v-if="dbName === externalGeneDatabases[0]" class="mavedb-help-small">
-                        If the target sequence provided to MaveDB starts partway through the linked sequence (such as an
-                        assay targeting a single functional domain), the target should also have an “offset”. The offset
-                        is the integer value that should be added to the MaveDB coordinates (which are relative to the
-                        target sequence) in order to match the coordinates in the linked sequence.
+                      <div class="mavedb-help-small">
+                        Score calibrations provide additional clinical context to the scores you upload. If you provide
+                        score calibrations, you may classify each range as having either normal, abnormal, or an
+                        unspecified function. If you provide a range with normal function, you should also provide a
+                        baseline score that falls within the normal range. This score is the expected score for baseline
+                        variants.
                       </div>
                     </div>
                     <div class="mavedb-wizard-content">
                       <InputSwitch
-                        v-model="createdTargetGenes[targetIdx].linkedAccessions[dbName]"
-                        :aria-labelledby="scopedId(`input-targetGeneExternalDatabase${dbName}Label`)"
+                        v-model="investigatorIsProvidingScoreCalibrations"
+                        :aria-labelledby="scopedId('input-investigatorIsProvidingScoreCalibrations')"
                       />
                       <div class="mavedb-switch-value">
                         {{
-                          createdTargetGenes[targetIdx].linkedAccessions[dbName]
-                            ? `Yes, link this target to a ${dbName} accession.`
-                            : `No, do not link this target to a ${dbName} accession.`
+                          investigatorIsProvidingScoreCalibrations
+                            ? 'Yes, I will be providing score range data.'
+                            : 'No, I will not be providing score range data.'
                         }}
                       </div>
-                      <div
-                        v-if="createdTargetGenes[targetIdx].linkedAccessions[dbName]"
-                        class="mavedb-wizard-subcontent field-columns"
-                      >
-                        <div class="p-float-label field-column">
-                          <AutoComplete
-                            :id="scopedId(`input-${dbName.toLowerCase()}Identifier`)"
-                            v-model="createdTargetGenes[targetIdx].targetGene.externalIdentifiers[dbName].identifier"
-                            field="identifier"
-                            :force-selection="false"
-                            style="width: 100%"
-                            :suggestions="targetGeneIdentifierSuggestionsList[dbName]"
-                            @change="externalTargetIdentifierChanged(dbName, targetIdx, $event)"
-                            @complete="searchTargetGeneIdentifiers(dbName, $event)"
-                          />
-                          <label :for="scopedId(`input-${dbName.toLowerCase()}Identifier`)"
-                            >{{ dbName }} identifier</label
-                          >
-                        </div>
-                        <span class="p-float-label">
-                          <InputNumber
-                            :id="scopedId(`input-${dbName.toLowerCase()}Offset`)"
-                            v-model="createdTargetGenes[targetIdx].targetGene.externalIdentifiers[dbName].offset"
-                            button-layout="stacked"
-                            :min="0"
-                            show-buttons
-                            suffix=" bp"
-                          />
-                          <label :for="scopedId(`input-${dbName.toLowerCase()}Offset`)">Offset</label>
-                        </span>
-                      </div>
-                      <span
-                        v-if="validationErrors[`targetGene.${targetIdx}.externalIdentifiers.${dbName}`]"
-                        class="mave-field-error"
-                        >{{ validationErrors[`targetGene.${targetIdx}.externalIdentifiers.${dbName}`] }}</span
-                      >
-                      <span
-                        v-if="validationErrors[`targetGene.${targetIdx}.externalIdentifiers.${dbName}.identifier`]"
-                        class="mave-field-error"
-                        >{{
-                          validationErrors[`targetGene.${targetIdx}.externalIdentifiers.${dbName}.identifier`]
-                        }}</span
-                      >
-                      <span
-                        v-if="validationErrors[`targetGene.${targetIdx}.externalIdentifiers.${dbName}.offset`]"
-                        class="mave-field-error"
-                        >{{ validationErrors[`targetGene.${targetIdx}.externalIdentifiers.${dbName}.offset`] }}</span
-                      >
                     </div>
                   </div>
+                  <div v-if="investigatorIsProvidingScoreCalibrations">
+                    <CalibrationEditor
+                      :calibration-draft-ref="calibrationCreateDraft"
+                      :validation-errors="calibrationValidationErrors || {}"
+                    />
+                  </div>
+                </div>
+                <div class="mavedb-wizard-step-controls-row">
+                  <div class="flex justify-content-between mavedb-wizard-step-controls pt-5">
+                    <Button icon="pi pi-arrow-left" label="Back" severity="secondary" @click="activateCallback(activeWizardStep - 1)" />
+                    <Button
+                      :disabled="maxWizardStepValidated < activeWizardStep"
+                      icon="pi pi-arrow-right"
+                      icon-pos="right"
+                      label="Next"
+                      @click="showNextWizardStepIfValid(activateCallback)"
+                    />
+                  </div>
+                </div>
+              <!-- </template> -->
+            </StepPanel>
+
+            <StepPanel v-slot="{ activateCallback }" :value="numTargets + 4">
+              <!-- <template #header="{index, clickCallback}">
+                <button
+                  class="p-stepper-action"
+                  :disabled="maxWizardStepEntered < index || maxWizardStepValidated < index - 1"
+                  role="tab"
+                  @click="clickCallback"
+                >
+                  <span class="p-stepper-number">{{ index + 1 }}</span>
+                  <span class="p-stepper-title">Variant scores</span>
+                </button>
+              </template> -->
+              <!-- <template #content="{prevCallback: showPreviousWizardStep}"> -->
+                <div class="mavedb-wizard-form">
+                  <div class="mavedb-wizard-form-content-background"></div>
                   <div class="mavedb-wizard-row">
-                    <div class="mavedb-wizard-help">
-                      <label :id="scopedId('input-targetGeneTaxonomyLabel')"
-                        >The taxonomy group to which this target belongs</label
-                      >
-                      <div class="mavedb-help-small">
-                        For more details about taxonomy, see the
-                        <a href="https://www.ncbi.nlm.nih.gov/books/NBK53758/" target="_blank"
-                          >NCBI taxonomy help page.</a
-                        >
-                      </div>
-                    </div>
                     <div class="mavedb-wizard-content">
-                      <span class="p-float-label">
-                        <AutoComplete
-                          :id="scopedId('input-targetGeneTaxonomyLabel')"
-                          ref="taxonomyInput"
-                          v-model="createdTargetGenes[targetIdx].targetGene.targetSequence.taxonomy"
-                          dropdown
-                          field="organismName"
-                          force-selection
-                          :multiple="false"
-                          :options="taxonomies"
-                          style="width: 100%"
-                          :suggestions="taxonomySuggestionsList"
-                          @complete="searchTaxonomies"
-                          @keyup.escape="clearTaxonomySearch"
-                        >
-                          <template #item="slotProps">
-                            {{ slotProps.item.code }} - {{ slotProps.item.organismName }}
-                            <template v-if="slotProps.item.commonName !== 'NULL' && slotProps.item.commonName !== null"
-                              >/ {{ slotProps.item.commonName }}</template
-                            >
-                          </template>
-                        </AutoComplete>
-                        <label :for="scopedId('input-targetGeneTaxonomyLabel')">Taxonomy</label>
-                      </span>
-                      <span
-                        v-if="validationErrors[`targetGene.${targetIdx}.targetSequence.taxonomy`]"
-                        class="mave-field-error"
-                        >{{ validationErrors[`targetGene.${targetIdx}.targetSequence.taxonomy`] }}</span
-                      >
+                      <Message v-if="createdTargetGenes[0]?.targetAccession?.accession" closable severity="info">
+                        When defining variants against an accession based target, uploaded variant coordinates should be
+                        fully qualified with respect to target names or target accessions (e.g: NC_000001.1:c.1A>C).
+                      </Message>
+                      <Message v-else-if="numTargets > 1" closable severity="info">
+                        When defining variants against multiple targets, uploaded variant coordinates should be fully
+                        qualified with respect to target names or target accessions.
+                      </Message>
                     </div>
                   </div>
                   <div class="mavedb-wizard-row">
                     <div class="mavedb-wizard-help">
-                      <label :id="scopedId('input-targetGeneSequenceTypeLabel')">The sequence type of the target</label>
-                    </div>
-                    <div class="mavedb-wizard-content">
-                      <span class="p-float-label">
-                        <SelectButton
-                          :id="scopedId('input-targetGeneSequenceType')"
-                          v-model="createdTargetGenes[targetIdx].targetGene.targetSequence.sequenceType"
-                          :options="sequenceTypes"
-                        />
-                      </span>
-                      <span
-                        v-if="validationErrors[`targetGene.${targetIdx}.targetSequence.sequenceType`]"
-                        class="mave-field-error"
-                        >{{ validationErrors[`targetGene.${targetIdx}.targetSequence.sequenceType`] }}</span
-                      >
-                    </div>
-                  </div>
-                  <div class="mavedb-wizard-row">
-                    <div class="mavedb-wizard-help">
-                      <label :id="scopedId('input-targetGeneSequenceFileLabel')">The sequence of the target</label>
+                      <div>
+                        <label :id="scopedId('input-scoresFile')">Load a scores file</label>
+                      </div>
                       <div class="mavedb-help-small">
-                        Variants will be validated against this sequence. Note that the first position in the sequence
-                        is numbered as position 1 when validating variants.
+                        This file is required and should be a CSV file, with each row of the table describing a single
+                        variant. For more information about what this file can include and how it should be formatted,
+                        please take a look at
+                        <a :href="`${config.appBaseUrl}/docs/mavedb/data_formats.html#data-table-formats`" target="_blank"
+                          >our documentation</a
+                        >.
                       </div>
                     </div>
                     <div class="mavedb-wizard-content">
                       <span class="p-float-label">
                         <FileUpload
-                          :id="scopedId('input-targetGeneSequenceFileLabel')"
-                          ref="sequenceFileUpload"
+                          :id="scopedId('input-scoresFile')"
+                          ref="scoresFileUpload"
+                          accept="text/csv"
                           :auto="false"
-                          choose-label="Reference sequence"
-                          :class="inputClasses.targetGeneTargetSequenceSequenceFile"
+                          choose-label="Scores file"
+                          :class="inputClasses.scoresFile || ''"
                           :custom-upload="true"
                           :file-limit="1"
                           :show-cancel-button="false"
                           :show-upload-button="false"
-                          @remove="fileCleared('targetGeneTargetSequenceSequenceFile', targetIdx)"
-                          @select="fileSelected('targetGeneTargetSequenceSequenceFile', $event, targetIdx)"
                         >
                           <template #empty>
-                            <div v-if="createdTargetGenes[targetIdx].targetGene.targetSequence.sequence != null">
-                              <Textarea
-                                v-model="createdTargetGenes[targetIdx].targetGene.targetSequence.sequence"
-                                disabled
-                                rows="5"
-                                style="width: 100%; max-width: 60em; word-wrap: break-word; font-family: monospace"
-                              />
-                              <small
-                                >This sequence was set by the autofilled target. To use a different sequence, upload a
-                                new FASTA file.</small
-                              >
-                            </div>
-                            <div v-else>
-                              <p>
-                                Drop a
-                                <a href="https://blast.ncbi.nlm.nih.gov/doc/blast-topics/#fasta" target="_blank"
-                                  >FASTA</a
-                                >
-                                file here
-                              </p>
-                            </div>
+                            <p>Drop a file here.</p>
                           </template>
                         </FileUpload>
                       </span>
-                      <span
-                        v-if="validationErrors[`targetGene.${targetIdx}.targetSequence.sequence`]"
-                        class="mave-field-error"
-                        >{{ validationErrors[`targetGene.${targetIdx}.targetSequence.sequence`] }}</span
-                      >
+                      <span v-if="validationErrors.scoresFile" class="mave-field-error">{{
+                        validationErrors.scoresFile
+                      }}</span>
                     </div>
                   </div>
-                </div>
-                <div v-else>
                   <div class="mavedb-wizard-row">
                     <div class="mavedb-wizard-help">
-                      <label :id="scopedId('input-targetDescribesChromosomeLabel')"
-                        >Does this target represent a whole chromosome?</label
-                      >
+                      <label :for="scopedId('input-scoreColumnsMetadataFile')">Load a scores column metadata file</label>
                       <div class="mavedb-help-small">
-                        Some score sets might describe variants relative to an entire chromosome, while others will
-                        describe variants relative to a RefSeq or Ensembl accession representing a gene.
+                        This file is optional, but recommended. If provided, it should be a JSON file containing a single
+                        object. The keys of that object should be limited to columns of the score data, while values
+                        should include a string description and an optional string details.
                       </div>
                     </div>
                     <div class="mavedb-wizard-content">
-                      <InputSwitch
-                        v-model="createdTargetGenes[targetIdx].isRelativeToChromosome"
-                        :aria-labelledby="scopedId('input-targetDescribesChromosomeLabel')"
-                        @change="refreshAccessionOptions(targetIdx)"
-                      />
-                      <div class="mavedb-switch-value">
-                        {{
-                          createdTargetGenes[targetIdx].isRelativeToChromosome
-                            ? 'Yes, this target represents an entire chromosome.'
-                            : 'No, this target represents a gene.'
-                        }}
-                      </div>
-                    </div>
-                  </div>
-                  <div v-if="createdTargetGenes[targetIdx].isRelativeToChromosome" class="mavedb-wizard-row">
-                    <div class="mavedb-wizard-help">
-                      <label :id="scopedId('input-targetGeneAssemblyLabel')">The assembly for this accession</label>
-                    </div>
-                    <div class="mavedb-wizard-content">
                       <span class="p-float-label">
-                        <!-- Assembly is the reference genome property in coordinate cases -->
-                        <Dropdown
-                          v-model="createdTargetGenes[targetIdx].targetGene.targetAccession.assembly"
-                          :aria-labelledby="scopedId('input-targetGeneAssemblyLabel')"
-                          :options="assemblies"
-                          style="width: 100%"
-                          @change="refreshAccessionOptions(targetIdx)"
-                        />
-                        <label :for="scopedId('input-targetGeneAssemblyLabel')">Assembly</label>
+                        <FileUpload
+                          :id="scopedId('input-scoreColumnsMetadataFile')"
+                          ref="scoreColumnsMetadataFileUpload"
+                          accept="application/json"
+                          :auto="false"
+                          choose-label="Scores column metadata file"
+                          :class="inputClasses.scoreColumnsMetadataFile || ''"
+                          :custom-upload="true"
+                          :disabled="!($refs.scoresFileUpload?.files?.length == 1)"
+                          :file-limit="1"
+                          :show-cancel-button="false"
+                          :show-upload-button="false"
+                          @remove="fileCleared('scoreColumnsMetadataFile')"
+                          @select="fileSelected('scoreColumnsMetadataFile', $event)"
+                        >
+                          <template #empty>
+                            <p>Drop a file here.</p>
+                          </template>
+                        </FileUpload>
                       </span>
-                      <span
-                        v-if="validationErrors[`targetGene.${targetIdx}.targetAccession.assembly`]"
-                        class="mave-field-error"
-                        >{{ validationErrors[`targetGene.${targetIdx}.targetAccession.assembly`] }}</span
-                      >
+                      <span v-if="validationErrors.scoreColumnsMetadataFile" class="mave-field-error">{{
+                        validationErrors.scoreColumnsMetadataFile
+                      }}</span>
                     </div>
                   </div>
-                  <div v-else class="mavedb-wizard-row">
-                    <div class="mavedb-wizard-help">
-                      <label :id="scopedId('input-targetGeneGeneNameLabel')">The gene name for this accession</label>
-                    </div>
-                    <div class="mavedb-wizard-content">
-                      <span class="p-float-label">
-                        <Dropdown
-                          :id="scopedId('input-targetGeneGeneNameLabel')"
-                          v-model="createdTargetGenes[targetIdx].targetGene.targetAccession.gene"
-                          filter
-                          option-label="name"
-                          :options="geneNamesAsObject"
-                          style="width: 100%"
-                          :virtual-scroller-options="{itemSize: 50}"
-                          @change="autofillGeneName($event, targetIdx)"
-                        />
-                        <label :for="scopedId('input-targetGeneGeneNameLabel')">HGNC Name</label>
-                      </span>
-                      <span
-                        v-if="validationErrors[`targetGene.${targetIdx}.targetAccession.gene`]"
-                        class="mave-field-error"
-                        >{{ validationErrors[`targetGene.${targetIdx}.targetAccession.gene`] }}</span
-                      >
-                    </div>
-                  </div>
-
                   <div class="mavedb-wizard-row">
                     <div class="mavedb-wizard-help">
-                      <label :id="scopedId('input-targetGeneAccessionLabel')"
-                        >The accession identifier for this target</label
-                      >
+                      <label :id="scopedId('input-countsFile')">Load a counts file</label>
                       <div class="mavedb-help-small">
-                        This will be the sequence that your variants are described against. It may be a RefSeq or
-                        Ensemble identifier. Available accessions matching the
-                        {{ createdTargetGenes[targetIdx].isRelativeToChromosome ? 'assembly' : 'gene name' }} will be
-                        displayed once one is selected.
+                        This file is optional, but recommended. There are no required columns for your count data, but you
+                        should describe the meaning of any columns by uploading a column metadata file and providing any
+                        additional information in your methods section.
                       </div>
                     </div>
                     <div class="mavedb-wizard-content">
                       <span class="p-float-label">
-                        <AutoComplete
-                          :id="scopedId('input-targetGeneAccessionLabel')"
-                          v-model="createdTargetGenes[targetIdx].targetGene.targetAccession.accession"
-                          :dropdown="true"
-                          :force-selection="true"
-                          style="width: 100%"
-                          :suggestions="accessionSuggestions"
-                          @complete="fetchTargetAccessions($event)"
-                        />
-                        <label :for="scopedId('input-targetGeneAccessionLabel')"> Accession Identifier </label>
+                        <FileUpload
+                          :id="scopedId('input-countsFile')"
+                          ref="countsFileUpload"
+                          accept="text/csv"
+                          :auto="false"
+                          choose-label="Counts file"
+                          :class="inputClasses.countsFile || ''"
+                          :custom-upload="true"
+                          :file-limit="1"
+                          :show-cancel-button="false"
+                          :show-upload-button="false"
+                        >
+                          <template #empty>
+                            <p>Drop a file here.</p>
+                          </template>
+                        </FileUpload>
                       </span>
-                      <div v-if="showSwitchToProteinAccessionButton(targetIdx)" class="mavedb-wizard-subcontent">
-                        <Button
-                          icon="pi pi-arrows-h"
-                          label="Switch to Protein Accession"
-                          severity="info"
-                          @click="swapNucleotideProteinAccessions(targetIdx)"
-                        />
-                      </div>
-                      <span
-                        v-if="validationErrors[`targetGene.${targetIdx}.targetAccession.accession`]"
-                        class="mave-field-error"
-                        >{{ validationErrors[`targetGene.${targetIdx}.targetAccession.accession`] }}</span
-                      >
-                    </div>
-                  </div>
-                  <div class="mavedb-wizard-row">
-                    <div class="mavedb-wizard-help">
-                      <label :id="scopedId('input-targetGeneCategoryLabel')">The genetic category of the target</label>
-                    </div>
-                    <div class="mavedb-wizard-content">
-                      <span class="p-float-label">
-                        <span class="p-float-label">
-                          <SelectButton
-                            :id="scopedId('input-targetGeneCategoryLabel')"
-                            v-model="createdTargetGenes[targetIdx].targetGene.category"
-                            :option-label="textForTargetGeneCategory"
-                            :options="targetGeneCategories"
-                          />
-                        </span>
-                      </span>
-                      <span v-if="validationErrors[`targetGene.${targetIdx}.category`]" class="mave-field-error">{{
-                        validationErrors[`targetGene.${targetIdx}.category`]
+                      <span v-if="validationErrors.countsFile" class="mave-field-error">{{
+                        validationErrors.countsFile
                       }}</span>
                     </div>
                   </div>
                 </div>
-              </div>
-              <div class="mavedb-wizard-step-controls-row">
-                <div class="flex justify-content-between mavedb-wizard-step-controls pt-4">
-                  <Button icon="pi pi-arrow-left" label="Back" severity="secondary" @click="showPreviousWizardStep" />
-                  <Button
-                    :disabled="maxWizardStepValidated < activeWizardStep"
-                    icon="pi pi-arrow-right"
-                    icon-pos="right"
-                    label="Next"
-                    @click="showNextWizardStepIfValid(showNextWizardStep)"
-                  />
-                </div>
-              </div>
-            </template>
-          </StepperPanel>
-
-          <StepperPanel header="Score Calibrations">
-            <template #header="{index, clickCallback}">
-              <button
-                class="p-stepper-action"
-                :disabled="maxWizardStepEntered < index || maxWizardStepValidated < index - 1"
-                role="tab"
-                @click="clickCallback"
-              >
-                <span class="p-stepper-number">{{ index + 1 }}</span>
-                <span class="p-stepper-title">Score Calibrations</span>
-              </button>
-            </template>
-            <template #content="{prevCallback: showPreviousWizardStep, nextCallback: showNextWizardStep}">
-              <div class="mavedb-wizard-form">
-                <div class="mavedb-wizard-form-content-background"></div>
                 <div class="mavedb-wizard-row">
                   <div class="mavedb-wizard-help">
-                    <label :id="scopedId('input-investigatorIsProvidingScoreCalibrations')"
-                      >Will you be providing score calibrations for this score set?</label
-                    >
-                    <div class="mavedb-help-small">
-                      Score calibrations provide additional clinical context to the scores you upload. If you provide
-                      score calibrations, you may classify each range as having either normal, abnormal, or an
-                      unspecified function. If you provide a range with normal function, you should also provide a
-                      baseline score that falls within the normal range. This score is the expected score for baseline
-                      variants.
-                    </div>
-                  </div>
-                  <div class="mavedb-wizard-content">
-                    <InputSwitch
-                      v-model="investigatorIsProvidingScoreCalibrations"
-                      :aria-labelledby="scopedId('input-investigatorIsProvidingScoreCalibrations')"
-                    />
-                    <div class="mavedb-switch-value">
-                      {{
-                        investigatorIsProvidingScoreCalibrations
-                          ? 'Yes, I will be providing score range data.'
-                          : 'No, I will not be providing score range data.'
-                      }}
-                    </div>
-                  </div>
-                </div>
-                <div v-if="investigatorIsProvidingScoreCalibrations">
-                  <CalibrationEditor
-                    :calibration-draft-ref="calibrationCreateDraft"
-                    :validation-errors="calibrationValidationErrors || {}"
-                  />
-                </div>
-              </div>
-              <div class="mavedb-wizard-step-controls-row">
-                <div class="flex justify-content-between mavedb-wizard-step-controls pt-5">
-                  <Button icon="pi pi-arrow-left" label="Back" severity="secondary" @click="showPreviousWizardStep" />
-                  <Button
-                    :disabled="maxWizardStepValidated < activeWizardStep"
-                    icon="pi pi-arrow-right"
-                    icon-pos="right"
-                    label="Next"
-                    @click="showNextWizardStepIfValid(showNextWizardStep)"
-                  />
-                </div>
-              </div>
-            </template>
-          </StepperPanel>
-
-          <StepperPanel header="Variant scores">
-            <template #header="{index, clickCallback}">
-              <button
-                class="p-stepper-action"
-                :disabled="maxWizardStepEntered < index || maxWizardStepValidated < index - 1"
-                role="tab"
-                @click="clickCallback"
-              >
-                <span class="p-stepper-number">{{ index + 1 }}</span>
-                <span class="p-stepper-title">Variant scores</span>
-              </button>
-            </template>
-            <template #content="{prevCallback: showPreviousWizardStep}">
-              <div class="mavedb-wizard-form">
-                <div class="mavedb-wizard-form-content-background"></div>
-                <div class="mavedb-wizard-row">
-                  <div class="mavedb-wizard-content">
-                    <Message v-if="createdTargetGenes[0]?.targetAccession?.accession" severity="info">
-                      When defining variants against an accession based target, uploaded variant coordinates should be
-                      fully qualified with respect to target names or target accessions (e.g: NC_000001.1:c.1A>C).
-                    </Message>
-                    <Message v-else-if="numTargets > 1" severity="info">
-                      When defining variants against multiple targets, uploaded variant coordinates should be fully
-                      qualified with respect to target names or target accessions.
-                    </Message>
-                  </div>
-                </div>
-                <div class="mavedb-wizard-row">
-                  <div class="mavedb-wizard-help">
-                    <div>
-                      <label :id="scopedId('input-scoresFile')">Load a scores file</label>
-                    </div>
-                    <div class="mavedb-help-small">
-                      This file is required and should be a CSV file, with each row of the table describing a single
-                      variant. For more information about what this file can include and how it should be formatted,
-                      please take a look at
-                      <a :href="`${config.appBaseUrl}/docs/mavedb/data_formats.html#data-table-formats`" target="_blank"
-                        >our documentation</a
-                      >.
-                    </div>
-                  </div>
-                  <div class="mavedb-wizard-content">
-                    <span class="p-float-label">
-                      <FileUpload
-                        :id="scopedId('input-scoresFile')"
-                        ref="scoresFileUpload"
-                        accept="text/csv"
-                        :auto="false"
-                        choose-label="Scores file"
-                        :class="inputClasses.scoresFile || ''"
-                        :custom-upload="true"
-                        :file-limit="1"
-                        :show-cancel-button="false"
-                        :show-upload-button="false"
-                      >
-                        <template #empty>
-                          <p>Drop a file here.</p>
-                        </template>
-                      </FileUpload>
-                    </span>
-                    <span v-if="validationErrors.scoresFile" class="mave-field-error">{{
-                      validationErrors.scoresFile
-                    }}</span>
-                  </div>
-                </div>
-                <div class="mavedb-wizard-row">
-                  <div class="mavedb-wizard-help">
-                    <label :for="scopedId('input-scoreColumnsMetadataFile')">Load a scores column metadata file</label>
+                    <label :for="scopedId('input-countColumnsMetadataFile')">Load a counts column metadata file</label>
                     <div class="mavedb-help-small">
                       This file is optional, but recommended. If provided, it should be a JSON file containing a single
-                      object. The keys of that object should be limited to columns of the score data, while values
-                      should include a string description and an optional string details.
+                      object. The keys of that object should be limited to columns of the count data, while values should
+                      include a string description and an optional string details.
                     </div>
                   </div>
                   <div class="mavedb-wizard-content">
                     <span class="p-float-label">
                       <FileUpload
-                        :id="scopedId('input-scoreColumnsMetadataFile')"
-                        ref="scoreColumnsMetadataFileUpload"
+                        :id="scopedId('input-countColumnsMetadataFile')"
+                        ref="countColumnsMetadataFileUpload"
                         accept="application/json"
                         :auto="false"
-                        choose-label="Scores column metadata file"
-                        :class="inputClasses.scoreColumnsMetadataFile || ''"
+                        choose-label="Counts column metadata file"
+                        :class="inputClasses.countColumnsMetadataFile || ''"
                         :custom-upload="true"
-                        :disabled="!($refs.scoresFileUpload?.files?.length == 1)"
+                        :disabled="!($refs.countsFileUpload?.files?.length == 1)"
                         :file-limit="1"
                         :show-cancel-button="false"
                         :show-upload-button="false"
-                        @remove="fileCleared('scoreColumnsMetadataFile')"
-                        @select="fileSelected('scoreColumnsMetadataFile', $event)"
+                        @remove="fileCleared('countColumnsMetadataFile')"
+                        @select="fileSelected('countColumnsMetadataFile', $event)"
                       >
                         <template #empty>
                           <p>Drop a file here.</p>
                         </template>
                       </FileUpload>
                     </span>
-                    <span v-if="validationErrors.scoreColumnsMetadataFile" class="mave-field-error">{{
-                      validationErrors.scoreColumnsMetadataFile
+                    <span v-if="validationErrors.countColumnsMetadataFile" class="mave-field-error">{{
+                      validationErrors.countColumnsMetadataFile
                     }}</span>
                   </div>
                 </div>
-                <div class="mavedb-wizard-row">
-                  <div class="mavedb-wizard-help">
-                    <label :id="scopedId('input-countsFile')">Load a counts file</label>
-                    <div class="mavedb-help-small">
-                      This file is optional, but recommended. There are no required columns for your count data, but you
-                      should describe the meaning of any columns by uploading a column metadata file and providing any
-                      additional information in your methods section.
-                    </div>
-                  </div>
-                  <div class="mavedb-wizard-content">
-                    <span class="p-float-label">
-                      <FileUpload
-                        :id="scopedId('input-countsFile')"
-                        ref="countsFileUpload"
-                        accept="text/csv"
-                        :auto="false"
-                        choose-label="Counts file"
-                        :class="inputClasses.countsFile || ''"
-                        :custom-upload="true"
-                        :file-limit="1"
-                        :show-cancel-button="false"
-                        :show-upload-button="false"
-                      >
-                        <template #empty>
-                          <p>Drop a file here.</p>
-                        </template>
-                      </FileUpload>
-                    </span>
-                    <span v-if="validationErrors.countsFile" class="mave-field-error">{{
-                      validationErrors.countsFile
-                    }}</span>
+                <div class="mavedb-wizard-step-controls-row">
+                  <div class="flex justify-content-between mavedb-wizard-step-controls pt-4">
+                    <Button icon="pi pi-arrow-left" label="Back" severity="secondary" @click="activateCallback(activeWizardStep - 1)" />
+                    <Button
+                      :disabled="maxWizardStepValidated < activeWizardStep"
+                      icon="pi pi-arrow-right"
+                      icon-pos="right"
+                      label="Save"
+                      @click="validateAndSave()"
+                    />
                   </div>
                 </div>
-              </div>
-              <div class="mavedb-wizard-row">
-                <div class="mavedb-wizard-help">
-                  <label :for="scopedId('input-countColumnsMetadataFile')">Load a counts column metadata file</label>
-                  <div class="mavedb-help-small">
-                    This file is optional, but recommended. If provided, it should be a JSON file containing a single
-                    object. The keys of that object should be limited to columns of the count data, while values should
-                    include a string description and an optional string details.
-                  </div>
-                </div>
-                <div class="mavedb-wizard-content">
-                  <span class="p-float-label">
-                    <FileUpload
-                      :id="scopedId('input-countColumnsMetadataFile')"
-                      ref="countColumnsMetadataFileUpload"
-                      accept="application/json"
-                      :auto="false"
-                      choose-label="Counts column metadata file"
-                      :class="inputClasses.countColumnsMetadataFile || ''"
-                      :custom-upload="true"
-                      :disabled="!($refs.countsFileUpload?.files?.length == 1)"
-                      :file-limit="1"
-                      :show-cancel-button="false"
-                      :show-upload-button="false"
-                      @remove="fileCleared('countColumnsMetadataFile')"
-                      @select="fileSelected('countColumnsMetadataFile', $event)"
-                    >
-                      <template #empty>
-                        <p>Drop a file here.</p>
-                      </template>
-                    </FileUpload>
-                  </span>
-                  <span v-if="validationErrors.countColumnsMetadataFile" class="mave-field-error">{{
-                    validationErrors.countColumnsMetadataFile
-                  }}</span>
-                </div>
-              </div>
-              <div class="mavedb-wizard-step-controls-row">
-                <div class="flex justify-content-between mavedb-wizard-step-controls pt-4">
-                  <Button icon="pi pi-arrow-left" label="Back" severity="secondary" @click="showPreviousWizardStep" />
-                  <Button
-                    :disabled="maxWizardStepValidated < activeWizardStep"
-                    icon="pi pi-arrow-right"
-                    icon-pos="right"
-                    label="Save"
-                    @click="validateAndSave()"
-                  />
-                </div>
-              </div>
-            </template>
-          </StepperPanel>
+              <!-- </template> -->
+            </StepPanel>
+          </StepPanels>
         </Stepper>
       </div>
     </div>
@@ -1491,8 +1506,15 @@ import Multiselect from 'primevue/multiselect'
 import ProgressSpinner from 'primevue/progressspinner'
 import SelectButton from 'primevue/selectbutton'
 import Stepper from 'primevue/stepper'
+import StepPanel from 'primevue/steppanel'
+import StepPanels from 'primevue/steppanels'
+import StepList from 'primevue/steplist'
+import Step from 'primevue/step'
+import Tabs from 'primevue/tabs'
+import Tab from 'primevue/tab'
+import TabList from 'primevue/tablist'
+import TabPanels from 'primevue/tabpanels'
 import TabPanel from 'primevue/tabpanel'
-import TabView from 'primevue/tabview'
 import Textarea from 'primevue/textarea'
 import {ref} from 'vue'
 import {useHead} from '@unhead/vue'
@@ -1562,8 +1584,15 @@ export default {
     ProgressSpinner,
     SelectButton,
     Stepper,
+    StepPanel,
+    StepPanels,
+    StepList,
+    Step,
     TabPanel,
-    TabView,
+    Tabs,
+    Tab,
+    TabList,
+    TabPanels,
     Textarea
   },
 
@@ -2066,7 +2095,7 @@ export default {
     showNextWizardStepIfValid: function (navigate) {
       if (this.maxWizardStepValidated >= this.activeWizardStep) {
         this.maxWizardStepEntered = Math.max(this.maxWizardStepEntered, this.activeWizardStep + 1)
-        navigate()
+        navigate(this.activeWizardStep + 1)
       }
     },
 
@@ -2835,7 +2864,7 @@ export default {
 }
 </script>
 
-<style scoped src="../../assets/forms.css"></style>
+<style src="../../assets/forms.css"></style>
 
 <style scoped>
 .mavedb-wizard:deep(.p-stepper) {
@@ -2843,7 +2872,7 @@ export default {
 }
 
 /* Remove the stepper panel's background color. */
-.mavedb-wizard:deep(.p-stepper .p-stepper-panels) {
+.mavedb-wizard:deep(.p-stepper .p-steppanels) {
   background-color: transparent;
 }
 
@@ -2851,6 +2880,7 @@ export default {
 .mavedb-wizard-form {
   position: relative;
   z-index: 0;
+  background-color: #f7f7f7;
 }
 
 /* Give the right side of the wizard a white background, without gaps between rows. */
@@ -2925,6 +2955,7 @@ export default {
 .mavedb-wizard-step-controls {
   padding-left: 10px;
   max-width: 100vw;
+  background-color: #f7f7f7;
 }
 
 /* Switches */
@@ -3048,5 +3079,13 @@ export default {
   bottom: 5px;
   right: 5px;
   z-index: 1001;
+}
+
+.mavedb-wizard:deep(.p-step-title) {
+  font-size: 0.9em !important;
+}
+
+.p-inputwrapper, .p-textarea, .p-inputtext {
+  width: 100%;
 }
 </style>

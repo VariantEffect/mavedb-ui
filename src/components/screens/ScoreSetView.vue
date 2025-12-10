@@ -45,21 +45,19 @@
       <div v-if="variants?.length">
         <div class="mavedb-score-set-variant-search">
           <span class="p-float-label">
-            <IftaLabel class="flex flex-col w-full">
-              <AutoComplete
-                :id="scopedId('variant-search')"
-                v-model="selectedVariant"
-                class="h-14"
-                dropdown
-                option-label="mavedb_label"
-                scroll-height="175px"
-                select-on-focus
-                :suggestions="variantSearchSuggestions"
-                :virtual-scroller-options="{itemSize: 50}"
-                @complete="variantSearch"
-              />
-              <label :for="scopedId('variant-search')">Search for a variant in this score set</label>
-            </IftaLabel>
+            <AutoComplete
+              :id="scopedId('variant-search')"
+              v-model="selectedVariant"
+              class="w-full"
+              dropdown
+              option-label="mavedb_label"
+              scroll-height="175px"
+              select-on-focus
+              :suggestions="variantSearchSuggestions"
+              :virtual-scroller-options="{itemSize: 50}"
+              @complete="variantSearch"
+            />
+            <label :for="scopedId('variant-search')">Search for a variant in this score set</label>
             <Button
               aria-label="Clear"
               icon="pi pi-times"
@@ -83,11 +81,10 @@
             <Button
               v-tooltip="clinicalModeHelpText"
               aria-label="About raw vs. clinical mode"
-              class="p-button-help"
+              class="p-button-help mavedb-help-tooltip-button"
               icon="pi pi-info"
               outlined
               rounded
-              size="small"
             />
           </span>
         </div>
@@ -409,7 +406,6 @@ import AutoComplete from 'primevue/autocomplete'
 import Button from 'primevue/button'
 import Checkbox from 'primevue/checkbox'
 import Dialog from 'primevue/dialog'
-import IftaLabel from 'primevue/iftalabel'
 import InputSwitch from 'primevue/inputswitch'
 import ProgressSpinner from 'primevue/progressspinner'
 import ProgressBar from 'primevue/progressbar'
@@ -463,7 +459,6 @@ export default {
     DefaultLayout,
     Dialog,
     InputSwitch,
-    IftaLabel,
     ItemNotFound,
     PageLoading,
     ProgressBar,
@@ -1325,6 +1320,29 @@ export default {
   display: block;
   content: '';
   clear: both;
+}
+
+.mavedb-help-tooltip-button {
+  height: 0.5rem !important;
+  width: 0.5rem !important;
+  vertical-align: middle;
+  /* Remove extra vertical margin/padding if any. */
+  margin-top: 0;
+  margin-bottom: 0;
+  /* Ensure that button is inline with text. */
+  display: inline-flex;
+  align-items: center;
+  background: none;
+}
+
+.mavedb-help-tooltip-button:focus,
+.mavedb-help-tooltip-button:active,
+.mavedb-help-tooltip-button.p-focus {
+  background: none;
+}
+
+.mavedb-help-tooltip-button:deep(.p-button-icon) {
+  font-size: 0.5rem;
 }
 </style>
 

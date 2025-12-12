@@ -112,3 +112,7 @@ body .p-button {
 .p-autocomplete-overlay {
   max-width: 75% !important;
 }
+
+.p-tablist-tab-list .p-tab-active {
+  background-color: #3f51b51f !important;
+}

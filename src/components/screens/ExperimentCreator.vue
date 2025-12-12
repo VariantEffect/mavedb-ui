@@ -295,6 +295,7 @@
                           :id="scopedId('input-primaryPublicationIdentifiers')"
                           ref="primaryPublicationIdentifiersInput"
                           v-model="primaryPublicationIdentifiers"
+                          class="p-inputwrapper-filled"
                           option-label="identifier"
                           :options="publicationIdentifiers"
                           placeholder="Select a primary publication (Where the dataset is described)"

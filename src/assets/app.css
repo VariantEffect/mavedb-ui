@@ -71,8 +71,7 @@ body .p-button {
 /* Hide placeholder text in float label components since label acts as placeholder */
 .p-float-label input::placeholder,
 .p-float-label textarea::placeholder,
-.p-float-label .p-chips-multiple-container input::placeholder,
-.p-float-label .p-multiselect-label {
+.p-float-label .p-chips-multiple-container input::placeholder {
   color: transparent !important;
 }
 
@@ -86,4 +85,30 @@ body .p-button {
 .p-float-label .p-chips-multiple-container input:focus::placeholder,
 .p-float-label .p-multiselect:focus-within .p-multiselect-label {
   color: rgba(0, 0, 0, 0.6) !important;
+}
+
+/* Style Chips components to match PrimeVue 3 appearance */
+.p-inputchips-chip-item {
+  background: #e9ecef !important;
+  color: #495057 !important;
+  border-radius: 1rem !important;
+  padding: 0.25rem 0.5rem !important;
+  margin-right: 0.5rem !important;
+  margin-bottom: 0.5rem !important;
+  margin-bottom: auto !important;
+  display: inline-flex !important;
+  align-items: center !important;
+}
+.p-inputchips-chip-item .pi-times,
+.p-inputchips-chip-item .pi-times-circle {
+  margin-left: 0.5rem !important;
+  cursor: pointer !important;
+  display: flex !important;
+  align-items: center !important;
+  justify-content: center !important;
+}
+
+/* Prevent autocomplete overlay from taking full page width */
+.p-autocomplete-overlay {
+  max-width: 75% !important;
 }

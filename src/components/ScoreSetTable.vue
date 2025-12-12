@@ -126,7 +126,10 @@ export default {
 /* Table */
 
 .mavedb-table-view {
-  flex: 1 1 400px;
+  height: 100vh;
+  overflow-y: auto;
+  overflow-x: hidden;
+  flex: 0 0 auto;
   position: relative;
 }
 

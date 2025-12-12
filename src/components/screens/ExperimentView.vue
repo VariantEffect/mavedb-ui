@@ -34,7 +34,7 @@
         <div v-if="item.creationDate">
           Created {{ formatDate(item.creationDate) }}
           <span v-if="item.createdBy">
-            <a :href="`https://orcid.org/${item.createdBy.orcidId}`" target="blank"
+            <a class="flex items-center gap-1" :href="`https://orcid.org/${item.createdBy.orcidId}`" target="blank"
               ><img alt="ORCIDiD" src="@/assets/ORCIDiD_icon.png" />{{ item.createdBy.firstName }}
               {{ item.createdBy.lastName }}</a
             ></span
@@ -42,8 +42,8 @@
         </div>
         <div v-if="item.modificationDate">
           Last updated {{ formatDate(item.modificationDate) }}
-          <span v-if="item.modifiedBy">
-            <a :href="`https://orcid.org/${item.modifiedBy.orcidId}`" target="blank"
+          <span v-if="item.modifiedBy" class="flex">
+            <a class="flex items-center gap-1" :href="`https://orcid.org/${item.modifiedBy.orcidId}`" target="blank"
               ><img alt="ORCIDiD" src="@/assets/ORCIDiD_icon.png" />{{ item.modifiedBy.firstName }}
               {{ item.modifiedBy.lastName }}</a
             ></span
@@ -54,7 +54,7 @@
           <a
             v-for="contributor in contributors"
             :key="contributor.orcidId"
-            class="mave-contributor"
+            class="mave-contributor flex items-center gap-1"
             :href="`https://orcid.org/${contributor.orcidId}`"
             target="blank"
           >
@@ -74,7 +74,7 @@
 
         <div class="mave-score-set-section-title">Score Sets</div>
         <div v-if="associatedScoreSets.length != 0">
-          <ul>
+          <ul class="list-disc pl-4">
             <li v-for="scoreSet in associatedScoreSets" :key="scoreSet.id">
               <router-link :to="{name: 'scoreSet', params: {urn: scoreSet.urn}}">{{ scoreSet.urn }}</router-link>
             </li>
@@ -96,7 +96,7 @@
         <div class="mave-score-set-section-title">Primary References</div>
         <div v-if="item.primaryPublicationIdentifiers.length > 0">
           <div v-for="publication in item.primaryPublicationIdentifiers" :key="publication">
-            <ul style="list-style-type: square">
+            <ul class="pl-4" style="list-style-type: square">
               <!-- eslint-disable-next-line vue/no-v-html -->
               <li v-html="markdownToHtml(publication.referenceHtml)"></li>
               <div>
@@ -116,7 +116,7 @@
         <div class="mave-score-set-section-title">Secondary References</div>
         <div v-if="item.secondaryPublicationIdentifiers.length > 0">
           <div v-for="publication in item.secondaryPublicationIdentifiers" :key="publication">
-            <ul style="list-style-type: square">
+            <ul class="pl-4" style="list-style-type: square">
               <!-- eslint-disable-next-line vue/no-v-html -->
               <li v-html="markdownToHtml(publication.referenceHtml)"></li>
               <div>

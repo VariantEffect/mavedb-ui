@@ -1531,6 +1531,9 @@ export default {
 .p-inputwrapper, .p-textarea, .p-inputtext {
   width: 100%;
 }
+.keyword-description-input, .keyword-dropdown {
+  width: 450px;
+}
 
 /* Fix list bullets in help text */
 .mavedb-help-small ul {

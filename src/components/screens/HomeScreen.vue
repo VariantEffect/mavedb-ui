@@ -190,6 +190,7 @@ td, th {
 
 ul {
   padding-left: 1em;
+  list-style-type: disc;
 }
 
 .mave-hgvs-example {

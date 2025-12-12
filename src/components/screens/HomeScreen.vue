@@ -2,11 +2,10 @@
   <DefaultLayout>
     <div class="grid" style="margin: 10px 0;">
       <div class="col-12">
-        <p class="mavedb-mavemd-notice">
-          <router-link to="/mavemd"><img alt="MaveMD" class="mavedb-mavemd-logo" src="@/assets/mavemd-logo.png" /></router-link>
-          &nbsp;
-          Looking for the new MaveMD clinical features? <router-link to="/mavemd">Click here.</router-link>
-        </p>
+        <div class="flex justify-center flex-row gap-4 m-2">
+          <router-link to="/mavemd"><img alt="MaveMD" class="h-10" src="@/assets/mavemd-logo.png" /></router-link>
+          <span class="text-lg my-auto">Looking for the new MaveMD clinical features? <router-link to="/mavemd">Click here.</router-link></span>
+        </div>
       </div>
       <div class="col-8">
         <Card>
@@ -162,8 +161,8 @@ export default {
     const addExperiment = () => {
         router.push({ name: 'createExperiment' })
     }
-    return { 
-      addScoreSet, 
+    return {
+      addScoreSet,
       addExperiment,
     }
   },
@@ -199,12 +198,4 @@ ul {
   cursor: pointer;
 }
 
-.mavedb-mavemd-notice {
-  text-align: center; font-size: 120%;
-}
-
-.mavedb-mavemd-logo {
-  height: 40px;
-  vertical-align: middle;
-}
 </style>

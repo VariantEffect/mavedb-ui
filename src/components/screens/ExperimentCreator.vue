@@ -250,7 +250,7 @@
                       </div>
                     </div>
                     <div class="mavedb-wizard-content field">
-                      <span class="p-float-label p-input-filled">
+                      <span class="p-float-label">
                         <AutoComplete
                           :id="scopedId('input-publicationIdentifiers')"                          ref="publicationIdentifiersInput"
                           v-model="publicationIdentifiers"
@@ -1028,11 +1028,15 @@ export default {
     },
 
     removePublicationIdentifier: function (event) {
-      // If we are removing a primary publication identifier, also remove it from that list.
       const removedIdentifier = event.identifier
-      const primaryIdx = this.publicationIdentifiers.findIndex((pub) => pub.identifier == removedIdentifier)
+      const publicationIdx = this.publicationIdentifiers.findIndex((pub) => pub.identifier == removedIdentifier)
+      if (publicationIdx != -1) {
+        this.publicationIdentifiers.splice(publicationIdx, 1)
+      }
+      // If we are removing a primary publication identifier, also remove it from that list.
+      const primaryIdx = this.primaryPublicationIdentifiers.findIndex((pub) => pub.identifier == removedIdentifier)
       if (primaryIdx != -1) {
-        this.publicationIdentifiers.splice(primaryIdx, 1)
+        this.primaryPublicationIdentifiers.splice(primaryIdx, 1)
       }
     },
 

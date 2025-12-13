@@ -80,7 +80,10 @@
                   >
                     <template #chip="slotProps">
                       <div>
-                        <span>{{ slotProps.value.identifier }}</span>
+                          <span>{{ slotProps.value?.identifier }}</span>
+                      </div>
+                      <div>
+                        <i class="pi pi-times-circle" @click="removeDoiIdentifier(slotProps.value)"></i>
                       </div>
                     </template>
                   </Chips>
@@ -100,21 +103,23 @@
                     option-label="identifier"
                     :suggestions="publicationIdentifierSuggestionsList"
                     @complete="searchPublicationIdentifiers"
-                    @item-select="acceptNewPublicationIdentifier"
-                    @item-unselect="removePublicationIdentifier"
                     @keyup.escape="clearPublicationIdentifierSearch"
+                    @option-select="acceptNewPublicationIdentifier"
                   >
                     <template #chip="slotProps">
-                      <div>
-                        <div>{{ slotProps.value.identifier }}</div>
+                      <div class="p-inputchips-chip-item">
+                        {{ slotProps.value.identifier }}: {{ truncatePublicationTitle(slotProps.value.title) }}
+                        <div>
+                          <i class="pi pi-times-circle" @click="removePublicationIdentifier(slotProps.value)"></i>
+                        </div>
                       </div>
                     </template>
-                    <template #item="slotProps">
+                    <template #option="slotProps">
                       <div>
-                        <div>Title: {{ slotProps.item.title }}</div>
-                        <div>DOI: {{ slotProps.item.doi }}</div>
-                        <div>Identifier: {{ slotProps.item.identifier }}</div>
-                        <div>Database: {{ slotProps.item.dbName }}</div>
+                        <div>Title: {{ slotProps.option.title }}</div>
+                        <div>DOI: {{ slotProps.option.doi }}</div>
+                        <div>Identifier: {{ slotProps.option.identifier }}</div>
+                        <div>Database: {{ slotProps.option.dbName }}</div>
                       </div>
                     </template>
                   </AutoComplete>
@@ -160,11 +165,14 @@
                     :add-on-blur="true"
                     :allow-duplicate="false"
                     @add="acceptNewRawReadIdentifier"
-                  >
                     @keyup.escape="clearRawReadIdentifierSearch"
+                  >
                     <template #chip="slotProps">
                       <div>
-                        <span>{{ slotProps.value.identifier }}</span>
+                          <span>{{ slotProps.value?.identifier }}</span>
+                      </div>
+                      <div>
+                        <i class="pi pi-times-circle" @click="removeRawReadIdentifier(slotProps.value)"></i>
                       </div>
                     </template>
                   </Chips>
@@ -216,7 +224,7 @@
                     v-model="contributors"
                     :add-on-blur="true"
                     :allow-duplicate="false"
-                    placeholder="Type or paste ORCID IDs here."
+                    :placeholder="contributors.length > 0 ? '' : 'Type or paste ORCID IDs here.'"
                     @add="newContributorsAdded"
                     @keyup.escape="clearContributorSearch"
                   >
@@ -228,6 +236,9 @@
                           }})
                         </div>
                         <div v-else>{{ slotProps.value.orcidId }}</div>
+                      </div>
+                      <div>
+                        <i class="pi pi-times-circle" @click="removeContributor(slotProps.value)"></i>
                       </div>
                     </template>
                   </Chips>
@@ -802,11 +813,34 @@ export default {
     },
 
     removePublicationIdentifier: function (event) {
+      const removedIdentifier = event.identifier
+      const publicationIdx = this.publicationIdentifiers.findIndex((pub) => pub.identifier == removedIdentifier)
+      if (publicationIdx != -1) {
+        this.publicationIdentifiers.splice(publicationIdx, 1)
+      }
       // If we are removing a primary publication identifier, also remove it from that list.
-      const removedIdentifier = event.value.identifier
       const primaryIdx = this.primaryPublicationIdentifiers.findIndex((pub) => pub.identifier == removedIdentifier)
       if (primaryIdx != -1) {
         this.primaryPublicationIdentifiers.splice(primaryIdx, 1)
+      }
+    },
+
+    removeContributor: function (contributor) {
+      const index = this.contributors.findIndex(c => c.orcidId === contributor.orcidId)
+      if (index !== -1) {
+        this.contributors.splice(index, 1)
+      }
+    },
+    removeRawReadIdentifier: function (rawReadIdentifier) {
+      const index = this.rawReadIdentifiers.findIndex(r => r.identifier === rawReadIdentifier.identifier)
+      if (index !== -1) {
+        this.rawReadIdentifiers.splice(index, 1)
+      }
+    },
+    removeDoiIdentifier: function (doiIdentifier) {
+      const index = this.doiIdentifiers.findIndex(d => d.identifier === doiIdentifier.identifier)
+      if (index !== -1) {
+        this.doiIdentifiers.splice(index, 1)
       }
     },
 
@@ -814,6 +848,10 @@ export default {
       // This could change with a new Primevue version.
       const input = this.$refs.publicationIdentifiersInput
       input.$refs.focusInput.value = ''
+    },
+
+    truncatePublicationTitle: function (title) {
+      return title.length > 50 ? title.slice(0, 50) + '...' : title
     },
 
     searchPublicationIdentifiers: function (event) {

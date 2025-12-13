@@ -254,7 +254,7 @@
         <div class="mave-score-set-section-title">External identifier</div>
         <strong>DOI: </strong>
         <div v-if="item.doiIdentifiers.length != 0">
-          <ul style="list-style-type: square">
+          <ul class="pl-4" style="list-style-type: square">
             <li v-for="(doi, i) of item.doiIdentifiers" :key="i">
               <a :href="`${doi.url}`" target="blank">{{ doi.identifier }}</a>
             </li>
@@ -263,7 +263,7 @@
         <template v-else>No associated DOIs<br /></template>
         <strong>Raw reads: </strong>
         <div v-if="item.rawReadIdentifiers.length != 0">
-          <ul style="list-style-type: square">
+          <ul class="pl-4" style="list-style-type: square">
             <li v-for="(read, i) of item.rawReadIdentifiers" :key="i">
               <a :href="`${read.url}`" target="blank">{{ read.identifier }}</a>
             </li>

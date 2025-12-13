@@ -324,6 +324,15 @@
                       rounded
                       @click="keywordToggleInput(keyword.key)"
                     />
+                    <Button
+                      aria-label="Delete"
+                      class="keyword-description-button"
+                      :disabled="!keywordKeys[keyword.key]"
+                      icon="pi pi-times"
+                      rounded
+                      severity="danger"
+                      @click="deleteKeyword(keyword.key)"
+                    />
                     &nbsp;<i
                       class="pi pi-info-circle"
                       style="color: green; cursor: pointer"
@@ -1171,6 +1180,12 @@ export default {
 
     keywordToggleInput: function (field) {
       this.keywordTextVisible[field] = !this.keywordTextVisible[field]
+    },
+
+    deleteKeyword: function (field) {
+      this.keywordKeys[field] = null
+      this.keywordDescriptions[field] = null
+      this.keywordTextVisible[field] = false
     },
 
     showDialog: function (index) {

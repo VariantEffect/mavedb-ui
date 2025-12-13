@@ -571,9 +571,9 @@ export interface paths {
      *     The index to start from. If None, starts from the beginning.
      * limit : Optional[int]
      *     The maximum number of variants to return. If None, returns all variants.
-     * namespaces: List[Literal["scores", "counts"]]
+     * namespaces: List[Literal["scores", "counts", "vep", "gnomad"]]
      *     The namespaces of all columns except for accession, hgvs_nt, hgvs_pro, and hgvs_splice.
-     *     We may add ClinVar and gnomAD in the future.
+     *     We may add ClinVar in the future.
      * drop_na_columns : bool, optional
      *     Whether to drop columns that contain only NA values. Defaults to False.
      * db : Session
@@ -2582,7 +2582,7 @@ export interface components {
       /** Processingstate */
       processingState?: string | null;
       /** Officialcollections */
-      officialCollections: components["schemas"]["OfficialCollection"][];
+      officialCollections: components["schemas"]["mavedb__view_models__experiment__OfficialCollection"][];
     };
     /**
      * ExperimentControlledKeyword
@@ -3485,15 +3485,6 @@ export interface components {
       /** Privatekey */
       privateKey: string;
     };
-    /** OfficialCollection */
-    OfficialCollection: {
-      /** Badgename */
-      badgeName: string;
-      /** Name */
-      name: string;
-      /** Urn */
-      urn: string;
-    };
     /** OrcidUser */
     OrcidUser: {
       /** Recordtype */
@@ -4233,7 +4224,7 @@ export interface components {
       scoreCalibrations?: components["schemas"]["ScoreCalibration"][] | null;
       experiment: components["schemas"]["Experiment"];
       /** Officialcollections */
-      officialCollections: components["schemas"]["OfficialCollection"][];
+      officialCollections: components["schemas"]["mavedb__view_models__experiment__OfficialCollection"][];
       /** Private */
       private: boolean;
       processingState?: components["schemas"]["ProcessingState"] | null;
@@ -4654,6 +4645,8 @@ export interface components {
       recordType?: string;
       targetSequence?: components["schemas"]["SavedTargetSequence"] | null;
       targetAccession?: components["schemas"]["SavedTargetAccession"] | null;
+      /** Mappedhgncname */
+      mappedHgncName?: string | null;
       /** Uniprotidfrommappedmetadata */
       uniprotIdFromMappedMetadata?: string | null;
     };
@@ -4860,6 +4853,8 @@ export interface components {
       recordType?: string;
       targetSequence?: components["schemas"]["TargetSequence"] | null;
       targetAccession?: components["schemas"]["TargetAccession"] | null;
+      /** Mappedhgncname */
+      mappedHgncName?: string | null;
       /** Uniprotidfrommappedmetadata */
       uniprotIdFromMappedMetadata?: string | null;
     };
@@ -4892,6 +4887,8 @@ export interface components {
       recordType?: string;
       targetSequence?: components["schemas"]["TargetSequence"] | null;
       targetAccession?: components["schemas"]["TargetAccession"] | null;
+      /** Mappedhgncname */
+      mappedHgncName?: string | null;
       /** Uniprotidfrommappedmetadata */
       uniprotIdFromMappedMetadata?: string | null;
       /** Scoreseturn */
@@ -5627,6 +5624,15 @@ export interface components {
      * @description An IRI Reference (either an IRI or a relative-reference), according to `RFC3986 section 4.1 <https://datatracker.ietf.org/doc/html/rfc3986#section-4.1>`_ and `RFC3987 section 2.1 <https://datatracker.ietf.org/doc/html/rfc3987#section-2.1>`_. MAY be a JSON Pointer as an IRI fragment, as described by `RFC6901 section 6 <https://datatracker.ietf.org/doc/html/rfc6901#section-6>`_.
      */
     iriReference: string;
+    /** OfficialCollection */
+    mavedb__view_models__experiment__OfficialCollection: {
+      /** Badgename */
+      badgeName: string;
+      /** Name */
+      name: string;
+      /** Urn */
+      urn: string;
+    };
     /**
      * sequenceString
      * @description A character string of Residues that represents a biological sequence using the conventional sequence order (5'-to-3' for nucleic acid sequences, and amino-to-carboxyl for amino acid sequences). IUPAC ambiguity codes are permitted in Sequence Strings.
@@ -8749,9 +8755,9 @@ export interface operations {
    *     The index to start from. If None, starts from the beginning.
    * limit : Optional[int]
    *     The maximum number of variants to return. If None, returns all variants.
-   * namespaces: List[Literal["scores", "counts"]]
+   * namespaces: List[Literal["scores", "counts", "vep", "gnomad"]]
    *     The namespaces of all columns except for accession, hgvs_nt, hgvs_pro, and hgvs_splice.
-   *     We may add ClinVar and gnomAD in the future.
+   *     We may add ClinVar in the future.
    * drop_na_columns : bool, optional
    *     Whether to drop columns that contain only NA values. Defaults to False.
    * db : Session
@@ -8771,8 +8777,8 @@ export interface operations {
         start?: number;
         /** @description Maximum number of variants to return */
         limit?: number;
-        /** @description One or more data types to include: scores, counts, clinVar, gnomAD */
-        namespaces?: ("scores" | "counts")[];
+        /** @description One or more data types to include: scores, counts, clinVar, gnomAD, VEP */
+        namespaces?: ("scores" | "counts" | "vep" | "gnomad")[];
         drop_na_columns?: boolean | null;
         include_custom_columns?: boolean | null;
         include_post_mapped_hgvs?: boolean | null;

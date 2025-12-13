@@ -13,7 +13,7 @@
         <PrimeButton
           v-tooltip.right="{value: scoreCalibration.baselineScoreDescription, autoHide: false}"
           aria-label="Info"
-          class="p-button-help mavedb-help-tooltip-button"
+          class="p-button-help mavedb-help-tooltip-button size-2!"
           icon="pi pi-info"
           outlined
           rounded
@@ -47,7 +47,7 @@
               <PrimeButton
                 v-tooltip.right="{value: range.description, autoHide: false}"
                 aria-label="Info"
-                class="p-button-help mavedb-help-tooltip-button"
+                class="p-button-help mavedb-help-tooltip-button size-2!"
                 icon="pi pi-info"
                 outlined
                 rounded
@@ -198,7 +198,7 @@
               autoHide: false
             }"
             aria-label="Threshold sources info"
-            class="p-button-help mavedb-help-tooltip-button"
+            class="p-button-help mavedb-help-tooltip-button size-2!"
             icon="pi pi-info"
             outlined
             rounded
@@ -234,7 +234,7 @@
               autoHide: false
             }"
             aria-label="Method sources info"
-            class="p-button-help mavedb-help-tooltip-button"
+            class="p-button-help mavedb-help-tooltip-button size-2!"
             icon="pi pi-info"
             outlined
             rounded
@@ -267,7 +267,7 @@
               autoHide: false
             }"
             aria-label="Evidence calculation sources info"
-            class="p-button-help mavedb-help-tooltip-button"
+            class="p-button-help mavedb-help-tooltip-button size-2!"
             icon="pi pi-info"
             outlined
             rounded
@@ -770,8 +770,6 @@ export default defineComponent({
 /* Tooltips */
 .mavedb-help-tooltip-button {
   margin-left: 0.6rem;
-  height: 0.5rem;
-  width: 0.5rem;
   vertical-align: middle;
   margin-top: 0;
   margin-bottom: 0;

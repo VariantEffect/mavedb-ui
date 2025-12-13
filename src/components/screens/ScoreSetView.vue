@@ -48,11 +48,11 @@
             <AutoComplete
               :id="scopedId('variant-search')"
               v-model="selectedVariant"
+              class="w-full"
               dropdown
               option-label="mavedb_label"
               scroll-height="175px"
               select-on-focus
-              style="flex: 1"
               :suggestions="variantSearchSuggestions"
               :virtual-scroller-options="{itemSize: 50}"
               @complete="variantSearch"
@@ -245,7 +245,7 @@
         <div class="mavedb-score-set-section-title">Primary References</div>
         <div v-if="item.primaryPublicationIdentifiers.length > 0">
           <div v-for="publication in item.primaryPublicationIdentifiers" :key="publication">
-            <ul style="list-style-type: square">
+            <ul class="ml-10 list-[square]">
               <!-- eslint-disable-next-line vue/no-v-html -->
               <li v-html="markdownToHtml(publication.referenceHtml)"></li>
               <div>
@@ -1332,8 +1332,8 @@ export default {
 }
 
 .mavedb-help-tooltip-button {
-  height: 0.5rem;
-  width: 0.5rem;
+  height: 0.5rem !important;
+  width: 0.5rem !important;
   vertical-align: middle;
   /* Remove extra vertical margin/padding if any. */
   margin-top: 0;

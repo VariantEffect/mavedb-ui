@@ -1,50 +1,55 @@
 <template>
   <DefaultLayout>
-    <h1 v-if="alleleTitle && variants.length > 1" class="mavedb-variant-title">Variant: {{ alleleTitle }}</h1>
+    <div v-if="alleleTitle && variants.length > 1" class="font-bold text-2xl m-3">Variant: {{ alleleTitle }}</div>
     <ErrorView v-if="variantsStatus == 'Error'" />
     <PageLoading v-else-if="variantsStatus == 'Loading'" />
     <Message v-else-if="variants.length == 0">No variants found in MaveDB</Message>
     <div v-else :class="singleOrMultipleVariantsClassName">
-      <TabView class="mavedb-variants-tabview" :lazy="true">
-        <TabPanel
-          v-for="(variant, variantIndex) in variants"
-          :key="variant.content.urn"
-          v-model:active-index="activeVariantIndex"
-          :header="variant.content.url"
-        >
-          <template #header>
-            <div v-if="variants.length > 1">
-              <div class="mavedb-variants-tabview-header-text" style="color: #000; font-weight: bold">
-                Measurement {{ variantIndex + 1 }}
+      <Tabs :lazy="true" :value="0">
+        <TabList>
+          <Tab v-for="(variant, variantIndex) in variants" :key="variant.content.urn" :value="variantIndex">
+              <div v-if="variants.length > 1" class="h-full">
+                <div class="mavedb-variants-tabview-header-text" style="color: #000; font-weight: bold">
+                  Measurement {{ variantIndex + 1 }}
+                </div>
+                <div
+                  v-if="variant.type == 'nucleotide'"
+                  class="mavedb-variants-tabview-header-text"
+                  style="color: #000; font-weight: bold"
+                >
+                  Assayed at nucleotide level
+                </div>
+                <div
+                  v-else-if="variant.type == 'protein'"
+                  class="mavedb-variants-tabview-header-text"
+                  style="color: #000; font-weight: bold"
+                >
+                  Assayed at protein level
+                </div>
+                <div
+                  v-else-if="variant.type == 'associatedNucleotide'"
+                  class="mavedb-variants-tabview-header-text"
+                  style="color: #000; font-weight: bold"
+                >
+                  Other nucleotide-level variant with equivalent protein effect
+                </div>
+                <div class="mavedb-variants-tabview-header-text">{{ variantName(variant.content) }}</div>
+                <div class="mavedb-variants-tabview-header-text">{{ variant.content.scoreSet.title }}</div>
               </div>
-              <div
-                v-if="variant.type == 'nucleotide'"
-                class="mavedb-variants-tabview-header-text"
-                style="color: #000; font-weight: bold"
-              >
-                Assayed at nucleotide level
-              </div>
-              <div
-                v-else-if="variant.type == 'protein'"
-                class="mavedb-variants-tabview-header-text"
-                style="color: #000; font-weight: bold"
-              >
-                Assayed at protein level
-              </div>
-              <div
-                v-else-if="variant.type == 'associatedNucleotide'"
-                class="mavedb-variants-tabview-header-text"
-                style="color: #000; font-weight: bold"
-              >
-                Other nucleotide-level variant with equivalent protein effect
-              </div>
-              <div class="mavedb-variants-tabview-header-text">{{ variantName(variant.content) }}</div>
-              <div class="mavedb-variants-tabview-header-text">{{ variant.content.scoreSet.title }}</div>
-            </div>
-          </template>
-          <VariantMeasurementView :variant-urn="variant.content.urn" />
-        </TabPanel>
-      </TabView>
+          </Tab>
+        </TabList>
+        <TabPanels>
+          <TabPanel
+            v-for="(variant, variantIndex) in variants"
+            :key="variant.content.urn"
+            v-model:active-index="activeVariantIndex"
+            :header="variant.content.url"
+            :value="variantIndex"
+          >
+            <VariantMeasurementView :variant-urn="variant.content.urn" />
+          </TabPanel>
+        </TabPanels>
+      </Tabs>
     </div>
   </DefaultLayout>
 </template>
@@ -53,8 +58,11 @@
 import axios from 'axios'
 import Button from 'primevue/button'
 import Message from 'primevue/message'
+import Tabs from 'primevue/tabs'
+import TabList from 'primevue/tablist'
+import Tab from 'primevue/tab'
+import TabPanels from 'primevue/tabpanels'
 import TabPanel from 'primevue/tabpanel'
-import TabView from 'primevue/tabview'
 import {defineComponent} from 'vue'
 import {useHead} from '@unhead/vue'
 
@@ -66,7 +74,7 @@ import config from '@/config'
 
 export default defineComponent({
   name: 'VariantMeasurementScreen',
-  components: {Button, DefaultLayout, ErrorView, Message, PageLoading, TabPanel, TabView, VariantMeasurementView},
+  components: {Button, DefaultLayout, ErrorView, Message, PageLoading, Tabs, TabList, Tab, TabPanels, TabPanel, VariantMeasurementView},
 
   props: {
     clingenAlleleId: {
@@ -212,10 +220,6 @@ export default defineComponent({
 <style scoped>
 .mavedb-single-variant:deep(.p-tabview-nav-container) {
   display: none;
-}
-.mavedb-variant-title {
-  font-weight: bold;
-  font-size: 2em;
 }
 .mavedb-variants-tabview:deep(.p-tabview-panels) {
   background: transparent;

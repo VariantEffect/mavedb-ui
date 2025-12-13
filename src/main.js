@@ -7,6 +7,8 @@ import {initRestClient} from 'rest-client-vue'
 import {createApp} from 'vue'
 import {createHead} from '@unhead/vue/client'
 import {TemplateParamsPlugin} from 'unhead/plugins'
+import Aura from '@primevue/themes/aura'
+import { definePreset } from '@primeuix/themes'
 
 import App from '@/App.vue'
 import config from '@/config'
@@ -15,8 +17,6 @@ import {initializeAuthentication as initializeOrcidAuthentication} from '@/lib/o
 import router from '@/router'
 import store from '@/store'
 
-import 'primevue/resources/themes/mdc-light-indigo/theme.css'
-import 'primevue/resources/primevue.min.css'
 import 'primeicons/primeicons.css'
 
 /* add fontawesome core */
@@ -58,12 +58,39 @@ const head = createHead({
   ]
 })
 
+const MaveDbTheme = definePreset(Aura, {
+    semantic: {
+        primary: {
+            50: '{blue.50}',
+            100: '{blue.100}',
+            200: '{blue.200}',
+            300: '{blue.300}',
+            400: '{blue.400}',
+            500: '{blue.500}',
+            600: '{blue.600}',
+            700: '{blue.700}',
+            800: '{blue.800}',
+            900: '{blue.900}',
+            950: '{blue.950}'
+        }
+    }
+});
+
 createApp(App)
   .use(router)
   .use(store)
   .use(createPinia())
   .use(head)
-  .use(PrimeVue)
+  .use(PrimeVue, {
+    theme: {
+        preset: MaveDbTheme,
+        options: {
+            prefix: 'p',
+            darkModeSelector: '.dark-mode',
+            cssLayer: false,
+        }
+    }
+  })
   .use(ConfirmationService)
   .use(ToastService)
   .directive('tooltip', Tooltip)

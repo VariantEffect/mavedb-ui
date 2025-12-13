@@ -498,10 +498,6 @@ h1 {
   grid-row-end: span 2;
 }
 
-.statistics-tile:deep(.p-card-content) {
-  padding: 0;
-}
-
 .chart-header {
   display: flex;
 }

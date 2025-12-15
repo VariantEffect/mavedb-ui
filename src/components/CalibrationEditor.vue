@@ -223,10 +223,11 @@
               @click="toggleBoundary(rangeIdx, 'lower')"
               ><FontAwesomeIcon class="score-range-toggle-icon" icon="fa-solid fa-circle-half-stroke"
             /></PrimeButton>
-            <span class="p-float-label">
+            <span class="p-float-label w-full">
               <InputNumber
                 v-model="rangeObj.range[0]"
                 :aria-labelledby="scopedId(`input-investigatorProvidedRangeLower-${rangeIdx}`)"
+                class="w-full"
                 :disabled="functionalRangeHelpers[rangeIdx].infiniteLower"
               />
               <label :for="scopedId(`input-investigatorProvidedRangeLower-${rangeIdx}`)">{{
@@ -238,10 +239,11 @@
               }}</label>
             </span>
             <InputGroupAddon>to</InputGroupAddon>
-            <span class="p-float-label">
+            <span class="p-float-label w-full">
               <InputNumber
                 v-model="rangeObj.range[1]"
                 :aria-labelledby="scopedId(`input-investigatorProvidedRangeUpper-${rangeIdx}`)"
+                class="w-full"
                 :disabled="functionalRangeHelpers[rangeIdx].infiniteUpper"
               />
               <label :for="scopedId(`input-investigatorProvidedRangeUpper-${rangeIdx}`)">{{
@@ -439,22 +441,28 @@
             :id="scopedId('input-threshold-sources')"
             ref="thresholdSourcesInput"
             v-model="draft.thresholdSources"
+            class="p-inputwrapper-filled"
             :multiple="true"
             option-label="identifier"
             :suggestions="publicationIdentifierSuggestionsList"
             @complete="searchPublicationIdentifiers"
-            @item-select="acceptNewPublicationIdentifier(draft.thresholdSources)"
             @keyup.escape="clearPublicationIdentifierSearch('thresholdSourcesInput')"
+            @option-select="acceptNewPublicationIdentifier(draft.thresholdSources)"
           >
             <template #chip="slotProps">
-              <div>{{ slotProps.value.identifier }}: {{ truncatePublicationTitle(slotProps.value.title) }}</div>
+              <div class="p-inputchips-chip-item">
+                {{ slotProps.value.identifier }}: {{ truncatePublicationTitle(slotProps.value.title) }}
+                <div>
+                  <i class="pi pi-times-circle" @click="removePublicationIdentifier(slotProps.value, draft.thresholdSources)"></i>
+                </div>
+              </div>
             </template>
-            <template #item="slotProps">
+            <template #option="slotProps">
               <div>
-                <div>Title: {{ slotProps.item.title }}</div>
-                <div>DOI: {{ slotProps.item.doi }}</div>
-                <div>Identifier: {{ slotProps.item.identifier }}</div>
-                <div>Database: {{ slotProps.item.dbName }}</div>
+                <div>Title: {{ slotProps.option.title }}</div>
+                <div>DOI: {{ slotProps.option.doi }}</div>
+                <div>Identifier: {{ slotProps.option.identifier }}</div>
+                <div>Database: {{ slotProps.option.dbName }}</div>
               </div>
             </template>
           </AutoComplete>
@@ -479,24 +487,28 @@
             :id="scopedId('input-classification-sources-publication-identifiers')"
             ref="classificationSourcesInput"
             v-model="draft.classificationSources"
+            class="p-inputwrapper-filled"
             :multiple="true"
             option-label="identifier"
             :suggestions="publicationIdentifierSuggestionsList"
             @complete="searchPublicationIdentifiers"
-            @item-select="acceptNewPublicationIdentifier(draft.classificationSources)"
             @keyup.escape="clearPublicationIdentifierSearch('classificationSourcesInput')"
+            @option-select="acceptNewPublicationIdentifier(draft.classificationSources)"
           >
             <template #chip="slotProps">
-              <div>
-                <div>{{ slotProps.value.identifier }}: {{ truncatePublicationTitle(slotProps.value.title) }}</div>
+              <div class="p-inputchips-chip-item">
+                {{ slotProps.value.identifier }}: {{ truncatePublicationTitle(slotProps.value.title) }}
+                <div>
+                  <i class="pi pi-times-circle" @click="removePublicationIdentifier(slotProps.value, draft.classificationSources)"></i>
+                </div>
               </div>
             </template>
-            <template #item="slotProps">
+            <template #option="slotProps">
               <div>
-                <div>Title: {{ slotProps.item.title }}</div>
-                <div>DOI: {{ slotProps.item.doi }}</div>
-                <div>Identifier: {{ slotProps.item.identifier }}</div>
-                <div>Database: {{ slotProps.item.dbName }}</div>
+                <div>Title: {{ slotProps.option.title }}</div>
+                <div>DOI: {{ slotProps.option.doi }}</div>
+                <div>Identifier: {{ slotProps.option.identifier }}</div>
+                <div>Database: {{ slotProps.option.dbName }}</div>
               </div>
             </template>
           </AutoComplete>
@@ -521,24 +533,28 @@
             :id="scopedId('input-method-sources-publication-identifiers')"
             ref="methodSourcesInput"
             v-model="draft.methodSources"
+            class="p-inputwrapper-filled"
             :multiple="true"
             option-label="identifier"
             :suggestions="publicationIdentifierSuggestionsList"
             @complete="searchPublicationIdentifiers"
-            @item-select="acceptNewPublicationIdentifier(draft.methodSources)"
             @keyup.escape="clearPublicationIdentifierSearch('methodSourcesInput')"
+            @option-select="acceptNewPublicationIdentifier(draft.methodSources)"
           >
             <template #chip="slotProps">
-              <div>
-                <div>{{ slotProps.value.identifier }}: {{ truncatePublicationTitle(slotProps.value.title) }}</div>
+              <div class="p-inputchips-chip-item">
+                {{ slotProps.value.identifier }}: {{ truncatePublicationTitle(slotProps.value.title) }}
+                <div>
+                  <i class="pi pi-times-circle" @click="removePublicationIdentifier(slotProps.value, draft.methodSources)"></i>
+                </div>
               </div>
             </template>
-            <template #item="slotProps">
+            <template #option="slotProps">
               <div>
-                <div>Title: {{ slotProps.item.title }}</div>
-                <div>DOI: {{ slotProps.item.doi }}</div>
-                <div>Identifier: {{ slotProps.item.identifier }}</div>
-                <div>Database: {{ slotProps.item.dbName }}</div>
+                <div>Title: {{ slotProps.option.title }}</div>
+                <div>DOI: {{ slotProps.option.doi }}</div>
+                <div>Identifier: {{ slotProps.option.identifier }}</div>
+                <div>Database: {{ slotProps.option.dbName }}</div>
               </div>
             </template>
           </AutoComplete>
@@ -1080,6 +1096,14 @@ export default {
       this.draft.functionalRanges.splice(rangeIdx, 1)
       this.functionalRangeHelpers.splice(rangeIdx, 1)
       this.recomputeMeta()
+    },
+
+    removePublicationIdentifier: function (val: PublicationIdentifier, publicationList: PublicationIdentifier[]) {
+      const removedIdentifier = val.identifier
+      const publicationIdx = publicationList.findIndex((pub) => pub.identifier == removedIdentifier)
+      if (publicationIdx != -1) {
+        publicationList.splice(publicationIdx, 1)
+      }
     },
 
     saveCalibration: function () {

@@ -15,15 +15,15 @@
       <div class="mavedb-wizard">
         <Stepper v-model:value="activeWizardStep">
           <StepList>
-            <Step :value="0">Parent experiment and context</Step>
-            <Step :value="1">Score set information</Step>
-            <Step :value="2">Targets</Step>
-            <Step v-for="(targetNum, targetIdx) in numTargets" :key="targetIdx" :value="targetIdx + 3">Target {{ targetIdx + 1 }}</Step>
-            <Step :value="numTargets + 3">Score Calibration</Step>
-            <Step :value="numTargets + 4">Variant Scores</Step>
+            <Step :value="1">Parent experiment and context</Step>
+            <Step :value="2">Score set information</Step>
+            <Step :value="3">Targets</Step>
+            <Step v-for="(targetNum, targetIdx) in numTargets" :key="targetIdx" :value="targetIdx + 4">Target {{ targetIdx + 1 }}</Step>
+            <Step :value="numTargets + 4">Score Calibration</Step>
+            <Step :value="numTargets + 5">Variant Scores</Step>
           </StepList>
           <StepPanels>
-            <StepPanel v-slot="{ activateCallback }" :value="0">
+            <StepPanel v-slot="{ activateCallback }" :value="1">
               <div class="mavedb-wizard-form">
                 <div class="mavedb-wizard-form-content-background"></div>
                 <div v-if="experimentUrn && experiment">
@@ -214,7 +214,7 @@
                 </div>
               </div>
             </StepPanel>
-            <StepPanel v-slot="{ activateCallback }" :value="1" >
+            <StepPanel v-slot="{ activateCallback }" :value="2" >
               <div class="mavedb-wizard-form">
                 <div class="mavedb-wizard-form-content-background"></div>
                 <div v-if="experiment" class="mavedb-wizard-row">
@@ -331,18 +331,24 @@
                     </div>
                   </div>
                   <div class="mavedb-wizard-content field">
-                    <TabView>
-                      <TabPanel header="Edit">
-                        <span class="p-float-label">
-                          <Textarea :id="scopedId('input-methodText')" v-model="methodText" rows="10" />
-                          <label :for="scopedId('input-methodText')">Methods</label>
-                        </span>
-                      </TabPanel>
-                      <TabPanel header="Preview">
-                        <!-- eslint-disable-next-line vue/no-v-html -->
-                        <div class="mavedb-wizard-rendered-markdown" v-html="markdownToHtml(methodText)"></div>
-                      </TabPanel>
-                    </TabView>
+                    <Tabs value="0">
+                      <TabList>
+                        <Tab value="0"> Edit </Tab>
+                        <Tab value="1"> Preview </Tab>
+                      </TabList>
+                      <TabPanels>
+                        <TabPanel header="Edit" value="0">
+                          <span class="p-float-label">
+                            <Textarea :id="scopedId('input-methodText')" v-model="methodText" rows="10" />
+                            <label :for="scopedId('input-methodText')">Methods</label>
+                          </span>
+                        </TabPanel>
+                        <TabPanel header="Preview" value="1">
+                          <!-- eslint-disable-next-line vue/no-v-html -->
+                          <div class="mavedb-wizard-rendered-markdown" v-html="markdownToHtml(methodText)"></div>
+                        </TabPanel>
+                      </TabPanels>
+                    </Tabs>
                     <span v-if="validationErrors.methodText" class="mave-field-error">{{
                       validationErrors.methodText
                     }}</span>
@@ -435,7 +441,7 @@
                           v-model="contributors"
                           :add-on-blur="true"
                           :allow-duplicate="false"
-                          placeholder="Type or paste ORCID IDs here."
+                          :placeholder="contributors?.length > 0 ? '' : 'Type or paste ORCID IDs here.'"
                           @add="newContributorsAdded"
                           @keyup.escape="clearContributorSearch"
                         >
@@ -447,6 +453,9 @@
                                 }})
                               </div>
                               <div v-else>{{ slotProps.value.orcidId }}</div>
+                            </div>
+                            <div>
+                              <i class="pi pi-times-circle" @click="removeContributor(slotProps.value)"></i>
                             </div>
                           </template>
                         </Chips>
@@ -480,6 +489,9 @@
                             <div>
                               <div>{{ slotProps.value.identifier }}</div>
                             </div>
+                            <div>
+                              <i class="pi pi-times-circle" @click="removeDoiIdentifier(slotProps.value)"></i>
+                            </div>
                           </template>
                         </Chips>
                         <label :for="scopedId('input-doiIdentifiers')">DOI identifiers</label>
@@ -507,27 +519,29 @@
                           :id="scopedId('input-publicationIdentifiers')"
                           ref="publicationIdentifiersInput"
                           v-model="publicationIdentifiers"
+                          class="p-inputwrapper-filled"
                           :multiple="true"
                           option-label="identifier"
                           :suggestions="publicationIdentifierSuggestionsList"
                           @complete="searchPublicationIdentifiers"
-                          @item-select="acceptNewPublicationIdentifier"
-                          @item-unselect="removePublicationIdentifier"
                           @keyup.escape="clearPublicationIdentifierSearch"
+                          @option-select="acceptNewPublicationIdentifier"
+                          @option-unselect="removePublicationIdentifier"
                         >
                           <template #chip="slotProps">
-                            <div>
+                            <div class="p-inputchips-chip-item">
+                              {{ slotProps.value.identifier }}: {{ truncatePublicationTitle(slotProps.value.title) }}
                               <div>
-                                {{ slotProps.value.identifier }}: {{ truncatePublicationTitle(slotProps.value.title) }}
+                                <i class="pi pi-times-circle" @click="removePublicationIdentifier(slotProps.value)"></i>
                               </div>
                             </div>
                           </template>
-                          <template #item="slotProps">
+                          <template #option="slotProps">
                             <div>
-                              <div>Title: {{ slotProps.item.title }}</div>
-                              <div>DOI: {{ slotProps.item.doi }}</div>
-                              <div>Identifier: {{ slotProps.item.identifier }}</div>
-                              <div>Database: {{ slotProps.item.dbName }}</div>
+                              <div>Title: {{ slotProps.option.title }}</div>
+                              <div>DOI: {{ slotProps.option.doi }}</div>
+                              <div>Identifier: {{ slotProps.option.identifier }}</div>
+                              <div>Database: {{ slotProps.option.dbName }}</div>
                             </div>
                           </template>
                         </AutoComplete>
@@ -614,8 +628,7 @@
                 </div>
               </div>
             </StepPanel>
-
-            <StepPanel v-slot="{ activateCallback }" :value="2" >
+            <StepPanel v-slot="{ activateCallback }" :value="3" >
               <div class="mavedb-wizard-form">
                 <div class="mavedb-wizard-form-content-background"></div>
                 <div class="mavedb-wizard-row">
@@ -725,7 +738,7 @@
                 </div>
               </div>
             </StepPanel>
-            <StepPanel v-slot="{ activateCallback }" v-for="(targetNum, targetIdx) in numTargets" :key="targetIdx" :value="targetIdx + 3">
+            <StepPanel v-for="(targetNum, targetIdx) in numTargets" v-slot="{ activateCallback }" :key="targetIdx" :value="targetIdx + 4">
               <div class="mavedb-wizard-form">
                 <div class="mavedb-wizard-form-content-background"></div>
                 <div v-if="isTargetSequence" class="mavedb-wizard-row">
@@ -745,16 +758,17 @@
                         v-model="createdTargetGenes[targetIdx].autofilledTargetGene"
                         field="name"
                         :force-selection="true"
+                        option-label="name"
                         :suggestions="targetGeneSuggestionsList"
                         @complete="searchTargetGenes"
-                        @item-select="autofillFromExistingTarget($event, targetIdx)"
+                        @option-select="autofillFromExistingTarget($event, targetIdx)"
                       >
-                        <template #item="slotProps">
+                        <template #option="slotProps">
                           <div>
-                            <div>Name: {{ slotProps.item.name }}</div>
-                            <div>Category: {{ textForTargetGeneCategory(slotProps.item.category) }}</div>
+                            <div>Name: {{ slotProps.option.name }}</div>
+                            <div>Category: {{ textForTargetGeneCategory(slotProps.option.category) }}</div>
                             <div
-                              v-for="externalIdentifier of slotProps.item.externalIdentifiers"
+                              v-for="externalIdentifier of slotProps.option.externalIdentifiers"
                               :key="externalIdentifier.identifier"
                             >
                               {{ externalIdentifier.identifier.dbName }}:
@@ -874,10 +888,11 @@
                             v-model="createdTargetGenes[targetIdx].targetGene.externalIdentifiers[dbName].identifier"
                             field="identifier"
                             :force-selection="false"
+                            option-label="identifier"
                             style="width: 100%"
                             :suggestions="targetGeneIdentifierSuggestionsList[dbName]"
-                            @change="externalTargetIdentifierChanged(dbName, targetIdx, $event)"
                             @complete="searchTargetGeneIdentifiers(dbName, $event)"
+                            @update:model-value="externalTargetIdentifierChanged(dbName, targetIdx, $event)"
                           />
                           <label :for="scopedId(`input-${dbName.toLowerCase()}Identifier`)"
                             >{{ dbName }} identifier</label
@@ -936,16 +951,17 @@
                           field="organismName"
                           force-selection
                           :multiple="false"
+                          option-label="organismName"
                           :options="taxonomies"
                           style="width: 100%"
                           :suggestions="taxonomySuggestionsList"
                           @complete="searchTaxonomies"
                           @keyup.escape="clearTaxonomySearch"
                         >
-                          <template #item="slotProps">
-                            {{ slotProps.item.code }} - {{ slotProps.item.organismName }}
-                            <template v-if="slotProps.item.commonName !== 'NULL' && slotProps.item.commonName !== null"
-                              >/ {{ slotProps.item.commonName }}</template
+                          <template #option="slotProps">
+                            {{ slotProps.option.code }} - {{ slotProps.option.organismName }}
+                            <template v-if="slotProps.option.commonName !== 'NULL' && slotProps.option.commonName !== null"
+                              >/ {{ slotProps.option.commonName }}</template
                             >
                           </template>
                         </AutoComplete>
@@ -1183,8 +1199,7 @@
                 </div>
               </div>
             </StepPanel>
-
-            <StepPanel v-slot="{ activateCallback }" :value="numTargets + 3">
+            <StepPanel v-slot="{ activateCallback }" :value="numTargets + 4">
               <div class="mavedb-wizard-form">
                 <div class="mavedb-wizard-form-content-background"></div>
                 <div class="mavedb-wizard-row">
@@ -1234,8 +1249,7 @@
                 </div>
               </div>
             </StepPanel>
-
-            <StepPanel v-slot="{ activateCallback }" :value="numTargets + 4">
+            <StepPanel v-slot="{ activateCallback }" :value="numTargets + 5">
               <div class="mavedb-wizard-form">
                 <div class="mavedb-wizard-form-content-background"></div>
                 <div class="mavedb-wizard-row">
@@ -1653,10 +1667,10 @@ export default {
     minTargetGeneStepWithError: Infinity,
 
     /** The currently active step. */
-    activeWizardStep: 0,
+    activeWizardStep: 1,
 
     /** The highest step that the user has entered. This can be used to prevent the user from jumping ahead. */
-    maxWizardStepEntered: 0,
+    maxWizardStepEntered: 1,
 
     stepFields: [
       ['experiment', 'supersededScoreSetUrn', 'metaAnalyzesScoreSetUrns'],
@@ -1682,7 +1696,7 @@ export default {
       const numSteps = 5 + this.numTargets
       // This yields the index of the maximum step validated, -1 if step 0 is not valid, and -2 if all steps are valid.
       const maxStepValidated = _.findIndex(_.range(0, numSteps), (step) => !this.validateWizardStep(step)) - 1
-      return maxStepValidated == -2 ? numSteps - 1 : maxStepValidated
+      return maxStepValidated == -2 ? numSteps - 1 : maxStepValidated + 1
     },
 
     targetGeneIdentifierSuggestionsList: function () {
@@ -1744,7 +1758,7 @@ export default {
           if (response.status == 200) {
             this.experiment = response.data
             this.populateExperimentMetadata({value: this.experiment})
-            this.activeWizardStep = 0
+            this.activeWizardStep = 1
           } else {
             this.$toast.add({severity: 'error', summary: `Could not fetch experiment with urn ${this.experimentUrn}`})
           }
@@ -2227,7 +2241,7 @@ export default {
     },
 
     externalTargetIdentifierChanged: function (dbName, targetIdx, event) {
-      this.addDefaultOffset(this.dbName, targetIdx)
+      this.addDefaultOffset(dbName, targetIdx)
       this.externalIdentifierTextToObject(dbName, targetIdx, event)
     },
 
@@ -2272,12 +2286,29 @@ export default {
       }
     },
 
-    removePublicationIdentifier: function (event) {
+    removePublicationIdentifier: function (value) {
+      const removedIdentifier = value.identifier
+      const publicationIdx = this.publicationIdentifiers.findIndex((pub) => pub.identifier == removedIdentifier)
+      if (publicationIdx != -1) {
+        this.publicationIdentifiers.splice(publicationIdx, 1)
+      }
       // If we are removing a primary publication identifier, also remove it from that list.
-      const removedIdentifier = event.value.identifier
       const primaryIdx = this.primaryPublicationIdentifiers.findIndex((pub) => pub.identifier == removedIdentifier)
       if (primaryIdx != -1) {
         this.primaryPublicationIdentifiers.splice(primaryIdx, 1)
+      }
+    },
+
+    removeContributor: function (contributor) {
+      const index = this.contributors.findIndex(c => c.orcidId === contributor.orcidId)
+      if (index !== -1) {
+        this.contributors.splice(index, 1)
+      }
+    },
+    removeDoiIdentifier: function (doiIdentifier) {
+      const index = this.doiIdentifiers.findIndex(d => d.identifier === doiIdentifier.identifier)
+      if (index !== -1) {
+        this.doiIdentifiers.splice(index, 1)
       }
     },
 
@@ -2538,9 +2569,9 @@ export default {
       this.validationErrors = {}
 
       // set form to step 0
-      this.activeWizardStep = 0
+      this.activeWizardStep = 1
       this.maxWizardStepValidated = 0
-      this.maxWizardStepEntered = 0
+      this.maxWizardStepEntered = 1
     },
 
     resetTarget: function (targetIdx) {

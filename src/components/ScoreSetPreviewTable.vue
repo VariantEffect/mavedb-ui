@@ -4,71 +4,80 @@
     file on the top page if you want to read the whole variants list.
   </div>
   <br />
-  <TabView>
-    <TabPanel header="Scores">
-      <div style="overflow-y: scroll; overflow-x: scroll">
-        <DataTable :show-gridlines="true" :striped-rows="true" :value="scoresTableData">
-          <Column
-            v-for="column of scoreColumns.slice(0, numTextColsInScoresTable)"
-            :key="column"
-            :field="column"
-            :header="column"
-            header-style="background-color: #a1d8c8; font-weight: bold;"
-            style="overflow: hidden"
-          >
-            <!--:frozen="columnIsAllNa(scoresTable, column)"-->
-            <template #body="scoresTable">{{ scoresTable.data[column] }}</template>
-          </Column>
-          <Column
-            v-for="column of scoreColumns.slice(numTextColsInScoresTable, scoreColumns.length)"
-            :key="column"
-            :field="column"
-            :header="column"
-            header-style="background-color: #a1d8c8; font-weight: bold;"
-            style="overflow: hidden"
-          >
-            <template #body="scoresTable">{{ convertToThreeDecimal(scoresTable.data[column]) }}</template>
-          </Column>
-        </DataTable>
-      </div>
-    </TabPanel>
-    <TabPanel header="Counts">
-      <div style="overflow-y: scroll; overflow-x: scroll">
-        <template v-if="!countsTableData || countsTableData.length === 0"> No count data available. </template>
-        <DataTable v-else :show-gridlines="true" :striped-rows="true" :value="countsTableData">
-          <Column
-            v-for="column of countColumns.slice(0, numTextColsInScoresTable)"
-            :key="column"
-            :field="column"
-            :header="column"
-            header-style="background-color: #a1d8c8; font-weight: bold;"
-            style="overflow: hidden"
-          >
-            <!--:frozen="columnIsAllNa(countsTable, column)" bodyStyle="text-align:left"-->
-            <template #body="countsTable">{{ countsTable.data[column] }}</template>
-            <!--:style="{overflow: 'hidden'}"-->
-          </Column>
-          <Column
-            v-for="column of countColumns.slice(numTextColsInScoresTable, countColumns.length)"
-            :key="column"
-            :field="column"
-            :header="column"
-            header-style="background-color: #a1d8c8; font-weight: bold;"
-            style="overflow: hidden"
-          >
-            <template #body="countsTable">{{ convertToThreeDecimal(countsTable.data[column]) }}</template>
-          </Column>
-        </DataTable>
-      </div>
-    </TabPanel>
-  </TabView>
+  <Tabs value="0">
+    <TabList>
+      <Tab value="0">Scores</Tab>
+      <Tab value="1">Counts</Tab>
+    </TabList>
+    <TabPanels>
+      <TabPanel header="Scores" value="0">
+        <div style="overflow-y: scroll; overflow-x: scroll">
+          <DataTable :show-gridlines="true" :striped-rows="true" :value="scoresTableData">
+            <Column
+              v-for="column of scoreColumns.slice(0, numTextColsInScoresTable)"
+              :key="column"
+              :field="column"
+              :header="column"
+              header-style="background-color: #a1d8c8; font-weight: bold;"
+              style="overflow: hidden"
+            >
+              <!--:frozen="columnIsAllNa(scoresTable, column)"-->
+              <template #body="scoresTable">{{ scoresTable.data[column] }}</template>
+            </Column>
+            <Column
+              v-for="column of scoreColumns.slice(numTextColsInScoresTable, scoreColumns.length)"
+              :key="column"
+              :field="column"
+              :header="column"
+              header-style="background-color: #a1d8c8; font-weight: bold;"
+              style="overflow: hidden"
+            >
+              <template #body="scoresTable">{{ convertToThreeDecimal(scoresTable.data[column]) }}</template>
+            </Column>
+          </DataTable>
+        </div>
+      </TabPanel>
+      <TabPanel header="Counts" value="1">
+        <div style="overflow-y: scroll; overflow-x: scroll">
+          <template v-if="!countsTableData || countsTableData.length === 0"> No count data available. </template>
+          <DataTable v-else :show-gridlines="true" :striped-rows="true" :value="countsTableData">
+            <Column
+              v-for="column of countColumns.slice(0, numTextColsInScoresTable)"
+              :key="column"
+              :field="column"
+              :header="column"
+              header-style="background-color: #a1d8c8; font-weight: bold;"
+              style="overflow: hidden"
+            >
+              <!--:frozen="columnIsAllNa(countsTable, column)" bodyStyle="text-align:left"-->
+              <template #body="countsTable">{{ countsTable.data[column] }}</template>
+              <!--:style="{overflow: 'hidden'}"-->
+            </Column>
+            <Column
+              v-for="column of countColumns.slice(numTextColsInScoresTable, countColumns.length)"
+              :key="column"
+              :field="column"
+              :header="column"
+              header-style="background-color: #a1d8c8; font-weight: bold;"
+              style="overflow: hidden"
+            >
+              <template #body="countsTable">{{ convertToThreeDecimal(countsTable.data[column]) }}</template>
+            </Column>
+          </DataTable>
+        </div>
+      </TabPanel>
+    </TabPanels>
+  </Tabs>
 </template>
 
 <script lang="ts" setup>
 import axios from 'axios'
 import Column from 'primevue/column'
 import DataTable from 'primevue/datatable'
-import TabView from 'primevue/tabview'
+import Tabs from 'primevue/tabs'
+import TabList from 'primevue/tablist'
+import Tab from 'primevue/tab'
+import TabPanels from 'primevue/tabpanels'
 import TabPanel from 'primevue/tabpanel'
 import {computed, ref, watch} from 'vue'
 import type {PropType, Ref} from 'vue'

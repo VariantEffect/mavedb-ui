@@ -165,6 +165,8 @@ export interface Histogram {
   // Selection
   selectedBin: Getter<HistogramBin | null>
   selectedDatum: Getter<HistogramDatum | null>
+  // Bins
+  bins: Getter<HistogramBin[]>
 
   // Container
   container: Getter<HTMLElement | null>
@@ -1337,7 +1339,9 @@ export default function makeHistogram(): Histogram {
 
     height: () => height,
 
-    width: () => width
+    width: () => width,
+
+    bins: () => bins
   }
 
   return chart

@@ -195,7 +195,10 @@
                     >
                       <template #chip="slotProps">
                         <div>
-                          <span>{{ slotProps.value.identifier }}</span>
+                          <div>{{ slotProps.value.identifier }}</div>
+                        </div>
+                        <div>
+                          <i class="pi pi-times-circle" @click="removeDoiIdentifier(slotProps.value)"></i>
                         </div>
                       </template>
                     </Chips>
@@ -211,25 +214,28 @@
                       :id="scopedId('input-publicationIdentifiers')"
                       ref="publicationIdentifiersInput"
                       v-model="publicationIdentifiers"
+                      class="p-inputwrapper-filled"
                       :multiple="true"
                       option-label="identifier"
                       :suggestions="publicationIdentifierSuggestionsList"
                       @complete="searchPublicationIdentifiers"
-                      @item-select="acceptNewPublicationIdentifier"
-                      @item-unselect="removePublicationIdentifier"
                       @keyup.escape="clearPublicationIdentifierSearch"
+                      @option-select="acceptNewPublicationIdentifier"
                     >
                       <template #chip="slotProps">
-                        <div>
-                          <div>{{ slotProps.value.identifier }}</div>
+                        <div class="p-inputchips-chip-item">
+                          {{ slotProps.value.identifier }}: {{ truncatePublicationTitle(slotProps.value.title) }}
+                          <div>
+                            <i class="pi pi-times-circle" @click="removePublicationIdentifier(slotProps.value)"></i>
+                          </div>
                         </div>
                       </template>
-                      <template #item="slotProps">
+                      <template #option="slotProps">
                         <div>
-                          <div>Title: {{ slotProps.item.title }}</div>
-                          <div>DOI: {{ slotProps.item.doi }}</div>
-                          <div>Identifier: {{ slotProps.item.identifier }}</div>
-                          <div>Database: {{ slotProps.item.dbName }}</div>
+                          <div>Title: {{ slotProps.option.title }}</div>
+                          <div>DOI: {{ slotProps.option.doi }}</div>
+                          <div>Identifier: {{ slotProps.option.identifier }}</div>
+                          <div>Database: {{ slotProps.option.dbName }}</div>
                         </div>
                       </template>
                     </AutoComplete>
@@ -245,6 +251,7 @@
                       :id="scopedId('input-primaryPublicationIdentifiers')"
                       ref="primaryPublicationIdentifiersInput"
                       v-model="primaryPublicationIdentifiers"
+                      class="p-inputwrapper-filled"
                       option-label="identifier"
                       :options="publicationIdentifiers"
                       placeholder="Select a primary publication (Where the dataset is described)"
@@ -1562,6 +1569,13 @@ export default {
       input.$refs.input.value = ''
     },
 
+    removeDoiIdentifier: function (doiIdentifier) {
+      const index = this.doiIdentifiers.findIndex(d => d.identifier === doiIdentifier.identifier)
+      if (index !== -1) {
+        this.doiIdentifiers.splice(index, 1)
+      }
+    },
+
     acceptNewPublicationIdentifier: function () {
       // Assume the newest value is the right-most one. That seems to always be true in this version of PrimeVue, but it
       // might change in the future.
@@ -1579,9 +1593,13 @@ export default {
       }
     },
 
-    removePublicationIdentifier: function (event) {
+    removePublicationIdentifier: function (value) {
+      const removedIdentifier = value.identifier
+      const publicationIdx = this.publicationIdentifiers.findIndex((pub) => pub.identifier == removedIdentifier)
+      if (publicationIdx != -1) {
+        this.publicationIdentifiers.splice(publicationIdx, 1)
+      }
       // If we are removing a primary publication identifier, also remove it from that list.
-      const removedIdentifier = event.value.identifier
       const primaryIdx = this.primaryPublicationIdentifiers.findIndex((pub) => pub.identifier == removedIdentifier)
       if (primaryIdx != -1) {
         this.primaryPublicationIdentifiers.splice(primaryIdx, 1)
@@ -1600,6 +1618,10 @@ export default {
         this.setPublicationIdentifierSearch(event.query)
         this.setExternalPublicationIdentifierSearch(event.query)
       }
+    },
+
+    truncatePublicationTitle: function (title) {
+      return title.length > 50 ? title.slice(0, 50) + '...' : title
     },
 
     acceptNewTargetGeneIdentifier: function (dbName) {

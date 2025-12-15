@@ -526,7 +526,6 @@
                           @complete="searchPublicationIdentifiers"
                           @keyup.escape="clearPublicationIdentifierSearch"
                           @option-select="acceptNewPublicationIdentifier"
-                          @option-unselect="removePublicationIdentifier"
                         >
                           <template #chip="slotProps">
                             <div class="p-inputchips-chip-item">

@@ -619,6 +619,10 @@ export default {
 .mavedb-calibrations-datatable {
   width: 100%;
 }
+.mavedb-calibrations-datatable :deep(.p-datatable-tbody > tr:nth-child(even)) {
+    background: var(--surface-a);
+}
+
 .mavedb-calibrations-datatable :deep(.p-datatable-thead > tr > th) {
   white-space: nowrap;
 }
@@ -662,6 +666,7 @@ export default {
 }
 .multi-line {
   white-space: normal;
+  margin-top: 0.3em;
   line-height: 1.2;
   max-height: 2.4em;
   display: -webkit-box;
@@ -682,26 +687,26 @@ export default {
 .tag-primary,
 .tag-general-use,
 .tag-published {
-  background: var(--green-100);
-  color: var(--green-700);
-  border: 1px solid var(--green-300);
+  background: var(--green-100) !important;
+  color: var(--green-700) !important;
+  border: 1px solid var(--green-300) !important;
 }
 .tag-non-primary,
 .tag-private,
 .tag-research-use {
-  background: var(--red-100);
-  color: var(--red-700);
-  border: 1px solid var(--red-300);
+  background: var(--red-100) !important;
+  color: var(--red-700) !important;
+  border: 1px solid var(--red-300) !important;
 }
 .tag-investigator-provided {
-  background: var(--blue-100);
-  color: var(--blue-700);
-  border: 1px solid var(--blue-300);
+  background: var(--blue-100) !important;
+  color: var(--blue-700) !important;
+  border: 1px solid var(--blue-300) !important;
 }
 .tag-non-investigator {
-  background: var(--purple-100);
-  color: var(--purple-700);
-  border: 1px solid var(--purple-300);
+  background: var(--purple-100) !important;
+  color: var(--purple-700) !important;
+  border: 1px solid var(--purple-300) !important;
 }
 </style>
 

@@ -101,6 +101,7 @@
             :variants="variants"
             @calibration-changed="(calibration) => childComponentSelectedCalibration(calibration, 0)"
             @export-chart="setHistogramExport"
+            @selection-changed="onHistogramSelectionChanged"
           />
         </div>
         <div
@@ -121,6 +122,7 @@
             :variants="variants"
             @calibration-changed="(calibration) => childComponentSelectedCalibration(calibration, 1)"
             @export-chart="setHistogramExport"
+            @selection-changed="onHistogramSelectionChanged"
           />
         </div>
         <div v-if="selectedCalibrationObjects[1]" class="mavedb-score-set-calibration-table">
@@ -548,7 +550,8 @@ export default {
     },
     annotatedDownloadInProgress: false,
     annotatedDownloadProgress: 0,
-    streamController: null
+    streamController: null,
+    syncingBinSelection: false
   }),
 
   computed: {
@@ -1151,6 +1154,40 @@ export default {
 
       const selectedVariant = this.variants.find((v) => v.accession == variant.accession)
       this.selectedVariant = Object.assign(selectedVariant, preferredVariantLabel(selectedVariant))
+    },
+    onHistogramSelectionChanged: function (payload) {
+      // Sync selected variant with histogram selection changes.
+      const accession = payload?.datum?.accession || payload?.datum?.urn
+      if (accession) {
+        const selectedVariant = this.variants.find((v) => v.accession == accession)
+        this.selectedVariant = selectedVariant
+          ? Object.assign(selectedVariant, preferredVariantLabel(selectedVariant))
+          : null
+      } else {
+        // Bin-only selection: keep histograms' bin selections in sync.
+        if (this.syncingBinSelection || !payload?.bin) return
+        this.syncingBinSelection = true
+        try {
+          // Determine source and target refs; if one is missing, attempt both.
+          const dist = this.$refs.distHistogram
+          const clinical = this.$refs.clinicalHistogram
+          // Sync the other histogram(s) to the same bin.
+          if (dist && clinical) {
+            // If the event likely came from dist, sync clinical, and vice versa.
+            // We can't reliably identify the source; update both to be safe.
+            dist.syncSelectBin(payload.bin)
+            clinical.syncSelectBin(payload.bin)
+          } else if (dist) {
+            dist.syncSelectBin(payload.bin)
+          } else if (clinical) {
+            clinical.syncSelectBin(payload.bin)
+          }
+        } finally {
+          this.syncingBinSelection = false
+        }
+        // Clear variant focus when no datum is selected.
+        this.selectedVariant = null
+      }
     },
     childComponentSelectedCalibration: function (calibration, idx) {
       this.selectedCalibrations[idx] = calibration

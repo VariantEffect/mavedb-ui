@@ -828,7 +828,12 @@ export default defineComponent({
           if (newValue) {
             this.histogram.selectDatum(newValue)
           } else {
-            this.histogram.clearSelection()
+            // Do not clear internal bin selection when external datum is cleared.
+            // This prevents a click from needing two taps when switching from a datum to a bin.
+            const hasSelectedBin = !!this.histogram.selectedBin()
+            if (!hasSelectedBin) {
+              this.histogram.clearSelection()
+            }
           }
         }
       }

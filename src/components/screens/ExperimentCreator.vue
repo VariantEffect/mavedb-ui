@@ -252,8 +252,10 @@
                     <div class="mavedb-wizard-content field">
                       <span class="p-float-label">
                         <AutoComplete
-                          :id="scopedId('input-publicationIdentifiers')"                          ref="publicationIdentifiersInput"
+                          :id="scopedId('input-publicationIdentifiers')"
+                          ref="publicationIdentifiersInput"
                           v-model="publicationIdentifiers"
+                          class="p-inputwrapper-filled"
                           :multiple="true"
                           option-label="identifier"
                           :suggestions="publicationIdentifierSuggestionsList"

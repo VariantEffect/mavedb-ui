@@ -99,6 +99,7 @@
                     :id="scopedId('input-publicationIdentifiers')"
                     ref="publicationIdentifiersInput"
                     v-model="publicationIdentifiers"
+                    class="p-inputwrapper-filled"
                     :multiple="true"
                     option-label="identifier"
                     :suggestions="publicationIdentifierSuggestionsList"

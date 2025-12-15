@@ -184,35 +184,47 @@
                 }}</span>
               </div>
               <div class="field">
-                <TabView>
-                  <TabPanel header="Edit">
-                    <span class="p-float-label">
-                      <Textarea :id="scopedId('input-abstractText')" v-model="abstractText" rows="4" />
-                      <label :for="scopedId('input-abstractText')">Abstract</label>
-                    </span>
-                  </TabPanel>
-                  <TabPanel header="Preview">
-                    <!-- eslint-disable-next-line vue/no-v-html -->
-                    <div v-html="markdownToHtml(abstractText)"></div>
-                  </TabPanel>
-                </TabView>
+                <Tabs value="0">
+                  <TabList>
+                    <Tab value="0">Edit</Tab>
+                    <Tab value="1">Preview</Tab>
+                  </TabList>
+                  <TabPanels>
+                    <TabPanel header="Edit" value="0">
+                      <span class="p-float-label">
+                        <Textarea :id="scopedId('input-abstractText')" v-model="abstractText" rows="4" />
+                        <label :for="scopedId('input-abstractText')">Abstract</label>
+                      </span>
+                    </TabPanel>
+                    <TabPanel header="Preview" value="1">
+                      <!-- eslint-disable-next-line vue/no-v-html -->
+                      <div v-html="markdownToHtml(abstractText)"></div>
+                    </TabPanel>
+                  </TabPanels>
+                </Tabs>
                 <span v-if="validationErrors.abstractText" class="mave-field-error">{{
                   validationErrors.abstractText
                 }}</span>
               </div>
               <div class="field">
-                <TabView>
-                  <TabPanel header="Edit">
-                    <span class="p-float-label">
-                      <Textarea :id="scopedId('input-methodText')" v-model="methodText" rows="4" />
-                      <label :for="scopedId('input-methodText')">Methods</label>
-                    </span>
-                  </TabPanel>
-                  <TabPanel header="Preview">
-                    <!-- eslint-disable-next-line vue/no-v-html -->
-                    <div v-html="markdownToHtml(methodText)"></div>
-                  </TabPanel>
-                </TabView>
+                <Tabs value="0">
+                  <TabList>
+                    <Tab value="0">Edit</Tab>
+                    <Tab value="1">Preview</Tab>
+                  </TabList>
+                  <TabPanels>
+                    <TabPanel header="Edit" value="0">
+                      <span class="p-float-label">
+                        <Textarea :id="scopedId('input-methodText')" v-model="methodText" rows="4" />
+                        <label :for="scopedId('input-methodText')">Methods</label>
+                      </span>
+                    </TabPanel>
+                    <TabPanel header="Preview" value="1">
+                      <!-- eslint-disable-next-line vue/no-v-html -->
+                      <div v-html="markdownToHtml(methodText)"></div>
+                    </TabPanel>
+                  </TabPanels>
+                </Tabs>
                 <span v-if="validationErrors.methodText" class="mave-field-error">{{
                   validationErrors.methodText
                 }}</span>
@@ -411,8 +423,11 @@ import Multiselect from 'primevue/multiselect'
 import FileUpload from 'primevue/fileupload'
 import InputText from 'primevue/inputtext'
 import ProgressSpinner from 'primevue/progressspinner'
+import Tabs from 'primevue/tabs'
+import TabList from 'primevue/tablist'
+import TabPanels from 'primevue/tabpanels'
+import Tab from 'primevue/tab'
 import TabPanel from 'primevue/tabpanel'
-import TabView from 'primevue/tabview'
 import Textarea from 'primevue/textarea'
 import {useHead} from '@unhead/vue'
 
@@ -527,7 +542,10 @@ export default {
     InputText,
     ProgressSpinner,
     TabPanel,
-    TabView,
+    Tabs,
+    TabList,
+    TabPanels,
+    Tab,
     Textarea
   },
 

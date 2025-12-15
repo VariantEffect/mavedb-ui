@@ -116,3 +116,8 @@ body .p-button {
 .p-tablist-tab-list .p-tab-active, .p-paginator-page-selected {
   background-color: #3f51b51f !important;
 }
+
+.p-menubar-root-list {
+  gap: 0 !important;
+  margin-left: 1em !important;
+}

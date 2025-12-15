@@ -23,7 +23,7 @@
             <InputText
               ref="searchTextInput"
               v-model="searchText"
-              class="p-inputtext-sm !rounded-r-none"
+              class="p-inputtext-sm !rounded-r-none w-full"
               placeholder="Search"
               style="width: 200px; height: auto;"
               type="search"

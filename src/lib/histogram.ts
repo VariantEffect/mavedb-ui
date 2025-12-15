@@ -391,14 +391,15 @@ export default function makeHistogram(): Histogram {
     refreshHighlighting()
 
     if (target instanceof Element) {
-      // Show hover tooltip and hide selection tooltip during hover.
+      // Show hover tooltip; do not hide selection tooltip when hovering selected bin.
       if (hoverBin && hoverBin === selectedBin) {
         showSelectionTooltip(false)
         return
       }
       if (tooltip) {
         showTooltip(tooltip, hoverBin, null)
-        hideSelectionTooltip()
+        // Temporarily hide selection tooltip during hover, but remember visibility
+        hideSelectionTooltip(true)
       }
     }
   }
@@ -425,6 +426,11 @@ export default function makeHistogram(): Histogram {
     // Hide the tooltip and the highlight.
     if (tooltip) {
       tooltip.style('display', 'none')
+    }
+
+    // Restore selection tooltip after hover only if it was visible at hover start and a bin remains selected.
+    if (selectionTooltipVisible && selectedBin) {
+      showSelectionTooltip(true)
     }
   }
 
@@ -483,7 +489,8 @@ export default function makeHistogram(): Histogram {
       .style('color', '#FF0919')
       .text('×')
       .on('click', () => {
-        hideSelectionTooltip()
+        // Close selection tooltip explicitly; do not mark it for restoration.
+        hideSelectionTooltip(false)
       })
 
     // Scoped outside-click: register only once per instance
@@ -494,8 +501,8 @@ export default function makeHistogram(): Histogram {
         if (!tooltipEl) return
         // Ignore clicks inside the tooltip
         if (tooltipEl.contains(target)) return
-        // Close selection tooltip without clearing selection
-        hideSelectionTooltip()
+        // Close selection tooltip without clearing selection, and do not restore on hover end.
+        hideSelectionTooltip(false)
       })
       containerClickHandlerRegistered = true
     }
@@ -525,7 +532,6 @@ export default function makeHistogram(): Histogram {
         if (tooltip === selectionTooltip) {
           // Update only inner content; button is persistent
           tooltip.select('.hg-popover-content').html(html)
-          selectionTooltipVisible = true
         } else {
           tooltip.html(html)
         }
@@ -546,6 +552,7 @@ export default function makeHistogram(): Histogram {
       } else {
         showTooltip(selectionTooltip, selectedBin, selectedDatum)
         positionSelectionTooltip()
+        // Showing the selection tooltip sets its visibility state.
         selectionTooltipVisible = selectionTooltipVisible || persist
         tooltip?.style('display', 'none')
       }
@@ -606,9 +613,13 @@ export default function makeHistogram(): Histogram {
     }
   }
 
-  const hideSelectionTooltip = () => {
+  const hideSelectionTooltip = (hideForHover: boolean) => {
     selectionTooltip?.style('display', 'none')
-    selectionTooltipVisible = false
+    // When hiding for hover, do not change visibility state so we can restore on mouseleave.
+    // Otherwise, explicitly mark as not visible.
+    if (!hideForHover) {
+      selectionTooltipVisible = false
+    }
   }
 
   const updateSelectionAfterRefresh = () => {
@@ -620,7 +631,7 @@ export default function makeHistogram(): Histogram {
     if (selectedBin) {
       showSelectionTooltip(true)
     } else {
-      hideSelectionTooltip()
+      hideSelectionTooltip(false)
     }
   }
 
@@ -1152,7 +1163,7 @@ export default function makeHistogram(): Histogram {
       selectedBin = null
       selectedDatum = null
       refreshHighlighting()
-      hideSelectionTooltip()
+      hideSelectionTooltip(false)
       if (selectionChangedCallback) selectionChangedCallback({bin: null, datum: null, source: 'histogram'})
     },
 

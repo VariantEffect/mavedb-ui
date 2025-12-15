@@ -71,7 +71,7 @@
             <span :class="clinicalMode ? 'mavedb-clinical-mode-option-off' : 'mavedb-clinical-mode-option-on'"
               >Raw data</span
             >
-            <InputSwitch
+            <ToggleSwitch
               v-model="clinicalMode"
               :aria-label="`Click to change to ${clinicalMode ? 'raw data' : 'clinical view'}.`"
             />
@@ -406,7 +406,7 @@ import AutoComplete from 'primevue/autocomplete'
 import Button from 'primevue/button'
 import Checkbox from 'primevue/checkbox'
 import Dialog from 'primevue/dialog'
-import InputSwitch from 'primevue/inputswitch'
+import ToggleSwitch from 'primevue/toggleswitch'
 import ProgressSpinner from 'primevue/progressspinner'
 import ProgressBar from 'primevue/progressbar'
 import PrimeDialog from 'primevue/dialog'
@@ -458,7 +458,7 @@ export default {
     CollectionBadge,
     DefaultLayout,
     Dialog,
-    InputSwitch,
+    ToggleSwitch,
     ItemNotFound,
     PageLoading,
     ProgressBar,

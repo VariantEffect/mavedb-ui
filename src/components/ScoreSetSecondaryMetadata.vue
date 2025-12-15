@@ -2,7 +2,7 @@
   <div v-if="scoreSet.creationDate">
     Created {{ formatDate(scoreSet.creationDate) }}
     <span v-if="scoreSet.createdBy">
-      <a :href="`https://orcid.org/${scoreSet.createdBy.orcidId}`" target="blank"
+      <a class="flex items-center gap-1" :href="`https://orcid.org/${scoreSet.createdBy.orcidId}`" target="blank"
         ><img alt="ORCIDiD" src="@/assets/ORCIDiD_icon.png" />{{ scoreSet.createdBy.firstName }}
         {{ scoreSet.createdBy.lastName }}</a
       ></span
@@ -11,7 +11,7 @@
   <div v-if="scoreSet.modificationDate">
     Last updated {{ formatDate(scoreSet.modificationDate) }}
     <span v-if="scoreSet.modifiedBy">
-      <a :href="`https://orcid.org/${scoreSet.modifiedBy.orcidId}`" target="blank"
+      <a class="flex items-center gap-1" :href="`https://orcid.org/${scoreSet.modifiedBy.orcidId}`" target="blank"
         ><img alt="ORCIDiD" src="@/assets/ORCIDiD_icon.png" />{{ scoreSet.modifiedBy.firstName }}
         {{ scoreSet.modifiedBy.lastName }}</a
       ></span
@@ -22,7 +22,7 @@
     <a
       v-for="contributor in contributors"
       :key="contributor.orcidId"
-      class="mavedb-contributor"
+      class="mavedb-contributor flex items-center gap-1"
       :href="`https://orcid.org/${contributor.orcidId}`"
       target="blank"
     >

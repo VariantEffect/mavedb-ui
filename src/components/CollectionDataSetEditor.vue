@@ -41,7 +41,16 @@
             placeholder="Type or paste comma-separated URNs"
             separator=" "
             @keyup.escape="unvalidatedUrnsToAdd = []"
-          />
+          >
+            <template #chip="slotProps">
+              <div>
+                  <span>{{ slotProps.value }}</span>
+              </div>
+              <div>
+                <i class="pi pi-times-circle" @click="removeUnvalidatedUrnsToAdd(slotProps.value)"></i>
+              </div>
+            </template>
+          </Chips>
           <Button
             class="flex-none mavedb-collection-add-data-set-button"
             icon="pi pi-plus"
@@ -72,7 +81,7 @@
 
 <script>
 import axios from 'axios'
-import _ from 'lodash'
+import _, { remove } from 'lodash'
 import Button from 'primevue/button'
 import Chips from 'primevue/chips'
 import Column from 'primevue/column'
@@ -187,6 +196,10 @@ export default {
       }
     },
 
+    removeUnvalidatedUrnsToAdd: function (urn) {
+      _.remove(this.unvalidatedUrnsToAdd, (item) => item === urn)
+    },
+
     saveChanges: async function () {
       if (this.unvalidatedUrnsToAdd.length > 0) {
         this.unpreparedChangesDialogVisible = true
@@ -295,7 +308,6 @@ export default {
   }
 }
 </script>
-
 <style scoped>
 .mavedb-collection-data-set-editor-button {
   width: fit-content;

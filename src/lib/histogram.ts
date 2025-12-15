@@ -547,6 +547,7 @@ export default function makeHistogram(): Histogram {
         showTooltip(selectionTooltip, selectedBin, selectedDatum)
         positionSelectionTooltip()
         selectionTooltipVisible = selectionTooltipVisible || persist
+        tooltip?.style('display', 'none')
       }
     }
   }

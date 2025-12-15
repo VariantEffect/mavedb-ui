@@ -136,40 +136,42 @@
         <div v-if="item.keywords && Object.keys(item.keywords).length > 0">
           <div class="mave-score-set-section-title">Keywords</div>
           <div class="mave-score-set-keywords">
-            <li v-for="(keyword, index) in item.keywords" :key="index">
-              {{ keyword.keyword.key }}
-              <!--Present local database keyword description-->
-              <i class="pi pi-info-circle" style="color: green; cursor: pointer" @click="showDialog(index)" />
-              <Dialog
-                v-model:visible="dialogVisible[index]"
-                :breakpoints="{'1199px': '75vw', '575px': '90vw'}"
-                :header="keyword.keyword.key"
-                modal
-                :style="{width: '50vw'}"
-              >
-                <p class="m-0">
-                  {{ keyword.keyword.description }}
-                </p>
-              </Dialog>
-              :
-              <a :href="`${config.appBaseUrl}/search?keywords=${keyword.keyword.label}`">{{ keyword.keyword.label }}</a>
-              <div v-if="keyword.keyword.code" class="field">
-                {{ keyword.keyword.code }}
-              </div>
-              <!--Present user's description-->
-              <div v-if="keyword.description" class="field">
-                <div v-if="keyword.description.length >= 300">
-                  <div v-if="!fullDescription[index]">
-                    {{ keyword.description.substring(0, 300) + '....' }}
+            <ul class="list-disc pl-4">
+              <li v-for="(keyword, index) in item.keywords" :key="index">
+                {{ keyword.keyword.key }}
+                <!--Present local database keyword description-->
+                <i class="pi pi-info-circle" style="color: green; cursor: pointer" @click="showDialog(index)" />
+                <Dialog
+                  v-model:visible="dialogVisible[index]"
+                  :breakpoints="{'1199px': '75vw', '575px': '90vw'}"
+                  :header="keyword.keyword.key"
+                  modal
+                  :style="{width: '50vw'}"
+                >
+                  <p class="m-0">
+                    {{ keyword.keyword.description }}
+                  </p>
+                </Dialog>
+                :
+                <a :href="`${config.appBaseUrl}/search?keywords=${keyword.keyword.label}`">{{ keyword.keyword.label }}</a>
+                <div v-if="keyword.keyword.code" class="field">
+                  {{ keyword.keyword.code }}
+                </div>
+                <!--Present user's description-->
+                <div v-if="keyword.description" class="field">
+                  <div v-if="keyword.description.length >= 300">
+                    <div v-if="!fullDescription[index]">
+                      {{ keyword.description.substring(0, 300) + '....' }}
+                    </div>
+                    <div v-else>{{ keyword.description }}</div>
+                    <Button class="p-button-text p-button-sm p-button-info" @click="showFullDescription(index)">
+                      {{ fullDescription[index] ? 'Show less' : 'Show all' }}
+                    </Button>
                   </div>
                   <div v-else>{{ keyword.description }}</div>
-                  <Button class="p-button-text p-button-sm p-button-info" @click="showFullDescription(index)">
-                    {{ fullDescription[index] ? 'Show less' : 'Show all' }}
-                  </Button>
                 </div>
-                <div v-else>{{ keyword.description }}</div>
-              </div>
-            </li>
+              </li>
+            </ul>
           </div>
         </div>
         <div class="mave-score-set-section-title">Scoreset Targets</div>

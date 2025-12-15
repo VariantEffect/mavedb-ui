@@ -9,12 +9,12 @@
         </div>
         <div class="mavedb-wizard-content">
           <span class="p-float-label">
-            <Dropdown
+            <Select
               :id="scopedId('input-containing-score-set')"
               v-model="selectedScoreSet"
+              class="w-full"
               option-label="title"
               :options="editableScoreSets"
-              style="width: 100%"
             >
               <template #option="slotProps">
                 <div>
@@ -22,7 +22,7 @@
                   <div>Description: {{ slotProps.option.shortDescription }}</div>
                 </div>
               </template>
-            </Dropdown>
+            </Select>
             <label :for="scopedId('input-containing-score-set')">Score Set</label>
           </span>
           <span v-if="validationErrors['scoreSetUrn']" class="mave-field-error">{{
@@ -118,11 +118,11 @@
           <div>
             Functional Range {{ rangeIdx + 1 }}
             <PrimeButton
+              class="float-right ml-2"
               icon="pi pi-times"
               rounded
               severity="danger"
-              style="float: right"
-              text
+              size="small"
               @click="removeFunctionalRange(rangeIdx)"
             />
           </div>
@@ -293,7 +293,7 @@
           </div>
         </div>
         <div class="mavedb-wizard-content">
-          <InputSwitch
+          <ToggleSwitch
             v-model="functionalRangeHelpers[rangeIdx].isProvidingClassification"
             :aria-labelledby="scopedId('input-investigatorIsProvidingClassification')"
             @change="updateClassificationValuesBasedOnRangeInformation(rangeIdx)"
@@ -320,24 +320,24 @@
         </div>
         <div class="mavedb-wizard-content">
           <InputGroup>
-            <span class="p-float-label">
-              <Dropdown
+            <span class="p-float-label w-full">
+              <Select
                 v-model="rangeObj.acmgClassification.criterion"
                 :aria-labelledby="scopedId('input-investigatorProvidedOddsPathEvidence')"
+                class="w-full"
                 disabled
                 :options="criterions"
-                style="width: 25%"
               />
               <label :for="scopedId('input-investigatorProvidedOddspathsCriterion')">Criterion</label>
             </span>
-            <span class="p-float-label">
-              <Dropdown
+            <span class="p-float-label w-full">
+              <Select
                 v-model="rangeObj.acmgClassification.evidenceStrength"
                 :aria-labelledby="scopedId('input-investigatorProvidedOddsPathEvidence')"
+                class="w-full"
                 option-label="label"
                 option-value="value"
                 :options="evidenceStrengths"
-                style="width: 75%"
               />
               <label :for="scopedId('input-investigatorProvidedOddsPathEvidence')">Evidence Strength</label>
             </span>
@@ -363,7 +363,7 @@
           <label :id="scopedId('input-investigatorIsProvidingOddsPath')">Provide OddsPaths?</label>
         </div>
         <div class="mavedb-wizard-content">
-          <InputSwitch
+          <ToggleSwitch
             v-model="functionalRangeHelpers[rangeIdx].isProvidingOddspaths"
             :aria-labelledby="scopedId('input-investigatorIsProvidingOddsPath')"
           />
@@ -414,7 +414,7 @@
         </div>
       </div>
       <div class="mavedb-wizard-content">
-        <InputSwitch v-model="draft.researchUseOnly" />
+        <ToggleSwitch v-model="draft.researchUseOnly" />
         <div class="mavedb-switch-value">
           {{
             draft.researchUseOnly
@@ -575,13 +575,13 @@ import useScopedId from '@/composables/scoped-id'
 import useAuth from '@/composition/auth'
 import axios from 'axios'
 import SelectButton from 'primevue/selectbutton'
-import Dropdown from 'primevue/dropdown'
+import Select from 'primevue/select'
 import {reactive, ref} from 'vue'
 import type {PropType} from 'vue'
 import InputText from 'primevue/inputtext'
 import PrimeButton from 'primevue/button'
 import PrimeTextarea from 'primevue/textarea'
-import InputSwitch from 'primevue/inputswitch'
+import ToggleSwitch from 'primevue/toggleswitch'
 import AutoComplete from 'primevue/autocomplete'
 import useItems from '@/composition/items'
 import {FontAwesomeIcon} from '@fortawesome/vue-fontawesome'
@@ -615,14 +615,14 @@ export default {
     InputText,
     PrimeButton,
     PrimeTextarea,
-    InputSwitch,
+    ToggleSwitch,
     AutoComplete,
     FontAwesomeIcon,
     InputGroup,
     InputGroupAddon,
     InputNumber,
     SelectButton,
-    Dropdown
+    Select
   },
 
   props: {
@@ -1225,7 +1225,7 @@ export default {
 }
 
 /* Switches */
-.p-inputswitch {
+.p-toggleswitch {
   margin: 10px 0;
   vertical-align: middle;
 }

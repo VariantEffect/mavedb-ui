@@ -152,6 +152,12 @@ export interface Histogram {
   renderShader: Accessor<string | null, Histogram>
   renderShaderTitles: Accessor<'show' | 'hide' | 'auto', Histogram>
 
+  // Events
+  selectionChanged: Accessor<
+    ((payload: {bin: HistogramBin | null; datum: HistogramDatum | null; source: 'histogram'}) => void) | null,
+    Histogram
+  >
+
   //////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
   // Getters
   //////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
@@ -169,6 +175,7 @@ export interface Histogram {
 }
 
 export default function makeHistogram(): Histogram {
+  const instanceId: string = uuidv4()
   //////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
   // Read/write properties
   //////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
@@ -205,6 +212,11 @@ export default function makeHistogram(): Histogram {
   let renderShader: string | null = null
   let renderShaderTitles: 'show' | 'hide' | 'auto' = 'auto'
 
+  // Events
+  let selectionChangedCallback:
+    | ((payload: {bin: HistogramBin | null; datum: HistogramDatum | null; source: 'histogram'}) => void)
+    | null = null
+
   //////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
   // Read-only properties
   //////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
@@ -240,6 +252,9 @@ export default function makeHistogram(): Histogram {
   let svg: d3.Selection<SVGSVGElement, any, any, any> | null = null
   let tooltip: d3.Selection<HTMLDivElement, any, any, any> | null = null
   let selectionTooltip: d3.Selection<HTMLDivElement, any, any, any> | null = null
+  let selectionTooltipVisible: boolean = false
+  // Handlers
+  let containerClickHandlerRegistered: boolean = false
 
   // Scales
   const xScale = d3.scaleLinear()
@@ -374,16 +389,24 @@ export default function makeHistogram(): Histogram {
     refreshHighlighting()
 
     if (target instanceof Element) {
-      // Show the mouseover tooltip, and hide the tooltip for any currently selected variant.
+      // Show hover tooltip and hide selection tooltip during hover.
+      if (hoverBin && hoverBin === selectedBin) {
+        showSelectionTooltip(false)
+        return
+      }
       if (tooltip) {
         showTooltip(tooltip, hoverBin, null)
+        hideSelectionTooltip()
       }
-      hideSelectionTooltip()
     }
   }
 
   const mousemove = (event: MouseEvent) => {
     if (tooltip) {
+      // If hovering over the selected bin, don't reposition/show hover tooltip.
+      if (selectedBin && hoverBin && hoverBin === selectedBin) {
+        return
+      }
       // Move tooltip to be 50px to the right of the pointer.
       tooltip
         .style('left', d3.pointer(event, document.body)[0] + 50 + 'px')
@@ -401,9 +424,6 @@ export default function makeHistogram(): Histogram {
     if (tooltip) {
       tooltip.style('display', 'none')
     }
-
-    // Show the selection tooltip, if there is a selection.
-    showSelectionTooltip()
   }
 
   //////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
@@ -434,10 +454,49 @@ export default function makeHistogram(): Histogram {
       .style('border-width', '2px')
       .style('border-radius', '5px')
       .style('color', '#000')
-      .style('padding', '5px')
+      .style('padding', '8px 10px')
       .style('position', 'relative')
       .style('width', 'fit-content')
       .style('z-index', 1)
+
+    // Create persistent inner content container and close button once
+    selectionTooltip
+      .append('div')
+      .attr('class', 'hg-popover-content')
+      .style('position', 'relative')
+      .style('padding-right', '18px')
+
+    selectionTooltip
+      .append('button')
+      .attr('class', 'hg-popover-close')
+      .attr('aria-label', 'Close selection details')
+      .style('position', 'absolute')
+      .style('top', '0px')
+      .style('right', '5px')
+      .style('border', 'none')
+      .style('background', 'none')
+      .style('font-size', '20px')
+      .style('line-height', '1')
+      .style('cursor', 'pointer')
+      .style('color', '#FF0919')
+      .text('×')
+      .on('click', () => {
+        hideSelectionTooltip()
+      })
+
+    // Scoped outside-click: register only once per instance
+    if (_container && !containerClickHandlerRegistered) {
+      d3.select(_container).on(`click.histogram-popover-${instanceId}`, (event: MouseEvent) => {
+        const target = event.target as Element
+        const tooltipEl = selectionTooltip?.node()
+        if (!tooltipEl) return
+        // Ignore clicks inside the tooltip
+        if (tooltipEl.contains(target)) return
+        // Close selection tooltip without clearing selection
+        hideSelectionTooltip()
+      })
+      containerClickHandlerRegistered = true
+    }
   }
 
   const showTooltip = (
@@ -461,7 +520,13 @@ export default function makeHistogram(): Histogram {
       )
 
       if (html) {
-        tooltip.html(html)
+        if (tooltip === selectionTooltip) {
+          // Update only inner content; button is persistent
+          tooltip.select('.hg-popover-content').html(html)
+          selectionTooltipVisible = true
+        } else {
+          tooltip.html(html)
+        }
         tooltip.style('display', 'block')
       }
     }
@@ -471,7 +536,7 @@ export default function makeHistogram(): Histogram {
   // Selection tooltip management
   //////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 
-  const showSelectionTooltip = () => {
+  const showSelectionTooltip = (persist: boolean) => {
     if (selectionTooltip) {
       // Don't show the tooltip if no bin is selected. (A bin can be selected without a datum, but not vice versa.)
       if (!selectedBin) {
@@ -479,44 +544,68 @@ export default function makeHistogram(): Histogram {
       } else {
         showTooltip(selectionTooltip, selectedBin, selectedDatum)
         positionSelectionTooltip()
+        selectionTooltipVisible = selectionTooltipVisible || persist
       }
     }
   }
 
   const positionSelectionTooltip = function () {
-    if (selectionTooltip && selectedBin) {
-      const documentWidth = document.body.clientWidth
+    if (selectionTooltip && selectedBin && _container) {
+      // The buffer between the tooltip and the bin it is associated with.
+      const bufferPx = 10
 
-      // Tooltip position relative to SVG, and therefore also relative to the offset parent, which should be _container
-      const left = xScale(selectedBin.x1) + effectiveMargins.left
-      let top = -(yScale(0) - yScale(selectedBin.yMax)) - effectiveMargins.bottom
+      // Anchor points relative to the chart
+      const anchorLeft = xScale(selectedBin.x1) + effectiveMargins.left
+      let anchorTop = -(yScale(0) - yScale(selectedBin.yMax)) - effectiveMargins.bottom
+      const binWidthPx = xScale(selectedBin.x1) - xScale(selectedBin.x0)
 
-      selectionTooltip
-        // Add a small buffer area to the left side of the tooltip so it doesn't overlap with the bin.
-        .style('left', `${left + 5}px`)
-        // Ensure the tooltip doesn't extend outside of the histogram container.
-        .style('max-width', `${documentWidth - left}px`)
+      // Current scroll position of the container's parent (if horizontally scrollable)
+      const scrollLeft = _container.parentElement?.scrollLeft || 0
+      const containerWidth = _container.clientWidth
 
-      // Having set the max width, get the height and border.
-      const tooltipHeight = selectionTooltip.node()?.clientHeight || 0
+      // Place tooltip to the right of the bin using the bin width as buffer
+      selectionTooltip.style('left', `${anchorLeft + bufferPx}px`)
+
+      // Measure tooltip
+      const tooltipRect = selectionTooltip.node()?.getBoundingClientRect()
+      const tooltipWidth = tooltipRect?.width || 0
+      const tooltipHeight = tooltipRect?.height || 0
       const topBorderWidth = selectionTooltip.node()?.clientTop || 0
 
-      // Move the tooltip above the x-axis if it would have obscured it.
-      if (top > -(tooltipHeight + effectiveMargins.bottom)) {
-        top -= tooltipHeight
+      // Determine absolute right edge within the container viewport
+      const rightEdge = scrollLeft + containerWidth
+
+      // Prospective right position of tooltip (anchorLeft + binWidth + width)
+      const prospectiveRight = anchorLeft + binWidthPx + tooltipWidth
+
+      // Flip horizontally if overflowing the container viewport
+      if (prospectiveRight > rightEdge) {
+        // Flip to the left side using bin width as the separation from the bar
+        selectionTooltip.style('left', `${anchorLeft - tooltipWidth - binWidthPx - bufferPx}px`)
+      }
+
+      // Vertical placement: move above x-axis if it would overlap
+      if (anchorTop > -(tooltipHeight + effectiveMargins.bottom)) {
+        anchorTop -= tooltipHeight
       }
 
       selectionTooltip
-        // Add a small buffer to the vertical placement of the tooltip so it doesn't overlap with the axis.
-        .style('top', `${top - 15}px`)
-        // A pretty silly workaround for the fact that this div is relatively positioned and would otherwise take up
-        // space in the document flow.
+        .style('top', `${anchorTop - bufferPx}px`)
+        // Prevent the relatively positioned div from affecting layout flow
         .style('margin-bottom', `${-height - topBorderWidth * 2}px`)
+
+      // Clamp horizontally inside container bounds (left not before 0, right not beyond width)
+      const leftPx = parseFloat(selectionTooltip.style('left')) || 0
+      const minLeft = 0
+      const maxLeft = containerWidth - tooltipWidth
+      const clampedLeft = Math.max(minLeft, Math.min(maxLeft, leftPx))
+      selectionTooltip.style('left', `${clampedLeft}px`)
     }
   }
 
   const hideSelectionTooltip = () => {
     selectionTooltip?.style('display', 'none')
+    selectionTooltipVisible = false
   }
 
   const updateSelectionAfterRefresh = () => {
@@ -526,7 +615,7 @@ export default function makeHistogram(): Histogram {
       selectedBin = selectedBinIndex == null ? null : bins[selectedBinIndex]
     }
     if (selectedBin) {
-      showSelectionTooltip()
+      showSelectionTooltip(true)
     } else {
       hideSelectionTooltip()
     }
@@ -621,6 +710,10 @@ export default function makeHistogram(): Histogram {
         svg.remove()
         svg = null
       }
+      // Remove this instance's container click handler
+      if (_container) {
+        d3.select(_container).on(`click.histogram-popover-${instanceId}`, null)
+      }
       if (tooltip) {
         tooltip.remove()
         tooltip = null
@@ -637,6 +730,9 @@ export default function makeHistogram(): Histogram {
       _container = container
 
       if (_container) {
+        // Ensure this instance's container click handler is unregistered
+        d3.select(_container).on(`click.histogram-popover-${instanceId}`, null)
+        containerClickHandlerRegistered = false
         svg = d3.select(_container).html(null).append('svg')
         svg.append('defs')
         const mainGroup = svg
@@ -862,15 +958,43 @@ export default function makeHistogram(): Histogram {
           .on('mouseover', mouseover)
           .on('mousemove', mousemove)
           .on('mouseleave', mouseleave)
+          .on('click', function (event: MouseEvent, bin: HistogramBin) {
+            // Prevent container outside-click from closing when clicking a datum region
+            event.stopPropagation()
+            if (selectedBin === bin) {
+              // If clicking the selected bin: always show the tooltip,
+              // and prefer datum-specific content when a datum is selected.
+              // Do not deselect on click.
+              showSelectionTooltip(true)
+              if (selectionChangedCallback)
+                selectionChangedCallback({bin: selectedBin, datum: selectedDatum, source: 'histogram'})
+            } else {
+              // Unselected: select and bring up tooltip
+              selectedBin = bin
+              selectedDatum = null
+              refreshHighlighting()
+              if (selectionChangedCallback)
+                selectionChangedCallback({bin: selectedBin, datum: selectedDatum, source: 'histogram'})
+              showSelectionTooltip(true)
+            }
+          })
 
-        // Hover target is the full height of the chart.
+        // Hover target covers only the shaded (bin) region, not the full chart height.
+        const minHoverPx = 20
         hovers
           .append('rect')
           .attr('class', () => `histogram-hover-target`)
           .attr('x', (d) => xScale(d.x0))
           .attr('width', (d) => xScale(d.x1) - xScale(d.x0))
-          .attr('y', () => yScale(yMax))
-          .attr('height', () => yScale(0) - yScale(yMax))
+          .attr('y', (d) => {
+            const currentHeight = yScale(0) - yScale(d.yMax)
+            const extra = Math.max(0, minHoverPx - currentHeight)
+            return yScale(d.yMax) - extra
+          })
+          .attr('height', (d) => {
+            const currentHeight = yScale(0) - yScale(d.yMax)
+            return Math.max(minHoverPx, currentHeight)
+          })
           .style('fill', 'transparent') // Necessary for mouse events to fire.
 
         // However, only the largest bin is highlighted on hover.
@@ -957,21 +1081,19 @@ export default function makeHistogram(): Histogram {
             .style('visibility', (d) => (renderShaderTitles !== 'hide' && d.title ? 'visible' : 'hidden'))
             .text((d) => d.title)
 
-            // Hide shader titles which do not fit inside their region if the user has requested automatic title rendering.
-            if (renderShaderTitles === 'auto') {
-              shaderG
-                .select('text')
-                .each(function (d) {
-                  const node = this as SVGTextElement
-                  const span = visibleShaderRegion(d)
-                  const regionPixelWidth = xScale(span.max) - xScale(span.min)
-                  const textWidth = node.getBBox().width
+          // Hide shader titles which do not fit inside their region if the user has requested automatic title rendering.
+          if (renderShaderTitles === 'auto') {
+            shaderG.select('text').each(function (d) {
+              const node = this as SVGTextElement
+              const span = visibleShaderRegion(d)
+              const regionPixelWidth = xScale(span.max) - xScale(span.min)
+              const textWidth = node.getBBox().width
 
-                  if (textWidth > regionPixelWidth) {
-                    d3.select(node).style('visibility', 'hidden')
-                  }
-                })
-            }
+              if (textWidth > regionPixelWidth) {
+                d3.select(node).style('visibility', 'hidden')
+              }
+            })
+          }
 
           // Draw the shader thresholds.
           const shaderThresholds = activeShader
@@ -1028,13 +1150,16 @@ export default function makeHistogram(): Histogram {
       selectedDatum = null
       refreshHighlighting()
       hideSelectionTooltip()
+      if (selectionChangedCallback) selectionChangedCallback({bin: null, datum: null, source: 'histogram'})
     },
 
     selectBin: (binIndex: number) => {
       selectedBin = bins[binIndex] || null
       selectedDatum = null
       refreshHighlighting()
-      showSelectionTooltip()
+      if (selectionChangedCallback)
+        selectionChangedCallback({bin: selectedBin, datum: selectedDatum, source: 'histogram'})
+      showSelectionTooltip(true)
     },
 
     selectDatum: (datum: HeatmapDatum) => {
@@ -1045,7 +1170,9 @@ export default function makeHistogram(): Histogram {
       selectedBin = selectedBinIndex == null ? null : bins[selectedBinIndex]
 
       refreshHighlighting()
-      showSelectionTooltip()
+      if (selectionChangedCallback)
+        selectionChangedCallback({bin: selectedBin, datum: selectedDatum, source: 'histogram'})
+      showSelectionTooltip(true)
     },
 
     ////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
@@ -1185,6 +1312,16 @@ export default function makeHistogram(): Histogram {
         return legendNote
       }
       legendNote = value
+      return chart
+    },
+
+    selectionChanged: (
+      value?: ((payload: {bin: HistogramBin | null; datum: HistogramDatum | null; source: 'histogram'}) => void) | null
+    ) => {
+      if (value === undefined) {
+        return selectionChangedCallback
+      }
+      selectionChangedCallback = value
       return chart
     },
 

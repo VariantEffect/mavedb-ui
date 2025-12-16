@@ -70,7 +70,11 @@
             @open="editCollectionDescription"
           >
             <template #display>
-              {{ item.description || '(Click here to add description)' }}
+              <!-- eslint-disable vue/no-v-html -->
+              <div
+                v-html="item.description ? linkifyTextHtml(item.description) : '(Click here to add description)'"
+              ></div>
+              <!-- eslint-enable vue/no-v-html -->
             </template>
             <template #content>
               <div class="flex mave-collection-description-editor">
@@ -87,7 +91,13 @@
           </Inplace>
         </div>
         <div v-else>
-          <div v-if="item.description" class="mave-collection-description">{{ item.description }}</div>
+          <!-- eslint-disable vue/no-v-html -->
+          <div
+            v-if="item.description"
+            class="mave-collection-description"
+            v-html="linkifyTextHtml(item.description)"
+          ></div>
+          <!-- eslint-enable vue/no-v-html -->
         </div>
       </div>
       <div class="mavedb-1000px-col">

@@ -72,7 +72,7 @@
   <div v-if="scoreSet.externalLinks?.igvf?.url" class="external-link">
     <a :href="scoreSet.externalLinks.igvf.url" target="blank">
       <img alt="IGVF" src="@/assets/igvf-tag.png" />
-      View in the IGVF Portal
+      Raw data available in the IGVF Portal
     </a>
   </div>
   <div v-if="scoreSet.externalLinks?.ucscGenomeBrowser?.url" class="external-link">

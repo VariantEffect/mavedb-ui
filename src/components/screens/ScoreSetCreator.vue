@@ -561,6 +561,7 @@
                           :id="scopedId('input-primaryPublicationIdentifiers')"
                           ref="primaryPublicationIdentifiersInput"
                           v-model="primaryPublicationIdentifiers"
+                          class="p-inputwrapper-filled"
                           option-label="identifier"
                           :options="publicationIdentifiers"
                           placeholder="Select a primary publication (Where the dataset is described)"
@@ -1370,41 +1371,41 @@
                     }}</span>
                   </div>
                 </div>
-              </div>
-              <div class="mavedb-wizard-row">
-                <div class="mavedb-wizard-help">
-                  <label :for="scopedId('input-countColumnsMetadataFile')">Load a counts column metadata file</label>
-                  <div class="mavedb-help-small">
-                    This file is optional, but recommended. If provided, it should be a JSON file containing a single
-                    object. The keys of that object should be limited to columns of the count data, while values should
-                    include a string description and an optional string details.
+                <div class="mavedb-wizard-row">
+                  <div class="mavedb-wizard-help">
+                    <label :for="scopedId('input-countColumnsMetadataFile')">Load a counts column metadata file</label>
+                    <div class="mavedb-help-small">
+                      This file is optional, but recommended. If provided, it should be a JSON file containing a single
+                      object. The keys of that object should be limited to columns of the count data, while values should
+                      include a string description and an optional string details.
+                    </div>
                   </div>
-                </div>
-                <div class="mavedb-wizard-content">
-                  <span class="p-float-label">
-                    <FileUpload
-                      :id="scopedId('input-countColumnsMetadataFile')"
-                      ref="countColumnsMetadataFileUpload"
-                      accept="application/json"
-                      :auto="false"
-                      choose-label="Counts column metadata file"
-                      :class="inputClasses.countColumnsMetadataFile || ''"
-                      :custom-upload="true"
-                      :disabled="!($refs.countsFileUpload?.files?.length == 1)"
-                      :file-limit="1"
-                      :show-cancel-button="false"
-                      :show-upload-button="false"
-                      @remove="fileCleared('countColumnsMetadataFile')"
-                      @select="fileSelected('countColumnsMetadataFile', $event)"
-                    >
-                      <template #empty>
-                        <p>Drop a file here.</p>
-                      </template>
-                    </FileUpload>
-                  </span>
-                  <span v-if="validationErrors.countColumnsMetadataFile" class="mave-field-error">{{
-                    validationErrors.countColumnsMetadataFile
-                  }}</span>
+                  <div class="mavedb-wizard-content">
+                    <span class="p-float-label">
+                      <FileUpload
+                        :id="scopedId('input-countColumnsMetadataFile')"
+                        ref="countColumnsMetadataFileUpload"
+                        accept="application/json"
+                        :auto="false"
+                        choose-label="Counts column metadata file"
+                        :class="inputClasses.countColumnsMetadataFile || ''"
+                        :custom-upload="true"
+                        :disabled="!($refs.countsFileUpload?.files?.length == 1)"
+                        :file-limit="1"
+                        :show-cancel-button="false"
+                        :show-upload-button="false"
+                        @remove="fileCleared('countColumnsMetadataFile')"
+                        @select="fileSelected('countColumnsMetadataFile', $event)"
+                      >
+                        <template #empty>
+                          <p>Drop a file here.</p>
+                        </template>
+                      </FileUpload>
+                    </span>
+                    <span v-if="validationErrors.countColumnsMetadataFile" class="mave-field-error">{{
+                      validationErrors.countColumnsMetadataFile
+                    }}</span>
+                  </div>
                 </div>
               </div>
               <div class="mavedb-wizard-step-controls-row">

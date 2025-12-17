@@ -265,7 +265,7 @@
         <div class="mavedb-score-set-section-title">Secondary References</div>
         <div v-if="item.secondaryPublicationIdentifiers.length > 0">
           <div v-for="publication in item.secondaryPublicationIdentifiers" :key="publication">
-            <ul style="list-style-type: square">
+            <ul class="ml-10 list-[square]">
               <!-- eslint-disable-next-line vue/no-v-html -->
               <li v-html="markdownToHtml(publication.referenceHtml)"></li>
               <div>

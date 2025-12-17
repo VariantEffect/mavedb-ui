@@ -121,3 +121,11 @@ body .p-button {
   gap: 0 !important;
   margin-left: 1em !important;
 }
+
+.p-tab {
+  padding: 0.5em 1em 0.5em 1em !important;
+}
+
+.p-listbox-header {
+  padding: 0 !important;
+}

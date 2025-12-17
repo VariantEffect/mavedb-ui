@@ -229,6 +229,7 @@
                 :aria-labelledby="scopedId(`input-investigatorProvidedRangeLower-${rangeIdx}`)"
                 class="w-full"
                 :disabled="functionalRangeHelpers[rangeIdx].infiniteLower"
+                :max-fraction-digits="10"
               />
               <label :for="scopedId(`input-investigatorProvidedRangeLower-${rangeIdx}`)">{{
                 functionalRangeHelpers[rangeIdx].infiniteLower
@@ -245,6 +246,7 @@
                 :aria-labelledby="scopedId(`input-investigatorProvidedRangeUpper-${rangeIdx}`)"
                 class="w-full"
                 :disabled="functionalRangeHelpers[rangeIdx].infiniteUpper"
+                :max-fraction-digits="10"
               />
               <label :for="scopedId(`input-investigatorProvidedRangeUpper-${rangeIdx}`)">{{
                 functionalRangeHelpers[rangeIdx].infiniteUpper

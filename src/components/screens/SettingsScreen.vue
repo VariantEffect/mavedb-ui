@@ -1,6 +1,6 @@
 <template>
   <DefaultLayout>
-    <h1>Welcome to MaveDB</h1>
+    <h1 class="font-bold text-4xl mx-2 my-4">Welcome to MaveDB</h1>
     <Card>
       <template #title> Profile </template>
       <template #content>

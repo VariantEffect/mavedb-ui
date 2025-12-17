@@ -19,59 +19,65 @@
           <Button class="p-button-plain" @click="clear">Clear All</Button>
         </div>
         <div class="mavedb-search-tab-view-container">
-          <TabView class="mavedb-search-tabs">
-            <TabPanel header="Target filters">
-              <div class="mavedb-search-filters">
-                <SelectList
-                  v-model="filterTargetNames"
+          <Tabs class="mavedb-search-tabs" value="0">
+            <TabList>
+              <Tab value="0">Target filters</Tab>
+              <Tab value="1">Publication filters</Tab>
+            </TabList>
+            <TabPanels>
+              <TabPanel header="Target filters" value="0">
+                <div class="mavedb-search-filters">
+                  <SelectList
+                    v-model="filterTargetNames"
                   class="mavedb-search-filter-option-picker"
                   :options="targetNameFilterOptions"
                   title="Target name"
-                />
-                <SelectList
-                  v-model="filterTargetTypes"
-                  class="mavedb-search-filter-option-picker"
-                  :option-label="textForTargetGeneCategory"
-                  :options="targetTypeFilterOptions"
-                  title="Target type"
-                />
-                <SelectList
-                  v-model="filterTargetOrganismNames"
-                  class="mavedb-search-filter-option-picker mavedb-organism-picker"
-                  :options="targetOrganismFilterOptions"
-                  title="Target organism"
-                />
-                <SelectList
-                  v-model="filterTargetAccession"
-                  class="mavedb-search-filter-option-picker mavedb-organism-picker"
-                  :options="targetAccessionFilterOptions"
-                  title="Target accession"
-                />
-              </div>
-            </TabPanel>
-            <TabPanel header="Publication filters">
-              <div class="mavedb-search-filters">
-                <SelectList
-                  v-model="filterPublicationAuthors"
-                  class="mavedb-search-filter-option-picker"
-                  :options="publicationAuthorFilterOptions"
-                  title="Publication authors"
-                />
-                <SelectList
-                  v-model="filterPublicationDatabases"
-                  class="mavedb-search-filter-option-picker"
-                  :options="publicationDatabaseFilterOptions"
-                  title="Publication database"
-                />
-                <SelectList
-                  v-model="filterPublicationJournals"
-                  class="mavedb-search-filter-option-picker"
-                  :options="publicationJournalFilterOptions"
-                  title="Publication journal"
-                />
-              </div>
-            </TabPanel>
-          </TabView>
+                  />
+                  <SelectList
+                    v-model="filterTargetTypes"
+                    class="mavedb-search-filter-option-picker"
+                    :option-label="textForTargetGeneCategory"
+                    :options="targetTypeFilterOptions"
+                    title="Target type"
+                  />
+                  <SelectList
+                    v-model="filterTargetOrganismNames"
+                    class="mavedb-search-filter-option-picker mavedb-organism-picker"
+                    :options="targetOrganismFilterOptions"
+                    title="Target organism"
+                  />
+                  <SelectList
+                    v-model="filterTargetAccession"
+                    class="mavedb-search-filter-option-picker mavedb-organism-picker"
+                    :options="targetAccessionFilterOptions"
+                    title="Target accession"
+                  />
+                </div>
+              </TabPanel>
+              <TabPanel header="Publication filters" value="1">
+                <div class="mavedb-search-filters">
+                  <SelectList
+                    v-model="filterPublicationAuthors"
+                    class="mavedb-search-filter-option-picker"
+                    :options="publicationAuthorFilterOptions"
+                    title="Publication authors"
+                  />
+                  <SelectList
+                    v-model="filterPublicationDatabases"
+                    class="mavedb-search-filter-option-picker"
+                    :options="publicationDatabaseFilterOptions"
+                    title="Publication database"
+                  />
+                  <SelectList
+                    v-model="filterPublicationJournals"
+                    class="mavedb-search-filter-option-picker"
+                    :options="publicationJournalFilterOptions"
+                    title="Publication journal"
+                  />
+                </div>
+              </TabPanel>
+            </TabPanels>
+          </Tabs>
           <div v-if="publishedScoreSets.length < numTotalSearchResults" class="mavedb-search-tab-view-tabs-right">
             Showing {{ publishedScoreSets.length.toLocaleString() }} of
             {{ numTotalSearchResults.toLocaleString() }} results. Try adding more filters to narrow your search.
@@ -100,7 +106,10 @@ import SelectList from '@/components/common/SelectList.vue'
 import DefaultLayout from '@/components/layout/DefaultLayout.vue'
 import Button from 'primevue/button'
 import TabPanel from 'primevue/tabpanel'
-import TabView from 'primevue/tabview'
+import Tabs from 'primevue/tabs'
+import TabList from 'primevue/tablist'
+import Tab from 'primevue/tab'
+import TabPanels from 'primevue/tabpanels'
 import {debounce} from 'vue-debounce'
 import {defineComponent} from 'vue'
 import {useHead} from '@unhead/vue'
@@ -174,7 +183,7 @@ function extractQueryParam(content: LocationQueryValue | LocationQueryValue[]): 
 export default defineComponent({
   name: 'SearchView',
 
-  components: {DefaultLayout, ScoreSetTable, IconField, InputIcon, InputText, SelectList, TabView, TabPanel, Button},
+  components: {DefaultLayout, ScoreSetTable, IconField, InputIcon, InputText, SelectList, Tabs, TabList, Tab, TabPanels, TabPanel, Button},
 
   setup: () => {
     useHead({title: 'Search data sets'})
@@ -546,6 +555,7 @@ export default defineComponent({
 .mavedb-search-filter-option-picker {
   max-width: 300px;
   width: 24%;
+  border: 1px solid rgba(0, 0, 0, 0.12) !important;
 }
 
 .mavedb-search-filter-option-picker:deep(.p-listbox-option) > div {

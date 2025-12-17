@@ -218,9 +218,13 @@ Score set targets
     :start-after: .. _targets-intro:
     :end-before: .. _end-targets-intro:
 
-Score calibrations
+
+Calibrations
 ###################################
-:ref:`score calibrations`
+
+.. include:: ../score_calibrations.rst
+    :start-after: .. _score-calibrations-intro:
+    
 
 Variant tables
 ###################################
@@ -298,7 +302,7 @@ For score sets, you are additionally required to provide:
 
 You are encouraged to also provide:
 
-* `Score calibrations`_ to provide additional context for interpreting the scores.
+* `Calibrations`_ to provide additional context for interpreting the scores.
 * `Counts table`_ containing the variant counts (if available).
 * `Metadata files`_ containing additional information about the score set.
 

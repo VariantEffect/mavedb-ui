@@ -15,8 +15,8 @@
     <script src="_static/sphinx_highlight.js?v=dc90522c"></script>
     <link rel="index" title="Index" href="genindex.html" />
     <link rel="search" title="Search" href="search.html" />
-    <link rel="next" title="User account management" href="accounts.html" />
-    <link rel="prev" title="Getting started with MaveDB" href="getting_started.html" />
+    <link rel="next" title="Data table formats" href="data_formats.html" />
+    <link rel="prev" title="Targets" href="targets.html" />
 <link rel="stylesheet" href="https://fonts.googleapis.com/css?family=Neuton&amp;subset=latin" type="text/css" media="screen" charset="utf-8" />
 <link rel="stylesheet" href="https://fonts.googleapis.com/css?family=Nobile:regular,italic,bold,bolditalic&amp;subset=latin" type="text/css" media="screen" charset="utf-8" />
 <!--[if lte IE 6]>
@@ -32,13 +32,12 @@
           <a href="genindex.html" title="General Index"
              accesskey="I">index</a></li>
         <li class="right" >
-          <a href="accounts.html" title="User account management"
+          <a href="data_formats.html" title="Data table formats"
              accesskey="N">next</a> |</li>
         <li class="right" >
-          <a href="getting_started.html" title="Getting started with MaveDB"
+          <a href="targets.html" title="Targets"
              accesskey="P">previous</a> |</li>
         <li class="nav-item nav-item-0"><a href="index.html">MaveDB 2025.5.2 documentation</a> &#187;</li>
-          <li class="nav-item nav-item-1"><a href="getting_started.html" accesskey="U">Getting started with MaveDB</a> &#187;</li>
         <li class="nav-item nav-item-this"><a href="">Score calibrations</a></li> 
       </ul>
     </div>  
@@ -50,6 +49,88 @@
             
   <section id="score-calibrations">
 <h1>Score calibrations<a class="headerlink" href="#score-calibrations" title="Link to this heading">¶</a></h1>
+<p id="score-calibrations-intro">Score calibrations in MaveDB provide a way to give additional context to variant effect scores by mapping them to known reference points.
+This helps users interpret the scores in a biologically meaningful way. A score calibration consists of four parts: a baseline score,
+a set of classifications, a set of evidence strength and a calibration metadata.</p>
+<section id="baseline-score">
+<span id="end-score-calibrations-intro"></span><h2>Baseline score<a class="headerlink" href="#baseline-score" title="Link to this heading">¶</a></h2>
+<p id="score-calibrations-baseline-score">The baseline score represents the expected score for a variant that has no effect on the phenotype being measured. This score serves as a reference point for interpreting other variant effect scores in the dataset.
+The baseline score is typically derived from known neutral variants or from the distribution of scores in the dataset, and may also be described as the “wild-type” or “reference” score.</p>
+<p>The baseline score should be provided as a numeric value along with a description of how it was determined. For example, if the baseline score is derived from the average score of known synonymous variants, this should be noted in the description.
+MaveDB will use the baseline score in the heatmap in order to set the color scale, and it will be displayed along with the calibration information in the score set details.</p>
+</section>
+<section id="functional-classifications">
+<span id="end-score-calibrations-baseline-score"></span><h2>Functional classifications<a class="headerlink" href="#functional-classifications" title="Link to this heading">¶</a></h2>
+<p id="score-calibrations-functional-classifications">Functional classifications provide a way to categorize variants based on their effect scores. These classifications help users understand the biological significance of the scores and facilitate comparisons between different variants.
+MaveDB supports a controlled vocabulary for functional classifications, which includes the following terms:</p>
+<ul class="simple">
+<li><p><strong>Normal</strong>: Indicates that the variant has no significant effect on the phenotype.</p></li>
+<li><p><strong>Abnormal</strong>: Indicates that the variant has a significant effect on the phenotype.</p></li>
+<li><p><strong>Not specified</strong>: Indicates that the effect of the variant is unknown or has not been determined.</p></li>
+</ul>
+<p>There are two ways to assign functional classifications to variants in MaveDB:</p>
+<ol class="arabic simple">
+<li><p><strong>Threshold-based classification</strong>: Users can define score thresholds that determine the functional classification of variants. For example, variants with scores above a certain threshold may be classified as “Normal”, while those below the threshold are classified as “Abnormal”.</p></li>
+<li><p><strong>Direct assignment</strong>: Users can directly assign functional classifications to individual variants based on experimental evidence or prior knowledge. You can do this by uploading a file that includes the variant identifiers and their corresponding classifications.</p></li>
+</ol>
+</section>
+<section id="evidence-strengths">
+<span id="end-score-calibrations-functional-classifications"></span><h2>Evidence strengths<a class="headerlink" href="#evidence-strengths" title="Link to this heading">¶</a></h2>
+<p id="score-calibrations-evidence-strengths">Evidence strengths provide a way of indicating the evidence level that may be used for variant interpretation. MaveDB supports a controlled vocabulary for evidence strengths, which includes the following terms based on ACMG/AMP guidelines:</p>
+<ul class="simple">
+<li><p><strong>Very Strong</strong></p></li>
+<li><p><strong>Strong</strong></p></li>
+<li><p><strong>Moderate</strong></p></li>
+<li><p><strong>Supporting</strong></p></li>
+</ul>
+<p>You may assign a particular evidence strength to each each functional classification. Note that for “abnormal” classifications, you must provide a pathogenic evidence strength, while for “normal” classifications, you must provide a benign evidence strength.
+For “not specified” classifications, evidence strengths may not be submitted.</p>
+<p>You may also include odds of pathogenicity (“OddsPath”) values for each classification. These values provide a quantitative measure of the strength of evidence associated with each classification, and may be used in variant interpretation. For more information
+on how OddsPath values relate to evidence strengths and recommendations for their application, see the guidelines provided by <a class="reference external" href="https://doi.org/10.1186/s13073-019-0690-2">Brnich et al., 2019</a>.</p>
+</section>
+<section id="calibration-metadata">
+<span id="end-score-calibrations-evidence-strengths"></span><h2>Calibration metadata<a class="headerlink" href="#calibration-metadata" title="Link to this heading">¶</a></h2>
+<p id="score-calibrations-calibration-metadata">Calibration metadata provides additional context about the score calibration, including information about how the calibration was performed and any relevant references or notes.
+This metadata may include:</p>
+<ul class="simple">
+<li><p>A title for the calibration</p></li>
+<li><p>A description of the methods used to determine the baseline score and functional classifications.</p></li>
+<li><p>Any additional notes or comments that may be useful for users interpreting the calibration, especially with regard to the baseline score and functional classifications.</p></li>
+<li><p>Whether the calibration should be marked as <strong>research use only</strong>, indicating that it is not intended for clinical or diagnostic purposes.</p></li>
+</ul>
+<p>In addition, users may provide three types of optional references to support the calibration:</p>
+<ul class="simple">
+<li><p><strong>Threshold sources</strong>: A publication reference (e.g., a DOI, PubMed ID, or bioRxiv/medRxiv ID) that describes the method by which classification thresholds or classes were determined.</p></li>
+<li><p><strong>Classification methods</strong>: A publication reference (e.g., a DOI, PubMed ID, or bioRxiv/medRxiv ID) that describes the method by which evidence strengths were determined.</p></li>
+<li><p><strong>Classification sources</strong>: A publication reference (e.g., a DOI, PubMed ID, or bioRxiv/medRxiv ID) that describes where the evidence strengths determined by the ‘classification methods’ are described.</p></li>
+</ul>
+</section>
+<section id="calibration-privacy">
+<span id="end-score-calibrations-calibration-metadata"></span><h2>Calibration privacy<a class="headerlink" href="#calibration-privacy" title="Link to this heading">¶</a></h2>
+<p id="score-calibrations-calibration-privacy">By default, score calibrations are not visible to all MaveDB users. However, you may choose to publish a calibration after it has been uploaded. Private calibrations are only visible to the user who uploaded them and any users marked as contributors on the associated score set.
+Published calibrations are visible to all MaveDB users and may be used in visualizations and interpretations of the associated score set.</p>
+<div class="admonition warning">
+<p class="admonition-title">Warning</p>
+<p>Once a calibration has been published, it cannot be made private again nor may it be edited. Please ensure that you are comfortable with making the calibration public before publishing it.</p>
+</div>
+</section>
+<section id="primary-calibrations">
+<h2>Primary calibrations<a class="headerlink" href="#primary-calibrations" title="Link to this heading">¶</a></h2>
+<p id="score-calibrations-primary-calibrations">A primary calibration is the main score calibration associated with a score set. Each score set in MaveDB may have at most one primary calibration. The primary calibration is used by default when displaying the score set in visualizations and when interpreting variant effect
+scores.</p>
+<p>After uploading a score calibration to MaveDB, you may choose to designate it as the primary calibration for the associated score set. If a score set already has a primary calibration, you must demote the existing primary calibration before designating a new one.
+A calibration must be publicly visible to be marked as the primary calibration, and research use only calibrations may not be designated as primary calibrations.</p>
+<div class="admonition note">
+<p class="admonition-title">Note</p>
+<p>MaveDB maintainers may review primary calibrations to ensure that they meet quality standards and are appropriate for use in visualizations and interpretations, and retain
+the right to remove primary calibration status from any calibration that does not meet these standards.</p>
+</div>
+</section>
+<section id="investigator-provided-calibrations">
+<span id="end-score-calibrations-primary-calibrations"></span><h2>Investigator provided calibrations<a class="headerlink" href="#investigator-provided-calibrations" title="Link to this heading">¶</a></h2>
+<p id="score-calibrations-investigator-provided-calibrations">When there is no primary calibration associated with a score set, investigator provided calibrations are given priority viewing over other non-primary calibrations. Investigator provided calibrations
+are any calibrations which have been uploaded by the samem user who uploaded the score set or a user marked as a contributor on the score set.</p>
+</section>
 </section>
 
 
@@ -60,14 +141,30 @@
       <div class="sphinxsidebar" role="navigation" aria-label="main navigation">
         <div class="sphinxsidebarwrapper">
   <div>
+    <h3><a href="index.html">Table of Contents</a></h3>
+    <ul>
+<li><a class="reference internal" href="#">Score calibrations</a><ul>
+<li><a class="reference internal" href="#baseline-score">Baseline score</a></li>
+<li><a class="reference internal" href="#functional-classifications">Functional classifications</a></li>
+<li><a class="reference internal" href="#evidence-strengths">Evidence strengths</a></li>
+<li><a class="reference internal" href="#calibration-metadata">Calibration metadata</a></li>
+<li><a class="reference internal" href="#calibration-privacy">Calibration privacy</a></li>
+<li><a class="reference internal" href="#primary-calibrations">Primary calibrations</a></li>
+<li><a class="reference internal" href="#investigator-provided-calibrations">Investigator provided calibrations</a></li>
+</ul>
+</li>
+</ul>
+
+  </div>
+  <div>
     <h4>Previous topic</h4>
-    <p class="topless"><a href="getting_started.html"
-                          title="previous chapter">Getting started with MaveDB</a></p>
+    <p class="topless"><a href="targets.html"
+                          title="previous chapter">Targets</a></p>
   </div>
   <div>
     <h4>Next topic</h4>
-    <p class="topless"><a href="accounts.html"
-                          title="next chapter">User account management</a></p>
+    <p class="topless"><a href="data_formats.html"
+                          title="next chapter">Data table formats</a></p>
   </div>
   <div role="note" aria-label="source link">
     <h3>This Page</h3>
@@ -97,13 +194,12 @@
           <a href="genindex.html" title="General Index"
              >index</a></li>
         <li class="right" >
-          <a href="accounts.html" title="User account management"
+          <a href="data_formats.html" title="Data table formats"
              >next</a> |</li>
         <li class="right" >
-          <a href="getting_started.html" title="Getting started with MaveDB"
+          <a href="targets.html" title="Targets"
              >previous</a> |</li>
         <li class="nav-item nav-item-0"><a href="index.html">MaveDB 2025.5.2 documentation</a> &#187;</li>
-          <li class="nav-item nav-item-1"><a href="getting_started.html" >Getting started with MaveDB</a> &#187;</li>
         <li class="nav-item nav-item-this"><a href="">Score calibrations</a></li> 
       </ul>
     </div>

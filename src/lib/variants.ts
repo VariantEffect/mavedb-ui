@@ -39,6 +39,9 @@ export interface RawVariant {
     post_mapped_hgvs_p?: string
     post_mapped_vrs_digest?: string
   }
+  vep?: {
+    vep_functional_consequence?: string
+  }
 
   control?: ClinicalControlVariant
   mavedb_label?: string
@@ -395,6 +398,13 @@ function translateSimpleCodingHgvsCVariant(
  * @returns true if the variant is classified as start-loss or stop-loss; false (or undefined) otherwise.
  */
 export function isStartOrStopLoss(variant: any) {
+  if (variant.vep && variant.vep.vep_functional_consequence && variant.vep.vep_functional_consequence != 'NA') {
+    if (variant.vep.vep_functional_consequence == 'start_lost' || variant.vep.vep_functional_consequence == 'stop_lost') {
+      return true
+    } else {
+      return false
+    }
+  }
   const parsedVariant = variant.parsedPostMappedHgvsP
   if (!parsedVariant) {
     return false
@@ -416,6 +426,13 @@ export function isStartOrStopLoss(variant: any) {
 }
 
 export function variantIsMissense(variant: Variant) {
+  if (variant.vep && variant.vep.vep_functional_consequence && variant.vep.vep_functional_consequence != 'NA') {
+    if (variant.vep.vep_functional_consequence == 'missense_variant') {
+      return true
+    } else {
+      return false
+    }
+  }
   const parsedVariant = variant.parsedPostMappedHgvsP
   if (!parsedVariant) {
     return false
@@ -429,6 +446,13 @@ export function variantIsMissense(variant: Variant) {
 }
 
 export function variantIsSynonymous(variant: Variant) {
+  if (variant.vep && variant.vep.vep_functional_consequence && variant.vep.vep_functional_consequence != 'NA') {
+    if (variant.vep.vep_functional_consequence == 'synonymous_variant') {
+      return true
+    } else {
+      return false
+    }
+  }
   const parsedVariant = variant.parsedPostMappedHgvsP
   if (!parsedVariant) {
     return false
@@ -440,6 +464,13 @@ export function variantIsSynonymous(variant: Variant) {
 }
 
 export function variantIsNonsense(variant: Variant) {
+  if (variant.vep && variant.vep.vep_functional_consequence && variant.vep.vep_functional_consequence != 'NA') {
+    if (variant.vep.vep_functional_consequence == 'stop_gained') {
+      return true
+    } else {
+      return false
+    }
+  }
   const parsedVariant = variant.parsedPostMappedHgvsP
   if (!parsedVariant) {
     return false
@@ -471,6 +502,7 @@ export function variantIsOther(variant: Variant) {
 export function allCodingVariantsHaveProteinConsequence(variants: Variant[]) {
   return variants.every(
     (v) =>
+      (v.vep && v.vep.vep_functional_consequence && v.vep.vep_functional_consequence != 'NA') ||
       v.parsedPostMappedHgvsP != null ||
       (v.parsedPostMappedHgvsC?.referenceType == 'c' && v.parsedPostMappedHgvsC?.position == null)
   )

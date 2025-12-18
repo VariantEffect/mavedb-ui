@@ -660,7 +660,7 @@ export default {
 
           let scoresUrl = null
           if (this.itemType && this.itemType.restCollectionName && this.itemId) {
-            scoresUrl = `${config.apiBaseUrl}/${this.itemType.restCollectionName}/${this.itemId}/variants/data?include_post_mapped_hgvs=true`
+            scoresUrl = `${config.apiBaseUrl}/${this.itemType.restCollectionName}/${this.itemId}/variants/data?include_post_mapped_hgvs=true&namespaces=vep&namespaces=scores`
           }
           this.setScoresDataUrl(scoresUrl)
           this.ensureScoresDataLoaded()

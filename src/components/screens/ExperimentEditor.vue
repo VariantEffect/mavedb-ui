@@ -80,7 +80,10 @@
                   >
                     <template #chip="slotProps">
                       <div>
-                        <span>{{ slotProps.value.identifier }}</span>
+                          <span>{{ slotProps.value?.identifier }}</span>
+                      </div>
+                      <div>
+                        <i class="pi pi-times-circle" @click="removeDoiIdentifier(slotProps.value)"></i>
                       </div>
                     </template>
                   </Chips>
@@ -96,25 +99,28 @@
                     :id="scopedId('input-publicationIdentifiers')"
                     ref="publicationIdentifiersInput"
                     v-model="publicationIdentifiers"
+                    class="p-inputwrapper-filled"
                     :multiple="true"
                     option-label="identifier"
                     :suggestions="publicationIdentifierSuggestionsList"
                     @complete="searchPublicationIdentifiers"
-                    @item-select="acceptNewPublicationIdentifier"
-                    @item-unselect="removePublicationIdentifier"
                     @keyup.escape="clearPublicationIdentifierSearch"
+                    @option-select="acceptNewPublicationIdentifier"
                   >
                     <template #chip="slotProps">
-                      <div>
-                        <div>{{ slotProps.value.identifier }}</div>
+                      <div class="p-inputchips-chip-item">
+                        {{ slotProps.value.identifier }}: {{ truncatePublicationTitle(slotProps.value.title) }}
+                        <div>
+                          <i class="pi pi-times-circle" @click="removePublicationIdentifier(slotProps.value)"></i>
+                        </div>
                       </div>
                     </template>
-                    <template #item="slotProps">
+                    <template #option="slotProps">
                       <div>
-                        <div>Title: {{ slotProps.item.title }}</div>
-                        <div>DOI: {{ slotProps.item.doi }}</div>
-                        <div>Identifier: {{ slotProps.item.identifier }}</div>
-                        <div>Database: {{ slotProps.item.dbName }}</div>
+                        <div>Title: {{ slotProps.option.title }}</div>
+                        <div>DOI: {{ slotProps.option.doi }}</div>
+                        <div>Identifier: {{ slotProps.option.identifier }}</div>
+                        <div>Database: {{ slotProps.option.dbName }}</div>
                       </div>
                     </template>
                   </AutoComplete>
@@ -130,6 +136,7 @@
                     :id="scopedId('input-primaryPublicationIdentifiers')"
                     ref="primaryPublicationIdentifiersInput"
                     v-model="primaryPublicationIdentifiers"
+                    class="p-inputwrapper-filled"
                     option-label="identifier"
                     :options="publicationIdentifiers"
                     placeholder="Select a primary publication (Where the dataset is described)"
@@ -159,11 +166,14 @@
                     :add-on-blur="true"
                     :allow-duplicate="false"
                     @add="acceptNewRawReadIdentifier"
-                  >
                     @keyup.escape="clearRawReadIdentifierSearch"
+                  >
                     <template #chip="slotProps">
                       <div>
-                        <span>{{ slotProps.value.identifier }}</span>
+                          <span>{{ slotProps.value?.identifier }}</span>
+                      </div>
+                      <div>
+                        <i class="pi pi-times-circle" @click="removeRawReadIdentifier(slotProps.value)"></i>
                       </div>
                     </template>
                   </Chips>
@@ -174,35 +184,47 @@
                 }}</span>
               </div>
               <div class="field">
-                <TabView>
-                  <TabPanel header="Edit">
-                    <span class="p-float-label">
-                      <Textarea :id="scopedId('input-abstractText')" v-model="abstractText" rows="4" />
-                      <label :for="scopedId('input-abstractText')">Abstract</label>
-                    </span>
-                  </TabPanel>
-                  <TabPanel header="Preview">
-                    <!-- eslint-disable-next-line vue/no-v-html -->
-                    <div v-html="markdownToHtml(abstractText)"></div>
-                  </TabPanel>
-                </TabView>
+                <Tabs value="0">
+                  <TabList>
+                    <Tab value="0">Edit</Tab>
+                    <Tab value="1">Preview</Tab>
+                  </TabList>
+                  <TabPanels>
+                    <TabPanel header="Edit" value="0">
+                      <span class="p-float-label">
+                        <Textarea :id="scopedId('input-abstractText')" v-model="abstractText" rows="4" />
+                        <label :for="scopedId('input-abstractText')">Abstract</label>
+                      </span>
+                    </TabPanel>
+                    <TabPanel header="Preview" value="1">
+                      <!-- eslint-disable-next-line vue/no-v-html -->
+                      <div v-html="markdownToHtml(abstractText)"></div>
+                    </TabPanel>
+                  </TabPanels>
+                </Tabs>
                 <span v-if="validationErrors.abstractText" class="mave-field-error">{{
                   validationErrors.abstractText
                 }}</span>
               </div>
               <div class="field">
-                <TabView>
-                  <TabPanel header="Edit">
-                    <span class="p-float-label">
-                      <Textarea :id="scopedId('input-methodText')" v-model="methodText" rows="4" />
-                      <label :for="scopedId('input-methodText')">Methods</label>
-                    </span>
-                  </TabPanel>
-                  <TabPanel header="Preview">
-                    <!-- eslint-disable-next-line vue/no-v-html -->
-                    <div v-html="markdownToHtml(methodText)"></div>
-                  </TabPanel>
-                </TabView>
+                <Tabs value="0">
+                  <TabList>
+                    <Tab value="0">Edit</Tab>
+                    <Tab value="1">Preview</Tab>
+                  </TabList>
+                  <TabPanels>
+                    <TabPanel header="Edit" value="0">
+                      <span class="p-float-label">
+                        <Textarea :id="scopedId('input-methodText')" v-model="methodText" rows="4" />
+                        <label :for="scopedId('input-methodText')">Methods</label>
+                      </span>
+                    </TabPanel>
+                    <TabPanel header="Preview" value="1">
+                      <!-- eslint-disable-next-line vue/no-v-html -->
+                      <div v-html="markdownToHtml(methodText)"></div>
+                    </TabPanel>
+                  </TabPanels>
+                </Tabs>
                 <span v-if="validationErrors.methodText" class="mave-field-error">{{
                   validationErrors.methodText
                 }}</span>
@@ -215,7 +237,7 @@
                     v-model="contributors"
                     :add-on-blur="true"
                     :allow-duplicate="false"
-                    placeholder="Type or paste ORCID IDs here."
+                    :placeholder="contributors.length > 0 ? '' : 'Type or paste ORCID IDs here.'"
                     @add="newContributorsAdded"
                     @keyup.escape="clearContributorSearch"
                   >
@@ -227,6 +249,9 @@
                           }})
                         </div>
                         <div v-else>{{ slotProps.value.orcidId }}</div>
+                      </div>
+                      <div>
+                        <i class="pi pi-times-circle" @click="removeContributor(slotProps.value)"></i>
                       </div>
                     </template>
                   </Chips>
@@ -312,6 +337,15 @@
                       rounded
                       @click="keywordToggleInput(keyword.key)"
                     />
+                    <Button
+                      aria-label="Delete"
+                      class="keyword-description-button"
+                      :disabled="!keywordKeys[keyword.key]"
+                      icon="pi pi-times"
+                      rounded
+                      severity="danger"
+                      @click="deleteKeyword(keyword.key)"
+                    />
                     &nbsp;<i
                       class="pi pi-info-circle"
                       style="color: green; cursor: pointer"
@@ -389,8 +423,11 @@ import Multiselect from 'primevue/multiselect'
 import FileUpload from 'primevue/fileupload'
 import InputText from 'primevue/inputtext'
 import ProgressSpinner from 'primevue/progressspinner'
+import Tabs from 'primevue/tabs'
+import TabList from 'primevue/tablist'
+import TabPanels from 'primevue/tabpanels'
+import Tab from 'primevue/tab'
 import TabPanel from 'primevue/tabpanel'
-import TabView from 'primevue/tabview'
 import Textarea from 'primevue/textarea'
 import {useHead} from '@unhead/vue'
 
@@ -505,7 +542,10 @@ export default {
     InputText,
     ProgressSpinner,
     TabPanel,
-    TabView,
+    Tabs,
+    TabList,
+    TabPanels,
+    Tab,
     Textarea
   },
 
@@ -801,11 +841,34 @@ export default {
     },
 
     removePublicationIdentifier: function (event) {
+      const removedIdentifier = event.identifier
+      const publicationIdx = this.publicationIdentifiers.findIndex((pub) => pub.identifier == removedIdentifier)
+      if (publicationIdx != -1) {
+        this.publicationIdentifiers.splice(publicationIdx, 1)
+      }
       // If we are removing a primary publication identifier, also remove it from that list.
-      const removedIdentifier = event.value.identifier
       const primaryIdx = this.primaryPublicationIdentifiers.findIndex((pub) => pub.identifier == removedIdentifier)
       if (primaryIdx != -1) {
         this.primaryPublicationIdentifiers.splice(primaryIdx, 1)
+      }
+    },
+
+    removeContributor: function (contributor) {
+      const index = this.contributors.findIndex(c => c.orcidId === contributor.orcidId)
+      if (index !== -1) {
+        this.contributors.splice(index, 1)
+      }
+    },
+    removeRawReadIdentifier: function (rawReadIdentifier) {
+      const index = this.rawReadIdentifiers.findIndex(r => r.identifier === rawReadIdentifier.identifier)
+      if (index !== -1) {
+        this.rawReadIdentifiers.splice(index, 1)
+      }
+    },
+    removeDoiIdentifier: function (doiIdentifier) {
+      const index = this.doiIdentifiers.findIndex(d => d.identifier === doiIdentifier.identifier)
+      if (index !== -1) {
+        this.doiIdentifiers.splice(index, 1)
       }
     },
 
@@ -813,6 +876,10 @@ export default {
       // This could change with a new Primevue version.
       const input = this.$refs.publicationIdentifiersInput
       input.$refs.focusInput.value = ''
+    },
+
+    truncatePublicationTitle: function (title) {
+      return title.length > 50 ? title.slice(0, 50) + '...' : title
     },
 
     searchPublicationIdentifiers: function (event) {
@@ -1134,6 +1201,12 @@ export default {
       this.keywordTextVisible[field] = !this.keywordTextVisible[field]
     },
 
+    deleteKeyword: function (field) {
+      this.keywordKeys[field] = null
+      this.keywordDescriptions[field] = null
+      this.keywordTextVisible[field] = false
+    },
+
     showDialog: function (index) {
       this.dialogVisible[index] = true
     }
@@ -1141,7 +1214,7 @@ export default {
 }
 </script>
 
-<style scoped src="../../assets/forms.css"></style>
+<style src="../../assets/forms.css"></style>
 
 <style scoped>
 /* Cards */
@@ -1170,7 +1243,7 @@ export default {
 /* Keywords */
 
 .keyword-dropdown {
-  width: 450px;
+  width: 450px !important;
   height: 45px;
 }
 
@@ -1181,8 +1254,10 @@ export default {
 
 .keyword-description-button {
   margin-left: 8px;
-  height: 32px;
-  width: 32px;
+  height: 32px !important;
+  width: 32px !important;
+  min-width: 32px !important;
+  padding: 0 !important;
 }
 
 .keyword-description-button:deep(.p-button-icon) {
@@ -1201,5 +1276,9 @@ export default {
 
 .padded-button {
   margin-left: 5px;
+}
+
+.p-inputwrapper, .p-textarea, .p-inputtext {
+  width: 100%;
 }
 </style>

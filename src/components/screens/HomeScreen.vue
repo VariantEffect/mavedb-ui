@@ -1,15 +1,14 @@
 <template>
   <DefaultLayout>
-    <div class="grid" style="margin: 10px 0;">
+    <div class="grid my-2!">
       <div class="col-12">
-        <p class="mavedb-mavemd-notice">
-          <router-link to="/mavemd"><img alt="MaveMD" class="mavedb-mavemd-logo" src="@/assets/mavemd-logo.png" /></router-link>
-          &nbsp;
-          Looking for the new MaveMD clinical features? <router-link to="/mavemd">Click here.</router-link>
-        </p>
+        <div class="flex justify-center flex-row gap-4 m-2">
+          <router-link to="/mavemd"><img alt="MaveMD" class="h-10" src="@/assets/mavemd-logo.png" /></router-link>
+          <span class="text-lg my-auto">Looking for the new MaveMD clinical features? <router-link to="/mavemd">Click here.</router-link></span>
+        </div>
       </div>
-      <div class="col-8">
-        <Card>
+      <div class="col-8 flex">
+        <Card class="flex-1">
           <template #title>About</template>
           <template #content>
             <p>
@@ -40,8 +39,8 @@
           </template>
         </Card>
       </div>
-      <div class="col-4">
-        <Card>
+      <div class="col-4 flex flex-column">
+        <Card class="flex-1">
           <template #title>Featured Searches</template>
           <template #content>
             <table>
@@ -123,12 +122,12 @@
             <p>
               To cite MaveDB, please cite our most recent publication:
             </p>
-            <blockquote>
+            <blockquote class="m-5 my-2">
                 Rubin, A.F., Stone, J., Bianchi, A.H. <i>et al.</i> MaveDB 2024: a curated community database with over seven million variant effects
                 from multiplexed functional assays. <i>Genome Biol</i> <b>26</b>, 13 (2025). <a href=https://doi.org/10.1186/s13059-025-03476-y>https://doi.org/10.1186/s13059-025-03476-y</a>
             </blockquote>
             Previous MaveDB publications are listed below:
-            <blockquote>
+            <blockquote class="mx-5 my-2">
               Daniel Esposito, Jochen Weile, Jay Shendure, Lea M Starita, Anthony T Papenfuss, Frederick P Roth, Douglas M Fowler, Alan F Rubin.
               MaveDB: an open-source platform to distribute and interpret data from multiplexed assays of variant effect.
               <i>Genome Biol</i> <b>20</b>, 223 (2019). <a href="https://doi.org/10.1186/s13059-019-1845-6">https://doi.org/10.1186/s13059-019-1845-6</a>
@@ -162,8 +161,8 @@ export default {
     const addExperiment = () => {
         router.push({ name: 'createExperiment' })
     }
-    return { 
-      addScoreSet, 
+    return {
+      addScoreSet,
       addExperiment,
     }
   },
@@ -191,6 +190,7 @@ td, th {
 
 ul {
   padding-left: 1em;
+  list-style-type: disc;
 }
 
 .mave-hgvs-example {
@@ -199,12 +199,4 @@ ul {
   cursor: pointer;
 }
 
-.mavedb-mavemd-notice {
-  text-align: center; font-size: 120%;
-}
-
-.mavedb-mavemd-logo {
-  height: 40px;
-  vertical-align: middle;
-}
 </style>

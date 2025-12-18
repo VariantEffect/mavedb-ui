@@ -10,7 +10,7 @@
         searchResultsVisible ? 'mavedb-search-view-with-results' : 'mavedb-search-view-without-results'
       ]"
     >
-      <div class="mavedb-page-title">
+      <div class="flex justify-content-center">
         <img alt="MaveMD" class="mavedb-mavemd-logo" src="@/assets/mavemd-logo.png" />
       </div>
       <div class="mavedb-mavemd-intro">
@@ -21,31 +21,31 @@
       </div>
       <div v-if="defaultSearchVisible" class="mavedb-search-form">
         <div class="mavedb-search-heading">Search MaveDB for human gene variants</div>
-        <div class="flex flex-wrap justify-content-center gap-3">
-          <Dropdown
+        <div class="flex flex-wrap justify-content-center align-items-center gap-3">
+          <Select
             v-model="searchType"
+            class="w-48"
             option-label="name"
             option-value="code"
             :options="searchTypeOptions"
             placeholder="Select search type"
-            :style="{ width: '13rem' }"
+            size="large"
           />
-          <IconField icon-position="left">
+          <IconField>
             <InputIcon class="pi pi-search"></InputIcon>
             <InputText
               ref="searchTextInput"
               v-model="searchText"
-              class="p-inputtext-lg"
+              class="w-124"
               placeholder="Enter a value"
-              style="width: 500px"
+              size="large"
               type="search"
               @keyup.enter="defaultSearch"
             />
           </IconField>
-          <Button class="p-button-plain" @click="defaultSearch">Search</Button>
+          <Button class="p-3!" @click="defaultSearch">Search</Button>
           <div class="mavedb-clear-search-button-container">
             <Button
-              class="p-button-plain"
               :disabled="!searchIsClearable"
               icon="pi pi-times"
               rounded
@@ -87,7 +87,7 @@
             placeholder="Gene symbol (HGNC)"
             type="search"
           />
-          <Dropdown
+          <Select
             v-model="inputVariantType"
             class="mavedb-fuzzy-search-form-component"
             :options="['c.', 'p.']"
@@ -95,13 +95,13 @@
           />
           <!-- TODO consider adding language to specify to include - or * in position if variant is in 5' or 3' UTR, respectively -->
           <InputText v-model="inputVariantPosition" class="mavedb-fuzzy-search-form-component" placeholder="Position" />
-          <Dropdown
+          <Select
             v-model="inputReferenceAllele"
             class="mavedb-fuzzy-search-form-component"
             :options="selectedAlleleOptions"
             placeholder="Reference allele"
           />
-          <Dropdown
+          <Select
             v-model="inputAlternateAllele"
             class="mavedb-fuzzy-search-form-component"
             :options="selectedAlleleOptions"
@@ -363,7 +363,7 @@ import _ from 'lodash'
 import Card from 'primevue/card'
 import Column from 'primevue/column'
 import DataTable from 'primevue/datatable'
-import Dropdown from 'primevue/dropdown'
+import Select from 'primevue/select'
 import IconField from 'primevue/iconfield'
 import InputIcon from 'primevue/inputicon'
 import InputText from 'primevue/inputtext'
@@ -393,7 +393,7 @@ export default defineComponent({
     Column,
     DataTable,
     DefaultLayout,
-    Dropdown,
+    Select,
     IconField,
     InputIcon,
     InputText,
@@ -1064,10 +1064,6 @@ export default defineComponent({
 </script>
 
 <style scoped>
-.mavedb-page-title {
-  text-align: center;
-}
-
 .mavedb-mavemd-logo {
   height: 150px;
   margin: 1em 0 0 0;
@@ -1089,10 +1085,6 @@ export default defineComponent({
   flex-direction: column;
   height: 100%;
   display: flex;
-}
-
-.mavedb-search-view-without-results .mavedb-page-title {
-  flex: 0 0 auto;
 }
 
 .mavedb-search-view-without-results .mavedb-mavemd-intro {
@@ -1177,19 +1169,6 @@ export default defineComponent({
 
 .mavedb-organism-picker:deep(.p-listbox-item .p-badge) {
   font-style: normal;
-}
-
-.mavedb-search-clear-button {
-  position: absolute;
-  top: 12px;
-  right: 8px;
-  margin: 0;
-  padding: 0;
-}
-
-.mavedb-variant-search-result-subheading {
-  margin: 1em 0 0.5em 0;
-  font-weight: bold;
 }
 
 .variant-search-result {

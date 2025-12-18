@@ -53,7 +53,7 @@
 }
 
 .field:deep(.p-tabview .p-tabview-nav) {
-  flex-direction: column;
+  flex-direction: column !important;
   padding-left: 5px;
   border: 0 none;
   background: transparent;

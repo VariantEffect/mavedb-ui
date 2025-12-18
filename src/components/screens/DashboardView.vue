@@ -1,29 +1,56 @@
 <template>
   <DefaultLayout :require-auth="true">
-    <h1>Welcome to MaveDB</h1>
-    <TabView>
-      <TabPanel header="Published">
-        <div class="mavedb-search-view">
-          <div class="mavedb-search-header" style="display: none">
-            <h1>Search MaveDB Experiments and Score Sets</h1>
+    <h1 class="text-4xl font-bold py-4">Welcome to MaveDB</h1>
+    <Tabs value="0">
+      <TabList>
+        <Tab value="0">Published</Tab>
+        <Tab value="1">Unpublished</Tab>
+      </TabList>
+      <TabPanels>
+        <TabPanel header="Published" value="0">
+          <div class="mavedb-search-view">
+            <h2 class="text-xl font-bold py-2">Published Score sets</h2>
+            <div class="mavedb-search-form">
+              <!-- <span class="p-input-icon-left">
+                <i class="pi pi-search" />
+                <InputText ref="searchTextInput" v-model="searchText" placeholder="Search" type="text" @change="search" />
+              </span> -->
+              <div style="display: inline-block; margin-left: 40px">
+                <div class="p-inputgroup" style="max-width: 300px; width: 300px; display: flex; align-items: stretch;">
+                  <InputText
+                    ref="searchTextInput"
+                    v-model="searchText"
+                    class="p-inputtext-sm rounded-r-none!"
+                    placeholder="Search"
+                    style="width: 200px; height: auto;"
+                    type="text"
+                    @change="search"
+                  />
+                  <Button
+                    class="p-button-default p-button-sm rounded-l-none!"
+                    :enabled="searchText && searchText.length > 0"
+                    icon="pi pi-search"
+                    @click="search"
+                  />
+                  <ProgressSpinner
+                    v-if="isSearching"
+                    class="size-8! m-1"
+                  />
+                </div>
+              </div>
+            </div>
+
+            <ScoreSetTable :data="publishedScoreSets" :language="language" :scroll-x="true" :scroll-y="true" />
           </div>
-          <h2 class="mave-score-set-section-title">Published Score sets</h2>
-          <div class="mavedb-search-form">
-            <span class="p-input-icon-left">
-              <i class="pi pi-search" />
-              <InputText ref="searchTextInput" v-model="searchText" placeholder="Search" type="text" @change="search" />
-            </span>
+        </TabPanel>
+        <TabPanel header="Unpublished" value="1">
+          <div class="mavedb-search-view">
+            <h2 class="text-xl font-bold py-2">Unpublished Score sets</h2>
+            <ScoreSetTable :data="unpublishedScoreSets" :language="language" :scroll-x="true" :scroll-y="true" />
           </div>
-          <ScoreSetTable :data="publishedScoreSets" :language="language" :scroll-x="true" :scroll-y="true" />
-        </div>
-      </TabPanel>
-      <TabPanel header="Unpublished">
-        <div class="mavedb-search-view">
-          <h2 class="mave-score-set-section-title">Unpublished Score sets</h2>
-          <ScoreSetTable :data="unpublishedScoreSets" :language="language" :scroll-x="true" :scroll-y="true" />
-        </div>
-      </TabPanel>
-    </TabView>
+        </TabPanel>
+      </TabPanels>
+    </Tabs>
   </DefaultLayout>
 </template>
 
@@ -31,8 +58,13 @@
 import axios from 'axios'
 import InputText from 'primevue/inputtext'
 import TabPanel from 'primevue/tabpanel'
-import TabView from 'primevue/tabview'
+import Tabs from 'primevue/tabs'
+import TabList from 'primevue/tablist'
+import Tab from 'primevue/tab'
+import TabPanels from 'primevue/tabpanels'
 import {useHead} from '@unhead/vue'
+import Button from 'primevue/button'
+import ProgressSpinner from 'primevue/progressspinner'
 
 import config from '@/config'
 import ScoreSetTable from '@/components/ScoreSetTable.vue'
@@ -41,7 +73,7 @@ import DefaultLayout from '@/components/layout/DefaultLayout'
 export default {
   name: 'HomeView',
 
-  components: {DefaultLayout, ScoreSetTable, InputText, TabView, TabPanel},
+  components: {DefaultLayout, ScoreSetTable, InputText, Tabs, TabList, Tab, TabPanels, TabPanel, Button, ProgressSpinner},
 
   setup: () => {
     useHead({title: 'My dashboard'})
@@ -57,7 +89,8 @@ export default {
       displayedUnplublishedScoreSets: false,
       language: {
         emptyTable: 'You do not have any score sets matching the request.'
-      }
+      },
+      isSearching: false,
     }
   },
 
@@ -77,7 +110,9 @@ export default {
 
   methods: {
     search: async function () {
+      this.isSearching = true
       await this.fetchSearchResults()
+      this.isSearching = false
       /*
       if (this.searchText && this.searchText.length > 0) {
         await this.fetchSearchResults()

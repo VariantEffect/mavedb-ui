@@ -48,11 +48,11 @@
             <AutoComplete
               :id="scopedId('variant-search')"
               v-model="selectedVariant"
+              class="w-full"
               dropdown
               option-label="mavedb_label"
               scroll-height="175px"
               select-on-focus
-              style="flex: 1"
               :suggestions="variantSearchSuggestions"
               :virtual-scroller-options="{itemSize: 50}"
               @complete="variantSearch"
@@ -71,7 +71,7 @@
             <span :class="clinicalMode ? 'mavedb-clinical-mode-option-off' : 'mavedb-clinical-mode-option-on'"
               >Raw data</span
             >
-            <InputSwitch
+            <ToggleSwitch
               v-model="clinicalMode"
               :aria-label="`Click to change to ${clinicalMode ? 'raw data' : 'clinical view'}.`"
             />
@@ -245,7 +245,7 @@
         <div class="mavedb-score-set-section-title">Primary References</div>
         <div v-if="item.primaryPublicationIdentifiers.length > 0">
           <div v-for="publication in item.primaryPublicationIdentifiers" :key="publication">
-            <ul style="list-style-type: square">
+            <ul class="ml-10 list-[square]">
               <!-- eslint-disable-next-line vue/no-v-html -->
               <li v-html="markdownToHtml(publication.referenceHtml)"></li>
               <div>
@@ -265,7 +265,7 @@
         <div class="mavedb-score-set-section-title">Secondary References</div>
         <div v-if="item.secondaryPublicationIdentifiers.length > 0">
           <div v-for="publication in item.secondaryPublicationIdentifiers" :key="publication">
-            <ul style="list-style-type: square">
+            <ul class="ml-10 list-[square]">
               <!-- eslint-disable-next-line vue/no-v-html -->
               <li v-html="markdownToHtml(publication.referenceHtml)"></li>
               <div>
@@ -323,26 +323,28 @@
 
         <div id="variants" class="mavedb-score-set-section-title">Variants</div>
         <div v-if="item.processingState == 'failed' && item.processingErrors.detail">
-          <Accordion :active-index="0">
-            <AccordionTab>
-              <template #header>
-                <i class="pi pi-exclamation-triangle" style="font-size: 3em"></i>
-                <div v-if="item.processingErrors.detail" style="margin: 0px 10px; font-weight: bold">
+          <Accordion value="0">
+            <AccordionPanel value="0">
+              <AccordionHeader>
+                <i class="pi pi-exclamation-triangle text-purple-700 text-6xl"></i>
+                <div v-if="item.processingErrors.detail" class="ml-2 mr-auto text-purple-700">
                   Scores and/or counts could not be processed. Please remedy the
                   {{ item.processingErrors.detail.length }} errors below, then try submitting again.
                 </div>
-                <div v-else style="margin: 0px 10px; font-weight: bold">
+                <div v-else class="ml-2 mr-auto text-purple-700">
                   Scores and/or counts could not be processed.
                 </div>
-              </template>
-              <ScrollPanel style="width: 100%; height: 200px">
-                <div v-if="item.processingErrors.detail">
-                  <div v-for="err of item.processingErrors.detail" :key="err">
-                    <span>{{ err }}</span>
+              </AccordionHeader>
+              <AccordionContent>
+                <ScrollPanel style="width: 100%; height: 200px">
+                  <div v-if="item.processingErrors.detail">
+                    <div v-for="err of item.processingErrors.detail" :key="err">
+                      <span>{{ err }}</span>
+                    </div>
                   </div>
-                </div>
-              </ScrollPanel>
-            </AccordionTab>
+                </ScrollPanel>
+              </AccordionContent>
+            </AccordionPanel>
           </Accordion>
         </div>
         <div v-else>
@@ -410,12 +412,14 @@ import axios from 'axios'
 import _ from 'lodash'
 import {marked} from 'marked'
 import Accordion from 'primevue/accordion'
-import AccordionTab from 'primevue/accordiontab'
+import AccordionPanel from 'primevue/accordionpanel'
+import AccordionHeader from 'primevue/accordionheader'
+import AccordionContent from 'primevue/accordioncontent'
 import AutoComplete from 'primevue/autocomplete'
 import Button from 'primevue/button'
 import Checkbox from 'primevue/checkbox'
 import Dialog from 'primevue/dialog'
-import InputSwitch from 'primevue/inputswitch'
+import ToggleSwitch from 'primevue/toggleswitch'
 import ProgressSpinner from 'primevue/progressspinner'
 import ProgressBar from 'primevue/progressbar'
 import PrimeDialog from 'primevue/dialog'
@@ -456,7 +460,9 @@ export default {
 
   components: {
     Accordion,
-    AccordionTab,
+    AccordionPanel,
+    AccordionHeader,
+    AccordionContent,
     AssayFactSheet,
     AutoComplete,
     Button,
@@ -467,7 +473,7 @@ export default {
     CollectionBadge,
     DefaultLayout,
     Dialog,
-    InputSwitch,
+    ToggleSwitch,
     ItemNotFound,
     PageLoading,
     ProgressBar,
@@ -1332,8 +1338,8 @@ export default {
 }
 
 .mavedb-help-tooltip-button {
-  height: 0.5rem;
-  width: 0.5rem;
+  height: 0.5rem !important;
+  width: 0.5rem !important;
   vertical-align: middle;
   /* Remove extra vertical margin/padding if any. */
   margin-top: 0;

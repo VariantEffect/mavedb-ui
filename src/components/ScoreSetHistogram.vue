@@ -1,6 +1,16 @@
 <template>
   <div class="mavedb-histogram-controls">
-    <TabMenu v-if="hasTabBar" v-model:active-index="activeViz" class="mave-histogram-viz-select" :model="vizOptions" />
+    <Tabs v-if="hasTabBar" v-model:value="activeViz">
+      <TabList>
+        <Tab
+          v-for="(option, index) of vizOptions"
+          :key="index"
+          :value="index"
+        >
+          {{ option.label }}
+        </tab>
+      </TabList>
+    </Tabs>
     <div v-if="showCalibrations" class="mavedb-histogram-thresholds-control">
       <div class="mavedb-histogram-control">
         <label class="mavedb-histogram-control-label" for="mavedb-histogram-viz-select">Thresholds: </label>
@@ -117,13 +127,13 @@
 <script lang="ts">
 import axios from 'axios'
 import _ from 'lodash'
-import Accordion from 'primevue/accordion'
-import AccordionTab from 'primevue/accordiontab'
 import Checkbox from 'primevue/checkbox'
 import Dropdown from 'primevue/dropdown'
 import ProgressSpinner from 'primevue/progressspinner'
 import Rating from 'primevue/rating'
-import TabMenu from 'primevue/tabmenu'
+import Tabs from 'primevue/tabs'
+import TabList from 'primevue/tablist'
+import Tab from 'primevue/tab'
 import {defineComponent, PropType} from 'vue'
 
 import useScopedId from '@/composables/scoped-id'
@@ -184,7 +194,7 @@ interface Margins {
 export default defineComponent({
   name: 'ScoreSetHistogram',
 
-  components: {Accordion, AccordionTab, Checkbox, Dropdown, Rating, TabMenu, ProgressSpinner},
+  components: {Checkbox, Dropdown, Rating, Tabs, TabList, Tab, ProgressSpinner},
 
   props: {
     coordinates: {

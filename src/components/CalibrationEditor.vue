@@ -9,12 +9,12 @@
         </div>
         <div class="mavedb-wizard-content">
           <span class="p-float-label">
-            <Dropdown
+            <Select
               :id="scopedId('input-containing-score-set')"
               v-model="selectedScoreSet"
+              class="w-full"
               option-label="title"
               :options="editableScoreSets"
-              style="width: 100%"
             >
               <template #option="slotProps">
                 <div>
@@ -22,7 +22,7 @@
                   <div>Description: {{ slotProps.option.shortDescription }}</div>
                 </div>
               </template>
-            </Dropdown>
+            </Select>
             <label :for="scopedId('input-containing-score-set')">Score Set</label>
           </span>
           <span v-if="validationErrors['scoreSetUrn']" class="mave-field-error">{{
@@ -118,11 +118,11 @@
           <div>
             Functional Range {{ rangeIdx + 1 }}
             <PrimeButton
+              class="float-right ml-2"
               icon="pi pi-times"
               rounded
               severity="danger"
-              style="float: right"
-              text
+              size="small"
               @click="removeFunctionalRange(rangeIdx)"
             />
           </div>
@@ -223,11 +223,13 @@
               @click="toggleBoundary(rangeIdx, 'lower')"
               ><FontAwesomeIcon class="score-range-toggle-icon" icon="fa-solid fa-circle-half-stroke"
             /></PrimeButton>
-            <span class="p-float-label">
+            <span class="p-float-label w-full">
               <InputNumber
                 v-model="rangeObj.range[0]"
                 :aria-labelledby="scopedId(`input-investigatorProvidedRangeLower-${rangeIdx}`)"
+                class="w-full"
                 :disabled="functionalRangeHelpers[rangeIdx].infiniteLower"
+                :max-fraction-digits="10"
               />
               <label :for="scopedId(`input-investigatorProvidedRangeLower-${rangeIdx}`)">{{
                 functionalRangeHelpers[rangeIdx].infiniteLower
@@ -238,11 +240,13 @@
               }}</label>
             </span>
             <InputGroupAddon>to</InputGroupAddon>
-            <span class="p-float-label">
+            <span class="p-float-label w-full">
               <InputNumber
                 v-model="rangeObj.range[1]"
                 :aria-labelledby="scopedId(`input-investigatorProvidedRangeUpper-${rangeIdx}`)"
+                class="w-full"
                 :disabled="functionalRangeHelpers[rangeIdx].infiniteUpper"
+                :max-fraction-digits="10"
               />
               <label :for="scopedId(`input-investigatorProvidedRangeUpper-${rangeIdx}`)">{{
                 functionalRangeHelpers[rangeIdx].infiniteUpper
@@ -291,7 +295,7 @@
           </div>
         </div>
         <div class="mavedb-wizard-content">
-          <InputSwitch
+          <ToggleSwitch
             v-model="functionalRangeHelpers[rangeIdx].isProvidingClassification"
             :aria-labelledby="scopedId('input-investigatorIsProvidingClassification')"
             @change="updateClassificationValuesBasedOnRangeInformation(rangeIdx)"
@@ -318,24 +322,24 @@
         </div>
         <div class="mavedb-wizard-content">
           <InputGroup>
-            <span class="p-float-label">
-              <Dropdown
+            <span class="p-float-label w-full">
+              <Select
                 v-model="rangeObj.acmgClassification.criterion"
                 :aria-labelledby="scopedId('input-investigatorProvidedOddsPathEvidence')"
+                class="w-full"
                 disabled
                 :options="criterions"
-                style="width: 25%"
               />
               <label :for="scopedId('input-investigatorProvidedOddspathsCriterion')">Criterion</label>
             </span>
-            <span class="p-float-label">
-              <Dropdown
+            <span class="p-float-label w-full">
+              <Select
                 v-model="rangeObj.acmgClassification.evidenceStrength"
                 :aria-labelledby="scopedId('input-investigatorProvidedOddsPathEvidence')"
+                class="w-full"
                 option-label="label"
                 option-value="value"
                 :options="evidenceStrengths"
-                style="width: 75%"
               />
               <label :for="scopedId('input-investigatorProvidedOddsPathEvidence')">Evidence Strength</label>
             </span>
@@ -361,7 +365,7 @@
           <label :id="scopedId('input-investigatorIsProvidingOddsPath')">Provide OddsPaths?</label>
         </div>
         <div class="mavedb-wizard-content">
-          <InputSwitch
+          <ToggleSwitch
             v-model="functionalRangeHelpers[rangeIdx].isProvidingOddspaths"
             :aria-labelledby="scopedId('input-investigatorIsProvidingOddsPath')"
           />
@@ -412,7 +416,7 @@
         </div>
       </div>
       <div class="mavedb-wizard-content">
-        <InputSwitch v-model="draft.researchUseOnly" />
+        <ToggleSwitch v-model="draft.researchUseOnly" />
         <div class="mavedb-switch-value">
           {{
             draft.researchUseOnly
@@ -439,22 +443,28 @@
             :id="scopedId('input-threshold-sources')"
             ref="thresholdSourcesInput"
             v-model="draft.thresholdSources"
+            class="p-inputwrapper-filled"
             :multiple="true"
             option-label="identifier"
             :suggestions="publicationIdentifierSuggestionsList"
             @complete="searchPublicationIdentifiers"
-            @item-select="acceptNewPublicationIdentifier(draft.thresholdSources)"
             @keyup.escape="clearPublicationIdentifierSearch('thresholdSourcesInput')"
+            @option-select="acceptNewPublicationIdentifier(draft.thresholdSources)"
           >
             <template #chip="slotProps">
-              <div>{{ slotProps.value.identifier }}: {{ truncatePublicationTitle(slotProps.value.title) }}</div>
+              <div class="p-inputchips-chip-item">
+                {{ slotProps.value.identifier }}: {{ truncatePublicationTitle(slotProps.value.title) }}
+                <div>
+                  <i class="pi pi-times-circle" @click="removePublicationIdentifier(slotProps.value, draft.thresholdSources)"></i>
+                </div>
+              </div>
             </template>
-            <template #item="slotProps">
+            <template #option="slotProps">
               <div>
-                <div>Title: {{ slotProps.item.title }}</div>
-                <div>DOI: {{ slotProps.item.doi }}</div>
-                <div>Identifier: {{ slotProps.item.identifier }}</div>
-                <div>Database: {{ slotProps.item.dbName }}</div>
+                <div>Title: {{ slotProps.option.title }}</div>
+                <div>DOI: {{ slotProps.option.doi }}</div>
+                <div>Identifier: {{ slotProps.option.identifier }}</div>
+                <div>Database: {{ slotProps.option.dbName }}</div>
               </div>
             </template>
           </AutoComplete>
@@ -479,24 +489,28 @@
             :id="scopedId('input-classification-sources-publication-identifiers')"
             ref="classificationSourcesInput"
             v-model="draft.classificationSources"
+            class="p-inputwrapper-filled"
             :multiple="true"
             option-label="identifier"
             :suggestions="publicationIdentifierSuggestionsList"
             @complete="searchPublicationIdentifiers"
-            @item-select="acceptNewPublicationIdentifier(draft.classificationSources)"
             @keyup.escape="clearPublicationIdentifierSearch('classificationSourcesInput')"
+            @option-select="acceptNewPublicationIdentifier(draft.classificationSources)"
           >
             <template #chip="slotProps">
-              <div>
-                <div>{{ slotProps.value.identifier }}: {{ truncatePublicationTitle(slotProps.value.title) }}</div>
+              <div class="p-inputchips-chip-item">
+                {{ slotProps.value.identifier }}: {{ truncatePublicationTitle(slotProps.value.title) }}
+                <div>
+                  <i class="pi pi-times-circle" @click="removePublicationIdentifier(slotProps.value, draft.classificationSources)"></i>
+                </div>
               </div>
             </template>
-            <template #item="slotProps">
+            <template #option="slotProps">
               <div>
-                <div>Title: {{ slotProps.item.title }}</div>
-                <div>DOI: {{ slotProps.item.doi }}</div>
-                <div>Identifier: {{ slotProps.item.identifier }}</div>
-                <div>Database: {{ slotProps.item.dbName }}</div>
+                <div>Title: {{ slotProps.option.title }}</div>
+                <div>DOI: {{ slotProps.option.doi }}</div>
+                <div>Identifier: {{ slotProps.option.identifier }}</div>
+                <div>Database: {{ slotProps.option.dbName }}</div>
               </div>
             </template>
           </AutoComplete>
@@ -521,24 +535,28 @@
             :id="scopedId('input-method-sources-publication-identifiers')"
             ref="methodSourcesInput"
             v-model="draft.methodSources"
+            class="p-inputwrapper-filled"
             :multiple="true"
             option-label="identifier"
             :suggestions="publicationIdentifierSuggestionsList"
             @complete="searchPublicationIdentifiers"
-            @item-select="acceptNewPublicationIdentifier(draft.methodSources)"
             @keyup.escape="clearPublicationIdentifierSearch('methodSourcesInput')"
+            @option-select="acceptNewPublicationIdentifier(draft.methodSources)"
           >
             <template #chip="slotProps">
-              <div>
-                <div>{{ slotProps.value.identifier }}: {{ truncatePublicationTitle(slotProps.value.title) }}</div>
+              <div class="p-inputchips-chip-item">
+                {{ slotProps.value.identifier }}: {{ truncatePublicationTitle(slotProps.value.title) }}
+                <div>
+                  <i class="pi pi-times-circle" @click="removePublicationIdentifier(slotProps.value, draft.methodSources)"></i>
+                </div>
               </div>
             </template>
-            <template #item="slotProps">
+            <template #option="slotProps">
               <div>
-                <div>Title: {{ slotProps.item.title }}</div>
-                <div>DOI: {{ slotProps.item.doi }}</div>
-                <div>Identifier: {{ slotProps.item.identifier }}</div>
-                <div>Database: {{ slotProps.item.dbName }}</div>
+                <div>Title: {{ slotProps.option.title }}</div>
+                <div>DOI: {{ slotProps.option.doi }}</div>
+                <div>Identifier: {{ slotProps.option.identifier }}</div>
+                <div>Database: {{ slotProps.option.dbName }}</div>
               </div>
             </template>
           </AutoComplete>
@@ -559,13 +577,13 @@ import useScopedId from '@/composables/scoped-id'
 import useAuth from '@/composition/auth'
 import axios from 'axios'
 import SelectButton from 'primevue/selectbutton'
-import Dropdown from 'primevue/dropdown'
+import Select from 'primevue/select'
 import {reactive, ref} from 'vue'
 import type {PropType} from 'vue'
 import InputText from 'primevue/inputtext'
 import PrimeButton from 'primevue/button'
 import PrimeTextarea from 'primevue/textarea'
-import InputSwitch from 'primevue/inputswitch'
+import ToggleSwitch from 'primevue/toggleswitch'
 import AutoComplete from 'primevue/autocomplete'
 import useItems from '@/composition/items'
 import {FontAwesomeIcon} from '@fortawesome/vue-fontawesome'
@@ -599,14 +617,14 @@ export default {
     InputText,
     PrimeButton,
     PrimeTextarea,
-    InputSwitch,
+    ToggleSwitch,
     AutoComplete,
     FontAwesomeIcon,
     InputGroup,
     InputGroupAddon,
     InputNumber,
     SelectButton,
-    Dropdown
+    Select
   },
 
   props: {
@@ -1082,6 +1100,14 @@ export default {
       this.recomputeMeta()
     },
 
+    removePublicationIdentifier: function (val: PublicationIdentifier, publicationList: PublicationIdentifier[]) {
+      const removedIdentifier = val.identifier
+      const publicationIdx = publicationList.findIndex((pub) => pub.identifier == removedIdentifier)
+      if (publicationIdx != -1) {
+        publicationList.splice(publicationIdx, 1)
+      }
+    },
+
     saveCalibration: function () {
       this.$emit('saved', this.draft)
       // Update original snapshot after external save (parent may call back). We optimistically snapshot here.
@@ -1201,7 +1227,7 @@ export default {
 }
 
 /* Switches */
-.p-inputswitch {
+.p-toggleswitch {
   margin: 10px 0;
   vertical-align: middle;
 }

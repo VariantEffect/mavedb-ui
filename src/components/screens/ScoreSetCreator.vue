@@ -13,20 +13,17 @@
         </div>
       </div>
       <div class="mavedb-wizard">
-        <Stepper v-model:active-step="activeWizardStep">
-          <StepperPanel>
-            <template #header="{index, clickCallback}">
-              <button
-                class="p-stepper-action"
-                :disabled="maxWizardStepEntered < index || maxWizardStepValidated < index - 1"
-                role="tab"
-                @click="clickCallback"
-              >
-                <span class="p-stepper-number">{{ index + 1 }}</span>
-                <span class="p-stepper-title">Parent experiment and context</span>
-              </button>
-            </template>
-            <template #content="{nextCallback: showNextWizardStep}">
+        <Stepper v-model:value="activeWizardStep">
+          <StepList>
+            <Step :value="1">Parent experiment and context</Step>
+            <Step :value="2">Score set information</Step>
+            <Step :value="3">Targets</Step>
+            <Step v-for="(targetNum, targetIdx) in numTargets" :key="targetIdx" :value="targetIdx + 4">Target {{ targetIdx + 1 }}</Step>
+            <Step :value="numTargets + 4">Score Calibration</Step>
+            <Step :value="numTargets + 5">Variant Scores</Step>
+          </StepList>
+          <StepPanels>
+            <StepPanel v-slot="{ activateCallback }" :value="1">
               <div class="mavedb-wizard-form">
                 <div class="mavedb-wizard-form-content-background"></div>
                 <div v-if="experimentUrn && experiment">
@@ -149,12 +146,17 @@
                             v-model="supersededScoreSet"
                             field="title"
                             :force-selection="true"
+                            :loading="supersededScoreSetSuggestionsLoading"
+                            option-label="title"
                             :suggestions="supersededScoreSetSuggestionsList"
                             @change="populateSupersededScoreSetMetadata"
                             @complete="searchSupersededScoreSets"
+                            @option-select="populateSupersededScoreSetMetadata"
                           >
-                            <template #item="slotProps">
-                              {{ slotProps.item.urn }}: {{ slotProps.item.title }}
+                            <template #option="slotProps">
+                              <div v-if="slotProps.option.urn && slotProps.option.title">
+                                {{ slotProps.option.urn }}: {{ slotProps.option.title }}
+                              </div>
                             </template>
                           </AutoComplete>
                           <label :for="scopedId('input-supersededScoreSet')">Supersedes</label>
@@ -207,30 +209,17 @@
                     icon="pi pi-arrow-right"
                     icon-pos="right"
                     label="Next"
-                    @click="showNextWizardStepIfValid(showNextWizardStep)"
+                    @click="showNextWizardStepIfValid(activateCallback)"
                   />
                 </div>
               </div>
-            </template>
-          </StepperPanel>
-          <StepperPanel>
-            <template #header="{index, clickCallback}">
-              <button
-                class="p-stepper-action"
-                :disabled="maxWizardStepEntered < index || maxWizardStepValidated < index - 1"
-                role="tab"
-                @click="clickCallback"
-              >
-                <span class="p-stepper-number">{{ index + 1 }}</span>
-                <span class="p-stepper-title">Score set information</span>
-              </button>
-            </template>
-            <template #content="{prevCallback: showPreviousWizardStep, nextCallback: showNextWizardStep}">
+            </StepPanel>
+            <StepPanel v-slot="{ activateCallback }" :value="2" >
               <div class="mavedb-wizard-form">
                 <div class="mavedb-wizard-form-content-background"></div>
                 <div v-if="experiment" class="mavedb-wizard-row">
                   <div class="mavedb-wizard-content-pane">
-                    <Message severity="info">
+                    <Message closable severity="info">
                       Some fields were autopopulated based on the selected experiment and should be inspected to ensure
                       they are still relevant to this score set.
                     </Message>
@@ -287,18 +276,24 @@
                     </div>
                   </div>
                   <div class="mavedb-wizard-content field">
-                    <TabView>
-                      <TabPanel header="Edit">
-                        <span class="p-float-label">
-                          <Textarea :id="scopedId('input-abstractText')" v-model="abstractText" rows="10" />
-                          <label :for="scopedId('input-abstractText')">Abstract</label>
-                        </span>
-                      </TabPanel>
-                      <TabPanel header="Preview">
-                        <!-- eslint-disable-next-line vue/no-v-html -->
-                        <div class="mavedb-wizard-rendered-markdown" v-html="markdownToHtml(abstractText)"></div>
-                      </TabPanel>
-                    </TabView>
+                    <Tabs value="0">
+                      <TabList>
+                        <Tab value="0">Edit</Tab>
+                        <Tab value="1">Preview</Tab>
+                      </TabList>
+                      <TabPanels>
+                        <TabPanel header="Edit" value="0">
+                          <span class="p-float-label">
+                            <Textarea :id="scopedId('input-abstractText')" v-model="abstractText" rows="10" />
+                            <label :for="scopedId('input-abstractText')">Abstract</label>
+                          </span>
+                        </TabPanel>
+                        <TabPanel header="Preview" value="1">
+                          <!-- eslint-disable-next-line vue/no-v-html -->
+                          <div class="mavedb-wizard-rendered-markdown" v-html="markdownToHtml(abstractText)"></div>
+                        </TabPanel>
+                      </TabPanels>
+                    </Tabs>
                     <span v-if="validationErrors.abstractText" class="mave-field-error">{{
                       validationErrors.abstractText
                     }}</span>
@@ -336,18 +331,24 @@
                     </div>
                   </div>
                   <div class="mavedb-wizard-content field">
-                    <TabView>
-                      <TabPanel header="Edit">
-                        <span class="p-float-label">
-                          <Textarea :id="scopedId('input-methodText')" v-model="methodText" rows="10" />
-                          <label :for="scopedId('input-methodText')">Methods</label>
-                        </span>
-                      </TabPanel>
-                      <TabPanel header="Preview">
-                        <!-- eslint-disable-next-line vue/no-v-html -->
-                        <div class="mavedb-wizard-rendered-markdown" v-html="markdownToHtml(methodText)"></div>
-                      </TabPanel>
-                    </TabView>
+                    <Tabs value="0">
+                      <TabList>
+                        <Tab value="0"> Edit </Tab>
+                        <Tab value="1"> Preview </Tab>
+                      </TabList>
+                      <TabPanels>
+                        <TabPanel header="Edit" value="0">
+                          <span class="p-float-label">
+                            <Textarea :id="scopedId('input-methodText')" v-model="methodText" rows="10" />
+                            <label :for="scopedId('input-methodText')">Methods</label>
+                          </span>
+                        </TabPanel>
+                        <TabPanel header="Preview" value="1">
+                          <!-- eslint-disable-next-line vue/no-v-html -->
+                          <div class="mavedb-wizard-rendered-markdown" v-html="markdownToHtml(methodText)"></div>
+                        </TabPanel>
+                      </TabPanels>
+                    </Tabs>
                     <span v-if="validationErrors.methodText" class="mave-field-error">{{
                       validationErrors.methodText
                     }}</span>
@@ -380,6 +381,7 @@
                       </span>
                       <Message
                         v-if="licenseId && licenses && licenses.find((l) => l.id == licenseId)?.shortName != 'CC0'"
+                        closable
                         severity="warn"
                       >
                         Choosing a license with these restrictions may cause your score set to be excluded from data
@@ -439,7 +441,7 @@
                           v-model="contributors"
                           :add-on-blur="true"
                           :allow-duplicate="false"
-                          placeholder="Type or paste ORCID IDs here."
+                          :placeholder="contributors?.length > 0 ? '' : 'Type or paste ORCID IDs here.'"
                           @add="newContributorsAdded"
                           @keyup.escape="clearContributorSearch"
                         >
@@ -451,6 +453,9 @@
                                 }})
                               </div>
                               <div v-else>{{ slotProps.value.orcidId }}</div>
+                            </div>
+                            <div>
+                              <i class="pi pi-times-circle" @click="removeContributor(slotProps.value)"></i>
                             </div>
                           </template>
                         </Chips>
@@ -484,6 +489,9 @@
                             <div>
                               <div>{{ slotProps.value.identifier }}</div>
                             </div>
+                            <div>
+                              <i class="pi pi-times-circle" @click="removeDoiIdentifier(slotProps.value)"></i>
+                            </div>
                           </template>
                         </Chips>
                         <label :for="scopedId('input-doiIdentifiers')">DOI identifiers</label>
@@ -511,27 +519,28 @@
                           :id="scopedId('input-publicationIdentifiers')"
                           ref="publicationIdentifiersInput"
                           v-model="publicationIdentifiers"
+                          class="p-inputwrapper-filled"
                           :multiple="true"
                           option-label="identifier"
                           :suggestions="publicationIdentifierSuggestionsList"
                           @complete="searchPublicationIdentifiers"
-                          @item-select="acceptNewPublicationIdentifier"
-                          @item-unselect="removePublicationIdentifier"
                           @keyup.escape="clearPublicationIdentifierSearch"
+                          @option-select="acceptNewPublicationIdentifier"
                         >
                           <template #chip="slotProps">
-                            <div>
+                            <div class="p-inputchips-chip-item">
+                              {{ slotProps.value.identifier }}: {{ truncatePublicationTitle(slotProps.value.title) }}
                               <div>
-                                {{ slotProps.value.identifier }}: {{ truncatePublicationTitle(slotProps.value.title) }}
+                                <i class="pi pi-times-circle" @click="removePublicationIdentifier(slotProps.value)"></i>
                               </div>
                             </div>
                           </template>
-                          <template #item="slotProps">
+                          <template #option="slotProps">
                             <div>
-                              <div>Title: {{ slotProps.item.title }}</div>
-                              <div>DOI: {{ slotProps.item.doi }}</div>
-                              <div>Identifier: {{ slotProps.item.identifier }}</div>
-                              <div>Database: {{ slotProps.item.dbName }}</div>
+                              <div>Title: {{ slotProps.option.title }}</div>
+                              <div>DOI: {{ slotProps.option.doi }}</div>
+                              <div>Identifier: {{ slotProps.option.identifier }}</div>
+                              <div>Database: {{ slotProps.option.dbName }}</div>
                             </div>
                           </template>
                         </AutoComplete>
@@ -552,6 +561,7 @@
                           :id="scopedId('input-primaryPublicationIdentifiers')"
                           ref="primaryPublicationIdentifiersInput"
                           v-model="primaryPublicationIdentifiers"
+                          class="p-inputwrapper-filled"
                           option-label="identifier"
                           :options="publicationIdentifiers"
                           placeholder="Select a primary publication (Where the dataset is described)"
@@ -607,32 +617,18 @@
               </div>
               <div class="mavedb-wizard-step-controls-row">
                 <div class="flex justify-content-between mavedb-wizard-step-controls pt-4">
-                  <Button icon="pi pi-arrow-left" label="Back" severity="secondary" @click="showPreviousWizardStep" />
+                  <Button icon="pi pi-arrow-left" label="Back" severity="secondary" @click="activateCallback(activeWizardStep - 1)" />
                   <Button
                     :disabled="maxWizardStepValidated < activeWizardStep"
                     icon="pi pi-arrow-right"
                     icon-pos="right"
                     label="Next"
-                    @click="showNextWizardStepIfValid(showNextWizardStep)"
+                    @click="showNextWizardStepIfValid(activateCallback)"
                   />
                 </div>
               </div>
-            </template>
-          </StepperPanel>
-
-          <StepperPanel>
-            <template #header="{index, clickCallback}">
-              <button
-                class="p-stepper-action"
-                :disabled="maxWizardStepEntered < index || maxWizardStepValidated < index - 1"
-                role="tab"
-                @click="clickCallback"
-              >
-                <span class="p-stepper-number">{{ index + 1 }}</span>
-                <span class="p-stepper-title">Targets</span>
-              </button>
-            </template>
-            <template #content="{prevCallback: showPreviousWizardStep, nextCallback: showNextWizardStep}">
+            </StepPanel>
+            <StepPanel v-slot="{ activateCallback }" :value="3" >
               <div class="mavedb-wizard-form">
                 <div class="mavedb-wizard-form-content-background"></div>
                 <div class="mavedb-wizard-row">
@@ -731,33 +727,18 @@
               </div>
               <div class="mavedb-wizard-step-controls-row">
                 <div class="flex justify-content-between mavedb-wizard-step-controls pt-4">
-                  <Button icon="pi pi-arrow-left" label="Back" severity="secondary" @click="showPreviousWizardStep" />
+                  <Button icon="pi pi-arrow-left" label="Back" severity="secondary" @click="activateCallback(activeWizardStep - 1)" />
                   <Button
                     :disabled="maxWizardStepValidated < activeWizardStep"
                     icon="pi pi-arrow-right"
                     icon-pos="right"
                     label="Next"
-                    @click="showNextWizardStepIfValid(showNextWizardStep)"
+                    @click="showNextWizardStepIfValid(activateCallback)"
                   />
                 </div>
               </div>
-            </template>
-          </StepperPanel>
-
-          <!-- Annoyingly, `idx in numTargets` is 1-indexed. -->
-          <StepperPanel v-for="(targetNum, targetIdx) in numTargets" :key="targetIdx">
-            <template #header="{index, clickCallback}">
-              <button
-                class="p-stepper-action"
-                :disabled="maxWizardStepEntered < index || maxWizardStepValidated < index - 1"
-                role="tab"
-                @click="clickCallback"
-              >
-                <span class="p-stepper-number">{{ index + 1 }}</span>
-                <span class="p-stepper-title">Target {{ targetNum }}</span>
-              </button>
-            </template>
-            <template #content="{prevCallback: showPreviousWizardStep, nextCallback: showNextWizardStep}">
+            </StepPanel>
+            <StepPanel v-for="(targetNum, targetIdx) in numTargets" v-slot="{ activateCallback }" :key="targetIdx" :value="targetIdx + 4">
               <div class="mavedb-wizard-form">
                 <div class="mavedb-wizard-form-content-background"></div>
                 <div v-if="isTargetSequence" class="mavedb-wizard-row">
@@ -777,16 +758,17 @@
                         v-model="createdTargetGenes[targetIdx].autofilledTargetGene"
                         field="name"
                         :force-selection="true"
+                        option-label="name"
                         :suggestions="targetGeneSuggestionsList"
                         @complete="searchTargetGenes"
-                        @item-select="autofillFromExistingTarget($event, targetIdx)"
+                        @option-select="autofillFromExistingTarget($event, targetIdx)"
                       >
-                        <template #item="slotProps">
+                        <template #option="slotProps">
                           <div>
-                            <div>Name: {{ slotProps.item.name }}</div>
-                            <div>Category: {{ textForTargetGeneCategory(slotProps.item.category) }}</div>
+                            <div>Name: {{ slotProps.option.name }}</div>
+                            <div>Category: {{ textForTargetGeneCategory(slotProps.option.category) }}</div>
                             <div
-                              v-for="externalIdentifier of slotProps.item.externalIdentifiers"
+                              v-for="externalIdentifier of slotProps.option.externalIdentifiers"
                               :key="externalIdentifier.identifier"
                             >
                               {{ externalIdentifier.identifier.dbName }}:
@@ -906,10 +888,11 @@
                             v-model="createdTargetGenes[targetIdx].targetGene.externalIdentifiers[dbName].identifier"
                             field="identifier"
                             :force-selection="false"
+                            option-label="identifier"
                             style="width: 100%"
                             :suggestions="targetGeneIdentifierSuggestionsList[dbName]"
-                            @change="externalTargetIdentifierChanged(dbName, targetIdx, $event)"
                             @complete="searchTargetGeneIdentifiers(dbName, $event)"
+                            @update:model-value="externalTargetIdentifierChanged(dbName, targetIdx, $event)"
                           />
                           <label :for="scopedId(`input-${dbName.toLowerCase()}Identifier`)"
                             >{{ dbName }} identifier</label
@@ -968,16 +951,17 @@
                           field="organismName"
                           force-selection
                           :multiple="false"
+                          option-label="organismName"
                           :options="taxonomies"
                           style="width: 100%"
                           :suggestions="taxonomySuggestionsList"
                           @complete="searchTaxonomies"
                           @keyup.escape="clearTaxonomySearch"
                         >
-                          <template #item="slotProps">
-                            {{ slotProps.item.code }} - {{ slotProps.item.organismName }}
-                            <template v-if="slotProps.item.commonName !== 'NULL' && slotProps.item.commonName !== null"
-                              >/ {{ slotProps.item.commonName }}</template
+                          <template #option="slotProps">
+                            {{ slotProps.option.code }} - {{ slotProps.option.organismName }}
+                            <template v-if="slotProps.option.commonName !== 'NULL' && slotProps.option.commonName !== null"
+                              >/ {{ slotProps.option.commonName }}</template
                             >
                           </template>
                         </AutoComplete>
@@ -1204,32 +1188,18 @@
               </div>
               <div class="mavedb-wizard-step-controls-row">
                 <div class="flex justify-content-between mavedb-wizard-step-controls pt-4">
-                  <Button icon="pi pi-arrow-left" label="Back" severity="secondary" @click="showPreviousWizardStep" />
+                  <Button icon="pi pi-arrow-left" label="Back" severity="secondary" @click="activateCallback(activeWizardStep - 1)" />
                   <Button
                     :disabled="maxWizardStepValidated < activeWizardStep"
                     icon="pi pi-arrow-right"
                     icon-pos="right"
                     label="Next"
-                    @click="showNextWizardStepIfValid(showNextWizardStep)"
+                    @click="showNextWizardStepIfValid(activateCallback)"
                   />
                 </div>
               </div>
-            </template>
-          </StepperPanel>
-
-          <StepperPanel header="Score Calibrations">
-            <template #header="{index, clickCallback}">
-              <button
-                class="p-stepper-action"
-                :disabled="maxWizardStepEntered < index || maxWizardStepValidated < index - 1"
-                role="tab"
-                @click="clickCallback"
-              >
-                <span class="p-stepper-number">{{ index + 1 }}</span>
-                <span class="p-stepper-title">Score Calibrations</span>
-              </button>
-            </template>
-            <template #content="{prevCallback: showPreviousWizardStep, nextCallback: showNextWizardStep}">
+            </StepPanel>
+            <StepPanel v-slot="{ activateCallback }" :value="numTargets + 4">
               <div class="mavedb-wizard-form">
                 <div class="mavedb-wizard-form-content-background"></div>
                 <div class="mavedb-wizard-row">
@@ -1268,41 +1238,27 @@
               </div>
               <div class="mavedb-wizard-step-controls-row">
                 <div class="flex justify-content-between mavedb-wizard-step-controls pt-5">
-                  <Button icon="pi pi-arrow-left" label="Back" severity="secondary" @click="showPreviousWizardStep" />
+                  <Button icon="pi pi-arrow-left" label="Back" severity="secondary" @click="activateCallback(activeWizardStep - 1)" />
                   <Button
                     :disabled="maxWizardStepValidated < activeWizardStep"
                     icon="pi pi-arrow-right"
                     icon-pos="right"
                     label="Next"
-                    @click="showNextWizardStepIfValid(showNextWizardStep)"
+                    @click="showNextWizardStepIfValid(activateCallback)"
                   />
                 </div>
               </div>
-            </template>
-          </StepperPanel>
-
-          <StepperPanel header="Variant scores">
-            <template #header="{index, clickCallback}">
-              <button
-                class="p-stepper-action"
-                :disabled="maxWizardStepEntered < index || maxWizardStepValidated < index - 1"
-                role="tab"
-                @click="clickCallback"
-              >
-                <span class="p-stepper-number">{{ index + 1 }}</span>
-                <span class="p-stepper-title">Variant scores</span>
-              </button>
-            </template>
-            <template #content="{prevCallback: showPreviousWizardStep}">
+            </StepPanel>
+            <StepPanel v-slot="{ activateCallback }" :value="numTargets + 5">
               <div class="mavedb-wizard-form">
                 <div class="mavedb-wizard-form-content-background"></div>
                 <div class="mavedb-wizard-row">
                   <div class="mavedb-wizard-content">
-                    <Message v-if="createdTargetGenes[0]?.targetAccession?.accession" severity="info">
+                    <Message v-if="createdTargetGenes[0]?.targetAccession?.accession" closable severity="info">
                       When defining variants against an accession based target, uploaded variant coordinates should be
                       fully qualified with respect to target names or target accessions (e.g: NC_000001.1:c.1A>C).
                     </Message>
-                    <Message v-else-if="numTargets > 1" severity="info">
+                    <Message v-else-if="numTargets > 1" closable severity="info">
                       When defining variants against multiple targets, uploaded variant coordinates should be fully
                       qualified with respect to target names or target accessions.
                     </Message>
@@ -1415,46 +1371,46 @@
                     }}</span>
                   </div>
                 </div>
-              </div>
-              <div class="mavedb-wizard-row">
-                <div class="mavedb-wizard-help">
-                  <label :for="scopedId('input-countColumnsMetadataFile')">Load a counts column metadata file</label>
-                  <div class="mavedb-help-small">
-                    This file is optional, but recommended. If provided, it should be a JSON file containing a single
-                    object. The keys of that object should be limited to columns of the count data, while values should
-                    include a string description and an optional string details.
+                <div class="mavedb-wizard-row">
+                  <div class="mavedb-wizard-help">
+                    <label :for="scopedId('input-countColumnsMetadataFile')">Load a counts column metadata file</label>
+                    <div class="mavedb-help-small">
+                      This file is optional, but recommended. If provided, it should be a JSON file containing a single
+                      object. The keys of that object should be limited to columns of the count data, while values should
+                      include a string description and an optional string details.
+                    </div>
                   </div>
-                </div>
-                <div class="mavedb-wizard-content">
-                  <span class="p-float-label">
-                    <FileUpload
-                      :id="scopedId('input-countColumnsMetadataFile')"
-                      ref="countColumnsMetadataFileUpload"
-                      accept="application/json"
-                      :auto="false"
-                      choose-label="Counts column metadata file"
-                      :class="inputClasses.countColumnsMetadataFile || ''"
-                      :custom-upload="true"
-                      :disabled="!($refs.countsFileUpload?.files?.length == 1)"
-                      :file-limit="1"
-                      :show-cancel-button="false"
-                      :show-upload-button="false"
-                      @remove="fileCleared('countColumnsMetadataFile')"
-                      @select="fileSelected('countColumnsMetadataFile', $event)"
-                    >
-                      <template #empty>
-                        <p>Drop a file here.</p>
-                      </template>
-                    </FileUpload>
-                  </span>
-                  <span v-if="validationErrors.countColumnsMetadataFile" class="mave-field-error">{{
-                    validationErrors.countColumnsMetadataFile
-                  }}</span>
+                  <div class="mavedb-wizard-content">
+                    <span class="p-float-label">
+                      <FileUpload
+                        :id="scopedId('input-countColumnsMetadataFile')"
+                        ref="countColumnsMetadataFileUpload"
+                        accept="application/json"
+                        :auto="false"
+                        choose-label="Counts column metadata file"
+                        :class="inputClasses.countColumnsMetadataFile || ''"
+                        :custom-upload="true"
+                        :disabled="!($refs.countsFileUpload?.files?.length == 1)"
+                        :file-limit="1"
+                        :show-cancel-button="false"
+                        :show-upload-button="false"
+                        @remove="fileCleared('countColumnsMetadataFile')"
+                        @select="fileSelected('countColumnsMetadataFile', $event)"
+                      >
+                        <template #empty>
+                          <p>Drop a file here.</p>
+                        </template>
+                      </FileUpload>
+                    </span>
+                    <span v-if="validationErrors.countColumnsMetadataFile" class="mave-field-error">{{
+                      validationErrors.countColumnsMetadataFile
+                    }}</span>
+                  </div>
                 </div>
               </div>
               <div class="mavedb-wizard-step-controls-row">
                 <div class="flex justify-content-between mavedb-wizard-step-controls pt-4">
-                  <Button icon="pi pi-arrow-left" label="Back" severity="secondary" @click="showPreviousWizardStep" />
+                  <Button icon="pi pi-arrow-left" label="Back" severity="secondary" @click="activateCallback(activeWizardStep - 1)" />
                   <Button
                     :disabled="maxWizardStepValidated < activeWizardStep"
                     icon="pi pi-arrow-right"
@@ -1464,8 +1420,8 @@
                   />
                 </div>
               </div>
-            </template>
-          </StepperPanel>
+            </StepPanel>
+          </StepPanels>
         </Stepper>
       </div>
     </div>
@@ -1491,9 +1447,15 @@ import Multiselect from 'primevue/multiselect'
 import ProgressSpinner from 'primevue/progressspinner'
 import SelectButton from 'primevue/selectbutton'
 import Stepper from 'primevue/stepper'
-import StepperPanel from 'primevue/stepperpanel'
+import StepPanel from 'primevue/steppanel'
+import StepPanels from 'primevue/steppanels'
+import StepList from 'primevue/steplist'
+import Step from 'primevue/step'
+import Tabs from 'primevue/tabs'
+import Tab from 'primevue/tab'
+import TabList from 'primevue/tablist'
+import TabPanels from 'primevue/tabpanels'
 import TabPanel from 'primevue/tabpanel'
-import TabView from 'primevue/tabview'
 import Textarea from 'primevue/textarea'
 import {ref} from 'vue'
 import {useHead} from '@unhead/vue'
@@ -1563,9 +1525,15 @@ export default {
     ProgressSpinner,
     SelectButton,
     Stepper,
-    StepperPanel,
+    StepPanel,
+    StepPanels,
+    StepList,
+    Step,
     TabPanel,
-    TabView,
+    Tabs,
+    Tab,
+    TabList,
+    TabPanels,
     Textarea
   },
 
@@ -1675,6 +1643,7 @@ export default {
       indeterminate: INDETERMINATE_CALIBRATION_EVIDENCE
     },
 
+    supersededScoreSetSuggestionsLoading: false,
     progressVisible: false,
     calibrationValidationErrors: {},
     serverSideValidationErrors: {},
@@ -1698,10 +1667,10 @@ export default {
     minTargetGeneStepWithError: Infinity,
 
     /** The currently active step. */
-    activeWizardStep: 0,
+    activeWizardStep: 1,
 
     /** The highest step that the user has entered. This can be used to prevent the user from jumping ahead. */
-    maxWizardStepEntered: 0,
+    maxWizardStepEntered: 1,
 
     stepFields: [
       ['experiment', 'supersededScoreSetUrn', 'metaAnalyzesScoreSetUrns'],
@@ -1727,7 +1696,7 @@ export default {
       const numSteps = 5 + this.numTargets
       // This yields the index of the maximum step validated, -1 if step 0 is not valid, and -2 if all steps are valid.
       const maxStepValidated = _.findIndex(_.range(0, numSteps), (step) => !this.validateWizardStep(step)) - 1
-      return maxStepValidated == -2 ? numSteps - 1 : maxStepValidated
+      return maxStepValidated == -2 ? numSteps - 1 : maxStepValidated + 1
     },
 
     targetGeneIdentifierSuggestionsList: function () {
@@ -1789,7 +1758,7 @@ export default {
           if (response.status == 200) {
             this.experiment = response.data
             this.populateExperimentMetadata({value: this.experiment})
-            this.activeWizardStep = 0
+            this.activeWizardStep = 1
           } else {
             this.$toast.add({severity: 'error', summary: `Could not fetch experiment with urn ${this.experimentUrn}`})
           }
@@ -2068,7 +2037,7 @@ export default {
     showNextWizardStepIfValid: function (navigate) {
       if (this.maxWizardStepValidated >= this.activeWizardStep) {
         this.maxWizardStepEntered = Math.max(this.maxWizardStepEntered, this.activeWizardStep + 1)
-        navigate()
+        navigate(this.activeWizardStep + 1)
       }
     },
 
@@ -2089,10 +2058,12 @@ export default {
     },
 
     searchSupersededScoreSets: async function (event) {
+      this.supersededScoreSetSuggestionsLoading = true
       const searchText = (event.query || '').trim()
       if (searchText.length > 0) {
         this.supersededScoreSetSuggestions = await this.searchScoreSets(searchText, true)
       }
+      this.supersededScoreSetSuggestionsLoading = false
     },
 
     searchScoreSets: async function (searchText, mine = false) {
@@ -2270,7 +2241,7 @@ export default {
     },
 
     externalTargetIdentifierChanged: function (dbName, targetIdx, event) {
-      this.addDefaultOffset(this.dbName, targetIdx)
+      this.addDefaultOffset(dbName, targetIdx)
       this.externalIdentifierTextToObject(dbName, targetIdx, event)
     },
 
@@ -2315,12 +2286,29 @@ export default {
       }
     },
 
-    removePublicationIdentifier: function (event) {
+    removePublicationIdentifier: function (value) {
+      const removedIdentifier = value.identifier
+      const publicationIdx = this.publicationIdentifiers.findIndex((pub) => pub.identifier == removedIdentifier)
+      if (publicationIdx != -1) {
+        this.publicationIdentifiers.splice(publicationIdx, 1)
+      }
       // If we are removing a primary publication identifier, also remove it from that list.
-      const removedIdentifier = event.value.identifier
       const primaryIdx = this.primaryPublicationIdentifiers.findIndex((pub) => pub.identifier == removedIdentifier)
       if (primaryIdx != -1) {
         this.primaryPublicationIdentifiers.splice(primaryIdx, 1)
+      }
+    },
+
+    removeContributor: function (contributor) {
+      const index = this.contributors.findIndex(c => c.orcidId === contributor.orcidId)
+      if (index !== -1) {
+        this.contributors.splice(index, 1)
+      }
+    },
+    removeDoiIdentifier: function (doiIdentifier) {
+      const index = this.doiIdentifiers.findIndex(d => d.identifier === doiIdentifier.identifier)
+      if (index !== -1) {
+        this.doiIdentifiers.splice(index, 1)
       }
     },
 
@@ -2581,9 +2569,9 @@ export default {
       this.validationErrors = {}
 
       // set form to step 0
-      this.activeWizardStep = 0
+      this.activeWizardStep = 1
       this.maxWizardStepValidated = 0
-      this.maxWizardStepEntered = 0
+      this.maxWizardStepEntered = 1
     },
 
     resetTarget: function (targetIdx) {
@@ -2837,7 +2825,7 @@ export default {
 }
 </script>
 
-<style scoped src="../../assets/forms.css"></style>
+<style src="../../assets/forms.css"></style>
 
 <style scoped>
 .mavedb-wizard:deep(.p-stepper) {
@@ -2845,7 +2833,7 @@ export default {
 }
 
 /* Remove the stepper panel's background color. */
-.mavedb-wizard:deep(.p-stepper .p-stepper-panels) {
+.mavedb-wizard:deep(.p-stepper .p-steppanels) {
   background-color: transparent;
 }
 
@@ -2853,6 +2841,7 @@ export default {
 .mavedb-wizard-form {
   position: relative;
   z-index: 0;
+  background-color: #f7f7f7;
 }
 
 /* Give the right side of the wizard a white background, without gaps between rows. */
@@ -2927,6 +2916,7 @@ export default {
 .mavedb-wizard-step-controls {
   padding-left: 10px;
   max-width: 100vw;
+  background-color: #f7f7f7;
 }
 
 /* Switches */
@@ -3052,24 +3042,11 @@ export default {
   z-index: 1001;
 }
 
-.mave-taxonomy-dropdown-panel.p-dropdown-panel .p-dropdown-items .p-dropdown-item {
-  padding: 0;
+.mavedb-wizard:deep(.p-step-title) {
+  font-size: 0.9em !important;
 }
 
-.mave-taxonomy-dropdown-panel.p-dropdown-panel
-  .p-dropdown-items
-  .p-dropdown-item:not(.p-highlight):not(.p-disabled):hover {
-  background: #eef;
-}
-
-.mave-taxonomy-dropdown-panel.p-dropdown-panel
-  .p-dropdown-items
-  .p-dropdown-item:not(.p-highlight):not(.p-disabled):hover
-  .mave-taxonomy-common-name,
-.mave-taxonomy-dropdown-panel.p-dropdown-panel
-  .p-dropdown-items
-  .p-dropdown-item:not(.p-highlight):not(.p-disabled):hover
-  .mave-taxonomy-organism-name {
-  background: #eef;
+.p-inputwrapper, .p-textarea, .p-inputtext {
+  width: 100%;
 }
 </style>

@@ -1007,8 +1007,6 @@ export default {
       combinedKeywords.push(...phenotypicKeywords)
       // Push all of the keyworeds to this.keywords directly will raise a bug if users choose Other option without typing anything.
       this.keywords = combinedKeywords
-      console.log("3122312")
-      console.log(this.keywords)
       const editedFields = {
         title: this.title,
         shortDescription: this.shortDescription,
@@ -1036,13 +1034,11 @@ export default {
       let response
       try {
         if (this.item) {
-          console.log("eeedittttt")
           response = await axios.put(`${config.apiBaseUrl}/experiments/${this.item.urn}`, editedItem)
         } else {
           if (this.experimentSetUrn) {
             editedItem.experimentSetUrn = this.experimentSetUrn
           }
-          console.log("seemssss not")
           response = await axios.post(`${config.apiBaseUrl}/experiments/`, editedItem)
         }
       } catch (e) {

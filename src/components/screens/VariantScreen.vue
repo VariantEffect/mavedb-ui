@@ -1,6 +1,17 @@
 <template>
   <DefaultLayout>
-    <div v-if="alleleTitle && variants.length > 1" class="font-bold text-2xl m-3">Variant: {{ alleleTitle }}</div>
+    <div class="variant-header-row">
+      <h1 v-if="alleleTitle && variants.length > 1" class="mavedb-variant-title">Variant: {{ alleleTitle }}</h1>
+      <div class="variant-header-download-btn-wrapper">
+        <SplitButton
+          :button-props="{class: 'p-button-sm'}"
+          label="Download annotations for selected variant"
+          :menu-button-props="{class: 'p-button-sm'}"
+          :model="annotatedVariantDownloadOptions"
+          @click="annotatedVariantDownloadOptions[0].command"
+        ></SplitButton>
+      </div>
+    </div>
     <ErrorView v-if="variantsStatus == 'Error'" />
     <PageLoading v-else-if="variantsStatus == 'Loading'" />
     <Message v-else-if="variants.length == 0">No variants found in MaveDB</Message>
@@ -8,34 +19,34 @@
       <Tabs :lazy="true" :value="0">
         <TabList>
           <Tab v-for="(variant, variantIndex) in variants" :key="variant.content.urn" :value="variantIndex">
-              <div v-if="variants.length > 1" class="h-full">
-                <div class="mavedb-variants-tabview-header-text" style="color: #000; font-weight: bold">
-                  Measurement {{ variantIndex + 1 }}
-                </div>
-                <div
-                  v-if="variant.type == 'nucleotide'"
-                  class="mavedb-variants-tabview-header-text"
-                  style="color: #000; font-weight: bold"
-                >
-                  Assayed at nucleotide level
-                </div>
-                <div
-                  v-else-if="variant.type == 'protein'"
-                  class="mavedb-variants-tabview-header-text"
-                  style="color: #000; font-weight: bold"
-                >
-                  Assayed at protein level
-                </div>
-                <div
-                  v-else-if="variant.type == 'associatedNucleotide'"
-                  class="mavedb-variants-tabview-header-text"
-                  style="color: #000; font-weight: bold"
-                >
-                  Other nucleotide-level variant with equivalent protein effect
-                </div>
-                <div class="mavedb-variants-tabview-header-text">{{ variantName(variant.content) }}</div>
-                <div class="mavedb-variants-tabview-header-text">{{ variant.content.scoreSet.title }}</div>
+            <div v-if="variants.length > 1" class="h-full">
+              <div class="mavedb-variants-tabview-header-text" style="color: #000; font-weight: bold">
+                Measurement {{ variantIndex + 1 }}
               </div>
+              <div
+                v-if="variant.type == 'nucleotide'"
+                class="mavedb-variants-tabview-header-text"
+                style="color: #000; font-weight: bold"
+              >
+                Assayed at nucleotide level
+              </div>
+              <div
+                v-else-if="variant.type == 'protein'"
+                class="mavedb-variants-tabview-header-text"
+                style="color: #000; font-weight: bold"
+              >
+                Assayed at protein level
+              </div>
+              <div
+                v-else-if="variant.type == 'associatedNucleotide'"
+                class="mavedb-variants-tabview-header-text"
+                style="color: #000; font-weight: bold"
+              >
+                Other nucleotide-level variant with equivalent protein effect
+              </div>
+              <div class="mavedb-variants-tabview-header-text">{{ variantName(variant.content) }}</div>
+              <div class="mavedb-variants-tabview-header-text">{{ variant.content.scoreSet.title }}</div>
+            </div>
           </Tab>
         </TabList>
         <TabPanels>
@@ -56,6 +67,7 @@
 
 <script lang="ts">
 import axios from 'axios'
+import SplitButton from 'primevue/splitbutton'
 import Button from 'primevue/button'
 import Message from 'primevue/message'
 import Tabs from 'primevue/tabs'
@@ -74,7 +86,20 @@ import config from '@/config'
 
 export default defineComponent({
   name: 'VariantMeasurementScreen',
-  components: {Button, DefaultLayout, ErrorView, Message, PageLoading, Tabs, TabList, Tab, TabPanels, TabPanel, VariantMeasurementView},
+  components: {
+    Button,
+    DefaultLayout,
+    ErrorView,
+    Message,
+    PageLoading,
+    Tabs,
+    TabList,
+    Tab,
+    TabPanels,
+    TabPanel,
+    SplitButton,
+    VariantMeasurementView
+  },
 
   props: {
     clingenAlleleId: {
@@ -95,12 +120,21 @@ export default defineComponent({
   }),
 
   computed: {
+    activeVariant: function () {
+      return this.variants[this.activeVariantIndex]?.content
+    },
     alleleTitle: function () {
       if (this.clingenAlleleName) {
         return this.clingenAlleleName
       }
       if (this.variants.length == 1) {
         return this.variantName(this.variants[0])
+      }
+      const names = this.variants
+        .map((v) => this.variantName(v.content))
+        .filter((name) => name != null && name !== undefined)
+      if (names.length > 0 && names.every((n) => n === names[0])) {
+        return names[0]
       }
       return undefined
     },
@@ -115,6 +149,35 @@ export default defineComponent({
       } else {
         return 'mavedb-no-variants'
       }
+    },
+    annotatedVariantDownloadOptions: function () {
+      const annotatedVariantOptions = []
+      if (this.activeVariant?.scoreSet?.scoreCalibrations) {
+        annotatedVariantOptions.push({
+          label: 'Pathogenicity evidence line',
+          command: () => {
+            this.fetchVariantAnnotations('clinical-evidence')
+          }
+        })
+      }
+
+      if (this.activeVariant?.scoreSet?.scoreCalibrations) {
+        annotatedVariantOptions.push({
+          label: 'Functional impact statement',
+          command: () => {
+            this.fetchVariantAnnotations('functional-impact')
+          }
+        })
+      }
+
+      annotatedVariantOptions.push({
+        label: 'Functional impact study result',
+        command: () => {
+          this.fetchVariantAnnotations('study-result')
+        }
+      })
+
+      return annotatedVariantOptions
     }
   },
 
@@ -180,8 +243,6 @@ export default defineComponent({
             type: 'associatedNucleotide'
           }))
           this.variants = [...nucleotideVariants, ...proteinVariants, ...associatedNucleotideVariants]
-          console.log('Variants:')
-          console.log(this.variants)
         } else if (this.clingenAlleleId.startsWith('PA')) {
           // do this separately because we want protein to show up first if protein page
           const proteinVariants = (response.data[0]?.exactMatch?.variantEffectMeasurements || []).map((entry: any) => ({
@@ -204,6 +265,57 @@ export default defineComponent({
       }
     },
 
+    fetchVariantAnnotations: async function (annotationType: string) {
+      if (!this.activeVariant?.urn) {
+        return null
+      }
+
+      try {
+        const response = await axios.get(
+          `${config.apiBaseUrl}/mapped-variants/${encodeURIComponent(this.activeVariant.urn)}/va/${annotationType}`,
+          {
+            responseType: 'json'
+          }
+        )
+
+        //convert object to Json.
+        const file = JSON.stringify(response.data)
+        const anchor = document.createElement('a')
+
+        anchor.href = 'data:text/json;charset=utf-8,' + encodeURIComponent(file)
+        anchor.target = '_blank'
+
+        //file default name
+        anchor.download = this.activeVariant.urn + '_' + annotationType + '.json'
+        anchor.click()
+      } catch (error) {
+        let serverMessage = ''
+        if (error && error.response && error.response.data) {
+          if (typeof error.response.data === 'string') {
+            serverMessage = error.response.data
+          } else if (error.response.data.detail) {
+            serverMessage = error.response.data.detail
+          } else {
+            serverMessage = JSON.stringify(error.response.data)
+          }
+        } else if (error && error.message) {
+          serverMessage = error.message
+        } else {
+          serverMessage = 'Unknown error.'
+        }
+        console.log(
+          `Error while fetching variant annotations of type "${annotationType}" for variant "${this.activeVariant.urn}"`,
+          error
+        )
+        this.$toast?.add({
+          severity: 'error',
+          summary: 'Download failed',
+          detail: `Could not fetch variant annotation: ${serverMessage}`,
+          life: 4000
+        })
+      }
+    },
+
     variantName: function (variant: any) {
       return (
         this.currentMappedVariant(variant)?.postMapped?.expressions?.[0]?.value ||
@@ -218,6 +330,19 @@ export default defineComponent({
 </script>
 
 <style scoped>
+.variant-header-row {
+  display: flex;
+  align-items: center;
+  gap: 1.5rem;
+  margin-top: 1rem;
+  margin-bottom: 1rem;
+  font-weight: bold;
+  font-size: 1.5rem;
+  margin: 1rem;
+}
+.variant-header-download-btn-wrapper {
+  margin-left: auto;
+}
 .mavedb-single-variant:deep(.p-tabview-nav-container) {
   display: none;
 }

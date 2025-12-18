@@ -571,9 +571,9 @@ export interface paths {
      *     The index to start from. If None, starts from the beginning.
      * limit : Optional[int]
      *     The maximum number of variants to return. If None, returns all variants.
-     * namespaces: List[Literal["scores", "counts"]]
+     * namespaces: List[Literal["scores", "counts", "vep", "gnomad"]]
      *     The namespaces of all columns except for accession, hgvs_nt, hgvs_pro, and hgvs_splice.
-     *     We may add ClinVar and gnomAD in the future.
+     *     We may add ClinVar in the future.
      * drop_na_columns : bool, optional
      *     Whether to drop columns that contain only NA values. Defaults to False.
      * db : Session
@@ -2577,6 +2577,10 @@ export interface components {
       keywords: components["schemas"]["ExperimentControlledKeyword"][];
       /** Scoreseturns */
       scoreSetUrns: string[];
+      /** Externallinks */
+      externalLinks: {
+        [key: string]: components["schemas"]["ExternalLink"];
+      };
       /** Numscoresets */
       numScoreSets?: number | null;
       /** Processingstate */
@@ -2945,7 +2949,14 @@ export interface components {
       /** Offset */
       offset: number;
     };
-    /** ExternalLink */
+    /**
+     * ExternalLink
+     * @description Represents an external hyperlink for view models.
+     *
+     * Attributes:
+     *     url (Optional[str]): Fully qualified URL for the external resource.
+     *         May be None if no link is available or applicable.
+     */
     ExternalLink: {
       /** Url */
       url?: string | null;
@@ -4573,6 +4584,10 @@ export interface components {
       keywords: components["schemas"]["SavedExperimentControlledKeyword"][];
       /** Scoreseturns */
       scoreSetUrns: string[];
+      /** Externallinks */
+      externalLinks: {
+        [key: string]: components["schemas"]["ExternalLink"];
+      };
       /** Processingstate */
       processingState?: string | null;
     };
@@ -8749,9 +8764,9 @@ export interface operations {
    *     The index to start from. If None, starts from the beginning.
    * limit : Optional[int]
    *     The maximum number of variants to return. If None, returns all variants.
-   * namespaces: List[Literal["scores", "counts"]]
+   * namespaces: List[Literal["scores", "counts", "vep", "gnomad"]]
    *     The namespaces of all columns except for accession, hgvs_nt, hgvs_pro, and hgvs_splice.
-   *     We may add ClinVar and gnomAD in the future.
+   *     We may add ClinVar in the future.
    * drop_na_columns : bool, optional
    *     Whether to drop columns that contain only NA values. Defaults to False.
    * db : Session
@@ -8771,8 +8786,8 @@ export interface operations {
         start?: number;
         /** @description Maximum number of variants to return */
         limit?: number;
-        /** @description One or more data types to include: scores, counts, clinVar, gnomAD */
-        namespaces?: ("scores" | "counts")[];
+        /** @description One or more data types to include: scores, counts, clinVar, gnomAD, VEP */
+        namespaces?: ("scores" | "counts" | "vep" | "gnomad")[];
         drop_na_columns?: boolean | null;
         include_custom_columns?: boolean | null;
         include_post_mapped_hgvs?: boolean | null;

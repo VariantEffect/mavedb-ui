@@ -570,7 +570,7 @@ const KEYWORDS = [
   },
   {
     key: 'Delivery Method',
-    descriptionLabel: 'Delivery method Description',
+    descriptionLabel: 'Delivery Method Description',
     option: 'deliveryMethodKeywordOptions'
   },
   {

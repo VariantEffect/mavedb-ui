@@ -470,7 +470,7 @@ const KEYWORDS = [
   },
   {
     key: 'Delivery Method',
-    descriptionLabel: 'Delivery method Description',
+    descriptionLabel: 'Delivery Method Description',
     option: 'deliveryMethodKeywordOptions'
   },
   {
@@ -1074,7 +1074,6 @@ export default {
       combinedKeywords.push(...phenotypicKeywords)
       // Push all of the keyworeds to this.keywords directly will raise a bug if users choose Other option without typing anything.
       this.keywords = combinedKeywords
-
       const editedFields = {
         title: this.title,
         shortDescription: this.shortDescription,

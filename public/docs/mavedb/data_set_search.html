@@ -51,6 +51,31 @@
 <h1>Data Set Search<a class="headerlink" href="#data-set-search" title="Link to this heading">¶</a></h1>
 <p id="data-set-search-intro">MaveDB provides a search interface to help users find relevant data sets.
 You can access the search page by clicking on the “Search” link in the top navigation bar.</p>
+<section id="search-interface">
+<span id="end-data-set-search-intro"></span><h2>Search interface<a class="headerlink" href="#search-interface" title="Link to this heading">¶</a></h2>
+<p id="data-set-search-interface">The search interface allows users to filter data sets based on various criteria.</p>
+<p>In the target tab, users can filter data sets based on the following fields pulled from user-submitted target metadata:</p>
+<ul class="simple">
+<li><p><strong>Target name</strong>: The name of the target associated with the data set (usually a gene or protein).</p></li>
+<li><p><strong>Target type</strong>: The type of target (e.g., protein-coding gene, non-coding RNA, regulatory element).</p></li>
+<li><p><strong>Organism</strong>: The organism from which the target is derived.</p></li>
+<li><p><strong>Target accession</strong>: The accession number or identifier for the target (e.g. Ensembl ID, RefSeq ID, etc.).</p></li>
+</ul>
+<p>In the publication tab, users can filter data sets based on the following publication-related fields:</p>
+<ul class="simple">
+<li><p><strong>Author</strong>: The author of any publication associated with a data set.</p></li>
+<li><p><strong>Database</strong>: The database of any publication associated with a dataset (e.g., PubMed, CrossRef, etc.).</p></li>
+<li><p><strong>Journal</strong>: The journal in which any publication associated with a data set was published.</p></li>
+</ul>
+<p>Users may also enter keywords into the search bar to perform a full-text search across all data set metadata fields, including target metadata, publication metadata, assay facts, and score set metadata.
+Note that search filters are additive; data sets must meet all specified criteria to be included in the search results.</p>
+<p>Results are grouped by experiment, with all matching score sets listed under each experiment.</p>
+<div class="admonition note">
+<p class="admonition-title">Note</p>
+<p>Search results are updated in real-time as users modify their search criteria but limited to the first 100 results for performance reasons.
+If your search returns more than 100 results, consider refining your search criteria further.</p>
+</div>
+</section>
 </section>
 
 
@@ -60,6 +85,16 @@ You can access the search page by clicking on the “Search” link in the top n
       </div>
       <div class="sphinxsidebar" role="navigation" aria-label="main navigation">
         <div class="sphinxsidebarwrapper">
+  <div>
+    <h3><a href="index.html">Table of Contents</a></h3>
+    <ul>
+<li><a class="reference internal" href="#">Data Set Search</a><ul>
+<li><a class="reference internal" href="#search-interface">Search interface</a></li>
+</ul>
+</li>
+</ul>
+
+  </div>
   <div>
     <h4>Previous topic</h4>
     <p class="topless"><a href="publishing.html"

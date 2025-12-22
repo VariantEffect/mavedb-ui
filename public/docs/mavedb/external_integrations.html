@@ -49,18 +49,28 @@
             
   <section id="external-integrations">
 <h1>External integrations<a class="headerlink" href="#external-integrations" title="Link to this heading">¶</a></h1>
-<p id="external-integrations-intro">MaveDB integrates with several external resources to enhance the usability and interoperability of the data it hosts.</p>
+<p id="external-integrations-intro">MaveDB integrates with several external resources to enrich hosted data sets and facilitate data sharing and interpretation.</p>
+<p>Many of these integrations rely on <a class="reference internal" href="variant_mapping.html#variant-mapping"><span class="std std-ref">variant mapping</span></a> to link MAVE variants to genomic coordinates and transcripts.</p>
 <section id="clingen">
 <span id="end-external-integrations-intro"></span><h2>ClinGen<a class="headerlink" href="#clingen" title="Link to this heading">¶</a></h2>
+<p id="clingen-integration">After mapping, MaveDB submits variant data to the <a class="reference external" href="https://reg.clinicalgenome.org/">ClinGen Allele Registry</a> to obtain ClinGen Allele IDs (CAIDs) for each variant.
+CAIDs provide a stable and unique identifier for genetic variants, enabling consistent referencing across databases and publications.</p>
+<p>When a data set is published, MaveDB automatically submits the mapped variants to the ClinGen Linked Data Hub. This submission includes relevant metadata about the variants and their associated scores.
+This allows ClinGen to display information about the functional data from MaveDB directly on their platform, enhancing the visibility and utility of MAVE data for the clinical genomics community.</p>
 </section>
 <section id="clinvar">
-<span id="end-clingen-integration"></span><span id="clingen-integration"></span><h2>ClinVar<a class="headerlink" href="#clinvar" title="Link to this heading">¶</a></h2>
+<span id="end-clingen-integration"></span><h2>ClinVar<a class="headerlink" href="#clinvar" title="Link to this heading">¶</a></h2>
+<p id="clinvar-integration">Using the ClinGen Allele IDs obtained during the mapping process, MaveDB cross-references variants with the <a class="reference external" href="https://www.ncbi.nlm.nih.gov/clinvar/">ClinVar database</a> to identify any existing annotations.
+These annotations power visualizations in MaveDB intended to show the segretation ability of an assay with respect to known pathogenic and benign variants. MaveDB displays ClinVar significance classifications
+and ‘star’ status alongside variant effect scores, allowing users to assess how well the MAVE data aligns with established clinical interpretations and links to ClinVar entries for further information.</p>
+<div class="admonition note">
+<p class="admonition-title">Note</p>
+<p>A future version of this software will allow users to submit variant interpretations back to ClinVar directly from MaveDB, streamlining the process of sharing functional evidence with the clinical genomics community.</p>
+</div>
 </section>
 <section id="gnomad">
-<span id="end-clinvar-integration"></span><span id="clinvar-integration"></span><h2>gnomAD<a class="headerlink" href="#gnomad" title="Link to this heading">¶</a></h2>
-</section>
-<section id="ga4gh-vrs">
-<span id="end-gnomad-integration"></span><span id="gnomad-integration"></span><h2>GA4GH VRS<a class="headerlink" href="#ga4gh-vrs" title="Link to this heading">¶</a></h2>
+<span id="end-clinvar-integration"></span><h2>gnomAD<a class="headerlink" href="#gnomad" title="Link to this heading">¶</a></h2>
+<p id="gnomad-integration">Mapped variants in MaveDB are also cross-referenced with the <a class="reference external" href="https://gnomad.broadinstitute.org/">gnomAD database</a> to retrieve population frequency data. This integration provides users with important context about the prevalence of variants in diverse human populations.</p>
 </section>
 </section>
 
@@ -78,7 +88,6 @@
 <li><a class="reference internal" href="#clingen">ClinGen</a></li>
 <li><a class="reference internal" href="#clinvar">ClinVar</a></li>
 <li><a class="reference internal" href="#gnomad">gnomAD</a></li>
-<li><a class="reference internal" href="#ga4gh-vrs">GA4GH VRS</a></li>
 </ul>
 </li>
 </ul>

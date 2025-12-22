@@ -25,6 +25,7 @@ To report issues or request new features, please use the `MaveDB issue tracker`_
    publishing
    data_set_search
    bulk_downloads
+   output_formats
    collections
    mavemd/index
    assay_facts

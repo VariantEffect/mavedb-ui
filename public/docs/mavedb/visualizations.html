@@ -1,0 +1,178 @@
+<!DOCTYPE html>
+
+<html lang="en" data-content_root="./">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" /><meta name="viewport" content="width=device-width, initial-scale=1" />
+
+    <title>Visualizations &#8212; MaveDB 2025.5.2 documentation</title>
+    <link rel="stylesheet" type="text/css" href="_static/pygments.css?v=4848ba22" />
+    <link rel="stylesheet" type="text/css" href="_static/pyramid.css?v=a5b9c134" />
+    <link rel="stylesheet" type="text/css" href="_static/graphviz.css?v=eafc0fe6" />
+    <link rel="stylesheet" type="text/css" href="_static/styles.css?v=1cacb62a" />
+    <script src="_static/documentation_options.js?v=ea53f692"></script>
+    <script src="_static/doctools.js?v=888ff710"></script>
+    <script src="_static/sphinx_highlight.js?v=dc90522c"></script>
+    <link rel="index" title="Index" href="genindex.html" />
+    <link rel="search" title="Search" href="search.html" />
+    <link rel="next" title="MaveDB API" href="api/index.html" />
+    <link rel="prev" title="Assay facts" href="assay_facts.html" />
+<link rel="stylesheet" href="https://fonts.googleapis.com/css?family=Neuton&amp;subset=latin" type="text/css" media="screen" charset="utf-8" />
+<link rel="stylesheet" href="https://fonts.googleapis.com/css?family=Nobile:regular,italic,bold,bolditalic&amp;subset=latin" type="text/css" media="screen" charset="utf-8" />
+<!--[if lte IE 6]>
+<link rel="stylesheet" href="_static/ie6.css" type="text/css" media="screen" charset="utf-8" />
+<![endif]-->
+
+  </head><body>
+
+    <div class="related" role="navigation" aria-label="related navigation">
+      <h3>Navigation</h3>
+      <ul>
+        <li class="right" style="margin-right: 10px">
+          <a href="genindex.html" title="General Index"
+             accesskey="I">index</a></li>
+        <li class="right" >
+          <a href="api/index.html" title="MaveDB API"
+             accesskey="N">next</a> |</li>
+        <li class="right" >
+          <a href="assay_facts.html" title="Assay facts"
+             accesskey="P">previous</a> |</li>
+        <li class="nav-item nav-item-0"><a href="index.html">MaveDB 2025.5.2 documentation</a> &#187;</li>
+        <li class="nav-item nav-item-this"><a href="">Visualizations</a></li> 
+      </ul>
+    </div>  
+
+    <div class="document">
+      <div class="documentwrapper">
+        <div class="bodywrapper">
+          <div class="body" role="main">
+            
+  <section id="visualizations">
+<h1>Visualizations<a class="headerlink" href="#visualizations" title="Link to this heading">¶</a></h1>
+<p id="visualizations-intro">MaveDB offers several built-in visualizations to help users explore and interpret variant effect data. These visualizations are automatically generated for published score sets and displayed
+prominently on the score set details page. Users can also download the underlying data used to create these visualizations for further analysis, or download the visualizations themselves
+as image files for use in presentations or publications.</p>
+<section id="histogram">
+<span id="end-visualizations-intro"></span><h2>Histogram<a class="headerlink" href="#histogram" title="Link to this heading">¶</a></h2>
+<p id="histogram-viz">The histogram visualization displays the distribution of variant effect scores within a score set. This visualization helps users quickly assess the overall distribution of scores within a dataset.</p>
+<p>Hovering over a bin in the histogram reveals the number of variants that fall within that score range for each series and shows which classification ranges
+the bin overlaps when a score calibration is selected. When a variant is selected, the corresponding bin in the histogram is highlighted to show where the variant’s score falls within the overall distribution
+and the tooltip provides additional information about the selected variant.</p>
+<figure class="align-left" id="base-histogram-example">
+<img alt="Default histogram visualization from a MaveDB score set page" src="_images/bard1_base_histogram.png" />
+</figure>
+<p>In the example above, we show the base histogram visualization from <a class="reference external" href="https://mavedb.org/score-sets/urn:mavedb:00001250-a-1">urn:mavedb:00001250-a-1</a>, which describes saturation genome editing of <em>BARD1</em>.</p>
+<p>When a score set has been linked to <a class="reference internal" href="external_integrations.html#clinvar-integration"><span class="std std-ref">ClinVar annotations</span></a>, the histogram will have a ‘clinical view’ available. This view overlays the distribution of scores for variants classified as ‘Pathogenic’ and ‘Benign’ in ClinVar, allowing users to assess how well the assay segregates known clinical variants.</p>
+<figure class="align-left" id="clinical-histogram-example">
+<img alt="Clinical view of the histogram visualization from a MaveDB score set page" src="_images/bard1_clinical_histogram.png" />
+</figure>
+<p>In the example above, we show the clinical view of the histogram visualization from <a class="reference external" href="https://mavedb.org/score-sets/urn:mavedb:00001250-a-1">urn:mavedb:00001250-a-1</a>, which describes saturation genome editing of <em>BARD1</em>.</p>
+<p>When a score set includes <a class="reference internal" href="external_integrations.html#vep-integration"><span class="std std-ref">variant effect predictions</span></a>, users may also view a ‘protein effect’ version of the histogram. This view overlays the distribution of scores for variants predicted to have different effects on the protein, such as ‘missense’, ‘nonsense’, and ‘synonymous’ variants.</p>
+<figure class="align-left" id="protein-effect-histogram-example">
+<img alt="Protein effect view of the histogram visualization from a MaveDB score set page" src="_images/bard1_protein_effect_histogram.png" />
+</figure>
+<p>In the example above, we show the protein effect view of the histogram visualization from <a class="reference external" href="https://mavedb.org/score-sets/urn:mavedb:00001250-a-1">urn:mavedb:00001250-a-1</a>, which describes saturation genome editing of <em>BARD1</em>.</p>
+<p>To give users more control over the histogram visualization, we also provide a ‘custom view’ that allows users to adjust the version of ClinVar data used, the ‘gold stars’ threshold for variant inclusion, include other ClinVar significance categories such as ‘Likely pathogenic’ and ‘Uncertain significance’,
+limit the series to only variants with specific protien effects, and/or include other series for different protein effects.
+When a score set has <a class="reference internal" href="score_calibrations.html#score-calibrations"><span class="std std-ref">score calibrations</span></a>, users may also overlay functional classifications on the histogram to get a sense of where different classes of variants fall within the score distribution.</p>
+<figure class="align-left" id="custom-histogram-example">
+<img alt="Custom view of the histogram visualization from a MaveDB score set page" src="_images/bard1_custom_histogram.png" />
+</figure>
+<p>In the example above, we show a custom view of the histogram visualization from <a class="reference external" href="https://mavedb.org/score-sets/urn:mavedb:00001250-a-1">urn:mavedb:00001250-a-1</a>, with overlaid score calibrations, variants of unknown significance (via ClinVar) shown in gray, and a series for scores of variants with a predicted ‘nonsense’ protein effect.</p>
+</section>
+<section id="heatmap">
+<span id="end-histogram-viz"></span><h2>Heatmap<a class="headerlink" href="#heatmap" title="Link to this heading">¶</a></h2>
+<p id="heatmap-viz">The heatmap visualization provides a two-dimensional representation of variant effect scores across the target sequence. This visualization is particularly useful for identifying patterns of variant effects at specific positions within the gene or protein.
+When variants are provided at the nucleotide level, users may toggle between viewing the heatmap at the nucleotide or amino acid level. Amino acids are ordered based
+on their hydrophobicity values using the <a class="reference external" href="http://www.sciencedirect.com/science/article/pii/0022283682905150">Kyte-Doolittle scale</a> and are grouped by chemical class based on values from <a class="reference external" href="https://genomebiology.biomedcentral.com/articles/10.1186/s13059-017-1272-5/figures/1">Enrich2</a>.</p>
+<p>Each cell in the heatmap represents a specific variant at a given position, with the color intensity indicating the variant effect score with wild type variants shown in yellow. Hovering over a cell reveals detailed information about the variant, including its score, classification (if applicable), and the HGVS strings of the variant. Selecting a cell highlights the corresponding variant in other visualizations on the page, such as the histogram.</p>
+<p>When a baseline score is available from a <a class="reference internal" href="score_calibrations.html#score-calibrations"><span class="std std-ref">score calibration</span></a>, the heatmap color scale centers the ‘normal’ color (purple) at the baseline score to provide better visual contrast for variants with scores deviating from the baseline.</p>
+<figure class="align-left" id="heatmap-example">
+<img alt="Heatmap visualization from a MaveDB score set page" src="_images/msh2_heatmap.png" />
+</figure>
+<p>In the example above, we show the heatmap visualization with a selected variant from <a class="reference external" href="https://mavedb.org/score-sets/urn:mavedb:00000050-a-1">urn:mavedb:00000050-a-1</a>, which describes deep mutational scanning of <em>MSH2</em>.</p>
+</section>
+<section id="protein-structure-viewer">
+<span id="end-heatmap-viz"></span><h2>Protein structure viewer<a class="headerlink" href="#protein-structure-viewer" title="Link to this heading">¶</a></h2>
+<p id="protein-structure-viz">When a score set is able to be associated with a UniProt accession, MaveDB provides an interactive 3D protein structure viewer using <a class="reference external" href="https://molstar.org/">Mol*</a> to help users visualize variant effect scores in the context of the protein’s structure.</p>
+<p>Opening the protein structure viewer displays a side-by-side view of a heatmap and the protein structure for the associated UniProt accession with a color gradient applied based on the mean variant effect score at each position. Users can interact with the 3D structure by rotating, zooming, and selecting specific residues to view their associated variant effect scores and details.
+Users may also click and drag on the heatmap to select multiple residues, which will highlight the corresponding regions on the protein structure. Other controls are available in the settings menu on the right side of the viewer, including an option to export the current view as a PNG image.</p>
+<figure class="align-left" id="protein-structure-example">
+<img alt="Protein structure visualization from a MaveDB score set page" src="_images/msh2_protein_structure.png" />
+</figure>
+<p>In the example above, we show the protein structure viewer from <a class="reference external" href="https://mavedb.org/score-sets/urn:mavedb:00000050-a-1">urn:mavedb:00000050-a-1</a>.</p>
+</section>
+</section>
+
+
+            <div class="clearer"></div>
+          </div>
+        </div>
+      </div>
+      <div class="sphinxsidebar" role="navigation" aria-label="main navigation">
+        <div class="sphinxsidebarwrapper">
+  <div>
+    <h3><a href="index.html">Table of Contents</a></h3>
+    <ul>
+<li><a class="reference internal" href="#">Visualizations</a><ul>
+<li><a class="reference internal" href="#histogram">Histogram</a></li>
+<li><a class="reference internal" href="#heatmap">Heatmap</a></li>
+<li><a class="reference internal" href="#protein-structure-viewer">Protein structure viewer</a></li>
+</ul>
+</li>
+</ul>
+
+  </div>
+  <div>
+    <h4>Previous topic</h4>
+    <p class="topless"><a href="assay_facts.html"
+                          title="previous chapter">Assay facts</a></p>
+  </div>
+  <div>
+    <h4>Next topic</h4>
+    <p class="topless"><a href="api/index.html"
+                          title="next chapter">MaveDB API</a></p>
+  </div>
+  <div role="note" aria-label="source link">
+    <h3>This Page</h3>
+    <ul class="this-page-menu">
+      <li><a href="_sources/visualizations.rst.txt"
+            rel="nofollow">Show Source</a></li>
+    </ul>
+   </div>
+<div id="searchbox" style="display: none" role="search">
+  <h3 id="searchlabel">Quick search</h3>
+    <div class="searchformwrapper">
+    <form class="search" action="search.html" method="get">
+      <input type="text" name="q" aria-labelledby="searchlabel" autocomplete="off" autocorrect="off" autocapitalize="off" spellcheck="false"/>
+      <input type="submit" value="Go" />
+    </form>
+    </div>
+</div>
+<script>document.getElementById('searchbox').style.display = "block"</script>
+        </div>
+      </div>
+      <div class="clearer"></div>
+    </div>
+    <div class="related" role="navigation" aria-label="related navigation">
+      <h3>Navigation</h3>
+      <ul>
+        <li class="right" style="margin-right: 10px">
+          <a href="genindex.html" title="General Index"
+             >index</a></li>
+        <li class="right" >
+          <a href="api/index.html" title="MaveDB API"
+             >next</a> |</li>
+        <li class="right" >
+          <a href="assay_facts.html" title="Assay facts"
+             >previous</a> |</li>
+        <li class="nav-item nav-item-0"><a href="index.html">MaveDB 2025.5.2 documentation</a> &#187;</li>
+        <li class="nav-item nav-item-this"><a href="">Visualizations</a></li> 
+      </ul>
+    </div>
+    <div class="footer" role="contentinfo">
+    &#169; Copyright 2017-2025, MaveDB Developers.
+      Created using <a href="https://www.sphinx-doc.org/">Sphinx</a> 7.2.6.
+    </div>
+  </body>
+</html>

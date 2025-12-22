@@ -1,0 +1,169 @@
+<!DOCTYPE html>
+
+<html lang="en" data-content_root="./">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" /><meta name="viewport" content="width=device-width, initial-scale=1" />
+
+    <title>Output formats &#8212; MaveDB 2025.5.2 documentation</title>
+    <link rel="stylesheet" type="text/css" href="_static/pygments.css?v=4848ba22" />
+    <link rel="stylesheet" type="text/css" href="_static/pyramid.css?v=a5b9c134" />
+    <link rel="stylesheet" type="text/css" href="_static/graphviz.css?v=eafc0fe6" />
+    <link rel="stylesheet" type="text/css" href="_static/styles.css?v=1cacb62a" />
+    <script src="_static/documentation_options.js?v=ea53f692"></script>
+    <script src="_static/doctools.js?v=888ff710"></script>
+    <script src="_static/sphinx_highlight.js?v=dc90522c"></script>
+    <link rel="index" title="Index" href="genindex.html" />
+    <link rel="search" title="Search" href="search.html" />
+    <link rel="next" title="Data set collections" href="collections.html" />
+    <link rel="prev" title="Bulk downloads" href="bulk_downloads.html" />
+<link rel="stylesheet" href="https://fonts.googleapis.com/css?family=Neuton&amp;subset=latin" type="text/css" media="screen" charset="utf-8" />
+<link rel="stylesheet" href="https://fonts.googleapis.com/css?family=Nobile:regular,italic,bold,bolditalic&amp;subset=latin" type="text/css" media="screen" charset="utf-8" />
+<!--[if lte IE 6]>
+<link rel="stylesheet" href="_static/ie6.css" type="text/css" media="screen" charset="utf-8" />
+<![endif]-->
+
+  </head><body>
+
+    <div class="related" role="navigation" aria-label="related navigation">
+      <h3>Navigation</h3>
+      <ul>
+        <li class="right" style="margin-right: 10px">
+          <a href="genindex.html" title="General Index"
+             accesskey="I">index</a></li>
+        <li class="right" >
+          <a href="collections.html" title="Data set collections"
+             accesskey="N">next</a> |</li>
+        <li class="right" >
+          <a href="bulk_downloads.html" title="Bulk downloads"
+             accesskey="P">previous</a> |</li>
+        <li class="nav-item nav-item-0"><a href="index.html">MaveDB 2025.5.2 documentation</a> &#187;</li>
+        <li class="nav-item nav-item-this"><a href="">Output formats</a></li> 
+      </ul>
+    </div>  
+
+    <div class="document">
+      <div class="documentwrapper">
+        <div class="bodywrapper">
+          <div class="body" role="main">
+            
+  <section id="output-formats">
+<h1>Output formats<a class="headerlink" href="#output-formats" title="Link to this heading">¶</a></h1>
+<p id="output-formats-intro">MaveDB supports multiple output formats for downloading variant effect score data. These formats are designed to accommodate different user needs and facilitate integration with various analysis tools and pipelines. The primary output formats available in MaveDB include:</p>
+<ul class="simple">
+<li><p><strong>Score and count data</strong>: Downloadable as CSV or TSV files, these files contain the raw and processed variant effect scores along with associated count data.</p></li>
+<li><p><strong>Mapped variants</strong>: Available in <a class="reference external" href="https://vrs.ga4gh.org/">GA4GH VRS</a> format, this output provides standardized representations of variants mapped to genomic coordinates.</p></li>
+<li><p><strong>Annotated variants</strong>: Provided in <a class="reference external" href="https://va-spec.ga4gh.org/">VA-Spec</a> format, this output includes additional annotations for each variant, such as functional classifications and evidence strengths.</p></li>
+</ul>
+<section id="score-and-count-data">
+<span id="end-output-formats-intro"></span><h2>Score and count data<a class="headerlink" href="#score-and-count-data" title="Link to this heading">¶</a></h2>
+<p id="score-data-output-formats">MaveDB allows users to download variant effect score data along with associated count data in common tabular formats such as CSV (Comma-Separated Values) and TSV (Tab-Separated Values). This is the same data that users upload, but with an additional column for variant URNs that uniquely identify each variant in MaveDB.
+Users may also choose to include other MaveDB generated columns in this output, such as mapped variant HGVS strings and VRS identifiers, if available.</p>
+<div class="admonition note">
+<p class="admonition-title">Note</p>
+<p>Score and count columns are non-prescriptive and may vary between datasets, see: <a class="reference internal" href="data_formats.html#data-table-formats"><span class="std std-ref">Data table formats</span></a>.</p>
+<p>Columns may mean different things between data sets, so users should refer to the dataset documentation for details on the specific columns included in each download.</p>
+</div>
+</section>
+<section id="mapped-variants">
+<span id="end-score-data-output-formats"></span><h2>Mapped variants<a class="headerlink" href="#mapped-variants" title="Link to this heading">¶</a></h2>
+<p id="mapped-variants-output-formats">MaveDB stores <a class="reference internal" href="variant_mapping.html#variant-mapping"><span class="std std-ref">mapped variants</span></a> using the <a class="reference external" href="https://vrs.ga4gh.org/">GA4GH VRS</a> standard for representing genetic variants. Mapped variants may be downloaded in VRS JSON format, which provides a structured representation of each variant
+including genomic coordinates, alleles, and reference sequences. For data sets which have been mapped, users may download this JSON file containing all mapped variants associated with the score set.</p>
+</section>
+<section id="annotated-variants">
+<span id="end-mapped-variants-output-formats"></span><h2>Annotated variants<a class="headerlink" href="#annotated-variants" title="Link to this heading">¶</a></h2>
+<p id="annotated-variants-output-formats">MaveDB provides annotated variant data in the <a class="reference external" href="https://va-spec.ga4gh.org/">VA-Spec</a> format, which builds upon the VRS standard to include additional annotations relevant to variant interpretation. This output includes functional classifications, evidence strengths, and other metadata associated with each variant. There are three types of VA-Spec objects that MaveDB provides, which are described below.
+Variants may not have all three types of VA-Spec objects associated with them; the availability of each object type depends on the data provided in the score set and its calibrations.</p>
+<section id="functional-impact-study-result">
+<h3>Functional Impact Study Result<a class="headerlink" href="#functional-impact-study-result" title="Link to this heading">¶</a></h3>
+<p id="annotated-variants-functional-impact-study-result">This object represents the results of a functional impact study for a specific variant. It includes the variant identifier, its mapping result, the observed effect score, and metadata about the study itself. This object is useful for capturing the direct results of MAVE experiments, and
+is intended to be used as evidence in variant interpretation frameworks. It forms the basis for other exported VA-Spec objects in MaveDB.</p>
+</section>
+<section id="functional-impact-statement">
+<span id="end-annotated-variants-functional-impact-study-result"></span><h3>Functional Impact Statement<a class="headerlink" href="#functional-impact-statement" title="Link to this heading">¶</a></h3>
+<p id="annotated-variants-functional-impact-statement">This object summarizes the functional impact of a variant based on the results of a functional impact study. It builds on the Functional Impact Study Result to additionally provide an overall classification (e.g., “Normal”, “Abnormal”) of variant effect based on provided <a class="reference internal" href="score_calibrations.html#score-calibrations"><span class="std std-ref">score calibrations</span></a>.</p>
+</section>
+<section id="pathogenicity-evidence-line">
+<span id="end-annotated-variants-output-formats"></span><h3>Pathogenicity Evidence Line<a class="headerlink" href="#pathogenicity-evidence-line" title="Link to this heading">¶</a></h3>
+<p id="annotated-variants-pathogenicity-evidence-line">This object represents a line of evidence for variant pathogenicity based on functional impact data. It incorporates the Functional Impact Statement and includes evidence strengths (e.g., “Strong”, “Moderate”) that indicate the level of confidence in the functional classification. This object is designed to be integrated into broader variant interpretation frameworks, such as those used in clinical genomics.</p>
+</section>
+</section>
+</section>
+
+
+            <div class="clearer"></div>
+          </div>
+        </div>
+      </div>
+      <div class="sphinxsidebar" role="navigation" aria-label="main navigation">
+        <div class="sphinxsidebarwrapper">
+  <div>
+    <h3><a href="index.html">Table of Contents</a></h3>
+    <ul>
+<li><a class="reference internal" href="#">Output formats</a><ul>
+<li><a class="reference internal" href="#score-and-count-data">Score and count data</a></li>
+<li><a class="reference internal" href="#mapped-variants">Mapped variants</a></li>
+<li><a class="reference internal" href="#annotated-variants">Annotated variants</a><ul>
+<li><a class="reference internal" href="#functional-impact-study-result">Functional Impact Study Result</a></li>
+<li><a class="reference internal" href="#functional-impact-statement">Functional Impact Statement</a></li>
+<li><a class="reference internal" href="#pathogenicity-evidence-line">Pathogenicity Evidence Line</a></li>
+</ul>
+</li>
+</ul>
+</li>
+</ul>
+
+  </div>
+  <div>
+    <h4>Previous topic</h4>
+    <p class="topless"><a href="bulk_downloads.html"
+                          title="previous chapter">Bulk downloads</a></p>
+  </div>
+  <div>
+    <h4>Next topic</h4>
+    <p class="topless"><a href="collections.html"
+                          title="next chapter">Data set collections</a></p>
+  </div>
+  <div role="note" aria-label="source link">
+    <h3>This Page</h3>
+    <ul class="this-page-menu">
+      <li><a href="_sources/output_formats.rst.txt"
+            rel="nofollow">Show Source</a></li>
+    </ul>
+   </div>
+<div id="searchbox" style="display: none" role="search">
+  <h3 id="searchlabel">Quick search</h3>
+    <div class="searchformwrapper">
+    <form class="search" action="search.html" method="get">
+      <input type="text" name="q" aria-labelledby="searchlabel" autocomplete="off" autocorrect="off" autocapitalize="off" spellcheck="false"/>
+      <input type="submit" value="Go" />
+    </form>
+    </div>
+</div>
+<script>document.getElementById('searchbox').style.display = "block"</script>
+        </div>
+      </div>
+      <div class="clearer"></div>
+    </div>
+    <div class="related" role="navigation" aria-label="related navigation">
+      <h3>Navigation</h3>
+      <ul>
+        <li class="right" style="margin-right: 10px">
+          <a href="genindex.html" title="General Index"
+             >index</a></li>
+        <li class="right" >
+          <a href="collections.html" title="Data set collections"
+             >next</a> |</li>
+        <li class="right" >
+          <a href="bulk_downloads.html" title="Bulk downloads"
+             >previous</a> |</li>
+        <li class="nav-item nav-item-0"><a href="index.html">MaveDB 2025.5.2 documentation</a> &#187;</li>
+        <li class="nav-item nav-item-this"><a href="">Output formats</a></li> 
+      </ul>
+    </div>
+    <div class="footer" role="contentinfo">
+    &#169; Copyright 2017-2025, MaveDB Developers.
+      Created using <a href="https://www.sphinx-doc.org/">Sphinx</a> 7.2.6.
+    </div>
+  </body>
+</html>

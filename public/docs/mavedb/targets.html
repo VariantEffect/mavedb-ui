@@ -1,0 +1,262 @@
+<!DOCTYPE html>
+
+<html lang="en" data-content_root="./">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" /><meta name="viewport" content="width=device-width, initial-scale=1" />
+
+    <title>Targets &#8212; MaveDB 2025.5.2 documentation</title>
+    <link rel="stylesheet" type="text/css" href="_static/pygments.css?v=4848ba22" />
+    <link rel="stylesheet" type="text/css" href="_static/pyramid.css?v=a5b9c134" />
+    <link rel="stylesheet" type="text/css" href="_static/graphviz.css?v=eafc0fe6" />
+    <link rel="stylesheet" type="text/css" href="_static/styles.css?v=1cacb62a" />
+    <script src="_static/documentation_options.js?v=ea53f692"></script>
+    <script src="_static/doctools.js?v=888ff710"></script>
+    <script src="_static/sphinx_highlight.js?v=dc90522c"></script>
+    <link rel="index" title="Index" href="genindex.html" />
+    <link rel="search" title="Search" href="search.html" />
+    <link rel="next" title="Score calibrations" href="score_calibrations.html" />
+    <link rel="prev" title="Data set metadata and properties" href="record_types/metadata_guide.html" />
+<link rel="stylesheet" href="https://fonts.googleapis.com/css?family=Neuton&amp;subset=latin" type="text/css" media="screen" charset="utf-8" />
+<link rel="stylesheet" href="https://fonts.googleapis.com/css?family=Nobile:regular,italic,bold,bolditalic&amp;subset=latin" type="text/css" media="screen" charset="utf-8" />
+<!--[if lte IE 6]>
+<link rel="stylesheet" href="_static/ie6.css" type="text/css" media="screen" charset="utf-8" />
+<![endif]-->
+
+  </head><body>
+
+    <div class="related" role="navigation" aria-label="related navigation">
+      <h3>Navigation</h3>
+      <ul>
+        <li class="right" style="margin-right: 10px">
+          <a href="genindex.html" title="General Index"
+             accesskey="I">index</a></li>
+        <li class="right" >
+          <a href="score_calibrations.html" title="Score calibrations"
+             accesskey="N">next</a> |</li>
+        <li class="right" >
+          <a href="record_types/metadata_guide.html" title="Data set metadata and properties"
+             accesskey="P">previous</a> |</li>
+        <li class="nav-item nav-item-0"><a href="index.html">MaveDB 2025.5.2 documentation</a> &#187;</li>
+        <li class="nav-item nav-item-this"><a href="">Targets</a></li> 
+      </ul>
+    </div>  
+
+    <div class="document">
+      <div class="documentwrapper">
+        <div class="bodywrapper">
+          <div class="body" role="main">
+            
+  <section id="targets">
+<h1>Targets<a class="headerlink" href="#targets" title="Link to this heading">¶</a></h1>
+<p id="targets-intro">All variants in a MaveDB <a class="reference internal" href="record_types/score_sets.html#score-sets"><span class="std std-ref">score set</span></a> are described relative to a target. This target
+should describe the sequence that was mutagenized to create the variant library. MaveDB supports two types
+of targets: <a class="reference internal" href="#sequence-based-targets"><span class="std std-ref">sequence-based targets</span></a> and <a class="reference internal" href="#accession-based-targets"><span class="std std-ref">accession-based targets</span></a>.</p>
+<p>Each score set in MaveDB must be associated with at least one target. Certain experiments may
+describe variants relative to two or more distinct sequences, such as protein-protein interaction assays
+that measure the effects of variants in both interacting proteins. In these cases, multiple targets may be
+associated with a single score set.</p>
+<section id="sequence-based-targets">
+<span id="end-targets-intro"></span><h2>Sequence-based targets<a class="headerlink" href="#sequence-based-targets" title="Link to this heading">¶</a></h2>
+<p id="id1">Sequence-based targets in MaveDB are based on the full sequence that was mutagenized to create the variant library,
+which may or may not correspond to a known sequence in an external database.</p>
+<p>You should use this type of target when the exact sequence used in the experiment is not available in an external database,
+or when important differences exist between the sequence used in the experiment and the corresponding sequence in an
+external database. Common examples include codon-optimized sequences, non-reference backgrounds, or synthetic sequences.</p>
+<p>For datasets that target a single functional domain, only that part of the gene should be included as the target.
+If multiple discontinuous functional domains were included in a single experiment,
+the target sequence should be given with the intervening sequence so that coordinates can be mapped back to a
+full-length reference.</p>
+<p>When uploading a sequence-based target to MaveDB, it is required that the uploader provide the target sequence.
+If the target is protein coding and variants are only described by their protein changes,
+the target sequence may be an amino acid sequence.
+If variants describing nucleotide changes are present, the target sequence must be a DNA sequence.</p>
+<p>Targets can also be linked to accession numbers in other databases, including <a class="reference external" href="https://www.uniprot.org/">UniProt</a>,
+<a class="reference external" href="https://www.ncbi.nlm.nih.gov/refseq/">RefSeq</a>, and <a class="reference external" href="https://www.ensembl.org/">Ensembl</a>.
+If the target sequence provided to MaveDB starts partway through the linked sequence
+(such as an assay targeting a single functional domain), the target should have an “offset” term.
+The offset is the integer value that should be added to the MaveDB coordinates
+(which are relative to the target sequence) in order to match the coordinates in the linked sequence.</p>
+<p>For example, the target sequence for <a class="reference external" href="https://mavedb.org/#/score-sets/urn:mavedb:00000002-a-1/">urn:mavedb:00000002-a-1</a>
+is a codon optimized version of the WW domain of YAP1.
+This corresponds to UniProt identifier <a class="reference external" href="https://www.uniprot.org/uniprot/P46937">P46937</a> with offset 169,
+meaning that position 1 in the MaveDB score set is position 170 in the UniProt sequence.</p>
+<div class="admonition note">
+<p class="admonition-title">Note</p>
+<p>If you choose to link a sequence-based target to an external accession, you should consider whether using an accession-based
+target (described below) is more appropriate.</p>
+</div>
+<section id="sequence-based-target-metadata">
+<h3>Sequence based target metadata<a class="headerlink" href="#sequence-based-target-metadata" title="Link to this heading">¶</a></h3>
+<dl class="simple" id="id2">
+<dt><strong>Target name</strong></dt><dd><p>The name of the target sequence. This name will be displayed on the score set page and across the site when referring to this target.
+Most users will expect this to be a gene name or a protein name.</p>
+</dd>
+<dt><strong>Functional category</strong></dt><dd><p>The functional category of the target sequence. This should be one of the following controlled vocabulary terms:</p>
+<ul class="simple">
+<li><p>protein coding</p></li>
+<li><p>regulatory</p></li>
+<li><p>other noncoding</p></li>
+</ul>
+</dd>
+<dt><strong>UniProt ID and offset</strong> (optional)</dt><dd><p>The <a class="reference external" href="https://www.uniprot.org/">UniProt</a> identifier corresponding to the target sequence, if applicable.</p>
+</dd>
+<dt><strong>Ensembl ID and offset</strong> (optional)</dt><dd><p>The <a class="reference external" href="https://www.ensembl.org">Ensembl</a> identifier corresponding to the target sequence, if applicable.</p>
+</dd>
+<dt><strong>RefSeq ID and offset</strong> (optional)</dt><dd><p>The <a class="reference external" href="https://www.ncbi.nlm.nih.gov/refseq/">RefSeq</a> identifier corresponding to the target sequence, if applicable.</p>
+</dd>
+<dt><strong>Taxonomy</strong></dt><dd><p>The organism that the target sequence is derived from, if applicable. MaveDB uses the
+<a class="reference external" href="https://www.ncbi.nlm.nih.gov/taxonomy">NCBI Taxonomy</a> controlled vocabulary for organism names.</p>
+</dd>
+<dt><strong>Sequence type</strong></dt><dd><p>The type of sequence provided for the target. This should be one of the following controlled vocabulary terms:</p>
+<ul class="simple">
+<li><p>DNA</p></li>
+<li><p>amino acid</p></li>
+</ul>
+</dd>
+<dt><strong>Sequence</strong></dt><dd><p>The full sequence of the target used in the experiment. This should be provided as a plain text string
+containing only valid characters for the specified sequence type (DNA or amino acid).</p>
+</dd>
+</dl>
+</section>
+</section>
+<section id="accession-based-targets">
+<span id="end-sequence-based-targets"></span><span id="end-sequence-based-target-metadata"></span><h2>Accession-based targets<a class="headerlink" href="#accession-based-targets" title="Link to this heading">¶</a></h2>
+<p id="id3">Accession-based targets in MaveDB are based on sequences that are fully described in an external database. If your
+variants were generated by editing the genome directly (e.g. using saturation genome editing) or by mutagenizing
+a known reference sequence without any other changes, this target type is appropriate.</p>
+<div class="admonition note">
+<p class="admonition-title">Note</p>
+<p>When you use an accession-based target, all variants in the associated score set must be described relative to the
+accession identifier you provide, regardless of whether there is only a single target for the assay.</p>
+<p>For instance, while you might describe a variant as <code class="docutils literal notranslate"><span class="pre">c.79A&gt;T</span></code> in a sequence-based target, the same variant would
+need to be described as <code class="docutils literal notranslate"><span class="pre">NM__000546.6:c.79A&gt;T</span></code> if the target is accession-based using the RefSeq ID <code class="docutils literal notranslate"><span class="pre">NM__000546.6</span></code>.</p>
+<p>This requirement allows users to better understand the context of the variants in your score set.</p>
+</div>
+<p>When uploading an accession-based target to MaveDB, you may supply either a <a class="reference external" href="https://www.ncbi.nlm.nih.gov/refseq/">RefSeq</a>
+or <a class="reference external" href="https://www.ensembl.org">Ensembl</a> identifier. MaveDB will automatically retrieve the corresponding sequence and metadata
+from the appropriate external database. These identifiers may refer to either full chromosomes or to individual transcripts/genes.</p>
+<p>MaveDB uses both <a class="reference external" href="https://cdot.cc">CDOT</a> and <a class="reference external" href="https://github.com/biocommons/seqrepo">SeqRepo</a> to retrieve and cache sequences and metadata for
+accession-based targets. For more information about how we use these services, see the <a class="reference internal" href="external_integrations.html#external-integrations"><span class="std std-ref">external integrations</span></a> section.</p>
+<div class="admonition seealso">
+<p class="admonition-title">See also</p>
+<p><a class="reference internal" href="data_formats.html#base-editor-data"><span class="std std-ref">Base editor score sets</span></a> use the same accession-based target format as other score sets. However, even though you will be providing an
+<code class="docutils literal notranslate"><span class="pre">hgvs_nt</span></code> column for your variants, a special <code class="docutils literal notranslate"><span class="pre">guide_sequence</span></code> column in your uploaded scores and counts files that indicates the guide sequence used for each variant
+will be the index column and should be unique.</p>
+</div>
+<section id="accession-based-target-metadata">
+<h3>Accession based target metadata<a class="headerlink" href="#accession-based-target-metadata" title="Link to this heading">¶</a></h3>
+<dl class="simple" id="id4">
+<dt><strong>Target name</strong></dt><dd><p>The name of the target sequence. This name will be displayed on the score set page and across the site when referring to this target.
+Most users will expect this to be a gene name or a protein name.</p>
+</dd>
+<dt><strong>Gene name or Assembly name</strong></dt><dd><p>The gene name (for transcript or gene accessions) or assembly name (for chromosome accessions) corresponding to the target sequence.</p>
+</dd>
+<dt><strong>Accession identifier</strong></dt><dd><p>The <a class="reference external" href="https://www.ncbi.nlm.nih.gov/refseq/">RefSeq</a> or <a class="reference external" href="https://www.ensembl.org">Ensembl</a> identifier that describes the target sequence.</p>
+</dd>
+<dt><strong>Functional category</strong></dt><dd><p>The functional category of the target sequence. This should be one of the following controlled vocabulary terms:</p>
+<ul class="simple">
+<li><p>protein coding</p></li>
+<li><p>regulatory</p></li>
+<li><p>other noncoding</p></li>
+</ul>
+</dd>
+</dl>
+</section>
+</section>
+<section id="multi-target-score-sets">
+<span id="end-accession-based-targets"></span><span id="end-accession-based-target-metadata"></span><h2>Multi-target score sets<a class="headerlink" href="#multi-target-score-sets" title="Link to this heading">¶</a></h2>
+<p id="id5">Some experiments may describe variants relative to two or more distinct sequences, such as protein-protein interaction assays
+that measure the effects of variants in both interacting proteins. In these cases, multiple targets may be
+associated with a single score set.</p>
+<p>Each target should be described using either the sequence-based or accession-based
+target format described above. A single score set may not mix sequence-based and accession-based targets; all targets
+associated with a given score set must use the same target format.</p>
+<p>When describing variants in a multi-target score set, each variant must indicate which target it is relative to. This is done
+by including a label for each target (e.g., “Target 1”, “Target 2”) and including this label in the variant notation as if it
+were a prefix to the variant.</p>
+<p>For example, if a score set includes two targets labeled “TP53” and “MDM2”, a variant
+affecting TP53 might be described as “TP53:p.R175H”, while a variant affecting MDM2 might be described as “MDM2:p.G58S”.</p>
+<p>While optional in single-target score sets, this label is a required field in multi-target score sets to ensure that each variant can be unambiguously
+mapped to the correct target.</p>
+</section>
+</section>
+
+
+            <div class="clearer"></div>
+          </div>
+        </div>
+      </div>
+      <div class="sphinxsidebar" role="navigation" aria-label="main navigation">
+        <div class="sphinxsidebarwrapper">
+  <div>
+    <h3><a href="index.html">Table of Contents</a></h3>
+    <ul>
+<li><a class="reference internal" href="#">Targets</a><ul>
+<li><a class="reference internal" href="#sequence-based-targets">Sequence-based targets</a><ul>
+<li><a class="reference internal" href="#sequence-based-target-metadata">Sequence based target metadata</a></li>
+</ul>
+</li>
+<li><a class="reference internal" href="#accession-based-targets">Accession-based targets</a><ul>
+<li><a class="reference internal" href="#accession-based-target-metadata">Accession based target metadata</a></li>
+</ul>
+</li>
+<li><a class="reference internal" href="#multi-target-score-sets">Multi-target score sets</a></li>
+</ul>
+</li>
+</ul>
+
+  </div>
+  <div>
+    <h4>Previous topic</h4>
+    <p class="topless"><a href="record_types/metadata_guide.html"
+                          title="previous chapter">Data set metadata and properties</a></p>
+  </div>
+  <div>
+    <h4>Next topic</h4>
+    <p class="topless"><a href="score_calibrations.html"
+                          title="next chapter">Score calibrations</a></p>
+  </div>
+  <div role="note" aria-label="source link">
+    <h3>This Page</h3>
+    <ul class="this-page-menu">
+      <li><a href="_sources/targets.rst.txt"
+            rel="nofollow">Show Source</a></li>
+    </ul>
+   </div>
+<div id="searchbox" style="display: none" role="search">
+  <h3 id="searchlabel">Quick search</h3>
+    <div class="searchformwrapper">
+    <form class="search" action="search.html" method="get">
+      <input type="text" name="q" aria-labelledby="searchlabel" autocomplete="off" autocorrect="off" autocapitalize="off" spellcheck="false"/>
+      <input type="submit" value="Go" />
+    </form>
+    </div>
+</div>
+<script>document.getElementById('searchbox').style.display = "block"</script>
+        </div>
+      </div>
+      <div class="clearer"></div>
+    </div>
+    <div class="related" role="navigation" aria-label="related navigation">
+      <h3>Navigation</h3>
+      <ul>
+        <li class="right" style="margin-right: 10px">
+          <a href="genindex.html" title="General Index"
+             >index</a></li>
+        <li class="right" >
+          <a href="score_calibrations.html" title="Score calibrations"
+             >next</a> |</li>
+        <li class="right" >
+          <a href="record_types/metadata_guide.html" title="Data set metadata and properties"
+             >previous</a> |</li>
+        <li class="nav-item nav-item-0"><a href="index.html">MaveDB 2025.5.2 documentation</a> &#187;</li>
+        <li class="nav-item nav-item-this"><a href="">Targets</a></li> 
+      </ul>
+    </div>
+    <div class="footer" role="contentinfo">
+    &#169; Copyright 2017-2025, MaveDB Developers.
+      Created using <a href="https://www.sphinx-doc.org/">Sphinx</a> 7.2.6.
+    </div>
+  </body>
+</html>

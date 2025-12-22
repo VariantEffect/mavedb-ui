@@ -5,18 +5,18 @@
     <meta charset="utf-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" /><meta name="viewport" content="width=device-width, initial-scale=1" />
 
-    <title>MaveDB accession numbers &#8212; MaveDB 2023.2.0 documentation</title>
+    <title>MaveDB accession numbers &#8212; MaveDB 2025.5.2 documentation</title>
     <link rel="stylesheet" type="text/css" href="_static/pygments.css?v=4848ba22" />
     <link rel="stylesheet" type="text/css" href="_static/pyramid.css?v=a5b9c134" />
     <link rel="stylesheet" type="text/css" href="_static/graphviz.css?v=eafc0fe6" />
     <link rel="stylesheet" type="text/css" href="_static/styles.css?v=1cacb62a" />
-    <script src="_static/documentation_options.js?v=953b8078"></script>
+    <script src="_static/documentation_options.js?v=ea53f692"></script>
     <script src="_static/doctools.js?v=888ff710"></script>
     <script src="_static/sphinx_highlight.js?v=dc90522c"></script>
     <link rel="index" title="Index" href="genindex.html" />
     <link rel="search" title="Search" href="search.html" />
-    <link rel="next" title="Data licensing" href="data_licensing.html" />
-    <link rel="prev" title="Target sequence information" href="target_sequences.html" />
+    <link rel="next" title="Frequently Asked Questions" href="faqs.html" />
+    <link rel="prev" title="External integrations" href="external_integrations.html" />
 <link rel="stylesheet" href="https://fonts.googleapis.com/css?family=Neuton&amp;subset=latin" type="text/css" media="screen" charset="utf-8" />
 <link rel="stylesheet" href="https://fonts.googleapis.com/css?family=Nobile:regular,italic,bold,bolditalic&amp;subset=latin" type="text/css" media="screen" charset="utf-8" />
 <!--[if lte IE 6]>
@@ -32,12 +32,12 @@
           <a href="genindex.html" title="General Index"
              accesskey="I">index</a></li>
         <li class="right" >
-          <a href="data_licensing.html" title="Data licensing"
+          <a href="faqs.html" title="Frequently Asked Questions"
              accesskey="N">next</a> |</li>
         <li class="right" >
-          <a href="target_sequences.html" title="Target sequence information"
+          <a href="external_integrations.html" title="External integrations"
              accesskey="P">previous</a> |</li>
-        <li class="nav-item nav-item-0"><a href="index.html">MaveDB 2023.2.0 documentation</a> &#187;</li>
+        <li class="nav-item nav-item-0"><a href="index.html">MaveDB 2025.5.2 documentation</a> &#187;</li>
         <li class="nav-item nav-item-this"><a href="">MaveDB accession numbers</a></li> 
       </ul>
     </div>  
@@ -49,11 +49,12 @@
             
   <section id="mavedb-accession-numbers">
 <h1>MaveDB accession numbers<a class="headerlink" href="#mavedb-accession-numbers" title="Link to this heading">¶</a></h1>
-<p>MaveDB accession numbers use the <a class="reference external" href="https://tools.ietf.org/html/rfc8141">URN (Uniform Resource Name) format</a>.
+<p id="accession-numbers-intro">MaveDB accession numbers use the <a class="reference external" href="https://tools.ietf.org/html/rfc8141">URN (Uniform Resource Name) format</a>.
 The accession numbers have a hierarchical structure that reflects the relationship between
-experiment sets, experiments, score sets, and individual variants in MaveDB.</p>
-<p>All public accession numbers start with the string <cite>urn:mavedb:</cite> followed by the experiment set number
-(eight digits, zero-padded).
+experiment sets, experiments, score sets, and individual variants in MaveDB. URNs are also used to uniquely identify
+other resources in MaveDB, such as calibrations and collections.</p>
+<p>URNs within the experiment set/experiment/score set/variant hierarchy start with the string <cite>urn:mavedb:</cite>
+followed by the experiment set number (eight digits, zero-padded).
 Experiments are indexed by letter within the experiment set.
 If necessary, <code class="docutils literal notranslate"><span class="pre">aa</span></code>, <code class="docutils literal notranslate"><span class="pre">ab</span></code>, etc. will follow <code class="docutils literal notranslate"><span class="pre">z</span></code>.
 Score sets are indexed by number within the experiment.</p>
@@ -83,18 +84,25 @@ Score sets are indexed by number within the experiment.</p>
 </tbody>
 </table>
 <section id="meta-analysis-accession-numbers">
-<h2>Meta-analysis accession numbers<a class="headerlink" href="#meta-analysis-accession-numbers" title="Link to this heading">¶</a></h2>
-<p>Meta-analysis score sets use the special <code class="docutils literal notranslate"><span class="pre">0</span></code> experiment instead of a letter.</p>
+<span id="end-accession-numbers-intro"></span><h2>Meta-analysis accession numbers<a class="headerlink" href="#meta-analysis-accession-numbers" title="Link to this heading">¶</a></h2>
+<p id="id1">Meta-analysis score sets use the special <code class="docutils literal notranslate"><span class="pre">0</span></code> experiment instead of a letter.</p>
 <p>Meta-analysis score sets that include data from a single experiment set will use that experiment set’s number.
 For meta-analyses that use data from multiple experiment sets,
 a new experiment set number will be assigned for all meta-analyses that include data from the same experiment sets.
 These meta-analysis-only experiment sets will only contain the <code class="docutils literal notranslate"><span class="pre">0</span></code> experiment.</p>
 </section>
 <section id="temporary-accession-numbers">
-<h2>Temporary accession numbers<a class="headerlink" href="#temporary-accession-numbers" title="Link to this heading">¶</a></h2>
-<p>When first uploaded, records are given a temporary accession number starting with <code class="docutils literal notranslate"><span class="pre">tmp:</span></code>.
+<span id="end-meta-analysis-accession-numbers"></span><h2>Temporary accession numbers<a class="headerlink" href="#temporary-accession-numbers" title="Link to this heading">¶</a></h2>
+<p id="id2">When first uploaded, records are given a temporary accession number starting with <code class="docutils literal notranslate"><span class="pre">tmp:</span></code>.
 These temporary accessions are not structured according to the record type.</p>
 <p>MaveDB URNs are created when the temporary records are made publicly viewable by publishing a score set.</p>
+</section>
+<section id="urns-for-other-resources">
+<span id="end-temporary-accession-numbers"></span><h2>URNs for other resources<a class="headerlink" href="#urns-for-other-resources" title="Link to this heading">¶</a></h2>
+<p id="other-resources-urns">Other resources in MaveDB that exists outside of the data set hierarchy, such as calibrations and collections, also use URNs starting with <code class="docutils literal notranslate"><span class="pre">urn:mavedb:</span></code>.
+This is followed by a resource type identifier (e.g., <code class="docutils literal notranslate"><span class="pre">calibration</span></code>, <code class="docutils literal notranslate"><span class="pre">collection</span></code>) and a unique
+resource identifier. For example, the URN for a calibration resource might be
+<code class="docutils literal notranslate"><span class="pre">urn:mavedb:calibration-11111111-2222-3333-aaaa-bbbbccccdddd</span></code>.</p>
 </section>
 </section>
 
@@ -111,6 +119,7 @@ These temporary accessions are not structured according to the record type.</p>
 <li><a class="reference internal" href="#">MaveDB accession numbers</a><ul>
 <li><a class="reference internal" href="#meta-analysis-accession-numbers">Meta-analysis accession numbers</a></li>
 <li><a class="reference internal" href="#temporary-accession-numbers">Temporary accession numbers</a></li>
+<li><a class="reference internal" href="#urns-for-other-resources">URNs for other resources</a></li>
 </ul>
 </li>
 </ul>
@@ -118,13 +127,13 @@ These temporary accessions are not structured according to the record type.</p>
   </div>
   <div>
     <h4>Previous topic</h4>
-    <p class="topless"><a href="target_sequences.html"
-                          title="previous chapter">Target sequence information</a></p>
+    <p class="topless"><a href="external_integrations.html"
+                          title="previous chapter">External integrations</a></p>
   </div>
   <div>
     <h4>Next topic</h4>
-    <p class="topless"><a href="data_licensing.html"
-                          title="next chapter">Data licensing</a></p>
+    <p class="topless"><a href="faqs.html"
+                          title="next chapter">Frequently Asked Questions</a></p>
   </div>
   <div role="note" aria-label="source link">
     <h3>This Page</h3>
@@ -154,17 +163,17 @@ These temporary accessions are not structured according to the record type.</p>
           <a href="genindex.html" title="General Index"
              >index</a></li>
         <li class="right" >
-          <a href="data_licensing.html" title="Data licensing"
+          <a href="faqs.html" title="Frequently Asked Questions"
              >next</a> |</li>
         <li class="right" >
-          <a href="target_sequences.html" title="Target sequence information"
+          <a href="external_integrations.html" title="External integrations"
              >previous</a> |</li>
-        <li class="nav-item nav-item-0"><a href="index.html">MaveDB 2023.2.0 documentation</a> &#187;</li>
+        <li class="nav-item nav-item-0"><a href="index.html">MaveDB 2025.5.2 documentation</a> &#187;</li>
         <li class="nav-item nav-item-this"><a href="">MaveDB accession numbers</a></li> 
       </ul>
     </div>
     <div class="footer" role="contentinfo">
-    &#169; Copyright 2017-2023, Alan F Rubin et al..
+    &#169; Copyright 2017-2025, MaveDB Developers.
       Created using <a href="https://www.sphinx-doc.org/">Sphinx</a> 7.2.6.
     </div>
   </body>

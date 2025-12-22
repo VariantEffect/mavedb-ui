@@ -1,21 +1,30 @@
 Data table formats
 ============================
 
+.. _data-table-formats-intro:
+
 MaveDB accepts and provides data tables in CSV format.
 Each row of the data table describes a single variant, and variants are described using `MAVE-HGVS`_ format.
 All other columns are expected to be floating point values.
 
+.. _end-data-table-formats-intro:
+
 Variant columns
 ############################
 
+.. _variant-columns:
+
 For both score and count data tables, there are three variant columns:
 
-* ``hgvs_nt`` describes variants with respect to the nucleotide :ref:`target sequence<Target sequence information>`
-* ``hgvs_tx`` describes variants with respect to a transcript model
-* ``hgvs_pro`` describes variants with respect to the amino acid :ref:`target sequence<Target sequence information>`
+* ``hgvs_nt`` describes variants with respect to the nucleotide :ref:`target sequence<targets>`
+* ``hgvs_splice`` describes variants with respect to a transcript model
+* ``hgvs_pro`` describes variants with respect to the amino acid :ref:`target sequence<targets>`
 
-``hgvs_nt`` and ``hgvs_pro`` variants are required to be described in relation to the score set target sequence,
-rather than to an external reference sequence.
+``hgvs_nt`` and ``hgvs_pro`` variants are required to be described in relation to the score set :ref:`target<targets>`.
+
+All variants must be described in `MAVE-HGVS`_ format, which is a subset of the `HGVS <https://varnomen.hgvs.org/>`_ format.
+This includes using the appropriate prefix (``c.`` for coding DNA, ``n.`` for non-coding DNA, ``p.`` for protein) and
+using brackets for complex variants that affect multiple positions (e.g. ``c.[123A>G;125_T>C]``).
 
 If ``hgvs_nt`` is present, it will be used as the primary key for distinguishing variants and must be unique.
 Otherwise, ``hgvs_pro`` will be used as the primary key.
@@ -26,13 +35,46 @@ Otherwise, ``hgvs_pro`` will be used as the primary key.
    `standard amino acid translation table
    <https://www.ncbi.nlm.nih.gov/Taxonomy/Utils/wprintgc.cgi?chapter=cgencodes#SG1>`_ for validation.
 
-The ``hgvs_tx`` variants are not validated against a transcript model or target sequence.
-This is a convenience feature for datasets that contain splice variants; most datasets will not use ``hgvs_tx``.
-Datasets that use ``hgvs_tx`` must also have ``hgvs_nt``, which is used as the primary key,
+The ``hgvs_splice`` variants are not validated against a transcript model or target sequence.
+This is a convenience feature for datasets that contain splice variants; most datasets will not use ``hgvs_splice``.
+Datasets that use ``hgvs_splice`` must also have ``hgvs_nt``, which is used as the primary key,
 and the ``hgvs_nt`` variants must use the ``'g.'`` prefix.
+
+.. _end-variant-columns:
+
+Fully-qualified variants 
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+
+.. _fully-qualified-variants:
+
+'Fully-qualified variants' refer to variants which are submitted with complete information about their transcript or relative sequence.
+For accession based targets, this means variants are submitted with respect to a specific RefSeq or Ensembl transcript (e.g: ``NM_000546.5:c.215C>G``).
+When submitting accession based targets, MaveDB requires fully-qualified variants to ensure unambiguous mapping to the target sequence.
+
+For sequence-based targets, fully-qualified variants include the full sequence context of the variant. When you are submitting variants
+with respect to a single sequence-based target, your variants need not be fully-qualified. However, if you are submitting variants
+with respect to multiple sequence-based targets, MaveDB requires fully-qualified variants to ensure unambiguous mapping to the correct target sequence.
+You should use the target label as the prefix for the variant (e.g: ``target1:c.215C>G``).
+
+For more information on targets, see the :ref:`targets<targets>` section.
+
+.. _end-fully-qualified-variants:
+
+Base editor data
+~~~~~~~~~~~~~~~~~~~~~~~~~
+
+.. _base-editor-data:
+
+If you are submitting data from a base editor experiment, you must also include a column ``guide_sequence`` in your score and/or count data table.
+This column should contain the guide RNA sequence used to generate each variant. This column is required for base editor datasets, and replaces the
+``hgvs_nt`` column as the primary key for variants. As such, it must be unique.
+
+.. _end-base-editor-data:
 
 Score table columns
 ############################
+
+.. _score-table-columns:
 
 All score tables must have a column named ``score`` that describes the score of that variant in the assay.
 Score tables may have any number of additional numeric columns.
@@ -40,6 +82,9 @@ Score tables may have any number of additional numeric columns.
 Suggested numeric columns include a standard deviation or variance,
 or some other measure of uncertainty for the score such as a 95% confidence interval
 (represented as two columns, e.g. ``ci_lower`` and ``ci_upper``).
+
+.. warning::
+   Do not submit patient data or anything which could be used to identify individuals to MaveDB.
 
 Score sets that describe experiments with multiple replicates often include the score and standard deviation for each
 replicate as additional columns.
@@ -49,13 +94,17 @@ we recommend encoding the categories as integers and describing the mapping betw
 :ref:`free text methods<Free text metadata>`.
 Support for additional data columns with string data will be added in a future version to support this use case.
 
+.. _end-score-table-columns:
+
 Score table examples
 ----------------------------------
+
+.. _score-table-examples:
 
 Here is a short excerpt from the score table for
 `urn:mavedb:00000003-a-1 <https://mavedb.org/#/score-sets/urn:mavedb:00000003-a-1/>`_.
 
-That this dataset uses ``hgvs_nt`` as the primary variant key.
+This dataset uses ``hgvs_nt`` as the primary variant key.
 It has several additional data columns with the scores and error estimates for multiple biological replicates.
 
 Note that some variants do not have a score.
@@ -78,11 +127,34 @@ such as a score in an individual replicate or some counts.
    c.[1G>T;97_99delinsGGG],NA,p.[Asp1Tyr;Pro33Gly],NA,NA,NA,0.159,-0.177,0.445,-0.583,0.500,-0.323,0.537,-0.470,NA,NA,0.284,0.188
    c.476G>T,NA,p.Gly159Val,-1.192,0.100,0.000,0.141,-1.050,0.079,-1.557,0.030,-0.969,0.114,-1.030,0.126,-1.264,0.168,-1.303
 
+.. _end-score-table-examples:
+
 Count table columns
 ##################################
+
+.. _count-table-columns:
 
 Count data are optional for MaveDB score sets, but are recommended.
 
 There are no required columns for count data,
 but uploaders should decide on an intuitive naming convention for the column names and describe it in the
 :ref:`free text methods<Free text metadata>`.
+
+.. _end-count-table-columns:
+
+Metadata files
+##################################
+
+.. _metadata-files:
+
+Users may also upload metadata files in JSON format to provide additional structured metadata about the columns in the score and count tables.
+These files should be named ``score_columns_metadata.json`` and ``count_columns_metadata.json`` respectively. These files are
+optional, but recommended.
+
+The metadata files should contain a JSON object where each key is a column name from the corresponding data table,
+and the value is another JSON object with additional metadata about that column. The additional JSON object may contain the following fields:
+
+* ``description``: A string describing the column.
+* ``details``: A string with additional details about the contents of the column (optional).
+
+.. _end-metadata-files:

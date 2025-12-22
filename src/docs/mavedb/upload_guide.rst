@@ -1,151 +1,96 @@
 Depositing your data into MaveDB
 =======================================
 
+.. _uploading-data-intro:
+
 Creating a complete entry in MaveDB requires several pieces of data and metadata.
-This document includes a checklist of what is required to deposit a study and a description of the required metadata.
+This document includes a checklist of what is required to deposit a study and a description of the required metadata. 
+It also includes details about the optional metadata that we recommend be included to maximize the usability of your data.
 
 For more information on how a dataset in MaveDB is structured,
 including descriptions of experiment sets, experiments, and score sets,
-please see :ref:`Record types`.
+please see :ref:`record types<record-types>`.
 
-Metadata formatting
-###################################
+.. _end-uploading-data-intro:
 
-Experiment and score set records contain several different types of required and optional metadata,
-either free text or accession numbers for other databases.
-These elements are described in this section.
-
-Free text metadata
+Data upload wizard
 -----------------------------------
 
-Experiments and score sets both have descriptive free text fields.
-These are the title, short description, abstract, and methods.
+.. _data-upload-wizard:
 
-The title and short description are plain text.
-The abstract and methods support `Markdown <https://daringfireball.net/projects/markdown/>`_
-formatting with embedded equations using `MathML <https://www.w3.org/Math/>`_,
-converted using `Pandoc <https://pandoc.org/>`_.
+MaveDB provides a step-by-step data upload wizard to guide you through the process of depositing your data.
+To begin the upload process, log in to MaveDB and select either the "New experiment" or "New score set" option 
+in the toolbar at the top of the page.
 
-The title is displayed at the top of the record page, and should be quite brief.
+.. _end-data-upload-wizard:
 
-The short description is displayed in the search results table and should summarize the entry at a high level in one
-or two sentences.
+Uploading an experiment
+-----------------------------------------
 
-The abstract should describe the motivation and approach for the dataset.
-Some MaveDB abstracts include a summary of the results of the related publications but many do not.
-The entry describes the MAVE data rather than a full study so the submitter should use their judgement when deciding
-what details are most relevant.
-It is common that experiments and score sets share the same abstract text if they are from the same study.
+.. _uploading-an-experiment:
 
-The methods section should describe the approach in a condensed form,
-suitable for a specialist audience of MAVE researchers.
+What is an experiment?
+^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
-For an experiment the methods section should include:
+.. include:: ./record_types/experiments.rst
+   :start-after: .. _experiment-intro:
+   :end-before: .. _end-experiment-intro:
 
-* Variant library construction methods
-* Description of the functional assay, including model system and selection type
-* Sequencing strategy and sequencing technology
-* Structure of biological or technical replicates (if applicable)
+What is required to upload an experiment?
+^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
-For a score set the methods section should include:
+.. _experiment-upload-requirements:
 
-* Sequence read filtering approach
-* Description of the statistical model for converting counts to scores, including normalization
-* Description of additional data columns included in the score or count tables, including column naming conventions
-* Details of how replicates were combined (if applicable)
+.. include:: ./record_types/metadata_guide.rst
+   :start-after: .. _data-set-required-metadata:
+   :end-before: .. _end-data-set-required-metadata:
 
-For a meta-analysis score set the methods section should include:
+.. include:: ./record_types/metadata_guide.rst
+   :start-after: .. _data-set-optional-metadata:
+   :end-before: .. _end-data-set-optional-metadata:
 
-* Description of the statistical model for converting the linked scores or counts into the scores presented
-* Description of additional data columns included in the score or count tables, including column naming conventions
+.. include:: ./record_types/metadata_guide.rst
+   :start-after: .. _experiment-optional-metadata:
+   :end-before: .. _end-experiment-optional-metadata:
 
-Score sets can also include an optional free-text data usage policy intended for unpublished data.
-For example, data producers may wish to assert their right to publish the results of certain analyses first.
+.. _end-experiment-upload-requirements:
 
-Publication details
+.. _end-uploading-an-experiment:
+
+Uploading a score set
+-----------------------------------------
+
+.. _uploading-a-score-set:
+
+What is a score set?
+^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+
+.. include:: ./record_types/score_sets.rst
+   :start-after: .. _score-set-intro:
+   :end-before: .. _end-score-set-intro:
+
+What is required to upload a score set?
+^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+
+.. _score-set-upload-requirements:
+
+.. include:: ./record_types/metadata_guide.rst
+   :start-after: .. _data-set-required-metadata:
+   :end-before: .. _end-data-set-required-metadata:
+
+.. include:: ./record_types/metadata_guide.rst
+   :start-after: .. _score-set-required-metadata:
+   :end-before: .. _end-score-set-required-metadata:
+
+.. include:: ./record_types/metadata_guide.rst
+   :start-after: .. _score-set-optional-metadata:
+   :end-before: .. _end-score-set-optional-metadata:
+
+.. _end-uploading-a-score-set:
+
+Publishing your data
 -----------------------------------
 
-Publications can be included by entering their `PubMed ID <https://pubmed.ncbi.nlm.nih.gov/>`_ and they will appear
-as formatted references.
-Publications included in an experiment will also be displayed on their associated score set pages.
-
-Preprints or publications that are not indexed by PubMed can be included via the DOI field.
-Improved support for preprints (including displaying them as formatted references) is planned for a future release.
-
-Raw data accessions
------------------------------------
-
-Experimenters are encouraged to deposit their raw sequence data in a public repository and link it to the relevant
-experiment record(s).
-
-MaveDB currently supports accession numbers for:
-
-* `ArrayExpress <https://www.ebi.ac.uk/arrayexpress/>`_
-* `BioProject <https://www.ncbi.nlm.nih.gov/bioproject/>`_
-* `Gene Expression Omnibus <https://www.ncbi.nlm.nih.gov/geo/>`_
-* `Sequence Read Archive <https://www.ncbi.nlm.nih.gov/sra>`_
-
-Raw data that is stored elsewhere can be included via the DOI field.
-
-Keywords
------------------------------------
-
-Experiments and score sets can be tagged with optional, user-specified keywords.
-
-In a future release, the keyword vocabulary will become restricted and keyword selection will be mandatory.
-This will improve the ability for data modellers to select appropriate MAVE datasets for their studies,
-and also facilitate more sophisticated tracking of the kind of data being generated by researchers.
-
-Data formatting
-###################################
-
-Score sets require detailed information about the target sequence, including the sequence,
-as well as a CSV-formatted file containing the variant scores
-(and optionally a second CSV-formatted file containing the variant counts).
-
-For more information including how to prepare your data for submission,
-see :ref:`Target sequence information` and :ref:`Data table formats`.
-
-Score set data must be given a license chosen from those listed on the :ref:`Data licensing` page.
-
-Optional structured metadata
------------------------------------
-
-Score sets also support the inclusion of optional `JSON <https://www.json.org/>`_-formatted metadata.
-This can be used to describe features like genomic coordinates for a target sequence or score cutoff ranges that the
-uploader would like to be more easily machine-readable than if this information was included in free text.
-
-If optional metadata is included, the uploader should describe it in the score set methods.
-
-Required information checklist
-###################################
-
-For each experiment and score set:
-
-* `Free text metadata`_
-    * Title
-    * Short description (1-3 brief sentences)
-    * Abstract
-    * Methods
-* `Keywords`_
-* `PubMed IDs <https://pubmed.ncbi.nlm.nih.gov/>`_ for the study reference(s) or `DOIs <https://www.doi.org/>`_
-  for references not listed in PubMed (such as on `bioRxiv <https://www.biorxiv.org/>`_)
-
-For each experiment you will also want:
-
-* `Raw data accessions`_
-
-For each score set you will also want:
-
-* Target information
-    * Nucleotide sequence for the target
-    * The sequence type (coding, regulatory, other non-coding)
-    * Organism the sequence is derived from (if applicable)
-    * `UniProt ID <https://www.uniprot.org/>`_ (if applicable)
-    * `RefSeq ID <https://www.ncbi.nlm.nih.gov/refseq/>`_ (if applicable)
-    * `Ensembl ID <https://www.ensembl.org>`_ (if applicable)
-
-* Variant score table
-* Variant count table (if available)
-* Choice of data license (see :ref:`Data licensing`)
-* Data usage policy text (if needed)
+.. include:: ./publishing.rst
+   :start-after: .. _publishing-data:
+   :end-before: .. _end-publishing-data:

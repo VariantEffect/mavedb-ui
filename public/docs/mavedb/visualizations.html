@@ -49,40 +49,58 @@
             
   <section id="visualizations">
 <h1>Visualizations<a class="headerlink" href="#visualizations" title="Link to this heading">¶</a></h1>
-<p id="visualizations-intro">Lorem ipsum dolor sit amet, consectetur adipiscing elit. Vestibulum at risus ac urna dapibus dapibus. Praesent congue, justo sit amet hendrerit varius, nibh nibh imperdiet lorem, non interdum turpis orci non odio. Integer vel mi euismod, varius erat non, feugiat augue.</p>
-<ul class="simple">
-<li><p>Curabitur facilisis nibh quis arcu dignissim.</p></li>
-<li><p>Sed non odio ut sapien iaculis accumsan.</p></li>
-<li><p>Phasellus luctus urna a mauris faucibus.</p></li>
-</ul>
-<div class="admonition note">
-<p class="admonition-title">Note</p>
-<p>Quisque vitae lectus eget nunc imperdiet feugiat. Morbi non mi sed magna sollicitudin sagittis.</p>
-</div>
-<section id="example">
-<span id="end-visualizations-intro"></span><h2>Example<a class="headerlink" href="#example" title="Link to this heading">¶</a></h2>
-<div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="kn">import</span> <span class="nn">matplotlib.pyplot</span> <span class="k">as</span> <span class="nn">plt</span>
-
-<span class="n">data</span> <span class="o">=</span> <span class="p">[</span><span class="mi">3</span><span class="p">,</span> <span class="mi">1</span><span class="p">,</span> <span class="mi">4</span><span class="p">,</span> <span class="mi">2</span><span class="p">]</span>
-<span class="n">labels</span> <span class="o">=</span> <span class="p">[</span><span class="s2">&quot;A&quot;</span><span class="p">,</span> <span class="s2">&quot;B&quot;</span><span class="p">,</span> <span class="s2">&quot;C&quot;</span><span class="p">,</span> <span class="s2">&quot;D&quot;</span><span class="p">]</span>
-
-<span class="n">plt</span><span class="o">.</span><span class="n">bar</span><span class="p">(</span><span class="n">labels</span><span class="p">,</span> <span class="n">data</span><span class="p">,</span> <span class="n">color</span><span class="o">=</span><span class="s2">&quot;#4C78A8&quot;</span><span class="p">)</span>
-<span class="n">plt</span><span class="o">.</span><span class="n">title</span><span class="p">(</span><span class="s2">&quot;Sample Visualization&quot;</span><span class="p">)</span>
-<span class="n">plt</span><span class="o">.</span><span class="n">xlabel</span><span class="p">(</span><span class="s2">&quot;Category&quot;</span><span class="p">)</span>
-<span class="n">plt</span><span class="o">.</span><span class="n">ylabel</span><span class="p">(</span><span class="s2">&quot;Value&quot;</span><span class="p">)</span>
-<span class="n">plt</span><span class="o">.</span><span class="n">tight_layout</span><span class="p">()</span>
-<span class="n">plt</span><span class="o">.</span><span class="n">show</span><span class="p">()</span>
-</pre></div>
-</div>
-<section id="heatmap">
-<h3>Heatmap<a class="headerlink" href="#heatmap" title="Link to this heading">¶</a></h3>
-</section>
+<p id="visualizations-intro">MaveDB offers several built-in visualizations to help users explore and interpret variant effect data. These visualizations are automatically generated for published score sets and displayed
+prominently on the score set details page. Users can also download the underlying data used to create these visualizations for further analysis, or download the visualizations themselves
+as image files for use in presentations or publications.</p>
 <section id="histogram">
-<span id="end-heatmap-viz"></span><span id="heatmap-viz"></span><h3>Histogram<a class="headerlink" href="#histogram" title="Link to this heading">¶</a></h3>
+<span id="end-visualizations-intro"></span><h2>Histogram<a class="headerlink" href="#histogram" title="Link to this heading">¶</a></h2>
+<p id="histogram-viz">The histogram visualization displays the distribution of variant effect scores within a score set. This visualization helps users quickly assess the overall distribution of scores within a dataset.</p>
+<p>Hovering over a bin in the histogram reveals the number of variants that fall within that score range for each series and shows which classification ranges
+the bin overlaps when a score calibration is selected. When a variant is selected, the corresponding bin in the histogram is highlighted to show where the variant’s score falls within the overall distribution
+and the tooltip provides additional information about the selected variant.</p>
+<figure class="align-left" id="base-histogram-example">
+<img alt="Default histogram visualization from a MaveDB score set page" src="_images/bard1_base_histogram.png" />
+</figure>
+<p>In the example above, we show the base histogram visualization from <a class="reference external" href="https://mavedb.org/score-sets/urn:mavedb:00001250-a-1">urn:mavedb:00001250-a-1</a>, which describes saturation genome editing of <em>BARD1</em>.</p>
+<p>When a score set has been linked to <a class="reference internal" href="external_integrations.html#clinvar-integration"><span class="std std-ref">ClinVar annotations</span></a>, the histogram will have a ‘clinical view’ available. This view overlays the distribution of scores for variants classified as ‘Pathogenic’ and ‘Benign’ in ClinVar, allowing users to assess how well the assay segregates known clinical variants.</p>
+<figure class="align-left" id="clinical-histogram-example">
+<img alt="Clinical view of the histogram visualization from a MaveDB score set page" src="_images/bard1_clinical_histogram.png" />
+</figure>
+<p>In the example above, we show the clinical view of the histogram visualization from <a class="reference external" href="https://mavedb.org/score-sets/urn:mavedb:00001250-a-1">urn:mavedb:00001250-a-1</a>, which describes saturation genome editing of <em>BARD1</em>.</p>
+<p>When a score set includes <a class="reference internal" href="external_integrations.html#vep-integration"><span class="std std-ref">variant effect predictions</span></a>, users may also view a ‘protein effect’ version of the histogram. This view overlays the distribution of scores for variants predicted to have different effects on the protein, such as ‘missense’, ‘nonsense’, and ‘synonymous’ variants.</p>
+<figure class="align-left" id="protein-effect-histogram-example">
+<img alt="Protein effect view of the histogram visualization from a MaveDB score set page" src="_images/bard1_protein_effect_histogram.png" />
+</figure>
+<p>In the example above, we show the protein effect view of the histogram visualization from <a class="reference external" href="https://mavedb.org/score-sets/urn:mavedb:00001250-a-1">urn:mavedb:00001250-a-1</a>, which describes saturation genome editing of <em>BARD1</em>.</p>
+<p>To give users more control over the histogram visualization, we also provide a ‘custom view’ that allows users to adjust the version of ClinVar data used, the ‘gold stars’ threshold for variant inclusion, include other ClinVar significance categories such as ‘Likely pathogenic’ and ‘Uncertain significance’,
+limit the series to only variants with specific protien effects, and/or include other series for different protein effects.
+When a score set has <a class="reference internal" href="score_calibrations.html#score-calibrations"><span class="std std-ref">score calibrations</span></a>, users may also overlay functional classifications on the histogram to get a sense of where different classes of variants fall within the score distribution.</p>
+<figure class="align-left" id="custom-histogram-example">
+<img alt="Custom view of the histogram visualization from a MaveDB score set page" src="_images/bard1_custom_histogram.png" />
+</figure>
+<p>In the example above, we show a custom view of the histogram visualization from <a class="reference external" href="https://mavedb.org/score-sets/urn:mavedb:00001250-a-1">urn:mavedb:00001250-a-1</a>, with overlaid score calibrations, variants of unknown significance (via ClinVar) shown in gray, and a series for scores of variants with a predicted ‘nonsense’ protein effect.</p>
+</section>
+<section id="heatmap">
+<span id="end-histogram-viz"></span><h2>Heatmap<a class="headerlink" href="#heatmap" title="Link to this heading">¶</a></h2>
+<p id="heatmap-viz">The heatmap visualization provides a two-dimensional representation of variant effect scores across the target sequence. This visualization is particularly useful for identifying patterns of variant effects at specific positions within the gene or protein.
+When variants are provided at the nucleotide level, users may toggle between viewing the heatmap at the nucleotide or amino acid level. Amino acids are ordered based
+on their hydrophobicity values using the <a class="reference external" href="http://www.sciencedirect.com/science/article/pii/0022283682905150">Kyte-Doolittle scale</a> and are grouped by chemical class based on values from <a class="reference external" href="https://genomebiology.biomedcentral.com/articles/10.1186/s13059-017-1272-5/figures/1">Enrich2</a>.</p>
+<p>Each cell in the heatmap represents a specific variant at a given position, with the color intensity indicating the variant effect score with wild type variants shown in yellow. Hovering over a cell reveals detailed information about the variant, including its score, classification (if applicable), and the HGVS strings of the variant. Selecting a cell highlights the corresponding variant in other visualizations on the page, such as the histogram.</p>
+<p>When a baseline score is available from a <a class="reference internal" href="score_calibrations.html#score-calibrations"><span class="std std-ref">score calibration</span></a>, the heatmap color scale centers the ‘normal’ color (purple) at the baseline score to provide better visual contrast for variants with scores deviating from the baseline.</p>
+<figure class="align-left" id="heatmap-example">
+<img alt="Heatmap visualization from a MaveDB score set page" src="_images/msh2_heatmap.png" />
+</figure>
+<p>In the example above, we show the heatmap visualization with a selected variant from <a class="reference external" href="https://mavedb.org/score-sets/urn:mavedb:00000050-a-1">urn:mavedb:00000050-a-1</a>, which describes deep mutational scanning of <em>MSH2</em>.</p>
 </section>
 <section id="protein-structure-viewer">
-<span id="end-histogram-viz"></span><span id="histogram-viz"></span><h3>Protein structure viewer<a class="headerlink" href="#protein-structure-viewer" title="Link to this heading">¶</a></h3>
-</section>
+<span id="end-heatmap-viz"></span><h2>Protein structure viewer<a class="headerlink" href="#protein-structure-viewer" title="Link to this heading">¶</a></h2>
+<p id="protein-structure-viz">When a score set is able to be associated with a UniProt accession, MaveDB provides an interactive 3D protein structure viewer using <a class="reference external" href="https://molstar.org/">Mol*</a> to help users visualize variant effect scores in the context of the protein’s structure.</p>
+<p>Opening the protein structure viewer displays a side-by-side view of a heatmap and the protein structure for the associated UniProt accession with a color gradient applied based on the mean variant effect score at each position. Users can interact with the 3D structure by rotating, zooming, and selecting specific residues to view their associated variant effect scores and details.
+Users may also click and drag on the heatmap to select multiple residues, which will highlight the corresponding regions on the protein structure. Other controls are available in the settings menu on the right side of the viewer, including an option to export the current view as a PNG image.</p>
+<figure class="align-left" id="protein-structure-example">
+<img alt="Protein structure visualization from a MaveDB score set page" src="_images/msh2_protein_structure.png" />
+</figure>
+<p>In the example above, we show the protein structure viewer from <a class="reference external" href="https://mavedb.org/score-sets/urn:mavedb:00000050-a-1">urn:mavedb:00000050-a-1</a>.</p>
 </section>
 </section>
 
@@ -97,12 +115,9 @@
     <h3><a href="index.html">Table of Contents</a></h3>
     <ul>
 <li><a class="reference internal" href="#">Visualizations</a><ul>
-<li><a class="reference internal" href="#example">Example</a><ul>
-<li><a class="reference internal" href="#heatmap">Heatmap</a></li>
 <li><a class="reference internal" href="#histogram">Histogram</a></li>
+<li><a class="reference internal" href="#heatmap">Heatmap</a></li>
 <li><a class="reference internal" href="#protein-structure-viewer">Protein structure viewer</a></li>
-</ul>
-</li>
 </ul>
 </li>
 </ul>

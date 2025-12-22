@@ -48,7 +48,7 @@ Variants are mapped to genomic coordinates upon upload of a score set. The mappi
    to ensure that variants have been accurately mapped.** Contributors can view mapping results on the score set page and download a report of mapped and unmapped variants.
 
    Mapping failures do not prevent datasets from being published in MaveDB, but mapped variants
-   are required for certain features such as :ref:`variant search<variant-search>`, linkages with
+   are required for certain features such as :ref:`variant search<variant search>`, linkages with
    certain :ref:`external resources<external integrations>`, and inclusion in :ref:`mavemd`.
 
 .. _end-mapping-process:

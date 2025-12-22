@@ -46,3 +46,12 @@ gnomAD
 Mapped variants in MaveDB are also cross-referenced with the `gnomAD database <https://gnomad.broadinstitute.org/>`_ to retrieve population frequency data. This integration provides users with important context about the prevalence of variants in diverse human populations.
 
 .. _end-gnomad-integration:
+
+VEP
+-------------------------------------------
+
+.. _vep-integration:
+
+MaveDB utilizes the `Ensembl Variant Effect Predictor (VEP) <https://www.ensembl.org/info/docs/tools/vep/index.html>`_ to annotate mapped variants with predicted functional consequences. VEP provides insights into how variants may impact gene function, including effects on protein coding sequences, splicing, and regulatory regions.
+
+.. _end-vep-integration:

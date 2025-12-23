@@ -19,13 +19,13 @@
           <img v-else alt="MaveDB" src="@/assets/logo-mavedb.png" />
         </router-link>
         <div style="display: inline-block; margin-left: 40px">
-          <div class="p-inputgroup" style="max-width: 300px; width: 300px; display: flex; align-items: stretch;">
+          <div class="p-inputgroup" style="max-width: 300px; width: 300px; display: flex; align-items: stretch">
             <InputText
               ref="searchTextInput"
               v-model="searchText"
               class="p-inputtext-sm !rounded-r-none w-full"
               placeholder="Search"
-              style="width: 200px; height: auto;"
+              style="width: 200px; height: auto"
               type="search"
               @keyup.enter="search"
             />
@@ -33,7 +33,7 @@
               class="p-button-default p-button-sm !rounded-l-none"
               :enabled="searchText && searchText.length > 0"
               icon="pi pi-search"
-              style="height: auto;"
+              style="height: auto"
               @click="search"
             />
           </div>
@@ -98,10 +98,6 @@ export default {
           label: 'Dashboard',
           route: '/dashboard',
           available: ({authenticated}) => authenticated
-        },
-        {
-          label: 'Home',
-          route: '/'
         },
         ...(config.CLINICAL_FEATURES_ENABLED
           ? [

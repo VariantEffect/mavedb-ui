@@ -19,7 +19,7 @@
           <img v-else alt="MaveDB" src="@/assets/logo-mavedb.png" />
         </router-link>
         <div style="display: inline-block; margin-left: 40px">
-          <div class="p-inputgroup" style="max-width: 300px; width: 300px; display: flex; align-items: stretch;">
+          <div class="p-inputgroup" style="max-width: 300px; width: 300px; display: flex; align-items: stretch">
             <InputText
               ref="searchTextInput"
               v-model="searchText"
@@ -98,10 +98,6 @@ export default {
           label: 'Dashboard',
           route: '/dashboard',
           available: ({authenticated}) => authenticated
-        },
-        {
-          label: 'Home',
-          route: '/'
         },
         ...(config.CLINICAL_FEATURES_ENABLED
           ? [

@@ -198,21 +198,9 @@
       </div>
       <div ref="searchResults" v-if="searchResultsVisible">
         <div v-for="(allele, alleleIdx) in alleles" :key="allele.clingenAlleleId" class="col-12">
-          <Card>
+          <Card @click="openAlleleInVariantView(allele)" class="clickable-variant-card">
             <template #content>
               <div class="variant-search-result">
-                <div
-                  v-if="
-                    allele.variants.nucleotide.length > 0 ||
-                    allele.variants.protein.length > 0 ||
-                    allele.variants.associatedNucleotide.length > 0
-                  "
-                  class="variant-search-result-button"
-                >
-                  <router-link :to="`/variants/${allele.clingenAlleleId}`">
-                    <Button icon="pi pi-eye" label="View in MaveMD Clinical View" />
-                  </router-link>
-                </div>
                 <div class="variant-search-result-content">
                   <!-- TODO handle no canonical allele name or just leave blank? -->
                   <div class="variant-search-result-title">
@@ -597,6 +585,11 @@ export default defineComponent({
   },
 
   methods: {
+    openAlleleInVariantView: function (allele: any) {
+      if (allele.clingenAlleleId) {
+        this.router.push({ name: 'variant', params: { clingenAlleleId: allele.clingenAlleleId } })
+      }
+    },
     getScoreSetShortName: function (scoreSet: ScoreSet) {
       return getScoreSetShortName(scoreSet)
     },
@@ -1226,5 +1219,15 @@ td,
 th {
   padding: 0 5px;
   vertical-align: top;
+}
+/* Card clickability and external link button styles */
+.clickable-variant-card {
+  cursor: pointer;
+  transition: box-shadow 0.2s, border-color 0.2s;
+  position: relative;
+}
+.clickable-variant-card:hover {
+  box-shadow: 0 0 0 2px #1976d2, 0 2px 8px rgba(25, 118, 210, 0.15);
+  border-color: #1976d2;
 }
 </style>

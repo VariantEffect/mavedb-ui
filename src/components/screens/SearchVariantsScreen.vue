@@ -45,12 +45,7 @@
           </IconField>
           <Button class="p-3!" @click="defaultSearch">Search</Button>
           <div class="mavedb-clear-search-button-container">
-            <Button
-              :disabled="!searchIsClearable"
-              icon="pi pi-times"
-              rounded
-              @click="clearSearch"
-            />
+            <Button :disabled="!searchIsClearable" icon="pi pi-times" rounded @click="clearSearch" />
           </div>
         </div>
         <div class="mavedb-search-form-view-switch">
@@ -62,20 +57,23 @@
             {{ searchSuggestionsVisible ? 'Hide search examples' : 'Show search examples' }}
           </Button>
         </div>
-        <div v-if="searchSuggestionsVisible" class="mavedb-search-suggestions">
-          <p>
-            Examples of supported searches:
-            <ul class="ml-5 list-disc">
-              <li v-for="option in searchTypeOptions" :key="option.code">
-                {{ option.name }}
-                <template v-for="(example, index) in option.examples" :key="example">
-                  <span v-if="index > 0">•</span>
-                  <span v-tooltip.top="'Click to search'" class="mavedb-search-example" @click="searchForText($event, option.code)">{{ example }}</span>
-                </template>
-                <template v-if="option.code=='hgvs'">(supports a variety of HGVS formats)</template>
-              </li>
-            </ul>
-          </p>
+        <div v-if="searchSuggestionsVisible" class="mavedb-search-suggestions m-auto">
+          <div>Examples of supported searches:</div>
+          <ul class="list-disc ml-5">
+            <li v-for="option in searchTypeOptions" :key="option.code">
+              {{ option.name }}
+              <template v-for="(example, index) in option.examples" :key="example">
+                <span v-if="index > 0">•</span>
+                <span
+                  v-tooltip.top="'Click to search'"
+                  class="mavedb-search-example"
+                  @click="searchForText($event, option.code)"
+                  >{{ example }}</span
+                >
+              </template>
+              <template v-if="option.code == 'hgvs'">(supports a variety of HGVS formats)</template>
+            </li>
+          </ul>
         </div>
       </div>
       <div v-if="fuzzySearchVisible" class="mavedb-search-form">
@@ -410,7 +408,7 @@ export default defineComponent({
         {code: 'hgvs', name: 'HGVS', examples: ['ENST00000473961.6:c.-19-2A>T', 'NP_000242.1:p.Asn566Thr']},
         {code: 'clinGenAlleleId', name: 'ClinGen Allele ID', examples: ['CA10590195', 'PA2579983208']},
         {code: 'dbSnpRsId', name: 'dbSNP rsID', examples: ['rs900082291', '900082291']},
-        {code: 'clinVarVariationId', name: 'ClinVar Variation ID', examples: ['869058']},
+        {code: 'clinVarVariationId', name: 'ClinVar Variation ID', examples: ['869058']}
       ],
       inputGene: null as string | null,
       inputVariantType: null as string | null,
@@ -587,7 +585,7 @@ export default defineComponent({
   methods: {
     openAlleleInVariantView: function (allele: any) {
       if (allele.clingenAlleleId) {
-        this.router.push({ name: 'variant', params: { clingenAlleleId: allele.clingenAlleleId } })
+        this.router.push({name: 'variant', params: {clingenAlleleId: allele.clingenAlleleId}})
       }
     },
     getScoreSetShortName: function (scoreSet: ScoreSet) {
@@ -636,10 +634,8 @@ export default defineComponent({
       this.alleles = []
     },
     showSearch(searchMethod: 'fuzzy' | 'default' = 'default') {
-
       this.defaultSearchVisible = searchMethod == 'default'
       this.fuzzySearchVisible = searchMethod == 'fuzzy'
-
     },
     defaultSearch: async function () {
       this.searchResultsVisible = true
@@ -667,7 +663,7 @@ export default defineComponent({
             this.toast.add({
               severity: 'error',
               summary: 'Invalid search',
-              detail: `Please provide a valid ClinGen Allele ID (e.g. ${_.join(_.find(this.searchTypeOptions, { code: searchType })?.examples, ', ')})`,
+              detail: `Please provide a valid ClinGen Allele ID (e.g. ${_.join(_.find(this.searchTypeOptions, {code: searchType})?.examples, ', ')})`,
               life: 10000
             })
             return
@@ -678,7 +674,7 @@ export default defineComponent({
             this.toast.add({
               severity: 'error',
               summary: 'Invalid search',
-              detail: `Please provide a valid dbSNP rsID (e.g. ${_.join(_.find(this.searchTypeOptions, { code: searchType })?.examples, ', ')})`,
+              detail: `Please provide a valid dbSNP rsID (e.g. ${_.join(_.find(this.searchTypeOptions, {code: searchType})?.examples, ', ')})`,
               life: 10000
             })
             return
@@ -693,7 +689,7 @@ export default defineComponent({
             this.toast.add({
               severity: 'error',
               summary: 'Invalid search',
-              detail: `Please provide a valid ClinVar Variation ID (e.g. ${_.join(_.find(this.searchTypeOptions, { code: searchType })?.examples, ', ')})`,
+              detail: `Please provide a valid ClinVar Variation ID (e.g. ${_.join(_.find(this.searchTypeOptions, {code: searchType})?.examples, ', ')})`,
               life: 10000
             })
             return
@@ -708,7 +704,7 @@ export default defineComponent({
             this.toast.add({
               severity: 'error',
               summary: 'Invalid search',
-              detail: `Please provide a valid HGVS string (e.g. ${_.join(_.find(this.searchTypeOptions, { code: searchType })?.examples, ', ')})`,
+              detail: `Please provide a valid HGVS string (e.g. ${_.join(_.find(this.searchTypeOptions, {code: searchType})?.examples, ', ')})`,
               life: 10000
             })
             return
@@ -867,8 +863,8 @@ export default defineComponent({
         }
         if (this.alleles.length > 0) {
           this.$refs.searchResults.scrollIntoView({
-            behavior: "smooth",
-            block: "start"
+            behavior: 'smooth',
+            block: 'start'
           })
         }
       } catch (error: any) {
@@ -1151,8 +1147,9 @@ export default defineComponent({
 }
 
 .mavedb-search-suggestions {
-  display:flex;
+  display: flex;
   justify-content: center;
+  flex-direction: column;
 }
 
 .mavedb-organism-picker:deep(.p-listbox-item) {
@@ -1223,11 +1220,15 @@ th {
 /* Card clickability and external link button styles */
 .clickable-variant-card {
   cursor: pointer;
-  transition: box-shadow 0.2s, border-color 0.2s;
+  transition:
+    box-shadow 0.2s,
+    border-color 0.2s;
   position: relative;
 }
 .clickable-variant-card:hover {
-  box-shadow: 0 0 0 2px #1976d2, 0 2px 8px rgba(25, 118, 210, 0.15);
+  box-shadow:
+    0 0 0 2px #1976d2,
+    0 2px 8px rgba(25, 118, 210, 0.15);
   border-color: #1976d2;
 }
 </style>

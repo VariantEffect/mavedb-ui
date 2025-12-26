@@ -1,10 +1,10 @@
 import _ from 'lodash'
 
-import type { components } from '@/schema/openapi'
+import type {components} from '@/schema/openapi'
 
 type ScoreSet = components['schemas']['ScoreSet']
 type PublicationIdentifier = components['schemas']['ScoreSet']['primaryPublicationIdentifiers'][0]
-type Author = components["schemas"]["PublicationAuthors"]
+type Author = components['schemas']['PublicationAuthors']
 
 /**
  * Get the first author of a score set.
@@ -16,6 +16,27 @@ type Author = components["schemas"]["PublicationAuthors"]
  */
 export function getScoreSetFirstAuthor(scoreSet: ScoreSet): Author | undefined {
   return scoreSet.primaryPublicationIdentifiers[0]?.authors.find((author) => author.primary)
+}
+
+/**
+ * Get the last name of the first author of a score set.
+ *
+ * @param scoreSet A score set.
+ * @returns The last name of the first author, or undefined if there is none.
+ */
+export function firstAuthorLastName(scoreSet: ScoreSet): string | undefined {
+  const firstAuthor = getScoreSetFirstAuthor(scoreSet)
+  return !firstAuthor || _.isEmpty(firstAuthor?.name) ? undefined : firstAuthor.name.split(',')[0]
+}
+
+/**
+ * Get the number of authors of a score set's primary publication.
+ *
+ * @param scoreSet A score set.
+ * @returns The number of authors, or 0 if there is no primary publication or no authors.
+ */
+export function scoreSetNumAuthors(scoreSet: ScoreSet): number {
+  return scoreSet.primaryPublicationIdentifiers[0]?.authors.length ?? 0
 }
 
 /**
@@ -53,8 +74,6 @@ export function getScoreSetShortName(scoreSet: ScoreSet): string {
   return parts.length > 0 ? parts.join(' ') : (scoreSet.title ?? scoreSet.shortDescription ?? 'Score set')
 }
 
-
-
 /**
  * Filters a collection of publication identifier objects and returns only those
  * that match the dbName + identifier pairs provided in a source array.
@@ -75,7 +94,7 @@ export function getScoreSetShortName(scoreSet: ScoreSet): string {
  * @returns An array of matched publication identifiers (in the order of the matching criteria) or null if there are no matches or inputs are invalid.
  */
 export function matchSources(
-  sourceArr: Array<{ dbName: string; identifier: string }> | undefined,
+  sourceArr: Array<{dbName: string; identifier: string}> | undefined,
   sources: PublicationIdentifier[] | undefined
 ): PublicationIdentifier[] | null {
   if (!Array.isArray(sourceArr) || !sources) return null
@@ -85,4 +104,31 @@ export function matchSources(
     if (match) matchedSources.push(match)
   }
   return matchedSources.length > 0 ? matchedSources : null
+}
+
+/** * Determine whether a score set has any score calibrations with evidence strengths.
+ *
+ * @param scoreSet A score set.
+ * @param excludeResearchUseOnly If true, score calibrations marked as research-use-only are ignored.
+ * @returns True if the score set has at least one score calibration with odds paths (and not marked as research-use-only, if specified).
+ */
+export function scoreSetHasCalibrationWithEvidenceStrengths(
+  scoreSet: ScoreSet,
+  excludeResearchUseOnly: boolean
+): boolean {
+  if (!scoreSet.scoreCalibrations) {
+    return false
+  }
+
+  for (const calibration of scoreSet.scoreCalibrations) {
+    if (excludeResearchUseOnly && calibration.researchUseOnly) {
+      continue
+    }
+    if (
+      calibration.functionalRanges &&
+      calibration.functionalRanges.some((range) => range.acmgClassification != null)
+    ) {
+      return true
+    }
+  }
 }

@@ -150,7 +150,7 @@
 import _ from 'lodash'
 import {defineComponent, PropType} from 'vue'
 
-import {getScoreSetFirstAuthor} from '@/lib/score-sets'
+import {firstAuthorLastName} from '@/lib/score-sets'
 import {shortCitationForPublication} from '@/lib/publication'
 import type {components} from '@/schema/openapi'
 
@@ -172,8 +172,8 @@ export default defineComponent({
 
   computed: {
     firstAuthor: function () {
-      const firstAuthor = getScoreSetFirstAuthor(this.scoreSet)
-      return !firstAuthor || _.isEmpty(firstAuthor?.name) ? undefined : firstAuthor.name.split(',')[0]
+      const author = firstAuthorLastName(this.scoreSet)
+      return author ? author : null
     },
 
     numAuthors: function () {

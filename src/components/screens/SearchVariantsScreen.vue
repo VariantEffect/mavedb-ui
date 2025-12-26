@@ -194,152 +194,163 @@
           </table>
         </div>
       </div>
-      <div ref="searchResults" v-if="searchResultsVisible">
+      <div v-if="searchResultsVisible" ref="searchResults">
         <div v-for="(allele, alleleIdx) in alleles" :key="allele.clingenAlleleId" class="col-12">
-          <Card class="clickable-variant-card" @click="openAlleleInVariantView(allele)">
-            <template #content>
-              <div class="variant-search-result">
-                <div class="variant-search-result-content">
-                  <!-- TODO handle no canonical allele name or just leave blank? -->
-                  <div class="variant-title-row">
-                    <div class="variant-search-result-title">
-                      {{ allele.canonicalAlleleName }}
-                    </div>
-                    <div class="variant-clingen-link-btn">
-                      <Button
-                        v-if="allele.clingenAlleleUrl"
-                        class="p-button-outlined p-button-sm"
-                        @click.stop="openAlleleInClinGenRegistry(allele)"
-                      >
-                        <span class="pi pi-external-link" style="margin-right: 0.5em"></span>
-                        View in ClinGen Allele Registry
-                      </Button>
-                    </div>
+          <Card class="clickable-variant-card">
+            <template #title>
+              <div class="flex flex-col clickable-title" @click="openAlleleInVariantView(allele)">
+                <span class="text-blue-600 font-semibold text-xxl">{{ allele.canonicalAlleleName }}</span>
+
+                <div class="flex mt-0">
+                  <div v-if="allele.grch38Hgvs" class="ml-10 mr-10 text-base">
+                    <span>GRCh38 coordinates:</span>
+                    <span style="font-style: italic">{{ allele.grch38Hgvs }}</span>
                   </div>
-                  <div v-if="allele.grch38Hgvs" class="variant-search-result-subcontent">
-                    GRCh38 coordinates: {{ allele.grch38Hgvs }}
+                  <div v-if="allele.grch37Hgvs" class="ml-10 mr-10 text-base">
+                    <span>GRCh37 coordinates:</span>
+                    <span style="font-style: italic">{{ allele.grch37Hgvs }}</span>
                   </div>
-                  <div v-if="allele.grch37Hgvs" class="variant-search-result-subcontent">
-                    GRCh37 coordinates: {{ allele.grch37Hgvs }}
-                  </div>
-                  <div v-if="allele.maneCoordinates.length > 0" class="variant-search-result-subcontent">
-                    MANE transcript coordinates:
+                  <div v-if="allele.maneCoordinates.length > 0" class="ml-10 mr-10 text-base">
+                    MANE transcripts:
                     <DataTable show-gridlines size="small" striped-rows :value="allele.maneCoordinates">
                       <Column field="sequenceType" header="Sequence Type"></Column>
                       <Column field="database" header="Database"></Column>
                       <Column field="hgvs" header="Coordinates"></Column>
                     </DataTable>
                   </div>
-                  <div
-                    v-if="
-                      allele.variantsStatus == 'Loaded' &&
-                      (allele.variants.nucleotide.length > 0 ||
-                        allele.variants.protein.length > 0 ||
-                        allele.variants.associatedNucleotide.length > 0)
-                    "
-                  >
-                    <div v-if="allele.variants.nucleotide.length > 0" class="variant-search-result-subcontent">
-                      MaveDB score sets measuring variant at the nucleotide level:
-                      <li
-                        v-for="variant in nucleotideScoreSetListIsExpanded[alleleIdx]
-                          ? allele.variants.nucleotide
-                          : allele.variants.nucleotide.slice(0, defaultNumScoreSetsToShow)"
-                        :key="variant.urn"
-                      >
-                        <router-link
-                          :to="{name: 'scoreSet', params: {urn: variant.scoreSet.urn}, query: {variant: variant.urn}}"
-                        >
-                          {{ variant.scoreSet.title }}
-                        </router-link>
-                      </li>
-                      <Button
-                        v-if="allele.variants.nucleotide.length > defaultNumScoreSetsToShow"
-                        icon="pi pi-angle-down"
-                        style="width: fit-content"
-                        variant="text"
-                        @click="
-                          nucleotideScoreSetListIsExpanded[alleleIdx] = !nucleotideScoreSetListIsExpanded[alleleIdx]
-                        "
-                      >
-                        {{
-                          nucleotideScoreSetListIsExpanded[alleleIdx]
-                            ? 'Show less'
-                            : `Show ${allele.variants.nucleotide.length - defaultNumScoreSetsToShow} more`
-                        }}
-                      </Button>
-                    </div>
-                    <div v-if="allele.variants.protein.length > 0" class="variant-search-result-subcontent">
-                      MaveDB score sets measuring variant at the amino acid level:
-                      <li
-                        v-for="variant in proteinScoreSetListIsExpanded[alleleIdx]
-                          ? allele.variants.protein
-                          : allele.variants.protein.slice(0, defaultNumScoreSetsToShow)"
-                        :key="variant.urn"
-                      >
-                        <router-link
-                          :to="{name: 'scoreSet', params: {urn: variant.scoreSet.urn}, query: {variant: variant.urn}}"
-                        >
-                          {{ variant.scoreSet.title }}
-                        </router-link>
-                      </li>
-                      <Button
-                        v-if="allele.variants.protein.length > defaultNumScoreSetsToShow"
-                        icon="pi pi-angle-down"
-                        style="width: fit-content"
-                        variant="text"
-                        @click="proteinScoreSetListIsExpanded[alleleIdx] = !proteinScoreSetListIsExpanded[alleleIdx]"
-                      >
-                        {{
-                          proteinScoreSetListIsExpanded[alleleIdx]
-                            ? 'Show less'
-                            : `Show ${allele.variants.protein.length - defaultNumScoreSetsToShow} more`
-                        }}
-                      </Button>
-                    </div>
-                    <div
-                      v-if="allele.variants.associatedNucleotide.length > 0"
-                      class="variant-search-result-subcontent"
+                </div>
+              </div>
+            </template>
+            <template #content>
+              <div>
+                <!-- TODO handle no canonical allele name or just leave blank? -->
+                <div
+                  v-if="
+                    allele.variantsStatus == 'Loaded' &&
+                    (allele.variants.nucleotide.length > 0 ||
+                      allele.variants.protein.length > 0 ||
+                      allele.variants.associatedNucleotide.length > 0)
+                  "
+                >
+                  <div v-if="allele.variants.nucleotide.length > 0" class="variant-search-result-subcontent ml-4">
+                    Nucleotide variant measurements <strong>({{ allele.variants.nucleotide.length }})</strong>:
+                    <li
+                      v-for="variant in nucleotideScoreSetListIsExpanded[alleleIdx]
+                        ? allele.variants.nucleotide
+                        : allele.variants.nucleotide.slice(0, defaultNumScoreSetsToShow)"
+                      :key="variant.urn"
+                      class="variant-search-score-set-result"
                     >
-                      MaveDB score sets measuring a different nucleotide variant with an equivalent protein effect:
-                      <li
-                        v-for="variant in associatedNucleotideScoreSetListIsExpanded[alleleIdx]
-                          ? allele.variants.associatedNucleotide
-                          : allele.variants.nucleotide.slice(0, defaultNumScoreSetsToShow)"
-                        :key="variant.urn"
+                      <router-link
+                        :to="{name: 'scoreSet', params: {urn: variant.scoreSet.urn}, query: {variant: variant.urn}}"
                       >
-                        <router-link
-                          :to="{name: 'scoreSet', params: {urn: variant.scoreSet.urn}, query: {variant: variant.urn}}"
-                        >
-                          {{ variant.scoreSet.title }}
-                        </router-link>
-                      </li>
-                      <Button
-                        v-if="allele.variants.associatedNucleotide.length > defaultNumScoreSetsToShow"
-                        icon="pi pi-angle-down"
-                        style="width: fit-content"
-                        variant="text"
-                        @click="
-                          associatedNucleotideScoreSetListIsExpanded[alleleIdx] =
-                            !associatedNucleotideScoreSetListIsExpanded[alleleIdx]
-                        "
-                      >
-                        {{
-                          associatedNucleotideScoreSetListIsExpanded[alleleIdx]
-                            ? 'Show less'
-                            : `Show ${allele.variants.associatedNucleotide.length - defaultNumScoreSetsToShow} more`
-                        }}
-                      </Button>
-                    </div>
+                        {{ variant.scoreSet.title }}
+                      </router-link>
+                    </li>
+                    <Button
+                      v-if="allele.variants.nucleotide.length > defaultNumScoreSetsToShow"
+                      class="p-button-text"
+                      icon="pi pi-angle-down"
+                      style="width: fit-content"
+                      @click="
+                        nucleotideScoreSetListIsExpanded[alleleIdx] = !nucleotideScoreSetListIsExpanded[alleleIdx]
+                      "
+                    >
+                      {{
+                        nucleotideScoreSetListIsExpanded[alleleIdx]
+                          ? 'Show less'
+                          : `Show ${allele.variants.nucleotide.length - defaultNumScoreSetsToShow} more`
+                      }}
+                    </Button>
                   </div>
-                  <!-- <div v-if="allele.variantsStatus == 'Loaded' && allele.variants.length > 0" style="overflow: hidden;">
+                  <div v-if="allele.variants.protein.length > 0" class="variant-search-result-subcontent ml-4">
+                    Amino acid variant measurements <strong>({{ allele.variants.protein.length }})</strong>:
+                    <li
+                      v-for="variant in proteinScoreSetListIsExpanded[alleleIdx]
+                        ? allele.variants.protein
+                        : allele.variants.protein.slice(0, defaultNumScoreSetsToShow)"
+                      :key="variant.urn"
+                      class="variant-search-score-set-result"
+                    >
+                      <router-link
+                        :to="{name: 'scoreSet', params: {urn: variant.scoreSet.urn}, query: {variant: variant.urn}}"
+                      >
+                        {{ variant.scoreSet.title }}
+                      </router-link>
+                    </li>
+                    <Button
+                      v-if="allele.variants.protein.length > defaultNumScoreSetsToShow"
+                      class="p-button-text"
+                      icon="pi pi-angle-down"
+                      style="width: fit-content"
+                      @click="proteinScoreSetListIsExpanded[alleleIdx] = !proteinScoreSetListIsExpanded[alleleIdx]"
+                    >
+                      {{
+                        proteinScoreSetListIsExpanded[alleleIdx]
+                          ? 'Show less'
+                          : `Show ${allele.variants.protein.length - defaultNumScoreSetsToShow} more`
+                      }}
+                    </Button>
+                  </div>
+                  <div
+                    v-if="allele.variants.associatedNucleotide.length > 0"
+                    class="variant-search-result-subcontent ml-4"
+                  >
+                    Measurements of different nucleotide variants with equivalent protein effect
+                    <strong>({{ allele.variants.associatedNucleotide.length }})</strong>:
+                    <li
+                      v-for="variant in associatedNucleotideScoreSetListIsExpanded[alleleIdx]
+                        ? allele.variants.associatedNucleotide
+                        : allele.variants.nucleotide.slice(0, defaultNumScoreSetsToShow)"
+                      :key="variant.urn"
+                      class="variant-search-score-set-result"
+                    >
+                      <router-link
+                        :to="{name: 'scoreSet', params: {urn: variant.scoreSet.urn}, query: {variant: variant.urn}}"
+                      >
+                        {{ variant.scoreSet.title }}
+                      </router-link>
+                    </li>
+                    <Button
+                      v-if="allele.variants.associatedNucleotide.length > defaultNumScoreSetsToShow"
+                      class="p-button-text"
+                      icon="pi pi-angle-down"
+                      style="width: fit-content"
+                      @click="
+                        associatedNucleotideScoreSetListIsExpanded[alleleIdx] =
+                          !associatedNucleotideScoreSetListIsExpanded[alleleIdx]
+                      "
+                    >
+                      {{
+                        associatedNucleotideScoreSetListIsExpanded[alleleIdx]
+                          ? 'Show less'
+                          : `Show ${allele.variants.associatedNucleotide.length - defaultNumScoreSetsToShow} more`
+                      }}
+                    </Button>
+                  </div>
+                </div>
+                <!-- <div v-if="allele.variantsStatus == 'Loaded' && allele.variants.length > 0" style="overflow: hidden;">
                     <div v-for="variant in allele.variants" :key="variant.urn" style="float: left; border: 1px solid #000; width: 300px; margin: 5px; padding: 5px;">
                       <div style="border-bottom: 3px solid #000; font-weight: bold;">{{ variant.scoreSet.title }}</div>
                       {{ variant.scoreSet?.experiment?.keywords }}
                     </div>
                   </div> -->
-                  <Message v-else-if="allele.variantsStatus == 'Loaded'"
-                    >No score sets containing this variant were found in MaveDB.</Message
+                <Message v-else-if="allele.variantsStatus == 'Loaded'"
+                  >No score sets containing this variant were found in MaveDB.</Message
+                >
+              </div>
+            </template>
+            <template #footer>
+              <div class="flex">
+                <div class="ml-auto">
+                  <Button
+                    v-if="allele.clingenAlleleUrl"
+                    class="p-button-outlined p-button-sm"
+                    @click="openAlleleInClinGenRegistry(allele)"
                   >
+                    <span class="pi pi-external-link" style="margin-right: 0.5em"></span>
+                    View in ClinGen Allele Registry
+                  </Button>
                 </div>
               </div>
             </template>
@@ -1173,26 +1184,23 @@ export default defineComponent({
   font-style: normal;
 }
 
-.variant-search-result {
-  display: flex;
-  gap: 20px;
+.clickable-variant-card::v-deep(.p-card-title) {
+  padding: 0px;
+  margin-bottom: 0px;
 }
 
-.variant-search-result-content {
-  flex: 1;
+.clickable-variant-card::v-deep(.p-card-content) {
+  border-top: 1px solid #555;
 }
 
-.variant-title-row {
-  display: flex;
+.clickable-variant-card::v-deep(.p-card-footer) {
+  padding: 0px;
 }
 
-.variant-clingen-link-btn {
-  margin-left: auto;
-}
-
-.variant-search-result-title {
-  font-weight: bold;
-  font-size: 24px;
+.variant-search-score-set-result {
+  list-style-position: inside;
+  margin-left: 1.2em;
+  padding-left: 0;
 }
 
 .variant-search-result-subcontent {
@@ -1241,18 +1249,16 @@ th {
   padding: 0 5px;
   vertical-align: top;
 }
-/* Card clickability and external link button styles */
-.clickable-variant-card {
+
+.clickable-title {
   cursor: pointer;
   transition:
-    box-shadow 0.2s,
-    border-color 0.2s;
-  position: relative;
+    color 0.2s,
+    text-decoration 0.2s;
 }
-.clickable-variant-card:hover {
-  box-shadow:
-    0 0 0 2px #1976d2,
-    0 2px 8px rgba(25, 118, 210, 0.15);
-  border-color: #1976d2;
+.clickable-title:hover,
+.clickable-title:focus {
+  color: #233a7a;
+  text-decoration: underline;
 }
 </style>

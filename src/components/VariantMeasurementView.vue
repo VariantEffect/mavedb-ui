@@ -502,7 +502,7 @@ table.variant-info-table td:first-child {
 }
 
 .mavedb-assay-facts-card {
-  width: 580px; /* fixed size */
+  width: 50%;
   border: 1px solid #000;
   padding: 12px;
   font-family: sans-serif;

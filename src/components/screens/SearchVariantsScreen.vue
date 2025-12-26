@@ -196,17 +196,25 @@
       </div>
       <div ref="searchResults" v-if="searchResultsVisible">
         <div v-for="(allele, alleleIdx) in alleles" :key="allele.clingenAlleleId" class="col-12">
-          <Card @click="openAlleleInVariantView(allele)" class="clickable-variant-card">
+          <Card class="clickable-variant-card" @click="openAlleleInVariantView(allele)">
             <template #content>
               <div class="variant-search-result">
                 <div class="variant-search-result-content">
                   <!-- TODO handle no canonical allele name or just leave blank? -->
-                  <div class="variant-search-result-title">
-                    {{ allele.canonicalAlleleName }}
-                  </div>
-                  <div v-if="allele.clingenAlleleUrl" class="variant-search-result-subcontent">
-                    ClinGen Allele ID:
-                    <a :href="allele.clingenAlleleUrl">{{ allele.clingenAlleleUrl }}</a>
+                  <div class="variant-title-row">
+                    <div class="variant-search-result-title">
+                      {{ allele.canonicalAlleleName }}
+                    </div>
+                    <div class="variant-clingen-link-btn">
+                      <Button
+                        v-if="allele.clingenAlleleUrl"
+                        class="p-button-outlined p-button-sm"
+                        @click.stop="openAlleleInClinGenRegistry(allele)"
+                      >
+                        <span class="pi pi-external-link" style="margin-right: 0.5em"></span>
+                        View in ClinGen Allele Registry
+                      </Button>
+                    </div>
                   </div>
                   <div v-if="allele.grch38Hgvs" class="variant-search-result-subcontent">
                     GRCh38 coordinates: {{ allele.grch38Hgvs }}
@@ -586,6 +594,11 @@ export default defineComponent({
     openAlleleInVariantView: function (allele: any) {
       if (allele.clingenAlleleId) {
         this.router.push({name: 'variant', params: {clingenAlleleId: allele.clingenAlleleId}})
+      }
+    },
+    openAlleleInClinGenRegistry: function (allele: any) {
+      if (allele.clingenAlleleUrl) {
+        window.open(allele.clingenAlleleUrl, '_blank')
       }
     },
     getScoreSetShortName: function (scoreSet: ScoreSet) {
@@ -1165,10 +1178,21 @@ export default defineComponent({
   gap: 20px;
 }
 
+.variant-search-result-content {
+  flex: 1;
+}
+
+.variant-title-row {
+  display: flex;
+}
+
+.variant-clingen-link-btn {
+  margin-left: auto;
+}
+
 .variant-search-result-title {
   font-weight: bold;
-  font-size: 20px;
-  margin-bottom: 10px;
+  font-size: 24px;
 }
 
 .variant-search-result-subcontent {

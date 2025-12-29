@@ -205,30 +205,17 @@
                     </div>
                     <div class="mavedb-wizard-content field">
                       <span class="p-float-label">
-                        <Chips
+                        <AutoComplete
                           :id="scopedId('input-contributors')"
-                          ref="contributorsInput"
                           v-model="contributors"
-                          :add-on-blur="true"
-                          :allow-duplicate="false"
-                          :placeholder="contributors?.length > 0 ? '' : 'Type or paste ORCID IDs here.'"
-                          @add="newContributorsAdded"
-                          @keyup.escape="clearContributorSearch"
-                        >
-                          <template #chip="slotProps">
-                            <div>
-                              <div v-if="slotProps.value.givenName || slotProps.value.familyName">
-                                {{ slotProps.value.givenName }} {{ slotProps.value.familyName }} ({{
-                                  slotProps.value.orcidId
-                                }})
-                              </div>
-                              <div v-else>{{ slotProps.value.orcidId }}</div>
-                            </div>
-                            <div>
-                              <i class="pi pi-times-circle" @click="removeContributor(slotProps.value)"></i>
-                            </div>
-                          </template>
-                        </Chips>
+                          fluid
+                          multiple
+                          :option-label="(x) => x.givenName || x.familyName ? `${x.givenName} ${x.familyName} (${x.orcidId})` : x.orcidId"
+                          :typeahead="false"
+                          @blur="updateContributors"
+                          @keyup.space="updateContributors"
+                          @update:model-value="newContributorsAdded"
+                        />
                         <label :for="scopedId('input-contributors')">Contributors</label>
                       </span>
                       <span v-if="validationErrors.contributors" class="mave-field-error">{{
@@ -846,12 +833,6 @@ export default {
     // Contributors
     //////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 
-    clearContributorSearch: function () {
-      // This could change with a new PrimeVue version.
-      const input = this.$refs.contributorsInput
-      input.$refs.input.value = ''
-    },
-
     lookupOrcidUser: async function (orcidId) {
       let orcidUser = null
       try {
@@ -862,8 +843,20 @@ export default {
       return orcidUser
     },
 
-    newContributorsAdded: async function (event) {
-      const newContributors = event.value
+    updateContributors: function (event) {
+      const currentValue = event.target?.value
+      if (currentValue && currentValue.trim() != '') {
+        this.contributors.push(currentValue.trim())
+        this.newContributorsAdded()
+
+        // clear the input field
+        event.target.value = ''
+      }
+    },
+
+    newContributorsAdded: async function () {
+      // new contributor values are those that are strings rather than objects
+      const newContributors = this.contributors.filter(_.isString)
 
       // Convert any strings to ORCID users without names. Remove whitespace from new entries.
       this.contributors = this.contributors.map((c) => (_.isString(c) ? {orcidId: c.trim()} : c))
@@ -907,12 +900,6 @@ export default {
       }
     },
 
-    removeContributor: function (contributor) {
-      const index = this.contributors.findIndex(c => c.orcidId === contributor.orcidId)
-      if (index !== -1) {
-        this.contributors.splice(index, 1)
-      }
-    },
     removeRawReadIdentifier: function (rawReadIdentifier) {
       const index = this.rawReadIdentifiers.findIndex(r => r.identifier === rawReadIdentifier.identifier)
       if (index !== -1) {

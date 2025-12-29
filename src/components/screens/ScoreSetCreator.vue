@@ -56,7 +56,7 @@
                       </label>
                     </div>
                     <div class="mavedb-wizard-content">
-                      <InputSwitch
+                      <ToggleSwitch
                         v-model="isSupersedingScoreSet"
                         :aria-labelledby="scopedId('input-superseding-score-set-label')"
                       />
@@ -82,7 +82,7 @@
                       </div>
                     </div>
                     <div class="mavedb-wizard-content">
-                      <InputSwitch
+                      <ToggleSwitch
                         v-model="isMetaAnalysis"
                         :aria-labelledby="scopedId('input-is-meta-analysis-label')"
                       />
@@ -395,7 +395,7 @@
                       set?
                     </div>
                     <div class="mavedb-wizard-content">
-                      <InputSwitch
+                      <ToggleSwitch
                         v-model="hasCustomUsagePolicy"
                         :aria-labelledby="scopedId('input-has-custom-usage-policy')"
                       />
@@ -644,7 +644,7 @@
                     </div>
                   </div>
                   <div class="mavedb-wizard-content">
-                    <InputSwitch
+                    <ToggleSwitch
                       v-model="isTargetSequence"
                       :aria-labelledby="scopedId('input-scoreSetIsSequenceBasedLabel')"
                     />
@@ -670,7 +670,7 @@
                     </div>
                   </div>
                   <div class="mavedb-wizard-content">
-                    <InputSwitch v-model="isBaseEditor" :aria-labelledby="scopedId('input-isBaseEditorData')" />
+                    <ToggleSwitch v-model="isBaseEditor" :aria-labelledby="scopedId('input-isBaseEditorData')" />
                     <div class="mavedb-switch-value">
                       {{
                         isBaseEditor
@@ -692,7 +692,7 @@
                     </div>
                   </div>
                   <div class="mavedb-wizard-content">
-                    <InputSwitch
+                    <ToggleSwitch
                       v-model="isMultiTarget"
                       :aria-labelledby="scopedId('input-scoreSetHasMultipleTargetsLabel')"
                     />
@@ -867,7 +867,7 @@
                       </div>
                     </div>
                     <div class="mavedb-wizard-content">
-                      <InputSwitch
+                      <ToggleSwitch
                         v-model="createdTargetGenes[targetIdx].linkedAccessions[dbName]"
                         :aria-labelledby="scopedId(`input-targetGeneExternalDatabase${dbName}Label`)"
                       />
@@ -1061,7 +1061,7 @@
                       </div>
                     </div>
                     <div class="mavedb-wizard-content">
-                      <InputSwitch
+                      <ToggleSwitch
                         v-model="createdTargetGenes[targetIdx].isRelativeToChromosome"
                         :aria-labelledby="scopedId('input-targetDescribesChromosomeLabel')"
                         @change="refreshAccessionOptions(targetIdx)"
@@ -1216,7 +1216,7 @@
                     </div>
                   </div>
                   <div class="mavedb-wizard-content">
-                    <InputSwitch
+                    <ToggleSwitch
                       v-model="investigatorIsProvidingScoreCalibrations"
                       :aria-labelledby="scopedId('input-investigatorIsProvidingScoreCalibrations')"
                     />
@@ -1440,7 +1440,7 @@ import Chips from 'primevue/chips'
 import Dropdown from 'primevue/dropdown'
 import FileUpload from 'primevue/fileupload'
 import InputNumber from 'primevue/inputnumber'
-import InputSwitch from 'primevue/inputswitch'
+import ToggleSwitch from 'primevue/toggleswitch'
 import InputText from 'primevue/inputtext'
 import Message from 'primevue/message'
 import Multiselect from 'primevue/multiselect'
@@ -1518,7 +1518,7 @@ export default {
     EmailPrompt,
     FileUpload,
     InputNumber,
-    InputSwitch,
+    ToggleSwitch,
     InputText,
     Message,
     Multiselect,
@@ -2920,7 +2920,7 @@ export default {
 }
 
 /* Switches */
-.p-inputswitch {
+.p-ToggleSwitch {
   margin: 10px 0;
   vertical-align: middle;
 }

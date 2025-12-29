@@ -762,7 +762,7 @@
 
                   <div class="field-column">
                     <div class="field" style="margin-top: 1em">
-                      <InputSwitch v-model="isBaseEditor" :aria-labelledby="scopedId('input-isBaseEditorData')" />
+                      <ToggleSwitch v-model="isBaseEditor" :aria-labelledby="scopedId('input-isBaseEditorData')" />
                       <span style="margin-left: 1em">{{
                         isBaseEditor
                           ? 'This score set represents base editor data.'
@@ -959,7 +959,7 @@ import Dropdown from 'primevue/dropdown'
 import FileUpload from 'primevue/fileupload'
 import InputNumber from 'primevue/inputnumber'
 import InputText from 'primevue/inputtext'
-import InputSwitch from 'primevue/inputswitch'
+import ToggleSwitch from 'primevue/toggleswitch'
 import Message from 'primevue/message'
 import Multiselect from 'primevue/multiselect'
 import ProgressSpinner from 'primevue/progressspinner'
@@ -1025,7 +1025,7 @@ export default {
     FileUpload,
     InputNumber,
     InputText,
-    InputSwitch,
+    ToggleSwitch,
     Message,
     Multiselect,
     ProgressSpinner,

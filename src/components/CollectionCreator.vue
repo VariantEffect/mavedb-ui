@@ -13,7 +13,7 @@
 
     <div class="flex flex-column gap-2">
       <label :for="scopedId('public-input')">Public</label>
-      <InputSwitch
+      <ToggleSwitch
         v-model="collectionPublic"
         :aria-labelledby="scopedId('public-help')"
         :input-id="scopedId('public-input')"
@@ -92,7 +92,7 @@ import Button from 'primevue/button'
 import Column from 'primevue/column'
 import DataTable from 'primevue/datatable'
 import Dropdown from 'primevue/dropdown'
-import InputSwitch from 'primevue/inputswitch'
+import ToggleSwitch from 'primevue/toggleswitch'
 import InputText from 'primevue/inputtext'
 import SelectButton from 'primevue/selectbutton'
 import Textarea from 'primevue/textarea'
@@ -104,7 +104,7 @@ import EmailPrompt from '@/components/common/EmailPrompt.vue'
 
 export default {
   name: 'CollectionCreator',
-  components: {Button, Column, DataTable, Dropdown, EmailPrompt, InputSwitch, InputText, SelectButton, Textarea},
+  components: {Button, Column, DataTable, Dropdown, EmailPrompt, ToggleSwitch, InputText, SelectButton, Textarea},
   emits: ['createdCollection', 'canceled'],
 
   setup: useScopedId,

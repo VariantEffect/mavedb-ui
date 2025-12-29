@@ -360,7 +360,7 @@
     </div>
   </DefaultLayout>
   <div v-if="itemStatus == 'Loaded'" class="card flex justify-content-center">
-    <Sidebar
+    <Drawer
       v-model:visible="isScoreSetVisualizerVisible"
       class="scoreset-viz-sidebar"
       :header="item.title"
@@ -373,7 +373,7 @@
         :scores="variants"
         :uniprot-id="uniprotId"
       />
-    </Sidebar>
+    </Drawer>
   </div>
   <!-- Set z-index to ensure dialog appears above heatmap color legend -->
   <PrimeDialog
@@ -424,7 +424,7 @@ import ProgressSpinner from 'primevue/progressspinner'
 import ProgressBar from 'primevue/progressbar'
 import PrimeDialog from 'primevue/dialog'
 import ScrollPanel from 'primevue/scrollpanel'
-import Sidebar from 'primevue/sidebar'
+import Drawer from 'primevue/drawer'
 import SplitButton from 'primevue/splitbutton'
 import {ref} from 'vue'
 import {mapState} from 'vuex'
@@ -486,7 +486,7 @@ export default {
     ScoreSetProcessingStatus,
     ScoreSetSecondaryMetadata,
     ScrollPanel,
-    Sidebar,
+    Drawer,
     SplitButton,
     TargetGene
   },

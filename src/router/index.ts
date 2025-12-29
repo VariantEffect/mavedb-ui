@@ -24,7 +24,6 @@ import SearchView from '@/components/screens/SearchView.vue'
 import SettingsScreen from '@/components/screens/SettingsScreen.vue'
 import StatisticsView from '@/components/screens/StatisticsView.vue'
 import {beginAuthentication, isAuthenticated} from '@/lib/orcid'
-import UsersView from '@/components/screens/UsersView.vue'
 import VariantMeasurementScreen from '@/components/screens/VariantMeasurementScreen.vue'
 import VariantScreen from '@/components/screens/VariantScreen.vue'
 import WizardCompletionView from '@/components/screens/WizardCompletionView.vue'
@@ -82,11 +81,6 @@ const routes: RouteRecordRaw[] = [
     path: '/dashboard',
     name: 'dashboard',
     component: DashboardView,
-    meta: {requiresAuth: true}
-  },
-  {
-    path: '/users',
-    component: UsersView,
     meta: {requiresAuth: true}
   },
   {

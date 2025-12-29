@@ -626,7 +626,7 @@ const KEYWORD_GROUPS = {
 }
 
 export default {
-  name: 'ExperimentEditor',
+  name: 'ExperimentCreator',
   components: {
     AutoComplete,
     Button,

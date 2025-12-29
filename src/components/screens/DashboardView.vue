@@ -71,7 +71,7 @@ import ScoreSetTable from '@/components/ScoreSetTable.vue'
 import DefaultLayout from '@/components/layout/DefaultLayout'
 
 export default {
-  name: 'HomeView',
+  name: 'DashboardView',
 
   components: {DefaultLayout, ScoreSetTable, InputText, Tabs, TabList, Tab, TabPanels, TabPanel, Button, ProgressSpinner},
 

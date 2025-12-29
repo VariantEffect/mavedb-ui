@@ -142,7 +142,7 @@ import useItems from '@/composition/items'
 import config from '@/config'
 
 export default {
-  name: 'HomeView',
+  name: 'SettingsScreen',
 
   components: {Button, Card, DefaultLayout, InputText, Checkbox},
 

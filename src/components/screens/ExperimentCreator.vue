@@ -169,24 +169,17 @@
                   </div>
                   <div class="mavedb-wizard-content field">
                     <span class="p-float-label">
-                      <Chips
+                      <AutoComplete
                         :id="scopedId('input-doiIdentifiers')"
                         ref="doiIdentifiersInput"
                         v-model="doiIdentifiers"
-                        :add-on-blur="true"
-                        :allow-duplicate="false"
-                        @add="acceptNewDoiIdentifier"
-                        @keyup.escape="clearDoiIdentifierSearch"
-                      >
-                        <template #chip="slotProps">
-                          <div>
-                              <span>{{ slotProps.value?.identifier }}</span>
-                          </div>
-                          <div>
-                            <i class="pi pi-times-circle" @click="removeDoiIdentifier(slotProps.value)"></i>
-                          </div>
-                        </template>
-                      </Chips>
+                        :multiple="true"
+                        option-label="identifier"
+                        :typeahead="false"
+                        @blur="updateDoiIdentifiers"
+                        @keyup.space="updateDoiIdentifiers"
+                        @update:model-value="newDoiIdentifiersAdded"
+                      />
                       <label :for="scopedId('input-doiIdentifiers')">DOIs</label>
                     </span>
                     <span v-if="validationErrors.doiIdentifiers" class="mave-field-error">{{
@@ -906,12 +899,6 @@ export default {
         this.rawReadIdentifiers.splice(index, 1)
       }
     },
-    removeDoiIdentifier: function (doiIdentifier) {
-      const index = this.doiIdentifiers.findIndex(d => d.identifier === doiIdentifier.identifier)
-      if (index !== -1) {
-        this.doiIdentifiers.splice(index, 1)
-      }
-    },
 
     suggestionsForAutocomplete: function (suggestions) {
       // The PrimeVue AutoComplete doesn't seem to like it if we set the suggestion list to [].
@@ -969,7 +956,18 @@ export default {
     // Form fields
     ////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 
-    acceptNewDoiIdentifier: function () {
+    updateDoiIdentifiers: function (event) {
+      const currentValue = event.target?.value
+      if (currentValue && currentValue.trim() != '') {
+        this.doiIdentifiers.push(currentValue.trim())
+        this.newDoiIdentifiersAdded()
+
+        // clear the input field
+        event.target.value = ''
+      }
+    },
+
+    newDoiIdentifiersAdded: function () {
       // Remove new string item from the model and add new structured item in its place if it validates and is not a duplicate.
       const idx = this.doiIdentifiers.findIndex((item) => typeof item === 'string' || item instanceof String)
       if (idx == -1) {
@@ -991,12 +989,6 @@ export default {
         this.doiIdentifiers.splice(idx, 1)
         this.$toast.add({severity: 'warn', summary: `"${searchText}" is not a valid DOI`, life: 3000})
       }
-    },
-
-    clearDoiIdentifierSearch: function () {
-      // This could change with a new Primevue version.
-      const input = this.$refs.doiIdentifiersInput
-      input.$refs.input.value = ''
     },
 
     acceptNewPublicationIdentifier: function () {

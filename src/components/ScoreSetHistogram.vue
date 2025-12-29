@@ -14,7 +14,7 @@
     <div v-if="showCalibrations" class="mavedb-histogram-thresholds-control">
       <div class="mavedb-histogram-control">
         <label class="mavedb-histogram-control-label" for="mavedb-histogram-viz-select">Thresholds: </label>
-        <Dropdown
+        <Select
           v-model="activeCalibration"
           :disabled="!showCalibrations"
           input-id="mavedb-histogram-viz-select"
@@ -39,7 +39,7 @@
         <label class="mavedb-histogram-control-label" for="mavedb-histogram-db-select"
           >Clinical control database:
         </label>
-        <Dropdown
+        <Select
           v-model="controlDb"
           :disabled="!refreshedClinicalControls"
           input-id="mavedb-histogram-db-select"
@@ -50,7 +50,7 @@
         <label class="mavedb-histogram-control-label" for="mavedb-histogram-version-select"
           >Clinical control version:
         </label>
-        <Dropdown
+        <Select
           v-model="controlVersion"
           :disabled="!refreshedClinicalControls"
           input-id="mavedb-histogram-version-select"
@@ -128,7 +128,7 @@
 import axios from 'axios'
 import _ from 'lodash'
 import Checkbox from 'primevue/checkbox'
-import Dropdown from 'primevue/dropdown'
+import Select from 'primevue/select'
 import ProgressSpinner from 'primevue/progressspinner'
 import Rating from 'primevue/rating'
 import Tabs from 'primevue/tabs'
@@ -194,7 +194,7 @@ interface Margins {
 export default defineComponent({
   name: 'ScoreSetHistogram',
 
-  components: {Checkbox, Dropdown, Rating, Tabs, TabList, Tab, ProgressSpinner},
+  components: {Checkbox, Select, Rating, Tabs, TabList, Tab, ProgressSpinner},
 
   props: {
     coordinates: {

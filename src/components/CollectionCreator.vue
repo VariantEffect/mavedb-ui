@@ -60,7 +60,7 @@
         <Column :field="(userRole) => `${userRole.user.firstName} ${userRole.user.lastName}`" header="Name" />
         <Column field="role" header="Role">
           <template #body="{data}">
-            <Dropdown
+            <Select
               class="mavedb-collection-role-dropdown"
               :model-value="data.role"
               option-label="title"
@@ -91,7 +91,7 @@ import _ from 'lodash'
 import Button from 'primevue/button'
 import Column from 'primevue/column'
 import DataTable from 'primevue/datatable'
-import Dropdown from 'primevue/dropdown'
+import Select from 'primevue/select'
 import ToggleSwitch from 'primevue/toggleswitch'
 import InputText from 'primevue/inputtext'
 import SelectButton from 'primevue/selectbutton'
@@ -104,7 +104,7 @@ import EmailPrompt from '@/components/common/EmailPrompt.vue'
 
 export default {
   name: 'CollectionCreator',
-  components: {Button, Column, DataTable, Dropdown, EmailPrompt, ToggleSwitch, InputText, SelectButton, Textarea},
+  components: {Button, Column, DataTable, Select, EmailPrompt, ToggleSwitch, InputText, SelectButton, Textarea},
   emits: ['createdCollection', 'canceled'],
 
   setup: useScopedId,

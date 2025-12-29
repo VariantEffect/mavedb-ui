@@ -1,12 +1,11 @@
 <template>
   <div style="display: flex; flex-flow: column; height: 100%">
-    <span v-if="alphaFoldData?.length > 1" class="p-float-label" style="margin-top: 10px; margin-bottom: 4px">
-      <Dropdown
+    <span class="p-float-label" style="margin-top: 10px; margin-bottom: 4px">
+      <Select
         :id="scopedId('alphafold-id')"
         v-model="selectedAlphaFold"
         option-label="id"
         :options="alphaFoldData"
-        style="height: 3em"
       />
       <label :for="scopedId('alphafold-id')">AlphaFold ID</label>
     </span>
@@ -30,7 +29,7 @@
 <script>
 import axios from 'axios'
 import $ from 'jquery'
-import Dropdown from 'primevue/dropdown'
+import Select from 'primevue/select'
 import SelectButton from 'primevue/selectbutton'
 import {PDBeMolstarPlugin} from 'pdbe-molstar/lib/viewer'
 import 'pdbe-molstar/build/pdbe-molstar-light.css'
@@ -43,7 +42,7 @@ import useScopedId from '@/composables/scoped-id'
 export default {
   name: 'ProteinStructureView',
 
-  components: {Dropdown, SelectButton},
+  components: {Select, SelectButton},
 
   props: {
     uniprotId: {

@@ -29,7 +29,7 @@
               <div v-else>
                 <div class="field">
                   <span class="p-float-label">
-                    <Dropdown
+                    <Select
                       :id="scopedId('input-experiment')"
                       v-model="experiment"
                       option-label="title"
@@ -155,7 +155,7 @@
               <div>
                 <div class="field">
                   <span class="p-float-label">
-                    <Dropdown
+                    <Select
                       :id="scopedId('input-targetLicenseId')"
                       v-model="licenseId"
                       option-label="longName"
@@ -520,7 +520,7 @@
                           <div class="field-column">
                             <span class="p-float-label">
                               <!-- Assembly is the reference genome property in coordinate cases -->
-                              <Dropdown
+                              <Select
                                 :id="scopedId('input-targetGeneAssembly')"
                                 v-model="assembly"
                                 :options="assemblies"
@@ -531,7 +531,7 @@
                           </div>
                           <div class="field-column">
                             <span class="p-float-label">
-                              <Dropdown
+                              <Select
                                 :id="scopedId('input-targetGeneGeneNames')"
                                 v-model="geneName"
                                 filter
@@ -955,7 +955,7 @@ import Card from 'primevue/card'
 import Chips from 'primevue/chips'
 import Column from 'primevue/column'
 import DataTable from 'primevue/datatable'
-import Dropdown from 'primevue/dropdown'
+import Select from 'primevue/select'
 import FileUpload from 'primevue/fileupload'
 import InputNumber from 'primevue/inputnumber'
 import InputText from 'primevue/inputtext'
@@ -1019,7 +1019,7 @@ export default {
     Column,
     DataTable,
     DefaultLayout,
-    Dropdown,
+    Select,
     EmailPrompt,
     EntityLink,
     FileUpload,

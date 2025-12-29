@@ -427,7 +427,7 @@
 
                     <div class="mavedb-wizard-content keyword-editor">
                       <span class="p-float-label field">
-                        <Dropdown
+                        <Select
                           :id="scopedId(`keyword-input-${keyword.key}`)"
                           v-model="keywordKeys[keyword.key]"
                           class="keyword-dropdown"
@@ -512,7 +512,7 @@ import AutoComplete from 'primevue/autocomplete'
 import Button from 'primevue/button'
 import Chips from 'primevue/chips'
 import Dialog from 'primevue/dialog'
-import Dropdown from 'primevue/dropdown'
+import Select from 'primevue/select'
 import FileUpload from 'primevue/fileupload'
 import InputText from 'primevue/inputtext'
 import Message from 'primevue/message'
@@ -633,7 +633,7 @@ export default {
     Chips,
     DefaultLayout,
     Dialog,
-    Dropdown,
+    Select,
     EmailPrompt,
     FileUpload,
     InputText,

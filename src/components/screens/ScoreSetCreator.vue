@@ -104,7 +104,7 @@
                     <div class="mavedb-wizard-content">
                       <div style="position: relative">
                         <span class="p-float-label">
-                          <Dropdown
+                          <Select
                             :id="scopedId('input-experiment')"
                             ref="experimentInput"
                             v-model="experiment"
@@ -121,7 +121,7 @@
                             <template #empty>
                               <div style="padding: 10px; text-align: center">No experiments found.</div>
                             </template>
-                          </Dropdown>
+                          </Select>
                           <label :for="scopedId('input-experiment')">Experiment</label>
                         </span>
                         <span v-if="validationErrors.experiment" class="mave-field-error">{{
@@ -369,7 +369,7 @@
                     </div>
                     <div class="mavedb-wizard-content field">
                       <span class="p-float-label">
-                        <Dropdown
+                        <Select
                           :id="scopedId('input-targetLicenseId')"
                           v-model="licenseId"
                           option-label="longName"
@@ -1082,7 +1082,7 @@
                     <div class="mavedb-wizard-content">
                       <span class="p-float-label">
                         <!-- Assembly is the reference genome property in coordinate cases -->
-                        <Dropdown
+                        <Select
                           v-model="createdTargetGenes[targetIdx].targetGene.targetAccession.assembly"
                           :aria-labelledby="scopedId('input-targetGeneAssemblyLabel')"
                           :options="assemblies"
@@ -1104,7 +1104,7 @@
                     </div>
                     <div class="mavedb-wizard-content">
                       <span class="p-float-label">
-                        <Dropdown
+                        <Select
                           :id="scopedId('input-targetGeneGeneNameLabel')"
                           v-model="createdTargetGenes[targetIdx].targetGene.targetAccession.gene"
                           filter
@@ -1437,7 +1437,7 @@ import {marked} from 'marked'
 import AutoComplete from 'primevue/autocomplete'
 import Button from 'primevue/button'
 import Chips from 'primevue/chips'
-import Dropdown from 'primevue/dropdown'
+import Select from 'primevue/select'
 import FileUpload from 'primevue/fileupload'
 import InputNumber from 'primevue/inputnumber'
 import ToggleSwitch from 'primevue/toggleswitch'
@@ -1514,7 +1514,7 @@ export default {
     CalibrationEditor,
     Chips,
     DefaultLayout,
-    Dropdown,
+    Select,
     EmailPrompt,
     FileUpload,
     InputNumber,

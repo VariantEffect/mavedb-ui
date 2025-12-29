@@ -315,7 +315,7 @@
                 <div v-if="keywordVisibility[keyword.key]">
                   <div class="field">
                     <span class="p-float-label">
-                      <Dropdown
+                      <Select
                         :id="scopedId(`keyword-input-${keyword.key}`)"
                         v-model="keywordKeys[keyword.key]"
                         class="keyword-dropdown"
@@ -418,7 +418,7 @@ import Button from 'primevue/button'
 import Card from 'primevue/card'
 import Chips from 'primevue/chips'
 import Dialog from 'primevue/dialog'
-import Dropdown from 'primevue/dropdown'
+import Select from 'primevue/select'
 import Multiselect from 'primevue/multiselect'
 import FileUpload from 'primevue/fileupload'
 import InputText from 'primevue/inputtext'
@@ -534,7 +534,7 @@ export default {
     Card,
     Chips,
     Dialog,
-    Dropdown,
+    Select,
     Multiselect,
     DefaultLayout,
     EmailPrompt,

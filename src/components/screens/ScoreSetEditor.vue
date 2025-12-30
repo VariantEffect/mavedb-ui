@@ -125,27 +125,18 @@
               </div>
               <div class="field">
                 <span class="p-float-label">
-                  <Chips
+                  <AutoComplete
                     :id="scopedId('input-contributors')"
-                    ref="contributorsInput"
                     v-model="contributors"
-                    :add-on-blur="true"
-                    :allow-duplicate="false"
-                    placeholder="Type or paste ORCID IDs here."
-                    @add="newContributorsAdded"
-                    @keyup.escape="clearContributorSearch"
-                  >
-                    <template #chip="slotProps">
-                      <div>
-                        <div v-if="slotProps.value.givenName || slotProps.value.familyName">
-                          {{ slotProps.value.givenName }} {{ slotProps.value.familyName }} ({{
-                            slotProps.value.orcidId
-                          }})
-                        </div>
-                        <div v-else>{{ slotProps.value.orcidId }}</div>
-                      </div>
-                    </template>
-                  </Chips>
+                    fluid
+                    multiple
+                    :option-label="(x) => x.givenName || x.familyName ? `${x.givenName} ${x.familyName} (${x.orcidId})` : x.orcidId"
+                    :typeahead="false"
+                    @blur="updateContributors"
+                    @keyup.escape="clearAutoCompleteInput"
+                    @keyup.space="updateContributors"
+                    @update:model-value="newContributorsAdded"
+                  />
                   <label :for="scopedId('input-contributors')">Contributors</label>
                 </span>
                 <span v-if="validationErrors.contributors" class="mave-field-error">{{
@@ -184,24 +175,17 @@
                 </div>
                 <div class="field">
                   <span class="p-float-label">
-                    <Chips
+                    <AutoComplete
                       :id="scopedId('input-doiIdentifiers')"
-                      ref="doiIdentifiersInput"
                       v-model="doiIdentifiers"
-                      :add-on-blur="true"
-                      :allow-duplicate="false"
-                      @add="acceptNewDoiIdentifier"
-                      @keyup.escape="clearDoiIdentifierSearch"
-                    >
-                      <template #chip="slotProps">
-                        <div>
-                          <div>{{ slotProps.value.identifier }}</div>
-                        </div>
-                        <div>
-                          <i class="pi pi-times-circle" @click="removeDoiIdentifier(slotProps.value)"></i>
-                        </div>
-                      </template>
-                    </Chips>
+                      :multiple="true"
+                      option-label="identifier"
+                      :typeahead="false"
+                      @blur="updateDoiIdentifiers"
+                      @keyup.escape="clearAutoCompleteInput"
+                      @keyup.space="updateDoiIdentifiers"
+                      @update:model-value="newDoiIdentifiersAdded"
+                    />
                     <label :for="scopedId('input-doiIdentifiers')">DOIs</label>
                   </span>
                   <span v-if="validationErrors.doiIdentifiers" class="mave-field-error">{{
@@ -1315,15 +1299,15 @@ export default {
   },
 
   methods: {
+    clearAutoCompleteInput: function(event) {
+      if (event.target) {
+        event.target.value = ''
+      }
+    },
+
     //////////////////////////////////////////////////////////////////////////////////////////////////////////////////
     // Contributors
     //////////////////////////////////////////////////////////////////////////////////////////////////////////////////
-
-    clearContributorSearch: function () {
-      // This could change with a new PrimeVue version.
-      const input = this.$refs.contributorsInput
-      input.$refs.input.value = ''
-    },
 
     lookupOrcidUser: async function (orcidId) {
       let orcidUser = null
@@ -1335,8 +1319,20 @@ export default {
       return orcidUser
     },
 
-    newContributorsAdded: async function (event) {
-      const newContributors = event.value
+    updateContributors: function (event) {
+      const currentValue = event.target?.value
+      if (currentValue && currentValue.trim() != '') {
+        this.contributors.push(currentValue.trim())
+        this.newContributorsAdded()
+
+        // clear the input field
+        event.target.value = ''
+      }
+    },
+
+    newContributorsAdded: async function () {
+      // new contributor values are those that are strings rather than objects
+      const newContributors = this.contributors.filter(_.isString)
 
       // Convert any strings to ORCID users without names. Remove whitespace from new entries.
       this.contributors = this.contributors.map((c) => (_.isString(c) ? {orcidId: c.trim()} : c))
@@ -1539,7 +1535,18 @@ export default {
       })
     },
 
-    acceptNewDoiIdentifier: function () {
+    updateDoiIdentifiers: function (event) {
+      const currentValue = event.target?.value
+      if (currentValue && currentValue.trim() != '') {
+        this.doiIdentifiers.push(currentValue.trim())
+        this.newDoiIdentifiersAdded()
+
+        // clear the input field
+        event.target.value = ''
+      }
+    },
+
+    newDoiIdentifiersAdded: function () {
       // Remove new string item from the model and add new structured item in its place if it validates and is not a duplicate.
       const idx = this.doiIdentifiers.findIndex((item) => typeof item === 'string' || item instanceof String)
       if (idx == -1) {

@@ -171,12 +171,12 @@
                     <span class="p-float-label">
                       <AutoComplete
                         :id="scopedId('input-doiIdentifiers')"
-                        ref="doiIdentifiersInput"
                         v-model="doiIdentifiers"
                         :multiple="true"
                         option-label="identifier"
                         :typeahead="false"
                         @blur="updateDoiIdentifiers"
+                        @keyup.escape="clearAutoCompleteInput"
                         @keyup.space="updateDoiIdentifiers"
                         @update:model-value="newDoiIdentifiersAdded"
                       />
@@ -206,6 +206,7 @@
                           :option-label="(x) => x.givenName || x.familyName ? `${x.givenName} ${x.familyName} (${x.orcidId})` : x.orcidId"
                           :typeahead="false"
                           @blur="updateContributors"
+                          @keyup.escape="clearAutoCompleteInput"
                           @keyup.space="updateContributors"
                           @update:model-value="newContributorsAdded"
                         />
@@ -233,13 +234,12 @@
                       <span class="p-float-label">
                         <AutoComplete
                           :id="scopedId('input-publicationIdentifiers')"
-                          ref="publicationIdentifiersInput"
                           v-model="publicationIdentifiers"
                           :multiple="true"
                           :suggestions="publicationIdentifierSuggestionsList"
-                          @blur="clearPublicationIdentifierSearch"
+                          @blur="clearAutoCompleteInput"
                           @complete="searchPublicationIdentifiers"
-                          @keyup.escape="clearPublicationIdentifierSearch"
+                          @keyup.escape="clearAutoCompleteInput"
                           @option-select="acceptNewPublicationIdentifier"
                         >
                           <template #chip="slotProps">
@@ -328,6 +328,7 @@
                           option-label="identifier"
                           :typeahead="false"
                           @blur="updateRawReadIdentifiers"
+                          @keyup.escape="clearAutoCompleteInput"
                           @keyup.space="updateRawReadIdentifiers"
                           @update:model-value="newRawReadIdentifiersAdded"
                         />
@@ -812,6 +813,12 @@ export default {
   },
 
   methods: {
+    clearAutoCompleteInput: function(event) {
+      if (event.target) {
+        event.target.value = ''
+      }
+    },
+
     //////////////////////////////////////////////////////////////////////////////////////////////////////////////////
     // Contributors
     //////////////////////////////////////////////////////////////////////////////////////////////////////////////////
@@ -1002,12 +1009,6 @@ export default {
       if (primaryIdx != -1) {
         this.primaryPublicationIdentifiers.splice(primaryIdx, 1)
       }
-    },
-
-    clearPublicationIdentifierSearch: function () {
-      // This could change with a new Primevue version.
-      const input = this.$refs.publicationIdentifiersInput
-      input.$refs.focusInput.value = ''
     },
 
     searchPublicationIdentifiers: function (event) {

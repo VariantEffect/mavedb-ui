@@ -333,7 +333,7 @@
             </div>
           </div>
           <div class="mavedb-wizard-content">
-            <InputTextfunctionalClassification
+            <InputText
               v-model="rangeObj.class"
               :aria-labelledby="scopedId(`input-functionalClassificationClass-${rangeIdx}`)"
               style="width: 100%"

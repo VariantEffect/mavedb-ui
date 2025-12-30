@@ -2671,6 +2671,7 @@ export default {
         await this.uploadData(savedItem)
       } else if (response.data && response.data.detail) {
         const formValidationErrors = {}
+        const calibrationValidationErrors = {}
         if (typeof response.data.detail === 'string' || response.data.detail instanceof String) {
           // Handle generic errors that are not surfaced by the API as objects
           this.$toast.add({
@@ -2718,8 +2719,8 @@ export default {
             // Add calibration errors to a separate object which is consumed by the calibration sub-component.
             if (_.isEqual(_.slice(path, 0, 1), ['scoreCalibrations'])) {
               // The second path element is an array index, which is irrelevant here as we only supply one calibration on score set creation.
-              this.calibrationValidationErrors = {
-                ...this.calibrationValidationErrors,
+              calibrationValidationErrors = {
+                ...calibrationValidationErrors,
                 [path.slice(2).join('.')]: error.msg
               }
             }
@@ -2728,6 +2729,7 @@ export default {
             formValidationErrors[path] = error.msg
           }
         }
+        this.calibrationValidationErrors = calibrationValidationErrors
         this.serverSideValidationErrors = formValidationErrors
         this.mergeValidationErrors()
         this.activeWizardStep = this.minStepWithError()

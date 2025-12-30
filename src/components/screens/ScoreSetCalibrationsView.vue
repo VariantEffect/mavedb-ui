@@ -195,7 +195,7 @@
   </DefaultLayout>
   <PrimeDialog
     v-model:visible="editorVisible"
-    :close-on-escape="true"
+    :close-on-escape="false"
     :header="editingCalibrationUrn ? 'Edit Calibration' : 'Create New Calibration'"
     modal
     :style="{maxWidth: '90%', width: '75rem'}"

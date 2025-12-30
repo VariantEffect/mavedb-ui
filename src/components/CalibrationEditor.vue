@@ -441,24 +441,15 @@
         <span class="p-float-label">
           <AutoComplete
             :id="scopedId('input-threshold-sources')"
-            ref="thresholdSourcesInput"
             v-model="draft.thresholdSources"
-            class="p-inputwrapper-filled"
             :multiple="true"
-            option-label="identifier"
+            :option-label="(option) => `${option.identifier}: ${truncatePublicationTitle(option.title)}`"
             :suggestions="publicationIdentifierSuggestionsList"
+            @blur="clearAutoCompleteInput"
             @complete="searchPublicationIdentifiers"
-            @keyup.escape="clearPublicationIdentifierSearch('thresholdSourcesInput')"
+            @keyup.escape="clearAutoCompleteInput"
             @option-select="acceptNewPublicationIdentifier(draft.thresholdSources)"
           >
-            <template #chip="slotProps">
-              <div class="p-inputchips-chip-item">
-                {{ slotProps.value.identifier }}: {{ truncatePublicationTitle(slotProps.value.title) }}
-                <div>
-                  <i class="pi pi-times-circle" @click="removePublicationIdentifier(slotProps.value, draft.thresholdSources)"></i>
-                </div>
-              </div>
-            </template>
             <template #option="slotProps">
               <div>
                 <div>Title: {{ slotProps.option.title }}</div>
@@ -487,24 +478,15 @@
         <span class="p-float-label">
           <AutoComplete
             :id="scopedId('input-classification-sources-publication-identifiers')"
-            ref="classificationSourcesInput"
             v-model="draft.classificationSources"
-            class="p-inputwrapper-filled"
             :multiple="true"
-            option-label="identifier"
+            :option-label="(option) => `${option.identifier}: ${truncatePublicationTitle(option.title)}`"
             :suggestions="publicationIdentifierSuggestionsList"
+            @blur="clearAutoCompleteInput"
             @complete="searchPublicationIdentifiers"
-            @keyup.escape="clearPublicationIdentifierSearch('classificationSourcesInput')"
+            @keyup.escape="clearAutoCompleteInput"
             @option-select="acceptNewPublicationIdentifier(draft.classificationSources)"
           >
-            <template #chip="slotProps">
-              <div class="p-inputchips-chip-item">
-                {{ slotProps.value.identifier }}: {{ truncatePublicationTitle(slotProps.value.title) }}
-                <div>
-                  <i class="pi pi-times-circle" @click="removePublicationIdentifier(slotProps.value, draft.classificationSources)"></i>
-                </div>
-              </div>
-            </template>
             <template #option="slotProps">
               <div>
                 <div>Title: {{ slotProps.option.title }}</div>
@@ -533,24 +515,15 @@
         <span class="p-float-label">
           <AutoComplete
             :id="scopedId('input-method-sources-publication-identifiers')"
-            ref="methodSourcesInput"
             v-model="draft.methodSources"
-            class="p-inputwrapper-filled"
             :multiple="true"
-            option-label="identifier"
+            :option-label="(option) => `${option.identifier}: ${truncatePublicationTitle(option.title)}`"
             :suggestions="publicationIdentifierSuggestionsList"
+            @blur="clearAutoCompleteInput"
             @complete="searchPublicationIdentifiers"
-            @keyup.escape="clearPublicationIdentifierSearch('methodSourcesInput')"
+            @keyup.escape="clearAutoCompleteInput"
             @option-select="acceptNewPublicationIdentifier(draft.methodSources)"
           >
-            <template #chip="slotProps">
-              <div class="p-inputchips-chip-item">
-                {{ slotProps.value.identifier }}: {{ truncatePublicationTitle(slotProps.value.title) }}
-                <div>
-                  <i class="pi pi-times-circle" @click="removePublicationIdentifier(slotProps.value, draft.methodSources)"></i>
-                </div>
-              </div>
-            </template>
             <template #option="slotProps">
               <div>
                 <div>Title: {{ slotProps.option.title }}</div>
@@ -923,6 +896,12 @@ export default {
     await this.loadEditableScoreSets()
   },
   methods: {
+    clearAutoCompleteInput: function(event) {
+      if (event.target) {
+        event.target.value = ''
+      }
+    },
+
     loadEditableScoreSets: async function () {
       try {
         const response = await axios.post(`${config.apiBaseUrl}/me/score-sets/search`, {
@@ -979,11 +958,11 @@ export default {
       }
     },
 
-    clearPublicationIdentifierSearch: function (refName: string) {
-      // This could change with a new Primevue version.
-      const input = this.$refs[refName]
-      input.$refs.focusInput.value = ''
-    },
+    // clearPublicationIdentifierSearch: function (refName: string) {
+    //   // This could change with a new Primevue version.
+    //   const input = this.$refs[refName]
+    //   input.$refs.focusInput.value = ''
+    // },
 
     searchPublicationIdentifiers: function (event: {query: string}) {
       const searchText = (event.query || '').trim()
@@ -1098,14 +1077,6 @@ export default {
       this.draft.functionalRanges.splice(rangeIdx, 1)
       this.functionalRangeHelpers.splice(rangeIdx, 1)
       this.recomputeMeta()
-    },
-
-    removePublicationIdentifier: function (val: PublicationIdentifier, publicationList: PublicationIdentifier[]) {
-      const removedIdentifier = val.identifier
-      const publicationIdx = publicationList.findIndex((pub) => pub.identifier == removedIdentifier)
-      if (publicationIdx != -1) {
-        publicationList.splice(publicationIdx, 1)
-      }
     },
 
     saveCalibration: function () {

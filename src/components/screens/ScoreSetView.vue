@@ -379,7 +379,7 @@
   <PrimeDialog
     v-model:visible="calibrationEditorVisible"
     :base-z-index="2003"
-    :close-on-escape="true"
+    :close-on-escape="false"
     header="Create New Calibration"
     modal
     :style="{maxWidth: '90%', width: '75rem'}"

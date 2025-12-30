@@ -936,7 +936,6 @@ import {marked} from 'marked'
 import AutoComplete from 'primevue/autocomplete'
 import Button from 'primevue/button'
 import Card from 'primevue/card'
-import Chips from 'primevue/chips'
 import Column from 'primevue/column'
 import DataTable from 'primevue/datatable'
 import Select from 'primevue/select'
@@ -999,7 +998,6 @@ export default {
     AutoComplete,
     Button,
     Card,
-    Chips,
     Column,
     DataTable,
     DefaultLayout,

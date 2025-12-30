@@ -1417,7 +1417,6 @@ import _ from 'lodash'
 import {marked} from 'marked'
 import AutoComplete from 'primevue/autocomplete'
 import Button from 'primevue/button'
-import Chips from 'primevue/chips'
 import Select from 'primevue/select'
 import FileUpload from 'primevue/fileupload'
 import InputNumber from 'primevue/inputnumber'
@@ -1493,7 +1492,6 @@ export default {
     AutoComplete,
     Button,
     CalibrationEditor,
-    Chips,
     DefaultLayout,
     Select,
     EmailPrompt,

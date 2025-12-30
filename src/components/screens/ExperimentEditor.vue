@@ -390,7 +390,6 @@ import {marked} from 'marked'
 import AutoComplete from 'primevue/autocomplete'
 import Button from 'primevue/button'
 import Card from 'primevue/card'
-import Chips from 'primevue/chips'
 import Dialog from 'primevue/dialog'
 import Select from 'primevue/select'
 import Multiselect from 'primevue/multiselect'
@@ -506,7 +505,6 @@ export default {
     AutoComplete,
     Button,
     Card,
-    Chips,
     Dialog,
     Select,
     Multiselect,

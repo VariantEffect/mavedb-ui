@@ -1040,7 +1040,7 @@ export default {
     return {
       evidenceStrengths: EVIDENCE_STRENGTH.map((es) => ({
         label: es,
-        value: es.toLowerCase()
+        value: es
       })),
       criterions: [PATHOGENIC_CRITERION, BENIGN_CRITERION],
       editableScoreSets: ref<Array<MinimalScoreSet>>([]),

@@ -333,11 +333,14 @@
             </div>
           </div>
           <div class="mavedb-wizard-content">
-            <InputText
-              v-model="rangeObj.class"
-              :aria-labelledby="scopedId(`input-functionalClassificationClass-${rangeIdx}`)"
-              style="width: 100%"
-            />
+            <span class="p-float-label">
+              <InputText
+                v-model="rangeObj.class"
+                :aria-labelledby="scopedId(`input-functionalClassificationClass-${rangeIdx}`)"
+                style="width: 100%"
+              />
+              <label :for="scopedId(`input-functionalClassificationClass-${rangeIdx}`)">Class name</label>
+            </span>
             <span v-if="validationErrors[`functionalClassifications.${rangeIdx}.class`]" class="mave-field-error">{{
               validationErrors[`functionalClassifications.${rangeIdx}.class`]
             }}</span>

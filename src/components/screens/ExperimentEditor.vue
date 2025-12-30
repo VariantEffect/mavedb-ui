@@ -69,24 +69,17 @@
               </div>
               <div class="field">
                 <span class="p-float-label">
-                  <Chips
+                 <AutoComplete
                     :id="scopedId('input-doiIdentifiers')"
                     ref="doiIdentifiersInput"
                     v-model="doiIdentifiers"
-                    :add-on-blur="true"
-                    :allow-duplicate="false"
-                    @add="acceptNewDoiIdentifier"
-                    @keyup.escape="clearDoiIdentifierSearch"
-                  >
-                    <template #chip="slotProps">
-                      <div>
-                          <span>{{ slotProps.value?.identifier }}</span>
-                      </div>
-                      <div>
-                        <i class="pi pi-times-circle" @click="removeDoiIdentifier(slotProps.value)"></i>
-                      </div>
-                    </template>
-                  </Chips>
+                    :multiple="true"
+                    option-label="identifier"
+                    :typeahead="false"
+                    @blur="updateDoiIdentifiers"
+                    @keyup.space="updateDoiIdentifiers"
+                    @update:model-value="newDoiIdentifiersAdded"
+                  />
                   <label :for="scopedId('input-doiIdentifiers')">DOIs</label>
                 </span>
                 <span v-if="validationErrors.doiIdentifiers" class="mave-field-error">{{
@@ -99,20 +92,19 @@
                     :id="scopedId('input-publicationIdentifiers')"
                     ref="publicationIdentifiersInput"
                     v-model="publicationIdentifiers"
-                    class="p-inputwrapper-filled"
                     :multiple="true"
-                    option-label="identifier"
                     :suggestions="publicationIdentifierSuggestionsList"
+                    @blur="clearPublicationIdentifierSearch"
                     @complete="searchPublicationIdentifiers"
                     @keyup.escape="clearPublicationIdentifierSearch"
                     @option-select="acceptNewPublicationIdentifier"
                   >
                     <template #chip="slotProps">
-                      <div class="p-inputchips-chip-item">
-                        {{ slotProps.value.identifier }}: {{ truncatePublicationTitle(slotProps.value.title) }}
-                        <div>
-                          <i class="pi pi-times-circle" @click="removePublicationIdentifier(slotProps.value)"></i>
+                      <div class="p-chip p-component p-autocomplete-chip">
+                        <div class="p-chip-label">
+                          {{ slotProps.value.identifier }}: {{ truncatePublicationTitle(slotProps.value.title) }}
                         </div>
+                        <i class="pi pi-times-circle cursor-pointer" @click="removePublicationIdentifier(slotProps.value)"></i>
                       </div>
                     </template>
                     <template #option="slotProps">
@@ -159,24 +151,17 @@
               </div>
               <div class="field">
                 <span class="p-float-label">
-                  <Chips
+                  <AutoComplete
                     :id="scopedId('input-rawReadIdentifiers')"
                     ref="rawReadIdentifiersInput"
                     v-model="rawReadIdentifiers"
-                    :add-on-blur="true"
-                    :allow-duplicate="false"
-                    @add="acceptNewRawReadIdentifier"
-                    @keyup.escape="clearRawReadIdentifierSearch"
-                  >
-                    <template #chip="slotProps">
-                      <div>
-                          <span>{{ slotProps.value?.identifier }}</span>
-                      </div>
-                      <div>
-                        <i class="pi pi-times-circle" @click="removeRawReadIdentifier(slotProps.value)"></i>
-                      </div>
-                    </template>
-                  </Chips>
+                    :multiple="true"
+                    option-label="identifier"
+                    :typeahead="false"
+                    @blur="updateRawReadIdentifiers"
+                    @keyup.space="updateRawReadIdentifiers"
+                    @update:model-value="newRawReadIdentifiersAdded"
+                  />
                   <label :for="scopedId('input-rawReadIdentifiers')">Raw Read</label>
                 </span>
                 <span v-if="validationErrors.rawReadIdentifiers" class="mave-field-error">{{
@@ -231,30 +216,17 @@
               </div>
               <div class="field">
                 <span class="p-float-label">
-                  <Chips
+                  <AutoComplete
                     :id="scopedId('input-contributors')"
-                    ref="contributorsInput"
                     v-model="contributors"
-                    :add-on-blur="true"
-                    :allow-duplicate="false"
-                    :placeholder="contributors.length > 0 ? '' : 'Type or paste ORCID IDs here.'"
-                    @add="newContributorsAdded"
-                    @keyup.escape="clearContributorSearch"
-                  >
-                    <template #chip="slotProps">
-                      <div>
-                        <div v-if="slotProps.value.givenName || slotProps.value.familyName">
-                          {{ slotProps.value.givenName }} {{ slotProps.value.familyName }} ({{
-                            slotProps.value.orcidId
-                          }})
-                        </div>
-                        <div v-else>{{ slotProps.value.orcidId }}</div>
-                      </div>
-                      <div>
-                        <i class="pi pi-times-circle" @click="removeContributor(slotProps.value)"></i>
-                      </div>
-                    </template>
-                  </Chips>
+                    fluid
+                    multiple
+                    :option-label="(x) => x.givenName || x.familyName ? `${x.givenName} ${x.familyName} (${x.orcidId})` : x.orcidId"
+                    :typeahead="false"
+                    @blur="updateContributors"
+                    @keyup.space="updateContributors"
+                    @update:model-value="newContributorsAdded"
+                  />
                   <label :for="scopedId('input-contributors')">Contributors</label>
                 </span>
                 <span v-if="validationErrors.contributors" class="mave-field-error">{{
@@ -719,12 +691,6 @@ export default {
     // Contributors
     //////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 
-    clearContributorSearch: function () {
-      // This could change with a new PrimeVue version.
-      const input = this.$refs.contributorsInput
-      input.$refs.input.value = ''
-    },
-
     lookupOrcidUser: async function (orcidId) {
       let orcidUser = null
       try {
@@ -735,8 +701,20 @@ export default {
       return orcidUser
     },
 
-    newContributorsAdded: async function (event) {
-      const newContributors = event.value
+    updateContributors: function (event) {
+      const currentValue = event.target?.value
+      if (currentValue && currentValue.trim() != '') {
+        this.contributors.push(currentValue.trim())
+        this.newContributorsAdded()
+
+        // clear the input field
+        event.target.value = ''
+      }
+    },
+
+    newContributorsAdded: async function () {
+      // new contributor values are those that are strings rather than objects
+      const newContributors = this.contributors.filter(_.isString)
 
       // Convert any strings to ORCID users without names. Remove whitespace from new entries.
       this.contributors = this.contributors.map((c) => (_.isString(c) ? {orcidId: c.trim()} : c))
@@ -793,7 +771,18 @@ export default {
     // Form fields
     ////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 
-    acceptNewDoiIdentifier: function () {
+    updateDoiIdentifiers: function (event) {
+      const currentValue = event.target?.value
+      if (currentValue && currentValue.trim() != '') {
+        this.doiIdentifiers.push(currentValue.trim())
+        this.newDoiIdentifiersAdded()
+
+        // clear the input field
+        event.target.value = ''
+      }
+    },
+
+    newDoiIdentifiersAdded: function () {
       // Remove new string item from the model and add new structured item in its place if it validates and is not a duplicate.
       const idx = this.doiIdentifiers.findIndex((item) => typeof item === 'string' || item instanceof String)
       if (idx == -1) {
@@ -817,10 +806,14 @@ export default {
       }
     },
 
-    clearDoiIdentifierSearch: function () {
-      // This could change with a new Primevue version.
-      const input = this.$refs.doiIdentifiersInput
-      input.$refs.input.value = ''
+    updatePublicationIdentifiers: function (event) {
+      const currentValue = event.target?.value
+      if (currentValue && currentValue.trim() != '') {
+        this.publicationIdentifiers.push(currentValue.trim())
+        this.acceptNewPublicationIdentifier()
+        // clear the input field
+        event.target.value = ''
+      }
     },
 
     acceptNewPublicationIdentifier: function () {
@@ -890,7 +883,18 @@ export default {
       }
     },
 
-    acceptNewRawReadIdentifier: function () {
+    updateRawReadIdentifiers: function (event) {
+      const currentValue = event.target?.value
+      if (currentValue && currentValue.trim() != '') {
+        this.rawReadIdentifiers.push(currentValue.trim())
+        this.addNewRawReadIdentifier()
+
+        // clear the input field
+        event.target.value = ''
+      }
+    },
+
+    addNewRawReadIdentifier: function () {
       // Remove new string item from the model and add new structured item in its place if it validates and is not a duplicate.
       const idx = this.rawReadIdentifiers.findIndex((item) => typeof item === 'string' || item instanceof String)
       if (idx == -1) {
@@ -912,12 +916,6 @@ export default {
         this.rawReadIdentifiers.splice(idx, 1)
         this.$toast.add({severity: 'warn', summary: `"${searchText}" is not a valid Raw Read identifier`, life: 3000})
       }
-    },
-
-    clearRawReadIdentifierSearch: function () {
-      // This could change with a new Primevue version.
-      const input = this.$refs.rawReadIdentifiersInput
-      input.$refs.input.value = ''
     },
 
     fileCleared: function (inputName) {

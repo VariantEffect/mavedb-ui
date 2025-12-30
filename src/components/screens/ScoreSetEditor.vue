@@ -200,20 +200,12 @@
                       v-model="publicationIdentifiers"
                       class="p-inputwrapper-filled"
                       :multiple="true"
-                      option-label="identifier"
+                      :option-label="(x) => `${x.identifier}: ${truncatePublicationTitle(x.title)}`"
                       :suggestions="publicationIdentifierSuggestionsList"
                       @complete="searchPublicationIdentifiers"
                       @keyup.escape="clearPublicationIdentifierSearch"
                       @option-select="acceptNewPublicationIdentifier"
                     >
-                      <template #chip="slotProps">
-                        <div class="p-inputchips-chip-item">
-                          {{ slotProps.value.identifier }}: {{ truncatePublicationTitle(slotProps.value.title) }}
-                          <div>
-                            <i class="pi pi-times-circle" @click="removePublicationIdentifier(slotProps.value)"></i>
-                          </div>
-                        </div>
-                      </template>
                       <template #option="slotProps">
                         <div>
                           <div>Title: {{ slotProps.option.title }}</div>
@@ -233,7 +225,6 @@
                   <span class="p-float-label">
                     <Multiselect
                       :id="scopedId('input-primaryPublicationIdentifiers')"
-                      ref="primaryPublicationIdentifiersInput"
                       v-model="primaryPublicationIdentifiers"
                       class="p-inputwrapper-filled"
                       option-label="identifier"
@@ -1289,6 +1280,17 @@ export default {
           this.assemblySuggestions = await this.fetchTargetAccessionsByAssembly(this.assemblyDropdownValue)
         }
       }
+    },
+    publicationIdentifiers: function () {
+      // If the primary publication is no longer in the list of publications, clear it.
+      if (
+        this.primaryPublicationIdentifiers.length > 0 &&
+        !this.publicationIdentifiers
+          .map((pi) => pi.identifier)
+          .includes(this.primaryPublicationIdentifiers[0].identifier)
+      ) {
+        this.primaryPublicationIdentifiers = []
+      }
     }
   },
 
@@ -1595,19 +1597,6 @@ export default {
           summary: `Identifier "${newIdentifier}" is already associated with this experiment`,
           life: 3000
         })
-      }
-    },
-
-    removePublicationIdentifier: function (value) {
-      const removedIdentifier = value.identifier
-      const publicationIdx = this.publicationIdentifiers.findIndex((pub) => pub.identifier == removedIdentifier)
-      if (publicationIdx != -1) {
-        this.publicationIdentifiers.splice(publicationIdx, 1)
-      }
-      // If we are removing a primary publication identifier, also remove it from that list.
-      const primaryIdx = this.primaryPublicationIdentifiers.findIndex((pub) => pub.identifier == removedIdentifier)
-      if (primaryIdx != -1) {
-        this.primaryPublicationIdentifiers.splice(primaryIdx, 1)
       }
     },
 

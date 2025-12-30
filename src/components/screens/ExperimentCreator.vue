@@ -235,20 +235,19 @@
                           :id="scopedId('input-publicationIdentifiers')"
                           ref="publicationIdentifiersInput"
                           v-model="publicationIdentifiers"
-                          class="p-inputwrapper-filled"
                           :multiple="true"
-                          option-label="identifier"
                           :suggestions="publicationIdentifierSuggestionsList"
+                          @blur="clearPublicationIdentifierSearch"
                           @complete="searchPublicationIdentifiers"
                           @keyup.escape="clearPublicationIdentifierSearch"
                           @option-select="acceptNewPublicationIdentifier"
                         >
                           <template #chip="slotProps">
-                            <div class="p-inputchips-chip-item">
-                              {{ slotProps.value.identifier }}: {{ truncatePublicationTitle(slotProps.value.title) }}
-                              <div>
-                                <i class="pi pi-times-circle" @click="removePublicationIdentifier(slotProps.value)"></i>
+                            <div class="p-chip p-component p-autocomplete-chip">
+                              <div class="p-chip-label">
+                                {{ slotProps.value.identifier }}: {{ truncatePublicationTitle(slotProps.value.title) }}
                               </div>
+                              <i class="pi pi-times-circle cursor-pointer" @click="removePublicationIdentifier(slotProps.value)"></i>
                             </div>
                           </template>
                           <template #option="slotProps">
@@ -321,24 +320,17 @@
                     </div>
                     <div class="mavedb-wizard-content field">
                       <span class="p-float-label">
-                        <Chips
+                        <AutoComplete
                           :id="scopedId('input-rawReadIdentifiers')"
                           ref="rawReadIdentifiersInput"
                           v-model="rawReadIdentifiers"
-                          :add-on-blur="true"
-                          :allow-duplicate="false"
-                          @add="acceptNewRawReadIdentifier"
-                          @keyup.escape="clearRawReadIdentifierSearch"
-                        >
-                          <template #chip="slotProps">
-                            <div>
-                                <span>{{ slotProps.value.identifier }} </span>
-                            </div>
-                            <div>
-                              <i class="pi pi-times-circle" @click="removeRawReadIdentifier(slotProps.value)"></i>
-                            </div>
-                          </template>
-                        </Chips>
+                          :multiple="true"
+                          option-label="identifier"
+                          :typeahead="false"
+                          @blur="updateRawReadIdentifiers"
+                          @keyup.space="updateRawReadIdentifiers"
+                          @update:model-value="newRawReadIdentifiersAdded"
+                        />
                         <label :for="scopedId('input-rawReadIdentifiers')">Raw Read</label>
                       </span>
                       <span v-if="validationErrors.rawReadIdentifiers" class="mave-field-error">{{
@@ -490,7 +482,6 @@ import _ from 'lodash'
 import {marked} from 'marked'
 import AutoComplete from 'primevue/autocomplete'
 import Button from 'primevue/button'
-import Chips from 'primevue/chips'
 import Dialog from 'primevue/dialog'
 import Select from 'primevue/select'
 import FileUpload from 'primevue/fileupload'
@@ -610,7 +601,6 @@ export default {
   components: {
     AutoComplete,
     Button,
-    Chips,
     DefaultLayout,
     Dialog,
     Select,
@@ -893,13 +883,6 @@ export default {
       }
     },
 
-    removeRawReadIdentifier: function (rawReadIdentifier) {
-      const index = this.rawReadIdentifiers.findIndex(r => r.identifier === rawReadIdentifier.identifier)
-      if (index !== -1) {
-        this.rawReadIdentifiers.splice(index, 1)
-      }
-    },
-
     suggestionsForAutocomplete: function (suggestions) {
       // The PrimeVue AutoComplete doesn't seem to like it if we set the suggestion list to [].
       // This causes the drop-down to stop appearing when we later populate the list.
@@ -1039,7 +1022,18 @@ export default {
       return title.length > 50 ? title.slice(0, 50) + '...' : title
     },
 
-    acceptNewRawReadIdentifier: function () {
+    updateRawReadIdentifiers: function (event) {
+      const currentValue = event.target?.value
+      if (currentValue && currentValue.trim() != '') {
+        this.rawReadIdentifiers.push(currentValue.trim())
+        this.newRawReadIdentifiersAdded()
+
+        // clear the input field
+        event.target.value = ''
+      }
+    },
+
+    newRawReadIdentifiersAdded: function () {
       // Remove new string item from the model and add new structured item in its place if it validates and is not a duplicate.
       const idx = this.rawReadIdentifiers.findIndex((item) => typeof item === 'string' || item instanceof String)
       if (idx == -1) {
@@ -1061,12 +1055,6 @@ export default {
         this.rawReadIdentifiers.splice(idx, 1)
         this.$toast.add({severity: 'warn', summary: `"${searchText}" is not a valid Raw Read identifier`, life: 3000})
       }
-    },
-
-    clearRawReadIdentifierSearch: function () {
-      // This could change with a new Primevue version.
-      const input = this.$refs.rawReadIdentifiersInput
-      input.$refs.input.value = ''
     },
 
     fileCleared: function (inputName) {

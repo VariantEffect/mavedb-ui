@@ -1,6 +1,5 @@
 import {HistogramBin, HistogramShader} from '@/lib/histogram'
-import {PublicationIdentifier} from './publication'
-import {User} from './user'
+import {components} from '@/schema/openapi'
 
 export const NORMAL_RANGE_DEFAULT_COLOR = '#4444ff'
 export const ABNORMAL_RANGE_DEFAULT_COLOR = '#ff4444'
@@ -40,66 +39,12 @@ export const EVIDENCE_STRENGTHS_REVERSED = Object.fromEntries(
   Object.entries(EVIDENCE_STRENGTHS).map(([key, value]) => [value, key])
 )
 
-export interface ACMGEvidenceStrength {
-  criterion: typeof BENIGN_CRITERION | typeof PATHOGENIC_CRITERION | null
-  evidenceStrength: keyof typeof EVIDENCE_STRENGTH_AS_POINTS | null
-  points?: number | null
-}
-
-export interface DraftScoreCalibration {
-  scoreSetUrn?: string | null
-  urn?: string | null
-
-  title: string
-  notes?: string | null
-
-  researchUseOnly: boolean
-  baselineScore?: number | null
-  baselineScoreDescription?: string | null
-
-  functionalRanges?: Array<FunctionalRange> | null
-
-  thresholdSources: PublicationIdentifier[]
-  classificationSources: PublicationIdentifier[]
-  methodSources: PublicationIdentifier[]
-}
-
-export interface PersistedScoreCalibration extends DraftScoreCalibration {
-  recordType: string
-  id: number
-
-  scoreSetId: number
-
-  primary: boolean
-  private: boolean
-  investigatorProvided: boolean
-
-  createdBy: User
-  createdAt: string
-  modifiedBy: User
-  modifiedAt: string
-}
-
-export interface FunctionalRange {
-  label: string
-  description?: string | null
-  classification: 'normal' | 'abnormal' | 'not_specified' | null
-
-  range: [number | null, number | null]
-  inclusiveLowerBound: boolean
-  inclusiveUpperBound: boolean
-
-  acmgClassification?: ACMGEvidenceStrength | null
-  positiveLikelihoodRatio?: number | null
-  oddspathsRatio?: number | null
-}
-
 /**
  * Prepares a list of histogram shader configuration objects from persisted score calibration data.
  *
  * Each functional range in the provided calibration is converted into a HistogramShader descriptor
  * containing:
- * - min / max: numeric bounds taken directly from the `range` tuple.
+ * - min / max: numeric bounds either taken directly from the `range` tuple or calculated from variant scores.
  * - title: resolved from the ACMG classification evidence strength (via `EVIDENCE_STRENGTHS_REVERSED`)
  *   when available; otherwise falls back to the range's `label`.
  * - color / thresholdColor: both derived from `getRangeColor(range)` to ensure visual consistency.
@@ -107,13 +52,16 @@ export interface FunctionalRange {
  * - startOpacity / stopOpacity: fixed opacity values (0.15 → 0.05) establishing a subtle gradient.
  * - gradientUUID: explicitly initialized to `undefined` (allowing later lazy assignment if needed).
  *
- * The function is resilient to an empty `functionalRanges` array and will return an empty list in that case.
+ * The function is resilient to an empty `functionalClassifications` array and will return an empty list in that case.
+ * The order of shaders in the output array matches the order of functional classifications in the input.
  *
- * Performance: O(n) where n = number of functional ranges.
+ * If a functional classification lacks a defined range, it is skipped.
+ *
+ * Performance: O(n) where n = number of functional classifications.
  *
  * Immutability: Produces a new array; does not mutate the input object or its ranges.
  *
- * @param scoreCalibrations The persisted calibration object containing one or more functional ranges
+ * @param scoreCalibrations The persisted calibration object containing one or more functional classifications
  *                          plus optional ACMG classification metadata for each range.
  * @returns An array of HistogramShader objects ready for consumption by histogram rendering logic.
  *
@@ -122,30 +70,36 @@ export interface FunctionalRange {
  * // shaders[0].title might be derived from evidence strength or fall back to the provided label.
  *
  * @remarks
- * If `acmgClassification.evidenceStrength` is absent on a range, ensure `label` is present to avoid
- * an undefined title. Downstream consumers may rely on `title` for tooltips or legends.
+ * - This function assumes that variant scores are numeric and filters out any non-numeric or NaN values.
+ * - The color derivation logic is centralized in `getRangeColor` to maintain consistency across the application.
  */
-export function prepareCalibrationsForHistogram(scoreCalibrations: PersistedScoreCalibration): HistogramShader[] {
+export function prepareCalibrationsForHistogram(
+  scoreCalibrations: components['schemas']['ScoreCalibration']
+): HistogramShader[] {
   const preparedCalibrations: HistogramShader[] = []
 
-  if (!scoreCalibrations.functionalRanges || scoreCalibrations.functionalRanges.length === 0) {
+  if (!scoreCalibrations.functionalClassifications || scoreCalibrations.functionalClassifications.length === 0) {
     return preparedCalibrations
   }
 
-  scoreCalibrations.functionalRanges.forEach((range) => {
-    const scoreRange: HistogramShader = {
-      min: range.range[0],
-      max: range.range[1],
-      title: range.label,
+  scoreCalibrations.functionalClassifications.forEach((classification) => {
+    if (!classification.range) {
+      return
+    }
+
+    const scoreClassification: HistogramShader = {
+      min: classification.range[0],
+      max: classification.range[1],
+      title: classification.label,
       align: 'center',
-      color: getRangeColor(range),
-      thresholdColor: getRangeColor(range),
+      color: getRangeColor(classification),
+      thresholdColor: getRangeColor(classification),
       startOpacity: 0.15,
       stopOpacity: 0.05,
       gradientUUID: undefined
     }
 
-    preparedCalibrations.push(scoreRange)
+    preparedCalibrations.push(scoreClassification)
   })
   return preparedCalibrations
 }
@@ -154,7 +108,7 @@ export function prepareCalibrationsForHistogram(scoreCalibrations: PersistedScor
  * Derives the display color associated with a functional range classification.
  *
  * The color returned depends on the `classification` property of the supplied
- * `FunctionalRange` object:
+ * `functionalClassification` object:
  * - `'normal'`        => NORMAL_RANGE_DEFAULT_COLOR
  * - `'abnormal'`      => ABNORMAL_RANGE_DEFAULT_COLOR
  * - `'not_specified'` => NOT_SPECIFIED_RANGE_DEFAULT_COLOR
@@ -169,12 +123,14 @@ export function prepareCalibrationsForHistogram(scoreCalibrations: PersistedScor
  * const color = getRangeColor({ classification: 'normal' }); // e.g. '#3BAA5C'
  * @remarks If new classifications are introduced, extend this function to handle them explicitly.
  */
-function getRangeColor(range: FunctionalRange): string {
-  if (range.classification === 'normal') {
+function getRangeColor(
+  range: components['schemas']['mavedb__view_models__score_calibration__FunctionalClassification']
+): string {
+  if (range.functionalClassification === 'normal') {
     return NORMAL_RANGE_DEFAULT_COLOR
-  } else if (range.classification === 'abnormal') {
+  } else if (range.functionalClassification === 'abnormal') {
     return ABNORMAL_RANGE_DEFAULT_COLOR
-  } else if (range.classification === 'not_specified') {
+  } else if (range.functionalClassification === 'not_specified') {
     return NOT_SPECIFIED_RANGE_DEFAULT_COLOR
   } else {
     return '#000000'
@@ -227,7 +183,7 @@ export function shaderOverlapsBin(range: HistogramShader, bin: HistogramBin): bo
 /**
  * Determines whether a variant score falls within the specified functional range.
  *
- * @param functionalRange - The functional range object containing min/max bounds and inclusivity flags
+ * @param functionalClassification - The functional range object containing min/max bounds and inclusivity flags
  * @param variantScore - The numeric score of the variant to check, or null if no score available
  * @returns True if the variant score is within the functional range bounds, false otherwise
  *
@@ -238,16 +194,24 @@ export function shaderOverlapsBin(range: HistogramShader, bin: HistogramBin): bo
  * - Lower bound check uses >= if inclusive, > if exclusive
  * - Upper bound check uses <= if inclusive, < if exclusive
  */
-export function functionalRangeContainsVariant(functionalRange: FunctionalRange, variantScore: number | null): boolean {
+export function functionalClassificationContainsVariant(
+  functionalClassification: components['schemas']['mavedb__view_models__score_calibration__FunctionalClassification'],
+  variantScore: number | null
+): boolean {
   if (variantScore === null) {
     return false
   }
 
-  const [min, max] = functionalRange.range
+  if (!functionalClassification.range) {
+    return false
+  }
 
-  const lowerOk = min === null ? true : functionalRange.inclusiveLowerBound ? variantScore >= min : variantScore > min
+  const [min, max] = functionalClassification.range
 
-  const upperOk = max === null ? true : functionalRange.inclusiveUpperBound ? variantScore <= max : variantScore < max
+  const lowerOk =
+    min === null ? true : functionalClassification.inclusiveLowerBound ? variantScore >= min : variantScore > min
+  const upperOk =
+    max === null ? true : functionalClassification.inclusiveUpperBound ? variantScore <= max : variantScore < max
 
   return lowerOk && upperOk
 }

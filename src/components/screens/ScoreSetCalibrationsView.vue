@@ -105,9 +105,16 @@
                 />
               </template>
             </Column>
-            <Column body-class="mave-align-center" field="functionalRangeCount" header="#Ranges" :sortable="true">
+            <Column
+              body-class="mave-align-center"
+              field="functionalClassificationCount"
+              header="#Ranges"
+              :sortable="true"
+            >
               <template #body="{data}">{{
-                data.functionalRanges ? data.functionalRanges.length : data.functionalRangeCount || 0
+                data.functionalClassifications
+                  ? data.functionalClassifications.length
+                  : data.functionalClassificationCount || 0
               }}</template>
             </Column>
             <Column header="Actions">
@@ -173,12 +180,12 @@
             <template #expansion="{data}">
               <div style="padding: 0.75rem 1rem">
                 <CalibrationTable
-                  v-if="data.functionalRanges && data.functionalRanges.length"
+                  v-if="data.functionalClassifications && data.functionalClassifications.length"
                   :score-calibration="data"
                   :score-calibration-name="data.title || ''"
                 />
                 <div v-else style="font-size: 0.85rem; color: var(--text-color-secondary)">
-                  No functional ranges defined for this calibration.
+                  No functional classifications defined for this calibration.
                 </div>
               </div>
             </template>
@@ -203,6 +210,7 @@
     <CalibrationEditor
       :calibration-draft-ref="calibrationDraftRef"
       :calibration-urn="editingCalibrationUrn"
+      :classes-draft-ref="calibrationDraftClassesFileRef"
       :score-set-urn="editingScoreSetUrn"
       :validation-errors="editorValidationErrors"
       @canceled="cancelEditCreate"
@@ -282,6 +290,7 @@ export default {
     const editingScoreSetUrn = ref<string | undefined>(undefined)
 
     const calibrationDraftRef = ref<{value: DraftScoreCalibration | null}>({value: null})
+    const calibrationDraftClassesFileRef = ref<{value: File | null}>({value: null})
     const editorValidationErrors = ref<Record<string, string>>({})
 
     const userIsAuthorizedToEditScoreSet = ref(false)
@@ -292,6 +301,7 @@ export default {
       config,
       userIsAuthenticated,
       userIsAuthorizedToEditScoreSet,
+      calibrationDraftClassesFileRef,
       calibrationAuthorizations,
       confirm,
       calibrationDraftRef,
@@ -402,15 +412,27 @@ export default {
       if (this.calibrationDraftRef.value) {
         try {
           const draft = this.calibrationDraftRef.value
+          const draftClassesFile = this.calibrationDraftClassesFileRef.value
+
+          const formData = new FormData()
+          formData.append('calibration_json', JSON.stringify(draft))
+          if (draftClassesFile) {
+            formData.append('classes_file', draftClassesFile)
+          }
+
           if (this.editingCalibrationUrn) {
             // Existing calibration, perform update
-            await axios.put(`${config.apiBaseUrl}/score-calibrations/${draft.urn}`, {
-              ...draft
+            await axios.put(`${config.apiBaseUrl}/score-calibrations/${draft.urn}`, formData, {
+              headers: {
+                'Content-Type': 'multipart/form-data'
+              }
             })
           } else {
             // New calibration, perform create
-            await axios.post(`${config.apiBaseUrl}/score-calibrations`, {
-              ...draft
+            await axios.post(`${config.apiBaseUrl}/score-calibrations`, formData, {
+              headers: {
+                'Content-Type': 'multipart/form-data'
+              }
             })
           }
           this.$toast.add({
@@ -431,7 +453,8 @@ export default {
               // Handle generic errors that are not surfaced by the API as objects
               this.$toast.add({
                 severity: 'error',
-                summary: `Encountered an error saving score set: ${error.response.data.detail}`
+                summary: `Encountered an error saving score set: ${error.response.data.detail}`,
+                life: 4000
               })
             } else {
               for (const err of error.response.data.detail) {
@@ -440,7 +463,7 @@ export default {
                   path = path.slice(1)
                 }
 
-                let customPath = err.ctx.error.custom_loc
+                let customPath = err.ctx?.error.custom_loc
                 if (customPath) {
                   if (customPath[0] == 'body') {
                     customPath = customPath.slice(1)
@@ -662,6 +685,7 @@ export default {
 }
 .expanded {
   max-height: none !important;
+  line-clamp: none !important;
   -webkit-line-clamp: none !important;
 }
 .multi-line {

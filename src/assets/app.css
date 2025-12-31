@@ -152,3 +152,7 @@ body .p-button {
 .mavedb-help-tooltip-button > .p-button-icon {
   font-size: 0.5rem !important;
 }
+
+.mavedb-toolbar .p-menubar-submenu {
+  z-index: 1100 !important;
+}

@@ -1,6 +1,6 @@
 <template>
-  <div style="display: flex; flex-flow: column; height: 100%">
-    <span class="p-float-label" style="margin-top: 10px; margin-bottom: 4px">
+  <div class="flex flex-col h-full">
+    <span v-if="alphaFoldData?.length > 1" class="p-float-label m-2">
       <Select
         :id="scopedId('alphafold-id')"
         v-model="selectedAlphaFold"
@@ -13,14 +13,14 @@
       <span class="ml-2">Color by:</span>
       <SelectButton
         v-model="colorBy"
-        class="protein-viz-colorby-button ml-2"
+        class="ml-2"
         option-label="name"
         option-value="value"
         :options="colorByOptions"
       />
     </div>
-    <div v-show="selectedAlphaFold" id="pdbe-molstar-viewer-container" style="flex: 1; position: relative"></div>
-    <div v-if="!selectedAlphaFold" style="flex: 1; position: relative; margin: auto; align-content: center">
+    <div v-show="selectedAlphaFold" id="pdbe-molstar-viewer-container" class="flex-1 relative"></div>
+    <div v-if="!selectedAlphaFold" class="m-auto">
       No AlphaFold entry found
     </div>
   </div>
@@ -303,9 +303,5 @@ export default {
 <style>
 .msp-plugin .msp-layout-standard {
   border: 0;
-}
-.protein-viz-colorby-button .p-button {
-  padding: 2px !important;
-  font-size: 0.8em;
 }
 </style>

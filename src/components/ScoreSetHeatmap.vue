@@ -39,7 +39,6 @@
         <Button
           v-if="showProteinStructureButton && sequenceType == 'protein'"
           label="View protein structure"
-          severity="info"
           @click="$emit('onDidClickShowProteinStructure')"
         />
       </div>

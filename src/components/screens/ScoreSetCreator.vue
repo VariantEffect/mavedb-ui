@@ -103,7 +103,7 @@
                     </div>
                     <div class="mavedb-wizard-content">
                       <div style="position: relative">
-                        <span class="p-float-label">
+                        <FloatLabel variant="on">
                           <Select
                             :id="scopedId('input-experiment')"
                             ref="experimentInput"
@@ -123,7 +123,7 @@
                             </template>
                           </Select>
                           <label :for="scopedId('input-experiment')">Experiment</label>
-                        </span>
+                        </FloatLabel>
                         <span v-if="validationErrors.experiment" class="mave-field-error">{{
                           validationErrors.experiment
                         }}</span>
@@ -139,7 +139,7 @@
                     </div>
                     <div class="mavedb-wizard-content">
                       <div class="field">
-                        <span class="p-float-label">
+                        <FloatLabel variant="on">
                           <AutoComplete
                             :id="scopedId('input-supersededScoreSet')"
                             ref="supersededScoreSetInput"
@@ -160,7 +160,7 @@
                             </template>
                           </AutoComplete>
                           <label :for="scopedId('input-supersededScoreSet')">Supersedes</label>
-                        </span>
+                        </FloatLabel>
                         <span v-if="validationErrors.supersededScoreSetUrn" class="mave-field-error">{{
                           validationErrors.supersededScoreSetUrn
                         }}</span>
@@ -177,7 +177,7 @@
                     </div>
                     <div class="mavedb-wizard-content">
                       <div class="field">
-                        <span class="p-float-label">
+                        <FloatLabel variant="on">
                           <AutoComplete
                             :id="scopedId('input-metaAnalyzesScoreSets')"
                             ref="metaAnalyzesScoreSetsInput"
@@ -193,7 +193,7 @@
                             </template>
                           </AutoComplete>
                           <label :for="scopedId('input-metaAnalyzesScoreSets')">Meta-analysis for</label>
-                        </span>
+                        </FloatLabel>
                         <span v-if="validationErrors.metaAnalyzesScoreSetUrns" class="mave-field-error">{{
                           validationErrors.metaAnalyzesScoreSetUrns
                         }}</span>
@@ -236,10 +236,10 @@
                     </div>
                   </div>
                   <div class="mavedb-wizard-content field">
-                    <span class="p-float-label">
+                    <FloatLabel variant="on">
                       <InputText :id="scopedId('input-title')" v-model="title" />
                       <label :for="scopedId('input-title')">Title</label>
-                    </span>
+                    </FloatLabel>
                     <span v-if="validationErrors.title" class="mave-field-error">{{ validationErrors.title }}</span>
                   </div>
                 </div>
@@ -255,10 +255,10 @@
                     </div>
                   </div>
                   <div class="mavedb-wizard-content field">
-                    <span class="p-float-label">
+                    <FloatLabel variant="on">
                       <Textarea :id="scopedId('input-shortDescription')" v-model="shortDescription" rows="4" />
                       <label :for="scopedId('input-shortDescription')">Short description</label>
-                    </span>
+                    </FloatLabel>
                     <span v-if="validationErrors.shortDescription" class="mave-field-error">{{
                       validationErrors.shortDescription
                     }}</span>
@@ -283,10 +283,10 @@
                       </TabList>
                       <TabPanels>
                         <TabPanel header="Edit" value="0">
-                          <span class="p-float-label">
+                          <FloatLabel variant="on">
                             <Textarea :id="scopedId('input-abstractText')" v-model="abstractText" rows="10" />
                             <label :for="scopedId('input-abstractText')">Abstract</label>
-                          </span>
+                          </FloatLabel>
                         </TabPanel>
                         <TabPanel header="Preview" value="1">
                           <!-- eslint-disable-next-line vue/no-v-html -->
@@ -338,10 +338,10 @@
                       </TabList>
                       <TabPanels>
                         <TabPanel header="Edit" value="0">
-                          <span class="p-float-label">
+                          <FloatLabel variant="on">
                             <Textarea :id="scopedId('input-methodText')" v-model="methodText" rows="10" />
                             <label :for="scopedId('input-methodText')">Methods</label>
-                          </span>
+                          </FloatLabel>
                         </TabPanel>
                         <TabPanel header="Preview" value="1">
                           <!-- eslint-disable-next-line vue/no-v-html -->
@@ -368,7 +368,7 @@
                       </div>
                     </div>
                     <div class="mavedb-wizard-content field">
-                      <span class="p-float-label">
+                      <FloatLabel variant="on">
                         <Select
                           :id="scopedId('input-targetLicenseId')"
                           v-model="licenseId"
@@ -378,7 +378,7 @@
                           style="min-width: 500px"
                         />
                         <label :for="scopedId('input-targetLicenseId')">License</label>
-                      </span>
+                      </FloatLabel>
                       <Message
                         v-if="licenseId && licenses && licenses.find((l) => l.id == licenseId)?.shortName != 'CC0'"
                         closable
@@ -416,10 +416,10 @@
                       </div>
                     </div>
                     <div class="mavedb-wizard-content field">
-                      <span class="p-float-label">
+                      <FloatLabel variant="on">
                         <Textarea :id="scopedId('input-dataUsagePolicy')" v-model="dataUsagePolicy" rows="4" />
                         <label :for="scopedId('input-dataUsagePolicy')">Data usage guidelines</label>
-                      </span>
+                      </FloatLabel>
                       <span v-if="validationErrors.dataUsagePolicy" class="mave-field-error">{{
                         validationErrors.dataUsagePolicy
                       }}</span>
@@ -434,7 +434,7 @@
                       <div class="mavedb-help-small">Examples: 1111-1111-1111-1111</div>
                     </div>
                     <div class="mavedb-wizard-content field">
-                      <span class="p-float-label">
+                      <FloatLabel variant="on">
                         <AutoComplete
                           :id="scopedId('input-contributors')"
                           v-model="contributors"
@@ -448,7 +448,7 @@
                           @update:model-value="newContributorsAdded"
                         />
                         <label :for="scopedId('input-contributors')">Contributors</label>
-                      </span>
+                      </FloatLabel>
                       <span v-if="validationErrors.contributors" class="mave-field-error">{{
                         validationErrors.contributors
                       }}</span>
@@ -465,7 +465,7 @@
                       </div>
                     </div>
                     <div class="mavedb-wizard-content field">
-                      <span class="p-float-label">
+                      <FloatLabel variant="on">
                         <AutoComplete
                           :id="scopedId('input-doiIdentifiers')"
                           v-model="doiIdentifiers"
@@ -478,7 +478,7 @@
                           @update:model-value="newDoiIdentifiersAdded"
                         />
                         <label :for="scopedId('input-doiIdentifiers')">DOI identifiers</label>
-                      </span>
+                      </FloatLabel>
                       <span v-if="validationErrors.doiIdentifiers" class="mave-field-error">{{
                         validationErrors.doiIdentifiers
                       }}</span>
@@ -497,7 +497,7 @@
                       </div>
                     </div>
                     <div class="mavedb-wizard-content field">
-                      <span class="p-float-label">
+                      <FloatLabel variant="on">
                          <AutoComplete
                           :id="scopedId('input-publicationIdentifiers')"
                           v-model="publicationIdentifiers"
@@ -519,7 +519,7 @@
                           </template>
                         </AutoComplete>
                         <label :for="scopedId('input-publicationIdentifiers')">Publication identifiers</label>
-                      </span>
+                      </FloatLabel>
                       <span v-if="validationErrors.publicationIdentifiers" class="mave-field-error">{{
                         validationErrors.publicationIdentifiers
                       }}</span>
@@ -530,7 +530,7 @@
                       <label> Of the above publications, the primary publication that describes the score set. </label>
                     </div>
                     <div class="mavedb-wizard-content field">
-                      <span class="p-float-label">
+                      <FloatLabel variant="on">
                         <Multiselect
                           :id="scopedId('input-primaryPublicationIdentifiers')"
                           ref="primaryPublicationIdentifiersInput"
@@ -552,7 +552,7 @@
                           </template>
                         </Multiselect>
                         <label :for="scopedId('input-primaryPublicationIdentifiers')">Primary publication</label>
-                      </span>
+                      </FloatLabel>
                       <span v-if="validationErrors.primaryPublicationIdentifiers" class="mave-field-error">{{
                         validationErrors.primaryPublicationIdentifiers
                       }}</span>
@@ -563,7 +563,7 @@
                       <label> Any additional metadata about the score set, as a JSON file. </label>
                     </div>
                     <div class="mavedb-wizard-content field">
-                      <span class="p-float-label">
+                      <FloatLabel variant="on">
                         <FileUpload
                           :id="scopedId('input-extraMetadataFile')"
                           accept="application/json"
@@ -581,7 +581,7 @@
                             <p>Upload a JSON file here.</p>
                           </template>
                         </FileUpload>
-                      </span>
+                      </FloatLabel>
                       <span v-if="validationErrors.extraMetadata" class="mave-field-error">{{
                         validationErrors.extraMetadata
                       }}</span>
@@ -685,7 +685,7 @@
                     <label>How many targets will be included with this score set?</label>
                   </div>
                   <div class="mavedb-wizard-content field">
-                    <span class="p-float-label">
+                    <FloatLabel variant="on">
                       <InputNumber
                         :id="scopedId(`input-numTargets`)"
                         v-model="numTargets"
@@ -695,7 +695,7 @@
                         suffix=" targets"
                       />
                       <label :for="scopedId(`input-numTargets`)">Targets</label>
-                    </span>
+                    </FloatLabel>
                   </div>
                 </div>
               </div>
@@ -725,7 +725,7 @@
                     </div>
                   </div>
                   <div class="mavedb-wizard-content field">
-                    <span class="p-float-label">
+                    <FloatLabel variant="on">
                       <AutoComplete
                         :id="scopedId('input-existingTargetGene')"
                         ref="existingTargetGeneInput"
@@ -752,7 +752,7 @@
                         </template>
                       </AutoComplete>
                       <label :for="scopedId('input-existingTargetGene')">Copy from an existing target</label>
-                    </span>
+                    </FloatLabel>
                   </div>
                 </div>
                 <div class="mavedb-wizard-row">
@@ -765,14 +765,14 @@
                     </div>
                   </div>
                   <div class="mavedb-wizard-content field">
-                    <span class="p-float-label">
+                    <FloatLabel variant="on">
                       <InputText
                         :id="scopedId('input-targetGeneName')"
                         v-model="createdTargetGenes[targetIdx].targetGene.name"
                         style="width: 100%"
                       />
                       <label :for="scopedId('input-targetGeneName')">Target name</label>
-                    </span>
+                    </FloatLabel>
                     <span v-if="validationErrors[`targetGene.${targetIdx}.name`]" class="mave-field-error">{{
                       validationErrors[`targetGene.${targetIdx}.name`]
                     }}</span>
@@ -790,14 +790,14 @@
                       </div>
                     </div>
                     <div class="mavedb-wizard-content field">
-                      <span class="p-float-label">
+                      <FloatLabel variant="on">
                         <InputText
                           :id="scopedId('input-targetGeneLabel')"
                           v-model="createdTargetGenes[targetIdx].targetGene.targetSequence.label"
                           style="width: 100%"
                         />
                         <label :for="scopedId('input-targetGeneLabel')">Target label</label>
-                      </span>
+                      </FloatLabel>
                       <span
                         v-if="validationErrors[`targetGene.${targetIdx}.targetSequence.label`]"
                         class="mave-field-error"
@@ -811,15 +811,13 @@
                       <label :id="scopedId('input-targetGeneCategory')">The functional category of the target</label>
                     </div>
                     <div class="mavedb-wizard-content">
-                      <span class="p-float-label">
-                        <span class="p-float-label">
-                          <SelectButton
-                            :id="scopedId('input-targetGeneCategory')"
-                            v-model="createdTargetGenes[targetIdx].targetGene.category"
-                            :option-label="textForTargetGeneCategory"
-                            :options="targetGeneCategories"
-                          />
-                        </span>
+                      <span>
+                        <SelectButton
+                          :id="scopedId('input-targetGeneCategory')"
+                          v-model="createdTargetGenes[targetIdx].targetGene.category"
+                          :option-label="textForTargetGeneCategory"
+                          :options="targetGeneCategories"
+                        />
                       </span>
                       <span v-if="validationErrors[`targetGene.${targetIdx}.category`]" class="mave-field-error">{{
                         validationErrors[`targetGene.${targetIdx}.category`]
@@ -856,23 +854,25 @@
                         v-if="createdTargetGenes[targetIdx].linkedAccessions[dbName]"
                         class="mavedb-wizard-subcontent field-columns"
                       >
-                        <div class="p-float-label field-column">
-                          <AutoComplete
-                            :id="scopedId(`input-${dbName.toLowerCase()}Identifier`)"
-                            v-model="createdTargetGenes[targetIdx].targetGene.externalIdentifiers[dbName].identifier"
-                            field="identifier"
-                            :force-selection="false"
-                            option-label="identifier"
-                            style="width: 100%"
-                            :suggestions="targetGeneIdentifierSuggestionsList[dbName]"
-                            @complete="searchTargetGeneIdentifiers(dbName, $event)"
-                            @update:model-value="externalTargetIdentifierChanged(dbName, targetIdx, $event)"
-                          />
-                          <label :for="scopedId(`input-${dbName.toLowerCase()}Identifier`)"
-                            >{{ dbName }} identifier</label
-                          >
+                        <div class="field-column">
+                          <FloatLabel variant="on">
+                            <AutoComplete
+                              :id="scopedId(`input-${dbName.toLowerCase()}Identifier`)"
+                              v-model="createdTargetGenes[targetIdx].targetGene.externalIdentifiers[dbName].identifier"
+                              field="identifier"
+                              :force-selection="false"
+                              option-label="identifier"
+                              style="width: 100%"
+                              :suggestions="targetGeneIdentifierSuggestionsList[dbName]"
+                              @complete="searchTargetGeneIdentifiers(dbName, $event)"
+                              @update:model-value="externalTargetIdentifierChanged(dbName, targetIdx, $event)"
+                            />
+                            <label :for="scopedId(`input-${dbName.toLowerCase()}Identifier`)"
+                              >{{ dbName }} identifier</label
+                            >
+                          </FloatLabel>
                         </div>
-                        <span class="p-float-label">
+                        <FloatLabel variant="on">
                           <InputNumber
                             :id="scopedId(`input-${dbName.toLowerCase()}Offset`)"
                             v-model="createdTargetGenes[targetIdx].targetGene.externalIdentifiers[dbName].offset"
@@ -882,7 +882,7 @@
                             suffix=" bp"
                           />
                           <label :for="scopedId(`input-${dbName.toLowerCase()}Offset`)">Offset</label>
-                        </span>
+                        </FloatLabel>
                       </div>
                       <span
                         v-if="validationErrors[`targetGene.${targetIdx}.externalIdentifiers.${dbName}`]"
@@ -916,7 +916,7 @@
                       </div>
                     </div>
                     <div class="mavedb-wizard-content">
-                      <span class="p-float-label">
+                      <FloatLabel variant="on">
                         <AutoComplete
                           :id="scopedId('input-targetGeneTaxonomyLabel')"
                           ref="taxonomyInput"
@@ -940,7 +940,7 @@
                           </template>
                         </AutoComplete>
                         <label :for="scopedId('input-targetGeneTaxonomyLabel')">Taxonomy</label>
-                      </span>
+                      </FloatLabel>
                       <span
                         v-if="validationErrors[`targetGene.${targetIdx}.targetSequence.taxonomy`]"
                         class="mave-field-error"
@@ -953,13 +953,13 @@
                       <label :id="scopedId('input-targetGeneSequenceTypeLabel')">The sequence type of the target</label>
                     </div>
                     <div class="mavedb-wizard-content">
-                      <span class="p-float-label">
+                      <FloatLabel variant="on">
                         <SelectButton
                           :id="scopedId('input-targetGeneSequenceType')"
                           v-model="createdTargetGenes[targetIdx].targetGene.targetSequence.sequenceType"
                           :options="sequenceTypes"
                         />
-                      </span>
+                      </FloatLabel>
                       <span
                         v-if="validationErrors[`targetGene.${targetIdx}.targetSequence.sequenceType`]"
                         class="mave-field-error"
@@ -976,7 +976,7 @@
                       </div>
                     </div>
                     <div class="mavedb-wizard-content">
-                      <span class="p-float-label">
+                      <FloatLabel variant="on">
                         <FileUpload
                           :id="scopedId('input-targetGeneSequenceFileLabel')"
                           ref="sequenceFileUpload"
@@ -1014,7 +1014,7 @@
                             </div>
                           </template>
                         </FileUpload>
-                      </span>
+                      </FloatLabel>
                       <span
                         v-if="validationErrors[`targetGene.${targetIdx}.targetSequence.sequence`]"
                         class="mave-field-error"
@@ -1054,7 +1054,7 @@
                       <label :id="scopedId('input-targetGeneAssemblyLabel')">The assembly for this accession</label>
                     </div>
                     <div class="mavedb-wizard-content">
-                      <span class="p-float-label">
+                      <FloatLabel variant="on">
                         <!-- Assembly is the reference genome property in coordinate cases -->
                         <Select
                           v-model="createdTargetGenes[targetIdx].targetGene.targetAccession.assembly"
@@ -1064,7 +1064,7 @@
                           @change="refreshAccessionOptions(targetIdx)"
                         />
                         <label :for="scopedId('input-targetGeneAssemblyLabel')">Assembly</label>
-                      </span>
+                      </FloatLabel>
                       <span
                         v-if="validationErrors[`targetGene.${targetIdx}.targetAccession.assembly`]"
                         class="mave-field-error"
@@ -1077,7 +1077,7 @@
                       <label :id="scopedId('input-targetGeneGeneNameLabel')">The gene name for this accession</label>
                     </div>
                     <div class="mavedb-wizard-content">
-                      <span class="p-float-label">
+                      <FloatLabel variant="on">
                         <Select
                           :id="scopedId('input-targetGeneGeneNameLabel')"
                           v-model="createdTargetGenes[targetIdx].targetGene.targetAccession.gene"
@@ -1089,7 +1089,7 @@
                           @change="autofillGeneName($event, targetIdx)"
                         />
                         <label :for="scopedId('input-targetGeneGeneNameLabel')">HGNC Name</label>
-                      </span>
+                      </FloatLabel>
                       <span
                         v-if="validationErrors[`targetGene.${targetIdx}.targetAccession.gene`]"
                         class="mave-field-error"
@@ -1111,7 +1111,7 @@
                       </div>
                     </div>
                     <div class="mavedb-wizard-content">
-                      <span class="p-float-label">
+                      <FloatLabel variant="on">
                         <AutoComplete
                           :id="scopedId('input-targetGeneAccessionLabel')"
                           v-model="createdTargetGenes[targetIdx].targetGene.targetAccession.accession"
@@ -1122,7 +1122,7 @@
                           @complete="fetchTargetAccessions($event)"
                         />
                         <label :for="scopedId('input-targetGeneAccessionLabel')"> Accession Identifier </label>
-                      </span>
+                      </FloatLabel>
                       <div v-if="showSwitchToProteinAccessionButton(targetIdx)" class="mavedb-wizard-subcontent">
                         <Button
                           icon="pi pi-arrows-h"
@@ -1143,15 +1143,13 @@
                       <label :id="scopedId('input-targetGeneCategoryLabel')">The genetic category of the target</label>
                     </div>
                     <div class="mavedb-wizard-content">
-                      <span class="p-float-label">
-                        <span class="p-float-label">
-                          <SelectButton
-                            :id="scopedId('input-targetGeneCategoryLabel')"
-                            v-model="createdTargetGenes[targetIdx].targetGene.category"
-                            :option-label="textForTargetGeneCategory"
-                            :options="targetGeneCategories"
-                          />
-                        </span>
+                      <span>
+                        <SelectButton
+                          :id="scopedId('input-targetGeneCategoryLabel')"
+                          v-model="createdTargetGenes[targetIdx].targetGene.category"
+                          :option-label="textForTargetGeneCategory"
+                          :options="targetGeneCategories"
+                        />
                       </span>
                       <span v-if="validationErrors[`targetGene.${targetIdx}.category`]" class="mave-field-error">{{
                         validationErrors[`targetGene.${targetIdx}.category`]
@@ -1253,7 +1251,7 @@
                     </div>
                   </div>
                   <div class="mavedb-wizard-content">
-                    <span class="p-float-label">
+                    <FloatLabel variant="on">
                       <FileUpload
                         :id="scopedId('input-scoresFile')"
                         ref="scoresFileUpload"
@@ -1270,7 +1268,7 @@
                           <p>Drop a file here.</p>
                         </template>
                       </FileUpload>
-                    </span>
+                    </FloatLabel>
                     <span v-if="validationErrors.scoresFile" class="mave-field-error">{{
                       validationErrors.scoresFile
                     }}</span>
@@ -1286,7 +1284,7 @@
                     </div>
                   </div>
                   <div class="mavedb-wizard-content">
-                    <span class="p-float-label">
+                    <FloatLabel variant="on">
                       <FileUpload
                         :id="scopedId('input-scoreColumnsMetadataFile')"
                         ref="scoreColumnsMetadataFileUpload"
@@ -1306,7 +1304,7 @@
                           <p>Drop a file here.</p>
                         </template>
                       </FileUpload>
-                    </span>
+                    </FloatLabel>
                     <span v-if="validationErrors.scoreColumnsMetadataFile" class="mave-field-error">{{
                       validationErrors.scoreColumnsMetadataFile
                     }}</span>
@@ -1322,7 +1320,7 @@
                     </div>
                   </div>
                   <div class="mavedb-wizard-content">
-                    <span class="p-float-label">
+                    <FloatLabel variant="on">
                       <FileUpload
                         :id="scopedId('input-countsFile')"
                         ref="countsFileUpload"
@@ -1339,7 +1337,7 @@
                           <p>Drop a file here.</p>
                         </template>
                       </FileUpload>
-                    </span>
+                    </FloatLabel>
                     <span v-if="validationErrors.countsFile" class="mave-field-error">{{
                       validationErrors.countsFile
                     }}</span>
@@ -1355,7 +1353,7 @@
                     </div>
                   </div>
                   <div class="mavedb-wizard-content">
-                    <span class="p-float-label">
+                    <FloatLabel variant="on">
                       <FileUpload
                         :id="scopedId('input-countColumnsMetadataFile')"
                         ref="countColumnsMetadataFileUpload"
@@ -1375,7 +1373,7 @@
                           <p>Drop a file here.</p>
                         </template>
                       </FileUpload>
-                    </span>
+                    </FloatLabel>
                     <span v-if="validationErrors.countColumnsMetadataFile" class="mave-field-error">{{
                       validationErrors.countColumnsMetadataFile
                     }}</span>
@@ -1412,6 +1410,7 @@ import AutoComplete from 'primevue/autocomplete'
 import Button from 'primevue/button'
 import Select from 'primevue/select'
 import FileUpload from 'primevue/fileupload'
+import FloatLabel from 'primevue/floatlabel'
 import InputNumber from 'primevue/inputnumber'
 import ToggleSwitch from 'primevue/toggleswitch'
 import InputText from 'primevue/inputtext'
@@ -1489,6 +1488,7 @@ export default {
     Select,
     EmailPrompt,
     FileUpload,
+    FloatLabel,
     InputNumber,
     ToggleSwitch,
     InputText,

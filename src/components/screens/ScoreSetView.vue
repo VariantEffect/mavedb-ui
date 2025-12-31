@@ -168,14 +168,14 @@
         </div>
         <div>
           Download files and/or charts
-          <Button severity="outlined" size="small" @click="downloadFile('scores')">Scores</Button>&nbsp;
+          <Button outlined size="small" @click="downloadFile('scores')">Scores</Button>&nbsp;
           <template v-if="hasCounts">
-            <Button severity="outlined" size="small" @click="downloadFile('counts')">Counts</Button>&nbsp;
+            <Button outlined size="small" @click="downloadFile('counts')">Counts</Button>&nbsp;
           </template>
           <template v-if="isMetaDataEmpty != true">
-            <Button severity="outlined" size="small" @click="downloadMetadata">Metadata</Button>&nbsp;
+            <Button outlined size="small" @click="downloadMetadata">Metadata</Button>&nbsp;
           </template>
-          <Button severity="outlined" size="small" @click="downloadMappedVariants()">Mapped Variants</Button>&nbsp;
+          <Button outlined size="small" @click="downloadMappedVariants()">Mapped Variants</Button>&nbsp;
           <div style="display: inline-block; position: relative">
             <SplitButton
               :button-props="{class: 'p-button-outlined p-button-sm'}"
@@ -192,11 +192,11 @@
               <ProgressBar show-value style="height: 1.5em" :value="annotatedDownloadProgress" />
             </div>
           </div>
-          &nbsp; <Button severity="outlined" size="small" @click="histogramExport()">Histogram</Button>&nbsp;
+          &nbsp; <Button outlined size="small" @click="histogramExport()">Histogram</Button>&nbsp;
           <template v-if="heatmapExists">
-            <Button severity="outlined" size="small" @click="heatmapExport()">Heatmap</Button>&nbsp;
+            <Button outlined size="small" @click="heatmapExport()">Heatmap</Button>&nbsp;
           </template>
-          <Button severity="outlined" size="small" @click="showOptions()"> Custom Data </Button>
+          <Button outlined size="small" @click="showOptions()"> Custom Data </Button>
           <Dialog
             v-model:visible="optionsVisible"
             :base-z-index="901"
@@ -214,7 +214,7 @@
               <label :for="scopedId('input-' + dataOption.value)">{{ dataOption.label }}</label>
             </div>
             <p />
-            <Button severity="outlined" size="small" label="Download" @click="downloadMultipleData"
+            <Button label="Download" outlined size="small" @click="downloadMultipleData"
               >Download</Button
             >
             &nbsp;
@@ -226,11 +226,11 @@
 
         <div v-if="requestFromGalaxy == '1'">
           <br />Send files to <a :href="galaxyUrl">Galaxy</a>
-          <Button severity="outlined" size="small" @click="sendToGalaxy('scores')">Scores</Button>&nbsp;
+          <Button outlined size="small" @click="sendToGalaxy('scores')">Scores</Button>&nbsp;
           <template v-if="hasCounts">
-            <Button severity="outlined" size="small" @click="sendToGalaxy('counts')">Counts</Button>&nbsp;
+            <Button outlined size="small" @click="sendToGalaxy('counts')">Counts</Button>&nbsp;
           </template>
-          <Button severity="outlined" size="small" @click="sendToGalaxy('mappedVariants')">Mapped Variants</Button
+          <Button outlined size="small" @click="sendToGalaxy('mappedVariants')">Mapped Variants</Button
           >&nbsp;
         </div>
         <div v-if="item.abstractText">

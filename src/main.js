@@ -8,7 +8,7 @@ import {createApp} from 'vue'
 import {createHead} from '@unhead/vue/client'
 import {TemplateParamsPlugin} from 'unhead/plugins'
 import Aura from '@primevue/themes/aura'
-import { definePreset } from '@primeuix/themes'
+import { definePreset, palette } from '@primeuix/themes'
 
 import App from '@/App.vue'
 import config from '@/config'
@@ -58,23 +58,61 @@ const head = createHead({
   ]
 })
 
+const darkBluePalette = palette('#3f51b5')
+
 const MaveDbTheme = definePreset(Aura, {
     semantic: {
         primary: {
-            50: '{blue.50}',
-            100: '{blue.100}',
-            200: '{blue.200}',
-            300: '{blue.300}',
-            400: '{blue.400}',
-            500: '{blue.500}',
-            600: '{blue.600}',
-            700: '{blue.700}',
-            800: '{blue.800}',
-            900: '{blue.900}',
-            950: '{blue.950}'
+            50: darkBluePalette[50],
+            100: darkBluePalette[100],
+            200: darkBluePalette[200],
+            300: darkBluePalette[300],
+            400: darkBluePalette[400],
+            500: darkBluePalette[500],
+            600: darkBluePalette[600],
+            700: darkBluePalette[700],
+            800: darkBluePalette[800],
+            900: darkBluePalette[900],
+            950: darkBluePalette[950],
         }
-    }
-});
+    },
+    components: {
+        button: {
+          colorScheme: {
+            light: {
+              root: {
+                warn: {
+                  background: '{yellow.400}',
+                  borderColor: '{yellow.400}',
+                  color: '{black.900}',
+                  hoverColor: '{black.900}',
+                  hoverBackground: '{yellow.500}',
+                  hoverBorderColor: '{yellow.500}',
+                  activeColor: '{black.900}',
+                  activeBackground: '{yellow.600}',
+                  activeBorderColor: '{yellow.600}',
+                },
+              }
+            },
+            dark: {
+              root: {
+                warn: {
+                  background: '{yellow.400}',
+                  borderColor: '{yellow.400}',
+                  color: '{black.900}',
+                  hoverColor: '{black.900}',
+                  hoverBackground: '{yellow.500}',
+                  hoverBorderColor: '{yellow.500}',
+                  activeColor: '{black.900}',
+                  activeBackground: '{yellow.600}',
+                  activeBorderColor: '{yellow.600}',
+                },
+              }
+            },
+          },
+        }
+    },
+})
 
 createApp(App)
   .use(router)

@@ -29,7 +29,6 @@
 import '@fontsource/raleway'
 
 import '@/assets/app.css'
-import '@/assets/theme.css'
 import Toolbar from '@/components/layout/Toolbar.vue'
 import Footer from '@/components/layout/Footer.vue'
 import EmailPrompt from '@/components/common/EmailPrompt.vue'

@@ -1,5 +1,25 @@
 @import "tailwindcss";
 
+/* Tailwind removes styling for headings, so adding them back */
+h1 {
+  @apply text-3xl font-bold text-gray-800 mt-6 mb-2;
+}
+h2 {
+  @apply text-2xl font-semibold text-gray-800 mt-5 mb-2;
+}
+h3 {
+  @apply text-xl font-semibold text-gray-800 mt-4 mb-2;
+}
+h4 {
+  @apply text-lg font-semibold text-gray-800 mt-3 mb-2;
+}
+h5 {
+  @apply text-base font-semibold text-gray-800 mt-2 mb-2;
+}
+h6 {
+  @apply text-sm font-semibold text-gray-800 mt-1 mb-2;
+}
+
 * {
   text-rendering: optimizeLegibility;
   font-family: 'Raleway', sans-serif;

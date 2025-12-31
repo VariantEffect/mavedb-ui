@@ -1,7 +1,7 @@
 <template>
   <div v-if="$props.model == 'Target'">
     <Card>
-      <template #title>Target Gene Highlights</template>
+      <template #title><h2 class="mt-0">Target Gene Highlights</h2></template>
       <template #content>
         <Tabs v-model:value="activeTabIndex" @update:value="(idx) => { field = targetLeaderboardFields[idx] }">
           <TabList>
@@ -100,7 +100,7 @@
   </div>
   <div v-else-if="$props.model == 'ScoreSet'">
     <Card>
-      <template #title>Score Set Highlights</template>
+      <template #title><h2 class="mt-0">Score Set Highlights</h2></template>
       <template #content>
         <Tabs v-model:value="activeTabIndex" @update:value="(idx) => { field = scoreSetLeaderboardFields[idx] }">
           <TabList>

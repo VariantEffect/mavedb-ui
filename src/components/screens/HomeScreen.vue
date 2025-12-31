@@ -9,7 +9,7 @@
       </div>
       <div class="col-8 flex">
         <Card class="flex-1">
-          <template #title>About</template>
+          <template #title><h2 class="mt-0">About</h2></template>
           <template #content>
             <p>
               MaveDB is a public repository for datasets from Multiplexed Assays of Variant Effect (MAVEs), such as those
@@ -41,7 +41,7 @@
       </div>
       <div class="col-4 flex flex-column">
         <Card class="flex-1">
-          <template #title>Featured Searches</template>
+          <template #title><h2 class="mt-0">Featured Searches</h2></template>
           <template #content>
             <table>
               <thead>
@@ -72,7 +72,7 @@
           </template>
         </Card>
         <Card class="mt-4">
-          <template #title>Upload Your Data</template>
+          <template #title><h2 class="mt-0">Upload Your Data</h2></template>
           <template #content>
             <Button size="small" @click="addExperiment"
               >Add an experiment</Button
@@ -91,7 +91,7 @@
       </div>
       <div class="col-4">
         <Card>
-          <template #title>News</template>
+          <template #title><h2 class="mt-0">News</h2></template>
           <template #content>
             <ul>
               <li>
@@ -117,7 +117,7 @@
       </div>
       <div class="col-12">
         <Card>
-          <template #title>Citing MaveDB</template>
+          <template #title><h2 class="mt-0">Citing MaveDB</h2></template>
           <template #content>
             <p>
               To cite MaveDB, please cite our most recent publication:

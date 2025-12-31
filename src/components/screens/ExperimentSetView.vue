@@ -18,7 +18,7 @@
         <div v-if="item.publishedDate">Published {{ formatDate(item.publishedDate) }}</div>
         <div class="mave-score-set-section-title">Experiments</div>
         <div v-if="item.experiments.length != 0">
-          <ul style="list-style-type: square">
+          <ul class="list-[square] ml-5">
             <li v-for="ex in item.experiments" :key="ex">
               <router-link :to="{name: 'experiment', params: {urn: ex.urn}}">{{ ex.urn }}</router-link>
               <div>

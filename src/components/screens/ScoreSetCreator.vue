@@ -75,7 +75,7 @@
                       <div class="mavedb-help-small">
                         Meta-analyses are score sets derived from data in other score sets that were created by you or
                         other users. For example:
-                        <ul>
+                        <ul class="list-disc ml-5">
                           <li>a score set that combines data from two other score sets to produce new scores, or</li>
                           <li>a score set that adds imputed missing values to the scores in another score set.</li>
                         </ul>
@@ -309,7 +309,7 @@
                       May be formatted using
                       <a href="https://daringfireball.net/projects/markdown/syntax" target="_blank">Markdown</a>. Should
                       include:
-                      <ul>
+                      <ul class="list-disc ml-5">
                         <template v-if="isMetaAnalysis">
                           <li>
                             a description of how the scores in this score set were generated from the data in the

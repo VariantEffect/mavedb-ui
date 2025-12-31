@@ -125,7 +125,7 @@
                       May be formatted using
                       <a href="https://daringfireball.net/projects/markdown/syntax" target="_blank">Markdown</a>. Should
                       include:
-                      <ul>
+                      <ul class="list-disc ml-5">
                         <li>variant library construction methods,</li>
                         <li>description of the functional assay, including model system and selection type,</li>
                         <li>sequencing strategy and sequencing technology, and</li>
@@ -298,7 +298,7 @@
                       </label>
                       <div class="mavedb-help-small">
                         MaveDB currently supports accession numbers for:
-                        <ul>
+                        <ul class="list-disc ml-5">
                           <li>
                             <a href="https://www.ebi.ac.uk/biostudies/arrayexpress" target="_blank">ArrayExpress</a>
                           </li>
@@ -1504,12 +1504,5 @@ export default {
 }
 .keyword-description-input, .keyword-dropdown {
   width: 450px;
-}
-
-/* Fix list bullets in help text */
-.mavedb-help-small ul {
-  list-style-type: disc;
-  list-style-position: inside;
-  padding-left: 1rem;
 }
 </style>

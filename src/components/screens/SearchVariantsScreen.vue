@@ -65,7 +65,7 @@
         <div v-if="searchSuggestionsVisible" class="mavedb-search-suggestions">
           <p>
             Examples of supported searches:
-            <ul>
+            <ul class="ml-5 list-disc">
               <li v-for="option in searchTypeOptions" :key="option.code">
                 {{ option.name }}
                 <template v-for="(example, index) in option.examples" :key="example">

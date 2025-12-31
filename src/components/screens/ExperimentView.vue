@@ -96,7 +96,7 @@
         <div class="mave-score-set-section-title">Primary References</div>
         <div v-if="item.primaryPublicationIdentifiers.length > 0">
           <div v-for="publication in item.primaryPublicationIdentifiers" :key="publication">
-            <ul class="pl-4" style="list-style-type: square">
+            <ul class="pl-4 list-[square]">
               <!-- eslint-disable-next-line vue/no-v-html -->
               <li v-html="markdownToHtml(publication.referenceHtml)"></li>
               <div>
@@ -116,7 +116,7 @@
         <div class="mave-score-set-section-title">Secondary References</div>
         <div v-if="item.secondaryPublicationIdentifiers.length > 0">
           <div v-for="publication in item.secondaryPublicationIdentifiers" :key="publication">
-            <ul class="pl-4" style="list-style-type: square">
+            <ul class="pl-4 list-[square]">
               <!-- eslint-disable-next-line vue/no-v-html -->
               <li v-html="markdownToHtml(publication.referenceHtml)"></li>
               <div>
@@ -260,7 +260,7 @@
         <div class="mave-score-set-section-title">External identifier</div>
         <strong>DOI: </strong>
         <div v-if="item.doiIdentifiers.length != 0">
-          <ul class="pl-4" style="list-style-type: square">
+          <ul class="pl-4 list-[square]">
             <li v-for="(doi, i) of item.doiIdentifiers" :key="i">
               <a :href="`${doi.url}`" target="blank">{{ doi.identifier }}</a>
             </li>
@@ -269,7 +269,7 @@
         <template v-else>No associated DOIs<br /></template>
         <strong>Raw reads: </strong>
         <div v-if="item.rawReadIdentifiers.length != 0">
-          <ul class="pl-4" style="list-style-type: square">
+          <ul class="pl-4 list-[square]">
             <li v-for="(read, i) of item.rawReadIdentifiers" :key="i">
               <a :href="`${read.url}`" target="blank">{{ read.identifier }}</a>
             </li>

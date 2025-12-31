@@ -8,8 +8,8 @@
       <div class="mave-screen-title-bar">
         <div class="mave-screen-title">Create a new score set</div>
         <div class="mavedb-screen-title-controls">
-          <Button class="p-button-help" @click="resetForm">Clear</Button>
-          <Button class="p-button-warning" @click="backDashboard">Cancel</Button>
+          <Button severity="help" @click="resetForm">Clear</Button>
+          <Button severity="warn" @click="backDashboard">Cancel</Button>
         </div>
       </div>
       <div class="mavedb-wizard">

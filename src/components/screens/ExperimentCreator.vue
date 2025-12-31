@@ -11,7 +11,7 @@
         <div v-if="item" class="mavedb-screen-title-controls">
           <Button @click="saveEditContent">Save changes</Button>
           <Button severity="help" @click="resetForm">Clear</Button>
-          <Button class="p-button-warning" @click="viewItem">Cancel</Button>
+          <Button severity="warn" @click="viewItem">Cancel</Button>
         </div>
       </div>
       <div v-else class="mave-screen-title-bar">
@@ -19,7 +19,7 @@
         <div class="mavedb-screen-title-controls">
           <Button @click="validateAndSave">Save</Button>
           <Button severity="help" @click="resetForm">Clear</Button>
-          <Button class="p-button-warning" @click="backDashboard">Cancel</Button>
+          <Button severity="warn" @click="backDashboard">Cancel</Button>
         </div>
       </div>
       <div class="mavedb-wizard">

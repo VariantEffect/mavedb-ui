@@ -12,16 +12,16 @@
             <div class="mave-screen-title">Edit experiment {{ item.urn }}</div>
             <div v-if="item" class="mavedb-screen-title-controls">
               <Button @click="validateAndSave">Save changes</Button>
-              <Button class="p-button-help" @click="resetForm">Clear</Button>
-              <Button class="p-button-warning" @click="viewItem">Cancel</Button>
+              <Button severity="help" @click="resetForm">Clear</Button>
+              <Button severity="warn" @click="viewItem">Cancel</Button>
             </div>
           </div>
           <div v-else class="mave-screen-title-bar">
             <div class="mave-screen-title">Create a new experiment</div>
             <div class="mavedb-screen-title-controls">
               <Button @click="validateAndSave">Save experiment</Button>
-              <Button class="p-button-help" @click="resetForm">Clear</Button>
-              <Button class="p-button-warning" @click="backDashboard">Cancel</Button>
+              <Button severity="help" @click="resetForm">Clear</Button>
+              <Button severity="warn" @click="backDashboard">Cancel</Button>
             </div>
           </div>
         </div>
@@ -234,14 +234,16 @@
                     <i class="pi pi-check mr-3"></i>
                     <Button
                       v-tooltip="{value: 'View extra metadata'}"
-                      class="p-button-info mr-2"
+                      class="mr-2"
                       icon="pi pi-eye"
+                      severity="info"
                       @click="jsonToDisplay = JSON.stringify(extraMetadata, null, 2)"
                     ></Button>
                     <Button
                       v-tooltip="{value: 'Delete extra metadata'}"
-                      class="p-button-danger mr-2"
+                      class="mr-2"
                       icon="pi pi-times"
+                      severity="danger"
                       @click="fileCleared('extraMetadataFile')"
                     ></Button>
                   </div>
@@ -346,9 +348,9 @@
                   </div>
                 </div>
               </div>
-              <div class="field">
-                <Button class="p-button-help" @click="resetKeywords">Reset Keywords</Button>
-                <Button class="p-button-warning padded-button" @click="clearKeywords">Clear Keywords</Button>
+              <div class="field space-x-2">
+                <Button severity="help" @click="resetKeywords">Reset Keywords</Button>
+                <Button severity="warn" @click="clearKeywords">Clear Keywords</Button>
               </div>
             </template>
           </Card>
@@ -1259,10 +1261,6 @@ export default {
 
 .keyword-description-input {
   width: 450px;
-}
-
-.padded-button {
-  margin-left: 5px;
 }
 
 .p-inputwrapper, .p-textarea, .p-inputtext {

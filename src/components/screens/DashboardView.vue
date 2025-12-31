@@ -20,16 +20,17 @@
                   <InputText
                     ref="searchTextInput"
                     v-model="searchText"
-                    class="p-inputtext-sm rounded-r-none!"
+                    class="rounded-r-none!"
                     placeholder="Search"
-                    style="width: 200px; height: auto;"
+                    size="small"
                     type="text"
                     @change="search"
                   />
                   <Button
-                    class="p-button-default p-button-sm rounded-l-none!"
+                    class="rounded-l-none!"
                     :enabled="searchText && searchText.length > 0"
                     icon="pi pi-search"
+                    size="small"
                     @click="search"
                   />
                   <ProgressSpinner

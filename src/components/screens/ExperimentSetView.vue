@@ -6,7 +6,7 @@
           <div class="mave-screen-title">{{ item.urn }}</div>
           <div v-if="userIsAuthenticated & userIsAuthorized">
             <div class="mavedb-screen-title-controls">
-              <Button class="p-button-sm" @click="addExperiment">Add an experiment</Button>
+              <Button size="small" @click="addExperiment">Add an experiment</Button>
             </div>
           </div>
         </div>

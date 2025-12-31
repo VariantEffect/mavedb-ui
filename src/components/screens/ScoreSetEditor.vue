@@ -11,8 +11,8 @@
             <div class="mave-screen-title">Edit score set {{ item.urn }}</div>
             <div class="mavedb-screen-title-controls">
               <Button @click="saveEditContent">Save changes</Button>
-              <Button class="p-button-help" @click="resetForm">Reset</Button>
-              <Button class="p-button-warning" @click="viewItem">Cancel</Button>
+              <Button severity="help" @click="resetForm">Reset</Button>
+              <Button severity="warn" @click="viewItem">Cancel</Button>
             </div>
           </div>
         </div>
@@ -259,14 +259,16 @@
                       <i class="pi pi-check mr-3"></i>
                       <Button
                         v-tooltip="{value: 'View extra metadata'}"
-                        class="p-button-info mr-2"
+                        class="mr-2"
                         icon="pi pi-eye"
+                        severity="info"
                         @click="jsonToDisplay = JSON.stringify(extraMetadata, null, 2)"
                       ></Button>
                       <Button
                         v-tooltip="{value: 'Delete extra metadata'}"
-                        class="p-button-danger mr-2"
+                        class="mr-2"
                         icon="pi pi-times"
+                        severity="danger"
                         @click="fileCleared('extraMetadataFile')"
                       ></Button>
                     </div>
@@ -471,10 +473,9 @@
                         <div>
                           <Button icon="pi pi-check" label="Add Target" @click="addTarget" />
                           <Button
-                            class="p-button-help"
                             icon="pi pi-times"
                             label="Clear Target"
-                            severity="secondary"
+                            severity="help"
                             style="margin-left: 0.5em"
                             @click="resetTarget"
                           />
@@ -563,10 +564,9 @@
                             @click="swapNucleotideProteinAccessions"
                           />
                           <Button
-                            class="p-button-help"
                             icon="pi pi-times"
                             label="Clear Target"
-                            severity="secondary"
+                            severity="help"
                             size="small"
                             style="margin-left: 0.5em"
                             @click="resetTarget"
@@ -590,10 +590,9 @@
                       <Column>
                         <template #body="slotProps">
                           <Button
-                            class="p-button-help"
                             icon="pi pi-minus-circle"
                             label="Remove"
-                            severity="secondary"
+                            severity="help"
                             size="small"
                             @click="targetDeleted(slotProps.data)"
                           />
@@ -723,10 +722,9 @@
                       <template #footer>
                         <div class="flex flex-wrap justify-content-start gap-2">
                           <Button
-                            class="p-button-help"
                             icon="pi pi-times-circle"
                             label="Clear all"
-                            severity="secondary"
+                            severity="help"
                             size="small"
                             @click="targetsCleared"
                           />
@@ -800,14 +798,16 @@
                       <i class="pi pi-check mr-3"></i>
                       <Button
                         v-tooltip="{value: 'View scores column metadata'}"
-                        class="p-button-info mr-2"
+                        class="mr-2"
                         icon="pi pi-eye"
+                        severity="info"
                         @click="jsonToDisplay = JSON.stringify(scoreColumnsMetadata, null, 2)"
                       ></Button>
                       <Button
                         v-tooltip="{value: 'Delete scores column metadata'}"
-                        class="p-button-danger mr-2"
+                        class="mr-2"
                         icon="pi pi-times"
+                        severity="danger"
                         @click="fileCleared('scoreColumnsMetadataFile')"
                       ></Button>
                     </div>
@@ -864,14 +864,16 @@
                       <i class="pi pi-check mr-3"></i>
                       <Button
                         v-tooltip="{value: 'View counts column metadata'}"
-                        class="p-button-info mr-2"
+                        class="mr-2"
                         icon="pi pi-eye"
+                        severity="info"
                         @click="jsonToDisplay = JSON.stringify(countColumnsMetadata, null, 2)"
                       ></Button>
                       <Button
                         v-tooltip="{value: 'Delete counts column metadata'}"
-                        class="p-button-danger mr-2"
+                        class="mr-2"
                         icon="pi pi-times"
+                        severity="danger"
                         @click="fileCleared('countColumnsMetadataFile')"
                       ></Button>
                     </div>

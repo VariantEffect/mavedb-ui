@@ -23,10 +23,10 @@
       <template #footer>
         <Button :disabled="!user || email == user.email" icon="pi pi-check" label="Save" @click="saveEmail" />
         <Button
-          class="p-button-secondary"
           :disabled="!user || email == user.email"
           icon="pi pi-times"
           label="Cancel"
+          severity="secondary"
           style="margin-left: 0.5em"
           @click="cancelEmailEditing"
         />
@@ -41,14 +41,16 @@
             {{ accessKeysByRole['ordinary user'] }}
             &nbsp;
             <Button
-              class="p-button-rounded p-button-outlined"
               icon="pi pi-copy"
+              rounded
+              variant="outlined"
               @click="copyTextToClipboard(accessKeysByRole['ordinary user'])"
             />
             &nbsp;
             <Button
-              class="p-button-rounded p-button-danger"
               icon="pi pi-times"
+              rounded
+              severity="danger"
               @click="deleteAccessKeyWithConfirmation(accessKeysByRole['ordinary user'])"
             />
           </div>
@@ -95,14 +97,16 @@
                     {{ accessKeysByRole[role] }}
                     &nbsp;
                     <Button
-                      class="p-button-rounded p-button-outlined"
                       icon="pi pi-copy"
+                      rounded
+                      variant="outlined"
                       @click="copyTextToClipboard(accessKeysByRole[role])"
                     />
                     &nbsp;
                     <Button
-                      class="p-button-rounded p-button-danger"
                       icon="pi pi-times"
+                      rounded
+                      severity="danger"
                       @click="deleteAccessKeyWithConfirmation(accessKeysByRole[role])"
                     />
                   </div>

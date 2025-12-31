@@ -17,26 +17,26 @@
           </div>
           <div v-if="userIsAuthenticated" class="mavedb-screen-title-controls">
             <Button
-              class="p-butto p-button-sm"
               icon="pi pi-external-link"
               label="Score set calibrations"
+              size="small"
               @click="$router.push({path: `/score-sets/${item.urn}/calibrations`})"
             />
             <Button
               v-if="userIsAuthorized.addCalibration"
-              class="p-button p-button-sm"
+              size="small"
               @click="calibrationEditorVisible = true"
               >Add calibration</Button
             >
             <template v-if="!item.publishedDate">
-              <Button v-if="userIsAuthorized.update" class="p-button p-button-sm" @click="editItem">Edit</Button>
-              <Button v-if="userIsAuthorized.publish" class="p-button p-button-sm" @click="publishItem">Publish</Button>
-              <Button v-if="userIsAuthorized.delete" class="p-button p-button-sm p-button-danger" @click="deleteItem"
+              <Button v-if="userIsAuthorized.update" size="small" @click="editItem">Edit</Button>
+              <Button v-if="userIsAuthorized.publish" size="small" @click="publishItem">Publish</Button>
+              <Button v-if="userIsAuthorized.delete" severity="danger" size="small" @click="deleteItem"
                 >Delete</Button
               >
             </template>
             <template v-if="item.publishedDate">
-              <Button v-if="userIsAuthorized.update" class="p-button p-button-sm" @click="editItem">Edit</Button>
+              <Button v-if="userIsAuthorized.update" size="small" @click="editItem">Edit</Button>
             </template>
           </div>
         </div>
@@ -81,10 +81,11 @@
             <Button
               v-tooltip="clinicalModeHelpText"
               aria-label="About raw vs. clinical mode"
-              class="p-button-help mavedb-help-tooltip-button"
+              class="mavedb-help-tooltip-button"
               icon="pi pi-info"
               outlined
               rounded
+              severity="help"
             />
           </span>
         </div>
@@ -167,14 +168,14 @@
         </div>
         <div>
           Download files and/or charts
-          <Button class="p-button-outlined p-button-sm" @click="downloadFile('scores')">Scores</Button>&nbsp;
+          <Button severity="outlined" size="small" @click="downloadFile('scores')">Scores</Button>&nbsp;
           <template v-if="hasCounts">
-            <Button class="p-button-outlined p-button-sm" @click="downloadFile('counts')">Counts</Button>&nbsp;
+            <Button severity="outlined" size="small" @click="downloadFile('counts')">Counts</Button>&nbsp;
           </template>
           <template v-if="isMetaDataEmpty != true">
-            <Button class="p-button-outlined p-button-sm" @click="downloadMetadata">Metadata</Button>&nbsp;
+            <Button severity="outlined" size="small" @click="downloadMetadata">Metadata</Button>&nbsp;
           </template>
-          <Button class="p-button-outlined p-button-sm" @click="downloadMappedVariants()">Mapped Variants</Button>&nbsp;
+          <Button severity="outlined" size="small" @click="downloadMappedVariants()">Mapped Variants</Button>&nbsp;
           <div style="display: inline-block; position: relative">
             <SplitButton
               :button-props="{class: 'p-button-outlined p-button-sm'}"
@@ -191,11 +192,11 @@
               <ProgressBar show-value style="height: 1.5em" :value="annotatedDownloadProgress" />
             </div>
           </div>
-          &nbsp; <Button class="p-button-outlined p-button-sm" @click="histogramExport()">Histogram</Button>&nbsp;
+          &nbsp; <Button severity="outlined" size="small" @click="histogramExport()">Histogram</Button>&nbsp;
           <template v-if="heatmapExists">
-            <Button class="p-button-outlined p-button-sm" @click="heatmapExport()">Heatmap</Button>&nbsp;
+            <Button severity="outlined" size="small" @click="heatmapExport()">Heatmap</Button>&nbsp;
           </template>
-          <Button class="p-button-outlined p-button-sm" @click="showOptions()"> Custom Data </Button>
+          <Button severity="outlined" size="small" @click="showOptions()"> Custom Data </Button>
           <Dialog
             v-model:visible="optionsVisible"
             :base-z-index="901"
@@ -213,11 +214,11 @@
               <label :for="scopedId('input-' + dataOption.value)">{{ dataOption.label }}</label>
             </div>
             <p />
-            <Button class="p-button-outlined p-button-sm" label="Download" @click="downloadMultipleData"
+            <Button severity="outlined" size="small" label="Download" @click="downloadMultipleData"
               >Download</Button
             >
             &nbsp;
-            <Button class="p-button-warning p-button-sm" label="Cancel" @click="optionsVisible = false">Cancel</Button>
+            <Button label="Cancel" severity="warn" size="small" @click="optionsVisible = false">Cancel</Button>
           </Dialog>
           <br />
         </div>
@@ -225,11 +226,11 @@
 
         <div v-if="requestFromGalaxy == '1'">
           <br />Send files to <a :href="galaxyUrl">Galaxy</a>
-          <Button class="p-button-outlined p-button-sm" @click="sendToGalaxy('scores')">Scores</Button>&nbsp;
+          <Button severity="outlined" size="small" @click="sendToGalaxy('scores')">Scores</Button>&nbsp;
           <template v-if="hasCounts">
-            <Button class="p-button-outlined p-button-sm" @click="sendToGalaxy('counts')">Counts</Button>&nbsp;
+            <Button severity="outlined" size="small" @click="sendToGalaxy('counts')">Counts</Button>&nbsp;
           </template>
-          <Button class="p-button-outlined p-button-sm" @click="sendToGalaxy('mappedVariants')">Mapped Variants</Button
+          <Button severity="outlined" size="small" @click="sendToGalaxy('mappedVariants')">Mapped Variants</Button
           >&nbsp;
         </div>
         <div v-if="item.abstractText">
@@ -392,15 +393,15 @@
     />
     <template #footer>
       <Button
-        class="p-button p-component p-button-secondary"
         icon="pi pi-times"
         label="Close"
+        severity="secondary"
         @click="calibrationEditorVisible = false"
       />
       <Button
-        class="p-button p-component p-button-success"
         icon="pi pi-save"
         label="Save Changes"
+        severity="success"
         @click="saveCreatedCalibration"
       />
     </template>
@@ -1335,29 +1336,6 @@ export default {
   display: block;
   content: '';
   clear: both;
-}
-
-.mavedb-help-tooltip-button {
-  height: 0.5rem !important;
-  width: 0.5rem !important;
-  vertical-align: middle;
-  /* Remove extra vertical margin/padding if any. */
-  margin-top: 0;
-  margin-bottom: 0;
-  /* Ensure that button is inline with text. */
-  display: inline-flex;
-  align-items: center;
-  background: none;
-}
-
-.mavedb-help-tooltip-button:focus,
-.mavedb-help-tooltip-button:active,
-.mavedb-help-tooltip-button.p-focus {
-  background: none;
-}
-
-.mavedb-help-tooltip-button:deep(.p-button-icon) {
-  font-size: 0.5rem;
 }
 </style>
 

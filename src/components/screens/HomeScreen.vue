@@ -74,10 +74,10 @@
         <Card class="mt-4">
           <template #title>Upload Your Data</template>
           <template #content>
-            <Button class="p-button-sm" @click="addExperiment"
+            <Button size="small" @click="addExperiment"
               >Add an experiment</Button
             >&nbsp;&nbsp;
-            <Button class="p-button-sm" @click="addScoreSet"
+            <Button size="small" @click="addScoreSet"
                 >Add a score set</Button
               >
           </template>

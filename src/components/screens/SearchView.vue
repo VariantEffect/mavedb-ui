@@ -16,7 +16,7 @@
               type="search"
             />
           </IconField>
-          <Button class="p-button-plain" @click="clear">Clear All</Button>
+          <Button @click="clear">Clear All</Button>
         </div>
         <div class="mavedb-search-tab-view-container">
           <Tabs class="mavedb-search-tabs" value="0">

@@ -44,6 +44,8 @@ body .p-inputtext {
 /* Override the minimum width from the PrimeVue theme. */
 body .p-button {
   min-width: 10px;
+  padding-top: 0.25rem;
+  padding-bottom: 0.25rem;
 }
 
 .p-badge {

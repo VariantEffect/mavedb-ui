@@ -28,7 +28,7 @@
               </div>
               <div v-else>
                 <div class="field">
-                  <span class="p-float-label">
+                  <FloatLabel variant="on">
                     <Select
                       :id="scopedId('input-experiment')"
                       v-model="experiment"
@@ -38,7 +38,7 @@
                       @change="populateExperimentMetadata"
                     />
                     <label :for="scopedId('input-experiment')">Experiment</label>
-                  </span>
+                  </FloatLabel>
                   <span v-if="validationErrors.experiment" class="mave-field-error">{{
                     validationErrors.experiment
                   }}</span>
@@ -62,17 +62,17 @@
             <template #title>Score set information</template>
             <template #content>
               <div class="field">
-                <span class="p-float-label">
+                <FloatLabel variant="on">
                   <InputText :id="scopedId('input-title')" v-model="title" />
                   <label :for="scopedId('input-title')">Title</label>
-                </span>
+                </FloatLabel>
                 <span v-if="validationErrors.title" class="mave-field-error">{{ validationErrors.title }}</span>
               </div>
               <div class="field">
-                <span class="p-float-label">
+                <FloatLabel variant="on">
                   <Textarea :id="scopedId('input-shortDescription')" v-model="shortDescription" rows="4" />
                   <label :for="scopedId('input-shortDescription')">Short description</label>
-                </span>
+                </FloatLabel>
                 <span v-if="validationErrors.shortDescription" class="mave-field-error">{{
                   validationErrors.shortDescription
                 }}</span>
@@ -85,10 +85,10 @@
                   </TabList>
                   <TabPanels>
                     <TabPanel header="Edit" value="0">
-                      <span class="p-float-label">
+                      <FloatLabel variant="on">
                         <Textarea :id="scopedId('input-abstractText')" v-model="abstractText" rows="4" />
                         <label :for="scopedId('input-abstractText')">Abstract</label>
-                      </span>
+                      </FloatLabel>
                     </TabPanel>
                     <TabPanel header="Preview" value="1">
                       <!-- eslint-disable-next-line vue/no-v-html -->
@@ -108,10 +108,10 @@
                   </TabList>
                   <TabPanels>
                     <TabPanel header="Edit" value="0">
-                      <span class="p-float-label">
+                      <FloatLabel variant="on">
                         <Textarea :id="scopedId('input-methodText')" v-model="methodText" rows="4" />
                         <label :for="scopedId('input-methodText')">Methods</label>
-                      </span>
+                      </FloatLabel>
                     </TabPanel>
                     <TabPanel header="Preview" value="1">
                       <!-- eslint-disable-next-line vue/no-v-html -->
@@ -124,7 +124,7 @@
                 }}</span>
               </div>
               <div class="field">
-                <span class="p-float-label">
+                <FloatLabel variant="on">
                   <AutoComplete
                     :id="scopedId('input-contributors')"
                     v-model="contributors"
@@ -138,14 +138,14 @@
                     @update:model-value="newContributorsAdded"
                   />
                   <label :for="scopedId('input-contributors')">Contributors</label>
-                </span>
+                </FloatLabel>
                 <span v-if="validationErrors.contributors" class="mave-field-error">{{
                   validationErrors.contributors
                 }}</span>
               </div>
               <div>
                 <div class="field">
-                  <span class="p-float-label">
+                  <FloatLabel variant="on">
                     <Select
                       :id="scopedId('input-targetLicenseId')"
                       v-model="licenseId"
@@ -155,7 +155,7 @@
                       style="width: 100%"
                     />
                     <label :for="scopedId('input-targetLicenseId')">License</label>
-                  </span>
+                  </FloatLabel>
                   <span v-if="validationErrors.licenseId" class="mave-field-error">{{
                     validationErrors.licenseId
                   }}</span>
@@ -174,7 +174,7 @@
                   </Message>
                 </div>
                 <div class="field">
-                  <span class="p-float-label">
+                  <FloatLabel variant="on">
                     <AutoComplete
                       :id="scopedId('input-doiIdentifiers')"
                       v-model="doiIdentifiers"
@@ -187,21 +187,21 @@
                       @update:model-value="newDoiIdentifiersAdded"
                     />
                     <label :for="scopedId('input-doiIdentifiers')">DOIs</label>
-                  </span>
+                  </FloatLabel>
                   <span v-if="validationErrors.doiIdentifiers" class="mave-field-error">{{
                     validationErrors.doiIdentifiers
                   }}</span>
                 </div>
                 <div class="field">
-                  <span class="p-float-label">
+                  <FloatLabel variant="on">
                     <AutoComplete
                       :id="scopedId('input-publicationIdentifiers')"
                       ref="publicationIdentifiersInput"
                       v-model="publicationIdentifiers"
-                      class="p-inputwrapper-filled"
                       :multiple="true"
                       :option-label="(x) => `${x.identifier}: ${truncatePublicationTitle(x.title)}`"
                       :suggestions="publicationIdentifierSuggestionsList"
+                      @blur="clearAutoCompleteInput"
                       @complete="searchPublicationIdentifiers"
                       @keyup.escape="clearPublicationIdentifierSearch"
                       @option-select="acceptNewPublicationIdentifier"
@@ -216,13 +216,13 @@
                       </template>
                     </AutoComplete>
                     <label :for="scopedId('input-publicationIdentifiers')">Publication identifiers</label>
-                  </span>
+                  </FloatLabel>
                   <span v-if="validationErrors.publicationIdentifiers" class="mave-field-error">{{
                     validationErrors.publicationIdentifiers
                   }}</span>
                 </div>
                 <div class="field">
-                  <span class="p-float-label">
+                  <FloatLabel variant="on">
                     <Multiselect
                       :id="scopedId('input-primaryPublicationIdentifiers')"
                       v-model="primaryPublicationIdentifiers"
@@ -243,7 +243,7 @@
                       </template>
                     </Multiselect>
                     <label :for="scopedId('input-primaryPublicationIdentifiers')">Primary publication</label>
-                  </span>
+                  </FloatLabel>
                   <span v-if="validationErrors.primaryPublicationIdentifiers" class="mave-field-error">{{
                     validationErrors.primaryPublicationIdentifiers
                   }}</span>
@@ -253,7 +253,7 @@
                   are still relevant to this score set.
                 </Message>
                 <div class="field">
-                  <span class="p-float-label">
+                  <FloatLabel variant="on">
                     <div v-if="extraMetadata">
                       <span class="mr-2"> Extra metadata</span>
                       <i class="pi pi-check mr-3"></i>
@@ -291,16 +291,16 @@
                         <p>Drop a JSON file here.</p>
                       </template>
                     </FileUpload>
-                  </span>
+                  </FloatLabel>
                   <span v-if="validationErrors.extraMetadata" class="mave-field-error">{{
                     validationErrors.extraMetadata
                   }}</span>
                 </div>
                 <div class="field">
-                  <span class="p-float-label">
+                  <FloatLabel variant="on">
                     <Textarea :id="scopedId('input-dataUsagePolicy')" v-model="dataUsagePolicy" rows="4" />
                     <label :for="scopedId('input-dataUsagePolicy')">Data usage policy</label>
-                  </span>
+                  </FloatLabel>
                   <span v-if="validationErrors.dataUsagePolicy" class="mave-field-error">{{
                     validationErrors.dataUsagePolicy
                   }}</span>
@@ -324,7 +324,7 @@
                     <TabPanels>
                       <TabPanel value="0">
                         <div class="field">
-                          <span class="p-float-label">
+                          <FloatLabel variant="on">
                             <AutoComplete
                               :id="scopedId('input-existingTargetGene')"
                             ref="existingTargetGeneInput"
@@ -350,16 +350,16 @@
                               </template>
                             </AutoComplete>
                             <label :for="scopedId('input-existingTargetGene')">Copy from an existing target gene</label>
-                          </span>
+                          </FloatLabel>
                         </div>
                         <div class="field">
-                          <span class="p-float-label">
+                          <FloatLabel variant="on">
                             <InputText :id="scopedId('input-targetGeneName')" v-model="targetGene.name" />
                             <label :for="scopedId('input-targetGeneName')">Target name</label>
-                          </span>
+                          </FloatLabel>
                         </div>
                         <div class="field">
-                          <span class="p-float-label">
+                          <FloatLabel variant="on">
                             <InputText
                               :id="scopedId('input-targetSequenceLabel')"
                               v-model="targetGene.targetSequence.label"
@@ -367,21 +367,21 @@
                             <label :for="scopedId('input-targetSequenceLabel')"
                               >Target label (only required when providing multiple targets)</label
                             >
-                          </span>
+                          </FloatLabel>
                         </div>
                         <div class="field">
-                          <span class="p-float-label">
+                          <FloatLabel variant="on">
                             <SelectButton
                               :id="scopedId('input-targetGeneCategory')"
                               v-model="targetGene.category"
                               :option-label="textForTargetGeneCategory"
                               :options="targetGeneCategories"
                             />
-                          </span>
+                          </FloatLabel>
                         </div>
                         <div v-for="dbName of externalGeneDatabases" :key="dbName" class="field field-columns">
                           <div class="field-column">
-                            <span class="p-float-label">
+                            <FloatLabel variant="on">
                               <AutoComplete
                                 :id="scopedId(`input-${dbName.toLowerCase()}Identifier`)"
                                 :ref="`${dbName.toLowerCase()}IdentifierInput`"
@@ -396,10 +396,10 @@
                               <label :for="scopedId(`input-${dbName.toLowerCase()}Identifier`)"
                                 >{{ dbName }} identifier</label
                               >
-                            </span>
+                            </FloatLabel>
                           </div>
                           <div class="field-column">
-                            <span class="p-float-label">
+                            <FloatLabel variant="on">
                               <InputNumber
                                 :id="scopedId(`input-${dbName.toLowerCase()}Offset`)"
                                 v-model="targetGene.externalIdentifiers[dbName].offset"
@@ -409,11 +409,11 @@
                                 suffix=" bp"
                               />
                               <label :for="scopedId(`input-${dbName.toLowerCase()}Offset`)">Offset</label>
-                            </span>
+                            </FloatLabel>
                           </div>
                         </div>
                         <div class="field">
-                          <span class="p-float-label">
+                          <FloatLabel variant="on">
                             <AutoComplete
                               :id="scopedId('input-targetSequenceTaxonomy')"
                               ref="taxonomyInput"
@@ -435,13 +435,13 @@
                               </template>
                             </AutoComplete>
                             <label :for="scopedId('input-targetSequenceTaxonomy')">Taxonomy</label>
-                          </span>
+                          </FloatLabel>
                           <span v-if="validationErrors['targetGene.targetSequence.taxonomy']" class="mave-field-error">{{
                             validationErrors['targetGene.targetSequence.taxonomy']
                           }}</span>
                         </div>
                         <div class="field">
-                          <span class="p-float-label">
+                          <FloatLabel variant="on">
                             <FileUpload
                               :id="scopedId('input-targetGeneTargetSequenceSequenceFile')"
                               ref="sequenceFileUpload"
@@ -459,16 +459,16 @@
                                 <p>Drop a FASTA file here.</p>
                               </template>
                             </FileUpload>
-                          </span>
+                          </FloatLabel>
                         </div>
                         <div class="field">
-                          <span class="p-float-label">
+                          <FloatLabel variant="on">
                             <SelectButton
                               :id="scopedId('input-targetGeneTargetSequenceSequenceType')"
                               v-model="targetGene.targetSequence.sequenceType"
                               :options="sequenceTypes"
                             />
-                          </span>
+                          </FloatLabel>
                         </div>
                         <div>
                           <Button icon="pi pi-check" label="Add Target" @click="addTarget" />
@@ -484,17 +484,17 @@
                       <TabPanel header="Genomic Coordinates" value="1">
                         <div class="field field-columns">
                           <div class="field-column">
-                            <span class="p-float-label">
+                            <FloatLabel variant="on">
                               <InputText
                                 :id="scopedId('input-targetGeneName')"
                                 v-model="targetGene.name"
                                 style="width: 100%"
                               />
                               <label :for="scopedId('input-targetGene')">Target gene name</label>
-                            </span>
+                            </FloatLabel>
                           </div>
                           <div class="field-column">
-                            <span class="p-float-label">
+                            <FloatLabel variant="on">
                               <!-- Assembly is the reference genome property in coordinate cases -->
                               <Select
                                 :id="scopedId('input-targetGeneAssembly')"
@@ -503,10 +503,10 @@
                                 style="width: 100%"
                               />
                               <label :for="scopedId('input-targetGeneAssembly')">Assembly</label>
-                            </span>
+                            </FloatLabel>
                           </div>
                           <div class="field-column">
-                            <span class="p-float-label">
+                            <FloatLabel variant="on">
                               <Select
                                 :id="scopedId('input-targetGeneGeneNames')"
                                 v-model="geneName"
@@ -518,15 +518,15 @@
                                 @change="autofillGeneName"
                               />
                               <label :for="scopedId('input-targetGeneAssembly')">HGNC Name</label>
-                            </span>
+                            </FloatLabel>
                           </div>
                         </div>
                         <div class="field">
-                          <span class="p-float-label pb-2">
-                            Autocomplete By:
+                          <div class="flex align-items-center space-x-2">
+                            <span>Autocomplete By:</span>
                             <SelectButton v-model="targetAutocomplete" aria-labelledby="basic" :options="targetOptions" />
-                          </span>
-                          <span class="p-float-label">
+                          </div>
+                          <FloatLabel class="mt-3" variant="on">
                             <AutoComplete
                               :id="scopedId('input-targetGene-accession')"
                               v-model="targetGene.targetAccession.accession"
@@ -536,17 +536,17 @@
                               @complete="fetchTargetAccessions"
                             />
                             <label :for="scopedId('input-targetGene-accession')">Accession/Transcript Identifier</label>
-                          </span>
+                          </FloatLabel>
                         </div>
                         <div class="field">
-                          <span class="p-float-label">
+                          <FloatLabel variant="on">
                             <SelectButton
                               :id="scopedId('input-targetGeneCategory')"
                               v-model="targetGene.category"
                               :option-label="textForTargetGeneCategory"
                               :options="targetGeneCategories"
                             />
-                          </span>
+                          </FloatLabel>
                         </div>
                         <div>
                           <Button
@@ -769,7 +769,7 @@
                 </div>
                 <div v-else>Load a scores file and an optional counts file:</div>
                 <div class="field">
-                  <span class="p-float-label">
+                  <FloatLabel variant="on">
                     <FileUpload
                       :id="scopedId('input-scoresFile')"
                       ref="scoresFileUpload"
@@ -786,13 +786,13 @@
                         <p>Drop a file here.</p>
                       </template>
                     </FileUpload>
-                  </span>
+                  </FloatLabel>
                   <span v-if="validationErrors.scoresFile" class="mave-field-error">{{
                     validationErrors.scoresFile
                   }}</span>
                 </div>
                 <div class="field">
-                  <span class="p-float-label">
+                  <FloatLabel variant="on">
                     <div v-if="scoreColumnsMetadata">
                       <span class="mr-2">Scores column metadata</span>
                       <i class="pi pi-check mr-3"></i>
@@ -829,13 +829,13 @@
                         <p>Drop a JSON file here.</p>
                       </template>
                     </FileUpload>
-                  </span>
+                  </FloatLabel>
                   <span v-if="validationErrors.scoreColumnsMetadataFile" class="mave-field-error">{{
                     validationErrors.scoreColumnsMetadataFile
                   }}</span>
                 </div>
                 <div class="field">
-                  <span class="p-float-label">
+                  <FloatLabel variant="on">
                     <FileUpload
                       :id="scopedId('input-countsFile')"
                       ref="countsFileUpload"
@@ -852,13 +852,13 @@
                         <p>Drop a file here.</p>
                       </template>
                     </FileUpload>
-                  </span>
+                  </FloatLabel>
                   <span v-if="validationErrors.countsFile" class="mave-field-error">{{
                     validationErrors.countsFile
                   }}</span>
                 </div>
                 <div class="field">
-                  <span class="p-float-label">
+                  <FloatLabel variant="on">
                     <div v-if="countColumnsMetadata">
                       <span class="mr-2">Counts column metadata</span>
                       <i class="pi pi-check mr-3"></i>
@@ -895,7 +895,7 @@
                         <p>Drop a JSON file here.</p>
                       </template>
                     </FileUpload>
-                  </span>
+                  </FloatLabel>
                   <span v-if="validationErrors.countColumnsMetadataFile" class="mave-field-error">{{
                     validationErrors.countColumnsMetadataFile
                   }}</span>
@@ -933,6 +933,7 @@ import Column from 'primevue/column'
 import DataTable from 'primevue/datatable'
 import Select from 'primevue/select'
 import FileUpload from 'primevue/fileupload'
+import FloatLabel from 'primevue/floatlabel'
 import InputNumber from 'primevue/inputnumber'
 import InputText from 'primevue/inputtext'
 import ToggleSwitch from 'primevue/toggleswitch'
@@ -998,6 +999,7 @@ export default {
     EmailPrompt,
     EntityLink,
     FileUpload,
+    FloatLabel,
     InputNumber,
     InputText,
     ToggleSwitch,

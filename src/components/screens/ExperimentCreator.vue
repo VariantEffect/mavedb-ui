@@ -52,10 +52,10 @@
                     </div>
                   </div>
                   <div class="mavedb-wizard-content field">
-                    <span class="p-float-label">
+                    <FloatLabel variant="on">
                       <InputText :id="scopedId('input-title')" v-model="title" />
                       <label :for="scopedId('input-title')">Title</label>
-                    </span>
+                    </FloatLabel>
                     <span v-if="validationErrors.title" class="mave-field-error">{{ validationErrors.title }}</span>
                   </div>
                 </div>
@@ -71,10 +71,10 @@
                     </div>
                   </div>
                   <div class="mavedb-wizard-content field">
-                    <span class="p-float-label">
+                    <FloatLabel variant="on">
                       <Textarea :id="scopedId('input-shortDescription')" v-model="shortDescription" rows="4" />
                       <label :for="scopedId('input-shortDescription')">Short description</label>
-                    </span>
+                    </FloatLabel>
                     <span v-if="validationErrors.shortDescription" class="mave-field-error">{{
                       validationErrors.shortDescription
                     }}</span>
@@ -99,10 +99,10 @@
                       </TabList>
                       <TabPanels>
                         <TabPanel header="Edit" value="0">
-                          <span class="p-float-label">
+                          <FloatLabel variant="on">
                             <Textarea :id="scopedId('input-abstractText')" v-model="abstractText" rows="10" />
                             <label :for="scopedId('input-abstractText')">Abstract</label>
-                          </span>
+                          </FloatLabel>
                         </TabPanel>
                         <TabPanel header="Preview" value="1">
                           <!-- eslint-disable-next-line vue/no-v-html -->
@@ -141,10 +141,10 @@
                       </TabList>
                       <TabPanels>
                         <TabPanel header="Edit" value="0">
-                          <span class="p-float-label">
+                          <FloatLabel variant="on">
                             <Textarea :id="scopedId('input-methodText')" v-model="methodText" rows="10" />
                             <label :for="scopedId('input-methodText')">Methods</label>
-                          </span>
+                          </FloatLabel>
                         </TabPanel>
                         <TabPanel header="Preview" value="1">
                           <!-- eslint-disable-next-line vue/no-v-html -->
@@ -168,7 +168,7 @@
                     </div>
                   </div>
                   <div class="mavedb-wizard-content field">
-                    <span class="p-float-label">
+                    <FloatLabel variant="on">
                       <AutoComplete
                         :id="scopedId('input-doiIdentifiers')"
                         v-model="doiIdentifiers"
@@ -181,7 +181,7 @@
                         @update:model-value="newDoiIdentifiersAdded"
                       />
                       <label :for="scopedId('input-doiIdentifiers')">DOIs</label>
-                    </span>
+                    </FloatLabel>
                     <span v-if="validationErrors.doiIdentifiers" class="mave-field-error">{{
                       validationErrors.doiIdentifiers
                     }}</span>
@@ -197,7 +197,7 @@
                       <div class="mavedb-help-small">Examples: 1111-1111-1111-1111</div>
                     </div>
                     <div class="mavedb-wizard-content field">
-                      <span class="p-float-label">
+                      <FloatLabel variant="on">
                         <AutoComplete
                           :id="scopedId('input-contributors')"
                           v-model="contributors"
@@ -211,7 +211,7 @@
                           @update:model-value="newContributorsAdded"
                         />
                         <label :for="scopedId('input-contributors')">Contributors</label>
-                      </span>
+                      </FloatLabel>
                       <span v-if="validationErrors.contributors" class="mave-field-error">{{
                         validationErrors.contributors
                       }}</span>
@@ -231,7 +231,7 @@
                       </div>
                     </div>
                     <div class="mavedb-wizard-content field">
-                      <span class="p-float-label">
+                      <FloatLabel variant="on">
                         <AutoComplete
                           :id="scopedId('input-publicationIdentifiers')"
                           v-model="publicationIdentifiers"
@@ -253,7 +253,7 @@
                           </template>
                         </AutoComplete>
                         <label :for="scopedId('input-publicationIdentifiers')">Publication identifiers</label>
-                      </span>
+                      </FloatLabel>
                       <span v-if="validationErrors.publicationIdentifiers" class="mave-field-error">{{
                         validationErrors.publicationIdentifiers
                       }}</span>
@@ -264,7 +264,7 @@
                       <label> Of the above publications, the primary publication that describes the score set. </label>
                     </div>
                     <div class="mavedb-wizard-content field">
-                      <span class="p-float-label" style="display: block">
+                      <FloatLabel variant="on">
                         <Multiselect
                           :id="scopedId('input-primaryPublicationIdentifiers')"
                           v-model="primaryPublicationIdentifiers"
@@ -284,7 +284,7 @@
                           </template>
                         </Multiselect>
                         <label :for="scopedId('input-primaryPublicationIdentifiers')">Primary publication</label>
-                      </span>
+                      </FloatLabel>
                       <span v-if="validationErrors.primaryPublicationIdentifiers" class="mave-field-error">{{
                         validationErrors.primaryPublicationIdentifiers
                       }}</span>
@@ -311,7 +311,7 @@
                       </div>
                     </div>
                     <div class="mavedb-wizard-content field">
-                      <span class="p-float-label">
+                      <FloatLabel variant="on">
                         <AutoComplete
                           :id="scopedId('input-rawReadIdentifiers')"
                           ref="rawReadIdentifiersInput"
@@ -325,7 +325,7 @@
                           @update:model-value="newRawReadIdentifiersAdded"
                         />
                         <label :for="scopedId('input-rawReadIdentifiers')">Raw Read</label>
-                      </span>
+                      </FloatLabel>
                       <span v-if="validationErrors.rawReadIdentifiers" class="mave-field-error">{{
                         validationErrors.rawReadIdentifiers
                       }}</span>
@@ -336,7 +336,7 @@
                       <label> Any additional metadata about the experiment, as a JSON file. </label>
                     </div>
                     <div class="mavedb-wizard-content field">
-                      <span class="p-float-label">
+                      <FloatLabel variant="on">
                         <FileUpload
                           :id="scopedId('input-extraMetadataFile')"
                           accept="application/json"
@@ -354,7 +354,7 @@
                             <p>Drop a JSON file here.</p>
                           </template>
                         </FileUpload>
-                      </span>
+                      </FloatLabel>
                       <span v-if="validationErrors.extraMetadata" class="mave-field-error">{{
                         validationErrors.extraMetadata
                       }}</span>
@@ -391,16 +391,18 @@
                     </div>
 
                     <div class="mavedb-wizard-content keyword-editor">
-                      <span class="p-float-label field">
-                        <Select
-                          :id="scopedId(`keyword-input-${keyword.key}`)"
-                          v-model="keywordKeys[keyword.key]"
-                          class="keyword-dropdown"
-                          :option-label="(option) => formatKeywordOptionLabel(option)"
-                          option-value="label"
-                          :options="getKeywordOptions(keyword.option)"
-                        />
-                        <label :for="scopedId(`keyword-input-${keyword.key}`)">{{ keyword.key }}</label>
+                      <span class="field">
+                        <FloatLabel variant="on">
+                          <Select
+                            :id="scopedId(`keyword-input-${keyword.key}`)"
+                            v-model="keywordKeys[keyword.key]"
+                            class="keyword-dropdown"
+                            :option-label="(option) => formatKeywordOptionLabel(option)"
+                            option-value="label"
+                            :options="getKeywordOptions(keyword.option)"
+                          />
+                          <label :for="scopedId(`keyword-input-${keyword.key}`)">{{ keyword.key }}</label>
+                        </FloatLabel>
                         <Button
                           aria-label="Filter"
                           class="keyword-button"
@@ -433,13 +435,13 @@
                       }}</span>
 
                       <div v-if="keywordTextVisible[keyword.key] || keywordKeys[keyword.key] === 'Other'" class="field">
-                        <span class="p-float-label keyword-description-input">
+                        <FloatLabel class="keyword-description-input" variant="on">
                           <Textarea :id="scopedId('input-title')" v-model="keywordDescriptions[keyword.key]" rows="4" />
                           <label :for="scopedId('input-title')"
                             >{{ keyword.descriptionLabel }}
                             {{ keywordKeys[keyword.key] === 'Other' ? '(Required)' : '(Optional)' }}</label
                           >
-                        </span>
+                        </FloatLabel>
                         <span v-if="validationErrors[`keywordDescriptions.${keyword.key}`]" class="mave-field-error">
                           {{ validationErrors[`keywordDescriptions.${keyword.key}`] }}</span
                         >
@@ -476,6 +478,7 @@ import {marked} from 'marked'
 import AutoComplete from 'primevue/autocomplete'
 import Button from 'primevue/button'
 import Dialog from 'primevue/dialog'
+import FloatLabel from 'primevue/floatlabel'
 import Select from 'primevue/select'
 import FileUpload from 'primevue/fileupload'
 import InputText from 'primevue/inputtext'
@@ -596,6 +599,7 @@ export default {
     Button,
     DefaultLayout,
     Dialog,
+    FloatLabel,
     Select,
     EmailPrompt,
     FileUpload,
@@ -1389,10 +1393,6 @@ export default {
 
 .keyword-button:deep(.p-button-icon.pi-file-edit) {
   margin-left: 4px;
-}
-
-.keyword-description-input {
-  width: 450px;
 }
 
 .mavedb-wizard:deep(.p-stepper) {

@@ -5,7 +5,7 @@
       <template #title> Profile </template>
       <template #content>
         <div class="field">
-          <span class="p-float-label">
+          <FloatLabel variant="on">
             <InputText
               :id="scopedId('input-email')"
               v-model="email"
@@ -14,7 +14,7 @@
               type="text"
             />
             <label :for="scopedId('input-email')">Email</label>
-          </span>
+          </FloatLabel>
         </div>
         <div>
           <span v-if="emailValidationError" class="mave-field-error">{{ emailValidationError }}</span>
@@ -134,6 +134,7 @@ import axios from 'axios'
 import Button from 'primevue/button'
 import Card from 'primevue/card'
 import Checkbox from 'primevue/checkbox'
+import FloatLabel from 'primevue/floatlabel'
 import InputText from 'primevue/inputtext'
 import {useHead} from '@unhead/vue'
 
@@ -148,7 +149,7 @@ import config from '@/config'
 export default {
   name: 'SettingsScreen',
 
-  components: {Button, Card, DefaultLayout, InputText, Checkbox},
+  components: {Button, Card, DefaultLayout, FloatLabel,InputText, Checkbox},
 
   setup: () => {
     useHead({title: 'Settings'})

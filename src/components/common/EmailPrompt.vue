@@ -1,10 +1,10 @@
 <template>
   <Dialog v-model:visible="visible" :closable="false" :header="title" :style="{width: '25rem'}">
     <span class="p-text-secondary block mb-5">{{ dialog }}</span>
-    <div class="flex align-items-center gap-3 mb-3 p-float-label">
-      <InputText :id="scopedId('email-input')" v-model:model-value="email" class="flex-auto" />
+    <FloatLabel class="mb-2" variant="on">
+      <InputText :id="scopedId('email-input')" v-model:model-value="email" class="w-full" />
       <label :for="scopedId('email-input')">Email</label>
-    </div>
+    </FloatLabel>
     <div>
       <span v-if="emailValidationError" class="mave-field-error">{{ emailValidationError }}</span>
     </div>
@@ -19,6 +19,7 @@
 import axios from 'axios'
 import Button from 'primevue/button'
 import Dialog from 'primevue/dialog'
+import FloatLabel from 'primevue/floatlabel'
 import InputText from 'primevue/inputtext'
 
 import useScopedId from '@/composables/scoped-id'
@@ -27,7 +28,7 @@ import config from '@/config'
 import {ref} from 'vue'
 
 export default {
-  components: {Button, Dialog, InputText},
+  components: {Button, Dialog, FloatLabel, InputText},
 
   props: {
     title: {

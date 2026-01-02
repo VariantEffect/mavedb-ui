@@ -1,6 +1,6 @@
 <template>
   <div class="flex flex-col h-full">
-    <span v-if="alphaFoldData?.length > 1" class="p-float-label m-2">
+    <FloatLabel v-if="alphaFoldData?.length > 1" class="m-2" variant="on">
       <Select
         :id="scopedId('alphafold-id')"
         v-model="selectedAlphaFold"
@@ -8,7 +8,7 @@
         :options="alphaFoldData"
       />
       <label :for="scopedId('alphafold-id')">AlphaFold ID</label>
-    </span>
+    </FloatLabel>
     <div class="flex">
       <span class="ml-2">Color by:</span>
       <SelectButton
@@ -29,6 +29,7 @@
 <script>
 import axios from 'axios'
 import $ from 'jquery'
+import FloatLabel from 'primevue/floatlabel'
 import Select from 'primevue/select'
 import SelectButton from 'primevue/selectbutton'
 import {PDBeMolstarPlugin} from 'pdbe-molstar/lib/viewer'
@@ -42,7 +43,7 @@ import useScopedId from '@/composables/scoped-id'
 export default {
   name: 'ProteinStructureView',
 
-  components: {Select, SelectButton},
+  components: {FloatLabel, Select, SelectButton},
 
   props: {
     uniprotId: {

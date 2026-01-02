@@ -44,7 +44,7 @@
       </div>
       <div v-if="variants?.length">
         <div class="mavedb-score-set-variant-search">
-          <span class="p-float-label">
+          <FloatLabel variant="on">
             <AutoComplete
               :id="scopedId('variant-search')"
               v-model="selectedVariant"
@@ -66,7 +66,7 @@
               :style="{visibility: variantToVisualize ? 'visible' : 'hidden'}"
               @click="selectedVariant = null"
             />
-          </span>
+          </FloatLabel>
           <span v-if="config.CLINICAL_FEATURES_ENABLED" class="mavedb-clinical-mode-control-container">
             <span :class="clinicalMode ? 'mavedb-clinical-mode-option-off' : 'mavedb-clinical-mode-option-on'"
               >Raw data</span
@@ -420,6 +420,7 @@ import AutoComplete from 'primevue/autocomplete'
 import Button from 'primevue/button'
 import Checkbox from 'primevue/checkbox'
 import Dialog from 'primevue/dialog'
+import FloatLabel from 'primevue/floatlabel'
 import ToggleSwitch from 'primevue/toggleswitch'
 import ProgressSpinner from 'primevue/progressspinner'
 import ProgressBar from 'primevue/progressbar'
@@ -474,6 +475,7 @@ export default {
     CollectionBadge,
     DefaultLayout,
     Dialog,
+    FloatLabel,
     ToggleSwitch,
     ItemNotFound,
     PageLoading,
@@ -1247,11 +1249,6 @@ export default {
   display: flex;
   align-items: center;
   column-gap: 0.5em;
-}
-
-.p-float-label {
-  display: flex;
-  width: 100%;
 }
 
 /* Histogram */

@@ -16,11 +16,11 @@
         <Stepper v-model:value="activeWizardStep">
           <StepList>
             <Step :value="1">Parent experiment and context</Step>
-            <Step :value="2">Score set information</Step>
-            <Step :value="3">Targets</Step>
-            <Step v-for="(targetNum, targetIdx) in numTargets" :key="targetIdx" :value="targetIdx + 4">Target {{ targetIdx + 1 }}</Step>
-            <Step :value="numTargets + 4">Score Calibration</Step>
-            <Step :value="numTargets + 5">Variant Scores</Step>
+            <Step :disabled="maxWizardStepValidated < 1" :value="2">Score set information</Step>
+            <Step :disabled="maxWizardStepValidated < 2" :value="3">Targets</Step>
+            <Step v-for="(targetNum, targetIdx) in numTargets" :key="targetIdx" :disabled="maxWizardStepValidated < targetIdx + 3" :value="targetIdx + 4">Target {{ targetIdx + 1 }}</Step>
+            <Step :disabled="maxWizardStepValidated < numTargets + 3" :value="numTargets + 4">Score Calibration</Step>
+            <Step :disabled="maxWizardStepValidated < numTargets + 4" :value="numTargets + 5">Variant Scores</Step>
           </StepList>
           <StepPanels>
             <StepPanel v-slot="{ activateCallback }" :value="1">
@@ -219,7 +219,7 @@
                 <div class="mavedb-wizard-form-content-background"></div>
                 <div v-if="experiment" class="mavedb-wizard-row">
                   <div class="mavedb-wizard-content-pane">
-                    <Message closable severity="info">
+                    <Message class="mb-1" closable severity="info">
                       Some fields were autopopulated based on the selected experiment and should be inspected to ensure
                       they are still relevant to this score set.
                     </Message>
@@ -859,47 +859,49 @@
                             <AutoComplete
                               :id="scopedId(`input-${dbName.toLowerCase()}Identifier`)"
                               v-model="createdTargetGenes[targetIdx].targetGene.externalIdentifiers[dbName].identifier"
+                              class="w-full"
                               field="identifier"
                               :force-selection="false"
                               option-label="identifier"
-                              style="width: 100%"
                               :suggestions="targetGeneIdentifierSuggestionsList[dbName]"
+                              @change="externalTargetIdentifierChanged(dbName, targetIdx, $event)"
                               @complete="searchTargetGeneIdentifiers(dbName, $event)"
-                              @update:model-value="externalTargetIdentifierChanged(dbName, targetIdx, $event)"
                             />
                             <label :for="scopedId(`input-${dbName.toLowerCase()}Identifier`)"
                               >{{ dbName }} identifier</label
                             >
                           </FloatLabel>
+                          <span
+                            v-if="validationErrors[`targetGenes.${targetIdx}.targetGene.externalIdentifiers.${dbName}.identifier.identifier`]"
+                            class="mave-field-error"
+                            >{{
+                              validationErrors[`targetGenes.${targetIdx}.targetGene.externalIdentifiers.${dbName}.identifier.identifier`]
+                            }}</span
+                          >
                         </div>
-                        <FloatLabel variant="on">
-                          <InputNumber
-                            :id="scopedId(`input-${dbName.toLowerCase()}Offset`)"
-                            v-model="createdTargetGenes[targetIdx].targetGene.externalIdentifiers[dbName].offset"
-                            button-layout="stacked"
-                            :min="0"
-                            show-buttons
-                            suffix=" bp"
-                          />
-                          <label :for="scopedId(`input-${dbName.toLowerCase()}Offset`)">Offset</label>
-                        </FloatLabel>
+                        <div class="field-column">
+                          <FloatLabel variant="on">
+                            <InputNumber
+                              :id="scopedId(`input-${dbName.toLowerCase()}Offset`)"
+                              v-model="createdTargetGenes[targetIdx].targetGene.externalIdentifiers[dbName].offset"
+                              button-layout="stacked"
+                              :min="0"
+                              show-buttons
+                              suffix=" bp"
+                            />
+                            <label :for="scopedId(`input-${dbName.toLowerCase()}Offset`)">Offset</label>
+                          </FloatLabel>
+                          <span
+                            v-if="validationErrors[`targetGenes.${targetIdx}.targetGene.externalIdentifiers.${dbName}.offset`]"
+                            class="mave-field-error"
+                            >{{ validationErrors[`targetGenes.${targetIdx}.targetGene.externalIdentifiers.${dbName}.offset`] }}</span
+                          >
+                        </div>
                       </div>
                       <span
-                        v-if="validationErrors[`targetGene.${targetIdx}.externalIdentifiers.${dbName}`]"
+                        v-if="validationErrors[`targetGenes.${targetIdx}.targetGene.externalIdentifiers.${dbName}`]"
                         class="mave-field-error"
-                        >{{ validationErrors[`targetGene.${targetIdx}.externalIdentifiers.${dbName}`] }}</span
-                      >
-                      <span
-                        v-if="validationErrors[`targetGene.${targetIdx}.externalIdentifiers.${dbName}.identifier`]"
-                        class="mave-field-error"
-                        >{{
-                          validationErrors[`targetGene.${targetIdx}.externalIdentifiers.${dbName}.identifier`]
-                        }}</span
-                      >
-                      <span
-                        v-if="validationErrors[`targetGene.${targetIdx}.externalIdentifiers.${dbName}.offset`]"
-                        class="mave-field-error"
-                        >{{ validationErrors[`targetGene.${targetIdx}.externalIdentifiers.${dbName}.offset`] }}</span
+                        >{{ validationErrors[`targetGenes.${targetIdx}.targetGene.externalIdentifiers.${dbName}`] }}</span
                       >
                     </div>
                   </div>
@@ -1636,7 +1638,7 @@ export default {
     investigatorIsProvidingScoreCalibrations: false,
 
     // track this separately, since it is a pain to reconstruct steps from target paths (targetGenes.**step**.rest.of.error.path)
-    minTargetGeneStepWithError: Infinity,
+    // minTargetGeneStepWithError: Infinity,
 
     /** The currently active step. */
     activeWizardStep: 1,
@@ -1644,31 +1646,57 @@ export default {
     /** The highest step that the user has entered. This can be used to prevent the user from jumping ahead. */
     maxWizardStepEntered: 1,
 
-    stepFields: [
-      ['experiment', 'supersededScoreSetUrn', 'metaAnalyzesScoreSetUrns'],
-      [
-        'title',
-        'shortDescription',
-        'methodText',
-        'abstractText',
-        'publicationIdentifiers',
-        'primaryPublicationIdentifiers',
-        'extraMetadata',
-        'dataUsagePolicy'
-      ],
-      ['targets'],
-      ['targetGene'],
-      ['scoreCalibrations'],
-      ['scoresFile', 'countsFile', 'scoreColumnsMetadataFile', 'countColumnsMetadataFile']
-    ]
+    // stepFields: [
+    //   ['experiment', 'supersededScoreSetUrn', 'metaAnalyzesScoreSetUrns'],
+    //   [
+    //     'title',
+    //     'shortDescription',
+    //     'methodText',
+    //     'abstractText',
+    //     'publicationIdentifiers',
+    //     'primaryPublicationIdentifiers',
+    //     'extraMetadata',
+    //     'dataUsagePolicy'
+    //   ],
+    //   ['targets'],
+    //   ['targetGene'],
+    //   ['scoreCalibrations'],
+    //   ['scoresFile', 'countsFile', 'scoreColumnsMetadataFile', 'countColumnsMetadataFile']
+    // ]
   }),
 
   computed: {
+    numSteps: function() {
+      return 5 + this.numTargets
+    },
+
+    stepFields: function() {
+      const fields = {
+        1: ['experiment', 'supersededScoreSetUrn', 'metaAnalyzesScoreSetUrns'],
+        2: [
+          'title',
+          'shortDescription',
+          'methodText',
+          'abstractText',
+          'publicationIdentifiers',
+          'primaryPublicationIdentifiers',
+          'extraMetadata',
+          'dataUsagePolicy'
+        ],
+        3: ['targets']
+      }
+      for (let i = 0; i < this.numTargets; i++) {
+        fields[4 + i] = [`targetGenes.${i}.targetGene`]
+      }
+      fields[4 + this.numTargets] = ['scoreCalibrations']
+      fields[5 + this.numTargets] = ['scoresFile', 'countsFile', 'scoreColumnsMetadataFile', 'countColumnsMetadataFile']
+      return fields
+    },
+
     maxWizardStepValidated: function () {
-      const numSteps = 5 + this.numTargets
-      // This yields the index of the maximum step validated, -1 if step 0 is not valid, and -2 if all steps are valid.
-      const maxStepValidated = _.findIndex(_.range(0, numSteps), (step) => !this.validateWizardStep(step)) - 1
-      return maxStepValidated == -2 ? numSteps - 1 : maxStepValidated + 1
+      // This yields the value of maximum step validated, 0 if step 1 is not valid.
+      const firstUnvalidatedStep = _.find(_.range(1, this.numSteps + 1), (step) => !this.validateWizardStep(step))
+      return firstUnvalidatedStep ? firstUnvalidatedStep - 1 : this.numSteps
     },
 
     targetGeneIdentifierSuggestionsList: function () {
@@ -1837,11 +1865,11 @@ export default {
         if (this.createdTargetGenes.length < this.numTargets) {
           for (let i = this.createdTargetGenes.length; i < this.numTargets; i++) {
             this.createdTargetGenes.push(emptyTargetGeneWizardObj())
-            this.stepFields.splice(3, 0, ['targetGene'])
+            // this.stepFields.splice(3, 0, ['targetGene'])
           }
         } else if (this.createdTargetGenes.length > this.numTargets) {
           this.createdTargetGenes = this.createdTargetGenes.slice(0, this.numTargets)
-          this.stepFields.splice(3, oldValue - newValue)
+          // this.stepFields.splice(3, oldValue - newValue)
         }
       }
     }
@@ -1933,7 +1961,7 @@ export default {
     validateWizardStep: function (step) {
       // Later, this may depend on server-side validation.
       switch (true) {
-        case step == 0: {
+        case step == 1: {
           // Step 0 is valid if
           // - The score set is a meta-analysis and at least one meta-analyzed score set has been chosen..
           // - The score set is a superseding score set, and the superseded score set has been chosen.
@@ -1944,14 +1972,14 @@ export default {
             !!((!this.isMetaAnalysis && !this.isSupersedingScoreSet && this.experiment) || this.experimentUrn)
           )
         }
-        case step == 1: {
+        case step == 2: {
           return this.title && this.shortDescription && this.abstractText && this.methodText
         }
-        case step == 2: {
+        case step == 3: {
           return this.numTargets > 0
         }
-        case step > 2 && step < 3 + this.numTargets: {
-          const currentTargetGene = this.createdTargetGenes[step - 3].targetGene
+        case step > 3 && step <= 3 + this.numTargets: {
+          const currentTargetGene = this.createdTargetGenes[step - 4].targetGene
           if (this.isTargetSequence) {
             return (
               currentTargetGene.name &&
@@ -1970,7 +1998,7 @@ export default {
             )
           }
         }
-        case step == 3 + this.numTargets: {
+        case step == 4 + this.numTargets: {
           if (!this.investigatorIsProvidingScoreCalibrations) {
             return true
           }
@@ -1999,23 +2027,15 @@ export default {
     },
 
     minStepWithError: function () {
-      const numSteps = this.stepFields.length
-      for (let i = 0; i < numSteps; i++) {
+      for (let i = 1; i <= this.numSteps; i++) {
         if (this.wizardStepHasError(i)) {
-          // errors in the target creation step
-          if (i > 2 && i < 3 + this.numTargets) {
-            return this.minTargetGeneStepWithError + 3
-          }
           return i
         }
       }
-      return numSteps - 1
+      return this.numSteps
     },
 
     wizardStepHasError: function (step) {
-      if (step >= this.stepFields.length) {
-        return false
-      }
       return !this.stepFields[step].every((field) => {
         for (const v of Object.keys(this.validationErrors)) {
           if (v.startsWith(field)) {
@@ -2584,6 +2604,8 @@ export default {
             )
         )
 
+      console.log('Preparing to save target genes:', this.createdTargetGenes)
+
       const editedFields = {
         experimentUrn: this.experimentUrn ? this.experimentUrn : this.experiment?.urn,
         title: this.title,
@@ -2615,8 +2637,13 @@ export default {
           }
 
           for (const [db, linked] of Object.entries(target.linkedAccessions)) {
+            console.log('Processing linked accession:', db, linked)
             if (linked) {
-              targetGene.externalIdentifiers.push(target.targetGene.externalIdentifiers[db])
+              const targetGeneExternalIdentifier = _.clone(target.targetGene.externalIdentifiers[db])
+              if (!targetGeneExternalIdentifier.identifier) {
+                targetGeneExternalIdentifier.identifier = {dbName: db}
+              }
+              targetGene.externalIdentifiers.push(targetGeneExternalIdentifier)
             }
           }
 
@@ -2668,7 +2695,7 @@ export default {
               path = path.slice(1)
             }
 
-            let customPath = error.ctx.error.custom_loc
+            let customPath = error.ctx?.error?.custom_loc
             if (customPath) {
               if (customPath[0] == 'body') {
                 customPath = customPath.slice(1)
@@ -2679,8 +2706,8 @@ export default {
               path = path.concat(customPath)
             }
 
-            if (_.isEqual(_.slice(path, 0, 1), ['targetGene'])) {
-              this.minTargetGeneStepWithError = Math.min(this.minTargetGeneStepWithError, path[1])
+            if (_.isEqual(_.first(path), 'targetGenes')) {
+              // this.minTargetGeneStepWithError = Math.min(this.minTargetGeneStepWithError, path[1])
 
               // Map errors on indexed external gene identifiers to inputs named for the identifier's database.
               if (_.isEqual(_.slice(path, 2, 3), ['externalIdentifiers'])) {
@@ -2690,11 +2717,13 @@ export default {
                 // preferable to not displaying the error.
                 path.splice(
                   3,
-                  2,
+                  1,
                   identifierOffset?.identifier?.dbName
                     ? identifierOffset.identifier.dbName
                     : this.externalGeneDatabases[identifierIndex]
                 )
+                // insert 'targetGene' after the targetGenes index to match the form's data structure
+                path.splice(2, 0, 'targetGene')
               }
             }
 

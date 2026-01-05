@@ -773,8 +773,8 @@
                       />
                       <label :for="scopedId('input-targetGeneName')">Target name</label>
                     </FloatLabel>
-                    <span v-if="validationErrors[`targetGene.${targetIdx}.name`]" class="mave-field-error">{{
-                      validationErrors[`targetGene.${targetIdx}.name`]
+                    <span v-if="validationErrors[`targetGenes.${targetIdx}.targetGene.name`]" class="mave-field-error">{{
+                      validationErrors[`targetGenes.${targetIdx}.targetGene.name`]
                     }}</span>
                   </div>
                 </div>
@@ -799,9 +799,9 @@
                         <label :for="scopedId('input-targetGeneLabel')">Target label</label>
                       </FloatLabel>
                       <span
-                        v-if="validationErrors[`targetGene.${targetIdx}.targetSequence.label`]"
+                        v-if="validationErrors[`targetGenes.${targetIdx}.targetGene.targetSequence.label`]"
                         class="mave-field-error"
-                        >{{ validationErrors[`targetGene.${targetIdx}.targetSequence.label`] }}</span
+                        >{{ validationErrors[`targetGenes.${targetIdx}.targetGene.targetSequence.label`] }}</span
                       >
                     </div>
                   </div>
@@ -819,8 +819,8 @@
                           :options="targetGeneCategories"
                         />
                       </span>
-                      <span v-if="validationErrors[`targetGene.${targetIdx}.category`]" class="mave-field-error">{{
-                        validationErrors[`targetGene.${targetIdx}.category`]
+                      <span v-if="validationErrors[`targetGenes.${targetIdx}.targetGene.category`]" class="mave-field-error">{{
+                        validationErrors[`targetGenes.${targetIdx}.targetGene.category`]
                       }}</span>
                     </div>
                   </div>
@@ -944,9 +944,9 @@
                         <label :for="scopedId('input-targetGeneTaxonomyLabel')">Taxonomy</label>
                       </FloatLabel>
                       <span
-                        v-if="validationErrors[`targetGene.${targetIdx}.targetSequence.taxonomy`]"
+                        v-if="validationErrors[`targetGenes.${targetIdx}.targetGene.targetSequence.taxonomy`]"
                         class="mave-field-error"
-                        >{{ validationErrors[`targetGene.${targetIdx}.targetSequence.taxonomy`] }}</span
+                        >{{ validationErrors[`targetGenes.${targetIdx}.targetGene.targetSequence.taxonomy`] }}</span
                       >
                     </div>
                   </div>
@@ -963,9 +963,9 @@
                         />
                       </FloatLabel>
                       <span
-                        v-if="validationErrors[`targetGene.${targetIdx}.targetSequence.sequenceType`]"
+                        v-if="validationErrors[`targetGenes.${targetIdx}.targetGene.targetSequence.sequenceType`]"
                         class="mave-field-error"
-                        >{{ validationErrors[`targetGene.${targetIdx}.targetSequence.sequenceType`] }}</span
+                        >{{ validationErrors[`targetGenes.${targetIdx}.targetGene.targetSequence.sequenceType`] }}</span
                       >
                     </div>
                   </div>
@@ -1018,9 +1018,9 @@
                         </FileUpload>
                       </FloatLabel>
                       <span
-                        v-if="validationErrors[`targetGene.${targetIdx}.targetSequence.sequence`]"
+                        v-if="validationErrors[`targetGenes.${targetIdx}.targetGene.targetSequence.sequence`]"
                         class="mave-field-error"
-                        >{{ validationErrors[`targetGene.${targetIdx}.targetSequence.sequence`] }}</span
+                        >{{ validationErrors[`targetGenes.${targetIdx}.targetGene.targetSequence.sequence`] }}</span
                       >
                     </div>
                   </div>
@@ -1068,9 +1068,9 @@
                         <label :for="scopedId('input-targetGeneAssemblyLabel')">Assembly</label>
                       </FloatLabel>
                       <span
-                        v-if="validationErrors[`targetGene.${targetIdx}.targetAccession.assembly`]"
+                        v-if="validationErrors[`targetGenes.${targetIdx}.targetGene.targetAccession.assembly`]"
                         class="mave-field-error"
-                        >{{ validationErrors[`targetGene.${targetIdx}.targetAccession.assembly`] }}</span
+                        >{{ validationErrors[`targetGenes.${targetIdx}.targetGene.targetAccession.assembly`] }}</span
                       >
                     </div>
                   </div>
@@ -1093,9 +1093,9 @@
                         <label :for="scopedId('input-targetGeneGeneNameLabel')">HGNC Name</label>
                       </FloatLabel>
                       <span
-                        v-if="validationErrors[`targetGene.${targetIdx}.targetAccession.gene`]"
+                        v-if="validationErrors[`targetGenes.${targetIdx}.targetGene.targetAccession.gene`]"
                         class="mave-field-error"
-                        >{{ validationErrors[`targetGene.${targetIdx}.targetAccession.gene`] }}</span
+                        >{{ validationErrors[`targetGenes.${targetIdx}.targetGene.targetAccession.gene`] }}</span
                       >
                     </div>
                   </div>
@@ -1134,9 +1134,9 @@
                         />
                       </div>
                       <span
-                        v-if="validationErrors[`targetGene.${targetIdx}.targetAccession.accession`]"
+                        v-if="validationErrors[`targetGenes.${targetIdx}.targetGene.targetAccession.accession`]"
                         class="mave-field-error"
-                        >{{ validationErrors[`targetGene.${targetIdx}.targetAccession.accession`] }}</span
+                        >{{ validationErrors[`targetGenes.${targetIdx}.targetGene.targetAccession.accession`] }}</span
                       >
                     </div>
                   </div>
@@ -1153,8 +1153,8 @@
                           :options="targetGeneCategories"
                         />
                       </span>
-                      <span v-if="validationErrors[`targetGene.${targetIdx}.category`]" class="mave-field-error">{{
-                        validationErrors[`targetGene.${targetIdx}.category`]
+                      <span v-if="validationErrors[`targetGenes.${targetIdx}.targetGene.category`]" class="mave-field-error">{{
+                        validationErrors[`targetGenes.${targetIdx}.targetGene.category`]
                       }}</span>
                     </div>
                   </div>
@@ -1295,7 +1295,7 @@
                         choose-label="Scores column metadata file"
                         :class="inputClasses.scoreColumnsMetadataFile || ''"
                         :custom-upload="true"
-                        :disabled="!($refs.scoresFileUpload?.files?.length == 1)"
+                        :disabled="($refs.scoresFileUpload?.files?.length || 0) != 1"
                         :file-limit="1"
                         :show-cancel-button="false"
                         :show-upload-button="false"
@@ -1364,7 +1364,7 @@
                         choose-label="Counts column metadata file"
                         :class="inputClasses.countColumnsMetadataFile || ''"
                         :custom-upload="true"
-                        :disabled="!($refs.countsFileUpload?.files?.length == 1)"
+                        :disabled="($refs.countsFileUpload?.files?.length || 0 ) != 1"
                         :file-limit="1"
                         :show-cancel-button="false"
                         :show-upload-button="false"
@@ -1637,32 +1637,11 @@ export default {
     isMultiTarget: false,
     investigatorIsProvidingScoreCalibrations: false,
 
-    // track this separately, since it is a pain to reconstruct steps from target paths (targetGenes.**step**.rest.of.error.path)
-    // minTargetGeneStepWithError: Infinity,
-
     /** The currently active step. */
     activeWizardStep: 1,
 
     /** The highest step that the user has entered. This can be used to prevent the user from jumping ahead. */
     maxWizardStepEntered: 1,
-
-    // stepFields: [
-    //   ['experiment', 'supersededScoreSetUrn', 'metaAnalyzesScoreSetUrns'],
-    //   [
-    //     'title',
-    //     'shortDescription',
-    //     'methodText',
-    //     'abstractText',
-    //     'publicationIdentifiers',
-    //     'primaryPublicationIdentifiers',
-    //     'extraMetadata',
-    //     'dataUsagePolicy'
-    //   ],
-    //   ['targets'],
-    //   ['targetGene'],
-    //   ['scoreCalibrations'],
-    //   ['scoresFile', 'countsFile', 'scoreColumnsMetadataFile', 'countColumnsMetadataFile']
-    // ]
   }),
 
   computed: {
@@ -1761,20 +1740,6 @@ export default {
             this.activeWizardStep = 1
           } else {
             this.$toast.add({severity: 'error', summary: `Could not fetch experiment with urn ${this.experimentUrn}`})
-          }
-        }
-      }
-    },
-    'targetGene.externalIdentifiers': {
-      deep: true,
-      handler: function (newValue) {
-        if (!newValue) {
-          return
-        }
-        // If an identifier has been set, set the offset to 0 by default.
-        for (const dbName of externalGeneDatabases) {
-          if (newValue[dbName]?.identifier?.identifier != null && newValue[dbName]?.offset == null) {
-            this.targetGene.externalIdentifiers[dbName].offset = 0
           }
         }
       }
@@ -1978,7 +1943,7 @@ export default {
         case step == 3: {
           return this.numTargets > 0
         }
-        case step > 3 && step <= 3 + this.numTargets: {
+        case step > 3 && step <= (3 + this.numTargets): {
           const currentTargetGene = this.createdTargetGenes[step - 4].targetGene
           if (this.isTargetSequence) {
             return (
@@ -2491,19 +2456,19 @@ export default {
                 }))
                 if (fastaData.length == 0) {
                   this.createdTargetGenes[targetIdx].targetGene.targetSequence.sequence = null
-                  this.clientSideValidationErrors['targetGene.targetSequence.sequence'] =
+                  this.clientSideValidationErrors[`targetGenes.${targetIdx}.targetGene.targetSequence.sequence`] =
                     'The FASTA file contains no sequences.'
                 } else if (fastaData.length > 1) {
                   this.createdTargetGenes[targetIdx].targetGene.targetSequence.sequence = null
-                  this.clientSideValidationErrors['targetGene.targetSequence.sequence'] =
+                  this.clientSideValidationErrors[`targetGenes.${targetIdx}.targetGene.targetSequence.sequence`] =
                     'The FASTA file contains more than one sequence.'
                 } else {
                   this.createdTargetGenes[targetIdx].targetGene.targetSequence.sequence = fastaData[0].sequence
-                  delete this.clientSideValidationErrors['targetGene.targetSequence.sequence']
+                  delete this.clientSideValidationErrors[`targetGenes.${targetIdx}.targetGene.targetSequence.sequence`]
                 }
               } catch (e) {
                 this.createdTargetGenes[targetIdx].targetGene.targetSequence.sequence = null
-                this.clientSideValidationErrors['targetGene.targetSequence.sequence'] =
+                this.clientSideValidationErrors[`targetGenes.${targetIdx}.targetGene.targetSequence.sequence`] =
                   'The file was not a valid FASTA file.'
                 console.log('Reference sequence file was not a valid FASTA file.')
               }
@@ -2706,7 +2671,7 @@ export default {
               path = path.concat(customPath)
             }
 
-            if (_.isEqual(_.first(path), 'targetGenes')) {
+            if (_.isEqual(_.first(path), 'targetGenes') && path.length >= 2) {
               // this.minTargetGeneStepWithError = Math.min(this.minTargetGeneStepWithError, path[1])
 
               // Map errors on indexed external gene identifiers to inputs named for the identifier's database.
@@ -2722,9 +2687,9 @@ export default {
                     ? identifierOffset.identifier.dbName
                     : this.externalGeneDatabases[identifierIndex]
                 )
-                // insert 'targetGene' after the targetGenes index to match the form's data structure
-                path.splice(2, 0, 'targetGene')
               }
+              // insert 'targetGene' after the targetGenes index to match the form's data structure
+              path.splice(2, 0, 'targetGene')
             }
 
             // Add calibration errors to a separate object which is consumed by the calibration sub-component.

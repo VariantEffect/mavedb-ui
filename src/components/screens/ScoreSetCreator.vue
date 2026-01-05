@@ -18,12 +18,14 @@
             <Step :value="1">Parent experiment and context</Step>
             <Step :value="2">Score set information</Step>
             <Step :value="3">Targets</Step>
-            <Step v-for="(targetNum, targetIdx) in numTargets" :key="targetIdx" :value="targetIdx + 4">Target {{ targetIdx + 1 }}</Step>
+            <Step v-for="(targetNum, targetIdx) in numTargets" :key="targetIdx" :value="targetIdx + 4"
+              >Target {{ targetIdx + 1 }}</Step
+            >
             <Step :value="numTargets + 4">Score Calibration</Step>
             <Step :value="numTargets + 5">Variant Scores</Step>
           </StepList>
           <StepPanels>
-            <StepPanel v-slot="{ activateCallback }" :value="1">
+            <StepPanel v-slot="{activateCallback}" :value="1">
               <div class="mavedb-wizard-form">
                 <div class="mavedb-wizard-form-content-background"></div>
                 <div v-if="experimentUrn && experiment">
@@ -214,7 +216,7 @@
                 </div>
               </div>
             </StepPanel>
-            <StepPanel v-slot="{ activateCallback }" :value="2" >
+            <StepPanel v-slot="{activateCallback}" :value="2">
               <div class="mavedb-wizard-form">
                 <div class="mavedb-wizard-form-content-background"></div>
                 <div v-if="experiment" class="mavedb-wizard-row">
@@ -617,7 +619,12 @@
               </div>
               <div class="mavedb-wizard-step-controls-row">
                 <div class="flex justify-content-between mavedb-wizard-step-controls pt-4">
-                  <Button icon="pi pi-arrow-left" label="Back" severity="secondary" @click="activateCallback(activeWizardStep - 1)" />
+                  <Button
+                    icon="pi pi-arrow-left"
+                    label="Back"
+                    severity="secondary"
+                    @click="activateCallback(activeWizardStep - 1)"
+                  />
                   <Button
                     :disabled="maxWizardStepValidated < activeWizardStep"
                     icon="pi pi-arrow-right"
@@ -628,7 +635,7 @@
                 </div>
               </div>
             </StepPanel>
-            <StepPanel v-slot="{ activateCallback }" :value="3" >
+            <StepPanel v-slot="{activateCallback}" :value="3">
               <div class="mavedb-wizard-form">
                 <div class="mavedb-wizard-form-content-background"></div>
                 <div class="mavedb-wizard-row">
@@ -727,7 +734,12 @@
               </div>
               <div class="mavedb-wizard-step-controls-row">
                 <div class="flex justify-content-between mavedb-wizard-step-controls pt-4">
-                  <Button icon="pi pi-arrow-left" label="Back" severity="secondary" @click="activateCallback(activeWizardStep - 1)" />
+                  <Button
+                    icon="pi pi-arrow-left"
+                    label="Back"
+                    severity="secondary"
+                    @click="activateCallback(activeWizardStep - 1)"
+                  />
                   <Button
                     :disabled="maxWizardStepValidated < activeWizardStep"
                     icon="pi pi-arrow-right"
@@ -738,7 +750,12 @@
                 </div>
               </div>
             </StepPanel>
-            <StepPanel v-for="(targetNum, targetIdx) in numTargets" v-slot="{ activateCallback }" :key="targetIdx" :value="targetIdx + 4">
+            <StepPanel
+              v-for="(targetNum, targetIdx) in numTargets"
+              v-slot="{activateCallback}"
+              :key="targetIdx"
+              :value="targetIdx + 4"
+            >
               <div class="mavedb-wizard-form">
                 <div class="mavedb-wizard-form-content-background"></div>
                 <div v-if="isTargetSequence" class="mavedb-wizard-row">
@@ -960,7 +977,8 @@
                         >
                           <template #option="slotProps">
                             {{ slotProps.option.code }} - {{ slotProps.option.organismName }}
-                            <template v-if="slotProps.option.commonName !== 'NULL' && slotProps.option.commonName !== null"
+                            <template
+                              v-if="slotProps.option.commonName !== 'NULL' && slotProps.option.commonName !== null"
                               >/ {{ slotProps.option.commonName }}</template
                             >
                           </template>
@@ -1188,7 +1206,12 @@
               </div>
               <div class="mavedb-wizard-step-controls-row">
                 <div class="flex justify-content-between mavedb-wizard-step-controls pt-4">
-                  <Button icon="pi pi-arrow-left" label="Back" severity="secondary" @click="activateCallback(activeWizardStep - 1)" />
+                  <Button
+                    icon="pi pi-arrow-left"
+                    label="Back"
+                    severity="secondary"
+                    @click="activateCallback(activeWizardStep - 1)"
+                  />
                   <Button
                     :disabled="maxWizardStepValidated < activeWizardStep"
                     icon="pi pi-arrow-right"
@@ -1199,7 +1222,7 @@
                 </div>
               </div>
             </StepPanel>
-            <StepPanel v-slot="{ activateCallback }" :value="numTargets + 4">
+            <StepPanel v-slot="{activateCallback}" :value="numTargets + 4">
               <div class="mavedb-wizard-form">
                 <div class="mavedb-wizard-form-content-background"></div>
                 <div class="mavedb-wizard-row">
@@ -1239,7 +1262,12 @@
               </div>
               <div class="mavedb-wizard-step-controls-row">
                 <div class="flex justify-content-between mavedb-wizard-step-controls pt-5">
-                  <Button icon="pi pi-arrow-left" label="Back" severity="secondary" @click="activateCallback(activeWizardStep - 1)" />
+                  <Button
+                    icon="pi pi-arrow-left"
+                    label="Back"
+                    severity="secondary"
+                    @click="activateCallback(activeWizardStep - 1)"
+                  />
                   <Button
                     :disabled="maxWizardStepValidated < activeWizardStep"
                     icon="pi pi-arrow-right"
@@ -1250,7 +1278,7 @@
                 </div>
               </div>
             </StepPanel>
-            <StepPanel v-slot="{ activateCallback }" :value="numTargets + 5">
+            <StepPanel v-slot="{activateCallback}" :value="numTargets + 5">
               <div class="mavedb-wizard-form">
                 <div class="mavedb-wizard-form-content-background"></div>
                 <div class="mavedb-wizard-row">
@@ -1377,8 +1405,8 @@
                     <label :for="scopedId('input-countColumnsMetadataFile')">Load a counts column metadata file</label>
                     <div class="mavedb-help-small">
                       This file is optional, but recommended. If provided, it should be a JSON file containing a single
-                      object. The keys of that object should be limited to columns of the count data, while values should
-                      include a string description and an optional string details.
+                      object. The keys of that object should be limited to columns of the count data, while values
+                      should include a string description and an optional string details.
                     </div>
                   </div>
                   <div class="mavedb-wizard-content">
@@ -1411,7 +1439,12 @@
               </div>
               <div class="mavedb-wizard-step-controls-row">
                 <div class="flex justify-content-between mavedb-wizard-step-controls pt-4">
-                  <Button icon="pi pi-arrow-left" label="Back" severity="secondary" @click="activateCallback(activeWizardStep - 1)" />
+                  <Button
+                    icon="pi pi-arrow-left"
+                    label="Back"
+                    severity="secondary"
+                    @click="activateCallback(activeWizardStep - 1)"
+                  />
                   <Button
                     :disabled="maxWizardStepValidated < activeWizardStep"
                     icon="pi pi-arrow-right"
@@ -1984,10 +2017,10 @@ export default {
             return true
           }
 
-          // If a user has begun to provide functional ranges, ensure that they have provided at least a label, classification
+          // If a user has begun to provide functional ranges, ensure that they have provided at least a label, functionalClassification
           // and min/max value for all functional ranges.
           for (const scoreRange of this.calibrationCreateDraft.value?.functionalClassifications || []) {
-            if (!scoreRange.label || !scoreRange.classification) {
+            if (!scoreRange.label || !scoreRange.functionalClassification) {
               return false
             }
             // Since infinite bounds are handled by null values, it's not trivial to check the bounds are complete. We'll leave
@@ -2301,13 +2334,13 @@ export default {
     },
 
     removeContributor: function (contributor) {
-      const index = this.contributors.findIndex(c => c.orcidId === contributor.orcidId)
+      const index = this.contributors.findIndex((c) => c.orcidId === contributor.orcidId)
       if (index !== -1) {
         this.contributors.splice(index, 1)
       }
     },
     removeDoiIdentifier: function (doiIdentifier) {
-      const index = this.doiIdentifiers.findIndex(d => d.identifier === doiIdentifier.identifier)
+      const index = this.doiIdentifiers.findIndex((d) => d.identifier === doiIdentifier.identifier)
       if (index !== -1) {
         this.doiIdentifiers.splice(index, 1)
       }
@@ -3049,7 +3082,9 @@ export default {
   font-size: 0.9em !important;
 }
 
-.p-inputwrapper, .p-textarea, .p-inputtext {
+.p-inputwrapper,
+.p-textarea,
+.p-inputtext {
   width: 100%;
 }
 </style>

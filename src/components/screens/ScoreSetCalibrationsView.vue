@@ -206,6 +206,7 @@
     :header="editingCalibrationUrn ? 'Edit Calibration' : 'Create New Calibration'"
     modal
     :style="{maxWidth: '90%', width: '75rem'}"
+    @hide="cancelEditCreate"
   >
     <CalibrationEditor
       :calibration-draft-ref="calibrationDraftRef"
@@ -403,9 +404,17 @@ export default {
     },
 
     cancelEditCreate: function () {
+      // Close the editor dialog
       this.editorVisible = false
+      // Reset editor state
       this.editingCalibrationUrn = undefined
       this.editingScoreSetUrn = undefined
+      // Reset draft
+      this.calibrationDraftRef.value = null
+      this.calibrationDraftClassesFileRef.value = null
+      // Reset validation errors
+      this.editorValidationErrors = {}
+      console.log('Calibration edit/create canceled')
     },
 
     saveChildCalibration: async function () {
@@ -643,7 +652,7 @@ export default {
   width: 100%;
 }
 .mavedb-calibrations-datatable :deep(.p-datatable-tbody > tr:nth-child(even)) {
-    background: var(--surface-a);
+  background: var(--surface-a);
 }
 
 .mavedb-calibrations-datatable :deep(.p-datatable-thead > tr > th) {

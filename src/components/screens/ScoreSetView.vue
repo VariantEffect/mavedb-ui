@@ -506,7 +506,7 @@ export default {
     const scoresRemoteData = useRemoteData()
     const variantSearchSuggestions = ref([])
     const calibrationDraftRef = ref({value: null})
-    const calibrationDraftClassesFileRef = ref < {value: File | null} > {value: null}
+    const calibrationDraftClassesFileRef = ref({value: null})
     const editorValidationErrors = ref({})
     const selectedCalibrations = ref([null, null])
 

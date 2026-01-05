@@ -2627,7 +2627,7 @@ export default {
 
         scoreCalibrations: this.investigatorIsProvidingScoreCalibrations ? [this.calibrationCreateDraft.value] : [],
 
-        targetGenes: this.createdTargetGenes.map((target) => {
+        targetGenes: _.cloneDeep(this.createdTargetGenes).map((target) => {
           const targetGene = {
             name: target.targetGene.name,
             category: target.targetGene.category,

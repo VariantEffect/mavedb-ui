@@ -294,7 +294,7 @@
             Optionally, you can provide a description of the evidence supporting this classification.
           </div>
         </div>
-        <div class="mavedb-wizard-content">
+        <div class="mavedb-wizard-content flex items-center">
           <ToggleSwitch
             v-model="functionalRangeHelpers[rangeIdx].isProvidingClassification"
             :aria-labelledby="scopedId('input-investigatorIsProvidingClassification')"
@@ -364,7 +364,7 @@
         <div class="mavedb-wizard-help">
           <label :id="scopedId('input-investigatorIsProvidingOddsPath')">Provide OddsPaths?</label>
         </div>
-        <div class="mavedb-wizard-content">
+        <div class="mavedb-wizard-content flex items-center">
           <ToggleSwitch
             v-model="functionalRangeHelpers[rangeIdx].isProvidingOddspaths"
             :aria-labelledby="scopedId('input-investigatorIsProvidingOddsPath')"
@@ -415,7 +415,7 @@
           used for variant interpretation.
         </div>
       </div>
-      <div class="mavedb-wizard-content">
+      <div class="mavedb-wizard-content flex items-center">
         <ToggleSwitch v-model="draft.researchUseOnly" />
         <div class="mavedb-switch-value">
           {{

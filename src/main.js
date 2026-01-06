@@ -92,20 +92,16 @@ const MaveDbTheme = definePreset(Aura, {
                   activeBackground: '{yellow.600}',
                   activeBorderColor: '{yellow.600}',
                 },
-              }
-            },
-            dark: {
-              root: {
-                warn: {
-                  background: '{yellow.400}',
-                  borderColor: '{yellow.400}',
-                  color: '{black.900}',
-                  hoverColor: '{black.900}',
-                  hoverBackground: '{yellow.500}',
-                  hoverBorderColor: '{yellow.500}',
-                  activeColor: '{black.900}',
-                  activeBackground: '{yellow.600}',
-                  activeBorderColor: '{yellow.600}',
+                secondary: {
+                  background: '{pink.400}',
+                  borderColor: '{pink.400}',
+                  color: '{surface.0}',
+                  hoverColor: '{surface.0}',
+                  hoverBackground: '{pink.500}',
+                  hoverBorderColor: '{pink.500}',
+                  activeColor: '{surface.0}',
+                  activeBackground: '{pink.600}',
+                  activeBorderColor: '{pink.600}',
                 },
               }
             },

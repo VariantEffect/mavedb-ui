@@ -55,7 +55,7 @@
                         that you created?
                       </label>
                     </div>
-                    <div class="mavedb-wizard-content">
+                    <div class="mavedb-wizard-content flex items-center">
                       <ToggleSwitch
                         v-model="isSupersedingScoreSet"
                         :aria-labelledby="scopedId('input-superseding-score-set-label')"
@@ -81,7 +81,7 @@
                         </ul>
                       </div>
                     </div>
-                    <div class="mavedb-wizard-content">
+                    <div class="mavedb-wizard-content flex items-center">
                       <ToggleSwitch
                         v-model="isMetaAnalysis"
                         :aria-labelledby="scopedId('input-is-meta-analysis-label')"
@@ -219,7 +219,7 @@
                 <div class="mavedb-wizard-form-content-background"></div>
                 <div v-if="experiment" class="mavedb-wizard-row">
                   <div class="mavedb-wizard-content-pane">
-                    <Message class="mb-1" closable severity="info">
+                    <Message class="mb-1 mt-1" closable severity="info">
                       Some fields were autopopulated based on the selected experiment and should be inspected to ensure
                       they are still relevant to this score set.
                     </Message>
@@ -394,7 +394,7 @@
                       Would you like to define any additional restrictions governing the usage of data within this score
                       set?
                     </div>
-                    <div class="mavedb-wizard-content">
+                    <div class="mavedb-wizard-content flex items-center">
                       <ToggleSwitch
                         v-model="hasCustomUsagePolicy"
                         :aria-labelledby="scopedId('input-has-custom-usage-policy')"
@@ -617,7 +617,7 @@
                       accession instead of uploading the target locus sequence as your own target.
                     </div>
                   </div>
-                  <div class="mavedb-wizard-content">
+                  <div class="mavedb-wizard-content flex items-center">
                     <ToggleSwitch
                       v-model="isTargetSequence"
                       :aria-labelledby="scopedId('input-scoreSetIsSequenceBasedLabel')"
@@ -643,7 +643,7 @@
                       scores (and counts) file(s).
                     </div>
                   </div>
-                  <div class="mavedb-wizard-content">
+                  <div class="mavedb-wizard-content flex items-center">
                     <ToggleSwitch v-model="isBaseEditor" :aria-labelledby="scopedId('input-isBaseEditorData')" />
                     <div class="mavedb-switch-value">
                       {{
@@ -665,7 +665,7 @@
                       the case, your variants will need to be described explicitly from the target they came from.
                     </div>
                   </div>
-                  <div class="mavedb-wizard-content">
+                  <div class="mavedb-wizard-content flex items-center">
                     <ToggleSwitch
                       v-model="isMultiTarget"
                       :aria-labelledby="scopedId('input-scoreSetHasMultipleTargetsLabel')"
@@ -838,7 +838,7 @@
                         target sequence) in order to match the coordinates in the linked sequence.
                       </div>
                     </div>
-                    <div class="mavedb-wizard-content">
+                    <div class="mavedb-wizard-content flex items-center">
                       <ToggleSwitch
                         v-model="createdTargetGenes[targetIdx].linkedAccessions[dbName]"
                         :aria-labelledby="scopedId(`input-targetGeneExternalDatabase${dbName}Label`)"
@@ -1036,7 +1036,7 @@
                         describe variants relative to a RefSeq or Ensembl accession representing a gene.
                       </div>
                     </div>
-                    <div class="mavedb-wizard-content">
+                    <div class="mavedb-wizard-content flex items-center">
                       <ToggleSwitch
                         v-model="createdTargetGenes[targetIdx].isRelativeToChromosome"
                         :aria-labelledby="scopedId('input-targetDescribesChromosomeLabel')"
@@ -1189,7 +1189,7 @@
                       variants.
                     </div>
                   </div>
-                  <div class="mavedb-wizard-content">
+                  <div class="mavedb-wizard-content flex items-center">
                     <ToggleSwitch
                       v-model="investigatorIsProvidingScoreCalibrations"
                       :aria-labelledby="scopedId('input-investigatorIsProvidingScoreCalibrations')"

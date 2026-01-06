@@ -149,11 +149,6 @@ export default {
           available: ({config}) => config.PREVIEW_SITE
         },
         {
-          label: 'Users',
-          route: '/users',
-          available: ({roles}) => roles.includes('admin')
-        },
-        {
           label: this.userName,
           icon: 'pi pi-fw pi-user',
           items: [

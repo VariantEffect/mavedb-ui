@@ -73,3 +73,8 @@ body .p-button {
 .p-listbox-header {
   padding: 0 !important;
 }
+
+.p-message {
+  margin-top: 0.5rem;
+  margin-bottom: 0.5rem;
+}

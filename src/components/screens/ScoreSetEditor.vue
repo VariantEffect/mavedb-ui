@@ -248,10 +248,6 @@
                     validationErrors.primaryPublicationIdentifiers
                   }}</span>
                 </div>
-                <Message v-if="experiment" closable severity="info">
-                  Some fields were autopopulated based on the selected experiment and should be inspected to ensure they
-                  are still relevant to this score set.
-                </Message>
                 <div class="field">
                   <FloatLabel variant="on">
                     <div v-if="extraMetadata">
@@ -734,7 +730,7 @@
                   </span>
 
                   <div class="field-column">
-                    <div class="field" style="margin-top: 1em">
+                    <div class="field mt-2 flex items-center">
                       <ToggleSwitch v-model="isBaseEditor" :aria-labelledby="scopedId('input-isBaseEditorData')" />
                       <span style="margin-left: 1em">{{
                         isBaseEditor

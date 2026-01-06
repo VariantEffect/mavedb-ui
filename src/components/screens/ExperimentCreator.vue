@@ -3,18 +3,9 @@
     dialog="You must add an email address to your account to create or edit an experiment. You can do so below, or on the 'Settings' page."
     :is-first-login-prompt="false"
   />
-  {{ experimentSetUrn }}
   <DefaultLayout :require-auth="true">
     <div class="mave-experiment-editor">
-      <div v-if="itemStatus != 'NotLoaded'" class="mave-screen-title-bar">
-        <div class="mave-screen-title">Edit experiment {{ item.urn }}</div>
-        <div v-if="item" class="mavedb-screen-title-controls">
-          <Button @click="saveEditContent">Save changes</Button>
-          <Button severity="help" @click="resetForm">Clear</Button>
-          <Button severity="warn" @click="viewItem">Cancel</Button>
-        </div>
-      </div>
-      <div v-else class="mave-screen-title-bar">
+      <div class="mave-screen-title-bar">
         <div class="mave-screen-title">Create a new experiment</div>
         <div class="mavedb-screen-title-controls">
           <Button @click="validateAndSave">Save</Button>
@@ -33,8 +24,22 @@
               <div class="mavedb-wizard-form">
                 <div class="mavedb-wizard-form-content-background"></div>
                 <div class="mavedb-wizard-row">
+                  <div class="mavedb-wizard-help">
+                    <label :for="scopedId('field-value-experiment-set')" style="font-weight: bold; margin-right: 5px"
+                      >Experiment set:</label
+                    >
+                    <span :id="scopedId('field-value-experiment-set')">{{ experimentSetUrn || "(New experiment set)"}}</span>
+                    <span v-if="validationErrors.experimentSetUrn" class="mave-field-error">{{
+                      validationErrors.experimentSetUrn
+                    }}</span>
+                  </div>
                   <div class="mavedb-wizard-content-pane">
-                    <Message closable severity="info">
+                    <Message v-if="experimentSetUrn" closable severity="info">
+                      You are currently adding an experiment to an existing experiment set. To add to a different set,
+                      please navigate to the experiment set first and click "Add experiment.". To add to a new set,
+                      click "New experiment" from the navigation menu.
+                    </Message>
+                    <Message v-else closable severity="info">
                       You are currently adding an experiment to a new experiment set. To add an experiment to an
                       existing experiment set, navigate to the existing experiment set and click the "Add experiment"
                       button.
@@ -187,7 +192,7 @@
                     }}</span>
                   </div>
                 </div>
-                <div v-if="itemStatus == 'NotLoaded' || item.private == true">
+                <div>
                   <div class="mavedb-wizard-row">
                     <div class="mavedb-wizard-help">
                       <label>
@@ -374,8 +379,8 @@
                 </div>
               </div>
             </StepPanel>
-            <StepPanel v-if="itemStatus == 'NotLoaded' || item.private" v-slot="{ activateCallback }" :value="2">
-              <Message closable>
+            <StepPanel v-slot="{ activateCallback }" :value="2">
+              <Message class="mb-1" closable>
                 Experiments can be tagged with optional keywords. In a future release, the keyword vocabulary will
                 become restricted and keyword selection will be mandatory.
               </Message>
@@ -503,7 +508,6 @@ import EmailPrompt from '@/components/common/EmailPrompt'
 import useScopedId from '@/composables/scoped-id'
 import useAuth from '@/composition/auth'
 import useFormatters from '@/composition/formatters'
-import useItem from '@/composition/item'
 import useItems from '@/composition/items'
 import config from '@/config'
 import {normalizeDoi, normalizeRawRead, validateDoi, validateRawRead} from '@/lib/identifiers'
@@ -623,12 +627,9 @@ export default {
   props: {
     experimentSetUrn: {
       type: String,
-      required: false
+      required: false,
+      default: null
     },
-    itemId: {
-      type: String,
-      required: false
-    }
   },
 
   setup: () => {
@@ -667,7 +668,6 @@ export default {
     return {
       userProfile,
       ...useFormatters(),
-      ...useItem({itemTypeName: 'experiment'}),
       ...useScopedId(),
       variantLibraryKeywordOptions: variantLibraryKeywordOptions.items,
       endogenousSystemKeywordOptions: endogenousSystemKeywordOptions.items,
@@ -789,12 +789,6 @@ export default {
       handler: function () {
         this.resetForm()
       }
-    },
-    itemId: {
-      handler: function () {
-        this.setItemId(this.itemId)
-      },
-      immediate: true
     },
     'keywordKeys.Variant Library Creation Method': function (newValue) {
       if (newValue !== 'Endogenous locus library method') {
@@ -1110,47 +1104,24 @@ export default {
     ////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 
     resetForm: function () {
-      if (this.item) {
-        this.title = this.item.title
-        this.shortDescription = this.item.shortDescription
-        this.abstractText = this.item.abstractText
-        this.methodText = this.item.methodText
-        this.contributors = _.sortBy(this.item.contributors, ['familyName', 'givenName', 'orcidId'])
-        this.doiIdentifiers = this.item.doiIdentifiers
-        // So that the multiselect can populate correctly, build the primary publication identifiers
-        // indirectly by filtering publication identifiers list for those publications we know to be
-        // primary.
-        this.publicationIdentifiers = _.concat(
-          this.item.primaryPublicationIdentifiers,
-          this.item.secondaryPublicationIdentifiers
-        )
-        this.primaryPublicationIdentifiers = this.item.primaryPublicationIdentifiers.filter((publication) => {
-          return this.publicationIdentifiers.some((primary) => {
-            return primary.identifier === publication.identifier
-          })
-        })
-        this.secondaryPublicationIdentifiers = this.item.secondaryPublicationIdentifiers
-        this.rawReadIdentifiers = this.item.rawReadIdentifiers
-        this.extraMetadata = this.item.extraMetadata
-      } else {
-        this.title = null
-        this.shortDescription = null
-        this.abstractText = null
-        this.methodText = null
-        this.contributors = [
-          {
-            orcidId: this.userProfile?.sub,
-            givenName: this.userProfile?.given_name,
-            familyName: this.userProfile?.family_name
-          }
-        ]
-        this.doiIdentifiers = []
-        this.primaryPublicationIdentifiers = []
-        this.secondaryPublicationIdentifiers = []
-        this.publicationIdentifiers = []
-        this.rawReadIdentifiers = []
-        this.extraMetadata = {}
-      }
+      this.title = null
+      this.shortDescription = null
+      this.abstractText = null
+      this.methodText = null
+      this.contributors = [
+        {
+          orcidId: this.userProfile?.sub,
+          givenName: this.userProfile?.given_name,
+          familyName: this.userProfile?.family_name
+        }
+      ]
+      this.doiIdentifiers = []
+      this.primaryPublicationIdentifiers = []
+      this.secondaryPublicationIdentifiers = []
+      this.publicationIdentifiers = []
+      this.rawReadIdentifiers = []
+      this.extraMetadata = {}
+
       this.resetKeywords()
     },
 
@@ -1222,16 +1193,8 @@ export default {
         primaryPublicationIdentifiers: primaryPublicationIdentifiers,
         secondaryPublicationIdentifiers: secondaryPublicationIdentifiers,
         rawReadIdentifiers: this.rawReadIdentifiers.map((identifier) => _.pick(identifier, 'identifier')),
-        extraMetadata: this.extraMetadata
-      }
-      // empty item arrays so that deleted items aren't merged back into editedItem object
-      if (this.item) {
-        this.item.contributors = []
-        this.item.keywords = []
-        this.item.doiIdentifiers = []
-        this.item.publicationIdentifiers = []
-        this.item.primaryPublicationIdentifiers = []
-        this.item.rawReadIdentifiers = []
+        extraMetadata: this.extraMetadata,
+        experimentSetUrn: this.experimentSetUrn
       }
 
       const editedItem = _.merge({}, this.item || {}, editedFields)

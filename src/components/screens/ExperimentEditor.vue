@@ -4,7 +4,6 @@
     :is-first-login-prompt="false"
   />
   <DefaultLayout :require-auth="true">
-    {{ experimentSetUrn }}
     <div class="mave-experiment-editor">
       <div class="grid">
         <div class="col-12">
@@ -16,41 +15,10 @@
               <Button severity="warn" @click="viewItem">Cancel</Button>
             </div>
           </div>
-          <div v-else class="mave-screen-title-bar">
-            <div class="mave-screen-title">Create a new experiment</div>
-            <div class="mavedb-screen-title-controls">
-              <Button @click="validateAndSave">Save experiment</Button>
-              <Button severity="help" @click="resetForm">Clear</Button>
-              <Button severity="warn" @click="backDashboard">Cancel</Button>
-            </div>
-          </div>
         </div>
         <div class="col-12 md:col-6">
           <Card>
             <template #content>
-              <div v-if="experimentSetUrn" class="field">
-                <label :for="scopedId('field-value-experiment-set')" style="font-weight: bold; margin-right: 5px"
-                  >Experiment set:</label
-                >
-                <span :id="scopedId('field-value-experiment-set')">{{ experimentSetUrn }}</span>
-                <span v-if="validationErrors.experimentSetUrn" class="mave-field-error">{{
-                  validationErrors.experimentSetUrn
-                }}</span>
-                <div v-if="!item" class="mave-field-help">
-                  To add an experiment to a different set, please navigate to the experiment set first and click "Add
-                  experiment."
-                </div>
-              </div>
-              <div v-else class="field">
-                <label :for="scopedId('field-value-experiment-set')" style="font-weight: bold; margin-right: 5px"
-                  >Experiment set:</label
-                >
-                <span :id="scopedId('field-value-experiment-set')">(New experiment set)</span>
-                <div class="mave-field-help">
-                  To add an experiment to an existing set, please navigate to the experiment set first and click "Add
-                  experiment."
-                </div>
-              </div>
               <div class="field">
                 <FloatLabel variant="on">
                   <InputText :id="scopedId('input-title')" v-model="title" />
@@ -518,13 +486,10 @@ export default {
   },
 
   props: {
-    experimentSetUrn: {
-      type: String,
-      required: false
-    },
     itemId: {
       type: String,
-      required: false
+      required: false,
+      default: null
     }
   },
 
@@ -984,24 +949,6 @@ export default {
         this.secondaryPublicationIdentifiers = this.item.secondaryPublicationIdentifiers
         this.rawReadIdentifiers = this.item.rawReadIdentifiers
         this.extraMetadata = this.item.extraMetadata
-      } else {
-        this.title = null
-        this.shortDescription = null
-        this.abstractText = null
-        this.methodText = null
-        this.contributors = [
-          {
-            orcidId: this.userProfile?.sub,
-            givenName: this.userProfile?.given_name,
-            familyName: this.userProfile?.family_name
-          }
-        ]
-        this.doiIdentifiers = []
-        this.primaryPublicationIdentifiers = []
-        this.secondaryPublicationIdentifiers = []
-        this.publicationIdentifiers = []
-        this.rawReadIdentifiers = []
-        this.extraMetadata = {}
       }
       this.resetKeywords()
     },
@@ -1094,11 +1041,6 @@ export default {
       try {
         if (this.item) {
           response = await axios.put(`${config.apiBaseUrl}/experiments/${this.item.urn}`, editedItem)
-        } else {
-          if (this.experimentSetUrn) {
-            editedItem.experimentSetUrn = this.experimentSetUrn
-          }
-          response = await axios.post(`${config.apiBaseUrl}/experiments/`, editedItem)
         }
       } catch (e) {
         response = e.response || {status: 500}
@@ -1112,10 +1054,6 @@ export default {
           //this.reloadItem()
           this.$router.replace({path: `/experiments/${savedItem.urn}`})
           this.$toast.add({severity: 'success', summary: 'Your changes were saved.', life: 3000})
-        } else {
-          console.log('Created item')
-          this.$router.replace({path: `/experiments/${savedItem.urn}`})
-          this.$toast.add({severity: 'success', summary: 'The new experiment was saved.', life: 3000})
         }
       } else if (response.data && response.data.detail) {
         if (typeof response.data.detail === 'string' || response.data.detail instanceof String) {

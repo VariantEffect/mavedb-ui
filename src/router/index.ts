@@ -129,7 +129,7 @@ const routes: RouteRecordRaw[] = [
   {
     path: '/experiment-sets/:urn/create-experiment',
     name: 'createExperimentInExperimentSet',
-    component: ExperimentEditor,
+    component: ExperimentCreator,
     props: (route) => ({experimentSetUrn: route.params.urn}),
     meta: {requiresAuth: true}
   },

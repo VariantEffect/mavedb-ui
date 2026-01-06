@@ -11,13 +11,14 @@
 <script lang="ts">
 import Tag from 'primevue/tag'
 import {defineComponent} from 'vue'
+import igvfTagImage from '@/assets/igvf-tag.png'
 
 const BUILT_IN_BADGE_CLASSES: {[key: string]: string} = {
   IGVF: 'mavedb-collection-badge-igvf'
 }
 
 const BUILT_IN_BADGE_IMAGE_ASSETS: {[key: string]: string} = {
-  IGVF: '../assets/igvf-tag.png'
+  IGVF: igvfTagImage
 }
 
 export default defineComponent({
@@ -37,8 +38,7 @@ export default defineComponent({
     },
 
     badgeImage: function () {
-      const asset = BUILT_IN_BADGE_IMAGE_ASSETS[this.collection.badgeName]
-      return asset ? new URL(asset, import.meta.url).href : undefined
+      return BUILT_IN_BADGE_IMAGE_ASSETS[this.collection.badgeName] || undefined
     },
 
     badgeNameIsLink: function () {

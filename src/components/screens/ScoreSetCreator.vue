@@ -1262,9 +1262,12 @@
                         choose-label="Scores file"
                         :class="inputClasses.scoresFile || ''"
                         :custom-upload="true"
+                        :disabled="scoresFileCount !== 0"
                         :file-limit="1"
                         :show-cancel-button="false"
                         :show-upload-button="false"
+                        @remove="fileCleared('scoresFile')"
+                        @select="fileSelected('scoresFile', $event)"
                       >
                         <template #empty>
                           <p>Drop a file here.</p>
@@ -1295,7 +1298,7 @@
                         choose-label="Scores column metadata file"
                         :class="inputClasses.scoreColumnsMetadataFile || ''"
                         :custom-upload="true"
-                        :disabled="($refs.scoresFileUpload?.files?.length || 0) != 1"
+                        :disabled="scoresFileCount !== 1 || scoreColumnsMetadataFileCount !== 0"
                         :file-limit="1"
                         :show-cancel-button="false"
                         :show-upload-button="false"
@@ -1331,9 +1334,12 @@
                         choose-label="Counts file"
                         :class="inputClasses.countsFile || ''"
                         :custom-upload="true"
+                        :disabled="countsFileCount !== 0"
                         :file-limit="1"
                         :show-cancel-button="false"
                         :show-upload-button="false"
+                        @remove="fileCleared('countsFile')"
+                        @select="fileSelected('countsFile', $event)"
                       >
                         <template #empty>
                           <p>Drop a file here.</p>
@@ -1364,7 +1370,7 @@
                         choose-label="Counts column metadata file"
                         :class="inputClasses.countColumnsMetadataFile || ''"
                         :custom-upload="true"
-                        :disabled="($refs.countsFileUpload?.files?.length || 0 ) != 1"
+                        :disabled="countsFileCount !== 1 || countColumnsMetadataFileCount !== 0"
                         :file-limit="1"
                         :show-cancel-button="false"
                         :show-upload-button="false"
@@ -1631,6 +1637,12 @@ export default {
     },
     externalGeneDatabases,
     validationErrors: {},
+
+    // File upload states - reactive replacements for refs
+    scoresFileCount: 0,
+    countsFileCount: 0,
+    scoreColumnsMetadataFileCount: 0,
+    countColumnsMetadataFileCount: 0,
 
     isTargetSequence: true,
     isBaseEditor: false,
@@ -2374,6 +2386,9 @@ export default {
     },
 
     fileCleared: function (inputName) {
+      // Update reactive file counts
+      this.updateFileCount(inputName, 0)
+
       if (inputName == 'extraMetadataFile') {
         this.extraMetadata = null
         delete this.clientSideValidationErrors.extraMetadata
@@ -2390,6 +2405,23 @@ export default {
       this.mergeValidationErrors()
     },
 
+    updateFileCount: function (inputName, count) {
+      switch (inputName) {
+        case 'scoresFile':
+          this.scoresFileCount = count
+          break
+        case 'countsFile':
+          this.countsFileCount = count
+          break
+        case 'scoreColumnsMetadataFile':
+          this.scoreColumnsMetadataFileCount = count
+          break
+        case 'countColumnsMetadataFile':
+          this.countColumnsMetadataFileCount = count
+          break
+      }
+    },
+
     validateJsonObject: function (data, fieldName) {
       if (!_.isObject(data) || _.isArray(data)) {
         this.clientSideValidationErrors[fieldName] =
@@ -2401,6 +2433,10 @@ export default {
 
     fileSelected: async function (inputName, event, targetIdx) {
       const file = event.files[0]
+
+      // Update reactive file counts
+      this.updateFileCount(inputName, event.files.length)
+
       if (file) {
         const text = await file.text()
         switch (inputName) {
@@ -2712,12 +2748,12 @@ export default {
     },
 
     uploadData: async function (scoreSet) {
-      if (this.$refs.scoresFileUpload.files.length != 1) {
+      if (this.scoresFileCount !== 1) {
         this.validationErrors = {scores: 'Required'}
       } else {
         const formData = new FormData()
         formData.append('scores_file', this.$refs.scoresFileUpload.files[0])
-        if (this.$refs.countsFileUpload.files.length == 1) {
+        if (this.countsFileCount === 1) {
           formData.append('counts_file', this.$refs.countsFileUpload.files[0])
         }
         if (this.scoreColumnsMetadata) {
@@ -2758,8 +2794,8 @@ export default {
     validateAndSave: async function () {
       this.clientSideValidationErrors = {}
 
-      const hasScoresFile = this.$refs.scoresFileUpload.files.length == 1
-      const hasCountsFile = this.$refs.countsFileUpload.files.length == 1
+      const hasScoresFile = this.scoresFileCount === 1
+      const hasCountsFile = this.countsFileCount === 1
       if (hasCountsFile && !hasScoresFile) {
         this.clientSideValidationErrors.scoresFile = 'Required'
       }

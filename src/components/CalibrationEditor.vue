@@ -960,12 +960,6 @@ export default {
       }
     },
 
-    // clearPublicationIdentifierSearch: function (refName: string) {
-    //   // This could change with a new Primevue version.
-    //   const input = this.$refs[refName]
-    //   input.$refs.focusInput.value = ''
-    // },
-
     searchPublicationIdentifiers: function (event: {query: string}) {
       const searchText = (event.query || '').trim()
       if (searchText.length > 0) {

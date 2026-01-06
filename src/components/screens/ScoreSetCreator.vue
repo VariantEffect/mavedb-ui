@@ -2708,8 +2708,6 @@ export default {
             }
 
             if (_.isEqual(_.first(path), 'targetGenes') && path.length >= 2) {
-              // this.minTargetGeneStepWithError = Math.min(this.minTargetGeneStepWithError, path[1])
-
               // Map errors on indexed external gene identifiers to inputs named for the identifier's database.
               if (_.isEqual(_.slice(path, 2, 3), ['externalIdentifiers'])) {
                 const identifierIndex = path[3]

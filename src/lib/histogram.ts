@@ -3,6 +3,7 @@ import $ from 'jquery'
 import _ from 'lodash'
 import {v4 as uuidv4} from 'uuid'
 import {HeatmapDatum} from './heatmap'
+import { style } from 'd3'
 
 type FieldGetter<T> = ((d: HistogramDatum) => T) | string
 type Getter<T> = () => T
@@ -640,21 +641,24 @@ export default function makeHistogram(): Histogram {
   ////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 
   const hoverOpacity = (d: HistogramBin) => {
-    // Don't highlight the bin if no serie has any data in this bin.
+    // Don't highlight the bin if no series has any data in this bin.
     if (!d.seriesBins.some((bin) => bin.length > 0)) {
       return 0
     }
-    // If the cursor is hovering over a bin, ignore the selection and just highlight the hovered bin.
-    if (hoverBin) {
-      return d == hoverBin ? 1 : 0
-    }
-    // Highlight the selected bin if there is one.
-    return d == selectedBin ? 1 : 0
+    // Highlight selected and hovered bins.
+    return ((hoverBin && d == hoverBin) || d == selectedBin) ? 1 : 0
+  }
+
+  const hoverStrokeWidth = (d: HistogramBin) => {
+    // Make the selected bin's border slightly thicker than hovered bins
+    return d == selectedBin ? '2' : '1.5'
   }
 
   const refreshHighlighting = () => {
     if (svg) {
-      svg.selectAll('.histogram-hover-highlight').style('opacity', (d) => hoverOpacity(d as HistogramBin))
+      svg.selectAll('.histogram-hover-highlight')
+        .style('opacity', (d) => hoverOpacity(d as HistogramBin))
+        .style('stroke-width', (d) => hoverStrokeWidth(d as HistogramBin))
     }
   }
 

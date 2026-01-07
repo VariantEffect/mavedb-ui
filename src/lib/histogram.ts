@@ -600,8 +600,9 @@ export default function makeHistogram(): Histogram {
         anchorTop -= tooltipHeight
       }
 
+      // Clamp vertically to keep tooltip inside container bounds
       selectionTooltip
-        .style('top', `${anchorTop - bufferPx}px`)
+        .style('top', `clamp(${-(_container.clientHeight - bufferPx)}px, ${anchorTop - bufferPx}px, ${-(tooltipHeight + bufferPx)}px)`)
         // Prevent the relatively positioned div from affecting layout flow
         .style('margin-bottom', `${-height - topBorderWidth * 2}px`)
 

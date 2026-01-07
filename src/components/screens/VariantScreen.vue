@@ -85,7 +85,7 @@ import VariantMeasurementView from '@/components/VariantMeasurementView.vue'
 import config from '@/config'
 
 export default defineComponent({
-  name: 'VariantMeasurementScreen',
+  name: 'VariantScreen',
   components: {
     Button,
     DefaultLayout,

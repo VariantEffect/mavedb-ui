@@ -23,17 +23,17 @@
             <InputText
               ref="searchTextInput"
               v-model="searchText"
-              class="p-inputtext-sm !rounded-r-none w-full"
+              class="rounded-r-none! w-full"
               placeholder="Search"
-              style="width: 200px; height: auto;"
+              size="small"
               type="search"
               @keyup.enter="search"
             />
             <Button
-              class="p-button-default p-button-sm !rounded-l-none"
+              class="rounded-l-none!"
               :enabled="searchText && searchText.length > 0"
               icon="pi pi-search"
-              style="height: auto;"
+              size="small"
               @click="search"
             />
           </div>
@@ -147,11 +147,6 @@ export default {
           target: '_blank',
           url: 'https://mavedb.zulipchat.com/#narrow/channel/511813-beta-testers',
           available: ({config}) => config.PREVIEW_SITE
-        },
-        {
-          label: 'Users',
-          route: '/users',
-          available: ({roles}) => roles.includes('admin')
         },
         {
           label: this.userName,

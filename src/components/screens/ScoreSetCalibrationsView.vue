@@ -6,19 +6,16 @@
         <div class="calibration-title-actions">
           <PrimeButton
             v-if="userIsAuthorizedToEditScoreSet"
-            class="p-button p-component"
             icon="pi pi-plus"
             label="New calibration"
             @click="createCalibration(item.urn)"
           />
           <PrimeButton
-            class="p-button p-component"
             icon="pi pi-refresh"
             title="Reload calibrations"
             @click="reloadItem()"
           />
           <PrimeButton
-            class="p-button p-component"
             icon="pi pi-download"
             title="Download calibration JSON"
             @click="downloadCalibrations()"
@@ -61,14 +58,16 @@
                 </span>
                 <PrimeButton
                   v-if="data.notes && data.notes.length > 100 && !expandedNotes[data.id]"
-                  class="p-button p-component p-button-text p-button-sm"
                   label="See more"
+                  size="small"
+                  variant="text"
                   @click="expandedNotes[data.id] = true"
                 />
                 <PrimeButton
                   v-if="data.notes && expandedNotes[data.id]"
-                  class="p-button p-component p-button-text p-button-sm"
                   label="See less"
+                  size="small"
+                  variant="text"
                   @click="expandedNotes[data.id] = false"
                 />
               </template>
@@ -118,51 +117,56 @@
                     :to="{name: 'scoreSet', params: {urn: item.urn}, query: {calibration: data.urn}}"
                   >
                     <PrimeButton
-                      class="p-button p-component p-button-sm p-button-info"
                       icon="pi pi-eye"
-                      :rounded="true"
+                      rounded
+                      severity="info"
+                      size="small"
                     />
                   </router-link>
                   <!-- Only an authenticated user will be able to edit these properties -->
                   <template v-if="userIsAuthenticated">
                     <PrimeButton
                       v-if="calibrationAuthorizations[data.urn]?.update && userIsAuthorizedToEditScoreSet"
-                      class="p-button p-component p-button-sm"
                       icon="pi pi-pencil"
                       :rounded="true"
+                      size="small"
                       title="Edit calibration"
                       @click="editCalibration(data.urn)"
                     />
                     <PrimeButton
                       v-if="calibrationAuthorizations[data.urn]?.change_rank && data.primary"
-                      class="p-button p-component p-button-sm p-button-warning"
                       icon="pi pi-angle-double-down"
                       :rounded="true"
+                      severity="warn"
+                      size="small"
                       title="Demote calibration to non-primary"
                       @click="demoteCalibration(data.urn)"
                     />
                     <PrimeButton
                       v-if="calibrationAuthorizations[data.urn]?.change_rank && !data.primary"
-                      class="p-button p-component p-button-sm p-button-warning"
                       :disabled="data.researchUseOnly || primaryExists"
                       icon="pi pi-angle-double-up"
                       :rounded="true"
+                      severity="warn"
+                      size="small"
                       title="Promote calibration to primary"
                       @click="promoteCalibration(data.urn)"
                     />
                     <PrimeButton
                       v-if="calibrationAuthorizations[data.urn]?.publish && data.private"
-                      class="p-button p-component p-button-sm p-button-success"
                       icon="pi pi-check-circle"
                       :rounded="true"
+                      severity="success"
+                      size="small"
                       title="Publish calibration"
                       @click="publishCalibration(data.urn)"
                     />
                     <PrimeButton
                       v-if="calibrationAuthorizations[data.urn]?.delete"
-                      class="p-button p-component p-button-sm p-button-danger"
                       icon="pi pi-trash"
                       :rounded="true"
+                      severity="danger"
+                      size="small"
                       title="Delete calibration"
                       @click="deleteCalibration(data.urn)"
                     />
@@ -195,7 +199,7 @@
   </DefaultLayout>
   <PrimeDialog
     v-model:visible="editorVisible"
-    :close-on-escape="true"
+    :close-on-escape="false"
     :header="editingCalibrationUrn ? 'Edit Calibration' : 'Create New Calibration'"
     modal
     :style="{maxWidth: '90%', width: '75rem'}"
@@ -209,15 +213,15 @@
     />
     <template #footer>
       <PrimeButton
-        class="p-button p-component p-button-secondary"
         icon="pi pi-times"
         label="Close"
+        severity="secondary"
         @click="cancelEditCreate"
       />
       <PrimeButton
-        class="p-button p-component p-button-success"
         icon="pi pi-save"
         label="Save Changes"
+        severity="success"
         @click="saveChildCalibration"
       />
     </template>
@@ -493,10 +497,11 @@ export default {
             await this.reloadItem()
           } catch (error) {
             console.error('Error publishing calibration:', error)
+            const errorMessage = axios.isAxiosError(error) && error.response?.data?.detail && (typeof error.response.data.detail === 'string' || error.response.data.detail instanceof String) ? error.response.data.detail : error
             this.$toast.add({
               severity: 'error',
               summary: 'Calibration Not Published',
-              detail: `An error occurred while publishing the calibration: ${error}. Please try again later.`,
+              detail: `An error occurred while publishing the calibration: ${errorMessage}. Please try again later.`,
               life: 4000
             })
           }
@@ -520,10 +525,11 @@ export default {
         await this.reloadItem()
       } catch (error) {
         console.error('Error demoting calibration:', error)
+        const errorMessage = axios.isAxiosError(error) && error.response?.data?.detail && (typeof error.response.data.detail === 'string' || error.response.data.detail instanceof String) ? error.response.data.detail : error
         this.$toast.add({
           severity: 'error',
           summary: 'Calibration Not Demoted',
-          detail: `An error occurred while demoting the calibration: ${error}. Please try again later.`,
+          detail: `An error occurred while demoting the calibration: ${errorMessage}. Please try again later.`,
           life: 4000
         })
       }
@@ -541,10 +547,11 @@ export default {
         await this.reloadItem()
       } catch (error) {
         console.error('Error promoting calibration:', error)
+        const errorMessage = axios.isAxiosError(error) && error.response?.data?.detail && (typeof error.response.data.detail === 'string' || error.response.data.detail instanceof String) ? error.response.data.detail : error
         this.$toast.add({
           severity: 'error',
           summary: 'Calibration Not Promoted',
-          detail: `An error occurred while promoting the calibration: ${error}. Please try again later.`,
+          detail: `An error occurred while promoting the calibration: ${errorMessage}. Please try again later.`,
           life: 4000
         })
       }
@@ -573,10 +580,11 @@ export default {
             await this.reloadItem()
           } catch (error) {
             console.error('Error deleting calibration:', error)
+            const errorMessage = axios.isAxiosError(error) && error.response?.data?.detail && (typeof error.response.data.detail === 'string' || error.response.data.detail instanceof String) ? error.response.data.detail : error
             this.$toast.add({
               severity: 'error',
               summary: 'Calibration Not Deleted',
-              detail: `An error occurred while deleting the calibration: ${error}. Please try again later.`,
+              detail: `An error occurred while deleting the calibration: ${errorMessage}. Please try again later.`,
               life: 4000
             })
           }
@@ -603,10 +611,11 @@ export default {
         document.body.removeChild(link)
       } catch (error) {
         console.error('Error downloading calibrations:', error)
+        const errorMessage = axios.isAxiosError(error) && error.response?.data?.detail && (typeof error.response.data.detail === 'string' || error.response.data.detail instanceof String) ? error.response.data.detail : error
         this.$toast.add({
           severity: 'error',
           summary: 'Download Failed',
-          detail: `An error occurred while downloading the calibrations: ${error}. Please try again later.`,
+          detail: `An error occurred while downloading the calibrations: ${errorMessage}. Please try again later.`,
           life: 4000
         })
       }

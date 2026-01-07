@@ -32,11 +32,13 @@
       <template v-else>{{ targetGene.targetSequence.sequence.substring(0, 500) + '....' }} </template>
       <Button
         v-if="showingFullSequence"
-        class="p-button-text p-button-sm p-button-info"
+        severity="info"
+        size="small"
+        variant="text"
         @click="showFullSequence(false)"
         >Show less</Button
       >
-      <Button v-else class="p-button-text p-button-sm p-button-info" @click="showFullSequence(true)"
+      <Button v-else severity="info" size="small" variant="text" @click="showFullSequence(true)"
         >Show more</Button
       > </template
     ><template v-else>{{ targetGene.targetSequence.sequence }}</template>

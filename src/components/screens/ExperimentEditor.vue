@@ -4,7 +4,6 @@
     :is-first-login-prompt="false"
   />
   <DefaultLayout :require-auth="true">
-    {{ experimentSetUrn }}
     <div class="mave-experiment-editor">
       <div class="grid">
         <div class="col-12">
@@ -12,109 +11,63 @@
             <div class="mave-screen-title">Edit experiment {{ item.urn }}</div>
             <div v-if="item" class="mavedb-screen-title-controls">
               <Button @click="validateAndSave">Save changes</Button>
-              <Button class="p-button-help" @click="resetForm">Clear</Button>
-              <Button class="p-button-warning" @click="viewItem">Cancel</Button>
-            </div>
-          </div>
-          <div v-else class="mave-screen-title-bar">
-            <div class="mave-screen-title">Create a new experiment</div>
-            <div class="mavedb-screen-title-controls">
-              <Button @click="validateAndSave">Save experiment</Button>
-              <Button class="p-button-help" @click="resetForm">Clear</Button>
-              <Button class="p-button-warning" @click="backDashboard">Cancel</Button>
+              <Button severity="help" @click="resetForm">Clear</Button>
+              <Button severity="warn" @click="viewItem">Cancel</Button>
             </div>
           </div>
         </div>
         <div class="col-12 md:col-6">
           <Card>
             <template #content>
-              <div v-if="experimentSetUrn" class="field">
-                <label :for="scopedId('field-value-experiment-set')" style="font-weight: bold; margin-right: 5px"
-                  >Experiment set:</label
-                >
-                <span :id="scopedId('field-value-experiment-set')">{{ experimentSetUrn }}</span>
-                <span v-if="validationErrors.experimentSetUrn" class="mave-field-error">{{
-                  validationErrors.experimentSetUrn
-                }}</span>
-                <div v-if="!item" class="mave-field-help">
-                  To add an experiment to a different set, please navigate to the experiment set first and click "Add
-                  experiment."
-                </div>
-              </div>
-              <div v-else class="field">
-                <label :for="scopedId('field-value-experiment-set')" style="font-weight: bold; margin-right: 5px"
-                  >Experiment set:</label
-                >
-                <span :id="scopedId('field-value-experiment-set')">(New experiment set)</span>
-                <div class="mave-field-help">
-                  To add an experiment to an existing set, please navigate to the experiment set first and click "Add
-                  experiment."
-                </div>
-              </div>
               <div class="field">
-                <span class="p-float-label">
+                <FloatLabel variant="on">
                   <InputText :id="scopedId('input-title')" v-model="title" />
                   <label :for="scopedId('input-title')">Title</label>
-                </span>
+                </FloatLabel>
                 <span v-if="validationErrors.title" class="mave-field-error">{{ validationErrors.title }}</span>
               </div>
               <div class="field">
-                <span class="p-float-label">
+                <FloatLabel variant="on">
                   <Textarea :id="scopedId('input-shortDescription')" v-model="shortDescription" rows="4" />
                   <label :for="scopedId('input-shortDescription')">Short description</label>
-                </span>
+                </FloatLabel>
                 <span v-if="validationErrors.shortDescription" class="mave-field-error">{{
                   validationErrors.shortDescription
                 }}</span>
               </div>
               <div class="field">
-                <span class="p-float-label">
-                  <Chips
+                <FloatLabel variant="on">
+                 <AutoComplete
                     :id="scopedId('input-doiIdentifiers')"
                     ref="doiIdentifiersInput"
                     v-model="doiIdentifiers"
-                    :add-on-blur="true"
-                    :allow-duplicate="false"
-                    @add="acceptNewDoiIdentifier"
-                    @keyup.escape="clearDoiIdentifierSearch"
-                  >
-                    <template #chip="slotProps">
-                      <div>
-                          <span>{{ slotProps.value?.identifier }}</span>
-                      </div>
-                      <div>
-                        <i class="pi pi-times-circle" @click="removeDoiIdentifier(slotProps.value)"></i>
-                      </div>
-                    </template>
-                  </Chips>
+                    :multiple="true"
+                    option-label="identifier"
+                    :typeahead="false"
+                    @blur="updateDoiIdentifiers"
+                    @keyup.escape="clearAutoCompleteInput"
+                    @keyup.space="updateDoiIdentifiers"
+                    @update:model-value="newDoiIdentifiersAdded"
+                  />
                   <label :for="scopedId('input-doiIdentifiers')">DOIs</label>
-                </span>
+                </FloatLabel>
                 <span v-if="validationErrors.doiIdentifiers" class="mave-field-error">{{
                   validationErrors.doiIdentifiers
                 }}</span>
               </div>
               <div class="field">
-                <span class="p-float-label">
+                <FloatLabel variant="on">
                   <AutoComplete
                     :id="scopedId('input-publicationIdentifiers')"
-                    ref="publicationIdentifiersInput"
                     v-model="publicationIdentifiers"
-                    class="p-inputwrapper-filled"
                     :multiple="true"
-                    option-label="identifier"
+                    :option-label="(x) => `${x.identifier}: ${truncatePublicationTitle(x.title)}`"
                     :suggestions="publicationIdentifierSuggestionsList"
+                    @blur="clearAutoCompleteInput"
                     @complete="searchPublicationIdentifiers"
-                    @keyup.escape="clearPublicationIdentifierSearch"
+                    @keyup.escape="clearAutoCompleteInput"
                     @option-select="acceptNewPublicationIdentifier"
                   >
-                    <template #chip="slotProps">
-                      <div class="p-inputchips-chip-item">
-                        {{ slotProps.value.identifier }}: {{ truncatePublicationTitle(slotProps.value.title) }}
-                        <div>
-                          <i class="pi pi-times-circle" @click="removePublicationIdentifier(slotProps.value)"></i>
-                        </div>
-                      </div>
-                    </template>
                     <template #option="slotProps">
                       <div>
                         <div>Title: {{ slotProps.option.title }}</div>
@@ -125,16 +78,15 @@
                     </template>
                   </AutoComplete>
                   <label :for="scopedId('input-publicationIdentifiers')">Publication identifiers</label>
-                </span>
+                </FloatLabel>
                 <span v-if="validationErrors.publicationIdentifiers" class="mave-field-error">{{
                   validationErrors.publicationIdentifiers
                 }}</span>
               </div>
               <div class="field">
-                <span class="p-float-label" style="display: block">
+                <FloatLabel variant="on">
                   <Multiselect
                     :id="scopedId('input-primaryPublicationIdentifiers')"
-                    ref="primaryPublicationIdentifiersInput"
                     v-model="primaryPublicationIdentifiers"
                     class="p-inputwrapper-filled"
                     option-label="identifier"
@@ -152,33 +104,27 @@
                     </template>
                   </Multiselect>
                   <label :for="scopedId('input-primaryPublicationIdentifiers')">Primary publication</label>
-                </span>
+                </FloatLabel>
                 <span v-if="validationErrors.primaryPublicationIdentifiers" class="mave-field-error">{{
                   validationErrors.primaryPublicationIdentifiers
                 }}</span>
               </div>
               <div class="field">
-                <span class="p-float-label">
-                  <Chips
+                <FloatLabel variant="on">
+                  <AutoComplete
                     :id="scopedId('input-rawReadIdentifiers')"
                     ref="rawReadIdentifiersInput"
                     v-model="rawReadIdentifiers"
-                    :add-on-blur="true"
-                    :allow-duplicate="false"
-                    @add="acceptNewRawReadIdentifier"
-                    @keyup.escape="clearRawReadIdentifierSearch"
-                  >
-                    <template #chip="slotProps">
-                      <div>
-                          <span>{{ slotProps.value?.identifier }}</span>
-                      </div>
-                      <div>
-                        <i class="pi pi-times-circle" @click="removeRawReadIdentifier(slotProps.value)"></i>
-                      </div>
-                    </template>
-                  </Chips>
+                    :multiple="true"
+                    option-label="identifier"
+                    :typeahead="false"
+                    @blur="updateRawReadIdentifiers"
+                    @keyup.escape="clearAutoCompleteInput"
+                    @keyup.space="updateRawReadIdentifiers"
+                    @update:model-value="newRawReadIdentifiersAdded"
+                  />
                   <label :for="scopedId('input-rawReadIdentifiers')">Raw Read</label>
-                </span>
+                </FloatLabel>
                 <span v-if="validationErrors.rawReadIdentifiers" class="mave-field-error">{{
                   validationErrors.rawReadIdentifiers
                 }}</span>
@@ -191,10 +137,10 @@
                   </TabList>
                   <TabPanels>
                     <TabPanel header="Edit" value="0">
-                      <span class="p-float-label">
+                      <FloatLabel variant="on">
                         <Textarea :id="scopedId('input-abstractText')" v-model="abstractText" rows="4" />
                         <label :for="scopedId('input-abstractText')">Abstract</label>
-                      </span>
+                      </FloatLabel>
                     </TabPanel>
                     <TabPanel header="Preview" value="1">
                       <!-- eslint-disable-next-line vue/no-v-html -->
@@ -214,10 +160,10 @@
                   </TabList>
                   <TabPanels>
                     <TabPanel header="Edit" value="0">
-                      <span class="p-float-label">
+                      <FloatLabel variant="on">
                         <Textarea :id="scopedId('input-methodText')" v-model="methodText" rows="4" />
                         <label :for="scopedId('input-methodText')">Methods</label>
-                      </span>
+                      </FloatLabel>
                     </TabPanel>
                     <TabPanel header="Preview" value="1">
                       <!-- eslint-disable-next-line vue/no-v-html -->
@@ -230,52 +176,42 @@
                 }}</span>
               </div>
               <div class="field">
-                <span class="p-float-label">
-                  <Chips
+                <FloatLabel variant="on">
+                  <AutoComplete
                     :id="scopedId('input-contributors')"
-                    ref="contributorsInput"
                     v-model="contributors"
-                    :add-on-blur="true"
-                    :allow-duplicate="false"
-                    :placeholder="contributors.length > 0 ? '' : 'Type or paste ORCID IDs here.'"
-                    @add="newContributorsAdded"
-                    @keyup.escape="clearContributorSearch"
-                  >
-                    <template #chip="slotProps">
-                      <div>
-                        <div v-if="slotProps.value.givenName || slotProps.value.familyName">
-                          {{ slotProps.value.givenName }} {{ slotProps.value.familyName }} ({{
-                            slotProps.value.orcidId
-                          }})
-                        </div>
-                        <div v-else>{{ slotProps.value.orcidId }}</div>
-                      </div>
-                      <div>
-                        <i class="pi pi-times-circle" @click="removeContributor(slotProps.value)"></i>
-                      </div>
-                    </template>
-                  </Chips>
+                    fluid
+                    multiple
+                    :option-label="(x) => x.givenName || x.familyName ? `${x.givenName} ${x.familyName} (${x.orcidId})` : x.orcidId"
+                    :typeahead="false"
+                    @blur="updateContributors"
+                    @keyup.escape="clearAutoCompleteInput"
+                    @keyup.space="updateContributors"
+                    @update:model-value="newContributorsAdded"
+                  />
                   <label :for="scopedId('input-contributors')">Contributors</label>
-                </span>
+                </FloatLabel>
                 <span v-if="validationErrors.contributors" class="mave-field-error">{{
                   validationErrors.contributors
                 }}</span>
               </div>
               <div class="field">
-                <span class="p-float-label">
+                <FloatLabel variant="on">
                   <div v-if="extraMetadata">
                     <span class="mr-2">Extra metadata</span>
                     <i class="pi pi-check mr-3"></i>
                     <Button
                       v-tooltip="{value: 'View extra metadata'}"
-                      class="p-button-info mr-2"
+                      class="mr-2"
                       icon="pi pi-eye"
+                      severity="info"
                       @click="jsonToDisplay = JSON.stringify(extraMetadata, null, 2)"
                     ></Button>
                     <Button
                       v-tooltip="{value: 'Delete extra metadata'}"
-                      class="p-button-danger mr-2"
+                      class="mr-2"
                       icon="pi pi-times"
+                      severity="danger"
                       @click="fileCleared('extraMetadataFile')"
                     ></Button>
                   </div>
@@ -297,7 +233,7 @@
                       <p>Drop a JSON file here.</p>
                     </template>
                   </FileUpload>
-                </span>
+                </FloatLabel>
                 <span v-if="validationErrors.extraMetadata" class="mave-field-error">{{
                   validationErrors.extraMetadata
                 }}</span>
@@ -314,8 +250,8 @@
               <div v-for="keyword in keywordData" :key="keyword.key">
                 <div v-if="keywordVisibility[keyword.key]">
                   <div class="field">
-                    <span class="p-float-label">
-                      <Dropdown
+                    <FloatLabel variant="on">
+                      <Select
                         :id="scopedId(`keyword-input-${keyword.key}`)"
                         v-model="keywordKeys[keyword.key]"
                         class="keyword-dropdown"
@@ -324,7 +260,7 @@
                         :options="getKeywordOptions(keyword.option)"
                       />
                       <label :for="scopedId(`keyword-input-${keyword.key}`)">{{ keyword.key }}</label>
-                    </span>
+                    </FloatLabel>
                     <Button
                       aria-label="Filter"
                       class="keyword-description-button"
@@ -367,22 +303,22 @@
                     }}</span>
                   </div>
                   <div v-if="keywordTextVisible[keyword.key] || keywordKeys[keyword.key] === 'Other'" class="field">
-                    <span class="p-float-label keyword-description-input">
+                    <FloatLabel variant="on" class="keyword-description-input">
                       <Textarea :id="scopedId('input-title')" v-model="keywordDescriptions[keyword.key]" rows="4" />
                       <label :for="scopedId('input-title')"
                         >{{ keyword.descriptionLabel }}
                         {{ keywordKeys[keyword.key] === 'Other' ? '(Required)' : '(Optional)' }}</label
                       >
-                    </span>
+                    </FloatLabel>
                     <span v-if="validationErrors[`keywordDescriptions.${keyword.key}`]" class="mave-field-error">
                       {{ validationErrors[`keywordDescriptions.${keyword.key}`] }}</span
                     >
                   </div>
                 </div>
               </div>
-              <div class="field">
-                <Button class="p-button-help" @click="resetKeywords">Reset Keywords</Button>
-                <Button class="p-button-warning padded-button" @click="clearKeywords">Clear Keywords</Button>
+              <div class="field space-x-2">
+                <Button severity="help" @click="resetKeywords">Reset Keywords</Button>
+                <Button severity="warn" @click="clearKeywords">Clear Keywords</Button>
               </div>
             </template>
           </Card>
@@ -416,9 +352,9 @@ import {marked} from 'marked'
 import AutoComplete from 'primevue/autocomplete'
 import Button from 'primevue/button'
 import Card from 'primevue/card'
-import Chips from 'primevue/chips'
 import Dialog from 'primevue/dialog'
-import Dropdown from 'primevue/dropdown'
+import FloatLabel from 'primevue/floatlabel'
+import Select from 'primevue/select'
 import Multiselect from 'primevue/multiselect'
 import FileUpload from 'primevue/fileupload'
 import InputText from 'primevue/inputtext'
@@ -532,9 +468,9 @@ export default {
     AutoComplete,
     Button,
     Card,
-    Chips,
     Dialog,
-    Dropdown,
+    FloatLabel,
+    Select,
     Multiselect,
     DefaultLayout,
     EmailPrompt,
@@ -550,13 +486,10 @@ export default {
   },
 
   props: {
-    experimentSetUrn: {
-      type: String,
-      required: false
-    },
     itemId: {
       type: String,
-      required: false
+      required: false,
+      default: null
     }
   },
 
@@ -707,6 +640,17 @@ export default {
         this.keywordKeys['In Vitro Construct Library Method System'] = null
         this.keywordKeys['In Vitro Construct Library Method Mechanism'] = null
       }
+    },
+    publicationIdentifiers: function () {
+      // If the primary publication is no longer in the list of publications, clear it.
+      if (
+        this.primaryPublicationIdentifiers.length > 0 &&
+        !this.publicationIdentifiers
+          .map((pi) => pi.identifier)
+          .includes(this.primaryPublicationIdentifiers[0].identifier)
+      ) {
+        this.primaryPublicationIdentifiers = []
+      }
     }
   },
 
@@ -715,15 +659,15 @@ export default {
   },
 
   methods: {
+    clearAutoCompleteInput: function(event) {
+      if (event.target) {
+        event.target.value = ''
+      }
+    },
+
     //////////////////////////////////////////////////////////////////////////////////////////////////////////////////
     // Contributors
     //////////////////////////////////////////////////////////////////////////////////////////////////////////////////
-
-    clearContributorSearch: function () {
-      // This could change with a new PrimeVue version.
-      const input = this.$refs.contributorsInput
-      input.$refs.input.value = ''
-    },
 
     lookupOrcidUser: async function (orcidId) {
       let orcidUser = null
@@ -735,8 +679,20 @@ export default {
       return orcidUser
     },
 
-    newContributorsAdded: async function (event) {
-      const newContributors = event.value
+    updateContributors: function (event) {
+      const currentValue = event.target?.value
+      if (currentValue && currentValue.trim() != '') {
+        this.contributors.push(currentValue.trim())
+        this.newContributorsAdded()
+
+        // clear the input field
+        event.target.value = ''
+      }
+    },
+
+    newContributorsAdded: async function () {
+      // new contributor values are those that are strings rather than objects
+      const newContributors = this.contributors.filter(_.isString)
 
       // Convert any strings to ORCID users without names. Remove whitespace from new entries.
       this.contributors = this.contributors.map((c) => (_.isString(c) ? {orcidId: c.trim()} : c))
@@ -793,7 +749,18 @@ export default {
     // Form fields
     ////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 
-    acceptNewDoiIdentifier: function () {
+    updateDoiIdentifiers: function (event) {
+      const currentValue = event.target?.value
+      if (currentValue && currentValue.trim() != '') {
+        this.doiIdentifiers.push(currentValue.trim())
+        this.newDoiIdentifiersAdded()
+
+        // clear the input field
+        event.target.value = ''
+      }
+    },
+
+    newDoiIdentifiersAdded: function () {
       // Remove new string item from the model and add new structured item in its place if it validates and is not a duplicate.
       const idx = this.doiIdentifiers.findIndex((item) => typeof item === 'string' || item instanceof String)
       if (idx == -1) {
@@ -817,10 +784,14 @@ export default {
       }
     },
 
-    clearDoiIdentifierSearch: function () {
-      // This could change with a new Primevue version.
-      const input = this.$refs.doiIdentifiersInput
-      input.$refs.input.value = ''
+    updatePublicationIdentifiers: function (event) {
+      const currentValue = event.target?.value
+      if (currentValue && currentValue.trim() != '') {
+        this.publicationIdentifiers.push(currentValue.trim())
+        this.acceptNewPublicationIdentifier()
+        // clear the input field
+        event.target.value = ''
+      }
     },
 
     acceptNewPublicationIdentifier: function () {
@@ -837,19 +808,6 @@ export default {
           summary: `Identifier "${newIdentifier}" is already associated with this experiment`,
           life: 3000
         })
-      }
-    },
-
-    removePublicationIdentifier: function (event) {
-      const removedIdentifier = event.identifier
-      const publicationIdx = this.publicationIdentifiers.findIndex((pub) => pub.identifier == removedIdentifier)
-      if (publicationIdx != -1) {
-        this.publicationIdentifiers.splice(publicationIdx, 1)
-      }
-      // If we are removing a primary publication identifier, also remove it from that list.
-      const primaryIdx = this.primaryPublicationIdentifiers.findIndex((pub) => pub.identifier == removedIdentifier)
-      if (primaryIdx != -1) {
-        this.primaryPublicationIdentifiers.splice(primaryIdx, 1)
       }
     },
 
@@ -872,12 +830,6 @@ export default {
       }
     },
 
-    clearPublicationIdentifierSearch: function () {
-      // This could change with a new Primevue version.
-      const input = this.$refs.publicationIdentifiersInput
-      input.$refs.focusInput.value = ''
-    },
-
     truncatePublicationTitle: function (title) {
       return title.length > 50 ? title.slice(0, 50) + '...' : title
     },
@@ -890,7 +842,18 @@ export default {
       }
     },
 
-    acceptNewRawReadIdentifier: function () {
+    updateRawReadIdentifiers: function (event) {
+      const currentValue = event.target?.value
+      if (currentValue && currentValue.trim() != '') {
+        this.rawReadIdentifiers.push(currentValue.trim())
+        this.addNewRawReadIdentifier()
+
+        // clear the input field
+        event.target.value = ''
+      }
+    },
+
+    addNewRawReadIdentifier: function () {
       // Remove new string item from the model and add new structured item in its place if it validates and is not a duplicate.
       const idx = this.rawReadIdentifiers.findIndex((item) => typeof item === 'string' || item instanceof String)
       if (idx == -1) {
@@ -912,12 +875,6 @@ export default {
         this.rawReadIdentifiers.splice(idx, 1)
         this.$toast.add({severity: 'warn', summary: `"${searchText}" is not a valid Raw Read identifier`, life: 3000})
       }
-    },
-
-    clearRawReadIdentifierSearch: function () {
-      // This could change with a new Primevue version.
-      const input = this.$refs.rawReadIdentifiersInput
-      input.$refs.input.value = ''
     },
 
     fileCleared: function (inputName) {
@@ -992,24 +949,6 @@ export default {
         this.secondaryPublicationIdentifiers = this.item.secondaryPublicationIdentifiers
         this.rawReadIdentifiers = this.item.rawReadIdentifiers
         this.extraMetadata = this.item.extraMetadata
-      } else {
-        this.title = null
-        this.shortDescription = null
-        this.abstractText = null
-        this.methodText = null
-        this.contributors = [
-          {
-            orcidId: this.userProfile?.sub,
-            givenName: this.userProfile?.given_name,
-            familyName: this.userProfile?.family_name
-          }
-        ]
-        this.doiIdentifiers = []
-        this.primaryPublicationIdentifiers = []
-        this.secondaryPublicationIdentifiers = []
-        this.publicationIdentifiers = []
-        this.rawReadIdentifiers = []
-        this.extraMetadata = {}
       }
       this.resetKeywords()
     },
@@ -1102,11 +1041,6 @@ export default {
       try {
         if (this.item) {
           response = await axios.put(`${config.apiBaseUrl}/experiments/${this.item.urn}`, editedItem)
-        } else {
-          if (this.experimentSetUrn) {
-            editedItem.experimentSetUrn = this.experimentSetUrn
-          }
-          response = await axios.post(`${config.apiBaseUrl}/experiments/`, editedItem)
         }
       } catch (e) {
         response = e.response || {status: 500}
@@ -1120,10 +1054,6 @@ export default {
           //this.reloadItem()
           this.$router.replace({path: `/experiments/${savedItem.urn}`})
           this.$toast.add({severity: 'success', summary: 'Your changes were saved.', life: 3000})
-        } else {
-          console.log('Created item')
-          this.$router.replace({path: `/experiments/${savedItem.urn}`})
-          this.$toast.add({severity: 'success', summary: 'The new experiment was saved.', life: 3000})
         }
       } else if (response.data && response.data.detail) {
         if (typeof response.data.detail === 'string' || response.data.detail instanceof String) {
@@ -1271,10 +1201,6 @@ export default {
 
 .keyword-description-input {
   width: 450px;
-}
-
-.padded-button {
-  margin-left: 5px;
 }
 
 .p-inputwrapper, .p-textarea, .p-inputtext {

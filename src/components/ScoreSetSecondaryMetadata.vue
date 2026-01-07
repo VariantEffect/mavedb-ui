@@ -1,6 +1,6 @@
 <template>
-  <div v-if="scoreSet.creationDate">
-    Created {{ formatDate(scoreSet.creationDate) }}
+  <div v-if="scoreSet.creationDate" class="flex space-x-2">
+    <span>Created {{ formatDate(scoreSet.creationDate) }}</span>
     <span v-if="scoreSet.createdBy">
       <a class="flex items-center gap-1" :href="`https://orcid.org/${scoreSet.createdBy.orcidId}`" target="blank"
         ><img alt="ORCIDiD" src="@/assets/ORCIDiD_icon.png" />{{ scoreSet.createdBy.firstName }}
@@ -8,8 +8,8 @@
       ></span
     >
   </div>
-  <div v-if="scoreSet.modificationDate">
-    Last updated {{ formatDate(scoreSet.modificationDate) }}
+  <div v-if="scoreSet.modificationDate" class="flex space-x-2">
+    <span>Last updated {{ formatDate(scoreSet.modificationDate) }}</span>
     <span v-if="scoreSet.modifiedBy">
       <a class="flex items-center gap-1" :href="`https://orcid.org/${scoreSet.modifiedBy.orcidId}`" target="blank"
         ><img alt="ORCIDiD" src="@/assets/ORCIDiD_icon.png" />{{ scoreSet.modifiedBy.firstName }}
@@ -70,9 +70,9 @@
     </template>
   </div>
   <div v-if="scoreSet.externalLinks?.ucscGenomeBrowser?.url">
-    <a :href="scoreSet.externalLinks.ucscGenomeBrowser.url" target="blank">
+    <a class="flex space-x-2" :href="scoreSet.externalLinks.ucscGenomeBrowser.url" target="blank">
       <img alt="UCSC Genome Browser" src="@/assets/logo-ucsc-genome-browser.png" style="height: 20px" />
-      View in the UCSC Genome Browser
+      <span>View in the UCSC Genome Browser</span>
     </a>
   </div>
 </template>

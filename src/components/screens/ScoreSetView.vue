@@ -17,26 +17,26 @@
           </div>
           <div v-if="userIsAuthenticated" class="mavedb-screen-title-controls">
             <Button
-              class="p-butto p-button-sm"
               icon="pi pi-external-link"
               label="Score set calibrations"
+              size="small"
               @click="$router.push({path: `/score-sets/${item.urn}/calibrations`})"
             />
             <Button
               v-if="userIsAuthorized.addCalibration"
-              class="p-button p-button-sm"
+              size="small"
               @click="calibrationEditorVisible = true"
               >Add calibration</Button
             >
             <template v-if="!item.publishedDate">
-              <Button v-if="userIsAuthorized.update" class="p-button p-button-sm" @click="editItem">Edit</Button>
-              <Button v-if="userIsAuthorized.publish" class="p-button p-button-sm" @click="publishItem">Publish</Button>
-              <Button v-if="userIsAuthorized.delete" class="p-button p-button-sm p-button-danger" @click="deleteItem"
+              <Button v-if="userIsAuthorized.update" size="small" @click="editItem">Edit</Button>
+              <Button v-if="userIsAuthorized.publish" size="small" @click="publishItem">Publish</Button>
+              <Button v-if="userIsAuthorized.delete" severity="danger" size="small" @click="deleteItem"
                 >Delete</Button
               >
             </template>
             <template v-if="item.publishedDate">
-              <Button v-if="userIsAuthorized.update" class="p-button p-button-sm" @click="editItem">Edit</Button>
+              <Button v-if="userIsAuthorized.update" size="small" @click="editItem">Edit</Button>
             </template>
           </div>
         </div>
@@ -44,7 +44,7 @@
       </div>
       <div v-if="variants?.length">
         <div class="mavedb-score-set-variant-search">
-          <span class="p-float-label">
+          <FloatLabel variant="on">
             <AutoComplete
               :id="scopedId('variant-search')"
               v-model="selectedVariant"
@@ -66,7 +66,7 @@
               :style="{visibility: variantToVisualize ? 'visible' : 'hidden'}"
               @click="selectedVariant = null"
             />
-          </span>
+          </FloatLabel>
           <span v-if="config.CLINICAL_FEATURES_ENABLED" class="mavedb-clinical-mode-control-container">
             <span :class="clinicalMode ? 'mavedb-clinical-mode-option-off' : 'mavedb-clinical-mode-option-on'"
               >Raw data</span
@@ -81,10 +81,11 @@
             <Button
               v-tooltip="clinicalModeHelpText"
               aria-label="About raw vs. clinical mode"
-              class="p-button-help mavedb-help-tooltip-button"
+              class="mavedb-help-tooltip-button"
               icon="pi pi-info"
               outlined
               rounded
+              severity="help"
             />
           </span>
         </div>
@@ -167,14 +168,14 @@
         </div>
         <div>
           Download files and/or charts
-          <Button class="p-button-outlined p-button-sm" @click="downloadFile('scores')">Scores</Button>&nbsp;
+          <Button outlined size="small" @click="downloadFile('scores')">Scores</Button>&nbsp;
           <template v-if="hasCounts">
-            <Button class="p-button-outlined p-button-sm" @click="downloadFile('counts')">Counts</Button>&nbsp;
+            <Button outlined size="small" @click="downloadFile('counts')">Counts</Button>&nbsp;
           </template>
           <template v-if="isMetaDataEmpty != true">
-            <Button class="p-button-outlined p-button-sm" @click="downloadMetadata">Metadata</Button>&nbsp;
+            <Button outlined size="small" @click="downloadMetadata">Metadata</Button>&nbsp;
           </template>
-          <Button class="p-button-outlined p-button-sm" @click="downloadMappedVariants()">Mapped Variants</Button>&nbsp;
+          <Button outlined size="small" @click="downloadMappedVariants()">Mapped Variants</Button>&nbsp;
           <div style="display: inline-block; position: relative">
             <SplitButton
               :button-props="{class: 'p-button-outlined p-button-sm'}"
@@ -191,11 +192,11 @@
               <ProgressBar show-value style="height: 1.5em" :value="annotatedDownloadProgress" />
             </div>
           </div>
-          &nbsp; <Button class="p-button-outlined p-button-sm" @click="histogramExport()">Histogram</Button>&nbsp;
+          &nbsp; <Button outlined size="small" @click="histogramExport()">Histogram</Button>&nbsp;
           <template v-if="heatmapExists">
-            <Button class="p-button-outlined p-button-sm" @click="heatmapExport()">Heatmap</Button>&nbsp;
+            <Button outlined size="small" @click="heatmapExport()">Heatmap</Button>&nbsp;
           </template>
-          <Button class="p-button-outlined p-button-sm" @click="showOptions()"> Custom Data </Button>
+          <Button outlined size="small" @click="showOptions()"> Custom Data </Button>
           <Dialog
             v-model:visible="optionsVisible"
             :base-z-index="901"
@@ -213,11 +214,11 @@
               <label :for="scopedId('input-' + dataOption.value)">{{ dataOption.label }}</label>
             </div>
             <p />
-            <Button class="p-button-outlined p-button-sm" label="Download" @click="downloadMultipleData"
+            <Button label="Download" outlined size="small" @click="downloadMultipleData"
               >Download</Button
             >
             &nbsp;
-            <Button class="p-button-warning p-button-sm" label="Cancel" @click="optionsVisible = false">Cancel</Button>
+            <Button label="Cancel" severity="warn" size="small" @click="optionsVisible = false">Cancel</Button>
           </Dialog>
           <br />
         </div>
@@ -225,11 +226,11 @@
 
         <div v-if="requestFromGalaxy == '1'">
           <br />Send files to <a :href="galaxyUrl">Galaxy</a>
-          <Button class="p-button-outlined p-button-sm" @click="sendToGalaxy('scores')">Scores</Button>&nbsp;
+          <Button outlined size="small" @click="sendToGalaxy('scores')">Scores</Button>&nbsp;
           <template v-if="hasCounts">
-            <Button class="p-button-outlined p-button-sm" @click="sendToGalaxy('counts')">Counts</Button>&nbsp;
+            <Button outlined size="small" @click="sendToGalaxy('counts')">Counts</Button>&nbsp;
           </template>
-          <Button class="p-button-outlined p-button-sm" @click="sendToGalaxy('mappedVariants')">Mapped Variants</Button
+          <Button outlined size="small" @click="sendToGalaxy('mappedVariants')">Mapped Variants</Button
           >&nbsp;
         </div>
         <div v-if="item.abstractText">
@@ -304,7 +305,7 @@
         <div class="mavedb-score-set-section-title">External identifier</div>
         <strong>DOI: </strong>
         <div v-if="item.doiIdentifiers.length != 0">
-          <ul style="list-style-type: square">
+          <ul class="pl-4 list-[square]">
             <li v-for="(doi, i) of item.doiIdentifiers" :key="i">
               <a :href="`${doi.url}`" target="blank">{{ doi.identifier }}</a>
             </li>
@@ -313,7 +314,7 @@
         <template v-else>No associated DOIs<br /></template>
         <strong>Raw reads: </strong>
         <div v-if="item.experiment.rawReadIdentifiers.length != 0">
-          <ul style="list-style-type: square">
+          <ul class="pl-4 list-[square]">
             <li v-for="(read, i) of item.experiment.rawReadIdentifiers" :key="i">
               <a :href="`${read.url}`" target="blank">{{ read.identifier }}</a>
             </li>
@@ -360,7 +361,7 @@
     </div>
   </DefaultLayout>
   <div v-if="itemStatus == 'Loaded'" class="card flex justify-content-center">
-    <Sidebar
+    <Drawer
       v-model:visible="isScoreSetVisualizerVisible"
       class="scoreset-viz-sidebar"
       :header="item.title"
@@ -373,13 +374,13 @@
         :scores="variants"
         :uniprot-id="uniprotId"
       />
-    </Sidebar>
+    </Drawer>
   </div>
   <!-- Set z-index to ensure dialog appears above heatmap color legend -->
   <PrimeDialog
     v-model:visible="calibrationEditorVisible"
     :base-z-index="2003"
-    :close-on-escape="true"
+    :close-on-escape="false"
     header="Create New Calibration"
     modal
     :style="{maxWidth: '90%', width: '75rem'}"
@@ -392,15 +393,15 @@
     />
     <template #footer>
       <Button
-        class="p-button p-component p-button-secondary"
         icon="pi pi-times"
         label="Close"
+        severity="secondary"
         @click="calibrationEditorVisible = false"
       />
       <Button
-        class="p-button p-component p-button-success"
         icon="pi pi-save"
         label="Save Changes"
+        severity="success"
         @click="saveCreatedCalibration"
       />
     </template>
@@ -419,12 +420,13 @@ import AutoComplete from 'primevue/autocomplete'
 import Button from 'primevue/button'
 import Checkbox from 'primevue/checkbox'
 import Dialog from 'primevue/dialog'
+import FloatLabel from 'primevue/floatlabel'
 import ToggleSwitch from 'primevue/toggleswitch'
 import ProgressSpinner from 'primevue/progressspinner'
 import ProgressBar from 'primevue/progressbar'
 import PrimeDialog from 'primevue/dialog'
 import ScrollPanel from 'primevue/scrollpanel'
-import Sidebar from 'primevue/sidebar'
+import Drawer from 'primevue/drawer'
 import SplitButton from 'primevue/splitbutton'
 import {ref} from 'vue'
 import {mapState} from 'vuex'
@@ -473,6 +475,7 @@ export default {
     CollectionBadge,
     DefaultLayout,
     Dialog,
+    FloatLabel,
     ToggleSwitch,
     ItemNotFound,
     PageLoading,
@@ -486,7 +489,7 @@ export default {
     ScoreSetProcessingStatus,
     ScoreSetSecondaryMetadata,
     ScrollPanel,
-    Sidebar,
+    Drawer,
     SplitButton,
     TargetGene
   },
@@ -1248,11 +1251,6 @@ export default {
   column-gap: 0.5em;
 }
 
-.p-float-label {
-  display: flex;
-  width: 100%;
-}
-
 /* Histogram */
 
 .mavedb-score-set-histogram-pane {
@@ -1335,29 +1333,6 @@ export default {
   display: block;
   content: '';
   clear: both;
-}
-
-.mavedb-help-tooltip-button {
-  height: 0.5rem !important;
-  width: 0.5rem !important;
-  vertical-align: middle;
-  /* Remove extra vertical margin/padding if any. */
-  margin-top: 0;
-  margin-bottom: 0;
-  /* Ensure that button is inline with text. */
-  display: inline-flex;
-  align-items: center;
-  background: none;
-}
-
-.mavedb-help-tooltip-button:focus,
-.mavedb-help-tooltip-button:active,
-.mavedb-help-tooltip-button.p-focus {
-  background: none;
-}
-
-.mavedb-help-tooltip-button:deep(.p-button-icon) {
-  font-size: 0.5rem;
 }
 </style>
 

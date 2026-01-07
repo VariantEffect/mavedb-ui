@@ -21,7 +21,7 @@
           <router-link :to="{name: 'createExperiment'}">create a score set in a new experiment</router-link>.
         </div>
         <h3>Attention</h3>
-        <ul class="attention-list">
+        <ul class="list-disc ml-5">
           <li>
             Your data is currently unpublished and viewable only to you. You can add other users as contributors without
             publishing it, or add the dataset to a collection and give users permission to view the collection.
@@ -85,9 +85,6 @@ export default {
 </script>
 
 <style scoped>
-.attention-list {
-  margin-top: 0.25rem;
-}
 .mave-wizard-completion {
   padding: 20px;
 }

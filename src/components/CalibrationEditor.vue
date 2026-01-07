@@ -8,7 +8,7 @@
           <p>Select the score set to which this calibration will apply.</p>
         </div>
         <div class="mavedb-wizard-content">
-          <span class="p-float-label">
+          <FloatLabel variant="on">
             <Select
               :id="scopedId('input-containing-score-set')"
               v-model="selectedScoreSet"
@@ -24,7 +24,7 @@
               </template>
             </Select>
             <label :for="scopedId('input-containing-score-set')">Score Set</label>
-          </span>
+          </FloatLabel>
           <span v-if="validationErrors['scoreSetUrn']" class="mave-field-error">{{
             validationErrors['scoreSetUrn']
           }}</span>
@@ -37,10 +37,10 @@
           <div class="mavedb-help-small">Display name for this calibration used in visualizations and listings.</div>
         </div>
         <div class="mavedb-wizard-content">
-          <span class="p-float-label">
+          <FloatLabel variant="on">
             <InputText :id="scopedId('input-calibration-title')" v-model="draft.title" style="width: 100%" />
             <label :for="scopedId('input-calibration-title')">Calibration Title</label>
-          </span>
+          </FloatLabel>
           <span v-if="validationErrors['title']" class="mave-field-error">{{ validationErrors['title'] }}</span>
         </div>
       </div>
@@ -50,10 +50,10 @@
           <label>Provide additional notes or context for the calibration.</label>
         </div>
         <div class="mavedb-wizard-content">
-          <span class="p-float-label">
+          <FloatLabel variant="on">
             <PrimeTextarea :id="scopedId('input-calibration-notes')" v-model="draft.notes" style="width: 100%" />
             <label :for="scopedId('input-calibration-notes')">Calibration Notes (optional)</label>
-          </span>
+          </FloatLabel>
           <span v-if="validationErrors['notes']" class="mave-field-error">{{ validationErrors['notes'] }}</span>
         </div>
       </div>
@@ -66,7 +66,7 @@
           <div class="mavedb-help-small">This number should not be in a range classified as abnormal.</div>
         </div>
         <div class="mavedb-wizard-content">
-          <span class="p-float-label">
+          <FloatLabel variant="on">
             <InputNumber
               v-model="draft.baselineScore"
               :aria-labelledby="scopedId('input-investigatorProvidedBaselineScore')"
@@ -75,7 +75,7 @@
               style="width: 100%"
             />
             <label :for="scopedId('input-investigatorProvidedBaselineScore')">Baseline Score</label>
-          </span>
+          </FloatLabel>
           <span v-if="validationErrors['baselineScore']" class="mave-field-error">{{
             validationErrors['baselineScore']
           }}</span>
@@ -93,7 +93,7 @@
           </div>
         </div>
         <div class="mavedb-wizard-content">
-          <span class="p-float-label">
+          <FloatLabel variant="on">
             <PrimeTextarea
               v-model="draft.baselineScoreDescription"
               :aria-labelledby="scopedId('input-investigatorProvidedBaselineScoreDescription')"
@@ -104,7 +104,7 @@
             <label :for="scopedId('input-investigatorProvidedBaselineScoreDescription')"
               >Baseline Score Description (optional)</label
             >
-          </span>
+          </FloatLabel>
           <span v-if="validationErrors['baselineScoreDescription']" class="mave-field-error">{{
             validationErrors['baselineScoreDescription']
           }}</span>
@@ -141,14 +141,14 @@
           <div class="mavedb-help-small">Display name used in visualizations.</div>
         </div>
         <div class="mavedb-wizard-content">
-          <span class="p-float-label">
+          <FloatLabel variant="on">
             <InputText
               v-model="rangeObj.label"
               :aria-labelledby="scopedId(`input-investigatorProvidedRangeLabel-${rangeIdx}`)"
               style="width: 100%"
             />
             <label :for="scopedId(`input-investigatorProvidedRangeLabel-${rangeIdx}`)">Functional range label</label>
-          </span>
+          </FloatLabel>
           <span v-if="validationErrors[`functionalRanges.${rangeIdx}.label`]" class="mave-field-error">{{
             validationErrors[`functionalRanges.${rangeIdx}.label`]
           }}</span>
@@ -163,7 +163,7 @@
           <div class="mavedb-help-small">Provide contextual meaning for the range.</div>
         </div>
         <div class="mavedb-wizard-content">
-          <span class="p-float-label">
+          <FloatLabel variant="on">
             <PrimeTextarea
               v-model="rangeObj.description"
               :aria-labelledby="scopedId(`input-investigatorProvidedRangeDescription-${rangeIdx}`)"
@@ -174,7 +174,7 @@
             <label :for="scopedId(`input-investigatorProvidedRangeDescription-${rangeIdx}`)"
               >Functional range description (optional)</label
             >
-          </span>
+          </FloatLabel>
           <span v-if="validationErrors[`functionalRanges.${rangeIdx}.description`]" class="mave-field-error">{{
             validationErrors[`functionalRanges.${rangeIdx}.description`]
           }}</span>
@@ -223,7 +223,7 @@
               @click="toggleBoundary(rangeIdx, 'lower')"
               ><FontAwesomeIcon class="score-range-toggle-icon" icon="fa-solid fa-circle-half-stroke"
             /></PrimeButton>
-            <span class="p-float-label w-full">
+            <FloatLabel class="w-full" variant="on">
               <InputNumber
                 v-model="rangeObj.range[0]"
                 :aria-labelledby="scopedId(`input-investigatorProvidedRangeLower-${rangeIdx}`)"
@@ -238,9 +238,9 @@
                     ? 'Lower Bound (inclusive)'
                     : 'Lower Bound (exclusive)'
               }}</label>
-            </span>
+            </FloatLabel>
             <InputGroupAddon>to</InputGroupAddon>
-            <span class="p-float-label w-full">
+            <FloatLabel class="w-full" variant="on">
               <InputNumber
                 v-model="rangeObj.range[1]"
                 :aria-labelledby="scopedId(`input-investigatorProvidedRangeUpper-${rangeIdx}`)"
@@ -255,7 +255,7 @@
                     ? 'Upper Bound (inclusive)'
                     : 'Upper Bound (exclusive)'
               }}</label>
-            </span>
+            </FloatLabel>
             <PrimeButton
               class="score-range-toggle-button"
               :disabled="functionalRangeHelpers[rangeIdx].infiniteUpper"
@@ -294,7 +294,7 @@
             Optionally, you can provide a description of the evidence supporting this classification.
           </div>
         </div>
-        <div class="mavedb-wizard-content">
+        <div class="mavedb-wizard-content flex items-center">
           <ToggleSwitch
             v-model="functionalRangeHelpers[rangeIdx].isProvidingClassification"
             :aria-labelledby="scopedId('input-investigatorIsProvidingClassification')"
@@ -322,7 +322,7 @@
         </div>
         <div class="mavedb-wizard-content">
           <InputGroup>
-            <span class="p-float-label w-full">
+            <FloatLabel class="w-full" variant="on">
               <Select
                 v-model="rangeObj.acmgClassification.criterion"
                 :aria-labelledby="scopedId('input-investigatorProvidedOddsPathEvidence')"
@@ -331,8 +331,8 @@
                 :options="criterions"
               />
               <label :for="scopedId('input-investigatorProvidedOddspathsCriterion')">Criterion</label>
-            </span>
-            <span class="p-float-label w-full">
+            </FloatLabel>
+            <FloatLabel class="w-full" variant="on">
               <Select
                 v-model="rangeObj.acmgClassification.evidenceStrength"
                 :aria-labelledby="scopedId('input-investigatorProvidedOddsPathEvidence')"
@@ -342,7 +342,7 @@
                 :options="evidenceStrengths"
               />
               <label :for="scopedId('input-investigatorProvidedOddsPathEvidence')">Evidence Strength</label>
-            </span>
+            </FloatLabel>
           </InputGroup>
           <span
             v-if="validationErrors[`functionalRanges.${rangeIdx}.acmgClassification.criterion`]"
@@ -364,7 +364,7 @@
         <div class="mavedb-wizard-help">
           <label :id="scopedId('input-investigatorIsProvidingOddsPath')">Provide OddsPaths?</label>
         </div>
-        <div class="mavedb-wizard-content">
+        <div class="mavedb-wizard-content flex items-center">
           <ToggleSwitch
             v-model="functionalRangeHelpers[rangeIdx].isProvidingOddspaths"
             :aria-labelledby="scopedId('input-investigatorIsProvidingOddsPath')"
@@ -380,7 +380,7 @@
           <label :id="scopedId('input-investigatorProvidedOddsPathRatio')">OddsPaths ratio.</label>
         </div>
         <div class="mavedb-wizard-content">
-          <span class="p-float-label" style="margin-right: 1em">
+          <FloatLabel variant="on">
             <InputNumber
               v-model="rangeObj.oddspathsRatio"
               :aria-labelledby="scopedId('input-investigatorProvidedOddsPathRatio')"
@@ -389,7 +389,7 @@
               style="width: 100%"
             />
             <label :for="scopedId('input-oddsPathRatio')">OddsPaths Ratio</label>
-          </span>
+          </FloatLabel>
           <span v-if="validationErrors[`functionalRanges.${rangeIdx}.oddspathsRatio`]" class="mave-field-error">{{
             validationErrors[`functionalRanges.${rangeIdx}.oddspathsRatio`]
           }}</span>
@@ -415,7 +415,7 @@
           used for variant interpretation.
         </div>
       </div>
-      <div class="mavedb-wizard-content">
+      <div class="mavedb-wizard-content flex items-center">
         <ToggleSwitch v-model="draft.researchUseOnly" />
         <div class="mavedb-switch-value">
           {{
@@ -438,27 +438,18 @@
         </div>
       </div>
       <div class="mavedb-wizard-content">
-        <span class="p-float-label">
+        <FloatLabel variant="on">
           <AutoComplete
             :id="scopedId('input-threshold-sources')"
-            ref="thresholdSourcesInput"
             v-model="draft.thresholdSources"
-            class="p-inputwrapper-filled"
             :multiple="true"
-            option-label="identifier"
+            :option-label="(option) => `${option.identifier}: ${truncatePublicationTitle(option.title)}`"
             :suggestions="publicationIdentifierSuggestionsList"
+            @blur="clearAutoCompleteInput"
             @complete="searchPublicationIdentifiers"
-            @keyup.escape="clearPublicationIdentifierSearch('thresholdSourcesInput')"
+            @keyup.escape="clearAutoCompleteInput"
             @option-select="acceptNewPublicationIdentifier(draft.thresholdSources)"
           >
-            <template #chip="slotProps">
-              <div class="p-inputchips-chip-item">
-                {{ slotProps.value.identifier }}: {{ truncatePublicationTitle(slotProps.value.title) }}
-                <div>
-                  <i class="pi pi-times-circle" @click="removePublicationIdentifier(slotProps.value, draft.thresholdSources)"></i>
-                </div>
-              </div>
-            </template>
             <template #option="slotProps">
               <div>
                 <div>Title: {{ slotProps.option.title }}</div>
@@ -472,7 +463,7 @@
           <span v-if="validationErrors['thresholdSources']" class="mave-field-error">{{
             validationErrors['thresholdSources']
           }}</span>
-        </span>
+        </FloatLabel>
       </div>
     </div>
 
@@ -484,27 +475,18 @@
         </div>
       </div>
       <div class="mavedb-wizard-content">
-        <span class="p-float-label">
+        <FloatLabel variant="on">
           <AutoComplete
             :id="scopedId('input-classification-sources-publication-identifiers')"
-            ref="classificationSourcesInput"
             v-model="draft.classificationSources"
-            class="p-inputwrapper-filled"
             :multiple="true"
-            option-label="identifier"
+            :option-label="(option) => `${option.identifier}: ${truncatePublicationTitle(option.title)}`"
             :suggestions="publicationIdentifierSuggestionsList"
+            @blur="clearAutoCompleteInput"
             @complete="searchPublicationIdentifiers"
-            @keyup.escape="clearPublicationIdentifierSearch('classificationSourcesInput')"
+            @keyup.escape="clearAutoCompleteInput"
             @option-select="acceptNewPublicationIdentifier(draft.classificationSources)"
           >
-            <template #chip="slotProps">
-              <div class="p-inputchips-chip-item">
-                {{ slotProps.value.identifier }}: {{ truncatePublicationTitle(slotProps.value.title) }}
-                <div>
-                  <i class="pi pi-times-circle" @click="removePublicationIdentifier(slotProps.value, draft.classificationSources)"></i>
-                </div>
-              </div>
-            </template>
             <template #option="slotProps">
               <div>
                 <div>Title: {{ slotProps.option.title }}</div>
@@ -518,7 +500,7 @@
           <span v-if="validationErrors['classificationSources']" class="mave-field-error">{{
             validationErrors['classificationSources']
           }}</span>
-        </span>
+        </FloatLabel>
       </div>
     </div>
 
@@ -530,27 +512,18 @@
         </div>
       </div>
       <div class="mavedb-wizard-content">
-        <span class="p-float-label">
+        <FloatLabel variant="on">
           <AutoComplete
             :id="scopedId('input-method-sources-publication-identifiers')"
-            ref="methodSourcesInput"
             v-model="draft.methodSources"
-            class="p-inputwrapper-filled"
             :multiple="true"
-            option-label="identifier"
+            :option-label="(option) => `${option.identifier}: ${truncatePublicationTitle(option.title)}`"
             :suggestions="publicationIdentifierSuggestionsList"
+            @blur="clearAutoCompleteInput"
             @complete="searchPublicationIdentifiers"
-            @keyup.escape="clearPublicationIdentifierSearch('methodSourcesInput')"
+            @keyup.escape="clearAutoCompleteInput"
             @option-select="acceptNewPublicationIdentifier(draft.methodSources)"
           >
-            <template #chip="slotProps">
-              <div class="p-inputchips-chip-item">
-                {{ slotProps.value.identifier }}: {{ truncatePublicationTitle(slotProps.value.title) }}
-                <div>
-                  <i class="pi pi-times-circle" @click="removePublicationIdentifier(slotProps.value, draft.methodSources)"></i>
-                </div>
-              </div>
-            </template>
             <template #option="slotProps">
               <div>
                 <div>Title: {{ slotProps.option.title }}</div>
@@ -564,7 +537,7 @@
           <span v-if="validationErrors['methodSources']" class="mave-field-error">{{
             validationErrors['methodSources']
           }}</span>
-        </span>
+        </FloatLabel>
       </div>
     </div>
   </div>
@@ -580,6 +553,7 @@ import SelectButton from 'primevue/selectbutton'
 import Select from 'primevue/select'
 import {reactive, ref} from 'vue'
 import type {PropType} from 'vue'
+import FloatLabel from 'primevue/floatlabel'
 import InputText from 'primevue/inputtext'
 import PrimeButton from 'primevue/button'
 import PrimeTextarea from 'primevue/textarea'
@@ -614,6 +588,7 @@ export interface DraftScoreCalibration extends DraftScoreCalibrationWithNullable
 export default {
   name: 'CalibrationEditor',
   components: {
+    FloatLabel,
     InputText,
     PrimeButton,
     PrimeTextarea,
@@ -923,6 +898,12 @@ export default {
     await this.loadEditableScoreSets()
   },
   methods: {
+    clearAutoCompleteInput: function(event) {
+      if (event.target) {
+        event.target.value = ''
+      }
+    },
+
     loadEditableScoreSets: async function () {
       try {
         const response = await axios.post(`${config.apiBaseUrl}/me/score-sets/search`, {
@@ -977,12 +958,6 @@ export default {
           life: 3000
         })
       }
-    },
-
-    clearPublicationIdentifierSearch: function (refName: string) {
-      // This could change with a new Primevue version.
-      const input = this.$refs[refName]
-      input.$refs.focusInput.value = ''
     },
 
     searchPublicationIdentifiers: function (event: {query: string}) {
@@ -1098,14 +1073,6 @@ export default {
       this.draft.functionalRanges.splice(rangeIdx, 1)
       this.functionalRangeHelpers.splice(rangeIdx, 1)
       this.recomputeMeta()
-    },
-
-    removePublicationIdentifier: function (val: PublicationIdentifier, publicationList: PublicationIdentifier[]) {
-      const removedIdentifier = val.identifier
-      const publicationIdx = publicationList.findIndex((pub) => pub.identifier == removedIdentifier)
-      if (publicationIdx != -1) {
-        publicationList.splice(publicationIdx, 1)
-      }
     },
 
     saveCalibration: function () {

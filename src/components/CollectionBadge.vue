@@ -63,5 +63,6 @@ export default defineComponent({
 
 .mavedb-collection-badge .mavedb-collection-badge-other {
   background-color: cadetblue;
+  color: white;
 }
 </style>

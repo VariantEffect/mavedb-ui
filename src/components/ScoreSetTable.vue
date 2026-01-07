@@ -20,7 +20,7 @@ import useFormatters from '@/composition/formatters'
 import FlexDataTable from '@/components/common/FlexDataTable'
 
 export default {
-  name: 'PublicationIdentifierView',
+  name: 'ScoreSetTable',
 
   components: {FlexDataTable},
 

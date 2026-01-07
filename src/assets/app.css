@@ -1,5 +1,25 @@
 @import "tailwindcss";
 
+/* Tailwind removes styling for headings, so adding them back */
+h1 {
+  @apply text-3xl font-bold text-gray-800 mt-6 mb-2;
+}
+h2 {
+  @apply text-2xl font-semibold text-gray-800 mt-5 mb-2;
+}
+h3 {
+  @apply text-xl font-semibold text-gray-800 mt-4 mb-2;
+}
+h4 {
+  @apply text-lg font-semibold text-gray-800 mt-3 mb-2;
+}
+h5 {
+  @apply text-base font-semibold text-gray-800 mt-2 mb-2;
+}
+h6 {
+  @apply text-sm font-semibold text-gray-800 mt-1 mb-2;
+}
+
 * {
   text-rendering: optimizeLegibility;
   font-family: 'Raleway', sans-serif;
@@ -24,88 +44,12 @@ body .p-inputtext {
 /* Override the minimum width from the PrimeVue theme. */
 body .p-button {
   min-width: 10px;
+  padding-top: 0.25rem;
+  padding-bottom: 0.25rem;
 }
 
 .p-badge {
   text-align: center;
-}
-
-
-/* Float label styles to match PrimeVue 3 theme */
-
-.p-float-label {
-  position: relative;
-  display: block;
-}
-/* Base label positioning - add missing properties to existing rule */
-.p-float-label > label {
-  position: absolute;
-  left: 0.75rem;
-  top: 1.5rem;
-  transform: translateY(-50%);
-  color: rgba(0, 0, 0, 0.6);
-  transition-duration: 0.2s;
-  transition-property: top, transform, font-size, color, background-color;
-  pointer-events: none;
-  font-size: 1rem;
-  line-height: 1;
-  z-index: 1;
-}
-
-/* Enhanced focused/filled label positioning */
-.p-float-label input:focus ~ label,
-.p-float-label input.p-filled ~ label,
-.p-float-label textarea:focus ~ label,
-.p-float-label textarea.p-filled ~ label,
-.p-float-label .p-inputwrapper-focus ~ label,
-.p-float-label .p-inputwrapper-filled ~ label {
-  top: -0.5rem !important;
-  transform: none;
-  font-size: 0.75rem;
-  background-color: #ffffff;
-  padding: 2px 4px;
-  margin-left: -4px;
-  margin-top: 0;
-}
-
-/* Hide placeholder text in float label components since label acts as placeholder */
-.p-float-label input::placeholder,
-.p-float-label textarea::placeholder,
-.p-float-label .p-chips-multiple-container input::placeholder {
-  color: transparent !important;
-}
-
-/* Show placeholder text when label is floated (focused or filled) */
-.p-float-label input:focus::placeholder,
-.p-float-label input.p-filled::placeholder,
-.p-float-label textarea:focus::placeholder,
-.p-float-label textarea.p-filled::placeholder,
-.p-float-label .p-inputwrapper-focus input::placeholder,
-.p-float-label .p-inputwrapper-filled input::placeholder,
-.p-float-label .p-chips-multiple-container input:focus::placeholder,
-.p-float-label .p-multiselect:focus-within .p-multiselect-label {
-  color: rgba(0, 0, 0, 0.6) !important;
-}
-
-/* Style Chips components to match PrimeVue 3 appearance */
-.p-inputchips-chip-item {
-  background: #e9ecef !important;
-  color: #495057 !important;
-  border-radius: 1rem !important;
-  padding: 0.25rem 0.5rem !important;
-  margin-right: 0.5rem !important;
-  margin-bottom: 0.5rem !important;
-  margin-bottom: auto !important;
-  display: inline-flex !important;
-  align-items: center !important;
-}
-.p-inputchips-chip-item .pi-times,
-.p-inputchips-chip-item .pi-times-circle {
-  margin-left: 0.5rem !important;
-  cursor: pointer !important;
-  display: flex !important;
-  align-items: center !important;
-  justify-content: center !important;
 }
 
 /* Prevent autocomplete overlay from taking full page width */
@@ -128,4 +72,9 @@ body .p-button {
 
 .p-listbox-header {
   padding: 0 !important;
+}
+
+.p-message {
+  margin-top: 0.5rem;
+  margin-bottom: 0.5rem;
 }

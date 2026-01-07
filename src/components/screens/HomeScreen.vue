@@ -98,8 +98,8 @@
                 <p>
                   MaveDB is an official
                     <a href="https://catalog.igvf.org/" target="_blank">
-                      <img alt="IGVF" src="@/assets/igvf-tag.png" style="height: 20px; vertical-align: middle;" />
-                    </a> 
+                      <img class="inline h-5 mb-1" alt="IGVF" src="@/assets/igvf-tag.png" />
+                    </a>
                   Data Resource! You can now find data from MaveDB datasets in the
                   <a href="https://catalog.igvf.org/" target="_blank">IGVF Data Catalog</a>.
                 </p>

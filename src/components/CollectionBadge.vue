@@ -1,8 +1,8 @@
 <template>
   <div class="mavedb-collection-badge">
     <router-link :to="{name: 'collection', params: {urn: collection.urn}}">
-      <img v-if="badgeImage" :alt="collection.name" :class="badgeClassName" :src="badgeImage" />
-      <img v-else-if="badgeNameIsLink" :alt="collection.name" :class="badgeClassName" :src="collection.badgeName" />
+      <img v-if="badgeImage" :alt="collection.name" :class="`inline ${badgeClassName}`" :src="badgeImage" />
+      <img v-else-if="badgeNameIsLink" :alt="collection.name" :class="`inline ${badgeClassName}`" :src="collection.badgeName" />
       <Tag v-else :class="badgeClassName" rounded :value="collection.badgeName" />
     </router-link>
   </div>

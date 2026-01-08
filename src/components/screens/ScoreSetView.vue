@@ -1064,6 +1064,8 @@ export default {
     variantSearch: function (event) {
       const matches = []
       for (const variant of this.variants) {
+        if (!_.isNumber(variant.scores?.score)) continue
+
         if (variantNotNullOrNA(variant.hgvs_nt) && variant.hgvs_nt.toLowerCase().includes(event.query.toLowerCase())) {
           matches.push(Object.assign(variant, {mavedb_label: variant.hgvs_nt}))
         } else if (

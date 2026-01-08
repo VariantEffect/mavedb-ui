@@ -828,10 +828,7 @@ export default defineComponent({
           if (newValue) {
             this.histogram.selectDatum(newValue)
           } else {
-            // Do not clear internal bin selection when external datum is cleared.
-            // This prevents a click from needing two taps when switching from a datum to a bin.
-            const hasSelectedBin = !!this.histogram.selectedBin()
-            if (!hasSelectedBin) {
+            if (!this.lockSelection) {
               this.histogram.clearSelection()
             }
           }
@@ -1006,8 +1003,8 @@ export default defineComponent({
           .bottomAxisLabel('Functional Score')
           .leftAxisLabel('Number of Variants')
           .numBins(30)
-          .valueField((variant: Variant) => variant.scores.score)
-          .accessorField((variant: Variant) => variant.accession)
+          .valueField((variant: Variant) => variant?.scores?.score)
+          .accessorField((variant: Variant) => variant?.accession)
           .tooltipHtml(this.tooltipHtmlGetter)
           .selectionChanged(this.onHistogramSelectionChanged)
       }

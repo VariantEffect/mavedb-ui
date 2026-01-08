@@ -70,8 +70,15 @@
           }}</router-link>
         </div>
         <div v-if="item.currentVersion">Current version {{ item.currentVersion }}</div>
-        <CollectionAdder class="mave-save-to-collection-button" data-set-type="experiment" :data-set-urn="item.urn" />
-
+        <div v-if="item.externalLinks?.igvf?.url" class="external-link">
+          <a :href="item.externalLinks.igvf.url" target="blank">
+            <img alt="IGVF" src="@/assets/igvf-tag.png" />
+            View this experiment in the IGVF Portal
+          </a>
+        </div>
+        <div style="margin-top: 1em">
+          <CollectionAdder class="mave-save-to-collection-button" data-set-type="experiment" :data-set-urn="item.urn" />
+        </div>
         <div class="mave-score-set-section-title">Score Sets</div>
         <div v-if="associatedScoreSets.length != 0">
           <ul class="list-disc pl-4">
@@ -528,6 +535,23 @@ export default {
 }
 
 .mave-save-to-collection-button {
-  margin: 1em 0;
+  margin: 1em;
+}
+
+/* External links */
+.external-link {
+  display: block;
+}
+.external-link a {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+}
+.external-link img {
+  height: 20px;
+  width: auto;
+}
+.external-link img {
+  display: block;
 }
 </style>

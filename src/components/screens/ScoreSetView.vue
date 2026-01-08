@@ -336,9 +336,7 @@
                   Scores and/or counts could not be processed. Please remedy the
                   {{ item.processingErrors.detail.length }} errors below, then try submitting again.
                 </div>
-                <div v-else class="ml-2 mr-auto text-purple-700">
-                  Scores and/or counts could not be processed.
-                </div>
+                <div v-else class="ml-2 mr-auto text-purple-700">Scores and/or counts could not be processed.</div>
               </AccordionHeader>
               <AccordionContent>
                 <ScrollPanel style="width: 100%; height: 200px">
@@ -1360,6 +1358,7 @@ export default {
 .mavedb-assay-facts-container {
   float: left;
   margin: 0 1em 1em 0;
+  width: 50%;
 }
 
 .clearfix::after {

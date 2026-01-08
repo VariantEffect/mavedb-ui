@@ -101,7 +101,7 @@
             :variants="variants"
             @calibration-changed="(calibration) => childComponentSelectedCalibration(calibration, 0)"
             @export-chart="setHistogramExport"
-            @selection-changed="onHistogramSelectionChanged"
+            @selection-changed="(payload) => onHistogramSelectionChanged(payload, {syncTarget: 'clinicalHistogram'})"
           />
         </div>
         <div
@@ -122,7 +122,7 @@
             :variants="variants"
             @calibration-changed="(calibration) => childComponentSelectedCalibration(calibration, 1)"
             @export-chart="setHistogramExport"
-            @selection-changed="onHistogramSelectionChanged"
+            @selection-changed="(payload) => onHistogramSelectionChanged(payload, {syncTarget: 'distHistogram'})"
           />
         </div>
         <div v-if="selectedCalibrationObjects[1]" class="mavedb-score-set-calibration-table">
@@ -1155,7 +1155,7 @@ export default {
       const selectedVariant = this.variants.find((v) => v.accession == variant.accession)
       this.selectedVariant = Object.assign(selectedVariant, preferredVariantLabel(selectedVariant))
     },
-    onHistogramSelectionChanged: function (payload) {
+    onHistogramSelectionChanged: function (payload, options) {
       // Sync selected variant with histogram selection changes.
       const accession = payload?.datum?.accession || payload?.datum?.urn
       if (accession) {
@@ -1168,19 +1168,11 @@ export default {
         if (this.syncingBinSelection || !payload?.bin) return
         this.syncingBinSelection = true
         try {
-          // Determine source and target refs; if one is missing, attempt both.
-          const dist = this.$refs.distHistogram
-          const clinical = this.$refs.clinicalHistogram
+          // Determine target ref based on source ref name
+          const target = this.$refs[options?.syncTarget]
           // Sync the other histogram(s) to the same bin.
-          if (dist && clinical) {
-            // If the event likely came from dist, sync clinical, and vice versa.
-            // We can't reliably identify the source; update both to be safe.
-            dist.syncSelectBin(payload.bin)
-            clinical.syncSelectBin(payload.bin)
-          } else if (dist) {
-            dist.syncSelectBin(payload.bin)
-          } else if (clinical) {
-            clinical.syncSelectBin(payload.bin)
+          if (target) {
+            target.syncSelectBin(payload.bin)
           }
         } finally {
           this.syncingBinSelection = false

@@ -18,25 +18,23 @@
           <img v-if="config.PREVIEW_SITE" alt="MaveDB Beta Site" src="@/assets/logo-mavedb-beta.png" />
           <img v-else alt="MaveDB" src="@/assets/logo-mavedb.png" />
         </router-link>
-        <div style="display: inline-block; margin-left: 40px">
-          <div class="p-inputgroup" style="max-width: 300px; width: 300px; display: flex; align-items: stretch;">
-            <InputText
-              ref="searchTextInput"
-              v-model="searchText"
-              class="rounded-r-none! w-full"
-              placeholder="Search"
-              size="small"
-              type="search"
-              @keyup.enter="search"
-            />
-            <Button
-              class="rounded-l-none!"
-              :enabled="searchText && searchText.length > 0"
-              icon="pi pi-search"
-              size="small"
-              @click="search"
-            />
-          </div>
+        <div class="flex w-[300px] ml-10">
+          <InputText
+            ref="searchTextInput"
+            v-model="searchText"
+            class="rounded-r-none! w-full"
+            placeholder="Search"
+            size="small"
+            type="search"
+            @keyup.enter="search"
+          />
+          <Button
+            class="rounded-l-none!"
+            :enabled="searchText && searchText.length > 0"
+            icon="pi pi-search"
+            size="small"
+            @click="search"
+          />
         </div>
       </template>
       <template #item="{item, props, hasSubmenu}">
@@ -98,10 +96,6 @@ export default {
           label: 'Dashboard',
           route: '/dashboard',
           available: ({authenticated}) => authenticated
-        },
-        {
-          label: 'Home',
-          route: '/'
         },
         ...(config.CLINICAL_FEATURES_ENABLED
           ? [

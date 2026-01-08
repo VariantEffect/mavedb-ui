@@ -96,11 +96,13 @@
             :default-histogram="'distribution'"
             :external-selection="variantToVisualize"
             :hide-start-and-stop-loss-by-default="hideStartAndStopLoss"
+            :lock-selection="variantToVisualize != null"
             :score-set="item"
             :selected-calibration="selectedCalibrations[0]"
             :variants="variants"
             @calibration-changed="(calibration) => childComponentSelectedCalibration(calibration, 0)"
             @export-chart="setHistogramExport"
+            @selection-changed="(payload) => onHistogramSelectionChanged(payload, {syncTarget: 'clinicalHistogram'})"
           />
         </div>
         <div
@@ -116,11 +118,13 @@
             :default-histogram="'clinical'"
             :external-selection="variantToVisualize"
             :hide-start-and-stop-loss-by-default="hideStartAndStopLoss"
+            :lock-selection="variantToVisualize != null"
             :score-set="item"
             :selected-calibration="selectedCalibrations[1]"
             :variants="variants"
             @calibration-changed="(calibration) => childComponentSelectedCalibration(calibration, 1)"
             @export-chart="setHistogramExport"
+            @selection-changed="(payload) => onHistogramSelectionChanged(payload, {syncTarget: 'distHistogram'})"
           />
         </div>
         <div v-if="selectedCalibrationObjects[1]" class="mavedb-score-set-calibration-table">
@@ -548,7 +552,8 @@ export default {
     },
     annotatedDownloadInProgress: false,
     annotatedDownloadProgress: 0,
-    streamController: null
+    streamController: null,
+    syncingBinSelection: false
   }),
 
   computed: {
@@ -1059,6 +1064,8 @@ export default {
     variantSearch: function (event) {
       const matches = []
       for (const variant of this.variants) {
+        if (!_.isNumber(variant.scores?.score)) continue
+
         if (variantNotNullOrNA(variant.hgvs_nt) && variant.hgvs_nt.toLowerCase().includes(event.query.toLowerCase())) {
           matches.push(Object.assign(variant, {mavedb_label: variant.hgvs_nt}))
         } else if (
@@ -1151,6 +1158,32 @@ export default {
 
       const selectedVariant = this.variants.find((v) => v.accession == variant.accession)
       this.selectedVariant = Object.assign(selectedVariant, preferredVariantLabel(selectedVariant))
+    },
+    onHistogramSelectionChanged: function (payload, options) {
+      // Sync selected variant with histogram selection changes.
+      const accession = payload?.datum?.accession || payload?.datum?.urn
+      if (accession) {
+        const selectedVariant = this.variants.find((v) => v.accession == accession)
+        this.selectedVariant = selectedVariant
+          ? Object.assign(selectedVariant, preferredVariantLabel(selectedVariant))
+          : null
+      } else {
+        // Bin-only selection: keep histograms' bin selections in sync.
+        if (this.syncingBinSelection || !payload?.bin) return
+        this.syncingBinSelection = true
+        try {
+          // Determine target ref based on source ref name
+          const target = this.$refs[options?.syncTarget]
+          // Sync the other histogram(s) to the same bin.
+          if (target) {
+            target.syncSelectBin(payload.bin)
+          }
+        } finally {
+          this.syncingBinSelection = false
+        }
+        // Clear variant focus when no datum is selected.
+        this.selectedVariant = null
+      }
     },
     childComponentSelectedCalibration: function (calibration, idx) {
       this.selectedCalibrations[idx] = calibration

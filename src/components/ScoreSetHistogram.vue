@@ -822,6 +822,8 @@ export default defineComponent({
         this.renderOrRefreshHistogram()
       }
     },
+    // TODO#608: Address circularity between externalSelection parent updates and selection changed events from
+    //           the child histogram.
     externalSelection: {
       handler: function (newValue) {
         if (this.histogram) {

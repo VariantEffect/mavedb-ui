@@ -107,12 +107,7 @@
           />
           <Button @click="fuzzySearch">Search</Button>
           <div class="mavedb-clear-search-button-container">
-            <Button
-              :disabled="!searchIsClearable"
-              icon="pi pi-times"
-              rounded
-              @click="clearSearch"
-            />
+            <Button :disabled="!searchIsClearable" icon="pi pi-times" rounded @click="clearSearch" />
           </div>
         </div>
         <div class="mavedb-search-form-view-switch">
@@ -249,9 +244,7 @@
                     </li>
                     <Button
                       v-if="allele.variants.nucleotide.length > defaultNumScoreSetsToShow"
-                      class="p-button-text"
-                      icon="pi pi-angle-down"
-                      style="width: fit-content"
+                      text
                       @click="
                         nucleotideScoreSetListIsExpanded[alleleIdx] = !nucleotideScoreSetListIsExpanded[alleleIdx]
                       "
@@ -280,9 +273,7 @@
                     </li>
                     <Button
                       v-if="allele.variants.protein.length > defaultNumScoreSetsToShow"
-                      class="p-button-text"
-                      icon="pi pi-angle-down"
-                      style="width: fit-content"
+                      text
                       @click="proteinScoreSetListIsExpanded[alleleIdx] = !proteinScoreSetListIsExpanded[alleleIdx]"
                     >
                       {{
@@ -313,9 +304,7 @@
                     </li>
                     <Button
                       v-if="allele.variants.associatedNucleotide.length > defaultNumScoreSetsToShow"
-                      class="p-button-text"
-                      icon="pi pi-angle-down"
-                      style="width: fit-content"
+                      text
                       @click="
                         associatedNucleotideScoreSetListIsExpanded[alleleIdx] =
                           !associatedNucleotideScoreSetListIsExpanded[alleleIdx]

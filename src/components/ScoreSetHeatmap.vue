@@ -68,7 +68,6 @@ import makeHeatmap from '@/lib/heatmap'
 import type {Heatmap, HeatmapDatum, HeatmapRowSpecification} from '@/lib/heatmap'
 import {parseSimpleProVariant, parseSimpleNtVariant, variantNotNullOrNA} from '@/lib/mave-hgvs'
 import {NUCLEOTIDE_BASES} from '@/lib/nucleotides'
-import type {FunctionalRange, PersistedScoreCalibration} from '@/lib/calibrations'
 import {
   PARSED_POST_MAPPED_VARIANT_PROPERTIES,
   HgvsReferenceSequenceType,
@@ -76,6 +75,7 @@ import {
   isStartOrStopLoss,
   Variant
 } from '@/lib/variants'
+import {components} from '@/schema/openapi'
 
 interface VariantHeatmapDatum {
   x: number
@@ -196,7 +196,7 @@ export default defineComponent({
       default: false
     },
     scoreSet: {
-      type: Object,
+      type: Object as PropType<components['schemas']['ScoreSet'] | null>,
       required: true
     },
     showProteinStructureButton: {
@@ -295,7 +295,7 @@ export default defineComponent({
     },
 
     targetType: function () {
-      const targetGenes: any[] = this.scoreSet?.targetGenes || []
+      const targetGenes: components['schemas']['TargetGene'][] = this.scoreSet?.targetGenes || []
       if (targetGenes.length == 0) {
         return 'none'
       }
@@ -614,8 +614,8 @@ export default defineComponent({
     ////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 
     colorScaleDomain: function () {
-      const baselineScore = this.scoreSet.scoreCalibration?.find(
-        (calibration: PersistedScoreCalibration) => calibration.primary
+      const baselineScore = this.scoreSet?.scoreCalibrations?.find(
+        (calibration: components['schemas']['ScoreCalibration']) => calibration.primary
       )?.baselineScore
 
       const scores = this.heatmapData.map((v) => v.meanScore).filter((score) => score != null)
@@ -652,22 +652,45 @@ export default defineComponent({
     ////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 
     functionalClassBasedColorScaleDomainIntervals: function () {
+      // If any ranges are null (ie. we are dealing with a class based calibration), return an empty domain.
+      // The color scale for such calibrations should be based on the categorical classes, not on score ranges.
+      if (
+        this.scoreSet?.scoreCalibrations
+          ?.find((calibration: components['schemas']['ScoreCalibration']) => calibration.primary)
+          ?.functionalClassifications?.some((classification) => classification.range === null)
+      ) {
+        return []
+      }
+
       // Start with all the ranges classified as normal or abnormal. We ignore other ranges, because they either lie
       // outside the normal/abnormal ranges, so that they should be treated as neutral intervals, or they overlap
       // with them, so that the normal or abnormal classification takes precedence.
-      const ranges = (
-        this.scoreSet.scoreCalibrations?.find((calibration: PersistedScoreCalibration) => calibration.primary)
-          ?.functionalRanges || []
-      ).filter((range: FunctionalRange) => ['normal', 'abnormal'].includes(range.classification))
-      if (ranges.length === 0) {
+      const classifications = (
+        this.scoreSet?.scoreCalibrations?.find(
+          (calibration: components['schemas']['ScoreCalibration']) => calibration.primary
+        )?.functionalClassifications || []
+      ).filter(
+        (range: components['schemas']['mavedb__view_models__score_calibration__FunctionalClassification']) =>
+          range.functionalClassification !== undefined &&
+          ['normal', 'abnormal'].includes(range.functionalClassification)
+      )
+      if (classifications.length === 0) {
         return []
       }
 
       // Flatten all interval endpoints.
-      const endpoints: Array<{value: number | null; type: 'min' | 'max'; range: FunctionalRange}> = []
-      for (const range of ranges) {
-        endpoints.push({value: range.range[0], type: 'min', range})
-        endpoints.push({value: range.range[1], type: 'max', range})
+      const endpoints: Array<{
+        value: number | null
+        type: 'min' | 'max'
+        range: components['schemas']['mavedb__view_models__score_calibration__FunctionalClassification']
+      }> = []
+      for (const classification of classifications) {
+        if (classification.range == null) {
+          continue
+        }
+
+        endpoints.push({value: classification.range[0], type: 'min', range: classification})
+        endpoints.push({value: classification.range[1], type: 'max', range: classification})
       }
 
       // Sort endpoints. Null is -infinity when it's a minimum, infinity when it's a maximum.
@@ -684,8 +707,12 @@ export default defineComponent({
       })
 
       // Build intervals from the endpoints.
-      const intervals: Array<{min: number | null; max: number | null; ranges: FunctionalRange[]}> = []
-      let active: FunctionalRange[] = []
+      const intervals: Array<{
+        min: number | null
+        max: number | null
+        classifications: components['schemas']['mavedb__view_models__score_calibration__FunctionalClassification'][]
+      }> = []
+      let active: components['schemas']['mavedb__view_models__score_calibration__FunctionalClassification'][] = []
       let previousThreshold: number | null = null
       for (const endpoint of endpoints) {
         const currentThreshold = endpoint.value
@@ -693,7 +720,7 @@ export default defineComponent({
           intervals.push({
             min: previousThreshold,
             max: currentThreshold,
-            ranges: [...active]
+            classifications: [...active]
           })
           previousThreshold = currentThreshold
         }
@@ -710,14 +737,14 @@ export default defineComponent({
         intervals.unshift({
           min: null,
           max: intervals[0].min,
-          ranges: []
+          classifications: []
         })
       }
       if (intervals.length > 0 && intervals[intervals.length - 1].max != null) {
         intervals.push({
           min: intervals[intervals.length - 1].max,
           max: null,
-          ranges: []
+          classifications: []
         })
       }
 
@@ -737,7 +764,9 @@ export default defineComponent({
       // classification. Otherwise give it a neutral classification. (The second case includes the subcase where normal
       // and abnormal ranges overlap. This should not happen, but we treat it as best we can.)
       const classifiedIntervals = nonemptyIntervals.map((interval) => {
-        const classifications = _.uniq(interval.ranges.map((range) => range.classification))
+        const classifications = _.uniq(
+          interval.classifications.map((classification) => classification.functionalClassification)
+        )
         const classification = classifications.length == 1 ? classifications[0] : 'neutral'
         return {
           min: interval.min,
@@ -867,11 +896,23 @@ export default defineComponent({
           }
         }
 
-        previousIntervalClassification = interval.classification
+        previousIntervalClassification = interval.classification ? interval.classification : 'none'
       }
 
       return controlPoints
     }
+
+    ////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+    // Heatmap coloring based on calibration classes (TODO#470)
+    ////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+
+    // classBasedColorScaleDomainIntervals: function () {
+    //   return null
+    // },
+
+    // classBasedColorScaleDomain: function () {
+    //   return null
+    // }
   },
 
   watch: {

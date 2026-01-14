@@ -22,18 +22,13 @@
               size="small"
               @click="$router.push({path: `/score-sets/${item.urn}/calibrations`})"
             />
-            <Button
-              v-if="userIsAuthorized.addCalibration"
-              size="small"
-              @click="calibrationEditorVisible = true"
+            <Button v-if="userIsAuthorized.addCalibration" size="small" @click="calibrationEditorVisible = true"
               >Add calibration</Button
             >
             <template v-if="!item.publishedDate">
               <Button v-if="userIsAuthorized.update" size="small" @click="editItem">Edit</Button>
               <Button v-if="userIsAuthorized.publish" size="small" @click="publishItem">Publish</Button>
-              <Button v-if="userIsAuthorized.delete" severity="danger" size="small" @click="deleteItem"
-                >Delete</Button
-              >
+              <Button v-if="userIsAuthorized.delete" severity="danger" size="small" @click="deleteItem">Delete</Button>
             </template>
             <template v-if="item.publishedDate">
               <Button v-if="userIsAuthorized.update" size="small" @click="editItem">Edit</Button>
@@ -218,9 +213,7 @@
               <label :for="scopedId('input-' + dataOption.value)">{{ dataOption.label }}</label>
             </div>
             <p />
-            <Button label="Download" outlined size="small" @click="downloadMultipleData"
-              >Download</Button
-            >
+            <Button label="Download" outlined size="small" @click="downloadMultipleData">Download</Button>
             &nbsp;
             <Button label="Cancel" severity="warn" size="small" @click="optionsVisible = false">Cancel</Button>
           </Dialog>
@@ -234,8 +227,7 @@
           <template v-if="hasCounts">
             <Button outlined size="small" @click="sendToGalaxy('counts')">Counts</Button>&nbsp;
           </template>
-          <Button outlined size="small" @click="sendToGalaxy('mappedVariants')">Mapped Variants</Button
-          >&nbsp;
+          <Button outlined size="small" @click="sendToGalaxy('mappedVariants')">Mapped Variants</Button>&nbsp;
         </div>
         <div v-if="item.abstractText">
           <div class="mavedb-score-set-section-title">Abstract</div>
@@ -386,26 +378,18 @@
     header="Create New Calibration"
     modal
     :style="{maxWidth: '90%', width: '75rem'}"
+    @hide="cancelCalibrationCreation"
   >
     <CalibrationEditor
       :calibration-draft-ref="calibrationDraftRef"
+      :classes-draft-ref="calibrationDraftClassesFileRef"
       :score-set-urn="item.urn"
       :validation-errors="editorValidationErrors"
-      @canceled="calibrationEditorVisible = false"
+      @canceled="cancelCalibrationCreation"
     />
     <template #footer>
-      <Button
-        icon="pi pi-times"
-        label="Close"
-        severity="secondary"
-        @click="calibrationEditorVisible = false"
-      />
-      <Button
-        icon="pi pi-save"
-        label="Save Changes"
-        severity="success"
-        @click="saveCreatedCalibration"
-      />
+      <Button icon="pi pi-times" label="Close" @click="cancelCalibrationCreation" severity="secondary" />
+      <Button icon="pi pi-save" label="Save Changes" severity="success" @click="saveCreatedCalibration" />
     </template>
   </PrimeDialog>
 </template>
@@ -510,6 +494,7 @@ export default {
     const scoresRemoteData = useRemoteData()
     const variantSearchSuggestions = ref([])
     const calibrationDraftRef = ref({value: null})
+    const calibrationDraftClassesFileRef = ref({value: null})
     const editorValidationErrors = ref({})
     const selectedCalibrations = ref([null, null])
 
@@ -518,6 +503,7 @@ export default {
       config: config,
       userIsAuthenticated,
       calibrationDraftRef,
+      calibrationDraftClassesFileRef,
       editorValidationErrors,
       selectedCalibrations,
 
@@ -1219,7 +1205,20 @@ export default {
       if (this.calibrationDraftRef.value) {
         let response = null
         try {
-          response = await axios.post(`${config.apiBaseUrl}/score-calibrations`, this.calibrationDraftRef.value)
+          const draft = this.calibrationDraftRef.value
+          const draftClassesFile = this.calibrationDraftClassesFileRef.value
+
+          const formData = new FormData()
+          formData.append('calibration_json', JSON.stringify(draft))
+          if (draftClassesFile) {
+            formData.append('classes_file', draftClassesFile)
+          }
+
+          response = await axios.post(`${config.apiBaseUrl}/score-calibrations`, formData, {
+            headers: {
+              'Content-Type': 'multipart/form-data'
+            }
+          })
         } catch (e) {
           response = e.response || {status: 500}
         }
@@ -1240,7 +1239,7 @@ export default {
             if (path[0] == 'body') {
               path = path.slice(1)
             }
-            let customPath = error.ctx.custom_loc
+            let customPath = error.ctx?.custom_loc
             if (customPath && customPath[0] == 'body') {
               customPath = customPath.slice(1)
             }
@@ -1253,6 +1252,15 @@ export default {
     },
     showOptions: function () {
       this.optionsVisible = true
+    },
+    cancelCalibrationCreation: function () {
+      // Close the editor dialog
+      this.calibrationEditorVisible = false
+      // Reset draft
+      this.calibrationDraftRef.value = null
+      this.calibrationDraftClassesFileRef.value = null
+      // Reset validation errors
+      this.editorValidationErrors = {}
     }
   }
 }
@@ -1285,7 +1293,7 @@ export default {
 /* Histogram */
 
 .mavedb-score-set-histogram-pane {
-  margin: 10px 0;
+  margin: 10px;
 }
 
 /* Calibration table */

@@ -447,6 +447,57 @@ export interface paths {
     /**
      * Modify Score Calibration Route
      * @description Modify an existing score calibration by its URN.
+     *
+     * This endpoint supports two different request formats to accommodate various client needs:
+     *
+     * ## Method 1: JSON Request Body (application/json)
+     * Send calibration update data as a standard JSON request body. This method is ideal for
+     * modifying calibrations without file uploads.
+     *
+     * **Content-Type**: `application/json`
+     *
+     * **Example**:
+     * ```json
+     * {
+     *     "score_set_urn": "urn:mavedb:0000000X-X-X",
+     *     "title": "Updated Calibration Title",
+     *     "description": "Updated functional score calibration",
+     *     "baseline_score": 1.0
+     * }
+     * ```
+     *
+     * ## Method 2: Multipart Form Data (multipart/form-data)
+     * Send calibration update data as JSON in a form field, optionally with file uploads.
+     * This method is required when uploading new classification files.
+     *
+     * **Content-Type**: `multipart/form-data`
+     *
+     * **Form Fields**:
+     * - `calibration_json` (string, required): JSON string containing the calibration update data
+     * - `classes_file` (file, optional): CSV file containing updated variant classifications
+     *
+     * **Example**:
+     * ```bash
+     * curl -X PUT "/api/v1/score-calibrations/{urn}" \
+     *      -H "Authorization: Bearer your-token" \
+     *      -F 'calibration_json={"score_set_urn":"urn:mavedb:0000000X-X-X","title":"My Calibration","description":"Functional score calibration","baseline_score":"1.0"}' \
+     *      -F 'classes_file=@updated_variant_classes.csv'
+     * ```
+     *
+     * ## Requirements
+     * - User must have update permission on the calibration
+     * - If changing the score_set_urn, user must have permission on the new score set
+     * - All fields in the update are optional - only provided fields will be modified
+     *
+     * ## File Upload Details
+     * The `classes_file` parameter accepts CSV files containing updated variant classification data.
+     * If provided, this will replace the existing classification data for the calibration.
+     * The file should have appropriate headers and follow the expected format for variant
+     * classifications within the associated score set.
+     *
+     * ## Response
+     * Returns the updated score calibration with all modifications applied and any new
+     * classification data from the uploaded file.
      */
     put: operations["modify_score_calibration_route_api_v1_score_calibrations__urn__put"];
     /**
@@ -474,8 +525,53 @@ export interface paths {
      * Create Score Calibration Route
      * @description Create a new score calibration.
      *
-     * The score set URN must be provided to associate the calibration with an existing score set.
-     * The user must have write permission on the associated score set.
+     * This endpoint supports two different request formats to accommodate various client needs:
+     *
+     * ## Method 1: JSON Request Body (application/json)
+     * Send calibration data as a standard JSON request body. This method is ideal for
+     * creating calibrations without file uploads.
+     *
+     * **Content-Type**: `application/json`
+     *
+     * **Example**:
+     * ```json
+     * {
+     *     "score_set_urn": "urn:mavedb:0000000X-X-X",
+     *     "title": "My Calibration",
+     *     "description": "Functional score calibration",
+     *     "baseline_score": 1.0
+     * }
+     * ```
+     *
+     * ## Method 2: Multipart Form Data (multipart/form-data)
+     * Send calibration data as JSON in a form field, optionally with file uploads.
+     * This method is required when uploading classification files.
+     *
+     * **Content-Type**: `multipart/form-data`
+     *
+     * **Form Fields**:
+     * - `calibration_json` (string, required): JSON string containing the calibration data
+     * - `classes_file` (file, optional): CSV file containing variant classifications
+     *
+     * **Example**:
+     * ```bash
+     * curl -X POST "/api/v1/score-calibrations/" \
+     *      -H "Authorization: Bearer your-token" \
+     *      -F 'calibration_json={"score_set_urn":"urn:mavedb:0000000X-X-X","title":"My Calibration","description":"Functional score calibration","baseline_score":"1.0"}' \
+     *      -F 'classes_file=@variant_classes.csv'
+     * ```
+     *
+     * ## Requirements
+     * - The score set URN must be provided to associate the calibration with an existing score set
+     * - User must have write permission on the associated score set
+     * - If uploading a classes_file, it must be a valid CSV with variant classification data
+     *
+     * ## File Upload Details
+     * The `classes_file` parameter accepts CSV files containing variant classification data.
+     * The file should have appropriate headers and contain columns for variant urns and class names.
+     *
+     * ## Response
+     * Returns the created score calibration with its generated URN and associated score set information.
      */
     post: operations["create_score_calibration_route_api_v1_score_calibrations__post"];
   };
@@ -1165,22 +1261,22 @@ export interface components {
       points?: number | null;
       /** Recordtype */
       recordType?: string;
+      /**
+       * Creationdate
+       * Format: date
+       */
+      creationDate: string;
+      /**
+       * Modificationdate
+       * Format: date
+       */
+      modificationDate: string;
     };
     /**
      * ACMGClassificationCreate
      * @description Model used to create a new ACMG classification.
      */
     ACMGClassificationCreate: {
-      criterion?: components["schemas"]["ACMGCriterion"] | null;
-      evidenceStrength?: components["schemas"]["StrengthOfEvidenceProvided"] | null;
-      /** Points */
-      points?: number | null;
-    };
-    /**
-     * ACMGClassificationModify
-     * @description Model used to modify an existing ACMG classification.
-     */
-    ACMGClassificationModify: {
       criterion?: components["schemas"]["ACMGCriterion"] | null;
       evidenceStrength?: components["schemas"]["StrengthOfEvidenceProvided"] | null;
       /** Points */
@@ -1429,6 +1525,32 @@ export interface components {
       name: string;
       /** Version */
       version: string;
+    };
+    /** Body_create_score_calibration_route_api_v1_score_calibrations__post */
+    Body_create_score_calibration_route_api_v1_score_calibrations__post: {
+      /**
+       * Classes File
+       * @description CSV file containing variant classifications. This file must contain two columns: 'variant_urn' and 'class_name'.
+       */
+      classes_file?: string | null;
+      /**
+       * Item
+       * @description JSON data for the request
+       */
+      item?: string;
+    };
+    /** Body_modify_score_calibration_route_api_v1_score_calibrations__urn__put */
+    Body_modify_score_calibration_route_api_v1_score_calibrations__urn__put: {
+      /**
+       * Classes File
+       * @description CSV file containing variant classifications. This file must contain two columns: 'variant_urn' and 'class_name'.
+       */
+      classes_file?: string | null;
+      /**
+       * Item
+       * @description JSON data for the request
+       */
+      item?: string;
     };
     /** Body_update_score_set_with_variants_api_v1_score_sets_with_variants__urn__patch */
     Body_update_score_set_with_variants_api_v1_score_sets_with_variants__urn__patch: {
@@ -2586,7 +2708,7 @@ export interface components {
       /** Processingstate */
       processingState?: string | null;
       /** Officialcollections */
-      officialCollections: components["schemas"]["OfficialCollection"][];
+      officialCollections: components["schemas"]["mavedb__view_models__score_set__OfficialCollection"][];
     };
     /**
      * ExperimentControlledKeyword
@@ -3002,101 +3124,25 @@ export interface components {
       featureContext: components["schemas"]["MappableConcept"];
     };
     /**
-     * FunctionalRange
-     * @description Complete functional range model returned by the API.
-     */
-    FunctionalRange: {
-      /** Label */
-      label: string;
-      /** Description */
-      description?: string | null;
-      /**
-       * Classification
-       * @default not_specified
-       * @enum {string}
-       */
-      classification?: "normal" | "abnormal" | "not_specified";
-      /** Range */
-      range: [number | null, number | null];
-      /**
-       * Inclusivelowerbound
-       * @default true
-       */
-      inclusiveLowerBound?: boolean;
-      /**
-       * Inclusiveupperbound
-       * @default false
-       */
-      inclusiveUpperBound?: boolean;
-      acmgClassification?: components["schemas"]["ACMGClassification"] | null;
-      /** Oddspathsratio */
-      oddspathsRatio?: number | null;
-      /** Positivelikelihoodratio */
-      positiveLikelihoodRatio?: number | null;
-      /** Recordtype */
-      recordType?: string;
-    };
-    /**
-     * FunctionalRangeCreate
+     * FunctionalClassificationCreate
      * @description Model used to create a new functional range.
      */
-    FunctionalRangeCreate: {
+    FunctionalClassificationCreate: {
       /** Label */
       label: string;
       /** Description */
       description?: string | null;
-      /**
-       * Classification
-       * @default not_specified
-       * @enum {string}
-       */
-      classification?: "normal" | "abnormal" | "not_specified";
+      /** @default not_specified */
+      functionalClassification?: components["schemas"]["mavedb__models__enums__functional_classification__FunctionalClassification"];
       /** Range */
-      range: [number | null, number | null];
-      /**
-       * Inclusivelowerbound
-       * @default true
-       */
-      inclusiveLowerBound?: boolean;
-      /**
-       * Inclusiveupperbound
-       * @default false
-       */
-      inclusiveUpperBound?: boolean;
+      range?: ([number | null, number | null]) | null;
+      /** Class */
+      class?: string | null;
+      /** Inclusivelowerbound */
+      inclusiveLowerBound?: boolean | null;
+      /** Inclusiveupperbound */
+      inclusiveUpperBound?: boolean | null;
       acmgClassification?: components["schemas"]["ACMGClassificationCreate"] | null;
-      /** Oddspathsratio */
-      oddspathsRatio?: number | null;
-      /** Positivelikelihoodratio */
-      positiveLikelihoodRatio?: number | null;
-    };
-    /**
-     * FunctionalRangeModify
-     * @description Model used to modify an existing functional range.
-     */
-    FunctionalRangeModify: {
-      /** Label */
-      label: string;
-      /** Description */
-      description?: string | null;
-      /**
-       * Classification
-       * @default not_specified
-       * @enum {string}
-       */
-      classification?: "normal" | "abnormal" | "not_specified";
-      /** Range */
-      range: [number | null, number | null];
-      /**
-       * Inclusivelowerbound
-       * @default true
-       */
-      inclusiveLowerBound?: boolean;
-      /**
-       * Inclusiveupperbound
-       * @default false
-       */
-      inclusiveUpperBound?: boolean;
-      acmgClassification?: components["schemas"]["ACMGClassificationModify"] | null;
       /** Oddspathsratio */
       oddspathsRatio?: number | null;
       /** Positivelikelihoodratio */
@@ -3496,15 +3542,6 @@ export interface components {
       /** Privatekey */
       privateKey: string;
     };
-    /** OfficialCollection */
-    OfficialCollection: {
-      /** Badgename */
-      badgeName: string;
-      /** Name */
-      name: string;
-      /** Urn */
-      urn: string;
-    };
     /** OrcidUser */
     OrcidUser: {
       /** Recordtype */
@@ -3837,6 +3874,16 @@ export interface components {
       points?: number | null;
       /** Recordtype */
       recordType?: string;
+      /**
+       * Creationdate
+       * Format: date
+       */
+      creationDate: string;
+      /**
+       * Modificationdate
+       * Format: date
+       */
+      modificationDate: string;
     };
     /** SavedDoiIdentifier */
     SavedDoiIdentifier: {
@@ -3861,32 +3908,24 @@ export interface components {
       recordType?: string;
     };
     /**
-     * SavedFunctionalRange
+     * SavedFunctionalClassification
      * @description Persisted functional range model (includes record type metadata).
      */
-    SavedFunctionalRange: {
+    SavedFunctionalClassification: {
       /** Label */
       label: string;
       /** Description */
       description?: string | null;
-      /**
-       * Classification
-       * @default not_specified
-       * @enum {string}
-       */
-      classification?: "normal" | "abnormal" | "not_specified";
+      /** @default not_specified */
+      functionalClassification?: components["schemas"]["mavedb__models__enums__functional_classification__FunctionalClassification"];
       /** Range */
-      range: [number | null, number | null];
-      /**
-       * Inclusivelowerbound
-       * @default true
-       */
-      inclusiveLowerBound?: boolean;
-      /**
-       * Inclusiveupperbound
-       * @default false
-       */
-      inclusiveUpperBound?: boolean;
+      range?: ([number | null, number | null]) | null;
+      /** Class */
+      class?: string | null;
+      /** Inclusivelowerbound */
+      inclusiveLowerBound?: boolean | null;
+      /** Inclusiveupperbound */
+      inclusiveUpperBound?: boolean | null;
       acmgClassification?: components["schemas"]["SavedACMGClassification"] | null;
       /** Oddspathsratio */
       oddspathsRatio?: number | null;
@@ -3894,6 +3933,11 @@ export interface components {
       positiveLikelihoodRatio?: number | null;
       /** Recordtype */
       recordType?: string;
+      /**
+       * Variants
+       * @default []
+       */
+      variants?: components["schemas"]["SavedVariantEffectMeasurement"][];
     };
     /** SavedPublicationIdentifier */
     SavedPublicationIdentifier: {
@@ -3996,6 +4040,38 @@ export interface components {
       recordType?: string;
     };
     /**
+     * SavedVariantEffectMeasurement
+     * @description Base class for variant effect measurement view models handling saved variant effect measurements
+     */
+    SavedVariantEffectMeasurement: {
+      /** Urn */
+      urn?: string | null;
+      /** Data */
+      data: unknown;
+      /** Scoresetid */
+      scoreSetId: number;
+      /** Hgvsnt */
+      hgvsNt?: string | null;
+      /** Hgvspro */
+      hgvsPro?: string | null;
+      /** Hgvssplice */
+      hgvsSplice?: string | null;
+      /**
+       * Creationdate
+       * Format: date
+       */
+      creationDate: string;
+      /**
+       * Modificationdate
+       * Format: date
+       */
+      modificationDate: string;
+      /** Id */
+      id: number;
+      /** Recordtype */
+      recordType?: string;
+    };
+    /**
      * ScoreCalibration
      * @description Complete score calibration model returned by the API.
      */
@@ -4013,8 +4089,8 @@ export interface components {
       baselineScoreDescription?: string | null;
       /** Notes */
       notes?: string | null;
-      /** Functionalranges */
-      functionalRanges?: components["schemas"]["FunctionalRange"][] | null;
+      /** Functionalclassifications */
+      functionalClassifications?: components["schemas"]["mavedb__view_models__score_calibration__FunctionalClassification"][] | null;
       /** Thresholdsources */
       thresholdSources?: components["schemas"]["PublicationIdentifier"][] | null;
       /** Classificationsources */
@@ -4074,39 +4150,8 @@ export interface components {
       baselineScoreDescription?: string | null;
       /** Notes */
       notes?: string | null;
-      /** Functionalranges */
-      functionalRanges?: components["schemas"]["FunctionalRangeCreate"][] | null;
-      /** Thresholdsources */
-      thresholdSources?: components["schemas"]["PublicationIdentifierCreate"][] | null;
-      /** Classificationsources */
-      classificationSources?: components["schemas"]["PublicationIdentifierCreate"][] | null;
-      /** Methodsources */
-      methodSources?: components["schemas"]["PublicationIdentifierCreate"][] | null;
-      /** Calibrationmetadata */
-      calibrationMetadata?: Record<string, never> | null;
-      /** Scoreseturn */
-      scoreSetUrn?: string | null;
-    };
-    /**
-     * ScoreCalibrationModify
-     * @description Model used to modify an existing score calibration.
-     */
-    ScoreCalibrationModify: {
-      /** Title */
-      title: string;
-      /**
-       * Researchuseonly
-       * @default false
-       */
-      researchUseOnly?: boolean;
-      /** Baselinescore */
-      baselineScore?: number | null;
-      /** Baselinescoredescription */
-      baselineScoreDescription?: string | null;
-      /** Notes */
-      notes?: string | null;
-      /** Functionalranges */
-      functionalRanges?: components["schemas"]["FunctionalRangeModify"][] | null;
+      /** Functionalclassifications */
+      functionalClassifications?: components["schemas"]["FunctionalClassificationCreate"][] | null;
       /** Thresholdsources */
       thresholdSources?: components["schemas"]["PublicationIdentifierCreate"][] | null;
       /** Classificationsources */
@@ -4136,8 +4181,8 @@ export interface components {
       baselineScoreDescription?: string | null;
       /** Notes */
       notes?: string | null;
-      /** Functionalranges */
-      functionalRanges?: components["schemas"]["SavedFunctionalRange"][] | null;
+      /** Functionalclassifications */
+      functionalClassifications?: components["schemas"]["SavedFunctionalClassification"][] | null;
       /** Thresholdsources */
       thresholdSources?: components["schemas"]["SavedPublicationIdentifier"][] | null;
       /** Classificationsources */
@@ -4244,7 +4289,7 @@ export interface components {
       scoreCalibrations?: components["schemas"]["ScoreCalibration"][] | null;
       experiment: components["schemas"]["Experiment"];
       /** Officialcollections */
-      officialCollections: components["schemas"]["OfficialCollection"][];
+      officialCollections: components["schemas"]["mavedb__view_models__score_set__OfficialCollection"][];
       /** Private */
       private: boolean;
       processingState?: components["schemas"]["ProcessingState"] | null;
@@ -4761,7 +4806,7 @@ export interface components {
      * @description Enum for strength of evidence provided.
      * @enum {string}
      */
-    StrengthOfEvidenceProvided: "very_strong" | "strong" | "moderate_plus" | "moderate" | "supporting";
+    StrengthOfEvidenceProvided: "VERY_STRONG" | "STRONG" | "MODERATE_PLUS" | "MODERATE" | "SUPPORTING";
     /**
      * StudyGroup
      * @description A collection of individuals or specimens from the same taxonomic class, selected
@@ -5212,6 +5257,38 @@ export interface components {
       objectCondition: components["schemas"]["Condition"] | components["schemas"]["iriReference"];
     };
     /**
+     * VariantEffectMeasurement
+     * @description Variant effect measurement view model returned to most clients
+     */
+    VariantEffectMeasurement: {
+      /** Urn */
+      urn?: string | null;
+      /** Data */
+      data: unknown;
+      /** Scoresetid */
+      scoreSetId: number;
+      /** Hgvsnt */
+      hgvsNt?: string | null;
+      /** Hgvspro */
+      hgvsPro?: string | null;
+      /** Hgvssplice */
+      hgvsSplice?: string | null;
+      /**
+       * Creationdate
+       * Format: date
+       */
+      creationDate: string;
+      /**
+       * Modificationdate
+       * Format: date
+       */
+      modificationDate: string;
+      /** Id */
+      id: number;
+      /** Recordtype */
+      recordType?: string;
+    };
+    /**
      * VariantEffectMeasurementWithScoreSet
      * @description Variant effect measurement view model with mapped variants and score set
      */
@@ -5642,6 +5719,52 @@ export interface components {
      * @description An IRI Reference (either an IRI or a relative-reference), according to `RFC3986 section 4.1 <https://datatracker.ietf.org/doc/html/rfc3986#section-4.1>`_ and `RFC3987 section 2.1 <https://datatracker.ietf.org/doc/html/rfc3987#section-2.1>`_. MAY be a JSON Pointer as an IRI fragment, as described by `RFC6901 section 6 <https://datatracker.ietf.org/doc/html/rfc6901#section-6>`_.
      */
     iriReference: string;
+    /**
+     * FunctionalClassification
+     * @enum {string}
+     */
+    mavedb__models__enums__functional_classification__FunctionalClassification: "normal" | "abnormal" | "not_specified";
+    /**
+     * FunctionalClassification
+     * @description Complete functional range model returned by the API.
+     */
+    mavedb__view_models__score_calibration__FunctionalClassification: {
+      /** Label */
+      label: string;
+      /** Description */
+      description?: string | null;
+      /** @default not_specified */
+      functionalClassification?: components["schemas"]["mavedb__models__enums__functional_classification__FunctionalClassification"];
+      /** Range */
+      range?: ([number | null, number | null]) | null;
+      /** Class */
+      class?: string | null;
+      /** Inclusivelowerbound */
+      inclusiveLowerBound?: boolean | null;
+      /** Inclusiveupperbound */
+      inclusiveUpperBound?: boolean | null;
+      acmgClassification?: components["schemas"]["ACMGClassification"] | null;
+      /** Oddspathsratio */
+      oddspathsRatio?: number | null;
+      /** Positivelikelihoodratio */
+      positiveLikelihoodRatio?: number | null;
+      /** Recordtype */
+      recordType?: string;
+      /**
+       * Variants
+       * @default []
+       */
+      variants?: components["schemas"]["VariantEffectMeasurement"][];
+    };
+    /** OfficialCollection */
+    mavedb__view_models__score_set__OfficialCollection: {
+      /** Badgename */
+      badgeName: string;
+      /** Name */
+      name: string;
+      /** Urn */
+      urn: string;
+    };
     /**
      * sequenceString
      * @description A character string of Residues that represents a biological sequence using the conventional sequence order (5'-to-3' for nucleic acid sequences, and amino-to-carboxyl for amino acid sequences). IUPAC ambiguity codes are permitted in Sequence Strings.
@@ -8153,6 +8276,57 @@ export interface operations {
   /**
    * Modify Score Calibration Route
    * @description Modify an existing score calibration by its URN.
+   *
+   * This endpoint supports two different request formats to accommodate various client needs:
+   *
+   * ## Method 1: JSON Request Body (application/json)
+   * Send calibration update data as a standard JSON request body. This method is ideal for
+   * modifying calibrations without file uploads.
+   *
+   * **Content-Type**: `application/json`
+   *
+   * **Example**:
+   * ```json
+   * {
+   *     "score_set_urn": "urn:mavedb:0000000X-X-X",
+   *     "title": "Updated Calibration Title",
+   *     "description": "Updated functional score calibration",
+   *     "baseline_score": 1.0
+   * }
+   * ```
+   *
+   * ## Method 2: Multipart Form Data (multipart/form-data)
+   * Send calibration update data as JSON in a form field, optionally with file uploads.
+   * This method is required when uploading new classification files.
+   *
+   * **Content-Type**: `multipart/form-data`
+   *
+   * **Form Fields**:
+   * - `calibration_json` (string, required): JSON string containing the calibration update data
+   * - `classes_file` (file, optional): CSV file containing updated variant classifications
+   *
+   * **Example**:
+   * ```bash
+   * curl -X PUT "/api/v1/score-calibrations/{urn}" \
+   *      -H "Authorization: Bearer your-token" \
+   *      -F 'calibration_json={"score_set_urn":"urn:mavedb:0000000X-X-X","title":"My Calibration","description":"Functional score calibration","baseline_score":"1.0"}' \
+   *      -F 'classes_file=@updated_variant_classes.csv'
+   * ```
+   *
+   * ## Requirements
+   * - User must have update permission on the calibration
+   * - If changing the score_set_urn, user must have permission on the new score set
+   * - All fields in the update are optional - only provided fields will be modified
+   *
+   * ## File Upload Details
+   * The `classes_file` parameter accepts CSV files containing updated variant classification data.
+   * If provided, this will replace the existing classification data for the calibration.
+   * The file should have appropriate headers and follow the expected format for variant
+   * classifications within the associated score set.
+   *
+   * ## Response
+   * Returns the updated score calibration with all modifications applied and any new
+   * classification data from the uploaded file.
    */
   modify_score_calibration_route_api_v1_score_calibrations__urn__put: {
     parameters: {
@@ -8163,8 +8337,10 @@ export interface operations {
         urn: string;
       };
     };
-    requestBody: {
+    /** @description Score calibration update data. Can be sent as JSON body or multipart form data */
+    requestBody?: {
       content: {
+        "multipart/form-data": components["schemas"]["Body_modify_score_calibration_route_api_v1_score_calibrations__urn__put"];
         "application/json": components["schemas"]["ScoreCalibrationModify"];
       };
     };
@@ -8181,9 +8357,7 @@ export interface operations {
       };
       /** @description Validation Error */
       422: {
-        content: {
-          "application/json": components["schemas"]["HTTPValidationError"];
-        };
+        content: never;
       };
     };
   };
@@ -8285,8 +8459,53 @@ export interface operations {
    * Create Score Calibration Route
    * @description Create a new score calibration.
    *
-   * The score set URN must be provided to associate the calibration with an existing score set.
-   * The user must have write permission on the associated score set.
+   * This endpoint supports two different request formats to accommodate various client needs:
+   *
+   * ## Method 1: JSON Request Body (application/json)
+   * Send calibration data as a standard JSON request body. This method is ideal for
+   * creating calibrations without file uploads.
+   *
+   * **Content-Type**: `application/json`
+   *
+   * **Example**:
+   * ```json
+   * {
+   *     "score_set_urn": "urn:mavedb:0000000X-X-X",
+   *     "title": "My Calibration",
+   *     "description": "Functional score calibration",
+   *     "baseline_score": 1.0
+   * }
+   * ```
+   *
+   * ## Method 2: Multipart Form Data (multipart/form-data)
+   * Send calibration data as JSON in a form field, optionally with file uploads.
+   * This method is required when uploading classification files.
+   *
+   * **Content-Type**: `multipart/form-data`
+   *
+   * **Form Fields**:
+   * - `calibration_json` (string, required): JSON string containing the calibration data
+   * - `classes_file` (file, optional): CSV file containing variant classifications
+   *
+   * **Example**:
+   * ```bash
+   * curl -X POST "/api/v1/score-calibrations/" \
+   *      -H "Authorization: Bearer your-token" \
+   *      -F 'calibration_json={"score_set_urn":"urn:mavedb:0000000X-X-X","title":"My Calibration","description":"Functional score calibration","baseline_score":"1.0"}' \
+   *      -F 'classes_file=@variant_classes.csv'
+   * ```
+   *
+   * ## Requirements
+   * - The score set URN must be provided to associate the calibration with an existing score set
+   * - User must have write permission on the associated score set
+   * - If uploading a classes_file, it must be a valid CSV with variant classification data
+   *
+   * ## File Upload Details
+   * The `classes_file` parameter accepts CSV files containing variant classification data.
+   * The file should have appropriate headers and contain columns for variant urns and class names.
+   *
+   * ## Response
+   * Returns the created score calibration with its generated URN and associated score set information.
    */
   create_score_calibration_route_api_v1_score_calibrations__post: {
     parameters: {
@@ -8294,8 +8513,10 @@ export interface operations {
         "x-active-roles"?: string | null;
       };
     };
-    requestBody: {
+    /** @description Score calibration data. Can be sent as JSON body or multipart form data */
+    requestBody?: {
       content: {
+        "multipart/form-data": components["schemas"]["Body_create_score_calibration_route_api_v1_score_calibrations__post"];
         "application/json": components["schemas"]["ScoreCalibrationCreate"];
       };
     };
@@ -8312,9 +8533,7 @@ export interface operations {
       };
       /** @description Validation Error */
       422: {
-        content: {
-          "application/json": components["schemas"]["HTTPValidationError"];
-        };
+        content: never;
       };
     };
   };

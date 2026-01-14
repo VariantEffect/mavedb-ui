@@ -18,12 +18,18 @@
             <Step :value="1">Parent experiment and context</Step>
             <Step :disabled="maxWizardStepValidated < 1" :value="2">Score set information</Step>
             <Step :disabled="maxWizardStepValidated < 2" :value="3">Targets</Step>
-            <Step v-for="(targetNum, targetIdx) in numTargets" :key="targetIdx" :disabled="maxWizardStepValidated < targetIdx + 3" :value="targetIdx + 4">Target {{ targetIdx + 1 }}</Step>
+            <Step
+              v-for="(targetNum, targetIdx) in numTargets"
+              :key="targetIdx"
+              :disabled="maxWizardStepValidated < targetIdx + 3"
+              :value="targetIdx + 4"
+              >Target {{ targetIdx + 1 }}</Step
+            >
             <Step :disabled="maxWizardStepValidated < numTargets + 3" :value="numTargets + 4">Score Calibration</Step>
             <Step :disabled="maxWizardStepValidated < numTargets + 4" :value="numTargets + 5">Variant Scores</Step>
           </StepList>
           <StepPanels>
-            <StepPanel v-slot="{ activateCallback }" :value="1">
+            <StepPanel v-slot="{activateCallback}" :value="1">
               <div class="mavedb-wizard-form">
                 <div class="mavedb-wizard-form-content-background"></div>
                 <div v-if="experimentUrn && experiment">
@@ -214,7 +220,7 @@
                 </div>
               </div>
             </StepPanel>
-            <StepPanel v-slot="{ activateCallback }" :value="2" >
+            <StepPanel v-slot="{activateCallback}" :value="2">
               <div class="mavedb-wizard-form">
                 <div class="mavedb-wizard-form-content-background"></div>
                 <div v-if="experiment" class="mavedb-wizard-row">
@@ -440,7 +446,10 @@
                           v-model="contributors"
                           fluid
                           multiple
-                          :option-label="(x) => x.givenName || x.familyName ? `${x.givenName} ${x.familyName} (${x.orcidId})` : x.orcidId"
+                          :option-label="
+                            (x) =>
+                              x.givenName || x.familyName ? `${x.givenName} ${x.familyName} (${x.orcidId})` : x.orcidId
+                          "
                           :typeahead="false"
                           @blur="updateContributors"
                           @keyup.escape="clearAutoCompleteInput"
@@ -498,7 +507,7 @@
                     </div>
                     <div class="mavedb-wizard-content field">
                       <FloatLabel variant="on">
-                         <AutoComplete
+                        <AutoComplete
                           :id="scopedId('input-publicationIdentifiers')"
                           v-model="publicationIdentifiers"
                           :multiple="true"
@@ -591,7 +600,12 @@
               </div>
               <div class="mavedb-wizard-step-controls-row">
                 <div class="flex justify-content-between mavedb-wizard-step-controls pt-4">
-                  <Button icon="pi pi-arrow-left" label="Back" severity="secondary" @click="activateCallback(activeWizardStep - 1)" />
+                  <Button
+                    icon="pi pi-arrow-left"
+                    label="Back"
+                    severity="secondary"
+                    @click="activateCallback(activeWizardStep - 1)"
+                  />
                   <Button
                     :disabled="maxWizardStepValidated < activeWizardStep"
                     icon="pi pi-arrow-right"
@@ -602,7 +616,7 @@
                 </div>
               </div>
             </StepPanel>
-            <StepPanel v-slot="{ activateCallback }" :value="3" >
+            <StepPanel v-slot="{activateCallback}" :value="3">
               <div class="mavedb-wizard-form">
                 <div class="mavedb-wizard-form-content-background"></div>
                 <div class="mavedb-wizard-row">
@@ -701,7 +715,12 @@
               </div>
               <div class="mavedb-wizard-step-controls-row">
                 <div class="flex justify-content-between mavedb-wizard-step-controls pt-4">
-                  <Button icon="pi pi-arrow-left" label="Back" severity="secondary" @click="activateCallback(activeWizardStep - 1)" />
+                  <Button
+                    icon="pi pi-arrow-left"
+                    label="Back"
+                    severity="secondary"
+                    @click="activateCallback(activeWizardStep - 1)"
+                  />
                   <Button
                     :disabled="maxWizardStepValidated < activeWizardStep"
                     icon="pi pi-arrow-right"
@@ -712,7 +731,12 @@
                 </div>
               </div>
             </StepPanel>
-            <StepPanel v-for="(targetNum, targetIdx) in numTargets" v-slot="{ activateCallback }" :key="targetIdx" :value="targetIdx + 4">
+            <StepPanel
+              v-for="(targetNum, targetIdx) in numTargets"
+              v-slot="{activateCallback}"
+              :key="targetIdx"
+              :value="targetIdx + 4"
+            >
               <div class="mavedb-wizard-form">
                 <div class="mavedb-wizard-form-content-background"></div>
                 <div v-if="isTargetSequence" class="mavedb-wizard-row">
@@ -773,9 +797,11 @@
                       />
                       <label :for="scopedId('input-targetGeneName')">Target name</label>
                     </FloatLabel>
-                    <span v-if="validationErrors[`targetGenes.${targetIdx}.targetGene.name`]" class="mave-field-error">{{
-                      validationErrors[`targetGenes.${targetIdx}.targetGene.name`]
-                    }}</span>
+                    <span
+                      v-if="validationErrors[`targetGenes.${targetIdx}.targetGene.name`]"
+                      class="mave-field-error"
+                      >{{ validationErrors[`targetGenes.${targetIdx}.targetGene.name`] }}</span
+                    >
                   </div>
                 </div>
 
@@ -819,9 +845,11 @@
                           :options="targetGeneCategories"
                         />
                       </span>
-                      <span v-if="validationErrors[`targetGenes.${targetIdx}.targetGene.category`]" class="mave-field-error">{{
-                        validationErrors[`targetGenes.${targetIdx}.targetGene.category`]
-                      }}</span>
+                      <span
+                        v-if="validationErrors[`targetGenes.${targetIdx}.targetGene.category`]"
+                        class="mave-field-error"
+                        >{{ validationErrors[`targetGenes.${targetIdx}.targetGene.category`] }}</span
+                      >
                     </div>
                   </div>
 
@@ -872,10 +900,16 @@
                             >
                           </FloatLabel>
                           <span
-                            v-if="validationErrors[`targetGenes.${targetIdx}.targetGene.externalIdentifiers.${dbName}.identifier.identifier`]"
+                            v-if="
+                              validationErrors[
+                                `targetGenes.${targetIdx}.targetGene.externalIdentifiers.${dbName}.identifier.identifier`
+                              ]
+                            "
                             class="mave-field-error"
                             >{{
-                              validationErrors[`targetGenes.${targetIdx}.targetGene.externalIdentifiers.${dbName}.identifier.identifier`]
+                              validationErrors[
+                                `targetGenes.${targetIdx}.targetGene.externalIdentifiers.${dbName}.identifier.identifier`
+                              ]
                             }}</span
                           >
                         </div>
@@ -892,16 +926,26 @@
                             <label :for="scopedId(`input-${dbName.toLowerCase()}Offset`)">Offset</label>
                           </FloatLabel>
                           <span
-                            v-if="validationErrors[`targetGenes.${targetIdx}.targetGene.externalIdentifiers.${dbName}.offset`]"
+                            v-if="
+                              validationErrors[
+                                `targetGenes.${targetIdx}.targetGene.externalIdentifiers.${dbName}.offset`
+                              ]
+                            "
                             class="mave-field-error"
-                            >{{ validationErrors[`targetGenes.${targetIdx}.targetGene.externalIdentifiers.${dbName}.offset`] }}</span
+                            >{{
+                              validationErrors[
+                                `targetGenes.${targetIdx}.targetGene.externalIdentifiers.${dbName}.offset`
+                              ]
+                            }}</span
                           >
                         </div>
                       </div>
                       <span
                         v-if="validationErrors[`targetGenes.${targetIdx}.targetGene.externalIdentifiers.${dbName}`]"
                         class="mave-field-error"
-                        >{{ validationErrors[`targetGenes.${targetIdx}.targetGene.externalIdentifiers.${dbName}`] }}</span
+                        >{{
+                          validationErrors[`targetGenes.${targetIdx}.targetGene.externalIdentifiers.${dbName}`]
+                        }}</span
                       >
                     </div>
                   </div>
@@ -936,7 +980,8 @@
                         >
                           <template #option="slotProps">
                             {{ slotProps.option.code }} - {{ slotProps.option.organismName }}
-                            <template v-if="slotProps.option.commonName !== 'NULL' && slotProps.option.commonName !== null"
+                            <template
+                              v-if="slotProps.option.commonName !== 'NULL' && slotProps.option.commonName !== null"
                               >/ {{ slotProps.option.commonName }}</template
                             >
                           </template>
@@ -1153,16 +1198,23 @@
                           :options="targetGeneCategories"
                         />
                       </span>
-                      <span v-if="validationErrors[`targetGenes.${targetIdx}.targetGene.category`]" class="mave-field-error">{{
-                        validationErrors[`targetGenes.${targetIdx}.targetGene.category`]
-                      }}</span>
+                      <span
+                        v-if="validationErrors[`targetGenes.${targetIdx}.targetGene.category`]"
+                        class="mave-field-error"
+                        >{{ validationErrors[`targetGenes.${targetIdx}.targetGene.category`] }}</span
+                      >
                     </div>
                   </div>
                 </div>
               </div>
               <div class="mavedb-wizard-step-controls-row">
                 <div class="flex justify-content-between mavedb-wizard-step-controls pt-4">
-                  <Button icon="pi pi-arrow-left" label="Back" severity="secondary" @click="activateCallback(activeWizardStep - 1)" />
+                  <Button
+                    icon="pi pi-arrow-left"
+                    label="Back"
+                    severity="secondary"
+                    @click="activateCallback(activeWizardStep - 1)"
+                  />
                   <Button
                     :disabled="maxWizardStepValidated < activeWizardStep"
                     icon="pi pi-arrow-right"
@@ -1173,7 +1225,7 @@
                 </div>
               </div>
             </StepPanel>
-            <StepPanel v-slot="{ activateCallback }" :value="numTargets + 4">
+            <StepPanel v-slot="{activateCallback}" :value="numTargets + 4">
               <div class="mavedb-wizard-form">
                 <div class="mavedb-wizard-form-content-background"></div>
                 <div class="mavedb-wizard-row">
@@ -1205,6 +1257,7 @@
                 </div>
                 <div v-if="investigatorIsProvidingScoreCalibrations">
                   <CalibrationEditor
+                    :allow-class-based="false"
                     :calibration-draft-ref="calibrationCreateDraft"
                     :validation-errors="calibrationValidationErrors || {}"
                   />
@@ -1212,7 +1265,12 @@
               </div>
               <div class="mavedb-wizard-step-controls-row">
                 <div class="flex justify-content-between mavedb-wizard-step-controls pt-5">
-                  <Button icon="pi pi-arrow-left" label="Back" severity="secondary" @click="activateCallback(activeWizardStep - 1)" />
+                  <Button
+                    icon="pi pi-arrow-left"
+                    label="Back"
+                    severity="secondary"
+                    @click="activateCallback(activeWizardStep - 1)"
+                  />
                   <Button
                     :disabled="maxWizardStepValidated < activeWizardStep"
                     icon="pi pi-arrow-right"
@@ -1223,7 +1281,7 @@
                 </div>
               </div>
             </StepPanel>
-            <StepPanel v-slot="{ activateCallback }" :value="numTargets + 5">
+            <StepPanel v-slot="{activateCallback}" :value="numTargets + 5">
               <div class="mavedb-wizard-form">
                 <div class="mavedb-wizard-form-content-background"></div>
                 <div class="mavedb-wizard-row">
@@ -1356,8 +1414,8 @@
                     <label :for="scopedId('input-countColumnsMetadataFile')">Load a counts column metadata file</label>
                     <div class="mavedb-help-small">
                       This file is optional, but recommended. If provided, it should be a JSON file containing a single
-                      object. The keys of that object should be limited to columns of the count data, while values should
-                      include a string description and an optional string details.
+                      object. The keys of that object should be limited to columns of the count data, while values
+                      should include a string description and an optional string details.
                     </div>
                   </div>
                   <div class="mavedb-wizard-content">
@@ -1390,7 +1448,12 @@
               </div>
               <div class="mavedb-wizard-step-controls-row">
                 <div class="flex justify-content-between mavedb-wizard-step-controls pt-4">
-                  <Button icon="pi pi-arrow-left" label="Back" severity="secondary" @click="activateCallback(activeWizardStep - 1)" />
+                  <Button
+                    icon="pi pi-arrow-left"
+                    label="Back"
+                    severity="secondary"
+                    @click="activateCallback(activeWizardStep - 1)"
+                  />
                   <Button
                     :disabled="maxWizardStepValidated < activeWizardStep"
                     icon="pi pi-arrow-right"
@@ -1653,15 +1716,15 @@ export default {
     activeWizardStep: 1,
 
     /** The highest step that the user has entered. This can be used to prevent the user from jumping ahead. */
-    maxWizardStepEntered: 1,
+    maxWizardStepEntered: 1
   }),
 
   computed: {
-    numSteps: function() {
+    numSteps: function () {
       return 5 + this.numTargets
     },
 
-    stepFields: function() {
+    stepFields: function () {
       const fields = {
         1: ['experiment', 'supersededScoreSetUrn', 'metaAnalyzesScoreSetUrns'],
         2: [
@@ -1805,9 +1868,7 @@ export default {
           newValue.length == 0 ||
           (newValue.length > 1 && oldValue.length == 1) ||
           (this.primaryPublicationIdentifiers.length > 0 &&
-          !newValue
-            .map((pi) => pi.identifier)
-            .includes(this.primaryPublicationIdentifiers[0].identifier))
+            !newValue.map((pi) => pi.identifier).includes(this.primaryPublicationIdentifiers[0].identifier))
         ) {
           // Clear primary publication if we have just added a second ID, or if we have deleted all IDs,
           // or if the primary publication is no longer in the list of publications.
@@ -1857,7 +1918,7 @@ export default {
   },
 
   methods: {
-    clearAutoCompleteInput: function(event) {
+    clearAutoCompleteInput: function (event) {
       if (event.target) {
         event.target.value = ''
       }
@@ -1955,7 +2016,7 @@ export default {
         case step == 3: {
           return this.numTargets > 0
         }
-        case step > 3 && step <= (3 + this.numTargets): {
+        case step > 3 && step <= 3 + this.numTargets: {
           const currentTargetGene = this.createdTargetGenes[step - 4].targetGene
           if (this.isTargetSequence) {
             return (
@@ -1980,10 +2041,10 @@ export default {
             return true
           }
 
-          // If a user has begun to provide functional ranges, ensure that they have provided at least a label, classification
+          // If a user has begun to provide functional ranges, ensure that they have provided at least a label, functionalClassification
           // and min/max value for all functional ranges.
-          for (const scoreRange of this.calibrationCreateDraft.value?.functionalRanges || []) {
-            if (!scoreRange.label || !scoreRange.classification) {
+          for (const scoreRange of this.calibrationCreateDraft.value?.functionalClassifications || []) {
+            if (!scoreRange.label || !scoreRange.functionalClassification) {
               return false
             }
             // Since infinite bounds are handled by null values, it's not trivial to check the bounds are complete. We'll leave
@@ -1994,7 +2055,7 @@ export default {
           // - At least one functional range has been provided.
           // - A baseline score has been provided.
           return (
-            this.calibrationCreateDraft.value?.functionalRanges.length ||
+            this.calibrationCreateDraft.value?.functionalClassifications.length ||
             this.calibrationCreateDraft.value?.baselineScore !== null
           )
         }
@@ -2287,13 +2348,13 @@ export default {
     },
 
     removeContributor: function (contributor) {
-      const index = this.contributors.findIndex(c => c.orcidId === contributor.orcidId)
+      const index = this.contributors.findIndex((c) => c.orcidId === contributor.orcidId)
       if (index !== -1) {
         this.contributors.splice(index, 1)
       }
     },
     removeDoiIdentifier: function (doiIdentifier) {
-      const index = this.doiIdentifiers.findIndex(d => d.identifier === doiIdentifier.identifier)
+      const index = this.doiIdentifiers.findIndex((d) => d.identifier === doiIdentifier.identifier)
       if (index !== -1) {
         this.doiIdentifiers.splice(index, 1)
       }
@@ -2682,6 +2743,7 @@ export default {
         await this.uploadData(savedItem)
       } else if (response.data && response.data.detail) {
         const formValidationErrors = {}
+        const calibrationValidationErrors = {}
         if (typeof response.data.detail === 'string' || response.data.detail instanceof String) {
           // Handle generic errors that are not surfaced by the API as objects
           this.$toast.add({
@@ -2729,16 +2791,14 @@ export default {
             // Add calibration errors to a separate object which is consumed by the calibration sub-component.
             if (_.isEqual(_.slice(path, 0, 1), ['scoreCalibrations'])) {
               // The second path element is an array index, which is irrelevant here as we only supply one calibration on score set creation.
-              this.calibrationValidationErrors = {
-                ...this.calibrationValidationErrors,
-                [path.slice(2).join('.')]: error.msg
-              }
+              calibrationValidationErrors[path.slice(2).join('.')] = error.msg
             }
 
             path = path.join('.')
             formValidationErrors[path] = error.msg
           }
         }
+        this.calibrationValidationErrors = calibrationValidationErrors
         this.serverSideValidationErrors = formValidationErrors
         this.mergeValidationErrors()
         this.activeWizardStep = this.minStepWithError()
@@ -3058,7 +3118,9 @@ export default {
   font-size: 0.9em !important;
 }
 
-.p-inputwrapper, .p-textarea, .p-inputtext {
+.p-inputwrapper,
+.p-textarea,
+.p-inputtext {
   width: 100%;
 }
 </style>

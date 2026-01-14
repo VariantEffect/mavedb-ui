@@ -11,6 +11,20 @@ type Accessor<T, Self> = (value?: T) => T | Self
 
 export const DEFAULT_SHADER_COLOR = '#333333'
 export const DEFAULT_SERIES_COLOR = '#333333'
+export const CATEGORICAL_SERIES_COLORS = [
+  '#1f77b4', // blue
+  '#ff7f0e', // orange
+  '#2ca02c', // green
+  '#d62728', // red
+  '#9467bd', // purple
+  '#8c564b', // brown
+  '#e377c2', // pink
+  '#7f7f7f', // gray
+  '#bcbd22', // olive
+  '#17becf', // cyan
+  '#aec7e8', // light blue
+  '#ffbb78' // light orange
+]
 const LABEL_SIZE = 10
 
 /**

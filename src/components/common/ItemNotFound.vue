@@ -12,7 +12,7 @@
 
 <script lang="ts">
 export default {
-    name: 'PageNotFoundView',
+    name: 'ItemNotFound',
     components: { },
 
     props: {

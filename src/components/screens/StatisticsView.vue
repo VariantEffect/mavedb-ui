@@ -2,7 +2,7 @@
   <DefaultLayout :with-email-prompt="!isEmbedded" :with-toolbar="!isEmbedded">
     <div v-if="loading"><PageLoading></PageLoading></div>
     <div v-else>
-      <h1 style="font-size: 2em; color: #3f51b5">MaveDB Site Statistics</h1>
+      <h1 style="color: #3f51b5">MaveDB Site Statistics</h1>
       <div class="statistics-pane">
         <Card class="statistics-tile-full">
           <template #content>
@@ -16,8 +16,8 @@
               <template #item="slotProps">
                 <div class="border-1 border-gray-300! surface-border border-round m-2 p-3">
                   <div class="count-container">
-                    <h2 class="count-header font-bold text-2xl my-2">{{ slotProps.data.title }}</h2>
-                    <h1 class="emphasis-number font-bold text-6xl my-5">
+                    <h2 class="count-header">{{ slotProps.data.title }}</h2>
+                    <h1 class="emphasis-number my-5">
                       {{ new Intl.NumberFormat('en-US').format(slotProps.data.statistic) }}
                     </h1>
                     <p class="count-footer">{{ slotProps.data.footer }}</p>
@@ -31,7 +31,7 @@
           <template #content>
             <div class="chart-header">
               <div class="chart-header-item">
-                <h2 class="m-0 font-bold text-2xl">Database Growth over Time</h2>
+                <h2 class="m-0">Database Growth over Time</h2>
               </div>
               <div class="chart-header-item" style="margin-right: auto">
                 <SelectButton
@@ -94,9 +94,9 @@
               <template #content>
                 <div class="flowchart-card-element">
                   <span style="text-align: center">
-                    <h1 class="emphasis-number font-bold text-6xl my-5">{{ new Intl.NumberFormat('en-US').format(totalScoreSets) }}</h1>
+                    <h1 class="emphasis-number my-5">{{ new Intl.NumberFormat('en-US').format(totalScoreSets) }}</h1>
                     total score sets
-                    <h1 class="emphasis-number font-bold text-6xl my-5">{{ new Intl.NumberFormat('en-US').format(totalVariants) }}</h1>
+                    <h1 class="emphasis-number my-5">{{ new Intl.NumberFormat('en-US').format(totalVariants) }}</h1>
                     variant effect measurements
                   </span>
                 </div>
@@ -109,9 +109,9 @@
               <template #content>
                 <div class="flowchart-card-element">
                   <span style="text-align: center">
-                    <h1 class="emphasis-number font-bold text-6xl my-5">{{ new Intl.NumberFormat('en-US').format(totalHumanScoreSets) }}</h1>
+                    <h1 class="emphasis-number my-5">{{ new Intl.NumberFormat('en-US').format(totalHumanScoreSets) }}</h1>
                     score sets with human targets
-                    <h1 class="emphasis-number font-bold text-6xl my-5">{{ new Intl.NumberFormat('en-US').format(totalMappedVariants) }}</h1>
+                    <h1 class="emphasis-number my-5">{{ new Intl.NumberFormat('en-US').format(totalMappedVariants) }}</h1>
                     variant effect measurements mapped to the human genome
                   </span>
                 </div>
@@ -125,7 +125,7 @@
                 <div class="flowchart-card-element">
                   <span style="text-align: center">
                     These variant effect measurements map to
-                    <h1 class="emphasis-number font-bold text-6xl my-5">{{ new Intl.NumberFormat('en-US').format(totalMappedTargetGenes) }}</h1>
+                    <h1 class="emphasis-number my-5">{{ new Intl.NumberFormat('en-US').format(totalMappedTargetGenes) }}</h1>
                     distinct human genes
                   </span>
                 </div>

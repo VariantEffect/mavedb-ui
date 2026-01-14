@@ -10,7 +10,7 @@
     <div v-if="showCalibrations" class="mavedb-histogram-thresholds-control">
       <div class="mavedb-histogram-control">
         <label class="mavedb-histogram-control-label" for="mavedb-histogram-viz-select">Thresholds: </label>
-        <Dropdown
+        <Select
           v-model="activeCalibration"
           :disabled="!showCalibrations"
           input-id="mavedb-histogram-viz-select"
@@ -35,7 +35,7 @@
         <label class="mavedb-histogram-control-label" for="mavedb-histogram-db-select"
           >Clinical control database:
         </label>
-        <Dropdown
+        <Select
           v-model="controlDb"
           :disabled="!refreshedClinicalControls"
           input-id="mavedb-histogram-db-select"
@@ -46,7 +46,7 @@
         <label class="mavedb-histogram-control-label" for="mavedb-histogram-version-select"
           >Clinical control version:
         </label>
-        <Dropdown
+        <Select
           v-model="controlVersion"
           :disabled="!refreshedClinicalControls"
           input-id="mavedb-histogram-version-select"
@@ -140,7 +140,7 @@
 import axios from 'axios'
 import _ from 'lodash'
 import Checkbox from 'primevue/checkbox'
-import Dropdown from 'primevue/dropdown'
+import Select from 'primevue/select'
 import ProgressSpinner from 'primevue/progressspinner'
 import Rating from 'primevue/rating'
 import Tabs from 'primevue/tabs'
@@ -214,7 +214,7 @@ interface VizOption {
 export default defineComponent({
   name: 'ScoreSetHistogram',
 
-  components: {Checkbox, Dropdown, Rating, Tabs, TabList, Tab, ProgressSpinner},
+  components: {Checkbox, Select, Rating, Tabs, TabList, Tab, ProgressSpinner},
 
   props: {
     coordinates: {
@@ -260,10 +260,14 @@ export default defineComponent({
       type: String,
       default: null,
       required: false
+    },
+    lockSelection: {
+      type: Boolean,
+      default: false
     }
   },
 
-  emits: ['exportChart', 'calibrationChanged'],
+  emits: ['exportChart', 'calibrationChanged', 'selection-changed'],
 
   setup: () => {
     return {
@@ -902,13 +906,17 @@ export default defineComponent({
         this.renderOrRefreshHistogram()
       }
     },
+    // TODO#608: Address circularity between externalSelection parent updates and selection changed events from
+    //           the child histogram.
     externalSelection: {
       handler: function (newValue) {
         if (this.histogram) {
           if (newValue) {
             this.histogram.selectDatum(newValue)
           } else {
-            this.histogram.clearSelection()
+            if (!this.lockSelection) {
+              this.histogram.clearSelection()
+            }
           }
         }
       }
@@ -1062,6 +1070,18 @@ export default defineComponent({
       )
     },
 
+    // Sync API: select a bin by its [x0, x1] range.
+    // Useful for coordinating selection across multiple histograms.
+    // Note that only bins with identical ranges will be selected.
+    syncSelectBin(bin: HistogramBin | null) {
+      if (!bin || !this.histogram) return
+      const currentBins = this.histogram.bins()
+      const idx = currentBins.findIndex((b) => (b.x0 ?? 0) === bin.x0 && (b.x1 ?? 0) === bin.x1)
+      if (idx != null) {
+        this.histogram.selectBin(idx)
+      }
+    },
+
     renderOrRefreshHistogram: function () {
       if (!this.histogram) {
         this.histogram = makeHistogram()
@@ -1069,9 +1089,10 @@ export default defineComponent({
           .bottomAxisLabel('Functional Score')
           .leftAxisLabel('Number of Variants')
           .numBins(30)
-          .valueField((variant: Variant) => variant.scores.score)
-          .accessorField((variant: Variant) => variant.accession)
+          .valueField((variant: Variant) => variant?.scores?.score)
+          .accessorField((variant: Variant) => variant?.accession)
           .tooltipHtml(this.tooltipHtmlGetter)
+          .selectionChanged(this.onHistogramSelectionChanged)
       }
 
       // benefits typing. The histogram will always be defined by now from the above.
@@ -1116,6 +1137,20 @@ export default defineComponent({
       }
     },
 
+    onHistogramSelectionChanged(payload: {bin: HistogramBin | null; datum: Variant | null; source: 'histogram'}) {
+      if (this.lockSelection) {
+        const currentAccession = (this.externalSelection as any)?.accession
+        const nextAccession = (payload?.datum as any)?.accession
+        // Block clears and changes; immediately restore selection
+        if (!nextAccession || (currentAccession && nextAccession !== currentAccession)) {
+          if (this.histogram && this.externalSelection) {
+            this.histogram.selectDatum(this.externalSelection as any)
+          }
+          return
+        }
+      }
+      this.$emit('selection-changed', payload)
+    },
     loadClinicalControls: async function () {
       if (
         this.controlDb &&

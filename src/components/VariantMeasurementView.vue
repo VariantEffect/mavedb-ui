@@ -107,10 +107,12 @@
             <ScoreSetHistogram
               ref="histogram"
               :external-selection="variantScores"
+              :lock-selection="true"
               :score-set="variant.scoreSet"
               :selected-calibration="selectedCalibration"
               :variants="scores"
               @calibration-changed="updateCalibration"
+              @selection-changed="onHistogramSelectionChanged"
             />
           </div>
           <div v-else>
@@ -362,6 +364,10 @@ export default defineComponent({
     },
     updateCalibration: function (calibration: string | null) {
       this.selectedCalibration = calibration
+    },
+    onHistogramSelectionChanged: function (payload: any) {
+      // Selection is locked; ignore changes to keep the variant focused.
+      return
     }
   }
 })

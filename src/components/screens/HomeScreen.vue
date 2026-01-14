@@ -9,7 +9,7 @@
       </div>
       <div class="col-8 flex">
         <Card class="flex-1">
-          <template #title>About</template>
+          <template #title><h2 class="mt-0">About</h2></template>
           <template #content>
             <p>
               MaveDB is a public repository for datasets from Multiplexed Assays of Variant Effect (MAVEs), such as those
@@ -41,7 +41,7 @@
       </div>
       <div class="col-4 flex flex-column">
         <Card class="flex-1">
-          <template #title>Featured Searches</template>
+          <template #title><h2 class="mt-0">Featured Searches</h2></template>
           <template #content>
             <table>
               <thead>
@@ -53,14 +53,14 @@
               <tbody>
                 <tr>
                   <td>
-                    <ul>
+                    <ul class="ml-5 list-disc">
                       <li><router-link :to="{name: 'search', query: {search: 'Homo sapiens'}}">Homo sapiens</router-link></li>
                       <li><router-link :to="{name: 'search', query: {search: 'Mus musculus'}}">Mus musculus</router-link></li>
                       <li><router-link :to="{name: 'search', query: {search: 'Saccharomyces cerevisiae S288C'}}">Saccharomyces cerevisiae S288C</router-link></li>
                     </ul>
                   </td>
                   <td>
-                    <ul>
+                    <ul class="ml-5 list-disc">
                       <li><router-link :to="{name: 'search', query: {search: 'HSP90'}}">HSP90</router-link></li>
                       <li><router-link :to="{name: 'search', query: {search: 'KCNQ4'}}">KCNQ4</router-link></li>
                       <li><router-link :to="{name: 'search', query: {search: 'TEM-1 β-lactamase'}}">TEM-1 β-lactamase</router-link></li>
@@ -72,12 +72,12 @@
           </template>
         </Card>
         <Card class="mt-4">
-          <template #title>Upload Your Data</template>
+          <template #title><h2 class="mt-0">Upload Your Data</h2></template>
           <template #content>
-            <Button class="p-button-sm" @click="addExperiment"
+            <Button size="small" @click="addExperiment"
               >Add an experiment</Button
             >&nbsp;&nbsp;
-            <Button class="p-button-sm" @click="addScoreSet"
+            <Button size="small" @click="addScoreSet"
                 >Add a score set</Button
               >
           </template>
@@ -91,15 +91,29 @@
       </div>
       <div class="col-4">
         <Card>
-          <template #title>News</template>
+          <template #title><h2 class="mt-0">News</h2></template>
           <template #content>
-            <ul>
+            <ul class="ml-2 list-disc space-y-4">
+              <li>
+                <p>
+                  MaveDB is an official
+                    <a href="https://catalog.igvf.org/" target="_blank">
+                      <img class="inline h-5 mb-1" alt="IGVF" src="@/assets/igvf-tag.png" />
+                    </a>
+                  Data Resource! You can now find data from MaveDB datasets in the
+                  <a href="https://catalog.igvf.org/" target="_blank">IGVF Data Catalog</a>.
+                </p>
+                <p>
+                  In addition, many MaveDB score sets now have links to view the corresponding raw data in the
+                  <a href="https://portal.igvf.org/" target="_blank">IGVF Data Portal</a>.
+                </p>
+              </li>
               <li>
                 <p>Tracks for many score sets are now available on the UCSC Genome Browser.</p>
-                <p>
+                <p class="mt-2">
                   Example:
                   <a href="https://genome.ucsc.edu/cgi-bin/hgTracks?db=hg38&position=chr17:43051063-43051117&hubUrl=https://public.gi.ucsc.edu/~cline/mavedb/hub/hub.txt&Variant_Effect_Maps_hideKids=1&BRCA1_00000097-s-1=dense" target="_blank">
-                    <img alt="UCSC Genome Browser" src="@/assets/logo-ucsc-genome-browser.png" style="height: 20px;" />
+                    <img alt="UCSC Genome Browser" class="inline h-5" src="@/assets/logo-ucsc-genome-browser.png" />
                     UCSC Genome Browser
                   </a>
                   track for
@@ -117,7 +131,7 @@
       </div>
       <div class="col-12">
         <Card>
-          <template #title>Citing MaveDB</template>
+          <template #title><h2 class="mt-0">Citing MaveDB</h2></template>
           <template #content>
             <p>
               To cite MaveDB, please cite our most recent publication:
@@ -186,11 +200,6 @@ export default {
 td, th {
   padding: 0 5px;
   vertical-align: top;
-}
-
-ul {
-  padding-left: 1em;
-  list-style-type: disc;
 }
 
 .mave-hgvs-example {

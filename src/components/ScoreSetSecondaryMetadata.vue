@@ -1,6 +1,6 @@
 <template>
-  <div v-if="scoreSet.creationDate">
-    Created {{ formatDate(scoreSet.creationDate) }}
+  <div v-if="scoreSet.creationDate" class="flex space-x-2">
+    <span>Created {{ formatDate(scoreSet.creationDate) }}</span>
     <span v-if="scoreSet.createdBy">
       <a class="flex items-center gap-1" :href="`https://orcid.org/${scoreSet.createdBy.orcidId}`" target="blank"
         ><img alt="ORCIDiD" src="@/assets/ORCIDiD_icon.png" />{{ scoreSet.createdBy.firstName }}
@@ -8,8 +8,8 @@
       ></span
     >
   </div>
-  <div v-if="scoreSet.modificationDate">
-    Last updated {{ formatDate(scoreSet.modificationDate) }}
+  <div v-if="scoreSet.modificationDate" class="flex space-x-2">
+    <span>Last updated {{ formatDate(scoreSet.modificationDate) }}</span>
     <span v-if="scoreSet.modifiedBy">
       <a class="flex items-center gap-1" :href="`https://orcid.org/${scoreSet.modifiedBy.orcidId}`" target="blank"
         ><img alt="ORCIDiD" src="@/assets/ORCIDiD_icon.png" />{{ scoreSet.modifiedBy.firstName }}
@@ -69,9 +69,15 @@
       <EntityLink entity-type="scoreSet" :urn="urn" />
     </template>
   </div>
-  <div v-if="scoreSet.externalLinks?.ucscGenomeBrowser?.url">
+  <div v-if="scoreSet.externalLinks?.igvf?.url" class="external-link">
+    <a :href="scoreSet.externalLinks.igvf.url" target="blank">
+      <img alt="IGVF" src="@/assets/igvf-tag.png" />
+      Raw data available in the IGVF Portal
+    </a>
+  </div>
+  <div v-if="scoreSet.externalLinks?.ucscGenomeBrowser?.url" class="external-link">
     <a :href="scoreSet.externalLinks.ucscGenomeBrowser.url" target="blank">
-      <img alt="UCSC Genome Browser" src="@/assets/logo-ucsc-genome-browser.png" style="height: 20px" />
+      <img alt="UCSC Genome Browser" src="@/assets/logo-ucsc-genome-browser.png" />
       View in the UCSC Genome Browser
     </a>
   </div>
@@ -108,5 +114,20 @@ const sortedMetaAnalyzedByScoreSetUrns = computed(() => _.sortBy(props.scoreSet.
 <style scoped>
 .mavedb-contributor {
   margin: 0 0.5em;
+}
+.external-link {
+  display: block;
+}
+.external-link a {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+}
+.external-link img {
+  height: 20px;
+  width: auto;
+}
+.external-link img {
+  display: block;
 }
 </style>

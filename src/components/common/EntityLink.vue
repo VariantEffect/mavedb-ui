@@ -16,7 +16,7 @@ import useItem from '@/composition/item'
  */
 // TODO This can be enhanced easily to show a preview in a pop-over view when the cursor hovers over the link.
 export default defineComponent({
-  name: 'SelectList',
+  name: 'EntityLink',
   components: {},
 
   props: {

@@ -55,17 +55,17 @@
         </div>
         <div class="mavedb-search-form-view-switch">
           Don't have a versioned reference sequence identifier? Click here to perform a fuzzy search instead:
-          <Button class="p-button-plain" @click="showSearch('fuzzy')">Fuzzy Search</Button>
+          <Button @click="showSearch('fuzzy')">Fuzzy Search</Button>
         </div>
         <div class="mavedb-examples-button-container">
-          <Button class="p-button-plain p-button-text" @click="searchSuggestionsVisible = !searchSuggestionsVisible">
+          <Button variant="text" @click="searchSuggestionsVisible = !searchSuggestionsVisible">
             {{ searchSuggestionsVisible ? 'Hide search examples' : 'Show search examples' }}
           </Button>
         </div>
         <div v-if="searchSuggestionsVisible" class="mavedb-search-suggestions">
           <p>
             Examples of supported searches:
-            <ul>
+            <ul class="ml-5 list-disc">
               <li v-for="option in searchTypeOptions" :key="option.code">
                 {{ option.name }}
                 <template v-for="(example, index) in option.examples" :key="example">
@@ -107,10 +107,9 @@
             :options="selectedAlleleOptions"
             placeholder="Alternate allele"
           />
-          <Button class="p-button-plain" @click="fuzzySearch">Search</Button>
+          <Button @click="fuzzySearch">Search</Button>
           <div class="mavedb-clear-search-button-container">
             <Button
-              class="p-button-plain"
               :disabled="!searchIsClearable"
               icon="pi pi-times"
               rounded
@@ -120,7 +119,7 @@
         </div>
         <div class="mavedb-search-form-view-switch">
           Click here to return to standard search:
-          <Button class="p-button-plain" @click="showSearch('default')">Standard Search</Button>
+          <Button @click="showSearch('default')">Standard Search</Button>
         </div>
       </div>
       <div v-if="!searchResultsVisible" class="mavedb-expander-container">
@@ -261,9 +260,9 @@
                       </li>
                       <Button
                         v-if="allele.variants.nucleotide.length > defaultNumScoreSetsToShow"
-                        class="p-button-text"
                         icon="pi pi-angle-down"
                         style="width: fit-content"
+                        variant="text"
                         @click="
                           nucleotideScoreSetListIsExpanded[alleleIdx] = !nucleotideScoreSetListIsExpanded[alleleIdx]
                         "
@@ -291,9 +290,9 @@
                       </li>
                       <Button
                         v-if="allele.variants.protein.length > defaultNumScoreSetsToShow"
-                        class="p-button-text"
                         icon="pi pi-angle-down"
                         style="width: fit-content"
+                        variant="text"
                         @click="proteinScoreSetListIsExpanded[alleleIdx] = !proteinScoreSetListIsExpanded[alleleIdx]"
                       >
                         {{
@@ -322,9 +321,9 @@
                       </li>
                       <Button
                         v-if="allele.variants.associatedNucleotide.length > defaultNumScoreSetsToShow"
-                        class="p-button-text"
                         icon="pi pi-angle-down"
                         style="width: fit-content"
+                        variant="text"
                         @click="
                           associatedNucleotideScoreSetListIsExpanded[alleleIdx] =
                             !associatedNucleotideScoreSetListIsExpanded[alleleIdx]

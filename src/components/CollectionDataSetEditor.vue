@@ -33,24 +33,16 @@
           <Column field="title" header="Title"></Column>
         </DataTable>
         <div class="flex gap-2">
-          <Chips
+          <AutoComplete
             v-model="unvalidatedUrnsToAdd"
-            :add-on-blur="true"
-            :allow-duplicate="false"
             class="flex-auto p-fluid"
-            placeholder="Type or paste comma-separated URNs"
-            separator=" "
-            @keyup.escape="unvalidatedUrnsToAdd = []"
-          >
-            <template #chip="slotProps">
-              <div>
-                  <span>{{ slotProps.value }}</span>
-              </div>
-              <div>
-                <i class="pi pi-times-circle" @click="removeUnvalidatedUrnsToAdd(slotProps.value)"></i>
-              </div>
-            </template>
-          </Chips>
+            :multiple="true"
+            :placeholder="unvalidatedUrnsToAdd.length ? '' : 'Type or paste comma-separated URNs'"
+            :pt="{overlay: (options) => ({class: ['invisible']})}"
+            @keyup.,="newUnvalidatedUrnToAdd"
+            @keyup.escape="clearAutoCompleteInput"
+            @keyup.space="newUnvalidatedUrnToAdd"
+          />
           <Button
             class="flex-none mavedb-collection-add-data-set-button"
             icon="pi pi-plus"
@@ -81,9 +73,9 @@
 
 <script>
 import axios from 'axios'
-import _, { remove } from 'lodash'
+import _ from 'lodash'
+import AutoComplete from 'primevue/autocomplete'
 import Button from 'primevue/button'
-import Chips from 'primevue/chips'
 import Column from 'primevue/column'
 import DataTable from 'primevue/datatable'
 import Dialog from 'primevue/dialog'
@@ -96,7 +88,7 @@ import EmailPrompt from '@/components/common/EmailPrompt.vue'
 export default {
   name: 'CollectionDataSetEditor',
 
-  components: {Button, Chips, Column, DataTable, Dialog, EmailPrompt, Message},
+  components: {AutoComplete, Button, Column, DataTable, Dialog, EmailPrompt, Message},
 
   props: {
     collectionUrn: {
@@ -178,6 +170,21 @@ export default {
   },
 
   methods: {
+    clearAutoCompleteInput: function (event) {
+      if (event.target) {
+        event.target.value = ''
+      }
+    },
+
+    newUnvalidatedUrnToAdd: function (event) {
+      const val = (event.target?.value || '').replace(',', '').trim()
+      if (val !== '') {
+        if (!this.unvalidatedUrnsToAdd.includes(val)) {
+          this.unvalidatedUrnsToAdd.push(val)
+        }
+      }
+      event.target.value = ''
+    },
     rowStyle: function (data) {
       if (this.urnsToRemove.includes(data.urn)) {
         return {backgroundColor: '#ffcccb'} // Light red
@@ -194,10 +201,6 @@ export default {
           _.remove(this.dataSetsToAdd, (dataSet) => dataSet.urn == dataSetToRemove.urn)
         }
       }
-    },
-
-    removeUnvalidatedUrnsToAdd: function (urn) {
-      _.remove(this.unvalidatedUrnsToAdd, (item) => item === urn)
     },
 
     saveChanges: async function () {

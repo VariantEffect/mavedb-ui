@@ -15,11 +15,11 @@
           </div>
           <div v-if="userIsAuthenticated">
             <div class="mavedb-screen-title-controls">
-              <Button v-if="userIsAuthorized.add_score_set" class="p-button-sm" @click="addScoreSet"
+              <Button v-if="userIsAuthorized.add_score_set" size="small" @click="addScoreSet"
                 >Add a score set</Button
               >
-              <Button v-if="userIsAuthorized.update" class="p-button-sm" @click="editItem">Edit</Button>
-              <Button v-if="userIsAuthorized.delete" class="p-button-sm p-button-danger" @click="deleteItem"
+              <Button v-if="userIsAuthorized.update" size="small" @click="editItem">Edit</Button>
+              <Button v-if="userIsAuthorized.delete" severity="danger" size="small" @click="deleteItem"
                 >Delete</Button
               >
             </div>
@@ -70,8 +70,15 @@
           }}</router-link>
         </div>
         <div v-if="item.currentVersion">Current version {{ item.currentVersion }}</div>
-        <CollectionAdder class="mave-save-to-collection-button" data-set-type="experiment" :data-set-urn="item.urn" />
-
+        <div v-if="item.externalLinks?.igvf?.url" class="external-link">
+          <a :href="item.externalLinks.igvf.url" target="blank">
+            <img alt="IGVF" src="@/assets/igvf-tag.png" />
+            View this experiment in the IGVF Portal
+          </a>
+        </div>
+        <div style="margin-top: 1em">
+          <CollectionAdder class="mave-save-to-collection-button" data-set-type="experiment" :data-set-urn="item.urn" />
+        </div>
         <div class="mave-score-set-section-title">Score Sets</div>
         <div v-if="associatedScoreSets.length != 0">
           <ul class="list-disc pl-4">
@@ -96,7 +103,7 @@
         <div class="mave-score-set-section-title">Primary References</div>
         <div v-if="item.primaryPublicationIdentifiers.length > 0">
           <div v-for="publication in item.primaryPublicationIdentifiers" :key="publication">
-            <ul class="pl-4" style="list-style-type: square">
+            <ul class="pl-4 list-[square]">
               <!-- eslint-disable-next-line vue/no-v-html -->
               <li v-html="markdownToHtml(publication.referenceHtml)"></li>
               <div>
@@ -116,7 +123,7 @@
         <div class="mave-score-set-section-title">Secondary References</div>
         <div v-if="item.secondaryPublicationIdentifiers.length > 0">
           <div v-for="publication in item.secondaryPublicationIdentifiers" :key="publication">
-            <ul class="pl-4" style="list-style-type: square">
+            <ul class="pl-4 list-[square]">
               <!-- eslint-disable-next-line vue/no-v-html -->
               <li v-html="markdownToHtml(publication.referenceHtml)"></li>
               <div>
@@ -164,7 +171,11 @@
                       {{ keyword.description.substring(0, 300) + '....' }}
                     </div>
                     <div v-else>{{ keyword.description }}</div>
-                    <Button class="p-button-text p-button-sm p-button-info" @click="showFullDescription(index)">
+                    <Button
+                      severity="info"
+                      size="small"
+                      variant="text"
+                      @click="showFullDescription(index)">
                       {{ fullDescription[index] ? 'Show less' : 'Show all' }}
                     </Button>
                   </div>
@@ -218,10 +229,10 @@
                     >{{ targetGene.targetSequence.sequence.substring(0, 500) + '....' }}
                   </template>
                   <template v-if="readMore == false">{{ targetGene.targetSequence.sequence }}</template>
-                  <Button v-if="readMore == true" class="p-button-text p-button-sm p-button-info" @click="showMore"
+                  <Button v-if="readMore == true" severity="info" size="small" variant="text" @click="showMore"
                     >Show more</Button
                   >
-                  <Button v-if="readMore == false" class="p-button-text p-button-sm p-button-info" @click="showLess"
+                  <Button v-if="readMore == false" severity="info" size="small" variant="text" @click="showLess"
                     >Show less</Button
                   > </template
                 ><template v-else>{{ targetGene.targetSequence.sequence }}</template>
@@ -256,7 +267,7 @@
         <div class="mave-score-set-section-title">External identifier</div>
         <strong>DOI: </strong>
         <div v-if="item.doiIdentifiers.length != 0">
-          <ul class="pl-4" style="list-style-type: square">
+          <ul class="pl-4 list-[square]">
             <li v-for="(doi, i) of item.doiIdentifiers" :key="i">
               <a :href="`${doi.url}`" target="blank">{{ doi.identifier }}</a>
             </li>
@@ -265,7 +276,7 @@
         <template v-else>No associated DOIs<br /></template>
         <strong>Raw reads: </strong>
         <div v-if="item.rawReadIdentifiers.length != 0">
-          <ul class="pl-4" style="list-style-type: square">
+          <ul class="pl-4 list-[square]">
             <li v-for="(read, i) of item.rawReadIdentifiers" :key="i">
               <a :href="`${read.url}`" target="blank">{{ read.identifier }}</a>
             </li>
@@ -524,6 +535,23 @@ export default {
 }
 
 .mave-save-to-collection-button {
-  margin: 1em 0;
+  margin: 1em;
+}
+
+/* External links */
+.external-link {
+  display: block;
+}
+.external-link a {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+}
+.external-link img {
+  height: 20px;
+  width: auto;
+}
+.external-link img {
+  display: block;
 }
 </style>

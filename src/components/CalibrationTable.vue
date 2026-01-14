@@ -13,10 +13,11 @@
         <PrimeButton
           v-tooltip.right="{value: scoreCalibration.baselineScoreDescription, autoHide: false}"
           aria-label="Info"
-          class="p-button-help mavedb-help-tooltip-button size-2!"
+          class="mavedb-help-tooltip-button"
           icon="pi pi-info"
           outlined
           rounded
+          severity="help"
         />
       </span>
     </div>
@@ -47,10 +48,11 @@
               <PrimeButton
                 v-tooltip.right="{value: range.description, autoHide: false}"
                 aria-label="Info"
-                class="p-button-help mavedb-help-tooltip-button size-2!"
+                class="mavedb-help-tooltip-button"
                 icon="pi pi-info"
                 outlined
                 rounded
+                severity="help"
               />
             </span>
           </div>
@@ -249,10 +251,11 @@
               autoHide: false
             }"
             aria-label="Threshold sources info"
-            class="p-button-help mavedb-help-tooltip-button size-2!"
+            class="mavedb-help-tooltip-button"
             icon="pi pi-info"
             outlined
             rounded
+            severity="help"
           />
           <strong>Thresholds:</strong>
           <span class="citation-list">
@@ -285,10 +288,11 @@
               autoHide: false
             }"
             aria-label="Method sources info"
-            class="p-button-help mavedb-help-tooltip-button size-2!"
+            class="mavedb-help-tooltip-button"
             icon="pi pi-info"
             outlined
             rounded
+            severity="help"
           />
           <strong>Method:</strong>
           <span class="citation-list">
@@ -318,10 +322,11 @@
               autoHide: false
             }"
             aria-label="Evidence calculation sources info"
-            class="p-button-help mavedb-help-tooltip-button size-2!"
+            class="mavedb-help-tooltip-button"
             icon="pi pi-info"
             outlined
             rounded
+            severity="help"
           />
           <strong>Evidence calcs:</strong>
           <span class="citation-list">
@@ -852,27 +857,6 @@ export default defineComponent({
 .minus-symbol {
   font-size: 1.3em;
   vertical-align: -0.05em;
-}
-
-/* Tooltips */
-.mavedb-help-tooltip-button {
-  margin-left: 0.6rem;
-  vertical-align: middle;
-  margin-top: 0;
-  margin-bottom: 0;
-  display: inline-flex;
-  align-items: center;
-  background: none;
-}
-
-.mavedb-help-tooltip-button:focus,
-.mavedb-help-tooltip-button:active,
-.mavedb-help-tooltip-button.p-focus {
-  background: none;
-}
-
-.mavedb-help-tooltip-button:deep(.p-button-icon) {
-  font-size: 0.5rem;
 }
 
 /* Responsive behavior */

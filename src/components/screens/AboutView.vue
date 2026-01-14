@@ -2,7 +2,7 @@
     <DefaultLayout>
         <section class="p-4">
             <header>
-                <h1 class="text-3xl font-extrabold pb-4">About MaveDB</h1>
+                <h1 class="pb-4">About MaveDB</h1>
             </header>
             <main class="leading-relaxed flex flex-col space-y-4">
                 <p>
@@ -80,7 +80,7 @@
                 </p>
                 <hr style="border:0; border-top:1px solid #ccc; height:0; margin:1.5rem 0;" />
 
-                <h2 class="text-2xl font-extrabold">Citing MaveDB</h2>
+                <h2 class="pb-2">Citing MaveDB</h2>
                 <p>
                 To cite MaveDB, please cite our most recent publication:
                 </p>

@@ -1,5 +1,6 @@
 import * as d3 from 'd3'
 import _ from 'lodash'
+import {v4 as uuidv4} from 'uuid'
 
 type FieldGetter<T> = (d: HeatmapDatum) => T
 type Getter<T> = () => T
@@ -165,6 +166,7 @@ export interface Heatmap {
 }
 
 export default function makeHeatmap(): Heatmap {
+  const instanceId: string = uuidv4()
   //////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
   // Read/write properties
   //////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
@@ -273,6 +275,10 @@ export default function makeHeatmap(): Heatmap {
   let yAxisSvg: d3.Selection<SVGElement, any, any, any> | null = null
   let hoverTooltip: d3.Selection<HTMLDivElement, any, any, any> | null = null
   let selectionTooltip: d3.Selection<HTMLDivElement, any, any, any> | null = null
+  let selectionTooltipVisible: boolean = false
+
+  // Handlers
+  let containerClickHandlerRegistered: boolean = false
 
   // Scales
   const xScale: d3.ScaleBand<number> = d3.scaleBand()
@@ -410,7 +416,19 @@ export default function makeHeatmap(): Heatmap {
   }
 
   const click = function (event: MouseEvent, d: HeatmapDatum) {
+    // Prevent container-scoped outside-click handler from closing selection tooltip on datum clicks
+    event.stopPropagation()
     const target = event.target
+
+    // If clicking the already-selected datum while tooltip is hidden, re-show the tooltip without deselecting.
+    if (selectedDatum === d && !selectionTooltipVisible) {
+      showTooltip(selectionTooltip, selectedDatum)
+      positionSelectionTooltip()
+      selectionTooltipVisible = true
+      return
+    }
+
+    // Otherwise, select/update as usual.
     refreshSelectedDatum(d, true)
 
     if (datumSelected) {
@@ -423,6 +441,7 @@ export default function makeHeatmap(): Heatmap {
 
     // Hide the hover tooltip.
     hideTooltip(hoverTooltip)
+    // Showing selection tooltip implies it is visible; handled in updateSelectionTooltipAfterRefresh
   }
 
   const heatmapMainMousedown = function (event: MouseEvent) {
@@ -635,6 +654,10 @@ export default function makeHeatmap(): Heatmap {
   const mouseover = (event: MouseEvent, d: HeatmapDatum) => {
     if (!selectionStartPoint) {
       const target = event.target
+      // Don't show hover tooltip when over the selected datum and selection tooltip is visible.
+      if (selectedDatum === d && selectionTooltipVisible) {
+        return
+      }
       refreshHoverDatum(d)
 
       if (target instanceof Element) {
@@ -718,11 +741,51 @@ export default function makeHeatmap(): Heatmap {
       .style('border-width', '2px')
       .style('border-radius', '5px')
       .style('color', '#000')
-      .style('padding', '5px')
+      .style('padding', '8px 10px')
       .style('line-height', '1.5')
       .style('position', 'relative')
       .style('width', 'fit-content')
       .style('z-index', 1)
+
+    // Create persistent inner content container and close button once
+    selectionTooltip
+      .append('div')
+      .attr('class', 'hm-popover-content')
+      .style('position', 'relative')
+      .style('padding-right', '18px')
+
+    selectionTooltip
+      .append('button')
+      .attr('class', 'hm-popover-close')
+      .attr('aria-label', 'Close selection tooltip')
+      .style('position', 'absolute')
+      .style('top', '0px')
+      .style('right', '5px')
+      .style('border', 'none')
+      .style('background', 'none')
+      .style('font-size', '20px')
+      .style('line-height', '1')
+      .style('cursor', 'pointer')
+      .style('color', '#FF0919')
+      .text('×')
+      // Close button click: hide the selection tooltip. Note that we intentionally do NOT clear selectedDatum here.
+      .on('click', () => {
+        hideTooltip(selectionTooltip)
+      })
+
+    // Scoped outside-click: register only once per instance
+    if (_container && !containerClickHandlerRegistered) {
+      d3.select(_container).on(`click.heatmap-popover-${instanceId}`, (event: MouseEvent) => {
+        const target = event.target as Element
+        const tooltipEl = selectionTooltip?.node()
+        if (!tooltipEl) return
+        // If click is inside the tooltip, ignore.
+        if (tooltipEl.contains(target)) return
+        // Otherwise, close the selection tooltip. We intentionally do NOT clear selectedDatum here.
+        hideTooltip(selectionTooltip)
+      })
+      containerClickHandlerRegistered = true
+    }
   }
 
   const showTooltip = (tooltip: d3.Selection<HTMLDivElement, any, any, any> | null, datum: HeatmapDatum | null) => {
@@ -731,7 +794,16 @@ export default function makeHeatmap(): Heatmap {
         const html = tooltipHtml(datum)
 
         if (html && tooltip) {
-          tooltip.html(html)
+          if (tooltip === selectionTooltip) {
+            // Update only inner content; button is persistent
+            tooltip.select('.hm-popover-content').html(html)
+            selectionTooltipVisible = true
+
+            // Hide hover tooltip when selection tooltip is shown.
+            hideTooltip(hoverTooltip)
+          } else {
+            tooltip.html(html)
+          }
           tooltip.style('display', 'block')
         }
       }
@@ -755,6 +827,9 @@ export default function makeHeatmap(): Heatmap {
   const hideTooltip = (tooltip: d3.Selection<HTMLDivElement, any, any, any> | null) => {
     if (tooltip) {
       tooltip.style('display', 'none')
+      if (tooltip === selectionTooltip) {
+        selectionTooltipVisible = false
+      }
     }
   }
 
@@ -781,9 +856,6 @@ export default function makeHeatmap(): Heatmap {
       // does not take up any vertical space in the document, despite being rentered with relative position.
       selectionTooltip.style('margin-bottom', -tooltipHeight + 'px')
 
-      // TODO: Bug- Drawing the selection tooltip makes the SVG scroll container add tooltipHeight worth of height
-      //            to the scroll container.
-
       // Show the tooltip to the left of the datum node if it would overflow from the right side of the heatmap container.
       if (
         left + effectiveMargins.left + 1.5 * nodeSize.width + tooltipWidth >
@@ -791,7 +863,10 @@ export default function makeHeatmap(): Heatmap {
       ) {
         selectionTooltip
           // When drawing the tooltip to the right of the node, the width of the tooltip influences how far to move it.
-          .style('left', left - 0.5 * tooltipWidth - nodeSize.width + 0.5 * strokeWidth(true) + 'px')
+          .style(
+            'left',
+            -1 * (effectiveMargins.left - left) - 0.25 * tooltipWidth - nodeSize.width + 0.5 * strokeWidth(true) + 'px'
+          )
       } else {
         selectionTooltip.style(
           'left',
@@ -865,6 +940,10 @@ export default function makeHeatmap(): Heatmap {
         svg.remove()
         svg = null
       }
+      // Remove this instance's container click handler
+      if (_container) {
+        d3.select(_container).on(`click.heatmap-popover-${instanceId}`, null)
+      }
       if (_wrapper) {
         yAxisSvg?.remove()
         yAxisSvg = null
@@ -888,6 +967,10 @@ export default function makeHeatmap(): Heatmap {
       _wrapper = wrapper || null
 
       if (_container) {
+        // Ensure this instance's container click handler is unregistered.
+        d3.select(_container).on(`click.heatmap-popover-${instanceId}`, null)
+        containerClickHandlerRegistered = false
+
         svg = d3.select(_container).html(null).append('svg')
         svg.append('defs')
         // Draw the legend after applying the margins.

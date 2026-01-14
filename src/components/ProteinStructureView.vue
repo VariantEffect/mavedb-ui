@@ -1,27 +1,26 @@
 <template>
-  <div style="display: flex; flex-flow: column; height: 100%">
-    <span v-if="alphaFoldData?.length > 1" class="p-float-label" style="margin-top: 10px; margin-bottom: 4px">
-      <Dropdown
+  <div class="flex flex-col h-full">
+    <FloatLabel v-if="alphaFoldData?.length > 1" class="m-2" variant="on">
+      <Select
         :id="scopedId('alphafold-id')"
         v-model="selectedAlphaFold"
         option-label="id"
         :options="alphaFoldData"
-        style="height: 3em"
       />
       <label :for="scopedId('alphafold-id')">AlphaFold ID</label>
-    </span>
+    </FloatLabel>
     <div class="flex">
       <span class="ml-2">Color by:</span>
       <SelectButton
         v-model="colorBy"
-        class="protein-viz-colorby-button ml-2"
+        class="ml-2"
         option-label="name"
         option-value="value"
         :options="colorByOptions"
       />
     </div>
-    <div v-show="selectedAlphaFold" id="pdbe-molstar-viewer-container" style="flex: 1; position: relative"></div>
-    <div v-if="!selectedAlphaFold" style="flex: 1; position: relative; margin: auto; align-content: center">
+    <div v-show="selectedAlphaFold" id="pdbe-molstar-viewer-container" class="flex-1 relative"></div>
+    <div v-if="!selectedAlphaFold" class="m-auto">
       No AlphaFold entry found
     </div>
   </div>
@@ -30,7 +29,8 @@
 <script>
 import axios from 'axios'
 import $ from 'jquery'
-import Dropdown from 'primevue/dropdown'
+import FloatLabel from 'primevue/floatlabel'
+import Select from 'primevue/select'
 import SelectButton from 'primevue/selectbutton'
 import {PDBeMolstarPlugin} from 'pdbe-molstar/lib/viewer'
 import 'pdbe-molstar/build/pdbe-molstar-light.css'
@@ -43,7 +43,7 @@ import useScopedId from '@/composables/scoped-id'
 export default {
   name: 'ProteinStructureView',
 
-  components: {Dropdown, SelectButton},
+  components: {FloatLabel, Select, SelectButton},
 
   props: {
     uniprotId: {
@@ -304,9 +304,5 @@ export default {
 <style>
 .msp-plugin .msp-layout-standard {
   border: 0;
-}
-.protein-viz-colorby-button .p-button {
-  padding: 2px !important;
-  font-size: 0.8em;
 }
 </style>

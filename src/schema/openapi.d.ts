@@ -2699,6 +2699,10 @@ export interface components {
       keywords: components["schemas"]["ExperimentControlledKeyword"][];
       /** Scoreseturns */
       scoreSetUrns: string[];
+      /** Externallinks */
+      externalLinks: {
+        [key: string]: components["schemas"]["ExternalLink"];
+      };
       /** Numscoresets */
       numScoreSets?: number | null;
       /** Processingstate */
@@ -3067,7 +3071,14 @@ export interface components {
       /** Offset */
       offset: number;
     };
-    /** ExternalLink */
+    /**
+     * ExternalLink
+     * @description Represents an external hyperlink for view models.
+     *
+     * Attributes:
+     *     url (Optional[str]): Fully qualified URL for the external resource.
+     *         May be None if no link is available or applicable.
+     */
     ExternalLink: {
       /** Url */
       url?: string | null;
@@ -4618,6 +4629,10 @@ export interface components {
       keywords: components["schemas"]["SavedExperimentControlledKeyword"][];
       /** Scoreseturns */
       scoreSetUrns: string[];
+      /** Externallinks */
+      externalLinks: {
+        [key: string]: components["schemas"]["ExternalLink"];
+      };
       /** Processingstate */
       processingState?: string | null;
     };

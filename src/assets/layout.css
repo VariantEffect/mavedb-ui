@@ -55,3 +55,30 @@
 .mavedb-screen-title-controls .p-button:last-child {
   margin-right: 0;
 }
+
+.mavedb-help-tooltip-button {
+  margin-left: 0.6rem;
+  vertical-align: middle;
+  margin-top: 0;
+  margin-bottom: 0;
+  display: inline-flex;
+  align-items: center;
+  background: none;
+  width: 1.2em !important;
+  height: 1.2em !important;
+  border-color: var(--p-button-outlined-help-color) !important;
+}
+
+.mavedb-help-tooltip-button:focus,
+.mavedb-help-tooltip-button:active,
+.mavedb-help-tooltip-button.p-focus {
+  background: none;
+}
+
+.mavedb-help-tooltip-button > .p-button-icon {
+  font-size: 0.5rem !important;
+}
+
+.mavedb-toolbar .p-menubar-submenu {
+  z-index: 1100 !important;
+}

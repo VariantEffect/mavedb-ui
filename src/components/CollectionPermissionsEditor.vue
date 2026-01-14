@@ -49,7 +49,7 @@
             <span v-if="orcidIdsToRemove.includes(data.user.orcidId)">{{ data.role }} &nbsp;&rightarrow; None</span>
             <span v-if="data.oldRole">{{ data.oldRole }} &rightarrow;&nbsp;</span>
             <span v-if="data.user.orcidId == userOrcidId">{{ data.role }}</span>
-            <Dropdown
+            <Select
               v-if="!orcidIdsToRemove.includes(data.user.orcidId) && data.user.orcidId != userOrcidId"
               class="mave-collection-role-dropdown"
               :model-value="data.role"
@@ -92,7 +92,7 @@ import Button from 'primevue/button'
 import Column from 'primevue/column'
 import DataTable from 'primevue/datatable'
 import Dialog from 'primevue/dialog'
-import Dropdown from 'primevue/dropdown'
+import Select from 'primevue/select'
 import InputText from 'primevue/inputtext'
 import SelectButton from 'primevue/selectbutton'
 
@@ -105,7 +105,7 @@ import EmailPrompt from '@/components/common/EmailPrompt.vue'
 export default {
   name: 'CollectionPermissionsEditor',
 
-  components: {Button, Column, DataTable, Dialog, Dropdown, EmailPrompt, InputText, SelectButton},
+  components: {Button, Column, DataTable, Dialog, Select, EmailPrompt, InputText, SelectButton},
 
   props: {
     collectionUrn: {

@@ -11,8 +11,8 @@
             <div class="mave-screen-title">Edit score set {{ item.urn }}</div>
             <div class="mavedb-screen-title-controls">
               <Button @click="saveEditContent">Save changes</Button>
-              <Button class="p-button-help" @click="resetForm">Reset</Button>
-              <Button class="p-button-warning" @click="viewItem">Cancel</Button>
+              <Button severity="help" @click="resetForm">Reset</Button>
+              <Button severity="warn" @click="viewItem">Cancel</Button>
             </div>
           </div>
         </div>
@@ -28,8 +28,8 @@
               </div>
               <div v-else>
                 <div class="field">
-                  <span class="p-float-label">
-                    <Dropdown
+                  <FloatLabel variant="on">
+                    <Select
                       :id="scopedId('input-experiment')"
                       v-model="experiment"
                       option-label="title"
@@ -38,7 +38,7 @@
                       @change="populateExperimentMetadata"
                     />
                     <label :for="scopedId('input-experiment')">Experiment</label>
-                  </span>
+                  </FloatLabel>
                   <span v-if="validationErrors.experiment" class="mave-field-error">{{
                     validationErrors.experiment
                   }}</span>
@@ -62,17 +62,17 @@
             <template #title>Score set information</template>
             <template #content>
               <div class="field">
-                <span class="p-float-label">
+                <FloatLabel variant="on">
                   <InputText :id="scopedId('input-title')" v-model="title" />
                   <label :for="scopedId('input-title')">Title</label>
-                </span>
+                </FloatLabel>
                 <span v-if="validationErrors.title" class="mave-field-error">{{ validationErrors.title }}</span>
               </div>
               <div class="field">
-                <span class="p-float-label">
+                <FloatLabel variant="on">
                   <Textarea :id="scopedId('input-shortDescription')" v-model="shortDescription" rows="4" />
                   <label :for="scopedId('input-shortDescription')">Short description</label>
-                </span>
+                </FloatLabel>
                 <span v-if="validationErrors.shortDescription" class="mave-field-error">{{
                   validationErrors.shortDescription
                 }}</span>
@@ -85,10 +85,10 @@
                   </TabList>
                   <TabPanels>
                     <TabPanel header="Edit" value="0">
-                      <span class="p-float-label">
+                      <FloatLabel variant="on">
                         <Textarea :id="scopedId('input-abstractText')" v-model="abstractText" rows="4" />
                         <label :for="scopedId('input-abstractText')">Abstract</label>
-                      </span>
+                      </FloatLabel>
                     </TabPanel>
                     <TabPanel header="Preview" value="1">
                       <!-- eslint-disable-next-line vue/no-v-html -->
@@ -108,10 +108,10 @@
                   </TabList>
                   <TabPanels>
                     <TabPanel header="Edit" value="0">
-                      <span class="p-float-label">
+                      <FloatLabel variant="on">
                         <Textarea :id="scopedId('input-methodText')" v-model="methodText" rows="4" />
                         <label :for="scopedId('input-methodText')">Methods</label>
-                      </span>
+                      </FloatLabel>
                     </TabPanel>
                     <TabPanel header="Preview" value="1">
                       <!-- eslint-disable-next-line vue/no-v-html -->
@@ -124,38 +124,29 @@
                 }}</span>
               </div>
               <div class="field">
-                <span class="p-float-label">
-                  <Chips
+                <FloatLabel variant="on">
+                  <AutoComplete
                     :id="scopedId('input-contributors')"
-                    ref="contributorsInput"
                     v-model="contributors"
-                    :add-on-blur="true"
-                    :allow-duplicate="false"
-                    placeholder="Type or paste ORCID IDs here."
-                    @add="newContributorsAdded"
-                    @keyup.escape="clearContributorSearch"
-                  >
-                    <template #chip="slotProps">
-                      <div>
-                        <div v-if="slotProps.value.givenName || slotProps.value.familyName">
-                          {{ slotProps.value.givenName }} {{ slotProps.value.familyName }} ({{
-                            slotProps.value.orcidId
-                          }})
-                        </div>
-                        <div v-else>{{ slotProps.value.orcidId }}</div>
-                      </div>
-                    </template>
-                  </Chips>
+                    fluid
+                    multiple
+                    :option-label="(x) => x.givenName || x.familyName ? `${x.givenName} ${x.familyName} (${x.orcidId})` : x.orcidId"
+                    :typeahead="false"
+                    @blur="updateContributors"
+                    @keyup.escape="clearAutoCompleteInput"
+                    @keyup.space="updateContributors"
+                    @update:model-value="newContributorsAdded"
+                  />
                   <label :for="scopedId('input-contributors')">Contributors</label>
-                </span>
+                </FloatLabel>
                 <span v-if="validationErrors.contributors" class="mave-field-error">{{
                   validationErrors.contributors
                 }}</span>
               </div>
               <div>
                 <div class="field">
-                  <span class="p-float-label">
-                    <Dropdown
+                  <FloatLabel variant="on">
+                    <Select
                       :id="scopedId('input-targetLicenseId')"
                       v-model="licenseId"
                       option-label="longName"
@@ -164,7 +155,7 @@
                       style="width: 100%"
                     />
                     <label :for="scopedId('input-targetLicenseId')">License</label>
-                  </span>
+                  </FloatLabel>
                   <span v-if="validationErrors.licenseId" class="mave-field-error">{{
                     validationErrors.licenseId
                   }}</span>
@@ -183,53 +174,38 @@
                   </Message>
                 </div>
                 <div class="field">
-                  <span class="p-float-label">
-                    <Chips
+                  <FloatLabel variant="on">
+                    <AutoComplete
                       :id="scopedId('input-doiIdentifiers')"
-                      ref="doiIdentifiersInput"
                       v-model="doiIdentifiers"
-                      :add-on-blur="true"
-                      :allow-duplicate="false"
-                      @add="acceptNewDoiIdentifier"
-                      @keyup.escape="clearDoiIdentifierSearch"
-                    >
-                      <template #chip="slotProps">
-                        <div>
-                          <div>{{ slotProps.value.identifier }}</div>
-                        </div>
-                        <div>
-                          <i class="pi pi-times-circle" @click="removeDoiIdentifier(slotProps.value)"></i>
-                        </div>
-                      </template>
-                    </Chips>
+                      :multiple="true"
+                      option-label="identifier"
+                      :typeahead="false"
+                      @blur="updateDoiIdentifiers"
+                      @keyup.escape="clearAutoCompleteInput"
+                      @keyup.space="updateDoiIdentifiers"
+                      @update:model-value="newDoiIdentifiersAdded"
+                    />
                     <label :for="scopedId('input-doiIdentifiers')">DOIs</label>
-                  </span>
+                  </FloatLabel>
                   <span v-if="validationErrors.doiIdentifiers" class="mave-field-error">{{
                     validationErrors.doiIdentifiers
                   }}</span>
                 </div>
                 <div class="field">
-                  <span class="p-float-label">
+                  <FloatLabel variant="on">
                     <AutoComplete
                       :id="scopedId('input-publicationIdentifiers')"
                       ref="publicationIdentifiersInput"
                       v-model="publicationIdentifiers"
-                      class="p-inputwrapper-filled"
                       :multiple="true"
-                      option-label="identifier"
+                      :option-label="(x) => `${x.identifier}: ${truncatePublicationTitle(x.title)}`"
                       :suggestions="publicationIdentifierSuggestionsList"
+                      @blur="clearAutoCompleteInput"
                       @complete="searchPublicationIdentifiers"
                       @keyup.escape="clearPublicationIdentifierSearch"
                       @option-select="acceptNewPublicationIdentifier"
                     >
-                      <template #chip="slotProps">
-                        <div class="p-inputchips-chip-item">
-                          {{ slotProps.value.identifier }}: {{ truncatePublicationTitle(slotProps.value.title) }}
-                          <div>
-                            <i class="pi pi-times-circle" @click="removePublicationIdentifier(slotProps.value)"></i>
-                          </div>
-                        </div>
-                      </template>
                       <template #option="slotProps">
                         <div>
                           <div>Title: {{ slotProps.option.title }}</div>
@@ -240,16 +216,15 @@
                       </template>
                     </AutoComplete>
                     <label :for="scopedId('input-publicationIdentifiers')">Publication identifiers</label>
-                  </span>
+                  </FloatLabel>
                   <span v-if="validationErrors.publicationIdentifiers" class="mave-field-error">{{
                     validationErrors.publicationIdentifiers
                   }}</span>
                 </div>
                 <div class="field">
-                  <span class="p-float-label">
+                  <FloatLabel variant="on">
                     <Multiselect
                       :id="scopedId('input-primaryPublicationIdentifiers')"
-                      ref="primaryPublicationIdentifiersInput"
                       v-model="primaryPublicationIdentifiers"
                       class="p-inputwrapper-filled"
                       option-label="identifier"
@@ -268,30 +243,28 @@
                       </template>
                     </Multiselect>
                     <label :for="scopedId('input-primaryPublicationIdentifiers')">Primary publication</label>
-                  </span>
+                  </FloatLabel>
                   <span v-if="validationErrors.primaryPublicationIdentifiers" class="mave-field-error">{{
                     validationErrors.primaryPublicationIdentifiers
                   }}</span>
                 </div>
-                <Message v-if="experiment" closable severity="info">
-                  Some fields were autopopulated based on the selected experiment and should be inspected to ensure they
-                  are still relevant to this score set.
-                </Message>
                 <div class="field">
-                  <span class="p-float-label">
+                  <FloatLabel variant="on">
                     <div v-if="extraMetadata">
                       <span class="mr-2"> Extra metadata</span>
                       <i class="pi pi-check mr-3"></i>
                       <Button
                         v-tooltip="{value: 'View extra metadata'}"
-                        class="p-button-info mr-2"
+                        class="mr-2"
                         icon="pi pi-eye"
+                        severity="info"
                         @click="jsonToDisplay = JSON.stringify(extraMetadata, null, 2)"
                       ></Button>
                       <Button
                         v-tooltip="{value: 'Delete extra metadata'}"
-                        class="p-button-danger mr-2"
+                        class="mr-2"
                         icon="pi pi-times"
+                        severity="danger"
                         @click="fileCleared('extraMetadataFile')"
                       ></Button>
                     </div>
@@ -314,16 +287,16 @@
                         <p>Drop a JSON file here.</p>
                       </template>
                     </FileUpload>
-                  </span>
+                  </FloatLabel>
                   <span v-if="validationErrors.extraMetadata" class="mave-field-error">{{
                     validationErrors.extraMetadata
                   }}</span>
                 </div>
                 <div class="field">
-                  <span class="p-float-label">
+                  <FloatLabel variant="on">
                     <Textarea :id="scopedId('input-dataUsagePolicy')" v-model="dataUsagePolicy" rows="4" />
                     <label :for="scopedId('input-dataUsagePolicy')">Data usage policy</label>
-                  </span>
+                  </FloatLabel>
                   <span v-if="validationErrors.dataUsagePolicy" class="mave-field-error">{{
                     validationErrors.dataUsagePolicy
                   }}</span>
@@ -347,7 +320,7 @@
                     <TabPanels>
                       <TabPanel value="0">
                         <div class="field">
-                          <span class="p-float-label">
+                          <FloatLabel variant="on">
                             <AutoComplete
                               :id="scopedId('input-existingTargetGene')"
                             ref="existingTargetGeneInput"
@@ -373,16 +346,16 @@
                               </template>
                             </AutoComplete>
                             <label :for="scopedId('input-existingTargetGene')">Copy from an existing target gene</label>
-                          </span>
+                          </FloatLabel>
                         </div>
                         <div class="field">
-                          <span class="p-float-label">
+                          <FloatLabel variant="on">
                             <InputText :id="scopedId('input-targetGeneName')" v-model="targetGene.name" />
                             <label :for="scopedId('input-targetGeneName')">Target name</label>
-                          </span>
+                          </FloatLabel>
                         </div>
                         <div class="field">
-                          <span class="p-float-label">
+                          <FloatLabel variant="on">
                             <InputText
                               :id="scopedId('input-targetSequenceLabel')"
                               v-model="targetGene.targetSequence.label"
@@ -390,21 +363,21 @@
                             <label :for="scopedId('input-targetSequenceLabel')"
                               >Target label (only required when providing multiple targets)</label
                             >
-                          </span>
+                          </FloatLabel>
                         </div>
                         <div class="field">
-                          <span class="p-float-label">
+                          <FloatLabel variant="on">
                             <SelectButton
                               :id="scopedId('input-targetGeneCategory')"
                               v-model="targetGene.category"
                               :option-label="textForTargetGeneCategory"
                               :options="targetGeneCategories"
                             />
-                          </span>
+                          </FloatLabel>
                         </div>
                         <div v-for="dbName of externalGeneDatabases" :key="dbName" class="field field-columns">
                           <div class="field-column">
-                            <span class="p-float-label">
+                            <FloatLabel variant="on">
                               <AutoComplete
                                 :id="scopedId(`input-${dbName.toLowerCase()}Identifier`)"
                                 :ref="`${dbName.toLowerCase()}IdentifierInput`"
@@ -419,10 +392,10 @@
                               <label :for="scopedId(`input-${dbName.toLowerCase()}Identifier`)"
                                 >{{ dbName }} identifier</label
                               >
-                            </span>
+                            </FloatLabel>
                           </div>
                           <div class="field-column">
-                            <span class="p-float-label">
+                            <FloatLabel variant="on">
                               <InputNumber
                                 :id="scopedId(`input-${dbName.toLowerCase()}Offset`)"
                                 v-model="targetGene.externalIdentifiers[dbName].offset"
@@ -432,11 +405,11 @@
                                 suffix=" bp"
                               />
                               <label :for="scopedId(`input-${dbName.toLowerCase()}Offset`)">Offset</label>
-                            </span>
+                            </FloatLabel>
                           </div>
                         </div>
                         <div class="field">
-                          <span class="p-float-label">
+                          <FloatLabel variant="on">
                             <AutoComplete
                               :id="scopedId('input-targetSequenceTaxonomy')"
                               ref="taxonomyInput"
@@ -458,13 +431,13 @@
                               </template>
                             </AutoComplete>
                             <label :for="scopedId('input-targetSequenceTaxonomy')">Taxonomy</label>
-                          </span>
+                          </FloatLabel>
                           <span v-if="validationErrors['targetGene.targetSequence.taxonomy']" class="mave-field-error">{{
                             validationErrors['targetGene.targetSequence.taxonomy']
                           }}</span>
                         </div>
                         <div class="field">
-                          <span class="p-float-label">
+                          <FloatLabel variant="on">
                             <FileUpload
                               :id="scopedId('input-targetGeneTargetSequenceSequenceFile')"
                               ref="sequenceFileUpload"
@@ -482,24 +455,23 @@
                                 <p>Drop a FASTA file here.</p>
                               </template>
                             </FileUpload>
-                          </span>
+                          </FloatLabel>
                         </div>
                         <div class="field">
-                          <span class="p-float-label">
+                          <FloatLabel variant="on">
                             <SelectButton
                               :id="scopedId('input-targetGeneTargetSequenceSequenceType')"
                               v-model="targetGene.targetSequence.sequenceType"
                               :options="sequenceTypes"
                             />
-                          </span>
+                          </FloatLabel>
                         </div>
                         <div>
                           <Button icon="pi pi-check" label="Add Target" @click="addTarget" />
                           <Button
-                            class="p-button-help"
                             icon="pi pi-times"
                             label="Clear Target"
-                            severity="secondary"
+                            severity="help"
                             style="margin-left: 0.5em"
                             @click="resetTarget"
                           />
@@ -508,30 +480,30 @@
                       <TabPanel header="Genomic Coordinates" value="1">
                         <div class="field field-columns">
                           <div class="field-column">
-                            <span class="p-float-label">
+                            <FloatLabel variant="on">
                               <InputText
                                 :id="scopedId('input-targetGeneName')"
                                 v-model="targetGene.name"
                                 style="width: 100%"
                               />
                               <label :for="scopedId('input-targetGene')">Target gene name</label>
-                            </span>
+                            </FloatLabel>
                           </div>
                           <div class="field-column">
-                            <span class="p-float-label">
+                            <FloatLabel variant="on">
                               <!-- Assembly is the reference genome property in coordinate cases -->
-                              <Dropdown
+                              <Select
                                 :id="scopedId('input-targetGeneAssembly')"
                                 v-model="assembly"
                                 :options="assemblies"
                                 style="width: 100%"
                               />
                               <label :for="scopedId('input-targetGeneAssembly')">Assembly</label>
-                            </span>
+                            </FloatLabel>
                           </div>
                           <div class="field-column">
-                            <span class="p-float-label">
-                              <Dropdown
+                            <FloatLabel variant="on">
+                              <Select
                                 :id="scopedId('input-targetGeneGeneNames')"
                                 v-model="geneName"
                                 filter
@@ -542,15 +514,15 @@
                                 @change="autofillGeneName"
                               />
                               <label :for="scopedId('input-targetGeneAssembly')">HGNC Name</label>
-                            </span>
+                            </FloatLabel>
                           </div>
                         </div>
                         <div class="field">
-                          <span class="p-float-label pb-2">
-                            Autocomplete By:
+                          <div class="flex align-items-center space-x-2">
+                            <span>Autocomplete By:</span>
                             <SelectButton v-model="targetAutocomplete" aria-labelledby="basic" :options="targetOptions" />
-                          </span>
-                          <span class="p-float-label">
+                          </div>
+                          <FloatLabel class="mt-3" variant="on">
                             <AutoComplete
                               :id="scopedId('input-targetGene-accession')"
                               v-model="targetGene.targetAccession.accession"
@@ -560,17 +532,17 @@
                               @complete="fetchTargetAccessions"
                             />
                             <label :for="scopedId('input-targetGene-accession')">Accession/Transcript Identifier</label>
-                          </span>
+                          </FloatLabel>
                         </div>
                         <div class="field">
-                          <span class="p-float-label">
+                          <FloatLabel variant="on">
                             <SelectButton
                               :id="scopedId('input-targetGeneCategory')"
                               v-model="targetGene.category"
                               :option-label="textForTargetGeneCategory"
                               :options="targetGeneCategories"
                             />
-                          </span>
+                          </FloatLabel>
                         </div>
                         <div>
                           <Button
@@ -588,10 +560,9 @@
                             @click="swapNucleotideProteinAccessions"
                           />
                           <Button
-                            class="p-button-help"
                             icon="pi pi-times"
                             label="Clear Target"
-                            severity="secondary"
+                            severity="help"
                             size="small"
                             style="margin-left: 0.5em"
                             @click="resetTarget"
@@ -615,10 +586,9 @@
                       <Column>
                         <template #body="slotProps">
                           <Button
-                            class="p-button-help"
                             icon="pi pi-minus-circle"
                             label="Remove"
-                            severity="secondary"
+                            severity="help"
                             size="small"
                             @click="targetDeleted(slotProps.data)"
                           />
@@ -748,10 +718,9 @@
                       <template #footer>
                         <div class="flex flex-wrap justify-content-start gap-2">
                           <Button
-                            class="p-button-help"
                             icon="pi pi-times-circle"
                             label="Clear all"
-                            severity="secondary"
+                            severity="help"
                             size="small"
                             @click="targetsCleared"
                           />
@@ -761,8 +730,8 @@
                   </span>
 
                   <div class="field-column">
-                    <div class="field" style="margin-top: 1em">
-                      <InputSwitch v-model="isBaseEditor" :aria-labelledby="scopedId('input-isBaseEditorData')" />
+                    <div class="field mt-2 flex items-center">
+                      <ToggleSwitch v-model="isBaseEditor" :aria-labelledby="scopedId('input-isBaseEditorData')" />
                       <span style="margin-left: 1em">{{
                         isBaseEditor
                           ? 'This score set represents base editor data.'
@@ -796,7 +765,7 @@
                 </div>
                 <div v-else>Load a scores file and an optional counts file:</div>
                 <div class="field">
-                  <span class="p-float-label">
+                  <FloatLabel variant="on">
                     <FileUpload
                       :id="scopedId('input-scoresFile')"
                       ref="scoresFileUpload"
@@ -813,26 +782,28 @@
                         <p>Drop a file here.</p>
                       </template>
                     </FileUpload>
-                  </span>
+                  </FloatLabel>
                   <span v-if="validationErrors.scoresFile" class="mave-field-error">{{
                     validationErrors.scoresFile
                   }}</span>
                 </div>
                 <div class="field">
-                  <span class="p-float-label">
+                  <FloatLabel variant="on">
                     <div v-if="scoreColumnsMetadata">
                       <span class="mr-2">Scores column metadata</span>
                       <i class="pi pi-check mr-3"></i>
                       <Button
                         v-tooltip="{value: 'View scores column metadata'}"
-                        class="p-button-info mr-2"
+                        class="mr-2"
                         icon="pi pi-eye"
+                        severity="info"
                         @click="jsonToDisplay = JSON.stringify(scoreColumnsMetadata, null, 2)"
                       ></Button>
                       <Button
                         v-tooltip="{value: 'Delete scores column metadata'}"
-                        class="p-button-danger mr-2"
+                        class="mr-2"
                         icon="pi pi-times"
+                        severity="danger"
                         @click="fileCleared('scoreColumnsMetadataFile')"
                       ></Button>
                     </div>
@@ -854,13 +825,13 @@
                         <p>Drop a JSON file here.</p>
                       </template>
                     </FileUpload>
-                  </span>
+                  </FloatLabel>
                   <span v-if="validationErrors.scoreColumnsMetadataFile" class="mave-field-error">{{
                     validationErrors.scoreColumnsMetadataFile
                   }}</span>
                 </div>
                 <div class="field">
-                  <span class="p-float-label">
+                  <FloatLabel variant="on">
                     <FileUpload
                       :id="scopedId('input-countsFile')"
                       ref="countsFileUpload"
@@ -877,26 +848,28 @@
                         <p>Drop a file here.</p>
                       </template>
                     </FileUpload>
-                  </span>
+                  </FloatLabel>
                   <span v-if="validationErrors.countsFile" class="mave-field-error">{{
                     validationErrors.countsFile
                   }}</span>
                 </div>
                 <div class="field">
-                  <span class="p-float-label">
+                  <FloatLabel variant="on">
                     <div v-if="countColumnsMetadata">
                       <span class="mr-2">Counts column metadata</span>
                       <i class="pi pi-check mr-3"></i>
                       <Button
                         v-tooltip="{value: 'View counts column metadata'}"
-                        class="p-button-info mr-2"
+                        class="mr-2"
                         icon="pi pi-eye"
+                        severity="info"
                         @click="jsonToDisplay = JSON.stringify(countColumnsMetadata, null, 2)"
                       ></Button>
                       <Button
                         v-tooltip="{value: 'Delete counts column metadata'}"
-                        class="p-button-danger mr-2"
+                        class="mr-2"
                         icon="pi pi-times"
+                        severity="danger"
                         @click="fileCleared('countColumnsMetadataFile')"
                       ></Button>
                     </div>
@@ -918,7 +891,7 @@
                         <p>Drop a JSON file here.</p>
                       </template>
                     </FileUpload>
-                  </span>
+                  </FloatLabel>
                   <span v-if="validationErrors.countColumnsMetadataFile" class="mave-field-error">{{
                     validationErrors.countColumnsMetadataFile
                   }}</span>
@@ -952,14 +925,14 @@ import {marked} from 'marked'
 import AutoComplete from 'primevue/autocomplete'
 import Button from 'primevue/button'
 import Card from 'primevue/card'
-import Chips from 'primevue/chips'
 import Column from 'primevue/column'
 import DataTable from 'primevue/datatable'
-import Dropdown from 'primevue/dropdown'
+import Select from 'primevue/select'
 import FileUpload from 'primevue/fileupload'
+import FloatLabel from 'primevue/floatlabel'
 import InputNumber from 'primevue/inputnumber'
 import InputText from 'primevue/inputtext'
-import InputSwitch from 'primevue/inputswitch'
+import ToggleSwitch from 'primevue/toggleswitch'
 import Message from 'primevue/message'
 import Multiselect from 'primevue/multiselect'
 import ProgressSpinner from 'primevue/progressspinner'
@@ -1015,17 +988,17 @@ export default {
     AutoComplete,
     Button,
     Card,
-    Chips,
     Column,
     DataTable,
     DefaultLayout,
-    Dropdown,
+    Select,
     EmailPrompt,
     EntityLink,
     FileUpload,
+    FloatLabel,
     InputNumber,
     InputText,
-    InputSwitch,
+    ToggleSwitch,
     Message,
     Multiselect,
     ProgressSpinner,
@@ -1307,6 +1280,17 @@ export default {
           this.assemblySuggestions = await this.fetchTargetAccessionsByAssembly(this.assemblyDropdownValue)
         }
       }
+    },
+    publicationIdentifiers: function () {
+      // If the primary publication is no longer in the list of publications, clear it.
+      if (
+        this.primaryPublicationIdentifiers.length > 0 &&
+        !this.publicationIdentifiers
+          .map((pi) => pi.identifier)
+          .includes(this.primaryPublicationIdentifiers[0].identifier)
+      ) {
+        this.primaryPublicationIdentifiers = []
+      }
     }
   },
 
@@ -1315,15 +1299,15 @@ export default {
   },
 
   methods: {
+    clearAutoCompleteInput: function(event) {
+      if (event.target) {
+        event.target.value = ''
+      }
+    },
+
     //////////////////////////////////////////////////////////////////////////////////////////////////////////////////
     // Contributors
     //////////////////////////////////////////////////////////////////////////////////////////////////////////////////
-
-    clearContributorSearch: function () {
-      // This could change with a new PrimeVue version.
-      const input = this.$refs.contributorsInput
-      input.$refs.input.value = ''
-    },
 
     lookupOrcidUser: async function (orcidId) {
       let orcidUser = null
@@ -1335,8 +1319,20 @@ export default {
       return orcidUser
     },
 
-    newContributorsAdded: async function (event) {
-      const newContributors = event.value
+    updateContributors: function (event) {
+      const currentValue = event.target?.value
+      if (currentValue && currentValue.trim() != '') {
+        this.contributors.push(currentValue.trim())
+        this.newContributorsAdded()
+
+        // clear the input field
+        event.target.value = ''
+      }
+    },
+
+    newContributorsAdded: async function () {
+      // new contributor values are those that are strings rather than objects
+      const newContributors = this.contributors.filter(_.isString)
 
       // Convert any strings to ORCID users without names. Remove whitespace from new entries.
       this.contributors = this.contributors.map((c) => (_.isString(c) ? {orcidId: c.trim()} : c))
@@ -1539,7 +1535,18 @@ export default {
       })
     },
 
-    acceptNewDoiIdentifier: function () {
+    updateDoiIdentifiers: function (event) {
+      const currentValue = event.target?.value
+      if (currentValue && currentValue.trim() != '') {
+        this.doiIdentifiers.push(currentValue.trim())
+        this.newDoiIdentifiersAdded()
+
+        // clear the input field
+        event.target.value = ''
+      }
+    },
+
+    newDoiIdentifiersAdded: function () {
       // Remove new string item from the model and add new structured item in its place if it validates and is not a duplicate.
       const idx = this.doiIdentifiers.findIndex((item) => typeof item === 'string' || item instanceof String)
       if (idx == -1) {
@@ -1590,19 +1597,6 @@ export default {
           summary: `Identifier "${newIdentifier}" is already associated with this experiment`,
           life: 3000
         })
-      }
-    },
-
-    removePublicationIdentifier: function (value) {
-      const removedIdentifier = value.identifier
-      const publicationIdx = this.publicationIdentifiers.findIndex((pub) => pub.identifier == removedIdentifier)
-      if (publicationIdx != -1) {
-        this.publicationIdentifiers.splice(publicationIdx, 1)
-      }
-      // If we are removing a primary publication identifier, also remove it from that list.
-      const primaryIdx = this.primaryPublicationIdentifiers.findIndex((pub) => pub.identifier == removedIdentifier)
-      if (primaryIdx != -1) {
-        this.primaryPublicationIdentifiers.splice(primaryIdx, 1)
       }
     },
 

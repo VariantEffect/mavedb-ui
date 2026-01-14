@@ -18,25 +18,23 @@
           <img v-if="config.PREVIEW_SITE" alt="MaveDB Beta Site" src="@/assets/logo-mavedb-beta.png" />
           <img v-else alt="MaveDB" src="@/assets/logo-mavedb.png" />
         </router-link>
-        <div style="display: inline-block; margin-left: 40px">
-          <div class="p-inputgroup" style="max-width: 300px; width: 300px; display: flex; align-items: stretch;">
-            <InputText
-              ref="searchTextInput"
-              v-model="searchText"
-              class="p-inputtext-sm !rounded-r-none w-full"
-              placeholder="Search"
-              style="width: 200px; height: auto;"
-              type="search"
-              @keyup.enter="search"
-            />
-            <Button
-              class="p-button-default p-button-sm !rounded-l-none"
-              :enabled="searchText && searchText.length > 0"
-              icon="pi pi-search"
-              style="height: auto;"
-              @click="search"
-            />
-          </div>
+        <div class="flex w-[300px] ml-10">
+          <InputText
+            ref="searchTextInput"
+            v-model="searchText"
+            class="rounded-r-none! w-full"
+            placeholder="Search"
+            size="small"
+            type="search"
+            @keyup.enter="search"
+          />
+          <Button
+            class="rounded-l-none!"
+            :enabled="searchText && searchText.length > 0"
+            icon="pi pi-search"
+            size="small"
+            @click="search"
+          />
         </div>
       </template>
       <template #item="{item, props, hasSubmenu}">
@@ -99,10 +97,6 @@ export default {
           route: '/dashboard',
           available: ({authenticated}) => authenticated
         },
-        {
-          label: 'Home',
-          route: '/'
-        },
         ...(config.CLINICAL_FEATURES_ENABLED
           ? [
               {
@@ -147,11 +141,6 @@ export default {
           target: '_blank',
           url: 'https://mavedb.zulipchat.com/#narrow/channel/511813-beta-testers',
           available: ({config}) => config.PREVIEW_SITE
-        },
-        {
-          label: 'Users',
-          route: '/users',
-          available: ({roles}) => roles.includes('admin')
         },
         {
           label: this.userName,

@@ -9,7 +9,7 @@
       <TabPanels>
         <TabPanel header="Published" value="0">
           <div class="mavedb-search-view">
-            <h2 class="text-xl font-bold py-2">Published Score sets</h2>
+            <h2>Published Score sets</h2>
             <div class="mavedb-search-form">
               <!-- <span class="p-input-icon-left">
                 <i class="pi pi-search" />
@@ -20,16 +20,17 @@
                   <InputText
                     ref="searchTextInput"
                     v-model="searchText"
-                    class="p-inputtext-sm rounded-r-none!"
+                    class="rounded-r-none!"
                     placeholder="Search"
-                    style="width: 200px; height: auto;"
+                    size="small"
                     type="text"
                     @change="search"
                   />
                   <Button
-                    class="p-button-default p-button-sm rounded-l-none!"
+                    class="rounded-l-none!"
                     :enabled="searchText && searchText.length > 0"
                     icon="pi pi-search"
+                    size="small"
                     @click="search"
                   />
                   <ProgressSpinner
@@ -45,7 +46,7 @@
         </TabPanel>
         <TabPanel header="Unpublished" value="1">
           <div class="mavedb-search-view">
-            <h2 class="text-xl font-bold py-2">Unpublished Score sets</h2>
+            <h2 class="pb-2">Unpublished Score sets</h2>
             <ScoreSetTable :data="unpublishedScoreSets" :language="language" :scroll-x="true" :scroll-y="true" />
           </div>
         </TabPanel>
@@ -71,7 +72,7 @@ import ScoreSetTable from '@/components/ScoreSetTable.vue'
 import DefaultLayout from '@/components/layout/DefaultLayout'
 
 export default {
-  name: 'HomeView',
+  name: 'DashboardView',
 
   components: {DefaultLayout, ScoreSetTable, InputText, Tabs, TabList, Tab, TabPanels, TabPanel, Button, ProgressSpinner},
 

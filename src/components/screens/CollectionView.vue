@@ -70,7 +70,11 @@
             @open="editCollectionDescription"
           >
             <template #display>
-              {{ item.description || '(Click here to add description)' }}
+              <!-- eslint-disable vue/no-v-html -->
+              <div
+                v-html="item.description ? linkifyTextHtml(item.description) : '(Click here to add description)'"
+              ></div>
+              <!-- eslint-enable vue/no-v-html -->
             </template>
             <template #content>
               <div class="flex mave-collection-description-editor">
@@ -87,7 +91,13 @@
           </Inplace>
         </div>
         <div v-else>
-          <div v-if="item.description" class="mave-collection-description">{{ item.description }}</div>
+          <!-- eslint-disable vue/no-v-html -->
+          <div
+            v-if="item.description"
+            class="mave-collection-description"
+            v-html="linkifyTextHtml(item.description)"
+          ></div>
+          <!-- eslint-enable vue/no-v-html -->
         </div>
       </div>
       <div class="mavedb-1000px-col">
@@ -119,7 +129,7 @@
             />
           </div>
         </div>
-        <ul v-if="item.scoreSetUrns.length != 0">
+        <ul v-if="item.scoreSetUrns.length != 0" class="list-disc ml-5">
           <li v-for="scoreSetUrn in item.scoreSetUrns" :key="scoreSetUrn">
             <EntityLink display="title" entity-type="scoreSet" :urn="scoreSetUrn" />
           </li>
@@ -136,7 +146,7 @@
             />
           </div>
         </div>
-        <ul v-if="item.experimentUrns.length != 0">
+        <ul v-if="item.experimentUrns.length != 0" class="list-disc ml-5">
           <li v-for="experimentUrn in item.experimentUrns" :key="experimentUrn">
             <EntityLink display="title" entity-type="experiment" :urn="experimentUrn" />
           </li>
@@ -153,37 +163,37 @@
           class="mave-collection-contributors-subsection"
         >
           <div class="mave-collection-contributors-subsection-title">Admins</div>
-          <ul v-if="item.admins.length > 0">
-            <div v-for="admin in item.admins" :key="admin">
+          <ul v-if="item.admins.length > 0" class="ml-5">
+            <li v-for="admin in item.admins" :key="admin">
               <a class="flex items-center gap-1" :href="`https://orcid.org/${admin.orcidId}`" target="_blank">
                 <img alt="ORCIDiD" src="@/assets/ORCIDiD_icon.png" />
                 {{ admin.firstName }} {{ admin.lastName }}
               </a>
-            </div>
+            </li>
           </ul>
           <p v-else>No admins</p>
         </div>
         <div v-if="userIsAuthorized.add_role" class="mave-collection-contributors-subsection">
           <div class="mave-collection-contributors-subsection-title">Editors</div>
-          <ul v-if="item.editors.length > 0">
-            <div v-for="editor in item.editors" :key="editor">
+          <ul v-if="item.editors.length > 0" class="ml-5">
+            <li v-for="editor in item.editors" :key="editor">
               <a class="flex items-center gap-1" :href="`https://orcid.org/${editor.orcidId}`" target="_blank">
                 <img alt="ORCIDiD" src="@/assets/ORCIDiD_icon.png" />
                 {{ editor.firstName }} {{ editor.lastName }}
               </a>
-            </div>
+            </li>
           </ul>
           <p v-else>No editors</p>
         </div>
         <div v-if="userIsAuthorized.add_role" class="mave-collection-contributors-subsection">
           <div class="mave-collection-contributors-subsection-title">Viewers</div>
-          <ul v-if="item.viewers.length > 0">
-            <div v-for="viewer in item.viewers" :key="viewer">
+          <ul v-if="item.viewers.length > 0" class="ml-5">
+            <li v-for="viewer in item.viewers" :key="viewer">
               <a class="flex items-center gap-1" :href="`https://orcid.org/${viewer.orcidId}`" target="_blank">
                 <img alt="ORCIDiD" src="@/assets/ORCIDiD_icon.png" />
                 {{ viewer.firstName }} {{ viewer.lastName }}
               </a>
-            </div>
+            </li>
           </ul>
           <p v-else>No viewers</p>
         </div>

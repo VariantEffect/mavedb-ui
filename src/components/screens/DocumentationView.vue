@@ -1,7 +1,7 @@
 <template>
   <DefaultLayout>
     <div class="ml-12 mt-4">
-      <h1 class="text-2xl font-extrabold mb-4">Documentation</h1>
+      <h1 class="mb-4">Documentation</h1>
       <p class="mb-4">Welcome to the documentation page for MaveDB and its associated packages.</p>
       <ul class="ml-10 list-disc">
         <li><a href="/docs/mavedb/index.html">MaveDB documentation homepage</a></li>

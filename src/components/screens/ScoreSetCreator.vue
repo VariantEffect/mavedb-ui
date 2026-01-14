@@ -2791,10 +2791,7 @@ export default {
             // Add calibration errors to a separate object which is consumed by the calibration sub-component.
             if (_.isEqual(_.slice(path, 0, 1), ['scoreCalibrations'])) {
               // The second path element is an array index, which is irrelevant here as we only supply one calibration on score set creation.
-              calibrationValidationErrors = {
-                ...calibrationValidationErrors,
-                [path.slice(2).join('.')]: error.msg
-              }
+              calibrationValidationErrors[path.slice(2).join('.')] = error.msg
             }
 
             path = path.join('.')

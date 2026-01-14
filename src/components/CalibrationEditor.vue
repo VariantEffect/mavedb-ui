@@ -239,76 +239,82 @@
             <div class="mavedb-help-small">Use toggle buttons for inclusive/exclusive and infinity.</div>
           </div>
           <div class="mavedb-wizard-content">
-          <InputGroup>
-            <PrimeButton
-              class="score-range-toggle-button"
-              :outlined="!functionalClassificationHelpers[rangeIdx].infiniteLower"
-              @click="toggleInfinity(rangeIdx, 'lower')"
-              ><FontAwesomeIcon class="score-range-toggle-icon" icon="fa-solid fa-infinity"
-            /></PrimeButton>
-            <PrimeButton
-              class="score-range-toggle-button"
-              :disabled="functionalClassificationHelpers[rangeIdx].infiniteLower"
-              :outlined="!rangeObj.inclusiveLowerBound"
-              @click="toggleBoundary(rangeIdx, 'lower')"
-              ><FontAwesomeIcon class="score-range-toggle-icon" icon="fa-solid fa-circle-half-stroke"
-            /></PrimeButton>
-            <FloatLabel class="w-full" variant="on">
-              <InputNumber
-                v-model="rangeObj.range[0]"
-                :aria-labelledby="scopedId(`input-investigatorProvidedRangeLower-${rangeIdx}`)"
-                class="w-full"
+            <InputGroup>
+              <PrimeButton
+                class="score-range-toggle-button"
+                :outlined="!functionalClassificationHelpers[rangeIdx].infiniteLower"
+                @click="toggleInfinity(rangeIdx, 'lower')"
+                ><FontAwesomeIcon class="score-range-toggle-icon" icon="fa-solid fa-infinity"
+              /></PrimeButton>
+              <PrimeButton
+                class="score-range-toggle-button"
                 :disabled="functionalClassificationHelpers[rangeIdx].infiniteLower"
-                :max-fraction-digits="10"
-              />
-              <label :for="scopedId(`input-investigatorProvidedRangeLower-${rangeIdx}`)">{{
-                functionalClassificationHelpers[rangeIdx].infiniteLower
-                  ? '-infinity'
-                  : rangeObj.inclusiveLowerBound
-                    ? 'Lower Bound (inclusive)'
-                    : 'Lower Bound (exclusive)'
-              }}</label>
-            </FloatLabel>
-            <InputGroupAddon>to</InputGroupAddon>
-            <FloatLabel class="w-full" variant="on">
-              <InputNumber
-                v-model="rangeObj.range[1]"
-                :aria-labelledby="scopedId(`input-investigatorProvidedRangeUpper-${rangeIdx}`)"
-                class="w-full"
+                :outlined="!rangeObj.inclusiveLowerBound"
+                @click="toggleBoundary(rangeIdx, 'lower')"
+                ><FontAwesomeIcon class="score-range-toggle-icon" icon="fa-solid fa-circle-half-stroke"
+              /></PrimeButton>
+              <FloatLabel class="w-full" variant="on">
+                <InputNumber
+                  v-model="rangeObj.range[0]"
+                  :aria-labelledby="scopedId(`input-investigatorProvidedRangeLower-${rangeIdx}`)"
+                  class="w-full"
+                  :disabled="functionalClassificationHelpers[rangeIdx].infiniteLower"
+                  :max-fraction-digits="10"
+                />
+                <label :for="scopedId(`input-investigatorProvidedRangeLower-${rangeIdx}`)">{{
+                  functionalClassificationHelpers[rangeIdx].infiniteLower
+                    ? '-infinity'
+                    : rangeObj.inclusiveLowerBound
+                      ? 'Lower Bound (inclusive)'
+                      : 'Lower Bound (exclusive)'
+                }}</label>
+              </FloatLabel>
+              <InputGroupAddon>to</InputGroupAddon>
+              <FloatLabel class="w-full" variant="on">
+                <InputNumber
+                  v-model="rangeObj.range[1]"
+                  :aria-labelledby="scopedId(`input-investigatorProvidedRangeUpper-${rangeIdx}`)"
+                  class="w-full"
+                  :disabled="functionalClassificationHelpers[rangeIdx].infiniteUpper"
+                  :max-fraction-digits="10"
+                />
+                <label :for="scopedId(`input-investigatorProvidedRangeUpper-${rangeIdx}`)">{{
+                  functionalClassificationHelpers[rangeIdx].infiniteUpper
+                    ? 'infinity'
+                    : rangeObj.inclusiveUpperBound
+                      ? 'Upper Bound (inclusive)'
+                      : 'Upper Bound (exclusive)'
+                }}</label>
+              </FloatLabel>
+              <PrimeButton
+                class="score-range-toggle-button"
                 :disabled="functionalClassificationHelpers[rangeIdx].infiniteUpper"
-                :max-fraction-digits="10"
-              />
-              <label :for="scopedId(`input-investigatorProvidedRangeUpper-${rangeIdx}`)">{{
-                functionalClassificationHelpers[rangeIdx].infiniteUpper
-                  ? 'infinity'
-                  : rangeObj.inclusiveUpperBound
-                    ? 'Upper Bound (inclusive)'
-                    : 'Upper Bound (exclusive)'
-              }}</label>
-            </FloatLabel>
-            <PrimeButton
-              class="score-range-toggle-button"
-              :disabled="functionalClassificationHelpers[rangeIdx].infiniteUpper"
-              :outlined="!rangeObj.inclusiveUpperBound"
-              @click="toggleBoundary(rangeIdx, 'upper')"
-              ><FontAwesomeIcon class="score-range-toggle-icon" icon="fa-solid fa-circle-half-stroke"
-            /></PrimeButton>
-            <PrimeButton
-              class="score-range-toggle-button"
-              :outlined="!functionalClassificationHelpers[rangeIdx].infiniteUpper"
-              @click="toggleInfinity(rangeIdx, 'upper')"
-              ><FontAwesomeIcon class="score-range-toggle-icon" icon="fa-solid fa-infinity"
-            /></PrimeButton>
-          </InputGroup>
-          <span v-if="validationErrors[`functionalClassifications.${rangeIdx}.range`]" class="mave-field-error">{{
-            validationErrors[`functionalClassifications.${rangeIdx}.range`]
-          }}</span>
-          <span v-if="validationErrors[`functionalClassifications.${rangeIdx}.inclusiveLowerBound`]" class="mave-field-error">{{
-            validationErrors[`functionalClassifications.${rangeIdx}.range`]
-          }}</span>
-          <span v-if="validationErrors[`functionalClassifications.${rangeIdx}.inclusiveUpperBound`]" class="mave-field-error">{{
-            validationErrors[`functionalClassifications.${rangeIdx}.inclusiveUpperBound`]
-          }}</span>
+                :outlined="!rangeObj.inclusiveUpperBound"
+                @click="toggleBoundary(rangeIdx, 'upper')"
+                ><FontAwesomeIcon class="score-range-toggle-icon" icon="fa-solid fa-circle-half-stroke"
+              /></PrimeButton>
+              <PrimeButton
+                class="score-range-toggle-button"
+                :outlined="!functionalClassificationHelpers[rangeIdx].infiniteUpper"
+                @click="toggleInfinity(rangeIdx, 'upper')"
+                ><FontAwesomeIcon class="score-range-toggle-icon" icon="fa-solid fa-infinity"
+              /></PrimeButton>
+            </InputGroup>
+            <span v-if="validationErrors[`functionalClassifications.${rangeIdx}.range`]" class="mave-field-error">{{
+              validationErrors[`functionalClassifications.${rangeIdx}.range`]
+            }}</span>
+            <span
+              v-if="validationErrors[`functionalClassifications.${rangeIdx}.inclusiveLowerBound`]"
+              class="mave-field-error"
+              >{{ validationErrors[`functionalClassifications.${rangeIdx}.range`] }}</span
+            >
+            <span
+              v-if="validationErrors[`functionalClassifications.${rangeIdx}.inclusiveUpperBound`]"
+              class="mave-field-error"
+              >{{ validationErrors[`functionalClassifications.${rangeIdx}.inclusiveUpperBound`] }}</span
+            >
+          </div>
+        </div>
       </template>
       <template v-else>
         <div class="mavedb-wizard-row">
@@ -321,14 +327,14 @@
             </div>
           </div>
           <div class="mavedb-wizard-content">
-            <span class="p-float-label">
+            <FloatLabel class="w-full" variant="on">
               <InputText
                 v-model="rangeObj.class"
                 :aria-labelledby="scopedId(`input-functionalClassificationClass-${rangeIdx}`)"
                 style="width: 100%"
               />
               <label :for="scopedId(`input-functionalClassificationClass-${rangeIdx}`)">Class name</label>
-            </span>
+            </FloatLabel>
             <span v-if="validationErrors[`functionalClassifications.${rangeIdx}.class`]" class="mave-field-error">{{
               validationErrors[`functionalClassifications.${rangeIdx}.class`]
             }}</span>
@@ -1104,7 +1110,7 @@ export default {
     onClassesFileClear: function () {
       this.draftClassesFile = null
     },
-    clearAutoCompleteInput: function(event) {
+    clearAutoCompleteInput: function (event) {
       if (event.target) {
         event.target.value = ''
       }

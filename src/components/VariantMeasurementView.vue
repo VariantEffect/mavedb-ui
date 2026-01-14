@@ -62,6 +62,10 @@
                 </div>
               </div>
             </div>
+            <div v-if="gnomadAF != null && gnomadAF != 'NA'" class="mavedb-assay-facts-row">
+              <div class="mavedb-assay-facts-label">gnomAD Allele Frequency</div>
+              <div class="mavedb-assay-facts-value">{{ gnomadAF.toPrecision(4) }}</div>
+            </div>
           </div>
           <div class="mavedb-assay-facts-section-title">Classification</div>
           <div class="mavedb-assay-facts-section">
@@ -241,6 +245,9 @@ export default defineComponent({
       const strength = this.variantScoreRange.acmgClassification.evidenceStrength.toUpperCase()
       return `${criterion}_${strength}`
     },
+    gnomadAF() {
+      return this.variantScores?.gnomad?.gnomad_af
+    },
     evidenceCodeCssClass() {
       if (!this.variantScoreRange?.acmgClassification?.evidenceStrength) {
         return ''
@@ -335,7 +342,7 @@ export default defineComponent({
     scoreSetUrn: {
       handler: function (newValue, oldValue) {
         if (newValue != oldValue) {
-          const scoresUrl = newValue ? `${config.apiBaseUrl}/score-sets/${newValue}/variants/data` : null
+          const scoresUrl = newValue ? `${config.apiBaseUrl}/score-sets/${newValue}/variants/data?namespaces=scores&namespaces=gnomad` : null
           this.setScoresDataUrl(scoresUrl)
           this.ensureScoresDataLoaded()
         }

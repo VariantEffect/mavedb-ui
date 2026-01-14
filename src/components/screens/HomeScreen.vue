@@ -95,6 +95,20 @@
           <template #content>
             <ul class="ml-2 list-disc space-y-4">
               <li>
+                <p>
+                  MaveDB is an official
+                    <a href="https://catalog.igvf.org/" target="_blank">
+                      <img class="inline h-5 mb-1" alt="IGVF" src="@/assets/igvf-tag.png" />
+                    </a>
+                  Data Resource! You can now find data from MaveDB datasets in the
+                  <a href="https://catalog.igvf.org/" target="_blank">IGVF Data Catalog</a>.
+                </p>
+                <p>
+                  In addition, many MaveDB score sets now have links to view the corresponding raw data in the
+                  <a href="https://portal.igvf.org/" target="_blank">IGVF Data Portal</a>.
+                </p>
+              </li>
+              <li>
                 <p>Tracks for many score sets are now available on the UCSC Genome Browser.</p>
                 <p class="mt-2">
                   Example:

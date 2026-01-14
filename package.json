@@ -43,6 +43,8 @@
     "jsonpath-plus": "^10.3.0",
     "jsonwebtoken": "^9.0.2",
     "jszip": "^3.10.1",
+    "linkify-html": "^4.3.2",
+    "linkifyjs": "^4.3.2",
     "lodash": "^4.17.21",
     "marked": "^11.1.0",
     "moment": "^2.29.4",

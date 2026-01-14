@@ -150,7 +150,7 @@
 import _ from 'lodash'
 import {defineComponent, PropType} from 'vue'
 
-import {getScoreSetFirstAuthor} from '@/lib/score-sets'
+import {firstAuthorLastName} from '@/lib/score-sets'
 import {shortCitationForPublication} from '@/lib/publication'
 import type {components} from '@/schema/openapi'
 
@@ -172,8 +172,8 @@ export default defineComponent({
 
   computed: {
     firstAuthor: function () {
-      const firstAuthor = getScoreSetFirstAuthor(this.scoreSet)
-      return !firstAuthor || _.isEmpty(firstAuthor?.name) ? undefined : firstAuthor.name.split(',')[0]
+      const author = firstAuthorLastName(this.scoreSet)
+      return author ? author : null
     },
 
     numAuthors: function () {
@@ -285,42 +285,41 @@ export default defineComponent({
 /* Assay fact sheet layout */
 
 .mavedb-assay-facts-card {
-  width: 580px; /* fixed size */
+  width: 100%;
   border: 1px solid #000;
-  padding: 12px;
+  padding: 1em;
   font-family: sans-serif;
-  font-size: 14px;
-  line-height: 1.4;
+  line-height: 1.5;
+  box-sizing: border-box;
 }
 
 .mavedb-assay-facts-card-header {
   font-weight: bold;
-  border-bottom: 3px solid #000;
-  padding-bottom: 4px;
-  margin-bottom: 8px;
+  border-bottom: 0.19em solid #000;
+  padding-bottom: 0.25em;
+  margin-bottom: 0.5em;
 }
 
 .mavedb-assay-facts-section {
-  margin-bottom: 12px;
+  margin-bottom: 0.75em;
 }
 
 .mavedb-assay-facts-section-title {
   font-weight: bold;
-  margin: 6px 0;
-  border-top: 1px solid #3e3d3dbb;
-  padding-top: 4px;
-  font-size: 16px;
-  font-weight: bold;
+  margin: 0.375em 0;
+  border-top: 0.06em solid #3e3d3dbb;
+  padding-top: 0.5em;
+  font-size: 1.1em;
 }
 
 .mavedb-assay-facts-row {
   display: flex;
   justify-content: space-between;
-  margin: 2px 0;
+  margin: 0.125em 0;
 }
 
 .mavedb-assay-facts-bottom-separator {
-  border-bottom: 1px solid #3e3d3dbb;
+  border-bottom: 0.06em solid #3e3d3dbb;
 }
 
 /* Assay facts data */
@@ -338,14 +337,14 @@ export default defineComponent({
 
 .mavedb-assay-facts-value.yellow {
   background: #fef3c7;
-  padding: 2px 4px;
+  padding: 0.125em 0.25em;
   border-radius: 4px;
 }
 
 /* Heading */
 
 .mavedb-assay-facts-heading {
-  font-size: 21px;
+  font-size: 1.4em;
 }
 
 .mavedb-assay-facts-heading-et-al,
@@ -358,11 +357,11 @@ export default defineComponent({
 .mavedb-classification-badge {
   position: absolute;
   left: 6em;
-  padding: 2px 6px;
-  border-radius: 4px;
-  font-size: 12px;
+  padding: 0.125em 0.375em;
+  border-radius: 0.25em;
+  font-size: 0.75em;
   font-weight: bold;
-  margin-left: 4px;
+  margin-left: 0.25em;
 }
 
 .mavedb-classification-badge.mavedb-blue {

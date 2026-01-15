@@ -167,10 +167,15 @@ export default {
             }
           }
           const meanScore = scoreSum / scoreCount
-          _.set(this.selectionData, [x - 1, _.camelCase(groupCode)], {
-            score: meanScore,
-            color: _.isNumber(meanScore) ? this.rgbToHex(heatmapColorScale(meanScore)) : '#000'
-          })
+
+          // x should correspond to residue position when properly mapped
+          const selectionDatum = _.find(this.selectionData, (d) => d.start_residue_number === x)
+          if (selectionDatum) {
+            _.set(selectionDatum, _.camelCase(groupCode), {
+              score: meanScore,
+              color: _.isNumber(meanScore) ? this.rgbToHex(heatmapColorScale(meanScore)) : '#000'
+            })
+          }
         }
         this.rowGroupSelected = {
           label: groupCode,

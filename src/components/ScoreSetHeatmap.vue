@@ -1273,7 +1273,7 @@ export default defineComponent({
         .accessorField(this.accession)
         .tooltipHtml(this.tooltipHtmlGetter)
         .tooltipTickLabelHtml(this.sequenceType == 'protein' ? this.tooltipTickLabelHtmlGetter : null)
-        .pivotColor('#f7f7f7')
+        .pivotColor('#e0e0e0')
         .lowerBoundColor('#762a83')
         .upperBoundColor('#1b7837')
         .datumSelected(this.variantSelected)

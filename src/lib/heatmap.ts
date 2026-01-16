@@ -597,10 +597,46 @@ export default function makeHeatmap(): Heatmap {
       heatmapNodesElemDOMMatrix = heatmapNodesElem.getScreenCTM()!.inverse()
 
       const startNode = svg.select(`g.heatmap-nodes`).select(`rect.node-${start.x}-${start.y}`).node() as Element
-      const startNodeBoundingRect = startNode.getBoundingClientRect()
+      let startNodeBoundingRect: DOMRect
+      if (startNode) {
+        startNodeBoundingRect = startNode.getBoundingClientRect()
+      } else {
+        // Calculate position using scales when node doesn't exist
+        const calculatedX = xScale(start.x) || 0
+        const calculatedY = yScale(start.y) || 0
+        const containerRect = heatmapNodesElemBoundingRect!
+        startNodeBoundingRect = {
+          x: containerRect.left + calculatedX,
+          y: containerRect.top + calculatedY,
+          width: xScale.bandwidth(),
+          height: yScale.bandwidth(),
+          top: containerRect.top + calculatedY,
+          bottom: containerRect.top + calculatedY + yScale.bandwidth(),
+          left: containerRect.left + calculatedX,
+          right: containerRect.left + calculatedX + xScale.bandwidth()
+        } as DOMRect
+      }
 
       const endNode = svg.select(`g.heatmap-nodes`).select(`rect.node-${end.x}-${end.y}`).node() as Element
-      const endNodeBoundingRect = endNode.getBoundingClientRect()
+      let endNodeBoundingRect: DOMRect
+      if (endNode) {
+        endNodeBoundingRect = endNode.getBoundingClientRect()
+      } else {
+        // Calculate position using scales when node doesn't exist
+        const calculatedX = xScale(end.x) || 0
+        const calculatedY = yScale(end.y) || 0
+        const containerRect = heatmapNodesElemBoundingRect!
+        endNodeBoundingRect = {
+          x: containerRect.left + calculatedX,
+          y: containerRect.top + calculatedY,
+          width: xScale.bandwidth(),
+          height: yScale.bandwidth(),
+          top: containerRect.top + calculatedY,
+          bottom: containerRect.top + calculatedY + yScale.bandwidth(),
+          left: containerRect.left + calculatedX,
+          right: containerRect.left + calculatedX + xScale.bandwidth()
+        } as DOMRect
+      }
 
       const startY = rangeSelectionMode == 'column' ? heatmapNodesElemBoundingRect?.top : startNodeBoundingRect.y
       const startX = rangeSelectionMode == 'row' ? heatmapNodesElemBoundingRect?.left : startNodeBoundingRect.x

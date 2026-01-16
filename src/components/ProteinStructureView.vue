@@ -67,6 +67,10 @@ export default {
     residueTooltips: {
       type: Array,
       default: () => []
+    },
+    nonSelectedColor: {
+      type: String,
+      default: '#FFFFFF'
     }
   },
 
@@ -170,7 +174,8 @@ export default {
   watch: {
     colorBy: {
       handler: function () {
-        if (this.viewerInstance) this.viewerInstance.visual.select({data: this.selectionDataWithSelectedColorBy})
+        console.log(this.selectionDataWithSelectedColorBy)
+        if (this.viewerInstance) this.viewerInstance.visual.select({data: this.selectionDataWithSelectedColorBy, nonSelectedColor: this.nonSelectedColor})
       }
     },
     selectedResidueRanges: {
@@ -182,7 +187,7 @@ export default {
             color: null,
             focus: true
           }))
-          this.viewerInstance.visual.select({data: [...this.selectionDataWithSelectedColorBy, ...selectedRanges]})
+          this.viewerInstance.visual.select({data: [...this.selectionDataWithSelectedColorBy, ...selectedRanges], nonSelectedColor: this.nonSelectedColor})
           this.viewerInstance.visual.highlight({
             data: selectedRanges
           })
@@ -275,7 +280,8 @@ export default {
           landscape: true,
           highlightColor: '#ffffff',
           selection: {
-            data: this.selectionDataWithSelectedColorBy
+            data: this.selectionDataWithSelectedColorBy,
+            nonSelectedColor: this.nonSelectedColor,
           },
           selectInteraction: false
         }

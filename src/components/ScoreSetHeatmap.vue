@@ -37,7 +37,7 @@
           ]"
         />
         <Button
-          v-if="showProteinStructureButton && sequenceType == 'protein'"
+          v-if="showProteinStructureButton && sequenceType == 'protein' && coordinates == 'mapped'"
           label="View protein structure"
           @click="$emit('onDidClickShowProteinStructure')"
         />

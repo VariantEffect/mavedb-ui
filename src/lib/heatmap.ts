@@ -506,17 +506,21 @@ export default function makeHeatmap(): Heatmap {
 
       // top left coordinates of the selection rectangle in heatmap coordinates.
       const rangeStart = {
-        x: Math.floor((heatmapSelectionBBox.x + xOffsetNodeMidpoint) / xScaleStep) + 1,
-        y: Math.floor((heatmapSelectionBBox.y + yOffsetNodeMidpoint) / yScaleStep) + 1
+        x: Math.floor((heatmapSelectionBBox.x + xOffsetNodeMidpoint) / xScaleStep),
+        y: Math.floor((heatmapSelectionBBox.y + yOffsetNodeMidpoint) / yScaleStep)
       }
       // bottom right coordinates of the selection rectangle in heatmap coordinates.
       const rangeEnd = {
-        x: Math.floor((heatmapSelectionBBox.x + heatmapSelectionBBox.width - xOffsetNodeMidpoint) / xScaleStep) + 1,
-        y: Math.floor((heatmapSelectionBBox.y + heatmapSelectionBBox.height - yOffsetNodeMidpoint) / yScaleStep) + 1
+        x: Math.floor((heatmapSelectionBBox.x + heatmapSelectionBBox.width - xOffsetNodeMidpoint) / xScaleStep),
+        y: Math.floor((heatmapSelectionBBox.y + heatmapSelectionBBox.height - yOffsetNodeMidpoint) / yScaleStep)
       }
 
       if (rangeSelectionMode == 'column' && columnRangesSelected) {
-        columnRangesSelected([{start: rangeStart.x, end: rangeEnd.x}])
+        // convert rangeStart.x and rangeEnd.x to corresponding domain values
+        const startDomainValue = (idxLowerBound || 0) + rangeStart.x
+        const endDomainValue = (idxLowerBound || 0) + rangeEnd.x
+
+        columnRangesSelected([{start: startDomainValue, end: endDomainValue}])
       }
     }
     selectionStartPoint = null

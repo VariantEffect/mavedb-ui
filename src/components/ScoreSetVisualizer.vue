@@ -126,11 +126,9 @@ export default {
       // console.log('didHighlightResidue', residueNumber)
     },
     didSelectHeatmapResidues: function (ranges) {
-      // ranges are 1-based indices of selectionData
-      // convert to residue numbers for correct range values to highlight on protein structure
       const newRanges = ranges.map((r) => ({
-        start: _.get(this.selectionData, [r.start - 1, 'start_residue_number']),
-        end: _.get(this.selectionData, [r.end - 1, 'end_residue_number'])
+        start: r.start,
+        end: r.end
       }))
 
       this.selectedResidueRanges = newRanges

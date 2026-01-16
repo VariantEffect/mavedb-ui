@@ -19,7 +19,7 @@
         :options="colorByOptions"
       />
     </div>
-    <div v-show="selectedAlphaFold" id="pdbe-molstar-viewer-container" class="flex-1 relative"></div>
+    <div v-show="selectedAlphaFold" id="pdbe-molstar-viewer-container" class="flex-1 relative z-5000"></div>
     <div v-if="!selectedAlphaFold" class="m-auto">
       No AlphaFold entry found
     </div>
@@ -174,7 +174,6 @@ export default {
   watch: {
     colorBy: {
       handler: function () {
-        console.log(this.selectionDataWithSelectedColorBy)
         if (this.viewerInstance) this.viewerInstance.visual.select({data: this.selectionDataWithSelectedColorBy, nonSelectedColor: this.nonSelectedColor})
       }
     },

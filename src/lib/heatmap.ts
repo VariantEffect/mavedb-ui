@@ -62,6 +62,8 @@ export interface HeatmapColorScaleControlPoint {
 export interface HeatmapContent {
   [key: number]: MappedDatum
   columns?: number
+  xMin?: number
+  xMax?: number
 }
 
 export interface Heatmap {
@@ -225,7 +227,9 @@ export default function makeHeatmap(): Heatmap {
 
   // Content
   let content: HeatmapContent = {
-    columns: undefined
+    columns: undefined,
+    xMin: undefined,
+    xMax: undefined
   }
   let filteredData: HeatmapDatum[] = []
   let lowerBound: number | null = null
@@ -322,8 +326,12 @@ export default function makeHeatmap(): Heatmap {
     }
     if (xMin != undefined && xMax != undefined) {
       content.columns = xMax - xMin + 1
+      content.xMin = xMin
+      content.xMax = xMax
     } else {
       content.columns = 0
+      content.xMin = undefined
+      content.xMax = undefined
     }
     buildColorScale()
   }
@@ -591,7 +599,10 @@ export default function makeHeatmap(): Heatmap {
 
     if (svg) {
       svg.select('g.heatmap-selection-rectangle').selectAll('rect').remove()
-
+      // if start.x or end.x is outside content xMin/xMax, do not draw selection rectangle
+      if (!content.xMin || !content.xMax || !_.inRange(start.x, content.xMin, content.xMax + 1) || !_.inRange(end.x, content.xMin, content.xMax + 1)) {
+        return
+      }
       const heatmapNodesElem = svg.select('g.heatmap-nodes').node() as SVGGraphicsElement
       heatmapNodesElemBoundingRect = heatmapNodesElem.getBoundingClientRect()
       heatmapNodesElemDOMMatrix = heatmapNodesElem.getScreenCTM()!.inverse()
@@ -999,7 +1010,7 @@ export default function makeHeatmap(): Heatmap {
       }
       data = []
       filteredData = []
-      content = {columns: undefined}
+      content = {columns: undefined, xMin: undefined, xMax: undefined}
     },
 
     render: (container: HTMLElement, wrapper?: HTMLElement) => {

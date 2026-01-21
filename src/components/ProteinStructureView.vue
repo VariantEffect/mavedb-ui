@@ -153,7 +153,7 @@ export default {
       return _.map(this.selectionData, (x) => ({
         start_residue_number: x.start_residue_number,
         end_residue_number: x.end_residue_number,
-        color: _.get(x, this.colorBy, '#000')
+        color: _.get(x, this.colorBy, '#ffffff')
       }))
     },
     alphaFoldData: function () {

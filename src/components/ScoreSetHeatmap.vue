@@ -37,7 +37,7 @@
           ]"
         />
         <Button
-          v-if="showProteinStructureButton && sequenceType == 'protein' && coordinates == 'mapped'"
+          v-if="showProteinStructureButton && sequenceType == 'protein' && (targetType == 'accession' || (coordinates == 'mapped' && hgvsProColumn == 'post_mapped_hgvs_p'))"
           label="View protein structure"
           @click="$emit('onDidClickShowProteinStructure')"
         />

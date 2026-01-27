@@ -13,8 +13,7 @@ To report issues or request new features, please use the `MaveDB issue tracker`_
 .. toctree::
    :maxdepth: 2
 
-   .. getting_started
-   
+   getting_started
    accounts
    record_types/index
    targets
@@ -29,6 +28,7 @@ To report issues or request new features, please use the `MaveDB issue tracker`_
    output_formats
    collections
    assay_facts
+   mavemd/index
    visualizations
    api/index
    external_integrations

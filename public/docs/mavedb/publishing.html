@@ -5,17 +5,17 @@
     <meta charset="utf-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" /><meta name="viewport" content="width=device-width, initial-scale=1" />
 
-    <title>Making your data public &#8212; MaveDB 2023.2.0 documentation</title>
+    <title>Making your data public &#8212; MaveDB 2025.5.2 documentation</title>
     <link rel="stylesheet" type="text/css" href="_static/pygments.css?v=4848ba22" />
     <link rel="stylesheet" type="text/css" href="_static/pyramid.css?v=a5b9c134" />
     <link rel="stylesheet" type="text/css" href="_static/graphviz.css?v=eafc0fe6" />
     <link rel="stylesheet" type="text/css" href="_static/styles.css?v=1cacb62a" />
-    <script src="_static/documentation_options.js?v=953b8078"></script>
+    <script src="_static/documentation_options.js?v=ea53f692"></script>
     <script src="_static/doctools.js?v=888ff710"></script>
     <script src="_static/sphinx_highlight.js?v=dc90522c"></script>
     <link rel="index" title="Index" href="genindex.html" />
     <link rel="search" title="Search" href="search.html" />
-    <link rel="next" title="Record types" href="record_types.html" />
+    <link rel="next" title="Data Set Search" href="data_set_search.html" />
     <link rel="prev" title="Depositing your data into MaveDB" href="upload_guide.html" />
 <link rel="stylesheet" href="https://fonts.googleapis.com/css?family=Neuton&amp;subset=latin" type="text/css" media="screen" charset="utf-8" />
 <link rel="stylesheet" href="https://fonts.googleapis.com/css?family=Nobile:regular,italic,bold,bolditalic&amp;subset=latin" type="text/css" media="screen" charset="utf-8" />
@@ -32,12 +32,12 @@
           <a href="genindex.html" title="General Index"
              accesskey="I">index</a></li>
         <li class="right" >
-          <a href="record_types.html" title="Record types"
+          <a href="data_set_search.html" title="Data Set Search"
              accesskey="N">next</a> |</li>
         <li class="right" >
           <a href="upload_guide.html" title="Depositing your data into MaveDB"
              accesskey="P">previous</a> |</li>
-        <li class="nav-item nav-item-0"><a href="index.html">MaveDB 2023.2.0 documentation</a> &#187;</li>
+        <li class="nav-item nav-item-0"><a href="index.html">MaveDB 2025.5.2 documentation</a> &#187;</li>
         <li class="nav-item nav-item-this"><a href="">Making your data public</a></li> 
       </ul>
     </div>  
@@ -49,18 +49,49 @@
             
   <section id="making-your-data-public">
 <h1>Making your data public<a class="headerlink" href="#making-your-data-public" title="Link to this heading">¶</a></h1>
-<p>When first created, records are given a <a class="reference internal" href="accession_numbers.html#temporary-accession-numbers"><span class="std std-ref">temporary accession number</span></a>
+<p id="publishing-data">When first created, records are given a <a class="reference internal" href="accession_numbers.html#temporary-accession-numbers"><span class="std std-ref">temporary accession number</span></a>
 beginning with <code class="docutils literal notranslate"><span class="pre">tmp:</span></code> instead of <code class="docutils literal notranslate"><span class="pre">urn:mavedb:</span></code>.</p>
-<p>Temporary records are only visible to the uploader.
-If you want to access these datasets via API, you can create an API key on your user profile page.</p>
-<p>When the record is ready to be made public, you can click on the padlock icon to “publish” the record.
-Note that when the data is published, several fields (including the target sequence, scores, and counts)
-will become un-editable.
-Most free-text metadata can still be revised after the dataset becomes public,
+<p>Temporary records are only visible to the uploader and to any <a class="reference internal" href="record_types/metadata_guide.html#contributors"><span class="std std-ref">contributors</span></a> that
+have been added to the record.
+If you want to access these datasets via API, you can create an API key on your user profile page to enable authentication.</p>
+<p>When the record is ready to be made public, you can click on the padlock icon to “publish” the record.</p>
+<div class="admonition warning">
+<p class="admonition-title">Warning</p>
+<p>Once a record is published, it cannot be unpublished. If you need to fix errors in a dataset after publication,
+see: <a class="reference internal" href="#deprecating-score-sets"><span class="std std-ref">Deprecating score sets</span></a>.</p>
+</div>
+<p>Once the data is published, several fields (including the <a class="reference internal" href="targets.html#targets"><span class="std std-ref">target</span></a>, scores, and counts)
+will become un-editable. However, most free-text metadata can still be revised after the dataset becomes public,
 and changes to these fields are tracked.</p>
+<div class="admonition note">
+<p class="admonition-title">Note</p>
+<p>Score sets are the only record type that can be published. When the first score set associated with an experiment
+is published, the associated experiment and experiment set will also become public.</p>
+</div>
+<section id="data-licensing">
+<span id="end-publishing-data"></span><h2>Data licensing<a class="headerlink" href="#data-licensing" title="Link to this heading">¶</a></h2>
+<p>When uploading score set information to the database, the user can choose one of three licenses:</p>
+<ul class="simple">
+<li><p><a class="reference external" href="https://creativecommons.org/publicdomain/zero/1.0/">CC0 (Public domain)</a></p></li>
+<li><p><a class="reference external" href="https://creativecommons.org/licenses/by/4.0/">CC BY 4.0 (Attribution) license</a></p></li>
+<li><p><a class="reference external" href="https://creativecommons.org/licenses/by-sa/4.0/">CC BY-SA 4.0 (Attribution-ShareAlike)</a></p></li>
+</ul>
+<div class="admonition note">
+<p class="admonition-title">Note</p>
+<p>Only datasets licensed under CC0 will be included as part of the <a class="reference internal" href="bulk_downloads.html#bulk-downloads"><span class="std std-ref">bulk download archive</span></a>.</p>
+</div>
+<p>By default, new score sets will have the CC0 license.
+The license can be changed after publication, but previously downloaded copies of the dataset will retain the license
+they were downloaded under.
+The license is listed in the header of downloaded CSV files and also in the API.</p>
+<p>Users also have the option of adding a free-text data usage policy to a score set, such as terms that dictate use of
+pre-publication data.
+For example, data producers may wish to assert their right to publish the results of certain analyses first.
+The data usage policy will be added to the header of any downloaded data files if one is present.</p>
+</section>
 <section id="deprecating-score-sets">
 <h2>Deprecating score sets<a class="headerlink" href="#deprecating-score-sets" title="Link to this heading">¶</a></h2>
-<p>If you need to fix an error after a dataset becomes public and is no longer editable,
+<p id="deprecating-data">If you need to fix an error after a dataset becomes public and is no longer editable,
 MaveDB supports the deprecation of score sets.
 When creating a new score set, the user can specify an existing score set to replace.</p>
 </section>
@@ -77,6 +108,7 @@ When creating a new score set, the user can specify an existing score set to rep
     <h3><a href="index.html">Table of Contents</a></h3>
     <ul>
 <li><a class="reference internal" href="#">Making your data public</a><ul>
+<li><a class="reference internal" href="#data-licensing">Data licensing</a></li>
 <li><a class="reference internal" href="#deprecating-score-sets">Deprecating score sets</a></li>
 </ul>
 </li>
@@ -90,8 +122,8 @@ When creating a new score set, the user can specify an existing score set to rep
   </div>
   <div>
     <h4>Next topic</h4>
-    <p class="topless"><a href="record_types.html"
-                          title="next chapter">Record types</a></p>
+    <p class="topless"><a href="data_set_search.html"
+                          title="next chapter">Data Set Search</a></p>
   </div>
   <div role="note" aria-label="source link">
     <h3>This Page</h3>
@@ -121,17 +153,17 @@ When creating a new score set, the user can specify an existing score set to rep
           <a href="genindex.html" title="General Index"
              >index</a></li>
         <li class="right" >
-          <a href="record_types.html" title="Record types"
+          <a href="data_set_search.html" title="Data Set Search"
              >next</a> |</li>
         <li class="right" >
           <a href="upload_guide.html" title="Depositing your data into MaveDB"
              >previous</a> |</li>
-        <li class="nav-item nav-item-0"><a href="index.html">MaveDB 2023.2.0 documentation</a> &#187;</li>
+        <li class="nav-item nav-item-0"><a href="index.html">MaveDB 2025.5.2 documentation</a> &#187;</li>
         <li class="nav-item nav-item-this"><a href="">Making your data public</a></li> 
       </ul>
     </div>
     <div class="footer" role="contentinfo">
-    &#169; Copyright 2017-2023, Alan F Rubin et al..
+    &#169; Copyright 2017-2025, MaveDB Developers.
       Created using <a href="https://www.sphinx-doc.org/">Sphinx</a> 7.2.6.
     </div>
   </body>

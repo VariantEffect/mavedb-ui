@@ -1,0 +1,502 @@
+<!DOCTYPE html>
+
+<html lang="en" data-content_root="../">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" /><meta name="viewport" content="width=device-width, initial-scale=1" />
+
+    <title>Data set metadata and properties &#8212; MaveDB 2025.5.2 documentation</title>
+    <link rel="stylesheet" type="text/css" href="../_static/pygments.css?v=4848ba22" />
+    <link rel="stylesheet" type="text/css" href="../_static/pyramid.css?v=a5b9c134" />
+    <link rel="stylesheet" type="text/css" href="../_static/graphviz.css?v=eafc0fe6" />
+    <link rel="stylesheet" type="text/css" href="../_static/styles.css?v=1cacb62a" />
+    <script src="../_static/documentation_options.js?v=ea53f692"></script>
+    <script src="../_static/doctools.js?v=888ff710"></script>
+    <script src="../_static/sphinx_highlight.js?v=dc90522c"></script>
+    <link rel="index" title="Index" href="../genindex.html" />
+    <link rel="search" title="Search" href="../search.html" />
+    <link rel="next" title="Targets" href="../targets.html" />
+    <link rel="prev" title="Score sets" href="score_sets.html" />
+<link rel="stylesheet" href="https://fonts.googleapis.com/css?family=Neuton&amp;subset=latin" type="text/css" media="screen" charset="utf-8" />
+<link rel="stylesheet" href="https://fonts.googleapis.com/css?family=Nobile:regular,italic,bold,bolditalic&amp;subset=latin" type="text/css" media="screen" charset="utf-8" />
+<!--[if lte IE 6]>
+<link rel="stylesheet" href="../_static/ie6.css" type="text/css" media="screen" charset="utf-8" />
+<![endif]-->
+
+  </head><body>
+
+    <div class="related" role="navigation" aria-label="related navigation">
+      <h3>Navigation</h3>
+      <ul>
+        <li class="right" style="margin-right: 10px">
+          <a href="../genindex.html" title="General Index"
+             accesskey="I">index</a></li>
+        <li class="right" >
+          <a href="../targets.html" title="Targets"
+             accesskey="N">next</a> |</li>
+        <li class="right" >
+          <a href="score_sets.html" title="Score sets"
+             accesskey="P">previous</a> |</li>
+        <li class="nav-item nav-item-0"><a href="../index.html">MaveDB 2025.5.2 documentation</a> &#187;</li>
+          <li class="nav-item nav-item-1"><a href="index.html" accesskey="U">Record types</a> &#187;</li>
+        <li class="nav-item nav-item-this"><a href="">Data set metadata and properties</a></li> 
+      </ul>
+    </div>  
+
+    <div class="document">
+      <div class="documentwrapper">
+        <div class="bodywrapper">
+          <div class="body" role="main">
+            
+  <section id="data-set-metadata-and-properties">
+<h1>Data set metadata and properties<a class="headerlink" href="#data-set-metadata-and-properties" title="Link to this heading">¶</a></h1>
+<p id="data-set-metadata-intro">MaveDB experiment and score set records include required and optional metadata fields
+to describe the data being deposited.
+These metadata fields are described in detail below, along with formatting guidelines and a checklist of required information.</p>
+<section id="free-text-metadata">
+<span id="shared-metadata"></span><span id="end-data-set-metadata-intro"></span><h2>Free text metadata<a class="headerlink" href="#free-text-metadata" title="Link to this heading">¶</a></h2>
+<p id="id1">Experiments and score sets both have descriptive free text fields.
+These are the title, short description, abstract, and methods.</p>
+<div class="admonition note">
+<p class="admonition-title">Note</p>
+<p>These four fields are required when uploading an experiment or score set.</p>
+</div>
+<p>While the title and short description are plain text, the abstract and methods support
+<a class="reference external" href="https://daringfireball.net/projects/markdown/">Markdown</a> formatting with embedded equations using
+<a class="reference external" href="https://www.w3.org/Math/">MathML</a>, converted using <a class="reference external" href="https://pandoc.org/">Pandoc</a>.</p>
+<dl>
+<dt>Title</dt><dd><p>The title of the experiment or score set, to be displayed at the top of the record page.</p>
+</dd>
+<dt>Short description</dt><dd><p>The short description is displayed in the search results table. It should summarize the entry at a high level in one
+or two sentences.</p>
+</dd>
+<dt>Abstract</dt><dd><p>The abstract should describe the motivation and approach for the dataset.
+Some MaveDB abstracts include a summary of the results of the related publications but many do not.
+The entry describes the MAVE data rather than a full study so the submitter should use their judgement when deciding
+what details are most relevant.</p>
+<div class="admonition note">
+<p class="admonition-title">Note</p>
+<p>It is common that experiments and score sets share the same abstract text if they are from the same study.</p>
+</div>
+</dd>
+<dt>Methods</dt><dd><p>The methods section should describe the approach in a condensed form,
+suitable for a specialist audience of MAVE researchers. The methods section for experiments and score sets
+have different recommended content, as described below.</p>
+<p>For an experiment, the methods section should include:</p>
+<ul class="simple">
+<li><p>Variant library construction methods</p></li>
+<li><p>Description of the functional assay, including model system and selection type</p></li>
+<li><p>Sequencing strategy and sequencing technology</p></li>
+<li><p>Structure of biological or technical replicates (if applicable)</p></li>
+</ul>
+<p>For a score set, the methods section should include:</p>
+<ul class="simple">
+<li><p>Sequence read filtering approach</p></li>
+<li><p>Description of the statistical model for converting counts to scores, including normalization</p></li>
+<li><p>Description of additional data columns included in the score or count tables, including column naming conventions</p></li>
+<li><p>Details of how replicates were combined (if applicable)</p></li>
+</ul>
+<p>For a meta-analysis score set, the methods section should include:</p>
+<ul class="simple">
+<li><p>Description of the statistical model for converting the linked scores or counts into the scores presented</p></li>
+<li><p>Description of additional data columns included in the score or count tables, including column naming conventions</p></li>
+</ul>
+</dd>
+</dl>
+</section>
+<section id="digital-object-identifiers-dois">
+<span id="end-free-text-metadata"></span><h2>Digital Object Identifiers (DOIs)<a class="headerlink" href="#digital-object-identifiers-dois" title="Link to this heading">¶</a></h2>
+<p id="digital-object-identifiers">You may include a list of <a class="reference external" href="https://www.doi.org/">DOIs</a> for any digital resources associated with the experiment or score set.
+You might use this field to link to datasets stored in other repositories, code repositories containing analysis pipelines, etc.</p>
+<div class="admonition warning">
+<p class="admonition-title">Warning</p>
+<p>DOIs for publications should not be provided here; instead, they should be included in the publication identifiers section.</p>
+</div>
+</section>
+<section id="publication-details">
+<span id="end-digital-object-identifiers"></span><h2>Publication details<a class="headerlink" href="#publication-details" title="Link to this heading">¶</a></h2>
+<p id="id2">Publications can be included by entering their <a class="reference external" href="https://pubmed.ncbi.nlm.nih.gov/">PubMed ID</a>, <a class="reference external" href="https://www.biorxiv.org/">bioRxiv ID</a>,
+<a class="reference external" href="https://www.medrxiv.org/">medRxiv ID</a>, or <a class="reference external" href="https://www.doi.org/">DOI</a> and they will appear as formatted references.</p>
+<p>You will also have the option to indicate a primary publication for the experiment or score set. This publication will be more prominently displayed
+and should describe the research contribution to which this experiment or score set is most closely related.</p>
+<div class="admonition note">
+<p class="admonition-title">Note</p>
+<p>Publications included in an experiment will be automatically linked to score sets associated with that experiment.</p>
+</div>
+</section>
+<section id="contributors">
+<span id="end-publication-details"></span><h2>Contributors<a class="headerlink" href="#contributors" title="Link to this heading">¶</a></h2>
+<p id="data-set-contributors">When a record in MaveDB is created and assigned a temporary accession number,
+it is only accessible to the “owner” user.</p>
+<p>The owner can add additional users to the record by editing the record and
+specifying that user’s <a class="reference external" href="https://orcid.org/">ORCID iD</a> in the Contributors field.
+The prospective contributor must have logged into MaveDB at least once.</p>
+<div class="admonition note">
+<p class="admonition-title">Note</p>
+<p>Contributors added to a dataset will not automatically be added as contributors to associated records.
+You will need to add them separately in each record form.</p>
+<p>For instance, contributors added to an experiment will not automatically be added as contributors to associated score sets, nor will
+contributors added to a score set be added to the associated experiment. You will need to add them separately in each record form.</p>
+</div>
+<p>Contributors have the same permissions on the dataset as the owner, with the exception that
+users added to a record as contributors will not be able to delete the record. This permission is reserved
+for the record owner and MaveDB administrators only.</p>
+</section>
+<section id="optional-structured-metadata">
+<span id="end-data-set-contributors"></span><h2>Optional structured metadata<a class="headerlink" href="#optional-structured-metadata" title="Link to this heading">¶</a></h2>
+<p id="id3">Data sets also support the inclusion of optional <a class="reference external" href="https://www.json.org/">JSON</a>-formatted metadata.
+This can be used to describe features like genomic coordinates for a target sequence or score cutoff ranges that the
+uploader would like to be more easily machine-readable than if this information was included in free text.</p>
+<p>If optional metadata is included, the uploader should describe it in the score set methods.</p>
+</section>
+<section id="experiment-specific-metadata">
+<span id="end-shared-metadata"></span><span id="end-optional-structured-metadata"></span><h2>Experiment specific metadata<a class="headerlink" href="#experiment-specific-metadata" title="Link to this heading">¶</a></h2>
+<p id="id4">In addition to the shared metadata fields described above, experiments also support the following specific metadata fields:</p>
+<section id="raw-data-accessions">
+<h3>Raw data accessions<a class="headerlink" href="#raw-data-accessions" title="Link to this heading">¶</a></h3>
+<p id="id5">Experimenters are encouraged to deposit their raw sequence data in a public repository and link it to the relevant
+experiment record(s).</p>
+<p>MaveDB currently supports accession numbers for:</p>
+<ul class="simple">
+<li><p><a class="reference external" href="https://www.ebi.ac.uk/arrayexpress/">ArrayExpress</a></p></li>
+<li><p><a class="reference external" href="https://www.ncbi.nlm.nih.gov/bioproject/">BioProject</a></p></li>
+<li><p><a class="reference external" href="https://www.ncbi.nlm.nih.gov/geo/">Gene Expression Omnibus</a></p></li>
+<li><p><a class="reference external" href="https://www.ncbi.nlm.nih.gov/sra">Sequence Read Archive</a></p></li>
+</ul>
+<p>Raw data that is stored elsewhere may be included via the DOI field.</p>
+</section>
+<section id="keywords">
+<span id="end-raw-data-accessions"></span><h3>Keywords<a class="headerlink" href="#keywords" title="Link to this heading">¶</a></h3>
+<p id="controlled-keywords">Experiments may be tagged with optional, <a class="reference internal" href="../controlled_vocabulary.html#mave-controlled-vocabulary"><span class="std std-ref">controlled keywords</span></a>.</p>
+<p>These keywords improve searchability of the records within MaveDB and facilitate the generation of
+<a class="reference internal" href="../assay_facts.html#assay-facts"><span class="std std-ref">assay facts</span></a> summaries.</p>
+<div class="admonition note">
+<p class="admonition-title">Note</p>
+<p>While keywords are optional, we strongly encourage you to include them when uploading an experiment or score set
+given the contextual benefits they provide.</p>
+<p>In a future release, providing a minimal set of controlled keywords may become a requirement for uploading new records.</p>
+</div>
+</section>
+</section>
+<section id="score-set-specific-metadata">
+<span id="end-experiment-metadata"></span><span id="end-controlled-keywords"></span><h2>Score set specific metadata<a class="headerlink" href="#score-set-specific-metadata" title="Link to this heading">¶</a></h2>
+<p id="id6">In addition to the shared metadata fields described above, score sets also support the following specific metadata fields:</p>
+<section id="licenses">
+<h3>Licenses<a class="headerlink" href="#licenses" title="Link to this heading">¶</a></h3>
+<p id="data-licensing">When uploading score set information to the database, the user can choose one of three licenses:</p>
+<ul class="simple">
+<li><p><a class="reference external" href="https://creativecommons.org/publicdomain/zero/1.0/">CC0 (Public domain)</a></p></li>
+<li><p><a class="reference external" href="https://creativecommons.org/licenses/by/4.0/">CC BY 4.0 (Attribution) license</a></p></li>
+<li><p><a class="reference external" href="https://creativecommons.org/licenses/by-sa/4.0/">CC BY-SA 4.0 (Attribution-ShareAlike)</a></p></li>
+</ul>
+<div class="admonition note">
+<p class="admonition-title">Note</p>
+<p>Only datasets licensed under CC0 will be included as part of the <a class="reference internal" href="../bulk_downloads.html#bulk-downloads"><span class="std std-ref">bulk download archive</span></a>.</p>
+</div>
+<p>By default, new score sets will have the CC0 license.
+The license can be changed after publication, but previously downloaded copies of the dataset will retain the license
+they were downloaded under.
+The license is listed in the header of downloaded CSV files and also in the API.</p>
+<p>Users also have the option of adding a free-text data usage policy to a score set, such as terms that dictate use of
+pre-publication data.
+For example, data producers may wish to assert their right to publish the results of certain analyses first.
+The data usage policy will be added to the header of any downloaded data files if one is present.</p>
+</section>
+<section id="score-set-targets">
+<span id="end-data-licensing"></span><h3>Score set targets<a class="headerlink" href="#score-set-targets" title="Link to this heading">¶</a></h3>
+<p>All variants in a MaveDB <a class="reference internal" href="score_sets.html#score-sets"><span class="std std-ref">score set</span></a> are described relative to a target. This target
+should describe the sequence that was mutagenized to create the variant library. MaveDB supports two types
+of targets: <a class="reference internal" href="../targets.html#sequence-based-targets"><span class="std std-ref">sequence-based targets</span></a> and <a class="reference internal" href="../targets.html#accession-based-targets"><span class="std std-ref">accession-based targets</span></a>.</p>
+<p>Each score set in MaveDB must be associated with at least one target. Certain experiments may
+describe variants relative to two or more distinct sequences, such as protein-protein interaction assays
+that measure the effects of variants in both interacting proteins. In these cases, multiple targets may be
+associated with a single score set.</p>
+</section>
+<section id="calibrations">
+<h3>Calibrations<a class="headerlink" href="#calibrations" title="Link to this heading">¶</a></h3>
+<p>Score calibrations in MaveDB provide a way to give additional context to variant effect scores by mapping them to known reference points.
+This helps users interpret the scores in a biologically meaningful way. A score calibration consists of four parts: a baseline score,
+a set of classifications, a set of evidence strength and a calibration metadata.</p>
+<section id="baseline-score">
+<span id="end-score-calibrations-intro"></span><h4>Baseline score<a class="headerlink" href="#baseline-score" title="Link to this heading">¶</a></h4>
+<p id="score-calibrations-baseline-score">The baseline score represents the expected score for a variant that has no effect on the phenotype being measured. This score serves as a reference point for interpreting other variant effect scores in the dataset.
+The baseline score is typically derived from known neutral variants or from the distribution of scores in the dataset, and may also be described as the “wild-type” or “reference” score.</p>
+<p>The baseline score should be provided as a numeric value along with a description of how it was determined. For example, if the baseline score is derived from the average score of known synonymous variants, this should be noted in the description.
+MaveDB will use the baseline score in the heatmap in order to set the color scale, and it will be displayed along with the calibration information in the score set details.</p>
+</section>
+<section id="functional-classifications">
+<span id="end-score-calibrations-baseline-score"></span><h4>Functional classifications<a class="headerlink" href="#functional-classifications" title="Link to this heading">¶</a></h4>
+<p id="score-calibrations-functional-classifications">Functional classifications provide a way to categorize variants based on their effect scores. These classifications help users understand the biological significance of the scores and facilitate comparisons between different variants.
+MaveDB supports a controlled vocabulary for functional classifications, which includes the following terms:</p>
+<ul class="simple">
+<li><p><strong>Normal</strong>: Indicates that the variant has no significant effect on the phenotype.</p></li>
+<li><p><strong>Abnormal</strong>: Indicates that the variant has a significant effect on the phenotype.</p></li>
+<li><p><strong>Not specified</strong>: Indicates that the effect of the variant is unknown or has not been determined.</p></li>
+</ul>
+<p>There are two ways to assign functional classifications to variants in MaveDB:</p>
+<ol class="arabic simple">
+<li><p><strong>Threshold-based classification</strong>: Users can define score thresholds that determine the functional classification of variants. For example, variants with scores above a certain threshold may be classified as “Normal”, while those below the threshold are classified as “Abnormal”.</p></li>
+<li><p><strong>Direct assignment</strong>: Users can directly assign functional classifications to individual variants based on experimental evidence or prior knowledge. You can do this by uploading a file that includes the variant identifiers and their corresponding classifications.</p></li>
+</ol>
+</section>
+<section id="evidence-strengths">
+<span id="end-score-calibrations-functional-classifications"></span><h4>Evidence strengths<a class="headerlink" href="#evidence-strengths" title="Link to this heading">¶</a></h4>
+<p id="score-calibrations-evidence-strengths">Evidence strengths provide a way of indicating the evidence level that may be used for variant interpretation. MaveDB supports a controlled vocabulary for evidence strengths, which includes the following terms based on ACMG/AMP guidelines:</p>
+<ul class="simple">
+<li><p><strong>Very Strong</strong></p></li>
+<li><p><strong>Strong</strong></p></li>
+<li><p><strong>Moderate</strong></p></li>
+<li><p><strong>Supporting</strong></p></li>
+</ul>
+<p>You may assign a particular evidence strength to each each functional classification. Note that for “abnormal” classifications, you must provide a pathogenic evidence strength, while for “normal” classifications, you must provide a benign evidence strength.
+For “not specified” classifications, evidence strengths may not be submitted.</p>
+<p>You may also include odds of pathogenicity (“OddsPath”) values for each classification. These values provide a quantitative measure of the strength of evidence associated with each classification, and may be used in variant interpretation. For more information
+on how OddsPath values relate to evidence strengths and recommendations for their application, see the guidelines provided by <a class="reference external" href="https://doi.org/10.1186/s13073-019-0690-2">Brnich et al., 2019</a>.</p>
+</section>
+<section id="calibration-metadata">
+<span id="end-score-calibrations-evidence-strengths"></span><h4>Calibration metadata<a class="headerlink" href="#calibration-metadata" title="Link to this heading">¶</a></h4>
+<p id="score-calibrations-calibration-metadata">Calibration metadata provides additional context about the score calibration, including information about how the calibration was performed and any relevant references or notes.
+This metadata may include:</p>
+<ul class="simple">
+<li><p>A title for the calibration</p></li>
+<li><p>A description of the methods used to determine the baseline score and functional classifications.</p></li>
+<li><p>Any additional notes or comments that may be useful for users interpreting the calibration, especially with regard to the baseline score and functional classifications.</p></li>
+<li><p>Whether the calibration should be marked as <strong>research use only</strong>, indicating that it is not intended for clinical or diagnostic purposes.</p></li>
+</ul>
+<p>In addition, users may provide three types of optional references to support the calibration:</p>
+<ul class="simple">
+<li><p><strong>Threshold sources</strong>: A publication reference (e.g., a DOI, PubMed ID, or bioRxiv/medRxiv ID) that describes the method by which classification thresholds or classes were determined.</p></li>
+<li><p><strong>Classification methods</strong>: A publication reference (e.g., a DOI, PubMed ID, or bioRxiv/medRxiv ID) that describes the method by which evidence strengths were determined.</p></li>
+<li><p><strong>Classification sources</strong>: A publication reference (e.g., a DOI, PubMed ID, or bioRxiv/medRxiv ID) that describes where the evidence strengths determined by the ‘classification methods’ are described.</p></li>
+</ul>
+</section>
+<section id="calibration-privacy">
+<span id="end-score-calibrations-calibration-metadata"></span><h4>Calibration privacy<a class="headerlink" href="#calibration-privacy" title="Link to this heading">¶</a></h4>
+<p id="score-calibrations-calibration-privacy">By default, score calibrations are not visible to all MaveDB users. However, you may choose to publish a calibration after it has been uploaded. Private calibrations are only visible to the user who uploaded them and any users marked as contributors on the associated score set.
+Published calibrations are visible to all MaveDB users and may be used in visualizations and interpretations of the associated score set.</p>
+<div class="admonition warning">
+<p class="admonition-title">Warning</p>
+<p>Once a calibration has been published, it cannot be made private again nor may it be edited. Please ensure that you are comfortable with making the calibration public before publishing it.</p>
+</div>
+</section>
+<section id="primary-calibrations">
+<h4>Primary calibrations<a class="headerlink" href="#primary-calibrations" title="Link to this heading">¶</a></h4>
+<p id="score-calibrations-primary-calibrations">A primary calibration is the main score calibration associated with a score set. Each score set in MaveDB may have at most one primary calibration. The primary calibration is used by default when displaying the score set in visualizations and when interpreting variant effect
+scores.</p>
+<p>After uploading a score calibration to MaveDB, you may choose to designate it as the primary calibration for the associated score set. If a score set already has a primary calibration, you must demote the existing primary calibration before designating a new one.
+A calibration must be publicly visible to be marked as the primary calibration, and research use only calibrations may not be designated as primary calibrations.</p>
+<div class="admonition note">
+<p class="admonition-title">Note</p>
+<p>MaveDB maintainers may review primary calibrations to ensure that they meet quality standards and are appropriate for use in visualizations and interpretations, and retain
+the right to remove primary calibration status from any calibration that does not meet these standards.</p>
+</div>
+</section>
+<section id="investigator-provided-calibrations">
+<span id="end-score-calibrations-primary-calibrations"></span><h4>Investigator provided calibrations<a class="headerlink" href="#investigator-provided-calibrations" title="Link to this heading">¶</a></h4>
+<p id="score-calibrations-investigator-provided-calibrations">When there is no primary calibration associated with a score set, investigator provided calibrations are given priority viewing over other non-primary calibrations. Investigator provided calibrations
+are any calibrations which have been uploaded by the samem user who uploaded the score set or a user marked as a contributor on the score set.</p>
+</section>
+</section>
+<section id="variant-tables">
+<h3>Variant tables<a class="headerlink" href="#variant-tables" title="Link to this heading">¶</a></h3>
+<p>You must upload at least one variant score CSV file when creating a new score set.
+Optionally, you may also upload a variant count CSV file.</p>
+<p>For both score and count data tables, there are three variant columns:</p>
+<ul class="simple">
+<li><p><code class="docutils literal notranslate"><span class="pre">hgvs_nt</span></code> describes variants with respect to the nucleotide <a class="reference internal" href="../targets.html#targets"><span class="std std-ref">target sequence</span></a></p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">hgvs_splice</span></code> describes variants with respect to a transcript model</p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">hgvs_pro</span></code> describes variants with respect to the amino acid <a class="reference internal" href="../targets.html#targets"><span class="std std-ref">target sequence</span></a></p></li>
+</ul>
+<p><code class="docutils literal notranslate"><span class="pre">hgvs_nt</span></code> and <code class="docutils literal notranslate"><span class="pre">hgvs_pro</span></code> variants are required to be described in relation to the score set <a class="reference internal" href="../targets.html#targets"><span class="std std-ref">target</span></a>.</p>
+<p>All variants must be described in <a class="reference external" href="https://www.mavedb.org/docs/mavehgvs">MAVE-HGVS</a> format, which is a subset of the <a class="reference external" href="https://varnomen.hgvs.org/">HGVS</a> format.
+This includes using the appropriate prefix (<code class="docutils literal notranslate"><span class="pre">c.</span></code> for coding DNA, <code class="docutils literal notranslate"><span class="pre">n.</span></code> for non-coding DNA, <code class="docutils literal notranslate"><span class="pre">p.</span></code> for protein) and
+using brackets for complex variants that affect multiple positions (e.g. <code class="docutils literal notranslate"><span class="pre">c.[123A&gt;G;125_T&gt;C]</span></code>).</p>
+<p>If <code class="docutils literal notranslate"><span class="pre">hgvs_nt</span></code> is present, it will be used as the primary key for distinguishing variants and must be unique.
+Otherwise, <code class="docutils literal notranslate"><span class="pre">hgvs_pro</span></code> will be used as the primary key.</p>
+<div class="admonition note">
+<p class="admonition-title">Note</p>
+<p>Datasets with only <code class="docutils literal notranslate"><span class="pre">hgvs_pro</span></code> variants can specify nucleotide target sequences.
+The target sequence will be translated using the
+<a class="reference external" href="https://www.ncbi.nlm.nih.gov/Taxonomy/Utils/wprintgc.cgi?chapter=cgencodes#SG1">standard amino acid translation table</a> for validation.</p>
+</div>
+<p>The <code class="docutils literal notranslate"><span class="pre">hgvs_splice</span></code> variants are not validated against a transcript model or target sequence.
+This is a convenience feature for datasets that contain splice variants; most datasets will not use <code class="docutils literal notranslate"><span class="pre">hgvs_splice</span></code>.
+Datasets that use <code class="docutils literal notranslate"><span class="pre">hgvs_splice</span></code> must also have <code class="docutils literal notranslate"><span class="pre">hgvs_nt</span></code>, which is used as the primary key,
+and the <code class="docutils literal notranslate"><span class="pre">hgvs_nt</span></code> variants must use the <code class="docutils literal notranslate"><span class="pre">'g.'</span></code> prefix.</p>
+<div class="admonition seealso">
+<p class="admonition-title">See also</p>
+<p>Base editor data follows a slightly different format; see the <a class="reference internal" href="../data_formats.html#base-editor-data"><span class="std std-ref">base editor data</span></a> section for details.</p>
+</div>
+<section id="score-table">
+<h4>Score table<a class="headerlink" href="#score-table" title="Link to this heading">¶</a></h4>
+<p>All score tables must have a column named <code class="docutils literal notranslate"><span class="pre">score</span></code> that describes the score of that variant in the assay.
+Score tables may have any number of additional numeric columns.</p>
+<p>Suggested numeric columns include a standard deviation or variance,
+or some other measure of uncertainty for the score such as a 95% confidence interval
+(represented as two columns, e.g. <code class="docutils literal notranslate"><span class="pre">ci_lower</span></code> and <code class="docutils literal notranslate"><span class="pre">ci_upper</span></code>).</p>
+<div class="admonition warning">
+<p class="admonition-title">Warning</p>
+<p>Do not submit patient data or anything which could be used to identify individuals to MaveDB.</p>
+</div>
+<p>Score sets that describe experiments with multiple replicates often include the score and standard deviation for each
+replicate as additional columns.</p>
+<p>For datasets with categorical data,
+we recommend encoding the categories as integers and describing the mapping between integers and categories in the
+<a class="reference internal" href="#free-text-metadata"><span class="std std-ref">free text methods</span></a>.
+Support for additional data columns with string data will be added in a future version to support this use case.</p>
+</section>
+<section id="counts-table">
+<h4>Counts table<a class="headerlink" href="#counts-table" title="Link to this heading">¶</a></h4>
+<p>Count data are optional for MaveDB score sets, but are recommended.</p>
+<p>There are no required columns for count data,
+but uploaders should decide on an intuitive naming convention for the column names and describe it in the
+<a class="reference internal" href="#free-text-metadata"><span class="std std-ref">free text methods</span></a>.</p>
+</section>
+</section>
+<section id="score-count-metadata-files">
+<h3>Score/count metadata files<a class="headerlink" href="#score-count-metadata-files" title="Link to this heading">¶</a></h3>
+<p>Users may also upload metadata files in JSON format to provide additional structured metadata about the columns in the score and count tables.
+These files should be named <code class="docutils literal notranslate"><span class="pre">score_columns_metadata.json</span></code> and <code class="docutils literal notranslate"><span class="pre">count_columns_metadata.json</span></code> respectively. These files are
+optional, but recommended.</p>
+<p>The metadata files should contain a JSON object where each key is a column name from the corresponding data table,
+and the value is another JSON object with additional metadata about that column. The additional JSON object may contain the following fields:</p>
+<ul class="simple">
+<li><p><code class="docutils literal notranslate"><span class="pre">description</span></code>: A string describing the column.</p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">details</span></code>: A string with additional details about the contents of the column (optional).</p></li>
+</ul>
+</section>
+</section>
+</section>
+<section id="metadata-checklist">
+<span id="end-score-set-metadata"></span><h1>Metadata checklist<a class="headerlink" href="#metadata-checklist" title="Link to this heading">¶</a></h1>
+<p id="data-set-required-metadata">For each experiment and score set, you are required to provide the following metadata:</p>
+<ul class="simple">
+<li><p><a class="reference internal" href="#free-text-metadata">Free text metadata</a>, including a title, short description, abstract, and methods.</p></li>
+</ul>
+<p id="data-set-optional-metadata"><span id="end-data-set-required-metadata"></span>You are not required to provide all optional metadata fields, but we strongly encourage you to do so
+to maximize the usability of your data:</p>
+<ul class="simple">
+<li><p><a class="reference internal" href="#digital-object-identifiers-dois">Digital Object Identifiers (DOIs)</a> for any digital resources associated with the data set.</p></li>
+<li><p><a class="reference internal" href="#publication-details">Publication details</a> for the study reference(s) and any related publications.</p></li>
+</ul>
+<p id="experiment-optional-metadata"><span id="end-data-set-optional-metadata"></span>For experiments, you are not required but strongly encouraged to provide:</p>
+<ul class="simple">
+<li><p><a class="reference internal" href="#raw-data-accessions">Raw data accessions</a> for any raw sequencing data associated with the experiment.</p></li>
+<li><p><a class="reference internal" href="#keywords">Keywords</a> to improve searchability and facilitate generation of <a class="reference internal" href="../assay_facts.html#assay-facts"><span class="std std-ref">assay facts</span></a> summaries.</p></li>
+</ul>
+<p id="score-set-required-metadata"><span id="end-experiment-optional-metadata"></span>For score sets, you are additionally required to provide:</p>
+<ul class="simple">
+<li><p><a class="reference internal" href="#score-set-targets"><span class="std std-ref">Targets</span></a> associated with the score set, including their sequences or accessions and any related metadata.</p></li>
+<li><p><a class="reference internal" href="#licenses">Licenses</a> and data usage guidelines (if needed) for the score set.</p></li>
+<li><p><a class="reference internal" href="#score-table">Score table</a> containing the variant scores.</p></li>
+</ul>
+<p id="score-set-optional-metadata"><span id="end-score-set-required-metadata"></span>You are encouraged to also provide:</p>
+<ul class="simple">
+<li><p><a class="reference internal" href="#calibrations">Calibrations</a> to provide additional context for interpreting the scores.</p></li>
+<li><p><a class="reference internal" href="#counts-table">Counts table</a> containing the variant counts (if available).</p></li>
+<li><p><a href="#id7"><span class="problematic" id="id8">`Metadata files`_</span></a> containing additional information about the score set.</p></li>
+</ul>
+</section>
+
+
+            <div class="clearer"></div>
+          </div>
+        </div>
+      </div>
+      <div class="sphinxsidebar" role="navigation" aria-label="main navigation">
+        <div class="sphinxsidebarwrapper">
+  <div>
+    <h3><a href="../index.html">Table of Contents</a></h3>
+    <ul>
+<li><a class="reference internal" href="#">Data set metadata and properties</a><ul>
+<li><a class="reference internal" href="#free-text-metadata">Free text metadata</a></li>
+<li><a class="reference internal" href="#digital-object-identifiers-dois">Digital Object Identifiers (DOIs)</a></li>
+<li><a class="reference internal" href="#publication-details">Publication details</a></li>
+<li><a class="reference internal" href="#contributors">Contributors</a></li>
+<li><a class="reference internal" href="#optional-structured-metadata">Optional structured metadata</a></li>
+<li><a class="reference internal" href="#experiment-specific-metadata">Experiment specific metadata</a><ul>
+<li><a class="reference internal" href="#raw-data-accessions">Raw data accessions</a></li>
+<li><a class="reference internal" href="#keywords">Keywords</a></li>
+</ul>
+</li>
+<li><a class="reference internal" href="#score-set-specific-metadata">Score set specific metadata</a><ul>
+<li><a class="reference internal" href="#licenses">Licenses</a></li>
+<li><a class="reference internal" href="#score-set-targets">Score set targets</a></li>
+<li><a class="reference internal" href="#calibrations">Calibrations</a><ul>
+<li><a class="reference internal" href="#baseline-score">Baseline score</a></li>
+<li><a class="reference internal" href="#functional-classifications">Functional classifications</a></li>
+<li><a class="reference internal" href="#evidence-strengths">Evidence strengths</a></li>
+<li><a class="reference internal" href="#calibration-metadata">Calibration metadata</a></li>
+<li><a class="reference internal" href="#calibration-privacy">Calibration privacy</a></li>
+<li><a class="reference internal" href="#primary-calibrations">Primary calibrations</a></li>
+<li><a class="reference internal" href="#investigator-provided-calibrations">Investigator provided calibrations</a></li>
+</ul>
+</li>
+<li><a class="reference internal" href="#variant-tables">Variant tables</a><ul>
+<li><a class="reference internal" href="#score-table">Score table</a></li>
+<li><a class="reference internal" href="#counts-table">Counts table</a></li>
+</ul>
+</li>
+<li><a class="reference internal" href="#score-count-metadata-files">Score/count metadata files</a></li>
+</ul>
+</li>
+</ul>
+</li>
+<li><a class="reference internal" href="#metadata-checklist">Metadata checklist</a></li>
+</ul>
+
+  </div>
+  <div>
+    <h4>Previous topic</h4>
+    <p class="topless"><a href="score_sets.html"
+                          title="previous chapter">Score sets</a></p>
+  </div>
+  <div>
+    <h4>Next topic</h4>
+    <p class="topless"><a href="../targets.html"
+                          title="next chapter">Targets</a></p>
+  </div>
+  <div role="note" aria-label="source link">
+    <h3>This Page</h3>
+    <ul class="this-page-menu">
+      <li><a href="../_sources/record_types/metadata_guide.rst.txt"
+            rel="nofollow">Show Source</a></li>
+    </ul>
+   </div>
+<div id="searchbox" style="display: none" role="search">
+  <h3 id="searchlabel">Quick search</h3>
+    <div class="searchformwrapper">
+    <form class="search" action="../search.html" method="get">
+      <input type="text" name="q" aria-labelledby="searchlabel" autocomplete="off" autocorrect="off" autocapitalize="off" spellcheck="false"/>
+      <input type="submit" value="Go" />
+    </form>
+    </div>
+</div>
+<script>document.getElementById('searchbox').style.display = "block"</script>
+        </div>
+      </div>
+      <div class="clearer"></div>
+    </div>
+    <div class="related" role="navigation" aria-label="related navigation">
+      <h3>Navigation</h3>
+      <ul>
+        <li class="right" style="margin-right: 10px">
+          <a href="../genindex.html" title="General Index"
+             >index</a></li>
+        <li class="right" >
+          <a href="../targets.html" title="Targets"
+             >next</a> |</li>
+        <li class="right" >
+          <a href="score_sets.html" title="Score sets"
+             >previous</a> |</li>
+        <li class="nav-item nav-item-0"><a href="../index.html">MaveDB 2025.5.2 documentation</a> &#187;</li>
+          <li class="nav-item nav-item-1"><a href="index.html" >Record types</a> &#187;</li>
+        <li class="nav-item nav-item-this"><a href="">Data set metadata and properties</a></li> 
+      </ul>
+    </div>
+    <div class="footer" role="contentinfo">
+    &#169; Copyright 2017-2025, MaveDB Developers.
+      Created using <a href="https://www.sphinx-doc.org/">Sphinx</a> 7.2.6.
+    </div>
+  </body>
+</html>

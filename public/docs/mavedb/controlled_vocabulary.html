@@ -1,0 +1,294 @@
+<!DOCTYPE html>
+
+<html lang="en" data-content_root="./">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" /><meta name="viewport" content="width=device-width, initial-scale=1" />
+
+    <title>MAVE controlled vocabulary &#8212; MaveDB 2025.5.2 documentation</title>
+    <link rel="stylesheet" type="text/css" href="_static/pygments.css?v=4848ba22" />
+    <link rel="stylesheet" type="text/css" href="_static/pyramid.css?v=a5b9c134" />
+    <link rel="stylesheet" type="text/css" href="_static/graphviz.css?v=eafc0fe6" />
+    <link rel="stylesheet" type="text/css" href="_static/styles.css?v=1cacb62a" />
+    <script src="_static/documentation_options.js?v=ea53f692"></script>
+    <script src="_static/doctools.js?v=888ff710"></script>
+    <script src="_static/sphinx_highlight.js?v=dc90522c"></script>
+    <link rel="index" title="Index" href="genindex.html" />
+    <link rel="search" title="Search" href="search.html" />
+    <link rel="next" title="Variant Mapping" href="variant_mapping.html" />
+    <link rel="prev" title="Data table formats" href="data_formats.html" />
+<link rel="stylesheet" href="https://fonts.googleapis.com/css?family=Neuton&amp;subset=latin" type="text/css" media="screen" charset="utf-8" />
+<link rel="stylesheet" href="https://fonts.googleapis.com/css?family=Nobile:regular,italic,bold,bolditalic&amp;subset=latin" type="text/css" media="screen" charset="utf-8" />
+<!--[if lte IE 6]>
+<link rel="stylesheet" href="_static/ie6.css" type="text/css" media="screen" charset="utf-8" />
+<![endif]-->
+
+  </head><body>
+
+    <div class="related" role="navigation" aria-label="related navigation">
+      <h3>Navigation</h3>
+      <ul>
+        <li class="right" style="margin-right: 10px">
+          <a href="genindex.html" title="General Index"
+             accesskey="I">index</a></li>
+        <li class="right" >
+          <a href="variant_mapping.html" title="Variant Mapping"
+             accesskey="N">next</a> |</li>
+        <li class="right" >
+          <a href="data_formats.html" title="Data table formats"
+             accesskey="P">previous</a> |</li>
+        <li class="nav-item nav-item-0"><a href="index.html">MaveDB 2025.5.2 documentation</a> &#187;</li>
+        <li class="nav-item nav-item-this"><a href="">MAVE controlled vocabulary</a></li> 
+      </ul>
+    </div>  
+
+    <div class="document">
+      <div class="documentwrapper">
+        <div class="bodywrapper">
+          <div class="body" role="main">
+            
+  <section id="mave-controlled-vocabulary">
+<h1>MAVE controlled vocabulary<a class="headerlink" href="#mave-controlled-vocabulary" title="Link to this heading">¶</a></h1>
+<p id="controlled-vocabulary-intro">Experiments may be tagged with a controlled set of terms. These keywords offer a structured vocabulary
+for describing key aspects of the experiment, such as the type of assay performed, the biological system used,
+or the specific techniques employed.</p>
+<p>Although such information may also be included in the free-text methods or abstract fields,
+using controlled keywords ensures consistency across experiments and facilitates more effective searches
+and visualizations for end users.</p>
+<p>For the information you submit to MaveDB to be maximally useful to others,
+we strongly encourage you to provide controlled keywords in the following four categories that describe key aspects of the assay:</p>
+<ol class="arabic simple">
+<li><p>The method and characteristics of genetic perturbation</p></li>
+<li><p>Details of the phenotypic assay used to assess variant effects</p></li>
+<li><p>Information about the cellular and environmental contexts of the assays</p></li>
+<li><p>The sequencing strategy for associating variants with effects.</p></li>
+</ol>
+<div class="admonition seealso">
+<p class="admonition-title">See also</p>
+<p>For more information on how these controlled keywords are used in MaveDB, see the <a class="reference internal" href="assay_facts.html#assay-facts"><span class="std std-ref">Assay facts</span></a> section.</p>
+</div>
+<section id="available-controlled-vocabulary-terms">
+<span id="end-controlled-vocabulary-intro"></span><h2>Available controlled vocabulary terms<a class="headerlink" href="#available-controlled-vocabulary-terms" title="Link to this heading">¶</a></h2>
+<section id="variant-library-creation-methods">
+<span id="controlled-vocabulary-terms"></span><h3>Variant library creation methods<a class="headerlink" href="#variant-library-creation-methods" title="Link to this heading">¶</a></h3>
+<p id="id1">This category describes the method used to generate the variant library for the MAVE experiment.</p>
+<ul class="simple">
+<li><p>Endogenous locus library method</p></li>
+<li><p>In vitro construct library method</p></li>
+<li><p>N/A (for meta-analyses or other experiments without a variant library)</p></li>
+<li><p>Other (include a brief description)</p></li>
+</ul>
+<p>After selecting a method, you should also include both the method system and mechanism used to create the variant library.</p>
+</section>
+<section id="delivery-method">
+<span id="end-variant-library-creation-methods"></span><h3>Delivery method<a class="headerlink" href="#delivery-method" title="Link to this heading">¶</a></h3>
+<p id="id2">The delivery method describes how the variant induction machinery and/or the construct was delivered
+to the model system. Possible options include:</p>
+<ul class="simple">
+<li><p>Electroporation</p></li>
+<li><p>Nucleofection</p></li>
+<li><p>Chemical-based transfection</p></li>
+<li><p>Adeno-associated virus transduction</p></li>
+<li><p>Lentivirus transduction</p></li>
+<li><p>Chemical or heat shock transformation</p></li>
+<li><p>Other (include a brief description)</p></li>
+</ul>
+</section>
+<section id="phenotypic-assay-dimensionality">
+<span id="end-delivery-method"></span><h3>Phenotypic assay dimensionality<a class="headerlink" href="#phenotypic-assay-dimensionality" title="Link to this heading">¶</a></h3>
+<p id="id3">This category describes the dimensionality of the functional readouts of the assay.</p>
+<p>Possible types:</p>
+<ul class="simple">
+<li><p>Single-dimensional data (e.g., single fluorescence measurement)</p></li>
+<li><p>High-dimensional data (e.g., ML/AI-enabled imaging/classification)</p></li>
+<li><p>Combined functional data (multiple assays combined)</p></li>
+<li><p>Other (include a brief description)</p></li>
+</ul>
+</section>
+<section id="phenotypic-assay-method">
+<span id="end-phenotypic-assay-dimensionality"></span><h3>Phenotypic assay method<a class="headerlink" href="#phenotypic-assay-method" title="Link to this heading">¶</a></h3>
+<p id="id4">Assay method defining the molecular properties interrogated. Terms are aligned to OBI (root OBI_0000070: “assay”).</p>
+<p>Possible types:</p>
+<ul class="simple">
+<li><p>Promoter activity detection by reporter gene assay</p></li>
+<li><p>Bulk RNA-sequencing</p></li>
+<li><p>Single-cell RNA sequencing assay</p></li>
+<li><p>Fluorescence in-situ hybridization (FISH) assay</p></li>
+<li><p>Flow cytometry assay</p></li>
+<li><p>Imaging mass cytometry assay</p></li>
+<li><p>Systematic evolution of ligands by exponential enrichment assay</p></li>
+<li><p>Single cell imaging</p></li>
+<li><p>Multiplexed fluorescent antibody imaging</p></li>
+<li><p>Binding assay</p></li>
+<li><p>Cell proliferation assay</p></li>
+<li><p>Survival assessment assay</p></li>
+<li><p>Other (include a brief description)</p></li>
+</ul>
+</section>
+<section id="phenotypic-assay-mechanism">
+<span id="end-phenotypic-assay-method"></span><h3>Phenotypic assay mechanism<a class="headerlink" href="#phenotypic-assay-mechanism" title="Link to this heading">¶</a></h3>
+<p id="id5">The biological mechanism by which the assay detects variant effects. Terms are aligned to <a class="reference external" href="https://geneontology.org/">gene ontology</a> biological process terms.</p>
+<p>Possible types:</p>
+<ul class="simple">
+<li><p>Dominant-negative effect</p></li>
+<li><p>Gain of function</p></li>
+<li><p>Loss of function</p></li>
+<li><p>Gain or loss of function</p></li>
+<li><p>Loss of function or dominant-negative effect</p></li>
+<li><p>Other (include a brief description)</p></li>
+</ul>
+</section>
+<section id="phenotypic-assay-model-system">
+<span id="end-phenotypic-assay-mechanism"></span><h3>Phenotypic assay model system<a class="headerlink" href="#phenotypic-assay-model-system" title="Link to this heading">¶</a></h3>
+<p id="id6">Context influencing phenotype expression.</p>
+<p>Possible types:</p>
+<ul class="simple">
+<li><p>Immortalized human cells</p></li>
+<li><p>Murine primary cells</p></li>
+<li><p>Induced pluripotent stem cells from human male</p></li>
+<li><p>Induced pluripotent stem cells from human female</p></li>
+<li><p>Patient derived primary cells</p></li>
+<li><p>Yeast</p></li>
+<li><p>Bacteria</p></li>
+<li><p>Bacteriophage</p></li>
+<li><p>Molecular display</p></li>
+<li><p>Other (include a brief description)</p></li>
+</ul>
+<p>Optionally provide codings for specific cell lines (e.g., Cell Line Ontology) and taxonomy identifiers where applicable.</p>
+</section>
+<section id="phenotypic-assay-profiling-strategy">
+<span id="end-phenotypic-assay-model-system"></span><h3>Phenotypic assay profiling strategy<a class="headerlink" href="#phenotypic-assay-profiling-strategy" title="Link to this heading">¶</a></h3>
+<p id="id7">Variant profiling strategy used to capture variant frequency vs. assay outcome. Required.</p>
+<p>Possible types:</p>
+<ul class="simple">
+<li><p>Direct sequencing</p></li>
+<li><p>Shotgun sequencing</p></li>
+<li><p>Barcode sequencing</p></li>
+</ul>
+</section>
+<section id="phenotypic-assay-sequencing-read-type">
+<span id="end-phenotypic-assay-profiling-strategy"></span><h3>Phenotypic assay sequencing read type<a class="headerlink" href="#phenotypic-assay-sequencing-read-type" title="Link to this heading">¶</a></h3>
+<p id="id8">Sequencing read type used in the assay. Required.</p>
+<p>Possible types:</p>
+<ul class="simple">
+<li><p>Single-segment (short read)</p></li>
+<li><p>Single-segment (long read)</p></li>
+<li><p>Multi-segment</p></li>
+</ul>
+</section>
+<section id="molecular-mechanism-assessed">
+<span id="end-phenotypic-assay-sequencing-read-type"></span><h3>Molecular mechanism assessed<a class="headerlink" href="#molecular-mechanism-assessed" title="Link to this heading">¶</a></h3>
+<p id="id9">Molecular mechanism by which the assay measures variant effects.</p>
+<p>Possible types:</p>
+<ul class="simple">
+<li><p>Catalytic and Cysteine synthase activity</p></li>
+<li><p>Catalytic and Hydroxymethylbilane synthase activity</p></li>
+<li><p>Catalytic and Lipid phosphatase activity</p></li>
+<li><p>Catalytic and Thiamine diphosphokinase activity</p></li>
+<li><p>Cellular response to cisplatin, DNA repair and Double-strand break repair via homologous recombination</p></li>
+<li><p>DNA damage response, signal transduction by p53 class mediator and MDM2/MDM4 family protein binding</p></li>
+<li><p>DNA repair and Double-strand break repair via homologous recombination</p></li>
+<li><p>Double-strand break repair, damage response, signal transduction by p53 class mediator and Response to etoposide</p></li>
+<li><p>Molecular function</p></li>
+<li><p>Monoatomic ion transport and Potassium channel activity</p></li>
+<li><p>Sodium channel activity</p></li>
+<li><p>Calcium-mediated signaling</p></li>
+<li><p>Catalytic and Gluconokinase activity</p></li>
+<li><p>Catalytic activity and Ornithine carbamoyltransferase activity</p></li>
+<li><p>Core promoter sequence-specific DNA binding</p></li>
+<li><p>DNA damage checkpoint signaling</p></li>
+<li><p>DNA and Mismatch repair</p></li>
+<li><p>Molecular condensate scaffold activity</p></li>
+<li><p>Monoatomic ion transport and Sodium ion transport</p></li>
+<li><p>Oxidative phosphorylation</p></li>
+<li><p>Protein carboxylation</p></li>
+<li><p>Protein glycosylation</p></li>
+<li><p>Protein localization to plasma membrane</p></li>
+<li><p>Regulation of protein stability</p></li>
+<li><p>Response to misfolded protein</p></li>
+</ul>
+</section>
+</section>
+</section>
+
+
+            <div class="clearer"></div>
+          </div>
+        </div>
+      </div>
+      <div class="sphinxsidebar" role="navigation" aria-label="main navigation">
+        <div class="sphinxsidebarwrapper">
+  <div>
+    <h3><a href="index.html">Table of Contents</a></h3>
+    <ul>
+<li><a class="reference internal" href="#">MAVE controlled vocabulary</a><ul>
+<li><a class="reference internal" href="#available-controlled-vocabulary-terms">Available controlled vocabulary terms</a><ul>
+<li><a class="reference internal" href="#variant-library-creation-methods">Variant library creation methods</a></li>
+<li><a class="reference internal" href="#delivery-method">Delivery method</a></li>
+<li><a class="reference internal" href="#phenotypic-assay-dimensionality">Phenotypic assay dimensionality</a></li>
+<li><a class="reference internal" href="#phenotypic-assay-method">Phenotypic assay method</a></li>
+<li><a class="reference internal" href="#phenotypic-assay-mechanism">Phenotypic assay mechanism</a></li>
+<li><a class="reference internal" href="#phenotypic-assay-model-system">Phenotypic assay model system</a></li>
+<li><a class="reference internal" href="#phenotypic-assay-profiling-strategy">Phenotypic assay profiling strategy</a></li>
+<li><a class="reference internal" href="#phenotypic-assay-sequencing-read-type">Phenotypic assay sequencing read type</a></li>
+<li><a class="reference internal" href="#molecular-mechanism-assessed">Molecular mechanism assessed</a></li>
+</ul>
+</li>
+</ul>
+</li>
+</ul>
+
+  </div>
+  <div>
+    <h4>Previous topic</h4>
+    <p class="topless"><a href="data_formats.html"
+                          title="previous chapter">Data table formats</a></p>
+  </div>
+  <div>
+    <h4>Next topic</h4>
+    <p class="topless"><a href="variant_mapping.html"
+                          title="next chapter">Variant Mapping</a></p>
+  </div>
+  <div role="note" aria-label="source link">
+    <h3>This Page</h3>
+    <ul class="this-page-menu">
+      <li><a href="_sources/controlled_vocabulary.rst.txt"
+            rel="nofollow">Show Source</a></li>
+    </ul>
+   </div>
+<div id="searchbox" style="display: none" role="search">
+  <h3 id="searchlabel">Quick search</h3>
+    <div class="searchformwrapper">
+    <form class="search" action="search.html" method="get">
+      <input type="text" name="q" aria-labelledby="searchlabel" autocomplete="off" autocorrect="off" autocapitalize="off" spellcheck="false"/>
+      <input type="submit" value="Go" />
+    </form>
+    </div>
+</div>
+<script>document.getElementById('searchbox').style.display = "block"</script>
+        </div>
+      </div>
+      <div class="clearer"></div>
+    </div>
+    <div class="related" role="navigation" aria-label="related navigation">
+      <h3>Navigation</h3>
+      <ul>
+        <li class="right" style="margin-right: 10px">
+          <a href="genindex.html" title="General Index"
+             >index</a></li>
+        <li class="right" >
+          <a href="variant_mapping.html" title="Variant Mapping"
+             >next</a> |</li>
+        <li class="right" >
+          <a href="data_formats.html" title="Data table formats"
+             >previous</a> |</li>
+        <li class="nav-item nav-item-0"><a href="index.html">MaveDB 2025.5.2 documentation</a> &#187;</li>
+        <li class="nav-item nav-item-this"><a href="">MAVE controlled vocabulary</a></li> 
+      </ul>
+    </div>
+    <div class="footer" role="contentinfo">
+    &#169; Copyright 2017-2025, MaveDB Developers.
+      Created using <a href="https://www.sphinx-doc.org/">Sphinx</a> 7.2.6.
+    </div>
+  </body>
+</html>

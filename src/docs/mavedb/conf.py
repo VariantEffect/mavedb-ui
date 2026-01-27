@@ -5,7 +5,7 @@ import os
 # -- Project information -----------------------------------------------------
 
 project = "MaveDB"
-copyright = "2017-2025, MaveDB Developers"
+copyright = "2017-2026, MaveDB Developers"
 author = "MaveDB Developers"
 
 # The full version, including alpha/beta/rc tags

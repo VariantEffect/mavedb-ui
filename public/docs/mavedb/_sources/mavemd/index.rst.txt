@@ -9,9 +9,9 @@ of variants based on variant effect measurements from MAVE assays.
 .. toctree::
    :maxdepth: 2
 
-   variant_search
-   curation
-   clinical_view
-   evaluating_functional_assays
+   ../mavemd/variant_search
+   ../mavemd/curation
+   ../mavemd/clinical_view
+   ../mavemd/evaluating_functional_assays
 
 .. _end-mavemd-index:

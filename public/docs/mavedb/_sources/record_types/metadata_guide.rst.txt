@@ -251,7 +251,7 @@ Counts table
     :start-after: .. _count-table-columns:
     :end-before: .. _end-count-table-columns:
 
-Metadata files
+Score/count metadata files
 ################################
 
 .. include:: ../data_formats.rst

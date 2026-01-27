@@ -33,9 +33,9 @@ Each of these record types are described in more detail below.
 .. toctree::
    :maxdepth: 2
 
-   experiment_sets
-   experiments
-   score_sets
-   metadata_guide
+   ../record_types/experiment_sets
+   ../record_types/experiments
+   ../record_types/score_sets
+   ../record_types/metadata_guide
 
 .. _end-record-types-index:

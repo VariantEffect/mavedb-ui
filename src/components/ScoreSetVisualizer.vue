@@ -126,7 +126,12 @@ export default {
       // console.log('didHighlightResidue', residueNumber)
     },
     didSelectHeatmapResidues: function (ranges) {
-      this.selectedResidueRanges = ranges
+      const newRanges = ranges.map((r) => ({
+        start: r.start,
+        end: r.end
+      }))
+
+      this.selectedResidueRanges = newRanges
     },
     didSelectHeatmapRow: function (data) {
       this.rowSelected = null
@@ -167,10 +172,15 @@ export default {
             }
           }
           const meanScore = scoreSum / scoreCount
-          _.set(this.selectionData, [x - 1, _.camelCase(groupCode)], {
-            score: meanScore,
-            color: _.isNumber(meanScore) ? this.rgbToHex(heatmapColorScale(meanScore)) : '#000'
-          })
+
+          // x should correspond to residue position when properly mapped
+          const selectionDatum = _.find(this.selectionData, (d) => d.start_residue_number === x)
+          if (selectionDatum) {
+            _.set(selectionDatum, _.camelCase(groupCode), {
+              score: meanScore,
+              color: _.isNumber(meanScore) ? this.rgbToHex(heatmapColorScale(meanScore)) : '#000'
+            })
+          }
         }
         this.rowGroupSelected = {
           label: groupCode,

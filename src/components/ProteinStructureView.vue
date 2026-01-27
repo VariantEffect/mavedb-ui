@@ -19,7 +19,7 @@
         :options="colorByOptions"
       />
     </div>
-    <div v-show="selectedAlphaFold" id="pdbe-molstar-viewer-container" class="flex-1 relative"></div>
+    <div v-show="selectedAlphaFold" id="pdbe-molstar-viewer-container" class="flex-1 relative z-5000"></div>
     <div v-if="!selectedAlphaFold" class="m-auto">
       No AlphaFold entry found
     </div>
@@ -67,6 +67,10 @@ export default {
     residueTooltips: {
       type: Array,
       default: () => []
+    },
+    nonSelectedColor: {
+      type: String,
+      default: '#FFFFFF'
     }
   },
 
@@ -149,7 +153,7 @@ export default {
       return _.map(this.selectionData, (x) => ({
         start_residue_number: x.start_residue_number,
         end_residue_number: x.end_residue_number,
-        color: _.get(x, this.colorBy, '#000')
+        color: _.get(x, this.colorBy, '#ffffff')
       }))
     },
     alphaFoldData: function () {
@@ -170,7 +174,7 @@ export default {
   watch: {
     colorBy: {
       handler: function () {
-        if (this.viewerInstance) this.viewerInstance.visual.select({data: this.selectionDataWithSelectedColorBy})
+        if (this.viewerInstance) this.viewerInstance.visual.select({data: this.selectionDataWithSelectedColorBy, nonSelectedColor: this.nonSelectedColor})
       }
     },
     selectedResidueRanges: {
@@ -182,7 +186,7 @@ export default {
             color: null,
             focus: true
           }))
-          this.viewerInstance.visual.select({data: [...this.selectionDataWithSelectedColorBy, ...selectedRanges]})
+          this.viewerInstance.visual.select({data: [...this.selectionDataWithSelectedColorBy, ...selectedRanges], nonSelectedColor: this.nonSelectedColor})
           this.viewerInstance.visual.highlight({
             data: selectedRanges
           })
@@ -275,7 +279,8 @@ export default {
           landscape: true,
           highlightColor: '#ffffff',
           selection: {
-            data: this.selectionDataWithSelectedColorBy
+            data: this.selectionDataWithSelectedColorBy,
+            nonSelectedColor: this.nonSelectedColor,
           },
           selectInteraction: false
         }

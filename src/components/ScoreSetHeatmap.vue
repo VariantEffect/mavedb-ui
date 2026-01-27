@@ -37,12 +37,12 @@
           ]"
         />
         <Button
-          v-if="showProteinStructureButton && sequenceType == 'protein'"
+          v-if="showProteinStructureButton && sequenceType == 'protein' && (targetType == 'accession' || (coordinates == 'mapped' && hgvsProColumn == 'post_mapped_hgvs_p'))"
           label="View protein structure"
           @click="$emit('onDidClickShowProteinStructure')"
         />
       </div>
-      <div v-if="numComplexVariants > 0">{{ numComplexVariants }} variants cannot be shown on this chart.</div>
+      <div class="ml-2" v-if="numComplexVariants > 0">{{ numComplexVariants }} variants cannot be shown on this chart.</div>
     </template>
     <template v-else-if="scoreSet?.private">
       <div class="no-heatmap-message">
@@ -1273,7 +1273,7 @@ export default defineComponent({
         .accessorField(this.accession)
         .tooltipHtml(this.tooltipHtmlGetter)
         .tooltipTickLabelHtml(this.sequenceType == 'protein' ? this.tooltipTickLabelHtmlGetter : null)
-        .pivotColor('#f7f7f7')
+        .pivotColor('#e0e0e0')
         .lowerBoundColor('#762a83')
         .upperBoundColor('#1b7837')
         .datumSelected(this.variantSelected)
@@ -1429,7 +1429,8 @@ export default defineComponent({
   z-index: 100;
   width: 100%;
   padding: 10px;
-  background-color: #eee;
+  border-top: 1px solid #ccc;
+  border-bottom: 1px solid #ccc;
 }
 
 .mavedb-heatmap-controls .p-selectbutton {
@@ -1446,6 +1447,7 @@ export default defineComponent({
 
 .mavedb-heatmap-wrapper {
   position: relative;
+  background-color: #fff;
 }
 
 /* .mavedb-heatmap-wrapper:hover .mavedb-heatmap-controls {

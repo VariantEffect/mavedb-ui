@@ -62,6 +62,8 @@ export interface HeatmapColorScaleControlPoint {
 export interface HeatmapContent {
   [key: number]: MappedDatum
   columns?: number
+  xMin?: number
+  xMax?: number
 }
 
 export interface Heatmap {
@@ -225,7 +227,9 @@ export default function makeHeatmap(): Heatmap {
 
   // Content
   let content: HeatmapContent = {
-    columns: undefined
+    columns: undefined,
+    xMin: undefined,
+    xMax: undefined
   }
   let filteredData: HeatmapDatum[] = []
   let lowerBound: number | null = null
@@ -322,8 +326,12 @@ export default function makeHeatmap(): Heatmap {
     }
     if (xMin != undefined && xMax != undefined) {
       content.columns = xMax - xMin + 1
+      content.xMin = xMin
+      content.xMax = xMax
     } else {
       content.columns = 0
+      content.xMin = undefined
+      content.xMax = undefined
     }
     buildColorScale()
   }
@@ -506,17 +514,21 @@ export default function makeHeatmap(): Heatmap {
 
       // top left coordinates of the selection rectangle in heatmap coordinates.
       const rangeStart = {
-        x: Math.floor((heatmapSelectionBBox.x + xOffsetNodeMidpoint) / xScaleStep) + 1,
-        y: Math.floor((heatmapSelectionBBox.y + yOffsetNodeMidpoint) / yScaleStep) + 1
+        x: Math.floor((heatmapSelectionBBox.x + xOffsetNodeMidpoint) / xScaleStep),
+        y: Math.floor((heatmapSelectionBBox.y + yOffsetNodeMidpoint) / yScaleStep)
       }
       // bottom right coordinates of the selection rectangle in heatmap coordinates.
       const rangeEnd = {
-        x: Math.floor((heatmapSelectionBBox.x + heatmapSelectionBBox.width - xOffsetNodeMidpoint) / xScaleStep) + 1,
-        y: Math.floor((heatmapSelectionBBox.y + heatmapSelectionBBox.height - yOffsetNodeMidpoint) / yScaleStep) + 1
+        x: Math.floor((heatmapSelectionBBox.x + heatmapSelectionBBox.width - xOffsetNodeMidpoint) / xScaleStep),
+        y: Math.floor((heatmapSelectionBBox.y + heatmapSelectionBBox.height - yOffsetNodeMidpoint) / yScaleStep)
       }
 
       if (rangeSelectionMode == 'column' && columnRangesSelected) {
-        columnRangesSelected([{start: rangeStart.x, end: rangeEnd.x}])
+        // convert rangeStart.x and rangeEnd.x to corresponding domain values
+        const startDomainValue = (idxLowerBound || 0) + rangeStart.x
+        const endDomainValue = (idxLowerBound || 0) + rangeEnd.x
+
+        columnRangesSelected([{start: startDomainValue, end: endDomainValue}])
       }
     }
     selectionStartPoint = null
@@ -587,16 +599,55 @@ export default function makeHeatmap(): Heatmap {
 
     if (svg) {
       svg.select('g.heatmap-selection-rectangle').selectAll('rect').remove()
-
+      // if start.x or end.x is outside content xMin/xMax, do not draw selection rectangle
+      if (!content.xMin || !content.xMax || !_.inRange(start.x, content.xMin, content.xMax + 1) || !_.inRange(end.x, content.xMin, content.xMax + 1)) {
+        return
+      }
       const heatmapNodesElem = svg.select('g.heatmap-nodes').node() as SVGGraphicsElement
       heatmapNodesElemBoundingRect = heatmapNodesElem.getBoundingClientRect()
       heatmapNodesElemDOMMatrix = heatmapNodesElem.getScreenCTM()!.inverse()
 
       const startNode = svg.select(`g.heatmap-nodes`).select(`rect.node-${start.x}-${start.y}`).node() as Element
-      const startNodeBoundingRect = startNode.getBoundingClientRect()
+      let startNodeBoundingRect: DOMRect
+      if (startNode) {
+        startNodeBoundingRect = startNode.getBoundingClientRect()
+      } else {
+        // Calculate position using scales when node doesn't exist
+        const calculatedX = xScale(start.x) || 0
+        const calculatedY = yScale(start.y) || 0
+        const containerRect = heatmapNodesElemBoundingRect!
+        startNodeBoundingRect = {
+          x: containerRect.left + calculatedX,
+          y: containerRect.top + calculatedY,
+          width: xScale.bandwidth(),
+          height: yScale.bandwidth(),
+          top: containerRect.top + calculatedY,
+          bottom: containerRect.top + calculatedY + yScale.bandwidth(),
+          left: containerRect.left + calculatedX,
+          right: containerRect.left + calculatedX + xScale.bandwidth()
+        } as DOMRect
+      }
 
       const endNode = svg.select(`g.heatmap-nodes`).select(`rect.node-${end.x}-${end.y}`).node() as Element
-      const endNodeBoundingRect = endNode.getBoundingClientRect()
+      let endNodeBoundingRect: DOMRect
+      if (endNode) {
+        endNodeBoundingRect = endNode.getBoundingClientRect()
+      } else {
+        // Calculate position using scales when node doesn't exist
+        const calculatedX = xScale(end.x) || 0
+        const calculatedY = yScale(end.y) || 0
+        const containerRect = heatmapNodesElemBoundingRect!
+        endNodeBoundingRect = {
+          x: containerRect.left + calculatedX,
+          y: containerRect.top + calculatedY,
+          width: xScale.bandwidth(),
+          height: yScale.bandwidth(),
+          top: containerRect.top + calculatedY,
+          bottom: containerRect.top + calculatedY + yScale.bandwidth(),
+          left: containerRect.left + calculatedX,
+          right: containerRect.left + calculatedX + xScale.bandwidth()
+        } as DOMRect
+      }
 
       const startY = rangeSelectionMode == 'column' ? heatmapNodesElemBoundingRect?.top : startNodeBoundingRect.y
       const startX = rangeSelectionMode == 'row' ? heatmapNodesElemBoundingRect?.left : startNodeBoundingRect.x
@@ -959,7 +1010,7 @@ export default function makeHeatmap(): Heatmap {
       }
       data = []
       filteredData = []
-      content = {columns: undefined}
+      content = {columns: undefined, xMin: undefined, xMax: undefined}
     },
 
     render: (container: HTMLElement, wrapper?: HTMLElement) => {
@@ -1012,7 +1063,7 @@ export default function makeHeatmap(): Heatmap {
           .style('left', 0)
           .style('height', '100%')
           .style('z-index', 2002)
-          .style('background-color', '#f7f7f7')
+          .style('background-color', '#fff')
           .classed('exclude-from-export', true)
         const legendGroup = yAxisSvg
           .append('g')

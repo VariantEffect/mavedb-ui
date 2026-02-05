@@ -14,7 +14,9 @@
     <div class="mavedb-assay-facts-section mavedb-assay-facts-bottom-separator">
       <div class="mavedb-assay-facts-row">
         <div class="mavedb-assay-facts-label">Gene (HGNC symbol)</div>
-        <div class="mavedb-assay-facts-value">{{ scoreSet.targetGenes[0]?.name }}</div>
+        <div class="mavedb-assay-facts-value">
+          {{ geneTextForScoreSet ? geneTextForScoreSet : 'Not specified' }}
+        </div>
       </div>
     </div>
     <div class="mavedb-assay-facts-section">
@@ -238,8 +240,7 @@ export default defineComponent({
     },
 
     geneAndYear: function () {
-      // TODO VariantEffect/mavedb-api#450
-      const gene = this.scoreSet.targetGenes?.[0]?.name
+      const gene = this.geneTextForScoreSet
       const year = this.scoreSet.primaryPublicationIdentifiers[0]?.publicationYear
       const parts = [gene, year?.toString()].filter((x) => x != null)
       return parts.length > 0 ? parts.join(' ') : undefined
@@ -251,6 +252,20 @@ export default defineComponent({
 
     journal: function () {
       return this.scoreSet.primaryPublicationIdentifiers[0]?.publicationJournal
+    },
+
+    distinctGenesForTargets: function () {
+      // empty when no target genes have mappedHgncName
+      const geneNames = this.scoreSet.targetGenes?.map((tg) => tg.mappedHgncName) || []
+      return _.uniq(geneNames.filter((name) => !_.isEmpty(name))) as string[]
+    },
+
+    geneTextForScoreSet: function () {
+      if (this.distinctGenesForTargets.length == 0) {
+        return this.scoreSet.targetGenes[0]?.name || null
+      }
+
+      return this.distinctGenesForTargets.length == 1 ? this.distinctGenesForTargets[0] : 'Multiple genes'
     },
 
     detectsNmd: function () {

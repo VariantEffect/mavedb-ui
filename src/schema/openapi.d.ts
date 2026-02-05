@@ -667,7 +667,7 @@ export interface paths {
      *     The index to start from. If None, starts from the beginning.
      * limit : Optional[int]
      *     The maximum number of variants to return. If None, returns all variants.
-     * namespaces: List[Literal["scores", "counts", "vep", "gnomad"]]
+     * namespaces: List[Literal["scores", "counts", "vep", "gnomad", "clingen"]]
      *     The namespaces of all columns except for accession, hgvs_nt, hgvs_pro, and hgvs_splice.
      *     We may add ClinVar in the future.
      * drop_na_columns : bool, optional
@@ -2708,7 +2708,7 @@ export interface components {
       /** Processingstate */
       processingState?: string | null;
       /** Officialcollections */
-      officialCollections: components["schemas"]["mavedb__view_models__score_set__OfficialCollection"][];
+      officialCollections: components["schemas"]["OfficialCollection"][];
     };
     /**
      * ExperimentControlledKeyword
@@ -3542,6 +3542,15 @@ export interface components {
       /** Privatekey */
       privateKey: string;
     };
+    /** OfficialCollection */
+    OfficialCollection: {
+      /** Badgename */
+      badgeName: string;
+      /** Name */
+      name: string;
+      /** Urn */
+      urn: string;
+    };
     /** OrcidUser */
     OrcidUser: {
       /** Recordtype */
@@ -4092,11 +4101,11 @@ export interface components {
       /** Functionalclassifications */
       functionalClassifications?: components["schemas"]["mavedb__view_models__score_calibration__FunctionalClassification"][] | null;
       /** Thresholdsources */
-      thresholdSources?: components["schemas"]["PublicationIdentifier"][] | null;
+      thresholdSources: components["schemas"]["PublicationIdentifier"][];
       /** Classificationsources */
-      classificationSources?: components["schemas"]["PublicationIdentifier"][] | null;
+      classificationSources: components["schemas"]["PublicationIdentifier"][];
       /** Methodsources */
-      methodSources?: components["schemas"]["PublicationIdentifier"][] | null;
+      methodSources: components["schemas"]["PublicationIdentifier"][];
       /** Calibrationmetadata */
       calibrationMetadata?: Record<string, never> | null;
       /** Recordtype */
@@ -4153,11 +4162,11 @@ export interface components {
       /** Functionalclassifications */
       functionalClassifications?: components["schemas"]["FunctionalClassificationCreate"][] | null;
       /** Thresholdsources */
-      thresholdSources?: components["schemas"]["PublicationIdentifierCreate"][] | null;
+      thresholdSources: components["schemas"]["PublicationIdentifierCreate"][];
       /** Classificationsources */
-      classificationSources?: components["schemas"]["PublicationIdentifierCreate"][] | null;
+      classificationSources: components["schemas"]["PublicationIdentifierCreate"][];
       /** Methodsources */
-      methodSources?: components["schemas"]["PublicationIdentifierCreate"][] | null;
+      methodSources: components["schemas"]["PublicationIdentifierCreate"][];
       /** Calibrationmetadata */
       calibrationMetadata?: Record<string, never> | null;
       /** Scoreseturn */
@@ -4184,11 +4193,11 @@ export interface components {
       /** Functionalclassifications */
       functionalClassifications?: components["schemas"]["SavedFunctionalClassification"][] | null;
       /** Thresholdsources */
-      thresholdSources?: components["schemas"]["SavedPublicationIdentifier"][] | null;
+      thresholdSources: components["schemas"]["SavedPublicationIdentifier"][];
       /** Classificationsources */
-      classificationSources?: components["schemas"]["SavedPublicationIdentifier"][] | null;
+      classificationSources: components["schemas"]["SavedPublicationIdentifier"][];
       /** Methodsources */
-      methodSources?: components["schemas"]["SavedPublicationIdentifier"][] | null;
+      methodSources: components["schemas"]["SavedPublicationIdentifier"][];
       /** Calibrationmetadata */
       calibrationMetadata?: Record<string, never> | null;
       /** Recordtype */
@@ -4289,7 +4298,7 @@ export interface components {
       scoreCalibrations?: components["schemas"]["ScoreCalibration"][] | null;
       experiment: components["schemas"]["Experiment"];
       /** Officialcollections */
-      officialCollections: components["schemas"]["mavedb__view_models__score_set__OfficialCollection"][];
+      officialCollections: components["schemas"]["OfficialCollection"][];
       /** Private */
       private: boolean;
       processingState?: components["schemas"]["ProcessingState"] | null;
@@ -4714,6 +4723,8 @@ export interface components {
       recordType?: string;
       targetSequence?: components["schemas"]["SavedTargetSequence"] | null;
       targetAccession?: components["schemas"]["SavedTargetAccession"] | null;
+      /** Mappedhgncname */
+      mappedHgncName?: string | null;
       /** Uniprotidfrommappedmetadata */
       uniprotIdFromMappedMetadata?: string | null;
     };
@@ -4920,6 +4931,8 @@ export interface components {
       recordType?: string;
       targetSequence?: components["schemas"]["TargetSequence"] | null;
       targetAccession?: components["schemas"]["TargetAccession"] | null;
+      /** Mappedhgncname */
+      mappedHgncName?: string | null;
       /** Uniprotidfrommappedmetadata */
       uniprotIdFromMappedMetadata?: string | null;
     };
@@ -4952,6 +4965,8 @@ export interface components {
       recordType?: string;
       targetSequence?: components["schemas"]["TargetSequence"] | null;
       targetAccession?: components["schemas"]["TargetAccession"] | null;
+      /** Mappedhgncname */
+      mappedHgncName?: string | null;
       /** Uniprotidfrommappedmetadata */
       uniprotIdFromMappedMetadata?: string | null;
       /** Scoreseturn */
@@ -5755,15 +5770,6 @@ export interface components {
        * @default []
        */
       variants?: components["schemas"]["VariantEffectMeasurement"][];
-    };
-    /** OfficialCollection */
-    mavedb__view_models__score_set__OfficialCollection: {
-      /** Badgename */
-      badgeName: string;
-      /** Name */
-      name: string;
-      /** Urn */
-      urn: string;
     };
     /**
      * sequenceString
@@ -8685,6 +8691,11 @@ export interface operations {
   };
   /** Get Filter Options For Search */
   get_filter_options_for_search_api_v1_score_sets_search_filter_options_post: {
+    parameters: {
+      header?: {
+        "x-active-roles"?: string | null;
+      };
+    };
     requestBody: {
       content: {
         "application/json": components["schemas"]["ScoreSetsSearch"];
@@ -8983,7 +8994,7 @@ export interface operations {
    *     The index to start from. If None, starts from the beginning.
    * limit : Optional[int]
    *     The maximum number of variants to return. If None, returns all variants.
-   * namespaces: List[Literal["scores", "counts", "vep", "gnomad"]]
+   * namespaces: List[Literal["scores", "counts", "vep", "gnomad", "clingen"]]
    *     The namespaces of all columns except for accession, hgvs_nt, hgvs_pro, and hgvs_splice.
    *     We may add ClinVar in the future.
    * drop_na_columns : bool, optional
@@ -9005,8 +9016,8 @@ export interface operations {
         start?: number;
         /** @description Maximum number of variants to return */
         limit?: number;
-        /** @description One or more data types to include: scores, counts, clinVar, gnomAD, VEP */
-        namespaces?: ("scores" | "counts" | "vep" | "gnomad")[];
+        /** @description One or more data types to include: scores, counts, ClinGen, gnomAD, VEP */
+        namespaces?: ("scores" | "counts" | "vep" | "gnomad" | "clingen")[];
         drop_na_columns?: boolean | null;
         include_custom_columns?: boolean | null;
         include_post_mapped_hgvs?: boolean | null;
@@ -9068,6 +9079,7 @@ export interface operations {
         urn: string;
       };
     };
+    /** @description Score files, to be uploaded as multipart form data. The `scores_file` is required, while the `counts_file`, `score_columns_metadata`, and `count_columns_metadata` are optional. */
     requestBody?: {
       content: {
         "multipart/form-data": components["schemas"]["Body_upload_score_set_variant_data_api_v1_score_sets__urn__variants_data_post"];
@@ -9604,6 +9616,7 @@ export interface operations {
         urn: string;
       };
     };
+    /** @description Score set properties and score files, to be uploaded as multipart form data. All fields here are optional, and only those provided will be updated. */
     requestBody?: {
       content: {
         "multipart/form-data": components["schemas"]["Body_update_score_set_with_variants_api_v1_score_sets_with_variants__urn__patch"];

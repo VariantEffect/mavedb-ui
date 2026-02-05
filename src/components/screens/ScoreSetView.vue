@@ -554,6 +554,13 @@ export default {
       const countColumns = allCountColumns.filter((col) => col !== 'accession')
       return countColumns.length > 0
     },
+    hasPrimaryCalibration: function () {
+      return !!(
+        this.item?.scoreCalibrations &&
+        this.item.scoreCalibrations.length > 0 &&
+        this.item.scoreCalibrations.some((cal) => cal.primary)
+      )
+    },
     dataTypeOptions: function () {
       const options = [
         {label: 'Scores', value: 'scores'},
@@ -569,7 +576,7 @@ export default {
     annotatedVariantDownloadOptions: function () {
       const annotatedVariantOptions = []
 
-      if (this.item?.scoreCalibrations) {
+      if (this.hasPrimaryCalibration) {
         annotatedVariantOptions.push({
           label: 'Pathogenicity Evidence Line',
           command: () => {
@@ -578,7 +585,7 @@ export default {
         })
       }
 
-      if (this.item?.scoreCalibrations) {
+      if (this.hasPrimaryCalibration) {
         annotatedVariantOptions.push({
           label: 'Functional Impact Statement',
           command: () => {

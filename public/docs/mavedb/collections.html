@@ -1,0 +1,191 @@
+<!DOCTYPE html>
+
+<html lang="en" data-content_root="./">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" /><meta name="viewport" content="width=device-width, initial-scale=1" />
+
+    <title>Data set collections &#8212; MaveDB 2025.5.2 documentation</title>
+    <link rel="stylesheet" type="text/css" href="_static/pygments.css?v=4848ba22" />
+    <link rel="stylesheet" type="text/css" href="_static/pyramid.css?v=a5b9c134" />
+    <link rel="stylesheet" type="text/css" href="_static/graphviz.css?v=eafc0fe6" />
+    <link rel="stylesheet" type="text/css" href="_static/styles.css?v=1cacb62a" />
+    <script src="_static/documentation_options.js?v=ea53f692"></script>
+    <script src="_static/doctools.js?v=888ff710"></script>
+    <script src="_static/sphinx_highlight.js?v=dc90522c"></script>
+    <link rel="index" title="Index" href="genindex.html" />
+    <link rel="search" title="Search" href="search.html" />
+    <link rel="next" title="Assay facts" href="assay_facts.html" />
+    <link rel="prev" title="Output formats" href="output_formats.html" />
+<link rel="stylesheet" href="https://fonts.googleapis.com/css?family=Neuton&amp;subset=latin" type="text/css" media="screen" charset="utf-8" />
+<link rel="stylesheet" href="https://fonts.googleapis.com/css?family=Nobile:regular,italic,bold,bolditalic&amp;subset=latin" type="text/css" media="screen" charset="utf-8" />
+<!--[if lte IE 6]>
+<link rel="stylesheet" href="_static/ie6.css" type="text/css" media="screen" charset="utf-8" />
+<![endif]-->
+
+  </head><body>
+
+    <div class="related" role="navigation" aria-label="related navigation">
+      <h3>Navigation</h3>
+      <ul>
+        <li class="right" style="margin-right: 10px">
+          <a href="genindex.html" title="General Index"
+             accesskey="I">index</a></li>
+        <li class="right" >
+          <a href="assay_facts.html" title="Assay facts"
+             accesskey="N">next</a> |</li>
+        <li class="right" >
+          <a href="output_formats.html" title="Output formats"
+             accesskey="P">previous</a> |</li>
+        <li class="nav-item nav-item-0"><a href="index.html">MaveDB 2025.5.2 documentation</a> &#187;</li>
+        <li class="nav-item nav-item-this"><a href="">Data set collections</a></li> 
+      </ul>
+    </div>  
+
+    <div class="document">
+      <div class="documentwrapper">
+        <div class="bodywrapper">
+          <div class="body" role="main">
+            
+  <section id="data-set-collections">
+<h1>Data set collections<a class="headerlink" href="#data-set-collections" title="Link to this heading">¶</a></h1>
+<p id="data-collections-intro">To make it easier to share, organize, and find related data sets that might not be part of the same experiment or study,
+MaveDB supports the concept of “collections”. A collection is a group of related <a class="reference internal" href="record_types/experiments.html#experiments"><span class="std std-ref">experiments</span></a>
+and <a class="reference internal" href="record_types/score_sets.html#score-sets"><span class="std std-ref">score sets</span></a> that can be browsed and shared together. Collections can be created for any
+purpose, such as grouping data sets from a specific publication, project, or research group.</p>
+<p>Collections which you are an owner or member of will show up on data set pages when the data set is a member of the collection.</p>
+<section id="creating-collections">
+<span id="end-data-collections-intro"></span><h2>Creating Collections<a class="headerlink" href="#creating-collections" title="Link to this heading">¶</a></h2>
+<p id="id1">To create a new collection, click on the dropdown menu under your user profile in the top-right corner of the MaveDB interface and select “Collections”.
+From there, you can click the “Add an empty collection” button. You will be prompted to provide a name and description for your collection,
+set its privacy level, and add any users you wish to share it with.</p>
+<p>Alternatively, when viewing an <a class="reference internal" href="record_types/experiments.html#experiments"><span class="std std-ref">experiment</span></a> or <a class="reference internal" href="record_types/score_sets.html#score-sets"><span class="std std-ref">score set</span></a>, you can add it to a new or existing collection by clicking the “Save to a collection” button
+that appears under the assay facts sheet.</p>
+</section>
+<section id="collection-privacy">
+<span id="end-creating-collections"></span><h2>Collection Privacy<a class="headerlink" href="#collection-privacy" title="Link to this heading">¶</a></h2>
+<p id="id2">When creating a collection, you can choose to make it either public or private. Public collections can be viewed by anyone visiting MaveDB, while private collections can only be accessed by you
+and the users you explicitly share them with.</p>
+<div class="admonition note">
+<p class="admonition-title">Note</p>
+<p>Even if a collection is private, the individual <a class="reference internal" href="record_types/experiments.html#experiments"><span class="std std-ref">experiments</span></a> and <a class="reference internal" href="record_types/score_sets.html#score-sets"><span class="std std-ref">score sets</span></a> within it will still be subject to their own privacy settings.
+For example, if a private collection contains a public score set, that score set will still be accessible to anyone with its accession number, even if they cannot view the collection itself.</p>
+</div>
+<section id="collection-permissions">
+<span id="end-collection-privacy"></span><h3>Collection Permissions<a class="headerlink" href="#collection-permissions" title="Link to this heading">¶</a></h3>
+<p id="id3">When creating or managing a collection, you can specify which users have access to it. You can add other MaveDB users by their ORCiD. There are three levels of permissions you can assign to users for a collection:</p>
+<ul class="simple">
+<li><p><strong>Viewer</strong>: Users can view the collection and its contents but cannot make any changes.</p></li>
+<li><p><strong>Editor</strong>: Users can add or remove items from the collection and modify its metadata, but cannot change its permissions or privacy settings.</p></li>
+<li><p><strong>Admin</strong>: Users have full control over the collection, including managing permissions for other users and updating its privacy settings.</p></li>
+</ul>
+<div class="admonition note">
+<p class="admonition-title">Note</p>
+<p>As a collection owner, you will always have admin permissions and cannot be removed from the collection. As the owner of the record, you are
+also the only user who may delete the collection.</p>
+</div>
+</section>
+</section>
+<section id="managing-collections">
+<span id="end-collection-permissions"></span><h2>Managing collections<a class="headerlink" href="#managing-collections" title="Link to this heading">¶</a></h2>
+<p id="id4">To edit or manage an existing collection, navigate to the collection page via the “Collections” link in the user profile dropdown menu.
+From there, you can update the collection’s name and description, change its privacy settings, manage user permissions,
+and add or remove experiments and score sets from the collection.</p>
+<section id="adding-and-removing-items-from-collections">
+<span id="end-managing-collections"></span><h3>Adding and removing items from collections<a class="headerlink" href="#adding-and-removing-items-from-collections" title="Link to this heading">¶</a></h3>
+<p id="add-to-collection"><span id="modifying-collections"></span>To add an <a class="reference internal" href="record_types/experiments.html#experiments"><span class="std std-ref">experiment</span></a> or <a class="reference internal" href="record_types/score_sets.html#score-sets"><span class="std std-ref">score set</span></a> to a collection, navigate to the item’s page and click the “Save to a collection” button located under the assay facts sheet.
+You can then select an existing collection or create a new one to add the item to. Alternatively, you can add items directly from the collection page by clicking the “Add items” button and pasting
+the <a class="reference internal" href="accession_numbers.html#mavedb-accession-numbers"><span class="std std-ref">accessions</span></a> for the desired experiments or score sets. You must have the requisite permissions on the item to add it to a collection.</p>
+<p id="remove-from-collection"><span id="end-add-to-collection"></span>To remove items from a collection, navigate to the collection page, click the edit icon next to the score set or experiment list, select the items you wish to remove, and click the “Remove” button.
+Changes are not saved until you click the “Save” button at the bottom of the dialog box.</p>
+<p id="sharing-collections"><span id="end-remove-from-collection"></span>If your collection is private, you can allow other MaveDB users to access it by <a class="reference internal" href="#id3"><span class="std std-ref">adding their users as viewers</span></a>. If your collection
+is public, anyone can view it without needing to be added explicitly. Simply share the URL of the collection page with others to give them access.</p>
+</section>
+</section>
+<section id="official-collections">
+<span id="end-modifying-collections"></span><span id="end-sharing-collections"></span><h2>Official Collections<a class="headerlink" href="#official-collections" title="Link to this heading">¶</a></h2>
+<p id="id5">Some collections in MaveDB are designated as “official” collections. These collections are curated by the MaveDB team and contain high-quality, well-annotated data sets that are of particular interest to the community.</p>
+<p>You can identify official collections by a special badge on their collection page, and they are often highlighted in MaveDB communications and promotions. These collections are also linked
+from any data set page that is included in the official collection.</p>
+</section>
+</section>
+
+
+            <div class="clearer"></div>
+          </div>
+        </div>
+      </div>
+      <div class="sphinxsidebar" role="navigation" aria-label="main navigation">
+        <div class="sphinxsidebarwrapper">
+  <div>
+    <h3><a href="index.html">Table of Contents</a></h3>
+    <ul>
+<li><a class="reference internal" href="#">Data set collections</a><ul>
+<li><a class="reference internal" href="#creating-collections">Creating Collections</a></li>
+<li><a class="reference internal" href="#collection-privacy">Collection Privacy</a><ul>
+<li><a class="reference internal" href="#collection-permissions">Collection Permissions</a></li>
+</ul>
+</li>
+<li><a class="reference internal" href="#managing-collections">Managing collections</a><ul>
+<li><a class="reference internal" href="#adding-and-removing-items-from-collections">Adding and removing items from collections</a></li>
+</ul>
+</li>
+<li><a class="reference internal" href="#official-collections">Official Collections</a></li>
+</ul>
+</li>
+</ul>
+
+  </div>
+  <div>
+    <h4>Previous topic</h4>
+    <p class="topless"><a href="output_formats.html"
+                          title="previous chapter">Output formats</a></p>
+  </div>
+  <div>
+    <h4>Next topic</h4>
+    <p class="topless"><a href="assay_facts.html"
+                          title="next chapter">Assay facts</a></p>
+  </div>
+  <div role="note" aria-label="source link">
+    <h3>This Page</h3>
+    <ul class="this-page-menu">
+      <li><a href="_sources/collections.rst.txt"
+            rel="nofollow">Show Source</a></li>
+    </ul>
+   </div>
+<div id="searchbox" style="display: none" role="search">
+  <h3 id="searchlabel">Quick search</h3>
+    <div class="searchformwrapper">
+    <form class="search" action="search.html" method="get">
+      <input type="text" name="q" aria-labelledby="searchlabel" autocomplete="off" autocorrect="off" autocapitalize="off" spellcheck="false"/>
+      <input type="submit" value="Go" />
+    </form>
+    </div>
+</div>
+<script>document.getElementById('searchbox').style.display = "block"</script>
+        </div>
+      </div>
+      <div class="clearer"></div>
+    </div>
+    <div class="related" role="navigation" aria-label="related navigation">
+      <h3>Navigation</h3>
+      <ul>
+        <li class="right" style="margin-right: 10px">
+          <a href="genindex.html" title="General Index"
+             >index</a></li>
+        <li class="right" >
+          <a href="assay_facts.html" title="Assay facts"
+             >next</a> |</li>
+        <li class="right" >
+          <a href="output_formats.html" title="Output formats"
+             >previous</a> |</li>
+        <li class="nav-item nav-item-0"><a href="index.html">MaveDB 2025.5.2 documentation</a> &#187;</li>
+        <li class="nav-item nav-item-this"><a href="">Data set collections</a></li> 
+      </ul>
+    </div>
+    <div class="footer" role="contentinfo">
+    &#169; Copyright 2017-2025, MaveDB Developers.
+      Created using <a href="https://www.sphinx-doc.org/">Sphinx</a> 7.2.6.
+    </div>
+  </body>
+</html>

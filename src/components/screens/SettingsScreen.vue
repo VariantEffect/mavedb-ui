@@ -5,7 +5,7 @@
       <template #title> Profile </template>
       <template #content>
         <div class="field">
-          <span class="p-float-label">
+          <FloatLabel variant="on">
             <InputText
               :id="scopedId('input-email')"
               v-model="email"
@@ -14,7 +14,7 @@
               type="text"
             />
             <label :for="scopedId('input-email')">Email</label>
-          </span>
+          </FloatLabel>
         </div>
         <div>
           <span v-if="emailValidationError" class="mave-field-error">{{ emailValidationError }}</span>
@@ -23,10 +23,10 @@
       <template #footer>
         <Button :disabled="!user || email == user.email" icon="pi pi-check" label="Save" @click="saveEmail" />
         <Button
-          class="p-button-secondary"
           :disabled="!user || email == user.email"
           icon="pi pi-times"
           label="Cancel"
+          severity="secondary"
           style="margin-left: 0.5em"
           @click="cancelEmailEditing"
         />
@@ -41,14 +41,16 @@
             {{ accessKeysByRole['ordinary user'] }}
             &nbsp;
             <Button
-              class="p-button-rounded p-button-outlined"
               icon="pi pi-copy"
+              rounded
+              variant="outlined"
               @click="copyTextToClipboard(accessKeysByRole['ordinary user'])"
             />
             &nbsp;
             <Button
-              class="p-button-rounded p-button-danger"
               icon="pi pi-times"
+              rounded
+              severity="danger"
               @click="deleteAccessKeyWithConfirmation(accessKeysByRole['ordinary user'])"
             />
           </div>
@@ -95,14 +97,16 @@
                     {{ accessKeysByRole[role] }}
                     &nbsp;
                     <Button
-                      class="p-button-rounded p-button-outlined"
                       icon="pi pi-copy"
+                      rounded
+                      variant="outlined"
                       @click="copyTextToClipboard(accessKeysByRole[role])"
                     />
                     &nbsp;
                     <Button
-                      class="p-button-rounded p-button-danger"
                       icon="pi pi-times"
+                      rounded
+                      severity="danger"
                       @click="deleteAccessKeyWithConfirmation(accessKeysByRole[role])"
                     />
                   </div>
@@ -130,6 +134,7 @@ import axios from 'axios'
 import Button from 'primevue/button'
 import Card from 'primevue/card'
 import Checkbox from 'primevue/checkbox'
+import FloatLabel from 'primevue/floatlabel'
 import InputText from 'primevue/inputtext'
 import {useHead} from '@unhead/vue'
 
@@ -142,9 +147,9 @@ import useItems from '@/composition/items'
 import config from '@/config'
 
 export default {
-  name: 'HomeView',
+  name: 'SettingsScreen',
 
-  components: {Button, Card, DefaultLayout, InputText, Checkbox},
+  components: {Button, Card, DefaultLayout, FloatLabel,InputText, Checkbox},
 
   setup: () => {
     useHead({title: 'Settings'})

@@ -3,45 +3,43 @@
     dialog="You must add an email address to your account to create or edit an experiment. You can do so below, or on the 'Settings' page."
     :is-first-login-prompt="false"
   />
-  {{ experimentSetUrn }}
-  <DefaultLayout>
+  <DefaultLayout :require-auth="true">
     <div class="mave-experiment-editor">
-      <div v-if="itemStatus != 'NotLoaded'" class="mave-screen-title-bar">
-        <div class="mave-screen-title">Edit experiment {{ item.urn }}</div>
-        <div v-if="item" class="mavedb-screen-title-controls">
-          <Button @click="saveEditContent">Save changes</Button>
-          <Button class="p-button-help" @click="resetForm">Clear</Button>
-          <Button class="p-button-warning" @click="viewItem">Cancel</Button>
-        </div>
-      </div>
-      <div v-else class="mave-screen-title-bar">
+      <div class="mave-screen-title-bar">
         <div class="mave-screen-title">Create a new experiment</div>
         <div class="mavedb-screen-title-controls">
           <Button @click="validateAndSave">Save</Button>
-          <Button class="p-button-help" @click="resetForm">Clear</Button>
-          <Button class="p-button-warning" @click="backDashboard">Cancel</Button>
+          <Button severity="help" @click="resetForm">Clear</Button>
+          <Button severity="warn" @click="backDashboard">Cancel</Button>
         </div>
       </div>
       <div class="mavedb-wizard">
-        <Stepper v-model:active-step="activeWizardStep">
-          <StepperPanel>
-            <template #header="{index, clickCallback}">
-              <button
-                class="p-stepper-action"
-                :disabled="maxWizardStepEntered < index || maxWizardStepValidated < index - 1"
-                role="tab"
-                @click="clickCallback"
-              >
-                <span class="p-stepper-number">{{ index + 1 }}</span>
-                <span class="p-stepper-title">Experiment information</span>
-              </button>
-            </template>
-            <template #content="{nextCallback: showNextWizardStep}">
+        <Stepper v-model:value="activeWizardStep">
+          <StepList>
+              <Step :value="1">Experiment information</Step>
+              <Step :disabled="maxWizardStepEntered < activeWizardStep || maxWizardStepValidated < activeWizardStep - 1" :value="2">Keywords</Step>
+          </StepList>
+          <StepPanels>
+            <StepPanel v-slot="{ value, activateCallback }" :value="1">
               <div class="mavedb-wizard-form">
                 <div class="mavedb-wizard-form-content-background"></div>
                 <div class="mavedb-wizard-row">
+                  <div class="mavedb-wizard-help">
+                    <label :for="scopedId('field-value-experiment-set')" style="font-weight: bold; margin-right: 5px"
+                      >Experiment set:</label
+                    >
+                    <span :id="scopedId('field-value-experiment-set')">{{ experimentSetUrn || "(New experiment set)"}}</span>
+                    <span v-if="validationErrors.experimentSetUrn" class="mave-field-error">{{
+                      validationErrors.experimentSetUrn
+                    }}</span>
+                  </div>
                   <div class="mavedb-wizard-content-pane">
-                    <Message severity="info">
+                    <Message v-if="experimentSetUrn" closable severity="info">
+                      You are currently adding an experiment to an existing experiment set. To add to a different set,
+                      please navigate to the experiment set first and click "Add experiment.". To add to a new set,
+                      click "New experiment" from the navigation menu.
+                    </Message>
+                    <Message v-else closable severity="info">
                       You are currently adding an experiment to a new experiment set. To add an experiment to an
                       existing experiment set, navigate to the existing experiment set and click the "Add experiment"
                       button.
@@ -59,10 +57,10 @@
                     </div>
                   </div>
                   <div class="mavedb-wizard-content field">
-                    <span class="p-float-label">
+                    <FloatLabel variant="on">
                       <InputText :id="scopedId('input-title')" v-model="title" />
                       <label :for="scopedId('input-title')">Title</label>
-                    </span>
+                    </FloatLabel>
                     <span v-if="validationErrors.title" class="mave-field-error">{{ validationErrors.title }}</span>
                   </div>
                 </div>
@@ -78,10 +76,10 @@
                     </div>
                   </div>
                   <div class="mavedb-wizard-content field">
-                    <span class="p-float-label">
+                    <FloatLabel variant="on">
                       <Textarea :id="scopedId('input-shortDescription')" v-model="shortDescription" rows="4" />
                       <label :for="scopedId('input-shortDescription')">Short description</label>
-                    </span>
+                    </FloatLabel>
                     <span v-if="validationErrors.shortDescription" class="mave-field-error">{{
                       validationErrors.shortDescription
                     }}</span>
@@ -99,18 +97,24 @@
                     </div>
                   </div>
                   <div class="mavedb-wizard-content field">
-                    <TabView>
-                      <TabPanel header="Edit">
-                        <span class="p-float-label">
-                          <Textarea :id="scopedId('input-abstractText')" v-model="abstractText" rows="10" />
-                          <label :for="scopedId('input-abstractText')">Abstract</label>
-                        </span>
-                      </TabPanel>
-                      <TabPanel header="Preview">
-                        <!-- eslint-disable-next-line vue/no-v-html -->
-                        <div class="mavedb-wizard-rendered-markdown" v-html="markdownToHtml(abstractText)"></div>
-                      </TabPanel>
-                    </TabView>
+                    <Tabs value="0">
+                      <TabList>
+                        <Tab value="0"> Edit </Tab>
+                        <Tab value="1"> Preview </Tab>
+                      </TabList>
+                      <TabPanels>
+                        <TabPanel header="Edit" value="0">
+                          <FloatLabel variant="on">
+                            <Textarea :id="scopedId('input-abstractText')" v-model="abstractText" rows="10" />
+                            <label :for="scopedId('input-abstractText')">Abstract</label>
+                          </FloatLabel>
+                        </TabPanel>
+                        <TabPanel header="Preview" value="1">
+                          <!-- eslint-disable-next-line vue/no-v-html -->
+                          <div class="mavedb-wizard-rendered-markdown" v-html="markdownToHtml(abstractText)"></div>
+                        </TabPanel>
+                      </TabPanels>
+                    </Tabs>
                     <span v-if="validationErrors.abstractText" class="mave-field-error">{{
                       validationErrors.abstractText
                     }}</span>
@@ -126,7 +130,7 @@
                       May be formatted using
                       <a href="https://daringfireball.net/projects/markdown/syntax" target="_blank">Markdown</a>. Should
                       include:
-                      <ul>
+                      <ul class="list-disc ml-5">
                         <li>variant library construction methods,</li>
                         <li>description of the functional assay, including model system and selection type,</li>
                         <li>sequencing strategy and sequencing technology, and</li>
@@ -135,18 +139,24 @@
                     </div>
                   </div>
                   <div class="mavedb-wizard-content field">
-                    <TabView>
-                      <TabPanel header="Edit">
-                        <span class="p-float-label">
-                          <Textarea :id="scopedId('input-methodText')" v-model="methodText" rows="10" />
-                          <label :for="scopedId('input-methodText')">Methods</label>
-                        </span>
-                      </TabPanel>
-                      <TabPanel header="Preview">
-                        <!-- eslint-disable-next-line vue/no-v-html -->
-                        <div class="mavedb-wizard-rendered-markdown" v-html="markdownToHtml(methodText)"></div>
-                      </TabPanel>
-                    </TabView>
+                    <Tabs value="0">
+                      <TabList>
+                        <Tab value="0"> Edit </Tab>
+                        <Tab value="1"> Preview </Tab>
+                      </TabList>
+                      <TabPanels>
+                        <TabPanel header="Edit" value="0">
+                          <FloatLabel variant="on">
+                            <Textarea :id="scopedId('input-methodText')" v-model="methodText" rows="10" />
+                            <label :for="scopedId('input-methodText')">Methods</label>
+                          </FloatLabel>
+                        </TabPanel>
+                        <TabPanel header="Preview" value="1">
+                          <!-- eslint-disable-next-line vue/no-v-html -->
+                          <div class="mavedb-wizard-rendered-markdown" v-html="markdownToHtml(methodText)"></div>
+                        </TabPanel>
+                      </TabPanels>
+                    </Tabs>
                     <span v-if="validationErrors.methodText" class="mave-field-error">{{
                       validationErrors.methodText
                     }}</span>
@@ -163,30 +173,26 @@
                     </div>
                   </div>
                   <div class="mavedb-wizard-content field">
-                    <span class="p-float-label">
-                      <Chips
+                    <FloatLabel variant="on">
+                      <AutoComplete
                         :id="scopedId('input-doiIdentifiers')"
-                        ref="doiIdentifiersInput"
                         v-model="doiIdentifiers"
-                        :add-on-blur="true"
-                        :allow-duplicate="false"
-                        @add="acceptNewDoiIdentifier"
-                        @keyup.escape="clearDoiIdentifierSearch"
-                      >
-                        <template #chip="slotProps">
-                          <div>
-                            <span>{{ slotProps.value.identifier }}</span>
-                          </div>
-                        </template>
-                      </Chips>
+                        :multiple="true"
+                        option-label="identifier"
+                        :typeahead="false"
+                        @blur="updateDoiIdentifiers"
+                        @keyup.escape="clearAutoCompleteInput"
+                        @keyup.space="updateDoiIdentifiers"
+                        @update:model-value="newDoiIdentifiersAdded"
+                      />
                       <label :for="scopedId('input-doiIdentifiers')">DOIs</label>
-                    </span>
+                    </FloatLabel>
                     <span v-if="validationErrors.doiIdentifiers" class="mave-field-error">{{
                       validationErrors.doiIdentifiers
                     }}</span>
                   </div>
                 </div>
-                <div v-if="itemStatus == 'NotLoaded' || item.private == true">
+                <div>
                   <div class="mavedb-wizard-row">
                     <div class="mavedb-wizard-help">
                       <label>
@@ -196,30 +202,21 @@
                       <div class="mavedb-help-small">Examples: 1111-1111-1111-1111</div>
                     </div>
                     <div class="mavedb-wizard-content field">
-                      <span class="p-float-label">
-                        <Chips
+                      <FloatLabel variant="on">
+                        <AutoComplete
                           :id="scopedId('input-contributors')"
-                          ref="contributorsInput"
                           v-model="contributors"
-                          :add-on-blur="true"
-                          :allow-duplicate="false"
-                          placeholder="Type or paste ORCID IDs here."
-                          @add="newContributorsAdded"
-                          @keyup.escape="clearContributorSearch"
-                        >
-                          <template #chip="slotProps">
-                            <div>
-                              <div v-if="slotProps.value.givenName || slotProps.value.familyName">
-                                {{ slotProps.value.givenName }} {{ slotProps.value.familyName }} ({{
-                                  slotProps.value.orcidId
-                                }})
-                              </div>
-                              <div v-else>{{ slotProps.value.orcidId }}</div>
-                            </div>
-                          </template>
-                        </Chips>
+                          fluid
+                          multiple
+                          :option-label="(x) => x.givenName || x.familyName ? `${x.givenName} ${x.familyName} (${x.orcidId})` : x.orcidId"
+                          :typeahead="false"
+                          @blur="updateContributors"
+                          @keyup.escape="clearAutoCompleteInput"
+                          @keyup.space="updateContributors"
+                          @update:model-value="newContributorsAdded"
+                        />
                         <label :for="scopedId('input-contributors')">Contributors</label>
-                      </span>
+                      </FloatLabel>
                       <span v-if="validationErrors.contributors" class="mave-field-error">{{
                         validationErrors.contributors
                       }}</span>
@@ -239,37 +236,29 @@
                       </div>
                     </div>
                     <div class="mavedb-wizard-content field">
-                      <span class="p-float-label">
+                      <FloatLabel variant="on">
                         <AutoComplete
                           :id="scopedId('input-publicationIdentifiers')"
-                          ref="publicationIdentifiersInput"
                           v-model="publicationIdentifiers"
                           :multiple="true"
-                          option-label="identifier"
+                          :option-label="(x) => `${x.identifier}: ${truncatePublicationTitle(x.title)}`"
                           :suggestions="publicationIdentifierSuggestionsList"
+                          @blur="clearAutoCompleteInput"
                           @complete="searchPublicationIdentifiers"
-                          @item-select="acceptNewPublicationIdentifier"
-                          @item-unselect="removePublicationIdentifier"
-                          @keyup.escape="clearPublicationIdentifierSearch"
+                          @keyup.escape="clearAutoCompleteInput"
+                          @option-select="acceptNewPublicationIdentifier"
                         >
-                          <template #chip="slotProps">
+                          <template #option="slotProps">
                             <div>
-                              <div>
-                                {{ slotProps.value.identifier }}: {{ truncatePublicationTitle(slotProps.value.title) }}
-                              </div>
-                            </div>
-                          </template>
-                          <template #item="slotProps">
-                            <div>
-                              <div>Title: {{ slotProps.item.title }}</div>
-                              <div>DOI: {{ slotProps.item.doi }}</div>
-                              <div>Identifier: {{ slotProps.item.identifier }}</div>
-                              <div>Database: {{ slotProps.item.dbName }}</div>
+                              <div>Title: {{ slotProps.option.title }}</div>
+                              <div>DOI: {{ slotProps.option.doi }}</div>
+                              <div>Identifier: {{ slotProps.option.identifier }}</div>
+                              <div>Database: {{ slotProps.option.dbName }}</div>
                             </div>
                           </template>
                         </AutoComplete>
                         <label :for="scopedId('input-publicationIdentifiers')">Publication identifiers</label>
-                      </span>
+                      </FloatLabel>
                       <span v-if="validationErrors.publicationIdentifiers" class="mave-field-error">{{
                         validationErrors.publicationIdentifiers
                       }}</span>
@@ -280,11 +269,11 @@
                       <label> Of the above publications, the primary publication that describes the score set. </label>
                     </div>
                     <div class="mavedb-wizard-content field">
-                      <span class="p-float-label" style="display: block">
+                      <FloatLabel variant="on">
                         <Multiselect
                           :id="scopedId('input-primaryPublicationIdentifiers')"
-                          ref="primaryPublicationIdentifiersInput"
                           v-model="primaryPublicationIdentifiers"
+                          class="p-inputwrapper-filled"
                           option-label="identifier"
                           :options="publicationIdentifiers"
                           placeholder="Select a primary publication (Where the dataset is described)"
@@ -300,7 +289,7 @@
                           </template>
                         </Multiselect>
                         <label :for="scopedId('input-primaryPublicationIdentifiers')">Primary publication</label>
-                      </span>
+                      </FloatLabel>
                       <span v-if="validationErrors.primaryPublicationIdentifiers" class="mave-field-error">{{
                         validationErrors.primaryPublicationIdentifiers
                       }}</span>
@@ -314,7 +303,7 @@
                       </label>
                       <div class="mavedb-help-small">
                         MaveDB currently supports accession numbers for:
-                        <ul>
+                        <ul class="list-disc ml-5">
                           <li>
                             <a href="https://www.ebi.ac.uk/biostudies/arrayexpress" target="_blank">ArrayExpress</a>
                           </li>
@@ -327,24 +316,21 @@
                       </div>
                     </div>
                     <div class="mavedb-wizard-content field">
-                      <span class="p-float-label">
-                        <Chips
+                      <FloatLabel variant="on">
+                        <AutoComplete
                           :id="scopedId('input-rawReadIdentifiers')"
                           ref="rawReadIdentifiersInput"
                           v-model="rawReadIdentifiers"
-                          :add-on-blur="true"
-                          :allow-duplicate="false"
-                          @add="acceptNewRawReadIdentifier"
-                        >
-                          @keyup.escape="clearRawReadIdentifierSearch"
-                          <template #chip="slotProps">
-                            <div>
-                              <span>{{ slotProps.value.identifier }}</span>
-                            </div>
-                          </template>
-                        </Chips>
+                          :multiple="true"
+                          option-label="identifier"
+                          :typeahead="false"
+                          @blur="updateRawReadIdentifiers"
+                          @keyup.escape="clearAutoCompleteInput"
+                          @keyup.space="updateRawReadIdentifiers"
+                          @update:model-value="newRawReadIdentifiersAdded"
+                        />
                         <label :for="scopedId('input-rawReadIdentifiers')">Raw Read</label>
-                      </span>
+                      </FloatLabel>
                       <span v-if="validationErrors.rawReadIdentifiers" class="mave-field-error">{{
                         validationErrors.rawReadIdentifiers
                       }}</span>
@@ -355,7 +341,7 @@
                       <label> Any additional metadata about the experiment, as a JSON file. </label>
                     </div>
                     <div class="mavedb-wizard-content field">
-                      <span class="p-float-label">
+                      <FloatLabel variant="on">
                         <FileUpload
                           :id="scopedId('input-extraMetadataFile')"
                           accept="application/json"
@@ -373,7 +359,7 @@
                             <p>Drop a JSON file here.</p>
                           </template>
                         </FileUpload>
-                      </span>
+                      </FloatLabel>
                       <span v-if="validationErrors.extraMetadata" class="mave-field-error">{{
                         validationErrors.extraMetadata
                       }}</span>
@@ -388,26 +374,13 @@
                     icon="pi pi-arrow-right"
                     icon-pos="right"
                     label="Next"
-                    @click="showNextWizardStepIfValid(showNextWizardStep)"
+                    @click="showNextWizardStepIfValid(activateCallback)"
                   />
                 </div>
               </div>
-            </template>
-          </StepperPanel>
-          <StepperPanel v-if="itemStatus == 'NotLoaded' || item.private" header="Keywords">
-            <template #header="{index, clickCallback}">
-              <button
-                class="p-stepper-action"
-                :disabled="maxWizardStepEntered < index || maxWizardStepValidated < index - 1"
-                role="tab"
-                @click="clickCallback"
-              >
-                <span class="p-stepper-number">{{ index + 1 }}</span>
-                <span class="p-stepper-title">Keywords</span>
-              </button>
-            </template>
-            <template #content="{prevCallback: showPreviousWizardStep}">
-              <Message>
+            </StepPanel>
+            <StepPanel v-slot="{ activateCallback }" :value="2">
+              <Message class="mb-1" closable>
                 Experiments can be tagged with optional keywords. In a future release, the keyword vocabulary will
                 become restricted and keyword selection will be mandatory.
               </Message>
@@ -423,16 +396,18 @@
                     </div>
 
                     <div class="mavedb-wizard-content keyword-editor">
-                      <span class="p-float-label field">
-                        <Dropdown
-                          :id="scopedId(`keyword-input-${keyword.key}`)"
-                          v-model="keywordKeys[keyword.key]"
-                          class="keyword-dropdown"
-                          :option-label="(option) => formatKeywordOptionLabel(option)"
-                          option-value="label"
-                          :options="getKeywordOptions(keyword.option)"
-                        />
-                        <label :for="scopedId(`keyword-input-${keyword.key}`)">{{ keyword.key }}</label>
+                      <span class="field">
+                        <FloatLabel variant="on">
+                          <Select
+                            :id="scopedId(`keyword-input-${keyword.key}`)"
+                            v-model="keywordKeys[keyword.key]"
+                            class="keyword-dropdown"
+                            :option-label="(option) => formatKeywordOptionLabel(option)"
+                            option-value="label"
+                            :options="getKeywordOptions(keyword.option)"
+                          />
+                          <label :for="scopedId(`keyword-input-${keyword.key}`)">{{ keyword.key }}</label>
+                        </FloatLabel>
                         <Button
                           aria-label="Filter"
                           class="keyword-button"
@@ -465,13 +440,13 @@
                       }}</span>
 
                       <div v-if="keywordTextVisible[keyword.key] || keywordKeys[keyword.key] === 'Other'" class="field">
-                        <span class="p-float-label keyword-description-input">
+                        <FloatLabel class="keyword-description-input" variant="on">
                           <Textarea :id="scopedId('input-title')" v-model="keywordDescriptions[keyword.key]" rows="4" />
                           <label :for="scopedId('input-title')"
                             >{{ keyword.descriptionLabel }}
                             {{ keywordKeys[keyword.key] === 'Other' ? '(Required)' : '(Optional)' }}</label
                           >
-                        </span>
+                        </FloatLabel>
                         <span v-if="validationErrors[`keywordDescriptions.${keyword.key}`]" class="mave-field-error">
                           {{ validationErrors[`keywordDescriptions.${keyword.key}`] }}</span
                         >
@@ -482,9 +457,9 @@
               </div>
               <div class="mavedb-wizard-step-controls-row">
                 <div class="flex justify-content-between mavedb-wizard-step-controls pt-4">
-                  <Button icon="pi pi-arrow-left" label="Back" severity="secondary" @click="showPreviousWizardStep" />
+                  <Button icon="pi pi-arrow-left" label="Back" severity="secondary" @click="activateCallback(activeWizardStep - 1)" />
                   <Button
-                    :disabled="maxWizardStepValidated < activeWizardStep"
+                    :disabled="maxWizardStepValidated == -2"
                     icon="pi pi-arrow-right"
                     icon-pos="right"
                     label="Save"
@@ -492,8 +467,8 @@
                   />
                 </div>
               </div>
-            </template>
-          </StepperPanel>
+            </StepPanel>
+          </StepPanels>
         </Stepper>
       </div>
     </div>
@@ -507,18 +482,24 @@ import _ from 'lodash'
 import {marked} from 'marked'
 import AutoComplete from 'primevue/autocomplete'
 import Button from 'primevue/button'
-import Chips from 'primevue/chips'
 import Dialog from 'primevue/dialog'
-import Dropdown from 'primevue/dropdown'
+import FloatLabel from 'primevue/floatlabel'
+import Select from 'primevue/select'
 import FileUpload from 'primevue/fileupload'
 import InputText from 'primevue/inputtext'
 import Message from 'primevue/message'
 import Multiselect from 'primevue/multiselect'
 import ProgressSpinner from 'primevue/progressspinner'
 import Stepper from 'primevue/stepper'
-import StepperPanel from 'primevue/stepperpanel'
+import StepPanel from 'primevue/steppanel'
+import StepPanels from 'primevue/steppanels'
+import StepList from 'primevue/steplist'
+import Step from 'primevue/step'
+import Tabs from 'primevue/tabs'
+import Tab from 'primevue/tab'
+import TabList from 'primevue/tablist'
+import TabPanels from 'primevue/tabpanels'
 import TabPanel from 'primevue/tabpanel'
-import TabView from 'primevue/tabview'
 import Textarea from 'primevue/textarea'
 import {useHead} from '@unhead/vue'
 
@@ -527,7 +508,6 @@ import EmailPrompt from '@/components/common/EmailPrompt'
 import useScopedId from '@/composables/scoped-id'
 import useAuth from '@/composition/auth'
 import useFormatters from '@/composition/formatters'
-import useItem from '@/composition/item'
 import useItems from '@/composition/items'
 import config from '@/config'
 import {normalizeDoi, normalizeRawRead, validateDoi, validateRawRead} from '@/lib/identifiers'
@@ -560,9 +540,14 @@ const KEYWORDS = [
     option: 'inVitroMechanismKeywordOptions'
   },
   {
-    key: 'Delivery method',
-    descriptionLabel: 'Delivery method Description',
+    key: 'Delivery Method',
+    descriptionLabel: 'Delivery Method Description',
     option: 'deliveryMethodKeywordOptions'
+  },
+  {
+    key: 'Molecular Mechanism Assessed',
+    descriptionLabel: 'Molecular Mechanism Assessed Description',
+    option: 'molecularMechanismAssessedKeywordOptions'
   },
   {
     key: 'Phenotypic Assay Dimensionality',
@@ -612,14 +597,14 @@ const KEYWORD_GROUPS = {
 }
 
 export default {
-  name: 'ExperimentEditor',
+  name: 'ExperimentCreator',
   components: {
     AutoComplete,
     Button,
-    Chips,
     DefaultLayout,
     Dialog,
-    Dropdown,
+    FloatLabel,
+    Select,
     EmailPrompt,
     FileUpload,
     InputText,
@@ -627,21 +612,24 @@ export default {
     Multiselect,
     ProgressSpinner,
     Stepper,
-    StepperPanel,
+    StepPanel,
+    StepPanels,
+    StepList,
+    Step,
+    Tabs,
+    Tab,
+    TabList,
+    TabPanels,
     TabPanel,
-    TabView,
     Textarea
   },
 
   props: {
     experimentSetUrn: {
       type: String,
-      required: false
+      required: false,
+      default: null
     },
-    itemId: {
-      type: String,
-      required: false
-    }
   },
 
   setup: () => {
@@ -655,6 +643,9 @@ export default {
     const inVitroSystemKeywordOptions = useItems({itemTypeName: `controlled-keywords-in-vitro-system-search`})
     const inVitroMechanismKeywordOptions = useItems({itemTypeName: `controlled-keywords-in-vitro-mechanism-search`})
     const deliveryMethodKeywordOptions = useItems({itemTypeName: `controlled-keywords-delivery-search`})
+    const molecularMechanismAssessedKeywordOptions = useItems({
+      itemTypeName: `controlled-keywords-molecular-mechanism-assessed-search`
+    })
     const phenotypicDimensionalityKeywordOptions = useItems({
       itemTypeName: `controlled-keywords-phenotypic-dimensionality-search`
     })
@@ -677,7 +668,6 @@ export default {
     return {
       userProfile,
       ...useFormatters(),
-      ...useItem({itemTypeName: 'experiment'}),
       ...useScopedId(),
       variantLibraryKeywordOptions: variantLibraryKeywordOptions.items,
       endogenousSystemKeywordOptions: endogenousSystemKeywordOptions.items,
@@ -685,6 +675,7 @@ export default {
       inVitroSystemKeywordOptions: inVitroSystemKeywordOptions.items,
       inVitroMechanismKeywordOptions: inVitroMechanismKeywordOptions.items,
       deliveryMethodKeywordOptions: deliveryMethodKeywordOptions.items,
+      molecularMechanismAssessedKeywordOptions: molecularMechanismAssessedKeywordOptions.items,
       phenotypicDimensionalityKeywordOptions: phenotypicDimensionalityKeywordOptions.items,
       phenotypicMethodKeywordOptions: phenotypicMethodKeywordOptions.items,
       phenotypicMechanismKeywordOptions: phenotypicMechanismKeywordOptions.items,
@@ -728,10 +719,10 @@ export default {
     },
 
     /** The currently active step. */
-    activeWizardStep: 0,
+    activeWizardStep: 1,
 
     /** The highest step that the user has entered. This can be used to prevent the user from jumping ahead. */
-    maxWizardStepEntered: 0,
+    maxWizardStepEntered: 1,
 
     stepFields: [
       [
@@ -799,12 +790,6 @@ export default {
         this.resetForm()
       }
     },
-    itemId: {
-      handler: function () {
-        this.setItemId(this.itemId)
-      },
-      immediate: true
-    },
     'keywordKeys.Variant Library Creation Method': function (newValue) {
       if (newValue !== 'Endogenous locus library method') {
         this.keywordKeys['Endogenous Locus Library Method System'] = null
@@ -814,19 +799,37 @@ export default {
         this.keywordKeys['In Vitro Construct Library Method System'] = null
         this.keywordKeys['In Vitro Construct Library Method Mechanism'] = null
       }
-    }
+    },
+    publicationIdentifiers: {
+      handler: function (newValue, oldValue) {
+        if (newValue.length == 1) {
+          this.primaryPublicationIdentifiers = newValue
+        } else if (
+          newValue.length == 0 ||
+          (newValue.length > 1 && oldValue.length == 1) ||
+          (this.primaryPublicationIdentifiers.length > 0 &&
+          !newValue
+            .map((pi) => pi.identifier)
+            .includes(this.primaryPublicationIdentifiers[0].identifier))
+        ) {
+          // Clear primary publication if we have just added a second ID, or if we have deleted all IDs,
+          // or if the primary publication is no longer in the list of publications.
+          this.primaryPublicationIdentifiers = []
+        }
+      }
+    },
   },
 
   methods: {
+    clearAutoCompleteInput: function(event) {
+      if (event.target) {
+        event.target.value = ''
+      }
+    },
+
     //////////////////////////////////////////////////////////////////////////////////////////////////////////////////
     // Contributors
     //////////////////////////////////////////////////////////////////////////////////////////////////////////////////
-
-    clearContributorSearch: function () {
-      // This could change with a new PrimeVue version.
-      const input = this.$refs.contributorsInput
-      input.$refs.input.value = ''
-    },
 
     lookupOrcidUser: async function (orcidId) {
       let orcidUser = null
@@ -838,8 +841,20 @@ export default {
       return orcidUser
     },
 
-    newContributorsAdded: async function (event) {
-      const newContributors = event.value
+    updateContributors: function (event) {
+      const currentValue = event.target?.value
+      if (currentValue && currentValue.trim() != '') {
+        this.contributors.push(currentValue.trim())
+        this.newContributorsAdded()
+
+        // clear the input field
+        event.target.value = ''
+      }
+    },
+
+    newContributorsAdded: async function () {
+      // new contributor values are those that are strings rather than objects
+      const newContributors = this.contributors.filter(_.isString)
 
       // Convert any strings to ORCID users without names. Remove whitespace from new entries.
       this.contributors = this.contributors.map((c) => (_.isString(c) ? {orcidId: c.trim()} : c))
@@ -905,12 +920,12 @@ export default {
 
     minStepWithError: function () {
       const numSteps = this.stepFields.length
-      for (let i = 0; i < numSteps; i++) {
+      for (let i = 1; i < numSteps + 1; i++) {
         if (this.wizardStepHasError(i)) {
           return i
         }
       }
-      return numSteps - 1
+      return numSteps
     },
 
     wizardStepHasError: function (step) {
@@ -931,7 +946,7 @@ export default {
     showNextWizardStepIfValid: function (navigate) {
       if (this.maxWizardStepValidated >= this.activeWizardStep) {
         this.maxWizardStepEntered = Math.max(this.maxWizardStepEntered, this.activeWizardStep + 1)
-        navigate()
+        navigate(this.activeWizardStep + 1)
       }
     },
 
@@ -939,7 +954,18 @@ export default {
     // Form fields
     ////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 
-    acceptNewDoiIdentifier: function () {
+    updateDoiIdentifiers: function (event) {
+      const currentValue = event.target?.value
+      if (currentValue && currentValue.trim() != '') {
+        this.doiIdentifiers.push(currentValue.trim())
+        this.newDoiIdentifiersAdded()
+
+        // clear the input field
+        event.target.value = ''
+      }
+    },
+
+    newDoiIdentifiersAdded: function () {
       // Remove new string item from the model and add new structured item in its place if it validates and is not a duplicate.
       const idx = this.doiIdentifiers.findIndex((item) => typeof item === 'string' || item instanceof String)
       if (idx == -1) {
@@ -963,12 +989,6 @@ export default {
       }
     },
 
-    clearDoiIdentifierSearch: function () {
-      // This could change with a new Primevue version.
-      const input = this.$refs.doiIdentifiersInput
-      input.$refs.input.value = ''
-    },
-
     acceptNewPublicationIdentifier: function () {
       // We assume the newest value is the right-most one here. That seems to always be true in this version of Primevue,
       // but that may change in the future.
@@ -986,21 +1006,6 @@ export default {
       }
     },
 
-    removePublicationIdentifier: function (event) {
-      // If we are removing a primary publication identifier, also remove it from that list.
-      const removedIdentifier = event.value.identifier
-      const primaryIdx = this.primaryPublicationIdentifiers.findIndex((pub) => pub.identifier == removedIdentifier)
-      if (primaryIdx != -1) {
-        this.primaryPublicationIdentifiers.splice(primaryIdx, 1)
-      }
-    },
-
-    clearPublicationIdentifierSearch: function () {
-      // This could change with a new Primevue version.
-      const input = this.$refs.publicationIdentifiersInput
-      input.$refs.focusInput.value = ''
-    },
-
     searchPublicationIdentifiers: function (event) {
       const searchText = (event.query || '').trim()
       if (searchText.length > 0) {
@@ -1013,7 +1018,18 @@ export default {
       return title.length > 50 ? title.slice(0, 50) + '...' : title
     },
 
-    acceptNewRawReadIdentifier: function () {
+    updateRawReadIdentifiers: function (event) {
+      const currentValue = event.target?.value
+      if (currentValue && currentValue.trim() != '') {
+        this.rawReadIdentifiers.push(currentValue.trim())
+        this.newRawReadIdentifiersAdded()
+
+        // clear the input field
+        event.target.value = ''
+      }
+    },
+
+    newRawReadIdentifiersAdded: function () {
       // Remove new string item from the model and add new structured item in its place if it validates and is not a duplicate.
       const idx = this.rawReadIdentifiers.findIndex((item) => typeof item === 'string' || item instanceof String)
       if (idx == -1) {
@@ -1035,12 +1051,6 @@ export default {
         this.rawReadIdentifiers.splice(idx, 1)
         this.$toast.add({severity: 'warn', summary: `"${searchText}" is not a valid Raw Read identifier`, life: 3000})
       }
-    },
-
-    clearRawReadIdentifierSearch: function () {
-      // This could change with a new Primevue version.
-      const input = this.$refs.rawReadIdentifiersInput
-      input.$refs.input.value = ''
     },
 
     fileCleared: function (inputName) {
@@ -1094,47 +1104,24 @@ export default {
     ////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 
     resetForm: function () {
-      if (this.item) {
-        this.title = this.item.title
-        this.shortDescription = this.item.shortDescription
-        this.abstractText = this.item.abstractText
-        this.methodText = this.item.methodText
-        this.contributors = _.sortBy(this.item.contributors, ['familyName', 'givenName', 'orcidId'])
-        this.doiIdentifiers = this.item.doiIdentifiers
-        // So that the multiselect can populate correctly, build the primary publication identifiers
-        // indirectly by filtering publication identifiers list for those publications we know to be
-        // primary.
-        this.publicationIdentifiers = _.concat(
-          this.item.primaryPublicationIdentifiers,
-          this.item.secondaryPublicationIdentifiers
-        )
-        this.primaryPublicationIdentifiers = this.item.primaryPublicationIdentifiers.filter((publication) => {
-          return this.publicationIdentifiers.some((primary) => {
-            return primary.identifier === publication.identifier
-          })
-        })
-        this.secondaryPublicationIdentifiers = this.item.secondaryPublicationIdentifiers
-        this.rawReadIdentifiers = this.item.rawReadIdentifiers
-        this.extraMetadata = this.item.extraMetadata
-      } else {
-        this.title = null
-        this.shortDescription = null
-        this.abstractText = null
-        this.methodText = null
-        this.contributors = [
-          {
-            orcidId: this.userProfile?.sub,
-            givenName: this.userProfile?.given_name,
-            familyName: this.userProfile?.family_name
-          }
-        ]
-        this.doiIdentifiers = []
-        this.primaryPublicationIdentifiers = []
-        this.secondaryPublicationIdentifiers = []
-        this.publicationIdentifiers = []
-        this.rawReadIdentifiers = []
-        this.extraMetadata = {}
-      }
+      this.title = null
+      this.shortDescription = null
+      this.abstractText = null
+      this.methodText = null
+      this.contributors = [
+        {
+          orcidId: this.userProfile?.sub,
+          givenName: this.userProfile?.given_name,
+          familyName: this.userProfile?.family_name
+        }
+      ]
+      this.doiIdentifiers = []
+      this.primaryPublicationIdentifiers = []
+      this.secondaryPublicationIdentifiers = []
+      this.publicationIdentifiers = []
+      this.rawReadIdentifiers = []
+      this.extraMetadata = {}
+
       this.resetKeywords()
     },
 
@@ -1206,16 +1193,8 @@ export default {
         primaryPublicationIdentifiers: primaryPublicationIdentifiers,
         secondaryPublicationIdentifiers: secondaryPublicationIdentifiers,
         rawReadIdentifiers: this.rawReadIdentifiers.map((identifier) => _.pick(identifier, 'identifier')),
-        extraMetadata: this.extraMetadata
-      }
-      // empty item arrays so that deleted items aren't merged back into editedItem object
-      if (this.item) {
-        this.item.contributors = []
-        this.item.keywords = []
-        this.item.doiIdentifiers = []
-        this.item.publicationIdentifiers = []
-        this.item.primaryPublicationIdentifiers = []
-        this.item.rawReadIdentifiers = []
+        extraMetadata: this.extraMetadata,
+        experimentSetUrn: this.experimentSetUrn
       }
 
       const editedItem = _.merge({}, this.item || {}, editedFields)
@@ -1332,7 +1311,7 @@ export default {
 }
 </script>
 
-<style scoped src="../../assets/forms.css"></style>
+<style src="../../assets/forms.css"></style>
 
 <style scoped>
 /* Cards */
@@ -1363,8 +1342,10 @@ export default {
 
 .keyword-button {
   margin-left: 8px;
-  height: 32px;
-  width: 32px;
+  height: 32px !important;
+  width: 32px !important;
+  min-width: 32px !important;
+  padding: 0 !important;
 }
 
 .keyword-button:deep(.p-button-icon) {
@@ -1375,10 +1356,6 @@ export default {
 
 .keyword-button:deep(.p-button-icon.pi-file-edit) {
   margin-left: 4px;
-}
-
-.keyword-description-input {
-  width: 450px;
 }
 
 .mavedb-wizard:deep(.p-stepper) {
@@ -1394,6 +1371,7 @@ export default {
 .mavedb-wizard-form {
   position: relative;
   z-index: 0;
+  background-color: #f7f7f7;
 }
 
 /* Give the right side of the wizard a white background, without gaps between rows. */
@@ -1445,7 +1423,7 @@ export default {
 .mavedb-wizard-content-pane {
   float: right;
   width: 676px;
-  padding: 0 10px;
+  padding: 10px 10px;
   background-color: #fff;
 }
 
@@ -1464,6 +1442,7 @@ export default {
 .mavedb-wizard-step-controls {
   padding-left: 10px;
   max-width: 100vw;
+  background-color: #f7f7f7;
 }
 
 .field:deep(.mavedb-wizard-rendered-markdown) {
@@ -1481,5 +1460,12 @@ export default {
   bottom: 5px;
   right: 5px;
   z-index: 1001;
+}
+
+.p-inputwrapper, .p-textarea, .p-inputtext {
+  width: 100%;
+}
+.keyword-description-input, .keyword-dropdown {
+  width: 450px;
 }
 </style>

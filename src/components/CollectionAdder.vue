@@ -30,7 +30,7 @@
       :style="{width: '25rem'}"
     >
       <div class="flex align-items-center gap-3 mb-3">
-        <Dropdown
+        <Select
           v-model="selectedCollectionUrn"
           class="w-full"
           option-label="name"
@@ -43,7 +43,7 @@
             <i v-if="option.private" class="mave-collection-option-private pi pi-lock" title="Private collection" />
             <span class="mave-collection-option-sharing">{{ collectionSharingInfo(option) }}</span>
           </template>
-        </Dropdown>
+        </Select>
       </div>
       <div class="mave-save-to-collection-actions">
         <Button label="Create new collection" @click="creatorVisible = true" />
@@ -71,7 +71,7 @@ import axios from 'axios'
 import pluralize from 'pluralize'
 import Button from 'primevue/button'
 import Dialog from 'primevue/dialog'
-import Dropdown from 'primevue/dropdown'
+import Select from 'primevue/select'
 
 import config from '@/config'
 import CollectionCreator from '@/components/CollectionCreator'
@@ -80,7 +80,7 @@ import EmailPrompt from '@/components/common/EmailPrompt.vue'
 
 export default {
   name: 'CollectionAdder',
-  components: {Button, CollectionCreator, Dialog, Dropdown, EmailPrompt},
+  components: {Button, CollectionCreator, Dialog, Select, EmailPrompt},
 
   props: {
     dataSetUrn: {
@@ -271,9 +271,5 @@ export default {
 
 .mave-collection-option-sharing {
   color: #999;
-}
-
-.mave-create-collection-button {
-  display: inline;
 }
 </style>

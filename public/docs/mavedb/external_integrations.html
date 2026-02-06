@@ -1,0 +1,153 @@
+<!DOCTYPE html>
+
+<html lang="en" data-content_root="./">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" /><meta name="viewport" content="width=device-width, initial-scale=1" />
+
+    <title>External integrations &#8212; MaveDB 2025.5.2 documentation</title>
+    <link rel="stylesheet" type="text/css" href="_static/pygments.css?v=4848ba22" />
+    <link rel="stylesheet" type="text/css" href="_static/pyramid.css?v=a5b9c134" />
+    <link rel="stylesheet" type="text/css" href="_static/graphviz.css?v=eafc0fe6" />
+    <link rel="stylesheet" type="text/css" href="_static/styles.css?v=1cacb62a" />
+    <script src="_static/documentation_options.js?v=ea53f692"></script>
+    <script src="_static/doctools.js?v=888ff710"></script>
+    <script src="_static/sphinx_highlight.js?v=dc90522c"></script>
+    <link rel="index" title="Index" href="genindex.html" />
+    <link rel="search" title="Search" href="search.html" />
+    <link rel="next" title="MaveDB accession numbers" href="accession_numbers.html" />
+    <link rel="prev" title="MaveDB API" href="api/index.html" />
+<link rel="stylesheet" href="https://fonts.googleapis.com/css?family=Neuton&amp;subset=latin" type="text/css" media="screen" charset="utf-8" />
+<link rel="stylesheet" href="https://fonts.googleapis.com/css?family=Nobile:regular,italic,bold,bolditalic&amp;subset=latin" type="text/css" media="screen" charset="utf-8" />
+<!--[if lte IE 6]>
+<link rel="stylesheet" href="_static/ie6.css" type="text/css" media="screen" charset="utf-8" />
+<![endif]-->
+
+  </head><body>
+
+    <div class="related" role="navigation" aria-label="related navigation">
+      <h3>Navigation</h3>
+      <ul>
+        <li class="right" style="margin-right: 10px">
+          <a href="genindex.html" title="General Index"
+             accesskey="I">index</a></li>
+        <li class="right" >
+          <a href="accession_numbers.html" title="MaveDB accession numbers"
+             accesskey="N">next</a> |</li>
+        <li class="right" >
+          <a href="api/index.html" title="MaveDB API"
+             accesskey="P">previous</a> |</li>
+        <li class="nav-item nav-item-0"><a href="index.html">MaveDB 2025.5.2 documentation</a> &#187;</li>
+        <li class="nav-item nav-item-this"><a href="">External integrations</a></li> 
+      </ul>
+    </div>  
+
+    <div class="document">
+      <div class="documentwrapper">
+        <div class="bodywrapper">
+          <div class="body" role="main">
+            
+  <section id="external-integrations">
+<h1>External integrations<a class="headerlink" href="#external-integrations" title="Link to this heading">¶</a></h1>
+<p id="external-integrations-intro">MaveDB integrates with several external resources to enrich hosted data sets and facilitate data sharing and interpretation.</p>
+<p>Many of these integrations rely on <a class="reference internal" href="variant_mapping.html#variant-mapping"><span class="std std-ref">variant mapping</span></a> to link MAVE variants to genomic coordinates and transcripts.</p>
+<section id="clingen">
+<span id="end-external-integrations-intro"></span><h2>ClinGen<a class="headerlink" href="#clingen" title="Link to this heading">¶</a></h2>
+<p id="clingen-integration">After mapping, MaveDB submits variant data to the <a class="reference external" href="https://reg.clinicalgenome.org/">ClinGen Allele Registry</a> to obtain ClinGen Allele IDs (CAIDs) for each variant.
+CAIDs provide a stable and unique identifier for genetic variants, enabling consistent referencing across databases and publications.</p>
+<p>When a data set is published, MaveDB automatically submits the mapped variants to the ClinGen Linked Data Hub. This submission includes relevant metadata about the variants and their associated scores.
+This allows ClinGen to display information about the functional data from MaveDB directly on their platform, enhancing the visibility and utility of MAVE data for the clinical genomics community.</p>
+</section>
+<section id="clinvar">
+<span id="end-clingen-integration"></span><h2>ClinVar<a class="headerlink" href="#clinvar" title="Link to this heading">¶</a></h2>
+<p id="clinvar-integration">Using the ClinGen Allele IDs obtained during the mapping process, MaveDB cross-references variants with the <a class="reference external" href="https://www.ncbi.nlm.nih.gov/clinvar/">ClinVar database</a> to identify any existing annotations.
+These annotations power visualizations in MaveDB intended to show the segretation ability of an assay with respect to known pathogenic and benign variants. MaveDB displays ClinVar significance classifications
+and ‘star’ status alongside variant effect scores, allowing users to assess how well the MAVE data aligns with established clinical interpretations and links to ClinVar entries for further information.</p>
+<div class="admonition note">
+<p class="admonition-title">Note</p>
+<p>A future version of this software will allow users to submit variant interpretations back to ClinVar directly from MaveDB, streamlining the process of sharing functional evidence with the clinical genomics community.</p>
+</div>
+</section>
+<section id="gnomad">
+<span id="end-clinvar-integration"></span><h2>gnomAD<a class="headerlink" href="#gnomad" title="Link to this heading">¶</a></h2>
+<p id="gnomad-integration">Mapped variants in MaveDB are also cross-referenced with the <a class="reference external" href="https://gnomad.broadinstitute.org/">gnomAD database</a> to retrieve population frequency data. This integration provides users with important context about the prevalence of variants in diverse human populations.</p>
+</section>
+<section id="vep">
+<span id="end-gnomad-integration"></span><h2>VEP<a class="headerlink" href="#vep" title="Link to this heading">¶</a></h2>
+<p id="vep-integration">MaveDB utilizes the <a class="reference external" href="https://www.ensembl.org/info/docs/tools/vep/index.html">Ensembl Variant Effect Predictor (VEP)</a> to annotate mapped variants with predicted functional consequences. VEP provides insights into how variants may impact gene function, including effects on protein coding sequences, splicing, and regulatory regions.</p>
+</section>
+</section>
+
+
+            <div class="clearer"></div>
+          </div>
+        </div>
+      </div>
+      <div class="sphinxsidebar" role="navigation" aria-label="main navigation">
+        <div class="sphinxsidebarwrapper">
+  <div>
+    <h3><a href="index.html">Table of Contents</a></h3>
+    <ul>
+<li><a class="reference internal" href="#">External integrations</a><ul>
+<li><a class="reference internal" href="#clingen">ClinGen</a></li>
+<li><a class="reference internal" href="#clinvar">ClinVar</a></li>
+<li><a class="reference internal" href="#gnomad">gnomAD</a></li>
+<li><a class="reference internal" href="#vep">VEP</a></li>
+</ul>
+</li>
+</ul>
+
+  </div>
+  <div>
+    <h4>Previous topic</h4>
+    <p class="topless"><a href="api/index.html"
+                          title="previous chapter">MaveDB API</a></p>
+  </div>
+  <div>
+    <h4>Next topic</h4>
+    <p class="topless"><a href="accession_numbers.html"
+                          title="next chapter">MaveDB accession numbers</a></p>
+  </div>
+  <div role="note" aria-label="source link">
+    <h3>This Page</h3>
+    <ul class="this-page-menu">
+      <li><a href="_sources/external_integrations.rst.txt"
+            rel="nofollow">Show Source</a></li>
+    </ul>
+   </div>
+<div id="searchbox" style="display: none" role="search">
+  <h3 id="searchlabel">Quick search</h3>
+    <div class="searchformwrapper">
+    <form class="search" action="search.html" method="get">
+      <input type="text" name="q" aria-labelledby="searchlabel" autocomplete="off" autocorrect="off" autocapitalize="off" spellcheck="false"/>
+      <input type="submit" value="Go" />
+    </form>
+    </div>
+</div>
+<script>document.getElementById('searchbox').style.display = "block"</script>
+        </div>
+      </div>
+      <div class="clearer"></div>
+    </div>
+    <div class="related" role="navigation" aria-label="related navigation">
+      <h3>Navigation</h3>
+      <ul>
+        <li class="right" style="margin-right: 10px">
+          <a href="genindex.html" title="General Index"
+             >index</a></li>
+        <li class="right" >
+          <a href="accession_numbers.html" title="MaveDB accession numbers"
+             >next</a> |</li>
+        <li class="right" >
+          <a href="api/index.html" title="MaveDB API"
+             >previous</a> |</li>
+        <li class="nav-item nav-item-0"><a href="index.html">MaveDB 2025.5.2 documentation</a> &#187;</li>
+        <li class="nav-item nav-item-this"><a href="">External integrations</a></li> 
+      </ul>
+    </div>
+    <div class="footer" role="contentinfo">
+    &#169; Copyright 2017-2025, MaveDB Developers.
+      Created using <a href="https://www.sphinx-doc.org/">Sphinx</a> 7.2.6.
+    </div>
+  </body>
+</html>

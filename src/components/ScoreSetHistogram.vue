@@ -1,10 +1,16 @@
 <template>
   <div class="mavedb-histogram-controls">
-    <TabMenu v-if="hasTabBar" v-model:active-index="activeViz" class="mave-histogram-viz-select" :model="vizOptions" />
+    <Tabs v-if="hasTabBar" v-model:value="activeViz">
+      <TabList>
+        <Tab v-for="(option, index) of vizOptions" :key="index" :value="index">
+          {{ option.label }}
+        </Tab>
+      </TabList>
+    </Tabs>
     <div v-if="showCalibrations" class="mavedb-histogram-thresholds-control">
       <div class="mavedb-histogram-control">
         <label class="mavedb-histogram-control-label" for="mavedb-histogram-viz-select">Thresholds: </label>
-        <Dropdown
+        <Select
           v-model="activeCalibration"
           :disabled="!showCalibrations"
           input-id="mavedb-histogram-viz-select"
@@ -29,7 +35,7 @@
         <label class="mavedb-histogram-control-label" for="mavedb-histogram-db-select"
           >Clinical control database:
         </label>
-        <Dropdown
+        <Select
           v-model="controlDb"
           :disabled="!refreshedClinicalControls"
           input-id="mavedb-histogram-db-select"
@@ -40,7 +46,7 @@
         <label class="mavedb-histogram-control-label" for="mavedb-histogram-version-select"
           >Clinical control version:
         </label>
-        <Dropdown
+        <Select
           v-model="controlVersion"
           :disabled="!refreshedClinicalControls"
           input-id="mavedb-histogram-version-select"
@@ -112,18 +118,34 @@
     </fieldset>
   </div>
   <div ref="histogramContainer" class="mavedb-histogram-container" />
+  <span v-if="selectedCalibrationIsClassBased" class="mavedb-class-based-calibration-note">
+    *Class-based calibrations may not be visualized as thresholds. To view the distribution of variants within each
+    class, select the
+    <a
+      href="#"
+      @click.prevent="
+        () => {
+          let idx = vizOptions.findIndex((opt: VizOption) => opt.view === 'calibration-classes')
+          idx >= 0 ? (activeViz = idx) : null
+        }
+      "
+    >
+      'Calibration Class View'
+    </a>
+    tab.
+  </span>
 </template>
 
 <script lang="ts">
 import axios from 'axios'
 import _ from 'lodash'
-import Accordion from 'primevue/accordion'
-import AccordionTab from 'primevue/accordiontab'
 import Checkbox from 'primevue/checkbox'
-import Dropdown from 'primevue/dropdown'
+import Select from 'primevue/select'
 import ProgressSpinner from 'primevue/progressspinner'
 import Rating from 'primevue/rating'
-import TabMenu from 'primevue/tabmenu'
+import Tabs from 'primevue/tabs'
+import TabList from 'primevue/tablist'
+import Tab from 'primevue/tab'
 import {defineComponent, PropType} from 'vue'
 
 import useScopedId from '@/composables/scoped-id'
@@ -151,9 +173,10 @@ import makeHistogram, {
   HistogramSerieOptions,
   HistogramDatum,
   HistogramBin,
-  HistogramShader
+  HistogramShader,
+  CATEGORICAL_SERIES_COLORS
 } from '@/lib/histogram'
-import {prepareCalibrationsForHistogram, shaderOverlapsBin, PersistedScoreCalibration} from '@/lib/calibrations'
+import {prepareCalibrationsForHistogram, shaderOverlapsBin} from '@/lib/calibrations'
 import {variantNotNullOrNA} from '@/lib/mave-hgvs'
 import {
   DEFAULT_VARIANT_EFFECT_TYPES,
@@ -166,6 +189,7 @@ import {
   Variant,
   allCodingVariantsHaveProteinConsequence
 } from '@/lib/variants'
+import {components} from '@/schema/openapi'
 
 function naToUndefined(x: string | null | undefined) {
   if (variantNotNullOrNA(x)) {
@@ -181,10 +205,16 @@ interface Margins {
   left: number
 }
 
+interface VizOption {
+  label: string
+  view: 'distribution' | 'clinical' | 'effect' | 'custom' | 'calibration-classes'
+  clinicalControlLegendNoteEnabled: boolean
+}
+
 export default defineComponent({
   name: 'ScoreSetHistogram',
 
-  components: {Accordion, AccordionTab, Checkbox, Dropdown, Rating, TabMenu, ProgressSpinner},
+  components: {Checkbox, Select, Rating, Tabs, TabList, Tab, ProgressSpinner},
 
   props: {
     coordinates: {
@@ -230,10 +260,14 @@ export default defineComponent({
       type: String,
       default: null,
       required: false
+    },
+    lockSelection: {
+      type: Boolean,
+      default: false
     }
   },
 
-  emits: ['exportChart', 'calibrationChanged'],
+  emits: ['exportChart', 'calibrationChanged', 'selection-changed'],
 
   setup: () => {
     return {
@@ -254,7 +288,7 @@ export default defineComponent({
       showCalibrations: scoreSetHasCalibrations,
       activeCalibration: {label: 'None', value: null} as {
         label: string
-        value: PersistedScoreCalibration | null
+        value: components['schemas']['ScoreCalibration'] | null
       },
       defaultVizApplied: false,
 
@@ -287,12 +321,59 @@ export default defineComponent({
     proteinEffectOptionsAvailable: function () {
       return allCodingVariantsHaveProteinConsequence(this.variants)
     },
+    selectedCalibrationIsClassBased: function () {
+      return (
+        this.activeCalibration.value != null &&
+        this.activeCalibration.value.functionalClassifications?.every((fc) => fc.class != null)
+      )
+    },
+    selectedCalibrationClassMap: function () {
+      if (!this.selectedCalibrationIsClassBased) {
+        return null
+      }
+
+      const classMap: Record<string, string> = {}
+      for (const fc of this.activeCalibration.value!.functionalClassifications!) {
+        if (fc.class == null) {
+          continue
+        }
+
+        for (const v of fc.variants || []) {
+          if (!v.urn) {
+            continue
+          }
+
+          classMap[v.urn] = fc.class
+        }
+      }
+      return classMap
+    },
     series: function () {
       if (!this.refreshedClinicalControls) {
         return null
       }
 
+      this.assureActiveVizIsAvailable()
+
+      if (!this.vizOptions[this.activeViz]) {
+        return null
+      }
+
       switch (this.vizOptions[this.activeViz].view) {
+        case 'calibration-classes':
+          return this.selectedCalibrationIsClassBased
+            ? this.activeCalibration.value?.functionalClassifications?.map((fc, i) => ({
+                classifier: (d: HistogramDatum) => {
+                  if (!d.accession) return false
+                  return this.selectedCalibrationClassMap?.[d.accession] === fc.class
+                },
+                options: {
+                  // not robust to many classes (>12), colors will collide.
+                  color: CATEGORICAL_SERIES_COLORS[i % CATEGORICAL_SERIES_COLORS.length],
+                  title: fc.label || 'Unlabeled'
+                }
+              }))
+            : null
         case 'clinical':
           return [
             {
@@ -486,10 +567,20 @@ export default defineComponent({
     },
 
     vizOptions: function () {
-      const options = [{label: 'Overall Distribution', view: 'distribution', clinicalControlLegendNoteEnabled: false}]
+      const options: VizOption[] = [
+        {label: 'Overall Distribution', view: 'distribution', clinicalControlLegendNoteEnabled: false}
+      ]
 
       if (this.someVariantsHaveClinicalSignificance) {
         options.push({label: 'Clinical View', view: 'clinical', clinicalControlLegendNoteEnabled: true})
+      }
+
+      if (this.selectedCalibrationIsClassBased) {
+        options.push({
+          label: 'Calibration Class View',
+          view: 'calibration-classes',
+          clinicalControlLegendNoteEnabled: false
+        })
       }
 
       // crude to be based on clinical significance. may be a better option for viz control
@@ -512,8 +603,8 @@ export default defineComponent({
       return this.activeViz == this.vizOptions.findIndex((item) => item.view === 'custom')
     },
 
-    scoreCalibrations: function (): {[key: string]: PersistedScoreCalibration} | null {
-      const calibrationObjects: Record<string, PersistedScoreCalibration> = {}
+    scoreCalibrations: function (): {[key: string]: components['schemas']['ScoreCalibration']} | null {
+      const calibrationObjects: Record<string, components['schemas']['ScoreCalibration']> = {}
       if (this.scoreSet.scoreCalibrations != null && this.scoreSet.scoreCalibrations.length > 0) {
         for (const calibration of this.scoreSet.scoreCalibrations) {
           calibrationObjects[calibration.urn] = calibration
@@ -539,7 +630,10 @@ export default defineComponent({
       if (!this.scoreCalibrations) return []
 
       const calibrationOptions = Object.entries(this.scoreCalibrations).map(([, value]) => {
-        const label = value.researchUseOnly ? `Research Use Only: ${value.title}` : value.title
+        // Base label on title, prepend "Research Use Only" if classification is tagged as research use
+        let label = value.researchUseOnly ? `Research Use Only: ${value.title}` : value.title
+        // Append asterisk if class-based
+        label = value.functionalClassifications?.every((fc) => fc.class != null) ? `${label}*` : label
         return {
           label,
           value
@@ -561,12 +655,12 @@ export default defineComponent({
     },
 
     histogramShaders: function () {
-      const shaders: Record<string, any> = {null: null} // No shader
+      const shaders: Record<string, HistogramShader[] | null> = {null: null} // No shader
 
       if (!this.scoreCalibrations) return shaders
 
       for (const [key, value] of Object.entries(this.scoreCalibrations)) {
-        shaders[key] = prepareCalibrationsForHistogram(value as PersistedScoreCalibration)
+        shaders[key] = prepareCalibrationsForHistogram(value as components['schemas']['ScoreCalibration'])
       }
 
       return shaders
@@ -812,13 +906,17 @@ export default defineComponent({
         this.renderOrRefreshHistogram()
       }
     },
+    // TODO#608: Address circularity between externalSelection parent updates and selection changed events from
+    //           the child histogram.
     externalSelection: {
       handler: function (newValue) {
         if (this.histogram) {
           if (newValue) {
             this.histogram.selectDatum(newValue)
           } else {
-            this.histogram.clearSelection()
+            if (!this.lockSelection) {
+              this.histogram.clearSelection()
+            }
           }
         }
       }
@@ -917,9 +1015,9 @@ export default defineComponent({
       }
     },
     vizOptions: {
-      handler(newOptions) {
+      handler(newOptions: VizOption[]) {
         if (this.defaultVizApplied) return
-        const idx = newOptions.findIndex((opt) => opt.view === this.defaultHistogram)
+        const idx = newOptions.findIndex((opt: VizOption) => opt.view === this.defaultHistogram)
         if (idx >= 0) {
           this.activeViz = idx
           this.defaultVizApplied = true
@@ -972,6 +1070,18 @@ export default defineComponent({
       )
     },
 
+    // Sync API: select a bin by its [x0, x1] range.
+    // Useful for coordinating selection across multiple histograms.
+    // Note that only bins with identical ranges will be selected.
+    syncSelectBin(bin: HistogramBin | null) {
+      if (!bin || !this.histogram) return
+      const currentBins = this.histogram.bins()
+      const idx = currentBins.findIndex((b) => (b.x0 ?? 0) === bin.x0 && (b.x1 ?? 0) === bin.x1)
+      if (idx != null) {
+        this.histogram.selectBin(idx)
+      }
+    },
+
     renderOrRefreshHistogram: function () {
       if (!this.histogram) {
         this.histogram = makeHistogram()
@@ -979,9 +1089,10 @@ export default defineComponent({
           .bottomAxisLabel('Functional Score')
           .leftAxisLabel('Number of Variants')
           .numBins(30)
-          .valueField((variant: Variant) => variant.scores.score)
-          .accessorField((variant: Variant) => variant.accession)
+          .valueField((variant: Variant) => variant?.scores?.score)
+          .accessorField((variant: Variant) => variant?.accession)
           .tooltipHtml(this.tooltipHtmlGetter)
+          .selectionChanged(this.onHistogramSelectionChanged)
       }
 
       // benefits typing. The histogram will always be defined by now from the above.
@@ -995,6 +1106,8 @@ export default defineComponent({
         seriesClassifier = (d: HistogramDatum) =>
           seriesIndices.filter((seriesIndex) => this.series[seriesIndex].classifier(d))
       }
+
+      this.assureActiveVizIsAvailable()
 
       this.histogram
         .data(this.variants)
@@ -1024,6 +1137,20 @@ export default defineComponent({
       }
     },
 
+    onHistogramSelectionChanged(payload: {bin: HistogramBin | null; datum: Variant | null; source: 'histogram'}) {
+      if (this.lockSelection) {
+        const currentAccession = (this.externalSelection as any)?.accession
+        const nextAccession = (payload?.datum as any)?.accession
+        // Block clears and changes; immediately restore selection
+        if (!nextAccession || (currentAccession && nextAccession !== currentAccession)) {
+          if (this.histogram && this.externalSelection) {
+            this.histogram.selectDatum(this.externalSelection as any)
+          }
+          return
+        }
+      }
+      this.$emit('selection-changed', payload)
+    },
     loadClinicalControls: async function () {
       if (
         this.controlDb &&
@@ -1174,7 +1301,7 @@ export default defineComponent({
 
       // Next, prefer any calibration that has any functional ranges defined
       const anyWithRanges = this.activeCalibrationOptions.find(
-        (option) => option.value?.functionalRanges && option.value.functionalRanges.length > 0
+        (option) => option.value?.functionalClassifications && option.value.functionalClassifications.length > 0
       )
       if (anyWithRanges) {
         return anyWithRanges
@@ -1194,6 +1321,12 @@ export default defineComponent({
         .replace(/^[-_]*(.)/, (_, c) => c.toUpperCase())
         .replace(/[-_]+(.)/g, (_, c) => ' ' + c.toUpperCase())
         .replace(/([a-z])([A-Z])/g, '$1 $2')
+    },
+
+    assureActiveVizIsAvailable() {
+      if (this.activeViz >= this.vizOptions.length) {
+        this.activeViz = 0
+      }
     }
   }
 })
@@ -1238,15 +1371,6 @@ export default defineComponent({
   gap: 1rem;
   align-items: center;
 }
-
-.mavedb-histogram-viz-select {
-  padding-bottom: 16px;
-}
-
-.mavedb-histogram-viz-select:deep(.p-tabmenu-nav),
-.mavedb-histogram-viz-select:deep(.p-menuitem-link) {
-  background: transparent;
-}
 </style>
 
 <style>
@@ -1278,5 +1402,13 @@ export default defineComponent({
   border-radius: 4px;
   font-size: 14px;
   font-weight: bold;
+}
+
+.mavedb-class-based-calibration-note {
+  margin-top: 0.25rem;
+  font-size: 12px;
+  line-height: 0.9rem;
+  display: block;
+  text-align: right;
 }
 </style>

@@ -1,16 +1,15 @@
 <template>
   <DefaultLayout>
-    <div class="grid" style="margin: 10px 0;">
+    <div class="grid my-2!">
       <div class="col-12">
-        <p class="mavedb-mavemd-notice">
-          <router-link to="/mavemd"><img alt="MaveMD" class="mavedb-mavemd-logo" src="@/assets/mavemd-logo.png" /></router-link>
-          &nbsp;
-          Looking for the new MaveMD clinical features? <router-link to="/mavemd">Click here.</router-link>
-        </p>
+        <div class="flex justify-center flex-row gap-4 m-2">
+          <router-link to="/mavemd"><img alt="MaveMD" class="h-10" src="@/assets/mavemd-logo.png" /></router-link>
+          <span class="text-lg my-auto">Looking for the new MaveMD clinical features? <router-link to="/mavemd">Click here.</router-link></span>
+        </div>
       </div>
-      <div class="col-8">
-        <Card>
-          <template #title>About</template>
+      <div class="col-8 flex">
+        <Card class="flex-1">
+          <template #title><h2 class="mt-0">About</h2></template>
           <template #content>
             <p>
               MaveDB is a public repository for datasets from Multiplexed Assays of Variant Effect (MAVEs), such as those
@@ -40,9 +39,9 @@
           </template>
         </Card>
       </div>
-      <div class="col-4">
-        <Card>
-          <template #title>Featured Searches</template>
+      <div class="col-4 flex flex-column">
+        <Card class="flex-1">
+          <template #title><h2 class="mt-0">Featured Searches</h2></template>
           <template #content>
             <table>
               <thead>
@@ -54,14 +53,14 @@
               <tbody>
                 <tr>
                   <td>
-                    <ul>
+                    <ul class="ml-5 list-disc">
                       <li><router-link :to="{name: 'search', query: {search: 'Homo sapiens'}}">Homo sapiens</router-link></li>
                       <li><router-link :to="{name: 'search', query: {search: 'Mus musculus'}}">Mus musculus</router-link></li>
                       <li><router-link :to="{name: 'search', query: {search: 'Saccharomyces cerevisiae S288C'}}">Saccharomyces cerevisiae S288C</router-link></li>
                     </ul>
                   </td>
                   <td>
-                    <ul>
+                    <ul class="ml-5 list-disc">
                       <li><router-link :to="{name: 'search', query: {search: 'HSP90'}}">HSP90</router-link></li>
                       <li><router-link :to="{name: 'search', query: {search: 'KCNQ4'}}">KCNQ4</router-link></li>
                       <li><router-link :to="{name: 'search', query: {search: 'TEM-1 β-lactamase'}}">TEM-1 β-lactamase</router-link></li>
@@ -70,6 +69,17 @@
                 </tr>
               </tbody>
             </table>
+          </template>
+        </Card>
+        <Card class="mt-4">
+          <template #title><h2 class="mt-0">Upload Your Data</h2></template>
+          <template #content>
+            <Button size="small" @click="addExperiment"
+              >Add an experiment</Button
+            >&nbsp;&nbsp;
+            <Button size="small" @click="addScoreSet"
+                >Add a score set</Button
+              >
           </template>
         </Card>
       </div>
@@ -81,15 +91,29 @@
       </div>
       <div class="col-4">
         <Card>
-          <template #title>News</template>
+          <template #title><h2 class="mt-0">News</h2></template>
           <template #content>
-            <ul>
+            <ul class="ml-2 list-disc space-y-4">
+              <li>
+                <p>
+                  MaveDB is an official
+                    <a href="https://catalog.igvf.org/" target="_blank">
+                      <img class="inline h-5 mb-1" alt="IGVF" src="@/assets/igvf-tag.png" />
+                    </a>
+                  Data Resource! You can now find data from MaveDB datasets in the
+                  <a href="https://catalog.igvf.org/" target="_blank">IGVF Data Catalog</a>.
+                </p>
+                <p>
+                  In addition, many MaveDB score sets now have links to view the corresponding raw data in the
+                  <a href="https://portal.igvf.org/" target="_blank">IGVF Data Portal</a>.
+                </p>
+              </li>
               <li>
                 <p>Tracks for many score sets are now available on the UCSC Genome Browser.</p>
-                <p>
+                <p class="mt-2">
                   Example:
                   <a href="https://genome.ucsc.edu/cgi-bin/hgTracks?db=hg38&position=chr17:43051063-43051117&hubUrl=https://public.gi.ucsc.edu/~cline/mavedb/hub/hub.txt&Variant_Effect_Maps_hideKids=1&BRCA1_00000097-s-1=dense" target="_blank">
-                    <img alt="UCSC Genome Browser" src="@/assets/logo-ucsc-genome-browser.png" style="height: 20px;" />
+                    <img alt="UCSC Genome Browser" class="inline h-5" src="@/assets/logo-ucsc-genome-browser.png" />
                     UCSC Genome Browser
                   </a>
                   track for
@@ -107,17 +131,17 @@
       </div>
       <div class="col-12">
         <Card>
-          <template #title>Citing MaveDB</template>
+          <template #title><h2 class="mt-0">Citing MaveDB</h2></template>
           <template #content>
             <p>
               To cite MaveDB, please cite our most recent publication:
             </p>
-            <blockquote>
+            <blockquote class="m-5 my-2">
                 Rubin, A.F., Stone, J., Bianchi, A.H. <i>et al.</i> MaveDB 2024: a curated community database with over seven million variant effects
                 from multiplexed functional assays. <i>Genome Biol</i> <b>26</b>, 13 (2025). <a href=https://doi.org/10.1186/s13059-025-03476-y>https://doi.org/10.1186/s13059-025-03476-y</a>
             </blockquote>
             Previous MaveDB publications are listed below:
-            <blockquote>
+            <blockquote class="mx-5 my-2">
               Daniel Esposito, Jochen Weile, Jay Shendure, Lea M Starita, Anthony T Papenfuss, Frederick P Roth, Douglas M Fowler, Alan F Rubin.
               MaveDB: an open-source platform to distribute and interpret data from multiplexed assays of variant effect.
               <i>Genome Biol</i> <b>20</b>, 223 (2019). <a href="https://doi.org/10.1186/s13059-019-1845-6">https://doi.org/10.1186/s13059-019-1845-6</a>
@@ -130,15 +154,33 @@
 </template>
 
 <script>
+import Button from 'primevue/button'
 import Card from 'primevue/card'
 
 import config from '@/config'
 import DefaultLayout from '@/components/layout/DefaultLayout'
 import HighlightsView from '@/components/common/HighlightsView.vue';
 
+import {useRouter} from 'vue-router'
+import useAuth from '@/composition/auth'
+
 export default {
   name: 'HomeScreen',
-  components: {Card, DefaultLayout, HighlightsView},
+  components: {Button, Card, DefaultLayout, HighlightsView},
+  setup() {
+    const router = useRouter()
+    const addScoreSet = () => {
+        router.push({ name: 'createScoreSet' })
+    }
+    const addExperiment = () => {
+        router.push({ name: 'createExperiment' })
+    }
+    return {
+      addScoreSet,
+      addExperiment,
+    }
+  },
+
   data: function() {
     return {config}
   },
@@ -160,22 +202,10 @@ td, th {
   vertical-align: top;
 }
 
-ul {
-  padding-left: 1em;
-}
-
 .mave-hgvs-example {
   background: #eee;
   padding: 0 3px;
   cursor: pointer;
 }
 
-.mavedb-mavemd-notice {
-  text-align: center; font-size: 120%;
-}
-
-.mavedb-mavemd-logo {
-  height: 40px;
-  vertical-align: middle;
-}
 </style>

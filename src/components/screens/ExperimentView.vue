@@ -15,11 +15,11 @@
           </div>
           <div v-if="userIsAuthenticated">
             <div class="mavedb-screen-title-controls">
-              <Button v-if="userIsAuthorized.add_score_set" class="p-button-sm" @click="addScoreSet"
+              <Button v-if="userIsAuthorized.add_score_set" size="small" @click="addScoreSet"
                 >Add a score set</Button
               >
-              <Button v-if="userIsAuthorized.update" class="p-button-sm" @click="editItem">Edit</Button>
-              <Button v-if="userIsAuthorized.delete" class="p-button-sm p-button-danger" @click="deleteItem"
+              <Button v-if="userIsAuthorized.update" size="small" @click="editItem">Edit</Button>
+              <Button v-if="userIsAuthorized.delete" severity="danger" size="small" @click="deleteItem"
                 >Delete</Button
               >
             </div>
@@ -34,7 +34,7 @@
         <div v-if="item.creationDate">
           Created {{ formatDate(item.creationDate) }}
           <span v-if="item.createdBy">
-            <a :href="`https://orcid.org/${item.createdBy.orcidId}`" target="blank"
+            <a class="flex items-center gap-1" :href="`https://orcid.org/${item.createdBy.orcidId}`" target="blank"
               ><img alt="ORCIDiD" src="@/assets/ORCIDiD_icon.png" />{{ item.createdBy.firstName }}
               {{ item.createdBy.lastName }}</a
             ></span
@@ -42,8 +42,8 @@
         </div>
         <div v-if="item.modificationDate">
           Last updated {{ formatDate(item.modificationDate) }}
-          <span v-if="item.modifiedBy">
-            <a :href="`https://orcid.org/${item.modifiedBy.orcidId}`" target="blank"
+          <span v-if="item.modifiedBy" class="flex">
+            <a class="flex items-center gap-1" :href="`https://orcid.org/${item.modifiedBy.orcidId}`" target="blank"
               ><img alt="ORCIDiD" src="@/assets/ORCIDiD_icon.png" />{{ item.modifiedBy.firstName }}
               {{ item.modifiedBy.lastName }}</a
             ></span
@@ -54,7 +54,7 @@
           <a
             v-for="contributor in contributors"
             :key="contributor.orcidId"
-            class="mave-contributor"
+            class="mave-contributor flex items-center gap-1"
             :href="`https://orcid.org/${contributor.orcidId}`"
             target="blank"
           >
@@ -70,11 +70,18 @@
           }}</router-link>
         </div>
         <div v-if="item.currentVersion">Current version {{ item.currentVersion }}</div>
-        <CollectionAdder class="mave-save-to-collection-button" data-set-type="experiment" :data-set-urn="item.urn" />
-
+        <div v-if="item.externalLinks?.igvf?.url" class="external-link">
+          <a :href="item.externalLinks.igvf.url" target="blank">
+            <img alt="IGVF" src="@/assets/igvf-tag.png" />
+            View this experiment in the IGVF Portal
+          </a>
+        </div>
+        <div style="margin-top: 1em">
+          <CollectionAdder class="mave-save-to-collection-button" data-set-type="experiment" :data-set-urn="item.urn" />
+        </div>
         <div class="mave-score-set-section-title">Score Sets</div>
         <div v-if="associatedScoreSets.length != 0">
-          <ul>
+          <ul class="list-disc pl-4">
             <li v-for="scoreSet in associatedScoreSets" :key="scoreSet.id">
               <router-link :to="{name: 'scoreSet', params: {urn: scoreSet.urn}}">{{ scoreSet.urn }}</router-link>
             </li>
@@ -96,7 +103,7 @@
         <div class="mave-score-set-section-title">Primary References</div>
         <div v-if="item.primaryPublicationIdentifiers.length > 0">
           <div v-for="publication in item.primaryPublicationIdentifiers" :key="publication">
-            <ul style="list-style-type: square">
+            <ul class="pl-4 list-[square]">
               <!-- eslint-disable-next-line vue/no-v-html -->
               <li v-html="markdownToHtml(publication.referenceHtml)"></li>
               <div>
@@ -116,7 +123,7 @@
         <div class="mave-score-set-section-title">Secondary References</div>
         <div v-if="item.secondaryPublicationIdentifiers.length > 0">
           <div v-for="publication in item.secondaryPublicationIdentifiers" :key="publication">
-            <ul style="list-style-type: square">
+            <ul class="pl-4 list-[square]">
               <!-- eslint-disable-next-line vue/no-v-html -->
               <li v-html="markdownToHtml(publication.referenceHtml)"></li>
               <div>
@@ -136,40 +143,46 @@
         <div v-if="item.keywords && Object.keys(item.keywords).length > 0">
           <div class="mave-score-set-section-title">Keywords</div>
           <div class="mave-score-set-keywords">
-            <li v-for="(keyword, index) in item.keywords" :key="index">
-              {{ keyword.keyword.key }}
-              <!--Present local database keyword description-->
-              <i class="pi pi-info-circle" style="color: green; cursor: pointer" @click="showDialog(index)" />
-              <Dialog
-                v-model:visible="dialogVisible[index]"
-                :breakpoints="{'1199px': '75vw', '575px': '90vw'}"
-                :header="keyword.keyword.key"
-                modal
-                :style="{width: '50vw'}"
-              >
-                <p class="m-0">
-                  {{ keyword.keyword.description }}
-                </p>
-              </Dialog>
-              :
-              <a :href="`${config.appBaseUrl}/search?keywords=${keyword.keyword.label}`">{{ keyword.keyword.label }}</a>
-              <div v-if="keyword.keyword.code" class="field">
-                {{ keyword.keyword.code }}
-              </div>
-              <!--Present user's description-->
-              <div v-if="keyword.description" class="field">
-                <div v-if="keyword.description.length >= 300">
-                  <div v-if="!fullDescription[index]">
-                    {{ keyword.description.substring(0, 300) + '....' }}
+            <ul class="list-disc pl-4">
+              <li v-for="(keyword, index) in item.keywords" :key="index">
+                {{ keyword.keyword.key }}
+                <!--Present local database keyword description-->
+                <i class="pi pi-info-circle" style="color: green; cursor: pointer" @click="showDialog(index)" />
+                <Dialog
+                  v-model:visible="dialogVisible[index]"
+                  :breakpoints="{'1199px': '75vw', '575px': '90vw'}"
+                  :header="keyword.keyword.key"
+                  modal
+                  :style="{width: '50vw'}"
+                >
+                  <p class="m-0">
+                    {{ keyword.keyword.description }}
+                  </p>
+                </Dialog>
+                :
+                <a :href="`${config.appBaseUrl}/search?keywords=${keyword.keyword.label}`">{{ keyword.keyword.label }}</a>
+                <div v-if="keyword.keyword.code" class="field">
+                  {{ keyword.keyword.code }}
+                </div>
+                <!--Present user's description-->
+                <div v-if="keyword.description" class="field">
+                  <div v-if="keyword.description.length >= 300">
+                    <div v-if="!fullDescription[index]">
+                      {{ keyword.description.substring(0, 300) + '....' }}
+                    </div>
+                    <div v-else>{{ keyword.description }}</div>
+                    <Button
+                      severity="info"
+                      size="small"
+                      variant="text"
+                      @click="showFullDescription(index)">
+                      {{ fullDescription[index] ? 'Show less' : 'Show all' }}
+                    </Button>
                   </div>
                   <div v-else>{{ keyword.description }}</div>
-                  <Button class="p-button-text p-button-sm p-button-info" @click="showFullDescription(index)">
-                    {{ fullDescription[index] ? 'Show less' : 'Show all' }}
-                  </Button>
                 </div>
-                <div v-else>{{ keyword.description }}</div>
-              </div>
-            </li>
+              </li>
+            </ul>
           </div>
         </div>
         <div class="mave-score-set-section-title">Scoreset Targets</div>
@@ -216,10 +229,10 @@
                     >{{ targetGene.targetSequence.sequence.substring(0, 500) + '....' }}
                   </template>
                   <template v-if="readMore == false">{{ targetGene.targetSequence.sequence }}</template>
-                  <Button v-if="readMore == true" class="p-button-text p-button-sm p-button-info" @click="showMore"
+                  <Button v-if="readMore == true" severity="info" size="small" variant="text" @click="showMore"
                     >Show more</Button
                   >
-                  <Button v-if="readMore == false" class="p-button-text p-button-sm p-button-info" @click="showLess"
+                  <Button v-if="readMore == false" severity="info" size="small" variant="text" @click="showLess"
                     >Show less</Button
                   > </template
                 ><template v-else>{{ targetGene.targetSequence.sequence }}</template>
@@ -254,7 +267,7 @@
         <div class="mave-score-set-section-title">External identifier</div>
         <strong>DOI: </strong>
         <div v-if="item.doiIdentifiers.length != 0">
-          <ul style="list-style-type: square">
+          <ul class="pl-4 list-[square]">
             <li v-for="(doi, i) of item.doiIdentifiers" :key="i">
               <a :href="`${doi.url}`" target="blank">{{ doi.identifier }}</a>
             </li>
@@ -263,7 +276,7 @@
         <template v-else>No associated DOIs<br /></template>
         <strong>Raw reads: </strong>
         <div v-if="item.rawReadIdentifiers.length != 0">
-          <ul style="list-style-type: square">
+          <ul class="pl-4 list-[square]">
             <li v-for="(read, i) of item.rawReadIdentifiers" :key="i">
               <a :href="`${read.url}`" target="blank">{{ read.identifier }}</a>
             </li>
@@ -522,6 +535,23 @@ export default {
 }
 
 .mave-save-to-collection-button {
-  margin: 1em 0;
+  margin: 1em;
+}
+
+/* External links */
+.external-link {
+  display: block;
+}
+.external-link a {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+}
+.external-link img {
+  height: 20px;
+  width: auto;
+}
+.external-link img {
+  display: block;
 }
 </style>

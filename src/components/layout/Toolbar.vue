@@ -18,24 +18,23 @@
           <img v-if="config.PREVIEW_SITE" alt="MaveDB Beta Site" src="@/assets/logo-mavedb-beta.png" />
           <img v-else alt="MaveDB" src="@/assets/logo-mavedb.png" />
         </router-link>
-        <div style="display: inline-block; margin-left: 40px">
-          <div class="p-inputgroup" style="max-width: 300px; width: 300px">
-            <InputText
-              ref="searchTextInput"
-              v-model="searchText"
-              class="p-inputtext-sm"
-              placeholder="Search"
-              style="width: 200px"
-              type="search"
-              @keyup.enter="search"
-            />
-            <Button
-              class="p-button-default p-button-sm"
-              :enabled="searchText && searchText.length > 0"
-              icon="pi pi-search"
-              @click="search"
-            />
-          </div>
+        <div class="flex w-[300px] ml-10">
+          <InputText
+            ref="searchTextInput"
+            v-model="searchText"
+            class="rounded-r-none! w-full"
+            placeholder="Search"
+            size="small"
+            type="search"
+            @keyup.enter="search"
+          />
+          <Button
+            class="rounded-l-none!"
+            :enabled="searchText && searchText.length > 0"
+            icon="pi pi-search"
+            size="small"
+            @click="search"
+          />
         </div>
       </template>
       <template #item="{item, props, hasSubmenu}">
@@ -98,10 +97,6 @@ export default {
           route: '/dashboard',
           available: ({authenticated}) => authenticated
         },
-        {
-          label: 'Home',
-          route: '/'
-        },
         ...(config.CLINICAL_FEATURES_ENABLED
           ? [
               {
@@ -146,11 +141,6 @@ export default {
           target: '_blank',
           url: 'https://mavedb.zulipchat.com/#narrow/channel/511813-beta-testers',
           available: ({config}) => config.PREVIEW_SITE
-        },
-        {
-          label: 'Users',
-          route: '/users',
-          available: ({roles}) => roles.includes('admin')
         },
         {
           label: this.userName,
@@ -280,10 +270,6 @@ export default {
 
 .mavedb-menubar.p-menubar:deep(.p-menubar-root-list > .p-menuitem > .p-menuitem-link .p-menuitem-icon.pi) {
   margin-right: 0.5rem;
-}
-
-.mavedb-menubar .mavedb-title {
-  font-size: 2rem;
 }
 
 .mavedb-beta-banner {

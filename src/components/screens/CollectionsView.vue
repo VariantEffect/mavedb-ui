@@ -1,5 +1,5 @@
 <template>
-  <DefaultLayout>
+  <DefaultLayout :require-auth="true">
     <div>
       <div class="mavedb-1000px-col">
         <div class="mave-screen-title-bar">
@@ -23,7 +23,13 @@
                 }}</router-link></template
               >
             </Column>
-            <Column class="mave-collection-description" field="description" header="Description" :sortable="true" />
+            <Column class="mave-collection-description" field="description" header="Description" :sortable="true">
+              <template #body="{data}">
+                <!-- eslint-disable-next-line vue/no-v-html -->
+                <span v-if="data.description" v-html="linkifyTextHtml(data.description)"></span>
+                <span v-else>—</span>
+              </template>
+            </Column>
             <Column
               body-class="mave-align-center"
               :field="(c) => (c.experimentUrns || []).length"
@@ -86,7 +92,10 @@ export default {
 
   setup: () => {
     useHead({title: 'My saved collections'})
-    return useFormatters()
+
+    return {
+      ...useFormatters()
+    }
   },
 
   data: () => ({

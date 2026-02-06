@@ -10,7 +10,7 @@
         searchResultsVisible ? 'mavedb-search-view-with-results' : 'mavedb-search-view-without-results'
       ]"
     >
-      <div class="mavedb-page-title">
+      <div class="flex justify-content-center">
         <img alt="MaveMD" class="mavedb-mavemd-logo" src="@/assets/mavemd-logo.png" />
       </div>
       <div class="mavedb-mavemd-intro">
@@ -21,61 +21,59 @@
       </div>
       <div v-if="defaultSearchVisible" class="mavedb-search-form">
         <div class="mavedb-search-heading">Search MaveDB for human gene variants</div>
-        <div class="flex flex-wrap justify-content-center gap-3">
-          <Dropdown
+        <div class="flex flex-wrap justify-content-center align-items-center gap-3">
+          <Select
             v-model="searchType"
+            class="w-48"
             option-label="name"
             option-value="code"
             :options="searchTypeOptions"
             placeholder="Select search type"
-            :style="{ width: '13rem' }"
+            size="large"
           />
-          <IconField icon-position="left">
+          <IconField>
             <InputIcon class="pi pi-search"></InputIcon>
             <InputText
               ref="searchTextInput"
               v-model="searchText"
-              class="p-inputtext-lg"
+              class="w-124"
               placeholder="Enter a value"
-              style="width: 500px"
+              size="large"
               type="search"
               @keyup.enter="defaultSearch"
             />
           </IconField>
-          <Button class="p-button-plain" @click="defaultSearch">Search</Button>
+          <Button class="p-3!" @click="defaultSearch">Search</Button>
           <div class="mavedb-clear-search-button-container">
-            <Button
-              class="p-button-plain"
-              :disabled="!searchIsClearable"
-              icon="pi pi-times"
-              rounded
-              @click="clearSearch"
-            />
+            <Button :disabled="!searchIsClearable" icon="pi pi-times" rounded @click="clearSearch" />
           </div>
         </div>
         <div class="mavedb-search-form-view-switch">
           Don't have a versioned reference sequence identifier? Click here to perform a fuzzy search instead:
-          <Button class="p-button-plain" @click="showSearch('fuzzy')">Fuzzy Search</Button>
+          <Button @click="showSearch('fuzzy')">Fuzzy Search</Button>
         </div>
         <div class="mavedb-examples-button-container">
-          <Button class="p-button-plain p-button-text" @click="searchSuggestionsVisible = !searchSuggestionsVisible">
+          <Button variant="text" @click="searchSuggestionsVisible = !searchSuggestionsVisible">
             {{ searchSuggestionsVisible ? 'Hide search examples' : 'Show search examples' }}
           </Button>
         </div>
-        <div v-if="searchSuggestionsVisible" class="mavedb-search-suggestions">
-          <p>
-            Examples of supported searches:
-            <ul>
-              <li v-for="option in searchTypeOptions" :key="option.code">
-                {{ option.name }}
-                <template v-for="(example, index) in option.examples" :key="example">
-                  <span v-if="index > 0">•</span>
-                  <span v-tooltip.top="'Click to search'" class="mavedb-search-example" @click="searchForText($event, option.code)">{{ example }}</span>
-                </template>
-                <template v-if="option.code=='hgvs'">(supports a variety of HGVS formats)</template>
-              </li>
-            </ul>
-          </p>
+        <div v-if="searchSuggestionsVisible" class="mavedb-search-suggestions m-auto">
+          <div>Examples of supported searches:</div>
+          <ul class="list-disc ml-5">
+            <li v-for="option in searchTypeOptions" :key="option.code">
+              {{ option.name }}
+              <template v-for="(example, index) in option.examples" :key="example">
+                <span v-if="index > 0">•</span>
+                <span
+                  v-tooltip.top="'Click to search'"
+                  class="mavedb-search-example"
+                  @click="searchForText($event, option.code)"
+                  >{{ example }}</span
+                >
+              </template>
+              <template v-if="option.code == 'hgvs'">(supports a variety of HGVS formats)</template>
+            </li>
+          </ul>
         </div>
       </div>
       <div v-if="fuzzySearchVisible" class="mavedb-search-form">
@@ -87,7 +85,7 @@
             placeholder="Gene symbol (HGNC)"
             type="search"
           />
-          <Dropdown
+          <Select
             v-model="inputVariantType"
             class="mavedb-fuzzy-search-form-component"
             :options="['c.', 'p.']"
@@ -95,32 +93,26 @@
           />
           <!-- TODO consider adding language to specify to include - or * in position if variant is in 5' or 3' UTR, respectively -->
           <InputText v-model="inputVariantPosition" class="mavedb-fuzzy-search-form-component" placeholder="Position" />
-          <Dropdown
+          <Select
             v-model="inputReferenceAllele"
             class="mavedb-fuzzy-search-form-component"
             :options="selectedAlleleOptions"
             placeholder="Reference allele"
           />
-          <Dropdown
+          <Select
             v-model="inputAlternateAllele"
             class="mavedb-fuzzy-search-form-component"
             :options="selectedAlleleOptions"
             placeholder="Alternate allele"
           />
-          <Button class="p-button-plain" @click="fuzzySearch">Search</Button>
+          <Button @click="fuzzySearch">Search</Button>
           <div class="mavedb-clear-search-button-container">
-            <Button
-              class="p-button-plain"
-              :disabled="!searchIsClearable"
-              icon="pi pi-times"
-              rounded
-              @click="clearSearch"
-            />
+            <Button :disabled="!searchIsClearable" icon="pi pi-times" rounded @click="clearSearch" />
           </div>
         </div>
         <div class="mavedb-search-form-view-switch">
           Click here to return to standard search:
-          <Button class="p-button-plain" @click="showSearch('default')">Standard Search</Button>
+          <Button @click="showSearch('default')">Standard Search</Button>
         </div>
       </div>
       <div v-if="!searchResultsVisible" class="mavedb-expander-container">
@@ -161,8 +153,8 @@
                     <router-link :to="{name: 'scoreSetCalibrations', params: {urn: urns[0]}}"
                       >{{
                         maveMdScoreSets[urns[0]]?.scoreCalibrations.filter(
-                          (calibration) =>
-                            calibration.functionalRanges?.filter((range) => range.acmgClassification).length > 0
+                          (calibration: components['schemas']['ScoreCalibration']) =>
+                            Array.isArray(calibration.functionalClassifications) && calibration.functionalClassifications.filter((range) => range.acmgClassification).length > 0
                         ).length || 0
                       }}
                       / {{ maveMdScoreSets[urns[0]]?.scoreCalibrations.length || 0 }}
@@ -184,8 +176,8 @@
                     <router-link :to="{name: 'scoreSetCalibrations', params: {urn: urns[0]}}">
                       {{
                         maveMdScoreSets[urn]?.scoreCalibrations.filter(
-                          (calibration) =>
-                            calibration.functionalRanges?.filter((range) => range.acmgClassification).length > 0
+                          (calibration: components['schemas']['ScoreCalibration']) =>
+                            Array.isArray(calibration.functionalClassifications) && calibration.functionalClassifications.filter((range) => range.acmgClassification).length > 0
                         ).length || 0
                       }}
                       / {{ maveMdScoreSets[urn]?.scoreCalibrations.length || 0 }}
@@ -197,156 +189,157 @@
           </table>
         </div>
       </div>
-      <div ref="searchResults" v-if="searchResultsVisible">
+      <div v-if="searchResultsVisible" ref="searchResults">
         <div v-for="(allele, alleleIdx) in alleles" :key="allele.clingenAlleleId" class="col-12">
-          <Card>
-            <template #content>
-              <div class="variant-search-result">
-                <div
-                  v-if="
-                    allele.variants.nucleotide.length > 0 ||
-                    allele.variants.protein.length > 0 ||
-                    allele.variants.associatedNucleotide.length > 0
-                  "
-                  class="variant-search-result-button"
-                >
-                  <router-link :to="`/variants/${allele.clingenAlleleId}`">
-                    <Button icon="pi pi-eye" label="View in MaveMD Clinical View" />
-                  </router-link>
-                </div>
-                <div class="variant-search-result-content">
-                  <!-- TODO handle no canonical allele name or just leave blank? -->
-                  <div class="variant-search-result-title">
-                    {{ allele.canonicalAlleleName }}
+          <Card class="clickable-variant-card">
+            <template #title>
+              <div class="flex flex-col clickable-title" @click="openAlleleInVariantView(allele)">
+                <span class="text-blue-600 font-semibold text-xxl">{{ allele.canonicalAlleleName }}</span>
+
+                <div class="flex mt-0">
+                  <div v-if="allele.grch38Hgvs" class="ml-10 mr-10 text-base">
+                    <span>GRCh38 coordinates:</span>
+                    <span style="font-style: italic">{{ allele.grch38Hgvs }}</span>
                   </div>
-                  <div v-if="allele.clingenAlleleUrl" class="variant-search-result-subcontent">
-                    ClinGen Allele ID:
-                    <a :href="allele.clingenAlleleUrl">{{ allele.clingenAlleleUrl }}</a>
+                  <div v-if="allele.grch37Hgvs" class="ml-10 mr-10 text-base">
+                    <span>GRCh37 coordinates:</span>
+                    <span style="font-style: italic">{{ allele.grch37Hgvs }}</span>
                   </div>
-                  <div v-if="allele.grch38Hgvs" class="variant-search-result-subcontent">
-                    GRCh38 coordinates: {{ allele.grch38Hgvs }}
-                  </div>
-                  <div v-if="allele.grch37Hgvs" class="variant-search-result-subcontent">
-                    GRCh37 coordinates: {{ allele.grch37Hgvs }}
-                  </div>
-                  <div v-if="allele.maneCoordinates.length > 0" class="variant-search-result-subcontent">
-                    MANE transcript coordinates:
+                  <div v-if="allele.maneCoordinates.length > 0" class="ml-10 mr-10 text-base">
+                    MANE transcripts:
                     <DataTable show-gridlines size="small" striped-rows :value="allele.maneCoordinates">
                       <Column field="sequenceType" header="Sequence Type"></Column>
                       <Column field="database" header="Database"></Column>
                       <Column field="hgvs" header="Coordinates"></Column>
                     </DataTable>
                   </div>
-                  <div
-                    v-if="
-                      allele.variantsStatus == 'Loaded' &&
-                      (allele.variants.nucleotide.length > 0 ||
-                        allele.variants.protein.length > 0 ||
-                        allele.variants.associatedNucleotide.length > 0)
-                    "
-                  >
-                    <div v-if="allele.variants.nucleotide.length > 0" class="variant-search-result-subcontent">
-                      MaveDB score sets measuring variant at the nucleotide level:
-                      <li
-                        v-for="variant in nucleotideScoreSetListIsExpanded[alleleIdx]
-                          ? allele.variants.nucleotide
-                          : allele.variants.nucleotide.slice(0, defaultNumScoreSetsToShow)"
-                        :key="variant.urn"
-                      >
-                        <router-link
-                          :to="{name: 'scoreSet', params: {urn: variant.scoreSet.urn}, query: {variant: variant.urn}}"
-                        >
-                          {{ variant.scoreSet.title }}
-                        </router-link>
-                      </li>
-                      <Button
-                        v-if="allele.variants.nucleotide.length > defaultNumScoreSetsToShow"
-                        class="p-button-text"
-                        icon="pi pi-angle-down"
-                        style="width: fit-content"
-                        @click="
-                          nucleotideScoreSetListIsExpanded[alleleIdx] = !nucleotideScoreSetListIsExpanded[alleleIdx]
-                        "
-                      >
-                        {{
-                          nucleotideScoreSetListIsExpanded[alleleIdx]
-                            ? 'Show less'
-                            : `Show ${allele.variants.nucleotide.length - defaultNumScoreSetsToShow} more`
-                        }}
-                      </Button>
-                    </div>
-                    <div v-if="allele.variants.protein.length > 0" class="variant-search-result-subcontent">
-                      MaveDB score sets measuring variant at the amino acid level:
-                      <li
-                        v-for="variant in proteinScoreSetListIsExpanded[alleleIdx]
-                          ? allele.variants.protein
-                          : allele.variants.protein.slice(0, defaultNumScoreSetsToShow)"
-                        :key="variant.urn"
-                      >
-                        <router-link
-                          :to="{name: 'scoreSet', params: {urn: variant.scoreSet.urn}, query: {variant: variant.urn}}"
-                        >
-                          {{ variant.scoreSet.title }}
-                        </router-link>
-                      </li>
-                      <Button
-                        v-if="allele.variants.protein.length > defaultNumScoreSetsToShow"
-                        class="p-button-text"
-                        icon="pi pi-angle-down"
-                        style="width: fit-content"
-                        @click="proteinScoreSetListIsExpanded[alleleIdx] = !proteinScoreSetListIsExpanded[alleleIdx]"
-                      >
-                        {{
-                          proteinScoreSetListIsExpanded[alleleIdx]
-                            ? 'Show less'
-                            : `Show ${allele.variants.protein.length - defaultNumScoreSetsToShow} more`
-                        }}
-                      </Button>
-                    </div>
-                    <div
-                      v-if="allele.variants.associatedNucleotide.length > 0"
-                      class="variant-search-result-subcontent"
+                </div>
+              </div>
+            </template>
+            <template #content>
+              <div>
+                <!-- TODO handle no canonical allele name or just leave blank? -->
+                <div
+                  v-if="
+                    allele.variantsStatus == 'Loaded' &&
+                    (allele.variants.nucleotide.length > 0 ||
+                      allele.variants.protein.length > 0 ||
+                      allele.variants.associatedNucleotide.length > 0)
+                  "
+                >
+                  <div v-if="allele.variants.nucleotide.length > 0" class="variant-search-result-subcontent ml-4">
+                    Nucleotide variant measurements <strong>({{ allele.variants.nucleotide.length }})</strong>:
+                    <li
+                      v-for="variant in nucleotideScoreSetListIsExpanded[alleleIdx]
+                        ? allele.variants.nucleotide
+                        : allele.variants.nucleotide.slice(0, defaultNumScoreSetsToShow)"
+                      :key="variant.urn"
+                      class="variant-search-score-set-result"
                     >
-                      MaveDB score sets measuring a different nucleotide variant with an equivalent protein effect:
-                      <li
-                        v-for="variant in associatedNucleotideScoreSetListIsExpanded[alleleIdx]
-                          ? allele.variants.associatedNucleotide
-                          : allele.variants.nucleotide.slice(0, defaultNumScoreSetsToShow)"
-                        :key="variant.urn"
+                      <router-link
+                        :to="{name: 'scoreSet', params: {urn: variant.scoreSet.urn}, query: {variant: variant.urn}}"
                       >
-                        <router-link
-                          :to="{name: 'scoreSet', params: {urn: variant.scoreSet.urn}, query: {variant: variant.urn}}"
-                        >
-                          {{ variant.scoreSet.title }}
-                        </router-link>
-                      </li>
-                      <Button
-                        v-if="allele.variants.associatedNucleotide.length > defaultNumScoreSetsToShow"
-                        class="p-button-text"
-                        icon="pi pi-angle-down"
-                        style="width: fit-content"
-                        @click="
-                          associatedNucleotideScoreSetListIsExpanded[alleleIdx] =
-                            !associatedNucleotideScoreSetListIsExpanded[alleleIdx]
-                        "
-                      >
-                        {{
-                          associatedNucleotideScoreSetListIsExpanded[alleleIdx]
-                            ? 'Show less'
-                            : `Show ${allele.variants.associatedNucleotide.length - defaultNumScoreSetsToShow} more`
-                        }}
-                      </Button>
-                    </div>
+                        {{ variant.scoreSet.title }}
+                      </router-link>
+                    </li>
+                    <Button
+                      v-if="allele.variants.nucleotide.length > defaultNumScoreSetsToShow"
+                      text
+                      @click="
+                        nucleotideScoreSetListIsExpanded[alleleIdx] = !nucleotideScoreSetListIsExpanded[alleleIdx]
+                      "
+                    >
+                      {{
+                        nucleotideScoreSetListIsExpanded[alleleIdx]
+                          ? 'Show less'
+                          : `Show ${allele.variants.nucleotide.length - defaultNumScoreSetsToShow} more`
+                      }}
+                    </Button>
                   </div>
-                  <!-- <div v-if="allele.variantsStatus == 'Loaded' && allele.variants.length > 0" style="overflow: hidden;">
+                  <div v-if="allele.variants.protein.length > 0" class="variant-search-result-subcontent ml-4">
+                    Amino acid variant measurements <strong>({{ allele.variants.protein.length }})</strong>:
+                    <li
+                      v-for="variant in proteinScoreSetListIsExpanded[alleleIdx]
+                        ? allele.variants.protein
+                        : allele.variants.protein.slice(0, defaultNumScoreSetsToShow)"
+                      :key="variant.urn"
+                      class="variant-search-score-set-result"
+                    >
+                      <router-link
+                        :to="{name: 'scoreSet', params: {urn: variant.scoreSet.urn}, query: {variant: variant.urn}}"
+                      >
+                        {{ variant.scoreSet.title }}
+                      </router-link>
+                    </li>
+                    <Button
+                      v-if="allele.variants.protein.length > defaultNumScoreSetsToShow"
+                      text
+                      @click="proteinScoreSetListIsExpanded[alleleIdx] = !proteinScoreSetListIsExpanded[alleleIdx]"
+                    >
+                      {{
+                        proteinScoreSetListIsExpanded[alleleIdx]
+                          ? 'Show less'
+                          : `Show ${allele.variants.protein.length - defaultNumScoreSetsToShow} more`
+                      }}
+                    </Button>
+                  </div>
+                  <div
+                    v-if="allele.variants.associatedNucleotide.length > 0"
+                    class="variant-search-result-subcontent ml-4"
+                  >
+                    Measurements of different nucleotide variants with equivalent protein effect
+                    <strong>({{ allele.variants.associatedNucleotide.length }})</strong>:
+                    <li
+                      v-for="variant in associatedNucleotideScoreSetListIsExpanded[alleleIdx]
+                        ? allele.variants.associatedNucleotide
+                        : allele.variants.nucleotide.slice(0, defaultNumScoreSetsToShow)"
+                      :key="variant.urn"
+                      class="variant-search-score-set-result"
+                    >
+                      <router-link
+                        :to="{name: 'scoreSet', params: {urn: variant.scoreSet.urn}, query: {variant: variant.urn}}"
+                      >
+                        {{ variant.scoreSet.title }}
+                      </router-link>
+                    </li>
+                    <Button
+                      v-if="allele.variants.associatedNucleotide.length > defaultNumScoreSetsToShow"
+                      text
+                      @click="
+                        associatedNucleotideScoreSetListIsExpanded[alleleIdx] =
+                          !associatedNucleotideScoreSetListIsExpanded[alleleIdx]
+                      "
+                    >
+                      {{
+                        associatedNucleotideScoreSetListIsExpanded[alleleIdx]
+                          ? 'Show less'
+                          : `Show ${allele.variants.associatedNucleotide.length - defaultNumScoreSetsToShow} more`
+                      }}
+                    </Button>
+                  </div>
+                </div>
+                <!-- <div v-if="allele.variantsStatus == 'Loaded' && allele.variants.length > 0" style="overflow: hidden;">
                     <div v-for="variant in allele.variants" :key="variant.urn" style="float: left; border: 1px solid #000; width: 300px; margin: 5px; padding: 5px;">
                       <div style="border-bottom: 3px solid #000; font-weight: bold;">{{ variant.scoreSet.title }}</div>
                       {{ variant.scoreSet?.experiment?.keywords }}
                     </div>
                   </div> -->
-                  <Message v-else-if="allele.variantsStatus == 'Loaded'"
-                    >No score sets containing this variant were found in MaveDB.</Message
+                <Message v-else-if="allele.variantsStatus == 'Loaded'"
+                  >No score sets containing this variant were found in MaveDB.</Message
+                >
+              </div>
+            </template>
+            <template #footer>
+              <div class="flex">
+                <div class="ml-auto">
+                  <Button
+                    v-if="allele.clingenAlleleUrl"
+                    class="p-button-outlined p-button-sm"
+                    @click="openAlleleInClinGenRegistry(allele)"
                   >
+                    <span class="pi pi-external-link" style="margin-right: 0.5em"></span>
+                    View in ClinGen Allele Registry
+                  </Button>
                 </div>
               </div>
             </template>
@@ -363,7 +356,7 @@ import _ from 'lodash'
 import Card from 'primevue/card'
 import Column from 'primevue/column'
 import DataTable from 'primevue/datatable'
-import Dropdown from 'primevue/dropdown'
+import Select from 'primevue/select'
 import IconField from 'primevue/iconfield'
 import InputIcon from 'primevue/inputicon'
 import InputText from 'primevue/inputtext'
@@ -393,7 +386,7 @@ export default defineComponent({
     Column,
     DataTable,
     DefaultLayout,
-    Dropdown,
+    Select,
     IconField,
     InputIcon,
     InputText,
@@ -423,7 +416,7 @@ export default defineComponent({
         {code: 'hgvs', name: 'HGVS', examples: ['ENST00000473961.6:c.-19-2A>T', 'NP_000242.1:p.Asn566Thr']},
         {code: 'clinGenAlleleId', name: 'ClinGen Allele ID', examples: ['CA10590195', 'PA2579983208']},
         {code: 'dbSnpRsId', name: 'dbSNP rsID', examples: ['rs900082291', '900082291']},
-        {code: 'clinVarVariationId', name: 'ClinVar Variation ID', examples: ['869058']},
+        {code: 'clinVarVariationId', name: 'ClinVar Variation ID', examples: ['869058']}
       ],
       inputGene: null as string | null,
       inputVariantType: null as string | null,
@@ -598,6 +591,16 @@ export default defineComponent({
   },
 
   methods: {
+    openAlleleInVariantView: function (allele: any) {
+      if (allele.clingenAlleleId) {
+        this.router.push({name: 'variant', params: {clingenAlleleId: allele.clingenAlleleId}})
+      }
+    },
+    openAlleleInClinGenRegistry: function (allele: any) {
+      if (allele.clingenAlleleUrl) {
+        window.open(allele.clingenAlleleUrl, '_blank')
+      }
+    },
     getScoreSetShortName: function (scoreSet: ScoreSet) {
       return getScoreSetShortName(scoreSet)
     },
@@ -644,10 +647,8 @@ export default defineComponent({
       this.alleles = []
     },
     showSearch(searchMethod: 'fuzzy' | 'default' = 'default') {
-
       this.defaultSearchVisible = searchMethod == 'default'
       this.fuzzySearchVisible = searchMethod == 'fuzzy'
-
     },
     defaultSearch: async function () {
       this.searchResultsVisible = true
@@ -675,7 +676,7 @@ export default defineComponent({
             this.toast.add({
               severity: 'error',
               summary: 'Invalid search',
-              detail: `Please provide a valid ClinGen Allele ID (e.g. ${_.join(_.find(this.searchTypeOptions, { code: searchType })?.examples, ', ')})`,
+              detail: `Please provide a valid ClinGen Allele ID (e.g. ${_.join(_.find(this.searchTypeOptions, {code: searchType})?.examples, ', ')})`,
               life: 10000
             })
             return
@@ -686,7 +687,7 @@ export default defineComponent({
             this.toast.add({
               severity: 'error',
               summary: 'Invalid search',
-              detail: `Please provide a valid dbSNP rsID (e.g. ${_.join(_.find(this.searchTypeOptions, { code: searchType })?.examples, ', ')})`,
+              detail: `Please provide a valid dbSNP rsID (e.g. ${_.join(_.find(this.searchTypeOptions, {code: searchType})?.examples, ', ')})`,
               life: 10000
             })
             return
@@ -701,7 +702,7 @@ export default defineComponent({
             this.toast.add({
               severity: 'error',
               summary: 'Invalid search',
-              detail: `Please provide a valid ClinVar Variation ID (e.g. ${_.join(_.find(this.searchTypeOptions, { code: searchType })?.examples, ', ')})`,
+              detail: `Please provide a valid ClinVar Variation ID (e.g. ${_.join(_.find(this.searchTypeOptions, {code: searchType})?.examples, ', ')})`,
               life: 10000
             })
             return
@@ -716,7 +717,7 @@ export default defineComponent({
             this.toast.add({
               severity: 'error',
               summary: 'Invalid search',
-              detail: `Please provide a valid HGVS string (e.g. ${_.join(_.find(this.searchTypeOptions, { code: searchType })?.examples, ', ')})`,
+              detail: `Please provide a valid HGVS string (e.g. ${_.join(_.find(this.searchTypeOptions, {code: searchType})?.examples, ', ')})`,
               life: 10000
             })
             return
@@ -875,8 +876,8 @@ export default defineComponent({
         }
         if (this.alleles.length > 0) {
           this.$refs.searchResults.scrollIntoView({
-            behavior: "smooth",
-            block: "start"
+            behavior: 'smooth',
+            block: 'start'
           })
         }
       } catch (error: any) {
@@ -1064,10 +1065,6 @@ export default defineComponent({
 </script>
 
 <style scoped>
-.mavedb-page-title {
-  text-align: center;
-}
-
 .mavedb-mavemd-logo {
   height: 150px;
   margin: 1em 0 0 0;
@@ -1089,10 +1086,6 @@ export default defineComponent({
   flex-direction: column;
   height: 100%;
   display: flex;
-}
-
-.mavedb-search-view-without-results .mavedb-page-title {
-  flex: 0 0 auto;
 }
 
 .mavedb-search-view-without-results .mavedb-mavemd-intro {
@@ -1167,8 +1160,9 @@ export default defineComponent({
 }
 
 .mavedb-search-suggestions {
-  display:flex;
+  display: flex;
   justify-content: center;
+  flex-direction: column;
 }
 
 .mavedb-organism-picker:deep(.p-listbox-item) {
@@ -1179,28 +1173,23 @@ export default defineComponent({
   font-style: normal;
 }
 
-.mavedb-search-clear-button {
-  position: absolute;
-  top: 12px;
-  right: 8px;
-  margin: 0;
-  padding: 0;
+.clickable-variant-card::v-deep(.p-card-title) {
+  padding: 0px;
+  margin-bottom: 0px;
 }
 
-.mavedb-variant-search-result-subheading {
-  margin: 1em 0 0.5em 0;
-  font-weight: bold;
+.clickable-variant-card::v-deep(.p-card-content) {
+  border-top: 1px solid #555;
 }
 
-.variant-search-result {
-  display: flex;
-  gap: 20px;
+.clickable-variant-card::v-deep(.p-card-footer) {
+  padding: 0px;
 }
 
-.variant-search-result-title {
-  font-weight: bold;
-  font-size: 20px;
-  margin-bottom: 10px;
+.variant-search-score-set-result {
+  list-style-position: inside;
+  margin-left: 1.2em;
+  padding-left: 0;
 }
 
 .variant-search-result-subcontent {
@@ -1248,5 +1237,17 @@ td,
 th {
   padding: 0 5px;
   vertical-align: top;
+}
+
+.clickable-title {
+  cursor: pointer;
+  transition:
+    color 0.2s,
+    text-decoration 0.2s;
+}
+.clickable-title:hover,
+.clickable-title:focus {
+  color: #233a7a;
+  text-decoration: underline;
 }
 </style>

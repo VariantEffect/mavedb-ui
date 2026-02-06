@@ -107,10 +107,12 @@
             <ScoreSetHistogram
               ref="histogram"
               :external-selection="variantScores"
+              :lock-selection="true"
               :score-set="variant.scoreSet"
               :selected-calibration="selectedCalibration"
               :variants="scores"
               @calibration-changed="updateCalibration"
+              @selection-changed="onHistogramSelectionChanged"
             />
           </div>
           <div v-else>
@@ -139,8 +141,9 @@ import useRemoteData from '@/composition/remote-data'
 import config from '@/config'
 import {parseScoresOrCounts, ScoresOrCountsRow} from '@/lib/scores'
 import ProgressSpinner from 'primevue/progressspinner'
-import {FunctionalRange, functionalRangeContainsVariant, PersistedScoreCalibration} from '@/lib/calibrations'
+import {functionalClassificationContainsVariant} from '@/lib/calibrations'
 import CalibrationTable from './CalibrationTable.vue'
+import {components} from '@/schema/openapi'
 
 type Classification = 'Functionally normal' | 'Functionally abnormal' | 'Not specified'
 
@@ -274,7 +277,7 @@ export default defineComponent({
       )
     },
     variantScoreRange: function () {
-      if (!this.selectedCalibrationObject?.functionalRanges) {
+      if (!this.selectedCalibrationObject?.functionalClassifications) {
         return null
       }
 
@@ -283,8 +286,9 @@ export default defineComponent({
         return null
       }
 
-      const range = this.selectedCalibrationObject.functionalRanges.find((range: FunctionalRange) =>
-        functionalRangeContainsVariant(range, variantScore)
+      const range = this.selectedCalibrationObject.functionalClassifications.find(
+        (range: components['schemas']['mavedb__view_models__score_calibration__FunctionalClassification']) =>
+          functionalClassificationContainsVariant(range, variantScore)
       )
 
       return range
@@ -301,14 +305,14 @@ export default defineComponent({
       }
       return null
     },
-    selectedCalibrationObject: function (): PersistedScoreCalibration | null {
+    selectedCalibrationObject: function (): components['schemas']['ScoreCalibration'] | null {
       if (!this.selectedCalibration || !this.variant?.scoreSet?.scoreCalibrations) {
         return null
       }
 
       return (
         this.variant.scoreSet.scoreCalibrations.find(
-          (calibration: PersistedScoreCalibration) => calibration.urn === this.selectedCalibration
+          (calibration: components['schemas']['ScoreCalibration']) => calibration.urn === this.selectedCalibration
         ) || null
       )
     }
@@ -360,6 +364,10 @@ export default defineComponent({
     },
     updateCalibration: function (calibration: string | null) {
       this.selectedCalibration = calibration
+    },
+    onHistogramSelectionChanged: function (payload: any) {
+      // Selection is locked; ignore changes to keep the variant focused.
+      return
     }
   }
 })
@@ -496,7 +504,7 @@ table.variant-info-table td:first-child {
 }
 
 .mavedb-assay-facts-card {
-  width: 580px; /* fixed size */
+  width: 50%;
   border: 1px solid #000;
   padding: 12px;
   font-family: sans-serif;

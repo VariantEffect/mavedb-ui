@@ -14,15 +14,27 @@
     <div class="mavedb-assay-facts-section mavedb-assay-facts-bottom-separator">
       <div class="mavedb-assay-facts-row">
         <div class="mavedb-assay-facts-label">Gene (HGNC symbol)</div>
-        <div class="mavedb-assay-facts-value">{{ scoreSet.targetGenes[0]?.name }}</div>
+        <div class="mavedb-assay-facts-value">
+          {{ geneTextForScoreSet ? geneTextForScoreSet : 'Not specified' }}
+        </div>
       </div>
     </div>
     <div class="mavedb-assay-facts-section">
       <div class="mavedb-assay-facts-row">
         <div class="mavedb-assay-facts-label">Assay Type</div>
         <div class="mavedb-assay-facts-value">
-          <div v-if="scoreSet.experiment.keywords?.some((k) => k.keyword.key === 'Phenotypic Assay Method')">
-            {{ scoreSet.experiment.keywords.find((k) => k.keyword.key === 'Phenotypic Assay Method')?.keyword.label }}
+          <div
+            v-if="
+              scoreSet.experiment.keywords?.some(
+                (k: components['schemas']['ExperimentControlledKeyword']) => k.keyword.key === 'Phenotypic Assay Method'
+              )
+            "
+          >
+            {{
+              scoreSet.experiment.keywords.find(
+                (k: components['schemas']['ExperimentControlledKeyword']) => k.keyword.key === 'Phenotypic Assay Method'
+              )?.keyword.label
+            }}
           </div>
           <div v-else>Not specified</div>
         </div>
@@ -30,9 +42,19 @@
       <div class="mavedb-assay-facts-row">
         <div class="mavedb-assay-facts-label">Molecular Mechanism Assessed</div>
         <div class="mavedb-assay-facts-value">
-          <div v-if="scoreSet.experiment.keywords?.some((k) => k.keyword.key === 'Molecular Mechanism Assessed')">
+          <div
+            v-if="
+              scoreSet.experiment.keywords?.some(
+                (k: components['schemas']['ExperimentControlledKeyword']) =>
+                  k.keyword.key === 'Molecular Mechanism Assessed'
+              )
+            "
+          >
             {{
-              scoreSet.experiment.keywords.find((k) => k.keyword.key === 'Molecular Mechanism Assessed')?.keyword.label
+              scoreSet.experiment.keywords.find(
+                (k: components['schemas']['ExperimentControlledKeyword']) =>
+                  k.keyword.key === 'Molecular Mechanism Assessed'
+              )?.keyword.label
             }}
           </div>
           <div v-else>Not specified</div>
@@ -41,9 +63,19 @@
       <div class="mavedb-assay-facts-row">
         <div class="mavedb-assay-facts-label">Variant Consequences Detected</div>
         <div class="mavedb-assay-facts-value">
-          <div v-if="scoreSet.experiment.keywords?.some((k) => k.keyword.key === 'Phenotypic Assay Mechanism')">
+          <div
+            v-if="
+              scoreSet.experiment.keywords?.some(
+                (k: components['schemas']['ExperimentControlledKeyword']) =>
+                  k.keyword.key === 'Phenotypic Assay Mechanism'
+              )
+            "
+          >
             {{
-              scoreSet.experiment.keywords.find((k) => k.keyword.key === 'Phenotypic Assay Mechanism')?.keyword.label
+              scoreSet.experiment.keywords.find(
+                (k: components['schemas']['ExperimentControlledKeyword']) =>
+                  k.keyword.key === 'Phenotypic Assay Mechanism'
+              )?.keyword.label
             }}
           </div>
           <div v-else>Not specified</div>
@@ -52,9 +84,19 @@
       <div class="mavedb-assay-facts-row">
         <div class="mavedb-assay-facts-label">Model System</div>
         <div class="mavedb-assay-facts-value">
-          <div v-if="scoreSet.experiment.keywords?.some((k) => k.keyword.key === 'Phenotypic Assay Model System')">
+          <div
+            v-if="
+              scoreSet.experiment.keywords?.some(
+                (k: components['schemas']['ExperimentControlledKeyword']) =>
+                  k.keyword.key === 'Phenotypic Assay Model System'
+              )
+            "
+          >
             {{
-              scoreSet.experiment.keywords.find((k) => k.keyword.key === 'Phenotypic Assay Model System')?.keyword.label
+              scoreSet.experiment.keywords.find(
+                (k: components['schemas']['ExperimentControlledKeyword']) =>
+                  k.keyword.key === 'Phenotypic Assay Model System'
+              )?.keyword.label
             }}
           </div>
           <div v-else>Not specified</div>
@@ -83,11 +125,23 @@
       Clinical Performance<sup v-if="!primaryScoreRangeIsInvestigatorProvided">*</sup>
     </div>
     <div class="mavedb-assay-facts-section">
-      <div v-if="primaryScoreRange?.functionalRanges?.some((r) => r.oddspathsRatio)">
+      <div
+        v-if="
+          primaryScoreRange?.functionalClassifications?.some(
+            (r: components['schemas']['mavedb__view_models__score_calibration__FunctionalClassification']) =>
+              r.oddspathsRatio
+          )
+        "
+      >
         <div class="mavedb-assay-facts-row">
           <div class="mavedb-assay-facts-label">OddsPath – Normal</div>
           <div
-            v-if="primaryScoreRange?.functionalRanges?.some((r) => r.classification === 'normal' && r.oddspathsRatio)"
+            v-if="
+              primaryScoreRange?.functionalClassifications?.some(
+                (r: components['schemas']['mavedb__view_models__score_calibration__FunctionalClassification']) =>
+                  r.functionalClassification === 'normal' && r.oddspathsRatio
+              )
+            "
             class="mavedb-assay-facts-value"
           >
             {{ roundOddsPath(normalScoreRange?.oddspathsRatio) }}
@@ -109,7 +163,12 @@
         <div class="mavedb-assay-facts-row">
           <div class="mavedb-assay-facts-label">OddsPath – Abnormal</div>
           <div
-            v-if="primaryScoreRange?.functionalRanges?.some((r) => r.classification === 'abnormal' && r.oddspathsRatio)"
+            v-if="
+              primaryScoreRange?.functionalClassifications?.some(
+                (r: components['schemas']['mavedb__view_models__score_calibration__FunctionalClassification']) =>
+                  r.functionalClassification === 'abnormal' && r.oddspathsRatio
+              )
+            "
             class="mavedb-assay-facts-value"
           >
             {{ roundOddsPath(abnormalScoreRange?.oddspathsRatio) }}
@@ -150,7 +209,7 @@
 import _ from 'lodash'
 import {defineComponent, PropType} from 'vue'
 
-import {getScoreSetFirstAuthor} from '@/lib/score-sets'
+import {firstAuthorLastName} from '@/lib/score-sets'
 import {shortCitationForPublication} from '@/lib/publication'
 import type {components} from '@/schema/openapi'
 
@@ -172,8 +231,8 @@ export default defineComponent({
 
   computed: {
     firstAuthor: function () {
-      const firstAuthor = getScoreSetFirstAuthor(this.scoreSet)
-      return !firstAuthor || _.isEmpty(firstAuthor?.name) ? undefined : firstAuthor.name.split(',')[0]
+      const author = firstAuthorLastName(this.scoreSet)
+      return author ? author : null
     },
 
     numAuthors: function () {
@@ -181,8 +240,7 @@ export default defineComponent({
     },
 
     geneAndYear: function () {
-      // TODO VariantEffect/mavedb-api#450
-      const gene = this.scoreSet.targetGenes?.[0]?.name
+      const gene = this.geneTextForScoreSet
       const year = this.scoreSet.primaryPublicationIdentifiers[0]?.publicationYear
       const parts = [gene, year?.toString()].filter((x) => x != null)
       return parts.length > 0 ? parts.join(' ') : undefined
@@ -194,6 +252,20 @@ export default defineComponent({
 
     journal: function () {
       return this.scoreSet.primaryPublicationIdentifiers[0]?.publicationJournal
+    },
+
+    distinctGenesForTargets: function () {
+      // empty when no target genes have mappedHgncName
+      const geneNames = this.scoreSet.targetGenes?.map((tg) => tg.mappedHgncName) || []
+      return _.uniq(geneNames.filter((name) => !_.isEmpty(name))) as string[]
+    },
+
+    geneTextForScoreSet: function () {
+      if (this.distinctGenesForTargets.length == 0) {
+        return this.scoreSet.targetGenes[0]?.name || null
+      }
+
+      return this.distinctGenesForTargets.length == 1 ? this.distinctGenesForTargets[0] : 'Multiple genes'
     },
 
     detectsNmd: function () {
@@ -251,10 +323,15 @@ export default defineComponent({
       return this.primaryScoreRange === this.scoreSet.scoreCalibrations?.find((sr) => sr?.investigatorProvided)
     },
     abnormalScoreRange: function () {
-      return this.primaryScoreRange?.functionalRanges?.find((r) => r.classification === 'abnormal') || null
+      return (
+        this.primaryScoreRange?.functionalClassifications?.find((r) => r.functionalClassification === 'abnormal') ||
+        null
+      )
     },
     normalScoreRange: function () {
-      return this.primaryScoreRange?.functionalRanges?.find((r) => r.classification === 'normal') || null
+      return (
+        this.primaryScoreRange?.functionalClassifications?.find((r) => r.functionalClassification === 'normal') || null
+      )
     },
     oddsPathSources() {
       return this.primaryScoreRange?.classificationSources
@@ -268,13 +345,17 @@ export default defineComponent({
     roundOddsPath: function (oddsPath: number | null | undefined) {
       return oddsPath?.toFixed(3)
     },
-    formatEvidenceCodeForScoreRange: function (functionalRange: components['schemas']['FunctionalRange'] | null) {
-      if (!functionalRange?.acmgClassification?.evidenceStrength) {
+    formatEvidenceCodeForScoreRange: function (
+      functionalClassification:
+        | components['schemas']['mavedb__view_models__score_calibration__FunctionalClassification']
+        | null
+    ) {
+      if (!functionalClassification?.acmgClassification?.evidenceStrength) {
         return ''
       }
 
-      const criterion = functionalRange.acmgClassification.criterion
-      const strength = functionalRange.acmgClassification.evidenceStrength.toUpperCase()
+      const criterion = functionalClassification.acmgClassification.criterion
+      const strength = functionalClassification.acmgClassification.evidenceStrength.toUpperCase()
       return `${criterion}_${strength}`
     }
   }
@@ -285,42 +366,41 @@ export default defineComponent({
 /* Assay fact sheet layout */
 
 .mavedb-assay-facts-card {
-  width: 580px; /* fixed size */
+  width: 100%;
   border: 1px solid #000;
-  padding: 12px;
+  padding: 1em;
   font-family: sans-serif;
-  font-size: 14px;
-  line-height: 1.4;
+  line-height: 1.5;
+  box-sizing: border-box;
 }
 
 .mavedb-assay-facts-card-header {
   font-weight: bold;
-  border-bottom: 3px solid #000;
-  padding-bottom: 4px;
-  margin-bottom: 8px;
+  border-bottom: 0.19em solid #000;
+  padding-bottom: 0.25em;
+  margin-bottom: 0.5em;
 }
 
 .mavedb-assay-facts-section {
-  margin-bottom: 12px;
+  margin-bottom: 0.75em;
 }
 
 .mavedb-assay-facts-section-title {
   font-weight: bold;
-  margin: 6px 0;
-  border-top: 1px solid #3e3d3dbb;
-  padding-top: 4px;
-  font-size: 16px;
-  font-weight: bold;
+  margin: 0.375em 0;
+  border-top: 0.06em solid #3e3d3dbb;
+  padding-top: 0.5em;
+  font-size: 1.1em;
 }
 
 .mavedb-assay-facts-row {
   display: flex;
   justify-content: space-between;
-  margin: 2px 0;
+  margin: 0.125em 0;
 }
 
 .mavedb-assay-facts-bottom-separator {
-  border-bottom: 1px solid #3e3d3dbb;
+  border-bottom: 0.06em solid #3e3d3dbb;
 }
 
 /* Assay facts data */
@@ -338,14 +418,14 @@ export default defineComponent({
 
 .mavedb-assay-facts-value.yellow {
   background: #fef3c7;
-  padding: 2px 4px;
+  padding: 0.125em 0.25em;
   border-radius: 4px;
 }
 
 /* Heading */
 
 .mavedb-assay-facts-heading {
-  font-size: 21px;
+  font-size: 1.4em;
 }
 
 .mavedb-assay-facts-heading-et-al,
@@ -358,11 +438,11 @@ export default defineComponent({
 .mavedb-classification-badge {
   position: absolute;
   left: 6em;
-  padding: 2px 6px;
-  border-radius: 4px;
-  font-size: 12px;
+  padding: 0.125em 0.375em;
+  border-radius: 0.25em;
+  font-size: 0.75em;
   font-weight: bold;
-  margin-left: 4px;
+  margin-left: 0.25em;
 }
 
 .mavedb-classification-badge.mavedb-blue {

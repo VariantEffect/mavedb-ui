@@ -1,27 +1,12 @@
 import json
-
-# Configuration file for the Sphinx documentation builder.
-#
-# This file only contains a selection of the most common options. For a full
-# list see the documentation:
-# https://www.sphinx-doc.org/en/master/usage/configuration.html
-
-# -- Path setup --------------------------------------------------------------
-
-# If extensions (or modules to document with autodoc) are in another directory,
-# add these directories to sys.path here. If the directory is relative to the
-# documentation root, use os.path.abspath to make it absolute, like shown here.
-#
-# import os
-# import sys
-# sys.path.insert(0, os.path.abspath('.'))
+import os
 
 
 # -- Project information -----------------------------------------------------
 
 project = "MaveDB"
-copyright = "2017-2023, Alan F Rubin et al."
-author = "Alan F Rubin et al."
+copyright = "2017-2026, MaveDB Developers"
+author = "MaveDB Developers"
 
 # The full version, including alpha/beta/rc tags
 release = json.load(open("../../../package.json", "rt"))["version"]
@@ -41,12 +26,12 @@ graphviz_output_format = "svg"
 numfig = True
 
 # Add any paths that contain templates here, relative to this directory.
-templates_path = ["_templates"]
+templates_path = ["templates"]
 
 # List of patterns, relative to source directory, that match files and
 # directories to ignore when looking for source files.
 # This pattern also affects html_static_path and html_extra_path.
-exclude_patterns = ["_build", "Thumbs.db", ".DS_Store"]
+exclude_patterns = ["build", "images", "static", "Thumbs.db", ".DS_Store"]
 
 
 # -- Options for HTML output -------------------------------------------------
@@ -63,8 +48,8 @@ html_static_path = ["static"]
 
 # -- General substitutions and link targets ----------------------------------
 rst_epilog = """
-.. _MaveDB issue tracker: https://github.com/VariantEffect/mavedb-ui/issues
-.. _MaveDB GitHub: https://github.com/VariantEffect/mavedb-ui
+.. _MaveDB issue tracker: https://github.com/VariantEffect/mavedb-api/issues
+.. _MaveDB GitHub: https://github.com/VariantEffect/mavedb-api
 .. _MAVE-HGVS: https://www.mavedb.org/docs/mavehgvs
 """
 

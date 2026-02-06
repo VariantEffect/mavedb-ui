@@ -1,0 +1,166 @@
+<!DOCTYPE html>
+
+<html lang="en" data-content_root="./">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" /><meta name="viewport" content="width=device-width, initial-scale=1" />
+
+    <title>Assay facts &#8212; MaveDB 2025.5.2 documentation</title>
+    <link rel="stylesheet" type="text/css" href="_static/pygments.css?v=4848ba22" />
+    <link rel="stylesheet" type="text/css" href="_static/pyramid.css?v=a5b9c134" />
+    <link rel="stylesheet" type="text/css" href="_static/graphviz.css?v=eafc0fe6" />
+    <link rel="stylesheet" type="text/css" href="_static/styles.css?v=1cacb62a" />
+    <script src="_static/documentation_options.js?v=ea53f692"></script>
+    <script src="_static/doctools.js?v=888ff710"></script>
+    <script src="_static/sphinx_highlight.js?v=dc90522c"></script>
+    <link rel="index" title="Index" href="genindex.html" />
+    <link rel="search" title="Search" href="search.html" />
+    <link rel="next" title="Visualizations" href="visualizations.html" />
+    <link rel="prev" title="Data set collections" href="collections.html" />
+<link rel="stylesheet" href="https://fonts.googleapis.com/css?family=Neuton&amp;subset=latin" type="text/css" media="screen" charset="utf-8" />
+<link rel="stylesheet" href="https://fonts.googleapis.com/css?family=Nobile:regular,italic,bold,bolditalic&amp;subset=latin" type="text/css" media="screen" charset="utf-8" />
+<!--[if lte IE 6]>
+<link rel="stylesheet" href="_static/ie6.css" type="text/css" media="screen" charset="utf-8" />
+<![endif]-->
+
+  </head><body>
+
+    <div class="related" role="navigation" aria-label="related navigation">
+      <h3>Navigation</h3>
+      <ul>
+        <li class="right" style="margin-right: 10px">
+          <a href="genindex.html" title="General Index"
+             accesskey="I">index</a></li>
+        <li class="right" >
+          <a href="visualizations.html" title="Visualizations"
+             accesskey="N">next</a> |</li>
+        <li class="right" >
+          <a href="collections.html" title="Data set collections"
+             accesskey="P">previous</a> |</li>
+        <li class="nav-item nav-item-0"><a href="index.html">MaveDB 2025.5.2 documentation</a> &#187;</li>
+        <li class="nav-item nav-item-this"><a href="">Assay facts</a></li> 
+      </ul>
+    </div>  
+
+    <div class="document">
+      <div class="documentwrapper">
+        <div class="bodywrapper">
+          <div class="body" role="main">
+            
+  <section id="assay-facts">
+<h1>Assay facts<a class="headerlink" href="#assay-facts" title="Link to this heading">¶</a></h1>
+<p id="assay-facts-intro">MaveDB captures key facts about the experimental assay used to generate variant effect measurements
+from controlled keywords based on a <a class="reference internal" href="controlled_vocabulary.html#mave-controlled-vocabulary"><span class="std std-ref">controlled vocabulary</span></a>. This information is then used
+to generate a concise summary of assay facts that is displayed on the score set page.</p>
+<figure class="align-left" id="assay-facts-example">
+<img alt="Assay facts section from a MaveDB score set page" src="_images/brca1_assay_facts_example.png" />
+<figcaption>
+<p><span class="caption-number">Fig. 2 </span><span class="caption-text">Example of the assay facts section from a score set</span><a class="headerlink" href="#assay-facts-example" title="Link to this image">¶</a></p>
+<div class="legend">
+<p>This figure shows the assay facts section from
+<a class="reference external" href="https://mavedb.org/score-sets/urn:mavedb:00000097-0-2">urn:mavedb:00000097-0-2</a>,
+which describes saturation genome editing of <em>BRCA1</em>.</p>
+</div>
+</figcaption>
+</figure>
+<section id="assay-fact-sheet-properties">
+<span id="end-assay-facts-intro"></span><h2>Assay fact sheet properties<a class="headerlink" href="#assay-fact-sheet-properties" title="Link to this heading">¶</a></h2>
+<dl id="id1">
+<dt><strong>Gene Symbol</strong></dt><dd><p>The HGNC gene symbol for the target gene being assayed.</p>
+</dd>
+<dt><strong>Assay type</strong></dt><dd><p>The type of functional assay used to measure variant effects. This corresponds to the <a class="reference internal" href="controlled_vocabulary.html#phenotypic-assay-method"><span class="std std-ref">phenotypic assay method</span></a> controlled vocabulary term.</p>
+</dd>
+<dt><strong>Molecular mechanism</strong></dt><dd><p>The molecular mechanism by which the assay measures variant effects. This corresponds to the <a class="reference internal" href="controlled_vocabulary.html#molecular-mechanism-assessed"><span class="std std-ref">molecular mechanism</span></a> controlled vocabulary term.</p>
+</dd>
+<dt><strong>Variant consequences detected</strong></dt><dd><p>The types of variant consequences that the assay is capable of detecting. This corresponds to the <a class="reference internal" href="controlled_vocabulary.html#phenotypic-assay-mechanism"><span class="std std-ref">phenotypic assay mechanism</span></a> controlled vocabulary term.</p>
+</dd>
+<dt><strong>Model system</strong></dt><dd><p>The biological system in which the assay was performed. This corresponds to the <a class="reference internal" href="controlled_vocabulary.html#phenotypic-assay-model-system"><span class="std std-ref">model system</span></a> controlled vocabulary term.</p>
+</dd>
+<dt><strong>Detects splicing variants</strong></dt><dd><p>Whether the assay is capable of detecting splicing variants. Based on assay design, and inferred based on a combination of the <a class="reference internal" href="controlled_vocabulary.html#variant-library-creation-methods"><span class="std std-ref">variant library creation method</span></a> and
+other terms.</p>
+</dd>
+<dt><strong>Detects nonsense-mediated decay (NMD) variants</strong></dt><dd><p>Whether the assay is capable of detecting NMD variants. Based on assay design, and inferred based on a combination of the <a class="reference internal" href="controlled_vocabulary.html#variant-library-creation-methods"><span class="std std-ref">variant library creation method</span></a> and
+other terms.</p>
+</dd>
+<dt><strong>OddsPaths</strong></dt><dd><p>The Odds of Pathogenicity score calculated for abnormal and normal functional readouts, if applicable. These OddsPaths are based on the framework described in <a class="reference external" href="https://doi.org/10.1186/s13073-019-0690-2">Brnich et al., 2019</a>.</p>
+<div class="admonition note">
+<p class="admonition-title">Note</p>
+<p>OddsPath calculations are provided when available.</p>
+<p>For some assays, MaveDB maintainers may have selected OddsPaths other than those submitted by the data contributor,
+based on updated calibrations or reanalyses of the data. In these cases, the source of the OddsPath scores will be indicated on the score set page.</p>
+</div>
+</dd>
+</dl>
+</section>
+</section>
+
+
+            <div class="clearer"></div>
+          </div>
+        </div>
+      </div>
+      <div class="sphinxsidebar" role="navigation" aria-label="main navigation">
+        <div class="sphinxsidebarwrapper">
+  <div>
+    <h3><a href="index.html">Table of Contents</a></h3>
+    <ul>
+<li><a class="reference internal" href="#">Assay facts</a><ul>
+<li><a class="reference internal" href="#assay-fact-sheet-properties">Assay fact sheet properties</a></li>
+</ul>
+</li>
+</ul>
+
+  </div>
+  <div>
+    <h4>Previous topic</h4>
+    <p class="topless"><a href="collections.html"
+                          title="previous chapter">Data set collections</a></p>
+  </div>
+  <div>
+    <h4>Next topic</h4>
+    <p class="topless"><a href="visualizations.html"
+                          title="next chapter">Visualizations</a></p>
+  </div>
+  <div role="note" aria-label="source link">
+    <h3>This Page</h3>
+    <ul class="this-page-menu">
+      <li><a href="_sources/assay_facts.rst.txt"
+            rel="nofollow">Show Source</a></li>
+    </ul>
+   </div>
+<div id="searchbox" style="display: none" role="search">
+  <h3 id="searchlabel">Quick search</h3>
+    <div class="searchformwrapper">
+    <form class="search" action="search.html" method="get">
+      <input type="text" name="q" aria-labelledby="searchlabel" autocomplete="off" autocorrect="off" autocapitalize="off" spellcheck="false"/>
+      <input type="submit" value="Go" />
+    </form>
+    </div>
+</div>
+<script>document.getElementById('searchbox').style.display = "block"</script>
+        </div>
+      </div>
+      <div class="clearer"></div>
+    </div>
+    <div class="related" role="navigation" aria-label="related navigation">
+      <h3>Navigation</h3>
+      <ul>
+        <li class="right" style="margin-right: 10px">
+          <a href="genindex.html" title="General Index"
+             >index</a></li>
+        <li class="right" >
+          <a href="visualizations.html" title="Visualizations"
+             >next</a> |</li>
+        <li class="right" >
+          <a href="collections.html" title="Data set collections"
+             >previous</a> |</li>
+        <li class="nav-item nav-item-0"><a href="index.html">MaveDB 2025.5.2 documentation</a> &#187;</li>
+        <li class="nav-item nav-item-this"><a href="">Assay facts</a></li> 
+      </ul>
+    </div>
+    <div class="footer" role="contentinfo">
+    &#169; Copyright 2017-2025, MaveDB Developers.
+      Created using <a href="https://www.sphinx-doc.org/">Sphinx</a> 7.2.6.
+    </div>
+  </body>
+</html>

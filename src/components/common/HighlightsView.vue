@@ -1,84 +1,98 @@
 <template>
   <div v-if="$props.model == 'Target'">
     <Card>
-      <template #title>Target Gene Highlights</template>
+      <template #title><h2 class="mt-0">Target Gene Highlights</h2></template>
       <template #content>
-        <TabView @update:active-index="(idx) => { this.field = targetLeaderboardFields[idx] }"
-          v-model:activeIndex="activeTabIndex">
-          <TabPanel v-for="tab in targetLeaderboardFields" :key="tab"
-            :header="targetLeaderboardFieldTitles[tab]">
-            <div v-if="loading" class="highlights-spinner-container" ref="spinner">
-              <ProgressSpinner class="highlights-progress" />
-            </div>
-            <div v-else>
-              <DataTable
-                :ref="`targetDataTable${tab}`"
-                :exportFilename="`mavedb-${pluralize(tab)}`"
-                paginator
-                :rows="5"
-                :rowsPerPageOptions="[5, 10, 20]"
-                size="small"
-                sortField="count"
-                :sortOrder="-1"
-                :value="leaderboardData"
-              >
-                <template #paginatorstart>
-                  <Button type="button" icon="pi pi-download" text @click="exportCsv('target', tab)" />
-                </template>
-                <Column v-for="col of targetLeaderboardColumns[this.field]" :field="col.field" :header="col.header"
-                  :sortable="col.field == 'count'" :key="col.field" :style="`width: ${col.width || auto}`">
-                  <!-- Link any identifier columns or `column` (in this compoenent representative of some db key) to a MaveDB search page -->
-                  <template v-if="this.field == 'accession' && col.field == 'column'" #body="slotProps">
-                    <a :href="`${config.appBaseUrl}/#/search?target-accession=${slotProps.data[col.field]}`">{{
-                      slotProps.data[col.field] }}</a>
+        <Tabs v-model:value="activeTabIndex" @update:value="(idx) => { field = targetLeaderboardFields[idx] }">
+          <TabList>
+            <Tab v-for="(tab, index) in targetLeaderboardFields" :key="tab" :value="index">{{ targetLeaderboardFieldTitles[tab] }}</Tab>
+          </TabList>
+          <TabPanels>
+            <TabPanel v-for="(tab, index) in targetLeaderboardFields" :key="tab" :value="index">
+              <div v-if="loading" ref="spinner" class="flex justify-center">
+                <ProgressSpinner class="size-12!" />
+              </div>
+              <div v-else>
+                <DataTable
+                  :ref="`targetDataTable${tab}`"
+                  :export-filename="`mavedb-${pluralize(tab)}`"
+                  paginator
+                  :rows="5"
+                  :rows-per-page-options="[5, 10, 20]"
+                  size="small"
+                  sort-field="count"
+                  :sort-order="-1"
+                  :value="leaderboardData"
+                >
+                  <template #paginatorstart>
+                    <Button icon="pi pi-download" text type="button" @click="exportCsv('target', tab)" />
                   </template>
-                  <template v-else-if="this.field == 'gene' && col.field == 'column'" #body="slotProps">
-                    <a :href="`${config.appBaseUrl}/#/search?search=${slotProps.data[col.field]}`">{{
-                      slotProps.data[col.field] }}</a>
-                  </template>
-                  <template v-else-if="this.field == 'organism' && col.field == 'column'" #body="slotProps">
-                    <a :href="`${config.appBaseUrl}/#/search?target-organism-name=${slotProps.data[col.field]}`">{{
-                      slotProps.data[col.field] }}</a>
-                  </template>
-                  <template v-else-if="col.field == 'identifier'" #body="slotProps">
-                    <a :href="`${config.appBaseUrl}/#/search?search=${slotProps.data[col.field]}`">{{
-                      slotProps.data[col.field] }}</a>
-                  </template>
-                  <!-- Handle url columns separately, so that we can fill in any missing DB data -->
-                  <template v-else-if="this.field == 'uniprot-identifier' && col.field == 'url'" #body="slotProps">
-                    <a :href="slotProps.data[col.field] ? `${slotProps.data[col.field]}` : `http://purl.uniprot.org/uniprot/${slotProps.data.identifier}`"
-                      target="_blank">{{
-                      slotProps.data.url ? slotProps.data.url :
-                      `http://purl.uniprot.org/uniprot/${slotProps.data.identifier}` }}</a>
-                  </template>
-                  <template v-else-if="this.field == 'refseq-identifier' && col.field == 'url'" #body="slotProps">
-                    <a :href="slotProps.data[col.field] ? `${slotProps.data[col.field]}` : `http://www.ncbi.nlm.nih.gov/entrez/viewer.fcgi?val=${slotProps.data.identifier}`"
-                      target="_blank">{{
-                      slotProps.data.url ? slotProps.data.url :
-                      `http://www.ncbi.nlm.nih.gov/entrez/viewer.fcgi?val=${slotProps.data.identifier}` }}</a>
-                  </template>
-                  <template v-else-if="this.field == 'ensembl-identifier' && col.field == 'url'" #body="slotProps">
-                    <a :href="slotProps.data[col.field] ? `${slotProps.data[col.field]}` : `http://www.ensembl.org/id/${slotProps.data.identifier}`"
-                      target="_blank">{{
-                      slotProps.data.url ? slotProps.data.url : `http://www.ensembl.org/id/${slotProps.data.identifier}`
-                      }}</a>
-                  </template>
-                  <!-- Handle generic url columns  -->
-                  <template v-else-if="col.field == 'url'" #body="slotProps">
-                    <a :href="`${slotProps.data.url}`" target="_blank">{{
-                      slotProps.data.url }}</a>
-                  </template>
-                </Column>
-              </DataTable>
-            </div>
-          </TabPanel>
-        </TabView>
-        <div class="chart-container">
-          <div v-if="showCategoryChart" class="chart">
-            <Chart type="pie" :data="categoryChartData" :options="categoryChartOptions"></Chart>
+                  <Column
+                    v-for="col of targetLeaderboardColumns[field]"
+                    :key="col.field"
+                    :field="col.field" :header="col.header"
+                    :sortable="col.field == 'count'"
+                    :style="`width: ${col.width || auto}`">
+                    <!-- Link any identifier columns or `column` (in this compoenent representative of some db key) to a MaveDB search page -->
+                    <template v-if="field == 'accession' && col.field == 'column'" #body="slotProps">
+                      <a :href="`${config.appBaseUrl}/#/search?target-accession=${slotProps.data[col.field]}`">{{
+                        slotProps.data[col.field] }}</a>
+                    </template>
+                    <template v-else-if="field == 'gene' && col.field == 'column'" #body="slotProps">
+                      <a :href="`${config.appBaseUrl}/#/search?search=${slotProps.data[col.field]}`">{{
+                        slotProps.data[col.field] }}</a>
+                    </template>
+                    <template v-else-if="field == 'organism' && col.field == 'column'" #body="slotProps">
+                      <a :href="`${config.appBaseUrl}/#/search?target-organism-name=${slotProps.data[col.field]}`">{{
+                        slotProps.data[col.field] }}</a>
+                    </template>
+                    <template v-else-if="col.field == 'identifier'" #body="slotProps">
+                      <a :href="`${config.appBaseUrl}/#/search?search=${slotProps.data[col.field]}`">
+                        {{ slotProps.data[col.field] }}
+                      </a>
+                    </template>
+                    <!-- Handle url columns separately, so that we can fill in any missing DB data -->
+                    <template v-else-if="field == 'uniprot-identifier' && col.field == 'url'" #body="slotProps">
+                      <a
+                        :href="slotProps.data[col.field] ? `${slotProps.data[col.field]}` : `http://purl.uniprot.org/uniprot/${slotProps.data.identifier}`"
+                        target="_blank"
+                      >
+                        {{ slotProps.data.url ? slotProps.data.url : `http://purl.uniprot.org/uniprot/${slotProps.data.identifier}` }}
+                      </a>
+                    </template>
+                    <template v-else-if="field == 'refseq-identifier' && col.field == 'url'" #body="slotProps">
+                      <a
+                        :href="slotProps.data[col.field] ? `${slotProps.data[col.field]}` : `http://www.ncbi.nlm.nih.gov/entrez/viewer.fcgi?val=${slotProps.data.identifier}`"
+                        target="_blank"
+                      >
+                      {{ slotProps.data.url ? slotProps.data.url : `http://www.ncbi.nlm.nih.gov/entrez/viewer.fcgi?val=${slotProps.data.identifier}` }}
+                      </a>
+                    </template>
+                    <template v-else-if="field == 'ensembl-identifier' && col.field == 'url'" #body="slotProps">
+                      <a
+                        :href="slotProps.data[col.field] ? `${slotProps.data[col.field]}` : `http://www.ensembl.org/id/${slotProps.data.identifier}`"
+                        target="_blank"
+                      >
+                      {{ slotProps.data.url ? slotProps.data.url : `http://www.ensembl.org/id/${slotProps.data.identifier}` }}
+                      </a>
+                    </template>
+                    <!-- Handle generic url columns  -->
+                    <template v-else-if="col.field == 'url'" #body="slotProps">
+                      <a :href="`${slotProps.data.url}`" target="_blank">{{
+                        slotProps.data.url }}</a>
+                    </template>
+                  </Column>
+                </DataTable>
+              </div>
+            </TabPanel>
+          </TabPanels>
+        </Tabs>
+        <div class="flex flex-wrap justify-evenly">
+          <div v-if="showCategoryChart" class="flex-initial">
+            <Chart :data="categoryChartData" :options="categoryChartOptions" type="pie"></Chart>
           </div>
-          <div v-if="showOrganismChart" class="chart">
-            <Chart type="pie" :data="organismChartData" :options="organismChartOptions"></Chart>
+          <div v-if="showOrganismChart" class="flex-initial">
+            <Chart :data="organismChartData" :options="organismChartOptions" type="pie"></Chart>
           </div>
         </div>
       </template>
@@ -86,52 +100,58 @@
   </div>
   <div v-else-if="$props.model == 'ScoreSet'">
     <Card>
-      <template #title>Score Set Highlights</template>
+      <template #title><h2 class="mt-0">Score Set Highlights</h2></template>
       <template #content>
-        <TabView @tab-change="(event) => { this.field = scoreSetLeaderboardFields[event.index] }"
-          v-model:activeIndex="activeTabIndex">
-          <TabPanel v-for="tab in scoreSetLeaderboardFields" :key="tab"
-            :header="scoreSetLeaderboardFieldTitles[tab]">
-            <div v-if="loading" class="highlights-spinner-container" ref="spinner">
-              <ProgressSpinner class="highlights-progress" />
-            </div>
-            <div v-else>
-              <DataTable
-                :ref="`scoreSetDataTable${tab}`"
-                :exportFilename="`mavedb-${pluralize(tab)}`"
-                :value="leaderboardData"
-                sortField="count"
-                :sortOrder="-1"
-                paginator
-                :rows="5"
-                :rowsPerPageOptions="[5, 10, 20]"
-                size="small"
-              >
-                <template #paginatorstart>
-                  <Button type="button" icon="pi pi-download" text @click="exportCsv('scoreSet', tab)" />
-                </template>
-                <Column v-for="col of scoreSetLeaderboardColumns[this.field]" :field="col.field" :header="col.header"
-                  :sortable="col.field == 'count'" :key="col.field" :style="`width: ${col.width || auto}`">
-                  <!-- Link publication identifiers to their MaveDB page -->
-                  <template v-if="this.field == 'publication-identifiers' && col.field == 'identifier'" #body="slotProps">
-                    <a
-                      :href="`${config.appBaseUrl}/publication-identifiers/${slotProps.data.dbName}/${encodeURIComponent(slotProps.data[col.field])}`">{{
+        <Tabs v-model:value="activeTabIndex" @update:value="(idx) => { field = scoreSetLeaderboardFields[idx] }">
+          <TabList>
+            <Tab v-for="(tab, index) in scoreSetLeaderboardFields" :key="tab" :value="index">{{ scoreSetLeaderboardFieldTitles[tab] }}</Tab>
+          </TabList>
+          <TabPanels>
+            <TabPanel v-for="(tab, index) in scoreSetLeaderboardFields" :key="tab" :value="index">
+              <div v-if="loading" ref="spinner" class="flex justify-center">
+                <ProgressSpinner class="size-12!" />
+              </div>
+              <div v-else>
+                <DataTable
+                  :ref="`scoreSetDataTable${tab}`"
+                  :export-filename="`mavedb-${pluralize(tab)}`"
+                  paginator
+                  :rows="5"
+                  :rows-per-page-options="[5, 10, 20]"
+                  size="small"
+                  sort-field="count"
+                  :sort-order="-1"
+                  :value="leaderboardData"
+                >
+                  <template #paginatorstart>
+                    <Button icon="pi pi-download" text type="button" @click="exportCsv('scoreSet', tab)" />
+                  </template>
+                  <Column
+                    v-for="col of scoreSetLeaderboardColumns[this.field]"
+                    :key="col.field"
+                    :field="col.field"
+                    :header="col.header" :sortable="col.field == 'count'" :style="`width: ${col.width || auto}`">
+                    <!-- Link publication identifiers to their MaveDB page -->
+                    <template v-if="this.field == 'publication-identifiers' && col.field == 'identifier'" #body="slotProps">
+                      <a
+                        :href="`${config.appBaseUrl}/publication-identifiers/${slotProps.data.dbName}/${encodeURIComponent(slotProps.data[col.field])}`">{{
+                          slotProps.data[col.field] }}</a>
+                    </template>
+                    <template v-else-if="this.field == 'doi-identifiers' && col.field == 'identifier'" #body="slotProps">
+                      <a :href="`${config.appBaseUrl}/#/search?search=${slotProps.data[col.field]}`">{{
                         slotProps.data[col.field] }}</a>
-                  </template>
-                  <template v-else-if="this.field == 'doi-identifiers' && col.field == 'identifier'" #body="slotProps">
-                    <a :href="`${config.appBaseUrl}/#/search?search=${slotProps.data[col.field]}`">{{
-                      slotProps.data[col.field] }}</a>
-                  </template>
-                  <!-- Link out any remaining URLs to the appropriate location -->
-                  <template v-else-if="col.field == 'url'" #body="slotProps">
-                    <a :href="`${slotProps.data.url}`" target="_blank">{{
-                      slotProps.data.url }}</a>
-                  </template>
-                </Column>
-              </DataTable>
-            </div>
-          </TabPanel>
-        </TabView>
+                    </template>
+                    <!-- Link out any remaining URLs to the appropriate location -->
+                    <template v-else-if="col.field == 'url'" #body="slotProps">
+                      <a :href="`${slotProps.data.url}`" target="_blank">{{
+                        slotProps.data.url }}</a>
+                    </template>
+                  </Column>
+                </DataTable>
+              </div>
+            </TabPanel>
+        </TabPanels>
+        </Tabs>
       </template>
     </Card>
   </div>
@@ -139,34 +159,50 @@
     <Card>
       <template #title>Experiment Highlights</template>
       <template #content>
-        <TabView @tab-change="(event) => { this.field = experimentLeaderboardFields[event.index] }"
-          v-model:activeIndex="activeTabIndex">
-          <TabPanel v-for="tab in experimentLeaderboardFields" :key="tab"
-            :header="tab.charAt(0).toUpperCase() + tab.slice(1)">
-            <div v-if="loading" class="highlights-spinner-container" ref="spinner">
-              <ProgressSpinner class="highlights-progress" />
-            </div>
-            <div v-else>
-              <DataTable :value="leaderboardData" sortField="count" :sortOrder="-1" paginator :rows="5"
-                :rowsPerPageOptions="[5, 10, 20]" size="small">
-                <Column v-for="col of experimentLeaderboardColumns[this.field]" :field="col.field" :header="col.header"
-                  :sortable="col.field == 'count'" :key="col.field" :style="`width: ${col.width || auto}`">
-                  <!-- Link publication identifiers to their MaveDB page -->
-                  <template v-if="this.field == 'publication-identifiers' && col.field == 'identifier'" #body="slotProps">
-                    <a
-                      :href="`${config.appBaseUrl}/publication-identifiers/${slotProps.data.dbName}/${encodeURIComponent(slotProps.data[col.field])}`">{{
-                        slotProps.data[col.field] }}</a>
-                  </template>
-                  <!-- Link out any URLs to the appropriate location -->
-                  <template v-else-if="col.field == 'url'" #body="slotProps">
-                    <a :href="`${slotProps.data.url}`" target="_blank">{{
-                      slotProps.data.url }}</a>
-                  </template>
-                </Column>
-              </DataTable>
-            </div>
-          </TabPanel>
-        </TabView>
+        <Tabs v-model:value="activeTabIndex" @update:value="(idx) => { field = experimentLeaderboardFields[idx] }">
+          <TabList>
+            <Tab v-for="(tab, index) in experimentLeaderboardFields" :key="tab" :value="index">{{ tab.charAt(0).toUpperCase() + tab.slice(1) }}</Tab>
+          </TabList>
+          <TabPanels>
+            <TabPanel v-for="(tab, index) in experimentLeaderboardFields" :key="tab" :value="index">
+              <div v-if="loading" ref="spinner" class="flex justify-center">
+                <ProgressSpinner class="size-12!" />
+              </div>
+              <div v-else>
+                <DataTable
+                  paginator
+                  :rows="5"
+                  :rows-per-page-options="[5, 10, 20]"
+                  size="small"
+                  sort-field="count"
+                  :sort-order="-1"
+                  :value="leaderboardData"
+                >
+                  <Column
+                    v-for="col of experimentLeaderboardColumns[field]"
+                    :key="col.field"
+                    :field="col.field"
+                    :header="col.header"
+                    :sortable="col.field == 'count'"
+                    :style="`width: ${col.width || auto}`"
+                  >
+                    <!-- Link publication identifiers to their MaveDB page -->
+                    <template v-if="field == 'publication-identifiers' && col.field == 'identifier'" #body="slotProps">
+                      <a
+                        :href="`${config.appBaseUrl}/publication-identifiers/${slotProps.data.dbName}/${encodeURIComponent(slotProps.data[col.field])}`">{{
+                          slotProps.data[col.field] }}</a>
+                    </template>
+                    <!-- Link out any URLs to the appropriate location -->
+                    <template v-else-if="col.field == 'url'" #body="slotProps">
+                      <a :href="`${slotProps.data.url}`" target="_blank">{{
+                        slotProps.data.url }}</a>
+                    </template>
+                  </Column>
+                </DataTable>
+              </div>
+            </TabPanel>
+          </TabPanels>
+        </Tabs>
       </template>
     </Card>
   </div>
@@ -179,7 +215,10 @@ import Button from 'primevue/button'
 import Column from 'primevue/column'
 import Card from 'primevue/card'
 import DataTable from 'primevue/datatable'
-import TabView from 'primevue/tabview'
+import Tabs from 'primevue/tabs'
+import TabList from 'primevue/tablist'
+import Tab from 'primevue/tab'
+import TabPanels from 'primevue/tabpanels'
 import TabPanel from 'primevue/tabpanel'
 import ProgressSpinner from 'primevue/progressspinner'
 import Chart from 'primevue/chart'
@@ -190,7 +229,7 @@ import useItem from '@/composition/item'
 
 export default defineComponent({
   name: 'HighlightsView',
-  components: {Button, Card, Chart, Column, DataTable, TabView, TabPanel, ProgressSpinner},
+  components: {Button, Card, Chart, Column, DataTable, Tabs, TabList, Tab, TabPanels, TabPanel, ProgressSpinner},
 
   setup: (props) => {
     const targetAccessionAssemblyStatistic = useItem({ itemTypeName: 'target-accession-statistics' })
@@ -331,10 +370,10 @@ export default defineComponent({
     categoryChartData: function() { return this.chartDataForTarget(this.targetGeneCategoryFieldCounts) },
     organismChartData: function() { return this.chartDataForTarget(this.targetGeneOrganismFieldCounts) },
     categoryChartOptions: function() {
-       return this.setChartOptions('Target Gene Category', this.chartDataForTarget(this.targetGeneCategoryFieldCounts), 'target-type') 
+       return this.setChartOptions('Target Gene Category', this.chartDataForTarget(this.targetGeneCategoryFieldCounts), 'target-type')
     },
     organismChartOptions: function() {
-       return this.setChartOptions('Target Organism', this.chartDataForTarget(this.targetGeneOrganismFieldCounts), 'target-organism-name') 
+       return this.setChartOptions('Target Organism', this.chartDataForTarget(this.targetGeneOrganismFieldCounts), 'target-organism-name')
     },
   },
 
@@ -394,7 +433,7 @@ export default defineComponent({
           if (!model) {
             model = 'search'
           }
-          
+
           const clickedLabel = data.labels[element[0].index]
           if (clickedLabel == 'Others') {
             return
@@ -588,28 +627,3 @@ export default defineComponent({
   }
 })
 </script>
-
-<style>
-.p-tabview-panel .highlights-spinner-container {
-  align-items: center;
-  display: flex;
-  justify-content: center;
-  padding-top: 18px;
-  width: 100%;
-}
-
-.p-tabview-panel .highlights-progress {
-  height: 50px;
-  width: 50px;
-}
-
-.chart-container {
-  display: flex;
-  flex-wrap: wrap;
-  justify-content: space-evenly;
-}
-
-.chart {
-  flex: 0 1 auto;
-}
-</style>

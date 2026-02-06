@@ -9,7 +9,15 @@
     />
     <div :class="wrapperClasses">
       <div :class="mainClasses">
-        <slot />
+        <template v-if="requireAuth && !userIsAuthenticated">
+          <div class="login-box">
+            <p>You may <a href="#" @click.prevent="signInWithRedirect">sign in</a> to view this page.</p>
+          </div>
+        </template>
+        <!-- Public pages -->
+        <template v-else>
+          <slot />
+        </template>
         <Footer v-if="footer == 'flow'" />
       </div>
     </div>
@@ -25,6 +33,7 @@ import Toolbar from '@/components/layout/Toolbar.vue'
 import Footer from '@/components/layout/Footer.vue'
 import EmailPrompt from '@/components/common/EmailPrompt.vue'
 import {defineComponent, PropType} from 'vue'
+import useAuth from '@/composition/auth'
 
 export default defineComponent({
   name: 'DefaultLayout',
@@ -44,6 +53,10 @@ export default defineComponent({
       type: String as PropType<'hidden' | 'scroll'>,
       default: 'scroll'
     },
+    requireAuth: {
+      type: Boolean,
+      default: false
+    },
     width: {
       type: String as PropType<'fixed' | 'full'>,
       default: 'fixed'
@@ -55,6 +68,22 @@ export default defineComponent({
     withEmailPrompt: {
       type: Boolean,
       default: true
+    }
+  },
+
+  setup: () => {
+    const {signIn, userIsAuthenticated} = useAuth()
+
+    const signInWithRedirect = () => {
+      const currentFullPath = window.location.pathname + window.location.search + window.location.hash
+      localStorage.setItem('redirectAfterLogin', currentFullPath)
+      signIn()
+    }
+
+    return {
+      signIn,
+      signInWithRedirect,
+      userIsAuthenticated
     }
   },
 
@@ -150,7 +179,6 @@ export default defineComponent({
 }
 
 .mavedb-footer-pinned {
-
 }
 </style>
 

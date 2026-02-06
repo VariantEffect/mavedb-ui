@@ -20,7 +20,7 @@ import useFormatters from '@/composition/formatters'
 import FlexDataTable from '@/components/common/FlexDataTable'
 
 export default {
-  name: 'PublicationIdentifierView',
+  name: 'ScoreSetTable',
 
   components: {FlexDataTable},
 
@@ -126,7 +126,10 @@ export default {
 /* Table */
 
 .mavedb-table-view {
-  flex: 1 1 400px;
+  height: 100vh;
+  overflow-y: auto;
+  overflow-x: hidden;
+  flex: 0 0 auto;
   position: relative;
 }
 

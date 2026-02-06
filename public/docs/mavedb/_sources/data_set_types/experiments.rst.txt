@@ -1,0 +1,21 @@
+Experiments
+============================================
+
+Experiments describe the data generated from performing a MAVE on a target.
+This includes all steps of the experimental procedure up to and including high-throughput sequencing.
+Library construction, assay design, and sequencing strategy are all described in the experiment
+(`example experiment <https://www.mavedb.org/#/experiments/urn:mavedb:00000003-a/>`_).
+
+.. seealso::
+   Data analysis steps including read filtering, read counting, and score calculation are described in a
+   :ref:`score set<Score sets>`.
+
+Publications that perform more than one functional assay should be represented as multiple experiments organized under
+a single experiment set, and each functional assay should be described in its own experiment record.
+This still applies to experimental designs where the differences between assays were relatively minor,
+such as varying the temperature or the concentration of a small molecule.
+
+To assign a new experiment to an existing experiment set, use the 'Add an experiment' button on the experiment set page.
+
+Replicate assays should not be reported as separate experiments,
+instead the number and nature of the replicates should be clearly stated in the experiment's methods section.

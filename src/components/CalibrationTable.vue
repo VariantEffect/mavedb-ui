@@ -13,10 +13,11 @@
         <PrimeButton
           v-tooltip.right="{value: scoreCalibration.baselineScoreDescription, autoHide: false}"
           aria-label="Info"
-          class="p-button-help mavedb-help-tooltip-button"
+          class="mavedb-help-tooltip-button"
           icon="pi pi-info"
           outlined
           rounded
+          severity="help"
         />
       </span>
     </div>
@@ -47,55 +48,107 @@
               <PrimeButton
                 v-tooltip.right="{value: range.description, autoHide: false}"
                 aria-label="Info"
-                class="p-button-help mavedb-help-tooltip-button"
+                class="mavedb-help-tooltip-button"
                 icon="pi pi-info"
                 outlined
                 rounded
+                severity="help"
               />
             </span>
           </div>
 
           <!-- Classification row -->
-          <div class="mavedb-calibration-row-header grid-row-header">Classification</div>
+          <div class="mavedb-calibration-row-header grid-row-header">Functional classification</div>
           <div
             v-for="(range, rangeIndex) in chunk"
             :key="range.label + '-classification'"
             :class="[
               'grid-data-cell',
-              `mave-classification-${range.classification}`,
+              `mave-classification-${range.functionalClassification}`,
               {'last-column': rangeIndex === chunk.length - 1}
             ]"
           >
-            <span>{{ range.classification ? titleCase(range.classification) : 'Not Provided' }}</span>
+            <span>{{
+              range.functionalClassification ? titleCase(range.functionalClassification) : 'Not Provided'
+            }}</span>
           </div>
 
           <!-- Numeric interval row -->
-          <div
-            class="mavedb-calibration-row-header grid-row-header"
-            :class="{'last-row': isLastRowInChunk('interval')}"
-          >
-            Numeric interval
-          </div>
-          <div
-            v-for="(range, rangeIndex) in chunk"
-            :key="range.label + '-interval'"
-            :class="[
-              'grid-data-cell',
-              'monospaced-type',
-              {
-                'last-column': rangeIndex === chunk.length - 1,
-                'last-row': isLastRowInChunk('interval')
-              }
-            ]"
-          >
-            <span>
-              {{ range.inclusiveLowerBound ? '[' : '('
-              }}<template v-if="range.range[0] !== null">{{ roundForCalibrationTable(range.range[0]) }}</template
-              ><span v-else><span class="minus-symbol">&minus;</span><span class="infinity-symbol">&infin;</span></span
-              >, <template v-if="range.range[1] !== null">{{ roundForCalibrationTable(range.range[1]) }}</template
-              ><span v-else class="infinity-symbol">&infin;</span>{{ range.inclusiveUpperBound ? ']' : ')' }}
-            </span>
-          </div>
+          <template v-if="!calibrationIsClassBased">
+            <div
+              class="mavedb-calibration-row-header grid-row-header"
+              :class="{'last-row': isLastRowInChunk('interval')}"
+            >
+              Numeric interval
+            </div>
+            <div
+              v-for="(range, rangeIndex) in chunk"
+              :key="range.label + '-interval'"
+              :class="[
+                'grid-data-cell',
+                'monospaced-type',
+                {
+                  'last-column': rangeIndex === chunk.length - 1,
+                  'last-row': isLastRowInChunk('interval')
+                }
+              ]"
+            >
+              <span>
+                {{ range.inclusiveLowerBound ? '[' : '('
+                }}<template v-if="range.range[0] !== null">{{ roundForCalibrationTable(range.range[0]) }}</template
+                ><span v-else
+                  ><span class="minus-symbol">&minus;</span><span class="infinity-symbol">&infin;</span></span
+                >, <template v-if="range.range[1] !== null">{{ roundForCalibrationTable(range.range[1]) }}</template
+                ><span v-else class="infinity-symbol">&infin;</span>{{ range.inclusiveUpperBound ? ']' : ')' }}
+              </span>
+            </div>
+          </template>
+
+          <!-- Variant count row -->
+          <template v-if="calibrationIsClassBased">
+            <div class="mavedb-calibration-row-header grid-row-header" :class="{'last-row': isLastRowInChunk('class')}">
+              Class name
+            </div>
+            <div
+              v-for="(range, rangeIndex) in chunk"
+              :key="range.label + '-class'"
+              :class="[
+                'grid-data-cell',
+                'monospaced-type',
+                {
+                  'last-column': rangeIndex === chunk.length - 1,
+                  'last-row': isLastRowInChunk('class')
+                }
+              ]"
+            >
+              <span>
+                {{ range.class ? range.class : '-' }}
+              </span>
+            </div>
+
+            <div
+              class="mavedb-calibration-row-header grid-row-header"
+              :class="{'last-row': isLastRowInChunk('variant-count')}"
+            >
+              Num variants in class
+            </div>
+            <div
+              v-for="(range, rangeIndex) in chunk"
+              :key="range.label + '-variant-count'"
+              :class="[
+                'grid-data-cell',
+                'monospaced-type',
+                {
+                  'last-column': rangeIndex === chunk.length - 1,
+                  'last-row': isLastRowInChunk('variant-count')
+                }
+              ]"
+            >
+              <span>
+                {{ range.variants ? range.variants.length : 0 }}
+              </span>
+            </div>
+          </template>
 
           <!-- Evidence strength row (if any ranges have evidence codes) -->
           <template v-if="anyRangeHasEvidenceCode">
@@ -198,10 +251,11 @@
               autoHide: false
             }"
             aria-label="Threshold sources info"
-            class="p-button-help mavedb-help-tooltip-button"
+            class="mavedb-help-tooltip-button"
             icon="pi pi-info"
             outlined
             rounded
+            severity="help"
           />
           <strong>Thresholds:</strong>
           <span class="citation-list">
@@ -234,10 +288,11 @@
               autoHide: false
             }"
             aria-label="Method sources info"
-            class="p-button-help mavedb-help-tooltip-button"
+            class="mavedb-help-tooltip-button"
             icon="pi pi-info"
             outlined
             rounded
+            severity="help"
           />
           <strong>Method:</strong>
           <span class="citation-list">
@@ -267,10 +322,11 @@
               autoHide: false
             }"
             aria-label="Evidence calculation sources info"
-            class="p-button-help mavedb-help-tooltip-button"
+            class="mavedb-help-tooltip-button"
             icon="pi pi-info"
             outlined
             rounded
+            severity="help"
           />
           <strong>Evidence calcs:</strong>
           <span class="citation-list">
@@ -298,9 +354,9 @@
 <script lang="ts">
 import PrimeButton from 'primevue/button'
 import {defineComponent, PropType} from 'vue'
+import {components} from '@/schema/openapi'
 
 import {shortCitationForPublication} from '@/lib/publication'
-import {PersistedScoreCalibration, FunctionalRange} from '@/lib/calibrations'
 
 export default defineComponent({
   name: 'CalibrationTable',
@@ -309,7 +365,7 @@ export default defineComponent({
 
   props: {
     scoreCalibration: {
-      type: Object as PropType<PersistedScoreCalibration>,
+      type: Object as PropType<components['schemas']['ScoreCalibration']>,
       required: true
     }
   },
@@ -324,38 +380,56 @@ export default defineComponent({
   },
 
   computed: {
-    anyRangeHasEvidenceStrength(): boolean {
-      if (!this.scoreCalibration.functionalRanges) {
+    calibrationIsClassBased(): boolean {
+      if (!this.scoreCalibration.functionalClassifications) {
         return false
       }
 
-      return this.scoreCalibration.functionalRanges.some(
-        (r: FunctionalRange) => r.acmgClassification && 'points' in r.acmgClassification
+      return this.scoreCalibration.functionalClassifications.every((fc) => fc.class != null)
+    },
+
+    anyRangeHasEvidenceStrength(): boolean {
+      if (!this.scoreCalibration.functionalClassifications) {
+        return false
+      }
+
+      return this.scoreCalibration.functionalClassifications.some(
+        (r: components['schemas']['mavedb__view_models__score_calibration__FunctionalClassification']) =>
+          r.acmgClassification && 'points' in r.acmgClassification
       )
     },
 
     anyRangeHasEvidenceCode(): boolean {
-      if (!this.scoreCalibration.functionalRanges) {
+      if (!this.scoreCalibration.functionalClassifications) {
         return false
       }
 
-      return this.scoreCalibration.functionalRanges.some((r: FunctionalRange) => r.acmgClassification?.evidenceStrength)
+      return this.scoreCalibration.functionalClassifications.some(
+        (r: components['schemas']['mavedb__view_models__score_calibration__FunctionalClassification']) =>
+          r.acmgClassification?.evidenceStrength
+      )
     },
 
     anyRangeHasOddsPaths(): boolean {
-      if (!this.scoreCalibration.functionalRanges) {
+      if (!this.scoreCalibration.functionalClassifications) {
         return false
       }
 
-      return this.scoreCalibration.functionalRanges.some((r: FunctionalRange) => r.oddspathsRatio !== undefined)
+      return this.scoreCalibration.functionalClassifications.some(
+        (r: components['schemas']['mavedb__view_models__score_calibration__FunctionalClassification']) =>
+          r.oddspathsRatio !== undefined
+      )
     },
 
     anyRangeHasPLR(): boolean {
-      if (!this.scoreCalibration.functionalRanges) {
+      if (!this.scoreCalibration.functionalClassifications) {
         return false
       }
 
-      return this.scoreCalibration.functionalRanges.some((r: FunctionalRange) => 'positiveLikelihoodRatio' in r)
+      return this.scoreCalibration.functionalClassifications.some(
+        (r: components['schemas']['mavedb__view_models__score_calibration__FunctionalClassification']) =>
+          'positiveLikelihoodRatio' in r
+      )
     },
 
     hasAnySources(): boolean {
@@ -367,10 +441,10 @@ export default defineComponent({
     },
 
     sortedRanges() {
-      if (!this.scoreCalibration.functionalRanges) {
+      if (!this.scoreCalibration.functionalClassifications) {
         return []
       }
-      return [...this.scoreCalibration.functionalRanges].sort(this.comparescoreCalibration)
+      return [...this.scoreCalibration.functionalClassifications].sort(this.compareScoreCalibration)
     },
 
     baselineScoreIsDefined() {
@@ -429,14 +503,30 @@ export default defineComponent({
       if (this.anyRangeHasPLR) return rowType === 'plr'
       if (this.anyRangeHasOddsPaths) return rowType === 'oddspaths'
       if (this.anyRangeHasEvidenceCode) return rowType === 'evidence'
+      if (this.calibrationIsClassBased) return rowType === 'variant-count'
       return rowType === 'interval' // Numeric interval is always present
     },
 
-    comparescoreCalibration(a: FunctionalRange, b: FunctionalRange): number {
-      let result = this.compareScores(a.range[0], b.range[0], true)
-      if (result == 0) {
-        result = this.compareScores(a.range[1], b.range[1], false)
+    compareScoreCalibration(
+      a: components['schemas']['mavedb__view_models__score_calibration__FunctionalClassification'],
+      b: components['schemas']['mavedb__view_models__score_calibration__FunctionalClassification']
+    ): number {
+      let result = 0
+
+      // return alphabetical order by class
+      if (a.class && b.class) {
+        result = a.class.localeCompare(b.class)
+        if (result !== 0) return result
       }
+
+      // compare by range boundaries
+      if (a.range && b.range) {
+        result = this.compareScores(a.range[0], b.range[0], true)
+        if (result !== 0) return result
+        result = this.compareScores(a.range[1], b.range[1], false)
+        if (result !== 0) return result
+      }
+
       return result
     },
 
@@ -464,7 +554,9 @@ export default defineComponent({
       return parseFloat(String(value)).toFixed(2)
     },
 
-    formattedEvidenceCode(range: FunctionalRange) {
+    formattedEvidenceCode(
+      range: components['schemas']['mavedb__view_models__score_calibration__FunctionalClassification']
+    ) {
       if (!range.acmgClassification?.evidenceStrength) {
         return ''
       }
@@ -765,29 +857,6 @@ export default defineComponent({
 .minus-symbol {
   font-size: 1.3em;
   vertical-align: -0.05em;
-}
-
-/* Tooltips */
-.mavedb-help-tooltip-button {
-  margin-left: 0.6rem;
-  height: 0.5rem;
-  width: 0.5rem;
-  vertical-align: middle;
-  margin-top: 0;
-  margin-bottom: 0;
-  display: inline-flex;
-  align-items: center;
-  background: none;
-}
-
-.mavedb-help-tooltip-button:focus,
-.mavedb-help-tooltip-button:active,
-.mavedb-help-tooltip-button.p-focus {
-  background: none;
-}
-
-.mavedb-help-tooltip-button:deep(.p-button-icon) {
-  font-size: 0.5rem;
 }
 
 /* Responsive behavior */

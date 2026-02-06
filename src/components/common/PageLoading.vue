@@ -8,7 +8,7 @@
 import ProgressSpinner from 'primevue/progressspinner'
 
 export default {
-    name: 'LoadingView',
+    name: 'PageLoading',
     components: { ProgressSpinner },
 }
 </script>

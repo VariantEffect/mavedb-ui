@@ -7,6 +7,8 @@ import {initRestClient} from 'rest-client-vue'
 import {createApp} from 'vue'
 import {createHead} from '@unhead/vue/client'
 import {TemplateParamsPlugin} from 'unhead/plugins'
+import Aura from '@primevue/themes/aura'
+import { definePreset, palette } from '@primeuix/themes'
 
 import App from '@/App.vue'
 import config from '@/config'
@@ -15,8 +17,6 @@ import {initializeAuthentication as initializeOrcidAuthentication} from '@/lib/o
 import router from '@/router'
 import store from '@/store'
 
-import 'primevue/resources/themes/mdc-light-indigo/theme.css'
-import 'primevue/resources/primevue.min.css'
 import 'primeicons/primeicons.css'
 
 /* add fontawesome core */
@@ -58,12 +58,73 @@ const head = createHead({
   ]
 })
 
+const darkBluePalette = palette('#3f51b5')
+
+const MaveDbTheme = definePreset(Aura, {
+    semantic: {
+        primary: {
+            50: darkBluePalette[50],
+            100: darkBluePalette[100],
+            200: darkBluePalette[200],
+            300: darkBluePalette[300],
+            400: darkBluePalette[400],
+            500: darkBluePalette[500],
+            600: darkBluePalette[600],
+            700: darkBluePalette[700],
+            800: darkBluePalette[800],
+            900: darkBluePalette[900],
+            950: darkBluePalette[950],
+        }
+    },
+    components: {
+        button: {
+          colorScheme: {
+            light: {
+              root: {
+                warn: {
+                  background: '{yellow.400}',
+                  borderColor: '{yellow.400}',
+                  color: '{black.900}',
+                  hoverColor: '{black.900}',
+                  hoverBackground: '{yellow.500}',
+                  hoverBorderColor: '{yellow.500}',
+                  activeColor: '{black.900}',
+                  activeBackground: '{yellow.600}',
+                  activeBorderColor: '{yellow.600}',
+                },
+                secondary: {
+                  background: '{pink.400}',
+                  borderColor: '{pink.400}',
+                  color: '{surface.0}',
+                  hoverColor: '{surface.0}',
+                  hoverBackground: '{pink.500}',
+                  hoverBorderColor: '{pink.500}',
+                  activeColor: '{surface.0}',
+                  activeBackground: '{pink.600}',
+                  activeBorderColor: '{pink.600}',
+                },
+              }
+            },
+          },
+        }
+    },
+})
+
 createApp(App)
   .use(router)
   .use(store)
   .use(createPinia())
   .use(head)
-  .use(PrimeVue)
+  .use(PrimeVue, {
+    theme: {
+        preset: MaveDbTheme,
+        options: {
+            prefix: 'p',
+            darkModeSelector: '.dark-mode',
+            cssLayer: false,
+        }
+    }
+  })
   .use(ConfirmationService)
   .use(ToastService)
   .directive('tooltip', Tooltip)

@@ -1,5 +1,6 @@
 import * as d3 from 'd3'
 import _ from 'lodash'
+import {v4 as uuidv4} from 'uuid'
 
 type FieldGetter<T> = (d: HeatmapDatum) => T
 type Getter<T> = () => T
@@ -61,6 +62,8 @@ export interface HeatmapColorScaleControlPoint {
 export interface HeatmapContent {
   [key: number]: MappedDatum
   columns?: number
+  xMin?: number
+  xMax?: number
 }
 
 export interface Heatmap {
@@ -165,6 +168,7 @@ export interface Heatmap {
 }
 
 export default function makeHeatmap(): Heatmap {
+  const instanceId: string = uuidv4()
   //////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
   // Read/write properties
   //////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
@@ -223,7 +227,9 @@ export default function makeHeatmap(): Heatmap {
 
   // Content
   let content: HeatmapContent = {
-    columns: undefined
+    columns: undefined,
+    xMin: undefined,
+    xMax: undefined
   }
   let filteredData: HeatmapDatum[] = []
   let lowerBound: number | null = null
@@ -273,6 +279,10 @@ export default function makeHeatmap(): Heatmap {
   let yAxisSvg: d3.Selection<SVGElement, any, any, any> | null = null
   let hoverTooltip: d3.Selection<HTMLDivElement, any, any, any> | null = null
   let selectionTooltip: d3.Selection<HTMLDivElement, any, any, any> | null = null
+  let selectionTooltipVisible: boolean = false
+
+  // Handlers
+  let containerClickHandlerRegistered: boolean = false
 
   // Scales
   const xScale: d3.ScaleBand<number> = d3.scaleBand()
@@ -316,8 +326,12 @@ export default function makeHeatmap(): Heatmap {
     }
     if (xMin != undefined && xMax != undefined) {
       content.columns = xMax - xMin + 1
+      content.xMin = xMin
+      content.xMax = xMax
     } else {
       content.columns = 0
+      content.xMin = undefined
+      content.xMax = undefined
     }
     buildColorScale()
   }
@@ -410,7 +424,19 @@ export default function makeHeatmap(): Heatmap {
   }
 
   const click = function (event: MouseEvent, d: HeatmapDatum) {
+    // Prevent container-scoped outside-click handler from closing selection tooltip on datum clicks
+    event.stopPropagation()
     const target = event.target
+
+    // If clicking the already-selected datum while tooltip is hidden, re-show the tooltip without deselecting.
+    if (selectedDatum === d && !selectionTooltipVisible) {
+      showTooltip(selectionTooltip, selectedDatum)
+      positionSelectionTooltip()
+      selectionTooltipVisible = true
+      return
+    }
+
+    // Otherwise, select/update as usual.
     refreshSelectedDatum(d, true)
 
     if (datumSelected) {
@@ -423,6 +449,7 @@ export default function makeHeatmap(): Heatmap {
 
     // Hide the hover tooltip.
     hideTooltip(hoverTooltip)
+    // Showing selection tooltip implies it is visible; handled in updateSelectionTooltipAfterRefresh
   }
 
   const heatmapMainMousedown = function (event: MouseEvent) {
@@ -487,17 +514,21 @@ export default function makeHeatmap(): Heatmap {
 
       // top left coordinates of the selection rectangle in heatmap coordinates.
       const rangeStart = {
-        x: Math.floor((heatmapSelectionBBox.x + xOffsetNodeMidpoint) / xScaleStep) + 1,
-        y: Math.floor((heatmapSelectionBBox.y + yOffsetNodeMidpoint) / yScaleStep) + 1
+        x: Math.floor((heatmapSelectionBBox.x + xOffsetNodeMidpoint) / xScaleStep),
+        y: Math.floor((heatmapSelectionBBox.y + yOffsetNodeMidpoint) / yScaleStep)
       }
       // bottom right coordinates of the selection rectangle in heatmap coordinates.
       const rangeEnd = {
-        x: Math.floor((heatmapSelectionBBox.x + heatmapSelectionBBox.width - xOffsetNodeMidpoint) / xScaleStep) + 1,
-        y: Math.floor((heatmapSelectionBBox.y + heatmapSelectionBBox.height - yOffsetNodeMidpoint) / yScaleStep) + 1
+        x: Math.floor((heatmapSelectionBBox.x + heatmapSelectionBBox.width - xOffsetNodeMidpoint) / xScaleStep),
+        y: Math.floor((heatmapSelectionBBox.y + heatmapSelectionBBox.height - yOffsetNodeMidpoint) / yScaleStep)
       }
 
       if (rangeSelectionMode == 'column' && columnRangesSelected) {
-        columnRangesSelected([{start: rangeStart.x, end: rangeEnd.x}])
+        // convert rangeStart.x and rangeEnd.x to corresponding domain values
+        const startDomainValue = (idxLowerBound || 0) + rangeStart.x
+        const endDomainValue = (idxLowerBound || 0) + rangeEnd.x
+
+        columnRangesSelected([{start: startDomainValue, end: endDomainValue}])
       }
     }
     selectionStartPoint = null
@@ -568,16 +599,55 @@ export default function makeHeatmap(): Heatmap {
 
     if (svg) {
       svg.select('g.heatmap-selection-rectangle').selectAll('rect').remove()
-
+      // if start.x or end.x is outside content xMin/xMax, do not draw selection rectangle
+      if (!content.xMin || !content.xMax || !_.inRange(start.x, content.xMin, content.xMax + 1) || !_.inRange(end.x, content.xMin, content.xMax + 1)) {
+        return
+      }
       const heatmapNodesElem = svg.select('g.heatmap-nodes').node() as SVGGraphicsElement
       heatmapNodesElemBoundingRect = heatmapNodesElem.getBoundingClientRect()
       heatmapNodesElemDOMMatrix = heatmapNodesElem.getScreenCTM()!.inverse()
 
       const startNode = svg.select(`g.heatmap-nodes`).select(`rect.node-${start.x}-${start.y}`).node() as Element
-      const startNodeBoundingRect = startNode.getBoundingClientRect()
+      let startNodeBoundingRect: DOMRect
+      if (startNode) {
+        startNodeBoundingRect = startNode.getBoundingClientRect()
+      } else {
+        // Calculate position using scales when node doesn't exist
+        const calculatedX = xScale(start.x) || 0
+        const calculatedY = yScale(start.y) || 0
+        const containerRect = heatmapNodesElemBoundingRect!
+        startNodeBoundingRect = {
+          x: containerRect.left + calculatedX,
+          y: containerRect.top + calculatedY,
+          width: xScale.bandwidth(),
+          height: yScale.bandwidth(),
+          top: containerRect.top + calculatedY,
+          bottom: containerRect.top + calculatedY + yScale.bandwidth(),
+          left: containerRect.left + calculatedX,
+          right: containerRect.left + calculatedX + xScale.bandwidth()
+        } as DOMRect
+      }
 
       const endNode = svg.select(`g.heatmap-nodes`).select(`rect.node-${end.x}-${end.y}`).node() as Element
-      const endNodeBoundingRect = endNode.getBoundingClientRect()
+      let endNodeBoundingRect: DOMRect
+      if (endNode) {
+        endNodeBoundingRect = endNode.getBoundingClientRect()
+      } else {
+        // Calculate position using scales when node doesn't exist
+        const calculatedX = xScale(end.x) || 0
+        const calculatedY = yScale(end.y) || 0
+        const containerRect = heatmapNodesElemBoundingRect!
+        endNodeBoundingRect = {
+          x: containerRect.left + calculatedX,
+          y: containerRect.top + calculatedY,
+          width: xScale.bandwidth(),
+          height: yScale.bandwidth(),
+          top: containerRect.top + calculatedY,
+          bottom: containerRect.top + calculatedY + yScale.bandwidth(),
+          left: containerRect.left + calculatedX,
+          right: containerRect.left + calculatedX + xScale.bandwidth()
+        } as DOMRect
+      }
 
       const startY = rangeSelectionMode == 'column' ? heatmapNodesElemBoundingRect?.top : startNodeBoundingRect.y
       const startX = rangeSelectionMode == 'row' ? heatmapNodesElemBoundingRect?.left : startNodeBoundingRect.x
@@ -635,6 +705,10 @@ export default function makeHeatmap(): Heatmap {
   const mouseover = (event: MouseEvent, d: HeatmapDatum) => {
     if (!selectionStartPoint) {
       const target = event.target
+      // Don't show hover tooltip when over the selected datum and selection tooltip is visible.
+      if (selectedDatum === d && selectionTooltipVisible) {
+        return
+      }
       refreshHoverDatum(d)
 
       if (target instanceof Element) {
@@ -718,11 +792,51 @@ export default function makeHeatmap(): Heatmap {
       .style('border-width', '2px')
       .style('border-radius', '5px')
       .style('color', '#000')
-      .style('padding', '5px')
+      .style('padding', '8px 10px')
       .style('line-height', '1.5')
       .style('position', 'relative')
       .style('width', 'fit-content')
       .style('z-index', 1)
+
+    // Create persistent inner content container and close button once
+    selectionTooltip
+      .append('div')
+      .attr('class', 'hm-popover-content')
+      .style('position', 'relative')
+      .style('padding-right', '18px')
+
+    selectionTooltip
+      .append('button')
+      .attr('class', 'hm-popover-close')
+      .attr('aria-label', 'Close selection tooltip')
+      .style('position', 'absolute')
+      .style('top', '0px')
+      .style('right', '5px')
+      .style('border', 'none')
+      .style('background', 'none')
+      .style('font-size', '20px')
+      .style('line-height', '1')
+      .style('cursor', 'pointer')
+      .style('color', '#FF0919')
+      .text('×')
+      // Close button click: hide the selection tooltip. Note that we intentionally do NOT clear selectedDatum here.
+      .on('click', () => {
+        hideTooltip(selectionTooltip)
+      })
+
+    // Scoped outside-click: register only once per instance
+    if (_container && !containerClickHandlerRegistered) {
+      d3.select(_container).on(`click.heatmap-popover-${instanceId}`, (event: MouseEvent) => {
+        const target = event.target as Element
+        const tooltipEl = selectionTooltip?.node()
+        if (!tooltipEl) return
+        // If click is inside the tooltip, ignore.
+        if (tooltipEl.contains(target)) return
+        // Otherwise, close the selection tooltip. We intentionally do NOT clear selectedDatum here.
+        hideTooltip(selectionTooltip)
+      })
+      containerClickHandlerRegistered = true
+    }
   }
 
   const showTooltip = (tooltip: d3.Selection<HTMLDivElement, any, any, any> | null, datum: HeatmapDatum | null) => {
@@ -731,7 +845,16 @@ export default function makeHeatmap(): Heatmap {
         const html = tooltipHtml(datum)
 
         if (html && tooltip) {
-          tooltip.html(html)
+          if (tooltip === selectionTooltip) {
+            // Update only inner content; button is persistent
+            tooltip.select('.hm-popover-content').html(html)
+            selectionTooltipVisible = true
+
+            // Hide hover tooltip when selection tooltip is shown.
+            hideTooltip(hoverTooltip)
+          } else {
+            tooltip.html(html)
+          }
           tooltip.style('display', 'block')
         }
       }
@@ -755,6 +878,9 @@ export default function makeHeatmap(): Heatmap {
   const hideTooltip = (tooltip: d3.Selection<HTMLDivElement, any, any, any> | null) => {
     if (tooltip) {
       tooltip.style('display', 'none')
+      if (tooltip === selectionTooltip) {
+        selectionTooltipVisible = false
+      }
     }
   }
 
@@ -781,9 +907,6 @@ export default function makeHeatmap(): Heatmap {
       // does not take up any vertical space in the document, despite being rentered with relative position.
       selectionTooltip.style('margin-bottom', -tooltipHeight + 'px')
 
-      // TODO: Bug- Drawing the selection tooltip makes the SVG scroll container add tooltipHeight worth of height
-      //            to the scroll container.
-
       // Show the tooltip to the left of the datum node if it would overflow from the right side of the heatmap container.
       if (
         left + effectiveMargins.left + 1.5 * nodeSize.width + tooltipWidth >
@@ -791,7 +914,10 @@ export default function makeHeatmap(): Heatmap {
       ) {
         selectionTooltip
           // When drawing the tooltip to the right of the node, the width of the tooltip influences how far to move it.
-          .style('left', left - 0.5 * tooltipWidth - nodeSize.width + 0.5 * strokeWidth(true) + 'px')
+          .style(
+            'left',
+            -1 * (effectiveMargins.left - left) - 0.25 * tooltipWidth - nodeSize.width + 0.5 * strokeWidth(true) + 'px'
+          )
       } else {
         selectionTooltip.style(
           'left',
@@ -865,6 +991,10 @@ export default function makeHeatmap(): Heatmap {
         svg.remove()
         svg = null
       }
+      // Remove this instance's container click handler
+      if (_container) {
+        d3.select(_container).on(`click.heatmap-popover-${instanceId}`, null)
+      }
       if (_wrapper) {
         yAxisSvg?.remove()
         yAxisSvg = null
@@ -880,7 +1010,7 @@ export default function makeHeatmap(): Heatmap {
       }
       data = []
       filteredData = []
-      content = {columns: undefined}
+      content = {columns: undefined, xMin: undefined, xMax: undefined}
     },
 
     render: (container: HTMLElement, wrapper?: HTMLElement) => {
@@ -888,6 +1018,10 @@ export default function makeHeatmap(): Heatmap {
       _wrapper = wrapper || null
 
       if (_container) {
+        // Ensure this instance's container click handler is unregistered.
+        d3.select(_container).on(`click.heatmap-popover-${instanceId}`, null)
+        containerClickHandlerRegistered = false
+
         svg = d3.select(_container).html(null).append('svg')
         svg.append('defs')
         // Draw the legend after applying the margins.
@@ -929,7 +1063,7 @@ export default function makeHeatmap(): Heatmap {
           .style('left', 0)
           .style('height', '100%')
           .style('z-index', 2002)
-          .style('background-color', '#f7f7f7')
+          .style('background-color', '#fff')
           .classed('exclude-from-export', true)
         const legendGroup = yAxisSvg
           .append('g')

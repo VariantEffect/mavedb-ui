@@ -11,10 +11,6 @@
       emptyMessage="No filters"
       optionValue="value"
   >
-    <template #header>
-      <div class="mavedb-listbox-controls">
-      </div>
-    </template>
     <template #option="slotProps">
       <div>
         <span>{{ optionLabel ? optionLabel(slotProps.option.value) : slotProps.option.title || optionLabel ? optionLabel(slotProps.option.value) : slotProps.option.value }}</span>

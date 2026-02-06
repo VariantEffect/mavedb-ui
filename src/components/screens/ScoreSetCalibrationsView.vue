@@ -6,19 +6,16 @@
         <div class="calibration-title-actions">
           <PrimeButton
             v-if="userIsAuthorizedToEditScoreSet"
-            class="p-button p-component"
             icon="pi pi-plus"
             label="New calibration"
             @click="createCalibration(item.urn)"
           />
           <PrimeButton
-            class="p-button p-component"
             icon="pi pi-refresh"
             title="Reload calibrations"
             @click="reloadItem()"
           />
           <PrimeButton
-            class="p-button p-component"
             icon="pi pi-download"
             title="Download calibration JSON"
             @click="downloadCalibrations()"
@@ -61,14 +58,16 @@
                 </span>
                 <PrimeButton
                   v-if="data.notes && data.notes.length > 100 && !expandedNotes[data.id]"
-                  class="p-button p-component p-button-text p-button-sm"
                   label="See more"
+                  size="small"
+                  variant="text"
                   @click="expandedNotes[data.id] = true"
                 />
                 <PrimeButton
                   v-if="data.notes && expandedNotes[data.id]"
-                  class="p-button p-component p-button-text p-button-sm"
                   label="See less"
+                  size="small"
+                  variant="text"
                   @click="expandedNotes[data.id] = false"
                 />
               </template>
@@ -105,9 +104,16 @@
                 />
               </template>
             </Column>
-            <Column body-class="mave-align-center" field="functionalRangeCount" header="#Ranges" :sortable="true">
+            <Column
+              body-class="mave-align-center"
+              field="functionalClassificationCount"
+              header="#Ranges"
+              :sortable="true"
+            >
               <template #body="{data}">{{
-                data.functionalRanges ? data.functionalRanges.length : data.functionalRangeCount || 0
+                data.functionalClassifications
+                  ? data.functionalClassifications.length
+                  : data.functionalClassificationCount || 0
               }}</template>
             </Column>
             <Column header="Actions">
@@ -118,51 +124,56 @@
                     :to="{name: 'scoreSet', params: {urn: item.urn}, query: {calibration: data.urn}}"
                   >
                     <PrimeButton
-                      class="p-button p-component p-button-sm p-button-info"
                       icon="pi pi-eye"
-                      :rounded="true"
+                      rounded
+                      severity="info"
+                      size="small"
                     />
                   </router-link>
                   <!-- Only an authenticated user will be able to edit these properties -->
                   <template v-if="userIsAuthenticated">
                     <PrimeButton
                       v-if="calibrationAuthorizations[data.urn]?.update && userIsAuthorizedToEditScoreSet"
-                      class="p-button p-component p-button-sm"
                       icon="pi pi-pencil"
                       :rounded="true"
+                      size="small"
                       title="Edit calibration"
                       @click="editCalibration(data.urn)"
                     />
                     <PrimeButton
                       v-if="calibrationAuthorizations[data.urn]?.change_rank && data.primary"
-                      class="p-button p-component p-button-sm p-button-warning"
                       icon="pi pi-angle-double-down"
                       :rounded="true"
+                      severity="warn"
+                      size="small"
                       title="Demote calibration to non-primary"
                       @click="demoteCalibration(data.urn)"
                     />
                     <PrimeButton
                       v-if="calibrationAuthorizations[data.urn]?.change_rank && !data.primary"
-                      class="p-button p-component p-button-sm p-button-warning"
                       :disabled="data.researchUseOnly || primaryExists"
                       icon="pi pi-angle-double-up"
                       :rounded="true"
+                      severity="warn"
+                      size="small"
                       title="Promote calibration to primary"
                       @click="promoteCalibration(data.urn)"
                     />
                     <PrimeButton
                       v-if="calibrationAuthorizations[data.urn]?.publish && data.private"
-                      class="p-button p-component p-button-sm p-button-success"
                       icon="pi pi-check-circle"
                       :rounded="true"
+                      severity="success"
+                      size="small"
                       title="Publish calibration"
                       @click="publishCalibration(data.urn)"
                     />
                     <PrimeButton
                       v-if="calibrationAuthorizations[data.urn]?.delete"
-                      class="p-button p-component p-button-sm p-button-danger"
                       icon="pi pi-trash"
                       :rounded="true"
+                      severity="danger"
+                      size="small"
                       title="Delete calibration"
                       @click="deleteCalibration(data.urn)"
                     />
@@ -173,12 +184,12 @@
             <template #expansion="{data}">
               <div style="padding: 0.75rem 1rem">
                 <CalibrationTable
-                  v-if="data.functionalRanges && data.functionalRanges.length"
+                  v-if="data.functionalClassifications && data.functionalClassifications.length"
                   :score-calibration="data"
                   :score-calibration-name="data.title || ''"
                 />
                 <div v-else style="font-size: 0.85rem; color: var(--text-color-secondary)">
-                  No functional ranges defined for this calibration.
+                  No functional classifications defined for this calibration.
                 </div>
               </div>
             </template>
@@ -195,29 +206,31 @@
   </DefaultLayout>
   <PrimeDialog
     v-model:visible="editorVisible"
-    :close-on-escape="true"
+    :close-on-escape="false"
     :header="editingCalibrationUrn ? 'Edit Calibration' : 'Create New Calibration'"
     modal
     :style="{maxWidth: '90%', width: '75rem'}"
+    @hide="cancelEditCreate"
   >
     <CalibrationEditor
       :calibration-draft-ref="calibrationDraftRef"
       :calibration-urn="editingCalibrationUrn"
+      :classes-draft-ref="calibrationDraftClassesFileRef"
       :score-set-urn="editingScoreSetUrn"
       :validation-errors="editorValidationErrors"
       @canceled="cancelEditCreate"
     />
     <template #footer>
       <PrimeButton
-        class="p-button p-component p-button-secondary"
         icon="pi pi-times"
         label="Close"
+        severity="secondary"
         @click="cancelEditCreate"
       />
       <PrimeButton
-        class="p-button p-component p-button-success"
         icon="pi pi-save"
         label="Save Changes"
+        severity="success"
         @click="saveChildCalibration"
       />
     </template>
@@ -282,6 +295,7 @@ export default {
     const editingScoreSetUrn = ref<string | undefined>(undefined)
 
     const calibrationDraftRef = ref<{value: DraftScoreCalibration | null}>({value: null})
+    const calibrationDraftClassesFileRef = ref<{value: File | null}>({value: null})
     const editorValidationErrors = ref<Record<string, string>>({})
 
     const userIsAuthorizedToEditScoreSet = ref(false)
@@ -292,6 +306,7 @@ export default {
       config,
       userIsAuthenticated,
       userIsAuthorizedToEditScoreSet,
+      calibrationDraftClassesFileRef,
       calibrationAuthorizations,
       confirm,
       calibrationDraftRef,
@@ -393,24 +408,44 @@ export default {
     },
 
     cancelEditCreate: function () {
+      // Close the editor dialog
       this.editorVisible = false
+      // Reset editor state
       this.editingCalibrationUrn = undefined
       this.editingScoreSetUrn = undefined
+      // Reset draft
+      this.calibrationDraftRef.value = null
+      this.calibrationDraftClassesFileRef.value = null
+      // Reset validation errors
+      this.editorValidationErrors = {}
+      console.log('Calibration edit/create canceled')
     },
 
     saveChildCalibration: async function () {
       if (this.calibrationDraftRef.value) {
         try {
           const draft = this.calibrationDraftRef.value
+          const draftClassesFile = this.calibrationDraftClassesFileRef.value
+
+          const formData = new FormData()
+          formData.append('calibration_json', JSON.stringify(draft))
+          if (draftClassesFile) {
+            formData.append('classes_file', draftClassesFile)
+          }
+
           if (this.editingCalibrationUrn) {
             // Existing calibration, perform update
-            await axios.put(`${config.apiBaseUrl}/score-calibrations/${draft.urn}`, {
-              ...draft
+            await axios.put(`${config.apiBaseUrl}/score-calibrations/${draft.urn}`, formData, {
+              headers: {
+                'Content-Type': 'multipart/form-data'
+              }
             })
           } else {
             // New calibration, perform create
-            await axios.post(`${config.apiBaseUrl}/score-calibrations`, {
-              ...draft
+            await axios.post(`${config.apiBaseUrl}/score-calibrations`, formData, {
+              headers: {
+                'Content-Type': 'multipart/form-data'
+              }
             })
           }
           this.$toast.add({
@@ -431,7 +466,8 @@ export default {
               // Handle generic errors that are not surfaced by the API as objects
               this.$toast.add({
                 severity: 'error',
-                summary: `Encountered an error saving score set: ${error.response.data.detail}`
+                summary: `Encountered an error saving score set: ${error.response.data.detail}`,
+                life: 4000
               })
             } else {
               for (const err of error.response.data.detail) {
@@ -440,7 +476,7 @@ export default {
                   path = path.slice(1)
                 }
 
-                let customPath = err.ctx.error.custom_loc
+                let customPath = err.ctx?.error.custom_loc
                 if (customPath) {
                   if (customPath[0] == 'body') {
                     customPath = customPath.slice(1)
@@ -493,10 +529,11 @@ export default {
             await this.reloadItem()
           } catch (error) {
             console.error('Error publishing calibration:', error)
+            const errorMessage = axios.isAxiosError(error) && error.response?.data?.detail && (typeof error.response.data.detail === 'string' || error.response.data.detail instanceof String) ? error.response.data.detail : error
             this.$toast.add({
               severity: 'error',
               summary: 'Calibration Not Published',
-              detail: `An error occurred while publishing the calibration: ${error}. Please try again later.`,
+              detail: `An error occurred while publishing the calibration: ${errorMessage}. Please try again later.`,
               life: 4000
             })
           }
@@ -520,10 +557,11 @@ export default {
         await this.reloadItem()
       } catch (error) {
         console.error('Error demoting calibration:', error)
+        const errorMessage = axios.isAxiosError(error) && error.response?.data?.detail && (typeof error.response.data.detail === 'string' || error.response.data.detail instanceof String) ? error.response.data.detail : error
         this.$toast.add({
           severity: 'error',
           summary: 'Calibration Not Demoted',
-          detail: `An error occurred while demoting the calibration: ${error}. Please try again later.`,
+          detail: `An error occurred while demoting the calibration: ${errorMessage}. Please try again later.`,
           life: 4000
         })
       }
@@ -541,10 +579,11 @@ export default {
         await this.reloadItem()
       } catch (error) {
         console.error('Error promoting calibration:', error)
+        const errorMessage = axios.isAxiosError(error) && error.response?.data?.detail && (typeof error.response.data.detail === 'string' || error.response.data.detail instanceof String) ? error.response.data.detail : error
         this.$toast.add({
           severity: 'error',
           summary: 'Calibration Not Promoted',
-          detail: `An error occurred while promoting the calibration: ${error}. Please try again later.`,
+          detail: `An error occurred while promoting the calibration: ${errorMessage}. Please try again later.`,
           life: 4000
         })
       }
@@ -573,10 +612,11 @@ export default {
             await this.reloadItem()
           } catch (error) {
             console.error('Error deleting calibration:', error)
+            const errorMessage = axios.isAxiosError(error) && error.response?.data?.detail && (typeof error.response.data.detail === 'string' || error.response.data.detail instanceof String) ? error.response.data.detail : error
             this.$toast.add({
               severity: 'error',
               summary: 'Calibration Not Deleted',
-              detail: `An error occurred while deleting the calibration: ${error}. Please try again later.`,
+              detail: `An error occurred while deleting the calibration: ${errorMessage}. Please try again later.`,
               life: 4000
             })
           }
@@ -603,10 +643,11 @@ export default {
         document.body.removeChild(link)
       } catch (error) {
         console.error('Error downloading calibrations:', error)
+        const errorMessage = axios.isAxiosError(error) && error.response?.data?.detail && (typeof error.response.data.detail === 'string' || error.response.data.detail instanceof String) ? error.response.data.detail : error
         this.$toast.add({
           severity: 'error',
           summary: 'Download Failed',
-          detail: `An error occurred while downloading the calibrations: ${error}. Please try again later.`,
+          detail: `An error occurred while downloading the calibrations: ${errorMessage}. Please try again later.`,
           life: 4000
         })
       }
@@ -619,6 +660,10 @@ export default {
 .mavedb-calibrations-datatable {
   width: 100%;
 }
+.mavedb-calibrations-datatable :deep(.p-datatable-tbody > tr:nth-child(even)) {
+  background: var(--surface-a);
+}
+
 .mavedb-calibrations-datatable :deep(.p-datatable-thead > tr > th) {
   white-space: nowrap;
 }
@@ -658,10 +703,12 @@ export default {
 }
 .expanded {
   max-height: none !important;
+  line-clamp: none !important;
   -webkit-line-clamp: none !important;
 }
 .multi-line {
   white-space: normal;
+  margin-top: 0.3em;
   line-height: 1.2;
   max-height: 2.4em;
   display: -webkit-box;
@@ -682,26 +729,26 @@ export default {
 .tag-primary,
 .tag-general-use,
 .tag-published {
-  background: var(--green-100);
-  color: var(--green-700);
-  border: 1px solid var(--green-300);
+  background: var(--green-100) !important;
+  color: var(--green-700) !important;
+  border: 1px solid var(--green-300) !important;
 }
 .tag-non-primary,
 .tag-private,
 .tag-research-use {
-  background: var(--red-100);
-  color: var(--red-700);
-  border: 1px solid var(--red-300);
+  background: var(--red-100) !important;
+  color: var(--red-700) !important;
+  border: 1px solid var(--red-300) !important;
 }
 .tag-investigator-provided {
-  background: var(--blue-100);
-  color: var(--blue-700);
-  border: 1px solid var(--blue-300);
+  background: var(--blue-100) !important;
+  color: var(--blue-700) !important;
+  border: 1px solid var(--blue-300) !important;
 }
 .tag-non-investigator {
-  background: var(--purple-100);
-  color: var(--purple-700);
-  border: 1px solid var(--purple-300);
+  background: var(--purple-100) !important;
+  color: var(--purple-700) !important;
+  border: 1px solid var(--purple-300) !important;
 }
 </style>
 

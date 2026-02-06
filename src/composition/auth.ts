@@ -13,6 +13,7 @@ import _ from 'lodash'
 import {computed, watch} from 'vue'
 // @ts-expect-error It's troublesome to get types for useStore; see store/index.ts for more details.
 import {useStore} from 'vuex'
+import {useRouter} from 'vue-router'
 
 import {
   beginAuthentication as orcidBeginAuthentication,

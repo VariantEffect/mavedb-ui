@@ -1,3 +1,25 @@
+@import "tailwindcss";
+
+/* Tailwind removes styling for headings, so adding them back */
+h1 {
+  @apply text-3xl font-bold text-gray-800 mt-6 mb-2;
+}
+h2 {
+  @apply text-2xl font-semibold text-gray-800 mt-5 mb-2;
+}
+h3 {
+  @apply text-xl font-semibold text-gray-800 mt-4 mb-2;
+}
+h4 {
+  @apply text-lg font-semibold text-gray-800 mt-3 mb-2;
+}
+h5 {
+  @apply text-base font-semibold text-gray-800 mt-2 mb-2;
+}
+h6 {
+  @apply text-sm font-semibold text-gray-800 mt-1 mb-2;
+}
+
 * {
   text-rendering: optimizeLegibility;
   font-family: 'Raleway', sans-serif;
@@ -22,8 +44,37 @@ body .p-inputtext {
 /* Override the minimum width from the PrimeVue theme. */
 body .p-button {
   min-width: 10px;
+  padding-top: 0.25rem;
+  padding-bottom: 0.25rem;
 }
 
 .p-badge {
   text-align: center;
+}
+
+/* Prevent autocomplete overlay from taking full page width */
+.p-autocomplete-overlay {
+  max-width: 75% !important;
+}
+
+.p-tablist-tab-list .p-tab-active, .p-paginator-page-selected {
+  background-color: #3f51b51f !important;
+}
+
+.p-menubar-root-list {
+  gap: 0 !important;
+  margin-left: 1em !important;
+}
+
+.p-tab {
+  padding: 0.5em 1em 0.5em 1em !important;
+}
+
+.p-listbox-header {
+  padding: 0 !important;
+}
+
+.p-message {
+  margin-top: 0.5rem;
+  margin-bottom: 0.5rem;
 }

@@ -97,10 +97,21 @@
     <div v-if="variant?.scoreSet" class="col-12">
       <Card>
         <template #title>
-          Score set:
-          <router-link :to="{name: 'scoreSet', params: {urn: variant.scoreSet.urn}, query: {variant: variant.urn}}">
-            {{ variant.scoreSet.title }}
-          </router-link>
+          <div class="flex justify-between items-center w-full">
+            <div>
+              Score set:
+              <router-link :to="{name: 'scoreSet', params: {urn: variant.scoreSet.urn}, query: {variant: variant.urn}}">
+                {{ variant.scoreSet.title }}
+              </router-link>
+            </div>
+            <SplitButton
+              :button-props="{class: 'p-button-sm'}"
+              label="Download annotations for selected variant"
+              :menu-button-props="{class: 'p-button-sm'}"
+              :model="annotatedVariantDownloadOptions"
+              @click="annotatedVariantDownloadOptions[0].command"
+            ></SplitButton>
+          </div>
         </template>
         <template #content>
           <div v-if="scores" class="mave-score-set-histogram-pane">
@@ -141,7 +152,12 @@ import useRemoteData from '@/composition/remote-data'
 import config from '@/config'
 import {parseScoresOrCounts, ScoresOrCountsRow} from '@/lib/scores'
 import ProgressSpinner from 'primevue/progressspinner'
-import {functionalClassificationContainsVariant} from '@/lib/calibrations'
+import SplitButton from 'primevue/splitbutton'
+import {
+  hasFunctionalCalibrations,
+  hasPathogenicityCalibrations,
+  functionalClassificationContainsVariant
+} from '@/lib/calibrations'
 import CalibrationTable from './CalibrationTable.vue'
 import {components} from '@/schema/openapi'
 
@@ -149,7 +165,7 @@ type Classification = 'Functionally normal' | 'Functionally abnormal' | 'Not spe
 
 export default defineComponent({
   name: 'VariantMeasurementView',
-  components: {AssayFactSheet, CalibrationTable, Card, ScoreSetHistogram, ProgressSpinner},
+  components: {AssayFactSheet, CalibrationTable, Card, ScoreSetHistogram, ProgressSpinner, SplitButton},
 
   props: {
     variantUrn: {
@@ -315,6 +331,35 @@ export default defineComponent({
           (calibration: components['schemas']['ScoreCalibration']) => calibration.urn === this.selectedCalibration
         ) || null
       )
+    },
+    annotatedVariantDownloadOptions: function () {
+      const annotatedVariantOptions = []
+      if (hasPathogenicityCalibrations(this.variant?.scoreSet?.scoreCalibrations) && this.variant) {
+        annotatedVariantOptions.push({
+          label: 'Pathogenicity statement',
+          command: () => {
+            this.fetchVariantAnnotations('pathogenicity-statement')
+          }
+        })
+      }
+
+      if (hasFunctionalCalibrations(this.variant?.scoreSet?.scoreCalibrations)) {
+        annotatedVariantOptions.push({
+          label: 'Functional impact statement',
+          command: () => {
+            this.fetchVariantAnnotations('functional-statement')
+          }
+        })
+      }
+
+      annotatedVariantOptions.push({
+        label: 'Functional study result',
+        command: () => {
+          this.fetchVariantAnnotations('study-result')
+        }
+      })
+
+      return annotatedVariantOptions
     }
   },
 
@@ -368,6 +413,56 @@ export default defineComponent({
     onHistogramSelectionChanged: function (payload: any) {
       // Selection is locked; ignore changes to keep the variant focused.
       return
+    },
+    fetchVariantAnnotations: async function (annotationType: string) {
+      if (!this.variant?.urn) {
+        return null
+      }
+
+      try {
+        const response = await axios.get(
+          `${config.apiBaseUrl}/mapped-variants/${encodeURIComponent(this.variant.urn)}/va/${annotationType}`,
+          {
+            responseType: 'json'
+          }
+        )
+
+        //convert object to Json.
+        const file = JSON.stringify(response.data)
+        const anchor = document.createElement('a')
+
+        anchor.href = 'data:text/json;charset=utf-8,' + encodeURIComponent(file)
+        anchor.target = '_blank'
+
+        //file default name
+        anchor.download = this.variant.urn + '_' + annotationType + '.json'
+        anchor.click()
+      } catch (error) {
+        let serverMessage = ''
+        if (error && error.response && error.response.data) {
+          if (typeof error.response.data === 'string') {
+            serverMessage = error.response.data
+          } else if (error.response.data.detail) {
+            serverMessage = error.response.data.detail
+          } else {
+            serverMessage = JSON.stringify(error.response.data)
+          }
+        } else if (error && error.message) {
+          serverMessage = error.message
+        } else {
+          serverMessage = 'Unknown error.'
+        }
+        console.log(
+          `Error while fetching variant annotations of type "${annotationType}" for variant "${this.activeVariant.urn}"`,
+          error
+        )
+        this.$toast?.add({
+          severity: 'error',
+          summary: 'Download failed',
+          detail: `Could not fetch variant annotation: ${serverMessage}`,
+          life: 4000
+        })
+      }
     }
   }
 })

@@ -438,6 +438,7 @@ import useAuth from '@/composition/auth'
 import useItem from '@/composition/item'
 import useRemoteData from '@/composition/remote-data'
 import config from '@/config'
+import {hasPathogenicityCalibrations, hasFunctionalCalibrations} from '@/lib/calibrations'
 import {preferredVariantLabel, variantNotNullOrNA} from '@/lib/mave-hgvs'
 import {getScoreSetShortName} from '@/lib/score-sets'
 import {parseScoresOrCounts} from '@/lib/scores'
@@ -554,13 +555,6 @@ export default {
       const countColumns = allCountColumns.filter((col) => col !== 'accession')
       return countColumns.length > 0
     },
-    hasPrimaryCalibration: function () {
-      return !!(
-        this.item?.scoreCalibrations &&
-        this.item.scoreCalibrations.length > 0 &&
-        this.item.scoreCalibrations.some((cal) => cal.primary)
-      )
-    },
     dataTypeOptions: function () {
       const options = [
         {label: 'Scores', value: 'scores'},
@@ -576,28 +570,28 @@ export default {
     annotatedVariantDownloadOptions: function () {
       const annotatedVariantOptions = []
 
-      if (this.hasPrimaryCalibration) {
+      if (hasPathogenicityCalibrations(this.item?.scoreCalibrations)) {
         annotatedVariantOptions.push({
-          label: 'Pathogenicity Evidence Line',
+          label: 'Pathogenicity Statement',
           command: () => {
-            this.streamVariantAnnotations('pathogenicity-evidence-line')
+            this.streamVariantAnnotations('pathogenicity-statement')
           }
         })
       }
 
-      if (this.hasPrimaryCalibration) {
+      if (hasFunctionalCalibrations(this.item?.scoreCalibrations)) {
         annotatedVariantOptions.push({
           label: 'Functional Impact Statement',
           command: () => {
-            this.streamVariantAnnotations('functional-impact-statement')
+            this.streamVariantAnnotations('functional-statement')
           }
         })
       }
 
       annotatedVariantOptions.push({
-        label: 'Functional Impact Study Result',
+        label: 'Functional Study Result',
         command: () => {
-          this.streamVariantAnnotations('functional-study-result')
+          this.streamVariantAnnotations('study-result')
         }
       })
 

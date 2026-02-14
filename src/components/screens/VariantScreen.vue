@@ -1,17 +1,6 @@
 <template>
   <DefaultLayout>
-    <div class="variant-header-row">
-      <h1 v-if="alleleTitle && variants.length > 1" class="mavedb-variant-title">Variant: {{ alleleTitle }}</h1>
-      <div class="variant-header-download-btn-wrapper">
-        <SplitButton
-          :button-props="{class: 'p-button-sm'}"
-          label="Download annotations for selected variant"
-          :menu-button-props="{class: 'p-button-sm'}"
-          :model="annotatedVariantDownloadOptions"
-          @click="annotatedVariantDownloadOptions[0].command"
-        ></SplitButton>
-      </div>
-    </div>
+    <h1 v-if="alleleTitle && variants.length > 1" class="mavedb-variant-title">Variant: {{ alleleTitle }}</h1>
     <ErrorView v-if="variantsStatus == 'Error'" />
     <PageLoading v-else-if="variantsStatus == 'Loading'" />
     <Message v-else-if="variants.length == 0">No variants found in MaveDB</Message>
@@ -67,7 +56,6 @@
 
 <script lang="ts">
 import axios from 'axios'
-import SplitButton from 'primevue/splitbutton'
 import Button from 'primevue/button'
 import Message from 'primevue/message'
 import Tabs from 'primevue/tabs'
@@ -97,7 +85,6 @@ export default defineComponent({
     Tab,
     TabPanels,
     TabPanel,
-    SplitButton,
     VariantMeasurementView
   },
 
@@ -149,35 +136,6 @@ export default defineComponent({
       } else {
         return 'mavedb-no-variants'
       }
-    },
-    annotatedVariantDownloadOptions: function () {
-      const annotatedVariantOptions = []
-      if (this.activeVariant?.scoreSet?.scoreCalibrations) {
-        annotatedVariantOptions.push({
-          label: 'Pathogenicity evidence line',
-          command: () => {
-            this.fetchVariantAnnotations('clinical-evidence')
-          }
-        })
-      }
-
-      if (this.activeVariant?.scoreSet?.scoreCalibrations) {
-        annotatedVariantOptions.push({
-          label: 'Functional impact statement',
-          command: () => {
-            this.fetchVariantAnnotations('functional-impact')
-          }
-        })
-      }
-
-      annotatedVariantOptions.push({
-        label: 'Functional impact study result',
-        command: () => {
-          this.fetchVariantAnnotations('study-result')
-        }
-      })
-
-      return annotatedVariantOptions
     }
   },
 
@@ -262,57 +220,6 @@ export default defineComponent({
       } catch (error) {
         console.log('Error while loading variants', error)
         this.variantsStatus = 'Error'
-      }
-    },
-
-    fetchVariantAnnotations: async function (annotationType: string) {
-      if (!this.activeVariant?.urn) {
-        return null
-      }
-
-      try {
-        const response = await axios.get(
-          `${config.apiBaseUrl}/mapped-variants/${encodeURIComponent(this.activeVariant.urn)}/va/${annotationType}`,
-          {
-            responseType: 'json'
-          }
-        )
-
-        //convert object to Json.
-        const file = JSON.stringify(response.data)
-        const anchor = document.createElement('a')
-
-        anchor.href = 'data:text/json;charset=utf-8,' + encodeURIComponent(file)
-        anchor.target = '_blank'
-
-        //file default name
-        anchor.download = this.activeVariant.urn + '_' + annotationType + '.json'
-        anchor.click()
-      } catch (error) {
-        let serverMessage = ''
-        if (error && error.response && error.response.data) {
-          if (typeof error.response.data === 'string') {
-            serverMessage = error.response.data
-          } else if (error.response.data.detail) {
-            serverMessage = error.response.data.detail
-          } else {
-            serverMessage = JSON.stringify(error.response.data)
-          }
-        } else if (error && error.message) {
-          serverMessage = error.message
-        } else {
-          serverMessage = 'Unknown error.'
-        }
-        console.log(
-          `Error while fetching variant annotations of type "${annotationType}" for variant "${this.activeVariant.urn}"`,
-          error
-        )
-        this.$toast?.add({
-          severity: 'error',
-          summary: 'Download failed',
-          detail: `Could not fetch variant annotation: ${serverMessage}`,
-          life: 4000
-        })
       }
     },
 

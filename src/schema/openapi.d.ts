@@ -292,19 +292,19 @@ export interface paths {
      */
     get: operations["show_mapped_variant_study_result_api_v1_mapped_variants__urn__va_study_result_get"];
   };
-  "/api/v1/mapped-variants/{urn}/va/functional-impact": {
+  "/api/v1/mapped-variants/{urn}/va/functional-statement": {
     /**
      * Construct a VA-Spec Statement from a mapped variant
      * @description Construct a single VA-Spec Statement from a mapped variant by URN.
      */
-    get: operations["show_mapped_variant_functional_impact_statement_api_v1_mapped_variants__urn__va_functional_impact_get"];
+    get: operations["show_mapped_variant_functional_impact_statement_api_v1_mapped_variants__urn__va_functional_statement_get"];
   };
-  "/api/v1/mapped-variants/{urn}/va/clinical-evidence": {
+  "/api/v1/mapped-variants/{urn}/va/pathogenicity-statement": {
     /**
      * Construct a VA-Spec EvidenceLine from a mapped variant
      * @description Construct a list of VA-Spec EvidenceLine(s) from a mapped variant by URN.
      */
-    get: operations["show_mapped_variant_acmg_evidence_line_api_v1_mapped_variants__urn__va_clinical_evidence_get"];
+    get: operations["show_mapped_variant_acmg_evidence_line_api_v1_mapped_variants__urn__va_pathogenicity_statement_get"];
   };
   "/api/v1/mapped-variants/vrs/{identifier}": {
     /**
@@ -721,10 +721,10 @@ export interface paths {
      */
     get: operations["get_score_set_mapped_variants_api_v1_score_sets__urn__mapped_variants_get"];
   };
-  "/api/v1/score-sets/{urn}/annotated-variants/pathogenicity-evidence-line": {
+  "/api/v1/score-sets/{urn}/annotated-variants/pathogenicity-statement": {
     /**
-     * Get pathogenicity evidence line annotations for mapped variants within a score set
-     * @description Retrieve annotated variants with pathogenicity evidence for a given score set.
+     * Get pathogenicity statement annotations for mapped variants within a score set
+     * @description Retrieve annotated variants with pathogenicity statements for a given score set.
      *
      * This endpoint streams pathogenicity evidence lines for all current mapped variants
      * associated with a specific score set. The response is returned as newline-delimited
@@ -764,9 +764,9 @@ export interface paths {
      *     processing. Only current (non-historical) mapped variants are included in
      *     the response.
      */
-    get: operations["get_score_set_annotated_variants_api_v1_score_sets__urn__annotated_variants_pathogenicity_evidence_line_get"];
+    get: operations["get_score_set_annotated_variants_api_v1_score_sets__urn__annotated_variants_pathogenicity_statement_get"];
   };
-  "/api/v1/score-sets/{urn}/annotated-variants/functional-impact-statement": {
+  "/api/v1/score-sets/{urn}/annotated-variants/functional-statement": {
     /**
      * Get functional impact statement annotations for mapped variants within a score set
      * @description Retrieve functional impact statements for annotated variants in a score set.
@@ -807,9 +807,9 @@ export interface paths {
      *     Only current (non-historical) mapped variants are included in the response.
      *     The function requires appropriate read permissions on the score set.
      */
-    get: operations["get_score_set_annotated_variants_functional_statement_api_v1_score_sets__urn__annotated_variants_functional_impact_statement_get"];
+    get: operations["get_score_set_annotated_variants_functional_statement_api_v1_score_sets__urn__annotated_variants_functional_statement_get"];
   };
-  "/api/v1/score-sets/{urn}/annotated-variants/functional-study-result": {
+  "/api/v1/score-sets/{urn}/annotated-variants/study-result": {
     /**
      * Get functional study result annotations for mapped variants within a score set
      * @description Retrieve functional study results for annotated variants in a score set.
@@ -854,7 +854,7 @@ export interface paths {
      *     - Eagerly loads related ScoreSet data including publications, users, license, and experiment
      *     - Logs requests and errors for monitoring and debugging purposes
      */
-    get: operations["get_score_set_annotated_variants_functional_study_result_api_v1_score_sets__urn__annotated_variants_functional_study_result_get"];
+    get: operations["get_score_set_annotated_variants_functional_study_result_api_v1_score_sets__urn__annotated_variants_study_result_get"];
   };
   "/api/v1/score-sets/": {
     /**
@@ -5441,83 +5441,6 @@ export interface components {
       objectTumorType: components["schemas"]["Condition"] | components["schemas"]["iriReference"];
     };
     /**
-     * VariantPathogenicityEvidenceLine
-     * @description An Evidence Line that describes how a specific type of information was
-     * interpreted as evidence for or againtst a variant's pathogenicity. In the ACMG
-     * Framework, evidence is assessed by determining if a specific criterion (e.g. 'PM2')
-     * with a default strength (e.g. 'moderate') is 'met' or 'not met', and in some cases
-     * adjusting the default strength based on the quality and abundance of evidence.
-     */
-    VariantPathogenicityEvidenceLine: {
-      /**
-       * Id
-       * @description The 'logical' identifier of the Entity in the system of record, e.g. a UUID.  This 'id' is unique within a given system, but may or may not be globally unique outside the system. It is used within a system to reference an object from another.
-       */
-      id?: string | null;
-      /**
-       * Type
-       * @description MUST be 'EvidenceLine'.
-       * @default EvidenceLine
-       * @constant
-       */
-      type?: "EvidenceLine";
-      /**
-       * Name
-       * @description A primary name for the entity.
-       */
-      name?: string | null;
-      /**
-       * Description
-       * @description A free-text description of the Entity.
-       */
-      description?: string | null;
-      /**
-       * Aliases
-       * @description Alternative name(s) for the Entity.
-       */
-      aliases?: string[] | null;
-      /**
-       * Extensions
-       * @description A list of extensions to the Entity, that allow for capture of information not directly supported by elements defined in the model.
-       */
-      extensions?: components["schemas"]["Extension"][] | null;
-      /**
-       * Specifiedby
-       * @description The guidelines that were followed to assess variant information as evidence for or against the assessed variant's pathogenicity.
-       */
-      specifiedBy: components["schemas"]["Method"] | components["schemas"]["iriReference"];
-      /**
-       * Contributions
-       * @description Specific actions taken by an Agent toward the creation, modification, validation, or deprecation of an Information Entity.
-       */
-      contributions?: components["schemas"]["Contribution"][] | null;
-      /**
-       * Reportedin
-       * @description A document in which the the Information Entity is reported.
-       */
-      reportedIn?: ((components["schemas"]["Document"] | components["schemas"]["iriReference"])[]) | null;
-      /** @description A Variant Pathogenicity Proposition against which specific information was assessed, in determining the strength and direction of support this information provides as evidence. */
-      targetProposition?: components["schemas"]["VariantPathogenicityProposition"] | null;
-      /**
-       * Hasevidenceitems
-       * @description An individual piece of information that was evaluated as evidence in building the argument represented by an Evidence Line.
-       */
-      hasEvidenceItems?: {
-          type: "VariantPathogenicityEvidenceLine";
-        }[] | null;
-      /** @description The direction of support that the Evidence Line is determined to provide toward its target Proposition (supports, disputes, neutral) */
-      directionOfEvidenceProvided: components["schemas"]["Direction"];
-      /** @description The strength of support that an Evidence Line is determined to provide for or against the proposed pathogenicity of the assessed variant. Strength is evaluated relative to the direction indicated by the 'directionOfEvidenceProvided' attribute. The indicated enumeration constrains the nested MappableConcept.primaryCoding > Coding.code attribute when capturing evidence strength. Conditional requirement: if directionOfEvidenceProvided is either 'supports' or 'disputes', then this attribute is required. If it is 'none', then this attribute is not allowed. */
-      strengthOfEvidenceProvided?: components["schemas"]["MappableConcept"] | null;
-      /**
-       * Scoreofevidenceprovided
-       * @description A quantitative score indicating the strength of support that an Evidence Line is determined to provide for or against its target Proposition, evaluated relative to the direction indicated by the directionOfEvidenceProvided value.
-       */
-      scoreOfEvidenceProvided?: number | null;
-      /** @description A term summarizing the overall outcome of the evidence assessment represented by the Evidence Line, in terms of the direction and strength of support it provides for or against the target Proposition. */
-      evidenceOutcome?: components["schemas"]["MappableConcept"] | null;
-    };
-    /**
      * VariantPathogenicityProposition
      * @description A proposition describing the role of a variant in causing a heritable condition.
      */
@@ -5587,6 +5510,77 @@ export interface components {
       penetranceQualifier?: components["schemas"]["MappableConcept"] | null;
       /** @description Reports a pattern of inheritance expected for the pathogenic effect of the variant. Consider using terms or codes from community terminologies here - e.g. terms from the 'Mode of inheritance' branch of the Human Phenotype Ontology such as HP:0000006 (autosomal dominant inheritance). */
       modeOfInheritanceQualifier?: components["schemas"]["MappableConcept"] | null;
+    };
+    /**
+     * VariantPathogenicityStatement
+     * @description A Statement describing the role of a variant in causing an inherited condition.
+     */
+    VariantPathogenicityStatement: {
+      /**
+       * Id
+       * @description The 'logical' identifier of the Entity in the system of record, e.g. a UUID.  This 'id' is unique within a given system, but may or may not be globally unique outside the system. It is used within a system to reference an object from another.
+       */
+      id?: string | null;
+      /**
+       * Type
+       * @description MUST be 'Statement'.
+       * @default Statement
+       * @constant
+       */
+      type?: "Statement";
+      /**
+       * Name
+       * @description A primary name for the entity.
+       */
+      name?: string | null;
+      /**
+       * Description
+       * @description A free-text description of the Entity.
+       */
+      description?: string | null;
+      /**
+       * Aliases
+       * @description Alternative name(s) for the Entity.
+       */
+      aliases?: string[] | null;
+      /**
+       * Extensions
+       * @description A list of extensions to the Entity, that allow for capture of information not directly supported by elements defined in the model.
+       */
+      extensions?: components["schemas"]["Extension"][] | null;
+      /**
+       * Specifiedby
+       * @description The method that specifies how the pathogenicity classification is ultimately assigned to the variant, based on assessment of evidence.
+       */
+      specifiedBy: components["schemas"]["Method"] | components["schemas"]["iriReference"];
+      /**
+       * Contributions
+       * @description Specific actions taken by an Agent toward the creation, modification, validation, or deprecation of an Information Entity.
+       */
+      contributions?: components["schemas"]["Contribution"][] | null;
+      /**
+       * Reportedin
+       * @description A document in which the the Information Entity is reported.
+       */
+      reportedIn?: ((components["schemas"]["Document"] | components["schemas"]["iriReference"])[]) | null;
+      /** @description A proposition about the pathogenicity of a variant, the validity of which is assessed and reported by the Statement. A Statement can put forth the proposition as being true, false, or uncertain, and may provide an assessment of the level of confidence/evidence supporting this claim. */
+      proposition: components["schemas"]["VariantPathogenicityProposition"];
+      /** @description A term indicating whether the Statement supports, disputes, or remains neutral w.r.t. the validity of the Proposition it evaluates. */
+      direction: components["schemas"]["Direction"];
+      /** @description The strength of support that an ACMG 2015 Variant Pathogenicity statement is determined to provide for or against the proposed pathogenicity of the assessed variant. Strength is evaluated relative to the direction indicated by the 'direction' attribute. The indicated enumeration constrains the nested MappableConcept.primaryCoding > Coding.code attribute when capturing evidence strength. */
+      strength?: components["schemas"]["MappableConcept"] | null;
+      /**
+       * Score
+       * @description A quantitative score that indicates the strength of a Proposition's assessment in the direction indicated (i.e. how strongly supported or disputed the Proposition is believed to be). Depending on its implementation, a score may reflect how *confident* that agent is that the Proposition is true or false, or the *strength of evidence* they believe supports or disputes it. Instructions for how to interpret the meaning of a given score may be gleaned from the method or document referenced in 'specifiedBy' attribute.
+       */
+      score?: number | null;
+      /** @description The classification of the variant's pathogenicity, based on the ACMG 2015 guidelines. These classifications should coincide with the direction and strength values as follows: 'pathogenic' with supports-strong, 'likely pathogenic' with supports-moderate, 'benign' with disputes-strong, 'likely benign' with disputes-moderate 'uncertain significance' can be one of three possibilities... supports-weak, disputes-weak or neutral for uncertain significance (favoring pathogenic), uncertain significance (favoring benign) or uncertain significance (favoring neither pathogenic nor benign). The 'low penetrance' and 'risk allele' versions of pathogenicity classifications would be applied based on whether the variant proposition was defined to have a 'penetrance' of 'low' or 'risk' respectively. */
+      classification: components["schemas"]["MappableConcept"];
+      /**
+       * Hasevidencelines
+       * @description An evidence-based argument that supports or disputes the validity of the proposition that a Statement assesses or puts forth as true. The strength and direction of this argument (whether it supports or disputes the proposition, and how strongly) is based on an interpretation of one or more pieces of information as evidence (i.e. 'Evidence Items).
+       */
+      hasEvidenceLines?: ((components["schemas"]["EvidenceLine"] | components["schemas"]["iriReference"])[]) | null;
     };
     /**
      * VariantPrognosticProposition
@@ -7493,7 +7487,7 @@ export interface operations {
    * Construct a VA-Spec Statement from a mapped variant
    * @description Construct a single VA-Spec Statement from a mapped variant by URN.
    */
-  show_mapped_variant_functional_impact_statement_api_v1_mapped_variants__urn__va_functional_impact_get: {
+  show_mapped_variant_functional_impact_statement_api_v1_mapped_variants__urn__va_functional_statement_get: {
     parameters: {
       header?: {
         "x-active-roles"?: string | null;
@@ -7537,7 +7531,7 @@ export interface operations {
    * Construct a VA-Spec EvidenceLine from a mapped variant
    * @description Construct a list of VA-Spec EvidenceLine(s) from a mapped variant by URN.
    */
-  show_mapped_variant_acmg_evidence_line_api_v1_mapped_variants__urn__va_clinical_evidence_get: {
+  show_mapped_variant_acmg_evidence_line_api_v1_mapped_variants__urn__va_pathogenicity_statement_get: {
     parameters: {
       header?: {
         "x-active-roles"?: string | null;
@@ -7550,7 +7544,7 @@ export interface operations {
       /** @description Successful Response */
       200: {
         content: {
-          "application/json": components["schemas"]["VariantPathogenicityEvidenceLine"];
+          "application/json": components["schemas"]["VariantPathogenicityStatement"];
         };
       };
       /** @description Authentication required. */
@@ -9287,8 +9281,8 @@ export interface operations {
     };
   };
   /**
-   * Get pathogenicity evidence line annotations for mapped variants within a score set
-   * @description Retrieve annotated variants with pathogenicity evidence for a given score set.
+   * Get pathogenicity statement annotations for mapped variants within a score set
+   * @description Retrieve annotated variants with pathogenicity statements for a given score set.
    *
    * This endpoint streams pathogenicity evidence lines for all current mapped variants
    * associated with a specific score set. The response is returned as newline-delimited
@@ -9328,7 +9322,7 @@ export interface operations {
    *     processing. Only current (non-historical) mapped variants are included in
    *     the response.
    */
-  get_score_set_annotated_variants_api_v1_score_sets__urn__annotated_variants_pathogenicity_evidence_line_get: {
+  get_score_set_annotated_variants_api_v1_score_sets__urn__annotated_variants_pathogenicity_statement_get: {
     parameters: {
       header?: {
         "x-active-roles"?: string | null;
@@ -9338,11 +9332,11 @@ export interface operations {
       };
     };
     responses: {
-      /** @description Stream pathogenicity evidence line annotations for mapped variants. */
+      /** @description Stream pathogenicity statement annotations for mapped variants. */
       200: {
         content: {
           "application/json": {
-            [key: string]: components["schemas"]["VariantPathogenicityEvidenceLine"] | null;
+            [key: string]: components["schemas"]["VariantPathogenicityStatement"] | null;
           };
           "application/x-ndjson": unknown;
         };
@@ -9411,7 +9405,7 @@ export interface operations {
    *     Only current (non-historical) mapped variants are included in the response.
    *     The function requires appropriate read permissions on the score set.
    */
-  get_score_set_annotated_variants_functional_statement_api_v1_score_sets__urn__annotated_variants_functional_impact_statement_get: {
+  get_score_set_annotated_variants_functional_statement_api_v1_score_sets__urn__annotated_variants_functional_statement_get: {
     parameters: {
       header?: {
         "x-active-roles"?: string | null;
@@ -9498,7 +9492,7 @@ export interface operations {
    *     - Eagerly loads related ScoreSet data including publications, users, license, and experiment
    *     - Logs requests and errors for monitoring and debugging purposes
    */
-  get_score_set_annotated_variants_functional_study_result_api_v1_score_sets__urn__annotated_variants_functional_study_result_get: {
+  get_score_set_annotated_variants_functional_study_result_api_v1_score_sets__urn__annotated_variants_study_result_get: {
     parameters: {
       header?: {
         "x-active-roles"?: string | null;

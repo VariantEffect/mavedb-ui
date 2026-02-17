@@ -3,43 +3,26 @@
     <EmailPrompt />
   </template>
   <div class="collection-data-set-editor">
-    <Button class="mavedb-collection-data-set-editor-button" label="Edit" @click="visible = true" />
+    <Button v-if="showTrigger" class="mavedb-collection-data-set-editor-button" label="Add items" @click="openEditor" />
     <Dialog
       v-model:visible="visible"
       :close-on-escape="false"
-      :header="`Add and remove ${dataSetTypeDisplay[dataSetType]}s from collection`"
+      :header="`Add ${dataSetTypeDisplay[dataSetType]}s to collection`"
       modal
       :style="{width: '45rem'}"
       @hide="resetDataSetEditor"
     >
       <div class="flex flex-column gap-2">
-        <Button
-          class="mavedb-collection-remove-data-set-button"
-          :disabled="!selectedDataSets || !selectedDataSets.length"
-          icon="pi pi-trash"
-          label="Remove"
-          severity="danger"
-          @click="markDataSetsToRemove"
-        />
-        <DataTable
-          v-model:selection="selectedDataSets"
-          data-key="urn"
-          :row-style="rowStyle"
-          table-style="min-width: 50rem"
-          :value="allDataSets"
-        >
-          <Column selection-mode="multiple"></Column>
-          <Column field="urn" header="URN"></Column>
-          <Column field="title" header="Title"></Column>
-        </DataTable>
         <div class="flex gap-2">
           <AutoComplete
+            ref="urnAutoComplete"
             v-model="unvalidatedUrnsToAdd"
             class="flex-auto p-fluid"
             :multiple="true"
             :placeholder="unvalidatedUrnsToAdd.length ? '' : 'Type or paste comma-separated URNs'"
             :pt="{overlay: (options) => ({class: ['invisible']})}"
             @keyup.,="newUnvalidatedUrnToAdd"
+            @keyup.enter.prevent="fetchDataSetsToAdd"
             @keyup.escape="clearAutoCompleteInput"
             @keyup.space="newUnvalidatedUrnToAdd"
           />
@@ -50,6 +33,15 @@
             @click="fetchDataSetsToAdd"
           />
         </div>
+        <DataTable v-if="dataSetsToAdd.length > 0" data-key="urn" table-style="min-width: 50rem" :value="dataSetsToAdd">
+          <Column field="urn" header="URN"></Column>
+          <Column field="title" header="Title"></Column>
+          <Column>
+            <template #body="{data}">
+              <Button icon="pi pi-times" severity="danger" size="small" text @click="removeDataSetToAdd(data.urn)" />
+            </template>
+          </Column>
+        </DataTable>
         <Message v-if="validationErrors.length > 0" class="mavedb-validation-errors-message" severity="error">
           There were validation errors
           <div v-if="validationErrors.length > 0" class="mavedb-validation-errors">
@@ -62,7 +54,7 @@
       </div>
       <div class="mavedb-collection-editor-action-buttons">
         <Button label="Cancel" severity="secondary" @click="visible = false" />
-        <Button label="Save" @click="saveChanges" />
+        <Button :disabled="dataSetsToAdd.length === 0" label="Save" @click="saveChanges" />
       </div>
     </Dialog>
     <Dialog v-model:visible="unpreparedChangesDialogVisible" :close-on-escape="true" header="Warning" modal>
@@ -85,6 +77,8 @@ import useItem from '@/composition/item'
 import config from '@/config'
 import EmailPrompt from '@/components/common/EmailPrompt.vue'
 
+const INVALID_URN_MESSAGES_DISPLAY_LIMIT = 3
+
 export default {
   name: 'CollectionDataSetEditor',
 
@@ -98,6 +92,10 @@ export default {
     dataSetType: {
       type: String,
       required: true
+    },
+    showTrigger: {
+      type: Boolean,
+      default: true
     }
   },
 
@@ -110,13 +108,9 @@ export default {
 
     unvalidatedUrnsToAdd: [],
     dataSetsToAdd: [],
-    urnsToRemove: [],
-
-    selectedDataSets: [],
 
     validationErrors: [],
     additionErrors: [],
-    removalErrors: [],
 
     dataSetTypeDisplay: {
       scoreSet: 'score set',
@@ -126,14 +120,8 @@ export default {
   }),
 
   computed: {
-    allDataSets() {
-      const savedDataSets = this.savedDataSets.map((dataSet) => ({...dataSet, saved: true}))
-      const newDataSets = this.dataSetsToAdd.map((dataSet) => ({...dataSet, saved: false}))
-      return savedDataSets.concat(newDataSets)
-    },
-
     errors: function () {
-      return [...this.additionErrors, ...this.removalErrors]
+      return this.additionErrors
     },
 
     restCollectionParent: function () {
@@ -142,10 +130,6 @@ export default {
       } else {
         return 'score-sets'
       }
-    },
-
-    savedDataSetUrns: function () {
-      return this.item?.[`${this.dataSetType}Urns`] || []
     }
   },
 
@@ -157,19 +141,14 @@ export default {
         }
       },
       immediate: true
-    },
-
-    savedDataSetUrns: {
-      handler: async function (newValue, oldValue) {
-        if (!_.isEqual(newValue, oldValue)) {
-          await this.fetchSavedDataSets()
-        }
-      },
-      immediate: true
     }
   },
 
   methods: {
+    openEditor: function () {
+      this.visible = true
+    },
+
     clearAutoCompleteInput: function (event) {
       if (event.target) {
         event.target.value = ''
@@ -185,21 +164,15 @@ export default {
       }
       event.target.value = ''
     },
-    rowStyle: function (data) {
-      if (this.urnsToRemove.includes(data.urn)) {
-        return {backgroundColor: '#ffcccb'} // Light red
-      } else if (data.saved === false) {
-        return {backgroundColor: '#d1ffbd'} // Light green
-      }
-    },
 
-    markDataSetsToRemove: function () {
-      for (const dataSetToRemove of this.selectedDataSets) {
-        if (dataSetToRemove.saved) {
-          this.urnsToRemove.push(dataSetToRemove.urn)
-        } else {
-          _.remove(this.dataSetsToAdd, (dataSet) => dataSet.urn == dataSetToRemove.urn)
-        }
+    flushPendingUrnInput: function () {
+      const input = this.$refs.urnAutoComplete?.$el?.querySelector('input')
+      const pendingUrn = (input?.value || '').replace(',', '').trim()
+      if (pendingUrn !== '' && !this.unvalidatedUrnsToAdd.includes(pendingUrn)) {
+        this.unvalidatedUrnsToAdd.push(pendingUrn)
+      }
+      if (input) {
+        input.value = ''
       }
     },
 
@@ -210,7 +183,6 @@ export default {
       }
 
       this.additionErrors = []
-      this.removalErrors = []
 
       const additionErrorUrns = []
       for (const dataSetToAdd of this.dataSetsToAdd) {
@@ -231,38 +203,47 @@ export default {
       }
       _.remove(this.dataSetsToAdd, (dataSet) => !additionErrorUrns.includes(dataSet.urn))
 
-      const removalErrorUrns = []
-      for (const urn of this.urnsToRemove) {
-        try {
-          await axios.delete(
-            `${config.apiBaseUrl}/collections/${this.collectionUrn}/${this.restCollectionParent}/${urn}`
-          )
-        } catch (error) {
-          removalErrorUrns.push(urn)
-          this.removalErrors.push(`${urn}: ${error.message || 'Could not be removed from the collection'}`)
-        }
-      }
-      _.remove(this.urnsToRemove, (dataSet) => !removalErrorUrns.includes(dataSet.urn))
-
       if (_.isEmpty(this.errors)) {
         this.visible = false
-        this.$toast.add({severity: 'success', summary: "Successfully updated collection's experiments.", life: 3000})
+        this.$toast.add({
+          severity: 'success',
+          summary: `Successfully added ${this.dataSetTypeDisplay[this.dataSetType]}s.`,
+          life: 3000
+        })
       }
 
       // Always emit 'saved', because if any API calls succeed (even if others fail), we need to reload collection's data sets.
       this.$emit('saved')
     },
 
+    removeDataSetToAdd: function (urn) {
+      _.remove(this.dataSetsToAdd, (dataSet) => dataSet.urn === urn)
+    },
+
     fetchDataSetsToAdd: async function () {
       this.validationErrors = []
+      this.flushPendingUrnInput()
+
+      if (!this.item) {
+        this.validationErrors.push('Collection is still loading. Please try again in a moment.')
+        return
+      }
+
+      if (this.unvalidatedUrnsToAdd.length === 0) {
+        this.validationErrors.push('Please enter at least one URN.')
+        return
+      }
+
       const invalidUrns = []
+      const invalidUrnMessages = []
+      const alreadyInCollectionUrns = []
+      const alreadyQueuedUrns = []
       for (let urn of this.unvalidatedUrnsToAdd) {
         urn = urn.trim()
-        if (
-          this.item[`${this.dataSetType}Urns`].includes(urn) ||
-          this.dataSetsToAdd.some((dataSet) => dataSet.urn == urn)
-        ) {
-          // Silently ignore the data sets in the collection or already prepared for adding in this session.
+        if (this.item[`${this.dataSetType}Urns`].includes(urn)) {
+          alreadyInCollectionUrns.push(urn)
+        } else if (this.dataSetsToAdd.some((dataSet) => dataSet.urn == urn)) {
+          alreadyQueuedUrns.push(urn)
         } else {
           // Fetch the data set.
           let response = null
@@ -270,8 +251,12 @@ export default {
             response = await axios.get(`${config.apiBaseUrl}/${this.restCollectionParent}/${urn}`)
           } catch (e) {
             response = e.response || {status: 500}
-            this.validationErrors.push(`${urn}: ${e.message}`)
+            const errorDetail = e.response?.data?.detail || e.message || 'Invalid URN'
+            const errorMessage = `${urn}: ${errorDetail}`
+            this.validationErrors.push(errorMessage)
+            invalidUrnMessages.push(errorMessage)
           }
+          console.log(response)
           if (response.status == 200) {
             this.dataSetsToAdd.push(response.data)
           } else {
@@ -279,34 +264,49 @@ export default {
           }
         }
       }
-      this.unvalidatedUrnsToAdd = invalidUrns
-    },
+      this.unvalidatedUrnsToAdd = []
 
-    fetchSavedDataSets: async function () {
-      const savedDataSets = []
-      for (const urn of this.savedDataSetUrns) {
-        console.log(urn)
-        let response = null
-        try {
-          response = await axios.get(`${config.apiBaseUrl}/${this.restCollectionParent}/${urn}`)
-        } catch (e) {
-          response = e.response || {status: 500}
-        }
-        if (response.status == 200) {
-          savedDataSets.push(response.data)
-        }
+      if (invalidUrnMessages.length > 0) {
+        const detail =
+          invalidUrnMessages.length > INVALID_URN_MESSAGES_DISPLAY_LIMIT
+            ? `${invalidUrnMessages.slice(0, INVALID_URN_MESSAGES_DISPLAY_LIMIT).join(' • ')} • +${invalidUrnMessages.length - INVALID_URN_MESSAGES_DISPLAY_LIMIT} more`
+            : invalidUrnMessages.join(' • ')
+        this.$toast.add({
+          severity: 'warn',
+          summary: 'Some URNs could not be added',
+          detail,
+          life: 6000
+        })
       }
-      this.savedDataSets = savedDataSets
+
+      if (alreadyInCollectionUrns.length > 0 || alreadyQueuedUrns.length > 0) {
+        const details = []
+        if (alreadyInCollectionUrns.length > 0) {
+          details.push(
+            `Already in collection: ${alreadyInCollectionUrns.slice(0, INVALID_URN_MESSAGES_DISPLAY_LIMIT).join(', ')}${alreadyInCollectionUrns.length > INVALID_URN_MESSAGES_DISPLAY_LIMIT ? ` (+${alreadyInCollectionUrns.length - INVALID_URN_MESSAGES_DISPLAY_LIMIT} more)` : ''}`
+          )
+        }
+        if (alreadyQueuedUrns.length > 0) {
+          details.push(
+            `Already queued: ${alreadyQueuedUrns.slice(0, INVALID_URN_MESSAGES_DISPLAY_LIMIT).join(', ')}${alreadyQueuedUrns.length > INVALID_URN_MESSAGES_DISPLAY_LIMIT ? ` (+${alreadyQueuedUrns.length - INVALID_URN_MESSAGES_DISPLAY_LIMIT} more)` : ''}`
+          )
+        }
+
+        this.$toast.add({
+          severity: 'info',
+          summary: 'Some URNs were skipped',
+          detail: details.join(' • '),
+          life: 5000
+        })
+      }
     },
 
     resetDataSetEditor: function () {
       this.unvalidatedUrnsToAdd = []
       this.dataSetsToAdd = []
-      this.urnsToRemove = []
 
       this.validationErrors = []
       this.additionErrors = []
-      this.removalErrors = []
     }
   }
 }
@@ -317,10 +317,6 @@ export default {
 }
 
 .mavedb-collection-add-data-set-button {
-  width: fit-content;
-}
-
-.mavedb-collection-remove-data-set-button {
   width: fit-content;
 }
 

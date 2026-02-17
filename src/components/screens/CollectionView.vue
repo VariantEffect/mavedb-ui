@@ -119,39 +119,45 @@
             </a>
           </span>
         </div>
-        <div class="mave-collection-section-title">
-          Score Sets
-          <div v-if="userIsAuthorized.add_score_set">
-            <CollectionDataSetEditor
-              :collection-urn="item.urn"
-              data-set-type="scoreSet"
-              @saved="childComponentEditedCollection"
-            />
-          </div>
+        <div class="mave-collection-section-title">Score Sets</div>
+        <div v-if="userIsAuthorized.add_score_set">
+          <CollectionDataSetEditor
+            ref="scoreSetEditor"
+            :collection-urn="item.urn"
+            data-set-type="scoreSet"
+            :show-trigger="false"
+            @saved="childComponentEditedCollection"
+          />
         </div>
-        <ul v-if="item.scoreSetUrns.length != 0" class="list-disc ml-5">
-          <li v-for="scoreSetUrn in item.scoreSetUrns" :key="scoreSetUrn">
-            <EntityLink display="title" entity-type="scoreSet" :urn="scoreSetUrn" />
-          </li>
-        </ul>
-        <div v-else>No associated score sets yet</div>
-        <div class="mave-collection-section-title">
-          Experiments
-          <!-- NOTE: permissions are the same for add score set and add experiment -->
-          <div v-if="userIsAuthorized.add_score_set">
-            <CollectionDataSetEditor
-              :collection-urn="item.urn"
-              data-set-type="experiment"
-              @saved="childComponentEditedCollection"
-            />
-          </div>
+        <CollectionItemsTable
+          :can-add="userIsAuthorized.add_score_set"
+          :can-update="userIsAuthorized.update"
+          entity-type="scoreSet"
+          :items="scoreSetsList"
+          @add="openScoreSetEditor"
+          @remove="removeScoreSet"
+          @reorder="onScoreSetReorder"
+        />
+        <div class="mave-collection-section-title">Experiments</div>
+        <!-- NOTE: permissions are the same for add score set and add experiment -->
+        <div v-if="userIsAuthorized.add_score_set">
+          <CollectionDataSetEditor
+            ref="experimentEditor"
+            :collection-urn="item.urn"
+            data-set-type="experiment"
+            :show-trigger="false"
+            @saved="childComponentEditedCollection"
+          />
         </div>
-        <ul v-if="item.experimentUrns.length != 0" class="list-disc ml-5">
-          <li v-for="experimentUrn in item.experimentUrns" :key="experimentUrn">
-            <EntityLink display="title" entity-type="experiment" :urn="experimentUrn" />
-          </li>
-        </ul>
-        <div v-else>No associated experiments yet</div>
+        <CollectionItemsTable
+          :can-add="userIsAuthorized.add_score_set"
+          :can-update="userIsAuthorized.update"
+          entity-type="experiment"
+          :items="experimentsList"
+          @add="openExperimentEditor"
+          @remove="removeExperiment"
+          @reorder="onExperimentReorder"
+        />
         <div class="mave-collection-section-title">
           User Permissions
           <div v-if="userIsAuthorized.add_role">
@@ -247,9 +253,9 @@ import InputText from 'primevue/inputtext'
 import Textarea from 'primevue/textarea'
 import {useHead} from '@unhead/vue'
 
-import EntityLink from '@/components/common/EntityLink'
 import CollectionBadge from '@/components/CollectionBadge'
 import CollectionDataSetEditor from '@/components/CollectionDataSetEditor'
+import CollectionItemsTable from '@/components/CollectionItemsTable'
 import CollectionPermissionsEditor from '@/components/CollectionPermissionsEditor'
 import DefaultLayout from '@/components/layout/DefaultLayout'
 import ItemNotFound from '@/components/common/ItemNotFound'
@@ -266,10 +272,10 @@ export default {
     Button,
     CollectionBadge,
     CollectionDataSetEditor,
+    CollectionItemsTable,
     CollectionPermissionsEditor,
     DefaultLayout,
     Dialog,
-    EntityLink,
     Inplace,
     InputText,
     ItemNotFound,
@@ -312,6 +318,15 @@ export default {
     privacyDialogVisible: false
   }),
 
+  computed: {
+    scoreSetsList() {
+      return (this.item?.scoreSetUrns || []).map((urn) => ({urn}))
+    },
+    experimentsList() {
+      return (this.item?.experimentUrns || []).map((urn) => ({urn}))
+    }
+  },
+
   watch: {
     item: {
       handler: function (newValue) {
@@ -351,6 +366,87 @@ export default {
 
     childComponentEditedCollection: function () {
       this.reloadItem(this.itemId)
+    },
+
+    openEditor(editorRef) {
+      const editor = this.$refs[editorRef]
+      if (editor && typeof editor.openEditor === 'function') {
+        editor.openEditor()
+      }
+    },
+
+    openScoreSetEditor() {
+      this.openEditor('scoreSetEditor')
+    },
+
+    openExperimentEditor() {
+      this.openEditor('experimentEditor')
+    },
+    async removeCollectionEntity(entityType, urn, {successSummary, failureSummary}) {
+      try {
+        await axios.delete(`${config.apiBaseUrl}/collections/${this.item.urn}/${entityType}/${urn}`)
+        this.$toast.add({severity: 'success', summary: successSummary, life: 3000})
+        this.reloadItem(this.itemId)
+      } catch (error) {
+        this.$toast.add({
+          severity: 'error',
+          summary: failureSummary,
+          detail: error.response?.data?.detail || error.message,
+          life: 5000
+        })
+      }
+    },
+
+    async removeScoreSet(urn) {
+      return this.removeCollectionEntity('score-sets', urn, {
+        successSummary: 'Score set removed',
+        failureSummary: 'Failed to remove score set'
+      })
+    },
+
+    async removeExperiment(urn) {
+      return this.removeCollectionEntity('experiments', urn, {
+        successSummary: 'Experiment removed',
+        failureSummary: 'Failed to remove experiment'
+      })
+    },
+
+    async reorderCollectionItems(event, urnFieldName, successSummary, failureSummary) {
+      const newOrder = event.value.map((row) => row.urn)
+      try {
+        const response = await axios.patch(`${config.apiBaseUrl}/collections/${this.item.urn}`, {
+          [urnFieldName]: newOrder
+        })
+        if (response.status === 200) {
+          // TODO#XXX: Consider adding an 'updateItem' method to the item store to avoid this extra API round trip.
+          // Currently using reloadItem() for safety to ensure state consistency, but we already have the updated
+          // item in response.data. A carefully designed updateItem() could reduce API calls while maintaining
+          // data integrity through proper validation and state management.
+          this.reloadItem(this.itemId)
+          this.$toast.add({severity: 'success', summary: successSummary, life: 3000})
+        }
+      } catch (error) {
+        this.$toast.add({
+          severity: 'error',
+          summary: failureSummary,
+          detail: error.response?.data?.detail || error.message,
+          life: 5000
+        })
+        this.reloadItem(this.itemId) // Rollback on error
+      }
+    },
+
+    async onScoreSetReorder(event) {
+      await this.reorderCollectionItems(event, 'score_set_urns', 'Score sets reordered', 'Failed to reorder score sets')
+    },
+
+    async onExperimentReorder(event) {
+      await this.reorderCollectionItems(
+        event,
+        'experiment_urns',
+        'Experiments reordered',
+        'Failed to reorder experiments'
+      )
     },
 
     deleteCollectionWithConfirmation: function () {
@@ -431,10 +527,10 @@ export default {
       editedDescription = editedDescription == '' ? null : editedDescription
       if (editedDescription == this.item.description) {
         // Do nothing if the description has not changed.
-        this.displayCollectionNameEdit = false
+        this.displayCollectionDescriptionEdit = false
       } else {
         const collectionPatch = {
-          description: editedDescription == '' ? null : editedDescription
+          description: editedDescription
         }
         let response = null
         try {

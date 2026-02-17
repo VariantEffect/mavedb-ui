@@ -7,6 +7,7 @@ import _ from 'lodash'
 import {defineComponent} from 'vue'
 
 import useItem from '@/composition/item'
+import {useEntityCache} from '@/composables/entity-cache'
 
 /**
  * A link to an experiment set, experiment, or score set.
@@ -40,26 +41,44 @@ export default defineComponent({
     urn: {
       type: String,
       required: true
+    },
+    /** Use cached entity data to avoid redundant API calls. Useful in lists. */
+    useCache: {
+      type: Boolean,
+      default: false
     }
   },
 
-  setup: (props) => useItem({itemTypeName: props.entityType}),
+  setup: (props) => {
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+    const itemComposition = useItem({itemTypeName: props.entityType as any})
+    const {getEntity} = useEntityCache()
+
+    return {
+      ...itemComposition,
+      getEntity
+    }
+  },
 
   data: function () {
     return {
-      selectedOptionValues: this.value
+      selectedOptionValues: this.value,
+      cachedEntity: null as Record<string, unknown> | null,
+      loadingCache: false
     }
   },
 
   computed: {
     linkText: function () {
-      if (!this.item) {
+      const entity = this.useCache ? this.cachedEntity : this.item
+
+      if (!entity) {
         return this.urn
       } else {
         if (_.isString(this.display)) {
-          return _.get(this.item, this.display)
+          return _.get(entity, this.display)
         } else if (_.isFunction(this.display)) {
-          return this.display(this.item)
+          return this.display(entity)
         } else {
           return this.urn
         }
@@ -81,9 +100,28 @@ export default defineComponent({
   watch: {
     urn: {
       handler: function () {
-        this.setItemId(this.urn)
+        if (this.useCache) {
+          this.loadCachedEntity()
+        } else {
+          this.setItemId(this.urn)
+        }
       },
       immediate: true
+    }
+  },
+
+  methods: {
+    async loadCachedEntity() {
+      if (!this.urn) return
+
+      this.loadingCache = true
+      try {
+        this.cachedEntity = (await this.getEntity(this.entityType, this.urn)) as Record<string, unknown>
+      } catch (error) {
+        console.error('Failed to load cached entity:', this.urn, error)
+      } finally {
+        this.loadingCache = false
+      }
     }
   }
 })

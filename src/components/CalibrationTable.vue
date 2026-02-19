@@ -144,9 +144,7 @@
                 }
               ]"
             >
-              <span>
-                {{ range.variants ? range.variants.length : 0 }}
-              </span>
+              <span> {{ range.variantCount ?? 0 }} variants </span>
             </div>
           </template>
 

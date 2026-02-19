@@ -28,6 +28,10 @@
     <ProgressSpinner style="height: 24px; width: 24px" />
     Loading clinical control options in the background. Additional histogram views will be available once loaded.
   </div>
+  <div v-if="isCalibrationClassViewActive && isLoadingActiveCalibrationVariants" style="font-size: small">
+    <ProgressSpinner style="height: 24px; width: 24px" />
+    Loading calibration class variants.
+  </div>
   <div v-if="showControls" class="mavedb-histogram-custom-controls">
     <fieldset class="mavedb-histogram-controls-panel">
       <legend>Clinical Series Options</legend>
@@ -176,7 +180,8 @@ import makeHistogram, {
   HistogramShader,
   CATEGORICAL_SERIES_COLORS
 } from '@/lib/histogram'
-import {prepareCalibrationsForHistogram, shaderOverlapsBin} from '@/lib/calibrations'
+import {fetchScoreCalibrationVariants, prepareCalibrationsForHistogram, shaderOverlapsBin} from '@/lib/calibrations'
+import type {FunctionalClassificationVariant} from '@/lib/calibrations'
 import {variantNotNullOrNA} from '@/lib/mave-hgvs'
 import {
   DEFAULT_VARIANT_EFFECT_TYPES,
@@ -313,6 +318,8 @@ export default defineComponent({
       customSelectedControlVariantTypeFilters: DEFAULT_VARIANT_EFFECT_TYPES.concat(
         this.hideStartAndStopLossByDefault ? [] : ['Start/Stop Loss']
       ),
+      calibrationClassVariantsByUrn: {} as Record<string, Record<number, FunctionalClassificationVariant[]>>,
+      calibrationClassVariantsLoadingByUrn: {} as Record<string, boolean>,
       histogram: null as Histogram | null
     }
   },
@@ -332,13 +339,23 @@ export default defineComponent({
         return null
       }
 
+      const calibrationUrn = this.activeCalibration.value?.urn
+      if (!calibrationUrn) {
+        return null
+      }
+
+      const variantsByClassificationId = this.calibrationClassVariantsByUrn[calibrationUrn]
+      if (!variantsByClassificationId) {
+        return null
+      }
+
       const classMap: Record<string, string> = {}
       for (const fc of this.activeCalibration.value!.functionalClassifications!) {
-        if (fc.class == null) {
+        if (fc.class == null || fc.id == null) {
           continue
         }
 
-        for (const v of fc.variants || []) {
+        for (const v of variantsByClassificationId[fc.id] || []) {
           if (!v.urn) {
             continue
           }
@@ -347,6 +364,13 @@ export default defineComponent({
         }
       }
       return classMap
+    },
+    isCalibrationClassViewActive: function () {
+      return this.vizOptions[this.activeViz]?.view === 'calibration-classes'
+    },
+    isLoadingActiveCalibrationVariants: function () {
+      const calibrationUrn = this.activeCalibration.value?.urn
+      return calibrationUrn != null && this.calibrationClassVariantsLoadingByUrn[calibrationUrn] === true
     },
     series: function () {
       if (!this.refreshedClinicalControls) {
@@ -360,20 +384,27 @@ export default defineComponent({
       }
 
       switch (this.vizOptions[this.activeViz].view) {
-        case 'calibration-classes':
-          return this.selectedCalibrationIsClassBased
-            ? this.activeCalibration.value?.functionalClassifications?.map((fc, i) => ({
-                classifier: (d: HistogramDatum) => {
-                  if (!d.accession) return false
-                  return this.selectedCalibrationClassMap?.[d.accession] === fc.class
-                },
-                options: {
-                  // not robust to many classes (>12), colors will collide.
-                  color: CATEGORICAL_SERIES_COLORS[i % CATEGORICAL_SERIES_COLORS.length],
-                  title: fc.label || 'Unlabeled'
-                }
-              }))
-            : null
+        case 'calibration-classes': {
+          if (!this.selectedCalibrationIsClassBased) {
+            return null
+          }
+
+          const selectedCalibrationClassMap = this.selectedCalibrationClassMap
+          if (!selectedCalibrationClassMap) {
+            return null
+          }
+
+          return this.activeCalibration.value?.functionalClassifications?.map((fc, i) => ({
+            classifier: (d: HistogramDatum) => {
+              if (!d.accession) return false
+              return selectedCalibrationClassMap[d.accession] === fc.class
+            },
+            options: {
+              color: CATEGORICAL_SERIES_COLORS[i % CATEGORICAL_SERIES_COLORS.length],
+              title: fc.label || 'Unlabeled'
+            }
+          }))
+        }
         case 'clinical':
           return [
             {
@@ -878,6 +909,9 @@ export default defineComponent({
   watch: {
     scoreSet: {
       handler: async function () {
+        this.calibrationClassVariantsByUrn = {}
+        this.calibrationClassVariantsLoadingByUrn = {}
+
         if (this.config.CLINICAL_FEATURES_ENABLED) {
           await this.loadClinicalControlOptions()
         }
@@ -896,9 +930,28 @@ export default defineComponent({
       }
     },
     activeCalibration: {
-      handler: function () {
+      handler: async function () {
+        await this.conditionallyLoadCalibrationClassVariants()
         this.renderOrRefreshHistogram()
         this.$emit('calibrationChanged', this.activeCalibration.value?.urn ?? null)
+      }
+    },
+    activeViz: {
+      handler: async function () {
+        await this.conditionallyLoadCalibrationClassVariants()
+      }
+    },
+    calibrationClassVariantsByUrn: {
+      handler: function (newValue, oldValue) {
+        const activeUrn = this.activeCalibration?.value?.urn
+        if (activeUrn) {
+          const newVariants = newValue && newValue[activeUrn]
+          const oldVariants = oldValue && oldValue[activeUrn]
+          if (newVariants === oldVariants) {
+            return
+          }
+        }
+        this.renderOrRefreshHistogram()
       }
     },
     showCalibrations: {
@@ -1035,6 +1088,7 @@ export default defineComponent({
     this.renderOrRefreshHistogram()
     this.$emit('exportChart', this.exportChart)
     this.activeCalibration = this.chooseDefaultCalibration()
+    await this.conditionallyLoadCalibrationClassVariants()
   },
 
   beforeUnmount: function () {
@@ -1150,6 +1204,69 @@ export default defineComponent({
         }
       }
       this.$emit('selection-changed', payload)
+    },
+    conditionallyLoadCalibrationClassVariants: async function () {
+      if (!this.isCalibrationClassViewActive || !this.selectedCalibrationIsClassBased) {
+        return
+      }
+
+      await this.loadCalibrationClassVariants(this.activeCalibration.value?.urn ?? null)
+    },
+    loadCalibrationClassVariants: async function (calibrationUrn: string | null) {
+      if (!calibrationUrn) {
+        return
+      }
+
+      if (
+        this.calibrationClassVariantsByUrn[calibrationUrn] ||
+        this.calibrationClassVariantsLoadingByUrn[calibrationUrn]
+      ) {
+        return
+      }
+
+      this.calibrationClassVariantsLoadingByUrn = {
+        ...this.calibrationClassVariantsLoadingByUrn,
+        [calibrationUrn]: true
+      }
+
+      try {
+        // TODO#622calibration-classes-performance: If very large calibrations become slow, optimize by
+        // precomputing and caching an accession->class map at fetch time and adding LRU-style cache
+        // eviction for calibrationClassVariantsByUrn to cap memory usage across many calibrations.
+        const response = await fetchScoreCalibrationVariants(calibrationUrn)
+        const variantsByClassificationId: Record<number, FunctionalClassificationVariant[]> = {}
+
+        for (const variantSet of response || []) {
+          variantsByClassificationId[variantSet.functionalClassificationId] = variantSet.variants || []
+        }
+
+        this.calibrationClassVariantsByUrn = {
+          ...this.calibrationClassVariantsByUrn,
+          [calibrationUrn]: variantsByClassificationId
+        }
+      } catch (error) {
+        const detail =
+          axios.isAxiosError(error) && error.response?.status
+            ? `Request failed with status ${error.response.status}.`
+            : 'Unable to load class variants for this calibration.'
+
+        this.$toast.add({
+          severity: 'warn',
+          summary: 'Could not load calibration class variants.',
+          detail,
+          life: 4000
+        })
+
+        // Remove any failed calibration from the variants by urn to avoid repeated failed load attempts on re-render or calibration switch.
+        this.calibrationClassVariantsByUrn = Object.fromEntries(
+          Object.entries(this.calibrationClassVariantsByUrn).filter(([urn]) => urn !== calibrationUrn)
+        )
+      } finally {
+        this.calibrationClassVariantsLoadingByUrn = {
+          ...this.calibrationClassVariantsLoadingByUrn,
+          [calibrationUrn]: false
+        }
+      }
     },
     loadClinicalControls: async function () {
       if (

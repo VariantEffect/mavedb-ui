@@ -1,5 +1,11 @@
+import axios from 'axios'
+
+import config from '@/config'
 import {HistogramBin, HistogramShader} from '@/lib/histogram'
 import {components} from '@/schema/openapi'
+
+export type FunctionalClassificationVariants = components['schemas']['FunctionalClassificationVariants']
+export type FunctionalClassificationVariant = components['schemas']['VariantEffectMeasurement']
 
 export const NORMAL_RANGE_DEFAULT_COLOR = '#4444ff'
 export const ABNORMAL_RANGE_DEFAULT_COLOR = '#ff4444'
@@ -214,4 +220,42 @@ export function functionalClassificationContainsVariant(
     max === null ? true : functionalClassification.inclusiveUpperBound ? variantScore <= max : variantScore < max
 
   return lowerOk && upperOk
+}
+
+/**
+ * Fetches the full list of variants for a single functional classification in a score calibration.
+ *
+ * Uses the dedicated calibration variants endpoint introduced to replace embedded
+ * `variants` payloads in calibration responses.
+ *
+ * @param calibrationUrn The score calibration URN.
+ * @param classificationId The database ID of the functional classification.
+ * @returns The classification ID and associated variant list.
+ */
+export async function fetchScoreCalibrationFunctionalClassificationVariants(
+  calibrationUrn: string,
+  classificationId: number
+): Promise<FunctionalClassificationVariants> {
+  const response = await axios.get(
+    `${config.apiBaseUrl}/score-calibrations/${encodeURIComponent(calibrationUrn)}/functional-classifications/${classificationId}/variants`
+  )
+  return response.data
+}
+
+/**
+ * Fetches variant lists for all functional classifications in a score calibration.
+ *
+ * This is intended for views that need class membership across the full calibration
+ * (for example, class-based histogram series generation).
+ *
+ * @param calibrationUrn The score calibration URN.
+ * @returns An array of per-classification variant payloads.
+ */
+export async function fetchScoreCalibrationVariants(
+  calibrationUrn: string
+): Promise<FunctionalClassificationVariants[]> {
+  const response = await axios.get(
+    `${config.apiBaseUrl}/score-calibrations/${encodeURIComponent(calibrationUrn)}/variants`
+  )
+  return response.data
 }

@@ -596,6 +596,29 @@ export interface paths {
      */
     post: operations["publish_score_calibration_route_api_v1_score_calibrations__urn__publish_post"];
   };
+  "/api/v1/score-calibrations/{urn}/functional-classifications/{classification_id}/variants": {
+    /**
+     * Get Functional Classification Variants
+     * @description Retrieve variants for a specific functional classification within a score calibration.
+     *
+     * Returns the list of variants whose scores fall within the functional classification's
+     * defined range or class. Use this endpoint when you need the full variant data for a
+     * specific classification — the main score set and calibration endpoints return only
+     * a `variant_count` summary for performance.
+     */
+    get: operations["get_functional_classification_variants_api_v1_score_calibrations__urn__functional_classifications__classification_id__variants_get"];
+  };
+  "/api/v1/score-calibrations/{urn}/variants": {
+    /**
+     * Get Calibration All Variants
+     * @description Retrieve all variants across all functional classifications for a score calibration.
+     *
+     * Returns a list of variant sets, one per functional classification. Use this endpoint
+     * when you need the full variant data for an entire calibration — the main score set and
+     * calibration endpoints return only a `variant_count` summary for performance.
+     */
+    get: operations["get_calibration_all_variants_api_v1_score_calibrations__urn__variants_get"];
+  };
   "/api/v1/score-sets/search": {
     /**
      * Search score sets
@@ -3149,6 +3172,19 @@ export interface components {
       positiveLikelihoodRatio?: number | null;
     };
     /**
+     * FunctionalClassificationVariants
+     * @description Response model for functional classification variant endpoints.
+     */
+    FunctionalClassificationVariants: {
+      /** Functionalclassificationid */
+      functionalClassificationId: number;
+      /**
+       * Variants
+       * @default []
+       */
+      variants?: components["schemas"]["VariantEffectMeasurement"][];
+    };
+    /**
      * GnomADVariantWithMappedVariants
      * @description GnomAD variant view model with mapped variants for non-admin clients.
      */
@@ -3940,13 +3976,15 @@ export interface components {
       oddspathsRatio?: number | null;
       /** Positivelikelihoodratio */
       positiveLikelihoodRatio?: number | null;
+      /** Id */
+      id: number;
       /** Recordtype */
       recordType?: string;
       /**
-       * Variants
-       * @default []
+       * Variantcount
+       * @default 0
        */
-      variants?: components["schemas"]["SavedVariantEffectMeasurement"][];
+      variantCount?: number;
     };
     /** SavedPublicationIdentifier */
     SavedPublicationIdentifier: {
@@ -4045,38 +4083,6 @@ export interface components {
       firstName?: string | null;
       /** Lastname */
       lastName?: string | null;
-      /** Recordtype */
-      recordType?: string;
-    };
-    /**
-     * SavedVariantEffectMeasurement
-     * @description Base class for variant effect measurement view models handling saved variant effect measurements
-     */
-    SavedVariantEffectMeasurement: {
-      /** Urn */
-      urn?: string | null;
-      /** Data */
-      data: unknown;
-      /** Scoresetid */
-      scoreSetId: number;
-      /** Hgvsnt */
-      hgvsNt?: string | null;
-      /** Hgvspro */
-      hgvsPro?: string | null;
-      /** Hgvssplice */
-      hgvsSplice?: string | null;
-      /**
-       * Creationdate
-       * Format: date
-       */
-      creationDate: string;
-      /**
-       * Modificationdate
-       * Format: date
-       */
-      modificationDate: string;
-      /** Id */
-      id: number;
       /** Recordtype */
       recordType?: string;
     };
@@ -5763,13 +5769,15 @@ export interface components {
       oddspathsRatio?: number | null;
       /** Positivelikelihoodratio */
       positiveLikelihoodRatio?: number | null;
+      /** Id */
+      id: number;
       /** Recordtype */
       recordType?: string;
       /**
-       * Variants
-       * @default []
+       * Variantcount
+       * @default 0
        */
-      variants?: components["schemas"]["VariantEffectMeasurement"][];
+      variantCount?: number;
     };
     /**
      * sequenceString
@@ -8629,6 +8637,80 @@ export interface operations {
       200: {
         content: {
           "application/json": components["schemas"]["ScoreCalibrationWithScoreSetUrn"];
+        };
+      };
+      /** @description Not Found */
+      404: {
+        content: never;
+      };
+      /** @description Validation Error */
+      422: {
+        content: {
+          "application/json": components["schemas"]["HTTPValidationError"];
+        };
+      };
+    };
+  };
+  /**
+   * Get Functional Classification Variants
+   * @description Retrieve variants for a specific functional classification within a score calibration.
+   *
+   * Returns the list of variants whose scores fall within the functional classification's
+   * defined range or class. Use this endpoint when you need the full variant data for a
+   * specific classification — the main score set and calibration endpoints return only
+   * a `variant_count` summary for performance.
+   */
+  get_functional_classification_variants_api_v1_score_calibrations__urn__functional_classifications__classification_id__variants_get: {
+    parameters: {
+      header?: {
+        "x-active-roles"?: string | null;
+      };
+      path: {
+        urn: string;
+        classification_id: number;
+      };
+    };
+    responses: {
+      /** @description Successful Response */
+      200: {
+        content: {
+          "application/json": components["schemas"]["FunctionalClassificationVariants"];
+        };
+      };
+      /** @description Not Found */
+      404: {
+        content: never;
+      };
+      /** @description Validation Error */
+      422: {
+        content: {
+          "application/json": components["schemas"]["HTTPValidationError"];
+        };
+      };
+    };
+  };
+  /**
+   * Get Calibration All Variants
+   * @description Retrieve all variants across all functional classifications for a score calibration.
+   *
+   * Returns a list of variant sets, one per functional classification. Use this endpoint
+   * when you need the full variant data for an entire calibration — the main score set and
+   * calibration endpoints return only a `variant_count` summary for performance.
+   */
+  get_calibration_all_variants_api_v1_score_calibrations__urn__variants_get: {
+    parameters: {
+      header?: {
+        "x-active-roles"?: string | null;
+      };
+      path: {
+        urn: string;
+      };
+    };
+    responses: {
+      /** @description Successful Response */
+      200: {
+        content: {
+          "application/json": components["schemas"]["FunctionalClassificationVariants"][];
         };
       };
       /** @description Not Found */

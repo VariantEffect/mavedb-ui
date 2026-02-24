@@ -418,7 +418,7 @@ export default {
           [urnFieldName]: newOrder
         })
         if (response.status === 200) {
-          // TODO#XXX: Consider adding an 'updateItem' method to the item store to avoid this extra API round trip.
+          // TODO#628: Consider adding an 'updateItem' method to the item store to avoid this extra API round trip.
           // Currently using reloadItem() for safety to ensure state consistency, but we already have the updated
           // item in response.data. A carefully designed updateItem() could reduce API calls while maintaining
           // data integrity through proper validation and state management.

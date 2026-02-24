@@ -396,6 +396,34 @@
         color: #aaa;
       }
 
+      /* ── SPONSORS ── */
+      .sponsor-item {
+        display: flex;
+        align-items: flex-start;
+        gap: 16px;
+      }
+      .sponsor-logo {
+        width: 48px;
+        height: 48px;
+        border-radius: 50%;
+        flex-shrink: 0;
+        border: 1px solid #dee2e6;
+      }
+      .sponsor-name {
+        font-size: 14px;
+        font-weight: 700;
+        color: #333;
+        display: block;
+        margin-bottom: 4px;
+      }
+      .sponsor-name:hover { text-decoration: underline; }
+      .sponsor-desc {
+        font-size: 13px;
+        color: #666;
+        line-height: 1.6;
+        margin: 0;
+      }
+
       /* ── FOOTER ── */
       footer {
         border-top: 1px solid #e0e0e0;
@@ -691,6 +719,24 @@
           All data in MaveDB is made available under the
           <a href="#">CC0 1.0 Universal Public Domain Dedication</a> unless otherwise noted by the submitting authors.
         </p>
+      </div>
+
+      <!-- SPONSORS -->
+      <div class="card">
+        <h2>Sponsors</h2>
+        <div class="sponsor-item">
+          <a href="https://zulip.com/" target="_blank" rel="noopener">
+            <img src="https://zulip.com/static/images/logo/zulip-icon-512x512.png" alt="Zulip" class="sponsor-logo" />
+          </a>
+          <div>
+            <a href="https://zulip.com/" target="_blank" rel="noopener" class="sponsor-name">Zulip</a>
+            <p class="sponsor-desc">
+              Zulip is an organized team chat app designed for efficient communication.
+              MaveDB's community chat is generously hosted by Zulip as part of their
+              sponsorship program for open-source projects.
+            </p>
+          </div>
+        </div>
       </div>
     </div>
 

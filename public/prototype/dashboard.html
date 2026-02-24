@@ -1,0 +1,1644 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Dashboard — MaveDB Prototype</title>
+    <link href="https://fonts.googleapis.com/css2?family=Raleway:wght@400;500;600;700&family=Exo+2:wght@700;800;900&display=swap" rel="stylesheet" />
+    <style>
+      *,
+      *::before,
+      *::after {
+        box-sizing: border-box;
+        margin: 0;
+        padding: 0;
+      }
+
+      body {
+        font-family: 'Raleway', sans-serif;
+        background: #f7f7f7;
+        color: #333;
+        font-size: 15px;
+      }
+
+      h1, h2, h3 {
+        font-family: 'Exo 2', sans-serif;
+      }
+
+      a {
+        color: #0074d9;
+        text-decoration: none;
+      }
+      a:hover {
+        text-decoration: underline;
+      }
+
+      /* ── NAV ── */
+      nav {
+        background: #fff;
+        border-bottom: 1px solid #dee2e6;
+        position: sticky;
+        top: 0;
+        z-index: 100;
+      }
+      .nav-inner {
+        max-width: 1200px;
+        margin: 0 auto;
+        display: flex;
+        align-items: center;
+        gap: 24px;
+        padding: 0 24px;
+        height: 58px;
+      }
+      .nav-logo-img {
+        height: 42px;
+        display: block;
+        flex-shrink: 0;
+      }
+      .nav-links {
+        display: flex;
+        gap: 20px;
+        margin-left: auto;
+        list-style: none;
+        font-size: 14px;
+        font-weight: 500;
+      }
+      .nav-links a {
+        color: #444;
+      }
+      .nav-links a:hover {
+        color: #78B793;
+        text-decoration: none;
+      }
+      .nav-links a.active {
+        color: #78B793;
+        font-weight: 700;
+      }
+      .nav-add-wrap { position: relative; }
+      .nav-add-dropdown {
+        display: none;
+        position: absolute;
+        top: calc(100% + 12px);
+        right: 0;
+        width: 260px;
+        background: #fff;
+        border: 1px solid #e0e0e0;
+        border-radius: 8px;
+        box-shadow: 0 8px 24px rgba(0,0,0,0.12);
+        z-index: 200;
+        overflow: hidden;
+      }
+      .nav-add-dropdown.open { display: block; }
+      .nav-add-option {
+        display: block;
+        padding: 12px 16px;
+        border-bottom: 1px solid #f0f0f0;
+      }
+      .nav-add-option:last-child { border-bottom: none; }
+      .nav-add-option:hover { background: #f5f5f5; text-decoration: none; }
+      .nav-add-option-label { font-size: 13px; font-weight: 600; color: #333; }
+      .nav-add-option-desc { font-size: 12px; color: #888; margin-top: 2px; }
+      .nav-user {
+        background: #78B793;
+        color: #fff;
+        border-radius: 50%;
+        width: 32px;
+        height: 32px;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        font-weight: 700;
+        font-size: 13px;
+        flex-shrink: 0;
+      }
+      .nav-bell-wrap {
+        position: relative;
+        flex-shrink: 0;
+      }
+      .nav-bell {
+        width: 32px;
+        height: 32px;
+        border-radius: 50%;
+        border: none;
+        background: transparent;
+        cursor: pointer;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        font-size: 16px;
+        color: #555;
+        transition: background 0.12s;
+        position: relative;
+      }
+      .nav-bell:hover {
+        background: #f0f0f0;
+      }
+      .nav-bell-badge {
+        position: absolute;
+        top: 2px;
+        right: 2px;
+        width: 16px;
+        height: 16px;
+        background: #e53935;
+        color: #fff;
+        border-radius: 50%;
+        font-size: 10px;
+        font-weight: 700;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        pointer-events: none;
+      }
+      .nav-bell-dropdown {
+        display: none;
+        position: absolute;
+        right: 0;
+        top: calc(100% + 8px);
+        width: 340px;
+        background: #fff;
+        border: 1px solid #e0e0e0;
+        border-radius: 8px;
+        box-shadow: 0 8px 24px rgba(0,0,0,0.12);
+        z-index: 300;
+        overflow: hidden;
+      }
+      .nav-bell-dropdown.open {
+        display: block;
+      }
+      .nav-bell-dropdown-header {
+        padding: 12px 16px;
+        font-size: 12px;
+        font-weight: 700;
+        color: #aaa;
+        text-transform: uppercase;
+        letter-spacing: 0.6px;
+        border-bottom: 1px solid #f0f0f0;
+      }
+      .nav-bell-activity-list {
+        padding: 8px 0;
+      }
+      .nav-bell-activity-item {
+        padding: 9px 16px;
+        font-size: 13px;
+        color: #555;
+        display: flex;
+        flex-direction: column;
+        gap: 2px;
+        border-bottom: 1px solid #fafafa;
+      }
+      .nav-bell-activity-item:last-child {
+        border-bottom: none;
+      }
+      .nav-bell-activity-item a {
+        color: #0074d9;
+        font-weight: 600;
+      }
+      .nav-bell-activity-verb {
+        color: #888;
+      }
+      .nav-bell-activity-time {
+        font-size: 11px;
+        color: #bbb;
+      }
+
+      /* ── PAGE HEADER ── */
+      .page-header {
+        background: #fff;
+        border-bottom: 1px solid #dee2e6;
+        padding: 28px 24px 0;
+      }
+      .page-header-inner {
+        max-width: 1200px;
+        margin: 0 auto;
+      }
+      .page-title {
+        font-size: 24px;
+        font-weight: 700;
+        color: #222;
+        margin-bottom: 4px;
+      }
+      .page-subtitle {
+        font-size: 13px;
+        color: #888;
+        margin-bottom: 20px;
+      }
+
+      /* ── TABS ── */
+      .tab-bar {
+        display: flex;
+        gap: 0;
+        border-bottom: 2px solid #dee2e6;
+        margin-top: 4px;
+      }
+      .tab-item {
+        padding: 10px 20px;
+        font-size: 14px;
+        font-weight: 600;
+        color: #777;
+        cursor: pointer;
+        border-bottom: 2px solid transparent;
+        margin-bottom: -2px;
+        background: none;
+        border-top: none;
+        border-left: none;
+        border-right: none;
+        font-family: 'Raleway', sans-serif;
+        transition: color 0.15s;
+        display: flex;
+        align-items: center;
+        gap: 7px;
+      }
+      .tab-item:hover {
+        color: #78B793;
+      }
+      .tab-item.active {
+        color: #78B793;
+        border-bottom-color: #78B793;
+      }
+      .tab-count {
+        font-size: 11px;
+        font-weight: 700;
+        background: #eef0fb;
+        color: #78B793;
+        border-radius: 10px;
+        padding: 1px 7px;
+      }
+      .tab-item.active .tab-count {
+        background: #78B793;
+        color: #222;
+      }
+
+      /* ── MAIN LAYOUT ── */
+      .main {
+        max-width: 1200px;
+        margin: 32px auto;
+        padding: 0 24px;
+      }
+
+      /* ── PANEL ── */
+      .panel {
+        display: none;
+      }
+      .panel.active {
+        display: block;
+      }
+
+      /* ── TOOLBAR ── */
+      .toolbar {
+        display: flex;
+        align-items: center;
+        gap: 10px;
+        margin-bottom: 16px;
+        flex-wrap: wrap;
+      }
+      .toolbar-right {
+        margin-left: auto;
+        display: flex;
+        gap: 10px;
+        align-items: center;
+      }
+      .search-input-small {
+        border: 1.5px solid #dee2e6;
+        border-radius: 6px;
+        padding: 7px 12px;
+        font-family: 'Raleway', sans-serif;
+        font-size: 13px;
+        color: #333;
+        outline: none;
+        width: 240px;
+        transition: border-color 0.15s;
+      }
+      .search-input-small:focus {
+        border-color: #78B793;
+      }
+      .search-input-small::placeholder {
+        color: #bbb;
+      }
+      .btn {
+        display: inline-flex;
+        align-items: center;
+        gap: 6px;
+        padding: 8px 16px;
+        border-radius: 5px;
+        font-family: inherit;
+        font-size: 13px;
+        font-weight: 600;
+        cursor: pointer;
+        border: none;
+        text-decoration: none;
+        transition: background 0.15s;
+      }
+      .btn-primary {
+        background: #F8971D;
+        color: #222;
+      }
+      .btn-primary:hover {
+        background: #d97510;
+        text-decoration: none;
+        color: #fff;
+      }
+      .btn-outline {
+        background: #fff;
+        color: #78B793;
+        border: 1.5px solid #78B793;
+      }
+      .btn-outline:hover {
+        background: #C8E4C6;
+        text-decoration: none;
+      }
+      .btn-sm {
+        padding: 5px 12px;
+        font-size: 12px;
+      }
+
+      /* ── FILTER CHIPS ── */
+      .filter-chips {
+        display: flex;
+        gap: 6px;
+        flex-wrap: wrap;
+        align-items: center;
+      }
+      .filter-label {
+        font-size: 12px;
+        font-weight: 600;
+        color: #aaa;
+        text-transform: uppercase;
+        letter-spacing: 0.4px;
+      }
+      .filter-chip {
+        padding: 4px 12px;
+        border-radius: 14px;
+        border: 1.5px solid #dee2e6;
+        background: #fff;
+        font-family: 'Raleway', sans-serif;
+        font-size: 12px;
+        font-weight: 600;
+        color: #666;
+        cursor: pointer;
+        transition: all 0.12s;
+      }
+      .filter-chip:hover {
+        border-color: #78B793;
+        color: #78B793;
+      }
+      .filter-chip.active {
+        background: #eef0fb;
+        border-color: #78B793;
+        color: #78B793;
+      }
+      .filter-chip--experiment {
+        display: none;
+        align-items: center;
+        gap: 6px;
+        background: #78B793;
+        border-color: #78B793;
+        color: #222;
+        cursor: default;
+      }
+      .filter-chip--experiment.visible {
+        display: inline-flex;
+      }
+      .filter-chip--experiment:hover {
+        background: #78B793;
+        border-color: #78B793;
+        color: #222;
+      }
+      .filter-chip--experiment-dismiss {
+        font-size: 14px;
+        line-height: 1;
+        opacity: 0.7;
+        cursor: pointer;
+      }
+      .filter-chip--experiment-dismiss:hover {
+        opacity: 1;
+      }
+
+      /* ── TABLE ── */
+      .data-table {
+        width: 100%;
+        border-collapse: collapse;
+        font-size: 13.5px;
+        background: #fff;
+        border-radius: 8px;
+        overflow: hidden;
+        border: 1px solid #dee2e6;
+      }
+      .data-table thead th {
+        text-align: left;
+        font-size: 11px;
+        font-weight: 700;
+        text-transform: uppercase;
+        letter-spacing: 0.6px;
+        color: #999;
+        padding: 10px 16px;
+        background: #fafafa;
+        border-bottom: 1px solid #dee2e6;
+      }
+      .data-table tbody tr {
+        border-bottom: 1px solid #f0f0f0;
+        transition: background 0.1s;
+      }
+      .data-table tbody tr:last-child {
+        border-bottom: none;
+      }
+      .data-table tbody tr:hover {
+        background: #f7f8fe;
+      }
+      .data-table td {
+        padding: 11px 16px;
+        vertical-align: middle;
+      }
+      .row-title {
+        font-weight: 600;
+        color: #78B793;
+      }
+      .row-title:hover {
+        text-decoration: underline;
+      }
+      .row-urn {
+        font-size: 12px;
+        color: #aaa;
+        font-family: monospace;
+        margin-top: 2px;
+      }
+      .row-meta {
+        display: flex;
+        gap: 6px;
+        flex-wrap: wrap;
+        margin-top: 4px;
+      }
+
+      /* ── STATUS BADGE ── */
+      .status-badge {
+        display: inline-flex;
+        align-items: center;
+        gap: 4px;
+        padding: 3px 9px;
+        border-radius: 12px;
+        font-size: 11px;
+        font-weight: 700;
+        white-space: nowrap;
+      }
+      .status-badge::before {
+        content: '';
+        display: inline-block;
+        width: 6px;
+        height: 6px;
+        border-radius: 50%;
+      }
+      .status-published {
+        background: #e8f5e9;
+        color: #2e7d32;
+      }
+      .status-published::before {
+        background: #4caf50;
+      }
+      .status-unpublished {
+        background: #fff3e0;
+        color: #e65100;
+      }
+      .status-unpublished::before {
+        background: #ff9800;
+      }
+
+      /* ── CHIP VARIANTS ── */
+      .chip-tag {
+        display: inline-block;
+        padding: 2px 8px;
+        border-radius: 10px;
+        font-size: 11px;
+        font-weight: 600;
+        border: 1px solid;
+      }
+      .chip-tag--gene {
+        background: #e8f5e9;
+        color: #2e7d32;
+        border-color: #a5d6a7;
+      }
+      .chip-tag--organism {
+        background: #fff3e0;
+        color: #e65100;
+        border-color: #ffcc80;
+      }
+      .chip-tag--cal {
+        background: #f3e5f5;
+        color: #6a1b9a;
+        border-color: #ce93d8;
+      }
+      .chip-tag--meta {
+        background: #ede7f6;
+        color: #4527a0;
+        border-color: #b39ddb;
+      }
+      .chip-tag--superseded {
+        background: #f5f5f5;
+        color: #9e9e9e;
+        border-color: #e0e0e0;
+      }
+      .row--superseded td {
+        opacity: 0.6;
+      }
+
+      /* ── ROW DESCRIPTION ── */
+      .row-desc {
+        font-size: 12px;
+        color: #999;
+        margin-top: 2px;
+        line-height: 1.4;
+      }
+
+      /* ── DATE ── */
+      .date-cell {
+        color: #888;
+        font-size: 13px;
+        white-space: nowrap;
+      }
+
+      /* ── ROW ACTIONS (text links, fade on hover) ── */
+      .row-actions {
+        display: flex;
+        gap: 8px;
+        align-items: center;
+        opacity: 0;
+        transition: opacity 0.12s;
+      }
+      .data-table tbody tr:hover .row-actions {
+        opacity: 1;
+      }
+      .action-link {
+        font-size: 12px;
+        font-weight: 600;
+        color: #78B793;
+      }
+      .action-link:hover {
+        text-decoration: underline;
+      }
+      .action-link--danger {
+        color: #c62828;
+      }
+
+      /* ── EMPTY STATE ── */
+      .empty-state {
+        background: #fff;
+        border: 1px dashed #dee2e6;
+        border-radius: 8px;
+        padding: 52px 24px;
+        text-align: center;
+        color: #aaa;
+      }
+      .empty-state-icon {
+        font-size: 36px;
+        margin-bottom: 14px;
+      }
+      .empty-state h3 {
+        font-size: 16px;
+        font-weight: 700;
+        color: #555;
+        margin-bottom: 6px;
+      }
+      .empty-state p {
+        font-size: 13px;
+        color: #999;
+        margin-bottom: 20px;
+        line-height: 1.6;
+      }
+
+      /* ── COLLECTION CARDS ── */
+      .collection-grid {
+        display: grid;
+        grid-template-columns: repeat(3, 1fr);
+        gap: 16px;
+      }
+      .collection-card {
+        background: #fff;
+        border: 1px solid #dee2e6;
+        border-radius: 8px;
+        padding: 20px;
+        transition: box-shadow 0.15s, border-color 0.15s;
+        display: flex;
+        flex-direction: column;
+      }
+      .collection-card-actions {
+        display: flex;
+        gap: 4px;
+        align-items: center;
+        padding-top: 12px;
+        margin-top: 12px;
+        border-top: 1px solid #f0f0f0;
+      }
+      .collection-card:hover {
+        border-color: #A1D8C8;
+        box-shadow: 0 2px 12px rgba(63, 81, 181, 0.08);
+      }
+      .collection-card--new {
+        border: 2px dashed #dee2e6;
+        background: transparent;
+        display: flex;
+        flex-direction: column;
+        align-items: center;
+        justify-content: center;
+        gap: 8px;
+        padding: 32px 20px;
+        color: #aaa;
+        font-size: 13px;
+        cursor: pointer;
+        transition: border-color 0.12s, color 0.12s;
+        text-decoration: none;
+      }
+      .collection-card--new:hover {
+        border-color: #78B793;
+        color: #78B793;
+        box-shadow: none;
+      }
+      .collection-card--new-icon {
+        font-size: 28px;
+        line-height: 1;
+        color: #ccc;
+      }
+      .collection-card--new:hover .collection-card--new-icon {
+        color: #78B793;
+      }
+      .collection-card-title {
+        font-size: 14px;
+        font-weight: 700;
+        color: #78B793;
+        margin-bottom: 6px;
+        line-height: 1.3;
+      }
+      .collection-card-title:hover {
+        text-decoration: underline;
+      }
+      .collection-card-desc {
+        font-size: 12.5px;
+        color: #777;
+        line-height: 1.55;
+        margin-bottom: 14px;
+      }
+      .collection-card-meta {
+        display: flex;
+        align-items: center;
+        gap: 10px;
+        font-size: 12px;
+        color: #aaa;
+        border-top: 1px solid #f0f0f0;
+        padding-top: 12px;
+        margin-top: auto;
+        flex-wrap: wrap;
+      }
+      .collection-card-count {
+        font-weight: 700;
+        color: #78B793;
+      }
+      .collection-visibility {
+        display: inline-flex;
+        align-items: center;
+        gap: 4px;
+        font-size: 11px;
+        font-weight: 600;
+        margin-left: auto;
+      }
+      .collection-visibility--public {
+        color: #2e7d32;
+      }
+      .collection-visibility--private {
+        color: #888;
+      }
+
+      /* ── CALIBRATION TAG BADGES ── */
+      .cal-tag {
+        display: inline-block;
+        padding: 2px 9px;
+        border-radius: 12px;
+        font-size: 11px;
+        font-weight: 700;
+        border: 1px solid;
+        white-space: nowrap;
+      }
+      .cal-tag--yes {
+        background: #e8f5e9;
+        color: #2e7d32;
+        border-color: #a5d6a7;
+      }
+      .cal-tag--no {
+        background: #ffebee;
+        color: #c62828;
+        border-color: #ef9a9a;
+      }
+      .cal-tag--blue {
+        background: #e3f2fd;
+        color: #1565c0;
+        border-color: #90caf9;
+      }
+      .cal-tag--purple {
+        background: #f3e5f5;
+        color: #6a1b9a;
+        border-color: #ce93d8;
+      }
+
+      /* ── EXPANDER ── */
+      .expander-btn {
+        background: none;
+        border: 1px solid #dee2e6;
+        border-radius: 4px;
+        width: 22px;
+        height: 22px;
+        cursor: pointer;
+        font-size: 11px;
+        color: #888;
+        display: inline-flex;
+        align-items: center;
+        justify-content: center;
+        transition: all 0.12s;
+        font-family: monospace;
+      }
+      .expander-btn:hover {
+        border-color: #78B793;
+        color: #78B793;
+      }
+      .expander-btn.open {
+        background: #eef0fb;
+        border-color: #78B793;
+        color: #78B793;
+      }
+      .expansion-row td {
+        background: #fafbff;
+        border-bottom: 1px solid #dee2e6;
+        padding: 14px 20px 14px 48px;
+      }
+      .expansion-content {
+        font-size: 13px;
+        color: #555;
+      }
+      .cal-exp-table {
+        width: 100%;
+        border-collapse: collapse;
+        border: 1px solid #dee2e6;
+        font-size: 13px;
+      }
+      .cal-exp-table th,
+      .cal-exp-table td {
+        padding: 8px 16px;
+        border: 1px solid #dee2e6;
+        text-align: center;
+      }
+      .cal-exp-table td:first-child {
+        text-align: left;
+        font-weight: 600;
+        background: #f5f5f5;
+        color: #444;
+        width: 190px;
+      }
+      .cal-exp-title td {
+        background: #f0f0f0;
+        font-weight: 600;
+        text-align: center;
+        color: #333;
+      }
+      .cal-exp-baseline td {
+        text-align: center;
+        color: #555;
+        font-size: 12.5px;
+      }
+      .cal-exp-range-header th {
+        font-weight: 600;
+        background: #fafafa;
+        color: #444;
+      }
+      .cal-exp-cell {
+        display: inline-block;
+        padding: 3px 14px;
+        border-radius: 3px;
+        font-weight: 700;
+        font-size: 12.5px;
+        color: #fff;
+      }
+      .cal-exp-cell--normal   { background: #2222cc; }
+      .cal-exp-cell--abnormal { background: #e53935; }
+      .cal-exp-cell--bs       { background: #5b9fa3; }
+      .cal-exp-cell--ps       { background: #8b3232; }
+      .cal-exp-interval {
+        font-family: monospace;
+        font-size: 12px;
+      }
+      .cal-exp-footer {
+        margin-top: 8px;
+        font-size: 11px;
+        color: #999;
+        display: flex;
+        gap: 6px;
+        align-items: center;
+        flex-wrap: wrap;
+      }
+      .cal-exp-footer-sep { color: #ccc; }
+
+      /* ── ROLE BADGE ── */
+      .role-badge {
+        display: inline-block;
+        padding: 2px 8px;
+        border-radius: 10px;
+        font-size: 11px;
+        font-weight: 700;
+        border: 1px solid;
+      }
+      .role-badge--owner {
+        background: #e8f0fe;
+        color: #1a56a0;
+        border-color: #90b8f8;
+      }
+      .role-badge--contributor {
+        background: #f3f4f8;
+        color: #666;
+        border-color: #ccc;
+      }
+
+      /* ── STAT CARDS ── */
+      /* ── ACTIVITY FEED ── */
+      .activity-section {
+        background: #fff;
+        border: 1px solid #e0e0e0;
+        border-radius: 8px;
+        padding: 16px 20px;
+        margin-bottom: 28px;
+      }
+      .activity-header {
+        font-size: 11px;
+        font-weight: 700;
+        color: #aaa;
+        text-transform: uppercase;
+        letter-spacing: 0.6px;
+        margin-bottom: 12px;
+      }
+      .activity-list {
+        display: flex;
+        flex-direction: column;
+        gap: 9px;
+      }
+      .activity-item {
+        display: flex;
+        align-items: baseline;
+        gap: 8px;
+        font-size: 13px;
+        color: #555;
+      }
+      .activity-dot {
+        width: 7px;
+        height: 7px;
+        border-radius: 50%;
+        background: #c5cae9;
+        flex-shrink: 0;
+        position: relative;
+        top: 1px;
+      }
+      .activity-item a {
+        color: #0074d9;
+        font-weight: 600;
+      }
+      .activity-time {
+        color: #bbb;
+        font-size: 12px;
+        margin-left: auto;
+        white-space: nowrap;
+        padding-left: 16px;
+      }
+
+      /* ── UNPUBLISHED ROW ACCENT ── */
+      .row--unpublished > td:first-child {
+        border-left: 3px solid #fb8c00;
+      }
+      .date-cell--updated {
+        color: #aaa;
+        font-size: 12px;
+        font-style: italic;
+      }
+
+      /* ── FOOTER ── */
+      footer {
+        border-top: 1px solid #e0e0e0;
+        background: #fff;
+        padding: 20px 24px;
+        margin-top: 48px;
+      }
+      .footer-inner {
+        max-width: 1200px;
+        margin: 0 auto;
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+        font-size: 13px;
+        color: #888;
+      }
+      .footer-inner a {
+        color: #0074d9;
+      }
+      .footer-links {
+        display: flex;
+        gap: 20px;
+      }
+
+      /* ── PROTOTYPE BANNER ── */
+      .proto-banner { background: #FBDA68; color: #333; text-align: center; padding: 8px 24px; font-size: 13px; font-family: 'Raleway', sans-serif; font-weight: 500; position: sticky; top: 0; z-index: 9999; letter-spacing: 0.1px; }
+      .proto-banner a { color: #555; text-decoration: underline; }
+      .proto-banner strong { font-weight: 700; }
+        </style>
+  </head>
+  <body>
+    <div class="proto-banner">
+      <strong>Prototype</strong> — This is a design prototype and is not intended for use. Data shown is fictional. The real MaveDB is at <a href="https://mavedb.org" target="_blank">mavedb.org</a>.
+    </div>
+    <!-- NAV -->
+    <nav>
+      <div class="nav-inner">
+        <a href="./index.html"><img src="./logo-mavedb.png" alt="MaveDB" class="nav-logo-img" /></a>
+        <ul class="nav-links">
+          <li><a href="#" class="active">Dashboard</a></li>
+          <li><a href="./mavemd.html">MaveMD</a></li>
+          <li><a href="./search.html">Search</a></li>
+          <li class="nav-add-wrap">
+            <a href="#" onclick="toggleAddMenu(event)" style="display:flex;align-items:center;gap:4px;">Add Dataset <svg width="10" height="10" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><polyline points="6 9 12 15 18 9"/></svg></a>
+            <div id="nav-add-dropdown" class="nav-add-dropdown">
+              <a href="./add-experiment.html" class="nav-add-option">
+                <div class="nav-add-option-label">New Experiment</div>
+                <div class="nav-add-option-desc">Group related score sets under a shared experiment</div>
+              </a>
+              <a href="./add-score-set.html" class="nav-add-option">
+                <div class="nav-add-option-label">New Score Set</div>
+                <div class="nav-add-option-desc">Upload variant scores and metadata</div>
+              </a>
+            </div>
+          </li>
+          <li><a href="./about.html">About</a></li>
+          <li><a href="./help.html">Help</a></li>
+        </ul>
+        <div class="nav-bell-wrap">
+          <button class="nav-bell" onclick="toggleBell(event)" title="Recent activity">
+            <svg width="17" height="17" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M18 8A6 6 0 0 0 6 8c0 7-3 9-3 9h18s-3-2-3-9"/><path d="M13.73 21a2 2 0 0 1-3.46 0"/></svg>
+            <span class="nav-bell-badge">5</span>
+          </button>
+          <div id="nav-bell-dropdown" class="nav-bell-dropdown">
+            <div class="nav-bell-dropdown-header">Recent Activity</div>
+            <div class="nav-bell-activity-list">
+              <div class="nav-bell-activity-item">
+                <span><a href="#">CHEK2 Kinase Activity Assay – Draft</a> <span class="nav-bell-activity-verb">edited by you</span></span>
+                <span class="nav-bell-activity-time">2 days ago</span>
+              </div>
+              <div class="nav-bell-activity-item">
+                <span><a href="#">KCNQ4 Variant Effect – Draft</a> <span class="nav-bell-activity-verb">calibration created by you</span></span>
+                <span class="nav-bell-activity-time">5 days ago</span>
+              </div>
+              <div class="nav-bell-activity-item">
+                <span><a href="#">BRCA1 Combined Functional Meta-analysis</a> <span class="nav-bell-activity-verb">published</span></span>
+                <span class="nav-bell-activity-time">Nov 5, 2024</span>
+              </div>
+              <div class="nav-bell-activity-item">
+                <span><a href="#">TP53 Saturation Genome Editing Panel</a> <span class="nav-bell-activity-verb">you were added as a contributor</span></span>
+                <span class="nav-bell-activity-time">Oct 28, 2024</span>
+              </div>
+              <div class="nav-bell-activity-item">
+                <span><a href="#">BRCA1 SGE Exon 20 – ClinVar</a> <span class="nav-bell-activity-verb">calibration published</span></span>
+                <span class="nav-bell-activity-time">Oct 14, 2024</span>
+              </div>
+            </div>
+          </div>
+        </div>
+        <div class="nav-user">B</div>
+      </div>
+    </nav>
+
+    <!-- PAGE HEADER + TAB BAR -->
+    <div class="page-header">
+      <div class="page-header-inner">
+        <h1 class="page-title">My Dashboard</h1>
+        <p class="page-subtitle">Manage your uploaded datasets, collections, and calibrations</p>
+        <div class="tab-bar">
+          <button class="tab-item active" onclick="switchTab('score-sets', this)">
+            Score Sets <span class="tab-count">14</span>
+          </button>
+          <button class="tab-item" onclick="switchTab('experiments', this)">
+            Experiments <span class="tab-count">6</span>
+          </button>
+          <button class="tab-item" onclick="switchTab('collections', this)">
+            Collections <span class="tab-count">3</span>
+          </button>
+          <button class="tab-item" onclick="switchTab('calibrations', this)">
+            Calibrations <span class="tab-count">2</span>
+          </button>
+        </div>
+      </div>
+    </div>
+
+    <main class="main">
+
+      <!-- ── SCORE SETS PANEL ── -->
+      <div id="panel-score-sets" class="panel active">
+        <div class="toolbar">
+          <div class="filter-chips">
+            <span class="filter-label">Show:</span>
+            <button class="filter-chip active" onclick="toggleFilter(this)">All</button>
+            <button class="filter-chip" onclick="toggleFilter(this)">Published</button>
+            <button class="filter-chip" onclick="toggleFilter(this)">Unpublished</button>
+            <button class="filter-chip" onclick="toggleFilter(this)">Owned</button>
+            <button class="filter-chip" onclick="toggleFilter(this)">Contributed</button>
+            <button class="filter-chip" onclick="toggleFilter(this)">Meta-analysis</button>
+            <button class="filter-chip" onclick="toggleFilter(this)">Superseded</button>
+            <span id="experiment-filter-chip" class="filter-chip filter-chip--experiment">
+              <span id="experiment-filter-label"></span>
+              <span class="filter-chip--experiment-dismiss" onclick="clearExperimentFilter()">×</span>
+            </span>
+          </div>
+          <div class="toolbar-right">
+            <input class="search-input-small" type="text" placeholder="Search score sets…" />
+            <a href="#" class="btn btn-primary">+ Add Score Set</a>
+          </div>
+        </div>
+        <table class="data-table">
+          <thead>
+            <tr>
+              <th style="width: 38%">Score Set</th>
+              <th>Targets</th>
+              <th>Role</th>
+              <th>Status</th>
+              <th>Published</th>
+              <th></th>
+            </tr>
+          </thead>
+          <tbody>
+            <tr>
+              <td>
+                <a href="#" class="row-title">BRCA1 SGE Exon 20 – Replicate 1</a>
+                <div class="row-desc">Saturation genome editing of BRCA1 exon 20 assessing variant impact on protein function via a cell survival readout.</div>
+              </td>
+              <td>
+                <div class="row-meta">
+                  <span class="chip-tag chip-tag--gene">BRCA1</span>
+                  <span class="chip-tag chip-tag--organism">Homo sapiens</span>
+                </div>
+              </td>
+              <td><span class="role-badge role-badge--owner">Owner</span></td>
+              <td><span class="status-badge status-published">Published</span></td>
+              <td class="date-cell">Jan 12, 2024</td>
+              <td><div class="row-actions">
+                <a href="#" class="action-link">View</a>
+              </div></td>
+            </tr>
+            <tr>
+              <td>
+                <a href="#" class="row-title">BRCA1 SGE Exon 20 – Replicate 2</a>
+                <div class="row-desc">Independent biological replicate of the BRCA1 exon 20 saturation genome editing screen.</div>
+              </td>
+              <td>
+                <div class="row-meta">
+                  <span class="chip-tag chip-tag--gene">BRCA1</span>
+                  <span class="chip-tag chip-tag--organism">Homo sapiens</span>
+                </div>
+              </td>
+              <td><span class="role-badge role-badge--owner">Owner</span></td>
+              <td><span class="status-badge status-published">Published</span></td>
+              <td class="date-cell">Jan 12, 2024</td>
+              <td><div class="row-actions">
+                <a href="#" class="action-link">View</a>
+              </div></td>
+            </tr>
+            <tr>
+              <td>
+                <a href="#" class="row-title">TP53 Saturation Genome Editing – Functional Score</a>
+                <div class="row-desc">Deep mutational scan of TP53 measuring functional scores across all possible single amino acid substitutions.</div>
+              </td>
+              <td>
+                <div class="row-meta">
+                  <span class="chip-tag chip-tag--gene">TP53</span>
+                  <span class="chip-tag chip-tag--organism">Homo sapiens</span>
+                </div>
+              </td>
+              <td><span class="role-badge role-badge--contributor">Contributor</span></td>
+              <td><span class="status-badge status-published">Published</span></td>
+              <td class="date-cell">Mar 4, 2024</td>
+              <td><div class="row-actions">
+                <a href="#" class="action-link">View</a>
+              </div></td>
+            </tr>
+            <tr>
+              <td>
+                <a href="#" class="row-title">KCNQ4 Missense Variant Effect Map</a>
+                <div class="row-desc">Comprehensive missense variant effect map for KCNQ4 using a heterologous expression assay in Xenopus oocytes.</div>
+              </td>
+              <td>
+                <div class="row-meta">
+                  <span class="chip-tag chip-tag--gene">KCNQ4</span>
+                  <span class="chip-tag chip-tag--organism">Homo sapiens</span>
+                </div>
+              </td>
+              <td><span class="role-badge role-badge--owner">Owner</span></td>
+              <td><span class="status-badge status-published">Published</span></td>
+              <td class="date-cell">Jun 22, 2023</td>
+              <td><div class="row-actions">
+                <a href="#" class="action-link">View</a>
+              </div></td>
+            </tr>
+            <tr>
+              <td>
+                <a href="#" class="row-title">SCN5A Channel Function – Heterologous Expression</a>
+                <div class="row-desc">Variant effect map for SCN5A sodium channel function measured in a heterologous expression system.</div>
+              </td>
+              <td>
+                <div class="row-meta">
+                  <span class="chip-tag chip-tag--gene">SCN5A</span>
+                  <span class="chip-tag chip-tag--organism">Homo sapiens</span>
+                </div>
+              </td>
+              <td><span class="role-badge role-badge--contributor">Contributor</span></td>
+              <td><span class="status-badge status-published">Published</span></td>
+              <td class="date-cell">Sep 3, 2024</td>
+              <td><div class="row-actions">
+                <a href="#" class="action-link">View</a>
+              </div></td>
+            </tr>
+            <tr>
+              <td>
+                <a href="#" class="row-title">PTEN Abundance – Yeast Two-Hybrid</a>
+                <div class="row-desc">Yeast two-hybrid assay measuring the effect of PTEN missense variants on protein abundance and stability.</div>
+              </td>
+              <td>
+                <div class="row-meta">
+                  <span class="chip-tag chip-tag--gene">PTEN</span>
+                  <span class="chip-tag chip-tag--organism">Homo sapiens</span>
+                </div>
+              </td>
+              <td><span class="role-badge role-badge--contributor">Contributor</span></td>
+              <td><span class="status-badge status-published">Published</span></td>
+              <td class="date-cell">Aug 15, 2023</td>
+              <td><div class="row-actions">
+                <a href="#" class="action-link">View</a>
+              </div></td>
+            </tr>
+            <tr class="row--unpublished">
+              <td>
+                <a href="#" class="row-title">GCK Missense Variant Functional Classification</a>
+                <div class="row-desc">Deep mutational scan of the GCK kinase domain classifying missense variants by enzymatic activity.</div>
+              </td>
+              <td>
+                <div class="row-meta">
+                  <span class="chip-tag chip-tag--gene">GCK</span>
+                  <span class="chip-tag chip-tag--organism">Homo sapiens</span>
+                </div>
+              </td>
+              <td><span class="role-badge role-badge--owner">Owner</span></td>
+              <td><span class="status-badge status-unpublished">Unpublished</span></td>
+              <td class="date-cell date-cell--updated">Updated Dec 3, 2024</td>
+              <td><div class="row-actions">
+                <a href="#" class="action-link">View</a>
+                <a href="#" class="action-link">Edit</a>
+              </div></td>
+            </tr>
+            <tr class="row--unpublished">
+              <td>
+                <a href="#" class="row-title">CHEK2 Kinase Activity Assay – Draft</a>
+                <div class="row-desc">Draft score set measuring CHEK2 kinase activity across missense variants using an in vitro phosphorylation assay.</div>
+              </td>
+              <td>
+                <div class="row-meta">
+                  <span class="chip-tag chip-tag--gene">CHEK2</span>
+                  <span class="chip-tag chip-tag--organism">Homo sapiens</span>
+                </div>
+              </td>
+              <td><span class="role-badge role-badge--owner">Owner</span></td>
+              <td><span class="status-badge status-unpublished">Unpublished</span></td>
+              <td class="date-cell date-cell--updated">Updated Jan 18, 2025</td>
+              <td><div class="row-actions">
+                <a href="#" class="action-link">View</a>
+                <a href="#" class="action-link">Edit</a>
+              </div></td>
+            </tr>
+            <!-- Meta-analysis example -->
+            <tr>
+              <td>
+                <a href="#" class="row-title">BRCA1 Combined Functional Meta-analysis</a>
+                <div class="row-desc">Meta-analysis combining multiple BRCA1 SGE datasets to derive consensus functional scores for clinical interpretation.</div>
+              </td>
+              <td>
+                <div class="row-meta">
+                  <span class="chip-tag chip-tag--gene">BRCA1</span>
+                  <span class="chip-tag chip-tag--meta">Meta-analysis</span>
+                </div>
+              </td>
+              <td><span class="role-badge role-badge--owner">Owner</span></td>
+              <td><span class="status-badge status-published">Published</span></td>
+              <td class="date-cell">Nov 5, 2024</td>
+              <td><div class="row-actions">
+                <a href="#" class="action-link">View</a>
+              </div></td>
+            </tr>
+            <!-- Superseded example -->
+            <tr class="row--superseded">
+              <td>
+                <a href="#" class="row-title">KCNQ4 Missense Variant Effect Map – v1</a>
+                <div class="row-desc">Initial KCNQ4 missense variant effect map; superseded by an updated analysis with expanded variant coverage.</div>
+              </td>
+              <td>
+                <div class="row-meta">
+                  <span class="chip-tag chip-tag--gene">KCNQ4</span>
+                  <span class="chip-tag chip-tag--superseded">Superseded</span>
+                </div>
+              </td>
+              <td><span class="role-badge role-badge--owner">Owner</span></td>
+              <td><span class="status-badge status-published">Published</span></td>
+              <td class="date-cell">Mar 8, 2022</td>
+              <td><div class="row-actions">
+                <a href="#" class="action-link">View</a>
+              </div></td>
+            </tr>
+          </tbody>
+        </table>
+        <div style="margin-top: 12px; font-size: 13px; color: #aaa; text-align: right">Showing 11 of 16 score sets &mdash; <a href="#" style="color: #0074d9; font-weight: 600;">View all</a></div>
+      </div>
+
+      <!-- ── EXPERIMENTS PANEL ── -->
+      <div id="panel-experiments" class="panel">
+        <div class="toolbar">
+          <div class="filter-chips">
+            <span class="filter-label">Show:</span>
+            <button class="filter-chip active" onclick="toggleFilter(this)">All</button>
+            <button class="filter-chip" onclick="toggleFilter(this)">Published</button>
+            <button class="filter-chip" onclick="toggleFilter(this)">Unpublished</button>
+            <button class="filter-chip" onclick="toggleFilter(this)">Owned</button>
+            <button class="filter-chip" onclick="toggleFilter(this)">Contributed</button>
+          </div>
+          <div class="toolbar-right">
+            <input class="search-input-small" type="text" placeholder="Search experiments…" />
+            <a href="#" class="btn btn-primary">+ Add Experiment</a>
+          </div>
+        </div>
+        <table class="data-table">
+          <thead>
+            <tr>
+              <th style="width: 40%">Experiment</th>
+              <th>Score Sets</th>
+              <th>Role</th>
+              <th>Status</th>
+              <th>Created</th>
+              <th></th>
+            </tr>
+          </thead>
+          <tbody>
+            <tr>
+              <td>
+                <a href="#" class="row-title">BRCA1 SGE – Exon 20 Saturation Editing</a>
+                <div class="row-desc">Saturation genome editing of BRCA1 exon 20 comprising multiple biological replicates and functional readouts.</div>
+              </td>
+              <td class="date-cell">3 score sets</td>
+              <td><span class="role-badge role-badge--owner">Owner</span></td>
+              <td><span class="status-badge status-published">Published</span></td>
+              <td class="date-cell">Jan 2024</td>
+              <td><div class="row-actions">
+                <a href="#" class="action-link">View</a>
+              </div></td>
+            </tr>
+            <tr>
+              <td>
+                <a href="#" class="row-title">TP53 Saturation Genome Editing Panel</a>
+                <div class="row-desc">Large-scale SGE panel characterizing TP53 variant effects across multiple functional domains and cell lines.</div>
+              </td>
+              <td class="date-cell">9 score sets</td>
+              <td><span class="role-badge role-badge--contributor">Contributor</span></td>
+              <td><span class="status-badge status-published">Published</span></td>
+              <td class="date-cell">Mar 2024</td>
+              <td><div class="row-actions">
+                <a href="#" class="action-link">View</a>
+              </div></td>
+            </tr>
+            <tr>
+              <td>
+                <a href="#" class="row-title">KCNQ4 Comprehensive Variant Screen</a>
+                <div class="row-desc">Comprehensive screen of KCNQ4 missense variants across two independent functional assays.</div>
+              </td>
+              <td class="date-cell">2 score sets</td>
+              <td><span class="role-badge role-badge--owner">Owner</span></td>
+              <td><span class="status-badge status-published">Published</span></td>
+              <td class="date-cell">Jun 2023</td>
+              <td><div class="row-actions">
+                <a href="#" class="action-link">View</a>
+              </div></td>
+            </tr>
+            <tr class="row--unpublished">
+              <td>
+                <a href="#" class="row-title">GCK Kinase Domain DMS – Draft</a>
+                <div class="row-desc">Draft deep mutational scan of the GCK kinase domain measuring catalytic activity across missense variants.</div>
+              </td>
+              <td class="date-cell">1 score set</td>
+              <td><span class="role-badge role-badge--owner">Owner</span></td>
+              <td><span class="status-badge status-unpublished">Unpublished</span></td>
+              <td class="date-cell">Nov 2024</td>
+              <td><div class="row-actions">
+                <a href="#" class="action-link">View</a>
+                <a href="#" class="action-link">Edit</a>
+              </div></td>
+            </tr>
+            <tr class="row--unpublished">
+              <td>
+                <a href="#" class="row-title">CHEK2 Functional Assay</a>
+                <div class="row-desc">Functional characterization of CHEK2 variants using kinase activity and protein stability assays.</div>
+              </td>
+              <td class="date-cell">2 score sets</td>
+              <td><span class="role-badge role-badge--owner">Owner</span></td>
+              <td><span class="status-badge status-unpublished">Unpublished</span></td>
+              <td class="date-cell">Jan 2025</td>
+              <td><div class="row-actions">
+                <a href="#" class="action-link">View</a>
+                <a href="#" class="action-link">Edit</a>
+              </div></td>
+            </tr>
+            <tr>
+              <td>
+                <a href="#" class="row-title">SCN5A Sodium Channel Activity Panel</a>
+                <div class="row-desc">Functional panel assessing SCN5A variant effects on sodium channel activity in a heterologous expression system.</div>
+              </td>
+              <td class="date-cell">1 score set</td>
+              <td><span class="role-badge role-badge--contributor">Contributor</span></td>
+              <td><span class="status-badge status-published">Published</span></td>
+              <td class="date-cell">Sep 2024</td>
+              <td><div class="row-actions">
+                <a href="#" class="action-link">View</a>
+              </div></td>
+            </tr>
+          </tbody>
+        </table>
+        <div style="margin-top: 12px; font-size: 13px; color: #aaa; text-align: right">Showing 6 of 6 experiments &mdash; <a href="#" style="color: #0074d9; font-weight: 600;">View all</a></div>
+      </div>
+
+      <!-- ── COLLECTIONS PANEL ── -->
+      <div id="panel-collections" class="panel">
+        <div class="toolbar">
+          <div class="filter-chips">
+            <span class="filter-label">Show:</span>
+            <button class="filter-chip active" onclick="toggleFilter(this)">All</button>
+            <button class="filter-chip" onclick="toggleFilter(this)">Public</button>
+            <button class="filter-chip" onclick="toggleFilter(this)">Private</button>
+          </div>
+          <div class="toolbar-right">
+            <a href="#" class="btn btn-primary">+ New Collection</a>
+          </div>
+        </div>
+        <div class="collection-grid">
+          <div class="collection-card">
+            <a href="#" class="collection-card-title">Cardiac Channelopathy MAVE Panel</a>
+            <p class="collection-card-desc">
+              Score sets covering SCN5A, KCNQ4, KCNH2, and KCNE1 functional assays for clinical interpretation of cardiac arrhythmia variants.
+            </p>
+            <div class="collection-card-meta">
+              <span><span class="collection-card-count">8</span> score sets</span>
+              <span>·</span>
+              <span>Updated Feb 10, 2025</span>
+              <span class="collection-visibility collection-visibility--public">&#9679; Public</span>
+            </div>
+          </div>
+          <div class="collection-card">
+            <a href="#" class="collection-card-title">TP53 Variant Interpretation Reference</a>
+            <p class="collection-card-desc">
+              Curated collection of all TP53 SGE and DMS score sets from MaveDB, spanning functional domains and assay types.
+            </p>
+            <div class="collection-card-meta">
+              <span><span class="collection-card-count">12</span> score sets</span>
+              <span>·</span>
+              <span>Updated Jan 3, 2025</span>
+              <span class="collection-visibility collection-visibility--public">&#9679; Public</span>
+            </div>
+          </div>
+          <div class="collection-card">
+            <a href="#" class="collection-card-title">In-Progress Curation – BRCA Genes</a>
+            <p class="collection-card-desc">
+              Working collection of BRCA1 and BRCA2 datasets for internal calibration work. Not yet ready for sharing.
+            </p>
+            <div class="collection-card-meta">
+              <span><span class="collection-card-count">4</span> score sets</span>
+              <span>·</span>
+              <span>Updated Feb 18, 2025</span>
+              <span class="collection-visibility collection-visibility--private">&#9679; Private</span>
+            </div>
+          </div>
+          <a href="#" class="collection-card collection-card--new">
+            <span class="collection-card--new-icon">+</span>
+            <span>New Collection</span>
+          </a>
+        </div>
+      </div>
+
+      <!-- ── CALIBRATIONS PANEL ── -->
+      <div id="panel-calibrations" class="panel">
+        <div class="toolbar">
+          <div class="filter-chips">
+            <span class="filter-label">Show:</span>
+            <button class="filter-chip active" onclick="toggleFilter(this)">All</button>
+            <button class="filter-chip" onclick="toggleFilter(this)">Published</button>
+            <button class="filter-chip" onclick="toggleFilter(this)">Unpublished</button>
+            <button class="filter-chip" onclick="toggleFilter(this)">Primary</button>
+            <button class="filter-chip" onclick="toggleFilter(this)">General Use</button>
+            <button class="filter-chip" onclick="toggleFilter(this)">Research Use</button>
+          </div>
+          <div class="toolbar-right">
+            <a href="#" class="btn btn-primary">+ New Calibration</a>
+          </div>
+        </div>
+        <div style="overflow-x: auto;">
+        <table class="data-table">
+          <thead>
+            <tr>
+              <th style="width: 3rem"></th>
+              <th>Title</th>
+              <th>Score Set</th>
+              <th>Notes</th>
+              <th style="text-align: center; white-space: nowrap">Published</th>
+              <th style="text-align: center; white-space: nowrap">Primary</th>
+              <th style="text-align: center; white-space: nowrap">Investigator</th>
+              <th style="text-align: center; white-space: nowrap">Use Type</th>
+              <th style="text-align: center; white-space: nowrap">#Ranges</th>
+              <th>Actions</th>
+            </tr>
+          </thead>
+          <tbody>
+            <!-- Row 1 -->
+            <tr>
+              <td><button class="expander-btn" onclick="toggleExpansion(this, 'exp-1')">▶</button></td>
+              <td><a href="#" class="row-title">BRCA1 SGE Exon 20 – ClinVar</a></td>
+              <td style="font-size: 13px; white-space: nowrap;"><a href="#" class="action-link">BRCA1 SGE Exon 20 – Replicate 1</a></td>
+              <td style="font-size: 13px; color: #666; min-width: 180px;">Calibrated against ClinVar P/LP and B/LB variants with ≥2 star review status.</td>
+              <td style="text-align: center"><span class="cal-tag cal-tag--yes">Yes</span></td>
+              <td style="text-align: center"><span class="cal-tag cal-tag--yes">Yes</span></td>
+              <td style="text-align: center"><span class="cal-tag cal-tag--blue">Yes</span></td>
+              <td style="text-align: center"><span class="cal-tag cal-tag--yes">General</span></td>
+              <td style="text-align: center">3</td>
+              <td>
+                <div class="row-actions">
+                  <a href="#" class="action-link">View</a>
+                </div>
+              </td>
+            </tr>
+            <tr id="exp-1" class="expansion-row" style="display: none;">
+              <td colspan="10">
+                <div class="expansion-content">
+                  <table class="cal-exp-table">
+                    <tr class="cal-exp-title">
+                      <td colspan="4">BRCA1 SGE Exon 20 – ClinVar</td>
+                    </tr>
+                    <tr class="cal-exp-baseline">
+                      <td colspan="4">Baseline score: −1.32</td>
+                    </tr>
+                    <tr class="cal-exp-range-header">
+                      <th></th>
+                      <th>Benign</th>
+                      <th>VUS</th>
+                      <th>Pathogenic</th>
+                    </tr>
+                    <tr>
+                      <td>Functional classification</td>
+                      <td><span class="cal-exp-cell cal-exp-cell--normal">Normal</span></td>
+                      <td style="color: #aaa;">—</td>
+                      <td><span class="cal-exp-cell cal-exp-cell--abnormal">Abnormal</span></td>
+                    </tr>
+                    <tr>
+                      <td>Numeric interval</td>
+                      <td class="cal-exp-interval">score ≥ 0.88</td>
+                      <td class="cal-exp-interval">−1.32 &lt; score &lt; 0.88</td>
+                      <td class="cal-exp-interval">score ≤ −1.32</td>
+                    </tr>
+                    <tr>
+                      <td>Evidence strength</td>
+                      <td><span class="cal-exp-cell cal-exp-cell--bs">BS3_Strong</span></td>
+                      <td style="color: #aaa;">—</td>
+                      <td><span class="cal-exp-cell cal-exp-cell--ps">PS3_Strong</span></td>
+                    </tr>
+                    <tr>
+                      <td>OddsPaths ratio</td>
+                      <td>0.04</td>
+                      <td style="color: #aaa;">—</td>
+                      <td>24.90</td>
+                    </tr>
+                  </table>
+                  <div class="cal-exp-footer">
+                    <span>ⓘ Thresholds: Tavtigian et al. (2020)</span>
+                    <span class="cal-exp-footer-sep">—</span>
+                    <span>ⓘ Method: Brnich et al. (2019)</span>
+                    <span class="cal-exp-footer-sep">—</span>
+                    <span>ⓘ Evidence calcs: Nakamura et al. (2018)</span>
+                  </div>
+                </div>
+              </td>
+            </tr>
+            <!-- Row 2 -->
+            <tr class="row--unpublished">
+              <td><button class="expander-btn" onclick="toggleExpansion(this, 'exp-2')">▶</button></td>
+              <td><a href="#" class="row-title">KCNQ4 Variant Effect – Draft</a></td>
+              <td style="font-size: 13px; white-space: nowrap;"><a href="#" class="action-link">KCNQ4 Missense Variant Effect Map</a></td>
+              <td style="font-size: 13px; color: #aaa; font-style: italic; min-width: 180px;">No notes.</td>
+              <td style="text-align: center"><span class="cal-tag cal-tag--no">No</span></td>
+              <td style="text-align: center"><span class="cal-tag cal-tag--no">No</span></td>
+              <td style="text-align: center"><span class="cal-tag cal-tag--purple">No</span></td>
+              <td style="text-align: center"><span class="cal-tag cal-tag--no">Research</span></td>
+              <td style="text-align: center">0</td>
+              <td>
+                <div class="row-actions">
+                  <a href="#" class="action-link">View</a>
+                  <a href="#" class="action-link">Edit</a>
+                </div>
+              </td>
+            </tr>
+            <tr id="exp-2" class="expansion-row" style="display: none;">
+              <td colspan="10">
+                <div class="expansion-content" style="color: #aaa; font-style: italic;">
+                  No functional classifications defined for this calibration.
+                </div>
+              </td>
+            </tr>
+          </tbody>
+        </table>
+        </div>
+        <div style="margin-top: 12px; font-size: 13px; color: #aaa; text-align: right">Showing 2 of 2 calibrations &mdash; <a href="#" style="color: #0074d9; font-weight: 600;">View all</a></div>
+      </div>
+
+    </main>
+
+    <!-- FOOTER -->
+    <footer>
+      <div class="footer-inner">
+        <div style="display: flex; align-items: center; gap: 16px">
+          <img src="./logo-mavedb-transparent.png" alt="MaveDB" style="height: 28px" />
+          <span>© 2026 MaveDB — AGPLv3 License — Hosted by the University of Washington</span>
+        </div>
+        <div class="footer-links">
+          <a href="#">Chat</a>
+          <a href="#">Documentation</a>
+          <a href="#">Report an issue</a>
+        </div>
+      </div>
+    </footer>
+
+    <script>
+      function toggleAddMenu(event) {
+        event.stopPropagation()
+        const dd = document.getElementById('nav-add-dropdown')
+        dd.classList.toggle('open')
+      }
+      document.addEventListener('click', function(e) {
+        const wrap = document.querySelector('.nav-add-wrap')
+        if (wrap && !wrap.contains(e.target)) {
+          const dd = document.getElementById('nav-add-dropdown')
+          if (dd) dd.classList.remove('open')
+        }
+      })
+
+      function toggleBell(event) {
+        event.stopPropagation();
+        const dropdown = document.getElementById('nav-bell-dropdown');
+        dropdown.classList.toggle('open');
+      }
+
+      document.addEventListener('click', function() {
+        document.getElementById('nav-bell-dropdown').classList.remove('open');
+      });
+
+      function switchTab(tabId, btn) {
+        // Update tab button states
+        document.querySelectorAll('.tab-item').forEach(t => t.classList.remove('active'));
+        btn.classList.add('active');
+
+        // Show/hide panels
+        document.querySelectorAll('.panel').forEach(p => p.classList.remove('active'));
+        document.getElementById('panel-' + tabId).classList.add('active');
+      }
+
+      function toggleExpansion(btn, rowId) {
+        const row = document.getElementById(rowId);
+        const isOpen = row.style.display !== 'none';
+        row.style.display = isOpen ? 'none' : 'table-row';
+        btn.textContent = isOpen ? '▶' : '▼';
+        btn.classList.toggle('open', !isOpen);
+      }
+
+      function toggleFilter(btn) {
+        const group = btn.closest('.filter-chips');
+        group.querySelectorAll('.filter-chip').forEach(c => c.classList.remove('active'));
+        btn.classList.add('active');
+        // Dismiss experiment filter if user picks a different chip
+        clearExperimentFilter(false);
+      }
+
+      function filterByExperiment(name) {
+        const tabBtn = document.querySelector('.tab-item[onclick*="score-sets"]');
+        switchTab('score-sets', tabBtn);
+        // Clear regular filter chips
+        const chips = document.querySelectorAll('#panel-score-sets .filter-chip:not(.filter-chip--experiment)');
+        chips.forEach(c => c.classList.remove('active'));
+        // Show experiment chip
+        document.getElementById('experiment-filter-label').textContent = name;
+        document.getElementById('experiment-filter-chip').classList.add('visible');
+      }
+
+      function clearExperimentFilter(reactivateAll = true) {
+        const chip = document.getElementById('experiment-filter-chip');
+        chip.classList.remove('visible');
+        if (reactivateAll) {
+          document.querySelector('#panel-score-sets .filter-chip:not(.filter-chip--experiment)').classList.add('active');
+        }
+      }
+
+    </script>
+  </body>
+</html>

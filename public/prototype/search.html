@@ -1,0 +1,1350 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Search — MaveDB</title>
+    <link
+      href="https://fonts.googleapis.com/css2?family=Raleway:wght@400;500;600;700&family=Exo+2:wght@700;800;900&display=swap"
+      rel="stylesheet"
+    />
+    <style>
+      *,
+      *::before,
+      *::after {
+        box-sizing: border-box;
+        margin: 0;
+        padding: 0;
+      }
+
+      body {
+        font-family: 'Raleway', sans-serif;
+        background: #f7f7f7;
+        color: #333;
+        font-size: 15px;
+      }
+
+      h1,
+      h2,
+      h3 {
+        font-family: 'Exo 2', sans-serif;
+      }
+
+      a {
+        color: #0074d9;
+        text-decoration: none;
+      }
+      a:hover {
+        text-decoration: underline;
+      }
+
+      /* ── NAV ── */
+      nav {
+        background: #fff;
+        border-bottom: 1px solid #dee2e6;
+        position: sticky;
+        top: 0;
+        z-index: 100;
+      }
+      .nav-inner {
+        max-width: 1200px;
+        margin: 0 auto;
+        display: flex;
+        align-items: center;
+        gap: 24px;
+        padding: 0 24px;
+        height: 58px;
+      }
+      .nav-logo-img {
+        height: 42px;
+        display: block;
+        flex-shrink: 0;
+      }
+      .nav-links {
+        display: flex;
+        gap: 20px;
+        margin-left: auto;
+        list-style: none;
+        font-size: 14px;
+        font-weight: 500;
+      }
+      .nav-links a {
+        color: #444;
+      }
+      .nav-links a:hover {
+        color: #78B793;
+        text-decoration: none;
+      }
+      .nav-links a.active {
+        color: #78B793;
+        font-weight: 700;
+      }
+      .nav-add-wrap { position: relative; }
+      .nav-add-dropdown {
+        display: none;
+        position: absolute;
+        top: calc(100% + 12px);
+        right: 0;
+        width: 260px;
+        background: #fff;
+        border: 1px solid #e0e0e0;
+        border-radius: 8px;
+        box-shadow: 0 8px 24px rgba(0,0,0,0.12);
+        z-index: 200;
+        overflow: hidden;
+      }
+      .nav-add-dropdown.open { display: block; }
+      .nav-add-option {
+        display: block;
+        padding: 12px 16px;
+        border-bottom: 1px solid #f0f0f0;
+      }
+      .nav-add-option:last-child { border-bottom: none; }
+      .nav-add-option:hover { background: #f5f5f5; text-decoration: none; }
+      .nav-add-option-label { font-size: 13px; font-weight: 600; color: #333; }
+      .nav-add-option-desc { font-size: 12px; color: #888; margin-top: 2px; }
+      .nav-user {
+        background: #78B793;
+        color: #fff;
+        border-radius: 50%;
+        width: 32px;
+        height: 32px;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        font-weight: 700;
+        font-size: 13px;
+        flex-shrink: 0;
+      }
+      .nav-bell-wrap {
+        position: relative;
+        flex-shrink: 0;
+      }
+      .nav-bell {
+        width: 32px;
+        height: 32px;
+        border-radius: 50%;
+        border: none;
+        background: transparent;
+        cursor: pointer;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        color: #555;
+        transition: background 0.12s;
+        position: relative;
+      }
+      .nav-bell:hover {
+        background: #f0f0f0;
+      }
+      .nav-bell-badge {
+        position: absolute;
+        top: 2px;
+        right: 2px;
+        width: 16px;
+        height: 16px;
+        background: #e53935;
+        color: #fff;
+        border-radius: 50%;
+        font-size: 10px;
+        font-weight: 700;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        pointer-events: none;
+      }
+      .nav-bell-dropdown {
+        display: none;
+        position: absolute;
+        right: 0;
+        top: calc(100% + 8px);
+        width: 340px;
+        background: #fff;
+        border: 1px solid #e0e0e0;
+        border-radius: 8px;
+        box-shadow: 0 8px 24px rgba(0, 0, 0, 0.12);
+        z-index: 300;
+        overflow: hidden;
+      }
+      .nav-bell-dropdown.open {
+        display: block;
+      }
+      .nav-bell-dropdown-header {
+        padding: 12px 16px;
+        font-size: 12px;
+        font-weight: 700;
+        color: #aaa;
+        text-transform: uppercase;
+        letter-spacing: 0.6px;
+        border-bottom: 1px solid #f0f0f0;
+      }
+      .nav-bell-activity-list {
+        padding: 8px 0;
+      }
+      .nav-bell-activity-item {
+        padding: 9px 16px;
+        font-size: 13px;
+        color: #555;
+        display: flex;
+        flex-direction: column;
+        gap: 2px;
+        border-bottom: 1px solid #fafafa;
+      }
+      .nav-bell-activity-item:last-child {
+        border-bottom: none;
+      }
+      .nav-bell-activity-item a {
+        color: #0074d9;
+        font-weight: 600;
+      }
+      .nav-bell-activity-verb {
+        color: #888;
+      }
+      .nav-bell-activity-time {
+        font-size: 11px;
+        color: #bbb;
+      }
+
+      /* ── SEARCH STRIP ── */
+      .search-strip {
+        background: #fff;
+        border-bottom: 1px solid #dee2e6;
+        padding: 16px 24px;
+      }
+      .search-strip-inner {
+        max-width: 1200px;
+        margin: 0 auto;
+        display: flex;
+        flex-direction: column;
+        gap: 10px;
+      }
+      .search-row {
+        display: flex;
+        gap: 10px;
+        align-items: center;
+      }
+      .search-box {
+        display: flex;
+        flex: 1;
+        max-width: 600px;
+        border: 1.5px solid #A1D8C8;
+        border-radius: 6px;
+        overflow: hidden;
+        background: #fff;
+        transition: border-color 0.15s;
+      }
+      .search-box:focus-within {
+        border-color: #78B793;
+      }
+      .search-box input {
+        flex: 1;
+        border: none;
+        padding: 9px 14px;
+        font-family: 'Raleway', sans-serif;
+        font-size: 14px;
+        outline: none;
+        color: #333;
+      }
+      .search-box input::placeholder {
+        color: #aaa;
+      }
+      .search-box button {
+        background: #78B793;
+        color: #222;
+        border: none;
+        padding: 0 18px;
+        font-family: 'Raleway', sans-serif;
+        font-size: 13px;
+        font-weight: 600;
+        cursor: pointer;
+        white-space: nowrap;
+      }
+      .search-box button:hover {
+        background: #5a9375;
+      }
+      .result-count-label {
+        font-size: 13px;
+        color: #888;
+        white-space: nowrap;
+      }
+      .result-count-label strong {
+        color: #333;
+        font-weight: 700;
+      }
+
+      /* active filter chips */
+      .active-filters {
+        display: flex;
+        gap: 6px;
+        flex-wrap: wrap;
+        align-items: center;
+      }
+      .active-filter-label {
+        font-size: 12px;
+        color: #aaa;
+        font-weight: 600;
+        text-transform: uppercase;
+        letter-spacing: 0.4px;
+      }
+      .active-chip {
+        display: inline-flex;
+        align-items: center;
+        gap: 5px;
+        background: #C8E4C6;
+        color: #78B793;
+        border: 1px solid #A1D8C8;
+        border-radius: 20px;
+        padding: 3px 10px 3px 12px;
+        font-size: 12px;
+        font-weight: 600;
+        cursor: pointer;
+      }
+      .active-chip:hover {
+        background: #d1ecdf;
+        text-decoration: none;
+      }
+      .active-chip-x {
+        font-size: 14px;
+        line-height: 1;
+        color: #999;
+        margin-left: 2px;
+      }
+      .clear-all {
+        font-size: 12px;
+        color: #aaa;
+        cursor: pointer;
+        font-weight: 600;
+      }
+      .clear-all:hover {
+        color: #e53935;
+        text-decoration: underline;
+      }
+
+      /* ── LAYOUT ── */
+      .browse-layout {
+        max-width: 1200px;
+        margin: 24px auto;
+        padding: 0 24px;
+        display: grid;
+        grid-template-columns: 220px 1fr;
+        gap: 24px;
+        align-items: start;
+      }
+
+      /* ── FILTER SIDEBAR ── */
+      .filter-sidebar {
+        background: #fff;
+        border: 1px solid #dee2e6;
+        border-radius: 8px;
+        overflow: hidden;
+        position: sticky;
+        top: 82px;
+      }
+      .filter-sidebar-header {
+        padding: 12px 16px;
+        font-size: 12px;
+        font-weight: 700;
+        color: #aaa;
+        text-transform: uppercase;
+        letter-spacing: 0.5px;
+        border-bottom: 1px solid #f0f0f0;
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+      }
+      .filter-reset {
+        font-size: 11px;
+        font-weight: 600;
+        color: #aaa;
+        cursor: pointer;
+        text-transform: none;
+        letter-spacing: 0;
+      }
+      .filter-reset:hover {
+        color: #e53935;
+      }
+      .filter-group {
+        border-bottom: 1px solid #f0f0f0;
+      }
+      .filter-group:last-child {
+        border-bottom: none;
+      }
+      .filter-group-label {
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+        padding: 10px 16px;
+        font-size: 12px;
+        font-weight: 700;
+        color: #555;
+        text-transform: uppercase;
+        letter-spacing: 0.4px;
+        cursor: pointer;
+        user-select: none;
+      }
+      .filter-group-label:hover {
+        background: #fafafa;
+      }
+      .filter-chevron {
+        color: #bbb;
+        flex-shrink: 0;
+        transition: transform 0.15s;
+      }
+      .filter-group.is-open .filter-chevron {
+        transform: rotate(180deg);
+      }
+      .filter-group-body {
+        display: none;
+        padding: 0 16px 12px;
+      }
+      .filter-group.is-open .filter-group-body {
+        display: block;
+      }
+      .filter-options {
+        display: flex;
+        flex-direction: column;
+        gap: 5px;
+      }
+      .filter-option {
+        display: flex;
+        align-items: center;
+        gap: 8px;
+        font-size: 13px;
+        color: #444;
+        cursor: pointer;
+        border-radius: 4px;
+        padding: 2px 4px;
+        user-select: none;
+      }
+      .filter-option:hover {
+        background: #f5f5f5;
+      }
+      .filter-option input[type='checkbox'] {
+        accent-color: #78B793;
+        width: 14px;
+        height: 14px;
+        cursor: pointer;
+        flex-shrink: 0;
+      }
+      .filter-option-count {
+        margin-left: auto;
+        font-size: 11px;
+        color: #bbb;
+        font-weight: 500;
+      }
+      .filter-option.checked {
+        color: #78B793;
+        font-weight: 600;
+      }
+      .filter-more {
+        font-size: 12px;
+        color: #0074d9;
+        cursor: pointer;
+        margin-top: 4px;
+        padding: 2px 4px;
+        display: block;
+      }
+      .filter-more:hover {
+        text-decoration: underline;
+      }
+      .filter-toggle {
+        display: flex;
+        align-items: center;
+        gap: 8px;
+        font-size: 13px;
+        color: #444;
+        cursor: pointer;
+        user-select: none;
+      }
+      .toggle-switch {
+        position: relative;
+        width: 32px;
+        height: 18px;
+        flex-shrink: 0;
+      }
+      .toggle-switch input {
+        display: none;
+      }
+      .toggle-track {
+        position: absolute;
+        inset: 0;
+        background: #ddd;
+        border-radius: 9px;
+        transition: background 0.15s;
+        cursor: pointer;
+      }
+      .toggle-thumb {
+        position: absolute;
+        top: 2px;
+        left: 2px;
+        width: 14px;
+        height: 14px;
+        background: #fff;
+        border-radius: 50%;
+        transition: transform 0.15s;
+      }
+      input:checked ~ .toggle-track {
+        background: #78B793;
+      }
+      input:checked ~ .toggle-track .toggle-thumb {
+        transform: translateX(14px);
+      }
+
+      /* ── RESULTS ── */
+      .results-area {
+        display: flex;
+        flex-direction: column;
+        gap: 0;
+      }
+      .results-toolbar {
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+        margin-bottom: 12px;
+      }
+      .results-count {
+        font-size: 13px;
+        color: #888;
+      }
+      .results-count strong {
+        color: #333;
+        font-weight: 700;
+      }
+      .sort-select {
+        border: 1px solid #dee2e6;
+        border-radius: 5px;
+        padding: 6px 10px;
+        font-family: 'Raleway', sans-serif;
+        font-size: 13px;
+        color: #333;
+        background: #fff;
+        cursor: pointer;
+        outline: none;
+      }
+      .results-list {
+        background: #fff;
+        border: 1px solid #dee2e6;
+        border-radius: 8px;
+        overflow: hidden;
+      }
+      .result-item {
+        padding: 16px 20px;
+        border-bottom: 1px solid #f0f0f0;
+        display: flex;
+        flex-direction: column;
+        gap: 6px;
+      }
+      .result-item:last-child {
+        border-bottom: none;
+      }
+      .result-item:hover {
+        background: #fafafa;
+      }
+      .result-title {
+        font-size: 14px;
+        font-weight: 600;
+        color: #0074d9;
+        line-height: 1.4;
+      }
+      .result-title:hover {
+        text-decoration: underline;
+      }
+      .result-subtitle {
+        font-size: 12px;
+        color: #999;
+      }
+      .result-subtitle a {
+        color: #999;
+      }
+      .result-subtitle a:hover {
+        color: #0074d9;
+        text-decoration: underline;
+      }
+      .result-meta {
+        display: flex;
+        gap: 6px;
+        flex-wrap: wrap;
+        align-items: center;
+      }
+      .chip {
+        display: inline-block;
+        padding: 2px 9px;
+        border-radius: 12px;
+        font-size: 11px;
+        font-weight: 600;
+        border: 1px solid;
+        white-space: nowrap;
+      }
+      .chip--gene {
+        background: #e8f5e9;
+        color: #2e7d32;
+        border-color: #a5d6a7;
+      }
+      .chip--organism {
+        background: #fff3e0;
+        color: #e65100;
+        border-color: #ffcc80;
+      }
+      .chip--assay {
+        background: #C8E4C6;
+        color: #78B793;
+        border-color: #A1D8C8;
+      }
+      .chip--count {
+        background: #f5f5f5;
+        color: #555;
+        border-color: #e0e0e0;
+      }
+      .chip--calibrated {
+        background: #f3e5f5;
+        color: #6a1b9a;
+        border-color: #ce93d8;
+      }
+      .result-date {
+        font-size: 11px;
+        color: #bbb;
+        margin-left: auto;
+        white-space: nowrap;
+      }
+
+      /* ── LOAD MORE ── */
+      .load-more-wrap {
+        text-align: center;
+        padding: 20px 0 4px;
+      }
+      .btn-outline {
+        display: inline-block;
+        padding: 9px 24px;
+        border-radius: 5px;
+        font-family: 'Raleway', sans-serif;
+        font-size: 13px;
+        font-weight: 600;
+        cursor: pointer;
+        border: 1.5px solid #78B793;
+        background: #fff;
+        color: #78B793;
+        text-decoration: none;
+      }
+      .btn-outline:hover {
+        background: #C8E4C6;
+        text-decoration: none;
+      }
+
+      /* ── FOOTER ── */
+      footer {
+        border-top: 1px solid #e0e0e0;
+        background: #fff;
+        padding: 20px 24px;
+        margin-top: 40px;
+      }
+      .footer-inner {
+        max-width: 1200px;
+        margin: 0 auto;
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+        font-size: 13px;
+        color: #888;
+      }
+      .footer-inner a {
+        color: #0074d9;
+      }
+      .footer-links {
+        display: flex;
+        gap: 20px;
+      }
+
+      /* ── PROTOTYPE BANNER ── */
+      .proto-banner { background: #FBDA68; color: #333; text-align: center; padding: 8px 24px; font-size: 13px; font-family: 'Raleway', sans-serif; font-weight: 500; position: sticky; top: 0; z-index: 9999; letter-spacing: 0.1px; }
+      .proto-banner a { color: #555; text-decoration: underline; }
+      .proto-banner strong { font-weight: 700; }
+        </style>
+  </head>
+  <body>
+    <div class="proto-banner">
+      <strong>Prototype</strong> — This is a design prototype and is not intended for use. Data shown is fictional. The real MaveDB is at <a href="https://mavedb.org" target="_blank">mavedb.org</a>.
+    </div>
+    <nav>
+      <div class="nav-inner">
+        <a href="./index.html"><img src="./logo-mavedb.png" alt="MaveDB" class="nav-logo-img" /></a>
+        <ul class="nav-links">
+          <li><a href="./dashboard.html">Dashboard</a></li>
+          <li><a href="./mavemd.html">MaveMD</a></li>
+          <li><a href="#" class="active">Search</a></li>
+          <li class="nav-add-wrap">
+            <a href="#" onclick="toggleAddMenu(event)" style="display:flex;align-items:center;gap:4px;">Add Dataset <svg width="10" height="10" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><polyline points="6 9 12 15 18 9"/></svg></a>
+            <div id="nav-add-dropdown" class="nav-add-dropdown">
+              <a href="./add-experiment.html" class="nav-add-option">
+                <div class="nav-add-option-label">New Experiment</div>
+                <div class="nav-add-option-desc">Group related score sets under a shared experiment</div>
+              </a>
+              <a href="./add-score-set.html" class="nav-add-option">
+                <div class="nav-add-option-label">New Score Set</div>
+                <div class="nav-add-option-desc">Upload variant scores and metadata</div>
+              </a>
+            </div>
+          </li>
+          <li><a href="./about.html">About</a></li>
+          <li><a href="./help.html">Help</a></li>
+        </ul>
+        <div class="nav-bell-wrap">
+          <button class="nav-bell" onclick="toggleBell(event)" title="Recent activity">
+            <svg
+              width="17"
+              height="17"
+              viewBox="0 0 24 24"
+              fill="none"
+              stroke="currentColor"
+              stroke-width="2"
+              stroke-linecap="round"
+              stroke-linejoin="round"
+            >
+              <path d="M18 8A6 6 0 0 0 6 8c0 7-3 9-3 9h18s-3-2-3-9" />
+              <path d="M13.73 21a2 2 0 0 1-3.46 0" />
+            </svg>
+            <span class="nav-bell-badge">5</span>
+          </button>
+          <div id="nav-bell-dropdown" class="nav-bell-dropdown">
+            <div class="nav-bell-dropdown-header">Recent Activity</div>
+            <div class="nav-bell-activity-list">
+              <div class="nav-bell-activity-item">
+                <span
+                  ><a href="#">CHEK2 Kinase Activity Assay – Draft</a>
+                  <span class="nav-bell-activity-verb">edited by you</span></span
+                >
+                <span class="nav-bell-activity-time">2 days ago</span>
+              </div>
+              <div class="nav-bell-activity-item">
+                <span
+                  ><a href="#">KCNQ4 Variant Effect – Draft</a>
+                  <span class="nav-bell-activity-verb">calibration created by you</span></span
+                >
+                <span class="nav-bell-activity-time">5 days ago</span>
+              </div>
+              <div class="nav-bell-activity-item">
+                <span
+                  ><a href="#">BRCA1 Combined Functional Meta-analysis</a>
+                  <span class="nav-bell-activity-verb">published</span></span
+                >
+                <span class="nav-bell-activity-time">Nov 5, 2024</span>
+              </div>
+              <div class="nav-bell-activity-item">
+                <span
+                  ><a href="#">TP53 Saturation Genome Editing Panel</a>
+                  <span class="nav-bell-activity-verb">you were added as a contributor</span></span
+                >
+                <span class="nav-bell-activity-time">Oct 28, 2024</span>
+              </div>
+              <div class="nav-bell-activity-item">
+                <span
+                  ><a href="#">BRCA1 SGE Exon 20 – ClinVar</a>
+                  <span class="nav-bell-activity-verb">calibration published</span></span
+                >
+                <span class="nav-bell-activity-time">Oct 14, 2024</span>
+              </div>
+            </div>
+          </div>
+        </div>
+        <div class="nav-user">B</div>
+      </div>
+    </nav>
+
+    <!-- SEARCH STRIP -->
+    <div class="search-strip">
+      <div class="search-strip-inner">
+        <div class="search-row">
+          <div class="search-box">
+            <input type="text" value="BRCA1" placeholder="Search genes, titles, keywords…" />
+            <button>Search</button>
+          </div>
+          <span class="result-count-label">Showing <strong>47</strong> score sets</span>
+        </div>
+        <div class="active-filters">
+          <span class="active-filter-label">Filters:</span>
+          <a href="#" class="active-chip">BRCA1 <span class="active-chip-x">×</span></a>
+          <a href="#" class="active-chip">Homo sapiens <span class="active-chip-x">×</span></a>
+          <a href="#" class="active-chip">Calibrated <span class="active-chip-x">×</span></a>
+          <a href="#" class="clear-all">Clear all</a>
+        </div>
+      </div>
+    </div>
+
+    <!-- BROWSE LAYOUT -->
+    <div class="browse-layout">
+      <!-- FILTER SIDEBAR -->
+      <aside class="filter-sidebar">
+        <div class="filter-sidebar-header">
+          Filters
+          <span class="filter-reset">Reset all</span>
+        </div>
+
+        <div class="filter-group is-open">
+          <div class="filter-group-label" onclick="toggleFilterGroup(this)">
+            Gene
+            <svg
+              class="filter-chevron"
+              width="12"
+              height="12"
+              viewBox="0 0 24 24"
+              fill="none"
+              stroke="currentColor"
+              stroke-width="2.5"
+              stroke-linecap="round"
+              stroke-linejoin="round"
+            >
+              <polyline points="6 9 12 15 18 9" />
+            </svg>
+          </div>
+          <div class="filter-group-body">
+            <input
+              type="text"
+              id="gene-search"
+              placeholder="Search genes…"
+              oninput="filterGenes(this.value)"
+              style="
+                width: 100%;
+                border: 1px solid #dee2e6;
+                border-radius: 4px;
+                padding: 5px 8px;
+                font-family: 'Raleway', sans-serif;
+                font-size: 12px;
+                margin-bottom: 8px;
+                outline: none;
+                box-sizing: border-box;
+              "
+            />
+            <div class="filter-options" id="gene-options">
+              <label class="filter-option checked">
+                <input type="checkbox" checked /> BRCA1
+                <span class="filter-option-count">47</span>
+              </label>
+              <label class="filter-option">
+                <input type="checkbox" /> BRCA2
+                <span class="filter-option-count">18</span>
+              </label>
+              <label class="filter-option">
+                <input type="checkbox" /> TP53
+                <span class="filter-option-count">31</span>
+              </label>
+              <label class="filter-option">
+                <input type="checkbox" /> BARD1
+                <span class="filter-option-count">12</span>
+              </label>
+              <label class="filter-option">
+                <input type="checkbox" /> CHEK2
+                <span class="filter-option-count">9</span>
+              </label>
+              <a href="#" class="filter-more" id="gene-more-link">+ 695 more genes</a>
+            </div>
+          </div>
+        </div>
+
+        <div class="filter-group is-open">
+          <div class="filter-group-label" onclick="toggleFilterGroup(this)">
+            Organism
+            <svg
+              class="filter-chevron"
+              width="12"
+              height="12"
+              viewBox="0 0 24 24"
+              fill="none"
+              stroke="currentColor"
+              stroke-width="2.5"
+              stroke-linecap="round"
+              stroke-linejoin="round"
+            >
+              <polyline points="6 9 12 15 18 9" />
+            </svg>
+          </div>
+          <div class="filter-group-body">
+            <div class="filter-options">
+              <label class="filter-option checked">
+                <input type="checkbox" checked /> Homo sapiens
+                <span class="filter-option-count">47</span>
+              </label>
+              <label class="filter-option">
+                <input type="checkbox" /> S. cerevisiae
+                <span class="filter-option-count">0</span>
+              </label>
+              <label class="filter-option">
+                <input type="checkbox" /> E. coli
+                <span class="filter-option-count">0</span>
+              </label>
+            </div>
+          </div>
+        </div>
+
+        <div class="filter-group is-open">
+          <div class="filter-group-label" onclick="toggleFilterGroup(this)">
+            Calibration
+            <svg
+              class="filter-chevron"
+              width="12"
+              height="12"
+              viewBox="0 0 24 24"
+              fill="none"
+              stroke="currentColor"
+              stroke-width="2.5"
+              stroke-linecap="round"
+              stroke-linejoin="round"
+            >
+              <polyline points="6 9 12 15 18 9" />
+            </svg>
+          </div>
+          <div class="filter-group-body">
+            <div class="filter-options">
+              <label class="filter-toggle">
+                <span class="toggle-switch">
+                  <input type="checkbox" id="cal-toggle" checked onchange="syncToggle(this)" />
+                  <span class="toggle-track"><span class="toggle-thumb"></span></span>
+                </span>
+                Calibrated only
+              </label>
+            </div>
+          </div>
+        </div>
+
+        <div class="filter-group">
+          <div class="filter-group-label" onclick="toggleFilterGroup(this)">
+            Published Year
+            <svg
+              class="filter-chevron"
+              width="12"
+              height="12"
+              viewBox="0 0 24 24"
+              fill="none"
+              stroke="currentColor"
+              stroke-width="2.5"
+              stroke-linecap="round"
+              stroke-linejoin="round"
+            >
+              <polyline points="6 9 12 15 18 9" />
+            </svg>
+          </div>
+          <div class="filter-group-body">
+            <div class="filter-options">
+              <label class="filter-option">
+                <input type="checkbox" /> 2026
+                <span class="filter-option-count">8</span>
+              </label>
+              <label class="filter-option">
+                <input type="checkbox" /> 2025
+                <span class="filter-option-count">19</span>
+              </label>
+              <label class="filter-option">
+                <input type="checkbox" /> 2024
+                <span class="filter-option-count">15</span>
+              </label>
+              <label class="filter-option">
+                <input type="checkbox" /> 2023 and earlier
+                <span class="filter-option-count">5</span>
+              </label>
+            </div>
+          </div>
+        </div>
+
+        <div class="filter-group">
+          <div class="filter-group-label" onclick="toggleFilterGroup(this)">
+            Target type
+            <svg
+              class="filter-chevron"
+              width="12"
+              height="12"
+              viewBox="0 0 24 24"
+              fill="none"
+              stroke="currentColor"
+              stroke-width="2.5"
+              stroke-linecap="round"
+              stroke-linejoin="round"
+            >
+              <polyline points="6 9 12 15 18 9" />
+            </svg>
+          </div>
+          <div class="filter-group-body">
+            <div class="filter-options">
+              <label class="filter-option">
+                <input type="checkbox" /> Protein coding
+                <span class="filter-option-count">38</span>
+              </label>
+              <label class="filter-option">
+                <input type="checkbox" /> Regulatory
+                <span class="filter-option-count">6</span>
+              </label>
+              <label class="filter-option">
+                <input type="checkbox" /> RNA
+                <span class="filter-option-count">3</span>
+              </label>
+            </div>
+          </div>
+        </div>
+
+        <div class="filter-group">
+          <div class="filter-group-label" onclick="toggleFilterGroup(this)">
+            Target accession
+            <svg
+              class="filter-chevron"
+              width="12"
+              height="12"
+              viewBox="0 0 24 24"
+              fill="none"
+              stroke="currentColor"
+              stroke-width="2.5"
+              stroke-linecap="round"
+              stroke-linejoin="round"
+            >
+              <polyline points="6 9 12 15 18 9" />
+            </svg>
+          </div>
+          <div class="filter-group-body">
+            <input
+              type="text"
+              id="accession-search"
+              placeholder="e.g. P38398, NM_007294…"
+              oninput="filterAccessions(this.value)"
+              style="
+                width: 100%;
+                border: 1px solid #dee2e6;
+                border-radius: 4px;
+                padding: 5px 8px;
+                font-family: 'Raleway', sans-serif;
+                font-size: 12px;
+                margin-bottom: 8px;
+                outline: none;
+                box-sizing: border-box;
+              "
+            />
+            <div class="filter-options" id="accession-options">
+              <label class="filter-option checked">
+                <input type="checkbox" checked /> P38398 (UniProt)
+                <span class="filter-option-count">47</span>
+              </label>
+              <label class="filter-option">
+                <input type="checkbox" /> NM_007294 (RefSeq)
+                <span class="filter-option-count">12</span>
+              </label>
+              <label class="filter-option">
+                <input type="checkbox" /> ENSG00000012048 (Ensembl)
+                <span class="filter-option-count">8</span>
+              </label>
+            </div>
+          </div>
+        </div>
+
+        <div class="filter-group">
+          <div class="filter-group-label" onclick="toggleFilterGroup(this)">
+            Author
+            <svg
+              class="filter-chevron"
+              width="12"
+              height="12"
+              viewBox="0 0 24 24"
+              fill="none"
+              stroke="currentColor"
+              stroke-width="2.5"
+              stroke-linecap="round"
+              stroke-linejoin="round"
+            >
+              <polyline points="6 9 12 15 18 9" />
+            </svg>
+          </div>
+          <div class="filter-group-body">
+            <input
+              type="text"
+              id="author-search"
+              placeholder="Search authors…"
+              oninput="filterAuthors(this.value)"
+              style="
+                width: 100%;
+                border: 1px solid #dee2e6;
+                border-radius: 4px;
+                padding: 5px 8px;
+                font-family: 'Raleway', sans-serif;
+                font-size: 12px;
+                margin-bottom: 8px;
+                outline: none;
+                box-sizing: border-box;
+              "
+            />
+            <div class="filter-options" id="author-options">
+              <label class="filter-option">
+                <input type="checkbox" /> Patel LM
+                <span class="filter-option-count">14</span>
+              </label>
+              <label class="filter-option">
+                <input type="checkbox" /> Torres DM
+                <span class="filter-option-count">11</span>
+              </label>
+              <label class="filter-option">
+                <input type="checkbox" /> Nakamura GM
+                <span class="filter-option-count">8</span>
+              </label>
+              <label class="filter-option">
+                <input type="checkbox" /> Chen AJ
+                <span class="filter-option-count">7</span>
+              </label>
+              <a href="#" class="filter-more" id="author-more-link">+ 142 more authors</a>
+            </div>
+          </div>
+        </div>
+
+        <div class="filter-group">
+          <div class="filter-group-label" onclick="toggleFilterGroup(this)">
+            Journal
+            <svg
+              class="filter-chevron"
+              width="12"
+              height="12"
+              viewBox="0 0 24 24"
+              fill="none"
+              stroke="currentColor"
+              stroke-width="2.5"
+              stroke-linecap="round"
+              stroke-linejoin="round"
+            >
+              <polyline points="6 9 12 15 18 9" />
+            </svg>
+          </div>
+          <div class="filter-group-body">
+            <div class="filter-options">
+              <label class="filter-option">
+                <input type="checkbox" /> Nature
+                <span class="filter-option-count">9</span>
+              </label>
+              <label class="filter-option">
+                <input type="checkbox" /> Nature Genetics
+                <span class="filter-option-count">8</span>
+              </label>
+              <label class="filter-option">
+                <input type="checkbox" /> Cell
+                <span class="filter-option-count">5</span>
+              </label>
+              <label class="filter-option">
+                <input type="checkbox" /> Nucleic Acids Research
+                <span class="filter-option-count">4</span>
+              </label>
+              <a href="#" class="filter-more">+ 18 more journals</a>
+            </div>
+          </div>
+        </div>
+
+        <div class="filter-group">
+          <div class="filter-group-label" onclick="toggleFilterGroup(this)">
+            Publication database
+            <svg
+              class="filter-chevron"
+              width="12"
+              height="12"
+              viewBox="0 0 24 24"
+              fill="none"
+              stroke="currentColor"
+              stroke-width="2.5"
+              stroke-linecap="round"
+              stroke-linejoin="round"
+            >
+              <polyline points="6 9 12 15 18 9" />
+            </svg>
+          </div>
+          <div class="filter-group-body">
+            <div class="filter-options">
+              <label class="filter-option">
+                <input type="checkbox" /> PubMed
+                <span class="filter-option-count">39</span>
+              </label>
+              <label class="filter-option">
+                <input type="checkbox" /> bioRxiv
+                <span class="filter-option-count">6</span>
+              </label>
+              <label class="filter-option">
+                <input type="checkbox" /> Europe PMC
+                <span class="filter-option-count">2</span>
+              </label>
+            </div>
+          </div>
+        </div>
+      </aside>
+
+      <!-- RESULTS -->
+      <div class="results-area">
+        <div class="results-toolbar">
+          <span class="results-count"><strong>47</strong> score sets matching your search</span>
+          <select class="sort-select">
+            <option>Most recent</option>
+            <option>Most variants</option>
+            <option>Title A–Z</option>
+          </select>
+        </div>
+
+        <div class="results-list">
+          <div class="result-item">
+            <a href="#" class="result-title"
+              >Mechanistic Modelling of Recessive, Dominant Negative, and Haploinsufficiency Effects with Allelic
+              Integration of Variant Effects</a
+            >
+            <div class="result-subtitle">Experiment: <a href="#">BRCA1 Combined Functional Meta-analysis</a></div>
+            <div class="result-meta">
+              <span class="chip chip--gene">BRCA1</span>
+              <span class="chip chip--organism">Homo sapiens</span>
+              <span class="chip chip--assay">Deep Mutational Scanning</span>
+              <span class="chip chip--count">4,832 variants</span>
+              <span class="chip chip--calibrated">2 calibrations</span>
+              <span class="result-date">Feb 2026</span>
+            </div>
+          </div>
+
+          <div class="result-item">
+            <a href="#" class="result-title">BRCA1 SGE Exon 20 – functional score (SGE Abundance)</a>
+            <div class="result-subtitle">Experiment: <a href="#">BRCA1 Saturation Genome Editing Panel</a></div>
+            <div class="result-meta">
+              <span class="chip chip--gene">BRCA1</span>
+              <span class="chip chip--organism">Homo sapiens</span>
+              <span class="chip chip--assay">Saturation Genome Editing</span>
+              <span class="chip chip--count">3,893 variants</span>
+              <span class="chip chip--calibrated">1 calibration</span>
+              <span class="result-date">Nov 2024</span>
+            </div>
+          </div>
+
+          <div class="result-item">
+            <a href="#" class="result-title">BRCA1 SGE Exon 21 – functional score (SGE Abundance)</a>
+            <div class="result-subtitle">Experiment: <a href="#">BRCA1 Saturation Genome Editing Panel</a></div>
+            <div class="result-meta">
+              <span class="chip chip--gene">BRCA1</span>
+              <span class="chip chip--organism">Homo sapiens</span>
+              <span class="chip chip--assay">Saturation Genome Editing</span>
+              <span class="chip chip--count">1,204 variants</span>
+              <span class="chip chip--calibrated">1 calibration</span>
+              <span class="result-date">Nov 2024</span>
+            </div>
+          </div>
+
+          <div class="result-item">
+            <a href="#" class="result-title">BRCA1 RING domain functional score – HAP1 HDR assay</a>
+            <div class="result-subtitle">Experiment: <a href="#">BRCA1 RING Domain HDR Assay</a></div>
+            <div class="result-meta">
+              <span class="chip chip--gene">BRCA1</span>
+              <span class="chip chip--organism">Homo sapiens</span>
+              <span class="chip chip--assay">Deep Mutational Scanning</span>
+              <span class="chip chip--count">1,756 variants</span>
+              <span class="chip chip--calibrated">1 calibration</span>
+              <span class="result-date">Sep 2024</span>
+            </div>
+          </div>
+
+          <div class="result-item">
+            <a href="#" class="result-title">BRCA1 BRCT domain protein stability score</a>
+            <div class="result-subtitle">Experiment: <a href="#">BRCA1 BRCT Domain Stability Panel</a></div>
+            <div class="result-meta">
+              <span class="chip chip--gene">BRCA1</span>
+              <span class="chip chip--organism">Homo sapiens</span>
+              <span class="chip chip--assay">Deep Mutational Scanning</span>
+              <span class="chip chip--count">2,291 variants</span>
+              <span class="chip chip--calibrated">1 calibration</span>
+              <span class="result-date">Jun 2024</span>
+            </div>
+          </div>
+
+          <div class="result-item">
+            <a href="#" class="result-title">BRCA1 exon 11 functional score – mouse ES cell HDR assay</a>
+            <div class="result-subtitle">Experiment: <a href="#">BRCA1 Exon 11 Mouse ES HDR</a></div>
+            <div class="result-meta">
+              <span class="chip chip--gene">BRCA1</span>
+              <span class="chip chip--organism">Homo sapiens</span>
+              <span class="chip chip--assay">Saturation Genome Editing</span>
+              <span class="chip chip--count">6,118 variants</span>
+              <span class="chip chip--calibrated">2 calibrations</span>
+              <span class="result-date">Mar 2024</span>
+            </div>
+          </div>
+
+          <div class="result-item">
+            <a href="#" class="result-title">BRCA1 BARD1-binding interface – yeast two-hybrid DMS</a>
+            <div class="result-subtitle">Experiment: <a href="#">BRCA1 Protein Interaction Screen</a></div>
+            <div class="result-meta">
+              <span class="chip chip--gene">BRCA1</span>
+              <span class="chip chip--organism">Homo sapiens</span>
+              <span class="chip chip--assay">Deep Mutational Scanning</span>
+              <span class="chip chip--count">982 variants</span>
+              <span class="chip chip--calibrated">1 calibration</span>
+              <span class="result-date">Jan 2024</span>
+            </div>
+          </div>
+        </div>
+
+        <div class="load-more-wrap">
+          <a href="#" class="btn-outline">Load more results</a>
+        </div>
+      </div>
+    </div>
+
+    <!-- FOOTER -->
+    <footer>
+      <div class="footer-inner">
+        <div style="display: flex; align-items: center; gap: 16px">
+          <img src="./logo-mavedb-transparent.png" alt="MaveDB" style="height: 28px" />
+          <span>© 2026 MaveDB — AGPLv3 License — Hosted by the University of Washington</span>
+        </div>
+        <div class="footer-links">
+          <a href="#">Chat</a>
+          <a href="#">Documentation</a>
+          <a href="#">Report an issue</a>
+        </div>
+      </div>
+    </footer>
+
+    <script>
+      function toggleAddMenu(event) {
+        event.stopPropagation()
+        const dd = document.getElementById('nav-add-dropdown')
+        dd.classList.toggle('open')
+      }
+      document.addEventListener('click', function(e) {
+        const wrap = document.querySelector('.nav-add-wrap')
+        if (wrap && !wrap.contains(e.target)) {
+          const dd = document.getElementById('nav-add-dropdown')
+          if (dd) dd.classList.remove('open')
+        }
+      })
+
+      function syncToggle(input) {
+        // visual update handled by CSS :checked, nothing extra needed
+      }
+
+      function toggleFilterGroup(label) {
+        label.closest('.filter-group').classList.toggle('is-open')
+      }
+
+      function filterOptions(containerId, moreLinkId, query) {
+        const q = query.trim().toLowerCase()
+        const options = document.querySelectorAll('#' + containerId + ' .filter-option')
+        const moreLink = moreLinkId ? document.getElementById(moreLinkId) : null
+        options.forEach(function (opt) {
+          const text = opt.textContent.trim().toLowerCase()
+          opt.style.display = !q || text.includes(q) ? '' : 'none'
+        })
+        if (moreLink) moreLink.style.display = q ? 'none' : ''
+      }
+      function filterGenes(q) {
+        filterOptions('gene-options', 'gene-more-link', q)
+      }
+      function filterAuthors(q) {
+        filterOptions('author-options', 'author-more-link', q)
+      }
+      function filterAccessions(q) {
+        filterOptions('accession-options', null, q)
+      }
+
+      function toggleBell(event) {
+        event.stopPropagation()
+        const dd = document.getElementById('nav-bell-dropdown')
+        dd.classList.toggle('open')
+      }
+      document.addEventListener('click', function (e) {
+        const wrap = document.querySelector('.nav-bell-wrap')
+        if (wrap && !wrap.contains(e.target)) {
+          const dd = document.getElementById('nav-bell-dropdown')
+          if (dd) dd.classList.remove('open')
+        }
+      })
+    </script>
+  </body>
+</html>

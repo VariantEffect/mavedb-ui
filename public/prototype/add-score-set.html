@@ -1,0 +1,376 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>New Score Set — MaveDB</title>
+    <link href="https://fonts.googleapis.com/css2?family=Raleway:wght@400;500;600;700&family=Exo+2:wght@700;800;900&display=swap" rel="stylesheet" />
+    <style>
+      *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+      body { font-family: 'Raleway', sans-serif; background: #f7f7f7; color: #333; font-size: 15px; }
+      h1, h2, h3 { font-family: 'Exo 2', sans-serif; }
+      a { color: #0074d9; text-decoration: none; }
+      a:hover { text-decoration: underline; }
+
+      /* ── NAV ── */
+      nav { background: #fff; border-bottom: 1px solid #dee2e6; position: sticky; top: 0; z-index: 100; }
+      .nav-inner { max-width: 1280px; margin: 0 auto; display: flex; align-items: center; gap: 24px; padding: 0 24px; height: 58px; }
+      .nav-logo-img { height: 42px; display: block; flex-shrink: 0; }
+      .nav-links { display: flex; gap: 20px; margin-left: auto; list-style: none; font-size: 14px; font-weight: 500; }
+      .nav-links a { color: #444; }
+      .nav-links a:hover { color: #78B793; text-decoration: none; }
+      .nav-links a.active { color: #78B793; font-weight: 700; }
+      .nav-add-wrap { position: relative; }
+      .nav-add-dropdown { display: none; position: absolute; top: calc(100% + 12px); right: 0; width: 260px; background: #fff; border: 1px solid #e0e0e0; border-radius: 8px; box-shadow: 0 8px 24px rgba(0,0,0,0.12); z-index: 200; overflow: hidden; }
+      .nav-add-dropdown.open { display: block; }
+      .nav-add-option { display: block; padding: 12px 16px; border-bottom: 1px solid #f0f0f0; }
+      .nav-add-option:last-child { border-bottom: none; }
+      .nav-add-option:hover { background: #f5f5f5; text-decoration: none; }
+      .nav-add-option-label { font-size: 13px; font-weight: 600; color: #333; }
+      .nav-add-option-desc { font-size: 12px; color: #888; margin-top: 2px; }
+      .nav-user { background: #78B793; color: #fff; border-radius: 50%; width: 32px; height: 32px; display: flex; align-items: center; justify-content: center; font-weight: 700; font-size: 13px; flex-shrink: 0; }
+      .nav-bell-wrap { position: relative; flex-shrink: 0; }
+      .nav-bell { width: 32px; height: 32px; border-radius: 50%; border: none; background: transparent; cursor: pointer; display: flex; align-items: center; justify-content: center; color: #555; transition: background 0.12s; position: relative; }
+      .nav-bell:hover { background: #f0f0f0; }
+      .nav-bell-badge { position: absolute; top: 2px; right: 2px; width: 16px; height: 16px; background: #e53935; color: #fff; border-radius: 50%; font-size: 10px; font-weight: 700; display: flex; align-items: center; justify-content: center; pointer-events: none; }
+      .nav-bell-dropdown { display: none; position: absolute; right: 0; top: calc(100% + 8px); width: 340px; background: #fff; border: 1px solid #e0e0e0; border-radius: 8px; box-shadow: 0 8px 24px rgba(0,0,0,0.12); z-index: 300; overflow: hidden; }
+      .nav-bell-dropdown.open { display: block; }
+      .nav-bell-dropdown-header { padding: 12px 16px; font-size: 12px; font-weight: 700; color: #aaa; text-transform: uppercase; letter-spacing: 0.6px; border-bottom: 1px solid #f0f0f0; }
+      .nav-bell-activity-list { padding: 8px 0; }
+      .nav-bell-activity-item { padding: 9px 16px; font-size: 13px; color: #555; display: flex; flex-direction: column; gap: 2px; border-bottom: 1px solid #fafafa; }
+      .nav-bell-activity-item:last-child { border-bottom: none; }
+      .nav-bell-activity-item a { color: #0074d9; font-weight: 600; }
+      .nav-bell-activity-verb { color: #888; }
+      .nav-bell-activity-time { font-size: 11px; color: #bbb; }
+
+      /* ── PAGE TITLE BAR ── */
+      .page-title-bar { background: #fff; border-bottom: 1px solid #dee2e6; padding: 14px 24px; }
+      .page-title-bar-inner { max-width: 1280px; margin: 0 auto; display: flex; align-items: center; justify-content: space-between; }
+      .page-title { font-family: 'Exo 2', sans-serif; font-size: 20px; font-weight: 800; color: #333; }
+      .btn-group { display: flex; gap: 8px; }
+      .btn { display: inline-flex; align-items: center; gap: 6px; padding: 8px 18px; border-radius: 5px; font-family: 'Raleway', sans-serif; font-size: 13px; font-weight: 600; cursor: pointer; border: 1.5px solid transparent; white-space: nowrap; text-decoration: none; }
+      .btn-primary { background: #F8971D; color: #222; border-color: #F8971D; }
+      .btn-primary:hover { background: #d97510; text-decoration: none; }
+      .btn-secondary { background: #fff; color: #666; border-color: #dee2e6; }
+      .btn-secondary:hover { background: #f5f5f5; text-decoration: none; }
+      .btn-warn { background: #fff; color: #c62828; border-color: #ef9a9a; }
+      .btn-warn:hover { background: #fff5f5; text-decoration: none; }
+
+      /* ── WIZARD OUTER ── */
+      .wizard-outer { max-width: 1280px; margin: 0 auto; padding: 24px; }
+
+      /* ── STEPPER ── */
+      .wizard-stepper { display: flex; align-items: center; background: #fff; border: 1px solid #dee2e6; border-radius: 8px; padding: 14px 20px; margin-bottom: 20px; gap: 0; overflow-x: auto; }
+      .step-item { display: flex; align-items: center; gap: 8px; flex-shrink: 0; }
+      .step-circle { width: 28px; height: 28px; border-radius: 50%; background: #e0e0e0; color: #aaa; display: flex; align-items: center; justify-content: center; font-size: 12px; font-weight: 700; flex-shrink: 0; }
+      .step-label { font-size: 13px; font-weight: 600; color: #aaa; white-space: nowrap; }
+      .step-item.active .step-circle { background: #78B793; color: #222; }
+      .step-item.active .step-label { color: #78B793; }
+      .step-item.disabled .step-circle { background: #f0f0f0; color: #ccc; }
+      .step-item.disabled .step-label { color: #ccc; }
+      .step-connector { flex: 1; height: 1px; background: #e0e0e0; margin: 0 12px; min-width: 16px; }
+
+      /* ── WIZARD FORM ── */
+      .wizard-form { background: #f7f7f7; border: 1px solid #dee2e6; border-radius: 8px; overflow: hidden; }
+      .wizard-row { display: flex; border-bottom: 1px solid #ebebeb; }
+      .wizard-row:last-child { border-bottom: none; }
+      .wizard-help { width: 420px; flex-shrink: 0; padding: 20px 24px 20px 20px; font-size: 13px; color: #555; line-height: 1.5; }
+      .wizard-help strong { font-weight: 600; color: #444; }
+      .help-small { font-size: 12px; color: #888; margin-top: 6px; line-height: 1.4; }
+      .help-small ul { margin-left: 16px; margin-top: 4px; }
+      .help-small li { margin-bottom: 2px; }
+      .wizard-content { flex: 1; background: #fff; border-left: 1px solid #ebebeb; padding: 18px 20px; min-width: 0; display: flex; align-items: center; gap: 14px; }
+      .wizard-controls { background: #f7f7f7; display: flex; justify-content: flex-end; padding: 14px 20px; border-top: 1px solid #ebebeb; }
+
+      /* ── TOGGLE SWITCH ── */
+      .toggle-row { display: flex; align-items: center; gap: 12px; }
+      .toggle-switch { position: relative; width: 40px; height: 22px; flex-shrink: 0; }
+      .toggle-switch input { display: none; }
+      .toggle-track { position: absolute; inset: 0; background: #ddd; border-radius: 11px; transition: background 0.15s; cursor: pointer; }
+      .toggle-thumb { position: absolute; top: 3px; left: 3px; width: 16px; height: 16px; background: #fff; border-radius: 50%; transition: transform 0.15s; box-shadow: 0 1px 3px rgba(0,0,0,0.2); }
+      input:checked ~ .toggle-track { background: #78B793; }
+      input:checked ~ .toggle-track .toggle-thumb { transform: translateX(18px); }
+      .toggle-value { font-size: 13px; color: #555; }
+      .toggle-value.active { color: #78B793; font-weight: 600; }
+
+      /* ── SELECT ── */
+      .float-field { position: relative; margin-bottom: 0; width: 100%; }
+      .fl-label { position: absolute; top: -8px; left: 10px; background: #fff; padding: 0 4px; font-size: 11px; font-weight: 700; color: #78B793; pointer-events: none; letter-spacing: 0.3px; }
+      .fl-select { width: 100%; border: 1.5px solid #A1D8C8; border-radius: 6px; padding: 12px; font-family: 'Raleway', sans-serif; font-size: 14px; color: #333; outline: none; background: #fff; box-sizing: border-box; transition: border-color 0.15s; appearance: none; cursor: pointer; background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='12' height='12' viewBox='0 0 24 24' fill='none' stroke='%23999' stroke-width='2.5' stroke-linecap='round' stroke-linejoin='round'%3E%3Cpolyline points='6 9 12 15 18 9'/%3E%3C/svg%3E"); background-repeat: no-repeat; background-position: right 12px center; padding-right: 32px; }
+      .fl-select:focus { border-color: #78B793; box-shadow: 0 0 0 3px rgba(47,128,98,0.08); }
+      .fl-input { width: 100%; border: 1.5px solid #A1D8C8; border-radius: 6px; padding: 12px; font-family: 'Raleway', sans-serif; font-size: 14px; color: #333; outline: none; background: #fff; box-sizing: border-box; transition: border-color 0.15s; }
+      .fl-input:focus { border-color: #78B793; box-shadow: 0 0 0 3px rgba(47,128,98,0.08); }
+
+      /* ── FOOTER ── */
+      footer { border-top: 1px solid #e0e0e0; background: #fff; padding: 20px 24px; margin-top: 40px; }
+      .footer-inner { max-width: 1280px; margin: 0 auto; display: flex; align-items: center; justify-content: space-between; font-size: 13px; color: #888; }
+      .footer-inner a { color: #0074d9; }
+      .footer-links { display: flex; gap: 20px; }
+
+      /* ── PROTOTYPE BANNER ── */
+      .proto-banner { background: #FBDA68; color: #333; text-align: center; padding: 8px 24px; font-size: 13px; font-family: 'Raleway', sans-serif; font-weight: 500; position: sticky; top: 0; z-index: 9999; letter-spacing: 0.1px; }
+      .proto-banner a { color: #555; text-decoration: underline; }
+      .proto-banner strong { font-weight: 700; }
+        </style>
+  </head>
+  <body>
+    <div class="proto-banner">
+      <strong>Prototype</strong> — This is a design prototype and is not intended for use. Data shown is fictional. The real MaveDB is at <a href="https://mavedb.org" target="_blank">mavedb.org</a>.
+    </div>
+    <nav>
+      <div class="nav-inner">
+        <a href="./index.html"><img src="./logo-mavedb.png" alt="MaveDB" class="nav-logo-img" /></a>
+        <ul class="nav-links">
+          <li><a href="./dashboard.html">Dashboard</a></li>
+          <li><a href="./mavemd.html">MaveMD</a></li>
+          <li><a href="./search.html">Search</a></li>
+          <li class="nav-add-wrap">
+            <a href="#" onclick="toggleAddMenu(event)" style="display:flex;align-items:center;gap:4px;">Add Dataset <svg width="10" height="10" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><polyline points="6 9 12 15 18 9"/></svg></a>
+            <div id="nav-add-dropdown" class="nav-add-dropdown">
+              <a href="./add-experiment.html" class="nav-add-option">
+                <div class="nav-add-option-label">New Experiment</div>
+                <div class="nav-add-option-desc">Group related score sets under a shared experiment</div>
+              </a>
+              <a href="./add-score-set.html" class="nav-add-option">
+                <div class="nav-add-option-label">New Score Set</div>
+                <div class="nav-add-option-desc">Upload variant scores and metadata</div>
+              </a>
+            </div>
+          </li>
+          <li><a href="./about.html">About</a></li>
+          <li><a href="./help.html">Help</a></li>
+        </ul>
+        <div class="nav-bell-wrap">
+          <button class="nav-bell" onclick="toggleBell(event)" title="Recent activity">
+            <svg width="17" height="17" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M18 8A6 6 0 0 0 6 8c0 7-3 9-3 9h18s-3-2-3-9"/><path d="M13.73 21a2 2 0 0 1-3.46 0"/></svg>
+            <span class="nav-bell-badge">5</span>
+          </button>
+          <div id="nav-bell-dropdown" class="nav-bell-dropdown">
+            <div class="nav-bell-dropdown-header">Recent Activity</div>
+            <div class="nav-bell-activity-list">
+              <div class="nav-bell-activity-item">
+                <span><a href="#">CHEK2 Kinase Activity Assay – Draft</a> <span class="nav-bell-activity-verb">edited by you</span></span>
+                <span class="nav-bell-activity-time">2 days ago</span>
+              </div>
+              <div class="nav-bell-activity-item">
+                <span><a href="#">BRCA1 Combined Functional Meta-analysis</a> <span class="nav-bell-activity-verb">published</span></span>
+                <span class="nav-bell-activity-time">Nov 5, 2024</span>
+              </div>
+            </div>
+          </div>
+        </div>
+        <div class="nav-user">B</div>
+      </div>
+    </nav>
+
+    <!-- PAGE TITLE BAR -->
+    <div class="page-title-bar">
+      <div class="page-title-bar-inner">
+        <span class="page-title">Create a new score set</span>
+        <div class="btn-group">
+          <button class="btn btn-secondary">Clear</button>
+          <button class="btn btn-warn">Cancel</button>
+        </div>
+      </div>
+    </div>
+
+    <div class="wizard-outer">
+
+      <!-- STEPPER -->
+      <div class="wizard-stepper">
+        <div class="step-item active">
+          <div class="step-circle">1</div>
+          <div class="step-label">Parent experiment and context</div>
+        </div>
+        <div class="step-connector"></div>
+        <div class="step-item disabled">
+          <div class="step-circle">2</div>
+          <div class="step-label">Score set information</div>
+        </div>
+        <div class="step-connector"></div>
+        <div class="step-item disabled">
+          <div class="step-circle">3</div>
+          <div class="step-label">Targets</div>
+        </div>
+        <div class="step-connector"></div>
+        <div class="step-item disabled">
+          <div class="step-circle">4</div>
+          <div class="step-label">Target 1</div>
+        </div>
+        <div class="step-connector"></div>
+        <div class="step-item disabled">
+          <div class="step-circle">5</div>
+          <div class="step-label">Score Calibration</div>
+        </div>
+        <div class="step-connector"></div>
+        <div class="step-item disabled">
+          <div class="step-circle">6</div>
+          <div class="step-label">Variant Scores</div>
+        </div>
+      </div>
+
+      <!-- FORM -->
+      <div class="wizard-form">
+
+        <!-- Supersedes toggle -->
+        <div class="wizard-row">
+          <div class="wizard-help">
+            <label>Does this score set correct errors in and replace a score set previously published on MaveDB that you created?</label>
+          </div>
+          <div class="wizard-content">
+            <label class="toggle-row">
+              <span class="toggle-switch">
+                <input type="checkbox" id="supersedes-toggle" onchange="syncSupersedesToggle(this)" />
+                <span class="toggle-track"><span class="toggle-thumb"></span></span>
+              </span>
+              <span class="toggle-value" id="supersedes-label">No, this does not supersede another score set</span>
+            </label>
+          </div>
+        </div>
+
+        <!-- Superseded score set (shown when supersedes = true) -->
+        <div class="wizard-row" id="supersedes-row" style="display:none;">
+          <div class="wizard-help">
+            <label>What score set does this supersede?</label>
+            <div class="help-small">Type the superseded score set's MaveDB URN here and select it from the list.</div>
+          </div>
+          <div class="wizard-content" style="display:block;">
+            <div class="float-field">
+              <span class="fl-label">Supersedes</span>
+              <input type="text" class="fl-input" placeholder="Search by URN or title…" />
+            </div>
+          </div>
+        </div>
+
+        <!-- Meta-analysis toggle -->
+        <div class="wizard-row">
+          <div class="wizard-help">
+            <label>Is this score set a meta-analysis?</label>
+            <div class="help-small">
+              Meta-analyses are score sets derived from data in other score sets. For example:
+              <ul>
+                <li>a score set that combines data from two other score sets to produce new scores, or</li>
+                <li>a score set that adds imputed missing values to scores in another score set.</li>
+              </ul>
+            </div>
+          </div>
+          <div class="wizard-content">
+            <label class="toggle-row">
+              <span class="toggle-switch">
+                <input type="checkbox" id="meta-toggle" onchange="syncMetaToggle(this)" />
+                <span class="toggle-track"><span class="toggle-thumb"></span></span>
+              </span>
+              <span class="toggle-value" id="meta-label">No, this is not a meta-analysis</span>
+            </label>
+          </div>
+        </div>
+
+        <!-- Meta-analysis score sets (shown when meta-analysis = true) -->
+        <div class="wizard-row" id="meta-row" style="display:none;">
+          <div class="wizard-help">
+            <label>What score set(s) does this score set analyze?</label>
+            <div class="help-small">Type a score set's MaveDB URN and select it from the list. You may choose more than one.</div>
+          </div>
+          <div class="wizard-content" style="display:block;">
+            <div class="float-field">
+              <span class="fl-label">Meta-analyzes</span>
+              <input type="text" class="fl-input" placeholder="Search by URN or title…" />
+            </div>
+          </div>
+        </div>
+
+        <!-- Experiment select (shown when neither supersedes nor meta-analysis) -->
+        <div class="wizard-row" id="experiment-row">
+          <div class="wizard-help">
+            <label>To which experiment does this score set belong?</label>
+            <div class="help-small">
+              For more on the relationship between score sets and experiments, see the <a href="#">documentation</a>.
+            </div>
+          </div>
+          <div class="wizard-content" style="display:block;">
+            <div class="float-field">
+              <span class="fl-label">Experiment</span>
+              <select class="fl-select">
+                <option value="" disabled selected></option>
+                <option>BRCA1 Combined Functional Meta-analysis (urn:mavedb:00000097-0)</option>
+                <option>BRCA1 Saturation Genome Editing Panel (urn:mavedb:00000098-0)</option>
+                <option>BRCA1 RING Domain HDR Assay (urn:mavedb:00000041-0)</option>
+                <option>CHEK2 Kinase Activity Assay (urn:mavedb:00000112-0)</option>
+                <option>TP53 Saturation Genome Editing Panel (urn:mavedb:00000089-0)</option>
+              </select>
+            </div>
+          </div>
+        </div>
+
+        <!-- Step controls -->
+        <div class="wizard-controls">
+          <button class="btn btn-primary">
+            Next
+            <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><polyline points="9 18 15 12 9 6"/></svg>
+          </button>
+        </div>
+
+      </div><!-- /wizard-form -->
+    </div><!-- /wizard-outer -->
+
+    <footer>
+      <div class="footer-inner">
+        <div style="display:flex;align-items:center;gap:16px;">
+          <img src="./logo-mavedb-transparent.png" alt="MaveDB" style="height:28px;" />
+          <span>© 2026 MaveDB — AGPLv3 License — Hosted by the University of Washington</span>
+        </div>
+        <div class="footer-links">
+          <a href="#">Chat</a>
+          <a href="#">Documentation</a>
+          <a href="#">Report an issue</a>
+        </div>
+      </div>
+    </footer>
+
+    <script>
+      function syncSupersedesToggle(input) {
+        document.getElementById('supersedes-label').textContent = input.checked
+          ? 'Yes, this supersedes another score set'
+          : 'No, this does not supersede another score set'
+        document.getElementById('supersedes-label').className = input.checked ? 'toggle-value active' : 'toggle-value'
+        document.getElementById('supersedes-row').style.display = input.checked ? 'flex' : 'none'
+        updateExperimentRowVisibility()
+      }
+
+      function syncMetaToggle(input) {
+        document.getElementById('meta-label').textContent = input.checked
+          ? 'Yes, this is a meta-analysis'
+          : 'No, this is not a meta-analysis'
+        document.getElementById('meta-label').className = input.checked ? 'toggle-value active' : 'toggle-value'
+        document.getElementById('meta-row').style.display = input.checked ? 'flex' : 'none'
+        updateExperimentRowVisibility()
+      }
+
+      function updateExperimentRowVisibility() {
+        const supersedes = document.getElementById('supersedes-toggle').checked
+        const meta = document.getElementById('meta-toggle').checked
+        document.getElementById('experiment-row').style.display = (!supersedes && !meta) ? 'flex' : 'none'
+      }
+
+      function toggleAddMenu(event) {
+        event.stopPropagation()
+        document.getElementById('nav-add-dropdown').classList.toggle('open')
+      }
+      function toggleBell(event) {
+        event.stopPropagation()
+        document.getElementById('nav-bell-dropdown').classList.toggle('open')
+      }
+      document.addEventListener('click', function(e) {
+        const addWrap = document.querySelector('.nav-add-wrap')
+        if (addWrap && !addWrap.contains(e.target)) {
+          document.getElementById('nav-add-dropdown').classList.remove('open')
+        }
+        const bellWrap = document.querySelector('.nav-bell-wrap')
+        if (bellWrap && !bellWrap.contains(e.target)) {
+          const dd = document.getElementById('nav-bell-dropdown')
+          if (dd) dd.classList.remove('open')
+        }
+      })
+    </script>
+  </body>
+</html>

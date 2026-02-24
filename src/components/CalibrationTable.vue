@@ -271,7 +271,7 @@
       <span
         v-if="
           scoreCalibration.thresholdSources?.length &&
-          (scoreCalibration.methodSources?.length || scoreCalibration.classificationSources?.length)
+          (scoreCalibration.methodSources?.length || scoreCalibration.evidenceSources?.length)
         "
         aria-hidden="true"
         class="sources-separator"
@@ -305,13 +305,13 @@
         </span>
       </template>
       <span
-        v-if="scoreCalibration.methodSources?.length && scoreCalibration.classificationSources?.length"
+        v-if="scoreCalibration.methodSources?.length && scoreCalibration.evidenceSources?.length"
         aria-hidden="true"
         class="sources-separator"
         >—</span
       >
       <!-- Evidence calculation sources group -->
-      <template v-if="scoreCalibration.classificationSources && scoreCalibration.classificationSources.length > 0">
+      <template v-if="scoreCalibration.evidenceSources && scoreCalibration.evidenceSources.length > 0">
         <span aria-label="Evidence calculation sources" class="sources-group" role="group">
           <PrimeButton
             v-tooltip.left="{
@@ -329,11 +329,11 @@
           <strong>Evidence calcs:</strong>
           <span class="citation-list">
             <span
-              v-for="(source, i) in scoreCalibration.classificationSources"
+              v-for="(source, i) in scoreCalibration.evidenceSources"
               :key="'calc:' + source.dbName + ':' + source.identifier"
             >
               <a :href="source.url" target="_blank">{{ shortCitationForPublication(source) }}</a
-              ><span v-if="i < scoreCalibration.classificationSources.length - 1">, </span>
+              ><span v-if="i < scoreCalibration.evidenceSources.length - 1">, </span>
             </span>
           </span>
         </span>
@@ -434,7 +434,7 @@ export default defineComponent({
       return !!(
         (this.scoreCalibration.thresholdSources && this.scoreCalibration.thresholdSources.length > 0) ||
         (this.scoreCalibration.methodSources && this.scoreCalibration.methodSources.length > 0) ||
-        (this.scoreCalibration.classificationSources && this.scoreCalibration.classificationSources.length > 0)
+        (this.scoreCalibration.evidenceSources && this.scoreCalibration.evidenceSources.length > 0)
       )
     },
 

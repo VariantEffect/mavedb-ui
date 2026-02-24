@@ -15,13 +15,13 @@
               :collection="officialCollection"
             />
           </div>
+          <Button
+            icon="pi pi-external-link"
+            label="Score set calibrations"
+            size="small"
+            @click="$router.push({path: `/score-sets/${item.urn}/calibrations`})"
+          />
           <div v-if="userIsAuthenticated" class="mavedb-screen-title-controls">
-            <Button
-              icon="pi pi-external-link"
-              label="Score set calibrations"
-              size="small"
-              @click="$router.push({path: `/score-sets/${item.urn}/calibrations`})"
-            />
             <Button v-if="userIsAuthorized.addCalibration" size="small" @click="calibrationEditorVisible = true"
               >Add calibration</Button
             >
@@ -370,6 +370,11 @@
       />
     </Drawer>
   </div>
+  <EmailPrompt
+    v-if="calibrationEditorVisible"
+    dialog="You must add an email address to your account to create calibrations. You can do so below, or on the 'Settings' page."
+    :is-first-login-prompt="false"
+  />
   <!-- Set z-index to ensure dialog appears above heatmap color legend -->
   <PrimeDialog
     v-model:visible="calibrationEditorVisible"
@@ -420,6 +425,7 @@ import {useHead} from '@unhead/vue'
 
 import AssayFactSheet from '@/components/AssayFactSheet'
 import CalibrationEditor from '../CalibrationEditor.vue'
+import EmailPrompt from '@/components/common/EmailPrompt.vue'
 import CollectionAdder from '@/components/CollectionAdder'
 import CollectionBadge from '@/components/CollectionBadge'
 import CalibrationTable from '@/components/CalibrationTable'
@@ -456,6 +462,7 @@ export default {
     Button,
     CalibrationTable,
     CalibrationEditor,
+    EmailPrompt,
     Checkbox,
     CollectionAdder,
     CollectionBadge,
@@ -730,7 +737,7 @@ export default {
     },
     checkAuthorization: async function () {
       // Response should be true to get authorization
-      const actions = ['delete', 'publish', 'update']
+      const actions = ['delete', 'publish', 'update', 'add_calibration']
       try {
         for (const action of actions) {
           const response = await axios.get(
@@ -738,8 +745,7 @@ export default {
           )
           this.userIsAuthorized[action] = response.data
         }
-        // If a user can update, they can also add calibrations
-        this.userIsAuthorized.addCalibration = this.userIsAuthorized.update
+        this.userIsAuthorized.addCalibration = this.userIsAuthorized['add_calibration']
       } catch (err) {
         console.log(`Error to get authorization:`, err)
       }
@@ -1239,21 +1245,41 @@ export default {
           // Reload item to get the new calibration and then select it
           await this.reloadItem()
           this.selectedCalibrations = this.selectedCalibrations.map(() => createdCalibration.urn)
+        } else if (
+          response.status == 403 &&
+          typeof response.data?.detail === 'string' &&
+          response.data.detail.toLowerCase().includes('email')
+        ) {
+          this.$toast.add({
+            severity: 'error',
+            summary: 'Email Required',
+            detail:
+              'You must add an email address to your account to create calibrations. Please update your email in Settings.',
+            life: 6000
+          })
         } else if (response.data && response.data.detail) {
-          const formValidationErrors = {}
-          for (const error of response.data.detail) {
-            let path = error.loc
-            if (path[0] == 'body') {
-              path = path.slice(1)
+          if (typeof response.data.detail === 'string' || response.data.detail instanceof String) {
+            this.$toast.add({
+              severity: 'error',
+              summary: `Error saving calibration: ${response.data.detail}`,
+              life: 4000
+            })
+          } else {
+            const formValidationErrors = {}
+            for (const error of response.data.detail) {
+              let path = error.loc
+              if (path[0] == 'body') {
+                path = path.slice(1)
+              }
+              let customPath = error.ctx?.custom_loc
+              if (customPath && customPath[0] == 'body') {
+                customPath = customPath.slice(1)
+              }
+              path = path.join('.')
+              formValidationErrors[path] = error.msg
             }
-            let customPath = error.ctx?.custom_loc
-            if (customPath && customPath[0] == 'body') {
-              customPath = customPath.slice(1)
-            }
-            path = path.join('.')
-            formValidationErrors[path] = error.msg
+            this.editorValidationErrors = formValidationErrors
           }
-          this.editorValidationErrors = formValidationErrors
         }
       }
     },

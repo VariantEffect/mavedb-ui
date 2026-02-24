@@ -577,15 +577,15 @@
       <div class="mavedb-wizard-content">
         <FloatLabel variant="on">
           <AutoComplete
-            :id="scopedId('input-classification-sources-publication-identifiers')"
-            v-model="draft.classificationSources"
+            :id="scopedId('input-evidence-sources-publication-identifiers')"
+            v-model="draft.evidenceSources"
             :multiple="true"
             :option-label="(option) => `${option.identifier}: ${truncatePublicationTitle(option.title)}`"
             :suggestions="publicationIdentifierSuggestionsList"
             @blur="clearAutoCompleteInput"
             @complete="searchPublicationIdentifiers"
             @keyup.escape="clearAutoCompleteInput"
-            @option-select="acceptNewPublicationIdentifier(draft.classificationSources)"
+            @option-select="acceptNewPublicationIdentifier(draft.evidenceSources)"
           >
             <template #option="slotProps">
               <div>
@@ -596,9 +596,9 @@
               </div>
             </template>
           </AutoComplete>
-          <label :for="scopedId('input-classification-sources-publication-identifiers')">Publication identifiers</label>
-          <span v-if="validationErrors['classificationSources']" class="mave-field-error">{{
-            validationErrors['classificationSources']
+          <label :for="scopedId('input-evidence-sources-publication-identifiers')">Publication identifiers</label>
+          <span v-if="validationErrors['evidenceSources']" class="mave-field-error">{{
+            validationErrors['evidenceSources']
           }}</span>
         </FloatLabel>
       </div>
@@ -795,7 +795,7 @@ export default {
       functionalClassifications: [] as DraftFunctionalClassification[],
       thresholdSources: [] as components['schemas']['PublicationIdentifier'][],
       methodSources: [] as components['schemas']['PublicationIdentifier'][],
-      classificationSources: [] as components['schemas']['PublicationIdentifier'][]
+      evidenceSources: [] as components['schemas']['PublicationIdentifier'][]
     })
 
     // Internal reactive draft calibration (object identity must remain stable)
@@ -838,7 +838,7 @@ export default {
         'researchUseOnly',
         'thresholdSources',
         'methodSources',
-        'classificationSources'
+        'evidenceSources'
       ]
       keys.forEach((k) => {
         if (data[k] !== undefined) {
@@ -932,7 +932,7 @@ export default {
         functionalClassifications: dc.functionalClassifications,
         thresholdSources: dc.thresholdSources,
         methodSources: dc.methodSources,
-        classificationSources: dc.classificationSources
+        evidenceSources: dc.evidenceSources
       })
       isDirty.value = !_.isEqual(snapshot(draftCalibration), snapshot(draftCalibration.__original))
       isValid.value = !!draftCalibration.title
@@ -1342,7 +1342,7 @@ export default {
           'investigatorProvide',
           'thresholdSources',
           'methodSources',
-          'classificationSources'
+          'evidenceSources'
         ]
         keys.forEach((k) => {
           // @ts-expect-error index

@@ -5,7 +5,7 @@
         <div>Calibrations for: {{ getScoreSetShortName(item) }}</div>
         <div class="calibration-title-actions">
           <PrimeButton
-            v-if="userIsAuthorizedToEditScoreSet"
+            v-if="userIsAuthorizedToAddCalibration"
             icon="pi pi-plus"
             label="New calibration"
             @click="createCalibration(item.urn)"
@@ -133,7 +133,7 @@
                   <!-- Only an authenticated user will be able to edit these properties -->
                   <template v-if="userIsAuthenticated">
                     <PrimeButton
-                      v-if="calibrationAuthorizations[data.urn]?.update && userIsAuthorizedToEditScoreSet"
+                      v-if="calibrationAuthorizations[data.urn]?.update"
                       icon="pi pi-pencil"
                       :rounded="true"
                       size="small"
@@ -204,6 +204,11 @@
       <ItemNotFound :item-id="itemId" :item-type="'Score Set'" />
     </div>
   </DefaultLayout>
+  <EmailPrompt
+    v-if="editorVisible"
+    dialog="You must add an email address to your account to create or edit calibrations. You can do so below, or on the 'Settings' page."
+    :is-first-login-prompt="false"
+  />
   <PrimeDialog
     v-model:visible="editorVisible"
     :close-on-escape="false"
@@ -254,6 +259,7 @@ import {getScoreSetShortName} from '@/lib/score-sets'
 import axios from 'axios'
 import {useConfirm} from 'primevue/useconfirm'
 import CalibrationEditor, {DraftScoreCalibration} from '../CalibrationEditor.vue'
+import EmailPrompt from '@/components/common/EmailPrompt.vue'
 import {ref} from 'vue'
 import PrimeDialog from 'primevue/dialog'
 import ItemNotFound from '../common/ItemNotFound.vue'
@@ -269,6 +275,7 @@ export default {
   name: 'ScoreSetCalibrationsView',
   components: {
     CalibrationEditor,
+    EmailPrompt,
     PrimeButton,
     DefaultLayout,
     DataTable,
@@ -298,14 +305,14 @@ export default {
     const calibrationDraftClassesFileRef = ref<{value: File | null}>({value: null})
     const editorValidationErrors = ref<Record<string, string>>({})
 
-    const userIsAuthorizedToEditScoreSet = ref(false)
+    const userIsAuthorizedToAddCalibration = ref(false)
     const calibrationAuthorizations = ref<Record<string, CalibrationAuthorizations>>({})
 
     return {
       head,
       config,
       userIsAuthenticated,
-      userIsAuthorizedToEditScoreSet,
+      userIsAuthorizedToAddCalibration,
       calibrationDraftClassesFileRef,
       calibrationAuthorizations,
       confirm,
@@ -359,12 +366,11 @@ export default {
   },
   methods: {
     checkScoreSetAuthorization: async function () {
-      // Response should be true to get authorization
       try {
         const response = await axios.get(
-          `${config.apiBaseUrl}/permissions/user-is-permitted/score-set/${this.itemId}/update`
+          `${config.apiBaseUrl}/permissions/user-is-permitted/score-set/${this.itemId}/add_calibration`
         )
-        this.userIsAuthorizedToEditScoreSet = response.data
+        this.userIsAuthorizedToAddCalibration = response.data
       } catch (err) {
         console.log(`Error to get authorization:`, err)
       }
@@ -460,13 +466,20 @@ export default {
           this.editorValidationErrors = {}
           await this.reloadItem()
         } catch (error: unknown) {
-          if (axios.isAxiosError(error) && error.response && error.response.data && error.response.data.detail) {
+          if (axios.isAxiosError(error) && error.response?.status === 403 && typeof error.response?.data?.detail === 'string' && error.response.data.detail.toLowerCase().includes('email')) {
+            this.$toast.add({
+              severity: 'error',
+              summary: 'Email Required',
+              detail: 'You must add an email address to your account to create or edit calibrations. Please update your email in Settings.',
+              life: 6000
+            })
+          } else if (axios.isAxiosError(error) && error.response && error.response.data && error.response.data.detail) {
             const formValidationErrors: Record<string, string> = {}
             if (typeof error.response.data.detail === 'string' || error.response.data.detail instanceof String) {
               // Handle generic errors that are not surfaced by the API as objects
               this.$toast.add({
                 severity: 'error',
-                summary: `Encountered an error saving score set: ${error.response.data.detail}`,
+                summary: `Encountered an error saving calibration: ${error.response.data.detail}`,
                 life: 4000
               })
             } else {

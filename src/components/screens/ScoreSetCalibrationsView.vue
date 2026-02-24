@@ -233,6 +233,7 @@ import useAuth from '@/composition/auth'
 import PageLoading from '../common/PageLoading.vue'
 import CalibrationTable from '../CalibrationTable.vue'
 import {getScoreSetShortName} from '@/lib/score-sets'
+import {saveCalibration} from '@/lib/calibrations'
 import axios from 'axios'
 import {useConfirm} from 'primevue/useconfirm'
 import CalibrationEditor, {DraftScoreCalibration} from '../CalibrationEditor.vue'
@@ -404,101 +405,51 @@ export default {
       console.log('Calibration edit/create canceled')
     },
 
-    // TODO#XXX: Refactor into shared code and consolidate with logic from ScoreSetView.vue
     saveChildCalibration: async function () {
-      if (this.calibrationDraftRef.value) {
-        try {
-          const draft = this.calibrationDraftRef.value
-          const draftClassesFile = this.calibrationDraftClassesFileRef.value
+      if (!this.calibrationDraftRef.value) return
 
-          const formData = new FormData()
-          formData.append('calibration_json', JSON.stringify(draft))
-          if (draftClassesFile) {
-            formData.append('classes_file', draftClassesFile)
-          }
+      const result = await saveCalibration({
+        draft: this.calibrationDraftRef.value,
+        classesFile: this.calibrationDraftClassesFileRef.value,
+        existingUrn: this.editingCalibrationUrn
+      })
 
-          if (this.editingCalibrationUrn) {
-            // Existing calibration, perform update
-            await axios.put(`${config.apiBaseUrl}/score-calibrations/${draft.urn}`, formData, {
-              headers: {
-                'Content-Type': 'multipart/form-data'
-              }
-            })
-          } else {
-            // New calibration, perform create
-            await axios.post(`${config.apiBaseUrl}/score-calibrations`, formData, {
-              headers: {
-                'Content-Type': 'multipart/form-data'
-              }
-            })
-          }
-          this.$toast.add({
-            severity: 'success',
-            summary: 'Calibration Saved',
-            detail: 'Calibration saved successfully.',
-            life: 4000
-          })
-          this.editorVisible = false
-          this.editingCalibrationUrn = undefined
-          this.editingScoreSetUrn = undefined
-          this.editorValidationErrors = {}
-          await this.reloadItem()
-        } catch (error: unknown) {
-          if (
-            axios.isAxiosError(error) &&
-            error.response?.status === 403 &&
-            typeof error.response?.data?.detail === 'string' &&
-            error.response.data.detail.toLowerCase().includes('email')
-          ) {
-            this.$toast.add({
-              severity: 'error',
-              summary: 'Email Required',
-              detail:
-                'You must add an email address to your account to create or edit calibrations. Please update your email in Settings.',
-              life: 6000
-            })
-          } else if (axios.isAxiosError(error) && error.response && error.response.data && error.response.data.detail) {
-            const formValidationErrors: Record<string, string> = {}
-            if (typeof error.response.data.detail === 'string' || error.response.data.detail instanceof String) {
-              // Handle generic errors that are not surfaced by the API as objects
-              this.$toast.add({
-                severity: 'error',
-                summary: `Encountered an error saving calibration: ${error.response.data.detail}`,
-                life: 4000
-              })
-            } else {
-              for (const err of error.response.data.detail) {
-                let path = err.loc
-                if (path[0] == 'body') {
-                  path = path.slice(1)
-                }
-
-                let customPath = err.ctx?.error?.custom_loc
-                if (customPath) {
-                  if (customPath[0] == 'body') {
-                    customPath = customPath.slice(1)
-                  }
-                }
-
-                if (customPath) {
-                  path = path.concat(customPath)
-                }
-
-                path = path.join('.')
-                formValidationErrors[path] = err.msg
-              }
-              this.editorValidationErrors = {...formValidationErrors}
-            }
-          } else {
-            console.error('Error saving calibration:', error)
-            this.$toast.add({
-              severity: 'error',
-              summary: 'Calibration Not Saved',
-              detail: `An error occurred while saving the calibration: ${error}. Please try again later.`,
-              life: 4000
-            })
-          }
-        }
+      if (result.success) {
+        this.$toast.add({
+          severity: 'success',
+          summary: 'Calibration Saved',
+          detail: 'Calibration saved successfully.',
+          life: 4000
+        })
+        this.editorVisible = false
+        this.editingCalibrationUrn = undefined
+        this.editingScoreSetUrn = undefined
+        this.editorValidationErrors = {}
+        await this.reloadItem()
+      } else if (result.error === 'email_required') {
+        this.$toast.add({
+          severity: 'error',
+          summary: 'Email Required',
+          detail:
+            'You must add an email address to your account to create or edit calibrations. Please update your email in Settings.',
+          life: 6000
+        })
+      } else if (result.error === 'validation') {
+        this.editorValidationErrors = {...result.validationErrors}
+      } else if (result.error === 'generic') {
+        this.$toast.add({
+          severity: 'error',
+          summary: `Encountered an error saving calibration: ${result.message}`,
+          life: 4000
+        })
+      } else {
+        console.error('Error saving calibration:', result.raw)
+        this.$toast.add({
+          severity: 'error',
+          summary: 'Calibration Not Saved',
+          detail: `An error occurred while saving the calibration. Please try again later.`,
+          life: 4000
+        })
       }
     },
 

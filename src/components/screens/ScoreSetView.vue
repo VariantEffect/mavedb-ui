@@ -446,6 +446,7 @@ import useItem from '@/composition/item'
 import useRemoteData from '@/composition/remote-data'
 import config from '@/config'
 import {preferredVariantLabel, variantNotNullOrNA} from '@/lib/mave-hgvs'
+import {saveCalibration} from '@/lib/calibrations'
 import {getScoreSetShortName} from '@/lib/score-sets'
 import {parseScoresOrCounts} from '@/lib/scores'
 import {parseSimpleCodingVariants, translateSimpleCodingVariants} from '@/lib/variants'
@@ -1215,79 +1216,37 @@ export default {
       }
       return frozen
     },
-    // TODO#XXX: Refactor into shared code and consolidate with logic from ScoreSetCalibrationsView.vue
     saveCreatedCalibration: async function () {
-      if (this.calibrationDraftRef.value) {
-        let response = null
-        try {
-          const draft = this.calibrationDraftRef.value
-          const draftClassesFile = this.calibrationDraftClassesFileRef.value
+      if (!this.calibrationDraftRef.value) return
 
-          const formData = new FormData()
-          formData.append('calibration_json', JSON.stringify(draft))
-          if (draftClassesFile) {
-            formData.append('classes_file', draftClassesFile)
-          }
+      const result = await saveCalibration({
+        draft: this.calibrationDraftRef.value,
+        classesFile: this.calibrationDraftClassesFileRef.value
+      })
 
-          response = await axios.post(`${config.apiBaseUrl}/score-calibrations`, formData, {
-            headers: {
-              'Content-Type': 'multipart/form-data'
-            }
-          })
-        } catch (e) {
-          response = e.response || {status: 500}
-        }
-
-        if (response.status == 200) {
-          const createdCalibration = response.data
-          this.$toast.add({severity: 'success', summary: 'Your calibration was successfully created.', life: 3000})
-          this.calibrationEditorVisible = false
-          // Reset draft
-          this.calibrationDraftRef.value = null
-          // Reload item to get the new calibration and then select it
-          await this.reloadItem()
-          this.selectedCalibrations = this.selectedCalibrations.map(() => createdCalibration.urn)
-        } else if (
-          response.status == 403 &&
-          typeof response.data?.detail === 'string' &&
-          response.data.detail.toLowerCase().includes('email')
-        ) {
-          this.$toast.add({
-            severity: 'error',
-            summary: 'Email Required',
-            detail:
-              'You must add an email address to your account to create calibrations. Please update your email in Settings.',
-            life: 6000
-          })
-        } else if (response.data && response.data.detail) {
-          if (typeof response.data.detail === 'string' || response.data.detail instanceof String) {
-            this.$toast.add({
-              severity: 'error',
-              summary: `Error saving calibration: ${response.data.detail}`,
-              life: 4000
-            })
-          } else {
-            const formValidationErrors = {}
-            for (const error of response.data.detail) {
-              let path = error.loc
-              if (path[0] == 'body') {
-                path = path.slice(1)
-              }
-              let customPath = error.ctx?.error?.custom_loc
-              if (customPath && customPath[0] == 'body') {
-                customPath = customPath.slice(1)
-              }
-
-              if (customPath) {
-                path = path.concat(customPath)
-              }
-
-              path = path.join('.')
-              formValidationErrors[path] = error.msg
-            }
-            this.editorValidationErrors = formValidationErrors
-          }
-        }
+      if (result.success) {
+        const createdCalibration = result.data
+        this.$toast.add({severity: 'success', summary: 'Your calibration was successfully created.', life: 3000})
+        this.calibrationEditorVisible = false
+        this.calibrationDraftRef.value = null
+        await this.reloadItem()
+        this.selectedCalibrations = this.selectedCalibrations.map(() => createdCalibration.urn)
+      } else if (result.error === 'email_required') {
+        this.$toast.add({
+          severity: 'error',
+          summary: 'Email Required',
+          detail:
+            'You must add an email address to your account to create calibrations. Please update your email in Settings.',
+          life: 6000
+        })
+      } else if (result.error === 'validation') {
+        this.editorValidationErrors = result.validationErrors
+      } else if (result.error === 'generic') {
+        this.$toast.add({
+          severity: 'error',
+          summary: `Error saving calibration: ${result.message}`,
+          life: 4000
+        })
       }
     },
     showOptions: function () {

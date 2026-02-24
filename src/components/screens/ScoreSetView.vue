@@ -1215,6 +1215,7 @@ export default {
       }
       return frozen
     },
+    // TODO#XXX: Refactor into shared code and consolidate with logic from ScoreSetCalibrationsView.vue
     saveCreatedCalibration: async function () {
       if (this.calibrationDraftRef.value) {
         let response = null
@@ -1272,10 +1273,15 @@ export default {
               if (path[0] == 'body') {
                 path = path.slice(1)
               }
-              let customPath = error.ctx?.custom_loc
+              let customPath = error.ctx?.error?.custom_loc
               if (customPath && customPath[0] == 'body') {
                 customPath = customPath.slice(1)
               }
+
+              if (customPath) {
+                path = path.concat(customPath)
+              }
+
               path = path.join('.')
               formValidationErrors[path] = error.msg
             }

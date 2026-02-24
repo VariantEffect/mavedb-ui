@@ -19,6 +19,7 @@
             icon="pi pi-external-link"
             label="Score set calibrations"
             size="small"
+            style="margin-right: 0.25rem"
             @click="$router.push({path: `/score-sets/${item.urn}/calibrations`})"
           />
           <div v-if="userIsAuthenticated" class="mavedb-screen-title-controls">

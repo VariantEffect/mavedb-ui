@@ -59,7 +59,12 @@ export interface paths {
     delete: operations["delete_collection_api_v1_collections__urn__delete"];
     /**
      * Update a collection
-     * @description Modify a collection's metadata.
+     * @description Modify a collection's metadata. Also supports reordering and modifying collection membership
+     * via score_set_urns and experiment_urns fields (replace-all with implicit add/remove).
+     *
+     * When score_set_urns or experiment_urns are provided, the order of URNs in the array determines
+     * the display order in the collection. The provided list replaces the entire set of associations:
+     * URNs not in the list are removed, new URNs are added, and the order is updated to match.
      */
     patch: operations["update_collection_api_v1_collections__urn__patch"];
   };
@@ -67,6 +72,10 @@ export interface paths {
     /**
      * Create a collection
      * @description Create a new collection owned by the current user.
+     *
+     * The order of URNs in score_set_urns and experiment_urns determines the display
+     * order in the collection. This order is preserved and can be modified later using
+     * the PATCH endpoint.
      */
     post: operations["create_collection_api_v1_collections__post"];
   };
@@ -74,6 +83,9 @@ export interface paths {
     /**
      * Add a score set to a collection
      * @description Add an existing score set to an existing collection.
+     *
+     * The score set will be appended to the end of the collection's score set list.
+     * To specify a different position, use the PATCH endpoint with the full ordered list.
      */
     post: operations["add_score_set_to_collection_api_v1_collections__collection_urn__score_sets_post"];
   };
@@ -89,6 +101,9 @@ export interface paths {
     /**
      * Add an experiment to a collection
      * @description Add an existing experiment to an existing collection.
+     *
+     * The experiment will be appended to the end of the collection's experiment list.
+     * To specify a different position, use the PATCH endpoint with the full ordered list.
      */
     post: operations["add_experiment_to_collection_api_v1_collections__collection_urn__experiments_post"];
   };
@@ -1976,6 +1991,16 @@ export interface components {
        * @description Badge name. Input ignored unless requesting user has MaveDB admin privileges.
        */
       badgeName?: string | null;
+      /**
+       * Scoreseturns
+       * @description Ordered list of score set URNs. When provided, replaces the full set of score sets and their ordering. URNs not currently in the collection will be added; URNs currently in the collection but absent from this list will be removed. The list order determines the persisted display order.
+       */
+      scoreSetUrns?: string[] | null;
+      /**
+       * Experimenturns
+       * @description Ordered list of experiment URNs. When provided, replaces the full set of experiments and their ordering. URNs not currently in the collection will be added; URNs currently in the collection but absent from this list will be removed. The list order determines the persisted display order.
+       */
+      experimentUrns?: string[] | null;
     };
     /**
      * ConceptMapping
@@ -3550,6 +3575,10 @@ export interface components {
       name: string;
       /** Urn */
       urn: string;
+      /** Scoreseturns */
+      scoreSetUrns: string[];
+      /** Experimenturns */
+      experimentUrns: string[];
     };
     /** OrcidUser */
     OrcidUser: {
@@ -6114,7 +6143,12 @@ export interface operations {
   };
   /**
    * Update a collection
-   * @description Modify a collection's metadata.
+   * @description Modify a collection's metadata. Also supports reordering and modifying collection membership
+   * via score_set_urns and experiment_urns fields (replace-all with implicit add/remove).
+   *
+   * When score_set_urns or experiment_urns are provided, the order of URNs in the array determines
+   * the display order in the collection. The provided list replaces the entire set of associations:
+   * URNs not in the list are removed, new URNs are added, and the order is updated to match.
    */
   update_collection_api_v1_collections__urn__patch: {
     parameters: {
@@ -6168,6 +6202,10 @@ export interface operations {
   /**
    * Create a collection
    * @description Create a new collection owned by the current user.
+   *
+   * The order of URNs in score_set_urns and experiment_urns determines the display
+   * order in the collection. This order is preserved and can be modified later using
+   * the PATCH endpoint.
    */
   create_collection_api_v1_collections__post: {
     parameters: {
@@ -6218,6 +6256,9 @@ export interface operations {
   /**
    * Add a score set to a collection
    * @description Add an existing score set to an existing collection.
+   *
+   * The score set will be appended to the end of the collection's score set list.
+   * To specify a different position, use the PATCH endpoint with the full ordered list.
    */
   add_score_set_to_collection_api_v1_collections__collection_urn__score_sets_post: {
     parameters: {
@@ -6317,6 +6358,9 @@ export interface operations {
   /**
    * Add an experiment to a collection
    * @description Add an existing experiment to an existing collection.
+   *
+   * The experiment will be appended to the end of the collection's experiment list.
+   * To specify a different position, use the PATCH endpoint with the full ordered list.
    */
   add_experiment_to_collection_api_v1_collections__collection_urn__experiments_post: {
     parameters: {

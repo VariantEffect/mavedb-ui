@@ -27,6 +27,8 @@ import {watch, ref} from 'vue'
 import config from '@/config'
 import useScopedId from '@/composables/scoped-id'
 
+const DEFAULT_ALPHAFOLD_FILES_VERSION = 'v6'
+
 export default {
   name: 'ProteinStructureView',
 
@@ -205,6 +207,18 @@ export default {
     hoveredOverResidue: function (e) {
       this.$emit('hoveredOverResidue', e.eventData)
     },
+    fetchAlphaFoldFilesVersion: async function () {
+      try {
+        const response = await axios.get(`${config.apiBaseUrl}/alphafold-files/version`)
+        const responseVersion = _.isString(response?.data) ? response.data : response?.data?.version
+        if (_.isString(responseVersion) && responseVersion.trim().length > 0) {
+          return responseVersion.trim()
+        }
+      } catch (error) {
+        // Fallback for environments where the proxy endpoint is unavailable.
+      }
+      return DEFAULT_ALPHAFOLD_FILES_VERSION
+    },
 
     destroyViewer: function () {
       if (this.viewerInstance) {
@@ -218,15 +232,8 @@ export default {
       this.destroyViewer()
 
       if (this.selectedAlphaFold) {
-        let alphafoldCifUrl
-        try {
-          const response = await axios.get(`${config.apiBaseUrl}/alphafold-files/version`)
-          const alphafoldFilesVersion = response.data.version
-          alphafoldCifUrl = `https://alphafold.ebi.ac.uk/files/AF-${encodeURIComponent(this.selectedAlphaFold.id)}-F1-model_${encodeURIComponent(alphafoldFilesVersion)}.cif`
-        } catch (error) {
-          this.$toast.add({severity: 'error', summary: 'Error', detail: 'Failed to fetch AlphaFold version'})
-          return
-        }
+        const alphafoldFilesVersion = await this.fetchAlphaFoldFilesVersion()
+        const alphafoldCifUrl = `https://alphafold.ebi.ac.uk/files/AF-${encodeURIComponent(this.selectedAlphaFold.id)}-F1-model_${encodeURIComponent(alphafoldFilesVersion)}.cif`
 
         const viewerInstance = new PDBeMolstarPlugin()
         const options = {

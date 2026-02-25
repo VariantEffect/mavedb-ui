@@ -86,3 +86,7 @@ MaveDB stores and serves data about **variant effects** measured through multipl
 2. **Dynamic Vuex modules**: The `composition/item.js` composable creates per-component Vuex modules dynamically using `store.registerModule()` with UUID-based namespaces.
 3. **Feature flags**: Some routes and features are conditionally enabled based on `config.CLINICAL_FEATURES_ENABLED`.
 4. **HTTPS required for dev**: The Vite dev server uses `@vitejs/plugin-basic-ssl` because ORCID OAuth requires HTTPS callbacks. Port 8081 must be available (strictPort).
+
+## Maintaining This File
+
+This instruction file and the project documentation (`docs/`) are **living documents**. When you make changes to the codebase that affect the information described here — such as removing a feature flag, changing the tech stack, restructuring directories, or updating conventions — update this file and any affected documentation pages to reflect the new state. Do not leave stale or obsolete instructions in place.

@@ -4,9 +4,10 @@
   "private": true,
   "type": "module",
   "scripts": {
-    "build": "vite build --mode=${MODE=live}",
-    "dev": "vite --mode=${MODE=dev}",
-    "preview": "vite build --mode=${MODE=live} --watch & vite preview --mode=${MODE=live}"
+    "build": "./scripts/build-docs.sh && vite build --mode=${MODE=live}",
+    "dev": "./scripts/build-docs.sh && vite --mode=${MODE=dev}",
+    "docs": "mkdocs serve -f docs/mkdocs.yml",
+    "preview": "./scripts/build-docs.sh && vite build --mode=${MODE=live} --watch & vite preview --mode=${MODE=live}"
   },
   "dependencies": {
     "@fontsource/raleway": "^5.0.16",

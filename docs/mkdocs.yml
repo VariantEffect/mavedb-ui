@@ -1,0 +1,108 @@
+site_name: MaveDB Documentation
+site_description: Documentation for MaveDB, a public repository for Multiplexed Assays of Variant Effect (MAVE) datasets
+site_url: https://www.mavedb.org/docs/mavedb/
+
+docs_dir: content
+use_directory_urls: false
+
+theme:
+  name: material
+  palette:
+    - scheme: default
+      primary: custom
+      accent: custom
+  favicon: images/mavedb-icon-transparent.png
+  font:
+    text: Raleway
+  features:
+    - navigation.sections
+    - navigation.expand
+    - navigation.top
+    - navigation.indexes
+    - search.suggest
+    - search.highlight
+    - content.tabs.link
+    - content.code.copy
+    - content.tooltips
+    - navigation.instant
+    - toc.follow
+  icon:
+    repo: fontawesome/brands/github
+
+repo_url: https://github.com/VariantEffect/mavedb-api
+repo_name: VariantEffect/mavedb-api
+
+extra_css:
+  - stylesheets/extra.css
+
+plugins:
+  - search
+  - glightbox
+
+markdown_extensions:
+  - admonition
+  - pymdownx.details
+  - pymdownx.superfences:
+      custom_fences:
+        - name: mermaid
+          class: mermaid
+          format: !!python/name:pymdownx.superfences.fence_code_format
+  - pymdownx.tabbed:
+      alternate_style: true
+  - attr_list
+  - md_in_html
+  - tables
+  - toc:
+      permalink: true
+  - def_list
+  - pymdownx.tasklist:
+      custom_checkbox: true
+  - pymdownx.emoji:
+      emoji_index: !!python/name:material.extensions.emoji.twemoji
+      emoji_generator: !!python/name:material.extensions.emoji.to_svg
+  - abbr
+  - pymdownx.snippets:
+      auto_append:
+        - docs/includes/glossary.md
+
+nav:
+  - Home: index.md
+  - Getting Started:
+      - getting-started/index.md
+      - User Accounts: getting-started/accounts.md
+      - Key Concepts: getting-started/key-concepts.md
+  - Finding Data:
+      - finding-data/index.md
+      - Searching Datasets: finding-data/searching.md
+      - Visualizations: finding-data/visualizations.md
+      - Downloading Data: finding-data/downloading.md
+      - External Integrations: finding-data/external-integrations.md
+  - Submitting Data:
+      - submitting-data/index.md
+      - Before You Start: submitting-data/before-you-start.md
+      - Data Formats: submitting-data/data-formats.md
+      - Metadata Guide: submitting-data/metadata-guide.md
+      - Targets: submitting-data/targets.md
+      - Upload Guide: submitting-data/upload-guide.md
+      - Publishing: submitting-data/publishing.md
+  - MaveMD:
+      - mavemd/index.md
+      - Variant Search: mavemd/variant-search.md
+      - Variant Page: mavemd/variant-page.md
+  - Programmatic Access:
+      - programmatic-access/index.md
+      - API Quickstart: programmatic-access/api-quickstart.md
+      - Python Usage: programmatic-access/python-usage.md
+  - Reference:
+      - reference/index.md
+      - Data Standards: reference/data-standards.md
+      - Score Calibrations: reference/score-calibrations.md
+      - Accession Numbers: reference/accession-numbers.md
+      - Controlled Vocabulary: reference/controlled-vocabulary.md
+      - Permissions: reference/permissions.md
+      - Variant Mapping: reference/variant-mapping.md
+      - Assay Facts: reference/assay-facts.md
+      - Collections: reference/collections.md
+  - Troubleshooting: troubleshooting.md
+  - FAQ: faq.md
+  - Citing MaveDB: citation.md

@@ -1,0 +1,56 @@
+/* MaveDB brand colors */
+:root {
+  --md-primary-fg-color: #78B793;
+  --md-primary-fg-color--light: #A1D8C8;
+  --md-primary-fg-color--dark: #5a9375;
+  --md-accent-fg-color: #1a73e8;
+  --md-typeset-a-color: #1a73e8;
+}
+
+/* Standard blue links throughout content */
+.md-typeset a {
+  color: #1a73e8;
+}
+.md-typeset a:hover {
+  color: #1558b0;
+}
+
+/* Push the arrow link to the bottom of grid cards */
+.md-typeset .grid.cards > ul > li {
+  display: flex !important;
+  flex-direction: column !important;
+}
+.md-typeset .grid.cards > ul > li > p:last-child {
+  margin-top: auto;
+}
+
+/* Make tables span full width */
+.md-typeset__table {
+  display: block !important;
+  width: 100% !important;
+}
+.md-typeset table:not([class]),
+.md-typeset__table table {
+  display: table !important;
+  width: 100% !important;
+}
+
+/* Center images and Mermaid diagrams */
+.md-typeset img {
+  display: block;
+  margin-left: auto;
+  margin-right: auto;
+}
+.md-typeset .mermaid {
+  text-align: center;
+}
+
+/* Figure captions */
+.md-typeset figure {
+  width: 100%;
+}
+.md-typeset figcaption {
+  text-align: left;
+  font-size: 0.7rem;
+  margin-top: -0.5rem;
+}

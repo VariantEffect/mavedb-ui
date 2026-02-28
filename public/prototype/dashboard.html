@@ -585,22 +585,52 @@
         padding: 52px 24px;
         text-align: center;
         color: #aaa;
+        display: flex;
+        flex-direction: column;
+        align-items: center;
       }
-      .empty-state-icon {
-        font-size: 36px;
-        margin-bottom: 14px;
+      .empty-state-bars {
+        display: flex;
+        align-items: flex-end;
+        gap: 4px;
+        height: 56px;
+        margin-bottom: 20px;
+      }
+      .empty-state-bar {
+        width: 6px;
+        border-radius: 3px 3px 0 0;
       }
       .empty-state h3 {
         font-size: 16px;
         font-weight: 700;
         color: #555;
         margin-bottom: 6px;
+        font-family: 'Raleway', sans-serif;
       }
       .empty-state p {
         font-size: 13px;
         color: #999;
         margin-bottom: 20px;
         line-height: 1.6;
+        max-width: 400px;
+      }
+      .empty-state-btn {
+        display: inline-flex;
+        align-items: center;
+        gap: 6px;
+        padding: 8px 18px;
+        background: #f8971d;
+        color: #fff;
+        border: none;
+        border-radius: 5px;
+        font-size: 13px;
+        font-weight: 600;
+        cursor: pointer;
+        font-family: 'Raleway', sans-serif;
+        transition: background 0.12s;
+      }
+      .empty-state-btn:hover {
+        background: #e5860a;
       }
 
       /* ── COLLECTION CARDS ── */
@@ -935,6 +965,32 @@
         gap: 20px;
       }
 
+      /* ── EMPTY STATE TOGGLE ── */
+      .empty-toggle {
+        display: inline-flex;
+        align-items: center;
+        gap: 6px;
+        padding: 4px 10px;
+        background: #fff;
+        border: 1px solid #dee2e6;
+        border-radius: 4px;
+        font-size: 11px;
+        font-weight: 600;
+        color: #888;
+        cursor: pointer;
+        font-family: 'Raleway', sans-serif;
+        transition: all 0.12s;
+      }
+      .empty-toggle:hover {
+        border-color: #78b793;
+        color: #555;
+      }
+      .empty-toggle.active {
+        background: #f0f9f2;
+        border-color: #78b793;
+        color: #2e6b45;
+      }
+
       /* ── PROTOTYPE BANNER ── */
       .proto-banner { background: #FBDA68; color: #333; text-align: center; padding: 8px 24px; font-size: 13px; font-family: 'Raleway', sans-serif; font-weight: 500; position: sticky; top: 0; z-index: 9999; letter-spacing: 0.1px; }
       .proto-banner a { color: #555; text-decoration: underline; }
@@ -1047,7 +1103,7 @@
           </div>
           <div class="toolbar-right">
             <input class="search-input-small" type="text" placeholder="Search score sets…" />
-            <a href="#" class="btn btn-primary">+ Add Score Set</a>
+            <a href="./add-score-set.html" class="btn btn-primary">+ Add Score Set</a>
           </div>
         </div>
         <table class="data-table">
@@ -1064,7 +1120,7 @@
           <tbody>
             <tr>
               <td>
-                <a href="#" class="row-title">BRCA1 SGE Exon 20 – Replicate 1</a>
+                <a href="./score-set-detail.html" class="row-title">BRCA1 SGE Exon 20 – Replicate 1</a>
                 <div class="row-desc">Saturation genome editing of BRCA1 exon 20 assessing variant impact on protein function via a cell survival readout.</div>
               </td>
               <td>
@@ -1077,12 +1133,12 @@
               <td><span class="status-badge status-published">Published</span></td>
               <td class="date-cell">Jan 12, 2024</td>
               <td><div class="row-actions">
-                <a href="#" class="action-link">View</a>
+                <a href="./score-set-detail.html" class="action-link">View</a>
               </div></td>
             </tr>
             <tr>
               <td>
-                <a href="#" class="row-title">BRCA1 SGE Exon 20 – Replicate 2</a>
+                <a href="./score-set-detail.html" class="row-title">BRCA1 SGE Exon 20 – Replicate 2</a>
                 <div class="row-desc">Independent biological replicate of the BRCA1 exon 20 saturation genome editing screen.</div>
               </td>
               <td>
@@ -1095,12 +1151,12 @@
               <td><span class="status-badge status-published">Published</span></td>
               <td class="date-cell">Jan 12, 2024</td>
               <td><div class="row-actions">
-                <a href="#" class="action-link">View</a>
+                <a href="./score-set-detail.html" class="action-link">View</a>
               </div></td>
             </tr>
             <tr>
               <td>
-                <a href="#" class="row-title">TP53 Saturation Genome Editing – Functional Score</a>
+                <a href="./score-set-detail.html" class="row-title">TP53 Saturation Genome Editing – Functional Score</a>
                 <div class="row-desc">Deep mutational scan of TP53 measuring functional scores across all possible single amino acid substitutions.</div>
               </td>
               <td>
@@ -1113,12 +1169,12 @@
               <td><span class="status-badge status-published">Published</span></td>
               <td class="date-cell">Mar 4, 2024</td>
               <td><div class="row-actions">
-                <a href="#" class="action-link">View</a>
+                <a href="./score-set-detail.html" class="action-link">View</a>
               </div></td>
             </tr>
             <tr>
               <td>
-                <a href="#" class="row-title">KCNQ4 Missense Variant Effect Map</a>
+                <a href="./score-set-detail.html" class="row-title">KCNQ4 Missense Variant Effect Map</a>
                 <div class="row-desc">Comprehensive missense variant effect map for KCNQ4 using a heterologous expression assay in Xenopus oocytes.</div>
               </td>
               <td>
@@ -1131,12 +1187,12 @@
               <td><span class="status-badge status-published">Published</span></td>
               <td class="date-cell">Jun 22, 2023</td>
               <td><div class="row-actions">
-                <a href="#" class="action-link">View</a>
+                <a href="./score-set-detail.html" class="action-link">View</a>
               </div></td>
             </tr>
             <tr>
               <td>
-                <a href="#" class="row-title">SCN5A Channel Function – Heterologous Expression</a>
+                <a href="./score-set-detail.html" class="row-title">SCN5A Channel Function – Heterologous Expression</a>
                 <div class="row-desc">Variant effect map for SCN5A sodium channel function measured in a heterologous expression system.</div>
               </td>
               <td>
@@ -1149,12 +1205,12 @@
               <td><span class="status-badge status-published">Published</span></td>
               <td class="date-cell">Sep 3, 2024</td>
               <td><div class="row-actions">
-                <a href="#" class="action-link">View</a>
+                <a href="./score-set-detail.html" class="action-link">View</a>
               </div></td>
             </tr>
             <tr>
               <td>
-                <a href="#" class="row-title">PTEN Abundance – Yeast Two-Hybrid</a>
+                <a href="./score-set-detail.html" class="row-title">PTEN Abundance – Yeast Two-Hybrid</a>
                 <div class="row-desc">Yeast two-hybrid assay measuring the effect of PTEN missense variants on protein abundance and stability.</div>
               </td>
               <td>
@@ -1167,12 +1223,12 @@
               <td><span class="status-badge status-published">Published</span></td>
               <td class="date-cell">Aug 15, 2023</td>
               <td><div class="row-actions">
-                <a href="#" class="action-link">View</a>
+                <a href="./score-set-detail.html" class="action-link">View</a>
               </div></td>
             </tr>
             <tr class="row--unpublished">
               <td>
-                <a href="#" class="row-title">GCK Missense Variant Functional Classification</a>
+                <a href="./score-set-detail.html" class="row-title">GCK Missense Variant Functional Classification</a>
                 <div class="row-desc">Deep mutational scan of the GCK kinase domain classifying missense variants by enzymatic activity.</div>
               </td>
               <td>
@@ -1185,13 +1241,13 @@
               <td><span class="status-badge status-unpublished">Unpublished</span></td>
               <td class="date-cell date-cell--updated">Updated Dec 3, 2024</td>
               <td><div class="row-actions">
-                <a href="#" class="action-link">View</a>
+                <a href="./score-set-detail.html" class="action-link">View</a>
                 <a href="#" class="action-link">Edit</a>
               </div></td>
             </tr>
             <tr class="row--unpublished">
               <td>
-                <a href="#" class="row-title">CHEK2 Kinase Activity Assay – Draft</a>
+                <a href="./score-set-detail.html" class="row-title">CHEK2 Kinase Activity Assay – Draft</a>
                 <div class="row-desc">Draft score set measuring CHEK2 kinase activity across missense variants using an in vitro phosphorylation assay.</div>
               </td>
               <td>
@@ -1204,14 +1260,14 @@
               <td><span class="status-badge status-unpublished">Unpublished</span></td>
               <td class="date-cell date-cell--updated">Updated Jan 18, 2025</td>
               <td><div class="row-actions">
-                <a href="#" class="action-link">View</a>
+                <a href="./score-set-detail.html" class="action-link">View</a>
                 <a href="#" class="action-link">Edit</a>
               </div></td>
             </tr>
             <!-- Meta-analysis example -->
             <tr>
               <td>
-                <a href="#" class="row-title">BRCA1 Combined Functional Meta-analysis</a>
+                <a href="./score-set-detail.html" class="row-title">BRCA1 Combined Functional Meta-analysis</a>
                 <div class="row-desc">Meta-analysis combining multiple BRCA1 SGE datasets to derive consensus functional scores for clinical interpretation.</div>
               </td>
               <td>
@@ -1224,13 +1280,13 @@
               <td><span class="status-badge status-published">Published</span></td>
               <td class="date-cell">Nov 5, 2024</td>
               <td><div class="row-actions">
-                <a href="#" class="action-link">View</a>
+                <a href="./score-set-detail.html" class="action-link">View</a>
               </div></td>
             </tr>
             <!-- Superseded example -->
             <tr class="row--superseded">
               <td>
-                <a href="#" class="row-title">KCNQ4 Missense Variant Effect Map – v1</a>
+                <a href="./score-set-detail.html" class="row-title">KCNQ4 Missense Variant Effect Map – v1</a>
                 <div class="row-desc">Initial KCNQ4 missense variant effect map; superseded by an updated analysis with expanded variant coverage.</div>
               </td>
               <td>
@@ -1243,7 +1299,7 @@
               <td><span class="status-badge status-published">Published</span></td>
               <td class="date-cell">Mar 8, 2022</td>
               <td><div class="row-actions">
-                <a href="#" class="action-link">View</a>
+                <a href="./score-set-detail.html" class="action-link">View</a>
               </div></td>
             </tr>
           </tbody>
@@ -1264,7 +1320,7 @@
           </div>
           <div class="toolbar-right">
             <input class="search-input-small" type="text" placeholder="Search experiments…" />
-            <a href="#" class="btn btn-primary">+ Add Experiment</a>
+            <a href="./add-experiment.html" class="btn btn-primary">+ Add Experiment</a>
           </div>
         </div>
         <table class="data-table">
@@ -1281,7 +1337,7 @@
           <tbody>
             <tr>
               <td>
-                <a href="#" class="row-title">BRCA1 SGE – Exon 20 Saturation Editing</a>
+                <a href="./experiment-detail.html" class="row-title">BRCA1 SGE – Exon 20 Saturation Editing</a>
                 <div class="row-desc">Saturation genome editing of BRCA1 exon 20 comprising multiple biological replicates and functional readouts.</div>
               </td>
               <td class="date-cell">3 score sets</td>
@@ -1289,12 +1345,12 @@
               <td><span class="status-badge status-published">Published</span></td>
               <td class="date-cell">Jan 2024</td>
               <td><div class="row-actions">
-                <a href="#" class="action-link">View</a>
+                <a href="./experiment-detail.html" class="action-link">View</a>
               </div></td>
             </tr>
             <tr>
               <td>
-                <a href="#" class="row-title">TP53 Saturation Genome Editing Panel</a>
+                <a href="./experiment-detail.html" class="row-title">TP53 Saturation Genome Editing Panel</a>
                 <div class="row-desc">Large-scale SGE panel characterizing TP53 variant effects across multiple functional domains and cell lines.</div>
               </td>
               <td class="date-cell">9 score sets</td>
@@ -1302,12 +1358,12 @@
               <td><span class="status-badge status-published">Published</span></td>
               <td class="date-cell">Mar 2024</td>
               <td><div class="row-actions">
-                <a href="#" class="action-link">View</a>
+                <a href="./experiment-detail.html" class="action-link">View</a>
               </div></td>
             </tr>
             <tr>
               <td>
-                <a href="#" class="row-title">KCNQ4 Comprehensive Variant Screen</a>
+                <a href="./experiment-detail.html" class="row-title">KCNQ4 Comprehensive Variant Screen</a>
                 <div class="row-desc">Comprehensive screen of KCNQ4 missense variants across two independent functional assays.</div>
               </td>
               <td class="date-cell">2 score sets</td>
@@ -1315,12 +1371,12 @@
               <td><span class="status-badge status-published">Published</span></td>
               <td class="date-cell">Jun 2023</td>
               <td><div class="row-actions">
-                <a href="#" class="action-link">View</a>
+                <a href="./experiment-detail.html" class="action-link">View</a>
               </div></td>
             </tr>
             <tr class="row--unpublished">
               <td>
-                <a href="#" class="row-title">GCK Kinase Domain DMS – Draft</a>
+                <a href="./experiment-detail.html" class="row-title">GCK Kinase Domain DMS – Draft</a>
                 <div class="row-desc">Draft deep mutational scan of the GCK kinase domain measuring catalytic activity across missense variants.</div>
               </td>
               <td class="date-cell">1 score set</td>
@@ -1328,13 +1384,13 @@
               <td><span class="status-badge status-unpublished">Unpublished</span></td>
               <td class="date-cell">Nov 2024</td>
               <td><div class="row-actions">
-                <a href="#" class="action-link">View</a>
+                <a href="./experiment-detail.html" class="action-link">View</a>
                 <a href="#" class="action-link">Edit</a>
               </div></td>
             </tr>
             <tr class="row--unpublished">
               <td>
-                <a href="#" class="row-title">CHEK2 Functional Assay</a>
+                <a href="./experiment-detail.html" class="row-title">CHEK2 Functional Assay</a>
                 <div class="row-desc">Functional characterization of CHEK2 variants using kinase activity and protein stability assays.</div>
               </td>
               <td class="date-cell">2 score sets</td>
@@ -1342,13 +1398,13 @@
               <td><span class="status-badge status-unpublished">Unpublished</span></td>
               <td class="date-cell">Jan 2025</td>
               <td><div class="row-actions">
-                <a href="#" class="action-link">View</a>
+                <a href="./experiment-detail.html" class="action-link">View</a>
                 <a href="#" class="action-link">Edit</a>
               </div></td>
             </tr>
             <tr>
               <td>
-                <a href="#" class="row-title">SCN5A Sodium Channel Activity Panel</a>
+                <a href="./experiment-detail.html" class="row-title">SCN5A Sodium Channel Activity Panel</a>
                 <div class="row-desc">Functional panel assessing SCN5A variant effects on sodium channel activity in a heterologous expression system.</div>
               </td>
               <td class="date-cell">1 score set</td>
@@ -1356,7 +1412,7 @@
               <td><span class="status-badge status-published">Published</span></td>
               <td class="date-cell">Sep 2024</td>
               <td><div class="row-actions">
-                <a href="#" class="action-link">View</a>
+                <a href="./experiment-detail.html" class="action-link">View</a>
               </div></td>
             </tr>
           </tbody>
@@ -1374,10 +1430,12 @@
             <button class="filter-chip" onclick="toggleFilter(this)">Private</button>
           </div>
           <div class="toolbar-right">
+            <button class="empty-toggle" id="collections-empty-toggle" onclick="toggleEmptyState('collections')">Show empty state</button>
             <a href="#" class="btn btn-primary">+ New Collection</a>
           </div>
         </div>
-        <div class="collection-grid">
+        <!-- Populated state -->
+        <div id="collections-populated" class="collection-grid">
           <div class="collection-card">
             <a href="#" class="collection-card-title">Cardiac Channelopathy MAVE Panel</a>
             <p class="collection-card-desc">
@@ -1419,6 +1477,22 @@
             <span>New Collection</span>
           </a>
         </div>
+        <!-- Empty state -->
+        <div id="collections-empty" class="empty-state" style="display: none;">
+          <div class="empty-state-bars" style="opacity: 0.45;">
+            <div class="empty-state-bar" style="background: #78b793; height: 20px;"></div>
+            <div class="empty-state-bar" style="background: #a1d8c8; height: 32px;"></div>
+            <div class="empty-state-bar" style="background: #78b793; height: 44px;"></div>
+            <div class="empty-state-bar" style="background: #f8971d; height: 36px; opacity: 0.7;"></div>
+            <div class="empty-state-bar" style="background: #bbb; height: 24px; opacity: 0.6;"></div>
+            <div class="empty-state-bar" style="background: #ccc; height: 40px; opacity: 0.5;"></div>
+            <div class="empty-state-bar" style="background: #ddd; height: 28px; opacity: 0.4;"></div>
+            <div class="empty-state-bar" style="background: #e0e0e0; height: 18px; opacity: 0.3;"></div>
+          </div>
+          <h3>No collections yet</h3>
+          <p>Collections help you organise score sets and experiments for clinical interpretation workflows or personal reference.</p>
+          <button class="empty-state-btn">+ Create your first collection</button>
+        </div>
       </div>
 
       <!-- ── CALIBRATIONS PANEL ── -->
@@ -1458,7 +1532,7 @@
             <tr>
               <td><button class="expander-btn" onclick="toggleExpansion(this, 'exp-1')">▶</button></td>
               <td><a href="#" class="row-title">BRCA1 SGE Exon 20 – ClinVar</a></td>
-              <td style="font-size: 13px; white-space: nowrap;"><a href="#" class="action-link">BRCA1 SGE Exon 20 – Replicate 1</a></td>
+              <td style="font-size: 13px; white-space: nowrap;"><a href="./score-set-detail.html" class="action-link">BRCA1 SGE Exon 20 – Replicate 1</a></td>
               <td style="font-size: 13px; color: #666; min-width: 180px;">Calibrated against ClinVar P/LP and B/LB variants with ≥2 star review status.</td>
               <td style="text-align: center"><span class="cal-tag cal-tag--yes">Yes</span></td>
               <td style="text-align: center"><span class="cal-tag cal-tag--yes">Yes</span></td>
@@ -1513,11 +1587,11 @@
                     </tr>
                   </table>
                   <div class="cal-exp-footer">
-                    <span>ⓘ Thresholds: Tavtigian et al. (2020)</span>
+                    <span>ⓘ Thresholds: Bergman et al. (2020)</span>
                     <span class="cal-exp-footer-sep">—</span>
-                    <span>ⓘ Method: Brnich et al. (2019)</span>
+                    <span>ⓘ Method: Fontaine et al. (2019)</span>
                     <span class="cal-exp-footer-sep">—</span>
-                    <span>ⓘ Evidence calcs: Nakamura et al. (2018)</span>
+                    <span>ⓘ Evidence calcs: Okafor et al. (2018)</span>
                   </div>
                 </div>
               </td>
@@ -1526,7 +1600,7 @@
             <tr class="row--unpublished">
               <td><button class="expander-btn" onclick="toggleExpansion(this, 'exp-2')">▶</button></td>
               <td><a href="#" class="row-title">KCNQ4 Variant Effect – Draft</a></td>
-              <td style="font-size: 13px; white-space: nowrap;"><a href="#" class="action-link">KCNQ4 Missense Variant Effect Map</a></td>
+              <td style="font-size: 13px; white-space: nowrap;"><a href="./score-set-detail.html" class="action-link">KCNQ4 Missense Variant Effect Map</a></td>
               <td style="font-size: 13px; color: #aaa; font-style: italic; min-width: 180px;">No notes.</td>
               <td style="text-align: center"><span class="cal-tag cal-tag--no">No</span></td>
               <td style="text-align: center"><span class="cal-tag cal-tag--no">No</span></td>
@@ -1639,6 +1713,23 @@
         }
       }
 
+      function toggleEmptyState(section) {
+        const populated = document.getElementById(section + '-populated');
+        const empty = document.getElementById(section + '-empty');
+        const toggle = document.getElementById(section + '-empty-toggle');
+        const isShowingEmpty = empty.style.display !== 'none';
+        if (isShowingEmpty) {
+          populated.style.display = '';
+          empty.style.display = 'none';
+          toggle.textContent = 'Show empty state';
+          toggle.classList.remove('active');
+        } else {
+          populated.style.display = 'none';
+          empty.style.display = '';
+          toggle.textContent = 'Show populated';
+          toggle.classList.add('active');
+        }
+      }
     </script>
   </body>
 </html>

@@ -1,0 +1,1974 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Calibrations — MaveDB</title>
+    <link
+      href="https://fonts.googleapis.com/css2?family=Raleway:wght@400;500;600;700&family=Exo+2:wght@700;800;900&display=swap"
+      rel="stylesheet"
+    />
+    <style>
+      *,
+      *::before,
+      *::after {
+        box-sizing: border-box;
+        margin: 0;
+        padding: 0;
+      }
+
+      body {
+        font-family: 'Raleway', sans-serif;
+        background: #f7f7f7;
+        color: #333;
+        font-size: 15px;
+      }
+
+      h1,
+      h2,
+      h3 {
+        font-family: 'Exo 2', sans-serif;
+      }
+
+      a {
+        color: #0074d9;
+        text-decoration: none;
+      }
+      a:hover {
+        text-decoration: underline;
+      }
+
+      /* ── NAV ── */
+      nav {
+        background: #fff;
+        border-bottom: 1px solid #dee2e6;
+        position: sticky;
+        top: 0;
+        z-index: 100;
+      }
+      .nav-inner {
+        max-width: 1200px;
+        margin: 0 auto;
+        display: flex;
+        align-items: center;
+        gap: 24px;
+        padding: 0 24px;
+        height: 58px;
+      }
+      .nav-logo-img {
+        height: 42px;
+        display: block;
+        flex-shrink: 0;
+      }
+      .nav-links {
+        display: flex;
+        gap: 20px;
+        margin-left: auto;
+        list-style: none;
+        font-size: 14px;
+        font-weight: 500;
+      }
+      .nav-links a {
+        color: #444;
+      }
+      .nav-links a:hover {
+        color: #78b793;
+        text-decoration: none;
+      }
+      .nav-add-wrap {
+        position: relative;
+      }
+      .nav-add-dropdown {
+        display: none;
+        position: absolute;
+        top: calc(100% + 12px);
+        right: 0;
+        width: 260px;
+        background: #fff;
+        border: 1px solid #e0e0e0;
+        border-radius: 8px;
+        box-shadow: 0 8px 24px rgba(0, 0, 0, 0.12);
+        z-index: 200;
+        overflow: hidden;
+      }
+      .nav-add-dropdown.open {
+        display: block;
+      }
+      .nav-add-option {
+        display: block;
+        padding: 12px 16px;
+        border-bottom: 1px solid #f0f0f0;
+      }
+      .nav-add-option:last-child {
+        border-bottom: none;
+      }
+      .nav-add-option:hover {
+        background: #f5f5f5;
+        text-decoration: none;
+      }
+      .nav-add-option-label {
+        font-size: 13px;
+        font-weight: 600;
+        color: #333;
+      }
+      .nav-add-option-desc {
+        font-size: 12px;
+        color: #888;
+        margin-top: 2px;
+      }
+      .nav-user {
+        background: #78b793;
+        color: #fff;
+        border-radius: 50%;
+        width: 32px;
+        height: 32px;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        font-weight: 700;
+        font-size: 13px;
+        flex-shrink: 0;
+      }
+      .nav-bell-wrap {
+        position: relative;
+        flex-shrink: 0;
+      }
+      .nav-bell {
+        width: 32px;
+        height: 32px;
+        border-radius: 50%;
+        border: none;
+        background: transparent;
+        cursor: pointer;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        font-size: 16px;
+        color: #555;
+        transition: background 0.12s;
+        position: relative;
+      }
+      .nav-bell:hover {
+        background: #f0f0f0;
+      }
+      .nav-bell-badge {
+        position: absolute;
+        top: 2px;
+        right: 2px;
+        width: 16px;
+        height: 16px;
+        background: #e53935;
+        color: #fff;
+        border-radius: 50%;
+        font-size: 10px;
+        font-weight: 700;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        pointer-events: none;
+      }
+      .nav-bell-dropdown {
+        display: none;
+        position: absolute;
+        right: 0;
+        top: calc(100% + 8px);
+        width: 340px;
+        background: #fff;
+        border: 1px solid #e0e0e0;
+        border-radius: 8px;
+        box-shadow: 0 8px 24px rgba(0, 0, 0, 0.12);
+        z-index: 300;
+        overflow: hidden;
+      }
+      .nav-bell-dropdown.open {
+        display: block;
+      }
+      .nav-bell-dropdown-header {
+        padding: 12px 16px;
+        font-size: 12px;
+        font-weight: 700;
+        color: #aaa;
+        text-transform: uppercase;
+        letter-spacing: 0.6px;
+        border-bottom: 1px solid #f0f0f0;
+      }
+      .nav-bell-activity-list {
+        padding: 8px 0;
+      }
+      .nav-bell-activity-item {
+        padding: 9px 16px;
+        font-size: 13px;
+        color: #555;
+        display: flex;
+        flex-direction: column;
+        gap: 2px;
+        border-bottom: 1px solid #fafafa;
+      }
+      .nav-bell-activity-item:last-child {
+        border-bottom: none;
+      }
+      .nav-bell-activity-item a {
+        color: #0074d9;
+        font-weight: 600;
+      }
+      .nav-bell-activity-verb {
+        color: #888;
+      }
+      .nav-bell-activity-time {
+        font-size: 11px;
+        color: #bbb;
+      }
+
+      /* ── PAGE HEADER ── */
+      .page-header {
+        background: #fff;
+        border-bottom: 1px solid #dee2e6;
+        padding: 32px 24px 28px;
+      }
+      .page-header-inner {
+        max-width: 1000px;
+        margin: 0 auto;
+      }
+      .page-header-top {
+        display: flex;
+        align-items: flex-start;
+        justify-content: space-between;
+        gap: 20px;
+      }
+      .page-header-title-group {
+        flex: 1;
+        min-width: 0;
+      }
+      .page-header-label {
+        font-size: 12px;
+        font-weight: 600;
+        text-transform: uppercase;
+        letter-spacing: 0.8px;
+        color: #aaa;
+        margin-bottom: 4px;
+      }
+      .page-header h1 {
+        font-size: 22px;
+        font-weight: 700;
+        color: #222;
+        line-height: 1.3;
+        margin-bottom: 2px;
+      }
+      .page-header-urn {
+        font-size: 12px;
+        color: #aaa;
+        font-weight: 500;
+        margin-bottom: 4px;
+      }
+      .page-header-breadcrumb {
+        font-size: 13px;
+        color: #888;
+        margin-top: 6px;
+      }
+      .page-header-breadcrumb a {
+        color: #0074d9;
+        font-weight: 500;
+      }
+
+      /* ── BUTTONS ── */
+      .btn {
+        display: inline-flex;
+        align-items: center;
+        gap: 6px;
+        padding: 8px 16px;
+        border-radius: 5px;
+        font-size: 13px;
+        font-weight: 600;
+        font-family: 'Raleway', sans-serif;
+        border: 1px solid transparent;
+        cursor: pointer;
+        transition:
+          background 0.12s,
+          border-color 0.12s;
+        text-decoration: none;
+        white-space: nowrap;
+      }
+      .btn:hover {
+        text-decoration: none;
+      }
+      .btn-primary {
+        background: #f8971d;
+        color: #222;
+        border-color: #f8971d;
+      }
+      .btn-primary:hover {
+        background: #d97510;
+        border-color: #d97510;
+      }
+      .btn-secondary {
+        background: #fff;
+        color: #555;
+        border-color: #dee2e6;
+      }
+      .btn-secondary:hover {
+        background: #f5f5f5;
+      }
+      .btn-sm {
+        padding: 6px 12px;
+        font-size: 12px;
+      }
+      .btn-group {
+        display: flex;
+        gap: 8px;
+        flex-wrap: wrap;
+        flex-shrink: 0;
+        align-items: center;
+      }
+
+      /* ── CONTENT ── */
+      .content {
+        max-width: 1000px;
+        margin: 0 auto;
+        padding: 28px 24px 60px;
+      }
+
+      /* ── CALIBRATION TABLE ── */
+      .cal-card {
+        background: #fff;
+        border: 1px solid #dee2e6;
+        border-radius: 8px;
+        overflow: hidden;
+        position: relative;
+      }
+      .cal-card::before {
+        content: '';
+        position: absolute;
+        top: 0;
+        left: 0;
+        right: 0;
+        height: 3px;
+        background: linear-gradient(90deg, #78b793, #a1d8c8, #fbda68, #f8971d);
+        z-index: 1;
+      }
+      .cal-table {
+        width: 100%;
+        border-collapse: collapse;
+        font-size: 13px;
+      }
+      .cal-table thead th {
+        text-align: left;
+        padding: 14px 16px;
+        font-weight: 700;
+        color: #555;
+        font-size: 11px;
+        text-transform: uppercase;
+        letter-spacing: 0.5px;
+        border-bottom: 1px solid #dee2e6;
+        background: #fafafa;
+      }
+      .cal-table thead th:first-child {
+        padding-left: 20px;
+      }
+      .cal-table > tbody > tr > td {
+        padding: 14px 16px;
+        border-bottom: 1px solid #dee2e6;
+        color: #444;
+        vertical-align: top;
+      }
+      .cal-table tbody td:first-child {
+        padding-left: 20px;
+      }
+      .cal-table tbody tr.expandable-row {
+        cursor: pointer;
+        transition: background 0.1s;
+      }
+      .cal-table tbody:hover tr.expandable-row {
+        background: #fafafa;
+      }
+      /* Separate calibration groups */
+      .cal-table > tbody + tbody > tr:first-child > td {
+        border-top: 2px solid #dee2e6;
+      }
+
+      /* Expand chevron */
+      .expand-chevron {
+        display: inline-flex;
+        align-items: center;
+        justify-content: center;
+        width: 20px;
+        height: 20px;
+        transition: transform 0.2s;
+        color: #bbb;
+        flex-shrink: 0;
+      }
+      .expandable-row.open .expand-chevron {
+        transform: rotate(90deg);
+        color: #78b793;
+      }
+
+      /* Calibration title in table */
+      .cal-title {
+        font-weight: 600;
+        color: #333;
+      }
+      /* Tags */
+      .tag {
+        display: inline-block;
+        padding: 2px 8px;
+        border-radius: 4px;
+        font-size: 11px;
+        font-weight: 600;
+        letter-spacing: 0.2px;
+      }
+      .tag-green {
+        background: #e8f5e9;
+        color: #2e7d32;
+      }
+      .tag-red {
+        background: #ffebee;
+        color: #c62828;
+      }
+      .tag-blue {
+        background: #e3f2fd;
+        color: #1565c0;
+      }
+      .tag-purple {
+        background: #ede7f6;
+        color: #5e35b1;
+      }
+
+      /* Column header tooltips */
+      /* ── GENERIC TOOLTIP ── */
+      .has-tip {
+        position: relative;
+        cursor: help;
+        border-bottom: 1px dashed #ccc;
+      }
+      .tip {
+        display: none;
+        position: absolute;
+        top: calc(100% + 6px);
+        left: 50%;
+        transform: translateX(-50%);
+        width: 220px;
+        padding: 8px 10px;
+        background: #333;
+        color: #fff;
+        font-size: 11px;
+        font-weight: 400;
+        line-height: 1.5;
+        border-radius: 5px;
+        z-index: 50;
+        text-transform: none;
+        letter-spacing: 0;
+        white-space: normal;
+        pointer-events: none;
+      }
+      .tip::before {
+        content: '';
+        position: absolute;
+        bottom: 100%;
+        left: 50%;
+        transform: translateX(-50%);
+        border: 5px solid transparent;
+        border-bottom-color: #333;
+      }
+      .has-tip:hover .tip {
+        display: block;
+      }
+      /* Row-label tips anchor left instead of center */
+      .row-label.has-tip .tip {
+        left: 0;
+        transform: none;
+      }
+      .row-label.has-tip .tip::before {
+        left: 20px;
+        transform: none;
+      }
+      /* Source-label tips */
+      .source-label {
+        position: relative;
+        cursor: help;
+        border-bottom: 1px dashed #ccc;
+      }
+      .source-label:hover .tip {
+        display: block;
+      }
+      .source-label .tip {
+        display: none;
+        position: absolute;
+        bottom: calc(100% + 6px);
+        left: 50%;
+        transform: translateX(-50%);
+        width: 220px;
+        padding: 8px 10px;
+        background: #333;
+        color: #fff;
+        font-size: 11px;
+        font-weight: 400;
+        line-height: 1.5;
+        border-radius: 5px;
+        z-index: 50;
+        white-space: normal;
+        pointer-events: none;
+      }
+      .source-label .tip::before {
+        content: '';
+        position: absolute;
+        top: 100%;
+        left: 50%;
+        transform: translateX(-50%);
+        border: 5px solid transparent;
+        border-top-color: #333;
+      }
+      /* Baseline tip */
+      .baseline-bar .has-tip {
+        border-bottom: 1px dashed #bbb;
+      }
+      .baseline-bar .has-tip .tip {
+        width: 200px;
+      }
+      /* Legacy aliases */
+      .th-with-tip {
+        position: relative;
+        cursor: help;
+        border-bottom: 1px dashed #ccc;
+      }
+      .th-tip {
+        display: none;
+        position: absolute;
+        top: calc(100% + 6px);
+        left: 50%;
+        transform: translateX(-50%);
+        width: 220px;
+        padding: 8px 10px;
+        background: #333;
+        color: #fff;
+        font-size: 11px;
+        font-weight: 400;
+        line-height: 1.5;
+        border-radius: 5px;
+        z-index: 50;
+        text-transform: none;
+        letter-spacing: 0;
+        white-space: normal;
+        pointer-events: none;
+      }
+      .th-tip::before {
+        content: '';
+        position: absolute;
+        bottom: 100%;
+        left: 50%;
+        transform: translateX(-50%);
+        border: 5px solid transparent;
+        border-bottom-color: #333;
+      }
+      .th-with-tip:hover .th-tip {
+        display: block;
+      }
+
+      /* Action icon buttons */
+      /* ── ROW ACTION DROPDOWN ── */
+      .row-action-wrap {
+        position: relative;
+        display: inline-block;
+      }
+      .row-action-trigger {
+        width: 30px;
+        height: 30px;
+        border: 1px solid #ddd;
+        background: #fff;
+        border-radius: 6px;
+        cursor: pointer;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        color: #888;
+        transition: all 0.15s;
+      }
+      .row-action-trigger:hover {
+        background: #f8f8f8;
+        border-color: #ccc;
+        color: #555;
+      }
+      .row-action-menu {
+        display: none;
+        position: absolute;
+        right: 0;
+        top: calc(100% + 4px);
+        min-width: 230px;
+        background: #fff;
+        border: 1px solid #e0e0e0;
+        border-radius: 8px;
+        box-shadow: 0 4px 16px rgba(0, 0, 0, 0.12);
+        z-index: 50;
+        padding: 4px 0;
+      }
+      .row-action-menu.open {
+        display: block;
+      }
+      .row-action-item {
+        display: block;
+        width: 100%;
+        padding: 8px 14px;
+        border: none;
+        background: none;
+        cursor: pointer;
+        text-align: left;
+        transition: background 0.1s;
+      }
+      .row-action-item:hover {
+        background: #f5f5f5;
+      }
+      .row-action-item-label {
+        font-size: 13px;
+        font-weight: 600;
+        color: #333;
+        display: flex;
+        align-items: center;
+        gap: 6px;
+      }
+      .row-action-item-desc {
+        font-size: 11px;
+        color: #999;
+        margin-top: 2px;
+        line-height: 1.35;
+      }
+      .row-action-item.danger .row-action-item-label {
+        color: #e53935;
+      }
+      .row-action-item.danger:hover {
+        background: #fef2f2;
+      }
+      .row-action-sep {
+        height: 1px;
+        background: #eee;
+        margin: 4px 0;
+      }
+
+      /* ── EXPANDED RANGES ── */
+      .expanded-content {
+        display: none;
+      }
+      .expandable-row.open + .expanded-content {
+        display: table-row;
+      }
+      .expanded-inner {
+        padding: 20px 24px 24px 24px;
+        background: #f8faf9;
+        margin: 0;
+      }
+      /* ── CALIBRATION RANGES COMPONENT (portable unit) ── */
+      .cal-ranges {
+        border: 1px solid #d5dbe0;
+        border-radius: 8px;
+        overflow: hidden;
+        background: #fff;
+      }
+      .cal-ranges-title {
+        display: flex;
+        align-items: center;
+        gap: 12px;
+        font-size: 11px;
+        font-weight: 700;
+        text-transform: uppercase;
+        letter-spacing: 0.6px;
+        color: #78b793;
+        padding: 10px 14px;
+        background: #f8f9fa;
+        border-bottom: 1px solid #d5dbe0;
+      }
+      .cal-ranges-title-desc {
+        font-size: 12px;
+        font-weight: 400;
+        color: #888;
+        text-transform: none;
+        letter-spacing: 0;
+        white-space: nowrap;
+        overflow: hidden;
+        text-overflow: ellipsis;
+      }
+      .cal-ranges-title-sep {
+        width: 1px;
+        height: 14px;
+        background: #dee2e6;
+        flex-shrink: 0;
+      }
+
+      /* Classification comparison grid */
+      .cal-grid {
+        width: 100%;
+        border-collapse: collapse;
+        font-size: 13px;
+        table-layout: fixed;
+      }
+      .cal-grid th {
+        padding: 12px 14px;
+        font-size: 12px;
+        font-weight: 700;
+        color: #333;
+        text-align: center;
+        background: #f8f9fa;
+        border-bottom: 2px solid #d5dbe0;
+        border-right: 1px solid #d5dbe0;
+      }
+      .cal-grid th:last-child {
+        border-right: none;
+      }
+      .cal-grid th:first-child {
+        text-align: left;
+        width: 160px;
+        color: transparent;
+        background: #f1f3f5;
+      }
+      .cal-grid .row-label {
+        padding: 10px 14px;
+        font-size: 12px;
+        font-weight: 700;
+        color: #444;
+        background: #f8f9fa;
+        border-right: 2px solid #dee2e6;
+        white-space: nowrap;
+      }
+      .cal-grid td {
+        padding: 10px 14px;
+        text-align: center;
+        border-bottom: 1px solid #d5dbe0;
+        border-right: 1px solid #d5dbe0;
+        color: #444;
+        font-size: 13px;
+      }
+      .cal-grid td:last-child {
+        border-right: none;
+      }
+      .cal-grid tr:last-child td,
+      .cal-grid tr:last-child .row-label {
+        border-bottom: none;
+      }
+
+      /* Variant count styling */
+      .variant-count {
+        font-weight: 700;
+        font-size: 13px;
+        color: #555;
+        font-family: 'Exo 2', monospace;
+      }
+
+      /* Stronger separation between calibrations */
+      .expanded-content > td {
+        border-bottom: 3px solid #dee2e6 !important;
+      }
+
+      /* Classification color bar on column headers */
+      .col-abnormal {
+        border-top: 4px solid #e53935;
+      }
+      .col-indeterminate {
+        border-top: 4px solid #bbb;
+      }
+      .col-normal {
+        border-top: 4px solid #1565c0;
+      }
+
+      /* Functional classification badges */
+      .fc-badge {
+        display: inline-block;
+        padding: 3px 10px;
+        border-radius: 4px;
+        font-size: 11px;
+        font-weight: 700;
+        letter-spacing: 0.2px;
+      }
+      .fc-abnormal {
+        background: #ffebee;
+        color: #c62828;
+      }
+      .fc-not-specified {
+        background: #f5f5f5;
+        color: #757575;
+      }
+      .fc-normal {
+        background: #e3f2fd;
+        color: #1565c0;
+      }
+
+      /* Evidence & interval styling */
+      .evidence-badge {
+        display: inline-block;
+        padding: 2px 8px;
+        border-radius: 4px;
+        font-size: 11px;
+        font-weight: 700;
+        letter-spacing: 0.3px;
+      }
+      .evidence-ps3-very-strong {
+        background: #f8bbd0;
+        color: #880e4f;
+      }
+      .evidence-ps3-strong {
+        background: #fce4ec;
+        color: #c62828;
+      }
+      .evidence-ps3-moderate {
+        background: #fff3e0;
+        color: #e65100;
+      }
+      .evidence-bs3 {
+        background: #e3f2fd;
+        color: #1565c0;
+      }
+      .evidence-bs3-moderate {
+        background: #e3f2fd;
+        color: #1565c0;
+      }
+      .evidence-bs3-strong {
+        background: #e8eaf6;
+        color: #283593;
+      }
+      .evidence-indeterminate {
+        background: #f5f5f5;
+        color: #757575;
+      }
+      .interval-mono {
+        font-family: monospace;
+        font-size: 12px;
+        color: #555;
+        letter-spacing: -0.3px;
+      }
+      .odds-value {
+        font-family: monospace;
+        font-size: 13px;
+        font-weight: 600;
+        color: #333;
+      }
+      .muted-dash {
+        color: #ccc;
+      }
+
+      /* Baseline score — top section of cal-ranges */
+      .baseline-bar {
+        display: flex;
+        align-items: center;
+        gap: 12px;
+        padding: 10px 16px;
+        background: #f8f9fa;
+        border-bottom: 1px solid #d5dbe0;
+      }
+      .baseline-bar-label {
+        font-size: 11px;
+        font-weight: 700;
+        color: #999;
+        text-transform: uppercase;
+        letter-spacing: 0.5px;
+      }
+      .baseline-bar-value {
+        font-size: 15px;
+        font-weight: 700;
+        color: #333;
+        font-family: monospace;
+      }
+      .baseline-bar-sep {
+        width: 1px;
+        height: 18px;
+        background: #dee2e6;
+      }
+      .baseline-bar-desc {
+        font-size: 12px;
+        color: #888;
+      }
+
+      /* Sources — bottom section of cal-ranges */
+      .sources-section {
+        padding: 10px 14px;
+        background: #f8f9fa;
+        border-top: 1px solid #d5dbe0;
+        display: flex;
+        flex-wrap: wrap;
+        gap: 4px 16px;
+        font-size: 12px;
+        color: #999;
+        align-items: center;
+      }
+      .sources-heading {
+        font-size: 10px;
+        font-weight: 700;
+        text-transform: uppercase;
+        letter-spacing: 0.5px;
+        color: #999;
+        margin-right: 4px;
+        display: flex;
+        align-items: center;
+        gap: 5px;
+      }
+      .sources-heading svg {
+        flex-shrink: 0;
+      }
+      .sources-section a {
+        font-size: 12px;
+        font-weight: 500;
+      }
+      .source-sep {
+        color: #ddd;
+      }
+
+      /* ── EDITOR DIALOG ── */
+      .dialog-overlay {
+        display: none;
+        position: fixed;
+        inset: 0;
+        background: rgba(0, 0, 0, 0.45);
+        z-index: 1000;
+        align-items: center;
+        justify-content: center;
+      }
+      .dialog-overlay.open {
+        display: flex;
+      }
+      .dialog {
+        background: #fff;
+        border-radius: 10px;
+        width: 90%;
+        max-width: 720px;
+        max-height: 85vh;
+        display: flex;
+        flex-direction: column;
+        box-shadow: 0 16px 48px rgba(0, 0, 0, 0.2);
+      }
+      .dialog-header {
+        padding: 18px 24px;
+        border-bottom: 1px solid #eee;
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+      }
+      .dialog-header h2 {
+        font-size: 18px;
+        font-weight: 700;
+        color: #222;
+      }
+      .dialog-close {
+        width: 32px;
+        height: 32px;
+        border: none;
+        background: transparent;
+        cursor: pointer;
+        border-radius: 6px;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        color: #888;
+        font-size: 18px;
+        transition: background 0.12s;
+      }
+      .dialog-close:hover {
+        background: #f0f0f0;
+      }
+      .dialog-body {
+        padding: 24px;
+        overflow-y: auto;
+        flex: 1;
+      }
+      .dialog-footer {
+        padding: 16px 24px;
+        border-top: 1px solid #eee;
+        display: flex;
+        justify-content: flex-end;
+        gap: 8px;
+      }
+      .form-group {
+        margin-bottom: 20px;
+      }
+      .form-label {
+        display: block;
+        font-size: 13px;
+        font-weight: 600;
+        color: #444;
+        margin-bottom: 6px;
+      }
+      .form-input {
+        width: 100%;
+        padding: 9px 12px;
+        border: 1px solid #dee2e6;
+        border-radius: 5px;
+        font-size: 14px;
+        font-family: 'Raleway', sans-serif;
+        color: #333;
+        transition: border-color 0.12s;
+      }
+      .form-input:focus {
+        outline: none;
+        border-color: #78b793;
+        box-shadow: 0 0 0 3px rgba(120, 183, 147, 0.15);
+      }
+      .form-textarea {
+        resize: vertical;
+        min-height: 80px;
+      }
+      .form-row {
+        display: grid;
+        grid-template-columns: 1fr 1fr;
+        gap: 16px;
+      }
+      .form-checkbox-group {
+        display: flex;
+        gap: 20px;
+        flex-wrap: wrap;
+      }
+      .form-checkbox {
+        display: flex;
+        align-items: center;
+        gap: 6px;
+        font-size: 13px;
+        color: #444;
+        cursor: pointer;
+      }
+      .form-checkbox input[type='checkbox'] {
+        accent-color: #78b793;
+        width: 16px;
+        height: 16px;
+      }
+
+      /* ── FOOTER ── */
+      footer {
+        border-top: 1px solid #e0e0e0;
+        background: #fff;
+        padding: 20px 24px;
+      }
+      .footer-inner {
+        max-width: 1200px;
+        margin: 0 auto;
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+        font-size: 13px;
+        color: #888;
+      }
+      .footer-inner a {
+        color: #0074d9;
+      }
+      .footer-links {
+        display: flex;
+        gap: 20px;
+      }
+
+      /* ── PROTOTYPE BANNER ── */
+      .proto-banner {
+        background: #fbda68;
+        color: #333;
+        text-align: center;
+        padding: 8px 24px;
+        font-size: 13px;
+        font-family: 'Raleway', sans-serif;
+        font-weight: 500;
+        position: sticky;
+        top: 0;
+        z-index: 9999;
+        letter-spacing: 0.1px;
+      }
+      .proto-banner a {
+        color: #555;
+        text-decoration: underline;
+      }
+      .proto-banner strong {
+        font-weight: 700;
+      }
+    </style>
+  </head>
+  <body>
+    <div class="proto-banner">
+      <strong>Prototype</strong> — This is a design prototype and is not intended for use. Data shown is fictional. The
+      real MaveDB is at <a href="https://mavedb.org" target="_blank">mavedb.org</a>.
+    </div>
+    <nav>
+      <div class="nav-inner">
+        <a href="./index.html"><img src="./logo-mavedb.png" alt="MaveDB" class="nav-logo-img" /></a>
+        <ul class="nav-links">
+          <li><a href="./dashboard.html">Dashboard</a></li>
+          <li><a href="./mavemd.html">MaveMD</a></li>
+          <li><a href="./search.html">Search</a></li>
+          <li class="nav-add-wrap">
+            <a href="#" onclick="toggleAddMenu(event)" style="display: flex; align-items: center; gap: 4px"
+              >Add Dataset
+              <svg
+                width="10"
+                height="10"
+                viewBox="0 0 24 24"
+                fill="none"
+                stroke="currentColor"
+                stroke-width="2.5"
+                stroke-linecap="round"
+                stroke-linejoin="round"
+              >
+                <polyline points="6 9 12 15 18 9" /></svg
+            ></a>
+            <div id="nav-add-dropdown" class="nav-add-dropdown">
+              <a href="./add-experiment.html" class="nav-add-option">
+                <div class="nav-add-option-label">New Experiment</div>
+                <div class="nav-add-option-desc">Group related score sets under a shared experiment</div>
+              </a>
+              <a href="./add-score-set.html" class="nav-add-option">
+                <div class="nav-add-option-label">New Score Set</div>
+                <div class="nav-add-option-desc">Upload variant scores and metadata</div>
+              </a>
+            </div>
+          </li>
+          <li><a href="./about.html">About</a></li>
+          <li><a href="./help.html">Help</a></li>
+        </ul>
+        <div class="nav-bell-wrap">
+          <button class="nav-bell" onclick="toggleBell(event)" title="Recent activity">
+            <svg
+              width="17"
+              height="17"
+              viewBox="0 0 24 24"
+              fill="none"
+              stroke="currentColor"
+              stroke-width="2"
+              stroke-linecap="round"
+              stroke-linejoin="round"
+            >
+              <path d="M18 8A6 6 0 0 0 6 8c0 7-3 9-3 9h18s-3-2-3-9" />
+              <path d="M13.73 21a2 2 0 0 1-3.46 0" />
+            </svg>
+            <span class="nav-bell-badge">5</span>
+          </button>
+          <div id="nav-bell-dropdown" class="nav-bell-dropdown">
+            <div class="nav-bell-dropdown-header">Recent Activity</div>
+            <div class="nav-bell-activity-list">
+              <div class="nav-bell-activity-item">
+                <span
+                  ><a href="#">CHEK2 Kinase Activity Assay – Draft</a>
+                  <span class="nav-bell-activity-verb">edited by you</span></span
+                >
+                <span class="nav-bell-activity-time">2 days ago</span>
+              </div>
+              <div class="nav-bell-activity-item">
+                <span
+                  ><a href="#">KCNQ4 Variant Effect – Draft</a>
+                  <span class="nav-bell-activity-verb">calibration created by you</span></span
+                >
+                <span class="nav-bell-activity-time">5 days ago</span>
+              </div>
+              <div class="nav-bell-activity-item">
+                <span
+                  ><a href="#">BRCA1 Combined Functional Meta-analysis</a>
+                  <span class="nav-bell-activity-verb">published</span></span
+                >
+                <span class="nav-bell-activity-time">Nov 5, 2024</span>
+              </div>
+            </div>
+          </div>
+        </div>
+        <div class="nav-user">B</div>
+      </div>
+    </nav>
+
+    <!-- PAGE HEADER -->
+    <div class="page-header">
+      <div class="page-header-inner">
+        <div class="page-header-label">Calibrations</div>
+        <div class="page-header-top">
+          <div class="page-header-title-group">
+            <h1>BRCA1 RING Domain Saturation Genome Editing — Functional Scores</h1>
+            <div class="page-header-urn">urn:mavedb:00000097-a-1</div>
+            <div class="page-header-breadcrumb">
+              <a href="./score-set-detail.html">Back to score set</a>
+            </div>
+          </div>
+          <div class="btn-group">
+            <button class="btn btn-primary btn-sm" onclick="openEditor()">
+              <svg
+                width="12"
+                height="12"
+                viewBox="0 0 24 24"
+                fill="none"
+                stroke="currentColor"
+                stroke-width="2.5"
+                stroke-linecap="round"
+                stroke-linejoin="round"
+              >
+                <line x1="12" y1="5" x2="12" y2="19" />
+                <line x1="5" y1="12" x2="19" y2="12" />
+              </svg>
+              New Calibration
+            </button>
+            <button class="btn btn-secondary btn-sm" title="Reload calibrations">
+              <svg
+                width="12"
+                height="12"
+                viewBox="0 0 24 24"
+                fill="none"
+                stroke="currentColor"
+                stroke-width="2"
+                stroke-linecap="round"
+                stroke-linejoin="round"
+              >
+                <polyline points="23 4 23 10 17 10" />
+                <polyline points="1 20 1 14 7 14" />
+                <path d="M3.51 9a9 9 0 0 1 14.85-3.36L23 10M1 14l4.64 4.36A9 9 0 0 0 20.49 15" />
+              </svg>
+            </button>
+            <button class="btn btn-secondary btn-sm" title="Download calibration JSON">
+              <svg
+                width="12"
+                height="12"
+                viewBox="0 0 24 24"
+                fill="none"
+                stroke="currentColor"
+                stroke-width="2"
+                stroke-linecap="round"
+                stroke-linejoin="round"
+              >
+                <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4" />
+                <polyline points="7 10 12 15 17 10" />
+                <line x1="12" y1="15" x2="12" y2="3" />
+              </svg>
+            </button>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- CONTENT -->
+    <div class="content">
+      <div class="cal-card">
+        <table class="cal-table">
+          <thead>
+            <tr>
+              <th style="width: 28px"></th>
+              <th>Title</th>
+              <th>
+                <span class="th-with-tip"
+                  >Published
+                  <span class="th-tip">Whether this calibration is publicly visible or still a private draft.</span>
+                </span>
+              </th>
+              <th>
+                <span class="th-with-tip"
+                  >Primary
+                  <span class="th-tip"
+                    >The primary calibration is used by default when viewing score distributions. Only one calibration
+                    can be primary.</span
+                  >
+                </span>
+              </th>
+              <th>
+                <span class="th-with-tip"
+                  >Type
+                  <span class="th-tip"
+                    >Investigator calibrations are provided by the original study authors. Community calibrations are
+                    contributed by other researchers.</span
+                  >
+                </span>
+              </th>
+              <th>
+                <span class="th-with-tip"
+                  >Use
+                  <span class="th-tip"
+                    >General calibrations are suitable for clinical applications. Research-only calibrations are
+                    intended for research purposes and should not be used clinically.</span
+                  >
+                </span>
+              </th>
+              <th style="text-align: center">
+                <span class="th-with-tip"
+                  >Ranges
+                  <span class="th-tip"
+                    >The number of functional classification ranges defined for this calibration.</span
+                  >
+                </span>
+              </th>
+              <th style="width: 60px; text-align: center">Actions</th>
+            </tr>
+          </thead>
+          <!-- Calibration 1 — Primary, Published -->
+          <tbody>
+            <tr class="expandable-row open" onclick="toggleRow(this)">
+              <td>
+                <span class="expand-chevron">
+                  <svg
+                    width="14"
+                    height="14"
+                    viewBox="0 0 24 24"
+                    fill="none"
+                    stroke="currentColor"
+                    stroke-width="2.5"
+                    stroke-linecap="round"
+                    stroke-linejoin="round"
+                  >
+                    <polyline points="9 18 15 12 9 6" />
+                  </svg>
+                </span>
+              </td>
+              <td>
+                <div class="cal-title">Harwood et al. 2018</div>
+              </td>
+              <td><span class="tag tag-green">Yes</span></td>
+              <td><span class="tag tag-green">Yes</span></td>
+              <td>Investigator</td>
+              <td>General</td>
+              <td style="text-align: center">5</td>
+              <td>
+                <div class="row-action-wrap" onclick="event.stopPropagation()">
+                  <button class="row-action-trigger" onclick="toggleRowMenu(this)" aria-label="Actions">
+                    <svg
+                      width="14"
+                      height="14"
+                      viewBox="0 0 24 24"
+                      fill="none"
+                      stroke="currentColor"
+                      stroke-width="2.5"
+                      stroke-linecap="round"
+                      stroke-linejoin="round"
+                    >
+                      <circle cx="12" cy="5" r="1" />
+                      <circle cx="12" cy="12" r="1" />
+                      <circle cx="12" cy="19" r="1" />
+                    </svg>
+                  </button>
+                  <div class="row-action-menu">
+                    <a href="./score-set-detail.html" class="row-action-item">
+                      <div class="row-action-item-label">View on Score Set</div>
+                      <div class="row-action-item-desc">Open the parent score set page</div>
+                    </a>
+                    <button class="row-action-item" onclick="openEditor()">
+                      <div class="row-action-item-label">Edit Calibration</div>
+                      <div class="row-action-item-desc">Modify title, ranges, and settings</div>
+                    </button>
+                    <button class="row-action-item">
+                      <div class="row-action-item-label" style="color: #d97510">Demote from Primary</div>
+                      <div class="row-action-item-desc">Remove primary status; another can be promoted</div>
+                    </button>
+                    <div class="row-action-sep"></div>
+                    <button class="row-action-item danger">
+                      <div class="row-action-item-label">Delete Calibration</div>
+                      <div class="row-action-item-desc">Permanently remove this calibration</div>
+                    </button>
+                  </div>
+                </div>
+              </td>
+            </tr>
+            <tr class="expanded-content">
+              <td colspan="8" style="padding: 0">
+                <div class="expanded-inner">
+                  <div class="cal-ranges">
+                    <div class="cal-ranges-title">
+                      Harwood et al. 2018
+                      <span class="cal-ranges-title-sep"></span>
+                      <span class="cal-ranges-title-desc"
+                        >BRCA1 RING domain SGE functional score calibration from ClinGen VCEP evidence review.</span
+                      >
+                    </div>
+                    <div class="baseline-bar">
+                      <span class="baseline-bar-label has-tip"
+                        >Baseline score<span class="tip"
+                          >The reference score representing normal function, used as the zero-point for calibration
+                          ranges.</span
+                        ></span
+                      >
+                      <span class="baseline-bar-value">0.000</span>
+                      <span class="baseline-bar-sep"></span>
+                      <span class="baseline-bar-desc">Wild-type synonymous median</span>
+                    </div>
+                    <table class="cal-grid">
+                      <tbody>
+                        <tr>
+                          <td class="row-label has-tip">
+                            Range label<span class="tip"
+                              >The descriptive name assigned to this score range by the calibration author.</span
+                            >
+                          </td>
+                          <td class="col-abnormal">Abnormal (Very Strong)</td>
+                          <td class="col-abnormal">Abnormal (Strong)</td>
+                          <td class="col-abnormal">Abnormal</td>
+                          <td class="col-indeterminate">Indeterminate</td>
+                          <td class="col-normal">Normal</td>
+                        </tr>
+                        <tr>
+                          <td class="row-label has-tip">
+                            Classification<span class="tip"
+                              >The functional classification (abnormal, normal, or not specified) assigned to variants
+                              falling in this range.</span
+                            >
+                          </td>
+                          <td><span class="fc-badge fc-abnormal">Abnormal</span></td>
+                          <td><span class="fc-badge fc-abnormal">Abnormal</span></td>
+                          <td><span class="fc-badge fc-abnormal">Abnormal</span></td>
+                          <td><span class="fc-badge fc-not-specified">Not Specified</span></td>
+                          <td><span class="fc-badge fc-normal">Normal</span></td>
+                        </tr>
+                        <tr>
+                          <td class="row-label has-tip">
+                            Numeric interval<span class="tip"
+                              >The score boundaries defining this range, expressed as a mathematical interval.</span
+                            >
+                          </td>
+                          <td><span class="interval-mono">(&minus;&infin;, &minus;2.576)</span></td>
+                          <td><span class="interval-mono">[&minus;2.576, &minus;1.952)</span></td>
+                          <td><span class="interval-mono">[&minus;1.952, &minus;1.328)</span></td>
+                          <td><span class="interval-mono">[&minus;1.328, &minus;0.743)</span></td>
+                          <td><span class="interval-mono">[&minus;0.743, &infin;)</span></td>
+                        </tr>
+                        <tr>
+                          <td class="row-label has-tip">
+                            Evidence strength<span class="tip"
+                              >The ACMG/AMP evidence code and strength level (e.g. PS3_Strong, BS3) for variants in this
+                              range.</span
+                            >
+                          </td>
+                          <td><span class="evidence-badge evidence-ps3-very-strong">PS3_Very_Strong</span></td>
+                          <td><span class="evidence-badge evidence-ps3-strong">PS3_Strong</span></td>
+                          <td><span class="evidence-badge evidence-ps3-moderate">PS3_Moderate</span></td>
+                          <td><span class="evidence-badge evidence-indeterminate">Indeterminate</span></td>
+                          <td><span class="evidence-badge evidence-bs3-strong">BS3_Strong</span></td>
+                        </tr>
+                        <tr>
+                          <td class="row-label has-tip">
+                            OddsPath ratio<span class="tip"
+                              >The odds of pathogenicity ratio derived from calibration data. Higher values indicate
+                              stronger evidence for pathogenicity.</span
+                            >
+                          </td>
+                          <td><span class="odds-value">350.00</span></td>
+                          <td><span class="odds-value">18.70</span></td>
+                          <td><span class="odds-value">4.30</span></td>
+                          <td><span class="muted-dash">&mdash;</span></td>
+                          <td><span class="odds-value">0.05</span></td>
+                        </tr>
+                        <tr>
+                          <td class="row-label has-tip">
+                            Variant count<span class="tip"
+                              >The number of variants from this score set that fall within this range.</span
+                            >
+                          </td>
+                          <td><span class="variant-count">1,247</span></td>
+                          <td><span class="variant-count">834</span></td>
+                          <td><span class="variant-count">512</span></td>
+                          <td><span class="variant-count">1,089</span></td>
+                          <td><span class="variant-count">2,318</span></td>
+                        </tr>
+                      </tbody>
+                    </table>
+                    <div class="sources-section">
+                      <span class="sources-heading">
+                        <svg
+                          width="12"
+                          height="12"
+                          viewBox="0 0 24 24"
+                          fill="none"
+                          stroke="currentColor"
+                          stroke-width="2"
+                          stroke-linecap="round"
+                          stroke-linejoin="round"
+                        >
+                          <path d="M2 3h6a4 4 0 0 1 4 4v14a3 3 0 0 0-3-3H2z" />
+                          <path d="M22 3h-6a4 4 0 0 0-4 4v14a3 3 0 0 1 3-3h7z" />
+                        </svg>
+                        Sources
+                      </span>
+                      <span class="source-label"
+                        >Thresholds<span class="tip"
+                          >The publication or source that defined the score thresholds used to create these
+                          ranges.</span
+                        ></span
+                      >: <a href="#">Harwood FG et al. (2018)</a>
+                      <span class="source-sep">&mdash;</span>
+                      <span class="source-label"
+                        >Method<span class="tip"
+                          >The methodology or guideline framework used to determine evidence strength and
+                          classifications.</span
+                        ></span
+                      >: <a href="#">ClinGen BRCA1/2 VCEP v3.1</a>
+                    </div>
+                  </div>
+                </div>
+              </td>
+            </tr>
+          </tbody>
+
+          <!-- Calibration 2 — Published, not primary -->
+          <tbody>
+            <tr class="expandable-row" onclick="toggleRow(this)">
+              <td>
+                <span class="expand-chevron">
+                  <svg
+                    width="14"
+                    height="14"
+                    viewBox="0 0 24 24"
+                    fill="none"
+                    stroke="currentColor"
+                    stroke-width="2.5"
+                    stroke-linecap="round"
+                    stroke-linejoin="round"
+                  >
+                    <polyline points="9 18 15 12 9 6" />
+                  </svg>
+                </span>
+              </td>
+              <td>
+                <div class="cal-title">ClinGen VCEP — Evidence Review</div>
+              </td>
+              <td><span class="tag tag-green">Yes</span></td>
+              <td><span class="tag tag-red">No</span></td>
+              <td>Investigator</td>
+              <td>General</td>
+              <td style="text-align: center">3</td>
+              <td>
+                <div class="row-action-wrap" onclick="event.stopPropagation()">
+                  <button class="row-action-trigger" onclick="toggleRowMenu(this)" aria-label="Actions">
+                    <svg
+                      width="14"
+                      height="14"
+                      viewBox="0 0 24 24"
+                      fill="none"
+                      stroke="currentColor"
+                      stroke-width="2.5"
+                      stroke-linecap="round"
+                      stroke-linejoin="round"
+                    >
+                      <circle cx="12" cy="5" r="1" />
+                      <circle cx="12" cy="12" r="1" />
+                      <circle cx="12" cy="19" r="1" />
+                    </svg>
+                  </button>
+                  <div class="row-action-menu">
+                    <a href="./score-set-detail.html" class="row-action-item">
+                      <div class="row-action-item-label">View on Score Set</div>
+                      <div class="row-action-item-desc">Open the parent score set page</div>
+                    </a>
+                    <button class="row-action-item" onclick="openEditor()">
+                      <div class="row-action-item-label">Edit Calibration</div>
+                      <div class="row-action-item-desc">Modify title, ranges, and settings</div>
+                    </button>
+                    <button class="row-action-item">
+                      <div class="row-action-item-label" style="color: #2e7d32">Promote to Primary</div>
+                      <div class="row-action-item-desc">Make this the default calibration for clinical use</div>
+                    </button>
+                    <div class="row-action-sep"></div>
+                    <button class="row-action-item danger">
+                      <div class="row-action-item-label">Delete Calibration</div>
+                      <div class="row-action-item-desc">Permanently remove this calibration</div>
+                    </button>
+                  </div>
+                </div>
+              </td>
+            </tr>
+            <tr class="expanded-content">
+              <td colspan="8" style="padding: 0">
+                <div class="expanded-inner">
+                  <div class="cal-ranges">
+                    <div class="cal-ranges-title">
+                      ClinGen VCEP
+                      <span class="cal-ranges-title-sep"></span>
+                      <span class="cal-ranges-title-desc"
+                        >Secondary calibration from ClinGen Variant Curation Expert Panel systematic evidence
+                        assessment.</span
+                      >
+                    </div>
+                    <div class="baseline-bar">
+                      <span class="baseline-bar-label has-tip"
+                        >Baseline score<span class="tip"
+                          >The reference score representing normal function, used as the zero-point for calibration
+                          ranges.</span
+                        ></span
+                      >
+                      <span class="baseline-bar-value" style="color: #bbb; font-weight: 500; font-family: inherit"
+                        >N/A</span
+                      >
+                      <span class="baseline-bar-sep"></span>
+                      <span class="baseline-bar-desc" style="font-style: italic">No description provided</span>
+                    </div>
+                    <table class="cal-grid">
+                      <tbody>
+                        <tr>
+                          <td class="row-label has-tip">
+                            Range label<span class="tip"
+                              >The descriptive name assigned to this score range by the calibration author.</span
+                            >
+                          </td>
+                          <td class="col-abnormal">Abnormal</td>
+                          <td class="col-indeterminate">Indeterminate</td>
+                          <td class="col-normal">Normal</td>
+                        </tr>
+                        <tr>
+                          <td class="row-label has-tip">
+                            Classification<span class="tip"
+                              >The functional classification (abnormal, normal, or not specified) assigned to variants
+                              falling in this range.</span
+                            >
+                          </td>
+                          <td><span class="fc-badge fc-abnormal">Abnormal</span></td>
+                          <td><span class="fc-badge fc-not-specified">Not Specified</span></td>
+                          <td><span class="fc-badge fc-normal">Normal</span></td>
+                        </tr>
+                        <tr>
+                          <td class="row-label has-tip">
+                            Numeric interval<span class="tip"
+                              >The score boundaries defining this range, expressed as a mathematical interval.</span
+                            >
+                          </td>
+                          <td><span class="interval-mono">(&minus;&infin;, &minus;1.200)</span></td>
+                          <td><span class="interval-mono">[&minus;1.200, &minus;0.500)</span></td>
+                          <td><span class="interval-mono">[&minus;0.500, &infin;)</span></td>
+                        </tr>
+                        <tr>
+                          <td class="row-label has-tip">
+                            Evidence strength<span class="tip"
+                              >The ACMG/AMP evidence code and strength level (e.g. PS3_Strong, BS3) for variants in this
+                              range.</span
+                            >
+                          </td>
+                          <td><span class="evidence-badge evidence-ps3-strong">PS3_Strong</span></td>
+                          <td><span class="evidence-badge evidence-indeterminate">Indeterminate</span></td>
+                          <td><span class="evidence-badge evidence-bs3">BS3</span></td>
+                        </tr>
+                        <tr>
+                          <td class="row-label has-tip">
+                            OddsPath ratio<span class="tip"
+                              >The odds of pathogenicity ratio derived from calibration data. Higher values indicate
+                              stronger evidence for pathogenicity.</span
+                            >
+                          </td>
+                          <td><span class="odds-value">12.50</span></td>
+                          <td><span class="muted-dash">&mdash;</span></td>
+                          <td><span class="odds-value">0.08</span></td>
+                        </tr>
+                        <tr>
+                          <td class="row-label has-tip">
+                            Variant count<span class="tip"
+                              >The number of variants from this score set that fall within this range.</span
+                            >
+                          </td>
+                          <td><span class="variant-count">892</span></td>
+                          <td><span class="variant-count">1,456</span></td>
+                          <td><span class="variant-count">3,102</span></td>
+                        </tr>
+                      </tbody>
+                    </table>
+                    <div class="sources-section">
+                      <span class="sources-heading">
+                        <svg
+                          width="12"
+                          height="12"
+                          viewBox="0 0 24 24"
+                          fill="none"
+                          stroke="currentColor"
+                          stroke-width="2"
+                          stroke-linecap="round"
+                          stroke-linejoin="round"
+                        >
+                          <path d="M2 3h6a4 4 0 0 1 4 4v14a3 3 0 0 0-3-3H2z" />
+                          <path d="M22 3h-6a4 4 0 0 0-4 4v14a3 3 0 0 1 3-3h7z" />
+                        </svg>
+                        Sources
+                      </span>
+                      <span style="color: #bbb; font-style: italic">Not provided</span>
+                    </div>
+                  </div>
+                </div>
+              </td>
+            </tr>
+          </tbody>
+
+          <!-- Calibration 3 — Private (draft), research-only -->
+          <tbody>
+            <tr class="expandable-row" onclick="toggleRow(this)">
+              <td>
+                <span class="expand-chevron">
+                  <svg
+                    width="14"
+                    height="14"
+                    viewBox="0 0 24 24"
+                    fill="none"
+                    stroke="currentColor"
+                    stroke-width="2.5"
+                    stroke-linecap="round"
+                    stroke-linejoin="round"
+                  >
+                    <polyline points="9 18 15 12 9 6" />
+                  </svg>
+                </span>
+              </td>
+              <td>
+                <div class="cal-title">Preliminary Functional Assessment</div>
+              </td>
+              <td><span class="tag tag-red">No</span></td>
+              <td><span class="tag tag-red">No</span></td>
+              <td>Community</td>
+              <td>Research</td>
+              <td style="text-align: center">2</td>
+              <td>
+                <div class="row-action-wrap" onclick="event.stopPropagation()">
+                  <button class="row-action-trigger" onclick="toggleRowMenu(this)" aria-label="Actions">
+                    <svg
+                      width="14"
+                      height="14"
+                      viewBox="0 0 24 24"
+                      fill="none"
+                      stroke="currentColor"
+                      stroke-width="2.5"
+                      stroke-linecap="round"
+                      stroke-linejoin="round"
+                    >
+                      <circle cx="12" cy="5" r="1" />
+                      <circle cx="12" cy="12" r="1" />
+                      <circle cx="12" cy="19" r="1" />
+                    </svg>
+                  </button>
+                  <div class="row-action-menu">
+                    <a href="./score-set-detail.html" class="row-action-item">
+                      <div class="row-action-item-label">View on Score Set</div>
+                      <div class="row-action-item-desc">Open the parent score set page</div>
+                    </a>
+                    <button class="row-action-item" onclick="openEditor()">
+                      <div class="row-action-item-label">Edit Calibration</div>
+                      <div class="row-action-item-desc">Modify title, ranges, and settings</div>
+                    </button>
+                    <button class="row-action-item">
+                      <div class="row-action-item-label" style="color: #2e7d32">Publish Calibration</div>
+                      <div class="row-action-item-desc">Make this calibration publicly visible</div>
+                    </button>
+                    <div class="row-action-sep"></div>
+                    <button class="row-action-item danger">
+                      <div class="row-action-item-label">Delete Calibration</div>
+                      <div class="row-action-item-desc">Permanently remove this calibration</div>
+                    </button>
+                  </div>
+                </div>
+              </td>
+            </tr>
+            <tr class="expanded-content">
+              <td colspan="8" style="padding: 0">
+                <div class="expanded-inner">
+                  <div class="cal-ranges">
+                    <div class="cal-ranges-title">
+                      Preliminary Functional Assessment
+                      <span class="cal-ranges-title-sep"></span>
+                      <span class="cal-ranges-title-desc"
+                        >Draft calibration using pilot experiment data. Not yet reviewed for clinical application.</span
+                      >
+                    </div>
+                    <div class="baseline-bar">
+                      <span class="baseline-bar-label has-tip"
+                        >Baseline score<span class="tip"
+                          >The reference score representing normal function, used as the zero-point for calibration
+                          ranges.</span
+                        ></span
+                      >
+                      <span class="baseline-bar-value" style="color: #bbb; font-weight: 500; font-family: inherit"
+                        >N/A</span
+                      >
+                      <span class="baseline-bar-sep"></span>
+                      <span class="baseline-bar-desc" style="font-style: italic">No description provided</span>
+                    </div>
+                    <table class="cal-grid">
+                      <tbody>
+                        <tr>
+                          <td class="row-label has-tip">
+                            Range label<span class="tip"
+                              >The descriptive name assigned to this score range by the calibration author.</span
+                            >
+                          </td>
+                          <td class="col-abnormal">Non-functional</td>
+                          <td class="col-normal">Functional</td>
+                        </tr>
+                        <tr>
+                          <td class="row-label has-tip">
+                            Classification<span class="tip"
+                              >The functional classification (abnormal, normal, or not specified) assigned to variants
+                              falling in this range.</span
+                            >
+                          </td>
+                          <td><span class="fc-badge fc-abnormal">Abnormal</span></td>
+                          <td><span class="fc-badge fc-normal">Normal</span></td>
+                        </tr>
+                        <tr>
+                          <td class="row-label has-tip">
+                            Numeric interval<span class="tip"
+                              >The score boundaries defining this range, expressed as a mathematical interval.</span
+                            >
+                          </td>
+                          <td><span class="interval-mono">(&minus;&infin;, &minus;0.600)</span></td>
+                          <td><span class="interval-mono">[&minus;0.600, &infin;)</span></td>
+                        </tr>
+                        <tr>
+                          <td class="row-label has-tip">
+                            Evidence strength<span class="tip"
+                              >The ACMG/AMP evidence code and strength level (e.g. PS3_Strong, BS3) for variants in this
+                              range.</span
+                            >
+                          </td>
+                          <td><span class="muted-dash">&mdash;</span></td>
+                          <td><span class="muted-dash">&mdash;</span></td>
+                        </tr>
+                        <tr>
+                          <td class="row-label has-tip">
+                            OddsPath ratio<span class="tip"
+                              >The odds of pathogenicity ratio derived from calibration data. Higher values indicate
+                              stronger evidence for pathogenicity.</span
+                            >
+                          </td>
+                          <td><span class="muted-dash">&mdash;</span></td>
+                          <td><span class="muted-dash">&mdash;</span></td>
+                        </tr>
+                        <tr>
+                          <td class="row-label has-tip">
+                            Variant count<span class="tip"
+                              >The number of variants from this score set that fall within this range.</span
+                            >
+                          </td>
+                          <td><span class="variant-count">156</span></td>
+                          <td><span class="variant-count">289</span></td>
+                        </tr>
+                      </tbody>
+                    </table>
+                    <div class="sources-section">
+                      <span class="sources-heading">
+                        <svg
+                          width="12"
+                          height="12"
+                          viewBox="0 0 24 24"
+                          fill="none"
+                          stroke="currentColor"
+                          stroke-width="2"
+                          stroke-linecap="round"
+                          stroke-linejoin="round"
+                        >
+                          <path d="M2 3h6a4 4 0 0 1 4 4v14a3 3 0 0 0-3-3H2z" />
+                          <path d="M22 3h-6a4 4 0 0 0-4 4v14a3 3 0 0 1 3-3h7z" />
+                        </svg>
+                        Sources
+                      </span>
+                      <span style="color: #bbb; font-style: italic">Not provided</span>
+                    </div>
+                  </div>
+                </div>
+              </td>
+            </tr>
+          </tbody>
+        </table>
+      </div>
+    </div>
+
+    <!-- EDITOR DIALOG -->
+    <div class="dialog-overlay" id="editor-dialog">
+      <div class="dialog">
+        <div class="dialog-header">
+          <h2>New Calibration</h2>
+          <button class="dialog-close" onclick="closeEditor()">&times;</button>
+        </div>
+        <div class="dialog-body">
+          <div class="form-group">
+            <label class="form-label">Title</label>
+            <input class="form-input" type="text" placeholder="e.g. Harwood et al. 2018" />
+          </div>
+          <div class="form-group">
+            <label class="form-label">Notes</label>
+            <textarea
+              class="form-input form-textarea"
+              placeholder="Optional notes about this calibration..."
+            ></textarea>
+          </div>
+          <div class="form-row">
+            <div class="form-group">
+              <label class="form-label">Baseline Score</label>
+              <input class="form-input" type="number" step="any" placeholder="0.000" />
+            </div>
+            <div class="form-group">
+              <label class="form-label">Baseline Description</label>
+              <input class="form-input" type="text" placeholder="e.g. Wild-type synonymous median" />
+            </div>
+          </div>
+          <div class="form-group">
+            <label class="form-label">Options</label>
+            <div class="form-checkbox-group">
+              <label class="form-checkbox">
+                <input type="checkbox" /> Investigator type
+                <span style="font-size: 11px; color: #999">(uncheck for community)</span>
+              </label>
+              <label class="form-checkbox"> <input type="checkbox" /> Research use only </label>
+            </div>
+          </div>
+          <div class="form-group">
+            <label class="form-label">Functional Classifications</label>
+            <p style="font-size: 13px; color: #999; line-height: 1.5">
+              Define score ranges and their functional classifications. Ranges are configured in the full editor.
+            </p>
+          </div>
+        </div>
+        <div class="dialog-footer">
+          <button class="btn btn-secondary btn-sm" onclick="closeEditor()">Cancel</button>
+          <button class="btn btn-primary btn-sm">Save Calibration</button>
+        </div>
+      </div>
+    </div>
+
+    <footer>
+      <div class="footer-inner">
+        <div style="display: flex; align-items: center; gap: 16px">
+          <img src="./logo-mavedb-transparent.png" alt="MaveDB" style="height: 28px" />
+          <span>&copy; 2026 MaveDB — AGPLv3 License — Hosted by the University of Washington</span>
+        </div>
+        <div class="footer-links">
+          <a href="#">Chat</a>
+          <a href="#">Documentation</a>
+          <a href="#">Report an issue</a>
+        </div>
+      </div>
+    </footer>
+
+    <script>
+      function toggleAddMenu(event) {
+        event.stopPropagation()
+        const dd = document.getElementById('nav-add-dropdown')
+        dd.classList.toggle('open')
+      }
+      document.addEventListener('click', function (e) {
+        const wrap = document.querySelector('.nav-add-wrap')
+        if (wrap && !wrap.contains(e.target)) {
+          const dd = document.getElementById('nav-add-dropdown')
+          if (dd) dd.classList.remove('open')
+        }
+      })
+
+      function toggleBell(event) {
+        event.stopPropagation()
+        const dd = document.getElementById('nav-bell-dropdown')
+        dd.classList.toggle('open')
+      }
+      document.addEventListener('click', function (e) {
+        const wrap = document.querySelector('.nav-bell-wrap')
+        if (wrap && !wrap.contains(e.target)) {
+          const dd = document.getElementById('nav-bell-dropdown')
+          if (dd) dd.classList.remove('open')
+        }
+      })
+
+      function toggleRow(row) {
+        row.classList.toggle('open')
+      }
+
+      function toggleRowMenu(btn) {
+        const menu = btn.nextElementSibling
+        const isOpen = menu.classList.contains('open')
+        // Close all other open menus first
+        document.querySelectorAll('.row-action-menu.open').forEach((m) => m.classList.remove('open'))
+        if (!isOpen) menu.classList.add('open')
+      }
+
+      // Close row menus on outside click
+      document.addEventListener('click', function (e) {
+        if (!e.target.closest('.row-action-wrap')) {
+          document.querySelectorAll('.row-action-menu.open').forEach((m) => m.classList.remove('open'))
+        }
+      })
+
+      function openEditor() {
+        document.getElementById('editor-dialog').classList.add('open')
+      }
+
+      function closeEditor() {
+        document.getElementById('editor-dialog').classList.remove('open')
+      }
+
+      document.getElementById('editor-dialog').addEventListener('click', function (e) {
+        if (e.target === this) closeEditor()
+      })
+    </script>
+  </body>
+</html>

@@ -5,21 +5,13 @@
         <div>Calibrations for: {{ getScoreSetShortName(item) }}</div>
         <div class="calibration-title-actions">
           <PrimeButton
-            v-if="userIsAuthorizedToEditScoreSet"
+            v-if="userIsAuthorizedToAddCalibration"
             icon="pi pi-plus"
             label="New calibration"
             @click="createCalibration(item.urn)"
           />
-          <PrimeButton
-            icon="pi pi-refresh"
-            title="Reload calibrations"
-            @click="reloadItem()"
-          />
-          <PrimeButton
-            icon="pi pi-download"
-            title="Download calibration JSON"
-            @click="downloadCalibrations()"
-          />
+          <PrimeButton icon="pi pi-refresh" title="Reload calibrations" @click="reloadItem()" />
+          <PrimeButton icon="pi pi-download" title="Download calibration JSON" @click="downloadCalibrations()" />
         </div>
       </div>
       <div class="p-d-flex p-flex-column p-ai-center" style="width: 100%">
@@ -123,17 +115,12 @@
                     :title="'View calibration ' + (data.title || data.urn) + ' in Score Set'"
                     :to="{name: 'scoreSet', params: {urn: item.urn}, query: {calibration: data.urn}}"
                   >
-                    <PrimeButton
-                      icon="pi pi-eye"
-                      rounded
-                      severity="info"
-                      size="small"
-                    />
+                    <PrimeButton icon="pi pi-eye" rounded severity="info" size="small" />
                   </router-link>
                   <!-- Only an authenticated user will be able to edit these properties -->
                   <template v-if="userIsAuthenticated">
                     <PrimeButton
-                      v-if="calibrationAuthorizations[data.urn]?.update && userIsAuthorizedToEditScoreSet"
+                      v-if="calibrationAuthorizations[data.urn]?.update"
                       icon="pi pi-pencil"
                       :rounded="true"
                       size="small"
@@ -204,6 +191,11 @@
       <ItemNotFound :item-id="itemId" :item-type="'Score Set'" />
     </div>
   </DefaultLayout>
+  <EmailPrompt
+    v-if="editorVisible"
+    dialog="You must add an email address to your account to create or edit calibrations. You can do so below, or on the 'Settings' page."
+    :is-first-login-prompt="false"
+  />
   <PrimeDialog
     v-model:visible="editorVisible"
     :close-on-escape="false"
@@ -221,18 +213,8 @@
       @canceled="cancelEditCreate"
     />
     <template #footer>
-      <PrimeButton
-        icon="pi pi-times"
-        label="Close"
-        severity="secondary"
-        @click="cancelEditCreate"
-      />
-      <PrimeButton
-        icon="pi pi-save"
-        label="Save Changes"
-        severity="success"
-        @click="saveChildCalibration"
-      />
+      <PrimeButton icon="pi pi-times" label="Close" severity="secondary" @click="cancelEditCreate" />
+      <PrimeButton icon="pi pi-save" label="Save Changes" severity="success" @click="saveChildCalibration" />
     </template>
   </PrimeDialog>
 </template>
@@ -251,9 +233,11 @@ import useAuth from '@/composition/auth'
 import PageLoading from '../common/PageLoading.vue'
 import CalibrationTable from '../CalibrationTable.vue'
 import {getScoreSetShortName} from '@/lib/score-sets'
+import {saveCalibration} from '@/lib/calibrations'
 import axios from 'axios'
 import {useConfirm} from 'primevue/useconfirm'
 import CalibrationEditor, {DraftScoreCalibration} from '../CalibrationEditor.vue'
+import EmailPrompt from '@/components/common/EmailPrompt.vue'
 import {ref} from 'vue'
 import PrimeDialog from 'primevue/dialog'
 import ItemNotFound from '../common/ItemNotFound.vue'
@@ -269,6 +253,7 @@ export default {
   name: 'ScoreSetCalibrationsView',
   components: {
     CalibrationEditor,
+    EmailPrompt,
     PrimeButton,
     DefaultLayout,
     DataTable,
@@ -298,14 +283,14 @@ export default {
     const calibrationDraftClassesFileRef = ref<{value: File | null}>({value: null})
     const editorValidationErrors = ref<Record<string, string>>({})
 
-    const userIsAuthorizedToEditScoreSet = ref(false)
+    const userIsAuthorizedToAddCalibration = ref(false)
     const calibrationAuthorizations = ref<Record<string, CalibrationAuthorizations>>({})
 
     return {
       head,
       config,
       userIsAuthenticated,
-      userIsAuthorizedToEditScoreSet,
+      userIsAuthorizedToAddCalibration,
       calibrationDraftClassesFileRef,
       calibrationAuthorizations,
       confirm,
@@ -359,12 +344,11 @@ export default {
   },
   methods: {
     checkScoreSetAuthorization: async function () {
-      // Response should be true to get authorization
       try {
         const response = await axios.get(
-          `${config.apiBaseUrl}/permissions/user-is-permitted/score-set/${this.itemId}/update`
+          `${config.apiBaseUrl}/permissions/user-is-permitted/score-set/${this.itemId}/add_calibration`
         )
-        this.userIsAuthorizedToEditScoreSet = response.data
+        this.userIsAuthorizedToAddCalibration = response.data
       } catch (err) {
         console.log(`Error to get authorization:`, err)
       }
@@ -422,86 +406,50 @@ export default {
     },
 
     saveChildCalibration: async function () {
-      if (this.calibrationDraftRef.value) {
-        try {
-          const draft = this.calibrationDraftRef.value
-          const draftClassesFile = this.calibrationDraftClassesFileRef.value
+      if (!this.calibrationDraftRef.value) return
 
-          const formData = new FormData()
-          formData.append('calibration_json', JSON.stringify(draft))
-          if (draftClassesFile) {
-            formData.append('classes_file', draftClassesFile)
-          }
+      const result = await saveCalibration({
+        draft: this.calibrationDraftRef.value,
+        classesFile: this.calibrationDraftClassesFileRef.value,
+        existingUrn: this.editingCalibrationUrn
+      })
 
-          if (this.editingCalibrationUrn) {
-            // Existing calibration, perform update
-            await axios.put(`${config.apiBaseUrl}/score-calibrations/${draft.urn}`, formData, {
-              headers: {
-                'Content-Type': 'multipart/form-data'
-              }
-            })
-          } else {
-            // New calibration, perform create
-            await axios.post(`${config.apiBaseUrl}/score-calibrations`, formData, {
-              headers: {
-                'Content-Type': 'multipart/form-data'
-              }
-            })
-          }
-          this.$toast.add({
-            severity: 'success',
-            summary: 'Calibration Saved',
-            detail: 'Calibration saved successfully.',
-            life: 4000
-          })
-          this.editorVisible = false
-          this.editingCalibrationUrn = undefined
-          this.editingScoreSetUrn = undefined
-          this.editorValidationErrors = {}
-          await this.reloadItem()
-        } catch (error: unknown) {
-          if (axios.isAxiosError(error) && error.response && error.response.data && error.response.data.detail) {
-            const formValidationErrors: Record<string, string> = {}
-            if (typeof error.response.data.detail === 'string' || error.response.data.detail instanceof String) {
-              // Handle generic errors that are not surfaced by the API as objects
-              this.$toast.add({
-                severity: 'error',
-                summary: `Encountered an error saving score set: ${error.response.data.detail}`,
-                life: 4000
-              })
-            } else {
-              for (const err of error.response.data.detail) {
-                let path = err.loc
-                if (path[0] == 'body') {
-                  path = path.slice(1)
-                }
-
-                let customPath = err.ctx?.error.custom_loc
-                if (customPath) {
-                  if (customPath[0] == 'body') {
-                    customPath = customPath.slice(1)
-                  }
-                }
-
-                if (customPath) {
-                  path = path.concat(customPath)
-                }
-
-                path = path.join('.')
-                formValidationErrors[path] = err.msg
-              }
-              this.editorValidationErrors = {...formValidationErrors}
-            }
-          } else {
-            console.error('Error saving calibration:', error)
-            this.$toast.add({
-              severity: 'error',
-              summary: 'Calibration Not Saved',
-              detail: `An error occurred while saving the calibration: ${error}. Please try again later.`,
-              life: 4000
-            })
-          }
-        }
+      if (result.success) {
+        this.$toast.add({
+          severity: 'success',
+          summary: 'Calibration Saved',
+          detail: 'Calibration saved successfully.',
+          life: 4000
+        })
+        this.editorVisible = false
+        this.editingCalibrationUrn = undefined
+        this.editingScoreSetUrn = undefined
+        this.editorValidationErrors = {}
+        await this.reloadItem()
+      } else if (result.error === 'email_required') {
+        this.$toast.add({
+          severity: 'error',
+          summary: 'Email Required',
+          detail:
+            'You must add an email address to your account to create or edit calibrations. Please update your email in Settings.',
+          life: 6000
+        })
+      } else if (result.error === 'validation') {
+        this.editorValidationErrors = {...result.validationErrors}
+      } else if (result.error === 'generic') {
+        this.$toast.add({
+          severity: 'error',
+          summary: `Encountered an error saving calibration: ${result.message}`,
+          life: 4000
+        })
+      } else {
+        console.error('Error saving calibration:', result.raw)
+        this.$toast.add({
+          severity: 'error',
+          summary: 'Calibration Not Saved',
+          detail: `An error occurred while saving the calibration. Please try again later.`,
+          life: 4000
+        })
       }
     },
 
@@ -529,7 +477,12 @@ export default {
             await this.reloadItem()
           } catch (error) {
             console.error('Error publishing calibration:', error)
-            const errorMessage = axios.isAxiosError(error) && error.response?.data?.detail && (typeof error.response.data.detail === 'string' || error.response.data.detail instanceof String) ? error.response.data.detail : error
+            const errorMessage =
+              axios.isAxiosError(error) &&
+              error.response?.data?.detail &&
+              (typeof error.response.data.detail === 'string' || error.response.data.detail instanceof String)
+                ? error.response.data.detail
+                : error
             this.$toast.add({
               severity: 'error',
               summary: 'Calibration Not Published',
@@ -557,7 +510,12 @@ export default {
         await this.reloadItem()
       } catch (error) {
         console.error('Error demoting calibration:', error)
-        const errorMessage = axios.isAxiosError(error) && error.response?.data?.detail && (typeof error.response.data.detail === 'string' || error.response.data.detail instanceof String) ? error.response.data.detail : error
+        const errorMessage =
+          axios.isAxiosError(error) &&
+          error.response?.data?.detail &&
+          (typeof error.response.data.detail === 'string' || error.response.data.detail instanceof String)
+            ? error.response.data.detail
+            : error
         this.$toast.add({
           severity: 'error',
           summary: 'Calibration Not Demoted',
@@ -579,7 +537,12 @@ export default {
         await this.reloadItem()
       } catch (error) {
         console.error('Error promoting calibration:', error)
-        const errorMessage = axios.isAxiosError(error) && error.response?.data?.detail && (typeof error.response.data.detail === 'string' || error.response.data.detail instanceof String) ? error.response.data.detail : error
+        const errorMessage =
+          axios.isAxiosError(error) &&
+          error.response?.data?.detail &&
+          (typeof error.response.data.detail === 'string' || error.response.data.detail instanceof String)
+            ? error.response.data.detail
+            : error
         this.$toast.add({
           severity: 'error',
           summary: 'Calibration Not Promoted',
@@ -612,7 +575,12 @@ export default {
             await this.reloadItem()
           } catch (error) {
             console.error('Error deleting calibration:', error)
-            const errorMessage = axios.isAxiosError(error) && error.response?.data?.detail && (typeof error.response.data.detail === 'string' || error.response.data.detail instanceof String) ? error.response.data.detail : error
+            const errorMessage =
+              axios.isAxiosError(error) &&
+              error.response?.data?.detail &&
+              (typeof error.response.data.detail === 'string' || error.response.data.detail instanceof String)
+                ? error.response.data.detail
+                : error
             this.$toast.add({
               severity: 'error',
               summary: 'Calibration Not Deleted',
@@ -643,7 +611,12 @@ export default {
         document.body.removeChild(link)
       } catch (error) {
         console.error('Error downloading calibrations:', error)
-        const errorMessage = axios.isAxiosError(error) && error.response?.data?.detail && (typeof error.response.data.detail === 'string' || error.response.data.detail instanceof String) ? error.response.data.detail : error
+        const errorMessage =
+          axios.isAxiosError(error) &&
+          error.response?.data?.detail &&
+          (typeof error.response.data.detail === 'string' || error.response.data.detail instanceof String)
+            ? error.response.data.detail
+            : error
         this.$toast.add({
           severity: 'error',
           summary: 'Download Failed',

@@ -500,8 +500,9 @@ export interface paths {
      * ```
      *
      * ## Requirements
+     * - User must have an email address associated with their account
      * - User must have update permission on the calibration
-     * - If changing the score_set_urn, user must have permission on the new score set
+     * - If changing the score_set_urn, user must have ADD_CALIBRATION permission on the target score set
      * - All fields in the update are optional - only provided fields will be modified
      *
      * ## File Upload Details
@@ -578,8 +579,10 @@ export interface paths {
      *
      * ## Requirements
      * - The score set URN must be provided to associate the calibration with an existing score set
-     * - User must have write permission on the associated score set
+     * - User must have an email address associated with their account
      * - If uploading a classes_file, it must be a valid CSV with variant classification data
+     * - User must have ADD_CALIBRATION permission on the score set (any authenticated user for
+     *   published sets; contributors/owners/admins for private sets)
      *
      * ## File Upload Details
      * The `classes_file` parameter accepts CSV files containing variant classification data.
@@ -1344,7 +1347,7 @@ export interface components {
      * Action
      * @enum {string}
      */
-    Action: "lookup" | "read" | "update" | "delete" | "add_experiment" | "add_score_set" | "set_scores" | "add_role" | "publish" | "add_badge" | "change_rank";
+    Action: "lookup" | "read" | "update" | "delete" | "add_experiment" | "add_score_set" | "set_scores" | "add_role" | "publish" | "add_badge" | "change_rank" | "add_calibration";
     /** AddExperimentToCollectionRequest */
     AddExperimentToCollectionRequest: {
       /** Experimenturn */
@@ -4137,8 +4140,8 @@ export interface components {
       functionalClassifications?: components["schemas"]["mavedb__view_models__score_calibration__FunctionalClassification"][] | null;
       /** Thresholdsources */
       thresholdSources: components["schemas"]["PublicationIdentifier"][];
-      /** Classificationsources */
-      classificationSources: components["schemas"]["PublicationIdentifier"][];
+      /** Evidencesources */
+      evidenceSources: components["schemas"]["PublicationIdentifier"][];
       /** Methodsources */
       methodSources: components["schemas"]["PublicationIdentifier"][];
       /** Calibrationmetadata */
@@ -4198,8 +4201,8 @@ export interface components {
       functionalClassifications?: components["schemas"]["FunctionalClassificationCreate"][] | null;
       /** Thresholdsources */
       thresholdSources: components["schemas"]["PublicationIdentifierCreate"][];
-      /** Classificationsources */
-      classificationSources: components["schemas"]["PublicationIdentifierCreate"][];
+      /** Evidencesources */
+      evidenceSources: components["schemas"]["PublicationIdentifierCreate"][];
       /** Methodsources */
       methodSources: components["schemas"]["PublicationIdentifierCreate"][];
       /** Calibrationmetadata */
@@ -4229,8 +4232,8 @@ export interface components {
       functionalClassifications?: components["schemas"]["SavedFunctionalClassification"][] | null;
       /** Thresholdsources */
       thresholdSources: components["schemas"]["SavedPublicationIdentifier"][];
-      /** Classificationsources */
-      classificationSources: components["schemas"]["SavedPublicationIdentifier"][];
+      /** Evidencesources */
+      evidenceSources: components["schemas"]["SavedPublicationIdentifier"][];
       /** Methodsources */
       methodSources: components["schemas"]["SavedPublicationIdentifier"][];
       /** Calibrationmetadata */
@@ -8372,8 +8375,9 @@ export interface operations {
    * ```
    *
    * ## Requirements
+   * - User must have an email address associated with their account
    * - User must have update permission on the calibration
-   * - If changing the score_set_urn, user must have permission on the new score set
+   * - If changing the score_set_urn, user must have ADD_CALIBRATION permission on the target score set
    * - All fields in the update are optional - only provided fields will be modified
    *
    * ## File Upload Details
@@ -8555,8 +8559,10 @@ export interface operations {
    *
    * ## Requirements
    * - The score set URN must be provided to associate the calibration with an existing score set
-   * - User must have write permission on the associated score set
+   * - User must have an email address associated with their account
    * - If uploading a classes_file, it must be a valid CSV with variant classification data
+   * - User must have ADD_CALIBRATION permission on the score set (any authenticated user for
+   *   published sets; contributors/owners/admins for private sets)
    *
    * ## File Upload Details
    * The `classes_file` parameter accepts CSV files containing variant classification data.

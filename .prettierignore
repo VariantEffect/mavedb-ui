@@ -1,2 +1,5 @@
 # Derived files
 /dist/
+
+# MkDocs documentation (Prettier breaks admonitions and collapsible syntax)
+/docs/

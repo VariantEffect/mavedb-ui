@@ -129,8 +129,8 @@ ENV/
 env.bak/
 venv.bak/
 
-# Sphinx documentation build cache
-.doctrees/
+# MkDocs build output
+docs/site/
 
 # IDEs and editors
 .vscode/

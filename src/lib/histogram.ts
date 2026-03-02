@@ -3,7 +3,6 @@ import $ from 'jquery'
 import _ from 'lodash'
 import {v4 as uuidv4} from 'uuid'
 import {HeatmapDatum} from './heatmap'
-import { style } from 'd3'
 
 type FieldGetter<T> = ((d: HistogramDatum) => T) | string
 type Getter<T> = () => T
@@ -12,18 +11,18 @@ type Accessor<T, Self> = (value?: T) => T | Self
 export const DEFAULT_SHADER_COLOR = '#333333'
 export const DEFAULT_SERIES_COLOR = '#333333'
 export const CATEGORICAL_SERIES_COLORS = [
-  '#1f77b4', // blue
-  '#ff7f0e', // orange
-  '#2ca02c', // green
-  '#d62728', // red
-  '#9467bd', // purple
-  '#8c564b', // brown
-  '#e377c2', // pink
-  '#7f7f7f', // gray
-  '#bcbd22', // olive
-  '#17becf', // cyan
-  '#aec7e8', // light blue
-  '#ffbb78' // light orange
+  '#FFD700', // Gold (yellow)
+  '#32CD32', // Lime (green)
+  '#FF00FF', // Magenta (purple-pink)
+  '#00CED1', // Cyan (blue-green)
+  '#FF8C00', // Orange
+  '#9370DB', // Purple
+  '#7FFF00', // Chartreuse (yellow-green)
+  '#FF6347', // Tomato (orange-red)
+  '#8B00FF', // Violet (deep purple)
+  '#20B2AA', // Teal (darker cyan)
+  '#DA70D6', // Orchid (light purple)
+  '#FFBF00' // Amber (darker yellow)
 ]
 const LABEL_SIZE = 10
 
@@ -616,7 +615,10 @@ export default function makeHistogram(): Histogram {
 
       // Clamp vertically to keep tooltip inside container bounds
       selectionTooltip
-        .style('top', `clamp(${-(_container.clientHeight - bufferPx)}px, ${anchorTop - bufferPx}px, ${-(tooltipHeight + bufferPx)}px)`)
+        .style(
+          'top',
+          `clamp(${-(_container.clientHeight - bufferPx)}px, ${anchorTop - bufferPx}px, ${-(tooltipHeight + bufferPx)}px)`
+        )
         // Prevent the relatively positioned div from affecting layout flow
         .style('margin-bottom', `${-height - topBorderWidth * 2}px`)
 
@@ -661,7 +663,7 @@ export default function makeHistogram(): Histogram {
       return 0
     }
     // Highlight selected and hovered bins.
-    return ((hoverBin && d == hoverBin) || d == selectedBin) ? 1 : 0
+    return (hoverBin && d == hoverBin) || d == selectedBin ? 1 : 0
   }
 
   const hoverStrokeWidth = (d: HistogramBin) => {
@@ -671,7 +673,8 @@ export default function makeHistogram(): Histogram {
 
   const refreshHighlighting = () => {
     if (svg) {
-      svg.selectAll('.histogram-hover-highlight')
+      svg
+        .selectAll('.histogram-hover-highlight')
         .style('opacity', (d) => hoverOpacity(d as HistogramBin))
         .style('stroke-width', (d) => hoverStrokeWidth(d as HistogramBin))
     }

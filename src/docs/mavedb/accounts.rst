@@ -20,7 +20,7 @@ Setting an email address
 MaveDB can only view public email addresses associated with your `ORCID iD <https://orcid.org/>`_.
 If you do not have one of these set and would like to receive emails from MaveDB,
 you can provide an email address using the `Profile settings page <https://www.mavedb.org/#/settings/>`_
-(requires login). To upload datasets, you must provide an email address.
+(requires login). To upload datasets or create score calibrations, you must provide an email address.
 
 .. _end-setting-email-address:
 

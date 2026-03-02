@@ -78,7 +78,7 @@ In addition, users may provide three types of optional references to support the
 
 * **Threshold sources**: A publication reference (e.g., a DOI, PubMed ID, or bioRxiv/medRxiv ID) that describes the method by which classification thresholds or classes were determined.
 * **Classification methods**: A publication reference (e.g., a DOI, PubMed ID, or bioRxiv/medRxiv ID) that describes the method by which evidence strengths were determined.
-* **Classification sources**: A publication reference (e.g., a DOI, PubMed ID, or bioRxiv/medRxiv ID) that describes where the evidence strengths determined by the 'classification methods' are described.
+* **Evidence sources**: A publication reference (e.g., a DOI, PubMed ID, or bioRxiv/medRxiv ID) that describes where the evidence strengths determined by the 'classification methods' are described.
 
 .. _end-score-calibrations-calibration-metadata:
 
@@ -87,7 +87,9 @@ Calibration privacy
 
 .. _score-calibrations-calibration-privacy:
 
-By default, score calibrations are not visible to all MaveDB users. However, you may choose to publish a calibration after it has been uploaded. Private calibrations are only visible to the user who uploaded them and any users marked as contributors on the associated score set.
+Any authenticated MaveDB user with a verified email address may create calibrations on published score sets. Calibrations on private (unpublished) score sets may only be created by the score set's contributors, owners, or administrators.
+
+By default, score calibrations are private and not visible to all MaveDB users. However, you may choose to publish a calibration after it has been uploaded. Private calibrations are only visible to the user who uploaded them and any users marked as contributors on the associated score set.
 Published calibrations are visible to all MaveDB users and may be used in visualizations and interpretations of the associated score set.
 
 .. warning::
@@ -104,16 +106,23 @@ scores.
 After uploading a score calibration to MaveDB, you may choose to designate it as the primary calibration for the associated score set. If a score set already has a primary calibration, you must demote the existing primary calibration before designating a new one.
 A calibration must be publicly visible to be marked as the primary calibration, and research use only calibrations may not be designated as primary calibrations.
 
+For investigator provided calibrations, the calibration owner, score set contributors, and administrators may promote to primary. For community calibrations, only the score set's contributors, owners, or administrators may promote — the community calibration owner cannot promote their own calibration.
+
 .. note::
    MaveDB maintainers may review primary calibrations to ensure that they meet quality standards and are appropriate for use in visualizations and interpretations, and retain
    the right to remove primary calibration status from any calibration that does not meet these standards.
 
 .. _end-score-calibrations-primary-calibrations:
 
-Investigator provided calibrations
-~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+Investigator provided and community calibrations
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
 .. _score-calibrations-investigator-provided-calibrations:
 
-When there is no primary calibration associated with a score set, investigator provided calibrations are given priority viewing over other non-primary calibrations. Investigator provided calibrations
-are any calibrations which have been uploaded by the samem user who uploaded the score set or a user marked as a contributor on the score set.
+MaveDB distinguishes between two types of calibrations based on who created them:
+
+* **Investigator provided calibrations** are created by the score set's contributors or owners. These calibrations are automatically marked as investigator provided. When there is no primary calibration associated with a score set, investigator provided calibrations are given priority viewing over other non-primary calibrations.
+* **Community calibrations** are created by any other authenticated user. These calibrations are always created as private and are marked as not investigator provided. Community calibrations allow independent researchers to contribute their own interpretations of published score sets.
+
+.. note::
+   Community calibration owners cannot promote their own calibrations to primary status. Only the score set's contributors, owners, or administrators may promote a community calibration to primary.

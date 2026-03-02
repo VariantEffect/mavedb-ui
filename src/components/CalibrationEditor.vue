@@ -529,6 +529,43 @@
         }}</span>
       </div>
     </div>
+    <!-- Calibration method -->
+    <div class="mavedb-wizard-row">
+      <div class="mavedb-wizard-help">
+        <label>Provide sources for calibration methods.</label>
+        <div class="mavedb-help-small">
+          These publications should describe the method by which this calibration was generated.
+        </div>
+      </div>
+      <div class="mavedb-wizard-content">
+        <FloatLabel variant="on">
+          <AutoComplete
+            :id="scopedId('input-method-sources-publication-identifiers')"
+            v-model="draft.methodSources"
+            :multiple="true"
+            :option-label="(option) => `${option.identifier}: ${truncatePublicationTitle(option.title)}`"
+            :suggestions="publicationIdentifierSuggestionsList"
+            @blur="clearAutoCompleteInput"
+            @complete="searchPublicationIdentifiers"
+            @keyup.escape="clearAutoCompleteInput"
+            @option-select="acceptNewPublicationIdentifier(draft.methodSources)"
+          >
+            <template #option="slotProps">
+              <div>
+                <div>Title: {{ slotProps.option.title }}</div>
+                <div>DOI: {{ slotProps.option.doi }}</div>
+                <div>Identifier: {{ slotProps.option.identifier }}</div>
+                <div>Database: {{ slotProps.option.dbName }}</div>
+              </div>
+            </template>
+          </AutoComplete>
+          <label :for="scopedId('input-method-sources-publication-identifiers')">Publication identifiers</label>
+        </FloatLabel>
+        <span v-if="validationErrors['methodSources']" class="mave-field-error">{{
+          validationErrors['methodSources']
+        }}</span>
+      </div>
+    </div>
     <!-- Threshold sources -->
     <div class="mavedb-wizard-row">
       <div class="mavedb-wizard-help">
@@ -560,32 +597,33 @@
             </template>
           </AutoComplete>
           <label :for="scopedId('input-threshold-sources-publication-identifiers')">Publication identifiers</label>
-          <span v-if="validationErrors['thresholdSources']" class="mave-field-error">{{
-            validationErrors['thresholdSources']
-          }}</span>
         </FloatLabel>
+        <span v-if="validationErrors['thresholdSources']" class="mave-field-error">{{
+          validationErrors['thresholdSources']
+        }}</span>
       </div>
     </div>
-
+    <!-- Evidence sources -->
     <div class="mavedb-wizard-row">
       <div class="mavedb-wizard-help">
-        <label>Provide sources for calibration classifications.</label>
+        <label>Provide sources for calibration evidence.</label>
         <div class="mavedb-help-small">
-          These publications should describe the evidence used to assign classifications to functional ranges.
+          These publications should describe the evidence used to assign evidence strengths and pathogenicity
+          classifications to functional ranges.
         </div>
       </div>
       <div class="mavedb-wizard-content">
         <FloatLabel variant="on">
           <AutoComplete
-            :id="scopedId('input-classification-sources-publication-identifiers')"
-            v-model="draft.classificationSources"
+            :id="scopedId('input-evidence-sources-publication-identifiers')"
+            v-model="draft.evidenceSources"
             :multiple="true"
             :option-label="(option) => `${option.identifier}: ${truncatePublicationTitle(option.title)}`"
             :suggestions="publicationIdentifierSuggestionsList"
             @blur="clearAutoCompleteInput"
             @complete="searchPublicationIdentifiers"
             @keyup.escape="clearAutoCompleteInput"
-            @option-select="acceptNewPublicationIdentifier(draft.classificationSources)"
+            @option-select="acceptNewPublicationIdentifier(draft.evidenceSources)"
           >
             <template #option="slotProps">
               <div>
@@ -596,48 +634,11 @@
               </div>
             </template>
           </AutoComplete>
-          <label :for="scopedId('input-classification-sources-publication-identifiers')">Publication identifiers</label>
-          <span v-if="validationErrors['classificationSources']" class="mave-field-error">{{
-            validationErrors['classificationSources']
-          }}</span>
+          <label :for="scopedId('input-evidence-sources-publication-identifiers')">Publication identifiers</label>
         </FloatLabel>
-      </div>
-    </div>
-
-    <div class="mavedb-wizard-row">
-      <div class="mavedb-wizard-help">
-        <label>Provide sources for classification methods.</label>
-        <div class="mavedb-help-small">
-          These publications should describe the method by which evidence strengths were determined.
-        </div>
-      </div>
-      <div class="mavedb-wizard-content">
-        <FloatLabel variant="on">
-          <AutoComplete
-            :id="scopedId('input-method-sources-publication-identifiers')"
-            v-model="draft.methodSources"
-            :multiple="true"
-            :option-label="(option) => `${option.identifier}: ${truncatePublicationTitle(option.title)}`"
-            :suggestions="publicationIdentifierSuggestionsList"
-            @blur="clearAutoCompleteInput"
-            @complete="searchPublicationIdentifiers"
-            @keyup.escape="clearAutoCompleteInput"
-            @option-select="acceptNewPublicationIdentifier(draft.methodSources)"
-          >
-            <template #option="slotProps">
-              <div>
-                <div>Title: {{ slotProps.option.title }}</div>
-                <div>DOI: {{ slotProps.option.doi }}</div>
-                <div>Identifier: {{ slotProps.option.identifier }}</div>
-                <div>Database: {{ slotProps.option.dbName }}</div>
-              </div>
-            </template>
-          </AutoComplete>
-          <label :for="scopedId('input-method-sources-publication-identifiers')">Publication identifiers</label>
-          <span v-if="validationErrors['methodSources']" class="mave-field-error">{{
-            validationErrors['methodSources']
-          }}</span>
-        </FloatLabel>
+        <span v-if="validationErrors['evidenceSources']" class="mave-field-error">{{
+          validationErrors['evidenceSources']
+        }}</span>
       </div>
     </div>
   </div>
@@ -795,7 +796,7 @@ export default {
       functionalClassifications: [] as DraftFunctionalClassification[],
       thresholdSources: [] as components['schemas']['PublicationIdentifier'][],
       methodSources: [] as components['schemas']['PublicationIdentifier'][],
-      classificationSources: [] as components['schemas']['PublicationIdentifier'][]
+      evidenceSources: [] as components['schemas']['PublicationIdentifier'][]
     })
 
     // Internal reactive draft calibration (object identity must remain stable)
@@ -838,7 +839,7 @@ export default {
         'researchUseOnly',
         'thresholdSources',
         'methodSources',
-        'classificationSources'
+        'evidenceSources'
       ]
       keys.forEach((k) => {
         if (data[k] !== undefined) {
@@ -932,7 +933,7 @@ export default {
         functionalClassifications: dc.functionalClassifications,
         thresholdSources: dc.thresholdSources,
         methodSources: dc.methodSources,
-        classificationSources: dc.classificationSources
+        evidenceSources: dc.evidenceSources
       })
       isDirty.value = !_.isEqual(snapshot(draftCalibration), snapshot(draftCalibration.__original))
       isValid.value = !!draftCalibration.title
@@ -1342,7 +1343,7 @@ export default {
           'investigatorProvide',
           'thresholdSources',
           'methodSources',
-          'classificationSources'
+          'evidenceSources'
         ]
         keys.forEach((k) => {
           // @ts-expect-error index

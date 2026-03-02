@@ -18,7 +18,7 @@
     "@primevue/themes": "^4.4.1",
     "@tailwindcss/vite": "^4.1.16",
     "@unhead/vue": "^2.0.17",
-    "axios": "^1.11.0",
+    "axios": "^1.13.5",
     "chart.js": "^4.4.1",
     "d3": "^7.9.0",
     "datatables.net": "1.11.5",
@@ -45,7 +45,7 @@
     "jszip": "^3.10.1",
     "linkify-html": "^4.3.2",
     "linkifyjs": "^4.3.2",
-    "lodash": "^4.17.21",
+    "lodash": "^4.17.23",
     "marked": "^11.1.0",
     "moment": "^2.29.4",
     "native-file-system-adapter": "^3.0.1",
@@ -84,7 +84,7 @@
     "eslint-plugin-vue": "^9.33.0",
     "openapi-typescript": "^6.7.5",
     "prettier": "^3.6.2",
-    "vite": "^5.4.20",
+    "vite": "^5.4.21",
     "vue-tsc": "^3.0.7"
   },
   "browserslist": [

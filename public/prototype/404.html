@@ -119,7 +119,15 @@
         color: #888;
         margin-top: 2px;
       }
+      .nav-user-wrap {
+        position: relative;
+        flex-shrink: 0;
+        display: flex;
+        align-items: center;
+        gap: 4px;
+      }
       .nav-user {
+        text-decoration: none;
         background: #78b793;
         color: #fff;
         border-radius: 50%;
@@ -130,6 +138,57 @@
         justify-content: center;
         font-weight: 700;
         font-size: 13px;
+        flex-shrink: 0;
+        cursor: pointer;
+        border: none;
+        font-family: 'Raleway', sans-serif;
+      }
+      .nav-user:hover {
+        background: #5a9375;
+      }
+      .nav-user-caret {
+        color: #999;
+        flex-shrink: 0;
+        cursor: pointer;
+      }
+      .nav-user-dropdown {
+        display: none;
+        position: absolute;
+        right: 0;
+        top: calc(100% + 8px);
+        width: 180px;
+        background: #fff;
+        border: 1px solid #e0e0e0;
+        border-radius: 8px;
+        box-shadow: 0 8px 24px rgba(0, 0, 0, 0.12);
+        z-index: 300;
+        overflow: hidden;
+      }
+      .nav-user-dropdown.open {
+        display: block;
+      }
+      .nav-user-dropdown a {
+        display: flex;
+        align-items: center;
+        gap: 10px;
+        padding: 11px 16px;
+        font-size: 13px;
+        font-weight: 500;
+        color: #333;
+        border-bottom: 1px solid #f0f0f0;
+        text-decoration: none;
+      }
+      .nav-user-dropdown a:last-child {
+        border-bottom: none;
+      }
+      .nav-user-dropdown a:hover {
+        background: #f5f5f5;
+        text-decoration: none;
+      }
+      .nav-user-dropdown .dropdown-icon {
+        width: 16px;
+        height: 16px;
+        color: #888;
         flex-shrink: 0;
       }
 
@@ -306,7 +365,24 @@
           <li><a href="./about.html">About</a></li>
           <li><a href="./help.html">Help</a></li>
         </ul>
-        <div class="nav-user">B</div>
+        <div class="nav-user-wrap" onclick="toggleUserMenu(event)">
+          <button class="nav-user">B</button>
+          <svg class="nav-user-caret" width="10" height="10" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><polyline points="6 9 12 15 18 9"/></svg>
+          <div id="nav-user-dropdown" class="nav-user-dropdown">
+            <a href="./settings.html">
+              <svg class="dropdown-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="3"/><path d="M19.4 15a1.65 1.65 0 0 0 .33 1.82l.06.06a2 2 0 1 1-2.83 2.83l-.06-.06a1.65 1.65 0 0 0-1.82-.33 1.65 1.65 0 0 0-1 1.51V21a2 2 0 0 1-4 0v-.09A1.65 1.65 0 0 0 9 19.4a1.65 1.65 0 0 0-1.82.33l-.06.06a2 2 0 1 1-2.83-2.83l.06-.06A1.65 1.65 0 0 0 4.68 15a1.65 1.65 0 0 0-1.51-1H3a2 2 0 0 1 0-4h.09A1.65 1.65 0 0 0 4.6 9a1.65 1.65 0 0 0-.33-1.82l-.06-.06a2 2 0 1 1 2.83-2.83l.06.06A1.65 1.65 0 0 0 9 4.68a1.65 1.65 0 0 0 1-1.51V3a2 2 0 0 1 4 0v.09a1.65 1.65 0 0 0 1 1.51 1.65 1.65 0 0 0 1.82-.33l.06-.06a2 2 0 1 1 2.83 2.83l-.06.06A1.65 1.65 0 0 0 19.4 9a1.65 1.65 0 0 0 1.51 1H21a2 2 0 0 1 0 4h-.09a1.65 1.65 0 0 0-1.51 1z"/></svg>
+              Settings
+            </a>
+            <a href="./dashboard.html">
+              <svg class="dropdown-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="3" width="7" height="7"/><rect x="14" y="3" width="7" height="7"/><rect x="14" y="14" width="7" height="7"/><rect x="3" y="14" width="7" height="7"/></svg>
+              Dashboard
+            </a>
+            <a href="#">
+              <svg class="dropdown-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M9 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h4"/><polyline points="16 17 21 12 16 7"/><line x1="21" y1="12" x2="9" y2="12"/></svg>
+              Sign out
+            </a>
+          </div>
+        </div>
       </div>
     </nav>
 
@@ -355,6 +431,19 @@
         const wrap = document.querySelector('.nav-add-wrap')
         if (wrap && !wrap.contains(e.target)) {
           const dd = document.getElementById('nav-add-dropdown')
+          if (dd) dd.classList.remove('open')
+        }
+      })
+    
+      function toggleUserMenu(event) {
+        event.stopPropagation()
+        var dd = document.getElementById('nav-user-dropdown')
+        dd.classList.toggle('open')
+      }
+      document.addEventListener('click', function(e) {
+        var wrap = document.querySelector('.nav-user-wrap')
+        if (wrap && !wrap.contains(e.target)) {
+          var dd = document.getElementById('nav-user-dropdown')
           if (dd) dd.classList.remove('open')
         }
       })

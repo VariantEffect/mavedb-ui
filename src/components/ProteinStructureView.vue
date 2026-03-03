@@ -37,10 +37,7 @@ import 'pdbe-molstar/build/pdbe-molstar-light.css'
 import _ from 'lodash'
 import {watch, ref} from 'vue'
 
-import config from '@/config'
 import useScopedId from '@/composables/scoped-id'
-
-const DEFAULT_ALPHAFOLD_FILES_VERSION = 'v6'
 
 export default {
   name: 'ProteinStructureView',
@@ -248,25 +245,28 @@ export default {
     hoveredOverResidue: function (e) {
       this.$emit('hoveredOverResidue', e.eventData)
     },
-    fetchAlphaFoldFilesVersion: async function () {
-      try {
-        const response = await axios.get(`${config.apiBaseUrl}/alphafold-files/version`)
-        const responseVersion = _.isString(response?.data)
-          ? response.data
-          : response?.data?.version
-        if (_.isString(responseVersion) && responseVersion.trim().length > 0) {
-          return responseVersion.trim()
-        }
-      } catch (error) {
-        // Fallback for environments where the proxy endpoint is unavailable.
-      }
-      return DEFAULT_ALPHAFOLD_FILES_VERSION
+    fetchAlphaFoldCifUrl: async function () {
+      const qualifier = encodeURIComponent(this.selectedAlphaFold.id)
+      const response = await axios.get(`https://alphafold.ebi.ac.uk/api/prediction/${qualifier}`)
+      const predictionModels = _.isArray(response.data) ? response.data : [response.data]
+      const selectedModel =
+        predictionModels.find((x) => _.isString(x?.cifUrl) && _.isString(x?.entryId) && x.entryId === `AF-${this.selectedAlphaFold.id}-F1`) ||
+        predictionModels.find((x) => _.isString(x?.cifUrl))
+      return selectedModel?.cifUrl || null
     },
 
     render: async function () {
       if (this.selectedAlphaFold) {
-        const alphafoldFilesVersion = await this.fetchAlphaFoldFilesVersion()
-        const alphafoldCifUrl = `https://alphafold.ebi.ac.uk/files/AF-${this.selectedAlphaFold.id}-F1-model_${alphafoldFilesVersion}.cif`
+        let alphafoldCifUrl
+        try {
+          alphafoldCifUrl = await this.fetchAlphaFoldCifUrl()
+          if (!alphafoldCifUrl) {
+            throw new Error('AlphaFold cifUrl not found')
+          }
+        } catch (error) {
+          this.$toast.add({severity: 'error', summary: 'Error', detail: 'Failed to fetch AlphaFold structure metadata'})
+          return
+        }
 
         const viewerInstance = new PDBeMolstarPlugin()
         const options = {

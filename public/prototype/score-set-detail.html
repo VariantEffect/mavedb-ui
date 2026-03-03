@@ -286,6 +286,16 @@
         margin: 0 8px;
         color: #ccc;
       }
+      .meta-jump {
+        font-size: 12px;
+        font-weight: 600;
+        color: #78b793;
+        text-decoration: none;
+        transition: color 0.12s;
+      }
+      .meta-jump:hover {
+        color: #5a9671;
+      }
       .orcid-icon {
         display: inline-block;
         width: 14px;
@@ -503,6 +513,27 @@
         border-color: #5a9671;
       }
 
+      /* ── USER COLLECTIONS LINE ── */
+      .collection-user-line {
+        display: flex;
+        align-items: center;
+        gap: 6px;
+        font-size: 11px;
+        color: #999;
+        padding-top: 6px;
+      }
+      .collection-user-line a {
+        color: #78b793;
+        font-weight: 600;
+        text-decoration: none;
+      }
+      .collection-user-line a:hover {
+        color: #5a9671;
+      }
+      .collection-user-line svg {
+        flex-shrink: 0;
+      }
+
       /* ── CONTENT ── */
       .content {
         max-width: 1000px;
@@ -607,6 +638,55 @@
         padding: 14px 20px;
         border-bottom: 1px solid #f0f0f0;
       }
+      .chart-tabs {
+        display: flex;
+        gap: 0;
+        border-bottom: 1px solid #e8e8e8;
+        background: #fafbfc;
+      }
+      .chart-tab {
+        padding: 10px 18px;
+        font-size: 12px;
+        font-weight: 600;
+        color: #888;
+        cursor: pointer;
+        border-bottom: 2px solid transparent;
+        transition:
+          color 0.15s,
+          border-color 0.15s;
+        white-space: nowrap;
+      }
+      .chart-tab:hover {
+        color: #555;
+      }
+      .chart-tab.active {
+        color: #78b793;
+        border-bottom-color: #78b793;
+      }
+      .seg-toggle {
+        display: inline-flex;
+        border: 1px solid #dee2e6;
+        border-radius: 4px;
+        overflow: hidden;
+      }
+      .seg-toggle-btn {
+        padding: 4px 12px;
+        font-size: 12px;
+        font-weight: 600;
+        font-family: 'Raleway', sans-serif;
+        color: #777;
+        background: #fff;
+        border: none;
+        cursor: pointer;
+        transition: background 0.15s, color 0.15s;
+      }
+      .seg-toggle-btn:not(:last-child) {
+        border-right: 1px solid #dee2e6;
+      }
+      .seg-toggle-btn.active {
+        background: #78b793;
+        color: #fff;
+      }
       .chart-title {
         font-size: 14px;
         font-weight: 700;
@@ -682,45 +762,334 @@
         color: #aaa;
       }
 
-      /* ── CALIBRATION TABLE ── */
-      .calibration-strip {
-        background: #fff;
-        border: 1px solid #dee2e6;
-        border-radius: 8px;
-        overflow: hidden;
+      /* ── CHART CALIBRATION (inside chart-card) ── */
+      .chart-calibration {
+        padding: 16px 20px 20px;
+        border-top: 1px solid #f0f0f0;
       }
-      .calibration-strip-header {
-        padding: 12px 20px;
-        font-size: 13px;
-        font-weight: 700;
-        color: #333;
-        border-bottom: 1px solid #f0f0f0;
+      .chart-calibration-footer {
+        display: flex;
+        justify-content: flex-end;
+        padding-top: 10px;
+      }
+      .chart-calibration-link {
+        font-size: 12px;
+        font-weight: 600;
+        color: #78b793;
+      }
+      .chart-calibration-link:hover {
+        color: #5a9671;
+      }
+      .chart-calibration-collapsed {
         display: flex;
         align-items: center;
         gap: 8px;
+        padding: 14px 20px;
+        border-top: 1px solid #f0f0f0;
+        font-size: 12px;
+        color: #999;
       }
-      .calibration-table {
+      .chart-calibration-collapsed svg {
+        flex-shrink: 0;
+        color: #bbb;
+      }
+      .chart-calibration-collapsed a {
+        color: #78b793;
+        font-weight: 600;
+        margin-left: auto;
+      }
+      .chart-calibration-collapsed a:hover {
+        color: #5a9671;
+      }
+
+      /* ── CALIBRATION RANGES COMPONENT (portable unit) ── */
+      .cal-ranges {
+        border: 1px solid #d5dbe0;
+        border-radius: 8px;
+        overflow: hidden;
+        background: #fff;
+      }
+      .cal-ranges-title {
+        display: flex;
+        align-items: center;
+        gap: 12px;
+        font-size: 11px;
+        font-weight: 700;
+        text-transform: uppercase;
+        letter-spacing: 0.6px;
+        color: #78b793;
+        padding: 10px 14px;
+        background: #f8f9fa;
+        border-bottom: 1px solid #d5dbe0;
+      }
+      .cal-ranges-title-desc {
+        font-size: 12px;
+        font-weight: 400;
+        color: #888;
+        text-transform: none;
+        letter-spacing: 0;
+        white-space: nowrap;
+        overflow: hidden;
+        text-overflow: ellipsis;
+      }
+      .cal-ranges-title-sep {
+        width: 1px;
+        height: 14px;
+        background: #dee2e6;
+        flex-shrink: 0;
+      }
+      /* Classification comparison grid */
+      .cal-grid {
         width: 100%;
         border-collapse: collapse;
         font-size: 13px;
+        table-layout: fixed;
       }
-      .calibration-table th {
+      .cal-grid th {
+        padding: 12px 14px;
+        font-size: 12px;
+        font-weight: 700;
+        color: #333;
+        text-align: center;
+        background: #f8f9fa;
+        border-bottom: 2px solid #d5dbe0;
+        border-right: 1px solid #d5dbe0;
+      }
+      .cal-grid th:last-child {
+        border-right: none;
+      }
+      .cal-grid th:first-child {
         text-align: left;
-        padding: 10px 16px;
-        font-weight: 600;
-        color: #888;
-        font-size: 11px;
-        text-transform: uppercase;
-        letter-spacing: 0.4px;
-        border-bottom: 1px solid #f0f0f0;
+        width: 160px;
+        color: transparent;
+        background: #f1f3f5;
       }
-      .calibration-table td {
-        padding: 10px 16px;
-        border-bottom: 1px solid #fafafa;
+      .cal-grid .row-label {
+        padding: 10px 14px;
+        font-size: 12px;
+        font-weight: 700;
         color: #444;
+        background: #f8f9fa;
+        border-right: 2px solid #dee2e6;
+        white-space: nowrap;
       }
-      .calibration-table tr:last-child td {
+      .cal-grid td {
+        padding: 10px 14px;
+        text-align: center;
+        border-bottom: 1px solid #d5dbe0;
+        border-right: 1px solid #d5dbe0;
+        color: #444;
+        font-size: 13px;
+      }
+      .cal-grid td:last-child {
+        border-right: none;
+      }
+      .cal-grid tr:last-child td,
+      .cal-grid tr:last-child .row-label {
         border-bottom: none;
+      }
+      /* Classification color bar on column headers */
+      .col-abnormal {
+        border-top: 4px solid #e53935;
+      }
+      .col-indeterminate {
+        border-top: 4px solid #bbb;
+      }
+      .col-normal {
+        border-top: 4px solid #1565c0;
+      }
+      /* Functional classification badges */
+      .fc-badge {
+        display: inline-block;
+        padding: 3px 10px;
+        border-radius: 4px;
+        font-size: 11px;
+        font-weight: 700;
+        letter-spacing: 0.2px;
+      }
+      .fc-abnormal {
+        background: #ffebee;
+        color: #c62828;
+      }
+      .fc-not-specified {
+        background: #f5f5f5;
+        color: #757575;
+      }
+      .fc-normal {
+        background: #e3f2fd;
+        color: #1565c0;
+      }
+      /* Baseline score bar */
+      .baseline-bar {
+        display: flex;
+        align-items: center;
+        gap: 12px;
+        padding: 10px 16px;
+        background: #f8f9fa;
+        border-bottom: 1px solid #d5dbe0;
+      }
+      .baseline-bar-label {
+        font-size: 11px;
+        font-weight: 700;
+        color: #999;
+        text-transform: uppercase;
+        letter-spacing: 0.5px;
+      }
+      .baseline-bar-value {
+        font-size: 15px;
+        font-weight: 700;
+        color: #333;
+        font-family: monospace;
+      }
+      .baseline-bar-sep {
+        width: 1px;
+        height: 18px;
+        background: #dee2e6;
+      }
+      .baseline-bar-desc {
+        font-size: 12px;
+        color: #888;
+      }
+      /* Sources section */
+      .sources-section {
+        padding: 10px 14px;
+        background: #f8f9fa;
+        border-top: 1px solid #d5dbe0;
+        display: flex;
+        flex-wrap: wrap;
+        gap: 4px 16px;
+        font-size: 12px;
+        color: #999;
+        align-items: center;
+      }
+      .sources-heading {
+        font-size: 10px;
+        font-weight: 700;
+        text-transform: uppercase;
+        letter-spacing: 0.5px;
+        color: #999;
+        margin-right: 4px;
+        display: flex;
+        align-items: center;
+        gap: 5px;
+      }
+      .sources-heading svg {
+        flex-shrink: 0;
+      }
+      .sources-section a {
+        font-size: 12px;
+        font-weight: 500;
+      }
+      .source-sep {
+        color: #ddd;
+      }
+      .variant-count {
+        font-weight: 700;
+        font-size: 13px;
+        color: #555;
+        font-family: 'Exo 2', monospace;
+      }
+      .interval-mono {
+        font-family: monospace;
+        font-size: 12px;
+        color: #555;
+        letter-spacing: -0.3px;
+      }
+      .odds-value {
+        font-family: monospace;
+        font-size: 13px;
+        font-weight: 600;
+        color: #333;
+      }
+      .muted-dash {
+        color: #ccc;
+      }
+      /* Tooltips for cal-grid row labels and sources */
+      .has-tip {
+        position: relative;
+        cursor: help;
+        border-bottom: 1px dashed #ccc;
+      }
+      .tip {
+        display: none;
+        position: absolute;
+        top: calc(100% + 6px);
+        left: 50%;
+        transform: translateX(-50%);
+        width: 220px;
+        padding: 8px 10px;
+        background: #333;
+        color: #fff;
+        font-size: 11px;
+        font-weight: 400;
+        line-height: 1.5;
+        border-radius: 5px;
+        z-index: 50;
+        text-transform: none;
+        letter-spacing: 0;
+        white-space: normal;
+        pointer-events: none;
+      }
+      .tip::before {
+        content: '';
+        position: absolute;
+        bottom: 100%;
+        left: 50%;
+        transform: translateX(-50%);
+        border: 5px solid transparent;
+        border-bottom-color: #333;
+      }
+      .has-tip:hover .tip {
+        display: block;
+      }
+      .row-label.has-tip .tip {
+        left: 0;
+        transform: none;
+      }
+      .row-label.has-tip .tip::before {
+        left: 20px;
+        transform: none;
+      }
+      .baseline-bar .has-tip {
+        border-bottom: 1px dashed #bbb;
+      }
+      .baseline-bar .has-tip .tip {
+        width: 200px;
+      }
+      .source-label {
+        position: relative;
+        cursor: help;
+        border-bottom: 1px dashed #ccc;
+      }
+      .source-label:hover .tip {
+        display: block;
+      }
+      .source-label .tip {
+        display: none;
+        position: absolute;
+        bottom: calc(100% + 6px);
+        left: 50%;
+        transform: translateX(-50%);
+        width: 220px;
+        padding: 8px 10px;
+        background: #333;
+        color: #fff;
+        font-size: 11px;
+        font-weight: 400;
+        line-height: 1.5;
+        border-radius: 5px;
+        z-index: 50;
+        white-space: normal;
+        pointer-events: none;
+      }
+      .source-label .tip::before {
+        content: '';
+        position: absolute;
+        top: 100%;
+        left: 50%;
+        transform: translateX(-50%);
+        border: 5px solid transparent;
+        border-top-color: #333;
       }
       .evidence-badge {
         display: inline-block;
@@ -730,6 +1099,10 @@
         font-weight: 700;
         letter-spacing: 0.3px;
       }
+      .evidence-ps3-very-strong {
+        background: #f8bbd0;
+        color: #880e4f;
+      }
       .evidence-ps3-strong {
         background: #fce4ec;
         color: #c62828;
@@ -737,6 +1110,10 @@
       .evidence-ps3-moderate {
         background: #fff3e0;
         color: #e65100;
+      }
+      .evidence-bs3 {
+        background: #e3f2fd;
+        color: #1565c0;
       }
       .evidence-bs3-moderate {
         background: #e3f2fd;
@@ -1343,7 +1720,7 @@
                   </svg>
                   Edit Score Set
                 </a>
-                <a href="#" class="actions-dropdown-item">
+                <a href="./calibrations.html" class="actions-dropdown-item">
                   <svg
                     width="14"
                     height="14"
@@ -1399,52 +1776,40 @@
               alt="ORCID"
               class="orcid-icon"
             />Jordan Mills</a
-          ><span class="meta-sep">&middot;</span>Published March 10, 2025
+          ><span class="meta-sep">&middot;</span>Published March 10, 2025<span class="meta-sep">&middot;</span><a href="#details" class="meta-jump">Jump to detailed metadata &darr;</a>
         </div>
       </div>
     </div>
 
     <!-- COLLECTION STRIP -->
     <div class="collection-strip">
-      <div class="collection-strip-inner">
-        <div class="collection-strip-labels">
-          <div class="collection-item">
-            <span class="collection-icon collection-icon-sage">M</span>
-            <span class="collection-item-label">Part of MaveMD</span>
+      <div class="collection-strip-inner" style="flex-wrap: wrap">
+        <div style="display: flex; flex-direction: column; gap: 0">
+          <div class="collection-strip-labels">
+            <div class="collection-item">
+              <span class="collection-icon collection-icon-sage">M</span>
+              <span class="collection-item-label">Part of MaveMD</span>
+            </div>
+            <div class="collection-item">
+              <span class="collection-icon collection-icon-purple">C</span>
+              <span class="collection-item-label">Calibrated by ClinGen</span>
+            </div>
           </div>
-          <div class="collection-item">
-            <span class="collection-icon collection-icon-purple">C</span>
-            <span class="collection-item-label">Calibrated by ClinGen</span>
+          <div class="collection-user-line">
+            <svg width="11" height="11" viewBox="0 0 24 24" fill="#aaa" stroke="none"><path d="M19 21l-7-5-7 5V5a2 2 0 0 1 2-2h10a2 2 0 0 1 2 2z"/></svg>
+            Also in:
+            <a href="#">My Favorites</a>
+            <a href="#">Lab Group Collection</a>
+            <span style="color: #bbb">&middot;</span>
+            <a href="#" style="color: #999">+4 more</a>
           </div>
         </div>
-        <button class="save-collection-btn-strip">
-          <svg
-            width="14"
-            height="14"
-            viewBox="0 0 24 24"
-            fill="none"
-            stroke="currentColor"
-            stroke-width="2"
-            stroke-linecap="round"
-            stroke-linejoin="round"
-          >
-            <path d="M19 21l-7-5-7 5V5a2 2 0 0 1 2-2h10a2 2 0 0 1 2 2z" />
-          </svg>
-          Save to collection
-        </button>
-      </div>
-    </div>
-
-    <!-- ALTERNATE: Minimal version when no collections exist
-    <div class="collection-strip minimal">
-      <div class="collection-strip-inner">
         <button class="save-collection-btn-strip">
           <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M19 21l-7-5-7 5V5a2 2 0 0 1 2-2h10a2 2 0 0 1 2 2z"/></svg>
           Save to collection
         </button>
       </div>
     </div>
-    -->
 
     <!-- CONTENT -->
     <div class="content">
@@ -1477,7 +1842,7 @@
         </div>
       </div>
 
-      <!-- DISTRIBUTION HISTOGRAM -->
+      <!-- DISTRIBUTION HISTOGRAM 1 -->
       <div class="chart-card">
         <div class="chart-header">
           <span class="chart-title">Score Distribution</span>
@@ -1488,6 +1853,13 @@
               <option>ClinGen VCEP — Investigator</option>
             </select>
           </div>
+        </div>
+        <div class="chart-tabs">
+          <span class="chart-tab active">Overall Distribution</span>
+          <span class="chart-tab">Clinical View</span>
+          <span class="chart-tab">Calibration Class View</span>
+          <span class="chart-tab">Protein Effect View</span>
+          <span class="chart-tab">Custom</span>
         </div>
         <div class="chart-body">
           <div class="mock-histogram">
@@ -1525,56 +1897,204 @@
           <span class="chart-axis-label">Functional Score</span>
           <span class="chart-y-label">Variants</span>
         </div>
+        <div class="chart-calibration-collapsed">
+          <svg
+            width="14"
+            height="14"
+            viewBox="0 0 24 24"
+            fill="none"
+            stroke="currentColor"
+            stroke-width="2"
+            stroke-linecap="round"
+            stroke-linejoin="round"
+          >
+            <circle cx="12" cy="12" r="10" />
+            <line x1="12" y1="16" x2="12" y2="12" />
+            <line x1="12" y1="8" x2="12.01" y2="8" />
+          </svg>
+          Calibration details shown on Score Distribution below
+          <a href="./calibrations.html">View all calibrations &rarr;</a>
+        </div>
       </div>
 
-      <!-- CALIBRATION TABLE -->
-      <div class="calibration-strip">
-        <div class="calibration-strip-header">
-          <svg width="16" height="14" viewBox="0 0 16 14">
-            <rect x="0" y="6" width="2.5" height="8" rx="1" fill="#78b793" />
-            <rect x="3.5" y="3" width="2.5" height="11" rx="1" fill="#a1d8c8" />
-            <rect x="7" y="0" width="2.5" height="14" rx="1" fill="#fbda68" />
-            <rect x="10.5" y="4" width="2.5" height="10" rx="1" fill="#f8971d" />
-            <rect x="14" y="7" width="2" height="7" rx="1" fill="#ccc" opacity="0.6" />
-          </svg>
-          Calibration — Harwood et al. 2018
+      <!-- DISTRIBUTION HISTOGRAM 2 (Clinical) -->
+      <div class="chart-card">
+        <div class="chart-header">
+          <span class="chart-title">Clinical Score Distribution</span>
+          <div class="chart-controls">
+            <select class="chart-select">
+              <option>No calibration</option>
+              <option selected>Harwood et al. 2018 — Primary</option>
+              <option>ClinGen VCEP — Investigator</option>
+            </select>
+          </div>
         </div>
-        <table class="calibration-table">
-          <thead>
-            <tr>
-              <th>Range</th>
-              <th>Score</th>
-              <th>Evidence Code</th>
-              <th>Classification</th>
-            </tr>
-          </thead>
-          <tbody>
-            <tr>
-              <td>Abnormal</td>
-              <td>&le; &minus;1.328</td>
-              <td><span class="evidence-badge evidence-ps3-strong">PS3_Strong</span></td>
-              <td>Functionally abnormal</td>
-            </tr>
-            <tr>
-              <td>Intermediate</td>
-              <td>&minus;1.328 to &minus;0.748</td>
-              <td><span class="evidence-badge evidence-ps3-moderate">PS3_Moderate</span></td>
-              <td>Intermediate / uncertain</td>
-            </tr>
-            <tr>
-              <td>Indeterminate</td>
-              <td>&minus;0.748 to 0.000</td>
-              <td><span class="evidence-badge evidence-indeterminate">Indeterminate</span></td>
-              <td>No evidence applicable</td>
-            </tr>
-            <tr>
-              <td>Normal</td>
-              <td>&ge; 0.000</td>
-              <td><span class="evidence-badge evidence-bs3-strong">BS3_Strong</span></td>
-              <td>Functionally normal</td>
-            </tr>
-          </tbody>
-        </table>
+        <div class="chart-tabs">
+          <span class="chart-tab">Overall Distribution</span>
+          <span class="chart-tab active">Clinical View</span>
+          <span class="chart-tab">Calibration Class View</span>
+          <span class="chart-tab">Protein Effect View</span>
+          <span class="chart-tab">Custom</span>
+        </div>
+        <div class="chart-body">
+          <div class="mock-histogram">
+            <div class="mock-bar" style="height: 5%"></div>
+            <div class="mock-bar" style="height: 10%"></div>
+            <div class="mock-bar" style="height: 20%"></div>
+            <div class="mock-bar" style="height: 32%"></div>
+            <div class="mock-bar" style="height: 45%"></div>
+            <div class="mock-bar" style="height: 58%"></div>
+            <div class="mock-bar" style="height: 70%"></div>
+            <div class="mock-bar" style="height: 80%"></div>
+            <div class="mock-bar" style="height: 90%"></div>
+            <div class="mock-bar" style="height: 100%"></div>
+            <div class="mock-bar" style="height: 95%"></div>
+            <div class="mock-bar" style="height: 82%"></div>
+            <div class="mock-bar" style="height: 68%"></div>
+            <div class="mock-bar" style="height: 50%"></div>
+            <div class="mock-bar" style="height: 35%"></div>
+            <div class="mock-bar" style="height: 22%"></div>
+            <div class="mock-bar" style="height: 15%"></div>
+            <div class="mock-bar" style="height: 10%"></div>
+            <div class="mock-bar" style="height: 6%"></div>
+            <div class="mock-bar" style="height: 3%"></div>
+          </div>
+          <span class="chart-axis-label">Clinical Score</span>
+          <span class="chart-y-label">Variants</span>
+        </div>
+        <div class="chart-calibration">
+          <div class="cal-ranges">
+            <div class="cal-ranges-title">
+              Harwood et al. 2018
+              <span class="cal-ranges-title-sep"></span>
+              <span class="cal-ranges-title-desc"
+                >BRCA1 RING domain SGE functional score calibration from ClinGen VCEP evidence review.</span
+              >
+            </div>
+            <div class="baseline-bar">
+              <span class="baseline-bar-label has-tip"
+                >Baseline score<span class="tip"
+                  >The reference score representing normal function, used as the zero-point for calibration
+                  ranges.</span
+                ></span
+              >
+              <span class="baseline-bar-value">0.000</span>
+              <span class="baseline-bar-sep"></span>
+              <span class="baseline-bar-desc">Wild-type synonymous median</span>
+            </div>
+            <table class="cal-grid">
+              <tbody>
+                <tr>
+                  <td class="row-label has-tip">
+                    Range label<span class="tip"
+                      >The descriptive name assigned to this score range by the calibration author.</span
+                    >
+                  </td>
+                  <td class="col-abnormal">Abnormal (Very Strong)</td>
+                  <td class="col-abnormal">Abnormal (Strong)</td>
+                  <td class="col-abnormal">Abnormal</td>
+                  <td class="col-indeterminate">Indeterminate</td>
+                  <td class="col-normal">Normal</td>
+                </tr>
+                <tr>
+                  <td class="row-label has-tip">
+                    Classification<span class="tip"
+                      >The functional classification (abnormal, normal, or not specified) assigned to variants falling
+                      in this range.</span
+                    >
+                  </td>
+                  <td><span class="fc-badge fc-abnormal">Abnormal</span></td>
+                  <td><span class="fc-badge fc-abnormal">Abnormal</span></td>
+                  <td><span class="fc-badge fc-abnormal">Abnormal</span></td>
+                  <td><span class="fc-badge fc-not-specified">Not Specified</span></td>
+                  <td><span class="fc-badge fc-normal">Normal</span></td>
+                </tr>
+                <tr>
+                  <td class="row-label has-tip">
+                    Numeric interval<span class="tip"
+                      >The score boundaries defining this range, expressed as a mathematical interval.</span
+                    >
+                  </td>
+                  <td><span class="interval-mono">(&minus;&infin;, &minus;2.576)</span></td>
+                  <td><span class="interval-mono">[&minus;2.576, &minus;1.952)</span></td>
+                  <td><span class="interval-mono">[&minus;1.952, &minus;1.328)</span></td>
+                  <td><span class="interval-mono">[&minus;1.328, &minus;0.743)</span></td>
+                  <td><span class="interval-mono">[&minus;0.743, &infin;)</span></td>
+                </tr>
+                <tr>
+                  <td class="row-label has-tip">
+                    Evidence strength<span class="tip"
+                      >The ACMG/AMP evidence code and strength level (e.g. PS3_Strong, BS3) for variants in this
+                      range.</span
+                    >
+                  </td>
+                  <td><span class="evidence-badge evidence-ps3-very-strong">PS3_Very_Strong</span></td>
+                  <td><span class="evidence-badge evidence-ps3-strong">PS3_Strong</span></td>
+                  <td><span class="evidence-badge evidence-ps3-moderate">PS3_Moderate</span></td>
+                  <td><span class="evidence-badge evidence-indeterminate">Indeterminate</span></td>
+                  <td><span class="evidence-badge evidence-bs3-strong">BS3_Strong</span></td>
+                </tr>
+                <tr>
+                  <td class="row-label has-tip">
+                    OddsPath ratio<span class="tip"
+                      >The odds of pathogenicity ratio derived from calibration data. Higher values indicate stronger
+                      evidence for pathogenicity.</span
+                    >
+                  </td>
+                  <td><span class="odds-value">350.00</span></td>
+                  <td><span class="odds-value">18.70</span></td>
+                  <td><span class="odds-value">4.30</span></td>
+                  <td><span class="muted-dash">&mdash;</span></td>
+                  <td><span class="odds-value">0.05</span></td>
+                </tr>
+                <tr>
+                  <td class="row-label has-tip">
+                    Variant count<span class="tip"
+                      >The number of variants from this score set that fall within this range.</span
+                    >
+                  </td>
+                  <td><span class="variant-count">1,247</span></td>
+                  <td><span class="variant-count">834</span></td>
+                  <td><span class="variant-count">512</span></td>
+                  <td><span class="variant-count">1,089</span></td>
+                  <td><span class="variant-count">2,318</span></td>
+                </tr>
+              </tbody>
+            </table>
+            <div class="sources-section">
+              <span class="sources-heading">
+                <svg
+                  width="12"
+                  height="12"
+                  viewBox="0 0 24 24"
+                  fill="none"
+                  stroke="currentColor"
+                  stroke-width="2"
+                  stroke-linecap="round"
+                  stroke-linejoin="round"
+                >
+                  <path d="M2 3h6a4 4 0 0 1 4 4v14a3 3 0 0 0-3-3H2z" />
+                  <path d="M22 3h-6a4 4 0 0 0-4 4v14a3 3 0 0 1 3-3h7z" />
+                </svg>
+                Sources
+              </span>
+              <span class="source-label"
+                >Thresholds<span class="tip"
+                  >The publication or source that defined the score thresholds used to create these ranges.</span
+                ></span
+              >: <a href="#">Harwood FG et al. (2018)</a>
+              <span class="source-sep">&mdash;</span>
+              <span class="source-label"
+                >Method<span class="tip"
+                  >The methodology or guideline framework used to determine evidence strength and classifications.</span
+                ></span
+              >: <a href="#">ClinGen BRCA1/2 VCEP v3.1</a>
+            </div>
+          </div>
+          <div class="chart-calibration-footer">
+            <a href="./calibrations.html" class="chart-calibration-link">View all calibrations &rarr;</a>
+          </div>
+        </div>
       </div>
 
       <!-- HEATMAP -->
@@ -1582,6 +2102,10 @@
         <div class="chart-header">
           <span class="chart-title">Variant Effect Heatmap</span>
           <div class="chart-controls">
+            <div class="seg-toggle">
+              <button class="seg-toggle-btn" onclick="toggleSeg(this)">DNA</button>
+              <button class="seg-toggle-btn active" onclick="toggleSeg(this)">Protein</button>
+            </div>
             <button class="btn btn-secondary btn-sm">
               <svg
                 width="12"
@@ -1717,7 +2241,7 @@
       </div>
 
       <!-- DETAILS CARDS -->
-      <div style="margin-bottom: -8px">
+      <div id="details" style="margin-bottom: -8px; scroll-margin-top: 16px">
         <div class="section-title">Details and Metadata</div>
         <hr style="border: none; border-top: 1px solid #dee2e6; margin: 16px 0" />
       </div>
@@ -2141,6 +2665,26 @@
         track.classList.toggle('on')
         container.classList.toggle('active')
       }
+
+      // Segmented toggle
+      function toggleSeg(btn) {
+        btn.parentElement.querySelectorAll('.seg-toggle-btn').forEach(function (b) {
+          b.classList.remove('active')
+        })
+        btn.classList.add('active')
+      }
+
+      // Tab switching within chart cards
+      document.querySelectorAll('.chart-tabs').forEach(function (tabBar) {
+        tabBar.querySelectorAll('.chart-tab').forEach(function (tab) {
+          tab.addEventListener('click', function () {
+            tabBar.querySelectorAll('.chart-tab').forEach(function (t) {
+              t.classList.remove('active')
+            })
+            tab.classList.add('active')
+          })
+        })
+      })
     </script>
   </body>
 </html>

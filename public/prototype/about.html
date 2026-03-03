@@ -4,7 +4,10 @@
     <meta charset="UTF-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
     <title>About — MaveDB</title>
-    <link href="https://fonts.googleapis.com/css2?family=Raleway:wght@400;500;600;700&family=Exo+2:wght@700;800;900&display=swap" rel="stylesheet" />
+    <link
+      href="https://fonts.googleapis.com/css2?family=Raleway:wght@400;500;600;700&family=Exo+2:wght@700;800;900&display=swap"
+      rel="stylesheet"
+    />
     <style>
       *,
       *::before,
@@ -21,7 +24,9 @@
         font-size: 15px;
       }
 
-      h1, h2, h3 {
+      h1,
+      h2,
+      h3 {
         font-family: 'Exo 2', sans-serif;
       }
 
@@ -67,14 +72,16 @@
         color: #444;
       }
       .nav-links a:hover {
-        color: #78B793;
+        color: #78b793;
         text-decoration: none;
       }
       .nav-links a.active {
-        color: #78B793;
+        color: #78b793;
         font-weight: 700;
       }
-      .nav-add-wrap { position: relative; }
+      .nav-add-wrap {
+        position: relative;
+      }
       .nav-add-dropdown {
         display: none;
         position: absolute;
@@ -84,22 +91,37 @@
         background: #fff;
         border: 1px solid #e0e0e0;
         border-radius: 8px;
-        box-shadow: 0 8px 24px rgba(0,0,0,0.12);
+        box-shadow: 0 8px 24px rgba(0, 0, 0, 0.12);
         z-index: 200;
         overflow: hidden;
       }
-      .nav-add-dropdown.open { display: block; }
+      .nav-add-dropdown.open {
+        display: block;
+      }
       .nav-add-option {
         display: block;
         padding: 12px 16px;
         border-bottom: 1px solid #f0f0f0;
       }
-      .nav-add-option:last-child { border-bottom: none; }
-      .nav-add-option:hover { background: #f5f5f5; text-decoration: none; }
-      .nav-add-option-label { font-size: 13px; font-weight: 600; color: #333; }
-      .nav-add-option-desc { font-size: 12px; color: #888; margin-top: 2px; }
+      .nav-add-option:last-child {
+        border-bottom: none;
+      }
+      .nav-add-option:hover {
+        background: #f5f5f5;
+        text-decoration: none;
+      }
+      .nav-add-option-label {
+        font-size: 13px;
+        font-weight: 600;
+        color: #333;
+      }
+      .nav-add-option-desc {
+        font-size: 12px;
+        color: #888;
+        margin-top: 2px;
+      }
       .nav-user {
-        background: #78B793;
+        background: #78b793;
         color: #fff;
         border-radius: 50%;
         width: 32px;
@@ -243,7 +265,7 @@
       .card h2 {
         font-size: 17px;
         font-weight: 700;
-        color: #78B793;
+        color: #78b793;
         margin-bottom: 12px;
       }
       .card p {
@@ -285,7 +307,7 @@
       .step-title {
         font-size: 14px;
         font-weight: 700;
-        color: #78B793;
+        color: #78b793;
         margin-bottom: 6px;
       }
       .step-desc {
@@ -416,7 +438,9 @@
         display: block;
         margin-bottom: 4px;
       }
-      .sponsor-name:hover { text-decoration: underline; }
+      .sponsor-name:hover {
+        text-decoration: underline;
+      }
       .sponsor-desc {
         font-size: 13px;
         color: #666;
@@ -449,14 +473,32 @@
       }
 
       /* ── PROTOTYPE BANNER ── */
-      .proto-banner { background: #FBDA68; color: #333; text-align: center; padding: 8px 24px; font-size: 13px; font-family: 'Raleway', sans-serif; font-weight: 500; position: sticky; top: 0; z-index: 9999; letter-spacing: 0.1px; }
-      .proto-banner a { color: #555; text-decoration: underline; }
-      .proto-banner strong { font-weight: 700; }
-        </style>
+      .proto-banner {
+        background: #fbda68;
+        color: #333;
+        text-align: center;
+        padding: 8px 24px;
+        font-size: 13px;
+        font-family: 'Raleway', sans-serif;
+        font-weight: 500;
+        position: sticky;
+        top: 0;
+        z-index: 9999;
+        letter-spacing: 0.1px;
+      }
+      .proto-banner a {
+        color: #555;
+        text-decoration: underline;
+      }
+      .proto-banner strong {
+        font-weight: 700;
+      }
+    </style>
   </head>
   <body>
     <div class="proto-banner">
-      <strong>Prototype</strong> — This is a design prototype and is not intended for use. Data shown is fictional. The real MaveDB is at <a href="https://mavedb.org" target="_blank">mavedb.org</a>.
+      <strong>Prototype</strong> — This is a design prototype and is not intended for use. Data shown is fictional. The
+      real MaveDB is at <a href="https://mavedb.org" target="_blank">mavedb.org</a>.
     </div>
     <nav>
       <div class="nav-inner">
@@ -466,7 +508,20 @@
           <li><a href="./mavemd.html">MaveMD</a></li>
           <li><a href="./search.html">Search</a></li>
           <li class="nav-add-wrap">
-            <a href="#" onclick="toggleAddMenu(event)" style="display:flex;align-items:center;gap:4px;">Add Dataset <svg width="10" height="10" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><polyline points="6 9 12 15 18 9"/></svg></a>
+            <a href="#" onclick="toggleAddMenu(event)" style="display: flex; align-items: center; gap: 4px"
+              >Add Dataset
+              <svg
+                width="10"
+                height="10"
+                viewBox="0 0 24 24"
+                fill="none"
+                stroke="currentColor"
+                stroke-width="2.5"
+                stroke-linecap="round"
+                stroke-linejoin="round"
+              >
+                <polyline points="6 9 12 15 18 9" /></svg
+            ></a>
             <div id="nav-add-dropdown" class="nav-add-dropdown">
               <a href="./add-experiment.html" class="nav-add-option">
                 <div class="nav-add-option-label">New Experiment</div>
@@ -636,46 +691,67 @@
         </div>
       </div>
 
+      <!-- SPONSORS -->
+      <div>
+        <div style="font-size: 14px; font-weight: 700; color: #333; margin-bottom: 12px">Sponsors</div>
+        <div class="card">
+          <div class="sponsor-item">
+            <a href="https://zulip.com/" target="_blank" rel="noopener">
+              <img src="https://zulip.com/static/images/logo/zulip-icon-512x512.png" alt="Zulip" class="sponsor-logo" />
+            </a>
+            <div>
+              <a href="https://zulip.com/" target="_blank" rel="noopener" class="sponsor-name">Zulip</a>
+              <p class="sponsor-desc">
+                Zulip is an organized team chat app designed for efficient communication. MaveDB's community chat is
+                generously hosted by Zulip as part of their sponsorship program for open-source projects.
+              </p>
+            </div>
+          </div>
+        </div>
+      </div>
+
       <!-- TEAM -->
-      <div class="card">
-        <h2>Team</h2>
-        <p style="margin-bottom: 18px">
-          MaveDB is developed and maintained by the
-          <a href="#">Variant Effects Lab</a> at the University of Washington, with contributions from collaborators across the
-          MAVE and clinical genomics communities.
-        </p>
-        <div class="team-grid">
-          <div class="team-card">
-            <div class="team-name">Alex Chen</div>
-            <div class="team-role">Principal Investigator</div>
-          </div>
-          <div class="team-card">
-            <div class="team-name">Laura Park</div>
-            <div class="team-role">Principal Investigator</div>
-          </div>
-          <div class="team-card">
-            <div class="team-name">Daniel Torres</div>
-            <div class="team-role">Principal Investigator</div>
-          </div>
-          <div class="team-card">
-            <div class="team-name">Ben Carter</div>
-            <div class="team-role">Lead Developer</div>
-          </div>
-          <div class="team-card">
-            <div class="team-name">Jordan Mills</div>
-            <div class="team-role">Software Engineer</div>
-          </div>
-          <div class="team-card">
-            <div class="team-name">Sara Griffin</div>
-            <div class="team-role">Software Engineer</div>
-          </div>
-          <div class="team-card">
-            <div class="team-name">David Marsh</div>
-            <div class="team-role">Software Engineer</div>
-          </div>
-          <div class="team-card">
-            <div class="team-name">Elle Zhang</div>
-            <div class="team-role">Software Engineer</div>
+      <div>
+        <div style="font-size: 14px; font-weight: 700; color: #333; margin-bottom: 12px">Team</div>
+        <div class="card">
+          <p style="margin-bottom: 18px">
+            MaveDB is developed and maintained by the
+            <a href="#">Variant Effects Lab</a> at the University of Washington, with contributions from collaborators
+            across the MAVE and clinical genomics communities.
+          </p>
+          <div class="team-grid">
+            <div class="team-card">
+              <div class="team-name">Alex Chen</div>
+              <div class="team-role">Principal Investigator</div>
+            </div>
+            <div class="team-card">
+              <div class="team-name">Laura Park</div>
+              <div class="team-role">Principal Investigator</div>
+            </div>
+            <div class="team-card">
+              <div class="team-name">Daniel Torres</div>
+              <div class="team-role">Principal Investigator</div>
+            </div>
+            <div class="team-card">
+              <div class="team-name">Ben Carter</div>
+              <div class="team-role">Lead Developer</div>
+            </div>
+            <div class="team-card">
+              <div class="team-name">Jordan Mills</div>
+              <div class="team-role">Software Engineer</div>
+            </div>
+            <div class="team-card">
+              <div class="team-name">Sara Griffin</div>
+              <div class="team-role">Software Engineer</div>
+            </div>
+            <div class="team-card">
+              <div class="team-name">David Marsh</div>
+              <div class="team-role">Software Engineer</div>
+            </div>
+            <div class="team-card">
+              <div class="team-name">Elle Zhang</div>
+              <div class="team-role">Software Engineer</div>
+            </div>
           </div>
         </div>
       </div>
@@ -693,9 +769,7 @@
             <div class="pub-journal">Genome Biology, 2022</div>
           </div>
           <div class="pub-item">
-            <a href="#" class="pub-title"
-              >A framework for deriving clinical evidence from variant effect maps</a
-            >
+            <a href="#" class="pub-title">A framework for deriving clinical evidence from variant effect maps</a>
             <div class="pub-authors">Bergman SV, Holloway MS, Jeffries SM, et al.</div>
             <div class="pub-journal">American Journal of Human Genetics, 2020</div>
           </div>
@@ -720,24 +794,6 @@
           <a href="#">CC0 1.0 Universal Public Domain Dedication</a> unless otherwise noted by the submitting authors.
         </p>
       </div>
-
-      <!-- SPONSORS -->
-      <div class="card">
-        <h2>Sponsors</h2>
-        <div class="sponsor-item">
-          <a href="https://zulip.com/" target="_blank" rel="noopener">
-            <img src="https://zulip.com/static/images/logo/zulip-icon-512x512.png" alt="Zulip" class="sponsor-logo" />
-          </a>
-          <div>
-            <a href="https://zulip.com/" target="_blank" rel="noopener" class="sponsor-name">Zulip</a>
-            <p class="sponsor-desc">
-              Zulip is an organized team chat app designed for efficient communication.
-              MaveDB's community chat is generously hosted by Zulip as part of their
-              sponsorship program for open-source projects.
-            </p>
-          </div>
-        </div>
-      </div>
     </div>
 
     <footer>
@@ -760,7 +816,7 @@
         const dd = document.getElementById('nav-add-dropdown')
         dd.classList.toggle('open')
       }
-      document.addEventListener('click', function(e) {
+      document.addEventListener('click', function (e) {
         const wrap = document.querySelector('.nav-add-wrap')
         if (wrap && !wrap.contains(e.target)) {
           const dd = document.getElementById('nav-add-dropdown')

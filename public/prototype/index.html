@@ -221,10 +221,30 @@
 
       /* ── HERO ── */
       .hero {
-        background: #fff;
+        background: #fafcfa;
         border-bottom: 1px solid #dee2e6;
-        padding: 52px 24px 44px;
+        padding: 64px 24px 60px;
         text-align: center;
+        position: relative;
+        overflow: hidden;
+      }
+      .hero-watermark-bars {
+        position: absolute;
+        bottom: 0;
+        left: 0;
+        right: 0;
+        display: flex;
+        align-items: flex-end;
+        justify-content: center;
+        gap: 6px;
+        height: 100%;
+        opacity: 0.04;
+        pointer-events: none;
+      }
+      .hero-watermark-bars .wbar {
+        width: 24px;
+        border-radius: 12px 12px 0 0;
+        flex-shrink: 0;
       }
       .hero-headline {
         font-size: 30px;
@@ -295,35 +315,6 @@
       }
       .hero-search-hint a {
         color: #0074d9;
-      }
-
-      /* ── STATS STRIP ── */
-      .stats-strip {
-        background: #fff;
-        border-bottom: 1px solid #dee2e6;
-        padding: 18px 24px;
-      }
-      .stats-inner {
-        max-width: 1200px;
-        margin: 0 auto;
-        display: flex;
-        justify-content: center;
-        gap: 56px;
-      }
-      .stat {
-        text-align: center;
-      }
-      .stat-number {
-        font-size: 22px;
-        font-weight: 700;
-        color: #78b793;
-        line-height: 1;
-      }
-      .stat-label {
-        font-size: 12px;
-        color: #888;
-        margin-top: 3px;
-        font-weight: 500;
       }
 
       /* ── PATHS ── */
@@ -457,20 +448,20 @@
         gap: 4px;
         padding: 12px 14px;
         border-radius: 6px;
-        border: 1px solid #A1D8C8;
-        background: #C8E4C6;
+        border: 1px solid #a1d8c8;
+        background: #c8e4c6;
         text-decoration: none;
         transition:
           background 0.15s,
           border-color 0.15s;
       }
       .contrib-cat:hover {
-        background: #A1D8C8;
-        border-color: #78B793;
+        background: #a1d8c8;
+        border-color: #78b793;
         text-decoration: none;
       }
       .contrib-cat-icon {
-        color: #78B793;
+        color: #78b793;
         line-height: 1;
         margin-bottom: 2px;
       }
@@ -811,6 +802,23 @@
 
     <!-- HERO — value proposition headline, no duplicate logo -->
     <section class="hero">
+      <div class="hero-watermark-bars">
+        <div class="wbar" style="background: #78b793; height: 15%"></div>
+        <div class="wbar" style="background: #a1d8c8; height: 25%"></div>
+        <div class="wbar" style="background: #78b793; height: 38%"></div>
+        <div class="wbar" style="background: #c8e4c6; height: 52%"></div>
+        <div class="wbar" style="background: #a1d8c8; height: 65%"></div>
+        <div class="wbar" style="background: #78b793; height: 78%"></div>
+        <div class="wbar" style="background: #fbda68; height: 88%"></div>
+        <div class="wbar" style="background: #78b793; height: 95%"></div>
+        <div class="wbar" style="background: #a1d8c8; height: 85%"></div>
+        <div class="wbar" style="background: #f8971d; height: 72%"></div>
+        <div class="wbar" style="background: #78b793; height: 58%"></div>
+        <div class="wbar" style="background: #c8e4c6; height: 42%"></div>
+        <div class="wbar" style="background: #a1d8c8; height: 30%"></div>
+        <div class="wbar" style="background: #fbda68; height: 20%"></div>
+        <div class="wbar" style="background: #78b793; height: 12%"></div>
+      </div>
       <h1 class="hero-headline">Functional variant data for the research community</h1>
       <p class="hero-tagline">A public repository for Multiplexed Assays of Variant Effect (MAVE) datasets</p>
       <a href="#" class="hero-learn">New to MaveDB? Learn how it works →</a>
@@ -831,24 +839,6 @@
         </p>
       </div>
     </section>
-
-    <!-- STATS STRIP -->
-    <div class="stats-strip">
-      <div class="stats-inner">
-        <div class="stat">
-          <div class="stat-number">2,700+</div>
-          <div class="stat-label">Datasets</div>
-        </div>
-        <div class="stat">
-          <div class="stat-number">7M+</div>
-          <div class="stat-label">Variants</div>
-        </div>
-        <div class="stat">
-          <div class="stat-number">700+</div>
-          <div class="stat-label">Human genes</div>
-        </div>
-      </div>
-    </div>
 
     <!-- TWO PATHS — explore is primary (wider), contribute is secondary -->
     <div class="paths">
@@ -914,7 +904,7 @@
                 <path d="M21 12v7a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h11" />
               </svg>
             </div>
-            <div class="browse-cat-label">Calibration</div>
+            <div class="browse-cat-label">Calibrated</div>
             <div class="browse-cat-desc">Clinically calibrated sets</div>
           </a>
           <a href="./search.html" class="browse-cat">
@@ -1089,7 +1079,9 @@
         </div>
 
         <div class="pub-item">
-          <a href="./score-set-detail.html" class="pub-title">Saturation mutagenesis of FGFR kinase domains in MCF10A and NCI-H3255 cells</a>
+          <a href="./score-set-detail.html" class="pub-title"
+            >Saturation mutagenesis of FGFR kinase domains in MCF10A and NCI-H3255 cells</a
+          >
           <div class="pub-meta">
             <span class="pub-chip">FGFR</span>
             <span class="pub-chip">Homo sapiens</span>

@@ -203,7 +203,7 @@
 
       /* ── HERO ── */
       .hero {
-        background: #fff;
+        background: #fafcfa;
         border-bottom: 1px solid #dee2e6;
         padding: 48px 24px 40px;
         text-align: center;
@@ -250,8 +250,8 @@
 
       /* ── SEARCH BAND ── */
       .search-band {
-        background: #C8E4C6;
-        border-bottom: 1px solid #A1D8C8;
+        background: linear-gradient(135deg, #e8f5e9 0%, #f0faf4 25%, #fafcfa 50%, #fff8e1 80%, #fef3e0 100%);
+        border-bottom: 1px solid #dee2e6;
         padding: 36px 24px 40px;
       }
       .search-card {
@@ -281,7 +281,7 @@
       }
       .search-tab--hgvs {
         border-color: #78B793;
-        color: #78B793;
+        color: #5a9375;
       }
       .search-tab--hgvs:hover,
       .search-tab--hgvs.active {
@@ -289,39 +289,40 @@
         color: #222;
       }
       .search-tab--clingen {
-        border-color: #00695c;
-        color: #00695c;
+        border-color: #5aafa0;
+        color: #3d8a7d;
       }
       .search-tab--clingen:hover,
       .search-tab--clingen.active {
-        background: #00695c;
-        color: #fff;
+        background: #5aafa0;
+        color: #222;
       }
       .search-tab--rsid {
-        border-color: #e65100;
-        color: #e65100;
+        border-color: #e6b84d;
+        color: #b8922a;
       }
       .search-tab--rsid:hover,
       .search-tab--rsid.active {
-        background: #e65100;
-        color: #fff;
+        background: #e6b84d;
+        color: #222;
       }
       .search-tab--clinvar {
-        border-color: #6a1b9a;
-        color: #6a1b9a;
+        border-color: #f8971d;
+        color: #c87815;
       }
       .search-tab--clinvar:hover,
       .search-tab--clinvar.active {
-        background: #6a1b9a;
-        color: #fff;
+        background: #f8971d;
+        color: #222;
       }
       .search-bar {
         display: flex;
-        border: 2px solid #78B793;
+        border: 2px solid var(--search-accent, #78B793);
         border-radius: 8px;
         overflow: hidden;
         background: #fff;
         margin-bottom: 12px;
+        transition: border-color 0.2s;
       }
       .search-input {
         flex: 1;
@@ -338,8 +339,8 @@
         font-size: 14px;
       }
       .search-btn {
-        background: #78B793;
-        color: #222;
+        background: var(--search-accent, #78B793);
+        color: var(--search-btn-text, #222);
         border: none;
         padding: 0 28px;
         font-family: 'Raleway', sans-serif;
@@ -347,9 +348,10 @@
         font-weight: 600;
         cursor: pointer;
         white-space: nowrap;
+        transition: background 0.2s, color 0.2s;
       }
       .search-btn:hover {
-        background: #5a9375;
+        filter: brightness(0.85);
       }
       .search-footer-row {
         display: flex;
@@ -413,30 +415,30 @@
         text-decoration: none;
       }
       .chip--clingen {
-        background: #e0f2f1;
-        color: #00695c;
-        border-color: #80cbc4;
+        background: #dff0ed;
+        color: #3d8a7d;
+        border-color: #a1d8c8;
       }
       .chip--clingen:hover {
-        background: #b2dfdb;
+        background: #c8e8e2;
         text-decoration: none;
       }
       .chip--rsid {
-        background: #fff3e0;
-        color: #e65100;
-        border-color: #ffcc80;
+        background: #fdf4de;
+        color: #b8922a;
+        border-color: #f0d88a;
       }
       .chip--rsid:hover {
-        background: #ffe0b2;
+        background: #faecc4;
         text-decoration: none;
       }
       .chip--clinvar {
-        background: #f3e5f5;
-        color: #6a1b9a;
-        border-color: #ce93d8;
+        background: #fef0dc;
+        color: #c87815;
+        border-color: #f8c87a;
       }
       .chip--clinvar:hover {
-        background: #e8d0f0;
+        background: #fde5c0;
         text-decoration: none;
       }
 
@@ -1219,15 +1221,31 @@
         btn.textContent = expanded ? 'Show search examples ↓' : 'Hide search examples ↑'
       }
 
-      // Search type tabs
+      // Search type tabs — color map ties to the gradient palette
+      const tabColors = {
+        'search-tab--hgvs': { accent: '#78B793', text: '#222' },
+        'search-tab--clingen': { accent: '#5aafa0', text: '#222' },
+        'search-tab--rsid': { accent: '#e6b84d', text: '#222' },
+        'search-tab--clinvar': { accent: '#f8971d', text: '#222' },
+      }
+
       const tabs = document.querySelectorAll('.search-tab')
       const searchInput = document.querySelector('.search-input')
+      const searchCard = document.querySelector('.search-card')
+
+      function updateSearchColors(tab) {
+        const cls = Array.from(tab.classList).find((c) => c.startsWith('search-tab--'))
+        const colors = tabColors[cls] || tabColors['search-tab--hgvs']
+        searchCard.style.setProperty('--search-accent', colors.accent)
+        searchCard.style.setProperty('--search-btn-text', colors.text)
+      }
 
       tabs.forEach((tab) => {
         tab.addEventListener('click', () => {
           tabs.forEach((t) => t.classList.remove('active'))
           tab.classList.add('active')
           searchInput.placeholder = tab.dataset.placeholder || ''
+          updateSearchColors(tab)
           searchInput.focus()
         })
       })

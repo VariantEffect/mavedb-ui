@@ -1,5 +1,5 @@
 <template>
-  <Dialog v-model:visible="visible" :closable="false" :header="title" :style="{width: '25rem'}">
+  <Dialog v-model:visible="visible" :base-z-index="3000" :closable="false" :header="title" modal :style="{width: '25rem'}">
     <span class="p-text-secondary block mb-5">{{ dialog }}</span>
     <FloatLabel class="mb-2" variant="on">
       <InputText :id="scopedId('email-input')" v-model:model-value="email" class="w-full" />

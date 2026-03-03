@@ -1,5 +1,11 @@
+import axios from 'axios'
+
+import config from '@/config'
 import {HistogramBin, HistogramShader} from '@/lib/histogram'
 import {components} from '@/schema/openapi'
+
+export type FunctionalClassificationVariants = components['schemas']['FunctionalClassificationVariants']
+export type FunctionalClassificationVariant = components['schemas']['VariantEffectMeasurement']
 
 export const NORMAL_RANGE_DEFAULT_COLOR = '#4444ff'
 export const ABNORMAL_RANGE_DEFAULT_COLOR = '#ff4444'
@@ -253,4 +259,121 @@ export function hasFunctionalCalibrations(
   }
 
   return scoreCalibrations.some((cal) => cal.functionalClassifications && Array.isArray(cal.functionalClassifications))
+
+export type CalibrationSaveResult =
+  | {success: true; data: any}
+  | {success: false; error: 'email_required'}
+  | {success: false; error: 'validation'; validationErrors: Record<string, string>}
+  | {success: false; error: 'generic'; message: string}
+  | {success: false; error: 'unknown'; raw: unknown}
+
+/**
+ * Saves (creates or updates) a score calibration via the API.
+ *
+ * Builds a multipart FormData payload and issues a POST (create) or PUT (update)
+ * request. Returns a discriminated union describing the outcome so callers can
+ * handle UI concerns (toasts, editor state) independently.
+ *
+ * @param params.draft - The calibration draft object to serialize as JSON.
+ * @param params.classesFile - Optional CSV file for class-based calibrations.
+ * @param params.existingUrn - When provided the request becomes a PUT (update);
+ *                             omit for a new calibration (POST).
+ */
+export async function saveCalibration(params: {
+  draft: any
+  classesFile?: File | null
+  existingUrn?: string
+}): Promise<CalibrationSaveResult> {
+  const {draft, classesFile, existingUrn} = params
+
+  const formData = new FormData()
+  formData.append('calibration_json', JSON.stringify(draft))
+  if (classesFile) {
+    formData.append('classes_file', classesFile)
+  }
+
+  try {
+    const requestConfig = {headers: {'Content-Type': 'multipart/form-data'}}
+    const response = existingUrn
+      ? await axios.put(`${config.apiBaseUrl}/score-calibrations/${existingUrn}`, formData, requestConfig)
+      : await axios.post(`${config.apiBaseUrl}/score-calibrations`, formData, requestConfig)
+
+    return {success: true, data: response.data}
+  } catch (error: unknown) {
+    if (
+      axios.isAxiosError(error) &&
+      error.response?.status === 403 &&
+      typeof error.response?.data?.detail === 'string' &&
+      error.response.data.detail.toLowerCase().includes('email')
+    ) {
+      return {success: false, error: 'email_required'}
+    }
+
+    if (axios.isAxiosError(error) && error.response?.data?.detail) {
+      const detail = error.response.data.detail
+
+      if (typeof detail === 'string' || detail instanceof String) {
+        return {success: false, error: 'generic', message: detail as string}
+      }
+
+      const validationErrors: Record<string, string> = {}
+      for (const err of detail) {
+        let path = err.loc
+        if (path[0] === 'body') {
+          path = path.slice(1)
+        }
+
+        let customPath = err.ctx?.error?.custom_loc
+        if (customPath) {
+          if (customPath[0] === 'body') {
+            customPath = customPath.slice(1)
+          }
+          path = path.concat(customPath)
+        }
+
+        validationErrors[path.join('.')] = err.msg
+      }
+      return {success: false, error: 'validation', validationErrors}
+    }
+
+    return {success: false, error: 'unknown', raw: error}
+  }
+}
+
+/**
+ * Fetches the full list of variants for a single functional classification in a score calibration.
+ *
+ * Uses the dedicated calibration variants endpoint introduced to replace embedded
+ * `variants` payloads in calibration responses.
+ *
+ * @param calibrationUrn The score calibration URN.
+ * @param classificationId The database ID of the functional classification.
+ * @returns The classification ID and associated variant list.
+ */
+export async function fetchScoreCalibrationFunctionalClassificationVariants(
+  calibrationUrn: string,
+  classificationId: number
+): Promise<FunctionalClassificationVariants> {
+  const response = await axios.get(
+    `${config.apiBaseUrl}/score-calibrations/${encodeURIComponent(calibrationUrn)}/functional-classifications/${classificationId}/variants`
+  )
+  return response.data
+}
+
+/**
+ * Fetches variant lists for all functional classifications in a score calibration.
+ *
+ * This is intended for views that need class membership across the full calibration
+ * (for example, class-based histogram series generation).
+ *
+ * @param calibrationUrn The score calibration URN.
+ * @returns An array of per-classification variant payloads.
+ */
+export async function fetchScoreCalibrationVariants(
+  calibrationUrn: string
+): Promise<FunctionalClassificationVariants[]> {
+  const response = await axios.get(
+    `${config.apiBaseUrl}/score-calibrations/${encodeURIComponent(calibrationUrn)}/variants`
+  )
+  return response.data
 }

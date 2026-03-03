@@ -27,6 +27,13 @@ export default defineConfig({
     // Same as above, but 127.0.0.1:8082 is also legal per ORCID.
     strictPort: true
   },
+  css: {
+    preprocessorOptions: {
+      scss: {
+        api: 'modern-compiler'
+      }
+    }
+  },
   build: {
     rollupOptions: {
       input: {

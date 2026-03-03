@@ -334,7 +334,7 @@ export default defineComponent({
       )
     },
     oddsPathSources() {
-      return this.primaryScoreRange?.classificationSources
+      return this.primaryScoreRange?.evidenceSources
     },
     sources: function () {
       return this.scoreSet.primaryPublicationIdentifiers.concat(this.scoreSet.secondaryPublicationIdentifiers)

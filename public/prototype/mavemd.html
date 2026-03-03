@@ -442,6 +442,219 @@
         text-decoration: none;
       }
 
+      /* ── SEARCH RESULTS ── */
+      .results-section {
+        display: none;
+        max-width: 900px;
+        margin: 0 auto;
+        padding: 32px 24px 40px;
+      }
+      .results-section.visible {
+        display: block;
+      }
+      .results-header {
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+        margin-bottom: 20px;
+      }
+      .results-title {
+        font-size: 17px;
+        font-weight: 700;
+        color: #222;
+      }
+      .results-subtitle {
+        font-size: 13px;
+        color: #888;
+        margin-top: 2px;
+      }
+      .results-back {
+        font-size: 13px;
+        color: #78b793;
+        font-weight: 600;
+        cursor: pointer;
+        background: none;
+        border: none;
+        font-family: 'Raleway', sans-serif;
+      }
+      .results-back:hover {
+        color: #5a9375;
+      }
+
+      /* Allele result card */
+      .allele-card {
+        background: #fff;
+        border: 1px solid #e8e8e8;
+        border-radius: 10px;
+        margin-bottom: 20px;
+        overflow: hidden;
+      }
+      .allele-card-header {
+        padding: 18px 22px;
+        border-bottom: 1px solid #f0f0f0;
+        display: flex;
+        align-items: flex-start;
+        justify-content: space-between;
+        gap: 16px;
+      }
+      .allele-name {
+        font-size: 16px;
+        font-weight: 700;
+        color: #0074d9;
+        text-decoration: none;
+        line-height: 1.3;
+      }
+      .allele-name:hover {
+        text-decoration: underline;
+      }
+      .allele-coords {
+        font-size: 12px;
+        color: #888;
+        margin-top: 4px;
+        font-family: 'Courier New', monospace;
+      }
+      .allele-coords span {
+        display: inline-block;
+        margin-right: 16px;
+      }
+      .allele-coords-label {
+        font-family: 'Raleway', sans-serif;
+        font-weight: 600;
+        color: #aaa;
+        font-size: 10px;
+        text-transform: uppercase;
+        letter-spacing: 0.3px;
+        margin-right: 4px;
+      }
+      .allele-clingen-btn {
+        font-size: 12px;
+        color: #78b793;
+        border: 1px solid #c8e4c6;
+        background: #f5faf7;
+        border-radius: 6px;
+        padding: 6px 12px;
+        font-family: 'Raleway', sans-serif;
+        font-weight: 600;
+        cursor: pointer;
+        white-space: nowrap;
+        flex-shrink: 0;
+      }
+      .allele-clingen-btn:hover {
+        background: #e8f5e9;
+        border-color: #78b793;
+      }
+
+      /* MANE coordinates mini-table */
+      .mane-table {
+        width: 100%;
+        font-size: 12px;
+        border-collapse: collapse;
+        margin: 12px 0 4px;
+      }
+      .mane-table th {
+        text-align: left;
+        font-size: 10px;
+        text-transform: uppercase;
+        letter-spacing: 0.3px;
+        color: #aaa;
+        font-weight: 600;
+        padding: 4px 8px;
+        border-bottom: 1px solid #eee;
+      }
+      .mane-table td {
+        padding: 5px 8px;
+        color: #555;
+        font-family: 'Courier New', monospace;
+        font-size: 11px;
+        border-bottom: 1px solid #f5f5f5;
+      }
+      .mane-table td:first-child {
+        font-family: 'Raleway', sans-serif;
+        color: #888;
+        font-size: 12px;
+      }
+
+      /* Measurement groups */
+      .allele-card-body {
+        padding: 16px 22px 18px;
+      }
+      .measurement-group {
+        margin-bottom: 16px;
+      }
+      .measurement-group:last-child {
+        margin-bottom: 0;
+      }
+      .measurement-group-header {
+        display: flex;
+        align-items: center;
+        gap: 8px;
+        margin-bottom: 8px;
+      }
+      .measurement-group-title {
+        font-size: 12px;
+        font-weight: 700;
+        text-transform: uppercase;
+        letter-spacing: 0.4px;
+        color: #555;
+      }
+      .measurement-group-count {
+        font-size: 11px;
+        color: #fff;
+        background: #78b793;
+        border-radius: 10px;
+        padding: 1px 8px;
+        font-weight: 600;
+      }
+      .measurement-group-list {
+        list-style: none;
+        padding: 0;
+        margin: 0;
+      }
+      .measurement-group-list li {
+        padding: 7px 12px;
+        font-size: 13px;
+        border-radius: 6px;
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+        gap: 8px;
+      }
+      .measurement-group-list li:nth-child(odd) {
+        background: #fafafa;
+      }
+      .measurement-group-list li a {
+        color: #0074d9;
+        font-weight: 500;
+        text-decoration: none;
+      }
+      .measurement-group-list li a:hover {
+        text-decoration: underline;
+      }
+      .measurement-group-list .cal-link {
+        font-size: 11px;
+        color: #78b793;
+        font-weight: 600;
+        white-space: nowrap;
+      }
+      .measurement-group-divider {
+        height: 1px;
+        background: #eee;
+        margin: 14px 0;
+      }
+
+      /* No results state */
+      .no-results {
+        text-align: center;
+        padding: 40px 20px;
+        color: #888;
+        font-size: 14px;
+      }
+      .no-results-icon {
+        font-size: 32px;
+        margin-bottom: 12px;
+        opacity: 0.4;
+      }
+
       /* ── HOW IT WORKS ── */
       .how-section {
         background: #fff;
@@ -757,6 +970,112 @@
           <div class="example-group">
             <span class="example-group-label">ClinVar Variation ID</span>
             <a href="#" class="chip chip--clinvar">869058</a>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <!-- SEARCH RESULTS (hidden by default, shown on search) -->
+    <section class="results-section" id="results-section">
+      <div class="results-header">
+        <div>
+          <div class="results-title">1 allele found</div>
+          <div class="results-subtitle">Searched HGVS: NP_000242.1:p.Asn566Thr</div>
+        </div>
+        <button class="results-back" onclick="hideResults()">← New search</button>
+      </div>
+
+      <!-- Allele card 1 -->
+      <div class="allele-card">
+        <div class="allele-card-header">
+          <div>
+            <a href="./variant-detail.html" class="allele-name">NM_007294.4(BRCA1):c.1697A>C (p.Asn566Thr)</a>
+            <div class="allele-coords">
+              <span><span class="allele-coords-label">GRCh38</span>NC_000017.11:g.43093221T>G</span>
+              <span><span class="allele-coords-label">GRCh37</span>NC_000017.10:g.41244961T>G</span>
+            </div>
+            <table class="mane-table">
+              <thead>
+                <tr>
+                  <th>Type</th>
+                  <th>Database</th>
+                  <th>HGVS</th>
+                </tr>
+              </thead>
+              <tbody>
+                <tr>
+                  <td>MANE Select</td>
+                  <td>RefSeq</td>
+                  <td>NM_007294.4:c.1697A>C</td>
+                </tr>
+                <tr>
+                  <td>MANE Select</td>
+                  <td>Ensembl</td>
+                  <td>ENST00000357654.9:c.1697A>C</td>
+                </tr>
+              </tbody>
+            </table>
+          </div>
+          <button class="allele-clingen-btn" onclick="window.open('#')">View in ClinGen Registry ↗</button>
+        </div>
+
+        <div class="allele-card-body">
+          <!-- Nucleotide measurements -->
+          <div class="measurement-group">
+            <div class="measurement-group-header">
+              <span class="measurement-group-title">Nucleotide variant measurements</span>
+              <span class="measurement-group-count">3</span>
+            </div>
+            <ul class="measurement-group-list">
+              <li>
+                <a href="./score-set-detail.html">Park et al. BRCA1 SGE 2019</a>
+                <a href="./calibrations.html" class="cal-link">3 calibrations →</a>
+              </li>
+              <li>
+                <a href="./score-set-detail.html">Voss et al. BRCA1 E3 Ubiquitin Ligase 2019</a>
+                <a href="./calibrations.html" class="cal-link">1 calibration →</a>
+              </li>
+              <li>
+                <a href="./score-set-detail.html">Chen et al. BRCA1 Transcription Activation 2020</a>
+                <a href="./calibrations.html" class="cal-link">2 calibrations →</a>
+              </li>
+            </ul>
+          </div>
+
+          <div class="measurement-group-divider"></div>
+
+          <!-- Protein measurements -->
+          <div class="measurement-group">
+            <div class="measurement-group-header">
+              <span class="measurement-group-title">Protein variant measurements</span>
+              <span class="measurement-group-count">2</span>
+            </div>
+            <ul class="measurement-group-list">
+              <li>
+                <a href="./score-set-detail.html">Nakamura et al. BRCA1 HDR Activity 2021</a>
+                <a href="./calibrations.html" class="cal-link">2 calibrations →</a>
+              </li>
+              <li>
+                <a href="./score-set-detail.html">Gallagher et al. BRCA1 Protein Abundance 2022</a>
+                <a href="./calibrations.html" class="cal-link">1 calibration →</a>
+              </li>
+            </ul>
+          </div>
+
+          <div class="measurement-group-divider"></div>
+
+          <!-- Associated nucleotide measurements -->
+          <div class="measurement-group">
+            <div class="measurement-group-header">
+              <span class="measurement-group-title">Associated nucleotide measurements</span>
+              <span class="measurement-group-count">1</span>
+            </div>
+            <ul class="measurement-group-list">
+              <li>
+                <a href="./score-set-detail.html">Reeves et al. BRCA1 Cell Viability 2019</a>
+                <a href="./calibrations.html" class="cal-link">2 calibrations →</a>
+              </li>
+            </ul>
           </div>
         </div>
       </div>
@@ -1248,6 +1567,32 @@
           updateSearchColors(tab)
           searchInput.focus()
         })
+      })
+
+      // Show/hide search results
+      const resultsSection = document.getElementById('results-section')
+      const howSection = document.querySelector('.how-section')
+      const datasetsSection = document.querySelector('.datasets-section')
+      const searchBtn = document.querySelector('.search-btn')
+
+      function showResults() {
+        resultsSection.classList.add('visible')
+        howSection.style.display = 'none'
+        datasetsSection.style.display = 'none'
+        resultsSection.scrollIntoView({ behavior: 'smooth', block: 'start' })
+      }
+
+      function hideResults() {
+        resultsSection.classList.remove('visible')
+        howSection.style.display = ''
+        datasetsSection.style.display = ''
+        searchInput.value = ''
+        searchInput.focus()
+      }
+
+      searchBtn.addEventListener('click', showResults)
+      searchInput.addEventListener('keydown', (e) => {
+        if (e.key === 'Enter') showResults()
       })
     </script>
   </body>

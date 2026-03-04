@@ -117,7 +117,7 @@
       }
       .nav-add-option-desc {
         font-size: 12px;
-        color: #888;
+        color: #767676;
         margin-top: 2px;
       }
       .nav-user-wrap {
@@ -148,7 +148,7 @@
         background: #5a9375;
       }
       .nav-user-caret {
-        color: #999;
+        color: #767676;
         flex-shrink: 0;
         cursor: pointer;
       }
@@ -189,7 +189,7 @@
       .nav-user-dropdown .dropdown-icon {
         width: 16px;
         height: 16px;
-        color: #888;
+        color: #767676;
         flex-shrink: 0;
       }
       .nav-bell-wrap {
@@ -275,7 +275,7 @@
         font-weight: 600;
       }
       .nav-bell-activity-verb {
-        color: #888;
+        color: #767676;
       }
       .nav-bell-activity-time {
         font-size: 11px;
@@ -306,7 +306,7 @@
       .page-header-label {
         font-size: 12px;
         font-weight: 600;
-        color: #888;
+        color: #767676;
         text-transform: uppercase;
         letter-spacing: 0.5px;
         margin-bottom: 4px;
@@ -333,7 +333,7 @@
       }
       .page-header-meta {
         font-size: 13px;
-        color: #888;
+        color: #767676;
         margin-top: 8px;
         line-height: 1.6;
       }
@@ -353,7 +353,7 @@
         transition: color 0.12s;
       }
       .meta-jump:hover {
-        color: #5a9671;
+        color: #5a9375;
       }
       .orcid-icon {
         display: inline-block;
@@ -464,7 +464,7 @@
       }
       .actions-dropdown-item svg {
         flex-shrink: 0;
-        color: #888;
+        color: #767676;
       }
       .actions-dropdown-sep {
         height: 1px;
@@ -503,8 +503,8 @@
       /* ── COLLECTION STRIP ── */
       .collection-strip {
         background: #fafafa;
-        border-top: 1px solid #e8e8e8;
-        border-bottom: 1px solid #e8e8e8;
+        border-top: 1px solid #e0e0e0;
+        border-bottom: 1px solid #e0e0e0;
         padding: 8px 0;
       }
       .collection-strip-inner {
@@ -569,7 +569,7 @@
       }
       .save-collection-btn-strip:hover {
         background: #f0f9f2;
-        border-color: #5a9671;
+        border-color: #5a9375;
       }
 
       /* ── USER COLLECTIONS LINE ── */
@@ -578,7 +578,7 @@
         align-items: center;
         gap: 6px;
         font-size: 11px;
-        color: #999;
+        color: #767676;
         padding-top: 6px;
       }
       .collection-user-line a {
@@ -587,7 +587,7 @@
         text-decoration: none;
       }
       .collection-user-line a:hover {
-        color: #5a9671;
+        color: #5a9375;
       }
       .collection-user-line svg {
         flex-shrink: 0;
@@ -700,19 +700,17 @@
       .chart-tabs {
         display: flex;
         gap: 0;
-        border-bottom: 1px solid #e8e8e8;
+        border-bottom: 1px solid #e0e0e0;
         background: #fafbfc;
       }
       .chart-tab {
         padding: 10px 18px;
         font-size: 12px;
         font-weight: 600;
-        color: #888;
+        color: #767676;
         cursor: pointer;
-        border-bottom: 2px solid transparent;
-        transition:
-          color 0.15s,
-          border-color 0.15s;
+        position: relative;
+        transition: color 0.15s;
         white-space: nowrap;
       }
       .chart-tab:hover {
@@ -720,7 +718,34 @@
       }
       .chart-tab.active {
         color: #78b793;
-        border-bottom-color: #78b793;
+      }
+      .chart-tab.active::after {
+        content: '';
+        position: absolute;
+        bottom: 0px;
+        left: 0;
+        right: 0;
+        height: 2px;
+        background: linear-gradient(
+          90deg,
+          #78b793 0% 10.2%,
+          transparent 10.2% 11.2%,
+          #a1d8c8 11.2% 21.4%,
+          transparent 21.4% 22.4%,
+          #78b793 22.4% 32.7%,
+          transparent 32.7% 33.7%,
+          #c8e4c6 33.7% 43.9%,
+          transparent 43.9% 44.9%,
+          #fbda68 44.9% 55.1%,
+          transparent 55.1% 56.1%,
+          #f8971d 56.1% 66.3%,
+          transparent 66.3% 67.3%,
+          #fbda68 67.3% 77.6%,
+          transparent 77.6% 78.6%,
+          #a1d8c8 78.6% 88.8%,
+          transparent 88.8% 89.8%,
+          #78b793 89.8% 100%
+        );
       }
       .seg-toggle {
         display: inline-flex;
@@ -737,7 +762,9 @@
         background: #fff;
         border: none;
         cursor: pointer;
-        transition: background 0.15s, color 0.15s;
+        transition:
+          background 0.15s,
+          color 0.15s;
       }
       .seg-toggle-btn:not(:last-child) {
         border-right: 1px solid #dee2e6;
@@ -781,7 +808,7 @@
         display: flex;
         align-items: center;
         justify-content: center;
-        color: #999;
+        color: #767676;
         font-size: 13px;
         font-style: italic;
       }
@@ -837,7 +864,7 @@
         color: #78b793;
       }
       .chart-calibration-link:hover {
-        color: #5a9671;
+        color: #5a9375;
       }
       .chart-calibration-collapsed {
         display: flex;
@@ -846,7 +873,7 @@
         padding: 14px 20px;
         border-top: 1px solid #f0f0f0;
         font-size: 12px;
-        color: #999;
+        color: #767676;
       }
       .chart-calibration-collapsed svg {
         flex-shrink: 0;
@@ -858,7 +885,7 @@
         margin-left: auto;
       }
       .chart-calibration-collapsed a:hover {
-        color: #5a9671;
+        color: #5a9375;
       }
 
       /* ── CALIBRATION RANGES COMPONENT (portable unit) ── */
@@ -884,7 +911,7 @@
       .cal-ranges-title-desc {
         font-size: 12px;
         font-weight: 400;
-        color: #888;
+        color: #767676;
         text-transform: none;
         letter-spacing: 0;
         white-space: nowrap;
@@ -990,7 +1017,7 @@
       .baseline-bar-label {
         font-size: 11px;
         font-weight: 700;
-        color: #999;
+        color: #767676;
         text-transform: uppercase;
         letter-spacing: 0.5px;
       }
@@ -1007,7 +1034,7 @@
       }
       .baseline-bar-desc {
         font-size: 12px;
-        color: #888;
+        color: #767676;
       }
       /* Sources section */
       .sources-section {
@@ -1018,7 +1045,7 @@
         flex-wrap: wrap;
         gap: 4px 16px;
         font-size: 12px;
-        color: #999;
+        color: #767676;
         align-items: center;
       }
       .sources-heading {
@@ -1026,7 +1053,7 @@
         font-weight: 700;
         text-transform: uppercase;
         letter-spacing: 0.5px;
-        color: #999;
+        color: #767676;
         margin-right: 4px;
         display: flex;
         align-items: center;
@@ -1238,7 +1265,7 @@
       }
       .scores-preview-note {
         font-size: 12px;
-        color: #999;
+        color: #767676;
       }
       .scores-table {
         width: 100%;
@@ -1250,7 +1277,7 @@
         text-align: left;
         padding: 8px 14px;
         font-weight: 600;
-        color: #888;
+        color: #767676;
         font-size: 11px;
         text-transform: uppercase;
         letter-spacing: 0.4px;
@@ -1332,7 +1359,7 @@
       }
       .detail-label {
         font-weight: 600;
-        color: #888;
+        color: #767676;
         min-width: 120px;
         flex-shrink: 0;
       }
@@ -1424,7 +1451,7 @@
       }
       .target-accordion-type {
         font-size: 12px;
-        color: #888;
+        color: #767676;
         font-weight: 500;
       }
       .target-accordion-body {
@@ -1450,7 +1477,7 @@
       }
       .assay-fact-label {
         font-weight: 600;
-        color: #888;
+        color: #767676;
         min-width: 140px;
         flex-shrink: 0;
       }
@@ -1473,7 +1500,7 @@
       .assay-citation {
         grid-column: 1 / -1;
         font-size: 12px;
-        color: #999;
+        color: #767676;
         font-style: italic;
         margin-bottom: 4px;
       }
@@ -1613,7 +1640,7 @@
         align-items: center;
         justify-content: space-between;
         font-size: 13px;
-        color: #888;
+        color: #767676;
       }
       .footer-inner a {
         color: #0074d9;
@@ -1709,21 +1736,21 @@
             <div class="nav-bell-activity-list">
               <div class="nav-bell-activity-item">
                 <span
-                  ><a href="#">CHEK2 Kinase Activity Assay – Draft</a>
+                  ><a href="./score-set-detail.html">CHEK2 Kinase Activity Assay – Draft</a>
                   <span class="nav-bell-activity-verb">edited by you</span></span
                 >
                 <span class="nav-bell-activity-time">2 days ago</span>
               </div>
               <div class="nav-bell-activity-item">
                 <span
-                  ><a href="#">KCNQ4 Variant Effect – Draft</a>
+                  ><a href="./score-set-detail.html">KCNQ4 Variant Effect – Draft</a>
                   <span class="nav-bell-activity-verb">calibration created by you</span></span
                 >
                 <span class="nav-bell-activity-time">5 days ago</span>
               </div>
               <div class="nav-bell-activity-item">
                 <span
-                  ><a href="#">BRCA1 Combined Functional Meta-analysis</a>
+                  ><a href="./score-set-detail.html">BRCA1 Combined Functional Meta-analysis</a>
                   <span class="nav-bell-activity-verb">published</span></span
                 >
                 <span class="nav-bell-activity-time">Nov 5, 2024</span>
@@ -1733,18 +1760,68 @@
         </div>
         <div class="nav-user-wrap" onclick="toggleUserMenu(event)">
           <button class="nav-user">B</button>
-          <svg class="nav-user-caret" width="10" height="10" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><polyline points="6 9 12 15 18 9"/></svg>
+          <svg
+            class="nav-user-caret"
+            width="10"
+            height="10"
+            viewBox="0 0 24 24"
+            fill="none"
+            stroke="currentColor"
+            stroke-width="2.5"
+            stroke-linecap="round"
+            stroke-linejoin="round"
+          >
+            <polyline points="6 9 12 15 18 9" />
+          </svg>
           <div id="nav-user-dropdown" class="nav-user-dropdown">
             <a href="./settings.html">
-              <svg class="dropdown-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="3"/><path d="M19.4 15a1.65 1.65 0 0 0 .33 1.82l.06.06a2 2 0 1 1-2.83 2.83l-.06-.06a1.65 1.65 0 0 0-1.82-.33 1.65 1.65 0 0 0-1 1.51V21a2 2 0 0 1-4 0v-.09A1.65 1.65 0 0 0 9 19.4a1.65 1.65 0 0 0-1.82.33l-.06.06a2 2 0 1 1-2.83-2.83l.06-.06A1.65 1.65 0 0 0 4.68 15a1.65 1.65 0 0 0-1.51-1H3a2 2 0 0 1 0-4h.09A1.65 1.65 0 0 0 4.6 9a1.65 1.65 0 0 0-.33-1.82l-.06-.06a2 2 0 1 1 2.83-2.83l.06.06A1.65 1.65 0 0 0 9 4.68a1.65 1.65 0 0 0 1-1.51V3a2 2 0 0 1 4 0v.09a1.65 1.65 0 0 0 1 1.51 1.65 1.65 0 0 0 1.82-.33l.06-.06a2 2 0 1 1 2.83 2.83l-.06.06A1.65 1.65 0 0 0 19.4 9a1.65 1.65 0 0 0 1.51 1H21a2 2 0 0 1 0 4h-.09a1.65 1.65 0 0 0-1.51 1z"/></svg>
+              <svg
+                class="dropdown-icon"
+                viewBox="0 0 24 24"
+                fill="none"
+                stroke="currentColor"
+                stroke-width="2"
+                stroke-linecap="round"
+                stroke-linejoin="round"
+              >
+                <circle cx="12" cy="12" r="3" />
+                <path
+                  d="M19.4 15a1.65 1.65 0 0 0 .33 1.82l.06.06a2 2 0 1 1-2.83 2.83l-.06-.06a1.65 1.65 0 0 0-1.82-.33 1.65 1.65 0 0 0-1 1.51V21a2 2 0 0 1-4 0v-.09A1.65 1.65 0 0 0 9 19.4a1.65 1.65 0 0 0-1.82.33l-.06.06a2 2 0 1 1-2.83-2.83l.06-.06A1.65 1.65 0 0 0 4.68 15a1.65 1.65 0 0 0-1.51-1H3a2 2 0 0 1 0-4h.09A1.65 1.65 0 0 0 4.6 9a1.65 1.65 0 0 0-.33-1.82l-.06-.06a2 2 0 1 1 2.83-2.83l.06.06A1.65 1.65 0 0 0 9 4.68a1.65 1.65 0 0 0 1-1.51V3a2 2 0 0 1 4 0v.09a1.65 1.65 0 0 0 1 1.51 1.65 1.65 0 0 0 1.82-.33l.06-.06a2 2 0 1 1 2.83 2.83l-.06.06A1.65 1.65 0 0 0 19.4 9a1.65 1.65 0 0 0 1.51 1H21a2 2 0 0 1 0 4h-.09a1.65 1.65 0 0 0-1.51 1z"
+                />
+              </svg>
               Settings
             </a>
             <a href="./dashboard.html">
-              <svg class="dropdown-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="3" width="7" height="7"/><rect x="14" y="3" width="7" height="7"/><rect x="14" y="14" width="7" height="7"/><rect x="3" y="14" width="7" height="7"/></svg>
+              <svg
+                class="dropdown-icon"
+                viewBox="0 0 24 24"
+                fill="none"
+                stroke="currentColor"
+                stroke-width="2"
+                stroke-linecap="round"
+                stroke-linejoin="round"
+              >
+                <rect x="3" y="3" width="7" height="7" />
+                <rect x="14" y="3" width="7" height="7" />
+                <rect x="14" y="14" width="7" height="7" />
+                <rect x="3" y="14" width="7" height="7" />
+              </svg>
               Dashboard
             </a>
             <a href="#">
-              <svg class="dropdown-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M9 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h4"/><polyline points="16 17 21 12 16 7"/><line x1="21" y1="12" x2="9" y2="12"/></svg>
+              <svg
+                class="dropdown-icon"
+                viewBox="0 0 24 24"
+                fill="none"
+                stroke="currentColor"
+                stroke-width="2"
+                stroke-linecap="round"
+                stroke-linejoin="round"
+              >
+                <path d="M9 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h4" />
+                <polyline points="16 17 21 12 16 7" />
+                <line x1="21" y1="12" x2="9" y2="12" />
+              </svg>
               Sign out
             </a>
           </div>
@@ -1780,7 +1857,7 @@
                 </svg>
               </button>
               <div id="actions-dropdown" class="actions-dropdown">
-                <a href="#" class="actions-dropdown-item">
+                <a href="./edit-score-set.html" class="actions-dropdown-item">
                   <svg
                     width="14"
                     height="14"
@@ -1852,7 +1929,8 @@
               alt="ORCID"
               class="orcid-icon"
             />Jordan Mills</a
-          ><span class="meta-sep">&middot;</span>Published March 10, 2025<span class="meta-sep">&middot;</span><a href="#details" class="meta-jump">Jump to detailed metadata &darr;</a>
+          ><span class="meta-sep">&middot;</span>Published March 10, 2025<span class="meta-sep">&middot;</span
+          ><a href="#details" class="meta-jump">Jump to detailed metadata &darr;</a>
         </div>
       </div>
     </div>
@@ -1872,16 +1950,29 @@
             </div>
           </div>
           <div class="collection-user-line">
-            <svg width="11" height="11" viewBox="0 0 24 24" fill="#aaa" stroke="none"><path d="M19 21l-7-5-7 5V5a2 2 0 0 1 2-2h10a2 2 0 0 1 2 2z"/></svg>
+            <svg width="11" height="11" viewBox="0 0 24 24" fill="#aaa" stroke="none">
+              <path d="M19 21l-7-5-7 5V5a2 2 0 0 1 2-2h10a2 2 0 0 1 2 2z" />
+            </svg>
             Also in:
-            <a href="#">My Favorites</a>
-            <a href="#">Lab Group Collection</a>
+            <a href="./collection-detail.html">My Favorites</a>
+            <a href="./collection-detail.html">Lab Group Collection</a>
             <span style="color: #bbb">&middot;</span>
-            <a href="#" style="color: #999">+4 more</a>
+            <a href="#" style="color: #767676">+4 more</a>
           </div>
         </div>
         <button class="save-collection-btn-strip">
-          <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M19 21l-7-5-7 5V5a2 2 0 0 1 2-2h10a2 2 0 0 1 2 2z"/></svg>
+          <svg
+            width="14"
+            height="14"
+            viewBox="0 0 24 24"
+            fill="none"
+            stroke="currentColor"
+            stroke-width="2"
+            stroke-linecap="round"
+            stroke-linejoin="round"
+          >
+            <path d="M19 21l-7-5-7 5V5a2 2 0 0 1 2-2h10a2 2 0 0 1 2 2z" />
+          </svg>
           Save to collection
         </button>
       </div>
@@ -2687,6 +2778,9 @@
           <a href="#">Chat</a>
           <a href="#">Documentation</a>
           <a href="#">Report an issue</a>
+          <span style="color: #dee2e6">|</span>
+          <a href="./design-showcase.html" style="color: #aaa">Design Showcase</a>
+          <a href="./404.html" style="color: #aaa">404 Demo</a>
         </div>
       </div>
     </footer>
@@ -2761,13 +2855,13 @@
           })
         })
       })
-    
+
       function toggleUserMenu(event) {
         event.stopPropagation()
         var dd = document.getElementById('nav-user-dropdown')
         dd.classList.toggle('open')
       }
-      document.addEventListener('click', function(e) {
+      document.addEventListener('click', function (e) {
         var wrap = document.querySelector('.nav-user-wrap')
         if (wrap && !wrap.contains(e.target)) {
           var dd = document.getElementById('nav-user-dropdown')

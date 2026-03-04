@@ -4,7 +4,10 @@
     <meta charset="UTF-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
     <title>MaveMD — MaveDB Prototype</title>
-    <link href="https://fonts.googleapis.com/css2?family=Raleway:wght@400;500;600;700&family=Exo+2:wght@700;800;900&display=swap" rel="stylesheet" />
+    <link
+      href="https://fonts.googleapis.com/css2?family=Raleway:wght@400;500;600;700&family=Exo+2:wght@700;800;900&display=swap"
+      rel="stylesheet"
+    />
     <style>
       *,
       *::before,
@@ -21,7 +24,9 @@
         font-size: 15px;
       }
 
-      h1, h2, h3 {
+      h1,
+      h2,
+      h3 {
         font-family: 'Exo 2', sans-serif;
       }
 
@@ -67,14 +72,16 @@
         color: #444;
       }
       .nav-links a:hover {
-        color: #78B793;
+        color: #78b793;
         text-decoration: none;
       }
       .nav-links a.active {
-        color: #78B793;
+        color: #78b793;
         font-weight: 700;
       }
-      .nav-add-wrap { position: relative; }
+      .nav-add-wrap {
+        position: relative;
+      }
       .nav-add-dropdown {
         display: none;
         position: absolute;
@@ -84,20 +91,35 @@
         background: #fff;
         border: 1px solid #e0e0e0;
         border-radius: 8px;
-        box-shadow: 0 8px 24px rgba(0,0,0,0.12);
+        box-shadow: 0 8px 24px rgba(0, 0, 0, 0.12);
         z-index: 200;
         overflow: hidden;
       }
-      .nav-add-dropdown.open { display: block; }
+      .nav-add-dropdown.open {
+        display: block;
+      }
       .nav-add-option {
         display: block;
         padding: 12px 16px;
         border-bottom: 1px solid #f0f0f0;
       }
-      .nav-add-option:last-child { border-bottom: none; }
-      .nav-add-option:hover { background: #f5f5f5; text-decoration: none; }
-      .nav-add-option-label { font-size: 13px; font-weight: 600; color: #333; }
-      .nav-add-option-desc { font-size: 12px; color: #888; margin-top: 2px; }
+      .nav-add-option:last-child {
+        border-bottom: none;
+      }
+      .nav-add-option:hover {
+        background: #f5f5f5;
+        text-decoration: none;
+      }
+      .nav-add-option-label {
+        font-size: 13px;
+        font-weight: 600;
+        color: #333;
+      }
+      .nav-add-option-desc {
+        font-size: 12px;
+        color: #767676;
+        margin-top: 2px;
+      }
       .nav-user-wrap {
         position: relative;
         flex-shrink: 0;
@@ -120,13 +142,13 @@
         flex-shrink: 0;
         cursor: pointer;
         border: none;
-        font-family: "Raleway", sans-serif;
+        font-family: 'Raleway', sans-serif;
       }
       .nav-user:hover {
         background: #5a9375;
       }
       .nav-user-caret {
-        color: #999;
+        color: #767676;
         flex-shrink: 0;
         cursor: pointer;
       }
@@ -167,7 +189,7 @@
       .nav-user-dropdown .dropdown-icon {
         width: 16px;
         height: 16px;
-        color: #888;
+        color: #767676;
         flex-shrink: 0;
       }
       .nav-bell-wrap {
@@ -217,7 +239,7 @@
         background: #fff;
         border: 1px solid #e0e0e0;
         border-radius: 8px;
-        box-shadow: 0 8px 24px rgba(0,0,0,0.12);
+        box-shadow: 0 8px 24px rgba(0, 0, 0, 0.12);
         z-index: 300;
         overflow: hidden;
       }
@@ -253,7 +275,7 @@
         font-weight: 600;
       }
       .nav-bell-activity-verb {
-        color: #888;
+        color: #767676;
       }
       .nav-bell-activity-time {
         font-size: 11px;
@@ -297,10 +319,10 @@
         gap: 10px;
         margin-top: 20px;
         font-size: 13px;
-        color: #999;
+        color: #767676;
       }
       .hero-stats strong {
-        color: #78B793;
+        color: #78b793;
         font-weight: 700;
       }
       .hero-stat-sep {
@@ -339,12 +361,12 @@
         transition: all 0.15s;
       }
       .search-tab--hgvs {
-        border-color: #78B793;
+        border-color: #78b793;
         color: #5a9375;
       }
       .search-tab--hgvs:hover,
       .search-tab--hgvs.active {
-        background: #78B793;
+        background: #78b793;
         color: #222;
       }
       .search-tab--clingen {
@@ -376,7 +398,7 @@
       }
       .search-bar {
         display: flex;
-        border: 2px solid var(--search-accent, #78B793);
+        border: 2px solid var(--search-accent, #78b793);
         border-radius: 8px;
         overflow: hidden;
         background: #fff;
@@ -398,7 +420,7 @@
         font-size: 14px;
       }
       .search-btn {
-        background: var(--search-accent, #78B793);
+        background: var(--search-accent, #78b793);
         color: var(--search-btn-text, #222);
         border: none;
         padding: 0 28px;
@@ -407,7 +429,9 @@
         font-weight: 600;
         cursor: pointer;
         white-space: nowrap;
-        transition: background 0.2s, color 0.2s;
+        transition:
+          background 0.2s,
+          color 0.2s;
       }
       .search-btn:hover {
         filter: brightness(0.85);
@@ -417,10 +441,10 @@
         align-items: center;
         gap: 6px;
         font-size: 13px;
-        color: #888;
+        color: #767676;
         margin-bottom: 24px;
       }
-      .fuzzy-link {
+      .guided-link {
         color: #0074d9;
         font-weight: 600;
       }
@@ -462,9 +486,9 @@
         line-height: 1.5;
       }
       .chip--hgvs {
-        background: #C8E4C6;
-        color: #78B793;
-        border-color: #A1D8C8;
+        background: #c8e4c6;
+        color: #78b793;
+        border-color: #a1d8c8;
         font-family: monospace;
         font-size: 12px;
         font-weight: 400;
@@ -524,7 +548,7 @@
       }
       .results-subtitle {
         font-size: 13px;
-        color: #888;
+        color: #767676;
         margin-top: 2px;
       }
       .results-back {
@@ -543,7 +567,7 @@
       /* Allele result card */
       .allele-card {
         background: #fff;
-        border: 1px solid #e8e8e8;
+        border: 1px solid #e0e0e0;
         border-radius: 10px;
         margin-bottom: 20px;
         overflow: hidden;
@@ -568,7 +592,7 @@
       }
       .allele-coords {
         font-size: 12px;
-        color: #888;
+        color: #767676;
         margin-top: 4px;
         font-family: 'Courier New', monospace;
       }
@@ -629,7 +653,7 @@
       }
       .mane-table td:first-child {
         font-family: 'Raleway', sans-serif;
-        color: #888;
+        color: #767676;
         font-size: 12px;
       }
 
@@ -705,7 +729,7 @@
       .no-results {
         text-align: center;
         padding: 40px 20px;
-        color: #888;
+        color: #767676;
         font-size: 14px;
       }
       .no-results-icon {
@@ -734,7 +758,7 @@
       }
       .section-sub {
         font-size: 13px;
-        color: #888;
+        color: #767676;
         margin-bottom: 32px;
       }
       .steps {
@@ -753,7 +777,7 @@
         width: 38px;
         height: 38px;
         border-radius: 50%;
-        background: #78B793;
+        background: #78b793;
         color: #222;
         font-size: 16px;
         font-weight: 700;
@@ -774,7 +798,7 @@
       }
       .step-arrow {
         font-size: 22px;
-        color: #A1D8C8;
+        color: #a1d8c8;
         padding-top: 8px;
         align-self: start;
       }
@@ -797,7 +821,7 @@
         font-weight: 700;
         text-transform: uppercase;
         letter-spacing: 0.6px;
-        color: #999;
+        color: #767676;
         padding: 0 12px 10px;
         border-bottom: 2px solid #dee2e6;
       }
@@ -819,7 +843,7 @@
         text-align: center;
       }
       .score-set-link {
-        color: #78B793;
+        color: #78b793;
         font-weight: 500;
       }
       .score-set-link:hover {
@@ -885,7 +909,7 @@
         align-items: center;
         justify-content: space-between;
         font-size: 13px;
-        color: #888;
+        color: #767676;
       }
       .footer-inner a {
         color: #0074d9;
@@ -896,14 +920,32 @@
       }
 
       /* ── PROTOTYPE BANNER ── */
-      .proto-banner { background: #FBDA68; color: #333; text-align: center; padding: 8px 24px; font-size: 13px; font-family: 'Raleway', sans-serif; font-weight: 500; position: sticky; top: 0; z-index: 9999; letter-spacing: 0.1px; }
-      .proto-banner a { color: #555; text-decoration: underline; }
-      .proto-banner strong { font-weight: 700; }
-        </style>
+      .proto-banner {
+        background: #fbda68;
+        color: #333;
+        text-align: center;
+        padding: 8px 24px;
+        font-size: 13px;
+        font-family: 'Raleway', sans-serif;
+        font-weight: 500;
+        position: sticky;
+        top: 0;
+        z-index: 9999;
+        letter-spacing: 0.1px;
+      }
+      .proto-banner a {
+        color: #555;
+        text-decoration: underline;
+      }
+      .proto-banner strong {
+        font-weight: 700;
+      }
+    </style>
   </head>
   <body>
     <div class="proto-banner">
-      <strong>Prototype</strong> — This is a design prototype and is not intended for use. Data shown is fictional. The real MaveDB is at <a href="https://mavedb.org" target="_blank">mavedb.org</a>.
+      <strong>Prototype</strong> — This is a design prototype and is not intended for use. Data shown is fictional. The
+      real MaveDB is at <a href="https://mavedb.org" target="_blank">mavedb.org</a>.
     </div>
     <!-- NAV -->
     <nav>
@@ -914,7 +956,20 @@
           <li><a href="#" class="active">MaveMD</a></li>
           <li><a href="./search.html">Search</a></li>
           <li class="nav-add-wrap">
-            <a href="#" onclick="toggleAddMenu(event)" style="display:flex;align-items:center;gap:4px;">Add Dataset <svg width="10" height="10" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><polyline points="6 9 12 15 18 9"/></svg></a>
+            <a href="#" onclick="toggleAddMenu(event)" style="display: flex; align-items: center; gap: 4px"
+              >Add Dataset
+              <svg
+                width="10"
+                height="10"
+                viewBox="0 0 24 24"
+                fill="none"
+                stroke="currentColor"
+                stroke-width="2.5"
+                stroke-linecap="round"
+                stroke-linejoin="round"
+              >
+                <polyline points="6 9 12 15 18 9" /></svg
+            ></a>
             <div id="nav-add-dropdown" class="nav-add-dropdown">
               <a href="./add-experiment.html" class="nav-add-option">
                 <div class="nav-add-option-label">New Experiment</div>
@@ -931,30 +986,57 @@
         </ul>
         <div class="nav-bell-wrap">
           <button class="nav-bell" onclick="toggleBell(event)" title="Recent activity">
-            <svg width="17" height="17" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M18 8A6 6 0 0 0 6 8c0 7-3 9-3 9h18s-3-2-3-9"/><path d="M13.73 21a2 2 0 0 1-3.46 0"/></svg>
+            <svg
+              width="17"
+              height="17"
+              viewBox="0 0 24 24"
+              fill="none"
+              stroke="currentColor"
+              stroke-width="2"
+              stroke-linecap="round"
+              stroke-linejoin="round"
+            >
+              <path d="M18 8A6 6 0 0 0 6 8c0 7-3 9-3 9h18s-3-2-3-9" />
+              <path d="M13.73 21a2 2 0 0 1-3.46 0" />
+            </svg>
             <span class="nav-bell-badge">5</span>
           </button>
           <div id="nav-bell-dropdown" class="nav-bell-dropdown">
             <div class="nav-bell-dropdown-header">Recent Activity</div>
             <div class="nav-bell-activity-list">
               <div class="nav-bell-activity-item">
-                <span><a href="#">CHEK2 Kinase Activity Assay – Draft</a> <span class="nav-bell-activity-verb">edited by you</span></span>
+                <span
+                  ><a href="./score-set-detail.html">CHEK2 Kinase Activity Assay – Draft</a>
+                  <span class="nav-bell-activity-verb">edited by you</span></span
+                >
                 <span class="nav-bell-activity-time">2 days ago</span>
               </div>
               <div class="nav-bell-activity-item">
-                <span><a href="#">KCNQ4 Variant Effect – Draft</a> <span class="nav-bell-activity-verb">calibration created by you</span></span>
+                <span
+                  ><a href="./score-set-detail.html">KCNQ4 Variant Effect – Draft</a>
+                  <span class="nav-bell-activity-verb">calibration created by you</span></span
+                >
                 <span class="nav-bell-activity-time">5 days ago</span>
               </div>
               <div class="nav-bell-activity-item">
-                <span><a href="#">BRCA1 Combined Functional Meta-analysis</a> <span class="nav-bell-activity-verb">published</span></span>
+                <span
+                  ><a href="./score-set-detail.html">BRCA1 Combined Functional Meta-analysis</a>
+                  <span class="nav-bell-activity-verb">published</span></span
+                >
                 <span class="nav-bell-activity-time">Nov 5, 2024</span>
               </div>
               <div class="nav-bell-activity-item">
-                <span><a href="#">TP53 Saturation Genome Editing Panel</a> <span class="nav-bell-activity-verb">you were added as a contributor</span></span>
+                <span
+                  ><a href="./experiment-detail.html">TP53 Saturation Genome Editing Panel</a>
+                  <span class="nav-bell-activity-verb">you were added as a contributor</span></span
+                >
                 <span class="nav-bell-activity-time">Oct 28, 2024</span>
               </div>
               <div class="nav-bell-activity-item">
-                <span><a href="#">BRCA1 SGE Exon 20 – ClinVar</a> <span class="nav-bell-activity-verb">calibration published</span></span>
+                <span
+                  ><a href="./calibrations.html">BRCA1 SGE Exon 20 – ClinVar</a>
+                  <span class="nav-bell-activity-verb">calibration published</span></span
+                >
                 <span class="nav-bell-activity-time">Oct 14, 2024</span>
               </div>
             </div>
@@ -962,18 +1044,68 @@
         </div>
         <div class="nav-user-wrap" onclick="toggleUserMenu(event)">
           <button class="nav-user">B</button>
-          <svg class="nav-user-caret" width="10" height="10" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><polyline points="6 9 12 15 18 9"/></svg>
+          <svg
+            class="nav-user-caret"
+            width="10"
+            height="10"
+            viewBox="0 0 24 24"
+            fill="none"
+            stroke="currentColor"
+            stroke-width="2.5"
+            stroke-linecap="round"
+            stroke-linejoin="round"
+          >
+            <polyline points="6 9 12 15 18 9" />
+          </svg>
           <div id="nav-user-dropdown" class="nav-user-dropdown">
             <a href="./settings.html">
-              <svg class="dropdown-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="3"/><path d="M19.4 15a1.65 1.65 0 0 0 .33 1.82l.06.06a2 2 0 1 1-2.83 2.83l-.06-.06a1.65 1.65 0 0 0-1.82-.33 1.65 1.65 0 0 0-1 1.51V21a2 2 0 0 1-4 0v-.09A1.65 1.65 0 0 0 9 19.4a1.65 1.65 0 0 0-1.82.33l-.06.06a2 2 0 1 1-2.83-2.83l.06-.06A1.65 1.65 0 0 0 4.68 15a1.65 1.65 0 0 0-1.51-1H3a2 2 0 0 1 0-4h.09A1.65 1.65 0 0 0 4.6 9a1.65 1.65 0 0 0-.33-1.82l-.06-.06a2 2 0 1 1 2.83-2.83l.06.06A1.65 1.65 0 0 0 9 4.68a1.65 1.65 0 0 0 1-1.51V3a2 2 0 0 1 4 0v.09a1.65 1.65 0 0 0 1 1.51 1.65 1.65 0 0 0 1.82-.33l.06-.06a2 2 0 1 1 2.83 2.83l-.06.06A1.65 1.65 0 0 0 19.4 9a1.65 1.65 0 0 0 1.51 1H21a2 2 0 0 1 0 4h-.09a1.65 1.65 0 0 0-1.51 1z"/></svg>
+              <svg
+                class="dropdown-icon"
+                viewBox="0 0 24 24"
+                fill="none"
+                stroke="currentColor"
+                stroke-width="2"
+                stroke-linecap="round"
+                stroke-linejoin="round"
+              >
+                <circle cx="12" cy="12" r="3" />
+                <path
+                  d="M19.4 15a1.65 1.65 0 0 0 .33 1.82l.06.06a2 2 0 1 1-2.83 2.83l-.06-.06a1.65 1.65 0 0 0-1.82-.33 1.65 1.65 0 0 0-1 1.51V21a2 2 0 0 1-4 0v-.09A1.65 1.65 0 0 0 9 19.4a1.65 1.65 0 0 0-1.82.33l-.06.06a2 2 0 1 1-2.83-2.83l.06-.06A1.65 1.65 0 0 0 4.68 15a1.65 1.65 0 0 0-1.51-1H3a2 2 0 0 1 0-4h.09A1.65 1.65 0 0 0 4.6 9a1.65 1.65 0 0 0-.33-1.82l-.06-.06a2 2 0 1 1 2.83-2.83l.06.06A1.65 1.65 0 0 0 9 4.68a1.65 1.65 0 0 0 1-1.51V3a2 2 0 0 1 4 0v.09a1.65 1.65 0 0 0 1 1.51 1.65 1.65 0 0 0 1.82-.33l.06-.06a2 2 0 1 1 2.83 2.83l-.06.06A1.65 1.65 0 0 0 19.4 9a1.65 1.65 0 0 0 1.51 1H21a2 2 0 0 1 0 4h-.09a1.65 1.65 0 0 0-1.51 1z"
+                />
+              </svg>
               Settings
             </a>
             <a href="./dashboard.html">
-              <svg class="dropdown-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="3" width="7" height="7"/><rect x="14" y="3" width="7" height="7"/><rect x="14" y="14" width="7" height="7"/><rect x="3" y="14" width="7" height="7"/></svg>
+              <svg
+                class="dropdown-icon"
+                viewBox="0 0 24 24"
+                fill="none"
+                stroke="currentColor"
+                stroke-width="2"
+                stroke-linecap="round"
+                stroke-linejoin="round"
+              >
+                <rect x="3" y="3" width="7" height="7" />
+                <rect x="14" y="3" width="7" height="7" />
+                <rect x="14" y="14" width="7" height="7" />
+                <rect x="3" y="14" width="7" height="7" />
+              </svg>
               Dashboard
             </a>
             <a href="#">
-              <svg class="dropdown-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M9 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h4"/><polyline points="16 17 21 12 16 7"/><line x1="21" y1="12" x2="9" y2="12"/></svg>
+              <svg
+                class="dropdown-icon"
+                viewBox="0 0 24 24"
+                fill="none"
+                stroke="currentColor"
+                stroke-width="2"
+                stroke-linecap="round"
+                stroke-linejoin="round"
+              >
+                <path d="M9 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h4" />
+                <polyline points="16 17 21 12 16 7" />
+                <line x1="21" y1="12" x2="9" y2="12" />
+              </svg>
               Sign out
             </a>
           </div>
@@ -1022,7 +1154,7 @@
         </div>
         <div class="search-footer-row">
           <span>Don't have a versioned reference sequence identifier?</span>
-          <a href="#" class="fuzzy-link">Try fuzzy search →</a>
+          <a href="#" class="guided-link">Try guided search →</a>
         </div>
 
         <button class="toggle-btn" id="examples-toggle-btn" onclick="toggleExamples()" style="margin-top: 4px">
@@ -1031,21 +1163,21 @@
         <div id="examples-content" style="display: none; margin-top: 14px">
           <div class="example-group">
             <span class="example-group-label">HGVS</span>
-            <a href="#" class="chip chip--hgvs">NP_000242.1:p.Asn566Thr</a>
-            <a href="#" class="chip chip--hgvs">ENST00000473961.6:c.-19-2A&gt;T</a>
+            <a href="./variant-detail.html" class="chip chip--hgvs">NP_000242.1:p.Asn566Thr</a>
+            <a href="./variant-detail.html" class="chip chip--hgvs">ENST00000473961.6:c.-19-2A&gt;T</a>
           </div>
           <div class="example-group">
             <span class="example-group-label">ClinGen Allele ID</span>
-            <a href="#" class="chip chip--clingen">CA10590195</a>
-            <a href="#" class="chip chip--clingen">PA2579983208</a>
+            <a href="./variant-detail.html" class="chip chip--clingen">CA10590195</a>
+            <a href="./variant-detail.html" class="chip chip--clingen">PA2579983208</a>
           </div>
           <div class="example-group">
             <span class="example-group-label">dbSNP rsID</span>
-            <a href="#" class="chip chip--rsid">rs900082291</a>
+            <a href="./variant-detail.html" class="chip chip--rsid">rs900082291</a>
           </div>
           <div class="example-group">
             <span class="example-group-label">ClinVar Variation ID</span>
-            <a href="#" class="chip chip--clinvar">869058</a>
+            <a href="./variant-detail.html" class="chip chip--clinvar">869058</a>
           </div>
         </div>
       </div>
@@ -1190,7 +1322,7 @@
             </div>
           </div>
         </div>
-        <div style="margin-top: 28px; font-size: 13px; color: #888">
+        <div style="margin-top: 28px; font-size: 13px; color: #767676">
           Want to learn more about how MaveMD calibrations work?
           <a href="#" style="color: #0074d9; font-weight: 600">Read the MaveMD documentation →</a>
         </div>
@@ -1212,37 +1344,57 @@
         </thead>
         <tbody>
           <tr>
-            <td><a href="./score-set-detail.html" class="score-set-link">BRCA1 saturation genome editing functional assay</a></td>
+            <td>
+              <a href="./score-set-detail.html" class="score-set-link"
+                >BRCA1 saturation genome editing functional assay</a
+              >
+            </td>
             <td class="pub-cell">Okafor et al. 2018</td>
             <td><span class="cal-badge">3 / 3</span></td>
           </tr>
           <tr>
-            <td><a href="./score-set-detail.html" class="score-set-link">BRCA1 protein abundance deep mutational scan</a></td>
+            <td>
+              <a href="./score-set-detail.html" class="score-set-link">BRCA1 protein abundance deep mutational scan</a>
+            </td>
             <td class="pub-cell">Gallagher et al. 2022</td>
             <td><span class="cal-badge">2 / 2</span></td>
           </tr>
           <tr>
-            <td><a href="./score-set-detail.html" class="score-set-link">BRCA1 homologous recombination repair assay</a></td>
+            <td>
+              <a href="./score-set-detail.html" class="score-set-link">BRCA1 homologous recombination repair assay</a>
+            </td>
             <td class="pub-cell">Patel et al. 2015</td>
             <td><span class="cal-badge">1 / 1</span></td>
           </tr>
           <tr>
-            <td><a href="./score-set-detail.html" class="score-set-link">BRCA2 saturation genome editing functional assay</a></td>
+            <td>
+              <a href="./score-set-detail.html" class="score-set-link"
+                >BRCA2 saturation genome editing functional assay</a
+              >
+            </td>
             <td class="pub-cell">Gallagher et al. 2022</td>
             <td><span class="cal-badge">1 / 1</span></td>
           </tr>
           <tr>
-            <td><a href="./score-set-detail.html" class="score-set-link">TP53 dominant-negative selection (etoposide)</a></td>
+            <td>
+              <a href="./score-set-detail.html" class="score-set-link">TP53 dominant-negative selection (etoposide)</a>
+            </td>
             <td class="pub-cell">Montoya et al. 2018</td>
             <td><span class="cal-badge">4 / 4</span></td>
           </tr>
           <tr>
-            <td><a href="./score-set-detail.html" class="score-set-link">TP53 dominant-negative selection (nutlin)</a></td>
+            <td>
+              <a href="./score-set-detail.html" class="score-set-link">TP53 dominant-negative selection (nutlin)</a>
+            </td>
             <td class="pub-cell">Montoya et al. 2018</td>
             <td><span class="cal-badge">4 / 4</span></td>
           </tr>
           <tr>
-            <td><a href="./score-set-detail.html" class="score-set-link">PTEN phosphatase activity deep mutational scan</a></td>
+            <td>
+              <a href="./score-set-detail.html" class="score-set-link"
+                >PTEN phosphatase activity deep mutational scan</a
+              >
+            </td>
             <td class="pub-cell">Sorensen et al. 2018</td>
             <td><span class="cal-badge">2 / 2</span></td>
           </tr>
@@ -1254,27 +1406,37 @@
         </tbody>
         <tbody id="extra-rows">
           <tr>
-            <td><a href="./score-set-detail.html" class="score-set-link">ASPA aspartoacylase variant effect score</a></td>
+            <td>
+              <a href="./score-set-detail.html" class="score-set-link">ASPA aspartoacylase variant effect score</a>
+            </td>
             <td class="pub-cell">Gallagher et al. 2022</td>
             <td><span class="cal-badge">1 / 1</span></td>
           </tr>
           <tr>
-            <td><a href="./score-set-detail.html" class="score-set-link">ASPA protein abundance deep mutational scan</a></td>
+            <td>
+              <a href="./score-set-detail.html" class="score-set-link">ASPA protein abundance deep mutational scan</a>
+            </td>
             <td class="pub-cell">Gallagher et al. 2022</td>
             <td><span class="cal-badge">1 / 1</span></td>
           </tr>
           <tr>
-            <td><a href="./score-set-detail.html" class="score-set-link">CALM1/2/3 calmodulin deep mutational scan</a></td>
+            <td>
+              <a href="./score-set-detail.html" class="score-set-link">CALM1/2/3 calmodulin deep mutational scan</a>
+            </td>
             <td class="pub-cell">Weile et al. 2017</td>
             <td><span class="cal-badge">1 / 1</span></td>
           </tr>
           <tr>
-            <td><a href="./score-set-detail.html" class="score-set-link">CARD11 functional variant effect (activation)</a></td>
+            <td>
+              <a href="./score-set-detail.html" class="score-set-link">CARD11 functional variant effect (activation)</a>
+            </td>
             <td class="pub-cell">Meitlis et al. 2020</td>
             <td><span class="cal-badge">1 / 2</span></td>
           </tr>
           <tr>
-            <td><a href="./score-set-detail.html" class="score-set-link">CARD11 functional variant effect (abundance)</a></td>
+            <td>
+              <a href="./score-set-detail.html" class="score-set-link">CARD11 functional variant effect (abundance)</a>
+            </td>
             <td class="pub-cell">Meitlis et al. 2020</td>
             <td><span class="cal-badge cal-badge--none">0 / 2</span></td>
           </tr>
@@ -1284,22 +1446,30 @@
             <td><span class="cal-badge">2 / 2</span></td>
           </tr>
           <tr>
-            <td><a href="./score-set-detail.html" class="score-set-link">CBS protein abundance deep mutational scan</a></td>
+            <td>
+              <a href="./score-set-detail.html" class="score-set-link">CBS protein abundance deep mutational scan</a>
+            </td>
             <td class="pub-cell">Pal et al. 2021</td>
             <td><span class="cal-badge">1 / 2</span></td>
           </tr>
           <tr>
-            <td><a href="./score-set-detail.html" class="score-set-link">CHEK2 kinase activity deep mutational scan</a></td>
+            <td>
+              <a href="./score-set-detail.html" class="score-set-link">CHEK2 kinase activity deep mutational scan</a>
+            </td>
             <td class="pub-cell">Boone et al. 2021</td>
             <td><span class="cal-badge">1 / 1</span></td>
           </tr>
           <tr>
-            <td><a href="./score-set-detail.html" class="score-set-link">CRX cone-rod homeobox transactivation DMS</a></td>
+            <td>
+              <a href="./score-set-detail.html" class="score-set-link">CRX cone-rod homeobox transactivation DMS</a>
+            </td>
             <td class="pub-cell">Jiang et al. 2024</td>
             <td><span class="cal-badge">1 / 1</span></td>
           </tr>
           <tr>
-            <td><a href="./score-set-detail.html" class="score-set-link">DDX3X RNA helicase deep mutational scan</a></td>
+            <td>
+              <a href="./score-set-detail.html" class="score-set-link">DDX3X RNA helicase deep mutational scan</a>
+            </td>
             <td class="pub-cell">Loughlin et al. 2024</td>
             <td><span class="cal-badge">1 / 1</span></td>
           </tr>
@@ -1329,7 +1499,9 @@
             <td><span class="cal-badge cal-badge--none">0 / 1</span></td>
           </tr>
           <tr>
-            <td><a href="./score-set-detail.html" class="score-set-link">FKRP fukutin-related protein variant effect</a></td>
+            <td>
+              <a href="./score-set-detail.html" class="score-set-link">FKRP fukutin-related protein variant effect</a>
+            </td>
             <td class="pub-cell">Gallagher et al. 2022</td>
             <td><span class="cal-badge">1 / 1</span></td>
           </tr>
@@ -1339,22 +1511,30 @@
             <td><span class="cal-badge">2 / 2</span></td>
           </tr>
           <tr>
-            <td><a href="./score-set-detail.html" class="score-set-link">GCK protein abundance deep mutational scan</a></td>
+            <td>
+              <a href="./score-set-detail.html" class="score-set-link">GCK protein abundance deep mutational scan</a>
+            </td>
             <td class="pub-cell">Weile et al. 2017</td>
             <td><span class="cal-badge">1 / 2</span></td>
           </tr>
           <tr>
-            <td><a href="./score-set-detail.html" class="score-set-link">HMBS hydroxymethylbilane synthase DMS (I)</a></td>
+            <td>
+              <a href="./score-set-detail.html" class="score-set-link">HMBS hydroxymethylbilane synthase DMS (I)</a>
+            </td>
             <td class="pub-cell">Pal et al. 2021</td>
             <td><span class="cal-badge">1 / 1</span></td>
           </tr>
           <tr>
-            <td><a href="./score-set-detail.html" class="score-set-link">HMBS hydroxymethylbilane synthase DMS (II)</a></td>
+            <td>
+              <a href="./score-set-detail.html" class="score-set-link">HMBS hydroxymethylbilane synthase DMS (II)</a>
+            </td>
             <td class="pub-cell">Pal et al. 2021</td>
             <td><span class="cal-badge">1 / 1</span></td>
           </tr>
           <tr>
-            <td><a href="./score-set-detail.html" class="score-set-link">HMBS hydroxymethylbilane synthase DMS (III)</a></td>
+            <td>
+              <a href="./score-set-detail.html" class="score-set-link">HMBS hydroxymethylbilane synthase DMS (III)</a>
+            </td>
             <td class="pub-cell">Pal et al. 2021</td>
             <td><span class="cal-badge cal-badge--none">0 / 1</span></td>
           </tr>
@@ -1364,17 +1544,25 @@
             <td><span class="cal-badge">1 / 1</span></td>
           </tr>
           <tr>
-            <td><a href="./score-set-detail.html" class="score-set-link">KCNE1 potassium channel beta subunit DMS (I)</a></td>
+            <td>
+              <a href="./score-set-detail.html" class="score-set-link">KCNE1 potassium channel beta subunit DMS (I)</a>
+            </td>
             <td class="pub-cell">Kozek et al. 2020</td>
             <td><span class="cal-badge">1 / 1</span></td>
           </tr>
           <tr>
-            <td><a href="./score-set-detail.html" class="score-set-link">KCNE1 potassium channel beta subunit DMS (II)</a></td>
+            <td>
+              <a href="./score-set-detail.html" class="score-set-link">KCNE1 potassium channel beta subunit DMS (II)</a>
+            </td>
             <td class="pub-cell">Kozek et al. 2020</td>
             <td><span class="cal-badge">1 / 1</span></td>
           </tr>
           <tr>
-            <td><a href="./score-set-detail.html" class="score-set-link">KCNE1 potassium channel beta subunit DMS (III)</a></td>
+            <td>
+              <a href="./score-set-detail.html" class="score-set-link"
+                >KCNE1 potassium channel beta subunit DMS (III)</a
+              >
+            </td>
             <td class="pub-cell">Kozek et al. 2020</td>
             <td><span class="cal-badge cal-badge--none">0 / 1</span></td>
           </tr>
@@ -1404,12 +1592,16 @@
             <td><span class="cal-badge">1 / 1</span></td>
           </tr>
           <tr>
-            <td><a href="./score-set-detail.html" class="score-set-link">LARGE1 glycosyltransferase variant effect</a></td>
+            <td>
+              <a href="./score-set-detail.html" class="score-set-link">LARGE1 glycosyltransferase variant effect</a>
+            </td>
             <td class="pub-cell">Gallagher et al. 2022</td>
             <td><span class="cal-badge">1 / 1</span></td>
           </tr>
           <tr>
-            <td><a href="./score-set-detail.html" class="score-set-link">MSH2 mismatch repair deep mutational scan</a></td>
+            <td>
+              <a href="./score-set-detail.html" class="score-set-link">MSH2 mismatch repair deep mutational scan</a>
+            </td>
             <td class="pub-cell">Jia et al. 2021</td>
             <td><span class="cal-badge">1 / 1</span></td>
           </tr>
@@ -1424,37 +1616,55 @@
             <td><span class="cal-badge">1 / 1</span></td>
           </tr>
           <tr>
-            <td><a href="./score-set-detail.html" class="score-set-link">PAX6 paired box transcription factor DMS (I)</a></td>
+            <td>
+              <a href="./score-set-detail.html" class="score-set-link">PAX6 paired box transcription factor DMS (I)</a>
+            </td>
             <td class="pub-cell">Richardson et al. 2023</td>
             <td><span class="cal-badge">1 / 1</span></td>
           </tr>
           <tr>
-            <td><a href="./score-set-detail.html" class="score-set-link">PAX6 paired box transcription factor DMS (II)</a></td>
+            <td>
+              <a href="./score-set-detail.html" class="score-set-link">PAX6 paired box transcription factor DMS (II)</a>
+            </td>
             <td class="pub-cell">Richardson et al. 2023</td>
             <td><span class="cal-badge">1 / 1</span></td>
           </tr>
           <tr>
-            <td><a href="./score-set-detail.html" class="score-set-link">PAX6 paired box transcription factor DMS (III)</a></td>
+            <td>
+              <a href="./score-set-detail.html" class="score-set-link"
+                >PAX6 paired box transcription factor DMS (III)</a
+              >
+            </td>
             <td class="pub-cell">Richardson et al. 2023</td>
             <td><span class="cal-badge">1 / 1</span></td>
           </tr>
           <tr>
-            <td><a href="./score-set-detail.html" class="score-set-link">PAX6 paired box transcription factor DMS (IV)</a></td>
+            <td>
+              <a href="./score-set-detail.html" class="score-set-link">PAX6 paired box transcription factor DMS (IV)</a>
+            </td>
             <td class="pub-cell">Richardson et al. 2023</td>
             <td><span class="cal-badge cal-badge--none">0 / 1</span></td>
           </tr>
           <tr>
-            <td><a href="./score-set-detail.html" class="score-set-link">PTEN protein abundance deep mutational scan</a></td>
+            <td>
+              <a href="./score-set-detail.html" class="score-set-link">PTEN protein abundance deep mutational scan</a>
+            </td>
             <td class="pub-cell">Sorensen et al. 2020</td>
             <td><span class="cal-badge">1 / 2</span></td>
           </tr>
           <tr>
-            <td><a href="./score-set-detail.html" class="score-set-link">RHO rhodopsin variant effect deep mutational scan</a></td>
+            <td>
+              <a href="./score-set-detail.html" class="score-set-link"
+                >RHO rhodopsin variant effect deep mutational scan</a
+              >
+            </td>
             <td class="pub-cell">Wan et al. 2023</td>
             <td><span class="cal-badge">1 / 1</span></td>
           </tr>
           <tr>
-            <td><a href="./score-set-detail.html" class="score-set-link">SCN5A Nav1.5 channel function assay (II)</a></td>
+            <td>
+              <a href="./score-set-detail.html" class="score-set-link">SCN5A Nav1.5 channel function assay (II)</a>
+            </td>
             <td class="pub-cell">Eriksson et al. 2024</td>
             <td><span class="cal-badge">1 / 1</span></td>
           </tr>
@@ -1563,6 +1773,9 @@
           <a href="#">Chat</a>
           <a href="#">Documentation</a>
           <a href="#">Report an issue</a>
+          <span style="color: #dee2e6">|</span>
+          <a href="./design-showcase.html" style="color: #aaa">Design Showcase</a>
+          <a href="./404.html" style="color: #aaa">404 Demo</a>
         </div>
       </div>
     </footer>
@@ -1573,7 +1786,7 @@
         const dd = document.getElementById('nav-add-dropdown')
         dd.classList.toggle('open')
       }
-      document.addEventListener('click', function(e) {
+      document.addEventListener('click', function (e) {
         const wrap = document.querySelector('.nav-add-wrap')
         if (wrap && !wrap.contains(e.target)) {
           const dd = document.getElementById('nav-add-dropdown')
@@ -1582,17 +1795,17 @@
       })
 
       function toggleBell(event) {
-        event.stopPropagation();
-        const dd = document.getElementById('nav-bell-dropdown');
-        dd.classList.toggle('open');
+        event.stopPropagation()
+        const dd = document.getElementById('nav-bell-dropdown')
+        dd.classList.toggle('open')
       }
-      document.addEventListener('click', function(e) {
-        const wrap = document.querySelector('.nav-bell-wrap');
+      document.addEventListener('click', function (e) {
+        const wrap = document.querySelector('.nav-bell-wrap')
         if (wrap && !wrap.contains(e.target)) {
-          const dd = document.getElementById('nav-bell-dropdown');
-          if (dd) dd.classList.remove('open');
+          const dd = document.getElementById('nav-bell-dropdown')
+          if (dd) dd.classList.remove('open')
         }
-      });
+      })
 
       // Dataset table toggle
       document.getElementById('extra-rows').style.display = 'none'
@@ -1618,10 +1831,10 @@
 
       // Search type tabs — color map ties to the gradient palette
       const tabColors = {
-        'search-tab--hgvs': { accent: '#78B793', text: '#222' },
-        'search-tab--clingen': { accent: '#5aafa0', text: '#222' },
-        'search-tab--rsid': { accent: '#e6b84d', text: '#222' },
-        'search-tab--clinvar': { accent: '#f8971d', text: '#222' },
+        'search-tab--hgvs': {accent: '#78b793', text: '#222'},
+        'search-tab--clingen': {accent: '#5aafa0', text: '#222'},
+        'search-tab--rsid': {accent: '#e6b84d', text: '#222'},
+        'search-tab--clinvar': {accent: '#f8971d', text: '#222'}
       }
 
       const tabs = document.querySelectorAll('.search-tab')
@@ -1655,7 +1868,7 @@
         resultsSection.classList.add('visible')
         howSection.style.display = 'none'
         datasetsSection.style.display = 'none'
-        resultsSection.scrollIntoView({ behavior: 'smooth', block: 'start' })
+        resultsSection.scrollIntoView({behavior: 'smooth', block: 'start'})
       }
 
       function hideResults() {
@@ -1670,13 +1883,13 @@
       searchInput.addEventListener('keydown', (e) => {
         if (e.key === 'Enter') showResults()
       })
-    
+
       function toggleUserMenu(event) {
         event.stopPropagation()
         var dd = document.getElementById('nav-user-dropdown')
         dd.classList.toggle('open')
       }
-      document.addEventListener('click', function(e) {
+      document.addEventListener('click', function (e) {
         var wrap = document.querySelector('.nav-user-wrap')
         if (wrap && !wrap.contains(e.target)) {
           var dd = document.getElementById('nav-user-dropdown')

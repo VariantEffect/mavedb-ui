@@ -113,7 +113,7 @@
       }
       .nav-add-option-desc {
         font-size: 12px;
-        color: #888;
+        color: #767676;
         margin-top: 2px;
       }
       .nav-user-wrap {
@@ -144,7 +144,7 @@
         background: #5a9375;
       }
       .nav-user-caret {
-        color: #999;
+        color: #767676;
         flex-shrink: 0;
         cursor: pointer;
       }
@@ -185,7 +185,7 @@
       .nav-user-dropdown .dropdown-icon {
         width: 16px;
         height: 16px;
-        color: #888;
+        color: #767676;
         flex-shrink: 0;
       }
       .nav-bell-wrap {
@@ -271,7 +271,7 @@
         font-weight: 600;
       }
       .nav-bell-activity-verb {
-        color: #888;
+        color: #767676;
       }
       .nav-bell-activity-time {
         font-size: 11px;
@@ -329,22 +329,27 @@
       }
       .hero-search-row {
         display: flex;
-        border: 1.5px solid #78b793;
+        border: 1.5px solid var(--search-accent, #78b793);
         border-radius: 6px;
         overflow: hidden;
         background: #fff;
+        transition: border-color 0.2s;
       }
       .hero-search-select {
         border: none;
-        border-right: 1.5px solid #78b793;
+        border-right: 1.5px solid var(--search-accent, #78b793);
         padding: 0 14px;
         font-family: inherit;
         font-size: 14px;
         font-weight: 600;
-        color: #78b793;
-        background: #c8e4c6;
+        color: var(--search-accent, #78b793);
+        background: var(--search-bg, #c8e4c6);
         outline: none;
         cursor: pointer;
+        transition:
+          background 0.2s,
+          border-color 0.2s,
+          color 0.2s;
       }
       .hero-search-input {
         flex: 1;
@@ -355,22 +360,23 @@
         outline: none;
       }
       .hero-search-btn {
-        background: #78b793;
-        color: #222;
+        background: var(--search-accent, #78b793);
+        color: var(--search-btn-text, #222);
         border: none;
         padding: 0 22px;
         font-family: inherit;
         font-size: 14px;
         font-weight: 600;
         cursor: pointer;
+        transition: background 0.2s;
       }
       .hero-search-btn:hover {
-        background: #5a9375;
+        filter: brightness(0.85);
       }
       .hero-search-hint {
         margin-top: 10px;
         font-size: 13px;
-        color: #888;
+        color: #767676;
       }
       .hero-search-hint a {
         color: #0074d9;
@@ -451,7 +457,7 @@
         font-weight: 700;
         text-transform: uppercase;
         letter-spacing: 0.06em;
-        color: #999;
+        color: #767676;
         margin-top: 18px;
         margin-bottom: 8px;
       }
@@ -507,20 +513,20 @@
         gap: 4px;
         padding: 12px 14px;
         border-radius: 6px;
-        border: 1px solid #a1d8c8;
-        background: #c8e4c6;
+        border: 1px solid #f8c87a;
+        background: #fef3e2;
         text-decoration: none;
         transition:
           background 0.15s,
           border-color 0.15s;
       }
       .contrib-cat:hover {
-        background: #a1d8c8;
-        border-color: #78b793;
+        background: #fde8c8;
+        border-color: #f8971d;
         text-decoration: none;
       }
       .contrib-cat-icon {
-        color: #78b793;
+        color: #d97510;
         line-height: 1;
         margin-bottom: 2px;
       }
@@ -614,7 +620,7 @@
       }
       .news-date {
         font-size: 12px;
-        color: #999;
+        color: #767676;
         font-weight: 600;
       }
       .news-tag {
@@ -714,7 +720,7 @@
         align-items: center;
         justify-content: space-between;
         font-size: 13px;
-        color: #888;
+        color: #767676;
       }
       .footer-inner a {
         color: #0074d9;
@@ -763,7 +769,7 @@
     <!-- NAV — no search bar on homepage -->
     <nav>
       <div class="nav-inner">
-        <a href="#"><img src="./logo-mavedb.png" alt="MaveDB" class="nav-logo-img" /></a>
+        <a href="./index.html"><img src="./logo-mavedb.png" alt="MaveDB" class="nav-logo-img" /></a>
         <ul class="nav-links">
           <li><a href="./dashboard.html">Dashboard</a></li>
           <li><a href="./mavemd.html">MaveMD</a></li>
@@ -819,35 +825,35 @@
             <div class="nav-bell-activity-list">
               <div class="nav-bell-activity-item">
                 <span
-                  ><a href="#">CHEK2 Kinase Activity Assay – Draft</a>
+                  ><a href="./score-set-detail.html">CHEK2 Kinase Activity Assay – Draft</a>
                   <span class="nav-bell-activity-verb">edited by you</span></span
                 >
                 <span class="nav-bell-activity-time">2 days ago</span>
               </div>
               <div class="nav-bell-activity-item">
                 <span
-                  ><a href="#">KCNQ4 Variant Effect – Draft</a>
+                  ><a href="./score-set-detail.html">KCNQ4 Variant Effect – Draft</a>
                   <span class="nav-bell-activity-verb">calibration created by you</span></span
                 >
                 <span class="nav-bell-activity-time">5 days ago</span>
               </div>
               <div class="nav-bell-activity-item">
                 <span
-                  ><a href="#">BRCA1 Combined Functional Meta-analysis</a>
+                  ><a href="./score-set-detail.html">BRCA1 Combined Functional Meta-analysis</a>
                   <span class="nav-bell-activity-verb">published</span></span
                 >
                 <span class="nav-bell-activity-time">Nov 5, 2024</span>
               </div>
               <div class="nav-bell-activity-item">
                 <span
-                  ><a href="#">TP53 Saturation Genome Editing Panel</a>
+                  ><a href="./experiment-detail.html">TP53 Saturation Genome Editing Panel</a>
                   <span class="nav-bell-activity-verb">you were added as a contributor</span></span
                 >
                 <span class="nav-bell-activity-time">Oct 28, 2024</span>
               </div>
               <div class="nav-bell-activity-item">
                 <span
-                  ><a href="#">BRCA1 SGE Exon 20 – ClinVar</a>
+                  ><a href="./calibrations.html">BRCA1 SGE Exon 20 – ClinVar</a>
                   <span class="nav-bell-activity-verb">calibration published</span></span
                 >
                 <span class="nav-bell-activity-time">Oct 14, 2024</span>
@@ -857,18 +863,68 @@
         </div>
         <div class="nav-user-wrap" onclick="toggleUserMenu(event)">
           <button class="nav-user">B</button>
-          <svg class="nav-user-caret" width="10" height="10" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><polyline points="6 9 12 15 18 9"/></svg>
+          <svg
+            class="nav-user-caret"
+            width="10"
+            height="10"
+            viewBox="0 0 24 24"
+            fill="none"
+            stroke="currentColor"
+            stroke-width="2.5"
+            stroke-linecap="round"
+            stroke-linejoin="round"
+          >
+            <polyline points="6 9 12 15 18 9" />
+          </svg>
           <div id="nav-user-dropdown" class="nav-user-dropdown">
             <a href="./settings.html">
-              <svg class="dropdown-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="3"/><path d="M19.4 15a1.65 1.65 0 0 0 .33 1.82l.06.06a2 2 0 1 1-2.83 2.83l-.06-.06a1.65 1.65 0 0 0-1.82-.33 1.65 1.65 0 0 0-1 1.51V21a2 2 0 0 1-4 0v-.09A1.65 1.65 0 0 0 9 19.4a1.65 1.65 0 0 0-1.82.33l-.06.06a2 2 0 1 1-2.83-2.83l.06-.06A1.65 1.65 0 0 0 4.68 15a1.65 1.65 0 0 0-1.51-1H3a2 2 0 0 1 0-4h.09A1.65 1.65 0 0 0 4.6 9a1.65 1.65 0 0 0-.33-1.82l-.06-.06a2 2 0 1 1 2.83-2.83l.06.06A1.65 1.65 0 0 0 9 4.68a1.65 1.65 0 0 0 1-1.51V3a2 2 0 0 1 4 0v.09a1.65 1.65 0 0 0 1 1.51 1.65 1.65 0 0 0 1.82-.33l.06-.06a2 2 0 1 1 2.83 2.83l-.06.06A1.65 1.65 0 0 0 19.4 9a1.65 1.65 0 0 0 1.51 1H21a2 2 0 0 1 0 4h-.09a1.65 1.65 0 0 0-1.51 1z"/></svg>
+              <svg
+                class="dropdown-icon"
+                viewBox="0 0 24 24"
+                fill="none"
+                stroke="currentColor"
+                stroke-width="2"
+                stroke-linecap="round"
+                stroke-linejoin="round"
+              >
+                <circle cx="12" cy="12" r="3" />
+                <path
+                  d="M19.4 15a1.65 1.65 0 0 0 .33 1.82l.06.06a2 2 0 1 1-2.83 2.83l-.06-.06a1.65 1.65 0 0 0-1.82-.33 1.65 1.65 0 0 0-1 1.51V21a2 2 0 0 1-4 0v-.09A1.65 1.65 0 0 0 9 19.4a1.65 1.65 0 0 0-1.82.33l-.06.06a2 2 0 1 1-2.83-2.83l.06-.06A1.65 1.65 0 0 0 4.68 15a1.65 1.65 0 0 0-1.51-1H3a2 2 0 0 1 0-4h.09A1.65 1.65 0 0 0 4.6 9a1.65 1.65 0 0 0-.33-1.82l-.06-.06a2 2 0 1 1 2.83-2.83l.06.06A1.65 1.65 0 0 0 9 4.68a1.65 1.65 0 0 0 1-1.51V3a2 2 0 0 1 4 0v.09a1.65 1.65 0 0 0 1 1.51 1.65 1.65 0 0 0 1.82-.33l.06-.06a2 2 0 1 1 2.83 2.83l-.06.06A1.65 1.65 0 0 0 19.4 9a1.65 1.65 0 0 0 1.51 1H21a2 2 0 0 1 0 4h-.09a1.65 1.65 0 0 0-1.51 1z"
+                />
+              </svg>
               Settings
             </a>
             <a href="./dashboard.html">
-              <svg class="dropdown-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="3" width="7" height="7"/><rect x="14" y="3" width="7" height="7"/><rect x="14" y="14" width="7" height="7"/><rect x="3" y="14" width="7" height="7"/></svg>
+              <svg
+                class="dropdown-icon"
+                viewBox="0 0 24 24"
+                fill="none"
+                stroke="currentColor"
+                stroke-width="2"
+                stroke-linecap="round"
+                stroke-linejoin="round"
+              >
+                <rect x="3" y="3" width="7" height="7" />
+                <rect x="14" y="3" width="7" height="7" />
+                <rect x="14" y="14" width="7" height="7" />
+                <rect x="3" y="14" width="7" height="7" />
+              </svg>
               Dashboard
             </a>
             <a href="#">
-              <svg class="dropdown-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M9 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h4"/><polyline points="16 17 21 12 16 7"/><line x1="21" y1="12" x2="9" y2="12"/></svg>
+              <svg
+                class="dropdown-icon"
+                viewBox="0 0 24 24"
+                fill="none"
+                stroke="currentColor"
+                stroke-width="2"
+                stroke-linecap="round"
+                stroke-linejoin="round"
+              >
+                <path d="M9 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h4" />
+                <polyline points="16 17 21 12 16 7" />
+                <line x1="21" y1="12" x2="9" y2="12" />
+              </svg>
               Sign out
             </a>
           </div>
@@ -897,16 +953,21 @@
       </div>
       <h1 class="hero-headline">Functional variant data for the research community</h1>
       <p class="hero-tagline">A public repository for Multiplexed Assays of Variant Effect (MAVE) datasets</p>
-      <a href="#" class="hero-learn">New to MaveDB? Learn how it works →</a>
+      <a href="./help.html" class="hero-learn">New to MaveDB? Learn how it works →</a>
       <div class="hero-search-wrap">
         <div class="hero-search-row">
-          <select class="hero-search-select">
-            <option>HGVS</option>
-            <option>dbSNP</option>
-            <option>ClinVar</option>
-            <option>ClinGen CAId</option>
+          <select class="hero-search-select" id="hero-search-type" onchange="updateSearchColors()">
+            <option value="hgvs">HGVS</option>
+            <option value="dbsnp">dbSNP</option>
+            <option value="clinvar">ClinVar</option>
+            <option value="clingen">ClinGen CAId</option>
           </select>
-          <input class="hero-search-input" type="text" placeholder="Search by HGVS, e.g. NM_007294.3:c.211A>G" />
+          <input
+            class="hero-search-input"
+            id="hero-search-input"
+            type="text"
+            placeholder="Search by HGVS, e.g. NM_007294.3:c.211A>G"
+          />
           <button class="hero-search-btn">Search</button>
         </div>
         <p class="hero-search-hint">
@@ -1068,7 +1129,7 @@
           <p>
             Functional genomics datasets generated as part of the IGVF Consortium's large-scale variant impact studies.
           </p>
-          <a href="#" class="card-link">View collection →</a>
+          <a href="./collection-detail.html" class="card-link">View collection →</a>
         </div>
 
         <div class="featured-card">
@@ -1077,7 +1138,7 @@
           <p>
             Curated datasets with clinical relevance, linking MAVE functional scores to variant pathogenicity evidence.
           </p>
-          <a href="#" class="card-link">View collection →</a>
+          <a href="./collection-detail.html" class="card-link">View collection →</a>
         </div>
       </div>
     </div>
@@ -1204,6 +1265,9 @@
           <a href="#">Chat</a>
           <a href="#">Documentation</a>
           <a href="#">Report an issue</a>
+          <span style="color: #dee2e6">|</span>
+          <a href="./design-showcase.html" style="color: #aaa">Design Showcase</a>
+          <a href="./404.html" style="color: #aaa">404 Demo</a>
         </div>
       </div>
     </footer>
@@ -1233,13 +1297,38 @@
           if (dd) dd.classList.remove('open')
         }
       })
-    
+
+      /* ── Search type color switching ── */
+      const searchColors = {
+        hgvs: {accent: '#78b793', bg: '#c8e4c6', text: '#222'},
+        dbsnp: {accent: '#e6b84d', bg: '#fdf3d7', text: '#222'},
+        clinvar: {accent: '#f8971d', bg: '#fef3e2', text: '#222'},
+        clingen: {accent: '#5aafa0', bg: '#c8ece5', text: '#222'}
+      }
+      const searchPlaceholders = {
+        hgvs: 'Search by HGVS, e.g. NM_007294.3:c.211A>G',
+        dbsnp: 'Search by dbSNP rsID, e.g. rs28897672',
+        clinvar: 'Search by ClinVar Variation ID, e.g. 37610',
+        clingen: 'Search by ClinGen CAId, e.g. CA003746'
+      }
+      function updateSearchColors() {
+        const sel = document.getElementById('hero-search-type')
+        const row = document.querySelector('.hero-search-row')
+        const input = document.getElementById('hero-search-input')
+        const val = sel.value
+        const c = searchColors[val] || searchColors.hgvs
+        row.style.setProperty('--search-accent', c.accent)
+        row.style.setProperty('--search-bg', c.bg)
+        row.style.setProperty('--search-btn-text', c.text)
+        input.placeholder = searchPlaceholders[val] || searchPlaceholders.hgvs
+      }
+
       function toggleUserMenu(event) {
         event.stopPropagation()
         var dd = document.getElementById('nav-user-dropdown')
         dd.classList.toggle('open')
       }
-      document.addEventListener('click', function(e) {
+      document.addEventListener('click', function (e) {
         var wrap = document.querySelector('.nav-user-wrap')
         if (wrap && !wrap.contains(e.target)) {
           var dd = document.getElementById('nav-user-dropdown')

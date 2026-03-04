@@ -4,127 +4,917 @@
     <meta charset="UTF-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
     <title>New Score Set — MaveDB</title>
-    <link href="https://fonts.googleapis.com/css2?family=Raleway:wght@400;500;600;700&family=Exo+2:wght@700;800;900&display=swap" rel="stylesheet" />
+    <link
+      href="https://fonts.googleapis.com/css2?family=Raleway:wght@400;500;600;700&family=Exo+2:wght@700;800;900&display=swap"
+      rel="stylesheet"
+    />
     <style>
-      *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
-      body { font-family: 'Raleway', sans-serif; background: #f7f7f7; color: #333; font-size: 15px; }
-      h1, h2, h3 { font-family: 'Exo 2', sans-serif; }
-      a { color: #0074d9; text-decoration: none; }
-      a:hover { text-decoration: underline; }
+      *,
+      *::before,
+      *::after {
+        box-sizing: border-box;
+        margin: 0;
+        padding: 0;
+      }
+      body {
+        font-family: 'Raleway', sans-serif;
+        background: #f7f7f7;
+        color: #333;
+        font-size: 15px;
+      }
+      h1,
+      h2,
+      h3 {
+        font-family: 'Exo 2', sans-serif;
+      }
+      a {
+        color: #0074d9;
+        text-decoration: none;
+      }
+      a:hover {
+        text-decoration: underline;
+      }
 
       /* ── NAV ── */
-      nav { background: #fff; border-bottom: 1px solid #dee2e6; position: sticky; top: 0; z-index: 100; }
-      .nav-inner { max-width: 1280px; margin: 0 auto; display: flex; align-items: center; gap: 24px; padding: 0 24px; height: 58px; }
-      .nav-logo-img { height: 42px; display: block; flex-shrink: 0; }
-      .nav-links { display: flex; gap: 20px; margin-left: auto; list-style: none; font-size: 14px; font-weight: 500; }
-      .nav-links a { color: #444; }
-      .nav-links a:hover { color: #78B793; text-decoration: none; }
-      .nav-links a.active { color: #78B793; font-weight: 700; }
-      .nav-add-wrap { position: relative; }
-      .nav-add-dropdown { display: none; position: absolute; top: calc(100% + 12px); right: 0; width: 260px; background: #fff; border: 1px solid #e0e0e0; border-radius: 8px; box-shadow: 0 8px 24px rgba(0,0,0,0.12); z-index: 200; overflow: hidden; }
-      .nav-add-dropdown.open { display: block; }
-      .nav-add-option { display: block; padding: 12px 16px; border-bottom: 1px solid #f0f0f0; }
-      .nav-add-option:last-child { border-bottom: none; }
-      .nav-add-option:hover { background: #f5f5f5; text-decoration: none; }
-      .nav-add-option-label { font-size: 13px; font-weight: 600; color: #333; }
-      .nav-add-option-desc { font-size: 12px; color: #888; margin-top: 2px; }
-      .nav-user-wrap { position: relative; flex-shrink: 0; display: flex; align-items: center; gap: 4px; }
-      .nav-user { text-decoration: none; background: #78b793; color: #fff; border-radius: 50%; width: 32px; height: 32px; display: flex; align-items: center; justify-content: center; font-weight: 700; font-size: 13px; flex-shrink: 0; cursor: pointer; border: none; font-family: 'Raleway', sans-serif; }
-      .nav-user:hover { background: #5a9375; }
-      .nav-user-caret { color: #999; flex-shrink: 0; cursor: pointer; }
-      .nav-user-dropdown { display: none; position: absolute; right: 0; top: calc(100% + 8px); width: 180px; background: #fff; border: 1px solid #e0e0e0; border-radius: 8px; box-shadow: 0 8px 24px rgba(0,0,0,0.12); z-index: 300; overflow: hidden; }
-      .nav-user-dropdown.open { display: block; }
-      .nav-user-dropdown a { display: flex; align-items: center; gap: 10px; padding: 11px 16px; font-size: 13px; font-weight: 500; color: #333; border-bottom: 1px solid #f0f0f0; text-decoration: none; }
-      .nav-user-dropdown a:last-child { border-bottom: none; }
-      .nav-user-dropdown a:hover { background: #f5f5f5; text-decoration: none; }
-      .nav-user-dropdown .dropdown-icon { width: 16px; height: 16px; color: #888; flex-shrink: 0; }
-      .nav-bell-wrap { position: relative; flex-shrink: 0; }
-      .nav-bell { width: 32px; height: 32px; border-radius: 50%; border: none; background: transparent; cursor: pointer; display: flex; align-items: center; justify-content: center; color: #555; transition: background 0.12s; position: relative; }
-      .nav-bell:hover { background: #f0f0f0; }
-      .nav-bell-badge { position: absolute; top: 2px; right: 2px; width: 16px; height: 16px; background: #e53935; color: #fff; border-radius: 50%; font-size: 10px; font-weight: 700; display: flex; align-items: center; justify-content: center; pointer-events: none; }
-      .nav-bell-dropdown { display: none; position: absolute; right: 0; top: calc(100% + 8px); width: 340px; background: #fff; border: 1px solid #e0e0e0; border-radius: 8px; box-shadow: 0 8px 24px rgba(0,0,0,0.12); z-index: 300; overflow: hidden; }
-      .nav-bell-dropdown.open { display: block; }
-      .nav-bell-dropdown-header { padding: 12px 16px; font-size: 12px; font-weight: 700; color: #aaa; text-transform: uppercase; letter-spacing: 0.6px; border-bottom: 1px solid #f0f0f0; }
-      .nav-bell-activity-list { padding: 8px 0; }
-      .nav-bell-activity-item { padding: 9px 16px; font-size: 13px; color: #555; display: flex; flex-direction: column; gap: 2px; border-bottom: 1px solid #fafafa; }
-      .nav-bell-activity-item:last-child { border-bottom: none; }
-      .nav-bell-activity-item a { color: #0074d9; font-weight: 600; }
-      .nav-bell-activity-verb { color: #888; }
-      .nav-bell-activity-time { font-size: 11px; color: #bbb; }
+      nav {
+        background: #fff;
+        border-bottom: 1px solid #dee2e6;
+        position: sticky;
+        top: 0;
+        z-index: 100;
+      }
+      .nav-inner {
+        max-width: 1280px;
+        margin: 0 auto;
+        display: flex;
+        align-items: center;
+        gap: 24px;
+        padding: 0 24px;
+        height: 58px;
+      }
+      .nav-logo-img {
+        height: 42px;
+        display: block;
+        flex-shrink: 0;
+      }
+      .nav-links {
+        display: flex;
+        gap: 20px;
+        margin-left: auto;
+        list-style: none;
+        font-size: 14px;
+        font-weight: 500;
+      }
+      .nav-links a {
+        color: #444;
+      }
+      .nav-links a:hover {
+        color: #78b793;
+        text-decoration: none;
+      }
+      .nav-links a.active {
+        color: #78b793;
+        font-weight: 700;
+      }
+      .nav-add-wrap {
+        position: relative;
+      }
+      .nav-add-dropdown {
+        display: none;
+        position: absolute;
+        top: calc(100% + 12px);
+        right: 0;
+        width: 260px;
+        background: #fff;
+        border: 1px solid #e0e0e0;
+        border-radius: 8px;
+        box-shadow: 0 8px 24px rgba(0, 0, 0, 0.12);
+        z-index: 200;
+        overflow: hidden;
+      }
+      .nav-add-dropdown.open {
+        display: block;
+      }
+      .nav-add-option {
+        display: block;
+        padding: 12px 16px;
+        border-bottom: 1px solid #f0f0f0;
+      }
+      .nav-add-option:last-child {
+        border-bottom: none;
+      }
+      .nav-add-option:hover {
+        background: #f5f5f5;
+        text-decoration: none;
+      }
+      .nav-add-option-label {
+        font-size: 13px;
+        font-weight: 600;
+        color: #333;
+      }
+      .nav-add-option-desc {
+        font-size: 12px;
+        color: #767676;
+        margin-top: 2px;
+      }
+      .nav-user-wrap {
+        position: relative;
+        flex-shrink: 0;
+        display: flex;
+        align-items: center;
+        gap: 4px;
+      }
+      .nav-user {
+        text-decoration: none;
+        background: #78b793;
+        color: #fff;
+        border-radius: 50%;
+        width: 32px;
+        height: 32px;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        font-weight: 700;
+        font-size: 13px;
+        flex-shrink: 0;
+        cursor: pointer;
+        border: none;
+        font-family: 'Raleway', sans-serif;
+      }
+      .nav-user:hover {
+        background: #5a9375;
+      }
+      .nav-user-caret {
+        color: #767676;
+        flex-shrink: 0;
+        cursor: pointer;
+      }
+      .nav-user-dropdown {
+        display: none;
+        position: absolute;
+        right: 0;
+        top: calc(100% + 8px);
+        width: 180px;
+        background: #fff;
+        border: 1px solid #e0e0e0;
+        border-radius: 8px;
+        box-shadow: 0 8px 24px rgba(0, 0, 0, 0.12);
+        z-index: 300;
+        overflow: hidden;
+      }
+      .nav-user-dropdown.open {
+        display: block;
+      }
+      .nav-user-dropdown a {
+        display: flex;
+        align-items: center;
+        gap: 10px;
+        padding: 11px 16px;
+        font-size: 13px;
+        font-weight: 500;
+        color: #333;
+        border-bottom: 1px solid #f0f0f0;
+        text-decoration: none;
+      }
+      .nav-user-dropdown a:last-child {
+        border-bottom: none;
+      }
+      .nav-user-dropdown a:hover {
+        background: #f5f5f5;
+        text-decoration: none;
+      }
+      .nav-user-dropdown .dropdown-icon {
+        width: 16px;
+        height: 16px;
+        color: #767676;
+        flex-shrink: 0;
+      }
+      .nav-bell-wrap {
+        position: relative;
+        flex-shrink: 0;
+      }
+      .nav-bell {
+        width: 32px;
+        height: 32px;
+        border-radius: 50%;
+        border: none;
+        background: transparent;
+        cursor: pointer;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        color: #555;
+        transition: background 0.12s;
+        position: relative;
+      }
+      .nav-bell:hover {
+        background: #f0f0f0;
+      }
+      .nav-bell-badge {
+        position: absolute;
+        top: 2px;
+        right: 2px;
+        width: 16px;
+        height: 16px;
+        background: #e53935;
+        color: #fff;
+        border-radius: 50%;
+        font-size: 10px;
+        font-weight: 700;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        pointer-events: none;
+      }
+      .nav-bell-dropdown {
+        display: none;
+        position: absolute;
+        right: 0;
+        top: calc(100% + 8px);
+        width: 340px;
+        background: #fff;
+        border: 1px solid #e0e0e0;
+        border-radius: 8px;
+        box-shadow: 0 8px 24px rgba(0, 0, 0, 0.12);
+        z-index: 300;
+        overflow: hidden;
+      }
+      .nav-bell-dropdown.open {
+        display: block;
+      }
+      .nav-bell-dropdown-header {
+        padding: 12px 16px;
+        font-size: 12px;
+        font-weight: 700;
+        color: #aaa;
+        text-transform: uppercase;
+        letter-spacing: 0.6px;
+        border-bottom: 1px solid #f0f0f0;
+      }
+      .nav-bell-activity-list {
+        padding: 8px 0;
+      }
+      .nav-bell-activity-item {
+        padding: 9px 16px;
+        font-size: 13px;
+        color: #555;
+        display: flex;
+        flex-direction: column;
+        gap: 2px;
+        border-bottom: 1px solid #fafafa;
+      }
+      .nav-bell-activity-item:last-child {
+        border-bottom: none;
+      }
+      .nav-bell-activity-item a {
+        color: #0074d9;
+        font-weight: 600;
+      }
+      .nav-bell-activity-verb {
+        color: #767676;
+      }
+      .nav-bell-activity-time {
+        font-size: 11px;
+        color: #bbb;
+      }
 
       /* ── PAGE TITLE BAR ── */
-      .page-title-bar { background: #fff; border-bottom: 1px solid #dee2e6; padding: 14px 24px; }
-      .page-title-bar-inner { max-width: 1280px; margin: 0 auto; display: flex; align-items: center; justify-content: space-between; }
-      .page-title { font-family: 'Exo 2', sans-serif; font-size: 20px; font-weight: 800; color: #333; }
-      .btn-group { display: flex; gap: 8px; }
-      .btn { display: inline-flex; align-items: center; gap: 6px; padding: 8px 18px; border-radius: 5px; font-family: 'Raleway', sans-serif; font-size: 13px; font-weight: 600; cursor: pointer; border: 1.5px solid transparent; white-space: nowrap; text-decoration: none; }
-      .btn-primary { background: #F8971D; color: #222; border-color: #F8971D; }
-      .btn-primary:hover { background: #d97510; text-decoration: none; }
-      .btn-secondary { background: #fff; color: #666; border-color: #dee2e6; }
-      .btn-secondary:hover { background: #f5f5f5; text-decoration: none; }
-      .btn-warn { background: #fff; color: #c62828; border-color: #ef9a9a; }
-      .btn-warn:hover { background: #fff5f5; text-decoration: none; }
+      .page-title-bar {
+        background: #fff;
+        border-bottom: 1px solid #dee2e6;
+        padding: 14px 24px;
+      }
+      .page-title-bar-inner {
+        max-width: 1280px;
+        margin: 0 auto;
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+      }
+      .page-title {
+        font-family: 'Exo 2', sans-serif;
+        font-size: 20px;
+        font-weight: 800;
+        color: #333;
+      }
+      .btn-group {
+        display: flex;
+        gap: 8px;
+      }
+      .btn {
+        display: inline-flex;
+        align-items: center;
+        gap: 6px;
+        padding: 8px 18px;
+        border-radius: 5px;
+        font-family: 'Raleway', sans-serif;
+        font-size: 13px;
+        font-weight: 600;
+        cursor: pointer;
+        border: 1.5px solid transparent;
+        white-space: nowrap;
+        text-decoration: none;
+      }
+      .btn-primary {
+        background: #f8971d;
+        color: #222;
+        border-color: #f8971d;
+      }
+      .btn-primary:hover {
+        background: #d97510;
+        text-decoration: none;
+      }
+      .btn-secondary {
+        background: #fff;
+        color: #666;
+        border-color: #dee2e6;
+      }
+      .btn-secondary:hover {
+        background: #f5f5f5;
+        text-decoration: none;
+      }
+      .btn-warn {
+        background: #fff;
+        color: #c62828;
+        border-color: #ef9a9a;
+      }
+      .btn-warn:hover {
+        background: #fff5f5;
+        text-decoration: none;
+      }
 
       /* ── WIZARD OUTER ── */
-      .wizard-outer { max-width: 1280px; margin: 0 auto; padding: 24px; }
+      .wizard-outer {
+        max-width: 1280px;
+        margin: 0 auto;
+        padding: 24px;
+      }
 
       /* ── STEPPER ── */
-      .wizard-stepper { display: flex; align-items: center; background: #fff; border: 1px solid #dee2e6; border-radius: 8px; padding: 14px 20px; margin-bottom: 20px; gap: 0; overflow-x: auto; }
-      .step-item { display: flex; align-items: center; gap: 8px; flex-shrink: 0; }
-      .step-circle { width: 28px; height: 28px; border-radius: 50%; background: #e0e0e0; color: #aaa; display: flex; align-items: center; justify-content: center; font-size: 12px; font-weight: 700; flex-shrink: 0; }
-      .step-label { font-size: 13px; font-weight: 600; color: #aaa; white-space: nowrap; }
-      .step-item.active .step-circle { background: #78B793; color: #222; }
-      .step-item.active .step-label { color: #78B793; }
-      .step-item.disabled .step-circle { background: #f0f0f0; color: #ccc; }
-      .step-item.disabled .step-label { color: #ccc; }
-      .step-connector { flex: 1; height: 1px; background: #e0e0e0; margin: 0 12px; min-width: 16px; }
+      .wizard-stepper {
+        display: flex;
+        align-items: center;
+        background: #fff;
+        border: 1px solid #dee2e6;
+        border-radius: 8px;
+        padding: 14px 20px;
+        margin-bottom: 20px;
+        gap: 0;
+        overflow-x: auto;
+      }
+      .step-item {
+        display: flex;
+        align-items: center;
+        gap: 8px;
+        flex-shrink: 0;
+        cursor: pointer;
+      }
+      .step-circle {
+        width: 28px;
+        height: 28px;
+        border-radius: 50%;
+        background: #e0e0e0;
+        color: #aaa;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        font-size: 12px;
+        font-weight: 700;
+        flex-shrink: 0;
+        transition:
+          background 0.15s,
+          color 0.15s;
+      }
+      .step-label {
+        font-size: 13px;
+        font-weight: 600;
+        color: #aaa;
+        white-space: nowrap;
+        transition: color 0.15s;
+      }
+      .step-item.active .step-circle {
+        background: #78b793;
+        color: #222;
+      }
+      .step-item.active .step-label {
+        color: #78b793;
+      }
+      .step-item.completed .step-circle {
+        background: #78b793;
+        color: #fff;
+      }
+      .step-item.completed .step-label {
+        color: #78b793;
+      }
+      .step-item.disabled .step-circle {
+        background: #f0f0f0;
+        color: #ccc;
+      }
+      .step-item.disabled .step-label {
+        color: #ccc;
+      }
+      .step-connector {
+        flex: 1;
+        height: 1px;
+        background: #e0e0e0;
+        margin: 0 12px;
+        min-width: 16px;
+      }
 
       /* ── WIZARD FORM ── */
-      .wizard-form { background: #f7f7f7; border: 1px solid #dee2e6; border-radius: 8px; overflow: hidden; }
-      .wizard-row { display: flex; border-bottom: 1px solid #ebebeb; }
-      .wizard-row:last-child { border-bottom: none; }
-      .wizard-help { width: 420px; flex-shrink: 0; padding: 20px 24px 20px 20px; font-size: 13px; color: #555; line-height: 1.5; }
-      .wizard-help strong { font-weight: 600; color: #444; }
-      .help-small { font-size: 12px; color: #888; margin-top: 6px; line-height: 1.4; }
-      .help-small ul { margin-left: 16px; margin-top: 4px; }
-      .help-small li { margin-bottom: 2px; }
-      .wizard-content { flex: 1; background: #fff; border-left: 1px solid #ebebeb; padding: 18px 20px; min-width: 0; display: flex; align-items: center; gap: 14px; }
-      .wizard-controls { background: #f7f7f7; display: flex; justify-content: flex-end; padding: 14px 20px; border-top: 1px solid #ebebeb; }
+      .wizard-form {
+        background: #f7f7f7;
+        border: 1px solid #dee2e6;
+        border-radius: 8px;
+        overflow: hidden;
+      }
+      .wizard-row {
+        display: flex;
+        border-bottom: 1px solid #e0e0e0;
+      }
+      .wizard-row:last-child {
+        border-bottom: none;
+      }
+      .wizard-help {
+        width: 420px;
+        flex-shrink: 0;
+        padding: 20px 24px 20px 20px;
+        font-size: 13px;
+        color: #555;
+        line-height: 1.5;
+      }
+      .wizard-help strong {
+        font-weight: 600;
+        color: #444;
+      }
+      .help-small {
+        font-size: 12px;
+        color: #767676;
+        margin-top: 6px;
+        line-height: 1.4;
+      }
+      .help-small ul {
+        margin-left: 16px;
+        margin-top: 4px;
+      }
+      .help-small li {
+        margin-bottom: 2px;
+      }
+      .wizard-content {
+        flex: 1;
+        background: #fff;
+        border-left: 1px solid #e0e0e0;
+        padding: 18px 20px;
+        min-width: 0;
+      }
+      .wizard-controls {
+        background: #f7f7f7;
+        display: flex;
+        justify-content: flex-end;
+        gap: 16px;
+        padding: 18px 20px;
+        border-top: 1px solid #e0e0e0;
+      }
+
+      /* ── FLOAT LABEL INPUTS ── */
+      .float-field {
+        position: relative;
+        margin-bottom: 16px;
+      }
+      .float-field:last-child {
+        margin-bottom: 0;
+      }
+      .fl-label {
+        position: absolute;
+        top: -8px;
+        left: 10px;
+        background: #fff;
+        padding: 0 4px;
+        font-size: 11px;
+        font-weight: 700;
+        color: #767676;
+        pointer-events: none;
+        letter-spacing: 0.3px;
+      }
+      .fl-input,
+      .fl-textarea {
+        width: 100%;
+        border: 1.5px solid #dee2e6;
+        border-radius: 6px;
+        padding: 12px;
+        font-family: 'Raleway', sans-serif;
+        font-size: 14px;
+        color: #333;
+        outline: none;
+        background: #fff;
+        box-sizing: border-box;
+        transition:
+          border-color 0.15s,
+          box-shadow 0.15s;
+      }
+      .fl-textarea {
+        resize: vertical;
+      }
+      .fl-input:focus,
+      .fl-textarea:focus {
+        border-color: #78b793;
+        box-shadow: 0 0 0 3px rgba(47, 128, 98, 0.08);
+      }
+      .fl-input:focus + .fl-label,
+      .fl-textarea:focus + .fl-label {
+        color: #78b793;
+      }
+      .fl-select {
+        width: 100%;
+        border: 1.5px solid #dee2e6;
+        border-radius: 6px;
+        padding: 12px;
+        font-family: 'Raleway', sans-serif;
+        font-size: 14px;
+        color: #333;
+        outline: none;
+        background: #fff
+          url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='12' height='12' viewBox='0 0 24 24' fill='none' stroke='%23999' stroke-width='2.5' stroke-linecap='round' stroke-linejoin='round'%3E%3Cpolyline points='6 9 12 15 18 9'/%3E%3C/svg%3E")
+          no-repeat right 12px center;
+        appearance: none;
+        cursor: pointer;
+        transition:
+          border-color 0.15s,
+          box-shadow 0.15s;
+        padding-right: 32px;
+      }
+      .fl-select:focus {
+        border-color: #78b793;
+        box-shadow: 0 0 0 3px rgba(47, 128, 98, 0.08);
+      }
+      .fl-select:focus + .fl-label {
+        color: #78b793;
+      }
+
+      /* ── TAG INPUTS ── */
+      .tag-field {
+        position: relative;
+        margin-bottom: 16px;
+      }
+      .tag-field:last-child {
+        margin-bottom: 0;
+      }
+      .tag-fl-label {
+        position: absolute;
+        top: -8px;
+        left: 10px;
+        background: #fff;
+        padding: 0 4px;
+        font-size: 11px;
+        font-weight: 700;
+        color: #767676;
+        pointer-events: none;
+        letter-spacing: 0.3px;
+        z-index: 1;
+      }
+      .tag-input {
+        display: flex;
+        flex-wrap: wrap;
+        align-items: center;
+        gap: 6px;
+        border: 1.5px solid #dee2e6;
+        border-radius: 6px;
+        padding: 8px 12px;
+        min-height: 44px;
+        background: #fff;
+        transition:
+          border-color 0.15s,
+          box-shadow 0.15s;
+      }
+      .tag-input:focus-within {
+        border-color: #78b793;
+        box-shadow: 0 0 0 3px rgba(47, 128, 98, 0.08);
+      }
+      .tag-chip {
+        display: inline-flex;
+        align-items: center;
+        gap: 4px;
+        background: #c8e4c6;
+        color: #2f7050;
+        border: 1px solid #a1d8c8;
+        border-radius: 4px;
+        padding: 2px 8px;
+        font-size: 12px;
+        font-weight: 600;
+      }
+      .tag-chip-x {
+        color: #767676;
+        font-size: 14px;
+        cursor: pointer;
+        line-height: 1;
+        margin-left: 2px;
+      }
+      .tag-chip-x:hover {
+        color: #e53935;
+      }
+      .tag-input input {
+        border: none;
+        outline: none;
+        flex: 1;
+        min-width: 140px;
+        font-family: 'Raleway', sans-serif;
+        font-size: 13px;
+        color: #333;
+        background: transparent;
+        padding: 2px 0;
+      }
+      .tag-input input::placeholder {
+        color: #bbb;
+      }
+
+      /* ── TABS ── */
+      .tab-group {
+        margin-bottom: 16px;
+      }
+      .tab-group:last-child {
+        margin-bottom: 0;
+      }
+      .tab-list {
+        display: flex;
+        border-bottom: 1px solid #dee2e6;
+        margin-bottom: 14px;
+      }
+      .tab-btn {
+        padding: 8px 16px;
+        font-family: 'Raleway', sans-serif;
+        font-size: 13px;
+        font-weight: 600;
+        color: #767676;
+        background: none;
+        border: none;
+        cursor: pointer;
+        margin-bottom: -1px;
+        transition: color 0.12s;
+        position: relative;
+      }
+      .tab-btn.active {
+        color: #78b793;
+      }
+      .tab-btn.active::after {
+        content: '';
+        position: absolute;
+        bottom: 0px;
+        left: 0;
+        right: 0;
+        height: 2px;
+        background: linear-gradient(
+          90deg,
+          #78b793 0% 10.2%,
+          transparent 10.2% 11.2%,
+          #a1d8c8 11.2% 21.4%,
+          transparent 21.4% 22.4%,
+          #78b793 22.4% 32.7%,
+          transparent 32.7% 33.7%,
+          #c8e4c6 33.7% 43.9%,
+          transparent 43.9% 44.9%,
+          #fbda68 44.9% 55.1%,
+          transparent 55.1% 56.1%,
+          #f8971d 56.1% 66.3%,
+          transparent 66.3% 67.3%,
+          #fbda68 67.3% 77.6%,
+          transparent 77.6% 78.6%,
+          #a1d8c8 78.6% 88.8%,
+          transparent 88.8% 89.8%,
+          #78b793 89.8% 100%
+        );
+      }
+      .tab-btn:hover {
+        color: #78b793;
+      }
+      .tab-panel {
+        display: none;
+      }
+      .tab-panel.active {
+        display: block;
+      }
+      .tab-preview-empty {
+        font-size: 13px;
+        color: #767676;
+        padding: 20px;
+        text-align: center;
+        background: #fafafa;
+        border-radius: 6px;
+        border: 1px dashed #dee2e6;
+      }
 
       /* ── TOGGLE SWITCH ── */
-      .toggle-row { display: flex; align-items: center; gap: 12px; }
-      .toggle-switch { position: relative; width: 40px; height: 22px; flex-shrink: 0; }
-      .toggle-switch input { display: none; }
-      .toggle-track { position: absolute; inset: 0; background: #ddd; border-radius: 11px; transition: background 0.15s; cursor: pointer; }
-      .toggle-thumb { position: absolute; top: 3px; left: 3px; width: 16px; height: 16px; background: #fff; border-radius: 50%; transition: transform 0.15s; box-shadow: 0 1px 3px rgba(0,0,0,0.2); }
-      input:checked ~ .toggle-track { background: #78B793; }
-      input:checked ~ .toggle-track .toggle-thumb { transform: translateX(18px); }
-      .toggle-value { font-size: 13px; color: #555; }
-      .toggle-value.active { color: #78B793; font-weight: 600; }
+      .toggle-row {
+        display: flex;
+        align-items: center;
+        gap: 12px;
+      }
+      .toggle-switch {
+        position: relative;
+        width: 40px;
+        height: 22px;
+        flex-shrink: 0;
+      }
+      .toggle-switch input {
+        opacity: 0;
+        width: 0;
+        height: 0;
+      }
+      .toggle-track {
+        position: absolute;
+        top: 0;
+        left: 0;
+        right: 0;
+        bottom: 0;
+        background: #ddd;
+        border-radius: 11px;
+        transition: background 0.2s;
+        cursor: pointer;
+      }
+      .toggle-switch input:checked + .toggle-track {
+        background: #78b793;
+      }
+      .toggle-thumb {
+        position: absolute;
+        top: 3px;
+        left: 3px;
+        width: 16px;
+        height: 16px;
+        background: #fff;
+        border-radius: 50%;
+        transition: transform 0.2s;
+        pointer-events: none;
+      }
+      .toggle-switch input:checked ~ .toggle-thumb {
+        transform: translateX(18px);
+      }
+      .toggle-value {
+        font-size: 13px;
+        color: #555;
+      }
+      .toggle-value.active {
+        color: #78b793;
+        font-weight: 600;
+      }
 
-      /* ── SELECT ── */
-      .float-field { position: relative; margin-bottom: 0; width: 100%; }
-      .fl-label { position: absolute; top: -8px; left: 10px; background: #fff; padding: 0 4px; font-size: 11px; font-weight: 700; color: #78B793; pointer-events: none; letter-spacing: 0.3px; }
-      .fl-select { width: 100%; border: 1.5px solid #A1D8C8; border-radius: 6px; padding: 12px; font-family: 'Raleway', sans-serif; font-size: 14px; color: #333; outline: none; background: #fff; box-sizing: border-box; transition: border-color 0.15s; appearance: none; cursor: pointer; background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='12' height='12' viewBox='0 0 24 24' fill='none' stroke='%23999' stroke-width='2.5' stroke-linecap='round' stroke-linejoin='round'%3E%3Cpolyline points='6 9 12 15 18 9'/%3E%3C/svg%3E"); background-repeat: no-repeat; background-position: right 12px center; padding-right: 32px; }
-      .fl-select:focus { border-color: #78B793; box-shadow: 0 0 0 3px rgba(47,128,98,0.08); }
-      .fl-input { width: 100%; border: 1.5px solid #A1D8C8; border-radius: 6px; padding: 12px; font-family: 'Raleway', sans-serif; font-size: 14px; color: #333; outline: none; background: #fff; box-sizing: border-box; transition: border-color 0.15s; }
-      .fl-input:focus { border-color: #78B793; box-shadow: 0 0 0 3px rgba(47,128,98,0.08); }
+      /* ── SELECT BUTTON GROUP ── */
+      .select-btn-group {
+        display: inline-flex;
+        border: 1.5px solid #dee2e6;
+        border-radius: 6px;
+        overflow: hidden;
+        margin-bottom: 16px;
+      }
+      .select-btn-group:last-child {
+        margin-bottom: 0;
+      }
+      .select-btn-option {
+        padding: 8px 16px;
+        font-family: 'Raleway', sans-serif;
+        font-size: 13px;
+        font-weight: 600;
+        color: #767676;
+        background: #fff;
+        border: none;
+        border-right: 1px solid #dee2e6;
+        cursor: pointer;
+        transition:
+          background 0.12s,
+          color 0.12s;
+      }
+      .select-btn-option:last-child {
+        border-right: none;
+      }
+      .select-btn-option.active {
+        background: #78b793;
+        color: #222;
+      }
+      .select-btn-option:hover:not(.active) {
+        background: #f5f5f5;
+      }
+
+      /* ── FIELD COLUMNS ── */
+      .field-columns {
+        display: flex;
+        gap: 12px;
+      }
+      .field-columns > * {
+        flex: 1;
+      }
+
+      /* ── FILE DROP ── */
+      .file-drop {
+        border: 2px dashed #dee2e6;
+        border-radius: 6px;
+        padding: 28px 20px;
+        text-align: center;
+        color: #aaa;
+        font-size: 13px;
+        background: #fafafa;
+        cursor: pointer;
+        transition:
+          border-color 0.15s,
+          background 0.15s;
+        margin-bottom: 16px;
+      }
+      .file-drop:last-child {
+        margin-bottom: 0;
+      }
+      .file-drop:hover {
+        border-color: #a1d8c8;
+        background: #f0faf0;
+        color: #78b793;
+      }
+      .file-drop-icon {
+        margin-bottom: 6px;
+      }
+      .file-drop-label {
+        margin-top: 8px;
+        font-weight: 600;
+        color: #767676;
+      }
+      .file-drop-hint {
+        margin-top: 4px;
+        font-size: 12px;
+      }
+
+      /* ── INFO / ALERT ── */
+      .info-msg {
+        background: #e8f4fd;
+        border: 1px solid #90caf9;
+        border-radius: 6px;
+        padding: 10px 14px;
+        font-size: 13px;
+        color: #1565c0;
+        line-height: 1.5;
+        margin-bottom: 16px;
+      }
+      .info-msg:last-child {
+        margin-bottom: 0;
+      }
+      .info-msg strong {
+        font-weight: 700;
+      }
+
+      /* ── ORCID ICON ── */
+      .orcid-icon {
+        display: inline-block;
+        width: 14px;
+        height: 14px;
+        vertical-align: -2px;
+        margin-right: 2px;
+      }
 
       /* ── FOOTER ── */
-      footer { border-top: 1px solid #e0e0e0; background: #fff; padding: 20px 24px; margin-top: 40px; }
-      .footer-inner { max-width: 1280px; margin: 0 auto; display: flex; align-items: center; justify-content: space-between; font-size: 13px; color: #888; }
-      .footer-inner a { color: #0074d9; }
-      .footer-links { display: flex; gap: 20px; }
+      footer {
+        border-top: 1px solid #e0e0e0;
+        background: #fff;
+        padding: 20px 24px;
+        margin-top: 40px;
+      }
+      .footer-inner {
+        max-width: 1280px;
+        margin: 0 auto;
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+        font-size: 13px;
+        color: #767676;
+      }
+      .footer-inner a {
+        color: #0074d9;
+      }
+      .footer-links {
+        display: flex;
+        gap: 20px;
+      }
 
       /* ── PROTOTYPE BANNER ── */
-      .proto-banner { background: #FBDA68; color: #333; text-align: center; padding: 8px 24px; font-size: 13px; font-family: 'Raleway', sans-serif; font-weight: 500; position: sticky; top: 0; z-index: 9999; letter-spacing: 0.1px; }
-      .proto-banner a { color: #555; text-decoration: underline; }
-      .proto-banner strong { font-weight: 700; }
-        </style>
+      .proto-banner {
+        background: #fbda68;
+        color: #333;
+        text-align: center;
+        padding: 8px 24px;
+        font-size: 13px;
+        font-family: 'Raleway', sans-serif;
+        font-weight: 500;
+        position: sticky;
+        top: 0;
+        z-index: 9999;
+        letter-spacing: 0.1px;
+      }
+      .proto-banner a {
+        color: #555;
+        text-decoration: underline;
+      }
+      .proto-banner strong {
+        font-weight: 700;
+      }
+    </style>
   </head>
   <body>
     <div class="proto-banner">
-      <strong>Prototype</strong> — This is a design prototype and is not intended for use. Data shown is fictional. The real MaveDB is at <a href="https://mavedb.org" target="_blank">mavedb.org</a>.
+      <strong>Prototype</strong> — This is a design prototype and is not intended for use. Data shown is fictional. The
+      real MaveDB is at <a href="https://mavedb.org" target="_blank">mavedb.org</a>.
     </div>
     <nav>
       <div class="nav-inner">
@@ -134,7 +924,20 @@
           <li><a href="./mavemd.html">MaveMD</a></li>
           <li><a href="./search.html">Search</a></li>
           <li class="nav-add-wrap">
-            <a href="#" onclick="toggleAddMenu(event)" style="display:flex;align-items:center;gap:4px;">Add Dataset <svg width="10" height="10" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><polyline points="6 9 12 15 18 9"/></svg></a>
+            <a href="#" onclick="toggleAddMenu(event)" style="display: flex; align-items: center; gap: 4px"
+              >Add Dataset
+              <svg
+                width="10"
+                height="10"
+                viewBox="0 0 24 24"
+                fill="none"
+                stroke="currentColor"
+                stroke-width="2.5"
+                stroke-linecap="round"
+                stroke-linejoin="round"
+              >
+                <polyline points="6 9 12 15 18 9" /></svg
+            ></a>
             <div id="nav-add-dropdown" class="nav-add-dropdown">
               <a href="./add-experiment.html" class="nav-add-option">
                 <div class="nav-add-option-label">New Experiment</div>
@@ -151,18 +954,36 @@
         </ul>
         <div class="nav-bell-wrap">
           <button class="nav-bell" onclick="toggleBell(event)" title="Recent activity">
-            <svg width="17" height="17" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M18 8A6 6 0 0 0 6 8c0 7-3 9-3 9h18s-3-2-3-9"/><path d="M13.73 21a2 2 0 0 1-3.46 0"/></svg>
+            <svg
+              width="17"
+              height="17"
+              viewBox="0 0 24 24"
+              fill="none"
+              stroke="currentColor"
+              stroke-width="2"
+              stroke-linecap="round"
+              stroke-linejoin="round"
+            >
+              <path d="M18 8A6 6 0 0 0 6 8c0 7-3 9-3 9h18s-3-2-3-9" />
+              <path d="M13.73 21a2 2 0 0 1-3.46 0" />
+            </svg>
             <span class="nav-bell-badge">5</span>
           </button>
           <div id="nav-bell-dropdown" class="nav-bell-dropdown">
             <div class="nav-bell-dropdown-header">Recent Activity</div>
             <div class="nav-bell-activity-list">
               <div class="nav-bell-activity-item">
-                <span><a href="#">CHEK2 Kinase Activity Assay – Draft</a> <span class="nav-bell-activity-verb">edited by you</span></span>
+                <span
+                  ><a href="./score-set-detail.html">CHEK2 Kinase Activity Assay – Draft</a>
+                  <span class="nav-bell-activity-verb">edited by you</span></span
+                >
                 <span class="nav-bell-activity-time">2 days ago</span>
               </div>
               <div class="nav-bell-activity-item">
-                <span><a href="#">BRCA1 Combined Functional Meta-analysis</a> <span class="nav-bell-activity-verb">published</span></span>
+                <span
+                  ><a href="./score-set-detail.html">BRCA1 Combined Functional Meta-analysis</a>
+                  <span class="nav-bell-activity-verb">published</span></span
+                >
                 <span class="nav-bell-activity-time">Nov 5, 2024</span>
               </div>
             </div>
@@ -170,18 +991,68 @@
         </div>
         <div class="nav-user-wrap" onclick="toggleUserMenu(event)">
           <button class="nav-user">B</button>
-          <svg class="nav-user-caret" width="10" height="10" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><polyline points="6 9 12 15 18 9"/></svg>
+          <svg
+            class="nav-user-caret"
+            width="10"
+            height="10"
+            viewBox="0 0 24 24"
+            fill="none"
+            stroke="currentColor"
+            stroke-width="2.5"
+            stroke-linecap="round"
+            stroke-linejoin="round"
+          >
+            <polyline points="6 9 12 15 18 9" />
+          </svg>
           <div id="nav-user-dropdown" class="nav-user-dropdown">
             <a href="./settings.html">
-              <svg class="dropdown-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="3"/><path d="M19.4 15a1.65 1.65 0 0 0 .33 1.82l.06.06a2 2 0 1 1-2.83 2.83l-.06-.06a1.65 1.65 0 0 0-1.82-.33 1.65 1.65 0 0 0-1 1.51V21a2 2 0 0 1-4 0v-.09A1.65 1.65 0 0 0 9 19.4a1.65 1.65 0 0 0-1.82.33l-.06.06a2 2 0 1 1-2.83-2.83l.06-.06A1.65 1.65 0 0 0 4.68 15a1.65 1.65 0 0 0-1.51-1H3a2 2 0 0 1 0-4h.09A1.65 1.65 0 0 0 4.6 9a1.65 1.65 0 0 0-.33-1.82l-.06-.06a2 2 0 1 1 2.83-2.83l.06.06A1.65 1.65 0 0 0 9 4.68a1.65 1.65 0 0 0 1-1.51V3a2 2 0 0 1 4 0v.09a1.65 1.65 0 0 0 1 1.51 1.65 1.65 0 0 0 1.82-.33l.06-.06a2 2 0 1 1 2.83 2.83l-.06.06A1.65 1.65 0 0 0 19.4 9a1.65 1.65 0 0 0 1.51 1H21a2 2 0 0 1 0 4h-.09a1.65 1.65 0 0 0-1.51 1z"/></svg>
+              <svg
+                class="dropdown-icon"
+                viewBox="0 0 24 24"
+                fill="none"
+                stroke="currentColor"
+                stroke-width="2"
+                stroke-linecap="round"
+                stroke-linejoin="round"
+              >
+                <circle cx="12" cy="12" r="3" />
+                <path
+                  d="M19.4 15a1.65 1.65 0 0 0 .33 1.82l.06.06a2 2 0 1 1-2.83 2.83l-.06-.06a1.65 1.65 0 0 0-1.82-.33 1.65 1.65 0 0 0-1 1.51V21a2 2 0 0 1-4 0v-.09A1.65 1.65 0 0 0 9 19.4a1.65 1.65 0 0 0-1.82.33l-.06.06a2 2 0 1 1-2.83-2.83l.06-.06A1.65 1.65 0 0 0 4.68 15a1.65 1.65 0 0 0-1.51-1H3a2 2 0 0 1 0-4h.09A1.65 1.65 0 0 0 4.6 9a1.65 1.65 0 0 0-.33-1.82l-.06-.06a2 2 0 1 1 2.83-2.83l.06.06A1.65 1.65 0 0 0 9 4.68a1.65 1.65 0 0 0 1-1.51V3a2 2 0 0 1 4 0v.09a1.65 1.65 0 0 0 1 1.51 1.65 1.65 0 0 0 1.82-.33l.06-.06a2 2 0 1 1 2.83 2.83l-.06.06A1.65 1.65 0 0 0 19.4 9a1.65 1.65 0 0 0 1.51 1H21a2 2 0 0 1 0 4h-.09a1.65 1.65 0 0 0-1.51 1z"
+                />
+              </svg>
               Settings
             </a>
             <a href="./dashboard.html">
-              <svg class="dropdown-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="3" width="7" height="7"/><rect x="14" y="3" width="7" height="7"/><rect x="14" y="14" width="7" height="7"/><rect x="3" y="14" width="7" height="7"/></svg>
+              <svg
+                class="dropdown-icon"
+                viewBox="0 0 24 24"
+                fill="none"
+                stroke="currentColor"
+                stroke-width="2"
+                stroke-linecap="round"
+                stroke-linejoin="round"
+              >
+                <rect x="3" y="3" width="7" height="7" />
+                <rect x="14" y="3" width="7" height="7" />
+                <rect x="14" y="14" width="7" height="7" />
+                <rect x="3" y="14" width="7" height="7" />
+              </svg>
               Dashboard
             </a>
             <a href="#">
-              <svg class="dropdown-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M9 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h4"/><polyline points="16 17 21 12 16 7"/><line x1="21" y1="12" x2="9" y2="12"/></svg>
+              <svg
+                class="dropdown-icon"
+                viewBox="0 0 24 24"
+                fill="none"
+                stroke="currentColor"
+                stroke-width="2"
+                stroke-linecap="round"
+                stroke-linejoin="round"
+              >
+                <path d="M9 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h4" />
+                <polyline points="16 17 21 12 16 7" />
+                <line x1="21" y1="12" x2="9" y2="12" />
+              </svg>
               Sign out
             </a>
           </div>
@@ -201,35 +1072,34 @@
     </div>
 
     <div class="wizard-outer">
-
       <!-- STEPPER -->
       <div class="wizard-stepper">
-        <div class="step-item active">
+        <div class="step-item active" onclick="goToStep(1)">
           <div class="step-circle">1</div>
           <div class="step-label">Parent experiment and context</div>
         </div>
         <div class="step-connector"></div>
-        <div class="step-item disabled">
+        <div class="step-item disabled" onclick="goToStep(2)">
           <div class="step-circle">2</div>
           <div class="step-label">Score set information</div>
         </div>
         <div class="step-connector"></div>
-        <div class="step-item disabled">
+        <div class="step-item disabled" onclick="goToStep(3)">
           <div class="step-circle">3</div>
           <div class="step-label">Targets</div>
         </div>
         <div class="step-connector"></div>
-        <div class="step-item disabled">
+        <div class="step-item disabled" onclick="goToStep(4)">
           <div class="step-circle">4</div>
           <div class="step-label">Target 1</div>
         </div>
         <div class="step-connector"></div>
-        <div class="step-item disabled">
+        <div class="step-item disabled" onclick="goToStep(5)">
           <div class="step-circle">5</div>
           <div class="step-label">Score Calibration</div>
         </div>
         <div class="step-connector"></div>
-        <div class="step-item disabled">
+        <div class="step-item disabled" onclick="goToStep(6)">
           <div class="step-circle">6</div>
           <div class="step-label">Variant Scores</div>
         </div>
@@ -237,123 +1107,984 @@
 
       <!-- FORM -->
       <div class="wizard-form">
+        <!-- ═══ STEP 1: Parent experiment and context ═══ -->
+        <div id="step-1-content">
+          <!-- Supersedes toggle -->
+          <div class="wizard-row">
+            <div class="wizard-help">
+              <label
+                >Does this score set correct errors in and replace a score set previously published on MaveDB that you
+                created?</label
+              >
+            </div>
+            <div class="wizard-content" style="display: flex; align-items: center; gap: 14px">
+              <label class="toggle-row">
+                <span class="toggle-switch">
+                  <input type="checkbox" id="supersedes-toggle" onchange="syncSupersedesToggle(this)" />
+                  <span class="toggle-track"></span>
+                  <span class="toggle-thumb"></span>
+                </span>
+                <span class="toggle-value" id="supersedes-label">No, this does not supersede another score set</span>
+              </label>
+            </div>
+          </div>
 
-        <!-- Supersedes toggle -->
-        <div class="wizard-row">
-          <div class="wizard-help">
-            <label>Does this score set correct errors in and replace a score set previously published on MaveDB that you created?</label>
+          <!-- Superseded score set (shown when supersedes = true) -->
+          <div class="wizard-row" id="supersedes-row" style="display: none">
+            <div class="wizard-help">
+              <label>What score set does this supersede?</label>
+              <div class="help-small">Type the superseded score set's MaveDB URN here and select it from the list.</div>
+            </div>
+            <div class="wizard-content">
+              <div class="float-field">
+                <input type="text" class="fl-input" placeholder="Search by URN or title…" />
+                <span class="fl-label">Supersedes</span>
+              </div>
+            </div>
           </div>
-          <div class="wizard-content">
-            <label class="toggle-row">
-              <span class="toggle-switch">
-                <input type="checkbox" id="supersedes-toggle" onchange="syncSupersedesToggle(this)" />
-                <span class="toggle-track"><span class="toggle-thumb"></span></span>
-              </span>
-              <span class="toggle-value" id="supersedes-label">No, this does not supersede another score set</span>
-            </label>
-          </div>
-        </div>
 
-        <!-- Superseded score set (shown when supersedes = true) -->
-        <div class="wizard-row" id="supersedes-row" style="display:none;">
-          <div class="wizard-help">
-            <label>What score set does this supersede?</label>
-            <div class="help-small">Type the superseded score set's MaveDB URN here and select it from the list.</div>
+          <!-- Meta-analysis toggle -->
+          <div class="wizard-row">
+            <div class="wizard-help">
+              <label>Is this score set a meta-analysis?</label>
+              <div class="help-small">
+                Meta-analyses are score sets derived from data in other score sets. For example:
+                <ul>
+                  <li>a score set that combines data from two other score sets to produce new scores, or</li>
+                  <li>a score set that adds imputed missing values to scores in another score set.</li>
+                </ul>
+              </div>
+            </div>
+            <div class="wizard-content" style="display: flex; align-items: center; gap: 14px">
+              <label class="toggle-row">
+                <span class="toggle-switch">
+                  <input type="checkbox" id="meta-toggle" onchange="syncMetaToggle(this)" />
+                  <span class="toggle-track"></span>
+                  <span class="toggle-thumb"></span>
+                </span>
+                <span class="toggle-value" id="meta-label">No, this is not a meta-analysis</span>
+              </label>
+            </div>
           </div>
-          <div class="wizard-content" style="display:block;">
-            <div class="float-field">
-              <span class="fl-label">Supersedes</span>
-              <input type="text" class="fl-input" placeholder="Search by URN or title…" />
+
+          <!-- Meta-analysis score sets (shown when meta-analysis = true) -->
+          <div class="wizard-row" id="meta-row" style="display: none">
+            <div class="wizard-help">
+              <label>What score set(s) does this score set analyze?</label>
+              <div class="help-small">
+                Type a score set's MaveDB URN and select it from the list. You may choose more than one.
+              </div>
+            </div>
+            <div class="wizard-content">
+              <div class="float-field">
+                <input type="text" class="fl-input" placeholder="Search by URN or title…" />
+                <span class="fl-label">Meta-analyzes</span>
+              </div>
+            </div>
+          </div>
+
+          <!-- Experiment select -->
+          <div class="wizard-row" id="experiment-row">
+            <div class="wizard-help">
+              <label>To which experiment does this score set belong?</label>
+              <div class="help-small">
+                For more on the relationship between score sets and experiments, see the
+                <a href="./help.html">documentation</a>.
+              </div>
+            </div>
+            <div class="wizard-content">
+              <div class="float-field">
+                <select class="fl-select">
+                  <option value="" disabled selected></option>
+                  <option>BRCA1 Combined Functional Meta-analysis (urn:mavedb:00000097-0)</option>
+                  <option>BRCA1 Saturation Genome Editing Panel (urn:mavedb:00000098-0)</option>
+                  <option>BRCA1 RING Domain HDR Assay (urn:mavedb:00000041-0)</option>
+                  <option>CHEK2 Kinase Activity Assay (urn:mavedb:00000112-0)</option>
+                  <option>TP53 Saturation Genome Editing Panel (urn:mavedb:00000089-0)</option>
+                </select>
+                <span class="fl-label">Experiment</span>
+              </div>
             </div>
           </div>
         </div>
+        <!-- /step-1-content -->
 
-        <!-- Meta-analysis toggle -->
-        <div class="wizard-row">
-          <div class="wizard-help">
-            <label>Is this score set a meta-analysis?</label>
-            <div class="help-small">
-              Meta-analyses are score sets derived from data in other score sets. For example:
-              <ul>
-                <li>a score set that combines data from two other score sets to produce new scores, or</li>
-                <li>a score set that adds imputed missing values to scores in another score set.</li>
-              </ul>
+        <!-- ═══ STEP 2: Score set information ═══ -->
+        <div id="step-2-content" style="display: none">
+          <!-- Title -->
+          <div class="wizard-row">
+            <div class="wizard-help">
+              <label>A short title for the score set.</label>
+              <div class="help-small">This appears at the top of the score set page and in search results.</div>
+            </div>
+            <div class="wizard-content">
+              <div class="float-field">
+                <input type="text" class="fl-input" placeholder="" />
+                <span class="fl-label">Title</span>
+              </div>
             </div>
           </div>
-          <div class="wizard-content">
-            <label class="toggle-row">
-              <span class="toggle-switch">
-                <input type="checkbox" id="meta-toggle" onchange="syncMetaToggle(this)" />
-                <span class="toggle-track"><span class="toggle-thumb"></span></span>
-              </span>
-              <span class="toggle-value" id="meta-label">No, this is not a meta-analysis</span>
-            </label>
+
+          <!-- Short description -->
+          <div class="wizard-row">
+            <div class="wizard-help">
+              <label>A brief summary of the score set in one or two sentences.</label>
+              <div class="help-small">Displayed in search results and at the top of the score set page.</div>
+            </div>
+            <div class="wizard-content">
+              <div class="float-field">
+                <textarea class="fl-textarea" rows="4" placeholder=""></textarea>
+                <span class="fl-label">Short description</span>
+              </div>
+            </div>
+          </div>
+
+          <!-- Abstract -->
+          <div class="wizard-row">
+            <div class="wizard-help">
+              <label>A detailed description of the score set, including motivation, approach, and key results.</label>
+              <div class="help-small">
+                May be formatted using <a href="#">Markdown</a>. This is the main descriptive text for the score set.
+              </div>
+            </div>
+            <div class="wizard-content">
+              <div class="tab-group">
+                <div class="tab-list">
+                  <button class="tab-btn active" onclick="switchTab(this,'s2-abstract-edit','s2-abstract-preview')">
+                    Edit
+                  </button>
+                  <button class="tab-btn" onclick="switchTab(this,'s2-abstract-preview','s2-abstract-edit')">
+                    Preview
+                  </button>
+                </div>
+                <div id="s2-abstract-edit" class="tab-panel active">
+                  <div class="float-field">
+                    <textarea class="fl-textarea" rows="8" placeholder=""></textarea>
+                    <span class="fl-label">Abstract</span>
+                  </div>
+                </div>
+                <div id="s2-abstract-preview" class="tab-panel">
+                  <div class="tab-preview-empty">No content to preview.</div>
+                </div>
+              </div>
+            </div>
+          </div>
+
+          <!-- Methods -->
+          <div class="wizard-row">
+            <div class="wizard-help">
+              <label>How were the scores computed? Describe the analysis pipeline from raw data to final scores.</label>
+              <div class="help-small">
+                May be formatted using <a href="#">Markdown</a>. Include details about scoring methodology,
+                normalization, and quality filters.
+              </div>
+            </div>
+            <div class="wizard-content">
+              <div class="tab-group">
+                <div class="tab-list">
+                  <button class="tab-btn active" onclick="switchTab(this,'s2-methods-edit','s2-methods-preview')">
+                    Edit
+                  </button>
+                  <button class="tab-btn" onclick="switchTab(this,'s2-methods-preview','s2-methods-edit')">
+                    Preview
+                  </button>
+                </div>
+                <div id="s2-methods-edit" class="tab-panel active">
+                  <div class="float-field">
+                    <textarea class="fl-textarea" rows="8" placeholder=""></textarea>
+                    <span class="fl-label">Methods</span>
+                  </div>
+                </div>
+                <div id="s2-methods-preview" class="tab-panel">
+                  <div class="tab-preview-empty">No content to preview.</div>
+                </div>
+              </div>
+            </div>
+          </div>
+
+          <!-- Contributors -->
+          <div class="wizard-row">
+            <div class="wizard-help">
+              <label
+                >Contributors who may edit this score set. Enter each contributor's <a href="#">ORCID</a> ID and confirm
+                their name.</label
+              >
+              <div class="help-small">Example: 0000-0001-2345-6789</div>
+            </div>
+            <div class="wizard-content">
+              <div class="tag-field">
+                <span class="tag-fl-label">Contributors</span>
+                <div class="tag-input">
+                  <span class="tag-chip">Jane Smith (0000-0001-2345-6789) <span class="tag-chip-x">&times;</span></span>
+                  <input type="text" placeholder="Add ORCID ID and press Enter…" />
+                </div>
+              </div>
+            </div>
+          </div>
+
+          <!-- License -->
+          <div class="wizard-row">
+            <div class="wizard-help">
+              <label>Choose a license for your data. This determines how others may reuse it.</label>
+              <div class="help-small">We recommend CC0 (public domain dedication) for maximum reusability.</div>
+            </div>
+            <div class="wizard-content">
+              <div class="float-field">
+                <select class="fl-select">
+                  <option value="cc0" selected>CC0 1.0 Universal (Public Domain Dedication)</option>
+                  <option value="cc-by-4">CC BY 4.0 (Attribution)</option>
+                  <option value="cc-by-nc-sa-4">CC BY-NC-SA 4.0 (Attribution-NonCommercial-ShareAlike)</option>
+                </select>
+                <span class="fl-label">License</span>
+              </div>
+              <div class="info-msg">
+                <strong>Recommended:</strong> CC0 1.0 Universal allows maximum reuse of your data and is consistent with
+                FAIR data principles.
+              </div>
+            </div>
+          </div>
+
+          <!-- Data usage policy -->
+          <div class="wizard-row">
+            <div class="wizard-help">
+              <label>Would you like to include a data usage policy?</label>
+              <div class="help-small">
+                A data usage policy allows you to describe additional terms or guidelines for using the data beyond what
+                the license covers.
+              </div>
+            </div>
+            <div class="wizard-content">
+              <label class="toggle-row" style="margin-bottom: 16px">
+                <span class="toggle-switch">
+                  <input type="checkbox" id="dup-toggle" onchange="syncDupToggle(this)" />
+                  <span class="toggle-track"></span>
+                  <span class="toggle-thumb"></span>
+                </span>
+                <span class="toggle-value" id="dup-label">No data usage policy</span>
+              </label>
+              <div id="dup-field" style="display: none">
+                <div class="float-field">
+                  <textarea class="fl-textarea" rows="4" placeholder=""></textarea>
+                  <span class="fl-label">Data usage policy</span>
+                </div>
+              </div>
+            </div>
+          </div>
+
+          <!-- DOIs -->
+          <div class="wizard-row">
+            <div class="wizard-help">
+              <label>The DOIs of any digital resources associated with this score set.</label>
+              <div class="help-small">For publications, use the Publication identifiers field below instead.</div>
+            </div>
+            <div class="wizard-content">
+              <div class="tag-field">
+                <span class="tag-fl-label">DOIs</span>
+                <div class="tag-input">
+                  <input type="text" placeholder="Paste a DOI and press Enter…" />
+                </div>
+              </div>
+            </div>
+          </div>
+
+          <!-- Publication identifiers -->
+          <div class="wizard-row">
+            <div class="wizard-help">
+              <label
+                >Publications associated with this score set. Search by DOI, PubMed ID, bioRxiv ID, or medRxiv
+                ID.</label
+              >
+            </div>
+            <div class="wizard-content">
+              <div class="tag-field">
+                <span class="tag-fl-label">Publication identifiers</span>
+                <div class="tag-input">
+                  <input type="text" placeholder="Search by DOI, PubMed ID, bioRxiv ID…" />
+                </div>
+              </div>
+            </div>
+          </div>
+
+          <!-- Primary publication -->
+          <div class="wizard-row">
+            <div class="wizard-help">
+              <label>Select the primary publication for this score set from the publications listed above.</label>
+            </div>
+            <div class="wizard-content">
+              <div class="float-field">
+                <select class="fl-select" style="color: #bbb">
+                  <option value="" selected>No publications added yet</option>
+                </select>
+                <span class="fl-label">Primary publication</span>
+              </div>
+            </div>
           </div>
         </div>
+        <!-- /step-2-content -->
 
-        <!-- Meta-analysis score sets (shown when meta-analysis = true) -->
-        <div class="wizard-row" id="meta-row" style="display:none;">
-          <div class="wizard-help">
-            <label>What score set(s) does this score set analyze?</label>
-            <div class="help-small">Type a score set's MaveDB URN and select it from the list. You may choose more than one.</div>
+        <!-- ═══ STEP 3: Targets ═══ -->
+        <div id="step-3-content" style="display: none">
+          <!-- Number of targets -->
+          <div class="wizard-row">
+            <div class="wizard-help">
+              <label>How many target sequences does this score set measure?</label>
+              <div class="help-small">
+                Most score sets have a single target (e.g. one protein or one regulatory element). Select multiple
+                targets only if your score set measures variants across more than one distinct sequence.
+              </div>
+            </div>
+            <div class="wizard-content">
+              <div class="float-field">
+                <select class="fl-select">
+                  <option value="1" selected>1 target</option>
+                  <option value="2">2 targets</option>
+                  <option value="3">3 targets</option>
+                  <option value="4">4 targets</option>
+                  <option value="5">5+ targets</option>
+                </select>
+                <span class="fl-label">Number of targets</span>
+              </div>
+            </div>
           </div>
-          <div class="wizard-content" style="display:block;">
-            <div class="float-field">
-              <span class="fl-label">Meta-analyzes</span>
-              <input type="text" class="fl-input" placeholder="Search by URN or title…" />
+
+          <!-- Target type -->
+          <div class="wizard-row">
+            <div class="wizard-help">
+              <label>How would you like to specify your target?</label>
+              <div class="help-small">
+                <strong>Target sequence:</strong> Provide the full reference sequence (FASTA file or raw sequence).
+                <br /><br />
+                <strong>Target accession:</strong> Reference a sequence by its UniProt, RefSeq, or Ensembl accession
+                number.
+              </div>
+            </div>
+            <div class="wizard-content">
+              <div class="select-btn-group">
+                <button class="select-btn-option active" onclick="selectBtn(this)">Target sequence</button>
+                <button class="select-btn-option" onclick="selectBtn(this)">Target accession</button>
+              </div>
+            </div>
+          </div>
+
+          <!-- Multi-target info -->
+          <div class="wizard-row" style="border-bottom: none">
+            <div class="wizard-help">
+              <label>Target configuration</label>
+            </div>
+            <div class="wizard-content">
+              <div class="info-msg">
+                You will define your target in the next step. If you selected multiple targets, additional steps will be
+                added automatically.
+              </div>
             </div>
           </div>
         </div>
+        <!-- /step-3-content -->
 
-        <!-- Experiment select (shown when neither supersedes nor meta-analysis) -->
-        <div class="wizard-row" id="experiment-row">
-          <div class="wizard-help">
-            <label>To which experiment does this score set belong?</label>
-            <div class="help-small">
-              For more on the relationship between score sets and experiments, see the <a href="#">documentation</a>.
+        <!-- ═══ STEP 4: Target 1 ═══ -->
+        <div id="step-4-content" style="display: none">
+          <!-- Target name -->
+          <div class="wizard-row">
+            <div class="wizard-help">
+              <label>The name of the target gene or element.</label>
+              <div class="help-small">Example: BRCA1, TP53, SCN5A, or a regulatory element name.</div>
+            </div>
+            <div class="wizard-content">
+              <div class="float-field">
+                <input type="text" class="fl-input" placeholder="" />
+                <span class="fl-label">Target name</span>
+              </div>
             </div>
           </div>
-          <div class="wizard-content" style="display:block;">
-            <div class="float-field">
-              <span class="fl-label">Experiment</span>
-              <select class="fl-select">
-                <option value="" disabled selected></option>
-                <option>BRCA1 Combined Functional Meta-analysis (urn:mavedb:00000097-0)</option>
-                <option>BRCA1 Saturation Genome Editing Panel (urn:mavedb:00000098-0)</option>
-                <option>BRCA1 RING Domain HDR Assay (urn:mavedb:00000041-0)</option>
-                <option>CHEK2 Kinase Activity Assay (urn:mavedb:00000112-0)</option>
-                <option>TP53 Saturation Genome Editing Panel (urn:mavedb:00000089-0)</option>
-              </select>
+
+          <!-- Target label -->
+          <div class="wizard-row">
+            <div class="wizard-help">
+              <label>An optional label to distinguish this target from others in the same score set.</label>
+              <div class="help-small">
+                Only needed for multi-target score sets. Leave blank for single-target experiments.
+              </div>
+            </div>
+            <div class="wizard-content">
+              <div class="float-field">
+                <input type="text" class="fl-input" placeholder="" />
+                <span class="fl-label">Target label (optional)</span>
+              </div>
+            </div>
+          </div>
+
+          <!-- Category -->
+          <div class="wizard-row">
+            <div class="wizard-help">
+              <label>What category best describes this target?</label>
+              <div class="help-small">
+                <strong>Protein coding</strong> — Target is a protein-coding gene.<br />
+                <strong>Regulatory</strong> — Target is a regulatory element (enhancer, promoter, etc.).<br />
+                <strong>Other genomic</strong> — Target is another type of genomic region.
+              </div>
+            </div>
+            <div class="wizard-content">
+              <div class="select-btn-group">
+                <button class="select-btn-option active" onclick="selectBtn(this)">Protein coding</button>
+                <button class="select-btn-option" onclick="selectBtn(this)">Regulatory</button>
+                <button class="select-btn-option" onclick="selectBtn(this)">Other genomic</button>
+              </div>
+            </div>
+          </div>
+
+          <!-- External identifiers -->
+          <div class="wizard-row">
+            <div class="wizard-help">
+              <label>External database identifiers for the target and optional sequence offsets.</label>
+              <div class="help-small">
+                Provide accession numbers from UniProt, RefSeq, or Ensembl. The offset indicates the position in the
+                reference sequence where your target region begins.
+              </div>
+            </div>
+            <div class="wizard-content">
+              <div class="field-columns" style="margin-bottom: 12px">
+                <div class="float-field">
+                  <input type="text" class="fl-input" placeholder="" />
+                  <span class="fl-label">UniProt accession</span>
+                </div>
+                <div class="float-field">
+                  <input type="text" class="fl-input" placeholder="" />
+                  <span class="fl-label">Offset</span>
+                </div>
+              </div>
+              <div class="field-columns" style="margin-bottom: 12px">
+                <div class="float-field">
+                  <input type="text" class="fl-input" placeholder="" />
+                  <span class="fl-label">RefSeq accession</span>
+                </div>
+                <div class="float-field">
+                  <input type="text" class="fl-input" placeholder="" />
+                  <span class="fl-label">Offset</span>
+                </div>
+              </div>
+              <div class="field-columns">
+                <div class="float-field">
+                  <input type="text" class="fl-input" placeholder="" />
+                  <span class="fl-label">Ensembl accession</span>
+                </div>
+                <div class="float-field">
+                  <input type="text" class="fl-input" placeholder="" />
+                  <span class="fl-label">Offset</span>
+                </div>
+              </div>
+            </div>
+          </div>
+
+          <!-- Taxonomy -->
+          <div class="wizard-row">
+            <div class="wizard-help">
+              <label>The organism from which the target originates.</label>
+              <div class="help-small">Start typing to search by common or scientific name.</div>
+            </div>
+            <div class="wizard-content">
+              <div class="float-field">
+                <input type="text" class="fl-input" placeholder="e.g. Homo sapiens, Mus musculus…" />
+                <span class="fl-label">Taxonomy</span>
+              </div>
+            </div>
+          </div>
+
+          <!-- Reference sequence -->
+          <div class="wizard-row">
+            <div class="wizard-help">
+              <label>Upload a reference sequence file for the target.</label>
+              <div class="help-small">
+                Accepted format: FASTA (.fa, .fasta). The sequence should match the reference against which variants are
+                defined.
+              </div>
+            </div>
+            <div class="wizard-content">
+              <div class="file-drop">
+                <div class="file-drop-icon">
+                  <svg
+                    width="28"
+                    height="28"
+                    viewBox="0 0 24 24"
+                    fill="none"
+                    stroke="currentColor"
+                    stroke-width="1.5"
+                    stroke-linecap="round"
+                    stroke-linejoin="round"
+                    style="margin: 0 auto; display: block; color: #bbb"
+                  >
+                    <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4" />
+                    <polyline points="17 8 12 3 7 8" />
+                    <line x1="12" y1="3" x2="12" y2="15" />
+                  </svg>
+                </div>
+                <div class="file-drop-label">Drop a FASTA file here</div>
+                <div class="file-drop-hint">or click to browse</div>
+              </div>
+            </div>
+          </div>
+
+          <!-- Sequence type -->
+          <div class="wizard-row" style="border-bottom: none">
+            <div class="wizard-help">
+              <label>What type of sequence is provided?</label>
+              <div class="help-small">
+                <strong>Infer from file</strong> — Automatically detect whether the sequence is protein or DNA.<br />
+                <strong>Protein</strong> — Amino acid sequence.<br />
+                <strong>DNA</strong> — Nucleotide sequence.
+              </div>
+            </div>
+            <div class="wizard-content">
+              <div class="select-btn-group">
+                <button class="select-btn-option active" onclick="selectBtn(this)">Infer from file</button>
+                <button class="select-btn-option" onclick="selectBtn(this)">Protein</button>
+                <button class="select-btn-option" onclick="selectBtn(this)">DNA</button>
+              </div>
             </div>
           </div>
         </div>
+        <!-- /step-4-content -->
+
+        <!-- ═══ STEP 5: Score Calibration ═══ -->
+        <div id="step-5-content" style="display: none">
+          <!-- Calibration toggle -->
+          <div class="wizard-row">
+            <div class="wizard-help">
+              <label>Would you like to provide score calibrations for this score set?</label>
+              <div class="help-small">
+                Score calibrations help users interpret functional scores by providing reference points. A calibration
+                maps functional scores to clinical significance categories (e.g., pathogenic vs. benign).
+              </div>
+            </div>
+            <div class="wizard-content" style="display: flex; align-items: center; gap: 14px">
+              <label class="toggle-row">
+                <span class="toggle-switch">
+                  <input type="checkbox" id="calibration-toggle" onchange="syncCalibrationToggle(this)" />
+                  <span class="toggle-track"></span>
+                  <span class="toggle-thumb"></span>
+                </span>
+                <span class="toggle-value" id="calibration-label">No, skip score calibration</span>
+              </label>
+            </div>
+          </div>
+
+          <!-- Calibration fields (shown when toggle is on) -->
+          <div id="calibration-fields" style="display: none">
+            <div class="wizard-row">
+              <div class="wizard-help">
+                <label>A title for this calibration.</label>
+                <div class="help-small">Example: "ACMG-calibrated functional scores"</div>
+              </div>
+              <div class="wizard-content">
+                <div class="float-field">
+                  <input type="text" class="fl-input" placeholder="" />
+                  <span class="fl-label">Calibration title</span>
+                </div>
+              </div>
+            </div>
+
+            <div class="wizard-row">
+              <div class="wizard-help">
+                <label>Notes about the calibration methodology or interpretation.</label>
+              </div>
+              <div class="wizard-content">
+                <div class="float-field">
+                  <textarea class="fl-textarea" rows="4" placeholder=""></textarea>
+                  <span class="fl-label">Calibration notes</span>
+                </div>
+              </div>
+            </div>
+
+            <div class="wizard-row">
+              <div class="wizard-help">
+                <label>The baseline (wild-type) score and a description of what it represents.</label>
+                <div class="help-small">For example, a score of 1.0 might represent "wild-type function".</div>
+              </div>
+              <div class="wizard-content">
+                <div class="field-columns" style="margin-bottom: 12px">
+                  <div class="float-field">
+                    <input type="text" class="fl-input" placeholder="" />
+                    <span class="fl-label">Baseline score</span>
+                  </div>
+                  <div class="float-field">
+                    <input type="text" class="fl-input" placeholder="" />
+                    <span class="fl-label">Baseline score description</span>
+                  </div>
+                </div>
+              </div>
+            </div>
+          </div>
+
+          <!-- Fallback info when no calibration -->
+          <div class="wizard-row" id="calibration-skip-msg" style="border-bottom: none">
+            <div class="wizard-help">
+              <label>You can always add calibrations later.</label>
+            </div>
+            <div class="wizard-content">
+              <div class="info-msg">
+                Score calibrations can be added or edited after the score set is created, as long as the score set
+                remains unpublished.
+              </div>
+            </div>
+          </div>
+        </div>
+        <!-- /step-5-content -->
+
+        <!-- ═══ STEP 6: Variant Scores ═══ -->
+        <div id="step-6-content" style="display: none">
+          <!-- Scores file (required) -->
+          <div class="wizard-row">
+            <div class="wizard-help">
+              <label>Upload the variant scores data file. <strong>Required.</strong></label>
+              <div class="help-small">
+                A CSV file where each row is a variant and columns include at minimum: <code>hgvs_nt</code> or
+                <code>hgvs_pro</code>, and <code>score</code>. <br /><br />
+                See the <a href="#">data format documentation</a> for full details.
+              </div>
+            </div>
+            <div class="wizard-content">
+              <div class="file-drop">
+                <div class="file-drop-icon">
+                  <svg
+                    width="28"
+                    height="28"
+                    viewBox="0 0 24 24"
+                    fill="none"
+                    stroke="currentColor"
+                    stroke-width="1.5"
+                    stroke-linecap="round"
+                    stroke-linejoin="round"
+                    style="margin: 0 auto; display: block; color: #bbb"
+                  >
+                    <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4" />
+                    <polyline points="17 8 12 3 7 8" />
+                    <line x1="12" y1="3" x2="12" y2="15" />
+                  </svg>
+                </div>
+                <div class="file-drop-label">Drop a scores CSV file here</div>
+                <div class="file-drop-hint">or click to browse (.csv)</div>
+              </div>
+            </div>
+          </div>
+
+          <!-- Scores column metadata (optional) -->
+          <div class="wizard-row">
+            <div class="wizard-help">
+              <label>Scores column metadata (optional).</label>
+              <div class="help-small">
+                A JSON file describing each column in the scores CSV. Helps users understand the meaning of additional
+                score columns.
+              </div>
+            </div>
+            <div class="wizard-content">
+              <div class="file-drop">
+                <div class="file-drop-icon">
+                  <svg
+                    width="28"
+                    height="28"
+                    viewBox="0 0 24 24"
+                    fill="none"
+                    stroke="currentColor"
+                    stroke-width="1.5"
+                    stroke-linecap="round"
+                    stroke-linejoin="round"
+                    style="margin: 0 auto; display: block; color: #bbb"
+                  >
+                    <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4" />
+                    <polyline points="17 8 12 3 7 8" />
+                    <line x1="12" y1="3" x2="12" y2="15" />
+                  </svg>
+                </div>
+                <div class="file-drop-label">Drop a JSON metadata file here</div>
+                <div class="file-drop-hint">or click to browse (.json)</div>
+              </div>
+            </div>
+          </div>
+
+          <!-- Counts file (optional) -->
+          <div class="wizard-row">
+            <div class="wizard-help">
+              <label>Counts file (optional).</label>
+              <div class="help-small">
+                A CSV file with raw count data for each variant. Used to provide transparency into how scores were
+                computed.
+              </div>
+            </div>
+            <div class="wizard-content">
+              <div class="file-drop">
+                <div class="file-drop-icon">
+                  <svg
+                    width="28"
+                    height="28"
+                    viewBox="0 0 24 24"
+                    fill="none"
+                    stroke="currentColor"
+                    stroke-width="1.5"
+                    stroke-linecap="round"
+                    stroke-linejoin="round"
+                    style="margin: 0 auto; display: block; color: #bbb"
+                  >
+                    <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4" />
+                    <polyline points="17 8 12 3 7 8" />
+                    <line x1="12" y1="3" x2="12" y2="15" />
+                  </svg>
+                </div>
+                <div class="file-drop-label">Drop a counts CSV file here</div>
+                <div class="file-drop-hint">or click to browse (.csv)</div>
+              </div>
+            </div>
+          </div>
+
+          <!-- Counts column metadata (optional) -->
+          <div class="wizard-row" style="border-bottom: none">
+            <div class="wizard-help">
+              <label>Counts column metadata (optional).</label>
+              <div class="help-small">A JSON file describing each column in the counts CSV.</div>
+            </div>
+            <div class="wizard-content">
+              <div class="file-drop">
+                <div class="file-drop-icon">
+                  <svg
+                    width="28"
+                    height="28"
+                    viewBox="0 0 24 24"
+                    fill="none"
+                    stroke="currentColor"
+                    stroke-width="1.5"
+                    stroke-linecap="round"
+                    stroke-linejoin="round"
+                    style="margin: 0 auto; display: block; color: #bbb"
+                  >
+                    <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4" />
+                    <polyline points="17 8 12 3 7 8" />
+                    <line x1="12" y1="3" x2="12" y2="15" />
+                  </svg>
+                </div>
+                <div class="file-drop-label">Drop a JSON metadata file here</div>
+                <div class="file-drop-hint">or click to browse (.json)</div>
+              </div>
+            </div>
+          </div>
+        </div>
+        <!-- /step-6-content -->
 
         <!-- Step controls -->
         <div class="wizard-controls">
-          <button class="btn btn-primary">
-            Next
-            <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><polyline points="9 18 15 12 9 6"/></svg>
-          </button>
+          <span id="step-1-controls">
+            <button class="btn btn-primary" onclick="goToStep(2)">
+              Next
+              <svg
+                width="14"
+                height="14"
+                viewBox="0 0 24 24"
+                fill="none"
+                stroke="currentColor"
+                stroke-width="2.5"
+                stroke-linecap="round"
+                stroke-linejoin="round"
+              >
+                <polyline points="9 18 15 12 9 6" />
+              </svg>
+            </button>
+          </span>
+          <span id="step-2-controls" style="display: none">
+            <button class="btn btn-secondary" onclick="goToStep(1)">
+              <svg
+                width="14"
+                height="14"
+                viewBox="0 0 24 24"
+                fill="none"
+                stroke="currentColor"
+                stroke-width="2.5"
+                stroke-linecap="round"
+                stroke-linejoin="round"
+              >
+                <polyline points="15 18 9 12 15 6" />
+              </svg>
+              Back
+            </button>
+            <button class="btn btn-primary" onclick="goToStep(3)">
+              Next
+              <svg
+                width="14"
+                height="14"
+                viewBox="0 0 24 24"
+                fill="none"
+                stroke="currentColor"
+                stroke-width="2.5"
+                stroke-linecap="round"
+                stroke-linejoin="round"
+              >
+                <polyline points="9 18 15 12 9 6" />
+              </svg>
+            </button>
+          </span>
+          <span id="step-3-controls" style="display: none">
+            <button class="btn btn-secondary" onclick="goToStep(2)">
+              <svg
+                width="14"
+                height="14"
+                viewBox="0 0 24 24"
+                fill="none"
+                stroke="currentColor"
+                stroke-width="2.5"
+                stroke-linecap="round"
+                stroke-linejoin="round"
+              >
+                <polyline points="15 18 9 12 15 6" />
+              </svg>
+              Back
+            </button>
+            <button class="btn btn-primary" onclick="goToStep(4)">
+              Next
+              <svg
+                width="14"
+                height="14"
+                viewBox="0 0 24 24"
+                fill="none"
+                stroke="currentColor"
+                stroke-width="2.5"
+                stroke-linecap="round"
+                stroke-linejoin="round"
+              >
+                <polyline points="9 18 15 12 9 6" />
+              </svg>
+            </button>
+          </span>
+          <span id="step-4-controls" style="display: none">
+            <button class="btn btn-secondary" onclick="goToStep(3)">
+              <svg
+                width="14"
+                height="14"
+                viewBox="0 0 24 24"
+                fill="none"
+                stroke="currentColor"
+                stroke-width="2.5"
+                stroke-linecap="round"
+                stroke-linejoin="round"
+              >
+                <polyline points="15 18 9 12 15 6" />
+              </svg>
+              Back
+            </button>
+            <button class="btn btn-primary" onclick="goToStep(5)">
+              Next
+              <svg
+                width="14"
+                height="14"
+                viewBox="0 0 24 24"
+                fill="none"
+                stroke="currentColor"
+                stroke-width="2.5"
+                stroke-linecap="round"
+                stroke-linejoin="round"
+              >
+                <polyline points="9 18 15 12 9 6" />
+              </svg>
+            </button>
+          </span>
+          <span id="step-5-controls" style="display: none">
+            <button class="btn btn-secondary" onclick="goToStep(4)">
+              <svg
+                width="14"
+                height="14"
+                viewBox="0 0 24 24"
+                fill="none"
+                stroke="currentColor"
+                stroke-width="2.5"
+                stroke-linecap="round"
+                stroke-linejoin="round"
+              >
+                <polyline points="15 18 9 12 15 6" />
+              </svg>
+              Back
+            </button>
+            <button class="btn btn-primary" onclick="goToStep(6)">
+              Next
+              <svg
+                width="14"
+                height="14"
+                viewBox="0 0 24 24"
+                fill="none"
+                stroke="currentColor"
+                stroke-width="2.5"
+                stroke-linecap="round"
+                stroke-linejoin="round"
+              >
+                <polyline points="9 18 15 12 9 6" />
+              </svg>
+            </button>
+          </span>
+          <span id="step-6-controls" style="display: none">
+            <button class="btn btn-secondary" onclick="goToStep(5)">
+              <svg
+                width="14"
+                height="14"
+                viewBox="0 0 24 24"
+                fill="none"
+                stroke="currentColor"
+                stroke-width="2.5"
+                stroke-linecap="round"
+                stroke-linejoin="round"
+              >
+                <polyline points="15 18 9 12 15 6" />
+              </svg>
+              Back
+            </button>
+            <button class="btn btn-primary" onclick="window.location.href='./wizard-completion.html'">Save</button>
+          </span>
         </div>
-
-      </div><!-- /wizard-form -->
-    </div><!-- /wizard-outer -->
+      </div>
+      <!-- /wizard-form -->
+    </div>
+    <!-- /wizard-outer -->
 
     <footer>
       <div class="footer-inner">
-        <div style="display:flex;align-items:center;gap:16px;">
-          <img src="./logo-mavedb-transparent.png" alt="MaveDB" style="height:28px;" />
-          <span>© 2026 MaveDB — AGPLv3 License — Hosted by the University of Washington</span>
+        <div style="display: flex; align-items: center; gap: 16px">
+          <img src="./logo-mavedb-transparent.png" alt="MaveDB" style="height: 28px" />
+          <span>&copy; 2026 MaveDB — AGPLv3 License — Hosted by the University of Washington</span>
         </div>
         <div class="footer-links">
           <a href="#">Chat</a>
           <a href="#">Documentation</a>
           <a href="#">Report an issue</a>
+          <span style="color: #dee2e6">|</span>
+          <a href="./design-showcase.html" style="color: #aaa">Design Showcase</a>
+          <a href="./404.html" style="color: #aaa">404 Demo</a>
         </div>
       </div>
     </footer>
 
     <script>
+      var totalSteps = 6
+      var currentStep = 1
+
+      function goToStep(n) {
+        currentStep = n
+        var items = document.querySelectorAll('.step-item')
+        items.forEach(function (item, i) {
+          var circle = item.querySelector('.step-circle')
+          item.classList.remove('active', 'completed', 'disabled')
+          if (i + 1 < n) {
+            item.classList.add('completed')
+            circle.innerHTML =
+              '<svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"><polyline points="20 6 9 17 4 12"/></svg>'
+          } else if (i + 1 === n) {
+            item.classList.add('active')
+            circle.textContent = i + 1
+          } else {
+            circle.textContent = i + 1
+          }
+        })
+        for (var s = 1; s <= totalSteps; s++) {
+          var content = document.getElementById('step-' + s + '-content')
+          var controls = document.getElementById('step-' + s + '-controls')
+          if (content) content.style.display = s === n ? 'block' : 'none'
+          if (controls) controls.style.display = s === n ? 'inline-flex' : 'none'
+        }
+        window.scrollTo({top: 0, behavior: 'smooth'})
+      }
+
       function syncSupersedesToggle(input) {
         document.getElementById('supersedes-label').textContent = input.checked
           ? 'Yes, this supersedes another score set'
@@ -373,9 +2104,45 @@
       }
 
       function updateExperimentRowVisibility() {
-        const supersedes = document.getElementById('supersedes-toggle').checked
-        const meta = document.getElementById('meta-toggle').checked
-        document.getElementById('experiment-row').style.display = (!supersedes && !meta) ? 'flex' : 'none'
+        var supersedes = document.getElementById('supersedes-toggle').checked
+        var meta = document.getElementById('meta-toggle').checked
+        document.getElementById('experiment-row').style.display = !supersedes && !meta ? 'flex' : 'none'
+      }
+
+      function syncDupToggle(input) {
+        document.getElementById('dup-label').textContent = input.checked
+          ? 'Yes, include a data usage policy'
+          : 'No data usage policy'
+        document.getElementById('dup-label').className = input.checked ? 'toggle-value active' : 'toggle-value'
+        document.getElementById('dup-field').style.display = input.checked ? 'block' : 'none'
+      }
+
+      function syncCalibrationToggle(input) {
+        document.getElementById('calibration-label').textContent = input.checked
+          ? 'Yes, provide score calibrations'
+          : 'No, skip score calibration'
+        document.getElementById('calibration-label').className = input.checked ? 'toggle-value active' : 'toggle-value'
+        document.getElementById('calibration-fields').style.display = input.checked ? 'block' : 'none'
+        document.getElementById('calibration-skip-msg').style.display = input.checked ? 'none' : 'flex'
+      }
+
+      function selectBtn(btn) {
+        btn.parentElement.querySelectorAll('.select-btn-option').forEach(function (b) {
+          b.classList.remove('active')
+        })
+        btn.classList.add('active')
+      }
+
+      function switchTab(btn, showId, hideId) {
+        btn
+          .closest('.tab-list')
+          .querySelectorAll('.tab-btn')
+          .forEach(function (b) {
+            b.classList.remove('active')
+          })
+        btn.classList.add('active')
+        document.getElementById(showId).classList.add('active')
+        document.getElementById(hideId).classList.remove('active')
       }
 
       function toggleAddMenu(event) {
@@ -386,26 +2153,20 @@
         event.stopPropagation()
         document.getElementById('nav-bell-dropdown').classList.toggle('open')
       }
-      document.addEventListener('click', function(e) {
-        const addWrap = document.querySelector('.nav-add-wrap')
-        if (addWrap && !addWrap.contains(e.target)) {
-          document.getElementById('nav-add-dropdown').classList.remove('open')
-        }
-        const bellWrap = document.querySelector('.nav-bell-wrap')
-        if (bellWrap && !bellWrap.contains(e.target)) {
-          const dd = document.getElementById('nav-bell-dropdown')
-          if (dd) dd.classList.remove('open')
-        }
-      })
-    
       function toggleUserMenu(event) {
         event.stopPropagation()
-        var dd = document.getElementById('nav-user-dropdown')
-        dd.classList.toggle('open')
+        document.getElementById('nav-user-dropdown').classList.toggle('open')
       }
-      document.addEventListener('click', function(e) {
-        var wrap = document.querySelector('.nav-user-wrap')
-        if (wrap && !wrap.contains(e.target)) {
+      document.addEventListener('click', function (e) {
+        var addWrap = document.querySelector('.nav-add-wrap')
+        if (addWrap && !addWrap.contains(e.target)) document.getElementById('nav-add-dropdown').classList.remove('open')
+        var bellWrap = document.querySelector('.nav-bell-wrap')
+        if (bellWrap && !bellWrap.contains(e.target)) {
+          var dd = document.getElementById('nav-bell-dropdown')
+          if (dd) dd.classList.remove('open')
+        }
+        var userWrap = document.querySelector('.nav-user-wrap')
+        if (userWrap && !userWrap.contains(e.target)) {
           var dd = document.getElementById('nav-user-dropdown')
           if (dd) dd.classList.remove('open')
         }

@@ -72,14 +72,16 @@
         color: #444;
       }
       .nav-links a:hover {
-        color: #78B793;
+        color: #78b793;
         text-decoration: none;
       }
       .nav-links a.active {
-        color: #78B793;
+        color: #78b793;
         font-weight: 700;
       }
-      .nav-add-wrap { position: relative; }
+      .nav-add-wrap {
+        position: relative;
+      }
       .nav-add-dropdown {
         display: none;
         position: absolute;
@@ -89,20 +91,35 @@
         background: #fff;
         border: 1px solid #e0e0e0;
         border-radius: 8px;
-        box-shadow: 0 8px 24px rgba(0,0,0,0.12);
+        box-shadow: 0 8px 24px rgba(0, 0, 0, 0.12);
         z-index: 200;
         overflow: hidden;
       }
-      .nav-add-dropdown.open { display: block; }
+      .nav-add-dropdown.open {
+        display: block;
+      }
       .nav-add-option {
         display: block;
         padding: 12px 16px;
         border-bottom: 1px solid #f0f0f0;
       }
-      .nav-add-option:last-child { border-bottom: none; }
-      .nav-add-option:hover { background: #f5f5f5; text-decoration: none; }
-      .nav-add-option-label { font-size: 13px; font-weight: 600; color: #333; }
-      .nav-add-option-desc { font-size: 12px; color: #888; margin-top: 2px; }
+      .nav-add-option:last-child {
+        border-bottom: none;
+      }
+      .nav-add-option:hover {
+        background: #f5f5f5;
+        text-decoration: none;
+      }
+      .nav-add-option-label {
+        font-size: 13px;
+        font-weight: 600;
+        color: #333;
+      }
+      .nav-add-option-desc {
+        font-size: 12px;
+        color: #767676;
+        margin-top: 2px;
+      }
       .nav-user-wrap {
         position: relative;
         flex-shrink: 0;
@@ -125,13 +142,13 @@
         flex-shrink: 0;
         cursor: pointer;
         border: none;
-        font-family: "Raleway", sans-serif;
+        font-family: 'Raleway', sans-serif;
       }
       .nav-user:hover {
         background: #5a9375;
       }
       .nav-user-caret {
-        color: #999;
+        color: #767676;
         flex-shrink: 0;
         cursor: pointer;
       }
@@ -172,7 +189,7 @@
       .nav-user-dropdown .dropdown-icon {
         width: 16px;
         height: 16px;
-        color: #888;
+        color: #767676;
         flex-shrink: 0;
       }
       .nav-bell-wrap {
@@ -257,7 +274,7 @@
         font-weight: 600;
       }
       .nav-bell-activity-verb {
-        color: #888;
+        color: #767676;
       }
       .nav-bell-activity-time {
         font-size: 11px;
@@ -286,14 +303,14 @@
         display: flex;
         flex: 1;
         max-width: 600px;
-        border: 1.5px solid #A1D8C8;
+        border: 1.5px solid #a1d8c8;
         border-radius: 6px;
         overflow: hidden;
         background: #fff;
         transition: border-color 0.15s;
       }
       .search-box:focus-within {
-        border-color: #78B793;
+        border-color: #78b793;
       }
       .search-box input {
         flex: 1;
@@ -308,7 +325,7 @@
         color: #aaa;
       }
       .search-box button {
-        background: #78B793;
+        background: #78b793;
         color: #222;
         border: none;
         padding: 0 18px;
@@ -323,7 +340,7 @@
       }
       .result-count-label {
         font-size: 13px;
-        color: #888;
+        color: #767676;
         white-space: nowrap;
       }
       .result-count-label strong {
@@ -349,9 +366,9 @@
         display: inline-flex;
         align-items: center;
         gap: 5px;
-        background: #C8E4C6;
-        color: #78B793;
-        border: 1px solid #A1D8C8;
+        background: #c8e4c6;
+        color: #78b793;
+        border: 1px solid #a1d8c8;
         border-radius: 20px;
         padding: 3px 10px 3px 12px;
         font-size: 12px;
@@ -365,7 +382,7 @@
       .active-chip-x {
         font-size: 14px;
         line-height: 1;
-        color: #999;
+        color: #767676;
         margin-left: 2px;
       }
       .clear-all {
@@ -479,7 +496,7 @@
         background: #f5f5f5;
       }
       .filter-option input[type='checkbox'] {
-        accent-color: #78B793;
+        accent-color: #78b793;
         width: 14px;
         height: 14px;
         cursor: pointer;
@@ -492,7 +509,7 @@
         font-weight: 500;
       }
       .filter-option.checked {
-        color: #78B793;
+        color: #78b793;
         font-weight: 600;
       }
       .filter-more {
@@ -543,7 +560,7 @@
         transition: transform 0.15s;
       }
       input:checked ~ .toggle-track {
-        background: #78B793;
+        background: #78b793;
       }
       input:checked ~ .toggle-track .toggle-thumb {
         transform: translateX(14px);
@@ -563,7 +580,7 @@
       }
       .results-count {
         font-size: 13px;
-        color: #888;
+        color: #767676;
       }
       .results-count strong {
         color: #333;
@@ -581,20 +598,40 @@
         outline: none;
       }
       .results-list {
+        display: flex;
+        flex-direction: column;
+        gap: 10px;
+      }
+
+      /* ── EXPERIMENT GROUP ── */
+      .experiment-group {
         background: #fff;
         border: 1px solid #dee2e6;
         border-radius: 8px;
+        border-left: 3px solid #c8e4c6;
         overflow: hidden;
       }
+      .experiment-group-header {
+        font-size: 12px;
+        color: #767676;
+        padding: 12px 20px 0;
+      }
+      .experiment-group-header a {
+        color: #0074d9;
+        font-weight: 600;
+      }
+      .experiment-group-header a:hover {
+        text-decoration: underline;
+      }
+      .experiment-group-count {
+        color: #bbb;
+        font-weight: 400;
+      }
       .result-item {
-        padding: 16px 20px;
-        border-bottom: 1px solid #f0f0f0;
+        padding: 12px 20px;
         display: flex;
         flex-direction: column;
         gap: 6px;
-      }
-      .result-item:last-child {
-        border-bottom: none;
       }
       .result-item:hover {
         background: #fafafa;
@@ -608,16 +645,13 @@
       .result-title:hover {
         text-decoration: underline;
       }
+      .result-desc {
+        font-size: 13px;
+        color: #555;
+        line-height: 1.4;
+      }
       .result-subtitle {
-        font-size: 12px;
-        color: #999;
-      }
-      .result-subtitle a {
-        color: #999;
-      }
-      .result-subtitle a:hover {
-        color: #0074d9;
-        text-decoration: underline;
+        display: none;
       }
       .result-meta {
         display: flex;
@@ -643,11 +677,6 @@
         background: #fff3e0;
         color: #e65100;
         border-color: #ffcc80;
-      }
-      .chip--assay {
-        background: #C8E4C6;
-        color: #78B793;
-        border-color: #A1D8C8;
       }
       .chip--count {
         background: #f5f5f5;
@@ -679,13 +708,13 @@
         font-size: 13px;
         font-weight: 600;
         cursor: pointer;
-        border: 1.5px solid #78B793;
+        border: 1.5px solid #78b793;
         background: #fff;
-        color: #78B793;
+        color: #78b793;
         text-decoration: none;
       }
       .btn-outline:hover {
-        background: #C8E4C6;
+        background: #c8e4c6;
         text-decoration: none;
       }
 
@@ -703,7 +732,7 @@
         align-items: center;
         justify-content: space-between;
         font-size: 13px;
-        color: #888;
+        color: #767676;
       }
       .footer-inner a {
         color: #0074d9;
@@ -714,14 +743,32 @@
       }
 
       /* ── PROTOTYPE BANNER ── */
-      .proto-banner { background: #FBDA68; color: #333; text-align: center; padding: 8px 24px; font-size: 13px; font-family: 'Raleway', sans-serif; font-weight: 500; position: sticky; top: 0; z-index: 9999; letter-spacing: 0.1px; }
-      .proto-banner a { color: #555; text-decoration: underline; }
-      .proto-banner strong { font-weight: 700; }
-        </style>
+      .proto-banner {
+        background: #fbda68;
+        color: #333;
+        text-align: center;
+        padding: 8px 24px;
+        font-size: 13px;
+        font-family: 'Raleway', sans-serif;
+        font-weight: 500;
+        position: sticky;
+        top: 0;
+        z-index: 9999;
+        letter-spacing: 0.1px;
+      }
+      .proto-banner a {
+        color: #555;
+        text-decoration: underline;
+      }
+      .proto-banner strong {
+        font-weight: 700;
+      }
+    </style>
   </head>
   <body>
     <div class="proto-banner">
-      <strong>Prototype</strong> — This is a design prototype and is not intended for use. Data shown is fictional. The real MaveDB is at <a href="https://mavedb.org" target="_blank">mavedb.org</a>.
+      <strong>Prototype</strong> — This is a design prototype and is not intended for use. Data shown is fictional. The
+      real MaveDB is at <a href="https://mavedb.org" target="_blank">mavedb.org</a>.
     </div>
     <nav>
       <div class="nav-inner">
@@ -731,7 +778,20 @@
           <li><a href="./mavemd.html">MaveMD</a></li>
           <li><a href="#" class="active">Search</a></li>
           <li class="nav-add-wrap">
-            <a href="#" onclick="toggleAddMenu(event)" style="display:flex;align-items:center;gap:4px;">Add Dataset <svg width="10" height="10" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><polyline points="6 9 12 15 18 9"/></svg></a>
+            <a href="#" onclick="toggleAddMenu(event)" style="display: flex; align-items: center; gap: 4px"
+              >Add Dataset
+              <svg
+                width="10"
+                height="10"
+                viewBox="0 0 24 24"
+                fill="none"
+                stroke="currentColor"
+                stroke-width="2.5"
+                stroke-linecap="round"
+                stroke-linejoin="round"
+              >
+                <polyline points="6 9 12 15 18 9" /></svg
+            ></a>
             <div id="nav-add-dropdown" class="nav-add-dropdown">
               <a href="./add-experiment.html" class="nav-add-option">
                 <div class="nav-add-option-label">New Experiment</div>
@@ -768,35 +828,35 @@
             <div class="nav-bell-activity-list">
               <div class="nav-bell-activity-item">
                 <span
-                  ><a href="#">CHEK2 Kinase Activity Assay – Draft</a>
+                  ><a href="./score-set-detail.html">CHEK2 Kinase Activity Assay – Draft</a>
                   <span class="nav-bell-activity-verb">edited by you</span></span
                 >
                 <span class="nav-bell-activity-time">2 days ago</span>
               </div>
               <div class="nav-bell-activity-item">
                 <span
-                  ><a href="#">KCNQ4 Variant Effect – Draft</a>
+                  ><a href="./score-set-detail.html">KCNQ4 Variant Effect – Draft</a>
                   <span class="nav-bell-activity-verb">calibration created by you</span></span
                 >
                 <span class="nav-bell-activity-time">5 days ago</span>
               </div>
               <div class="nav-bell-activity-item">
                 <span
-                  ><a href="#">BRCA1 Combined Functional Meta-analysis</a>
+                  ><a href="./score-set-detail.html">BRCA1 Combined Functional Meta-analysis</a>
                   <span class="nav-bell-activity-verb">published</span></span
                 >
                 <span class="nav-bell-activity-time">Nov 5, 2024</span>
               </div>
               <div class="nav-bell-activity-item">
                 <span
-                  ><a href="#">TP53 Saturation Genome Editing Panel</a>
+                  ><a href="./experiment-detail.html">TP53 Saturation Genome Editing Panel</a>
                   <span class="nav-bell-activity-verb">you were added as a contributor</span></span
                 >
                 <span class="nav-bell-activity-time">Oct 28, 2024</span>
               </div>
               <div class="nav-bell-activity-item">
                 <span
-                  ><a href="#">BRCA1 SGE Exon 20 – ClinVar</a>
+                  ><a href="./calibrations.html">BRCA1 SGE Exon 20 – ClinVar</a>
                   <span class="nav-bell-activity-verb">calibration published</span></span
                 >
                 <span class="nav-bell-activity-time">Oct 14, 2024</span>
@@ -806,18 +866,68 @@
         </div>
         <div class="nav-user-wrap" onclick="toggleUserMenu(event)">
           <button class="nav-user">B</button>
-          <svg class="nav-user-caret" width="10" height="10" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><polyline points="6 9 12 15 18 9"/></svg>
+          <svg
+            class="nav-user-caret"
+            width="10"
+            height="10"
+            viewBox="0 0 24 24"
+            fill="none"
+            stroke="currentColor"
+            stroke-width="2.5"
+            stroke-linecap="round"
+            stroke-linejoin="round"
+          >
+            <polyline points="6 9 12 15 18 9" />
+          </svg>
           <div id="nav-user-dropdown" class="nav-user-dropdown">
             <a href="./settings.html">
-              <svg class="dropdown-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="3"/><path d="M19.4 15a1.65 1.65 0 0 0 .33 1.82l.06.06a2 2 0 1 1-2.83 2.83l-.06-.06a1.65 1.65 0 0 0-1.82-.33 1.65 1.65 0 0 0-1 1.51V21a2 2 0 0 1-4 0v-.09A1.65 1.65 0 0 0 9 19.4a1.65 1.65 0 0 0-1.82.33l-.06.06a2 2 0 1 1-2.83-2.83l.06-.06A1.65 1.65 0 0 0 4.68 15a1.65 1.65 0 0 0-1.51-1H3a2 2 0 0 1 0-4h.09A1.65 1.65 0 0 0 4.6 9a1.65 1.65 0 0 0-.33-1.82l-.06-.06a2 2 0 1 1 2.83-2.83l.06.06A1.65 1.65 0 0 0 9 4.68a1.65 1.65 0 0 0 1-1.51V3a2 2 0 0 1 4 0v.09a1.65 1.65 0 0 0 1 1.51 1.65 1.65 0 0 0 1.82-.33l.06-.06a2 2 0 1 1 2.83 2.83l-.06.06A1.65 1.65 0 0 0 19.4 9a1.65 1.65 0 0 0 1.51 1H21a2 2 0 0 1 0 4h-.09a1.65 1.65 0 0 0-1.51 1z"/></svg>
+              <svg
+                class="dropdown-icon"
+                viewBox="0 0 24 24"
+                fill="none"
+                stroke="currentColor"
+                stroke-width="2"
+                stroke-linecap="round"
+                stroke-linejoin="round"
+              >
+                <circle cx="12" cy="12" r="3" />
+                <path
+                  d="M19.4 15a1.65 1.65 0 0 0 .33 1.82l.06.06a2 2 0 1 1-2.83 2.83l-.06-.06a1.65 1.65 0 0 0-1.82-.33 1.65 1.65 0 0 0-1 1.51V21a2 2 0 0 1-4 0v-.09A1.65 1.65 0 0 0 9 19.4a1.65 1.65 0 0 0-1.82.33l-.06.06a2 2 0 1 1-2.83-2.83l.06-.06A1.65 1.65 0 0 0 4.68 15a1.65 1.65 0 0 0-1.51-1H3a2 2 0 0 1 0-4h.09A1.65 1.65 0 0 0 4.6 9a1.65 1.65 0 0 0-.33-1.82l-.06-.06a2 2 0 1 1 2.83-2.83l.06.06A1.65 1.65 0 0 0 9 4.68a1.65 1.65 0 0 0 1-1.51V3a2 2 0 0 1 4 0v.09a1.65 1.65 0 0 0 1 1.51 1.65 1.65 0 0 0 1.82-.33l.06-.06a2 2 0 1 1 2.83 2.83l-.06.06A1.65 1.65 0 0 0 19.4 9a1.65 1.65 0 0 0 1.51 1H21a2 2 0 0 1 0 4h-.09a1.65 1.65 0 0 0-1.51 1z"
+                />
+              </svg>
               Settings
             </a>
             <a href="./dashboard.html">
-              <svg class="dropdown-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="3" width="7" height="7"/><rect x="14" y="3" width="7" height="7"/><rect x="14" y="14" width="7" height="7"/><rect x="3" y="14" width="7" height="7"/></svg>
+              <svg
+                class="dropdown-icon"
+                viewBox="0 0 24 24"
+                fill="none"
+                stroke="currentColor"
+                stroke-width="2"
+                stroke-linecap="round"
+                stroke-linejoin="round"
+              >
+                <rect x="3" y="3" width="7" height="7" />
+                <rect x="14" y="3" width="7" height="7" />
+                <rect x="14" y="14" width="7" height="7" />
+                <rect x="3" y="14" width="7" height="7" />
+              </svg>
               Dashboard
             </a>
             <a href="#">
-              <svg class="dropdown-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M9 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h4"/><polyline points="16 17 21 12 16 7"/><line x1="21" y1="12" x2="9" y2="12"/></svg>
+              <svg
+                class="dropdown-icon"
+                viewBox="0 0 24 24"
+                fill="none"
+                stroke="currentColor"
+                stroke-width="2"
+                stroke-linecap="round"
+                stroke-linejoin="round"
+              >
+                <path d="M9 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h4" />
+                <polyline points="16 17 21 12 16 7" />
+                <line x1="21" y1="12" x2="9" y2="12" />
+              </svg>
               Sign out
             </a>
           </div>
@@ -1251,97 +1361,149 @@
         </div>
 
         <div class="results-list">
-          <div class="result-item">
-            <a href="./score-set-detail.html" class="result-title"
-              >Mechanistic Modelling of Recessive, Dominant Negative, and Haploinsufficiency Effects with Allelic
-              Integration of Variant Effects</a
-            >
-            <div class="result-subtitle">Experiment: <a href="./experiment-detail.html">BRCA1 Combined Functional Meta-analysis</a></div>
-            <div class="result-meta">
-              <span class="chip chip--gene">BRCA1</span>
-              <span class="chip chip--organism">Homo sapiens</span>
-              <span class="chip chip--assay">Deep Mutational Scanning</span>
-              <span class="chip chip--count">4,832 variants</span>
-              <span class="chip chip--calibrated">2 calibrations</span>
-              <span class="result-date">Feb 2026</span>
+          <div class="experiment-group">
+            <div class="experiment-group-header">
+              Experiment: <a href="./experiment-detail.html">BRCA1 Combined Functional Meta-analysis</a>
+            </div>
+            <div class="result-item">
+              <a href="./score-set-detail.html" class="result-title"
+                >Mechanistic Modelling of Recessive, Dominant Negative, and Haploinsufficiency Effects with Allelic
+                Integration of Variant Effects</a
+              >
+              <div class="result-desc">
+                Integrated allelic model combining BRCA1 functional assay data with population genetics to classify
+                variants by mechanism of pathogenicity.
+              </div>
+              <div class="result-meta">
+                <span class="chip chip--gene">BRCA1</span>
+                <span class="chip chip--organism">Homo sapiens</span>
+                <span class="chip chip--count">4,832 variants</span>
+                <span class="chip chip--calibrated">2 calibrations</span>
+                <span class="result-date">Feb 2026</span>
+              </div>
             </div>
           </div>
 
-          <div class="result-item">
-            <a href="./score-set-detail.html" class="result-title">BRCA1 SGE Exon 20 – functional score (SGE Abundance)</a>
-            <div class="result-subtitle">Experiment: <a href="./experiment-detail.html">BRCA1 Saturation Genome Editing Panel</a></div>
-            <div class="result-meta">
-              <span class="chip chip--gene">BRCA1</span>
-              <span class="chip chip--organism">Homo sapiens</span>
-              <span class="chip chip--assay">Saturation Genome Editing</span>
-              <span class="chip chip--count">3,893 variants</span>
-              <span class="chip chip--calibrated">1 calibration</span>
-              <span class="result-date">Nov 2024</span>
+          <div class="experiment-group">
+            <div class="experiment-group-header">
+              Experiment: <a href="./experiment-detail.html">BRCA1 Saturation Genome Editing Panel</a>
+              <span class="experiment-group-count">— 2 score sets</span>
+            </div>
+            <div class="result-item">
+              <a href="./score-set-detail.html" class="result-title"
+                >BRCA1 SGE Exon 20 – functional score (SGE Abundance)</a
+              >
+              <div class="result-desc">
+                Saturation genome editing functional scores for all possible SNVs in BRCA1 exon 20, measured by cell
+                abundance.
+              </div>
+              <div class="result-meta">
+                <span class="chip chip--gene">BRCA1</span>
+                <span class="chip chip--organism">Homo sapiens</span>
+                <span class="chip chip--count">3,893 variants</span>
+                <span class="chip chip--calibrated">1 calibration</span>
+                <span class="result-date">Nov 2024</span>
+              </div>
+            </div>
+            <div class="result-item">
+              <a href="./score-set-detail.html" class="result-title"
+                >BRCA1 SGE Exon 21 – functional score (SGE Abundance)</a
+              >
+              <div class="result-desc">
+                Saturation genome editing functional scores for all possible SNVs in BRCA1 exon 21, measured by cell
+                abundance.
+              </div>
+              <div class="result-meta">
+                <span class="chip chip--gene">BRCA1</span>
+                <span class="chip chip--organism">Homo sapiens</span>
+                <span class="chip chip--count">1,204 variants</span>
+                <span class="chip chip--calibrated">1 calibration</span>
+                <span class="result-date">Nov 2024</span>
+              </div>
             </div>
           </div>
 
-          <div class="result-item">
-            <a href="./score-set-detail.html" class="result-title">BRCA1 SGE Exon 21 – functional score (SGE Abundance)</a>
-            <div class="result-subtitle">Experiment: <a href="./experiment-detail.html">BRCA1 Saturation Genome Editing Panel</a></div>
-            <div class="result-meta">
-              <span class="chip chip--gene">BRCA1</span>
-              <span class="chip chip--organism">Homo sapiens</span>
-              <span class="chip chip--assay">Saturation Genome Editing</span>
-              <span class="chip chip--count">1,204 variants</span>
-              <span class="chip chip--calibrated">1 calibration</span>
-              <span class="result-date">Nov 2024</span>
+          <div class="experiment-group">
+            <div class="experiment-group-header">
+              Experiment: <a href="./experiment-detail.html">BRCA1 RING Domain HDR Assay</a>
+            </div>
+            <div class="result-item">
+              <a href="./score-set-detail.html" class="result-title"
+                >BRCA1 RING domain functional score – HAP1 HDR assay</a
+              >
+              <div class="result-desc">
+                Deep mutational scanning of the BRCA1 RING domain using a homology-directed repair assay in HAP1 cells.
+              </div>
+              <div class="result-meta">
+                <span class="chip chip--gene">BRCA1</span>
+                <span class="chip chip--organism">Homo sapiens</span>
+                <span class="chip chip--count">1,756 variants</span>
+                <span class="chip chip--calibrated">1 calibration</span>
+                <span class="result-date">Sep 2024</span>
+              </div>
             </div>
           </div>
 
-          <div class="result-item">
-            <a href="./score-set-detail.html" class="result-title">BRCA1 RING domain functional score – HAP1 HDR assay</a>
-            <div class="result-subtitle">Experiment: <a href="./experiment-detail.html">BRCA1 RING Domain HDR Assay</a></div>
-            <div class="result-meta">
-              <span class="chip chip--gene">BRCA1</span>
-              <span class="chip chip--organism">Homo sapiens</span>
-              <span class="chip chip--assay">Deep Mutational Scanning</span>
-              <span class="chip chip--count">1,756 variants</span>
-              <span class="chip chip--calibrated">1 calibration</span>
-              <span class="result-date">Sep 2024</span>
+          <div class="experiment-group">
+            <div class="experiment-group-header">
+              Experiment: <a href="./experiment-detail.html">BRCA1 BRCT Domain Stability Panel</a>
+            </div>
+            <div class="result-item">
+              <a href="./score-set-detail.html" class="result-title">BRCA1 BRCT domain protein stability score</a>
+              <div class="result-desc">
+                Multiplexed stability measurements of BRCA1 BRCT domain missense variants using a proteolysis-based
+                assay.
+              </div>
+              <div class="result-meta">
+                <span class="chip chip--gene">BRCA1</span>
+                <span class="chip chip--organism">Homo sapiens</span>
+                <span class="chip chip--count">2,291 variants</span>
+                <span class="chip chip--calibrated">1 calibration</span>
+                <span class="result-date">Jun 2024</span>
+              </div>
             </div>
           </div>
 
-          <div class="result-item">
-            <a href="./score-set-detail.html" class="result-title">BRCA1 BRCT domain protein stability score</a>
-            <div class="result-subtitle">Experiment: <a href="./experiment-detail.html">BRCA1 BRCT Domain Stability Panel</a></div>
-            <div class="result-meta">
-              <span class="chip chip--gene">BRCA1</span>
-              <span class="chip chip--organism">Homo sapiens</span>
-              <span class="chip chip--assay">Deep Mutational Scanning</span>
-              <span class="chip chip--count">2,291 variants</span>
-              <span class="chip chip--calibrated">1 calibration</span>
-              <span class="result-date">Jun 2024</span>
+          <div class="experiment-group">
+            <div class="experiment-group-header">
+              Experiment: <a href="./experiment-detail.html">BRCA1 Exon 11 Mouse ES HDR</a>
+            </div>
+            <div class="result-item">
+              <a href="./score-set-detail.html" class="result-title"
+                >BRCA1 exon 11 functional score – mouse ES cell HDR assay</a
+              >
+              <div class="result-desc">
+                Functional classification of BRCA1 exon 11 variants via saturation genome editing in mouse embryonic
+                stem cells.
+              </div>
+              <div class="result-meta">
+                <span class="chip chip--gene">BRCA1</span>
+                <span class="chip chip--organism">Homo sapiens</span>
+                <span class="chip chip--count">6,118 variants</span>
+                <span class="chip chip--calibrated">2 calibrations</span>
+                <span class="result-date">Mar 2024</span>
+              </div>
             </div>
           </div>
 
-          <div class="result-item">
-            <a href="./score-set-detail.html" class="result-title">BRCA1 exon 11 functional score – mouse ES cell HDR assay</a>
-            <div class="result-subtitle">Experiment: <a href="./experiment-detail.html">BRCA1 Exon 11 Mouse ES HDR</a></div>
-            <div class="result-meta">
-              <span class="chip chip--gene">BRCA1</span>
-              <span class="chip chip--organism">Homo sapiens</span>
-              <span class="chip chip--assay">Saturation Genome Editing</span>
-              <span class="chip chip--count">6,118 variants</span>
-              <span class="chip chip--calibrated">2 calibrations</span>
-              <span class="result-date">Mar 2024</span>
+          <div class="experiment-group">
+            <div class="experiment-group-header">
+              Experiment: <a href="./experiment-detail.html">BRCA1 Protein Interaction Screen</a>
             </div>
-          </div>
-
-          <div class="result-item">
-            <a href="./score-set-detail.html" class="result-title">BRCA1 BARD1-binding interface – yeast two-hybrid DMS</a>
-            <div class="result-subtitle">Experiment: <a href="./experiment-detail.html">BRCA1 Protein Interaction Screen</a></div>
-            <div class="result-meta">
-              <span class="chip chip--gene">BRCA1</span>
-              <span class="chip chip--organism">Homo sapiens</span>
-              <span class="chip chip--assay">Deep Mutational Scanning</span>
-              <span class="chip chip--count">982 variants</span>
-              <span class="chip chip--calibrated">1 calibration</span>
-              <span class="result-date">Jan 2024</span>
+            <div class="result-item">
+              <a href="./score-set-detail.html" class="result-title"
+                >BRCA1 BARD1-binding interface – yeast two-hybrid DMS</a
+              >
+              <div class="result-desc">
+                Deep mutational scan of the BRCA1-BARD1 binding interface using a yeast two-hybrid interaction assay.
+              </div>
+              <div class="result-meta">
+                <span class="chip chip--gene">BRCA1</span>
+                <span class="chip chip--organism">Homo sapiens</span>
+                <span class="chip chip--count">982 variants</span>
+                <span class="chip chip--calibrated">1 calibration</span>
+                <span class="result-date">Jan 2024</span>
+              </div>
             </div>
           </div>
         </div>
@@ -1363,6 +1525,9 @@
           <a href="#">Chat</a>
           <a href="#">Documentation</a>
           <a href="#">Report an issue</a>
+          <span style="color: #dee2e6">|</span>
+          <a href="./design-showcase.html" style="color: #aaa">Design Showcase</a>
+          <a href="./404.html" style="color: #aaa">404 Demo</a>
         </div>
       </div>
     </footer>
@@ -1373,7 +1538,7 @@
         const dd = document.getElementById('nav-add-dropdown')
         dd.classList.toggle('open')
       }
-      document.addEventListener('click', function(e) {
+      document.addEventListener('click', function (e) {
         const wrap = document.querySelector('.nav-add-wrap')
         if (wrap && !wrap.contains(e.target)) {
           const dd = document.getElementById('nav-add-dropdown')
@@ -1421,13 +1586,13 @@
           if (dd) dd.classList.remove('open')
         }
       })
-    
+
       function toggleUserMenu(event) {
         event.stopPropagation()
         var dd = document.getElementById('nav-user-dropdown')
         dd.classList.toggle('open')
       }
-      document.addEventListener('click', function(e) {
+      document.addEventListener('click', function (e) {
         var wrap = document.querySelector('.nav-user-wrap')
         if (wrap && !wrap.contains(e.target)) {
           var dd = document.getElementById('nav-user-dropdown')

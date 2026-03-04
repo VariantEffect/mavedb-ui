@@ -117,7 +117,7 @@
       }
       .nav-add-option-desc {
         font-size: 12px;
-        color: #888;
+        color: #767676;
         margin-top: 2px;
       }
       .nav-user-wrap {
@@ -148,7 +148,7 @@
         background: #5a9375;
       }
       .nav-user-caret {
-        color: #999;
+        color: #767676;
         flex-shrink: 0;
         cursor: pointer;
       }
@@ -189,7 +189,7 @@
       .nav-user-dropdown .dropdown-icon {
         width: 16px;
         height: 16px;
-        color: #888;
+        color: #767676;
         flex-shrink: 0;
       }
       .nav-bell-wrap {
@@ -275,7 +275,7 @@
         font-weight: 600;
       }
       .nav-bell-activity-verb {
-        color: #888;
+        color: #767676;
       }
       .nav-bell-activity-time {
         font-size: 11px;
@@ -305,7 +305,7 @@
       .page-header-label {
         font-size: 12px;
         font-weight: 600;
-        color: #888;
+        color: #767676;
         text-transform: uppercase;
         letter-spacing: 0.5px;
         margin-bottom: 4px;
@@ -332,7 +332,7 @@
       }
       .page-header-meta {
         font-size: 13px;
-        color: #888;
+        color: #767676;
         margin-top: 8px;
         line-height: 1.6;
       }
@@ -396,8 +396,8 @@
       /* ── COLLECTION STRIP ── */
       .collection-strip {
         background: #fafafa;
-        border-top: 1px solid #e8e8e8;
-        border-bottom: 1px solid #e8e8e8;
+        border-top: 1px solid #e0e0e0;
+        border-bottom: 1px solid #e0e0e0;
         padding: 8px 0;
       }
       .collection-strip-inner {
@@ -462,7 +462,7 @@
       }
       .save-collection-btn-strip:hover {
         background: #f0f9f2;
-        border-color: #5a9671;
+        border-color: #5a9375;
       }
 
       /* ── CONTENT ── */
@@ -526,7 +526,7 @@
       .score-set-item-urn {
         font-size: 12px;
         font-weight: 500;
-        color: #999;
+        color: #767676;
       }
       .score-set-badges {
         display: flex;
@@ -563,7 +563,7 @@
       }
       .score-set-item-target {
         font-size: 12px;
-        color: #888;
+        color: #767676;
         display: flex;
         align-items: center;
         gap: 4px;
@@ -626,7 +626,7 @@
       }
       .detail-label {
         flex: 0 0 120px;
-        color: #888;
+        color: #767676;
         font-weight: 600;
       }
       .detail-value {
@@ -712,7 +712,7 @@
       }
       .target-accordion-type {
         font-size: 12px;
-        color: #888;
+        color: #767676;
         font-weight: 500;
       }
       .target-accordion-urn {
@@ -763,7 +763,7 @@
         flex-shrink: 0;
       }
       .keyword-info-btn:hover {
-        background: #5a9671;
+        background: #5a9375;
       }
       .keyword-label {
         color: #0074d9;
@@ -891,7 +891,7 @@
       }
       .ext-id-empty {
         font-size: 13px;
-        color: #999;
+        color: #767676;
         font-style: italic;
       }
 
@@ -964,7 +964,7 @@
         align-items: center;
         justify-content: space-between;
         font-size: 13px;
-        color: #888;
+        color: #767676;
       }
       .footer-inner a {
         color: #0074d9;
@@ -1060,21 +1060,21 @@
             <div class="nav-bell-activity-list">
               <div class="nav-bell-activity-item">
                 <span
-                  ><a href="#">CHEK2 Kinase Activity Assay – Draft</a>
+                  ><a href="./score-set-detail.html">CHEK2 Kinase Activity Assay – Draft</a>
                   <span class="nav-bell-activity-verb">edited by you</span></span
                 >
                 <span class="nav-bell-activity-time">2 days ago</span>
               </div>
               <div class="nav-bell-activity-item">
                 <span
-                  ><a href="#">KCNQ4 Variant Effect – Draft</a>
+                  ><a href="./score-set-detail.html">KCNQ4 Variant Effect – Draft</a>
                   <span class="nav-bell-activity-verb">calibration created by you</span></span
                 >
                 <span class="nav-bell-activity-time">5 days ago</span>
               </div>
               <div class="nav-bell-activity-item">
                 <span
-                  ><a href="#">BRCA1 Combined Functional Meta-analysis</a>
+                  ><a href="./score-set-detail.html">BRCA1 Combined Functional Meta-analysis</a>
                   <span class="nav-bell-activity-verb">published</span></span
                 >
                 <span class="nav-bell-activity-time">Nov 5, 2024</span>
@@ -1084,18 +1084,68 @@
         </div>
         <div class="nav-user-wrap" onclick="toggleUserMenu(event)">
           <button class="nav-user">B</button>
-          <svg class="nav-user-caret" width="10" height="10" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><polyline points="6 9 12 15 18 9"/></svg>
+          <svg
+            class="nav-user-caret"
+            width="10"
+            height="10"
+            viewBox="0 0 24 24"
+            fill="none"
+            stroke="currentColor"
+            stroke-width="2.5"
+            stroke-linecap="round"
+            stroke-linejoin="round"
+          >
+            <polyline points="6 9 12 15 18 9" />
+          </svg>
           <div id="nav-user-dropdown" class="nav-user-dropdown">
             <a href="./settings.html">
-              <svg class="dropdown-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="3"/><path d="M19.4 15a1.65 1.65 0 0 0 .33 1.82l.06.06a2 2 0 1 1-2.83 2.83l-.06-.06a1.65 1.65 0 0 0-1.82-.33 1.65 1.65 0 0 0-1 1.51V21a2 2 0 0 1-4 0v-.09A1.65 1.65 0 0 0 9 19.4a1.65 1.65 0 0 0-1.82.33l-.06.06a2 2 0 1 1-2.83-2.83l.06-.06A1.65 1.65 0 0 0 4.68 15a1.65 1.65 0 0 0-1.51-1H3a2 2 0 0 1 0-4h.09A1.65 1.65 0 0 0 4.6 9a1.65 1.65 0 0 0-.33-1.82l-.06-.06a2 2 0 1 1 2.83-2.83l.06.06A1.65 1.65 0 0 0 9 4.68a1.65 1.65 0 0 0 1-1.51V3a2 2 0 0 1 4 0v.09a1.65 1.65 0 0 0 1 1.51 1.65 1.65 0 0 0 1.82-.33l.06-.06a2 2 0 1 1 2.83 2.83l-.06.06A1.65 1.65 0 0 0 19.4 9a1.65 1.65 0 0 0 1.51 1H21a2 2 0 0 1 0 4h-.09a1.65 1.65 0 0 0-1.51 1z"/></svg>
+              <svg
+                class="dropdown-icon"
+                viewBox="0 0 24 24"
+                fill="none"
+                stroke="currentColor"
+                stroke-width="2"
+                stroke-linecap="round"
+                stroke-linejoin="round"
+              >
+                <circle cx="12" cy="12" r="3" />
+                <path
+                  d="M19.4 15a1.65 1.65 0 0 0 .33 1.82l.06.06a2 2 0 1 1-2.83 2.83l-.06-.06a1.65 1.65 0 0 0-1.82-.33 1.65 1.65 0 0 0-1 1.51V21a2 2 0 0 1-4 0v-.09A1.65 1.65 0 0 0 9 19.4a1.65 1.65 0 0 0-1.82.33l-.06.06a2 2 0 1 1-2.83-2.83l.06-.06A1.65 1.65 0 0 0 4.68 15a1.65 1.65 0 0 0-1.51-1H3a2 2 0 0 1 0-4h.09A1.65 1.65 0 0 0 4.6 9a1.65 1.65 0 0 0-.33-1.82l-.06-.06a2 2 0 1 1 2.83-2.83l.06.06A1.65 1.65 0 0 0 9 4.68a1.65 1.65 0 0 0 1-1.51V3a2 2 0 0 1 4 0v.09a1.65 1.65 0 0 0 1 1.51 1.65 1.65 0 0 0 1.82-.33l.06-.06a2 2 0 1 1 2.83 2.83l-.06.06A1.65 1.65 0 0 0 19.4 9a1.65 1.65 0 0 0 1.51 1H21a2 2 0 0 1 0 4h-.09a1.65 1.65 0 0 0-1.51 1z"
+                />
+              </svg>
               Settings
             </a>
             <a href="./dashboard.html">
-              <svg class="dropdown-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="3" width="7" height="7"/><rect x="14" y="3" width="7" height="7"/><rect x="14" y="14" width="7" height="7"/><rect x="3" y="14" width="7" height="7"/></svg>
+              <svg
+                class="dropdown-icon"
+                viewBox="0 0 24 24"
+                fill="none"
+                stroke="currentColor"
+                stroke-width="2"
+                stroke-linecap="round"
+                stroke-linejoin="round"
+              >
+                <rect x="3" y="3" width="7" height="7" />
+                <rect x="14" y="3" width="7" height="7" />
+                <rect x="14" y="14" width="7" height="7" />
+                <rect x="3" y="14" width="7" height="7" />
+              </svg>
               Dashboard
             </a>
             <a href="#">
-              <svg class="dropdown-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M9 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h4"/><polyline points="16 17 21 12 16 7"/><line x1="21" y1="12" x2="9" y2="12"/></svg>
+              <svg
+                class="dropdown-icon"
+                viewBox="0 0 24 24"
+                fill="none"
+                stroke="currentColor"
+                stroke-width="2"
+                stroke-linecap="round"
+                stroke-linejoin="round"
+              >
+                <path d="M9 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h4" />
+                <polyline points="16 17 21 12 16 7" />
+                <line x1="21" y1="12" x2="9" y2="12" />
+              </svg>
               Sign out
             </a>
           </div>
@@ -1114,7 +1164,7 @@
           </div>
           <div class="btn-group">
             <a href="./add-score-set.html" class="btn btn-primary btn-sm">Add Score Set</a>
-            <a href="#" class="btn btn-secondary btn-sm">Edit</a>
+            <a href="./edit-experiment.html" class="btn btn-secondary btn-sm">Edit</a>
           </div>
         </div>
         <div class="page-header-desc">
@@ -1465,7 +1515,7 @@
         <h3>Scoreset Targets</h3>
 
         <!-- Score set 1 targets -->
-        <div style="font-size: 12px; color: #888; font-weight: 600; margin-bottom: 8px">
+        <div style="font-size: 12px; color: #767676; font-weight: 600; margin-bottom: 8px">
           From <a href="./score-set-detail.html" style="font-size: 12px">BRCA1 RING Domain — Functional Scores</a>
         </div>
         <div class="target-accordion-item open" onclick="toggleTarget(this)">
@@ -1524,7 +1574,7 @@
         <div
           style="
             font-size: 12px;
-            color: #888;
+            color: #767676;
             font-weight: 600;
             margin-top: 20px;
             margin-bottom: 8px;
@@ -1647,6 +1697,9 @@
           <a href="#">Chat</a>
           <a href="#">Documentation</a>
           <a href="#">Report an issue</a>
+          <span style="color: #dee2e6">|</span>
+          <a href="./design-showcase.html" style="color: #aaa">Design Showcase</a>
+          <a href="./404.html" style="color: #aaa">404 Demo</a>
         </div>
       </div>
     </footer>
@@ -1709,13 +1762,13 @@
           btn.textContent = 'Show all'
         }
       }
-    
+
       function toggleUserMenu(event) {
         event.stopPropagation()
         var dd = document.getElementById('nav-user-dropdown')
         dd.classList.toggle('open')
       }
-      document.addEventListener('click', function(e) {
+      document.addEventListener('click', function (e) {
         var wrap = document.querySelector('.nav-user-wrap')
         if (wrap && !wrap.contains(e.target)) {
           var dd = document.getElementById('nav-user-dropdown')

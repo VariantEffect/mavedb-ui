@@ -4,7 +4,10 @@
     <meta charset="UTF-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
     <title>Dashboard — MaveDB Prototype</title>
-    <link href="https://fonts.googleapis.com/css2?family=Raleway:wght@400;500;600;700&family=Exo+2:wght@700;800;900&display=swap" rel="stylesheet" />
+    <link
+      href="https://fonts.googleapis.com/css2?family=Raleway:wght@400;500;600;700&family=Exo+2:wght@700;800;900&display=swap"
+      rel="stylesheet"
+    />
     <style>
       *,
       *::before,
@@ -21,7 +24,9 @@
         font-size: 15px;
       }
 
-      h1, h2, h3 {
+      h1,
+      h2,
+      h3 {
         font-family: 'Exo 2', sans-serif;
       }
 
@@ -67,14 +72,16 @@
         color: #444;
       }
       .nav-links a:hover {
-        color: #78B793;
+        color: #78b793;
         text-decoration: none;
       }
       .nav-links a.active {
-        color: #78B793;
+        color: #78b793;
         font-weight: 700;
       }
-      .nav-add-wrap { position: relative; }
+      .nav-add-wrap {
+        position: relative;
+      }
       .nav-add-dropdown {
         display: none;
         position: absolute;
@@ -84,20 +91,35 @@
         background: #fff;
         border: 1px solid #e0e0e0;
         border-radius: 8px;
-        box-shadow: 0 8px 24px rgba(0,0,0,0.12);
+        box-shadow: 0 8px 24px rgba(0, 0, 0, 0.12);
         z-index: 200;
         overflow: hidden;
       }
-      .nav-add-dropdown.open { display: block; }
+      .nav-add-dropdown.open {
+        display: block;
+      }
       .nav-add-option {
         display: block;
         padding: 12px 16px;
         border-bottom: 1px solid #f0f0f0;
       }
-      .nav-add-option:last-child { border-bottom: none; }
-      .nav-add-option:hover { background: #f5f5f5; text-decoration: none; }
-      .nav-add-option-label { font-size: 13px; font-weight: 600; color: #333; }
-      .nav-add-option-desc { font-size: 12px; color: #888; margin-top: 2px; }
+      .nav-add-option:last-child {
+        border-bottom: none;
+      }
+      .nav-add-option:hover {
+        background: #f5f5f5;
+        text-decoration: none;
+      }
+      .nav-add-option-label {
+        font-size: 13px;
+        font-weight: 600;
+        color: #333;
+      }
+      .nav-add-option-desc {
+        font-size: 12px;
+        color: #767676;
+        margin-top: 2px;
+      }
       .nav-user-wrap {
         position: relative;
         flex-shrink: 0;
@@ -120,13 +142,13 @@
         flex-shrink: 0;
         cursor: pointer;
         border: none;
-        font-family: "Raleway", sans-serif;
+        font-family: 'Raleway', sans-serif;
       }
       .nav-user:hover {
         background: #5a9375;
       }
       .nav-user-caret {
-        color: #999;
+        color: #767676;
         flex-shrink: 0;
         cursor: pointer;
       }
@@ -167,7 +189,7 @@
       .nav-user-dropdown .dropdown-icon {
         width: 16px;
         height: 16px;
-        color: #888;
+        color: #767676;
         flex-shrink: 0;
       }
       .nav-bell-wrap {
@@ -217,7 +239,7 @@
         background: #fff;
         border: 1px solid #e0e0e0;
         border-radius: 8px;
-        box-shadow: 0 8px 24px rgba(0,0,0,0.12);
+        box-shadow: 0 8px 24px rgba(0, 0, 0, 0.12);
         z-index: 300;
         overflow: hidden;
       }
@@ -253,7 +275,7 @@
         font-weight: 600;
       }
       .nav-bell-activity-verb {
-        color: #888;
+        color: #767676;
       }
       .nav-bell-activity-time {
         font-size: 11px;
@@ -278,7 +300,7 @@
       }
       .page-subtitle {
         font-size: 13px;
-        color: #888;
+        color: #767676;
         margin-bottom: 20px;
       }
 
@@ -290,40 +312,65 @@
         margin-top: 4px;
       }
       .tab-item {
-        padding: 10px 20px;
+        padding: 10px 20px 12px;
         font-size: 14px;
         font-weight: 600;
         color: #777;
         cursor: pointer;
-        border-bottom: 2px solid transparent;
+        border: none;
         margin-bottom: -2px;
         background: none;
-        border-top: none;
-        border-left: none;
-        border-right: none;
         font-family: 'Raleway', sans-serif;
         transition: color 0.15s;
         display: flex;
         align-items: center;
         gap: 7px;
+        position: relative;
       }
       .tab-item:hover {
-        color: #78B793;
+        color: #78b793;
       }
       .tab-item.active {
-        color: #78B793;
-        border-bottom-color: #78B793;
+        color: #78b793;
+      }
+      .tab-item.active::after {
+        content: '';
+        position: absolute;
+        bottom: 0px;
+        left: 0;
+        right: 0;
+        height: 2px;
+        background: linear-gradient(
+          90deg,
+          #78b793 0% 10.2%,
+          transparent 10.2% 11.2%,
+          #a1d8c8 11.2% 21.4%,
+          transparent 21.4% 22.4%,
+          #78b793 22.4% 32.7%,
+          transparent 32.7% 33.7%,
+          #c8e4c6 33.7% 43.9%,
+          transparent 43.9% 44.9%,
+          #fbda68 44.9% 55.1%,
+          transparent 55.1% 56.1%,
+          #f8971d 56.1% 66.3%,
+          transparent 66.3% 67.3%,
+          #fbda68 67.3% 77.6%,
+          transparent 77.6% 78.6%,
+          #a1d8c8 78.6% 88.8%,
+          transparent 88.8% 89.8%,
+          #78b793 89.8% 100%
+        );
       }
       .tab-count {
         font-size: 11px;
         font-weight: 700;
         background: #eef0fb;
-        color: #78B793;
+        color: #78b793;
         border-radius: 10px;
         padding: 1px 7px;
       }
       .tab-item.active .tab-count {
-        background: #78B793;
+        background: #78b793;
         color: #222;
       }
 
@@ -368,7 +415,7 @@
         transition: border-color 0.15s;
       }
       .search-input-small:focus {
-        border-color: #78B793;
+        border-color: #78b793;
       }
       .search-input-small::placeholder {
         color: #bbb;
@@ -388,7 +435,7 @@
         transition: background 0.15s;
       }
       .btn-primary {
-        background: #F8971D;
+        background: #f8971d;
         color: #222;
       }
       .btn-primary:hover {
@@ -398,11 +445,11 @@
       }
       .btn-outline {
         background: #fff;
-        color: #78B793;
-        border: 1.5px solid #78B793;
+        color: #78b793;
+        border: 1.5px solid #78b793;
       }
       .btn-outline:hover {
-        background: #C8E4C6;
+        background: #c8e4c6;
         text-decoration: none;
       }
       .btn-sm {
@@ -437,20 +484,20 @@
         transition: all 0.12s;
       }
       .filter-chip:hover {
-        border-color: #78B793;
-        color: #78B793;
+        border-color: #78b793;
+        color: #78b793;
       }
       .filter-chip.active {
         background: #eef0fb;
-        border-color: #78B793;
-        color: #78B793;
+        border-color: #78b793;
+        color: #78b793;
       }
       .filter-chip--experiment {
         display: none;
         align-items: center;
         gap: 6px;
-        background: #78B793;
-        border-color: #78B793;
+        background: #78b793;
+        border-color: #78b793;
         color: #222;
         cursor: default;
       }
@@ -458,8 +505,8 @@
         display: inline-flex;
       }
       .filter-chip--experiment:hover {
-        background: #78B793;
-        border-color: #78B793;
+        background: #78b793;
+        border-color: #78b793;
         color: #222;
       }
       .filter-chip--experiment-dismiss {
@@ -488,7 +535,7 @@
         font-weight: 700;
         text-transform: uppercase;
         letter-spacing: 0.6px;
-        color: #999;
+        color: #767676;
         padding: 10px 16px;
         background: #fafafa;
         border-bottom: 1px solid #dee2e6;
@@ -509,7 +556,7 @@
       }
       .row-title {
         font-weight: 600;
-        color: #78B793;
+        color: #78b793;
       }
       .row-title:hover {
         text-decoration: underline;
@@ -594,21 +641,25 @@
         color: #9e9e9e;
         border-color: #e0e0e0;
       }
-      .row--superseded td {
-        opacity: 0.6;
+      .status-superseded {
+        background: #f5f5f5;
+        color: #757575;
+      }
+      .status-superseded::before {
+        background: #bdbdbd;
       }
 
       /* ── ROW DESCRIPTION ── */
       .row-desc {
         font-size: 12px;
-        color: #999;
+        color: #767676;
         margin-top: 2px;
         line-height: 1.4;
       }
 
       /* ── DATE ── */
       .date-cell {
-        color: #888;
+        color: #767676;
         font-size: 13px;
         white-space: nowrap;
       }
@@ -627,7 +678,7 @@
       .action-link {
         font-size: 12px;
         font-weight: 600;
-        color: #78B793;
+        color: #78b793;
       }
       .action-link:hover {
         text-decoration: underline;
@@ -668,7 +719,7 @@
       }
       .empty-state p {
         font-size: 13px;
-        color: #999;
+        color: #767676;
         margin-bottom: 20px;
         line-height: 1.6;
         max-width: 400px;
@@ -719,7 +770,7 @@
       }
       .visibility-private {
         background: #f5f5f5;
-        color: #888;
+        color: #767676;
       }
       .visibility-private::before {
         background: #bbb;
@@ -788,10 +839,13 @@
       }
       .cal-score-set {
         font-size: 12px;
-        color: #888;
+        color: #767676;
         margin-top: 2px;
       }
-      .cal-score-set a { color: #0074d9; font-weight: 500; }
+      .cal-score-set a {
+        color: #0074d9;
+        font-weight: 500;
+      }
       .tag {
         display: inline-block;
         padding: 2px 8px;
@@ -800,11 +854,21 @@
         font-weight: 600;
         letter-spacing: 0.2px;
       }
-      .tag-green { background: #e8f5e9; color: #2e7d32; }
-      .tag-red { background: #ffebee; color: #c62828; }
+      .tag-green {
+        background: #e8f5e9;
+        color: #2e7d32;
+      }
+      .tag-red {
+        background: #ffebee;
+        color: #c62828;
+      }
 
       /* Column header tooltips */
-      .has-tip { position: relative; cursor: help; border-bottom: 1px dashed #ccc; }
+      .has-tip {
+        position: relative;
+        cursor: help;
+        border-bottom: 1px dashed #ccc;
+      }
       .tip {
         display: none;
         position: absolute;
@@ -834,108 +898,367 @@
         border: 5px solid transparent;
         border-bottom-color: #333;
       }
-      .has-tip:hover .tip { display: block; }
-      .row-label.has-tip .tip { left: 0; transform: none; }
-      .row-label.has-tip .tip::before { left: 20px; transform: none; }
-      .source-label { position: relative; cursor: help; border-bottom: 1px dashed #ccc; }
-      .source-label:hover .tip { display: block; }
+      .has-tip:hover .tip {
+        display: block;
+      }
+      .row-label.has-tip .tip {
+        left: 0;
+        transform: none;
+      }
+      .row-label.has-tip .tip::before {
+        left: 20px;
+        transform: none;
+      }
+      .source-label {
+        position: relative;
+        cursor: help;
+        border-bottom: 1px dashed #ccc;
+      }
+      .source-label:hover .tip {
+        display: block;
+      }
       .source-label .tip {
-        display: none; position: absolute; bottom: calc(100% + 6px); left: 50%; transform: translateX(-50%);
-        width: 220px; padding: 8px 10px; background: #333; color: #fff; font-size: 11px; font-weight: 400;
-        line-height: 1.5; border-radius: 5px; z-index: 50; white-space: normal; pointer-events: none;
+        display: none;
+        position: absolute;
+        bottom: calc(100% + 6px);
+        left: 50%;
+        transform: translateX(-50%);
+        width: 220px;
+        padding: 8px 10px;
+        background: #333;
+        color: #fff;
+        font-size: 11px;
+        font-weight: 400;
+        line-height: 1.5;
+        border-radius: 5px;
+        z-index: 50;
+        white-space: normal;
+        pointer-events: none;
       }
       .source-label .tip::before {
-        content: ''; position: absolute; top: 100%; left: 50%; transform: translateX(-50%);
-        border: 5px solid transparent; border-top-color: #333;
+        content: '';
+        position: absolute;
+        top: 100%;
+        left: 50%;
+        transform: translateX(-50%);
+        border: 5px solid transparent;
+        border-top-color: #333;
       }
-      .baseline-bar .has-tip { border-bottom: 1px dashed #bbb; }
-      .baseline-bar .has-tip .tip { width: 200px; }
+      .baseline-bar .has-tip {
+        border-bottom: 1px dashed #bbb;
+      }
+      .baseline-bar .has-tip .tip {
+        width: 200px;
+      }
 
       /* Row action dropdown */
-      .row-action-wrap { position: relative; display: inline-block; }
+      .row-action-wrap {
+        position: relative;
+        display: inline-block;
+      }
       .row-action-trigger {
-        width: 30px; height: 30px; border: 1px solid #ddd; background: #fff; border-radius: 6px;
-        cursor: pointer; display: flex; align-items: center; justify-content: center; color: #888; transition: all 0.15s;
+        width: 30px;
+        height: 30px;
+        border: 1px solid #ddd;
+        background: #fff;
+        border-radius: 6px;
+        cursor: pointer;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        color: #767676;
+        transition: all 0.15s;
       }
-      .row-action-trigger:hover { background: #f8f8f8; border-color: #ccc; color: #555; }
+      .row-action-trigger:hover {
+        background: #f8f8f8;
+        border-color: #ccc;
+        color: #555;
+      }
       .row-action-menu {
-        display: none; position: absolute; right: 0; top: calc(100% + 4px); min-width: 230px;
-        background: #fff; border: 1px solid #e0e0e0; border-radius: 8px; box-shadow: 0 4px 16px rgba(0,0,0,0.12);
-        z-index: 50; padding: 4px 0;
+        display: none;
+        position: absolute;
+        right: 0;
+        top: calc(100% + 4px);
+        min-width: 230px;
+        background: #fff;
+        border: 1px solid #e0e0e0;
+        border-radius: 8px;
+        box-shadow: 0 4px 16px rgba(0, 0, 0, 0.12);
+        z-index: 50;
+        padding: 4px 0;
       }
-      .row-action-menu.open { display: block; }
+      .row-action-menu.open {
+        display: block;
+      }
       .row-action-item {
-        display: block; width: 100%; padding: 8px 14px; border: none; background: none;
-        cursor: pointer; text-align: left; transition: background 0.1s; text-decoration: none;
+        display: block;
+        width: 100%;
+        padding: 8px 14px;
+        border: none;
+        background: none;
+        cursor: pointer;
+        text-align: left;
+        transition: background 0.1s;
+        text-decoration: none;
       }
-      .row-action-item:hover { background: #f5f5f5; text-decoration: none; }
-      .row-action-item-label { font-size: 13px; font-weight: 600; color: #333; display: flex; align-items: center; gap: 6px; }
-      .row-action-item-desc { font-size: 11px; color: #999; margin-top: 2px; line-height: 1.35; }
-      .row-action-item.danger .row-action-item-label { color: #e53935; }
-      .row-action-item.danger:hover { background: #fef2f2; }
-      .row-action-sep { height: 1px; background: #eee; margin: 4px 0; }
+      .row-action-item:hover {
+        background: #f5f5f5;
+        text-decoration: none;
+      }
+      .row-action-item-label {
+        font-size: 13px;
+        font-weight: 600;
+        color: #333;
+        display: flex;
+        align-items: center;
+        gap: 6px;
+      }
+      .row-action-item-desc {
+        font-size: 11px;
+        color: #767676;
+        margin-top: 2px;
+        line-height: 1.35;
+      }
+      .row-action-item.danger .row-action-item-label {
+        color: #e53935;
+      }
+      .row-action-item.danger:hover {
+        background: #fef2f2;
+      }
+      .row-action-sep {
+        height: 1px;
+        background: #eee;
+        margin: 4px 0;
+      }
 
       /* Expanded ranges */
-      .expanded-content { display: none; }
-      .expandable-row.open + .expanded-content { display: table-row; }
-      .expanded-inner { padding: 20px 24px 24px 24px; background: #f8faf9; margin: 0; }
-      .cal-ranges { border: 1px solid #d5dbe0; border-radius: 8px; overflow: hidden; background: #fff; }
-      .cal-ranges-title {
-        display: flex; align-items: center; gap: 12px; font-size: 11px; font-weight: 700;
-        text-transform: uppercase; letter-spacing: 0.6px; color: #78b793; padding: 10px 14px;
-        background: #f8f9fa; border-bottom: 1px solid #d5dbe0;
+      .expanded-content {
+        display: none;
       }
-      .cal-ranges-title-desc { font-size: 12px; font-weight: 400; color: #888; text-transform: none; letter-spacing: 0; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
-      .cal-ranges-title-sep { width: 1px; height: 14px; background: #dee2e6; flex-shrink: 0; }
+      .expandable-row.open + .expanded-content {
+        display: table-row;
+      }
+      .expanded-inner {
+        padding: 20px 24px 24px 24px;
+        background: #f8faf9;
+        margin: 0;
+      }
+      .cal-ranges {
+        border: 1px solid #d5dbe0;
+        border-radius: 8px;
+        overflow: hidden;
+        background: #fff;
+      }
+      .cal-ranges-title {
+        display: flex;
+        align-items: center;
+        gap: 12px;
+        font-size: 11px;
+        font-weight: 700;
+        text-transform: uppercase;
+        letter-spacing: 0.6px;
+        color: #78b793;
+        padding: 10px 14px;
+        background: #f8f9fa;
+        border-bottom: 1px solid #d5dbe0;
+      }
+      .cal-ranges-title-desc {
+        font-size: 12px;
+        font-weight: 400;
+        color: #767676;
+        text-transform: none;
+        letter-spacing: 0;
+        white-space: nowrap;
+        overflow: hidden;
+        text-overflow: ellipsis;
+      }
+      .cal-ranges-title-sep {
+        width: 1px;
+        height: 14px;
+        background: #dee2e6;
+        flex-shrink: 0;
+      }
 
       /* Ranges grid */
-      .cal-grid { width: 100%; border-collapse: collapse; font-size: 13px; table-layout: fixed; }
+      .cal-grid {
+        width: 100%;
+        border-collapse: collapse;
+        font-size: 13px;
+        table-layout: fixed;
+      }
       .cal-grid .row-label {
-        padding: 10px 14px; font-size: 12px; font-weight: 700; color: #444;
-        background: #f8f9fa; border-right: 2px solid #dee2e6; white-space: nowrap;
+        padding: 10px 14px;
+        font-size: 12px;
+        font-weight: 700;
+        color: #444;
+        background: #f8f9fa;
+        border-right: 2px solid #dee2e6;
+        white-space: nowrap;
       }
       .cal-grid td {
-        padding: 10px 14px; text-align: center; border-bottom: 1px solid #d5dbe0;
-        border-right: 1px solid #d5dbe0; color: #444; font-size: 13px;
+        padding: 10px 14px;
+        text-align: center;
+        border-bottom: 1px solid #d5dbe0;
+        border-right: 1px solid #d5dbe0;
+        color: #444;
+        font-size: 13px;
       }
-      .cal-grid td:last-child { border-right: none; }
-      .cal-grid tr:last-child td, .cal-grid tr:last-child .row-label { border-bottom: none; }
-      .col-abnormal { border-top: 4px solid #e53935; }
-      .col-indeterminate { border-top: 4px solid #bbb; }
-      .col-normal { border-top: 4px solid #1565c0; }
+      .cal-grid td:last-child {
+        border-right: none;
+      }
+      .cal-grid tr:last-child td,
+      .cal-grid tr:last-child .row-label {
+        border-bottom: none;
+      }
+      .col-abnormal {
+        border-top: 4px solid #e53935;
+      }
+      .col-indeterminate {
+        border-top: 4px solid #bbb;
+      }
+      .col-normal {
+        border-top: 4px solid #1565c0;
+      }
 
-      .fc-badge { display: inline-block; padding: 3px 10px; border-radius: 4px; font-size: 11px; font-weight: 700; letter-spacing: 0.2px; }
-      .fc-abnormal { background: #ffebee; color: #c62828; }
-      .fc-not-specified { background: #f5f5f5; color: #757575; }
-      .fc-normal { background: #e3f2fd; color: #1565c0; }
+      .fc-badge {
+        display: inline-block;
+        padding: 3px 10px;
+        border-radius: 4px;
+        font-size: 11px;
+        font-weight: 700;
+        letter-spacing: 0.2px;
+      }
+      .fc-abnormal {
+        background: #ffebee;
+        color: #c62828;
+      }
+      .fc-not-specified {
+        background: #f5f5f5;
+        color: #757575;
+      }
+      .fc-normal {
+        background: #e3f2fd;
+        color: #1565c0;
+      }
 
-      .evidence-badge { display: inline-block; padding: 2px 8px; border-radius: 4px; font-size: 11px; font-weight: 700; letter-spacing: 0.3px; }
-      .evidence-ps3-very-strong { background: #f8bbd0; color: #880e4f; }
-      .evidence-ps3-strong { background: #fce4ec; color: #c62828; }
-      .evidence-ps3-moderate { background: #fff3e0; color: #e65100; }
-      .evidence-bs3 { background: #e3f2fd; color: #1565c0; }
-      .evidence-bs3-strong { background: #e8eaf6; color: #283593; }
-      .evidence-indeterminate { background: #f5f5f5; color: #757575; }
+      .evidence-badge {
+        display: inline-block;
+        padding: 2px 8px;
+        border-radius: 4px;
+        font-size: 11px;
+        font-weight: 700;
+        letter-spacing: 0.3px;
+      }
+      .evidence-ps3-very-strong {
+        background: #f8bbd0;
+        color: #880e4f;
+      }
+      .evidence-ps3-strong {
+        background: #fce4ec;
+        color: #c62828;
+      }
+      .evidence-ps3-moderate {
+        background: #fff3e0;
+        color: #e65100;
+      }
+      .evidence-bs3 {
+        background: #e3f2fd;
+        color: #1565c0;
+      }
+      .evidence-bs3-strong {
+        background: #e8eaf6;
+        color: #283593;
+      }
+      .evidence-indeterminate {
+        background: #f5f5f5;
+        color: #757575;
+      }
 
-      .interval-mono { font-family: monospace; font-size: 12px; color: #555; letter-spacing: -0.3px; }
-      .odds-value { font-family: monospace; font-size: 13px; font-weight: 600; color: #333; }
-      .muted-dash { color: #ccc; }
-      .variant-count { font-weight: 700; font-size: 13px; color: #555; font-family: 'Exo 2', monospace; }
-      .expanded-content > td { border-bottom: 3px solid #dee2e6 !important; }
+      .interval-mono {
+        font-family: monospace;
+        font-size: 12px;
+        color: #555;
+        letter-spacing: -0.3px;
+      }
+      .odds-value {
+        font-family: monospace;
+        font-size: 13px;
+        font-weight: 600;
+        color: #333;
+      }
+      .muted-dash {
+        color: #ccc;
+      }
+      .variant-count {
+        font-weight: 700;
+        font-size: 13px;
+        color: #555;
+        font-family: 'Exo 2', monospace;
+      }
+      .expanded-content > td {
+        border-bottom: 3px solid #dee2e6 !important;
+      }
 
-      .baseline-bar { display: flex; align-items: center; gap: 12px; padding: 10px 16px; background: #f8f9fa; border-bottom: 1px solid #d5dbe0; }
-      .baseline-bar-label { font-size: 11px; font-weight: 700; color: #999; text-transform: uppercase; letter-spacing: 0.5px; }
-      .baseline-bar-value { font-size: 15px; font-weight: 700; color: #333; font-family: monospace; }
-      .baseline-bar-sep { width: 1px; height: 18px; background: #dee2e6; }
-      .baseline-bar-desc { font-size: 12px; color: #888; }
+      .baseline-bar {
+        display: flex;
+        align-items: center;
+        gap: 12px;
+        padding: 10px 16px;
+        background: #f8f9fa;
+        border-bottom: 1px solid #d5dbe0;
+      }
+      .baseline-bar-label {
+        font-size: 11px;
+        font-weight: 700;
+        color: #767676;
+        text-transform: uppercase;
+        letter-spacing: 0.5px;
+      }
+      .baseline-bar-value {
+        font-size: 15px;
+        font-weight: 700;
+        color: #333;
+        font-family: monospace;
+      }
+      .baseline-bar-sep {
+        width: 1px;
+        height: 18px;
+        background: #dee2e6;
+      }
+      .baseline-bar-desc {
+        font-size: 12px;
+        color: #767676;
+      }
 
       .sources-section {
-        padding: 10px 14px; background: #f8f9fa; border-top: 1px solid #d5dbe0;
-        display: flex; flex-wrap: wrap; gap: 4px 16px; font-size: 12px; color: #999; align-items: center;
+        padding: 10px 14px;
+        background: #f8f9fa;
+        border-top: 1px solid #d5dbe0;
+        display: flex;
+        flex-wrap: wrap;
+        gap: 4px 16px;
+        font-size: 12px;
+        color: #767676;
+        align-items: center;
       }
-      .sources-heading { font-size: 10px; font-weight: 700; text-transform: uppercase; letter-spacing: 0.5px; color: #999; margin-right: 4px; display: flex; align-items: center; gap: 5px; }
-      .sources-section a { font-size: 12px; font-weight: 500; }
-      .source-sep { color: #ddd; }
+      .sources-heading {
+        font-size: 10px;
+        font-weight: 700;
+        text-transform: uppercase;
+        letter-spacing: 0.5px;
+        color: #767676;
+        margin-right: 4px;
+        display: flex;
+        align-items: center;
+        gap: 5px;
+      }
+      .sources-section a {
+        font-size: 12px;
+        font-weight: 500;
+      }
+      .source-sep {
+        color: #ddd;
+      }
 
       /* ── ROLE BADGE ── */
       .role-badge {
@@ -1046,7 +1369,7 @@
         align-items: center;
         justify-content: space-between;
         font-size: 13px;
-        color: #888;
+        color: #767676;
       }
       .footer-inner a {
         color: #0074d9;
@@ -1067,7 +1390,7 @@
         border-radius: 4px;
         font-size: 11px;
         font-weight: 600;
-        color: #888;
+        color: #767676;
         cursor: pointer;
         font-family: 'Raleway', sans-serif;
         transition: all 0.12s;
@@ -1083,14 +1406,32 @@
       }
 
       /* ── PROTOTYPE BANNER ── */
-      .proto-banner { background: #FBDA68; color: #333; text-align: center; padding: 8px 24px; font-size: 13px; font-family: 'Raleway', sans-serif; font-weight: 500; position: sticky; top: 0; z-index: 9999; letter-spacing: 0.1px; }
-      .proto-banner a { color: #555; text-decoration: underline; }
-      .proto-banner strong { font-weight: 700; }
-        </style>
+      .proto-banner {
+        background: #fbda68;
+        color: #333;
+        text-align: center;
+        padding: 8px 24px;
+        font-size: 13px;
+        font-family: 'Raleway', sans-serif;
+        font-weight: 500;
+        position: sticky;
+        top: 0;
+        z-index: 9999;
+        letter-spacing: 0.1px;
+      }
+      .proto-banner a {
+        color: #555;
+        text-decoration: underline;
+      }
+      .proto-banner strong {
+        font-weight: 700;
+      }
+    </style>
   </head>
   <body>
     <div class="proto-banner">
-      <strong>Prototype</strong> — This is a design prototype and is not intended for use. Data shown is fictional. The real MaveDB is at <a href="https://mavedb.org" target="_blank">mavedb.org</a>.
+      <strong>Prototype</strong> — This is a design prototype and is not intended for use. Data shown is fictional. The
+      real MaveDB is at <a href="https://mavedb.org" target="_blank">mavedb.org</a>.
     </div>
     <!-- NAV -->
     <nav>
@@ -1101,7 +1442,20 @@
           <li><a href="./mavemd.html">MaveMD</a></li>
           <li><a href="./search.html">Search</a></li>
           <li class="nav-add-wrap">
-            <a href="#" onclick="toggleAddMenu(event)" style="display:flex;align-items:center;gap:4px;">Add Dataset <svg width="10" height="10" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><polyline points="6 9 12 15 18 9"/></svg></a>
+            <a href="#" onclick="toggleAddMenu(event)" style="display: flex; align-items: center; gap: 4px"
+              >Add Dataset
+              <svg
+                width="10"
+                height="10"
+                viewBox="0 0 24 24"
+                fill="none"
+                stroke="currentColor"
+                stroke-width="2.5"
+                stroke-linecap="round"
+                stroke-linejoin="round"
+              >
+                <polyline points="6 9 12 15 18 9" /></svg
+            ></a>
             <div id="nav-add-dropdown" class="nav-add-dropdown">
               <a href="./add-experiment.html" class="nav-add-option">
                 <div class="nav-add-option-label">New Experiment</div>
@@ -1118,30 +1472,57 @@
         </ul>
         <div class="nav-bell-wrap">
           <button class="nav-bell" onclick="toggleBell(event)" title="Recent activity">
-            <svg width="17" height="17" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M18 8A6 6 0 0 0 6 8c0 7-3 9-3 9h18s-3-2-3-9"/><path d="M13.73 21a2 2 0 0 1-3.46 0"/></svg>
+            <svg
+              width="17"
+              height="17"
+              viewBox="0 0 24 24"
+              fill="none"
+              stroke="currentColor"
+              stroke-width="2"
+              stroke-linecap="round"
+              stroke-linejoin="round"
+            >
+              <path d="M18 8A6 6 0 0 0 6 8c0 7-3 9-3 9h18s-3-2-3-9" />
+              <path d="M13.73 21a2 2 0 0 1-3.46 0" />
+            </svg>
             <span class="nav-bell-badge">5</span>
           </button>
           <div id="nav-bell-dropdown" class="nav-bell-dropdown">
             <div class="nav-bell-dropdown-header">Recent Activity</div>
             <div class="nav-bell-activity-list">
               <div class="nav-bell-activity-item">
-                <span><a href="#">CHEK2 Kinase Activity Assay – Draft</a> <span class="nav-bell-activity-verb">edited by you</span></span>
+                <span
+                  ><a href="./score-set-detail.html">CHEK2 Kinase Activity Assay – Draft</a>
+                  <span class="nav-bell-activity-verb">edited by you</span></span
+                >
                 <span class="nav-bell-activity-time">2 days ago</span>
               </div>
               <div class="nav-bell-activity-item">
-                <span><a href="#">KCNQ4 Variant Effect – Draft</a> <span class="nav-bell-activity-verb">calibration created by you</span></span>
+                <span
+                  ><a href="./score-set-detail.html">KCNQ4 Variant Effect – Draft</a>
+                  <span class="nav-bell-activity-verb">calibration created by you</span></span
+                >
                 <span class="nav-bell-activity-time">5 days ago</span>
               </div>
               <div class="nav-bell-activity-item">
-                <span><a href="#">BRCA1 Combined Functional Meta-analysis</a> <span class="nav-bell-activity-verb">published</span></span>
+                <span
+                  ><a href="./score-set-detail.html">BRCA1 Combined Functional Meta-analysis</a>
+                  <span class="nav-bell-activity-verb">published</span></span
+                >
                 <span class="nav-bell-activity-time">Nov 5, 2024</span>
               </div>
               <div class="nav-bell-activity-item">
-                <span><a href="#">TP53 Saturation Genome Editing Panel</a> <span class="nav-bell-activity-verb">you were added as a contributor</span></span>
+                <span
+                  ><a href="./experiment-detail.html">TP53 Saturation Genome Editing Panel</a>
+                  <span class="nav-bell-activity-verb">you were added as a contributor</span></span
+                >
                 <span class="nav-bell-activity-time">Oct 28, 2024</span>
               </div>
               <div class="nav-bell-activity-item">
-                <span><a href="#">BRCA1 SGE Exon 20 – ClinVar</a> <span class="nav-bell-activity-verb">calibration published</span></span>
+                <span
+                  ><a href="./calibrations.html">BRCA1 SGE Exon 20 – ClinVar</a>
+                  <span class="nav-bell-activity-verb">calibration published</span></span
+                >
                 <span class="nav-bell-activity-time">Oct 14, 2024</span>
               </div>
             </div>
@@ -1149,18 +1530,68 @@
         </div>
         <div class="nav-user-wrap" onclick="toggleUserMenu(event)">
           <button class="nav-user">B</button>
-          <svg class="nav-user-caret" width="10" height="10" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><polyline points="6 9 12 15 18 9"/></svg>
+          <svg
+            class="nav-user-caret"
+            width="10"
+            height="10"
+            viewBox="0 0 24 24"
+            fill="none"
+            stroke="currentColor"
+            stroke-width="2.5"
+            stroke-linecap="round"
+            stroke-linejoin="round"
+          >
+            <polyline points="6 9 12 15 18 9" />
+          </svg>
           <div id="nav-user-dropdown" class="nav-user-dropdown">
             <a href="./settings.html">
-              <svg class="dropdown-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="3"/><path d="M19.4 15a1.65 1.65 0 0 0 .33 1.82l.06.06a2 2 0 1 1-2.83 2.83l-.06-.06a1.65 1.65 0 0 0-1.82-.33 1.65 1.65 0 0 0-1 1.51V21a2 2 0 0 1-4 0v-.09A1.65 1.65 0 0 0 9 19.4a1.65 1.65 0 0 0-1.82.33l-.06.06a2 2 0 1 1-2.83-2.83l.06-.06A1.65 1.65 0 0 0 4.68 15a1.65 1.65 0 0 0-1.51-1H3a2 2 0 0 1 0-4h.09A1.65 1.65 0 0 0 4.6 9a1.65 1.65 0 0 0-.33-1.82l-.06-.06a2 2 0 1 1 2.83-2.83l.06.06A1.65 1.65 0 0 0 9 4.68a1.65 1.65 0 0 0 1-1.51V3a2 2 0 0 1 4 0v.09a1.65 1.65 0 0 0 1 1.51 1.65 1.65 0 0 0 1.82-.33l.06-.06a2 2 0 1 1 2.83 2.83l-.06.06A1.65 1.65 0 0 0 19.4 9a1.65 1.65 0 0 0 1.51 1H21a2 2 0 0 1 0 4h-.09a1.65 1.65 0 0 0-1.51 1z"/></svg>
+              <svg
+                class="dropdown-icon"
+                viewBox="0 0 24 24"
+                fill="none"
+                stroke="currentColor"
+                stroke-width="2"
+                stroke-linecap="round"
+                stroke-linejoin="round"
+              >
+                <circle cx="12" cy="12" r="3" />
+                <path
+                  d="M19.4 15a1.65 1.65 0 0 0 .33 1.82l.06.06a2 2 0 1 1-2.83 2.83l-.06-.06a1.65 1.65 0 0 0-1.82-.33 1.65 1.65 0 0 0-1 1.51V21a2 2 0 0 1-4 0v-.09A1.65 1.65 0 0 0 9 19.4a1.65 1.65 0 0 0-1.82.33l-.06.06a2 2 0 1 1-2.83-2.83l.06-.06A1.65 1.65 0 0 0 4.68 15a1.65 1.65 0 0 0-1.51-1H3a2 2 0 0 1 0-4h.09A1.65 1.65 0 0 0 4.6 9a1.65 1.65 0 0 0-.33-1.82l-.06-.06a2 2 0 1 1 2.83-2.83l.06.06A1.65 1.65 0 0 0 9 4.68a1.65 1.65 0 0 0 1-1.51V3a2 2 0 0 1 4 0v.09a1.65 1.65 0 0 0 1 1.51 1.65 1.65 0 0 0 1.82-.33l.06-.06a2 2 0 1 1 2.83 2.83l-.06.06A1.65 1.65 0 0 0 19.4 9a1.65 1.65 0 0 0 1.51 1H21a2 2 0 0 1 0 4h-.09a1.65 1.65 0 0 0-1.51 1z"
+                />
+              </svg>
               Settings
             </a>
             <a href="./dashboard.html">
-              <svg class="dropdown-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="3" width="7" height="7"/><rect x="14" y="3" width="7" height="7"/><rect x="14" y="14" width="7" height="7"/><rect x="3" y="14" width="7" height="7"/></svg>
+              <svg
+                class="dropdown-icon"
+                viewBox="0 0 24 24"
+                fill="none"
+                stroke="currentColor"
+                stroke-width="2"
+                stroke-linecap="round"
+                stroke-linejoin="round"
+              >
+                <rect x="3" y="3" width="7" height="7" />
+                <rect x="14" y="3" width="7" height="7" />
+                <rect x="14" y="14" width="7" height="7" />
+                <rect x="3" y="14" width="7" height="7" />
+              </svg>
               Dashboard
             </a>
             <a href="#">
-              <svg class="dropdown-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M9 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h4"/><polyline points="16 17 21 12 16 7"/><line x1="21" y1="12" x2="9" y2="12"/></svg>
+              <svg
+                class="dropdown-icon"
+                viewBox="0 0 24 24"
+                fill="none"
+                stroke="currentColor"
+                stroke-width="2"
+                stroke-linecap="round"
+                stroke-linejoin="round"
+              >
+                <path d="M9 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h4" />
+                <polyline points="16 17 21 12 16 7" />
+                <line x1="21" y1="12" x2="9" y2="12" />
+              </svg>
               Sign out
             </a>
           </div>
@@ -1191,7 +1622,6 @@
     </div>
 
     <main class="main">
-
       <!-- ── SCORE SETS PANEL ── -->
       <div id="panel-score-sets" class="panel active">
         <div class="toolbar">
@@ -1210,225 +1640,221 @@
             </span>
           </div>
           <div class="toolbar-right">
-            <button class="empty-toggle" id="score-sets-empty-toggle" onclick="toggleEmptyState('score-sets')">Show empty state</button>
+            <button class="empty-toggle" id="score-sets-empty-toggle" onclick="toggleEmptyState('score-sets')">
+              Show empty state
+            </button>
             <input class="search-input-small" type="text" placeholder="Search score sets…" />
             <a href="./add-score-set.html" class="btn btn-primary">+ Add Score Set</a>
           </div>
         </div>
         <div id="score-sets-populated">
-        <table class="data-table">
-          <thead>
-            <tr>
-              <th style="width: 38%">Score Set</th>
-              <th>Targets</th>
-              <th>Role</th>
-              <th>Status</th>
-              <th>Published</th>
-              <th></th>
-            </tr>
-          </thead>
-          <tbody>
-            <tr>
-              <td>
-                <a href="./score-set-detail.html" class="row-title">BRCA1 SGE Exon 20 – Replicate 1</a>
-                <div class="row-desc">Saturation genome editing of BRCA1 exon 20 assessing variant impact on protein function via a cell survival readout.</div>
-              </td>
-              <td>
-                <div class="row-meta">
-                  <span class="chip-tag chip-tag--gene">BRCA1</span>
-                  <span class="chip-tag chip-tag--organism">Homo sapiens</span>
-                </div>
-              </td>
-              <td><span class="role-badge role-badge--owner">Owner</span></td>
-              <td><span class="status-badge status-published">Published</span></td>
-              <td class="date-cell">Jan 12, 2024</td>
-              <td><div class="row-actions">
-                <a href="./score-set-detail.html" class="action-link">View</a>
-              </div></td>
-            </tr>
-            <tr>
-              <td>
-                <a href="./score-set-detail.html" class="row-title">BRCA1 SGE Exon 20 – Replicate 2</a>
-                <div class="row-desc">Independent biological replicate of the BRCA1 exon 20 saturation genome editing screen.</div>
-              </td>
-              <td>
-                <div class="row-meta">
-                  <span class="chip-tag chip-tag--gene">BRCA1</span>
-                  <span class="chip-tag chip-tag--organism">Homo sapiens</span>
-                </div>
-              </td>
-              <td><span class="role-badge role-badge--owner">Owner</span></td>
-              <td><span class="status-badge status-published">Published</span></td>
-              <td class="date-cell">Jan 12, 2024</td>
-              <td><div class="row-actions">
-                <a href="./score-set-detail.html" class="action-link">View</a>
-              </div></td>
-            </tr>
-            <tr>
-              <td>
-                <a href="./score-set-detail.html" class="row-title">TP53 Saturation Genome Editing – Functional Score</a>
-                <div class="row-desc">Deep mutational scan of TP53 measuring functional scores across all possible single amino acid substitutions.</div>
-              </td>
-              <td>
-                <div class="row-meta">
-                  <span class="chip-tag chip-tag--gene">TP53</span>
-                  <span class="chip-tag chip-tag--organism">Homo sapiens</span>
-                </div>
-              </td>
-              <td><span class="role-badge role-badge--contributor">Contributor</span></td>
-              <td><span class="status-badge status-published">Published</span></td>
-              <td class="date-cell">Mar 4, 2024</td>
-              <td><div class="row-actions">
-                <a href="./score-set-detail.html" class="action-link">View</a>
-              </div></td>
-            </tr>
-            <tr>
-              <td>
-                <a href="./score-set-detail.html" class="row-title">KCNQ4 Missense Variant Effect Map</a>
-                <div class="row-desc">Comprehensive missense variant effect map for KCNQ4 using a heterologous expression assay in Xenopus oocytes.</div>
-              </td>
-              <td>
-                <div class="row-meta">
-                  <span class="chip-tag chip-tag--gene">KCNQ4</span>
-                  <span class="chip-tag chip-tag--organism">Homo sapiens</span>
-                </div>
-              </td>
-              <td><span class="role-badge role-badge--owner">Owner</span></td>
-              <td><span class="status-badge status-published">Published</span></td>
-              <td class="date-cell">Jun 22, 2023</td>
-              <td><div class="row-actions">
-                <a href="./score-set-detail.html" class="action-link">View</a>
-              </div></td>
-            </tr>
-            <tr>
-              <td>
-                <a href="./score-set-detail.html" class="row-title">SCN5A Channel Function – Heterologous Expression</a>
-                <div class="row-desc">Variant effect map for SCN5A sodium channel function measured in a heterologous expression system.</div>
-              </td>
-              <td>
-                <div class="row-meta">
-                  <span class="chip-tag chip-tag--gene">SCN5A</span>
-                  <span class="chip-tag chip-tag--organism">Homo sapiens</span>
-                </div>
-              </td>
-              <td><span class="role-badge role-badge--contributor">Contributor</span></td>
-              <td><span class="status-badge status-published">Published</span></td>
-              <td class="date-cell">Sep 3, 2024</td>
-              <td><div class="row-actions">
-                <a href="./score-set-detail.html" class="action-link">View</a>
-              </div></td>
-            </tr>
-            <tr>
-              <td>
-                <a href="./score-set-detail.html" class="row-title">PTEN Abundance – Yeast Two-Hybrid</a>
-                <div class="row-desc">Yeast two-hybrid assay measuring the effect of PTEN missense variants on protein abundance and stability.</div>
-              </td>
-              <td>
-                <div class="row-meta">
-                  <span class="chip-tag chip-tag--gene">PTEN</span>
-                  <span class="chip-tag chip-tag--organism">Homo sapiens</span>
-                </div>
-              </td>
-              <td><span class="role-badge role-badge--contributor">Contributor</span></td>
-              <td><span class="status-badge status-published">Published</span></td>
-              <td class="date-cell">Aug 15, 2023</td>
-              <td><div class="row-actions">
-                <a href="./score-set-detail.html" class="action-link">View</a>
-              </div></td>
-            </tr>
-            <tr class="row--unpublished">
-              <td>
-                <a href="./score-set-detail.html" class="row-title">GCK Missense Variant Functional Classification</a>
-                <div class="row-desc">Deep mutational scan of the GCK kinase domain classifying missense variants by enzymatic activity.</div>
-              </td>
-              <td>
-                <div class="row-meta">
-                  <span class="chip-tag chip-tag--gene">GCK</span>
-                  <span class="chip-tag chip-tag--organism">Homo sapiens</span>
-                </div>
-              </td>
-              <td><span class="role-badge role-badge--owner">Owner</span></td>
-              <td><span class="status-badge status-unpublished">Unpublished</span></td>
-              <td class="date-cell date-cell--updated">Updated Dec 3, 2024</td>
-              <td><div class="row-actions">
-                <a href="./score-set-detail.html" class="action-link">View</a>
-                <a href="#" class="action-link">Edit</a>
-              </div></td>
-            </tr>
-            <tr class="row--unpublished">
-              <td>
-                <a href="./score-set-detail.html" class="row-title">CHEK2 Kinase Activity Assay – Draft</a>
-                <div class="row-desc">Draft score set measuring CHEK2 kinase activity across missense variants using an in vitro phosphorylation assay.</div>
-              </td>
-              <td>
-                <div class="row-meta">
-                  <span class="chip-tag chip-tag--gene">CHEK2</span>
-                  <span class="chip-tag chip-tag--organism">Homo sapiens</span>
-                </div>
-              </td>
-              <td><span class="role-badge role-badge--owner">Owner</span></td>
-              <td><span class="status-badge status-unpublished">Unpublished</span></td>
-              <td class="date-cell date-cell--updated">Updated Jan 18, 2025</td>
-              <td><div class="row-actions">
-                <a href="./score-set-detail.html" class="action-link">View</a>
-                <a href="#" class="action-link">Edit</a>
-              </div></td>
-            </tr>
-            <!-- Meta-analysis example -->
-            <tr>
-              <td>
-                <a href="./score-set-detail.html" class="row-title">BRCA1 Combined Functional Meta-analysis</a>
-                <div class="row-desc">Meta-analysis combining multiple BRCA1 SGE datasets to derive consensus functional scores for clinical interpretation.</div>
-              </td>
-              <td>
-                <div class="row-meta">
-                  <span class="chip-tag chip-tag--gene">BRCA1</span>
-                  <span class="chip-tag chip-tag--meta">Meta-analysis</span>
-                </div>
-              </td>
-              <td><span class="role-badge role-badge--owner">Owner</span></td>
-              <td><span class="status-badge status-published">Published</span></td>
-              <td class="date-cell">Nov 5, 2024</td>
-              <td><div class="row-actions">
-                <a href="./score-set-detail.html" class="action-link">View</a>
-              </div></td>
-            </tr>
-            <!-- Superseded example -->
-            <tr class="row--superseded">
-              <td>
-                <a href="./score-set-detail.html" class="row-title">KCNQ4 Missense Variant Effect Map – v1</a>
-                <div class="row-desc">Initial KCNQ4 missense variant effect map; superseded by an updated analysis with expanded variant coverage.</div>
-              </td>
-              <td>
-                <div class="row-meta">
-                  <span class="chip-tag chip-tag--gene">KCNQ4</span>
-                  <span class="chip-tag chip-tag--superseded">Superseded</span>
-                </div>
-              </td>
-              <td><span class="role-badge role-badge--owner">Owner</span></td>
-              <td><span class="status-badge status-published">Published</span></td>
-              <td class="date-cell">Mar 8, 2022</td>
-              <td><div class="row-actions">
-                <a href="./score-set-detail.html" class="action-link">View</a>
-              </div></td>
-            </tr>
-          </tbody>
-        </table>
-        <div style="margin-top: 12px; font-size: 13px; color: #aaa; text-align: right">Showing 11 of 16 score sets &mdash; <a href="#" style="color: #0074d9; font-weight: 600;">View all</a></div>
+          <table class="data-table">
+            <thead>
+              <tr>
+                <th style="width: 46%">Score Set</th>
+                <th>Role</th>
+                <th>Status</th>
+                <th>Published</th>
+                <th></th>
+              </tr>
+            </thead>
+            <tbody>
+              <tr>
+                <td>
+                  <a href="./score-set-detail.html" class="row-title">BRCA1 SGE Exon 20 – Replicate 1</a>
+                  <div class="row-desc">
+                    Saturation genome editing of BRCA1 exon 20 assessing variant impact on protein function via a cell
+                    survival readout.
+                  </div>
+                </td>
+                <td><span class="role-badge role-badge--owner">Owner</span></td>
+                <td><span class="status-badge status-published">Published</span></td>
+                <td class="date-cell">Jan 12, 2024</td>
+                <td>
+                  <div class="row-actions">
+                    <a href="./score-set-detail.html" class="action-link">View</a>
+                  </div>
+                </td>
+              </tr>
+              <tr>
+                <td>
+                  <a href="./score-set-detail.html" class="row-title">BRCA1 SGE Exon 20 – Replicate 2</a>
+                  <div class="row-desc">
+                    Independent biological replicate of the BRCA1 exon 20 saturation genome editing screen.
+                  </div>
+                </td>
+                <td><span class="role-badge role-badge--owner">Owner</span></td>
+                <td><span class="status-badge status-published">Published</span></td>
+                <td class="date-cell">Jan 12, 2024</td>
+                <td>
+                  <div class="row-actions">
+                    <a href="./score-set-detail.html" class="action-link">View</a>
+                  </div>
+                </td>
+              </tr>
+              <tr>
+                <td>
+                  <a href="./score-set-detail.html" class="row-title"
+                    >TP53 Saturation Genome Editing – Functional Score</a
+                  >
+                  <div class="row-desc">
+                    Deep mutational scan of TP53 measuring functional scores across all possible single amino acid
+                    substitutions.
+                  </div>
+                </td>
+                <td><span class="role-badge role-badge--contributor">Contributor</span></td>
+                <td><span class="status-badge status-published">Published</span></td>
+                <td class="date-cell">Mar 4, 2024</td>
+                <td>
+                  <div class="row-actions">
+                    <a href="./score-set-detail.html" class="action-link">View</a>
+                  </div>
+                </td>
+              </tr>
+              <tr>
+                <td>
+                  <a href="./score-set-detail.html" class="row-title">KCNQ4 Missense Variant Effect Map</a>
+                  <div class="row-desc">
+                    Comprehensive missense variant effect map for KCNQ4 using a heterologous expression assay in Xenopus
+                    oocytes.
+                  </div>
+                </td>
+                <td><span class="role-badge role-badge--owner">Owner</span></td>
+                <td><span class="status-badge status-published">Published</span></td>
+                <td class="date-cell">Jun 22, 2023</td>
+                <td>
+                  <div class="row-actions">
+                    <a href="./score-set-detail.html" class="action-link">View</a>
+                  </div>
+                </td>
+              </tr>
+              <tr>
+                <td>
+                  <a href="./score-set-detail.html" class="row-title"
+                    >SCN5A Channel Function – Heterologous Expression</a
+                  >
+                  <div class="row-desc">
+                    Variant effect map for SCN5A sodium channel function measured in a heterologous expression system.
+                  </div>
+                </td>
+                <td><span class="role-badge role-badge--contributor">Contributor</span></td>
+                <td><span class="status-badge status-published">Published</span></td>
+                <td class="date-cell">Sep 3, 2024</td>
+                <td>
+                  <div class="row-actions">
+                    <a href="./score-set-detail.html" class="action-link">View</a>
+                  </div>
+                </td>
+              </tr>
+              <tr>
+                <td>
+                  <a href="./score-set-detail.html" class="row-title">PTEN Abundance – Yeast Two-Hybrid</a>
+                  <div class="row-desc">
+                    Yeast two-hybrid assay measuring the effect of PTEN missense variants on protein abundance and
+                    stability.
+                  </div>
+                </td>
+                <td><span class="role-badge role-badge--contributor">Contributor</span></td>
+                <td><span class="status-badge status-published">Published</span></td>
+                <td class="date-cell">Aug 15, 2023</td>
+                <td>
+                  <div class="row-actions">
+                    <a href="./score-set-detail.html" class="action-link">View</a>
+                  </div>
+                </td>
+              </tr>
+              <tr class="row--unpublished">
+                <td>
+                  <a href="./score-set-detail.html" class="row-title">GCK Missense Variant Functional Classification</a>
+                  <div class="row-desc">
+                    Deep mutational scan of the GCK kinase domain classifying missense variants by enzymatic activity.
+                  </div>
+                </td>
+                <td><span class="role-badge role-badge--owner">Owner</span></td>
+                <td><span class="status-badge status-unpublished">Unpublished</span></td>
+                <td class="date-cell date-cell--updated">Updated Dec 3, 2024</td>
+                <td>
+                  <div class="row-actions">
+                    <a href="./score-set-detail.html" class="action-link">View</a>
+                    <a href="./edit-score-set.html" class="action-link">Edit</a>
+                  </div>
+                </td>
+              </tr>
+              <tr class="row--unpublished">
+                <td>
+                  <a href="./score-set-detail.html" class="row-title">CHEK2 Kinase Activity Assay – Draft</a>
+                  <div class="row-desc">
+                    Draft score set measuring CHEK2 kinase activity across missense variants using an in vitro
+                    phosphorylation assay.
+                  </div>
+                </td>
+                <td><span class="role-badge role-badge--owner">Owner</span></td>
+                <td><span class="status-badge status-unpublished">Unpublished</span></td>
+                <td class="date-cell date-cell--updated">Updated Jan 18, 2025</td>
+                <td>
+                  <div class="row-actions">
+                    <a href="./score-set-detail.html" class="action-link">View</a>
+                    <a href="./edit-score-set.html" class="action-link">Edit</a>
+                  </div>
+                </td>
+              </tr>
+              <!-- Meta-analysis example -->
+              <tr>
+                <td>
+                  <a href="./score-set-detail.html" class="row-title">BRCA1 Combined Functional Meta-analysis</a>
+                  <div class="row-desc">
+                    Meta-analysis combining multiple BRCA1 SGE datasets to derive consensus functional scores for
+                    clinical interpretation.
+                  </div>
+                </td>
+                <td><span class="role-badge role-badge--owner">Owner</span></td>
+                <td><span class="status-badge status-published">Published</span></td>
+                <td class="date-cell">Nov 5, 2024</td>
+                <td>
+                  <div class="row-actions">
+                    <a href="./score-set-detail.html" class="action-link">View</a>
+                  </div>
+                </td>
+              </tr>
+              <!-- Superseded example -->
+              <tr>
+                <td>
+                  <a href="./score-set-detail.html" class="row-title">KCNQ4 Missense Variant Effect Map – v1</a>
+                  <div class="row-desc">
+                    Initial KCNQ4 missense variant effect map; superseded by an updated analysis with expanded variant
+                    coverage.
+                  </div>
+                </td>
+                <td><span class="role-badge role-badge--owner">Owner</span></td>
+                <td><span class="status-badge status-superseded">Superseded</span></td>
+                <td class="date-cell">Mar 8, 2022</td>
+                <td>
+                  <div class="row-actions">
+                    <a href="./score-set-detail.html" class="action-link">View</a>
+                  </div>
+                </td>
+              </tr>
+            </tbody>
+          </table>
+          <div style="margin-top: 12px; font-size: 13px; color: #aaa; text-align: right">
+            Showing 11 of 16 score sets &mdash; <a href="#" style="color: #0074d9; font-weight: 600">View all</a>
+          </div>
         </div>
-        <div id="score-sets-empty" class="empty-state" style="display: none;">
-          <div class="empty-state-bars" style="opacity: 0.45;">
-            <div class="empty-state-bar" style="background: #78b793; height: 20px;"></div>
-            <div class="empty-state-bar" style="background: #a1d8c8; height: 32px;"></div>
-            <div class="empty-state-bar" style="background: #78b793; height: 44px;"></div>
-            <div class="empty-state-bar" style="background: #f8971d; height: 36px; opacity: 0.7;"></div>
-            <div class="empty-state-bar" style="background: #bbb; height: 24px; opacity: 0.6;"></div>
-            <div class="empty-state-bar" style="background: #ccc; height: 40px; opacity: 0.5;"></div>
-            <div class="empty-state-bar" style="background: #ddd; height: 28px; opacity: 0.4;"></div>
-            <div class="empty-state-bar" style="background: #e0e0e0; height: 18px; opacity: 0.3;"></div>
+        <div id="score-sets-empty" class="empty-state" style="display: none">
+          <div class="empty-state-bars" style="opacity: 0.45">
+            <div class="empty-state-bar" style="background: #78b793; height: 20px"></div>
+            <div class="empty-state-bar" style="background: #a1d8c8; height: 32px"></div>
+            <div class="empty-state-bar" style="background: #78b793; height: 44px"></div>
+            <div class="empty-state-bar" style="background: #f8971d; height: 36px; opacity: 0.7"></div>
+            <div class="empty-state-bar" style="background: #bbb; height: 24px; opacity: 0.6"></div>
+            <div class="empty-state-bar" style="background: #ccc; height: 40px; opacity: 0.5"></div>
+            <div class="empty-state-bar" style="background: #ddd; height: 28px; opacity: 0.4"></div>
+            <div class="empty-state-bar" style="background: #e0e0e0; height: 18px; opacity: 0.3"></div>
           </div>
           <h3>No score sets yet</h3>
-          <p>Score sets contain variant effect data from functional assays. Upload your first dataset to get started.</p>
+          <p>
+            Score sets contain variant effect data from functional assays. Upload your first dataset to get started.
+          </p>
           <a href="./add-score-set.html" class="empty-state-btn">+ Add your first score set</a>
         </div>
       </div>
@@ -1445,118 +1871,150 @@
             <button class="filter-chip" onclick="toggleFilter(this)">Contributed</button>
           </div>
           <div class="toolbar-right">
-            <button class="empty-toggle" id="experiments-empty-toggle" onclick="toggleEmptyState('experiments')">Show empty state</button>
+            <button class="empty-toggle" id="experiments-empty-toggle" onclick="toggleEmptyState('experiments')">
+              Show empty state
+            </button>
             <input class="search-input-small" type="text" placeholder="Search experiments…" />
             <a href="./add-experiment.html" class="btn btn-primary">+ Add Experiment</a>
           </div>
         </div>
         <div id="experiments-populated">
-        <table class="data-table">
-          <thead>
-            <tr>
-              <th style="width: 40%">Experiment</th>
-              <th>Score Sets</th>
-              <th>Role</th>
-              <th>Status</th>
-              <th>Created</th>
-              <th></th>
-            </tr>
-          </thead>
-          <tbody>
-            <tr>
-              <td>
-                <a href="./experiment-detail.html" class="row-title">BRCA1 SGE – Exon 20 Saturation Editing</a>
-                <div class="row-desc">Saturation genome editing of BRCA1 exon 20 comprising multiple biological replicates and functional readouts.</div>
-              </td>
-              <td class="date-cell">3 score sets</td>
-              <td><span class="role-badge role-badge--owner">Owner</span></td>
-              <td><span class="status-badge status-published">Published</span></td>
-              <td class="date-cell">Jan 2024</td>
-              <td><div class="row-actions">
-                <a href="./experiment-detail.html" class="action-link">View</a>
-              </div></td>
-            </tr>
-            <tr>
-              <td>
-                <a href="./experiment-detail.html" class="row-title">TP53 Saturation Genome Editing Panel</a>
-                <div class="row-desc">Large-scale SGE panel characterizing TP53 variant effects across multiple functional domains and cell lines.</div>
-              </td>
-              <td class="date-cell">9 score sets</td>
-              <td><span class="role-badge role-badge--contributor">Contributor</span></td>
-              <td><span class="status-badge status-published">Published</span></td>
-              <td class="date-cell">Mar 2024</td>
-              <td><div class="row-actions">
-                <a href="./experiment-detail.html" class="action-link">View</a>
-              </div></td>
-            </tr>
-            <tr>
-              <td>
-                <a href="./experiment-detail.html" class="row-title">KCNQ4 Comprehensive Variant Screen</a>
-                <div class="row-desc">Comprehensive screen of KCNQ4 missense variants across two independent functional assays.</div>
-              </td>
-              <td class="date-cell">2 score sets</td>
-              <td><span class="role-badge role-badge--owner">Owner</span></td>
-              <td><span class="status-badge status-published">Published</span></td>
-              <td class="date-cell">Jun 2023</td>
-              <td><div class="row-actions">
-                <a href="./experiment-detail.html" class="action-link">View</a>
-              </div></td>
-            </tr>
-            <tr class="row--unpublished">
-              <td>
-                <a href="./experiment-detail.html" class="row-title">GCK Kinase Domain DMS – Draft</a>
-                <div class="row-desc">Draft deep mutational scan of the GCK kinase domain measuring catalytic activity across missense variants.</div>
-              </td>
-              <td class="date-cell">1 score set</td>
-              <td><span class="role-badge role-badge--owner">Owner</span></td>
-              <td><span class="status-badge status-unpublished">Unpublished</span></td>
-              <td class="date-cell">Nov 2024</td>
-              <td><div class="row-actions">
-                <a href="./experiment-detail.html" class="action-link">View</a>
-                <a href="#" class="action-link">Edit</a>
-              </div></td>
-            </tr>
-            <tr class="row--unpublished">
-              <td>
-                <a href="./experiment-detail.html" class="row-title">CHEK2 Functional Assay</a>
-                <div class="row-desc">Functional characterization of CHEK2 variants using kinase activity and protein stability assays.</div>
-              </td>
-              <td class="date-cell">2 score sets</td>
-              <td><span class="role-badge role-badge--owner">Owner</span></td>
-              <td><span class="status-badge status-unpublished">Unpublished</span></td>
-              <td class="date-cell">Jan 2025</td>
-              <td><div class="row-actions">
-                <a href="./experiment-detail.html" class="action-link">View</a>
-                <a href="#" class="action-link">Edit</a>
-              </div></td>
-            </tr>
-            <tr>
-              <td>
-                <a href="./experiment-detail.html" class="row-title">SCN5A Sodium Channel Activity Panel</a>
-                <div class="row-desc">Functional panel assessing SCN5A variant effects on sodium channel activity in a heterologous expression system.</div>
-              </td>
-              <td class="date-cell">1 score set</td>
-              <td><span class="role-badge role-badge--contributor">Contributor</span></td>
-              <td><span class="status-badge status-published">Published</span></td>
-              <td class="date-cell">Sep 2024</td>
-              <td><div class="row-actions">
-                <a href="./experiment-detail.html" class="action-link">View</a>
-              </div></td>
-            </tr>
-          </tbody>
-        </table>
-        <div style="margin-top: 12px; font-size: 13px; color: #aaa; text-align: right">Showing 6 of 6 experiments &mdash; <a href="#" style="color: #0074d9; font-weight: 600;">View all</a></div>
+          <table class="data-table">
+            <thead>
+              <tr>
+                <th style="width: 40%">Experiment</th>
+                <th>Score Sets</th>
+                <th>Role</th>
+                <th>Status</th>
+                <th>Created</th>
+                <th></th>
+              </tr>
+            </thead>
+            <tbody>
+              <tr>
+                <td>
+                  <a href="./experiment-detail.html" class="row-title">BRCA1 SGE – Exon 20 Saturation Editing</a>
+                  <div class="row-desc">
+                    Saturation genome editing of BRCA1 exon 20 comprising multiple biological replicates and functional
+                    readouts.
+                  </div>
+                </td>
+                <td class="date-cell">3 score sets</td>
+                <td><span class="role-badge role-badge--owner">Owner</span></td>
+                <td><span class="status-badge status-published">Published</span></td>
+                <td class="date-cell">Jan 2024</td>
+                <td>
+                  <div class="row-actions">
+                    <a href="./experiment-detail.html" class="action-link">View</a>
+                  </div>
+                </td>
+              </tr>
+              <tr>
+                <td>
+                  <a href="./experiment-detail.html" class="row-title">TP53 Saturation Genome Editing Panel</a>
+                  <div class="row-desc">
+                    Large-scale SGE panel characterizing TP53 variant effects across multiple functional domains and
+                    cell lines.
+                  </div>
+                </td>
+                <td class="date-cell">9 score sets</td>
+                <td><span class="role-badge role-badge--contributor">Contributor</span></td>
+                <td><span class="status-badge status-published">Published</span></td>
+                <td class="date-cell">Mar 2024</td>
+                <td>
+                  <div class="row-actions">
+                    <a href="./experiment-detail.html" class="action-link">View</a>
+                  </div>
+                </td>
+              </tr>
+              <tr>
+                <td>
+                  <a href="./experiment-detail.html" class="row-title">KCNQ4 Comprehensive Variant Screen</a>
+                  <div class="row-desc">
+                    Comprehensive screen of KCNQ4 missense variants across two independent functional assays.
+                  </div>
+                </td>
+                <td class="date-cell">2 score sets</td>
+                <td><span class="role-badge role-badge--owner">Owner</span></td>
+                <td><span class="status-badge status-published">Published</span></td>
+                <td class="date-cell">Jun 2023</td>
+                <td>
+                  <div class="row-actions">
+                    <a href="./experiment-detail.html" class="action-link">View</a>
+                  </div>
+                </td>
+              </tr>
+              <tr class="row--unpublished">
+                <td>
+                  <a href="./experiment-detail.html" class="row-title">GCK Kinase Domain DMS – Draft</a>
+                  <div class="row-desc">
+                    Draft deep mutational scan of the GCK kinase domain measuring catalytic activity across missense
+                    variants.
+                  </div>
+                </td>
+                <td class="date-cell">1 score set</td>
+                <td><span class="role-badge role-badge--owner">Owner</span></td>
+                <td><span class="status-badge status-unpublished">Unpublished</span></td>
+                <td class="date-cell">Nov 2024</td>
+                <td>
+                  <div class="row-actions">
+                    <a href="./experiment-detail.html" class="action-link">View</a>
+                    <a href="./edit-experiment.html" class="action-link">Edit</a>
+                  </div>
+                </td>
+              </tr>
+              <tr class="row--unpublished">
+                <td>
+                  <a href="./experiment-detail.html" class="row-title">CHEK2 Functional Assay</a>
+                  <div class="row-desc">
+                    Functional characterization of CHEK2 variants using kinase activity and protein stability assays.
+                  </div>
+                </td>
+                <td class="date-cell">2 score sets</td>
+                <td><span class="role-badge role-badge--owner">Owner</span></td>
+                <td><span class="status-badge status-unpublished">Unpublished</span></td>
+                <td class="date-cell">Jan 2025</td>
+                <td>
+                  <div class="row-actions">
+                    <a href="./experiment-detail.html" class="action-link">View</a>
+                    <a href="./edit-experiment.html" class="action-link">Edit</a>
+                  </div>
+                </td>
+              </tr>
+              <tr>
+                <td>
+                  <a href="./experiment-detail.html" class="row-title">SCN5A Sodium Channel Activity Panel</a>
+                  <div class="row-desc">
+                    Functional panel assessing SCN5A variant effects on sodium channel activity in a heterologous
+                    expression system.
+                  </div>
+                </td>
+                <td class="date-cell">1 score set</td>
+                <td><span class="role-badge role-badge--contributor">Contributor</span></td>
+                <td><span class="status-badge status-published">Published</span></td>
+                <td class="date-cell">Sep 2024</td>
+                <td>
+                  <div class="row-actions">
+                    <a href="./experiment-detail.html" class="action-link">View</a>
+                  </div>
+                </td>
+              </tr>
+            </tbody>
+          </table>
+          <div style="margin-top: 12px; font-size: 13px; color: #aaa; text-align: right">
+            Showing 6 of 6 experiments &mdash; <a href="#" style="color: #0074d9; font-weight: 600">View all</a>
+          </div>
         </div>
-        <div id="experiments-empty" class="empty-state" style="display: none;">
-          <div class="empty-state-bars" style="opacity: 0.45;">
-            <div class="empty-state-bar" style="background: #78b793; height: 20px;"></div>
-            <div class="empty-state-bar" style="background: #a1d8c8; height: 32px;"></div>
-            <div class="empty-state-bar" style="background: #78b793; height: 44px;"></div>
-            <div class="empty-state-bar" style="background: #f8971d; height: 36px; opacity: 0.7;"></div>
-            <div class="empty-state-bar" style="background: #bbb; height: 24px; opacity: 0.6;"></div>
-            <div class="empty-state-bar" style="background: #ccc; height: 40px; opacity: 0.5;"></div>
-            <div class="empty-state-bar" style="background: #ddd; height: 28px; opacity: 0.4;"></div>
-            <div class="empty-state-bar" style="background: #e0e0e0; height: 18px; opacity: 0.3;"></div>
+        <div id="experiments-empty" class="empty-state" style="display: none">
+          <div class="empty-state-bars" style="opacity: 0.45">
+            <div class="empty-state-bar" style="background: #78b793; height: 20px"></div>
+            <div class="empty-state-bar" style="background: #a1d8c8; height: 32px"></div>
+            <div class="empty-state-bar" style="background: #78b793; height: 44px"></div>
+            <div class="empty-state-bar" style="background: #f8971d; height: 36px; opacity: 0.7"></div>
+            <div class="empty-state-bar" style="background: #bbb; height: 24px; opacity: 0.6"></div>
+            <div class="empty-state-bar" style="background: #ccc; height: 40px; opacity: 0.5"></div>
+            <div class="empty-state-bar" style="background: #ddd; height: 28px; opacity: 0.4"></div>
+            <div class="empty-state-bar" style="background: #e0e0e0; height: 18px; opacity: 0.3"></div>
           </div>
           <h3>No experiments yet</h3>
           <p>Experiments group related score sets together under a shared context, such as a single study or assay.</p>
@@ -1578,113 +2036,145 @@
             <button class="filter-chip" onclick="toggleFilter(this)">Viewer</button>
           </div>
           <div class="toolbar-right">
-            <button class="empty-toggle" id="collections-empty-toggle" onclick="toggleEmptyState('collections')">Show empty state</button>
-            <a href="#" class="btn btn-primary">+ New Collection</a>
+            <button class="empty-toggle" id="collections-empty-toggle" onclick="toggleEmptyState('collections')">
+              Show empty state
+            </button>
+            <a href="./collection-detail.html" class="btn btn-primary">+ New Collection</a>
           </div>
         </div>
         <!-- Populated state -->
         <div id="collections-populated">
-        <table class="data-table">
-          <thead>
-            <tr>
-              <th style="width: 38%">Collection</th>
-              <th>Score Sets</th>
-              <th>Experiments</th>
-              <th>Role</th>
-              <th>Visibility</th>
-              <th>Updated</th>
-              <th></th>
-            </tr>
-          </thead>
-          <tbody>
-            <tr>
-              <td>
-                <a href="#" class="row-title">Cardiac Channelopathy MAVE Panel</a>
-                <div class="row-desc">Score sets covering SCN5A, KCNQ4, KCNH2, and KCNE1 functional assays for clinical interpretation of cardiac arrhythmia variants.</div>
-              </td>
-              <td class="date-cell">8</td>
-              <td class="date-cell">3</td>
-              <td><span class="role-badge role-badge--admin">Admin</span></td>
-              <td><span class="visibility-badge visibility-public">Public</span></td>
-              <td class="date-cell">Feb 10, 2025</td>
-              <td><div class="row-actions">
-                <a href="#" class="action-link">View</a>
-              </div></td>
-            </tr>
-            <tr>
-              <td>
-                <a href="#" class="row-title">TP53 Variant Interpretation Reference</a>
-                <div class="row-desc">Curated collection of all TP53 SGE and DMS score sets from MaveDB, spanning functional domains and assay types.</div>
-              </td>
-              <td class="date-cell">12</td>
-              <td class="date-cell">4</td>
-              <td><span class="role-badge role-badge--admin">Admin</span></td>
-              <td><span class="visibility-badge visibility-public">Public</span></td>
-              <td class="date-cell">Jan 3, 2025</td>
-              <td><div class="row-actions">
-                <a href="#" class="action-link">View</a>
-              </div></td>
-            </tr>
-            <tr>
-              <td>
-                <a href="#" class="row-title">In-Progress Curation – BRCA Genes</a>
-                <div class="row-desc">Working collection of BRCA1 and BRCA2 datasets for internal calibration work. Not yet ready for sharing.</div>
-              </td>
-              <td class="date-cell">4</td>
-              <td class="date-cell">2</td>
-              <td><span class="role-badge role-badge--admin">Admin</span></td>
-              <td><span class="visibility-badge visibility-private">Private</span></td>
-              <td class="date-cell">Feb 18, 2025</td>
-              <td><div class="row-actions">
-                <a href="#" class="action-link">View</a>
-              </div></td>
-            </tr>
-            <tr>
-              <td>
-                <a href="#" class="row-title">Clinical MAVE Benchmarking Set</a>
-                <div class="row-desc">Shared collection of benchmark score sets used by the clinical genomics team for calibration validation.</div>
-              </td>
-              <td class="date-cell">6</td>
-              <td class="date-cell">2</td>
-              <td><span class="role-badge role-badge--editor">Editor</span></td>
-              <td><span class="visibility-badge visibility-public">Public</span></td>
-              <td class="date-cell">Dec 14, 2024</td>
-              <td><div class="row-actions">
-                <a href="#" class="action-link">View</a>
-              </div></td>
-            </tr>
-            <tr>
-              <td>
-                <a href="#" class="row-title">ACMG Gene Panel – Functional Evidence</a>
-                <div class="row-desc">Read-only reference collection of functional assay data for ACMG-recommended genes with calibrated score sets.</div>
-              </td>
-              <td class="date-cell">22</td>
-              <td class="date-cell">9</td>
-              <td><span class="role-badge role-badge--viewer">Viewer</span></td>
-              <td><span class="visibility-badge visibility-public">Public</span></td>
-              <td class="date-cell">Nov 28, 2024</td>
-              <td><div class="row-actions">
-                <a href="#" class="action-link">View</a>
-              </div></td>
-            </tr>
-          </tbody>
-        </table>
-        <div style="margin-top: 12px; font-size: 13px; color: #aaa; text-align: right">Showing 5 of 5 collections</div>
+          <table class="data-table">
+            <thead>
+              <tr>
+                <th style="width: 38%">Collection</th>
+                <th>Score Sets</th>
+                <th>Experiments</th>
+                <th>Role</th>
+                <th>Visibility</th>
+                <th>Updated</th>
+                <th></th>
+              </tr>
+            </thead>
+            <tbody>
+              <tr>
+                <td>
+                  <a href="./collection-detail.html" class="row-title">Cardiac Channelopathy MAVE Panel</a>
+                  <div class="row-desc">
+                    Score sets covering SCN5A, KCNQ4, KCNH2, and KCNE1 functional assays for clinical interpretation of
+                    cardiac arrhythmia variants.
+                  </div>
+                </td>
+                <td class="date-cell">8</td>
+                <td class="date-cell">3</td>
+                <td><span class="role-badge role-badge--admin">Admin</span></td>
+                <td><span class="visibility-badge visibility-public">Public</span></td>
+                <td class="date-cell">Feb 10, 2025</td>
+                <td>
+                  <div class="row-actions">
+                    <a href="./collection-detail.html" class="action-link">View</a>
+                  </div>
+                </td>
+              </tr>
+              <tr>
+                <td>
+                  <a href="./collection-detail.html" class="row-title">TP53 Variant Interpretation Reference</a>
+                  <div class="row-desc">
+                    Curated collection of all TP53 SGE and DMS score sets from MaveDB, spanning functional domains and
+                    assay types.
+                  </div>
+                </td>
+                <td class="date-cell">12</td>
+                <td class="date-cell">4</td>
+                <td><span class="role-badge role-badge--admin">Admin</span></td>
+                <td><span class="visibility-badge visibility-public">Public</span></td>
+                <td class="date-cell">Jan 3, 2025</td>
+                <td>
+                  <div class="row-actions">
+                    <a href="./collection-detail.html" class="action-link">View</a>
+                  </div>
+                </td>
+              </tr>
+              <tr>
+                <td>
+                  <a href="./collection-detail.html" class="row-title">In-Progress Curation – BRCA Genes</a>
+                  <div class="row-desc">
+                    Working collection of BRCA1 and BRCA2 datasets for internal calibration work. Not yet ready for
+                    sharing.
+                  </div>
+                </td>
+                <td class="date-cell">4</td>
+                <td class="date-cell">2</td>
+                <td><span class="role-badge role-badge--admin">Admin</span></td>
+                <td><span class="visibility-badge visibility-private">Private</span></td>
+                <td class="date-cell">Feb 18, 2025</td>
+                <td>
+                  <div class="row-actions">
+                    <a href="./collection-detail.html" class="action-link">View</a>
+                  </div>
+                </td>
+              </tr>
+              <tr>
+                <td>
+                  <a href="./collection-detail.html" class="row-title">Clinical MAVE Benchmarking Set</a>
+                  <div class="row-desc">
+                    Shared collection of benchmark score sets used by the clinical genomics team for calibration
+                    validation.
+                  </div>
+                </td>
+                <td class="date-cell">6</td>
+                <td class="date-cell">2</td>
+                <td><span class="role-badge role-badge--editor">Editor</span></td>
+                <td><span class="visibility-badge visibility-public">Public</span></td>
+                <td class="date-cell">Dec 14, 2024</td>
+                <td>
+                  <div class="row-actions">
+                    <a href="./collection-detail.html" class="action-link">View</a>
+                  </div>
+                </td>
+              </tr>
+              <tr>
+                <td>
+                  <a href="./collection-detail.html" class="row-title">ACMG Gene Panel – Functional Evidence</a>
+                  <div class="row-desc">
+                    Read-only reference collection of functional assay data for ACMG-recommended genes with calibrated
+                    score sets.
+                  </div>
+                </td>
+                <td class="date-cell">22</td>
+                <td class="date-cell">9</td>
+                <td><span class="role-badge role-badge--viewer">Viewer</span></td>
+                <td><span class="visibility-badge visibility-public">Public</span></td>
+                <td class="date-cell">Nov 28, 2024</td>
+                <td>
+                  <div class="row-actions">
+                    <a href="./collection-detail.html" class="action-link">View</a>
+                  </div>
+                </td>
+              </tr>
+            </tbody>
+          </table>
+          <div style="margin-top: 12px; font-size: 13px; color: #aaa; text-align: right">
+            Showing 5 of 5 collections
+          </div>
         </div>
         <!-- Empty state -->
-        <div id="collections-empty" class="empty-state" style="display: none;">
-          <div class="empty-state-bars" style="opacity: 0.45;">
-            <div class="empty-state-bar" style="background: #78b793; height: 20px;"></div>
-            <div class="empty-state-bar" style="background: #a1d8c8; height: 32px;"></div>
-            <div class="empty-state-bar" style="background: #78b793; height: 44px;"></div>
-            <div class="empty-state-bar" style="background: #f8971d; height: 36px; opacity: 0.7;"></div>
-            <div class="empty-state-bar" style="background: #bbb; height: 24px; opacity: 0.6;"></div>
-            <div class="empty-state-bar" style="background: #ccc; height: 40px; opacity: 0.5;"></div>
-            <div class="empty-state-bar" style="background: #ddd; height: 28px; opacity: 0.4;"></div>
-            <div class="empty-state-bar" style="background: #e0e0e0; height: 18px; opacity: 0.3;"></div>
+        <div id="collections-empty" class="empty-state" style="display: none">
+          <div class="empty-state-bars" style="opacity: 0.45">
+            <div class="empty-state-bar" style="background: #78b793; height: 20px"></div>
+            <div class="empty-state-bar" style="background: #a1d8c8; height: 32px"></div>
+            <div class="empty-state-bar" style="background: #78b793; height: 44px"></div>
+            <div class="empty-state-bar" style="background: #f8971d; height: 36px; opacity: 0.7"></div>
+            <div class="empty-state-bar" style="background: #bbb; height: 24px; opacity: 0.6"></div>
+            <div class="empty-state-bar" style="background: #ccc; height: 40px; opacity: 0.5"></div>
+            <div class="empty-state-bar" style="background: #ddd; height: 28px; opacity: 0.4"></div>
+            <div class="empty-state-bar" style="background: #e0e0e0; height: 18px; opacity: 0.3"></div>
           </div>
           <h3>No collections yet</h3>
-          <p>Collections help you organise score sets and experiments for clinical interpretation workflows or personal reference.</p>
+          <p>
+            Collections help you organise score sets and experiments for clinical interpretation workflows or personal
+            reference.
+          </p>
           <button class="empty-state-btn">+ Create your first collection</button>
         </div>
       </div>
@@ -1702,246 +2192,443 @@
             <button class="filter-chip" onclick="toggleFilter(this)">Research Use</button>
           </div>
           <div class="toolbar-right">
-            <button class="empty-toggle" id="calibrations-empty-toggle" onclick="toggleEmptyState('calibrations')">Show empty state</button>
-            <a href="#" class="btn btn-primary">+ New Calibration</a>
+            <button class="empty-toggle" id="calibrations-empty-toggle" onclick="toggleEmptyState('calibrations')">
+              Show empty state
+            </button>
+            <a href="./calibrations.html" class="btn btn-primary">+ New Calibration</a>
           </div>
         </div>
         <div id="calibrations-populated">
-        <div style="overflow-x: auto;">
-        <table class="cal-table">
-          <thead>
-            <tr>
-              <th style="width: 28px"></th>
-              <th>Title</th>
-              <th><span class="has-tip">Published<span class="tip">Whether this calibration is publicly visible or still a private draft.</span></span></th>
-              <th><span class="has-tip">Primary<span class="tip">The primary calibration is used by default when viewing score distributions. Only one calibration can be primary per score set.</span></span></th>
-              <th><span class="has-tip">Type<span class="tip">Investigator calibrations are provided by the original study authors. Community calibrations are contributed by other researchers.</span></span></th>
-              <th><span class="has-tip">Use<span class="tip">General calibrations are suitable for clinical applications. Research-only calibrations are intended for research purposes.</span></span></th>
-              <th style="text-align: center"><span class="has-tip">Ranges<span class="tip">The number of functional classification ranges defined for this calibration.</span></span></th>
-              <th style="width: 60px; text-align: center">Actions</th>
-            </tr>
-          </thead>
-          <!-- Calibration 1 — Published, Primary, on BRCA1 SGE -->
-          <tbody>
-            <tr class="expandable-row" onclick="toggleRow(this)">
-              <td><span class="expand-chevron"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><polyline points="9 18 15 12 9 6"/></svg></span></td>
-              <td>
-                <div class="cal-title">Harwood et al. 2018</div>
-                <div class="cal-score-set"><a href="./score-set-detail.html">BRCA1 SGE Exon 20 – Replicate 1</a></div>
-              </td>
-              <td><span class="tag tag-green">Yes</span></td>
-              <td><span class="tag tag-green">Yes</span></td>
-              <td>Investigator</td>
-              <td>General</td>
-              <td style="text-align: center">3</td>
-              <td>
-                <div class="row-action-wrap" onclick="event.stopPropagation()">
-                  <button class="row-action-trigger" onclick="toggleRowMenu(this)" aria-label="Actions">
-                    <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="5" r="1"/><circle cx="12" cy="12" r="1"/><circle cx="12" cy="19" r="1"/></svg>
-                  </button>
-                  <div class="row-action-menu">
-                    <a href="./score-set-detail.html" class="row-action-item">
-                      <div class="row-action-item-label">View on Score Set</div>
-                      <div class="row-action-item-desc">Open the parent score set page</div>
-                    </a>
-                    <a href="./calibrations.html" class="row-action-item">
-                      <div class="row-action-item-label">Edit Calibration</div>
-                      <div class="row-action-item-desc">Modify title, ranges, and settings</div>
-                    </a>
-                    <div class="row-action-sep"></div>
-                    <button class="row-action-item danger">
-                      <div class="row-action-item-label">Delete Calibration</div>
-                      <div class="row-action-item-desc">Permanently remove this calibration</div>
-                    </button>
-                  </div>
-                </div>
-              </td>
-            </tr>
-            <tr class="expanded-content">
-              <td colspan="8" style="padding: 0">
-                <div class="expanded-inner">
-                  <div class="cal-ranges">
-                    <div class="cal-ranges-title">
-                      Harwood et al. 2018
-                      <span class="cal-ranges-title-sep"></span>
-                      <span class="cal-ranges-title-desc">BRCA1 RING domain SGE functional score calibration from ClinGen VCEP evidence review.</span>
+          <div style="overflow-x: auto">
+            <table class="cal-table">
+              <thead>
+                <tr>
+                  <th style="width: 28px"></th>
+                  <th>Title</th>
+                  <th>
+                    <span class="has-tip"
+                      >Published<span class="tip"
+                        >Whether this calibration is publicly visible or still a private draft.</span
+                      ></span
+                    >
+                  </th>
+                  <th>
+                    <span class="has-tip"
+                      >Primary<span class="tip"
+                        >The primary calibration is used by default when viewing score distributions. Only one
+                        calibration can be primary per score set.</span
+                      ></span
+                    >
+                  </th>
+                  <th>
+                    <span class="has-tip"
+                      >Type<span class="tip"
+                        >Investigator calibrations are provided by the original study authors. Community calibrations
+                        are contributed by other researchers.</span
+                      ></span
+                    >
+                  </th>
+                  <th>
+                    <span class="has-tip"
+                      >Use<span class="tip"
+                        >General calibrations are suitable for clinical applications. Research-only calibrations are
+                        intended for research purposes.</span
+                      ></span
+                    >
+                  </th>
+                  <th style="text-align: center">
+                    <span class="has-tip"
+                      >Ranges<span class="tip"
+                        >The number of functional classification ranges defined for this calibration.</span
+                      ></span
+                    >
+                  </th>
+                  <th style="width: 60px; text-align: center">Actions</th>
+                </tr>
+              </thead>
+              <!-- Calibration 1 — Published, Primary, on BRCA1 SGE -->
+              <tbody>
+                <tr class="expandable-row" onclick="toggleRow(this)">
+                  <td>
+                    <span class="expand-chevron"
+                      ><svg
+                        width="14"
+                        height="14"
+                        viewBox="0 0 24 24"
+                        fill="none"
+                        stroke="currentColor"
+                        stroke-width="2.5"
+                        stroke-linecap="round"
+                        stroke-linejoin="round"
+                      >
+                        <polyline points="9 18 15 12 9 6" /></svg
+                    ></span>
+                  </td>
+                  <td>
+                    <div class="cal-title">Harwood et al. 2018</div>
+                    <div class="cal-score-set">
+                      <a href="./score-set-detail.html">BRCA1 SGE Exon 20 – Replicate 1</a>
                     </div>
-                    <div class="baseline-bar">
-                      <span class="baseline-bar-label has-tip">Baseline score<span class="tip">The reference score representing normal function, used as the zero-point for calibration ranges.</span></span>
-                      <span class="baseline-bar-value">0.000</span>
-                      <span class="baseline-bar-sep"></span>
-                      <span class="baseline-bar-desc">Wild-type synonymous median</span>
+                  </td>
+                  <td><span class="tag tag-green">Yes</span></td>
+                  <td><span class="tag tag-green">Yes</span></td>
+                  <td>Investigator</td>
+                  <td>General</td>
+                  <td style="text-align: center">3</td>
+                  <td>
+                    <div class="row-action-wrap" onclick="event.stopPropagation()">
+                      <button class="row-action-trigger" onclick="toggleRowMenu(this)" aria-label="Actions">
+                        <svg
+                          width="14"
+                          height="14"
+                          viewBox="0 0 24 24"
+                          fill="none"
+                          stroke="currentColor"
+                          stroke-width="2.5"
+                          stroke-linecap="round"
+                          stroke-linejoin="round"
+                        >
+                          <circle cx="12" cy="5" r="1" />
+                          <circle cx="12" cy="12" r="1" />
+                          <circle cx="12" cy="19" r="1" />
+                        </svg>
+                      </button>
+                      <div class="row-action-menu">
+                        <a href="./score-set-detail.html" class="row-action-item">
+                          <div class="row-action-item-label">View on Score Set</div>
+                          <div class="row-action-item-desc">Open the parent score set page</div>
+                        </a>
+                        <a href="./calibrations.html" class="row-action-item">
+                          <div class="row-action-item-label">Edit Calibration</div>
+                          <div class="row-action-item-desc">Modify title, ranges, and settings</div>
+                        </a>
+                        <div class="row-action-sep"></div>
+                        <button class="row-action-item danger">
+                          <div class="row-action-item-label">Delete Calibration</div>
+                          <div class="row-action-item-desc">Permanently remove this calibration</div>
+                        </button>
+                      </div>
                     </div>
-                    <table class="cal-grid">
-                      <tbody>
-                        <tr>
-                          <td class="row-label has-tip">Range label<span class="tip">The descriptive name assigned to this score range by the calibration author.</span></td>
-                          <td class="col-abnormal">Abnormal</td>
-                          <td class="col-indeterminate">Indeterminate</td>
-                          <td class="col-normal">Normal</td>
-                        </tr>
-                        <tr>
-                          <td class="row-label has-tip">Classification<span class="tip">The functional classification assigned to variants falling in this range.</span></td>
-                          <td><span class="fc-badge fc-abnormal">Abnormal</span></td>
-                          <td><span class="fc-badge fc-not-specified">Not Specified</span></td>
-                          <td><span class="fc-badge fc-normal">Normal</span></td>
-                        </tr>
-                        <tr>
-                          <td class="row-label has-tip">Numeric interval<span class="tip">The score boundaries defining this range, expressed as a mathematical interval.</span></td>
-                          <td><span class="interval-mono">(&minus;&infin;, &minus;1.328)</span></td>
-                          <td><span class="interval-mono">[&minus;1.328, &minus;0.743)</span></td>
-                          <td><span class="interval-mono">[&minus;0.743, &infin;)</span></td>
-                        </tr>
-                        <tr>
-                          <td class="row-label has-tip">Evidence strength<span class="tip">The ACMG/AMP evidence code and strength level for variants in this range.</span></td>
-                          <td><span class="evidence-badge evidence-ps3-strong">PS3_Strong</span></td>
-                          <td><span class="evidence-badge evidence-indeterminate">Indeterminate</span></td>
-                          <td><span class="evidence-badge evidence-bs3-strong">BS3_Strong</span></td>
-                        </tr>
-                        <tr>
-                          <td class="row-label has-tip">OddsPath ratio<span class="tip">The odds of pathogenicity ratio derived from calibration data.</span></td>
-                          <td><span class="odds-value">18.70</span></td>
-                          <td><span class="muted-dash">&mdash;</span></td>
-                          <td><span class="odds-value">0.05</span></td>
-                        </tr>
-                        <tr>
-                          <td class="row-label has-tip">Variant count<span class="tip">The number of variants from this score set that fall within this range.</span></td>
-                          <td><span class="variant-count">1,247</span></td>
-                          <td><span class="variant-count">1,089</span></td>
-                          <td><span class="variant-count">2,318</span></td>
-                        </tr>
-                      </tbody>
-                    </table>
-                    <div class="sources-section">
-                      <span class="sources-heading"><svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M2 3h6a4 4 0 0 1 4 4v14a3 3 0 0 0-3-3H2z"/><path d="M22 3h-6a4 4 0 0 0-4 4v14a3 3 0 0 1 3-3h7z"/></svg> Sources</span>
-                      <span class="source-label">Thresholds<span class="tip">The publication or source that defined the score thresholds used to create these ranges.</span></span>: <a href="#">Harwood FG et al. (2018)</a>
-                      <span class="source-sep">&mdash;</span>
-                      <span class="source-label">Method<span class="tip">The methodology or guideline framework used to determine evidence strength.</span></span>: <a href="#">ClinGen BRCA1/2 VCEP v3.1</a>
+                  </td>
+                </tr>
+                <tr class="expanded-content">
+                  <td colspan="8" style="padding: 0">
+                    <div class="expanded-inner">
+                      <div class="cal-ranges">
+                        <div class="cal-ranges-title">
+                          Harwood et al. 2018
+                          <span class="cal-ranges-title-sep"></span>
+                          <span class="cal-ranges-title-desc"
+                            >BRCA1 RING domain SGE functional score calibration from ClinGen VCEP evidence review.</span
+                          >
+                        </div>
+                        <div class="baseline-bar">
+                          <span class="baseline-bar-label has-tip"
+                            >Baseline score<span class="tip"
+                              >The reference score representing normal function, used as the zero-point for calibration
+                              ranges.</span
+                            ></span
+                          >
+                          <span class="baseline-bar-value">0.000</span>
+                          <span class="baseline-bar-sep"></span>
+                          <span class="baseline-bar-desc">Wild-type synonymous median</span>
+                        </div>
+                        <table class="cal-grid">
+                          <tbody>
+                            <tr>
+                              <td class="row-label has-tip">
+                                Range label<span class="tip"
+                                  >The descriptive name assigned to this score range by the calibration author.</span
+                                >
+                              </td>
+                              <td class="col-abnormal">Abnormal</td>
+                              <td class="col-indeterminate">Indeterminate</td>
+                              <td class="col-normal">Normal</td>
+                            </tr>
+                            <tr>
+                              <td class="row-label has-tip">
+                                Classification<span class="tip"
+                                  >The functional classification assigned to variants falling in this range.</span
+                                >
+                              </td>
+                              <td><span class="fc-badge fc-abnormal">Abnormal</span></td>
+                              <td><span class="fc-badge fc-not-specified">Not Specified</span></td>
+                              <td><span class="fc-badge fc-normal">Normal</span></td>
+                            </tr>
+                            <tr>
+                              <td class="row-label has-tip">
+                                Numeric interval<span class="tip"
+                                  >The score boundaries defining this range, expressed as a mathematical interval.</span
+                                >
+                              </td>
+                              <td><span class="interval-mono">(&minus;&infin;, &minus;1.328)</span></td>
+                              <td><span class="interval-mono">[&minus;1.328, &minus;0.743)</span></td>
+                              <td><span class="interval-mono">[&minus;0.743, &infin;)</span></td>
+                            </tr>
+                            <tr>
+                              <td class="row-label has-tip">
+                                Evidence strength<span class="tip"
+                                  >The ACMG/AMP evidence code and strength level for variants in this range.</span
+                                >
+                              </td>
+                              <td><span class="evidence-badge evidence-ps3-strong">PS3_Strong</span></td>
+                              <td><span class="evidence-badge evidence-indeterminate">Indeterminate</span></td>
+                              <td><span class="evidence-badge evidence-bs3-strong">BS3_Strong</span></td>
+                            </tr>
+                            <tr>
+                              <td class="row-label has-tip">
+                                OddsPath ratio<span class="tip"
+                                  >The odds of pathogenicity ratio derived from calibration data.</span
+                                >
+                              </td>
+                              <td><span class="odds-value">18.70</span></td>
+                              <td><span class="muted-dash">&mdash;</span></td>
+                              <td><span class="odds-value">0.05</span></td>
+                            </tr>
+                            <tr>
+                              <td class="row-label has-tip">
+                                Variant count<span class="tip"
+                                  >The number of variants from this score set that fall within this range.</span
+                                >
+                              </td>
+                              <td><span class="variant-count">1,247</span></td>
+                              <td><span class="variant-count">1,089</span></td>
+                              <td><span class="variant-count">2,318</span></td>
+                            </tr>
+                          </tbody>
+                        </table>
+                        <div class="sources-section">
+                          <span class="sources-heading"
+                            ><svg
+                              width="12"
+                              height="12"
+                              viewBox="0 0 24 24"
+                              fill="none"
+                              stroke="currentColor"
+                              stroke-width="2"
+                              stroke-linecap="round"
+                              stroke-linejoin="round"
+                            >
+                              <path d="M2 3h6a4 4 0 0 1 4 4v14a3 3 0 0 0-3-3H2z" />
+                              <path d="M22 3h-6a4 4 0 0 0-4 4v14a3 3 0 0 1 3-3h7z" />
+                            </svg>
+                            Sources</span
+                          >
+                          <span class="source-label"
+                            >Thresholds<span class="tip"
+                              >The publication or source that defined the score thresholds used to create these
+                              ranges.</span
+                            ></span
+                          >: <a href="#">Harwood FG et al. (2018)</a>
+                          <span class="source-sep">&mdash;</span>
+                          <span class="source-label"
+                            >Method<span class="tip"
+                              >The methodology or guideline framework used to determine evidence strength.</span
+                            ></span
+                          >: <a href="#">ClinGen BRCA1/2 VCEP v3.1</a>
+                        </div>
+                      </div>
                     </div>
-                  </div>
-                </div>
-              </td>
-            </tr>
-          </tbody>
-          <!-- Calibration 2 — Draft, on KCNQ4 -->
-          <tbody>
-            <tr class="expandable-row" onclick="toggleRow(this)">
-              <td><span class="expand-chevron"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><polyline points="9 18 15 12 9 6"/></svg></span></td>
-              <td>
-                <div class="cal-title">Preliminary Functional Assessment</div>
-                <div class="cal-score-set"><a href="./score-set-detail.html">KCNQ4 Missense Variant Effect Map</a></div>
-              </td>
-              <td><span class="tag tag-red">No</span></td>
-              <td><span class="tag tag-red">No</span></td>
-              <td>Community</td>
-              <td>Research</td>
-              <td style="text-align: center">2</td>
-              <td>
-                <div class="row-action-wrap" onclick="event.stopPropagation()">
-                  <button class="row-action-trigger" onclick="toggleRowMenu(this)" aria-label="Actions">
-                    <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="5" r="1"/><circle cx="12" cy="12" r="1"/><circle cx="12" cy="19" r="1"/></svg>
-                  </button>
-                  <div class="row-action-menu">
-                    <a href="./score-set-detail.html" class="row-action-item">
-                      <div class="row-action-item-label">View on Score Set</div>
-                      <div class="row-action-item-desc">Open the parent score set page</div>
-                    </a>
-                    <a href="./calibrations.html" class="row-action-item">
-                      <div class="row-action-item-label">Edit Calibration</div>
-                      <div class="row-action-item-desc">Modify title, ranges, and settings</div>
-                    </a>
-                    <button class="row-action-item">
-                      <div class="row-action-item-label" style="color: #2e7d32">Publish Calibration</div>
-                      <div class="row-action-item-desc">Make this calibration publicly visible</div>
-                    </button>
-                    <div class="row-action-sep"></div>
-                    <button class="row-action-item danger">
-                      <div class="row-action-item-label">Delete Calibration</div>
-                      <div class="row-action-item-desc">Permanently remove this calibration</div>
-                    </button>
-                  </div>
-                </div>
-              </td>
-            </tr>
-            <tr class="expanded-content">
-              <td colspan="8" style="padding: 0">
-                <div class="expanded-inner">
-                  <div class="cal-ranges">
-                    <div class="cal-ranges-title">
-                      Preliminary Functional Assessment
-                      <span class="cal-ranges-title-sep"></span>
-                      <span class="cal-ranges-title-desc">Draft calibration using pilot experiment data. Not yet reviewed for clinical application.</span>
+                  </td>
+                </tr>
+              </tbody>
+              <!-- Calibration 2 — Draft, on KCNQ4 -->
+              <tbody>
+                <tr class="expandable-row" onclick="toggleRow(this)">
+                  <td>
+                    <span class="expand-chevron"
+                      ><svg
+                        width="14"
+                        height="14"
+                        viewBox="0 0 24 24"
+                        fill="none"
+                        stroke="currentColor"
+                        stroke-width="2.5"
+                        stroke-linecap="round"
+                        stroke-linejoin="round"
+                      >
+                        <polyline points="9 18 15 12 9 6" /></svg
+                    ></span>
+                  </td>
+                  <td>
+                    <div class="cal-title">Preliminary Functional Assessment</div>
+                    <div class="cal-score-set">
+                      <a href="./score-set-detail.html">KCNQ4 Missense Variant Effect Map</a>
                     </div>
-                    <div class="baseline-bar">
-                      <span class="baseline-bar-label has-tip">Baseline score<span class="tip">The reference score representing normal function, used as the zero-point for calibration ranges.</span></span>
-                      <span class="baseline-bar-value" style="color: #bbb; font-weight: 500; font-family: inherit">N/A</span>
-                      <span class="baseline-bar-sep"></span>
-                      <span class="baseline-bar-desc" style="font-style: italic">No description provided</span>
+                  </td>
+                  <td><span class="tag tag-red">No</span></td>
+                  <td><span class="tag tag-red">No</span></td>
+                  <td>Community</td>
+                  <td>Research</td>
+                  <td style="text-align: center">2</td>
+                  <td>
+                    <div class="row-action-wrap" onclick="event.stopPropagation()">
+                      <button class="row-action-trigger" onclick="toggleRowMenu(this)" aria-label="Actions">
+                        <svg
+                          width="14"
+                          height="14"
+                          viewBox="0 0 24 24"
+                          fill="none"
+                          stroke="currentColor"
+                          stroke-width="2.5"
+                          stroke-linecap="round"
+                          stroke-linejoin="round"
+                        >
+                          <circle cx="12" cy="5" r="1" />
+                          <circle cx="12" cy="12" r="1" />
+                          <circle cx="12" cy="19" r="1" />
+                        </svg>
+                      </button>
+                      <div class="row-action-menu">
+                        <a href="./score-set-detail.html" class="row-action-item">
+                          <div class="row-action-item-label">View on Score Set</div>
+                          <div class="row-action-item-desc">Open the parent score set page</div>
+                        </a>
+                        <a href="./calibrations.html" class="row-action-item">
+                          <div class="row-action-item-label">Edit Calibration</div>
+                          <div class="row-action-item-desc">Modify title, ranges, and settings</div>
+                        </a>
+                        <button class="row-action-item">
+                          <div class="row-action-item-label" style="color: #2e7d32">Publish Calibration</div>
+                          <div class="row-action-item-desc">Make this calibration publicly visible</div>
+                        </button>
+                        <div class="row-action-sep"></div>
+                        <button class="row-action-item danger">
+                          <div class="row-action-item-label">Delete Calibration</div>
+                          <div class="row-action-item-desc">Permanently remove this calibration</div>
+                        </button>
+                      </div>
                     </div>
-                    <table class="cal-grid">
-                      <tbody>
-                        <tr>
-                          <td class="row-label has-tip">Range label<span class="tip">The descriptive name assigned to this score range.</span></td>
-                          <td class="col-abnormal">Non-functional</td>
-                          <td class="col-normal">Functional</td>
-                        </tr>
-                        <tr>
-                          <td class="row-label has-tip">Classification<span class="tip">The functional classification assigned to variants falling in this range.</span></td>
-                          <td><span class="fc-badge fc-abnormal">Abnormal</span></td>
-                          <td><span class="fc-badge fc-normal">Normal</span></td>
-                        </tr>
-                        <tr>
-                          <td class="row-label has-tip">Numeric interval<span class="tip">The score boundaries defining this range.</span></td>
-                          <td><span class="interval-mono">(&minus;&infin;, &minus;0.600)</span></td>
-                          <td><span class="interval-mono">[&minus;0.600, &infin;)</span></td>
-                        </tr>
-                        <tr>
-                          <td class="row-label has-tip">Evidence strength<span class="tip">The ACMG/AMP evidence code and strength level for variants in this range.</span></td>
-                          <td><span class="muted-dash">&mdash;</span></td>
-                          <td><span class="muted-dash">&mdash;</span></td>
-                        </tr>
-                        <tr>
-                          <td class="row-label has-tip">OddsPath ratio<span class="tip">The odds of pathogenicity ratio derived from calibration data.</span></td>
-                          <td><span class="muted-dash">&mdash;</span></td>
-                          <td><span class="muted-dash">&mdash;</span></td>
-                        </tr>
-                        <tr>
-                          <td class="row-label has-tip">Variant count<span class="tip">The number of variants that fall within this range.</span></td>
-                          <td><span class="variant-count">156</span></td>
-                          <td><span class="variant-count">289</span></td>
-                        </tr>
-                      </tbody>
-                    </table>
-                    <div class="sources-section">
-                      <span class="sources-heading"><svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M2 3h6a4 4 0 0 1 4 4v14a3 3 0 0 0-3-3H2z"/><path d="M22 3h-6a4 4 0 0 0-4 4v14a3 3 0 0 1 3-3h7z"/></svg> Sources</span>
-                      <span style="color: #bbb; font-style: italic">Not provided</span>
+                  </td>
+                </tr>
+                <tr class="expanded-content">
+                  <td colspan="8" style="padding: 0">
+                    <div class="expanded-inner">
+                      <div class="cal-ranges">
+                        <div class="cal-ranges-title">
+                          Preliminary Functional Assessment
+                          <span class="cal-ranges-title-sep"></span>
+                          <span class="cal-ranges-title-desc"
+                            >Draft calibration using pilot experiment data. Not yet reviewed for clinical
+                            application.</span
+                          >
+                        </div>
+                        <div class="baseline-bar">
+                          <span class="baseline-bar-label has-tip"
+                            >Baseline score<span class="tip"
+                              >The reference score representing normal function, used as the zero-point for calibration
+                              ranges.</span
+                            ></span
+                          >
+                          <span class="baseline-bar-value" style="color: #bbb; font-weight: 500; font-family: inherit"
+                            >N/A</span
+                          >
+                          <span class="baseline-bar-sep"></span>
+                          <span class="baseline-bar-desc" style="font-style: italic">No description provided</span>
+                        </div>
+                        <table class="cal-grid">
+                          <tbody>
+                            <tr>
+                              <td class="row-label has-tip">
+                                Range label<span class="tip">The descriptive name assigned to this score range.</span>
+                              </td>
+                              <td class="col-abnormal">Non-functional</td>
+                              <td class="col-normal">Functional</td>
+                            </tr>
+                            <tr>
+                              <td class="row-label has-tip">
+                                Classification<span class="tip"
+                                  >The functional classification assigned to variants falling in this range.</span
+                                >
+                              </td>
+                              <td><span class="fc-badge fc-abnormal">Abnormal</span></td>
+                              <td><span class="fc-badge fc-normal">Normal</span></td>
+                            </tr>
+                            <tr>
+                              <td class="row-label has-tip">
+                                Numeric interval<span class="tip">The score boundaries defining this range.</span>
+                              </td>
+                              <td><span class="interval-mono">(&minus;&infin;, &minus;0.600)</span></td>
+                              <td><span class="interval-mono">[&minus;0.600, &infin;)</span></td>
+                            </tr>
+                            <tr>
+                              <td class="row-label has-tip">
+                                Evidence strength<span class="tip"
+                                  >The ACMG/AMP evidence code and strength level for variants in this range.</span
+                                >
+                              </td>
+                              <td><span class="muted-dash">&mdash;</span></td>
+                              <td><span class="muted-dash">&mdash;</span></td>
+                            </tr>
+                            <tr>
+                              <td class="row-label has-tip">
+                                OddsPath ratio<span class="tip"
+                                  >The odds of pathogenicity ratio derived from calibration data.</span
+                                >
+                              </td>
+                              <td><span class="muted-dash">&mdash;</span></td>
+                              <td><span class="muted-dash">&mdash;</span></td>
+                            </tr>
+                            <tr>
+                              <td class="row-label has-tip">
+                                Variant count<span class="tip"
+                                  >The number of variants that fall within this range.</span
+                                >
+                              </td>
+                              <td><span class="variant-count">156</span></td>
+                              <td><span class="variant-count">289</span></td>
+                            </tr>
+                          </tbody>
+                        </table>
+                        <div class="sources-section">
+                          <span class="sources-heading"
+                            ><svg
+                              width="12"
+                              height="12"
+                              viewBox="0 0 24 24"
+                              fill="none"
+                              stroke="currentColor"
+                              stroke-width="2"
+                              stroke-linecap="round"
+                              stroke-linejoin="round"
+                            >
+                              <path d="M2 3h6a4 4 0 0 1 4 4v14a3 3 0 0 0-3-3H2z" />
+                              <path d="M22 3h-6a4 4 0 0 0-4 4v14a3 3 0 0 1 3-3h7z" />
+                            </svg>
+                            Sources</span
+                          >
+                          <span style="color: #bbb; font-style: italic">Not provided</span>
+                        </div>
+                      </div>
                     </div>
-                  </div>
-                </div>
-              </td>
-            </tr>
-          </tbody>
-        </table>
+                  </td>
+                </tr>
+              </tbody>
+            </table>
+          </div>
+          <div style="margin-top: 12px; font-size: 13px; color: #aaa; text-align: right">
+            Showing 2 of 2 calibrations
+          </div>
         </div>
-        <div style="margin-top: 12px; font-size: 13px; color: #aaa; text-align: right">Showing 2 of 2 calibrations</div>
-        </div>
-        <div id="calibrations-empty" class="empty-state" style="display: none;">
-          <div class="empty-state-bars" style="opacity: 0.45;">
-            <div class="empty-state-bar" style="background: #78b793; height: 20px;"></div>
-            <div class="empty-state-bar" style="background: #a1d8c8; height: 32px;"></div>
-            <div class="empty-state-bar" style="background: #78b793; height: 44px;"></div>
-            <div class="empty-state-bar" style="background: #f8971d; height: 36px; opacity: 0.7;"></div>
-            <div class="empty-state-bar" style="background: #bbb; height: 24px; opacity: 0.6;"></div>
-            <div class="empty-state-bar" style="background: #ccc; height: 40px; opacity: 0.5;"></div>
-            <div class="empty-state-bar" style="background: #ddd; height: 28px; opacity: 0.4;"></div>
-            <div class="empty-state-bar" style="background: #e0e0e0; height: 18px; opacity: 0.3;"></div>
+        <div id="calibrations-empty" class="empty-state" style="display: none">
+          <div class="empty-state-bars" style="opacity: 0.45">
+            <div class="empty-state-bar" style="background: #78b793; height: 20px"></div>
+            <div class="empty-state-bar" style="background: #a1d8c8; height: 32px"></div>
+            <div class="empty-state-bar" style="background: #78b793; height: 44px"></div>
+            <div class="empty-state-bar" style="background: #f8971d; height: 36px; opacity: 0.7"></div>
+            <div class="empty-state-bar" style="background: #bbb; height: 24px; opacity: 0.6"></div>
+            <div class="empty-state-bar" style="background: #ccc; height: 40px; opacity: 0.5"></div>
+            <div class="empty-state-bar" style="background: #ddd; height: 28px; opacity: 0.4"></div>
+            <div class="empty-state-bar" style="background: #e0e0e0; height: 18px; opacity: 0.3"></div>
           </div>
           <h3>No calibrations yet</h3>
-          <p>Calibrations define functional score ranges for clinical variant interpretation. Create one from any score set you own.</p>
+          <p>
+            Calibrations define functional score ranges for clinical variant interpretation. Create one from any score
+            set you own.
+          </p>
           <button class="empty-state-btn">+ Create your first calibration</button>
         </div>
       </div>
-
     </main>
 
     <!-- FOOTER -->
@@ -1955,6 +2642,9 @@
           <a href="#">Chat</a>
           <a href="#">Documentation</a>
           <a href="#">Report an issue</a>
+          <span style="color: #dee2e6">|</span>
+          <a href="./design-showcase.html" style="color: #aaa">Design Showcase</a>
+          <a href="./404.html" style="color: #aaa">404 Demo</a>
         </div>
       </div>
     </footer>
@@ -1965,7 +2655,7 @@
         const dd = document.getElementById('nav-add-dropdown')
         dd.classList.toggle('open')
       }
-      document.addEventListener('click', function(e) {
+      document.addEventListener('click', function (e) {
         const wrap = document.querySelector('.nav-add-wrap')
         if (wrap && !wrap.contains(e.target)) {
           const dd = document.getElementById('nav-add-dropdown')
@@ -1974,94 +2664,94 @@
       })
 
       function toggleBell(event) {
-        event.stopPropagation();
-        const dropdown = document.getElementById('nav-bell-dropdown');
-        dropdown.classList.toggle('open');
+        event.stopPropagation()
+        const dropdown = document.getElementById('nav-bell-dropdown')
+        dropdown.classList.toggle('open')
       }
 
-      document.addEventListener('click', function() {
-        document.getElementById('nav-bell-dropdown').classList.remove('open');
-      });
+      document.addEventListener('click', function () {
+        document.getElementById('nav-bell-dropdown').classList.remove('open')
+      })
 
       function switchTab(tabId, btn) {
         // Update tab button states
-        document.querySelectorAll('.tab-item').forEach(t => t.classList.remove('active'));
-        btn.classList.add('active');
+        document.querySelectorAll('.tab-item').forEach((t) => t.classList.remove('active'))
+        btn.classList.add('active')
 
         // Show/hide panels
-        document.querySelectorAll('.panel').forEach(p => p.classList.remove('active'));
-        document.getElementById('panel-' + tabId).classList.add('active');
+        document.querySelectorAll('.panel').forEach((p) => p.classList.remove('active'))
+        document.getElementById('panel-' + tabId).classList.add('active')
       }
 
       function toggleRow(tr) {
-        tr.classList.toggle('open');
+        tr.classList.toggle('open')
       }
 
       function toggleRowMenu(btn) {
         // Close any other open menus first
-        document.querySelectorAll('.row-action-menu.open').forEach(m => {
-          if (m !== btn.nextElementSibling) m.classList.remove('open');
-        });
-        btn.nextElementSibling.classList.toggle('open');
+        document.querySelectorAll('.row-action-menu.open').forEach((m) => {
+          if (m !== btn.nextElementSibling) m.classList.remove('open')
+        })
+        btn.nextElementSibling.classList.toggle('open')
       }
       // Close row action menus on outside click
-      document.addEventListener('click', function(e) {
+      document.addEventListener('click', function (e) {
         if (!e.target.closest('.row-action-wrap')) {
-          document.querySelectorAll('.row-action-menu.open').forEach(m => m.classList.remove('open'));
+          document.querySelectorAll('.row-action-menu.open').forEach((m) => m.classList.remove('open'))
         }
-      });
+      })
 
       function toggleFilter(btn) {
-        const group = btn.closest('.filter-chips');
-        group.querySelectorAll('.filter-chip').forEach(c => c.classList.remove('active'));
-        btn.classList.add('active');
+        const group = btn.closest('.filter-chips')
+        group.querySelectorAll('.filter-chip').forEach((c) => c.classList.remove('active'))
+        btn.classList.add('active')
         // Dismiss experiment filter if user picks a different chip
-        clearExperimentFilter(false);
+        clearExperimentFilter(false)
       }
 
       function filterByExperiment(name) {
-        const tabBtn = document.querySelector('.tab-item[onclick*="score-sets"]');
-        switchTab('score-sets', tabBtn);
+        const tabBtn = document.querySelector('.tab-item[onclick*="score-sets"]')
+        switchTab('score-sets', tabBtn)
         // Clear regular filter chips
-        const chips = document.querySelectorAll('#panel-score-sets .filter-chip:not(.filter-chip--experiment)');
-        chips.forEach(c => c.classList.remove('active'));
+        const chips = document.querySelectorAll('#panel-score-sets .filter-chip:not(.filter-chip--experiment)')
+        chips.forEach((c) => c.classList.remove('active'))
         // Show experiment chip
-        document.getElementById('experiment-filter-label').textContent = name;
-        document.getElementById('experiment-filter-chip').classList.add('visible');
+        document.getElementById('experiment-filter-label').textContent = name
+        document.getElementById('experiment-filter-chip').classList.add('visible')
       }
 
       function clearExperimentFilter(reactivateAll = true) {
-        const chip = document.getElementById('experiment-filter-chip');
-        chip.classList.remove('visible');
+        const chip = document.getElementById('experiment-filter-chip')
+        chip.classList.remove('visible')
         if (reactivateAll) {
-          document.querySelector('#panel-score-sets .filter-chip:not(.filter-chip--experiment)').classList.add('active');
+          document.querySelector('#panel-score-sets .filter-chip:not(.filter-chip--experiment)').classList.add('active')
         }
       }
 
       function toggleEmptyState(section) {
-        const populated = document.getElementById(section + '-populated');
-        const empty = document.getElementById(section + '-empty');
-        const toggle = document.getElementById(section + '-empty-toggle');
-        const isShowingEmpty = empty.style.display !== 'none';
+        const populated = document.getElementById(section + '-populated')
+        const empty = document.getElementById(section + '-empty')
+        const toggle = document.getElementById(section + '-empty-toggle')
+        const isShowingEmpty = empty.style.display !== 'none'
         if (isShowingEmpty) {
-          populated.style.display = '';
-          empty.style.display = 'none';
-          toggle.textContent = 'Show empty state';
-          toggle.classList.remove('active');
+          populated.style.display = ''
+          empty.style.display = 'none'
+          toggle.textContent = 'Show empty state'
+          toggle.classList.remove('active')
         } else {
-          populated.style.display = 'none';
-          empty.style.display = '';
-          toggle.textContent = 'Show populated';
-          toggle.classList.add('active');
+          populated.style.display = 'none'
+          empty.style.display = ''
+          toggle.textContent = 'Show populated'
+          toggle.classList.add('active')
         }
       }
-    
+
       function toggleUserMenu(event) {
         event.stopPropagation()
         var dd = document.getElementById('nav-user-dropdown')
         dd.classList.toggle('open')
       }
-      document.addEventListener('click', function(e) {
+      document.addEventListener('click', function (e) {
         var wrap = document.querySelector('.nav-user-wrap')
         if (wrap && !wrap.contains(e.target)) {
           var dd = document.getElementById('nav-user-dropdown')

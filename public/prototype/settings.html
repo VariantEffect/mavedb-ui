@@ -117,7 +117,7 @@
       }
       .nav-add-option-desc {
         font-size: 12px;
-        color: #888;
+        color: #767676;
         margin-top: 2px;
       }
       .nav-user-wrap {
@@ -148,7 +148,7 @@
         background: #5a9375;
       }
       .nav-user-caret {
-        color: #999;
+        color: #767676;
         flex-shrink: 0;
         cursor: pointer;
       }
@@ -189,7 +189,7 @@
       .nav-user-dropdown .dropdown-icon {
         width: 16px;
         height: 16px;
-        color: #888;
+        color: #767676;
         flex-shrink: 0;
       }
       .nav-bell-wrap {
@@ -275,7 +275,7 @@
         font-weight: 600;
       }
       .nav-bell-activity-verb {
-        color: #888;
+        color: #767676;
       }
       .nav-bell-activity-time {
         font-size: 11px;
@@ -355,7 +355,7 @@
       }
       .settings-card {
         background: #fff;
-        border: 1px solid #e8e8e8;
+        border: 1px solid #e0e0e0;
         border-radius: 10px;
         margin-bottom: 20px;
       }
@@ -388,7 +388,7 @@
         display: block;
         font-size: 12px;
         font-weight: 600;
-        color: #888;
+        color: #767676;
         text-transform: uppercase;
         letter-spacing: 0.4px;
         margin-bottom: 6px;
@@ -429,11 +429,11 @@
         transition: all 0.15s;
       }
       .btn-primary {
-        background: #78b793;
+        background: #f8971d;
         color: #222;
       }
       .btn-primary:hover {
-        background: #5a9375;
+        background: #d97510;
       }
       .btn-secondary {
         background: #eee;
@@ -516,7 +516,7 @@
       }
       .key-empty {
         font-size: 13px;
-        color: #999;
+        color: #767676;
         font-style: italic;
       }
 
@@ -607,7 +607,7 @@
         align-items: center;
         justify-content: space-between;
         font-size: 13px;
-        color: #888;
+        color: #767676;
       }
       .footer-inner a {
         color: #0074d9;
@@ -705,21 +705,21 @@
             <div class="nav-bell-activity-list">
               <div class="nav-bell-activity-item">
                 <span
-                  ><a href="#">CHEK2 Kinase Activity Assay – Draft</a>
+                  ><a href="./score-set-detail.html">CHEK2 Kinase Activity Assay – Draft</a>
                   <span class="nav-bell-activity-verb">edited by you</span></span
                 >
                 <span class="nav-bell-activity-time">2 days ago</span>
               </div>
               <div class="nav-bell-activity-item">
                 <span
-                  ><a href="#">KCNQ4 Variant Effect – Draft</a>
+                  ><a href="./score-set-detail.html">KCNQ4 Variant Effect – Draft</a>
                   <span class="nav-bell-activity-verb">calibration created by you</span></span
                 >
                 <span class="nav-bell-activity-time">5 days ago</span>
               </div>
               <div class="nav-bell-activity-item">
                 <span
-                  ><a href="#">BRCA1 Combined Functional Meta-analysis</a>
+                  ><a href="./score-set-detail.html">BRCA1 Combined Functional Meta-analysis</a>
                   <span class="nav-bell-activity-verb">published</span></span
                 >
                 <span class="nav-bell-activity-time">Nov 5, 2024</span>
@@ -729,18 +729,68 @@
         </div>
         <div class="nav-user-wrap" onclick="toggleUserMenu(event)">
           <button class="nav-user">B</button>
-          <svg class="nav-user-caret" width="10" height="10" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><polyline points="6 9 12 15 18 9"/></svg>
+          <svg
+            class="nav-user-caret"
+            width="10"
+            height="10"
+            viewBox="0 0 24 24"
+            fill="none"
+            stroke="currentColor"
+            stroke-width="2.5"
+            stroke-linecap="round"
+            stroke-linejoin="round"
+          >
+            <polyline points="6 9 12 15 18 9" />
+          </svg>
           <div id="nav-user-dropdown" class="nav-user-dropdown">
             <a href="./settings.html">
-              <svg class="dropdown-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="3"/><path d="M19.4 15a1.65 1.65 0 0 0 .33 1.82l.06.06a2 2 0 1 1-2.83 2.83l-.06-.06a1.65 1.65 0 0 0-1.82-.33 1.65 1.65 0 0 0-1 1.51V21a2 2 0 0 1-4 0v-.09A1.65 1.65 0 0 0 9 19.4a1.65 1.65 0 0 0-1.82.33l-.06.06a2 2 0 1 1-2.83-2.83l.06-.06A1.65 1.65 0 0 0 4.68 15a1.65 1.65 0 0 0-1.51-1H3a2 2 0 0 1 0-4h.09A1.65 1.65 0 0 0 4.6 9a1.65 1.65 0 0 0-.33-1.82l-.06-.06a2 2 0 1 1 2.83-2.83l.06.06A1.65 1.65 0 0 0 9 4.68a1.65 1.65 0 0 0 1-1.51V3a2 2 0 0 1 4 0v.09a1.65 1.65 0 0 0 1 1.51 1.65 1.65 0 0 0 1.82-.33l.06-.06a2 2 0 1 1 2.83 2.83l-.06.06A1.65 1.65 0 0 0 19.4 9a1.65 1.65 0 0 0 1.51 1H21a2 2 0 0 1 0 4h-.09a1.65 1.65 0 0 0-1.51 1z"/></svg>
+              <svg
+                class="dropdown-icon"
+                viewBox="0 0 24 24"
+                fill="none"
+                stroke="currentColor"
+                stroke-width="2"
+                stroke-linecap="round"
+                stroke-linejoin="round"
+              >
+                <circle cx="12" cy="12" r="3" />
+                <path
+                  d="M19.4 15a1.65 1.65 0 0 0 .33 1.82l.06.06a2 2 0 1 1-2.83 2.83l-.06-.06a1.65 1.65 0 0 0-1.82-.33 1.65 1.65 0 0 0-1 1.51V21a2 2 0 0 1-4 0v-.09A1.65 1.65 0 0 0 9 19.4a1.65 1.65 0 0 0-1.82.33l-.06.06a2 2 0 1 1-2.83-2.83l.06-.06A1.65 1.65 0 0 0 4.68 15a1.65 1.65 0 0 0-1.51-1H3a2 2 0 0 1 0-4h.09A1.65 1.65 0 0 0 4.6 9a1.65 1.65 0 0 0-.33-1.82l-.06-.06a2 2 0 1 1 2.83-2.83l.06.06A1.65 1.65 0 0 0 9 4.68a1.65 1.65 0 0 0 1-1.51V3a2 2 0 0 1 4 0v.09a1.65 1.65 0 0 0 1 1.51 1.65 1.65 0 0 0 1.82-.33l.06-.06a2 2 0 1 1 2.83 2.83l-.06.06A1.65 1.65 0 0 0 19.4 9a1.65 1.65 0 0 0 1.51 1H21a2 2 0 0 1 0 4h-.09a1.65 1.65 0 0 0-1.51 1z"
+                />
+              </svg>
               Settings
             </a>
             <a href="./dashboard.html">
-              <svg class="dropdown-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="3" width="7" height="7"/><rect x="14" y="3" width="7" height="7"/><rect x="14" y="14" width="7" height="7"/><rect x="3" y="14" width="7" height="7"/></svg>
+              <svg
+                class="dropdown-icon"
+                viewBox="0 0 24 24"
+                fill="none"
+                stroke="currentColor"
+                stroke-width="2"
+                stroke-linecap="round"
+                stroke-linejoin="round"
+              >
+                <rect x="3" y="3" width="7" height="7" />
+                <rect x="14" y="3" width="7" height="7" />
+                <rect x="14" y="14" width="7" height="7" />
+                <rect x="3" y="14" width="7" height="7" />
+              </svg>
               Dashboard
             </a>
             <a href="#">
-              <svg class="dropdown-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M9 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h4"/><polyline points="16 17 21 12 16 7"/><line x1="21" y1="12" x2="9" y2="12"/></svg>
+              <svg
+                class="dropdown-icon"
+                viewBox="0 0 24 24"
+                fill="none"
+                stroke="currentColor"
+                stroke-width="2"
+                stroke-linecap="round"
+                stroke-linejoin="round"
+              >
+                <path d="M9 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h4" />
+                <polyline points="16 17 21 12 16 7" />
+                <line x1="21" y1="12" x2="9" y2="12" />
+              </svg>
               Sign out
             </a>
           </div>
@@ -755,7 +805,11 @@
         <div class="settings-hero-info">
           <div class="settings-hero-name">Blake Capaldi</div>
           <div class="settings-hero-orcid">
-            <svg width="14" height="14" viewBox="0 0 256 256" fill="#a6ce39"><path d="M128 0C57.3 0 0 57.3 0 128s57.3 128 128 128 128-57.3 128-128S198.7 0 128 0zm-20.8 193.6H88V96h19.2v97.6zM97.6 84.8c-6.4 0-11.2-4.8-11.2-11.2s4.8-11.2 11.2-11.2 11.2 4.8 11.2 11.2-4.8 11.2-11.2 11.2zm70.4 108.8h-19.2v-48c0-16-19.2-16-19.2 0v48H112V96h16v12.8c8-14.4 35.2-16 35.2 0v84.8h4.8z"/></svg>
+            <svg width="14" height="14" viewBox="0 0 256 256" fill="#a6ce39">
+              <path
+                d="M128 0C57.3 0 0 57.3 0 128s57.3 128 128 128 128-57.3 128-128S198.7 0 128 0zm-20.8 193.6H88V96h19.2v97.6zM97.6 84.8c-6.4 0-11.2-4.8-11.2-11.2s4.8-11.2 11.2-11.2 11.2 4.8 11.2 11.2-4.8 11.2-11.2 11.2zm70.4 108.8h-19.2v-48c0-16-19.2-16-19.2 0v48H112V96h16v12.8c8-14.4 35.2-16 35.2 0v84.8h4.8z"
+              />
+            </svg>
             0000-0001-2345-6789
           </div>
         </div>
@@ -787,12 +841,7 @@
         <div class="settings-card-body">
           <div class="form-group">
             <label class="form-label" for="email-input">Email address</label>
-            <input
-              id="email-input"
-              class="form-input"
-              type="email"
-              value="b.capaldi@example.org"
-            />
+            <input id="email-input" class="form-input" type="email" value="b.capaldi@example.org" />
             <div class="form-hint">Used for account notifications and ORCID record linking</div>
           </div>
         </div>
@@ -809,13 +858,31 @@
           <div class="key-display" id="user-key-display">
             <span class="key-value">mdb_sk_7f3a9c2e1d4b8f6a0c5e3d7b9a1f4c8e</span>
             <button class="key-icon-btn" title="Copy to clipboard" onclick="copyKey(this)">
-              <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+              <svg
+                width="14"
+                height="14"
+                viewBox="0 0 24 24"
+                fill="none"
+                stroke="currentColor"
+                stroke-width="2"
+                stroke-linecap="round"
+                stroke-linejoin="round"
+              >
                 <rect x="9" y="9" width="13" height="13" rx="2" ry="2"></rect>
                 <path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1"></path>
               </svg>
             </button>
             <button class="key-icon-btn danger" title="Delete key" onclick="deleteKey('user')">
-              <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+              <svg
+                width="14"
+                height="14"
+                viewBox="0 0 24 24"
+                fill="none"
+                stroke="currentColor"
+                stroke-width="2"
+                stroke-linecap="round"
+                stroke-linejoin="round"
+              >
                 <polyline points="3 6 5 6 21 6"></polyline>
                 <path d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6m3 0V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2"></path>
               </svg>
@@ -862,13 +929,31 @@
             <div class="key-display">
               <span class="key-value">mdb_sk_cur_4a8c1f2e7d3b9e6a0d5f8c2b1a7e4d9f</span>
               <button class="key-icon-btn" title="Copy to clipboard" onclick="copyKey(this)">
-                <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                <svg
+                  width="14"
+                  height="14"
+                  viewBox="0 0 24 24"
+                  fill="none"
+                  stroke="currentColor"
+                  stroke-width="2"
+                  stroke-linecap="round"
+                  stroke-linejoin="round"
+                >
                   <rect x="9" y="9" width="13" height="13" rx="2" ry="2"></rect>
                   <path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1"></path>
                 </svg>
               </button>
               <button class="key-icon-btn danger" title="Delete key" onclick="deleteKey('curator')">
-                <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                <svg
+                  width="14"
+                  height="14"
+                  viewBox="0 0 24 24"
+                  fill="none"
+                  stroke="currentColor"
+                  stroke-width="2"
+                  stroke-linecap="round"
+                  stroke-linejoin="round"
+                >
                   <polyline points="3 6 5 6 21 6"></polyline>
                   <path d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6m3 0V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2"></path>
                 </svg>
@@ -886,13 +971,31 @@
               <div class="key-display">
                 <span class="key-value" id="admin-key-value"></span>
                 <button class="key-icon-btn" title="Copy to clipboard" onclick="copyKey(this)">
-                  <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                  <svg
+                    width="14"
+                    height="14"
+                    viewBox="0 0 24 24"
+                    fill="none"
+                    stroke="currentColor"
+                    stroke-width="2"
+                    stroke-linecap="round"
+                    stroke-linejoin="round"
+                  >
                     <rect x="9" y="9" width="13" height="13" rx="2" ry="2"></rect>
                     <path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1"></path>
                   </svg>
                 </button>
                 <button class="key-icon-btn danger" title="Delete key">
-                  <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                  <svg
+                    width="14"
+                    height="14"
+                    viewBox="0 0 24 24"
+                    fill="none"
+                    stroke="currentColor"
+                    stroke-width="2"
+                    stroke-linecap="round"
+                    stroke-linejoin="round"
+                  >
                     <polyline points="3 6 5 6 21 6"></polyline>
                     <path d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6m3 0V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2"></path>
                   </svg>
@@ -921,6 +1024,9 @@
           <a href="#">Chat</a>
           <a href="#">Documentation</a>
           <a href="#">Report an issue</a>
+          <span style="color: #dee2e6">|</span>
+          <a href="./design-showcase.html" style="color: #aaa">Design Showcase</a>
+          <a href="./404.html" style="color: #aaa">404 Demo</a>
         </div>
       </div>
     </footer>
@@ -983,7 +1089,8 @@
 
       // Delete user key (toggle display)
       function deleteKey(role) {
-        if (!confirm('Are you sure you want to delete this API key? Any applications using it will lose access.')) return
+        if (!confirm('Are you sure you want to delete this API key? Any applications using it will lose access.'))
+          return
         if (role === 'user') {
           document.getElementById('user-key-display').style.display = 'none'
           document.getElementById('user-key-empty').style.display = ''

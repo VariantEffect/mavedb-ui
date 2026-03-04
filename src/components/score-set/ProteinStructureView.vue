@@ -205,13 +205,9 @@ export default {
       this.$emit('hoveredOverResidue', e.eventData)
     },
     fetchAlphaFoldCifUrl: async function () {
-      const qualifier = encodeURIComponent(this.selectedAlphaFold.id)
-      const response = await axios.get(`https://alphafold.ebi.ac.uk/api/prediction/${qualifier}`)
+      const response = await axios.get(`https://alphafold.ebi.ac.uk/api/prediction/${this.selectedAlphaFold.id}`)
       const predictionModels = _.isArray(response.data) ? response.data : [response.data]
-      const selectedModel =
-        predictionModels.find(
-          (x) => _.isString(x?.cifUrl) && _.isString(x?.entryId) && x.entryId === `AF-${this.selectedAlphaFold.id}-F1`
-        ) || predictionModels.find((x) => _.isString(x?.cifUrl))
+      const selectedModel = predictionModels.find((x) => x.entryId === `AF-${this.selectedAlphaFold.id}-F1`)
       return selectedModel?.cifUrl || null
     },
 

@@ -1,0 +1,759 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Score Set Saved! — MaveDB</title>
+    <link
+      href="https://fonts.googleapis.com/css2?family=Raleway:wght@400;500;600;700&family=Exo+2:wght@700;800;900&display=swap"
+      rel="stylesheet"
+    />
+    <style>
+      *,
+      *::before,
+      *::after {
+        box-sizing: border-box;
+        margin: 0;
+        padding: 0;
+      }
+      body {
+        font-family: 'Raleway', sans-serif;
+        background: #f7f7f7;
+        color: #333;
+        font-size: 15px;
+      }
+      h1,
+      h2,
+      h3 {
+        font-family: 'Exo 2', sans-serif;
+      }
+      a {
+        color: #0074d9;
+        text-decoration: none;
+      }
+      a:hover {
+        text-decoration: underline;
+      }
+
+      /* ── NAV ── */
+      nav {
+        background: #fff;
+        border-bottom: 1px solid #dee2e6;
+        position: sticky;
+        top: 0;
+        z-index: 100;
+      }
+      .nav-inner {
+        max-width: 1280px;
+        margin: 0 auto;
+        display: flex;
+        align-items: center;
+        gap: 24px;
+        padding: 0 24px;
+        height: 58px;
+      }
+      .nav-logo-img {
+        height: 42px;
+        display: block;
+        flex-shrink: 0;
+      }
+      .nav-links {
+        display: flex;
+        gap: 20px;
+        margin-left: auto;
+        list-style: none;
+        font-size: 14px;
+        font-weight: 500;
+      }
+      .nav-links a {
+        color: #444;
+      }
+      .nav-links a:hover {
+        color: #78b793;
+        text-decoration: none;
+      }
+      .nav-links a.active {
+        color: #78b793;
+        font-weight: 700;
+      }
+      .nav-add-wrap {
+        position: relative;
+      }
+      .nav-add-dropdown {
+        display: none;
+        position: absolute;
+        top: calc(100% + 12px);
+        right: 0;
+        width: 260px;
+        background: #fff;
+        border: 1px solid #e0e0e0;
+        border-radius: 8px;
+        box-shadow: 0 8px 24px rgba(0, 0, 0, 0.12);
+        z-index: 200;
+        overflow: hidden;
+      }
+      .nav-add-dropdown.open {
+        display: block;
+      }
+      .nav-add-option {
+        display: block;
+        padding: 12px 16px;
+        border-bottom: 1px solid #f0f0f0;
+      }
+      .nav-add-option:last-child {
+        border-bottom: none;
+      }
+      .nav-add-option:hover {
+        background: #f5f5f5;
+        text-decoration: none;
+      }
+      .nav-add-option-label {
+        font-size: 13px;
+        font-weight: 600;
+        color: #333;
+      }
+      .nav-add-option-desc {
+        font-size: 12px;
+        color: #767676;
+        margin-top: 2px;
+      }
+      .nav-user-wrap {
+        position: relative;
+        flex-shrink: 0;
+        display: flex;
+        align-items: center;
+        gap: 4px;
+      }
+      .nav-user {
+        text-decoration: none;
+        background: #78b793;
+        color: #fff;
+        border-radius: 50%;
+        width: 32px;
+        height: 32px;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        font-weight: 700;
+        font-size: 13px;
+        flex-shrink: 0;
+        cursor: pointer;
+        border: none;
+        font-family: 'Raleway', sans-serif;
+      }
+      .nav-user:hover {
+        background: #5a9375;
+      }
+      .nav-user-caret {
+        color: #767676;
+        flex-shrink: 0;
+        cursor: pointer;
+      }
+      .nav-user-dropdown {
+        display: none;
+        position: absolute;
+        right: 0;
+        top: calc(100% + 8px);
+        width: 180px;
+        background: #fff;
+        border: 1px solid #e0e0e0;
+        border-radius: 8px;
+        box-shadow: 0 8px 24px rgba(0, 0, 0, 0.12);
+        z-index: 300;
+        overflow: hidden;
+      }
+      .nav-user-dropdown.open {
+        display: block;
+      }
+      .nav-user-dropdown a {
+        display: flex;
+        align-items: center;
+        gap: 10px;
+        padding: 11px 16px;
+        font-size: 13px;
+        font-weight: 500;
+        color: #333;
+        border-bottom: 1px solid #f0f0f0;
+        text-decoration: none;
+      }
+      .nav-user-dropdown a:last-child {
+        border-bottom: none;
+      }
+      .nav-user-dropdown a:hover {
+        background: #f5f5f5;
+        text-decoration: none;
+      }
+      .nav-user-dropdown .dropdown-icon {
+        width: 16px;
+        height: 16px;
+        color: #767676;
+        flex-shrink: 0;
+      }
+      .nav-bell-wrap {
+        position: relative;
+        flex-shrink: 0;
+      }
+      .nav-bell {
+        width: 32px;
+        height: 32px;
+        border-radius: 50%;
+        border: none;
+        background: transparent;
+        cursor: pointer;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        color: #555;
+        transition: background 0.12s;
+        position: relative;
+      }
+      .nav-bell:hover {
+        background: #f0f0f0;
+      }
+      .nav-bell-badge {
+        position: absolute;
+        top: 2px;
+        right: 2px;
+        width: 16px;
+        height: 16px;
+        background: #e53935;
+        color: #fff;
+        border-radius: 50%;
+        font-size: 10px;
+        font-weight: 700;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        pointer-events: none;
+      }
+      .nav-bell-dropdown {
+        display: none;
+        position: absolute;
+        right: 0;
+        top: calc(100% + 8px);
+        width: 340px;
+        background: #fff;
+        border: 1px solid #e0e0e0;
+        border-radius: 8px;
+        box-shadow: 0 8px 24px rgba(0, 0, 0, 0.12);
+        z-index: 300;
+        overflow: hidden;
+      }
+      .nav-bell-dropdown.open {
+        display: block;
+      }
+      .nav-bell-dropdown-header {
+        padding: 12px 16px;
+        font-size: 12px;
+        font-weight: 700;
+        color: #aaa;
+        text-transform: uppercase;
+        letter-spacing: 0.6px;
+        border-bottom: 1px solid #f0f0f0;
+      }
+      .nav-bell-activity-list {
+        padding: 8px 0;
+      }
+      .nav-bell-activity-item {
+        padding: 9px 16px;
+        font-size: 13px;
+        color: #555;
+        display: flex;
+        flex-direction: column;
+        gap: 2px;
+        border-bottom: 1px solid #fafafa;
+      }
+      .nav-bell-activity-item:last-child {
+        border-bottom: none;
+      }
+      .nav-bell-activity-item a {
+        color: #0074d9;
+        font-weight: 600;
+      }
+      .nav-bell-activity-verb {
+        color: #767676;
+      }
+      .nav-bell-activity-time {
+        font-size: 11px;
+        color: #bbb;
+      }
+
+      /* ── COMPLETION PAGE ── */
+      .completion-outer {
+        max-width: 640px;
+        margin: 0 auto;
+        padding: 60px 24px 80px;
+      }
+
+      .completion-card {
+        background: #fff;
+        border: 1px solid #dee2e6;
+        border-radius: 12px;
+        padding: 40px 36px;
+        position: relative;
+        overflow: hidden;
+        text-align: center;
+      }
+      .completion-card::before {
+        content: '';
+        position: absolute;
+        top: 0;
+        left: 0;
+        right: 0;
+        height: 4px;
+        background: linear-gradient(90deg, #78b793, #a1d8c8, #fbda68, #f8971d);
+      }
+
+      .completion-icon {
+        display: flex;
+        align-items: flex-end;
+        justify-content: center;
+        gap: 4px;
+        height: 56px;
+        margin: 0 auto 24px;
+      }
+      .completion-icon .bar {
+        width: 6px;
+        border-radius: 3px 3px 0 0;
+      }
+
+      .completion-card h2 {
+        font-family: 'Raleway', sans-serif;
+        font-size: 22px;
+        font-weight: 700;
+        color: #222;
+        margin-bottom: 8px;
+      }
+      .completion-card > p {
+        font-size: 15px;
+        color: #767676;
+        margin-bottom: 24px;
+      }
+
+      /* View score set link */
+      .completion-view-link {
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+        padding: 14px 18px;
+        background: #f0faf0;
+        border: 1px solid #c8e4c6;
+        border-radius: 8px;
+        text-decoration: none;
+        color: #333;
+        font-weight: 600;
+        font-size: 14px;
+        margin-bottom: 28px;
+        transition: background 0.12s;
+      }
+      .completion-view-link:hover {
+        background: #e0f5e0;
+        text-decoration: none;
+      }
+      .completion-view-link .urn {
+        color: #78b793;
+        font-family: monospace;
+        font-weight: 400;
+        font-size: 13px;
+      }
+      .completion-view-link .arrow {
+        color: #78b793;
+        font-size: 18px;
+      }
+
+      /* Next steps */
+      .completion-next {
+        text-align: left;
+        margin-bottom: 28px;
+      }
+      .completion-next h3 {
+        font-family: 'Raleway', sans-serif;
+        font-size: 14px;
+        font-weight: 700;
+        color: #767676;
+        text-transform: uppercase;
+        letter-spacing: 0.4px;
+        margin-bottom: 12px;
+      }
+
+      .completion-action {
+        display: block;
+        padding: 14px 18px;
+        border: 1px solid #dee2e6;
+        border-radius: 8px;
+        margin-bottom: 8px;
+        text-decoration: none;
+        color: #333;
+        transition:
+          border-color 0.12s,
+          background 0.12s;
+      }
+      .completion-action:last-child {
+        margin-bottom: 0;
+      }
+      .completion-action:hover {
+        border-color: #78b793;
+        background: #fafafa;
+        text-decoration: none;
+      }
+      .completion-action-label {
+        font-size: 14px;
+        font-weight: 600;
+        color: #333;
+      }
+      .completion-action-desc {
+        font-size: 12px;
+        color: #767676;
+        margin-top: 2px;
+      }
+
+      /* Attention box */
+      .attention-msg {
+        text-align: left;
+        background: #fffdf0;
+        border: 1px solid #fbda68;
+        border-radius: 8px;
+        padding: 16px 18px;
+      }
+      .attention-msg h3 {
+        font-family: 'Raleway', sans-serif;
+        font-size: 13px;
+        font-weight: 700;
+        color: #b8860b;
+        text-transform: uppercase;
+        letter-spacing: 0.3px;
+        margin-bottom: 8px;
+        display: flex;
+        align-items: center;
+        gap: 6px;
+      }
+      .attention-msg ul {
+        margin: 0;
+        padding-left: 20px;
+        font-size: 13px;
+        color: #555;
+        line-height: 1.6;
+      }
+      .attention-msg li {
+        margin-bottom: 4px;
+      }
+      .attention-msg li:last-child {
+        margin-bottom: 0;
+      }
+
+      /* ── FOOTER ── */
+      footer {
+        border-top: 1px solid #e0e0e0;
+        background: #fff;
+        padding: 20px 24px;
+        margin-top: 40px;
+      }
+      .footer-inner {
+        max-width: 1280px;
+        margin: 0 auto;
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+        font-size: 13px;
+        color: #767676;
+      }
+      .footer-inner a {
+        color: #0074d9;
+      }
+      .footer-links {
+        display: flex;
+        gap: 20px;
+      }
+
+      /* ── PROTOTYPE BANNER ── */
+      .proto-banner {
+        background: #fbda68;
+        color: #333;
+        text-align: center;
+        padding: 8px 24px;
+        font-size: 13px;
+        font-family: 'Raleway', sans-serif;
+        font-weight: 500;
+        position: sticky;
+        top: 0;
+        z-index: 9999;
+        letter-spacing: 0.1px;
+      }
+      .proto-banner a {
+        color: #555;
+        text-decoration: underline;
+      }
+      .proto-banner strong {
+        font-weight: 700;
+      }
+    </style>
+  </head>
+  <body>
+    <div class="proto-banner">
+      <strong>Prototype</strong> — This is a design prototype and is not intended for use. Data shown is fictional. The
+      real MaveDB is at <a href="https://mavedb.org" target="_blank">mavedb.org</a>.
+    </div>
+    <nav>
+      <div class="nav-inner">
+        <a href="./index.html"><img src="./logo-mavedb.png" alt="MaveDB" class="nav-logo-img" /></a>
+        <ul class="nav-links">
+          <li><a href="./dashboard.html">Dashboard</a></li>
+          <li><a href="./mavemd.html">MaveMD</a></li>
+          <li><a href="./search.html">Search</a></li>
+          <li class="nav-add-wrap">
+            <a href="#" onclick="toggleAddMenu(event)" style="display: flex; align-items: center; gap: 4px"
+              >Add Dataset
+              <svg
+                width="10"
+                height="10"
+                viewBox="0 0 24 24"
+                fill="none"
+                stroke="currentColor"
+                stroke-width="2.5"
+                stroke-linecap="round"
+                stroke-linejoin="round"
+              >
+                <polyline points="6 9 12 15 18 9" /></svg
+            ></a>
+            <div id="nav-add-dropdown" class="nav-add-dropdown">
+              <a href="./add-experiment.html" class="nav-add-option">
+                <div class="nav-add-option-label">New Experiment</div>
+                <div class="nav-add-option-desc">Group related score sets under a shared experiment</div>
+              </a>
+              <a href="./add-score-set.html" class="nav-add-option">
+                <div class="nav-add-option-label">New Score Set</div>
+                <div class="nav-add-option-desc">Upload variant scores and metadata</div>
+              </a>
+            </div>
+          </li>
+          <li><a href="./about.html">About</a></li>
+          <li><a href="./help.html">Help</a></li>
+        </ul>
+        <div class="nav-bell-wrap">
+          <button class="nav-bell" onclick="toggleBell(event)" title="Recent activity">
+            <svg
+              width="17"
+              height="17"
+              viewBox="0 0 24 24"
+              fill="none"
+              stroke="currentColor"
+              stroke-width="2"
+              stroke-linecap="round"
+              stroke-linejoin="round"
+            >
+              <path d="M18 8A6 6 0 0 0 6 8c0 7-3 9-3 9h18s-3-2-3-9" />
+              <path d="M13.73 21a2 2 0 0 1-3.46 0" />
+            </svg>
+            <span class="nav-bell-badge">5</span>
+          </button>
+          <div id="nav-bell-dropdown" class="nav-bell-dropdown">
+            <div class="nav-bell-dropdown-header">Recent Activity</div>
+            <div class="nav-bell-activity-list">
+              <div class="nav-bell-activity-item">
+                <span
+                  ><a href="./score-set-detail.html">BRCA1 RING Domain — Functional Scores</a>
+                  <span class="nav-bell-activity-verb">created just now</span></span
+                >
+                <span class="nav-bell-activity-time">Just now</span>
+              </div>
+            </div>
+          </div>
+        </div>
+        <div class="nav-user-wrap" onclick="toggleUserMenu(event)">
+          <button class="nav-user">B</button>
+          <svg
+            class="nav-user-caret"
+            width="10"
+            height="10"
+            viewBox="0 0 24 24"
+            fill="none"
+            stroke="currentColor"
+            stroke-width="2.5"
+            stroke-linecap="round"
+            stroke-linejoin="round"
+          >
+            <polyline points="6 9 12 15 18 9" />
+          </svg>
+          <div id="nav-user-dropdown" class="nav-user-dropdown">
+            <a href="./settings.html"
+              ><svg
+                class="dropdown-icon"
+                viewBox="0 0 24 24"
+                fill="none"
+                stroke="currentColor"
+                stroke-width="2"
+                stroke-linecap="round"
+                stroke-linejoin="round"
+              >
+                <circle cx="12" cy="12" r="3" />
+                <path
+                  d="M19.4 15a1.65 1.65 0 0 0 .33 1.82l.06.06a2 2 0 1 1-2.83 2.83l-.06-.06a1.65 1.65 0 0 0-1.82-.33 1.65 1.65 0 0 0-1 1.51V21a2 2 0 0 1-4 0v-.09A1.65 1.65 0 0 0 9 19.4a1.65 1.65 0 0 0-1.82.33l-.06.06a2 2 0 1 1-2.83-2.83l.06-.06A1.65 1.65 0 0 0 4.68 15a1.65 1.65 0 0 0-1.51-1H3a2 2 0 0 1 0-4h.09A1.65 1.65 0 0 0 4.6 9a1.65 1.65 0 0 0-.33-1.82l-.06-.06a2 2 0 1 1 2.83-2.83l.06.06A1.65 1.65 0 0 0 9 4.68a1.65 1.65 0 0 0 1-1.51V3a2 2 0 0 1 4 0v.09a1.65 1.65 0 0 0 1 1.51 1.65 1.65 0 0 0 1.82-.33l.06-.06a2 2 0 1 1 2.83 2.83l-.06.06A1.65 1.65 0 0 0 19.4 9a1.65 1.65 0 0 0 1.51 1H21a2 2 0 0 1 0 4h-.09a1.65 1.65 0 0 0-1.51 1z"
+                />
+              </svg>
+              Settings</a
+            >
+            <a href="./dashboard.html"
+              ><svg
+                class="dropdown-icon"
+                viewBox="0 0 24 24"
+                fill="none"
+                stroke="currentColor"
+                stroke-width="2"
+                stroke-linecap="round"
+                stroke-linejoin="round"
+              >
+                <rect x="3" y="3" width="7" height="7" />
+                <rect x="14" y="3" width="7" height="7" />
+                <rect x="14" y="14" width="7" height="7" />
+                <rect x="3" y="14" width="7" height="7" />
+              </svg>
+              Dashboard</a
+            >
+            <a href="#"
+              ><svg
+                class="dropdown-icon"
+                viewBox="0 0 24 24"
+                fill="none"
+                stroke="currentColor"
+                stroke-width="2"
+                stroke-linecap="round"
+                stroke-linejoin="round"
+              >
+                <path d="M9 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h4" />
+                <polyline points="16 17 21 12 16 7" />
+                <line x1="21" y1="12" x2="9" y2="12" />
+              </svg>
+              Sign out</a
+            >
+          </div>
+        </div>
+      </div>
+    </nav>
+
+    <!-- COMPLETION CONTENT -->
+    <div class="completion-outer">
+      <div class="completion-card">
+        <!-- Success icon — mirror of the dashboard empty-state bars (gray→colored) -->
+        <div class="completion-icon">
+          <div class="bar" style="background: #e0e0e0; height: 18px; opacity: 0.3"></div>
+          <div class="bar" style="background: #ddd; height: 28px; opacity: 0.4"></div>
+          <div class="bar" style="background: #ccc; height: 40px; opacity: 0.5"></div>
+          <div class="bar" style="background: #bbb; height: 24px; opacity: 0.6"></div>
+          <div class="bar" style="background: #f8971d; height: 36px; opacity: 0.7"></div>
+          <div class="bar" style="background: #78b793; height: 44px"></div>
+          <div class="bar" style="background: #a1d8c8; height: 32px"></div>
+          <div class="bar" style="background: #78b793; height: 20px"></div>
+        </div>
+
+        <h2>Your score set has been saved!</h2>
+        <p>Thank you for uploading your data to MaveDB.</p>
+
+        <!-- View link -->
+        <a href="./score-set-detail.html" class="completion-view-link">
+          <span>View your score set: <span class="urn">urn:mavedb:00000097-a-1</span></span>
+          <span class="arrow">&rarr;</span>
+        </a>
+
+        <!-- Next steps -->
+        <div class="completion-next">
+          <h3>What's next?</h3>
+          <a href="./add-score-set.html" class="completion-action">
+            <div class="completion-action-label">Add another score set to the same experiment</div>
+            <div class="completion-action-desc">
+              BRCA1 RING Domain Saturation Genome Editing (urn:mavedb:00000097-a)
+            </div>
+          </a>
+          <a href="./add-experiment.html" class="completion-action">
+            <div class="completion-action-label">Create a score set in a new experiment</div>
+            <div class="completion-action-desc">Start a new experiment and add score sets to it</div>
+          </a>
+          <a href="./score-set-detail.html" class="completion-action">
+            <div class="completion-action-label">Add a score calibration</div>
+            <div class="completion-action-desc">
+              Help users interpret functional scores by providing clinical reference points
+            </div>
+          </a>
+        </div>
+
+        <!-- Attention section -->
+        <div class="attention-msg">
+          <h3>
+            <svg
+              width="16"
+              height="16"
+              viewBox="0 0 24 24"
+              fill="none"
+              stroke="currentColor"
+              stroke-width="2"
+              stroke-linecap="round"
+              stroke-linejoin="round"
+            >
+              <circle cx="12" cy="12" r="10" />
+              <line x1="12" y1="8" x2="12" y2="12" />
+              <line x1="12" y1="16" x2="12.01" y2="16" />
+            </svg>
+            Important
+          </h3>
+          <ul>
+            <li>Your data is currently <strong>unpublished</strong> and viewable only to you.</li>
+            <li>
+              You can add other users as contributors without publishing, or add the dataset to a collection and give
+              users permission to view the collection.
+            </li>
+            <li>
+              Once you publish a dataset, the data will be <strong>public and permanent</strong>. It cannot be made
+              private again.
+            </li>
+            <li>Only a limited subset of metadata may be edited after publication. Please only publish when ready.</li>
+          </ul>
+        </div>
+      </div>
+    </div>
+
+    <footer>
+      <div class="footer-inner">
+        <div style="display: flex; align-items: center; gap: 16px">
+          <img src="./logo-mavedb-transparent.png" alt="MaveDB" style="height: 28px" />
+          <span>&copy; 2026 MaveDB — AGPLv3 License — Hosted by the University of Washington</span>
+        </div>
+        <div class="footer-links">
+          <a href="#">Chat</a>
+          <a href="#">Documentation</a>
+          <a href="#">Report an issue</a>
+          <span style="color: #dee2e6">|</span>
+          <a href="./design-showcase.html" style="color: #aaa">Design Showcase</a>
+          <a href="./404.html" style="color: #aaa">404 Demo</a>
+        </div>
+      </div>
+    </footer>
+
+    <script>
+      function toggleAddMenu(event) {
+        event.stopPropagation()
+        document.getElementById('nav-add-dropdown').classList.toggle('open')
+      }
+      function toggleBell(event) {
+        event.stopPropagation()
+        document.getElementById('nav-bell-dropdown').classList.toggle('open')
+      }
+      function toggleUserMenu(event) {
+        event.stopPropagation()
+        document.getElementById('nav-user-dropdown').classList.toggle('open')
+      }
+      document.addEventListener('click', function (e) {
+        var addWrap = document.querySelector('.nav-add-wrap')
+        if (addWrap && !addWrap.contains(e.target)) document.getElementById('nav-add-dropdown').classList.remove('open')
+        var bellWrap = document.querySelector('.nav-bell-wrap')
+        if (bellWrap && !bellWrap.contains(e.target)) {
+          var dd = document.getElementById('nav-bell-dropdown')
+          if (dd) dd.classList.remove('open')
+        }
+        var userWrap = document.querySelector('.nav-user-wrap')
+        if (userWrap && !userWrap.contains(e.target)) {
+          var dd = document.getElementById('nav-user-dropdown')
+          if (dd) dd.classList.remove('open')
+        }
+      })
+    </script>
+  </body>
+</html>

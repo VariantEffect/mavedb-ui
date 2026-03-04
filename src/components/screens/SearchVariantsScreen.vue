@@ -49,8 +49,8 @@
           </div>
         </div>
         <div class="mavedb-search-form-view-switch">
-          Don't have a versioned reference sequence identifier? Click here to perform a fuzzy search instead:
-          <Button @click="showSearch('fuzzy')">Fuzzy Search</Button>
+          Don't have a versioned reference sequence identifier? Click here to perform a guided search instead:
+          <Button @click="showSearch('guided')">Guided Search</Button>
         </div>
         <div class="mavedb-examples-button-container">
           <Button variant="text" @click="searchSuggestionsVisible = !searchSuggestionsVisible">
@@ -76,36 +76,40 @@
           </ul>
         </div>
       </div>
-      <div v-if="fuzzySearchVisible" class="mavedb-search-form">
+      <div v-if="guidedSearchVisible" class="mavedb-search-form">
         <div class="mavedb-search-heading">Search MaveDB for human gene variants</div>
         <div class="align-items-stretch flex flex-wrap justify-content-center gap-0">
           <InputText
             v-model="inputGene"
-            class="mavedb-fuzzy-search-form-component"
+            class="mavedb-guided-search-form-component"
             placeholder="Gene symbol (HGNC)"
             type="search"
           />
           <Select
             v-model="inputVariantType"
-            class="mavedb-fuzzy-search-form-component"
+            class="mavedb-guided-search-form-component"
             :options="['c.', 'p.']"
             placeholder="Variant type"
           />
           <!-- TODO consider adding language to specify to include - or * in position if variant is in 5' or 3' UTR, respectively -->
-          <InputText v-model="inputVariantPosition" class="mavedb-fuzzy-search-form-component" placeholder="Position" />
+          <InputText
+            v-model="inputVariantPosition"
+            class="mavedb-guided-search-form-component"
+            placeholder="Position"
+          />
           <Select
             v-model="inputReferenceAllele"
-            class="mavedb-fuzzy-search-form-component"
+            class="mavedb-guided-search-form-component"
             :options="selectedAlleleOptions"
             placeholder="Reference allele"
           />
           <Select
             v-model="inputAlternateAllele"
-            class="mavedb-fuzzy-search-form-component"
+            class="mavedb-guided-search-form-component"
             :options="selectedAlleleOptions"
             placeholder="Alternate allele"
           />
-          <Button @click="fuzzySearch">Search</Button>
+          <Button @click="guidedSearch">Search</Button>
           <div class="mavedb-clear-search-button-container">
             <Button :disabled="!searchIsClearable" icon="pi pi-times" rounded @click="clearSearch" />
           </div>
@@ -154,7 +158,8 @@
                       >{{
                         maveMdScoreSets[urns[0]]?.scoreCalibrations.filter(
                           (calibration: components['schemas']['ScoreCalibration']) =>
-                            Array.isArray(calibration.functionalClassifications) && calibration.functionalClassifications.filter((range) => range.acmgClassification).length > 0
+                            Array.isArray(calibration.functionalClassifications) &&
+                            calibration.functionalClassifications.filter((range) => range.acmgClassification).length > 0
                         ).length || 0
                       }}
                       / {{ maveMdScoreSets[urns[0]]?.scoreCalibrations.length || 0 }}
@@ -177,7 +182,8 @@
                       {{
                         maveMdScoreSets[urn]?.scoreCalibrations.filter(
                           (calibration: components['schemas']['ScoreCalibration']) =>
-                            Array.isArray(calibration.functionalClassifications) && calibration.functionalClassifications.filter((range) => range.acmgClassification).length > 0
+                            Array.isArray(calibration.functionalClassifications) &&
+                            calibration.functionalClassifications.filter((range) => range.acmgClassification).length > 0
                         ).length || 0
                       }}
                       / {{ maveMdScoreSets[urn]?.scoreCalibrations.length || 0 }}
@@ -408,7 +414,7 @@ export default defineComponent({
       loading: false,
       defaultSearchVisible: true,
       searchSuggestionsVisible: false,
-      fuzzySearchVisible: false,
+      guidedSearchVisible: false,
       searchResultsVisible: false,
       searchText: null as string | null,
       searchType: null as string | null,
@@ -572,7 +578,7 @@ export default defineComponent({
     // If search param is present, run default search
     if (this.route.query.search && String(this.route.query.search).trim() !== '') {
       this.defaultSearchVisible = true
-      this.fuzzySearchVisible = false
+      this.guidedSearchVisible = false
       this.defaultSearch()
     } else if (
       this.route.query.gene ||
@@ -581,10 +587,10 @@ export default defineComponent({
       this.route.query.refAllele ||
       this.route.query.altAllele
     ) {
-      // If any fuzzy search param is present, run fuzzy search
+      // If any guided search param is present, run guided search
       this.defaultSearchVisible = false
-      this.fuzzySearchVisible = true
-      this.fuzzySearch()
+      this.guidedSearchVisible = true
+      this.guidedSearch()
     }
 
     this.fetchMaveMdScoreSets()
@@ -646,13 +652,13 @@ export default defineComponent({
       this.searchResultsVisible = false
       this.alleles = []
     },
-    showSearch(searchMethod: 'fuzzy' | 'default' = 'default') {
+    showSearch(searchMethod: 'guided' | 'default' = 'default') {
       this.defaultSearchVisible = searchMethod == 'default'
-      this.fuzzySearchVisible = searchMethod == 'fuzzy'
+      this.guidedSearchVisible = searchMethod == 'guided'
     },
     defaultSearch: async function () {
       this.searchResultsVisible = true
-      // Remove fuzzy search params from the URL
+      // Remove guided search params from the URL
       const {gene, variantType, variantPosition, refAllele, altAllele, ...rest} = this.route.query
       this.router.replace({
         query: {...rest, search: this.searchText || undefined}
@@ -954,7 +960,7 @@ export default defineComponent({
         }
       }
     },
-    fuzzySearch: async function () {
+    guidedSearch: async function () {
       this.searchResultsVisible = true
       // Remove HGVS search param from the URL
       const {search, searchType, ...rest} = this.route.query
@@ -970,11 +976,11 @@ export default defineComponent({
       })
       this.alleles = []
       this.loading = true
-      await this.fetchFuzzySearchResults()
+      await this.fetchGuidedSearchResults()
       this.loading = false
       await this.searchVariants()
     },
-    fetchFuzzySearchResults: async function () {
+    fetchGuidedSearchResults: async function () {
       // TODO could make this check more elegant
       if (
         _.isEmpty(this.inputGene) ||
@@ -1136,7 +1142,7 @@ export default defineComponent({
   width: fit-content;
 }
 
-.mavedb-fuzzy-search-form-component {
+.mavedb-guided-search-form-component {
   margin: 0 5px;
 }
 

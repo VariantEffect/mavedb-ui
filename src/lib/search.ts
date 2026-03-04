@@ -10,7 +10,7 @@ export function routeToVariantSearchIfVariantIsSearchable(searchText: string | n
   searchText = searchText.trim()
   if (clinGenAlleleIdRegex.test(searchText)) {
     console.log(`Routing to mavemd with ClinGen Allele ID: ${searchText}`)
-    router.push({name: 'mavemd', query: {search:searchText, searchType: 'clinGenAlleleId'}})
+    router.push({name: 'mavemd', query: {search: searchText, searchType: 'clinGenAlleleId'}})
     return true
   }
 
@@ -33,7 +33,7 @@ export function routeToVariantSearchIfVariantIsSearchable(searchText: string | n
       router.push({name: 'mavemd', query: {search: hgvsMatches[0], searchType: 'hgvs'}})
       return true
     } else {
-      // Assume identifier is an HGNC gene symbol, parse description for fuzzy search
+      // Assume identifier is an HGNC gene symbol, parse description for guided search
       // Example: BRCA1:c.123A>G or BRCA1:p.Arg123Gly
       const gene = identifier
       let variantType = ''
@@ -42,17 +42,17 @@ export function routeToVariantSearchIfVariantIsSearchable(searchText: string | n
       let altAllele = ''
 
       // Try to parse c. or p. notation
-      const fuzzyMatch = /^(c\.|p\.)?([A-Za-z]+)?([0-9]+)([A-Za-z*-]+)?(?:>([A-Za-z*-]+))?$/gm.exec(description)
-      if (fuzzyMatch) {
-        variantType = fuzzyMatch[1] || ''
+      const guidedMatch = /^(c\.|p\.)?([A-Za-z]+)?([0-9]+)([A-Za-z*-]+)?(?:>([A-Za-z*-]+))?$/gm.exec(description)
+      if (guidedMatch) {
+        variantType = guidedMatch[1] || ''
         if (variantType === 'c.') {
-          variantPosition = fuzzyMatch[3] || ''
-          refAllele = fuzzyMatch[4] || ''
-          altAllele = fuzzyMatch[5] || ''
+          variantPosition = guidedMatch[3] || ''
+          refAllele = guidedMatch[4] || ''
+          altAllele = guidedMatch[5] || ''
         } else if (variantType === 'p.') {
-          refAllele = fuzzyMatch[2] || ''
-          variantPosition = fuzzyMatch[3] || ''
-          altAllele = fuzzyMatch[4] || ''
+          refAllele = guidedMatch[2] || ''
+          variantPosition = guidedMatch[3] || ''
+          altAllele = guidedMatch[4] || ''
         }
 
         router.push({
@@ -62,7 +62,7 @@ export function routeToVariantSearchIfVariantIsSearchable(searchText: string | n
             variantType,
             variantPosition,
             refAllele,
-            altAllele,
+            altAllele
           }
         })
         return true

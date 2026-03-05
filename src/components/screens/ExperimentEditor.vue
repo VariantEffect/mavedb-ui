@@ -5,8 +5,8 @@
   />
   <DefaultLayout :require-auth="true">
     <div class="mave-experiment-editor">
-      <div class="grid">
-        <div class="col-12">
+      <div class="flex flex-wrap gap-4">
+        <div class="w-full">
           <div v-if="itemStatus != 'NotLoaded'" class="mave-screen-title-bar">
             <div class="mave-screen-title">Edit experiment {{ item.urn }}</div>
             <div v-if="item" class="mavedb-screen-title-controls">
@@ -16,7 +16,7 @@
             </div>
           </div>
         </div>
-        <div class="col-12 md:col-6">
+        <div class="w-full md:w-[calc(50%-0.5rem)]">
           <Card>
             <template #content>
               <div class="field">
@@ -241,7 +241,7 @@
             </template>
           </Card>
         </div>
-        <div class="col-12 md:col-6">
+        <div class="w-full md:w-[calc(50%-0.5rem)]">
           <Card class="keyword-editor">
             <template #content>
               <div class="field">

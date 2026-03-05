@@ -58,23 +58,42 @@ const head = createHead({
   ]
 })
 
-const darkBluePalette = palette('#3f51b5')
+const sagePalette = palette('#78b793')
+const orangePalette = palette('#f8971d')
 
 const MaveDbTheme = definePreset(Aura, {
     semantic: {
         primary: {
-            50: darkBluePalette[50],
-            100: darkBluePalette[100],
-            200: darkBluePalette[200],
-            300: darkBluePalette[300],
-            400: darkBluePalette[400],
-            500: darkBluePalette[500],
-            600: darkBluePalette[600],
-            700: darkBluePalette[700],
-            800: darkBluePalette[800],
-            900: darkBluePalette[900],
-            950: darkBluePalette[950],
-        }
+            50: sagePalette[50],
+            100: sagePalette[100],
+            200: sagePalette[200],
+            300: sagePalette[300],
+            400: sagePalette[400],
+            500: sagePalette[500],
+            600: sagePalette[600],
+            700: sagePalette[700],
+            800: sagePalette[800],
+            900: sagePalette[900],
+            950: sagePalette[950],
+        },
+        colorScheme: {
+            light: {
+                surface: {
+                    0: '#ffffff',
+                    50: '#fafafa',
+                    100: '#f5f5f5',
+                    200: '#eeeeee',
+                    300: '#e0e0e0',
+                    400: '#bdbdbd',
+                    500: '#9e9e9e',
+                    600: '#757575',
+                    700: '#616161',
+                    800: '#424242',
+                    900: '#212121',
+                    950: '#121212',
+                },
+            },
+        },
     },
     components: {
         button: {
@@ -82,26 +101,26 @@ const MaveDbTheme = definePreset(Aura, {
             light: {
               root: {
                 warn: {
-                  background: '{yellow.400}',
-                  borderColor: '{yellow.400}',
-                  color: '{black.900}',
-                  hoverColor: '{black.900}',
-                  hoverBackground: '{yellow.500}',
-                  hoverBorderColor: '{yellow.500}',
-                  activeColor: '{black.900}',
-                  activeBackground: '{yellow.600}',
-                  activeBorderColor: '{yellow.600}',
+                  background: orangePalette[400],
+                  borderColor: orangePalette[400],
+                  color: '#222',
+                  hoverColor: '#222',
+                  hoverBackground: orangePalette[500],
+                  hoverBorderColor: orangePalette[500],
+                  activeColor: '#222',
+                  activeBackground: orangePalette[600],
+                  activeBorderColor: orangePalette[600],
                 },
                 secondary: {
-                  background: '{pink.400}',
-                  borderColor: '{pink.400}',
-                  color: '{surface.0}',
-                  hoverColor: '{surface.0}',
-                  hoverBackground: '{pink.500}',
-                  hoverBorderColor: '{pink.500}',
-                  activeColor: '{surface.0}',
-                  activeBackground: '{pink.600}',
-                  activeBorderColor: '{pink.600}',
+                  background: '{surface.100}',
+                  borderColor: '{surface.300}',
+                  color: '{surface.700}',
+                  hoverColor: '{surface.800}',
+                  hoverBackground: '{surface.200}',
+                  hoverBorderColor: '{surface.400}',
+                  activeColor: '{surface.800}',
+                  activeBackground: '{surface.300}',
+                  activeBorderColor: '{surface.400}',
                 },
               }
             },

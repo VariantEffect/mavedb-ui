@@ -5,8 +5,8 @@
   />
   <DefaultLayout :require-auth="true">
     <div v-if="itemId && itemStatus == 'Loaded'" class="mave-score-set-editor">
-      <div class="grid">
-        <div class="col-12">
+      <div class="flex flex-wrap gap-4">
+        <div class="w-full">
           <div class="mave-screen-title-bar">
             <div class="mave-screen-title">Edit score set {{ item.urn }}</div>
             <div class="mavedb-screen-title-controls">
@@ -16,7 +16,7 @@
             </div>
           </div>
         </div>
-        <div class="col-12 md:col-6">
+        <div class="w-full md:w-[calc(50%-0.5rem)]">
           <Card>
             <template #title>Parent experiment and context</template>
             <template #content>
@@ -306,7 +306,7 @@
           </Card>
         </div>
 
-        <div class="col-12 md:col-6">
+        <div class="w-full md:w-[calc(50%-0.5rem)]">
           <div v-if="item.private">
             <Card>
               <template #title>Targets</template>

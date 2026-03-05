@@ -14,7 +14,7 @@
           <PrimeButton icon="pi pi-download" title="Download calibration JSON" @click="downloadCalibrations()" />
         </div>
       </div>
-      <div class="p-d-flex p-flex-column p-ai-center" style="width: 100%">
+      <div class="flex flex-col items-center w-full">
         <div v-if="item.scoreCalibrations.length === 0">
           <p>No calibrations found for this score set.</p>
         </div>

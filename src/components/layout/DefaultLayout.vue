@@ -27,6 +27,9 @@
 
 <script lang="ts">
 import '@fontsource/raleway'
+import '@fontsource/exo-2/700.css'
+import '@fontsource/exo-2/800.css'
+import '@fontsource/exo-2/900.css'
 
 import '@/assets/app.css'
 import Toolbar from '@/components/layout/Toolbar.vue'

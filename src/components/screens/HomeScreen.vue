@@ -1,13 +1,13 @@
 <template>
   <DefaultLayout>
-    <div class="grid my-2!">
-      <div class="col-12">
+    <div class="flex flex-wrap my-2! gap-4">
+      <div class="w-full">
         <div class="flex justify-center flex-row gap-4 m-2">
           <router-link to="/mavemd"><img alt="MaveMD" class="h-10" src="@/assets/mavemd-logo.png" /></router-link>
           <span class="text-lg my-auto">Looking for the new MaveMD clinical features? <router-link to="/mavemd">Click here.</router-link></span>
         </div>
       </div>
-      <div class="col-8 flex">
+      <div class="w-2/3 flex">
         <Card class="flex-1">
           <template #title><h2 class="mt-0">About</h2></template>
           <template #content>
@@ -39,7 +39,7 @@
           </template>
         </Card>
       </div>
-      <div class="col-4 flex flex-column">
+      <div class="w-1/3 flex flex-col">
         <Card class="flex-1">
           <template #title><h2 class="mt-0">Featured Searches</h2></template>
           <template #content>
@@ -83,13 +83,13 @@
           </template>
         </Card>
       </div>
-      <div class="col-12">
+      <div class="w-full">
         <HighlightsView model="ScoreSet"></HighlightsView>
       </div>
-      <div class="col-8">
+      <div class="w-2/3">
         <HighlightsView model="Target"></HighlightsView>
       </div>
-      <div class="col-4">
+      <div class="w-1/3">
         <Card>
           <template #title><h2 class="mt-0">News</h2></template>
           <template #content>
@@ -129,7 +129,7 @@
           </template>
         </Card>
       </div>
-      <div class="col-12">
+      <div class="w-full">
         <Card>
           <template #title><h2 class="mt-0">Citing MaveDB</h2></template>
           <template #content>

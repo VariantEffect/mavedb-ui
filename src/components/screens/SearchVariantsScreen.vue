@@ -196,7 +196,7 @@
         </div>
       </div>
       <div v-if="searchResultsVisible" ref="searchResults">
-        <div v-for="(allele, alleleIdx) in alleles" :key="allele.clingenAlleleId" class="col-12">
+        <div v-for="(allele, alleleIdx) in alleles" :key="allele.clingenAlleleId" class="w-full">
           <Card class="clickable-variant-card">
             <template #title>
               <div class="flex flex-col clickable-title" @click="openAlleleInVariantView(allele)">

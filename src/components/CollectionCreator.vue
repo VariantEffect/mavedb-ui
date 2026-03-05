@@ -1,17 +1,17 @@
 <template>
   <EmailPrompt />
   <div class="mavedb-collection-creator">
-    <div class="flex flex-column gap-2">
+    <div class="flex flex-col gap-2">
       <label :for="scopedId('name-input')">Collection name</label>
       <InputText :id="scopedId('name-input')" v-model="collectionName" />
     </div>
 
-    <div class="flex flex-column gap-2">
+    <div class="flex flex-col gap-2">
       <label :for="scopedId('description-input')">Description</label>
       <Textarea :id="scopedId('description-input')" v-model="collectionDescription" />
     </div>
 
-    <div class="flex flex-column gap-2">
+    <div class="flex flex-col gap-2">
       <label :for="scopedId('public-input')">Public</label>
       <ToggleSwitch
         v-model="collectionPublic"

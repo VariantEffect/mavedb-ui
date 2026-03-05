@@ -12,12 +12,31 @@
       :style="{width: '45rem'}"
       @hide="resetDataSetEditor"
     >
-      <div class="flex flex-column gap-2">
+      <div class="flex flex-col gap-2">
+        <Button
+          class="mavedb-collection-remove-data-set-button"
+          :disabled="!selectedDataSets || !selectedDataSets.length"
+          icon="pi pi-trash"
+          label="Remove"
+          severity="danger"
+          @click="markDataSetsToRemove"
+        />
+        <DataTable
+          v-model:selection="selectedDataSets"
+          data-key="urn"
+          :row-style="rowStyle"
+          table-style="min-width: 50rem"
+          :value="allDataSets"
+        >
+          <Column selection-mode="multiple"></Column>
+          <Column field="urn" header="URN"></Column>
+          <Column field="title" header="Title"></Column>
+        </DataTable>
         <div class="flex gap-2">
           <AutoComplete
             ref="urnAutoComplete"
             v-model="unvalidatedUrnsToAdd"
-            class="flex-auto p-fluid"
+            class="flex-auto w-full"
             :multiple="true"
             :placeholder="unvalidatedUrnsToAdd.length ? '' : 'Type or paste comma-separated URNs'"
             :pt="{overlay: (options) => ({class: ['invisible']})}"

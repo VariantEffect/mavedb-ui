@@ -1,47 +1,92 @@
 @import "tailwindcss";
 
-/* Tailwind removes styling for headings, so adding them back */
+/* ── Design Tokens ─────────────────────────────────────────────── */
+@theme {
+  /* Brand colors (from prototype palette) */
+  --color-sage: #78b793;
+  --color-sage-dark: #5a9375;
+  --color-sage-light: #c8e4c6;
+  --color-mint: #a1d8c8;
+  --color-orange-cta: #f8971d;
+  --color-orange-cta-dark: #d97510;
+  --color-yellow-accent: #fbda68;
+
+  /* Semantic colors */
+  --color-link: #0074d9;
+  --color-danger: #e53935;
+  --color-border: #dee2e6;
+  --color-border-light: #f0f0f0;
+  --color-bg: #f7f7f7;
+  --color-surface: #ffffff;
+
+  /* Text colors */
+  --color-text-dark: #222;
+  --color-text-primary: #333;
+  --color-text-secondary: #555;
+  --color-text-muted: #767676;
+
+  /* Typography */
+  --font-display: 'Exo 2', sans-serif;
+  --font-body: 'Raleway', sans-serif;
+}
+
+/* ── Base Styles ───────────────────────────────────────────────── */
+
+/* Headings use Exo 2 display font */
 h1 {
-  @apply text-3xl font-bold text-gray-800 mt-6 mb-2;
+  @apply text-3xl font-bold mt-6 mb-2;
+  font-family: var(--font-display);
+  color: var(--color-text-dark);
 }
 h2 {
-  @apply text-2xl font-semibold text-gray-800 mt-5 mb-2;
+  @apply text-2xl font-semibold mt-5 mb-2;
+  font-family: var(--font-display);
+  color: var(--color-text-dark);
 }
 h3 {
-  @apply text-xl font-semibold text-gray-800 mt-4 mb-2;
+  @apply text-xl font-semibold mt-4 mb-2;
+  font-family: var(--font-display);
+  color: var(--color-text-dark);
 }
 h4 {
-  @apply text-lg font-semibold text-gray-800 mt-3 mb-2;
+  @apply text-lg font-semibold mt-3 mb-2;
+  color: var(--color-text-dark);
 }
 h5 {
-  @apply text-base font-semibold text-gray-800 mt-2 mb-2;
+  @apply text-base font-semibold mt-2 mb-2;
+  color: var(--color-text-dark);
 }
 h6 {
-  @apply text-sm font-semibold text-gray-800 mt-1 mb-2;
+  @apply text-sm font-semibold mt-1 mb-2;
+  color: var(--color-text-dark);
 }
 
 * {
   text-rendering: optimizeLegibility;
-  font-family: 'Raleway', sans-serif;
+  font-family: var(--font-body);
   text-align: left;
 }
 
 body {
   line-height: 1.75;
-  background-color: #f7f7f7;
+  background-color: var(--color-bg);
+  color: var(--color-text-primary);
 }
 
 a {
-  color: #694988;
+  color: var(--color-link);
   text-decoration: none;
   transition: color 0.1s ease-in-out;
 }
 
+/* ── PrimeVue Overrides ────────────────────────────────────────── */
+/* These are temporary overrides that should be removed as pages   */
+/* are individually redesigned and PrimeVue is rethemed via preset */
+
 body .p-inputtext {
-  font-family: 'Raleway', sans-serif;
+  font-family: var(--font-body);
 }
 
-/* Override the minimum width from the PrimeVue theme. */
 body .p-button {
   min-width: 10px;
   padding-top: 0.25rem;
@@ -52,13 +97,13 @@ body .p-button {
   text-align: center;
 }
 
-/* Prevent autocomplete overlay from taking full page width */
 .p-autocomplete-overlay {
   max-width: 75% !important;
 }
 
+/* Active tab and pagination highlight — uses sage instead of dark blue */
 .p-tablist-tab-list .p-tab-active, .p-paginator-page-selected {
-  background-color: #3f51b51f !important;
+  background-color: color-mix(in srgb, var(--color-sage) 12%, transparent) !important;
 }
 
 .p-menubar-root-list {

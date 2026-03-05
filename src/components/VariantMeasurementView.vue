@@ -1,7 +1,7 @@
 <template>
-  <div class="grid" style="margin: 10px 0">
-    <div v-if="variant" class="col-12">
-      <div class="col-12 mavedb-variant-and-assay-fact-sheet-container">
+  <div class="flex flex-wrap" style="margin: 10px 0">
+    <div v-if="variant" class="w-full">
+      <div class="w-full mavedb-variant-and-assay-fact-sheet-container">
         <div class="mavedb-assay-facts-card">
           <div class="mavedb-assay-facts-card-header">
             <span class="mavedb-assay-facts-author">Variant: {{ variantName }}</span>
@@ -94,7 +94,7 @@
         <AssayFactSheet v-if="variant?.scoreSet" :score-set="variant.scoreSet" />
       </div>
     </div>
-    <div v-if="variant?.scoreSet" class="col-12">
+    <div v-if="variant?.scoreSet" class="w-full">
       <Card>
         <template #title>
           Score set:

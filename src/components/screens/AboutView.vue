@@ -1,5 +1,5 @@
 <template>
-    <DefaultLayout>
+    <MvLayout>
         <section class="p-4">
             <header>
                 <h1 class="pb-4">About MaveDB</h1>
@@ -96,16 +96,16 @@
                 </blockquote>
             </main>
         </section>
-    </DefaultLayout>
+    </MvLayout>
 </template>
 
 <script lang="ts">
 import { defineComponent, onMounted } from 'vue';
-import DefaultLayout from '@/components/layout/DefaultLayout.vue';
+import MvLayout from '@/components/layout/MvLayout.vue';
 
 export default defineComponent({
     name: 'AboutView',
-    components: { DefaultLayout },
+    components: { MvLayout },
 
     setup() {
         onMounted(() => {

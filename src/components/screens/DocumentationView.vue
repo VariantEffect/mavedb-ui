@@ -1,5 +1,5 @@
 <template>
-  <DefaultLayout>
+  <MvLayout>
     <div class="ml-12 mt-4">
       <h1 class="mb-4">Documentation</h1>
       <p class="mb-4">Welcome to the documentation page for MaveDB and its associated packages.</p>
@@ -21,20 +21,20 @@
         </ul>
       </ul>
     </div>
-  </DefaultLayout>
+  </MvLayout>
 </template>
 
 <script lang="ts">
 import {defineComponent} from 'vue'
 import {useHead} from '@unhead/vue'
 
-import DefaultLayout from '@/components/layout/DefaultLayout.vue'
+import MvLayout from '@/components/layout/MvLayout.vue'
 import config from '@/config'
 
 export default defineComponent({
   name: 'DocumentationView',
 
-  components: {DefaultLayout},
+  components: {MvLayout},
 
   setup: () => {
     useHead({title: 'Documentation'})

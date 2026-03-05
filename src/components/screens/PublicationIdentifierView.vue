@@ -1,5 +1,5 @@
 <template>
-  <DefaultLayout>
+  <MvLayout>
     <div v-if="itemStatus == 'Loaded'" class="mave-publication mavedb-scroll-vertical">
       <div class="mavedb-1000px-col">
         <div class="mave-screen-title-bar">
@@ -36,7 +36,7 @@
     <div v-else>
       <ItemNotFound :item-id="itemId" model="publication" />
     </div>
-  </DefaultLayout>
+  </MvLayout>
 </template>
 
 <script>
@@ -44,7 +44,7 @@ import _ from 'lodash'
 import {marked} from 'marked'
 import {useHead} from '@unhead/vue'
 
-import DefaultLayout from '@/components/layout/DefaultLayout'
+import MvLayout from '@/components/layout/MvLayout.vue'
 import ScoreSetTable from '@/components/ScoreSetTable'
 import PageLoading from '@/components/common/PageLoading'
 import ItemNotFound from '@/components/common/ItemNotFound'
@@ -55,7 +55,7 @@ import axios from 'axios'
 
 export default {
   name: 'PublicationIdentifierView',
-  components: {DefaultLayout, ScoreSetTable, PageLoading, ItemNotFound},
+  components: {MvLayout, ScoreSetTable, PageLoading, ItemNotFound},
 
   props: {
     itemId: {

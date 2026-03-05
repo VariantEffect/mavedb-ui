@@ -1,5 +1,5 @@
 <template>
-  <DefaultLayout>
+  <MvLayout>
     <h1>Welcome to MaveDB</h1>
     <Card>
       <template #title> Profile </template>
@@ -126,7 +126,7 @@
         </template>
       </Card>
     </div>
-  </DefaultLayout>
+  </MvLayout>
 </template>
 
 <script>
@@ -138,7 +138,7 @@ import FloatLabel from 'primevue/floatlabel'
 import InputText from 'primevue/inputtext'
 import {useHead} from '@unhead/vue'
 
-import DefaultLayout from '@/components/layout/DefaultLayout'
+import MvLayout from '@/components/layout/MvLayout.vue'
 import useScopedId from '@/composables/scoped-id'
 import useAuth from '@/composition/auth'
 import useClipboard from '@/composition/clipboard'
@@ -149,7 +149,7 @@ import config from '@/config'
 export default {
   name: 'SettingsScreen',
 
-  components: {Button, Card, DefaultLayout, FloatLabel,InputText, Checkbox},
+  components: {Button, Card, MvLayout, FloatLabel,InputText, Checkbox},
 
   setup: () => {
     useHead({title: 'Settings'})

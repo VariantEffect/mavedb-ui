@@ -1,19 +1,19 @@
 <template>
-  <DefaultLayout>
+  <MvLayout>
     <VariantMeasurementView :variant-urn="variantUrn" />
-  </DefaultLayout>
+  </MvLayout>
 </template>
 
 <script lang="ts">
 import {defineComponent} from 'vue'
 import {useHead} from '@unhead/vue'
 
-import DefaultLayout from '@/components/layout/DefaultLayout.vue'
+import MvLayout from '@/components/layout/MvLayout.vue'
 import VariantMeasurementView from '@/components/VariantMeasurementView.vue'
 
 export default defineComponent({
   name: 'VariantMeasurementScreen',
-  components: {DefaultLayout, VariantMeasurementView},
+  components: {MvLayout, VariantMeasurementView},
 
   props: {
     variantUrn: {

@@ -3,7 +3,7 @@
     dialog="You must add an email address to your account to create or edit a score set. You can do so below, or on the 'Settings' page."
     :is-first-login-prompt="false"
   />
-  <DefaultLayout :require-auth="true">
+  <MvLayout :require-auth="true">
     <div v-if="itemId && itemStatus == 'Loaded'" class="mave-score-set-editor">
       <div class="flex flex-wrap gap-4">
         <div class="w-full">
@@ -914,7 +914,7 @@
         {{ jsonToDisplay }}
       </span>
     </Dialog>
-  </DefaultLayout>
+  </MvLayout>
 </template>
 
 <script>
@@ -949,7 +949,7 @@ import {useHead} from '@unhead/vue'
 
 import EmailPrompt from '@/components/common/EmailPrompt'
 import EntityLink from '@/components/common/EntityLink'
-import DefaultLayout from '@/components/layout/DefaultLayout'
+import MvLayout from '@/components/layout/MvLayout.vue'
 import useScopedId from '@/composables/scoped-id'
 import useFormatters from '@/composition/formatters'
 import useItem from '@/composition/item'
@@ -990,7 +990,7 @@ export default {
     Card,
     Column,
     DataTable,
-    DefaultLayout,
+    MvLayout,
     Select,
     EmailPrompt,
     EntityLink,

@@ -1,5 +1,5 @@
 <template>
-  <DefaultLayout :require-auth="true">
+  <MvLayout :require-auth="true">
     <h1 class="text-4xl font-bold py-4">Welcome to MaveDB</h1>
     <Tabs value="0">
       <TabList>
@@ -52,7 +52,7 @@
         </TabPanel>
       </TabPanels>
     </Tabs>
-  </DefaultLayout>
+  </MvLayout>
 </template>
 
 <script>
@@ -69,12 +69,12 @@ import ProgressSpinner from 'primevue/progressspinner'
 
 import config from '@/config'
 import ScoreSetTable from '@/components/ScoreSetTable.vue'
-import DefaultLayout from '@/components/layout/DefaultLayout'
+import MvLayout from '@/components/layout/MvLayout.vue'
 
 export default {
   name: 'DashboardView',
 
-  components: {DefaultLayout, ScoreSetTable, InputText, Tabs, TabList, Tab, TabPanels, TabPanel, Button, ProgressSpinner},
+  components: {MvLayout, ScoreSetTable, InputText, Tabs, TabList, Tab, TabPanels, TabPanel, Button, ProgressSpinner},
 
   setup: () => {
     useHead({title: 'My dashboard'})

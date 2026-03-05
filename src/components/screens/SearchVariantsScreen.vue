@@ -1,9 +1,5 @@
 <template>
-  <DefaultLayout
-    :footer="searchResultsVisible ? 'flow' : 'pinned'"
-    height="full"
-    :overflow-y="true || searchResultsVisible ? 'scroll' : 'hidden'"
-  >
+  <MvLayout>
     <div
       :class="[
         'mavedb-search-view',
@@ -353,7 +349,7 @@
         </div>
       </div>
     </div>
-  </DefaultLayout>
+  </MvLayout>
 </template>
 
 <script lang="ts">
@@ -374,7 +370,7 @@ import {useToast} from 'primevue/usetoast'
 import {useHead} from '@unhead/vue'
 
 import config from '@/config'
-import DefaultLayout from '@/components/layout/DefaultLayout.vue'
+import MvLayout from '@/components/layout/MvLayout.vue'
 import {clinGenAlleleIdRegex, clinVarVariationIdRegex, rsIdRegex, MAVE_MD_SCORE_SETS} from '@/lib/mavemd'
 import {components} from '@/schema/openapi'
 import {getScoreSetShortName} from '@/lib/score-sets'
@@ -391,7 +387,7 @@ export default defineComponent({
     Card,
     Column,
     DataTable,
-    DefaultLayout,
+    MvLayout,
     Select,
     IconField,
     InputIcon,

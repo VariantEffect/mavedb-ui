@@ -1,5 +1,5 @@
 <template>
-  <DefaultLayout height="default">
+  <MvLayout>
     <div class="mavedb-search-view">
       <div class="mavedb-search-header" style="display: none">
         <h1>Search MaveDB Experiments and Score Sets</h1>
@@ -92,7 +92,7 @@
         :scroll-y="true"
       />
     </div>
-  </DefaultLayout>
+  </MvLayout>
 </template>
 
 <script lang="ts">
@@ -103,7 +103,7 @@ import InputText from 'primevue/inputtext'
 import config from '@/config'
 import ScoreSetTable from '@/components/ScoreSetTable.vue'
 import SelectList from '@/components/common/SelectList.vue'
-import DefaultLayout from '@/components/layout/DefaultLayout.vue'
+import MvLayout from '@/components/layout/MvLayout.vue'
 import Button from 'primevue/button'
 import TabPanel from 'primevue/tabpanel'
 import Tabs from 'primevue/tabs'
@@ -183,7 +183,7 @@ function extractQueryParam(content: LocationQueryValue | LocationQueryValue[]): 
 export default defineComponent({
   name: 'SearchView',
 
-  components: {DefaultLayout, ScoreSetTable, IconField, InputIcon, InputText, SelectList, Tabs, TabList, Tab, TabPanels, TabPanel, Button},
+  components: {MvLayout, ScoreSetTable, IconField, InputIcon, InputText, SelectList, Tabs, TabList, Tab, TabPanels, TabPanel, Button},
 
   setup: () => {
     useHead({title: 'Search data sets'})

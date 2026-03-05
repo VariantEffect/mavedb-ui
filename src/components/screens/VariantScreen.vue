@@ -1,5 +1,5 @@
 <template>
-  <DefaultLayout>
+  <MvLayout>
     <div class="variant-header-row">
       <h1 v-if="alleleTitle && variants.length > 1" class="mavedb-variant-title">Variant: {{ alleleTitle }}</h1>
       <div class="variant-header-download-btn-wrapper">
@@ -62,7 +62,7 @@
         </TabPanels>
       </Tabs>
     </div>
-  </DefaultLayout>
+  </MvLayout>
 </template>
 
 <script lang="ts">
@@ -80,7 +80,7 @@ import {useHead} from '@unhead/vue'
 
 import ErrorView from '@/components/common/ErrorView.vue'
 import PageLoading from '@/components/common/PageLoading.vue'
-import DefaultLayout from '@/components/layout/DefaultLayout.vue'
+import MvLayout from '@/components/layout/MvLayout.vue'
 import VariantMeasurementView from '@/components/VariantMeasurementView.vue'
 import config from '@/config'
 
@@ -88,7 +88,7 @@ export default defineComponent({
   name: 'VariantScreen',
   components: {
     Button,
-    DefaultLayout,
+    MvLayout,
     ErrorView,
     Message,
     PageLoading,

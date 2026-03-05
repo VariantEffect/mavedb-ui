@@ -3,7 +3,7 @@
     dialog="You must add an email address to your account to create or edit a score set. You can do so below, or on the 'Settings' page."
     :is-first-login-prompt="false"
   />
-  <DefaultLayout :require-auth="true">
+  <MvLayout :require-auth="true">
     <div class="mave-score-set-editor">
       <div class="mave-screen-title-bar">
         <div class="mave-screen-title">Create a new score set</div>
@@ -1469,7 +1469,7 @@
       </div>
     </div>
     <ProgressSpinner v-if="progressVisible" class="mave-progress" />
-  </DefaultLayout>
+  </MvLayout>
 </template>
 
 <script>
@@ -1505,7 +1505,7 @@ import {useHead} from '@unhead/vue'
 
 import CalibrationEditor from '@/components/CalibrationEditor.vue'
 import EmailPrompt from '@/components/common/EmailPrompt'
-import DefaultLayout from '@/components/layout/DefaultLayout'
+import MvLayout from '@/components/layout/MvLayout.vue'
 import useScopedId from '@/composables/scoped-id'
 import useFormatters from '@/composition/formatters'
 import useItems from '@/composition/items'
@@ -1555,7 +1555,7 @@ export default {
     AutoComplete,
     Button,
     CalibrationEditor,
-    DefaultLayout,
+    MvLayout,
     Select,
     EmailPrompt,
     FileUpload,

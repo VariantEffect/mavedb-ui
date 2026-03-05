@@ -1,5 +1,5 @@
 <template>
-  <DefaultLayout>
+  <MvLayout>
     <div v-if="userIsAuthenticated">
       <div class="mave-wizard-completion">
         <h1>Your score set has been saved successfully!</h1>
@@ -37,11 +37,11 @@
     <div v-else>
       <ItemNotFound :item-id="itemId" model="score set" />
     </div>
-  </DefaultLayout>
+  </MvLayout>
 </template>
 
 <script>
-import DefaultLayout from '@/components/layout/DefaultLayout'
+import MvLayout from '@/components/layout/MvLayout.vue'
 import ItemNotFound from '@/components/common/ItemNotFound'
 import useAuth from '@/composition/auth'
 import useItem from '@/composition/item'
@@ -50,7 +50,7 @@ import {useHead} from '@unhead/vue'
 export default {
   name: 'WizardCompletionView',
 
-  components: {DefaultLayout, ItemNotFound},
+  components: {MvLayout, ItemNotFound},
 
   props: {
     itemId: {

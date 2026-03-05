@@ -1,5 +1,5 @@
 <template>
-  <DefaultLayout>
+  <MvLayout>
     <div v-if="itemStatus == 'Loaded'" class="mave-collection">
       <div class="mavedb-1000px-col">
         <div class="mave-screen-title-bar">
@@ -211,7 +211,7 @@
     <div v-else>
       <ItemNotFound :item-id="itemId" model="collection" />
     </div>
-  </DefaultLayout>
+  </MvLayout>
   <Dialog
     v-if="userIsAuthorized.update"
     v-model:visible="privacyDialogVisible"
@@ -257,7 +257,7 @@ import CollectionBadge from '@/components/CollectionBadge'
 import CollectionDataSetEditor from '@/components/CollectionDataSetEditor'
 import CollectionItemsTable from '@/components/CollectionItemsTable'
 import CollectionPermissionsEditor from '@/components/CollectionPermissionsEditor'
-import DefaultLayout from '@/components/layout/DefaultLayout'
+import MvLayout from '@/components/layout/MvLayout.vue'
 import ItemNotFound from '@/components/common/ItemNotFound'
 import PageLoading from '@/components/common/PageLoading'
 import useAuth from '@/composition/auth'
@@ -274,7 +274,7 @@ export default {
     CollectionDataSetEditor,
     CollectionItemsTable,
     CollectionPermissionsEditor,
-    DefaultLayout,
+    MvLayout,
     Dialog,
     Inplace,
     InputText,

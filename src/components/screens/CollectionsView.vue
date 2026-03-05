@@ -1,5 +1,5 @@
 <template>
-  <DefaultLayout :require-auth="true">
+  <MvLayout :require-auth="true">
     <div>
       <div class="mavedb-1000px-col">
         <div class="mave-screen-title-bar">
@@ -59,7 +59,7 @@
         </div>
       </div>
     </div>
-  </DefaultLayout>
+  </MvLayout>
   <Dialog
     v-model:visible="creatorVisible"
     :close-on-escape="true"
@@ -80,7 +80,7 @@ import Dialog from 'primevue/dialog'
 import {useHead} from '@unhead/vue'
 
 import CollectionCreator from '@/components/CollectionCreator'
-import DefaultLayout from '@/components/layout/DefaultLayout'
+import MvLayout from '@/components/layout/MvLayout.vue'
 import PageLoading from '@/components/common/PageLoading'
 import useFormatters from '@/composition/formatters'
 import config from '@/config'
@@ -88,7 +88,7 @@ import config from '@/config'
 export default {
   name: 'CollectionsView',
 
-  components: {Button, CollectionCreator, Column, DataTable, DefaultLayout, Dialog, PageLoading},
+  components: {Button, CollectionCreator, Column, DataTable, MvLayout, Dialog, PageLoading},
 
   setup: () => {
     useHead({title: 'My saved collections'})

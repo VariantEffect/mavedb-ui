@@ -1,5 +1,5 @@
 <template>
-  <DefaultLayout>
+  <MvLayout>
     <div class="help-screen-container">
       <h1>Help & Support</h1>
       <p>
@@ -38,19 +38,19 @@
         </li>
       </ul>
     </div>
-  </DefaultLayout>
+  </MvLayout>
 </template>
 
 <script lang="ts">
 import {defineComponent} from 'vue'
 import {useHead} from '@unhead/vue'
 
-import DefaultLayout from '@/components/layout/DefaultLayout.vue'
+import MvLayout from '@/components/layout/MvLayout.vue'
 
 export default defineComponent({
   name: 'HelpScreen',
 
-  components: {DefaultLayout},
+  components: {MvLayout},
 
   setup: () => {
     useHead({title: 'Help'})

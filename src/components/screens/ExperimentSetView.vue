@@ -1,5 +1,5 @@
 <template>
-  <DefaultLayout>
+  <MvLayout>
     <div v-if="itemStatus == 'Loaded'" class="mavedb-full-height mave-score-set mavedb-scroll-vertical">
       <div class="mavedb-1000px-col">
         <div class="mave-screen-title-bar">
@@ -38,7 +38,7 @@
     <div v-else>
       <ItemNotFound :item-id="itemId" model="experiment set" />
     </div>
-  </DefaultLayout>
+  </MvLayout>
 </template>
 
 <script>
@@ -48,7 +48,7 @@ import {marked} from 'marked'
 import Button from 'primevue/button'
 import {useHead} from '@unhead/vue'
 
-import DefaultLayout from '@/components/layout/DefaultLayout'
+import MvLayout from '@/components/layout/MvLayout.vue'
 import ItemNotFound from '@/components/common/ItemNotFound'
 import PageLoading from '@/components/common/PageLoading'
 import useAuth from '@/composition/auth'
@@ -59,7 +59,7 @@ import config from '@/config'
 export default {
   name: 'ExperimentSetView',
 
-  components: {Button, DefaultLayout, PageLoading, ItemNotFound},
+  components: {Button, MvLayout, PageLoading, ItemNotFound},
 
   props: {
     itemId: {

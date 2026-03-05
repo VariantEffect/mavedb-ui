@@ -6,14 +6,6 @@
   overflow-y: auto;
 }
 
-.mavedb-1000px-col {
-  position: relative;
-  width: 1000px;
-  margin: 0 auto;
-  text-align: left;
-  overflow-x: hide;
-}
-
 .mave-collection-badges {
   flex: 0 1 auto;
   font-size: 12px;
@@ -79,6 +71,3 @@
   font-size: 0.5rem !important;
 }
 
-.mavedb-toolbar .p-menubar-submenu {
-  z-index: 1100 !important;
-}

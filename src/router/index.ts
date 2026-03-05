@@ -27,7 +27,6 @@ import {beginAuthentication, isAuthenticated} from '@/lib/orcid'
 import VariantMeasurementScreen from '@/components/screens/VariantMeasurementScreen.vue'
 import VariantScreen from '@/components/screens/VariantScreen.vue'
 import WizardCompletionView from '@/components/screens/WizardCompletionView.vue'
-import config from '@/config'
 import store from '@/store'
 
 const routes: RouteRecordRaw[] = [
@@ -51,15 +50,11 @@ const routes: RouteRecordRaw[] = [
     name: 'search',
     component: SearchView
   },
-  ...(config.CLINICAL_FEATURES_ENABLED
-    ? [
-        {
-          path: '/mavemd',
-          name: 'mavemd',
-          component: SearchVariantsScreen
-        }
-      ]
-    : []),
+  {
+    path: '/mavemd',
+    name: 'mavemd',
+    component: SearchVariantsScreen
+  },
   {
     path: '/docs',
     component: DocumentationView
@@ -168,30 +163,22 @@ const routes: RouteRecordRaw[] = [
     component: CollectionView,
     props: (route) => ({itemId: route.params.urn})
   },
-  ...(config.CLINICAL_FEATURES_ENABLED
-    ? [
-        {
-          path: '/variants/:clingenAlleleId',
-          name: 'variant',
-          component: VariantScreen,
-          props: (route: RouteLocationNormalized) => ({
-            clingenAlleleId: route.params.clingenAlleleId
-          })
-        }
-      ]
-    : []),
-  ...(config.CLINICAL_FEATURES_ENABLED
-    ? [
-        {
-          path: '/variant-measurements/:urn',
-          name: 'variantMeasurement',
-          component: VariantMeasurementScreen,
-          props: (route: RouteLocationNormalized) => ({
-            variantUrn: route.params.urn
-          })
-        }
-      ]
-    : []),
+  {
+    path: '/variants/:clingenAlleleId',
+    name: 'variant',
+    component: VariantScreen,
+    props: (route) => ({
+      clingenAlleleId: route.params.clingenAlleleId
+    })
+  },
+  {
+    path: '/variant-measurements/:urn',
+    name: 'variantMeasurement',
+    component: VariantMeasurementScreen,
+    props: (route) => ({
+      variantUrn: route.params.urn
+    })
+  },
   {
     name: 'pubmedPublicationIdentifier',
     path: '/publication-identifiers/pubmed/:identifier',

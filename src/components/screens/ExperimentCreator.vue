@@ -3,7 +3,7 @@
     dialog="You must add an email address to your account to create or edit an experiment. You can do so below, or on the 'Settings' page."
     :is-first-login-prompt="false"
   />
-  <DefaultLayout :require-auth="true">
+  <MvLayout :require-auth="true">
     <div class="mave-experiment-editor">
       <div class="mave-screen-title-bar">
         <div class="mave-screen-title">Create a new experiment</div>
@@ -473,7 +473,7 @@
       </div>
     </div>
     <ProgressSpinner v-if="progressVisible" class="mave-progress" />
-  </DefaultLayout>
+  </MvLayout>
 </template>
 
 <script>
@@ -503,7 +503,7 @@ import TabPanel from 'primevue/tabpanel'
 import Textarea from 'primevue/textarea'
 import {useHead} from '@unhead/vue'
 
-import DefaultLayout from '@/components/layout/DefaultLayout'
+import MvLayout from '@/components/layout/MvLayout.vue'
 import EmailPrompt from '@/components/common/EmailPrompt'
 import useScopedId from '@/composables/scoped-id'
 import useAuth from '@/composition/auth'
@@ -601,7 +601,7 @@ export default {
   components: {
     AutoComplete,
     Button,
-    DefaultLayout,
+    MvLayout,
     Dialog,
     FloatLabel,
     Select,

@@ -1,5 +1,5 @@
 <template>
-  <DefaultLayout :with-email-prompt="!isEmbedded" :with-toolbar="!isEmbedded">
+  <MvLayout :with-email-prompt="!isEmbedded" :with-nav="!isEmbedded">
     <div v-if="loading"><PageLoading></PageLoading></div>
     <div v-else>
       <h1 style="color: #3f51b5">MaveDB Site Statistics</h1>
@@ -135,7 +135,7 @@
         </div>
       </div>
     </div>
-  </DefaultLayout>
+  </MvLayout>
 </template>
 
 <script>
@@ -144,7 +144,7 @@ import Carousel from 'primevue/carousel'
 import Chart from 'primevue/chart'
 import Column from 'primevue/column'
 import DataTable from 'primevue/datatable'
-import DefaultLayout from '../layout/DefaultLayout.vue'
+import MvLayout from '@/components/layout/MvLayout.vue'
 import SelectButton from 'primevue/selectbutton'
 import PageLoading from '../common/PageLoading.vue'
 import TimeSeriesLineChart from '../TimeSeriesLineChart.vue'
@@ -155,7 +155,7 @@ import config from '@/config'
 
 export default {
   name: 'StatisticsView',
-  components: {Carousel, Card, Column, Chart, DataTable, DefaultLayout, SelectButton, PageLoading, TimeSeriesLineChart},
+  components: {Carousel, Card, Column, Chart, DataTable, MvLayout, SelectButton, PageLoading, TimeSeriesLineChart},
 
   setup: () => {
    useHead({title: 'Database statistics'})

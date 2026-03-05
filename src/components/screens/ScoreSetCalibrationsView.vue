@@ -1,5 +1,5 @@
 <template>
-  <DefaultLayout>
+  <MvLayout>
     <div v-if="itemStatus === 'Loaded' && item">
       <div class="mave-screen-title-bar">
         <div>Calibrations for: {{ getScoreSetShortName(item) }}</div>
@@ -190,7 +190,7 @@
     <div v-else>
       <ItemNotFound :item-id="itemId" :item-type="'Score Set'" />
     </div>
-  </DefaultLayout>
+  </MvLayout>
   <EmailPrompt
     v-if="editorVisible"
     dialog="You must add an email address to your account to create or edit calibrations. You can do so below, or on the 'Settings' page."
@@ -221,7 +221,7 @@
 
 <script lang="ts">
 import {useHead} from '@unhead/vue'
-import DefaultLayout from '@/components/layout/DefaultLayout.vue'
+import MvLayout from '@/components/layout/MvLayout.vue'
 import config from '@/config'
 import PrimeButton from 'primevue/button'
 import Column from 'primevue/column'
@@ -255,7 +255,7 @@ export default {
     CalibrationEditor,
     EmailPrompt,
     PrimeButton,
-    DefaultLayout,
+    MvLayout,
     DataTable,
     ItemNotFound,
     Column,

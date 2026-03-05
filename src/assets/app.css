@@ -106,11 +106,6 @@ body .p-button {
   background-color: color-mix(in srgb, var(--color-sage) 12%, transparent) !important;
 }
 
-.p-menubar-root-list {
-  gap: 0 !important;
-  margin-left: 1em !important;
-}
-
 .p-tab {
   padding: 0.5em 1em 0.5em 1em !important;
 }

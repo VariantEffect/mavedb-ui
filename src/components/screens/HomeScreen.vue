@@ -1,5 +1,5 @@
 <template>
-  <DefaultLayout>
+  <MvLayout>
     <div class="flex flex-wrap my-2! gap-4">
       <div class="w-full">
         <div class="flex justify-center flex-row gap-4 m-2">
@@ -150,7 +150,7 @@
         </Card>
       </div>
     </div>
-  </DefaultLayout>
+  </MvLayout>
 </template>
 
 <script>
@@ -158,7 +158,7 @@ import Button from 'primevue/button'
 import Card from 'primevue/card'
 
 import config from '@/config'
-import DefaultLayout from '@/components/layout/DefaultLayout'
+import MvLayout from '@/components/layout/MvLayout.vue'
 import HighlightsView from '@/components/common/HighlightsView.vue';
 
 import {useRouter} from 'vue-router'
@@ -166,7 +166,7 @@ import useAuth from '@/composition/auth'
 
 export default {
   name: 'HomeScreen',
-  components: {Button, Card, DefaultLayout, HighlightsView},
+  components: {Button, Card, MvLayout, HighlightsView},
   setup() {
     const router = useRouter()
     const addScoreSet = () => {

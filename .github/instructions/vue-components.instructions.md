@@ -57,7 +57,7 @@ export default defineComponent({
 
 Top-level route components. Named with suffixes: `*View`, `*Screen`, `*Creator`, `*Editor`.
 
-- Wrap content in `<DefaultLayout>` for consistent page structure.
+- Wrap content in `<MvLayout>` for consistent page structure.
 - Receive route params via `props` configuration in the router.
 - May use `useItem()` or `useItems()` composition functions to load data.
 
@@ -67,7 +67,7 @@ Reusable UI primitives: `EntityLink`, `FlexDataTable`, `PageLoading`, `SelectLis
 
 ### Layout Components (`src/components/layout/`)
 
-App shell components: `DefaultLayout`, `Toolbar`, `Footer`.
+App shell components: `MvLayout`, `MvNavBar`, `MvFooter`.
 
 ### Feature Components (`src/components/`)
 
@@ -104,8 +104,7 @@ When adding UI elements, prefer PrimeVue components over custom implementations.
 ## Template Conventions
 
 - Use PrimeVue components for UI elements.
-- Use PrimeFlex grid classes for layout (`grid`, `col-12`, `col-6`, etc.).
-- Use Tailwind utility classes for spacing, typography, and other styling.
+- Use Tailwind utility classes for layout, spacing, typography, and other styling.
 - Vue template attributes must be in **alphabetical order** (enforced by ESLint rule `vue/attributes-order`).
 - Use `v-if` / `v-else` for conditional rendering, `v-for` with `:key` for lists.
 
@@ -114,7 +113,7 @@ When adding UI elements, prefer PrimeVue components over custom implementations.
 Always use the `@/` path alias:
 
 ```ts
-import DefaultLayout from '@/components/layout/DefaultLayout.vue'
+import MvLayout from '@/components/layout/MvLayout.vue'
 import EntityLink from '@/components/common/EntityLink.vue'
 import useItem from '@/composition/item'
 ```

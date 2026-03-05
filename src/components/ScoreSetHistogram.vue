@@ -282,9 +282,7 @@ export default defineComponent({
 
   data: function () {
     const scoreSetHasCalibrations =
-      config.CLINICAL_FEATURES_ENABLED &&
-      this.scoreSet.scoreCalibrations != null &&
-      this.scoreSet.scoreCalibrations.length > 0
+      this.scoreSet.scoreCalibrations != null && this.scoreSet.scoreCalibrations.length > 0
 
     return {
       config: config,
@@ -301,7 +299,7 @@ export default defineComponent({
       clinicalControlOptions: [] as ClinicalControlOption[],
       clinicalControlCache: {} as Record<string, Record<string, ClinicalControl[]>>,
       someVariantsHaveClinicalSignificance: false,
-      clinicalControlsEnabled: config.CLINICAL_FEATURES_ENABLED,
+      clinicalControlsEnabled: true,
       refreshedClinicalControls: false,
       associatedClinicalControls: false,
 
@@ -627,7 +625,7 @@ export default defineComponent({
     },
 
     hasTabBar: function () {
-      return this.config.CLINICAL_FEATURES_ENABLED && this.vizOptions.length > 1
+      return this.vizOptions.length > 1
     },
 
     showControls: function () {
@@ -912,9 +910,7 @@ export default defineComponent({
         this.calibrationClassVariantsByUrn = {}
         this.calibrationClassVariantsLoadingByUrn = {}
 
-        if (this.config.CLINICAL_FEATURES_ENABLED) {
-          await this.loadClinicalControlOptions()
-        }
+        await this.loadClinicalControlOptions()
         // Changes to clinical control options will trigger loading of clinical controls.
       },
       immediate: true
@@ -1039,12 +1035,10 @@ export default defineComponent({
     },
     controlDbAndVersion: {
       handler: function () {
-        if (this.config.CLINICAL_FEATURES_ENABLED) {
-          this.clinicalSignificanceClassificationOptions = clinvarClinicalSignificanceClassifications(
-            this.controlVersion ? this.controlVersion : DEFAULT_CLINICAL_CONTROL_VERSION
-          )
-          this.loadClinicalControls()
-        }
+        this.clinicalSignificanceClassificationOptions = clinvarClinicalSignificanceClassifications(
+          this.controlVersion ? this.controlVersion : DEFAULT_CLINICAL_CONTROL_VERSION
+        )
+        this.loadClinicalControls()
       }
     },
     clinicalControls: {
@@ -1175,8 +1169,7 @@ export default defineComponent({
         )
         .shaders(this.histogramShaders)
 
-      // Only render clinical specific viz options if such features are enabled.
-      if (this.config.CLINICAL_FEATURES_ENABLED && this.showCalibrations) {
+      if (this.showCalibrations) {
         this.histogram.renderShader(this.activeCalibration.value ? this.activeCalibration.value.urn : null)
       } else {
         this.histogram.renderShader(null)

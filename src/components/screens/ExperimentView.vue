@@ -1,5 +1,5 @@
 <template>
-  <DefaultLayout>
+  <MvLayout>
     <div v-if="itemStatus == 'Loaded'" class="mave-score-set">
       <div class="mavedb-1000px-col">
         <div class="mave-screen-title-bar">
@@ -291,7 +291,7 @@
     <div v-else>
       <ItemNotFound :item-id="itemId" model="experiment" />
     </div>
-  </DefaultLayout>
+  </MvLayout>
 </template>
 
 <script>
@@ -305,7 +305,7 @@ import {useHead} from '@unhead/vue'
 
 import CollectionAdder from '@/components/CollectionAdder'
 import CollectionBadge from '@/components/CollectionBadge'
-import DefaultLayout from '@/components/layout/DefaultLayout'
+import MvLayout from '@/components/layout/MvLayout.vue'
 import ItemNotFound from '@/components/common/ItemNotFound'
 import PageLoading from '@/components/common/PageLoading'
 import useAuth from '@/composition/auth'
@@ -316,7 +316,7 @@ import {textForTargetGeneCategory} from '@/lib/target-genes'
 
 export default {
   name: 'ExperimentView',
-  components: {Button, CollectionAdder, CollectionBadge, DefaultLayout, Dialog, PageLoading, ItemNotFound},
+  components: {Button, CollectionAdder, CollectionBadge, MvLayout, Dialog, PageLoading, ItemNotFound},
 
   props: {
     itemId: {

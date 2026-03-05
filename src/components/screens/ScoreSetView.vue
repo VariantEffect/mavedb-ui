@@ -1,5 +1,5 @@
 <template>
-  <DefaultLayout>
+  <MvLayout>
     <div v-if="itemStatus == 'Loaded' && item" class="mavedb-score-set">
       <div class="mavedb-1000px-col">
         <ScoreSetProcessingStatus :score-set="item" />
@@ -63,7 +63,7 @@
               @click="selectedVariant = null"
             />
           </FloatLabel>
-          <span v-if="config.CLINICAL_FEATURES_ENABLED" class="mavedb-clinical-mode-control-container">
+          <span class="mavedb-clinical-mode-control-container">
             <span :class="clinicalMode ? 'mavedb-clinical-mode-option-off' : 'mavedb-clinical-mode-option-on'"
               >Raw data</span
             >
@@ -133,7 +133,7 @@
             :external-selection="variantToVisualize"
             :hide-start-and-stop-loss="hideStartAndStopLoss"
             :score-set="item"
-            :show-protein-structure-button="uniprotId != null && config.CLINICAL_FEATURES_ENABLED"
+            :show-protein-structure-button="uniprotId != null"
             :variants="variants"
             @export-chart="setHeatmapExport"
             @heatmap-visible="heatmapVisibilityUpdated"
@@ -159,7 +159,7 @@
       </div>
       <div class="mave-1000px-col">
         <div class="clearfix">
-          <div v-if="config.CLINICAL_FEATURES_ENABLED" class="mavedb-assay-facts-container">
+          <div class="mavedb-assay-facts-container">
             <AssayFactSheet :score-set="item" />
           </div>
           <div>
@@ -354,7 +354,7 @@
     <div v-else>
       <ItemNotFound :item-id="itemId" model="score set" />
     </div>
-  </DefaultLayout>
+  </MvLayout>
   <div v-if="itemStatus == 'Loaded'" class="card flex justify-content-center">
     <Drawer
       v-model:visible="isScoreSetVisualizerVisible"
@@ -439,7 +439,7 @@ import ScoreSetVisualizer from '@/components/ScoreSetVisualizer'
 import TargetGene from '@/components/TargetGene'
 import ItemNotFound from '@/components/common/ItemNotFound'
 import PageLoading from '@/components/common/PageLoading'
-import DefaultLayout from '@/components/layout/DefaultLayout'
+import MvLayout from '@/components/layout/MvLayout.vue'
 import useScopedId from '@/composables/scoped-id'
 import useAuth from '@/composition/auth'
 import useItem from '@/composition/item'
@@ -468,7 +468,7 @@ export default {
     Checkbox,
     CollectionAdder,
     CollectionBadge,
-    DefaultLayout,
+    MvLayout,
     Dialog,
     FloatLabel,
     ToggleSwitch,
@@ -527,7 +527,7 @@ export default {
   },
 
   data: () => ({
-    clinicalMode: config.CLINICAL_FEATURES_ENABLED,
+    clinicalMode: true,
     variants: null,
     selectedDataOptions: [],
     showHeatmap: true,

@@ -37,7 +37,6 @@ import 'pdbe-molstar/build/pdbe-molstar-light.css'
 import _ from 'lodash'
 import {watch, ref} from 'vue'
 
-import config from '@/config'
 import useScopedId from '@/composables/scoped-id'
 
 export default {
@@ -246,16 +245,23 @@ export default {
     hoveredOverResidue: function (e) {
       this.$emit('hoveredOverResidue', e.eventData)
     },
+    fetchAlphaFoldCifUrl: async function () {
+      const response = await axios.get(`https://alphafold.ebi.ac.uk/api/prediction/${this.selectedAlphaFold.id}`)
+      const predictionModels = _.isArray(response.data) ? response.data : [response.data]
+      const selectedModel = predictionModels.find((x) => x.entryId === `AF-${this.selectedAlphaFold.id}-F1`)
+      return selectedModel?.cifUrl || null
+    },
 
     render: async function () {
       if (this.selectedAlphaFold) {
         let alphafoldCifUrl
         try {
-          const response = await axios.get(`${config.apiBaseUrl}/alphafold-files/version`)
-          const alphafoldFilesVersion = response.data.version
-          alphafoldCifUrl = `https://alphafold.ebi.ac.uk/files/AF-${this.selectedAlphaFold.id}-F1-model_${alphafoldFilesVersion}.cif`
+          alphafoldCifUrl = await this.fetchAlphaFoldCifUrl()
+          if (!alphafoldCifUrl) {
+            throw new Error('AlphaFold cifUrl not found')
+          }
         } catch (error) {
-          this.$toast.add({severity: 'error', summary: 'Error', detail: 'Failed to fetch AlphaFold version'})
+          this.$toast.add({severity: 'error', summary: 'Error', detail: 'Failed to fetch AlphaFold structure metadata'})
           return
         }
 

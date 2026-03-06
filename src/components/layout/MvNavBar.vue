@@ -16,7 +16,7 @@
   </div>
 
   <!-- Main nav -->
-  <nav class="sticky top-0 z-100 border-b border-border bg-white">
+  <nav aria-label="Main navigation" class="sticky top-0 z-100 border-b border-border bg-white">
     <div class="mx-auto flex h-[58px] max-w-screen-xl items-center gap-6 px-6">
       <!-- Logo -->
       <router-link class="shrink-0" to="/">
@@ -29,8 +29,8 @@
         <img v-else alt="MaveDB" class="block h-[42px]" src="@/assets/logo-mavedb.png" />
       </router-link>
 
-      <!-- Nav links -->
-      <ul class="ml-auto flex list-none items-center gap-5 text-sm font-medium">
+      <!-- Nav links (desktop) -->
+      <ul class="ml-auto hidden list-none items-center gap-5 text-sm font-medium md:flex">
         <li>
           <router-link active-class="nav-link-active" class="nav-link" to="/mavemd">MaveMD</router-link>
         </li>
@@ -40,9 +40,15 @@
 
         <!-- Add Dataset dropdown -->
         <li v-if="userIsAuthenticated" class="relative">
-          <a class="nav-link flex items-center gap-1" href="#" @click.prevent="toggleAddMenu">
+          <a
+            aria-haspopup="true"
+            aria-label="Add dataset menu"
+            class="nav-link flex items-center gap-1"
+            href="#"
+            @click.prevent="toggleAddMenu"
+          >
             Add Dataset
-            <FontAwesomeIcon class="text-[10px]" icon="fa-solid fa-chevron-down" />
+            <FontAwesomeIcon class="text-[0.625rem]" icon="fa-solid fa-chevron-down" />
           </a>
           <Popover ref="addMenuRef" class="nav-popover nav-add-menu">
             <router-link
@@ -52,8 +58,8 @@
               :to="item.route"
               @click="hideAddMenu"
             >
-              <div class="text-[13px] font-semibold text-text-primary">{{ item.label }}</div>
-              <div class="mt-0.5 text-[12px] text-text-muted">{{ item.description }}</div>
+              <div class="text-sm font-semibold text-text-primary">{{ item.label }}</div>
+              <div class="mt-0.5 text-xs text-text-muted">{{ item.description }}</div>
             </router-link>
           </Popover>
         </li>
@@ -71,23 +77,25 @@
         </li>
       </ul>
 
-      <!-- Notification bell (authenticated) -->
-      <div v-if="userIsAuthenticated" class="relative shrink-0">
+      <!-- Notification bell (authenticated, desktop) -->
+      <div v-if="userIsAuthenticated" class="relative hidden shrink-0 md:block">
         <button
+          aria-haspopup="true"
+          aria-label="Recent activity notifications"
           class="flex h-8 w-8 cursor-pointer items-center justify-center rounded-full border-none bg-transparent text-text-secondary transition-colors hover:bg-border-light"
           title="Recent activity"
           @click="toggleBell"
         >
-          <FontAwesomeIcon class="text-[17px]" icon="fa-solid fa-bell" />
+          <FontAwesomeIcon class="text-lg" icon="fa-solid fa-bell" />
           <span
-            class="pointer-events-none absolute right-0.5 top-0.5 flex h-4 w-4 items-center justify-center rounded-full bg-danger text-[10px] font-bold text-white"
+            class="pointer-events-none absolute right-0.5 top-0.5 flex h-4 w-4 items-center justify-center rounded-full bg-danger text-[0.625rem] font-bold text-white"
             >5</span
           >
         </button>
         <Popover ref="bellPopoverRef" class="nav-popover nav-bell-popover">
           <div class="w-[340px]">
             <div
-              class="border-b border-border-light px-4 py-3 text-[12px] font-bold uppercase tracking-wider text-text-muted"
+              class="border-b border-border-light px-4 py-3 text-xs font-bold uppercase tracking-wider text-text-muted"
             >
               Recent Activity
             </div>
@@ -95,35 +103,40 @@
               <div
                 v-for="(activity, idx) in stubActivities"
                 :key="idx"
-                class="flex flex-col gap-1 border-b border-border-light px-4 py-3 text-[13px] text-text-secondary last:border-b-0"
+                class="flex flex-col gap-1 border-b border-border-light px-4 py-3 text-sm text-text-secondary last:border-b-0"
               >
                 <span>
                   <a class="font-semibold text-link" :href="activity.href">{{ activity.title }}</a>
                   {{ ' ' }}
                   <span class="text-text-muted">{{ activity.verb }}</span>
                 </span>
-                <span class="text-[11px] text-[#bbb]">{{ activity.time }}</span>
+                <span class="text-xs text-[#bbb]">{{ activity.time }}</span>
               </div>
             </div>
           </div>
         </Popover>
       </div>
 
-      <!-- User avatar (authenticated) -->
-      <div v-if="userIsAuthenticated" class="relative shrink-0">
-        <button class="flex cursor-pointer items-center gap-1 border-none bg-transparent p-0" @click="toggleUserMenu">
+      <!-- User avatar (authenticated, desktop) -->
+      <div v-if="userIsAuthenticated" class="relative hidden shrink-0 md:block">
+        <button
+          aria-haspopup="true"
+          aria-label="User account menu"
+          class="flex cursor-pointer items-center gap-1 border-none bg-transparent p-0"
+          @click="toggleUserMenu"
+        >
           <span
-            class="flex h-8 w-8 shrink-0 items-center justify-center rounded-full bg-sage font-body text-[13px] font-bold text-white"
+            class="flex h-8 w-8 shrink-0 items-center justify-center rounded-full bg-sage font-body text-sm font-bold text-white"
           >
             {{ userInitial }}
           </span>
-          <FontAwesomeIcon class="text-[10px] text-text-muted" icon="fa-solid fa-chevron-down" />
+          <FontAwesomeIcon class="text-[0.625rem] text-text-muted" icon="fa-solid fa-chevron-down" />
         </button>
         <Popover ref="userMenuRef" class="nav-popover nav-user-menu">
           <div v-for="(item, idx) in userMenuItems" :key="idx">
             <a
               v-if="item.command"
-              class="flex items-center gap-2.5 border-b border-border-light px-4 py-2.5 text-[13px] font-medium !text-text-primary no-underline last:border-b-0 hover:bg-[#f5f5f5]"
+              class="flex items-center gap-2.5 border-b border-border-light px-4 py-2.5 text-sm font-medium !text-text-primary no-underline last:border-b-0 hover:bg-[#f5f5f5]"
               href="#"
               @click.prevent="handleUserMenuCommand(item)"
             >
@@ -132,7 +145,7 @@
             </a>
             <router-link
               v-else
-              class="flex items-center gap-2.5 border-b border-border-light px-4 py-2.5 text-[13px] font-medium !text-text-primary no-underline last:border-b-0 hover:bg-[#f5f5f5]"
+              class="flex items-center gap-2.5 border-b border-border-light px-4 py-2.5 text-sm font-medium !text-text-primary no-underline last:border-b-0 hover:bg-[#f5f5f5]"
               :to="item.route!"
               @click="hideUserMenu"
             >
@@ -142,7 +155,47 @@
           </div>
         </Popover>
       </div>
+
+      <!-- Hamburger button (mobile) -->
+      <button
+        aria-controls="mobile-nav-menu"
+        :aria-expanded="mobileMenuOpen"
+        aria-label="Main menu"
+        class="ml-auto flex h-9 w-9 cursor-pointer items-center justify-center rounded-md border-none bg-transparent text-text-secondary md:hidden"
+        @click="mobileMenuOpen = !mobileMenuOpen"
+      >
+        <FontAwesomeIcon class="text-lg" :icon="mobileMenuOpen ? 'fa-solid fa-xmark' : 'fa-solid fa-bars'" />
+      </button>
     </div>
+
+    <!-- Mobile menu panel -->
+    <Transition name="mobile-menu">
+      <div v-if="mobileMenuOpen" id="mobile-nav-menu" class="border-t border-border-light bg-white px-6 py-4 md:hidden">
+        <nav aria-label="Mobile navigation" class="flex flex-col gap-1">
+        <router-link class="mobile-nav-link" to="/mavemd" @click="mobileMenuOpen = false">MaveMD</router-link>
+        <router-link class="mobile-nav-link" to="/search" @click="mobileMenuOpen = false">Search</router-link>
+        <template v-if="userIsAuthenticated">
+          <router-link class="mobile-nav-link" to="/create-experiment" @click="mobileMenuOpen = false"
+            >New Experiment</router-link
+          >
+          <router-link class="mobile-nav-link" to="/create-score-set" @click="mobileMenuOpen = false"
+            >New Score Set</router-link
+          >
+        </template>
+        <router-link class="mobile-nav-link" to="/about" @click="mobileMenuOpen = false">About</router-link>
+        <router-link class="mobile-nav-link" to="/help" @click="mobileMenuOpen = false">Help</router-link>
+
+        <hr class="my-2 border-border-light" />
+
+        <template v-if="userIsAuthenticated">
+          <router-link class="mobile-nav-link" to="/settings" @click="mobileMenuOpen = false">Settings</router-link>
+          <router-link class="mobile-nav-link" to="/dashboard" @click="mobileMenuOpen = false">Dashboard</router-link>
+          <a class="mobile-nav-link" href="#" @click.prevent="mobileSignOut">Sign out</a>
+        </template>
+        <a v-else class="mobile-nav-link" href="#" @click.prevent="mobileSignIn">Sign in</a>
+      </nav>
+    </div>
+    </Transition>
   </nav>
 </template>
 
@@ -205,6 +258,10 @@ export default defineComponent({
     }
   },
 
+  data() {
+    return {mobileMenuOpen: false}
+  },
+
   computed: {
     hasElevatedRoles(): boolean {
       return this.activeRoles.length > 0 && !this.activeRoles.every((r) => r === 'ordinary user')
@@ -226,6 +283,12 @@ export default defineComponent({
 
     activeRoles(): string[] {
       return this.store.state.auth.activeRoles
+    }
+  },
+
+  watch: {
+    $route() {
+      this.mobileMenuOpen = false
     }
   },
 
@@ -273,6 +336,16 @@ export default defineComponent({
     handleUserMenuCommand(item: NavMenuItem) {
       if (typeof item.command === 'function') item.command()
       this.hideUserMenu()
+    },
+
+    mobileSignIn() {
+      this.signIn()
+      this.mobileMenuOpen = false
+    },
+
+    mobileSignOut() {
+      this.signOut()
+      this.mobileMenuOpen = false
     }
   }
 })
@@ -292,6 +365,40 @@ export default defineComponent({
 .nav-link-active {
   color: var(--color-sage);
   font-weight: 700;
+}
+
+.mobile-nav-link {
+  display: block;
+  padding: 0.5rem 0;
+  font-size: 0.875rem;
+  font-weight: 500;
+  color: #444;
+  text-decoration: none;
+}
+
+.mobile-nav-link:hover {
+  color: var(--color-sage);
+  text-decoration: none;
+}
+
+.mobile-menu-enter-active,
+.mobile-menu-leave-active {
+  transition: all 0.2s ease;
+  overflow: hidden;
+}
+
+.mobile-menu-enter-from,
+.mobile-menu-leave-to {
+  opacity: 0;
+  max-height: 0;
+  padding-top: 0;
+  padding-bottom: 0;
+}
+
+.mobile-menu-enter-to,
+.mobile-menu-leave-from {
+  opacity: 1;
+  max-height: 500px;
 }
 </style>
 

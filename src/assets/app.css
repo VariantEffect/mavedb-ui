@@ -1,4 +1,4 @@
-@import "tailwindcss";
+@import 'tailwindcss';
 
 /* ── Design Tokens ─────────────────────────────────────────────── */
 @theme {
@@ -10,6 +10,15 @@
   --color-orange-cta: #f8971d;
   --color-orange-cta-dark: #d97510;
   --color-yellow-accent: #fbda68;
+
+  /* Card palettes */
+  --color-orange-light: #fef3e2;
+  --color-orange-border: #f8c87a;
+  --color-calibrated: #6a1b9a;
+  --color-calibrated-light: #f3e5f5;
+  --color-calibrated-border: #d7b8e8;
+  --color-chip: #f3f4f8;
+  --color-chip-border: #e0e0e0;
 
   /* Semantic colors */
   --color-link: #0074d9;
@@ -32,39 +41,14 @@
 
 /* ── Base Styles ───────────────────────────────────────────────── */
 
-/* Headings use Exo 2 display font */
-h1 {
-  @apply text-3xl font-bold mt-6 mb-2;
+/* All headings use the Exo 2 display font */
+h1, h2, h3, h4, h5, h6 {
   font-family: var(--font-display);
-  color: var(--color-text-dark);
-}
-h2 {
-  @apply text-2xl font-semibold mt-5 mb-2;
-  font-family: var(--font-display);
-  color: var(--color-text-dark);
-}
-h3 {
-  @apply text-xl font-semibold mt-4 mb-2;
-  font-family: var(--font-display);
-  color: var(--color-text-dark);
-}
-h4 {
-  @apply text-lg font-semibold mt-3 mb-2;
-  color: var(--color-text-dark);
-}
-h5 {
-  @apply text-base font-semibold mt-2 mb-2;
-  color: var(--color-text-dark);
-}
-h6 {
-  @apply text-sm font-semibold mt-1 mb-2;
-  color: var(--color-text-dark);
 }
 
 * {
   text-rendering: optimizeLegibility;
   font-family: var(--font-body);
-  text-align: left;
 }
 
 body {
@@ -74,9 +58,12 @@ body {
 }
 
 a {
-  color: var(--color-link);
   text-decoration: none;
   transition: color 0.1s ease-in-out;
+}
+
+a:hover {
+  text-decoration: underline;
 }
 
 /* ── PrimeVue Overrides ────────────────────────────────────────── */
@@ -102,7 +89,8 @@ body .p-button {
 }
 
 /* Active tab and pagination highlight — uses sage instead of dark blue */
-.p-tablist-tab-list .p-tab-active, .p-paginator-page-selected {
+.p-tablist-tab-list .p-tab-active,
+.p-paginator-page-selected {
   background-color: color-mix(in srgb, var(--color-sage) 12%, transparent) !important;
 }
 

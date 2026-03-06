@@ -23,6 +23,7 @@ import SearchVariantsScreen from '@/components/screens/SearchVariantsScreen.vue'
 import SearchView from '@/components/screens/SearchView.vue'
 import SettingsScreen from '@/components/screens/SettingsScreen.vue'
 import StatisticsView from '@/components/screens/StatisticsView.vue'
+import NotFoundView from '@/components/screens/NotFoundView.vue'
 import {beginAuthentication, isAuthenticated} from '@/lib/orcid'
 import VariantMeasurementScreen from '@/components/screens/VariantMeasurementScreen.vue'
 import VariantScreen from '@/components/screens/VariantScreen.vue'
@@ -218,6 +219,11 @@ const routes: RouteRecordRaw[] = [
     path: '/score-sets/submit-completion/:urn',
     component: WizardCompletionView,
     props: (route) => ({itemId: route.params.urn})
+  },
+  {
+    path: '/:pathMatch(.*)*',
+    name: 'notFound',
+    component: NotFoundView
   }
 ]
 

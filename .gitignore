@@ -138,6 +138,3 @@ public/docs/mavedb/
 
 # OS X folder view option files
 *.DS_Store
-
-*storybook.log
-storybook-static

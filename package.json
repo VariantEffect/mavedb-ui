@@ -7,9 +7,7 @@
     "build": "./scripts/build-docs.sh && vite build --mode=${MODE=live}",
     "dev": "./scripts/build-docs.sh && vite --mode=${MODE=dev}",
     "docs": "mkdocs serve -f docs/mkdocs.yml",
-    "preview": "./scripts/build-docs.sh && vite build --mode=${MODE=live} --watch & vite preview --mode=${MODE=live}",
-    "storybook": "storybook dev -p 6006",
-    "build-storybook": "storybook build"
+    "preview": "./scripts/build-docs.sh && vite build --mode=${MODE=live} --watch & vite preview --mode=${MODE=live}"
   },
   "dependencies": {
     "@fontsource/exo-2": "^5.2.8",
@@ -90,14 +88,7 @@
     "prettier": "^3.6.2",
     "sass-embedded": "^1.97.3",
     "vite": "^5.4.21",
-    "vue-tsc": "^3.0.7",
-    "storybook": "^10.2.15",
-    "@storybook/vue3-vite": "^10.2.15",
-    "@chromatic-com/storybook": "^5.0.1",
-    "@storybook/addon-a11y": "^10.2.15",
-    "@storybook/addon-docs": "^10.2.15",
-    "@storybook/addon-onboarding": "^10.2.15",
-    "eslint-plugin-storybook": "^10.2.15"
+    "vue-tsc": "^3.0.7"
   },
   "browserslist": [
     "> 1%",

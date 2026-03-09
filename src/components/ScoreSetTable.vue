@@ -15,7 +15,7 @@
 import $ from 'jquery'
 import _ from 'lodash'
 
-import {textForTargetGeneCategory} from '@/lib/target-genes'
+import {getTargetGeneName, textForTargetGeneCategory} from '@/lib/target-genes'
 import useFormatters from '@/composition/formatters'
 import FlexDataTable from '@/components/common/FlexDataTable'
 
@@ -76,11 +76,14 @@ export default {
           {data: 'shortDescription', title: 'Description', width: '40%'},
           // TODO: Surface target genes besides the first one in the data table.
           {
-            data: (x) => _.get(x, 'targetGenes[0].name', 'null name'),
+            data: (x) => {
+              const target = _.get(x, 'targetGenes[0]')
+              return target ? getTargetGeneName(target) : '—'
+            },
             title: 'Target'
           },
           {
-            data: (x) => textForTargetGeneCategory(_.get(x, 'targetGenes[0].category', undefined)) || 'null category',
+            data: (x) => textForTargetGeneCategory(_.get(x, 'targetGenes[0].category', undefined)) || '—',
             title: 'Target type'
           },
           {
@@ -88,7 +91,7 @@ export default {
               _.get(
                 x,
                 'targetGenes[0].targetSequence.taxonomy.organismName',
-                _.get(x, 'targetGenes[0].targetAccession.assembly', null)
+                _.get(x, 'targetGenes[0].targetAccession.assembly', '—')
               ),
             title: 'Target organism/assembly'
           },

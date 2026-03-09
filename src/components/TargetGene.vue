@@ -1,5 +1,5 @@
 <template>
-  <div v-if="targetGene.name"><strong>Name:</strong> {{ targetGene.name }}</div>
+  <div v-if="getTargetGeneName(targetGene)"><strong>Name:</strong> {{ getTargetGeneName(targetGene) }}</div>
   <div v-if="targetGene.category"><strong>Type:</strong> {{ textForTargetGeneCategory(targetGene.category) }}</div>
 
   <div v-if="targetGene.targetAccession?.accession" style="word-break: break-word">
@@ -70,7 +70,7 @@
 import Button from 'primevue/button'
 import {PropType, ref} from 'vue'
 
-import {textForTargetGeneCategory} from '@/lib/target-genes'
+import {getTargetGeneName, textForTargetGeneCategory} from '@/lib/target-genes'
 import type {components} from '@/schema/openapi'
 
 defineProps({

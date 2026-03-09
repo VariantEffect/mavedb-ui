@@ -192,7 +192,7 @@
               >Scoreset: {{ scoreSet.urn }}</router-link
             >
             <div v-for="targetGene of scoreSet.targetGenes" :key="targetGene">
-              <div v-if="targetGene.name"><strong>Name:</strong> {{ targetGene.name }}</div>
+              <div v-if="getTargetGeneName(targetGene)"><strong>Name:</strong> {{ getTargetGeneName(targetGene) }}</div>
               <div v-if="targetGene.category">
                 <strong>Type:</strong> {{ textForTargetGeneCategory(targetGene.category) }}
               </div>
@@ -312,7 +312,7 @@ import useAuth from '@/composition/auth'
 import useFormatters from '@/composition/formatters'
 import useItem from '@/composition/item'
 import config from '@/config'
-import {textForTargetGeneCategory} from '@/lib/target-genes'
+import {getTargetGeneName, textForTargetGeneCategory} from '@/lib/target-genes'
 
 export default {
   name: 'ExperimentView',
@@ -335,7 +335,8 @@ export default {
       ...useFormatters(),
       ...useItem({itemTypeName: 'experiment'}),
       userIsAuthenticated,
-      textForTargetGeneCategory: textForTargetGeneCategory
+      textForTargetGeneCategory: textForTargetGeneCategory,
+      getTargetGeneName: getTargetGeneName
     }
   },
 

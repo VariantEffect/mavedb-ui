@@ -1,5 +1,5 @@
 <template>
-  <router-link v-if="routerLink" :to="routerLink">{{ linkText }}</router-link>
+  <router-link v-if="routerLink" class="text-link" :to="routerLink">{{ linkText }}</router-link>
 </template>
 
 <script lang="ts">

@@ -30,13 +30,17 @@ export function useEntityCache() {
     // Return if already loading
     if (cache.value[urn]?.loading) {
       // Wait for the existing request to complete
-      return new Promise((resolve) => {
+      return new Promise((resolve, reject) => {
         const unwatch = watch(
           () => cache.value[urn],
           (value) => {
-            if (!value.loading && value.data) {
+            if (!value.loading) {
               unwatch()
-              resolve(value.data)
+              if (value.error) {
+                reject(value.error)
+              } else {
+                resolve(value.data)
+              }
             }
           }
         )

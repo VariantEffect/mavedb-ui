@@ -62,10 +62,10 @@
               </template>
             </Select>
             <div class="flex min-w-0 flex-1">
-              <input
+              <InputText
                 v-model="searchText"
                 aria-label="Search variants"
-                class="min-w-0 flex-1 border-none bg-transparent px-3 py-3 font-body text-base outline-none placeholder:text-text-muted md:px-4 md:py-3.5"
+                class="min-w-0 flex-1 !rounded-none !border-none !bg-transparent !shadow-none"
                 :placeholder="activeSearchPlaceholder"
                 type="text"
               />
@@ -226,6 +226,7 @@ import {defineComponent, ref, computed, onMounted, onBeforeUnmount} from 'vue'
 import {useRouter} from 'vue-router'
 import {useHead} from '@unhead/vue'
 import {FontAwesomeIcon} from '@fortawesome/vue-fontawesome'
+import InputText from 'primevue/inputtext'
 import Select from 'primevue/select'
 
 import MvLayout from '@/components/layout/MvLayout.vue'
@@ -242,7 +243,7 @@ import {SEARCH_COLORS, SEARCH_PLACEHOLDERS, SEARCH_TYPES} from '@/data/search'
 export default defineComponent({
   name: 'HomeScreen',
 
-  components: {FontAwesomeIcon, MvLayout, Select},
+  components: {FontAwesomeIcon, InputText, MvLayout, Select},
 
   setup() {
     useHead({title: 'Home'})

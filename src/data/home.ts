@@ -7,23 +7,25 @@
 
 import igvfLogo from '@/assets/igvf-tag.png'
 import mavemdLogo from '@/assets/mavemd-logo.png'
+import {MAVEMD_COLLECTION_URN} from '@/data/mavemd'
+import {IGVF_COLLECTION_URN} from '@/data/igvf'
 
 export const WATERMARK_BARS = [
-  {color: '#78b793', height: '15%'},
-  {color: '#a1d8c8', height: '25%'},
-  {color: '#78b793', height: '38%'},
-  {color: '#c8e4c6', height: '52%'},
-  {color: '#a1d8c8', height: '65%'},
-  {color: '#78b793', height: '78%'},
-  {color: '#fbda68', height: '88%'},
-  {color: '#78b793', height: '95%'},
-  {color: '#a1d8c8', height: '85%'},
-  {color: '#f8971d', height: '72%'},
-  {color: '#78b793', height: '58%'},
-  {color: '#c8e4c6', height: '42%'},
-  {color: '#a1d8c8', height: '30%'},
-  {color: '#fbda68', height: '20%'},
-  {color: '#78b793', height: '12%'}
+  {color: 'var(--color-sage)', height: '15%'},
+  {color: 'var(--color-mint)', height: '25%'},
+  {color: 'var(--color-sage)', height: '38%'},
+  {color: 'var(--color-sage-light)', height: '52%'},
+  {color: 'var(--color-mint)', height: '65%'},
+  {color: 'var(--color-sage)', height: '78%'},
+  {color: 'var(--color-yellow-accent)', height: '88%'},
+  {color: 'var(--color-sage)', height: '95%'},
+  {color: 'var(--color-mint)', height: '85%'},
+  {color: 'var(--color-orange-cta)', height: '72%'},
+  {color: 'var(--color-sage)', height: '58%'},
+  {color: 'var(--color-sage-light)', height: '42%'},
+  {color: 'var(--color-mint)', height: '30%'},
+  {color: 'var(--color-yellow-accent)', height: '20%'},
+  {color: 'var(--color-sage)', height: '12%'}
 ]
 
 // TODO: Link to appropriate search filters
@@ -55,14 +57,14 @@ export const FEATURED_COLLECTIONS = [
     description:
       "Functional genomics datasets generated as part of the IGVF Consortium's large-scale variant impact studies.",
     logo: igvfLogo,
-    route: '/collections/urn:mavedb:collection-c5eabe66-76f1-4e74-9589-35324e4f6f8d'
+    route: `/collections/${IGVF_COLLECTION_URN}`
   },
   {
     title: 'MaveMD',
     description:
       'Curated datasets with clinical relevance, linking MAVE functional scores to variant pathogenicity evidence.',
     logo: mavemdLogo,
-    route: '/collections/urn:mavedb:collection-603dafbf-4a3f-4d70-ab8c-aafb226fbff4'
+    route: `/collections/${MAVEMD_COLLECTION_URN}`
   }
 ]
 

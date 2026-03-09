@@ -1,189 +1,273 @@
 <template>
   <MvLayout>
-    <div class="mavedb-search-view">
-      <div class="mavedb-search-header" style="display: none">
-        <h1>Search MaveDB Experiments and Score Sets</h1>
-      </div>
-      <div class="mavedb-search-form">
-        <div class="flex flex-wrap justify-content-center gap-3">
-          <IconField icon-position="left">
-            <InputIcon class="pi pi-search"></InputIcon>
-            <InputText
-              ref="searchTextInput"
-              v-model="searchText"
-              class="p-inputtext-sm"
-              placeholder="Search"
-              type="search"
-            />
-          </IconField>
-          <Button @click="clear">Clear All</Button>
-        </div>
-        <div class="mavedb-search-tab-view-container">
-          <Tabs class="mavedb-search-tabs" value="0">
-            <TabList>
-              <Tab value="0">Target filters</Tab>
-              <Tab value="1">Publication filters</Tab>
-            </TabList>
-            <TabPanels>
-              <TabPanel header="Target filters" value="0">
-                <div class="mavedb-search-filters">
-                  <SelectList
-                    v-model="filterTargetNames"
-                  class="mavedb-search-filter-option-picker"
-                  :options="targetNameFilterOptions"
-                  title="Target name"
-                  />
-                  <SelectList
-                    v-model="filterTargetTypes"
-                    class="mavedb-search-filter-option-picker"
-                    :option-label="textForTargetGeneCategory"
-                    :options="targetTypeFilterOptions"
-                    title="Target type"
-                  />
-                  <SelectList
-                    v-model="filterTargetOrganismNames"
-                    class="mavedb-search-filter-option-picker mavedb-organism-picker"
-                    :options="targetOrganismFilterOptions"
-                    title="Target organism"
-                  />
-                  <SelectList
-                    v-model="filterTargetAccession"
-                    class="mavedb-search-filter-option-picker mavedb-organism-picker"
-                    :options="targetAccessionFilterOptions"
-                    title="Target accession"
-                  />
-                </div>
-              </TabPanel>
-              <TabPanel header="Publication filters" value="1">
-                <div class="mavedb-search-filters">
-                  <SelectList
-                    v-model="filterPublicationAuthors"
-                    class="mavedb-search-filter-option-picker"
-                    :options="publicationAuthorFilterOptions"
-                    title="Publication authors"
-                  />
-                  <SelectList
-                    v-model="filterPublicationDatabases"
-                    class="mavedb-search-filter-option-picker"
-                    :options="publicationDatabaseFilterOptions"
-                    title="Publication database"
-                  />
-                  <SelectList
-                    v-model="filterPublicationJournals"
-                    class="mavedb-search-filter-option-picker"
-                    :options="publicationJournalFilterOptions"
-                    title="Publication journal"
-                  />
-                </div>
-              </TabPanel>
-            </TabPanels>
-          </Tabs>
-          <div v-if="publishedScoreSets.length < numTotalSearchResults" class="mavedb-search-tab-view-tabs-right">
-            Showing {{ publishedScoreSets.length.toLocaleString() }} of
-            {{ numTotalSearchResults.toLocaleString() }} results. Try adding more filters to narrow your search.
+    <template #header>
+      <div class="border-b border-gray-200 bg-white">
+        <div class="mx-auto flex max-w-screen-xl flex-col gap-3 px-6 py-4">
+          <div class="flex flex-col gap-3 sm:flex-row sm:flex-wrap sm:items-center sm:gap-4">
+            <div
+              class="flex flex-1 overflow-hidden rounded-md border-[1.5px] border-mint bg-white transition-colors focus-within:border-sage"
+              style="max-width: 600px"
+            >
+              <InputText
+                ref="searchTextInput"
+                v-model="searchText"
+                aria-label="Search score sets"
+                class="flex-1 !rounded-none !border-none !shadow-none"
+                placeholder="Search genes, titles, keywords..."
+                type="search"
+              />
+              <button
+                class="cursor-pointer whitespace-nowrap border-none bg-sage px-4.5 text-sm font-semibold text-dark hover:bg-sage-dark"
+                @click="search"
+              >
+                Search
+              </button>
+            </div>
+            <span aria-live="polite" class="whitespace-nowrap text-sm text-gray-500" role="status">
+              <strong class="font-bold text-gray-800">{{ numTotalSearchResults.toLocaleString() }}</strong>
+              score sets match the supplied filters
+            </span>
+          </div>
+          <div v-if="hasActiveFilters" class="flex flex-wrap items-center gap-1.5">
+            <span class="text-xs font-semibold uppercase tracking-wide text-gray-400">Filters:</span>
+            <button
+              v-for="filter in activeFilters"
+              :key="filter.key + ':' + filter.value"
+              :aria-label="'Remove filter: ' + filter.label"
+              class="inline-flex cursor-pointer items-center gap-1.5 rounded-full border border-mint bg-sage-light px-3 py-0.5 text-xs font-semibold text-sage hover:bg-sage-light"
+              @click="removeFilter(filter.key, filter.value)"
+            >
+              {{ filter.label }}
+              <span aria-hidden="true" class="ml-0.5 text-sm leading-none text-gray-500">&times;</span>
+            </button>
+            <button
+              class="cursor-pointer text-xs font-semibold text-gray-400 hover:text-red-600 hover:underline"
+              @click="clear"
+            >
+              Clear all
+            </button>
           </div>
         </div>
       </div>
-      <ScoreSetTable
-        :data="publishedScoreSets"
-        :language="language"
-        :loading="loading"
-        :scroll-x="true"
-        :scroll-y="true"
-      />
+    </template>
+
+    <div class="mx-auto grid w-full max-w-screen-xl grid-cols-1 items-start gap-6 px-6 py-6 md:grid-cols-[220px_1fr]">
+      <!-- MOBILE FILTER TOGGLE -->
+      <button
+        class="flex cursor-pointer items-center gap-2 rounded-lg border border-gray-200 bg-white px-4 py-2.5 text-sm font-semibold text-gray-600 hover:bg-gray-50 md:hidden"
+        @click="mobileFiltersOpen = true"
+      >
+        <svg
+          aria-hidden="true"
+          class="h-4 w-4"
+          fill="none"
+          stroke="currentColor"
+          stroke-linecap="round"
+          stroke-linejoin="round"
+          stroke-width="2"
+          viewBox="0 0 24 24"
+        >
+          <line x1="4" x2="20" y1="6" y2="6" />
+          <line x1="6" x2="18" y1="12" y2="12" />
+          <line x1="8" x2="16" y1="18" y2="18" />
+        </svg>
+        Filters
+        <span
+          v-if="hasActiveFilters"
+          aria-hidden="true"
+          class="rounded-full bg-sage px-1.5 text-[0.6875rem] font-bold text-white"
+          >{{ activeFilters.length }}</span
+        >
+        <span v-if="hasActiveFilters" class="sr-only">({{ activeFilters.length }} active)</span>
+      </button>
+
+      <!-- MOBILE FILTER DRAWER BACKDROP -->
+      <Teleport to="body">
+        <Transition name="fade">
+          <div
+            v-if="mobileFiltersOpen"
+            class="fixed inset-0 z-[110] bg-black/30 md:hidden"
+            @click="mobileFiltersOpen = false"
+          />
+        </Transition>
+        <Transition name="slide-left">
+          <aside
+            v-if="mobileFiltersOpen"
+            ref="mobileDrawer"
+            aria-label="Filters"
+            aria-modal="true"
+            class="fixed inset-y-0 left-0 z-[120] w-[280px] overflow-y-auto bg-white shadow-xl md:hidden"
+            role="dialog"
+            @keydown.escape="mobileFiltersOpen = false"
+          >
+            <div class="flex items-center justify-between border-b border-gray-100 px-4 py-3">
+              <span class="text-xs font-bold uppercase tracking-wide text-gray-400">Filters</span>
+              <div class="flex items-center gap-3">
+                <button
+                  class="cursor-pointer text-[0.6875rem] font-semibold text-gray-400 hover:text-red-600"
+                  @click="clear"
+                >
+                  Reset all
+                </button>
+                <button
+                  ref="drawerCloseBtn"
+                  aria-label="Close filters"
+                  class="cursor-pointer text-lg leading-none text-gray-400 hover:text-gray-700"
+                  @click="mobileFiltersOpen = false"
+                >
+                  <span aria-hidden="true">&times;</span>
+                </button>
+              </div>
+            </div>
+            <MvSearchFilters
+              v-model:publication-authors="filterPublicationAuthors"
+              v-model:publication-databases="filterPublicationDatabases"
+              v-model:publication-journals="filterPublicationJournals"
+              v-model:target-accession="filterTargetAccession"
+              v-model:target-names="filterTargetNames"
+              v-model:target-organism-names="filterTargetOrganismNames"
+              v-model:target-types="filterTargetTypes"
+              :loading="filtersLoading"
+              :publication-author-options="publicationAuthorFilterOptions"
+              :publication-database-options="publicationDatabaseFilterOptions"
+              :publication-journal-options="publicationJournalFilterOptions"
+              :target-accession-options="targetAccessionFilterOptions"
+              :target-name-options="targetNameFilterOptions"
+              :target-organism-name-options="targetOrganismFilterOptions"
+              :target-type-label-fn="(v: string) => textForTargetGeneCategory(v as TargetGeneCategory) || v"
+              :target-type-options="targetTypeFilterOptions"
+            />
+          </aside>
+        </Transition>
+      </Teleport>
+
+      <!-- DESKTOP FILTER SIDEBAR -->
+      <aside
+        aria-label="Filter score sets"
+        class="sticky top-20 hidden overflow-hidden rounded-lg border border-gray-200 bg-white md:block"
+      >
+        <div class="flex items-center justify-between border-b border-gray-100 px-4 py-3">
+          <span class="text-xs font-bold uppercase tracking-wide text-gray-400">Filters</span>
+          <button class="cursor-pointer text-[0.6875rem] font-semibold text-gray-400 hover:text-red-600" @click="clear">
+            Reset all
+          </button>
+        </div>
+
+        <MvSearchFilters
+          v-model:publication-authors="filterPublicationAuthors"
+          v-model:publication-databases="filterPublicationDatabases"
+          v-model:publication-journals="filterPublicationJournals"
+          v-model:target-accession="filterTargetAccession"
+          v-model:target-names="filterTargetNames"
+          v-model:target-organism-names="filterTargetOrganismNames"
+          v-model:target-types="filterTargetTypes"
+          :loading="filtersLoading"
+          :publication-author-options="publicationAuthorFilterOptions"
+          :publication-database-options="publicationDatabaseFilterOptions"
+          :publication-journal-options="publicationJournalFilterOptions"
+          :target-accession-options="targetAccessionFilterOptions"
+          :target-name-options="targetNameFilterOptions"
+          :target-organism-name-options="targetOrganismFilterOptions"
+          :target-type-label-fn="(v: string) => textForTargetGeneCategory(v as TargetGeneCategory) || v"
+          :target-type-options="targetTypeFilterOptions"
+        />
+      </aside>
+
+      <!-- RESULTS -->
+      <div class="flex min-w-0 flex-col">
+        <div class="mb-3 flex items-center justify-between">
+          <span class="text-sm text-gray-500">
+            Showing <strong class="font-bold text-gray-800">{{ scoreSets.length.toLocaleString() }}</strong> score sets
+          </span>
+          <Select
+            v-model="sortBy"
+            aria-label="Sort results by"
+            class="!text-sm"
+            option-label="label"
+            option-value="value"
+            :options="sortOptions"
+          />
+        </div>
+
+        <Message
+          v-if="!loading && scoreSets.length > 0 && scoreSets.length < numTotalSearchResults"
+          :closable="false"
+          severity="warn"
+        >
+          Your search matched {{ numTotalSearchResults.toLocaleString() }} score sets. For performance reasons, only the
+          first {{ scoreSets.length }} are shown. Use the filters to narrow your results.
+        </Message>
+
+        <MvLoader v-if="loading" text="Loading score sets..." />
+
+        <div v-else class="flex flex-col gap-2.5">
+          <div
+            v-for="group in visibleGroups"
+            :key="group.experimentUrn"
+            class="overflow-hidden rounded-lg border border-gray-200 border-l-[3px] border-l-sage-light bg-white"
+          >
+            <div class="px-5 pt-3 text-xs font-semibold text-gray-500">
+              Experiment:
+              <router-link class="text-link" :to="{name: 'experiment', params: {urn: group.experimentUrn}}">
+                {{ group.experimentTitle }}
+              </router-link>
+              <span v-if="group.scoreSets.length > 1" class="text-gray-400">
+                &mdash; {{ group.scoreSets.length }} score sets
+              </span>
+            </div>
+            <MvScoreSetRow v-for="scoreSet in group.scoreSets" :key="scoreSet.urn" :score-set="scoreSet" />
+          </div>
+        </div>
+
+        <div v-if="!loading && visibleCount < groupedScoreSets.length" class="pt-5 text-center">
+          <button
+            class="inline-block cursor-pointer rounded-[5px] border-[1.5px] border-sage bg-white px-6 py-2 text-sm font-semibold text-sage hover:bg-sage-light"
+            @click="visibleCount += 25"
+          >
+            Load more results ({{ groupedScoreSets.length - visibleCount }} remaining)
+          </button>
+        </div>
+
+        <div v-if="!loading && scoreSets.length === 0" class="py-16 text-center text-sm text-gray-500">
+          Type in the search box above or use the filters to find a data set.
+        </div>
+      </div>
     </div>
   </MvLayout>
 </template>
 
 <script lang="ts">
-import axios from 'axios'
-import IconField from 'primevue/iconfield'
-import InputIcon from 'primevue/inputicon'
-import InputText from 'primevue/inputtext'
-import config from '@/config'
-import ScoreSetTable from '@/components/ScoreSetTable.vue'
-import SelectList from '@/components/common/SelectList.vue'
-import MvLayout from '@/components/layout/MvLayout.vue'
-import Button from 'primevue/button'
-import TabPanel from 'primevue/tabpanel'
-import Tabs from 'primevue/tabs'
-import TabList from 'primevue/tablist'
-import Tab from 'primevue/tab'
-import TabPanels from 'primevue/tabpanels'
 import {debounce} from 'vue-debounce'
 import {defineComponent} from 'vue'
 import {useHead} from '@unhead/vue'
 
-import type {LocationQueryValue} from 'vue-router'
-import {textForTargetGeneCategory} from '@/lib/target-genes'
-import {routeToVariantSearchIfVariantIsSearchable} from '@/lib/search'
-import {paths, components} from '@/schema/openapi'
+import {textForTargetGeneCategory, type TargetGeneCategory} from '@/lib/target-genes'
+import {extractQueryParam} from '@/lib/router'
+import {
+  routeToVariantSearchIfVariantIsSearchable,
+  buildSearchParams,
+  SEARCH_RESULT_LIMIT,
+  SORT_OPTIONS
+} from '@/lib/search'
+import type {FilterOption, ExperimentGroup, ActiveFilter, SortValue} from '@/lib/search'
+import type {components} from '@/schema/openapi'
 
 type ShortScoreSet = components['schemas']['ShortScoreSet']
-type ShortTargetGene = components['schemas']['ShortTargetGene']
-type PublicationIdentifier = components['schemas']['SavedPublicationIdentifier']
-type SearchParams = paths['/api/v1/score-sets/search']['post']['requestBody']['content']['application/json']
 
-interface FilterOption {
-  value: string
-  badge: number
-}
-
-type ScoreSetMetadataFn = (scoreSet: ShortScoreSet) => Array<string>
-function countScoreSetMetadata(
-  scoreSets: Array<ShortScoreSet>,
-  scoreSetMetadataFn: ScoreSetMetadataFn
-): FilterOption[] {
-  if (!scoreSets.length) {
-    return []
-  }
-
-  // Filter out empty string values.
-  const values = scoreSets
-    .map(scoreSetMetadataFn)
-    .flat()
-    .filter((item) => !!item)
-  const frequencies = values.reduce((counts, item) => {
-    counts.set(item, (counts.get(item) || 0) + 1)
-    return counts
-  }, new Map<string, number>())
-  return Array.from(frequencies.keys())
-    .sort()
-    .map((value) => ({value, badge: frequencies.get(value) || 0}))
-}
-type GeneMetadataFn = (targetGene: ShortTargetGene) => string
-function countTargetGeneMetadata(scoreSets: Array<ShortScoreSet>, geneMetadataFn: GeneMetadataFn): FilterOption[] {
-  return countScoreSetMetadata(scoreSets, (scoreSet) => [...new Set<string>(scoreSet.targetGenes.map(geneMetadataFn))])
-}
-
-type PublicationMetadataFn = (publicationIdentifier: PublicationIdentifier) => Array<string>
-function countPublicationMetadata(
-  scoreSets: Array<ShortScoreSet>,
-  publicationMetadataFn: PublicationMetadataFn
-): FilterOption[] {
-  return countScoreSetMetadata(scoreSets, (scoreSet) => {
-    const primary = scoreSet.primaryPublicationIdentifiers.map(publicationMetadataFn).flat()
-    const secondary = scoreSet.secondaryPublicationIdentifiers.map(publicationMetadataFn).flat()
-
-    // Use a Set to eliminate duplicate values, then transform it back into an Array.
-    return [...new Set<string>(primary.concat(secondary))]
-  })
-}
-
-function extractQueryParam(content: LocationQueryValue | LocationQueryValue[]): Array<string> {
-  // If there are multiple values, they will be stored as multiple identical query params (i.e. ?a=1&b=2&a=3) and
-  // content will be an Array.
-  if (Array.isArray(content)) {
-    // Only return non-null values. Typescript can't intuit what our filter is doing here, so we tell it explicitly.
-    return content.filter((item) => !!item) as Array<string>
-  }
-  return content ? [content] : []
-}
+import InputText from 'primevue/inputtext'
+import Message from 'primevue/message'
+import Select from 'primevue/select'
+import MvLayout from '@/components/layout/MvLayout.vue'
+import MvLoader from '@/components/common/MvLoader.vue'
+import MvScoreSetRow from '@/components/common/MvScoreSetRow.vue'
+import MvSearchFilters from '@/components/common/MvSearchFilters.vue'
+import {searchScoreSets, getSearchFilterOptions} from '@/api/mavedb'
+import type {ScoreSetsSearchFilterOptionsResponse} from '@/api/mavedb'
 
 export default defineComponent({
   name: 'SearchView',
 
-  components: {MvLayout, ScoreSetTable, IconField, InputIcon, InputText, SelectList, Tabs, TabList, Tab, TabPanels, TabPanel, Button},
+  components: {InputText, Message, MvLayout, MvLoader, MvScoreSetRow, MvSearchFilters, Select},
 
   setup: () => {
     useHead({title: 'Search data sets'})
@@ -200,13 +284,11 @@ export default defineComponent({
       filterPublicationJournals: extractQueryParam(this.$route.query['publication-journal']) as Array<string>,
       filterKeywords: extractQueryParam(this.$route.query['keywords']) as Array<string>,
       loading: false,
+      filtersLoading: false,
+      mobileFiltersOpen: false,
       searchText: this.$route.query.search as string | null,
       scoreSets: [] as Array<ShortScoreSet>,
-      publishedScoreSets: [] as Array<ShortScoreSet>,
       numTotalSearchResults: 0,
-      language: {
-        emptyTable: 'Type in the search box above or use the filters to find a data set.'
-      },
       textForTargetGeneCategory: textForTargetGeneCategory,
       targetNameFilterOptions: [] as FilterOption[],
       targetOrganismFilterOptions: [] as FilterOption[],
@@ -214,83 +296,153 @@ export default defineComponent({
       targetTypeFilterOptions: [] as FilterOption[],
       publicationAuthorFilterOptions: [] as FilterOption[],
       publicationDatabaseFilterOptions: [] as FilterOption[],
-      publicationJournalFilterOptions: [] as FilterOption[]
+      publicationJournalFilterOptions: [] as FilterOption[],
+      sortOptions: SORT_OPTIONS,
+      sortBy: (SORT_OPTIONS.some((o) => o.value === this.$route.query.sort)
+        ? this.$route.query.sort
+        : 'recent') as SortValue,
+      visibleCount: 25,
+      searchAbortController: null as AbortController | null,
+      filterAbortController: null as AbortController | null
     }
   },
 
   computed: {
     debouncedSearchFunction: function () {
       return debounce(() => this.search(), '400ms')
+    },
+
+    hasActiveFilters(): boolean {
+      return this.activeFilters.length > 0
+    },
+
+    activeFilters(): ActiveFilter[] {
+      const filters: ActiveFilter[] = []
+      const addFilters = (key: string, values: string[], labelFn?: (v: string) => string) => {
+        for (const value of values) {
+          filters.push({key, value, label: labelFn ? labelFn(value) : value})
+        }
+      }
+      addFilters('filterTargetNames', this.filterTargetNames)
+      addFilters('filterTargetOrganismNames', this.filterTargetOrganismNames)
+      addFilters(
+        'filterTargetTypes',
+        this.filterTargetTypes,
+        (v) => textForTargetGeneCategory(v as TargetGeneCategory) || v
+      )
+      addFilters('filterTargetAccession', this.filterTargetAccession)
+      addFilters('filterPublicationAuthors', this.filterPublicationAuthors)
+      addFilters('filterPublicationDatabases', this.filterPublicationDatabases)
+      addFilters('filterPublicationJournals', this.filterPublicationJournals)
+      return filters
+    },
+
+    sortedScoreSets(): ShortScoreSet[] {
+      const option = SORT_OPTIONS.find((o) => o.value === this.sortBy)
+      return option ? [...this.scoreSets].sort(option.compare) : [...this.scoreSets]
+    },
+
+    groupedScoreSets(): ExperimentGroup[] {
+      const groups = new Map<string, ExperimentGroup>()
+      for (const scoreSet of this.sortedScoreSets) {
+        const expUrn = scoreSet.experiment?.urn || 'unknown'
+        const expTitle = scoreSet.experiment?.title || expUrn
+        if (!groups.has(expUrn)) {
+          groups.set(expUrn, {experimentUrn: expUrn, experimentTitle: expTitle, scoreSets: []})
+        }
+        groups.get(expUrn)!.scoreSets.push(scoreSet)
+      }
+      return Array.from(groups.values())
+    },
+
+    visibleGroups(): ExperimentGroup[] {
+      return this.groupedScoreSets.slice(0, this.visibleCount)
     }
   },
 
   watch: {
     filterTargetNames: {
-      handler: function (oldValue, newValue) {
-        if (oldValue != newValue) {
+      handler: function (newValue, oldValue) {
+        if (newValue != oldValue) {
           this.debouncedSearch()
         }
       }
     },
     filterTargetOrganismNames: {
-      handler: function (oldValue, newValue) {
-        if (oldValue != newValue) {
+      handler: function (newValue, oldValue) {
+        if (newValue != oldValue) {
           this.debouncedSearch()
         }
       }
     },
     filterTargetAccession: {
-      handler: function (oldValue, newValue) {
-        if (oldValue != newValue) {
+      handler: function (newValue, oldValue) {
+        if (newValue != oldValue) {
           this.debouncedSearch()
         }
       }
     },
     filterTargetTypes: {
-      handler: function (oldValue, newValue) {
-        if (oldValue != newValue) {
+      handler: function (newValue, oldValue) {
+        if (newValue != oldValue) {
           this.debouncedSearch()
         }
       }
     },
     filterPublicationAuthors: {
-      handler: function (oldValue, newValue) {
-        if (oldValue != newValue) {
+      handler: function (newValue, oldValue) {
+        if (newValue != oldValue) {
           this.debouncedSearch()
         }
       }
     },
     filterPublicationDatabases: {
-      handler: function (oldValue, newValue) {
-        if (oldValue != newValue) {
+      handler: function (newValue, oldValue) {
+        if (newValue != oldValue) {
           this.debouncedSearch()
         }
       }
     },
     filterPublicationJournals: {
-      handler: function (oldValue, newValue) {
-        if (oldValue != newValue) {
+      handler: function (newValue, oldValue) {
+        if (newValue != oldValue) {
           this.debouncedSearch()
         }
       }
     },
     filterKeywords: {
-      handler: function (oldValue, newValue) {
-        if (oldValue != newValue) {
+      handler: function (newValue, oldValue) {
+        if (newValue != oldValue) {
           this.debouncedSearch()
         }
       }
     },
     searchText: {
-      handler: function (oldValue, newValue) {
-        if (oldValue != newValue) {
+      handler: function (newValue, oldValue) {
+        if (newValue != oldValue) {
           this.debouncedSearch()
         }
       }
     },
-    item: {
+    sortBy: {
       handler: function () {
-        this.clear()
+        // Sort is applied client-side via the sortedScoreSets computed, so we only
+        // need to sync the URL query param — no need to refetch results or filters.
+        // TODO#XXX: If sorting moves server-side, this should call search() instead.
+        this.$router.push({
+          query: {
+            ...this.$route.query,
+            ...(this.sortBy !== 'recent' ? {sort: this.sortBy} : {sort: undefined})
+          }
+        })
+      }
+    },
+    // Focus the close button after Vue renders the drawer (v-if means it doesn't exist until nextTick).
+    mobileFiltersOpen(open: boolean) {
+      if (open) {
+        this.$nextTick(() => {
+          ;(this.$refs.drawerCloseBtn as HTMLElement)?.focus()
+        })
       }
     },
     '$route.query.search': {
@@ -364,6 +516,15 @@ export default defineComponent({
         }
       },
       immediate: true
+    },
+    '$route.query.sort': {
+      handler: function (newValue) {
+        const val = typeof newValue === 'string' ? newValue : 'recent'
+        if (SORT_OPTIONS.some((o) => o.value === val)) {
+          this.sortBy = val as SortValue
+        }
+      },
+      immediate: true
     }
   },
 
@@ -375,9 +536,8 @@ export default defineComponent({
     debouncedSearch: function () {
       this.debouncedSearchFunction()
     },
+
     search: async function () {
-      // TODO#410 Because of the debounced search, this is super aggressive and will send the user to the variant search page as they are
-      // typing. I'm not sure that is the best user experience, but it seems unlikely people will actually be typing an HGVS string.
       if (routeToVariantSearchIfVariantIsSearchable(this.searchText)) {
         return
       }
@@ -396,107 +556,104 @@ export default defineComponent({
             ? {'publication-database': this.filterPublicationDatabases}
             : {}),
           ...(this.filterPublicationJournals.length > 0 ? {'publication-journal': this.filterPublicationJournals} : {}),
-          ...(this.filterKeywords.length > 0 ? {keywords: this.filterKeywords} : {})
+          ...(this.filterKeywords.length > 0 ? {keywords: this.filterKeywords} : {}),
+          ...(this.sortBy !== 'recent' ? {sort: this.sortBy} : {})
         }
       })
       this.loading = true
       await this.fetchSearchResults()
       this.loading = false
     },
+
     fetchSearchResults: async function () {
+      this.searchAbortController?.abort()
+      const controller = new AbortController()
+      this.searchAbortController = controller
       try {
-        const requestParams: SearchParams = {
-          text: this.searchText || undefined,
-          targets: this.filterTargetNames.length > 0 ? this.filterTargetNames : undefined,
-          targetOrganismNames: this.filterTargetOrganismNames.length > 0 ? this.filterTargetOrganismNames : undefined,
-          targetAccessions: this.filterTargetAccession.length > 0 ? this.filterTargetAccession : undefined,
-          targetTypes: this.filterTargetTypes.length > 0 ? this.filterTargetTypes : undefined,
-          authors: this.filterPublicationAuthors.length > 0 ? this.filterPublicationAuthors : undefined,
-          databases: this.filterPublicationDatabases.length > 0 ? this.filterPublicationDatabases : undefined,
-          journals: this.filterPublicationJournals.length > 0 ? this.filterPublicationJournals : undefined,
-          keywords: this.filterKeywords.length > 0 ? this.filterKeywords : undefined,
+        const requestParams = {
+          ...buildSearchParams(this),
           includeExperimentScoreSetUrnsAndCount: false,
-          limit: 100,
+          limit: SEARCH_RESULT_LIMIT,
+          published: true
         }
-        const response = await axios.post(`${config.apiBaseUrl}/score-sets/search`, requestParams, {
-          headers: {
-            accept: 'application/json'
-          }
-        })
-        // TODO (#130) catch errors in response
-        const {scoreSets, numScoreSets} = response.data || {scoreSets: [], numScoreSets: 0}
+        const {scoreSets, numScoreSets} = await searchScoreSets(requestParams, controller.signal)
         this.scoreSets = scoreSets
         this.numTotalSearchResults = numScoreSets
-
-        // reset published score sets search results when using search bar
-        this.publishedScoreSets = this.scoreSets.filter((scoreSet) => !!scoreSet.publishedDate)
+        this.visibleCount = 25
 
         this.$nextTick(() => this.fetchFilterOptions())
       } catch (err) {
-        console.log(`Error while loading search results")`, err)
+        if (err instanceof DOMException && err.name === 'AbortError') return
+        console.error('Error while loading search results', err)
       }
     },
-    fetchFilterOptions: async function () {
-      try {
-        const requestParams: SearchParams = {
-          text: this.searchText || undefined,
-          targets: this.filterTargetNames.length > 0 ? this.filterTargetNames : undefined,
-          targetOrganismNames: this.filterTargetOrganismNames.length > 0 ? this.filterTargetOrganismNames : undefined,
-          targetAccessions: this.filterTargetAccession.length > 0 ? this.filterTargetAccession : undefined,
-          targetTypes: this.filterTargetTypes.length > 0 ? this.filterTargetTypes : undefined,
-          authors: this.filterPublicationAuthors.length > 0 ? this.filterPublicationAuthors : undefined,
-          databases: this.filterPublicationDatabases.length > 0 ? this.filterPublicationDatabases : undefined,
-          journals: this.filterPublicationJournals.length > 0 ? this.filterPublicationJournals : undefined,
-          keywords: this.filterKeywords.length > 0 ? this.filterKeywords : undefined
-        }
-        const response = await axios.post(`${config.apiBaseUrl}/score-sets/search/filter-options`, requestParams, {
-          headers: {
-            accept: 'application/json'
-          }
-        })
-        // TODO (#130) catch errors in response
-        const {
-          targetAccessions,
-          targetGeneCategories,
-          targetGeneNames,
-          targetOrganismNames,
-          publicationAuthorNames,
-          publicationDbNames,
-          publicationJournals
-        } = response.data
 
-        this.targetAccessionFilterOptions = (targetAccessions || []).map((option) => ({
+    fetchFilterOptions: async function () {
+      this.filterAbortController?.abort()
+      const controller = new AbortController()
+      this.filterAbortController = controller
+      this.filtersLoading = true
+      try {
+        const requestParams = buildSearchParams(this)
+        const data: ScoreSetsSearchFilterOptionsResponse = await getSearchFilterOptions(
+          requestParams,
+          controller.signal
+        )
+
+        this.targetAccessionFilterOptions = (data.targetAccessions || []).map((option) => ({
           value: option.value,
           badge: option.count
         }))
-        this.targetNameFilterOptions = (targetGeneNames || []).map((option) => ({
+        this.targetNameFilterOptions = (data.targetGeneNames || []).map((option) => ({
           value: option.value,
           badge: option.count
         }))
-        this.targetOrganismFilterOptions = (targetOrganismNames || []).map((option) => ({
+        this.targetOrganismFilterOptions = (data.targetOrganismNames || []).map((option) => ({
           value: option.value,
           badge: option.count
         }))
-        this.targetTypeFilterOptions = (targetGeneCategories || []).map((option) => ({
+        this.targetTypeFilterOptions = (data.targetGeneCategories || []).map((option) => ({
           value: option.value,
           badge: option.count
         }))
-        this.publicationAuthorFilterOptions = (publicationAuthorNames || []).map((option) => ({
+        this.publicationAuthorFilterOptions = (data.publicationAuthorNames || []).map((option) => ({
           value: option.value,
           badge: option.count
         }))
-        this.publicationDatabaseFilterOptions = (publicationDbNames || []).map((option) => ({
+        this.publicationDatabaseFilterOptions = (data.publicationDbNames || []).map((option) => ({
           value: option.value,
           badge: option.count
         }))
-        this.publicationJournalFilterOptions = (publicationJournals || []).map((option) => ({
+        this.publicationJournalFilterOptions = (data.publicationJournals || []).map((option) => ({
           value: option.value,
           badge: option.count
         }))
       } catch (err) {
-        console.log(`Error while loading filter options")`, err)
+        if (err instanceof DOMException && err.name === 'AbortError') return
+        console.error('Error while loading filter options', err)
+      } finally {
+        this.filtersLoading = false
       }
     },
+
+    removeFilter(key: string, value: string) {
+      const filterArrays: Record<string, string[]> = {
+        filterTargetNames: this.filterTargetNames,
+        filterTargetOrganismNames: this.filterTargetOrganismNames,
+        filterTargetTypes: this.filterTargetTypes,
+        filterTargetAccession: this.filterTargetAccession,
+        filterPublicationAuthors: this.filterPublicationAuthors,
+        filterPublicationDatabases: this.filterPublicationDatabases,
+        filterPublicationJournals: this.filterPublicationJournals
+      }
+      const arr = filterArrays[key]
+      if (!arr) return
+      const idx = arr.indexOf(value)
+      if (idx !== -1) {
+        arr.splice(idx, 1)
+      }
+    },
+
     clear: function () {
       this.searchText = null
       this.filterTargetNames = []
@@ -513,81 +670,20 @@ export default defineComponent({
 </script>
 
 <style scoped>
-/* Layout */
-
-.mavedb-search-view {
-  display: flex;
-  flex-direction: column;
-  position: relative;
-  height: 100%;
+.fade-enter-active,
+.fade-leave-active {
+  transition: opacity 0.2s ease;
 }
-
-.mavedb-search-header {
-  flex: 0 0 auto;
-  text-align: center;
+.fade-enter-from,
+.fade-leave-to {
+  opacity: 0;
 }
-
-.mavedb-search-header h1 {
-  font-size: 20px;
-  text-align: center;
+.slide-left-enter-active,
+.slide-left-leave-active {
+  transition: transform 0.25s ease;
 }
-
-.mavedb-search-form {
-  flex: 0 0 auto;
-  padding: 10px 0;
-  text-align: center;
-}
-
-.mavedb-search-tabs {
-  flex: 0 0 auto;
-  padding: 10px 0;
-  text-align: center;
-}
-
-.mavedb-search-filters {
-  display: flex;
-  flex-direction: row;
-  justify-content: space-evenly;
-  max-width: 1000px;
-  margin: 10px auto;
-}
-
-.mavedb-search-filter-option-picker {
-  max-width: 300px;
-  width: 24%;
-  border: 1px solid rgba(0, 0, 0, 0.12) !important;
-}
-
-.mavedb-search-filter-option-picker:deep(.p-listbox-option) > div {
-  width: 100%;
-}
-.mavedb-organism-picker:deep(.p-listbox-item) {
-  font-style: italic;
-}
-.mavedb-organism-picker:deep(.p-listbox-item .p-badge) {
-  font-style: normal;
-}
-
-.mavedb-search-clear-button {
-  position: absolute;
-  top: 12px;
-  right: 8px;
-  margin: 0;
-  padding: 0;
-}
-
-/* Placing custom content to the right of a TabView's tabs */
-
-.mavedb-search-tab-view-container {
-  position: relative;
-}
-
-.mavedb-search-tab-view-container .mavedb-search-tab-view-tabs-right {
-  position: absolute;
-  top: 0;
-  right: 0;
-  margin: 10px 0;
-  padding: 0.75rem 1.25rem;
-  line-height: 1;
+.slide-left-enter-from,
+.slide-left-leave-to {
+  transform: translateX(-100%);
 }
 </style>

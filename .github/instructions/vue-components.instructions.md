@@ -63,7 +63,7 @@ Top-level route components. Named with suffixes: `*View`, `*Screen`, `*Creator`,
 
 ### Common Components (`src/components/common/`)
 
-Reusable UI primitives: `EntityLink`, `FlexDataTable`, `PageLoading`, `SelectList`, etc.
+Reusable UI primitives: `EntityLink`, `FlexDataTable`, `PageLoading`, `MvSelectList`, `MvCollapsible`, `MvLoader`, `MvScoreSetRow`, `MvSearchFilters`, etc.
 
 ### Layout Components (`src/components/layout/`)
 

@@ -210,6 +210,7 @@ import _ from 'lodash'
 import {defineComponent, PropType} from 'vue'
 
 import {firstAuthorLastName} from '@/lib/score-sets'
+import {getTargetGeneName} from '@/lib/target-genes'
 import {shortCitationForPublication} from '@/lib/publication'
 import type {components} from '@/schema/openapi'
 
@@ -255,14 +256,13 @@ export default defineComponent({
     },
 
     distinctGenesForTargets: function () {
-      // empty when no target genes have mappedHgncName
-      const geneNames = this.scoreSet.targetGenes?.map((tg) => tg.mappedHgncName) || []
+      const geneNames = this.scoreSet.targetGenes?.map((tg) => getTargetGeneName(tg)) || []
       return _.uniq(geneNames.filter((name) => !_.isEmpty(name))) as string[]
     },
 
     geneTextForScoreSet: function () {
       if (this.distinctGenesForTargets.length == 0) {
-        return this.scoreSet.targetGenes[0]?.name || null
+        return null
       }
 
       return this.distinctGenesForTargets.length == 1 ? this.distinctGenesForTargets[0] : 'Multiple genes'

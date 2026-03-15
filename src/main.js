@@ -58,8 +58,22 @@ const head = createHead({
   ]
 })
 
+// ── PrimeVue Theme Palettes ─────────────────────────────────────
+// These palette() calls generate full shade ramps (50–950) from a
+// single base color. The base colors MUST match the corresponding
+// CSS custom properties in app.css. See the sync table there.
+//
+//   palette source      CSS token             Role
+//   '#78b793'           --color-sage          primary / success
+//   '#f8971d'           --color-orange-cta    warn / CTA
+//   '#D05353'           --color-danger        danger / destructive
+//   '#4A80C4'           --color-info          info / informational
+//   '#7E5DAF'           --color-help          help / calibration
 const sagePalette = palette('#78b793')
 const orangePalette = palette('#f8971d')
+const dangerPalette = palette('#D05353')
+const infoPalette = palette('#4A80C4')
+const helpPalette = palette('#7E5DAF')
 
 const MaveDbTheme = definePreset(Aura, {
     semantic: {
@@ -96,10 +110,34 @@ const MaveDbTheme = definePreset(Aura, {
         },
     },
     components: {
+        togglebutton: {
+          colorScheme: {
+            light: {
+              root: {
+                background: '{surface.100}',
+                checkedBackground: sagePalette[500],
+                checkedBorderColor: sagePalette[500],
+                checkedColor: '#ffffff',
+                hoverBackground: '{surface.200}',
+                hoverColor: '{surface.800}',
+                borderColor: '{surface.100}',
+                color: '{surface.600}',
+              },
+              content: {
+                checkedBackground: sagePalette[500],
+                checkedShadow: 'none',
+              },
+              icon: {
+                checkedColor: '#ffffff',
+              },
+            }
+          }
+        },
         button: {
           colorScheme: {
             light: {
               root: {
+                // Warn — amber/orange for CTA and cancel actions
                 warn: {
                   background: orangePalette[400],
                   borderColor: orangePalette[400],
@@ -111,6 +149,55 @@ const MaveDbTheme = definePreset(Aura, {
                   activeBackground: orangePalette[600],
                   activeBorderColor: orangePalette[600],
                 },
+                // Danger — softer red for destructive actions
+                danger: {
+                  background: dangerPalette[400],
+                  borderColor: dangerPalette[400],
+                  color: '#fff',
+                  hoverColor: '#fff',
+                  hoverBackground: dangerPalette[500],
+                  hoverBorderColor: dangerPalette[500],
+                  activeColor: '#fff',
+                  activeBackground: dangerPalette[600],
+                  activeBorderColor: dangerPalette[600],
+                },
+                // Success — sage green for positive/save actions
+                success: {
+                  background: sagePalette[400],
+                  borderColor: sagePalette[400],
+                  color: '#fff',
+                  hoverColor: '#fff',
+                  hoverBackground: sagePalette[500],
+                  hoverBorderColor: sagePalette[500],
+                  activeColor: '#fff',
+                  activeBackground: sagePalette[600],
+                  activeBorderColor: sagePalette[600],
+                },
+                // Info — dusty blue for informational actions
+                info: {
+                  background: infoPalette[400],
+                  borderColor: infoPalette[400],
+                  color: '#fff',
+                  hoverColor: '#fff',
+                  hoverBackground: infoPalette[500],
+                  hoverBorderColor: infoPalette[500],
+                  activeColor: '#fff',
+                  activeBackground: infoPalette[600],
+                  activeBorderColor: infoPalette[600],
+                },
+                // Help — soft purple for calibration/contextual help
+                help: {
+                  background: helpPalette[400],
+                  borderColor: helpPalette[400],
+                  color: '#fff',
+                  hoverColor: '#fff',
+                  hoverBackground: helpPalette[500],
+                  hoverBorderColor: helpPalette[500],
+                  activeColor: '#fff',
+                  activeBackground: helpPalette[600],
+                  activeBorderColor: helpPalette[600],
+                },
+                // Secondary — neutral surface tones
                 secondary: {
                   background: '{surface.100}',
                   borderColor: '{surface.300}',

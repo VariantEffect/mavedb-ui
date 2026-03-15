@@ -17,7 +17,7 @@ import _ from 'lodash'
 
 import {getTargetGeneName, textForTargetGeneCategory} from '@/lib/target-genes'
 import useFormatters from '@/composition/formatters'
-import FlexDataTable from '@/components/common/FlexDataTable'
+import FlexDataTable from '@/components/common/FlexDataTable.vue'
 
 export default {
   name: 'ScoreSetTable',
@@ -70,7 +70,7 @@ export default {
               const url = this.$router.resolve({
                 path: `/score-sets/${urn}`
               }).href
-              return '<a href="' + url + '">' + urn + '</a>' // TODO Escape the text.
+              return $('<a/>').attr('href', url).text(urn).prop('outerHTML')
             }
           },
           {data: 'shortDescription', title: 'Description', width: '40%'},
@@ -111,11 +111,11 @@ export default {
               path: `/experiments/${experimentUrn}`
             }).href
 
-            const link = '<a href="' + url + '">' + experimentUrnDisplay + '</a>'
+            const $link = $('<a/>').attr('href', url).text(experimentUrnDisplay)
 
             return $('<tr/>')
-              .append('<td colSpan="1">' + link + '</td>')
-              .append('<td colSpan="5">' + experimentDescription + '</td>') // increment if adding columns
+              .append($('<td/>').attr('colSpan', 1).append($link))
+              .append($('<td/>').attr('colSpan', 5).text(experimentDescription || '')) // increment if adding columns
           }
         },
         searching: false

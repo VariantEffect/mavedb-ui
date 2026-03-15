@@ -9,15 +9,19 @@ The project uses two complementary styling systems:
 
 ## Design Tokens
 
-Design tokens are defined in `src/assets/app.css` inside a `@theme` block and are available as both CSS custom properties and Tailwind utility classes:
+Design tokens are defined in `src/assets/app.css` inside a `@theme` block and are available as both CSS custom properties and Tailwind utility classes. The brand color palettes are also generated as PrimeVue palettes in `src/main.js` — see the sync table in `app.css` for the mapping.
+
+Key tokens:
 
 | Token | Value | Usage |
 |-------|-------|-------|
-| `--color-sage` | `#78b793` | Primary brand color |
+| `--color-sage` | `#78b793` | Primary brand color (PrimeVue: `sagePalette`) |
 | `--color-sage-dark` | `#5a9375` | Hover state for sage |
-| `--color-sage-light` | `#c8e4c6` | Light green backgrounds |
 | `--color-mint` | `#a1d8c8` | Accent backgrounds |
-| `--color-orange-cta` | `#f8971d` | Call-to-action buttons |
+| `--color-orange-cta` | `#f8971d` | Warn/CTA actions (PrimeVue: `orangePalette`) |
+| `--color-danger` | `#D05353` | Destructive actions (PrimeVue: `dangerPalette`) |
+| `--color-info` | `#4A80C4` | Informational actions (PrimeVue: `infoPalette`) |
+| `--color-help` | `#7E5DAF` | Contextual help (PrimeVue: `helpPalette`) |
 | `--color-text-primary` | `#333` | Body text |
 | `--color-text-muted` | `#767676` | Secondary/muted text |
 | `--color-border` | `#dee2e6` | Default borders |
@@ -25,22 +29,29 @@ Design tokens are defined in `src/assets/app.css` inside a `@theme` block and ar
 
 ## Theme Configuration
 
-The PrimeVue theme is customized in `src/main.js`:
+The PrimeVue theme is customized in `src/main.js` using `definePreset(Aura, ...)`:
 
-- **Primary color**: Dark blue (`#3f51b5`) palette applied across all primary shades (50–950).
-- **Button severities**:
-  - `primary` — Dark blue (default)
-  - `secondary` — Pink (`{pink.400}` through `{pink.600}`)
-  - `warn` — Yellow (`{yellow.400}` through `{yellow.600}`) with dark text
+- **Primary color**: Sage (`#78b793`) palette applied across all primary shades (50–950).
+- **Button severities** (all themed via the preset):
+  - `primary` — Sage green (default)
+  - `secondary` — Surface grays
+  - `success` — Sage green (same as primary, for save/confirm)
+  - `info` — Blue (`#4A80C4`)
+  - `warn` — Orange (`#f8971d`) with dark text
+  - `danger` — Red (`#D05353`)
+  - `help` — Purple (`#7E5DAF`)
 - **Dark mode selector**: `.dark-mode` (not currently active)
 - **CSS layer**: Disabled (`cssLayer: false`)
+
+### Button styling
+
+All buttons must use PrimeVue `<Button>` with the `severity` prop for color. Do not use custom CSS button classes — use PrimeVue's severity system exclusively. Combine with `size="small"`, `text`, `outlined`, or `rounded` props for variants.
 
 ## Global Stylesheets
 
 Located in `src/assets/`:
 
 - `app.css` — Tailwind import, design tokens, base styles, and global PrimeVue overrides
-- `forms.css` — Form-specific styling
 - `layout.css` — Legacy layout styles (screen title bars, help tooltips, etc.)
 
 ## Fonts
@@ -52,7 +63,22 @@ Located in `src/assets/`:
 
 ### Page layout
 
-Screen components wrap their content in `<MvLayout>` which provides consistent page chrome (nav bar, footer, content area with 1200px max-width).
+Screen components wrap their content in `<MvLayout>` which provides consistent page chrome (nav bar, footer, content area with 1200px max-width). The `#header` slot is used for page-level title bars.
+
+### Creator pages (wizard layout)
+
+Creator pages use PrimeVue `Stepper` with a two-column wizard layout:
+- **Container**: `.wizard-form` with gray background (`#f7f7f7`) and a white content column overlay (`.wizard-form-content-bg`, 676px wide)
+- **Rows**: `.wizard-row` (flex) containing `.wizard-help` (480px, help text) and `.wizard-field` (flex: 1, white background, form inputs)
+- Form section components support `wizardMode` prop to render their fields inside this layout
+- Step navigation controls appear below the wizard form on a gray background
+
+### Editor pages (card layout)
+
+Editor pages use stacked cards at `max-w-[1000px]`:
+- **Page header**: MvLayout `#header` slot with title, URN, and action buttons
+- **Cards**: `.editor-card` — white background, rounded border, 22px/24px padding, with a 3px gradient top accent (sage → mint → yellow → orange)
+- Form section components render in flat mode (no `wizardMode` prop) inside cards
 
 ### Spacing and utilities
 

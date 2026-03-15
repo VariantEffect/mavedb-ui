@@ -74,7 +74,8 @@ import Dialog from 'primevue/dialog'
 import Select from 'primevue/select'
 
 import config from '@/config'
-import CollectionCreator from '@/components/CollectionCreator'
+import {getErrorResponse} from '@/api/mavedb'
+import CollectionCreator from '@/components/CollectionCreator.vue'
 import useAuth from '@/composition/auth'
 import EmailPrompt from '@/components/common/EmailPrompt.vue'
 
@@ -168,7 +169,7 @@ export default {
         response = await axios.get(`${config.apiBaseUrl}/users/me/collections`)
       } catch (error) {
         console.log(error)
-        response = error.response || {status: 500}
+        response = getErrorResponse(error)
       }
 
       if (response.status == 200) {
@@ -194,7 +195,7 @@ export default {
         })
       } catch (error) {
         console.log(error)
-        response = error.response || {status: 500}
+        response = getErrorResponse(error)
       }
 
       if (response.status == 200) {
@@ -215,7 +216,7 @@ export default {
           experimentUrn
         })
       } catch (error) {
-        response = error.response || {status: 500}
+        response = getErrorResponse(error)
       }
 
       if (response.status == 200) {

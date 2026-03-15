@@ -44,14 +44,44 @@ This means components do not need to manually attach auth headers; they are inje
 
 Resource types include: experiment sets, experiments, score sets, collections, controlled keywords, users, access keys, and more.
 
-## Data Fetching Patterns
+## API Modules (`src/api/mavedb/`)
 
-### 1. Composition-based (primary pattern)
+The preferred pattern for API calls is the `api/mavedb/` module layer. Each module exports typed async functions that wrap Axios calls for a specific resource:
 
-The `useItem()` composable from `src/composition/item.js` manages loading a single resource:
+```
+api/mavedb/
+├── index.ts          # Re-exports + shared helpers (lookupOrcidUser, etc.)
+├── calibrations.ts   # Score calibration CRUD
+├── experiments.ts    # Experiment create/update
+├── orcid.ts          # ORCID user lookup
+├── permissions.ts    # Permission checks
+├── collections.ts    # Collection CRUD
+├── variants.ts       # Variant data fetching
+└── search.ts         # Score set search
+```
+
+Usage:
 
 ```ts
-import useItem from '@/composition/item'
+import {updateExperiment} from '@/api/mavedb'
+
+const response = await updateExperiment(urn, editedItem)
+```
+
+New API interactions should be added as functions in the appropriate module (or a new module if the resource doesn't have one yet). Components should import from `@/api/mavedb` rather than making inline Axios calls.
+
+## Data Fetching Patterns
+
+### 1. API modules (preferred for mutations)
+
+Use `src/api/mavedb/` modules for create/update/delete operations and targeted fetches. See above.
+
+### 2. Composition-based (for single-entity loading)
+
+The `useItem()` composable from `src/composition/item.ts` manages loading a single resource:
+
+```ts
+import useItem from '@/composition/item.ts'
 
 // In a component's setup function:
 setup: (props) => useItem({itemTypeName: 'scoreSet'})
@@ -61,11 +91,26 @@ setup: (props) => useItem({itemTypeName: 'scoreSet'})
 // - setItemId(id): triggers fetching by ID/URN
 ```
 
-Similarly, `useItems()` from `src/composition/items.js` manages loading collections.
+Similarly, `useItems()` from `src/composition/items.js` manages loading collections (used in SettingsScreen for access keys).
 
 Both composables dynamically register Vuex modules with UUID namespaces for isolated state.
 
-### 2. Direct Axios calls
+### 3. useAutocomplete (preferred for search/autocomplete)
+
+The `useAutocomplete()` composable in `src/composables/use-autocomplete.ts` is a lightweight alternative to `useItems()` for autocomplete and search patterns. It makes direct Axios calls without Vuex:
+
+```ts
+import {useAutocomplete} from '@/composables/use-autocomplete'
+
+const pubSearch = useAutocomplete('/publication-identifiers/search', {method: 'POST'})
+// pubSearch.search(query) — triggers fetch
+// pubSearch.items — reactive results
+// pubSearch.loading — loading state
+```
+
+This is the standard pattern for all form page autocomplete fields.
+
+### 4. Direct Axios calls
 
 For custom or one-off API interactions, components use Axios directly:
 
@@ -78,9 +123,21 @@ const response = await axios.get(`${config.apiBaseUrl}/score-sets/${urn}`)
 
 Auth headers are automatically included by the interceptor.
 
-### 3. REST client (rest-client-vue)
+### 5. REST client (rest-client-vue)
 
 The `rest-client-vue` wrapper provides reactive REST collection management with built-in caching and pagination. Used in some components for list/search scenarios.
+
+## Form Helpers (`src/lib/`)
+
+- `form-helpers.ts` — save-time normalization (DOIs, raw reads, contributors, publications), autocomplete utilities, keyword payload building, markdown rendering
+- `form-validation.ts` — `parseApiValidationErrors()` for converting FastAPI validation error responses into field-keyed error maps
+
+## Data Modules (`src/data/`)
+
+Static data and content extracted from components:
+
+- `keywords.ts` — keyword definitions and groupings for the controlled vocabulary system
+- `field-descriptions.ts` — wizard help text and editor field hints (centralized copy)
 
 ## OpenAPI Type Generation
 

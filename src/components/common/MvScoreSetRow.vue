@@ -65,25 +65,9 @@
 <script lang="ts">
 import {defineComponent, type PropType} from 'vue'
 import {getTargetGeneName} from '@/lib/target-genes'
+import {components} from '@/schema/openapi'
 
-interface ScoreSetData {
-  urn: string
-  title: string
-  shortDescription?: string
-  numVariants?: number
-  publishedDate?: string | null
-  targetGenes?: {
-    name: string
-    mappedHgncName?: string | null
-    targetAccession?: {accession?: string} | null
-    targetSequence?: {
-      sequenceType?: string | null
-      taxonomy?: {
-        organismName?: string | null
-      } | null
-    } | null
-  }[]
-}
+type ScoreSet = components['schemas']['ShortScoreSet']
 
 const MAX_TAGS = 3
 
@@ -92,7 +76,7 @@ export default defineComponent({
 
   props: {
     scoreSet: {
-      type: Object as PropType<ScoreSetData>,
+      type: Object as PropType<ScoreSet>,
       required: true
     },
     showDescription: {

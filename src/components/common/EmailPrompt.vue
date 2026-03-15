@@ -1,34 +1,44 @@
 <template>
-  <Dialog v-model:visible="visible" :base-z-index="3000" :closable="false" :header="title" modal :style="{width: '25rem'}">
+  <PDialog
+    v-model:visible="visible"
+    :base-z-index="3000"
+    :closable="false"
+    :header="title"
+    modal
+    :style="{width: '25rem'}"
+  >
     <span class="p-text-secondary block mb-5">{{ dialog }}</span>
     <FloatLabel class="mb-2" variant="on">
       <InputText :id="scopedId('email-input')" v-model:model-value="email" class="w-full" />
       <label :for="scopedId('email-input')">Email</label>
     </FloatLabel>
     <div>
-      <span v-if="emailValidationError" class="mave-field-error">{{ emailValidationError }}</span>
+      <span v-if="emailValidationError" class="text-sm text-danger">{{ emailValidationError }}</span>
     </div>
     <div class="flex justify-content-end gap-2">
-      <Button label="Not now" severity="secondary" type="button" @click="ignoreEmail" />
-      <Button label="Add email" type="button" @click="saveEmail" />
+      <PButton label="Not now" severity="secondary" type="button" @click="ignoreEmail" />
+      <PButton label="Add email" type="button" @click="saveEmail" />
     </div>
-  </Dialog>
+  </PDialog>
 </template>
 
-<script>
-import axios from 'axios'
+<script lang="ts">
+import axios, {isAxiosError} from 'axios'
 import Button from 'primevue/button'
 import Dialog from 'primevue/dialog'
 import FloatLabel from 'primevue/floatlabel'
 import InputText from 'primevue/inputtext'
 
 import useScopedId from '@/composables/scoped-id'
-import useItem from '@/composition/item'
+import useItem from '@/composition/item.ts'
 import config from '@/config'
 import {ref} from 'vue'
+import {components} from '@/schema/openapi'
+
+type User = components['schemas']['CurrentUser']
 
 export default {
-  components: {Button, Dialog, FloatLabel, InputText},
+  components: {PButton: Button, PDialog: Dialog, FloatLabel, InputText},
 
   props: {
     title: {
@@ -49,7 +59,7 @@ export default {
   },
 
   setup: () => {
-    const {item: user, setItemId: setUserId, saveItem: saveUser} = useItem({itemTypeName: 'me'})
+    const {item: user, setItemId: setUserId, saveItem: saveUser} = useItem<User>({itemTypeName: 'me'})
     const visible = ref(false)
 
     return {
@@ -63,20 +73,20 @@ export default {
 
   data: function () {
     return {
-      email: null,
-      emailValidationError: null
+      email: null as string | null,
+      emailValidationError: null as string | null
     }
   },
 
   watch: {
     user: {
       handler: function () {
-        this.email = this.user?.email
+        this.email = this.user?.email ?? null
 
         if (this.$props.isFirstLoginPrompt) {
-          this.visible = this.user.isFirstLogin && this.user.email == null
+          this.visible = (this.user?.isFirstLogin ?? false) && this.user?.email == null
         } else {
-          this.visible = this.user.email == null
+          this.visible = this.user?.email == null
         }
       }
     }
@@ -92,6 +102,7 @@ export default {
 
       if (!email) {
         this.emailValidationError = 'Email cannot be empty.'
+        return
       }
 
       if (this.user && email && email != this.user.email) {
@@ -103,8 +114,8 @@ export default {
               email
             }
           })
-        } catch (error) {
-          errorResponse = error.response
+        } catch (error: unknown) {
+          errorResponse = isAxiosError(error) ? (error.response ?? {status: 500}) : {status: 500}
         }
 
         if (errorResponse) {
@@ -144,5 +155,3 @@ export default {
   }
 }
 </script>
-
-<style scoped src="../../assets/forms.css"></style>

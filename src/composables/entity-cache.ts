@@ -1,4 +1,4 @@
-import {ref, watch} from 'vue'
+import {ref, watch, type Ref} from 'vue'
 import axios from 'axios'
 import config from '@/config'
 
@@ -16,7 +16,40 @@ interface EntityCache {
 const cache = ref<EntityCache>({})
 const CACHE_TTL = 5 * 60 * 1000 // 5 minutes
 
-export function useEntityCache() {
+/**
+ * Composable for caching API entity fetches with a shared, TTL-based store.
+ *
+ * Deduplicates concurrent requests for the same URN, caches results for 5
+ * minutes, and provides invalidation and force-refresh methods. The cache is
+ * module-level (shared across all component instances).
+ *
+ * Used by: ExperimentSetView.vue, ExperimentView.vue, ScoreSetView.vue
+ *
+ * @example
+ * ```ts
+ * const { getEntity, invalidateCache } = useEntityCache()
+ * const scoreSet = await getEntity('scoreSet', 'urn:mavedb:00000001-a-1')
+ * ```
+ */
+/**
+ * Return type for {@link useEntityCache}.
+ *
+ * Provides methods for fetching, caching, invalidating, and refreshing
+ * API entities (score sets, experiments, experiment sets) with automatic
+ * request deduplication and a 5-minute TTL.
+ */
+export interface UseEntityCacheReturn {
+  /** Fetch an entity by type and URN, returning a cached result when available. */
+  getEntity: (entityType: string, urn: string, forceRefresh?: boolean) => Promise<Record<string, unknown> | null>
+  /** Remove one or all entries from the cache. Pass no argument to clear everything. */
+  invalidateCache: (urn?: string) => void
+  /** Force-refresh a single entity, bypassing the cache TTL. */
+  refreshEntity: (entityType: string, urn: string) => Promise<Record<string, unknown> | null>
+  /** The raw reactive cache store (module-level, shared across instances). */
+  cache: Ref<EntityCache>
+}
+
+export function useEntityCache(): UseEntityCacheReturn {
   const isCacheValid = (entry: CacheEntry): boolean => {
     return Date.now() - entry.timestamp < CACHE_TTL
   }
@@ -27,14 +60,30 @@ export function useEntityCache() {
       return cache.value[urn].data
     }
 
-    // Return if already loading
+    // If another caller is already fetching this URN, wait for that request
+    // instead of starting a duplicate.
     if (cache.value[urn]?.loading) {
-      // Wait for the existing request to complete
       return new Promise((resolve, reject) => {
+        // Guard against indefinite hangs: if the original request never
+        // settles (e.g. network hang), reject after 30 seconds.
+        const timeout = setTimeout(() => {
+          unwatch()
+          reject(new Error(`Timed out waiting for ${urn}`))
+        }, 30_000)
+
         const unwatch = watch(
           () => cache.value[urn],
           (value) => {
+            // The cache entry can be removed via invalidateCache() while we
+            // are waiting. Without this guard, `value.loading` would throw.
+            if (!value) {
+              clearTimeout(timeout)
+              unwatch()
+              reject(new Error(`Cache entry for ${urn} was removed`))
+              return
+            }
             if (!value.loading) {
+              clearTimeout(timeout)
               unwatch()
               if (value.error) {
                 reject(value.error)

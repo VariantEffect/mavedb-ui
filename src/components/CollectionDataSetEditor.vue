@@ -92,8 +92,9 @@ import DataTable from 'primevue/datatable'
 import Dialog from 'primevue/dialog'
 import Message from 'primevue/message'
 
-import useItem from '@/composition/item'
+import useItem from '@/composition/item.ts'
 import config from '@/config'
+import {getErrorResponse} from '@/api/mavedb'
 import EmailPrompt from '@/components/common/EmailPrompt.vue'
 
 const INVALID_URN_MESSAGES_DISPLAY_LIMIT = 3
@@ -269,8 +270,8 @@ export default {
           try {
             response = await axios.get(`${config.apiBaseUrl}/${this.restCollectionParent}/${urn}`)
           } catch (e) {
-            response = e.response || {status: 500}
-            const errorDetail = e.response?.data?.detail || e.message || 'Invalid URN'
+            response = getErrorResponse(e)
+            const errorDetail = response.data?.detail || (e instanceof Error ? e.message : 'Invalid URN')
             const errorMessage = `${urn}: ${errorDetail}`
             this.validationErrors.push(errorMessage)
             invalidUrnMessages.push(errorMessage)

@@ -35,7 +35,7 @@
 import Button from 'primevue/button'
 import Column from 'primevue/column'
 import DataTable from 'primevue/datatable'
-import EntityLink from '@/components/common/EntityLink'
+import EntityLink from '@/components/common/EntityLink.vue'
 
 export default {
   name: 'CollectionItemsTable',

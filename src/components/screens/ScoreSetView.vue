@@ -23,7 +23,7 @@
             @click="$router.push({path: `/score-sets/${item.urn}/calibrations`})"
           />
           <div v-if="userIsAuthenticated" class="mavedb-screen-title-controls">
-            <Button v-if="userIsAuthorized.addCalibration" size="small" @click="calibrationEditorVisible = true"
+            <Button v-if="userIsAuthorized.addCalibration" size="small" @click="openCalibrationEditor(item.urn)"
               >Add calibration</Button
             >
             <template v-if="!item.publishedDate">
@@ -52,7 +52,11 @@
               :suggestions="variantSearchSuggestions"
               :virtual-scroller-options="{itemSize: 50}"
               @complete="variantSearch"
-            />
+            >
+              <template #empty>
+                <div class="p-2.5 text-center text-sm text-text-muted">No matching variants found.</div>
+              </template>
+            </AutoComplete>
             <label :for="scopedId('variant-search')">Search for a variant in this score set</label>
             <Button
               aria-label="Clear"
@@ -372,29 +376,28 @@
     </Drawer>
   </div>
   <EmailPrompt
-    v-if="calibrationEditorVisible"
+    v-if="editorVisible"
     dialog="You must add an email address to your account to create calibrations. You can do so below, or on the 'Settings' page."
     :is-first-login-prompt="false"
   />
   <!-- Set z-index to ensure dialog appears above heatmap color legend -->
   <PrimeDialog
-    v-model:visible="calibrationEditorVisible"
+    v-model:visible="editorVisible"
     :base-z-index="2003"
     :close-on-escape="false"
-    header="Create New Calibration"
+    :header="editorDialogHeader"
     modal
     :style="{maxWidth: '90%', width: '75rem'}"
-    @hide="cancelCalibrationCreation"
+    @hide="closeCalibrationEditor"
   >
     <CalibrationEditor
-      :calibration-draft-ref="calibrationDraftRef"
-      :classes-draft-ref="calibrationDraftClassesFileRef"
-      :score-set-urn="item.urn"
-      :validation-errors="editorValidationErrors"
-      @canceled="cancelCalibrationCreation"
+      ref="calibrationEditorRef"
+      :score-set-urn="editingScoreSetUrn"
+      @canceled="closeCalibrationEditor"
+      @saved="onCalibrationSaved"
     />
     <template #footer>
-      <Button icon="pi pi-times" label="Close" @click="cancelCalibrationCreation" severity="secondary" />
+      <Button icon="pi pi-times" label="Close" severity="secondary" @click="closeCalibrationEditor" />
       <Button icon="pi pi-save" label="Save Changes" severity="success" @click="saveCreatedCalibration" />
     </template>
   </PrimeDialog>
@@ -403,7 +406,7 @@
 <script>
 import axios from 'axios'
 import _ from 'lodash'
-import {marked} from 'marked'
+import {markdownToHtml} from '@/lib/form-helpers'
 import Accordion from 'primevue/accordion'
 import AccordionPanel from 'primevue/accordionpanel'
 import AccordionHeader from 'primevue/accordionheader'
@@ -424,32 +427,33 @@ import {ref} from 'vue'
 import {mapState} from 'vuex'
 import {useHead} from '@unhead/vue'
 
-import AssayFactSheet from '@/components/AssayFactSheet'
-import CalibrationEditor from '../CalibrationEditor.vue'
+import AssayFactSheet from '@/components/AssayFactSheet.vue'
+import CalibrationEditor from '../forms/CalibrationEditor.vue'
 import EmailPrompt from '@/components/common/EmailPrompt.vue'
-import CollectionAdder from '@/components/CollectionAdder'
-import CollectionBadge from '@/components/CollectionBadge'
-import CalibrationTable from '@/components/CalibrationTable'
-import ScoreSetHeatmap from '@/components/ScoreSetHeatmap'
-import ScoreSetHistogram from '@/components/ScoreSetHistogram'
-import ScoreSetPreviewTable from '@/components/ScoreSetPreviewTable'
-import ScoreSetProcessingStatus from '@/components/ScoreSetProcessingStatus'
-import ScoreSetSecondaryMetadata from '@/components/ScoreSetSecondaryMetadata'
-import ScoreSetVisualizer from '@/components/ScoreSetVisualizer'
-import TargetGene from '@/components/TargetGene'
-import ItemNotFound from '@/components/common/ItemNotFound'
-import PageLoading from '@/components/common/PageLoading'
+import CollectionAdder from '@/components/CollectionAdder.vue'
+import CollectionBadge from '@/components/CollectionBadge.vue'
+import CalibrationTable from '@/components/CalibrationTable.vue'
+import ScoreSetHeatmap from '@/components/ScoreSetHeatmap.vue'
+import ScoreSetHistogram from '@/components/ScoreSetHistogram.vue'
+import ScoreSetPreviewTable from '@/components/ScoreSetPreviewTable.vue'
+import ScoreSetProcessingStatus from '@/components/ScoreSetProcessingStatus.vue'
+import ScoreSetSecondaryMetadata from '@/components/ScoreSetSecondaryMetadata.vue'
+import ScoreSetVisualizer from '@/components/ScoreSetVisualizer.vue'
+import TargetGene from '@/components/TargetGene.vue'
+import ItemNotFound from '@/components/common/ItemNotFound.vue'
+import PageLoading from '@/components/common/PageLoading.vue'
 import MvLayout from '@/components/layout/MvLayout.vue'
 import useScopedId from '@/composables/scoped-id'
 import useAuth from '@/composition/auth'
-import useItem from '@/composition/item'
+import useItem from '@/composition/item.ts'
 import useRemoteData from '@/composition/remote-data'
 import config from '@/config'
 import {preferredVariantLabel, variantNotNullOrNA} from '@/lib/mave-hgvs'
-import {saveCalibration} from '@/lib/calibrations'
+import {useCalibrationDialog} from '@/composables/use-calibration-dialog'
 import {getScoreSetShortName} from '@/lib/score-sets'
 import {parseScoresOrCounts} from '@/lib/scores'
 import {parseSimpleCodingVariants, translateSimpleCodingVariants} from '@/lib/variants'
+import {getErrorResponse} from '@/api/mavedb'
 
 export default {
   name: 'ScoreSetView',
@@ -502,20 +506,15 @@ export default {
     const {userIsAuthenticated} = useAuth()
     const scoresRemoteData = useRemoteData()
     const variantSearchSuggestions = ref([])
-    const calibrationDraftRef = ref({value: null})
-    const calibrationDraftClassesFileRef = ref({value: null})
-    const editorValidationErrors = ref({})
     const selectedCalibrations = ref([null, null])
 
     return {
       head,
       config: config,
       userIsAuthenticated,
-      calibrationDraftRef,
-      calibrationDraftClassesFileRef,
-      editorValidationErrors,
       selectedCalibrations,
 
+      ...useCalibrationDialog(),
       ...useItem({itemTypeName: 'scoreSet'}),
       ...useScopedId(),
       scoresData: scoresRemoteData.data,
@@ -536,7 +535,6 @@ export default {
     hasClinicalVariants: false,
     heatmapExists: false,
     selectedVariant: null,
-    calibrationEditorVisible: false,
     userIsAuthorized: {
       delete: false,
       publish: false,
@@ -826,7 +824,7 @@ export default {
             try {
               response = await axios.delete(`${config.apiBaseUrl}/score-sets/${this.item.urn}`, this.item)
             } catch (e) {
-              response = e.response || {status: 500}
+              response = getErrorResponse(e)
             }
 
             if (response.status == 200) {
@@ -854,9 +852,7 @@ export default {
         }
       })
     },
-    markdownToHtml: function (markdown) {
-      return marked(markdown)
-    },
+    markdownToHtml,
     get(...args) {
       return _.get(...args)
     },
@@ -879,7 +875,7 @@ export default {
               // make sure scroesets cannot be published twice API, but also remove the button on UI side
             }
           } catch (e) {
-            response = e.response || {status: 500}
+            response = getErrorResponse(e)
           }
 
           if (response.status == 200) {
@@ -918,7 +914,7 @@ export default {
           response = await axios.get(`${config.apiBaseUrl}/score-sets/${this.item.urn}/scores?drop_na_columns=true`)
         }
       } catch (e) {
-        response = e.response || {status: 500}
+        response = getErrorResponse(e)
       }
       if (response.status == 200) {
         const file = response.data
@@ -950,7 +946,7 @@ export default {
           response = await axios.get(`${config.apiBaseUrl}/score-sets/${this.item.urn}/mapped-variants`)
         }
       } catch (e) {
-        response = e.response || {status: 500}
+        response = getErrorResponse(e)
       }
       if (response.status == 200) {
         //convert object to Json.
@@ -1124,7 +1120,7 @@ export default {
           response = await axios.get(`${baseUrl}?${params.toString()}`)
         }
       } catch (e) {
-        response = e.response || {status: 500}
+        response = getErrorResponse(e)
       }
       if (response.status == 200) {
         const file = response.data
@@ -1216,22 +1212,16 @@ export default {
       }
       return frozen
     },
-    saveCreatedCalibration: async function () {
-      if (!this.calibrationDraftRef.value) return
+    async saveCreatedCalibration() {
+      const editor = this.$refs.calibrationEditorRef
+      if (!editor) return
 
-      const result = await saveCalibration({
-        draft: this.calibrationDraftRef.value,
-        classesFile: this.calibrationDraftClassesFileRef.value
-      })
+      const result = await editor.saveCalibration()
+      if (!result || result.success) return
 
-      if (result.success) {
-        const createdCalibration = result.data
-        this.$toast.add({severity: 'success', summary: 'Your calibration was successfully created.', life: 3000})
-        this.calibrationEditorVisible = false
-        this.calibrationDraftRef.value = null
-        await this.reloadItem()
-        this.selectedCalibrations = this.selectedCalibrations.map(() => createdCalibration.urn)
-      } else if (result.error === 'email_required') {
+      // Save succeeded — handled via @saved / onCalibrationSaved.
+      // Only error cases reach here.
+      if (result.error === 'email_required') {
         this.$toast.add({
           severity: 'error',
           summary: 'Email Required',
@@ -1240,7 +1230,12 @@ export default {
           life: 6000
         })
       } else if (result.error === 'validation') {
-        this.editorValidationErrors = result.validationErrors
+        const count = Object.keys(result.validationErrors).length
+        this.$toast.add({
+          severity: 'error',
+          summary: `Please fix ${count} validation ${count === 1 ? 'error' : 'errors'} before saving.`,
+          life: 5000
+        })
       } else if (result.error === 'generic') {
         this.$toast.add({
           severity: 'error',
@@ -1249,17 +1244,16 @@ export default {
         })
       }
     },
+    async onCalibrationSaved(calibrationData) {
+      this.$toast.add({severity: 'success', summary: 'Your calibration was successfully created.', life: 3000})
+      this.closeCalibrationEditor()
+      await this.reloadItem()
+      if (calibrationData?.urn) {
+        this.selectedCalibrations = this.selectedCalibrations.map(() => calibrationData.urn)
+      }
+    },
     showOptions: function () {
       this.optionsVisible = true
-    },
-    cancelCalibrationCreation: function () {
-      // Close the editor dialog
-      this.calibrationEditorVisible = false
-      // Reset draft
-      this.calibrationDraftRef.value = null
-      this.calibrationDraftClassesFileRef.value = null
-      // Reset validation errors
-      this.editorValidationErrors = {}
     }
   }
 }

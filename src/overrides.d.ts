@@ -1,5 +1,11 @@
+declare module 'fasta-js' {
+  export default class Fasta {
+    parse(text: string): Array<{id: string; description: string; sequence: string}>
+  }
+}
+
 declare module "vue-debounce" {
-  function debounce(fn: function(any): any, interval: string | number)
+  function debounce(fn: (arg: any) => any, interval: string | number): void
 }
 
 declare module '*.png' {

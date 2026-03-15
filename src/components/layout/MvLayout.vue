@@ -69,8 +69,7 @@ export default defineComponent({
   },
 
   setup() {
-    const {signIn, userIsAuthenticated} = useAuth()
-    return {signIn, userIsAuthenticated}
+    return {...useAuth()}
   },
 
   methods: {

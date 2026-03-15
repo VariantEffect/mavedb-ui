@@ -4,7 +4,7 @@
     <Card>
       <template #title> Profile </template>
       <template #content>
-        <div class="field">
+        <div>
           <FloatLabel variant="on">
             <InputText
               :id="scopedId('input-email')"
@@ -17,7 +17,7 @@
           </FloatLabel>
         </div>
         <div>
-          <span v-if="emailValidationError" class="mave-field-error">{{ emailValidationError }}</span>
+          <span v-if="emailValidationError" class="text-sm text-danger">{{ emailValidationError }}</span>
         </div>
       </template>
       <template #footer>
@@ -142,14 +142,14 @@ import MvLayout from '@/components/layout/MvLayout.vue'
 import useScopedId from '@/composables/scoped-id'
 import useAuth from '@/composition/auth'
 import useClipboard from '@/composition/clipboard'
-import useItem from '@/composition/item'
+import useItem from '@/composition/item.ts'
 import useItems from '@/composition/items'
 import config from '@/config'
 
 export default {
   name: 'SettingsScreen',
 
-  components: {Button, Card, MvLayout, FloatLabel,InputText, Checkbox},
+  components: {Button, Card, MvLayout, FloatLabel, InputText, Checkbox},
 
   setup: () => {
     useHead({title: 'Settings'})
@@ -285,8 +285,6 @@ export default {
   }
 }
 </script>
-
-<style scoped src="../../assets/forms.css"></style>
 
 <style scoped>
 .p-card {

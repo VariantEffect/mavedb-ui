@@ -180,7 +180,8 @@ import makeHistogram, {
   HistogramShader,
   CATEGORICAL_SERIES_COLORS
 } from '@/lib/histogram'
-import {fetchScoreCalibrationVariants, prepareCalibrationsForHistogram, shaderOverlapsBin} from '@/lib/calibrations'
+import {getScoreCalibrationVariants} from '@/api/mavedb'
+import {prepareCalibrationsForHistogram, shaderOverlapsBin} from '@/lib/calibrations'
 import type {FunctionalClassificationVariant} from '@/lib/calibrations'
 import {variantNotNullOrNA} from '@/lib/mave-hgvs'
 import {
@@ -1226,7 +1227,7 @@ export default defineComponent({
         // TODO#622calibration-classes-performance: If very large calibrations become slow, optimize by
         // precomputing and caching an accession->class map at fetch time and adding LRU-style cache
         // eviction for calibrationClassVariantsByUrn to cap memory usage across many calibrations.
-        const response = await fetchScoreCalibrationVariants(calibrationUrn)
+        const response = await getScoreCalibrationVariants(calibrationUrn)
         const variantsByClassificationId: Record<number, FunctionalClassificationVariant[]> = {}
 
         for (const variantSet of response || []) {

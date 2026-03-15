@@ -99,6 +99,7 @@ import Textarea from 'primevue/textarea'
 
 import useScopedId from '@/composables/scoped-id'
 import config from '@/config'
+import {getErrorResponse} from '@/api/mavedb'
 import {ORCID_ID_REGEX} from '@/lib/orcid'
 import EmailPrompt from '@/components/common/EmailPrompt.vue'
 
@@ -215,7 +216,7 @@ export default {
           response = await axios.post(`${config.apiBaseUrl}/collections`, newCollection)
         } catch (error) {
           console.log(error)
-          response = error.response || {status: 500}
+          response = getErrorResponse(error)
           this.$toast.add({severity: 'error', summary: 'Error', life: 3000})
         }
         if (response.status == 200) {

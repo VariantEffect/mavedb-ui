@@ -15,13 +15,9 @@
           </div>
           <div v-if="userIsAuthenticated">
             <div class="mavedb-screen-title-controls">
-              <Button v-if="userIsAuthorized.add_score_set" size="small" @click="addScoreSet"
-                >Add a score set</Button
-              >
+              <Button v-if="userIsAuthorized.add_score_set" size="small" @click="addScoreSet">Add a score set</Button>
               <Button v-if="userIsAuthorized.update" size="small" @click="editItem">Edit</Button>
-              <Button v-if="userIsAuthorized.delete" severity="danger" size="small" @click="deleteItem"
-                >Delete</Button
-              >
+              <Button v-if="userIsAuthorized.delete" severity="danger" size="small" @click="deleteItem">Delete</Button>
             </div>
           </div>
         </div>
@@ -160,7 +156,9 @@
                   </p>
                 </Dialog>
                 :
-                <a :href="`${config.appBaseUrl}/search?keywords=${keyword.keyword.label}`">{{ keyword.keyword.label }}</a>
+                <a :href="`${config.appBaseUrl}/search?keywords=${keyword.keyword.label}`">{{
+                  keyword.keyword.label
+                }}</a>
                 <div v-if="keyword.keyword.code" class="field">
                   {{ keyword.keyword.code }}
                 </div>
@@ -171,11 +169,7 @@
                       {{ keyword.description.substring(0, 300) + '....' }}
                     </div>
                     <div v-else>{{ keyword.description }}</div>
-                    <Button
-                      severity="info"
-                      size="small"
-                      variant="text"
-                      @click="showFullDescription(index)">
+                    <Button severity="info" size="small" variant="text" @click="showFullDescription(index)">
                       {{ fullDescription[index] ? 'Show less' : 'Show all' }}
                     </Button>
                   </div>
@@ -303,16 +297,17 @@ import Button from 'primevue/button'
 import Dialog from 'primevue/dialog'
 import {useHead} from '@unhead/vue'
 
-import CollectionAdder from '@/components/CollectionAdder'
-import CollectionBadge from '@/components/CollectionBadge'
+import CollectionAdder from '@/components/CollectionAdder.vue'
+import CollectionBadge from '@/components/CollectionBadge.vue'
 import MvLayout from '@/components/layout/MvLayout.vue'
-import ItemNotFound from '@/components/common/ItemNotFound'
-import PageLoading from '@/components/common/PageLoading'
+import ItemNotFound from '@/components/common/ItemNotFound.vue'
+import PageLoading from '@/components/common/PageLoading.vue'
 import useAuth from '@/composition/auth'
 import useFormatters from '@/composition/formatters'
-import useItem from '@/composition/item'
+import useItem from '@/composition/item.ts'
 import config from '@/config'
 import {getTargetGeneName, textForTargetGeneCategory} from '@/lib/target-genes'
+import {getErrorResponse} from '@/api/mavedb'
 
 export default {
   name: 'ExperimentView',
@@ -422,7 +417,7 @@ export default {
             try {
               response = await axios.delete(`${config.apiBaseUrl}/experiments/${this.item.urn}`, this.item)
             } catch (e) {
-              response = e.response || {status: 500}
+              response = getErrorResponse(e)
             }
 
             if (response.status == 200) {

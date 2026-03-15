@@ -82,7 +82,7 @@ MaveDB stores and serves data about **variant effects** measured through multipl
 ## Important Architectural Notes
 
 1. **State management is in transition**: Vuex 4 modules exist for auth, toast, and dynamic item state. Pinia is installed but not widely used yet. New state management should prefer Pinia.
-2. **Dynamic Vuex modules**: The `composition/item.js` composable creates per-component Vuex modules dynamically using `store.registerModule()` with UUID-based namespaces.
+2. **Dynamic Vuex modules**: The `composition/item.ts.ts` composable creates per-component Vuex modules dynamically using `store.registerModule()` with UUID-based namespaces.
 3. **HTTPS required for dev**: The Vite dev server uses `@vitejs/plugin-basic-ssl` because ORCID OAuth requires HTTPS callbacks. Port 8081 must be available (strictPort).
 
 ## Maintaining This File

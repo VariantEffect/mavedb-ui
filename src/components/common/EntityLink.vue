@@ -6,7 +6,7 @@
 import _ from 'lodash'
 import {defineComponent} from 'vue'
 
-import useItem from '@/composition/item'
+import useItem from '@/composition/item.ts'
 import {useEntityCache} from '@/composables/entity-cache'
 
 /**

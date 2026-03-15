@@ -33,8 +33,8 @@
 </template>
 
 <script>
-import ProteinStructureView from '@/components/ProteinStructureView'
-import ScoreSetHeatmap from '@/components/ScoreSetHeatmap'
+import ProteinStructureView from '@/components/ProteinStructureView.vue'
+import ScoreSetHeatmap from '@/components/ScoreSetHeatmap.vue'
 
 import Splitter from 'primevue/splitter'
 import SplitterPanel from 'primevue/splitterpanel'

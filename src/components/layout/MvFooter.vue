@@ -5,11 +5,14 @@
     >
       <!-- Links -->
       <div class="flex flex-wrap justify-center gap-3 md:order-2 md:gap-5">
-        <a aria-label="Chat (opens in new tab)" :href="ZULIP_CHAT" rel="noopener" target="_blank">Chat</a>
-        <router-link to="/docs">Documentation</router-link>
+        <a aria-label="Chat (opens in new tab)" class="text-link" :href="ZULIP_CHAT" rel="noopener" target="_blank"
+          >Chat</a
+        >
+        <router-link class="text-link" to="/docs">Documentation</router-link>
         <a
           v-if="reportIssueLink"
           aria-label="Report a Dataset issue (opens in new tab)"
+          class="text-link"
           :href="reportIssueLink"
           rel="noopener"
           target="_blank"
@@ -18,6 +21,7 @@
         <a
           v-else
           aria-label="Report an issue (opens in new tab)"
+          class="text-link"
           :href="GITHUB_UI_ISSUES"
           rel="noopener"
           target="_blank"

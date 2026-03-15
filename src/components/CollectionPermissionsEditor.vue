@@ -98,7 +98,7 @@ import SelectButton from 'primevue/selectbutton'
 
 import config from '@/config'
 import useAuth from '@/composition/auth'
-import useItem from '@/composition/item'
+import useItem from '@/composition/item.ts'
 import {ORCID_ID_REGEX} from '@/lib/orcid'
 import EmailPrompt from '@/components/common/EmailPrompt.vue'
 

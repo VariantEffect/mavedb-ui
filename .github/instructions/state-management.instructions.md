@@ -14,7 +14,7 @@ store/
 └── modules/
     ├── auth.ts       # User roles and authorization
     ├── toast.js      # Toast notification queue
-    ├── item.js       # Dynamic single-item loading (registered per-component)
+    ├── item.ts       # Dynamic single-item loading (registered per-component)
     ├── items.js      # Dynamic collection loading (registered per-component)
     ├── layout.js     # UI layout state
     └── remote-data.js # Generic remote data fetching
@@ -26,10 +26,10 @@ The root store holds `routeProps` (Galaxy integration parameters) and registers 
 
 ### Dynamic module pattern
 
-The `item.js` and `items.js` modules are **not** statically registered. Instead, the `useItem()` and `useItems()` composables in `src/composition/` dynamically register Vuex modules with UUID-based namespaces at the component level:
+The `item.ts` and `items.js` modules are **not** statically registered. Instead, the `useItem()` and `useItems()` composables in `src/composition/` dynamically register Vuex modules with UUID-based namespaces at the component level:
 
 ```ts
-// src/composition/item.js (simplified)
+// src/composition/item.ts.ts (simplified)
 export default function useItem({itemTypeName}) {
   const store = useStore()
   const namespace = uuid()
@@ -40,6 +40,32 @@ export default function useItem({itemTypeName}) {
 ```
 
 This means each component instance that calls `useItem()` gets its own isolated state namespace. The module is unregistered when the component unmounts.
+
+**Note:** `useItems()` is mostly superseded by `useAutocomplete()` (see below) for autocomplete/search patterns in form pages. `useItems()` is still used in `SettingsScreen.vue` for loading access keys. `useItem()` remains in active use for single-entity loading in editor pages.
+
+**Note:** For API mutations (create, update, delete), prefer the typed functions in `src/api/mavedb/` modules over inline Axios calls. See `api-and-data.instructions.md` for details.
+
+## useAutocomplete (Preferred for autocomplete/search)
+
+The `useAutocomplete()` composable in `src/composables/use-autocomplete.ts` is a lightweight replacement for `useItems()` when fetching autocomplete suggestions or search results. It makes direct Axios calls with `AbortController` support instead of dynamically registering Vuex modules:
+
+```ts
+import {useAutocomplete} from '@/composables/use-autocomplete'
+
+// In setup():
+const pubSearch = useAutocomplete('/publication-identifiers/search', {method: 'POST'})
+// Returns: { items: Ref<any[]>, loading: Ref<boolean>, search: (query) => void }
+
+// In a method or template:
+pubSearch.search(query) // triggers fetch
+pubSearch.items // reactive suggestions list
+```
+
+Used across all form pages (ExperimentCreator, ExperimentEditor, ScoreSetCreator, ScoreSetEditor, CalibrationEditor) for: publication search, taxonomy search, target gene search, gene name/assembly lookups, license lists, keyword options, and score set search.
+
+## Entity Cache (`src/composables/entity-cache.ts`)
+
+A shared reactive cache for entity lookups (score sets, experiments, experiment sets) with a 5-minute TTL. Deduplicates concurrent requests for the same URN — if a fetch is already in-flight, subsequent callers wait for it rather than starting a duplicate request.
 
 ### Accessing Vuex from components
 

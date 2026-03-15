@@ -1,6 +1,6 @@
 import axios from 'axios'
 
-import config from '@/config'
+import {createScoreCalibration, updateScoreCalibration} from '@/api/mavedb'
 import {HistogramBin, HistogramShader} from '@/lib/histogram'
 import {components} from '@/schema/openapi'
 
@@ -255,12 +255,11 @@ export async function saveCalibration(params: {
   }
 
   try {
-    const requestConfig = {headers: {'Content-Type': 'multipart/form-data'}}
-    const response = existingUrn
-      ? await axios.put(`${config.apiBaseUrl}/score-calibrations/${existingUrn}`, formData, requestConfig)
-      : await axios.post(`${config.apiBaseUrl}/score-calibrations`, formData, requestConfig)
+    const data = existingUrn
+      ? await updateScoreCalibration(existingUrn, formData)
+      : await createScoreCalibration(formData)
 
-    return {success: true, data: response.data}
+    return {success: true, data}
   } catch (error: unknown) {
     if (
       axios.isAxiosError(error) &&
@@ -300,42 +299,4 @@ export async function saveCalibration(params: {
 
     return {success: false, error: 'unknown', raw: error}
   }
-}
-
-/**
- * Fetches the full list of variants for a single functional classification in a score calibration.
- *
- * Uses the dedicated calibration variants endpoint introduced to replace embedded
- * `variants` payloads in calibration responses.
- *
- * @param calibrationUrn The score calibration URN.
- * @param classificationId The database ID of the functional classification.
- * @returns The classification ID and associated variant list.
- */
-export async function fetchScoreCalibrationFunctionalClassificationVariants(
-  calibrationUrn: string,
-  classificationId: number
-): Promise<FunctionalClassificationVariants> {
-  const response = await axios.get(
-    `${config.apiBaseUrl}/score-calibrations/${encodeURIComponent(calibrationUrn)}/functional-classifications/${classificationId}/variants`
-  )
-  return response.data
-}
-
-/**
- * Fetches variant lists for all functional classifications in a score calibration.
- *
- * This is intended for views that need class membership across the full calibration
- * (for example, class-based histogram series generation).
- *
- * @param calibrationUrn The score calibration URN.
- * @returns An array of per-classification variant payloads.
- */
-export async function fetchScoreCalibrationVariants(
-  calibrationUrn: string
-): Promise<FunctionalClassificationVariants[]> {
-  const response = await axios.get(
-    `${config.apiBaseUrl}/score-calibrations/${encodeURIComponent(calibrationUrn)}/variants`
-  )
-  return response.data
 }

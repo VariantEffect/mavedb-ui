@@ -72,11 +72,7 @@
 import {defineComponent, type PropType} from 'vue'
 import MvCollapsible from '@/components/common/MvCollapsible.vue'
 import MvSelectList from '@/components/common/MvSelectList.vue'
-
-interface FilterOption {
-  value: string
-  badge?: number
-}
+import {FilterOption} from '@/lib/search'
 
 export default defineComponent({
   name: 'MvSearchFilters',

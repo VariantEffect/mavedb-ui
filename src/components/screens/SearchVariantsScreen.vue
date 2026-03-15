@@ -41,7 +41,7 @@
               :aria-selected="searchType === option.code"
               class="cursor-pointer rounded-full border-[1.5px] px-3 py-1 text-xs font-semibold transition-all md:px-4 md:py-1.5 md:text-sm"
               role="tab"
-              :style="searchTabStyle(option.code)"
+              :style="searchColorStyle(option.code, searchType === option.code ? 'active' : 'inactive')"
               :tabindex="searchType === option.code ? 0 : -1"
               @click="searchType = option.code"
               @keydown.arrow-left.prevent="focusTab($event, -1)"
@@ -109,7 +109,8 @@
                 :key="example"
                 :aria-label="'Search for ' + example"
                 class="cursor-pointer rounded-full border-[1.5px] px-3 py-1 text-xs font-semibold leading-relaxed transition-colors"
-                :class="chipClasses(option.code)"
+                :class="option.code === 'hgvs' ? 'font-mono font-normal' : ''"
+                :style="searchColorStyle(option.code)"
                 @click="searchForText(example, option.code)"
               >
                 {{ example }}
@@ -142,7 +143,7 @@
                   class="absolute left-3 top-1 z-10 text-[0.5625rem] font-bold uppercase tracking-wider text-gray-400"
                   >Type</label
                 >
-                <Select
+                <PSelect
                   v-model="inputVariantType"
                   aria-labelledby="guided-type-label"
                   class="guided-select"
@@ -174,7 +175,7 @@
                   class="absolute left-3 top-1 z-10 text-[0.5625rem] font-bold uppercase tracking-wider text-gray-400"
                   >Ref</label
                 >
-                <Select
+                <PSelect
                   v-model="inputReferenceAllele"
                   aria-labelledby="guided-ref-label"
                   class="guided-select"
@@ -188,7 +189,7 @@
                   class="absolute left-3 top-1 z-10 text-[0.5625rem] font-bold uppercase tracking-wider text-gray-400"
                   >Alt</label
                 >
-                <Select
+                <PSelect
                   v-model="inputAlternateAllele"
                   aria-labelledby="guided-alt-label"
                   class="guided-select"
@@ -621,7 +622,7 @@ import _ from 'lodash'
 import EntityLink from '@/components/common/EntityLink.vue'
 import InputText from 'primevue/inputtext'
 import Message from 'primevue/message'
-import Select from 'primevue/select'
+import PSelect from 'primevue/select'
 import {defineComponent} from 'vue'
 import {useRoute, useRouter} from 'vue-router'
 import {useToast} from 'primevue/usetoast'
@@ -651,7 +652,7 @@ import {
   ALLELE_OPTIONS
 } from '@/data/mavemd'
 import {getAlleleByCaId, getAlleleByHgvs, getAlleleByDbSnp, getAlleleByClinVar, getGeneBySymbol} from '@/api/clingen'
-import {getCollection, lookupVariantsByClingenId} from '@/api/mavedb'
+import {getCollection, getErrorResponse, lookupVariantsByClingenId} from '@/api/mavedb'
 import {useEntityCache} from '@/composables/entity-cache'
 import MvLoader from '@/components/common/MvLoader.vue'
 
@@ -671,7 +672,7 @@ export default defineComponent({
     Message,
     MvLoader,
     MvScoreSetRow,
-    Select
+    PSelect
   },
 
   setup() {
@@ -1078,15 +1079,16 @@ export default defineComponent({
             block: 'start'
           })
         }
-      } catch (error: any) {
+      } catch (error: unknown) {
         console.log('Error while loading search results', error)
+        const {data} = getErrorResponse(error)
         this.toast.add({
           severity: 'error',
           summary:
-            error.response?.data?.errorType && error.response?.data?.description
-              ? `${error.response.data?.errorType}: ${error.response.data?.description}`
+            data?.errorType && data?.description
+              ? `${data.errorType}: ${data.description}`
               : 'Error fetching results',
-          detail: error.response?.data?.message || 'Invalid search.',
+          detail: (data?.message as string) || 'Invalid search.',
           life: 10000
         })
       }
@@ -1114,10 +1116,11 @@ export default defineComponent({
             )
           }
           allele.variantsStatus = 'Loaded'
-        } catch (error: any) {
+        } catch (error: unknown) {
           allele.variants = {nucleotide: [], protein: [], associatedNucleotide: []}
           console.log('Error while loading MaveDB search results for variant', error)
-          if (error.response?.status === 404) {
+          const {status} = getErrorResponse(error)
+          if (status === 404) {
             allele.variantsStatus = 'Loaded'
             this.toast.add({
               severity: 'info',
@@ -1125,7 +1128,7 @@ export default defineComponent({
               detail: 'No variants match the provided search criteria.',
               life: 10000
             })
-          } else if (error.response?.status >= 500) {
+          } else if (status >= 500) {
             allele.variantsStatus = 'Error'
             this.toast.add({
               severity: 'error',
@@ -1202,39 +1205,33 @@ export default defineComponent({
           for (const hgvsString of hgvsStrings) {
             await this.fetchDefaultSearchResults(hgvsString.hgvsString, hgvsString.maneStatus)
           }
-        } catch (error: any) {
+        } catch (error: unknown) {
           this.alleles = []
           console.log('Error while loading search results', error)
+          const {data} = getErrorResponse(error)
           this.toast.add({
             severity: 'error',
             summary:
-              error.response?.data?.errorType && error.response?.data?.description
-                ? `${error.response.data?.errorType}: ${error.response.data?.description}`
+              data?.errorType && data?.description
+                ? `${data.errorType}: ${data.description}`
                 : 'Error fetching results',
-            detail: error.response?.data?.message || 'Invalid search.',
+            detail: (data?.message as string) || 'Invalid search.',
             life: 10000
           })
         }
       }
     },
 
-    searchTabStyle(code: string): Record<string, string> {
+    searchColorStyle(code: string, variant: 'active' | 'inactive' | 'chip' = 'chip'): Record<string, string> {
       const colors = SEARCH_COLORS[code] || SEARCH_COLORS.hgvs
-      const isActive = this.searchType === code
-      if (isActive) {
-        return {borderColor: colors.accent, backgroundColor: colors.accent, color: 'var(--color-text-dark)'}
+      switch (variant) {
+        case 'active':
+          return {borderColor: colors.accent, backgroundColor: colors.accent, color: 'var(--color-text-dark)'}
+        case 'inactive':
+          return {borderColor: colors.accent, backgroundColor: 'var(--color-surface)', color: colors.accent}
+        default:
+          return {borderColor: colors.accent, backgroundColor: colors.bg, color: colors.accent}
       }
-      return {borderColor: colors.accent, color: colors.accent, backgroundColor: 'var(--color-surface)'}
-    },
-
-    chipClasses(code: string): string {
-      const map: Record<string, string> = {
-        hgvs: 'bg-sage-light text-sage-dark border-mint font-mono text-xs font-normal',
-        clinGenAlleleId: 'bg-[#dff0ed] text-[#3d8a7d] border-mint',
-        dbSnpRsId: 'bg-[#fdf4de] text-[#b8922a] border-[#f0d88a]',
-        clinVarVariationId: 'bg-orange-light text-[#c87815] border-orange-border'
-      }
-      return map[code] || ''
     },
 
     calibrationCountWithEvidence(urn: string): number {

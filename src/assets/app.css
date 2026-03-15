@@ -1,40 +1,71 @@
 @import 'tailwindcss';
 
 /* ── Design Tokens ─────────────────────────────────────────────── */
+/* These CSS custom properties define the site-wide color palette.  */
+/* Brand palettes (sage, orange, danger) are also defined as        */
+/* PrimeVue palettes in main.js via palette(). Keep both in sync.   */
+/*                                                                  */
+/*   CSS token base color  ←→  main.js palette() source             */
+/*   --color-sage: #78b793     palette('#78b793')  → sagePalette    */
+/*   --color-orange-cta: #f8971d  palette('#f8971d') → orangePalette*/
+/*   --color-danger: #D05353   palette('#D05353')  → dangerPalette  */
+/*   --color-info: #4A80C4     palette('#4A80C4')  → infoPalette    */
+/*   --color-help: #7E5DAF     palette('#7E5DAF')  → helpPalette    */
 @theme {
-  /* Brand colors (from prototype palette) */
+  /* ── Brand: Sage (primary) ── PrimeVue: sagePalette ──────────── */
   --color-sage: #78b793;
   --color-sage-dark: #5a9375;
   --color-sage-light: #e5f2e4;
   --color-mint: #a1d8c8;
+  --color-mint-light: #f0faf0;
+  --color-light-green: #c8e4c6;
+
+  /* ── Brand: Orange (warn/CTA) ── PrimeVue: orangePalette ─────── */
   --color-orange-cta: #f8971d;
   --color-orange-cta-dark: #d97510;
-  --color-yellow-accent: #fbda68;
-
-  /* Card palettes */
   --color-orange-light: #fef3e2;
   --color-orange-border: #f8c87a;
+  --color-yellow-accent: #fbda68;
+
+  /* ── Brand: Danger ── PrimeVue: dangerPalette ────────────────── */
+  --color-danger: #d05353;
+  --color-danger-light: #fdf0f0;
+  --color-danger-border: #e4a3a3;
+  --color-danger-hover: #f9e6e6;
+
+  /* ── Brand: Info ── PrimeVue: infoPalette ──────────────────── */
+  --color-info: #4a80c4;
+  --color-info-light: #ecf2fb;
+  --color-info-border: #9bb8de;
+
+  /* ── Brand: Help ── PrimeVue: helpPalette ────────────────── */
+  --color-help: #7e5daf;
+  --color-help-light: #f1ecf8;
+  --color-help-border: #b5a0d0;
+
+  /* ── Accent: Calibrated (purple) ─────────────────────────────── */
   --color-calibrated: #6a1b9a;
   --color-calibrated-light: #f3e5f5;
   --color-calibrated-border: #d7b8e8;
+
+  /* ── Neutral: Chips ──────────────────────────────────────────── */
   --color-chip: #f3f4f8;
   --color-chip-border: #e0e0e0;
 
-  /* Semantic colors */
+  /* ── Semantic colors ─────────────────────────────────────────── */
   --color-link: #0074d9;
-  --color-danger: #e53935;
   --color-border: #dee2e6;
   --color-border-light: #f0f0f0;
   --color-bg: #f7f7f7;
   --color-surface: #ffffff;
 
-  /* Text colors */
+  /* ── Text colors ─────────────────────────────────────────────── */
   --color-text-dark: #222;
   --color-text-primary: #333;
   --color-text-secondary: #555;
   --color-text-muted: #767676;
 
-  /* Typography */
+  /* ── Typography ──────────────────────────────────────────────── */
   --font-display: 'Exo 2', sans-serif;
   --font-body: 'Raleway', sans-serif;
 }
@@ -42,13 +73,24 @@
 /* ── Base Styles ───────────────────────────────────────────────── */
 
 /* All headings use the Exo 2 display font */
-h1, h2, h3, h4, h5, h6 {
+h1,
+h2,
+h3,
+h4,
+h5,
+h6 {
   font-family: var(--font-display);
 }
 
 * {
   text-rendering: optimizeLegibility;
   font-family: var(--font-body);
+}
+
+html {
+  /* Prevent horizontal layout shift when the page scrollbar appears/disappears
+     (e.g. switching between wizard steps with different content heights). */
+  scrollbar-gutter: stable;
 }
 
 body {
@@ -74,6 +116,16 @@ body .p-inputtext {
   font-family: var(--font-body);
 }
 
+/* PrimeVue sets cursor: default on disabled buttons — override to not-allowed */
+body .p-button:disabled {
+  cursor: not-allowed;
+}
+
+/* Prevent toggle switches from shrinking when placed beside long text */
+.p-toggleswitch {
+  flex-shrink: 0;
+}
+
 body .p-button {
   min-width: 10px;
   padding-top: 0.25rem;
@@ -84,18 +136,85 @@ body .p-button {
   text-align: center;
 }
 
+/* Constrain autocomplete dropdown to the width of its input field.
+   PrimeVue sets an inline min-width matching the input; per CSS spec,
+   min-width wins over max-width, so the overlay is clamped to input width. */
 .p-autocomplete-overlay {
-  max-width: 75% !important;
+  max-width: 0 !important;
+  overflow-x: hidden;
 }
 
-/* Active tab and pagination highlight — uses sage instead of dark blue */
-.p-tablist-tab-list .p-tab-active,
+.p-autocomplete-option {
+  white-space: normal !important;
+  word-break: break-word;
+  line-height: 1.4;
+}
+
+/* Constrain Select dropdown to input width (same technique as AutoComplete overlay) */
+.p-select-overlay {
+  max-width: 0 !important;
+  overflow-x: hidden;
+}
+
+.p-select-option {
+  white-space: normal !important;
+  word-break: break-word;
+  line-height: 1.4;
+}
+
+/* Constrain Multiselect dropdown to input width */
+.p-multiselect-overlay {
+  max-width: 0 !important;
+  overflow-x: hidden;
+}
+
+.p-multiselect-option {
+  white-space: normal !important;
+  word-break: break-word;
+  line-height: 1.4;
+}
+
+/* Hide PrimeVue's built-in active tab bar */
+.p-tablist-active-bar {
+  display: none !important;
+}
+
+/* Active tab — six distinct colored bars */
+.p-tab {
+  padding: 0.5em 1em !important;
+  position: relative;
+}
+
+.p-tab-active {
+  background: transparent !important;
+}
+
+.p-tab-active::after {
+  content: '';
+  position: absolute;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  height: 3px;
+  background: linear-gradient(
+    90deg,
+    var(--color-sage) 0% 15.8%,
+    transparent 15.8% 16.8%,
+    var(--color-mint) 16.8% 32.7%,
+    transparent 32.7% 33.7%,
+    var(--color-light-green) 33.7% 49.5%,
+    transparent 49.5% 50.5%,
+    var(--color-yellow-accent) 50.5% 66.3%,
+    transparent 66.3% 67.3%,
+    var(--color-orange-cta) 67.3% 83.2%,
+    transparent 83.2% 84.2%,
+    var(--color-sage) 84.2% 100%
+  );
+}
+
+/* Pagination highlight — sage tint */
 .p-paginator-page-selected {
   background-color: color-mix(in srgb, var(--color-sage) 12%, transparent) !important;
-}
-
-.p-tab {
-  padding: 0.5em 1em 0.5em 1em !important;
 }
 
 .p-listbox-header {
@@ -105,4 +224,183 @@ body .p-button {
 .p-message {
   margin-top: 0.5rem;
   margin-bottom: 0.5rem;
+}
+
+/* Wizard step panels manage their own padding */
+.p-steppanel-content {
+  padding: 0;
+}
+
+/* ── Wizard Layout ────────────────────────────────────────────── */
+
+.wizard-row {
+  position: relative;
+  z-index: 1;
+  display: flex;
+  flex-wrap: wrap;
+}
+
+.wizard-help {
+  flex: 9 1 240px;
+  min-width: 240px;
+  padding: 22px 10px 10px;
+  font-size: 0.875rem;
+  line-height: 1.5;
+}
+
+.wizard-help-detail {
+  font-size: smaller;
+  margin-top: 4px;
+}
+
+.wizard-field {
+  flex: 11 1 360px;
+  background: white;
+  padding: 22px 10px 10px;
+  min-width: 0;
+}
+
+.wizard-form {
+  position: relative;
+  z-index: 0;
+  background-color: var(--color-bg);
+  overflow: hidden;
+}
+
+.wizard-form-content-bg {
+  position: absolute;
+  top: 0;
+  bottom: 0;
+  right: 0;
+  left: 45%;
+  background-color: #fff;
+}
+
+/* Highlight wizard rows that contain an error */
+.wizard-row:has(.mv-field-error) {
+  background: var(--color-danger-light);
+  border-radius: 6px;
+}
+
+.wizard-row:has(.mv-field-error) .wizard-field {
+  background: transparent;
+}
+
+.wizard-classifications-header {
+  border-top: 2px solid var(--color-border);
+}
+
+.wizard-classifications-header .wizard-help {
+  display: flex;
+  align-items: center;
+}
+
+.wizard-classifications-title {
+  font-size: 13px;
+  font-weight: 700;
+  letter-spacing: 0.5px;
+  color: #555;
+}
+
+.wizard-classifications-empty .wizard-help,
+.wizard-classifications-empty .wizard-field {
+  padding-top: 14px;
+  padding-bottom: 14px;
+}
+
+.wizard-classifications-empty-title {
+  font-size: 14px;
+  font-weight: 600;
+  color: var(--p-text-muted-color);
+}
+
+.wizard-classifications-empty-hint {
+  font-size: 13px;
+  color: var(--p-text-muted-color);
+  line-height: 1.5;
+}
+
+/* ── Field Dividers ──────────────────────────────────────────── */
+/* Dashed horizontal lines between form fields in editor mode    */
+
+.mv-field-dividers > * {
+  padding: 1rem 0;
+}
+
+.mv-field-dividers > *:first-child {
+  padding-top: 0;
+}
+
+.mv-field-dividers > *:last-child {
+  padding-bottom: 0;
+}
+
+.mv-field-dividers > * + * {
+  border-top: 1px dashed var(--color-border-light);
+}
+
+/* Highlight the full divider section when it contains an error */
+.mv-field-dividers > *:has(.mv-field-error) {
+  background: var(--color-danger-light);
+  border-color: var(--color-danger-border);
+  border-radius: 6px;
+  margin-left: -12px;
+  margin-right: -12px;
+  padding: 12px;
+}
+
+/* Merge adjacent error sections: flatten bottom of first, top of second */
+.mv-field-dividers > *:has(.mv-field-error):has(+ *:has(.mv-field-error)) {
+  border-bottom-left-radius: 0;
+  border-bottom-right-radius: 0;
+}
+
+.mv-field-dividers > *:has(.mv-field-error) + *:has(.mv-field-error) {
+  border-top: none;
+  border-top-left-radius: 0;
+  border-top-right-radius: 0;
+}
+
+/* ── Editor cards ── */
+.editor-card {
+  position: relative;
+  overflow: hidden;
+  border-radius: 8px;
+  border: 1px solid var(--color-border);
+  background: white;
+  padding: 22px 24px;
+}
+
+.editor-card::before {
+  content: '';
+  position: absolute;
+  inset: 0;
+  bottom: auto;
+  height: 3px;
+  background: linear-gradient(
+    90deg,
+    var(--color-sage),
+    var(--color-mint),
+    var(--color-yellow-accent),
+    var(--color-orange-cta)
+  );
+}
+
+/* ── Field error messages ── */
+.mv-field-error-msg {
+  display: flex;
+  align-items: baseline;
+  gap: 6px;
+  margin-top: 6px;
+  font-size: 13px;
+  color: var(--color-danger);
+}
+
+.mv-field-error-msg.warn {
+  color: var(--color-orange-cta);
+}
+
+.mv-field-error-msg .pi {
+  font-size: 12px;
+  flex-shrink: 0;
 }

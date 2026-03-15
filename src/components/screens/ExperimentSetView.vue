@@ -49,10 +49,10 @@ import Button from 'primevue/button'
 import {useHead} from '@unhead/vue'
 
 import MvLayout from '@/components/layout/MvLayout.vue'
-import ItemNotFound from '@/components/common/ItemNotFound'
-import PageLoading from '@/components/common/PageLoading'
+import ItemNotFound from '@/components/common/ItemNotFound.vue'
+import PageLoading from '@/components/common/PageLoading.vue'
 import useAuth from '@/composition/auth'
-import useItem from '@/composition/item'
+import useItem from '@/composition/item.ts'
 import useFormatters from '@/composition/formatters'
 import config from '@/config'
 

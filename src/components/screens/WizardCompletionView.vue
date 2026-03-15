@@ -1,38 +1,82 @@
 <template>
   <MvLayout>
-    <div v-if="userIsAuthenticated">
-      <div class="mave-wizard-completion">
-        <h1>Your score set has been saved successfully!</h1>
-        <p>Thank you for uploading your data!</p>
-        <p>
-          You can now view your score set:
-          <router-link :to="{name: 'scoreSet', params: {urn: itemId}}">{{ itemId }}</router-link>
-        </p>
-        <div>
-          If you would like to add another score set to the same experiment, you may do so
-          <router-link :to="{name: 'createScoreSetInExperiment', params: {urn: item?.experiment.urn}}"
-            >here</router-link
-          >
-          or from its
-          <router-link :to="{name: 'experiment', params: {urn: item?.experiment.urn}}">experiment page</router-link>
-          later.
-          <br />
-          Alternatively,
-          <router-link :to="{name: 'createExperiment'}">create a score set in a new experiment</router-link>.
+    <div v-if="userIsAuthenticated && item" class="mx-auto max-w-[640px] px-6 py-[60px]">
+      <div class="completion-card">
+        <!-- Success icon bars -->
+        <div class="flex h-14 items-end justify-center gap-1">
+          <div class="w-1.5 rounded-t" style="background: #e0e0e0; height: 18px; opacity: 0.3"></div>
+          <div class="w-1.5 rounded-t" style="background: #ddd; height: 28px; opacity: 0.4"></div>
+          <div class="w-1.5 rounded-t" style="background: #ccc; height: 40px; opacity: 0.5"></div>
+          <div class="w-1.5 rounded-t" style="background: #bbb; height: 24px; opacity: 0.6"></div>
+          <div class="w-1.5 rounded-t" style="background: #f8971d; height: 36px; opacity: 0.7"></div>
+          <div class="w-1.5 rounded-t" style="background: #78b793; height: 44px"></div>
+          <div class="w-1.5 rounded-t" style="background: #a1d8c8; height: 32px"></div>
+          <div class="w-1.5 rounded-t" style="background: #78b793; height: 20px"></div>
         </div>
-        <h3>Attention</h3>
-        <ul class="list-disc ml-5">
-          <li>
-            Your data is currently unpublished and viewable only to you. You can add other users as contributors without
-            publishing it, or add the dataset to a collection and give users permission to view the collection.
-          </li>
-          <li>
-            Once you publish a dataset, the data will be public. Once a dataset has been published, it can not be made
-            private again and only a limited subset of metadata may be edited. Please only publish this dataset once it
-            is ready to be made public.
-          </li>
-        </ul>
+
+        <h2 class="mb-2 mt-6 text-[22px] font-bold text-text-dark">Your score set has been saved!</h2>
+        <p class="mb-6 text-[15px] text-text-secondary">Thank you for uploading your data to MaveDB.</p>
+
+        <!-- View score set link -->
+        <router-link
+          class="mb-7 flex items-center justify-between rounded-lg border border-light-green bg-mint-light px-[18px] py-3.5 text-sm font-semibold text-text-primary no-underline transition-colors hover:bg-[#e0f5e0]"
+          :to="{name: 'scoreSet', params: {urn: itemId}}"
+        >
+          <span
+            >View your score set: <span class="font-mono font-normal text-sage">{{ itemId }}</span></span
+          >
+          <span class="text-lg text-sage">&rarr;</span>
+        </router-link>
+
+        <!-- What's next? -->
+        <div class="mb-7 text-left">
+          <h3 class="mb-3 text-sm font-bold uppercase tracking-wide text-text-secondary">What's next?</h3>
+          <router-link
+            class="completion-action"
+            :to="{name: 'createScoreSetInExperiment', params: {urn: item.experiment.urn}}"
+          >
+            <div class="text-sm font-semibold text-text-primary">Add another score set to the same experiment</div>
+            <div class="mt-0.5 text-xs text-text-secondary">
+              {{ item.experiment.title }} ({{ item.experiment.urn }})
+            </div>
+          </router-link>
+          <router-link class="completion-action" :to="{name: 'createExperiment'}">
+            <div class="text-sm font-semibold text-text-primary">Create a score set in a new experiment</div>
+            <div class="mt-0.5 text-xs text-text-secondary">Start a new experiment and add score sets to it</div>
+          </router-link>
+          <router-link class="completion-action" :to="{name: 'scoreSet', params: {urn: itemId}}">
+            <div class="text-sm font-semibold text-text-primary">Add a score calibration</div>
+            <div class="mt-0.5 text-xs text-text-secondary">
+              Help users interpret functional scores by providing clinical reference points
+            </div>
+          </router-link>
+        </div>
+
+        <!-- Attention box -->
+        <div class="rounded-lg border border-[#fbda68] bg-[#fffdf0] p-4 text-left">
+          <h3 class="mb-2 flex items-center gap-1.5 text-[13px] font-bold uppercase tracking-wide text-[#b8860b]">
+            <i class="pi pi-exclamation-circle text-sm" />
+            Important
+          </h3>
+          <ul class="list-disc space-y-1 pl-5 text-[13px] leading-relaxed text-text-secondary">
+            <li>
+              Your data is currently <strong class="text-text-primary">unpublished</strong> and viewable only to you.
+            </li>
+            <li>
+              You can add other users as contributors without publishing, or add the dataset to a collection and give
+              users permission to view the collection.
+            </li>
+            <li>
+              Once you publish a dataset, the data will be
+              <strong class="text-text-primary">public and permanent</strong>. It cannot be made private again.
+            </li>
+            <li>Only a limited subset of metadata may be edited after publication. Please only publish when ready.</li>
+          </ul>
+        </div>
       </div>
+    </div>
+    <div v-else-if="userIsAuthenticated" class="p-8">
+      <PageLoading />
     </div>
     <div v-else>
       <ItemNotFound :item-id="itemId" model="score set" />
@@ -40,17 +84,21 @@
   </MvLayout>
 </template>
 
-<script>
+<script lang="ts">
 import MvLayout from '@/components/layout/MvLayout.vue'
-import ItemNotFound from '@/components/common/ItemNotFound'
+import ItemNotFound from '@/components/common/ItemNotFound.vue'
+import PageLoading from '@/components/common/PageLoading.vue'
 import useAuth from '@/composition/auth'
-import useItem from '@/composition/item'
+import useItem from '@/composition/item.ts'
 import {useHead} from '@unhead/vue'
+import {components} from '@/schema/openapi'
+
+type ScoreSet = components['schemas']['ScoreSet']
 
 export default {
   name: 'WizardCompletionView',
 
-  components: {MvLayout, ItemNotFound},
+  components: {MvLayout, ItemNotFound, PageLoading},
 
   props: {
     itemId: {
@@ -66,7 +114,7 @@ export default {
 
     return {
       userIsAuthenticated,
-      ...useItem({itemTypeName: 'scoreSet'})
+      ...useItem<ScoreSet>({itemTypeName: 'scoreSet'})
     }
   },
 
@@ -75,7 +123,6 @@ export default {
       handler: function (newValue, oldValue) {
         if (newValue != oldValue) {
           this.setItemId(newValue)
-          console.log(newValue)
         }
       },
       immediate: true
@@ -85,10 +132,50 @@ export default {
 </script>
 
 <style scoped>
-.mave-wizard-completion {
-  padding: 20px;
+.completion-card {
+  position: relative;
+  overflow: hidden;
+  border-radius: 12px;
+  border: 1px solid var(--color-border);
+  background: white;
+  padding: 40px 36px;
+  text-align: center;
 }
-.mave-wizard-completion h3 {
-  margin-bottom: 0.25rem;
+
+.completion-card::before {
+  content: '';
+  position: absolute;
+  inset: 0;
+  bottom: auto;
+  height: 4px;
+  background: linear-gradient(
+    90deg,
+    var(--color-sage),
+    var(--color-mint),
+    var(--color-yellow-accent),
+    var(--color-orange-cta)
+  );
+}
+
+.completion-action {
+  display: block;
+  padding: 14px 18px;
+  border: 1px solid var(--color-border);
+  border-radius: 8px;
+  margin-bottom: 8px;
+  text-decoration: none;
+  transition:
+    border-color 0.12s,
+    background 0.12s;
+}
+
+.completion-action:last-child {
+  margin-bottom: 0;
+}
+
+.completion-action:hover {
+  border-color: var(--color-sage);
+  background: #fafafa;
+  text-decoration: none;
 }
 </style>

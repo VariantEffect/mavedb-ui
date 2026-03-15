@@ -36,7 +36,7 @@
             :style="{borderColor: activeSearchColor.accent}"
             @submit.prevent="submitSearch"
           >
-            <Select
+            <PSelect
               v-model="searchType"
               class="hero-search-select shrink-0"
               option-label="label"
@@ -60,7 +60,7 @@
                 />
                 {{ option.label }}
               </template>
-            </Select>
+            </PSelect>
             <div class="flex min-w-0 flex-1">
               <InputText
                 v-model="searchText"
@@ -222,7 +222,7 @@
 </template>
 
 <script lang="ts">
-import {defineComponent, ref, computed, onMounted, onBeforeUnmount} from 'vue'
+import {defineComponent} from 'vue'
 import {useRouter} from 'vue-router'
 import {useHead} from '@unhead/vue'
 import {FontAwesomeIcon} from '@fortawesome/vue-fontawesome'
@@ -243,51 +243,63 @@ import {SEARCH_COLORS, SEARCH_PLACEHOLDERS, SEARCH_TYPES} from '@/data/search'
 export default defineComponent({
   name: 'HomeScreen',
 
-  components: {FontAwesomeIcon, InputText, MvLayout, Select},
+  components: {FontAwesomeIcon, InputText, MvLayout, PSelect: Select},
 
   setup() {
     useHead({title: 'Home'})
     const router = useRouter()
 
-    const searchType = ref('hgvs')
-    const searchText = ref('')
-
-    const mdQuery = window.matchMedia('(min-width: 768px)')
-    const isDesktop = ref(mdQuery.matches)
-    function onMediaChange(e: MediaQueryListEvent) {
-      isDesktop.value = e.matches
-    }
-
-    const activeSearchColor = computed(() => SEARCH_COLORS[searchType.value] || SEARCH_COLORS.hgvs)
-    const activeSearchPlaceholder = computed(() => {
-      const p = SEARCH_PLACEHOLDERS[searchType.value] || SEARCH_PLACEHOLDERS.hgvs
-      return isDesktop.value ? p.full : p.short
-    })
-
-    onMounted(() => mdQuery.addEventListener('change', onMediaChange))
-    onBeforeUnmount(() => mdQuery.removeEventListener('change', onMediaChange))
-
-    function submitSearch() {
-      const text = searchText.value.trim()
-      if (!text) return
-      router.push({path: '/mavemd', query: {search: text, searchType: searchType.value}})
-    }
-
     return {
-      searchType,
-      searchText,
-      activeSearchColor,
-      activeSearchPlaceholder,
-      submitSearch,
-      SEARCH_COLORS,
+      router,
       newsItems: NEWS_ITEMS,
       NEWS_TAG_STYLES,
       WATERMARK_BARS,
       SEARCH_TYPES,
+      SEARCH_COLORS,
       BROWSE_CATEGORIES,
       CONTRIBUTE_CATEGORIES,
       FEATURED_COLLECTIONS,
       RECENT_PUBLICATIONS
+    }
+  },
+
+  data() {
+    return {
+      searchType: 'hgvs',
+      searchText: '',
+      isDesktop: false,
+      mdQuery: null as MediaQueryList | null
+    }
+  },
+
+  computed: {
+    activeSearchColor(): {accent: string; bg: string} {
+      return SEARCH_COLORS[this.searchType] || SEARCH_COLORS.hgvs
+    },
+    activeSearchPlaceholder(): string {
+      const p = SEARCH_PLACEHOLDERS[this.searchType] || SEARCH_PLACEHOLDERS.hgvs
+      return this.isDesktop ? p.full : p.short
+    }
+  },
+
+  mounted() {
+    this.mdQuery = window.matchMedia('(min-width: 768px)')
+    this.isDesktop = this.mdQuery.matches
+    this.mdQuery.addEventListener('change', this.onMediaChange)
+  },
+
+  beforeUnmount() {
+    this.mdQuery?.removeEventListener('change', this.onMediaChange)
+  },
+
+  methods: {
+    onMediaChange(e: MediaQueryListEvent) {
+      this.isDesktop = e.matches
+    },
+    submitSearch() {
+      const text = this.searchText.trim()
+      if (!text) return
+      this.router.push({path: '/mavemd', query: {search: text, searchType: this.searchType}})
     }
   }
 })
@@ -325,7 +337,11 @@ export default defineComponent({
   padding-right: 0.5rem;
 }
 
-/* Dropdown panel — match trigger width */
+/* Dropdown panel — match trigger width; override global p-select-overlay constraint */
+.hero-search-select-panel {
+  max-width: none !important;
+}
+
 @media (min-width: 768px) {
   .hero-search-select-panel {
     min-width: 0 !important;

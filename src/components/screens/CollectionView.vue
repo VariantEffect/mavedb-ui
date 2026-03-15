@@ -253,17 +253,18 @@ import InputText from 'primevue/inputtext'
 import Textarea from 'primevue/textarea'
 import {useHead} from '@unhead/vue'
 
-import CollectionBadge from '@/components/CollectionBadge'
-import CollectionDataSetEditor from '@/components/CollectionDataSetEditor'
-import CollectionItemsTable from '@/components/CollectionItemsTable'
-import CollectionPermissionsEditor from '@/components/CollectionPermissionsEditor'
+import CollectionBadge from '@/components/CollectionBadge.vue'
+import CollectionDataSetEditor from '@/components/CollectionDataSetEditor.vue'
+import CollectionItemsTable from '@/components/CollectionItemsTable.vue'
+import CollectionPermissionsEditor from '@/components/CollectionPermissionsEditor.vue'
 import MvLayout from '@/components/layout/MvLayout.vue'
-import ItemNotFound from '@/components/common/ItemNotFound'
-import PageLoading from '@/components/common/PageLoading'
+import ItemNotFound from '@/components/common/ItemNotFound.vue'
+import PageLoading from '@/components/common/PageLoading.vue'
 import useAuth from '@/composition/auth'
 import useFormatters from '@/composition/formatters'
-import useItem from '@/composition/item'
+import useItem from '@/composition/item.ts'
 import config from '@/config'
+import {getErrorResponse} from '@/api/mavedb'
 
 export default {
   name: 'CollectionView',
@@ -468,7 +469,7 @@ export default {
             try {
               response = await axios.delete(`${config.apiBaseUrl}/collections/${this.item.urn}`, this.item)
             } catch (e) {
-              response = e.response || {status: 500}
+              response = getErrorResponse(e)
             }
 
             if (response.status == 200) {
@@ -509,7 +510,7 @@ export default {
         try {
           response = await axios.patch(`${config.apiBaseUrl}/collections/${this.item.urn}`, collectionPatch)
         } catch (e) {
-          response = e.response || {status: 500}
+          response = getErrorResponse(e)
           this.$toast.add({severity: 'error', summary: 'Error saving collection name', life: 3000})
         }
         if (response.status == 200) {
@@ -536,7 +537,7 @@ export default {
         try {
           response = await axios.patch(`${config.apiBaseUrl}/collections/${this.item.urn}`, collectionPatch)
         } catch (e) {
-          response = e.response || {status: 500}
+          response = getErrorResponse(e)
           this.$toast.add({severity: 'error', summary: 'Error saving description', life: 3000})
         }
         if (response.status == 200) {
@@ -563,7 +564,7 @@ export default {
                 try {
                   response = await axios.patch(`${config.apiBaseUrl}/collections/${this.item.urn}`, {private: true})
                 } catch (e) {
-                  response = e.response || {status: 500}
+                  response = getErrorResponse(e)
                 }
 
                 if (response.status == 200) {
@@ -592,7 +593,7 @@ export default {
                 try {
                   response = await axios.patch(`${config.apiBaseUrl}/collections/${this.item.urn}`, {private: false})
                 } catch (e) {
-                  response = e.response || {status: 500}
+                  response = getErrorResponse(e)
                 }
 
                 if (response.status == 200) {

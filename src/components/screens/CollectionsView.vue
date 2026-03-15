@@ -79,10 +79,11 @@ import DataTable from 'primevue/datatable'
 import Dialog from 'primevue/dialog'
 import {useHead} from '@unhead/vue'
 
-import CollectionCreator from '@/components/CollectionCreator'
+import CollectionCreator from '@/components/CollectionCreator.vue'
 import MvLayout from '@/components/layout/MvLayout.vue'
-import PageLoading from '@/components/common/PageLoading'
+import PageLoading from '@/components/common/PageLoading.vue'
 import useFormatters from '@/composition/formatters'
+import {getErrorResponse} from '@/api/mavedb'
 import config from '@/config'
 
 export default {
@@ -122,7 +123,7 @@ export default {
       try {
         response = await axios.get(`${config.apiBaseUrl}/users/me/collections`)
       } catch (error) {
-        response = error.response || {status: 500}
+        response = getErrorResponse(error)
         console.log('Error while loading collections: ', error)
       }
 

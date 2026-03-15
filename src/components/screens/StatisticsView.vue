@@ -109,9 +109,13 @@
               <template #content>
                 <div class="flowchart-card-element">
                   <span style="text-align: center">
-                    <h1 class="emphasis-number my-5">{{ new Intl.NumberFormat('en-US').format(totalHumanScoreSets) }}</h1>
+                    <h1 class="emphasis-number my-5">
+                      {{ new Intl.NumberFormat('en-US').format(totalHumanScoreSets) }}
+                    </h1>
                     score sets with human targets
-                    <h1 class="emphasis-number my-5">{{ new Intl.NumberFormat('en-US').format(totalMappedVariants) }}</h1>
+                    <h1 class="emphasis-number my-5">
+                      {{ new Intl.NumberFormat('en-US').format(totalMappedVariants) }}
+                    </h1>
                     variant effect measurements mapped to the human genome
                   </span>
                 </div>
@@ -125,7 +129,9 @@
                 <div class="flowchart-card-element">
                   <span style="text-align: center">
                     These variant effect measurements map to
-                    <h1 class="emphasis-number my-5">{{ new Intl.NumberFormat('en-US').format(totalMappedTargetGenes) }}</h1>
+                    <h1 class="emphasis-number my-5">
+                      {{ new Intl.NumberFormat('en-US').format(totalMappedTargetGenes) }}
+                    </h1>
                     distinct human genes
                   </span>
                 </div>
@@ -150,7 +156,7 @@ import PageLoading from '../common/PageLoading.vue'
 import TimeSeriesLineChart from '../TimeSeriesLineChart.vue'
 import {useHead} from '@unhead/vue'
 
-import useItem from '@/composition/item'
+import useItem from '@/composition/item.ts'
 import config from '@/config'
 
 export default {
@@ -158,7 +164,7 @@ export default {
   components: {Carousel, Card, Column, Chart, DataTable, MvLayout, SelectButton, PageLoading, TimeSeriesLineChart},
 
   setup: () => {
-   useHead({title: 'Database statistics'})
+    useHead({title: 'Database statistics'})
   },
 
   data() {
@@ -452,7 +458,6 @@ export default {
           return
         }
         window.open(`${config.appBaseUrl}/#/search?${model}=${organismName}`)
-
       }
 
       return {

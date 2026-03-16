@@ -43,6 +43,7 @@
     <div v-if="filteredOptions.length > visibleLimit && !filterText" class="mt-1 flex gap-2">
       <button
         v-if="visibleOptions.length < filteredOptions.length"
+        :aria-label="`Show next ${Math.min(visibleLimit, filteredOptions.length - visibleOptions.length)} ${title || 'options'}`"
         class="cursor-pointer border-none bg-transparent px-1 text-xs font-semibold text-link"
         @click="showMore"
       >

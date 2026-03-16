@@ -98,7 +98,7 @@ const routes: RouteRecordRaw[] = [
   },
   {
     path: '/experiments/:urn/edit',
-    name: '/editExperiment',
+    name: 'editExperiment',
     component: ExperimentEditor,
     props: (route) => ({itemId: route.params.urn}),
     meta: {requiresAuth: true}

@@ -5,7 +5,6 @@ import linkifyHtml from 'linkify-html'
 export function formatDate(x: string) {
   return moment(x).format('MMM DD, YYYY')
 }
-
 export function formatInt(x: number | null) {
   if (x == null) {
     return ''

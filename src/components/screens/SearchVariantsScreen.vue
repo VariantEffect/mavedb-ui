@@ -23,7 +23,7 @@
       </section>
 
       <!-- SEARCH BAND -->
-      <section class="border-b border-gray-200 bg-linear-to-br from-[#e8f5e9] via-[#fafcfa] to-[#fef3e0] px-6 py-9">
+      <section class="border-b border-gray-200 bg-linear-to-br from-published-light via-[#fafcfa] to-unpublished-light px-6 py-9">
         <div class="mx-auto mb-5 max-w-[800px] text-center">
           <div class="text-lg font-bold text-dark">Find functional evidence for a variant</div>
           <div class="mt-1.5 text-sm text-gray-600">

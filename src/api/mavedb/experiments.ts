@@ -19,3 +19,8 @@ export async function searchMyExperiments(filters: {metaAnalysis?: boolean} = {}
   const response = await axios.post(`${config.apiBaseUrl}/me/experiments/search`, filters)
   return response.data
 }
+
+export async function deleteExperiment(urn: string) {
+  const response = await axios.delete(`${config.apiBaseUrl}/experiments/${encodeURIComponent(urn)}`)
+  return response.data
+}

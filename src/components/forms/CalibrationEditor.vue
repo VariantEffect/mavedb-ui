@@ -18,7 +18,7 @@
     :range-classifications="rangeClassifications"
     :research-use-only="draft.researchUseOnly"
     :selected-score-set="selectedScoreSet"
-    :show-score-set-selector="!!($props.scoreSetUrn || $props.calibrationUrn)"
+    :show-score-set-selector="showScoreSetSelector ?? !!($props.scoreSetUrn || $props.calibrationUrn)"
     :threshold-sources="draft.thresholdSources || []"
     :title="draft.title"
     :validation-errors="validationErrors"
@@ -49,7 +49,7 @@
 </template>
 
 <script lang="ts">
-import {defineComponent} from 'vue'
+import {defineComponent, type PropType} from 'vue'
 import {cloneDeep} from 'lodash'
 
 import CalibrationFields from '@/components/forms/CalibrationFields.vue'
@@ -80,7 +80,8 @@ export default defineComponent({
   props: {
     calibrationUrn: {type: String, default: null},
     scoreSetUrn: {type: String, default: null},
-    allowClassBased: {type: Boolean, default: true}
+    allowClassBased: {type: Boolean, default: true},
+    showScoreSetSelector: {type: [Boolean, null] as unknown as PropType<boolean | null>, default: null}
   },
 
   emits: ['canceled', 'saved', 'update:draft'],

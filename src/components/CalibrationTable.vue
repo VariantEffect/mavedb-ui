@@ -749,92 +749,9 @@ export default defineComponent({
   color: #333;
 }
 
-/* Investigator-supplied functional classifications */
-.mave-classification-normal {
-  background-color: #4444ff;
-  color: white;
-  font-weight: bold;
-}
-
-.mave-classification-abnormal {
-  background-color: #ff4444;
-  color: white;
-  font-weight: bold;
-}
-
-.mave-classification-not_specified {
-  background-color: #646464;
-  color: white;
-  font-weight: bold;
-}
-
 .mave-classification-not_provided {
   background-color: #ffffff;
   font-style: italic;
-}
-
-/* Evidence strengths */
-.mave-evidence-code-PS3_VERY_STRONG {
-  background-color: #943744;
-  color: white;
-  font-weight: bold;
-}
-
-.mave-evidence-code-PS3_STRONG {
-  background-color: #b85c6b;
-  color: white;
-  font-weight: bold;
-}
-
-.mave-evidence-code-PS3_MODERATE_PLUS {
-  background-color: #ca7682;
-  color: white;
-  font-weight: bold;
-}
-
-.mave-evidence-code-PS3_MODERATE {
-  background-color: #d68f99;
-  color: white;
-  font-weight: bold;
-}
-
-.mave-evidence-code-PS3_SUPPORTING {
-  background-color: #e6b1b8;
-  color: white;
-  font-weight: bold;
-}
-
-.mave-evidence-code-BS3_SUPPORTING {
-  background-color: #e4f1f6;
-  font-weight: bold;
-}
-
-.mave-evidence-code-BS3_MODERATE {
-  background-color: #d0e8f0;
-  font-weight: bold;
-}
-
-.mave-evidence-code-BS3_MODERATE_PLUS {
-  background-color: #99c8dc;
-  color: white;
-  font-weight: bold;
-}
-
-.mave-evidence-code-BS3_STRONG {
-  background-color: #7ab5d1;
-  color: white;
-  font-weight: bold;
-}
-
-.mave-evidence-code-BS3_VERY_STRONG {
-  background-color: #4b91a6;
-  color: white;
-  font-weight: bold;
-}
-
-.mave-evidence-code-INDETERMINATE {
-  background-color: #e0e0e0;
-  font-weight: bold;
 }
 
 /* Monospace (or at least tabular) numerals for ranges and OddsPath ratios */

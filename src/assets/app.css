@@ -48,6 +48,66 @@
   --color-calibrated-light: #f3e5f5;
   --color-calibrated-border: #d7b8e8;
 
+  /* ── Status: Published (green) ───────────────────────────────── */
+  --color-published: #2e7d32;
+  --color-published-light: #e8f5e9;
+  --color-published-dot: #4caf50;
+
+  /* ── Status: Unpublished (orange) ──────────────────────────── */
+  --color-unpublished: #e65100;
+  --color-unpublished-light: #fff3e0;
+  --color-unpublished-dot: #ff9800;
+
+  /* ── Status: Superseded (gray) ─────────────────────────────── */
+  --color-superseded: #757575;
+  --color-superseded-light: #f5f5f5;
+  --color-superseded-dot: #bdbdbd;
+
+  /* ── Evidence: PS3 Pathogenic (red gradient) ────────────────── */
+  --color-ps3-very-strong: #943744;
+  --color-ps3-strong: #b85c6b;
+  --color-ps3-moderate-plus: #ca7682;
+  --color-ps3-moderate: #d68f99;
+  --color-ps3-supporting: #e6b1b8;
+
+  /* ── Evidence: BS3 Benign (blue gradient) ──────────────────── */
+  --color-bs3-very-strong: #4b91a6;
+  --color-bs3-strong: #7ab5d1;
+  --color-bs3-moderate-plus: #99c8dc;
+  --color-bs3-moderate: #d0e8f0;
+  --color-bs3-supporting: #e4f1f6;
+
+  /* ── Evidence: Indeterminate ───────────────────────────────── */
+  --color-evidence-indeterminate: #e0e0e0;
+
+  /* ── Calibration: Functional Classifications ───────────────── */
+  --color-cal-normal: #4444ff;
+  --color-cal-abnormal: #ff4444;
+  --color-cal-unspecified: #646464;
+
+  /* ── Functional Classifications (normal/abnormal from assay) ── */
+  --color-fn-normal: #1e40af;
+  --color-fn-abnormal: #991b1b;
+
+  /* ── Clinical Classification Badges (benign/pathogenic) ───── */
+  --color-badge-benign: #1e40af;
+  --color-badge-pathogenic: #991b1b;
+  --color-badge-alert: #fef3c7;
+
+  /* ── Search Types ──────────────────────────────────────────── */
+  --color-dbsnp: #e6b84d;
+  --color-dbsnp-light: #fdf3d7;
+  --color-clinvar: #5aafa0;
+  --color-clinvar-light: #c8ece5;
+
+  /* ── Role Badges ───────────────────────────────────────────── */
+  --color-role-admin: #1a56a0;
+  --color-role-admin-light: #e8f0fe;
+  --color-role-admin-border: #90b8f8;
+  --color-role-editor: #b8760a;
+  --color-role-editor-light: #fef3e0;
+  --color-role-editor-border: #f5c97a;
+
   /* ── Neutral: Chips ──────────────────────────────────────────── */
   --color-chip: #f3f4f8;
   --color-chip-border: #e0e0e0;
@@ -68,6 +128,9 @@
   /* ── Typography ──────────────────────────────────────────────── */
   --font-display: 'Exo 2', sans-serif;
   --font-body: 'Raleway', sans-serif;
+
+  /* ── Custom breakpoints ────────────────────────────────────── */
+  --breakpoint-tablet: 56rem; /* 896px — between md (768) and lg (1024) */
 }
 
 /* ── Base Styles ───────────────────────────────────────────────── */
@@ -187,29 +250,43 @@ body .p-button {
 
 .p-tab-active {
   background: transparent !important;
+  border-color: transparent !important;
+  box-shadow: none !important;
+}
+
+.p-tab-active::before {
+  display: none !important;
 }
 
 .p-tab-active::after {
   content: '';
   position: absolute;
+  bottom: -1px;
   left: 0;
   right: 0;
-  bottom: 0;
-  height: 3px;
-  background: linear-gradient(
-    90deg,
-    var(--color-sage) 0% 15.8%,
-    transparent 15.8% 16.8%,
-    var(--color-mint) 16.8% 32.7%,
-    transparent 32.7% 33.7%,
-    var(--color-light-green) 33.7% 49.5%,
-    transparent 49.5% 50.5%,
-    var(--color-yellow-accent) 50.5% 66.3%,
-    transparent 66.3% 67.3%,
-    var(--color-orange-cta) 67.3% 83.2%,
-    transparent 83.2% 84.2%,
-    var(--color-sage) 84.2% 100%
-  );
+  height: 5px;
+  background-color: transparent;
+  background-image:
+    linear-gradient(var(--color-sage), var(--color-sage)), linear-gradient(var(--color-mint), var(--color-mint)),
+    linear-gradient(var(--color-light-green), var(--color-light-green)),
+    linear-gradient(var(--color-yellow-accent), var(--color-yellow-accent)),
+    linear-gradient(var(--color-orange-cta), var(--color-orange-cta)),
+    linear-gradient(var(--color-sage), var(--color-sage));
+  background-repeat: no-repeat;
+  background-position:
+    0% bottom,
+    17% bottom,
+    34% bottom,
+    51% bottom,
+    68% bottom,
+    85% bottom;
+  background-size:
+    15% 3px,
+    15% 3px,
+    15% 3px,
+    15% 3px,
+    15% 3px,
+    15% 3px;
 }
 
 /* Pagination highlight — sage tint */
@@ -220,6 +297,28 @@ body .p-button {
 .p-listbox-header {
   padding: 0 !important;
 }
+
+/* ── Evidence & Classification Badges ────────────────────────── */
+/* Shared across CalibrationTable, AssayFactSheet, and VariantMeasurementView */
+
+.mave-evidence-code-PS3_VERY_STRONG { background-color: var(--color-ps3-very-strong); color: white; font-weight: bold; }
+.mave-evidence-code-PS3_STRONG { background-color: var(--color-ps3-strong); color: white; font-weight: bold; }
+.mave-evidence-code-PS3_MODERATE_PLUS { background-color: var(--color-ps3-moderate-plus); color: white; font-weight: bold; }
+.mave-evidence-code-PS3_MODERATE { background-color: var(--color-ps3-moderate); color: white; font-weight: bold; }
+.mave-evidence-code-PS3_SUPPORTING { background-color: var(--color-ps3-supporting); color: white; font-weight: bold; }
+.mave-evidence-code-BS3_SUPPORTING { background-color: var(--color-bs3-supporting); font-weight: bold; }
+.mave-evidence-code-BS3_MODERATE { background-color: var(--color-bs3-moderate); font-weight: bold; }
+.mave-evidence-code-BS3_MODERATE_PLUS { background-color: var(--color-bs3-moderate-plus); color: white; font-weight: bold; }
+.mave-evidence-code-BS3_STRONG { background-color: var(--color-bs3-strong); color: white; font-weight: bold; }
+.mave-evidence-code-BS3_VERY_STRONG { background-color: var(--color-bs3-very-strong); color: white; font-weight: bold; }
+.mave-evidence-code-INDETERMINATE { background-color: var(--color-evidence-indeterminate); font-weight: bold; }
+
+.mavedb-classification-badge.mavedb-blue { background: var(--color-badge-benign); color: white; }
+.mavedb-classification-badge.mavedb-red { background: var(--color-badge-pathogenic); color: white; }
+
+.mave-classification-normal { background-color: var(--color-cal-normal); color: white; font-weight: bold; }
+.mave-classification-abnormal { background-color: var(--color-cal-abnormal); color: white; font-weight: bold; }
+.mave-classification-not_specified { background-color: var(--color-cal-unspecified); color: white; font-weight: bold; }
 
 .p-message {
   margin-top: 0.5rem;

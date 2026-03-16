@@ -1,6 +1,7 @@
 <template>
   <PDialog
     v-model:visible="visible"
+    :aria-label="title"
     :base-z-index="3000"
     :closable="false"
     :header="title"
@@ -9,11 +10,17 @@
   >
     <span class="p-text-secondary block mb-5">{{ dialog }}</span>
     <FloatLabel class="mb-2" variant="on">
-      <InputText :id="scopedId('email-input')" v-model:model-value="email" class="w-full" />
+      <InputText
+        :id="scopedId('email-input')"
+        v-model:model-value="email"
+        :aria-describedby="emailValidationError ? scopedId('email-error') : undefined"
+        :aria-invalid="!!emailValidationError"
+        class="w-full"
+      />
       <label :for="scopedId('email-input')">Email</label>
     </FloatLabel>
     <div>
-      <span v-if="emailValidationError" class="text-sm text-danger">{{ emailValidationError }}</span>
+      <span v-if="emailValidationError" :id="scopedId('email-error')" class="text-sm text-danger" role="alert">{{ emailValidationError }}</span>
     </div>
     <div class="flex justify-content-end gap-2">
       <PButton label="Not now" severity="secondary" type="button" @click="ignoreEmail" />

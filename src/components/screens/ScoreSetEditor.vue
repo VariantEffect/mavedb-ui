@@ -68,11 +68,11 @@
 
           <MvEmptyState
             v-if="targetGenes.length === 0"
+            action-label="+ Add target"
             description="Targets define the reference sequences or genomic accessions that variants are described against."
             title="No targets added yet"
-          >
-            <PButton icon="pi pi-plus" label="Add target" size="small" @click="targetEditorVisible = true" />
-          </MvEmptyState>
+            @action="targetEditorVisible = true"
+          />
 
           <div v-else class="space-y-2">
             <div

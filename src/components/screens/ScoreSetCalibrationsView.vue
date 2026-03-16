@@ -17,7 +17,7 @@
           <router-link
             class="inline-block font-mono text-xs text-link"
             :to="{name: 'scoreSet', params: {urn: item.urn}}"
-            >&larr; {{ item.urn }}</router-link
+            >&larr; Back to score set view</router-link
           >
         </template>
         <template #actions>
@@ -38,10 +38,14 @@
       </MvPageHeader>
     </template>
 
-    <div v-if="itemStatus === 'Loaded' && item" class="mx-auto max-w-[1000px] py-7">
-      <div v-if="!item.scoreCalibrations?.length" class="text-center text-sm text-text-secondary">
-        <p>No calibrations found for this score set.</p>
-      </div>
+    <div v-if="itemStatus === 'Loaded' && item" class="max-w-screen-xl px-4 py-7 tablet:px-6">
+      <MvEmptyState
+        v-if="!item.scoreCalibrations?.length"
+        :action-label="userIsAuthorizedToAddCalibration ? '+ Create a calibration' : undefined"
+        description="Score calibrations define functional classification ranges for clinical variant interpretation. Add one to help users interpret scores from this dataset."
+        title="No calibrations yet"
+        @action="openCalibrationEditor(item.urn)"
+      />
       <div v-else class="cal-card">
         <DataTable
           v-model:expanded-rows="expandedRows"
@@ -228,6 +232,7 @@
 import {useHead} from '@unhead/vue'
 import MvLayout from '@/components/layout/MvLayout.vue'
 import MvPageHeader from '@/components/layout/MvPageHeader.vue'
+import MvEmptyState from '@/components/common/MvEmptyState.vue'
 import {
   checkPermission,
   checkPermissions,
@@ -277,6 +282,7 @@ export default {
   components: {
     CalibrationEditor,
     EmailPrompt,
+    MvEmptyState,
     PButton: Button,
     MvLayout,
     MvPageHeader,
@@ -613,8 +619,8 @@ export default {
 }
 
 .cal-tag-green {
-  background: #e8f5e9;
-  color: #2e7d32;
+  background: var(--color-published-light);
+  color: var(--color-published);
 }
 
 .cal-tag-red {

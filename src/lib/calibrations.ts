@@ -7,9 +7,9 @@ import {components} from '@/schema/openapi'
 export type FunctionalClassificationVariants = components['schemas']['FunctionalClassificationVariants']
 export type FunctionalClassificationVariant = components['schemas']['VariantEffectMeasurement']
 
-export const NORMAL_RANGE_DEFAULT_COLOR = '#4444ff'
-export const ABNORMAL_RANGE_DEFAULT_COLOR = '#ff4444'
-export const NOT_SPECIFIED_RANGE_DEFAULT_COLOR = '#646464'
+export const NORMAL_RANGE_DEFAULT_COLOR = 'var(--color-cal-normal)'
+export const ABNORMAL_RANGE_DEFAULT_COLOR = 'var(--color-cal-abnormal)'
+export const NOT_SPECIFIED_RANGE_DEFAULT_COLOR = 'var(--color-cal-unspecified)'
 
 export const BENIGN_CRITERION = 'BS3'
 export const PATHOGENIC_CRITERION = 'PS3'

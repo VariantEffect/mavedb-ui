@@ -54,7 +54,7 @@
             <router-link
               v-for="item in addMenuItems"
               :key="item.route"
-              class="block border-b border-border-light px-4 py-3 !text-text-primary no-underline last:border-b-0 hover:bg-[#f5f5f5]"
+              class="block border-b border-border-light px-4 py-3 !text-text-primary no-underline last:border-b-0 hover:bg-neutral-100"
               :to="item.route"
               @click="hideAddMenu"
             >
@@ -110,7 +110,7 @@
                   {{ ' ' }}
                   <span class="text-text-muted">{{ activity.verb }}</span>
                 </span>
-                <span class="text-xs text-[#bbb]">{{ activity.time }}</span>
+                <span class="text-xs text-neutral-400">{{ activity.time }}</span>
               </div>
             </div>
           </div>
@@ -136,7 +136,7 @@
           <div v-for="(item, idx) in userMenuItems" :key="idx">
             <a
               v-if="item.command"
-              class="flex items-center gap-2.5 border-b border-border-light px-4 py-2.5 text-sm font-medium !text-text-primary no-underline last:border-b-0 hover:bg-[#f5f5f5]"
+              class="flex items-center gap-2.5 border-b border-border-light px-4 py-2.5 text-sm font-medium !text-text-primary no-underline last:border-b-0 hover:bg-neutral-100"
               href="#"
               @click.prevent="handleUserMenuCommand(item)"
             >
@@ -145,7 +145,7 @@
             </a>
             <router-link
               v-else
-              class="flex items-center gap-2.5 border-b border-border-light px-4 py-2.5 text-sm font-medium !text-text-primary no-underline last:border-b-0 hover:bg-[#f5f5f5]"
+              class="flex items-center gap-2.5 border-b border-border-light px-4 py-2.5 text-sm font-medium !text-text-primary no-underline last:border-b-0 hover:bg-neutral-100"
               :to="item.route!"
               @click="hideUserMenu"
             >

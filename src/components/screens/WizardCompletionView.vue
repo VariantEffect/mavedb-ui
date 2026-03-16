@@ -2,17 +2,7 @@
   <MvLayout>
     <div v-if="userIsAuthenticated && item" class="mx-auto max-w-[640px] px-6 py-[60px]">
       <div class="completion-card">
-        <!-- Success icon bars -->
-        <div class="flex h-14 items-end justify-center gap-1">
-          <div class="w-1.5 rounded-t" style="background: #e0e0e0; height: 18px; opacity: 0.3"></div>
-          <div class="w-1.5 rounded-t" style="background: #ddd; height: 28px; opacity: 0.4"></div>
-          <div class="w-1.5 rounded-t" style="background: #ccc; height: 40px; opacity: 0.5"></div>
-          <div class="w-1.5 rounded-t" style="background: #bbb; height: 24px; opacity: 0.6"></div>
-          <div class="w-1.5 rounded-t" style="background: #f8971d; height: 36px; opacity: 0.7"></div>
-          <div class="w-1.5 rounded-t" style="background: #78b793; height: 44px"></div>
-          <div class="w-1.5 rounded-t" style="background: #a1d8c8; height: 32px"></div>
-          <div class="w-1.5 rounded-t" style="background: #78b793; height: 20px"></div>
-        </div>
+        <MvDecorativeBars variant="leading" />
 
         <h2 class="mb-2 mt-6 text-[22px] font-bold text-text-dark">Your score set has been saved!</h2>
         <p class="mb-6 text-[15px] text-text-secondary">Thank you for uploading your data to MaveDB.</p>
@@ -44,7 +34,7 @@
             <div class="text-sm font-semibold text-text-primary">Create a score set in a new experiment</div>
             <div class="mt-0.5 text-xs text-text-secondary">Start a new experiment and add score sets to it</div>
           </router-link>
-          <router-link class="completion-action" :to="{name: 'scoreSet', params: {urn: itemId}}">
+          <router-link class="completion-action" :to="{name: 'scoreSetCalibrations', params: {urn: itemId}}">
             <div class="text-sm font-semibold text-text-primary">Add a score calibration</div>
             <div class="mt-0.5 text-xs text-text-secondary">
               Help users interpret functional scores by providing clinical reference points
@@ -52,13 +42,24 @@
           </router-link>
         </div>
 
+        <!-- Done? -->
+        <div class="mb-7 text-left">
+          <h3 class="mb-3 text-sm font-bold uppercase tracking-wide text-text-secondary">All done?</h3>
+          <router-link class="completion-action" :to="{name: 'dashboard'}">
+            <div class="text-sm font-semibold text-text-primary">Go to your dashboard</div>
+            <div class="mt-0.5 text-xs text-text-secondary">
+              View and manage all your score sets, experiments, and collections
+            </div>
+          </router-link>
+        </div>
+
         <!-- Attention box -->
         <div class="rounded-lg border border-[#fbda68] bg-[#fffdf0] p-4 text-left">
-          <h3 class="mb-2 flex items-center gap-1.5 text-[13px] font-bold uppercase tracking-wide text-[#b8860b]">
+          <h3 class="mb-2 flex items-center gap-1.5 text-sm font-bold uppercase tracking-wide text-[#b8860b]">
             <i class="pi pi-exclamation-circle text-sm" />
             Important
           </h3>
-          <ul class="list-disc space-y-1 pl-5 text-[13px] leading-relaxed text-text-secondary">
+          <ul class="list-disc space-y-1 pl-5 text-sm leading-relaxed text-text-secondary">
             <li>
               Your data is currently <strong class="text-text-primary">unpublished</strong> and viewable only to you.
             </li>
@@ -86,6 +87,7 @@
 
 <script lang="ts">
 import MvLayout from '@/components/layout/MvLayout.vue'
+import MvDecorativeBars from '@/components/common/MvDecorativeBars.vue'
 import ItemNotFound from '@/components/common/ItemNotFound.vue'
 import PageLoading from '@/components/common/PageLoading.vue'
 import useAuth from '@/composition/auth'
@@ -98,7 +100,7 @@ type ScoreSet = components['schemas']['ScoreSet']
 export default {
   name: 'WizardCompletionView',
 
-  components: {MvLayout, ItemNotFound, PageLoading},
+  components: {MvLayout, MvDecorativeBars, ItemNotFound, PageLoading},
 
   props: {
     itemId: {
@@ -175,7 +177,7 @@ export default {
 
 .completion-action:hover {
   border-color: var(--color-sage);
-  background: #fafafa;
+  background: var(--color-bg);
   text-decoration: none;
 }
 </style>

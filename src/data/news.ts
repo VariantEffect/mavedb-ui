@@ -41,9 +41,9 @@ export interface NewsItem {
 }
 
 export const NEWS_TAG_STYLES: Record<NewsTag, {bg: string; text: string}> = {
-  feature: {bg: 'bg-[#e8f0fe]', text: 'text-[#1a56a0]'},
-  improvement: {bg: 'bg-[#e8f5e9]', text: 'text-[#2e7d32]'},
-  fix: {bg: 'bg-[#fff3e0]', text: 'text-[#e65100]'}
+  feature: {bg: 'bg-role-admin-light', text: 'text-role-admin'},
+  improvement: {bg: 'bg-published-light', text: 'text-published'},
+  fix: {bg: 'bg-unpublished-light', text: 'text-unpublished'}
 }
 
 export const NEWS_ITEMS: NewsItem[] = [

@@ -1,16 +1,6 @@
 <template>
   <div class="flex flex-1 flex-col items-center justify-center px-6 py-16 text-center">
-    <!-- Decorative bars -->
-    <div class="mb-7 flex items-end justify-center gap-1" style="height: 48px">
-      <div class="w-1.5 rounded-t bg-sage" style="height: 18px" />
-      <div class="w-1.5 rounded-t bg-mint" style="height: 30px" />
-      <div class="w-1.5 rounded-t bg-sage" style="height: 42px" />
-      <div class="w-1.5 rounded-t bg-orange-cta/70" style="height: 34px" />
-      <div class="w-1.5 rounded-t bg-gray-400/60" style="height: 24px" />
-      <div class="w-1.5 rounded-t bg-gray-300/50" style="height: 38px" />
-      <div class="w-1.5 rounded-t bg-gray-200/40" style="height: 26px" />
-      <div class="w-1.5 rounded-t bg-gray-200/30" style="height: 16px" />
-    </div>
+    <MvDecorativeBars class="mb-7" variant="trailing" />
 
     <h2 class="mb-3 font-display text-2xl font-bold text-text-primary">
       404 &mdash; {{ modelNameForDisplay ? `${modelNameForDisplay} not found` : 'Page not found' }}
@@ -36,7 +26,7 @@
         Search MaveDB
       </router-link>
       <router-link
-        class="inline-flex items-center gap-1.5 rounded-md border border-border bg-white px-5 py-2.5 text-sm font-semibold text-text-secondary no-underline transition-colors hover:bg-[#f5f5f5]"
+        class="inline-flex items-center gap-1.5 rounded-md border border-border bg-white px-5 py-2.5 text-sm font-semibold text-text-secondary no-underline transition-colors hover:bg-neutral-100"
         to="/"
       >
         Back to home
@@ -47,9 +37,12 @@
 
 <script lang="ts">
 import {defineComponent} from 'vue'
+import MvDecorativeBars from '@/components/common/MvDecorativeBars.vue'
 
 export default defineComponent({
   name: 'ItemNotFound',
+
+  components: {MvDecorativeBars},
 
   props: {
     model: {type: String, default: null},

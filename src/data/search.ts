@@ -14,8 +14,8 @@ export const SEARCH_TYPES = [
 
 export const SEARCH_COLORS: Record<string, {accent: string; bg: string}> = {
   hgvs: {accent: 'var(--color-sage)', bg: 'var(--color-sage-light)'},
-  dbSnpRsId: {accent: '#e6b84d', bg: '#fdf3d7'},
-  clinVarVariationId: {accent: '#5aafa0', bg: '#c8ece5'},
+  dbSnpRsId: {accent: 'var(--color-dbsnp)', bg: 'var(--color-dbsnp-light)'},
+  clinVarVariationId: {accent: 'var(--color-clinvar)', bg: 'var(--color-clinvar-light)'},
   clinGenAlleleId: {accent: 'var(--color-orange-cta)', bg: 'var(--color-orange-light)'}
 }
 

@@ -1,197 +1,420 @@
 <template>
   <MvLayout :require-auth="true">
-    <h1 class="text-4xl font-bold py-4">Welcome to MaveDB</h1>
-    <Tabs value="0">
-      <TabList>
-        <Tab value="0">Published</Tab>
-        <Tab value="1">Unpublished</Tab>
-      </TabList>
-      <TabPanels>
-        <TabPanel header="Published" value="0">
-          <div class="mavedb-search-view">
-            <h2>Published Score sets</h2>
-            <div class="mavedb-search-form">
-              <!-- <span class="p-input-icon-left">
-                <i class="pi pi-search" />
-                <InputText ref="searchTextInput" v-model="searchText" placeholder="Search" type="text" @change="search" />
-              </span> -->
-              <div style="display: inline-block; margin-left: 40px">
-                <div class="p-inputgroup" style="max-width: 300px; width: 300px; display: flex; align-items: stretch;">
-                  <InputText
-                    ref="searchTextInput"
-                    v-model="searchText"
-                    class="rounded-r-none!"
-                    placeholder="Search"
-                    size="small"
-                    type="text"
-                    @change="search"
-                  />
-                  <Button
-                    class="rounded-l-none!"
-                    :enabled="searchText && searchText.length > 0"
-                    icon="pi pi-search"
-                    size="small"
-                    @click="search"
-                  />
-                  <ProgressSpinner
-                    v-if="isSearching"
-                    class="size-8! m-1"
-                  />
-                </div>
-              </div>
-            </div>
+    <template #header>
+      <MvPageHeader max-width="1200px" title="My Dashboard">
+        <template #subtitle>
+          <p class="mb-5 text-sm text-text-muted">Manage your uploaded datasets, collections, and calibrations</p>
+        </template>
+      </MvPageHeader>
+      <div class="border-b border-border bg-white px-4 tablet:px-6">
+        <div class="mx-auto" style="max-width: 1200px">
+          <!-- Mobile: dropdown tab switcher -->
+          <div class="py-2.5 tablet:hidden">
+            <PSelect
+              class="w-full"
+              :model-value="activeTab"
+              option-label="label"
+              option-value="value"
+              :options="tabOptions"
+              @update:model-value="activeTab = $event"
+            />
+          </div>
 
-            <ScoreSetTable :data="publishedScoreSets" :language="language" :scroll-x="true" :scroll-y="true" />
+          <!-- Desktop: tab bar -->
+          <div class="hidden tablet:flex">
+            <Tabs v-model:value="activeTab">
+              <TabList>
+                <Tab value="score-sets">
+                  Score Sets
+                  <span
+                    class="ml-1.5 rounded-[10px] px-[7px] py-px text-xs font-bold"
+                    :class="activeTab === 'score-sets' ? 'bg-sage text-text-dark' : 'bg-chip text-sage'"
+                  >
+                    {{ tabCounts.scoreSets }}
+                  </span>
+                </Tab>
+                <Tab value="experiments">
+                  Experiments
+                  <span
+                    class="ml-1.5 rounded-[10px] px-[7px] py-px text-xs font-bold"
+                    :class="activeTab === 'experiments' ? 'bg-sage text-text-dark' : 'bg-chip text-sage'"
+                  >
+                    {{ tabCounts.experiments }}
+                  </span>
+                </Tab>
+                <Tab value="collections">
+                  Collections
+                  <span
+                    class="ml-1.5 rounded-[10px] px-[7px] py-px text-xs font-bold"
+                    :class="activeTab === 'collections' ? 'bg-sage text-text-dark' : 'bg-chip text-sage'"
+                  >
+                    {{ tabCounts.collections }}
+                  </span>
+                </Tab>
+                <Tab value="calibrations">
+                  Calibrations
+                  <span
+                    class="ml-1.5 rounded-[10px] px-[7px] py-px text-xs font-bold"
+                    :class="activeTab === 'calibrations' ? 'bg-sage text-text-dark' : 'bg-chip text-sage'"
+                  >
+                    {{ tabCounts.calibrations }}
+                  </span>
+                </Tab>
+              </TabList>
+            </Tabs>
           </div>
-        </TabPanel>
-        <TabPanel header="Unpublished" value="1">
-          <div class="mavedb-search-view">
-            <h2 class="pb-2">Unpublished Score sets</h2>
-            <ScoreSetTable :data="unpublishedScoreSets" :language="language" :scroll-x="true" :scroll-y="true" />
-          </div>
-        </TabPanel>
-      </TabPanels>
-    </Tabs>
+        </div>
+      </div>
+    </template>
+
+    <div class="mx-auto w-full px-4 py-6 tablet:px-6 tablet:py-8" style="max-width: 1200px">
+      <MvDashboardScoreSets
+        v-if="activeTab === 'score-sets'"
+        v-model:score-set-filter="scoreSetFilter"
+        v-model:score-set-search="scoreSetSearch"
+        :cross-tab-filter="crossTabFilter"
+        :error="error"
+        :filtered-score-sets="filteredScoreSets"
+        :has-data="hasScoreSets"
+        :loading="loading"
+        @clear-cross-tab-filter="setCrossTabFilter(null)"
+        @delete-score-set="onDeleteScoreSet"
+        @retry="fetchScoreSets"
+      />
+
+      <MvDashboardExperiments
+        v-else-if="activeTab === 'experiments'"
+        v-model:experiment-filter="experimentFilter"
+        v-model:experiment-search="experimentSearch"
+        :error="error"
+        :filtered-experiments="filteredExperiments"
+        :has-data="hasExperiments"
+        :loading="loading"
+        @delete-experiment="onDeleteExperiment"
+        @retry="fetchExperiments"
+        @view-score-sets="onViewScoreSets"
+      />
+
+      <MvDashboardCollections
+        v-else-if="activeTab === 'collections'"
+        v-model:collection-filter="collectionFilter"
+        v-model:collection-search="collectionSearch"
+        :error="error"
+        :filtered-collections="filteredCollections"
+        :has-data="hasCollections"
+        :loading="loading"
+        @create-collection="creatorVisible = true"
+        @delete-collection="onDeleteCollection"
+        @retry="fetchCollections"
+      />
+
+      <MvDashboardCalibrations
+        v-else-if="activeTab === 'calibrations'"
+        v-model:calibration-filter="calibrationFilter"
+        v-model:calibration-search="calibrationSearch"
+        :error="error"
+        :filtered-calibrations="filteredCalibrations"
+        :has-data="hasCalibrations"
+        :loading="loading"
+        @create-calibration="openCalibrationEditor()"
+        @retry="fetchCalibrations"
+      />
+    </div>
+
+    <PDialog v-model:visible="creatorVisible" header="New Collection" modal :style="{width: '600px'}">
+      <CollectionCreator @collection-created="onCollectionCreated" />
+    </PDialog>
+
+    <PDialog
+      v-model:visible="editorVisible"
+      :close-on-escape="false"
+      :header="editorDialogHeader"
+      modal
+      :style="{maxWidth: '90%', width: '75rem'}"
+      @hide="closeCalibrationEditor"
+    >
+      <CalibrationEditor
+        ref="calibrationEditorRef"
+        :calibration-urn="editingCalibrationUrn"
+        :score-set-urn="editingScoreSetUrn"
+        :show-score-set-selector="true"
+        @canceled="closeCalibrationEditor"
+        @saved="onCalibrationSaved"
+      />
+      <template #footer>
+        <PButton icon="pi pi-times" label="Close" severity="secondary" @click="closeCalibrationEditor" />
+        <PButton icon="pi pi-save" label="Save Changes" severity="success" @click="saveChildCalibration" />
+      </template>
+    </PDialog>
   </MvLayout>
 </template>
 
-<script>
-import axios from 'axios'
-import InputText from 'primevue/inputtext'
-import TabPanel from 'primevue/tabpanel'
+<script lang="ts">
+import {defineComponent} from 'vue'
+import {useHead} from '@unhead/vue'
 import Tabs from 'primevue/tabs'
 import TabList from 'primevue/tablist'
 import Tab from 'primevue/tab'
-import TabPanels from 'primevue/tabpanels'
-import {useHead} from '@unhead/vue'
-import Button from 'primevue/button'
-import ProgressSpinner from 'primevue/progressspinner'
+import PButton from 'primevue/button'
+import PDialog from 'primevue/dialog'
+import Select from 'primevue/select'
 
-import config from '@/config'
-import ScoreSetTable from '@/components/ScoreSetTable.vue'
 import MvLayout from '@/components/layout/MvLayout.vue'
+import MvPageHeader from '@/components/layout/MvPageHeader.vue'
+import MvDashboardScoreSets from '@/components/dashboard/MvDashboardScoreSets.vue'
+import MvDashboardExperiments from '@/components/dashboard/MvDashboardExperiments.vue'
+import MvDashboardCollections from '@/components/dashboard/MvDashboardCollections.vue'
+import MvDashboardCalibrations from '@/components/dashboard/MvDashboardCalibrations.vue'
+import CollectionCreator from '@/components/CollectionCreator.vue'
+import CalibrationEditor from '@/components/forms/CalibrationEditor.vue'
+import {useDashboard} from '@/composables/use-dashboard'
+import {useCalibrationDialog} from '@/composables/use-calibration-dialog'
+import {deleteScoreSet} from '@/api/mavedb/score-sets'
+import {deleteExperiment} from '@/api/mavedb/experiments'
+import {deleteCollection} from '@/api/mavedb/collections'
 
-export default {
+export default defineComponent({
   name: 'DashboardView',
 
-  components: {MvLayout, ScoreSetTable, InputText, Tabs, TabList, Tab, TabPanels, TabPanel, Button, ProgressSpinner},
-
-  setup: () => {
-    useHead({title: 'My dashboard'})
+  components: {
+    CalibrationEditor,
+    CollectionCreator,
+    PButton,
+    PDialog,
+    PSelect: Select,
+    MvDashboardCalibrations,
+    MvDashboardCollections,
+    MvDashboardExperiments,
+    MvDashboardScoreSets,
+    MvLayout,
+    MvPageHeader,
+    Tab,
+    TabList,
+    Tabs
   },
 
-  data: function () {
+  setup() {
+    useHead({title: 'My dashboard'})
+
+    // useDashboard: scoreSets, experiments, collections, calibrations, loading, error,
+    //   *Filter, *Search, crossTabFilter, filtered*, has*, tabCounts, fetch*, setCrossTabFilter
+    // useCalibrationDialog: editorVisible, editingCalibrationUrn, editingScoreSetUrn,
+    //   editorDialogHeader, openCalibrationEditor, editCalibrationInEditor, closeCalibrationEditor
+    const dashboard = useDashboard()
+    const calibrationDialog = useCalibrationDialog()
+    return {...dashboard, ...calibrationDialog}
+  },
+
+  data() {
+    const validTabs = ['score-sets', 'experiments', 'collections', 'calibrations']
+    const tab = this.$route.query.tab as string
+    const filterParam = this.$route.query.filter as string
+    const initialFilter = filterParam ? filterParam.split(',') : undefined
+    const experimentParam = this.$route.query.experiment as string | undefined
     return {
-      //currentUser: user,
-      searchText: null,
-      scoreSets: [],
-      publishedScoreSets: [],
-      unpublishedScoreSets: [],
-      displayedUnplublishedScoreSets: false,
-      language: {
-        emptyTable: 'You do not have any score sets matching the request.'
+      activeTab: validTabs.includes(tab) ? tab : 'score-sets',
+      creatorVisible: false,
+      validTabs,
+      initialFilter,
+      initialExperiment: experimentParam
+    }
+  },
+
+  computed: {
+    activeFilter: {
+      get(): string[] {
+        switch (this.activeTab) {
+          case 'score-sets':
+            return this.scoreSetFilter
+          case 'experiments':
+            return this.experimentFilter
+          case 'collections':
+            return this.collectionFilter
+          case 'calibrations':
+            return this.calibrationFilter
+          default:
+            return ['all']
+        }
       },
-      isSearching: false,
+      set(value: string[]) {
+        switch (this.activeTab) {
+          case 'score-sets':
+            this.scoreSetFilter = value
+            break
+          case 'experiments':
+            this.experimentFilter = value
+            break
+          case 'collections':
+            this.collectionFilter = value
+            break
+          case 'calibrations':
+            this.calibrationFilter = value
+            break
+        }
+      }
+    },
+    tabOptions(): {label: string; value: string}[] {
+      return [
+        {label: `Score Sets (${this.tabCounts.scoreSets})`, value: 'score-sets'},
+        {label: `Experiments (${this.tabCounts.experiments})`, value: 'experiments'},
+        {label: `Collections (${this.tabCounts.collections})`, value: 'collections'},
+        {label: `Calibrations (${this.tabCounts.calibrations})`, value: 'calibrations'}
+      ]
     }
   },
 
   watch: {
-    searchText: {
-      handler: function (oldValue, newValue) {
-        if (oldValue != newValue) {
-          this.search()
-        }
-      }
+    activeTab() {
+      this.syncQuery()
+    },
+    scoreSetFilter() {
+      if (this.activeTab === 'score-sets') this.syncQuery()
+    },
+    experimentFilter() {
+      if (this.activeTab === 'experiments') this.syncQuery()
+    },
+    collectionFilter() {
+      if (this.activeTab === 'collections') this.syncQuery()
+    },
+    calibrationFilter() {
+      if (this.activeTab === 'calibrations') this.syncQuery()
+    },
+    crossTabFilter() {
+      this.syncQuery()
     }
   },
 
-  mounted: async function () {
-    await this.search()
+  async mounted() {
+    if (this.initialFilter) {
+      this.activeFilter = this.initialFilter
+    }
+    await this.fetchAll()
+    if (this.initialExperiment) {
+      const exp = this.experiments.find((e) => e.urn === this.initialExperiment)
+      if (exp) {
+        this.setCrossTabFilter({
+          type: 'experiment',
+          experimentUrn: exp.urn,
+          experimentTitle: exp.title
+        })
+      }
+    }
   },
 
   methods: {
-    search: async function () {
-      this.isSearching = true
-      await this.fetchSearchResults()
-      this.isSearching = false
-      /*
-      if (this.searchText && this.searchText.length > 0) {
-        await this.fetchSearchResults()
-      } else {
-        this.scoreSets = []
+    syncQuery() {
+      const query: Record<string, string> = {}
+      if (this.activeTab !== 'score-sets') query.tab = this.activeTab
+      if (!this.activeFilter.includes('all')) query.filter = this.activeFilter.join(',')
+      if (this.crossTabFilter?.type === 'experiment') {
+        query.experiment = this.crossTabFilter.experimentUrn
       }
-      */
+      this.$router.replace({query})
     },
-    fetchSearchResults: async function () {
+    onViewScoreSets(payload: {experimentUrn: string; experimentTitle: string}) {
+      this.setCrossTabFilter({
+        type: 'experiment',
+        experimentUrn: payload.experimentUrn,
+        experimentTitle: payload.experimentTitle
+      })
+      this.activeTab = 'score-sets'
+    },
+    onCollectionCreated() {
+      this.creatorVisible = false
+      this.fetchCollections()
+    },
+    async onDeleteScoreSet(urn: string) {
       try {
-        // this response should be true to get published data
-        const response = await axios.post(
-          `${config.apiBaseUrl}/me/score-sets/search`,
-          {
-            text: this.searchText || null
-          },
-          {
-            headers: {
-              accept: 'application/json'
-            }
-          }
-        )
-        this.scoreSets = response.data?.scoreSets || []
-        // reset published score sets search results when using search bar
-        this.publishedScoreSets = []
-        this.unpublishedScoreSets = []
-        // Separate the response.data into published score set and unpublished score set.
-        for (let i = 0, len = this.scoreSets.length; i < len; i++) {
-          if (this.scoreSets[i].publishedDate == null) {
-            // do not add to unpublished score sets if it is already populated
-            this.unpublishedScoreSets.push(this.scoreSets[i])
-          } else {
-            this.publishedScoreSets.push(this.scoreSets[i])
-          }
-        }
-      } catch (err) {
-        console.log(`Error while loading search results")`, err)
+        await deleteScoreSet(urn)
+        this.$toast.add({severity: 'success', summary: 'Score set deleted', life: 3000})
+        this.fetchScoreSets()
+      } catch {
+        this.$toast.add({severity: 'error', summary: 'Failed to delete score set', life: 5000})
       }
+    },
+    async onDeleteExperiment(urn: string) {
+      try {
+        await deleteExperiment(urn)
+        this.$toast.add({severity: 'success', summary: 'Experiment deleted', life: 3000})
+        this.fetchExperiments()
+      } catch {
+        this.$toast.add({severity: 'error', summary: 'Failed to delete experiment', life: 5000})
+      }
+    },
+    async onDeleteCollection(urn: string) {
+      try {
+        await deleteCollection(urn)
+        this.$toast.add({severity: 'success', summary: 'Collection deleted', life: 3000})
+        this.fetchCollections()
+      } catch {
+        this.$toast.add({severity: 'error', summary: 'Failed to delete collection', life: 5000})
+      }
+    },
+    async saveChildCalibration() {
+      const editor = this.$refs.calibrationEditorRef as InstanceType<typeof CalibrationEditor> | undefined
+      if (!editor) return
+
+      let result
+      try {
+        result = await editor.saveCalibration()
+      } catch (err) {
+        console.error('Error saving calibration:', err)
+        this.$toast.add({
+          severity: 'error',
+          summary: 'Calibration Not Saved',
+          detail: 'An unexpected error occurred while saving the calibration. Please try again later.',
+          life: 4000
+        })
+        return
+      }
+
+      // Save succeeded — handled via @saved event / onCalibrationSaved.
+      // Only error cases reach here.
+      if (!result || result.success) return
+
+      if (result.error === 'email_required') {
+        this.$toast.add({
+          severity: 'error',
+          summary: 'Email Required',
+          detail:
+            'You must add an email address to your account to create or edit calibrations. Please update your email in Settings.',
+          life: 6000
+        })
+      } else if (result.error === 'validation') {
+        const count = Object.keys(result.validationErrors).length
+        this.$toast.add({
+          severity: 'error',
+          summary: `Please fix ${count} validation ${count === 1 ? 'error' : 'errors'} before saving.`,
+          life: 5000
+        })
+      } else if (result.error === 'generic') {
+        this.$toast.add({
+          severity: 'error',
+          summary: `Encountered an error saving calibration: ${result.message}`,
+          life: 4000
+        })
+      } else if (result.error === 'unknown') {
+        console.error('Error saving calibration:', result.raw)
+        this.$toast.add({
+          severity: 'error',
+          summary: 'Calibration Not Saved',
+          detail: 'An error occurred while saving the calibration. Please try again later.',
+          life: 4000
+        })
+      }
+    },
+    // TODO: Consolidate the dual save path (imperative saveChildCalibration + @saved event)
+    // into a single flow. This pattern is shared with ScoreSetView and ScoreSetCalibrationsView.
+    async onCalibrationSaved() {
+      this.$toast.add({
+        severity: 'success',
+        summary: 'Calibration Saved',
+        detail: 'Calibration saved successfully.',
+        life: 4000
+      })
+      this.closeCalibrationEditor()
+      await this.fetchCalibrations()
     }
   }
-}
+})
 </script>
-
-<style scoped>
-/* (A) FLEX CONTAINER */
-.flex-wrap {
-  display: flex;
-}
-
-/* (B) OPTIONAL COSMETICS */
-.flex-wrap > * {
-  box-sizing: border-box;
-  width: 50%;
-  padding: 10px;
-  background: #ffe2e0;
-}
-
-/* Layout */
-.mavedb-search-view {
-  display: flex;
-  flex-direction: column;
-  position: relative;
-  height: 100%;
-}
-
-.mavedb-search-header {
-  flex: 0 0 auto;
-  text-align: center;
-}
-
-.mavedb-search-header h1 {
-  font-size: 20px;
-  text-align: center;
-}
-
-.mavedb-search-form {
-  flex: 0 0 auto;
-  padding: 10px 0;
-  text-align: center;
-}
-</style>

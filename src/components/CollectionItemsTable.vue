@@ -15,35 +15,41 @@
       </Column>
       <Column v-if="canUpdate" style="width: 4rem">
         <template #body="{data}">
-          <Button icon="pi pi-trash" severity="danger" size="small" text @click="$emit('remove', data.urn)" />
+          <PButton icon="pi pi-trash" severity="danger" size="small" text @click="$emit('remove', data.urn)" />
         </template>
       </Column>
       <template v-if="canAdd" #footer>
         <div class="table-footer-actions">
-          <Button :label="`Add ${entityTypeLabel}`" size="small" @click="$emit('add')" />
+          <PButton :label="`Add ${entityTypeLabel}`" severity="success" size="small" @click="$emit('add')" />
         </div>
       </template>
     </DataTable>
-    <div v-else class="empty-state">
-      <p>No {{ entityTypeLabel }}s in this collection yet.</p>
-      <p v-if="canAdd" class="add-items-link" @click="$emit('add')">Add items to start organizing your collection.</p>
+    <div v-else>
+      <MvEmptyState
+        :action-label="`Add ${entityTypeLabel}`"
+        :description="`This collection doesn't have any ${entityTypeLabel}s yet.`"
+        :title="`No ${entityTypeLabel}s yet`"
+        @action="$emit('add')"
+      />
     </div>
   </div>
 </template>
 
-<script>
+<script lang="ts">
 import Button from 'primevue/button'
 import Column from 'primevue/column'
 import DataTable from 'primevue/datatable'
 import EntityLink from '@/components/common/EntityLink.vue'
+import MvEmptyState from './common/MvEmptyState.vue'
 
 export default {
   name: 'CollectionItemsTable',
   components: {
-    Button,
+    PButton: Button,
     Column,
     DataTable,
-    EntityLink
+    EntityLink,
+    MvEmptyState
   },
   props: {
     items: {
@@ -53,7 +59,7 @@ export default {
     entityType: {
       type: String,
       required: true,
-      validator: (value) => ['scoreSet', 'experiment'].includes(value)
+      validator: (value: string) => ['scoreSet', 'experiment'].includes(value)
     },
     canUpdate: {
       type: Boolean,

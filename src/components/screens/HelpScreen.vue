@@ -100,7 +100,7 @@ const CHANNELS = [
     external: true,
     icon: 'fa-solid fa-comment',
     iconBg: 'bg-[#eef0fb]',
-    iconColor: '#78b793'
+    iconColor: 'var(--color-sage)'
   },
   {
     title: 'Documentation',
@@ -109,8 +109,8 @@ const CHANNELS = [
     href: '/docs',
     external: false,
     icon: 'fa-solid fa-file-lines',
-    iconBg: 'bg-[#e8f5e9]',
-    iconColor: '#2e7d32'
+    iconBg: 'bg-published-light',
+    iconColor: 'var(--color-published)'
   },
   {
     title: 'GitHub',
@@ -119,8 +119,8 @@ const CHANNELS = [
     href: GITHUB_UI_ISSUES,
     external: true,
     icon: 'fa-brands fa-github',
-    iconBg: 'bg-[#f5f5f5]',
-    iconColor: '#333'
+    iconBg: 'bg-neutral-100',
+    iconColor: 'var(--color-text-primary)'
   }
 ]
 

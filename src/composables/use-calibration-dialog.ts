@@ -32,8 +32,8 @@ export interface UseCalibrationDialogReturn {
   editingScoreSetUrn: Ref<string | undefined>
   /** Computed dialog header text ("Create New Calibration" or "Edit Calibration"). */
   editorDialogHeader: ComputedRef<string>
-  /** Open the dialog in create mode for the given score set. */
-  openCalibrationEditor: (scoreSetUrn: string) => void
+  /** Open the dialog in create mode, optionally for a given score set. */
+  openCalibrationEditor: (scoreSetUrn?: string) => void
   /** Open the dialog in edit mode for the given calibration. */
   editCalibrationInEditor: (calibrationUrn: string) => void
   /** Close the dialog and reset URN state. */
@@ -49,7 +49,7 @@ export function useCalibrationDialog(): UseCalibrationDialogReturn {
     editingCalibrationUrn.value ? 'Edit Calibration' : 'Create New Calibration'
   )
 
-  function openCalibrationEditor(scoreSetUrn: string) {
+  function openCalibrationEditor(scoreSetUrn?: string) {
     editingCalibrationUrn.value = undefined
     editingScoreSetUrn.value = scoreSetUrn
     editorVisible.value = true

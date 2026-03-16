@@ -417,7 +417,7 @@ export default defineComponent({
 }
 
 .mavedb-assay-facts-value.yellow {
-  background: #fef3c7;
+  background: var(--color-badge-alert);
   padding: 0.125em 0.25em;
   border-radius: 4px;
 }
@@ -445,70 +445,4 @@ export default defineComponent({
   margin-left: 0.25em;
 }
 
-.mavedb-classification-badge.mavedb-blue {
-  background: #1e40af;
-  color: white;
-}
-
-.mavedb-classification-badge.mavedb-red {
-  background: #991b1b;
-  color: white;
-}
-
-/* Evidence Strengths */
-
-.mave-evidence-code-PS3_VERY_STRONG {
-  background-color: #943744;
-  font-weight: bold;
-}
-
-.mave-evidence-code-PS3_STRONG {
-  background-color: #b85c6b;
-  font-weight: bold;
-}
-
-.mave-evidence-code-PS3_MODERATE_PLUS {
-  background-color: #ca7682;
-  font-weight: bold;
-}
-
-.mave-evidence-code-PS3_MODERATE {
-  background-color: #d68f99;
-  font-weight: bold;
-}
-
-.mave-evidence-code-PS3_SUPPORTING {
-  background-color: #e6b1b8;
-  font-weight: bold;
-}
-
-.mave-evidence-code-BS3_SUPPORTING {
-  background-color: #e4f1f6;
-  font-weight: bold;
-}
-
-.mave-evidence-code-BS3_MODERATE {
-  background-color: #d0e8f0;
-  font-weight: bold;
-}
-
-.mave-evidence-code-BS3_MODERATE_PLUS {
-  background-color: #99c8dc;
-  font-weight: bold;
-}
-
-.mave-evidence-code-BS3_STRONG {
-  background-color: #7ab5d1;
-  font-weight: bold;
-}
-
-.mave-evidence-code-BS3_VERY_STRONG {
-  background-color: #4b91a6;
-  font-weight: bold;
-}
-
-.mave-evidence-code-INDETERMINATE {
-  background-color: #e0e0e0;
-  font-weight: bold;
-}
 </style>

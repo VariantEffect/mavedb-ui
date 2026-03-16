@@ -774,7 +774,11 @@ export default defineComponent({
     searchType: {
       handler(newVal, oldVal) {
         if (newVal !== oldVal && this.defaultSearchVisible) {
-          this.searchText = ''
+          // Don't clear searchText on initial hydration from query params (oldVal is null).
+          // Only clear when the user actively switches search type.
+          if (oldVal != null) {
+            this.searchText = ''
+          }
           this.router.replace({
             query: {...this.route.query, searchType: newVal}
           })

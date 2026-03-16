@@ -27,6 +27,9 @@
   --color-orange-border: #f8c87a;
   --color-yellow-accent: #fbda68;
 
+  /* ── External: ORCID ─────────────────────────────────────────── */
+  --color-orcid: #a6ce39;
+
   /* ── Brand: Danger ── PrimeVue: dangerPalette ────────────────── */
   --color-danger: #d05353;
   --color-danger-light: #fdf0f0;

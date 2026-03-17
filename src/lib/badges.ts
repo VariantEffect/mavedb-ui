@@ -21,7 +21,8 @@ export const statusBadges: Record<Status, BadgeConfig> = {
 
 // ── Role ─────────────────────────────────────────────────────────────────────
 
-export type Role = 'owner' | 'contributor' | 'admin' | 'editor' | 'viewer'
+export type {Role} from '@/lib/roles'
+import type {Role} from '@/lib/roles'
 
 export const roleBadges: Record<Role, BadgeConfig> = {
   owner: {label: 'Owner', classes: 'bg-role-admin-light text-role-admin', dotClass: 'bg-role-admin'},

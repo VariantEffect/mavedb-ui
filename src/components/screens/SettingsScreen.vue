@@ -12,16 +12,7 @@
             <div class="flex items-start justify-between gap-4">
               <div>
                 <div class="font-display text-xl font-bold text-text-dark">{{ userName }}</div>
-                <a
-                  v-if="userOrcidId"
-                  class="mt-0.5 inline-flex items-center gap-1.5 text-xs font-semibold text-orcid no-underline hover:underline"
-                  :href="`https://orcid.org/${userOrcidId}`"
-                  rel="noopener noreferrer"
-                  target="_blank"
-                >
-                  <img alt="ORCID iD" class="size-3.5" src="@/assets/ORCIDiD_icon.png" />
-                  {{ userOrcidId }}
-                </a>
+                <MvOrcidLink v-if="userOrcidId" class="mt-0.5" :orcid-id="userOrcidId" size="sm" />
               </div>
               <div class="flex items-center gap-2">
                 <PButton
@@ -172,6 +163,7 @@ import {
   searchMyScoreSets
 } from '@/api/mavedb'
 import MvAccessKeyRow from '@/components/common/MvAccessKeyRow.vue'
+import MvOrcidLink from '@/components/common/MvOrcidLink.vue'
 import MvFloatField from '@/components/forms/MvFloatField.vue'
 import MvLayout from '@/components/layout/MvLayout.vue'
 import type {components} from '@/schema/openapi'
@@ -191,7 +183,7 @@ type RoleWithDefault = UserRole | typeof DEFAULT_ROLE
 export default defineComponent({
   name: 'SettingsScreen',
 
-  components: {Checkbox, InputText, MvAccessKeyRow, MvFloatField, MvLayout, PButton},
+  components: {Checkbox, InputText, MvAccessKeyRow, MvFloatField, MvLayout, MvOrcidLink, PButton},
 
   setup() {
     useHead({title: 'Settings'})

@@ -1,111 +1,144 @@
 <template>
   <template v-if="dialogVisible">
-    <EmailPrompt />
+    <EmailPrompt :is-first-login-prompt="false" />
   </template>
   <div>
-    <Button class="mave-collection-permissions-editor-button" label="Edit" @click="dialogVisible = true" />
-    <Dialog
+    <PButton
+      aria-label="Edit user permissions"
+      icon="pi pi-pencil"
+      label="Edit"
+      severity="success"
+      size="small"
+      @click="dialogVisible = true"
+    />
+    <PDialog
       v-model:visible="dialogVisible"
       :close-on-escape="false"
       header="Edit collection permissions"
       modal
-      :style="{width: '45rem'}"
+      :style="{width: '45rem', maxWidth: 'calc(100% - 2rem)'}"
       @hide="resetContributorEditor"
     >
-      <InputText
-        ref="userSearchInput"
-        v-model="orcidIdsToAddStr"
-        class="mave-collection-add-users-search-input"
-        placeholder="Type or paste ORCID IDs here."
-        @keyup.enter="addUsers"
-        @keyup.escape="clearUserSearch"
-      />
-      <div class="mave-collection-user-role-add-controls">
-        <SelectButton
-          v-model="roleToAdd"
-          :allow-empty="false"
-          class="mave-collection-role-to-add"
-          option-label="title"
-          option-value="value"
-          :options="roleOptions"
-        />
-        <Button label="Add user" @click="addUsers" />
+      <div class="flex flex-col gap-3 mt-2">
+        <div class="flex items-center gap-3">
+          <MvFloatField class="flex-auto" label="ORCID IDs">
+            <template #default="{id}">
+              <InputText
+                :id="id"
+                ref="userSearchInput"
+                v-model="orcidIdsToAddStr"
+                class="w-full"
+                fluid
+                @keyup.enter="addUsers"
+                @keyup.escape="clearUserSearch"
+              />
+            </template>
+          </MvFloatField>
+          <PSelect v-model="roleToAdd" class="w-34" option-label="title" option-value="value" :options="roleOptions" />
+          <PButton class="flex-none" label="Add user" @click="addUsers" />
+        </div>
+        <DataTable
+          data-key="orcidId"
+          :multi-sort-meta="[
+            {field: 'user.lastName', order: 1},
+            {field: 'user.firstName', order: 1},
+            {field: 'user.orcidId', order: 1}
+          ]"
+          :row-style="rowStyle"
+          sort-mode="multiple"
+          :value="userRoles"
+        >
+          <Column field="user.orcidId" header="ORCID ID" />
+          <Column
+            :field="(userRole: DisplayUserRole) => `${userRole.user.firstName} ${userRole.user.lastName}`"
+            header="Name"
+          />
+          <Column field="role" header="Role">
+            <template #body="{data}: {data: DisplayUserRole}">
+              <div class="flex items-center gap-1 whitespace-nowrap">
+                <span v-if="orcidIdsToRemove.includes(data.user.orcidId)">{{ data.role }} &rightarrow; None</span>
+                <span v-if="data.oldRole">{{ data.oldRole }} &rightarrow;</span>
+                <span v-if="data.user.orcidId == userOrcidId">{{ data.role }}</span>
+                <PSelect
+                  v-if="!orcidIdsToRemove.includes(data.user.orcidId) && data.user.orcidId != userOrcidId"
+                  class="w-34"
+                  :model-value="data.role"
+                  option-label="title"
+                  option-value="value"
+                  :options="roleOptions"
+                  @change="changeRole(data.user.orcidId, $event.value)"
+                />
+              </div>
+            </template>
+          </Column>
+          <Column>
+            <template #body="{data}: {data: DisplayUserRole}">
+              <PButton
+                v-if="data.user.orcidId != userOrcidId && !orcidIdsToRemove.includes(data.user.orcidId)"
+                aria-label="Remove user"
+                icon="pi pi-trash"
+                rounded
+                severity="danger"
+                size="small"
+                text
+                @click="removeUserRole(data.user.orcidId)"
+              />
+              <PButton
+                v-if="orcidIdsToRemove.includes(data.user.orcidId)"
+                label="Restore"
+                severity="secondary"
+                size="small"
+                @click="restoreUserRole(data.user.orcidId)"
+              />
+            </template>
+          </Column>
+        </DataTable>
       </div>
-      <DataTable
-        data-key="orcidId"
-        :multi-sort-meta="[
-          {field: 'user.lastName', order: 1},
-          {field: 'user.firstName', order: 1},
-          {field: 'user.orcidId', order: 1}
-        ]"
-        :row-style="rowStyle"
-        sort-mode="multiple"
-        :value="userRoles"
-      >
-        <Column field="user.orcidId" header="ORCID ID" />
-        <Column :field="(userRole) => `${userRole.user.firstName} ${userRole.user.lastName}`" header="Name" />
-        <Column field="role" header="Role">
-          <template #body="{data}">
-            <span v-if="orcidIdsToRemove.includes(data.user.orcidId)">{{ data.role }} &nbsp;&rightarrow; None</span>
-            <span v-if="data.oldRole">{{ data.oldRole }} &rightarrow;&nbsp;</span>
-            <span v-if="data.user.orcidId == userOrcidId">{{ data.role }}</span>
-            <Select
-              v-if="!orcidIdsToRemove.includes(data.user.orcidId) && data.user.orcidId != userOrcidId"
-              class="mave-collection-role-dropdown"
-              :model-value="data.role"
-              option-label="title"
-              option-value="value"
-              :options="roleOptions"
-              @change="changeRole(data.user.orcidId, $event.value)"
-            />
-          </template>
-        </Column>
-        <Column>
-          <template #body="{data}">
-            <Button
-              v-if="data.user.orcidId != userOrcidId && !orcidIdsToRemove.includes(data.user.orcidId)"
-              label="Remove"
-              size="small"
-              @click="removeUserRole(data.user.orcidId)"
-            />
-            <Button
-              v-if="orcidIdsToRemove.includes(data.user.orcidId)"
-              label="Restore"
-              size="small"
-              @click="restoreUserRole(data.user.orcidId)"
-            />
-          </template>
-        </Column>
-      </DataTable>
-      <div class="mave-collection-editor-action-buttons">
-        <Button label="Cancel" severity="secondary" @click="dialogVisible = false" />
-        <Button :disabled="!dirty" label="Save" @click="saveChanges" />
+      <div class="flex justify-end gap-2 mt-5">
+        <PButton label="Cancel" severity="secondary" @click="dialogVisible = false" />
+        <PButton :disabled="!dirty" label="Save" severity="success" @click="saveChanges" />
       </div>
-    </Dialog>
+    </PDialog>
   </div>
 </template>
 
-<script>
-import axios from 'axios'
+<script lang="ts">
+import {defineComponent} from 'vue'
 import _ from 'lodash'
-import Button from 'primevue/button'
+import PButton from 'primevue/button'
 import Column from 'primevue/column'
 import DataTable from 'primevue/datatable'
-import Dialog from 'primevue/dialog'
-import Select from 'primevue/select'
+import PDialog from 'primevue/dialog'
+import PSelect from 'primevue/select'
 import InputText from 'primevue/inputtext'
-import SelectButton from 'primevue/selectbutton'
 
-import config from '@/config'
 import useAuth from '@/composition/auth'
 import useItem from '@/composition/item.ts'
+import {addCollectionRole, removeCollectionRole} from '@/api/mavedb/collections'
+import {lookupUser} from '@/api/mavedb/users'
 import {ORCID_ID_REGEX} from '@/lib/orcid'
+import {type CollectionRole, collectionRoleOptions} from '@/lib/roles'
 import EmailPrompt from '@/components/common/EmailPrompt.vue'
+import MvFloatField from '@/components/forms/MvFloatField.vue'
+import {components} from '@/schema/openapi'
 
-export default {
+type User = components['schemas']['User']
+type Collection = components['schemas']['Collection']
+
+interface UserRole {
+  user: User
+  role: CollectionRole
+  oldRole?: CollectionRole
+}
+
+interface DisplayUserRole extends UserRole {
+  state: 'pending' | 'saved'
+}
+
+export default defineComponent({
   name: 'CollectionPermissionsEditor',
 
-  components: {Button, Column, DataTable, Dialog, Select, EmailPrompt, InputText, SelectButton},
+  components: {PButton, Column, DataTable, PDialog, PSelect, EmailPrompt, InputText, MvFloatField},
 
   props: {
     collectionUrn: {
@@ -120,31 +153,27 @@ export default {
     const {userOrcidId} = useAuth()
     return {
       userOrcidId,
-      ...useItem({itemTypeName: 'collection'})
+      ...useItem<Collection>({itemTypeName: 'collection'})
     }
   },
 
   data: () => ({
     dialogVisible: false,
 
-    pendingUserRoles: [],
-    existingUserRoles: [],
-    orcidIdsToRemove: [],
+    pendingUserRoles: [] as UserRole[],
+    existingUserRoles: [] as UserRole[],
+    orcidIdsToRemove: [] as string[],
 
     orcidIdsToAddStr: '',
-    roleToAdd: 'viewer',
+    roleToAdd: 'viewer' as CollectionRole,
 
-    roleOptions: [
-      {title: 'Admin', value: 'admin'},
-      {title: 'Editor', value: 'editor'},
-      {title: 'Viewer', value: 'viewer'}
-    ],
+    roleOptions: collectionRoleOptions,
 
-    errors: []
+    errors: [] as string[]
   }),
 
   computed: {
-    dirty: function () {
+    dirty(): boolean {
       return (
         this.pendingUserRoles.length > 0 ||
         this.orcidIdsToRemove.length > 0 ||
@@ -152,17 +181,17 @@ export default {
       )
     },
 
-    userRoles: function () {
+    userRoles(): DisplayUserRole[] {
       return [
-        ...this.pendingUserRoles.map((ur) => ({...ur, state: 'pending'})),
-        ...this.existingUserRoles.map((ur) => ({...ur, state: 'saved'}))
+        ...this.pendingUserRoles.map((ur) => ({...ur, state: 'pending' as const})),
+        ...this.existingUserRoles.map((ur) => ({...ur, state: 'saved' as const}))
       ]
     }
   },
 
   watch: {
     collectionUrn: {
-      handler: function (newValue, oldValue) {
+      handler(newValue: string, oldValue: string) {
         if (newValue != oldValue) {
           this.setItemId(newValue)
         }
@@ -171,12 +200,12 @@ export default {
     },
 
     item: {
-      handler: function (newValue, oldValue) {
+      handler(newValue: Collection | null, oldValue: Collection | null) {
         if (!_.isEqual(newValue, oldValue)) {
           this.existingUserRoles = [
-            ...(newValue?.admins?.map((user) => ({user, role: 'admin'})) || []),
-            ...(newValue?.editors?.map((user) => ({user, role: 'editor'})) || []),
-            ...(newValue?.viewers?.map((user) => ({user, role: 'viewer'})) || [])
+            ...(newValue?.admins?.map((user) => ({user, role: 'admin' as const})) || []),
+            ...(newValue?.editors?.map((user) => ({user, role: 'editor' as const})) || []),
+            ...(newValue?.viewers?.map((user) => ({user, role: 'viewer' as const})) || [])
           ]
         }
       }
@@ -184,30 +213,25 @@ export default {
   },
 
   methods: {
-    addUsers: async function () {
-      const orcidIdsToAdd = _.without(this.orcidIdsToAddStr.split(/[ ,]+/g))
+    async addUsers(): Promise<void> {
+      const orcidIdsToAdd = _.without(this.orcidIdsToAddStr.split(/[ ,]+/g), '')
 
-      const invalidOrcidIds = []
+      const invalidOrcidIds: string[] = []
       for (const orcidId of orcidIdsToAdd) {
         const existingUserRole = this.existingUserRoles.find((ur) => ur.user.orcidId == orcidId)
         const pendingUserRole = this.pendingUserRoles.find((ur) => ur.user.orcidId == orcidId)
 
         if (orcidId == this.userOrcidId) {
-          // Do not allow ths user to add herself.
           this.$toast.add({
             life: 3000,
             severity: 'warn',
             summary: `Your own admin permissions cannot be changed.`
           })
         } else if (existingUserRole) {
-          // If the the target user already has a different saved role for this collection, behave as though the user
-          // had changed the role using the drop-down.
           this.changeRole(orcidId, this.roleToAdd)
         } else if (pendingUserRole) {
-          // If the target user has a pending role added in this session, update the desired role.
           pendingUserRole.role = this.roleToAdd
         } else if (!ORCID_ID_REGEX.test(orcidId)) {
-          // If the ORCID ID is invalid, issue a warning.
           invalidOrcidIds.push(orcidId)
           this.$toast.add({
             life: 3000,
@@ -215,9 +239,8 @@ export default {
             summary: `${orcidId} is not a valid ORCID ID`
           })
         } else {
-          const user = await this.lookupUser(orcidId)
+          const user = await lookupUser(orcidId)
           if (!user) {
-            // If the ORCID ID does not refer to a MaveDB user, issue a warning.
             invalidOrcidIds.push(orcidId)
             this.$toast.add({
               life: 3000,
@@ -225,8 +248,6 @@ export default {
               summary: `No MaveDB user was found with ORCID ID ${orcidId}.`
             })
           } else {
-            // If the ORCID ID refers to a user who does not yet have a role for this collection, add the user role to
-            // the list of pending roles.
             this.pendingUserRoles.push({user, role: this.roleToAdd})
           }
         }
@@ -234,7 +255,7 @@ export default {
       this.orcidIdsToAddStr = invalidOrcidIds.join(' ')
     },
 
-    changeRole: function (orcidId, newRole) {
+    changeRole(orcidId: string, newRole: CollectionRole): void {
       const userRole = this.userRoles.find((ur) => ur.user.orcidId == orcidId)
       if (userRole) {
         if (userRole.state == 'saved') {
@@ -261,27 +282,25 @@ export default {
       }
     },
 
-    clearUserSearch: function () {
-      this.$refs.userSearchinput.$refs.input.value = ''
+    clearUserSearch(): void {
+      this.orcidIdsToAddStr = ''
     },
 
-    lookupUser: async function (orcidId) {
-      // Look up MaveDB user by ORCID ID.
-      let user = null
-      try {
-        user = (await axios.get(`${config.apiBaseUrl}/users/${orcidId}`)).data
-      } catch {
-        // Assume that the error was 404 Not Found.
+    resetContributorEditor(): void {
+      this.pendingUserRoles = []
+      this.orcidIdsToRemove = []
+      this.orcidIdsToAddStr = ''
+      this.errors = []
+      // Re-derive existing roles from the current item state
+      for (const ur of this.existingUserRoles) {
+        ur.oldRole = undefined
       }
-
-      return user
     },
 
-    removeUserRole: function (orcidId) {
+    removeUserRole(orcidId: string): void {
       const userRole = this.userRoles.find((ur) => ur.user.orcidId == orcidId)
       if (userRole) {
         if (userRole.state == 'saved') {
-          // If the user already has a role, mark it for removal. Clear any pending role change.
           this.orcidIdsToRemove.push(userRole.user.orcidId)
           if (userRole.oldRole) {
             userRole.role = userRole.oldRole
@@ -292,7 +311,6 @@ export default {
           )
           this.existingUserRoles.splice(existingUserRoleIndex, 1, userRole)
         } else if (userRole.state == 'pending') {
-          // If the user as been added in this session, remove the pending user role.
           const pendingUserRoleIndex = this.pendingUserRoles.findIndex((ur) => ur.user.orcidId == userRole.user.orcidId)
           if (pendingUserRoleIndex >= 0) {
             this.pendingUserRoles.splice(pendingUserRoleIndex, 1)
@@ -301,119 +319,70 @@ export default {
       }
     },
 
-    restoreUserRole: function (orcidId) {
+    restoreUserRole(orcidId: string): void {
       this.orcidIdsToRemove = _.without(this.orcidIdsToRemove, orcidId)
     },
 
-    rowStyle: function (userRole) {
+    rowStyle(userRole: DisplayUserRole): Record<string, string> | undefined {
       if (userRole.state == 'pending') {
-        return {backgroundColor: '#d1ffbd'} // Light green
+        return {backgroundColor: '#f0fdf4'} // green-50
       } else if (this.orcidIdsToRemove.includes(userRole.user.orcidId)) {
-        return {backgroundColor: '#ffcccb'} // Light red
+        return {backgroundColor: '#fef2f2'} // red-50
       } else if (userRole.oldRole) {
-        return {backgroundColor: '#ccddff'} // Light red
+        return {backgroundColor: '#fefce8'} // yellow-50
       }
     },
 
-    saveChanges: async function () {
+    async saveChanges(): Promise<void> {
       this.errors = []
 
-      const failedRemovalUserRoles = []
+      const failedRemovalUserRoles: UserRole[] = []
       for (const orcidId of this.orcidIdsToRemove) {
         const userRole = this.existingUserRoles.find((ur) => ur.user.orcidId == orcidId)
+        if (!userRole) continue
         try {
-          await axios.delete(`${config.apiBaseUrl}/collections/${this.collectionUrn}/${userRole.role}s/${orcidId}`)
+          await removeCollectionRole(this.collectionUrn, userRole.role, orcidId)
         } catch (e) {
           failedRemovalUserRoles.push(userRole)
-          this.errors.push(`${orcidId}: ${e.message}`)
+          this.errors.push(`${orcidId}: ${e instanceof Error ? e.message : String(e)}`)
         }
       }
 
-      const failedAdditionUserRoles = []
-      for (const role of ['admin', 'editor', 'viewer']) {
+      const failedAdditionUserRoles: UserRole[] = []
+      for (const role of ['admin', 'editor', 'viewer'] as const) {
         const userRoles = this.pendingUserRoles.filter((ur) => ur.role == role)
 
         for (const userRole of userRoles) {
           try {
-            await axios.post(`${config.apiBaseUrl}/collections/${this.collectionUrn}/${role}s`, {
-              orcid_id: userRole.user.orcidId
-            })
+            await addCollectionRole(this.collectionUrn, role, userRole.user.orcidId)
           } catch (error) {
-            console.log(error)
             failedAdditionUserRoles.push(userRole)
-            this.errors.push(`${userRole.user.orcidId}: ${error.message}`)
+            this.errors.push(`${userRole.user.orcidId}: ${error instanceof Error ? error.message : String(error)}`)
           }
         }
       }
 
-      const failedRoleChangeUserRoles = []
+      const failedRoleChangeUserRoles: UserRole[] = []
       const userRoles = this.existingUserRoles.filter((ur) => ur.oldRole != null && ur.oldRole != ur.role)
 
       for (const userRole of userRoles) {
         try {
-          await axios.delete(
-            `${config.apiBaseUrl}/collections/${this.collectionUrn}/${userRole.oldRole}s/${userRole.user.orcidId}`
-          )
-          await axios.post(`${config.apiBaseUrl}/collections/${this.collectionUrn}/${userRole.role}s`, {
-            orcid_id: userRole.user.orcidId
-          })
+          await addCollectionRole(this.collectionUrn, userRole.role, userRole.user.orcidId)
         } catch (error) {
-          console.log(error)
           failedRoleChangeUserRoles.push(userRole)
-          this.errors.push(`${userRole.user.orcidId}: ${error.message}`)
+          this.errors.push(`${userRole.user.orcidId}: ${error instanceof Error ? error.message : String(error)}`)
         }
       }
 
-      if (failedRemovalUserRoles.length == 0 && failedAdditionUserRoles.length == 0 && failedRoleChangeUserRoles == 0) {
+      if (
+        failedRemovalUserRoles.length == 0 &&
+        failedAdditionUserRoles.length == 0 &&
+        failedRoleChangeUserRoles.length == 0
+      ) {
         this.dialogVisible = false
         this.$emit('saved')
       }
     }
   }
-}
+})
 </script>
-
-<style scoped>
-.mave-collection-permissions-editor-button {
-  width: fit-content;
-}
-
-.mave-collection-editor-action-buttons {
-  display: flex;
-  justify-content: flex-end;
-  gap: 2px;
-  margin: 5px 0 0 0;
-}
-
-.mave-collection-editor-action-buttons Button {
-  margin: 0 0 0 3px;
-}
-
-.mave-collection-add-users-search-input {
-  width: 100%;
-}
-
-.mave-collection-add-users-search-input:deep(.p-inputtext) {
-  width: 100%;
-}
-
-.mave-collection-role-dropdown:deep(.p-inputtext) {
-  padding: 0 0.3em;
-}
-
-.mave-collection-role-to-add {
-  display: inline;
-}
-
-.mave-collection-user-role-add-controls {
-  margin: 1em 0;
-}
-
-.mave-collection-user-role-add-controls .p-selectbutton {
-  margin-right: 1em;
-}
-
-.mave-collection-user-role-add-controls:deep(*) {
-  vertical-align: middle;
-}
-</style>

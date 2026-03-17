@@ -21,13 +21,14 @@ export async function checkPermissions<T extends string>(
   urn: string,
   actions: readonly T[]
 ): Promise<Record<T, boolean>> {
-  const results = {} as Record<T, boolean>
-  for (const action of actions) {
-    try {
-      results[action] = await checkPermission(modelName, urn, action)
-    } catch {
-      results[action] = false
-    }
-  }
-  return results
+  const entries = await Promise.all(
+    actions.map(async (action) => {
+      try {
+        return [action, await checkPermission(modelName, urn, action)] as const
+      } catch {
+        return [action, false] as const
+      }
+    })
+  )
+  return Object.fromEntries(entries) as Record<T, boolean>
 }

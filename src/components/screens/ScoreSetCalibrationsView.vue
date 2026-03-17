@@ -428,12 +428,8 @@ export default {
           'Are you sure you want to publish this score calibration? Once published, you will be unable to edit its functional ranges or other details.',
         header: 'Confirm Score Set Publication',
         icon: 'pi pi-exclamation-triangle',
-        acceptLabel: 'Publish',
-        acceptClass: 'p-button-success',
-        rejectLabel: 'Cancel',
-        rejectClass: 'p-button',
-        acceptIcon: 'pi pi-check',
-        rejectIcon: 'pi pi-times',
+        acceptProps: {label: 'Publish', severity: 'success', icon: 'pi pi-check'},
+        rejectProps: {label: 'Cancel', severity: 'secondary', icon: 'pi pi-times'},
         accept: async () => {
           try {
             await publishScoreCalibration(calibrationUrn)
@@ -505,12 +501,8 @@ export default {
         message: 'Are you sure you want to delete this score calibration? This action cannot be undone.',
         header: 'Confirm Calibration Deletion',
         icon: 'pi pi-exclamation-triangle',
-        acceptLabel: 'Delete',
-        acceptClass: 'p-button-danger',
-        rejectLabel: 'Cancel',
-        rejectClass: 'p-button',
-        acceptIcon: 'pi pi-trash',
-        rejectIcon: 'pi pi-times',
+        acceptProps: {label: 'Delete', severity: 'danger', icon: 'pi pi-trash'},
+        rejectProps: {label: 'Cancel', severity: 'secondary', icon: 'pi pi-times'},
         accept: async () => {
           try {
             await deleteScoreCalibration(calibrationUrn)

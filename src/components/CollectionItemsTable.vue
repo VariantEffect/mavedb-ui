@@ -15,18 +15,21 @@
       </Column>
       <Column v-if="canUpdate" style="width: 4rem">
         <template #body="{data}">
-          <PButton icon="pi pi-trash" severity="danger" size="small" text @click="$emit('remove', data.urn)" />
+          <PButton
+            aria-label="Remove item"
+            icon="pi pi-trash"
+            rounded
+            severity="danger"
+            size="small"
+            text
+            @click="$emit('remove', data.urn)"
+          />
         </template>
       </Column>
-      <template v-if="canAdd" #footer>
-        <div class="table-footer-actions">
-          <PButton :label="`Add ${entityTypeLabel}`" severity="success" size="small" @click="$emit('add')" />
-        </div>
-      </template>
     </DataTable>
     <div v-else>
       <MvEmptyState
-        :action-label="`Add ${entityTypeLabel}`"
+        :action-label="`Add ${entityTypeLabel}s`"
         :description="`This collection doesn't have any ${entityTypeLabel}s yet.`"
         :title="`No ${entityTypeLabel}s yet`"
         @action="$emit('add')"
@@ -80,31 +83,6 @@ export default {
 </script>
 
 <style scoped>
-.empty-state {
-  padding: 2rem;
-  text-align: center;
-  background: #f9fafb;
-  border-radius: 8px;
-  border: 2px dashed #d1d5db;
-}
-
-.table-footer-actions {
-  display: flex;
-  justify-content: flex-end;
-}
-
-.add-items-link {
-  margin-top: 0.5rem;
-  color: #2563eb;
-  cursor: pointer;
-  font-size: 0.875rem;
-}
-
-.add-items-link:hover {
-  text-decoration: underline;
-  color: #1d4ed8;
-}
-
 :deep(.p-datatable-thead) {
   display: none;
 }

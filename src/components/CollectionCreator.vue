@@ -1,136 +1,178 @@
 <template>
-  <EmailPrompt />
-  <div class="mavedb-collection-creator">
+  <EmailPrompt :is-first-login-prompt="false" />
+  <div class="mb-4">
     <div class="flex flex-col gap-2">
-      <label :for="scopedId('name-input')">Collection name</label>
-      <InputText :id="scopedId('name-input')" v-model="collectionName" />
-    </div>
+      <div class="font-semibold">Collection details</div>
+      <MvFloatField :error="validationErrors.name" label="Collection name">
+        <template #default="{id, invalid}">
+          <InputText :id="id" v-model="collectionName" class="w-full" fluid :invalid="invalid" />
+        </template>
+      </MvFloatField>
 
-    <div class="flex flex-col gap-2">
-      <label :for="scopedId('description-input')">Description</label>
-      <Textarea :id="scopedId('description-input')" v-model="collectionDescription" />
+      <MvFloatField :error="validationErrors.description" label="Description">
+        <template #default="{id, invalid}">
+          <PTextarea :id="id" v-model="collectionDescription" class="w-full" fluid :invalid="invalid" />
+        </template>
+      </MvFloatField>
     </div>
+  </div>
 
-    <div class="flex flex-col gap-2">
-      <label :for="scopedId('public-input')">Public</label>
-      <ToggleSwitch
-        v-model="collectionPublic"
-        :aria-labelledby="scopedId('public-help')"
-        :input-id="scopedId('public-input')"
+  <div class="mb-4">
+    <div id="visibility-label" class="font-semibold mb-1.5">Visibility</div>
+    <MvVisibilityToggle
+      v-model="collectionPrivate"
+      :description="
+        collectionPrivate
+          ? 'This collection will only be visible to you and users you grant permissions to. Click to make it public.'
+          : 'This collection will be visible to anyone with the URL. Click to make it private.'
+      "
+    />
+  </div>
+
+  <div class="flex flex-col gap-3">
+    <div class="font-semibold">User permissions</div>
+    <div class="flex items-center gap-3">
+      <MvFloatField class="flex-auto" label="ORCID IDs">
+        <template #default="{id}">
+          <InputText
+            :id="id"
+            ref="userSearchInput"
+            v-model="orcidIdsToAddStr"
+            class="w-full"
+            fluid
+            @keyup.enter="addUsers"
+            @keyup.escape="clearUserSearch"
+          />
+        </template>
+      </MvFloatField>
+      <PSelect
+        v-model="roleToAdd"
+        aria-label="Role to assign"
+        class="w-34"
+        option-label="title"
+        option-value="value"
+        :options="roleOptions"
       />
-      <small :id="scopedId('public-help')"
-        >Public collections are visible to others. Private collections are only visible to you and anyone to whom you
-        grant permissions.</small
-      >
+      <PButton class="flex-none" label="Add user" @click="addUsers" />
     </div>
+    <DataTable
+      v-if="pendingUserRoles.length > 0"
+      data-key="orcidId"
+      :multi-sort-meta="[
+        {field: 'user.lastName', order: 1},
+        {field: 'user.firstName', order: 1},
+        {field: 'user.orcidId', order: 1}
+      ]"
+      sort-mode="multiple"
+      :value="pendingUserRoles"
+    >
+      <Column field="user.orcidId" header="ORCID ID" />
+      <Column :field="(userRole: any) => `${userRole.user.firstName} ${userRole.user.lastName}`" header="Name" />
+      <Column field="role" header="Role">
+        <template #body="{data}">
+          <PSelect
+            :aria-label="`Role for ${data.user.firstName} ${data.user.lastName}`"
+            :model-value="data.role"
+            option-label="title"
+            option-value="value"
+            :options="roleOptions"
+            @change="changeRole(data.user.orcidId, $event.value)"
+          />
+        </template>
+      </Column>
+      <Column>
+        <template #body="{data}">
+          <PButton
+            :aria-label="`Remove ${data.user.firstName} ${data.user.lastName}`"
+            icon="pi pi-trash"
+            rounded
+            severity="danger"
+            size="small"
+            text
+            @click="removeUserRole(data.user.orcidId)"
+          />
+        </template>
+      </Column>
+    </DataTable>
+  </div>
 
-    <div class="mave-contributors-adder">
-      <div class="mave-contributors-adder-title">User permissions</div>
-      <InputText
-        ref="userSearchInput"
-        v-model="orcidIdsToAddStr"
-        class="mavedb-collection-add-users-search-input"
-        placeholder="Type or paste 1 or more ORCID IDs here."
-        @keyup.enter="addUsers"
-        @keyup.escape="clearUserSearch"
-      />
-      <div class="mavedb-collection-user-role-add-controls">
-        <SelectButton
-          v-model="roleToAdd"
-          :allow-empty="false"
-          class="mavedb-collection-role-to-add"
-          option-label="title"
-          option-value="value"
-          :options="roleOptions"
-        />
-        <Button label="Add user" @click="addUsers" />
-      </div>
-      <DataTable
-        v-if="pendingUserRoles.length > 0"
-        data-key="orcidId"
-        :multi-sort-meta="[
-          {field: 'user.lastName', order: 1},
-          {field: 'user.firstName', order: 1},
-          {field: 'user.orcidId', order: 1}
-        ]"
-        sort-mode="multiple"
-        :value="pendingUserRoles"
-      >
-        <Column field="user.orcidId" header="ORCID ID" />
-        <Column :field="(userRole) => `${userRole.user.firstName} ${userRole.user.lastName}`" header="Name" />
-        <Column field="role" header="Role">
-          <template #body="{data}">
-            <Select
-              class="mavedb-collection-role-dropdown"
-              :model-value="data.role"
-              option-label="title"
-              option-value="value"
-              :options="roleOptions"
-              @change="changeRole(data.user.orcidId, $event.value)"
-            />
-          </template>
-        </Column>
-        <Column>
-          <template #body="{data}">
-            <Button label="Remove" size="small" @click="removeUserRole(data.user.orcidId)" />
-          </template>
-        </Column>
-      </DataTable>
-    </div>
+  <!-- TODO: Support adding score sets and experiments directly in the creator. -->
+  <p class="mt-4 text-xs text-text-muted">
+    <i class="pi pi-info-circle" style="font-size: 11px" />
+    You can add score sets and experiments after the collection is created.
+  </p>
 
-    <div class="mavedb-collection-editor-action-buttons">
-      <Button label="Cancel" severity="secondary" @click="cancel" />
-      <Button label="Save" @click="saveCollection" />
-    </div>
+  <div class="flex justify-end gap-2 mt-5">
+    <PButton label="Cancel" severity="secondary" @click="cancel" />
+    <PButton label="Save" severity="success" @click="saveCollection" />
   </div>
 </template>
 
-<script>
-import axios from 'axios'
+<script lang="ts">
 import _ from 'lodash'
-import Button from 'primevue/button'
+import {type AxiosError} from 'axios'
+import PButton from 'primevue/button'
 import Column from 'primevue/column'
 import DataTable from 'primevue/datatable'
-import Select from 'primevue/select'
-import ToggleSwitch from 'primevue/toggleswitch'
+import PSelect from 'primevue/select'
 import InputText from 'primevue/inputtext'
-import SelectButton from 'primevue/selectbutton'
-import Textarea from 'primevue/textarea'
+import PTextarea from 'primevue/textarea'
 
-import useScopedId from '@/composables/scoped-id'
-import config from '@/config'
-import {getErrorResponse} from '@/api/mavedb'
+import {createCollection} from '@/api/mavedb/collections'
+import {lookupUser} from '@/api/mavedb/users'
 import {ORCID_ID_REGEX} from '@/lib/orcid'
+import {collectionRoleOptions} from '@/lib/roles'
+import {useValidationErrors} from '@/composables/use-validation-errors'
+import {parseApiValidationErrors} from '@/lib/form-validation'
 import EmailPrompt from '@/components/common/EmailPrompt.vue'
+import MvVisibilityToggle from '@/components/common/MvVisibilityToggle.vue'
+import MvFloatField from '@/components/forms/MvFloatField.vue'
+import {components} from '@/schema/openapi'
+
+type User = components['schemas']['User']
+
+interface UserRole {
+  user: User
+  role: string
+}
 
 export default {
   name: 'CollectionCreator',
-  components: {Button, Column, DataTable, Select, EmailPrompt, ToggleSwitch, InputText, SelectButton, Textarea},
+  components: {
+    PButton,
+    Column,
+    DataTable,
+    PSelect,
+    EmailPrompt,
+    MvFloatField,
+    MvVisibilityToggle,
+    InputText,
+    PTextarea
+  },
   emits: ['createdCollection', 'canceled'],
 
-  setup: useScopedId,
+  setup() {
+    const validation = useValidationErrors()
+    return {...validation}
+  },
 
   data: () => ({
-    collectionName: null,
-    collectionDescription: null,
-    collectionPublic: false,
-    pendingUserRoles: [],
+    collectionName: null as string | null,
+    collectionDescription: null as string | null,
+    collectionPrivate: true,
+    pendingUserRoles: [] as UserRole[],
 
     orcidIdsToAddStr: '',
     roleToAdd: 'viewer',
 
-    roleOptions: [
-      {title: 'Admin', value: 'admin'},
-      {title: 'Editor', value: 'editor'},
-      {title: 'Viewer', value: 'viewer'}
-    ]
+    roleOptions: collectionRoleOptions
   }),
 
   methods: {
     addUsers: async function () {
       const orcidIdsToAdd = _.without(this.orcidIdsToAddStr.split(/[ ,]+/g), '')
 
-      const invalidOrcidIds = []
+      const invalidOrcidIds: string[] = []
       for (const orcidId of orcidIdsToAdd) {
         const pendingUserRole = this.pendingUserRoles.find((ur) => ur.user.orcidId == orcidId)
         if (pendingUserRole) {
@@ -143,7 +185,7 @@ export default {
             summary: `${orcidId} is not a valid ORCID ID`
           })
         } else {
-          const user = await this.lookupUser(orcidId)
+          const user = await lookupUser(orcidId)
           if (!user) {
             invalidOrcidIds.push(orcidId)
             this.$toast.add({
@@ -163,7 +205,7 @@ export default {
       this.$emit('canceled')
     },
 
-    changeRole: function (orcidId, newRole) {
+    changeRole: function (orcidId: string, newRole: string) {
       const userRole = this.pendingUserRoles.find((ur) => ur.user.orcidId == orcidId)
       if (userRole) {
         userRole.role = newRole
@@ -171,21 +213,10 @@ export default {
     },
 
     clearUserSearch: function () {
-      this.$refs.userSearchinput.$refs.input.value = ''
+      this.orcidIdsToAddStr = ''
     },
 
-    lookupUser: async function (orcidId) {
-      let user = null
-      try {
-        user = (await axios.get(`${config.apiBaseUrl}/users/${orcidId}`)).data
-      } catch {
-        // Assume that the error was 404 Not Found.
-      }
-      return user
-    },
-
-    removeUserRole: function (orcidId) {
-      // If the user as been added in this session, remove the pending user role.
+    removeUserRole: function (orcidId: string) {
       const pendingUserRoleIndex = this.pendingUserRoles.findIndex((ur) => ur.user.orcidId == orcidId)
       if (pendingUserRoleIndex >= 0) {
         this.pendingUserRoles.splice(pendingUserRoleIndex, 1)
@@ -193,84 +224,39 @@ export default {
     },
 
     saveCollection: async function () {
+      this.clearValidationState()
+
       const collectionName = this.collectionName?.trim()
-      let collectionDescription = this.collectionDescription?.trim()
-      collectionDescription = _.isEmpty(collectionDescription) ? null : collectionDescription
-      if (_.isEmpty(collectionName)) {
-        this.$toast.add({
-          life: 3000,
-          severity: 'warn',
-          summary: 'Must provide collection name'
-        })
-      } else {
-        const newCollection = {
+      const collectionDescription = this.collectionDescription?.trim() || undefined
+
+      if (!collectionName) {
+        this.setClientError('name', 'Collection name is required.')
+        return
+      }
+
+      try {
+        const savedCollection = await createCollection({
           name: collectionName,
           description: collectionDescription,
-          private: !this.collectionPublic,
-          viewers: this.pendingUserRoles.filter((ur) => ur.role == 'viewer').map((ur) => ur.user),
-          editors: this.pendingUserRoles.filter((ur) => ur.role == 'editor').map((ur) => ur.user),
-          admins: this.pendingUserRoles.filter((ur) => ur.role == 'admin').map((ur) => ur.user)
+          private: this.collectionPrivate,
+          viewers: this.pendingUserRoles.filter((ur) => ur.role == 'viewer').map((ur) => ({orcidId: ur.user.orcidId})),
+          editors: this.pendingUserRoles.filter((ur) => ur.role == 'editor').map((ur) => ({orcidId: ur.user.orcidId})),
+          admins: this.pendingUserRoles.filter((ur) => ur.role == 'admin').map((ur) => ({orcidId: ur.user.orcidId}))
+        })
+        this.$toast.add({severity: 'success', summary: 'Created new collection.', life: 3000})
+        this.$emit('createdCollection', savedCollection)
+      } catch (err) {
+        const detail = (err as AxiosError<{detail: unknown}>)?.response?.data?.detail
+        if (detail) {
+          const fieldErrors = parseApiValidationErrors(detail)
+          if (fieldErrors) {
+            this.setServerErrors(fieldErrors)
+            return
+          }
         }
-        let response = null
-        try {
-          response = await axios.post(`${config.apiBaseUrl}/collections`, newCollection)
-        } catch (error) {
-          console.log(error)
-          response = getErrorResponse(error)
-          this.$toast.add({severity: 'error', summary: 'Error', life: 3000})
-        }
-        if (response.status == 200) {
-          const savedCollection = response.data
-          this.$toast.add({severity: 'success', summary: 'Created new collection.', life: 3000})
-          this.$emit('createdCollection', savedCollection)
-        }
+        this.$toast.add({severity: 'error', summary: 'Error creating collection.', life: 3000})
       }
     }
   }
 }
 </script>
-
-<style scoped>
-.mavedb-collection-add-users-search-input {
-  width: 100%;
-}
-
-.mavedb-collection-add-users-search-input:deep(.p-inputtext) {
-  width: 100%;
-}
-
-.mavedb-collection-role-to-add {
-  display: inline;
-}
-
-.mavedb-collection-user-role-add-controls {
-  margin: 1em 0;
-}
-
-.mavedb-collection-user-role-add-controls .p-selectbutton {
-  margin-right: 1em;
-}
-
-.mavedb-collection-user-role-add-controls:deep(*) {
-  vertical-align: middle;
-}
-
-.mavedb-collection-role-dropdown:deep(.p-inputtext) {
-  padding: 0 0.3em;
-}
-
-.mavedb-collection-creator > * {
-  margin-bottom: 1em;
-}
-
-.mavedb-collection-editor-action-buttons {
-  display: flex;
-  justify-content: flex-end;
-  gap: 2px;
-  margin: 5px 0 0 0;
-}
-
-.mavedb-collection-editor-action-buttons Button {
-  margin: 0 0 0 3px;
-}
-</style>

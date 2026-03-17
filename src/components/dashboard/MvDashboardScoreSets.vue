@@ -236,6 +236,8 @@ export default defineComponent({
         message: `Are you sure you want to delete "${ss.title}"? This action cannot be undone.`,
         header: 'Delete score set',
         icon: 'pi pi-exclamation-triangle',
+        acceptProps: {label: 'Delete', severity: 'danger'},
+        rejectProps: {label: 'Cancel', severity: 'secondary'},
         accept: () => this.$emit('deleteScoreSet', ss.urn)
       })
     }

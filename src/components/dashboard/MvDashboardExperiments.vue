@@ -185,6 +185,8 @@ export default defineComponent({
         message: `Are you sure you want to delete "${exp.title}"? This action cannot be undone.`,
         header: 'Delete experiment',
         icon: 'pi pi-exclamation-triangle',
+        acceptProps: {label: 'Delete', severity: 'danger'},
+        rejectProps: {label: 'Cancel', severity: 'secondary'},
         accept: () => this.$emit('deleteExperiment', exp.urn)
       })
     }

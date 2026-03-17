@@ -1,162 +1,47 @@
 <template>
   <MvLayout :require-auth="true">
-    <div>
-      <div class="mavedb-1000px-col">
-        <div class="mave-screen-title-bar">
-          <div class="mave-screen-title">My saved collections</div>
-        </div>
-        <div v-if="collectionsStatus == 'Loaded' && collections.length > 0">
-          <DataTable
-            class="mave-collections-table"
-            data-key="urn"
-            :multi-sort-meta="[
-              {field: 'role', order: 1},
-              {field: 'name', order: 1}
-            ]"
-            sort-mode="multiple"
-            :value="collections"
-          >
-            <Column field="name" header="Collection name" :sortable="true">
-              <template #body="{data}"
-                ><router-link :to="{name: 'collection', params: {urn: data.urn}}">{{
-                  data.name
-                }}</router-link></template
-              >
-            </Column>
-            <Column class="mave-collection-description" field="description" header="Description" :sortable="true">
-              <template #body="{data}">
-                <!-- eslint-disable-next-line vue/no-v-html -->
-                <span v-if="data.description" v-html="linkifyTextHtml(data.description)"></span>
-                <span v-else>—</span>
-              </template>
-            </Column>
-            <Column
-              body-class="mave-align-center"
-              :field="(c) => (c.experimentUrns || []).length"
-              header="Experiments"
-              :sortable="true"
-            />
-            <Column
-              body-class="mave-align-center"
-              :field="(c) => (c.scoreSetUrns || []).length"
-              header="Score&nbsp;sets"
-              :sortable="true"
-            />
-            <Column field="role" header="Permissions" :sortable="true" />
-            <Column field="modificationDate" header="Last modified" :sortable="true">
-              <template #body="{data}">{{ formatDate(data.modificationDate) }}</template>
-            </Column>
-          </DataTable>
-          <Button label="Add an empty collection" @click="creatorVisible = true" />
-        </div>
-        <div v-else-if="collectionsStatus == 'Loaded'">
-          <p>You have not saved any data sets to a collection.</p>
-          <Button label="Create an empty collection" @click="creatorVisible = true" />
-        </div>
-        <PageLoading v-else-if="['NotLoaded', 'Loading'].includes(collectionsStatus)" />
-        <div v-else>
-          Sorry, an error occurred, and collection data could not be loaded. Please refresh the page to try again.
-        </div>
+    <template #header>
+      <MvPageHeader max-width="1200px" title="Collections have moved">
+        <template #subtitle>
+          <p class="text-sm text-text-muted">Collections are now managed from the dashboard</p>
+        </template>
+      </MvPageHeader>
+    </template>
+
+    <div class="mx-auto w-full px-4 py-6 tablet:px-6 tablet:py-8" style="max-width: 1200px">
+      <div class="flex flex-col items-center rounded-lg border border-border bg-white px-6 py-16 text-center">
+        <MvDecorativeBars class="mb-5" variant="trailing" />
+        <h2 class="mb-2 text-lg font-bold text-text-secondary">This page has moved</h2>
+        <p class="mb-6 max-w-md text-sm leading-relaxed text-text-muted">
+          Collections are now part of your dashboard. If you have this page bookmarked, please update your bookmark.
+        </p>
+        <PButton
+          label="Go to Dashboard"
+          severity="success"
+          @click="$router.push({name: 'dashboard', query: {tab: 'collections'}})"
+        />
       </div>
     </div>
   </MvLayout>
-  <Dialog
-    v-model:visible="creatorVisible"
-    :close-on-escape="true"
-    header="Create a new collection"
-    modal
-    :style="{maxWidth: '90%', width: '50rem'}"
-  >
-    <CollectionCreator @canceled="creatorVisible = false" @created-collection="childComponentCreatedCollection" />
-  </Dialog>
 </template>
 
-<script>
-import axios from 'axios'
-import Button from 'primevue/button'
-import Column from 'primevue/column'
-import DataTable from 'primevue/datatable'
-import Dialog from 'primevue/dialog'
+<!-- TODO: Remove this page and its route once enough time has passed for users to update bookmarks. -->
+<script lang="ts">
+import {defineComponent} from 'vue'
 import {useHead} from '@unhead/vue'
+import PButton from 'primevue/button'
 
-import CollectionCreator from '@/components/CollectionCreator.vue'
 import MvLayout from '@/components/layout/MvLayout.vue'
-import PageLoading from '@/components/common/PageLoading.vue'
-import useFormatters from '@/composition/formatters'
-import {getErrorResponse} from '@/api/mavedb'
-import config from '@/config'
+import MvPageHeader from '@/components/layout/MvPageHeader.vue'
+import MvDecorativeBars from '@/components/common/MvDecorativeBars.vue'
 
-export default {
+export default defineComponent({
   name: 'CollectionsView',
 
-  components: {Button, CollectionCreator, Column, DataTable, MvLayout, Dialog, PageLoading},
+  components: {MvDecorativeBars, MvLayout, MvPageHeader, PButton},
 
-  setup: () => {
-    useHead({title: 'My saved collections'})
-
-    return {
-      ...useFormatters()
-    }
-  },
-
-  data: () => ({
-    collections: [],
-    collectionsStatus: 'NotLoaded',
-    creatorVisible: false
-  }),
-
-  mounted: async function () {
-    await this.fetchData()
-  },
-
-  methods: {
-    childComponentCreatedCollection: function () {
-      this.creatorVisible = false
-      this.fetchData()
-    },
-
-    fetchData: async function () {
-      this.collectionsStatus = 'Loading'
-      this.collections = []
-
-      let response = null
-      try {
-        response = await axios.get(`${config.apiBaseUrl}/users/me/collections`)
-      } catch (error) {
-        response = getErrorResponse(error)
-        console.log('Error while loading collections: ', error)
-      }
-
-      if (response.status == 200) {
-        this.collections = [
-          ...response.data['admin'].map((c) => ({...c, role: 'Admin'})),
-          ...response.data['editor'].map((c) => ({...c, role: 'Edit'})),
-          ...response.data['viewer'].map((c) => ({...c, role: 'View'}))
-        ]
-        this.collectionsStatus = 'Loaded'
-      } else {
-        this.collections = []
-        this.collectionsStatus = 'LoadingFailed'
-      }
-    }
+  setup() {
+    useHead({title: 'Collections have moved'})
   }
-}
+})
 </script>
-
-<style scoped>
-.mave-collections-table {
-  margin: 1em 0;
-}
-
-.mave-collections-table:deep(td) {
-  vertical-align: top;
-}
-
-.mave-collections-table:deep(.mave-align-center) {
-  text-align: center;
-}
-
-.mave-collections-table:deep(.mave-collection-description) {
-  white-space: pre-line;
-}
-</style>

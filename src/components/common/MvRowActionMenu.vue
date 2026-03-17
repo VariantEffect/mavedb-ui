@@ -1,5 +1,10 @@
 <template>
-  <div class="relative inline-block" @click.stop>
+  <div class="relative inline-block">
+    <!--
+      Don't use @click.stop on this button — it prevents PrimeVue's outside-click
+      detection, so other open popovers won't dismiss. If this component is ever
+      used inside a row with a click handler, use @click.stop on the parent wrapper instead.
+    -->
     <button
       :aria-expanded="menuOpen"
       aria-haspopup="true"
@@ -16,19 +21,18 @@
         <template v-for="(action, i) in actions" :key="i">
           <div v-if="action.separator" class="my-1 h-px bg-border-light" role="separator" />
           <component
-            :is="action.to ? 'router-link' : 'button'"
+            :is="actionTag(action)"
             v-else
-            class="group/action block w-full cursor-pointer px-3.5 py-2 text-left !no-underline transition-colors"
-            :class="action.danger ? 'hover:bg-red-50' : 'hover:bg-bg'"
+            :aria-disabled="action.disabled || undefined"
+            class="group/action block w-full px-3.5 py-2 text-left !no-underline transition-colors"
+            :class="actionClass(action)"
+            :disabled="action.disabled || undefined"
             role="menuitem"
-            :to="action.to"
+            :to="action.disabled ? undefined : action.to"
             :type="action.to ? undefined : 'button'"
             @click="handleAction(action)"
           >
-            <div
-              class="flex items-center gap-1.5 text-xs font-semibold group-hover/action:underline"
-              :class="action.danger ? 'text-red-600' : 'text-text-primary'"
-            >
+            <div class="flex items-center gap-1.5 text-xs font-semibold" :class="actionLabelClass(action)">
               {{ action.label }}
             </div>
             <div v-if="action.description" class="mt-0.5 text-xs leading-snug text-text-muted">
@@ -50,6 +54,7 @@ export interface RowAction {
   label?: string
   description?: string
   danger?: boolean
+  disabled?: boolean
   separator?: boolean
   to?: RouteLocationRaw
   handler?: () => void
@@ -75,8 +80,20 @@ export default defineComponent({
       ;(this.$refs.popoverRef as InstanceType<typeof Popover>)?.toggle(event)
     },
     handleAction(action: RowAction) {
+      if (action.disabled) return
       ;(this.$refs.popoverRef as InstanceType<typeof Popover>)?.hide()
       if (action.handler) action.handler()
+    },
+    actionTag(action: RowAction): string {
+      return action.to && !action.disabled ? 'router-link' : 'button'
+    },
+    actionClass(action: RowAction): string {
+      if (action.disabled) return 'cursor-not-allowed opacity-50'
+      return action.danger ? 'cursor-pointer hover:bg-red-50' : 'cursor-pointer hover:bg-bg'
+    },
+    actionLabelClass(action: RowAction): string {
+      const color = action.danger ? 'text-red-600' : 'text-text-primary'
+      return action.disabled ? color : `${color} group-hover/action:underline`
     }
   }
 })

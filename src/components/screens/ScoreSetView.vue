@@ -863,11 +863,8 @@ export default {
           'Are you sure you want to publish this score set? Once published, you will be unable to edit scores, counts, or targets. You will also be unable to delete this score set.',
         header: 'Confirm Score Set Publication',
         icon: 'pi pi-exclamation-triangle',
-        acceptLabel: 'Publish',
-        rejectLabel: 'Cancel',
-        rejectClass: 'p-button-danger',
-        acceptIcon: 'pi pi-check',
-        rejectIcon: 'pi pi-times',
+        acceptProps: {label: 'Publish', severity: 'success', icon: 'pi pi-check'},
+        rejectProps: {label: 'Cancel', severity: 'secondary', icon: 'pi pi-times'},
         accept: async () => {
           try {
             if (this.item) {

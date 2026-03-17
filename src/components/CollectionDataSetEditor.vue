@@ -1,37 +1,18 @@
 <template>
   <template v-if="visible">
-    <EmailPrompt />
+    <EmailPrompt :is-first-login-prompt="false" />
   </template>
-  <div class="collection-data-set-editor">
-    <Button v-if="showTrigger" class="mavedb-collection-data-set-editor-button" label="Add items" @click="openEditor" />
-    <Dialog
+  <div>
+    <PButton v-if="showTrigger" label="Add items" @click="openEditor" />
+    <PDialog
       v-model:visible="visible"
       :close-on-escape="false"
       :header="`Add ${dataSetTypeDisplay[dataSetType]}s to collection`"
       modal
-      :style="{width: '45rem'}"
+      :style="{width: '45rem', maxWidth: 'calc(100% - 2rem)'}"
       @hide="resetDataSetEditor"
     >
       <div class="flex flex-col gap-2">
-        <Button
-          class="mavedb-collection-remove-data-set-button"
-          :disabled="!selectedDataSets || !selectedDataSets.length"
-          icon="pi pi-trash"
-          label="Remove"
-          severity="danger"
-          @click="markDataSetsToRemove"
-        />
-        <DataTable
-          v-model:selection="selectedDataSets"
-          data-key="urn"
-          :row-style="rowStyle"
-          table-style="min-width: 50rem"
-          :value="allDataSets"
-        >
-          <Column selection-mode="multiple"></Column>
-          <Column field="urn" header="URN"></Column>
-          <Column field="title" header="Title"></Column>
-        </DataTable>
         <div class="flex gap-2">
           <AutoComplete
             ref="urnAutoComplete"
@@ -39,70 +20,116 @@
             class="flex-auto w-full"
             :multiple="true"
             :placeholder="unvalidatedUrnsToAdd.length ? '' : 'Type or paste comma-separated URNs'"
-            :pt="{overlay: (options) => ({class: ['invisible']})}"
+            :pt="{overlay: () => ({class: ['invisible']})}"
             @keyup.,="newUnvalidatedUrnToAdd"
             @keyup.enter.prevent="fetchDataSetsToAdd"
             @keyup.escape="clearAutoCompleteInput"
             @keyup.space="newUnvalidatedUrnToAdd"
           />
-          <Button
-            class="flex-none mavedb-collection-add-data-set-button"
-            icon="pi pi-plus"
-            label="Add"
-            @click="fetchDataSetsToAdd"
-          />
+          <PButton class="flex-none" icon="pi pi-plus" label="Add" @click="fetchDataSetsToAdd" />
         </div>
-        <DataTable v-if="dataSetsToAdd.length > 0" data-key="urn" table-style="min-width: 50rem" :value="dataSetsToAdd">
-          <Column field="urn" header="URN"></Column>
-          <Column field="title" header="Title"></Column>
-          <Column>
-            <template #body="{data}">
-              <Button icon="pi pi-times" severity="danger" size="small" text @click="removeDataSetToAdd(data.urn)" />
+        <DataTable
+          v-if="dataSetsToAdd.length > 0"
+          data-key="urn"
+          table-style="width: 100%; table-layout: fixed"
+          :value="dataSetsToAdd"
+        >
+          <Column
+            field="urn"
+            header="URN"
+            style="width: 35%; overflow: hidden; text-overflow: ellipsis; white-space: nowrap"
+          />
+          <Column
+            field="title"
+            header="Title"
+            style="width: 58%; overflow: hidden; text-overflow: ellipsis; white-space: nowrap"
+          />
+          <Column style="width: 7%">
+            <template #body="{data}: {data: DataSetItem}">
+              <PButton
+                aria-label="Remove"
+                icon="pi pi-trash"
+                rounded
+                severity="danger"
+                size="small"
+                text
+                @click="removeDataSetToAdd(data.urn)"
+              />
             </template>
           </Column>
         </DataTable>
-        <Message v-if="validationErrors.length > 0" class="mavedb-validation-errors-message" severity="error">
-          There were validation errors
-          <div v-if="validationErrors.length > 0" class="mavedb-validation-errors">
-            <div v-for="errorMessage in validationErrors" :key="errorMessage" class="mavedb-validation-error">
-              {{ errorMessage }}
+        <Message v-if="errors.length > 0" severity="error">
+          <template v-if="errors.length === 1">{{ errors[0] }}</template>
+          <template v-else>
+            There were errors:
+            <div class="max-h-[100px] overflow-auto w-full">
+              <div v-for="errorMessage in errors" :key="errorMessage">{{ errorMessage }}</div>
             </div>
-          </div>
+          </template>
         </Message>
-        <Message v-if="errors.length > 0" severity="error"> Sorry, some changes could not be saved. </Message>
       </div>
-      <div class="mavedb-collection-editor-action-buttons">
-        <Button label="Cancel" severity="secondary" @click="visible = false" />
-        <Button :disabled="dataSetsToAdd.length === 0" label="Save" @click="saveChanges" />
+      <div class="flex justify-end gap-2 mt-5">
+        <PButton label="Cancel" severity="secondary" @click="visible = false" />
+        <PButton :disabled="dataSetsToAdd.length === 0" label="Save" severity="success" @click="saveChanges" />
       </div>
-    </Dialog>
-    <Dialog v-model:visible="unpreparedChangesDialogVisible" :close-on-escape="true" header="Warning" modal>
-      Please add your new data sets or clear the URNs box before saving changes.
-    </Dialog>
+    </PDialog>
+    <PDialog
+      v-model:visible="unpreparedChangesDialogVisible"
+      :close-on-escape="true"
+      header="Warning"
+      modal
+      :style="{width: '28rem', maxWidth: 'calc(100% - 2rem)'}"
+    >
+      <p class="mb-4">Please add your new data sets or clear the URNs box before saving changes.</p>
+      <div class="flex justify-end">
+        <PButton label="OK" severity="warn" @click="unpreparedChangesDialogVisible = false" />
+      </div>
+    </PDialog>
   </div>
 </template>
 
-<script>
-import axios from 'axios'
-import _ from 'lodash'
+<script lang="ts">
+import {defineComponent, type PropType} from 'vue'
 import AutoComplete from 'primevue/autocomplete'
-import Button from 'primevue/button'
+import PButton from 'primevue/button'
 import Column from 'primevue/column'
 import DataTable from 'primevue/datatable'
-import Dialog from 'primevue/dialog'
+import PDialog from 'primevue/dialog'
 import Message from 'primevue/message'
 
 import useItem from '@/composition/item.ts'
-import config from '@/config'
+import {addCollectionScoreSet, addCollectionExperiment} from '@/api/mavedb/collections'
+import {getScoreSet} from '@/api/mavedb/variants'
+import {getExperiment} from '@/api/mavedb/experiments'
 import {getErrorResponse} from '@/api/mavedb'
 import EmailPrompt from '@/components/common/EmailPrompt.vue'
+import {components} from '@/schema/openapi'
 
-const INVALID_URN_MESSAGES_DISPLAY_LIMIT = 3
+type Collection = components['schemas']['Collection']
 
-export default {
+type DataSetType = 'scoreSet' | 'experiment'
+
+interface DataSetItem {
+  urn: string
+  title: string
+}
+
+const TOAST_ITEM_LIMIT = 3
+
+function truncatedList(items: string[], separator = ', '): string {
+  if (items.length <= TOAST_ITEM_LIMIT) return items.join(separator)
+  return `${items.slice(0, TOAST_ITEM_LIMIT).join(separator)} (+${items.length - TOAST_ITEM_LIMIT} more)`
+}
+
+const dataSetTypeDisplay: Record<DataSetType, string> = {
+  scoreSet: 'score set',
+  experiment: 'experiment'
+}
+
+export default defineComponent({
   name: 'CollectionDataSetEditor',
 
-  components: {AutoComplete, Button, Column, DataTable, Dialog, EmailPrompt, Message},
+  components: {AutoComplete, PButton, Column, DataTable, PDialog, EmailPrompt, Message},
 
   props: {
     collectionUrn: {
@@ -110,7 +137,7 @@ export default {
       required: true
     },
     dataSetType: {
-      type: String,
+      type: String as PropType<DataSetType>,
       required: true
     },
     showTrigger: {
@@ -121,41 +148,22 @@ export default {
 
   emits: ['saved'],
 
-  setup: () => useItem({itemTypeName: 'collection'}),
+  setup: () => useItem<Collection>({itemTypeName: 'collection'}),
 
   data: () => ({
     visible: false,
 
-    unvalidatedUrnsToAdd: [],
-    dataSetsToAdd: [],
+    unvalidatedUrnsToAdd: [] as string[],
+    dataSetsToAdd: [] as DataSetItem[],
+    errors: [] as string[],
 
-    validationErrors: [],
-    additionErrors: [],
-
-    dataSetTypeDisplay: {
-      scoreSet: 'score set',
-      experiment: 'experiment'
-    },
+    dataSetTypeDisplay,
     unpreparedChangesDialogVisible: false
   }),
 
-  computed: {
-    errors: function () {
-      return this.additionErrors
-    },
-
-    restCollectionParent: function () {
-      if (this.dataSetType === 'experiment') {
-        return 'experiments'
-      } else {
-        return 'score-sets'
-      }
-    }
-  },
-
   watch: {
     collectionUrn: {
-      handler: function (newValue, oldValue) {
+      handler(newValue: string, oldValue: string) {
         if (newValue != oldValue) {
           this.setItemId(newValue)
         }
@@ -165,28 +173,31 @@ export default {
   },
 
   methods: {
-    openEditor: function () {
+    openEditor(): void {
       this.visible = true
     },
 
-    clearAutoCompleteInput: function (event) {
-      if (event.target) {
-        event.target.value = ''
+    clearAutoCompleteInput(event: KeyboardEvent): void {
+      const target = event.target as HTMLInputElement | null
+      if (target) {
+        target.value = ''
       }
     },
 
-    newUnvalidatedUrnToAdd: function (event) {
-      const val = (event.target?.value || '').replace(',', '').trim()
+    newUnvalidatedUrnToAdd(event: KeyboardEvent): void {
+      const target = event.target as HTMLInputElement
+      const val = (target?.value || '').replace(',', '').trim()
       if (val !== '') {
         if (!this.unvalidatedUrnsToAdd.includes(val)) {
           this.unvalidatedUrnsToAdd.push(val)
         }
       }
-      event.target.value = ''
+      target.value = ''
     },
 
-    flushPendingUrnInput: function () {
-      const input = this.$refs.urnAutoComplete?.$el?.querySelector('input')
+    flushPendingUrnInput(): void {
+      const autoComplete = this.$refs.urnAutoComplete as {$el?: HTMLElement} | undefined
+      const input = autoComplete?.$el?.querySelector('input') as HTMLInputElement | null
       const pendingUrn = (input?.value || '').replace(',', '').trim()
       if (pendingUrn !== '' && !this.unvalidatedUrnsToAdd.includes(pendingUrn)) {
         this.unvalidatedUrnsToAdd.push(pendingUrn)
@@ -196,34 +207,32 @@ export default {
       }
     },
 
-    saveChanges: async function () {
+    async saveChanges(): Promise<void> {
       if (this.unvalidatedUrnsToAdd.length > 0) {
         this.unpreparedChangesDialogVisible = true
         return
       }
 
-      this.additionErrors = []
+      this.errors = []
 
-      const additionErrorUrns = []
+      const failedUrns = new Set<string>()
       for (const dataSetToAdd of this.dataSetsToAdd) {
         try {
           if (this.dataSetType == 'experiment') {
-            await axios.post(`${config.apiBaseUrl}/collections/${this.collectionUrn}/experiments`, {
-              experiment_urn: dataSetToAdd.urn
-            })
+            await addCollectionExperiment(this.collectionUrn, dataSetToAdd.urn)
           } else if (this.dataSetType == 'scoreSet') {
-            await axios.post(`${config.apiBaseUrl}/collections/${this.collectionUrn}/score-sets`, {
-              score_set_urn: dataSetToAdd.urn
-            })
+            await addCollectionScoreSet(this.collectionUrn, dataSetToAdd.urn)
           }
         } catch (error) {
-          additionErrorUrns.push(dataSetToAdd.urn)
-          this.additionErrors.push(`${dataSetToAdd.urn}: ${error.message || 'Could not be added to the collection'}`)
+          failedUrns.add(dataSetToAdd.urn)
+          this.errors.push(
+            `${dataSetToAdd.urn}: ${error instanceof Error ? error.message : 'Could not be added to the collection'}`
+          )
         }
       }
-      _.remove(this.dataSetsToAdd, (dataSet) => !additionErrorUrns.includes(dataSet.urn))
+      this.dataSetsToAdd = this.dataSetsToAdd.filter((ds) => failedUrns.has(ds.urn))
 
-      if (_.isEmpty(this.errors)) {
+      if (this.errors.length === 0) {
         this.visible = false
         this.$toast.add({
           severity: 'success',
@@ -236,128 +245,76 @@ export default {
       this.$emit('saved')
     },
 
-    removeDataSetToAdd: function (urn) {
-      _.remove(this.dataSetsToAdd, (dataSet) => dataSet.urn === urn)
+    removeDataSetToAdd(urn: string): void {
+      this.dataSetsToAdd = this.dataSetsToAdd.filter((ds) => ds.urn !== urn)
     },
 
-    fetchDataSetsToAdd: async function () {
-      this.validationErrors = []
+    async fetchDataSetsToAdd(): Promise<void> {
+      this.errors = []
       this.flushPendingUrnInput()
 
       if (!this.item) {
-        this.validationErrors.push('Collection is still loading. Please try again in a moment.')
+        this.errors.push('Collection is still loading. Please try again in a moment.')
         return
       }
 
       if (this.unvalidatedUrnsToAdd.length === 0) {
-        this.validationErrors.push('Please enter at least one URN.')
+        this.errors.push('Please enter at least one URN.')
         return
       }
 
-      const invalidUrns = []
-      const invalidUrnMessages = []
-      const alreadyInCollectionUrns = []
-      const alreadyQueuedUrns = []
-      for (let urn of this.unvalidatedUrnsToAdd) {
-        urn = urn.trim()
-        if (this.item[`${this.dataSetType}Urns`].includes(urn)) {
-          alreadyInCollectionUrns.push(urn)
-        } else if (this.dataSetsToAdd.some((dataSet) => dataSet.urn == urn)) {
-          alreadyQueuedUrns.push(urn)
+      const urnKey = this.dataSetType === 'experiment' ? 'experimentUrns' : 'scoreSetUrns'
+      const existingUrns = new Set(this.item[urnKey])
+      const queuedUrns = new Set(this.dataSetsToAdd.map((ds) => ds.urn))
+
+      const skipped: string[] = []
+      const failed: string[] = []
+
+      for (const raw of this.unvalidatedUrnsToAdd) {
+        const urn = raw.trim()
+        if (existingUrns.has(urn)) {
+          skipped.push(urn)
+        } else if (queuedUrns.has(urn)) {
+          skipped.push(urn)
         } else {
-          // Fetch the data set.
-          let response = null
           try {
-            response = await axios.get(`${config.apiBaseUrl}/${this.restCollectionParent}/${urn}`)
+            const data = this.dataSetType === 'experiment' ? await getExperiment(urn) : await getScoreSet(urn)
+            this.dataSetsToAdd.push(data)
+            queuedUrns.add(urn)
           } catch (e) {
-            response = getErrorResponse(e)
-            const errorDetail = response.data?.detail || (e instanceof Error ? e.message : 'Invalid URN')
-            const errorMessage = `${urn}: ${errorDetail}`
-            this.validationErrors.push(errorMessage)
-            invalidUrnMessages.push(errorMessage)
-          }
-          console.log(response)
-          if (response.status == 200) {
-            this.dataSetsToAdd.push(response.data)
-          } else {
-            invalidUrns.push(urn)
+            const response = getErrorResponse(e)
+            const detail = response.data?.detail || (e instanceof Error ? e.message : 'Invalid URN')
+            this.errors.push(`${urn}: ${detail}`)
+            failed.push(urn)
           }
         }
       }
       this.unvalidatedUrnsToAdd = []
 
-      if (invalidUrnMessages.length > 0) {
-        const detail =
-          invalidUrnMessages.length > INVALID_URN_MESSAGES_DISPLAY_LIMIT
-            ? `${invalidUrnMessages.slice(0, INVALID_URN_MESSAGES_DISPLAY_LIMIT).join(' • ')} • +${invalidUrnMessages.length - INVALID_URN_MESSAGES_DISPLAY_LIMIT} more`
-            : invalidUrnMessages.join(' • ')
+      if (failed.length > 0) {
         this.$toast.add({
           severity: 'warn',
           summary: 'Some URNs could not be added',
-          detail,
+          detail: truncatedList(failed, ' • '),
           life: 6000
         })
       }
 
-      if (alreadyInCollectionUrns.length > 0 || alreadyQueuedUrns.length > 0) {
-        const details = []
-        if (alreadyInCollectionUrns.length > 0) {
-          details.push(
-            `Already in collection: ${alreadyInCollectionUrns.slice(0, INVALID_URN_MESSAGES_DISPLAY_LIMIT).join(', ')}${alreadyInCollectionUrns.length > INVALID_URN_MESSAGES_DISPLAY_LIMIT ? ` (+${alreadyInCollectionUrns.length - INVALID_URN_MESSAGES_DISPLAY_LIMIT} more)` : ''}`
-          )
-        }
-        if (alreadyQueuedUrns.length > 0) {
-          details.push(
-            `Already queued: ${alreadyQueuedUrns.slice(0, INVALID_URN_MESSAGES_DISPLAY_LIMIT).join(', ')}${alreadyQueuedUrns.length > INVALID_URN_MESSAGES_DISPLAY_LIMIT ? ` (+${alreadyQueuedUrns.length - INVALID_URN_MESSAGES_DISPLAY_LIMIT} more)` : ''}`
-          )
-        }
-
+      if (skipped.length > 0) {
         this.$toast.add({
           severity: 'info',
           summary: 'Some URNs were skipped',
-          detail: details.join(' • '),
+          detail: `Already in collection or queued: ${truncatedList(skipped)}`,
           life: 5000
         })
       }
     },
 
-    resetDataSetEditor: function () {
+    resetDataSetEditor(): void {
       this.unvalidatedUrnsToAdd = []
       this.dataSetsToAdd = []
-
-      this.validationErrors = []
-      this.additionErrors = []
+      this.errors = []
     }
   }
-}
+})
 </script>
-<style scoped>
-.mavedb-collection-data-set-editor-button {
-  width: fit-content;
-}
-
-.mavedb-collection-add-data-set-button {
-  width: fit-content;
-}
-
-.mavedb-collection-editor-action-buttons {
-  display: flex;
-  justify-content: flex-end;
-  gap: 2px;
-  margin: 20px 0 0 0;
-}
-
-.mavedb-collection-editor-action-buttons Button {
-  margin: 0 0 0 3px;
-}
-
-.mavedb-validation-errors-message:deep(.p-message-text) {
-  width: 100%;
-}
-
-.mavedb-validation-errors {
-  max-height: 100px;
-  overflow: auto;
-  width: 100%;
-}
-</style>

@@ -1,343 +1,435 @@
 <template>
   <MvLayout>
-    <div v-if="itemStatus == 'Loaded'" class="mave-collection">
-      <div class="mavedb-1000px-col">
-        <div class="mave-screen-title-bar">
-          <Button
-            v-if="userIsAuthorized.update && item.private"
-            aria-label="Private collection"
-            class="flex-i"
-            icon="pi pi-lock"
-            text
-            title="Private collection"
-            @click="privacyDialogVisible = true"
-          />
-          <Button
-            v-else-if="userIsAuthorized.update && !item.private"
-            aria-label="Publicly visible"
-            class="flex-i"
-            icon="pi pi-lock-open"
-            text
-            title="Publicly visible"
-            @click="privacyDialogVisible = true"
-          />
-          <i v-else-if="item.private" class="flex-i pi pi-lock" />
-          <div v-if="userIsAuthorized.update" class="flex-auto">
-            <Inplace
-              :active="displayCollectionNameEdit"
-              class="mave-screen-collection-title"
-              @open="editCollectionName"
+    <!-- Header (only rendered when item is loaded) -->
+    <template v-if="item" #header>
+      <header class="border-b border-border bg-white px-6 pb-9 pt-10">
+        <div class="mx-auto" style="max-width: 1200px">
+          <div
+            class="mb-1 text-sm font-semibold uppercase tracking-wider"
+            :class="item.badgeName ? 'cursor-help text-sage-dark' : 'text-text-muted'"
+          >
+            <span
+              v-if="item.badgeName"
+              v-tooltip.right="'Official collections are curated and maintained by the MaveDB team.'"
             >
-              <template #display>
-                {{ item.name }}
-              </template>
-              <template #content>
-                <div class="flex mave-collection-name-editor">
-                  <InputText
-                    v-model="editName"
-                    autofocus
-                    class="flex-auto"
-                    @keyup.enter="saveCollectionName"
-                    @keyup.escape="displayCollectionNameEdit = false"
-                  />
-                  <Button class="flex-none" icon="pi pi-check" @click="saveCollectionName" />
-                  <Button
-                    class="flex-none"
-                    icon="pi pi-times"
-                    severity="danger"
-                    @click="displayCollectionNameEdit = false"
+              Official Collection
+            </span>
+            <span v-else>Collection</span>
+          </div>
+
+          <div class="flex items-start justify-between gap-5">
+            <div class="min-w-0 flex-1">
+              <!-- Edit mode -->
+              <template v-if="editing">
+                <div class="mb-3">
+                  <MvFloatField label="Name">
+                    <template #default="{id}">
+                      <InputText :id="id" v-model="editName" autofocus class="w-full" @keyup.enter="saveEdits" />
+                    </template>
+                  </MvFloatField>
+                </div>
+                <div class="mb-3">
+                  <MvFloatField label="Description">
+                    <template #default="{id}">
+                      <PTextarea :id="id" v-model="editDescription" class="w-full" rows="3" />
+                    </template>
+                  </MvFloatField>
+                </div>
+                <div class="mb-3">
+                  <div class="text-xs font-semibold text-text-muted mb-1">Visibility</div>
+                  <MvVisibilityToggle
+                    v-model="editPrivate"
+                    :description="item.badgeName ? 'Official collections cannot be made private.' : undefined"
+                    :disabled="!!item.badgeName"
                   />
                 </div>
+                <div class="flex gap-2">
+                  <PButton label="Save" severity="success" size="small" @click="saveEdits" />
+                  <PButton label="Cancel" severity="secondary" size="small" @click="cancelEditing" />
+                </div>
               </template>
-            </Inplace>
-          </div>
-          <div v-else>
-            <div class="mave-screen-title">
-              {{ item.name }}
+
+              <!-- Display mode -->
+              <template v-else>
+                <h1 class="mb-2 font-display text-3xl font-bold text-text-dark">{{ item.name }}</h1>
+
+                <div class="mb-3 flex flex-wrap items-center gap-2">
+                  <MvVisibilityToggle
+                    :interactive="userIsAuthorized.update"
+                    :model-value="item.private"
+                    @click="privacyDialogVisible = true"
+                  />
+                </div>
+
+                <!-- eslint-disable vue/no-v-html -->
+                <div
+                  v-if="item.description"
+                  class="whitespace-pre-line text-sm leading-relaxed text-text-secondary"
+                  v-html="linkifyTextHtml(item.description)"
+                />
+                <!-- eslint-enable vue/no-v-html -->
+
+                <div class="mt-3 flex flex-wrap gap-x-4 gap-y-1 text-xs text-text-muted">
+                  <span v-if="item.creationDate">
+                    Created {{ formatDate(item.creationDate) }}
+                    <template v-if="item.createdBy">
+                      by
+                      <MvOrcidLink
+                        :first-name="item.createdBy.firstName"
+                        :last-name="item.createdBy.lastName"
+                        :orcid-id="item.createdBy.orcidId"
+                        size="sm"
+                      />
+                    </template>
+                  </span>
+                  <span v-if="item.modificationDate">
+                    Modified {{ formatDate(item.modificationDate) }}
+                    <template v-if="item.modifiedBy">
+                      by
+                      <MvOrcidLink
+                        :first-name="item.modifiedBy.firstName"
+                        :last-name="item.modifiedBy.lastName"
+                        :orcid-id="item.modifiedBy.orcidId"
+                        size="sm"
+                      />
+                    </template>
+                  </span>
+                </div>
+              </template>
+            </div>
+
+            <div v-if="hasActions && !editing" class="flex shrink-0 gap-2">
+              <MvRowActionMenu :actions="collectionActions" />
             </div>
           </div>
-          <div>
-            <CollectionBadge v-if="item.badgeName" :collection="item" />
+        </div>
+      </header>
+    </template>
+
+    <!-- Default slot: loading, error, or content -->
+    <div
+      v-if="itemStatus === 'Loading' || itemStatus === 'NotLoaded'"
+      class="mx-auto w-full px-4 py-16 tablet:px-6"
+      style="max-width: 1200px"
+    >
+      <MvLoader text="Loading collection…" />
+    </div>
+
+    <div v-else-if="itemStatus !== 'Loaded'" class="mx-auto w-full px-4 py-6 tablet:px-6" style="max-width: 1200px">
+      <ItemNotFound :item-id="itemId" model="collection" />
+    </div>
+
+    <div v-else-if="item" class="mx-auto w-full space-y-6 px-4 py-6 tablet:px-6 tablet:py-8" style="max-width: 1200px">
+      <template v-for="section in entitySections" :key="section.type">
+        <div class="overflow-hidden rounded-lg border border-border bg-white">
+          <div class="flex items-center justify-between border-b border-border-light px-5 py-4">
+            <span class="text-[15px] font-bold text-text-dark">{{ section.title }} ({{ section.items.length }})</span>
+            <PButton
+              v-if="userIsAuthorized.add_score_set && section.items.length > 0"
+              :aria-label="`Add ${section.title.toLowerCase()}`"
+              icon="pi pi-plus"
+              :label="`Add ${section.title.toLowerCase()}`"
+              severity="success"
+              size="small"
+              @click="openEditor(section.editorRef)"
+            />
           </div>
-          <div v-if="userIsAuthorized.delete" class="mavedb-screen-title-controls">
-            <Button label="Delete" severity="danger" size="small" @click="deleteCollectionWithConfirmation" />
+          <div class="px-5 py-4">
+            <CollectionItemsTable
+              :can-add="userIsAuthorized.add_score_set"
+              :can-update="userIsAuthorized.update"
+              :entity-type="section.type"
+              :items="section.items"
+              @add="openEditor(section.editorRef)"
+              @remove="section.remove"
+              @reorder="section.reorder"
+            />
           </div>
         </div>
-        <div v-if="userIsAuthorized.update">
-          <Inplace
-            :active="displayCollectionDescriptionEdit"
-            class="mave-collection-description"
-            @open="editCollectionDescription"
-          >
-            <template #display>
-              <!-- eslint-disable vue/no-v-html -->
-              <div
-                v-html="item.description ? linkifyTextHtml(item.description) : '(Click here to add description)'"
-              ></div>
-              <!-- eslint-enable vue/no-v-html -->
-            </template>
-            <template #content>
-              <div class="flex mave-collection-description-editor">
-                <Textarea
-                  v-model="editDescription"
-                  autofocus
-                  class="flex-auto"
-                  @keyup.escape="displayCollectionDescriptionEdit = false"
-                />
-                <Button icon="pi pi-check" @click="saveCollectionDescription" />
-                <Button icon="pi pi-times" severity="danger" @click="displayCollectionDescriptionEdit = false" />
-              </div>
-            </template>
-          </Inplace>
-        </div>
-        <div v-else>
-          <!-- eslint-disable vue/no-v-html -->
-          <div
-            v-if="item.description"
-            class="mave-collection-description"
-            v-html="linkifyTextHtml(item.description)"
-          ></div>
-          <!-- eslint-enable vue/no-v-html -->
-        </div>
-      </div>
-      <div class="mavedb-1000px-col">
-        <div v-if="item.creationDate">
-          Created {{ formatDate(item.creationDate) }}
-          <span v-if="item.createdBy">
-            <a class="flex items-center gap-1" :href="`https://orcid.org/${item.createdBy.orcidId}`" target="_blank"
-              ><img alt="ORCIDiD" src="@/assets/ORCIDiD_icon.png" />{{ item.createdBy.firstName }}
-              {{ item.createdBy.lastName }}</a
-            ></span
-          >
-        </div>
-        <div v-if="item.modificationDate">
-          Last updated {{ formatDate(item.modificationDate) }}
-          <span v-if="item.modifiedBy">
-            <a class="flex items-center gap-1" :href="`https://orcid.org/${item.modifiedBy.orcidId}`" target="_blank">
-              <img alt="ORCIDiD" src="@/assets/ORCIDiD_icon.png" />
-              {{ item.modifiedBy.firstName }} {{ item.modifiedBy.lastName }}
-            </a>
-          </span>
-        </div>
-        <div class="mave-collection-section-title">Score Sets</div>
-        <div v-if="userIsAuthorized.add_score_set">
+
+        <div v-if="userIsAuthorized.add_score_set" class="hidden">
           <CollectionDataSetEditor
-            ref="scoreSetEditor"
+            :ref="section.editorRef"
             :collection-urn="item.urn"
-            data-set-type="scoreSet"
+            :data-set-type="section.type"
             :show-trigger="false"
             @saved="childComponentEditedCollection"
           />
         </div>
-        <CollectionItemsTable
-          :can-add="userIsAuthorized.add_score_set"
-          :can-update="userIsAuthorized.update"
-          entity-type="scoreSet"
-          :items="scoreSetsList"
-          @add="openScoreSetEditor"
-          @remove="removeScoreSet"
-          @reorder="onScoreSetReorder"
-        />
-        <div class="mave-collection-section-title">Experiments</div>
-        <!-- NOTE: permissions are the same for add score set and add experiment -->
-        <div v-if="userIsAuthorized.add_score_set">
-          <CollectionDataSetEditor
-            ref="experimentEditor"
-            :collection-urn="item.urn"
-            data-set-type="experiment"
-            :show-trigger="false"
-            @saved="childComponentEditedCollection"
-          />
-        </div>
-        <CollectionItemsTable
-          :can-add="userIsAuthorized.add_score_set"
-          :can-update="userIsAuthorized.update"
-          entity-type="experiment"
-          :items="experimentsList"
-          @add="openExperimentEditor"
-          @remove="removeExperiment"
-          @reorder="onExperimentReorder"
-        />
-        <div class="mave-collection-section-title">
-          User Permissions
+      </template>
+
+      <!-- User Permissions -->
+      <div class="relative overflow-hidden rounded-lg border border-border bg-white">
+        <div class="absolute inset-x-0 top-0 h-[3px] bg-gradient-to-r from-sage via-mint to-orange-cta" />
+        <div class="flex items-center justify-between border-b border-border-light px-5 py-4 pt-[19px]">
+          <span class="text-[15px] font-bold text-text-dark">User Permissions</span>
           <div v-if="userIsAuthorized.add_role">
             <CollectionPermissionsEditor :collection-urn="item.urn" @saved="childComponentEditedCollection" />
           </div>
         </div>
-        <div
-          v-if="item.admins.length != 0 || userIsAuthorized.add_role"
-          class="mave-collection-contributors-subsection"
-        >
-          <div class="mave-collection-contributors-subsection-title">Admins</div>
-          <ul v-if="item.admins.length > 0" class="ml-5">
-            <li v-for="admin in item.admins" :key="admin">
-              <a class="flex items-center gap-1" :href="`https://orcid.org/${admin.orcidId}`" target="_blank">
-                <img alt="ORCIDiD" src="@/assets/ORCIDiD_icon.png" />
-                {{ admin.firstName }} {{ admin.lastName }}
-              </a>
-            </li>
-          </ul>
-          <p v-else>No admins</p>
-        </div>
-        <div v-if="userIsAuthorized.add_role" class="mave-collection-contributors-subsection">
-          <div class="mave-collection-contributors-subsection-title">Editors</div>
-          <ul v-if="item.editors.length > 0" class="ml-5">
-            <li v-for="editor in item.editors" :key="editor">
-              <a class="flex items-center gap-1" :href="`https://orcid.org/${editor.orcidId}`" target="_blank">
-                <img alt="ORCIDiD" src="@/assets/ORCIDiD_icon.png" />
-                {{ editor.firstName }} {{ editor.lastName }}
-              </a>
-            </li>
-          </ul>
-          <p v-else>No editors</p>
-        </div>
-        <div v-if="userIsAuthorized.add_role" class="mave-collection-contributors-subsection">
-          <div class="mave-collection-contributors-subsection-title">Viewers</div>
-          <ul v-if="item.viewers.length > 0" class="ml-5">
-            <li v-for="viewer in item.viewers" :key="viewer">
-              <a class="flex items-center gap-1" :href="`https://orcid.org/${viewer.orcidId}`" target="_blank">
-                <img alt="ORCIDiD" src="@/assets/ORCIDiD_icon.png" />
-                {{ viewer.firstName }} {{ viewer.lastName }}
-              </a>
-            </li>
-          </ul>
-          <p v-else>No viewers</p>
+        <div class="divide-y divide-border-light px-5">
+          <template v-for="group in roleGroups" :key="group.role">
+            <div v-if="group.visible" class="py-4">
+              <div class="mb-2.5 text-xs font-bold uppercase tracking-wider text-text-muted">
+                {{ group.title }} ({{ group.users.length }})
+              </div>
+              <div v-if="group.users.length > 0" class="flex flex-col gap-2">
+                <MvOrcidLink
+                  v-for="user in group.users"
+                  :key="user.orcidId"
+                  :first-name="user.firstName"
+                  :last-name="user.lastName"
+                  :orcid-id="user.orcidId"
+                />
+              </div>
+              <p v-else class="text-sm text-text-muted">No {{ group.title.toLowerCase() }}</p>
+            </div>
+          </template>
         </div>
       </div>
     </div>
-    <div v-else-if="itemStatus == 'Loading' || itemStatus == 'NotLoaded'">
-      <PageLoading />
-    </div>
-    <div v-else>
-      <ItemNotFound :item-id="itemId" model="collection" />
-    </div>
-  </MvLayout>
-  <Dialog
-    v-if="userIsAuthorized.update"
-    v-model:visible="privacyDialogVisible"
-    :close-on-escape="true"
-    header="Privacy"
-    modal
-    :style="{width: '25rem'}"
-  >
-    <p v-if="item.private">
-      This collection is currently private. Only you and other users listed as admins, editors, or viewers can access
-      it.
-    </p>
-    <p v-else-if="item.badgeName">This collection is currently public and is an official collection of MaveDB.</p>
-    <p v-else>This collection is currently public. Any user who has the URL can access it.</p>
 
-    <Button
-      v-if="item.private"
-      icon="pi pi-lock-open"
-      label="Make it public"
-      severity="danger"
-      @click="updatePrivacyWithConfirmation(false)"
-    />
-    <Button
-      v-else-if="!item.badgeName"
-      icon="pi pi-lock"
-      label="Make it private"
-      severity="danger"
-      @click="updatePrivacyWithConfirmation(true)"
-    />
-  </Dialog>
+    <!-- Privacy dialog -->
+    <PDialog
+      v-if="item && userIsAuthorized.update"
+      v-model:visible="privacyDialogVisible"
+      :close-on-escape="true"
+      header="Change Visibility"
+      modal
+      :style="{width: '28rem', maxWidth: 'calc(100% - 2rem)'}"
+    >
+      <p v-if="item.private" class="mb-4 text-sm leading-relaxed text-text-secondary">
+        This collection is currently <strong>private</strong>. Only designated admins, editors, and viewers can access
+        it. Making it public will allow anyone with the URL to view it.
+      </p>
+      <p v-else-if="item.badgeName" class="mb-4 text-sm leading-relaxed text-text-secondary">
+        This collection is currently <strong>public</strong> and is an official collection of MaveDB. Its visibility
+        cannot be changed.
+      </p>
+      <p v-else class="mb-4 text-sm leading-relaxed text-text-secondary">
+        This collection is currently <strong>public</strong>. Any user with the URL can access it. Making it private
+        will restrict access to designated users only.
+      </p>
+      <div class="flex justify-end gap-2">
+        <PButton label="Cancel" severity="secondary" size="small" @click="privacyDialogVisible = false" />
+        <PButton
+          v-if="item.private"
+          icon="pi pi-lock-open"
+          label="Make Public"
+          severity="warn"
+          size="small"
+          @click="updatePrivacy(false)"
+        />
+        <PButton
+          v-else-if="!item.badgeName"
+          icon="pi pi-lock"
+          label="Make Private"
+          severity="danger"
+          size="small"
+          @click="updatePrivacy(true)"
+        />
+      </div>
+    </PDialog>
+  </MvLayout>
 </template>
 
-<script>
-import axios from 'axios'
-import Button from 'primevue/button'
-import Dialog from 'primevue/dialog'
-import Inplace from 'primevue/inplace'
+<script lang="ts">
+import {defineComponent} from 'vue'
+import PButton from 'primevue/button'
+import PDialog from 'primevue/dialog'
 import InputText from 'primevue/inputtext'
-import Textarea from 'primevue/textarea'
+import PTextarea from 'primevue/textarea'
 import {useHead} from '@unhead/vue'
 
-import CollectionBadge from '@/components/CollectionBadge.vue'
 import CollectionDataSetEditor from '@/components/CollectionDataSetEditor.vue'
 import CollectionItemsTable from '@/components/CollectionItemsTable.vue'
 import CollectionPermissionsEditor from '@/components/CollectionPermissionsEditor.vue'
+import MvFloatField from '@/components/forms/MvFloatField.vue'
 import MvLayout from '@/components/layout/MvLayout.vue'
+import MvLoader from '@/components/common/MvLoader.vue'
+import MvOrcidLink from '@/components/common/MvOrcidLink.vue'
+import MvVisibilityToggle from '@/components/common/MvVisibilityToggle.vue'
+import MvRowActionMenu from '@/components/common/MvRowActionMenu.vue'
 import ItemNotFound from '@/components/common/ItemNotFound.vue'
-import PageLoading from '@/components/common/PageLoading.vue'
 import useAuth from '@/composition/auth'
 import useFormatters from '@/composition/formatters'
-import useItem from '@/composition/item.ts'
-import config from '@/config'
+import useItem from '@/composition/item'
+import {deleteCollection, removeCollectionEntity, updateCollection} from '@/api/mavedb/collections'
+import {checkPermissions} from '@/api/mavedb/permissions'
+import type {RowAction} from '@/components/common/MvRowActionMenu.vue'
+import {components} from '@/schema/openapi'
 import {getErrorResponse} from '@/api/mavedb'
 
-export default {
+type Collection = components['schemas']['Collection']
+type User = components['schemas']['User']
+
+interface CollectionAuthorization {
+  delete: boolean
+  publish: boolean
+  update: boolean
+  add_score_set: boolean
+  add_role: boolean
+}
+
+export default defineComponent({
   name: 'CollectionView',
 
   components: {
-    Button,
-    CollectionBadge,
     CollectionDataSetEditor,
     CollectionItemsTable,
     CollectionPermissionsEditor,
-    MvLayout,
-    Dialog,
-    Inplace,
     InputText,
     ItemNotFound,
-    PageLoading,
-    Textarea
+    MvFloatField,
+    MvLayout,
+    MvLoader,
+    MvOrcidLink,
+    MvRowActionMenu,
+    MvVisibilityToggle,
+    PButton,
+    PDialog,
+    PTextarea
   },
 
   props: {
-    itemId: {
-      type: String,
-      required: true
-    }
+    itemId: {type: String, required: true}
   },
 
-  setup: () => {
+  setup() {
     const head = useHead({title: 'Collection'})
-    const {userIsAuthenticated} = useAuth()
+    const {userIsAuthenticated, userOrcidId} = useAuth()
     return {
       head,
-      config: config,
       userIsAuthenticated,
-
+      userOrcidId,
       ...useFormatters(),
-      ...useItem({itemTypeName: 'collection'})
+      ...useItem<Collection>({itemTypeName: 'collection'})
     }
   },
 
-  data: () => ({
-    userIsAuthorized: {
-      delete: false,
-      publish: false,
-      update: false,
-      add_score_set: false, // permissions are the same for add score set, remove score set, add experiment, and remove experiment
-      add_role: false // permissions are the same for add user to role and remove user from role
-    },
-    editName: null,
-    displayCollectionNameEdit: false,
-    editDescription: null,
-    displayCollectionDescriptionEdit: false,
-    privacyDialogVisible: false
-  }),
+  data() {
+    return {
+      userIsAuthorized: {
+        delete: false,
+        publish: false,
+        update: false,
+        add_score_set: false,
+        add_role: false
+      } as CollectionAuthorization,
+      editing: false,
+      editName: '' as string,
+      editDescription: '' as string,
+      editPrivate: false,
+      privacyDialogVisible: false
+    }
+  },
 
   computed: {
     scoreSetsList() {
-      return (this.item?.scoreSetUrns || []).map((urn) => ({urn}))
+      return (this.item?.scoreSetUrns || []).map((urn: string) => ({urn}))
     },
     experimentsList() {
-      return (this.item?.experimentUrns || []).map((urn) => ({urn}))
+      return (this.item?.experimentUrns || []).map((urn: string) => ({urn}))
+    },
+    entitySections() {
+      return [
+        {
+          type: 'scoreSet' as const,
+          title: 'Score Sets',
+          editorRef: 'scoreSetEditor',
+          items: this.scoreSetsList,
+          remove: (urn: string) => this.removeScoreSet(urn),
+          reorder: (event: {value: {urn: string}[]}) => this.onScoreSetReorder(event)
+        },
+        {
+          type: 'experiment' as const,
+          title: 'Experiments',
+          editorRef: 'experimentEditor',
+          items: this.experimentsList,
+          remove: (urn: string) => this.removeExperiment(urn),
+          reorder: (event: {value: {urn: string}[]}) => this.onExperimentReorder(event)
+        }
+      ]
+    },
+    roleGroups() {
+      if (!this.item) return []
+      return [
+        {role: 'admin', title: 'Admins', users: this.item.admins, visible: this.item.admins.length > 0 || this.userIsAuthorized.add_role},
+        {role: 'editor', title: 'Editors', users: this.item.editors, visible: this.userIsAuthorized.add_role},
+        {role: 'viewer', title: 'Viewers', users: this.item.viewers, visible: this.userIsAuthorized.add_role}
+      ]
+    },
+    hasActions(): boolean {
+      return this.userIsAuthorized.update || this.userIsAuthorized.delete
+    },
+    collectionActions(): RowAction[] {
+      const actions: RowAction[] = []
+      if (this.userIsAuthorized.update) {
+        actions.push({
+          label: 'Edit Details',
+          description: 'Edit collection name and description',
+          handler: () => this.beginEditing()
+        })
+      }
+      actions.push({
+        label: 'Copy Share Link',
+        description: 'Copy a link to this collection',
+        handler: () => this.copyShareLink()
+      })
+      const deleteAction = this.deleteCollectionAction
+      if (deleteAction) {
+        actions.push({separator: true}, deleteAction)
+      }
+      return actions
+    },
+    userIsAdmin(): boolean {
+      if (!this.item || !this.userOrcidId) return false
+      return this.item.admins.some((admin: User) => admin.orcidId === this.userOrcidId)
+    },
+    /**
+     * Build the "Delete Collection" action for the row action menu.
+     *
+     * Only shown to collection admins. Deletion is enabled when all conditions are met:
+     *   1. The user has the `delete` permission (API grants this for private, non-official collections).
+     *   2. The collection is not official (official collections cannot be deleted).
+     *   3. The collection is private (public collections must be made private first).
+     *
+     * When deletion is blocked, the action is shown disabled with an explanation
+     * so admins know why and what to do. Returns null for non-admins.
+     */
+    deleteCollectionAction(): RowAction | null {
+      if (!this.userIsAdmin) return null
+
+      const isOfficial = !!this.item?.badgeName
+      const isPublic = !this.item?.private
+      const canDelete = this.userIsAuthorized.delete && !isPublic && !isOfficial
+
+      let description = 'Permanently delete this collection'
+      if (isOfficial) {
+        description = 'Official collections cannot be deleted.'
+      } else if (isPublic) {
+        description = 'Public collections cannot be deleted. Make it private first.'
+      }
+
+      return {
+        label: 'Delete Collection',
+        description,
+        danger: true,
+        disabled: !canDelete,
+        handler: () => this.deleteCollectionWithConfirmation()
+      }
     }
   },
 
   watch: {
     item: {
-      handler: function (newValue) {
+      handler(newValue: {name?: string} | null) {
         this.head.patch({title: newValue?.name || 'Collection'})
       }
     },
-
     itemId: {
-      handler: function (newValue, oldValue) {
-        if (newValue != oldValue) {
+      handler(newValue: string, oldValue: string) {
+        if (newValue !== oldValue) {
           this.setItemId(newValue)
         }
       },
@@ -345,103 +437,154 @@ export default {
     }
   },
 
-  mounted: async function () {
+  async mounted() {
     await this.checkAuthorization()
   },
 
   methods: {
-    checkAuthorization: async function () {
-      // Response should be true to get authorization
-      const actions = ['delete', 'publish', 'update', 'add_score_set', 'add_role']
+    async checkAuthorization() {
       try {
-        for (const action of actions) {
-          const response = await axios.get(
-            `${config.apiBaseUrl}/permissions/user-is-permitted/collection/${this.itemId}/${action}`
-          )
-          this.userIsAuthorized[action] = response.data
-        }
+        const actions = ['delete', 'publish', 'update', 'add_score_set', 'add_role'] as const
+        const results = await checkPermissions('collection', this.itemId, actions)
+        Object.assign(this.userIsAuthorized, results)
       } catch (err) {
-        console.log(`Error to get authorization:`, err)
+        console.error('Error checking authorization:', err)
       }
     },
 
-    childComponentEditedCollection: function () {
+    async copyShareLink() {
+      const url = `${window.location.origin}/collections/${this.itemId}`
+      try {
+        await navigator.clipboard.writeText(url)
+        this.$toast.add({severity: 'success', summary: 'Link copied to clipboard', life: 3000})
+      } catch {
+        this.$toast.add({severity: 'warn', summary: 'Failed to copy link', life: 3000})
+      }
+    },
+
+    childComponentEditedCollection() {
       this.reloadItem(this.itemId)
     },
 
-    openEditor(editorRef) {
-      const editor = this.$refs[editorRef]
-      if (editor && typeof editor.openEditor === 'function') {
-        editor.openEditor()
+    beginEditing() {
+      if (!this.item) return
+      this.editName = this.item.name || ''
+      this.editDescription = this.item.description || ''
+      this.editPrivate = this.item.private
+      this.editing = true
+    },
+
+    cancelEditing() {
+      this.editing = false
+    },
+
+    async saveEdits() {
+      if (!this.item) return
+      const name = this.editName.trim()
+      const description = this.editDescription.trim() || null
+
+      if (!name) {
+        this.$toast.add({severity: 'warn', summary: 'Collection name cannot be empty', life: 3000})
+        return
       }
-    },
 
-    openScoreSetEditor() {
-      this.openEditor('scoreSetEditor')
-    },
+      const patch: Record<string, unknown> = {}
+      if (name !== this.item.name) patch.name = name
+      if (description !== this.item.description) patch.description = description
+      if (this.editPrivate !== this.item.private) patch.private = this.editPrivate
 
-    openExperimentEditor() {
-      this.openEditor('experimentEditor')
-    },
-    async removeCollectionEntity(entityType, urn, {successSummary, failureSummary}) {
+      if (Object.keys(patch).length === 0) {
+        this.editing = false
+        return
+      }
+
       try {
-        await axios.delete(`${config.apiBaseUrl}/collections/${this.item.urn}/${entityType}/${urn}`)
-        this.$toast.add({severity: 'success', summary: successSummary, life: 3000})
+        await updateCollection(this.item.urn, patch)
         this.reloadItem(this.itemId)
-      } catch (error) {
+        this.editing = false
+        this.$toast.add({severity: 'success', summary: 'Collection updated.', life: 3000})
+      } catch (error: unknown) {
+        const errResponse = getErrorResponse(error)
         this.$toast.add({
           severity: 'error',
-          summary: failureSummary,
-          detail: error.response?.data?.detail || error.message,
+          summary: 'Error saving changes',
+          detail: errResponse.data?.detail || 'Unknown error',
           life: 5000
         })
       }
     },
 
-    async removeScoreSet(urn) {
+    openEditor(editorRef: string) {
+      const editor = this.$refs[editorRef] as {openEditor?: () => void} | undefined
+      if (editor && typeof editor.openEditor === 'function') {
+        editor.openEditor()
+      }
+    },
+
+    async removeCollectionEntity(
+      entityType: string,
+      urn: string,
+      {successSummary, failureSummary}: {successSummary: string; failureSummary: string}
+    ) {
+      if (!this.item) return
+      try {
+        await removeCollectionEntity(this.item.urn, entityType, urn)
+        this.$toast.add({severity: 'success', summary: successSummary, life: 3000})
+        this.reloadItem(this.itemId)
+      } catch (error: unknown) {
+        const errResponse = getErrorResponse(error)
+        this.$toast.add({
+          severity: 'error',
+          summary: failureSummary,
+          detail: errResponse.data?.detail || 'Unknown error',
+          life: 5000
+        })
+      }
+    },
+
+    async removeScoreSet(urn: string) {
       return this.removeCollectionEntity('score-sets', urn, {
         successSummary: 'Score set removed',
         failureSummary: 'Failed to remove score set'
       })
     },
 
-    async removeExperiment(urn) {
+    async removeExperiment(urn: string) {
       return this.removeCollectionEntity('experiments', urn, {
         successSummary: 'Experiment removed',
         failureSummary: 'Failed to remove experiment'
       })
     },
 
-    async reorderCollectionItems(event, urnFieldName, successSummary, failureSummary) {
+    async reorderCollectionItems(
+      event: {value: {urn: string}[]},
+      urnFieldName: string,
+      successSummary: string,
+      failureSummary: string
+    ) {
+      if (!this.item) return
       const newOrder = event.value.map((row) => row.urn)
       try {
-        const response = await axios.patch(`${config.apiBaseUrl}/collections/${this.item.urn}`, {
-          [urnFieldName]: newOrder
-        })
-        if (response.status === 200) {
-          // TODO#628: Consider adding an 'updateItem' method to the item store to avoid this extra API round trip.
-          // Currently using reloadItem() for safety to ensure state consistency, but we already have the updated
-          // item in response.data. A carefully designed updateItem() could reduce API calls while maintaining
-          // data integrity through proper validation and state management.
-          this.reloadItem(this.itemId)
-          this.$toast.add({severity: 'success', summary: successSummary, life: 3000})
-        }
-      } catch (error) {
+        await updateCollection(this.item.urn, {[urnFieldName]: newOrder})
+        this.reloadItem(this.itemId)
+        this.$toast.add({severity: 'success', summary: successSummary, life: 3000})
+      } catch (error: unknown) {
+        const errResponse = getErrorResponse(error)
         this.$toast.add({
           severity: 'error',
           summary: failureSummary,
-          detail: error.response?.data?.detail || error.message,
+          detail: errResponse.data?.detail || 'Unknown error',
           life: 5000
         })
-        this.reloadItem(this.itemId) // Rollback on error
+        this.reloadItem(this.itemId)
       }
     },
 
-    async onScoreSetReorder(event) {
+    async onScoreSetReorder(event: {value: {urn: string}[]}) {
       await this.reorderCollectionItems(event, 'score_set_urns', 'Score sets reordered', 'Failed to reorder score sets')
     },
 
-    async onExperimentReorder(event) {
+    async onExperimentReorder(event: {value: {urn: string}[]}) {
       await this.reorderCollectionItems(
         event,
         'experiment_urns',
@@ -450,230 +593,63 @@ export default {
       )
     },
 
-    deleteCollectionWithConfirmation: function () {
-      const numOtherUsers =
-        (this.item.admins || []).length + (this.item.editors || []).length + (this.item.viewers || []).length - 1
+    deleteCollectionWithConfirmation() {
+      if (!this.item) return
+
+      const item = this.item
+      const numOtherUsers = (item.admins || []).length + (item.editors || []).length + (item.viewers || []).length - 1
 
       const message =
         numOtherUsers > 0
-          ? `Are you sure you want to delete the collection named "${this.item.name}"? ${numOtherUsers} users will also lose access.`
-          : `Are you sure you want to delete the collection named "${this.item.name}"?`
+          ? `Are you sure you want to delete "${item.name}"? ${numOtherUsers} other users will also lose access.`
+          : `Are you sure you want to delete "${item.name}"?`
 
+      // @ts-expect-error PrimeVue ConfirmationService plugin is globally registered but not typed on Options API instances
       this.$confirm.require({
         message,
-        header: `Delete ${this.item.name}`,
+        header: `Delete ${item.name}`,
         icon: 'pi pi-exclamation-triangle',
+        acceptProps: {label: 'Delete', severity: 'danger'},
+        rejectProps: {label: 'Cancel', severity: 'secondary'},
         accept: async () => {
-          if (this.item) {
-            let response = null
-            try {
-              response = await axios.delete(`${config.apiBaseUrl}/collections/${this.item.urn}`, this.item)
-            } catch (e) {
-              response = getErrorResponse(e)
-            }
-
-            if (response.status == 200) {
-              this.$router.replace({name: `collections`})
-              this.$toast.add({severity: 'success', summary: 'The collection was successfully deleted.', life: 3000})
-            } else {
-              this.$toast.add({
-                severity: 'warn',
-                summary: response.data?.detail || 'Sorry, deletion failed.',
-                life: 3000
-              })
-            }
+          try {
+            await deleteCollection(item.urn)
+            this.$router.replace({name: 'dashboard', query: {tab: 'collections'}})
+            this.$toast.add({severity: 'success', summary: 'Collection deleted successfully.', life: 3000})
+          } catch (error: unknown) {
+            const errResponse = getErrorResponse(error)
+            this.$toast.add({
+              severity: 'warn',
+              summary: (errResponse.data?.detail as string) || 'Unknown error',
+              life: 3000
+            })
           }
         }
       })
     },
 
-    editCollectionDescription: function () {
-      this.displayCollectionDescriptionEdit = true
-      this.editDescription = this.item.description
-    },
+    async updatePrivacy(newPrivate: boolean) {
+      if (!this.item) return
+      if (newPrivate === this.item.private) return
 
-    editCollectionName: function () {
-      this.displayCollectionNameEdit = true
-      this.editName = this.item.name
-    },
-
-    saveCollectionName: async function () {
-      const editedName = this.editName?.trim()
-      if (!editedName || editedName.length == 0 || editedName == this.item.name) {
-        // Do nothing if the name is empty or has not changed.
-        this.displayCollectionNameEdit = false
-      } else {
-        const collectionPatch = {
-          name: editedName
-        }
-        let response = null
-        try {
-          response = await axios.patch(`${config.apiBaseUrl}/collections/${this.item.urn}`, collectionPatch)
-        } catch (e) {
-          response = getErrorResponse(e)
-          this.$toast.add({severity: 'error', summary: 'Error saving collection name', life: 3000})
-        }
-        if (response.status == 200) {
-          this.reloadItem(this.itemId)
-          this.displayCollectionNameEdit = false
-          this.$toast.add({severity: 'success', summary: 'Saved new collection name.', life: 3000})
-        } else {
-          console.log(response)
-        }
-      }
-    },
-
-    saveCollectionDescription: async function () {
-      let editedDescription = this.editDescription?.trim()
-      editedDescription = editedDescription == '' ? null : editedDescription
-      if (editedDescription == this.item.description) {
-        // Do nothing if the description has not changed.
-        this.displayCollectionDescriptionEdit = false
-      } else {
-        const collectionPatch = {
-          description: editedDescription
-        }
-        let response = null
-        try {
-          response = await axios.patch(`${config.apiBaseUrl}/collections/${this.item.urn}`, collectionPatch)
-        } catch (e) {
-          response = getErrorResponse(e)
-          this.$toast.add({severity: 'error', summary: 'Error saving description', life: 3000})
-        }
-        if (response.status == 200) {
-          this.reloadItem(this.itemId)
-          this.displayCollectionDescriptionEdit = false
-          this.$toast.add({severity: 'success', summary: 'Saved description.', life: 3000})
-        } else {
-          console.log(response)
-        }
-      }
-    },
-
-    updatePrivacyWithConfirmation: function (newPrivate) {
-      if (newPrivate != this.item.private) {
-        if (newPrivate) {
-          this.$confirm.require({
-            message:
-              'After making it private, only users you designated as admins, editors, or viewers will be able to see it.',
-            header: `Are you sure you want to make this collection private?`,
-            icon: 'pi pi-exclamation-triangle',
-            accept: async () => {
-              if (this.item) {
-                let response = null
-                try {
-                  response = await axios.patch(`${config.apiBaseUrl}/collections/${this.item.urn}`, {private: true})
-                } catch (e) {
-                  response = getErrorResponse(e)
-                }
-
-                if (response.status == 200) {
-                  this.reloadItem(this.itemId)
-                  this.$toast.add({severity: 'success', summary: 'The collection is now private.', life: 3000})
-                  this.privacyDialogVisible = false
-                } else {
-                  this.$toast.add({
-                    severity: 'warn',
-                    summary: response.data?.detail || 'Sorry, the collection privacy setting could not be updated.',
-                    life: 3000
-                  })
-                }
-              }
-            }
-          })
-        } else {
-          this.$confirm.require({
-            message:
-              'After making it public, any user with the collection URL will be able to see it. Editing will still be limited to people you designated as admins or editors.',
-            header: `Are you sure you want to make this collection public?`,
-            icon: 'pi pi-exclamation-triangle',
-            accept: async () => {
-              if (this.item) {
-                let response = null
-                try {
-                  response = await axios.patch(`${config.apiBaseUrl}/collections/${this.item.urn}`, {private: false})
-                } catch (e) {
-                  response = getErrorResponse(e)
-                }
-
-                if (response.status == 200) {
-                  this.reloadItem(this.itemId)
-                  this.$toast.add({severity: 'success', summary: 'The collection is now public.', life: 3000})
-                  this.privacyDialogVisible = false
-                } else {
-                  this.$toast.add({
-                    severity: 'warn',
-                    summary: response.data?.detail || 'Sorry, the collection privacy setting could not be updated.',
-                    life: 3000
-                  })
-                }
-              }
-            }
-          })
-        }
+      try {
+        await updateCollection(this.item.urn, {private: newPrivate})
+        this.reloadItem(this.itemId)
+        this.privacyDialogVisible = false
+        this.$toast.add({
+          severity: 'success',
+          summary: `Collection is now ${newPrivate ? 'private' : 'public'}.`,
+          life: 3000
+        })
+      } catch (error: unknown) {
+        const errResponse = getErrorResponse(error)
+        this.$toast.add({
+          severity: 'warn',
+          summary: (errResponse.data?.detail as string) || 'Unknown error',
+          life: 3000
+        })
       }
     }
   }
-}
+})
 </script>
-
-<style scoped>
-.mave-collection {
-  padding: 20px;
-}
-
-.mave-collection-description {
-  white-space: pre-line;
-}
-
-.mave-collection-description:deep(.p-inplace-display) {
-  margin: 0 0 10px 0;
-  padding-left: 0;
-}
-
-.mave-collection-section-title {
-  font-size: 24px;
-  padding: 0 0 5px 0;
-  border-bottom: 1px solid #ccc;
-  margin: 20px 0 10px 0;
-  align-items: center;
-  display: flex;
-  flex-direction: row;
-  justify-content: flex-start;
-  gap: 20px;
-}
-
-.mave-collection-contributors-subsection-title {
-  font-size: 18px;
-  padding: 0 0 0 0;
-  /* margin: 20px 0 10px 0; */
-}
-
-.mave-collection-contributors-subsection {
-  padding: 0 0 5px 0;
-  border-bottom: 1px dashed #ccc;
-  margin: 20px 0 10px 0;
-}
-
-.mave-collection-description-editor,
-.mave-collection-name-editor {
-  position: relative;
-  width: 100%;
-}
-
-.mave-collection-description-editor > *,
-.mave-collection-name-editor > * {
-  margin-left: 0.5em;
-}
-
-.mave-collection-description-editor > *:first-child,
-.mave-collection-name-editor > *:first-child {
-  margin-left: 0;
-}
-
-.mave-screen-collection-title:deep(.p-inplace-display) {
-  flex: 0 0 auto;
-  font-size: 28px;
-  padding: 0;
-}
-</style>

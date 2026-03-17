@@ -186,6 +186,8 @@ export default defineComponent({
         message: `Are you sure you want to delete "${col.name}"? This action cannot be undone.`,
         header: 'Delete collection',
         icon: 'pi pi-exclamation-triangle',
+        acceptProps: {label: 'Delete', severity: 'danger'},
+        rejectProps: {label: 'Cancel', severity: 'secondary'},
         accept: () => this.$emit('deleteCollection', col.urn)
       })
     }

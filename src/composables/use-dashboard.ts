@@ -22,6 +22,7 @@
 // TODO: Add sort controls to dashboard tabs (reuse SORT_OPTIONS from lib/search.ts)
 import {computed, reactive, ref, type ComputedRef, type Ref} from 'vue'
 
+import type {CollectionRole} from '@/lib/roles'
 import {searchMyScoreSets} from '@/api/mavedb/score-sets'
 import {searchMyExperiments} from '@/api/mavedb/experiments'
 import {getMyCollections} from '@/api/mavedb/collections'
@@ -41,7 +42,7 @@ export type CrossTabFilter = {type: 'experiment'; experimentUrn: string; experim
 
 /** Collection enriched with the current user's role. */
 export interface CollectionWithRole extends Collection {
-  role: 'admin' | 'editor' | 'viewer'
+  role: CollectionRole
 }
 
 /** Score set enriched with derived role and publication status. */

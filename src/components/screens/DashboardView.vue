@@ -122,7 +122,7 @@
     </div>
 
     <PDialog v-model:visible="creatorVisible" header="New Collection" modal :style="{width: '600px'}">
-      <CollectionCreator @collection-created="onCollectionCreated" />
+      <CollectionCreator @canceled="creatorVisible = false" @created-collection="onCollectionCreated" />
     </PDialog>
 
     <PDialog

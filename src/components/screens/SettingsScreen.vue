@@ -1,7 +1,7 @@
 <template>
   <MvLayout :require-auth="true">
     <template #header>
-      <section class="settings-hero overflow-hidden pb-6 pt-8">
+      <section class="overflow-hidden bg-gradient-to-br from-sage-light via-mint-light to-[#f0faf0] pb-6 pt-8">
         <div class="mx-auto flex max-w-[850px] items-center gap-4 px-6">
           <div
             class="flex size-16 shrink-0 items-center justify-center rounded-full bg-sage text-2xl font-bold text-white shadow-sm"
@@ -32,11 +32,11 @@
               </div>
             </div>
             <div v-if="statsLoaded" class="mt-2 flex items-center gap-0 text-xs text-text-muted">
-              <span class="stats-item">{{ scoreSetCount }} score sets</span>
-              <span class="stats-divider" />
-              <span class="stats-item">{{ experimentCount }} experiments</span>
-              <span class="stats-divider" />
-              <span class="stats-item">{{ collectionCount }} collections</span>
+              <span class="whitespace-nowrap">{{ scoreSetCount }} score sets</span>
+              <span class="mx-2.5 h-3 w-px bg-border" />
+              <span class="whitespace-nowrap">{{ experimentCount }} experiments</span>
+              <span class="mx-2.5 h-3 w-px bg-border" />
+              <span class="whitespace-nowrap">{{ collectionCount }} collections</span>
             </div>
           </div>
         </div>
@@ -129,7 +129,7 @@
               class="rounded-md border border-border-light bg-bg p-3"
               :class="index < (user?.roles?.length ?? 0) - 1 ? 'mb-2.5' : ''"
             >
-              <div class="mb-2 text-[13px] font-semibold capitalize text-text-secondary">{{ role }}</div>
+              <div class="mb-2 text-xs-plus font-semibold capitalize text-text-secondary">{{ role }}</div>
               <MvAccessKeyRow
                 empty-message="You have not created an API key for this role."
                 key-display-class="bg-surface"
@@ -383,19 +383,3 @@ export default defineComponent({
 })
 </script>
 
-<style scoped>
-.settings-hero {
-  background: linear-gradient(135deg, var(--color-sage-light) 0%, var(--color-mint-light) 60%, #f0faf0 100%);
-}
-
-.stats-divider {
-  width: 1px;
-  height: 12px;
-  margin: 0 10px;
-  background-color: var(--color-border);
-}
-
-.stats-item {
-  white-space: nowrap;
-}
-</style>

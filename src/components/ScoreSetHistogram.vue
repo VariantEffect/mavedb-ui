@@ -8,29 +8,41 @@
       </TabList>
     </Tabs>
     <div v-if="showCalibrations" class="mavedb-histogram-thresholds-control">
-      <div class="mavedb-histogram-control">
-        <label class="mavedb-histogram-control-label" for="mavedb-histogram-viz-select">Thresholds: </label>
-        <Select
-          v-model="activeCalibration"
-          :disabled="!showCalibrations"
-          input-id="mavedb-histogram-viz-select"
-          option-label="label"
-          :options="activeCalibrationOptions"
-          style="align-items: center; height: 1.5rem"
-        />
-      </div>
+      <button class="mavedb-threshold-trigger" type="button" @click="toggleThresholdsPopover">
+        <span class="mavedb-threshold-trigger-label">Active calibration</span>
+        <span class="mavedb-threshold-trigger-value">{{ activeCalibration.label }}</span>
+        <i class="pi pi-chevron-down mavedb-threshold-trigger-icon" />
+      </button>
+      <Popover ref="thresholdsPopoverRef" class="mavedb-thresholds-popover">
+        <div class="mavedb-thresholds-list" role="listbox">
+          <button
+            v-for="option of activeCalibrationOptions"
+            :key="option.value?.urn ?? 'none'"
+            :aria-selected="activeCalibration.value?.urn === option.value?.urn"
+            class="mavedb-thresholds-option"
+            :class="{'mavedb-thresholds-option--active': activeCalibration.value?.urn === option.value?.urn}"
+            role="option"
+            type="button"
+            @click="selectCalibration(option)"
+          >
+            <span class="mavedb-thresholds-option-label">{{ option.value?.title ?? 'None' }}</span>
+            <span
+              v-if="option.value?.researchUseOnly"
+              class="mavedb-thresholds-badge mavedb-thresholds-badge--research"
+            >
+              Research Use Only
+            </span>
+            <span v-if="option.value?.primary" class="mavedb-thresholds-badge mavedb-thresholds-badge--primary">
+              Primary
+            </span>
+            <i
+              v-if="activeCalibration.value?.urn === option.value?.urn"
+              class="pi pi-check mavedb-thresholds-option-check"
+            />
+          </button>
+        </div>
+      </Popover>
     </div>
-  </div>
-  <div
-    v-if="clinicalControlsEnabled && (!refreshedClinicalControls || !associatedClinicalControls)"
-    style="font-size: small"
-  >
-    <ProgressSpinner style="height: 24px; width: 24px" />
-    Loading clinical control options in the background. Additional histogram views will be available once loaded.
-  </div>
-  <div v-if="isCalibrationClassViewActive && isLoadingActiveCalibrationVariants" style="font-size: small">
-    <ProgressSpinner style="height: 24px; width: 24px" />
-    Loading calibration class variants.
   </div>
   <div v-if="showControls" class="mavedb-histogram-custom-controls">
     <fieldset class="mavedb-histogram-controls-panel">
@@ -39,7 +51,7 @@
         <label class="mavedb-histogram-control-label" for="mavedb-histogram-db-select"
           >Clinical control database:
         </label>
-        <Select
+        <PSelect
           v-model="controlDb"
           :disabled="!refreshedClinicalControls"
           input-id="mavedb-histogram-db-select"
@@ -50,7 +62,7 @@
         <label class="mavedb-histogram-control-label" for="mavedb-histogram-version-select"
           >Clinical control version:
         </label>
-        <Select
+        <PSelect
           v-model="controlVersion"
           :disabled="!refreshedClinicalControls"
           input-id="mavedb-histogram-version-select"
@@ -121,6 +133,17 @@
       </div>
     </fieldset>
   </div>
+  <div
+    v-if="clinicalControlsEnabled && (!refreshedClinicalControls || !associatedClinicalControls)"
+    style="font-size: small"
+  >
+    <ProgressSpinner style="height: 24px; width: 24px" />
+    Loading clinical control options in the background. Additional histogram views will be available once loaded.
+  </div>
+  <div v-if="isCalibrationClassViewActive && isLoadingActiveCalibrationVariants" style="font-size: small">
+    <ProgressSpinner style="height: 24px; width: 24px" />
+    Loading calibration class variants.
+  </div>
   <div ref="histogramContainer" class="mavedb-histogram-container" />
   <span v-if="selectedCalibrationIsClassBased" class="mavedb-class-based-calibration-note">
     *Class-based calibrations may not be visualized as thresholds. To view the distribution of variants within each
@@ -144,7 +167,8 @@
 import axios from 'axios'
 import _ from 'lodash'
 import Checkbox from 'primevue/checkbox'
-import Select from 'primevue/select'
+import PSelect from 'primevue/select'
+import Popover from 'primevue/popover'
 import ProgressSpinner from 'primevue/progressspinner'
 import Rating from 'primevue/rating'
 import Tabs from 'primevue/tabs'
@@ -220,7 +244,7 @@ interface VizOption {
 export default defineComponent({
   name: 'ScoreSetHistogram',
 
-  components: {Checkbox, Select, Rating, Tabs, TabList, Tab, ProgressSpinner},
+  components: {Checkbox, Popover, PSelect, Rating, Tabs, TabList, Tab, ProgressSpinner},
 
   props: {
     coordinates: {
@@ -1094,6 +1118,13 @@ export default defineComponent({
   },
 
   methods: {
+    toggleThresholdsPopover(event: Event) {
+      ;(this.$refs.thresholdsPopoverRef as InstanceType<typeof Popover>)?.toggle(event)
+    },
+    selectCalibration(option: {label: string; value: components['schemas']['ScoreCalibration'] | null}) {
+      this.activeCalibration = option
+      ;(this.$refs.thresholdsPopoverRef as InstanceType<typeof Popover>)?.hide()
+    },
     filterControlVariantByEffect(variant: Variant) {
       // Do not filter control variants unless we have protein consequences for all coding variants.
       if (!this.proteinEffectOptionsAvailable) {
@@ -1452,22 +1483,81 @@ export default defineComponent({
   display: flex;
   flex-direction: column;
   gap: 0.5rem;
+  overflow-x: auto;
 }
 
 .mavedb-histogram-thresholds-control {
   margin-left: auto;
+  display: flex;
+  align-items: center;
+  padding: 0 0.5rem;
+  margin-bottom: 6px;
 }
 
-.mavedb-histogram-thresholds-control:first-child {
-  margin-left: 0;
+.mavedb-threshold-trigger {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  padding: 4px 10px;
+  border: 1px solid var(--p-tabs-tablist-border-color, #dee2e6);
+  border-radius: 6px;
+  background: #fff;
+  cursor: pointer;
+  font-size: 13px;
+  line-height: 1.4;
+  white-space: nowrap;
+  transition: border-color 0.15s;
+}
+
+.mavedb-threshold-trigger:hover {
+  border-color: #adb5bd;
+}
+
+.mavedb-threshold-trigger-label {
+  color: #6c757d;
+  font-weight: 500;
+}
+
+@media (max-width: 896px) {
+  .mavedb-threshold-trigger-label {
+    display: none;
+  }
+}
+
+.mavedb-threshold-trigger-value {
+  color: #212529;
+  font-weight: 600;
+  max-width: 180px;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+@media (max-width: 480px) {
+  .mavedb-threshold-trigger-value {
+    max-width: 100px;
+  }
+}
+
+.mavedb-threshold-trigger-icon {
+  font-size: 10px;
+  color: #6c757d;
 }
 
 .mavedb-histogram-controls {
   display: flex;
-  flex-direction: row;
-  justify-content: space-between;
-  align-items: center;
+  align-items: flex-end;
+  margin-bottom: 0.75rem;
   background: #fff;
+  border-bottom: 2px solid var(--p-tabs-tablist-border-color, #dee2e6);
+}
+
+.mavedb-histogram-controls :deep(.p-tablist) {
+  border-bottom: none;
+}
+
+.mavedb-histogram-controls :deep(.p-tabs) {
+  min-width: 0;
+  flex-shrink: 1;
 }
 
 .mavedb-histogram-custom-controls {
@@ -1479,12 +1569,91 @@ export default defineComponent({
 .mavedb-histogram-control {
   display: flex;
   flex-wrap: wrap;
-  gap: 1rem;
+  gap: 0.5rem 1rem;
   align-items: center;
 }
+
 </style>
 
 <style>
+.mavedb-thresholds-popover.p-popover {
+  border: 1px solid #dee2e6;
+  border-radius: 8px;
+  box-shadow: 0 8px 24px rgba(0, 0, 0, 0.12);
+  padding: 0;
+}
+
+.mavedb-thresholds-popover .p-popover-content {
+  padding: 4px 0;
+}
+
+.mavedb-thresholds-popover.p-popover::before,
+.mavedb-thresholds-popover.p-popover::after {
+  display: none;
+}
+
+.mavedb-thresholds-list {
+  display: flex;
+  flex-direction: column;
+  min-width: 220px;
+  max-width: 360px;
+}
+
+.mavedb-thresholds-option {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  width: 100%;
+  padding: 8px 12px;
+  border: none;
+  background: none;
+  cursor: pointer;
+  text-align: left;
+  font-size: 13px;
+  line-height: 1.4;
+  transition: background-color 0.1s;
+}
+
+.mavedb-thresholds-option:hover {
+  background-color: #f8f9fa;
+}
+
+.mavedb-thresholds-option--active {
+  background-color: #f0f7ff;
+  font-weight: 600;
+}
+
+.mavedb-thresholds-option-label {
+  flex: 1;
+  min-width: 0;
+}
+
+.mavedb-thresholds-option-check {
+  font-size: 12px;
+  color: var(--p-primary-color, #3b82f6);
+  flex-shrink: 0;
+}
+
+.mavedb-thresholds-badge {
+  flex-shrink: 0;
+  padding: 1px 6px;
+  border-radius: 4px;
+  font-size: 10px;
+  font-weight: 600;
+  text-transform: uppercase;
+  letter-spacing: 0.3px;
+}
+
+.mavedb-thresholds-badge--research {
+  background: #fff3cd;
+  color: #856404;
+}
+
+.mavedb-thresholds-badge--primary {
+  background: #d1ecf1;
+  color: #0c5460;
+}
+
 .histogram-tooltip {
   position: absolute;
 }
@@ -1509,9 +1678,9 @@ export default defineComponent({
 }
 
 .mavedb-range-classification-badge {
-  padding: 2px 2px;
+  padding: 2px 4px;
   border-radius: 4px;
-  font-size: 14px;
+  font-size: 11px;
   font-weight: bold;
 }
 

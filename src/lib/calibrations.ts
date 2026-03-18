@@ -222,6 +222,61 @@ export function functionalClassificationContainsVariant(
   return lowerOk && upperOk
 }
 
+/**
+ * Returns the primary calibration for a score set — the one marked `primary`, or
+ * failing that, the one marked `investigatorProvided`. Returns null if neither exists.
+ */
+export function getPrimaryCalibration(
+  scoreSet: {scoreCalibrations?: components['schemas']['ScoreCalibration'][] | null} | null | undefined
+): components['schemas']['ScoreCalibration'] | null {
+  const calibrations = scoreSet?.scoreCalibrations
+  if (!calibrations || calibrations.length === 0) return null
+  return calibrations.find((c) => c.primary) || calibrations.find((c) => c.investigatorProvided) || null
+}
+
+/**
+ * Finds a functional classification by type (e.g. 'normal', 'abnormal') from a calibration's
+ * classifications list. Returns null if not found.
+ */
+export function findClassificationByType(
+  calibration: components['schemas']['ScoreCalibration'] | null | undefined,
+  type: string
+): components['schemas']['mavedb__view_models__score_calibration__FunctionalClassification'] | null {
+  return calibration?.functionalClassifications?.find((r) => r.functionalClassification === type) || null
+}
+
+/**
+ * Returns the formatted OddsPath ratio string for a given classification type from a calibration,
+ * or null if not available. Uses the specified precision (default 2).
+ */
+export function getClassificationOddsPath(
+  calibration: components['schemas']['ScoreCalibration'] | null | undefined,
+  type: string,
+  precision: number = 2
+): string | null {
+  const range = findClassificationByType(calibration, type)
+  return range?.oddspathsRatio != null ? range.oddspathsRatio.toFixed(precision) : null
+}
+
+/**
+ * Formats the ACMG evidence code from a functional classification's ACMG classification data.
+ *
+ * @param classification - A functional classification that may contain an `acmgClassification`
+ *   with `criterion` (e.g. "PS3", "BS3") and `evidenceStrength` (e.g. "Strong", "Moderate").
+ * @returns A formatted code like "PS3_STRONG", or an empty string if evidence data is missing.
+ */
+export function formatEvidenceCode(
+  classification:
+    | components['schemas']['mavedb__view_models__score_calibration__FunctionalClassification']
+    | null
+    | undefined
+): string {
+  if (!classification?.acmgClassification?.evidenceStrength) return ''
+  const criterion = classification.acmgClassification.criterion
+  const strength = classification.acmgClassification.evidenceStrength.toUpperCase()
+  return `${criterion}_${strength}`
+}
+
 export type CalibrationSaveResult =
   | {success: true; data: any}
   | {success: false; error: 'email_required'}

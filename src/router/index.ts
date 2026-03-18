@@ -24,8 +24,8 @@ import SearchView from '@/components/screens/SearchView.vue'
 import SettingsScreen from '@/components/screens/SettingsScreen.vue'
 import StatisticsView from '@/components/screens/StatisticsView.vue'
 import NotFoundView from '@/components/screens/NotFoundView.vue'
+import {getVariantDetail} from '@/api/mavedb/variants'
 import {beginAuthentication, isAuthenticated} from '@/lib/orcid'
-import VariantMeasurementScreen from '@/components/screens/VariantMeasurementScreen.vue'
 import VariantScreen from '@/components/screens/VariantScreen.vue'
 import WizardCompletionView from '@/components/screens/WizardCompletionView.vue'
 import store from '@/store'
@@ -173,12 +173,24 @@ const routes: RouteRecordRaw[] = [
     })
   },
   {
+    // This route is for legacy URLs from older versions of MaveDB that used variant measurement URNs.
+    // It looks up the variant by URN and redirects to the new URL format using the ClinGen Allele ID.
+    // If the URN can't be resolved, it redirects to the 404 page.
     path: '/variant-measurements/:urn',
     name: 'variantMeasurement',
-    component: VariantMeasurementScreen,
-    props: (route) => ({
-      variantUrn: route.params.urn
-    })
+    async beforeEnter(to) {
+      const urn = Array.isArray(to.params.urn) ? to.params.urn[0] : to.params.urn
+      try {
+        const detail = await getVariantDetail(urn)
+        const mapped = detail.mappedVariants.find((m) => m.current)
+        if (mapped?.clingenAlleleId) {
+          return {name: 'variant', params: {clingenAlleleId: mapped.clingenAlleleId}}
+        }
+      } catch {
+        // Fall through to 404 if the variant can't be resolved
+      }
+    },
+    redirect: {name: 'notFound'}
   },
   {
     name: 'pubmedPublicationIdentifier',

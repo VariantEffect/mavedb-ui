@@ -1,104 +1,302 @@
 <template>
   <MvLayout>
-    <div class="variant-header-row">
-      <h1 v-if="alleleTitle && variants.length > 1" class="mavedb-variant-title">Variant: {{ alleleTitle }}</h1>
-      <div class="variant-header-download-btn-wrapper">
-        <SplitButton
-          :button-props="{class: 'p-button-sm'}"
-          label="Download annotations for selected variant"
-          :menu-button-props="{class: 'p-button-sm'}"
-          :model="annotatedVariantDownloadOptions"
-          @click="annotatedVariantDownloadOptions[0].command"
-        ></SplitButton>
-      </div>
-    </div>
-    <ErrorView v-if="variantsStatus == 'Error'" />
-    <PageLoading v-else-if="variantsStatus == 'Loading'" />
-    <Message v-else-if="variants.length == 0">No variants found in MaveDB</Message>
-    <div v-else :class="singleOrMultipleVariantsClassName">
-      <Tabs :lazy="true" :value="0">
-        <TabList>
-          <Tab v-for="(variant, variantIndex) in variants" :key="variant.content.urn" :value="variantIndex">
-            <div v-if="variants.length > 1" class="h-full">
-              <div class="mavedb-variants-tabview-header-text" style="color: #000; font-weight: bold">
-                Measurement {{ variantIndex + 1 }}
-              </div>
-              <div
-                v-if="variant.type == 'nucleotide'"
-                class="mavedb-variants-tabview-header-text"
-                style="color: #000; font-weight: bold"
-              >
-                Assayed at nucleotide level
-              </div>
-              <div
-                v-else-if="variant.type == 'protein'"
-                class="mavedb-variants-tabview-header-text"
-                style="color: #000; font-weight: bold"
-              >
-                Assayed at protein level
-              </div>
-              <div
-                v-else-if="variant.type == 'associatedNucleotide'"
-                class="mavedb-variants-tabview-header-text"
-                style="color: #000; font-weight: bold"
-              >
-                Other nucleotide-level variant with equivalent protein effect
-              </div>
-              <div class="mavedb-variants-tabview-header-text">{{ variantName(variant.content) }}</div>
-              <div class="mavedb-variants-tabview-header-text">{{ variant.content.scoreSet.title }}</div>
+    <template #header>
+      <MvPageHeader eyebrow="Variant" max-width="1000px" :title="pageTitle">
+        <template v-if="lookup.variants.value.length > 0" #actions>
+          <div class="hidden tablet:block">
+            <SplitButton
+              :model="annotatedVariantDownloadOptions"
+              severity="secondary"
+              size="small"
+              @click="annotatedVariantDownloadOptions[0]?.command"
+            >
+              <template #default>
+                <i class="pi pi-download mr-1.5 text-xs" />
+                Download annotations
+              </template>
+            </SplitButton>
+          </div>
+          <MvRowActionMenu :actions="downloadActions" class="tablet:hidden" />
+        </template>
+        <template v-if="lookup.variants.value.length > 0" #subtitle>
+          <p class="mt-2 text-sm text-text-muted">
+            <template v-if="lookup.geneName.value">{{ lookup.geneName.value }} &middot; </template>
+            <template v-if="lookup.clingenAllele.genomicLocationText.value"
+              >{{ lookup.clingenAllele.genomicLocationText.value }} &middot;
+            </template>
+            {{ lookup.variants.value.length }}
+            {{ lookup.variants.value.length === 1 ? 'measurement' : 'measurements' }}
+            <template v-if="lookup.uniqueAssayCount.value > 1">
+              across {{ lookup.uniqueAssayCount.value }} assays</template
+            >
+          </p>
+        </template>
+      </MvPageHeader>
+    </template>
+
+    <div class="mx-auto w-full px-4 tablet:px-6 py-6 tablet:py-8" style="max-width: 1000px">
+      <!-- Error state -->
+      <MvErrorState v-if="lookup.variantsStatus.value === 'Error'" @retry="lookup.fetchVariants" />
+
+      <!-- Loading state -->
+      <PageLoading v-else-if="lookup.variantsStatus.value === 'Loading'" text="Loading variant measurements..." />
+
+      <!-- Empty state -->
+      <MvEmptyState
+        v-else-if="lookup.variants.value.length === 0"
+        description="No variants were found for this allele."
+        title="No variants found"
+      />
+
+      <template v-else>
+        <!-- ── MEASUREMENTS SECTION ───────────────────────────── -->
+        <div class="rounded-lg border border-border bg-surface">
+          <div class="flex flex-wrap items-center gap-2.5 border-b border-border-light px-4 tablet:px-5 py-3.5">
+            <span class="text-sm font-bold text-text-primary"
+              >{{ lookup.variants.value.length }}
+              {{ lookup.variants.value.length === 1 ? 'Measurement' : 'Measurements' }}</span
+            >
+            <div class="ml-auto flex gap-1.5">
+              <MvBadgeToggle
+                v-if="lookup.nucleotideCount.value > 0"
+                v-model="lookup.showNucleotide.value"
+                active-background="var(--color-nucleotide-light)"
+                active-border="var(--color-nucleotide-border)"
+                color="var(--color-nucleotide)"
+                :count="lookup.nucleotideCount.value"
+                label="Nucleotide level"
+              />
+              <MvBadgeToggle
+                v-if="lookup.proteinCount.value > 0"
+                v-model="lookup.showProtein.value"
+                active-background="var(--color-protein-light)"
+                active-border="var(--color-protein-border)"
+                color="var(--color-protein)"
+                :count="lookup.proteinCount.value"
+                label="Protein level"
+              />
             </div>
-          </Tab>
-        </TabList>
-        <TabPanels>
-          <TabPanel
-            v-for="(variant, variantIndex) in variants"
-            :key="variant.content.urn"
-            v-model:active-index="activeVariantIndex"
-            :header="variant.content.url"
-            :value="variantIndex"
+          </div>
+          <!-- Desktop: horizontal scroll strip -->
+          <div class="measurement-switcher hidden tablet:flex gap-3 overflow-x-auto px-5 py-4">
+            <MvMeasurementCard
+              v-for="variant in lookup.filteredVariants.value"
+              :key="'desktop-' + (variant.content.urn ?? variant.content.id)"
+              :abnormal-odds-path="lookup.getAbnormalOddsPath(variant.content.urn)"
+              :active="lookup.selectedVariantUrn.value === variant.content.urn"
+              :assay-type="lookup.getKeyword(variant.content, 'Phenotypic Assay Method')"
+              :classification="lookup.getVariantClassification(variant.content.urn)"
+              :evidence-code="lookup.getVariantEvidenceCode(variant.content.urn)"
+              :mechanism="lookup.getKeyword(variant.content, 'Molecular Mechanism Assessed')"
+              :model-system="lookup.getKeyword(variant.content, 'Phenotypic Assay Model System')"
+              :normal-odds-path="lookup.getNormalOddsPath(variant.content.urn)"
+              :study-title="variant.content.scoreSet?.title || 'Untitled score set'"
+              :type="variant.type"
+              @select="lookup.selectVariant(variant.content.urn)"
+            />
+          </div>
+          <!-- Mobile: dropdown selector -->
+          <div class="tablet:hidden px-4 py-3">
+            <PSelect
+              class="w-full"
+              :model-value="lookup.selectedVariantUrn.value"
+              option-label="label"
+              option-value="urn"
+              :options="measurementOptions"
+              @update:model-value="lookup.selectVariant($event)"
+            />
+          </div>
+        </div>
+
+        <!-- ── VARIANT & ASSAY DETAILS ──────────────────────── -->
+        <template v-if="lookup.selectedVariantDetail.value">
+          <!-- Desktop: single card with two columns -->
+          <div
+            class="mave-gradient-bar relative mt-6 hidden tablet:block rounded-lg border border-border bg-surface px-[18px] py-3.5"
           >
-            <VariantMeasurementView :variant-urn="variant.content.urn" />
-          </TabPanel>
-        </TabPanels>
-      </Tabs>
+            <div class="grid grid-cols-2">
+              <div class="border-r border-border-light pr-[18px]">
+                <VariantInfoSection
+                  :allele-name="lookup.clingenAllele.alleleName.value"
+                  :classification="lookup.calibrationResolution.classification.value"
+                  :clingen-allele-id="lookup.selectedClingenAlleleId.value"
+                  :clinvar-allele-ids="lookup.clingenAllele.clinvarAlleleIds.value"
+                  :genomic-locations="lookup.clingenAllele.genomicLocations.value"
+                />
+              </div>
+              <div class="pl-[18px]">
+                <MvAssayFactsCard
+                  :score-set="lookup.selectedScoreSet.value ?? undefined"
+                  :variant-urn="lookup.selectedVariantDetail.value?.urn ?? undefined"
+                />
+              </div>
+            </div>
+          </div>
+
+          <!-- Mobile: separate cards -->
+          <div
+            class="mt-6 tablet:hidden mave-gradient-bar relative rounded-lg border border-border bg-surface px-4 py-3.5"
+          >
+            <VariantInfoSection
+              :allele-name="lookup.clingenAllele.alleleName.value"
+              :classification="lookup.calibrationResolution.classification.value"
+              :clingen-allele-id="lookup.selectedClingenAlleleId.value"
+              :clinvar-allele-ids="lookup.clingenAllele.clinvarAlleleIds.value"
+              :genomic-locations="lookup.clingenAllele.genomicLocations.value"
+            />
+          </div>
+          <div
+            class="mt-4 tablet:hidden mave-gradient-bar relative rounded-lg border border-border bg-surface px-4 py-3.5"
+          >
+            <MvAssayFactsCard
+              :score-set="lookup.selectedScoreSet.value ?? undefined"
+              :variant-urn="lookup.selectedVariantDetail.value?.urn ?? undefined"
+            />
+          </div>
+        </template>
+
+        <!-- ── ANNOTATIONS CARD ──────────────────────────────── -->
+        <div
+          v-if="lookup.selectedVariantDetail.value && lookup.selectedVariantScore.value != null"
+          class="mave-gradient-bar relative mt-6 rounded-lg border border-border bg-surface px-[18px] py-3.5"
+        >
+          <div class="annotations-columns grid grid-cols-1 tablet:grid-cols-3">
+            <!-- Classification -->
+            <div class="tablet:pr-[18px]">
+              <div class="mb-1.5 text-xs-minus font-bold uppercase tracking-[0.5px] text-black">Classification</div>
+              <MvDetailRow
+                label="Functional score"
+                :value="
+                  lookup.selectedVariantScore.value !== 'NA'
+                    ? Number(lookup.selectedVariantScore.value).toPrecision(4)
+                    : undefined
+                "
+              />
+              <MvDetailRow label="ACMG code">
+                <MvEvidenceTag
+                  v-if="lookup.calibrationResolution.formattedEvidenceCode.value"
+                  :code="lookup.calibrationResolution.formattedEvidenceCode.value"
+                />
+              </MvDetailRow>
+              <MvDetailRow
+                label="OddsPath ratio"
+                :value="lookup.calibrationResolution.scoreRange.value?.oddspathsRatio ?? undefined"
+              />
+            </div>
+            <!-- Placeholder columns for future data -->
+            <div
+              class="border-t border-border-light pt-4 tablet:border-t-0 tablet:pt-0 tablet:border-l tablet:border-border-light tablet:px-[18px]"
+            >
+              <div class="mb-1.5 text-xs-minus font-bold uppercase tracking-[0.5px] text-black">
+                Population Frequency
+              </div>
+              <p class="text-xs-plus italic text-text-muted">Data coming soon</p>
+            </div>
+            <div
+              class="border-t border-border-light pt-4 tablet:border-t-0 tablet:pt-0 tablet:border-l tablet:border-border-light tablet:pl-[18px]"
+            >
+              <div class="mb-1.5 text-xs-minus font-bold uppercase tracking-[0.5px] text-black">
+                Splicing Predictions
+              </div>
+              <p class="text-xs-plus italic text-text-muted">Data coming soon</p>
+            </div>
+          </div>
+        </div>
+
+        <!-- ── SCORE DISTRIBUTION CHART ──────────────────────── -->
+        <div v-if="lookup.selectedScoreSet.value" class="mt-6 rounded-lg border border-border bg-surface">
+          <div
+            class="flex flex-wrap items-center justify-between gap-3 border-b border-border-light px-4 tablet:px-5 py-3.5"
+          >
+            <div class="min-w-0">
+              <router-link
+                class="text-base tablet:text-lg font-bold text-link"
+                :to="{
+                  name: 'scoreSet',
+                  params: {urn: lookup.selectedScoreSet.value.urn},
+                  query: {variant: lookup.selectedVariantDetail.value?.urn}
+                }"
+              >
+                {{ lookup.selectedScoreSet.value.title }}
+              </router-link>
+            </div>
+          </div>
+          <div class="p-3 tablet:p-5">
+            <div v-if="lookup.scores.value && lookup.scores.value.length > 0" class="min-h-[200px]">
+              <ScoreSetHistogram
+                :key="lookup.selectedScoreSetUrn.value || ''"
+                ref="histogram"
+                :external-selection="lookup.variantScoreRow.value"
+                :lock-selection="true"
+                :score-set="lookup.selectedScoreSet.value"
+                :selected-calibration="lookup.selectedCalibration.value || undefined"
+                :variants="lookup.scores.value as any"
+                @calibration-changed="lookup.selectedCalibration.value = $event"
+                @selection-changed="() => {}"
+              />
+            </div>
+            <div v-else class="flex min-h-[200px] items-center justify-center">
+              <MvLoader text="Loading variant information..." />
+            </div>
+          </div>
+          <div v-if="lookup.selectedCalibrationObject.value" class="border-t border-border-light p-5">
+            <CalibrationTable
+              :highlighted-range-label="lookup.calibrationResolution.scoreRange.value?.label || null"
+              :score-calibration="lookup.selectedCalibrationObject.value"
+            />
+          </div>
+        </div>
+      </template>
     </div>
   </MvLayout>
 </template>
 
 <script lang="ts">
-import axios from 'axios'
+import Select from 'primevue/select'
 import SplitButton from 'primevue/splitbutton'
-import Button from 'primevue/button'
-import Message from 'primevue/message'
-import Tabs from 'primevue/tabs'
-import TabList from 'primevue/tablist'
-import Tab from 'primevue/tab'
-import TabPanels from 'primevue/tabpanels'
-import TabPanel from 'primevue/tabpanel'
-import {defineComponent} from 'vue'
+import {defineComponent, toRef} from 'vue'
 import {useHead} from '@unhead/vue'
+import {useToast} from 'primevue/usetoast'
 
-import ErrorView from '@/components/common/ErrorView.vue'
+import CalibrationTable from '@/components/CalibrationTable.vue'
+import MvDetailRow from '@/components/common/MvDetailRow.vue'
+import MvEmptyState from '@/components/common/MvEmptyState.vue'
+import MvErrorState from '@/components/common/MvErrorState.vue'
+import MvEvidenceTag from '@/components/common/MvEvidenceTag.vue'
+import MvLoader from '@/components/common/MvLoader.vue'
 import PageLoading from '@/components/common/PageLoading.vue'
 import MvLayout from '@/components/layout/MvLayout.vue'
-import VariantMeasurementView from '@/components/VariantMeasurementView.vue'
-import config from '@/config'
+import MvPageHeader from '@/components/layout/MvPageHeader.vue'
+import MvAssayFactsCard from '@/components/common/MvAssayFactsCard.vue'
+import MvBadgeToggle from '@/components/common/MvBadgeToggle.vue'
+import ScoreSetHistogram from '@/components/ScoreSetHistogram.vue'
+import MvMeasurementCard from '@/components/variant/MvMeasurementCard.vue'
+import MvRowActionMenu, {type RowAction} from '@/components/common/MvRowActionMenu.vue'
+import VariantInfoSection from '@/components/variant/VariantInfoSection.vue'
+import {useVariantLookup} from '@/composables/use-variant-lookup'
+import {MEASUREMENT_TYPE_LABELS} from '@/lib/measurement-types'
 
 export default defineComponent({
   name: 'VariantScreen',
+
   components: {
-    Button,
+    CalibrationTable,
+    MvAssayFactsCard,
+    MvBadgeToggle,
+    MvDetailRow,
+    MvEmptyState,
+    MvErrorState,
+    MvEvidenceTag,
     MvLayout,
-    ErrorView,
-    Message,
+    MvLoader,
+    MvMeasurementCard,
+    MvPageHeader,
+    MvRowActionMenu,
     PageLoading,
-    Tabs,
-    TabList,
-    Tab,
-    TabPanels,
-    TabPanel,
+    PSelect: Select,
+    ScoreSetHistogram,
     SplitButton,
-    VariantMeasurementView
+    VariantInfoSection
   },
 
   props: {
@@ -108,255 +306,82 @@ export default defineComponent({
     }
   },
 
-  setup: () => ({
-    head: useHead({title: 'Variant search results'})
-  }),
-
-  data: () => ({
-    activeVariantIndex: 0,
-    clingenAllele: undefined as any,
-    variants: [] as any[],
-    variantsStatus: 'NotLoaded'
-  }),
+  setup(props) {
+    return {
+      head: useHead({title: 'Variant search results'}),
+      lookup: useVariantLookup(toRef(props, 'clingenAlleleId'), {toast: useToast()})
+    }
+  },
 
   computed: {
-    activeVariant: function () {
-      return this.variants[this.activeVariantIndex]?.content
+    pageTitle(): string {
+      return this.lookup.clingenAllele.alleleName.value || this.lookup.selectedVariantName.value || 'Variant'
     },
-    alleleTitle: function () {
-      if (this.clingenAlleleName) {
-        return this.clingenAlleleName
-      }
-      if (this.variants.length == 1) {
-        return this.variantName(this.variants[0])
-      }
-      const names = this.variants
-        .map((v) => this.variantName(v.content))
-        .filter((name) => name != null && name !== undefined)
-      if (names.length > 0 && names.every((n) => n === names[0])) {
-        return names[0]
-      }
-      return undefined
+    measurementOptions(): {label: string; urn: string}[] {
+      return this.lookup.filteredVariants.value
+        .filter((variant): variant is typeof variant & {content: {urn: string}} => !!variant.content.urn)
+        .map((variant) => ({
+          label: `${variant.content.scoreSet?.title || 'Untitled score set'} (${MEASUREMENT_TYPE_LABELS[variant.type]?.short ?? variant.type})`,
+          urn: variant.content.urn
+        }))
     },
-    clingenAlleleName: function () {
-      return this.clingenAllele?.communityStandardTitle?.[0] || undefined
+    downloadActions(): RowAction[] {
+      return this.annotatedVariantDownloadOptions.map((opt) => ({
+        label: opt.label,
+        handler: opt.command
+      }))
     },
-    singleOrMultipleVariantsClassName: function () {
-      if (this.variants.length > 1) {
-        return 'mavedb-multiple-variants'
-      } else if (this.variants.length == 1) {
-        return 'mavedb-single-variant'
-      } else {
-        return 'mavedb-no-variants'
-      }
-    },
-    annotatedVariantDownloadOptions: function () {
-      const annotatedVariantOptions = []
-      if (this.activeVariant?.scoreSet?.scoreCalibrations) {
-        annotatedVariantOptions.push({
+    annotatedVariantDownloadOptions(): {label: string; command: () => void}[] {
+      const options: {label: string; command: () => void}[] = []
+      const activeVariant = this.lookup.selectedVariantDetail.value
+
+      if (activeVariant?.scoreSet?.scoreCalibrations) {
+        options.push({
           label: 'Pathogenicity evidence line',
-          command: () => {
-            this.fetchVariantAnnotations('clinical-evidence')
-          }
+          command: () => this.lookup.fetchVariantAnnotations('clinical-evidence')
         })
-      }
-
-      if (this.activeVariant?.scoreSet?.scoreCalibrations) {
-        annotatedVariantOptions.push({
+        options.push({
           label: 'Functional impact statement',
-          command: () => {
-            this.fetchVariantAnnotations('functional-impact')
-          }
+          command: () => this.lookup.fetchVariantAnnotations('functional-impact')
         })
       }
 
-      annotatedVariantOptions.push({
+      options.push({
         label: 'Functional impact study result',
-        command: () => {
-          this.fetchVariantAnnotations('study-result')
-        }
+        command: () => this.lookup.fetchVariantAnnotations('study-result')
       })
 
-      return annotatedVariantOptions
+      return options
     }
   },
 
   watch: {
-    clingenAlleleId: {
-      handler: async function (newValue, oldValue) {
-        if (newValue != oldValue) {
-          await this.fetchVariants()
-          await this.fetchClingenAllele()
-        }
-      },
-      immediate: true
-    },
-    clingenAlleleName: {
-      handler: async function (newValue) {
-        this.head.patch({
-          title: newValue ? `Variant ${newValue}` : 'Variant'
-        })
-      }
+    'lookup.clingenAllele.alleleName.value'(name: string | undefined) {
+      this.head!.patch({title: name ? `Variant ${name}` : 'Variant'})
     }
   },
 
-  methods: {
-    currentMappedVariant: function (variant: any) {
-      return (variant.mappedVariants || []).find((mappedVariant: any) => mappedVariant.current)
-    },
-
-    fetchClingenAllele: async function () {
-      this.clingenAllele = undefined
-      try {
-        const response = await axios.get(`https://reg.genome.network/allele/${this.clingenAlleleId}`)
-        this.clingenAllele = response.data
-      } catch (error) {
-        console.log(`Error while fetching ClinGen allele "${this.clingenAlleleId}"`, error)
-        return undefined
-      }
-    },
-
-    fetchVariants: async function () {
-      this.variants = []
-      this.variantsStatus = 'Loading'
-      try {
-        const response = await axios.post(`${config.apiBaseUrl}/variants/clingen-allele-id-lookups`, {
-          clingenAlleleIds: [this.clingenAlleleId]
-        })
-        if (this.clingenAlleleId.startsWith('CA')) {
-          const nucleotideVariants = (response.data[0]?.exactMatch?.variantEffectMeasurements || []).map(
-            (entry: any) => ({
-              content: entry,
-              type: 'nucleotide'
-            })
-          )
-          const proteinVariants = (
-            response.data[0]?.equivalentAa?.flatMap((entry: any) => entry.variantEffectMeasurements || []) || []
-          ).map((entry: any) => ({
-            content: entry,
-            type: 'protein'
-          }))
-          const associatedNucleotideVariants = (
-            response.data[0]?.equivalentNt?.flatMap((entry: any) => entry.variantEffectMeasurements || []) || []
-          ).map((entry: any) => ({
-            content: entry,
-            type: 'associatedNucleotide'
-          }))
-          this.variants = [...nucleotideVariants, ...proteinVariants, ...associatedNucleotideVariants]
-        } else if (this.clingenAlleleId.startsWith('PA')) {
-          // do this separately because we want protein to show up first if protein page
-          const proteinVariants = (response.data[0]?.exactMatch?.variantEffectMeasurements || []).map((entry: any) => ({
-            content: entry,
-            type: 'protein'
-          }))
-          // note: since we weren't able to resolve PA ID to a CA ID, we don't expect any results for nt
-          const nucleotideVariants = (
-            response.data[0]?.equivalentNt?.flatMap((entry: any) => entry.variantEffectMeasurements || []) || []
-          ).map((entry: any) => ({
-            content: entry,
-            type: 'nucleotide'
-          }))
-          this.variants = [...proteinVariants, ...nucleotideVariants]
-        }
-        this.variantsStatus = 'Loaded'
-      } catch (error) {
-        console.log('Error while loading variants', error)
-        this.variantsStatus = 'Error'
-      }
-    },
-
-    fetchVariantAnnotations: async function (annotationType: string) {
-      if (!this.activeVariant?.urn) {
-        return null
-      }
-
-      try {
-        const response = await axios.get(
-          `${config.apiBaseUrl}/mapped-variants/${encodeURIComponent(this.activeVariant.urn)}/va/${annotationType}`,
-          {
-            responseType: 'json'
-          }
-        )
-
-        //convert object to Json.
-        const file = JSON.stringify(response.data)
-        const anchor = document.createElement('a')
-
-        anchor.href = 'data:text/json;charset=utf-8,' + encodeURIComponent(file)
-        anchor.target = '_blank'
-
-        //file default name
-        anchor.download = this.activeVariant.urn + '_' + annotationType + '.json'
-        anchor.click()
-      } catch (error) {
-        let serverMessage = ''
-        if (error && error.response && error.response.data) {
-          if (typeof error.response.data === 'string') {
-            serverMessage = error.response.data
-          } else if (error.response.data.detail) {
-            serverMessage = error.response.data.detail
-          } else {
-            serverMessage = JSON.stringify(error.response.data)
-          }
-        } else if (error && error.message) {
-          serverMessage = error.message
-        } else {
-          serverMessage = 'Unknown error.'
-        }
-        console.log(
-          `Error while fetching variant annotations of type "${annotationType}" for variant "${this.activeVariant.urn}"`,
-          error
-        )
-        this.$toast?.add({
-          severity: 'error',
-          summary: 'Download failed',
-          detail: `Could not fetch variant annotation: ${serverMessage}`,
-          life: 4000
-        })
-      }
-    },
-
-    variantName: function (variant: any) {
-      return (
-        this.currentMappedVariant(variant)?.postMapped?.expressions?.[0]?.value ||
-        variant.hgvs_nt ||
-        variant.hgvs_pro ||
-        variant.hgvs_splice ||
-        undefined
-      )
-    }
-  }
+  methods: {}
 })
 </script>
 
 <style scoped>
-.variant-header-row {
-  display: flex;
-  align-items: center;
-  gap: 1.5rem;
-  margin-top: 1rem;
-  margin-bottom: 1rem;
-  font-weight: bold;
-  font-size: 1.5rem;
-  margin: 1rem;
+/* Thin scrollbar for horizontal measurement card scroller */
+.measurement-switcher {
+  scrollbar-width: thin;
+  scrollbar-color: #ccc transparent;
 }
-.variant-header-download-btn-wrapper {
-  margin-left: auto;
+
+.measurement-switcher::-webkit-scrollbar {
+  height: 6px;
 }
-.mavedb-single-variant:deep(.p-tabview-nav-container) {
-  display: none;
-}
-.mavedb-variants-tabview:deep(.p-tabview-panels) {
+
+.measurement-switcher::-webkit-scrollbar-track {
   background: transparent;
 }
-.mavedb-variants-tabview-header-text {
-  color: #3f51b5;
-}
-.mavedb-multiple-variants:deep(.p-tabview-header > a) {
-  border: 0 none;
-  background: transparent;
-}
-.mavedb-multiple-variants:deep(.p-tabview-header.p-highlight) {
-  background-color: rgba(63, 81, 181, 0.12);
+
+.measurement-switcher::-webkit-scrollbar-thumb {
+  background: #ccc;
+  border-radius: 3px;
 }
 </style>

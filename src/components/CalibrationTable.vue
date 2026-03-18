@@ -1,370 +1,428 @@
 <template>
-  <div>
-    <!-- Main caption -->
-    <div class="mavedb-calibration-caption-standalone">
+  <div class="overflow-hidden rounded-lg border border-border bg-surface">
+    <!-- Title bar -->
+    <div class="flex items-center gap-3 border-b border-border bg-bg px-3.5 py-3 text-lg font-bold text-sage">
       {{ calibrationNameToDisplay }}
     </div>
 
-    <!-- Baseline score (if provided) - always spans full width -->
-    <div v-if="baselineScoreIsDefined" class="mavedb-baseline-score">
-      <strong>Baseline score: </strong>
-      <span class="monospaced-type">{{ roundForCalibrationTable(scoreCalibration.baselineScore || 0) }}</span>
-      <span v-if="scoreCalibration.baselineScoreDescription">
-        <PrimeButton
-          v-tooltip.right="{value: scoreCalibration.baselineScoreDescription, autoHide: false}"
-          aria-label="Info"
-          class="mavedb-help-tooltip-button"
-          icon="pi pi-info"
-          outlined
-          rounded
-          severity="help"
-        />
-      </span>
+    <!-- Baseline score -->
+    <div class="flex items-center gap-3 border-b border-border bg-bg px-4 py-2.5">
+      <span
+        v-tooltip.top="{
+          value: 'The reference score representing normal function, used as the zero-point for calibration ranges.',
+          autoHide: false
+        }"
+        class="cursor-help border-b border-dashed border-border text-xs font-bold uppercase tracking-wide text-text-muted"
+        >Baseline score</span
+      >
+      <template v-if="baselineScoreIsDefined">
+        <span class="font-mono text-base font-bold text-text-primary">{{
+          roundForCalibrationTable(scoreCalibration.baselineScore || 0)
+        }}</span>
+        <span class="h-[18px] w-px bg-border"></span>
+        <span v-if="scoreCalibration.baselineScoreDescription" class="text-xs text-text-muted">{{
+          scoreCalibration.baselineScoreDescription
+        }}</span>
+        <span v-else class="text-xs italic text-text-muted/60">No description provided by author</span>
+      </template>
+      <span v-else class="text-xs italic text-text-muted/60">N/A</span>
     </div>
 
-    <!-- Chunked table sections -->
-    <div
-      v-if="sortedRanges.length > 0"
-      class="mavedb-calibration-chunks"
-      :class="{'has-baseline': baselineScoreIsDefined}"
-    >
-      <div v-for="(chunk, chunkIndex) in rangeChunks" :key="`chunk-${chunkIndex}`" class="mavedb-calibration-chunk">
-        <div class="mavedb-calibration-grid" :style="chunkGridStyle(chunk.length)">
-          <!-- Range label row -->
-          <div class="mavedb-calibration-row-header grid-row-header" :class="{'chunk-separator-top': chunkIndex > 0}">
-            Range label
-          </div>
-          <div
-            v-for="(range, rangeIndex) in chunk"
-            :key="range.label"
-            class="grid-data-cell"
-            :class="{
-              'chunk-separator-top': chunkIndex > 0,
-              'last-column': rangeIndex === chunk.length - 1
-            }"
-          >
-            <span>{{ range.label }}</span>
-            <span v-if="range.description">
-              <PrimeButton
-                v-tooltip.right="{value: range.description, autoHide: false}"
-                aria-label="Info"
-                class="mavedb-help-tooltip-button"
-                icon="pi pi-info"
-                outlined
-                rounded
-                severity="help"
-              />
-            </span>
-          </div>
+    <!-- Range table chunks -->
+    <template v-if="sortedRanges.length > 0">
+      <table
+        v-for="(chunk, chunkIndex) in rangeChunks"
+        :key="`chunk-${chunkIndex}`"
+        class="cal-grid"
+        :class="{'cal-grid-last': chunkIndex === rangeChunks.length - 1, 'cal-grid-continuation': chunkIndex > 0}"
+      >
+        <tbody>
+          <!-- Range label row (with column color bars) -->
+          <tr>
+            <td
+              v-tooltip.top="{
+                value: 'The descriptive name assigned to this score range by the calibration author.',
+                autoHide: false
+              }"
+              class="row-label row-label-tip"
+            >
+              Range label
+            </td>
+            <td
+              v-for="range in chunk"
+              :key="range.label"
+              :class="[columnColorClass(range), {highlight: range.label === highlightedRangeLabel}]"
+            >
+              <span>{{ range.label }}</span>
+            </td>
+            <td
+              v-for="n in chunkIndex === rangeChunks.length - 1 ? lastChunkPadding : 0"
+              :key="`pad-label-${n}`"
+              class="pad-cell"
+            />
+          </tr>
+
+          <!-- Range description row (only when at least one range has a description) -->
+          <tr v-if="anyRangeHasDescription">
+            <td
+              v-tooltip.top="{
+                value: 'Author-provided description of what this score range represents.',
+                autoHide: false
+              }"
+              class="row-label row-label-tip"
+            >
+              Description
+            </td>
+            <td
+              v-for="range in chunk"
+              :key="range.label + '-desc'"
+              :class="{highlight: range.label === highlightedRangeLabel}"
+            >
+              <span v-if="range.description" class="text-xs text-text-muted">{{ range.description }}</span>
+              <span v-else class="text-xs italic text-text-muted/60">No description provided by author</span>
+            </td>
+            <td
+              v-for="n in chunkIndex === rangeChunks.length - 1 ? lastChunkPadding : 0"
+              :key="`pad-desc-${n}`"
+              class="pad-cell"
+            />
+          </tr>
 
           <!-- Classification row -->
-          <div class="mavedb-calibration-row-header grid-row-header">Functional classification</div>
-          <div
-            v-for="(range, rangeIndex) in chunk"
-            :key="range.label + '-classification'"
-            :class="[
-              'grid-data-cell',
-              `mave-classification-${range.functionalClassification}`,
-              {'last-column': rangeIndex === chunk.length - 1}
-            ]"
-          >
-            <span>{{
-              range.functionalClassification ? titleCase(range.functionalClassification) : 'Not Provided'
-            }}</span>
-          </div>
+          <tr>
+            <td
+              v-tooltip.top="{
+                value:
+                  'The functional classification (abnormal, normal, or not specified) assigned to variants falling in this range.',
+                autoHide: false
+              }"
+              class="row-label row-label-tip"
+            >
+              Classification
+            </td>
+            <td
+              v-for="range in chunk"
+              :key="range.label + '-cl'"
+              :class="{highlight: range.label === highlightedRangeLabel}"
+            >
+              <MvClassificationTag
+                v-if="range.functionalClassification"
+                :classification="range.functionalClassification"
+                :compact="true"
+              />
+              <span
+                v-else
+                class="inline-block rounded px-2.5 py-0.5 text-xs font-bold tracking-wide mave-classification-not_specified"
+                >Not Provided</span
+              >
+            </td>
+            <td
+              v-for="n in chunkIndex === rangeChunks.length - 1 ? lastChunkPadding : 0"
+              :key="`pad-cl-${n}`"
+              class="pad-cell"
+            />
+          </tr>
 
           <!-- Numeric interval row -->
-          <template v-if="!calibrationIsClassBased">
-            <div
-              class="mavedb-calibration-row-header grid-row-header"
-              :class="{'last-row': isLastRowInChunk('interval')}"
+          <tr v-if="!calibrationIsClassBased">
+            <td
+              v-tooltip.top="{
+                value: 'The score boundaries defining this range, expressed as a mathematical interval.',
+                autoHide: false
+              }"
+              class="row-label row-label-tip"
             >
               Numeric interval
-            </div>
-            <div
-              v-for="(range, rangeIndex) in chunk"
+            </td>
+            <td
+              v-for="range in chunk"
               :key="range.label + '-interval'"
-              :class="[
-                'grid-data-cell',
-                'monospaced-type',
-                {
-                  'last-column': rangeIndex === chunk.length - 1,
-                  'last-row': isLastRowInChunk('interval')
-                }
-              ]"
+              :class="{highlight: range.label === highlightedRangeLabel}"
             >
-              <span>
+              <span class="interval-mono">
                 {{ range.inclusiveLowerBound ? '[' : '('
-                }}<template v-if="range.range[0] !== null">{{ roundForCalibrationTable(range.range[0]) }}</template
+                }}<template v-if="range.range?.[0] !== null">{{ roundForCalibrationTable(range.range![0]!) }}</template
                 ><span v-else
                   ><span class="minus-symbol">&minus;</span><span class="infinity-symbol">&infin;</span></span
-                >, <template v-if="range.range[1] !== null">{{ roundForCalibrationTable(range.range[1]) }}</template
+                >, <template v-if="range.range?.[1] !== null">{{ roundForCalibrationTable(range.range![1]!) }}</template
                 ><span v-else class="infinity-symbol">&infin;</span>{{ range.inclusiveUpperBound ? ']' : ')' }}
               </span>
-            </div>
-          </template>
+            </td>
+            <td
+              v-for="n in chunkIndex === rangeChunks.length - 1 ? lastChunkPadding : 0"
+              :key="`pad-interval-${n}`"
+              class="pad-cell"
+            />
+          </tr>
 
-          <!-- Variant count row -->
-          <template v-if="calibrationIsClassBased">
-            <div class="mavedb-calibration-row-header grid-row-header" :class="{'last-row': isLastRowInChunk('class')}">
-              Class name
-            </div>
-            <div
-              v-for="(range, rangeIndex) in chunk"
+          <!-- Class name row (class-based calibrations) -->
+          <tr v-if="calibrationIsClassBased">
+            <td class="row-label">Class name</td>
+            <td
+              v-for="range in chunk"
               :key="range.label + '-class'"
-              :class="[
-                'grid-data-cell',
-                'monospaced-type',
-                {
-                  'last-column': rangeIndex === chunk.length - 1,
-                  'last-row': isLastRowInChunk('class')
-                }
-              ]"
+              :class="{highlight: range.label === highlightedRangeLabel}"
             >
-              <span>
-                {{ range.class ? range.class : '-' }}
-              </span>
-            </div>
+              <span class="interval-mono">{{ range.class || '—' }}</span>
+            </td>
+            <td
+              v-for="n in chunkIndex === rangeChunks.length - 1 ? lastChunkPadding : 0"
+              :key="`pad-class-${n}`"
+              class="pad-cell"
+            />
+          </tr>
 
-            <div
-              class="mavedb-calibration-row-header grid-row-header"
-              :class="{'last-row': isLastRowInChunk('variant-count')}"
-            >
-              Num variants in class
-            </div>
-            <div
-              v-for="(range, rangeIndex) in chunk"
-              :key="range.label + '-variant-count'"
-              :class="[
-                'grid-data-cell',
-                'monospaced-type',
-                {
-                  'last-column': rangeIndex === chunk.length - 1,
-                  'last-row': isLastRowInChunk('variant-count')
-                }
-              ]"
-            >
-              <span> {{ range.variantCount ?? 0 }} variants </span>
-            </div>
-          </template>
-
-          <!-- Evidence strength row (if any ranges have evidence codes) -->
-          <template v-if="anyRangeHasEvidenceCode">
-            <div
-              class="mavedb-calibration-row-header grid-row-header"
-              :class="{'last-row': isLastRowInChunk('evidence')}"
+          <!-- Evidence strength row -->
+          <tr v-if="anyRangeHasEvidenceCode">
+            <td
+              v-tooltip.top="{
+                value:
+                  'The ACMG/AMP evidence code and strength level (e.g. PS3_Strong, BS3) for variants in this range.',
+                autoHide: false
+              }"
+              class="row-label row-label-tip"
             >
               Evidence strength
-            </div>
-            <div
-              v-for="(range, rangeIndex) in chunk"
-              :key="range.label + '-evidence-code'"
-              :class="[
-                'grid-data-cell',
-                'evidence-strength-cell',
-                range.acmgClassification?.evidenceStrength
-                  ? `mave-evidence-code-${range.acmgClassification?.criterion}_${range.acmgClassification?.evidenceStrength?.toUpperCase()}`
-                  : '',
-                {
-                  'last-column': rangeIndex === chunk.length - 1,
-                  'last-row': isLastRowInChunk('evidence')
-                }
-              ]"
+            </td>
+            <td
+              v-for="range in chunk"
+              :key="range.label + '-evidence'"
+              :class="{highlight: range.label === highlightedRangeLabel}"
             >
-              <span v-if="range.acmgClassification?.evidenceStrength" class="evidence-code">
-                {{ formattedEvidenceCode(range) }}
-              </span>
-              <span v-else> — </span>
-            </div>
-          </template>
+              <MvEvidenceTag
+                v-if="range.acmgClassification?.evidenceStrength"
+                :criterion="range.acmgClassification.criterion"
+                :evidence-strength="range.acmgClassification.evidenceStrength"
+              />
+              <span v-else class="text-border">&mdash;</span>
+            </td>
+            <td
+              v-for="n in chunkIndex === rangeChunks.length - 1 ? lastChunkPadding : 0"
+              :key="`pad-evidence-${n}`"
+              class="pad-cell"
+            />
+          </tr>
 
-          <!-- OddsPaths ratio row (if any ranges have OddsPaths) -->
-          <template v-if="anyRangeHasOddsPaths">
-            <div
-              class="mavedb-calibration-row-header grid-row-header"
-              :class="{'last-row': isLastRowInChunk('oddspaths')}"
+          <!-- OddsPath ratio row -->
+          <tr v-if="anyRangeHasOddsPaths">
+            <td
+              v-tooltip.top="{
+                value:
+                  'The odds of pathogenicity ratio derived from calibration data. Higher values indicate stronger evidence for pathogenicity.',
+                autoHide: false
+              }"
+              class="row-label row-label-tip"
             >
-              OddsPaths ratio
-            </div>
-            <div
-              v-for="(range, rangeIndex) in chunk"
+              OddsPath ratio
+            </td>
+            <td
+              v-for="range in chunk"
               :key="range.label + '-oddspaths'"
-              :class="[
-                'grid-data-cell',
-                {
-                  'last-column': rangeIndex === chunk.length - 1,
-                  'last-row': isLastRowInChunk('oddspaths')
-                }
-              ]"
+              :class="{highlight: range.label === highlightedRangeLabel}"
             >
-              <template v-if="range.oddspathsRatio">
-                <span class="monospaced-type">{{ roundForCalibrationTable(range.oddspathsRatio) }}</span>
-              </template>
-              <span v-else> — </span>
-            </div>
-          </template>
+              <span v-if="range.oddspathsRatio" class="font-mono text-sm font-semibold text-text-primary">{{
+                roundForCalibrationTable(range.oddspathsRatio)
+              }}</span>
+              <span v-else class="text-border">&mdash;</span>
+            </td>
+            <td
+              v-for="n in chunkIndex === rangeChunks.length - 1 ? lastChunkPadding : 0"
+              :key="`pad-odds-${n}`"
+              class="pad-cell"
+            />
+          </tr>
 
-          <!-- PLR row (if any ranges have PLR) -->
-          <template v-if="anyRangeHasPLR">
-            <div class="mavedb-calibration-row-header grid-row-header" :class="{'last-row': isLastRowInChunk('plr')}">
-              Positive Likelihood Ratio (PLR)
-            </div>
-            <div
-              v-for="(range, rangeIndex) in chunk"
+          <!-- PLR row -->
+          <tr v-if="anyRangeHasPLR">
+            <td
+              v-tooltip.top="{
+                value: 'Positive Likelihood Ratio — the ratio of the true positive rate to the false positive rate.',
+                autoHide: false
+              }"
+              class="row-label row-label-tip"
+            >
+              PLR
+            </td>
+            <td
+              v-for="range in chunk"
               :key="range.label + '-plr'"
-              :class="[
-                'grid-data-cell',
-                {
-                  'last-column': rangeIndex === chunk.length - 1,
-                  'last-row': isLastRowInChunk('plr')
-                }
-              ]"
+              :class="{highlight: range.label === highlightedRangeLabel}"
             >
               <span v-if="'positiveLikelihoodRatio' in range">{{ range.positiveLikelihoodRatio }}</span>
-              <span v-else>Not Provided</span>
-            </div>
-          </template>
-        </div>
-      </div>
-    </div>
+              <span v-else class="text-border">&mdash;</span>
+            </td>
+            <td
+              v-for="n in chunkIndex === rangeChunks.length - 1 ? lastChunkPadding : 0"
+              :key="`pad-plr-${n}`"
+              class="pad-cell"
+            />
+          </tr>
 
-    <!-- Evidence absence message (if ranges exist but no evidence details) -->
+          <!-- Variant count row -->
+          <tr>
+            <td
+              v-tooltip.top="{
+                value: 'The number of variants from this score set that fall within this range.',
+                autoHide: false
+              }"
+              class="row-label row-label-tip"
+            >
+              Variant count
+            </td>
+            <td
+              v-for="range in chunk"
+              :key="range.label + '-count'"
+              :class="{highlight: range.label === highlightedRangeLabel}"
+            >
+              <span class="font-mono text-sm font-bold text-text-secondary">{{
+                (range.variantCount ?? 0).toLocaleString()
+              }}</span>
+            </td>
+            <td
+              v-for="n in chunkIndex === rangeChunks.length - 1 ? lastChunkPadding : 0"
+              :key="`pad-count-${n}`"
+              class="pad-cell"
+            />
+          </tr>
+        </tbody>
+      </table>
+    </template>
+
+    <!-- Evidence absence message -->
     <div
       v-if="
         sortedRanges.length > 0 && !anyRangeHasEvidenceStrength && !anyRangeHasEvidenceCode && !anyRangeHasOddsPaths
       "
-      class="grid-full-width-message"
+      class="border-t border-border bg-bg px-4 py-3 text-center text-sm italic text-text-muted"
     >
-      No evidence strengths have been reported for this calibration{{ scoreCalibration.notes ? '*' : '' }}.
+      No evidence strengths have been reported for this calibration.
     </div>
 
-    <!-- Calibration sources section -->
-    <div v-if="hasAnySources" class="mavedb-calibration-sources-cell">
-      <!-- Threshold sources group -->
-      <template v-if="scoreCalibration.thresholdSources && scoreCalibration.thresholdSources.length > 0">
-        <span aria-label="Threshold sources" class="sources-group" role="group">
-          <PrimeButton
-            v-tooltip.left="{
-              value: 'The threshold source(s) describes the source of the score threshold used in this calibration.',
-              autoHide: false
-            }"
-            aria-label="Threshold sources info"
-            class="mavedb-help-tooltip-button"
-            icon="pi pi-info"
-            outlined
-            rounded
-            severity="help"
-          />
-          <strong>Thresholds:</strong>
-          <span class="citation-list">
-            <span
-              v-for="(source, i) in scoreCalibration.thresholdSources"
-              :key="'threshold:' + source.dbName + ':' + source.identifier"
-            >
-              <a :href="source.url" target="_blank">{{ shortCitationForPublication(source) }}</a
-              ><span v-if="i < scoreCalibration.thresholdSources.length - 1">, </span>
-            </span>
-          </span>
+    <!-- Empty state -->
+    <div
+      v-if="sortedRanges.length === 0"
+      class="border-t border-border bg-bg px-4 py-3 text-center text-sm italic text-text-muted"
+    >
+      Ranges have not been provided.
+    </div>
+
+    <!-- Notes (author-provided context about this calibration) -->
+    <div
+      v-if="scoreCalibration.notes"
+      class="flex items-start gap-2 border-t border-border bg-bg px-3.5 py-2.5 text-xs text-text-muted"
+    >
+      <i class="pi pi-info-circle mt-0.5 text-xs text-text-muted/60"></i>
+      <span>{{ scoreCalibration.notes }}</span>
+    </div>
+
+    <!-- Sources -->
+    <div
+      v-if="hasAnySources"
+      class="flex flex-col gap-2 tablet:flex-row tablet:flex-wrap tablet:items-center tablet:gap-x-2 tablet:gap-y-1 border-t border-border bg-bg px-3.5 py-2.5 text-xs text-text-muted"
+    >
+      <span class="flex items-center gap-1.5 text-[10px] font-bold uppercase tracking-wide text-text-muted tablet:mr-1">
+        <i class="pi pi-book text-xs"></i>
+        Sources
+      </span>
+      <div v-if="scoreCalibration.thresholdSources && scoreCalibration.thresholdSources.length > 0" class="flex flex-wrap items-baseline gap-x-1.5 gap-y-0.5">
+        <span
+          v-tooltip.top="{
+            value: 'The threshold source(s) describes the source of the score threshold used in this calibration.',
+            autoHide: false
+          }"
+          class="cursor-help border-b border-dashed border-border font-semibold text-text-secondary"
+          >Thresholds</span
+        >:
+        <span
+          v-for="(source, i) in scoreCalibration.thresholdSources"
+          :key="'threshold:' + source.dbName + ':' + source.identifier"
+        >
+          <a class="text-xs font-medium" :href="source.url ?? undefined" target="_blank">{{
+            shortCitationForPublication(source)
+          }}</a
+          ><span v-if="i < scoreCalibration.thresholdSources.length - 1">, </span>
         </span>
-      </template>
-      <!-- Separator between groups -->
+      </div>
       <span
         v-if="
           scoreCalibration.thresholdSources?.length &&
           (scoreCalibration.methodSources?.length || scoreCalibration.evidenceSources?.length)
         "
-        aria-hidden="true"
-        class="sources-separator"
-        >—</span
+        class="hidden tablet:inline mx-0.5 text-border-light"
+        >&mdash;</span
       >
-      <!-- Method sources group -->
-      <template v-if="scoreCalibration.methodSources && scoreCalibration.methodSources.length > 0">
-        <span aria-label="Method sources" class="sources-group" role="group">
-          <PrimeButton
-            v-tooltip.left="{
-              value: 'The method source(s) describe the method by which evidence strengths were obtained.',
-              autoHide: false
-            }"
-            aria-label="Method sources info"
-            class="mavedb-help-tooltip-button"
-            icon="pi pi-info"
-            outlined
-            rounded
-            severity="help"
-          />
-          <strong>Method:</strong>
-          <span class="citation-list">
-            <span
-              v-for="(source, i) in scoreCalibration.methodSources"
-              :key="'method:' + source.dbName + ':' + source.identifier"
-            >
-              <a :href="source.url" target="_blank">{{ shortCitationForPublication(source) }}</a
-              ><span v-if="i < scoreCalibration.methodSources.length - 1">, </span>
-            </span>
-          </span>
+      <div v-if="scoreCalibration.methodSources && scoreCalibration.methodSources.length > 0" class="flex flex-wrap items-baseline gap-x-1.5 gap-y-0.5">
+        <span
+          v-tooltip.top="{
+            value: 'The method source(s) describe the method by which evidence strengths were obtained.',
+            autoHide: false
+          }"
+          class="cursor-help border-b border-dashed border-border font-semibold text-text-secondary"
+          >Method</span
+        >:
+        <span
+          v-for="(source, i) in scoreCalibration.methodSources"
+          :key="'method:' + source.dbName + ':' + source.identifier"
+        >
+          <a class="text-xs font-medium" :href="source.url ?? undefined" target="_blank">{{
+            shortCitationForPublication(source)
+          }}</a
+          ><span v-if="i < scoreCalibration.methodSources.length - 1">, </span>
         </span>
-      </template>
+      </div>
       <span
         v-if="scoreCalibration.methodSources?.length && scoreCalibration.evidenceSources?.length"
-        aria-hidden="true"
-        class="sources-separator"
-        >—</span
+        class="hidden tablet:inline mx-0.5 text-border-light"
+        >&mdash;</span
       >
-      <!-- Evidence calculation sources group -->
-      <template v-if="scoreCalibration.evidenceSources && scoreCalibration.evidenceSources.length > 0">
-        <span aria-label="Evidence calculation sources" class="sources-group" role="group">
-          <PrimeButton
-            v-tooltip.left="{
-              value:
-                'Evidence calculation source(s) describe the source of the evidence strengths for each functional range.',
-              autoHide: false
-            }"
-            aria-label="Evidence calculation sources info"
-            class="mavedb-help-tooltip-button"
-            icon="pi pi-info"
-            outlined
-            rounded
-            severity="help"
-          />
-          <strong>Evidence calcs:</strong>
-          <span class="citation-list">
-            <span
-              v-for="(source, i) in scoreCalibration.evidenceSources"
-              :key="'calc:' + source.dbName + ':' + source.identifier"
-            >
-              <a :href="source.url" target="_blank">{{ shortCitationForPublication(source) }}</a
-              ><span v-if="i < scoreCalibration.evidenceSources.length - 1">, </span>
-            </span>
-          </span>
+      <div v-if="scoreCalibration.evidenceSources && scoreCalibration.evidenceSources.length > 0" class="flex flex-wrap items-baseline gap-x-1.5 gap-y-0.5">
+        <span
+          v-tooltip.top="{
+            value:
+              'Evidence calculation source(s) describe the source of the evidence strengths for each functional range.',
+            autoHide: false
+          }"
+          class="cursor-help border-b border-dashed border-border font-semibold text-text-secondary"
+          >Evidence calcs</span
+        >:
+        <span
+          v-for="(source, i) in scoreCalibration.evidenceSources"
+          :key="'calc:' + source.dbName + ':' + source.identifier"
+        >
+          <a class="text-xs font-medium" :href="source.url ?? undefined" target="_blank">{{
+            shortCitationForPublication(source)
+          }}</a
+          ><span v-if="i < scoreCalibration.evidenceSources.length - 1">, </span>
         </span>
-      </template>
+      </div>
     </div>
-
-    <!-- Empty state -->
-    <div v-if="sortedRanges.length === 0" class="mave-classification-not_provided grid-full-width-message">
-      Ranges have not been provided{{ scoreCalibration.notes ? '*' : '' }}.
-    </div>
-
-    <div v-if="scoreCalibration.notes" class="mavedb-calibration-caption-notes">*{{ scoreCalibration.notes }}</div>
   </div>
 </template>
 
 <script lang="ts">
-import PrimeButton from 'primevue/button'
 import {defineComponent, PropType} from 'vue'
 import {components} from '@/schema/openapi'
 
+import MvClassificationTag from '@/components/common/MvClassificationTag.vue'
+import MvEvidenceTag from '@/components/common/MvEvidenceTag.vue'
 import {shortCitationForPublication} from '@/lib/publication'
 
 export default defineComponent({
   name: 'CalibrationTable',
 
-  components: {PrimeButton},
+  components: {
+    MvClassificationTag,
+    MvEvidenceTag
+  },
 
   props: {
     scoreCalibration: {
       type: Object as PropType<components['schemas']['ScoreCalibration']>,
       required: true
+    },
+    highlightedRangeLabel: {
+      type: String as PropType<string | null>,
+      default: null
     }
   },
 
@@ -372,8 +430,7 @@ export default defineComponent({
 
   data() {
     return {
-      shortCitationForPublication,
-      activeRangeKey: null as {label: string; value: string} | null
+      shortCitationForPublication
     }
   },
 
@@ -384,6 +441,17 @@ export default defineComponent({
       }
 
       return this.scoreCalibration.functionalClassifications.every((fc) => fc.class != null)
+    },
+
+    anyRangeHasDescription(): boolean {
+      if (!this.scoreCalibration.functionalClassifications) {
+        return false
+      }
+
+      return this.scoreCalibration.functionalClassifications.some(
+        (r: components['schemas']['mavedb__view_models__score_calibration__FunctionalClassification']) =>
+          !!r.description
+      )
     },
 
     anyRangeHasEvidenceStrength(): boolean {
@@ -456,8 +524,7 @@ export default defineComponent({
     },
 
     chunkSize() {
-      // Determine how many columns per chunk based on screen width
-      if (typeof window === 'undefined') return 4 // SSR fallback
+      if (typeof window === 'undefined') return 4
       if (window.innerWidth < 600) return 2
       if (window.innerWidth < 900) return 3
       return 4
@@ -473,36 +540,28 @@ export default defineComponent({
         chunks.push(this.sortedRanges.slice(i, i + this.chunkSize))
       }
       return chunks
+    },
+
+    /** Number of empty padding cells needed in the last chunk to keep columns uniform across chunks. */
+    lastChunkPadding(): number {
+      if (this.rangeChunks.length <= 1) return 0
+      const lastChunk = this.rangeChunks[this.rangeChunks.length - 1]
+      return this.chunkSize - lastChunk.length
     }
   },
 
   methods: {
-    chunkGridStyle(chunkLength: number) {
-      // If there is only one chunk, use all columns for proportional sizing. If multiple chunks, use fixed chunk size.
-      // for visual consistency across chunks.
-      const maxChunkSize = this.rangeChunks.length > 1 ? this.chunkSize : chunkLength
-
-      // Use proportional widths that fill the full container
-      const headerPortion = 1
-      const totalDataPortion = maxChunkSize
-      const totalPortion = headerPortion + totalDataPortion
-
-      const headerWidth = `${(headerPortion / totalPortion) * 100}%`
-      const dataWidth = `${(1 / totalPortion) * 100}%`
-
-      return {
-        gridTemplateColumns: `${headerWidth} repeat(${chunkLength}, ${dataWidth})`
+    columnColorClass(
+      range: components['schemas']['mavedb__view_models__score_calibration__FunctionalClassification']
+    ): string {
+      switch (range.functionalClassification) {
+        case 'abnormal':
+          return 'col-abnormal'
+        case 'normal':
+          return 'col-normal'
+        default:
+          return 'col-indeterminate'
       }
-    },
-
-    isLastRowInChunk(rowType: string): boolean {
-      // Determine if this row type is the last one to be rendered
-      // Order: Range label, Classification, Numeric interval, Evidence strength, OddsPaths, PLR
-      if (this.anyRangeHasPLR) return rowType === 'plr'
-      if (this.anyRangeHasOddsPaths) return rowType === 'oddspaths'
-      if (this.anyRangeHasEvidenceCode) return rowType === 'evidence'
-      if (this.calibrationIsClassBased) return rowType === 'variant-count'
-      return rowType === 'interval' // Numeric interval is always present
     },
 
     compareScoreCalibration(
@@ -511,13 +570,11 @@ export default defineComponent({
     ): number {
       let result = 0
 
-      // return alphabetical order by class
       if (a.class && b.class) {
         result = a.class.localeCompare(b.class)
         if (result !== 0) return result
       }
 
-      // compare by range boundaries
       if (a.range && b.range) {
         result = this.compareScores(a.range[0], b.range[0], true)
         if (result !== 0) return result
@@ -541,273 +598,163 @@ export default defineComponent({
       return a - b
     },
 
-    titleCase(s: string) {
-      return s
-        .replace(/^[-_]*(.)/, (_, c) => c.toUpperCase())
-        .replace(/[-_]+(.)/g, (_, c) => ' ' + c.toUpperCase())
-        .replace(/([a-z])([A-Z])/g, '$1 $2')
-    },
-
     roundForCalibrationTable(value: number | string) {
       return parseFloat(String(value)).toFixed(2)
-    },
-
-    formattedEvidenceCode(
-      range: components['schemas']['mavedb__view_models__score_calibration__FunctionalClassification']
-    ) {
-      if (!range.acmgClassification?.evidenceStrength) {
-        return ''
-      }
-      const criterion = range.acmgClassification.criterion
-      const strength = range.acmgClassification.evidenceStrength.toUpperCase()
-      // Inject zero-width space after underscores to allow wrapping only at underscores
-      return `${criterion}_${strength}`.replace(/_/g, '_\u200b')
     }
   }
 })
 </script>
 
 <style scoped>
-/* Standalone caption styling */
-.mavedb-calibration-caption-standalone {
-  text-align: center;
-  font-weight: 600;
-  font-size: 1.25em;
-  padding: 0.6em 0.4em;
-  background: #f0f0f0;
-  border: 1px solid gray;
-  border-bottom: 1px solid gray;
-}
-
-/* Baseline score styling */
-.mavedb-baseline-score {
-  text-align: center;
-  padding: 0.5em 1em;
-  background: #fafafa;
-  border: 1px solid gray;
-  border-top: 0;
-  border-bottom: 1px solid gray;
-}
-
-/* Chunked layout container */
-.mavedb-calibration-chunks {
-  display: flex;
-  flex-direction: column;
-  gap: 0; /* Remove gap to create unified appearance */
-  border: 1px solid gray;
-  border-top: 0; /* Continue from baseline score or caption */
-}
-
-.mavedb-calibration-chunk {
-  /* Remove individual chunk borders */
-  border: none;
-}
-
-/* Add extra thick separator line between chunks for clear visual grouping */
-.chunk-separator-top {
-  border-top: 6px solid #333 !important;
-}
-
-/* Extend thick border to the right edge using a pseudo-element */
-.mavedb-calibration-chunk:not(:first-child) {
-  position: relative;
-}
-
-.mavedb-calibration-chunk:not(:first-child)::before {
-  content: '';
-  position: absolute;
-  top: 0;
-  left: 0;
-  right: 0;
-  height: 6px;
-  background-color: #333;
-  z-index: 1;
-}
-
-/* Grid styling for each chunk */
-.mavedb-calibration-grid {
-  display: grid;
-  gap: 0;
-  line-height: normal;
+/* ── Table layout (cannot be expressed as Tailwind utilities) ── */
+.cal-grid {
   width: 100%;
+  border-collapse: separate;
+  border-spacing: 0;
+  font-size: 14px; /* text-sm */
+  table-layout: fixed;
 }
 
-.grid-row-header {
-  font-weight: bold;
-  text-align: left;
-  background-color: #fafafa;
-  white-space: normal;
-  border-right: 1px solid gray;
-  border-bottom: 1px solid gray;
-  border-top: 0;
-  border-left: 0;
-  padding: 0.5em 1em;
-  display: flex;
-  align-items: center;
-}
-
-.grid-data-cell {
-  border-right: 1px solid gray;
-  border-bottom: 1px solid gray;
-  border-top: 0;
-  border-left: 0;
-  padding: 0.5em 1em;
-  text-align: center;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  /* Better text wrapping for evidence codes */
-  overflow-wrap: normal;
-  word-break: normal;
-  min-height: 2.5em;
-}
-
-/* Remove right border from all cells in the last column of each chunk */
-.grid-data-cell.last-column {
-  border-right: 0 !important;
-}
-
-/* Remove bottom border from last row of final chunk only to connect seamlessly with sources */
-.mavedb-calibration-chunk:last-child .grid-data-cell.last-row,
-.mavedb-calibration-chunk:last-child .grid-row-header.last-row {
-  border-bottom: 0 !important;
-}
-
-/* Add right border to the last cell in the final chunk */
-.mavedb-calibration-chunk:last-child .grid-data-cell.last-column {
-  border-right: 1px solid gray !important;
-}
-
-/* Special styling for evidence strength cells to prevent overlap */
-.evidence-strength-cell {
-  min-width: 100px;
-  font-size: 0.9em;
-  padding: 0.4em 0.6em;
-}
-
-/* Full-width message styling */
-.grid-full-width-message {
-  padding: 0.5em 1em;
-  text-align: center;
-  font-style: italic;
-  font-size: 0.9em;
-  background: #f9f9f9;
-  border-bottom: 1px solid gray;
-  border-left: 1px solid gray;
-  border-right: 1px solid gray;
-  border-top: 0;
-}
-
-/* Sources styling */
-.mavedb-calibration-sources-cell {
-  text-align: left;
-  font-size: 0.85em;
-  line-height: 1.5;
-  background: #f9f9f9;
-  padding: 0.5em 1em;
-  border-bottom: 1px solid gray;
-  border-left: 1px solid gray;
-  border-right: 1px solid gray;
-  border-top: 0;
-}
-
-.mavedb-calibration-sources-cell .sources-label {
-  font-weight: 600;
-  margin-right: 0.15em;
-}
-
-.mavedb-calibration-sources-cell .sources-group {
-  display: inline-flex;
-  align-items: center;
-  gap: 0.25em;
-  margin-right: 0.3em;
-  flex-wrap: wrap;
-}
-
-.mavedb-calibration-sources-cell .citation-list a {
+.cal-grid .row-label {
+  padding: 10px 14px;
+  font-size: 12px; /* text-xs */
+  font-weight: 700;
+  color: var(--color-text-secondary);
+  background: var(--color-bg);
+  border-right: 2px solid var(--color-border);
+  border-bottom: 1px solid var(--color-border);
   white-space: nowrap;
+  text-align: left;
+  width: 160px;
 }
 
-.evidence-code {
-  white-space: normal;
+.cal-grid .row-label-tip {
+  cursor: help;
+}
+
+.cal-grid td:not(.row-label) {
+  padding: 10px 14px;
+  text-align: center;
+  border-bottom: 1px solid var(--color-border);
+  border-right: 1px solid var(--color-border);
+  color: var(--color-text-secondary);
+  overflow: hidden;
   word-break: break-word;
 }
 
-.mavedb-calibration-sources-cell .sources-separator {
-  margin: 0 0.15em;
-  color: #666;
-  font-weight: 600;
+.cal-grid td:last-child {
+  border-right: none;
 }
 
-.mavedb-calibration-caption-notes {
-  display: block;
-  font-size: 0.9em;
-  line-height: 1.2;
-  font-weight: normal;
-  margin-top: 0.25em;
-  font-style: italic;
-  color: #333;
+.cal-grid td.pad-cell {
+  border-bottom: none;
+  border-right: none;
+  background: var(--color-bg);
 }
 
-.mave-classification-not_provided {
-  background-color: #ffffff;
-  font-style: italic;
+.cal-grid tr:first-child td.pad-cell {
+  border-top: 3px solid var(--color-border);
 }
 
-/* Monospace (or at least tabular) numerals for ranges and OddsPath ratios */
-.monospaced-type,
-.monospaced-type > span {
-  font-family:
-    ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, 'Liberation Mono', 'Courier New', monospace !important;
+.cal-grid tr:last-child td,
+.cal-grid tr:last-child .row-label {
+  border-bottom: none;
+}
+
+.cal-grid-last tr:last-child td,
+.cal-grid-last tr:last-child .row-label {
+  border-bottom: 3px solid var(--color-border);
+}
+
+.cal-grid-continuation tr:first-child .row-label {
+  border-top: 4px solid var(--color-border);
+}
+
+/* ── Column color bars ────────────────────── */
+.col-abnormal {
+  border-top: 4px solid var(--color-cal-abnormal);
+}
+
+.col-indeterminate {
+  border-top: 4px solid var(--color-cal-unspecified);
+}
+
+.col-normal {
+  border-top: 4px solid var(--color-cal-normal);
+}
+
+/* ── Highlighted column ────────────────────────────────────── */
+.highlight {
+  background: var(--color-mint-light);
+  position: relative;
+}
+
+.highlight::after {
+  content: '';
+  position: absolute;
+  inset: 0;
+  border-left: 2px solid var(--color-sage);
+  border-right: 2px solid var(--color-sage);
+  pointer-events: none;
+}
+
+tr:first-child .highlight::after {
+  border-top: 2px solid var(--color-sage);
+  border-top-left-radius: 4px;
+  border-top-right-radius: 4px;
+}
+
+tr:last-child .highlight::after {
+  border-bottom: 2px solid var(--color-sage);
+  border-bottom-left-radius: 4px;
+  border-bottom-right-radius: 4px;
+}
+
+/* ── Monospace intervals ───────────────────────────────────── */
+.interval-mono,
+.interval-mono > span {
+  font-family: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, monospace;
   font-variant-numeric: tabular-nums;
+  font-size: 12px; /* text-xs */
+  color: var(--color-text-secondary);
+  letter-spacing: -0.3px;
 }
 
-/* Make infinity symbols larger and align (infinity baseline is different) */
 .infinity-symbol {
   font-size: 1.4em;
   vertical-align: -0.1em;
 }
 
-/* Make minus symbols larger for appropriate scale with infinity symbol and align */
 .minus-symbol {
   font-size: 1.3em;
   vertical-align: -0.05em;
 }
 
-/* Responsive behavior */
+/* ── Responsive ────────────────────────────────────────────── */
 @media (max-width: 900px) {
-  .evidence-strength-cell {
-    min-width: 80px;
-    font-size: 0.8em;
-    padding: 0.3em 0.4em;
+  .cal-grid .row-label {
+    width: 120px;
+    font-size: 11px;
+    padding: 8px 10px;
   }
 
-  .grid-data-cell,
-  .grid-row-header {
-    padding: 0.4em 0.6em;
-  }
-
-  .evidence-code {
-    overflow-wrap: anywhere;
-    word-break: break-word;
+  .cal-grid td:not(.row-label) {
+    padding: 8px 10px;
   }
 }
 
 @media (max-width: 600px) {
-  .mavedb-calibration-chunks {
-    gap: 0.5em;
+  .cal-grid .row-label {
+    width: 80px;
+    font-size: 10px;
+    padding: 6px 6px;
+    white-space: normal;
+    line-height: 1.3;
   }
 
-  .evidence-strength-cell {
-    min-width: 60px;
-    font-size: 0.75em;
-    padding: 0.25em 0.3em;
-  }
-
-  .grid-data-cell,
-  .grid-row-header {
-    padding: 0.3em 0.4em;
-    font-size: 0.9em;
+  .cal-grid td:not(.row-label) {
+    padding: 6px 6px;
+    font-size: 11px;
   }
 }
 </style>

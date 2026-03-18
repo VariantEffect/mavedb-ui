@@ -1,23 +1,20 @@
 <template>
   <div aria-busy="true" aria-label="Page loading" role="status" style="height: 100vh">
-    <ProgressSpinner class="mave-page-loading" />
-    <span class="sr-only">Loading page content</span>
+    <MvLoader class="absolute top-[40%] left-1/2 -translate-x-1/2" :text="text" />
   </div>
 </template>
 
 <script lang="ts">
-import ProgressSpinner from 'primevue/progressspinner'
+import {defineComponent} from 'vue'
 
-export default {
+import MvLoader from '@/components/common/MvLoader.vue'
+
+export default defineComponent({
   name: 'PageLoading',
-  components: {ProgressSpinner}
-}
-</script>
+  components: {MvLoader},
 
-<style>
-.mave-page-loading {
-  position: absolute;
-  top: 40%; /* leave 10% for menu bar */
-  left: 50%;
-}
-</style>
+  props: {
+    text: {type: String, default: 'Loading...'}
+  }
+})
+</script>

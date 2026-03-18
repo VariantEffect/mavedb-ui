@@ -1,7 +1,7 @@
 <template>
   <MvLayout>
     <div v-if="userIsAuthenticated && item" class="mx-auto max-w-[640px] px-6 py-[60px]">
-      <div class="completion-card">
+      <div class="mave-gradient-bar relative overflow-hidden rounded-xl border border-border bg-white px-9 py-10 text-center">
         <MvDecorativeBars variant="leading" />
 
         <h2 class="mb-2 mt-6 text-[22px] font-bold text-text-dark">Your score set has been saved!</h2>
@@ -134,31 +134,6 @@ export default {
 </script>
 
 <style scoped>
-.completion-card {
-  position: relative;
-  overflow: hidden;
-  border-radius: 12px;
-  border: 1px solid var(--color-border);
-  background: white;
-  padding: 40px 36px;
-  text-align: center;
-}
-
-.completion-card::before {
-  content: '';
-  position: absolute;
-  inset: 0;
-  bottom: auto;
-  height: 4px;
-  background: linear-gradient(
-    90deg,
-    var(--color-sage),
-    var(--color-mint),
-    var(--color-yellow-accent),
-    var(--color-orange-cta)
-  );
-}
-
 .completion-action {
   display: block;
   padding: 14px 18px;
@@ -167,8 +142,8 @@ export default {
   margin-bottom: 8px;
   text-decoration: none;
   transition:
-    border-color 0.12s,
-    background 0.12s;
+    border-color 120ms,
+    background 120ms;
 }
 
 .completion-action:last-child {
@@ -181,3 +156,4 @@ export default {
   text-decoration: none;
 }
 </style>
+

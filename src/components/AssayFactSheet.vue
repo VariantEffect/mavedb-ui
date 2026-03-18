@@ -23,18 +23,8 @@
       <div class="mavedb-assay-facts-row">
         <div class="mavedb-assay-facts-label">Assay Type</div>
         <div class="mavedb-assay-facts-value">
-          <div
-            v-if="
-              scoreSet.experiment.keywords?.some(
-                (k: components['schemas']['ExperimentControlledKeyword']) => k.keyword.key === 'Phenotypic Assay Method'
-              )
-            "
-          >
-            {{
-              scoreSet.experiment.keywords.find(
-                (k: components['schemas']['ExperimentControlledKeyword']) => k.keyword.key === 'Phenotypic Assay Method'
-              )?.keyword.label
-            }}
+          <div v-if="getKeyword('Phenotypic Assay Method')">
+            {{ getKeyword('Phenotypic Assay Method') }}
           </div>
           <div v-else>Not specified</div>
         </div>
@@ -42,20 +32,8 @@
       <div class="mavedb-assay-facts-row">
         <div class="mavedb-assay-facts-label">Molecular Mechanism Assessed</div>
         <div class="mavedb-assay-facts-value">
-          <div
-            v-if="
-              scoreSet.experiment.keywords?.some(
-                (k: components['schemas']['ExperimentControlledKeyword']) =>
-                  k.keyword.key === 'Molecular Mechanism Assessed'
-              )
-            "
-          >
-            {{
-              scoreSet.experiment.keywords.find(
-                (k: components['schemas']['ExperimentControlledKeyword']) =>
-                  k.keyword.key === 'Molecular Mechanism Assessed'
-              )?.keyword.label
-            }}
+          <div v-if="getKeyword('Molecular Mechanism Assessed')">
+            {{ getKeyword('Molecular Mechanism Assessed') }}
           </div>
           <div v-else>Not specified</div>
         </div>
@@ -63,20 +41,8 @@
       <div class="mavedb-assay-facts-row">
         <div class="mavedb-assay-facts-label">Variant Consequences Detected</div>
         <div class="mavedb-assay-facts-value">
-          <div
-            v-if="
-              scoreSet.experiment.keywords?.some(
-                (k: components['schemas']['ExperimentControlledKeyword']) =>
-                  k.keyword.key === 'Phenotypic Assay Mechanism'
-              )
-            "
-          >
-            {{
-              scoreSet.experiment.keywords.find(
-                (k: components['schemas']['ExperimentControlledKeyword']) =>
-                  k.keyword.key === 'Phenotypic Assay Mechanism'
-              )?.keyword.label
-            }}
+          <div v-if="getKeyword('Phenotypic Assay Mechanism')">
+            {{ getKeyword('Phenotypic Assay Mechanism') }}
           </div>
           <div v-else>Not specified</div>
         </div>
@@ -84,20 +50,8 @@
       <div class="mavedb-assay-facts-row">
         <div class="mavedb-assay-facts-label">Model System</div>
         <div class="mavedb-assay-facts-value">
-          <div
-            v-if="
-              scoreSet.experiment.keywords?.some(
-                (k: components['schemas']['ExperimentControlledKeyword']) =>
-                  k.keyword.key === 'Phenotypic Assay Model System'
-              )
-            "
-          >
-            {{
-              scoreSet.experiment.keywords.find(
-                (k: components['schemas']['ExperimentControlledKeyword']) =>
-                  k.keyword.key === 'Phenotypic Assay Model System'
-              )?.keyword.label
-            }}
+          <div v-if="getKeyword('Phenotypic Assay Model System')">
+            {{ getKeyword('Phenotypic Assay Model System') }}
           </div>
           <div v-else>Not specified</div>
         </div>
@@ -149,13 +103,11 @@
               :class="[
                 'mavedb-classification-badge',
                 `mave-evidence-code-${
-                  normalScoreRange?.acmgClassification
-                    ? formatEvidenceCodeForScoreRange(normalScoreRange)
-                    : 'INDETERMINATE'
+                  normalScoreRange?.acmgClassification ? formatEvidenceCode(normalScoreRange) : 'INDETERMINATE'
                 }`
               ]"
             >
-              {{ formatEvidenceCodeForScoreRange(normalScoreRange) }}
+              {{ formatEvidenceCode(normalScoreRange) }}
             </span>
           </div>
           <div v-else class="mavedb-assay-facts-value">OddsPath normal not provided</div>
@@ -176,13 +128,11 @@
               :class="[
                 'mavedb-classification-badge',
                 `mave-evidence-code-${
-                  abnormalScoreRange?.acmgClassification
-                    ? formatEvidenceCodeForScoreRange(abnormalScoreRange)
-                    : 'INDETERMINATE'
+                  abnormalScoreRange?.acmgClassification ? formatEvidenceCode(abnormalScoreRange) : 'INDETERMINATE'
                 }`
               ]"
             >
-              {{ formatEvidenceCodeForScoreRange(abnormalScoreRange) }}
+              {{ formatEvidenceCode(abnormalScoreRange) }}
             </span>
           </div>
           <div v-else class="mavedb-assay-facts-value">OddsPath abnormal not provided</div>
@@ -209,6 +159,8 @@
 import _ from 'lodash'
 import {defineComponent, PropType} from 'vue'
 
+import {formatEvidenceCode} from '@/lib/calibrations'
+import {getExperimentKeyword} from '@/lib/experiments'
 import {firstAuthorLastName} from '@/lib/score-sets'
 import {getTargetGeneName} from '@/lib/target-genes'
 import {shortCitationForPublication} from '@/lib/publication'
@@ -269,9 +221,7 @@ export default defineComponent({
     },
 
     detectsNmd: function () {
-      const libraryCreationMethod = this.scoreSet.experiment?.keywords?.find(
-        (k) => k.keyword.key === 'Variant Library Creation Method'
-      )?.keyword?.label
+      const libraryCreationMethod = this.getKeyword('Variant Library Creation Method')
       switch (libraryCreationMethod) {
         case 'Endogenous locus library method':
           if (this.scoreSet.urn.startsWith('urn:mavedb:00001242')) {
@@ -289,9 +239,7 @@ export default defineComponent({
     },
 
     detectsSplicing: function () {
-      const libraryCreationMethod = this.scoreSet.experiment?.keywords?.find(
-        (k) => k.keyword.key === 'Variant Library Creation Method'
-      )?.keyword?.label
+      const libraryCreationMethod = this.getKeyword('Variant Library Creation Method')
       switch (libraryCreationMethod) {
         case 'Endogenous locus library method':
           return true
@@ -342,22 +290,13 @@ export default defineComponent({
   },
 
   methods: {
+    getKeyword(key: string): string | null {
+      return getExperimentKeyword(this.scoreSet.experiment, key)
+    },
     roundOddsPath: function (oddsPath: number | null | undefined) {
       return oddsPath?.toFixed(3)
     },
-    formatEvidenceCodeForScoreRange: function (
-      functionalClassification:
-        | components['schemas']['mavedb__view_models__score_calibration__FunctionalClassification']
-        | null
-    ) {
-      if (!functionalClassification?.acmgClassification?.evidenceStrength) {
-        return ''
-      }
-
-      const criterion = functionalClassification.acmgClassification.criterion
-      const strength = functionalClassification.acmgClassification.evidenceStrength.toUpperCase()
-      return `${criterion}_${strength}`
-    }
+    formatEvidenceCode
   }
 })
 </script>
@@ -444,5 +383,4 @@ export default defineComponent({
   font-weight: bold;
   margin-left: 0.25em;
 }
-
 </style>

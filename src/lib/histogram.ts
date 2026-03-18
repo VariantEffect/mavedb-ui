@@ -463,6 +463,7 @@ export default function makeHistogram(): Histogram {
       .style('border-width', '2px')
       .style('border-radius', '5px')
       .style('color', '#000')
+      .style('font-size', '12px')
       .style('padding', '5px')
       .style('z-index', 2001)
 
@@ -476,6 +477,7 @@ export default function makeHistogram(): Histogram {
       .style('border-width', '2px')
       .style('border-radius', '5px')
       .style('color', '#000')
+      .style('font-size', '12px')
       .style('padding', '8px 10px')
       .style('position', 'relative')
       .style('width', 'fit-content')

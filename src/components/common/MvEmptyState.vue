@@ -1,7 +1,7 @@
 <template>
   <component
     :is="to ? 'router-link' : 'div'"
-    class="mv-empty-state"
+    class="mv-empty-state flex flex-col items-center rounded-md border-2 border-dashed border-border bg-chip px-6 py-13 text-center no-underline text-inherit transition-[border-color,background] duration-150"
     :class="{interactive: isInteractive}"
     :role="!to && isInteractive ? 'button' : undefined"
     :tabindex="!to && isInteractive ? 0 : undefined"
@@ -11,9 +11,9 @@
     @keydown.space.prevent="handleClick"
   >
     <MvDecorativeBars class="mb-5" variant="trailing" />
-    <h3>{{ title }}</h3>
-    <p v-if="description">{{ description }}</p>
-    <span v-if="actionLabel" class="mv-empty-state-action">{{ actionLabel }}</span>
+    <h3 class="text-base font-bold text-text-secondary mb-1.5">{{ title }}</h3>
+    <p v-if="description" class="text-xs-plus text-text-muted mb-5 leading-relaxed max-w-[400px]">{{ description }}</p>
+    <span v-if="actionLabel" class="text-xs-plus font-semibold text-sage">{{ actionLabel }}</span>
     <slot />
   </component>
 </template>
@@ -49,22 +49,7 @@ export default defineComponent({
 </script>
 
 <style scoped>
-.mv-empty-state {
-  border: 2px dashed var(--color-border);
-  border-radius: 6px;
-  padding: 52px 24px;
-  text-align: center;
-  display: flex;
-  flex-direction: column;
-  align-items: center;
-  background: var(--color-chip);
-  text-decoration: none;
-  color: inherit;
-  transition:
-    border-color 0.15s,
-    background 0.15s;
-}
-
+/* Conditional state + hover combo — cleaner as scoped CSS than dynamic class binding */
 .mv-empty-state.interactive {
   cursor: pointer;
 }
@@ -72,26 +57,5 @@ export default defineComponent({
 .mv-empty-state.interactive:hover {
   border-color: var(--color-mint);
   background: var(--color-mint-light);
-}
-
-.mv-empty-state h3 {
-  font-size: 16px;
-  font-weight: 700;
-  color: var(--color-text-secondary);
-  margin-bottom: 6px;
-}
-
-.mv-empty-state p {
-  font-size: 13px;
-  color: var(--color-text-muted);
-  margin-bottom: 20px;
-  line-height: 1.6;
-  max-width: 400px;
-}
-
-.mv-empty-state-action {
-  font-size: 13px;
-  font-weight: 600;
-  color: var(--color-sage);
 }
 </style>

@@ -11,7 +11,7 @@
       <PButton
         :aria-label="revealed ? 'Hide API key' : 'Reveal API key'"
         :aria-pressed="revealed"
-        class="key-reveal-btn hover:bg-transparent hover:!text-sage hover:opacity-100"
+        class="absolute right-0.5 top-1/2 -translate-y-1/2 opacity-50 transition-opacity hover:bg-transparent hover:!text-sage hover:opacity-100"
         :class="revealed ? '!text-sage opacity-100' : ''"
         :icon="revealed ? 'pi pi-eye-slash' : 'pi pi-eye'"
         rounded
@@ -70,18 +70,18 @@ export default defineComponent({
     }
   },
 
-  watch: {
-    keyId() {
-      this.revealed = false
-      this.copySuccess = false
-    }
-  },
-
   computed: {
     maskedKey(): string {
       if (!this.keyId) return ''
       const suffix = this.keyId.slice(-4)
       return `${'•'.repeat(8)}${suffix}`
+    }
+  },
+
+  watch: {
+    keyId() {
+      this.revealed = false
+      this.copySuccess = false
     }
   },
 
@@ -97,15 +97,7 @@ export default defineComponent({
 </script>
 
 <style scoped>
-.key-reveal-btn {
-  position: absolute;
-  right: 2px;
-  top: 50%;
-  transform: translateY(-50%);
-  opacity: 0.5;
-  transition: opacity 0.15s;
-}
-
+/* PrimeVue button hover overrides — !important needed to beat PrimeVue's inline styles */
 .key-copy-btn:hover {
   border-color: var(--color-sage) !important;
   color: var(--color-sage) !important;

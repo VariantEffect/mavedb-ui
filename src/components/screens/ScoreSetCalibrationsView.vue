@@ -46,158 +46,143 @@
         title="No calibrations yet"
         @action="openCalibrationEditor(item.urn)"
       />
-      <div v-else class="cal-card">
-        <DataTable
-          v-model:expanded-rows="expandedRows"
-          class="cal-datatable"
-          data-key="id"
-          :multi-sort-meta="[
-            {field: 'primary', order: -1},
-            {field: 'private', order: -1},
-            {field: 'title', order: 1}
-          ]"
-          :paginator="(item.scoreCalibrations?.length ?? 0) > 15"
-          :rows="15"
-          :sort-mode="'multiple'"
-          :striped-rows="true"
-          :value="item.scoreCalibrations ?? []"
-        >
-          <Column :expander="true" header-style="width:3rem" />
-
-          <Column field="title" header="Title" :sortable="true">
-            <template #body="{data}">
-              <span class="font-semibold text-text-primary">{{ data.title || '—' }}</span>
-            </template>
-          </Column>
-          <Column field="notes" header="Notes">
-            <template #body="{data}">
-              <span :class="expandedNotes[data.id] ? 'notes-expanded' : 'notes-truncated'" :title="data.notes">
-                {{ data.notes || '—' }}
-              </span>
-              <button
-                v-if="data.notes && data.notes.length > 100 && !expandedNotes[data.id]"
-                class="ml-1 text-xs font-medium text-link hover:underline"
-                @click="expandedNotes[data.id] = true"
-              >
-                See more
-              </button>
-              <button
-                v-if="data.notes && expandedNotes[data.id]"
-                class="ml-1 text-xs font-medium text-link hover:underline"
-                @click="expandedNotes[data.id] = false"
-              >
-                See less
-              </button>
-            </template>
-          </Column>
-          <Column body-class="text-center" field="private" header="Published" :sortable="true">
-            <template #body="{data}">
-              <span :class="data.private ? 'cal-tag cal-tag-red' : 'cal-tag cal-tag-green'">
-                {{ data.private ? 'No' : 'Yes' }}
-              </span>
-            </template>
-          </Column>
-          <Column body-class="text-center" field="primary" header="Primary" :sortable="true">
-            <template #body="{data}">
-              <span :class="data.primary ? 'cal-tag cal-tag-green' : 'cal-tag cal-tag-red'">
-                {{ data.primary ? 'Yes' : 'No' }}
-              </span>
-            </template>
-          </Column>
-          <Column body-class="text-center" field="investigatorProvided" header="Type" :sortable="true">
-            <template #body="{data}">
-              <span :class="data.investigatorProvided ? 'cal-tag cal-tag-blue' : 'cal-tag cal-tag-purple'">
-                {{ data.investigatorProvided ? 'Investigator' : 'Community' }}
-              </span>
-            </template>
-          </Column>
-          <Column body-class="text-center" field="researchUseOnly" header="Use" :sortable="true">
-            <template #body="{data}">
-              <span :class="data.researchUseOnly ? 'cal-tag cal-tag-red' : 'cal-tag cal-tag-green'">
-                {{ data.researchUseOnly ? 'Research' : 'General' }}
-              </span>
-            </template>
-          </Column>
-          <Column body-class="text-center" field="functionalClassificationCount" header="Ranges" :sortable="true">
-            <template #body="{data}">{{
-              data.functionalClassifications
-                ? data.functionalClassifications.length
-                : data.functionalClassificationCount || 0
-            }}</template>
-          </Column>
-          <Column header="Actions">
-            <template #body="{data}">
-              <div class="flex flex-wrap gap-0.5" style="min-width: 4rem">
-                <router-link
-                  :title="'View calibration ' + (data.title || data.urn) + ' in Score Set'"
-                  :to="{name: 'scoreSet', params: {urn: item.urn}, query: {calibration: data.urn}}"
-                >
-                  <PButton icon="pi pi-eye" rounded severity="info" size="small" />
-                </router-link>
-                <template v-if="userIsAuthenticated">
-                  <PButton
-                    v-if="calibrationAuthorizations[data.urn]?.update"
-                    icon="pi pi-pencil"
-                    :rounded="true"
-                    size="small"
-                    title="Edit calibration"
-                    @click="editCalibrationInEditor(data.urn)"
-                  />
-                  <PButton
-                    v-if="calibrationAuthorizations[data.urn]?.change_rank && data.primary"
-                    icon="pi pi-angle-double-down"
-                    :rounded="true"
-                    severity="warn"
-                    size="small"
-                    title="Demote calibration to non-primary"
-                    @click="demoteCalibration(data.urn)"
-                  />
-                  <PButton
-                    v-if="calibrationAuthorizations[data.urn]?.change_rank && !data.primary"
-                    :disabled="data.researchUseOnly || primaryExists"
-                    icon="pi pi-angle-double-up"
-                    :rounded="true"
-                    severity="warn"
-                    size="small"
-                    title="Promote calibration to primary"
-                    @click="promoteCalibration(data.urn)"
-                  />
-                  <PButton
-                    v-if="calibrationAuthorizations[data.urn]?.publish && data.private"
-                    icon="pi pi-check-circle"
-                    :rounded="true"
-                    severity="success"
-                    size="small"
-                    title="Publish calibration"
-                    @click="publishCalibration(data.urn)"
-                  />
-                  <PButton
-                    v-if="calibrationAuthorizations[data.urn]?.delete"
-                    icon="pi pi-trash"
-                    :rounded="true"
-                    severity="danger"
-                    size="small"
-                    title="Delete calibration"
-                    @click="deleteCalibration(data.urn)"
-                  />
-                </template>
+      <template v-else>
+        <!-- ── MOBILE: Card layout ────────────────────────── -->
+        <div class="flex flex-col gap-4 tablet:hidden">
+          <div v-for="cal in sortedCalibrations" :key="cal.id" class="relative overflow-hidden rounded-lg border border-border bg-white mave-gradient-bar">
+            <div class="px-4 py-4">
+              <div class="mb-2 flex items-start gap-2">
+                <div class="min-w-0 flex-1">
+                  <span class="text-sm font-semibold text-text-primary">{{ cal.title || '—' }}</span>
+                </div>
+                <MvRowActionMenu :actions="calibrationActions(cal)" />
               </div>
-            </template>
-          </Column>
-          <template #expansion="{data}">
-            <div class="bg-[#f8faf9] px-6 py-5">
-              <CalibrationTable
-                v-if="data.functionalClassifications && data.functionalClassifications.length"
-                :score-calibration="data"
-                :score-calibration-name="data.title || ''"
-              />
-              <div v-else class="text-sm text-text-secondary">
-                No functional classifications defined for this calibration.
+
+              <div class="mb-3 flex flex-wrap items-center gap-1.5">
+                <MvBadge :value="cal.private ? 'unpublished' : 'published'" />
+                <MvBadge v-if="cal.primary" value="primary" />
+                <MvBadge :value="cal.investigatorProvided ? 'investigator' : 'community'" />
+                <MvBadge :value="cal.researchUseOnly ? 'research' : 'general'" />
+              </div>
+
+              <p v-if="cal.notes" class="mb-3 text-xs leading-relaxed text-text-secondary">{{ cal.notes }}</p>
+
+              <div class="text-xs text-text-muted">
+                <strong>{{ cal.functionalClassifications?.length ?? 0 }}</strong>
+                classification {{ (cal.functionalClassifications?.length ?? 0) === 1 ? 'range' : 'ranges' }}
+              </div>
+
+              <!-- Expandable classification ranges -->
+              <div v-if="cal.functionalClassifications && cal.functionalClassifications.length" class="mt-3">
+                <button
+                  class="flex cursor-pointer items-center gap-1.5 rounded-md border border-border px-3 py-2 text-xs font-semibold text-text-secondary transition-colors hover:bg-gray-50 active:bg-gray-100"
+                  @click="expandedRanges[cal.id] = !expandedRanges[cal.id]"
+                >
+                  <i class="pi pi-list text-[11px]" />
+                  {{ expandedRanges[cal.id] ? 'Hide classification ranges' : 'Show classification ranges' }}
+                </button>
+                <div v-if="expandedRanges[cal.id]" class="mt-2">
+                  <CalibrationTable :score-calibration="cal" :score-calibration-name="cal.title || ''" />
+                </div>
               </div>
             </div>
-          </template>
-        </DataTable>
-      </div>
+          </div>
+        </div>
+
+        <!-- ── DESKTOP: DataTable layout ─────────────────── -->
+        <div class="cal-card mave-gradient-bar hidden tablet:block">
+          <DataTable
+            v-model:expanded-rows="expandedRows"
+            class="cal-datatable"
+            data-key="id"
+            :paginator="(item.scoreCalibrations?.length ?? 0) > 15"
+            :rows="15"
+            :striped-rows="true"
+            :value="sortedCalibrations"
+          >
+            <Column :expander="true" header-style="width:3rem" />
+
+            <Column field="title" header="Title" :sortable="true">
+              <template #body="{data}">
+                <div>
+                  <span class="font-semibold text-text-primary">{{ data.title || '—' }}</span>
+                  <p
+                    v-if="data.notes"
+                    class="mt-0.5 text-xs leading-snug text-text-muted line-clamp-2"
+                    :title="data.notes"
+                  >
+                    {{ data.notes }}
+                  </p>
+                </div>
+              </template>
+            </Column>
+            <Column
+              body-class="text-center"
+              field="private"
+              header="Status"
+              header-style="width:5.5rem"
+              :sortable="true"
+            >
+              <template #body="{data}">
+                <MvBadge :value="data.private ? 'unpublished' : 'published'" />
+              </template>
+            </Column>
+            <Column body-class="text-center" field="primary" header="Rank" header-style="width:4.5rem" :sortable="true">
+              <template #body="{data}">
+                <MvBadge v-if="data.primary" value="primary" />
+                <span v-else class="text-xs text-text-muted">&mdash;</span>
+              </template>
+            </Column>
+            <Column
+              body-class="text-center"
+              field="investigatorProvided"
+              header="Type"
+              header-style="width:7rem"
+              :sortable="true"
+            >
+              <template #body="{data}">
+                <MvBadge :value="data.investigatorProvided ? 'investigator' : 'community'" />
+              </template>
+            </Column>
+            <Column
+              body-class="text-center"
+              field="researchUseOnly"
+              header="Use"
+              header-style="width:5rem"
+              :sortable="true"
+            >
+              <template #body="{data}">
+                <MvBadge :value="data.researchUseOnly ? 'research' : 'general'" />
+              </template>
+            </Column>
+            <Column
+              body-class="text-center"
+              header="Ranges"
+              header-style="width:3rem"
+              :sortable="true"
+            >
+              <template #body="{data}">{{ data.functionalClassifications?.length ?? 0 }}</template>
+            </Column>
+            <Column header-style="width:3rem">
+              <template #body="{data}">
+                <MvRowActionMenu :actions="calibrationActions(data)" />
+              </template>
+            </Column>
+            <template #expansion="{data}">
+              <div class="bg-[#f8faf9] px-6 py-5">
+                <CalibrationTable
+                  v-if="data.functionalClassifications && data.functionalClassifications.length"
+                  :score-calibration="data"
+                  :score-calibration-name="data.title || ''"
+                />
+                <div v-else class="text-sm text-text-secondary">
+                  No functional classifications defined for this calibration.
+                </div>
+              </div>
+            </template>
+          </DataTable>
+        </div>
+      </template>
     </div>
     <div v-else-if="['NotLoaded', 'Loading'].includes(itemStatus)" class="p-8">
       <PageLoading />
@@ -259,6 +244,8 @@ import EmailPrompt from '@/components/common/EmailPrompt.vue'
 import {ref} from 'vue'
 import PrimeDialog from 'primevue/dialog'
 import ItemNotFound from '../common/ItemNotFound.vue'
+import MvBadge from '@/components/common/MvBadge.vue'
+import MvRowActionMenu, {type RowAction} from '@/components/common/MvRowActionMenu.vue'
 import {components} from '@/schema/openapi'
 
 type ScoreSet = components['schemas']['ScoreSet']
@@ -282,7 +269,9 @@ export default {
   components: {
     CalibrationEditor,
     EmailPrompt,
+    MvBadge,
     MvEmptyState,
+    MvRowActionMenu,
     PButton: Button,
     MvLayout,
     MvPageHeader,
@@ -323,7 +312,7 @@ export default {
   data() {
     return {
       expandedRows: [] as Array<Record<string, unknown>>,
-      expandedNotes: {} as Record<string, boolean>
+      expandedRanges: {} as Record<number, boolean>
     }
   },
   computed: {
@@ -332,6 +321,12 @@ export default {
         return this.item.scoreCalibrations.some((calibration) => !!calibration.primary)
       }
       return false
+    },
+    sortedCalibrations(): components['schemas']['ScoreCalibration'][] {
+      if (!this.item?.scoreCalibrations) return []
+      return [...this.item.scoreCalibrations].sort((a, b) => {
+        return this.calibrationSortKey(a) - this.calibrationSortKey(b)
+      })
     }
   },
   watch: {
@@ -354,6 +349,70 @@ export default {
     }
   },
   methods: {
+    calibrationSortKey(cal: components['schemas']['ScoreCalibration']): number {
+      if (cal.primary) return 0
+      if (cal.private) return 4
+      if (cal.researchUseOnly) return 3
+      if (cal.investigatorProvided) return 1
+      return 2 // community
+    },
+
+    calibrationActions(data: components['schemas']['ScoreCalibration']): RowAction[] {
+      const actions: RowAction[] = [
+        {
+          label: 'View in score set',
+          to: {name: 'scoreSet', params: {urn: this.item!.urn}, query: {calibration: data.urn}}
+        }
+      ]
+
+      if (!this.userIsAuthenticated) return actions
+
+      const auth = this.calibrationAuthorizations[data.urn]
+      if (!auth) return actions
+
+      actions.push({separator: true})
+
+      if (auth.update) {
+        actions.push({
+          label: 'Edit calibration',
+          handler: () => this.editCalibrationInEditor(data.urn)
+        })
+      }
+
+      if (auth.change_rank && data.primary) {
+        actions.push({
+          label: 'Demote to non-primary',
+          handler: () => this.demoteCalibration(data.urn)
+        })
+      }
+
+      if (auth.change_rank && !data.primary) {
+        actions.push({
+          label: 'Promote to primary',
+          disabled: data.researchUseOnly || this.primaryExists,
+          handler: () => this.promoteCalibration(data.urn)
+        })
+      }
+
+      if (auth.publish && data.private) {
+        actions.push({
+          label: 'Publish calibration',
+          handler: () => this.publishCalibration(data.urn)
+        })
+      }
+
+      if (auth.delete) {
+        actions.push({separator: true})
+        actions.push({
+          label: 'Delete calibration',
+          danger: true,
+          handler: () => this.deleteCalibration(data.urn)
+        })
+      }
+
+      return actions
+    },
+
     checkScoreSetAuthorization: async function () {
       try {
         this.userIsAuthorizedToAddCalibration = await checkPermission('score-set', this.itemId, 'add_calibration')
@@ -555,34 +614,10 @@ export default {
 </script>
 
 <style scoped>
-/* Card wrapper with gradient top accent */
-.cal-card {
-  position: relative;
-  overflow: hidden;
-  border-radius: 8px;
-  border: 1px solid var(--color-border);
-  background: white;
-}
-
-.cal-card::before {
-  content: '';
-  position: absolute;
-  inset: 0;
-  bottom: auto;
-  height: 3px;
-  background: linear-gradient(
-    90deg,
-    var(--color-sage),
-    var(--color-mint),
-    var(--color-yellow-accent),
-    var(--color-orange-cta)
-  );
-  z-index: 1;
-}
-
-/* DataTable overrides */
+/* DataTable overrides — :deep() selectors cannot be expressed in Tailwind */
 .cal-datatable {
   width: 100%;
+  margin-top: 3px;
 }
 
 .cal-datatable :deep(.p-datatable-thead > tr > th) {
@@ -595,55 +630,14 @@ export default {
   background: #fafafa;
 }
 
+.cal-datatable :deep(.p-datatable-thead > tr > th),
+.cal-datatable :deep(.p-datatable-tbody > tr > td) {
+  padding-left: 8px;
+  padding-right: 8px;
+}
+
 .cal-datatable :deep(.p-datatable-tbody > tr > td) {
   vertical-align: top;
   font-size: 13px;
-}
-
-/* Tags */
-.cal-tag {
-  display: inline-block;
-  padding: 2px 8px;
-  border-radius: 4px;
-  font-size: 11px;
-  font-weight: 600;
-  letter-spacing: 0.2px;
-}
-
-.cal-tag-green {
-  background: var(--color-published-light);
-  color: var(--color-published);
-}
-
-.cal-tag-red {
-  background: var(--color-danger-hover);
-  color: var(--color-danger);
-}
-
-.cal-tag-blue {
-  background: #e3f2fd;
-  color: #1565c0;
-}
-
-.cal-tag-purple {
-  background: #ede7f6;
-  color: #5e35b1;
-}
-
-/* Notes truncation */
-.notes-truncated {
-  display: -webkit-box;
-  -webkit-line-clamp: 2;
-  line-clamp: 2;
-  -webkit-box-orient: vertical;
-  overflow: hidden;
-  white-space: normal;
-  line-height: 1.2;
-  max-height: 2.4em;
-}
-
-.notes-expanded {
-  white-space: normal;
-  line-height: 1.2;
 }
 </style>

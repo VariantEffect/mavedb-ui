@@ -473,6 +473,10 @@
           </div>
         </div>
 
+        <div v-else-if="allele.variantsStatus === 'Loading'" class="px-5 py-4">
+          <MvLoader text="Loading assay results..." />
+        </div>
+
         <div v-else-if="allele.variantsStatus === 'Loaded'" class="px-5 py-4">
           <Message> No score sets containing this variant were found in MaveDB. </Message>
         </div>

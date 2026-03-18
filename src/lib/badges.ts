@@ -39,12 +39,23 @@ export const visibilityBadges: Record<'public' | 'private', BadgeConfig> = {
   private: {label: 'Private', classes: 'bg-chip text-text-muted', dotClass: 'bg-text-muted'}
 }
 
+// ── Calibration ─────────────────────────────────────────────────────────────
+
+export const calibrationBadges: Record<string, BadgeConfig> = {
+  primary: {label: 'Primary', classes: 'bg-published-light text-published', dotClass: 'bg-published-dot'},
+  investigator: {label: 'Investigator', classes: 'bg-blue-50 text-blue-700', dotClass: 'bg-blue-500'},
+  community: {label: 'Community', classes: 'bg-purple-50 text-purple-700', dotClass: 'bg-purple-500'},
+  research: {label: 'Research', classes: 'bg-amber-50 text-amber-700', dotClass: 'bg-amber-500'},
+  general: {label: 'General', classes: 'bg-published-light text-published', dotClass: 'bg-published-dot'}
+}
+
 // ── Lookup ───────────────────────────────────────────────────────────────────
 
 const allBadges: Record<string, BadgeConfig> = {
   ...statusBadges,
   ...roleBadges,
-  ...visibilityBadges
+  ...visibilityBadges,
+  ...calibrationBadges
 }
 
 /** Look up a badge config by key, falling back to a neutral "Unknown" badge. */

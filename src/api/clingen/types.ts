@@ -5,11 +5,16 @@ export interface ClinGenAllele {
   genomicAlleles?: ClinGenGenomicAllele[]
   transcriptAlleles?: ClinGenTranscriptAllele[]
   aminoAcidAlleles?: ClinGenAminoAcidAllele[]
+  externalRecords?: {
+    ClinVarAlleles?: Array<{alleleId: string}>
+  }
 }
 
 export interface ClinGenGenomicAllele {
   referenceGenome?: string
   hgvs?: string[]
+  chromosome?: string
+  coordinates?: Array<{start: string}>
 }
 
 export interface ClinGenTranscriptAllele {

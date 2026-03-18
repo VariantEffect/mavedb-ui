@@ -272,6 +272,7 @@ export function useDashboard(): UseDashboardReturn {
   //   3. Append results for "load more" or replace for page-based navigation.
   // The tab components already render both desktop tables and mobile cards — pagination
   // controls should go in the shared footer area (next to the "+ Add" button).
+  //
   // TODO: Supersession insight — Show which score sets supersede which in the dashboard.
   // ShortScoreSet has `replacesId` (numeric) but no `id` field, so we can't resolve
   // supersession relationships client-side. The best fix is for the API to add

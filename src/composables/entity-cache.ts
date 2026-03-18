@@ -1,6 +1,8 @@
 import {ref, watch, type Ref} from 'vue'
 import axios from 'axios'
+
 import config from '@/config'
+import {getBufferedScoreSet} from '@/lib/buffered-score-set-requests'
 
 interface CacheEntry {
   data: Record<string, unknown> | null
@@ -110,9 +112,14 @@ export function useEntityCache(): UseEntityCacheReturn {
         throw new Error(`Unknown entity type: ${entityType}`)
       }
 
-      const response = await axios.get(`${config.apiBaseUrl}/${endpoint}/${urn}`)
-      cache.value[urn] = {data: response.data, loading: false, error: null, timestamp: Date.now()}
-      return response.data
+      console.log(endpoint)
+      const data =
+        endpoint === 'score-sets'
+          ? await getBufferedScoreSet(urn)
+          : (await axios.get(`${config.apiBaseUrl}/${endpoint}/${urn}`)).data
+
+      cache.value[urn] = {data, loading: false, error: null, timestamp: Date.now()}
+      return data
     } catch (error) {
       const err = error instanceof Error ? error : new Error('Unknown error')
       cache.value[urn] = {data: null, loading: false, error: err, timestamp: Date.now()}

@@ -28,7 +28,6 @@ beforeEach(async () => {
       apiBaseUrl: 'https://api.example'
     }
   }))
-
   ;({getBufferedScoreSet} = await import('./buffered-score-set-requests'))
 })
 
@@ -46,7 +45,10 @@ describe('getBufferedScoreSet', () => {
   })
 
   it('splits buffered requests into multiple calls when the query string would exceed 2048 characters', async () => {
-    const urns = Array.from({length: 6}, (_, index) => `urn:mavedb:${String(index).padStart(8, '0')}-${'x'.repeat(450)}`)
+    const urns = Array.from(
+      {length: 6},
+      (_, index) => `urn:mavedb:${String(index).padStart(8, '0')}-${'x'.repeat(450)}`
+    )
 
     const results = await Promise.all(urns.map((urn) => getBufferedScoreSet(urn)))
 

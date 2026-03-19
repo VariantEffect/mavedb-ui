@@ -126,6 +126,7 @@
               </div>
               <div class="pl-[18px]">
                 <MvAssayFactsCard
+                  :columns="1"
                   :score-set="lookup.selectedScoreSet.value ?? undefined"
                   :variant-urn="lookup.selectedVariantDetail.value?.urn ?? undefined"
                 />
@@ -149,6 +150,7 @@
             class="mt-4 tablet:hidden mave-gradient-bar relative rounded-lg border border-border bg-surface px-4 py-3.5"
           >
             <MvAssayFactsCard
+              :columns="1"
               :score-set="lookup.selectedScoreSet.value ?? undefined"
               :variant-urn="lookup.selectedVariantDetail.value?.urn ?? undefined"
             />

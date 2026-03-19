@@ -18,7 +18,7 @@
         <template v-if="scoreSet.numVariants">{{ scoreSet.numVariants.toLocaleString() }} variants</template>
       </div>
     </div>
-    <div class="assay-facts-grid grid grid-cols-1 gap-x-8 tablet:grid-cols-2">
+    <div :class="gridClass">
       <MvDetailRow fallback="Not specified" label="Assay type" :value="getKeyword('Phenotypic Assay Method')" />
       <MvDetailRow
         fallback="Not specified"
@@ -48,7 +48,7 @@
     <div class="mt-2 border-t border-border pt-2">
       <div class="text-[11px] font-bold uppercase tracking-[0.4px] text-[#999] mb-1">Assay OddsPath</div>
       <template v-if="hasOddsPath">
-        <div class="assay-facts-grid grid grid-cols-1 gap-x-8 tablet:grid-cols-2">
+        <div :class="gridClass">
           <MvDetailRow fallback="Not provided" label="OddsPath Normal">
             <template v-if="normalOddsPath != null">
               <span class="inline-block min-w-[7ch] font-mono font-bold">{{ normalOddsPath }}</span>
@@ -97,12 +97,18 @@ export default defineComponent({
   },
 
   props: {
+    columns: {type: Number as PropType<1 | 2>, default: 2},
     linkTitle: {type: Boolean, default: true},
     scoreSet: {type: Object as PropType<ScoreSet>, default: null},
     variantUrn: {type: String, default: null}
   },
 
   computed: {
+    gridClass(): string {
+      return this.columns === 2
+        ? 'assay-facts-grid grid grid-cols-1 gap-x-8 tablet:grid-cols-2'
+        : 'assay-facts-grid grid grid-cols-1 gap-x-8'
+    },
     geneName(): string | null {
       const targets = this.scoreSet?.targetGenes
       if (targets?.length > 0) {

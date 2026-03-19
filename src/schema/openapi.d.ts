@@ -59,7 +59,12 @@ export interface paths {
     delete: operations["delete_collection_api_v1_collections__urn__delete"];
     /**
      * Update a collection
-     * @description Modify a collection's metadata.
+     * @description Modify a collection's metadata. Also supports reordering and modifying collection membership
+     * via score_set_urns and experiment_urns fields (replace-all with implicit add/remove).
+     *
+     * When score_set_urns or experiment_urns are provided, the order of URNs in the array determines
+     * the display order in the collection. The provided list replaces the entire set of associations:
+     * URNs not in the list are removed, new URNs are added, and the order is updated to match.
      */
     patch: operations["update_collection_api_v1_collections__urn__patch"];
   };
@@ -67,6 +72,10 @@ export interface paths {
     /**
      * Create a collection
      * @description Create a new collection owned by the current user.
+     *
+     * The order of URNs in score_set_urns and experiment_urns determines the display
+     * order in the collection. This order is preserved and can be modified later using
+     * the PATCH endpoint.
      */
     post: operations["create_collection_api_v1_collections__post"];
   };
@@ -74,6 +83,9 @@ export interface paths {
     /**
      * Add a score set to a collection
      * @description Add an existing score set to an existing collection.
+     *
+     * The score set will be appended to the end of the collection's score set list.
+     * To specify a different position, use the PATCH endpoint with the full ordered list.
      */
     post: operations["add_score_set_to_collection_api_v1_collections__collection_urn__score_sets_post"];
   };
@@ -89,6 +101,9 @@ export interface paths {
     /**
      * Add an experiment to a collection
      * @description Add an existing experiment to an existing collection.
+     *
+     * The experiment will be appended to the end of the collection's experiment list.
+     * To specify a different position, use the PATCH endpoint with the full ordered list.
      */
     post: operations["add_experiment_to_collection_api_v1_collections__collection_urn__experiments_post"];
   };
@@ -485,8 +500,9 @@ export interface paths {
      * ```
      *
      * ## Requirements
+     * - User must have an email address associated with their account
      * - User must have update permission on the calibration
-     * - If changing the score_set_urn, user must have permission on the new score set
+     * - If changing the score_set_urn, user must have ADD_CALIBRATION permission on the target score set
      * - All fields in the update are optional - only provided fields will be modified
      *
      * ## File Upload Details
@@ -563,8 +579,10 @@ export interface paths {
      *
      * ## Requirements
      * - The score set URN must be provided to associate the calibration with an existing score set
-     * - User must have write permission on the associated score set
+     * - User must have an email address associated with their account
      * - If uploading a classes_file, it must be a valid CSV with variant classification data
+     * - User must have ADD_CALIBRATION permission on the score set (any authenticated user for
+     *   published sets; contributors/owners/admins for private sets)
      *
      * ## File Upload Details
      * The `classes_file` parameter accepts CSV files containing variant classification data.
@@ -595,6 +613,29 @@ export interface paths {
      * @description Publish a score calibration, making it publicly visible.
      */
     post: operations["publish_score_calibration_route_api_v1_score_calibrations__urn__publish_post"];
+  };
+  "/api/v1/score-calibrations/{urn}/functional-classifications/{classification_id}/variants": {
+    /**
+     * Get Functional Classification Variants
+     * @description Retrieve variants for a specific functional classification within a score calibration.
+     *
+     * Returns the list of variants whose scores fall within the functional classification's
+     * defined range or class. Use this endpoint when you need the full variant data for a
+     * specific classification — the main score set and calibration endpoints return only
+     * a `variant_count` summary for performance.
+     */
+    get: operations["get_functional_classification_variants_api_v1_score_calibrations__urn__functional_classifications__classification_id__variants_get"];
+  };
+  "/api/v1/score-calibrations/{urn}/variants": {
+    /**
+     * Get Calibration All Variants
+     * @description Retrieve all variants across all functional classifications for a score calibration.
+     *
+     * Returns a list of variant sets, one per functional classification. Use this endpoint
+     * when you need the full variant data for an entire calibration — the main score set and
+     * calibration endpoints return only a `variant_count` summary for performance.
+     */
+    get: operations["get_calibration_all_variants_api_v1_score_calibrations__urn__variants_get"];
   };
   "/api/v1/score-sets/search": {
     /**
@@ -667,7 +708,7 @@ export interface paths {
      *     The index to start from. If None, starts from the beginning.
      * limit : Optional[int]
      *     The maximum number of variants to return. If None, returns all variants.
-     * namespaces: List[Literal["scores", "counts", "vep", "gnomad"]]
+     * namespaces: List[Literal["scores", "counts", "vep", "gnomad", "clingen"]]
      *     The namespaces of all columns except for accession, hgvs_nt, hgvs_pro, and hgvs_splice.
      *     We may add ClinVar in the future.
      * drop_na_columns : bool, optional
@@ -1306,7 +1347,7 @@ export interface components {
      * Action
      * @enum {string}
      */
-    Action: "lookup" | "read" | "update" | "delete" | "add_experiment" | "add_score_set" | "set_scores" | "add_role" | "publish" | "add_badge" | "change_rank";
+    Action: "lookup" | "read" | "update" | "delete" | "add_experiment" | "add_score_set" | "set_scores" | "add_role" | "publish" | "add_badge" | "change_rank" | "add_calibration";
     /** AddExperimentToCollectionRequest */
     AddExperimentToCollectionRequest: {
       /** Experimenturn */
@@ -1976,6 +2017,16 @@ export interface components {
        * @description Badge name. Input ignored unless requesting user has MaveDB admin privileges.
        */
       badgeName?: string | null;
+      /**
+       * Scoreseturns
+       * @description Ordered list of score set URNs. When provided, replaces the full set of score sets and their ordering. URNs not currently in the collection will be added; URNs currently in the collection but absent from this list will be removed. The list order determines the persisted display order.
+       */
+      scoreSetUrns?: string[] | null;
+      /**
+       * Experimenturns
+       * @description Ordered list of experiment URNs. When provided, replaces the full set of experiments and their ordering. URNs not currently in the collection will be added; URNs currently in the collection but absent from this list will be removed. The list order determines the persisted display order.
+       */
+      experimentUrns?: string[] | null;
     };
     /**
      * ConceptMapping
@@ -2708,7 +2759,7 @@ export interface components {
       /** Processingstate */
       processingState?: string | null;
       /** Officialcollections */
-      officialCollections: components["schemas"]["mavedb__view_models__score_set__OfficialCollection"][];
+      officialCollections: components["schemas"]["OfficialCollection"][];
     };
     /**
      * ExperimentControlledKeyword
@@ -3149,6 +3200,19 @@ export interface components {
       positiveLikelihoodRatio?: number | null;
     };
     /**
+     * FunctionalClassificationVariants
+     * @description Response model for functional classification variant endpoints.
+     */
+    FunctionalClassificationVariants: {
+      /** Functionalclassificationid */
+      functionalClassificationId: number;
+      /**
+       * Variants
+       * @default []
+       */
+      variants?: components["schemas"]["VariantEffectMeasurement"][];
+    };
+    /**
      * GnomADVariantWithMappedVariants
      * @description GnomAD variant view model with mapped variants for non-admin clients.
      */
@@ -3542,6 +3606,19 @@ export interface components {
       /** Privatekey */
       privateKey: string;
     };
+    /** OfficialCollection */
+    OfficialCollection: {
+      /** Badgename */
+      badgeName: string;
+      /** Name */
+      name: string;
+      /** Urn */
+      urn: string;
+      /** Scoreseturns */
+      scoreSetUrns: string[];
+      /** Experimenturns */
+      experimentUrns: string[];
+    };
     /** OrcidUser */
     OrcidUser: {
       /** Recordtype */
@@ -3931,13 +4008,15 @@ export interface components {
       oddspathsRatio?: number | null;
       /** Positivelikelihoodratio */
       positiveLikelihoodRatio?: number | null;
+      /** Id */
+      id: number;
       /** Recordtype */
       recordType?: string;
       /**
-       * Variants
-       * @default []
+       * Variantcount
+       * @default 0
        */
-      variants?: components["schemas"]["SavedVariantEffectMeasurement"][];
+      variantCount?: number;
     };
     /** SavedPublicationIdentifier */
     SavedPublicationIdentifier: {
@@ -4040,38 +4119,6 @@ export interface components {
       recordType?: string;
     };
     /**
-     * SavedVariantEffectMeasurement
-     * @description Base class for variant effect measurement view models handling saved variant effect measurements
-     */
-    SavedVariantEffectMeasurement: {
-      /** Urn */
-      urn?: string | null;
-      /** Data */
-      data: unknown;
-      /** Scoresetid */
-      scoreSetId: number;
-      /** Hgvsnt */
-      hgvsNt?: string | null;
-      /** Hgvspro */
-      hgvsPro?: string | null;
-      /** Hgvssplice */
-      hgvsSplice?: string | null;
-      /**
-       * Creationdate
-       * Format: date
-       */
-      creationDate: string;
-      /**
-       * Modificationdate
-       * Format: date
-       */
-      modificationDate: string;
-      /** Id */
-      id: number;
-      /** Recordtype */
-      recordType?: string;
-    };
-    /**
      * ScoreCalibration
      * @description Complete score calibration model returned by the API.
      */
@@ -4092,11 +4139,11 @@ export interface components {
       /** Functionalclassifications */
       functionalClassifications?: components["schemas"]["mavedb__view_models__score_calibration__FunctionalClassification"][] | null;
       /** Thresholdsources */
-      thresholdSources?: components["schemas"]["PublicationIdentifier"][] | null;
-      /** Classificationsources */
-      classificationSources?: components["schemas"]["PublicationIdentifier"][] | null;
+      thresholdSources: components["schemas"]["PublicationIdentifier"][];
+      /** Evidencesources */
+      evidenceSources: components["schemas"]["PublicationIdentifier"][];
       /** Methodsources */
-      methodSources?: components["schemas"]["PublicationIdentifier"][] | null;
+      methodSources: components["schemas"]["PublicationIdentifier"][];
       /** Calibrationmetadata */
       calibrationMetadata?: Record<string, never> | null;
       /** Recordtype */
@@ -4153,11 +4200,11 @@ export interface components {
       /** Functionalclassifications */
       functionalClassifications?: components["schemas"]["FunctionalClassificationCreate"][] | null;
       /** Thresholdsources */
-      thresholdSources?: components["schemas"]["PublicationIdentifierCreate"][] | null;
-      /** Classificationsources */
-      classificationSources?: components["schemas"]["PublicationIdentifierCreate"][] | null;
+      thresholdSources: components["schemas"]["PublicationIdentifierCreate"][];
+      /** Evidencesources */
+      evidenceSources: components["schemas"]["PublicationIdentifierCreate"][];
       /** Methodsources */
-      methodSources?: components["schemas"]["PublicationIdentifierCreate"][] | null;
+      methodSources: components["schemas"]["PublicationIdentifierCreate"][];
       /** Calibrationmetadata */
       calibrationMetadata?: Record<string, never> | null;
       /** Scoreseturn */
@@ -4184,11 +4231,11 @@ export interface components {
       /** Functionalclassifications */
       functionalClassifications?: components["schemas"]["SavedFunctionalClassification"][] | null;
       /** Thresholdsources */
-      thresholdSources?: components["schemas"]["SavedPublicationIdentifier"][] | null;
-      /** Classificationsources */
-      classificationSources?: components["schemas"]["SavedPublicationIdentifier"][] | null;
+      thresholdSources: components["schemas"]["SavedPublicationIdentifier"][];
+      /** Evidencesources */
+      evidenceSources: components["schemas"]["SavedPublicationIdentifier"][];
       /** Methodsources */
-      methodSources?: components["schemas"]["SavedPublicationIdentifier"][] | null;
+      methodSources: components["schemas"]["SavedPublicationIdentifier"][];
       /** Calibrationmetadata */
       calibrationMetadata?: Record<string, never> | null;
       /** Recordtype */
@@ -4289,7 +4336,7 @@ export interface components {
       scoreCalibrations?: components["schemas"]["ScoreCalibration"][] | null;
       experiment: components["schemas"]["Experiment"];
       /** Officialcollections */
-      officialCollections: components["schemas"]["mavedb__view_models__score_set__OfficialCollection"][];
+      officialCollections: components["schemas"]["OfficialCollection"][];
       /** Private */
       private: boolean;
       processingState?: components["schemas"]["ProcessingState"] | null;
@@ -4714,6 +4761,8 @@ export interface components {
       recordType?: string;
       targetSequence?: components["schemas"]["SavedTargetSequence"] | null;
       targetAccession?: components["schemas"]["SavedTargetAccession"] | null;
+      /** Mappedhgncname */
+      mappedHgncName?: string | null;
       /** Uniprotidfrommappedmetadata */
       uniprotIdFromMappedMetadata?: string | null;
     };
@@ -4920,6 +4969,8 @@ export interface components {
       recordType?: string;
       targetSequence?: components["schemas"]["TargetSequence"] | null;
       targetAccession?: components["schemas"]["TargetAccession"] | null;
+      /** Mappedhgncname */
+      mappedHgncName?: string | null;
       /** Uniprotidfrommappedmetadata */
       uniprotIdFromMappedMetadata?: string | null;
     };
@@ -4952,6 +5003,8 @@ export interface components {
       recordType?: string;
       targetSequence?: components["schemas"]["TargetSequence"] | null;
       targetAccession?: components["schemas"]["TargetAccession"] | null;
+      /** Mappedhgncname */
+      mappedHgncName?: string | null;
       /** Uniprotidfrommappedmetadata */
       uniprotIdFromMappedMetadata?: string | null;
       /** Scoreseturn */
@@ -5748,22 +5801,15 @@ export interface components {
       oddspathsRatio?: number | null;
       /** Positivelikelihoodratio */
       positiveLikelihoodRatio?: number | null;
+      /** Id */
+      id: number;
       /** Recordtype */
       recordType?: string;
       /**
-       * Variants
-       * @default []
+       * Variantcount
+       * @default 0
        */
-      variants?: components["schemas"]["VariantEffectMeasurement"][];
-    };
-    /** OfficialCollection */
-    mavedb__view_models__score_set__OfficialCollection: {
-      /** Badgename */
-      badgeName: string;
-      /** Name */
-      name: string;
-      /** Urn */
-      urn: string;
+      variantCount?: number;
     };
     /**
      * sequenceString
@@ -6108,7 +6154,12 @@ export interface operations {
   };
   /**
    * Update a collection
-   * @description Modify a collection's metadata.
+   * @description Modify a collection's metadata. Also supports reordering and modifying collection membership
+   * via score_set_urns and experiment_urns fields (replace-all with implicit add/remove).
+   *
+   * When score_set_urns or experiment_urns are provided, the order of URNs in the array determines
+   * the display order in the collection. The provided list replaces the entire set of associations:
+   * URNs not in the list are removed, new URNs are added, and the order is updated to match.
    */
   update_collection_api_v1_collections__urn__patch: {
     parameters: {
@@ -6162,6 +6213,10 @@ export interface operations {
   /**
    * Create a collection
    * @description Create a new collection owned by the current user.
+   *
+   * The order of URNs in score_set_urns and experiment_urns determines the display
+   * order in the collection. This order is preserved and can be modified later using
+   * the PATCH endpoint.
    */
   create_collection_api_v1_collections__post: {
     parameters: {
@@ -6212,6 +6267,9 @@ export interface operations {
   /**
    * Add a score set to a collection
    * @description Add an existing score set to an existing collection.
+   *
+   * The score set will be appended to the end of the collection's score set list.
+   * To specify a different position, use the PATCH endpoint with the full ordered list.
    */
   add_score_set_to_collection_api_v1_collections__collection_urn__score_sets_post: {
     parameters: {
@@ -6311,6 +6369,9 @@ export interface operations {
   /**
    * Add an experiment to a collection
    * @description Add an existing experiment to an existing collection.
+   *
+   * The experiment will be appended to the end of the collection's experiment list.
+   * To specify a different position, use the PATCH endpoint with the full ordered list.
    */
   add_experiment_to_collection_api_v1_collections__collection_urn__experiments_post: {
     parameters: {
@@ -8314,8 +8375,9 @@ export interface operations {
    * ```
    *
    * ## Requirements
+   * - User must have an email address associated with their account
    * - User must have update permission on the calibration
-   * - If changing the score_set_urn, user must have permission on the new score set
+   * - If changing the score_set_urn, user must have ADD_CALIBRATION permission on the target score set
    * - All fields in the update are optional - only provided fields will be modified
    *
    * ## File Upload Details
@@ -8497,8 +8559,10 @@ export interface operations {
    *
    * ## Requirements
    * - The score set URN must be provided to associate the calibration with an existing score set
-   * - User must have write permission on the associated score set
+   * - User must have an email address associated with their account
    * - If uploading a classes_file, it must be a valid CSV with variant classification data
+   * - User must have ADD_CALIBRATION permission on the score set (any authenticated user for
+   *   published sets; contributors/owners/admins for private sets)
    *
    * ## File Upload Details
    * The `classes_file` parameter accepts CSV files containing variant classification data.
@@ -8638,6 +8702,80 @@ export interface operations {
     };
   };
   /**
+   * Get Functional Classification Variants
+   * @description Retrieve variants for a specific functional classification within a score calibration.
+   *
+   * Returns the list of variants whose scores fall within the functional classification's
+   * defined range or class. Use this endpoint when you need the full variant data for a
+   * specific classification — the main score set and calibration endpoints return only
+   * a `variant_count` summary for performance.
+   */
+  get_functional_classification_variants_api_v1_score_calibrations__urn__functional_classifications__classification_id__variants_get: {
+    parameters: {
+      header?: {
+        "x-active-roles"?: string | null;
+      };
+      path: {
+        urn: string;
+        classification_id: number;
+      };
+    };
+    responses: {
+      /** @description Successful Response */
+      200: {
+        content: {
+          "application/json": components["schemas"]["FunctionalClassificationVariants"];
+        };
+      };
+      /** @description Not Found */
+      404: {
+        content: never;
+      };
+      /** @description Validation Error */
+      422: {
+        content: {
+          "application/json": components["schemas"]["HTTPValidationError"];
+        };
+      };
+    };
+  };
+  /**
+   * Get Calibration All Variants
+   * @description Retrieve all variants across all functional classifications for a score calibration.
+   *
+   * Returns a list of variant sets, one per functional classification. Use this endpoint
+   * when you need the full variant data for an entire calibration — the main score set and
+   * calibration endpoints return only a `variant_count` summary for performance.
+   */
+  get_calibration_all_variants_api_v1_score_calibrations__urn__variants_get: {
+    parameters: {
+      header?: {
+        "x-active-roles"?: string | null;
+      };
+      path: {
+        urn: string;
+      };
+    };
+    responses: {
+      /** @description Successful Response */
+      200: {
+        content: {
+          "application/json": components["schemas"]["FunctionalClassificationVariants"][];
+        };
+      };
+      /** @description Not Found */
+      404: {
+        content: never;
+      };
+      /** @description Validation Error */
+      422: {
+        content: {
+          "application/json": components["schemas"]["HTTPValidationError"];
+        };
+      };
+    };
+  };
+  /**
    * Search score sets
    * @description Search score sets.
    */
@@ -8685,6 +8823,11 @@ export interface operations {
   };
   /** Get Filter Options For Search */
   get_filter_options_for_search_api_v1_score_sets_search_filter_options_post: {
+    parameters: {
+      header?: {
+        "x-active-roles"?: string | null;
+      };
+    };
     requestBody: {
       content: {
         "application/json": components["schemas"]["ScoreSetsSearch"];
@@ -8983,7 +9126,7 @@ export interface operations {
    *     The index to start from. If None, starts from the beginning.
    * limit : Optional[int]
    *     The maximum number of variants to return. If None, returns all variants.
-   * namespaces: List[Literal["scores", "counts", "vep", "gnomad"]]
+   * namespaces: List[Literal["scores", "counts", "vep", "gnomad", "clingen"]]
    *     The namespaces of all columns except for accession, hgvs_nt, hgvs_pro, and hgvs_splice.
    *     We may add ClinVar in the future.
    * drop_na_columns : bool, optional
@@ -9005,8 +9148,8 @@ export interface operations {
         start?: number;
         /** @description Maximum number of variants to return */
         limit?: number;
-        /** @description One or more data types to include: scores, counts, clinVar, gnomAD, VEP */
-        namespaces?: ("scores" | "counts" | "vep" | "gnomad")[];
+        /** @description One or more data types to include: scores, counts, ClinGen, gnomAD, VEP */
+        namespaces?: ("scores" | "counts" | "vep" | "gnomad" | "clingen")[];
         drop_na_columns?: boolean | null;
         include_custom_columns?: boolean | null;
         include_post_mapped_hgvs?: boolean | null;
@@ -9068,6 +9211,7 @@ export interface operations {
         urn: string;
       };
     };
+    /** @description Score files, to be uploaded as multipart form data. The `scores_file` is required, while the `counts_file`, `score_columns_metadata`, and `count_columns_metadata` are optional. */
     requestBody?: {
       content: {
         "multipart/form-data": components["schemas"]["Body_upload_score_set_variant_data_api_v1_score_sets__urn__variants_data_post"];
@@ -9604,6 +9748,7 @@ export interface operations {
         urn: string;
       };
     };
+    /** @description Score set properties and score files, to be uploaded as multipart form data. All fields here are optional, and only those provided will be updated. */
     requestBody?: {
       content: {
         "multipart/form-data": components["schemas"]["Body_update_score_set_with_variants_api_v1_score_sets_with_variants__urn__patch"];

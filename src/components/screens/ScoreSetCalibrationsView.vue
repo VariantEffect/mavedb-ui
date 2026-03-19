@@ -1,5 +1,5 @@
 <template>
-  <EmailPrompt
+  <MvEmailPrompt
     v-if="editorVisible"
     dialog="You must add an email address to your account to create or edit calibrations. You can do so below, or on the 'Settings' page."
     :is-first-login-prompt="false"
@@ -21,19 +21,24 @@
           >
         </template>
         <template #actions>
-          <PButton
-            v-if="userIsAuthorizedToAddCalibration"
-            icon="pi pi-plus"
-            label="New calibration"
-            @click="openCalibrationEditor(item.urn)"
-          />
-          <PButton icon="pi pi-refresh" severity="secondary" title="Reload calibrations" @click="reloadItem()" />
-          <PButton
-            icon="pi pi-download"
-            severity="secondary"
-            title="Download calibration JSON"
-            @click="downloadCalibrations()"
-          />
+          <!-- Desktop: individual buttons -->
+          <div class="hidden tablet:contents">
+            <PButton
+              v-if="scoreSetPermissions.add_calibration"
+              icon="pi pi-plus"
+              label="New calibration"
+              @click="openCalibrationEditor(item.urn)"
+            />
+            <PButton icon="pi pi-refresh" severity="secondary" title="Reload calibrations" @click="reloadItem()" />
+            <PButton
+              icon="pi pi-download"
+              severity="secondary"
+              title="Download calibration JSON"
+              @click="downloadCalibrations()"
+            />
+          </div>
+          <!-- Mobile: collapsed menu -->
+          <MvRowActionMenu class="tablet:hidden" :actions="headerActions" />
         </template>
       </MvPageHeader>
     </template>
@@ -41,7 +46,7 @@
     <div v-if="itemStatus === 'Loaded' && item" class="max-w-screen-xl px-4 py-7 tablet:px-6">
       <MvEmptyState
         v-if="!item.scoreCalibrations?.length"
-        :action-label="userIsAuthorizedToAddCalibration ? '+ Create a calibration' : undefined"
+        :action-label="scoreSetPermissions.add_calibration ? '+ Create a calibration' : undefined"
         description="Score calibrations define functional classification ranges for clinical variant interpretation. Add one to help users interpret scores from this dataset."
         title="No calibrations yet"
         @action="openCalibrationEditor(item.urn)"
@@ -185,10 +190,10 @@
       </template>
     </div>
     <div v-else-if="['NotLoaded', 'Loading'].includes(itemStatus)" class="p-8">
-      <PageLoading />
+      <MvPageLoading />
     </div>
     <div v-else>
-      <ItemNotFound :item-id="itemId" model="Score Set" />
+      <MvItemNotFound :item-id="itemId" model="Score Set" />
     </div>
   </MvLayout>
   <PrimeDialog
@@ -219,7 +224,6 @@ import MvLayout from '@/components/layout/MvLayout.vue'
 import MvPageHeader from '@/components/layout/MvPageHeader.vue'
 import MvEmptyState from '@/components/common/MvEmptyState.vue'
 import {
-  checkPermission,
   checkPermissions,
   publishScoreCalibration,
   demoteScoreCalibration,
@@ -227,6 +231,7 @@ import {
   deleteScoreCalibration,
   getScoreSetCalibrations
 } from '@/api/mavedb'
+import {useDatasetPermissions} from '@/composables/use-dataset-permissions'
 import axios from 'axios'
 import Button from 'primevue/button'
 import Column from 'primevue/column'
@@ -235,15 +240,15 @@ import useItem from '@/composition/item.ts'
 import useScopedId from '@/composables/scoped-id'
 import useAuth from '@/composition/auth'
 import {useCalibrationDialog} from '@/composables/use-calibration-dialog'
-import PageLoading from '../common/PageLoading.vue'
-import CalibrationTable from '../CalibrationTable.vue'
+import MvPageLoading from '@/components/common/MvPageLoading.vue'
+import CalibrationTable from '@/components/calibration/CalibrationTable.vue'
 import {getScoreSetShortName} from '@/lib/score-sets'
 import {useConfirm} from 'primevue/useconfirm'
-import CalibrationEditor from '../forms/CalibrationEditor.vue'
-import EmailPrompt from '@/components/common/EmailPrompt.vue'
-import {ref} from 'vue'
+import CalibrationEditor from '@/components/calibration/CalibrationEditor.vue'
+import MvEmailPrompt from '@/components/common/MvEmailPrompt.vue'
+import {ref, toRef} from 'vue'
 import PrimeDialog from 'primevue/dialog'
-import ItemNotFound from '../common/ItemNotFound.vue'
+import MvItemNotFound from '@/components/common/MvItemNotFound.vue'
 import MvBadge from '@/components/common/MvBadge.vue'
 import MvRowActionMenu, {type RowAction} from '@/components/common/MvRowActionMenu.vue'
 import {components} from '@/schema/openapi'
@@ -268,7 +273,7 @@ export default {
   name: 'ScoreSetCalibrationsView',
   components: {
     CalibrationEditor,
-    EmailPrompt,
+    MvEmailPrompt,
     MvBadge,
     MvEmptyState,
     MvRowActionMenu,
@@ -276,9 +281,9 @@ export default {
     MvLayout,
     MvPageHeader,
     DataTable,
-    ItemNotFound,
+    MvItemNotFound,
     Column,
-    PageLoading,
+    MvPageLoading,
     CalibrationTable,
     PrimeDialog
   },
@@ -293,14 +298,15 @@ export default {
 
     const {userIsAuthenticated} = useAuth()
     const confirm = useConfirm()
+    const urnRef = toRef(props, 'itemId')
+    const {permissions: scoreSetPermissions} = useDatasetPermissions('score-set', urnRef, ['add_calibration'] as const)
 
-    const userIsAuthorizedToAddCalibration = ref(false)
     const calibrationAuthorizations = ref<Record<string, CalibrationAuthorizations>>({})
 
     return {
       head,
       userIsAuthenticated,
-      userIsAuthorizedToAddCalibration,
+      scoreSetPermissions,
       calibrationAuthorizations,
       confirm,
       getScoreSetShortName,
@@ -322,6 +328,15 @@ export default {
       }
       return false
     },
+    headerActions(): RowAction[] {
+      const actions: RowAction[] = []
+      if (this.scoreSetPermissions.add_calibration) {
+        actions.push({label: 'New calibration', handler: () => this.openCalibrationEditor(this.item!.urn)})
+      }
+      actions.push({label: 'Reload calibrations', handler: () => this.reloadItem()})
+      actions.push({label: 'Download calibration JSON', handler: () => this.downloadCalibrations()})
+      return actions
+    },
     sortedCalibrations(): components['schemas']['ScoreCalibration'][] {
       if (!this.item?.scoreCalibrations) return []
       return [...this.item.scoreCalibrations].sort((a, b) => {
@@ -339,7 +354,6 @@ export default {
         if (newValue !== oldValue) {
           this.setItemId(newValue)
           await this.ensureItemLoaded()
-          await this.checkScoreSetAuthorization()
           for (const calibration of this.item?.scoreCalibrations || []) {
             await this.checkCalibrationAuthorization(calibration.urn)
           }
@@ -411,14 +425,6 @@ export default {
       }
 
       return actions
-    },
-
-    checkScoreSetAuthorization: async function () {
-      try {
-        this.userIsAuthorizedToAddCalibration = await checkPermission('score-set', this.itemId, 'add_calibration')
-      } catch (err) {
-        console.log(`Error to get authorization:`, err)
-      }
     },
 
     checkCalibrationAuthorization: async function (calibrationUrn: string) {

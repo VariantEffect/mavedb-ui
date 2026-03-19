@@ -1,5 +1,5 @@
 <template>
-  <EmailPrompt
+  <MvEmailPrompt
     dialog="You must add an email address to your account to create or edit an experiment. You can do so below, or on the 'Settings' page."
     :is-first-login-prompt="false"
   />
@@ -72,7 +72,7 @@
           </p>
           <ul class="list-disc pl-5 space-y-1 text-sm">
             <li v-for="urn in item.scoreSetUrns" :key="urn">
-              <EntityLink :display="scoreSetDisplay" entity-type="scoreSet" :urn="urn" :use-cache="true" />
+              <MvEntityLink :display="scoreSetDisplay" entity-type="scoreSet" :urn="urn" :use-cache="true" />
             </li>
           </ul>
         </div>
@@ -103,8 +103,8 @@ import {useHead} from '@unhead/vue'
 
 import MvLayout from '@/components/layout/MvLayout.vue'
 import MvPageHeader from '@/components/layout/MvPageHeader.vue'
-import EmailPrompt from '@/components/common/EmailPrompt.vue'
-import EntityLink from '@/components/common/EntityLink.vue'
+import MvEmailPrompt from '@/components/common/MvEmailPrompt.vue'
+import MvEntityLink from '@/components/common/MvEntityLink.vue'
 import ExperimentFields from '@/components/forms/ExperimentFields.vue'
 import KeywordFields from '@/components/forms/KeywordFields.vue'
 import {useExperimentKeywords} from '@/composables/use-experiment-keywords'
@@ -131,8 +131,8 @@ export default defineComponent({
   components: {
     PButton: Button,
     PDialog: Dialog,
-    EmailPrompt,
-    EntityLink,
+    MvEmailPrompt,
+    MvEntityLink,
     ExperimentFields,
     KeywordFields,
     MvLayout,

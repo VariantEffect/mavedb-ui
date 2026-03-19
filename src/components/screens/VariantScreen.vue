@@ -39,7 +39,7 @@
       <MvErrorState v-if="lookup.variantsStatus.value === 'Error'" @retry="lookup.fetchVariants" />
 
       <!-- Loading state -->
-      <PageLoading v-else-if="lookup.variantsStatus.value === 'Loading'" text="Loading variant measurements..." />
+      <MvPageLoading v-else-if="lookup.variantsStatus.value === 'Loading'" text="Loading variant measurements..." />
 
       <!-- Empty state -->
       <MvEmptyState
@@ -258,18 +258,18 @@ import {defineComponent, toRef} from 'vue'
 import {useHead} from '@unhead/vue'
 import {useToast} from 'primevue/usetoast'
 
-import CalibrationTable from '@/components/CalibrationTable.vue'
+import CalibrationTable from '@/components/calibration/CalibrationTable.vue'
 import MvDetailRow from '@/components/common/MvDetailRow.vue'
 import MvEmptyState from '@/components/common/MvEmptyState.vue'
 import MvErrorState from '@/components/common/MvErrorState.vue'
 import MvEvidenceTag from '@/components/common/MvEvidenceTag.vue'
 import MvLoader from '@/components/common/MvLoader.vue'
-import PageLoading from '@/components/common/PageLoading.vue'
+import MvPageLoading from '@/components/common/MvPageLoading.vue'
 import MvLayout from '@/components/layout/MvLayout.vue'
 import MvPageHeader from '@/components/layout/MvPageHeader.vue'
 import MvAssayFactsCard from '@/components/common/MvAssayFactsCard.vue'
 import MvBadgeToggle from '@/components/common/MvBadgeToggle.vue'
-import ScoreSetHistogram from '@/components/ScoreSetHistogram.vue'
+import ScoreSetHistogram from '@/components/score-set/ScoreSetHistogram.vue'
 import MvMeasurementCard from '@/components/variant/MvMeasurementCard.vue'
 import MvRowActionMenu, {type RowAction} from '@/components/common/MvRowActionMenu.vue'
 import VariantInfoSection from '@/components/variant/VariantInfoSection.vue'
@@ -292,7 +292,7 @@ export default defineComponent({
     MvMeasurementCard,
     MvPageHeader,
     MvRowActionMenu,
-    PageLoading,
+    MvPageLoading,
     PSelect: Select,
     ScoreSetHistogram,
     SplitButton,

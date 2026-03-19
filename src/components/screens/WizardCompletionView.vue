@@ -77,10 +77,10 @@
       </div>
     </div>
     <div v-else-if="userIsAuthenticated" class="p-8">
-      <PageLoading />
+      <MvPageLoading />
     </div>
     <div v-else>
-      <ItemNotFound :item-id="itemId" model="score set" />
+      <MvItemNotFound :item-id="itemId" model="score set" />
     </div>
   </MvLayout>
 </template>
@@ -88,8 +88,8 @@
 <script lang="ts">
 import MvLayout from '@/components/layout/MvLayout.vue'
 import MvDecorativeBars from '@/components/common/MvDecorativeBars.vue'
-import ItemNotFound from '@/components/common/ItemNotFound.vue'
-import PageLoading from '@/components/common/PageLoading.vue'
+import MvItemNotFound from '@/components/common/MvItemNotFound.vue'
+import MvPageLoading from '@/components/common/MvPageLoading.vue'
 import useAuth from '@/composition/auth'
 import useItem from '@/composition/item.ts'
 import {useHead} from '@unhead/vue'
@@ -100,7 +100,7 @@ type ScoreSet = components['schemas']['ScoreSet']
 export default {
   name: 'WizardCompletionView',
 
-  components: {MvLayout, MvDecorativeBars, ItemNotFound, PageLoading},
+  components: {MvLayout, MvDecorativeBars, MvItemNotFound, MvPageLoading},
 
   props: {
     itemId: {

@@ -1,371 +1,272 @@
 <template>
   <MvLayout>
-    <div v-if="itemStatus == 'Loaded'" class="mave-score-set">
-      <div class="mavedb-1000px-col">
-        <div class="mave-screen-title-bar">
-          <div class="mave-screen-title">
-            {{ item.title || 'Untitled experiment' }}
+    <template v-if="itemStatus === 'Loaded' && item" #header>
+      <MvPageHeader eyebrow="Experiment" max-width="1000px" :title="item.title || 'Untitled experiment'">
+        <template #subtitle>
+          <div class="-mt-2 text-sm text-text-muted">{{ item.urn }}</div>
+          <div v-if="item.shortDescription" class="mt-2 text-sm leading-snug text-text-secondary">
+            {{ item.shortDescription }}
           </div>
-          <div class="mave-collection-badges">
-            <CollectionBadge
-              v-for="officialCollection in item.officialCollections"
-              :key="officialCollection.urn"
-              :collection="officialCollection"
+        </template>
+        <template #actions>
+          <div class="hidden items-center gap-1 tablet:flex">
+            <PButton
+              v-if="permissions.add_score_set"
+              icon="pi pi-plus"
+              label="Add Score Set"
+              size="small"
+              @click="addScoreSet"
             />
+            <PButton v-if="permissions.update" label="Edit" severity="warn" size="small" @click="editItem" />
+            <PButton v-if="permissions.delete" label="Delete" severity="danger" size="small" @click="deleteItem" />
           </div>
-          <div v-if="userIsAuthenticated">
-            <div class="mavedb-screen-title-controls">
-              <Button v-if="userIsAuthorized.add_score_set" size="small" @click="addScoreSet">Add a score set</Button>
-              <Button v-if="userIsAuthorized.update" size="small" @click="editItem">Edit</Button>
-              <Button v-if="userIsAuthorized.delete" severity="danger" size="small" @click="deleteItem">Delete</Button>
+          <MvRowActionMenu :actions="headerActions" class="tablet:hidden" />
+        </template>
+        <template #metadata>
+          <MvMetadataLine
+            class="mt-3"
+            :created-by="item.createdBy"
+            :creation-date="item.creationDate"
+            jump-to-id="detailed-metadata"
+            :modification-date="item.modificationDate"
+            :modified-by="item.modifiedBy"
+            :published-date="item.publishedDate"
+          />
+        </template>
+      </MvPageHeader>
+    </template>
+
+    <!-- Loading -->
+    <MvPageLoading v-if="itemStatus === 'Loading' || itemStatus === 'NotLoaded'" text="Loading experiment..." />
+
+    <!-- Not found -->
+    <MvItemNotFound v-else-if="itemStatus === 'Failed'" :item-id="itemId" model="experiment" />
+
+    <!-- Loaded -->
+    <template v-else-if="itemStatus === 'Loaded' && item">
+      <MvCollectionStrip
+        data-set-type="experiment"
+        :data-set-urn="item.urn"
+        :official-collections="item.officialCollections"
+      />
+
+      <div class="mx-auto w-full px-4 py-6 tablet:px-6 tablet:py-8" style="max-width: 1000px">
+        <!-- Score Sets -->
+        <MvLoader v-if="scoreSetsLoading" text="Loading score sets..." />
+        <div
+          v-else-if="associatedScoreSets.length > 0"
+          class="overflow-hidden rounded-lg border border-border bg-white"
+        >
+          <div class="border-b border-border-light px-5 py-3.5">
+            <span class="text-sm font-bold text-text-dark">Score Sets ({{ associatedScoreSets.length }})</span>
+          </div>
+          <div v-for="ss in associatedScoreSets" :key="ss.urn" class="border-b border-border-light last:border-b-0">
+            <MvScoreSetRow :score-set="ss" show-collections />
+          </div>
+        </div>
+        <MvEmptyState
+          v-else
+          :action-label="permissions.add_score_set ? 'Add a score set' : undefined"
+          description="No score sets have been added to this experiment yet."
+          title="No score sets"
+          @action="addScoreSet"
+        />
+
+        <!-- Details and Metadata -->
+        <h2 id="detailed-metadata" class="mb-4 mt-8 text-base font-bold text-text-dark">Details and Metadata</h2>
+
+        <MvProvenanceCard
+          :contributors="contributors"
+          :external-links="item.externalLinks"
+          parent-label="Parent experiment set"
+          :parent-urn="item.experimentSetUrn"
+        />
+
+        <!-- Keywords -->
+        <div class="mave-gradient-bar relative mt-4 overflow-hidden rounded-lg border border-border bg-white p-5">
+          <h3 class="mb-3 text-xs font-bold uppercase tracking-wider text-text-dark">Keywords</h3>
+          <template v-if="item.keywords && item.keywords.length > 0">
+            <div v-for="(kw, i) in item.keywords" :key="i" class="border-b border-border-light py-2.5 last:border-b-0">
+              <div class="flex items-center gap-1.5 text-sm">
+                <span
+                  v-if="kw.keyword.description"
+                  v-tooltip.top="kw.keyword.description"
+                  class="inline-flex size-4 shrink-0 cursor-help items-center justify-center rounded-full bg-sage text-[10px] font-bold text-white"
+                  >?</span
+                >
+                <span class="font-bold text-text-primary">{{ kw.keyword.key }}</span>
+                <span class="text-text-muted">:</span>
+                <router-link
+                  class="font-medium text-link"
+                  :to="{name: 'search', query: {keywords: kw.keyword.label}}"
+                  >{{ kw.keyword.label }}</router-link
+                >
+              </div>
+              <div
+                v-if="kw.description"
+                class="mt-1 text-sm leading-relaxed text-text-secondary"
+                style="margin-left: 22px"
+              >
+                {{ kw.description }}
+              </div>
             </div>
+          </template>
+          <p v-else class="pl-4 text-sm italic text-text-muted">No keywords were provided.</p>
+        </div>
+
+        <!-- Metadata card (abstract, method, publications) -->
+        <div class="mave-gradient-bar relative mt-4 overflow-hidden rounded-lg border border-border bg-white p-6">
+          <div class="border-b border-border-light pb-4">
+            <h3 class="mb-3 text-[15px] font-bold text-text-dark">Abstract</h3>
+            <!-- eslint-disable vue/no-v-html -->
+            <div
+              v-if="item.abstractText"
+              class="pl-4 text-sm leading-relaxed text-text-secondary"
+              v-html="markdownToHtml(item.abstractText)"
+            />
+            <!-- eslint-enable vue/no-v-html -->
+            <p v-else class="pl-4 text-sm italic text-text-muted">Not provided.</p>
+          </div>
+          <div class="border-b border-border-light py-4">
+            <h3 class="mb-3 text-[15px] font-bold text-text-dark">Method</h3>
+            <!-- eslint-disable vue/no-v-html -->
+            <div
+              v-if="item.methodText"
+              class="pl-4 text-sm leading-relaxed text-text-secondary"
+              v-html="markdownToHtml(item.methodText)"
+            />
+            <!-- eslint-enable vue/no-v-html -->
+            <p v-else class="pl-4 text-sm italic text-text-muted">Not provided.</p>
+          </div>
+          <div class="border-b border-border-light py-4">
+            <MvPublicationsSection :publications="item.primaryPublicationIdentifiers" title="Primary References" />
+          </div>
+          <div class="py-4">
+            <MvPublicationsSection :publications="item.secondaryPublicationIdentifiers" title="Secondary References" />
           </div>
         </div>
-        <div v-if="item.shortDescription" class="mave-score-set-description">{{ item.shortDescription }}</div>
-        <h3>
-          <div v-if="item.urn" class="mave-score-set-urn">{{ item.urn }}</div>
-        </h3>
+
+        <!-- Targets -->
+        <div class="mt-4">
+          <MvTargetsAccordion :score-sets="associatedScoreSets" />
+        </div>
+
+        <!-- External Identifiers -->
+        <div class="mt-4">
+          <MvExternalIdentifiersCard
+            :doi-identifiers="item.doiIdentifiers"
+            :raw-read-identifiers="item.rawReadIdentifiers"
+          />
+        </div>
       </div>
-      <div class="mavedb-1000px-col">
-        <div v-if="item.creationDate">
-          Created {{ formatDate(item.creationDate) }}
-          <span v-if="item.createdBy">
-            <a class="flex items-center gap-1" :href="`https://orcid.org/${item.createdBy.orcidId}`" target="blank"
-              ><img alt="ORCIDiD" src="@/assets/ORCIDiD_icon.png" />{{ item.createdBy.firstName }}
-              {{ item.createdBy.lastName }}</a
-            ></span
-          >
-        </div>
-        <div v-if="item.modificationDate">
-          Last updated {{ formatDate(item.modificationDate) }}
-          <span v-if="item.modifiedBy" class="flex">
-            <a class="flex items-center gap-1" :href="`https://orcid.org/${item.modifiedBy.orcidId}`" target="blank"
-              ><img alt="ORCIDiD" src="@/assets/ORCIDiD_icon.png" />{{ item.modifiedBy.firstName }}
-              {{ item.modifiedBy.lastName }}</a
-            ></span
-          >
-        </div>
-        <div v-if="contributors.length > 0">
-          Contributors
-          <a
-            v-for="contributor in contributors"
-            :key="contributor.orcidId"
-            class="mave-contributor flex items-center gap-1"
-            :href="`https://orcid.org/${contributor.orcidId}`"
-            target="blank"
-          >
-            <img alt="ORCIDiD" src="@/assets/ORCIDiD_icon.png" />
-            {{ contributor.givenName }} {{ contributor.familyName }}
-          </a>
-        </div>
-        <div v-if="item.publishedDate">Published {{ formatDate(item.publishedDate) }}</div>
-        <div v-if="item.experimentSetUrn">
-          Member of
-          <router-link :to="{name: 'experimentSet', params: {urn: item.experimentSetUrn}}">{{
-            item.experimentSetUrn
-          }}</router-link>
-        </div>
-        <div v-if="item.currentVersion">Current version {{ item.currentVersion }}</div>
-        <div v-if="item.externalLinks?.igvf?.url" class="external-link">
-          <a :href="item.externalLinks.igvf.url" target="blank">
-            <img alt="IGVF" src="@/assets/igvf-tag.png" />
-            View this experiment in the IGVF Portal
-          </a>
-        </div>
-        <div style="margin-top: 1em">
-          <CollectionAdder class="mave-save-to-collection-button" data-set-type="experiment" :data-set-urn="item.urn" />
-        </div>
-        <div class="mave-score-set-section-title">Score Sets</div>
-        <div v-if="associatedScoreSets.length != 0">
-          <ul class="list-disc pl-4">
-            <li v-for="scoreSet in associatedScoreSets" :key="scoreSet.id">
-              <router-link :to="{name: 'scoreSet', params: {urn: scoreSet.urn}}">{{ scoreSet.urn }}</router-link>
-            </li>
-          </ul>
-        </div>
-        <div v-else>No associated score set</div>
-
-        <div v-if="item.abstractText">
-          <div class="mave-score-set-section-title">Abstract</div>
-          <!-- eslint-disable-next-line vue/no-v-html -->
-          <div class="mave-score-set-abstract" v-html="markdownToHtml(item.abstractText)"></div>
-        </div>
-        <div v-if="item.methodText">
-          <div class="mave-score-set-section-title">Method</div>
-          <!-- eslint-disable-next-line vue/no-v-html -->
-          <div class="mave-score-set-abstract" v-html="markdownToHtml(item.methodText)"></div>
-        </div>
-        <!--Temporary codes to show references. Will change it in the future.-->
-        <div class="mave-score-set-section-title">Primary References</div>
-        <div v-if="item.primaryPublicationIdentifiers.length > 0">
-          <div v-for="publication in item.primaryPublicationIdentifiers" :key="publication">
-            <ul class="pl-4 list-[square]">
-              <!-- eslint-disable-next-line vue/no-v-html -->
-              <li v-html="markdownToHtml(publication.referenceHtml)"></li>
-              <div>
-                Publication:
-                <a
-                  :href="`${config.appBaseUrl}/publication-identifiers/${publication.dbName}/${encodeURIComponent(publication.identifier)}`"
-                  >{{ publication.identifier }}</a
-                >
-              </div>
-              <div>
-                <a :href="`${publication.url}`" target="_blank">View article on the web</a>
-              </div>
-            </ul>
-          </div>
-        </div>
-        <div v-else>No associated primary publications.</div>
-        <div class="mave-score-set-section-title">Secondary References</div>
-        <div v-if="item.secondaryPublicationIdentifiers.length > 0">
-          <div v-for="publication in item.secondaryPublicationIdentifiers" :key="publication">
-            <ul class="pl-4 list-[square]">
-              <!-- eslint-disable-next-line vue/no-v-html -->
-              <li v-html="markdownToHtml(publication.referenceHtml)"></li>
-              <div>
-                Publication:
-                <a
-                  :href="`${config.appBaseUrl}/publication-identifiers/${publication.dbName}/${encodeURIComponent(publication.identifier)}`"
-                  >{{ publication.identifier }}</a
-                >
-              </div>
-              <div>
-                <a :href="`${publication.url}`" target="_blank">View article on the web</a>
-              </div>
-            </ul>
-          </div>
-        </div>
-        <div v-else>No associated secondary publications.</div>
-        <div v-if="item.keywords && Object.keys(item.keywords).length > 0">
-          <div class="mave-score-set-section-title">Keywords</div>
-          <div class="mave-score-set-keywords">
-            <ul class="list-disc pl-4">
-              <li v-for="(keyword, index) in item.keywords" :key="index">
-                {{ keyword.keyword.key }}
-                <!--Present local database keyword description-->
-                <i class="pi pi-info-circle" style="color: green; cursor: pointer" @click="showDialog(index)" />
-                <Dialog
-                  v-model:visible="dialogVisible[index]"
-                  :breakpoints="{'1199px': '75vw', '575px': '90vw'}"
-                  :header="keyword.keyword.key"
-                  modal
-                  :style="{width: '50vw'}"
-                >
-                  <p class="m-0">
-                    {{ keyword.keyword.description }}
-                  </p>
-                </Dialog>
-                :
-                <a :href="`${config.appBaseUrl}/search?keywords=${keyword.keyword.label}`">{{
-                  keyword.keyword.label
-                }}</a>
-                <div v-if="keyword.keyword.code" class="field">
-                  {{ keyword.keyword.code }}
-                </div>
-                <!--Present user's description-->
-                <div v-if="keyword.description" class="field">
-                  <div v-if="keyword.description.length >= 300">
-                    <div v-if="!fullDescription[index]">
-                      {{ keyword.description.substring(0, 300) + '....' }}
-                    </div>
-                    <div v-else>{{ keyword.description }}</div>
-                    <Button severity="info" size="small" variant="text" @click="showFullDescription(index)">
-                      {{ fullDescription[index] ? 'Show less' : 'Show all' }}
-                    </Button>
-                  </div>
-                  <div v-else>{{ keyword.description }}</div>
-                </div>
-              </li>
-            </ul>
-          </div>
-        </div>
-        <div class="mave-score-set-section-title">Scoreset Targets</div>
-        <div v-if="associatedScoreSets.length != 0">
-          <div v-for="scoreSet in associatedScoreSets" :key="scoreSet" class="mave-score-set-section-sublist">
-            <router-link :to="{name: 'scoreSet', params: {urn: scoreSet.urn}}"
-              >Scoreset: {{ scoreSet.urn }}</router-link
-            >
-            <div v-for="targetGene of scoreSet.targetGenes" :key="targetGene">
-              <div v-if="getTargetGeneName(targetGene)"><strong>Name:</strong> {{ getTargetGeneName(targetGene) }}</div>
-              <div v-if="targetGene.category">
-                <strong>Type:</strong> {{ textForTargetGeneCategory(targetGene.category) }}
-              </div>
-
-              <div v-if="targetGene.targetAccession?.accession" style="word-break: break-word">
-                <div v-if="targetGene.targetAccession?.assembly">
-                  <strong>Assembly:</strong> {{ targetGene.targetAccession.assembly }}
-                </div>
-                <div v-if="targetGene.targetAccession?.gene">
-                  <strong>HGNC:</strong> {{ targetGene.targetAccession.gene }}
-                </div>
-                <strong>Accession Number: </strong>
-                {{ targetGene.targetAccession.accession }}
-              </div>
-
-              <div v-if="targetGene.targetSequence?.taxonomy?.url">
-                <strong>Taxonomy ID:</strong> &nbsp;<a
-                  :href="`${targetGene.targetSequence.taxonomy.url}`"
-                  target="blank"
-                  >{{ targetGene.targetSequence.taxonomy.code }}</a
-                >
-              </div>
-              <div v-if="targetGene.targetSequence?.sequence" style="word-break: break-word">
-                <div v-if="targetGene.targetSequence.taxonomy?.organismName">
-                  <strong>Organism name:</strong> {{ targetGene.targetSequence.taxonomy.organismName }}
-                </div>
-                <div v-if="targetGene.targetSequence.taxonomy?.commonName">
-                  <strong>Common name:</strong> {{ targetGene.targetSequence.taxonomy.commonName }}
-                </div>
-                <div v-if="targetGene.id"><strong>Target ID:</strong> {{ targetGene.id }}</div>
-                <strong>Reference sequence: </strong>
-                <template v-if="targetGene.targetSequence.sequence.length >= 500">
-                  <template v-if="readMore == true"
-                    >{{ targetGene.targetSequence.sequence.substring(0, 500) + '....' }}
-                  </template>
-                  <template v-if="readMore == false">{{ targetGene.targetSequence.sequence }}</template>
-                  <Button v-if="readMore == true" severity="info" size="small" variant="text" @click="showMore"
-                    >Show more</Button
-                  >
-                  <Button v-if="readMore == false" severity="info" size="small" variant="text" @click="showLess"
-                    >Show less</Button
-                  > </template
-                ><template v-else>{{ targetGene.targetSequence.sequence }}</template>
-              </div>
-              <!--One for loop can't handle the order so separating them into three parts.-->
-              <div v-if="targetGene.externalIdentifiers?.[0]?.identifier">
-                <div v-for="i in targetGene.externalIdentifiers" :key="i">
-                  <div v-if="i.identifier.dbName === 'UniProt'">
-                    <strong>UniProt:</strong> {{ i.identifier.identifier }}
-                    <span v-if="i.offset != 0"> with offset {{ i.offset }}</span>
-                  </div>
-                </div>
-                <div v-for="i in targetGene.externalIdentifiers" :key="i">
-                  <div v-if="i.identifier.dbName === 'RefSeq'">
-                    <strong>RefSeq:</strong> {{ i.identifier.identifier }}
-                    <span v-if="i.offset != 0"> with offset {{ i.offset }}</span>
-                  </div>
-                </div>
-                <div v-for="i in targetGene.externalIdentifiers" :key="i">
-                  <div v-if="i.identifier.dbName === 'Ensembl'">
-                    <strong>Ensembl:</strong> {{ i.identifier.identifier }}
-                    <span v-if="i.offset != 0"> with offset {{ i.offset }}</span>
-                  </div>
-                </div>
-              </div>
-              <br />
-            </div>
-          </div>
-        </div>
-        <div v-else>No associated score set targets</div>
-
-        <div class="mave-score-set-section-title">External identifier</div>
-        <strong>DOI: </strong>
-        <div v-if="item.doiIdentifiers.length != 0">
-          <ul class="pl-4 list-[square]">
-            <li v-for="(doi, i) of item.doiIdentifiers" :key="i">
-              <a :href="`${doi.url}`" target="blank">{{ doi.identifier }}</a>
-            </li>
-          </ul>
-        </div>
-        <template v-else>No associated DOIs<br /></template>
-        <strong>Raw reads: </strong>
-        <div v-if="item.rawReadIdentifiers.length != 0">
-          <ul class="pl-4 list-[square]">
-            <li v-for="(read, i) of item.rawReadIdentifiers" :key="i">
-              <a :href="`${read.url}`" target="blank">{{ read.identifier }}</a>
-            </li>
-          </ul>
-        </div>
-        <template v-else>No associated raw reads<br /></template>
-      </div>
-    </div>
-    <div v-else-if="itemStatus == 'Loading' || itemStatus == 'NotLoaded'">
-      <PageLoading />
-    </div>
-    <div v-else>
-      <ItemNotFound :item-id="itemId" model="experiment" />
-    </div>
+    </template>
   </MvLayout>
 </template>
 
-<script>
-import axios from 'axios'
-import _ from 'lodash'
+<script lang="ts">
+import {defineComponent, toRef} from 'vue'
 import {marked} from 'marked'
-import 'primeicons/primeicons.css'
-import Button from 'primevue/button'
-import Dialog from 'primevue/dialog'
+import PButton from 'primevue/button'
 import {useHead} from '@unhead/vue'
 
-import CollectionAdder from '@/components/CollectionAdder.vue'
-import CollectionBadge from '@/components/CollectionBadge.vue'
+import {deleteExperiment, getExperimentScoreSets} from '@/api/mavedb'
+import MvScoreSetRow from '@/components/common/MvScoreSetRow.vue'
+import MvCollectionStrip from '@/components/common/MvCollectionStrip.vue'
+import MvEmptyState from '@/components/common/MvEmptyState.vue'
+import MvExternalIdentifiersCard from '@/components/common/MvExternalIdentifiersCard.vue'
+import MvMetadataLine from '@/components/common/MvMetadataLine.vue'
+import MvPageLoading from '@/components/common/MvPageLoading.vue'
+import MvProvenanceCard from '@/components/common/MvProvenanceCard.vue'
+import MvPublicationsSection from '@/components/common/MvPublicationsSection.vue'
+import MvRowActionMenu from '@/components/common/MvRowActionMenu.vue'
+import MvTargetsAccordion from '@/components/common/MvTargetsAccordion.vue'
+import MvItemNotFound from '@/components/common/MvItemNotFound.vue'
 import MvLayout from '@/components/layout/MvLayout.vue'
-import ItemNotFound from '@/components/common/ItemNotFound.vue'
-import PageLoading from '@/components/common/PageLoading.vue'
-import useAuth from '@/composition/auth'
-import useFormatters from '@/composition/formatters'
+import MvPageHeader from '@/components/layout/MvPageHeader.vue'
 import useItem from '@/composition/item.ts'
-import config from '@/config'
-import {getTargetGeneName, textForTargetGeneCategory} from '@/lib/target-genes'
-import {getErrorResponse} from '@/api/mavedb'
+import {useDatasetPermissions} from '@/composables/use-dataset-permissions'
+import {components} from '@/schema/openapi'
+import type {RowAction} from '@/components/common/MvRowActionMenu.vue'
+import MvLoader from '@/components/common/MvLoader.vue'
 
-export default {
+type ScoreSet = components['schemas']['ScoreSet']
+type Experiment = components['schemas']['Experiment']
+type Contributor = components['schemas']['Contributor']
+const ACTIONS = ['add_score_set', 'update', 'delete'] as const
+
+export default defineComponent({
   name: 'ExperimentView',
-  components: {Button, CollectionAdder, CollectionBadge, MvLayout, Dialog, PageLoading, ItemNotFound},
+
+  components: {
+    MvItemNotFound,
+    MvCollectionStrip,
+    MvEmptyState,
+    MvExternalIdentifiersCard,
+    MvLayout,
+    MvMetadataLine,
+    MvPageHeader,
+    MvScoreSetRow,
+    MvLoader,
+    MvPageLoading,
+    MvProvenanceCard,
+    MvPublicationsSection,
+    MvRowActionMenu,
+    MvTargetsAccordion,
+    PButton
+  },
 
   props: {
-    itemId: {
-      type: String,
-      required: true
-    }
+    itemId: {type: String, required: true}
   },
 
-  setup: () => {
+  setup(props) {
     const head = useHead()
-    const {userIsAuthenticated} = useAuth()
+    const urnRef = toRef(props, 'itemId')
+    const {permissions} = useDatasetPermissions('experiment', urnRef, ACTIONS)
+
     return {
       head,
-      config: config,
-
-      ...useFormatters(),
-      ...useItem({itemTypeName: 'experiment'}),
-      userIsAuthenticated,
-      textForTargetGeneCategory: textForTargetGeneCategory,
-      getTargetGeneName: getTargetGeneName
+      ...useItem<Experiment>({itemTypeName: 'experiment'}),
+      permissions
     }
   },
 
-  data: () => ({
-    associatedScoreSets: [],
-    dialogVisible: [],
-    readMore: true,
-    fullDescription: [],
-    userIsAuthorized: {
-      add_score_set: false,
-      delete: false,
-      update: false
+  data() {
+    return {
+      associatedScoreSets: [] as ScoreSet[],
+      scoreSetsLoading: true
     }
-  }),
+  },
 
   computed: {
-    contributors: function () {
-      return _.sortBy(
-        (this.item?.contributors || []).filter((c) => c.orcidId != this.item?.createdBy?.orcidId),
-        ['familyName', 'givenName', 'orcidId']
-      )
+    contributors(): Contributor[] {
+      const creatorId = this.item?.createdBy?.orcidId
+      return (this.item?.contributors || [])
+        .filter((c) => c.orcidId !== creatorId)
+        .sort((a, b) => (a.familyName ?? '').localeCompare(b.familyName ?? ''))
+    },
+    headerActions(): RowAction[] {
+      const actions: RowAction[] = []
+      if (this.permissions.add_score_set) {
+        actions.push({label: 'Add Score Set', handler: () => this.addScoreSet()})
+      }
+      if (this.permissions.update) {
+        actions.push({label: 'Edit', handler: () => this.editItem()})
+      }
+      if (this.permissions.delete) {
+        actions.push({label: 'Delete', danger: true, handler: () => this.deleteItem()})
+      }
+      return actions
     }
   },
 
   watch: {
-    item: {
-      handler: function (newValue) {
-        this.head.patch({title: newValue?.title ?? 'Untitled experiment'})
-      }
+    item(newValue: Experiment | null) {
+      this.head?.patch({title: newValue?.title ?? 'Untitled experiment'})
     },
-
     itemId: {
-      handler: function (newValue, oldValue) {
-        if (newValue != oldValue) {
+      handler(newValue: string, oldValue: string) {
+        if (newValue !== oldValue) {
           this.setItemId(newValue)
         }
       },
@@ -374,180 +275,50 @@ export default {
   },
 
   created() {
-    this.getAssociatedScoreSets()
-  },
-
-  mounted: async function () {
-    await this.checkUserAuthorization()
+    this.fetchAssociatedScoreSets()
   },
 
   methods: {
-    addScoreSet: function () {
+    addScoreSet() {
+      if (!this.item) return
       this.$router.push({name: 'createScoreSetInExperiment', params: {urn: this.item.urn}})
     },
-    checkUserAuthorization: async function () {
-      await this.checkAuthorization()
-    },
-    checkAuthorization: async function () {
-      const actions = ['add_score_set', 'delete', 'update']
-      try {
-        for (const action of actions) {
-          const response = await axios.get(
-            `${config.apiBaseUrl}/permissions/user-is-permitted/experiment/${this.itemId}/${action}`
-          )
-          this.userIsAuthorized[action] = response.data
-        }
-      } catch (err) {
-        console.log(`Error to get authorization:`, err)
-      }
-    },
-    editItem: function () {
+    editItem() {
       if (this.item) {
         this.$router.replace({path: `/experiments/${this.item.urn}/edit`})
       }
     },
-    deleteItem: async function () {
-      let response = null
+    async deleteItem() {
+      // @ts-expect-error PrimeVue ConfirmationService plugin
       this.$confirm.require({
         message: 'Are you sure you want to proceed?',
         header: 'Confirmation',
         icon: 'pi pi-exclamation-triangle',
         accept: async () => {
-          if (this.item) {
-            try {
-              response = await axios.delete(`${config.apiBaseUrl}/experiments/${this.item.urn}`, this.item)
-            } catch (e) {
-              response = getErrorResponse(e)
-            }
-
-            if (response.status == 200) {
-              // display toast message here
-              console.log('Deleted item')
-              this.$router.replace({path: `/dashboard`})
-              this.$toast.add({severity: 'success', summary: 'Your experiment was successfully deleted.', life: 3000})
-            } else if (response.data && response.data.detail) {
-              const formValidationErrors = {}
-              for (const error of response.data.detail) {
-                let path = error.loc
-                if (path[0] == 'body') {
-                  path = path.slice(1)
-                }
-                path = path.join('.')
-                formValidationErrors[path] = error.msg
-              }
-            }
+          if (!this.item) return
+          try {
+            await deleteExperiment(this.item.urn)
+            this.$toast.add({severity: 'success', summary: 'Your experiment was successfully deleted.', life: 3000})
+            this.$router.replace({path: '/dashboard'})
+          } catch {
+            this.$toast.add({severity: 'error', summary: 'Failed to delete experiment.', life: 5000})
           }
-        },
-        reject: () => {
-          //callback to execute when user rejects the action
-          //do nothing
         }
       })
     },
-    markdownToHtml: function (markdown) {
-      return marked(markdown)
+    async fetchAssociatedScoreSets() {
+      this.scoreSetsLoading = true
+      try {
+        this.associatedScoreSets = await getExperimentScoreSets(this.itemId)
+      } catch {
+        this.associatedScoreSets = []
+      } finally {
+        this.scoreSetsLoading = false
+      }
     },
-    get(...args) {
-      return _.get(...args)
-    },
-    getAssociatedScoreSets: async function () {
-      const response = await axios.get(`${config.apiBaseUrl}/experiments/${this.itemId}/score-sets`)
-      this.associatedScoreSets = response.data
-    },
-    showMore: function () {
-      this.readMore = false
-      return this.readMore
-    },
-    showLess: function () {
-      this.readMore = true
-      return this.readMore
-    },
-    showFullDescription: function (index) {
-      this.fullDescription[index] = !this.fullDescription[index]
-    },
-    showDialog: function (index) {
-      this.dialogVisible[index] = true
+    markdownToHtml(markdown: string): string {
+      return marked(markdown) as string
     }
   }
-}
+})
 </script>
-
-<style scoped>
-/* Score set */
-
-.mave-score-set {
-  padding: 20px;
-}
-
-.mave-score-set-heatmap-pane {
-  margin: 10px 0;
-}
-
-/* Score set details */
-
-.mave-score-set-section-title {
-  /*font-family: Helvetica, Verdana, Arial, sans-serif;*/
-  font-size: 24px;
-  padding: 0 0 5px 0;
-  border-bottom: 1px solid #ccc;
-  margin: 20px 0 10px 0;
-}
-
-.mave-score-set-section-sublist {
-  padding: 0 0 5px 0;
-  border-bottom: 1px dashed #ccc;
-  margin: 20px 0 10px 0;
-}
-
-.mave-score-set-description {
-  /*font-family: Helvetica, Verdana, Arial, sans-serif;*/
-  margin: 0 0 10px 0;
-}
-
-.mave-score-set-urn {
-  /*font-family: Helvetica, Verdana, Arial, sans-serif;*/
-}
-
-.mave-score-set-keywords .p-chip {
-  /*font-family: Helvetica, Verdana, Arial, sans-serif;*/
-  margin: 0 5px;
-}
-
-.mave-contributor {
-  margin: 0 0.5em;
-}
-
-/* Formatting in Markdown blocks */
-
-.mave-score-set-abstract {
-  /*font-family: Helvetica, Verdana, Arial, sans-serif;*/
-  font-size: 20px;
-}
-
-.mave-score-set-abstract:deep(code) {
-  color: #987cb8;
-  font-size: 87.5%;
-  word-wrap: break-word;
-}
-
-.mave-save-to-collection-button {
-  margin: 1em;
-}
-
-/* External links */
-.external-link {
-  display: block;
-}
-.external-link a {
-  display: inline-flex;
-  align-items: center;
-  gap: 6px;
-}
-.external-link img {
-  height: 20px;
-  width: auto;
-}
-.external-link img {
-  display: block;
-}
-</style>

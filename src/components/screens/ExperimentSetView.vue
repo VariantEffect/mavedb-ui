@@ -1,180 +1,119 @@
 <template>
   <MvLayout>
-    <div v-if="itemStatus == 'Loaded'" class="mavedb-full-height mave-score-set mavedb-scroll-vertical">
-      <div class="mavedb-1000px-col">
-        <div class="mave-screen-title-bar">
-          <div class="mave-screen-title">{{ item.urn }}</div>
-          <div v-if="userIsAuthenticated & userIsAuthorized">
-            <div class="mavedb-screen-title-controls">
-              <Button size="small" @click="addExperiment">Add an experiment</Button>
-            </div>
-          </div>
+    <template v-if="itemStatus === 'Loaded' && item" #header>
+      <MvPageHeader eyebrow="Experiment Set" max-width="900px" :title="item.urn">
+        <template v-if="permissions.add_experiment" #actions>
+          <PButton icon="pi pi-plus" label="Add experiment" size="small" @click="addExperiment" />
+        </template>
+        <template #metadata>
+          <MvMetadataLine
+            :created-by="item.createdBy"
+            :creation-date="item.creationDate"
+            :modification-date="item.modificationDate"
+            :modified-by="item.modifiedBy"
+            :published-date="item.publishedDate"
+          />
+        </template>
+      </MvPageHeader>
+    </template>
+
+    <!-- Loading -->
+    <MvPageLoading v-if="itemStatus === 'Loading' || itemStatus === 'NotLoaded'" text="Loading experiment set..." />
+
+    <!-- Not found -->
+    <MvItemNotFound v-else-if="itemStatus === 'Failed'" :item-id="itemId" model="experiment set" />
+
+    <!-- Loaded -->
+    <div
+      v-else-if="itemStatus === 'Loaded' && item"
+      class="mx-auto w-full px-4 py-6 tablet:px-6 tablet:py-8"
+      style="max-width: 900px"
+    >
+      <!-- Experiments list -->
+      <div
+        v-if="item.experiments && item.experiments.length > 0"
+        class="mt-6 overflow-hidden rounded-lg border border-border bg-white"
+      >
+        <div class="border-b border-border-light px-5 py-3.5">
+          <span class="text-sm font-bold text-text-dark">Experiments ({{ item.experiments.length }})</span>
         </div>
-        <div class="mave-screen-title">Experiment set</div>
-      </div>
-      <div class="mavedb-1000px-col">
-        <div v-if="item.creationDate">Created {{ formatDate(item.creationDate) }}</div>
-        <div v-if="item.modificationDate">Last updated {{ formatDate(item.modificationDate) }}</div>
-        <div v-if="item.publishedDate">Published {{ formatDate(item.publishedDate) }}</div>
-        <div class="mave-score-set-section-title">Experiments</div>
-        <div v-if="item.experiments.length != 0">
-          <ul class="list-[square] ml-5">
-            <li v-for="ex in item.experiments" :key="ex">
-              <router-link :to="{name: 'experiment', params: {urn: ex.urn}}">{{ ex.urn }}</router-link>
-              <div>
-                <strong>{{ ex.title }}</strong>
-              </div>
-              {{ ex.shortDescription }}
-              <p />
-            </li>
-          </ul>
+        <div v-for="ex in item.experiments" :key="ex.urn" class="border-b border-border-light last:border-b-0">
+          <MvExperimentRow :experiment="ex" />
         </div>
-        <div v-else>No associated experiment</div>
       </div>
-    </div>
-    <div v-else-if="itemStatus == 'Loading' || itemStatus == 'NotLoaded'">
-      <PageLoading />
-    </div>
-    <div v-else>
-      <ItemNotFound :item-id="itemId" model="experiment set" />
+
+      <MvEmptyState
+        v-else
+        description="No experiments have been added to this experiment set yet."
+        title="No experiments"
+      />
     </div>
   </MvLayout>
 </template>
 
-<script>
-import _ from 'lodash'
-import axios from 'axios'
-import {marked} from 'marked'
-import Button from 'primevue/button'
+<script lang="ts">
+import {defineComponent, toRef} from 'vue'
+import PButton from 'primevue/button'
 import {useHead} from '@unhead/vue'
 
 import MvLayout from '@/components/layout/MvLayout.vue'
-import ItemNotFound from '@/components/common/ItemNotFound.vue'
-import PageLoading from '@/components/common/PageLoading.vue'
-import useAuth from '@/composition/auth'
+import MvPageHeader from '@/components/layout/MvPageHeader.vue'
+import MvEmptyState from '@/components/common/MvEmptyState.vue'
+import MvExperimentRow from '@/components/common/MvExperimentRow.vue'
+import MvMetadataLine from '@/components/common/MvMetadataLine.vue'
+import MvPageLoading from '@/components/common/MvPageLoading.vue'
+import MvItemNotFound from '@/components/common/MvItemNotFound.vue'
 import useItem from '@/composition/item.ts'
-import useFormatters from '@/composition/formatters'
-import config from '@/config'
+import {useDatasetPermissions} from '@/composables/use-dataset-permissions'
+import {components} from '@/schema/openapi'
 
-export default {
+type ExperimentSet = components['schemas']['ExperimentSet']
+const ACTIONS = ['add_experiment'] as const
+
+export default defineComponent({
   name: 'ExperimentSetView',
 
-  components: {Button, MvLayout, PageLoading, ItemNotFound},
+  components: {
+    PButton,
+    MvLayout,
+    MvPageHeader,
+    MvEmptyState,
+    MvExperimentRow,
+    MvMetadataLine,
+    MvPageLoading,
+    MvItemNotFound
+  },
 
   props: {
-    itemId: {
-      type: String,
-      required: true
-    }
+    itemId: {type: String, required: true}
   },
 
-  setup: () => {
+  setup(props) {
     useHead({title: 'Experiment set'})
-    const {userIsAuthenticated} = useAuth()
+    const urnRef = toRef(props, 'itemId')
+    const {permissions} = useDatasetPermissions('experiment-set', urnRef, ACTIONS)
 
     return {
-      ...useFormatters(),
-      ...useItem({itemTypeName: 'experimentSet'}),
-      userIsAuthenticated
-    }
-  },
-
-  data() {
-    return {
-      associatedExperiments: [],
-      userIsAuthorized: false
+      ...useItem<ExperimentSet>({itemTypeName: 'experimentSet'}),
+      permissions
     }
   },
 
   watch: {
     itemId: {
-      handler: function (newValue, oldValue) {
-        if (newValue != oldValue) {
+      handler(newValue: string, oldValue: string) {
+        if (newValue !== oldValue) {
           this.setItemId(newValue)
-          console.log(newValue)
         }
       },
       immediate: true
     }
   },
 
-  mounted: async function () {
-    await this.checkUserAuthorization()
-  },
-
   methods: {
-    addExperiment: function () {
-      this.$router.push({name: 'createExperimentInExperimentSet', params: {urn: this.item.urn}})
-    },
-    checkUserAuthorization: async function () {
-      await this.checkAuthorization()
-    },
-    checkAuthorization: async function () {
-      try {
-        // this response should be true to get authorization
-        const response = await axios.get(
-          `${config.apiBaseUrl}/permissions/user-is-permitted/experiment-set/${this.itemId}/add_experiment`
-        )
-        this.userIsAuthorized = response.data
-      } catch (err) {
-        console.log(`Error to get authorization:`, err)
-      }
-    },
-    markdownToHtml: function (markdown) {
-      return marked(markdown)
-    },
-    get(...args) {
-      return _.get(...args)
+    addExperiment() {
+      this.$router.push({name: 'createExperimentInExperimentSet', params: {urn: this.item?.urn}})
     }
   }
-}
+})
 </script>
-
-<style scoped>
-/* Score set */
-
-.mave-score-set {
-  padding: 20px;
-}
-
-.mave-score-set-heatmap-pane {
-  margin: 10px 0;
-}
-
-/* Score set details */
-
-.mave-score-set-section-title {
-  /*font-family: Helvetica, Verdana, Arial, sans-serif;*/
-  font-size: 24px;
-  padding: 0 0 5px 0;
-  border-bottom: 1px solid #ccc;
-  margin: 20px 0 10px 0;
-}
-
-.mave-score-set-description {
-  /*font-family: Helvetica, Verdana, Arial, sans-serif;*/
-  margin: 0 0 10px 0;
-}
-
-.mave-score-set-urn {
-  /*font-family: Helvetica, Verdana, Arial, sans-serif;*/
-}
-
-.mave-score-set-keywords .p-chip {
-  /*font-family: Helvetica, Verdana, Arial, sans-serif;*/
-  margin: 0 5px;
-}
-
-/* Formatting in Markdown blocks */
-
-.mave-score-set-abstract {
-  /*font-family: Helvetica, Verdana, Arial, sans-serif;*/
-  font-size: 20px;
-}
-
-.mave-score-set-abstract:deep(code) {
-  color: #987cb8;
-  font-size: 87.5%;
-  word-wrap: break-word;
-}
-</style>

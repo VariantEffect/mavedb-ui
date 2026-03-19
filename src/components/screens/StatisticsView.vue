@@ -1,6 +1,6 @@
 <template>
   <MvLayout :with-email-prompt="!isEmbedded" :with-nav="!isEmbedded">
-    <div v-if="loading"><PageLoading></PageLoading></div>
+    <div v-if="loading"><MvPageLoading></MvPageLoading></div>
     <div v-else>
       <h1 style="color: #3f51b5">MaveDB Site Statistics</h1>
       <div class="statistics-pane">
@@ -44,11 +44,11 @@
               </div>
             </div>
             <div class="chart-container">
-              <TimeSeriesLineChart
+              <MvTimeSeriesLineChart
                 :data="timeSeriesData"
                 :interpolate-missing-dates="timeSeriesInterpolation"
                 :level="selectedAggregationLevel"
-              ></TimeSeriesLineChart>
+              ></MvTimeSeriesLineChart>
             </div>
           </template>
         </Card>
@@ -152,8 +152,8 @@ import Column from 'primevue/column'
 import DataTable from 'primevue/datatable'
 import MvLayout from '@/components/layout/MvLayout.vue'
 import SelectButton from 'primevue/selectbutton'
-import PageLoading from '../common/PageLoading.vue'
-import TimeSeriesLineChart from '../TimeSeriesLineChart.vue'
+import MvPageLoading from '@/components/common/MvPageLoading.vue'
+import MvTimeSeriesLineChart from '@/components/common/MvTimeSeriesLineChart.vue'
 import {useHead} from '@unhead/vue'
 
 import useItem from '@/composition/item.ts'
@@ -161,7 +161,7 @@ import config from '@/config'
 
 export default {
   name: 'StatisticsView',
-  components: {Carousel, Card, Column, Chart, DataTable, MvLayout, SelectButton, PageLoading, TimeSeriesLineChart},
+  components: {Carousel, Card, Column, Chart, DataTable, MvLayout, SelectButton, MvPageLoading, MvTimeSeriesLineChart},
 
   setup: () => {
     useHead({title: 'Database statistics'})

@@ -1,83 +1,82 @@
 <template>
   <div class="flex min-w-0 flex-col gap-1.5 px-5 py-3 hover:bg-gray-50">
-    <router-link
-      class="break-words text-sm font-semibold leading-snug text-link"
-      :to="{name: 'scoreSet', params: {urn: scoreSet.urn}}"
-    >
-      {{ scoreSet.title }}
+    <router-link class="block text-link no-underline" :to="{name: 'scoreSet', params: {urn: scoreSet.urn}}">
+      <div class="text-xs-minus font-medium">{{ scoreSet.urn }}</div>
+      <div class="text-md font-semibold leading-snug">{{ scoreSet.title }}</div>
     </router-link>
     <p v-if="scoreSet.shortDescription && showDescription" class="text-sm leading-snug text-gray-600">
       {{ scoreSet.shortDescription }}
     </p>
     <div v-if="showMeta" class="flex flex-wrap items-center gap-1.5">
-      <span
-        v-for="gene in visibleGenes"
-        :key="gene"
-        class="inline-block whitespace-nowrap rounded-xl border border-mint bg-sage-light px-2.5 py-px text-[0.6875rem] font-semibold text-sage-dark"
-        title="Target gene"
-      >
-        {{ gene }}
-      </span>
-      <span
+      <template v-if="showCollections && collections.length">
+        <CollectionBadge v-for="col in collections" :key="col.urn" :collection="col" size="sm" />
+        <span class="mx-0.5 text-border">|</span>
+      </template>
+      <MvPill v-for="gene in visibleGenes" :key="gene" :label="gene" title="Target gene" variant="blue" />
+      <MvPill
         v-if="geneNames.length > maxTags"
-        class="inline-block whitespace-nowrap rounded-xl border border-mint bg-sage-light px-2.5 py-px text-[0.6875rem] font-semibold text-sage-dark"
+        :label="`+${geneNames.length - maxTags} more`"
         :title="`${geneNames.length - maxTags} more target genes`"
-      >
-        +{{ geneNames.length - maxTags }} more
-      </span>
-      <span
+        variant="blue"
+      />
+      <MvPill
         v-for="organism in visibleOrganisms"
         :key="organism"
-        class="inline-block whitespace-nowrap rounded-xl border border-orange-border bg-orange-light px-2.5 py-px text-[0.6875rem] font-semibold italic text-orange-cta-dark"
+        :label="organism"
         title="Organism"
-      >
-        {{ organism }}
-      </span>
-      <span
+        variant="orange"
+      />
+      <MvPill
         v-if="organisms.length > maxTags"
-        class="inline-block whitespace-nowrap rounded-xl border border-orange-border bg-orange-light px-2.5 py-px text-[0.6875rem] font-semibold italic text-orange-cta-dark"
+        :label="`+${organisms.length - maxTags} more`"
         :title="`${organisms.length - maxTags} more organisms`"
-      >
-        +{{ organisms.length - maxTags }} more
-      </span>
-      <span
+        variant="orange"
+      />
+      <MvPill
         v-if="sequenceType"
-        class="inline-block whitespace-nowrap rounded-xl border border-calibrated-border bg-calibrated-light px-2.5 py-px text-[0.6875rem] font-semibold text-calibrated"
+        :label="sequenceType"
         title="Sequence type"
-      >
-        {{ sequenceType }}
-      </span>
-      <span
+        :variant="sequenceType === 'Nucleotide' ? 'nucleotide' : 'protein'"
+      />
+      <MvPill
         v-if="scoreSet.numVariants"
-        class="inline-block whitespace-nowrap rounded-xl border border-gray-300 bg-gray-100 px-2.5 py-px text-[0.6875rem] font-semibold text-gray-600"
+        :label="`${scoreSet.numVariants.toLocaleString()} variants`"
         title="Number of variants"
-      >
-        {{ scoreSet.numVariants.toLocaleString() }} variants
-      </span>
-      <span v-if="scoreSet.publishedDate" class="ml-auto whitespace-nowrap text-[0.6875rem] text-gray-400">
+      />
+      <span v-if="scoreSet.publishedDate" class="ml-auto whitespace-nowrap text-xs-minus text-gray-400">
         Published {{ formattedDate }}
       </span>
-      <span v-else class="ml-auto whitespace-nowrap text-[0.6875rem] text-gray-400"> Unpublished </span>
+      <span v-else class="ml-auto whitespace-nowrap text-xs-minus text-gray-400"> Unpublished </span>
     </div>
   </div>
 </template>
 
 <script lang="ts">
 import {defineComponent, type PropType} from 'vue'
+import CollectionBadge from '@/components/common/MvCollectionBadge.vue'
+import MvPill from '@/components/common/MvPill.vue'
 import {getTargetGeneName} from '@/lib/target-genes'
 import {components} from '@/schema/openapi'
 
-type ScoreSet = components['schemas']['ShortScoreSet']
+type FullScoreSet = components['schemas']['ScoreSet']
+type ShortScoreSet = components['schemas']['ShortScoreSet']
+type ScoreSet = ShortScoreSet | FullScoreSet
 
 const MAX_TAGS = 3
 
 export default defineComponent({
   name: 'MvScoreSetRow',
 
+  components: {CollectionBadge, MvPill},
+
   props: {
     scoreSet: {
       type: Object as PropType<ScoreSet>,
       required: true
+    },
+    showCollections: {
+      type: Boolean,
+      default: false
     },
     showDescription: {
       type: Boolean,
@@ -90,6 +89,9 @@ export default defineComponent({
   },
 
   computed: {
+    collections(): FullScoreSet['officialCollections'] {
+      return 'officialCollections' in this.scoreSet ? (this.scoreSet as FullScoreSet).officialCollections : []
+    },
     maxTags(): number {
       return MAX_TAGS
     },

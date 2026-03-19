@@ -1,5 +1,5 @@
 <template>
-  <EmailPrompt
+  <MvEmailPrompt
     dialog="You must add an email address to your account to create or edit a score set. You can do so below, or on the 'Settings' page."
     :is-first-login-prompt="false"
   />
@@ -256,7 +256,7 @@ import {useHead} from '@unhead/vue'
 import ToggleSwitch from 'primevue/toggleswitch'
 
 import {searchMyExperiments, updateScoreSetWithVariants, getErrorResponse} from '@/api/mavedb'
-import EmailPrompt from '@/components/common/EmailPrompt.vue'
+import MvEmailPrompt from '@/components/common/MvEmailPrompt.vue'
 import MvEmptyState from '@/components/common/MvEmptyState.vue'
 import ScoreSetContextFields from '@/components/forms/ScoreSetContextFields.vue'
 import ScoreSetFields from '@/components/forms/ScoreSetFields.vue'
@@ -291,7 +291,7 @@ export default defineComponent({
   components: {
     PButton: Button,
     PDialog: Dialog,
-    EmailPrompt,
+    MvEmailPrompt,
     MvEmptyState,
     MvLayout,
     MvPageHeader,

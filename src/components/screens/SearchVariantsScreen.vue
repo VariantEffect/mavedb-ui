@@ -583,7 +583,7 @@
             </tr>
             <tr v-for="urn in urns" :key="urn">
               <td class="border-b border-gray-100 py-2 pl-5 pr-3">
-                <EntityLink display="title" entity-type="scoreSet" :urn="urn" :use-cache="true" />
+                <MvEntityLink display="title" entity-type="scoreSet" :urn="urn" :use-cache="true" />
               </td>
               <td class="border-b border-gray-100 px-3 py-2">
                 <router-link
@@ -623,7 +623,7 @@
 
 <script lang="ts">
 import _ from 'lodash'
-import EntityLink from '@/components/common/EntityLink.vue'
+import MvEntityLink from '@/components/common/MvEntityLink.vue'
 import InputText from 'primevue/inputtext'
 import Message from 'primevue/message'
 import PSelect from 'primevue/select'
@@ -669,7 +669,7 @@ export default defineComponent({
   name: 'SearchVariantsScreen',
 
   components: {
-    EntityLink,
+    MvEntityLink,
     InputText,
     MvCollapsible,
     MvLayout,

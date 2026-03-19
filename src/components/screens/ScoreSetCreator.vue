@@ -1,5 +1,5 @@
 <template>
-  <EmailPrompt
+  <MvEmailPrompt
     dialog="You must add an email address to your account to create or edit a score set. You can do so below, or on the 'Settings' page."
     :is-first-login-prompt="false"
   />
@@ -406,8 +406,8 @@ import {ref} from 'vue'
 import {useHead} from '@unhead/vue'
 
 import {getExperiment, searchMyExperiments, createScoreSet, uploadVariantData, getErrorResponse} from '@/api/mavedb'
-import CalibrationEditor from '@/components/forms/CalibrationEditor.vue'
-import EmailPrompt from '@/components/common/EmailPrompt.vue'
+import CalibrationEditor from '@/components/calibration/CalibrationEditor.vue'
+import MvEmailPrompt from '@/components/common/MvEmailPrompt.vue'
 import ScoreSetContextFields from '@/components/forms/ScoreSetContextFields.vue'
 import ScoreSetFields from '@/components/forms/ScoreSetFields.vue'
 import TargetEditor from '@/components/forms/TargetEditor.vue'
@@ -445,7 +445,7 @@ export default {
     Message,
     MvLayout,
     MvPageHeader,
-    EmailPrompt,
+    MvEmailPrompt,
     ProgressSpinner,
     ScoreSetContextFields,
     ScoreSetFields,

@@ -63,11 +63,11 @@ Top-level route components. Named with suffixes: `*View`, `*Screen`, `*Creator`,
 
 ### Common Components (`src/components/common/`)
 
-Reusable UI primitives: `EntityLink`, `FlexDataTable`, `PageLoading`, `MvSelectList`, `MvCollapsible`, `MvLoader`, `MvScoreSetRow`, `MvSearchFilters`, etc.
+Reusable UI components, all prefixed `Mv*`: `MvEntityLink`, `MvPageLoading`, `MvItemNotFound`, `MvEmailPrompt`, `MvSelectList`, `MvCollapsible`, `MvLoader`, `MvScoreSetRow`, `MvSearchFilters`, `MvTimeSeriesLineChart`, etc.
 
 ### Layout Components (`src/components/layout/`)
 
-App shell components: `MvLayout`, `MvNavBar`, `MvFooter`.
+App shell components: `MvLayout`, `MvNavBar`, `MvFooter`, `MvPageHeader`.
 
 ### Form Section Components (`src/components/forms/`)
 
@@ -91,10 +91,27 @@ Low-level field components:
 - `MvMarkdownField` — Edit/Preview tabs for markdown textarea
 - `MvTagField` — Multi-value chip AutoComplete
 - `MvUploadField` — File upload drop zone
+- `MvFileStatus` — File upload status indicator
 
-### Feature Components (`src/components/`)
+### Score Set Components (`src/components/score-set/`)
 
-Larger feature-specific components in the root components directory: `CalibrationEditor`, `ScoreSetHeatmap`, `ScoreSetHistogram`, `AssayFactSheet`, etc.
+Score set visualization and display components: `ScoreSetHeatmap`, `ScoreSetHistogram`, `ScoreSetVisualizer`, `ScoreSetProcessingStatus`, `ScoreSetDownloads`, `ScoreSetMetadataCard`, `ProteinStructureView`.
+
+### Calibration Components (`src/components/calibration/`)
+
+Calibration display and editing: `CalibrationTable`, `CalibrationEditor`, `CalibrationFields`, `CalibrationClassificationRow`.
+
+### Collection Components (`src/components/collection/`)
+
+Collection management: `CollectionAdder`, `CollectionCreator`, `CollectionDataSetEditor`, `CollectionItemsTable`, `CollectionPermissionsEditor`.
+
+### Dashboard Components (`src/components/dashboard/`)
+
+Dashboard tab panels: `MvDashboardScoreSets`, `MvDashboardExperiments`, `MvDashboardCollections`, `MvDashboardCalibrations`.
+
+### Variant Components (`src/components/variant/`)
+
+Variant display: `MvMeasurementCard`, `VariantInfoSection`.
 
 ## Composables and Composition Functions
 
@@ -150,6 +167,6 @@ Always use the `@/` path alias and always include the file extension (`.vue` for
 
 ```ts
 import MvLayout from '@/components/layout/MvLayout.vue'
-import EntityLink from '@/components/common/EntityLink.vue'
+import MvEntityLink from '@/components/common/MvEntityLink.vue'
 import useItem from '@/composition/item.ts'
 ```

@@ -179,7 +179,7 @@
           <span class="text-sm text-gray-500">
             Showing <strong class="font-bold text-gray-800">{{ scoreSets.length.toLocaleString() }}</strong> score sets
           </span>
-          <Select
+          <PSelect
             v-model="sortBy"
             aria-label="Sort results by"
             class="!text-sm"
@@ -256,7 +256,7 @@ type ShortScoreSet = components['schemas']['ShortScoreSet']
 
 import InputText from 'primevue/inputtext'
 import Message from 'primevue/message'
-import Select from 'primevue/select'
+import PSelect from 'primevue/select'
 import MvLayout from '@/components/layout/MvLayout.vue'
 import MvLoader from '@/components/common/MvLoader.vue'
 import MvScoreSetRow from '@/components/common/MvScoreSetRow.vue'
@@ -267,7 +267,7 @@ import type {ScoreSetsSearchFilterOptionsResponse} from '@/api/mavedb'
 export default defineComponent({
   name: 'SearchView',
 
-  components: {InputText, Message, MvLayout, MvLoader, MvScoreSetRow, MvSearchFilters, Select},
+  components: {InputText, Message, MvLayout, MvLoader, MvScoreSetRow, MvSearchFilters, PSelect},
 
   setup: () => {
     useHead({title: 'Search data sets'})
@@ -303,15 +303,12 @@ export default defineComponent({
         : 'recent') as SortValue,
       visibleCount: 25,
       searchAbortController: null as AbortController | null,
-      filterAbortController: null as AbortController | null
+      filterAbortController: null as AbortController | null,
+      debouncedSearch: (() => {}) as () => void
     }
   },
 
   computed: {
-    debouncedSearchFunction: function () {
-      return debounce(() => this.search(), '400ms')
-    },
-
     hasActiveFilters(): boolean {
       return this.activeFilters.length > 0
     },
@@ -528,15 +525,15 @@ export default defineComponent({
     }
   },
 
+  created() {
+    this.debouncedSearch = debounce(() => this.search(), '400ms') as unknown as () => void
+  },
+
   mounted: async function () {
     await this.search()
   },
 
   methods: {
-    debouncedSearch: function () {
-      this.debouncedSearchFunction()
-    },
-
     search: async function () {
       if (routeToVariantSearchIfVariantIsSearchable(this.searchText)) {
         return

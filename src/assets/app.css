@@ -353,7 +353,7 @@ body .p-button {
 }
 
 /* ── Evidence & Classification Badges ────────────────────────── */
-/* Shared across CalibrationTable, AssayFactSheet, and VariantMeasurementView */
+/* Shared across CalibrationTable, MvAssayFactsCard, and VariantMeasurementView */
 
 .mave-evidence-code-PS3_VERY_STRONG {
   background-color: var(--color-ps3-very-strong);

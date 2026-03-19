@@ -16,7 +16,7 @@
         :class="{'rotate-180': isOpen}"
       />
     </button>
-    <div v-show="isOpen" :id="panelId" class="px-4 pb-3">
+    <div v-show="isOpen" :id="panelId" class="pb-3 pl-8 pr-4">
       <slot />
     </div>
   </div>

@@ -465,7 +465,7 @@ export default function makeHistogram(): Histogram {
       .style('color', '#000')
       .style('font-size', '12px')
       .style('padding', '5px')
-      .style('z-index', 2001)
+      .style('z-index', 5)
 
     selectionTooltip = d3
       .select(_container)

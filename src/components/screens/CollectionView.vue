@@ -116,7 +116,7 @@
     </div>
 
     <div v-else-if="itemStatus !== 'Loaded'" class="mx-auto w-full px-4 py-6 tablet:px-6" style="max-width: 1200px">
-      <ItemNotFound :item-id="itemId" model="collection" />
+      <MvItemNotFound :item-id="itemId" model="collection" />
     </div>
 
     <div v-else-if="item" class="mx-auto w-full space-y-6 px-4 py-6 tablet:px-6 tablet:py-8" style="max-width: 1200px">
@@ -234,42 +234,34 @@
 </template>
 
 <script lang="ts">
-import {defineComponent} from 'vue'
+import {defineComponent, toRef} from 'vue'
 import PButton from 'primevue/button'
 import PDialog from 'primevue/dialog'
 import InputText from 'primevue/inputtext'
 import PTextarea from 'primevue/textarea'
 import {useHead} from '@unhead/vue'
 
-import CollectionDataSetEditor from '@/components/CollectionDataSetEditor.vue'
-import CollectionItemsTable from '@/components/CollectionItemsTable.vue'
-import CollectionPermissionsEditor from '@/components/CollectionPermissionsEditor.vue'
+import CollectionDataSetEditor from '@/components/collection/CollectionDataSetEditor.vue'
+import CollectionItemsTable from '@/components/collection/CollectionItemsTable.vue'
+import CollectionPermissionsEditor from '@/components/collection/CollectionPermissionsEditor.vue'
 import MvFloatField from '@/components/forms/MvFloatField.vue'
 import MvLayout from '@/components/layout/MvLayout.vue'
 import MvLoader from '@/components/common/MvLoader.vue'
 import MvOrcidLink from '@/components/common/MvOrcidLink.vue'
 import MvVisibilityToggle from '@/components/common/MvVisibilityToggle.vue'
 import MvRowActionMenu from '@/components/common/MvRowActionMenu.vue'
-import ItemNotFound from '@/components/common/ItemNotFound.vue'
+import MvItemNotFound from '@/components/common/MvItemNotFound.vue'
 import useAuth from '@/composition/auth'
 import useFormatters from '@/composition/formatters'
 import useItem from '@/composition/item'
 import {deleteCollection, removeCollectionEntity, updateCollection} from '@/api/mavedb/collections'
-import {checkPermissions} from '@/api/mavedb/permissions'
+import {useDatasetPermissions} from '@/composables/use-dataset-permissions'
 import type {RowAction} from '@/components/common/MvRowActionMenu.vue'
 import {components} from '@/schema/openapi'
 import {getErrorResponse} from '@/api/mavedb'
 
 type Collection = components['schemas']['Collection']
 type User = components['schemas']['User']
-
-interface CollectionAuthorization {
-  delete: boolean
-  publish: boolean
-  update: boolean
-  add_score_set: boolean
-  add_role: boolean
-}
 
 export default defineComponent({
   name: 'CollectionView',
@@ -279,7 +271,7 @@ export default defineComponent({
     CollectionItemsTable,
     CollectionPermissionsEditor,
     InputText,
-    ItemNotFound,
+    MvItemNotFound,
     MvFloatField,
     MvLayout,
     MvLoader,
@@ -295,13 +287,18 @@ export default defineComponent({
     itemId: {type: String, required: true}
   },
 
-  setup() {
+  setup(props) {
     const head = useHead({title: 'Collection'})
     const {userIsAuthenticated, userOrcidId} = useAuth()
+    const urnRef = toRef(props, 'itemId')
+    const COLLECTION_ACTIONS = ['delete', 'publish', 'update', 'add_score_set', 'add_role'] as const
+    const {permissions} = useDatasetPermissions('collection', urnRef, COLLECTION_ACTIONS)
+
     return {
       head,
       userIsAuthenticated,
       userOrcidId,
+      userIsAuthorized: permissions,
       ...useFormatters(),
       ...useItem<Collection>({itemTypeName: 'collection'})
     }
@@ -309,13 +306,6 @@ export default defineComponent({
 
   data() {
     return {
-      userIsAuthorized: {
-        delete: false,
-        publish: false,
-        update: false,
-        add_score_set: false,
-        add_role: false
-      } as CollectionAuthorization,
       editing: false,
       editName: '' as string,
       editDescription: '' as string,
@@ -354,7 +344,12 @@ export default defineComponent({
     roleGroups() {
       if (!this.item) return []
       return [
-        {role: 'admin', title: 'Admins', users: this.item.admins, visible: this.item.admins.length > 0 || this.userIsAuthorized.add_role},
+        {
+          role: 'admin',
+          title: 'Admins',
+          users: this.item.admins,
+          visible: this.item.admins.length > 0 || this.userIsAuthorized.add_role
+        },
         {role: 'editor', title: 'Editors', users: this.item.editors, visible: this.userIsAuthorized.add_role},
         {role: 'viewer', title: 'Viewers', users: this.item.viewers, visible: this.userIsAuthorized.add_role}
       ]
@@ -437,21 +432,7 @@ export default defineComponent({
     }
   },
 
-  async mounted() {
-    await this.checkAuthorization()
-  },
-
   methods: {
-    async checkAuthorization() {
-      try {
-        const actions = ['delete', 'publish', 'update', 'add_score_set', 'add_role'] as const
-        const results = await checkPermissions('collection', this.itemId, actions)
-        Object.assign(this.userIsAuthorized, results)
-      } catch (err) {
-        console.error('Error checking authorization:', err)
-      }
-    },
-
     async copyShareLink() {
       const url = `${window.location.origin}/collections/${this.itemId}`
       try {
@@ -515,7 +496,9 @@ export default defineComponent({
     },
 
     openEditor(editorRef: string) {
-      const editor = this.$refs[editorRef] as {openEditor?: () => void} | undefined
+      const ref = this.$refs[editorRef]
+      // Refs inside v-for return an array; unwrap if needed.
+      const editor = (Array.isArray(ref) ? ref[0] : ref) as {openEditor?: () => void} | undefined
       if (editor && typeof editor.openEditor === 'function') {
         editor.openEditor()
       }

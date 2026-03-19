@@ -24,3 +24,8 @@ export async function deleteExperiment(urn: string) {
   const response = await axios.delete(`${config.apiBaseUrl}/experiments/${encodeURIComponent(urn)}`)
   return response.data
 }
+
+export async function getExperimentScoreSets(urn: string) {
+  const response = await axios.get(`${config.apiBaseUrl}/experiments/${encodeURIComponent(urn)}/score-sets`)
+  return response.data
+}

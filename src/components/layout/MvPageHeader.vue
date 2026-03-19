@@ -1,6 +1,9 @@
 <template>
   <header class="border-b border-border bg-white px-4 tablet:px-6" :class="paddingClass">
     <div class="mx-auto" :style="{maxWidth}">
+      <div v-if="$slots.alerts" class="mb-4">
+        <slot name="alerts" />
+      </div>
       <div v-if="eyebrow || $slots.eyebrow" class="mb-1 text-sm font-semibold uppercase tracking-wider text-text-muted">
         <slot name="eyebrow">{{ eyebrow }}</slot>
       </div>
@@ -27,6 +30,8 @@
           <slot />
         </div>
       </template>
+
+      <slot name="metadata" />
     </div>
   </header>
 </template>

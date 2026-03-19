@@ -1,196 +1,151 @@
 <template>
   <MvLayout>
-    <div v-if="itemStatus == 'Loaded'" class="mave-publication mavedb-scroll-vertical">
-      <div class="mavedb-1000px-col">
-        <div class="mave-screen-title-bar">
-          <div class="mave-screen-title">{{ item.dbName }} {{ item.identifier }}: {{ item.title }}</div>
+    <template v-if="itemStatus === 'Loaded' && item" #header>
+      <MvPageHeader
+        :eyebrow="`${item.dbName} · ${item.identifier}`"
+        max-width="850px"
+        :title="item.title || 'Untitled publication'"
+      >
+        <template #subtitle>
+          <div class="-mt-2 flex flex-wrap items-center gap-x-3 text-sm text-text-secondary">
+            <span v-if="item.publicationJournal">
+              {{ item.publicationYear }} · <span class="italic">{{ item.publicationJournal }}</span>
+            </span>
+            <a
+              v-if="item.url"
+              class="inline-flex items-center gap-1 text-link no-underline"
+              :href="item.url"
+              rel="noopener noreferrer"
+              target="_blank"
+            >
+              <i class="pi pi-external-link text-[10px]" />
+              View article on the web
+            </a>
+          </div>
+        </template>
+      </MvPageHeader>
+    </template>
+
+    <!-- Loading -->
+    <MvPageLoading v-if="itemStatus === 'Loading' || itemStatus === 'NotLoaded'" />
+
+    <!-- Not found -->
+    <MvItemNotFound v-else-if="itemStatus === 'Failed'" :item-id="itemId" model="publication" />
+
+    <!-- Loaded -->
+    <div
+      v-else-if="itemStatus === 'Loaded' && item"
+      class="mx-auto w-full px-4 py-6 tablet:px-6 tablet:py-8"
+      style="max-width: 850px"
+    >
+      <!-- Reference -->
+      <div v-if="item.referenceHtml" class="mb-6 rounded-lg border border-border bg-white p-5">
+        <h3 class="mb-3 text-xs font-bold uppercase tracking-wider text-text-dark">Citation</h3>
+        <!-- eslint-disable-next-line vue/no-v-html -->
+        <div class="text-sm leading-relaxed text-text-secondary" v-html="item.referenceHtml"></div>
+      </div>
+
+      <!-- Abstract -->
+      <div
+        v-if="item.abstract"
+        class="mave-gradient-bar relative mb-6 overflow-hidden rounded-lg border border-border bg-white p-6"
+      >
+        <h3 class="mb-3 text-[15px] font-bold text-text-dark">Abstract</h3>
+        <!-- eslint-disable-next-line vue/no-v-html -->
+        <div class="pl-4 text-sm leading-relaxed text-text-secondary" v-html="markdownToHtml(item.abstract)"></div>
+      </div>
+
+      <!-- Linked score sets -->
+      <div class="overflow-hidden rounded-lg border border-border bg-white">
+        <div class="border-b border-border-light px-5 py-3.5">
+          <span class="text-sm font-bold text-text-dark">Linked Score Sets</span>
+        </div>
+        <MvLoader v-if="linkedScoreSetsLoading" text="Loading linked score sets..." />
+        <template v-else-if="linkedScoreSets.length > 0">
+          <div v-for="ss in linkedScoreSets" :key="ss.urn" class="border-b border-border-light last:border-b-0">
+            <MvScoreSetRow :score-set="ss" />
+          </div>
+        </template>
+        <div v-else class="px-5 py-6 text-center text-sm italic text-text-muted">
+          No published score sets are linked to this publication.
         </div>
       </div>
-      <div class="mavedb-1000px-col">
-        <div v-if="item.creationDate">
-          Created {{ formatDate(item.creationDate) }}, updated {{ formatDate(item.modificationDate) }}
-        </div>
-        <div v-if="item.publicationJournal">Published {{ item.publicationYear }} in {{ item.publicationJournal }}</div>
-        <div v-if="item.doi">
-          DOI:
-          <span>
-            <a :href="`${item.url}`" target="blank">{{ item.doi }}</a>
-          </span>
-        </div>
-
-        <div v-if="item.abstract">
-          <div class="mave-publication-section-title">Abstract</div>
-          <!-- eslint-disable-next-line vue/no-v-html -->
-          <div class="mave-publication-abstract" v-html="markdownToHtml(item.abstract)"></div>
-        </div>
-
-        <div class="mave-publication-section-title">Linked score sets</div>
-        <div class="mavedb-score-set-table-container">
-          <ScoreSetTable :data="publishedScoresets" :language="language" :scroll-x="true" :scroll-y="true" />
-        </div>
-      </div>
-    </div>
-    <div v-else-if="itemStatus == 'Loading' || itemStatus == 'NotLoaded'">
-      <PageLoading />
-    </div>
-    <div v-else>
-      <ItemNotFound :item-id="itemId" model="publication" />
     </div>
   </MvLayout>
 </template>
 
-<script>
-import _ from 'lodash'
+<script lang="ts">
+import {defineComponent} from 'vue'
 import {marked} from 'marked'
 import {useHead} from '@unhead/vue'
 
+import {searchScoreSetsByPublication} from '@/api/mavedb'
+import type {components} from '@/schema/openapi'
+import MvItemNotFound from '@/components/common/MvItemNotFound.vue'
+import MvScoreSetRow from '@/components/common/MvScoreSetRow.vue'
+import MvPageLoading from '@/components/common/MvPageLoading.vue'
 import MvLayout from '@/components/layout/MvLayout.vue'
-import ScoreSetTable from '@/components/ScoreSetTable.vue'
-import PageLoading from '@/components/common/PageLoading.vue'
-import ItemNotFound from '@/components/common/ItemNotFound.vue'
+import MvPageHeader from '@/components/layout/MvPageHeader.vue'
 import useItem from '@/composition/item.ts'
-import config from '@/config'
-import useFormatters from '@/composition/formatters'
-import axios from 'axios'
+import MvLoader from '@/components/common/MvLoader.vue'
 
-export default {
+type ShortScoreSet = components['schemas']['ShortScoreSet']
+type PublicationIdentifier = components['schemas']['PublicationIdentifier']
+
+export default defineComponent({
   name: 'PublicationIdentifierView',
-  components: {MvLayout, ScoreSetTable, PageLoading, ItemNotFound},
+
+  components: {MvItemNotFound, MvLayout, MvPageHeader, MvScoreSetRow, MvPageLoading, MvLoader},
 
   props: {
-    itemId: {
-      type: String,
-      required: true
-    },
-    name: {
-      type: String,
-      required: true
-    },
-    dbId: {
-      type: String,
-      required: true
-    }
+    itemId: {type: String, required: true},
+    name: {type: String, required: true},
+    dbId: {type: String, required: true}
   },
 
-  setup: (props) => {
+  setup(props) {
     useHead({title: 'Publication details'})
-
     return {
-      ...useFormatters(),
-      ...useItem({itemTypeName: props.name})
+      ...useItem<PublicationIdentifier>({itemTypeName: props.name})
     }
   },
 
   data() {
     return {
-      publication: null,
-      publishedScoresets: [],
-      language: {
-        emptyTable: 'No score sets have been linked to this publication.'
-      }
+      linkedScoreSets: [] as ShortScoreSet[],
+      linkedScoreSetsLoading: true
     }
   },
 
   watch: {
     itemId: {
-      handler: function (newValue, oldValue) {
-        if (newValue != oldValue) {
+      handler(newValue: string, oldValue: string) {
+        if (newValue !== oldValue) {
           this.setItemId(newValue)
         }
       },
       immediate: true
+    },
+    item(newValue: Record<string, unknown> | null) {
+      if (newValue) this.fetchLinkedScoreSets()
     }
-  },
-
-  mounted: async function () {
-    await this.search()
   },
 
   methods: {
-    markdownToHtml: function (markdown) {
-      return marked(markdown)
+    markdownToHtml(markdown: string): string {
+      return marked(markdown) as string
     },
-    get(...args) {
-      return _.get(...args)
-    },
-    search: async function () {
-      await this.fetchSearchResults()
-    },
-    fetchSearchResults: async function () {
+    async fetchLinkedScoreSets() {
+      this.linkedScoreSetsLoading = true
       try {
-        const response = await axios.post(
-          `${config.apiBaseUrl}/score-sets/search`,
-          {
-            publication_identifiers: [this.itemId],
-            databases: [this.dbId]
-          },
-          {
-            headers: {
-              accept: 'application/json'
-            }
-          }
-        )
-        // TODO (#130) catch errors in response
-        this.scoreSets = response.data?.scoreSets || []
-
-        // reset published score sets search results when using search bar
-        this.publishedScoresets = []
-        // Separate the response.data into published scoreset and unpublished scoreset.
-        for (let i = 0, len = this.scoreSets.length; i < len; i++) {
-          if (this.scoreSets[i].publishedDate != null) {
-            //if (this.scoreSets[i].private)
-            this.publishedScoresets.push(this.scoreSets[i])
-          }
-        }
-      } catch (err) {
-        console.log(`Error while loading search results")`, err)
+        const results = await searchScoreSetsByPublication(this.itemId, this.dbId)
+        this.linkedScoreSets = results.filter((ss: ShortScoreSet) => ss.publishedDate != null)
+      } catch {
+        this.linkedScoreSets = []
+      } finally {
+        this.linkedScoreSetsLoading = false
       }
     }
   }
-}
+})
 </script>
-
-<style scoped>
-/* Table */
-
-.mavedb-score-set-table-container {
-  display: flex;
-  flex-direction: column;
-  position: relative;
-  height: 100%;
-}
-
-/* Publication */
-
-.mave-publication {
-  padding: 20px;
-}
-
-/* Publication details */
-
-.mave-publication-section-title {
-  /*font-family: Helvetica, Verdana, Arial, sans-serif;*/
-  font-size: 24px;
-  padding: 0 0 5px 0;
-  border-bottom: 1px solid #ccc;
-  margin: 20px 0 10px 0;
-}
-
-.mave-publication-description {
-  /*font-family: Helvetica, Verdana, Arial, sans-serif;*/
-  margin: 0 0 10px 0;
-}
-
-/* Formatting in Markdown blocks */
-
-.mave-publication-abstract {
-  /*font-family: Helvetica, Verdana, Arial, sans-serif;*/
-  font-size: 20px;
-}
-
-.mave-publication-abstract:deep(code) {
-  color: #987cb8;
-  font-size: 87.5%;
-  word-wrap: break-word;
-}
-</style>

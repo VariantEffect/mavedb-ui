@@ -1,5 +1,5 @@
 <template>
-  <EmailPrompt
+  <MvEmailPrompt
     dialog="You must add an email address to your account to create or edit an experiment. You can do so below, or on the 'Settings' page."
     :is-first-login-prompt="false"
   />
@@ -164,7 +164,7 @@ import {useHead} from '@unhead/vue'
 
 import MvLayout from '@/components/layout/MvLayout.vue'
 import MvPageHeader from '@/components/layout/MvPageHeader.vue'
-import EmailPrompt from '@/components/common/EmailPrompt.vue'
+import MvEmailPrompt from '@/components/common/MvEmailPrompt.vue'
 import MvFieldError from '@/components/forms/MvFieldError.vue'
 import ExperimentFields from '@/components/forms/ExperimentFields.vue'
 import KeywordFields from '@/components/forms/KeywordFields.vue'
@@ -195,7 +195,7 @@ export default defineComponent({
     MvPageHeader,
     ExperimentFields,
     KeywordFields,
-    EmailPrompt,
+    MvEmailPrompt,
     ProgressSpinner,
     Step,
     StepList,

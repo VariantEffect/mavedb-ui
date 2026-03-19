@@ -28,9 +28,15 @@ MaveDB UI is the frontend for [MaveDB](https://mavedb.org), a database for Multi
 src/
 ├── assets/          # Global CSS and static images
 ├── components/
-│   ├── common/      # Reusable, generic UI components
+│   ├── calibration/ # Calibration display and editing components
+│   ├── collection/  # Collection management components
+│   ├── common/      # Reusable UI components (all prefixed Mv*)
+│   ├── dashboard/   # Dashboard tab components
+│   ├── forms/       # Form section components for creator/editor pages
 │   ├── layout/      # App shell: MvLayout, MvNavBar, MvFooter
-│   └── screens/     # Top-level route/page components (*View, *Screen, *Creator, *Editor)
+│   ├── score-set/   # Score set visualization and display components
+│   ├── screens/     # Top-level route/page components (*View, *Screen, *Creator, *Editor)
+│   └── variant/     # Variant display components
 ├── composables/     # Vue 3 composables (newer pattern)
 ├── composition/     # Composition functions (older pattern, similar purpose)
 ├── lib/             # Business logic, utilities, API helpers
@@ -43,7 +49,7 @@ src/
 ## Key Conventions
 
 - **Path alias**: Always use `@/` (maps to `src/`) instead of relative imports.
-- **Component naming**: PascalCase `.vue` files. Screens suffixed with `View`, `Screen`, `Creator`, or `Editor`.
+- **Component naming**: PascalCase `.vue` files. Components in `common/` are prefixed `Mv*`. Screens are suffixed with `View`, `Screen`, `Creator`, or `Editor`.
 - **TypeScript**: Prefer `.ts` for new files. Strict mode is enabled (`noUnusedLocals`, `noUnusedParameters`, `noFallthroughCasesInSwitch`).
 - **No test framework**: There is currently no automated test suite in this project.
 - **Node version**: 20.x is required.

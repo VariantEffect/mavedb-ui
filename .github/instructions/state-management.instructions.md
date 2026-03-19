@@ -29,7 +29,7 @@ The root store holds `routeProps` (Galaxy integration parameters) and registers 
 The `item.ts` and `items.js` modules are **not** statically registered. Instead, the `useItem()` and `useItems()` composables in `src/composition/` dynamically register Vuex modules with UUID-based namespaces at the component level:
 
 ```ts
-// src/composition/item.ts.ts (simplified)
+// src/composition/item.ts (simplified)
 export default function useItem({itemTypeName}) {
   const store = useStore()
   const namespace = uuid()
@@ -62,6 +62,35 @@ pubSearch.items // reactive suggestions list
 ```
 
 Used across all form pages (ExperimentCreator, ExperimentEditor, ScoreSetCreator, ScoreSetEditor, CalibrationEditor) for: publication search, taxonomy search, target gene search, gene name/assembly lookups, license lists, keyword options, and score set search.
+
+## Dataset Permissions (`src/composables/use-dataset-permissions.ts`)
+
+Wraps the `checkPermissions` API call with reactive state. Auto-fetches when the URN changes. Used by ExperimentSetView, ExperimentView, ScoreSetView, CollectionView, and ScoreSetCalibrationsView.
+
+```ts
+const {permissions} = useDatasetPermissions('score-set', urnRef, ['update', 'delete', 'publish'])
+// permissions.value.update, permissions.value.delete, etc.
+```
+
+## Score Set Downloads (`src/composables/use-score-set-downloads.ts`)
+
+Shared download logic for score set data files. Provides reactive state for the custom data dialog and methods for downloading scores, counts, mapped variants, metadata, custom data, and streaming annotated variants. Used by ScoreSetDownloads and MvVariantPreview.
+
+```ts
+const {downloadFile, downloadMultipleData, customDialogVisible, dataTypeOptions} = useScoreSetDownloads({
+  scoreSet: scoreSetRef
+})
+```
+
+## Variant Coordinates (`src/composables/use-variant-coordinates.ts`)
+
+Stateless utilities for resolving variant HGVS coordinates based on display mode (raw vs mapped). Shared between ScoreSetView (variant search, labels, sequence type detection) and ScoreSetHeatmap.
+
+```ts
+const {getHgvsNt, getHgvsPro, labelForVariant, sequenceTypeOptions} = useVariantCoordinates()
+const nt = getHgvsNt(variant, useMapped) // resolved NT coordinate
+const options = sequenceTypeOptions(variants, useMapped) // [{title: 'DNA', value: 'dna'}, ...]
+```
 
 ## Entity Cache (`src/composables/entity-cache.ts`)
 

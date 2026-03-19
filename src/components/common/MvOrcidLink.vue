@@ -1,12 +1,12 @@
 <template>
   <a
-    class="inline-flex items-center gap-1.5 align-middle font-medium no-underline"
+    class="inline-flex items-baseline gap-1.5 font-medium no-underline text-link"
     :class="sizeClass"
     :href="`https://orcid.org/${orcidId}`"
     rel="noopener noreferrer"
     target="_blank"
   >
-    <img alt="ORCID iD" :class="iconClass" src="@/assets/ORCIDiD_icon.png" />
+    <img alt="ORCID iD" class="relative top-px" :class="iconClass" src="@/assets/ORCIDiD_icon.png" />
     <slot>{{ label }}</slot>
   </a>
 </template>

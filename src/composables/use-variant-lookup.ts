@@ -16,6 +16,7 @@ import {
   getClassificationOddsPath,
   getPrimaryCalibration
 } from '@/lib/calibrations'
+import {triggerDownload} from '@/lib/downloads'
 import {getExperimentKeyword} from '@/lib/experiments'
 import {parseScoresOrCounts, type ScoresOrCountsRow} from '@/lib/scores'
 import type {MeasurementType} from '@/lib/measurement-types'
@@ -282,11 +283,7 @@ export function useVariantLookup(
 
     try {
       const data = await getVariantAnnotation(activeVariant.urn, annotationType)
-      const file = JSON.stringify(data)
-      const anchor = document.createElement('a')
-      anchor.href = 'data:text/json;charset=utf-8,' + encodeURIComponent(file)
-      anchor.download = activeVariant.urn + '_' + annotationType + '.json'
-      anchor.click()
+      triggerDownload(JSON.stringify(data), activeVariant.urn + '_' + annotationType + '.json', 'text/json')
     } catch (error: unknown) {
       let serverMessage = ''
       if (axios.isAxiosError(error) && error.response?.data) {

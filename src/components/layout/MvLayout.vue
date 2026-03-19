@@ -7,7 +7,7 @@
       Skip to content
     </a>
     <MvNavBar v-if="withNav" />
-    <EmailPrompt
+    <MvEmailPrompt
       v-if="withEmailPrompt"
       dialog="We're glad you're here! We require a valid email address to upload data to MaveDB, so that we can get in touch if there are any issues. You may add an email now, or do so at any time on the 'Settings' page."
       :is-first-login-prompt="true"
@@ -45,13 +45,13 @@ import {defineComponent} from 'vue'
 
 import MvNavBar from '@/components/layout/MvNavBar.vue'
 import MvFooter from '@/components/layout/MvFooter.vue'
-import EmailPrompt from '@/components/common/EmailPrompt.vue'
+import MvEmailPrompt from '@/components/common/MvEmailPrompt.vue'
 import useAuth from '@/composition/auth'
 
 export default defineComponent({
   name: 'MvLayout',
 
-  components: {EmailPrompt, MvFooter, MvNavBar},
+  components: {MvEmailPrompt, MvFooter, MvNavBar},
 
   props: {
     requireAuth: {

@@ -131,6 +131,7 @@ venv.bak/
 
 # MkDocs build output
 docs/site/
+public/docs/mavedb/
 
 # IDEs and editors
 .vscode/

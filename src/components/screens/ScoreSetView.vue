@@ -351,6 +351,7 @@
             :license="item.license"
             :meta-analyzes-urns="item.metaAnalyzesScoreSetUrns"
             parent-label="Parent experiment"
+            parent-route-name="experiment"
             :parent-urn="item.experiment?.urn"
             :superseded-urn="item.supersededScoreSet?.urn"
             :superseding-urn="item.supersedingScoreSet?.urn"

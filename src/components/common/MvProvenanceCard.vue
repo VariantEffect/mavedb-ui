@@ -34,18 +34,36 @@
       <MvDetailRow v-if="metaAnalyzesUrns && metaAnalyzesUrns.length > 0" label="Meta-analysis for">
         <div class="flex flex-col gap-1">
           <MvEntityLink
-            v-for="urn in metaAnalyzesUrns"
+            v-for="urn in displayedMetaAnalyzesUrns"
             :key="urn"
             entity-type="scoreSet"
             :urn="urn"
             :use-cache="true"
           />
+          <button
+            v-if="hasCollapsedMetaAnalyzesUrns"
+            class="mt-1 w-fit text-left text-sm text-link hover:underline flex items-center gap-1"
+            type="button"
+            @click="metaAnalyzesExpanded = !metaAnalyzesExpanded"
+          >
+            <FontAwesomeIcon
+              aria-hidden="true"
+              class="transition-transform duration-200 w-4 h-4"
+              :icon="'fa-solid fa-chevron-down'"
+              :style="{transform: metaAnalyzesExpanded ? 'rotate(180deg)' : 'rotate(0deg)'}"
+            />
+            <span>
+              {{
+                metaAnalyzesExpanded
+                  ? 'Show fewer'
+                  : `Show ${metaAnalyzesUrns.length - META_ANALYZES_VISIBLE_COUNT} more`
+              }}
+            </span>
+          </button>
         </div>
       </MvDetailRow>
       <MvDetailRow v-if="parentUrn" :label="parentLabel">
-        <router-link class="text-link" :to="{name: parentRouteName, params: {urn: parentUrn}}">{{
-          parentUrn
-        }}</router-link>
+        <MvEntityLink :entity-type="parentRouteName" :urn="parentUrn" :use-cache="true" />
       </MvDetailRow>
       <MvDetailRow v-if="externalLinks && externalLinks.igvf && externalLinks.igvf.url" label="External data">
         <a
@@ -75,7 +93,7 @@
 
 <script lang="ts">
 import {defineComponent, type PropType} from 'vue'
-
+import {FontAwesomeIcon} from '@fortawesome/vue-fontawesome'
 import igvfLogo from '@/assets/igvf-tag.png'
 import ucscLogo from '@/assets/logo-ucsc-genome-browser.png'
 import MvDetailRow from '@/components/common/MvDetailRow.vue'
@@ -86,11 +104,11 @@ import {components} from '@/schema/openapi'
 type Contributor = components['schemas']['Contributor']
 type License = components['schemas']['ShortLicense']
 type ExternalLinks = Record<string, components['schemas']['ExternalLink'] | undefined>
+const META_ANALYZES_VISIBLE_COUNT = 3
 
 export default defineComponent({
   name: 'MvProvenanceCard',
-
-  components: {MvDetailRow, MvEntityLink, MvOrcidLink},
+  components: {FontAwesomeIcon, MvDetailRow, MvEntityLink, MvOrcidLink},
 
   props: {
     title: {type: String as PropType<string | null>, default: null},
@@ -107,7 +125,26 @@ export default defineComponent({
   },
 
   data() {
-    return {igvfLogo, ucscLogo}
+    return {
+      igvfLogo,
+      ucscLogo,
+      metaAnalyzesExpanded: false,
+      META_ANALYZES_VISIBLE_COUNT
+    }
+  },
+
+  computed: {
+    displayedMetaAnalyzesUrns() {
+      if (this.metaAnalyzesExpanded || this.metaAnalyzesUrns.length <= this.META_ANALYZES_VISIBLE_COUNT) {
+        return this.metaAnalyzesUrns
+      }
+
+      return this.metaAnalyzesUrns.slice(0, this.META_ANALYZES_VISIBLE_COUNT)
+    },
+
+    hasCollapsedMetaAnalyzesUrns() {
+      return this.metaAnalyzesUrns.length > this.META_ANALYZES_VISIBLE_COUNT
+    }
   }
 })
 </script>

@@ -6,12 +6,13 @@
           <div class="flex flex-col gap-3">
             <MvStatusMessage v-if="item.supersedingScoreSet" severity="warn">
               A newer version of this score set is available:
-              <router-link
+              <MvEntityLink
                 class="font-semibold underline"
-                :to="{name: 'scoreSet', params: {urn: item.supersedingScoreSet.urn}}"
-              >
-                {{ item.supersedingScoreSet.urn }} </router-link
-              >. The data below may be outdated.
+                display="urn"
+                entity-type="scoreSet"
+                :urn="item.supersedingScoreSet.urn"
+                :use-cache="true"
+              />. The data below may be outdated.
             </MvStatusMessage>
             <ScoreSetProcessingStatus :score-set="item" />
           </div>
@@ -348,7 +349,9 @@
             :data-usage-policy="item.dataUsagePolicy"
             :external-links="item.externalLinks || item.experiment?.externalLinks"
             :license="item.license"
+            :meta-analyzes-urns="item.metaAnalyzesScoreSetUrns"
             parent-label="Parent experiment"
+            parent-route-name="experiment"
             :parent-urn="item.experiment?.urn"
             :superseded-urn="item.supersededScoreSet?.urn"
             :superseding-urn="item.supersedingScoreSet?.urn"
@@ -455,6 +458,7 @@ import MvEmailPrompt from '@/components/common/MvEmailPrompt.vue'
 import MvItemNotFound from '@/components/common/MvItemNotFound.vue'
 import MvAssayFactsCard from '@/components/common/MvAssayFactsCard.vue'
 import MvCollectionStrip from '@/components/common/MvCollectionStrip.vue'
+import MvEntityLink from '@/components/common/MvEntityLink.vue'
 import MvExternalIdentifiersCard from '@/components/common/MvExternalIdentifiersCard.vue'
 import MvMetadataLine from '@/components/common/MvMetadataLine.vue'
 import MvPageLoading from '@/components/common/MvPageLoading.vue'
@@ -504,6 +508,7 @@ export default {
     MvItemNotFound,
     MvAssayFactsCard,
     MvCollectionStrip,
+    MvEntityLink,
     MvExternalIdentifiersCard,
     MvEmptyState,
     MvLayout,

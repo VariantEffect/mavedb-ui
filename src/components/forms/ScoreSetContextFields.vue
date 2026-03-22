@@ -148,14 +148,12 @@
     <!-- Read-only context display (editor mode - supersedes/meta-analysis info) -->
     <div v-if="!wizardMode && supersedesUrn">
       Supersedes:
-      <router-link :to="{name: 'scoreSet', params: {urn: supersedesUrn}}">
-        {{ supersedesTitle || supersedesUrn }}
-      </router-link>
+      <MvEntityLink entity-type="scoreSet" :urn="supersedesUrn" :use-cache="true" />
     </div>
     <div v-if="!wizardMode && metaAnalyzesUrns && metaAnalyzesUrns.length > 0">
       Meta-analysis for:<br />
       <div v-for="urn of metaAnalyzesUrns" :key="urn">
-        <router-link :to="{name: 'scoreSet', params: {urn}}">{{ urn }}</router-link>
+        <MvEntityLink entity-type="scoreSet" :urn="urn" :use-cache="true" />
       </div>
     </div>
   </div>
@@ -167,6 +165,7 @@ import AutoComplete from 'primevue/autocomplete'
 import Select from 'primevue/select'
 import ToggleSwitch from 'primevue/toggleswitch'
 
+import MvEntityLink from '@/components/common/MvEntityLink.vue'
 import MvFloatField from '@/components/forms/MvFloatField.vue'
 import {components} from '@/schema/openapi'
 import MvTagField from '@/components/forms/MvTagField.vue'
@@ -180,7 +179,7 @@ type ScoreSet = components['schemas']['ScoreSet']
 export default defineComponent({
   name: 'ScoreSetContextFields',
 
-  components: {AutoComplete, MvFloatField, MvTagField, PSelect: Select, ToggleSwitch},
+  components: {AutoComplete, MvEntityLink, MvFloatField, MvTagField, PSelect: Select, ToggleSwitch},
 
   props: {
     // Fixed experiment context (from route prop or loaded item)
@@ -199,7 +198,6 @@ export default defineComponent({
     metaAnalyzesLoading: {type: Boolean, default: false},
     // Read-only display (editor mode)
     supersedesUrn: {type: String, default: null},
-    supersedesTitle: {type: String, default: null},
     metaAnalyzesUrns: {type: Array as PropType<string[]>, default: () => []},
     // Common
     validationErrors: {type: Object as PropType<ValidationErrors>, default: () => ({})},
@@ -222,7 +220,6 @@ export default defineComponent({
       desc: scoreSetContextDescriptions(),
       isEmptySentinel
     }
-  },
-
+  }
 })
 </script>

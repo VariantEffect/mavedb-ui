@@ -36,6 +36,8 @@
             :experiment="experiment"
             :fixed-experiment-title="experiment?.title"
             :fixed-experiment-urn="experiment?.urn"
+            :meta-analyzes-urns="item.metaAnalyzesScoreSetUrns || []"
+            :supersedes-urn="item.supersededScoreSet?.urn"
             :validation-errors="validationErrors"
             @update:experiment="onExperimentSelected($event)"
           />

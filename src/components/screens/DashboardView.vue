@@ -117,6 +117,8 @@
         :has-data="hasCalibrations"
         :loading="loading"
         @create-calibration="openCalibrationEditor()"
+        @delete-calibration="onDeleteCalibration"
+        @edit-calibration="editCalibrationInEditor"
         @retry="fetchCalibrations"
       />
     </div>
@@ -172,6 +174,7 @@ import {useCalibrationDialog} from '@/composables/use-calibration-dialog'
 import {deleteScoreSet} from '@/api/mavedb/score-sets'
 import {deleteExperiment} from '@/api/mavedb/experiments'
 import {deleteCollection} from '@/api/mavedb/collections'
+import {deleteScoreCalibration} from '@/api/mavedb/calibrations'
 
 export default defineComponent({
   name: 'DashboardView',
@@ -348,6 +351,15 @@ export default defineComponent({
         this.fetchCollections()
       } catch {
         this.$toast.add({severity: 'error', summary: 'Failed to delete collection', life: 5000})
+      }
+    },
+    async onDeleteCalibration(urn: string) {
+      try {
+        await deleteScoreCalibration(urn)
+        this.$toast.add({severity: 'success', summary: 'Calibration deleted', life: 3000})
+        this.fetchCalibrations()
+      } catch {
+        this.$toast.add({severity: 'error', summary: 'Failed to delete calibration', life: 5000})
       }
     },
     async saveChildCalibration() {

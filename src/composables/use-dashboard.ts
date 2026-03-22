@@ -33,7 +33,7 @@ import {components} from '@/schema/openapi'
 type ShortScoreSet = components['schemas']['ShortScoreSet']
 type ShortExperiment = components['schemas']['ShortExperiment']
 type Collection = components['schemas']['Collection']
-type ScoreCalibration = components['schemas']['ScoreCalibration']
+type ScoreCalibration = components['schemas']['ScoreCalibrationWithScoreSetUrn']
 
 // TODO: Add a calibrations cross-tab filter (e.g. "show calibrations for this score set")
 // once the /me/calibrations API endpoint lands and calibrations include a scoreSetUrn.
@@ -186,6 +186,14 @@ export function useDashboard(): UseDashboardReturn {
     viewer: (c) => c.role === 'viewer'
   }
 
+  const calibrationPredicates: Record<string, (c: ScoreCalibration) => boolean> = {
+    published: (c) => !c.private,
+    unpublished: (c) => !!c.private,
+    primary: (c) => !!c.primary,
+    general: (c) => !c.researchUseOnly,
+    research: (c) => !!c.researchUseOnly
+  }
+
   function applyPredicates<T>(items: T[], filters: string[], predicates: Record<string, (item: T) => boolean>): T[] {
     if (filters.includes('all')) return items
     const fns = filters.map((f) => predicates[f]).filter(Boolean)
@@ -236,7 +244,7 @@ export function useDashboard(): UseDashboardReturn {
     return applyPredicates(items, collectionFilter.value, collectionPredicates)
   })
 
-  // Calibration filtering (no filter predicates yet — just search)
+  // Calibration filtering
   const filteredCalibrations = computed(() => {
     let items = calibrations.value
 
@@ -245,7 +253,7 @@ export function useDashboard(): UseDashboardReturn {
       items = items.filter((c) => c.title.toLowerCase().includes(q) || c.notes?.toLowerCase().includes(q))
     }
 
-    return items
+    return applyPredicates(items, calibrationFilter.value, calibrationPredicates)
   })
 
   // Whether unfiltered data exists (for empty state differentiation)

@@ -129,7 +129,9 @@ export async function getScoreSetByUrn(urn: string): Promise<ScoreSet> {
   return response.data
 }
 
-// TODO: Replace with real endpoint when /me/calibrations API is added
-export async function getMyCalibrations(): Promise<ScoreCalibration[]> {
-  return []
+export async function getMyCalibrations(): Promise<components['schemas']['ScoreCalibrationWithScoreSetUrn'][]> {
+  const response = await axios.get(`${config.apiBaseUrl}/score-calibrations/me`, {
+    headers: {accept: 'application/json'}
+  })
+  return response.data || []
 }

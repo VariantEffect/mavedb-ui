@@ -142,6 +142,7 @@ export default {
 
     async fetchMyCollections() {
       this.myCollections = {admin: [], editor: [], viewer: []}
+      if (!this.userIsAuthenticated) return
       try {
         this.myCollections = await getMyCollections()
       } catch {

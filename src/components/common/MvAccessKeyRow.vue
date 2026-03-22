@@ -2,16 +2,16 @@
   <div v-if="keyId" class="flex items-center gap-2">
     <span
       aria-label="API key"
-      class="relative max-w-[450px] flex-1 overflow-hidden text-ellipsis whitespace-nowrap rounded-md border border-border py-1.5 pl-3 pr-8 font-mono text-sm tracking-wide text-text-secondary"
+      class="flex max-w-[450px] flex-1 items-center gap-1 overflow-hidden rounded-md border border-border py-1.5 pl-3 pr-1 font-mono text-sm tracking-wide text-text-secondary"
       :class="keyDisplayClass"
       role="status"
     >
-      <span :aria-hidden="!revealed" aria-live="polite">{{ revealed ? keyId : maskedKey }}</span>
+      <span class="flex-1 overflow-hidden text-ellipsis whitespace-nowrap" :aria-hidden="!revealed" aria-live="polite">{{ revealed ? keyId : maskedKey }}</span>
       <span v-if="!revealed" class="sr-only">Key hidden. Use the reveal button to show it.</span>
       <PButton
         :aria-label="revealed ? 'Hide API key' : 'Reveal API key'"
         :aria-pressed="revealed"
-        class="absolute right-0.5 top-1/2 -translate-y-1/2 opacity-50 transition-opacity hover:bg-transparent hover:!text-sage hover:opacity-100"
+        class="shrink-0 opacity-50 transition-opacity hover:bg-transparent hover:!text-sage hover:opacity-100"
         :class="revealed ? '!text-sage opacity-100' : ''"
         :icon="revealed ? 'pi pi-eye-slash' : 'pi pi-eye'"
         rounded

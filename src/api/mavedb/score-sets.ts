@@ -115,3 +115,11 @@ export async function downloadMappedVariants(urn: string) {
   const response = await axios.get(`${config.apiBaseUrl}/score-sets/${encodeURIComponent(urn)}/mapped-variants`)
   return response.data
 }
+
+export async function getRecentlyPublishedScoreSets(signal?: AbortSignal): Promise<components['schemas']['ScoreSet'][]> {
+  const response = await axios.get(`${config.apiBaseUrl}/score-sets/recently-published`, {
+    headers: {accept: 'application/json'},
+    signal
+  })
+  return response.data || []
+}

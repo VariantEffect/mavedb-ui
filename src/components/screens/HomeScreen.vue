@@ -191,31 +191,23 @@
         <div class="text-lg font-bold text-text-primary">Recently published</div>
         <router-link class="text-sm text-link" to="/search">View all</router-link>
       </div>
-      <div class="overflow-hidden rounded-lg border border-border bg-white">
-        <div
-          v-for="(pub, idx) in RECENT_PUBLICATIONS"
-          :key="idx"
-          class="border-b border-border-light px-5 py-3.5 last:border-b-0"
-        >
-          <router-link
-            class="mb-1.5 block text-sm font-semibold leading-relaxed text-link hover:underline"
-            :to="pub.route"
-            >{{ pub.title }}</router-link
-          >
-          <div class="flex flex-wrap gap-2">
-            <span
-              v-for="chip in pub.chips"
-              :key="chip.label"
-              class="rounded-full border px-2 py-0.5 text-xs font-medium"
-              :class="
-                chip.calibrated
-                  ? 'border-calibrated-border bg-calibrated-light text-calibrated'
-                  : 'border-chip-border bg-chip text-text-secondary'
-              "
-              >{{ chip.label }}</span
-            >
-          </div>
+      <div class="overflow-hidden rounded-lg border border-border bg-white divide-y divide-border-light">
+        <MvScoreSetRow
+          v-for="scoreSet in recentlyPublished"
+          :key="scoreSet.urn"
+          :score-set="scoreSet"
+          :show-description="false"
+        />
+        <div v-if="recentlyPublishedError" class="px-5 py-4 text-sm text-text-secondary">
+          Could not load recently published datasets.
         </div>
+        <div
+          v-else-if="recentlyPublished.length === 0 && !recentlyPublishedLoading"
+          class="px-5 py-4 text-sm text-text-secondary"
+        >
+          No recently published datasets.
+        </div>
+        <MvLoader v-else-if="recentlyPublishedLoading" text="Loading recently published score sets..." />
       </div>
     </section>
   </MvLayout>
@@ -230,20 +222,20 @@ import InputText from 'primevue/inputtext'
 import Select from 'primevue/select'
 
 import MvLayout from '@/components/layout/MvLayout.vue'
-import {
-  BROWSE_CATEGORIES,
-  CONTRIBUTE_CATEGORIES,
-  FEATURED_COLLECTIONS,
-  RECENT_PUBLICATIONS,
-  WATERMARK_BARS
-} from '@/data/home'
+import MvLoader from '@/components/common/MvLoader.vue'
+import MvScoreSetRow from '@/components/common/MvScoreSetRow.vue'
+import {BROWSE_CATEGORIES, CONTRIBUTE_CATEGORIES, FEATURED_COLLECTIONS, WATERMARK_BARS} from '@/data/home'
 import {NEWS_ITEMS, NEWS_TAG_STYLES} from '@/data/news'
 import {SEARCH_COLORS, SEARCH_PLACEHOLDERS, SEARCH_TYPES} from '@/data/search'
+import {getRecentlyPublishedScoreSets} from '@/api/mavedb/score-sets'
+import {components} from '@/schema/openapi'
+
+type ScoreSet = components['schemas']['ScoreSet']
 
 export default defineComponent({
   name: 'HomeScreen',
 
-  components: {FontAwesomeIcon, InputText, MvLayout, PSelect: Select},
+  components: {FontAwesomeIcon, InputText, MvLayout, MvScoreSetRow, MvLoader, PSelect: Select},
 
   setup() {
     useHead({title: 'Home'})
@@ -258,8 +250,7 @@ export default defineComponent({
       SEARCH_COLORS,
       BROWSE_CATEGORIES,
       CONTRIBUTE_CATEGORIES,
-      FEATURED_COLLECTIONS,
-      RECENT_PUBLICATIONS
+      FEATURED_COLLECTIONS
     }
   },
 
@@ -268,7 +259,10 @@ export default defineComponent({
       searchType: 'hgvs',
       searchText: '',
       isDesktop: false,
-      mdQuery: null as MediaQueryList | null
+      mdQuery: null as MediaQueryList | null,
+      recentlyPublished: [] as ScoreSet[],
+      recentlyPublishedLoading: false,
+      recentlyPublishedError: false
     }
   },
 
@@ -282,10 +276,19 @@ export default defineComponent({
     }
   },
 
-  mounted() {
+  async mounted() {
     this.mdQuery = window.matchMedia('(min-width: 768px)')
     this.isDesktop = this.mdQuery.matches
     this.mdQuery.addEventListener('change', this.onMediaChange)
+
+    this.recentlyPublishedLoading = true
+    try {
+      this.recentlyPublished = await getRecentlyPublishedScoreSets()
+    } catch {
+      this.recentlyPublishedError = true
+    } finally {
+      this.recentlyPublishedLoading = false
+    }
   },
 
   beforeUnmount() {

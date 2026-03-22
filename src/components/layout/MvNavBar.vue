@@ -77,46 +77,6 @@
         </li>
       </ul>
 
-      <!-- Notification bell (authenticated, desktop) -->
-      <div v-if="userIsAuthenticated" class="relative hidden shrink-0 md:block">
-        <button
-          aria-haspopup="true"
-          aria-label="Recent activity notifications"
-          class="flex h-8 w-8 cursor-pointer items-center justify-center rounded-full border-none bg-transparent text-text-secondary transition-colors hover:bg-border-light"
-          title="Recent activity"
-          @click="toggleBell"
-        >
-          <FontAwesomeIcon class="text-lg" icon="fa-solid fa-bell" />
-          <span
-            class="pointer-events-none absolute right-0.5 top-0.5 flex h-4 w-4 items-center justify-center rounded-full bg-danger text-[0.625rem] font-bold text-white"
-            >5</span
-          >
-        </button>
-        <Popover ref="bellPopoverRef" class="nav-popover nav-bell-popover">
-          <div class="w-[340px]">
-            <div
-              class="border-b border-border-light px-4 py-3 text-xs font-bold uppercase tracking-wider text-text-muted"
-            >
-              Recent Activity
-            </div>
-            <div class="py-2">
-              <div
-                v-for="(activity, idx) in stubActivities"
-                :key="idx"
-                class="flex flex-col gap-1 border-b border-border-light px-4 py-3 text-sm text-text-secondary last:border-b-0"
-              >
-                <span>
-                  <a class="font-semibold text-link" :href="activity.href">{{ activity.title }}</a>
-                  {{ ' ' }}
-                  <span class="text-text-muted">{{ activity.verb }}</span>
-                </span>
-                <span class="text-xs text-neutral-400">{{ activity.time }}</span>
-              </div>
-            </div>
-          </div>
-        </Popover>
-      </div>
-
       <!-- User avatar (authenticated, desktop) -->
       <div v-if="userIsAuthenticated" class="relative hidden shrink-0 md:block">
         <button
@@ -172,29 +132,29 @@
     <Transition name="mobile-menu">
       <div v-if="mobileMenuOpen" id="mobile-nav-menu" class="border-t border-border-light bg-white px-6 py-4 md:hidden">
         <nav aria-label="Mobile navigation" class="flex flex-col gap-1">
-        <router-link class="mobile-nav-link" to="/mavemd" @click="mobileMenuOpen = false">MaveMD</router-link>
-        <router-link class="mobile-nav-link" to="/search" @click="mobileMenuOpen = false">Search</router-link>
-        <template v-if="userIsAuthenticated">
-          <router-link class="mobile-nav-link" to="/create-experiment" @click="mobileMenuOpen = false"
-            >New Experiment</router-link
-          >
-          <router-link class="mobile-nav-link" to="/create-score-set" @click="mobileMenuOpen = false"
-            >New Score Set</router-link
-          >
-        </template>
-        <router-link class="mobile-nav-link" to="/about" @click="mobileMenuOpen = false">About</router-link>
-        <router-link class="mobile-nav-link" to="/help" @click="mobileMenuOpen = false">Help</router-link>
+          <router-link class="mobile-nav-link" to="/mavemd" @click="mobileMenuOpen = false">MaveMD</router-link>
+          <router-link class="mobile-nav-link" to="/search" @click="mobileMenuOpen = false">Search</router-link>
+          <template v-if="userIsAuthenticated">
+            <router-link class="mobile-nav-link" to="/create-experiment" @click="mobileMenuOpen = false"
+              >New Experiment</router-link
+            >
+            <router-link class="mobile-nav-link" to="/create-score-set" @click="mobileMenuOpen = false"
+              >New Score Set</router-link
+            >
+          </template>
+          <router-link class="mobile-nav-link" to="/about" @click="mobileMenuOpen = false">About</router-link>
+          <router-link class="mobile-nav-link" to="/help" @click="mobileMenuOpen = false">Help</router-link>
 
-        <hr class="my-2 border-border-light" />
+          <hr class="my-2 border-border-light" />
 
-        <template v-if="userIsAuthenticated">
-          <router-link class="mobile-nav-link" to="/settings" @click="mobileMenuOpen = false">Settings</router-link>
-          <router-link class="mobile-nav-link" to="/dashboard" @click="mobileMenuOpen = false">Dashboard</router-link>
-          <a class="mobile-nav-link" href="#" @click.prevent="mobileSignOut">Sign out</a>
-        </template>
-        <a v-else class="mobile-nav-link" href="#" @click.prevent="mobileSignIn">Sign in</a>
-      </nav>
-    </div>
+          <template v-if="userIsAuthenticated">
+            <router-link class="mobile-nav-link" to="/settings" @click="mobileMenuOpen = false">Settings</router-link>
+            <router-link class="mobile-nav-link" to="/dashboard" @click="mobileMenuOpen = false">Dashboard</router-link>
+            <a class="mobile-nav-link" href="#" @click.prevent="mobileSignOut">Sign out</a>
+          </template>
+          <a v-else class="mobile-nav-link" href="#" @click.prevent="mobileSignIn">Sign in</a>
+        </nav>
+      </div>
     </Transition>
   </nav>
 </template>
@@ -212,20 +172,6 @@ import type {NavMenuItem} from '@/types/components'
 
 // @ts-expect-error Vuex has no type declarations; see store/index.ts
 import {useStore} from 'vuex'
-
-// TODO: replace stub activities with real data from the backend
-const STUB_ACTIVITIES = [
-  {title: 'CHEK2 Kinase Activity Assay – Draft', verb: 'edited by you', time: '2 days ago', href: '#'},
-  {title: 'KCNQ4 Variant Effect – Draft', verb: 'calibration created by you', time: '5 days ago', href: '#'},
-  {title: 'BRCA1 Combined Functional Meta-analysis', verb: 'published', time: 'Nov 5, 2024', href: '#'},
-  {
-    title: 'TP53 Saturation Genome Editing Panel',
-    verb: 'you were added as a contributor',
-    time: 'Oct 28, 2024',
-    href: '#'
-  },
-  {title: 'BRCA1 SGE Exon 20 – ClinVar', verb: 'calibration published', time: 'Oct 14, 2024', href: '#'}
-]
 
 const ADD_MENU_ITEMS = [
   {
@@ -253,8 +199,7 @@ export default defineComponent({
       config,
       MAVEDB_PRODUCTION,
       ZULIP_BETA_TESTERS,
-      addMenuItems: ADD_MENU_ITEMS,
-      stubActivities: STUB_ACTIVITIES
+      addMenuItems: ADD_MENU_ITEMS
     }
   },
 
@@ -302,20 +247,12 @@ export default defineComponent({
 
   methods: {
     toggleAddMenu(event: Event) {
-      ;(this.$refs.bellPopoverRef as InstanceType<typeof Popover>)?.hide()
       ;(this.$refs.userMenuRef as InstanceType<typeof Popover>)?.hide()
       ;(this.$refs.addMenuRef as InstanceType<typeof Popover>)?.toggle(event)
     },
 
-    toggleBell(event: Event) {
-      ;(this.$refs.addMenuRef as InstanceType<typeof Popover>)?.hide()
-      ;(this.$refs.userMenuRef as InstanceType<typeof Popover>)?.hide()
-      ;(this.$refs.bellPopoverRef as InstanceType<typeof Popover>)?.toggle(event)
-    },
-
     toggleUserMenu(event: Event) {
       ;(this.$refs.addMenuRef as InstanceType<typeof Popover>)?.hide()
-      ;(this.$refs.bellPopoverRef as InstanceType<typeof Popover>)?.hide()
       ;(this.$refs.userMenuRef as InstanceType<typeof Popover>)?.toggle(event)
     },
 
@@ -329,7 +266,6 @@ export default defineComponent({
 
     hideAllPopovers() {
       ;(this.$refs.addMenuRef as InstanceType<typeof Popover>)?.hide()
-      ;(this.$refs.bellPopoverRef as InstanceType<typeof Popover>)?.hide()
       ;(this.$refs.userMenuRef as InstanceType<typeof Popover>)?.hide()
     },
 

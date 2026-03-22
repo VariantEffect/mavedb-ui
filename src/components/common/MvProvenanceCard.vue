@@ -25,15 +25,22 @@
         <span v-else class="italic text-text-muted">No special data usage policies.</span>
       </MvDetailRow>
       <MvDetailRow v-if="supersedingUrn" label="Superseded by">
-        <router-link class="text-link" :to="{name: 'scoreSet', params: {urn: supersedingUrn}}">{{
-          supersedingUrn
-        }}</router-link>
+        <MvEntityLink entity-type="scoreSet" :urn="supersedingUrn" :use-cache="true" />
       </MvDetailRow>
       <MvDetailRow v-else-if="supersededUrn || !supersedingUrn" label="Version" value="Current version" />
       <MvDetailRow v-if="supersededUrn" label="Supersedes">
-        <router-link class="text-link" :to="{name: 'scoreSet', params: {urn: supersededUrn}}">{{
-          supersededUrn
-        }}</router-link>
+        <MvEntityLink entity-type="scoreSet" :urn="supersededUrn" :use-cache="true" />
+      </MvDetailRow>
+      <MvDetailRow v-if="metaAnalyzesUrns && metaAnalyzesUrns.length > 0" label="Meta-analysis for">
+        <div class="flex flex-col gap-1">
+          <MvEntityLink
+            v-for="urn in metaAnalyzesUrns"
+            :key="urn"
+            entity-type="scoreSet"
+            :urn="urn"
+            :use-cache="true"
+          />
+        </div>
       </MvDetailRow>
       <MvDetailRow v-if="parentUrn" :label="parentLabel">
         <router-link class="text-link" :to="{name: parentRouteName, params: {urn: parentUrn}}">{{
@@ -41,13 +48,23 @@
         }}</router-link>
       </MvDetailRow>
       <MvDetailRow v-if="externalLinks && externalLinks.igvf && externalLinks.igvf.url" label="External data">
-        <a class="inline-flex items-center gap-1.5 text-link no-underline" :href="externalLinks.igvf.url" rel="noopener noreferrer" target="_blank">
+        <a
+          class="inline-flex items-center gap-1.5 text-link no-underline"
+          :href="externalLinks.igvf.url"
+          rel="noopener noreferrer"
+          target="_blank"
+        >
           <img alt="IGVF" class="h-4" :src="igvfLogo" />
           View in IGVF Portal
         </a>
       </MvDetailRow>
       <MvDetailRow v-if="externalLinks && externalLinks.ucsc && externalLinks.ucsc.url" label="Genome browser">
-        <a class="inline-flex items-center gap-1.5 text-link no-underline" :href="externalLinks.ucsc.url" rel="noopener noreferrer" target="_blank">
+        <a
+          class="inline-flex items-center gap-1.5 text-link no-underline"
+          :href="externalLinks.ucsc.url"
+          rel="noopener noreferrer"
+          target="_blank"
+        >
           <img alt="UCSC" class="h-4" :src="ucscLogo" />
           View in UCSC Browser
         </a>
@@ -62,6 +79,7 @@ import {defineComponent, type PropType} from 'vue'
 import igvfLogo from '@/assets/igvf-tag.png'
 import ucscLogo from '@/assets/logo-ucsc-genome-browser.png'
 import MvDetailRow from '@/components/common/MvDetailRow.vue'
+import MvEntityLink from '@/components/common/MvEntityLink.vue'
 import MvOrcidLink from '@/components/common/MvOrcidLink.vue'
 import {components} from '@/schema/openapi'
 
@@ -72,7 +90,7 @@ type ExternalLinks = Record<string, components['schemas']['ExternalLink'] | unde
 export default defineComponent({
   name: 'MvProvenanceCard',
 
-  components: {MvDetailRow, MvOrcidLink},
+  components: {MvDetailRow, MvEntityLink, MvOrcidLink},
 
   props: {
     title: {type: String as PropType<string | null>, default: null},
@@ -83,6 +101,7 @@ export default defineComponent({
     parentLabel: {type: String, default: 'Parent'},
     parentRouteName: {type: String, default: 'experimentSet'},
     parentUrn: {type: String as PropType<string | null>, default: null},
+    metaAnalyzesUrns: {type: Array as PropType<string[]>, default: () => []},
     supersededUrn: {type: String as PropType<string | null>, default: null},
     supersedingUrn: {type: String as PropType<string | null>, default: null}
   },

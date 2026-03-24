@@ -5,6 +5,8 @@ import vue from '@vitejs/plugin-vue'
 import basicSsl from '@vitejs/plugin-basic-ssl'
 import tailwindcss from '@tailwindcss/vite'
 
+const __dirname = import.meta.dirname
+
 export default defineConfig({
   plugins: [vue(), basicSsl(), tailwindcss()],
   resolve: {

@@ -1,266 +1,289 @@
 <template>
-  <DefaultLayout>
-    <div v-if="itemStatus === 'Loaded' && item">
-      <div class="mave-screen-title-bar">
-        <div>Calibrations for: {{ getScoreSetShortName(item) }}</div>
-        <div class="calibration-title-actions">
-          <PrimeButton
-            v-if="userIsAuthorizedToAddCalibration"
-            icon="pi pi-plus"
-            label="New calibration"
-            @click="createCalibration(item.urn)"
-          />
-          <PrimeButton icon="pi pi-refresh" title="Reload calibrations" @click="reloadItem()" />
-          <PrimeButton icon="pi pi-download" title="Download calibration JSON" @click="downloadCalibrations()" />
+  <MvEmailPrompt
+    v-if="editorVisible"
+    dialog="You must add an email address to your account to create or edit calibrations. You can do so below, or on the 'Settings' page."
+    :is-first-login-prompt="false"
+  />
+  <MvLayout>
+    <template #header>
+      <MvPageHeader
+        v-if="itemStatus === 'Loaded' && item"
+        eyebrow="Calibrations"
+        max-width="max-w-5xl"
+        :title="item.title || 'Untitled Score Set'"
+        variant="editor"
+      >
+        <template #subtitle>
+          <router-link
+            class="inline-block font-mono text-xs text-link"
+            :to="{name: 'scoreSet', params: {urn: item.urn}}"
+            >&larr; Back to score set view</router-link
+          >
+        </template>
+        <template #actions>
+          <!-- Desktop: individual buttons -->
+          <div class="hidden tablet:contents">
+            <PButton
+              v-if="scoreSetPermissions.add_calibration"
+              icon="pi pi-plus"
+              label="New calibration"
+              @click="openCalibrationEditor(item.urn)"
+            />
+            <PButton icon="pi pi-refresh" severity="secondary" title="Reload calibrations" @click="reloadItem()" />
+            <PButton
+              icon="pi pi-download"
+              severity="secondary"
+              title="Download calibration JSON"
+              @click="downloadCalibrations()"
+            />
+          </div>
+          <!-- Mobile: collapsed menu -->
+          <MvRowActionMenu class="tablet:hidden" :actions="headerActions" />
+        </template>
+      </MvPageHeader>
+    </template>
+
+    <div v-if="itemStatus === 'Loaded' && item" class="max-w-screen-xl px-4 py-7 tablet:px-6">
+      <MvEmptyState
+        v-if="!item.scoreCalibrations?.length"
+        :action-label="scoreSetPermissions.add_calibration ? '+ Create a calibration' : undefined"
+        description="Score calibrations define functional classification ranges for clinical variant interpretation. Add one to help users interpret scores from this dataset."
+        title="No calibrations yet"
+        @action="openCalibrationEditor(item.urn)"
+      />
+      <template v-else>
+        <!-- ── MOBILE: Card layout ────────────────────────── -->
+        <div class="flex flex-col gap-4 tablet:hidden">
+          <div v-for="cal in sortedCalibrations" :key="cal.id" class="relative overflow-hidden rounded-lg border border-border bg-white mave-gradient-bar">
+            <div class="px-4 py-4">
+              <div class="mb-2 flex items-start gap-2">
+                <div class="min-w-0 flex-1">
+                  <span class="text-sm font-semibold text-text-primary">{{ cal.title || '—' }}</span>
+                </div>
+                <MvRowActionMenu :actions="calibrationActions(cal)" />
+              </div>
+
+              <div class="mb-3 flex flex-wrap items-center gap-1.5">
+                <MvBadge :value="cal.private ? 'unpublished' : 'published'" />
+                <MvBadge v-if="cal.primary" value="primary" />
+                <MvBadge :value="cal.investigatorProvided ? 'investigator' : 'community'" />
+                <MvBadge :value="cal.researchUseOnly ? 'research' : 'general'" />
+              </div>
+
+              <p v-if="cal.notes" class="mb-3 text-xs leading-relaxed text-text-secondary">{{ cal.notes }}</p>
+
+              <div class="text-xs text-text-muted">
+                <strong>{{ cal.functionalClassifications?.length ?? 0 }}</strong>
+                classification {{ (cal.functionalClassifications?.length ?? 0) === 1 ? 'range' : 'ranges' }}
+              </div>
+
+              <!-- Expandable classification ranges -->
+              <div v-if="cal.functionalClassifications && cal.functionalClassifications.length" class="mt-3">
+                <button
+                  class="flex cursor-pointer items-center gap-1.5 rounded-md border border-border px-3 py-2 text-xs font-semibold text-text-secondary transition-colors hover:bg-gray-50 active:bg-gray-100"
+                  @click="expandedRanges[cal.id] = !expandedRanges[cal.id]"
+                >
+                  <i class="pi pi-list text-[11px]" />
+                  {{ expandedRanges[cal.id] ? 'Hide classification ranges' : 'Show classification ranges' }}
+                </button>
+                <div v-if="expandedRanges[cal.id]" class="mt-2">
+                  <CalibrationTable :score-calibration="cal" :score-calibration-name="cal.title || ''" />
+                </div>
+              </div>
+            </div>
+          </div>
         </div>
-      </div>
-      <div class="p-d-flex p-flex-column p-ai-center" style="width: 100%">
-        <div v-if="item.scoreCalibrations.length === 0">
-          <p>No calibrations found for this score set.</p>
-        </div>
-        <div v-else>
+
+        <!-- ── DESKTOP: DataTable layout ─────────────────── -->
+        <div class="cal-card mave-gradient-bar hidden tablet:block">
           <DataTable
             v-model:expanded-rows="expandedRows"
-            class="mavedb-calibrations-datatable"
+            class="cal-datatable"
             data-key="id"
-            :multi-sort-meta="[
-              {field: 'primary', order: -1},
-              {field: 'private', order: -1},
-              {field: 'title', order: 1}
-            ]"
-            :paginator="item.scoreCalibrations.length > 15"
+            :paginator="(item.scoreCalibrations?.length ?? 0) > 15"
             :rows="15"
-            :sort-mode="'multiple'"
             :striped-rows="true"
-            :value="item.scoreCalibrations"
+            :value="sortedCalibrations"
           >
             <Column :expander="true" header-style="width:3rem" />
 
-            <!-- Data columns -->
             <Column field="title" header="Title" :sortable="true">
-              <template #body="{data}"> {{ data.title || '—' }} </template>
-            </Column>
-            <Column field="notes" header="Notes">
               <template #body="{data}">
-                <span
-                  :class="expandedNotes[data.id] ? 'expanded multi-line' : 'truncate multi-line'"
-                  :title="data.notes"
-                >
-                  {{ data.notes || '—' }}
-                </span>
-                <PrimeButton
-                  v-if="data.notes && data.notes.length > 100 && !expandedNotes[data.id]"
-                  label="See more"
-                  size="small"
-                  variant="text"
-                  @click="expandedNotes[data.id] = true"
-                />
-                <PrimeButton
-                  v-if="data.notes && expandedNotes[data.id]"
-                  label="See less"
-                  size="small"
-                  variant="text"
-                  @click="expandedNotes[data.id] = false"
-                />
-              </template>
-            </Column>
-            <Column body-class="mave-align-center" field="private" header="Published" :sortable="true">
-              <template #body="{data}">
-                <Tag
-                  :class="`mavedb-calibration-tag ${data.private ? 'tag-private' : 'tag-published'}`"
-                  :value="data.private ? 'No' : 'Yes'"
-                />
-              </template>
-            </Column>
-            <Column body-class="mave-align-center" field="primary" header="Primary" :sortable="true">
-              <template #body="{data}">
-                <Tag
-                  :class="`mavedb-calibration-tag ${data.primary ? 'tag-primary' : 'tag-non-primary'}`"
-                  :value="data.primary ? 'Yes' : 'No'"
-                />
-              </template>
-            </Column>
-            <Column body-class="mave-align-center" field="investigatorProvided" header="Investigator" :sortable="true">
-              <template #body="{data}">
-                <Tag
-                  :class="`mavedb-calibration-tag ${data.investigatorProvided ? 'tag-investigator-provided' : 'tag-non-investigator'}`"
-                  :value="data.investigatorProvided ? 'Yes' : 'No'"
-                />
-              </template>
-            </Column>
-            <Column body-class="mave-align-center" field="researchUseOnly" header="Use type" :sortable="true">
-              <template #body="{data}">
-                <Tag
-                  :class="`mavedb-calibration-tag ${data.researchUseOnly ? 'tag-research-use' : 'tag-general-use'}`"
-                  :value="data.researchUseOnly ? 'Research' : 'General'"
-                />
-              </template>
-            </Column>
-            <Column
-              body-class="mave-align-center"
-              field="functionalClassificationCount"
-              header="#Ranges"
-              :sortable="true"
-            >
-              <template #body="{data}">{{
-                data.functionalClassifications
-                  ? data.functionalClassifications.length
-                  : data.functionalClassificationCount || 0
-              }}</template>
-            </Column>
-            <Column header="Actions">
-              <template #body="{data}">
-                <div class="calibration-actions">
-                  <router-link
-                    :title="'View calibration ' + (data.title || data.urn) + ' in Score Set'"
-                    :to="{name: 'scoreSet', params: {urn: item.urn}, query: {calibration: data.urn}}"
+                <div>
+                  <span class="font-semibold text-text-primary">{{ data.title || '—' }}</span>
+                  <p
+                    v-if="data.notes"
+                    class="mt-0.5 text-xs leading-snug text-text-muted line-clamp-2"
+                    :title="data.notes"
                   >
-                    <PrimeButton icon="pi pi-eye" rounded severity="info" size="small" />
-                  </router-link>
-                  <!-- Only an authenticated user will be able to edit these properties -->
-                  <template v-if="userIsAuthenticated">
-                    <PrimeButton
-                      v-if="calibrationAuthorizations[data.urn]?.update"
-                      icon="pi pi-pencil"
-                      :rounded="true"
-                      size="small"
-                      title="Edit calibration"
-                      @click="editCalibration(data.urn)"
-                    />
-                    <PrimeButton
-                      v-if="calibrationAuthorizations[data.urn]?.change_rank && data.primary"
-                      icon="pi pi-angle-double-down"
-                      :rounded="true"
-                      severity="warn"
-                      size="small"
-                      title="Demote calibration to non-primary"
-                      @click="demoteCalibration(data.urn)"
-                    />
-                    <PrimeButton
-                      v-if="calibrationAuthorizations[data.urn]?.change_rank && !data.primary"
-                      :disabled="data.researchUseOnly || primaryExists"
-                      icon="pi pi-angle-double-up"
-                      :rounded="true"
-                      severity="warn"
-                      size="small"
-                      title="Promote calibration to primary"
-                      @click="promoteCalibration(data.urn)"
-                    />
-                    <PrimeButton
-                      v-if="calibrationAuthorizations[data.urn]?.publish && data.private"
-                      icon="pi pi-check-circle"
-                      :rounded="true"
-                      severity="success"
-                      size="small"
-                      title="Publish calibration"
-                      @click="publishCalibration(data.urn)"
-                    />
-                    <PrimeButton
-                      v-if="calibrationAuthorizations[data.urn]?.delete"
-                      icon="pi pi-trash"
-                      :rounded="true"
-                      severity="danger"
-                      size="small"
-                      title="Delete calibration"
-                      @click="deleteCalibration(data.urn)"
-                    />
-                  </template>
+                    {{ data.notes }}
+                  </p>
                 </div>
               </template>
             </Column>
+            <Column
+              body-class="text-center"
+              field="private"
+              header="Status"
+              header-style="width:5.5rem"
+              :sortable="true"
+            >
+              <template #body="{data}">
+                <MvBadge :value="data.private ? 'unpublished' : 'published'" />
+              </template>
+            </Column>
+            <Column body-class="text-center" field="primary" header="Rank" header-style="width:4.5rem" :sortable="true">
+              <template #body="{data}">
+                <MvBadge v-if="data.primary" value="primary" />
+                <span v-else class="text-xs text-text-muted">&mdash;</span>
+              </template>
+            </Column>
+            <Column
+              body-class="text-center"
+              field="investigatorProvided"
+              header="Type"
+              header-style="width:7rem"
+              :sortable="true"
+            >
+              <template #body="{data}">
+                <MvBadge :value="data.investigatorProvided ? 'investigator' : 'community'" />
+              </template>
+            </Column>
+            <Column
+              body-class="text-center"
+              field="researchUseOnly"
+              header="Use"
+              header-style="width:5rem"
+              :sortable="true"
+            >
+              <template #body="{data}">
+                <MvBadge :value="data.researchUseOnly ? 'research' : 'general'" />
+              </template>
+            </Column>
+            <Column
+              body-class="text-center"
+              header="Ranges"
+              header-style="width:3rem"
+              :sortable="true"
+            >
+              <template #body="{data}">{{ data.functionalClassifications?.length ?? 0 }}</template>
+            </Column>
+            <Column header-style="width:3rem">
+              <template #body="{data}">
+                <MvRowActionMenu :actions="calibrationActions(data)" />
+              </template>
+            </Column>
             <template #expansion="{data}">
-              <div style="padding: 0.75rem 1rem">
+              <div class="bg-[#f8faf9] px-6 py-5">
                 <CalibrationTable
                   v-if="data.functionalClassifications && data.functionalClassifications.length"
                   :score-calibration="data"
                   :score-calibration-name="data.title || ''"
                 />
-                <div v-else style="font-size: 0.85rem; color: var(--text-color-secondary)">
+                <div v-else class="text-sm text-text-secondary">
                   No functional classifications defined for this calibration.
                 </div>
               </div>
             </template>
           </DataTable>
         </div>
-      </div>
+      </template>
     </div>
-    <div v-else-if="['NotLoaded', 'Loading'].includes(itemStatus)" class="p-m-4">
-      <PageLoading />
+    <div v-else-if="['NotLoaded', 'Loading'].includes(itemStatus)" class="p-8">
+      <MvPageLoading />
     </div>
     <div v-else>
-      <ItemNotFound :item-id="itemId" :item-type="'Score Set'" />
+      <MvItemNotFound :item-id="itemId" model="Score Set" />
     </div>
-  </DefaultLayout>
-  <EmailPrompt
-    v-if="editorVisible"
-    dialog="You must add an email address to your account to create or edit calibrations. You can do so below, or on the 'Settings' page."
-    :is-first-login-prompt="false"
-  />
+  </MvLayout>
   <PrimeDialog
     v-model:visible="editorVisible"
     :close-on-escape="false"
-    :header="editingCalibrationUrn ? 'Edit Calibration' : 'Create New Calibration'"
+    :header="editorDialogHeader"
     modal
     :style="{maxWidth: '90%', width: '75rem'}"
-    @hide="cancelEditCreate"
+    @hide="closeCalibrationEditor"
   >
     <CalibrationEditor
-      :calibration-draft-ref="calibrationDraftRef"
+      ref="calibrationEditorRef"
       :calibration-urn="editingCalibrationUrn"
-      :classes-draft-ref="calibrationDraftClassesFileRef"
       :score-set-urn="editingScoreSetUrn"
-      :validation-errors="editorValidationErrors"
-      @canceled="cancelEditCreate"
+      @canceled="closeCalibrationEditor"
+      @saved="onCalibrationSaved"
     />
     <template #footer>
-      <PrimeButton icon="pi pi-times" label="Close" severity="secondary" @click="cancelEditCreate" />
-      <PrimeButton icon="pi pi-save" label="Save Changes" severity="success" @click="saveChildCalibration" />
+      <PButton icon="pi pi-times" label="Close" severity="secondary" @click="closeCalibrationEditor" />
+      <PButton icon="pi pi-save" label="Save Changes" severity="success" @click="saveChildCalibration" />
     </template>
   </PrimeDialog>
 </template>
 
 <script lang="ts">
 import {useHead} from '@unhead/vue'
-import DefaultLayout from '@/components/layout/DefaultLayout.vue'
-import config from '@/config'
-import PrimeButton from 'primevue/button'
+import MvLayout from '@/components/layout/MvLayout.vue'
+import MvPageHeader from '@/components/layout/MvPageHeader.vue'
+import MvEmptyState from '@/components/common/MvEmptyState.vue'
+import {
+  checkPermissions,
+  publishScoreCalibration,
+  demoteScoreCalibration,
+  promoteScoreCalibration,
+  deleteScoreCalibration,
+  getScoreSetCalibrations
+} from '@/api/mavedb'
+import {useDatasetPermissions} from '@/composables/use-dataset-permissions'
+import axios from 'axios'
+import Button from 'primevue/button'
 import Column from 'primevue/column'
 import DataTable from 'primevue/datatable'
-import Tag from 'primevue/tag'
-import useItem from '@/composition/item'
+import useItem from '@/composition/item.ts'
 import useScopedId from '@/composables/scoped-id'
 import useAuth from '@/composition/auth'
-import PageLoading from '../common/PageLoading.vue'
-import CalibrationTable from '../CalibrationTable.vue'
+import {useCalibrationDialog} from '@/composables/use-calibration-dialog'
+import MvPageLoading from '@/components/common/MvPageLoading.vue'
+import CalibrationTable from '@/components/calibration/CalibrationTable.vue'
 import {getScoreSetShortName} from '@/lib/score-sets'
-import {saveCalibration} from '@/lib/calibrations'
-import axios from 'axios'
 import {useConfirm} from 'primevue/useconfirm'
-import CalibrationEditor, {DraftScoreCalibration} from '../CalibrationEditor.vue'
-import EmailPrompt from '@/components/common/EmailPrompt.vue'
-import {ref} from 'vue'
+import CalibrationEditor from '@/components/calibration/CalibrationEditor.vue'
+import MvEmailPrompt from '@/components/common/MvEmailPrompt.vue'
+import {ref, toRef} from 'vue'
 import PrimeDialog from 'primevue/dialog'
-import ItemNotFound from '../common/ItemNotFound.vue'
+import MvItemNotFound from '@/components/common/MvItemNotFound.vue'
+import MvBadge from '@/components/common/MvBadge.vue'
+import MvRowActionMenu, {type RowAction} from '@/components/common/MvRowActionMenu.vue'
+import {components} from '@/schema/openapi'
 
-interface CalibrationAuthorizations {
-  update: boolean
-  delete: boolean
-  publish: boolean
-  change_rank: boolean
+type ScoreSet = components['schemas']['ScoreSet']
+
+const CALIBRATION_ACTIONS = ['update', 'delete', 'publish', 'change_rank'] as const
+type CalibrationAuthorizations = Record<(typeof CALIBRATION_ACTIONS)[number], boolean>
+
+function extractErrorDetail(error: unknown): string {
+  if (
+    axios.isAxiosError(error) &&
+    error.response?.data?.detail &&
+    (typeof error.response.data.detail === 'string' || error.response.data.detail instanceof String)
+  ) {
+    return error.response.data.detail as string
+  }
+  return String(error)
 }
 
 export default {
   name: 'ScoreSetCalibrationsView',
   components: {
     CalibrationEditor,
-    EmailPrompt,
-    PrimeButton,
-    DefaultLayout,
+    MvEmailPrompt,
+    MvBadge,
+    MvEmptyState,
+    MvRowActionMenu,
+    PButton: Button,
+    MvLayout,
+    MvPageHeader,
     DataTable,
-    ItemNotFound,
+    MvItemNotFound,
     Column,
-    Tag,
-    PageLoading,
+    MvPageLoading,
     CalibrationTable,
     PrimeDialog
   },
@@ -275,57 +298,55 @@ export default {
 
     const {userIsAuthenticated} = useAuth()
     const confirm = useConfirm()
-    const editorVisible = ref(false)
-    const editingCalibrationUrn = ref<string | undefined>(undefined)
-    const editingScoreSetUrn = ref<string | undefined>(undefined)
+    const urnRef = toRef(props, 'itemId')
+    const {permissions: scoreSetPermissions} = useDatasetPermissions('score-set', urnRef, ['add_calibration'] as const)
 
-    const calibrationDraftRef = ref<{value: DraftScoreCalibration | null}>({value: null})
-    const calibrationDraftClassesFileRef = ref<{value: File | null}>({value: null})
-    const editorValidationErrors = ref<Record<string, string>>({})
-
-    const userIsAuthorizedToAddCalibration = ref(false)
     const calibrationAuthorizations = ref<Record<string, CalibrationAuthorizations>>({})
 
     return {
       head,
-      config,
       userIsAuthenticated,
-      userIsAuthorizedToAddCalibration,
-      calibrationDraftClassesFileRef,
+      scoreSetPermissions,
       calibrationAuthorizations,
       confirm,
-      calibrationDraftRef,
-      editorValidationErrors,
-      editorVisible,
-      editingCalibrationUrn,
-      editingScoreSetUrn,
       getScoreSetShortName,
-      // @ts-expect-error dynamic store module typing
-      ...useItem({itemTypeName: 'scoreSet'}),
+      ...useCalibrationDialog(),
+      ...useItem<ScoreSet>({itemTypeName: 'scoreSet'}),
       ...useScopedId()
     }
   },
   data() {
     return {
-      // Expanded calibration rows (PrimeVue expects raw row objects)
       expandedRows: [] as Array<Record<string, unknown>>,
-      // Expanded notes state per calibration ID
-      expandedNotes: {} as Record<string, boolean>
+      expandedRanges: {} as Record<number, boolean>
     }
   },
   computed: {
     primaryExists(): boolean {
       if (this.item && this.item.scoreCalibrations) {
-        // Treat each item as calibration with a boolean primary
-        return this.item.scoreCalibrations.some((calibration: {primary?: boolean}) => !!calibration.primary)
+        return this.item.scoreCalibrations.some((calibration) => !!calibration.primary)
       }
       return false
+    },
+    headerActions(): RowAction[] {
+      const actions: RowAction[] = []
+      if (this.scoreSetPermissions.add_calibration) {
+        actions.push({label: 'New calibration', handler: () => this.openCalibrationEditor(this.item!.urn)})
+      }
+      actions.push({label: 'Reload calibrations', handler: () => this.reloadItem()})
+      actions.push({label: 'Download calibration JSON', handler: () => this.downloadCalibrations()})
+      return actions
+    },
+    sortedCalibrations(): components['schemas']['ScoreCalibration'][] {
+      if (!this.item?.scoreCalibrations) return []
+      return [...this.item.scoreCalibrations].sort((a, b) => {
+        return this.calibrationSortKey(a) - this.calibrationSortKey(b)
+      })
     }
   },
   watch: {
     item(newValue) {
       this.head.patch({title: newValue ? `Calibrations for ${getScoreSetShortName(newValue)}` : undefined})
-      // Clear expanded rows when underlying item changes (avoid stale expanded state)
       this.expandedRows = []
     },
     itemId: {
@@ -333,8 +354,7 @@ export default {
         if (newValue !== oldValue) {
           this.setItemId(newValue)
           await this.ensureItemLoaded()
-          await this.checkScoreSetAuthorization()
-          for (const calibration of this.item.scoreCalibrations) {
+          for (const calibration of this.item?.scoreCalibrations || []) {
             await this.checkCalibrationAuthorization(calibration.urn)
           }
         }
@@ -343,90 +363,88 @@ export default {
     }
   },
   methods: {
-    checkScoreSetAuthorization: async function () {
-      try {
-        const response = await axios.get(
-          `${config.apiBaseUrl}/permissions/user-is-permitted/score-set/${this.itemId}/add_calibration`
-        )
-        this.userIsAuthorizedToAddCalibration = response.data
-      } catch (err) {
-        console.log(`Error to get authorization:`, err)
+    calibrationSortKey(cal: components['schemas']['ScoreCalibration']): number {
+      if (cal.primary) return 0
+      if (cal.private) return 4
+      if (cal.researchUseOnly) return 3
+      if (cal.investigatorProvided) return 1
+      return 2 // community
+    },
+
+    calibrationActions(data: components['schemas']['ScoreCalibration']): RowAction[] {
+      const actions: RowAction[] = [
+        {
+          label: 'View in score set',
+          to: {name: 'scoreSet', params: {urn: this.item!.urn}, query: {calibration: data.urn}}
+        }
+      ]
+
+      if (!this.userIsAuthenticated) return actions
+
+      const auth = this.calibrationAuthorizations[data.urn]
+      if (!auth) return actions
+
+      actions.push({separator: true})
+
+      if (auth.update) {
+        actions.push({
+          label: 'Edit calibration',
+          handler: () => this.editCalibrationInEditor(data.urn)
+        })
       }
+
+      if (auth.change_rank && data.primary) {
+        actions.push({
+          label: 'Demote to non-primary',
+          handler: () => this.demoteCalibration(data.urn)
+        })
+      }
+
+      if (auth.change_rank && !data.primary) {
+        actions.push({
+          label: 'Promote to primary',
+          disabled: data.researchUseOnly || this.primaryExists,
+          handler: () => this.promoteCalibration(data.urn)
+        })
+      }
+
+      if (auth.publish && data.private) {
+        actions.push({
+          label: 'Publish calibration',
+          handler: () => this.publishCalibration(data.urn)
+        })
+      }
+
+      if (auth.delete) {
+        actions.push({separator: true})
+        actions.push({
+          label: 'Delete calibration',
+          danger: true,
+          handler: () => this.deleteCalibration(data.urn)
+        })
+      }
+
+      return actions
     },
 
     checkCalibrationAuthorization: async function (calibrationUrn: string) {
-      const calibrationAuthorizations: CalibrationAuthorizations = {
-        update: false,
-        delete: false,
-        publish: false,
-        change_rank: false
-      }
-
-      try {
-        for (const action of Object.keys(calibrationAuthorizations) as Array<keyof CalibrationAuthorizations>) {
-          const response = await axios.get(
-            `${config.apiBaseUrl}/permissions/user-is-permitted/score-calibration/${calibrationUrn}/${action}`
-          )
-          calibrationAuthorizations[action] = response.data
-        }
-      } catch (err) {
-        console.log(`Error to get authorization:`, err)
-      }
-
+      const result = await checkPermissions('score-calibration', calibrationUrn, CALIBRATION_ACTIONS)
       this.calibrationAuthorizations = {
         ...this.calibrationAuthorizations,
-        [calibrationUrn]: calibrationAuthorizations
+        [calibrationUrn]: result
       }
     },
 
-    editCalibration(calibrationUrn: string) {
-      this.editorVisible = true
-      this.editingCalibrationUrn = calibrationUrn
-      this.editingScoreSetUrn = undefined
-    },
+    async saveChildCalibration() {
+      const editor = this.$refs.calibrationEditorRef as InstanceType<typeof CalibrationEditor> | undefined
+      if (!editor) return
 
-    createCalibration(scoreSetUrn: string) {
-      this.editorVisible = true
-      this.editingCalibrationUrn = undefined
-      this.editingScoreSetUrn = scoreSetUrn
-    },
+      const result = await editor.saveCalibration()
+      if (!result || result.success) return
 
-    cancelEditCreate: function () {
-      // Close the editor dialog
-      this.editorVisible = false
-      // Reset editor state
-      this.editingCalibrationUrn = undefined
-      this.editingScoreSetUrn = undefined
-      // Reset draft
-      this.calibrationDraftRef.value = null
-      this.calibrationDraftClassesFileRef.value = null
-      // Reset validation errors
-      this.editorValidationErrors = {}
-      console.log('Calibration edit/create canceled')
-    },
-
-    saveChildCalibration: async function () {
-      if (!this.calibrationDraftRef.value) return
-
-      const result = await saveCalibration({
-        draft: this.calibrationDraftRef.value,
-        classesFile: this.calibrationDraftClassesFileRef.value,
-        existingUrn: this.editingCalibrationUrn
-      })
-
-      if (result.success) {
-        this.$toast.add({
-          severity: 'success',
-          summary: 'Calibration Saved',
-          detail: 'Calibration saved successfully.',
-          life: 4000
-        })
-        this.editorVisible = false
-        this.editingCalibrationUrn = undefined
-        this.editingScoreSetUrn = undefined
-        this.editorValidationErrors = {}
-        await this.reloadItem()
-      } else if (result.error === 'email_required') {
+      // Save succeeded — handled via @saved event / onCalibrationSaved.
+      // Only error cases reach here.
+      if (result.error === 'email_required') {
         this.$toast.add({
           severity: 'error',
           summary: 'Email Required',
@@ -435,14 +453,19 @@ export default {
           life: 6000
         })
       } else if (result.error === 'validation') {
-        this.editorValidationErrors = {...result.validationErrors}
+        const count = Object.keys(result.validationErrors).length
+        this.$toast.add({
+          severity: 'error',
+          summary: `Please fix ${count} validation ${count === 1 ? 'error' : 'errors'} before saving.`,
+          life: 5000
+        })
       } else if (result.error === 'generic') {
         this.$toast.add({
           severity: 'error',
           summary: `Encountered an error saving calibration: ${result.message}`,
           life: 4000
         })
-      } else {
+      } else if (result.error === 'unknown') {
         console.error('Error saving calibration:', result.raw)
         this.$toast.add({
           severity: 'error',
@@ -453,21 +476,28 @@ export default {
       }
     },
 
+    async onCalibrationSaved() {
+      this.$toast.add({
+        severity: 'success',
+        summary: 'Calibration Saved',
+        detail: 'Calibration saved successfully.',
+        life: 4000
+      })
+      this.closeCalibrationEditor()
+      await this.reloadItem()
+    },
+
     publishCalibration: async function (calibrationUrn: string) {
       this.confirm.require({
         message:
           'Are you sure you want to publish this score calibration? Once published, you will be unable to edit its functional ranges or other details.',
         header: 'Confirm Score Set Publication',
         icon: 'pi pi-exclamation-triangle',
-        acceptLabel: 'Publish',
-        acceptClass: 'p-button-success',
-        rejectLabel: 'Cancel',
-        rejectClass: 'p-button',
-        acceptIcon: 'pi pi-check',
-        rejectIcon: 'pi pi-times',
+        acceptProps: {label: 'Publish', severity: 'success', icon: 'pi pi-check'},
+        rejectProps: {label: 'Cancel', severity: 'secondary', icon: 'pi pi-times'},
         accept: async () => {
           try {
-            await axios.post(`${config.apiBaseUrl}/score-calibrations/${calibrationUrn}/publish`)
+            await publishScoreCalibration(calibrationUrn)
             this.$toast.add({
               severity: 'success',
               summary: 'Calibration Published',
@@ -477,30 +507,21 @@ export default {
             await this.reloadItem()
           } catch (error) {
             console.error('Error publishing calibration:', error)
-            const errorMessage =
-              axios.isAxiosError(error) &&
-              error.response?.data?.detail &&
-              (typeof error.response.data.detail === 'string' || error.response.data.detail instanceof String)
-                ? error.response.data.detail
-                : error
             this.$toast.add({
               severity: 'error',
               summary: 'Calibration Not Published',
-              detail: `An error occurred while publishing the calibration: ${errorMessage}. Please try again later.`,
+              detail: `An error occurred while publishing the calibration: ${extractErrorDetail(error)}. Please try again later.`,
               life: 4000
             })
           }
         },
-        reject: () => {
-          //callback to execute when user rejects the action
-          //do nothing
-        }
+        reject: () => {}
       })
     },
 
     demoteCalibration: async function (calibrationUrn: string) {
       try {
-        await axios.post(`${config.apiBaseUrl}/score-calibrations/${calibrationUrn}/demote-from-primary`)
+        await demoteScoreCalibration(calibrationUrn)
         this.$toast.add({
           severity: 'success',
           summary: 'Calibration Demoted',
@@ -510,16 +531,10 @@ export default {
         await this.reloadItem()
       } catch (error) {
         console.error('Error demoting calibration:', error)
-        const errorMessage =
-          axios.isAxiosError(error) &&
-          error.response?.data?.detail &&
-          (typeof error.response.data.detail === 'string' || error.response.data.detail instanceof String)
-            ? error.response.data.detail
-            : error
         this.$toast.add({
           severity: 'error',
           summary: 'Calibration Not Demoted',
-          detail: `An error occurred while demoting the calibration: ${errorMessage}. Please try again later.`,
+          detail: `An error occurred while demoting the calibration: ${extractErrorDetail(error)}. Please try again later.`,
           life: 4000
         })
       }
@@ -527,7 +542,7 @@ export default {
 
     promoteCalibration: async function (calibrationUrn: string) {
       try {
-        await axios.post(`${config.apiBaseUrl}/score-calibrations/${calibrationUrn}/promote-to-primary`)
+        await promoteScoreCalibration(calibrationUrn)
         this.$toast.add({
           severity: 'success',
           summary: 'Calibration Promoted',
@@ -537,16 +552,10 @@ export default {
         await this.reloadItem()
       } catch (error) {
         console.error('Error promoting calibration:', error)
-        const errorMessage =
-          axios.isAxiosError(error) &&
-          error.response?.data?.detail &&
-          (typeof error.response.data.detail === 'string' || error.response.data.detail instanceof String)
-            ? error.response.data.detail
-            : error
         this.$toast.add({
           severity: 'error',
           summary: 'Calibration Not Promoted',
-          detail: `An error occurred while promoting the calibration: ${errorMessage}. Please try again later.`,
+          detail: `An error occurred while promoting the calibration: ${extractErrorDetail(error)}. Please try again later.`,
           life: 4000
         })
       }
@@ -557,15 +566,11 @@ export default {
         message: 'Are you sure you want to delete this score calibration? This action cannot be undone.',
         header: 'Confirm Calibration Deletion',
         icon: 'pi pi-exclamation-triangle',
-        acceptLabel: 'Delete',
-        acceptClass: 'p-button-danger',
-        rejectLabel: 'Cancel',
-        rejectClass: 'p-button',
-        acceptIcon: 'pi pi-trash',
-        rejectIcon: 'pi pi-times',
+        acceptProps: {label: 'Delete', severity: 'danger', icon: 'pi pi-trash'},
+        rejectProps: {label: 'Cancel', severity: 'secondary', icon: 'pi pi-times'},
         accept: async () => {
           try {
-            await axios.delete(`${config.apiBaseUrl}/score-calibrations/${calibrationUrn}`)
+            await deleteScoreCalibration(calibrationUrn)
             this.$toast.add({
               severity: 'success',
               summary: 'Calibration Deleted',
@@ -575,31 +580,22 @@ export default {
             await this.reloadItem()
           } catch (error) {
             console.error('Error deleting calibration:', error)
-            const errorMessage =
-              axios.isAxiosError(error) &&
-              error.response?.data?.detail &&
-              (typeof error.response.data.detail === 'string' || error.response.data.detail instanceof String)
-                ? error.response.data.detail
-                : error
             this.$toast.add({
               severity: 'error',
               summary: 'Calibration Not Deleted',
-              detail: `An error occurred while deleting the calibration: ${errorMessage}. Please try again later.`,
+              detail: `An error occurred while deleting the calibration: ${extractErrorDetail(error)}. Please try again later.`,
               life: 4000
             })
           }
         },
-        reject: () => {
-          //callback to execute when user rejects the action
-          //do nothing
-        }
+        reject: () => {}
       })
     },
 
     downloadCalibrations: async function () {
       try {
-        const response = await axios.get(`${config.apiBaseUrl}/score-calibrations/score-set/${this.itemId}`)
-        const dataStr = JSON.stringify(response.data, null, 2)
+        const data = await getScoreSetCalibrations(this.itemId)
+        const dataStr = JSON.stringify(data, null, 2)
         const blob = new Blob([dataStr], {type: 'application/json'})
         const url = window.URL.createObjectURL(blob)
         const link = document.createElement('a')
@@ -611,16 +607,10 @@ export default {
         document.body.removeChild(link)
       } catch (error) {
         console.error('Error downloading calibrations:', error)
-        const errorMessage =
-          axios.isAxiosError(error) &&
-          error.response?.data?.detail &&
-          (typeof error.response.data.detail === 'string' || error.response.data.detail instanceof String)
-            ? error.response.data.detail
-            : error
         this.$toast.add({
           severity: 'error',
           summary: 'Download Failed',
-          detail: `An error occurred while downloading the calibrations: ${errorMessage}. Please try again later.`,
+          detail: `An error occurred while downloading the calibrations: ${extractErrorDetail(error)}. Please try again later.`,
           life: 4000
         })
       }
@@ -630,120 +620,30 @@ export default {
 </script>
 
 <style scoped>
-.mavedb-calibrations-datatable {
+/* DataTable overrides — :deep() selectors cannot be expressed in Tailwind */
+.cal-datatable {
   width: 100%;
-}
-.mavedb-calibrations-datatable :deep(.p-datatable-tbody > tr:nth-child(even)) {
-  background: var(--surface-a);
+  margin-top: 3px;
 }
 
-.mavedb-calibrations-datatable :deep(.p-datatable-thead > tr > th) {
+.cal-datatable :deep(.p-datatable-thead > tr > th) {
   white-space: nowrap;
-}
-.mavedb-calibrations-datatable :deep(.p-datatable-tbody > tr > td) {
-  vertical-align: top;
-}
-.mavedb-calibrations-datatable :deep(.mave-align-center) {
-  text-align: center;
-}
-.calibration-actions {
-  display: flex;
-  /*
-  Crude, but the approximate width of two buttons so
-  we can always have at least two of them side-by-side
-  even when wrapped.
-  */
-  min-width: 4rem;
-  flex-wrap: wrap;
-  gap: 0.15rem;
-}
-.calibration-title-actions {
-  display: flex;
-  /*
-  Crude, but the approximate width of two buttons so
-  we can always have at least two of them side-by-side
-  even when wrapped.
-  */
-  flex-wrap: wrap;
-  gap: 0.15rem;
-}
-.truncate {
-  display: inline-block;
-  max-width: 100%;
-  overflow: hidden;
-  text-overflow: ellipsis;
-  white-space: nowrap;
-}
-.expanded {
-  max-height: none !important;
-  line-clamp: none !important;
-  -webkit-line-clamp: none !important;
-}
-.multi-line {
-  white-space: normal;
-  margin-top: 0.3em;
-  line-height: 1.2;
-  max-height: 2.4em;
-  display: -webkit-box;
-  line-clamp: 2;
-  -webkit-line-clamp: 2;
-  -webkit-box-orient: vertical;
-}
-.mavedb-calibration-tag {
-  display: inline-block;
-  padding: 0.15em 0.7em;
-  margin-right: 0.3em;
-  border-radius: 1em;
-  font-size: 0.85em;
-  font-weight: 500;
-  background: var(--surface-border);
-  color: var(--text-color-secondary);
-}
-.tag-primary,
-.tag-general-use,
-.tag-published {
-  background: var(--green-100) !important;
-  color: var(--green-700) !important;
-  border: 1px solid var(--green-300) !important;
-}
-.tag-non-primary,
-.tag-private,
-.tag-research-use {
-  background: var(--red-100) !important;
-  color: var(--red-700) !important;
-  border: 1px solid var(--red-300) !important;
-}
-.tag-investigator-provided {
-  background: var(--blue-100) !important;
-  color: var(--blue-700) !important;
-  border: 1px solid var(--blue-300) !important;
-}
-.tag-non-investigator {
-  background: var(--purple-100) !important;
-  color: var(--purple-700) !important;
-  border: 1px solid var(--purple-300) !important;
-}
-</style>
-
-<style scoped>
-.calibration-group-row td {
-  background: var(--surface-ground);
-  font-weight: 600;
+  font-size: 11px;
+  font-weight: 700;
   text-transform: uppercase;
   letter-spacing: 0.5px;
-  padding-top: 0.6rem !important;
-  padding-bottom: 0.4rem !important;
-  border-top: 2px solid var(--surface-border);
+  color: #555;
+  background: #fafafa;
 }
-.group-label {
-  display: flex;
-  align-items: center;
-  gap: 0.5rem;
+
+.cal-datatable :deep(.p-datatable-thead > tr > th),
+.cal-datatable :deep(.p-datatable-tbody > tr > td) {
+  padding-left: 8px;
+  padding-right: 8px;
 }
-.group-count {
-  font-weight: 400;
-  text-transform: none;
-  letter-spacing: normal;
-  color: var(--text-color-secondary);
+
+.cal-datatable :deep(.p-datatable-tbody > tr > td) {
+  vertical-align: top;
+  font-size: 13px;
 }
 </style>

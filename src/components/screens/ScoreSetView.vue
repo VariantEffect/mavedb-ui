@@ -1,365 +1,407 @@
 <template>
-  <DefaultLayout>
-    <div v-if="itemStatus == 'Loaded' && item" class="mavedb-score-set">
-      <div class="mavedb-1000px-col">
-        <ScoreSetProcessingStatus :score-set="item" />
-        <div class="mave-screen-title-bar">
-          <div class="mave-screen-title">
-            <span>{{ item.title || 'Untitled score set' }}</span>
-            <span v-if="item.urn" class="mavedb-score-set-urn">{{ item.urn }}</span>
+  <MvLayout>
+    <template v-if="itemStatus === 'Loaded' && item" #header>
+      <MvPageHeader eyebrow="Score Set" max-width="1000px" :title="item.title || 'Untitled score set'">
+        <template v-if="item.supersedingScoreSet || !item.publishedDate" #alerts>
+          <div class="flex flex-col gap-3">
+            <MvStatusMessage v-if="item.supersedingScoreSet" severity="warn">
+              A newer version of this score set is available:
+              <MvEntityLink
+                class="font-semibold underline"
+                display="urn"
+                entity-type="scoreSet"
+                :urn="item.supersedingScoreSet.urn"
+                :use-cache="true"
+              />. The data below may be outdated.
+            </MvStatusMessage>
+            <ScoreSetProcessingStatus :score-set="item" />
           </div>
-          <div class="mave-collection-badges">
-            <CollectionBadge
-              v-for="officialCollection in item.officialCollections"
-              :key="officialCollection.urn"
-              :collection="officialCollection"
+        </template>
+        <template #subtitle>
+          <div class="-mt-3 text-sm text-text-muted">{{ item.urn }}</div>
+          <div v-if="item.shortDescription" class="mt-2 text-sm leading-relaxed text-text-secondary">
+            {{ item.shortDescription }}
+          </div>
+        </template>
+        <template #actions>
+          <div class="hidden items-center gap-2 tablet:flex">
+            <PButton
+              v-if="permissions.publish && !item.publishedDate"
+              label="Publish"
+              severity="warn"
+              size="small"
+              @click="publishItem"
             />
+            <PButton v-if="permissions.update" label="Edit" severity="secondary" size="small" @click="editItem" />
           </div>
-          <Button
-            icon="pi pi-external-link"
-            label="Score set calibrations"
-            size="small"
-            style="margin-right: 0.25rem"
-            @click="$router.push({path: `/score-sets/${item.urn}/calibrations`})"
+          <MvRowActionMenu :actions="headerActions" />
+        </template>
+        <template #metadata>
+          <MvMetadataLine
+            class="mt-3"
+            :created-by="item.createdBy"
+            :creation-date="item.creationDate"
+            jump-to-id="detailed-metadata"
+            :modification-date="item.modificationDate"
+            :modified-by="item.modifiedBy"
+            :published-date="item.publishedDate"
           />
-          <div v-if="userIsAuthenticated" class="mavedb-screen-title-controls">
-            <Button v-if="userIsAuthorized.addCalibration" size="small" @click="calibrationEditorVisible = true"
-              >Add calibration</Button
-            >
-            <template v-if="!item.publishedDate">
-              <Button v-if="userIsAuthorized.update" size="small" @click="editItem">Edit</Button>
-              <Button v-if="userIsAuthorized.publish" size="small" @click="publishItem">Publish</Button>
-              <Button v-if="userIsAuthorized.delete" severity="danger" size="small" @click="deleteItem">Delete</Button>
-            </template>
-            <template v-if="item.publishedDate">
-              <Button v-if="userIsAuthorized.update" size="small" @click="editItem">Edit</Button>
-            </template>
-          </div>
-        </div>
-        <div v-if="item.shortDescription" class="mavedb-score-set-description">{{ item.shortDescription }}</div>
-      </div>
-      <div v-if="variants?.length">
-        <div class="mavedb-score-set-variant-search">
-          <FloatLabel variant="on">
-            <AutoComplete
-              :id="scopedId('variant-search')"
-              v-model="selectedVariant"
-              class="w-full"
-              dropdown
-              option-label="mavedb_label"
-              scroll-height="175px"
-              select-on-focus
-              :suggestions="variantSearchSuggestions"
-              :virtual-scroller-options="{itemSize: 50}"
-              @complete="variantSearch"
-            />
-            <label :for="scopedId('variant-search')">Search for a variant in this score set</label>
-            <Button
+        </template>
+      </MvPageHeader>
+    </template>
+
+    <!-- Loading -->
+    <MvPageLoading v-if="itemStatus === 'Loading' || itemStatus === 'NotLoaded'" text="Loading score set..." />
+
+    <!-- Not found -->
+    <MvItemNotFound v-else-if="itemStatus === 'Failed'" :item-id="itemId" model="score set" />
+
+    <!-- Loaded -->
+    <template v-else-if="itemStatus === 'Loaded' && item">
+      <MvCollectionStrip
+        data-set-type="scoreSet"
+        :data-set-urn="item.urn"
+        :official-collections="item.officialCollections"
+      />
+
+      <div class="mx-auto w-full px-4 py-6 tablet:px-6 tablet:py-8" style="max-width: 1000px">
+        <!-- Variant search + clinical toggle -->
+        <div
+          v-if="variants?.length"
+          class="mb-4 flex flex-col gap-3 rounded-lg border border-border bg-white px-4 py-3 tablet:flex-row tablet:items-center"
+        >
+          <div class="relative min-w-0 flex-1">
+            <MvFloatField label="Search variants">
+              <template #default="{id}">
+                <AutoComplete
+                  :id="id"
+                  v-model="selectedVariant"
+                  class="w-full"
+                  :delay="300"
+                  dropdown
+                  fluid
+                  :input-style="variantToVisualize ? {paddingRight: '2.25rem'} : undefined"
+                  option-label="mavedb_label"
+                  scroll-height="175px"
+                  select-on-focus
+                  :suggestions="variantSearchSuggestions"
+                  :virtual-scroller-options="{itemSize: 50}"
+                  @complete="variantSearch"
+                >
+                  <template #empty>
+                    <div class="p-2.5 text-center text-sm text-text-muted">No matching variants found.</div>
+                  </template>
+                </AutoComplete>
+              </template>
+            </MvFloatField>
+            <button
+              v-if="variantToVisualize"
               aria-label="Clear"
-              icon="pi pi-times"
-              rounded
-              severity="danger"
-              :style="{visibility: variantToVisualize ? 'visible' : 'hidden'}"
+              class="absolute right-12 top-1/2 flex size-5 -translate-y-1/2 cursor-pointer items-center justify-center rounded-full text-text-muted hover:bg-red-50 hover:text-red-600"
               @click="selectedVariant = null"
-            />
-          </FloatLabel>
-          <span v-if="config.CLINICAL_FEATURES_ENABLED" class="mavedb-clinical-mode-control-container">
-            <span :class="clinicalMode ? 'mavedb-clinical-mode-option-off' : 'mavedb-clinical-mode-option-on'"
-              >Raw data</span
+            >
+              <i class="pi pi-times text-[10px]" />
+            </button>
+          </div>
+          <div class="flex items-center gap-2 text-sm text-text-secondary tablet:ml-auto">
+            <span
+              :class="[
+                clinicalMode ? 'text-text-muted' : 'font-semibold text-sage',
+                {'opacity-50': coordinateSwitching}
+              ]"
+              >Raw variants</span
             >
             <ToggleSwitch
-              v-model="clinicalMode"
               :aria-label="`Click to change to ${clinicalMode ? 'raw data' : 'clinical view'}.`"
+              :disabled="coordinateSwitching"
+              :model-value="clinicalMode"
+              @update:model-value="toggleClinicalMode"
             />
-            <span :class="clinicalMode ? 'mavedb-clinical-mode-option-on' : 'mavedb-clinical-mode-option-off'"
-              >Mapped variant coordinates for clinical use</span
+            <span
+              :class="[
+                clinicalMode ? 'font-semibold text-sage' : 'text-text-muted',
+                {'opacity-50': coordinateSwitching}
+              ]"
+              >Mapped variants</span
             >
-            <Button
-              v-tooltip="clinicalModeHelpText"
-              aria-label="About raw vs. clinical mode"
-              class="mavedb-help-tooltip-button"
-              icon="pi pi-info"
-              outlined
-              rounded
-              severity="help"
-            />
-          </span>
-        </div>
-        <div class="mavedb-score-set-histogram-pane">
-          <ScoreSetHistogram
-            ref="distHistogram"
-            :coordinates="clinicalMode ? 'mapped' : 'raw'"
-            :default-histogram="'distribution'"
-            :external-selection="variantToVisualize"
-            :hide-start-and-stop-loss-by-default="hideStartAndStopLoss"
-            :lock-selection="variantToVisualize != null"
-            :score-set="item"
-            :selected-calibration="selectedCalibrations[0]"
-            :variants="variants"
-            @calibration-changed="(calibration) => childComponentSelectedCalibration(calibration, 0)"
-            @export-chart="setHistogramExport"
-            @selection-changed="(payload) => onHistogramSelectionChanged(payload, {syncTarget: 'clinicalHistogram'})"
-          />
-        </div>
-        <div
-          v-if="selectedCalibrationObjects[0] && !sameCalibrationSelected"
-          class="mavedb-score-set-calibration-table"
-        >
-          <CalibrationTable :score-calibration="selectedCalibrationObjects[0]" />
-        </div>
-        <div v-if="hasClinicalVariants" class="mavedb-score-set-histogram-pane">
-          <ScoreSetHistogram
-            ref="clinicalHistogram"
-            :coordinates="clinicalMode ? 'mapped' : 'raw'"
-            :default-histogram="'clinical'"
-            :external-selection="variantToVisualize"
-            :hide-start-and-stop-loss-by-default="hideStartAndStopLoss"
-            :lock-selection="variantToVisualize != null"
-            :score-set="item"
-            :selected-calibration="selectedCalibrations[1]"
-            :variants="variants"
-            @calibration-changed="(calibration) => childComponentSelectedCalibration(calibration, 1)"
-            @export-chart="setHistogramExport"
-            @selection-changed="(payload) => onHistogramSelectionChanged(payload, {syncTarget: 'distHistogram'})"
-          />
-        </div>
-        <div v-if="selectedCalibrationObjects[1]" class="mavedb-score-set-calibration-table">
-          <CalibrationTable :score-calibration="selectedCalibrationObjects[1]" />
-        </div>
-        <div v-if="showHeatmap && !isScoreSetVisualizerVisible" class="mavedb-score-set-heatmap-pane">
-          <ScoreSetHeatmap
-            ref="heatmap"
-            :coordinates="clinicalMode ? 'mapped' : 'raw'"
-            :external-selection="variantToVisualize"
-            :hide-start-and-stop-loss="hideStartAndStopLoss"
-            :score-set="item"
-            :show-protein-structure-button="uniprotId != null && config.CLINICAL_FEATURES_ENABLED"
-            :variants="variants"
-            @export-chart="setHeatmapExport"
-            @heatmap-visible="heatmapVisibilityUpdated"
-            @on-did-click-show-protein-structure="showProteinStructureModal"
-            @variant-selected="childComponentSelectedVariant"
-          />
-        </div>
-      </div>
-      <div v-else-if="scoresDataStatus !== 'Loaded'" style="display: flex; justify-content: center; width: 100%">
-        <div
-          style="
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            margin: 12px auto;
-            max-width: fit-content;
-            text-align: center;
-          "
-        >
-          <ProgressSpinner style="width: 36px; height: 36px; margin-right: 8px" />
-          <span style="line-height: 36px; font-weight: bold">Loading variants...</span>
-        </div>
-      </div>
-      <div class="mave-1000px-col">
-        <div class="clearfix">
-          <div v-if="config.CLINICAL_FEATURES_ENABLED" class="mavedb-assay-facts-container">
-            <AssayFactSheet :score-set="item" />
-          </div>
-          <div>
-            <ScoreSetSecondaryMetadata :score-set="item" />
+            <i v-if="coordinateSwitching" class="pi pi-spinner pi-spin text-xs text-sage" />
+            <span
+              v-tooltip.top="clinicalModeHelpText"
+              class="inline-flex size-4 shrink-0 cursor-help items-center justify-center rounded-full bg-sage text-[10px] font-bold text-white"
+              >?</span
+            >
           </div>
         </div>
-        <div>
-          Download files and/or charts
-          <Button outlined size="small" @click="downloadFile('scores')">Scores</Button>&nbsp;
-          <template v-if="hasCounts">
-            <Button outlined size="small" @click="downloadFile('counts')">Counts</Button>&nbsp;
-          </template>
-          <template v-if="isMetaDataEmpty != true">
-            <Button outlined size="small" @click="downloadMetadata">Metadata</Button>&nbsp;
-          </template>
-          <Button outlined size="small" @click="downloadMappedVariants()">Mapped Variants</Button>&nbsp;
-          <div style="display: inline-block; position: relative">
-            <SplitButton
-              :button-props="{class: 'p-button-outlined p-button-sm'}"
-              :disabled="annotatedDownloadInProgress"
-              label="Annotated Variants"
-              :menu-button-props="{class: 'p-button-sm'}"
-              :model="annotatedVariantDownloadOptions"
-              @click="annotatedVariantDownloadOptions[0].command"
-            ></SplitButton>
+
+        <!-- Variants loading spinner -->
+        <div v-if="variants == null && scoresDataStatus !== 'Loaded'" class="flex items-center justify-center py-6">
+          <MvLoader text="Loading variants..." />
+        </div>
+
+        <!-- Visualizations -->
+        <template v-if="variants?.length">
+          <!-- Score Distribution -->
+          <div class="mb-4 overflow-hidden rounded-lg border border-border bg-surface">
             <div
-              v-if="annotatedDownloadInProgress"
-              style="position: absolute; left: 0; right: 0; top: 100%; margin-top: 4px"
+              class="flex flex-wrap items-center justify-between gap-3 border-b border-border-light px-4 py-3.5 tablet:px-5"
             >
-              <ProgressBar show-value style="height: 1.5em" :value="annotatedDownloadProgress" />
-            </div>
-          </div>
-          &nbsp; <Button outlined size="small" @click="histogramExport()">Histogram</Button>&nbsp;
-          <template v-if="heatmapExists">
-            <Button outlined size="small" @click="heatmapExport()">Heatmap</Button>&nbsp;
-          </template>
-          <Button outlined size="small" @click="showOptions()"> Custom Data </Button>
-          <Dialog
-            v-model:visible="optionsVisible"
-            :base-z-index="901"
-            :breakpoints="{'1199px': '75vw', '575px': '90vw'}"
-            header="Data Options"
-            modal
-            :style="{width: '50vw'}"
-          >
-            <div v-for="dataOption of dataTypeOptions" :key="dataOption.value" class="flex gap-1 align-items-center">
-              <Checkbox
-                :id="scopedId('input-' + dataOption.value)"
-                v-model="selectedDataOptions"
-                :value="dataOption.value"
+              <h3 class="mave-section-title">Score Distribution</h3>
+              <PButton
+                v-if="distHistogramExport"
+                icon="pi pi-download"
+                label="Export"
+                severity="secondary"
+                size="small"
+                @click="distHistogramExport"
               />
-              <label :for="scopedId('input-' + dataOption.value)">{{ dataOption.label }}</label>
             </div>
-            <p />
-            <Button label="Download" outlined size="small" @click="downloadMultipleData">Download</Button>
-            &nbsp;
-            <Button label="Cancel" severity="warn" size="small" @click="optionsVisible = false">Cancel</Button>
-          </Dialog>
-          <br />
-        </div>
-        <CollectionAdder data-set-type="scoreSet" :data-set-urn="item.urn" />
-
-        <div v-if="requestFromGalaxy == '1'">
-          <br />Send files to <a :href="galaxyUrl">Galaxy</a>
-          <Button outlined size="small" @click="sendToGalaxy('scores')">Scores</Button>&nbsp;
-          <template v-if="hasCounts">
-            <Button outlined size="small" @click="sendToGalaxy('counts')">Counts</Button>&nbsp;
-          </template>
-          <Button outlined size="small" @click="sendToGalaxy('mappedVariants')">Mapped Variants</Button>&nbsp;
-        </div>
-        <div v-if="item.abstractText">
-          <div class="mavedb-score-set-section-title">Abstract</div>
-          <!-- eslint-disable-next-line vue/no-v-html -->
-          <div class="mavedb-score-set-abstract" v-html="markdownToHtml(item.abstractText)"></div>
-        </div>
-        <div v-if="item.methodText">
-          <div class="mavedb-score-set-section-title">Method</div>
-          <!-- eslint-disable-next-line vue/no-v-html -->
-          <div class="mavedb-score-set-abstract" v-html="markdownToHtml(item.methodText)"></div>
-        </div>
-        <div class="mavedb-score-set-section-title">Primary References</div>
-        <div v-if="item.primaryPublicationIdentifiers.length > 0">
-          <div v-for="publication in item.primaryPublicationIdentifiers" :key="publication">
-            <ul class="ml-10 list-[square]">
-              <!-- eslint-disable-next-line vue/no-v-html -->
-              <li v-html="markdownToHtml(publication.referenceHtml)"></li>
-              <div>
-                Publication:
-                <a
-                  :href="`${config.appBaseUrl}/publication-identifiers/${publication.dbName}/${encodeURIComponent(publication.identifier)}`"
-                  >{{ publication.identifier }}</a
-                >
-              </div>
-              <div>
-                <a :href="`${publication.url}`" target="_blank">View article on the web</a>
-              </div>
-            </ul>
-          </div>
-        </div>
-        <div v-else>No associated primary publications.</div>
-        <div class="mavedb-score-set-section-title">Secondary References</div>
-        <div v-if="item.secondaryPublicationIdentifiers.length > 0">
-          <div v-for="publication in item.secondaryPublicationIdentifiers" :key="publication">
-            <ul class="ml-10 list-[square]">
-              <!-- eslint-disable-next-line vue/no-v-html -->
-              <li v-html="markdownToHtml(publication.referenceHtml)"></li>
-              <div>
-                Publication:
-                <a
-                  :href="`${config.appBaseUrl}/publication-identifiers/${publication.dbName}/${encodeURIComponent(publication.identifier)}`"
-                  >{{ publication.identifier }}</a
-                >
-              </div>
-              <div>
-                <a :href="`${publication.url}`" target="_blank">View article on the web</a>
-              </div>
-            </ul>
-          </div>
-        </div>
-        <div v-else>No associated secondary publications.</div>
-        <div class="mavedb-score-set-section-title">Data Usage Policy</div>
-        <div v-if="item.dataUsagePolicy">
-          <!-- eslint-disable-next-line vue/no-v-html -->
-          <div class="mavedb-score-set-abstract" v-html="markdownToHtml(item.dataUsagePolicy)"></div>
-        </div>
-        <div v-else>Not specified</div>
-        <div v-if="item.targetGenes">
-          <div class="mavedb-score-set-section-title">Targets</div>
-          <div v-for="targetGene of item.targetGenes" :key="targetGene">
-            <TargetGene :target-gene="targetGene" />
-            <br />
-          </div>
-          <div v-if="item.targetGenes[0].targetAccession">
-            <div v-if="item.targetGenes[0].targetAccession.isBaseEditor">
-              <strong>*This score set represents base editor data.</strong>
+            <div class="p-3 tablet:p-5">
+              <ScoreSetHistogram
+                ref="distHistogram"
+                :coordinates="clinicalMode ? 'mapped' : 'raw'"
+                :default-histogram="'distribution'"
+                :external-selection="variantToVisualize"
+                :hide-start-and-stop-loss-by-default="hideStartAndStopLoss"
+                :lock-selection="variantToVisualize != null"
+                :score-set="item"
+                :selected-calibration="selectedCalibrations[0]"
+                :variants="variants"
+                @calibration-changed="(cal) => childComponentSelectedCalibration(cal, 0)"
+                @export-chart="setDistHistogramExport"
+                @selection-changed="
+                  (payload) => onHistogramSelectionChanged(payload, {syncTarget: 'clinicalHistogram'})
+                "
+              />
+            </div>
+            <div
+              v-if="selectedCalibrationObjects[0] && !sameCalibrationSelected"
+              class="border-t border-border-light p-5"
+            >
+              <CalibrationTable :score-calibration="selectedCalibrationObjects[0]" />
+            </div>
+            <div
+              v-if="hasCalibrations"
+              class="flex items-center gap-2 border-t border-border-light px-5 py-3 text-xs text-text-muted"
+            >
+              <template v-if="selectedCalibrationObjects[0] && sameCalibrationSelected">
+                <i class="pi pi-info-circle" />
+                Calibration details shown on Clinical Score Distribution below.
+              </template>
+              <router-link
+                class="ml-auto font-semibold text-link no-underline"
+                :to="{path: `/score-sets/${item.urn}/calibrations`}"
+              >
+                View all calibrations &rarr;
+              </router-link>
             </div>
           </div>
+
+          <!-- Clinical Score Distribution -->
+          <div v-if="hasClinicalVariants" class="mb-4 overflow-hidden rounded-lg border border-border bg-surface">
+            <div
+              class="flex flex-wrap items-center justify-between gap-3 border-b border-border-light px-4 py-3.5 tablet:px-5"
+            >
+              <h3 class="mave-section-title">Clinical Score Distribution</h3>
+              <PButton
+                v-if="clinicalHistogramExport"
+                icon="pi pi-download"
+                label="Export"
+                severity="secondary"
+                size="small"
+                @click="clinicalHistogramExport"
+              />
+            </div>
+            <div class="p-3 tablet:p-5">
+              <ScoreSetHistogram
+                ref="clinicalHistogram"
+                :coordinates="clinicalMode ? 'mapped' : 'raw'"
+                :default-histogram="'clinical'"
+                :external-selection="variantToVisualize"
+                :hide-start-and-stop-loss-by-default="hideStartAndStopLoss"
+                :lock-selection="variantToVisualize != null"
+                :score-set="item"
+                :selected-calibration="selectedCalibrations[1]"
+                :variants="variants"
+                @calibration-changed="(cal) => childComponentSelectedCalibration(cal, 1)"
+                @export-chart="setClinicalHistogramExport"
+                @selection-changed="(payload) => onHistogramSelectionChanged(payload, {syncTarget: 'distHistogram'})"
+              />
+            </div>
+            <div v-if="selectedCalibrationObjects[1]" class="border-t border-border-light p-5">
+              <CalibrationTable :score-calibration="selectedCalibrationObjects[1]" />
+            </div>
+            <div v-if="hasCalibrations" class="flex items-center justify-end border-t border-border-light px-5 py-3">
+              <router-link
+                class="text-xs font-semibold text-link no-underline"
+                :to="{path: `/score-sets/${item.urn}/calibrations`}"
+              >
+                View all calibrations &rarr;
+              </router-link>
+            </div>
+          </div>
+
+          <!-- Variant Effect Heatmap -->
+          <div
+            v-if="showHeatmap && !isScoreSetVisualizerVisible"
+            class="mb-4 overflow-hidden rounded-lg border border-border bg-surface"
+          >
+            <div
+              class="relative z-10 flex flex-wrap items-center justify-between gap-3 border-b border-border-light bg-surface px-4 py-3.5 tablet:px-5"
+            >
+              <h3 class="mave-section-title">Variant Effect Heatmap</h3>
+              <div class="flex flex-wrap items-center gap-2">
+                <SelectButton
+                  v-if="heatmapSequenceTypeOptions.length > 1"
+                  :allow-empty="false"
+                  :model-value="heatmapSequenceType"
+                  option-label="title"
+                  option-value="value"
+                  :options="heatmapSequenceTypeOptions"
+                  size="small"
+                  @update:model-value="heatmapSequenceType = $event"
+                />
+                <SelectButton
+                  :allow-empty="false"
+                  :model-value="heatmapLayout"
+                  option-label="title"
+                  option-value="value"
+                  :options="[
+                    {title: 'Normal', value: 'normal'},
+                    {title: 'Compact', value: 'compact'}
+                  ]"
+                  size="small"
+                  @update:model-value="heatmapLayout = $event"
+                />
+                <PButton
+                  v-if="uniprotId != null"
+                  icon="pi pi-box"
+                  label="Protein Structure"
+                  severity="secondary"
+                  size="small"
+                  @click="showProteinStructureModal"
+                />
+                <PButton
+                  v-if="heatmapExport"
+                  icon="pi pi-download"
+                  label="Export"
+                  severity="secondary"
+                  size="small"
+                  @click="heatmapExport"
+                />
+              </div>
+            </div>
+            <div class="p-3 tablet:p-5">
+              <ScoreSetHeatmap
+                ref="heatmap"
+                :coordinates="clinicalMode ? 'mapped' : 'raw'"
+                :external-selection="variantToVisualize"
+                :hide-start-and-stop-loss="hideStartAndStopLoss"
+                :layout="heatmapLayout"
+                :score-set="item"
+                :sequence-type="heatmapSequenceType"
+                :show-protein-structure-button="false"
+                :variants="variants"
+                @export-chart="setHeatmapExport"
+                @heatmap-visible="heatmapVisibilityUpdated"
+                @update:sequence-type="heatmapSequenceType = $event"
+                @variant-selected="childComponentSelectedVariant"
+              />
+            </div>
+          </div>
+        </template>
+
+        <!-- No visualizations available -->
+        <MvEmptyState
+          v-else-if="item.processingState === 'failed'"
+          class="mb-4"
+          description="Variant data could not be processed. Visualizations are unavailable until processing errors are resolved."
+          title="Visualizations unavailable"
+        />
+
+        <!-- Downloads -->
+        <div class="mb-6">
+          <ScoreSetDownloads
+            :has-counts="hasCounts"
+            :has-primary-calibration="hasPrimaryCalibration"
+            :heatmap-exists="heatmapExists"
+            :heatmap-export-fn="heatmapExport"
+            :histogram-export-fn="distHistogramExport"
+            :is-meta-data-empty="isMetaDataEmpty"
+            :score-set="item"
+          />
         </div>
 
-        <div class="mavedb-score-set-section-title">External identifier</div>
-        <strong>DOI: </strong>
-        <div v-if="item.doiIdentifiers.length != 0">
-          <ul class="pl-4 list-[square]">
-            <li v-for="(doi, i) of item.doiIdentifiers" :key="i">
-              <a :href="`${doi.url}`" target="blank">{{ doi.identifier }}</a>
-            </li>
-          </ul>
+        <!-- Details section -->
+        <div id="detailed-metadata" class="scroll-mt-4">
+          <h2 class="mb-4 text-base font-bold text-text-dark">Details and Metadata</h2>
+          <hr class="mb-4 border-border" />
         </div>
-        <template v-else>No associated DOIs<br /></template>
-        <strong>Raw reads: </strong>
-        <div v-if="item.experiment.rawReadIdentifiers.length != 0">
-          <ul class="pl-4 list-[square]">
-            <li v-for="(read, i) of item.experiment.rawReadIdentifiers" :key="i">
-              <a :href="`${read.url}`" target="blank">{{ read.identifier }}</a>
-            </li>
-          </ul>
-        </div>
-        <template v-else>No associated raw reads<br /></template>
 
-        <div id="variants" class="mavedb-score-set-section-title">Variants</div>
-        <div v-if="item.processingState == 'failed' && item.processingErrors.detail">
-          <Accordion value="0">
-            <AccordionPanel value="0">
-              <AccordionHeader>
-                <i class="pi pi-exclamation-triangle text-purple-700 text-6xl"></i>
-                <div v-if="item.processingErrors.detail" class="ml-2 mr-auto text-purple-700">
-                  Scores and/or counts could not be processed. Please remedy the
-                  {{ item.processingErrors.detail.length }} errors below, then try submitting again.
-                </div>
-                <div v-else class="ml-2 mr-auto text-purple-700">Scores and/or counts could not be processed.</div>
-              </AccordionHeader>
-              <AccordionContent>
-                <ScrollPanel style="width: 100%; height: 200px">
-                  <div v-if="item.processingErrors.detail">
-                    <div v-for="err of item.processingErrors.detail" :key="err">
-                      <span>{{ err }}</span>
-                    </div>
-                  </div>
-                </ScrollPanel>
-              </AccordionContent>
-            </AccordionPanel>
-          </Accordion>
+        <!-- Assay Facts -->
+        <div class="mb-4 mave-gradient-bar relative overflow-hidden rounded-lg border border-border bg-white p-5">
+          <MvAssayFactsCard :link-title="false" :score-set="item" />
         </div>
-        <div v-else>
-          <ScoreSetPreviewTable :score-set="item" />
+
+        <!-- Attribution -->
+        <div class="mb-4">
+          <MvAttributionCard
+            :contributors="contributors"
+            :created-by="item.createdBy"
+            :creation-date="item.creationDate"
+            :data-usage-policy="item.dataUsagePolicy"
+            :external-links="item.externalLinks || item.experiment?.externalLinks"
+            :license="item.license"
+            :meta-analyzes-urns="item.metaAnalyzesScoreSetUrns"
+            :modification-date="item.modificationDate"
+            :modified-by="item.modifiedBy"
+            parent-label="Parent experiment"
+            parent-route-name="experiment"
+            :parent-urn="item.experiment?.urn"
+            :published-date="item.publishedDate"
+            :superseded-urn="item.supersededScoreSet?.urn"
+            :superseding-urn="item.supersedingScoreSet?.urn"
+            title="Attribution"
+          />
+        </div>
+
+        <!-- Metadata card -->
+        <div class="mb-4">
+          <ScoreSetMetadataCard :item="item" />
+        </div>
+
+        <!-- Targets -->
+        <div class="mb-4">
+          <MvTargetsAccordion :target-genes="item.targetGenes" />
+          <div
+            v-if="item.targetGenes?.[0]?.targetAccession?.isBaseEditor"
+            class="mt-2 text-sm font-bold text-text-secondary"
+          >
+            *This score set represents base editor data.
+          </div>
+        </div>
+
+        <!-- External Identifiers -->
+        <div class="mb-4">
+          <MvExternalIdentifiersCard
+            :doi-identifiers="item.doiIdentifiers"
+            :raw-read-identifiers="item.experiment?.rawReadIdentifiers"
+          />
+        </div>
+
+        <!-- Variants section -->
+        <div id="variants" class="mb-4">
+          <MvVariantPreview :score-set="item" />
         </div>
       </div>
-    </div>
-    <div v-else-if="itemStatus == 'Loading' || itemStatus == 'NotLoaded'">
-      <PageLoading />
-    </div>
-    <div v-else>
-      <ItemNotFound :item-id="itemId" model="score set" />
-    </div>
-  </DefaultLayout>
-  <div v-if="itemStatus == 'Loaded'" class="card flex justify-content-center">
+    </template>
+  </MvLayout>
+
+  <!-- Protein structure drawer -->
+  <div v-if="itemStatus === 'Loaded'" class="card flex justify-center">
     <Drawer
       v-model:visible="isScoreSetVisualizerVisible"
       class="scoreset-viz-sidebar"
-      :header="item.title"
+      :header="item?.title"
       position="full"
     >
       <ScoreSetVisualizer
@@ -371,122 +413,129 @@
       />
     </Drawer>
   </div>
-  <EmailPrompt
-    v-if="calibrationEditorVisible"
+
+  <!-- Email prompt for calibration creation -->
+  <MvEmailPrompt
+    v-if="editorVisible"
     dialog="You must add an email address to your account to create calibrations. You can do so below, or on the 'Settings' page."
     :is-first-login-prompt="false"
   />
-  <!-- Set z-index to ensure dialog appears above heatmap color legend -->
+
+  <!-- Calibration editor dialog -->
   <PrimeDialog
-    v-model:visible="calibrationEditorVisible"
+    v-model:visible="editorVisible"
     :base-z-index="2003"
     :close-on-escape="false"
-    header="Create New Calibration"
+    :header="editorDialogHeader"
     modal
     :style="{maxWidth: '90%', width: '75rem'}"
-    @hide="cancelCalibrationCreation"
+    @hide="closeCalibrationEditor"
   >
     <CalibrationEditor
-      :calibration-draft-ref="calibrationDraftRef"
-      :classes-draft-ref="calibrationDraftClassesFileRef"
-      :score-set-urn="item.urn"
-      :validation-errors="editorValidationErrors"
-      @canceled="cancelCalibrationCreation"
+      ref="calibrationEditorRef"
+      :score-set-urn="editingScoreSetUrn"
+      @canceled="closeCalibrationEditor"
+      @saved="onCalibrationSaved"
     />
     <template #footer>
-      <Button icon="pi pi-times" label="Close" @click="cancelCalibrationCreation" severity="secondary" />
-      <Button icon="pi pi-save" label="Save Changes" severity="success" @click="saveCreatedCalibration" />
+      <PButton icon="pi pi-times" label="Close" severity="secondary" @click="closeCalibrationEditor" />
+      <PButton icon="pi pi-save" label="Save Changes" severity="success" @click="saveCreatedCalibration" />
     </template>
   </PrimeDialog>
 </template>
 
-<script>
-import axios from 'axios'
+<script lang="ts">
 import _ from 'lodash'
-import {marked} from 'marked'
-import Accordion from 'primevue/accordion'
-import AccordionPanel from 'primevue/accordionpanel'
-import AccordionHeader from 'primevue/accordionheader'
-import AccordionContent from 'primevue/accordioncontent'
+import {markdownToHtml} from '@/lib/form-helpers'
 import AutoComplete from 'primevue/autocomplete'
-import Button from 'primevue/button'
-import Checkbox from 'primevue/checkbox'
-import Dialog from 'primevue/dialog'
-import FloatLabel from 'primevue/floatlabel'
+import PButton from 'primevue/button'
+import MvFloatField from '@/components/forms/MvFloatField.vue'
+import SelectButton from 'primevue/selectbutton'
 import ToggleSwitch from 'primevue/toggleswitch'
-import ProgressSpinner from 'primevue/progressspinner'
-import ProgressBar from 'primevue/progressbar'
 import PrimeDialog from 'primevue/dialog'
-import ScrollPanel from 'primevue/scrollpanel'
 import Drawer from 'primevue/drawer'
-import SplitButton from 'primevue/splitbutton'
 import {ref} from 'vue'
-import {mapState} from 'vuex'
 import {useHead} from '@unhead/vue'
 
-import AssayFactSheet from '@/components/AssayFactSheet'
-import CalibrationEditor from '../CalibrationEditor.vue'
-import EmailPrompt from '@/components/common/EmailPrompt.vue'
-import CollectionAdder from '@/components/CollectionAdder'
-import CollectionBadge from '@/components/CollectionBadge'
-import CalibrationTable from '@/components/CalibrationTable'
-import ScoreSetHeatmap from '@/components/ScoreSetHeatmap'
-import ScoreSetHistogram from '@/components/ScoreSetHistogram'
-import ScoreSetPreviewTable from '@/components/ScoreSetPreviewTable'
-import ScoreSetProcessingStatus from '@/components/ScoreSetProcessingStatus'
-import ScoreSetSecondaryMetadata from '@/components/ScoreSetSecondaryMetadata'
-import ScoreSetVisualizer from '@/components/ScoreSetVisualizer'
-import TargetGene from '@/components/TargetGene'
-import ItemNotFound from '@/components/common/ItemNotFound'
-import PageLoading from '@/components/common/PageLoading'
-import DefaultLayout from '@/components/layout/DefaultLayout'
+import CalibrationEditor from '@/components/calibration/CalibrationEditor.vue'
+import CalibrationTable from '@/components/calibration/CalibrationTable.vue'
+import MvEmailPrompt from '@/components/common/MvEmailPrompt.vue'
+import MvItemNotFound from '@/components/common/MvItemNotFound.vue'
+import MvAssayFactsCard from '@/components/common/MvAssayFactsCard.vue'
+import MvCollectionStrip from '@/components/common/MvCollectionStrip.vue'
+import MvEntityLink from '@/components/common/MvEntityLink.vue'
+import MvExternalIdentifiersCard from '@/components/common/MvExternalIdentifiersCard.vue'
+import MvMetadataLine from '@/components/common/MvMetadataLine.vue'
+import MvPageLoading from '@/components/common/MvPageLoading.vue'
+import MvAttributionCard from '@/components/common/MvAttributionCard.vue'
+import MvRowActionMenu, {type RowAction} from '@/components/common/MvRowActionMenu.vue'
+import MvStatusMessage from '@/components/common/MvStatusMessage.vue'
+import MvTargetsAccordion from '@/components/common/MvTargetsAccordion.vue'
+import MvLayout from '@/components/layout/MvLayout.vue'
+import MvPageHeader from '@/components/layout/MvPageHeader.vue'
+import ScoreSetDownloads from '@/components/score-set/ScoreSetDownloads.vue'
+import ScoreSetMetadataCard from '@/components/score-set/ScoreSetMetadataCard.vue'
+import ScoreSetHeatmap from '@/components/score-set/ScoreSetHeatmap.vue'
+import ScoreSetHistogram from '@/components/score-set/ScoreSetHistogram.vue'
+import MvVariantPreview from '@/components/common/MvVariantPreview.vue'
+import ScoreSetProcessingStatus from '@/components/score-set/ScoreSetProcessingStatus.vue'
+import ScoreSetVisualizer from '@/components/score-set/ScoreSetVisualizer.vue'
+
 import useScopedId from '@/composables/scoped-id'
-import useAuth from '@/composition/auth'
-import useItem from '@/composition/item'
+import useItem from '@/composition/item.ts'
 import useRemoteData from '@/composition/remote-data'
+import {useDatasetPermissions} from '@/composables/use-dataset-permissions'
+import {useCalibrationDialog} from '@/composables/use-calibration-dialog'
+import {useVariantCoordinates} from '@/composables/use-variant-coordinates'
 import config from '@/config'
-import {preferredVariantLabel, variantNotNullOrNA} from '@/lib/mave-hgvs'
-import {saveCalibration} from '@/lib/calibrations'
+import {variantNotNullOrNA} from '@/lib/mave-hgvs'
 import {getScoreSetShortName} from '@/lib/score-sets'
 import {parseScoresOrCounts} from '@/lib/scores'
-import {parseSimpleCodingVariants, translateSimpleCodingVariants} from '@/lib/variants'
+import {parseSimpleCodingVariants, translateSimpleCodingVariants, type Variant} from '@/lib/variants'
+import {deleteScoreSet, publishScoreSet, getScoreSetClinicalControlOptions} from '@/api/mavedb'
+import {components} from '@/schema/openapi'
+import MvLoader from '@/components/common/MvLoader.vue'
+import MvEmptyState from '@/components/common/MvEmptyState.vue'
+
+type ScoreSet = components['schemas']['ScoreSet']
+const ACTIONS = ['delete', 'publish', 'update', 'add_calibration']
 
 export default {
   name: 'ScoreSetView',
 
   components: {
-    Accordion,
-    AccordionPanel,
-    AccordionHeader,
-    AccordionContent,
-    AssayFactSheet,
     AutoComplete,
-    Button,
-    CalibrationTable,
     CalibrationEditor,
-    EmailPrompt,
-    Checkbox,
-    CollectionAdder,
-    CollectionBadge,
-    DefaultLayout,
-    Dialog,
-    FloatLabel,
-    ToggleSwitch,
-    ItemNotFound,
-    PageLoading,
-    ProgressBar,
-    ProgressSpinner,
+    CalibrationTable,
+    Drawer,
+    MvEmailPrompt,
+    MvFloatField,
+    MvItemNotFound,
+    MvAssayFactsCard,
+    MvCollectionStrip,
+    MvEntityLink,
+    MvExternalIdentifiersCard,
+    MvEmptyState,
+    MvLayout,
+    MvMetadataLine,
+    MvPageHeader,
+    MvPageLoading,
+    MvAttributionCard,
+    MvRowActionMenu,
+    MvStatusMessage,
+    MvTargetsAccordion,
+    MvVariantPreview,
+    PButton,
     PrimeDialog,
+    MvLoader,
+    ScoreSetDownloads,
     ScoreSetHeatmap,
     ScoreSetHistogram,
-    ScoreSetVisualizer,
-    ScoreSetPreviewTable,
+    ScoreSetMetadataCard,
     ScoreSetProcessingStatus,
-    ScoreSetSecondaryMetadata,
-    ScrollPanel,
-    Drawer,
-    SplitButton,
-    TargetGene
+    ScoreSetVisualizer,
+    SelectButton,
+    ToggleSwitch
   },
 
   props: {
@@ -496,28 +545,25 @@ export default {
     }
   },
 
-  setup: () => {
+  setup(props) {
     const head = useHead()
-
-    const {userIsAuthenticated} = useAuth()
     const scoresRemoteData = useRemoteData()
-    const variantSearchSuggestions = ref([])
-    const calibrationDraftRef = ref({value: null})
-    const calibrationDraftClassesFileRef = ref({value: null})
-    const editorValidationErrors = ref({})
-    const selectedCalibrations = ref([null, null])
+    const variantSearchSuggestions = ref<Variant[]>([])
+    const selectedCalibrations = ref<(string | null)[]>([null, null])
+    const urnRef = ref(props.itemId)
+
+    const {permissions} = useDatasetPermissions('score-set', urnRef, ACTIONS)
 
     return {
       head,
-      config: config,
-      userIsAuthenticated,
-      calibrationDraftRef,
-      calibrationDraftClassesFileRef,
-      editorValidationErrors,
+      config,
+      permissions,
       selectedCalibrations,
 
-      ...useItem({itemTypeName: 'scoreSet'}),
+      ...useCalibrationDialog(),
+      ...useItem<ScoreSet>({itemTypeName: 'scoreSet'}),
       ...useScopedId(),
+      ...useVariantCoordinates(),
       scoresData: scoresRemoteData.data,
       scoresDataStatus: scoresRemoteData.remoteDataStatus,
       setScoresDataUrl: scoresRemoteData.setDataUrl,
@@ -527,156 +573,111 @@ export default {
   },
 
   data: () => ({
-    clinicalMode: config.CLINICAL_FEATURES_ENABLED,
-    variants: null,
-    selectedDataOptions: [],
+    clinicalMode: true,
+    coordinateSwitching: false,
+    variants: null as Variant[] | null,
     showHeatmap: true,
-    optionsVisible: false,
     isScoreSetVisualizerVisible: false,
     hasClinicalVariants: false,
     heatmapExists: false,
-    selectedVariant: null,
-    calibrationEditorVisible: false,
-    userIsAuthorized: {
-      delete: false,
-      publish: false,
-      update: false,
-      addCalibration: false
-    },
-    annotatedDownloadInProgress: false,
-    annotatedDownloadProgress: 0,
-    streamController: null,
+    selectedVariant: null as Variant | null,
+    distHistogramExport: null as (() => void) | null,
+    clinicalHistogramExport: null as (() => void) | null,
+    heatmapSequenceType: 'protein' as 'dna' | 'protein',
+    heatmapLayout: 'normal' as 'normal' | 'compact',
+    heatmapExport: null as (() => void) | null,
     syncingBinSelection: false
   }),
 
   computed: {
-    clinicalModeHelpText: function () {
-      if (this.item.targetGenes[0]?.targetSequence) {
-        // Message for score sets from experiments with synthetic target sequences
+    clinicalModeHelpText() {
+      if (this.item?.targetGenes?.[0]?.targetSequence) {
         return 'In clinical mode, mapped variant coordinates are used when available, and start- and stop-loss codons are omitted because this score set was produced using a synthetic target sequence.'
-      } else {
-        return 'In clinical mode, mapped variant coordinates are used when available. For experiments with endogenously-edited targets, raw and mapped data are usually identical.'
       }
+      return 'In clinical mode, mapped variant coordinates are used when available. For experiments with endogenously-edited targets, raw and mapped data are usually identical.'
     },
-    hasCounts: function () {
+    contributors() {
+      const creatorId = this.item?.createdBy?.orcidId
+      return (this.item?.contributors || [])
+        .filter((c) => c.orcidId !== creatorId)
+        .sort((a, b) => (a.familyName ?? '').localeCompare(b.familyName ?? ''))
+    },
+    heatmapSequenceTypeOptions(): Array<{title: string; value: string}> {
+      if (!this.variants?.length) return []
+      return this.sequenceTypeOptions(this.variants as Variant[], this.clinicalMode)
+    },
+    hasCounts() {
       const allCountColumns = this.item?.datasetColumns?.countColumns ?? []
-      const countColumns = allCountColumns.filter((col) => col !== 'accession')
-      return countColumns.length > 0
+      return allCountColumns.filter((col) => col !== 'accession').length > 0
     },
-    hasPrimaryCalibration: function () {
-      return !!(
-        this.item?.scoreCalibrations &&
-        this.item.scoreCalibrations.length > 0 &&
-        this.item.scoreCalibrations.some((cal) => cal.primary)
-      )
+    hasCalibrations(): boolean {
+      return !!(this.item?.scoreCalibrations && this.item.scoreCalibrations.length > 0)
     },
-    dataTypeOptions: function () {
-      const options = [
-        {label: 'Scores', value: 'scores'},
-        {label: 'Mapped HGVS', value: 'mappedHgvs'},
-        {label: 'Custom columns', value: 'includeCustomColumns'},
-        {label: 'Without NA columns', value: 'dropNaColumns'}
-      ]
-      if (this.hasCounts) {
-        options.splice(1, 0, {label: 'Counts', value: 'counts'})
+    hasPrimaryCalibration(): boolean {
+      return this.hasCalibrations && !!this.item?.scoreCalibrations?.some((cal) => cal.primary)
+    },
+    headerActions(): RowAction[] {
+      const actions: RowAction[] = []
+      if (this.permissions.update) {
+        actions.push({label: 'Edit', handler: () => this.editItem()})
       }
-      return options
-    },
-    annotatedVariantDownloadOptions: function () {
-      const annotatedVariantOptions = []
-
-      if (this.hasPrimaryCalibration) {
-        annotatedVariantOptions.push({
-          label: 'Pathogenicity Evidence Line',
-          command: () => {
-            this.streamVariantAnnotations('pathogenicity-evidence-line')
-          }
+      if (this.permissions.add_calibration && this.item) {
+        actions.push({
+          label: 'Add Calibration',
+          handler: () => this.openCalibrationEditor(this.item!.urn)
         })
       }
-
-      if (this.hasPrimaryCalibration) {
-        annotatedVariantOptions.push({
-          label: 'Functional Impact Statement',
-          command: () => {
-            this.streamVariantAnnotations('functional-impact-statement')
-          }
+      if (this.item) {
+        actions.push({
+          label: 'View Calibrations',
+          handler: () => this.$router.push({path: `/score-sets/${this.item!.urn}/calibrations`})
         })
       }
-
-      annotatedVariantOptions.push({
-        label: 'Functional Impact Study Result',
-        command: () => {
-          this.streamVariantAnnotations('functional-study-result')
-        }
-      })
-
-      return annotatedVariantOptions
+      if (this.permissions.delete && this.item && !this.item.publishedDate) {
+        actions.push({separator: true})
+        actions.push({label: 'Delete', danger: true, handler: () => this.deleteItem()})
+      }
+      return actions
     },
-    hideStartAndStopLoss: function () {
-      // In clinical mode, when the target is not endogenously edited (so it has a target sequence), omit start- and
-      // stop-loss variants.
-      return this.clinicalMode && !!this.item.targetGenes[0]?.targetSequence
+    hideStartAndStopLoss() {
+      return this.clinicalMode && !!this.item?.targetGenes?.[0]?.targetSequence
     },
-    selectedCalibrationObjects: function () {
-      if (this.item && this.item.scoreCalibrations && this.selectedCalibrations) {
-        return this.selectedCalibrations.map((calibrationUrn) =>
-          this.item.scoreCalibrations.find((calibration) => calibration.urn === calibrationUrn)
+    isMetaDataEmpty() {
+      return Object.keys(this.item?.extraMetadata || {}).length === 0
+    },
+    selectedCalibrationObjects() {
+      if (this.item?.scoreCalibrations && this.selectedCalibrations) {
+        return this.selectedCalibrations.map(
+          (urn) => this.item!.scoreCalibrations?.find((cal) => cal.urn === urn) ?? null
         )
       }
       return this.selectedCalibrations.map(() => null)
     },
-    sameCalibrationSelected: function () {
+    sameCalibrationSelected() {
       const cal1 = this.selectedCalibrations[0]
-      for (const cal of this.selectedCalibrations) {
-        if (cal !== cal1) {
-          return false
-        }
-      }
-
-      return true
+      return this.selectedCalibrations.every((cal) => cal === cal1)
     },
-    uniprotId: function () {
-      // If there is only one target gene, return its UniProt ID that has been set from mapped metadata.
-      return _.size(this.item.targetGenes) == 1
-        ? _.get(this.item.targetGenes, [0, 'uniprotIdFromMappedMetadata'], null)
+    uniprotId(): string | null {
+      return _.size(this.item?.targetGenes) === 1
+        ? _.get(this.item?.targetGenes, [0, 'uniprotIdFromMappedMetadata'], null)
         : null
     },
-    isMetaDataEmpty: function () {
-      //If extraMetadata is empty, return value will be true.
-      return Object.keys(this.item.extraMetadata).length === 0
-    },
-    variantToVisualize: function () {
-      // While a user is autocompleting, `this.selectedVariant` is a string. Once selected, it will become an object and we can pass it as a prop.
+    variantToVisualize() {
       return typeof this.selectedVariant === 'object' ? this.selectedVariant : null
-    },
-    urlVariant: function () {
-      return this.$route.query.variant
-    },
-    urlCalibration: function () {
-      return this.$route.query.calibration
-    },
-    ...mapState({
-      galaxyUrl: (state) => state.routeProps.galaxyUrl,
-      toolId: (state) => state.routeProps.toolId,
-      requestFromGalaxy: (state) => state.routeProps.requestFromGalaxy
-    })
+    }
   },
 
   watch: {
-    item: {
-      handler: function (newValue) {
-        this.head.patch({
-          title: newValue ? getScoreSetShortName(newValue) : undefined
-        })
-      }
+    item(newValue) {
+      this.head.patch({title: newValue ? getScoreSetShortName(newValue) : undefined})
+      if (newValue) this.checkClinicalVariants()
     },
     itemId: {
-      handler: function (newValue, oldValue) {
-        if (newValue != oldValue) {
+      handler(newValue, oldValue) {
+        if (newValue !== oldValue) {
           this.setItemId(newValue)
-
           let scoresUrl = null
-          if (this.itemType && this.itemType.restCollectionName && this.itemId) {
+          if (this.itemType?.restCollectionName && this.itemId) {
             scoresUrl = `${config.apiBaseUrl}/${this.itemType.restCollectionName}/${this.itemId}/variants/data?include_post_mapped_hgvs=true&namespaces=vep&namespaces=scores`
           }
           this.setScoresDataUrl(scoresUrl)
@@ -685,699 +686,249 @@ export default {
       },
       immediate: true
     },
-    scoresData: {
-      handler: function (newValue) {
-        const variants = newValue ? parseScoresOrCounts(newValue, true) : null
-        if (variants) {
-          parseSimpleCodingVariants(variants)
-          translateSimpleCodingVariants(variants)
-        }
-        this.variants = variants ? Object.freeze(variants) : null
-        this.applyUrlState()
+    scoresData(newValue: unknown) {
+      const parsed = newValue ? parseScoresOrCounts(newValue as string, true) : null
+      if (parsed) {
+        parseSimpleCodingVariants(parsed as Variant[])
+        translateSimpleCodingVariants(parsed as Variant[])
       }
+      this.variants = parsed ? (Object.freeze(parsed) as Variant[]) : null
+      this.applyUrlState()
     },
     selectedVariant: 'refreshUrlState',
-    selectedCalibrations: {
-      handler: 'refreshUrlState',
-      deep: true
-    }
+    selectedCalibrations: {handler: 'refreshUrlState', deep: true}
   },
 
-  mounted: async function () {
-    await this.checkUserAuthorization()
+  async mounted() {
     await this.checkClinicalVariants()
   },
 
   methods: {
-    refreshUrlState: async function () {
+    refreshUrlState() {
       const query = {...this.$route.query}
-
       if (this.selectedVariant) {
         query.variant = this.selectedVariant.accession
       } else {
         delete query.variant
       }
-
-      if (this.selectedCalibrations && this.selectedCalibrations.length > 0) {
-        if (this.sameCalibrationSelected) {
-          query.calibration = this.selectedCalibrations[0]
-        } else {
-          delete query.calibration
-        }
+      if (this.selectedCalibrations?.length > 0 && this.sameCalibrationSelected) {
+        query.calibration = this.selectedCalibrations[0]
       } else {
         delete query.calibration
       }
-
-      await this.$router.replace({path: this.$route.path, query: query})
+      this.$router.replace({path: this.$route.path, query})
     },
-    showProteinStructureModal: function () {
+
+    showProteinStructureModal() {
       this.isScoreSetVisualizerVisible = true
     },
-    variantNotNullOrNA,
-    checkUserAuthorization: async function () {
-      await this.checkAuthorization()
+
+    toggleClinicalMode(value: boolean) {
+      this.coordinateSwitching = true
+      this.clinicalMode = value
+      requestAnimationFrame(() => {
+        this.coordinateSwitching = false
+      })
     },
-    checkAuthorization: async function () {
-      // Response should be true to get authorization
-      const actions = ['delete', 'publish', 'update', 'add_calibration']
+
+    async checkClinicalVariants() {
+      if (!this.item) return
       try {
-        for (const action of actions) {
-          const response = await axios.get(
-            `${config.apiBaseUrl}/permissions/user-is-permitted/score-set/${this.itemId}/${action}`
-          )
-          this.userIsAuthorized[action] = response.data
-        }
-        this.userIsAuthorized.addCalibration = this.userIsAuthorized['add_calibration']
-      } catch (err) {
-        console.log(`Error to get authorization:`, err)
+        await getScoreSetClinicalControlOptions(this.item.urn)
+        this.hasClinicalVariants = true
+      } catch {
+        // No clinical variants available
       }
     },
-    checkClinicalVariants: async function () {
-      if (this.item) {
-        try {
-          const response = await axios.get(`${config.apiBaseUrl}/score-sets/${this.item.urn}/clinical-controls/options`)
-          if (response.status == 200) {
-            this.hasClinicalVariants = true
-          }
-        } catch (err) {
-          console.log(`Error to get clinical variants:`, err)
-        }
-      }
-    },
-    editItem: function () {
-      if (this.item) {
-        this.$router.replace({path: `/score-sets/${this.item.urn}/edit`})
-      }
-    },
-    sendToGalaxy: async function (download_type) {
-      try {
-        const galaxyUrl = this.galaxyUrl
-        let params = {}
-        if (this.item) {
-          const baseApiUrl = `${config.apiBaseUrl}/score-sets/${this.item.urn}`
 
-          let endpoint, outputType
-          switch (download_type) {
-            case 'counts':
-              endpoint = 'counts'
-              outputType = 'table'
-              break
-            case 'scores':
-              endpoint = 'scores'
-              outputType = 'table'
-              break
-            case 'mappedVariants':
-              endpoint = 'mapped-variants'
-              outputType = 'json'
-              break
-            default:
-              break
-          }
-
-          const apiUrl = `${baseApiUrl}/${endpoint}`
-
-          params = {
-            toolId: this.toolId,
-            maveData: download_type,
-            urn: this.item.urn,
-            outputType: outputType,
-            URL: apiUrl
-          }
-          const submitGalaxyUrl = `${galaxyUrl}?tool_id=${params.toolId}&maveData=${params.maveData}&urn=${
-            params.urn
-          }&outputType=${params.outputType}&URL=${encodeURIComponent(params.URL)}`
-          window.location.href = submitGalaxyUrl
-          localStorage.removeItem('galaxyUrl')
-          localStorage.removeItem('toolId')
-          localStorage.removeItem('requestFromGalaxy')
-        }
-      } catch (error) {
-        console.error('Error sending data:', error)
-      }
+    editItem() {
+      if (this.item) this.$router.replace({path: `/score-sets/${this.item.urn}/edit`})
     },
-    deleteItem: async function () {
-      let response = null
+
+    async deleteItem() {
+      // @ts-expect-error PrimeVue ConfirmationService plugin
       this.$confirm.require({
         message: 'Are you sure you want to proceed?',
         header: 'Confirmation',
         icon: 'pi pi-exclamation-triangle',
         accept: async () => {
-          if (this.item) {
-            try {
-              response = await axios.delete(`${config.apiBaseUrl}/score-sets/${this.item.urn}`, this.item)
-            } catch (e) {
-              response = e.response || {status: 500}
-            }
-
-            if (response.status == 200) {
-              // display toast message here
-              //const deletedItem = response.data
-              console.log('Deleted item')
-              this.$router.replace({path: `/dashboard`})
-              this.$toast.add({severity: 'success', summary: 'Your score set was successfully deleted.', life: 3000})
-            } else if (response.data && response.data.detail) {
-              const formValidationErrors = {}
-              for (const error of response.data.detail) {
-                let path = error.loc
-                if (path[0] == 'body') {
-                  path = path.slice(1)
-                }
-                path = path.join('.')
-                formValidationErrors[path] = error.msg
-              }
-            }
+          if (!this.item) return
+          try {
+            await deleteScoreSet(this.item.urn)
+            this.$toast.add({severity: 'success', summary: 'Your score set was successfully deleted.', life: 3000})
+            this.$router.replace({path: '/dashboard'})
+          } catch {
+            this.$toast.add({severity: 'error', summary: 'Failed to delete score set.', life: 5000})
           }
-        },
-        reject: () => {
-          //callback to execute when user rejects the action
-          //do nothing
         }
       })
     },
-    markdownToHtml: function (markdown) {
-      return marked(markdown)
-    },
-    get(...args) {
-      return _.get(...args)
-    },
-    publishItem: async function () {
-      let response = null
+
+    markdownToHtml,
+
+    async publishItem() {
+      // @ts-expect-error PrimeVue ConfirmationService plugin
       this.$confirm.require({
         message:
           'Are you sure you want to publish this score set? Once published, you will be unable to edit scores, counts, or targets. You will also be unable to delete this score set.',
         header: 'Confirm Score Set Publication',
         icon: 'pi pi-exclamation-triangle',
-        acceptLabel: 'Publish',
-        rejectLabel: 'Cancel',
-        rejectClass: 'p-button-danger',
-        acceptIcon: 'pi pi-check',
-        rejectIcon: 'pi pi-times',
+        acceptProps: {label: 'Publish', severity: 'success', icon: 'pi pi-check'},
+        rejectProps: {label: 'Cancel', severity: 'secondary', icon: 'pi pi-times'},
         accept: async () => {
+          if (!this.item) return
           try {
-            if (this.item) {
-              response = await axios.post(`${config.apiBaseUrl}/score-sets/${this.item.urn}/publish`, this.item)
-              // make sure scroesets cannot be published twice API, but also remove the button on UI side
-            }
-          } catch (e) {
-            response = e.response || {status: 500}
+            const published = await publishScoreSet(this.item.urn)
+            this.$toast.add({severity: 'success', summary: 'Your score set was successfully published.', life: 3000})
+            this.$router.replace({path: `/score-sets/${published.urn}`})
+          } catch {
+            this.$toast.add({severity: 'error', summary: 'Failed to publish score set.', life: 5000})
           }
-
-          if (response.status == 200) {
-            // display toast message here
-            const publishedItem = response.data
-            if (this.item) {
-              console.log('Published item')
-              this.$router.replace({path: `/score-sets/${publishedItem.urn}`})
-              this.$toast.add({severity: 'success', summary: 'Your score set was successfully published.', life: 3000})
-            }
-          } else if (response.data && response.data.detail) {
-            const formValidationErrors = {}
-            for (const error of response.data.detail) {
-              let path = error.loc
-              if (path[0] == 'body') {
-                path = path.slice(1)
-              }
-              path = path.join('.')
-              formValidationErrors[path] = error.msg
-            }
-          }
-        },
-        reject: () => {
-          //callback to execute when user rejects the action
-          //do nothing
         }
       })
     },
-    //Download scores or counts
-    downloadFile: async function (download_type) {
-      let response = null
-      try {
-        if (this.item && download_type == 'counts') {
-          response = await axios.get(`${config.apiBaseUrl}/score-sets/${this.item.urn}/counts?drop_na_columns=true`)
-        } else if (this.item && download_type == 'scores') {
-          response = await axios.get(`${config.apiBaseUrl}/score-sets/${this.item.urn}/scores?drop_na_columns=true`)
-        }
-      } catch (e) {
-        response = e.response || {status: 500}
-      }
-      if (response.status == 200) {
-        const file = response.data
-        const anchor = document.createElement('a')
-        anchor.href = 'data:text/csv;charset=utf-8,' + encodeURIComponent(file)
-        anchor.target = '_blank'
-        if (download_type == 'counts') {
-          anchor.download = this.item.urn + '_counts.csv'
-        } else if (download_type == 'scores') {
-          anchor.download = this.item.urn + '_scores.csv'
-        }
-        anchor.click()
-      } else if (response.data && response.data.detail) {
-        const formValidationErrors = {}
-        for (const error of response.data.detail) {
-          let path = error.loc
-          if (path[0] == 'body') {
-            path = path.slice(1)
-          }
-          path = path.join('.')
-          formValidationErrors[path] = error.msg
-        }
-      }
+
+    setDistHistogramExport(fn: (() => void) | null) {
+      this.distHistogramExport = fn
     },
-    downloadMappedVariants: async function () {
-      let response = null
-      try {
-        if (this.item) {
-          response = await axios.get(`${config.apiBaseUrl}/score-sets/${this.item.urn}/mapped-variants`)
-        }
-      } catch (e) {
-        response = e.response || {status: 500}
-      }
-      if (response.status == 200) {
-        //convert object to Json.
-        const file = JSON.stringify(response.data)
-        const anchor = document.createElement('a')
-
-        anchor.href = 'data:text/json;charset=utf-8,' + encodeURIComponent(file)
-        anchor.target = '_blank'
-        //file default name
-        anchor.download = this.item.urn + '_mapped_variants.json'
-        anchor.click()
-      } else {
-        this.$toast.add({severity: 'error', summary: 'No downloadable mapped variants text file', life: 3000})
-      }
+    setClinicalHistogramExport(fn: (() => void) | null) {
+      this.clinicalHistogramExport = fn
     },
-    streamVariantAnnotations: async function (annotationType) {
-      this.abortStream()
-      this.streamController = new AbortController()
-
-      try {
-        this.annotatedDownloadInProgress = true
-        const response = await fetch(
-          `${config.apiBaseUrl}/score-sets/${this.item.urn}/annotated-variants/${annotationType}`,
-          {
-            signal: this.streamController.signal,
-            headers: {
-              Accept: 'application/x-ndjson'
-            }
-          }
-        )
-
-        if (!response.ok) {
-          throw new Error(`HTTP ${response.status}: ${response.statusText}`)
-        }
-
-        // Extract metadata from headers to build progress bar
-        const metadata = {
-          totalCount: parseInt(response.headers.get('X-Total-Count') || '0'),
-          processingStarted: response.headers.get('X-Processing-Started') || '',
-          streamType: response.headers.get('X-Stream-Type') || 'unknown'
-        }
-
-        const reader = response.body?.getReader()
-        if (!reader) {
-          throw new Error('Response body is not readable')
-        }
-
-        const decoder = new TextDecoder()
-        const chunks = []
-        let processedCount = 0
-
-        while (true) {
-          const {done, value} = await reader.read()
-
-          if (done) {
-            const allChunks = chunks.join('')
-            // Download the accumulated data as a file
-            const finalData = allChunks.trim()
-            const blob = new Blob([finalData], {type: 'application/x-ndjson'})
-            const url = URL.createObjectURL(blob)
-            const anchor = document.createElement('a')
-            anchor.href = url
-            anchor.download = `${this.item.urn}_annotated_variants_${annotationType}.ndjson`
-            anchor.click()
-            URL.revokeObjectURL(url)
-            break
-          }
-
-          const chunk = decoder.decode(value)
-          chunks.push(chunk)
-          const lines = chunk.split('\n')
-          processedCount += lines.length
-          this.annotatedDownloadProgress = Math.round((processedCount / metadata.totalCount) * 100)
-        }
-      } catch (error) {
-        this.$toast.add({
-          severity: 'error',
-          summary: `Error downloading annotated variants: ${error.message}`,
-          life: 5000
-        })
-      } finally {
-        this.streamController = null
-        this.annotatedDownloadInProgress = false
-        this.annotatedDownloadProgress = 0
-      }
-    },
-    abortStream: function () {
-      if (this.streamController) {
-        this.streamController.abort()
-        this.annotatedDownloadInProgress = false
-        this.annotatedDownloadProgress = 0
-      }
-    },
-    downloadMetadata: async function () {
-      //convert object to Json. extraMetadata is an object.
-      const metadata = JSON.stringify(this.item.extraMetadata)
-      const anchor = document.createElement('a')
-      anchor.href = 'data:text/txt;charset=utf-8,' + encodeURIComponent(metadata)
-      anchor.target = '_blank'
-      //file default name
-      anchor.download = this.item.urn + '_metadata.txt'
-      anchor.click()
-    },
-    setHistogramExport: function (fn) {
-      this.histogramExport = fn
-    },
-    setHeatmapExport: function (fn) {
+    setHeatmapExport(fn: (() => void) | null) {
       this.heatmapExport = fn
     },
-    variantSearch: function (event) {
-      const matches = []
-      for (const variant of this.variants) {
+
+    variantSearch(event: {query: string}) {
+      const query = event.query.toLowerCase()
+      const useMapped = this.clinicalMode
+      const matches: Variant[] = []
+      const MAX_RESULTS = 100
+
+      for (const variant of (this.variants || []) as Variant[]) {
+        if (matches.length >= MAX_RESULTS) break
         if (!_.isNumber(variant.scores?.score)) continue
 
-        if (variantNotNullOrNA(variant.hgvs_nt) && variant.hgvs_nt.toLowerCase().includes(event.query.toLowerCase())) {
-          matches.push(Object.assign(variant, {mavedb_label: variant.hgvs_nt}))
-        } else if (
-          variantNotNullOrNA(variant.hgvs_splice) &&
-          variant.hgvs_splice.toLowerCase().includes(event.query.toLowerCase())
-        ) {
+        const nt = this.getHgvsNt(variant, useMapped)
+        const pro = this.getHgvsPro(variant, useMapped)
+
+        // Empty query: show all variants with their preferred label
+        if (!query) {
+          matches.push(Object.assign(variant, this.variantLabel(variant)))
+        } else if (variantNotNullOrNA(nt) && nt!.toLowerCase().includes(query)) {
+          matches.push(Object.assign(variant, {mavedb_label: nt}))
+        } else if (variantNotNullOrNA(variant.hgvs_splice) && variant.hgvs_splice!.toLowerCase().includes(query)) {
           matches.push(Object.assign(variant, {mavedb_label: variant.hgvs_splice}))
-        } else if (
-          variantNotNullOrNA(variant.hgvs_pro) &&
-          variant.hgvs_pro.toLowerCase().includes(event.query.toLowerCase())
-        ) {
-          matches.push(Object.assign(variant, {mavedb_label: variant.hgvs_pro}))
-        } else if (
-          variantNotNullOrNA(variant.accession) &&
-          variant.accession.toLowerCase().includes(event.query.toLowerCase())
-        ) {
+        } else if (variantNotNullOrNA(pro) && pro!.toLowerCase().includes(query)) {
+          matches.push(Object.assign(variant, {mavedb_label: pro}))
+        } else if (variantNotNullOrNA(variant.accession) && variant.accession.toLowerCase().includes(query)) {
           matches.push(Object.assign(variant, {mavedb_label: variant.accession}))
         }
       }
-
       this.variantSearchSuggestions = matches
     },
-    downloadMultipleData: async function () {
-      if (this.selectedDataOptions.length === 0) {
-        this.$toast.add({
-          severity: 'warn',
-          summary: 'No data selected',
-          detail: 'Please select at least one data type.',
-          life: 3000
-        })
-        return
-      }
 
-      const baseUrl = new URL(`${config.apiBaseUrl}/score-sets/${this.item.urn}/variants/data`)
-      const params = new URLSearchParams(baseUrl.params)
-      let includeCustomColumns = false
-      for (const option of this.selectedDataOptions) {
-        if (['scores', 'counts'].includes(option)) {
-          params.append('namespaces', option)
-        }
-        if (option === 'mappedHgvs') {
-          params.append('include_post_mapped_hgvs', 'true')
-        }
-        if (option === 'counts' || option === 'includeCustomColumns') {
-          includeCustomColumns = true
-        }
-        if (option === 'dropNaColumns') {
-          params.append('drop_na_columns', 'true')
-        }
-      }
-      if (includeCustomColumns) {
-        params.append('include_custom_columns', 'true')
-      }
-      let response = null
-      try {
-        if (this.item) {
-          response = await axios.get(`${baseUrl}?${params.toString()}`)
-        }
-      } catch (e) {
-        response = e.response || {status: 500}
-      }
-      if (response.status == 200) {
-        const file = response.data
-        const anchor = document.createElement('a')
-        anchor.href = 'data:text/csv;charset=utf-8,' + encodeURIComponent(file)
-        anchor.target = '_blank'
-        anchor.download = this.item.urn + '.csv'
-        anchor.click()
-      } else if (response.data && response.data.detail) {
-        const formValidationErrors = {}
-        for (const error of response.data.detail) {
-          let path = error.loc
-          if (path[0] == 'body') {
-            path = path.slice(1)
-          }
-          path = path.join('.')
-          formValidationErrors[path] = error.msg
-        }
-      }
-      this.optionsVisible = false
+    variantLabel(variant: Variant): {mavedb_label: string} {
+      return this.labelForVariant(variant, this.clinicalMode)
     },
-    childComponentSelectedVariant: function (variant) {
+
+    childComponentSelectedVariant(variant: Variant | null) {
       if (variant == null) {
         this.selectedVariant = null
-      }
-
-      if (!variant?.accession) {
         return
       }
-
-      const selectedVariant = this.variants.find((v) => v.accession == variant.accession)
-      this.selectedVariant = Object.assign(selectedVariant, preferredVariantLabel(selectedVariant))
+      if (!variant.accession) return
+      const selected = this.variants?.find((v) => v.accession === variant.accession)
+      this.selectedVariant = selected ? Object.assign(selected, this.variantLabel(selected)) : null
     },
-    onHistogramSelectionChanged: function (payload, options) {
-      // Sync selected variant with histogram selection changes.
+
+    onHistogramSelectionChanged(
+      payload: {datum?: {accession?: string; urn?: string}; bin?: unknown},
+      options: {syncTarget?: string}
+    ) {
       const accession = payload?.datum?.accession || payload?.datum?.urn
       if (accession) {
-        const selectedVariant = this.variants.find((v) => v.accession == accession)
-        this.selectedVariant = selectedVariant
-          ? Object.assign(selectedVariant, preferredVariantLabel(selectedVariant))
-          : null
+        const selected = this.variants?.find((v) => v.accession === accession)
+        this.selectedVariant = selected ? Object.assign(selected, this.variantLabel(selected)) : null
       } else {
-        // Bin-only selection: keep histograms' bin selections in sync.
         if (this.syncingBinSelection || !payload?.bin) return
         this.syncingBinSelection = true
         try {
-          // Determine target ref based on source ref name
-          const target = this.$refs[options?.syncTarget]
-          // Sync the other histogram(s) to the same bin.
-          if (target) {
-            target.syncSelectBin(payload.bin)
-          }
+          // eslint-disable-next-line @typescript-eslint/no-explicit-any
+          const target = this.$refs[options?.syncTarget ?? ''] as any
+          if (target) target.syncSelectBin(payload.bin)
         } finally {
           this.syncingBinSelection = false
         }
-        // Clear variant focus when no datum is selected.
         this.selectedVariant = null
       }
     },
-    childComponentSelectedCalibration: function (calibration, idx) {
+
+    childComponentSelectedCalibration(calibration: string | null, idx: number) {
       this.selectedCalibrations[idx] = calibration
     },
-    applyUrlState: function () {
+
+    applyUrlState() {
       if (this.$route.query.variant) {
-        const selectedVariant = this.variants.find((v) => v.accession == this.$route.query.variant)
-        this.selectedVariant = Object.assign(selectedVariant, preferredVariantLabel(selectedVariant))
+        const selected = this.variants?.find((v) => v.accession === this.$route.query.variant)
+        if (selected) this.selectedVariant = Object.assign(selected, this.variantLabel(selected))
       }
       if (this.$route.query.calibration) {
-        const selectedCalibration = this.$route.query.calibration
-        this.selectedCalibrations = this.selectedCalibrations.map(() => selectedCalibration)
+        const cal = String(this.$route.query.calibration)
+        this.selectedCalibrations = this.selectedCalibrations.map(() => cal)
       }
     },
-    heatmapVisibilityUpdated: function (visible) {
+
+    heatmapVisibilityUpdated(visible: boolean) {
       this.heatmapExists = visible
     },
-    // Check whether all columns values are NA.
-    columnIsAllNa: function (tableData, column) {
-      const sliceData = tableData.slice(0, 10)
-      let frozen = true
-      let count = 0
-      for (let i = 0; i < sliceData.length; i++) {
-        //NA is a string
-        if (sliceData[i][column] == 'NA') {
-          count += 1
-        }
-      }
-      if (count == 10) {
-        frozen = false
-      }
-      return frozen
-    },
-    saveCreatedCalibration: async function () {
-      if (!this.calibrationDraftRef.value) return
 
-      const result = await saveCalibration({
-        draft: this.calibrationDraftRef.value,
-        classesFile: this.calibrationDraftClassesFileRef.value
-      })
+    async saveCreatedCalibration() {
+      const editor = this.$refs.calibrationEditorRef as InstanceType<typeof CalibrationEditor> | undefined
+      if (!editor) return
+      const result = await editor.saveCalibration()
+      if (!result || result.success) return
 
-      if (result.success) {
-        const createdCalibration = result.data
-        this.$toast.add({severity: 'success', summary: 'Your calibration was successfully created.', life: 3000})
-        this.calibrationEditorVisible = false
-        this.calibrationDraftRef.value = null
-        await this.reloadItem()
-        this.selectedCalibrations = this.selectedCalibrations.map(() => createdCalibration.urn)
-      } else if (result.error === 'email_required') {
+      if (result.error === 'email_required') {
         this.$toast.add({
           severity: 'error',
           summary: 'Email Required',
-          detail:
-            'You must add an email address to your account to create calibrations. Please update your email in Settings.',
+          detail: 'You must add an email address to your account to create calibrations.',
           life: 6000
         })
       } else if (result.error === 'validation') {
-        this.editorValidationErrors = result.validationErrors
-      } else if (result.error === 'generic') {
+        const count = Object.keys(result.validationErrors).length
         this.$toast.add({
           severity: 'error',
-          summary: `Error saving calibration: ${result.message}`,
-          life: 4000
+          summary: `Please fix ${count} validation ${count === 1 ? 'error' : 'errors'} before saving.`,
+          life: 5000
         })
+      } else if (result.error === 'generic') {
+        this.$toast.add({severity: 'error', summary: `Error saving calibration: ${result.message}`, life: 4000})
       }
     },
-    showOptions: function () {
-      this.optionsVisible = true
-    },
-    cancelCalibrationCreation: function () {
-      // Close the editor dialog
-      this.calibrationEditorVisible = false
-      // Reset draft
-      this.calibrationDraftRef.value = null
-      this.calibrationDraftClassesFileRef.value = null
-      // Reset validation errors
-      this.editorValidationErrors = {}
+
+    async onCalibrationSaved(calibrationData: {urn?: string}) {
+      this.$toast.add({severity: 'success', summary: 'Your calibration was successfully created.', life: 3000})
+      this.closeCalibrationEditor()
+      await this.reloadItem()
+      if (calibrationData?.urn) {
+        this.selectedCalibrations = this.selectedCalibrations.map(() => calibrationData.urn ?? null)
+      }
     }
   }
 }
 </script>
 
-<style scoped>
-/* Score set */
-
-.mavedb-score-set {
-  padding: 20px;
-}
-
-.mavedb-score-set-heatmap-pane {
-  margin: 10px 0;
-}
-
-.mavedb-score-set-variant-search {
-  margin: 40px 0 0 0;
-  display: flex;
-  justify-content: center;
-}
-
-.mavedb-score-set-variant-search > span {
-  width: 50%;
-  display: flex;
-  align-items: center;
-  column-gap: 0.5em;
-}
-
-/* Histogram */
-
-.mavedb-score-set-histogram-pane {
-  margin: 10px;
-}
-
-/* Calibration table */
-
-.mavedb-score-set-calibration-pane {
-  margin: 10px 0;
-}
-
-/* Controls */
-
-.mavedb-clinical-mode-control-container {
-  margin-left: 1em;
-}
-
-.mavedb-clinical-mode-option-on {
-  font-weight: bold;
-}
-
-/* Score set details */
-
-.mavedb-score-set-section-title {
-  /*font-family: Helvetica, Verdana, Arial, sans-serif;*/
-  font-size: 24px;
-  padding: 0 0 5px 0;
-  border-bottom: 1px solid #ccc;
-  margin: 20px 0 10px 0;
-}
-
-.mavedb-score-set-description {
-  /*font-family: Helvetica, Verdana, Arial, sans-serif;*/
-  margin: 0 0 10px 0;
-}
-
-.mavedb-score-set-urn {
-  font-size: 20px;
-  color: gray;
-  margin-left: 12px;
-}
-
-/* Formatting in Markdown blocks */
-
-.mavedb-score-set-abstract {
-  /*font-family: Helvetica, Verdana, Arial, sans-serif;*/
-  font-size: 20px;
-}
-
-.mavedb-score-set-abstract:deep(code) {
-  color: #987cb8;
-  font-size: 87.5%;
-  word-wrap: break-word;
-}
-
-.samplify-data-table .samplify-data-table-spinner-container {
-  align-items: center;
-  display: flex;
-  justify-content: center;
-  padding-top: 18px;
-  width: 100%;
-}
-
-.samplify-data-table .samplify-data-table-progress {
-  height: 50px;
-  width: 50px;
-}
-
-.mave-save-to-collection-button {
-  margin: 1em 0;
-}
-
-.mavedb-assay-facts-container {
-  float: left;
-  margin: 0 1em 1em 0;
-  width: 50%;
-}
-
-.clearfix::after {
-  display: block;
-  content: '';
-  clear: both;
-}
-</style>
-
 <style>
 .scoreset-viz-sidebar .p-sidebar-header {
   padding: 0 5px 0;
   height: 2em;
+}
+</style>
+
+<style scoped>
+:deep(.p-selectbutton .p-togglebutton) {
+  padding: 0.25rem 0.625rem;
+  font-size: 0.75rem;
 }
 </style>

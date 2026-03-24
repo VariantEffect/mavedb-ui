@@ -12,7 +12,7 @@ The router is defined in `src/router/index.ts` and uses **history mode** (`creat
 | Protected     | `/dashboard`, `/settings`, `/create-experiment`, `/create-score-set` | Yes           |
 | Entity views  | `/experiments/:urn`, `/score-sets/:urn`, `/experiment-sets/:urn`     | No            |
 | Entity edit   | `/experiments/:urn/edit`, `/score-sets/:urn/edit`                    | Yes           |
-| Conditional   | `/mavemd`, `/variants/:clingenAlleleId` (clinical features flag)     | No            |
+| Clinical      | `/mavemd`, `/variants/:clingenAlleleId`, `/variant-measurements/:urn` | No           |
 | Auth callback | `/oidc-callback`, `/oidc-callback-error`                             | No            |
 
 ### Route props
@@ -45,14 +45,6 @@ router.beforeEach((to, _from, next) => {
 ### Hash-to-history migration
 
 A second `beforeEach` guard in `src/main.js` handles legacy hash-based URLs (from a previous Vue Router configuration) by redirecting them to the equivalent history-mode URL.
-
-### Feature-flagged routes
-
-Routes for clinical features (`/mavemd`, `/variants/:id`, `/variant-measurements/:urn`) are conditionally included based on `config.CLINICAL_FEATURES_ENABLED`:
-
-```ts
-...(config.CLINICAL_FEATURES_ENABLED ? [{ path: '/mavemd', component: SearchVariantsScreen }] : [])
-```
 
 ## Authentication (ORCID OAuth2)
 

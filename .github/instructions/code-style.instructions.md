@@ -74,6 +74,7 @@ Configured in `eslint.config.mjs` with:
 ## Import Conventions
 
 - Always use the `@/` path alias (maps to `src/`). Never use relative paths.
+- Always include file extensions: `.vue` for components, `.ts` for TypeScript modules.
 - Group imports: Vue/library imports first, then project imports.
 
 ```ts

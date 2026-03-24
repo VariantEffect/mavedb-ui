@@ -13,7 +13,7 @@ MaveDB UI is the frontend for [MaveDB](https://mavedb.org), a database for Multi
 | Build tool         | Vite 5                                                  |
 | Package manager    | npm                                                     |
 | Component library  | PrimeVue 4 (Aura theme)                                 |
-| CSS                | Tailwind CSS 4 + PrimeFlex 3 grid utilities             |
+| CSS                | Tailwind CSS 4                                          |
 | State management   | Vuex 4 (legacy, migrating to Pinia)                     |
 | Routing            | Vue Router 4 (history mode)                             |
 | HTTP client        | Axios (via rest-client-vue wrapper)                     |
@@ -28,9 +28,15 @@ MaveDB UI is the frontend for [MaveDB](https://mavedb.org), a database for Multi
 src/
 ├── assets/          # Global CSS and static images
 ├── components/
-│   ├── common/      # Reusable, generic UI components
-│   ├── layout/      # App shell: DefaultLayout, Toolbar, Footer
-│   └── screens/     # Top-level route/page components (*View, *Screen, *Creator, *Editor)
+│   ├── calibration/ # Calibration display and editing components
+│   ├── collection/  # Collection management components
+│   ├── common/      # Reusable UI components (all prefixed Mv*)
+│   ├── dashboard/   # Dashboard tab components
+│   ├── forms/       # Form section components for creator/editor pages
+│   ├── layout/      # App shell: MvLayout, MvNavBar, MvFooter
+│   ├── score-set/   # Score set visualization and display components
+│   ├── screens/     # Top-level route/page components (*View, *Screen, *Creator, *Editor)
+│   └── variant/     # Variant display components
 ├── composables/     # Vue 3 composables (newer pattern)
 ├── composition/     # Composition functions (older pattern, similar purpose)
 ├── lib/             # Business logic, utilities, API helpers
@@ -43,7 +49,7 @@ src/
 ## Key Conventions
 
 - **Path alias**: Always use `@/` (maps to `src/`) instead of relative imports.
-- **Component naming**: PascalCase `.vue` files. Screens suffixed with `View`, `Screen`, `Creator`, or `Editor`.
+- **Component naming**: PascalCase `.vue` files. Components in `common/` are prefixed `Mv*`. Screens are suffixed with `View`, `Screen`, `Creator`, or `Editor`.
 - **TypeScript**: Prefer `.ts` for new files. Strict mode is enabled (`noUnusedLocals`, `noUnusedParameters`, `noFallthroughCasesInSwitch`).
 - **No test framework**: There is currently no automated test suite in this project.
 - **Node version**: 20.x is required.
@@ -64,7 +70,6 @@ Environment variables are defined in `.env.*` files and accessed via `import.met
 - `VITE_API_URL` — Backend API base URL
 - `VITE_APP_URL` — Application base URL
 - `VITE_SITE_TITLE` — Page title template
-- `VITE_CLINICAL_FEATURES_ENABLED` — Feature flag for MaveMD clinical features
 - `VITE_PREVIEW_SITE` — Preview mode flag
 
 ## Domain Context
@@ -83,9 +88,8 @@ MaveDB stores and serves data about **variant effects** measured through multipl
 ## Important Architectural Notes
 
 1. **State management is in transition**: Vuex 4 modules exist for auth, toast, and dynamic item state. Pinia is installed but not widely used yet. New state management should prefer Pinia.
-2. **Dynamic Vuex modules**: The `composition/item.js` composable creates per-component Vuex modules dynamically using `store.registerModule()` with UUID-based namespaces.
-3. **Feature flags**: Some routes and features are conditionally enabled based on `config.CLINICAL_FEATURES_ENABLED`.
-4. **HTTPS required for dev**: The Vite dev server uses `@vitejs/plugin-basic-ssl` because ORCID OAuth requires HTTPS callbacks. Port 8081 must be available (strictPort).
+2. **Dynamic Vuex modules**: The `composition/item.ts.ts` composable creates per-component Vuex modules dynamically using `store.registerModule()` with UUID-based namespaces.
+3. **HTTPS required for dev**: The Vite dev server uses `@vitejs/plugin-basic-ssl` because ORCID OAuth requires HTTPS callbacks. Port 8081 must be available (strictPort).
 
 ## Maintaining This File
 

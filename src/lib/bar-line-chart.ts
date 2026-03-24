@@ -159,7 +159,7 @@ export default function makeBarLineChart(): BarLineChart {
       .style('border-radius', '5px')
       .style('color', '#000')
       .style('padding', '5px')
-      .style('z-index', 2001)
+      .style('z-index', 5)
   }
 
   const showTooltip = (

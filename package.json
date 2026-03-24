@@ -7,9 +7,11 @@
     "build": "./scripts/build-docs.sh && vite build --mode=${MODE=live}",
     "dev": "./scripts/build-docs.sh && vite --mode=${MODE=dev}",
     "docs": "mkdocs serve -f docs/mkdocs.yml",
-    "preview": "./scripts/build-docs.sh && vite build --mode=${MODE=live} --watch & vite preview --mode=${MODE=live}"
+    "preview": "./scripts/build-docs.sh && vite build --mode=${MODE=live} --watch & vite preview --mode=${MODE=live}",
+    "test:unit": "vitest run"
   },
   "dependencies": {
+    "@fontsource/exo-2": "^5.2.8",
     "@fontsource/raleway": "^5.0.16",
     "@fortawesome/fontawesome-svg-core": "^7.0.0",
     "@fortawesome/free-brands-svg-icons": "^7.0.0",
@@ -37,6 +39,7 @@
     "datatables.net-select": "1.4.0",
     "datatables.net-select-dt": "1.4.0",
     "dom-to-image": "^2.6.0",
+    "dompurify": "^3.3.2",
     "fasta-js": "^1.0.1",
     "indefinite": "^2.4.3",
     "jquery": "^3.7.1",
@@ -72,6 +75,7 @@
   "devDependencies": {
     "@types/d3": "^7.4.3",
     "@types/dom-to-image": "^2.6.7",
+    "@types/dompurify": "^3.0.5",
     "@types/lodash": "^4.17.0",
     "@types/papaparse": "^5.3.14",
     "@types/pluralize": "^0.0.33",
@@ -87,6 +91,7 @@
     "prettier": "^3.6.2",
     "sass-embedded": "^1.97.3",
     "vite": "^5.4.21",
+    "vitest": "^2.1.9",
     "vue-tsc": "^3.0.7"
   },
   "browserslist": [

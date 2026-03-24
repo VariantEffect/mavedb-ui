@@ -1,72 +1,7 @@
-export const MAVE_MD_SCORE_SETS = [
-  {gene: 'ASPA', urn: 'urn:mavedb:00000657-a-1'},
-  {gene: 'ASPA', urn: 'urn:mavedb:00000657-b-1'},
-  {gene: 'BRCA1', urn: 'urn:mavedb:00000097-0-2'},
-  {gene: 'BRCA1', urn: 'urn:mavedb:00001222-a-2'},
-  {gene: 'BRCA1', urn: 'urn:mavedb:00001222-b-2'},
-  {gene: 'BRCA2', urn: 'urn:mavedb:00001224-a-1'},
-  {gene: 'CALM1, CALM2, and CALM3', urn: 'urn:mavedb:00000001-c-1'},
-  {gene: 'CARD11', urn: 'urn:mavedb:00001226-a-1'},
-  {gene: 'CARD11', urn: 'urn:mavedb:00001226-b-1'},
-  {gene: 'CBS', urn: 'urn:mavedb:00000005-a-5'},
-  {gene: 'CBS', urn: 'urn:mavedb:00000005-a-6'},
-  {gene: 'CHEK2', urn: 'urn:mavedb:00001205-a-1'},
-  {gene: 'CRX', urn: 'urn:mavedb:00001227-a-2'},
-  {gene: 'DDX3X', urn: 'urn:mavedb:00001228-a-1'},
-  {gene: 'F9', urn: 'urn:mavedb:00001200-a-1'},
-  {gene: 'F9', urn: 'urn:mavedb:00001200-b-1'},
-  {gene: 'F9', urn: 'urn:mavedb:00001200-c-1'},
-  {gene: 'F9', urn: 'urn:mavedb:00001200-d-1'},
-  {gene: 'F9', urn: 'urn:mavedb:00001200-e-1'},
-  {gene: 'FKRP', urn: 'urn:mavedb:00001197-a-5'},
-  {gene: 'GCK', urn: 'urn:mavedb:00000096-a-1'},
-  {gene: 'GCK', urn: 'urn:mavedb:00000096-b-1'},
-  {gene: 'HMBS', urn: 'urn:mavedb:00000108-a-1'},
-  {gene: 'HMBS', urn: 'urn:mavedb:00000108-b-1'},
-  {gene: 'HMBS', urn: 'urn:mavedb:00000108-0-1'},
-  {gene: 'JAG1', urn: 'urn:mavedb:00001198-a-1'},
-  {gene: 'KCNE1', urn: 'urn:mavedb:00000674-a-2'},
-  {gene: 'KCNE1', urn: 'urn:mavedb:00000674-b-1'},
-  {gene: 'KCNE1', urn: 'urn:mavedb:00000674-c-1'},
-  {gene: 'KCNH2', urn: 'urn:mavedb:00001229-a-2'},
-  {gene: 'KCNH2', urn: 'urn:mavedb:00001230-a-2'},
-  {gene: 'KCNH2', urn: 'urn:mavedb:00001231-a-2'},
-  {gene: 'KCNQ4', urn: 'urn:mavedb:00000094-a-2'},
-  {gene: 'KCNQ4', urn: 'urn:mavedb:00000094-a-3'},
-  {gene: 'LARGE1', urn: 'urn:mavedb:00001254-a-1'},
-  {gene: 'MSH2', urn: 'urn:mavedb:00000050-a-1'},
-  {gene: 'NDUFAF6', urn: 'urn:mavedb:00000663-a-1'},
-  {gene: 'OTC', urn: 'urn:mavedb:00000112-a-1'},
-  {gene: 'PAX6', urn: 'urn:mavedb:00000665-a-1'},
-  {gene: 'PAX6', urn: 'urn:mavedb:00000665-b-1'},
-  {gene: 'PAX6', urn: 'urn:mavedb:00000665-c-1'},
-  {gene: 'PAX6', urn: 'urn:mavedb:00000665-d-1'},
-  {gene: 'PTEN', urn: 'urn:mavedb:00000013-a-1'},
-  {gene: 'PTEN', urn: 'urn:mavedb:00000054-a-1'},
-  {gene: 'RHO', urn: 'urn:mavedb:00000099-a-1'},
-  {gene: 'SCN5A', urn: 'urn:mavedb:00000098-a-2'},
-  {gene: 'SCN5A', urn: 'urn:mavedb:00001233-a-1'},
-  {gene: 'SGCB', urn: 'urn:mavedb:00000659-a-1'},
-  {gene: 'TARDBP', urn: 'urn:mavedb:00000060-a-1'},
-  {gene: 'TARDBP', urn: 'urn:mavedb:00000060-a-2'},
-  {gene: 'TP53', urn: 'urn:mavedb:00000068-0-1'},
-  {gene: 'TP53', urn: 'urn:mavedb:00000068-a-1'},
-  {gene: 'TP53', urn: 'urn:mavedb:00000068-b-1'},
-  {gene: 'TP53', urn: 'urn:mavedb:00000068-c-1'},
-  {gene: 'TP53', urn: 'urn:mavedb:00001234-0-1'},
-  {gene: 'TP53', urn: 'urn:mavedb:00001234-a-1'},
-  {gene: 'TP53', urn: 'urn:mavedb:00001234-b-1'},
-  {gene: 'TP53', urn: 'urn:mavedb:00001234-c-1'},
-  {gene: 'TP53', urn: 'urn:mavedb:00001234-d-1'},
-  {gene: 'TP53', urn: 'urn:mavedb:00001234-e-1'},
-  {gene: 'TP53', urn: 'urn:mavedb:00001234-f-1'},
-  {gene: 'TP53', urn: 'urn:mavedb:00001234-g-1'},
-  {gene: 'TP53', urn: 'urn:mavedb:00001234-h-1'},
-  {gene: 'TP53', urn: 'urn:mavedb:00001235-a-1'},
-  {gene: 'TP53', urn: 'urn:mavedb:00001236-0-1'},
-  {gene: 'TPK1', urn: 'urn:mavedb:00001251-a-1'},
-  {gene: 'VHL', urn: 'urn:mavedb:00000675-a-1'}
-]
+import type {ClinGenAllele, ClinGenGenomicAllele, ClinGenTranscriptAllele} from '@/api/clingen'
+import type {components} from '@/schema/openapi'
+
+type VariantMeasurement = components['schemas']['VariantEffectMeasurementWithShortScoreSet']
 
 /**
  * Regular expression for valid CA or PA ids that can be used in ClinGen searches.
@@ -82,3 +17,82 @@ export const clinVarVariationIdRegex = /^[0-9]+$/m
  * Regular expression for valid Reference SNP cluster IDs that can be used in ClinGen searches.
  */
 export const rsIdRegex = /^rs[0-9]+$/im
+
+/** A single MANE coordinate extracted from a ClinGen transcript allele. */
+export interface ManeCoordinate {
+  sequenceType: string
+  database: string
+  hgvs: string | undefined
+}
+
+/** Processed ClinGen allele data used by the MaveMD search results UI. */
+export interface AlleleResult {
+  clingenAlleleUrl: string | undefined
+  clingenAlleleId: string | undefined
+  canonicalAlleleName: string | undefined
+  maneStatus: string | null
+  genomicAlleles: ClinGenGenomicAllele[]
+  grch38Hgvs: string | null
+  grch37Hgvs: string | null
+  transcriptAlleles: ClinGenTranscriptAllele[]
+  maneCoordinates: ManeCoordinate[]
+  variantsStatus: string
+  variants: {
+    nucleotide: VariantMeasurement[]
+    protein: VariantMeasurement[]
+    associatedNucleotide: VariantMeasurement[]
+  }
+}
+
+/** Extract the trailing path segment from a URL (e.g. ClinGen allele ID from its URL). */
+export function extractIdFromUrl(url: string | undefined): string | undefined {
+  if (!url) return undefined
+  const parts = url.split('/')
+  return parts[parts.length - 1]
+}
+
+/** Transform a raw ClinGen allele API response into an AlleleResult for display. */
+export function createAlleleResult(data: ClinGenAllele, maneStatus: string | null): AlleleResult {
+  const allele: AlleleResult = {
+    clingenAlleleUrl: data['@id'],
+    clingenAlleleId: extractIdFromUrl(data['@id']),
+    canonicalAlleleName: data.communityStandardTitle?.[0],
+    maneStatus,
+    genomicAlleles: data.genomicAlleles || [],
+    grch38Hgvs: null,
+    grch37Hgvs: null,
+    transcriptAlleles: data.transcriptAlleles || [],
+    maneCoordinates: [],
+    variantsStatus: 'NotLoaded',
+    variants: {nucleotide: [], protein: [], associatedNucleotide: []}
+  }
+
+  for (const genomicAllele of allele.genomicAlleles) {
+    if (genomicAllele.referenceGenome === 'GRCh38') {
+      allele.grch38Hgvs = genomicAllele.hgvs?.[0] ?? null
+    } else if (genomicAllele.referenceGenome === 'GRCh37') {
+      allele.grch37Hgvs = genomicAllele.hgvs?.[0] ?? null
+    }
+  }
+
+  for (const transcriptAllele of allele.transcriptAlleles) {
+    const mane = transcriptAllele.MANE
+    if (mane) {
+      for (const sequenceType of ['nucleotide', 'protein'] as const) {
+        const records = mane[sequenceType]
+        if (records) {
+          for (const database in records) {
+            allele.maneCoordinates.push({
+              sequenceType,
+              database,
+              hgvs: records[database].hgvs
+            })
+          }
+        }
+      }
+    }
+    break
+  }
+
+  return allele
+}

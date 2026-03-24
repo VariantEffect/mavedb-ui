@@ -342,20 +342,25 @@
           <MvAssayFactsCard :link-title="false" :score-set="item" />
         </div>
 
-        <!-- Provenance -->
+        <!-- Attribution -->
         <div class="mb-4">
-          <MvProvenanceCard
+          <MvAttributionCard
             :contributors="contributors"
+            :created-by="item.createdBy"
+            :creation-date="item.creationDate"
             :data-usage-policy="item.dataUsagePolicy"
             :external-links="item.externalLinks || item.experiment?.externalLinks"
             :license="item.license"
             :meta-analyzes-urns="item.metaAnalyzesScoreSetUrns"
+            :modification-date="item.modificationDate"
+            :modified-by="item.modifiedBy"
             parent-label="Parent experiment"
             parent-route-name="experiment"
             :parent-urn="item.experiment?.urn"
+            :published-date="item.publishedDate"
             :superseded-urn="item.supersededScoreSet?.urn"
             :superseding-urn="item.supersedingScoreSet?.urn"
-            title="Provenance"
+            title="Attribution"
           />
         </div>
 
@@ -462,7 +467,7 @@ import MvEntityLink from '@/components/common/MvEntityLink.vue'
 import MvExternalIdentifiersCard from '@/components/common/MvExternalIdentifiersCard.vue'
 import MvMetadataLine from '@/components/common/MvMetadataLine.vue'
 import MvPageLoading from '@/components/common/MvPageLoading.vue'
-import MvProvenanceCard from '@/components/common/MvProvenanceCard.vue'
+import MvAttributionCard from '@/components/common/MvAttributionCard.vue'
 import MvRowActionMenu, {type RowAction} from '@/components/common/MvRowActionMenu.vue'
 import MvStatusMessage from '@/components/common/MvStatusMessage.vue'
 import MvTargetsAccordion from '@/components/common/MvTargetsAccordion.vue'
@@ -515,7 +520,7 @@ export default {
     MvMetadataLine,
     MvPageHeader,
     MvPageLoading,
-    MvProvenanceCard,
+    MvAttributionCard,
     MvRowActionMenu,
     MvStatusMessage,
     MvTargetsAccordion,

@@ -75,11 +75,16 @@
         <!-- Details and Metadata -->
         <h2 id="detailed-metadata" class="mb-4 mt-8 text-base font-bold text-text-dark">Details and Metadata</h2>
 
-        <MvProvenanceCard
+        <MvAttributionCard
           :contributors="contributors"
+          :created-by="item.createdBy"
+          :creation-date="item.creationDate"
           :external-links="item.externalLinks"
+          :modification-date="item.modificationDate"
+          :modified-by="item.modifiedBy"
           parent-label="Parent experiment set"
           :parent-urn="item.experimentSetUrn"
+          :published-date="item.publishedDate"
         />
 
         <!-- Keywords -->
@@ -176,7 +181,7 @@ import MvEmptyState from '@/components/common/MvEmptyState.vue'
 import MvExternalIdentifiersCard from '@/components/common/MvExternalIdentifiersCard.vue'
 import MvMetadataLine from '@/components/common/MvMetadataLine.vue'
 import MvPageLoading from '@/components/common/MvPageLoading.vue'
-import MvProvenanceCard from '@/components/common/MvProvenanceCard.vue'
+import MvAttributionCard from '@/components/common/MvAttributionCard.vue'
 import MvPublicationsSection from '@/components/common/MvPublicationsSection.vue'
 import MvRowActionMenu from '@/components/common/MvRowActionMenu.vue'
 import MvTargetsAccordion from '@/components/common/MvTargetsAccordion.vue'
@@ -208,7 +213,7 @@ export default defineComponent({
     MvScoreSetRow,
     MvLoader,
     MvPageLoading,
-    MvProvenanceCard,
+    MvAttributionCard,
     MvPublicationsSection,
     MvRowActionMenu,
     MvTargetsAccordion,

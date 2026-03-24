@@ -50,6 +50,13 @@ export const NEWS_ITEMS: NewsItem[] = [
   {
     date: 'Mar 2026',
     tag: 'improvement',
+    title: 'Redesigned site',
+    description:
+      'MaveDB has a refreshed look and feel with a new card-based layout, cleaner dataset pages, and improved navigation throughout.'
+  },
+  {
+    date: 'Mar 2026',
+    tag: 'improvement',
     title: 'Sortable collections',
     description:
       'Collections can now be sorted from the collection view, making it easier to organize and navigate large collections.'

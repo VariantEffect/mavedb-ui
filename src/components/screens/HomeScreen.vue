@@ -99,7 +99,7 @@
           community-contributed MAVE experiments.
         </p>
         <div class="mt-auto mb-2 text-sm font-bold uppercase tracking-wide text-text-muted">Browse by</div>
-        <div class="grid md:grid-cols-2 lg:grid-cols-4 gap-2.5">
+        <div class="grid md:grid-cols-3 gap-2.5">
           <router-link
             v-for="cat in BROWSE_CATEGORIES"
             :key="cat.label"

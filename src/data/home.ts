@@ -28,15 +28,13 @@ export const WATERMARK_BARS = [
   {color: 'var(--color-sage)', height: '12%'}
 ]
 
-// TODO: Link to appropriate search filters
 export const BROWSE_CATEGORIES = [
-  {label: 'Gene', description: '700+ human genes', icon: 'fa-solid fa-dna', route: '/search'},
-  {label: 'Organism', description: 'Human, yeast & more', icon: 'fa-solid fa-person', route: '/search'},
+  {label: 'BRCA1', description: 'Browse BRCA1 score sets', icon: 'fa-solid fa-dna', route: '/search?target-name=BRCA1'},
   {
-    label: 'Calibrated',
-    description: 'Clinically calibrated sets',
-    icon: 'fa-regular fa-square-check',
-    route: '/search'
+    label: 'Human',
+    description: 'Human variant data',
+    icon: 'fa-solid fa-person',
+    route: '/search?target-organism-name=Homo+sapiens'
   },
   {label: 'Browse all', description: 'Open search, no filters', icon: 'fa-solid fa-magnifying-glass', route: '/search'}
 ]
@@ -67,4 +65,3 @@ export const FEATURED_COLLECTIONS = [
     route: `/collections/${MAVEMD_COLLECTION_URN}`
   }
 ]
-

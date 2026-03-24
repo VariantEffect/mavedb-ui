@@ -40,7 +40,7 @@
                         To add a score set to a different experiment, supercede a score set or add a score set to
                         meta-analysis, please navigate to "New score set". For more on the relationship between score
                         sets and experiments, see the
-                        <a :href="`${config.appBaseUrl}/docs/mavedb/record_types.html#record-types`" target="_blank"
+                        <a :href="`${config.appBaseUrl}/docs/mavedb/getting-started/key-concepts.html`" target="_blank"
                           >documentation</a
                         >.
                       </div>
@@ -102,7 +102,7 @@
                       To which experiment does this score set belong?
                       <div class="mavedb-help-small">
                         For more on the relationship between score sets and experiments, see the
-                        <a :href="`${config.appBaseUrl}/docs/mavedb/record_types.html#record-types`" target="_blank"
+                        <a :href="`${config.appBaseUrl}/docs/mavedb/getting-started/key-concepts.html`" target="_blank"
                           >documentation</a
                         >.
                       </div>
@@ -368,7 +368,7 @@
                       </label>
                       <div class="mavedb-help-small">
                         For more on data licensing in MaveDB, see the
-                        <a :href="`${config.appBaseUrl}/docs/mavedb/data_licensing.html#data-licensing`" target="_blank"
+                        <a :href="`${config.appBaseUrl}/docs/mavedb/submitting-data/metadata-guide.html#licenses`" target="_blank"
                           >documentation</a
                         >.
                       </div>
@@ -1305,7 +1305,7 @@
                       This file is required and should be a CSV file, with each row of the table describing a single
                       variant. For more information about what this file can include and how it should be formatted,
                       please take a look at
-                      <a :href="`${config.appBaseUrl}/docs/mavedb/data_formats.html#data-table-formats`" target="_blank"
+                      <a :href="`${config.appBaseUrl}/docs/mavedb/submitting-data/data-formats.html`" target="_blank"
                         >our documentation</a
                       >.
                     </div>

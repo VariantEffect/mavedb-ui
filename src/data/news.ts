@@ -46,6 +46,8 @@ export const NEWS_TAG_STYLES: Record<NewsTag, {bg: string; text: string}> = {
   fix: {bg: 'bg-unpublished-light', text: 'text-unpublished'}
 }
 
+export const NEWS_ITEMS_LIMIT = 3
+
 export const NEWS_ITEMS: NewsItem[] = [
   {
     date: 'Mar 2026',

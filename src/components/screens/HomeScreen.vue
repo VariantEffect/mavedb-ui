@@ -225,7 +225,7 @@ import MvLayout from '@/components/layout/MvLayout.vue'
 import MvLoader from '@/components/common/MvLoader.vue'
 import MvScoreSetRow from '@/components/common/MvScoreSetRow.vue'
 import {BROWSE_CATEGORIES, CONTRIBUTE_CATEGORIES, FEATURED_COLLECTIONS, WATERMARK_BARS} from '@/data/home'
-import {NEWS_ITEMS, NEWS_TAG_STYLES} from '@/data/news'
+import {NEWS_ITEMS, NEWS_ITEMS_LIMIT, NEWS_TAG_STYLES} from '@/data/news'
 import {SEARCH_COLORS, SEARCH_PLACEHOLDERS, SEARCH_TYPES} from '@/data/search'
 import {getRecentlyPublishedScoreSets} from '@/api/mavedb/score-sets'
 import {components} from '@/schema/openapi'
@@ -243,7 +243,7 @@ export default defineComponent({
 
     return {
       router,
-      newsItems: NEWS_ITEMS,
+      newsItems: NEWS_ITEMS.slice(0, NEWS_ITEMS_LIMIT),
       NEWS_TAG_STYLES,
       WATERMARK_BARS,
       SEARCH_TYPES,

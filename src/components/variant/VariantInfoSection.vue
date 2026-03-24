@@ -5,6 +5,7 @@
     <MvDetailRow label="ClinGen allele ID">
       <a
         v-if="clingenAlleleId"
+        class="text-link"
         :href="`https://reg.clinicalgenome.org/redmine/projects/registry/genboree_registry/by_canonicalid?canonicalid=${clingenAlleleId}`"
         target="_blank"
         >{{ clingenAlleleId }}</a
@@ -12,7 +13,9 @@
     </MvDetailRow>
     <MvDetailRow :label="`ClinVar allele ${clinvarAlleleIds.length > 1 ? 'IDs' : 'ID'}`">
       <template v-for="(cvId, i) in clinvarAlleleIds" :key="cvId">
-        <a :href="`https://www.ncbi.nlm.nih.gov/clinvar/variation/${cvId}`" target="_blank">{{ cvId }}</a>
+        <a class="text-link" :href="`http://www.ncbi.nlm.nih.gov/clinvar/?term=${cvId}[alleleid]`" target="_blank">{{
+          cvId
+        }}</a>
         <template v-if="i < clinvarAlleleIds.length - 1">, </template>
       </template>
     </MvDetailRow>

@@ -48,6 +48,20 @@ export const NEWS_TAG_STYLES: Record<NewsTag, {bg: string; text: string}> = {
 
 export const NEWS_ITEMS: NewsItem[] = [
   {
+    date: 'Mar 2026',
+    tag: 'improvement',
+    title: 'Sortable collections',
+    description:
+      'Collections can now be sorted from the collection view, making it easier to organize and navigate large collections.'
+  },
+  {
+    date: 'Mar 2026',
+    tag: 'improvement',
+    title: 'Broader calibration management',
+    description:
+      'Score calibration operations are now available to a wider range of collaborators, making it easier for the community to submit and manage calibrations.'
+  },
+  {
     date: 'Feb 2026',
     tag: 'feature',
     title: 'Categorical Calibrations',

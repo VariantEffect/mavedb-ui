@@ -12,18 +12,12 @@
           calibrations, provide intuitive visualizations, and export structured evidence compatible with ACMG/AMP
           variant classification guidelines.
         </p>
-        <!-- TODO: Fetch variant measurements, MAVE datasets, and genes covered from API endpoints or via collection information -->
-        <div class="mt-5 flex flex-wrap items-center justify-center gap-x-2.5 gap-y-1 text-sm text-gray-500">
-          <span><strong class="font-bold text-sage">438,318</strong> variant measurements</span>
-          <span aria-hidden="true" class="hidden text-gray-300 sm:inline">&middot;</span>
-          <span><strong class="font-bold text-sage">74</strong> MAVE datasets</span>
-          <span aria-hidden="true" class="hidden text-gray-300 sm:inline">&middot;</span>
-          <span><strong class="font-bold text-sage">32</strong> genes covered</span>
-        </div>
       </section>
 
       <!-- SEARCH BAND -->
-      <section class="border-b border-gray-200 bg-linear-to-br from-published-light via-[#fafcfa] to-unpublished-light px-6 py-9">
+      <section
+        class="border-b border-gray-200 bg-linear-to-br from-published-light via-[#fafcfa] to-unpublished-light px-6 py-9"
+      >
         <div class="mx-auto mb-5 max-w-[800px] text-center">
           <div class="text-lg font-bold text-dark">Find functional evidence for a variant</div>
           <div class="mt-1.5 text-sm text-gray-600">
@@ -1093,9 +1087,7 @@ export default defineComponent({
         this.toast.add({
           severity: 'error',
           summary:
-            data?.errorType && data?.description
-              ? `${data.errorType}: ${data.description}`
-              : 'Error fetching results',
+            data?.errorType && data?.description ? `${data.errorType}: ${data.description}` : 'Error fetching results',
           detail: (data?.message as string) || 'Invalid search.',
           life: 10000
         })

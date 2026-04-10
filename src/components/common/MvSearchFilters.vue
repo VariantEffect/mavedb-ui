@@ -65,6 +65,15 @@
         @update:model-value="$emit('update:publicationDatabases', $event)"
       />
     </MvCollapsible>
+    <MvCollapsible :open="false" title="Keyword">
+      <MvSelectList
+        :loading="loading"
+        :model-value="controlledKeywords"
+        :options="controlledKeywordOptions"
+        title="Search keywords..."
+        @update:model-value="$emit('update:controlledKeywords', $event)"
+      />
+    </MvCollapsible>
   </div>
 </template>
 
@@ -80,6 +89,7 @@ export default defineComponent({
   components: {MvCollapsible, MvSelectList},
 
   props: {
+    controlledKeywords: {type: Array as PropType<string[]>, default: () => []},
     targetNames: {type: Array as PropType<string[]>, default: () => []},
     targetOrganismNames: {type: Array as PropType<string[]>, default: () => []},
     targetTypes: {type: Array as PropType<string[]>, default: () => []},
@@ -87,6 +97,7 @@ export default defineComponent({
     publicationAuthors: {type: Array as PropType<string[]>, default: () => []},
     publicationJournals: {type: Array as PropType<string[]>, default: () => []},
     publicationDatabases: {type: Array as PropType<string[]>, default: () => []},
+    controlledKeywordOptions: {type: Array as PropType<FilterOption[]>, default: () => []},
     targetNameOptions: {type: Array as PropType<FilterOption[]>, default: () => []},
     targetOrganismNameOptions: {type: Array as PropType<FilterOption[]>, default: () => []},
     targetTypeOptions: {type: Array as PropType<FilterOption[]>, default: () => []},
@@ -99,6 +110,7 @@ export default defineComponent({
   },
 
   emits: [
+    'update:controlledKeywords',
     'update:targetNames',
     'update:targetOrganismNames',
     'update:targetTypes',

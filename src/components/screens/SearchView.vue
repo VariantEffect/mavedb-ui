@@ -127,6 +127,7 @@
               v-model:target-names="filterTargetNames"
               v-model:target-organism-names="filterTargetOrganismNames"
               v-model:target-types="filterTargetTypes"
+              v-model:controlled-keywords="filterControlledKeywords"
               :loading="filtersLoading"
               :publication-author-options="publicationAuthorFilterOptions"
               :publication-database-options="publicationDatabaseFilterOptions"
@@ -134,6 +135,7 @@
               :target-accession-options="targetAccessionFilterOptions"
               :target-name-options="targetNameFilterOptions"
               :target-organism-name-options="targetOrganismFilterOptions"
+              :controlled-keyword-options="controlledKeywordOptions"
               :target-type-label-fn="(v: string) => textForTargetGeneCategory(v as TargetGeneCategory) || v"
               :target-type-options="targetTypeFilterOptions"
             />
@@ -161,6 +163,7 @@
           v-model:target-names="filterTargetNames"
           v-model:target-organism-names="filterTargetOrganismNames"
           v-model:target-types="filterTargetTypes"
+          v-model:controlled-keywords="filterControlledKeywords"
           :loading="filtersLoading"
           :publication-author-options="publicationAuthorFilterOptions"
           :publication-database-options="publicationDatabaseFilterOptions"
@@ -168,6 +171,7 @@
           :target-accession-options="targetAccessionFilterOptions"
           :target-name-options="targetNameFilterOptions"
           :target-organism-name-options="targetOrganismFilterOptions"
+          :controlled-keyword-options="controlledKeywordOptions"
           :target-type-label-fn="(v: string) => textForTargetGeneCategory(v as TargetGeneCategory) || v"
           :target-type-options="targetTypeFilterOptions"
         />
@@ -275,6 +279,7 @@ export default defineComponent({
 
   data: function () {
     return {
+      filterControlledKeywords: extractQueryParam(this.$route.query['controlled-keyword']) as Array<string>,
       filterTargetNames: extractQueryParam(this.$route.query['target-name']) as Array<string>,
       filterTargetTypes: extractQueryParam(this.$route.query['target-type']) as Array<string>,
       filterTargetOrganismNames: extractQueryParam(this.$route.query['target-organism-name']) as Array<string>,
@@ -290,6 +295,7 @@ export default defineComponent({
       scoreSets: [] as Array<ShortScoreSet>,
       numTotalSearchResults: 0,
       textForTargetGeneCategory: textForTargetGeneCategory,
+      controlledKeywordOptions: [] as FilterOption[],
       targetNameFilterOptions: [] as FilterOption[],
       targetOrganismFilterOptions: [] as FilterOption[],
       targetAccessionFilterOptions: [] as FilterOption[],
@@ -320,6 +326,7 @@ export default defineComponent({
           filters.push({key, value, label: labelFn ? labelFn(value) : value})
         }
       }
+      addFilters('controlledKeywords', this.filterControlledKeywords)
       addFilters('filterTargetNames', this.filterTargetNames)
       addFilters('filterTargetOrganismNames', this.filterTargetOrganismNames)
       addFilters(
@@ -407,7 +414,7 @@ export default defineComponent({
         }
       }
     },
-    filterKeywords: {
+    filterControlledKeywords: {
       handler: function (newValue, oldValue) {
         if (newValue != oldValue) {
           this.debouncedSearch()
@@ -446,6 +453,14 @@ export default defineComponent({
       handler: function (newValue, oldValue) {
         if (newValue != oldValue) {
           this.searchText = newValue
+        }
+      },
+      immediate: true
+    },
+    '$route.query.controlled-keyword': {
+      handler: function (newValue, oldValue) {
+        if (newValue != oldValue) {
+          this.filterControlledKeywords = extractQueryParam(newValue)
         }
       },
       immediate: true
@@ -542,6 +557,7 @@ export default defineComponent({
       this.$router.push({
         query: {
           ...(this.searchText && this.searchText.length > 0 ? {search: this.searchText} : {}),
+          ...(this.filterControlledKeywords.length > 0 ? {'controlled-keyword': this.filterControlledKeywords} : {}),
           ...(this.filterTargetNames.length > 0 ? {'target-name': this.filterTargetNames} : {}),
           ...(this.filterTargetTypes.length > 0 ? {'target-type': this.filterTargetTypes} : {}),
           ...(this.filterTargetOrganismNames.length > 0
@@ -597,6 +613,10 @@ export default defineComponent({
           controller.signal
         )
 
+        this.controlledKeywordOptions = (data.controlledKeywords || []).map((option) => ({
+          value: option.value,
+          badge: option.count
+        }))
         this.targetAccessionFilterOptions = (data.targetAccessions || []).map((option) => ({
           value: option.value,
           badge: option.count
@@ -635,6 +655,7 @@ export default defineComponent({
 
     removeFilter(key: string, value: string) {
       const filterArrays: Record<string, string[]> = {
+        filterControlledKeywords: this.filterControlledKeywords,
         filterTargetNames: this.filterTargetNames,
         filterTargetOrganismNames: this.filterTargetOrganismNames,
         filterTargetTypes: this.filterTargetTypes,
@@ -660,7 +681,7 @@ export default defineComponent({
       this.filterPublicationAuthors = []
       this.filterPublicationDatabases = []
       this.filterPublicationJournals = []
-      this.filterKeywords = []
+      this.filterControlledKeywords = []
     }
   }
 })

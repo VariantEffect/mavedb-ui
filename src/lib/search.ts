@@ -60,7 +60,7 @@ export interface SearchFilters {
   filterPublicationAuthors: string[]
   filterPublicationDatabases: string[]
   filterPublicationJournals: string[]
-  filterKeywords: string[]
+  filterControlledKeywords: string[]
 }
 
 /** Convert SearchFilters into the param shape expected by the search API. */
@@ -74,7 +74,7 @@ export function buildSearchParams(filters: SearchFilters) {
     authors: filters.filterPublicationAuthors.length > 0 ? filters.filterPublicationAuthors : undefined,
     databases: filters.filterPublicationDatabases.length > 0 ? filters.filterPublicationDatabases : undefined,
     journals: filters.filterPublicationJournals.length > 0 ? filters.filterPublicationJournals : undefined,
-    keywords: filters.filterKeywords.length > 0 ? filters.filterKeywords : undefined
+    controlledKeywords: filters.filterControlledKeywords.length > 0 ? filters.filterControlledKeywords : undefined,
   }
 }
 

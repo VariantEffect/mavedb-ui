@@ -4476,6 +4476,8 @@ export interface components {
     };
     /** ScoreSetsSearchFilterOptionsResponse */
     ScoreSetsSearchFilterOptionsResponse: {
+      /** Controlledkeywords */
+      controlledKeywords: components["schemas"]["ScoreSetsSearchFilterOption"][];
       /** Targetgenecategories */
       targetGeneCategories: components["schemas"]["ScoreSetsSearchFilterOption"][];
       /** Targetgenenames */

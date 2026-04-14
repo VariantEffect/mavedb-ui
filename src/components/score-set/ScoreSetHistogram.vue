@@ -208,7 +208,8 @@ import {getScoreCalibrationVariants} from '@/api/mavedb'
 import {
   prepareCalibrationsForHistogram,
   shaderOverlapsBin,
-  functionalClassificationContainsVariant
+  functionalClassificationContainsVariant,
+  getClassificationColor
 } from '@/lib/calibrations'
 import type {FunctionalClassificationVariant} from '@/lib/calibrations'
 import {variantNotNullOrNA} from '@/lib/mave-hgvs'
@@ -862,14 +863,24 @@ export default defineComponent({
             if (this.activeCalibration.value?.urn && this.activeCalibration.value?.functionalClassifications) {
               // TODO#491: Refactor this calculation into the creation of variant objects so we may just access the property of the variant which tells us its classification.
               const classifications = this.activeCalibration.value.functionalClassifications
-              const shaders = this.histogramShaders[this.activeCalibration.value.urn]
-              const matchIndex = classifications.findIndex((fc) =>
-                functionalClassificationContainsVariant(fc, variant.scores.score)
-              )
-              const matchingShader = matchIndex >= 0 && shaders ? shaders[matchIndex] : null
 
-              if (matchingShader) {
-                binClassificationLabel = `<span class="mavedb-range-classification-badge" style="margin-left: 6px; background-color:${matchingShader.color}; color:white;">${matchingShader.title}</span>`
+              // Try range-based match first, then fall back to class-based membership lookup.
+              let matchedClassification =
+                classifications.find((fc) => functionalClassificationContainsVariant(fc, variant.scores.score)) ?? null
+
+              if (!matchedClassification && this.selectedCalibrationIsClassBased) {
+                const variantsByClassificationId = this.calibrationClassVariantsByUrn[this.activeCalibration.value.urn]
+                if (variantsByClassificationId) {
+                  matchedClassification =
+                    classifications.find((fc) =>
+                    variantsByClassificationId[fc.id]?.some((v) => v.urn === variant.accession)
+                  ) ?? null
+                }
+              }
+
+              if (matchedClassification) {
+                const color = getClassificationColor(matchedClassification)
+                binClassificationLabel = `<span class="mavedb-range-classification-badge" style="margin-left: 6px; background-color:${color}; color:white;">${matchedClassification.label}</span>`
               }
             }
 

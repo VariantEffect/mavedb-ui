@@ -26,6 +26,9 @@ The default view shows the overall score distribution for all variants in the sc
 
 Available when a score set has been linked to [ClinVar annotations](external-integrations.md#clinvar). This view overlays the distribution of scores for variants classified as `Pathogenic` or `Likely pathogenic` and `Benign` or `Likely benign` in ClinVar, allowing users to assess how well the assay segregates known clinical variants. The ClinVar version used is always shown in the histogram legend.
 
+!!! info "Clinical controls are not calibration controls"
+    The clinical controls displayed in the histogram are ClinVar entries linked to mapped variants in the score set. They are **not** necessarily the same controls used to derive a [score calibration](../reference/score-calibrations.md). A calibration may use a different set of reference variants, classification criteria, or ClinVar version than what is shown in the histogram. Treat the clinical view as an independent overlay of ClinVar annotations, not as a representation of a calibration's input data.
+
 <figure markdown="span">
   ![Clinical view of the histogram visualization from a MaveDB score set page](../images/bard1_clinical_histogram.png)
   <figcaption>Clinical view of the histogram from <a href="https://mavedb.org/score-sets/urn:mavedb:00001250-a-1">urn:mavedb:00001250-a-1</a>, showing ClinVar pathogenic and benign variant distributions.</figcaption>

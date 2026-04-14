@@ -145,6 +145,14 @@
     Loading calibration class variants.
   </div>
   <div ref="histogramContainer" class="mavedb-histogram-container" />
+  <span
+    v-if="vizOptions[activeViz]?.clinicalControlLegendNoteEnabled && refreshedClinicalControls"
+    class="mt-1 block text-center text-xs italic leading-tight"
+  >
+    Note: The ClinVar annotations shown above are matched to variants in this score set and may not correspond to the
+    control variants used to derive the displayed calibration. For details on which variants were used, refer to the
+    sources associated with each calibration.
+  </span>
   <span v-if="selectedCalibrationIsClassBased" class="mavedb-class-based-calibration-note">
     *Class-based calibrations may not be visualized as thresholds. To view the distribution of variants within each
     class, select the
@@ -1570,7 +1578,6 @@ export default defineComponent({
   gap: 0.5rem 1rem;
   align-items: center;
 }
-
 </style>
 
 <style>

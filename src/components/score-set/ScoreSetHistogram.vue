@@ -873,8 +873,8 @@ export default defineComponent({
                 if (variantsByClassificationId) {
                   matchedClassification =
                     classifications.find((fc) =>
-                    variantsByClassificationId[fc.id]?.some((v) => v.urn === variant.accession)
-                  ) ?? null
+                      variantsByClassificationId[fc.id]?.some((v) => v.urn === variant.accession)
+                    ) ?? null
                 }
               }
 
@@ -1247,7 +1247,7 @@ export default defineComponent({
       this.$emit('selection-changed', payload)
     },
     conditionallyLoadCalibrationClassVariants: async function () {
-      if (!this.isCalibrationClassViewActive || !this.selectedCalibrationIsClassBased) {
+      if (!this.selectedCalibrationIsClassBased) {
         return
       }
 

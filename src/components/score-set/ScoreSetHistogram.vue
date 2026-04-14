@@ -205,7 +205,12 @@ import makeHistogram, {
   CATEGORICAL_SERIES_COLORS
 } from '@/lib/histogram'
 import {getScoreCalibrationVariants} from '@/api/mavedb'
-import {prepareCalibrationsForHistogram, shaderOverlapsBin} from '@/lib/calibrations'
+import {
+  prepareCalibrationsForHistogram,
+  shaderOverlapsBin,
+  functionalClassificationContainsVariant,
+  getClassificationColor
+} from '@/lib/calibrations'
 import type {FunctionalClassificationVariant} from '@/lib/calibrations'
 import {variantNotNullOrNA} from '@/lib/mave-hgvs'
 import {
@@ -848,21 +853,34 @@ export default defineComponent({
             parts.push(variantDescriptionParts.join(' '))
           }
           if (variantHasClinicalSignificance && variantHasReviewStatus) {
-            const clinVarLinkOut = `<a href="http://www.ncbi.nlm.nih.gov/clinvar/?term=${variant.control.dbIdentifier}[alleleid]" target="_blank">View in ClinVar</a>`
+            const clinVarLinkOut = `<a href="http://www.ncbi.nlm.nih.gov/clinvar/?term=${variant.control.dbIdentifier}[alleleid]" target="_blank" class="text-link">View in ClinVar</a>`
             parts.push(clinVarLinkOut)
           }
 
           // Line 3: Score and classification
-          if (variant.scores.score) {
+          if (variant.scores.score && variant.scores.score != 'NA') {
             let binClassificationLabel = null
-            if (bin && this.activeCalibration.value?.urn) {
+            if (this.activeCalibration.value?.urn && this.activeCalibration.value?.functionalClassifications) {
               // TODO#491: Refactor this calculation into the creation of variant objects so we may just access the property of the variant which tells us its classification.
-              const binClassification = this.histogramShaders[this.activeCalibration.value.urn]?.find(
-                (calibration: HistogramShader) => shaderOverlapsBin(calibration, bin)
-              )
+              const classifications = this.activeCalibration.value.functionalClassifications
 
-              if (binClassification) {
-                binClassificationLabel = `<span class="mavedb-range-classification-badge" style="margin-left: 6px; background-color:${binClassification.color}; color:white;">${binClassification.title}</span>`
+              // Try range-based match first, then fall back to class-based membership lookup.
+              let matchedClassification =
+                classifications.find((fc) => functionalClassificationContainsVariant(fc, variant.scores.score)) ?? null
+
+              if (!matchedClassification && this.selectedCalibrationIsClassBased) {
+                const variantsByClassificationId = this.calibrationClassVariantsByUrn[this.activeCalibration.value.urn]
+                if (variantsByClassificationId) {
+                  matchedClassification =
+                    classifications.find((fc) =>
+                      variantsByClassificationId[fc.id]?.some((v) => v.urn === variant.accession)
+                    ) ?? null
+                }
+              }
+
+              if (matchedClassification) {
+                const color = getClassificationColor(matchedClassification)
+                binClassificationLabel = `<span class="mavedb-range-classification-badge" style="margin-left: 6px; background-color:${color}; color:white;">${matchedClassification.label}</span>`
               }
             }
 
@@ -1229,7 +1247,7 @@ export default defineComponent({
       this.$emit('selection-changed', payload)
     },
     conditionallyLoadCalibrationClassVariants: async function () {
-      if (!this.isCalibrationClassViewActive || !this.selectedCalibrationIsClassBased) {
+      if (!this.selectedCalibrationIsClassBased) {
         return
       }
 
@@ -1570,7 +1588,6 @@ export default defineComponent({
   gap: 0.5rem 1rem;
   align-items: center;
 }
-
 </style>
 
 <style>

@@ -98,8 +98,8 @@ export function prepareCalibrationsForHistogram(
       max: classification.range[1],
       title: classification.label,
       align: 'center',
-      color: getRangeColor(classification),
-      thresholdColor: getRangeColor(classification),
+      color: getClassificationColor(classification),
+      thresholdColor: getClassificationColor(classification),
       startOpacity: 0.15,
       stopOpacity: 0.05,
       gradientUUID: undefined
@@ -129,7 +129,7 @@ export function prepareCalibrationsForHistogram(
  * const color = getRangeColor({ classification: 'normal' }); // e.g. '#3BAA5C'
  * @remarks If new classifications are introduced, extend this function to handle them explicitly.
  */
-function getRangeColor(
+export function getClassificationColor(
   range: components['schemas']['mavedb__view_models__score_calibration__FunctionalClassification']
 ): string {
   if (range.functionalClassification === 'normal') {

@@ -852,6 +852,13 @@ export default defineComponent({
             parts.push(clinVarLinkOut)
           }
 
+          const clingenAlleleId = variant.clingen?.clingen_allele_id
+          if (clingenAlleleId) {
+            parts.push(
+              `<a href="/variants/${clingenAlleleId}" target="_blank" class="text-link">View variant details</a>`
+            )
+          }
+
           // Line 3: Score and classification
           if (variant.scores.score) {
             let binClassificationLabel = null
@@ -1570,7 +1577,6 @@ export default defineComponent({
   gap: 0.5rem 1rem;
   align-items: center;
 }
-
 </style>
 
 <style>

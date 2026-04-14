@@ -205,7 +205,11 @@ import makeHistogram, {
   CATEGORICAL_SERIES_COLORS
 } from '@/lib/histogram'
 import {getScoreCalibrationVariants} from '@/api/mavedb'
-import {prepareCalibrationsForHistogram, shaderOverlapsBin} from '@/lib/calibrations'
+import {
+  prepareCalibrationsForHistogram,
+  shaderOverlapsBin,
+  functionalClassificationContainsVariant
+} from '@/lib/calibrations'
 import type {FunctionalClassificationVariant} from '@/lib/calibrations'
 import {variantNotNullOrNA} from '@/lib/mave-hgvs'
 import {
@@ -848,21 +852,24 @@ export default defineComponent({
             parts.push(variantDescriptionParts.join(' '))
           }
           if (variantHasClinicalSignificance && variantHasReviewStatus) {
-            const clinVarLinkOut = `<a href="http://www.ncbi.nlm.nih.gov/clinvar/?term=${variant.control.dbIdentifier}[alleleid]" target="_blank">View in ClinVar</a>`
+            const clinVarLinkOut = `<a href="http://www.ncbi.nlm.nih.gov/clinvar/?term=${variant.control.dbIdentifier}[alleleid]" target="_blank" class="text-link">View in ClinVar</a>`
             parts.push(clinVarLinkOut)
           }
 
           // Line 3: Score and classification
-          if (variant.scores.score) {
+          if (variant.scores.score && variant.scores.score != 'NA') {
             let binClassificationLabel = null
-            if (bin && this.activeCalibration.value?.urn) {
+            if (this.activeCalibration.value?.urn && this.activeCalibration.value?.functionalClassifications) {
               // TODO#491: Refactor this calculation into the creation of variant objects so we may just access the property of the variant which tells us its classification.
-              const binClassification = this.histogramShaders[this.activeCalibration.value.urn]?.find(
-                (calibration: HistogramShader) => shaderOverlapsBin(calibration, bin)
+              const classifications = this.activeCalibration.value.functionalClassifications
+              const shaders = this.histogramShaders[this.activeCalibration.value.urn]
+              const matchIndex = classifications.findIndex((fc) =>
+                functionalClassificationContainsVariant(fc, variant.scores.score)
               )
+              const matchingShader = matchIndex >= 0 && shaders ? shaders[matchIndex] : null
 
-              if (binClassification) {
-                binClassificationLabel = `<span class="mavedb-range-classification-badge" style="margin-left: 6px; background-color:${binClassification.color}; color:white;">${binClassification.title}</span>`
+              if (matchingShader) {
+                binClassificationLabel = `<span class="mavedb-range-classification-badge" style="margin-left: 6px; background-color:${matchingShader.color}; color:white;">${matchingShader.title}</span>`
               }
             }
 
@@ -1570,7 +1577,6 @@ export default defineComponent({
   gap: 0.5rem 1rem;
   align-items: center;
 }
-
 </style>
 
 <style>

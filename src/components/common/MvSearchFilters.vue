@@ -66,13 +66,22 @@
       />
     </MvCollapsible>
     <MvCollapsible :open="false" title="Keyword">
-      <MvSelectList
-        :loading="loading"
-        :model-value="controlledKeywords"
-        :options="controlledKeywordOptions"
-        title="Search keywords..."
-        @update:model-value="$emit('update:controlledKeywords', $event)"
-      />
+      <div
+        v-for="group in groupedControlledKeywordOptions"
+        :key="group.key"
+        class="mb-3"
+      >
+        <div class="mb-1 text-xs font-semibold uppercase tracking-wide text-gray-400">
+          {{ group.key }}
+        </div>
+        <MvSelectList
+          :loading="loading"
+          :model-value="groupSelections[group.key] || []"
+          :options="group.options"
+          :title="`Search ${group.key}...`"
+          @update:model-value="(vals) => onGroupChange(group.key, vals)"
+        />
+      </div>
     </MvCollapsible>
   </div>
 </template>
@@ -87,6 +96,20 @@ export default defineComponent({
   name: 'MvSearchFilters',
 
   components: {MvCollapsible, MvSelectList},
+
+  computed: {
+    groupedControlledKeywordOptions(): { key: string; options: FilterOption[] }[] {
+      const groups: Record<string, FilterOption[]> = {}
+      for (const opt of this.controlledKeywordOptions) {
+        const key = opt.groupKey || 'Other'
+        if (!groups[key]) {
+          groups[key] = []
+        }
+        groups[key].push(opt)
+      }
+      return Object.entries(groups).map(([key, options]) => ({key, options}))
+    }
+  },
 
   props: {
     controlledKeywords: {type: Array as PropType<string[]>, default: () => []},
@@ -109,6 +132,32 @@ export default defineComponent({
     loading: {type: Boolean, default: false}
   },
 
+  data() {
+    return {
+      // per-group local selections
+      groupSelections: {} as Record<string, string[]>
+    }
+  },
+
+  watch: {
+    // Keep local selections in sync when parent controlledKeywords changes,
+    // e.g. from URL or Clear All
+    controlledKeywords: {
+      immediate: true,
+      handler(newVals: string[]) {
+        const byGroup: Record<string, string[]> = {}
+        for (const opt of this.controlledKeywordOptions) {
+          if (newVals.includes(opt.value)) {
+            const key = opt.groupKey || 'Other'
+            if (!byGroup[key]) byGroup[key] = []
+            byGroup[key].push(opt.value)
+          }
+        }
+        this.groupSelections = byGroup
+      }
+    }
+  },
+
   emits: [
     'update:controlledKeywords',
     'update:targetNames',
@@ -118,6 +167,17 @@ export default defineComponent({
     'update:publicationAuthors',
     'update:publicationJournals',
     'update:publicationDatabases'
-  ]
+  ],
+
+  methods: {
+    onGroupChange(groupKey: string, values: string[]) {
+      this.groupSelections = {
+        ...this.groupSelections,
+        [groupKey]: values
+      }
+      const merged = Object.values(this.groupSelections).flat()
+      this.$emit('update:controlledKeywords', merged)
+    }
+  }
 })
 </script>

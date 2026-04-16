@@ -32,6 +32,7 @@ export type SortValue = (typeof SORT_OPTIONS)[number]['value']
 
 /** A single option in a search filter sidebar list. */
 export interface FilterOption {
+  groupKey?: string 
   value: string
   badge: number
 }

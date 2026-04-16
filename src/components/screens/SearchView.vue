@@ -612,10 +612,11 @@ export default defineComponent({
           requestParams,
           controller.signal
         )
-
+        
         this.controlledKeywordOptions = (data.controlledKeywords || []).map((option) => ({
-          value: option.value,
-          badge: option.count
+          value: option.value,      
+          badge: option.count,
+          groupKey: option.key 
         }))
         this.targetAccessionFilterOptions = (data.targetAccessions || []).map((option) => ({
           value: option.value,

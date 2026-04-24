@@ -326,7 +326,7 @@ export default defineComponent({
           filters.push({key, value, label: labelFn ? labelFn(value) : value})
         }
       }
-      addFilters('controlledKeywords', this.filterControlledKeywords)
+      addFilters('controlledKeywords', this.filterControlledKeywords, (v) => v.split('::', 2)[1] ?? v)
       addFilters('filterTargetNames', this.filterTargetNames)
       addFilters('filterTargetOrganismNames', this.filterTargetOrganismNames)
       addFilters(
@@ -612,11 +612,12 @@ export default defineComponent({
           requestParams,
           controller.signal
         )
-        
+
         this.controlledKeywordOptions = (data.controlledKeywords || []).map((option) => ({
-          value: option.value,      
+          value: `${option.key}::${option.value}`, 
+          title: option.value, 
           badge: option.count,
-          groupKey: option.key 
+          groupKey: option.key
         }))
         this.targetAccessionFilterOptions = (data.targetAccessions || []).map((option) => ({
           value: option.value,

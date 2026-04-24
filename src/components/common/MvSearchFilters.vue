@@ -65,7 +65,7 @@
         @update:model-value="$emit('update:publicationDatabases', $event)"
       />
     </MvCollapsible>
-    <MvCollapsible :open="false" title="Keyword">
+    <MvCollapsible :open="false" title="Keywords">
       <div
         v-for="group in groupedControlledKeywordOptions"
         :key="group.key"
@@ -97,20 +97,6 @@ export default defineComponent({
 
   components: {MvCollapsible, MvSelectList},
 
-  computed: {
-    groupedControlledKeywordOptions(): { key: string; options: FilterOption[] }[] {
-      const groups: Record<string, FilterOption[]> = {}
-      for (const opt of this.controlledKeywordOptions) {
-        const key = opt.groupKey || 'Other'
-        if (!groups[key]) {
-          groups[key] = []
-        }
-        groups[key].push(opt)
-      }
-      return Object.entries(groups).map(([key, options]) => ({key, options}))
-    }
-  },
-
   props: {
     controlledKeywords: {type: Array as PropType<string[]>, default: () => []},
     targetNames: {type: Array as PropType<string[]>, default: () => []},
@@ -132,10 +118,35 @@ export default defineComponent({
     loading: {type: Boolean, default: false}
   },
 
+  emits: [
+    'update:controlledKeywords',
+    'update:targetNames',
+    'update:targetOrganismNames',
+    'update:targetTypes',
+    'update:targetAccession',
+    'update:publicationAuthors',
+    'update:publicationJournals',
+    'update:publicationDatabases'
+  ],
+
   data() {
     return {
       // per-group local selections
       groupSelections: {} as Record<string, string[]>
+    }
+  },
+
+  computed: {
+    groupedControlledKeywordOptions(): { key: string; options: FilterOption[] }[] {
+      const groups: Record<string, FilterOption[]> = {}
+      for (const opt of this.controlledKeywordOptions) {
+        const key = opt.groupKey || 'Other'
+        if (!groups[key]) {
+          groups[key] = []
+        }
+        groups[key].push(opt)
+      }
+      return Object.entries(groups).sort(([aKey], [bKey]) => aKey.localeCompare(bKey)).map(([key, options]) => ({key, options}))
     }
   },
 
@@ -157,17 +168,6 @@ export default defineComponent({
       }
     }
   },
-
-  emits: [
-    'update:controlledKeywords',
-    'update:targetNames',
-    'update:targetOrganismNames',
-    'update:targetTypes',
-    'update:targetAccession',
-    'update:publicationAuthors',
-    'update:publicationJournals',
-    'update:publicationDatabases'
-  ],
 
   methods: {
     onGroupChange(groupKey: string, values: string[]) {

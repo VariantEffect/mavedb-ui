@@ -32,9 +32,10 @@ export type SortValue = (typeof SORT_OPTIONS)[number]['value']
 
 /** A single option in a search filter sidebar list. */
 export interface FilterOption {
-  groupKey?: string 
   value: string
   badge: number
+  title?: string
+  groupKey?: string
 }
 
 /** A group of score sets sharing the same experiment, used for grouped result rendering. */
@@ -75,7 +76,13 @@ export function buildSearchParams(filters: SearchFilters) {
     authors: filters.filterPublicationAuthors.length > 0 ? filters.filterPublicationAuthors : undefined,
     databases: filters.filterPublicationDatabases.length > 0 ? filters.filterPublicationDatabases : undefined,
     journals: filters.filterPublicationJournals.length > 0 ? filters.filterPublicationJournals : undefined,
-    controlledKeywords: filters.filterControlledKeywords.length > 0 ? filters.filterControlledKeywords : undefined,
+    controlledKeywords:
+      filters.filterControlledKeywords.length > 0
+        ? filters.filterControlledKeywords.map((v) => {
+            const [key, label] = v.split('::', 2)
+            return { key, label }
+          })
+        : undefined
   }
 }
 

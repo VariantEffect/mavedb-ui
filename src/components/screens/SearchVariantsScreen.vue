@@ -265,6 +265,13 @@
         <MvLoader text="Finding matching variants..." />
       </div>
 
+      <div v-else-if="alleles.length === 0" class="py-10 text-center">
+        <div class="text-base font-semibold text-gray-600">No variants found</div>
+        <div class="mt-1.5 text-sm text-gray-500">
+          No matching variants were found in MaveDB. Try a different identifier or search type.
+        </div>
+      </div>
+
       <article
         v-for="(allele, alleleIdx) in alleles"
         :key="allele.clingenAlleleId"

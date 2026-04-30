@@ -60,8 +60,11 @@
               @keyup.enter="defaultSearch"
             />
             <button
-              class="cursor-pointer whitespace-nowrap border-none px-4 text-sm font-semibold text-dark transition-colors hover:brightness-85 md:px-7"
-              :style="{backgroundColor: currentSearchColor.accent}"
+              class="cursor-pointer whitespace-nowrap border-none px-4 text-sm font-semibold transition-colors hover:brightness-85 md:px-7"
+              :style="{
+                backgroundColor: currentSearchColor.accent,
+                color: currentSearchColor.activeText || 'var(--color-text-dark)'
+              }"
               @click="defaultSearch"
             >
               Search
@@ -274,13 +277,14 @@
 
       <article
         v-for="(allele, alleleIdx) in alleles"
-        :key="allele.clingenAlleleId"
+        :key="allele.clingenAlleleId || allele.variantUrn || alleleIdx"
         :aria-label="'Allele result: ' + allele.canonicalAlleleName"
         class="mb-5 overflow-hidden rounded-lg border border-gray-200 border-l-[3px] border-l-sage-light bg-white"
       >
         <!-- Card header -->
         <div class="border-b border-gray-100 px-5 pt-4 pb-3.5">
           <router-link
+            v-if="allele.clingenAlleleId"
             :aria-label="'View variant detail for ' + allele.canonicalAlleleName"
             class="group flex flex-col gap-2 no-underline sm:flex-row sm:items-start sm:justify-between sm:gap-4"
             :to="{name: 'variant', params: {clingenAlleleId: allele.clingenAlleleId}}"
@@ -310,6 +314,13 @@
               View variant &rarr;
             </span>
           </router-link>
+          <div v-else class="flex flex-col gap-2 sm:flex-row sm:items-start sm:justify-between sm:gap-4">
+            <div class="min-w-0">
+              <span class="font-mono text-base font-bold leading-snug text-dark sm:text-lg">
+                {{ allele.canonicalAlleleName }}
+              </span>
+            </div>
+          </div>
 
           <!-- MANE coordinates (collapsible) -->
           <MvCollapsible v-if="allele.maneCoordinates.length > 0" class="mt-3" :open="false" title="MANE transcripts">
@@ -479,7 +490,20 @@
         </div>
 
         <div v-else-if="allele.variantsStatus === 'Loaded'" class="px-5 py-4">
-          <Message> No score sets containing this variant were found in MaveDB. </Message>
+          <!-- VRS Digest based searches may not always resolve to variants with a ClinGen Allele ID -->
+          <template v-if="allele.variantUrn && !allele.clingenAlleleId">
+            <p class="mb-3 text-sm text-gray-600">
+              This variant was found in MaveDB but it is not linked to a ClinGen Allele ID.
+            </p>
+            <router-link
+              v-if="scoreSetUrnFromVariantUrn(allele.variantUrn)"
+              class="text-sm font-semibold text-link hover:underline"
+              :to="{name: 'scoreSet', params: {urn: scoreSetUrnFromVariantUrn(allele.variantUrn)}}"
+            >
+              View score set &rarr;
+            </router-link>
+          </template>
+          <Message v-else> No score sets containing this variant were found in MaveDB. </Message>
         </div>
 
         <div v-else-if="allele.variantsStatus === 'Error'" class="px-5 py-4">
@@ -641,6 +665,8 @@ import {
   clinGenAlleleIdRegex,
   clinVarVariationIdRegex,
   rsIdRegex,
+  vrsDigestRegex,
+  scoreSetUrnFromVariantUrn,
   extractIdFromUrl,
   createAlleleResult
 } from '@/lib/mavemd'
@@ -658,6 +684,7 @@ import {
 } from '@/data/mavemd'
 import {getAlleleByCaId, getAlleleByHgvs, getAlleleByDbSnp, getAlleleByClinVar, getGeneBySymbol} from '@/api/clingen'
 import {getCollection, getErrorResponse, lookupVariantsByClingenId} from '@/api/mavedb'
+import {lookupVariantsByVrsDigest} from '@/api/mavedb/variants'
 import {useEntityCache} from '@/composables/entity-cache'
 import MvLoader from '@/components/common/MvLoader.vue'
 
@@ -687,7 +714,7 @@ export default defineComponent({
     const router = useRouter()
     const toast = useToast()
     const {getEntity} = useEntityCache()
-    return {route, router, toast, getEntity, getScoreSetShortName}
+    return {route, router, toast, getEntity, getScoreSetShortName, scoreSetUrnFromVariantUrn}
   },
 
   data: function () {
@@ -759,7 +786,7 @@ export default defineComponent({
         this.inputAlternateAllele
       )
     },
-    currentSearchColor(): {accent: string; bg: string} {
+    currentSearchColor(): {accent: string; bg: string; activeText?: string} {
       return SEARCH_COLORS[this.searchType || 'hgvs'] || SEARCH_COLORS.hgvs
     },
     currentPlaceholder(): string {
@@ -1039,6 +1066,57 @@ export default defineComponent({
             return
           }
           responseData = await getAlleleByClinVar(searchStr)
+        } else if (searchType === 'vrsDigest') {
+          if (!vrsDigestRegex.test(searchStr)) {
+            this.toast.add({
+              severity: 'error',
+              summary: 'Invalid search',
+              detail: `Please provide a valid VRS digest (e.g. ${this.searchTypeOptions.find((o) => o.code === searchType)?.examples?.join(', ')})`,
+              life: 10000
+            })
+            return
+          }
+          let mappedVariants
+          try {
+            mappedVariants = await lookupVariantsByVrsDigest(searchStr)
+          } catch (error: unknown) {
+            const {status} = getErrorResponse(error)
+            if (status === 404) {
+              this.toast.add({
+                severity: 'warn',
+                summary: 'VRS identifier not found',
+                detail: 'No MaveDB variants match this identifier. Check that the digest is correct and try again.',
+                life: 10000
+              })
+              return
+            }
+            throw error
+          }
+          for (const mappedVariant of mappedVariants) {
+            if (mappedVariant.clingenAlleleId) {
+              const alleleData = await getAlleleByCaId(mappedVariant.clingenAlleleId)
+              this.alleles.push(createAlleleResult(alleleData, maneStatus))
+            } else {
+              this.alleles.push({
+                clingenAlleleUrl: undefined,
+                clingenAlleleId: undefined,
+                variantUrn: mappedVariant.variantUrn,
+                canonicalAlleleName: mappedVariant.variantUrn,
+                maneStatus: null,
+                genomicAlleles: [],
+                grch38Hgvs: null,
+                grch37Hgvs: null,
+                transcriptAlleles: [],
+                maneCoordinates: [],
+                variantsStatus: 'Loaded',
+                variants: {nucleotide: [], protein: [], associatedNucleotide: []}
+              })
+            }
+          }
+          if (this.alleles.length > 0) {
+            ;(this.$refs.searchResults as HTMLElement)?.scrollIntoView({behavior: 'smooth', block: 'start'})
+          }
+          return
         } else {
           if (!hgvsSearchStringRegex.test(searchStr)) {
             this.toast.add({
@@ -1233,7 +1311,11 @@ export default defineComponent({
       const colors = SEARCH_COLORS[code] || SEARCH_COLORS.hgvs
       switch (variant) {
         case 'active':
-          return {borderColor: colors.accent, backgroundColor: colors.accent, color: 'var(--color-text-dark)'}
+          return {
+            borderColor: colors.accent,
+            backgroundColor: colors.accent,
+            color: colors.activeText || 'var(--color-text-dark)'
+          }
         case 'inactive':
           return {borderColor: colors.accent, backgroundColor: 'var(--color-surface)', color: colors.accent}
         default:

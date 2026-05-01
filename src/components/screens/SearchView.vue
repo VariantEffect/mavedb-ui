@@ -326,7 +326,7 @@ export default defineComponent({
           filters.push({key, value, label: labelFn ? labelFn(value) : value})
         }
       }
-      addFilters('controlledKeywords', this.filterControlledKeywords, (v) => v.split('::', 2)[1] ?? v)
+      addFilters('filterControlledKeywords', this.filterControlledKeywords, (v) => v.split('::', 2)[1] ?? v)
       addFilters('filterTargetNames', this.filterTargetNames)
       addFilters('filterTargetOrganismNames', this.filterTargetOrganismNames)
       addFilters(
@@ -614,8 +614,8 @@ export default defineComponent({
         )
 
         this.controlledKeywordOptions = (data.controlledKeywords || []).map((option) => ({
-          value: `${option.key}::${option.value}`, 
-          title: option.value, 
+          value: `${option.key}::${option.value}`,
+          title: option.value,
           badge: option.count,
           groupKey: option.key
         }))
@@ -656,7 +656,17 @@ export default defineComponent({
     },
 
     removeFilter(key: string, value: string) {
-      const filterArrays: Record<string, string[]> = {
+      const setters: Record<string, (v: string[]) => void> = {
+        filterControlledKeywords: (v) => (this.filterControlledKeywords = v),
+        filterTargetNames: (v) => (this.filterTargetNames = v),
+        filterTargetOrganismNames: (v) => (this.filterTargetOrganismNames = v),
+        filterTargetTypes: (v) => (this.filterTargetTypes = v),
+        filterTargetAccession: (v) => (this.filterTargetAccession = v),
+        filterPublicationAuthors: (v) => (this.filterPublicationAuthors = v),
+        filterPublicationDatabases: (v) => (this.filterPublicationDatabases = v),
+        filterPublicationJournals: (v) => (this.filterPublicationJournals = v)
+      }
+      const getters: Record<string, string[]> = {
         filterControlledKeywords: this.filterControlledKeywords,
         filterTargetNames: this.filterTargetNames,
         filterTargetOrganismNames: this.filterTargetOrganismNames,
@@ -666,12 +676,11 @@ export default defineComponent({
         filterPublicationDatabases: this.filterPublicationDatabases,
         filterPublicationJournals: this.filterPublicationJournals
       }
-      const arr = filterArrays[key]
-      if (!arr) return
-      const idx = arr.indexOf(value)
-      if (idx !== -1) {
-        arr.splice(idx, 1)
-      }
+      const setter = setters[key]
+      const arr = getters[key]
+      if (!setter || !arr) return
+      const filtered = arr.filter((v) => v !== value)
+      setter(filtered)
     },
 
     clear: function () {

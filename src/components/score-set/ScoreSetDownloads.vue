@@ -1,6 +1,6 @@
 <template>
   <div class="rounded-lg border border-border bg-white p-5">
-    <h3 class="mave-section-title">Download files and charts</h3>
+    <h3 class="mave-section-title">Download files</h3>
     <div class="flex flex-wrap gap-2">
       <PButton icon="pi pi-download" label="Scores" severity="secondary" size="small" @click="downloadFile('scores')" />
       <PButton
@@ -34,29 +34,18 @@
           label="Annotated Variants"
           :menu-button-props="{class: 'p-button-sm p-button-secondary'}"
           :model="annotatedVariantDownloadOptions"
-          @click="annotatedVariantDownloadOptions[0]?.command?.({originalEvent: $event, item: annotatedVariantDownloadOptions[0]})"
+          @click="
+            annotatedVariantDownloadOptions[0]?.command?.({
+              originalEvent: $event,
+              item: annotatedVariantDownloadOptions[0]
+            })
+          "
         />
         <div v-if="annotatedDownloadInProgress" class="absolute inset-x-0 top-full mt-1">
           <ProgressBar show-value style="height: 1.5em" :value="annotatedDownloadProgress" />
         </div>
       </div>
 
-      <PButton
-        v-if="histogramExportFn"
-        icon="pi pi-chart-bar"
-        label="Histogram"
-        severity="secondary"
-        size="small"
-        @click="histogramExportFn()"
-      />
-      <PButton
-        v-if="heatmapExists && heatmapExportFn"
-        icon="pi pi-table"
-        label="Heatmap"
-        severity="secondary"
-        size="small"
-        @click="heatmapExportFn()"
-      />
       <PButton
         icon="pi pi-sliders-h"
         label="Custom Data"
@@ -122,9 +111,6 @@ export default defineComponent({
   props: {
     hasCounts: {type: Boolean, default: false},
     hasPrimaryCalibration: {type: Boolean, default: false},
-    heatmapExists: {type: Boolean, default: false},
-    heatmapExportFn: {type: [Function, null] as unknown as PropType<(() => void) | null>, default: null},
-    histogramExportFn: {type: [Function, null] as unknown as PropType<(() => void) | null>, default: null},
     isMetaDataEmpty: {type: Boolean, default: true},
     scoreSet: {type: Object as PropType<ScoreSet>, required: true}
   },

@@ -178,7 +178,7 @@ import {defineComponent, PropType} from 'vue'
 
 import useScopedId from '@/composables/scoped-id'
 import config from '@/config'
-import {saveChartAsFile} from '@/lib/chart-export'
+import {saveChartAsSvg, saveChartAsPng} from '@/lib/chart-export'
 import {
   BENIGN_CLINICAL_SIGNIFICANCE_CLASSIFICATIONS,
   CLINVAR_REVIEW_STATUS_STARS,
@@ -1103,7 +1103,7 @@ export default defineComponent({
 
   mounted: async function () {
     this.renderOrRefreshHistogram()
-    this.$emit('exportChart', this.exportChart)
+    this.$emit('exportChart', this.buildExportFns())
     this.activeCalibration = this.chooseDefaultCalibration()
     await this.conditionallyLoadCalibrationClassVariants()
   },
@@ -1140,12 +1140,21 @@ export default defineComponent({
           !isStartOrStopLoss(variant))
       )
     },
-    exportChart() {
-      saveChartAsFile(
-        this.$refs.histogramContainer,
-        `${this.scoreSet.urn}-scores-histogram`,
-        'mavedb-histogram-container'
-      )
+    buildExportFns() {
+      return {
+        svg: () =>
+          saveChartAsSvg(
+            this.$refs.histogramContainer as HTMLElement,
+            `${this.scoreSet.urn}-scores-histogram`,
+            'mavedb-histogram-container'
+          ),
+        png: () =>
+          saveChartAsPng(
+            this.$refs.histogramContainer as HTMLElement,
+            `${this.scoreSet.urn}-scores-histogram`,
+            'mavedb-histogram-container'
+          )
+      }
     },
 
     // Sync API: select a bin by its [x0, x1] range.
@@ -1570,7 +1579,6 @@ export default defineComponent({
   gap: 0.5rem 1rem;
   align-items: center;
 }
-
 </style>
 
 <style>

@@ -37,7 +37,7 @@ import {defineComponent} from 'vue'
 import type {PropType} from 'vue'
 
 import {AMINO_ACIDS, AMINO_ACIDS_WITH_TER, singleLetterAminoAcidOrHgvsCode} from '@/lib/amino-acids'
-import {saveChartAsFile} from '@/lib/chart-export'
+import {saveChartAsSvg, saveChartAsPng} from '@/lib/chart-export'
 import geneticCodes from '@/lib/genetic-codes'
 import makeHeatmap from '@/lib/heatmap'
 import type {Heatmap, HeatmapDatum, HeatmapRowSpecification} from '@/lib/heatmap'
@@ -911,7 +911,7 @@ export default defineComponent({
 
   mounted: function () {
     this.renderOrRefreshHeatmaps()
-    this.$emit('exportChart', this.exportChart)
+    this.$emit('exportChart', this.buildExportFns())
   },
 
   beforeUnmount: function () {
@@ -1273,8 +1273,21 @@ export default defineComponent({
       })
     },
 
-    exportChart() {
-      saveChartAsFile(this.$refs.heatmapContainer, `${this.scoreSet.urn}-scores-heatmap`, 'mavedb-heatmap-container')
+    buildExportFns() {
+      return {
+        svg: () =>
+          saveChartAsSvg(
+            this.$refs.heatmapContainer as HTMLElement,
+            `${this.scoreSet.urn}-scores-heatmap`,
+            'mavedb-heatmap-container'
+          ),
+        png: () =>
+          saveChartAsPng(
+            this.$refs.heatmapContainer as HTMLElement,
+            `${this.scoreSet.urn}-scores-heatmap`,
+            'mavedb-heatmap-container'
+          )
+      }
     },
 
     showProteinStructure() {

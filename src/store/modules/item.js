@@ -53,6 +53,10 @@ export default (collectionUrl, {primaryKey = '_id'} = {}) => {
         })
       },
 
+      updatedItem(state, {item}) {
+        state.item = item
+      },
+
       setItemId(state, {itemId}) {
         state.itemId = itemId
         if (state.item && getPrimaryKeyValue(state.item, primaryKey) != itemId) {

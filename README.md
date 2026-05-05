@@ -5,6 +5,7 @@ for Multiplex Assays of Variant Effect (MAVE) datasets.
 
 For more information about MaveDB or to cite MaveDB please refer to the
 [MaveDB paper in Genome Biology](https://genomebiology.biomedcentral.com/articles/10.1186/s13059-019-1845-6).
+
 ## Build and deployment
 
 ### Prerequisites
@@ -50,6 +51,7 @@ npm run dev
 In development mode, the application will look for a local server running the MaveDB API at `http://localhost:8002`.
 If you would like to use the live MaveDB API server at `https://mavedb.org` while still having internal links resolve
 to the development environment, run:
+
 ```
 MODE=prodapi npm run dev
 ```
@@ -110,21 +112,32 @@ To deploy in production, simply push the contents of `dist` to the appropriate S
 aws s3 sync ./dist s3://mavedb-ui
 ```
 
-### Updating the documentation
+### Building and deploying documentation
 
-To update the documentation, first install `sphinx`:
+Documentation is built with [MkDocs Material](https://squidfunk.github.io/mkdocs-material/). Source files live in `docs/content/` and configuration is in `docs/mkdocs.yml`.
+
+Install the docs dependencies into the project venv:
 
 ```
-python -m venv .venv
 source .venv/bin/activate
-pip install -r requirements.txt
+pip install -r docs/requirements.txt
 ```
 
-and then build a new version of the documentation with:
+Preview the docs locally (recommended for docs development):
 
 ```
-sphinx-build -b html src/docs/mavedb public/docs/mavedb
+npm run docs
 ```
+
+Build the docs independently (useful for testing):
+
+```
+./scripts/build-docs.sh
+```
+
+This builds MkDocs to `docs/site/` and copies the output to `public/docs/mavedb/`, which Vite includes in `dist/` during the production build. The docs are served at `/docs/mavedb/` in production.
+
+`npm run build` runs this script automatically before the Vite build, so no separate step is needed for deployment.
 
 ### Updating Typescript types for the API
 

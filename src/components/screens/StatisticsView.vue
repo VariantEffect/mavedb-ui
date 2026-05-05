@@ -1,6 +1,6 @@
 <template>
-  <DefaultLayout :with-email-prompt="!isEmbedded" :with-toolbar="!isEmbedded">
-    <div v-if="loading"><PageLoading></PageLoading></div>
+  <MvLayout :with-email-prompt="!isEmbedded" :with-nav="!isEmbedded">
+    <div v-if="loading"><MvPageLoading></MvPageLoading></div>
     <div v-else>
       <h1 style="color: #3f51b5">MaveDB Site Statistics</h1>
       <div class="statistics-pane">
@@ -44,11 +44,11 @@
               </div>
             </div>
             <div class="chart-container">
-              <TimeSeriesLineChart
+              <MvTimeSeriesLineChart
                 :data="timeSeriesData"
                 :interpolate-missing-dates="timeSeriesInterpolation"
                 :level="selectedAggregationLevel"
-              ></TimeSeriesLineChart>
+              ></MvTimeSeriesLineChart>
             </div>
           </template>
         </Card>
@@ -109,9 +109,13 @@
               <template #content>
                 <div class="flowchart-card-element">
                   <span style="text-align: center">
-                    <h1 class="emphasis-number my-5">{{ new Intl.NumberFormat('en-US').format(totalHumanScoreSets) }}</h1>
+                    <h1 class="emphasis-number my-5">
+                      {{ new Intl.NumberFormat('en-US').format(totalHumanScoreSets) }}
+                    </h1>
                     score sets with human targets
-                    <h1 class="emphasis-number my-5">{{ new Intl.NumberFormat('en-US').format(totalMappedVariants) }}</h1>
+                    <h1 class="emphasis-number my-5">
+                      {{ new Intl.NumberFormat('en-US').format(totalMappedVariants) }}
+                    </h1>
                     variant effect measurements mapped to the human genome
                   </span>
                 </div>
@@ -125,7 +129,9 @@
                 <div class="flowchart-card-element">
                   <span style="text-align: center">
                     These variant effect measurements map to
-                    <h1 class="emphasis-number my-5">{{ new Intl.NumberFormat('en-US').format(totalMappedTargetGenes) }}</h1>
+                    <h1 class="emphasis-number my-5">
+                      {{ new Intl.NumberFormat('en-US').format(totalMappedTargetGenes) }}
+                    </h1>
                     distinct human genes
                   </span>
                 </div>
@@ -135,7 +141,7 @@
         </div>
       </div>
     </div>
-  </DefaultLayout>
+  </MvLayout>
 </template>
 
 <script>
@@ -144,21 +150,21 @@ import Carousel from 'primevue/carousel'
 import Chart from 'primevue/chart'
 import Column from 'primevue/column'
 import DataTable from 'primevue/datatable'
-import DefaultLayout from '../layout/DefaultLayout.vue'
+import MvLayout from '@/components/layout/MvLayout.vue'
 import SelectButton from 'primevue/selectbutton'
-import PageLoading from '../common/PageLoading.vue'
-import TimeSeriesLineChart from '../TimeSeriesLineChart.vue'
+import MvPageLoading from '@/components/common/MvPageLoading.vue'
+import MvTimeSeriesLineChart from '@/components/common/MvTimeSeriesLineChart.vue'
 import {useHead} from '@unhead/vue'
 
-import useItem from '@/composition/item'
+import useItem from '@/composition/item.ts'
 import config from '@/config'
 
 export default {
   name: 'StatisticsView',
-  components: {Carousel, Card, Column, Chart, DataTable, DefaultLayout, SelectButton, PageLoading, TimeSeriesLineChart},
+  components: {Carousel, Card, Column, Chart, DataTable, MvLayout, SelectButton, MvPageLoading, MvTimeSeriesLineChart},
 
   setup: () => {
-   useHead({title: 'Database statistics'})
+    useHead({title: 'Database statistics'})
   },
 
   data() {
@@ -452,7 +458,6 @@ export default {
           return
         }
         window.open(`${config.appBaseUrl}/#/search?${model}=${organismName}`)
-
       }
 
       return {

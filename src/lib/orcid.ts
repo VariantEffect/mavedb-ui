@@ -33,6 +33,7 @@ import {v4 as uuidv4} from 'uuid'
 import {computed, ref, Ref} from 'vue'
 
 import config from '../config'
+import {getErrorResponse} from '@/api/mavedb'
 
 export interface OidcUserProfileBase {
   auth_time: number
@@ -134,7 +135,7 @@ export async function continueAuthenticationFromRedirect() {
       redirectUri: `${appUrl}oidc-callback`
     })
   } catch (e: unknown) {
-    response = (e as {response?: {status: number}}).response || {status: 500}
+    response = getErrorResponse(e)
   }
   if (response.status == 200) {
     const newIdToken = (response as {data?: {idToken: string}}).data?.idToken

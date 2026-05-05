@@ -10,6 +10,9 @@ export default defineConfigWithVueTs(
     rules: {
       'vue/attributes-order': [
         'error', {alphabetical: true}
+      ],
+      '@typescript-eslint/no-unused-vars': [
+        'error', {argsIgnorePattern: '^_', varsIgnorePattern: '^_'}
       ]
     }
   }

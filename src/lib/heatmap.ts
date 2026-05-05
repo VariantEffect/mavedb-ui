@@ -778,9 +778,10 @@ export default function makeHeatmap(): Heatmap {
       .style('border-width', '2px')
       .style('border-radius', '5px')
       .style('color', '#000')
+      .style('font-size', '12px')
       .style('padding', '5px')
       .style('line-height', '1.5')
-      .style('z-index', 2001)
+      .style('z-index', 5)
 
     selectionTooltip = d3
       .select(_container)
@@ -792,6 +793,7 @@ export default function makeHeatmap(): Heatmap {
       .style('border-width', '2px')
       .style('border-radius', '5px')
       .style('color', '#000')
+      .style('font-size', '12px')
       .style('padding', '8px 10px')
       .style('line-height', '1.5')
       .style('position', 'relative')
@@ -1062,7 +1064,7 @@ export default function makeHeatmap(): Heatmap {
           .style('top', 0)
           .style('left', 0)
           .style('height', '100%')
-          .style('z-index', 2002)
+          .style('z-index', 5)
           .style('background-color', '#fff')
           .classed('exclude-from-export', true)
         const legendGroup = yAxisSvg

@@ -1,6 +1,7 @@
 import _ from 'lodash'
 
 import type {components} from '@/schema/openapi'
+import {getTargetGeneName} from '@/lib/target-genes'
 
 type ScoreSet = components['schemas']['ScoreSet']
 type PublicationIdentifier = components['schemas']['ScoreSet']['primaryPublicationIdentifiers'][0]
@@ -68,7 +69,8 @@ export function getScoreSetShortName(scoreSet: ScoreSet): string {
       : firstAuthorLastName
     : undefined
   // TODO VariantEffect/mavedb-api#450
-  const gene = scoreSet.targetGenes?.[0]?.name
+  const firstTarget = scoreSet.targetGenes?.[0]
+  const gene = firstTarget ? getTargetGeneName(firstTarget) : undefined
   const year = scoreSet.primaryPublicationIdentifiers[0]?.publicationYear
   const parts = [authors, gene, year?.toString()].filter((x) => x != null)
   return parts.length > 0 ? parts.join(' ') : (scoreSet.title ?? scoreSet.shortDescription ?? 'Score set')

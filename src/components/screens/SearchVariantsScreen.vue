@@ -1,397 +1,710 @@
 <template>
-  <DefaultLayout
-    :footer="searchResultsVisible ? 'flow' : 'pinned'"
-    height="full"
-    :overflow-y="true || searchResultsVisible ? 'scroll' : 'hidden'"
-  >
-    <div
-      :class="[
-        'mavedb-search-view',
-        searchResultsVisible ? 'mavedb-search-view-with-results' : 'mavedb-search-view-without-results'
-      ]"
-    >
-      <div class="flex justify-content-center">
-        <img alt="MaveMD" class="mavedb-mavemd-logo" src="@/assets/mavemd-logo.png" />
-      </div>
-      <div class="mavedb-mavemd-intro">
-        MaveMD (MAVEs for MeDicine) is an interface that integrates ClinVar and the ClinGen Allele Registry, displays
-        clinical evidence calibrations, provides intuitive visualizations, and exports structured evidence compatible
-        with ACMG/AMP variant classification guidelines. MaveMD currently contains 438,318 variant effect measurements
-        mapped to the human genome from 74 MAVE datasets spanning 32 disease-associated genes.
-      </div>
-      <div v-if="defaultSearchVisible" class="mavedb-search-form">
-        <div class="mavedb-search-heading">Search MaveDB for human gene variants</div>
-        <div class="flex flex-wrap justify-content-center align-items-center gap-3">
-          <Select
-            v-model="searchType"
-            class="w-48"
-            option-label="name"
-            option-value="code"
-            :options="searchTypeOptions"
-            placeholder="Select search type"
-            size="large"
-          />
-          <IconField>
-            <InputIcon class="pi pi-search"></InputIcon>
+  <MvLayout>
+    <template #header>
+      <!-- HERO -->
+      <section class="bg-[#fafcfa] px-6 py-10 text-center">
+        <img alt="MaveMD" class="mx-auto h-24" src="@/assets/mavemd-logo.png" />
+        <h1 class="mt-4 font-display text-2xl font-bold leading-tight text-dark md:text-3xl">
+          MAVE evidence for clinical variant interpretation
+        </h1>
+        <p class="mx-auto mt-2.5 max-w-[580px] text-sm leading-relaxed text-gray-500 md:text-base">
+          MaveMD (MAVEs for MeDicine) integrates ClinVar and the ClinGen Allele Registry to display clinical evidence
+          calibrations, provide intuitive visualizations, and export structured evidence compatible with ACMG/AMP
+          variant classification guidelines.
+        </p>
+      </section>
+
+      <!-- SEARCH BAND -->
+      <section
+        class="border-b border-gray-200 bg-linear-to-br from-published-light via-[#fafcfa] to-unpublished-light px-6 py-9"
+      >
+        <div class="mx-auto mb-5 max-w-[800px] text-center">
+          <div class="text-lg font-bold text-dark">Find functional evidence for a variant</div>
+          <div class="mt-1.5 text-sm text-gray-600">
+            Enter a variant identifier to retrieve matching measurements and clinical evidence calibrations.
+          </div>
+        </div>
+
+        <!-- DEFAULT SEARCH -->
+        <div v-if="defaultSearchVisible" class="mx-auto max-w-[800px] rounded-xl bg-white p-5 shadow-md md:p-7">
+          <!-- Pill tabs -->
+          <div aria-label="Search type" class="mb-3.5 flex flex-wrap gap-1.5 md:gap-2" role="tablist">
+            <button
+              v-for="option in searchTypeOptions"
+              :key="option.code"
+              :aria-selected="searchType === option.code"
+              class="cursor-pointer rounded-full border-[1.5px] px-3 py-1 text-xs font-semibold transition-all md:px-4 md:py-1.5 md:text-sm"
+              role="tab"
+              :style="searchColorStyle(option.code, searchType === option.code ? 'active' : 'inactive')"
+              :tabindex="searchType === option.code ? 0 : -1"
+              @click="searchType = option.code"
+              @keydown.arrow-left.prevent="focusTab($event, -1)"
+              @keydown.arrow-right.prevent="focusTab($event, 1)"
+            >
+              {{ option.name }}
+            </button>
+          </div>
+
+          <!-- Search bar -->
+          <div
+            class="mb-3 flex overflow-hidden rounded-lg border-2 bg-white transition-colors"
+            :style="{borderColor: currentSearchColor.accent}"
+          >
             <InputText
               ref="searchTextInput"
               v-model="searchText"
-              class="w-124"
-              placeholder="Enter a value"
-              size="large"
+              :aria-label="'Search by ' + (searchTypeOptions.find((o) => o.code === searchType)?.name || 'HGVS')"
+              class="min-w-0 flex-1 !rounded-none !border-none !shadow-none placeholder:font-mono placeholder:text-xs md:placeholder:text-sm"
+              :placeholder="currentPlaceholder"
               type="search"
               @keyup.enter="defaultSearch"
             />
-          </IconField>
-          <Button class="p-3!" @click="defaultSearch">Search</Button>
-          <div class="mavedb-clear-search-button-container">
-            <Button :disabled="!searchIsClearable" icon="pi pi-times" rounded @click="clearSearch" />
+            <button
+              class="cursor-pointer whitespace-nowrap border-none px-4 text-sm font-semibold transition-colors hover:brightness-85 md:px-7"
+              :style="{
+                backgroundColor: currentSearchColor.accent,
+                color: currentSearchColor.activeText || 'var(--color-text-dark)'
+              }"
+              @click="defaultSearch"
+            >
+              Search
+            </button>
           </div>
-        </div>
-        <div class="mavedb-search-form-view-switch">
-          Don't have a versioned reference sequence identifier? Click here to perform a fuzzy search instead:
-          <Button @click="showSearch('fuzzy')">Fuzzy Search</Button>
-        </div>
-        <div class="mavedb-examples-button-container">
-          <Button variant="text" @click="searchSuggestionsVisible = !searchSuggestionsVisible">
-            {{ searchSuggestionsVisible ? 'Hide search examples' : 'Show search examples' }}
-          </Button>
-        </div>
-        <div v-if="searchSuggestionsVisible" class="mavedb-search-suggestions m-auto">
-          <div>Examples of supported searches:</div>
-          <ul class="list-disc ml-5">
-            <li v-for="option in searchTypeOptions" :key="option.code">
-              {{ option.name }}
-              <template v-for="(example, index) in option.examples" :key="example">
-                <span v-if="index > 0">•</span>
-                <span
-                  v-tooltip.top="'Click to search'"
-                  class="mavedb-search-example"
-                  @click="searchForText($event, option.code)"
-                  >{{ example }}</span
-                >
-              </template>
-              <template v-if="option.code == 'hgvs'">(supports a variety of HGVS formats)</template>
-            </li>
-          </ul>
-        </div>
-      </div>
-      <div v-if="fuzzySearchVisible" class="mavedb-search-form">
-        <div class="mavedb-search-heading">Search MaveDB for human gene variants</div>
-        <div class="align-items-stretch flex flex-wrap justify-content-center gap-0">
-          <InputText
-            v-model="inputGene"
-            class="mavedb-fuzzy-search-form-component"
-            placeholder="Gene symbol (HGNC)"
-            type="search"
-          />
-          <Select
-            v-model="inputVariantType"
-            class="mavedb-fuzzy-search-form-component"
-            :options="['c.', 'p.']"
-            placeholder="Variant type"
-          />
-          <!-- TODO consider adding language to specify to include - or * in position if variant is in 5' or 3' UTR, respectively -->
-          <InputText v-model="inputVariantPosition" class="mavedb-fuzzy-search-form-component" placeholder="Position" />
-          <Select
-            v-model="inputReferenceAllele"
-            class="mavedb-fuzzy-search-form-component"
-            :options="selectedAlleleOptions"
-            placeholder="Reference allele"
-          />
-          <Select
-            v-model="inputAlternateAllele"
-            class="mavedb-fuzzy-search-form-component"
-            :options="selectedAlleleOptions"
-            placeholder="Alternate allele"
-          />
-          <Button @click="fuzzySearch">Search</Button>
-          <div class="mavedb-clear-search-button-container">
-            <Button :disabled="!searchIsClearable" icon="pi pi-times" rounded @click="clearSearch" />
-          </div>
-        </div>
-        <div class="mavedb-search-form-view-switch">
-          Click here to return to standard search:
-          <Button @click="showSearch('default')">Standard Search</Button>
-        </div>
-      </div>
-      <div v-if="!searchResultsVisible" class="mavedb-expander-container">
-        <Button
-          class="mavedb-expander-toggle"
-          :label="guideExpanded ? 'Show less' : 'Show more'"
-          text
-          @click="toggleGuide"
-        />
-        <div
-          v-if="!searchResultsVisible"
-          :class="['mavedb-expander', ...(guideExpanded ? ['mavedb-expander-expanded'] : [])]"
-        >
-          <table>
-            <thead>
-              <tr>
-                <th style="width: 12%">Gene</th>
-                <th style="width: 50%">Score set</th>
-                <th style="width: 25%">Publication</th>
-                <th style="width: 13%">Calibrations w. evidence / Total</th>
-              </tr>
-            </thead>
-            <tbody>
-              <template v-for="{gene, urns} in maveMdScoreSetsGroupedByGene" :key="gene">
-                <tr>
-                  <td :rowspan="urns.length">{{ gene }}</td>
-                  <td>
-                    <router-link :to="{name: 'scoreSet', params: {urn: urns[0]}}">{{
-                      maveMdScoreSets[urns[0]]?.title || urns[0]
-                    }}</router-link>
-                  </td>
-                  <td>
-                    <router-link v-if="maveMdScoreSets[urns[0]]" :to="{name: 'scoreSet', params: {urn: urns[0]}}">{{
-                      getScoreSetShortName(maveMdScoreSets[urns[0]]!)
-                    }}</router-link>
-                  </td>
-                  <td style="text-align: center">
-                    <router-link :to="{name: 'scoreSetCalibrations', params: {urn: urns[0]}}"
-                      >{{
-                        maveMdScoreSets[urns[0]]?.scoreCalibrations.filter(
-                          (calibration: components['schemas']['ScoreCalibration']) =>
-                            Array.isArray(calibration.functionalClassifications) && calibration.functionalClassifications.filter((range) => range.acmgClassification).length > 0
-                        ).length || 0
-                      }}
-                      / {{ maveMdScoreSets[urns[0]]?.scoreCalibrations.length || 0 }}
-                    </router-link>
-                  </td>
-                </tr>
-                <tr v-for="urn in urns.slice(1)" :key="urn">
-                  <td>
-                    <router-link :to="{name: 'scoreSet', params: {urn}}">{{
-                      maveMdScoreSets[urn]?.title || urn
-                    }}</router-link>
-                  </td>
-                  <td style>
-                    <router-link v-if="maveMdScoreSets[urn]" :to="{name: 'scoreSet', params: {urn}}">{{
-                      getScoreSetShortName(maveMdScoreSets[urn]!)
-                    }}</router-link>
-                  </td>
-                  <td style="text-align: center">
-                    <router-link :to="{name: 'scoreSetCalibrations', params: {urn: urns[0]}}">
-                      {{
-                        maveMdScoreSets[urn]?.scoreCalibrations.filter(
-                          (calibration: components['schemas']['ScoreCalibration']) =>
-                            Array.isArray(calibration.functionalClassifications) && calibration.functionalClassifications.filter((range) => range.acmgClassification).length > 0
-                        ).length || 0
-                      }}
-                      / {{ maveMdScoreSets[urn]?.scoreCalibrations.length || 0 }}
-                    </router-link>
-                  </td>
-                </tr>
-              </template>
-            </tbody>
-          </table>
-        </div>
-      </div>
-      <div v-if="searchResultsVisible" ref="searchResults">
-        <div v-for="(allele, alleleIdx) in alleles" :key="allele.clingenAlleleId" class="col-12">
-          <Card class="clickable-variant-card">
-            <template #title>
-              <div class="flex flex-col clickable-title" @click="openAlleleInVariantView(allele)">
-                <span class="text-blue-600 font-semibold text-xxl">{{ allele.canonicalAlleleName }}</span>
 
-                <div class="flex mt-0">
-                  <div v-if="allele.grch38Hgvs" class="ml-10 mr-10 text-base">
-                    <span>GRCh38 coordinates:</span>
-                    <span style="font-style: italic">{{ allele.grch38Hgvs }}</span>
-                  </div>
-                  <div v-if="allele.grch37Hgvs" class="ml-10 mr-10 text-base">
-                    <span>GRCh37 coordinates:</span>
-                    <span style="font-style: italic">{{ allele.grch37Hgvs }}</span>
-                  </div>
-                  <div v-if="allele.maneCoordinates.length > 0" class="ml-10 mr-10 text-base">
-                    MANE transcripts:
-                    <DataTable show-gridlines size="small" striped-rows :value="allele.maneCoordinates">
-                      <Column field="sequenceType" header="Sequence Type"></Column>
-                      <Column field="database" header="Database"></Column>
-                      <Column field="hgvs" header="Coordinates"></Column>
-                    </DataTable>
-                  </div>
-                </div>
-              </div>
-            </template>
-            <template #content>
-              <div>
-                <!-- TODO handle no canonical allele name or just leave blank? -->
-                <div
-                  v-if="
-                    allele.variantsStatus == 'Loaded' &&
-                    (allele.variants.nucleotide.length > 0 ||
-                      allele.variants.protein.length > 0 ||
-                      allele.variants.associatedNucleotide.length > 0)
-                  "
+          <!-- Footer row -->
+          <div class="mb-6 flex flex-wrap items-center gap-1.5 text-sm text-gray-500">
+            <span>Don't have a versioned reference sequence identifier?</span>
+            <button class="cursor-pointer font-semibold text-sage-dark hover:underline" @click="showSearch('guided')">
+              Try guided search &rarr;
+            </button>
+          </div>
+
+          <!-- Examples toggle -->
+          <button
+            aria-controls="search-examples"
+            :aria-expanded="searchSuggestionsVisible"
+            class="cursor-pointer border-none bg-transparent text-sm font-semibold text-sage-dark hover:underline"
+            @click="searchSuggestionsVisible = !searchSuggestionsVisible"
+          >
+            {{ searchSuggestionsVisible ? 'Hide search examples' : 'Show search examples' }}
+            <span aria-hidden="true">{{ searchSuggestionsVisible ? '↑' : '↓' }}</span>
+          </button>
+
+          <div v-if="searchSuggestionsVisible" id="search-examples" class="mt-3.5">
+            <div
+              v-for="option in searchTypeOptions"
+              :key="option.code"
+              class="mb-2.5 flex flex-col gap-1.5 md:flex-row md:flex-wrap md:items-center md:gap-2"
+            >
+              <span
+                class="text-[0.6875rem] font-semibold uppercase tracking-wide text-gray-400 md:min-w-[130px] md:whitespace-nowrap"
+              >
+                {{ option.name }}
+              </span>
+              <button
+                v-for="example in option.examples"
+                :key="example"
+                :aria-label="'Search for ' + example"
+                class="cursor-pointer rounded-full border-[1.5px] px-3 py-1 text-xs font-semibold leading-relaxed transition-colors"
+                :class="option.code === 'hgvs' ? 'font-mono font-normal' : ''"
+                :style="searchColorStyle(option.code)"
+                @click="searchForText(example, option.code)"
+              >
+                {{ example }}
+              </button>
+            </div>
+          </div>
+        </div>
+
+        <!-- GUIDED SEARCH -->
+        <div v-if="guidedSearchVisible" class="mx-auto max-w-[800px] rounded-xl bg-white p-5 shadow-md md:p-7">
+          <!-- Segmented input bar (stacks on mobile) -->
+          <div class="mb-3 flex flex-col overflow-hidden rounded-lg border-2 border-sage bg-white md:flex-row">
+            <div class="grid flex-1 grid-cols-2 divide-x divide-y divide-gray-200 md:grid-cols-5 md:divide-y-0">
+              <div class="relative col-span-2 flex items-center md:col-span-1">
+                <label
+                  class="absolute left-3 top-1 text-[0.5625rem] font-bold uppercase tracking-wider text-gray-400"
+                  for="guided-gene"
+                  >Gene</label
                 >
-                  <div v-if="allele.variants.nucleotide.length > 0" class="variant-search-result-subcontent ml-4">
-                    Nucleotide variant measurements <strong>({{ allele.variants.nucleotide.length }})</strong>:
-                    <li
-                      v-for="variant in nucleotideScoreSetListIsExpanded[alleleIdx]
-                        ? allele.variants.nucleotide
-                        : allele.variants.nucleotide.slice(0, defaultNumScoreSetsToShow)"
-                      :key="variant.urn"
-                      class="variant-search-score-set-result"
-                    >
-                      <router-link
-                        :to="{name: 'scoreSet', params: {urn: variant.scoreSet.urn}, query: {variant: variant.urn}}"
-                      >
-                        {{ variant.scoreSet.title }}
-                      </router-link>
-                    </li>
-                    <Button
-                      v-if="allele.variants.nucleotide.length > defaultNumScoreSetsToShow"
-                      text
-                      @click="
-                        nucleotideScoreSetListIsExpanded[alleleIdx] = !nucleotideScoreSetListIsExpanded[alleleIdx]
-                      "
-                    >
-                      {{
-                        nucleotideScoreSetListIsExpanded[alleleIdx]
-                          ? 'Show less'
-                          : `Show ${allele.variants.nucleotide.length - defaultNumScoreSetsToShow} more`
-                      }}
-                    </Button>
-                  </div>
-                  <div v-if="allele.variants.protein.length > 0" class="variant-search-result-subcontent ml-4">
-                    Amino acid variant measurements <strong>({{ allele.variants.protein.length }})</strong>:
-                    <li
-                      v-for="variant in proteinScoreSetListIsExpanded[alleleIdx]
-                        ? allele.variants.protein
-                        : allele.variants.protein.slice(0, defaultNumScoreSetsToShow)"
-                      :key="variant.urn"
-                      class="variant-search-score-set-result"
-                    >
-                      <router-link
-                        :to="{name: 'scoreSet', params: {urn: variant.scoreSet.urn}, query: {variant: variant.urn}}"
-                      >
-                        {{ variant.scoreSet.title }}
-                      </router-link>
-                    </li>
-                    <Button
-                      v-if="allele.variants.protein.length > defaultNumScoreSetsToShow"
-                      text
-                      @click="proteinScoreSetListIsExpanded[alleleIdx] = !proteinScoreSetListIsExpanded[alleleIdx]"
-                    >
-                      {{
-                        proteinScoreSetListIsExpanded[alleleIdx]
-                          ? 'Show less'
-                          : `Show ${allele.variants.protein.length - defaultNumScoreSetsToShow} more`
-                      }}
-                    </Button>
-                  </div>
-                  <div
-                    v-if="allele.variants.associatedNucleotide.length > 0"
-                    class="variant-search-result-subcontent ml-4"
-                  >
-                    Measurements of different nucleotide variants with equivalent protein effect
-                    <strong>({{ allele.variants.associatedNucleotide.length }})</strong>:
-                    <li
-                      v-for="variant in associatedNucleotideScoreSetListIsExpanded[alleleIdx]
-                        ? allele.variants.associatedNucleotide
-                        : allele.variants.nucleotide.slice(0, defaultNumScoreSetsToShow)"
-                      :key="variant.urn"
-                      class="variant-search-score-set-result"
-                    >
-                      <router-link
-                        :to="{name: 'scoreSet', params: {urn: variant.scoreSet.urn}, query: {variant: variant.urn}}"
-                      >
-                        {{ variant.scoreSet.title }}
-                      </router-link>
-                    </li>
-                    <Button
-                      v-if="allele.variants.associatedNucleotide.length > defaultNumScoreSetsToShow"
-                      text
-                      @click="
-                        associatedNucleotideScoreSetListIsExpanded[alleleIdx] =
-                          !associatedNucleotideScoreSetListIsExpanded[alleleIdx]
-                      "
-                    >
-                      {{
-                        associatedNucleotideScoreSetListIsExpanded[alleleIdx]
-                          ? 'Show less'
-                          : `Show ${allele.variants.associatedNucleotide.length - defaultNumScoreSetsToShow} more`
-                      }}
-                    </Button>
-                  </div>
-                </div>
-                <!-- <div v-if="allele.variantsStatus == 'Loaded' && allele.variants.length > 0" style="overflow: hidden;">
-                    <div v-for="variant in allele.variants" :key="variant.urn" style="float: left; border: 1px solid #000; width: 300px; margin: 5px; padding: 5px;">
-                      <div style="border-bottom: 3px solid #000; font-weight: bold;">{{ variant.scoreSet.title }}</div>
-                      {{ variant.scoreSet?.experiment?.keywords }}
-                    </div>
-                  </div> -->
-                <Message v-else-if="allele.variantsStatus == 'Loaded'"
-                  >No score sets containing this variant were found in MaveDB.</Message
+                <InputText
+                  id="guided-gene"
+                  v-model="inputGene"
+                  class="w-full !rounded-none !border-none !bg-transparent !pt-4 !pb-2 !shadow-none"
+                  placeholder="e.g. BRCA1"
+                />
+              </div>
+              <div class="guided-select-cell relative flex items-center bg-white">
+                <label
+                  id="guided-type-label"
+                  class="absolute left-3 top-1 z-10 text-[0.5625rem] font-bold uppercase tracking-wider text-gray-400"
+                  >Type</label
                 >
+                <PSelect
+                  v-model="inputVariantType"
+                  aria-labelledby="guided-type-label"
+                  class="guided-select"
+                  option-label="label"
+                  option-value="value"
+                  :options="variantTypeOptions"
+                  placeholder="Select"
+                />
               </div>
-            </template>
-            <template #footer>
-              <div class="flex">
-                <div class="ml-auto">
-                  <Button
-                    v-if="allele.clingenAlleleUrl"
-                    class="p-button-outlined p-button-sm"
-                    @click="openAlleleInClinGenRegistry(allele)"
-                  >
-                    <span class="pi pi-external-link" style="margin-right: 0.5em"></span>
-                    View in ClinGen Allele Registry
-                  </Button>
-                </div>
+              <div class="relative flex items-center">
+                <label
+                  class="absolute left-3 top-1 text-[0.5625rem] font-bold uppercase tracking-wider text-gray-400"
+                  for="guided-position"
+                  >Position</label
+                >
+                <InputText
+                  id="guided-position"
+                  v-model="inputVariantPosition"
+                  class="w-full !rounded-none !border-none !bg-transparent !pt-4 !pb-2 !shadow-none"
+                  inputmode="numeric"
+                  pattern="[0-9]*"
+                  placeholder="e.g. 100"
+                  @beforeinput="restrictToDigits"
+                />
               </div>
-            </template>
-          </Card>
+              <div class="guided-select-cell relative flex items-center bg-white">
+                <label
+                  id="guided-ref-label"
+                  class="absolute left-3 top-1 z-10 text-[0.5625rem] font-bold uppercase tracking-wider text-gray-400"
+                  >Ref</label
+                >
+                <PSelect
+                  v-model="inputReferenceAllele"
+                  aria-labelledby="guided-ref-label"
+                  class="guided-select"
+                  :options="selectedAlleleOptions"
+                  placeholder="Select"
+                />
+              </div>
+              <div class="guided-select-cell relative flex items-center bg-white">
+                <label
+                  id="guided-alt-label"
+                  class="absolute left-3 top-1 z-10 text-[0.5625rem] font-bold uppercase tracking-wider text-gray-400"
+                  >Alt</label
+                >
+                <PSelect
+                  v-model="inputAlternateAllele"
+                  aria-labelledby="guided-alt-label"
+                  class="guided-select"
+                  :options="selectedAlleleOptions"
+                  placeholder="Select"
+                />
+              </div>
+            </div>
+            <button
+              class="w-full cursor-pointer whitespace-nowrap border-t border-gray-200 bg-sage px-7 py-3 text-sm font-semibold text-dark transition-colors hover:bg-sage-dark md:w-auto md:border-t-0 md:border-l md:border-l-gray-200"
+              @click="guidedSearch"
+            >
+              Search
+            </button>
+          </div>
+
+          <!-- Live HGVS preview -->
+          <div v-if="guidedSearchHasInput" class="mb-3 flex items-center gap-2.5 rounded-lg bg-gray-50 px-4 py-2.5">
+            <span class="text-[0.625rem] font-bold uppercase tracking-wider text-gray-400">Building</span>
+            <code class="flex items-center gap-px font-mono text-sm leading-none">
+              <span :class="inputGene ? 'text-gray-800' : 'text-gray-300'">{{ inputGene || 'GENE' }}</span>
+              <span class="text-gray-400">&nbsp;:&nbsp;</span>
+              <span :class="inputVariantType ? 'font-semibold' : 'text-gray-300'">{{
+                inputVariantType || 'c./p.'
+              }}</span>
+              <template v-if="!inputVariantType || inputVariantType === 'c.'">
+                <span :class="inputVariantPosition ? 'text-gray-800' : 'text-gray-300'">{{
+                  inputVariantPosition || 'pos'
+                }}</span>
+                <span :class="inputReferenceAllele ? 'text-gray-800' : 'text-gray-300'">{{
+                  inputReferenceAllele || 'ref'
+                }}</span>
+                <span class="text-gray-400">&gt;</span>
+                <span :class="inputAlternateAllele ? 'text-gray-800' : 'text-gray-300'">{{
+                  inputAlternateAllele || 'alt'
+                }}</span>
+              </template>
+              <template v-else>
+                <span :class="inputReferenceAllele ? 'text-gray-800' : 'text-gray-300'">{{
+                  inputReferenceAllele || 'Ref'
+                }}</span>
+                <span :class="inputVariantPosition ? 'text-gray-800' : 'text-gray-300'">{{
+                  inputVariantPosition || 'pos'
+                }}</span>
+                <span :class="inputAlternateAllele ? 'text-gray-800' : 'text-gray-300'">{{
+                  inputAlternateAllele || 'Alt'
+                }}</span>
+              </template>
+            </code>
+          </div>
+
+          <div class="flex items-center gap-1.5 text-sm text-gray-500">
+            <span>Know a specific variant identifier?</span>
+            <button class="cursor-pointer font-semibold text-sage-dark hover:underline" @click="showSearch('default')">
+              Use standard search &rarr;
+            </button>
+          </div>
+        </div>
+      </section>
+    </template>
+
+    <!-- SEARCH RESULTS -->
+    <div v-if="searchResultsVisible" ref="searchResults" class="mx-auto w-full max-w-[800px] py-8">
+      <div class="mb-5 flex items-center justify-between">
+        <div aria-live="polite" role="status">
+          <div class="text-lg font-bold text-dark">
+            {{ alleles.length }} allele{{ alleles.length !== 1 ? 's' : '' }} found
+          </div>
+        </div>
+        <button
+          aria-label="Clear results and start a new search"
+          class="cursor-pointer border-none bg-transparent text-sm font-semibold text-sage hover:text-sage-dark"
+          @click="clearSearch"
+        >
+          <span aria-hidden="true">&larr;</span> New search
+        </button>
+      </div>
+      <div v-if="loading">
+        <MvLoader text="Finding matching variants..." />
+      </div>
+
+      <div v-else-if="alleles.length === 0" class="py-10 text-center">
+        <div class="text-base font-semibold text-gray-600">No variants found</div>
+        <div class="mt-1.5 text-sm text-gray-500">
+          No matching variants were found in MaveDB. Try a different identifier or search type.
         </div>
       </div>
+
+      <article
+        v-for="(allele, alleleIdx) in alleles"
+        :key="allele.clingenAlleleId || allele.variantUrn || alleleIdx"
+        :aria-label="'Allele result: ' + allele.canonicalAlleleName"
+        class="mb-5 overflow-hidden rounded-lg border border-gray-200 border-l-[3px] border-l-sage-light bg-white"
+      >
+        <!-- Card header -->
+        <div class="border-b border-gray-100 px-5 pt-4 pb-3.5">
+          <router-link
+            v-if="allele.clingenAlleleId"
+            :aria-label="'View variant detail for ' + allele.canonicalAlleleName"
+            class="group flex flex-col gap-2 no-underline sm:flex-row sm:items-start sm:justify-between sm:gap-4"
+            :to="{name: 'variant', params: {clingenAlleleId: allele.clingenAlleleId}}"
+          >
+            <div class="min-w-0">
+              <span class="text-base font-bold leading-snug text-link group-hover:underline sm:text-lg">
+                {{ allele.canonicalAlleleName }}
+              </span>
+              <div v-if="allele.grch38Hgvs || allele.grch37Hgvs" class="mt-1.5 flex flex-wrap items-center gap-2">
+                <span
+                  v-if="allele.grch38Hgvs"
+                  class="inline-flex items-center gap-1.5 rounded-md bg-gray-100 px-2 py-0.5 font-mono text-[0.6875rem] text-gray-600"
+                >
+                  <span class="font-sans text-[0.625rem] font-bold uppercase text-gray-400">GRCh38</span>
+                  {{ allele.grch38Hgvs }}
+                </span>
+                <span
+                  v-if="allele.grch37Hgvs"
+                  class="inline-flex items-center gap-1.5 rounded-md bg-gray-100 px-2 py-0.5 font-mono text-[0.6875rem] text-gray-600"
+                >
+                  <span class="font-sans text-[0.625rem] font-bold uppercase text-gray-400">GRCh37</span>
+                  {{ allele.grch37Hgvs }}
+                </span>
+              </div>
+            </div>
+            <span class="shrink-0 text-sm font-semibold text-link group-hover:underline sm:text-md">
+              View variant &rarr;
+            </span>
+          </router-link>
+          <div v-else class="flex flex-col gap-2 sm:flex-row sm:items-start sm:justify-between sm:gap-4">
+            <div class="min-w-0">
+              <span class="font-mono text-base font-bold leading-snug text-dark sm:text-lg">
+                {{ allele.canonicalAlleleName }}
+              </span>
+            </div>
+          </div>
+
+          <!-- MANE coordinates (collapsible) -->
+          <MvCollapsible v-if="allele.maneCoordinates.length > 0" class="mt-3" :open="false" title="MANE transcripts">
+            <table aria-label="MANE transcript coordinates" class="w-full border-collapse text-xs">
+              <thead>
+                <tr>
+                  <th
+                    class="border-b border-gray-100 px-2 py-1 text-left text-[0.625rem] font-semibold uppercase tracking-wide text-gray-400"
+                  >
+                    Type
+                  </th>
+                  <th
+                    class="border-b border-gray-100 px-2 py-1 text-left text-[0.625rem] font-semibold uppercase tracking-wide text-gray-400"
+                  >
+                    Database
+                  </th>
+                  <th
+                    class="border-b border-gray-100 px-2 py-1 text-left text-[0.625rem] font-semibold uppercase tracking-wide text-gray-400"
+                  >
+                    HGVS
+                  </th>
+                </tr>
+              </thead>
+              <tbody>
+                <tr v-for="(coord, idx) in allele.maneCoordinates" :key="idx">
+                  <td class="border-b border-gray-50 px-2 py-1.5 text-xs text-gray-500">{{ coord.sequenceType }}</td>
+                  <td class="border-b border-gray-50 px-2 py-1.5 font-mono text-[0.6875rem] text-gray-600">
+                    {{ coord.database }}
+                  </td>
+                  <td class="border-b border-gray-50 px-2 py-1.5 font-mono text-[0.6875rem] text-gray-600">
+                    {{ coord.hgvs }}
+                  </td>
+                </tr>
+              </tbody>
+            </table>
+          </MvCollapsible>
+        </div>
+
+        <!-- Card body: measurements -->
+        <div
+          v-if="
+            allele.variantsStatus === 'Loaded' &&
+            (allele.variants.nucleotide.length > 0 ||
+              allele.variants.protein.length > 0 ||
+              allele.variants.associatedNucleotide.length > 0)
+          "
+        >
+          <!-- Nucleotide measurements -->
+          <div v-if="allele.variants.nucleotide.length > 0" aria-label="Nucleotide level assays" role="group">
+            <div class="flex items-center gap-2 px-5 pt-3.5 pb-1">
+              <span class="text-sm font-bold uppercase tracking-wide text-gray-500">Nucleotide level assays</span>
+              <span class="rounded-full bg-sage px-3 py-px text-[0.6875rem] font-semibold text-white">{{
+                allele.variants.nucleotide.length
+              }}</span>
+            </div>
+            <MvScoreSetRow
+              v-for="(variant, idx) in nucleotideScoreSetListIsExpanded[alleleIdx]
+                ? allele.variants.nucleotide
+                : allele.variants.nucleotide.slice(0, defaultNumScoreSetsToShow)"
+              :key="variant.urn ?? idx"
+              class="pl-8"
+              :score-set="variant.scoreSet"
+              :show-description="false"
+              :show-meta="false"
+            />
+            <button
+              v-if="allele.variants.nucleotide.length > defaultNumScoreSetsToShow"
+              :aria-expanded="!!nucleotideScoreSetListIsExpanded[alleleIdx]"
+              class="mb-2 ml-5 mt-1 cursor-pointer border-none bg-transparent text-sm font-semibold text-link"
+              @click="nucleotideScoreSetListIsExpanded[alleleIdx] = !nucleotideScoreSetListIsExpanded[alleleIdx]"
+            >
+              {{
+                nucleotideScoreSetListIsExpanded[alleleIdx]
+                  ? 'Show less'
+                  : `Show ${allele.variants.nucleotide.length - defaultNumScoreSetsToShow} more`
+              }}
+            </button>
+          </div>
+
+          <div
+            v-if="allele.variants.nucleotide.length > 0 && allele.variants.protein.length > 0"
+            class="mx-5 h-px bg-gray-100"
+          ></div>
+
+          <!-- Protein measurements -->
+          <div v-if="allele.variants.protein.length > 0" aria-label="Protein level assays" role="group">
+            <div class="flex items-center gap-2 px-5 pt-3.5 pb-1">
+              <span class="text-sm font-bold uppercase tracking-wide text-gray-500">Protein level assays</span>
+              <span class="rounded-full bg-sage px-3 py-px text-[0.6875rem] font-semibold text-white">{{
+                allele.variants.protein.length
+              }}</span>
+            </div>
+            <MvScoreSetRow
+              v-for="(variant, idx) in proteinScoreSetListIsExpanded[alleleIdx]
+                ? allele.variants.protein
+                : allele.variants.protein.slice(0, defaultNumScoreSetsToShow)"
+              :key="variant.urn ?? idx"
+              class="pl-8"
+              :score-set="variant.scoreSet"
+              :show-description="false"
+              :show-meta="false"
+            />
+            <button
+              v-if="allele.variants.protein.length > defaultNumScoreSetsToShow"
+              :aria-expanded="!!proteinScoreSetListIsExpanded[alleleIdx]"
+              class="mb-2 ml-5 mt-1 cursor-pointer border-none bg-transparent text-sm font-semibold text-link"
+              @click="proteinScoreSetListIsExpanded[alleleIdx] = !proteinScoreSetListIsExpanded[alleleIdx]"
+            >
+              {{
+                proteinScoreSetListIsExpanded[alleleIdx]
+                  ? 'Show less'
+                  : `Show ${allele.variants.protein.length - defaultNumScoreSetsToShow} more`
+              }}
+            </button>
+          </div>
+
+          <div
+            v-if="
+              allele.variants.associatedNucleotide.length > 0 &&
+              (allele.variants.nucleotide.length > 0 || allele.variants.protein.length > 0)
+            "
+            class="mx-5 h-px bg-gray-100"
+          ></div>
+
+          <!-- Associated nucleotide measurements -->
+          <div
+            v-if="allele.variants.associatedNucleotide.length > 0"
+            aria-label="Associated nucleotide assays"
+            role="group"
+          >
+            <div class="flex items-center gap-2 px-5 pt-3.5 pb-1">
+              <span class="text-xs font-bold uppercase tracking-wide text-gray-500">Associated nucleotide</span>
+              <span class="rounded-full bg-sage px-2 py-px text-[0.6875rem] font-semibold text-white">{{
+                allele.variants.associatedNucleotide.length
+              }}</span>
+            </div>
+            <MvScoreSetRow
+              v-for="(variant, idx) in associatedNucleotideScoreSetListIsExpanded[alleleIdx]
+                ? allele.variants.associatedNucleotide
+                : allele.variants.associatedNucleotide.slice(0, defaultNumScoreSetsToShow)"
+              :key="variant.urn ?? idx"
+              class="pl-8"
+              :score-set="variant.scoreSet"
+              :show-description="false"
+              :show-meta="false"
+            />
+            <button
+              v-if="allele.variants.associatedNucleotide.length > defaultNumScoreSetsToShow"
+              :aria-expanded="!!associatedNucleotideScoreSetListIsExpanded[alleleIdx]"
+              class="mb-2 ml-5 mt-1 cursor-pointer border-none bg-transparent text-sm font-semibold text-link"
+              @click="
+                associatedNucleotideScoreSetListIsExpanded[alleleIdx] =
+                  !associatedNucleotideScoreSetListIsExpanded[alleleIdx]
+              "
+            >
+              {{
+                associatedNucleotideScoreSetListIsExpanded[alleleIdx]
+                  ? 'Show less'
+                  : `Show ${allele.variants.associatedNucleotide.length - defaultNumScoreSetsToShow} more`
+              }}
+            </button>
+          </div>
+        </div>
+
+        <div v-else-if="allele.variantsStatus === 'Loading'" class="px-5 py-4">
+          <MvLoader text="Loading assay results..." />
+        </div>
+
+        <div v-else-if="allele.variantsStatus === 'Loaded'" class="px-5 py-4">
+          <!-- VRS Digest based searches may not always resolve to variants with a ClinGen Allele ID -->
+          <template v-if="allele.variantUrn && !allele.clingenAlleleId">
+            <p class="mb-3 text-sm text-gray-600">
+              This variant was found in MaveDB but it is not linked to a ClinGen Allele ID.
+            </p>
+            <router-link
+              v-if="scoreSetUrnFromVariantUrn(allele.variantUrn)"
+              class="text-sm font-semibold text-link hover:underline"
+              :to="{name: 'scoreSet', params: {urn: scoreSetUrnFromVariantUrn(allele.variantUrn)}}"
+            >
+              View score set &rarr;
+            </router-link>
+          </template>
+          <Message v-else> No score sets containing this variant were found in MaveDB. </Message>
+        </div>
+
+        <div v-else-if="allele.variantsStatus === 'Error'" class="px-5 py-4">
+          <Message :closable="false" severity="error"> Failed to load variant measurements. </Message>
+        </div>
+
+        <!-- Card footer -->
+        <div v-if="allele.clingenAlleleUrl" class="flex justify-end border-t border-gray-100 px-5 py-2.5">
+          <button
+            aria-label="View in ClinGen Registry (opens in new window)"
+            class="cursor-pointer border-none bg-transparent text-[0.6875rem] text-gray-400 text-link hover:underline"
+            @click="openAlleleInClinGenRegistry(allele)"
+          >
+            View in ClinGen Registry <span aria-hidden="true">&nearr;</span>
+          </button>
+        </div>
+      </article>
     </div>
-  </DefaultLayout>
+
+    <!-- HOW IT WORKS (shown when no results) -->
+    <section v-if="!searchResultsVisible" class="-mx-6 border-y border-gray-200 bg-white px-6 py-10">
+      <div class="mx-auto max-w-[900px] text-center">
+        <div class="text-lg font-bold text-dark">How MaveMD works</div>
+        <div class="mb-8 text-sm text-gray-500">From variant identifier to clinical evidence in three steps</div>
+        <div
+          aria-label="How MaveMD works"
+          class="grid grid-cols-1 items-start gap-6 md:grid-cols-[1fr_auto_1fr_auto_1fr]"
+          role="list"
+        >
+          <template v-for="(step, idx) in howItWorksSteps" :key="step.number">
+            <div class="flex flex-col items-center gap-2.5 px-3" role="listitem">
+              <div
+                aria-hidden="true"
+                class="flex h-[38px] w-[38px] items-center justify-center rounded-full bg-sage text-base font-bold text-dark"
+              >
+                {{ step.number }}
+              </div>
+              <div class="text-sm font-bold text-dark">{{ step.title }}</div>
+              <div class="text-sm leading-relaxed text-gray-500">{{ step.description }}</div>
+            </div>
+            <div
+              v-if="idx < howItWorksSteps.length - 1"
+              aria-hidden="true"
+              class="hidden self-start pt-2 text-xl text-mint md:block"
+            >
+              &rarr;
+            </div>
+          </template>
+        </div>
+      </div>
+    </section>
+
+    <!-- SCORE SETS TABLE (shown when no results) -->
+    <section v-if="!searchResultsVisible" class="mx-auto w-full max-w-[1000px] px-6 py-10">
+      <div class="text-lg font-bold text-dark">MaveMD score sets</div>
+      <div class="text-sm text-gray-500">
+        {{ maveMdScoreSetUrns.length }} MAVE datasets calibrated for clinical variant interpretation
+      </div>
+
+      <Message v-if="maveMdScoreSetsError" class="mt-5" :closable="false" severity="error">
+        Failed to load score sets.
+        <button
+          class="ml-1 cursor-pointer border-none bg-transparent font-semibold text-inherit underline"
+          @click="fetchMaveMdScoreSets"
+        >
+          Retry
+        </button>
+      </Message>
+
+      <table v-else aria-label="MaveMD score sets by gene" class="mt-5 w-full table-fixed border-collapse text-sm">
+        <thead>
+          <tr>
+            <th
+              class="border-b-2 border-gray-200 pb-2.5 pl-3 text-left text-[0.6875rem] font-bold uppercase tracking-wider text-gray-500"
+              style="width: 55%"
+            >
+              Score set
+            </th>
+            <th
+              class="border-b-2 border-gray-200 pb-2.5 pl-3 text-left text-[0.6875rem] font-bold uppercase tracking-wider text-gray-500"
+              style="width: 30%"
+            >
+              Publication
+            </th>
+            <th
+              class="border-b-2 border-gray-200 pb-2.5 pl-3 text-center text-[0.6875rem] font-bold uppercase tracking-wider text-gray-500"
+              style="width: 15%"
+            >
+              Calibrations
+            </th>
+          </tr>
+        </thead>
+        <tbody>
+          <template v-for="({gene, urns}, gi) in maveMdScoreSetsGroupedByGene" :key="gene">
+            <tr>
+              <td class="border-b border-gray-100 bg-gray-50/60 px-3 py-1.5 text-gray-700" colspan="3">
+                <span v-if="gi === 0" class="mr-2 text-[0.625rem] font-bold uppercase tracking-wider text-gray-400"
+                  >Gene</span
+                >
+                <span class="font-semibold">{{ gene }}</span>
+              </td>
+            </tr>
+            <tr v-for="urn in urns" :key="urn">
+              <td class="border-b border-gray-100 py-2 pl-5 pr-3">
+                <MvEntityLink display="title" entity-type="scoreSet" :urn="urn" :use-cache="true" />
+              </td>
+              <td class="border-b border-gray-100 px-3 py-2">
+                <router-link
+                  v-if="maveMdScoreSets[urn]"
+                  class="text-sm text-link"
+                  :to="{name: 'scoreSet', params: {urn}}"
+                >
+                  {{ getScoreSetShortName(maveMdScoreSets[urn]!) }}
+                </router-link>
+              </td>
+              <td class="border-b border-gray-100 px-3 py-2 text-center">
+                <router-link :to="{name: 'scoreSetCalibrations', params: {urn}}">
+                  <span
+                    class="inline-block whitespace-nowrap rounded-full border border-purple-300 bg-purple-50 px-2.5 py-px text-xs font-semibold text-purple-800"
+                  >
+                    {{ calibrationCountWithEvidence(urn) }} / {{ calibrationCountTotal(urn) }}
+                  </span>
+                </router-link>
+              </td>
+            </tr>
+          </template>
+        </tbody>
+      </table>
+
+      <div v-if="!guideExpanded" class="mt-3 flex items-center gap-3 border-t border-gray-200 pt-3">
+        <button
+          class="cursor-pointer border-none bg-transparent text-sm font-semibold text-link hover:underline"
+          @click="guideExpanded = true"
+        >
+          Show all {{ maveMdScoreSetUrns.length }} datasets
+        </button>
+        <span class="text-xs text-gray-400">Showing first 8 genes</span>
+      </div>
+    </section>
+  </MvLayout>
 </template>
 
 <script lang="ts">
-import axios from 'axios'
 import _ from 'lodash'
-import Card from 'primevue/card'
-import Column from 'primevue/column'
-import DataTable from 'primevue/datatable'
-import Select from 'primevue/select'
-import IconField from 'primevue/iconfield'
-import InputIcon from 'primevue/inputicon'
+import MvEntityLink from '@/components/common/MvEntityLink.vue'
 import InputText from 'primevue/inputtext'
-import Button from 'primevue/button'
 import Message from 'primevue/message'
+import PSelect from 'primevue/select'
 import {defineComponent} from 'vue'
 import {useRoute, useRouter} from 'vue-router'
 import {useToast} from 'primevue/usetoast'
 import {useHead} from '@unhead/vue'
 
-import config from '@/config'
-import DefaultLayout from '@/components/layout/DefaultLayout.vue'
-import {clinGenAlleleIdRegex, clinVarVariationIdRegex, rsIdRegex, MAVE_MD_SCORE_SETS} from '@/lib/mavemd'
+import MvCollapsible from '@/components/common/MvCollapsible.vue'
+import MvScoreSetRow from '@/components/common/MvScoreSetRow.vue'
+import MvLayout from '@/components/layout/MvLayout.vue'
+import {
+  type AlleleResult,
+  clinGenAlleleIdRegex,
+  clinVarVariationIdRegex,
+  rsIdRegex,
+  vrsDigestRegex,
+  scoreSetUrnFromVariantUrn,
+  extractIdFromUrl,
+  createAlleleResult
+} from '@/lib/mavemd'
+import {getTargetGeneName} from '@/lib/target-genes'
 import {components} from '@/schema/openapi'
 import {getScoreSetShortName} from '@/lib/score-sets'
 import {clinVarHgvsSearchStringRegex, hgvsSearchStringRegex} from '@/lib/mave-hgvs'
+import {SEARCH_COLORS} from '@/data/search'
+import {
+  HOW_IT_WORKS_STEPS,
+  MAVEMD_COLLECTION_URN,
+  SEARCH_TYPE_OPTIONS,
+  VARIANT_TYPE_OPTIONS,
+  ALLELE_OPTIONS
+} from '@/data/mavemd'
+import {getAlleleByCaId, getAlleleByHgvs, getAlleleByDbSnp, getAlleleByClinVar, getGeneBySymbol} from '@/api/clingen'
+import {getCollection, getErrorResponse, lookupVariantsByClingenId} from '@/api/mavedb'
+import {lookupVariantsByVrsDigest} from '@/api/mavedb/variants'
+import {useEntityCache} from '@/composables/entity-cache'
+import MvLoader from '@/components/common/MvLoader.vue'
 
 const SCORE_SETS_TO_SHOW = 5
 
 type ScoreSet = components['schemas']['ScoreSet']
+type TargetGene = components['schemas']['TargetGene']
 
 export default defineComponent({
   name: 'SearchVariantsScreen',
 
   components: {
-    Card,
-    Column,
-    DataTable,
-    DefaultLayout,
-    Select,
-    IconField,
-    InputIcon,
+    MvEntityLink,
     InputText,
-    Button,
-    Message
+    MvCollapsible,
+    MvLayout,
+    Message,
+    MvLoader,
+    MvScoreSetRow,
+    PSelect
   },
 
   setup() {
@@ -400,7 +713,8 @@ export default defineComponent({
     const route = useRoute()
     const router = useRouter()
     const toast = useToast()
-    return {route, router, toast}
+    const {getEntity} = useEntityCache()
+    return {route, router, toast, getEntity, getScoreSetShortName, scoreSetUrnFromVariantUrn}
   },
 
   data: function () {
@@ -408,68 +722,44 @@ export default defineComponent({
       loading: false,
       defaultSearchVisible: true,
       searchSuggestionsVisible: false,
-      fuzzySearchVisible: false,
+      guidedSearchVisible: false,
       searchResultsVisible: false,
       searchText: null as string | null,
       searchType: null as string | null,
-      searchTypeOptions: [
-        {code: 'hgvs', name: 'HGVS', examples: ['ENST00000473961.6:c.-19-2A>T', 'NP_000242.1:p.Asn566Thr']},
-        {code: 'clinGenAlleleId', name: 'ClinGen Allele ID', examples: ['CA10590195', 'PA2579983208']},
-        {code: 'dbSnpRsId', name: 'dbSNP rsID', examples: ['rs900082291', '900082291']},
-        {code: 'clinVarVariationId', name: 'ClinVar Variation ID', examples: ['869058']}
-      ],
+      searchTypeOptions: SEARCH_TYPE_OPTIONS,
       inputGene: null as string | null,
       inputVariantType: null as string | null,
+      variantTypeOptions: VARIANT_TYPE_OPTIONS,
       inputVariantPosition: null as string | null,
       inputReferenceAllele: null as string | null,
       inputAlternateAllele: null as string | null,
-      allAlleleOptions: {
-        'c.': ['A', 'C', 'G', 'T'],
-        'p.': [
-          'Ala',
-          'Arg',
-          'Asp',
-          'Asn',
-          'Cys',
-          'Gln',
-          'Glu',
-          'Gly',
-          'His',
-          'Ile',
-          'Leu',
-          'Lys',
-          'Met',
-          'Phe',
-          'Pro',
-          'Ser',
-          'Thr',
-          'Trp',
-          'Tyr',
-          'Val'
-        ]
-      },
-      alleles: [] as Array<any>,
+      allAlleleOptions: ALLELE_OPTIONS,
+      alleles: [] as AlleleResult[],
       nucleotideScoreSetListIsExpanded: [] as Array<boolean>,
       proteinScoreSetListIsExpanded: [] as Array<boolean>,
       associatedNucleotideScoreSetListIsExpanded: [] as Array<boolean>,
       defaultNumScoreSetsToShow: SCORE_SETS_TO_SHOW,
       guideExpanded: false,
-      maveMdScoreSetUrns: MAVE_MD_SCORE_SETS,
+      maveMdScoreSetUrns: [] as string[],
       maveMdScoreSets: {} as {[urn: string]: ScoreSet | undefined},
-      numMaveMdScoreSetRetries: 0
+      maveMdScoreSetsError: false,
+      howItWorksSteps: HOW_IT_WORKS_STEPS
     }
   },
 
   computed: {
     maveMdScoreSetsGroupedByGene: function () {
-      return _(this.maveMdScoreSetUrns)
-        .groupBy('gene')
+      const groups = _(this.maveMdScoreSetUrns)
+        .groupBy((urn) => {
+          const scoreSet = this.maveMdScoreSets[urn]
+          if (!scoreSet) return 'Unknown'
+          return scoreSet.targetGenes?.map((g: TargetGene) => getTargetGeneName(g)).join(', ') || 'Unknown'
+        })
         .toPairs()
-        .map((geneAndScoreSetSpecs) => ({
-          gene: geneAndScoreSetSpecs[0],
-          urns: geneAndScoreSetSpecs[1].map((scoreSetSpec) => scoreSetSpec.urn)
-        }))
+        .map(([gene, urns]) => ({gene, urns}))
+        .sortBy(({gene}) => gene.toLowerCase())
         .value()
+      return this.guideExpanded ? groups : groups.slice(0, 8)
     },
     searchIsClearable: function () {
       return (
@@ -481,37 +771,48 @@ export default defineComponent({
         !_.isEmpty(this.inputAlternateAllele)
       )
     },
-    // clingenAlleleId: function() {
-    //   return this.allele?.['@id']?.split('/')?.at(-1)
-    // },
-    // debouncedSearchFunction: function() {
-    //   return debounce(() => this.search(), '400ms')
-    // }
     selectedAlleleOptions: function () {
-      if (this.inputVariantType === null) {
+      if (!this.inputVariantType) {
         return []
-      } else {
-        // @ts-ignore
-        return this.allAlleleOptions[this.inputVariantType]
       }
+      return this.allAlleleOptions[this.inputVariantType] || []
+    },
+    guidedSearchHasInput(): boolean {
+      return !!(
+        this.inputGene ||
+        this.inputVariantType ||
+        this.inputVariantPosition ||
+        this.inputReferenceAllele ||
+        this.inputAlternateAllele
+      )
+    },
+    currentSearchColor(): {accent: string; bg: string; activeText?: string} {
+      return SEARCH_COLORS[this.searchType || 'hgvs'] || SEARCH_COLORS.hgvs
+    },
+    currentPlaceholder(): string {
+      const option = this.searchTypeOptions.find((o) => o.code === this.searchType)
+      return option?.examples?.[0] || 'Enter a value'
     }
   },
 
   watch: {
     alleles: {
       handler: function (newValue) {
-        if (newValue.length > 0) {
-          this.nucleotideScoreSetListIsExpanded = newValue.map(() => false)
-          this.proteinScoreSetListIsExpanded = newValue.map(() => false)
-          this.associatedNucleotideScoreSetListIsExpanded = newValue.map(() => false)
-        }
+        this.nucleotideScoreSetListIsExpanded = newValue.map(() => false)
+        this.proteinScoreSetListIsExpanded = newValue.map(() => false)
+        this.associatedNucleotideScoreSetListIsExpanded = newValue.map(() => false)
       }
     },
     searchType: {
       handler(newVal, oldVal) {
-        if (newVal !== oldVal) {
+        if (newVal !== oldVal && this.defaultSearchVisible) {
+          // Don't clear searchText on initial hydration from query params (oldVal is null).
+          // Only clear when the user actively switches search type.
+          if (oldVal != null) {
+            this.searchText = ''
+          }
           this.router.replace({
-            query: {search: this.searchText || undefined, searchType: newVal}
+            query: {...this.route.query, searchType: newVal}
           })
         }
       }
@@ -531,7 +832,7 @@ export default defineComponent({
       handler(newVal) {
         if (typeof newVal === 'string') {
           this.searchType = newVal
-        } else if (!newVal) {
+        } else if (!newVal && this.defaultSearchVisible) {
           this.searchType = 'hgvs'
         }
       }
@@ -547,6 +848,25 @@ export default defineComponent({
       handler(newVal) {
         this.inputVariantType = typeof newVal === 'string' ? newVal : ''
       }
+    },
+    inputGene() {
+      this.syncGuidedQueryParams()
+    },
+    inputVariantType(newVal, oldVal) {
+      if (oldVal && newVal !== oldVal) {
+        this.inputReferenceAllele = null
+        this.inputAlternateAllele = null
+      }
+      this.syncGuidedQueryParams()
+    },
+    inputVariantPosition() {
+      this.syncGuidedQueryParams()
+    },
+    inputReferenceAllele() {
+      this.syncGuidedQueryParams()
+    },
+    inputAlternateAllele() {
+      this.syncGuidedQueryParams()
     },
     '$route.query.variantPosition': {
       immediate: true,
@@ -569,71 +889,87 @@ export default defineComponent({
   },
 
   mounted() {
-    // If search param is present, run default search
     if (this.route.query.search && String(this.route.query.search).trim() !== '') {
       this.defaultSearchVisible = true
-      this.fuzzySearchVisible = false
+      this.guidedSearchVisible = false
       this.defaultSearch()
     } else if (
+      this.route.query.mode === 'guided' ||
       this.route.query.gene ||
       this.route.query.variantType ||
       this.route.query.variantPosition ||
       this.route.query.refAllele ||
       this.route.query.altAllele
     ) {
-      // If any fuzzy search param is present, run fuzzy search
       this.defaultSearchVisible = false
-      this.fuzzySearchVisible = true
-      this.fuzzySearch()
+      this.guidedSearchVisible = true
+      if (this.route.query.gene) {
+        this.guidedSearch()
+      }
     }
 
     this.fetchMaveMdScoreSets()
   },
 
   methods: {
-    openAlleleInVariantView: function (allele: any) {
-      if (allele.clingenAlleleId) {
-        this.router.push({name: 'variant', params: {clingenAlleleId: allele.clingenAlleleId}})
+    restrictToDigits(event: InputEvent) {
+      if (event.data && !/^\d*$/.test(event.data)) {
+        event.preventDefault()
       }
     },
-    openAlleleInClinGenRegistry: function (allele: any) {
+    syncGuidedQueryParams() {
+      if (!this.guidedSearchVisible) return
+      const query = {...this.route.query}
+      query.mode = 'guided'
+      if (this.inputGene) query.gene = this.inputGene
+      else delete query.gene
+      if (this.inputVariantType) query.variantType = this.inputVariantType
+      else delete query.variantType
+      if (this.inputVariantPosition) query.variantPosition = this.inputVariantPosition
+      else delete query.variantPosition
+      if (this.inputReferenceAllele) query.refAllele = this.inputReferenceAllele
+      else delete query.refAllele
+      if (this.inputAlternateAllele) query.altAllele = this.inputAlternateAllele
+      else delete query.altAllele
+      this.router.replace({query})
+    },
+    focusTab(event: KeyboardEvent, direction: -1 | 1) {
+      const tabs = (event.currentTarget as HTMLElement)?.parentElement?.querySelectorAll<HTMLElement>('[role="tab"]')
+      if (!tabs) return
+      const list = Array.from(tabs)
+      const idx = list.indexOf(event.currentTarget as HTMLElement)
+      const target = list[(idx + direction + list.length) % list.length]
+      target.focus()
+      target.click()
+    },
+    openAlleleInClinGenRegistry: function (allele: AlleleResult) {
       if (allele.clingenAlleleUrl) {
         window.open(allele.clingenAlleleUrl, '_blank')
       }
     },
-    getScoreSetShortName: function (scoreSet: ScoreSet) {
-      return getScoreSetShortName(scoreSet)
-    },
     fetchMaveMdScoreSets: async function () {
-      let hasFailures = false
-      for (const scoreSetSpec of this.maveMdScoreSetUrns) {
-        if (!this.maveMdScoreSets[scoreSetSpec.urn]) {
-          try {
-            const scoreSet = (await axios.get(`${config.apiBaseUrl}/score-sets/${scoreSetSpec.urn}`)).data
-            this.maveMdScoreSets[scoreSetSpec.urn] = scoreSet
-          } catch {
-            hasFailures = true
+      this.maveMdScoreSetsError = false
+      try {
+        if (this.maveMdScoreSetUrns.length === 0) {
+          const collection = await getCollection(MAVEMD_COLLECTION_URN)
+          this.maveMdScoreSetUrns = collection.scoreSetUrns
+        }
+        for (const urn of this.maveMdScoreSetUrns) {
+          if (!this.maveMdScoreSets[urn]) {
+            const scoreSet = await this.getEntity('scoreSet', urn)
+            this.maveMdScoreSets[urn] = scoreSet as ScoreSet
           }
         }
-      }
-      if (hasFailures && this.numMaveMdScoreSetRetries < 10) {
-        this.numMaveMdScoreSetRetries++
-        setTimeout(() => {
-          this.fetchMaveMdScoreSets()
-        }, 5000)
+      } catch (error) {
+        console.error('Failed to load MaveMD score sets', error)
+        this.maveMdScoreSetsError = true
       }
     },
-    toggleGuide: function () {
-      this.guideExpanded = !this.guideExpanded
-    },
-    searchForText: function (event: PointerEvent, searchType: string) {
-      const element = event.target
+    searchForText: function (example: string, searchType: string) {
       this.searchType = searchType
-      if (element) {
-        this.showSearch('default')
-        this.searchText = element.innerText
-        this.defaultSearch()
-      }
+      this.showSearch('default')
+      this.searchText = example
+      this.defaultSearch()
       this.router.replace({query: {searchType: this.searchType, search: this.searchText}})
     },
     clearSearch() {
@@ -645,18 +981,44 @@ export default defineComponent({
       this.inputAlternateAllele = null
       this.searchResultsVisible = false
       this.alleles = []
+      this.router.replace({query: {}})
     },
-    showSearch(searchMethod: 'fuzzy' | 'default' = 'default') {
-      this.defaultSearchVisible = searchMethod == 'default'
-      this.fuzzySearchVisible = searchMethod == 'fuzzy'
+    showSearch(searchMethod: 'guided' | 'default' = 'default') {
+      this.defaultSearchVisible = searchMethod === 'default'
+      this.guidedSearchVisible = searchMethod === 'guided'
+
+      const query = {...this.route.query}
+      if (searchMethod === 'guided') {
+        delete query.search
+        delete query.searchType
+        query.mode = 'guided'
+      } else {
+        delete query.gene
+        delete query.variantType
+        delete query.variantPosition
+        delete query.refAllele
+        delete query.altAllele
+        delete query.mode
+      }
+      this.router.replace({query})
+      this.clearSearch()
     },
     defaultSearch: async function () {
+      if (this.searchText) this.searchText = this.searchText.trim()
       this.searchResultsVisible = true
-      // Remove fuzzy search params from the URL
-      const {gene, variantType, variantPosition, refAllele, altAllele, ...rest} = this.route.query
-      this.router.replace({
-        query: {...rest, search: this.searchText || undefined}
-      })
+      const query = {...this.route.query}
+      delete query.mode
+      delete query.gene
+      delete query.variantType
+      delete query.variantPosition
+      delete query.refAllele
+      delete query.altAllele
+      if (this.searchText) {
+        query.search = this.searchText
+      } else {
+        delete query.search
+      }
+      this.router.replace({query})
       this.alleles = []
       this.loading = true
       if (this.searchText !== null && this.searchText !== '') {
@@ -670,263 +1032,180 @@ export default defineComponent({
       let searchStr = searchString.trim()
 
       try {
-        let response
+        let responseData
         if (searchType === 'clinGenAlleleId') {
           if (!clinGenAlleleIdRegex.test(searchStr)) {
             this.toast.add({
               severity: 'error',
               summary: 'Invalid search',
-              detail: `Please provide a valid ClinGen Allele ID (e.g. ${_.join(_.find(this.searchTypeOptions, {code: searchType})?.examples, ', ')})`,
+              detail: `Please provide a valid ClinGen Allele ID (e.g. ${this.searchTypeOptions.find((o) => o.code === searchType)?.examples?.join(', ')})`,
               life: 10000
             })
             return
           }
-          response = await axios.get(`https://reg.genome.network/allele/${searchStr}`)
+          responseData = await getAlleleByCaId(searchStr)
         } else if (searchType === 'dbSnpRsId') {
           if (!rsIdRegex.test(searchStr) && !rsIdRegex.test(`rs${searchStr}`)) {
             this.toast.add({
               severity: 'error',
               summary: 'Invalid search',
-              detail: `Please provide a valid dbSNP rsID (e.g. ${_.join(_.find(this.searchTypeOptions, {code: searchType})?.examples, ', ')})`,
+              detail: `Please provide a valid dbSNP rsID (e.g. ${this.searchTypeOptions.find((o) => o.code === searchType)?.examples?.join(', ')})`,
               life: 10000
             })
             return
           }
-          response = await axios.get('https://reg.genome.network/alleles', {
-            params: {
-              'dbSNP.rs': searchStr
-            }
-          })
+          responseData = await getAlleleByDbSnp(searchStr)
         } else if (searchType === 'clinVarVariationId') {
           if (!clinVarVariationIdRegex.test(searchStr)) {
             this.toast.add({
               severity: 'error',
               summary: 'Invalid search',
-              detail: `Please provide a valid ClinVar Variation ID (e.g. ${_.join(_.find(this.searchTypeOptions, {code: searchType})?.examples, ', ')})`,
+              detail: `Please provide a valid ClinVar Variation ID (e.g. ${this.searchTypeOptions.find((o) => o.code === searchType)?.examples?.join(', ')})`,
               life: 10000
             })
             return
           }
-          response = await axios.get('https://reg.genome.network/alleles', {
-            params: {
-              'ClinVar.variationId': searchStr
+          responseData = await getAlleleByClinVar(searchStr)
+        } else if (searchType === 'vrsDigest') {
+          if (!vrsDigestRegex.test(searchStr)) {
+            this.toast.add({
+              severity: 'error',
+              summary: 'Invalid search',
+              detail: `Please provide a valid VRS digest (e.g. ${this.searchTypeOptions.find((o) => o.code === searchType)?.examples?.join(', ')})`,
+              life: 10000
+            })
+            return
+          }
+          let mappedVariants
+          try {
+            mappedVariants = await lookupVariantsByVrsDigest(searchStr)
+          } catch (error: unknown) {
+            const {status} = getErrorResponse(error)
+            if (status === 404) {
+              this.toast.add({
+                severity: 'warn',
+                summary: 'VRS identifier not found',
+                detail: 'No MaveDB variants match this identifier. Check that the digest is correct and try again.',
+                life: 10000
+              })
+              return
             }
-          })
+            throw error
+          }
+          for (const mappedVariant of mappedVariants) {
+            if (mappedVariant.clingenAlleleId) {
+              const alleleData = await getAlleleByCaId(mappedVariant.clingenAlleleId)
+              this.alleles.push(createAlleleResult(alleleData, maneStatus))
+            } else {
+              this.alleles.push({
+                clingenAlleleUrl: undefined,
+                clingenAlleleId: undefined,
+                variantUrn: mappedVariant.variantUrn,
+                canonicalAlleleName: mappedVariant.variantUrn,
+                maneStatus: null,
+                genomicAlleles: [],
+                grch38Hgvs: null,
+                grch37Hgvs: null,
+                transcriptAlleles: [],
+                maneCoordinates: [],
+                variantsStatus: 'Loaded',
+                variants: {nucleotide: [], protein: [], associatedNucleotide: []}
+              })
+            }
+          }
+          if (this.alleles.length > 0) {
+            ;(this.$refs.searchResults as HTMLElement)?.scrollIntoView({behavior: 'smooth', block: 'start'})
+          }
+          return
         } else {
           if (!hgvsSearchStringRegex.test(searchStr)) {
             this.toast.add({
               severity: 'error',
               summary: 'Invalid search',
-              detail: `Please provide a valid HGVS string (e.g. ${_.join(_.find(this.searchTypeOptions, {code: searchType})?.examples, ', ')})`,
+              detail: `Please provide a valid HGVS string (e.g. ${this.searchTypeOptions.find((o) => o.code === searchType)?.examples?.join(', ')})`,
               life: 10000
             })
             return
           }
-          // Strip gene symbol and/or protein consequence from ClinVar-style variant names to obtain valid HGVS. If the
-          // search string doesn't match the pattern, leave it as is and let the rest of the search code handle any format
-          // problem.
           const match = clinVarHgvsSearchStringRegex.exec(searchStr)
           if (match) {
             searchStr = `${match.groups!.identifier}:${match.groups!.description}`
           }
-          response = await axios.get('https://reg.genome.network/allele', {
-            params: {
-              hgvs: searchStr
-            }
-          })
+          responseData = await getAlleleByHgvs(searchStr)
         }
-        // determine if response data is a single allele or a list of alleles
-        const results = Array.isArray(response.data) ? response.data : [response.data]
+        const results = Array.isArray(responseData) ? responseData : [responseData]
 
         for (const result of results) {
-          const clingenAlleleId = result['@id']?.split('/')?.at(-1)
+          const clingenAlleleId = extractIdFromUrl(result['@id'])
           if (clingenAlleleId && clingenAlleleId.startsWith('CA')) {
-            const newAllele = {
-              clingenAlleleUrl: result?.['@id'],
-              clingenAlleleId: clingenAlleleId,
-              canonicalAlleleName: result?.communityStandardTitle?.[0] || undefined,
-              maneStatus: maneStatus,
-              genomicAlleles: result?.genomicAlleles || [],
-              grch38Hgvs: null,
-              grch37Hgvs: null,
-              transcriptAlleles: result?.transcriptAlleles || [],
-              maneCoordinates: [] as Array<any>,
-              variantsStatus: 'NotLoaded',
-              variants: {
-                nucleotide: [] as Array<any>,
-                protein: [] as Array<any>,
-                associatedNucleotide: [] as Array<any>
-              }
-            }
-            for (let i = 0; i < newAllele.genomicAlleles.length; i++) {
-              // TODO currently just taking first entry from hgvs array, since that appears to be NC coordinates. check this assumption
-              if (newAllele.genomicAlleles[i].referenceGenome === 'GRCh38') {
-                newAllele.grch38Hgvs = newAllele.genomicAlleles[i].hgvs?.[0]
-              } else if (newAllele.genomicAlleles[i].referenceGenome === 'GRCh37') {
-                newAllele.grch37Hgvs = newAllele.genomicAlleles[i].hgvs?.[0]
-              }
-            }
-            for (let i = 0; i < newAllele.transcriptAlleles.length; i++) {
-              if (newAllele.transcriptAlleles[i].MANE !== undefined) {
-                // TODO may want to prioritize one of MANE select, MANE clinical, etc. For now, just grab the first mane transcript.
-                const mane = newAllele.transcriptAlleles[i].MANE
-                for (const sequenceType of ['nucleotide', 'protein']) {
-                  for (const database in mane[sequenceType]) {
-                    newAllele.maneCoordinates.push({
-                      sequenceType: sequenceType,
-                      database: database,
-                      hgvs: mane[sequenceType][database].hgvs
-                    })
-                  }
-                }
-              }
-              break
-            }
-            this.alleles.push(newAllele)
+            this.alleles.push(createAlleleResult(result, maneStatus))
           } else if (clingenAlleleId && clingenAlleleId.startsWith('PA')) {
-            // Surface result on nucleotide-level variant if possible
-            // some PA IDs do not have associated CA IDs/matching registered transcripts
-            // because they are single amino acid variants caused by multi-nucleotide variants
-            // or delins nucleotide variants, and the more complex nucleotide variant has not
-            // been registered with ClinGen yet. in this case, use the PA ID
-
-            // get amino acid allele associated with the searched hgvs
-            // note, not sure if we should assume that the searched hgvs will appear here.
             const aminoAcidAlleles = result?.aminoAcidAlleles || []
             for (let i = 0; i < aminoAcidAlleles.length; i++) {
               if (searchType !== 'hgvs' || aminoAcidAlleles[i].hgvs?.includes(searchString)) {
                 const transcripts = aminoAcidAlleles[i]?.matchingRegisteredTranscripts || []
                 if (transcripts.length > 0) {
                   for (let j = 0; j < transcripts.length; j++) {
-                    const associatedClingenAlleleId = transcripts[j]?.['@id']?.split('/')?.at(-1)
-                    const associatedResponse = await axios.get(
-                      `https://reg.genome.network/allele/${associatedClingenAlleleId}`
-                    )
-                    const newAllele = {
-                      clingenAlleleUrl: associatedResponse.data?.['@id'],
-                      clingenAlleleId: associatedResponse.data?.['@id']?.split('/')?.at(-1),
-                      canonicalAlleleName: associatedResponse.data?.communityStandardTitle?.[0] || undefined,
-                      maneStatus: maneStatus,
-                      genomicAlleles: associatedResponse.data?.genomicAlleles || [],
-                      grch38Hgvs: null,
-                      grch37Hgvs: null,
-                      transcriptAlleles: associatedResponse.data?.transcriptAlleles || [],
-                      maneCoordinates: [] as Array<any>,
-                      variantsStatus: 'NotLoaded',
-                      variants: {
-                        nucleotide: [] as Array<any>,
-                        protein: [] as Array<any>,
-                        associatedNucleotide: [] as Array<any>
-                      }
-                    }
-                    for (let i = 0; i < newAllele.genomicAlleles.length; i++) {
-                      // TODO currently just taking first entry from hgvs array, since that appears to be NC coordinates. check this assumption
-                      if (newAllele.genomicAlleles[i].referenceGenome === 'GRCh38') {
-                        newAllele.grch38Hgvs = newAllele.genomicAlleles[i].hgvs?.[0]
-                      } else if (newAllele.genomicAlleles[i].referenceGenome === 'GRCh37') {
-                        newAllele.grch37Hgvs = newAllele.genomicAlleles[i].hgvs?.[0]
-                      }
-                    }
-                    for (let i = 0; i < newAllele.transcriptAlleles.length; i++) {
-                      if (newAllele.transcriptAlleles[i].MANE !== undefined) {
-                        // TODO may want to prioritize one of MANE select, MANE clinical, etc. For now, just grab the first mane transcript.
-                        const mane = newAllele.transcriptAlleles[i].MANE
-                        for (const sequenceType of ['nucleotide', 'protein']) {
-                          for (const database in mane[sequenceType]) {
-                            newAllele.maneCoordinates.push({
-                              sequenceType: sequenceType,
-                              database: database,
-                              hgvs: mane[sequenceType][database].hgvs
-                            })
-                          }
-                        }
-                      }
-                      break
-                    }
-                    this.alleles.push(newAllele)
+                    const associatedId = extractIdFromUrl(transcripts[j]?.['@id'])
+                    const associatedData = await getAlleleByCaId(associatedId!)
+                    this.alleles.push(createAlleleResult(associatedData, maneStatus))
                   }
                 } else {
-                  // no associated CA IDs, use PA ID as search result
-                  // there is not as much info available for PA IDs
-                  const newAllele = {
-                    clingenAlleleUrl: result?.['@id'],
-                    clingenAlleleId: result?.['@id']?.split('/')?.at(-1),
-                    canonicalAlleleName: searchStr, // since we have already determined a match, just use supplied search string as a name
-                    variantsStatus: 'NotLoaded',
-                    variants: {
-                      nucleotide: [] as Array<any>,
-                      protein: [] as Array<any>,
-                      associatedNucleotide: [] as Array<any>
-                    },
-                    // the following fields are not available for PA IDs
-                    maneStatus: null,
-                    genomicAlleles: [],
-                    grch38Hgvs: null,
-                    grch37Hgvs: null,
-                    transcriptAlleles: [],
-                    maneCoordinates: [] as Array<any>
-                  }
-                  this.alleles.push(newAllele)
+                  const bareAllele = createAlleleResult(result, null)
+                  bareAllele.canonicalAlleleName = searchStr
+                  this.alleles.push(bareAllele)
                 }
               }
-              // only expect one amino acid allele match
               break
             }
           }
         }
         if (this.alleles.length > 0) {
-          this.$refs.searchResults.scrollIntoView({
+          ;(this.$refs.searchResults as HTMLElement)?.scrollIntoView({
             behavior: 'smooth',
             block: 'start'
           })
         }
-      } catch (error: any) {
-        // NOTE: not resetting alleles here, because any error will have occurred before pushing to alleles.
-        // don't want to reset alleles because this function may be called in a loop to process several hgvs strings.
+      } catch (error: unknown) {
         console.log('Error while loading search results', error)
+        const {data} = getErrorResponse(error)
         this.toast.add({
           severity: 'error',
           summary:
-            error.response.data?.errorType && error.response.data?.description
-              ? `${error.response.data?.errorType}: ${error.response.data?.description}`
-              : 'Error fetching results',
-          detail: error.response.data?.message || 'Invalid search.',
+            data?.errorType && data?.description ? `${data.errorType}: ${data.description}` : 'Error fetching results',
+          detail: (data?.message as string) || 'Invalid search.',
           life: 10000
         })
       }
     },
     searchVariants: async function () {
       for (const allele of this.alleles) {
+        const caId = allele.clingenAlleleId
+        if (!caId) continue
         allele.variantsStatus = 'Loading'
         try {
-          const response = await axios.post(`${config.apiBaseUrl}/variants/clingen-allele-id-lookups`, {
-            clingenAlleleIds: [allele.clingenAlleleId]
-          })
+          const data = await lookupVariantsByClingenId([caId])
 
-          // if CA ID, exact match = nucleotide
-          // else if PA ID, exact match = protein
-          if (allele.clingenAlleleId.startsWith('CA')) {
-            allele.variants.nucleotide = response.data[0]?.exactMatch?.variantEffectMeasurements || []
-            allele.variants.protein = (response.data[0]?.equivalentAa || []).flatMap(
-              (entry: any) => entry.variantEffectMeasurements || []
+          if (caId.startsWith('CA')) {
+            allele.variants.nucleotide = data[0]?.exactMatch?.variantEffectMeasurements || []
+            allele.variants.protein = (data[0]?.equivalentAa || []).flatMap(
+              (entry) => entry.variantEffectMeasurements || []
             )
-            allele.variants.associatedNucleotide = (response.data[0]?.equivalentNt || []).flatMap(
-              (entry: any) => entry.variantEffectMeasurements || []
+            allele.variants.associatedNucleotide = (data[0]?.equivalentNt || []).flatMap(
+              (entry) => entry.variantEffectMeasurements || []
             )
-          } else if (allele.clingenAlleleId.startsWith('PA')) {
-            allele.variants.protein = response.data[0]?.exactMatch?.variantEffectMeasurements || []
-            // note: since we weren't able to resolve PA ID to a CA ID, we don't expect any results for nt
-            allele.variants.nucleotide = (response.data[0]?.equivalentNt || []).flatMap(
-              (entry: any) => entry.variantEffectMeasurements || []
+          } else if (caId.startsWith('PA')) {
+            allele.variants.protein = data[0]?.exactMatch?.variantEffectMeasurements || []
+            allele.variants.nucleotide = (data[0]?.equivalentNt || []).flatMap(
+              (entry) => entry.variantEffectMeasurements || []
             )
           }
           allele.variantsStatus = 'Loaded'
-          console.log('Variants:')
-          console.log(allele.variants)
-        } catch (error: any) {
-          allele.variants = []
+        } catch (error: unknown) {
+          allele.variants = {nucleotide: [], protein: [], associatedNucleotide: []}
           console.log('Error while loading MaveDB search results for variant', error)
-          if (error.response?.status === 404) {
+          const {status} = getErrorResponse(error)
+          if (status === 404) {
             allele.variantsStatus = 'Loaded'
             this.toast.add({
               severity: 'info',
@@ -934,7 +1213,7 @@ export default defineComponent({
               detail: 'No variants match the provided search criteria.',
               life: 10000
             })
-          } else if (error.response?.status >= 500) {
+          } else if (status >= 500) {
             allele.variantsStatus = 'Error'
             this.toast.add({
               severity: 'error',
@@ -954,28 +1233,16 @@ export default defineComponent({
         }
       }
     },
-    fuzzySearch: async function () {
+    guidedSearch: async function () {
       this.searchResultsVisible = true
-      // Remove HGVS search param from the URL
-      const {search, searchType, ...rest} = this.route.query
-      this.router.replace({
-        query: {
-          ...rest,
-          gene: this.inputGene || undefined,
-          variantType: this.inputVariantType || undefined,
-          variantPosition: this.inputVariantPosition || undefined,
-          refAllele: this.inputReferenceAllele || undefined,
-          altAllele: this.inputAlternateAllele || undefined
-        }
-      })
+      this.syncGuidedQueryParams()
       this.alleles = []
       this.loading = true
-      await this.fetchFuzzySearchResults()
+      await this.fetchGuidedSearchResults()
       this.loading = false
       await this.searchVariants()
     },
-    fetchFuzzySearchResults: async function () {
-      // TODO could make this check more elegant
+    fetchGuidedSearchResults: async function () {
       if (
         _.isEmpty(this.inputGene) ||
         _.isEmpty(this.inputVariantType) ||
@@ -983,24 +1250,15 @@ export default defineComponent({
         _.isEmpty(this.inputReferenceAllele) ||
         _.isEmpty(this.inputAlternateAllele)
       ) {
-        // unnecessary since we are clearing this.alleles above
         this.alleles = []
       } else {
         try {
-          // human gene symbols should always be upper case, and ClinGen API is case-sensitive
           const geneSymbol = this.inputGene?.toUpperCase()
-          // TODO validate variant position input: can't be 0, can only include *, - (if c.) and digits
 
-          // retrieve clingen gene id
-          const geneResponse = await axios.get('https://reg.genome.network/gene', {
-            params: {
-              'HGNC.symbol': geneSymbol
-            }
-          })
+          const geneData = await getGeneBySymbol(geneSymbol!)
 
-          //extract mane transcripts
           const maneRefSeqIds = []
-          for (const maneRecord of geneResponse.data?.externalRecords?.MANE) {
+          for (const maneRecord of geneData?.externalRecords?.MANE || []) {
             if (this.inputVariantType === 'c.') {
               maneRefSeqIds.push({
                 id: maneRecord.nucleotide?.RefSeq?.id,
@@ -1014,18 +1272,6 @@ export default defineComponent({
             }
           }
 
-          // for now, just use mane transcripts from gene response.
-          // uncomment this block to include all refseq transcripts, including non-MANE
-          // which could be done if variant input type is c.
-          // const clingenGeneId = geneResponse.data?.['@id']?.split('/')?.at(-1)
-          // // retrieve refseq transcripts associated with clingen allele id
-          // const transcriptResponse = await axios.get('https://reg.genome.network/refseqs', {
-          //   params: {
-          //     gene: clingenGeneId
-          //   }
-          // })
-
-          // create hgvs strings
           const hgvsStrings = []
           for (const maneRefSeqId of maneRefSeqIds) {
             if (this.inputVariantType === 'c.') {
@@ -1041,213 +1287,104 @@ export default defineComponent({
             }
           }
 
-          // fetch clingen allele id results for each hgvs string
           for (const hgvsString of hgvsStrings) {
             await this.fetchDefaultSearchResults(hgvsString.hgvsString, hgvsString.maneStatus)
           }
-        } catch (error: any) {
+        } catch (error: unknown) {
           this.alleles = []
           console.log('Error while loading search results', error)
+          const {data} = getErrorResponse(error)
           this.toast.add({
             severity: 'error',
             summary:
-              error.response.data?.errorType && error.response.data?.description
-                ? `${error.response.data?.errorType}: ${error.response.data?.description}`
+              data?.errorType && data?.description
+                ? `${data.errorType}: ${data.description}`
                 : 'Error fetching results',
-            detail: error.response.data?.message || 'Invalid search.',
+            detail: (data?.message as string) || 'Invalid search.',
             life: 10000
           })
         }
       }
+    },
+
+    searchColorStyle(code: string, variant: 'active' | 'inactive' | 'chip' = 'chip'): Record<string, string> {
+      const colors = SEARCH_COLORS[code] || SEARCH_COLORS.hgvs
+      switch (variant) {
+        case 'active':
+          return {
+            borderColor: colors.accent,
+            backgroundColor: colors.accent,
+            color: colors.activeText || 'var(--color-text-dark)'
+          }
+        case 'inactive':
+          return {borderColor: colors.accent, backgroundColor: 'var(--color-surface)', color: colors.accent}
+        default:
+          return {borderColor: colors.accent, backgroundColor: colors.bg, color: colors.accent}
+      }
+    },
+
+    calibrationCountWithEvidence(urn: string): number {
+      const scoreSet = this.maveMdScoreSets[urn]
+      if (!scoreSet?.scoreCalibrations) return 0
+      return scoreSet.scoreCalibrations.filter(
+        (calibration: components['schemas']['ScoreCalibration']) =>
+          Array.isArray(calibration.functionalClassifications) &&
+          calibration.functionalClassifications.filter((range) => range.acmgClassification).length > 0
+      ).length
+    },
+
+    calibrationCountTotal(urn: string): number {
+      return this.maveMdScoreSets[urn]?.scoreCalibrations?.length || 0
     }
   }
 })
 </script>
 
-<style scoped>
-.mavedb-mavemd-logo {
-  height: 150px;
-  margin: 1em 0 0 0;
+<style>
+/* Guided search PrimeVue Select overrides */
+.guided-select-cell .guided-select {
+  width: 100%;
+  border: none;
+  border-radius: 0;
+  background: transparent;
+  box-shadow: none;
 }
 
-.mavedb-mavemd-intro {
-  display: none;
-  flex: 0 0 auto;
-  text-align: left;
-  font-size: 110%;
+.guided-select-cell .guided-select .p-select-label {
+  padding: 1rem 1.75rem 0.5rem 0.75rem;
+  font-size: 14px;
+  color: var(--color-gray-800);
+  background: transparent;
 }
 
-.mavedb-search-view {
-  position: relative;
+.guided-select-cell .guided-select .p-select-label.p-placeholder {
+  color: var(--color-gray-400);
 }
 
-.mavedb-search-view-without-results {
-  display: flex;
-  flex-direction: column;
-  height: 100%;
-  display: flex;
+.guided-select-cell .guided-select .p-select-dropdown {
+  width: 1.5rem;
+  color: var(--color-gray-400);
 }
 
-.mavedb-search-view-without-results .mavedb-mavemd-intro {
-  display: block;
-  flex-direction: column;
-  justify-content: center;
+.guided-select-cell .guided-select .p-select-dropdown svg {
+  width: 0.875rem;
+  height: 0.875rem;
 }
 
-.mavedb-search-form {
-  /* flex: 0 0 auto; */
-  display: flex;
-  flex-direction: column;
-  flex-wrap: wrap;
-  padding: 10px 0;
-  text-align: center;
-  justify-content: center;
-  gap: 3px;
+.guided-select .p-select-overlay {
+  border: 1px solid var(--color-gray-200);
+  border-radius: 0.5rem;
+  box-shadow: 0 4px 12px rgb(0 0 0 / 0.1);
+  margin-top: 2px;
 }
 
-.mavedb-search-heading {
-  font-size: 120%;
-  text-align: center;
+.guided-select .p-select-option {
+  font-size: 14px;
+  padding: 0.5rem 0.75rem;
 }
 
-.mavedb-search-view-without-results .mavedb-search-form {
-  flex: 1 0 auto;
-  max-height: 500px;
-  display: flex;
-  flex-direction: column;
-  justify-content: center;
-}
-
-.mavedb-search-form-view-switch {
-  flex: 0 0 auto;
-  padding: 10px 0;
-  text-align: center;
-  gap: 5px;
-  justify-content: center;
-}
-
-.mavedb-examples-button-container {
-  display: flex;
-  justify-content: center;
-  margin: 8px 0;
-}
-
-.mavedb-examples-button-container .p-button {
-  width: fit-content;
-}
-
-.mavedb-fuzzy-search-form-component {
-  margin: 0 5px;
-}
-
-.mavedb-search-tabs {
-  flex: 0 0 auto;
-  padding: 10px 0;
-  text-align: center;
-}
-
-.mavedb-search-filters {
-  display: flex;
-  flex-direction: row;
-  justify-content: space-evenly;
-  max-width: 1000px;
-  margin: 10px auto;
-}
-
-.mavedb-search-filter-option-picker {
-  max-width: 300px;
-  width: 24%;
-}
-
-.mavedb-search-suggestions {
-  display: flex;
-  justify-content: center;
-  flex-direction: column;
-}
-
-.mavedb-organism-picker:deep(.p-listbox-item) {
-  font-style: italic;
-}
-
-.mavedb-organism-picker:deep(.p-listbox-item .p-badge) {
-  font-style: normal;
-}
-
-.clickable-variant-card::v-deep(.p-card-title) {
-  padding: 0px;
-  margin-bottom: 0px;
-}
-
-.clickable-variant-card::v-deep(.p-card-content) {
-  border-top: 1px solid #555;
-}
-
-.clickable-variant-card::v-deep(.p-card-footer) {
-  padding: 0px;
-}
-
-.variant-search-score-set-result {
-  list-style-position: inside;
-  margin-left: 1.2em;
-  padding-left: 0;
-}
-
-.variant-search-result-subcontent {
-  margin-top: 5px;
-}
-
-.mavedb-search-example {
-  background: #eee;
-  padding: 0 3px;
-  cursor: pointer;
-}
-
-.mavedb-clear-search-button-container {
-  display: flex;
-  flex-direction: column;
-  justify-content: center;
-  margin: 0 0 0 5px;
-}
-
-.mavedb-expander-container {
-  position: relative;
-  padding: 0 0 2em 0;
-}
-
-.mavedb-expander {
-  margin: 0;
-  max-height: 9lh;
-  overflow-y: hidden;
-}
-
-.mavedb-expander-expanded {
-  max-height: none;
-}
-
-.mavedb-expander-toggle {
-  position: absolute;
-  bottom: 0;
-}
-
-.mavedb-expander p {
-  margin: 0 0 0.5lh 0;
-}
-
-td,
-th {
-  padding: 0 5px;
-  vertical-align: top;
-}
-
-.clickable-title {
-  cursor: pointer;
-  transition:
-    color 0.2s,
-    text-decoration 0.2s;
-}
-.clickable-title:hover,
-.clickable-title:focus {
-  color: #233a7a;
-  text-decoration: underline;
+.guided-select .p-select-option.p-select-option-selected {
+  background: var(--color-sage-light);
+  color: var(--color-sage-dark);
 }
 </style>

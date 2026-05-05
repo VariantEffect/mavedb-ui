@@ -1,15 +1,15 @@
 import axios from 'axios'
 
-import config from '@/config'
+import {createScoreCalibration, updateScoreCalibration} from '@/api/mavedb'
 import {HistogramBin, HistogramShader} from '@/lib/histogram'
 import {components} from '@/schema/openapi'
 
 export type FunctionalClassificationVariants = components['schemas']['FunctionalClassificationVariants']
 export type FunctionalClassificationVariant = components['schemas']['VariantEffectMeasurement']
 
-export const NORMAL_RANGE_DEFAULT_COLOR = '#4444ff'
-export const ABNORMAL_RANGE_DEFAULT_COLOR = '#ff4444'
-export const NOT_SPECIFIED_RANGE_DEFAULT_COLOR = '#646464'
+export const NORMAL_RANGE_DEFAULT_COLOR = 'var(--color-cal-normal)'
+export const ABNORMAL_RANGE_DEFAULT_COLOR = 'var(--color-cal-abnormal)'
+export const NOT_SPECIFIED_RANGE_DEFAULT_COLOR = 'var(--color-cal-unspecified)'
 
 export const BENIGN_CRITERION = 'BS3'
 export const PATHOGENIC_CRITERION = 'PS3'
@@ -98,8 +98,8 @@ export function prepareCalibrationsForHistogram(
       max: classification.range[1],
       title: classification.label,
       align: 'center',
-      color: getRangeColor(classification),
-      thresholdColor: getRangeColor(classification),
+      color: getClassificationColor(classification),
+      thresholdColor: getClassificationColor(classification),
       startOpacity: 0.15,
       stopOpacity: 0.05,
       gradientUUID: undefined
@@ -129,7 +129,7 @@ export function prepareCalibrationsForHistogram(
  * const color = getRangeColor({ classification: 'normal' }); // e.g. '#3BAA5C'
  * @remarks If new classifications are introduced, extend this function to handle them explicitly.
  */
-function getRangeColor(
+export function getClassificationColor(
   range: components['schemas']['mavedb__view_models__score_calibration__FunctionalClassification']
 ): string {
   if (range.functionalClassification === 'normal') {
@@ -230,8 +230,9 @@ export function functionalClassificationContainsVariant(
  * @returns True if any calibration has at least one functional classification with an evidence strength
  */
 export function hasPathogenicityCalibrations(
-  scoreCalibrations: components['schemas']['ScoreCalibration'][] | undefined
+  scoreSet: {scoreCalibrations?: components['schemas']['ScoreCalibration'][] | null} | null | undefined
 ): boolean {
+  const scoreCalibrations = scoreSet?.scoreCalibrations
   if (!scoreCalibrations || scoreCalibrations.length === 0) {
     return false
   }
@@ -252,13 +253,70 @@ export function hasPathogenicityCalibrations(
  * @returns True if any calibration has at least one functional classification
  */
 export function hasFunctionalCalibrations(
-  scoreCalibrations: components['schemas']['ScoreCalibration'][] | undefined
+  scoreSet: {scoreCalibrations?: components['schemas']['ScoreCalibration'][] | null} | null | undefined
 ): boolean {
+  const scoreCalibrations = scoreSet?.scoreCalibrations
   if (!scoreCalibrations || scoreCalibrations.length === 0) {
     return false
   }
 
   return scoreCalibrations.some((cal) => cal.functionalClassifications && Array.isArray(cal.functionalClassifications))
+}
+
+/**
+ * Returns the primary calibration for a score set — the one marked `primary`, or
+ * failing that, the one marked `investigatorProvided`. Returns null if neither exists.
+ */
+export function getPrimaryCalibration(
+  scoreSet: {scoreCalibrations?: components['schemas']['ScoreCalibration'][] | null} | null | undefined
+): components['schemas']['ScoreCalibration'] | null {
+  const calibrations = scoreSet?.scoreCalibrations
+  if (!calibrations || calibrations.length === 0) return null
+  return calibrations.find((c) => c.primary) || calibrations.find((c) => c.investigatorProvided) || null
+}
+
+/**
+ * Finds a functional classification by type (e.g. 'normal', 'abnormal') from a calibration's
+ * classifications list. Returns null if not found.
+ */
+export function findClassificationByType(
+  calibration: components['schemas']['ScoreCalibration'] | null | undefined,
+  type: string
+): components['schemas']['mavedb__view_models__score_calibration__FunctionalClassification'] | null {
+  return calibration?.functionalClassifications?.find((r) => r.functionalClassification === type) || null
+}
+
+/**
+ * Returns the formatted OddsPath ratio string for a given classification type from a calibration,
+ * or null if not available. Uses the specified precision (default 2).
+ */
+export function getClassificationOddsPath(
+  calibration: components['schemas']['ScoreCalibration'] | null | undefined,
+  type: string,
+  precision: number = 2
+): string | null {
+  const range = findClassificationByType(calibration, type)
+  return range?.oddspathsRatio != null ? range.oddspathsRatio.toFixed(precision) : null
+}
+
+/**
+ * Formats the ACMG evidence code from a functional classification's ACMG classification data.
+ *
+ * @param classification - A functional classification that may contain an `acmgClassification`
+ *   with `criterion` (e.g. "PS3", "BS3") and `evidenceStrength` (e.g. "Strong", "Moderate").
+ * @returns A formatted code like "PS3_STRONG", or an empty string if evidence data is missing.
+ */
+export function formatEvidenceCode(
+  classification:
+    | components['schemas']['mavedb__view_models__score_calibration__FunctionalClassification']
+    | null
+    | undefined
+): string {
+  if (!classification?.acmgClassification?.evidenceStrength) return ''
+  const criterion = classification.acmgClassification.criterion
+  const strength = classification.acmgClassification.evidenceStrength.toUpperCase()
+  return `${criterion}_${strength}`
+}
 
 export type CalibrationSaveResult =
   | {success: true; data: any}
@@ -293,12 +351,11 @@ export async function saveCalibration(params: {
   }
 
   try {
-    const requestConfig = {headers: {'Content-Type': 'multipart/form-data'}}
-    const response = existingUrn
-      ? await axios.put(`${config.apiBaseUrl}/score-calibrations/${existingUrn}`, formData, requestConfig)
-      : await axios.post(`${config.apiBaseUrl}/score-calibrations`, formData, requestConfig)
+    const data = existingUrn
+      ? await updateScoreCalibration(existingUrn, formData)
+      : await createScoreCalibration(formData)
 
-    return {success: true, data: response.data}
+    return {success: true, data}
   } catch (error: unknown) {
     if (
       axios.isAxiosError(error) &&
@@ -338,42 +395,4 @@ export async function saveCalibration(params: {
 
     return {success: false, error: 'unknown', raw: error}
   }
-}
-
-/**
- * Fetches the full list of variants for a single functional classification in a score calibration.
- *
- * Uses the dedicated calibration variants endpoint introduced to replace embedded
- * `variants` payloads in calibration responses.
- *
- * @param calibrationUrn The score calibration URN.
- * @param classificationId The database ID of the functional classification.
- * @returns The classification ID and associated variant list.
- */
-export async function fetchScoreCalibrationFunctionalClassificationVariants(
-  calibrationUrn: string,
-  classificationId: number
-): Promise<FunctionalClassificationVariants> {
-  const response = await axios.get(
-    `${config.apiBaseUrl}/score-calibrations/${encodeURIComponent(calibrationUrn)}/functional-classifications/${classificationId}/variants`
-  )
-  return response.data
-}
-
-/**
- * Fetches variant lists for all functional classifications in a score calibration.
- *
- * This is intended for views that need class membership across the full calibration
- * (for example, class-based histogram series generation).
- *
- * @param calibrationUrn The score calibration URN.
- * @returns An array of per-classification variant payloads.
- */
-export async function fetchScoreCalibrationVariants(
-  calibrationUrn: string
-): Promise<FunctionalClassificationVariants[]> {
-  const response = await axios.get(
-    `${config.apiBaseUrl}/score-calibrations/${encodeURIComponent(calibrationUrn)}/variants`
-  )
-  return response.data
 }

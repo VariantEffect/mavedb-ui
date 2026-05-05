@@ -453,6 +453,13 @@ export interface paths {
      */
     get: operations["get_sequence_api_v1_refget_sequence__alias__get"];
   };
+  "/api/v1/score-calibrations/me": {
+    /**
+     * List my calibrations
+     * @description List all score calibrations created by the current user.
+     */
+    get: operations["list_my_calibrations_api_v1_score_calibrations_me_get"];
+  };
   "/api/v1/score-calibrations/{urn}": {
     /**
      * Get Score Calibration
@@ -661,6 +668,25 @@ export interface paths {
      * @description Search score sets created by the current user..
      */
     post: operations["search_my_score_sets_api_v1_me_score_sets_search_post"];
+  };
+  "/api/v1/score-sets/recently-published": {
+    /**
+     * List recently published score sets
+     * @description Return the most recently published score sets, ordered by publication date descending.
+     */
+    get: operations["list_recently_published_score_sets_api_v1_score_sets_recently_published_get"];
+  };
+  "/api/v1/score-sets/": {
+    /**
+     * Fetch score sets by URN list
+     * @description Fetch score sets identified by a list of URNs.
+     */
+    get: operations["show_score_sets_api_v1_score_sets__get"];
+    /**
+     * Create a score set
+     * @description Create a score set.
+     */
+    post: operations["create_score_set_api_v1_score_sets__post"];
   };
   "/api/v1/score-sets/{urn}": {
     /**
@@ -896,13 +922,6 @@ export interface paths {
      *     - Logs requests and errors for monitoring and debugging purposes
      */
     get: operations["get_score_set_annotated_variants_functional_study_result_api_v1_score_sets__urn__annotated_variants_study_result_get"];
-  };
-  "/api/v1/score-sets/": {
-    /**
-     * Create a score set
-     * @description Create a score set.
-     */
-    post: operations["create_score_set_api_v1_score_sets__post"];
   };
   "/api/v1/score-sets-with-variants/{urn}": {
     /**
@@ -5810,6 +5829,122 @@ export interface components {
      * @description A character string of Residues that represents a biological sequence using the conventional sequence order (5'-to-3' for nucleic acid sequences, and amino-to-carboxyl for amino acid sequences). IUPAC ambiguity codes are permitted in Sequence Strings.
      */
     sequenceString: string;
+    /**
+     * ACMGClassificationModify
+     * @description Model used to modify an existing ACMG classification.
+     */
+    ACMGClassificationModify: {
+      /** @default null */
+      criterion?: components["schemas"]["ACMGCriterion"] | null;
+      /** @default null */
+      evidenceStrength?: components["schemas"]["StrengthOfEvidenceProvided"] | null;
+      /**
+       * Points
+       * @default null
+       */
+      points?: number | null;
+    };
+    /**
+     * FunctionalClassification
+     * @enum {string}
+     */
+    FunctionalClassification: "normal" | "abnormal" | "not_specified";
+    /**
+     * FunctionalClassificationModify
+     * @description Model used to modify an existing functional range.
+     */
+    FunctionalClassificationModify: {
+      /** Label */
+      label: string;
+      /**
+       * Description
+       * @default null
+       */
+      description?: string | null;
+      /** @default not_specified */
+      functionalClassification?: components["schemas"]["FunctionalClassification"];
+      /**
+       * Range
+       * @default null
+       */
+      range?: ([number | null, number | null]) | null;
+      /**
+       * Class
+       * @default null
+       */
+      class?: string | null;
+      /**
+       * Inclusivelowerbound
+       * @default null
+       */
+      inclusiveLowerBound?: boolean | null;
+      /**
+       * Inclusiveupperbound
+       * @default null
+       */
+      inclusiveUpperBound?: boolean | null;
+      /** @default null */
+      acmgClassification?: components["schemas"]["ACMGClassificationModify"] | null;
+      /**
+       * Oddspathsratio
+       * @default null
+       */
+      oddspathsRatio?: number | null;
+      /**
+       * Positivelikelihoodratio
+       * @default null
+       */
+      positiveLikelihoodRatio?: number | null;
+    };
+    /**
+     * ScoreCalibrationModify
+     * @description Model used to modify an existing score calibration.
+     */
+    ScoreCalibrationModify: {
+      /** Title */
+      title: string;
+      /**
+       * Researchuseonly
+       * @default false
+       */
+      researchUseOnly?: boolean;
+      /**
+       * Baselinescore
+       * @default null
+       */
+      baselineScore?: number | null;
+      /**
+       * Baselinescoredescription
+       * @default null
+       */
+      baselineScoreDescription?: string | null;
+      /**
+       * Notes
+       * @default null
+       */
+      notes?: string | null;
+      /**
+       * Functionalclassifications
+       * @default null
+       */
+      functionalClassifications?: components["schemas"]["FunctionalClassificationModify"][] | null;
+      /** Thresholdsources */
+      thresholdSources: components["schemas"]["PublicationIdentifierCreate"][];
+      /** Evidencesources */
+      evidenceSources: components["schemas"]["PublicationIdentifierCreate"][];
+      /** Methodsources */
+      methodSources: components["schemas"]["PublicationIdentifierCreate"][];
+      /**
+       * Calibrationmetadata
+       * @default null
+       */
+      calibrationMetadata?: Record<string, never> | null;
+      /**
+       * Scoreseturn
+       * @default null
+       */
+      scoreSetUrn?: string | null;
+    };
   };
   responses: never;
   parameters: never;
@@ -8297,6 +8432,47 @@ export interface operations {
     };
   };
   /**
+   * List my calibrations
+   * @description List all score calibrations created by the current user.
+   */
+  list_my_calibrations_api_v1_score_calibrations_me_get: {
+    parameters: {
+      header?: {
+        "x-active-roles"?: string | null;
+      };
+    };
+    responses: {
+      /** @description Successful Response */
+      200: {
+        content: {
+          "application/json": components["schemas"]["ScoreCalibrationWithScoreSetUrn"][];
+        };
+      };
+      /** @description Authentication required. */
+      401: {
+        content: never;
+      };
+      /** @description Forbidden. Insufficient permissions. */
+      403: {
+        content: never;
+      };
+      /** @description Resource not found. */
+      404: {
+        content: never;
+      };
+      /** @description Validation Error */
+      422: {
+        content: {
+          "application/json": components["schemas"]["HTTPValidationError"];
+        };
+      };
+      /** @description Internal server error. */
+      500: {
+        content: never;
+      };
+    };
+  };
+  /**
    * Get Score Calibration
    * @description Retrieve a score calibration by its URN.
    */
@@ -8325,6 +8501,10 @@ export interface operations {
         content: {
           "application/json": components["schemas"]["HTTPValidationError"];
         };
+      };
+      /** @description Internal server error. */
+      500: {
+        content: never;
       };
     };
   };
@@ -8415,6 +8595,10 @@ export interface operations {
       422: {
         content: never;
       };
+      /** @description Internal server error. */
+      500: {
+        content: never;
+      };
     };
   };
   /**
@@ -8444,6 +8628,10 @@ export interface operations {
         content: {
           "application/json": components["schemas"]["HTTPValidationError"];
         };
+      };
+      /** @description Internal server error. */
+      500: {
+        content: never;
       };
     };
   };
@@ -8477,6 +8665,10 @@ export interface operations {
           "application/json": components["schemas"]["HTTPValidationError"];
         };
       };
+      /** @description Internal server error. */
+      500: {
+        content: never;
+      };
     };
   };
   /**
@@ -8508,6 +8700,10 @@ export interface operations {
         content: {
           "application/json": components["schemas"]["HTTPValidationError"];
         };
+      };
+      /** @description Internal server error. */
+      500: {
+        content: never;
       };
     };
   };
@@ -8593,6 +8789,10 @@ export interface operations {
       422: {
         content: never;
       };
+      /** @description Internal server error. */
+      500: {
+        content: never;
+      };
     };
   };
   /**
@@ -8629,6 +8829,10 @@ export interface operations {
           "application/json": components["schemas"]["HTTPValidationError"];
         };
       };
+      /** @description Internal server error. */
+      500: {
+        content: never;
+      };
     };
   };
   /**
@@ -8661,6 +8865,10 @@ export interface operations {
           "application/json": components["schemas"]["HTTPValidationError"];
         };
       };
+      /** @description Internal server error. */
+      500: {
+        content: never;
+      };
     };
   };
   /**
@@ -8692,6 +8900,10 @@ export interface operations {
         content: {
           "application/json": components["schemas"]["HTTPValidationError"];
         };
+      };
+      /** @description Internal server error. */
+      500: {
+        content: never;
       };
     };
   };
@@ -8731,6 +8943,10 @@ export interface operations {
           "application/json": components["schemas"]["HTTPValidationError"];
         };
       };
+      /** @description Internal server error. */
+      500: {
+        content: never;
+      };
     };
   };
   /**
@@ -8766,6 +8982,10 @@ export interface operations {
         content: {
           "application/json": components["schemas"]["HTTPValidationError"];
         };
+      };
+      /** @description Internal server error. */
+      500: {
+        content: never;
       };
     };
   };
@@ -8935,6 +9155,150 @@ export interface operations {
       };
       /** @description Internal server error. */
       500: {
+        content: never;
+      };
+    };
+  };
+  /**
+   * List recently published score sets
+   * @description Return the most recently published score sets, ordered by publication date descending.
+   */
+  list_recently_published_score_sets_api_v1_score_sets_recently_published_get: {
+    parameters: {
+      query?: {
+        /** @description Number of score sets to return (maximum 20). */
+        limit?: number;
+      };
+      header?: {
+        "x-active-roles"?: string | null;
+      };
+    };
+    responses: {
+      /** @description Successful Response */
+      200: {
+        content: {
+          "application/json": components["schemas"]["ScoreSet"][];
+        };
+      };
+      /** @description Resource not found. */
+      404: {
+        content: never;
+      };
+      /** @description Validation Error */
+      422: {
+        content: {
+          "application/json": components["schemas"]["HTTPValidationError"];
+        };
+      };
+      /** @description Internal server error. */
+      500: {
+        content: never;
+      };
+    };
+  };
+  /**
+   * Fetch score sets by URN list
+   * @description Fetch score sets identified by a list of URNs.
+   */
+  show_score_sets_api_v1_score_sets__get: {
+    parameters: {
+      query: {
+        /** @description Comma-separated list of score set URNs */
+        urns: string;
+      };
+      header?: {
+        "x-active-roles"?: string | null;
+      };
+    };
+    responses: {
+      /** @description Successful Response */
+      200: {
+        content: {
+          "application/json": components["schemas"]["ScoreSet"][];
+        };
+      };
+      /** @description Authentication required. */
+      401: {
+        content: never;
+      };
+      /** @description Forbidden. Insufficient permissions. */
+      403: {
+        content: never;
+      };
+      /** @description Resource not found. */
+      404: {
+        content: never;
+      };
+      /** @description Validation Error */
+      422: {
+        content: {
+          "application/json": components["schemas"]["HTTPValidationError"];
+        };
+      };
+      /** @description Internal server error. */
+      500: {
+        content: never;
+      };
+    };
+  };
+  /**
+   * Create a score set
+   * @description Create a score set.
+   */
+  create_score_set_api_v1_score_sets__post: {
+    parameters: {
+      header?: {
+        "x-active-roles"?: string | null;
+      };
+    };
+    requestBody: {
+      content: {
+        "application/json": components["schemas"]["ScoreSetCreate"];
+      };
+    };
+    responses: {
+      /** @description Successful Response */
+      200: {
+        content: {
+          "application/json": components["schemas"]["ScoreSet"];
+        };
+      };
+      /** @description Authentication required. */
+      401: {
+        content: never;
+      };
+      /** @description Forbidden. Insufficient permissions. */
+      403: {
+        content: never;
+      };
+      /** @description Resource not found. */
+      404: {
+        content: never;
+      };
+      /** @description Conflict with current resource state. */
+      409: {
+        content: never;
+      };
+      /** @description Validation Error */
+      422: {
+        content: {
+          "application/json": components["schemas"]["HTTPValidationError"];
+        };
+      };
+      /** @description Internal server error. */
+      500: {
+        content: never;
+      };
+      /** @description Bad gateway. Upstream responded invalidly. */
+      502: {
+        content: never;
+      };
+      /** @description Service unavailable. Temporary overload or maintenance. */
+      503: {
+        content: never;
+      };
+      /** @description Gateway timeout. Upstream did not respond in time. */
+      504: {
         content: never;
       };
     };
@@ -9663,68 +10027,6 @@ export interface operations {
       };
       /** @description Internal server error. */
       500: {
-        content: never;
-      };
-    };
-  };
-  /**
-   * Create a score set
-   * @description Create a score set.
-   */
-  create_score_set_api_v1_score_sets__post: {
-    parameters: {
-      header?: {
-        "x-active-roles"?: string | null;
-      };
-    };
-    requestBody: {
-      content: {
-        "application/json": components["schemas"]["ScoreSetCreate"];
-      };
-    };
-    responses: {
-      /** @description Successful Response */
-      200: {
-        content: {
-          "application/json": components["schemas"]["ScoreSet"];
-        };
-      };
-      /** @description Authentication required. */
-      401: {
-        content: never;
-      };
-      /** @description Forbidden. Insufficient permissions. */
-      403: {
-        content: never;
-      };
-      /** @description Resource not found. */
-      404: {
-        content: never;
-      };
-      /** @description Conflict with current resource state. */
-      409: {
-        content: never;
-      };
-      /** @description Validation Error */
-      422: {
-        content: {
-          "application/json": components["schemas"]["HTTPValidationError"];
-        };
-      };
-      /** @description Internal server error. */
-      500: {
-        content: never;
-      };
-      /** @description Bad gateway. Upstream responded invalidly. */
-      502: {
-        content: never;
-      };
-      /** @description Service unavailable. Temporary overload or maintenance. */
-      503: {
-        content: never;
-      };
-      /** @description Gateway timeout. Upstream did not respond in time. */
-      504: {
         content: never;
       };
     };

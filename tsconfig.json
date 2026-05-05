@@ -21,6 +21,7 @@
     "noFallthroughCasesInSwitch": true,
 
     "allowJs": true,
+    "types": ["vitest/globals"],
 
     "baseUrl": "./",
     "paths": {

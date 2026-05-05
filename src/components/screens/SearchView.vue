@@ -120,6 +120,7 @@
               </div>
             </div>
             <MvSearchFilters
+              v-model:controlled-keywords="filterControlledKeywords"
               v-model:publication-authors="filterPublicationAuthors"
               v-model:publication-databases="filterPublicationDatabases"
               v-model:publication-journals="filterPublicationJournals"
@@ -127,7 +128,7 @@
               v-model:target-names="filterTargetNames"
               v-model:target-organism-names="filterTargetOrganismNames"
               v-model:target-types="filterTargetTypes"
-              v-model:controlled-keywords="filterControlledKeywords"
+              :controlled-keyword-options="controlledKeywordOptions"
               :loading="filtersLoading"
               :publication-author-options="publicationAuthorFilterOptions"
               :publication-database-options="publicationDatabaseFilterOptions"
@@ -135,7 +136,6 @@
               :target-accession-options="targetAccessionFilterOptions"
               :target-name-options="targetNameFilterOptions"
               :target-organism-name-options="targetOrganismFilterOptions"
-              :controlled-keyword-options="controlledKeywordOptions"
               :target-type-label-fn="(v: string) => textForTargetGeneCategory(v as TargetGeneCategory) || v"
               :target-type-options="targetTypeFilterOptions"
             />
@@ -156,6 +156,7 @@
         </div>
 
         <MvSearchFilters
+          v-model:controlled-keywords="filterControlledKeywords"
           v-model:publication-authors="filterPublicationAuthors"
           v-model:publication-databases="filterPublicationDatabases"
           v-model:publication-journals="filterPublicationJournals"
@@ -163,7 +164,7 @@
           v-model:target-names="filterTargetNames"
           v-model:target-organism-names="filterTargetOrganismNames"
           v-model:target-types="filterTargetTypes"
-          v-model:controlled-keywords="filterControlledKeywords"
+          :controlled-keyword-options="controlledKeywordOptions"
           :loading="filtersLoading"
           :publication-author-options="publicationAuthorFilterOptions"
           :publication-database-options="publicationDatabaseFilterOptions"
@@ -171,7 +172,6 @@
           :target-accession-options="targetAccessionFilterOptions"
           :target-name-options="targetNameFilterOptions"
           :target-organism-name-options="targetOrganismFilterOptions"
-          :controlled-keyword-options="controlledKeywordOptions"
           :target-type-label-fn="(v: string) => textForTargetGeneCategory(v as TargetGeneCategory) || v"
           :target-type-options="targetTypeFilterOptions"
         />
@@ -287,7 +287,6 @@ export default defineComponent({
       filterPublicationAuthors: extractQueryParam(this.$route.query['publication-author']) as Array<string>,
       filterPublicationDatabases: extractQueryParam(this.$route.query['publication-database']) as Array<string>,
       filterPublicationJournals: extractQueryParam(this.$route.query['publication-journal']) as Array<string>,
-      filterKeywords: extractQueryParam(this.$route.query['keywords']) as Array<string>,
       loading: false,
       filtersLoading: false,
       mobileFiltersOpen: false,
@@ -521,14 +520,6 @@ export default defineComponent({
       },
       immediate: true
     },
-    '$route.query.keywords': {
-      handler: function (newValue, oldValue) {
-        if (newValue != oldValue) {
-          this.filterKeywords = extractQueryParam(newValue)
-        }
-      },
-      immediate: true
-    },
     '$route.query.sort': {
       handler: function (newValue) {
         const val = typeof newValue === 'string' ? newValue : 'recent'
@@ -569,7 +560,6 @@ export default defineComponent({
             ? {'publication-database': this.filterPublicationDatabases}
             : {}),
           ...(this.filterPublicationJournals.length > 0 ? {'publication-journal': this.filterPublicationJournals} : {}),
-          ...(this.filterKeywords.length > 0 ? {keywords: this.filterKeywords} : {}),
           ...(this.sortBy !== 'recent' ? {sort: this.sortBy} : {})
         }
       })

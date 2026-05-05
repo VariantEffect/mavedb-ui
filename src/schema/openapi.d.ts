@@ -4454,7 +4454,7 @@ export interface components {
       /** Publicationidentifiers */
       publicationIdentifiers?: string[] | null;
       /** Keywords */
-      controlledKeywords?: string[] | null;
+      keywords?: string[] | null;
       /** Text */
       text?: string | null;
       /**

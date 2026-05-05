@@ -76,7 +76,7 @@ export function buildSearchParams(filters: SearchFilters) {
     authors: filters.filterPublicationAuthors.length > 0 ? filters.filterPublicationAuthors : undefined,
     databases: filters.filterPublicationDatabases.length > 0 ? filters.filterPublicationDatabases : undefined,
     journals: filters.filterPublicationJournals.length > 0 ? filters.filterPublicationJournals : undefined,
-    controlledKeywords:
+    keywords:
       filters.filterControlledKeywords.length > 0
         ? filters.filterControlledKeywords.map((v) => {
             const [key, label] = v.split('::', 2)

@@ -9,6 +9,21 @@ type VariantMeasurement = components['schemas']['VariantEffectMeasurementWithSho
 export const clinGenAlleleIdRegex = /^(CA|PA)[0-9]+$/im
 
 /**
+ * Regular expression for GA4GH VRS identifiers: ga4gh:<type>.<32-char base64url digest>.
+ */
+export const vrsDigestRegex = /^ga4gh:[^.]+\.[0-9A-Za-z_-]{32}$/
+
+/**
+ * Extracts the score set URN from a MaveDB variant URN.
+ * Variant URNs follow the format urn:mavedb:XXXXXXXX-X-N-SUFFIX.
+ * The score set URN is the first three hyphenated segments.
+ */
+export function scoreSetUrnFromVariantUrn(variantUrn: string): string | null {
+  const match = variantUrn.match(/^(urn:mavedb:[^-]+-[^-]+-[^-]+)(?:-.+)?$/)
+  return match?.[1] ?? null
+}
+
+/**
  * Regular expression for valid ClinVar Variation IDs that can be used in ClinGen searches.
  */
 export const clinVarVariationIdRegex = /^[0-9]+$/m
@@ -42,6 +57,8 @@ export interface AlleleResult {
     protein: VariantMeasurement[]
     associatedNucleotide: VariantMeasurement[]
   }
+  /** MaveDB variant URN — present when a VRS digest search resolves to a variant without a ClinGen Allele ID. */
+  variantUrn?: string | null
 }
 
 /** Extract the trailing path segment from a URL (e.g. ClinGen allele ID from its URL). */

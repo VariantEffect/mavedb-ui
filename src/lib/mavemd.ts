@@ -90,8 +90,9 @@ export function createAlleleResult(data: ClinGenAllele, maneStatus: string | nul
           }
         }
       }
+      // Assuming all MANE transcripts have the same MANE status, we can set it from the first one we encounter.
+      break
     }
-    break
   }
 
   return allele

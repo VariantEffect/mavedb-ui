@@ -1132,6 +1132,11 @@ export default defineComponent({
         parts.push(`Score stdev: ${v.scoreStdev}`)
       }
 
+      const clingenAlleleId = v.instance?.clingen?.clingen_allele_id
+      if (clingenAlleleId) {
+        parts.push(`<a href="/variants/${clingenAlleleId}" target="_blank" class="text-link">View variant details</a>`)
+      }
+
       return parts.length > 0 ? parts.join('<br />') : null
     },
 

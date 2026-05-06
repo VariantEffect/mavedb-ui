@@ -4474,8 +4474,19 @@ export interface components {
       /** Count */
       count: number;
     };
+    /** ControlledKeywordFilterOption */
+    ControlledKeywordFilterOption: {
+      /** Key */
+      key: string;
+      /** Value (label) */
+      value: string;
+      /** Count */
+      count: number;
+    };
     /** ScoreSetsSearchFilterOptionsResponse */
     ScoreSetsSearchFilterOptionsResponse: {
+      /** Controlledkeywords */
+      controlledKeywords: components["schemas"]["ControlledKeywordFilterOption"][];
       /** Targetgenecategories */
       targetGeneCategories: components["schemas"]["ScoreSetsSearchFilterOption"][];
       /** Targetgenenames */

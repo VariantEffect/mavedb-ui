@@ -90,6 +90,12 @@ The viewer displays a side-by-side heatmap and 3D structure sourced from the [Al
   <figcaption>Protein structure viewer from <a href="https://mavedb.org/score-sets/urn:mavedb:00000050-a-1">urn:mavedb:00000050-a-1</a>, showing mean variant effect scores mapped onto the MSH2 3D structure.</figcaption>
 </figure>
 
+References:
+<ul class="list-disc text-xs italic text-gray-400 ml-5 px-2 py-1">
+  <li>Jumper, J et al. Highly accurate protein structure prediction with AlphaFold. <em>Nature</em> (2021)</li>
+  <li>Fleming J. et al. AlphaFold Protein Structure Database and 3D-Beacons: New Data and Capabilities. <em>Journal of Molecular Biology</em> (2025)</li>
+</ul>
+
 ## See also
 
 - [Score calibrations](../reference/score-calibrations.md) -- learn how calibration data drives classification overlays in histograms and heatmaps.

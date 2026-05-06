@@ -98,8 +98,8 @@ export function prepareCalibrationsForHistogram(
       max: classification.range[1],
       title: classification.label,
       align: 'center',
-      color: getRangeColor(classification),
-      thresholdColor: getRangeColor(classification),
+      color: getClassificationColor(classification),
+      thresholdColor: getClassificationColor(classification),
       startOpacity: 0.15,
       stopOpacity: 0.05,
       gradientUUID: undefined
@@ -129,7 +129,7 @@ export function prepareCalibrationsForHistogram(
  * const color = getRangeColor({ classification: 'normal' }); // e.g. '#3BAA5C'
  * @remarks If new classifications are introduced, extend this function to handle them explicitly.
  */
-function getRangeColor(
+export function getClassificationColor(
   range: components['schemas']['mavedb__view_models__score_calibration__FunctionalClassification']
 ): string {
   if (range.functionalClassification === 'normal') {
@@ -220,6 +220,47 @@ export function functionalClassificationContainsVariant(
     max === null ? true : functionalClassification.inclusiveUpperBound ? variantScore <= max : variantScore < max
 
   return lowerOk && upperOk
+}
+
+/**
+ * Checks if a score set has any calibrations with functional classifications that have evidence strengths.
+ * This is used to determine if pathogenicity annotations are available for variants in the score set.
+ *
+ * @param scoreCalibrations - Array of score calibrations from a score set
+ * @returns True if any calibration has at least one functional classification with an evidence strength
+ */
+export function hasPathogenicityCalibrations(
+  scoreSet: {scoreCalibrations?: components['schemas']['ScoreCalibration'][] | null} | null | undefined
+): boolean {
+  const scoreCalibrations = scoreSet?.scoreCalibrations
+  if (!scoreCalibrations || scoreCalibrations.length === 0) {
+    return false
+  }
+
+  return scoreCalibrations.some(
+    (cal) =>
+      cal.functionalClassifications &&
+      Array.isArray(cal.functionalClassifications) &&
+      cal.functionalClassifications.some((funcCal) => funcCal.acmgClassification)
+  )
+}
+
+/**
+ * Checks if a score set has any calibrations with functional classifications.
+ * This is used to determine if functional impact annotations are available for variants in the score set.
+ *
+ * @param scoreCalibrations - Array of score calibrations from a score set
+ * @returns True if any calibration has at least one functional classification
+ */
+export function hasFunctionalCalibrations(
+  scoreSet: {scoreCalibrations?: components['schemas']['ScoreCalibration'][] | null} | null | undefined
+): boolean {
+  const scoreCalibrations = scoreSet?.scoreCalibrations
+  if (!scoreCalibrations || scoreCalibrations.length === 0) {
+    return false
+  }
+
+  return scoreCalibrations.some((cal) => cal.functionalClassifications && Array.isArray(cal.functionalClassifications))
 }
 
 /**

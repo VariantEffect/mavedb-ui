@@ -145,6 +145,14 @@
     Loading calibration class variants.
   </div>
   <div ref="histogramContainer" class="mavedb-histogram-container" />
+  <span
+    v-if="vizOptions[activeViz]?.clinicalControlLegendNoteEnabled && refreshedClinicalControls"
+    class="mt-1 block text-center text-xs italic leading-tight"
+  >
+    Note: The ClinVar annotations shown above are matched to variants in this score set and may not correspond to the
+    control variants used to derive the displayed calibration. For details on which variants were used, refer to the
+    sources associated with each calibration.
+  </span>
   <span v-if="selectedCalibrationIsClassBased" class="mavedb-class-based-calibration-note">
     *Class-based calibrations may not be visualized as thresholds. To view the distribution of variants within each
     class, select the
@@ -178,7 +186,7 @@ import {defineComponent, PropType} from 'vue'
 
 import useScopedId from '@/composables/scoped-id'
 import config from '@/config'
-import {saveChartAsFile} from '@/lib/chart-export'
+import {saveChartAsSvg, saveChartAsPng} from '@/lib/chart-export'
 import {
   BENIGN_CLINICAL_SIGNIFICANCE_CLASSIFICATIONS,
   CLINVAR_REVIEW_STATUS_STARS,
@@ -205,7 +213,12 @@ import makeHistogram, {
   CATEGORICAL_SERIES_COLORS
 } from '@/lib/histogram'
 import {getScoreCalibrationVariants} from '@/api/mavedb'
-import {prepareCalibrationsForHistogram, shaderOverlapsBin} from '@/lib/calibrations'
+import {
+  prepareCalibrationsForHistogram,
+  shaderOverlapsBin,
+  functionalClassificationContainsVariant,
+  getClassificationColor
+} from '@/lib/calibrations'
 import type {FunctionalClassificationVariant} from '@/lib/calibrations'
 import {variantNotNullOrNA} from '@/lib/mave-hgvs'
 import {
@@ -848,21 +861,41 @@ export default defineComponent({
             parts.push(variantDescriptionParts.join(' '))
           }
           if (variantHasClinicalSignificance && variantHasReviewStatus) {
-            const clinVarLinkOut = `<a href="http://www.ncbi.nlm.nih.gov/clinvar/?term=${variant.control.dbIdentifier}[alleleid]" target="_blank">View in ClinVar</a>`
+            const clinVarLinkOut = `<a href="http://www.ncbi.nlm.nih.gov/clinvar/?term=${variant.control.dbIdentifier}[alleleid]" target="_blank" class="text-link">View in ClinVar</a>`
             parts.push(clinVarLinkOut)
           }
 
-          // Line 3: Score and classification
-          if (variant.scores.score) {
-            let binClassificationLabel = null
-            if (bin && this.activeCalibration.value?.urn) {
-              // TODO#491: Refactor this calculation into the creation of variant objects so we may just access the property of the variant which tells us its classification.
-              const binClassification = this.histogramShaders[this.activeCalibration.value.urn]?.find(
-                (calibration: HistogramShader) => shaderOverlapsBin(calibration, bin)
-              )
+          const clingenAlleleId = variant.clingen?.clingen_allele_id
+          if (clingenAlleleId) {
+            parts.push(
+              `<a href="/variants/${clingenAlleleId}" target="_blank" class="text-link">View variant details</a>`
+            )
+          }
 
-              if (binClassification) {
-                binClassificationLabel = `<span class="mavedb-range-classification-badge" style="margin-left: 6px; background-color:${binClassification.color}; color:white;">${binClassification.title}</span>`
+          // Line 3: Score and classification
+          if (variant.scores.score && variant.scores.score != 'NA') {
+            let binClassificationLabel = null
+            if (this.activeCalibration.value?.urn && this.activeCalibration.value?.functionalClassifications) {
+              // TODO#491: Refactor this calculation into the creation of variant objects so we may just access the property of the variant which tells us its classification.
+              const classifications = this.activeCalibration.value.functionalClassifications
+
+              // Try range-based match first, then fall back to class-based membership lookup.
+              let matchedClassification =
+                classifications.find((fc) => functionalClassificationContainsVariant(fc, variant.scores.score)) ?? null
+
+              if (!matchedClassification && this.selectedCalibrationIsClassBased) {
+                const variantsByClassificationId = this.calibrationClassVariantsByUrn[this.activeCalibration.value.urn]
+                if (variantsByClassificationId) {
+                  matchedClassification =
+                    classifications.find((fc) =>
+                      variantsByClassificationId[fc.id]?.some((v) => v.urn === variant.accession)
+                    ) ?? null
+                }
+              }
+
+              if (matchedClassification) {
+                const color = getClassificationColor(matchedClassification)
+                binClassificationLabel = `<span class="mavedb-range-classification-badge" style="margin-left: 6px; background-color:${color}; color:white;">${matchedClassification.label}</span>`
               }
             }
 
@@ -1103,7 +1136,7 @@ export default defineComponent({
 
   mounted: async function () {
     this.renderOrRefreshHistogram()
-    this.$emit('exportChart', this.exportChart)
+    this.$emit('exportChart', this.buildExportFns())
     this.activeCalibration = this.chooseDefaultCalibration()
     await this.conditionallyLoadCalibrationClassVariants()
   },
@@ -1140,12 +1173,21 @@ export default defineComponent({
           !isStartOrStopLoss(variant))
       )
     },
-    exportChart() {
-      saveChartAsFile(
-        this.$refs.histogramContainer,
-        `${this.scoreSet.urn}-scores-histogram`,
-        'mavedb-histogram-container'
-      )
+    buildExportFns() {
+      return {
+        svg: () =>
+          saveChartAsSvg(
+            this.$refs.histogramContainer as HTMLElement,
+            `${this.scoreSet.urn}-scores-histogram`,
+            'mavedb-histogram-container'
+          ),
+        png: () =>
+          saveChartAsPng(
+            this.$refs.histogramContainer as HTMLElement,
+            `${this.scoreSet.urn}-scores-histogram`,
+            'mavedb-histogram-container'
+          )
+      }
     },
 
     // Sync API: select a bin by its [x0, x1] range.
@@ -1229,7 +1271,7 @@ export default defineComponent({
       this.$emit('selection-changed', payload)
     },
     conditionallyLoadCalibrationClassVariants: async function () {
-      if (!this.isCalibrationClassViewActive || !this.selectedCalibrationIsClassBased) {
+      if (!this.selectedCalibrationIsClassBased) {
         return
       }
 
@@ -1570,7 +1612,6 @@ export default defineComponent({
   gap: 0.5rem 1rem;
   align-items: center;
 }
-
 </style>
 
 <style>

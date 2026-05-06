@@ -6,6 +6,7 @@ import {components} from '@/schema/openapi'
 type ScoreSet = components['schemas']['ScoreSet']
 type VariantEffectMeasurementWithScoreSet = components['schemas']['VariantEffectMeasurementWithScoreSet']
 type ClingenAlleleIdVariantLookupResponse = components['schemas']['ClingenAlleleIdVariantLookupResponse']
+type MappedVariant = components['schemas']['MappedVariant']
 
 export async function lookupVariantsByClingenId(
   clingenAlleleIds: string[]
@@ -13,6 +14,14 @@ export async function lookupVariantsByClingenId(
   const response = await axios.post(`${config.apiBaseUrl}/variants/clingen-allele-id-lookups`, {
     clingenAlleleIds
   })
+  return response.data
+}
+
+export async function lookupVariantsByVrsDigest(identifier: string): Promise<MappedVariant[]> {
+  const response = await axios.get(
+    `${config.apiBaseUrl}/mapped-variants/vrs/${encodeURIComponent(identifier)}`,
+    {params: {only_current: true}}
+  )
   return response.data
 }
 

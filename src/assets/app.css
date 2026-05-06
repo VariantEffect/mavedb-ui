@@ -117,6 +117,8 @@
   --color-dbsnp-light: #fdf3d7;
   --color-clinvar: #5aafa0;
   --color-clinvar-light: #c8ece5;
+  --color-ga4gh: #0f6ca4;
+  --color-ga4gh-light: #e3f0f9;
 
   /* ── Measurement Types (variant screen) ────────────────────── */
   --color-nucleotide: var(--color-published);

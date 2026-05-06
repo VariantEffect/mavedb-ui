@@ -277,6 +277,7 @@ import MvRowActionMenu, {type RowAction} from '@/components/common/MvRowActionMe
 import VariantInfoSection from '@/components/variant/VariantInfoSection.vue'
 import {useVariantLookup} from '@/composables/use-variant-lookup'
 import {MEASUREMENT_TYPE_LABELS} from '@/lib/measurement-types'
+import {hasFunctionalCalibrations, hasPathogenicityCalibrations} from '@/lib/calibrations'
 
 export default defineComponent({
   name: 'VariantScreen',
@@ -337,11 +338,13 @@ export default defineComponent({
       const options: {label: string; command: () => void}[] = []
       const activeVariant = this.lookup.selectedVariantDetail.value
 
-      if (activeVariant?.scoreSet?.scoreCalibrations) {
+      if (activeVariant && hasPathogenicityCalibrations(activeVariant.scoreSet)) {
         options.push({
           label: 'Pathogenicity evidence line',
           command: () => this.lookup.fetchVariantAnnotations('clinical-evidence')
         })
+      }
+      if (activeVariant && hasFunctionalCalibrations(activeVariant.scoreSet)) {
         options.push({
           label: 'Functional impact statement',
           command: () => this.lookup.fetchVariantAnnotations('functional-impact')

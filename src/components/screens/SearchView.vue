@@ -120,6 +120,7 @@
               </div>
             </div>
             <MvSearchFilters
+              v-model:controlled-keywords="filterControlledKeywords"
               v-model:publication-authors="filterPublicationAuthors"
               v-model:publication-databases="filterPublicationDatabases"
               v-model:publication-journals="filterPublicationJournals"
@@ -127,6 +128,7 @@
               v-model:target-names="filterTargetNames"
               v-model:target-organism-names="filterTargetOrganismNames"
               v-model:target-types="filterTargetTypes"
+              :controlled-keyword-options="controlledKeywordOptions"
               :loading="filtersLoading"
               :publication-author-options="publicationAuthorFilterOptions"
               :publication-database-options="publicationDatabaseFilterOptions"
@@ -154,6 +156,7 @@
         </div>
 
         <MvSearchFilters
+          v-model:controlled-keywords="filterControlledKeywords"
           v-model:publication-authors="filterPublicationAuthors"
           v-model:publication-databases="filterPublicationDatabases"
           v-model:publication-journals="filterPublicationJournals"
@@ -161,6 +164,7 @@
           v-model:target-names="filterTargetNames"
           v-model:target-organism-names="filterTargetOrganismNames"
           v-model:target-types="filterTargetTypes"
+          :controlled-keyword-options="controlledKeywordOptions"
           :loading="filtersLoading"
           :publication-author-options="publicationAuthorFilterOptions"
           :publication-database-options="publicationDatabaseFilterOptions"
@@ -275,6 +279,7 @@ export default defineComponent({
 
   data: function () {
     return {
+      filterControlledKeywords: extractQueryParam(this.$route.query['controlled-keyword']) as Array<string>,
       filterTargetNames: extractQueryParam(this.$route.query['target-name']) as Array<string>,
       filterTargetTypes: extractQueryParam(this.$route.query['target-type']) as Array<string>,
       filterTargetOrganismNames: extractQueryParam(this.$route.query['target-organism-name']) as Array<string>,
@@ -282,7 +287,6 @@ export default defineComponent({
       filterPublicationAuthors: extractQueryParam(this.$route.query['publication-author']) as Array<string>,
       filterPublicationDatabases: extractQueryParam(this.$route.query['publication-database']) as Array<string>,
       filterPublicationJournals: extractQueryParam(this.$route.query['publication-journal']) as Array<string>,
-      filterKeywords: extractQueryParam(this.$route.query['keywords']) as Array<string>,
       loading: false,
       filtersLoading: false,
       mobileFiltersOpen: false,
@@ -290,6 +294,7 @@ export default defineComponent({
       scoreSets: [] as Array<ShortScoreSet>,
       numTotalSearchResults: 0,
       textForTargetGeneCategory: textForTargetGeneCategory,
+      controlledKeywordOptions: [] as FilterOption[],
       targetNameFilterOptions: [] as FilterOption[],
       targetOrganismFilterOptions: [] as FilterOption[],
       targetAccessionFilterOptions: [] as FilterOption[],
@@ -320,6 +325,7 @@ export default defineComponent({
           filters.push({key, value, label: labelFn ? labelFn(value) : value})
         }
       }
+      addFilters('filterControlledKeywords', this.filterControlledKeywords, (v) => v.split('::', 2)[1] ?? v)
       addFilters('filterTargetNames', this.filterTargetNames)
       addFilters('filterTargetOrganismNames', this.filterTargetOrganismNames)
       addFilters(
@@ -407,7 +413,7 @@ export default defineComponent({
         }
       }
     },
-    filterKeywords: {
+    filterControlledKeywords: {
       handler: function (newValue, oldValue) {
         if (newValue != oldValue) {
           this.debouncedSearch()
@@ -446,6 +452,14 @@ export default defineComponent({
       handler: function (newValue, oldValue) {
         if (newValue != oldValue) {
           this.searchText = newValue
+        }
+      },
+      immediate: true
+    },
+    '$route.query.controlled-keyword': {
+      handler: function (newValue, oldValue) {
+        if (newValue != oldValue) {
+          this.filterControlledKeywords = extractQueryParam(newValue)
         }
       },
       immediate: true
@@ -506,14 +520,6 @@ export default defineComponent({
       },
       immediate: true
     },
-    '$route.query.keywords': {
-      handler: function (newValue, oldValue) {
-        if (newValue != oldValue) {
-          this.filterKeywords = extractQueryParam(newValue)
-        }
-      },
-      immediate: true
-    },
     '$route.query.sort': {
       handler: function (newValue) {
         const val = typeof newValue === 'string' ? newValue : 'recent'
@@ -542,6 +548,7 @@ export default defineComponent({
       this.$router.push({
         query: {
           ...(this.searchText && this.searchText.length > 0 ? {search: this.searchText} : {}),
+          ...(this.filterControlledKeywords.length > 0 ? {'controlled-keyword': this.filterControlledKeywords} : {}),
           ...(this.filterTargetNames.length > 0 ? {'target-name': this.filterTargetNames} : {}),
           ...(this.filterTargetTypes.length > 0 ? {'target-type': this.filterTargetTypes} : {}),
           ...(this.filterTargetOrganismNames.length > 0
@@ -553,7 +560,6 @@ export default defineComponent({
             ? {'publication-database': this.filterPublicationDatabases}
             : {}),
           ...(this.filterPublicationJournals.length > 0 ? {'publication-journal': this.filterPublicationJournals} : {}),
-          ...(this.filterKeywords.length > 0 ? {keywords: this.filterKeywords} : {}),
           ...(this.sortBy !== 'recent' ? {sort: this.sortBy} : {})
         }
       })
@@ -597,6 +603,12 @@ export default defineComponent({
           controller.signal
         )
 
+        this.controlledKeywordOptions = (data.controlledKeywords || []).map((option) => ({
+          value: `${option.key}::${option.value}`,
+          title: option.value,
+          badge: option.count,
+          groupKey: option.key
+        }))
         this.targetAccessionFilterOptions = (data.targetAccessions || []).map((option) => ({
           value: option.value,
           badge: option.count
@@ -634,7 +646,18 @@ export default defineComponent({
     },
 
     removeFilter(key: string, value: string) {
-      const filterArrays: Record<string, string[]> = {
+      const setters: Record<string, (v: string[]) => void> = {
+        filterControlledKeywords: (v) => (this.filterControlledKeywords = v),
+        filterTargetNames: (v) => (this.filterTargetNames = v),
+        filterTargetOrganismNames: (v) => (this.filterTargetOrganismNames = v),
+        filterTargetTypes: (v) => (this.filterTargetTypes = v),
+        filterTargetAccession: (v) => (this.filterTargetAccession = v),
+        filterPublicationAuthors: (v) => (this.filterPublicationAuthors = v),
+        filterPublicationDatabases: (v) => (this.filterPublicationDatabases = v),
+        filterPublicationJournals: (v) => (this.filterPublicationJournals = v)
+      }
+      const getters: Record<string, string[]> = {
+        filterControlledKeywords: this.filterControlledKeywords,
         filterTargetNames: this.filterTargetNames,
         filterTargetOrganismNames: this.filterTargetOrganismNames,
         filterTargetTypes: this.filterTargetTypes,
@@ -643,12 +666,11 @@ export default defineComponent({
         filterPublicationDatabases: this.filterPublicationDatabases,
         filterPublicationJournals: this.filterPublicationJournals
       }
-      const arr = filterArrays[key]
-      if (!arr) return
-      const idx = arr.indexOf(value)
-      if (idx !== -1) {
-        arr.splice(idx, 1)
-      }
+      const setter = setters[key]
+      const arr = getters[key]
+      if (!setter || !arr) return
+      const filtered = arr.filter((v) => v !== value)
+      setter(filtered)
     },
 
     clear: function () {
@@ -660,7 +682,7 @@ export default defineComponent({
       this.filterPublicationAuthors = []
       this.filterPublicationDatabases = []
       this.filterPublicationJournals = []
-      this.filterKeywords = []
+      this.filterControlledKeywords = []
     }
   }
 })

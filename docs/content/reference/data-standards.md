@@ -448,6 +448,8 @@ Each VRS object has a globally unique GA4GH identifier (e.g., `ga4gh:VA.2JOqpLMF
 !!! tip "Why GA4GH identifiers matter"
     HGVS strings that describe the same variant are often not identical — differences in reference sequence versions, notation style, or coordinate systems can produce different strings for the same biological change. This makes cross-referencing variants by HGVS alone unreliable. GA4GH identifiers solve this problem by being computed deterministically from the variant's properties, guaranteeing that the same variant always produces the same identifier regardless of how it was originally described.
 
+    GA4GH identifiers can also be used directly to search MaveMD. Paste a `ga4gh:VA.*` or `ga4gh:VH.*` identifier into the VRS search tab to retrieve matching functional measurements without going through the ClinGen Allele Registry. See [VRS identifier search](../mavemd/variant-search.md#vrs-identifier-search) for details.
+
 ### HGVS expressions
 
 VRS objects include HGVS expressions in the `expressions` array for human readability. MaveDB typically includes both pre-mapped (relative to the target sequence) and post-mapped (relative to a genomic reference) HGVS strings. The `syntax` field indicates the type — `hgvs.p` for protein, `hgvs.g` for genomic, or `hgvs.c` for coding DNA.

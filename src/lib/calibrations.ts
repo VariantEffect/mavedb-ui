@@ -223,6 +223,47 @@ export function functionalClassificationContainsVariant(
 }
 
 /**
+ * Checks if a score set has any calibrations with functional classifications that have evidence strengths.
+ * This is used to determine if pathogenicity annotations are available for variants in the score set.
+ *
+ * @param scoreCalibrations - Array of score calibrations from a score set
+ * @returns True if any calibration has at least one functional classification with an evidence strength
+ */
+export function hasPathogenicityCalibrations(
+  scoreSet: {scoreCalibrations?: components['schemas']['ScoreCalibration'][] | null} | null | undefined
+): boolean {
+  const scoreCalibrations = scoreSet?.scoreCalibrations
+  if (!scoreCalibrations || scoreCalibrations.length === 0) {
+    return false
+  }
+
+  return scoreCalibrations.some(
+    (cal) =>
+      cal.functionalClassifications &&
+      Array.isArray(cal.functionalClassifications) &&
+      cal.functionalClassifications.some((funcCal) => funcCal.acmgClassification)
+  )
+}
+
+/**
+ * Checks if a score set has any calibrations with functional classifications.
+ * This is used to determine if functional impact annotations are available for variants in the score set.
+ *
+ * @param scoreCalibrations - Array of score calibrations from a score set
+ * @returns True if any calibration has at least one functional classification
+ */
+export function hasFunctionalCalibrations(
+  scoreSet: {scoreCalibrations?: components['schemas']['ScoreCalibration'][] | null} | null | undefined
+): boolean {
+  const scoreCalibrations = scoreSet?.scoreCalibrations
+  if (!scoreCalibrations || scoreCalibrations.length === 0) {
+    return false
+  }
+
+  return scoreCalibrations.some((cal) => cal.functionalClassifications && Array.isArray(cal.functionalClassifications))
+}
+
+/**
  * Returns the primary calibration for a score set — the one marked `primary`, or
  * failing that, the one marked `investigatorProvided`. Returns null if neither exists.
  */

@@ -499,6 +499,7 @@ import {useCalibrationDialog} from '@/composables/use-calibration-dialog'
 import {useChartExport, type ChartExportFns} from '@/composables/use-chart-export'
 import {useVariantCoordinates} from '@/composables/use-variant-coordinates'
 import config from '@/config'
+import {hasPathogenicityCalibrations, hasFunctionalCalibrations} from '@/lib/calibrations'
 import {variantNotNullOrNA} from '@/lib/mave-hgvs'
 import {getScoreSetShortName} from '@/lib/score-sets'
 import {parseScoresOrCounts} from '@/lib/scores'
@@ -638,6 +639,12 @@ export default {
     hasCounts() {
       const allCountColumns = this.item?.datasetColumns?.countColumns ?? []
       return allCountColumns.filter((col) => col !== 'accession').length > 0
+    },
+    hasPathogenicityCalibrations() {
+      return hasPathogenicityCalibrations(this.item)
+    },
+    hasFunctionalImpactCalibrations() {
+      return hasFunctionalCalibrations(this.item)
     },
     hasCalibrations(): boolean {
       return !!(this.item?.scoreCalibrations && this.item.scoreCalibrations.length > 0)

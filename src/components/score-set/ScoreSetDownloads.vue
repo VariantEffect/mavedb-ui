@@ -110,7 +110,8 @@ export default defineComponent({
 
   props: {
     hasCounts: {type: Boolean, default: false},
-    hasPrimaryCalibration: {type: Boolean, default: false},
+    hasPathogenicityCalibrations: {type: Boolean, default: false},
+    hasFunctionalImpactCalibrations: {type: Boolean, default: false},
     isMetaDataEmpty: {type: Boolean, default: true},
     scoreSet: {type: Object as PropType<ScoreSet>, required: true}
   },
@@ -134,11 +135,13 @@ export default defineComponent({
     annotatedVariantDownloadOptions(): MenuItem[] {
       const options: MenuItem[] = []
 
-      if (this.hasPrimaryCalibration) {
+      if (this.hasPathogenicityCalibrations) {
         options.push({
           label: 'Pathogenicity Evidence Line',
           command: () => this.streamVariantAnnotations('pathogenicity-evidence-line')
         })
+      }
+      if (this.hasFunctionalImpactCalibrations) {
         options.push({
           label: 'Functional Impact Statement',
           command: () => this.streamVariantAnnotations('functional-impact-statement')

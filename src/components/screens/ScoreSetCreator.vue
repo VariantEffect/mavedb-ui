@@ -907,10 +907,11 @@ export default {
         this.$router.replace({path: `/score-sets/submit-completion/${scoreSet.urn}`})
         this.$toast.add({severity: 'success', summary: 'The new score set was saved.', life: 3000})
       } else {
+        this.$router.replace({path: `/score-sets/${scoreSet.urn}`})
         this.$toast.add({
           severity: 'error',
-          summary: `The score and count files could not be imported. ${response.data?.detail || ''}`,
-          life: 3000
+          summary: `The score set was created, but score and count files could not be imported. ${response.data?.detail || ''}. Please try uploading your files again from the score set page. If the problem persists, contact support.`,
+          life: 10000
         })
       }
     },

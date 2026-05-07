@@ -137,20 +137,20 @@ export default defineComponent({
 
       if (this.hasPathogenicityCalibrations) {
         options.push({
-          label: 'Pathogenicity Evidence Line',
-          command: () => this.streamVariantAnnotations('pathogenicity-evidence-line')
+          label: 'Pathogenicity Statement',
+          command: () => this.streamVariantAnnotations('pathogenicity-statement')
         })
       }
       if (this.hasFunctionalImpactCalibrations) {
         options.push({
           label: 'Functional Impact Statement',
-          command: () => this.streamVariantAnnotations('functional-impact-statement')
+          command: () => this.streamVariantAnnotations('functional-statement')
         })
       }
 
       options.push({
-        label: 'Functional Impact Study Result',
-        command: () => this.streamVariantAnnotations('functional-study-result')
+        label: 'Functional Study Result',
+        command: () => this.streamVariantAnnotations('study-result')
       })
 
       return options

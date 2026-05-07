@@ -340,19 +340,19 @@ export default defineComponent({
 
       if (activeVariant && hasPathogenicityCalibrations(activeVariant.scoreSet)) {
         options.push({
-          label: 'Pathogenicity evidence line',
-          command: () => this.lookup.fetchVariantAnnotations('clinical-evidence')
+          label: 'Pathogenicity Statement',
+          command: () => this.lookup.fetchVariantAnnotations('pathogenicity-statement')
         })
       }
       if (activeVariant && hasFunctionalCalibrations(activeVariant.scoreSet)) {
         options.push({
-          label: 'Functional impact statement',
-          command: () => this.lookup.fetchVariantAnnotations('functional-impact')
+          label: 'Functional Impact Statement',
+          command: () => this.lookup.fetchVariantAnnotations('functional-statement')
         })
       }
 
       options.push({
-        label: 'Functional impact study result',
+        label: 'Functional Study Result',
         command: () => this.lookup.fetchVariantAnnotations('study-result')
       })
 

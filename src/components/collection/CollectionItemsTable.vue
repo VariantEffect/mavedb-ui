@@ -29,8 +29,7 @@
     </DataTable>
     <div v-else>
       <MvEmptyState
-        v-if="permissions[entityTypeLabel === 'score set' ? 'add_score_set' : 'add_experiment']"
-        :action-label="`Add ${entityTypeLabel}s`"
+        :action-label="canAdd ? `Add ${entityTypeLabel}s` : undefined"
         :description="`This collection doesn't have any ${entityTypeLabel}s yet.`"
         :title="`No ${entityTypeLabel}s yet`"
         @action="$emit('add')"
@@ -40,16 +39,13 @@
 </template>
 
 <script lang="ts">
-import {defineComponent, toRef} from 'vue'
+import {defineComponent} from 'vue'
 import Button from 'primevue/button'
 import Column from 'primevue/column'
 import DataTable from 'primevue/datatable'
 import {DATA_SET_TYPE_LABELS} from '@/lib/collections'
 import MvEntityLink from '@/components/common/MvEntityLink.vue'
 import MvEmptyState from '@/components/common/MvEmptyState.vue'
-import {useDatasetPermissions} from '@/composables/use-dataset-permissions'
-
-const ACTIONS = ['add_experiment', 'add_score_set'] as const
 
 
 export default defineComponent({
@@ -85,14 +81,6 @@ export default defineComponent({
     }
   },
   emits: ['reorder', 'remove', 'add'],
-  setup(props) {
-    const urnRef = toRef(props, 'itemId')
-    const {permissions} = useDatasetPermissions('collection', urnRef, ACTIONS)
-
-    return {
-      permissions
-    }
-  },
   
   computed: {
     entityTypeLabel() {

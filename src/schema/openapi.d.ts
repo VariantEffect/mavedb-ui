@@ -272,6 +272,20 @@ export interface paths {
      */
     get: operations["convert_to_protein_api_v1_hgvs_protein__transcript__get"];
   };
+  "/api/v1/job-runs/": {
+    /**
+     * List job runs
+     * @description List job runs with optional filters. Admin only.
+     */
+    get: operations["list_job_runs_api_v1_job_runs__get"];
+  };
+  "/api/v1/job-runs/{urn}": {
+    /**
+     * Show job run with full error details
+     * @description Fetch a single job run by URN, including error traceback. Admin only.
+     */
+    get: operations["show_job_run_api_v1_job_runs__urn__get"];
+  };
   "/api/v1/licenses/": {
     /**
      * List all licenses
@@ -346,6 +360,20 @@ export interface paths {
      * @description Check whether users have permission to perform a given action on a resource.
      */
     get: operations["check_permission_api_v1_permissions_user_is_permitted__model_name___urn___action__get"];
+  };
+  "/api/v1/pipelines/": {
+    /**
+     * List pipelines
+     * @description List pipelines with optional filters. Admin only.
+     */
+    get: operations["list_pipelines_api_v1_pipelines__get"];
+  };
+  "/api/v1/pipelines/{urn}": {
+    /**
+     * Show pipeline with progress
+     * @description Fetch a single pipeline by URN including job progress statistics. Admin only.
+     */
+    get: operations["show_pipeline_api_v1_pipelines__urn__get"];
   };
   "/api/v1/publication-identifiers/": {
     /**
@@ -723,9 +751,6 @@ export interface paths {
      * This differs from get_score_set_scores_csv() in that it returns only the HGVS columns, score column, and mapped HGVS
      * string.
      *
-     * TODO (https://github.com/VariantEffect/mavedb-api/issues/446) We may add another function for ClinVar and gnomAD.
-     * export endpoint, with options governing which columns to include.
-     *
      * Parameters
      * __________
      * urn : str
@@ -734,9 +759,11 @@ export interface paths {
      *     The index to start from. If None, starts from the beginning.
      * limit : Optional[int]
      *     The maximum number of variants to return. If None, returns all variants.
-     * namespaces: List[Literal["scores", "counts", "vep", "gnomad", "clingen"]]
+     * namespaces: List[str]
      *     The namespaces of all columns except for accession, hgvs_nt, hgvs_pro, and hgvs_splice.
-     *     We may add ClinVar in the future.
+     *     Supported values: "scores", "counts", "vep", "gnomad", "clingen", and ClinVar-versioned
+     *     namespaces of the form "clinvar.YEAR_MONTH" (e.g. "clinvar.2024_01" for January 2024).
+     *     Multiple ClinVar namespaces with different YEAR_MONTH values may be requested simultaneously.
      * drop_na_columns : bool, optional
      *     Whether to drop columns that contain only NA values. Defaults to False.
      * db : Session
@@ -1579,6 +1606,17 @@ export interface components {
        */
       state: components["schemas"]["LiteralSequenceExpression"] | components["schemas"]["ReferenceLengthExpression"] | components["schemas"]["LengthExpression"];
     };
+    /**
+     * AnnotationLayer
+     * @description Annotation layer for a variant mapping result.
+     *
+     * Mirrors the ``AnnotationLayer`` enum produced by the dcd-mapping QC API.
+     * Values use full names so they round-trip readably through the database
+     * column; the dcd-mapping payload uses short single-character codes
+     * (``p`` / ``c`` / ``g``) which the worker translates via :func:`from_wire`.
+     * @enum {string}
+     */
+    AnnotationLayer: "protein" | "cdna" | "genomic";
     /** ApiVersion */
     ApiVersion: {
       /** Name */
@@ -2181,6 +2219,22 @@ export interface components {
     ContributorCreate: {
       /** Orcidid */
       orcidId: string;
+    };
+    /** ControlledKeywordFilterOption */
+    ControlledKeywordFilterOption: {
+      /** Key */
+      key: string;
+      /** Value */
+      value: string;
+      /** Count */
+      count: number;
+    };
+    /** ControlledKeywordSearch */
+    ControlledKeywordSearch: {
+      /** Key */
+      key: string;
+      /** Label */
+      label: string;
     };
     /**
      * CopyChange
@@ -3034,7 +3088,7 @@ export interface components {
       /** Publicationidentifiers */
       publicationIdentifiers?: string[] | null;
       /** Keywords */
-      keywords?: string[] | null;
+      keywords?: components["schemas"]["ControlledKeywordSearch"][] | null;
       /** Text */
       text?: string | null;
       /** Metaanalysis */
@@ -3280,6 +3334,69 @@ export interface components {
       detail?: components["schemas"]["ValidationError"][];
     };
     /**
+     * JobRunDetail
+     * @description Single-job-run detail response including the error traceback.
+     */
+    JobRunDetail: {
+      /** Urn */
+      urn?: string | null;
+      /** Jobtype */
+      jobType: string;
+      /** Jobfunction */
+      jobFunction: string;
+      status: components["schemas"]["JobStatus"];
+      /** Correlationid */
+      correlationId?: string | null;
+      /** Pipelineid */
+      pipelineId?: number | null;
+      /** Failurecategory */
+      failureCategory?: string | null;
+      /** Errormessage */
+      errorMessage?: string | null;
+      /** Mavedbversion */
+      mavedbVersion?: string | null;
+      /** Id */
+      id: number;
+      /** Jobparams */
+      jobParams?: Record<string, never> | null;
+      /** Metadata */
+      metadata?: Record<string, never>;
+      /** Maxretries */
+      maxRetries: number;
+      /** Retrycount */
+      retryCount: number;
+      /** Retrydelayseconds */
+      retryDelaySeconds?: number | null;
+      /**
+       * Scheduledat
+       * Format: date-time
+       */
+      scheduledAt: string;
+      /** Startedat */
+      startedAt?: string | null;
+      /** Finishedat */
+      finishedAt?: string | null;
+      /**
+       * Createdat
+       * Format: date-time
+       */
+      createdAt: string;
+      /** Progresscurrent */
+      progressCurrent?: number | null;
+      /** Progresstotal */
+      progressTotal?: number | null;
+      /** Progressmessage */
+      progressMessage?: string | null;
+      /** Errortraceback */
+      errorTraceback?: string | null;
+    };
+    /**
+     * JobStatus
+     * @description Status of a job execution.
+     * @enum {string}
+     */
+    JobStatus: "succeeded" | "failed" | "errored" | "pending" | "queued" | "running" | "cancelled" | "skipped";
+    /**
      * Keyword
      * @description Keyword view model for non-admin clients.
      */
@@ -3515,6 +3632,11 @@ export interface components {
       mappingApiVersion: string;
       /** Current */
       current: boolean;
+      alignmentLevel?: components["schemas"]["AnnotationLayer"] | null;
+      /** Atmismatchedlocus */
+      atMismatchedLocus?: boolean | null;
+      /** Neargap */
+      nearGap?: boolean | null;
       /** Varianturn */
       variantUrn: string;
       /** Id */
@@ -3528,6 +3650,48 @@ export interface components {
     MappedVariantForClinicalControl: {
       /** Varianturn */
       variantUrn: string;
+    };
+    /**
+     * MappedVariantWithMappingDetails
+     * @description Client-facing variant of :class:`SavedMappedVariantWithMappingDetails`.
+     */
+    MappedVariantWithMappingDetails: {
+      /** Premapped */
+      preMapped?: unknown;
+      /** Postmapped */
+      postMapped?: unknown;
+      /** Vrsversion */
+      vrsVersion?: string | null;
+      /** Errormessage */
+      errorMessage?: string | null;
+      /**
+       * Modificationdate
+       * Format: date
+       */
+      modificationDate: string;
+      /**
+       * Mappeddate
+       * Format: date
+       */
+      mappedDate: string;
+      /** Mappingapiversion */
+      mappingApiVersion: string;
+      /** Current */
+      current: boolean;
+      alignmentLevel?: components["schemas"]["AnnotationLayer"] | null;
+      /** Atmismatchedlocus */
+      atMismatchedLocus?: boolean | null;
+      /** Neargap */
+      nearGap?: boolean | null;
+      /** Varianturn */
+      variantUrn: string;
+      /** Id */
+      id: number;
+      /** Clingenalleleid */
+      clingenAlleleId?: string | null;
+      /** Recordtype */
+      recordType?: string;
+      targetGeneMapping?: components["schemas"]["TargetGeneMapping"] | null;
     };
     /**
      * MappingState
@@ -3655,6 +3819,71 @@ export interface components {
      * @enum {string}
      */
     Orientation: "forward" | "reverse_complement";
+    /**
+     * PipelineDetail
+     * @description Single-pipeline detail response including progress statistics.
+     */
+    PipelineDetail: {
+      /** Urn */
+      urn?: string | null;
+      /** Name */
+      name: string;
+      /** Description */
+      description?: string | null;
+      status: components["schemas"]["PipelineStatus"];
+      /** Correlationid */
+      correlationId?: string | null;
+      /** Mavedbversion */
+      mavedbVersion?: string | null;
+      /** Id */
+      id: number;
+      /** Metadata */
+      metadata?: Record<string, never>;
+      /**
+       * Createdat
+       * Format: date-time
+       */
+      createdAt: string;
+      /** Startedat */
+      startedAt?: string | null;
+      /** Finishedat */
+      finishedAt?: string | null;
+      /** Createdbyuserid */
+      createdByUserId?: number | null;
+      progress: components["schemas"]["PipelineProgress"];
+    };
+    /**
+     * PipelineProgress
+     * @description Pipeline progress statistics returned by PipelineManager.get_pipeline_progress().
+     */
+    PipelineProgress: {
+      /** Totaljobs */
+      totalJobs: number;
+      /** Completedjobs */
+      completedJobs: number;
+      /** Successfuljobs */
+      successfulJobs: number;
+      /** Failedjobs */
+      failedJobs: number;
+      /** Runningjobs */
+      runningJobs: number;
+      /** Pendingjobs */
+      pendingJobs: number;
+      /** Completionpercentage */
+      completionPercentage: number;
+      /** Duration */
+      duration: number;
+      /** Statuscounts */
+      statusCounts: {
+        [key: string]: number;
+      };
+    };
+    /**
+     * PipelineStatus
+     * @description Status of a pipeline execution.
+     * @enum {string}
+     */
+    PipelineStatus: "succeeded" | "failed" | "created" | "running" | "paused" | "cancelled" | "partial";
     /**
      * ProcessingState
      * @enum {string}
@@ -4036,6 +4265,93 @@ export interface components {
        * @default 0
        */
       variantCount?: number;
+    };
+    /**
+     * SavedJobRun
+     * @description View model for a saved job run record.
+     */
+    SavedJobRun: {
+      /** Urn */
+      urn?: string | null;
+      /** Jobtype */
+      jobType: string;
+      /** Jobfunction */
+      jobFunction: string;
+      status: components["schemas"]["JobStatus"];
+      /** Correlationid */
+      correlationId?: string | null;
+      /** Pipelineid */
+      pipelineId?: number | null;
+      /** Failurecategory */
+      failureCategory?: string | null;
+      /** Errormessage */
+      errorMessage?: string | null;
+      /** Mavedbversion */
+      mavedbVersion?: string | null;
+      /** Id */
+      id: number;
+      /** Jobparams */
+      jobParams?: Record<string, never> | null;
+      /** Metadata */
+      metadata?: Record<string, never>;
+      /** Maxretries */
+      maxRetries: number;
+      /** Retrycount */
+      retryCount: number;
+      /** Retrydelayseconds */
+      retryDelaySeconds?: number | null;
+      /**
+       * Scheduledat
+       * Format: date-time
+       */
+      scheduledAt: string;
+      /** Startedat */
+      startedAt?: string | null;
+      /** Finishedat */
+      finishedAt?: string | null;
+      /**
+       * Createdat
+       * Format: date-time
+       */
+      createdAt: string;
+      /** Progresscurrent */
+      progressCurrent?: number | null;
+      /** Progresstotal */
+      progressTotal?: number | null;
+      /** Progressmessage */
+      progressMessage?: string | null;
+    };
+    /**
+     * SavedPipeline
+     * @description View model for a saved pipeline record.
+     */
+    SavedPipeline: {
+      /** Urn */
+      urn?: string | null;
+      /** Name */
+      name: string;
+      /** Description */
+      description?: string | null;
+      status: components["schemas"]["PipelineStatus"];
+      /** Correlationid */
+      correlationId?: string | null;
+      /** Mavedbversion */
+      mavedbVersion?: string | null;
+      /** Id */
+      id: number;
+      /** Metadata */
+      metadata?: Record<string, never>;
+      /**
+       * Createdat
+       * Format: date-time
+       */
+      createdAt: string;
+      /** Startedat */
+      startedAt?: string | null;
+      /** Finishedat */
+      finishedAt?: string | null;
+      /** Createdbyuserid */
+      createdByUserId?: number | null;
     };
     /** SavedPublicationIdentifier */
     SavedPublicationIdentifier: {
@@ -4454,7 +4770,7 @@ export interface components {
       /** Publicationidentifiers */
       publicationIdentifiers?: string[] | null;
       /** Keywords */
-      keywords?: string[] | null;
+      keywords?: components["schemas"]["ControlledKeywordSearch"][] | null;
       /** Text */
       text?: string | null;
       /**
@@ -4474,19 +4790,8 @@ export interface components {
       /** Count */
       count: number;
     };
-    /** ControlledKeywordFilterOption */
-    ControlledKeywordFilterOption: {
-      /** Key */
-      key: string;
-      /** Value (label) */
-      value: string;
-      /** Count */
-      count: number;
-    };
     /** ScoreSetsSearchFilterOptionsResponse */
     ScoreSetsSearchFilterOptionsResponse: {
-      /** Controlledkeywords */
-      controlledKeywords: components["schemas"]["ControlledKeywordFilterOption"][];
       /** Targetgenecategories */
       targetGeneCategories: components["schemas"]["ScoreSetsSearchFilterOption"][];
       /** Targetgenenames */
@@ -4501,6 +4806,8 @@ export interface components {
       publicationDbNames: components["schemas"]["ScoreSetsSearchFilterOption"][];
       /** Publicationjournals */
       publicationJournals: components["schemas"]["ScoreSetsSearchFilterOption"][];
+      /** Keywords */
+      keywords: components["schemas"]["ControlledKeywordFilterOption"][];
     };
     /** ScoreSetsSearchResponse */
     ScoreSetsSearchResponse: {
@@ -5016,6 +5323,69 @@ export interface components {
       externalIdentifiers: components["schemas"]["ExternalGeneIdentifierOffsetCreate"][];
       targetSequence?: components["schemas"]["TargetSequenceCreate"] | null;
       targetAccession?: components["schemas"]["TargetAccessionCreate"] | null;
+    };
+    /** TargetGeneMapping */
+    TargetGeneMapping: {
+      alignmentLevel: components["schemas"]["AnnotationLayer"];
+      /**
+       * Preferred
+       * @default false
+       */
+      preferred?: boolean;
+      /** Referenceassembly */
+      referenceAssembly?: string | null;
+      /** Referenceaccession */
+      referenceAccession?: string | null;
+      /** Referencesequenceid */
+      referenceSequenceId?: string | null;
+      /** Alignmentscore */
+      alignmentScore?: number | null;
+      /** Nextbestalignmentscore */
+      nextBestAlignmentScore?: number | null;
+      /** Alignmentlength */
+      alignmentLength?: number | null;
+      /** Alignmentstring */
+      alignmentString?: string | null;
+      /** Mismatchcount */
+      mismatchCount?: number | null;
+      /** Gapcount */
+      gapCount?: number | null;
+      /** Percentidentity */
+      percentIdentity?: number | null;
+      /** Totalvariants */
+      totalVariants?: number | null;
+      /** Variantsfailed */
+      variantsFailed?: number | null;
+      /** Variantswithalignmentwarnings */
+      variantsWithAlignmentWarnings?: number | null;
+      /** Variantsmappedcleanly */
+      variantsMappedCleanly?: number | null;
+      /** Toolname */
+      toolName: string;
+      /** Toolversion */
+      toolVersion: string;
+      /** Toolparameters */
+      toolParameters?: Record<string, never> | null;
+      /** Alignmentmetadata */
+      alignmentMetadata?: Record<string, never> | null;
+      /** Vrsversion */
+      vrsVersion?: string | null;
+      /** Mappeddate */
+      mappedDate?: string | null;
+      /** Id */
+      id: number;
+      /**
+       * Creationdate
+       * Format: date
+       */
+      creationDate: string;
+      /**
+       * Modificationdate
+       * Format: date
+       */
+      modificationDate: string;
+      /** Recordtype */
+      recordType?: string;
     };
     /**
      * TargetGeneWithScoreSetUrn
@@ -7520,6 +7890,109 @@ export interface operations {
     };
   };
   /**
+   * List job runs
+   * @description List job runs with optional filters. Admin only.
+   */
+  list_job_runs_api_v1_job_runs__get: {
+    parameters: {
+      query?: {
+        /** @description Filter by job run status. */
+        status?: components["schemas"]["JobStatus"] | null;
+        /** @description Filter by job type. */
+        job_type?: string | null;
+        /** @description Filter by job function name. */
+        job_function?: string | null;
+        /** @description Filter by correlation id. */
+        correlation_id?: string | null;
+        /** @description Filter by parent pipeline id. */
+        pipeline_id?: number | null;
+        /** @description Only return job runs created at or after this time. */
+        created_after?: string | null;
+        /** @description Only return job runs created at or before this time. */
+        created_before?: string | null;
+        limit?: number;
+        offset?: number;
+      };
+      header?: {
+        "x-active-roles"?: string | null;
+      };
+    };
+    responses: {
+      /** @description Successful Response */
+      200: {
+        content: {
+          "application/json": components["schemas"]["SavedJobRun"][];
+        };
+      };
+      /** @description Authentication required. */
+      401: {
+        content: never;
+      };
+      /** @description Forbidden. Insufficient permissions. */
+      403: {
+        content: never;
+      };
+      /** @description Resource not found. */
+      404: {
+        content: never;
+      };
+      /** @description Validation Error */
+      422: {
+        content: {
+          "application/json": components["schemas"]["HTTPValidationError"];
+        };
+      };
+      /** @description Internal server error. */
+      500: {
+        content: never;
+      };
+    };
+  };
+  /**
+   * Show job run with full error details
+   * @description Fetch a single job run by URN, including error traceback. Admin only.
+   */
+  show_job_run_api_v1_job_runs__urn__get: {
+    parameters: {
+      header?: {
+        "x-active-roles"?: string | null;
+      };
+      path: {
+        urn: string;
+      };
+    };
+    responses: {
+      /** @description Successful Response */
+      200: {
+        content: {
+          "application/json": components["schemas"]["JobRunDetail"];
+        };
+      };
+      /** @description Authentication required. */
+      401: {
+        content: never;
+      };
+      /** @description Forbidden. Insufficient permissions. */
+      403: {
+        content: never;
+      };
+      /** @description Resource not found. */
+      404: {
+        content: never;
+      };
+      /** @description Validation Error */
+      422: {
+        content: {
+          "application/json": components["schemas"]["HTTPValidationError"];
+        };
+      };
+      /** @description Internal server error. */
+      500: {
+        content: never;
+      };
+    };
+  };
+  /**
    * List all licenses
    * @description List all supported licenses.
    */
@@ -7613,7 +8086,7 @@ export interface operations {
       /** @description Successful Response */
       200: {
         content: {
-          "application/json": components["schemas"]["MappedVariant"];
+          "application/json": components["schemas"]["MappedVariantWithMappingDetails"];
         };
       };
       /** @description Authentication required. */
@@ -7901,6 +8374,107 @@ export interface operations {
       200: {
         content: {
           "application/json": boolean;
+        };
+      };
+      /** @description Authentication required. */
+      401: {
+        content: never;
+      };
+      /** @description Forbidden. Insufficient permissions. */
+      403: {
+        content: never;
+      };
+      /** @description Resource not found. */
+      404: {
+        content: never;
+      };
+      /** @description Validation Error */
+      422: {
+        content: {
+          "application/json": components["schemas"]["HTTPValidationError"];
+        };
+      };
+      /** @description Internal server error. */
+      500: {
+        content: never;
+      };
+    };
+  };
+  /**
+   * List pipelines
+   * @description List pipelines with optional filters. Admin only.
+   */
+  list_pipelines_api_v1_pipelines__get: {
+    parameters: {
+      query?: {
+        /** @description Filter by pipeline status. */
+        status?: components["schemas"]["PipelineStatus"] | null;
+        /** @description Filter by pipeline name (exact match). */
+        name?: string | null;
+        /** @description Filter by correlation id. */
+        correlation_id?: string | null;
+        /** @description Filter by creating user id. */
+        created_by_user_id?: number | null;
+        /** @description Only return pipelines created at or after this time. */
+        created_after?: string | null;
+        /** @description Only return pipelines created at or before this time. */
+        created_before?: string | null;
+        limit?: number;
+        offset?: number;
+      };
+      header?: {
+        "x-active-roles"?: string | null;
+      };
+    };
+    responses: {
+      /** @description Successful Response */
+      200: {
+        content: {
+          "application/json": components["schemas"]["SavedPipeline"][];
+        };
+      };
+      /** @description Authentication required. */
+      401: {
+        content: never;
+      };
+      /** @description Forbidden. Insufficient permissions. */
+      403: {
+        content: never;
+      };
+      /** @description Resource not found. */
+      404: {
+        content: never;
+      };
+      /** @description Validation Error */
+      422: {
+        content: {
+          "application/json": components["schemas"]["HTTPValidationError"];
+        };
+      };
+      /** @description Internal server error. */
+      500: {
+        content: never;
+      };
+    };
+  };
+  /**
+   * Show pipeline with progress
+   * @description Fetch a single pipeline by URN including job progress statistics. Admin only.
+   */
+  show_pipeline_api_v1_pipelines__urn__get: {
+    parameters: {
+      header?: {
+        "x-active-roles"?: string | null;
+      };
+      path: {
+        urn: string;
+      };
+    };
+    responses: {
+      /** @description Successful Response */
+      200: {
+        content: {
+          "application/json": components["schemas"]["PipelineDetail"];
         };
       };
       /** @description Authentication required. */
@@ -9484,9 +10058,6 @@ export interface operations {
    * This differs from get_score_set_scores_csv() in that it returns only the HGVS columns, score column, and mapped HGVS
    * string.
    *
-   * TODO (https://github.com/VariantEffect/mavedb-api/issues/446) We may add another function for ClinVar and gnomAD.
-   * export endpoint, with options governing which columns to include.
-   *
    * Parameters
    * __________
    * urn : str
@@ -9495,9 +10066,11 @@ export interface operations {
    *     The index to start from. If None, starts from the beginning.
    * limit : Optional[int]
    *     The maximum number of variants to return. If None, returns all variants.
-   * namespaces: List[Literal["scores", "counts", "vep", "gnomad", "clingen"]]
+   * namespaces: List[str]
    *     The namespaces of all columns except for accession, hgvs_nt, hgvs_pro, and hgvs_splice.
-   *     We may add ClinVar in the future.
+   *     Supported values: "scores", "counts", "vep", "gnomad", "clingen", and ClinVar-versioned
+   *     namespaces of the form "clinvar.YEAR_MONTH" (e.g. "clinvar.2024_01" for January 2024).
+   *     Multiple ClinVar namespaces with different YEAR_MONTH values may be requested simultaneously.
    * drop_na_columns : bool, optional
    *     Whether to drop columns that contain only NA values. Defaults to False.
    * db : Session
@@ -9517,8 +10090,8 @@ export interface operations {
         start?: number;
         /** @description Maximum number of variants to return */
         limit?: number;
-        /** @description One or more data types to include: scores, counts, ClinGen, gnomAD, VEP */
-        namespaces?: ("scores" | "counts" | "vep" | "gnomad" | "clingen")[];
+        /** @description One or more data types to include: "scores", "counts", "vep", "gnomad", "clingen", and/or ClinVar-versioned namespaces of the form "clinvar.YEAR_MONTH" (e.g. "clinvar.2024_01" for January 2024). */
+        namespaces?: string[];
         drop_na_columns?: boolean | null;
         include_custom_columns?: boolean | null;
         include_post_mapped_hgvs?: boolean | null;

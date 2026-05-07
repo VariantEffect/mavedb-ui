@@ -62,10 +62,6 @@ export default defineComponent({
       type: Array,
       required: true
     },
-    itemId: {
-      type: String,
-      required: true
-    },
     entityType: {
       type: String,
       required: true,

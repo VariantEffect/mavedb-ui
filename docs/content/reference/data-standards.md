@@ -74,7 +74,7 @@ graph LR
     class VPS top
 ```
 
-Functional Impact Study Results are available for all mapped score sets. Functional Impact Statements and Variant Pathogenicity Statements additionally require [score calibrations](score-calibrations.md).
+Availability is determined per-variant. Functional Impact Study Results are available for any variant that has been successfully mapped (i.e., has post-mapped genomic coordinates). Functional Impact Statements and Variant Pathogenicity Statements additionally require [score calibrations](score-calibrations.md) on the score set and a non-null score value for the variant.
 
 ### Functional Impact Study Result
 
@@ -270,6 +270,8 @@ Not all variants in a score set can be represented in VRS. Variants are excluded
 - Could not be resolved to a genomic location during [variant mapping](variant-mapping.md).
 
 These variants remain available in the score and count CSV downloads but will not appear in VRS JSON or VA-Spec exports.
+
+Additionally, variants with a null score value cannot be exported as Functional Impact Statements or Variant Pathogenicity Statements, since those annotations require a score to evaluate against calibration ranges. Functional Impact Study Results are still available for null-score variants that have been successfully mapped.
 
 ## Working with VRS and VA-Spec objects
 

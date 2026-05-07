@@ -28,7 +28,15 @@ MaveDB stores [mapped variants](../reference/variant-mapping.md) using the [GA4G
 
 MaveDB provides annotated variant data in the [VA-Spec](https://va-spec.ga4gh.org/) format, which builds upon the VRS standard to include additional annotations relevant to variant interpretation. This output includes functional classifications, evidence strengths, and other metadata associated with each variant.
 
-There are three types of VA-Spec objects that MaveDB can provide. Functional Impact Study Results are available for all mapped score sets, while Functional Impact Statements and Variant Pathogenicity Statements additionally require [score calibrations](../reference/score-calibrations.md). Each object type builds on the previous, from raw experimental results to clinical-grade pathogenicity evidence. For detailed descriptions of each object type, example JSON, and notes on how MaveDB data maps into these standards, see the [Data Standards](../reference/data-standards.md) reference page.
+There are three types of VA-Spec objects that MaveDB can provide. Each object type builds on the previous, from raw experimental results to clinical-grade pathogenicity evidence.
+
+Availability is determined per-variant:
+
+- **Functional Impact Study Results** are available for any variant that has been successfully mapped (i.e., has post-mapped genomic coordinates).
+- **Functional Impact Statements** additionally require [score calibrations](../reference/score-calibrations.md) on the score set and a non-null score for the variant.
+- **Variant Pathogenicity Statements** additionally require calibrations with [ACMG/AMP evidence strengths](../reference/score-calibrations.md) and a non-null score.
+
+For detailed descriptions of each object type, example JSON, and notes on how MaveDB data maps into these standards, see the [Data Standards](../reference/data-standards.md) reference page.
 
 ## Bulk downloads via Zenodo
 

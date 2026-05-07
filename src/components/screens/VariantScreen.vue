@@ -337,24 +337,32 @@ export default defineComponent({
     annotatedVariantDownloadOptions(): {label: string; command: () => void}[] {
       const options: {label: string; command: () => void}[] = []
       const activeVariant = this.lookup.selectedVariantDetail.value
+      if (!activeVariant) return options
 
-      if (activeVariant && hasPathogenicityCalibrations(activeVariant.scoreSet)) {
+      const currentMapped = activeVariant.mappedVariants.find((m) => m.current)
+      const hasMappingData = !!currentMapped?.postMapped
+
+      const score = this.lookup.selectedVariantScore.value
+      const hasScore = score !== null && score !== 'NA'
+
+      if (hasMappingData && hasScore && hasPathogenicityCalibrations(activeVariant.scoreSet)) {
         options.push({
           label: 'Pathogenicity Statement',
           command: () => this.lookup.fetchVariantAnnotations('pathogenicity-statement')
         })
       }
-      if (activeVariant && hasFunctionalCalibrations(activeVariant.scoreSet)) {
+      if (hasMappingData && hasScore && hasFunctionalCalibrations(activeVariant.scoreSet)) {
         options.push({
           label: 'Functional Impact Statement',
           command: () => this.lookup.fetchVariantAnnotations('functional-statement')
         })
       }
-
-      options.push({
-        label: 'Functional Study Result',
-        command: () => this.lookup.fetchVariantAnnotations('study-result')
-      })
+      if (hasMappingData) {
+        options.push({
+          label: 'Functional Study Result',
+          command: () => this.lookup.fetchVariantAnnotations('study-result')
+        })
+      }
 
       return options
     }

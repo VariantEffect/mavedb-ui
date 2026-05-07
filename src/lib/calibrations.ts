@@ -230,7 +230,8 @@ export function functionalClassificationContainsVariant(
  * @returns True if any calibration has at least one functional classification with an evidence strength
  */
 export function hasPathogenicityCalibrations(
-  scoreSet: {scoreCalibrations?: components['schemas']['ScoreCalibration'][] | null} | null | undefined
+  scoreSet: {scoreCalibrations?: components['schemas']['ScoreCalibration'][] | null} | null | undefined,
+  {excludeResearchUseOnly = true}: {excludeResearchUseOnly?: boolean} = {}
 ): boolean {
   const scoreCalibrations = scoreSet?.scoreCalibrations
   if (!scoreCalibrations || scoreCalibrations.length === 0) {
@@ -239,6 +240,7 @@ export function hasPathogenicityCalibrations(
 
   return scoreCalibrations.some(
     (cal) =>
+      !(excludeResearchUseOnly && cal.researchUseOnly) &&
       cal.functionalClassifications &&
       Array.isArray(cal.functionalClassifications) &&
       cal.functionalClassifications.some((funcCal) => funcCal.acmgClassification)
@@ -253,14 +255,21 @@ export function hasPathogenicityCalibrations(
  * @returns True if any calibration has at least one functional classification
  */
 export function hasFunctionalCalibrations(
-  scoreSet: {scoreCalibrations?: components['schemas']['ScoreCalibration'][] | null} | null | undefined
+  scoreSet: {scoreCalibrations?: components['schemas']['ScoreCalibration'][] | null} | null | undefined,
+  {excludeResearchUseOnly = true}: {excludeResearchUseOnly?: boolean} = {}
 ): boolean {
   const scoreCalibrations = scoreSet?.scoreCalibrations
   if (!scoreCalibrations || scoreCalibrations.length === 0) {
     return false
   }
 
-  return scoreCalibrations.some((cal) => cal.functionalClassifications && Array.isArray(cal.functionalClassifications))
+  return scoreCalibrations.some(
+    (cal) =>
+      !(excludeResearchUseOnly && cal.researchUseOnly) &&
+      cal.functionalClassifications &&
+      Array.isArray(cal.functionalClassifications) &&
+      cal.functionalClassifications.length > 0
+  )
 }
 
 /**

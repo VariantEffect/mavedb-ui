@@ -603,7 +603,7 @@ export default defineComponent({
           controller.signal
         )
 
-        this.controlledKeywordOptions = (data.controlledKeywords || []).map((option) => ({
+        this.controlledKeywordOptions = (data.keywords || []).map((option) => ({
           value: `${option.key}::${option.value}`,
           title: option.value,
           badge: option.count,

@@ -71,7 +71,7 @@
               />
               <button
                 class="cursor-pointer border-none px-4 font-body text-sm font-semibold md:px-5.5"
-                :style="{background: activeSearchColor.accent, color: '#222'}"
+                :style="{background: activeSearchColor.accent, color: activeSearchColor.activeText || '#222'}"
                 type="submit"
               >
                 Search
@@ -82,8 +82,9 @@
             Find a variant with functional data via
             <router-link class="text-link" to="/mavemd?searchType=hgvs">HGVS</router-link>,
             <router-link class="text-link" to="/mavemd?searchType=clinGenAlleleId">ClinGen CAId</router-link>,
-            <router-link class="text-link" to="/mavemd?searchType=clinVarVariationId">ClinVar ID</router-link>, or
-            <router-link class="text-link" to="/mavemd?searchType=dbSnpRsId">dbSNP rsid</router-link>.
+            <router-link class="text-link" to="/mavemd?searchType=clinVarVariationId">ClinVar ID</router-link>,
+            <router-link class="text-link" to="/mavemd?searchType=dbSnpRsId">dbSNP rsid</router-link>, or
+            <router-link class="text-link" to="/mavemd?searchType=vrsDigest">VRS digest</router-link>.
           </p>
         </div>
       </section>
@@ -267,7 +268,7 @@ export default defineComponent({
   },
 
   computed: {
-    activeSearchColor(): {accent: string; bg: string} {
+    activeSearchColor(): {accent: string; bg: string; activeText?: string} {
       return SEARCH_COLORS[this.searchType] || SEARCH_COLORS.hgvs
     },
     activeSearchPlaceholder(): string {

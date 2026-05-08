@@ -42,6 +42,9 @@ export interface RawVariant {
   vep?: {
     vep_functional_consequence?: string
   }
+  clingen?: {
+    clingen_allele_id?: string
+  }
 
   control?: ClinicalControlVariant
   mavedb_label?: string
@@ -399,7 +402,10 @@ function translateSimpleCodingHgvsCVariant(
  */
 export function isStartOrStopLoss(variant: any) {
   if (variant.vep && variant.vep.vep_functional_consequence && variant.vep.vep_functional_consequence != 'NA') {
-    if (variant.vep.vep_functional_consequence == 'start_lost' || variant.vep.vep_functional_consequence == 'stop_lost') {
+    if (
+      variant.vep.vep_functional_consequence == 'start_lost' ||
+      variant.vep.vep_functional_consequence == 'stop_lost'
+    ) {
       return true
     } else {
       return false

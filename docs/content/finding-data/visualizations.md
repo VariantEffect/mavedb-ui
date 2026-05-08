@@ -26,6 +26,9 @@ The default view shows the overall score distribution for all variants in the sc
 
 Available when a score set has been linked to [ClinVar annotations](external-integrations.md#clinvar). This view overlays the distribution of scores for variants classified as `Pathogenic` or `Likely pathogenic` and `Benign` or `Likely benign` in ClinVar, allowing users to assess how well the assay segregates known clinical variants. The ClinVar version used is always shown in the histogram legend.
 
+!!! info "Clinical controls are not calibration controls"
+    The clinical controls displayed in the histogram are ClinVar entries linked to mapped variants in the score set. They are **not** necessarily the same controls used to derive a [score calibration](../reference/score-calibrations.md). A calibration may use a different set of reference variants, classification criteria, or ClinVar version than what is shown in the histogram. Treat the clinical view as an independent overlay of ClinVar annotations, not as a representation of a calibration's input data.
+
 <figure markdown="span">
   ![Clinical view of the histogram visualization from a MaveDB score set page](../images/bard1_clinical_histogram.png)
   <figcaption>Clinical view of the histogram from <a href="https://mavedb.org/score-sets/urn:mavedb:00001250-a-1">urn:mavedb:00001250-a-1</a>, showing ClinVar pathogenic and benign variant distributions.</figcaption>
@@ -86,6 +89,12 @@ The viewer displays a side-by-side heatmap and 3D structure sourced from the [Al
   ![Protein structure visualization from a MaveDB score set page](../images/msh2_protein_structure.png)
   <figcaption>Protein structure viewer from <a href="https://mavedb.org/score-sets/urn:mavedb:00000050-a-1">urn:mavedb:00000050-a-1</a>, showing mean variant effect scores mapped onto the MSH2 3D structure.</figcaption>
 </figure>
+
+References:
+<ul class="list-disc text-xs italic text-gray-400 ml-5 px-2 py-1">
+  <li>Jumper, J et al. Highly accurate protein structure prediction with AlphaFold. <em>Nature</em> (2021)</li>
+  <li>Fleming J. et al. AlphaFold Protein Structure Database and 3D-Beacons: New Data and Capabilities. <em>Journal of Molecular Biology</em> (2025)</li>
+</ul>
 
 ## See also
 

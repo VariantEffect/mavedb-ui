@@ -277,6 +277,27 @@ export default function makeHistogram(): Histogram {
   const yScale = d3.scaleLinear()
 
   //////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+  // Color resolution
+  //////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+
+  /** Resolves a CSS custom property (e.g. "var(--my-color)") to its computed hex value.
+   *  Falls back to the original string if the variable cannot be resolved. For histogram
+   *  exports, the SVG fill/stroke colors are resolved to ensure correct rendering.
+   */
+  const resolveCssColor = (color: string): string => {
+    // Match CSS var(...) syntax and capture the custom property name in group 1.
+    // `[^),\s]+` consumes the variable name (everything after `--`) until a `)`, `,`, or
+    // whitespace. `[^)]*` allows an optional fallback value (e.g. `var(--x, #fff)`) without
+    // trying to parse it; we only need the property name for the getComputedStyle lookup.
+    const match = color.match(/^var\(\s*(--[^),\s]+)[^)]*\)$/)
+    if (match) {
+      const resolved = getComputedStyle(document.documentElement).getPropertyValue(match[1]).trim()
+      return resolved || color
+    }
+    return color
+  }
+
+  //////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
   // Data series & bin preparation
   //////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 
@@ -1086,13 +1107,13 @@ export default function makeHistogram(): Histogram {
               gradient
                 .append('stop')
                 .attr('offset', '0')
-                .attr('stop-color', (d) => d.color || DEFAULT_SERIES_COLOR)
-                .attr('stop-opacity', (d) => d.startOpacity || '0.15')
+                .style('stop-color', (d) => resolveCssColor(d.color || DEFAULT_SERIES_COLOR))
+                .style('stop-opacity', (d) => d.startOpacity || '0.15')
               gradient
                 .append('stop')
                 .attr('offset', '100%')
-                .attr('stop-color', (d) => d.color || DEFAULT_SERIES_COLOR)
-                .attr('stop-opacity', (d) => d.stopOpacity || '0.05')
+                .style('stop-color', (d) => resolveCssColor(d.color || DEFAULT_SERIES_COLOR))
+                .style('stop-opacity', (d) => d.stopOpacity || '0.05')
 
               return gradient
             })
@@ -1107,7 +1128,7 @@ export default function makeHistogram(): Histogram {
           shaderG
             .select('text')
             .attr('class', 'histogram-shader-title')
-            .style('fill', (d) => d.thresholdColor || '#000000')
+            .style('fill', (d) => resolveCssColor(d.thresholdColor || '#000000'))
             .attr('x', (d) => {
               const span = visibleShaderRegion(d)
               return (
@@ -1146,9 +1167,10 @@ export default function makeHistogram(): Histogram {
             .data(chartHasContent ? shaderThresholds : [])
             .join('path')
             .attr('class', 'histogram-shader-threshold')
-            .attr('stroke', (d) => d.region.thresholdColor || DEFAULT_SHADER_COLOR)
-            .attr('stroke-dasharray', '4 4')
-            .attr('stroke-width', 1.5)
+            .style('fill', 'none')
+            .style('stroke', (d) => resolveCssColor(d.region.thresholdColor || DEFAULT_SHADER_COLOR))
+            .style('stroke-dasharray', '4 4')
+            .style('stroke-width', 1.5)
             .attr('d', (d) => {
               const intersectedBinIndex = findBinIndex(d.x)
               let yMin = intersectedBinIndex == null ? yScale.domain()[0] : bins[intersectedBinIndex].yMax

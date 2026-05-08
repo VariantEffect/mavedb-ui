@@ -1,84 +1,208 @@
-import {showSaveFilePicker} from 'native-file-system-adapter'
-import domtoimage from 'dom-to-image'
+/**
+ * Maximum canvas dimension (px) supported across all major browsers.
+ * Chrome/Firefox allow 32767; Safari caps at 16384. We use the lower bound.
+ */
+const MAX_CANVAS_DIMENSION = 16384
+
+/**
+ * Maximum total canvas area (px²) before Chrome throws an allocation error.
+ */
+const MAX_CANVAS_AREA = 268_435_456
 
 const XMLNS = 'http://www.w3.org/2000/xmlns/'
 const XLINKNS = 'http://www.w3.org/1999/xlink'
 const SVGNS = 'http://www.w3.org/2000/svg'
 
 /**
- * Save an SVG image as a file on the user's local machine.
+ * Save a chart container as an SVG file. Works across all major browsers by using a
+ * programmatic anchor download.
  *
- * The user should be prompted for the save location, filename, and type, with SVG and PNG as file type options. This
- * does not work reliably on all browsers right now, but when it fails, the image is saved as an SVG file with the
- * specified default filename.
+ * The exported file contains a proper <svg> root element so that it opens correctly in vector
+ * graphics editors such as Inkscape and Affinity Designer. If the container holds multiple SVG
+ * elements (e.g. a stacked heatmap), they are combined into a single <svg> root.
  *
- * The file chooser dialog tends to work in Chrome but not in Firefox or Safari, where the image is just saved in SVG
- * format. The behavior may depend on browser settings.
- *
- * @param svgElement The SVG element containing the image to export.
- * @param suggestedFilenameBase The filename to suggest, without its extension.
- * @param containerElementClass An optional ancestor element class to consider when building CSS for the serialized SVG
- *   image. See {@link getCSSStyles} for details about its use.
+ * @param container The HTML element whose chart SVG(s) should be exported.
+ * @param filename The suggested filename base, without its .svg extension.
+ * @param containerElementClass An optional ancestor element class to strip from CSS selector
+ *   prefixes. See {@link getCSSStyles} for details.
  */
-export async function saveChartAsFile(
-  svgContainer: HTMLElement,
-  suggestedFilenameBase: string = 'mavedb-chart',
+export function saveChartAsSvg(
+  container: HTMLElement,
+  filename: string = 'mavedb-chart',
   containerElementClass?: string
-) {
-  const fileHandle = await showSaveFilePicker({
-    _preferPolyfill: false,
-    suggestedName: `${suggestedFilenameBase}.svg`,
-    types: [{accept: {'image/svg+xml': ['.svg']}}, {accept: {'image/png': ['.png']}}],
-    excludeAcceptAllOption: false // default
-  })
+): void {
+  const svgStr = serializeAsSvgString(container, containerElementClass)
+  triggerDownload(new Blob([svgStr], {type: 'image/svg+xml'}), `${filename}.svg`)
+}
 
-  const extensionChosen = fileHandle.name.split('.').pop()
+/**
+ * Save a chart container as a PNG file by rasterizing its serialized SVG onto a canvas.
+ * Automatically scales down if the chart dimensions would exceed browser canvas limits.
+ *
+ * @param container The HTML element containing the chart to rasterize.
+ * @param filename The suggested filename base, without its .png extension.
+ * @param containerElementClass An optional ancestor element class to strip from CSS selector
+ *   prefixes. See {@link getCSSStyles} for details.
+ */
+export async function saveChartAsPng(
+  container: HTMLElement,
+  filename: string = 'mavedb-chart',
+  containerElementClass?: string
+): Promise<void> {
+  const svgStr = serializeAsSvgString(container, containerElementClass)
 
-  if (extensionChosen === 'png') {
-    const filter = (node: Node) => {
-      return (node as Element).classList.contains('exclude-from-export') ? false : true
-    }
-    const pngBlob = await domtoimage.toBlob(svgContainer, {
-      filter: filter,
-      width: svgContainer.scrollWidth,
-      height: svgContainer.scrollHeight
+  // Get the true dimensions from the serialized SVG, not from the container.
+  // container.scrollWidth only reflects the visible (clipped) size of the wrapper div,
+  // which can be much smaller than the SVG content (e.g. inside a scroll container).
+  const svgRoot = new DOMParser().parseFromString(svgStr, 'image/svg+xml').documentElement
+  const viewBox = svgRoot.getAttribute('viewBox')?.split(/\s+/)
+  const widthAttribute = parseFloat(svgRoot.getAttribute('width') || '0')
+  const heightAttribute = parseFloat(svgRoot.getAttribute('height') || '0')
+  const viewBoxWidth = viewBox ? parseFloat(viewBox[2]) : 0
+  const viewBoxHeight = viewBox ? parseFloat(viewBox[3]) : 0
+  const naturalWidth = widthAttribute || viewBoxWidth || container.scrollWidth
+  const naturalHeight = heightAttribute || viewBoxHeight || container.scrollHeight
+
+  // Scale down proportionally if the natural dimensions would overflow the canvas. We're
+  // accepting the fact that this can result in an image that doesn't look great for large
+  // charts, but this is unavoidable given browser limits. SVG export is the default, and
+  // we prefer it as the recommended option for high-resolution output in any case.
+  const scale = Math.min(
+    1,
+    MAX_CANVAS_DIMENSION / naturalWidth,
+    MAX_CANVAS_DIMENSION / naturalHeight,
+    Math.sqrt(MAX_CANVAS_AREA / (naturalWidth * naturalHeight))
+  )
+  const canvasWidth = Math.floor(naturalWidth * scale)
+  const canvasHeight = Math.floor(naturalHeight * scale)
+
+  if (scale < 0.75) {
+    console.warn(
+      `[chart-export] PNG scaled down to ${Math.round(scale * 100)}% (${canvasWidth}×${canvasHeight}px) ` +
+        `due to browser canvas limits. For full-resolution output, use SVG export instead.`
+    )
+  }
+
+  const svgBlob = new Blob([svgStr], {type: 'image/svg+xml'})
+  const svgUrl = URL.createObjectURL(svgBlob)
+  try {
+    const img = await new Promise<HTMLImageElement>((resolve, reject) => {
+      const image = new Image()
+      image.onload = () => resolve(image)
+      image.onerror = reject
+      image.src = svgUrl
     })
-    await pngBlob.stream().pipeTo(await fileHandle.createWritable())
-  } else {
-    // use custom serializer to support images composed of multiple SVGs
-    const svgBlob = new Blob([serializeAsSvgString(svgContainer, containerElementClass)], {type: 'image/svg+xml'})
-    await svgBlob.stream().pipeTo(await fileHandle.createWritable())
+
+    const canvas = document.createElement('canvas')
+    canvas.width = canvasWidth
+    canvas.height = canvasHeight
+    canvas.getContext('2d')!.drawImage(img, 0, 0, canvasWidth, canvasHeight)
+
+    const pngBlob = await new Promise<Blob>((resolve, reject) =>
+      canvas.toBlob(
+        (b) =>
+          b
+            ? resolve(b)
+            : reject(
+                new Error(
+                  'Failed to convert canvas to PNG. The canvas may be invalid or memory insufficient. Try SVG export or reduce chart size.'
+                )
+              ),
+        'image/png'
+      )
+    )
+    triggerDownload(pngBlob, `${filename}.png`)
+  } finally {
+    URL.revokeObjectURL(svgUrl)
   }
 }
 
 /**
- * Serialize an SVG element and its content as a blob containing SVG XML text, which can then be saved to a file as a
- * way of exporting the SVG image.
- *
- * @param svgElement The <svg> element to serialize.
- * @param containerElementClass An optional ancestor element class to consider when building CSS for the serialized SVG
- *   image. See {@link getCSSStyles} for details about its use.
- * @returns A blob containing SVG XML text representing the same image, stripped as much as possible of its relation to
- *   its context on the page.
+ * Trigger a browser file download using a temporary object URL and anchor element.
+ * This approach works across Chrome, Firefox, and Safari.
  */
-function serializeAsSvgString(svgElement: Element, containerElementClass?: string) {
-  const svgClone = svgElement.cloneNode(true) as Element
+function triggerDownload(blob: Blob, filename: string): void {
+  const url = URL.createObjectURL(blob)
+  const anchor = document.createElement('a')
+  anchor.href = url
+  anchor.download = filename
+  document.body.appendChild(anchor)
+  anchor.click()
+  document.body.removeChild(anchor)
+  URL.revokeObjectURL(url)
+}
 
-  const elements = svgClone.getElementsByClassName('exclude-from-export')
-  for (const element of Array.from(elements)) {
-    svgClone.removeChild(element)
+/**
+ * Serialize the chart SVG(s) inside a container element into a self-contained SVG string that
+ * can be saved to disk and opened in vector graphics editors.
+ *
+ * If the container itself is an <svg> it is used directly. Otherwise every <svg> descendant
+ * (excluding those inside .exclude-from-export) is collected. A single SVG is used as the root
+ * as-is; multiple SVGs are stacked vertically inside a new <svg> wrapper.
+ *
+ * @param container The HTML element wrapping the chart(s).
+ * @param containerElementClass An optional ancestor element class to strip from CSS selector
+ *   prefixes. See {@link getCSSStyles} for details.
+ */
+function serializeAsSvgString(container: Element, containerElementClass?: string): string {
+  // Clone so we can mutate safely
+  const containerClone = container.cloneNode(true) as Element
+
+  // Remove elements excluded from export at any depth
+  for (const el of Array.from(containerClone.querySelectorAll('.exclude-from-export'))) {
+    el.parentNode?.removeChild(el)
   }
 
-  const cssStr = getCSSStyles(svgElement, containerElementClass)
+  // Collect the SVG element(s) to include in the output
+  let svgsToProcess: Element[]
+  if (containerClone.tagName.toLowerCase() === 'svg') {
+    svgsToProcess = [containerClone]
+  } else {
+    svgsToProcess = Array.from(containerClone.querySelectorAll('svg'))
+  }
 
-  const styleElement = document.createElement('style')
-  styleElement.setAttribute('type', 'text/css')
-  styleElement.innerHTML = cssStr
-  const refNode = svgClone.hasChildNodes() ? svgClone.children[0] : null
-  svgClone.insertBefore(styleElement, refNode)
+  if (svgsToProcess.length === 0) return ''
 
+  // Collect CSS from the original (pre-clone) element so that selectors still match
+  const cssStr = getCSSStyles(container, containerElementClass)
+
+  // Build the root SVG: single SVG is used directly; multiple are wrapped
+  let rootSvg: Element
+  if (svgsToProcess.length === 1) {
+    rootSvg = svgsToProcess[0]
+  } else {
+    // Stack all inner SVGs vertically inside a new root
+    let totalHeight = 0
+    let maxWidth = 0
+    const svgDimensions = svgsToProcess.map((svg) => {
+      const vb = svg.getAttribute('viewBox')?.split(/\s+/)
+      const w = parseFloat(svg.getAttribute('width') || '0') || (vb ? parseFloat(vb[2]) : 0)
+      const h = parseFloat(svg.getAttribute('height') || '0') || (vb ? parseFloat(vb[3]) : 0)
+      totalHeight += h
+      maxWidth = Math.max(maxWidth, w)
+      return {width: w, height: h}
+    })
+
+    const wrapperSvg = document.createElementNS(SVGNS, 'svg')
+    wrapperSvg.setAttribute('width', String(maxWidth))
+    wrapperSvg.setAttribute('height', String(totalHeight))
+
+    let yOffset = 0
+    for (let i = 0; i < svgsToProcess.length; i++) {
+      const inner = svgsToProcess[i]
+      inner.setAttribute('x', '0')
+      inner.setAttribute('y', String(yOffset))
+      wrapperSvg.appendChild(inner)
+      yOffset += svgDimensions[i].height
+    }
+
+    rootSvg = wrapperSvg
+  }
+
+  // Rewrite absolute fragment URLs (e.g. linearGradient references) to relative ones so that
+  // they resolve correctly when the file is opened outside the browser page
   const fragment = window.location.href + '#'
-  const walker = document.createTreeWalker(svgClone, NodeFilter.SHOW_ELEMENT)
+  const walker = document.createTreeWalker(rootSvg, NodeFilter.SHOW_ELEMENT)
   while (walker.nextNode()) {
     for (const attr of (walker.currentNode as Element).attributes) {
       if (attr.value.includes(fragment)) {
@@ -87,35 +211,44 @@ function serializeAsSvgString(svgElement: Element, containerElementClass?: strin
     }
   }
 
-  svgClone.setAttributeNS(XMLNS, 'xmlns', SVGNS)
-  svgClone.setAttributeNS(XMLNS, 'xmlns:xlink', XLINKNS)
-  const serializer = new window.XMLSerializer()
-  const string = serializer.serializeToString(svgClone)
-  return string
+  // Embed the relevant page CSS into the SVG so styles are preserved when opened externally
+  const styleElement = document.createElement('style')
+  styleElement.setAttribute('type', 'text/css')
+  styleElement.innerHTML = cssStr
+  rootSvg.insertBefore(styleElement, rootSvg.children[0] ?? null)
+
+  // Declare SVG namespace so the file is recognized as SVG by editors and validators
+  rootSvg.setAttributeNS(XMLNS, 'xmlns', SVGNS)
+  rootSvg.setAttributeNS(XMLNS, 'xmlns:xlink', XLINKNS)
+
+  return new window.XMLSerializer().serializeToString(rootSvg)
 }
 
 /**
  * Build a CSS string of all styles that affect a parent element or its descendants.
  *
- * The purpose of this function is to identify all the CSS styles that affect an SVG rendered in the browser, so as to
- * include them in an exported copy of the SVG.
+ * The purpose of this function is to identify all the CSS styles that affect an SVG rendered in
+ * the browser, so as to include them in an exported copy of the SVG.
  *
- * The limitation of this approach is that styles applied on the basis of CSS classes belonging to ancestors of
- * parentElement will be found, but their CSS selectors will not match elements in the exported SVG, which lacks those
- * ancestors. Normally, therefore, when using this approach it it necessary to use global styles that apply to SVG
- * elements regardless of the enclosing DOM context.
+ * The limitation of this approach is that styles applied on the basis of CSS classes belonging
+ * to ancestors of parentElement will be found, but their CSS selectors will not match elements
+ * in the exported SVG, which lacks those ancestors. Normally, therefore, when using this
+ * approach it is necessary to use global styles that apply to SVG elements regardless of the
+ * enclosing DOM context.
  *
- * We support one extension here, which is to strip out a single ancestor class name, with an optional attribute
- * selector (which in the selector follows the class name immediately, enclosed in square brackets:
- *`class-name[attribute]`). In particular, this supports the case where styles are applied to SVG elements only in the
- * context of some element rendered by a Vue component, and where Vue's style scope has been used. This case produces
- * CSS selectors like `.histogramContainer[data-v-75e9f366] .threshold-lines`, and in this case we strip out the
- * first part and only use `.threshold-lines` in the generated CSS text.
+ * We support one extension here, which is to strip out a single ancestor class name, with an
+ * optional attribute selector (which in the selector follows the class name immediately,
+ * enclosed in square brackets: `class-name[attribute]`). In particular, this supports the case
+ * where styles are applied to SVG elements only in the context of some element rendered by a
+ * Vue component, and where Vue's style scope has been used. This case produces CSS selectors
+ * like `.histogramContainer[data-v-75e9f366] .threshold-lines`, and in this case we strip out
+ * the first part and only use `.threshold-lines` in the generated CSS text.
  *
  * @param parentElement The root element of the subtree to examine.
- * @param containerElementClass An optional ancestor element class to strip from the beginning of CSS selectors, along
- *   with an optional attribute.
- * @returns A CSS string representing all the rules that affect the specified parent element or its descendants.
+ * @param containerElementClass An optional ancestor element class to strip from the beginning
+ *   of CSS selectors, along with an optional attribute.
+ * @returns A CSS string representing all the rules that affect the specified parent element or
+ *   its descendants.
  */
 function getCSSStyles(parentElement: Element, containerElementClass?: string): string {
   const nodesToCheck = [parentElement, ...parentElement.getElementsByTagName('*')]

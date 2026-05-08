@@ -272,6 +272,20 @@ export interface paths {
      */
     get: operations["convert_to_protein_api_v1_hgvs_protein__transcript__get"];
   };
+  "/api/v1/job-runs/": {
+    /**
+     * List job runs
+     * @description List job runs with optional filters. Admin only.
+     */
+    get: operations["list_job_runs_api_v1_job_runs__get"];
+  };
+  "/api/v1/job-runs/{urn}": {
+    /**
+     * Show job run with full error details
+     * @description Fetch a single job run by URN, including error traceback. Admin only.
+     */
+    get: operations["show_job_run_api_v1_job_runs__urn__get"];
+  };
   "/api/v1/licenses/": {
     /**
      * List all licenses
@@ -307,19 +321,19 @@ export interface paths {
      */
     get: operations["show_mapped_variant_study_result_api_v1_mapped_variants__urn__va_study_result_get"];
   };
-  "/api/v1/mapped-variants/{urn}/va/functional-impact": {
+  "/api/v1/mapped-variants/{urn}/va/functional-statement": {
     /**
      * Construct a VA-Spec Statement from a mapped variant
      * @description Construct a single VA-Spec Statement from a mapped variant by URN.
      */
-    get: operations["show_mapped_variant_functional_impact_statement_api_v1_mapped_variants__urn__va_functional_impact_get"];
+    get: operations["show_mapped_variant_functional_impact_statement_api_v1_mapped_variants__urn__va_functional_statement_get"];
   };
-  "/api/v1/mapped-variants/{urn}/va/clinical-evidence": {
+  "/api/v1/mapped-variants/{urn}/va/pathogenicity-statement": {
     /**
      * Construct a VA-Spec EvidenceLine from a mapped variant
      * @description Construct a list of VA-Spec EvidenceLine(s) from a mapped variant by URN.
      */
-    get: operations["show_mapped_variant_acmg_evidence_line_api_v1_mapped_variants__urn__va_clinical_evidence_get"];
+    get: operations["show_mapped_variant_acmg_evidence_line_api_v1_mapped_variants__urn__va_pathogenicity_statement_get"];
   };
   "/api/v1/mapped-variants/vrs/{identifier}": {
     /**
@@ -346,6 +360,20 @@ export interface paths {
      * @description Check whether users have permission to perform a given action on a resource.
      */
     get: operations["check_permission_api_v1_permissions_user_is_permitted__model_name___urn___action__get"];
+  };
+  "/api/v1/pipelines/": {
+    /**
+     * List pipelines
+     * @description List pipelines with optional filters. Admin only.
+     */
+    get: operations["list_pipelines_api_v1_pipelines__get"];
+  };
+  "/api/v1/pipelines/{urn}": {
+    /**
+     * Show pipeline with progress
+     * @description Fetch a single pipeline by URN including job progress statistics. Admin only.
+     */
+    get: operations["show_pipeline_api_v1_pipelines__urn__get"];
   };
   "/api/v1/publication-identifiers/": {
     /**
@@ -723,9 +751,6 @@ export interface paths {
      * This differs from get_score_set_scores_csv() in that it returns only the HGVS columns, score column, and mapped HGVS
      * string.
      *
-     * TODO (https://github.com/VariantEffect/mavedb-api/issues/446) We may add another function for ClinVar and gnomAD.
-     * export endpoint, with options governing which columns to include.
-     *
      * Parameters
      * __________
      * urn : str
@@ -734,9 +759,11 @@ export interface paths {
      *     The index to start from. If None, starts from the beginning.
      * limit : Optional[int]
      *     The maximum number of variants to return. If None, returns all variants.
-     * namespaces: List[Literal["scores", "counts", "vep", "gnomad", "clingen"]]
+     * namespaces: List[str]
      *     The namespaces of all columns except for accession, hgvs_nt, hgvs_pro, and hgvs_splice.
-     *     We may add ClinVar in the future.
+     *     Supported values: "scores", "counts", "vep", "gnomad", "clingen", and ClinVar-versioned
+     *     namespaces of the form "clinvar.YEAR_MONTH" (e.g. "clinvar.2024_01" for January 2024).
+     *     Multiple ClinVar namespaces with different YEAR_MONTH values may be requested simultaneously.
      * drop_na_columns : bool, optional
      *     Whether to drop columns that contain only NA values. Defaults to False.
      * db : Session
@@ -788,10 +815,10 @@ export interface paths {
      */
     get: operations["get_score_set_mapped_variants_api_v1_score_sets__urn__mapped_variants_get"];
   };
-  "/api/v1/score-sets/{urn}/annotated-variants/pathogenicity-evidence-line": {
+  "/api/v1/score-sets/{urn}/annotated-variants/pathogenicity-statement": {
     /**
-     * Get pathogenicity evidence line annotations for mapped variants within a score set
-     * @description Retrieve annotated variants with pathogenicity evidence for a given score set.
+     * Get pathogenicity statement annotations for mapped variants within a score set
+     * @description Retrieve annotated variants with pathogenicity statements for a given score set.
      *
      * This endpoint streams pathogenicity evidence lines for all current mapped variants
      * associated with a specific score set. The response is returned as newline-delimited
@@ -831,9 +858,9 @@ export interface paths {
      *     processing. Only current (non-historical) mapped variants are included in
      *     the response.
      */
-    get: operations["get_score_set_annotated_variants_api_v1_score_sets__urn__annotated_variants_pathogenicity_evidence_line_get"];
+    get: operations["get_score_set_annotated_variants_api_v1_score_sets__urn__annotated_variants_pathogenicity_statement_get"];
   };
-  "/api/v1/score-sets/{urn}/annotated-variants/functional-impact-statement": {
+  "/api/v1/score-sets/{urn}/annotated-variants/functional-statement": {
     /**
      * Get functional impact statement annotations for mapped variants within a score set
      * @description Retrieve functional impact statements for annotated variants in a score set.
@@ -874,9 +901,9 @@ export interface paths {
      *     Only current (non-historical) mapped variants are included in the response.
      *     The function requires appropriate read permissions on the score set.
      */
-    get: operations["get_score_set_annotated_variants_functional_statement_api_v1_score_sets__urn__annotated_variants_functional_impact_statement_get"];
+    get: operations["get_score_set_annotated_variants_functional_statement_api_v1_score_sets__urn__annotated_variants_functional_statement_get"];
   };
-  "/api/v1/score-sets/{urn}/annotated-variants/functional-study-result": {
+  "/api/v1/score-sets/{urn}/annotated-variants/study-result": {
     /**
      * Get functional study result annotations for mapped variants within a score set
      * @description Retrieve functional study results for annotated variants in a score set.
@@ -921,7 +948,7 @@ export interface paths {
      *     - Eagerly loads related ScoreSet data including publications, users, license, and experiment
      *     - Logs requests and errors for monitoring and debugging purposes
      */
-    get: operations["get_score_set_annotated_variants_functional_study_result_api_v1_score_sets__urn__annotated_variants_functional_study_result_get"];
+    get: operations["get_score_set_annotated_variants_functional_study_result_api_v1_score_sets__urn__annotated_variants_study_result_get"];
   };
   "/api/v1/score-sets-with-variants/{urn}": {
     /**
@@ -1579,6 +1606,17 @@ export interface components {
        */
       state: components["schemas"]["LiteralSequenceExpression"] | components["schemas"]["ReferenceLengthExpression"] | components["schemas"]["LengthExpression"];
     };
+    /**
+     * AnnotationLayer
+     * @description Annotation layer for a variant mapping result.
+     *
+     * Mirrors the ``AnnotationLayer`` enum produced by the dcd-mapping QC API.
+     * Values use full names so they round-trip readably through the database
+     * column; the dcd-mapping payload uses short single-character codes
+     * (``p`` / ``c`` / ``g``) which the worker translates via :func:`from_wire`.
+     * @enum {string}
+     */
+    AnnotationLayer: "protein" | "cdna" | "genomic";
     /** ApiVersion */
     ApiVersion: {
       /** Name */
@@ -2181,6 +2219,22 @@ export interface components {
     ContributorCreate: {
       /** Orcidid */
       orcidId: string;
+    };
+    /** ControlledKeywordFilterOption */
+    ControlledKeywordFilterOption: {
+      /** Key */
+      key: string;
+      /** Value */
+      value: string;
+      /** Count */
+      count: number;
+    };
+    /** ControlledKeywordSearch */
+    ControlledKeywordSearch: {
+      /** Key */
+      key: string;
+      /** Label */
+      label: string;
     };
     /**
      * CopyChange
@@ -3034,7 +3088,7 @@ export interface components {
       /** Publicationidentifiers */
       publicationIdentifiers?: string[] | null;
       /** Keywords */
-      keywords?: string[] | null;
+      keywords?: components["schemas"]["ControlledKeywordSearch"][] | null;
       /** Text */
       text?: string | null;
       /** Metaanalysis */
@@ -3280,6 +3334,69 @@ export interface components {
       detail?: components["schemas"]["ValidationError"][];
     };
     /**
+     * JobRunDetail
+     * @description Single-job-run detail response including the error traceback.
+     */
+    JobRunDetail: {
+      /** Urn */
+      urn?: string | null;
+      /** Jobtype */
+      jobType: string;
+      /** Jobfunction */
+      jobFunction: string;
+      status: components["schemas"]["JobStatus"];
+      /** Correlationid */
+      correlationId?: string | null;
+      /** Pipelineid */
+      pipelineId?: number | null;
+      /** Failurecategory */
+      failureCategory?: string | null;
+      /** Errormessage */
+      errorMessage?: string | null;
+      /** Mavedbversion */
+      mavedbVersion?: string | null;
+      /** Id */
+      id: number;
+      /** Jobparams */
+      jobParams?: Record<string, never> | null;
+      /** Metadata */
+      metadata?: Record<string, never>;
+      /** Maxretries */
+      maxRetries: number;
+      /** Retrycount */
+      retryCount: number;
+      /** Retrydelayseconds */
+      retryDelaySeconds?: number | null;
+      /**
+       * Scheduledat
+       * Format: date-time
+       */
+      scheduledAt: string;
+      /** Startedat */
+      startedAt?: string | null;
+      /** Finishedat */
+      finishedAt?: string | null;
+      /**
+       * Createdat
+       * Format: date-time
+       */
+      createdAt: string;
+      /** Progresscurrent */
+      progressCurrent?: number | null;
+      /** Progresstotal */
+      progressTotal?: number | null;
+      /** Progressmessage */
+      progressMessage?: string | null;
+      /** Errortraceback */
+      errorTraceback?: string | null;
+    };
+    /**
+     * JobStatus
+     * @description Status of a job execution.
+     * @enum {string}
+     */
+    JobStatus: "succeeded" | "failed" | "errored" | "pending" | "queued" | "running" | "cancelled" | "skipped";
+    /**
      * Keyword
      * @description Keyword view model for non-admin clients.
      */
@@ -3515,6 +3632,11 @@ export interface components {
       mappingApiVersion: string;
       /** Current */
       current: boolean;
+      alignmentLevel?: components["schemas"]["AnnotationLayer"] | null;
+      /** Atmismatchedlocus */
+      atMismatchedLocus?: boolean | null;
+      /** Neargap */
+      nearGap?: boolean | null;
       /** Varianturn */
       variantUrn: string;
       /** Id */
@@ -3528,6 +3650,48 @@ export interface components {
     MappedVariantForClinicalControl: {
       /** Varianturn */
       variantUrn: string;
+    };
+    /**
+     * MappedVariantWithMappingDetails
+     * @description Client-facing variant of :class:`SavedMappedVariantWithMappingDetails`.
+     */
+    MappedVariantWithMappingDetails: {
+      /** Premapped */
+      preMapped?: unknown;
+      /** Postmapped */
+      postMapped?: unknown;
+      /** Vrsversion */
+      vrsVersion?: string | null;
+      /** Errormessage */
+      errorMessage?: string | null;
+      /**
+       * Modificationdate
+       * Format: date
+       */
+      modificationDate: string;
+      /**
+       * Mappeddate
+       * Format: date
+       */
+      mappedDate: string;
+      /** Mappingapiversion */
+      mappingApiVersion: string;
+      /** Current */
+      current: boolean;
+      alignmentLevel?: components["schemas"]["AnnotationLayer"] | null;
+      /** Atmismatchedlocus */
+      atMismatchedLocus?: boolean | null;
+      /** Neargap */
+      nearGap?: boolean | null;
+      /** Varianturn */
+      variantUrn: string;
+      /** Id */
+      id: number;
+      /** Clingenalleleid */
+      clingenAlleleId?: string | null;
+      /** Recordtype */
+      recordType?: string;
+      targetGeneMapping?: components["schemas"]["TargetGeneMapping"] | null;
     };
     /**
      * MappingState
@@ -3655,6 +3819,71 @@ export interface components {
      * @enum {string}
      */
     Orientation: "forward" | "reverse_complement";
+    /**
+     * PipelineDetail
+     * @description Single-pipeline detail response including progress statistics.
+     */
+    PipelineDetail: {
+      /** Urn */
+      urn?: string | null;
+      /** Name */
+      name: string;
+      /** Description */
+      description?: string | null;
+      status: components["schemas"]["PipelineStatus"];
+      /** Correlationid */
+      correlationId?: string | null;
+      /** Mavedbversion */
+      mavedbVersion?: string | null;
+      /** Id */
+      id: number;
+      /** Metadata */
+      metadata?: Record<string, never>;
+      /**
+       * Createdat
+       * Format: date-time
+       */
+      createdAt: string;
+      /** Startedat */
+      startedAt?: string | null;
+      /** Finishedat */
+      finishedAt?: string | null;
+      /** Createdbyuserid */
+      createdByUserId?: number | null;
+      progress: components["schemas"]["PipelineProgress"];
+    };
+    /**
+     * PipelineProgress
+     * @description Pipeline progress statistics returned by PipelineManager.get_pipeline_progress().
+     */
+    PipelineProgress: {
+      /** Totaljobs */
+      totalJobs: number;
+      /** Completedjobs */
+      completedJobs: number;
+      /** Successfuljobs */
+      successfulJobs: number;
+      /** Failedjobs */
+      failedJobs: number;
+      /** Runningjobs */
+      runningJobs: number;
+      /** Pendingjobs */
+      pendingJobs: number;
+      /** Completionpercentage */
+      completionPercentage: number;
+      /** Duration */
+      duration: number;
+      /** Statuscounts */
+      statusCounts: {
+        [key: string]: number;
+      };
+    };
+    /**
+     * PipelineStatus
+     * @description Status of a pipeline execution.
+     * @enum {string}
+     */
+    PipelineStatus: "succeeded" | "failed" | "created" | "running" | "paused" | "cancelled" | "partial";
     /**
      * ProcessingState
      * @enum {string}
@@ -4036,6 +4265,93 @@ export interface components {
        * @default 0
        */
       variantCount?: number;
+    };
+    /**
+     * SavedJobRun
+     * @description View model for a saved job run record.
+     */
+    SavedJobRun: {
+      /** Urn */
+      urn?: string | null;
+      /** Jobtype */
+      jobType: string;
+      /** Jobfunction */
+      jobFunction: string;
+      status: components["schemas"]["JobStatus"];
+      /** Correlationid */
+      correlationId?: string | null;
+      /** Pipelineid */
+      pipelineId?: number | null;
+      /** Failurecategory */
+      failureCategory?: string | null;
+      /** Errormessage */
+      errorMessage?: string | null;
+      /** Mavedbversion */
+      mavedbVersion?: string | null;
+      /** Id */
+      id: number;
+      /** Jobparams */
+      jobParams?: Record<string, never> | null;
+      /** Metadata */
+      metadata?: Record<string, never>;
+      /** Maxretries */
+      maxRetries: number;
+      /** Retrycount */
+      retryCount: number;
+      /** Retrydelayseconds */
+      retryDelaySeconds?: number | null;
+      /**
+       * Scheduledat
+       * Format: date-time
+       */
+      scheduledAt: string;
+      /** Startedat */
+      startedAt?: string | null;
+      /** Finishedat */
+      finishedAt?: string | null;
+      /**
+       * Createdat
+       * Format: date-time
+       */
+      createdAt: string;
+      /** Progresscurrent */
+      progressCurrent?: number | null;
+      /** Progresstotal */
+      progressTotal?: number | null;
+      /** Progressmessage */
+      progressMessage?: string | null;
+    };
+    /**
+     * SavedPipeline
+     * @description View model for a saved pipeline record.
+     */
+    SavedPipeline: {
+      /** Urn */
+      urn?: string | null;
+      /** Name */
+      name: string;
+      /** Description */
+      description?: string | null;
+      status: components["schemas"]["PipelineStatus"];
+      /** Correlationid */
+      correlationId?: string | null;
+      /** Mavedbversion */
+      mavedbVersion?: string | null;
+      /** Id */
+      id: number;
+      /** Metadata */
+      metadata?: Record<string, never>;
+      /**
+       * Createdat
+       * Format: date-time
+       */
+      createdAt: string;
+      /** Startedat */
+      startedAt?: string | null;
+      /** Finishedat */
+      finishedAt?: string | null;
+      /** Createdbyuserid */
+      createdByUserId?: number | null;
     };
     /** SavedPublicationIdentifier */
     SavedPublicationIdentifier: {
@@ -4454,7 +4770,7 @@ export interface components {
       /** Publicationidentifiers */
       publicationIdentifiers?: string[] | null;
       /** Keywords */
-      keywords?: string[] | null;
+      keywords?: components["schemas"]["ControlledKeywordSearch"][] | null;
       /** Text */
       text?: string | null;
       /**
@@ -4490,6 +4806,8 @@ export interface components {
       publicationDbNames: components["schemas"]["ScoreSetsSearchFilterOption"][];
       /** Publicationjournals */
       publicationJournals: components["schemas"]["ScoreSetsSearchFilterOption"][];
+      /** Keywords */
+      keywords: components["schemas"]["ControlledKeywordFilterOption"][];
     };
     /** ScoreSetsSearchResponse */
     ScoreSetsSearchResponse: {
@@ -5006,6 +5324,69 @@ export interface components {
       targetSequence?: components["schemas"]["TargetSequenceCreate"] | null;
       targetAccession?: components["schemas"]["TargetAccessionCreate"] | null;
     };
+    /** TargetGeneMapping */
+    TargetGeneMapping: {
+      alignmentLevel: components["schemas"]["AnnotationLayer"];
+      /**
+       * Preferred
+       * @default false
+       */
+      preferred?: boolean;
+      /** Referenceassembly */
+      referenceAssembly?: string | null;
+      /** Referenceaccession */
+      referenceAccession?: string | null;
+      /** Referencesequenceid */
+      referenceSequenceId?: string | null;
+      /** Alignmentscore */
+      alignmentScore?: number | null;
+      /** Nextbestalignmentscore */
+      nextBestAlignmentScore?: number | null;
+      /** Alignmentlength */
+      alignmentLength?: number | null;
+      /** Alignmentstring */
+      alignmentString?: string | null;
+      /** Mismatchcount */
+      mismatchCount?: number | null;
+      /** Gapcount */
+      gapCount?: number | null;
+      /** Percentidentity */
+      percentIdentity?: number | null;
+      /** Totalvariants */
+      totalVariants?: number | null;
+      /** Variantsfailed */
+      variantsFailed?: number | null;
+      /** Variantswithalignmentwarnings */
+      variantsWithAlignmentWarnings?: number | null;
+      /** Variantsmappedcleanly */
+      variantsMappedCleanly?: number | null;
+      /** Toolname */
+      toolName: string;
+      /** Toolversion */
+      toolVersion: string;
+      /** Toolparameters */
+      toolParameters?: Record<string, never> | null;
+      /** Alignmentmetadata */
+      alignmentMetadata?: Record<string, never> | null;
+      /** Vrsversion */
+      vrsVersion?: string | null;
+      /** Mappeddate */
+      mappedDate?: string | null;
+      /** Id */
+      id: number;
+      /**
+       * Creationdate
+       * Format: date
+       */
+      creationDate: string;
+      /**
+       * Modificationdate
+       * Format: date
+       */
+      modificationDate: string;
+      /** Recordtype */
+      recordType?: string;
+    };
     /**
      * TargetGeneWithScoreSetUrn
      * @description Target gene view model containing its score set urn.
@@ -5498,83 +5879,6 @@ export interface components {
       objectTumorType: components["schemas"]["Condition"] | components["schemas"]["iriReference"];
     };
     /**
-     * VariantPathogenicityEvidenceLine
-     * @description An Evidence Line that describes how a specific type of information was
-     * interpreted as evidence for or againtst a variant's pathogenicity. In the ACMG
-     * Framework, evidence is assessed by determining if a specific criterion (e.g. 'PM2')
-     * with a default strength (e.g. 'moderate') is 'met' or 'not met', and in some cases
-     * adjusting the default strength based on the quality and abundance of evidence.
-     */
-    VariantPathogenicityEvidenceLine: {
-      /**
-       * Id
-       * @description The 'logical' identifier of the Entity in the system of record, e.g. a UUID.  This 'id' is unique within a given system, but may or may not be globally unique outside the system. It is used within a system to reference an object from another.
-       */
-      id?: string | null;
-      /**
-       * Type
-       * @description MUST be 'EvidenceLine'.
-       * @default EvidenceLine
-       * @constant
-       */
-      type?: "EvidenceLine";
-      /**
-       * Name
-       * @description A primary name for the entity.
-       */
-      name?: string | null;
-      /**
-       * Description
-       * @description A free-text description of the Entity.
-       */
-      description?: string | null;
-      /**
-       * Aliases
-       * @description Alternative name(s) for the Entity.
-       */
-      aliases?: string[] | null;
-      /**
-       * Extensions
-       * @description A list of extensions to the Entity, that allow for capture of information not directly supported by elements defined in the model.
-       */
-      extensions?: components["schemas"]["Extension"][] | null;
-      /**
-       * Specifiedby
-       * @description The guidelines that were followed to assess variant information as evidence for or against the assessed variant's pathogenicity.
-       */
-      specifiedBy: components["schemas"]["Method"] | components["schemas"]["iriReference"];
-      /**
-       * Contributions
-       * @description Specific actions taken by an Agent toward the creation, modification, validation, or deprecation of an Information Entity.
-       */
-      contributions?: components["schemas"]["Contribution"][] | null;
-      /**
-       * Reportedin
-       * @description A document in which the the Information Entity is reported.
-       */
-      reportedIn?: ((components["schemas"]["Document"] | components["schemas"]["iriReference"])[]) | null;
-      /** @description A Variant Pathogenicity Proposition against which specific information was assessed, in determining the strength and direction of support this information provides as evidence. */
-      targetProposition?: components["schemas"]["VariantPathogenicityProposition"] | null;
-      /**
-       * Hasevidenceitems
-       * @description An individual piece of information that was evaluated as evidence in building the argument represented by an Evidence Line.
-       */
-      hasEvidenceItems?: {
-          type: "VariantPathogenicityEvidenceLine";
-        }[] | null;
-      /** @description The direction of support that the Evidence Line is determined to provide toward its target Proposition (supports, disputes, neutral) */
-      directionOfEvidenceProvided: components["schemas"]["Direction"];
-      /** @description The strength of support that an Evidence Line is determined to provide for or against the proposed pathogenicity of the assessed variant. Strength is evaluated relative to the direction indicated by the 'directionOfEvidenceProvided' attribute. The indicated enumeration constrains the nested MappableConcept.primaryCoding > Coding.code attribute when capturing evidence strength. Conditional requirement: if directionOfEvidenceProvided is either 'supports' or 'disputes', then this attribute is required. If it is 'none', then this attribute is not allowed. */
-      strengthOfEvidenceProvided?: components["schemas"]["MappableConcept"] | null;
-      /**
-       * Scoreofevidenceprovided
-       * @description A quantitative score indicating the strength of support that an Evidence Line is determined to provide for or against its target Proposition, evaluated relative to the direction indicated by the directionOfEvidenceProvided value.
-       */
-      scoreOfEvidenceProvided?: number | null;
-      /** @description A term summarizing the overall outcome of the evidence assessment represented by the Evidence Line, in terms of the direction and strength of support it provides for or against the target Proposition. */
-      evidenceOutcome?: components["schemas"]["MappableConcept"] | null;
-    };
-    /**
      * VariantPathogenicityProposition
      * @description A proposition describing the role of a variant in causing a heritable condition.
      */
@@ -5644,6 +5948,77 @@ export interface components {
       penetranceQualifier?: components["schemas"]["MappableConcept"] | null;
       /** @description Reports a pattern of inheritance expected for the pathogenic effect of the variant. Consider using terms or codes from community terminologies here - e.g. terms from the 'Mode of inheritance' branch of the Human Phenotype Ontology such as HP:0000006 (autosomal dominant inheritance). */
       modeOfInheritanceQualifier?: components["schemas"]["MappableConcept"] | null;
+    };
+    /**
+     * VariantPathogenicityStatement
+     * @description A Statement describing the role of a variant in causing an inherited condition.
+     */
+    VariantPathogenicityStatement: {
+      /**
+       * Id
+       * @description The 'logical' identifier of the Entity in the system of record, e.g. a UUID.  This 'id' is unique within a given system, but may or may not be globally unique outside the system. It is used within a system to reference an object from another.
+       */
+      id?: string | null;
+      /**
+       * Type
+       * @description MUST be 'Statement'.
+       * @default Statement
+       * @constant
+       */
+      type?: "Statement";
+      /**
+       * Name
+       * @description A primary name for the entity.
+       */
+      name?: string | null;
+      /**
+       * Description
+       * @description A free-text description of the Entity.
+       */
+      description?: string | null;
+      /**
+       * Aliases
+       * @description Alternative name(s) for the Entity.
+       */
+      aliases?: string[] | null;
+      /**
+       * Extensions
+       * @description A list of extensions to the Entity, that allow for capture of information not directly supported by elements defined in the model.
+       */
+      extensions?: components["schemas"]["Extension"][] | null;
+      /**
+       * Specifiedby
+       * @description The method that specifies how the pathogenicity classification is ultimately assigned to the variant, based on assessment of evidence.
+       */
+      specifiedBy: components["schemas"]["Method"] | components["schemas"]["iriReference"];
+      /**
+       * Contributions
+       * @description Specific actions taken by an Agent toward the creation, modification, validation, or deprecation of an Information Entity.
+       */
+      contributions?: components["schemas"]["Contribution"][] | null;
+      /**
+       * Reportedin
+       * @description A document in which the the Information Entity is reported.
+       */
+      reportedIn?: ((components["schemas"]["Document"] | components["schemas"]["iriReference"])[]) | null;
+      /** @description A proposition about the pathogenicity of a variant, the validity of which is assessed and reported by the Statement. A Statement can put forth the proposition as being true, false, or uncertain, and may provide an assessment of the level of confidence/evidence supporting this claim. */
+      proposition: components["schemas"]["VariantPathogenicityProposition"];
+      /** @description A term indicating whether the Statement supports, disputes, or remains neutral w.r.t. the validity of the Proposition it evaluates. */
+      direction: components["schemas"]["Direction"];
+      /** @description The strength of support that an ACMG 2015 Variant Pathogenicity statement is determined to provide for or against the proposed pathogenicity of the assessed variant. Strength is evaluated relative to the direction indicated by the 'direction' attribute. The indicated enumeration constrains the nested MappableConcept.primaryCoding > Coding.code attribute when capturing evidence strength. */
+      strength?: components["schemas"]["MappableConcept"] | null;
+      /**
+       * Score
+       * @description A quantitative score that indicates the strength of a Proposition's assessment in the direction indicated (i.e. how strongly supported or disputed the Proposition is believed to be). Depending on its implementation, a score may reflect how *confident* that agent is that the Proposition is true or false, or the *strength of evidence* they believe supports or disputes it. Instructions for how to interpret the meaning of a given score may be gleaned from the method or document referenced in 'specifiedBy' attribute.
+       */
+      score?: number | null;
+      /** @description The classification of the variant's pathogenicity, based on the ACMG 2015 guidelines. These classifications should coincide with the direction and strength values as follows: 'pathogenic' with supports-strong, 'likely pathogenic' with supports-moderate, 'benign' with disputes-strong, 'likely benign' with disputes-moderate 'uncertain significance' can be one of three possibilities... supports-weak, disputes-weak or neutral for uncertain significance (favoring pathogenic), uncertain significance (favoring benign) or uncertain significance (favoring neither pathogenic nor benign). The 'low penetrance' and 'risk allele' versions of pathogenicity classifications would be applied based on whether the variant proposition was defined to have a 'penetrance' of 'low' or 'risk' respectively. */
+      classification: components["schemas"]["MappableConcept"];
+      /**
+       * Hasevidencelines
+       * @description An evidence-based argument that supports or disputes the validity of the proposition that a Statement assesses or puts forth as true. The strength and direction of this argument (whether it supports or disputes the proposition, and how strongly) is based on an interpretation of one or more pieces of information as evidence (i.e. 'Evidence Items).
+       */
+      hasEvidenceLines?: ((components["schemas"]["EvidenceLine"] | components["schemas"]["iriReference"])[]) | null;
     };
     /**
      * VariantPrognosticProposition
@@ -7515,6 +7890,109 @@ export interface operations {
     };
   };
   /**
+   * List job runs
+   * @description List job runs with optional filters. Admin only.
+   */
+  list_job_runs_api_v1_job_runs__get: {
+    parameters: {
+      query?: {
+        /** @description Filter by job run status. */
+        status?: components["schemas"]["JobStatus"] | null;
+        /** @description Filter by job type. */
+        job_type?: string | null;
+        /** @description Filter by job function name. */
+        job_function?: string | null;
+        /** @description Filter by correlation id. */
+        correlation_id?: string | null;
+        /** @description Filter by parent pipeline id. */
+        pipeline_id?: number | null;
+        /** @description Only return job runs created at or after this time. */
+        created_after?: string | null;
+        /** @description Only return job runs created at or before this time. */
+        created_before?: string | null;
+        limit?: number;
+        offset?: number;
+      };
+      header?: {
+        "x-active-roles"?: string | null;
+      };
+    };
+    responses: {
+      /** @description Successful Response */
+      200: {
+        content: {
+          "application/json": components["schemas"]["SavedJobRun"][];
+        };
+      };
+      /** @description Authentication required. */
+      401: {
+        content: never;
+      };
+      /** @description Forbidden. Insufficient permissions. */
+      403: {
+        content: never;
+      };
+      /** @description Resource not found. */
+      404: {
+        content: never;
+      };
+      /** @description Validation Error */
+      422: {
+        content: {
+          "application/json": components["schemas"]["HTTPValidationError"];
+        };
+      };
+      /** @description Internal server error. */
+      500: {
+        content: never;
+      };
+    };
+  };
+  /**
+   * Show job run with full error details
+   * @description Fetch a single job run by URN, including error traceback. Admin only.
+   */
+  show_job_run_api_v1_job_runs__urn__get: {
+    parameters: {
+      header?: {
+        "x-active-roles"?: string | null;
+      };
+      path: {
+        urn: string;
+      };
+    };
+    responses: {
+      /** @description Successful Response */
+      200: {
+        content: {
+          "application/json": components["schemas"]["JobRunDetail"];
+        };
+      };
+      /** @description Authentication required. */
+      401: {
+        content: never;
+      };
+      /** @description Forbidden. Insufficient permissions. */
+      403: {
+        content: never;
+      };
+      /** @description Resource not found. */
+      404: {
+        content: never;
+      };
+      /** @description Validation Error */
+      422: {
+        content: {
+          "application/json": components["schemas"]["HTTPValidationError"];
+        };
+      };
+      /** @description Internal server error. */
+      500: {
+        content: never;
+      };
+    };
+  };
+  /**
    * List all licenses
    * @description List all supported licenses.
    */
@@ -7608,7 +8086,7 @@ export interface operations {
       /** @description Successful Response */
       200: {
         content: {
-          "application/json": components["schemas"]["MappedVariant"];
+          "application/json": components["schemas"]["MappedVariantWithMappingDetails"];
         };
       };
       /** @description Authentication required. */
@@ -7683,7 +8161,7 @@ export interface operations {
    * Construct a VA-Spec Statement from a mapped variant
    * @description Construct a single VA-Spec Statement from a mapped variant by URN.
    */
-  show_mapped_variant_functional_impact_statement_api_v1_mapped_variants__urn__va_functional_impact_get: {
+  show_mapped_variant_functional_impact_statement_api_v1_mapped_variants__urn__va_functional_statement_get: {
     parameters: {
       header?: {
         "x-active-roles"?: string | null;
@@ -7727,7 +8205,7 @@ export interface operations {
    * Construct a VA-Spec EvidenceLine from a mapped variant
    * @description Construct a list of VA-Spec EvidenceLine(s) from a mapped variant by URN.
    */
-  show_mapped_variant_acmg_evidence_line_api_v1_mapped_variants__urn__va_clinical_evidence_get: {
+  show_mapped_variant_acmg_evidence_line_api_v1_mapped_variants__urn__va_pathogenicity_statement_get: {
     parameters: {
       header?: {
         "x-active-roles"?: string | null;
@@ -7740,7 +8218,7 @@ export interface operations {
       /** @description Successful Response */
       200: {
         content: {
-          "application/json": components["schemas"]["VariantPathogenicityEvidenceLine"];
+          "application/json": components["schemas"]["VariantPathogenicityStatement"];
         };
       };
       /** @description Authentication required. */
@@ -7896,6 +8374,107 @@ export interface operations {
       200: {
         content: {
           "application/json": boolean;
+        };
+      };
+      /** @description Authentication required. */
+      401: {
+        content: never;
+      };
+      /** @description Forbidden. Insufficient permissions. */
+      403: {
+        content: never;
+      };
+      /** @description Resource not found. */
+      404: {
+        content: never;
+      };
+      /** @description Validation Error */
+      422: {
+        content: {
+          "application/json": components["schemas"]["HTTPValidationError"];
+        };
+      };
+      /** @description Internal server error. */
+      500: {
+        content: never;
+      };
+    };
+  };
+  /**
+   * List pipelines
+   * @description List pipelines with optional filters. Admin only.
+   */
+  list_pipelines_api_v1_pipelines__get: {
+    parameters: {
+      query?: {
+        /** @description Filter by pipeline status. */
+        status?: components["schemas"]["PipelineStatus"] | null;
+        /** @description Filter by pipeline name (exact match). */
+        name?: string | null;
+        /** @description Filter by correlation id. */
+        correlation_id?: string | null;
+        /** @description Filter by creating user id. */
+        created_by_user_id?: number | null;
+        /** @description Only return pipelines created at or after this time. */
+        created_after?: string | null;
+        /** @description Only return pipelines created at or before this time. */
+        created_before?: string | null;
+        limit?: number;
+        offset?: number;
+      };
+      header?: {
+        "x-active-roles"?: string | null;
+      };
+    };
+    responses: {
+      /** @description Successful Response */
+      200: {
+        content: {
+          "application/json": components["schemas"]["SavedPipeline"][];
+        };
+      };
+      /** @description Authentication required. */
+      401: {
+        content: never;
+      };
+      /** @description Forbidden. Insufficient permissions. */
+      403: {
+        content: never;
+      };
+      /** @description Resource not found. */
+      404: {
+        content: never;
+      };
+      /** @description Validation Error */
+      422: {
+        content: {
+          "application/json": components["schemas"]["HTTPValidationError"];
+        };
+      };
+      /** @description Internal server error. */
+      500: {
+        content: never;
+      };
+    };
+  };
+  /**
+   * Show pipeline with progress
+   * @description Fetch a single pipeline by URN including job progress statistics. Admin only.
+   */
+  show_pipeline_api_v1_pipelines__urn__get: {
+    parameters: {
+      header?: {
+        "x-active-roles"?: string | null;
+      };
+      path: {
+        urn: string;
+      };
+    };
+    responses: {
+      /** @description Successful Response */
+      200: {
+        content: {
+          "application/json": components["schemas"]["PipelineDetail"];
         };
       };
       /** @description Authentication required. */
@@ -9479,9 +10058,6 @@ export interface operations {
    * This differs from get_score_set_scores_csv() in that it returns only the HGVS columns, score column, and mapped HGVS
    * string.
    *
-   * TODO (https://github.com/VariantEffect/mavedb-api/issues/446) We may add another function for ClinVar and gnomAD.
-   * export endpoint, with options governing which columns to include.
-   *
    * Parameters
    * __________
    * urn : str
@@ -9490,9 +10066,11 @@ export interface operations {
    *     The index to start from. If None, starts from the beginning.
    * limit : Optional[int]
    *     The maximum number of variants to return. If None, returns all variants.
-   * namespaces: List[Literal["scores", "counts", "vep", "gnomad", "clingen"]]
+   * namespaces: List[str]
    *     The namespaces of all columns except for accession, hgvs_nt, hgvs_pro, and hgvs_splice.
-   *     We may add ClinVar in the future.
+   *     Supported values: "scores", "counts", "vep", "gnomad", "clingen", and ClinVar-versioned
+   *     namespaces of the form "clinvar.YEAR_MONTH" (e.g. "clinvar.2024_01" for January 2024).
+   *     Multiple ClinVar namespaces with different YEAR_MONTH values may be requested simultaneously.
    * drop_na_columns : bool, optional
    *     Whether to drop columns that contain only NA values. Defaults to False.
    * db : Session
@@ -9512,8 +10090,8 @@ export interface operations {
         start?: number;
         /** @description Maximum number of variants to return */
         limit?: number;
-        /** @description One or more data types to include: scores, counts, ClinGen, gnomAD, VEP */
-        namespaces?: ("scores" | "counts" | "vep" | "gnomad" | "clingen")[];
+        /** @description One or more data types to include: "scores", "counts", "vep", "gnomad", "clingen", and/or ClinVar-versioned namespaces of the form "clinvar.YEAR_MONTH" (e.g. "clinvar.2024_01" for January 2024). */
+        namespaces?: string[];
         drop_na_columns?: boolean | null;
         include_custom_columns?: boolean | null;
         include_post_mapped_hgvs?: boolean | null;
@@ -9783,8 +10361,8 @@ export interface operations {
     };
   };
   /**
-   * Get pathogenicity evidence line annotations for mapped variants within a score set
-   * @description Retrieve annotated variants with pathogenicity evidence for a given score set.
+   * Get pathogenicity statement annotations for mapped variants within a score set
+   * @description Retrieve annotated variants with pathogenicity statements for a given score set.
    *
    * This endpoint streams pathogenicity evidence lines for all current mapped variants
    * associated with a specific score set. The response is returned as newline-delimited
@@ -9824,7 +10402,7 @@ export interface operations {
    *     processing. Only current (non-historical) mapped variants are included in
    *     the response.
    */
-  get_score_set_annotated_variants_api_v1_score_sets__urn__annotated_variants_pathogenicity_evidence_line_get: {
+  get_score_set_annotated_variants_api_v1_score_sets__urn__annotated_variants_pathogenicity_statement_get: {
     parameters: {
       header?: {
         "x-active-roles"?: string | null;
@@ -9834,11 +10412,11 @@ export interface operations {
       };
     };
     responses: {
-      /** @description Stream pathogenicity evidence line annotations for mapped variants. */
+      /** @description Stream pathogenicity statement annotations for mapped variants. */
       200: {
         content: {
           "application/json": {
-            [key: string]: components["schemas"]["VariantPathogenicityEvidenceLine"] | null;
+            [key: string]: components["schemas"]["VariantPathogenicityStatement"] | null;
           };
           "application/x-ndjson": unknown;
         };
@@ -9907,7 +10485,7 @@ export interface operations {
    *     Only current (non-historical) mapped variants are included in the response.
    *     The function requires appropriate read permissions on the score set.
    */
-  get_score_set_annotated_variants_functional_statement_api_v1_score_sets__urn__annotated_variants_functional_impact_statement_get: {
+  get_score_set_annotated_variants_functional_statement_api_v1_score_sets__urn__annotated_variants_functional_statement_get: {
     parameters: {
       header?: {
         "x-active-roles"?: string | null;
@@ -9994,7 +10572,7 @@ export interface operations {
    *     - Eagerly loads related ScoreSet data including publications, users, license, and experiment
    *     - Logs requests and errors for monitoring and debugging purposes
    */
-  get_score_set_annotated_variants_functional_study_result_api_v1_score_sets__urn__annotated_variants_functional_study_result_get: {
+  get_score_set_annotated_variants_functional_study_result_api_v1_score_sets__urn__annotated_variants_study_result_get: {
     parameters: {
       header?: {
         "x-active-roles"?: string | null;

@@ -74,7 +74,7 @@ graph LR
     class VPS top
 ```
 
-Functional Impact Study Results are available for all mapped score sets. Functional Impact Statements and Variant Pathogenicity Statements additionally require [score calibrations](score-calibrations.md).
+Availability is determined per-variant. Functional Impact Study Results are available for any variant that has been successfully mapped (i.e., has post-mapped genomic coordinates). Functional Impact Statements and Variant Pathogenicity Statements additionally require [score calibrations](score-calibrations.md) on the score set and a non-null score value for the variant.
 
 ### Functional Impact Study Result
 
@@ -271,6 +271,8 @@ Not all variants in a score set can be represented in VRS. Variants are excluded
 
 These variants remain available in the score and count CSV downloads but will not appear in VRS JSON or VA-Spec exports.
 
+Additionally, variants with a null score value cannot be exported as Functional Impact Statements or Variant Pathogenicity Statements, since those annotations require a score to evaluate against calibration ranges. Functional Impact Study Results are still available for null-score variants that have been successfully mapped.
+
 ## Working with VRS and VA-Spec objects
 
 VRS and VA-Spec objects exported from MaveDB are self-contained but reference other data — sequences, score sets, and variant identifiers — that you can resolve through the MaveDB API. This section walks through the end-to-end workflow of downloading these objects and extracting the information they contain.
@@ -447,6 +449,8 @@ Each VRS object has a globally unique GA4GH identifier (e.g., `ga4gh:VA.2JOqpLMF
 
 !!! tip "Why GA4GH identifiers matter"
     HGVS strings that describe the same variant are often not identical — differences in reference sequence versions, notation style, or coordinate systems can produce different strings for the same biological change. This makes cross-referencing variants by HGVS alone unreliable. GA4GH identifiers solve this problem by being computed deterministically from the variant's properties, guaranteeing that the same variant always produces the same identifier regardless of how it was originally described.
+
+    GA4GH identifiers can also be used directly to search MaveMD. Paste a `ga4gh:VA.*` or `ga4gh:VH.*` identifier into the VRS search tab to retrieve matching functional measurements without going through the ClinGen Allele Registry. See [VRS identifier search](../mavemd/variant-search.md#vrs-identifier-search) for details.
 
 ### HGVS expressions
 

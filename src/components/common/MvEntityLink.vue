@@ -30,7 +30,8 @@ export default defineComponent({
      */
     display: {
       type: [String, Function],
-      default: 'title'
+      // Default: show title if present, otherwise URN, otherwise empty string
+      default: () => ((entity: any) => entity?.title || entity?.urn )
     },
     /** The entity type. This should be "experiment," "experimentSet," or "scoreSet." */
     entityType: {

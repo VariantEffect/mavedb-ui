@@ -50,6 +50,20 @@ export const NEWS_ITEMS_LIMIT = 3
 
 export const NEWS_ITEMS: NewsItem[] = [
   {
+    date: 'May 2026',
+    tag: 'feature',
+    title: 'Variant search expanded to support VRS digests',
+    description:
+      'You can now look up variants using GA4GH VRS digests in addition to HGVS, dbSNP, ClinVar IDs, and ClinGen CAIds.'
+  },
+  {
+    date: 'May 2026',
+    tag: 'improvement',
+    title: 'Filter score sets by keyword',
+    description:
+      'The score set search filter now includes a keyword field, letting you narrow results by controlled vocabulary categories.'
+  },
+  {
     date: 'Mar 2026',
     tag: 'improvement',
     title: 'Redesigned site',

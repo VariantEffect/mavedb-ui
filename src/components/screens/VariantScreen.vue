@@ -277,6 +277,7 @@ import MvRowActionMenu, {type RowAction} from '@/components/common/MvRowActionMe
 import VariantInfoSection from '@/components/variant/VariantInfoSection.vue'
 import {useVariantLookup} from '@/composables/use-variant-lookup'
 import {MEASUREMENT_TYPE_LABELS} from '@/lib/measurement-types'
+import {hasFunctionalCalibrations, hasPathogenicityCalibrations} from '@/lib/calibrations'
 
 export default defineComponent({
   name: 'VariantScreen',
@@ -336,22 +337,32 @@ export default defineComponent({
     annotatedVariantDownloadOptions(): {label: string; command: () => void}[] {
       const options: {label: string; command: () => void}[] = []
       const activeVariant = this.lookup.selectedVariantDetail.value
+      if (!activeVariant) return options
 
-      if (activeVariant?.scoreSet?.scoreCalibrations) {
+      const currentMapped = activeVariant.mappedVariants.find((m) => m.current)
+      const hasMappingData = !!currentMapped?.postMapped
+
+      const score = this.lookup.selectedVariantScore.value
+      const hasScore = score !== null && score !== 'NA'
+
+      if (hasMappingData && hasScore && hasPathogenicityCalibrations(activeVariant.scoreSet)) {
         options.push({
-          label: 'Pathogenicity evidence line',
-          command: () => this.lookup.fetchVariantAnnotations('clinical-evidence')
-        })
-        options.push({
-          label: 'Functional impact statement',
-          command: () => this.lookup.fetchVariantAnnotations('functional-impact')
+          label: 'Pathogenicity Statement',
+          command: () => this.lookup.fetchVariantAnnotations('pathogenicity-statement')
         })
       }
-
-      options.push({
-        label: 'Functional impact study result',
-        command: () => this.lookup.fetchVariantAnnotations('study-result')
-      })
+      if (hasMappingData && hasScore && hasFunctionalCalibrations(activeVariant.scoreSet)) {
+        options.push({
+          label: 'Functional Impact Statement',
+          command: () => this.lookup.fetchVariantAnnotations('functional-statement')
+        })
+      }
+      if (hasMappingData) {
+        options.push({
+          label: 'Functional Study Result',
+          command: () => this.lookup.fetchVariantAnnotations('study-result')
+        })
+      }
 
       return options
     }

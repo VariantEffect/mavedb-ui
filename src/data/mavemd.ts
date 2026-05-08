@@ -8,7 +8,8 @@ export const SEARCH_TYPE_OPTIONS = [
   {code: 'hgvs', name: 'HGVS', examples: ['ENST00000473961.6:c.-19-2A>T', 'NP_000242.1:p.Asn566Thr']},
   {code: 'clinGenAlleleId', name: 'ClinGen Allele ID', examples: ['CA10590195', 'PA2579983208']},
   {code: 'dbSnpRsId', name: 'dbSNP rsID', examples: ['rs900082291', '900082291']},
-  {code: 'clinVarVariationId', name: 'ClinVar Variation ID', examples: ['869058']}
+  {code: 'clinVarVariationId', name: 'ClinVar Variation ID', examples: ['869058']},
+  {code: 'vrsDigest', name: 'VRS Digest', examples: ['ga4gh:VA.-US8Ap1kUYvW3DzeFEYrNXgk3Xk9toKy']}
 ]
 
 /** Variant type options for guided search. */

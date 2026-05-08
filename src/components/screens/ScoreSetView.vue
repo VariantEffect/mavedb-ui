@@ -146,14 +146,18 @@
               class="flex flex-wrap items-center justify-between gap-3 border-b border-border-light px-4 py-3.5 tablet:px-5"
             >
               <h3 class="mave-section-title">Score Distribution</h3>
-              <PButton
-                v-if="distHistogramExport"
-                icon="pi pi-download"
-                label="Export"
-                severity="secondary"
-                size="small"
-                @click="distHistogramExport"
-              />
+              <div v-if="distHistogramExportFn" class="inline-flex items-center gap-1">
+                <SplitButton
+                  :disabled="distHistogramInProgress"
+                  icon="pi pi-download"
+                  label="Export SVG"
+                  :model="[{label: 'Export PNG', icon: 'pi pi-image', command: exportDistHistogramPng}]"
+                  severity="secondary"
+                  size="small"
+                  @click="exportDistHistogramSvg"
+                />
+                <i v-if="distHistogramInProgress" class="pi pi-spin pi-spinner text-sm text-muted" />
+              </div>
             </div>
             <div class="p-3 tablet:p-5">
               <ScoreSetHistogram
@@ -202,14 +206,18 @@
               class="flex flex-wrap items-center justify-between gap-3 border-b border-border-light px-4 py-3.5 tablet:px-5"
             >
               <h3 class="mave-section-title">Clinical Score Distribution</h3>
-              <PButton
-                v-if="clinicalHistogramExport"
-                icon="pi pi-download"
-                label="Export"
-                severity="secondary"
-                size="small"
-                @click="clinicalHistogramExport"
-              />
+              <div v-if="clinicalHistogramExportFn" class="inline-flex items-center gap-1">
+                <SplitButton
+                  :disabled="clinicalHistogramInProgress"
+                  icon="pi pi-download"
+                  label="Export SVG"
+                  :model="[{label: 'Export PNG', icon: 'pi pi-image', command: exportClinicalHistogramPng}]"
+                  severity="secondary"
+                  size="small"
+                  @click="exportClinicalHistogramSvg"
+                />
+                <i v-if="clinicalHistogramInProgress" class="pi pi-spin pi-spinner text-sm text-muted" />
+              </div>
             </div>
             <div class="p-3 tablet:p-5">
               <ScoreSetHistogram
@@ -280,14 +288,18 @@
                   size="small"
                   @click="showProteinStructureModal"
                 />
-                <PButton
-                  v-if="heatmapExport"
-                  icon="pi pi-download"
-                  label="Export"
-                  severity="secondary"
-                  size="small"
-                  @click="heatmapExport"
-                />
+                <div v-if="heatmapExportFn" class="inline-flex items-center gap-1">
+                  <SplitButton
+                    :disabled="heatmapInProgress"
+                    icon="pi pi-download"
+                    label="Export SVG"
+                    :model="[{label: 'Export PNG', icon: 'pi pi-image', command: exportHeatmapPng}]"
+                    severity="secondary"
+                    size="small"
+                    @click="exportHeatmapSvg"
+                  />
+                  <i v-if="heatmapInProgress" class="pi pi-spin pi-spinner text-sm text-muted" />
+                </div>
               </div>
             </div>
             <div class="p-3 tablet:p-5">
@@ -323,9 +335,6 @@
           <ScoreSetDownloads
             :has-counts="hasCounts"
             :has-primary-calibration="hasPrimaryCalibration"
-            :heatmap-exists="heatmapExists"
-            :heatmap-export-fn="heatmapExport"
-            :histogram-export-fn="distHistogramExport"
             :is-meta-data-empty="isMetaDataEmpty"
             :score-set="item"
           />
@@ -449,6 +458,7 @@ import _ from 'lodash'
 import {markdownToHtml} from '@/lib/form-helpers'
 import AutoComplete from 'primevue/autocomplete'
 import PButton from 'primevue/button'
+import SplitButton from 'primevue/splitbutton'
 import MvFloatField from '@/components/forms/MvFloatField.vue'
 import SelectButton from 'primevue/selectbutton'
 import ToggleSwitch from 'primevue/toggleswitch'
@@ -486,8 +496,10 @@ import useItem from '@/composition/item.ts'
 import useRemoteData from '@/composition/remote-data'
 import {useDatasetPermissions} from '@/composables/use-dataset-permissions'
 import {useCalibrationDialog} from '@/composables/use-calibration-dialog'
+import {useChartExport, type ChartExportFns} from '@/composables/use-chart-export'
 import {useVariantCoordinates} from '@/composables/use-variant-coordinates'
 import config from '@/config'
+import {hasPathogenicityCalibrations, hasFunctionalCalibrations} from '@/lib/calibrations'
 import {variantNotNullOrNA} from '@/lib/mave-hgvs'
 import {getScoreSetShortName} from '@/lib/score-sets'
 import {parseScoresOrCounts} from '@/lib/scores'
@@ -527,6 +539,7 @@ export default {
     MvVariantPreview,
     PButton,
     PrimeDialog,
+    SplitButton,
     MvLoader,
     ScoreSetDownloads,
     ScoreSetHeatmap,
@@ -554,6 +567,13 @@ export default {
 
     const {permissions} = useDatasetPermissions('score-set', urnRef, ACTIONS)
 
+    const distHistogramExportFn = ref<ChartExportFns | null>(null)
+    const clinicalHistogramExportFn = ref<ChartExportFns | null>(null)
+    const heatmapExportFn = ref<ChartExportFns | null>(null)
+    const distHistogramChart = useChartExport(distHistogramExportFn)
+    const clinicalHistogramChart = useChartExport(clinicalHistogramExportFn)
+    const heatmapChart = useChartExport(heatmapExportFn)
+
     return {
       head,
       config,
@@ -568,7 +588,20 @@ export default {
       scoresDataStatus: scoresRemoteData.remoteDataStatus,
       setScoresDataUrl: scoresRemoteData.setDataUrl,
       ensureScoresDataLoaded: scoresRemoteData.ensureDataLoaded,
-      variantSearchSuggestions
+      variantSearchSuggestions,
+
+      distHistogramExportFn,
+      clinicalHistogramExportFn,
+      heatmapExportFn,
+      exportDistHistogramSvg: distHistogramChart.exportSvg,
+      exportDistHistogramPng: distHistogramChart.exportPng,
+      distHistogramInProgress: distHistogramChart.inProgress,
+      exportClinicalHistogramSvg: clinicalHistogramChart.exportSvg,
+      exportClinicalHistogramPng: clinicalHistogramChart.exportPng,
+      clinicalHistogramInProgress: clinicalHistogramChart.inProgress,
+      exportHeatmapSvg: heatmapChart.exportSvg,
+      exportHeatmapPng: heatmapChart.exportPng,
+      heatmapInProgress: heatmapChart.inProgress
     }
   },
 
@@ -581,11 +614,8 @@ export default {
     hasClinicalVariants: false,
     heatmapExists: false,
     selectedVariant: null as Variant | null,
-    distHistogramExport: null as (() => void) | null,
-    clinicalHistogramExport: null as (() => void) | null,
     heatmapSequenceType: 'protein' as 'dna' | 'protein',
     heatmapLayout: 'normal' as 'normal' | 'compact',
-    heatmapExport: null as (() => void) | null,
     syncingBinSelection: false
   }),
 
@@ -609,6 +639,12 @@ export default {
     hasCounts() {
       const allCountColumns = this.item?.datasetColumns?.countColumns ?? []
       return allCountColumns.filter((col) => col !== 'accession').length > 0
+    },
+    hasPathogenicityCalibrations() {
+      return hasPathogenicityCalibrations(this.item)
+    },
+    hasFunctionalImpactCalibrations() {
+      return hasFunctionalCalibrations(this.item)
     },
     hasCalibrations(): boolean {
       return !!(this.item?.scoreCalibrations && this.item.scoreCalibrations.length > 0)
@@ -678,7 +714,7 @@ export default {
           this.setItemId(newValue)
           let scoresUrl = null
           if (this.itemType?.restCollectionName && this.itemId) {
-            scoresUrl = `${config.apiBaseUrl}/${this.itemType.restCollectionName}/${this.itemId}/variants/data?include_post_mapped_hgvs=true&namespaces=vep&namespaces=scores`
+            scoresUrl = `${config.apiBaseUrl}/${this.itemType.restCollectionName}/${this.itemId}/variants/data?include_post_mapped_hgvs=true&namespaces=vep&namespaces=scores&namespaces=clingen`
           }
           this.setScoresDataUrl(scoresUrl)
           this.ensureScoresDataLoaded()
@@ -788,14 +824,14 @@ export default {
       })
     },
 
-    setDistHistogramExport(fn: (() => void) | null) {
-      this.distHistogramExport = fn
+    setDistHistogramExport(fns: ChartExportFns | null) {
+      this.distHistogramExportFn = fns
     },
-    setClinicalHistogramExport(fn: (() => void) | null) {
-      this.clinicalHistogramExport = fn
+    setClinicalHistogramExport(fns: ChartExportFns | null) {
+      this.clinicalHistogramExportFn = fns
     },
-    setHeatmapExport(fn: (() => void) | null) {
-      this.heatmapExport = fn
+    setHeatmapExport(fns: ChartExportFns | null) {
+      this.heatmapExportFn = fns
     },
 
     variantSearch(event: {query: string}) {

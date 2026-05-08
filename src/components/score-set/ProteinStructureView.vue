@@ -10,6 +10,10 @@
     </div>
     <div v-show="selectedAlphaFold" id="pdbe-molstar-viewer-container" class="flex-1 relative z-5000"></div>
     <div v-if="!selectedAlphaFold" class="m-auto">No AlphaFold entry found</div>
+    <ul class="list-disc text-xs italic text-gray-400 ml-5 px-2 py-1">
+      <li>Jumper, J et al. Highly accurate protein structure prediction with AlphaFold. <em>Nature</em> (2021)</li>
+      <li>Fleming J. et al. AlphaFold Protein Structure Database and 3D-Beacons: New Data and Capabilities. <em>Journal of Molecular Biology</em> (2025)</li>
+    </ul>
   </div>
 </template>
 

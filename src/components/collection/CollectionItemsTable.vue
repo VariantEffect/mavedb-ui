@@ -29,7 +29,7 @@
     </DataTable>
     <div v-else>
       <MvEmptyState
-        :action-label="`Add ${entityTypeLabel}s`"
+        :action-label="canAdd ? `Add ${entityTypeLabel}s` : undefined"
         :description="`This collection doesn't have any ${entityTypeLabel}s yet.`"
         :title="`No ${entityTypeLabel}s yet`"
         @action="$emit('add')"
@@ -46,6 +46,7 @@ import DataTable from 'primevue/datatable'
 import {DATA_SET_TYPE_LABELS} from '@/lib/collections'
 import MvEntityLink from '@/components/common/MvEntityLink.vue'
 import MvEmptyState from '@/components/common/MvEmptyState.vue'
+
 
 export default defineComponent({
   name: 'CollectionItemsTable',
@@ -76,6 +77,7 @@ export default defineComponent({
     }
   },
   emits: ['reorder', 'remove', 'add'],
+  
   computed: {
     entityTypeLabel() {
       return DATA_SET_TYPE_LABELS[this.entityType as keyof typeof DATA_SET_TYPE_LABELS] ?? this.entityType

@@ -60,9 +60,18 @@
               class="h-7 object-contain object-left"
               :src="partner.logoSrc"
             />
-            <div v-else class="flex h-7 items-center text-sm font-bold text-link">{{ partner.name }}</div>
-            <div class="text-sm font-bold text-text-primary">{{ partner.name }}</div>
+            <div v-else class="flex h-7 items-center text-sm font-bold text-text-primary">{{ partner.name }}</div>
             <div class="text-xs leading-relaxed text-text-muted">{{ partner.description }}</div>
+            <a
+              v-if="partner.url"
+              :aria-label="partner.name + ' (opens in new tab)'"
+              class="mt-auto inline-block text-sm font-semibold text-link"
+              :href="partner.url"
+              rel="noopener noreferrer"
+              target="_blank"
+            >
+              Visit site &rarr;
+            </a>
           </div>
         </div>
       </div>
@@ -83,7 +92,7 @@
           <div class="px-6 py-6">
             <a
               aria-label="Zulip (opens in new tab)"
-              class="text-base font-bold text-text-primary no-underline"
+              class="text-base font-bold text-link no-underline"
               href="https://zulip.com/"
               rel="noopener"
               target="_blank"
@@ -198,8 +207,9 @@ import {useHead} from '@unhead/vue'
 import MvLayout from '@/components/layout/MvLayout.vue'
 import MvPageHeader from '@/components/layout/MvPageHeader.vue'
 import igvfLogo from '@/assets/igvf-tag.png'
+import maveRegistryLogo from '@/assets/mave-registry-logo.png'
 import zulipLogo from '@/assets/zulip-logo.png'
-import {GITHUB_API_URL, GITHUB_UI_URL} from '@/lib/links'
+import {GITHUB_API_URL, GITHUB_UI_URL, MAVE_REGISTRY, IGVF_URL, CLINGEN_URL, GA4GH_URL, CLINVAR_URL} from '@/lib/links'
 
 const DATA_MODEL_STEPS = [
   {
@@ -223,24 +233,34 @@ const PARTNERS = [
   {
     name: 'IGVF Consortium',
     description: 'Functional genomics data from the Impact of Genomic Variation on Function consortium.',
-    logoSrc: igvfLogo
+    logoSrc: igvfLogo,
+    url: IGVF_URL
   },
   {
     name: 'ClinGen',
     description: 'Clinical Genome Resource — calibrated MaveDB score sets contribute to variant evidence curation.',
-    logoSrc: ''
+    logoSrc: '',
+    url: CLINGEN_URL
   },
   {
     name: 'GA4GH',
     description:
       'Global Alliance for Genomics and Health — MaveDB is a Driver Project for the Genomic Knowledge Standards Work Stream.',
-    logoSrc: ''
+    logoSrc: '',
+    url: GA4GH_URL
   },
   {
     name: 'ClinVar',
     description:
       'ClinVar is a public database of variant interpretations, providing a resource for clinical and research communities.',
-    logoSrc: ''
+    logoSrc: '',
+    url: CLINVAR_URL
+  },
+  {
+    name: 'MaveRegistry',
+    description: 'A registry for sharing and tracking progress on MAVE experiments.',
+    logoSrc: maveRegistryLogo,
+    url: MAVE_REGISTRY
   }
 ]
 

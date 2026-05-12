@@ -55,6 +55,23 @@
         </Accordion>
       </div>
 
+      <!-- Clinical application -->
+      <div class="rounded-lg border border-border bg-white px-8 py-7">
+        <h2 class="mb-4 text-lg font-bold text-sage">Clinical application</h2>
+        <p class="text-sm leading-relaxed text-text-secondary">
+          The Alliance for Variant Effects (AVE) maintains a
+          <a
+            aria-label="Clinical Application of Variant Effect Data (opens in new tab)"
+            class="text-link"
+            :href="AVE_CLINICAL_APPLICATION"
+            rel="noopener noreferrer"
+            target="_blank"
+            >Clinical Application of Variant Effect Data</a
+          >
+          page covering how MAVE functional scores can be used in clinical genomics and for variant interpretation.
+        </p>
+      </div>
+
       <!-- Contact us -->
       <div class="rounded-lg border border-border bg-white px-8 py-7">
         <h2 class="mb-4 text-lg font-bold text-sage">Contact us</h2>
@@ -89,7 +106,7 @@ import AccordionContent from 'primevue/accordioncontent'
 
 import MvLayout from '@/components/layout/MvLayout.vue'
 import MvPageHeader from '@/components/layout/MvPageHeader.vue'
-import {ZULIP_CHAT, GITHUB_UI_ISSUES} from '@/lib/links'
+import {ZULIP_CHAT, GITHUB_UI_ISSUES, AVE_CLINICAL_APPLICATION} from '@/lib/links'
 
 const CHANNELS = [
   {
@@ -174,7 +191,8 @@ export default defineComponent({
       channels: CHANNELS,
       faqs: FAQS,
       ZULIP_CHAT,
-      GITHUB_UI_ISSUES
+      GITHUB_UI_ISSUES,
+      AVE_CLINICAL_APPLICATION
     }
   }
 })

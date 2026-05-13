@@ -4,10 +4,8 @@ import {AMINO_ACIDS, AMINO_ACIDS_WITH_TER, singleLetterAminoAcidOrHgvsCode} from
 import {DEFAULT_CLNREVSTAT_FIELD, DEFAULT_CLNSIG_FIELD} from '@/lib/clinical-controls'
 import geneticCodes from '@/lib/genetic-codes'
 import {parseSimpleNtVariant, parseSimpleProVariant} from '@/lib/mave-hgvs'
+import {parseScoresOrCounts} from '@/lib/scores'
 import type {SimpleDnaVariation, SimpleProteinVariation} from '@/lib/mave-hgvs'
-import {components} from '@/schema/openapi'
-
-type ScoreSet = components['schemas']['ScoreSet']
 
 export type HgvsReferenceSequenceType = 'c' | 'p' // | 'n'
 
@@ -19,6 +17,16 @@ export interface SequenceRange {
 export interface ClinicalControlVariant {
   [DEFAULT_CLNSIG_FIELD]: string
   [DEFAULT_CLNREVSTAT_FIELD]: string
+}
+
+type ParsedSimpleDnaVariation = SimpleDnaVariation & {
+  residueType?: 'nt'
+  origin?: 'mapped' | 'unmapped'
+}
+
+type ParsedSimpleProteinVariation = SimpleProteinVariation & {
+  residueType?: 'aa'
+  origin?: 'mapped' | 'unmapped'
 }
 
 export interface RawVariant {
@@ -51,9 +59,9 @@ export interface RawVariant {
 }
 
 export interface VariantPropertiesAddedByPreparingCodingVariants {
-  // Added by prepareSimpleCodingVariants.
-  parsedPostMappedHgvsC?: SimpleDnaVariation
-  parsedPostMappedHgvsP?: SimpleProteinVariation
+  // Added by parseSimpleCodingVariants.
+  parsedPostMappedHgvsC?: ParsedSimpleDnaVariation
+  parsedPostMappedHgvsP?: ParsedSimpleProteinVariation
 }
 
 export interface Variant extends RawVariant, VariantPropertiesAddedByPreparingCodingVariants {
@@ -61,9 +69,10 @@ export interface Variant extends RawVariant, VariantPropertiesAddedByPreparingCo
   translated_hgvs_p?: string
 }
 
-export const HGVS_REFERENCE_SEQUENCE_TYPES: {
-  [type: HgvsReferenceSequenceType]: {parsedPostMappedHgvsField: keyof VariantPropertiesAddedByPreparingCodingVariants}
-} = {
+export const HGVS_REFERENCE_SEQUENCE_TYPES: Record<
+  HgvsReferenceSequenceType,
+  {parsedPostMappedHgvsField: keyof VariantPropertiesAddedByPreparingCodingVariants}
+> = {
   c: {
     parsedPostMappedHgvsField: 'parsedPostMappedHgvsC'
   },
@@ -106,6 +115,17 @@ export const VARIANT_EFFECT_TYPE_OPTIONS = [
 
 export const DEFAULT_VARIANT_EFFECT_TYPES = ['Missense', 'Nonsense', 'Synonymous', 'Other']
 
+export function parseScoreSetVariantData(csvData: string): Variant[] {
+  const variants = parseScoresOrCounts(csvData, true) as Variant[]
+  prepareScoreSetVariantData(variants)
+  return variants
+}
+
+function prepareScoreSetVariantData(variants: Variant[]) {
+  parseSimpleCodingVariants(variants)
+  translateSimpleCodingVariants(variants)
+}
+
 export const PARSED_POST_MAPPED_VARIANT_PROPERTIES: ParsedPostMappedVariantProperties = {
   c: 'parsedPostMappedHgvsC',
   g: 'parsedPostMappedHgvsC',
@@ -128,7 +148,7 @@ function getParsedPostMappedHgvs(variant: Variant, type: HgvsReferenceSequenceTy
  *
  * @param variants The variants to modify.
  */
-export function parseSimpleCodingVariants(variants: Variant[]) {
+function parseSimpleCodingVariants(variants: Variant[]) {
   for (const v of variants) {
     // Create the mavedb namespace if it doesn't exist.
     if (!v.mavedb) v.mavedb = {}
@@ -302,7 +322,7 @@ export function inferReferenceSequenceFromVariants(variants: Variant[], referenc
  *
  * @param variants The array of variants to translate.
  */
-export function translateSimpleCodingVariants(variants: Variant[]) {
+function translateSimpleCodingVariants(variants: Variant[]) {
   const {referenceSequence: codingSequence, referenceSequenceRange: codingSequenceRange} =
     inferReferenceSequenceFromVariants(variants, 'c')
   if (codingSequence.length > 0) {

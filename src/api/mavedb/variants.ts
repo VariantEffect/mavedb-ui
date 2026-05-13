@@ -1,6 +1,7 @@
 import axios from 'axios'
 
 import config from '@/config'
+import {histogramScoreSetVariantDataUrl} from '@/api/mavedb/score-sets'
 import {components} from '@/schema/openapi'
 
 type ScoreSet = components['schemas']['ScoreSet']
@@ -18,10 +19,9 @@ export async function lookupVariantsByClingenId(
 }
 
 export async function lookupVariantsByVrsDigest(identifier: string): Promise<MappedVariant[]> {
-  const response = await axios.get(
-    `${config.apiBaseUrl}/mapped-variants/vrs/${encodeURIComponent(identifier)}`,
-    {params: {only_current: true}}
-  )
+  const response = await axios.get(`${config.apiBaseUrl}/mapped-variants/vrs/${encodeURIComponent(identifier)}`, {
+    params: {only_current: true}
+  })
   return response.data
 }
 
@@ -30,8 +30,8 @@ export async function getVariantDetail(urn: string): Promise<VariantEffectMeasur
   return response.data
 }
 
-export async function getVariantScores(scoreSetUrn: string): Promise<string> {
-  const response = await axios.get(`${config.apiBaseUrl}/score-sets/${encodeURIComponent(scoreSetUrn)}/variants/data`)
+export async function getHistogramVariantData(scoreSetUrn: string): Promise<string> {
+  const response = await axios.get(histogramScoreSetVariantDataUrl(scoreSetUrn))
   return response.data
 }
 

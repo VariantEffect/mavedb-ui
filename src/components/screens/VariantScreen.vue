@@ -228,11 +228,12 @@
               <ScoreSetHistogram
                 :key="lookup.selectedScoreSetUrn.value || ''"
                 ref="histogram"
+                :coordinates="'mapped'"
                 :external-selection="lookup.variantScoreRow.value"
                 :lock-selection="true"
                 :score-set="lookup.selectedScoreSet.value"
                 :selected-calibration="lookup.selectedCalibration.value || undefined"
-                :variants="lookup.scores.value as any"
+                :variants="lookup.scores.value"
                 @calibration-changed="lookup.selectedCalibration.value = $event"
                 @selection-changed="() => {}"
               />

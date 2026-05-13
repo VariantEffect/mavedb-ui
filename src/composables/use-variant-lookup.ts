@@ -4,7 +4,7 @@ import {computed, ref, shallowRef, watch, type ComputedRef, type Ref} from 'vue'
 import {
   getVariantAnnotation,
   getVariantDetail,
-  getVariantScores,
+  getHistogramVariantData,
   lookupVariantsByClingenId
 } from '@/api/mavedb/variants'
 import {useCalibrationResolution, type UseCalibrationResolutionReturn} from '@/composables/use-calibration-resolution'
@@ -18,7 +18,7 @@ import {
 } from '@/lib/calibrations'
 import {triggerDownload} from '@/lib/downloads'
 import {getExperimentKeyword} from '@/lib/experiments'
-import {parseScoresOrCounts, type ScoresOrCountsRow} from '@/lib/scores'
+import {parseScoreSetVariantData, type Variant} from '@/lib/variants'
 import type {MeasurementType} from '@/lib/measurement-types'
 import type {components} from '@/schema/openapi'
 
@@ -60,8 +60,8 @@ export interface UseVariantLookupReturn {
   // Scores
   selectedScoreSet: ComputedRef<ScoreSet | null>
   selectedScoreSetUrn: ComputedRef<string | null>
-  scores: ComputedRef<readonly ScoresOrCountsRow[] | null>
-  variantScoreRow: ComputedRef<ScoresOrCountsRow | undefined>
+  scores: ComputedRef<Variant[] | null>
+  variantScoreRow: ComputedRef<Variant | undefined>
   selectedVariantScore: ComputedRef<number | string | null>
 
   // Calibration
@@ -116,7 +116,7 @@ export function useVariantLookup(
   const showNucleotide = ref(true)
   const showProtein = ref(true)
   const variantDetailCache = ref<Record<string, VariantEffectMeasurementWithScoreSet>>({})
-  const scoresCache = shallowRef<Record<string, readonly ScoresOrCountsRow[]>>({})
+  const scoresCache = shallowRef<Record<string, Variant[]>>({})
   const selectedCalibration = ref<string | null>(null)
 
   // ── Filters ───────────────────────────────────────────────
@@ -212,10 +212,10 @@ export function useVariantLookup(
   async function fetchScores(scoreSetUrn: string) {
     if (scoresCache.value[scoreSetUrn]) return
     try {
-      const data = await getVariantScores(scoreSetUrn)
+      const data = await getHistogramVariantData(scoreSetUrn)
       scoresCache.value = {
         ...scoresCache.value,
-        [scoreSetUrn]: Object.freeze(parseScoresOrCounts(data, true))
+        [scoreSetUrn]: parseScoreSetVariantData(data)
       }
     } catch (error) {
       console.error(`Error fetching scores for score set "${scoreSetUrn}"`, error)

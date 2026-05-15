@@ -45,8 +45,10 @@ export interface UseVariantLookupReturn {
   // Filters
   showNucleotide: Ref<boolean>
   showProtein: Ref<boolean>
+  showAssociatedNucleotide: Ref<boolean>
   nucleotideCount: ComputedRef<number>
   proteinCount: ComputedRef<number>
+  associatedNucleotideCount: ComputedRef<number>
   filteredVariants: ComputedRef<VariantEntry[]>
 
   // Selection
@@ -115,19 +117,22 @@ export function useVariantLookup(
   const selectedVariantUrn = ref<string | null>(null)
   const showNucleotide = ref(true)
   const showProtein = ref(true)
+  const showAssociatedNucleotide = ref(true)
   const variantDetailCache = ref<Record<string, VariantEffectMeasurementWithScoreSet>>({})
   const scoresCache = shallowRef<Record<string, readonly ScoresOrCountsRow[]>>({})
   const selectedCalibration = ref<string | null>(null)
 
   // ── Filters ───────────────────────────────────────────────
-  const nucleotideCount = computed(
-    () => variants.value.filter((v) => v.type === 'nucleotide' || v.type === 'associatedNucleotide').length
-  )
+  const nucleotideCount = computed(() => variants.value.filter((v) => v.type === 'nucleotide').length)
   const proteinCount = computed(() => variants.value.filter((v) => v.type === 'protein').length)
+  const associatedNucleotideCount = computed(
+    () => variants.value.filter((v) => v.type === 'associatedNucleotide').length
+  )
   const filteredVariants = computed(() =>
     variants.value.filter((v) => {
-      if (v.type === 'nucleotide' || v.type === 'associatedNucleotide') return showNucleotide.value
+      if (v.type === 'nucleotide') return showNucleotide.value
       if (v.type === 'protein') return showProtein.value
+      if (v.type === 'associatedNucleotide') return showAssociatedNucleotide.value
       return true
     })
   )
@@ -383,8 +388,10 @@ export function useVariantLookup(
     fetchVariants,
     showNucleotide,
     showProtein,
+    showAssociatedNucleotide,
     nucleotideCount,
     proteinCount,
+    associatedNucleotideCount,
     filteredVariants,
     selectedVariantUrn,
     selectVariant,

@@ -75,6 +75,15 @@
                 :count="lookup.proteinCount.value"
                 label="Protein level"
               />
+              <MvBadgeToggle
+                v-if="lookup.associatedNucleotideCount.value > 0"
+                v-model="lookup.showAssociatedNucleotide.value"
+                active-background="var(--color-synonymous-nucleotide-light)"
+                active-border="var(--color-synonymous-nucleotide-border)"
+                color="var(--color-synonymous-nucleotide)"
+                :count="lookup.associatedNucleotideCount.value"
+                label="Synonymous nucleotide"
+              />
             </div>
           </div>
           <!-- Desktop: horizontal scroll strip -->

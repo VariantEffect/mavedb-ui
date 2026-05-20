@@ -209,6 +209,10 @@ export interface paths {
      */
     get: operations["get_experiment_score_sets_api_v1_experiments__urn__score_sets_get"];
   };
+  "/api/v1/genes/{symbol}": {
+    /** Fetch a gene and associated published score sets */
+    get: operations["get_gene_api_v1_genes__symbol__get"];
+  };
   "/api/v1/hgvs/fetch/{accession}": {
     /**
      * Fetch stored sequence by accession
@@ -3284,6 +3288,31 @@ export interface components {
        * @default []
        */
       variants?: components["schemas"]["VariantEffectMeasurement"][];
+    };
+    /** GeneResponse */
+    GeneResponse: {
+      /** Symbol */
+      symbol: string;
+      /** Name */
+      name: string;
+      /** Hgncid */
+      hgncId?: string | null;
+      /** Locusgroup */
+      locusGroup?: string | null;
+      /** Location */
+      location?: string | null;
+      /** Omimid */
+      omimId?: string | null;
+      /** Scoresets */
+      scoreSets: components["schemas"]["ShortScoreSet"][];
+      /** Limit */
+      limit: number;
+      /** Offset */
+      offset: number;
+      /** Total */
+      total: number;
+      /** Totalscoredvariants */
+      totalScoredVariants: number;
     };
     /**
      * GnomADVariantWithMappedVariants
@@ -7604,6 +7633,54 @@ export interface operations {
       };
       /** @description Internal server error. */
       500: {
+        content: never;
+      };
+    };
+  };
+  /** Fetch a gene and associated published score sets */
+  get_gene_api_v1_genes__symbol__get: {
+    parameters: {
+      query?: {
+        /** @description Number of score sets to return (maximum 100). */
+        limit?: number;
+        /** @description Number of score sets to skip. */
+        offset?: number;
+      };
+      path: {
+        symbol: string;
+      };
+    };
+    responses: {
+      /** @description Successful Response */
+      200: {
+        content: {
+          "application/json": components["schemas"]["GeneResponse"];
+        };
+      };
+      /** @description Resource not found. */
+      404: {
+        content: never;
+      };
+      /** @description Validation Error */
+      422: {
+        content: {
+          "application/json": components["schemas"]["HTTPValidationError"];
+        };
+      };
+      /** @description Internal server error. */
+      500: {
+        content: never;
+      };
+      /** @description Bad gateway. Upstream responded invalidly. */
+      502: {
+        content: never;
+      };
+      /** @description Service unavailable. Temporary overload or maintenance. */
+      503: {
+        content: never;
+      };
+      /** @description Gateway timeout. Upstream did not respond in time. */
+      504: {
         content: never;
       };
     };

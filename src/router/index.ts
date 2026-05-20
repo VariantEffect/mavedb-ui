@@ -10,6 +10,7 @@ import ExperimentCreator from '@/components/screens/ExperimentCreator.vue'
 import ExperimentEditor from '@/components/screens/ExperimentEditor.vue'
 import ExperimentSetView from '@/components/screens/ExperimentSetView.vue'
 import ExperimentView from '@/components/screens/ExperimentView.vue'
+import GeneView from '@/components/screens/GeneView.vue'
 import HelpScreen from '@/components/screens/HelpScreen.vue'
 import HomeScreen from '@/components/screens/HomeScreen.vue'
 import OidcCallback from '@/components/screens/OidcCallback.vue'
@@ -89,6 +90,14 @@ const routes: RouteRecordRaw[] = [
     name: 'experiment',
     component: ExperimentView,
     props: (route) => ({itemId: route.params.urn})
+  },
+  {
+    path: '/genes/:symbol([^/]+)',
+    name: 'gene',
+    component: GeneView,
+    props: (route) => ({
+      symbol: Array.isArray(route.params.symbol) ? route.params.symbol[0] : route.params.symbol
+    })
   },
   {
     name: 'createExperiment',

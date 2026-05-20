@@ -7,6 +7,36 @@ export function getTargetGeneName(gene: {name: string; mappedHgncName?: string |
   return gene.mappedHgncName || gene.name
 }
 
+export type TargetGeneRoute = {name: 'gene'; params: {symbol: string}}
+export type TargetGeneLinkItem = {name: string; route: TargetGeneRoute | null}
+
+type LinkableTargetGene = {
+  name: string
+  mappedHgncName?: string | null
+}
+
+export function getTargetGeneRoute(gene: LinkableTargetGene): TargetGeneRoute | null {
+  if (!gene.mappedHgncName) return null
+  return {name: 'gene', params: {symbol: gene.mappedHgncName}}
+}
+
+export function getTargetGeneLinkItems(targetGenes: LinkableTargetGene[] = []): TargetGeneLinkItem[] {
+  const targets = new Map<string, TargetGeneLinkItem>()
+
+  for (const targetGene of targetGenes) {
+    const route = getTargetGeneRoute(targetGene)
+    const name = route ? targetGene.mappedHgncName : getTargetGeneName(targetGene)
+    if (!name) continue
+
+    const key = route ? `route:${route.params.symbol}` : `plain:${name}`
+    if (!targets.has(key)) {
+      targets.set(key, {name, route})
+    }
+  }
+
+  return [...targets.values()]
+}
+
 export const EXTERNAL_GENE_DATABASES = ['UniProt', 'Ensembl', 'RefSeq'] as const
 export const SEQUENCE_TYPES = ['DNA', 'protein'] as const
 

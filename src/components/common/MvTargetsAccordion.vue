@@ -14,10 +14,27 @@
           <div class="text-[0.6875rem] text-text-muted leading-snug -mt-1">{{ scoreSet.urn }}</div>
         </div>
         <div class="pl-4">
-          <MvCollapsible v-for="(gene, geneIdx) in scoreSet.targetGenes" :key="`${scoreSet.urn}-${geneIdx}`" :open="ssIdx === 0">
+          <MvCollapsible
+            v-for="(gene, geneIdx) in scoreSet.targetGenes"
+            :key="`${scoreSet.urn}-${geneIdx}`"
+            :button-label="`Toggle details for ${getTargetGeneName(gene)}`"
+            :open="ssIdx === 0"
+          >
+            <template #inline-link>
+              <router-link
+                v-if="gene.mappedHgncName"
+                class="text-sm font-bold uppercase tracking-wide text-link"
+                title="View gene page"
+                :to="{name: 'gene', params: {symbol: gene.mappedHgncName}}"
+              >
+                {{ gene.mappedHgncName }}
+              </router-link>
+              <span v-else class="text-sm font-bold uppercase tracking-wide text-text-primary">{{
+                getTargetGeneName(gene)
+              }}</span>
+            </template>
             <template #header>
               <div class="flex items-center gap-2">
-                <span class="text-sm font-bold text-text-primary">{{ getTargetGeneName(gene) }}</span>
                 <span v-if="gene.category" class="text-xs font-medium text-text-muted">{{
                   textForTargetGeneCategory(gene.category)
                 }}</span>
@@ -31,10 +48,26 @@
 
     <!-- Direct target genes (score set view) -->
     <template v-else-if="targetGenes && targetGenes.length > 0">
-      <MvCollapsible v-for="(gene, i) in targetGenes" :key="i">
+      <MvCollapsible
+        v-for="(gene, i) in targetGenes"
+        :key="i"
+        :button-label="`Toggle details for ${getTargetGeneName(gene)}`"
+      >
+        <template #inline-link>
+          <router-link
+            v-if="gene.mappedHgncName"
+            class="text-sm font-bold uppercase tracking-wide text-link"
+            title="View gene page"
+            :to="{name: 'gene', params: {symbol: gene.mappedHgncName}}"
+          >
+            {{ gene.mappedHgncName }}
+          </router-link>
+          <span v-else class="text-sm font-bold uppercase tracking-wide text-text-primary">{{
+            getTargetGeneName(gene)
+          }}</span>
+        </template>
         <template #header>
           <div class="flex items-center gap-2">
-            <span class="text-sm font-bold text-text-primary">{{ getTargetGeneName(gene) }}</span>
             <span v-if="gene.category" class="text-xs font-medium text-text-muted">{{
               textForTargetGeneCategory(gene.category)
             }}</span>

@@ -1000,6 +1000,7 @@ export default defineComponent({
         delete query.search
         delete query.searchType
         query.mode = 'guided'
+        this.searchType = 'hgvs'
       } else {
         delete query.gene
         delete query.variantType
@@ -1035,8 +1036,8 @@ export default defineComponent({
       this.loading = false
       await this.searchVariants()
     },
-    fetchDefaultSearchResults: async function (searchString: string, maneStatus: string | null = null) {
-      const searchType = this.searchType
+    fetchDefaultSearchResults: async function (searchString: string, maneStatus: string | null = null, forcedSearchType?: string) {
+      const searchType = forcedSearchType ?? this.searchType
       let searchStr = searchString.trim()
 
       try {
@@ -1296,7 +1297,7 @@ export default defineComponent({
           }
 
           for (const hgvsString of hgvsStrings) {
-            await this.fetchDefaultSearchResults(hgvsString.hgvsString, hgvsString.maneStatus)
+            await this.fetchDefaultSearchResults(hgvsString.hgvsString, hgvsString.maneStatus, 'hgvs')
           }
         } catch (error: unknown) {
           this.alleles = []

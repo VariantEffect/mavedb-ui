@@ -81,10 +81,12 @@
           <p class="mt-2 text-xs text-text-muted">
             Find a variant with functional data via
             <router-link class="text-link" to="/mavemd?searchType=hgvs">HGVS</router-link>,
-            <router-link class="text-link" to="/mavemd?searchType=clinGenAlleleId">ClinGen CAId</router-link>,
-            <router-link class="text-link" to="/mavemd?searchType=clinVarVariationId">ClinVar ID</router-link>,
-            <router-link class="text-link" to="/mavemd?searchType=dbSnpRsId">dbSNP rsid</router-link>, or
-            <router-link class="text-link" to="/mavemd?searchType=vrsDigest">VRS digest</router-link>.
+            <router-link class="text-link" to="/mavemd?searchType=vrsDigest">VRS digest</router-link>, and more.
+            <br />
+            No variant identifier?
+            <router-link class="text-link" :to="{name: 'mavemd', query: {mode: 'guided'}}"
+              >Try guided search &rarr;</router-link
+            >
           </p>
         </div>
       </section>

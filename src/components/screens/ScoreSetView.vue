@@ -334,7 +334,8 @@
         <div class="mb-6">
           <ScoreSetDownloads
             :has-counts="hasCounts"
-            :has-primary-calibration="hasPrimaryCalibration"
+            :has-pathogenicity-calibrations="hasPathogenicityCalibrations"
+            :has-functional-impact-calibrations="hasFunctionalImpactCalibrations"
             :is-meta-data-empty="isMetaDataEmpty"
             :score-set="item"
           />
@@ -502,9 +503,13 @@ import config from '@/config'
 import {hasPathogenicityCalibrations, hasFunctionalCalibrations} from '@/lib/calibrations'
 import {variantNotNullOrNA} from '@/lib/mave-hgvs'
 import {getScoreSetShortName} from '@/lib/score-sets'
-import {parseScoresOrCounts} from '@/lib/scores'
-import {parseSimpleCodingVariants, translateSimpleCodingVariants, type Variant} from '@/lib/variants'
-import {deleteScoreSet, publishScoreSet, getScoreSetClinicalControlOptions} from '@/api/mavedb'
+import {parseScoreSetVariantData, type Variant} from '@/lib/variants'
+import {
+  deleteScoreSet,
+  publishScoreSet,
+  getScoreSetClinicalControlOptions,
+  histogramScoreSetVariantDataUrl
+} from '@/api/mavedb'
 import {components} from '@/schema/openapi'
 import MvLoader from '@/components/common/MvLoader.vue'
 import MvEmptyState from '@/components/common/MvEmptyState.vue'
@@ -714,7 +719,7 @@ export default {
           this.setItemId(newValue)
           let scoresUrl = null
           if (this.itemType?.restCollectionName && this.itemId) {
-            scoresUrl = `${config.apiBaseUrl}/${this.itemType.restCollectionName}/${this.itemId}/variants/data?include_post_mapped_hgvs=true&namespaces=vep&namespaces=scores&namespaces=clingen`
+            scoresUrl = histogramScoreSetVariantDataUrl(this.itemId)
           }
           this.setScoresDataUrl(scoresUrl)
           this.ensureScoresDataLoaded()
@@ -723,11 +728,7 @@ export default {
       immediate: true
     },
     scoresData(newValue: unknown) {
-      const parsed = newValue ? parseScoresOrCounts(newValue as string, true) : null
-      if (parsed) {
-        parseSimpleCodingVariants(parsed as Variant[])
-        translateSimpleCodingVariants(parsed as Variant[])
-      }
+      const parsed = newValue ? parseScoreSetVariantData(newValue as string) : null
       this.variants = parsed ? (Object.freeze(parsed) as Variant[]) : null
       this.applyUrlState()
     },

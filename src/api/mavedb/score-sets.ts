@@ -7,6 +7,30 @@ type ScoreSetSearch = components['schemas']['ScoreSetsSearch']
 type ScoreSetsSearchResponse = components['schemas']['ScoreSetsSearchResponse']
 export type ScoreSetsSearchFilterOptionsResponse = components['schemas']['ScoreSetsSearchFilterOptionsResponse']
 
+const HISTOGRAM_VARIANT_DATA_NAMESPACES = ['vep', 'scores', 'clingen']
+
+function scoreSetVariantDataParams(
+  options: {includePostMappedHgvs?: boolean; namespaces?: string[]} = {}
+): URLSearchParams {
+  const params = new URLSearchParams()
+  if (options.includePostMappedHgvs) params.append('include_post_mapped_hgvs', 'true')
+  for (const namespace of options.namespaces ?? []) params.append('namespaces', namespace)
+  return params
+}
+
+function scoreSetVariantDataUrl(urn: string, params: URLSearchParams = new URLSearchParams()): string {
+  const query = params.toString()
+  const baseUrl = `${config.apiBaseUrl}/score-sets/${encodeURIComponent(urn)}/variants/data`
+  return query ? `${baseUrl}?${query}` : baseUrl
+}
+
+export function histogramScoreSetVariantDataUrl(urn: string): string {
+  return scoreSetVariantDataUrl(
+    urn,
+    scoreSetVariantDataParams({includePostMappedHgvs: true, namespaces: HISTOGRAM_VARIANT_DATA_NAMESPACES})
+  )
+}
+
 // ---------------------------------------------------------------------------
 // Search
 // ---------------------------------------------------------------------------
@@ -91,9 +115,7 @@ export async function downloadScoreSetFile(urn: string, type: 'scores' | 'counts
 }
 
 export async function downloadScoreSetVariantData(urn: string, params: URLSearchParams): Promise<string> {
-  const response = await axios.get(
-    `${config.apiBaseUrl}/score-sets/${encodeURIComponent(urn)}/variants/data?${params.toString()}`
-  )
+  const response = await axios.get(scoreSetVariantDataUrl(urn, params))
   return response.data
 }
 

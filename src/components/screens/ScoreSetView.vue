@@ -334,7 +334,8 @@
         <div class="mb-6">
           <ScoreSetDownloads
             :has-counts="hasCounts"
-            :has-primary-calibration="hasPrimaryCalibration"
+            :has-pathogenicity-calibrations="hasPathogenicityCalibrations"
+            :has-functional-impact-calibrations="hasFunctionalImpactCalibrations"
             :is-meta-data-empty="isMetaDataEmpty"
             :score-set="item"
           />

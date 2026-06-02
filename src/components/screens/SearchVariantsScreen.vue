@@ -143,6 +143,7 @@
                   v-model="inputGene"
                   class="w-full !rounded-none !border-none !bg-transparent !pt-4 !pb-2 !shadow-none"
                   placeholder="e.g. BRCA1"
+                  style="text-transform: uppercase"
                 />
               </div>
               <div class="guided-select-cell relative flex items-center bg-white">
@@ -861,7 +862,14 @@ export default defineComponent({
         this.inputVariantType = typeof newVal === 'string' ? newVal : ''
       }
     },
-    inputGene() {
+    inputGene(newVal) {
+      const normalized = newVal?.toUpperCase() ?? null
+      if (newVal && newVal !== normalized) {
+        // Setting inputGene re-triggers this watcher with the normalized value, return
+        // early to avoid syncing query params twice.
+        this.inputGene = normalized
+        return
+      }
       this.syncGuidedQueryParams()
     },
     inputVariantType(newVal, oldVal) {
@@ -1004,6 +1012,7 @@ export default defineComponent({
         delete query.search
         delete query.searchType
         query.mode = 'guided'
+        this.searchType = 'hgvs'
       } else {
         delete query.gene
         delete query.variantType
@@ -1039,8 +1048,8 @@ export default defineComponent({
       this.loading = false
       await this.searchVariants()
     },
-    fetchDefaultSearchResults: async function (searchString: string, maneStatus: string | null = null) {
-      const searchType = this.searchType
+    fetchDefaultSearchResults: async function (searchString: string, maneStatus: string | null = null, forcedSearchType?: string) {
+      const searchType = forcedSearchType ?? this.searchType
       let searchStr = searchString.trim()
 
       try {
@@ -1300,7 +1309,7 @@ export default defineComponent({
           }
 
           for (const hgvsString of hgvsStrings) {
-            await this.fetchDefaultSearchResults(hgvsString.hgvsString, hgvsString.maneStatus)
+            await this.fetchDefaultSearchResults(hgvsString.hgvsString, hgvsString.maneStatus, 'hgvs')
           }
         } catch (error: unknown) {
           this.alleles = []

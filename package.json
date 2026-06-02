@@ -8,7 +8,8 @@
     "dev": "./scripts/build-docs.sh && vite --mode=${MODE=dev}",
     "docs": "mkdocs serve -f docs/mkdocs.yml",
     "preview": "./scripts/build-docs.sh && vite build --mode=${MODE=live} --watch & vite preview --mode=${MODE=live}",
-    "test:unit": "vitest run"
+    "test:unit": "vitest run",
+    "test:unit:coverage": "vitest run --coverage"
   },
   "dependencies": {
     "@fontsource/exo-2": "^5.2.8",
@@ -80,6 +81,7 @@
     "@types/uuid": "^9.0.8",
     "@vitejs/plugin-basic-ssl": "^1.0.2",
     "@vitejs/plugin-vue": "^6.0.1",
+    "@vitest/coverage-v8": "2.1.9",
     "@vue/eslint-config-prettier": "^10.2.0",
     "@vue/eslint-config-typescript": "^14.6.0",
     "@vue/tsconfig": "^0.8.1",
@@ -91,6 +93,9 @@
     "vite": "^5.4.21",
     "vitest": "^2.1.9",
     "vue-tsc": "^3.0.7"
+  },
+  "optionalDependencies": {
+    "@rollup/rollup-linux-x64-gnu": "4.46.3"
   },
   "browserslist": [
     "> 1%",

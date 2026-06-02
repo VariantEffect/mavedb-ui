@@ -9,6 +9,13 @@ export default defineConfig({
     }
   },
   test: {
-    environment: 'node'
+    environment: 'node',
+    coverage: {
+      all: true,
+      provider: 'v8',
+      reporter: ['text', 'lcov'],
+      include: ['src/**/*.{js,ts}'],
+      exclude: ['src/**/*.d.ts', 'src/**/*.test.{js,ts}']
+    }
   }
 })

@@ -32,7 +32,17 @@ initializeOrcidAuthentication()
 // Provide a smooth migration path from vue-router's hash navigation mode to its history navigation mode. If the user
 // arrived via an old bookmark that uses the URL fragment (hash) for routing, redirect to the corresponding current URL.
 router.beforeEach((to) => {
-  if (to.fullPath.startsWith('/#/')) {
+  const regex = /^\/score-sets\/([^#]+)#(\d+)$/
+  const match = to.fullPath.match(regex)
+  if (match) {
+    const urnBeforeHash = match[1]
+    const fullUrn = `${urnBeforeHash}#${match[2]}`
+    const redirectPath = `/score-sets/${urnBeforeHash}`
+    const redirectQuery = {variant: fullUrn}
+    if (router.resolve({path: redirectPath})?.name) {
+      return {path: redirectPath, query: redirectQuery}
+    }
+  } else if (to.fullPath.startsWith('/#/')) {
     const redirectPathAndQuery = to.fullPath.replace('/#/', '/')
     if (redirectPathAndQuery) {
       const [redirectPath, redirectQueryStr] = redirectPathAndQuery.split('?', 2)

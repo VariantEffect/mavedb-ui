@@ -12,6 +12,17 @@
           calibrations, provide intuitive visualizations, and export structured evidence compatible with ACMG/AMP
           variant classification guidelines.
         </p>
+        <p class="mx-auto mt-2.5 max-w-[580px] text-sm leading-relaxed text-gray-500 md:text-base">
+          Learn more about
+          <a
+            aria-label="Clinical Application of Variant Effect Data (opens in new tab)"
+            class="font-medium text-sage-dark hover:underline"
+            :href="AVE_CLINICAL_APPLICATION"
+            rel="noopener noreferrer"
+            target="_blank"
+            >evaluating MAVE functional assays and integrating them into clinical practice</a
+          >.
+        </p>
       </section>
 
       <!-- SEARCH BAND -->
@@ -675,6 +686,7 @@ import {components} from '@/schema/openapi'
 import {getScoreSetShortName} from '@/lib/score-sets'
 import {clinVarHgvsSearchStringRegex, hgvsSearchStringRegex} from '@/lib/mave-hgvs'
 import {SEARCH_COLORS} from '@/data/search'
+import {AVE_CLINICAL_APPLICATION} from '@/lib/links'
 import {
   HOW_IT_WORKS_STEPS,
   MAVEMD_COLLECTION_URN,
@@ -714,7 +726,7 @@ export default defineComponent({
     const router = useRouter()
     const toast = useToast()
     const {getEntity} = useEntityCache()
-    return {route, router, toast, getEntity, getScoreSetShortName, scoreSetUrnFromVariantUrn}
+    return {route, router, toast, getEntity, getScoreSetShortName, scoreSetUrnFromVariantUrn, AVE_CLINICAL_APPLICATION}
   },
 
   data: function () {

@@ -32,15 +32,27 @@ initializeOrcidAuthentication()
 // Provide a smooth migration path from vue-router's hash navigation mode to its history navigation mode. If the user
 // arrived via an old bookmark that uses the URL fragment (hash) for routing, redirect to the corresponding current URL.
 router.beforeEach((to) => {
-  const redirectPathAndQuery = to.hash.split('#')[1]
-  if (redirectPathAndQuery) {
-    const [redirectPath, redirectQueryStr] = redirectPathAndQuery.split('?', 2)
-    const redirectQuery = redirectQueryStr ? Object.fromEntries(new URLSearchParams(redirectQueryStr)) : undefined
-
-    // Attempt to resolve the path using vue-router. If the router finds a matching named route, then the path
-    // represents a valid screen, and we should redirect the user to that screen's current URL.
+  const regex = /^\/score-sets\/([^#]+)#(\d+)$/
+  const match = to.fullPath.match(regex)
+  if (match) {
+    const urnBeforeHash = match[1]
+    const fullUrn = `${urnBeforeHash}#${match[2]}`
+    const redirectPath = `/score-sets/${urnBeforeHash}`
+    const redirectQuery = {variant: fullUrn}
     if (router.resolve({path: redirectPath})?.name) {
       return {path: redirectPath, query: redirectQuery}
+    }
+  } else if (to.fullPath.startsWith('/#/')) {
+    const redirectPathAndQuery = to.fullPath.replace('/#/', '/')
+    if (redirectPathAndQuery) {
+      const [redirectPath, redirectQueryStr] = redirectPathAndQuery.split('?', 2)
+      const redirectQuery = redirectQueryStr ? Object.fromEntries(new URLSearchParams(redirectQueryStr)) : undefined
+
+      // Attempt to resolve the path using vue-router. If the router finds a matching named route, then the path
+      // represents a valid screen, and we should redirect the user to that screen's current URL.
+      if (router.resolve({path: redirectPath})?.name) {
+        return {path: redirectPath, query: redirectQuery}
+      }
     }
   }
 })

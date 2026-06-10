@@ -12,7 +12,14 @@
         <CollectionBadge v-for="col in collections" :key="col.urn" :collection="col" size="sm" />
         <span class="mx-0.5 text-border">|</span>
       </template>
-      <MvPill v-for="gene in visibleGenes" :key="gene" :label="gene" title="Target gene" variant="blue" />
+      <template v-for="gene in visibleGeneTargets" :key="`${gene.route ? 'linked' : 'plain'}:${gene.name}`">
+        <router-link v-if="gene.route" class="group no-underline" title="View gene page" :to="gene.route">
+          <MvPill title="Target gene" variant="blue">
+            <span class="group-hover:underline">{{ gene.name }}</span>
+          </MvPill>
+        </router-link>
+        <MvPill v-else :label="gene.name" title="Target gene" variant="blue" />
+      </template>
       <MvPill
         v-if="geneNames.length > maxTags"
         :label="`+${geneNames.length - maxTags} more`"
@@ -39,7 +46,13 @@
         :variant="sequenceType === 'Nucleotide' ? 'nucleotide' : 'protein'"
       />
       <MvPill
-        v-if="scoreSet.numVariants"
+        v-if="showMultiTargetPill && isMultiTarget"
+        label="multi-target"
+        title="Targets multiple genes"
+        variant="sage"
+      />
+      <MvPill
+        v-if="scoreSet.numVariants !== null && scoreSet.numVariants !== undefined"
         :label="`${scoreSet.numVariants.toLocaleString()} variants`"
         title="Number of variants"
       />
@@ -55,7 +68,8 @@
 import {defineComponent, type PropType} from 'vue'
 import CollectionBadge from '@/components/common/MvCollectionBadge.vue'
 import MvPill from '@/components/common/MvPill.vue'
-import {getTargetGeneName} from '@/lib/target-genes'
+import {isMultiTargetScoreSet} from '@/lib/genes'
+import {getTargetGeneLinkItems, type TargetGeneLinkItem} from '@/lib/target-genes'
 import {components} from '@/schema/openapi'
 
 type FullScoreSet = components['schemas']['ScoreSet']
@@ -85,6 +99,10 @@ export default defineComponent({
     showMeta: {
       type: Boolean,
       default: true
+    },
+    showMultiTargetPill: {
+      type: Boolean,
+      default: false
     }
   },
 
@@ -95,12 +113,14 @@ export default defineComponent({
     maxTags(): number {
       return MAX_TAGS
     },
-    geneNames(): string[] {
-      if (!this.scoreSet.targetGenes) return []
-      return [...new Set(this.scoreSet.targetGenes.map((g) => getTargetGeneName(g)).filter(Boolean))]
+    geneTargets(): TargetGeneLinkItem[] {
+      return getTargetGeneLinkItems(this.scoreSet.targetGenes || [])
     },
-    visibleGenes(): string[] {
-      return this.geneNames.slice(0, MAX_TAGS)
+    geneNames(): string[] {
+      return this.geneTargets.map((gene) => gene.name)
+    },
+    visibleGeneTargets(): TargetGeneLinkItem[] {
+      return this.geneTargets.slice(0, MAX_TAGS)
     },
     organisms(): string[] {
       if (!this.scoreSet.targetGenes) return []
@@ -122,6 +142,9 @@ export default defineComponent({
       if (type === 'dna') return 'Nucleotide'
       if (type === 'protein') return 'Protein'
       return null
+    },
+    isMultiTarget(): boolean {
+      return isMultiTargetScoreSet(this.scoreSet)
     },
     formattedDate(): string {
       if (!this.scoreSet.publishedDate) return ''

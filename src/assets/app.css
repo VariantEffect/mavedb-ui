@@ -121,12 +121,15 @@
   --color-ga4gh-light: #e3f0f9;
 
   /* ── Measurement Types (variant screen) ────────────────────── */
-  --color-nucleotide: var(--color-published);
-  --color-nucleotide-light: var(--color-published-light);
-  --color-nucleotide-border: var(--color-light-green);
-  --color-protein: var(--color-help);
-  --color-protein-light: var(--color-help-light);
-  --color-protein-border: var(--color-help-border);
+  --color-nucleotide: #2e7d32;
+  --color-nucleotide-light: #e8f5e9;
+  --color-nucleotide-border: #c8e4c6;
+  --color-protein: #7e5daf;
+  --color-protein-light: #f1ecf8;
+  --color-protein-border: #b5a0d0;
+  --color-synonymous-nucleotide: #8a5700;
+  --color-synonymous-nucleotide-light: #fef8e1;
+  --color-synonymous-nucleotide-border: #f5c97a;
 
   /* ── Role Badges ───────────────────────────────────────────── */
   --color-role-admin: #1a56a0;

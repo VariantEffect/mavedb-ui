@@ -12,6 +12,17 @@
           calibrations, provide intuitive visualizations, and export structured evidence compatible with ACMG/AMP
           variant classification guidelines.
         </p>
+        <p class="mx-auto mt-2.5 max-w-[580px] text-sm leading-relaxed text-gray-500 md:text-base">
+          Learn more about
+          <a
+            aria-label="Clinical Application of Variant Effect Data (opens in new tab)"
+            class="font-medium text-sage-dark hover:underline"
+            :href="AVE_CLINICAL_APPLICATION"
+            rel="noopener noreferrer"
+            target="_blank"
+            >evaluating MAVE functional assays and integrating them into clinical practice</a
+          >.
+        </p>
       </section>
 
       <!-- SEARCH BAND -->
@@ -132,6 +143,7 @@
                   v-model="inputGene"
                   class="w-full !rounded-none !border-none !bg-transparent !pt-4 !pb-2 !shadow-none"
                   placeholder="e.g. BRCA1"
+                  style="text-transform: uppercase"
                 />
               </div>
               <div class="guided-select-cell relative flex items-center bg-white">
@@ -675,6 +687,7 @@ import {components} from '@/schema/openapi'
 import {getScoreSetShortName} from '@/lib/score-sets'
 import {clinVarHgvsSearchStringRegex, hgvsSearchStringRegex} from '@/lib/mave-hgvs'
 import {SEARCH_COLORS} from '@/data/search'
+import {AVE_CLINICAL_APPLICATION} from '@/lib/links'
 import {
   HOW_IT_WORKS_STEPS,
   MAVEMD_COLLECTION_URN,
@@ -714,7 +727,7 @@ export default defineComponent({
     const router = useRouter()
     const toast = useToast()
     const {getEntity} = useEntityCache()
-    return {route, router, toast, getEntity, getScoreSetShortName, scoreSetUrnFromVariantUrn}
+    return {route, router, toast, getEntity, getScoreSetShortName, scoreSetUrnFromVariantUrn, AVE_CLINICAL_APPLICATION}
   },
 
   data: function () {
@@ -849,7 +862,14 @@ export default defineComponent({
         this.inputVariantType = typeof newVal === 'string' ? newVal : ''
       }
     },
-    inputGene() {
+    inputGene(newVal) {
+      const normalized = newVal?.toUpperCase() ?? null
+      if (newVal && newVal !== normalized) {
+        // Setting inputGene re-triggers this watcher with the normalized value, return
+        // early to avoid syncing query params twice.
+        this.inputGene = normalized
+        return
+      }
       this.syncGuidedQueryParams()
     },
     inputVariantType(newVal, oldVal) {
@@ -992,6 +1012,7 @@ export default defineComponent({
         delete query.search
         delete query.searchType
         query.mode = 'guided'
+        this.searchType = 'hgvs'
       } else {
         delete query.gene
         delete query.variantType
@@ -1027,8 +1048,8 @@ export default defineComponent({
       this.loading = false
       await this.searchVariants()
     },
-    fetchDefaultSearchResults: async function (searchString: string, maneStatus: string | null = null) {
-      const searchType = this.searchType
+    fetchDefaultSearchResults: async function (searchString: string, maneStatus: string | null = null, forcedSearchType?: string) {
+      const searchType = forcedSearchType ?? this.searchType
       let searchStr = searchString.trim()
 
       try {
@@ -1288,7 +1309,7 @@ export default defineComponent({
           }
 
           for (const hgvsString of hgvsStrings) {
-            await this.fetchDefaultSearchResults(hgvsString.hgvsString, hgvsString.maneStatus)
+            await this.fetchDefaultSearchResults(hgvsString.hgvsString, hgvsString.maneStatus, 'hgvs')
           }
         } catch (error: unknown) {
           this.alleles = []

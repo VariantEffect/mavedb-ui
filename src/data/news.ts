@@ -50,6 +50,13 @@ export const NEWS_ITEMS_LIMIT = 3
 
 export const NEWS_ITEMS: NewsItem[] = [
   {
+    date: 'Jun 2026',
+    tag: 'feature',
+    title: 'Gene pages',
+    description:
+      'Each gene now has a dedicated page listing its identifiers, taxonomy, and all published score sets grouped by experiment. If a score set has been mapped to the human reference, the gene page is available from its entry in the database.'
+  },
+  {
     date: 'May 2026',
     tag: 'feature',
     title: 'Variant search expanded to support VRS digests',

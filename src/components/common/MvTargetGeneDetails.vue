@@ -31,8 +31,10 @@
       <div class="flex flex-col gap-0.5">
         <div v-for="ext in gene.externalIdentifiers" :key="ext.identifier?.identifier" class="text-text-primary">
           <span class="font-medium text-text-muted">{{ ext.identifier?.dbName }}:</span>
-          {{ ext.identifier?.identifier
-          }}<span v-if="ext.offset" class="text-text-muted"> (offset {{ ext.offset }})</span>
+          {{ ext.identifier?.identifier }}
+          <span v-if="ext.offset !== null && ext.offset !== undefined" class="text-text-muted">
+            (offset {{ ext.offset }})
+          </span>
         </div>
       </div>
     </MvDetailRow>
@@ -46,10 +48,11 @@
           </span>
           <button
             class="inline-flex cursor-pointer items-center gap-1 text-xs-plus font-medium text-sage hover:text-sage-dark"
+            type="button"
             @click="copySequence"
           >
             <i class="pi text-[10px]" :class="copied ? 'pi-check' : 'pi-copy'" />
-            {{ copied ? 'Copied' : 'Copy' }}
+            {{ copied ? 'Copied' : copyFailed ? 'Copy failed' : 'Copy' }}
           </button>
         </div>
         <pre
@@ -77,7 +80,8 @@ export default defineComponent({
 
   data() {
     return {
-      copied: false
+      copied: false,
+      copyFailed: false
     }
   },
 
@@ -91,10 +95,20 @@ export default defineComponent({
     async copySequence() {
       const seq = this.gene.targetSequence?.sequence
       if (!seq) return
-      await navigator.clipboard.writeText(seq)
-      this.copied = true
+      if (!navigator.clipboard) {
+        this.copyFailed = true
+      } else {
+        try {
+          await navigator.clipboard.writeText(seq)
+          this.copied = true
+        } catch {
+          this.copyFailed = true
+        }
+      }
+
       setTimeout(() => {
         this.copied = false
+        this.copyFailed = false
       }, 1500)
     }
   }

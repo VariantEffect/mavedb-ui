@@ -76,6 +76,9 @@ graph LR
 
 Availability is determined per-variant. Functional Impact Study Results are available for any variant that has been successfully mapped (i.e., has post-mapped genomic coordinates). Functional Impact Statements and Variant Pathogenicity Statements additionally require [score calibrations](score-calibrations.md) on the score set and a non-null score value for the variant.
 
+!!! note "Identifying object types"
+    The `type` field carries the GA4GH schema value, not MaveDB's class name. Both statement layers serialize with `"type": "Statement"` — distinguish them by `proposition.type`: `ExperimentalVariantFunctionalImpactProposition` for a Functional Impact Statement versus `VariantPathogenicityProposition` for a Variant Pathogenicity Statement. The pathogenicity statement's clinical evidence lines likewise serialize with `"type": "EvidenceLine"` (the object is a `VariantPathogenicityEvidenceLine`, but that string never appears in `type`). Study Results carry `"type": "ExperimentalVariantFunctionalImpactStudyResult"`.
+
 ### Functional Impact Study Result
 
 A Functional Impact Study Result captures the raw output of a MAVE experiment for a single variant. It is the foundational VA-Spec object and does not require score calibrations.
@@ -167,6 +170,9 @@ Each Functional Impact Statement contains:
 
 A Variant Pathogenicity Statement translates functional evidence into clinical terms by mapping functional classifications to [ACMG/AMP criteria](https://pubmed.ncbi.nlm.nih.gov/25741868/). This is the primary object MaveDB exports for integration into clinical variant interpretation workflows.
 
+!!! warning "Functional evidence only — not a clinical determination"
+    The classification on a Variant Pathogenicity Statement reflects **MaveDB functional evidence only** — the strongest of the variant's eligible calibrations — and does not incorporate the non-functional ACMG criteria (population frequency, segregation, computational predictions) that a complete clinical determination requires. Treat it as the functional contribution (a calibrated PS3/BS3 line of evidence) to be integrated with other evidence downstream, not as a standalone clinical classification.
+
 Each statement assigns an ACMG criterion and evidence strength:
 
 | ACMG criterion | Direction | Meaning |
@@ -188,7 +194,7 @@ Each Variant Pathogenicity Statement contains:
 
     ```json
     {
-      "type": "VariantPathogenicityStatement",
+      "type": "Statement",
       "description": "Variant pathogenicity statement for urn:mavedb:00000050-a-1#12345.",
       "direction": "Supports",
       "proposition": {
@@ -205,7 +211,7 @@ Each Variant Pathogenicity Statement contains:
       },
       "hasEvidenceLines": [
         {
-          "type": "VariantPathogenicityEvidenceLine",
+          "type": "EvidenceLine",
           "directionOfEvidenceProvided": "Supports",
           "strengthOfEvidenceProvided": {
             "primaryCoding": {

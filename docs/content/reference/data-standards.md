@@ -86,10 +86,12 @@ The table below summarizes the **highest** layer a variant qualifies for. Higher
 | Mapped and scored, with an eligible functional calibration | Functional Impact Statement |
 | Mapped and scored, with an eligible calibration carrying [ACMG/AMP evidence strengths](score-calibrations.md) | Variant Pathogenicity Statement |
 
-"Eligible" excludes [research-use-only](score-calibrations.md) calibrations. A variant whose score falls outside every calibration range is still annotated at the layer above — its classification is `Indeterminate` (functional) or `Uncertain Significance` (pathogenicity) with a `Neutral` direction, rather than being demoted to a lower layer.
+"Eligible" excludes [research-use-only](score-calibrations.md) calibrations. A variant whose score falls outside every calibration range is still annotated at the layer above — its classification is `indeterminate` (functional) or `uncertain significance` (pathogenicity) with a `neutral` direction, rather than being demoted to a lower layer.
 
 !!! note "Identifying object types"
     The `type` field carries the GA4GH schema value, not MaveDB's class name. Both statement layers serialize with `"type": "Statement"` — distinguish them by `proposition.type`: `ExperimentalVariantFunctionalImpactProposition` for a Functional Impact Statement versus `VariantPathogenicityProposition` for a Variant Pathogenicity Statement. The pathogenicity statement's clinical evidence lines likewise serialize with `"type": "EvidenceLine"` (the object is a `VariantPathogenicityEvidenceLine`, but that string never appears in `type`). Study Results carry `"type": "ExperimentalVariantFunctionalImpactStudyResult"`.
+
+    Unlike the `type` field, `classification`, `direction`, and `evidenceOutcome` *code* values are lowercase — e.g. `pathogenic` / `benign` / `uncertain significance`, `normal` / `abnormal` / `indeterminate`, and `supports` / `disputes` / `neutral`. (ACMG criterion codes such as `PS3` / `BS3_supporting` keep their conventional casing.)
 
 ### Functional Impact Study Result
 
@@ -129,14 +131,14 @@ Each Study Result contains:
 
 ### Functional Impact Statement
 
-A Functional Impact Statement classifies a variant's functional impact as **Normal**, **Abnormal**, or **Indeterminate** based on where its score falls within the ranges defined by a [score calibration](score-calibrations.md).
+A Functional Impact Statement classifies a variant's functional impact as `normal`, `abnormal`, or `indeterminate` based on where its score falls within the ranges defined by a [score calibration](score-calibrations.md).
 
 When multiple calibrations are available for a score set, MaveDB generates an evidence line for each eligible calibration — that is, each calibration that is not marked as [research-use-only](score-calibrations.md) — and selects the **strongest** calibration to determine the statement-level classification. All evidence lines are included in the exported object for transparency.
 
 Each Functional Impact Statement contains:
 
-- A **classification** (`Normal`, `Abnormal`, or `Indeterminate`).
-- A **direction of evidence** — `Supports` (abnormal function), `Disputes` (normal function), or `Neutral` (indeterminate) — aggregated across all evidence lines.
+- A **classification** (`normal`, `abnormal`, or `indeterminate`).
+- A **direction of evidence** — `supports` (abnormal function), `disputes` (normal function), or `neutral` (indeterminate) — aggregated across all evidence lines.
 - **Evidence lines**, one per eligible calibration, each referencing the underlying Functional Impact Study Result and the calibration that produced the classification.
 
 ??? example "Example Functional Impact Statement"
@@ -145,7 +147,7 @@ Each Functional Impact Statement contains:
     {
       "type": "Statement",
       "description": "Variant functional impact statement for urn:mavedb:00000050-a-1#12345.",
-      "direction": "Supports",
+      "direction": "supports",
       "proposition": {
         "type": "ExperimentalVariantFunctionalImpactProposition",
         "predicate": "impactsFunctionOf",
@@ -154,17 +156,17 @@ Each Functional Impact Statement contains:
       },
       "classification": {
         "primaryCoding": {
-          "code": "Abnormal",
+          "code": "abnormal",
           "system": "ga4gh-gks-term:experimental-var-func-impact-classification"
         }
       },
       "hasEvidenceLines": [
         {
           "type": "EvidenceLine",
-          "directionOfEvidenceProvided": "Supports",
+          "directionOfEvidenceProvided": "supports",
           "evidenceOutcome": {
             "primaryCoding": {
-              "code": "Abnormal",
+              "code": "abnormal",
               "system": "ga4gh-gks-term:experimental-var-func-impact-classification"
             }
           },
@@ -192,13 +194,13 @@ Each statement assigns an ACMG criterion and evidence strength:
 | PS3 | Supports pathogenicity | Well-established functional study shows a damaging effect |
 | BS3 | Supports benignity | Well-established functional study shows no damaging effect |
 
-The evidence strength (e.g., `Supporting`, `Moderate`, `Strong`, `Very Strong`) indicates the level of confidence in the classification, determined by the score calibration.
+The evidence strength (e.g., `supporting`, `moderate`, `strong`, `very strong`) indicates the level of confidence in the classification, determined by the score calibration.
 
-When multiple calibrations are eligible, MaveDB generates a clinical evidence line for each and selects the **strongest** to determine the statement-level classification. All evidence lines are included in the output. If calibrations provide conflicting evidence at equal strength (e.g., one supports pathogenicity while another supports benignity), the classification defaults to `Uncertain Significance`.
+When multiple calibrations are eligible, MaveDB generates a clinical evidence line for each and selects the **strongest** to determine the statement-level classification. All evidence lines are included in the output. If calibrations provide conflicting evidence at equal strength (e.g., one supports pathogenicity while another supports benignity), the classification defaults to `uncertain significance`.
 
 Each Variant Pathogenicity Statement contains:
 
-- A **classification** (`Pathogenic`, `Benign`, or `Uncertain Significance`).
+- A **classification** (`pathogenic`, `benign`, or `uncertain significance`).
 - A **direction of evidence** aggregated across all clinical evidence lines.
 - **Clinical evidence lines**, each containing the ACMG criterion, evidence strength, and a nested Functional Impact Statement.
 
@@ -208,7 +210,7 @@ Each Variant Pathogenicity Statement contains:
     {
       "type": "Statement",
       "description": "Variant pathogenicity statement for urn:mavedb:00000050-a-1#12345.",
-      "direction": "Supports",
+      "direction": "supports",
       "proposition": {
         "type": "VariantPathogenicityProposition",
         "predicate": "isCausalFor",
@@ -217,22 +219,22 @@ Each Variant Pathogenicity Statement contains:
       },
       "classification": {
         "primaryCoding": {
-          "code": "Pathogenic",
+          "code": "pathogenic",
           "system": "ACMG Guidelines, 2015"
         }
       },
       "hasEvidenceLines": [
         {
           "type": "EvidenceLine",
-          "directionOfEvidenceProvided": "Supports",
+          "directionOfEvidenceProvided": "supports",
           "strengthOfEvidenceProvided": {
             "primaryCoding": {
-              "code": "Strong"
+              "code": "strong"
             }
           },
           "evidenceOutcome": {
             "primaryCoding": {
-              "code": "ps3_strong",
+              "code": "PS3",
               "system": "ACMG Guidelines, 2015"
             },
             "name": "ACMG 2015 PS3 Criterion Met"
@@ -256,13 +258,13 @@ This means a single Variant Pathogenicity Statement may contain multiple evidenc
 
 ### Evidence strength mapping
 
-MaveDB's internal evidence strength scale includes a `Moderate+` level that sits between `Moderate` and `Strong`. Because the GA4GH VA-Spec standard does not include this level, MaveDB maps `Moderate+` to `Moderate` when generating Variant Pathogenicity Statements. This ensures compliance with the standard while preserving a conservative interpretation of evidence strength.
+MaveDB's internal evidence strength scale includes a `Moderate+` level that sits between `Moderate` and `Strong`. Because the GA4GH VA-Spec standard does not include this level, MaveDB maps `Moderate+` to `moderate` when generating Variant Pathogenicity Statements. This ensures compliance with the standard while preserving a conservative interpretation of evidence strength.
 
 The full internal evidence strength scale, from weakest to strongest:
 
 : `Supporting` · `Moderate` · `Moderate+` · `Strong` · `Very Strong`
 
-In VA-Spec output, `Moderate+` appears as `Moderate`.
+In VA-Spec output, `Moderate+` appears as `moderate`.
 
 ### Direction of evidence
 
@@ -270,14 +272,14 @@ VA-Spec uses a `direction` field to indicate whether evidence supports or disput
 
 | Functional classification | Direction | Rationale |
 |---|---|---|
-| Normal | Disputes | Normal function argues against pathogenicity |
-| Abnormal | Supports | Abnormal function argues for pathogenicity |
-| Indeterminate | Neutral | Insufficient evidence to determine direction |
+| `normal` | `disputes` | Normal function argues against pathogenicity |
+| `abnormal` | `supports` | Abnormal function argues for pathogenicity |
+| `indeterminate` | `neutral` | Insufficient evidence to determine direction |
 
 !!! tip
-    The default proposition being evaluated is that the variant **affects function** (for Functional Impact Statements) or **is pathogenic** (for Variant Pathogenicity Statements). This is why `Normal` function *disputes* the proposition while `Abnormal` function *supports* it.
+    The default proposition being evaluated is that the variant **affects function** (for Functional Impact Statements) or **is pathogenic** (for Variant Pathogenicity Statements). This is why `normal` function *disputes* the proposition while `abnormal` function *supports* it.
     
-When a statement includes multiple evidence lines, MaveDB aggregates their directions. If all evidence lines point in the same direction, the statement inherits that direction. If evidence lines conflict, the statement direction is set to `Neutral`.
+When a statement includes multiple evidence lines, MaveDB aggregates their directions. If all evidence lines point in the same direction, the statement inherits that direction. If evidence lines conflict, the statement direction is set to `neutral`.
 
 ### Variants without VRS representations
 

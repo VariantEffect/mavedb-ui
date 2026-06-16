@@ -76,6 +76,18 @@ graph LR
 
 Availability is determined per-variant. Functional Impact Study Results are available for any variant that has been successfully mapped (i.e., has post-mapped genomic coordinates). Functional Impact Statements and Variant Pathogenicity Statements additionally require [score calibrations](score-calibrations.md) on the score set and a non-null score value for the variant.
 
+The table below summarizes the **highest** layer a variant qualifies for. Higher layers nest the layers beneath them (a Study Result sits inside a Functional Impact Statement, which sits inside a Variant Pathogenicity Statement), so a variant that qualifies for a higher layer is also represented at every lower one.
+
+| Variant state | Highest VA-Spec layer |
+|---|---|
+| Not successfully mapped (no post-mapped genomic coordinates) | *None* — excluded from VRS and VA-Spec output |
+| Mapped, but no score value | Functional Impact Study Result |
+| Mapped and scored, but the score set has no eligible calibration | Functional Impact Study Result |
+| Mapped and scored, with an eligible functional calibration | Functional Impact Statement |
+| Mapped and scored, with an eligible calibration carrying [ACMG/AMP evidence strengths](score-calibrations.md) | Variant Pathogenicity Statement |
+
+"Eligible" excludes [research-use-only](score-calibrations.md) calibrations. A variant whose score falls outside every calibration range is still annotated at the layer above — its classification is `Indeterminate` (functional) or `Uncertain Significance` (pathogenicity) with a `Neutral` direction, rather than being demoted to a lower layer.
+
 !!! note "Identifying object types"
     The `type` field carries the GA4GH schema value, not MaveDB's class name. Both statement layers serialize with `"type": "Statement"` — distinguish them by `proposition.type`: `ExperimentalVariantFunctionalImpactProposition` for a Functional Impact Statement versus `VariantPathogenicityProposition` for a Variant Pathogenicity Statement. The pathogenicity statement's clinical evidence lines likewise serialize with `"type": "EvidenceLine"` (the object is a `VariantPathogenicityEvidenceLine`, but that string never appears in `type`). Study Results carry `"type": "ExperimentalVariantFunctionalImpactStudyResult"`.
 

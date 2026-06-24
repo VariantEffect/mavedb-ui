@@ -206,10 +206,20 @@ import {useHead} from '@unhead/vue'
 
 import MvLayout from '@/components/layout/MvLayout.vue'
 import MvPageHeader from '@/components/layout/MvPageHeader.vue'
+import aveAllianceLogo from '@/assets/logo-ave-alliance.png'
 import igvfLogo from '@/assets/igvf-tag.png'
 import maveRegistryLogo from '@/assets/mave-registry-logo.png'
 import zulipLogo from '@/assets/zulip-logo.png'
-import {GITHUB_API_URL, GITHUB_UI_URL, MAVE_REGISTRY, IGVF_URL, CLINGEN_URL, GA4GH_URL, CLINVAR_URL} from '@/lib/links'
+import {
+  GITHUB_API_URL,
+  GITHUB_UI_URL,
+  MAVE_REGISTRY,
+  AVE_ALLIANCE_URL,
+  IGVF_URL,
+  CLINGEN_URL,
+  GA4GH_URL,
+  CLINVAR_URL
+} from '@/lib/links'
 
 const DATA_MODEL_STEPS = [
   {
@@ -230,6 +240,12 @@ const DATA_MODEL_STEPS = [
 
 // TODO: Add more partners and collaborators, and include links to their websites and/or logos where available
 const PARTNERS = [
+  {
+    name: 'AVE Alliance',
+    description: 'A global community dedicated to systematically measuring and interpreting genetic variant effects.',
+    logoSrc: aveAllianceLogo,
+    url: AVE_ALLIANCE_URL
+  },
   {
     name: 'IGVF Consortium',
     description: 'Functional genomics data from the Impact of Genomic Variation on Function consortium.',

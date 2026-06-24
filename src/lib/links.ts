@@ -12,6 +12,7 @@ export const GITHUB_API_ISSUES = `${GITHUB_API_URL}/issues`
 
 export const MAVEDB_PRODUCTION = 'https://mavedb.org'
 
+export const AVE_ALLIANCE_URL = 'https://www.varianteffect.org/'
 export const AVE_CLINICAL_APPLICATION = 'https://www.varianteffect.org/clinical-application/'
 export const MAVE_REGISTRY = 'https://registry.varianteffect.org/'
 

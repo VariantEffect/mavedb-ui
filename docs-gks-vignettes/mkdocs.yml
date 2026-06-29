@@ -1,0 +1,54 @@
+site_name: MaveDB × GA4GH GKS Vignettes
+site_description: Real-world walk-throughs of how MaveDB uses the GA4GH Genomic Knowledge Standards (VRS, Cat-VRS, VA-Spec)
+
+# Standalone internal preview of the GKS Starter Kit vignettes MaveDB plans to
+# contribute upstream. Mirrors the starter-kit's snippet config (base_path ["."],
+# check_paths) so `docs/vignettes/<slug>/` exports cleanly into ga4gh/gks-starter-kit.
+
+theme:
+  name: material
+  features:
+    - navigation.sections
+    - navigation.expand
+    - content.code.copy
+  palette:
+    - scheme: default
+      primary: indigo
+      accent: indigo
+      toggle:
+        icon: material/brightness-7
+        name: Switch to dark mode
+    - scheme: slate
+      primary: deep purple
+      accent: deep purple
+      toggle:
+        icon: material/brightness-4
+        name: Switch to light mode
+
+use_directory_urls: false
+
+plugins:
+  - search
+
+markdown_extensions:
+  - admonition
+  - attr_list
+  - md_in_html
+  - pymdownx.details
+  - pymdownx.superfences
+  - tables
+  - toc:
+      permalink: true
+  - pymdownx.snippets:
+      base_path: ["."]
+      check_paths: true
+
+nav:
+  - Home: index.md
+  - Vignettes:
+      - "Precise VRS identity (VRS)": vignettes/mavedb-mave-variants-vrs/vignette.md
+      - "Annotate once across score sets (VRS)": vignettes/mavedb-vrs-cross-score-set-harmonization/vignette.md
+      - "Variant as a category (Cat-VRS)": vignettes/mavedb-protein-variant-cat-vrs/vignette.md
+      - "Functional evidence (VA-Spec)": vignettes/mavedb-functional-evidence-va-spec/vignette.md
+
+strict: true

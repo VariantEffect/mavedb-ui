@@ -1,0 +1,1333 @@
+{
+  "type": "Statement",
+  "description": "Variant pathogenicity statement for urn:mavedb:00000096-a-1#2446.",
+  "specifiedBy": {
+    "type": "Method",
+    "name": "ACMG standards and guidelines for the interpretation of sequence variants",
+    "reportedIn": "https://www.acmg.net/docs/standards_guidelines_for_the_interpretation_of_sequence_variants.pdf"
+  },
+  "contributions": [
+    {
+      "type": "Contribution",
+      "name": "MaveDB API",
+      "description": "Contribution from the MaveDB API",
+      "contributor": {
+        "type": "Agent",
+        "name": "MaveDB API",
+        "description": "MaveDB API agent, version 2026.2.5",
+        "extensions": [
+          {
+            "name": "mavedbApiVersion",
+            "value": "2026.2.5"
+          }
+        ],
+        "agentType": "Software"
+      },
+      "activityType": "software application programming interface",
+      "date": "2026-06-24 18:44:14.755971"
+    },
+    {
+      "type": "Contribution",
+      "name": "MaveDB VRS Mapper",
+      "description": "Contribution from the MaveDB VRS mapping software",
+      "contributor": {
+        "type": "Agent",
+        "name": "MaveDB VRS Mapping Agent",
+        "description": "MaveDB VRS mapping agent, version 2026.2.0",
+        "extensions": [
+          {
+            "name": "mavedbVrsVersion",
+            "value": "2026.2.0"
+          }
+        ],
+        "agentType": "Software"
+      },
+      "activityType": "human genome sequence mapping process",
+      "date": "2026-05-28 00:00:00"
+    },
+    {
+      "id": "urn:mavedb:calibration-b18c5122-57a0-4d54-90a7-9297411219c2",
+      "type": "Contribution",
+      "name": "IGVF Coding Variant Focus Group -- Controls: All Variants",
+      "description": "Contribution from a score calibration.",
+      "contributor": {
+        "type": "Agent",
+        "name": "AnonymousUser",
+        "description": "MaveDB ORCid authenticated user AnonymousUser",
+        "agentType": "Person"
+      },
+      "activityType": "variant specific calibration",
+      "date": "2025-11-14 00:00:00"
+    }
+  ],
+  "proposition": {
+    "type": "VariantPathogenicityProposition",
+    "description": "Variant pathogenicity proposition for urn:mavedb:00000096-a-1#2446.",
+    "subjectVariant": {
+      "id": "ga4gh:VA.uKdR7fpiG9_r42oyAC33xQyd24VUNW3I",
+      "type": "Allele",
+      "extensions": [
+        {
+          "name": "vrs_ref_allele_seq",
+          "value": "F"
+        }
+      ],
+      "digest": "uKdR7fpiG9_r42oyAC33xQyd24VUNW3I",
+      "expressions": [
+        {
+          "syntax": "hgvs.p",
+          "value": "NP_000153.1:p.Phe269Gln"
+        }
+      ],
+      "location": {
+        "id": "ga4gh:SL.mr0SP5seWdgAplFqdmHBAbdhfmPcalZq",
+        "type": "SequenceLocation",
+        "digest": "mr0SP5seWdgAplFqdmHBAbdhfmPcalZq",
+        "sequenceReference": {
+          "type": "SequenceReference",
+          "refgetAccession": "SQ._mgLuM2tl_ap4JfYxyyr96JzV_FxAqsk"
+        },
+        "start": 268,
+        "end": 269
+      },
+      "state": {
+        "type": "LiteralSequenceExpression",
+        "sequence": "Q"
+      }
+    },
+    "geneContextQualifier": {
+      "primaryCoding": {
+        "system": "https://www.genenames.org/",
+        "code": "GCK"
+      }
+    },
+    "predicate": "isCausalFor",
+    "objectCondition": {
+      "conceptType": "Disease",
+      "primaryCoding": {
+        "system": "https://www.ncbi.nlm.nih.gov/medgen/",
+        "code": "C0012634",
+        "iris": [
+          "http://identifiers.org/medgen/C0012634"
+        ]
+      }
+    }
+  },
+  "direction": "supports",
+  "classification": {
+    "primaryCoding": {
+      "system": "ACMG Guidelines, 2015",
+      "code": "pathogenic"
+    }
+  },
+  "hasEvidenceLines": [
+    {
+      "type": "EvidenceLine",
+      "description": "Pathogenicity evidence line for urn:mavedb:00000096-a-1#2446.",
+      "extensions": [
+        {
+          "name": "Containing classification name",
+          "value": "Decreased activity",
+          "description": "The name of the classification which contains this variant."
+        }
+      ],
+      "specifiedBy": {
+        "type": "Method",
+        "name": "Calibration method",
+        "methodType": "PS3",
+        "reportedIn": "Not Provided"
+      },
+      "contributions": [
+        {
+          "type": "Contribution",
+          "name": "MaveDB API",
+          "description": "Contribution from the MaveDB API",
+          "contributor": {
+            "type": "Agent",
+            "name": "MaveDB API",
+            "description": "MaveDB API agent, version 2026.2.5",
+            "extensions": [
+              {
+                "name": "mavedbApiVersion",
+                "value": "2026.2.5"
+              }
+            ],
+            "agentType": "Software"
+          },
+          "activityType": "software application programming interface",
+          "date": "2026-06-24 18:44:14.755235"
+        },
+        {
+          "type": "Contribution",
+          "name": "MaveDB VRS Mapper",
+          "description": "Contribution from the MaveDB VRS mapping software",
+          "contributor": {
+            "type": "Agent",
+            "name": "MaveDB VRS Mapping Agent",
+            "description": "MaveDB VRS mapping agent, version 2026.2.0",
+            "extensions": [
+              {
+                "name": "mavedbVrsVersion",
+                "value": "2026.2.0"
+              }
+            ],
+            "agentType": "Software"
+          },
+          "activityType": "human genome sequence mapping process",
+          "date": "2026-05-28 00:00:00"
+        },
+        {
+          "id": "urn:mavedb:calibration-b18c5122-57a0-4d54-90a7-9297411219c2",
+          "type": "Contribution",
+          "name": "IGVF Coding Variant Focus Group -- Controls: All Variants",
+          "description": "Contribution from a score calibration.",
+          "contributor": {
+            "type": "Agent",
+            "name": "AnonymousUser",
+            "description": "MaveDB ORCid authenticated user AnonymousUser",
+            "agentType": "Person"
+          },
+          "activityType": "variant specific calibration",
+          "date": "2025-11-14 00:00:00"
+        }
+      ],
+      "reportedIn": [
+        {
+          "id": "urn:mavedb:calibration-b18c5122-57a0-4d54-90a7-9297411219c2",
+          "type": "Document",
+          "name": "MaveDB Score Calibration",
+          "extensions": [
+            {
+              "name": "Baseline score",
+              "value": 1.0,
+              "description": "No description for this baseline score provided."
+            },
+            {
+              "name": "Research use only",
+              "value": false,
+              "description": "Indicates whether this score calibration is intended for research use only."
+            },
+            {
+              "name": "Primary calibration",
+              "value": true,
+              "description": "Indicates whether this score calibration is the primary calibration for its associated score set."
+            },
+            {
+              "name": "Investigator provided",
+              "value": false,
+              "description": "Indicates whether this score calibration was provided by the investigator rather than generated by MaveDB."
+            },
+            {
+              "name": "Hyperactive",
+              "value": [
+                1.18,
+                null
+              ],
+              "description": "No description for this functional classification provided."
+            },
+            {
+              "name": "(0.66,1.18)",
+              "value": [
+                0.66,
+                1.18
+              ],
+              "description": "No description for this functional classification provided."
+            },
+            {
+              "name": "Decreased activity",
+              "value": [
+                null,
+                0.66
+              ],
+              "description": "No description for this functional classification provided."
+            }
+          ],
+          "documentType": "score calibration",
+          "title": "IGVF Coding Variant Focus Group -- Controls: All Variants",
+          "urls": [
+            "https://mavedb.org/score-sets/urn:mavedb:00000096-a-1/calibrations?calibration=urn%3Amavedb%3Acalibration-b18c5122-57a0-4d54-90a7-9297411219c2"
+          ]
+        }
+      ],
+      "targetProposition": {
+        "type": "VariantPathogenicityProposition",
+        "description": "Variant pathogenicity proposition for urn:mavedb:00000096-a-1#2446.",
+        "subjectVariant": {
+          "id": "ga4gh:VA.uKdR7fpiG9_r42oyAC33xQyd24VUNW3I",
+          "type": "Allele",
+          "extensions": [
+            {
+              "name": "vrs_ref_allele_seq",
+              "value": "F"
+            }
+          ],
+          "digest": "uKdR7fpiG9_r42oyAC33xQyd24VUNW3I",
+          "expressions": [
+            {
+              "syntax": "hgvs.p",
+              "value": "NP_000153.1:p.Phe269Gln"
+            }
+          ],
+          "location": {
+            "id": "ga4gh:SL.mr0SP5seWdgAplFqdmHBAbdhfmPcalZq",
+            "type": "SequenceLocation",
+            "digest": "mr0SP5seWdgAplFqdmHBAbdhfmPcalZq",
+            "sequenceReference": {
+              "type": "SequenceReference",
+              "refgetAccession": "SQ._mgLuM2tl_ap4JfYxyyr96JzV_FxAqsk"
+            },
+            "start": 268,
+            "end": 269
+          },
+          "state": {
+            "type": "LiteralSequenceExpression",
+            "sequence": "Q"
+          }
+        },
+        "geneContextQualifier": {
+          "primaryCoding": {
+            "system": "https://www.genenames.org/",
+            "code": "GCK"
+          }
+        },
+        "predicate": "isCausalFor",
+        "objectCondition": {
+          "conceptType": "Disease",
+          "primaryCoding": {
+            "system": "https://www.ncbi.nlm.nih.gov/medgen/",
+            "code": "C0012634",
+            "iris": [
+              "http://identifiers.org/medgen/C0012634"
+            ]
+          }
+        }
+      },
+      "hasEvidenceItems": [
+        {
+          "type": "Statement",
+          "description": "Variant functional impact statement for urn:mavedb:00000096-a-1#2446.",
+          "specifiedBy": {
+            "type": "Method",
+            "name": "Variant interpretation guideline",
+            "reportedIn": "https://pubmed.ncbi.nlm.nih.gov/29785012/"
+          },
+          "contributions": [
+            {
+              "type": "Contribution",
+              "name": "MaveDB API",
+              "description": "Contribution from the MaveDB API",
+              "contributor": {
+                "type": "Agent",
+                "name": "MaveDB API",
+                "description": "MaveDB API agent, version 2026.2.5",
+                "extensions": [
+                  {
+                    "name": "mavedbApiVersion",
+                    "value": "2026.2.5"
+                  }
+                ],
+                "agentType": "Software"
+              },
+              "activityType": "software application programming interface",
+              "date": "2026-06-24 18:44:14.754872"
+            },
+            {
+              "type": "Contribution",
+              "name": "MaveDB VRS Mapper",
+              "description": "Contribution from the MaveDB VRS mapping software",
+              "contributor": {
+                "type": "Agent",
+                "name": "MaveDB VRS Mapping Agent",
+                "description": "MaveDB VRS mapping agent, version 2026.2.0",
+                "extensions": [
+                  {
+                    "name": "mavedbVrsVersion",
+                    "value": "2026.2.0"
+                  }
+                ],
+                "agentType": "Software"
+              },
+              "activityType": "human genome sequence mapping process",
+              "date": "2026-05-28 00:00:00"
+            },
+            {
+              "id": "urn:mavedb:calibration-b18c5122-57a0-4d54-90a7-9297411219c2",
+              "type": "Contribution",
+              "name": "IGVF Coding Variant Focus Group -- Controls: All Variants",
+              "description": "Contribution from a score calibration.",
+              "contributor": {
+                "type": "Agent",
+                "name": "AnonymousUser",
+                "description": "MaveDB ORCid authenticated user AnonymousUser",
+                "agentType": "Person"
+              },
+              "activityType": "variant specific calibration",
+              "date": "2025-11-14 00:00:00"
+            }
+          ],
+          "proposition": {
+            "type": "ExperimentalVariantFunctionalImpactProposition",
+            "description": "Variant functional impact proposition for urn:mavedb:00000096-a-1#2446.",
+            "subjectVariant": {
+              "id": "ga4gh:VA.uKdR7fpiG9_r42oyAC33xQyd24VUNW3I",
+              "type": "Allele",
+              "extensions": [
+                {
+                  "name": "vrs_ref_allele_seq",
+                  "value": "F"
+                }
+              ],
+              "digest": "uKdR7fpiG9_r42oyAC33xQyd24VUNW3I",
+              "expressions": [
+                {
+                  "syntax": "hgvs.p",
+                  "value": "NP_000153.1:p.Phe269Gln"
+                }
+              ],
+              "location": {
+                "id": "ga4gh:SL.mr0SP5seWdgAplFqdmHBAbdhfmPcalZq",
+                "type": "SequenceLocation",
+                "digest": "mr0SP5seWdgAplFqdmHBAbdhfmPcalZq",
+                "sequenceReference": {
+                  "type": "SequenceReference",
+                  "refgetAccession": "SQ._mgLuM2tl_ap4JfYxyyr96JzV_FxAqsk"
+                },
+                "start": 268,
+                "end": 269
+              },
+              "state": {
+                "type": "LiteralSequenceExpression",
+                "sequence": "Q"
+              }
+            },
+            "predicate": "impactsFunctionOf",
+            "objectSequenceFeature": {
+              "primaryCoding": {
+                "system": "https://www.genenames.org/",
+                "code": "GCK"
+              }
+            },
+            "experimentalContextQualifier": {
+              "id": "urn:mavedb:00000096-a",
+              "type": "Document",
+              "name": "MaveDB Experiment",
+              "description": "Activity of GCK variants measured by functional complementation of an hxk1\u0394hxk2\u0394glk1\u0394 yeast strain.",
+              "documentType": "experiment",
+              "title": "GCK activity measured by complementation",
+              "urls": [
+                "https://mavedb.org/experiments/urn:mavedb:00000096-a"
+              ]
+            }
+          },
+          "direction": "supports",
+          "classification": {
+            "primaryCoding": {
+              "system": "ga4gh-gks-term:experimental-var-func-impact-classification",
+              "code": "abnormal"
+            }
+          },
+          "hasEvidenceLines": [
+            {
+              "type": "EvidenceLine",
+              "description": "Functional evidence line for urn:mavedb:00000096-a-1#2446",
+              "extensions": [
+                {
+                  "name": "Containing functional classification",
+                  "value": "Decreased activity",
+                  "description": "The functional classification which contains this variant."
+                }
+              ],
+              "specifiedBy": {
+                "type": "Method",
+                "name": "Calibration method",
+                "reportedIn": "http://www.ncbi.nlm.nih.gov/pubmed/37101203"
+              },
+              "contributions": [
+                {
+                  "type": "Contribution",
+                  "name": "MaveDB API",
+                  "description": "Contribution from the MaveDB API",
+                  "contributor": {
+                    "type": "Agent",
+                    "name": "MaveDB API",
+                    "description": "MaveDB API agent, version 2026.2.5",
+                    "extensions": [
+                      {
+                        "name": "mavedbApiVersion",
+                        "value": "2026.2.5"
+                      }
+                    ],
+                    "agentType": "Software"
+                  },
+                  "activityType": "software application programming interface",
+                  "date": "2026-06-24 18:44:14.754491"
+                },
+                {
+                  "type": "Contribution",
+                  "name": "MaveDB VRS Mapper",
+                  "description": "Contribution from the MaveDB VRS mapping software",
+                  "contributor": {
+                    "type": "Agent",
+                    "name": "MaveDB VRS Mapping Agent",
+                    "description": "MaveDB VRS mapping agent, version 2026.2.0",
+                    "extensions": [
+                      {
+                        "name": "mavedbVrsVersion",
+                        "value": "2026.2.0"
+                      }
+                    ],
+                    "agentType": "Software"
+                  },
+                  "activityType": "human genome sequence mapping process",
+                  "date": "2026-05-28 00:00:00"
+                },
+                {
+                  "id": "urn:mavedb:calibration-b18c5122-57a0-4d54-90a7-9297411219c2",
+                  "type": "Contribution",
+                  "name": "IGVF Coding Variant Focus Group -- Controls: All Variants",
+                  "description": "Contribution from a score calibration.",
+                  "contributor": {
+                    "type": "Agent",
+                    "name": "AnonymousUser",
+                    "description": "MaveDB ORCid authenticated user AnonymousUser",
+                    "agentType": "Person"
+                  },
+                  "activityType": "variant specific calibration",
+                  "date": "2025-11-14 00:00:00"
+                }
+              ],
+              "reportedIn": [
+                {
+                  "id": "urn:mavedb:calibration-b18c5122-57a0-4d54-90a7-9297411219c2",
+                  "type": "Document",
+                  "name": "MaveDB Score Calibration",
+                  "extensions": [
+                    {
+                      "name": "Baseline score",
+                      "value": 1.0,
+                      "description": "No description for this baseline score provided."
+                    },
+                    {
+                      "name": "Research use only",
+                      "value": false,
+                      "description": "Indicates whether this score calibration is intended for research use only."
+                    },
+                    {
+                      "name": "Primary calibration",
+                      "value": true,
+                      "description": "Indicates whether this score calibration is the primary calibration for its associated score set."
+                    },
+                    {
+                      "name": "Investigator provided",
+                      "value": false,
+                      "description": "Indicates whether this score calibration was provided by the investigator rather than generated by MaveDB."
+                    },
+                    {
+                      "name": "Hyperactive",
+                      "value": [
+                        1.18,
+                        null
+                      ],
+                      "description": "No description for this functional classification provided."
+                    },
+                    {
+                      "name": "(0.66,1.18)",
+                      "value": [
+                        0.66,
+                        1.18
+                      ],
+                      "description": "No description for this functional classification provided."
+                    },
+                    {
+                      "name": "Decreased activity",
+                      "value": [
+                        null,
+                        0.66
+                      ],
+                      "description": "No description for this functional classification provided."
+                    }
+                  ],
+                  "documentType": "score calibration",
+                  "title": "IGVF Coding Variant Focus Group -- Controls: All Variants",
+                  "urls": [
+                    "https://mavedb.org/score-sets/urn:mavedb:00000096-a-1/calibrations?calibration=urn%3Amavedb%3Acalibration-b18c5122-57a0-4d54-90a7-9297411219c2"
+                  ]
+                }
+              ],
+              "hasEvidenceItems": [
+                {
+                  "type": "ExperimentalVariantFunctionalImpactStudyResult",
+                  "description": "Variant effect study result for urn:mavedb:00000096-a-1#2446.",
+                  "specifiedBy": {
+                    "type": "Method",
+                    "name": "Experimental protocol",
+                    "reportedIn": "http://www.ncbi.nlm.nih.gov/pubmed/37101203"
+                  },
+                  "contributions": [
+                    {
+                      "type": "Contribution",
+                      "name": "MaveDB API",
+                      "description": "Contribution from the MaveDB API",
+                      "contributor": {
+                        "type": "Agent",
+                        "name": "MaveDB API",
+                        "description": "MaveDB API agent, version 2026.2.5",
+                        "extensions": [
+                          {
+                            "name": "mavedbApiVersion",
+                            "value": "2026.2.5"
+                          }
+                        ],
+                        "agentType": "Software"
+                      },
+                      "activityType": "software application programming interface",
+                      "date": "2026-06-24 18:44:14.486748"
+                    },
+                    {
+                      "type": "Contribution",
+                      "name": "MaveDB VRS Mapper",
+                      "description": "Contribution from the MaveDB VRS mapping software",
+                      "contributor": {
+                        "type": "Agent",
+                        "name": "MaveDB VRS Mapping Agent",
+                        "description": "MaveDB VRS mapping agent, version 2026.2.0",
+                        "extensions": [
+                          {
+                            "name": "mavedbVrsVersion",
+                            "value": "2026.2.0"
+                          }
+                        ],
+                        "agentType": "Software"
+                      },
+                      "activityType": "human genome sequence mapping process",
+                      "date": "2026-05-28 00:00:00"
+                    },
+                    {
+                      "type": "Contribution",
+                      "name": "MaveDB Dataset Creator",
+                      "description": "When this resource was first submitted, and by whom.",
+                      "extensions": [
+                        {
+                          "name": "resourceType",
+                          "value": "Variant"
+                        }
+                      ],
+                      "contributor": {
+                        "type": "Agent",
+                        "name": "0000-0001-5034-1952",
+                        "description": "MaveDB ORCid authenticated user 0000-0001-5034-1952",
+                        "agentType": "Person"
+                      },
+                      "activityType": "http://purl.obolibrary.org/obo/CRO_0000105",
+                      "date": "2022-03-18 00:00:00"
+                    },
+                    {
+                      "type": "Contribution",
+                      "name": "MaveDB Dataset Modifier",
+                      "description": "When this resource was last modified, and by whom.",
+                      "extensions": [
+                        {
+                          "name": "resourceType",
+                          "value": "Variant"
+                        }
+                      ],
+                      "contributor": {
+                        "type": "Agent",
+                        "name": "0000-0001-5034-1952",
+                        "description": "MaveDB ORCid authenticated user 0000-0001-5034-1952",
+                        "agentType": "Person"
+                      },
+                      "activityType": "http://purl.obolibrary.org/obo/CRO_0000103",
+                      "date": "2022-06-14 00:00:00"
+                    }
+                  ],
+                  "reportedIn": [
+                    "https://mavedb.org/score-sets/urn:mavedb:00000096-a-1?variant=urn%3Amavedb%3A00000096-a-1%232446",
+                    "https://mavedb.org/variant/PA2579976630"
+                  ],
+                  "sourceDataSet": {
+                    "id": "urn:mavedb:00000096-a-1",
+                    "type": "DataSet",
+                    "name": "GCK activity measured by complementation",
+                    "description": "Activity of GCK variants measured by functional complementation of an hxk1\u0394hxk2\u0394glk1\u0394 yeast strain.",
+                    "reportedIn": "https://mavedb.org/score-sets/urn:mavedb:00000096-a-1",
+                    "releaseDate": "2022-06-14",
+                    "license": {
+                      "name": "CC0 (Public domain)",
+                      "primaryCoding": {
+                        "system": "https://spdx.org/licenses/",
+                        "systemVersion": "1.0",
+                        "code": "CC0-1.0",
+                        "iris": [
+                          "https://creativecommons.org/publicdomain/zero/1.0/"
+                        ]
+                      }
+                    }
+                  },
+                  "focusVariant": {
+                    "id": "ga4gh:VA.uKdR7fpiG9_r42oyAC33xQyd24VUNW3I",
+                    "type": "Allele",
+                    "extensions": [
+                      {
+                        "name": "vrs_ref_allele_seq",
+                        "value": "F"
+                      }
+                    ],
+                    "digest": "uKdR7fpiG9_r42oyAC33xQyd24VUNW3I",
+                    "expressions": [
+                      {
+                        "syntax": "hgvs.p",
+                        "value": "NP_000153.1:p.Phe269Gln"
+                      }
+                    ],
+                    "location": {
+                      "id": "ga4gh:SL.mr0SP5seWdgAplFqdmHBAbdhfmPcalZq",
+                      "type": "SequenceLocation",
+                      "digest": "mr0SP5seWdgAplFqdmHBAbdhfmPcalZq",
+                      "sequenceReference": {
+                        "type": "SequenceReference",
+                        "refgetAccession": "SQ._mgLuM2tl_ap4JfYxyyr96JzV_FxAqsk"
+                      },
+                      "start": 268,
+                      "end": 269
+                    },
+                    "state": {
+                      "type": "LiteralSequenceExpression",
+                      "sequence": "Q"
+                    }
+                  },
+                  "functionalImpactScore": 0.21223874
+                }
+              ],
+              "directionOfEvidenceProvided": "supports",
+              "evidenceOutcome": {
+                "primaryCoding": {
+                  "system": "ga4gh-gks-term:experimental-var-func-impact-classification",
+                  "code": "abnormal"
+                }
+              }
+            }
+          ]
+        }
+      ],
+      "directionOfEvidenceProvided": "supports",
+      "strengthOfEvidenceProvided": {
+        "primaryCoding": {
+          "system": "ACMG Guidelines, 2015",
+          "code": "moderate"
+        }
+      },
+      "evidenceOutcome": {
+        "name": "ACMG 2015 PS3 Criterion Met",
+        "primaryCoding": {
+          "system": "ACMG Guidelines, 2015",
+          "code": "PS3_moderate"
+        }
+      }
+    },
+    {
+      "type": "EvidenceLine",
+      "description": "Pathogenicity evidence line for urn:mavedb:00000096-a-1#2446.",
+      "extensions": [
+        {
+          "name": "Containing classification name",
+          "value": "Decreased activity",
+          "description": "The name of the classification which contains this variant."
+        }
+      ],
+      "specifiedBy": {
+        "type": "Method",
+        "name": "Calibration method",
+        "methodType": "PS3",
+        "reportedIn": "Not Provided"
+      },
+      "contributions": [
+        {
+          "type": "Contribution",
+          "name": "MaveDB API",
+          "description": "Contribution from the MaveDB API",
+          "contributor": {
+            "type": "Agent",
+            "name": "MaveDB API",
+            "description": "MaveDB API agent, version 2026.2.5",
+            "extensions": [
+              {
+                "name": "mavedbApiVersion",
+                "value": "2026.2.5"
+              }
+            ],
+            "agentType": "Software"
+          },
+          "activityType": "software application programming interface",
+          "date": "2026-06-24 18:44:14.755802"
+        },
+        {
+          "type": "Contribution",
+          "name": "MaveDB VRS Mapper",
+          "description": "Contribution from the MaveDB VRS mapping software",
+          "contributor": {
+            "type": "Agent",
+            "name": "MaveDB VRS Mapping Agent",
+            "description": "MaveDB VRS mapping agent, version 2026.2.0",
+            "extensions": [
+              {
+                "name": "mavedbVrsVersion",
+                "value": "2026.2.0"
+              }
+            ],
+            "agentType": "Software"
+          },
+          "activityType": "human genome sequence mapping process",
+          "date": "2026-05-28 00:00:00"
+        },
+        {
+          "id": "urn:mavedb:calibration-c1472fe6-94f4-4785-b313-4777e9839f92",
+          "type": "Contribution",
+          "name": "IGVF Coding Variant Focus Group -- Controls: Missense Variants Only",
+          "description": "Contribution from a score calibration.",
+          "contributor": {
+            "type": "Agent",
+            "name": "AnonymousUser",
+            "description": "MaveDB ORCid authenticated user AnonymousUser",
+            "agentType": "Person"
+          },
+          "activityType": "variant specific calibration",
+          "date": "2025-11-14 00:00:00"
+        }
+      ],
+      "reportedIn": [
+        {
+          "id": "urn:mavedb:calibration-c1472fe6-94f4-4785-b313-4777e9839f92",
+          "type": "Document",
+          "name": "MaveDB Score Calibration",
+          "extensions": [
+            {
+              "name": "Baseline score",
+              "value": 1.0,
+              "description": "No description for this baseline score provided."
+            },
+            {
+              "name": "Research use only",
+              "value": false,
+              "description": "Indicates whether this score calibration is intended for research use only."
+            },
+            {
+              "name": "Primary calibration",
+              "value": false,
+              "description": "Indicates whether this score calibration is the primary calibration for its associated score set."
+            },
+            {
+              "name": "Investigator provided",
+              "value": false,
+              "description": "Indicates whether this score calibration was provided by the investigator rather than generated by MaveDB."
+            },
+            {
+              "name": "Decreased activity",
+              "value": [
+                null,
+                0.66
+              ],
+              "description": "No description for this functional classification provided."
+            },
+            {
+              "name": "Hyperactive",
+              "value": [
+                1.18,
+                null
+              ],
+              "description": "No description for this functional classification provided."
+            },
+            {
+              "name": "(0.66,1.18)",
+              "value": [
+                0.66,
+                1.18
+              ],
+              "description": "No description for this functional classification provided."
+            }
+          ],
+          "documentType": "score calibration",
+          "title": "IGVF Coding Variant Focus Group -- Controls: Missense Variants Only",
+          "urls": [
+            "https://mavedb.org/score-sets/urn:mavedb:00000096-a-1/calibrations?calibration=urn%3Amavedb%3Acalibration-c1472fe6-94f4-4785-b313-4777e9839f92"
+          ]
+        }
+      ],
+      "targetProposition": {
+        "type": "VariantPathogenicityProposition",
+        "description": "Variant pathogenicity proposition for urn:mavedb:00000096-a-1#2446.",
+        "subjectVariant": {
+          "id": "ga4gh:VA.uKdR7fpiG9_r42oyAC33xQyd24VUNW3I",
+          "type": "Allele",
+          "extensions": [
+            {
+              "name": "vrs_ref_allele_seq",
+              "value": "F"
+            }
+          ],
+          "digest": "uKdR7fpiG9_r42oyAC33xQyd24VUNW3I",
+          "expressions": [
+            {
+              "syntax": "hgvs.p",
+              "value": "NP_000153.1:p.Phe269Gln"
+            }
+          ],
+          "location": {
+            "id": "ga4gh:SL.mr0SP5seWdgAplFqdmHBAbdhfmPcalZq",
+            "type": "SequenceLocation",
+            "digest": "mr0SP5seWdgAplFqdmHBAbdhfmPcalZq",
+            "sequenceReference": {
+              "type": "SequenceReference",
+              "refgetAccession": "SQ._mgLuM2tl_ap4JfYxyyr96JzV_FxAqsk"
+            },
+            "start": 268,
+            "end": 269
+          },
+          "state": {
+            "type": "LiteralSequenceExpression",
+            "sequence": "Q"
+          }
+        },
+        "geneContextQualifier": {
+          "primaryCoding": {
+            "system": "https://www.genenames.org/",
+            "code": "GCK"
+          }
+        },
+        "predicate": "isCausalFor",
+        "objectCondition": {
+          "conceptType": "Disease",
+          "primaryCoding": {
+            "system": "https://www.ncbi.nlm.nih.gov/medgen/",
+            "code": "C0012634",
+            "iris": [
+              "http://identifiers.org/medgen/C0012634"
+            ]
+          }
+        }
+      },
+      "hasEvidenceItems": [
+        {
+          "type": "Statement",
+          "description": "Variant functional impact statement for urn:mavedb:00000096-a-1#2446.",
+          "specifiedBy": {
+            "type": "Method",
+            "name": "Variant interpretation guideline",
+            "reportedIn": "https://pubmed.ncbi.nlm.nih.gov/29785012/"
+          },
+          "contributions": [
+            {
+              "type": "Contribution",
+              "name": "MaveDB API",
+              "description": "Contribution from the MaveDB API",
+              "contributor": {
+                "type": "Agent",
+                "name": "MaveDB API",
+                "description": "MaveDB API agent, version 2026.2.5",
+                "extensions": [
+                  {
+                    "name": "mavedbApiVersion",
+                    "value": "2026.2.5"
+                  }
+                ],
+                "agentType": "Software"
+              },
+              "activityType": "software application programming interface",
+              "date": "2026-06-24 18:44:14.755708"
+            },
+            {
+              "type": "Contribution",
+              "name": "MaveDB VRS Mapper",
+              "description": "Contribution from the MaveDB VRS mapping software",
+              "contributor": {
+                "type": "Agent",
+                "name": "MaveDB VRS Mapping Agent",
+                "description": "MaveDB VRS mapping agent, version 2026.2.0",
+                "extensions": [
+                  {
+                    "name": "mavedbVrsVersion",
+                    "value": "2026.2.0"
+                  }
+                ],
+                "agentType": "Software"
+              },
+              "activityType": "human genome sequence mapping process",
+              "date": "2026-05-28 00:00:00"
+            },
+            {
+              "id": "urn:mavedb:calibration-c1472fe6-94f4-4785-b313-4777e9839f92",
+              "type": "Contribution",
+              "name": "IGVF Coding Variant Focus Group -- Controls: Missense Variants Only",
+              "description": "Contribution from a score calibration.",
+              "contributor": {
+                "type": "Agent",
+                "name": "AnonymousUser",
+                "description": "MaveDB ORCid authenticated user AnonymousUser",
+                "agentType": "Person"
+              },
+              "activityType": "variant specific calibration",
+              "date": "2025-11-14 00:00:00"
+            }
+          ],
+          "proposition": {
+            "type": "ExperimentalVariantFunctionalImpactProposition",
+            "description": "Variant functional impact proposition for urn:mavedb:00000096-a-1#2446.",
+            "subjectVariant": {
+              "id": "ga4gh:VA.uKdR7fpiG9_r42oyAC33xQyd24VUNW3I",
+              "type": "Allele",
+              "extensions": [
+                {
+                  "name": "vrs_ref_allele_seq",
+                  "value": "F"
+                }
+              ],
+              "digest": "uKdR7fpiG9_r42oyAC33xQyd24VUNW3I",
+              "expressions": [
+                {
+                  "syntax": "hgvs.p",
+                  "value": "NP_000153.1:p.Phe269Gln"
+                }
+              ],
+              "location": {
+                "id": "ga4gh:SL.mr0SP5seWdgAplFqdmHBAbdhfmPcalZq",
+                "type": "SequenceLocation",
+                "digest": "mr0SP5seWdgAplFqdmHBAbdhfmPcalZq",
+                "sequenceReference": {
+                  "type": "SequenceReference",
+                  "refgetAccession": "SQ._mgLuM2tl_ap4JfYxyyr96JzV_FxAqsk"
+                },
+                "start": 268,
+                "end": 269
+              },
+              "state": {
+                "type": "LiteralSequenceExpression",
+                "sequence": "Q"
+              }
+            },
+            "predicate": "impactsFunctionOf",
+            "objectSequenceFeature": {
+              "primaryCoding": {
+                "system": "https://www.genenames.org/",
+                "code": "GCK"
+              }
+            },
+            "experimentalContextQualifier": {
+              "id": "urn:mavedb:00000096-a",
+              "type": "Document",
+              "name": "MaveDB Experiment",
+              "description": "Activity of GCK variants measured by functional complementation of an hxk1\u0394hxk2\u0394glk1\u0394 yeast strain.",
+              "documentType": "experiment",
+              "title": "GCK activity measured by complementation",
+              "urls": [
+                "https://mavedb.org/experiments/urn:mavedb:00000096-a"
+              ]
+            }
+          },
+          "direction": "supports",
+          "classification": {
+            "primaryCoding": {
+              "system": "ga4gh-gks-term:experimental-var-func-impact-classification",
+              "code": "abnormal"
+            }
+          },
+          "hasEvidenceLines": [
+            {
+              "type": "EvidenceLine",
+              "description": "Functional evidence line for urn:mavedb:00000096-a-1#2446",
+              "extensions": [
+                {
+                  "name": "Containing functional classification",
+                  "value": "Decreased activity",
+                  "description": "The functional classification which contains this variant."
+                }
+              ],
+              "specifiedBy": {
+                "type": "Method",
+                "name": "Calibration method",
+                "reportedIn": "http://www.ncbi.nlm.nih.gov/pubmed/37101203"
+              },
+              "contributions": [
+                {
+                  "type": "Contribution",
+                  "name": "MaveDB API",
+                  "description": "Contribution from the MaveDB API",
+                  "contributor": {
+                    "type": "Agent",
+                    "name": "MaveDB API",
+                    "description": "MaveDB API agent, version 2026.2.5",
+                    "extensions": [
+                      {
+                        "name": "mavedbApiVersion",
+                        "value": "2026.2.5"
+                      }
+                    ],
+                    "agentType": "Software"
+                  },
+                  "activityType": "software application programming interface",
+                  "date": "2026-06-24 18:44:14.755510"
+                },
+                {
+                  "type": "Contribution",
+                  "name": "MaveDB VRS Mapper",
+                  "description": "Contribution from the MaveDB VRS mapping software",
+                  "contributor": {
+                    "type": "Agent",
+                    "name": "MaveDB VRS Mapping Agent",
+                    "description": "MaveDB VRS mapping agent, version 2026.2.0",
+                    "extensions": [
+                      {
+                        "name": "mavedbVrsVersion",
+                        "value": "2026.2.0"
+                      }
+                    ],
+                    "agentType": "Software"
+                  },
+                  "activityType": "human genome sequence mapping process",
+                  "date": "2026-05-28 00:00:00"
+                },
+                {
+                  "id": "urn:mavedb:calibration-c1472fe6-94f4-4785-b313-4777e9839f92",
+                  "type": "Contribution",
+                  "name": "IGVF Coding Variant Focus Group -- Controls: Missense Variants Only",
+                  "description": "Contribution from a score calibration.",
+                  "contributor": {
+                    "type": "Agent",
+                    "name": "AnonymousUser",
+                    "description": "MaveDB ORCid authenticated user AnonymousUser",
+                    "agentType": "Person"
+                  },
+                  "activityType": "variant specific calibration",
+                  "date": "2025-11-14 00:00:00"
+                }
+              ],
+              "reportedIn": [
+                {
+                  "id": "urn:mavedb:calibration-c1472fe6-94f4-4785-b313-4777e9839f92",
+                  "type": "Document",
+                  "name": "MaveDB Score Calibration",
+                  "extensions": [
+                    {
+                      "name": "Baseline score",
+                      "value": 1.0,
+                      "description": "No description for this baseline score provided."
+                    },
+                    {
+                      "name": "Research use only",
+                      "value": false,
+                      "description": "Indicates whether this score calibration is intended for research use only."
+                    },
+                    {
+                      "name": "Primary calibration",
+                      "value": false,
+                      "description": "Indicates whether this score calibration is the primary calibration for its associated score set."
+                    },
+                    {
+                      "name": "Investigator provided",
+                      "value": false,
+                      "description": "Indicates whether this score calibration was provided by the investigator rather than generated by MaveDB."
+                    },
+                    {
+                      "name": "Decreased activity",
+                      "value": [
+                        null,
+                        0.66
+                      ],
+                      "description": "No description for this functional classification provided."
+                    },
+                    {
+                      "name": "Hyperactive",
+                      "value": [
+                        1.18,
+                        null
+                      ],
+                      "description": "No description for this functional classification provided."
+                    },
+                    {
+                      "name": "(0.66,1.18)",
+                      "value": [
+                        0.66,
+                        1.18
+                      ],
+                      "description": "No description for this functional classification provided."
+                    }
+                  ],
+                  "documentType": "score calibration",
+                  "title": "IGVF Coding Variant Focus Group -- Controls: Missense Variants Only",
+                  "urls": [
+                    "https://mavedb.org/score-sets/urn:mavedb:00000096-a-1/calibrations?calibration=urn%3Amavedb%3Acalibration-c1472fe6-94f4-4785-b313-4777e9839f92"
+                  ]
+                }
+              ],
+              "hasEvidenceItems": [
+                {
+                  "type": "ExperimentalVariantFunctionalImpactStudyResult",
+                  "description": "Variant effect study result for urn:mavedb:00000096-a-1#2446.",
+                  "specifiedBy": {
+                    "type": "Method",
+                    "name": "Experimental protocol",
+                    "reportedIn": "http://www.ncbi.nlm.nih.gov/pubmed/37101203"
+                  },
+                  "contributions": [
+                    {
+                      "type": "Contribution",
+                      "name": "MaveDB API",
+                      "description": "Contribution from the MaveDB API",
+                      "contributor": {
+                        "type": "Agent",
+                        "name": "MaveDB API",
+                        "description": "MaveDB API agent, version 2026.2.5",
+                        "extensions": [
+                          {
+                            "name": "mavedbApiVersion",
+                            "value": "2026.2.5"
+                          }
+                        ],
+                        "agentType": "Software"
+                      },
+                      "activityType": "software application programming interface",
+                      "date": "2026-06-24 18:44:14.486748"
+                    },
+                    {
+                      "type": "Contribution",
+                      "name": "MaveDB VRS Mapper",
+                      "description": "Contribution from the MaveDB VRS mapping software",
+                      "contributor": {
+                        "type": "Agent",
+                        "name": "MaveDB VRS Mapping Agent",
+                        "description": "MaveDB VRS mapping agent, version 2026.2.0",
+                        "extensions": [
+                          {
+                            "name": "mavedbVrsVersion",
+                            "value": "2026.2.0"
+                          }
+                        ],
+                        "agentType": "Software"
+                      },
+                      "activityType": "human genome sequence mapping process",
+                      "date": "2026-05-28 00:00:00"
+                    },
+                    {
+                      "type": "Contribution",
+                      "name": "MaveDB Dataset Creator",
+                      "description": "When this resource was first submitted, and by whom.",
+                      "extensions": [
+                        {
+                          "name": "resourceType",
+                          "value": "Variant"
+                        }
+                      ],
+                      "contributor": {
+                        "type": "Agent",
+                        "name": "0000-0001-5034-1952",
+                        "description": "MaveDB ORCid authenticated user 0000-0001-5034-1952",
+                        "agentType": "Person"
+                      },
+                      "activityType": "http://purl.obolibrary.org/obo/CRO_0000105",
+                      "date": "2022-03-18 00:00:00"
+                    },
+                    {
+                      "type": "Contribution",
+                      "name": "MaveDB Dataset Modifier",
+                      "description": "When this resource was last modified, and by whom.",
+                      "extensions": [
+                        {
+                          "name": "resourceType",
+                          "value": "Variant"
+                        }
+                      ],
+                      "contributor": {
+                        "type": "Agent",
+                        "name": "0000-0001-5034-1952",
+                        "description": "MaveDB ORCid authenticated user 0000-0001-5034-1952",
+                        "agentType": "Person"
+                      },
+                      "activityType": "http://purl.obolibrary.org/obo/CRO_0000103",
+                      "date": "2022-06-14 00:00:00"
+                    }
+                  ],
+                  "reportedIn": [
+                    "https://mavedb.org/score-sets/urn:mavedb:00000096-a-1?variant=urn%3Amavedb%3A00000096-a-1%232446",
+                    "https://mavedb.org/variant/PA2579976630"
+                  ],
+                  "sourceDataSet": {
+                    "id": "urn:mavedb:00000096-a-1",
+                    "type": "DataSet",
+                    "name": "GCK activity measured by complementation",
+                    "description": "Activity of GCK variants measured by functional complementation of an hxk1\u0394hxk2\u0394glk1\u0394 yeast strain.",
+                    "reportedIn": "https://mavedb.org/score-sets/urn:mavedb:00000096-a-1",
+                    "releaseDate": "2022-06-14",
+                    "license": {
+                      "name": "CC0 (Public domain)",
+                      "primaryCoding": {
+                        "system": "https://spdx.org/licenses/",
+                        "systemVersion": "1.0",
+                        "code": "CC0-1.0",
+                        "iris": [
+                          "https://creativecommons.org/publicdomain/zero/1.0/"
+                        ]
+                      }
+                    }
+                  },
+                  "focusVariant": {
+                    "id": "ga4gh:VA.uKdR7fpiG9_r42oyAC33xQyd24VUNW3I",
+                    "type": "Allele",
+                    "extensions": [
+                      {
+                        "name": "vrs_ref_allele_seq",
+                        "value": "F"
+                      }
+                    ],
+                    "digest": "uKdR7fpiG9_r42oyAC33xQyd24VUNW3I",
+                    "expressions": [
+                      {
+                        "syntax": "hgvs.p",
+                        "value": "NP_000153.1:p.Phe269Gln"
+                      }
+                    ],
+                    "location": {
+                      "id": "ga4gh:SL.mr0SP5seWdgAplFqdmHBAbdhfmPcalZq",
+                      "type": "SequenceLocation",
+                      "digest": "mr0SP5seWdgAplFqdmHBAbdhfmPcalZq",
+                      "sequenceReference": {
+                        "type": "SequenceReference",
+                        "refgetAccession": "SQ._mgLuM2tl_ap4JfYxyyr96JzV_FxAqsk"
+                      },
+                      "start": 268,
+                      "end": 269
+                    },
+                    "state": {
+                      "type": "LiteralSequenceExpression",
+                      "sequence": "Q"
+                    }
+                  },
+                  "functionalImpactScore": 0.21223874
+                }
+              ],
+              "directionOfEvidenceProvided": "supports",
+              "evidenceOutcome": {
+                "primaryCoding": {
+                  "system": "ga4gh-gks-term:experimental-var-func-impact-classification",
+                  "code": "abnormal"
+                }
+              }
+            }
+          ]
+        }
+      ],
+      "directionOfEvidenceProvided": "supports",
+      "strengthOfEvidenceProvided": {
+        "primaryCoding": {
+          "system": "ACMG Guidelines, 2015",
+          "code": "moderate"
+        }
+      },
+      "evidenceOutcome": {
+        "name": "ACMG 2015 PS3 Criterion Met",
+        "primaryCoding": {
+          "system": "ACMG Guidelines, 2015",
+          "code": "PS3_moderate"
+        }
+      }
+    }
+  ]
+}

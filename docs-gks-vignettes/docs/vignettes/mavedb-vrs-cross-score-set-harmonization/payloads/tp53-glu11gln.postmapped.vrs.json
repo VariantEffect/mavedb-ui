@@ -1,0 +1,34 @@
+{
+  "id": "ga4gh:VA.SnOzGzPkL6_TKrM0h38YeaTJ1AEgp2MJ",
+  "type": "Allele",
+  "state": {
+    "type": "LiteralSequenceExpression",
+    "sequence": "Q"
+  },
+  "digest": "SnOzGzPkL6_TKrM0h38YeaTJ1AEgp2MJ",
+  "location": {
+    "id": "ga4gh:SL.XVL3-XNEArW9-cTBzHRMwdWXgLvJKcJh",
+    "end": 11,
+    "type": "SequenceLocation",
+    "start": 10,
+    "digest": "XVL3-XNEArW9-cTBzHRMwdWXgLvJKcJh",
+    "sequenceReference": {
+      "type": "SequenceReference",
+      "label": "NP_000537.3",
+      "refgetAccession": "SQ.KAxM06sYzBF6zFftFaYq9E_18wsnn7al"
+    }
+  },
+  "extensions": [
+    {
+      "name": "vrs_ref_allele_seq",
+      "type": "Extension",
+      "value": "E"
+    }
+  ],
+  "expressions": [
+    {
+      "value": "NP_000537.3:p.Glu11Gln",
+      "syntax": "hgvs.p"
+    }
+  ]
+}

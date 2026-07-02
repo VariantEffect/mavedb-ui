@@ -747,6 +747,20 @@ export interface paths {
      */
     delete: operations["delete_score_set_api_v1_score_sets__urn__delete"];
   };
+  "/api/v1/score-sets/{urn}/variants": {
+    /**
+     * Get the lean whole-set variant view for a score set
+     * @description Return the lean whole-set view for a score set: one pre-chewed record per variant carrying the
+     * selection key (variant URN), score, a representative consequence, the bridge identifiers into the
+     * annotation dimensions (ClinGen allele id, assay-level digest), and the DNA + protein parsed
+     * position/ref/alt blocks that drive the heatmap's level toggle.
+     *
+     * The full set is returned in one payload — the score-set page bins/sorts/filters across every
+     * variant client-side. as_of time-travels the annotation layer only (scores are immutable); the
+     * resolved value is echoed in the X-As-Of response header so the content-time is a visible fact.
+     */
+    get: operations["get_score_set_lean_variants_api_v1_score_sets__urn__variants_get"];
+  };
   "/api/v1/score-sets/{urn}/variants/data": {
     /**
      * Get score set variant data in CSV format
@@ -3363,6 +3377,23 @@ export interface components {
       detail?: components["schemas"]["ValidationError"][];
     };
     /**
+     * HgvsField
+     * @description An HGVS expression with its parsed substitution block riding alongside when representable.
+     *
+     * ``hgvs`` is always present; ``position``/``ref``/``alt`` appear only for a placeable simple
+     * substitution (the heatmap grid) and are omitted for splice/indels/multivariants.
+     */
+    HgvsField: {
+      /** Hgvs */
+      hgvs: string;
+      /** Position */
+      position?: number | null;
+      /** Ref */
+      ref?: string | null;
+      /** Alt */
+      alt?: string | null;
+    };
+    /**
      * JobRunDetail
      * @description Single-job-run detail response including the error traceback.
      */
@@ -3488,6 +3519,34 @@ export interface components {
       special?: boolean | null;
       /** Description */
       description?: string | null;
+    };
+    /**
+     * LeanVariant
+     * @description One pre-chewed per-variant record feeding the score-set table, heatmap, and histograms.
+     *
+     * ``variantUrn`` is the universal selection key; ``assayLevelDigest`` bridges into the digest-keyed
+     * annotation dimensions. The submitted HGVS (``hgvsNt``/``hgvsPro``/``hgvsSplice``, target frame) and
+     * the mapped ``assayLevelHgvs`` (reference frame) carry both sides of the heatmap's frame toggle, each
+     * with an optional parsed block for the level toggle. ``proteinLevelHgvs`` is the mapped protein
+     * representation (distinct from the *submitted* ``hgvsPro``); for a protein assay it coincides with
+     * ``assayLevelHgvs``. Fields are omitted when null.
+     */
+    LeanVariant: {
+      /** Varianturn */
+      variantUrn: string;
+      /** Score */
+      score?: number | null;
+      /** Consequence */
+      consequence?: string | null;
+      /** Clingenalleleid */
+      clingenAlleleId?: string | null;
+      /** Assayleveldigest */
+      assayLevelDigest?: string | null;
+      hgvsNt?: components["schemas"]["HgvsField"] | null;
+      hgvsPro?: components["schemas"]["HgvsField"] | null;
+      hgvsSplice?: components["schemas"]["HgvsField"] | null;
+      assayLevelHgvs?: components["schemas"]["HgvsField"] | null;
+      proteinLevelHgvs?: components["schemas"]["HgvsField"] | null;
     };
     /**
      * LengthExpression
@@ -10102,6 +10161,61 @@ export interface operations {
       200: {
         content: {
           "application/json": unknown;
+        };
+      };
+      /** @description Authentication required. */
+      401: {
+        content: never;
+      };
+      /** @description Forbidden. Insufficient permissions. */
+      403: {
+        content: never;
+      };
+      /** @description Resource not found. */
+      404: {
+        content: never;
+      };
+      /** @description Validation Error */
+      422: {
+        content: {
+          "application/json": components["schemas"]["HTTPValidationError"];
+        };
+      };
+      /** @description Internal server error. */
+      500: {
+        content: never;
+      };
+    };
+  };
+  /**
+   * Get the lean whole-set variant view for a score set
+   * @description Return the lean whole-set view for a score set: one pre-chewed record per variant carrying the
+   * selection key (variant URN), score, a representative consequence, the bridge identifiers into the
+   * annotation dimensions (ClinGen allele id, assay-level digest), and the DNA + protein parsed
+   * position/ref/alt blocks that drive the heatmap's level toggle.
+   *
+   * The full set is returned in one payload — the score-set page bins/sorts/filters across every
+   * variant client-side. as_of time-travels the annotation layer only (scores are immutable); the
+   * resolved value is echoed in the X-As-Of response header so the content-time is a visible fact.
+   */
+  get_score_set_lean_variants_api_v1_score_sets__urn__variants_get: {
+    parameters: {
+      query?: {
+        /** @description Reconstruct the annotation layer (mapping, allele links, VEP consequence) as it stood at this instant, over the score set's fixed scores. ISO 8601, ideally timezone-aware. This is content valid-time only — it never re-selects a score-set version. Defaults to current. */
+        as_of?: string | null;
+      };
+      header?: {
+        "x-active-roles"?: string | null;
+      };
+      path: {
+        urn: string;
+      };
+    };
+    responses: {
+      /** @description Successful Response */
+      200: {
+        content: {
+          "application/json": components["schemas"]["LeanVariant"][];
         };
       };
       /** @description Authentication required. */

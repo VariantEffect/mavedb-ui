@@ -503,12 +503,13 @@ import config from '@/config'
 import {hasPathogenicityCalibrations, hasFunctionalCalibrations} from '@/lib/calibrations'
 import {variantNotNullOrNA} from '@/lib/mave-hgvs'
 import {getScoreSetShortName} from '@/lib/score-sets'
-import {parseScoreSetVariantData, type Variant} from '@/lib/variants'
+import {parseScoreSetVariantData, type Variant, type LeanVariant} from '@/lib/variants'
 import {
   deleteScoreSet,
   publishScoreSet,
   getScoreSetClinicalControlOptions,
-  histogramScoreSetVariantDataUrl
+  histogramScoreSetVariantDataUrl,
+  leanScoreSetVariantsUrl
 } from '@/api/mavedb'
 import {components} from '@/schema/openapi'
 import MvLoader from '@/components/common/MvLoader.vue'
@@ -566,6 +567,9 @@ export default {
   setup(props) {
     const head = useHead()
     const scoresRemoteData = useRemoteData()
+    // Transitional: the lean whole-set view fetched alongside the legacy CSV `scoresData` channel.
+    // Consumers migrate onto `leanVariants` slice by slice; the CSV channel is removed once they have.
+    const leanVariantsRemoteData = useRemoteData()
     const variantSearchSuggestions = ref<Variant[]>([])
     const selectedCalibrations = ref<(string | null)[]>([null, null])
     const urnRef = ref(props.itemId)
@@ -593,6 +597,10 @@ export default {
       scoresDataStatus: scoresRemoteData.remoteDataStatus,
       setScoresDataUrl: scoresRemoteData.setDataUrl,
       ensureScoresDataLoaded: scoresRemoteData.ensureDataLoaded,
+      leanVariants: leanVariantsRemoteData.data,
+      leanVariantsStatus: leanVariantsRemoteData.remoteDataStatus,
+      setLeanVariantsUrl: leanVariantsRemoteData.setDataUrl,
+      ensureLeanVariantsLoaded: leanVariantsRemoteData.ensureDataLoaded,
       variantSearchSuggestions,
 
       distHistogramExportFn,
@@ -686,6 +694,10 @@ export default {
     isMetaDataEmpty() {
       return Object.keys(this.item?.extraMetadata || {}).length === 0
     },
+    // Typed handle on the lean whole-set view. Consumers migrate onto this from `variants` slice by slice.
+    leanVariantRecords(): LeanVariant[] | null {
+      return (this.leanVariants as LeanVariant[] | null) ?? null
+    },
     selectedCalibrationObjects() {
       if (this.item?.scoreCalibrations && this.selectedCalibrations) {
         return this.selectedCalibrations.map(
@@ -718,11 +730,15 @@ export default {
         if (newValue !== oldValue) {
           this.setItemId(newValue)
           let scoresUrl = null
+          let leanUrl = null
           if (this.itemType?.restCollectionName && this.itemId) {
             scoresUrl = histogramScoreSetVariantDataUrl(this.itemId)
+            leanUrl = leanScoreSetVariantsUrl(this.itemId)
           }
           this.setScoresDataUrl(scoresUrl)
           this.ensureScoresDataLoaded()
+          this.setLeanVariantsUrl(leanUrl)
+          this.ensureLeanVariantsLoaded()
         }
       },
       immediate: true

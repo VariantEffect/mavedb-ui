@@ -5,7 +5,16 @@ import {DEFAULT_CLNREVSTAT_FIELD, DEFAULT_CLNSIG_FIELD} from '@/lib/clinical-con
 import geneticCodes from '@/lib/genetic-codes'
 import {parseSimpleNtVariant, parseSimpleProVariant} from '@/lib/mave-hgvs'
 import {parseScoresOrCounts} from '@/lib/scores'
+import type {components} from '@/schema/openapi'
 import type {SimpleDnaVariation, SimpleProteinVariation} from '@/lib/mave-hgvs'
+
+/**
+ * The lean per-variant record served by `GET /score-sets/{urn}/variants`, mirrored from the API's
+ * OpenAPI schema. This is the target shape for the score-set view reshape; consumers migrate onto it
+ * slice by slice, at which point the legacy CSV-derived `Variant`/`RawVariant` types below are removed.
+ */
+export type HgvsField = components['schemas']['HgvsField']
+export type LeanVariant = components['schemas']['LeanVariant']
 
 export type HgvsReferenceSequenceType = 'c' | 'p' // | 'n'
 

@@ -2,6 +2,7 @@ import axios from 'axios'
 
 import config from '@/config'
 import {components} from '@/schema/openapi'
+import type {LeanVariant} from '@/lib/variants'
 
 type ScoreSetSearch = components['schemas']['ScoreSetsSearch']
 type ScoreSetsSearchResponse = components['schemas']['ScoreSetsSearchResponse']
@@ -29,6 +30,23 @@ export function histogramScoreSetVariantDataUrl(urn: string): string {
     urn,
     scoreSetVariantDataParams({includePostMappedHgvs: true, namespaces: HISTOGRAM_VARIANT_DATA_NAMESPACES})
   )
+}
+
+// ---------------------------------------------------------------------------
+// Lean whole-set variant view (GET /score-sets/{urn}/variants)
+// ---------------------------------------------------------------------------
+
+export function leanScoreSetVariantsUrl(urn: string): string {
+  return `${config.apiBaseUrl}/score-sets/${encodeURIComponent(urn)}/variants`
+}
+
+/** Fetch the lean whole-set variant view for a score set. */
+export async function getLeanScoreSetVariants(urn: string, signal?: AbortSignal): Promise<LeanVariant[]> {
+  const response = await axios.get(leanScoreSetVariantsUrl(urn), {
+    headers: {accept: 'application/json'},
+    signal
+  })
+  return response.data || []
 }
 
 // ---------------------------------------------------------------------------
@@ -103,7 +121,9 @@ export async function publishScoreSet(urn: string) {
 }
 
 export async function getScoreSetClinicalControlOptions(urn: string) {
-  const response = await axios.get(`${config.apiBaseUrl}/score-sets/${encodeURIComponent(urn)}/clinical-controls/options`)
+  const response = await axios.get(
+    `${config.apiBaseUrl}/score-sets/${encodeURIComponent(urn)}/clinical-controls/options`
+  )
   return response.data
 }
 
@@ -138,7 +158,9 @@ export async function downloadMappedVariants(urn: string) {
   return response.data
 }
 
-export async function getRecentlyPublishedScoreSets(signal?: AbortSignal): Promise<components['schemas']['ScoreSet'][]> {
+export async function getRecentlyPublishedScoreSets(
+  signal?: AbortSignal
+): Promise<components['schemas']['ScoreSet'][]> {
   const response = await axios.get(`${config.apiBaseUrl}/score-sets/recently-published`, {
     headers: {accept: 'application/json'},
     signal

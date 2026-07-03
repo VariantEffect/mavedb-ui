@@ -1,15 +1,10 @@
 <template>
   <div class="flex flex-col h-full">
-    <FloatLabel v-if="alphaFoldData?.length > 1" class="m-2" variant="on">
-      <Select :id="scopedId('alphafold-id')" v-model="selectedAlphaFold" option-label="id" :options="alphaFoldData" />
-      <label :for="scopedId('alphafold-id')">AlphaFold ID</label>
-    </FloatLabel>
     <div class="flex">
       <span class="ml-2">Color by:</span>
       <SelectButton v-model="colorBy" class="ml-2" option-label="name" option-value="value" :options="colorByOptions" />
     </div>
-    <div v-show="selectedAlphaFold" id="pdbe-molstar-viewer-container" class="flex-1 relative z-5000"></div>
-    <div v-if="!selectedAlphaFold" class="m-auto">No AlphaFold entry found</div>
+    <div id="pdbe-molstar-viewer-container" class="flex-1 relative z-5000"></div>
     <ul class="list-disc text-xs italic text-gray-400 ml-5 px-2 py-1">
       <li>Jumper, J et al. Highly accurate protein structure prediction with AlphaFold. <em>Nature</em> (2021)</li>
       <li>Fleming J. et al. AlphaFold Protein Structure Database and 3D-Beacons: New Data and Capabilities. <em>Journal of Molecular Biology</em> (2025)</li>
@@ -19,9 +14,6 @@
 
 <script>
 import axios from 'axios'
-import $ from 'jquery'
-import FloatLabel from 'primevue/floatlabel'
-import Select from 'primevue/select'
 import SelectButton from 'primevue/selectbutton'
 import {PDBeMolstarPlugin} from 'pdbe-molstar/lib/viewer'
 import 'pdbe-molstar/build/pdbe-molstar-light.css'
@@ -33,7 +25,7 @@ import useScopedId from '@/composables/scoped-id'
 export default {
   name: 'ProteinStructureView',
 
-  components: {FloatLabel, Select, SelectButton},
+  components: {SelectButton},
 
   props: {
     uniprotId: {
@@ -96,9 +88,7 @@ export default {
   },
 
   data: () => ({
-    uniprotData: null,
     viewerInstance: null,
-    selectedAlphaFold: null
   }),
 
   computed: {
@@ -122,19 +112,6 @@ export default {
         color: _.get(x, this.colorBy, '#ffffff')
       }))
     },
-    alphaFoldData: function () {
-      if (!this.uniprotData) {
-        return []
-      }
-      return $('entry dbReference[type="AlphaFoldDB"]', this.uniprotData)
-        .map((i, element) => {
-          return {
-            id: $(element).attr('id')
-          }
-        })
-        .get()
-        .filter((x) => x.id != null)
-    }
   },
 
   watch: {
@@ -167,21 +144,9 @@ export default {
       },
       deep: true
     },
-    alphaFoldData: {
-      handler: function () {
-        if (!this.selectedAlphaFold && this.alphaFoldData.length > 0) {
-          this.selectedAlphaFold = this.alphaFoldData[0]
-        }
-      }
-    },
-    selectedAlphaFold: {
-      handler: function () {
-        this.render()
-      }
-    },
     uniprotId: {
       handler: async function () {
-        await this.fetchUniprotData()
+        this.render()
       },
       immediate: true
     }
@@ -192,16 +157,6 @@ export default {
   },
 
   methods: {
-    fetchUniprotData: async function () {
-      const response = await axios.get(`https://rest.uniprot.org/uniprotkb/${encodeURIComponent(this.uniprotId)}.xml`)
-      if (response.data) {
-        const parser = new DOMParser()
-        this.uniprotData = parser.parseFromString(response.data, 'text/xml')
-      } else {
-        this.uniprotData = null
-      }
-    },
-
     clickedResidue: function (e) {
       this.$emit('clickedResidue', e.eventData)
     },
@@ -209,9 +164,11 @@ export default {
       this.$emit('hoveredOverResidue', e.eventData)
     },
     fetchAlphaFoldCifUrl: async function () {
-      const response = await axios.get(`https://alphafold.ebi.ac.uk/api/prediction/${this.selectedAlphaFold.id}`)
+      const response = await axios.get(`https://alphafold.ebi.ac.uk/api/prediction/${this.uniprotId}`)
       const predictionModels = _.isArray(response.data) ? response.data : [response.data]
-      const selectedModel = predictionModels.find((x) => x.entryId === `AF-${this.selectedAlphaFold.id}-F1`)
+
+      // response may contain multiple entries (e.g. UniProt ID: P42167), we want to select the one with entryId = AF-<uniprotId>-F1
+      const selectedModel = predictionModels.find((x) => x.entryId === `AF-${this.uniprotId}-F1`)
       return selectedModel?.cifUrl || null
     },
 
@@ -226,7 +183,7 @@ export default {
     render: async function () {
       this.destroyViewer()
 
-      if (this.selectedAlphaFold) {
+      if (this.uniprotId) {
         let alphafoldCifUrl
         try {
           alphafoldCifUrl = await this.fetchAlphaFoldCifUrl()

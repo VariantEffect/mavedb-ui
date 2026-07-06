@@ -220,26 +220,32 @@ import {
   getClassificationColor
 } from '@/lib/calibrations'
 import type {FunctionalClassificationVariant} from '@/lib/calibrations'
-import {variantNotNullOrNA} from '@/lib/mave-hgvs'
 import {
-  DEFAULT_VARIANT_EFFECT_TYPES,
-  isStartOrStopLoss,
-  variantIsMissense,
-  variantIsNonsense,
-  variantIsOther,
-  variantIsSynonymous,
-  VARIANT_EFFECT_TYPE_OPTIONS,
-  Variant,
-  allCodingVariantsHaveProteinConsequence
-} from '@/lib/variants'
+  tooltipBadgeBlock,
+  tooltipConsequence,
+  tooltipCountRow,
+  tooltipKeyValue,
+  tooltipLink,
+  tooltipNote,
+  tooltipReviewStars,
+  tooltipRoot,
+  tooltipSection,
+  tooltipSectionLabel,
+  tooltipText,
+  tooltipTitle,
+  tooltipVariantDetailsLink
+} from '@/lib/tooltips'
+import {DisplayVariant} from '@/lib/variants'
+import {
+  consequenceBucket,
+  humanReadableConsequence,
+  EFFECT_BUCKETS,
+  EFFECT_TYPE_FILTER_OPTIONS,
+  DEFAULT_EFFECT_TYPE_FILTERS,
+  type EffectBucketName
+} from '@/lib/consequences'
+import {useVariantCoordinates} from '@/composables/use-variant-coordinates'
 import {components} from '@/schema/openapi'
-
-function naToUndefined(x: string | null | undefined) {
-  if (variantNotNullOrNA(x)) {
-    return x
-  }
-  return undefined
-}
 
 interface Margins {
   top: number
@@ -269,7 +275,7 @@ export default defineComponent({
       default: 'distribution'
     },
     externalSelection: {
-      type: Object as PropType<Variant | null>,
+      type: Object as PropType<DisplayVariant | null>,
       default: null
     },
     // Margins must accommodate the X axis label and title.
@@ -291,7 +297,7 @@ export default defineComponent({
       required: true
     },
     variants: {
-      type: Array as PropType<Variant[]>,
+      type: Array as PropType<DisplayVariant[]>,
       required: true
     },
     hideStartAndStopLossByDefault: {
@@ -312,7 +318,8 @@ export default defineComponent({
 
   setup: () => {
     return {
-      ...useScopedId()
+      ...useScopedId(),
+      ...useVariantCoordinates()
     }
   },
 
@@ -345,13 +352,13 @@ export default defineComponent({
       clinicalSignificanceClassificationOptions: clinvarClinicalSignificanceClassifications(
         DEFAULT_CLINICAL_CONTROL_VERSION
       ),
-      variantTypeOptions: VARIANT_EFFECT_TYPE_OPTIONS,
+      variantTypeOptions: EFFECT_TYPE_FILTER_OPTIONS,
       customMinStarRating: DEFAULT_MIN_STAR_RATING,
       customSelectedClinicalSignificanceClassifications: DEFAULT_CLINICAL_SIGNIFICANCE_CLASSIFICATIONS,
-      customSelectedVariantTypeFilters: [] as string[],
-      customSelectedControlVariantTypeFilters: DEFAULT_VARIANT_EFFECT_TYPES.concat(
+      customSelectedVariantTypeFilters: [] as EffectBucketName[],
+      customSelectedControlVariantTypeFilters: DEFAULT_EFFECT_TYPE_FILTERS.concat(
         this.hideStartAndStopLossByDefault ? [] : ['Start/Stop Loss']
-      ),
+      ) as EffectBucketName[],
       calibrationClassVariantsByUrn: {} as Record<string, Record<number, FunctionalClassificationVariant[]>>,
       calibrationClassVariantsLoadingByUrn: {} as Record<string, boolean>,
       histogram: null as Histogram | null
@@ -360,7 +367,8 @@ export default defineComponent({
 
   computed: {
     proteinEffectOptionsAvailable: function () {
-      return allCodingVariantsHaveProteinConsequence(this.variants)
+      // Worth offering as soon as some variant carries a VEP consequence (anything but 'No consequence').
+      return this.variants.some((v) => consequenceBucket(v.consequence) !== 'No consequence')
     },
     selectedCalibrationIsClassBased: function () {
       return (
@@ -430,8 +438,8 @@ export default defineComponent({
 
           return this.activeCalibration.value?.functionalClassifications?.map((fc, i) => ({
             classifier: (d: HistogramDatum) => {
-              if (!d.accession) return false
-              return selectedCalibrationClassMap[d.accession] === fc.class
+              if (!d.variantUrn) return false
+              return selectedCalibrationClassMap[d.variantUrn] === fc.class
             },
             options: {
               color: CATEGORICAL_SERIES_COLORS[i % CATEGORICAL_SERIES_COLORS.length],
@@ -465,48 +473,14 @@ export default defineComponent({
             }
           ]
 
-        case 'effect':
-          return [
-            {
-              classifier: (d: HistogramDatum) => variantIsMissense(d),
-              options: {
-                color: '#ffcd3a',
-                title: 'Missense'
-              }
-            },
-            {
-              classifier: (d: HistogramDatum) => variantIsSynonymous(d),
-              options: {
-                color: '#6aa84f',
-                title: 'Synonymous'
-              }
-            },
-            {
-              classifier: (d: HistogramDatum) => variantIsNonsense(d),
-              options: {
-                color: '#681a1a',
-                title: 'Nonsense'
-              }
-            },
-            ...(this.hideStartAndStopLossByDefault
-              ? []
-              : [
-                  {
-                    classifier: (d: HistogramDatum) => isStartOrStopLoss(d),
-                    options: {
-                      color: '#cd3aff',
-                      title: 'Start/Stop Loss'
-                    }
-                  }
-                ]),
-            {
-              classifier: (d: HistogramDatum) => variantIsOther(d),
-              options: {
-                color: '#3affcd',
-                title: 'Other'
-              }
-            }
-          ]
+        case 'effect': {
+          // The dedicated effect view shows every annotated bucket (Start/Stop Loss omitted for
+          // synthetic targets); 'No consequence' is not a protein effect and is left out here.
+          const buckets = EFFECT_BUCKETS.map((b) => b.name).filter(
+            (name) => name !== 'No consequence' && !(name === 'Start/Stop Loss' && this.hideStartAndStopLossByDefault)
+          )
+          return this.proteinEffectSeries(buckets)
+        }
 
         case 'custom': {
           const series = [
@@ -540,7 +514,7 @@ export default defineComponent({
 
           if (this.selectedClinicalSignificanceClassifications.includes('Uncertain significance')) {
             series.push({
-              classifier: (d: Variant) =>
+              classifier: (d: DisplayVariant) =>
                 d.control?.[DEFAULT_CLNSIG_FIELD] == 'Uncertain significance' &&
                 (CLINVAR_REVIEW_STATUS_STARS[d.control?.[DEFAULT_CLNREVSTAT_FIELD]] ?? -1) >= this.minStarRating &&
                 this.filterControlVariantByEffect(d),
@@ -573,54 +547,8 @@ export default defineComponent({
             })
           }
 
-          if (this.proteinEffectOptionsAvailable && this.selectedVariantTypeFilters.includes('Missense')) {
-            series.push({
-              classifier: (d: HistogramDatum) => variantIsMissense(d),
-              options: {
-                color: '#ffcd3a',
-                title: 'Missense'
-              }
-            })
-          }
-
-          if (this.proteinEffectOptionsAvailable && this.selectedVariantTypeFilters.includes('Synonymous')) {
-            series.push({
-              classifier: (d: HistogramDatum) => variantIsSynonymous(d),
-              options: {
-                color: '#6aa84f',
-                title: 'Synonymous'
-              }
-            })
-          }
-
-          if (this.proteinEffectOptionsAvailable && this.selectedVariantTypeFilters.includes('Nonsense')) {
-            series.push({
-              classifier: (d: HistogramDatum) => variantIsNonsense(d),
-              options: {
-                color: '#681a1a',
-                title: 'Nonsense'
-              }
-            })
-          }
-
-          if (this.proteinEffectOptionsAvailable && this.selectedVariantTypeFilters.includes('Start/Stop Loss')) {
-            series.push({
-              classifier: (d: HistogramDatum) => isStartOrStopLoss(d),
-              options: {
-                color: '#cd3aff',
-                title: 'Start/Stop Loss'
-              }
-            })
-          }
-
-          if (this.proteinEffectOptionsAvailable && this.selectedVariantTypeFilters.includes('Other')) {
-            series.push({
-              classifier: (d: HistogramDatum) => variantIsOther(d),
-              options: {
-                color: '#3affcd',
-                title: 'Other'
-              }
-            })
+          if (this.proteinEffectOptionsAvailable) {
+            series.push(...this.proteinEffectSeries(this.selectedVariantTypeFilters))
           }
 
           return series
@@ -771,191 +699,15 @@ export default defineComponent({
 
     tooltipHtmlGetter: function () {
       return (
-        variant: Variant | null, // HistogramDatum | null,
+        variant: DisplayVariant | null,
         bin: HistogramBin | null,
         seriesContainingVariant: HistogramSerieOptions[],
         allSeries: HistogramSerieOptions[]
       ) => {
-        const parts = []
-
-        if (variant) {
-          // Line 1: Variant identifier
-          const mappedDnaHgvs = naToUndefined(variant.mavedb?.post_mapped_hgvs_c)
-          const mappedProteinHgvs =
-            naToUndefined(variant.mavedb?.post_mapped_hgvs_p) ?? naToUndefined(variant.translated_hgvs_p)
-          const unmappedDnaHgvs = naToUndefined(variant.hgvs_nt)
-          const unmappedProteinHgvs = naToUndefined(variant.hgvs_pro)
-          const unmappedSpliceHgvs = naToUndefined(variant.hgvs_splice)
-          // const variantLabel = variant.mavedb_label || (
-          //   proteinHgvs ?
-          //     (dnaHgvs ? `${proteinHgvs} (${dnaHgvs})` : proteinHgvs)
-          //     : spliceHgvs ?
-          //       (dnaHgvs ? `${spliceHgvs} (${dnaHgvs})` : spliceHgvs)
-          //       : dnaHgvs
-          // )
-          const mappedVariantLabel = mappedProteinHgvs
-            ? mappedDnaHgvs
-              ? `${mappedProteinHgvs} (${mappedDnaHgvs})`
-              : mappedProteinHgvs
-            : mappedDnaHgvs
-          const unmappedVariantLabel = unmappedProteinHgvs
-            ? unmappedDnaHgvs
-              ? `${unmappedProteinHgvs} (${unmappedDnaHgvs})`
-              : unmappedProteinHgvs
-            : unmappedSpliceHgvs
-              ? unmappedDnaHgvs
-                ? `${unmappedSpliceHgvs} (${unmappedDnaHgvs})`
-                : unmappedSpliceHgvs
-              : unmappedDnaHgvs
-
-          const variantLabel =
-            this.coordinates == 'mapped'
-              ? (mappedVariantLabel ?? variant.mavedb_label ?? unmappedVariantLabel)
-              : (variant.mavedb_label ?? unmappedVariantLabel)
-          if (variantLabel) {
-            parts.push(variantLabel)
-          }
-
-          // Line 2: Variant description
-          const variantDescriptionParts = []
-          if (seriesContainingVariant.length == 0) {
-            variantDescriptionParts.push('(not shown in currently visible series)')
-          } else {
-            for (const series of seriesContainingVariant) {
-              if (series.title) {
-                variantDescriptionParts.push(
-                  '<span class="mavedb-histogram-tooltip-variant-color"' +
-                    ` style="background-color: ${series.color || DEFAULT_SERIES_COLOR}"></span>`
-                )
-              }
-            }
-          }
-
-          const variantHasClinicalSignificance =
-            variant.control && variant.control[DEFAULT_CLNSIG_FIELD] && variant.control[DEFAULT_CLNSIG_FIELD] != 'NA'
-          const variantHasReviewStatus =
-            variant.control &&
-            variant.control[DEFAULT_CLNREVSTAT_FIELD] &&
-            variant.control[DEFAULT_CLNREVSTAT_FIELD] != 'NA'
-          if (variantHasClinicalSignificance) {
-            const classification = clinvarClinicalSignificanceClassifications(
-              this.controlVersion ? this.controlVersion : DEFAULT_CLINICAL_CONTROL_VERSION
-            ).find((c) => c.name == variant.control?.[DEFAULT_CLNSIG_FIELD])
-            if (classification) {
-              variantDescriptionParts.push(classification.description)
-            }
-          }
-          if (variantHasReviewStatus) {
-            const numStars = CLINVAR_REVIEW_STATUS_STARS[variant.control?.[DEFAULT_CLNREVSTAT_FIELD]]
-            if (numStars != null) {
-              // Create an array of 4 stars to hold clinical review status a la ClinVar.
-              const stars = new Array(4)
-                .fill(
-                  '<span class="mavedb-histogram-tooltip-variant-star mavedb-histogram-tooltip-variant-star-filled">★</span>'
-                )
-                .fill('<span class="mavedb-histogram-tooltip-variant-star">☆</span>', numStars)
-              variantDescriptionParts.push(`(${stars.join('')})`)
-            }
-          }
-          if (variantDescriptionParts.length > 0) {
-            parts.push(variantDescriptionParts.join(' '))
-          }
-          if (variantHasClinicalSignificance && variantHasReviewStatus) {
-            const clinVarLinkOut = `<a href="http://www.ncbi.nlm.nih.gov/clinvar/?term=${variant.control.dbIdentifier}[alleleid]" target="_blank" class="text-link">View in ClinVar</a>`
-            parts.push(clinVarLinkOut)
-          }
-
-          const clingenAlleleId = variant.clingen?.clingen_allele_id
-          if (clingenAlleleId) {
-            parts.push(
-              `<a href="/variants/${clingenAlleleId}" target="_blank" class="text-link">View variant details</a>`
-            )
-          }
-
-          // Line 3: Score and classification
-          if (variant.scores.score && variant.scores.score != 'NA') {
-            let binClassificationLabel = null
-            if (this.activeCalibration.value?.urn && this.activeCalibration.value?.functionalClassifications) {
-              // TODO#491: Refactor this calculation into the creation of variant objects so we may just access the property of the variant which tells us its classification.
-              const classifications = this.activeCalibration.value.functionalClassifications
-
-              // Try range-based match first, then fall back to class-based membership lookup.
-              let matchedClassification =
-                classifications.find((fc) => functionalClassificationContainsVariant(fc, variant.scores.score)) ?? null
-
-              if (!matchedClassification && this.selectedCalibrationIsClassBased) {
-                const variantsByClassificationId = this.calibrationClassVariantsByUrn[this.activeCalibration.value.urn]
-                if (variantsByClassificationId) {
-                  matchedClassification =
-                    classifications.find((fc) =>
-                      variantsByClassificationId[fc.id]?.some((v) => v.urn === variant.accession)
-                    ) ?? null
-                }
-              }
-
-              if (matchedClassification) {
-                const color = getClassificationColor(matchedClassification)
-                binClassificationLabel = `<span class="mavedb-range-classification-badge" style="margin-left: 6px; background-color:${color}; color:white;">${matchedClassification.label}</span>`
-              }
-            }
-
-            if (binClassificationLabel) {
-              parts.push(`Score: ${variant.scores.score.toPrecision(4)} ${binClassificationLabel}`)
-            }
-          }
-
-          // Line 4: Blank line
-          parts.push('')
-        }
-
-        if (bin) {
-          // Line 5: Bin range
-          parts.push(`Bin range: ${bin.x0} to ${bin.x1}`)
-
-          //Line 6: Bin Classification
-          if (this.activeCalibration.value?.urn) {
-            // TODO#491: Refactor this calculation into the creation of histogram bins so we don't need to repeat it every time we construct a tooltip.
-            const binClassifications =
-              this.histogramShaders[this.activeCalibration.value.urn]
-                ?.filter((calibration: HistogramShader) => shaderOverlapsBin(calibration, bin))
-                .sort(
-                  (a: HistogramShader, b: HistogramShader) => (a.min ? a.min : -Infinity) - (b.min ? b.min : -Infinity)
-                ) || []
-
-            if (binClassifications.length > 0) {
-              const binClassificationLabels = binClassifications.map((binClassification: HistogramShader) => {
-                const calibrationMin = binClassification.min ?? -Infinity
-                const calibrationMax = binClassification.max ?? Infinity
-
-                const spanStart = Math.max(bin.x0, calibrationMin).toPrecision(3)
-                const spanEnd = Math.min(bin.x1, calibrationMax).toPrecision(3)
-
-                const binSpansMultipleShaders = bin.x0 < calibrationMin || bin.x1 > calibrationMax
-                const multipleShaderRangeText = spanStart != spanEnd ? `(${spanStart} to ${spanEnd})` : `(${spanStart})`
-
-                return `<span class="mavedb-range-classification-badge" style="background-color:${binClassification.color}; color:white;">${binClassification.title} ${binSpansMultipleShaders ? `${multipleShaderRangeText}` : ''}</span>`
-              })
-
-              // If the bin spans many classifications, show the first two and then the rest on a new line.
-              if (binClassificationLabels.length <= 2) {
-                parts.push(`Bin classification(s): ${binClassificationLabels.join(', ')}`)
-              } else {
-                parts.push(`Bin classification(s): ${binClassificationLabels.slice(0, 2).join(', ')},`)
-                parts.push(binClassificationLabels.slice(2).join(', '))
-              }
-            }
-          } else {
-            parts.push('Bin classification(s): N/A')
-          }
-
-          // Line 7: Bin series counts
-          bin.seriesBins.forEach((serieBin, i) => {
-            const label = allSeries[i].title ? allSeries[i].title : allSeries.length > 1 ? `Series ${i + 1}` : null
-            parts.push((label ? `${label}: ` : '') + `${serieBin.length} variants in bin`)
-          })
-        }
-
-        return parts.length > 0 ? parts.join('<br />') : null
+        return tooltipRoot([
+          variant ? this.tooltipVariantSections(variant) : null,
+          bin ? this.tooltipBinSection(bin, allSeries, seriesContainingVariant, Boolean(variant)) : null
+        ])
       }
     }
   },
@@ -1149,6 +901,170 @@ export default defineComponent({
   },
 
   methods: {
+    // ---- Histogram tooltip construction ----
+
+    /** Variant identity + ClinVar annotation, as one or two stacked tooltip sections. */
+    tooltipVariantSections(variant: DisplayVariant): string {
+      const identity = []
+
+      const label = this.labelForVariant(variant, this.coordinates)
+      if (label) {
+        identity.push(tooltipTitle(label))
+      }
+      // In the mapped frame an unmapped variant's label is its submitted (target-frame) HGVS; flag it so
+      // the string isn't mistaken for a mapped coordinate.
+      if (this.coordinates == 'mapped' && this.isUnmapped(variant)) {
+        identity.push(tooltipNote('Could not be mapped'))
+      }
+
+      const consequence = humanReadableConsequence(variant.consequence)
+      if (consequence) {
+        identity.push(tooltipConsequence(consequence))
+      }
+
+      if (variant.score != null) {
+        identity.push(tooltipText(`Score ${variant.score.toPrecision(4)}`))
+        const classification = this.matchVariantClassification(variant)
+        if (classification) {
+          identity.push(tooltipBadgeBlock(getClassificationColor(classification), classification.label))
+        }
+      }
+
+      if (variant.clingenAlleleId) {
+        identity.push(tooltipVariantDetailsLink(variant.clingenAlleleId))
+      }
+
+      return [tooltipSection(identity), this.tooltipClinvarSection(variant)].filter(Boolean).join('')
+    },
+
+    /** ClinVar significance, review stars, and link — or null when the variant has no ClinVar annotation. */
+    tooltipClinvarSection(variant: DisplayVariant): string | null {
+      const control = variant.control
+      if (!control) {
+        return null
+      }
+      const significance = control[DEFAULT_CLNSIG_FIELD]
+      const reviewStatus = control[DEFAULT_CLNREVSTAT_FIELD]
+      const hasSignificance = Boolean(significance) && significance != 'NA'
+      const hasReviewStatus = Boolean(reviewStatus) && reviewStatus != 'NA'
+      if (!hasSignificance) {
+        return null
+      }
+
+      const description =
+        clinvarClinicalSignificanceClassifications(this.controlVersion || DEFAULT_CLINICAL_CONTROL_VERSION).find(
+          (c) => c.name == significance
+        )?.description ?? significance
+      const numStars = hasReviewStatus ? CLINVAR_REVIEW_STATUS_STARS[reviewStatus] : null
+      const stars = numStars != null ? ` ${tooltipReviewStars(numStars)}` : ''
+
+      return tooltipSection([
+        tooltipSectionLabel('ClinVar'),
+        tooltipText(`${description}${stars}`),
+        hasReviewStatus
+          ? tooltipLink(
+              `http://www.ncbi.nlm.nih.gov/clinvar/?term=${control.dbIdentifier}[alleleid]`,
+              'View in ClinVar'
+            )
+          : null
+      ])
+    },
+
+    /** The functional classification a variant falls into, matched by score range then class membership. */
+    // TODO#491: Attach this to the variant object so the tooltip can read it directly.
+    matchVariantClassification(variant: DisplayVariant) {
+      const score = variant.score
+      const calibration = this.activeCalibration.value
+      if (score == null || !calibration?.urn || !calibration.functionalClassifications) {
+        return null
+      }
+      const classifications = calibration.functionalClassifications
+
+      const byScore = classifications.find((fc) => functionalClassificationContainsVariant(fc, score)) ?? null
+      if (byScore) {
+        return byScore
+      }
+      if (this.selectedCalibrationIsClassBased) {
+        const variantsByClassificationId = this.calibrationClassVariantsByUrn[calibration.urn]
+        if (variantsByClassificationId) {
+          return (
+            classifications.find((fc) =>
+              variantsByClassificationId[fc.id]?.some((v) => v.urn === variant.variantUrn)
+            ) ?? null
+          )
+        }
+      }
+      return null
+    },
+
+    /** Bin range, overlapping calibration classifications, and per-series counts (member series highlighted). */
+    tooltipBinSection(
+      bin: HistogramBin,
+      allSeries: HistogramSerieOptions[],
+      seriesContainingVariant: HistogramSerieOptions[],
+      variantHovered: boolean
+    ): string {
+      const rows = [tooltipSectionLabel(`Bin details (${bin.x0} to ${bin.x1})`)]
+
+      // Bin classifications are only useful on a bare bin hover; a hovered variant already shows its own
+      // classification badge above.
+      if (!variantHovered) {
+        rows.push(this.tooltipBinClassifications(bin))
+      }
+
+      // When a variant is hovered, its series are bolded below. State the negative explicitly so an
+      // absence of bold isn't left to interpretation.
+      if (variantHovered && seriesContainingVariant.length == 0) {
+        rows.push(tooltipNote('This variant is not within the displayed series'))
+      }
+
+      bin.seriesBins.forEach((serieBin, i) => {
+        const series = allSeries[i]
+        rows.push(
+          tooltipCountRow({
+            color: series?.color || DEFAULT_SERIES_COLOR,
+            label: series?.title || (allSeries.length > 1 ? `Series ${i + 1}` : ''),
+            count: serieBin.length,
+            active: seriesContainingVariant.includes(series)
+          })
+        )
+      })
+
+      return tooltipSection(rows)
+    },
+
+    /** Compact "Classes: ..." line of calibration classifications overlapping a bin, or empty when none. */
+    // TODO#491: Precompute per-bin classifications so the tooltip doesn't recompute them on every hover.
+    tooltipBinClassifications(bin: HistogramBin): string {
+      const urn = this.activeCalibration.value?.urn
+      if (!urn) {
+        return ''
+      }
+      const shaders = (this.histogramShaders[urn] || [])
+        .filter((shader: HistogramShader) => shaderOverlapsBin(shader, bin))
+        .sort((a: HistogramShader, b: HistogramShader) => (a.min ?? -Infinity) - (b.min ?? -Infinity))
+      if (shaders.length == 0) {
+        return ''
+      }
+
+      const names = shaders.map((shader: HistogramShader) => {
+        const min = shader.min ?? -Infinity
+        const max = shader.max ?? Infinity
+        const spanStart = Math.max(bin.x0, min).toPrecision(3)
+        const spanEnd = Math.min(bin.x1, max).toPrecision(3)
+        // Note the covered sub-range only when a shader boundary cuts through the bin.
+        const shaderSplitsBin = bin.x0 < min || bin.x1 > max
+        const range = shaderSplitsBin
+          ? spanStart != spanEnd
+            ? ` (${spanStart} to ${spanEnd})`
+            : ` (${spanStart})`
+          : ''
+        return `${shader.title ?? ''}${range}`
+      })
+
+      return tooltipKeyValue('Overlapped classes', names.join(', '))
+    },
+
     toggleThresholdsPopover(event: Event) {
       ;(this.$refs.thresholdsPopoverRef as InstanceType<typeof Popover>)?.toggle(event)
     },
@@ -1156,22 +1072,19 @@ export default defineComponent({
       this.activeCalibration = option
       ;(this.$refs.thresholdsPopoverRef as InstanceType<typeof Popover>)?.hide()
     },
-    filterControlVariantByEffect(variant: Variant) {
-      // Do not filter control variants unless we have protein consequences for all coding variants.
+    // A histogram series per named protein-effect bucket, classified by VEP consequence.
+    proteinEffectSeries(bucketNames: string[]) {
+      return EFFECT_BUCKETS.filter((bucket) => bucketNames.includes(bucket.name)).map((bucket) => ({
+        classifier: (d: HistogramDatum) => consequenceBucket(d.consequence) === bucket.name,
+        options: {color: bucket.color, title: bucket.name}
+      }))
+    },
+    filterControlVariantByEffect(variant: DisplayVariant) {
+      // Keep a control variant only when its effect bucket is among the selected filters.
       if (!this.proteinEffectOptionsAvailable) {
         return true
       }
-      return (
-        (this.selectedControlVariantTypeFilters.includes('Missense') && variantIsMissense(variant)) ||
-        (this.selectedControlVariantTypeFilters.includes('Synonymous') && variantIsSynonymous(variant)) ||
-        (this.selectedControlVariantTypeFilters.includes('Nonsense') && variantIsNonsense(variant)) ||
-        (this.selectedControlVariantTypeFilters.includes('Start/Stop Loss') && isStartOrStopLoss(variant)) ||
-        (this.selectedControlVariantTypeFilters.includes('Other') &&
-          !variantIsMissense(variant) &&
-          !variantIsSynonymous(variant) &&
-          !variantIsNonsense(variant) &&
-          !isStartOrStopLoss(variant))
-      )
+      return this.selectedControlVariantTypeFilters.includes(consequenceBucket(variant.consequence))
     },
     buildExportFns() {
       return {
@@ -1209,8 +1122,8 @@ export default defineComponent({
           .bottomAxisLabel('Functional Score')
           .leftAxisLabel('Number of Variants')
           .numBins(30)
-          .valueField((variant: Variant) => variant?.scores?.score)
-          .accessorField((variant: Variant) => variant?.accession)
+          .valueField((variant: DisplayVariant) => variant?.score)
+          .accessorField((variant: DisplayVariant) => variant?.variantUrn)
           .tooltipHtml(this.tooltipHtmlGetter)
           .selectionChanged(this.onHistogramSelectionChanged)
       }
@@ -1256,10 +1169,14 @@ export default defineComponent({
       }
     },
 
-    onHistogramSelectionChanged(payload: {bin: HistogramBin | null; datum: Variant | null; source: 'histogram'}) {
+    onHistogramSelectionChanged(payload: {
+      bin: HistogramBin | null
+      datum: DisplayVariant | null
+      source: 'histogram'
+    }) {
       if (this.lockSelection) {
-        const currentAccession = (this.externalSelection as any)?.accession
-        const nextAccession = (payload?.datum as any)?.accession
+        const currentAccession = (this.externalSelection as any)?.variantUrn
+        const nextAccession = (payload?.datum as any)?.variantUrn
         // Block clears and changes; immediately restore selection
         if (!nextAccession || (currentAccession && nextAccession !== currentAccession)) {
           if (this.histogram && this.externalSelection) {
@@ -1419,7 +1336,7 @@ export default defineComponent({
 
       for (const clinicalControl of this.clinicalControls) {
         clinicalControl.mappedVariants.forEach((mappedVariant) => {
-          const variant = this.variants.find((variant) => variant.accession === mappedVariant.variantUrn)
+          const variant = this.variants.find((variant) => variant.variantUrn === mappedVariant.variantUrn)
           if (variant) {
             associatedAnyControlsWithVariants = true
             variant.control = clinicalControl
@@ -1697,30 +1614,8 @@ export default defineComponent({
   position: absolute;
 }
 
-.mavedb-histogram-tooltip-variant-color {
-  display: inline-block;
-  height: 12px;
-  width: 12px;
-  margin-right: 4px;
-  border-radius: 100%;
-}
-
 .mavedb-histogram-container {
   height: 350px;
-}
-
-.mavedb-histogram-tooltip-variant-star {
-  margin: 0 1.5px;
-}
-.mavedb-histogram-tooltip-variant-star-filled {
-  color: #fdb81e;
-}
-
-.mavedb-range-classification-badge {
-  padding: 2px 4px;
-  border-radius: 4px;
-  font-size: 11px;
-  font-weight: bold;
 }
 
 .mavedb-class-based-calibration-note {

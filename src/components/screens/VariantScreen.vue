@@ -177,11 +177,7 @@
               <div class="mb-1.5 text-xs-minus font-bold uppercase tracking-[0.5px] text-black">Classification</div>
               <MvDetailRow
                 label="Functional score"
-                :value="
-                  lookup.selectedVariantScore.value !== 'NA'
-                    ? Number(lookup.selectedVariantScore.value).toPrecision(4)
-                    : undefined
-                "
+                :value="lookup.selectedVariantScore.value?.toPrecision(4)"
               />
               <MvDetailRow label="ACMG code">
                 <MvEvidenceTag
@@ -352,8 +348,7 @@ export default defineComponent({
       const currentMapped = activeVariant.mappedVariants.find((m) => m.current)
       const hasMappingData = !!currentMapped?.postMapped
 
-      const score = this.lookup.selectedVariantScore.value
-      const hasScore = score !== null && score !== 'NA'
+      const hasScore = this.lookup.selectedVariantScore.value !== null
 
       if (hasMappingData && hasScore && hasPathogenicityCalibrations(activeVariant.scoreSet)) {
         options.push({

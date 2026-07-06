@@ -81,13 +81,21 @@
                   dropdown
                   fluid
                   :input-style="variantToVisualize ? {paddingRight: '2.25rem'} : undefined"
-                  option-label="mavedb_label"
+                  :option-label="variantOptionLabel"
                   scroll-height="175px"
                   select-on-focus
                   :suggestions="variantSearchSuggestions"
                   :virtual-scroller-options="{itemSize: 50}"
                   @complete="variantSearch"
                 >
+                  <template #option="{option}">
+                    <div class="flex flex-col justify-center leading-tight">
+                      <span>{{ variantOptionLabel(option) }}</span>
+                      <span v-if="frame === 'mapped' && isUnmapped(option)" class="text-xs italic text-text-muted">
+                        Variant could not be mapped
+                      </span>
+                    </div>
+                  </template>
                   <template #empty>
                     <div class="p-2.5 text-center text-sm text-text-muted">No matching variants found.</div>
                   </template>
@@ -111,12 +119,21 @@
               ]"
               >Raw variants</span
             >
-            <ToggleSwitch
-              :aria-label="`Click to change to ${clinicalMode ? 'raw data' : 'clinical view'}.`"
-              :disabled="coordinateSwitching"
-              :model-value="clinicalMode"
-              @update:model-value="toggleClinicalMode"
-            />
+            <!-- Wrapper so the tooltip fires even when the switch is disabled (a disabled control has
+                 pointer-events: none and won't trigger a tooltip on itself). Only shown when mapped
+                 mode is unavailable — clinicalModeHelpText returns the "no mapped variants" reason then. -->
+            <span
+              v-tooltip.top="mappedModeAvailable ? undefined : clinicalModeHelpText"
+              class="inline-flex"
+              :class="{'cursor-not-allowed': !mappedModeAvailable}"
+            >
+              <ToggleSwitch
+                :aria-label="`Click to change to ${clinicalMode ? 'raw data' : 'clinical view'}.`"
+                :disabled="coordinateSwitching || !mappedModeAvailable"
+                :model-value="clinicalMode"
+                @update:model-value="toggleClinicalMode"
+              />
+            </span>
             <span
               :class="[
                 clinicalMode ? 'font-semibold text-sage' : 'text-text-muted',
@@ -134,7 +151,7 @@
         </div>
 
         <!-- Variants loading spinner -->
-        <div v-if="variants == null && scoresDataStatus !== 'Loaded'" class="flex items-center justify-center py-6">
+        <div v-if="variants == null && variantsDataStatus !== 'Loaded'" class="flex items-center justify-center py-6">
           <MvLoader text="Loading variants..." />
         </div>
 
@@ -162,7 +179,7 @@
             <div class="p-3 tablet:p-5">
               <ScoreSetHistogram
                 ref="distHistogram"
-                :coordinates="clinicalMode ? 'mapped' : 'raw'"
+                :coordinates="frame"
                 :default-histogram="'distribution'"
                 :external-selection="variantToVisualize"
                 :hide-start-and-stop-loss-by-default="hideStartAndStopLoss"
@@ -222,7 +239,7 @@
             <div class="p-3 tablet:p-5">
               <ScoreSetHistogram
                 ref="clinicalHistogram"
-                :coordinates="clinicalMode ? 'mapped' : 'raw'"
+                :coordinates="frame"
                 :default-histogram="'clinical'"
                 :external-selection="variantToVisualize"
                 :hide-start-and-stop-loss-by-default="hideStartAndStopLoss"
@@ -305,7 +322,7 @@
             <div class="p-3 tablet:p-5">
               <ScoreSetHeatmap
                 ref="heatmap"
-                :coordinates="clinicalMode ? 'mapped' : 'raw'"
+                :coordinates="frame"
                 :external-selection="variantToVisualize"
                 :hide-start-and-stop-loss="hideStartAndStopLoss"
                 :layout="heatmapLayout"
@@ -498,19 +515,12 @@ import useRemoteData from '@/composition/remote-data'
 import {useDatasetPermissions} from '@/composables/use-dataset-permissions'
 import {useCalibrationDialog} from '@/composables/use-calibration-dialog'
 import {useChartExport, type ChartExportFns} from '@/composables/use-chart-export'
-import {useVariantCoordinates} from '@/composables/use-variant-coordinates'
+import {useVariantCoordinates, type CoordinateFrame} from '@/composables/use-variant-coordinates'
 import config from '@/config'
 import {hasPathogenicityCalibrations, hasFunctionalCalibrations} from '@/lib/calibrations'
-import {variantNotNullOrNA} from '@/lib/mave-hgvs'
 import {getScoreSetShortName} from '@/lib/score-sets'
-import {parseScoreSetVariantData, type Variant, type LeanVariant} from '@/lib/variants'
-import {
-  deleteScoreSet,
-  publishScoreSet,
-  getScoreSetClinicalControlOptions,
-  histogramScoreSetVariantDataUrl,
-  leanScoreSetVariantsUrl
-} from '@/api/mavedb'
+import {type DisplayVariant} from '@/lib/variants'
+import {deleteScoreSet, publishScoreSet, getScoreSetClinicalControlOptions, leanScoreSetVariantsUrl} from '@/api/mavedb'
 import {components} from '@/schema/openapi'
 import MvLoader from '@/components/common/MvLoader.vue'
 import MvEmptyState from '@/components/common/MvEmptyState.vue'
@@ -566,11 +576,8 @@ export default {
 
   setup(props) {
     const head = useHead()
-    const scoresRemoteData = useRemoteData()
-    // Transitional: the lean whole-set view fetched alongside the legacy CSV `scoresData` channel.
-    // Consumers migrate onto `leanVariants` slice by slice; the CSV channel is removed once they have.
-    const leanVariantsRemoteData = useRemoteData()
-    const variantSearchSuggestions = ref<Variant[]>([])
+    const variantsRemoteData = useRemoteData()
+    const variantSearchSuggestions = ref<DisplayVariant[]>([])
     const selectedCalibrations = ref<(string | null)[]>([null, null])
     const urnRef = ref(props.itemId)
 
@@ -593,14 +600,10 @@ export default {
       ...useItem<ScoreSet>({itemTypeName: 'scoreSet'}),
       ...useScopedId(),
       ...useVariantCoordinates(),
-      scoresData: scoresRemoteData.data,
-      scoresDataStatus: scoresRemoteData.remoteDataStatus,
-      setScoresDataUrl: scoresRemoteData.setDataUrl,
-      ensureScoresDataLoaded: scoresRemoteData.ensureDataLoaded,
-      leanVariants: leanVariantsRemoteData.data,
-      leanVariantsStatus: leanVariantsRemoteData.remoteDataStatus,
-      setLeanVariantsUrl: leanVariantsRemoteData.setDataUrl,
-      ensureLeanVariantsLoaded: leanVariantsRemoteData.ensureDataLoaded,
+      variantsData: variantsRemoteData.data,
+      variantsDataStatus: variantsRemoteData.remoteDataStatus,
+      setVariantsDataUrl: variantsRemoteData.setDataUrl,
+      ensureVariantsDataLoaded: variantsRemoteData.ensureDataLoaded,
       variantSearchSuggestions,
 
       distHistogramExportFn,
@@ -621,12 +624,12 @@ export default {
   data: () => ({
     clinicalMode: true,
     coordinateSwitching: false,
-    variants: null as Variant[] | null,
+    variants: null as DisplayVariant[] | null,
     showHeatmap: true,
     isScoreSetVisualizerVisible: false,
     hasClinicalVariants: false,
     heatmapExists: false,
-    selectedVariant: null as Variant | null,
+    selectedVariant: null as DisplayVariant | null,
     heatmapSequenceType: 'protein' as 'dna' | 'protein',
     heatmapLayout: 'normal' as 'normal' | 'compact',
     syncingBinSelection: false
@@ -634,6 +637,9 @@ export default {
 
   computed: {
     clinicalModeHelpText() {
+      if (!this.mappedModeAvailable) {
+        return 'This score set has no mapped variants, so only raw (submitted) coordinates are available.'
+      }
       if (this.item?.targetGenes?.[0]?.targetSequence) {
         return 'In clinical mode, mapped variant coordinates are used when available, and start- and stop-loss codons are omitted because this score set was produced using a synthetic target sequence.'
       }
@@ -645,9 +651,20 @@ export default {
         .filter((c) => c.orcidId !== creatorId)
         .sort((a, b) => (a.familyName ?? '').localeCompare(b.familyName ?? ''))
     },
+    // The coordinate frame the page is displaying in: clinical mode reads the mapped (reference)
+    // numbering, non-clinical the raw (submitted/target) numbering.
+    frame(): CoordinateFrame {
+      return this.clinicalMode ? 'mapped' : 'raw'
+    },
+    // Whether the mapped frame has anything to show — some variant carries a mapped coordinate at some
+    // level. When false the score set has no mapped data (unmapped or unmappable), so mapped mode is
+    // disabled and the page makes only the raw frame available.
+    mappedModeAvailable(): boolean {
+      return !!this.variants?.length && this.sequenceTypeOptions(this.variants, 'mapped').length > 0
+    },
     heatmapSequenceTypeOptions(): Array<{title: string; value: string}> {
       if (!this.variants?.length) return []
-      return this.sequenceTypeOptions(this.variants as Variant[], this.clinicalMode)
+      return this.sequenceTypeOptions(this.variants, this.frame)
     },
     hasCounts() {
       const allCountColumns = this.item?.datasetColumns?.countColumns ?? []
@@ -694,10 +711,6 @@ export default {
     isMetaDataEmpty() {
       return Object.keys(this.item?.extraMetadata || {}).length === 0
     },
-    // Typed handle on the lean whole-set view. Consumers migrate onto this from `variants` slice by slice.
-    leanVariantRecords(): LeanVariant[] | null {
-      return (this.leanVariants as LeanVariant[] | null) ?? null
-    },
     selectedCalibrationObjects() {
       if (this.item?.scoreCalibrations && this.selectedCalibrations) {
         return this.selectedCalibrations.map(
@@ -729,24 +742,24 @@ export default {
       handler(newValue, oldValue) {
         if (newValue !== oldValue) {
           this.setItemId(newValue)
-          let scoresUrl = null
-          let leanUrl = null
+          let variantsUrl = null
           if (this.itemType?.restCollectionName && this.itemId) {
-            scoresUrl = histogramScoreSetVariantDataUrl(this.itemId)
-            leanUrl = leanScoreSetVariantsUrl(this.itemId)
+            variantsUrl = leanScoreSetVariantsUrl(this.itemId)
           }
-          this.setScoresDataUrl(scoresUrl)
-          this.ensureScoresDataLoaded()
-          this.setLeanVariantsUrl(leanUrl)
-          this.ensureLeanVariantsLoaded()
+          this.setVariantsDataUrl(variantsUrl)
+          this.ensureVariantsDataLoaded()
         }
       },
       immediate: true
     },
-    scoresData(newValue: unknown) {
-      const parsed = newValue ? parseScoreSetVariantData(newValue as string) : null
-      this.variants = parsed ? (Object.freeze(parsed) as Variant[]) : null
+    variantsData(newValue: unknown) {
+      const records = (newValue as DisplayVariant[] | null) ?? null
+      this.variants = records ? (Object.freeze(records) as DisplayVariant[]) : null
+      // Start in mapped mode only when the score set actually has mapped data; otherwise fall back to
+      // the raw frame (where the toggle is also disabled). Re-decided per score set as its variants load.
+      this.clinicalMode = this.mappedModeAvailable
       this.applyUrlState()
+      this.reconcileHeatmapLevel()
     },
     selectedVariant: 'refreshUrlState',
     selectedCalibrations: {handler: 'refreshUrlState', deep: true}
@@ -760,7 +773,7 @@ export default {
     refreshUrlState() {
       const query = {...this.$route.query}
       if (this.selectedVariant) {
-        query.variant = this.selectedVariant.accession
+        query.variant = this.selectedVariant.variantUrn
       } else {
         delete query.variant
       }
@@ -779,9 +792,23 @@ export default {
     toggleClinicalMode(value: boolean) {
       this.coordinateSwitching = true
       this.clinicalMode = value
+      this.reconcileHeatmapLevel()
       requestAnimationFrame(() => {
         this.coordinateSwitching = false
       })
+    },
+
+    reconcileHeatmapLevel() {
+      // The frame toggle can strand the current sequence level: a level that exists in one frame may
+      // not exist in the other (e.g. a nucleotide accession-based set has mapped protein but no raw
+      // protein). Fall back to an available level so we never leave the heatmap on an empty view.
+      if (!this.variants?.length) {
+        return
+      }
+      const resolved = this.resolveLevel(this.variants, this.heatmapSequenceType, this.frame)
+      if (resolved && resolved !== this.heatmapSequenceType) {
+        this.heatmapSequenceType = resolved
+      }
     },
 
     async checkClinicalVariants() {
@@ -853,55 +880,58 @@ export default {
 
     variantSearch(event: {query: string}) {
       const query = event.query.toLowerCase()
-      const useMapped = this.clinicalMode
-      const matches: Variant[] = []
-      const MAX_RESULTS = 100
+      const matches: DisplayVariant[] = []
 
-      for (const variant of (this.variants || []) as Variant[]) {
-        if (matches.length >= MAX_RESULTS) break
-        if (!_.isNumber(variant.scores?.score)) continue
-
-        const nt = this.getHgvsNt(variant, useMapped)
-        const pro = this.getHgvsPro(variant, useMapped)
-
-        // Empty query: show all variants with their preferred label
-        if (!query) {
-          matches.push(Object.assign(variant, this.variantLabel(variant)))
-        } else if (variantNotNullOrNA(nt) && nt!.toLowerCase().includes(query)) {
-          matches.push(Object.assign(variant, {mavedb_label: nt}))
-        } else if (variantNotNullOrNA(variant.hgvs_splice) && variant.hgvs_splice!.toLowerCase().includes(query)) {
-          matches.push(Object.assign(variant, {mavedb_label: variant.hgvs_splice}))
-        } else if (variantNotNullOrNA(pro) && pro!.toLowerCase().includes(query)) {
-          matches.push(Object.assign(variant, {mavedb_label: pro}))
-        } else if (variantNotNullOrNA(variant.accession) && variant.accession.toLowerCase().includes(query)) {
-          matches.push(Object.assign(variant, {mavedb_label: variant.accession}))
+      for (const variant of this.variants || []) {
+        if (!_.isNumber(variant.score)) continue
+        // Empty query lists every scored variant; otherwise keep those whose coordinate strings match.
+        if (!query || this.variantMatchesQuery(variant, query)) {
+          matches.push(variant)
         }
       }
       this.variantSearchSuggestions = matches
     },
 
-    variantLabel(variant: Variant): {mavedb_label: string} {
-      return this.labelForVariant(variant, this.clinicalMode)
+    // Whether any of a variant's coordinate strings contains the query. Matches the current frame's
+    // coordinates plus the submitted (target-frame) strings, so a search finds the submitted HGVS the
+    // label falls back to for an unmapped variant — not just the mapped representation.
+    variantMatchesQuery(variant: DisplayVariant, query: string): boolean {
+      const candidates = [
+        this.getHgvsNt(variant, this.frame),
+        this.getHgvsPro(variant, this.frame),
+        variant.hgvsNt?.hgvs,
+        variant.hgvsPro?.hgvs,
+        variant.hgvsSplice?.hgvs,
+        variant.variantUrn
+      ]
+      return candidates.some((candidate) => candidate != null && candidate.toLowerCase().includes(query))
     },
 
-    childComponentSelectedVariant(variant: Variant | null) {
+    // Label for the AutoComplete chip and suggestions. A function (not a materialized field) so it
+    // re-resolves from the current frame — flipping the clinical toggle re-labels reactively. PrimeVue
+    // may hand back the raw typed string before a selection is made, so tolerate that.
+    variantOptionLabel(variant: DisplayVariant | string): string {
+      return typeof variant === 'string' ? variant : this.labelForVariant(variant, this.frame)
+    },
+
+    childComponentSelectedVariant(variant: DisplayVariant | null) {
       if (variant == null) {
         this.selectedVariant = null
         return
       }
-      if (!variant.accession) return
-      const selected = this.variants?.find((v) => v.accession === variant.accession)
-      this.selectedVariant = selected ? Object.assign(selected, this.variantLabel(selected)) : null
+      if (!variant.variantUrn) return
+      const selected = this.variants?.find((v) => v.variantUrn === variant.variantUrn)
+      this.selectedVariant = selected ?? null
     },
 
     onHistogramSelectionChanged(
-      payload: {datum?: {accession?: string; urn?: string}; bin?: unknown},
+      payload: {datum?: {variantUrn?: string}; bin?: unknown},
       options: {syncTarget?: string}
     ) {
-      const accession = payload?.datum?.accession || payload?.datum?.urn
-      if (accession) {
-        const selected = this.variants?.find((v) => v.accession === accession)
-        this.selectedVariant = selected ? Object.assign(selected, this.variantLabel(selected)) : null
+      const urn = payload?.datum?.variantUrn
+      if (urn) {
+        const selected = this.variants?.find((v) => v.variantUrn === urn)
+        this.selectedVariant = selected ?? null
       } else {
         if (this.syncingBinSelection || !payload?.bin) return
         this.syncingBinSelection = true
@@ -922,8 +952,8 @@ export default {
 
     applyUrlState() {
       if (this.$route.query.variant) {
-        const selected = this.variants?.find((v) => v.accession === this.$route.query.variant)
-        if (selected) this.selectedVariant = Object.assign(selected, this.variantLabel(selected))
+        const selected = this.variants?.find((v) => v.variantUrn === this.$route.query.variant)
+        if (selected) this.selectedVariant = selected
       }
       if (this.$route.query.calibration) {
         const cal = String(this.$route.query.calibration)

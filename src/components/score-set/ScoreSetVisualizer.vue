@@ -41,7 +41,7 @@ import Splitter from 'primevue/splitter'
 import SplitterPanel from 'primevue/splitterpanel'
 import _ from 'lodash'
 import {AMINO_ACIDS} from '@/lib/amino-acids'
-import type {Variant} from '@/lib/variants'
+import type {DisplayVariant} from '@/lib/variants'
 import type {components} from '@/schema/openapi'
 
 type ScoreSet = components['schemas']['ScoreSet']
@@ -54,8 +54,8 @@ export default defineComponent({
   components: {ProteinStructureView, ScoreSetHeatmap, Splitter, SplitterPanel},
 
   props: {
-    heatmapVariants: {type: Array as PropType<Variant[] | null>, default: null},
-    scores: {type: Array as PropType<Variant[] | null>, default: null},
+    heatmapVariants: {type: Array as PropType<DisplayVariant[] | null>, default: null},
+    scores: {type: Array as PropType<DisplayVariant[] | null>, default: null},
     scoreSet: {type: Object as PropType<ScoreSet | null>, default: null},
     uniprotId: {type: String as PropType<string | null>, default: null}
   },

@@ -40,7 +40,7 @@ export function leanScoreSetVariantsUrl(urn: string): string {
   return `${config.apiBaseUrl}/score-sets/${encodeURIComponent(urn)}/variants`
 }
 
-/** Fetch the lean whole-set variant view for a score set. */
+/** Fetch the lean whole-set variant view for a score set — one pre-chewed record per variant. */
 export async function getLeanScoreSetVariants(urn: string, signal?: AbortSignal): Promise<LeanVariant[]> {
   const response = await axios.get(leanScoreSetVariantsUrl(urn), {
     headers: {accept: 'application/json'},

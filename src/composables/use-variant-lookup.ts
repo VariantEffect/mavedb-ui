@@ -1,12 +1,8 @@
 import axios from 'axios'
 import {computed, ref, shallowRef, watch, type ComputedRef, type Ref} from 'vue'
 
-import {
-  getVariantAnnotation,
-  getVariantDetail,
-  getHistogramVariantData,
-  lookupVariantsByClingenId
-} from '@/api/mavedb/variants'
+import {getVariantAnnotation, getVariantDetail, lookupVariantsByClingenId} from '@/api/mavedb/variants'
+import {getLeanScoreSetVariants} from '@/api/mavedb/score-sets'
 import {useCalibrationResolution, type UseCalibrationResolutionReturn} from '@/composables/use-calibration-resolution'
 import {useClingenAllele, type UseClingenAlleleReturn} from '@/composables/use-clingen-allele'
 
@@ -18,7 +14,7 @@ import {
 } from '@/lib/calibrations'
 import {triggerDownload} from '@/lib/downloads'
 import {getExperimentKeyword} from '@/lib/experiments'
-import {parseScoreSetVariantData, type Variant} from '@/lib/variants'
+import type {DisplayVariant} from '@/lib/variants'
 import type {MeasurementType} from '@/lib/measurement-types'
 import type {components} from '@/schema/openapi'
 
@@ -62,9 +58,9 @@ export interface UseVariantLookupReturn {
   // Scores
   selectedScoreSet: ComputedRef<ScoreSet | null>
   selectedScoreSetUrn: ComputedRef<string | null>
-  scores: ComputedRef<Variant[] | null>
-  variantScoreRow: ComputedRef<Variant | undefined>
-  selectedVariantScore: ComputedRef<number | string | null>
+  scores: ComputedRef<DisplayVariant[] | null>
+  variantScoreRow: ComputedRef<DisplayVariant | undefined>
+  selectedVariantScore: ComputedRef<number | null>
 
   // Calibration
   selectedCalibration: Ref<string | null>
@@ -119,7 +115,7 @@ export function useVariantLookup(
   const showProtein = ref(true)
   const showAssociatedNucleotide = ref(true)
   const variantDetailCache = ref<Record<string, VariantEffectMeasurementWithScoreSet>>({})
-  const scoresCache = shallowRef<Record<string, Variant[]>>({})
+  const scoresCache = shallowRef<Record<string, DisplayVariant[]>>({})
   const selectedCalibration = ref<string | null>(null)
 
   // ── Filters ───────────────────────────────────────────────
@@ -163,8 +159,8 @@ export function useVariantLookup(
     if (!selectedScoreSetUrn.value) return null
     return scoresCache.value[selectedScoreSetUrn.value] || null
   })
-  const variantScoreRow = computed(() => (scores.value || []).find((s) => s.accession === selectedVariantUrn.value))
-  const selectedVariantScore = computed(() => variantScoreRow.value?.scores?.score ?? null)
+  const variantScoreRow = computed(() => (scores.value || []).find((s) => s.variantUrn === selectedVariantUrn.value))
+  const selectedVariantScore = computed(() => variantScoreRow.value?.score ?? null)
 
   // ── Calibration ───────────────────────────────────────────
   const selectedCalibrationObject = computed<ScoreCalibration | null>(() => {
@@ -175,12 +171,7 @@ export function useVariantLookup(
     )
   })
 
-  const selectedVariantScoreAsNumber = computed<number | null>(() => {
-    const s = selectedVariantScore.value
-    if (s == null || s === 'NA') return null
-    const n = typeof s === 'number' ? s : Number(s)
-    return Number.isNaN(n) ? null : n
-  })
+  const selectedVariantScoreAsNumber = computed<number | null>(() => selectedVariantScore.value)
 
   const calibrationResolution = useCalibrationResolution(
     selectedCalibrationObject,
@@ -217,10 +208,10 @@ export function useVariantLookup(
   async function fetchScores(scoreSetUrn: string) {
     if (scoresCache.value[scoreSetUrn]) return
     try {
-      const data = await getHistogramVariantData(scoreSetUrn)
+      const data = await getLeanScoreSetVariants(scoreSetUrn)
       scoresCache.value = {
         ...scoresCache.value,
-        [scoreSetUrn]: parseScoreSetVariantData(data)
+        [scoreSetUrn]: data
       }
     } catch (error) {
       console.error(`Error fetching scores for score set "${scoreSetUrn}"`, error)
@@ -336,11 +327,9 @@ export function useVariantLookup(
     const cachedScores = scoresCache.value[scoreSetUrn]
     if (!cachedScores) return null
 
-    const scoreRow = cachedScores.find((s) => s.accession === variantUrn)
-    const rawScore = scoreRow?.scores?.score
-    if (rawScore == null || rawScore === 'NA') return null
-    const score = typeof rawScore === 'number' ? rawScore : Number(rawScore)
-    if (Number.isNaN(score)) return null
+    const scoreRow = cachedScores.find((s) => s.variantUrn === variantUrn)
+    const score = scoreRow?.score
+    if (score == null) return null
 
     const cal = getPrimaryCalibration(detail?.scoreSet)
     if (!cal?.functionalClassifications) return null

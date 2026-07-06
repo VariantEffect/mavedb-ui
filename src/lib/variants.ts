@@ -1,6 +1,6 @@
 import _ from 'lodash'
 
-import {AMINO_ACIDS, AMINO_ACIDS_WITH_TER, singleLetterAminoAcidOrHgvsCode} from '@/lib/amino-acids'
+import {AMINO_ACIDS_WITH_TER, singleLetterAminoAcidOrHgvsCode} from '@/lib/amino-acids'
 import {DEFAULT_CLNREVSTAT_FIELD, DEFAULT_CLNSIG_FIELD} from '@/lib/clinical-controls'
 import geneticCodes from '@/lib/genetic-codes'
 import {parseSimpleNtVariant, parseSimpleProVariant} from '@/lib/mave-hgvs'
@@ -16,6 +16,15 @@ import type {SimpleDnaVariation, SimpleProteinVariation} from '@/lib/mave-hgvs'
 export type HgvsField = components['schemas']['HgvsField']
 export type LeanVariant = components['schemas']['LeanVariant']
 
+/**
+ * A lean variant as displayed on the score-set page, with the one client-side augmentation the views
+ * add on top of the API record: `control` (clinical-control data merged in by variant URN). Score-set
+ * visualizations and search consume this shape.
+ */
+export type DisplayVariant = LeanVariant & {
+  control?: ClinicalControlVariant | null
+}
+
 export type HgvsReferenceSequenceType = 'c' | 'p' // | 'n'
 
 export interface SequenceRange {
@@ -26,6 +35,7 @@ export interface SequenceRange {
 export interface ClinicalControlVariant {
   [DEFAULT_CLNSIG_FIELD]: string
   [DEFAULT_CLNREVSTAT_FIELD]: string
+  dbIdentifier?: string
 }
 
 type ParsedSimpleDnaVariation = SimpleDnaVariation & {
@@ -93,36 +103,6 @@ export const HGVS_REFERENCE_SEQUENCE_TYPES: Record<
 export interface ParsedPostMappedVariantProperties {
   [type: string]: keyof VariantPropertiesAddedByPreparingCodingVariants
 }
-
-export const VARIANT_EFFECT_TYPE_OPTIONS = [
-  {
-    name: 'Synonymous',
-    description: 'Show all synonymous variants',
-    shortDescription: 'Synonymous variants'
-  },
-  {
-    name: 'Missense',
-    description: 'Show all missense variants',
-    shortDescription: 'Missense variants'
-  },
-  {
-    name: 'Nonsense',
-    description: 'Show all nonsense variants',
-    shortDescription: 'Nonsense variants'
-  },
-  {
-    name: 'Start/Stop Loss',
-    description: 'Show all start/stop loss variants',
-    shortDescription: 'Start/Stop Loss variants'
-  },
-  {
-    name: 'Other',
-    description: 'Show all other variant types',
-    shortDescription: 'Others'
-  }
-]
-
-export const DEFAULT_VARIANT_EFFECT_TYPES = ['Missense', 'Nonsense', 'Synonymous', 'Other']
 
 export function parseScoreSetVariantData(csvData: string): Variant[] {
   const variants = parseScoresOrCounts(csvData, true) as Variant[]
@@ -309,6 +289,41 @@ export function inferReferenceSequenceFromVariants(variants: Variant[], referenc
 }
 
 /**
+ * Infer a wild-type reference sequence from lean variant records, in whatever coordinate frame the
+ * caller's block accessor resolves. `getBlock` returns the HGVS block (with `position`/`ref`) for a
+ * variant in the desired (level, frame); the reference residue at each position is taken from the
+ * first block that covers it. Positions with no covering variant are filled with the unknown residue
+ * (`X` for protein, `N` for nucleotide). This is the Option A analogue of
+ * `inferReferenceSequenceFromVariants` — it works off the resolved blocks, so it reprojects with the
+ * frame instead of assuming the post-mapped parse.
+ */
+export function inferReferenceSequenceFromBlocks(
+  variants: DisplayVariant[],
+  getBlock: (variant: DisplayVariant) => HgvsField | null,
+  residueType: 'nt' | 'aa'
+): {referenceSequence: string; referenceSequenceRange: SequenceRange} {
+  const blocks = variants.map(getBlock).filter((block): block is HgvsField => block != null && block.position != null)
+  if (blocks.length == 0) {
+    return {referenceSequence: '', referenceSequenceRange: {start: 0, length: 0}}
+  }
+  const start = _.min(blocks.map((block) => block.position!))!
+  const end = _.max(blocks.map((block) => block.position!))!
+  const length = end - start + 1
+  const unknownResidue = residueType == 'aa' ? 'X' : 'N'
+  const referenceSequenceArr = Array(length).fill(unknownResidue)
+  for (const block of blocks) {
+    const index = block.position! - start
+    if (referenceSequenceArr[index] == unknownResidue && block.ref != null) {
+      const oneChar = residueType == 'aa' ? singleLetterAminoAcidOrHgvsCode(block.ref) : block.ref
+      if (oneChar != null) {
+        referenceSequenceArr[index] = oneChar
+      }
+    }
+  }
+  return {referenceSequence: referenceSequenceArr.join(''), referenceSequenceRange: {start, length}}
+}
+
+/**
  * Translate simple coding variants, adding an translated_hgvs_p column and setting parsedPostMappedHgvsP.
  *
  * This function looks at the parsedPostMappedHgvsC and parsedPostMappedHgvsP properties of every variant in the list.
@@ -404,23 +419,32 @@ function translateSimpleCodingHgvsCVariant(
 }
 
 /**
+ * The protein-level HGVS block used to classify a variant's consequence when a VEP consequence is
+ * absent: the mapped protein representation preferred, falling back to the submitted protein HGVS.
+ */
+function proteinConsequenceBlock(variant: DisplayVariant): HgvsField | null {
+  return variant.proteinLevelHgvs ?? variant.hgvsPro ?? null
+}
+
+/**
  * Determines whether a given variant represents either a start-loss (loss of the initiator methionine)
  * or a stop-loss (loss of a terminal stop/termination signal) event based on its protein-level HGVS notation.
  *
  * Detection logic:
- * 1. Selects the first available, non-null / non-"NA" protein HGVS string from:
+ * 1. If the variant has a VEP consequence, it is used directly to determine start-loss or stop-loss.
+ * 2. If no VEP consequence is available, the function attempts to extract a protein-level HGVS block from the variant.
+ * 3. Selects the first available, non-null / non-"NA" protein HGVS string from:
  *    - variant.post_mapped_hgvs_p
  *    - variant.hgvs_pro_inferred
  *    - variant.hgvs_pro
- * 2. Parses the HGVS protein string via parseSimpleProVariant (external utility).
- * 3. Returns:
+ * 4. Parses the HGVS protein string via parseSimpleProVariant (external utility).
+ * 5. Returns:
  *    - true if the variant alters the initiator methionine at position 1 (original == 'Met') to a different residue.
  *    - true if the variant alters a termination symbol at position 1 (original == 'Ter' or '*') to a non-stop residue.
- * 4. Returns false if no suitable HGVS string is found, parsing fails, or the criteria above are not met.
+ * 6. Returns false if no suitable HGVS string is found, parsing fails, or the criteria above are not met.
  *
  * Notes:
  * - The function currently infers start-loss strictly when position == 1 and original is 'Met'.
- *
  *
  * Parameter requirements:
  * - variant should be an object containing at least one of the HGVS protein fields listed above.
@@ -429,30 +453,19 @@ function translateSimpleCodingHgvsCVariant(
  * @param variant Arbitrary variant-like object holding HGVS protein annotations.
  * @returns true if the variant is classified as start-loss or stop-loss; false (or undefined) otherwise.
  */
-export function isStartOrStopLoss(variant: any) {
-  if (variant.vep && variant.vep.vep_functional_consequence && variant.vep.vep_functional_consequence != 'NA') {
-    if (
-      variant.vep.vep_functional_consequence == 'start_lost' ||
-      variant.vep.vep_functional_consequence == 'stop_lost'
-    ) {
-      return true
-    } else {
-      return false
-    }
+export function isStartOrStopLoss(variant: DisplayVariant): boolean {
+  if (variant.consequence && variant.consequence != 'NA') {
+    return variant.consequence == 'start_lost' || variant.consequence == 'stop_lost'
   }
-  const parsedVariant = variant.parsedPostMappedHgvsP
-  if (!parsedVariant) {
+  const block = proteinConsequenceBlock(variant)
+  if (!block || block.ref == null || block.alt == null) {
     return false
   }
-  if (parsedVariant.position == 1 && parsedVariant.original == 'Met' && parsedVariant.substitution != 'Met') {
+  if (block.position == 1 && block.ref == 'Met' && block.alt != 'Met') {
     // Start loss
     return true
   }
-  if (
-    (parsedVariant.original == 'Ter' || parsedVariant.original == '*') &&
-    parsedVariant.substitution != 'Ter' &&
-    parsedVariant.substitution != '*'
-  ) {
+  if ((block.ref == 'Ter' || block.ref == '*') && block.alt != 'Ter' && block.alt != '*') {
     // Stop loss
     return true
   }
@@ -460,85 +473,7 @@ export function isStartOrStopLoss(variant: any) {
   return false
 }
 
-export function variantIsMissense(variant: Variant) {
-  if (variant.vep && variant.vep.vep_functional_consequence && variant.vep.vep_functional_consequence != 'NA') {
-    if (variant.vep.vep_functional_consequence == 'missense_variant') {
-      return true
-    } else {
-      return false
-    }
-  }
-  const parsedVariant = variant.parsedPostMappedHgvsP
-  if (!parsedVariant) {
-    return false
-  }
-  const refAllele = parsedVariant.original.toUpperCase()
-  const altAllele = parsedVariant.substitution.toUpperCase()
-  const refAlleleIsAA = AMINO_ACIDS.find((aa) => aa.codes.triple == refAllele)
-  const altAlleleIsAA = AMINO_ACIDS.find((aa) => aa.codes.triple == altAllele)
-  const startLoss = parsedVariant.position == 1 && refAllele == 'MET'
-  return !!(refAlleleIsAA && altAlleleIsAA && !startLoss && refAllele != altAllele)
-}
-
-export function variantIsSynonymous(variant: Variant) {
-  if (variant.vep && variant.vep.vep_functional_consequence && variant.vep.vep_functional_consequence != 'NA') {
-    if (variant.vep.vep_functional_consequence == 'synonymous_variant') {
-      return true
-    } else {
-      return false
-    }
-  }
-  const parsedVariant = variant.parsedPostMappedHgvsP
-  if (!parsedVariant) {
-    return false
-  }
-  const refAllele = parsedVariant.original.toUpperCase()
-  const altAllele = parsedVariant.substitution.toUpperCase()
-  const refAlleleIsAA = AMINO_ACIDS.find((aa) => aa.codes.triple == refAllele)
-  return !!(refAlleleIsAA && (refAllele == altAllele || altAllele == '='))
-}
-
-export function variantIsNonsense(variant: Variant) {
-  if (variant.vep && variant.vep.vep_functional_consequence && variant.vep.vep_functional_consequence != 'NA') {
-    if (variant.vep.vep_functional_consequence == 'stop_gained') {
-      return true
-    } else {
-      return false
-    }
-  }
-  const parsedVariant = variant.parsedPostMappedHgvsP
-  if (!parsedVariant) {
-    return false
-  }
-  const altAllele = parsedVariant.substitution.toUpperCase()
-  return altAllele == 'TER' || altAllele == '*'
-}
-
-export function variantIsOther(variant: Variant) {
-  return (
-    !variantIsMissense(variant) &&
-    !variantIsSynonymous(variant) &&
-    !variantIsNonsense(variant) &&
-    !isStartOrStopLoss(variant)
-  )
-}
-
-/**
- * Check that this application is able to determine the protein consequence of every variant.
- *
- * This means that every variant either has a parseable protein HGVS string or is known to be non-coding.
- *
- * Here we distinguish known a non-coding variant by the facts that (a) it has a parsed HGVS c. string and (b) the
- * position in this string is not an integer.
- *
- * @param variants A list of variants.
- * @returns True if every variant has a protein consequence determinable by this application.
- */
-export function allCodingVariantsHaveProteinConsequence(variants: Variant[]) {
-  return variants.every(
-    (v) =>
-      (v.vep && v.vep.vep_functional_consequence && v.vep.vep_functional_consequence != 'NA') ||
-      v.parsedPostMappedHgvsP != null ||
-      (v.parsedPostMappedHgvsC?.referenceType == 'c' && v.parsedPostMappedHgvsC?.position == null)
-  )
-}
+// Protein-effect classification by VEP consequence now lives in `lib/consequences.ts`
+// (`consequenceBucket`). `isStartOrStopLoss` above is intentionally block-aware and stays here: it is
+// the heatmap's plotted-representation filter (hiding start/stop-loss cells on synthetic targets),
+// where VEP may be absent and the amino-acid change being drawn is the right signal.

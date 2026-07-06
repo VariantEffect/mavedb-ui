@@ -1,5 +1,9 @@
 <template>
   <div class="mavedb-heatmap-wrapper">
+    <div v-if="redrawing" class="mavedb-heatmap-loading">
+      <i class="pi pi-spin pi-spinner" />
+      <span>Rendering heatmap…</span>
+    </div>
     <template v-if="heatmapVisible">
       <div style="text-align: center">Functional Score by Variant</div>
       <div id="mavedb-heatmap-container" ref="heatmapContainer" class="heatmapContainer">
@@ -16,9 +20,33 @@
           />
         </div>
       </div>
-      <!-- Controls moved to parent component header -->
-      <div class="ml-2" v-if="numComplexVariants > 0">
-        {{ numComplexVariants }} variants cannot be shown on this chart.
+      <!-- Informational notes about what the heatmap can and can't show. Controls live in the parent header. -->
+      <div
+        v-if="selectedVariantNotOnHeatmap || notShownCounts.noCoordinate > 0 || notShownCounts.complex > 0"
+        class="mt-2 flex flex-col gap-1 px-2 text-sm text-text-muted"
+      >
+        <div v-if="selectedVariantNotOnHeatmap" class="flex items-center gap-1.5">
+          <i class="pi pi-info-circle text-xs" />
+          <span
+            ><span class="font-medium text-text-secondary">{{ selectedVariantLabel }}</span> is not shown on this
+            heatmap.</span
+          >
+        </div>
+        <div v-if="notShownCounts.noCoordinate > 0" class="flex items-center gap-1.5">
+          <i class="pi pi-info-circle text-xs" />
+          <span
+            >{{ notShownCounts.noCoordinate }}
+            {{ notShownCounts.noCoordinate === 1 ? 'variant has' : 'variants have' }} no
+            {{ sequenceType === 'protein' ? 'protein' : 'DNA' }} representation in this view.</span
+          >
+        </div>
+        <div v-if="notShownCounts.complex > 0" class="flex items-center gap-1.5">
+          <i class="pi pi-info-circle text-xs" />
+          <span
+            >{{ notShownCounts.complex }} {{ notShownCounts.complex === 1 ? 'variant is' : 'variants are' }} too complex
+            to plot (indels, multivariants).</span
+          >
+        </div>
       </div>
     </template>
     <template v-else-if="scoreSet?.private">
@@ -41,22 +69,23 @@ import {saveChartAsSvg, saveChartAsPng} from '@/lib/chart-export'
 import geneticCodes from '@/lib/genetic-codes'
 import makeHeatmap from '@/lib/heatmap'
 import type {Heatmap, HeatmapDatum, HeatmapRowSpecification} from '@/lib/heatmap'
-import {parseSimpleProVariant, parseSimpleNtVariant, variantNotNullOrNA} from '@/lib/mave-hgvs'
 import {NUCLEOTIDE_BASES} from '@/lib/nucleotides'
 import {
-  PARSED_POST_MAPPED_VARIANT_PROPERTIES,
-  HgvsReferenceSequenceType,
-  inferReferenceSequenceFromVariants,
-  isStartOrStopLoss,
-  Variant
-} from '@/lib/variants'
+  tooltipKeyValue,
+  tooltipRoot,
+  tooltipSection,
+  tooltipTitle,
+  tooltipVariantDetailsLink
+} from '@/lib/tooltips'
+import {inferReferenceSequenceFromBlocks, isStartOrStopLoss, type DisplayVariant, type HgvsField} from '@/lib/variants'
+import {useVariantCoordinates} from '@/composables/use-variant-coordinates'
 import {components} from '@/schema/openapi'
 
 interface VariantHeatmapDatum {
   x: number
   y: number
   score: number | undefined
-  variant: Variant
+  variant: DisplayVariant
 }
 
 interface VariantClassHeatmapDatum {
@@ -68,7 +97,7 @@ interface VariantClassHeatmapDatum {
   scoreRank?: number
   wt?: boolean
   /** One variant in the class. All of its properties are shared by the other variants except its score, which should be ignored. */
-  instance?: Variant
+  instance?: DisplayVariant
 }
 
 const HEATMAP_AMINO_ACIDS_SORTED = _.sortBy(AMINO_ACIDS, [
@@ -152,7 +181,7 @@ export default defineComponent({
       default: 'raw'
     },
     externalSelection: {
-      type: Object as PropType<Variant | null>,
+      type: Object as PropType<DisplayVariant | null>,
       default: null
     },
     margins: {
@@ -185,7 +214,7 @@ export default defineComponent({
       default: undefined
     },
     variants: {
-      type: Array as PropType<Variant[]>,
+      type: Array as PropType<DisplayVariant[]>,
       required: true
     },
     forceBothClassificationColors: {
@@ -214,11 +243,16 @@ export default defineComponent({
     'update:layout'
   ],
 
+  setup() {
+    return {...useVariantCoordinates()}
+  },
+
   data: () => ({
     isMounted: false,
     proteinStructureVisible: false,
     heatmap: null as Heatmap | null,
-    stackedHeatmap: null as Heatmap | null
+    stackedHeatmap: null as Heatmap | null,
+    redrawing: false
   }),
 
   computed: {
@@ -226,24 +260,12 @@ export default defineComponent({
     // Choice of heatmap sequence type
     ////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 
-    dnaHeatmapAvailable: function () {
-      return this.variants.some((v) => this.getHgvsNtValue(v) != null && this.getHgvsNtValue(v) != 'NA')
-    },
-
-    proteinHeatmapAvailable: function () {
-      return this.variants.some((v) => this.getHgvsProValue(v) != null && this.getHgvsProValue(v) != 'NA')
-    },
-
-    sequenceTypeOptions: function () {
-      return [
-        ...(this.dnaHeatmapAvailable && (!this.allowedSequenceTypes || this.allowedSequenceTypes.includes('dna'))
-          ? [{title: 'DNA', value: 'dna'}]
-          : []),
-        ...(this.proteinHeatmapAvailable &&
-        (!this.allowedSequenceTypes || this.allowedSequenceTypes.includes('protein'))
-          ? [{title: 'Protein', value: 'protein'}]
-          : [])
-      ]
+    availableSequenceTypeOptions: function () {
+      const options = this.sequenceTypeOptions(this.variants, this.coordinates)
+      if (!this.allowedSequenceTypes) {
+        return options
+      }
+      return options.filter((option) => this.allowedSequenceTypes!.includes(option.value))
     },
 
     ////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
@@ -262,10 +284,9 @@ export default defineComponent({
               return 'none'
           }
         case 'accession':
-          // For accession-based targets, all variants should have either hgvs_nt or hgvs_pro, but not both. They should
-          // all be of the same type (AA or NT). Use the raw data (not the mapped or translated HGVS properties) to
-          // determine which.
-          if (variantNotNullOrNA(this.variants[0].hgvs_pro)) {
+          // For accession-based targets, all variants should have either a submitted nt or protein HGVS, but not both.
+          // They are all of the same type (AA or NT); use the submitted data to determine which.
+          if (this.variants[0]?.hgvsPro != null) {
             return 'aa'
           } else {
             return 'nt'
@@ -323,9 +344,12 @@ export default defineComponent({
     ////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 
     inferredTargetSequenceAndOffset: function () {
-      const {referenceSequence, referenceSequenceRange} = inferReferenceSequenceFromVariants(
+      // Accession targets have no stored sequence; infer it from the submitted (raw) blocks.
+      const level = this.targetResidueType == 'aa' ? 'protein' : 'dna'
+      const {referenceSequence, referenceSequenceRange} = inferReferenceSequenceFromBlocks(
         this.variants,
-        this.targetResidueType == 'aa' ? 'p' : 'c'
+        (v) => this.coordinateFor(v, level, 'raw'),
+        this.targetResidueType == 'aa' ? 'aa' : 'nt'
       )
       return {
         targetSequence: referenceSequence,
@@ -350,22 +374,24 @@ export default defineComponent({
     },
 
     wtSequenceAndOffset: function () {
-      if (this.wtResidueType == this.targetResidueType) {
+      // Option A: the WT sequence is expressed in the same coordinate system as the plotted cells.
+      // In the raw frame with a target sequence of the matching residue type, that sequence is the
+      // authoritative WT in target coordinates. Otherwise (mapped frame, or a residue type the target
+      // sequence doesn't provide) infer the WT from the plotted blocks in the current (level, frame).
+      if (this.coordinates == 'raw' && this.wtResidueType == this.targetResidueType && this.targetSequence) {
         return {
           wtSequence: this.targetSequence,
           wtSequenceOffset: this.targetSequenceOffset
         }
-      } else if (this.wtResidueType == 'aa' && this.targetResidueType == 'nt') {
-        const {referenceSequence, referenceSequenceRange} = inferReferenceSequenceFromVariants(this.variants, 'p')
-        return {
-          wtSequence: referenceSequence,
-          wtSequenceOffset: referenceSequenceRange.start
-        }
-      } else {
-        return {
-          wtSequence: '',
-          wtSequenceOffset: 1
-        }
+      }
+      const {referenceSequence, referenceSequenceRange} = inferReferenceSequenceFromBlocks(
+        this.variants,
+        (v) => this.plotBlock(v),
+        this.wtResidueType
+      )
+      return {
+        wtSequence: referenceSequence,
+        wtSequenceOffset: referenceSequenceRange.start
       }
     },
 
@@ -381,80 +407,34 @@ export default defineComponent({
     // Accessing variant HGVS strings
     ////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 
-    hgvsColumn: function () {
-      switch (this.sequenceType) {
-        case 'dna':
-          return this.hgvsNtColumn
-        case 'protein':
-        default:
-          return this.hgvsProColumn
-      }
-    },
-
-    hgvsNtColumn: function () {
-      switch (this.coordinates) {
-        case 'mapped':
-          if (this.variants.some((v) => v.mavedb?.post_mapped_hgvs_c != null && v.mavedb?.post_mapped_hgvs_c != 'NA')) {
-            return 'post_mapped_hgvs_c'
-          }
-          return 'hgvs_nt'
-        case 'raw':
-        default:
-          return 'hgvs_nt'
-      }
-    },
-
-    hgvsProColumn: function () {
-      switch (this.coordinates) {
-        case 'mapped':
-          if (this.variants.some((v) => v.translated_hgvs_p != null && v.translated_hgvs_p != 'NA')) {
-            return 'translated_hgvs_p'
-          }
-          return 'post_mapped_hgvs_p'
-        case 'raw':
-        default:
-          if (this.variants.some((v) => v.hgvs_pro != null && v.hgvs_pro != 'NA')) {
-            return 'hgvs_pro'
-          } else if (this.variants.some((v) => v.translated_hgvs_p != null && v.translated_hgvs_p != 'NA')) {
-            return 'translated_hgvs_p'
-          } else {
-            return 'hgvs_pro'
-          }
-      }
-    },
-
-    parseSimpleVariant: function () {
-      return this.sequenceType == 'dna' ? parseSimpleNtVariant : parseSimpleProVariant
-    },
-
     ////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
     // Variants to display
     ////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 
-    hgvsReferenceSequenceType: function (): HgvsReferenceSequenceType | undefined {
-      switch (this.sequenceType) {
-        case 'dna':
-          return 'c'
-        case 'protein':
-          return 'p'
-        default:
-          return undefined
-      }
-    },
-
     simpleVariants: function () {
-      if (this.hgvsReferenceSequenceType == null) {
-        return []
-      }
-      const parsedHgvsProperty = PARSED_POST_MAPPED_VARIANT_PROPERTIES[this.hgvsReferenceSequenceType]
-      if (!parsedHgvsProperty) {
-        return []
-      }
-      return this.variants.filter((v) => v[parsedHgvsProperty] != null)
+      // Plottable variants are those with a placeable substitution block in the current (level, frame).
+      return this.variants.filter((v) => {
+        const block = this.plotBlock(v)
+        return block != null && block.position != null
+      })
     },
 
-    numComplexVariants: function () {
-      return this.variants.length - this.simpleVariants.length
+    // The unplottable variants, split by why. `noCoordinate` resolve to no coordinate at the current
+    // level/frame (unmapped, or that level absent); `complex` carry an HGVS that is not a placeable
+    // single substitution (indels, multivariants, intronic/UTR). The two are mutually exclusive and
+    // together are every variant excluded from simpleVariants.
+    notShownCounts: function (): {noCoordinate: number; complex: number} {
+      let noCoordinate = 0
+      let complex = 0
+      for (const v of this.variants) {
+        const block = this.plotBlock(v)
+        if (block == null) {
+          noCoordinate++
+        } else if (block.position == null) {
+          complex++
+        }
+      }
+      return {noCoordinate, complex}
     },
 
     ////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
@@ -550,8 +530,19 @@ export default defineComponent({
 
     selectedVariant: function () {
       return this.externalSelection
-        ? this.heatmapData.filter((variant) => variant.instance?.accession == this.externalSelection.accession)[0]
+        ? this.heatmapData.filter((variant) => variant.instance?.variantUrn == this.externalSelection!.variantUrn)[0]
         : null
+    },
+
+    // A selection exists but resolves to no cell on this heatmap — a complex/unmapped variant, or one
+    // with no placeable substitution in the current level and frame. selectDatum can't highlight it
+    // either (same condition), so the note explains the absent highlight.
+    selectedVariantNotOnHeatmap: function (): boolean {
+      return !!this.externalSelection && !this.selectedVariant
+    },
+
+    selectedVariantLabel: function (): string {
+      return this.externalSelection ? this.labelForVariant(this.externalSelection, this.coordinates) : ''
     },
 
     ////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
@@ -842,13 +833,13 @@ export default defineComponent({
   watch: {
     coordinates: {
       handler: function () {
-        this.renderOrRefreshHeatmaps()
+        this.scheduleRedraw()
       }
     },
 
     heatmapData: {
       handler: function () {
-        this.renderOrRefreshHeatmaps()
+        this.scheduleRedraw()
       },
       immediate: true
     },
@@ -866,14 +857,14 @@ export default defineComponent({
     layout: {
       handler: function (newValue, oldValue) {
         if (newValue != oldValue) {
-          this.renderOrRefreshHeatmaps()
+          this.scheduleRedraw()
         }
       }
     },
 
     sequenceType: {
       handler: function () {
-        this.renderOrRefreshHeatmaps()
+        this.scheduleRedraw()
       }
     },
 
@@ -897,10 +888,13 @@ export default defineComponent({
       immediate: true
     },
 
-    sequenceTypeOptions: {
-      handler: function (newValue, oldValue) {
+    availableSequenceTypeOptions: {
+      handler: function (
+        newValue: Array<{title: string; value: string}>,
+        oldValue: Array<{title: string; value: string}>
+      ) {
         if (!_.isEqual(newValue, oldValue)) {
-          if (!newValue.find((option) => option.value == this.sequenceType)) {
+          if (newValue.length > 0 && !newValue.find((option) => option.value == this.sequenceType)) {
             this.$emit('update:sequenceType', newValue[0].value)
           }
         }
@@ -910,6 +904,9 @@ export default defineComponent({
   },
 
   mounted: function () {
+    // Render synchronously on mount so colorScale/heatmapData are ready when a parent (e.g.
+    // ScoreSetVisualizer) reads them in its own mounted() hook. scheduleRedraw() handles later updates.
+    this.isMounted = true
     this.renderOrRefreshHeatmaps()
     this.$emit('exportChart', this.buildExportFns())
   },
@@ -927,45 +924,15 @@ export default defineComponent({
 
   methods: {
     ////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
-    // HGVS value accessors
+    // Coordinate resolution
     ////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 
     /**
-     * Get the HGVS nucleotide value from a variant, handling nested properties.
+     * The HGVS block that this variant plots at, in the current sequence level and coordinate frame.
+     * The single source of truth for the heatmap's x/y derivation, WT inference, and tooltips.
      */
-    getHgvsNtValue: function (variant: Variant) {
-      switch (this.coordinates) {
-        case 'mapped':
-          if (variant.mavedb?.post_mapped_hgvs_c != null && variant.mavedb?.post_mapped_hgvs_c != 'NA') {
-            return variant.mavedb.post_mapped_hgvs_c
-          }
-          return variant.hgvs_nt
-        case 'raw':
-        default:
-          return variant.hgvs_nt
-      }
-    },
-
-    /**
-     * Get the HGVS protein value from a variant, handling nested properties.
-     */
-    getHgvsProValue: function (variant: Variant) {
-      switch (this.coordinates) {
-        case 'mapped':
-          if (variant.translated_hgvs_p != null && variant.translated_hgvs_p != 'NA') {
-            return variant.translated_hgvs_p
-          }
-          return variant.mavedb?.post_mapped_hgvs_p
-        case 'raw':
-        default:
-          if (variant.hgvs_pro != null && variant.hgvs_pro != 'NA') {
-            return variant.hgvs_pro
-          } else if (variant.translated_hgvs_p != null && variant.translated_hgvs_p != 'NA') {
-            return variant.translated_hgvs_p
-          } else {
-            return variant.hgvs_pro
-          }
-      }
+    plotBlock: function (variant: DisplayVariant): HgvsField | null {
+      return this.coordinateFor(variant, this.sequenceType, this.coordinates)
     },
 
     ////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
@@ -977,57 +944,48 @@ export default defineComponent({
      *
      * @param simpleVariants
      */
-    prepareSimpleVariantHeatmapData: function (simpleVariants: Variant[]) {
-      // Count of variants that do not appear to be complex but are don't have a valid substitution
+    prepareSimpleVariantHeatmapData: function (simpleVariants: DisplayVariant[]) {
+      // Count of variants that do not appear to be complex but don't have a valid substitution
       let numIgnoredVariants = 0
 
-      const distinctAccessions = new Set()
-
-      const parsedHgvsProperty = PARSED_POST_MAPPED_VARIANT_PROPERTIES[this.hgvsReferenceSequenceType]
-      let simpleVariantHeatmapData = _.filter(
+      const simpleVariantHeatmapData = _.filter(
         simpleVariants.map((variant) => {
-          const parsedVariant = variant[parsedHgvsProperty]
-          if (parsedVariant.target) {
-            distinctAccessions.add(parsedVariant.target)
+          const block = this.plotBlock(variant)
+          if (!block || block.position == null || block.alt == null) {
+            numIgnoredVariants++
+            return null
           }
-          // Don't display variants out of range from the provided sequence. This happens occassionally with legacy data
-          // sets.
+          // Don't display variants out of range from the reference sequence. This happens occasionally with legacy
+          // data sets.
           if (
-            variant.position < this.wtSequence.offset ||
-            variant.position > this.wtSequence.length + this.wtSequence.offset
+            block.position < this.wtSequenceOffset ||
+            block.position > this.wtSequence.length + this.wtSequenceOffset
           ) {
             numIgnoredVariants++
             return null
           }
-          // If hideStartAndStopLoss is set to true, omit start- and stop-loss variants. The parent component shouuld
+          // If hideStartAndStopLoss is set to true, omit start- and stop-loss variants. The parent component should
           // set this option when viewing scores in clinical mode from an assay using a synthetic target sequence.
           if (this.hideStartAndStopLoss && isStartOrStopLoss(variant)) {
             numIgnoredVariants++
             return null
           }
-          const row = this.heatmapRowForSubstitution(
-            parsedVariant.substitution == parsedVariant.original ? '=' : parsedVariant.substitution
-          )
+          const row = this.heatmapRowForSubstitution(block.alt == block.ref ? '=' : block.alt)
           if (row == null) {
             numIgnoredVariants++
             return null
           }
-          const x = parsedVariant.position
+          const x = block.position
           const y = this.heatmapRows.length - 1 - row
           return {
             x,
             y,
-            score: variant.scores.score,
+            score: variant.score ?? undefined,
             variant
           }
         }),
         (x) => x != null
       )
-      // TODO(#237) See https://github.com/VariantEffect/mavedb-ui/issues/237.
-      if (distinctAccessions.size > 1) {
-        numIgnoredVariants += simpleVariantHeatmapData.length
-        simpleVariantHeatmapData = []
-      }
 
       return {simpleVariantHeatmapData, numIgnoredVariants}
     },
@@ -1063,8 +1021,8 @@ export default defineComponent({
     // Data property accessors for the heatmap
     ////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 
-    accession: function (d: HeatmapDatum) {
-      return (d as VariantClassHeatmapDatum)?.instance?.accession
+    variantKey: function (d: HeatmapDatum) {
+      return (d as VariantClassHeatmapDatum)?.instance?.variantUrn
     },
 
     tooltipTickLabelHtmlGetter: function (rowNumber: number) {
@@ -1072,72 +1030,56 @@ export default defineComponent({
       if (this.sequenceType == 'protein') {
         const aminoAcid = AMINO_ACIDS.find((aa) => aa.codes.single == currentRow.code)
         if (aminoAcid) {
-          return `Name: ${aminoAcid.name} (${aminoAcid.codes.triple})<br/>Hydrophobicity: ${aminoAcid.hydrophobicity?.originalValue} (Kyte-Doolittle)<br/>Class: ${aminoAcid.class}`
+          return tooltipRoot([
+            tooltipSection([
+              tooltipKeyValue('Name', `${aminoAcid.name} (${aminoAcid.codes.triple})`),
+              tooltipKeyValue('Hydrophobicity', `${aminoAcid.hydrophobicity?.originalValue} (Kyte-Doolittle)`),
+              tooltipKeyValue('Class', aminoAcid.class)
+            ])
+          ])
         }
       }
       return null
     },
 
     tooltipHtmlGetter: function (v: VariantClassHeatmapDatum) {
-      const parts = []
+      // Identity: WT flag plus the variant's identifiers, resolved in the current coordinate frame.
+      const identity = []
       if (v.wt) {
-        parts.push('WT')
+        identity.push(tooltipTitle('Wild-type'))
       }
-      const nameParts = []
-      if (this.coordinates == 'mapped') {
-        switch (this.sequenceType) {
-          case 'dna':
-            if (variantNotNullOrNA(v.instance?.mavedb?.post_mapped_hgvs_c)) {
-              nameParts.push(`Variant: ${v.instance?.mavedb?.post_mapped_hgvs_c}`)
-            }
-            if (variantNotNullOrNA(v.instance?.mavedb?.post_mapped_hgvs_p)) {
-              nameParts.push(`Protein variant: ${v.instance?.mavedb?.post_mapped_hgvs_p}`)
-            } else if (variantNotNullOrNA(v.instance?.translated_hgvs_p)) {
-              nameParts.push(`Protein variant: ${v.instance?.translated_hgvs_p}`)
-            }
-            break
-          case 'protein':
-          default:
-            if (variantNotNullOrNA(v.instance?.mavedb?.post_mapped_hgvs_p)) {
-              nameParts.push(`Variant: ${v.instance?.mavedb?.post_mapped_hgvs_p}`)
-            } else if (variantNotNullOrNA(v.instance?.translated_hgvs_p)) {
-              nameParts.push(`Variant: ${v.instance?.translated_hgvs_p}`)
-            }
-            if (variantNotNullOrNA(v.instance?.mavedb?.post_mapped_hgvs_c)) {
-              nameParts.push(`NT variant: ${v.instance?.mavedb?.post_mapped_hgvs_c}`)
-            }
+      const instance = v.instance
+      if (instance) {
+        const protein = this.getHgvsPro(instance, this.coordinates)
+        const nucleotide = this.getHgvsNt(instance, this.coordinates)
+        const splice = instance.hgvsSplice?.hgvs
+        if (protein) {
+          identity.push(tooltipKeyValue('Protein variant', protein))
+        }
+        if (nucleotide) {
+          identity.push(tooltipKeyValue('NT variant', nucleotide))
+        }
+        if (!protein && !nucleotide && splice) {
+          identity.push(tooltipKeyValue('Splice variant', splice))
         }
       }
-      if (nameParts.length == 0) {
-        if (variantNotNullOrNA(v.instance?.hgvs_nt)) {
-          nameParts.push(`NT variant: ${v.instance?.hgvs_nt}`)
-        }
-        if (variantNotNullOrNA(v.instance?.hgvs_pro)) {
-          nameParts.push(`Protein variant: ${v.instance?.hgvs_pro}`)
-        } else if (variantNotNullOrNA(v.instance?.translated_hgvs_p)) {
-          nameParts.push(`Protein variant: ${v.instance?.translated_hgvs_p}`)
-        }
-        if (variantNotNullOrNA(v.instance?.hgvs_splice)) {
-          nameParts.push(`Splice variant: ${v.instance?.hgvs_splice}`)
-        }
+      if (instance?.clingenAlleleId) {
+        identity.push(tooltipVariantDetailsLink(instance.clingenAlleleId))
       }
-      parts.push(...nameParts)
+
+      // Aggregate score statistics for the cell.
+      const stats = []
       if (v.numScores != null) {
-        parts.push(`# of observations: ${v.numScores}`)
+        stats.push(tooltipKeyValue('# of observations', v.numScores))
       }
       if (v.numScores == 1) {
-        parts.push(`Score: ${v.meanScore}`)
+        stats.push(tooltipKeyValue('Score', v.meanScore))
       } else if (v.numScores != null && v.numScores > 1) {
-        parts.push(`Mean score: ${v.meanScore}`)
-        parts.push(`Score stdev: ${v.scoreStdev}`)
+        stats.push(tooltipKeyValue('Mean score', v.meanScore))
+        stats.push(tooltipKeyValue('Score stdev', v.scoreStdev))
       }
 
-      const clingenAlleleId = v.instance?.clingen?.clingen_allele_id
-      if (clingenAlleleId) {
-        parts.push(`<a href="/variants/${clingenAlleleId}" target="_blank" class="text-link">View variant details</a>`)
-      }
-
-      return parts.length > 0 ? parts.join('<br />') : null
+      return tooltipRoot([tooltipSection(identity), tooltipSection(stats)])
     },
 
     vRank: function (d: HeatmapDatum) {
@@ -1155,6 +1097,27 @@ export default defineComponent({
     ////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
     // Heatmap rendering and refresh
     ////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+
+    /**
+     * Show a loading indicator, then redraw on a later frame. Rebuilding the heatmap re-creates every
+     * SVG cell, which blocks the main thread; yielding two animation frames first lets the browser
+     * paint the indicator before the freeze. Re-entrant calls coalesce — the single deferred redraw
+     * reads the latest reactive state, so rapid level/frame changes collapse into one redraw.
+     */
+    scheduleRedraw: function () {
+      // Before mount, the synchronous first render in mounted() is the sole first paint (so a parent can
+      // read colorScale/heatmapData immediately). Deferring here would double-render and flash the spinner.
+      if (!this.isMounted || this.redrawing) {
+        return
+      }
+      this.redrawing = true
+      requestAnimationFrame(() =>
+        requestAnimationFrame(() => {
+          this.renderOrRefreshHeatmaps()
+          this.redrawing = false
+        })
+      )
+    },
 
     renderOrRefreshHeatmaps: function () {
       if (!this.heatmapData) {
@@ -1181,7 +1144,7 @@ export default defineComponent({
         .rows(this.heatmapRows)
         .xCoordinate(this.xCoord)
         .yCoordinate(this.yCoord)
-        .accessorField(this.accession)
+        .accessorField(this.variantKey)
         .tooltipHtml(this.tooltipHtmlGetter)
         .tooltipTickLabelHtml(this.sequenceType == 'protein' ? this.tooltipTickLabelHtmlGetter : null)
         .pivotColor('#e0e0e0')
@@ -1232,7 +1195,7 @@ export default defineComponent({
         .nodeSize({width: 20, height: 1})
         .xCoordinate(this.xCoord)
         .yCoordinate(this.vRank)
-        .accessorField(this.accession)
+        .accessorField(this.variantKey)
         .drawY(false)
         .drawLegend(false)
         .alignViaLegend(true)
@@ -1374,6 +1337,21 @@ export default defineComponent({
   background-color: #fff;
 }
 
+.mavedb-heatmap-loading {
+  position: absolute;
+  inset: 0;
+  z-index: 10;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
+  min-height: 120px;
+  background-color: rgba(255, 255, 255, 0.7);
+  color: #555;
+  font-size: 13px;
+}
+
 /* .mavedb-heatmap-wrapper:hover .mavedb-heatmap-controls {
   display: flex;
   flex-direction: row;
@@ -1399,6 +1377,13 @@ export default defineComponent({
   overflow-x: auto;
   overflow-y: hidden;
   position: relative;
+}
+
+/* The sticky y-axis/legend overlay spans the wrapper's full height, so its bottom-left otherwise
+   covers the left end of the horizontal scrollbar on wide (e.g. DNA) heatmaps. Trim it to clear the
+   scrollbar track. Overrides the inline height:100% d3 sets on the overlay svg. */
+.heatmapContainer:deep(svg.exclude-from-export) {
+  height: calc(100% - 8px) !important;
 }
 
 .heatmapContainer:deep(.heatmap-y-axis-tick-labels) {

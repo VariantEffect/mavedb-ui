@@ -190,10 +190,11 @@ const routes: RouteRecordRaw[] = [
     async beforeEnter(to) {
       const urn = Array.isArray(to.params.urn) ? to.params.urn[0] : to.params.urn
       try {
+        // The detail envelope carries the assay-level ClinGen id as a flat field (the URN→allele
+        // bridge), so resolving a legacy measurement URN to its allele page is a direct read.
         const detail = await getVariantDetail(urn)
-        const mapped = detail.mappedVariants.find((m) => m.current)
-        if (mapped?.clingenAlleleId) {
-          return {name: 'variant', params: {clingenAlleleId: mapped.clingenAlleleId}}
+        if (detail.clingenAlleleId) {
+          return {name: 'variant', params: {clingenAlleleId: detail.clingenAlleleId}}
         }
       } catch {
         // Fall through to 404 if the variant can't be resolved

@@ -65,7 +65,7 @@ export const CONFLICTING_CLINICAL_SIGNIFICANCE_CLASSIFICATIONS = [
   'Conflicting classifications of pathogenicity'
 ]
 
-export const CLINVAR_REVIEW_STATUS_STARS: { [status: string]: number } = {
+export const CLINVAR_REVIEW_STATUS_STARS: {[status: string]: number} = {
   'no assertion criteria provided': 0,
   'criteria provided, conflicting interpretations': 1,
   'criteria provided, conflicting classifications': 1,
@@ -88,7 +88,6 @@ export const DEFAULT_CLINICAL_SIGNIFICANCE_CLASSIFICATIONS = [
 export const DEFAULT_MIN_STAR_RATING = 1
 
 export const DEFAULT_CLINICAL_CONTROL_DB = 'ClinVar'
-export const DEFAULT_CLINICAL_CONTROL_VERSION = '01_2025'
 
 export interface ClinicalControlOption {
   dbName: string
@@ -122,11 +121,11 @@ export interface ClinicalControl {
  * @returns An array of clinical significance classification objects, including the appropriate "Conflicting" classification.
  */
 export function clinvarClinicalSignificanceClassifications(
-  version: string
+  version: string | null
 ): typeof CLINVAR_CLINICAL_SIGNIFICANCE_CLASSIFICATIONS {
   return [
     ...CLINVAR_CLINICAL_SIGNIFICANCE_CLASSIFICATIONS,
-    clinvarConflictingSignificanceClassificationForVersion(version),
+    clinvarConflictingSignificanceClassificationForVersion(version)
   ]
 }
 
@@ -140,12 +139,12 @@ export function clinvarClinicalSignificanceClassifications(
  * @param version - The version string, expected to contain a year after an underscore (e.g., "clinvar_2025").
  * @returns An object with `name`, `description`, and `shortDescription` fields describing the conflicting classification.
  */
-export function clinvarConflictingSignificanceClassificationForVersion(version: string): {
+export function clinvarConflictingSignificanceClassificationForVersion(version: string | null): {
   name: string
   description: string
   shortDescription: string
 } {
-  if (Number(version.split('_')[1]) > 2024) {
+  if (version === null || Number(version.split('_')[1]) > 2024) {
     return {
       name: 'Conflicting classifications of pathogenicity',
       description: 'Variant with conflicting classifications of pathogenicity',
@@ -170,8 +169,8 @@ export function clinvarConflictingSignificanceClassificationForVersion(version: 
  * @param version - The version string in the format "prefix_number" (e.g., "v_2025").
  * @returns The label for conflicting clinical significance series.
  */
-export function conflictingClinicalSignificanceSeriesLabelForVersion(version: string): string {
-  if (Number(version.split('_')[1]) > 2024) {
+export function conflictingClinicalSignificanceSeriesLabelForVersion(version: string | null): string {
+  if (version === null || Number(version.split('_')[1]) > 2024) {
     return 'Conflicting classifications'
   } else {
     return 'Conflicting interpretations'

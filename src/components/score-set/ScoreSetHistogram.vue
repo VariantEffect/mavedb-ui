@@ -194,7 +194,6 @@ import {
   DEFAULT_CLNREVSTAT_FIELD,
   DEFAULT_CLNSIG_FIELD,
   DEFAULT_CLINICAL_CONTROL_DB,
-  DEFAULT_CLINICAL_CONTROL_VERSION,
   DEFAULT_CLINICAL_SIGNIFICANCE_CLASSIFICATIONS,
   DEFAULT_MIN_STAR_RATING,
   PATHOGENIC_CLINICAL_SIGNIFICANCE_CLASSIFICATIONS,
@@ -222,7 +221,6 @@ import {
 import type {FunctionalClassificationVariant} from '@/lib/calibrations'
 import {
   tooltipBadgeBlock,
-  tooltipConsequence,
   tooltipCountRow,
   tooltipKeyValue,
   tooltipLink,
@@ -238,7 +236,6 @@ import {
 import {DisplayVariant} from '@/lib/variants'
 import {
   consequenceBucket,
-  humanReadableConsequence,
   EFFECT_BUCKETS,
   EFFECT_TYPE_FILTER_OPTIONS,
   DEFAULT_EFFECT_TYPE_FILTERS,
@@ -349,9 +346,7 @@ export default defineComponent({
       controlDb: null as ClinicalControlOption | null,
       controlVersion: null as string | null,
 
-      clinicalSignificanceClassificationOptions: clinvarClinicalSignificanceClassifications(
-        DEFAULT_CLINICAL_CONTROL_VERSION
-      ),
+      clinicalSignificanceClassificationOptions: clinvarClinicalSignificanceClassifications(null),
       variantTypeOptions: EFFECT_TYPE_FILTER_OPTIONS,
       customMinStarRating: DEFAULT_MIN_STAR_RATING,
       customSelectedClinicalSignificanceClassifications: DEFAULT_CLINICAL_SIGNIFICANCE_CLASSIFICATIONS,
@@ -540,9 +535,7 @@ export default defineComponent({
                 this.filterControlVariantByEffect(d),
               options: {
                 color: '#984ea3',
-                title: conflictingClinicalSignificanceSeriesLabelForVersion(
-                  this.controlVersion ? this.controlVersion : DEFAULT_CLINICAL_CONTROL_VERSION
-                )
+                title: conflictingClinicalSignificanceSeriesLabelForVersion(this.controlVersion)
               }
             })
           }
@@ -794,9 +787,7 @@ export default defineComponent({
         this.customSelectedClinicalSignificanceClassifications =
           this.customSelectedClinicalSignificanceClassifications.map((classification) => {
             if (CONFLICTING_CLINICAL_SIGNIFICANCE_CLASSIFICATIONS.includes(classification)) {
-              return clinvarConflictingSignificanceClassificationForVersion(
-                this.controlVersion ? this.controlVersion : DEFAULT_CLINICAL_CONTROL_VERSION
-              ).name
+              return clinvarConflictingSignificanceClassificationForVersion(this.controlVersion).name
             }
             return classification
           })
@@ -826,10 +817,7 @@ export default defineComponent({
           this.controlDb = defaultControlDb ? defaultControlDb : this.clinicalControlOptions[0]
         }
         if (!this.controlVersion) {
-          const defaultControlVersion = this.controlDb?.availableVersions.find(
-            (version) => version == DEFAULT_CLINICAL_CONTROL_VERSION
-          )
-          this.controlVersion = defaultControlVersion ? defaultControlVersion : this.controlDb?.availableVersions[0]
+          this.controlVersion = this.controlDb?.availableVersions[0]
         }
         const cache: Record<string, Record<string, ClinicalControl[]>> = {}
         for (const dbOption of this.clinicalControlOptions) {
@@ -843,9 +831,7 @@ export default defineComponent({
     },
     controlDbAndVersion: {
       handler: function () {
-        this.clinicalSignificanceClassificationOptions = clinvarClinicalSignificanceClassifications(
-          this.controlVersion ? this.controlVersion : DEFAULT_CLINICAL_CONTROL_VERSION
-        )
+        this.clinicalSignificanceClassificationOptions = clinvarClinicalSignificanceClassifications(this.controlVersion)
         this.loadClinicalControls()
       }
     },
@@ -911,15 +897,14 @@ export default defineComponent({
       if (label) {
         identity.push(tooltipTitle(label))
       }
+      const underlyingNt = this.getHgvsNt(variant, this.coordinates)
+      if (underlyingNt && underlyingNt !== label) {
+        identity.push(tooltipNote(underlyingNt))
+      }
       // In the mapped frame an unmapped variant's label is its submitted (target-frame) HGVS; flag it so
       // the string isn't mistaken for a mapped coordinate.
       if (this.coordinates == 'mapped' && this.isUnmapped(variant)) {
         identity.push(tooltipNote('Could not be mapped'))
-      }
-
-      const consequence = humanReadableConsequence(variant.consequence)
-      if (consequence) {
-        identity.push(tooltipConsequence(consequence))
       }
 
       if (variant.score != null) {
@@ -934,7 +919,16 @@ export default defineComponent({
         identity.push(tooltipVariantDetailsLink(variant.clingenAlleleId))
       }
 
-      return [tooltipSection(identity), this.tooltipClinvarSection(variant)].filter(Boolean).join('')
+      const sections = [tooltipSection(identity)]
+
+      if (this.vizOptions[this.activeViz].view == 'clinical') {
+        const clinvarSection = this.tooltipClinvarSection(variant)
+        if (clinvarSection) {
+          sections.push(clinvarSection)
+        }
+      }
+
+      return sections.filter(Boolean).join('')
     },
 
     /** ClinVar significance, review stars, and link — or null when the variant has no ClinVar annotation. */
@@ -952,9 +946,8 @@ export default defineComponent({
       }
 
       const description =
-        clinvarClinicalSignificanceClassifications(this.controlVersion || DEFAULT_CLINICAL_CONTROL_VERSION).find(
-          (c) => c.name == significance
-        )?.description ?? significance
+        clinvarClinicalSignificanceClassifications(this.controlVersion).find((c) => c.name == significance)
+          ?.description ?? significance
       const numStars = hasReviewStatus ? CLINVAR_REVIEW_STATUS_STARS[reviewStatus] : null
       const stars = numStars != null ? ` ${tooltipReviewStars(numStars)}` : ''
 

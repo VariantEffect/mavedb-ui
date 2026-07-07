@@ -1337,8 +1337,12 @@ export interface paths {
   };
   "/api/v1/variants/{urn}": {
     /**
-     * Fetch variant by URN
-     * @description Fetch a single variant by URN.
+     * Fetch assayed variant detail by URN
+     * @description Fetch the two-tier detail envelope for a single assayed variant by URN.
+     *
+     * Flat assay-level fields for the common UI case plus the spec-pure GA4GH CategoricalVariant and a
+     * digest-keyed annotation map for machine/standard consumers. A superseded variant is served (it is
+     * the citable unit) but self-describes via isCurrent/supersededBy rather than reading as current.
      */
     get: operations["get_variant_api_v1_variants__urn__get"];
   };
@@ -1625,6 +1629,19 @@ export interface components {
       state: components["schemas"]["LiteralSequenceExpression"] | components["schemas"]["ReferenceLengthExpression"] | components["schemas"]["LengthExpression"];
     };
     /**
+     * AlleleAnnotations
+     * @description The external annotations for one allele, sparse — each source absent unless it has data.
+     */
+    AlleleAnnotations: {
+      vep?: components["schemas"]["VepAnnotation"] | null;
+      gnomad?: components["schemas"]["GnomadAnnotation"] | null;
+      /**
+       * Clinvar
+       * @default []
+       */
+      clinvar?: components["schemas"]["ClinvarAnnotation"][];
+    };
+    /**
      * AnnotationLayer
      * @description Annotation layer for a variant mapping result.
      *
@@ -1794,17 +1811,17 @@ export interface components {
     ClingenAlleleIdVariantLookupResponse: {
       /** Clingenalleleid */
       clingenAlleleId: string;
-      exactMatch?: components["schemas"]["Variant"] | null;
+      exactMatch?: components["schemas"]["ClingenAlleleVariants"] | null;
       /**
        * Equivalentnt
        * @default []
        */
-      equivalentNt?: components["schemas"]["Variant"][];
+      equivalentNt?: components["schemas"]["ClingenAlleleVariants"][];
       /**
        * Equivalentaa
        * @default []
        */
-      equivalentAa?: components["schemas"]["Variant"][];
+      equivalentAa?: components["schemas"]["ClingenAlleleVariants"][];
     };
     /**
      * ClingenAlleleIdVariantLookupsRequest
@@ -1813,6 +1830,19 @@ export interface components {
     ClingenAlleleIdVariantLookupsRequest: {
       /** Clingenalleleids */
       clingenAlleleIds: string[];
+    };
+    /**
+     * ClingenAlleleVariants
+     * @description The assayed variants sharing one ClinGen allele id, with their variant effect measurements.
+     *
+     * An allele-side grouping (keyed by ClinGen allele id), it is the mapped-allele view of "which
+     * measurements share this molecular identity," not the assayed variant itself.
+     */
+    ClingenAlleleVariants: {
+      /** Clingenalleleid */
+      clingenAlleleId: string;
+      /** Varianteffectmeasurements */
+      variantEffectMeasurements: components["schemas"]["VariantEffectMeasurementWithShortScoreSet"][];
     };
     /** ClinicalControlOptions */
     ClinicalControlOptions: {
@@ -1851,6 +1881,22 @@ export interface components {
       recordType?: string;
       /** Mappedvariants */
       mappedVariants: components["schemas"]["MappedVariantForClinicalControl"][];
+    };
+    /**
+     * ClinvarAnnotation
+     * @description One ClinVar assertion for an allele (an allele may carry one per release).
+     */
+    ClinvarAnnotation: {
+      /** Clinicalsignificance */
+      clinicalSignificance: string;
+      /** Clinicalreviewstatus */
+      clinicalReviewStatus: string;
+      /** Clinvarvariationid */
+      clinvarVariationId?: string | null;
+      /** Clinvaralleleid */
+      clinvarAlleleId: string;
+      /** Dbversion */
+      dbVersion: string;
     };
     /**
      * Coding
@@ -3365,6 +3411,24 @@ export interface components {
       modificationDate: string;
       /** Mappedvariants */
       mappedVariants: components["schemas"]["MappedVariant"][];
+    };
+    /**
+     * GnomadAnnotation
+     * @description gnomAD population frequency for an allele.
+     */
+    GnomadAnnotation: {
+      /** Allelefrequency */
+      alleleFrequency: number;
+      /** Allelecount */
+      alleleCount: number;
+      /** Allelenumber */
+      alleleNumber: number;
+      /** Faf95Max */
+      faf95Max?: number | null;
+      /** Dbversion */
+      dbVersion: string;
+      /** Dbidentifier */
+      dbIdentifier: string;
     };
     /**
      * GroupBy
@@ -5725,14 +5789,74 @@ export interface components {
       type: string;
     };
     /**
-     * Variant
-     * @description View model for a variant, defined by its ClinGen allele id, with associated variant effect measurements
+     * VariantClassification
+     * @description A functional classification the variant falls into, tagged with its calibration context.
+     *
+     * A score set may carry several calibrations, so a variant has one classification per calibration;
+     * ``primary`` flags the UI default. The classifications are calibration-derived but as-of-invariant
+     * (calibrations carry no valid-time), so they are always the current calibration state.
      */
-    Variant: {
+    VariantClassification: {
+      /** Calibrationid */
+      calibrationId: number;
+      /** Primary */
+      primary: boolean;
+      classification: components["schemas"]["SavedFunctionalClassification"];
+    };
+    /**
+     * VariantDetail
+     * @description The assayed variant-detail envelope (``GET /variants/{urn}``, design §7.1).
+     *
+     * Two tiers: flat, UI-ergonomic assay fields (the ``targetHgvs``/``referenceHgvs`` coordinate pair
+     * is a client-side toggle, no refetch) plus the spec-pure GA4GH ``molecularRepresentation``
+     * (``CategoricalVariant``, no MaveDB fields inside). The MaveDB layer rides alongside keyed by VRS
+     * digest: ``memberRelations`` (member→defining relation) and the ``annotations`` map. ``isCurrent``
+     * /``supersededBy`` let a superseded variant self-describe. Absent fields are omitted.
+     */
+    VariantDetail: {
+      /** Urn */
+      urn: string;
+      /** Scores */
+      scores?: Record<string, never> | null;
+      /** Counts */
+      counts?: Record<string, never> | null;
+      /**
+       * Classifications
+       * @default []
+       */
+      classifications?: components["schemas"]["VariantClassification"][];
+      /** Assaylevel */
+      assayLevel?: string | null;
+      /** Targethgvs */
+      targetHgvs?: string | null;
+      /** Referencehgvs */
+      referenceHgvs?: string | null;
+      /** Assayleveldigest */
+      assayLevelDigest?: string | null;
       /** Clingenalleleid */
-      clingenAlleleId: string;
-      /** Varianteffectmeasurements */
-      variantEffectMeasurements: components["schemas"]["VariantEffectMeasurementWithShortScoreSet"][];
+      clingenAlleleId?: string | null;
+      /** Molecularrepresentation */
+      molecularRepresentation?: Record<string, never> | null;
+      /** Mode */
+      mode?: string | null;
+      /**
+       * Memberrelations
+       * @default {}
+       */
+      memberRelations?: {
+        [key: string]: string;
+      };
+      /**
+       * Annotations
+       * @default {}
+       */
+      annotations?: {
+        [key: string]: components["schemas"]["AlleleAnnotations"];
+      };
+      /** Iscurrent */
+      isCurrent: boolean;
+      /** Supersededby */
+      supersededBy?: string | null;
     };
     /**
      * VariantDiagnosticProposition
@@ -5828,41 +5952,6 @@ export interface components {
       id: number;
       /** Recordtype */
       recordType?: string;
-    };
-    /**
-     * VariantEffectMeasurementWithScoreSet
-     * @description Variant effect measurement view model with mapped variants and score set
-     */
-    VariantEffectMeasurementWithScoreSet: {
-      /** Urn */
-      urn?: string | null;
-      /** Data */
-      data: unknown;
-      /** Scoresetid */
-      scoreSetId: number;
-      /** Hgvsnt */
-      hgvsNt?: string | null;
-      /** Hgvspro */
-      hgvsPro?: string | null;
-      /** Hgvssplice */
-      hgvsSplice?: string | null;
-      /**
-       * Creationdate
-       * Format: date
-       */
-      creationDate: string;
-      /**
-       * Modificationdate
-       * Format: date
-       */
-      modificationDate: string;
-      /** Id */
-      id: number;
-      /** Recordtype */
-      recordType?: string;
-      scoreSet: components["schemas"]["ScoreSet"];
-      /** Mappedvariants */
-      mappedVariants: components["schemas"]["MappedVariant"][];
     };
     /**
      * VariantEffectMeasurementWithShortScoreSet
@@ -6243,6 +6332,16 @@ export interface components {
      * @description A representation of the state of one or more biomolecules.
      */
     Variation: components["schemas"]["Allele"] | components["schemas"]["CisPhasedBlock"] | components["schemas"]["Adjacency"] | components["schemas"]["Terminus"] | components["schemas"]["DerivativeMolecule"] | components["schemas"]["CopyNumberChange"] | components["schemas"]["CopyNumberCount"];
+    /**
+     * VepAnnotation
+     * @description VEP most-severe functional consequence and the Ensembl release it resolved under.
+     */
+    VepAnnotation: {
+      /** Consequence */
+      consequence?: string | null;
+      /** Sourceversion */
+      sourceVersion: string;
+    };
     /**
      * code
      * @description Indicates that the value is taken from a set of controlled strings defined elsewhere. Technically, a code is restricted to a string which has at least one character and no leading or  trailing whitespace, and where there is no whitespace other than single spaces in the contents.
@@ -12538,11 +12637,19 @@ export interface operations {
     };
   };
   /**
-   * Fetch variant by URN
-   * @description Fetch a single variant by URN.
+   * Fetch assayed variant detail by URN
+   * @description Fetch the two-tier detail envelope for a single assayed variant by URN.
+   *
+   * Flat assay-level fields for the common UI case plus the spec-pure GA4GH CategoricalVariant and a
+   * digest-keyed annotation map for machine/standard consumers. A superseded variant is served (it is
+   * the citable unit) but self-describes via isCurrent/supersededBy rather than reading as current.
    */
   get_variant_api_v1_variants__urn__get: {
     parameters: {
+      query?: {
+        /** @description Reconstruct the molecular layer (Cat-VRS membership, VEP/gnomAD/ClinVar annotations) as it stood at this instant, over the variant's fixed score. ISO 8601, ideally timezone-aware. Content valid-time only — it never re-selects a score-set version, and scores/classifications are as-of-invariant. Defaults to current. */
+        as_of?: string | null;
+      };
       header?: {
         "x-active-roles"?: string | null;
       };
@@ -12554,7 +12661,7 @@ export interface operations {
       /** @description Successful Response */
       200: {
         content: {
-          "application/json": components["schemas"]["VariantEffectMeasurementWithScoreSet"];
+          "application/json": components["schemas"]["VariantDetail"];
         };
       };
       /** @description Authentication required. */

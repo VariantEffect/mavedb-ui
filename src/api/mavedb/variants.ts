@@ -5,7 +5,7 @@ import {histogramScoreSetVariantDataUrl} from '@/api/mavedb/score-sets'
 import {components} from '@/schema/openapi'
 
 type ScoreSet = components['schemas']['ScoreSet']
-type VariantEffectMeasurementWithScoreSet = components['schemas']['VariantEffectMeasurementWithScoreSet']
+type VariantDetail = components['schemas']['VariantDetail']
 type ClingenAlleleIdVariantLookupResponse = components['schemas']['ClingenAlleleIdVariantLookupResponse']
 type MappedVariant = components['schemas']['MappedVariant']
 
@@ -25,7 +25,7 @@ export async function lookupVariantsByVrsDigest(identifier: string): Promise<Map
   return response.data
 }
 
-export async function getVariantDetail(urn: string): Promise<VariantEffectMeasurementWithScoreSet> {
+export async function getVariantDetail(urn: string): Promise<VariantDetail> {
   const response = await axios.get(`${config.apiBaseUrl}/variants/${encodeURIComponent(urn)}`)
   return response.data
 }

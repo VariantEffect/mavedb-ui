@@ -197,7 +197,15 @@
               <div class="mb-1.5 text-xs-minus font-bold uppercase tracking-[0.5px] text-black">
                 Population Frequency
               </div>
-              <p class="text-xs-plus italic text-text-muted">Data coming soon</p>
+              <template v-if="lookup.selectedGnomad.value">
+                <MvDetailRow label="gnomAD AF" :value="formatFrequency(lookup.selectedGnomad.value.alleleFrequency)" />
+                <MvDetailRow
+                  v-if="lookup.selectedGnomad.value.faf95Max != null"
+                  label="FAF95 max"
+                  :value="formatFrequency(lookup.selectedGnomad.value.faf95Max)"
+                />
+              </template>
+              <p v-else class="text-xs-plus italic text-text-muted">No gnomAD data</p>
             </div>
             <div
               class="border-t border-border-light pt-4 tablet:border-t-0 tablet:pt-0 tablet:border-l tablet:border-border-light tablet:pl-[18px]"
@@ -345,18 +353,18 @@ export default defineComponent({
       const activeVariant = this.lookup.selectedVariantDetail.value
       if (!activeVariant) return options
 
-      const currentMapped = activeVariant.mappedVariants.find((m) => m.current)
-      const hasMappingData = !!currentMapped?.postMapped
-
+      // Mapping is present iff the envelope built a molecular representation (Cat-VRS) for the variant.
+      const hasMappingData = !!activeVariant.molecularRepresentation
+      const scoreSet = this.lookup.selectedScoreSet.value
       const hasScore = this.lookup.selectedVariantScore.value !== null
 
-      if (hasMappingData && hasScore && hasPathogenicityCalibrations(activeVariant.scoreSet)) {
+      if (hasMappingData && hasScore && hasPathogenicityCalibrations(scoreSet)) {
         options.push({
           label: 'Pathogenicity Statement',
           command: () => this.lookup.fetchVariantAnnotations('pathogenicity-statement')
         })
       }
-      if (hasMappingData && hasScore && hasFunctionalCalibrations(activeVariant.scoreSet)) {
+      if (hasMappingData && hasScore && hasFunctionalCalibrations(scoreSet)) {
         options.push({
           label: 'Functional Impact Statement',
           command: () => this.lookup.fetchVariantAnnotations('functional-statement')
@@ -379,7 +387,12 @@ export default defineComponent({
     }
   },
 
-  methods: {}
+  methods: {
+    formatFrequency(value: number | null | undefined): string {
+      if (value == null) return '—'
+      return value < 0.0001 ? value.toExponential(2) : value.toPrecision(3)
+    }
+  }
 })
 </script>
 

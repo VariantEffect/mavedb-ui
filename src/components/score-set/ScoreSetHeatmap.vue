@@ -72,6 +72,7 @@ import type {Heatmap, HeatmapDatum, HeatmapRowSpecification} from '@/lib/heatmap
 import {NUCLEOTIDE_BASES} from '@/lib/nucleotides'
 import {
   tooltipKeyValue,
+  tooltipNote,
   tooltipRoot,
   tooltipSection,
   tooltipTitle,
@@ -1044,23 +1045,25 @@ export default defineComponent({
 
     tooltipHtmlGetter: function (v: VariantClassHeatmapDatum) {
       // Identity: WT flag plus the variant's identifiers, resolved in the current coordinate frame.
+      // Prefers the HGVS in the coordinate frame of the current heatmap display, with HGVS in the
+      // non-displayed frame displayed as the secondary HGVS label when they differ.
       const identity = []
       if (v.wt) {
         identity.push(tooltipTitle('Wild-type'))
       }
       const instance = v.instance
       if (instance) {
-        const protein = this.getHgvsPro(instance, this.coordinates)
-        const nucleotide = this.getHgvsNt(instance, this.coordinates)
-        const splice = instance.hgvsSplice?.hgvs
-        if (protein) {
-          identity.push(tooltipKeyValue('Protein variant', protein))
+        const ntHgvs = this.getHgvsNt(instance, this.coordinates)
+        const primaryLabel =
+          this.sequenceType === 'dna'
+            ? (ntHgvs ?? this.labelForVariant(instance, this.coordinates))
+            : this.labelForVariant(instance, this.coordinates)
+        if (primaryLabel) {
+          identity.push(tooltipTitle(primaryLabel))
         }
-        if (nucleotide) {
-          identity.push(tooltipKeyValue('NT variant', nucleotide))
-        }
-        if (!protein && !nucleotide && splice) {
-          identity.push(tooltipKeyValue('Splice variant', splice))
+        const underlyingLabel = this.sequenceType === 'dna' ? this.getHgvsPro(instance, this.coordinates) : ntHgvs
+        if (underlyingLabel && underlyingLabel !== primaryLabel) {
+          identity.push(tooltipNote(underlyingLabel))
         }
       }
       if (instance?.clingenAlleleId) {

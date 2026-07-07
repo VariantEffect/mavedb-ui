@@ -1,7 +1,7 @@
 import axios from 'axios'
 import {computed, ref, shallowRef, watch, type ComputedRef, type Ref} from 'vue'
 
-import {getVariantAnnotation, getVariantDetail, lookupVariantsByClingenId} from '@/api/mavedb/variants'
+import {getScoreSet, getVariantAnnotation, getVariantDetail, lookupVariantsByClingenId} from '@/api/mavedb/variants'
 import {getLeanScoreSetVariants} from '@/api/mavedb/score-sets'
 import {useCalibrationResolution, type UseCalibrationResolutionReturn} from '@/composables/use-calibration-resolution'
 import {useClingenAllele, type UseClingenAlleleReturn} from '@/composables/use-clingen-allele'
@@ -23,7 +23,8 @@ export type {MeasurementType}
 type ScoreCalibration = components['schemas']['ScoreCalibration']
 type ScoreSet = components['schemas']['ScoreSet']
 type VariantEffectMeasurementWithShortScoreSet = components['schemas']['VariantEffectMeasurementWithShortScoreSet']
-type VariantEffectMeasurementWithScoreSet = components['schemas']['VariantEffectMeasurementWithScoreSet']
+type VariantDetail = components['schemas']['VariantDetail']
+type AlleleAnnotations = components['schemas']['AlleleAnnotations']
 type FunctionalClassification =
   components['schemas']['mavedb__view_models__score_calibration__FunctionalClassification']
 
@@ -51,9 +52,10 @@ export interface UseVariantLookupReturn {
   selectedVariantUrn: Ref<string | null>
   selectVariant: (urn: string | null | undefined) => void
   selectedVariant: ComputedRef<VariantEntry | undefined>
-  selectedVariantDetail: ComputedRef<VariantEffectMeasurementWithScoreSet | null>
+  selectedVariantDetail: ComputedRef<VariantDetail | null>
   selectedVariantName: ComputedRef<string | null>
   selectedClingenAlleleId: ComputedRef<string | null>
+  selectedGnomad: ComputedRef<AlleleAnnotations['gnomad'] | null>
 
   // Scores
   selectedScoreSet: ComputedRef<ScoreSet | null>
@@ -114,9 +116,15 @@ export function useVariantLookup(
   const showNucleotide = ref(true)
   const showProtein = ref(true)
   const showAssociatedNucleotide = ref(true)
-  const variantDetailCache = ref<Record<string, VariantEffectMeasurementWithScoreSet>>({})
+  const variantDetailCache = ref<Record<string, VariantDetail>>({})
+  const scoreSetCache = shallowRef<Record<string, ScoreSet>>({})
   const scoresCache = shallowRef<Record<string, DisplayVariant[]>>({})
   const selectedCalibration = ref<string | null>(null)
+
+  // A variant URN is `<score-set-urn>#<n>`, so its score set is the URN's prefix — no extra lookup
+  // needed. The detail envelope deliberately doesn't embed the score set (it's its own resource), so
+  // score-set metadata (calibrations, target, experiment) is fetched separately and cached per URN.
+  const scoreSetUrnOf = (variantUrn: string): string => variantUrn.split('#')[0]
 
   // ── Filters ───────────────────────────────────────────────
   const nucleotideCount = computed(() => variants.value.filter((v) => v.type === 'nucleotide').length)
@@ -135,11 +143,14 @@ export function useVariantLookup(
 
   // ── Selection ─────────────────────────────────────────────
   const selectedVariant = computed(() => variants.value.find((v) => v.content.urn === selectedVariantUrn.value))
-  const selectedVariantDetail = computed<VariantEffectMeasurementWithScoreSet | null>(() => {
+  const selectedVariantDetail = computed<VariantDetail | null>(() => {
     if (!selectedVariantUrn.value) return null
     return variantDetailCache.value[selectedVariantUrn.value] || null
   })
-  const selectedScoreSet = computed<ScoreSet | null>(() => selectedVariantDetail.value?.scoreSet || null)
+  const selectedScoreSet = computed<ScoreSet | null>(() => {
+    if (!selectedVariantUrn.value) return null
+    return scoreSetCache.value[scoreSetUrnOf(selectedVariantUrn.value)] || null
+  })
   const selectedVariantName = computed(() => {
     if (!selectedVariant.value) return null
     const v = selectedVariant.value.content
@@ -148,9 +159,14 @@ export function useVariantLookup(
     const postMapped = mapped?.postMapped as {expressions?: {value?: string}[]} | undefined
     return postMapped?.expressions?.[0]?.value || v.hgvsNt || v.hgvsPro || v.hgvsSplice || null
   })
-  const selectedClingenAlleleId = computed(() => {
-    const mapped = selectedVariantDetail.value?.mappedVariants.find((m) => m.current)
-    return mapped?.clingenAlleleId || null
+  // The detail envelope carries the assay-level ClinGen id as a flat field (the URN→allele bridge).
+  const selectedClingenAlleleId = computed(() => selectedVariantDetail.value?.clingenAlleleId || null)
+  // Population frequency for the assay-level allele, from the envelope's digest-keyed annotation map.
+  const selectedGnomad = computed<AlleleAnnotations['gnomad'] | null>(() => {
+    const detail = selectedVariantDetail.value
+    const digest = detail?.assayLevelDigest
+    if (!detail?.annotations || !digest) return null
+    return detail.annotations[digest]?.gnomad ?? null
   })
 
   // ── Scores ────────────────────────────────────────────────
@@ -192,16 +208,26 @@ export function useVariantLookup(
 
   // ── Data fetching ─────────────────────────────────────────
   async function fetchVariantDetail(variantUrn: string) {
+    const scoreSetUrn = scoreSetUrnOf(variantUrn)
+    // The score set (calibrations, target, experiment) and lean scores are needed regardless of
+    // whether the envelope is already cached, so kick those off first.
+    fetchScoreSet(scoreSetUrn)
+    fetchScores(scoreSetUrn)
     if (variantDetailCache.value[variantUrn]) return
     try {
-      const detail = await getVariantDetail(variantUrn)
-      variantDetailCache.value[variantUrn] = detail
-      const scoreSetUrn = detail.scoreSet?.urn
-      if (scoreSetUrn) {
-        fetchScores(scoreSetUrn)
-      }
+      variantDetailCache.value[variantUrn] = await getVariantDetail(variantUrn)
     } catch (error) {
       console.error(`Error fetching variant detail for "${variantUrn}"`, error)
+    }
+  }
+
+  async function fetchScoreSet(scoreSetUrn: string) {
+    if (scoreSetCache.value[scoreSetUrn]) return
+    try {
+      const scoreSet = await getScoreSet(scoreSetUrn)
+      scoreSetCache.value = {...scoreSetCache.value, [scoreSetUrn]: scoreSet}
+    } catch (error) {
+      console.error(`Error fetching score set "${scoreSetUrn}"`, error)
     }
   }
 
@@ -221,6 +247,7 @@ export function useVariantLookup(
   async function fetchVariants() {
     variants.value = []
     variantDetailCache.value = {}
+    scoreSetCache.value = {}
     scoresCache.value = {}
     variantsStatus.value = 'Loading'
     try {
@@ -310,19 +337,19 @@ export function useVariantLookup(
 
   function getAbnormalOddsPath(urn: string | null | undefined): string | null {
     if (!urn) return null
-    return getClassificationOddsPath(getPrimaryCalibration(variantDetailCache.value[urn]?.scoreSet), 'abnormal')
+    return getClassificationOddsPath(getPrimaryCalibration(scoreSetCache.value[scoreSetUrnOf(urn)]), 'abnormal')
   }
 
   function getNormalOddsPath(urn: string | null | undefined): string | null {
     if (!urn) return null
-    return getClassificationOddsPath(getPrimaryCalibration(variantDetailCache.value[urn]?.scoreSet), 'normal')
+    return getClassificationOddsPath(getPrimaryCalibration(scoreSetCache.value[scoreSetUrnOf(urn)]), 'normal')
   }
 
   function getVariantScoreRange(variantUrn: string | null | undefined): FunctionalClassification | null {
     if (!variantUrn) return null
-    const detail = variantDetailCache.value[variantUrn]
-    const scoreSetUrn = detail?.scoreSet?.urn
-    if (!scoreSetUrn) return null
+    const scoreSetUrn = scoreSetUrnOf(variantUrn)
+    const scoreSet = scoreSetCache.value[scoreSetUrn]
+    if (!scoreSet) return null
 
     const cachedScores = scoresCache.value[scoreSetUrn]
     if (!cachedScores) return null
@@ -331,7 +358,7 @@ export function useVariantLookup(
     const score = scoreRow?.score
     if (score == null) return null
 
-    const cal = getPrimaryCalibration(detail?.scoreSet)
+    const cal = getPrimaryCalibration(scoreSet)
     if (!cal?.functionalClassifications) return null
 
     return cal.functionalClassifications.find((r) => functionalClassificationContainsVariant(r, score)) || null
@@ -388,6 +415,7 @@ export function useVariantLookup(
     selectedVariantDetail,
     selectedVariantName,
     selectedClingenAlleleId,
+    selectedGnomad,
     selectedScoreSet,
     selectedScoreSetUrn,
     scores,

@@ -65,89 +65,106 @@
       />
 
       <div class="mx-auto w-full px-4 py-6 tablet:px-6 tablet:py-8" style="max-width: 1000px">
-        <!-- Variant search + clinical toggle -->
+        <!-- Variant search + selected-variant detail — one unit -->
         <div
           v-if="variants?.length"
-          class="mb-4 flex flex-col gap-3 rounded-lg border border-border bg-white px-4 py-3 tablet:flex-row tablet:items-center"
+          class="mave-gradient-bar relative mb-4 overflow-hidden rounded-lg border border-border bg-surface"
         >
-          <div class="relative min-w-0 flex-1">
-            <MvFloatField label="Search variants">
-              <template #default="{id}">
-                <AutoComplete
-                  :id="id"
-                  v-model="selectedVariant"
-                  class="w-full"
-                  :delay="300"
-                  dropdown
-                  fluid
-                  :input-style="variantToVisualize ? {paddingRight: '2.25rem'} : undefined"
-                  :option-label="variantOptionLabel"
-                  scroll-height="175px"
-                  select-on-focus
-                  :suggestions="variantSearchSuggestions"
-                  :virtual-scroller-options="{itemSize: 50}"
-                  @complete="variantSearch"
-                >
-                  <template #option="{option}">
-                    <div class="flex flex-col justify-center leading-tight">
-                      <span>{{ variantOptionLabel(option) }}</span>
-                      <span v-if="frame === 'mapped' && isUnmapped(option)" class="text-xs italic text-text-muted">
-                        Variant could not be mapped
-                      </span>
-                    </div>
-                  </template>
-                  <template #empty>
-                    <div class="p-2.5 text-center text-sm text-text-muted">No matching variants found.</div>
-                  </template>
-                </AutoComplete>
-              </template>
-            </MvFloatField>
-            <button
-              v-if="variantToVisualize"
-              aria-label="Clear"
-              class="absolute right-12 top-1/2 flex size-5 -translate-y-1/2 cursor-pointer items-center justify-center rounded-full text-text-muted hover:bg-red-50 hover:text-red-600"
-              @click="selectedVariant = null"
-            >
-              <i class="pi pi-times text-[10px]" />
-            </button>
-          </div>
-          <div class="flex items-center gap-2 text-sm text-text-secondary tablet:ml-auto">
-            <span
-              :class="[
-                clinicalMode ? 'text-text-muted' : 'font-semibold text-sage',
-                {'opacity-50': coordinateSwitching}
-              ]"
-              >Raw variants</span
-            >
-            <!-- Wrapper so the tooltip fires even when the switch is disabled (a disabled control has
+          <div class="flex flex-col gap-3 px-4 py-3 tablet:flex-row tablet:items-center">
+            <div class="relative min-w-0 flex-1 mt-2">
+              <MvFloatField label="Search variants">
+                <template #default="{id}">
+                  <AutoComplete
+                    :id="id"
+                    v-model="selectedVariant"
+                    class="w-full"
+                    :delay="300"
+                    dropdown
+                    fluid
+                    :input-style="variantToVisualize ? {paddingRight: '2.25rem'} : undefined"
+                    :option-label="variantOptionLabel"
+                    scroll-height="175px"
+                    select-on-focus
+                    :suggestions="variantSearchSuggestions"
+                    :virtual-scroller-options="{itemSize: 50}"
+                    @complete="variantSearch"
+                  >
+                    <template #option="{option}">
+                      <div class="flex flex-col justify-center leading-tight">
+                        <span>{{ variantOptionLabel(option) }}</span>
+                        <span v-if="variantUnderlyingLabel(option)" class="font-mono text-xs text-text-muted">
+                          {{ variantUnderlyingLabel(option) }}
+                        </span>
+                        <span v-if="frame === 'mapped' && isUnmapped(option)" class="text-xs italic text-text-muted">
+                          Variant could not be mapped
+                        </span>
+                      </div>
+                    </template>
+                    <template #empty>
+                      <div class="p-2.5 text-center text-sm text-text-muted">No matching variants found.</div>
+                    </template>
+                  </AutoComplete>
+                </template>
+              </MvFloatField>
+              <button
+                v-if="variantToVisualize"
+                aria-label="Clear"
+                class="absolute right-12 top-1/2 flex size-5 -translate-y-1/2 cursor-pointer items-center justify-center rounded-full text-text-muted hover:bg-red-50 hover:text-red-600"
+                @click="selectedVariant = null"
+              >
+                <i class="pi pi-times text-[10px]" />
+              </button>
+            </div>
+            <div class="flex items-center gap-2 text-sm text-text-secondary tablet:ml-auto">
+              <span
+                :class="[
+                  clinicalMode ? 'text-text-muted' : 'font-semibold text-sage',
+                  {'opacity-50': coordinateSwitching}
+                ]"
+                >Raw variants</span
+              >
+              <!-- Wrapper so the tooltip fires even when the switch is disabled (a disabled control has
                  pointer-events: none and won't trigger a tooltip on itself). Only shown when mapped
                  mode is unavailable — clinicalModeHelpText returns the "no mapped variants" reason then. -->
-            <span
-              v-tooltip.top="mappedModeAvailable ? undefined : clinicalModeHelpText"
-              class="inline-flex"
-              :class="{'cursor-not-allowed': !mappedModeAvailable}"
-            >
-              <ToggleSwitch
-                :aria-label="`Click to change to ${clinicalMode ? 'raw data' : 'clinical view'}.`"
-                :disabled="coordinateSwitching || !mappedModeAvailable"
-                :model-value="clinicalMode"
-                @update:model-value="toggleClinicalMode"
-              />
-            </span>
-            <span
-              :class="[
-                clinicalMode ? 'font-semibold text-sage' : 'text-text-muted',
-                {'opacity-50': coordinateSwitching}
-              ]"
-              >Mapped variants</span
-            >
-            <i v-if="coordinateSwitching" class="pi pi-spinner pi-spin text-xs text-sage" />
-            <span
-              v-tooltip.top="clinicalModeHelpText"
-              class="inline-flex size-4 shrink-0 cursor-help items-center justify-center rounded-full bg-sage text-[10px] font-bold text-white"
-              >?</span
-            >
+              <span
+                v-tooltip.top="mappedModeAvailable ? undefined : clinicalModeHelpText"
+                class="inline-flex"
+                :class="{'cursor-not-allowed': !mappedModeAvailable}"
+              >
+                <ToggleSwitch
+                  :aria-label="`Click to change to ${clinicalMode ? 'raw data' : 'clinical view'}.`"
+                  :disabled="coordinateSwitching || !mappedModeAvailable"
+                  :model-value="clinicalMode"
+                  @update:model-value="toggleClinicalMode"
+                />
+              </span>
+              <span
+                :class="[
+                  clinicalMode ? 'font-semibold text-sage' : 'text-text-muted',
+                  {'opacity-50': coordinateSwitching}
+                ]"
+                >Mapped variants</span
+              >
+              <i v-if="coordinateSwitching" class="pi pi-spinner pi-spin text-xs text-sage" />
+              <span
+                v-tooltip.top="clinicalModeHelpText"
+                class="inline-flex size-4 shrink-0 cursor-help items-center justify-center rounded-full bg-sage text-[10px] font-bold text-white"
+                >?</span
+              >
+            </div>
           </div>
+
+          <!-- Selected-variant detail (assayed variant envelope: GET /variants/{urn}), flush within the card -->
+          <VariantDetailPanel
+            v-if="variantToVisualize?.variantUrn"
+            :key="variantToVisualize.variantUrn"
+            :coordinate="variantOptionLabel(variantToVisualize)"
+            :flush="true"
+            :identify="false"
+            :selected-calibration-id="selectedCalibrationObjects[0]?.id ?? null"
+            :underlying-coordinate="variantUnderlyingLabel(variantToVisualize) ?? ''"
+            :urn="variantToVisualize.variantUrn"
+          />
         </div>
 
         <!-- Variants loading spinner -->
@@ -351,8 +368,8 @@
         <div class="mb-6">
           <ScoreSetDownloads
             :has-counts="hasCounts"
-            :has-pathogenicity-calibrations="hasPathogenicityCalibrations"
             :has-functional-impact-calibrations="hasFunctionalImpactCalibrations"
+            :has-pathogenicity-calibrations="hasPathogenicityCalibrations"
             :is-meta-data-empty="isMetaDataEmpty"
             :score-set="item"
           />
@@ -506,6 +523,7 @@ import ScoreSetMetadataCard from '@/components/score-set/ScoreSetMetadataCard.vu
 import ScoreSetHeatmap from '@/components/score-set/ScoreSetHeatmap.vue'
 import ScoreSetHistogram from '@/components/score-set/ScoreSetHistogram.vue'
 import MvVariantPreview from '@/components/common/MvVariantPreview.vue'
+import VariantDetailPanel from '@/components/variant/VariantDetailPanel.vue'
 import ScoreSetProcessingStatus from '@/components/score-set/ScoreSetProcessingStatus.vue'
 import ScoreSetVisualizer from '@/components/score-set/ScoreSetVisualizer.vue'
 
@@ -564,7 +582,8 @@ export default {
     ScoreSetProcessingStatus,
     ScoreSetVisualizer,
     SelectButton,
-    ToggleSwitch
+    ToggleSwitch,
+    VariantDetailPanel
   },
 
   props: {
@@ -912,6 +931,15 @@ export default {
     // may hand back the raw typed string before a selection is made, so tolerate that.
     variantOptionLabel(variant: DisplayVariant | string): string {
       return typeof variant === 'string' ? variant : this.labelForVariant(variant, this.frame)
+    },
+
+    // The underlying nucleotide coordinate in the current frame, when it differs from the (protein-
+    // preferred) display label — surfaced to disambiguate distinct coding variants that share a
+    // protein label, and as provenance. Null when the label already is the nucleotide coordinate.
+    variantUnderlyingLabel(variant: DisplayVariant | string): string | null {
+      if (typeof variant === 'string') return null
+      const nt = this.getHgvsNt(variant, this.frame)
+      return nt && nt !== this.variantOptionLabel(variant) ? nt : null
     },
 
     childComponentSelectedVariant(variant: DisplayVariant | null) {

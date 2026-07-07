@@ -1342,7 +1342,7 @@ export interface paths {
      *
      * Flat assay-level fields for the common UI case plus the spec-pure GA4GH CategoricalVariant and a
      * digest-keyed annotation map for machine/standard consumers. A superseded variant is served (it is
-     * the citable unit) but self-describes via isCurrent/supersededBy rather than reading as current.
+     * the citable unit) but self-describes via isCurrent/supersededByScoreSet rather than reading as current.
      */
     get: operations["get_variant_api_v1_variants__urn__get"];
   };
@@ -5811,7 +5811,11 @@ export interface components {
      * is a client-side toggle, no refetch) plus the spec-pure GA4GH ``molecularRepresentation``
      * (``CategoricalVariant``, no MaveDB fields inside). The MaveDB layer rides alongside keyed by VRS
      * digest: ``memberRelations`` (member→defining relation) and the ``annotations`` map. ``isCurrent``
-     * /``supersededBy`` let a superseded variant self-describe. Absent fields are omitted.
+     * /``supersededByScoreSet`` let a superseded variant self-describe: ``supersededByScoreSet`` is the
+     * superseding *score set*'s URN, not a variant URN. Supersession is versioned at the score-set level,
+     * and a newer version may add, drop, or renumber variants — so there is no stable
+     * superseding-*variant* pointer to hand back; a consumer resolves the current measurement by looking
+     * this variant up within that score set. Absent fields are omitted.
      */
     VariantDetail: {
       /** Urn */
@@ -5855,8 +5859,8 @@ export interface components {
       };
       /** Iscurrent */
       isCurrent: boolean;
-      /** Supersededby */
-      supersededBy?: string | null;
+      /** Supersededbyscoreset */
+      supersededByScoreSet?: string | null;
     };
     /**
      * VariantDiagnosticProposition
@@ -12642,7 +12646,7 @@ export interface operations {
    *
    * Flat assay-level fields for the common UI case plus the spec-pure GA4GH CategoricalVariant and a
    * digest-keyed annotation map for machine/standard consumers. A superseded variant is served (it is
-   * the citable unit) but self-describes via isCurrent/supersededBy rather than reading as current.
+   * the citable unit) but self-describes via isCurrent/supersededByScoreSet rather than reading as current.
    */
   get_variant_api_v1_variants__urn__get: {
     parameters: {

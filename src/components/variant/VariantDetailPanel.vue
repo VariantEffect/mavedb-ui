@@ -224,8 +224,8 @@ export default defineComponent({
       return `${acmg.criterion}_${acmg.evidenceStrength.toUpperCase()}`
     },
     supersededTooltip(): string {
-      return this.detail?.supersededBy
-        ? `Superseded by ${this.detail.supersededBy}`
+      return this.detail?.supersededByScoreSet
+        ? `Superseded by score set ${this.detail.supersededByScoreSet}`
         : 'This measurement has been superseded by a newer version.'
     }
   },

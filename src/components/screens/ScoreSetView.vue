@@ -281,7 +281,7 @@
                   @update:model-value="heatmapLayout = $event"
                 />
                 <PButton
-                  v-if="uniprotId != null"
+                  v-if="hasMappedVariants && uniprotId != null"
                   icon="pi pi-box"
                   label="Protein Structure"
                   severity="secondary"
@@ -625,6 +625,10 @@ export default {
   }),
 
   computed: {
+    hasMappedVariants() {
+      // A mapping state of "complete" or "incomplete" indicates that at least some variants have been mapped to a reference genome
+      return ['complete', 'incomplete'].includes(this.item?.mappingState ?? '')
+    },
     clinicalModeHelpText() {
       if (this.item?.targetGenes?.[0]?.targetSequence) {
         return 'In clinical mode, mapped variant coordinates are used when available, and start- and stop-loss codons are omitted because this score set was produced using a synthetic target sequence.'

@@ -4,9 +4,19 @@
       <Select :id="scopedId('alphafold-id')" v-model="selectedAlphaFold" option-label="id" :options="alphaFoldData" />
       <label :for="scopedId('alphafold-id')">AlphaFold ID</label>
     </FloatLabel>
-    <div class="flex">
+    <div class="flex items-center">
       <span class="ml-2">Color by:</span>
       <SelectButton v-model="colorBy" class="ml-2" option-label="name" option-value="value" :options="colorByOptions" />
+      <PButton
+        :id="scopedId('download-pdb')"
+        class="ml-auto mr-2"
+        :disabled="!selectedModel?.pdbUrl"
+        icon="pi pi-download"
+        label="Download PDB"
+        severity="secondary"
+        size="small"
+        @click="downloadPdb"
+      />
     </div>
     <div v-show="selectedAlphaFold" id="pdbe-molstar-viewer-container" class="flex-1 relative z-5000"></div>
     <div v-if="!selectedAlphaFold" class="m-auto">No AlphaFold entry found</div>
@@ -20,6 +30,7 @@
 <script>
 import axios from 'axios'
 import $ from 'jquery'
+import PButton from 'primevue/button'
 import FloatLabel from 'primevue/floatlabel'
 import Select from 'primevue/select'
 import SelectButton from 'primevue/selectbutton'
@@ -33,7 +44,7 @@ import useScopedId from '@/composables/scoped-id'
 export default {
   name: 'ProteinStructureView',
 
-  components: {FloatLabel, Select, SelectButton},
+  components: {FloatLabel, PButton, Select, SelectButton},
 
   props: {
     uniprotId: {
@@ -98,7 +109,8 @@ export default {
   data: () => ({
     uniprotData: null,
     viewerInstance: null,
-    selectedAlphaFold: null
+    selectedAlphaFold: null,
+    selectedModel: null
   }),
 
   computed: {
@@ -208,14 +220,39 @@ export default {
     hoveredOverResidue: function (e) {
       this.$emit('hoveredOverResidue', e.eventData)
     },
-    fetchAlphaFoldCifUrl: async function () {
+    fetchAlphaFoldModel: async function () {
       const response = await axios.get(`https://alphafold.ebi.ac.uk/api/prediction/${this.selectedAlphaFold.id}`)
       const predictionModels = _.isArray(response.data) ? response.data : [response.data]
-      const selectedModel = predictionModels.find((x) => x.entryId === `AF-${this.selectedAlphaFold.id}-F1`)
-      return selectedModel?.cifUrl || null
+      return predictionModels.find((x) => x.entryId === `AF-${this.selectedAlphaFold.id}-F1`) || null
+    },
+
+    downloadPdb: async function () {
+      const pdbUrl = this.selectedModel?.pdbUrl
+      if (!pdbUrl) {
+        return
+      }
+      try {
+        const response = await axios.get(pdbUrl, {responseType: 'text'})
+        const filename = pdbUrl.split('/').pop() || `${this.selectedAlphaFold.id}.pdb`
+        this.downloadFile(new Blob([response.data], {type: 'chemical/x-pdb'}), filename)
+      } catch (error) {
+        this.$toast.add({severity: 'error', summary: 'Error', detail: 'Failed to download PDB file'})
+      }
+    },
+
+    downloadFile: function (blob, filename) {
+      const url = URL.createObjectURL(blob)
+      const anchor = document.createElement('a')
+      anchor.href = url
+      anchor.download = filename
+      document.body.appendChild(anchor)
+      anchor.click()
+      document.body.removeChild(anchor)
+      URL.revokeObjectURL(url)
     },
 
     destroyViewer: function () {
+      this.selectedModel = null
       if (this.viewerInstance) {
         document.removeEventListener('PDB.molstar.click', this.clickedResidue)
         document.removeEventListener('PDB.molstar.mouseover', this.hoveredOverResidue)
@@ -227,21 +264,22 @@ export default {
       this.destroyViewer()
 
       if (this.selectedAlphaFold) {
-        let alphafoldCifUrl
+        let model
         try {
-          alphafoldCifUrl = await this.fetchAlphaFoldCifUrl()
-          if (!alphafoldCifUrl) {
+          model = await this.fetchAlphaFoldModel()
+          if (!model?.cifUrl) {
             throw new Error('AlphaFold cifUrl not found')
           }
         } catch (error) {
           this.$toast.add({severity: 'error', summary: 'Error', detail: 'Failed to fetch AlphaFold structure metadata'})
           return
         }
+        this.selectedModel = model
 
         const viewerInstance = new PDBeMolstarPlugin()
         const options = {
           customData: {
-            url: alphafoldCifUrl,
+            url: model.cifUrl,
             format: 'cif'
           },
           /** This applies AlphaFold confidence score colouring theme for AlphaFold model */

@@ -52,8 +52,9 @@ export function tooltipLink(href: string, text: string): string {
 }
 
 /** ClinGen variant-details link — shared by both charts. */
-export function tooltipVariantDetailsLink(clingenAlleleId: string): string {
-  return tooltipLink(`/variants/${clingenAlleleId}`, 'View variant details')
+export function tooltipVariantDetailsLink(clingenAlleleId: string, variantUrn?: string | null): string {
+  const query = variantUrn ? `?variant=${encodeURIComponent(variantUrn)}` : ''
+  return tooltipLink(`/variants/${clingenAlleleId}${query}`, 'View variant details')
 }
 
 /** A round color swatch, used to tie series/legend colors to their labels. */

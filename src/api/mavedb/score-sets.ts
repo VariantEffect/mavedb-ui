@@ -8,28 +8,10 @@ type ScoreSetSearch = components['schemas']['ScoreSetsSearch']
 type ScoreSetsSearchResponse = components['schemas']['ScoreSetsSearchResponse']
 export type ScoreSetsSearchFilterOptionsResponse = components['schemas']['ScoreSetsSearchFilterOptionsResponse']
 
-const HISTOGRAM_VARIANT_DATA_NAMESPACES = ['vep', 'scores', 'clingen']
-
-function scoreSetVariantDataParams(
-  options: {includePostMappedHgvs?: boolean; namespaces?: string[]} = {}
-): URLSearchParams {
-  const params = new URLSearchParams()
-  if (options.includePostMappedHgvs) params.append('include_post_mapped_hgvs', 'true')
-  for (const namespace of options.namespaces ?? []) params.append('namespaces', namespace)
-  return params
-}
-
 function scoreSetVariantDataUrl(urn: string, params: URLSearchParams = new URLSearchParams()): string {
   const query = params.toString()
   const baseUrl = `${config.apiBaseUrl}/score-sets/${encodeURIComponent(urn)}/variants/data`
   return query ? `${baseUrl}?${query}` : baseUrl
-}
-
-export function histogramScoreSetVariantDataUrl(urn: string): string {
-  return scoreSetVariantDataUrl(
-    urn,
-    scoreSetVariantDataParams({includePostMappedHgvs: true, namespaces: HISTOGRAM_VARIANT_DATA_NAMESPACES})
-  )
 }
 
 // ---------------------------------------------------------------------------
@@ -139,16 +121,24 @@ export async function downloadScoreSetVariantData(urn: string, params: URLSearch
   return response.data
 }
 
-export async function getScoreSetScoresPreview(urn: string): Promise<string> {
+// The preview table renders only a handful of rows, so it passes `limit` to fetch just those rather
+// than the whole dataset. Note: `drop_na_columns` is evaluated over the returned rows, so with a limit
+// the shown column set reflects the sampled rows (fine for a preview; the download buttons fetch the
+// full, unlimited file).
+export async function getScoreSetScoresPreview(urn: string, limit?: number): Promise<string> {
+  const params = new URLSearchParams({drop_na_columns: 'true'})
+  if (limit != null) params.append('limit', String(limit))
   const response = await axios.get(
-    `${config.apiBaseUrl}/score-sets/${encodeURIComponent(urn)}/scores?drop_na_columns=true`
+    `${config.apiBaseUrl}/score-sets/${encodeURIComponent(urn)}/scores?${params.toString()}`
   )
   return response.data
 }
 
-export async function getScoreSetCountsPreview(urn: string): Promise<string> {
+export async function getScoreSetCountsPreview(urn: string, limit?: number): Promise<string> {
+  const params = new URLSearchParams({drop_na_columns: 'true'})
+  if (limit != null) params.append('limit', String(limit))
   const response = await axios.get(
-    `${config.apiBaseUrl}/score-sets/${encodeURIComponent(urn)}/counts?drop_na_columns=true`
+    `${config.apiBaseUrl}/score-sets/${encodeURIComponent(urn)}/counts?${params.toString()}`
   )
   return response.data
 }

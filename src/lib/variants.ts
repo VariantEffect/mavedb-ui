@@ -423,7 +423,7 @@ function translateSimpleCodingHgvsCVariant(
  * absent: the mapped protein representation preferred, falling back to the submitted protein HGVS.
  */
 function proteinConsequenceBlock(variant: DisplayVariant): HgvsField | null {
-  return variant.proteinLevelHgvs ?? variant.hgvsPro ?? null
+  return variant.mapped?.protein ?? variant.hgvsPro ?? null
 }
 
 /**

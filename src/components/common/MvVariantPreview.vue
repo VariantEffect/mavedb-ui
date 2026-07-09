@@ -3,8 +3,8 @@
     <div class="flex flex-wrap items-center justify-between gap-3 border-b border-border-light px-4 py-3.5 tablet:px-5">
       <h3 class="mave-section-title">
         Variants preview
-        <span v-if="scoreSet.numVariants" class="font-normal text-text-muted">
-          ({{ scoreSet.numVariants.toLocaleString() }})
+        <span v-if="scoreSet.numVariants" class="font-normal text-xs text-text-muted lowercase">
+          ({{ scoreSet.numVariants.toLocaleString() }} total variants)
         </span>
       </h3>
       <div class="flex flex-wrap items-center gap-2">
@@ -54,9 +54,7 @@
       <div v-if="scoresRows.length > 0">
         <div class="flex items-center justify-between border-b border-border-light bg-bg px-4 py-2 tablet:px-5">
           <span class="text-xs font-semibold uppercase tracking-wider text-text-muted">Scores</span>
-          <span class="text-xs text-text-muted">
-            Showing {{ scoresRows.length }} of {{ scoresData.length.toLocaleString() }}
-          </span>
+          <span class="text-xs text-text-muted"> Showing {{ scoresRows.length }} of {{ totalLabel }} </span>
         </div>
         <div class="overflow-x-auto">
           <table class="variant-table w-full">
@@ -85,9 +83,7 @@
           class="flex items-center justify-between border-b border-border-light border-t bg-bg px-4 py-2 tablet:px-5"
         >
           <span class="text-xs font-semibold uppercase tracking-wider text-text-muted">Counts</span>
-          <span class="text-xs text-text-muted">
-            Showing {{ countsRows.length }} of {{ countsData.length.toLocaleString() }}
-          </span>
+          <span class="text-xs text-text-muted"> Showing {{ countsRows.length }} of {{ totalLabel }} </span>
         </div>
         <div class="overflow-x-auto">
           <table class="variant-table w-full">
@@ -187,6 +183,11 @@ export default defineComponent({
     hasCountData(): boolean {
       return this.countColumns.some((col) => !TEXT_COLUMNS.includes(col))
     },
+    // The preview fetches only MAX_ROWS, so the true total comes from the score set's variant count
+    // rather than the (truncated) fetched rows.
+    totalLabel(): string {
+      return (this.scoreSet.numVariants ?? this.scoresData.length).toLocaleString()
+    },
     scoresRows(): ScoresOrCountsRow[] {
       return this.scoresData.slice(0, MAX_ROWS)
     },
@@ -233,8 +234,8 @@ export default defineComponent({
       this.loading = true
       try {
         const [scoresRaw, countsRaw] = await Promise.all([
-          getScoreSetScoresPreview(this.scoreSet.urn),
-          getScoreSetCountsPreview(this.scoreSet.urn).catch(() => null)
+          getScoreSetScoresPreview(this.scoreSet.urn, MAX_ROWS),
+          getScoreSetCountsPreview(this.scoreSet.urn, MAX_ROWS).catch(() => null)
         ])
         this.scoresData = scoresRaw ? parseScoresOrCounts(scoresRaw, false) : []
         this.countsData = countsRaw ? parseScoresOrCounts(countsRaw, false) : []

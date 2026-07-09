@@ -5,7 +5,6 @@ import {components} from '@/schema/openapi'
 import type {MinimalScoreSet} from '@/lib/calibration-types'
 
 type ScoreCalibration = components['schemas']['ScoreCalibration']
-type ScoreSet = components['schemas']['ScoreSet']
 
 /**
  * Fetch a single score calibration by URN.
@@ -135,14 +134,6 @@ export async function searchEditableScoreSets(): Promise<MinimalScoreSet[]> {
     includeExperimentScoreSetUrnsAndCount: false
   })
   return response.data.scoreSets || []
-}
-
-/**
- * Fetch a single score set by URN (used as fallback when a score set isn't in the editable list).
- */
-export async function getScoreSetByUrn(urn: string): Promise<ScoreSet> {
-  const response = await axios.get(`${config.apiBaseUrl}/score-sets/${encodeURIComponent(urn)}`)
-  return response.data
 }
 
 export async function getMyCalibrations(): Promise<components['schemas']['ScoreCalibrationWithScoreSetUrn'][]> {

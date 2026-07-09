@@ -1,12 +1,23 @@
 import axios from 'axios'
 
+import {memoizeRead} from '@/api/cache'
 import config from '@/config'
 import {components} from '@/schema/openapi'
 import type {LeanVariant} from '@/lib/variants'
 
+type ScoreSet = components['schemas']['ScoreSet']
 type ScoreSetSearch = components['schemas']['ScoreSetsSearch']
 type ScoreSetsSearchResponse = components['schemas']['ScoreSetsSearchResponse']
 export type ScoreSetsSearchFilterOptionsResponse = components['schemas']['ScoreSetsSearchFilterOptionsResponse']
+
+/** Fetch a single score set by URN. */
+export const getScoreSet = memoizeRead(
+  async (urn: string): Promise<ScoreSet> => {
+    const response = await axios.get(`${config.apiBaseUrl}/score-sets/${encodeURIComponent(urn)}`)
+    return response.data
+  },
+  (urn) => urn
+)
 
 function scoreSetVariantDataUrl(urn: string, params: URLSearchParams = new URLSearchParams()): string {
   const query = params.toString()
@@ -23,13 +34,15 @@ export function leanScoreSetVariantsUrl(urn: string): string {
 }
 
 /** Fetch the lean whole-set variant view for a score set — one pre-chewed record per variant. */
-export async function getLeanScoreSetVariants(urn: string, signal?: AbortSignal): Promise<LeanVariant[]> {
-  const response = await axios.get(leanScoreSetVariantsUrl(urn), {
-    headers: {accept: 'application/json'},
-    signal
-  })
-  return response.data || []
-}
+export const getLeanScoreSetVariants = memoizeRead(
+  async (urn: string): Promise<LeanVariant[]> => {
+    const response = await axios.get(leanScoreSetVariantsUrl(urn), {
+      headers: {accept: 'application/json'}
+    })
+    return response.data || []
+  },
+  (urn) => urn
+)
 
 // ---------------------------------------------------------------------------
 // Search

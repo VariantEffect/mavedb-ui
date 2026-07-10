@@ -38,6 +38,17 @@ export interface paths {
      */
     get: operations["show_version_api_v1_api_version_get"];
   };
+  "/api/v1/clingen-alleles/{clingen_allele_id}/measurements": {
+    /**
+     * List measurements for a ClinGen allele's equivalence class
+     * @description List every measurement whose cross-layer equivalence class touches this ClinGen allele (a ``CA`` or
+     * ``PA``) — the direct measurements assayed at this change plus the reverse-translation-related ones,
+     * each labeled by its assayed level and relationship. This is the ClinGen-allele-centric variant page's
+     * entrypoint. A private score set's measurement is never included; its inline classification is withheld
+     * where the calibration is unreadable while the measurement still shows.
+     */
+    get: operations["get_clingen_allele_measurements_api_v1_clingen_alleles__clingen_allele_id__measurements_get"];
+  };
   "/api/v1/users/me/collections": {
     /**
      * List my collections
@@ -1328,13 +1339,6 @@ export interface paths {
      */
     put: operations["update_user_api_v1_users___id__put"];
   };
-  "/api/v1/variants/clingen-allele-id-lookups": {
-    /**
-     * Lookup variants by ClinGen Allele IDs
-     * @description Lookup variants by ClinGen Allele IDs.
-     */
-    post: operations["lookup_variants_api_v1_variants_clingen_allele_id_lookups_post"];
-  };
   "/api/v1/variants/{urn}": {
     /**
      * Fetch assayed variant detail by URN
@@ -1642,16 +1646,69 @@ export interface components {
       clinvar?: components["schemas"]["ClinvarAnnotation"][];
     };
     /**
-     * AnnotationLayer
-     * @description Annotation layer for a variant mapping result.
+     * AlleleIdentity
+     * @description The MaveDB molecular-identity facts for one of the variant's linked alleles.
      *
-     * Mirrors the ``AnnotationLayer`` enum produced by the dcd-mapping QC API.
-     * Values use full names so they round-trip readably through the database
-     * column; the dcd-mapping payload uses short single-character codes
-     * (``p`` / ``c`` / ``g``) which the worker translates via :func:`from_wire`.
-     * @enum {string}
+     * An entry of the ``alleles`` sidecar, keyed by VRS digest. ``level`` + ``hgvs`` (the reference-frame
+     * HGVS) are what the UI labels the per-level annotation panel by — never the digest.
+     *
+     * Three independent axes:
+     * - ``relation`` (Cat-VRS, structural): member→defining relation; ``null`` when it *is* the measured
+     *   allele, or when the allele is not a Cat-VRS member.
+     * - ``derivation`` (provenance): ``authoritative`` (measured) / ``projection`` (deterministic,
+     *   precise) / ``candidate`` (reverse-translation, ambiguous). Orthogonal to ``relation`` — never
+     *   conflate them.
+     * - ``projectionOf`` (provenance): the VRS digest of this allele's projection sibling (the paired c↔g member of
+     *   its projection pair group); ``null`` for the protein apex and pre-reverse-translation data.
      */
-    AnnotationLayer: "protein" | "cdna" | "genomic";
+    AlleleIdentity: {
+      /** Level */
+      level?: string | null;
+      /** Hgvs */
+      hgvs?: string | null;
+      /** Clingenalleleid */
+      clingenAlleleId?: string | null;
+      /** Relation */
+      relation?: string | null;
+      /** Derivation */
+      derivation?: string | null;
+      /** Projectionof */
+      projectionOf?: string | null;
+    };
+    /**
+     * AlleleMeasurement
+     * @description One measurement in the queried ClinGen allele's cross-layer equivalence class.
+     *
+     * ``assayLevel`` is the level at which this measurement was actually assayed (``protein`` / ``cdna`` /
+     * ``genomic``) — always shown, since the measured level is the clinically load-bearing fact.
+     * ``relationship`` says how the measurement relates to the queried ClinGen id: ``direct`` (assayed at
+     * this allele), ``protein_consequence`` (a protein measurement of a nt query's consequence), or
+     * ``nucleotide_encoding`` (a nt measurement encoding a protein query). ``primaryClassification`` is the
+     * primary readable functional classification, omitted when absent or gated. ``isCurrent`` /
+     * ``supersededByScoreSet`` let a superseded measurement (surfaced only under ``include_superseded``)
+     * self-describe; ``supersededByScoreSet`` is the superseding *score set*'s URN.
+     */
+    AlleleMeasurement: {
+      /** Varianturn */
+      variantUrn: string;
+      /** Score */
+      score?: number | null;
+      assayLevel?: components["schemas"]["SequenceLevel"] | null;
+      relationship: components["schemas"]["MeasurementRelationship"];
+      /** Assaylevelhgvs */
+      assayLevelHgvs?: string | null;
+      /** Submittedhgvs */
+      submittedHgvs?: string | null;
+      /** Scoreseturn */
+      scoreSetUrn: string;
+      /** Scoresettitle */
+      scoreSetTitle: string;
+      primaryClassification?: components["schemas"]["SavedFunctionalClassification"] | null;
+      /** Iscurrent */
+      isCurrent: boolean;
+      /** Supersededbyscoreset */
+      supersededByScoreSet?: string | null;
+    };
     /** ApiVersion */
     ApiVersion: {
       /** Name */
@@ -1803,46 +1860,6 @@ export interface components {
       members: (components["schemas"]["Allele"] | components["schemas"]["iriReference"])[];
       /** @description An optional Sequence Reference on which all of the in-cis Alleles are found. When defined, this may be used to implicitly define the `sequenceReference` attribute for each of the CisPhasedBlock member Alleles. */
       sequenceReference?: components["schemas"]["SequenceReference"] | null;
-    };
-    /**
-     * ClingenAlleleIdVariantLookupResponse
-     * @description Response model for a variant lookup by ClinGen allele ID
-     */
-    ClingenAlleleIdVariantLookupResponse: {
-      /** Clingenalleleid */
-      clingenAlleleId: string;
-      exactMatch?: components["schemas"]["ClingenAlleleVariants"] | null;
-      /**
-       * Equivalentnt
-       * @default []
-       */
-      equivalentNt?: components["schemas"]["ClingenAlleleVariants"][];
-      /**
-       * Equivalentaa
-       * @default []
-       */
-      equivalentAa?: components["schemas"]["ClingenAlleleVariants"][];
-    };
-    /**
-     * ClingenAlleleIdVariantLookupsRequest
-     * @description A request to search for variants matching a list of ClinGen allele IDs
-     */
-    ClingenAlleleIdVariantLookupsRequest: {
-      /** Clingenalleleids */
-      clingenAlleleIds: string[];
-    };
-    /**
-     * ClingenAlleleVariants
-     * @description The assayed variants sharing one ClinGen allele id, with their variant effect measurements.
-     *
-     * An allele-side grouping (keyed by ClinGen allele id), it is the mapped-allele view of "which
-     * measurements share this molecular identity," not the assayed variant itself.
-     */
-    ClingenAlleleVariants: {
-      /** Clingenalleleid */
-      clingenAlleleId: string;
-      /** Varianteffectmeasurements */
-      variantEffectMeasurements: components["schemas"]["VariantEffectMeasurementWithShortScoreSet"][];
     };
     /** ClinicalControlOptions */
     ClinicalControlOptions: {
@@ -3589,11 +3606,11 @@ export interface components {
      * @description One pre-chewed per-variant record feeding the score-set table, heatmap, and histograms.
      *
      * ``variantUrn`` is the universal selection key; ``assayLevelDigest`` bridges into the digest-keyed
-     * annotation dimensions. The submitted HGVS (``hgvsNt``/``hgvsPro``/``hgvsSplice``, target frame) and
-     * the mapped ``assayLevelHgvs`` (reference frame) carry both sides of the heatmap's frame toggle, each
-     * with an optional parsed block for the level toggle. ``proteinLevelHgvs`` is the mapped protein
-     * representation (distinct from the *submitted* ``hgvsPro``); for a protein assay it coincides with
-     * ``assayLevelHgvs``. Fields are omitted when null.
+     * annotation dimensions. The submitted HGVS (``hgvsNt``/``hgvsPro``/``hgvsSplice``, target frame) carry
+     * the depositor's frame for the heatmap's raw↔mapped toggle. The mapped (reference) frame is the
+     * ``mapped`` :class:`MappedTriple` plus the ``assayLevel`` pointer (an ``SequenceLevel`` value) naming
+     * the measured/canonical slot: ``mapped[assayLevel]`` is the measured representation and ``mapped.cdna``
+     * the level-invariant search key. Fields are omitted when null.
      */
     LeanVariant: {
       /** Varianturn */
@@ -3609,8 +3626,9 @@ export interface components {
       hgvsNt?: components["schemas"]["HgvsField"] | null;
       hgvsPro?: components["schemas"]["HgvsField"] | null;
       hgvsSplice?: components["schemas"]["HgvsField"] | null;
-      assayLevelHgvs?: components["schemas"]["HgvsField"] | null;
-      proteinLevelHgvs?: components["schemas"]["HgvsField"] | null;
+      assayLevel?: components["schemas"]["SequenceLevel"] | null;
+      /** @default {} */
+      mapped?: components["schemas"]["MappedTriple"];
     };
     /**
      * LengthExpression
@@ -3760,6 +3778,20 @@ export interface components {
        */
       mappings?: components["schemas"]["ConceptMapping"][] | null;
     };
+    /**
+     * MappedTriple
+     * @description The mapped (reference-frame) HGVS keyed by level — the canonical projection of the measured change.
+     *
+     * One slot per level. A nucleotide assay populates all three (``mapped[assayLevel]`` is the measured
+     * slot; ``cdna`` is the level-invariant search key, present even when ``assayLevel`` is ``genomic``); a
+     * protein assay populates only ``protein`` (the ambiguous c/g fan-out is not fabricated). Null slots are
+     * omitted under ``response_model_exclude_none``.
+     */
+    MappedTriple: {
+      genomic?: components["schemas"]["HgvsField"] | null;
+      cdna?: components["schemas"]["HgvsField"] | null;
+      protein?: components["schemas"]["HgvsField"] | null;
+    };
     /** MappedVariant */
     MappedVariant: {
       /** Premapped */
@@ -3784,7 +3816,7 @@ export interface components {
       mappingApiVersion: string;
       /** Current */
       current: boolean;
-      alignmentLevel?: components["schemas"]["AnnotationLayer"] | null;
+      alignmentLevel?: components["schemas"]["SequenceLevel"] | null;
       /** Atmismatchedlocus */
       atMismatchedLocus?: boolean | null;
       /** Neargap */
@@ -3830,7 +3862,7 @@ export interface components {
       mappingApiVersion: string;
       /** Current */
       current: boolean;
-      alignmentLevel?: components["schemas"]["AnnotationLayer"] | null;
+      alignmentLevel?: components["schemas"]["SequenceLevel"] | null;
       /** Atmismatchedlocus */
       atMismatchedLocus?: boolean | null;
       /** Neargap */
@@ -3850,6 +3882,14 @@ export interface components {
      * @enum {string}
      */
     MappingState: "incomplete" | "processing" | "failed" | "complete" | "pending_variant_processing" | "not_attempted" | "queued";
+    /**
+     * MeasurementRelationship
+     * @description The relationship of a measurement to the queried ClinGen allele. ``direct`` = the measurement was
+     * assayed *at* this allele; the other two are the RT-related measurements, named for how they relate
+     * to the query.
+     * @enum {string}
+     */
+    MeasurementRelationship: "direct" | "protein_consequence" | "nucleotide_encoding";
     /**
      * MembershipOperator
      * @description The logical relationship between members of the set, that indicates how they
@@ -5006,6 +5046,20 @@ export interface components {
       seqrepo_dependency_version: string;
     };
     /**
+     * SequenceLevel
+     * @description The molecular sequence level of a variant representation: genomic DNA, coding DNA, or protein.
+     *
+     * A single, duty-neutral closed set reused across several columns that each carry a different
+     * semantic meaning: the level a variant was *assayed* at (``assay_level``), the level dcd-mapping
+     * *aligned* it at (``alignment_level``), and the level of a stored allele (``level``).
+     *
+     * Values use full names so they round-trip readably through the database column; the dcd-mapping
+     * payload uses short single-character codes (``p`` / ``c`` / ``g``) which the worker translates via
+     * :func:`from_wire`.
+     * @enum {string}
+     */
+    SequenceLevel: "protein" | "cdna" | "genomic";
+    /**
      * SequenceLocation
      * @description A `Location` defined by an interval on a `Sequence`.
      */
@@ -5478,7 +5532,7 @@ export interface components {
     };
     /** TargetGeneMapping */
     TargetGeneMapping: {
-      alignmentLevel: components["schemas"]["AnnotationLayer"];
+      alignmentLevel: components["schemas"]["SequenceLevel"];
       /**
        * Preferred
        * @default false
@@ -5805,17 +5859,18 @@ export interface components {
     };
     /**
      * VariantDetail
-     * @description The assayed variant-detail envelope (``GET /variants/{urn}``, design §7.1).
+     * @description The assayed variant-detail envelope (``GET /variants/{urn}``).
      *
      * Two tiers: flat, UI-ergonomic assay fields (the ``targetHgvs``/``referenceHgvs`` coordinate pair
      * is a client-side toggle, no refetch) plus the spec-pure GA4GH ``molecularRepresentation``
-     * (``CategoricalVariant``, no MaveDB fields inside). The MaveDB layer rides alongside keyed by VRS
-     * digest: ``memberRelations`` (member→defining relation) and the ``annotations`` map. ``isCurrent``
-     * /``supersededByScoreSet`` let a superseded variant self-describe: ``supersededByScoreSet`` is the
-     * superseding *score set*'s URN, not a variant URN. Supersession is versioned at the score-set level,
-     * and a newer version may add, drop, or renumber variants — so there is no stable
-     * superseding-*variant* pointer to hand back; a consumer resolves the current measurement by looking
-     * this variant up within that score set. Absent fields are omitted.
+     * (``CategoricalVariant``, no MaveDB fields inside). The MaveDB layer rides alongside, keyed by VRS
+     * digest: the ``alleles`` identity sidecar (per-allele ``level`` / ``hgvs`` / ``clingenAlleleId`` /
+     * ``relation`` — one entry per linked allele, sharing keys with ``annotations``) and the
+     * ``annotations`` map. ``isCurrent``/``supersededByScoreSet`` let a superseded variant self-describe:
+     * ``supersededByScoreSet`` is the superseding *score set*'s URN, not a variant URN. Supersession is
+     * versioned at the score-set level, and a newer version may add, drop, or renumber variants — so there
+     * is no stable superseding-*variant* pointer to hand back; a consumer resolves the current measurement
+     * by looking this variant up within that score set. Absent fields are omitted.
      */
     VariantDetail: {
       /** Urn */
@@ -5829,8 +5884,7 @@ export interface components {
        * @default []
        */
       classifications?: components["schemas"]["VariantClassification"][];
-      /** Assaylevel */
-      assayLevel?: string | null;
+      assayLevel?: components["schemas"]["SequenceLevel"] | null;
       /** Targethgvs */
       targetHgvs?: string | null;
       /** Referencehgvs */
@@ -5844,11 +5898,11 @@ export interface components {
       /** Mode */
       mode?: string | null;
       /**
-       * Memberrelations
+       * Alleles
        * @default {}
        */
-      memberRelations?: {
-        [key: string]: string;
+      alleles?: {
+        [key: string]: components["schemas"]["AlleleIdentity"];
       };
       /**
        * Annotations
@@ -5956,41 +6010,6 @@ export interface components {
       id: number;
       /** Recordtype */
       recordType?: string;
-    };
-    /**
-     * VariantEffectMeasurementWithShortScoreSet
-     * @description Variant effect measurement view model with mapped variants and a limited set of score set details
-     */
-    VariantEffectMeasurementWithShortScoreSet: {
-      /** Urn */
-      urn?: string | null;
-      /** Data */
-      data: unknown;
-      /** Scoresetid */
-      scoreSetId: number;
-      /** Hgvsnt */
-      hgvsNt?: string | null;
-      /** Hgvspro */
-      hgvsPro?: string | null;
-      /** Hgvssplice */
-      hgvsSplice?: string | null;
-      /**
-       * Creationdate
-       * Format: date
-       */
-      creationDate: string;
-      /**
-       * Modificationdate
-       * Format: date
-       */
-      modificationDate: string;
-      /** Id */
-      id: number;
-      /** Recordtype */
-      recordType?: string;
-      scoreSet: components["schemas"]["ShortScoreSet"];
-      /** Mappedvariants */
-      mappedVariants: components["schemas"]["MappedVariant"][];
     };
     /**
      * VariantOncogenicityProposition
@@ -6716,6 +6735,62 @@ export interface operations {
       /** @description Resource not found. */
       404: {
         content: never;
+      };
+      /** @description Internal server error. */
+      500: {
+        content: never;
+      };
+    };
+  };
+  /**
+   * List measurements for a ClinGen allele's equivalence class
+   * @description List every measurement whose cross-layer equivalence class touches this ClinGen allele (a ``CA`` or
+   * ``PA``) — the direct measurements assayed at this change plus the reverse-translation-related ones,
+   * each labeled by its assayed level and relationship. This is the ClinGen-allele-centric variant page's
+   * entrypoint. A private score set's measurement is never included; its inline classification is withheld
+   * where the calibration is unreadable while the measurement still shows.
+   */
+  get_clingen_allele_measurements_api_v1_clingen_alleles__clingen_allele_id__measurements_get: {
+    parameters: {
+      query?: {
+        /** @description Include measurements from superseded score-set versions. Default false — superseded measurements are a deliberate power-user / citation path, never surfaced by discovery. */
+        include_superseded?: boolean;
+        /** @description For a nucleotide (CA) query only: also return sibling nucleotide changes — other DNA variants encoding the same protein consequence that were themselves assayed at the nucleotide level (relationship 'nucleotide_encoding'). Default false: the variant page anchors strictly on the queried allele. Discovery surfaces (search) set it to surface all evidence bearing on the consequence. No-op for a protein (PA) query. */
+        include_nucleotide_siblings?: boolean;
+        /** @description Reconstruct the equivalence class (which mapping records / allele links are live) as it stood at this instant. ISO 8601, ideally timezone-aware. Scores and classifications are as-of-invariant. Defaults to current. */
+        as_of?: string | null;
+      };
+      header?: {
+        "x-active-roles"?: string | null;
+      };
+      path: {
+        clingen_allele_id: string;
+      };
+    };
+    responses: {
+      /** @description Successful Response */
+      200: {
+        content: {
+          "application/json": components["schemas"]["AlleleMeasurement"][];
+        };
+      };
+      /** @description Authentication required. */
+      401: {
+        content: never;
+      };
+      /** @description Forbidden. Insufficient permissions. */
+      403: {
+        content: never;
+      };
+      /** @description Resource not found. */
+      404: {
+        content: never;
+      };
+      /** @description Validation Error */
+      422: {
+        content: {
+          "application/json": components["schemas"]["HTTPValidationError"];
+        };
       };
       /** @description Internal server error. */
       500: {
@@ -11018,6 +11093,8 @@ export interface operations {
   get_clinical_controls_for_score_set_api_v1_score_sets__urn__clinical_controls_get: {
     parameters: {
       query?: {
+        /** @description Reconstruct the allele → ClinVar link state as it stood at this instant. ISO 8601, ideally timezone-aware. Defaults to current. */
+        as_of?: string | null;
         db?: string | null;
         version?: string | null;
       };
@@ -11065,6 +11142,10 @@ export interface operations {
    */
   get_clinical_controls_options_for_score_set_api_v1_score_sets__urn__clinical_controls_options_get: {
     parameters: {
+      query?: {
+        /** @description Reconstruct the allele → ClinVar link state as it stood at this instant. ISO 8601, ideally timezone-aware. Defaults to current. */
+        as_of?: string | null;
+      };
       header?: {
         "x-active-roles"?: string | null;
       };
@@ -12565,56 +12646,6 @@ export interface operations {
         content: {
           "application/json": components["schemas"]["AdminUser"];
         };
-      };
-      /** @description Authentication required. */
-      401: {
-        content: never;
-      };
-      /** @description Forbidden. Insufficient permissions. */
-      403: {
-        content: never;
-      };
-      /** @description Resource not found. */
-      404: {
-        content: never;
-      };
-      /** @description Validation Error */
-      422: {
-        content: {
-          "application/json": components["schemas"]["HTTPValidationError"];
-        };
-      };
-      /** @description Internal server error. */
-      500: {
-        content: never;
-      };
-    };
-  };
-  /**
-   * Lookup variants by ClinGen Allele IDs
-   * @description Lookup variants by ClinGen Allele IDs.
-   */
-  lookup_variants_api_v1_variants_clingen_allele_id_lookups_post: {
-    parameters: {
-      header?: {
-        "x-active-roles"?: string | null;
-      };
-    };
-    requestBody: {
-      content: {
-        "application/json": components["schemas"]["ClingenAlleleIdVariantLookupsRequest"];
-      };
-    };
-    responses: {
-      /** @description Successful Response */
-      200: {
-        content: {
-          "application/json": components["schemas"]["ClingenAlleleIdVariantLookupResponse"][];
-        };
-      };
-      /** @description Bad request. Check parameters and payload. */
-      400: {
-        content: never;
       };
       /** @description Authentication required. */
       401: {

@@ -118,9 +118,9 @@ export default {
     downloadMenuItems: function () {
       return [
         {label: 'PDB structure', icon: 'pi pi-download', command: () => this.downloadPdb()},
-        {label: 'PyMOL coloring script (.pml)', icon: 'pi pi-palette', command: () => this.downloadPml()},
-        {label: 'ChimeraX coloring script (.cxc)', icon: 'pi pi-palette', command: () => this.downloadCxc()},
-        {label: 'Mol* coloring script (.mvsj)', icon: 'pi pi-palette', command: () => this.downloadMvsj()}
+        {label: 'PyMOL Macro Language (.pml)', icon: 'pi pi-palette', command: () => this.downloadPml()},
+        {label: 'ChimeraX command file (.cxc)', icon: 'pi pi-palette', command: () => this.downloadCxc()},
+        {label: 'MolViewSpec JSON (.mvsj)', icon: 'pi pi-palette', command: () => this.downloadMvsj()}
       ]
     },
     currentColorByLabel: function () {

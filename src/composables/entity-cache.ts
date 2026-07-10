@@ -112,7 +112,6 @@ export function useEntityCache(): UseEntityCacheReturn {
         throw new Error(`Unknown entity type: ${entityType}`)
       }
 
-      console.log(endpoint)
       const data =
         endpoint === 'score-sets'
           ? await getBufferedScoreSet(urn)

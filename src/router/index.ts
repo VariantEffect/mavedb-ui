@@ -178,7 +178,9 @@ const routes: RouteRecordRaw[] = [
     name: 'variant',
     component: VariantScreen,
     props: (route) => ({
-      clingenAlleleId: route.params.clingenAlleleId
+      clingenAlleleId: route.params.clingenAlleleId,
+      // `?variant=` highlights a specific measurement without changing the CAID/PAID anchor.
+      highlightVariantUrn: (Array.isArray(route.query.variant) ? route.query.variant[0] : route.query.variant) || null
     })
   },
   {
@@ -193,8 +195,11 @@ const routes: RouteRecordRaw[] = [
         // The detail envelope carries the assay-level ClinGen id as a flat field (the URN→allele
         // bridge), so resolving a legacy measurement URN to its allele page is a direct read.
         const detail = await getVariantDetail(urn)
+
+        // Carry the measurement URN as the `?variant=` highlight so the redirect preserves which
+        // measurement the cited link pointed at.
         if (detail.clingenAlleleId) {
-          return {name: 'variant', params: {clingenAlleleId: detail.clingenAlleleId}}
+          return {name: 'variant', params: {clingenAlleleId: detail.clingenAlleleId}, query: {variant: urn}}
         }
       } catch {
         // Fall through to 404 if the variant can't be resolved

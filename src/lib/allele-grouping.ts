@@ -1,0 +1,141 @@
+import _ from 'lodash'
+
+import type {components} from '@/schema/openapi'
+
+type AlleleIdentity = components['schemas']['AlleleIdentity']
+type AlleleAnnotations = components['schemas']['AlleleAnnotations']
+
+/** Confidence/provenance axis (orthogonal to Cat-VRS `relation`); strongest first. */
+export type Derivation = 'authoritative' | 'projection' | 'candidate'
+const DERIVATION_RANK: Record<string, number> = {authoritative: 0, projection: 1, candidate: 2}
+
+// Level display order (genomic → coding → protein) so a group reads bottom-up through the layer stack.
+const LEVEL_ORDER: Record<string, number> = {genomic: 0, cdna: 1, protein: 2}
+
+export interface AlleleMember extends AlleleIdentity {
+  digest: string
+  annotations: AlleleAnnotations | null
+  /** This allele is the CAID/PAID the page is anchored on. */
+  pageRoot: boolean
+}
+
+/**
+ * A group of alleles rendered as one entry. Either a single allele (the protein apex, an unpaired
+ * measured allele, or a projection-failed one-member candidate) or a c↔g projection pair collapsed into
+ * one — the same change at two levels — with its annotations deduplicated.
+ */
+export interface AlleleGroup {
+  key: string
+  members: AlleleMember[]
+  /** Contains the measured (authoritative) allele. */
+  measured: boolean
+  /** Contains the page-anchor allele. */
+  pageRoot: boolean
+  /** Grouped confidence: the strongest derivation among the members. */
+  derivation: Derivation | null
+  /** Members share one annotation block, so it renders once; otherwise render each level's separately. */
+  annotationsMatch: boolean
+  /** Distinct linked CAIDs to surface, excluding the page anchor (which is this page). */
+  clingenLinks: string[]
+}
+
+export interface GroupAllelesInput {
+  alleles: Record<string, AlleleIdentity>
+  annotations: Record<string, AlleleAnnotations>
+  /** The ClinGen id the page is anchored on. */
+  pageClingenAlleleId: string | null
+}
+
+function pickDerivation(members: AlleleMember[]): Derivation | null {
+  let best: Derivation | null = null
+  let bestRank = Infinity
+  for (const m of members) {
+    const rank = m.derivation != null ? DERIVATION_RANK[m.derivation] : undefined
+    if (rank != null && rank < bestRank) {
+      bestRank = rank
+      best = m.derivation as Derivation
+    }
+  }
+  return best
+}
+
+// Mutual by construction, but honor a one-sided link too so a group is never split by iteration order.
+function buildPartnerMap(alleles: Record<string, AlleleIdentity>): Map<string, string> {
+  const partnerOf = new Map<string, string>()
+  for (const [digest, identity] of Object.entries(alleles)) {
+    const sibling = identity.projectionOf
+    if (sibling && sibling !== digest && alleles[sibling]) {
+      partnerOf.set(digest, sibling)
+      partnerOf.set(sibling, digest)
+    }
+  }
+  return partnerOf
+}
+
+function makeMember(
+  digest: string,
+  identity: AlleleIdentity,
+  annotations: Record<string, AlleleAnnotations>,
+  pageClingenAlleleId: string | null
+): AlleleMember {
+  return {
+    digest,
+    level: identity.level,
+    hgvs: identity.hgvs,
+    clingenAlleleId: identity.clingenAlleleId ?? null,
+    relation: identity.relation ?? null,
+    derivation: identity.derivation ?? null,
+    annotations: annotations[digest] ?? null,
+    pageRoot: identity.clingenAlleleId != null && identity.clingenAlleleId === pageClingenAlleleId
+  }
+}
+
+/**
+ * Collapse the detail envelope's `alleles` sidecar into rendered groups, pairing each c↔g projection
+ * (linked by `projectionOf`) into one entry and deduplicating its annotations. `derivation` labels the
+ * group's confidence — orthogonal to Cat-VRS `relation`, which stays per member. Groups are ordered
+ * measured/page-root first, then bottom-up by level.
+ */
+export function groupAlleles(input: GroupAllelesInput): AlleleGroup[] {
+  const {alleles, annotations, pageClingenAlleleId} = input
+  const partnerOf = buildPartnerMap(alleles)
+
+  // Pair-and-consume: each allele is visited once; its projection partner (if any) is pulled in immediately.
+  const done = new Set<string>()
+  const groups: AlleleGroup[] = []
+  for (const [digest, identity] of Object.entries(alleles)) {
+    if (done.has(digest)) continue
+    done.add(digest)
+    const members = [makeMember(digest, identity, annotations, pageClingenAlleleId)]
+    const sibling = partnerOf.get(digest)
+    if (sibling && !done.has(sibling)) {
+      done.add(sibling)
+      members.push(makeMember(sibling, alleles[sibling], annotations, pageClingenAlleleId))
+    }
+    // Sort members genomic → cDNA → protein so the group reads consistently regardless of input order.
+    members.sort((a, b) => (LEVEL_ORDER[a.level ?? ''] ?? 99) - (LEVEL_ORDER[b.level ?? ''] ?? 99))
+
+    groups.push({
+      key: members[0].digest,
+      members,
+      measured: members.some((m) => m.derivation === 'authoritative'),
+      pageRoot: members.some((m) => m.pageRoot),
+      derivation: pickDerivation(members),
+      // If both members carry identical annotations, the UI renders one shared block instead of two.
+      annotationsMatch: members.length < 2 || _.isEqual(members[0].annotations, members[1].annotations),
+      clingenLinks: _.uniq(
+        members.map((m) => m.clingenAlleleId).filter((id): id is string => id != null && id !== pageClingenAlleleId)
+      )
+    })
+  }
+
+  // Measured/page-root groups float to the top; within those, measured beats page-root-only.
+  // Remaining groups sort by their first member's level (genomic → cDNA → protein).
+  return groups.sort((a, b) => {
+    const aPinned = a.measured || a.pageRoot
+    const bPinned = b.measured || b.pageRoot
+    if (aPinned !== bPinned) return aPinned ? -1 : 1
+    if (a.measured !== b.measured) return a.measured ? -1 : 1
+    return (LEVEL_ORDER[a.members[0].level ?? ''] ?? 99) - (LEVEL_ORDER[b.members[0].level ?? ''] ?? 99)
+  })
+}

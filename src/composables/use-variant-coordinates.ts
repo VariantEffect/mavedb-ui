@@ -1,15 +1,14 @@
-import {isNucleotideHgvs} from '@/lib/mave-hgvs'
 import type {HgvsField, LeanVariant} from '@/lib/variants'
 
-/** The sequence level a coordinate is expressed in. */
-export type SequenceLevel = 'dna' | 'protein'
+/** The sequence level a coordinate is expressed in, mirroring the backend's AnnotationLayer enum. */
+export type SequenceLevel = 'cdna' | 'genomic' | 'protein'
 
 /** The coordinate frame: `raw` = submitted/target numbering, `mapped` = reference numbering. */
 export type CoordinateFrame = 'raw' | 'mapped'
 
 /**
  * Stateless resolution of a variant's HGVS coordinate across two orthogonal axes — sequence
- * **level** (dna ↔ protein) and **frame** (raw/submitted ↔ mapped/reference).
+ * **level** (cdna / genomic / protein) and **frame** (raw/submitted ↔ mapped/reference).
  *
  * `coordinateFor` is the single source of truth: every downstream derivation (heatmap x/y,
  * axis availability, labels, tooltips) resolves through it, so the (level, frame) → coordinate
@@ -23,31 +22,49 @@ export function useVariantCoordinates() {
    * Resolve the HGVS coordinate for a variant at a given level and frame, or `null` when that
    * cell does not exist for the variant.
    *
-   * The 2×2 mapping onto the lean record's slots:
+   * In the **mapped** frame each level routes directly to its `MappedTriple` slot:
    *
-   * |         | raw       | mapped                                |
-   * | ------- | --------- | ------------------------------------- |
-   * | dna     | `hgvsNt`  | `assayLevelHgvs` iff it is nucleotide |
-   * | protein | `hgvsPro` | `proteinLevelHgvs`                    |
+   * | level   | mapped slot       |
+   * | ------- | ----------------- |
+   * | cdna    | `mapped.cdna`     |
+   * | genomic | `mapped.genomic`  |
+   * | protein | `mapped.protein`  |
    *
-   * The (mapped, dna) cell is `null` for a protein assay: a protein measurement has no mapped
-   * coding representation (mavedb-api#784), so we never fabricate one from a degenerate sibling.
+   * In the **raw** frame `cdna` and `genomic` both alias `hgvsNt` — the depositor submitted one
+   * nucleotide string and the schema has a single field for it. The cdna/genomic distinction is a
+   * post-mapping conclusion, since raw submitted HGVS strings only have meaning relative to the submitted
+   * sequence. Both levels therefore return `hgvsNt` and `levelAvailable` will report both as true whenever
+   * `hgvsNt` is present. `sequenceTypeOptions` handles the display concern of offering only one NT option
+   * in raw frame.
    */
   function coordinateFor(variant: LeanVariant, level: SequenceLevel, frame: CoordinateFrame): HgvsField | null {
     if (frame === 'raw') {
-      return (level === 'dna' ? variant.hgvsNt : variant.hgvsPro) ?? null
+      if (level === 'protein') return variant.hgvsPro ?? null
+      return variant.hgvsNt ?? null
     }
-    if (level === 'protein') {
-      return variant.proteinLevelHgvs ?? null
-    }
-    // mapped + dna: only when the assay-level mapped representation is itself nucleotide.
-    const assayLevel = variant.assayLevelHgvs
-    return assayLevel && isNucleotideHgvs(assayLevel.hgvs) ? assayLevel : null
+    // mapped: direct slot lookup — no assayLevel indirection needed.
+    return variant.mapped?.[level] ?? null
   }
 
-  /** The nucleotide HGVS string for a variant in the given frame, if any. */
+  /**
+   * The canonical nucleotide HGVS string for a variant in the given frame, if any — the single
+   * nucleotide coordinate a compact surface (label pair, tooltip note, search chip) should show.
+   *
+   * In the raw frame reads `hgvsNt` directly — no level discrimination, since the submitted string is
+   * a single field. In the mapped frame the ordering is prescriptive: **coding (`cdna`) preferred,
+   * genomic fallback.** The coding `NM_:c.` string is the natural pair of the protein `NP_:p.` change
+   * (same transcript, same frame, the conventional `c. (p.)` citation), so a genomic-*measured* variant
+   * surfaces its coding coordinate here rather than the `NC_:g.` one. It becomes the string only when
+   * there is no coding projection.
+   *
+   * The plotted-axis coordinate is a different concern: when a surface has a user-selected level (the
+   * heatmap axis) it should read `coordinateFor(variant, level, frame)` directly, not this.
+   *
+   * Returns `undefined` for protein assays or unmapped variants in the mapped frame.
+   */
   function getHgvsNt(variant: LeanVariant, frame: CoordinateFrame): string | undefined {
-    return coordinateFor(variant, 'dna', frame)?.hgvs
+    if (frame === 'raw') return variant.hgvsNt?.hgvs
+    return (variant.mapped?.cdna ?? variant.mapped?.genomic)?.hgvs
   }
 
   /** The protein HGVS string for a variant in the given frame, if any. */
@@ -56,8 +73,9 @@ export function useVariantCoordinates() {
   }
 
   /**
-   * Preferred display label in the given frame, most to least specific:
-   *   frame protein → frame nucleotide → submitted protein → submitted nucleotide → submitted splice → URN.
+   * Preferred display label in the given frame, following the prescriptive identity order
+   * protein > coding > genomic (the last two via `getHgvsNt`), then submitted-string fallbacks:
+   *   frame protein → frame nucleotide (coding-preferred) → submitted protein → submitted nucleotide → submitted splice → URN.
    *
    * The mapped frame has no coordinate for an unmapped variant, so before giving up to the bare URN we
    * fall back to the variant's submitted (target-frame) HGVS: an unmapped intronic variant still carries
@@ -68,7 +86,7 @@ export function useVariantCoordinates() {
   function labelForVariant(variant: LeanVariant, frame: CoordinateFrame): string {
     return (
       coordinateFor(variant, 'protein', frame)?.hgvs ??
-      coordinateFor(variant, 'dna', frame)?.hgvs ??
+      getHgvsNt(variant, frame) ??
       variant.hgvsPro?.hgvs ??
       variant.hgvsNt?.hgvs ??
       variant.hgvsSplice?.hgvs ??
@@ -81,15 +99,40 @@ export function useVariantCoordinates() {
     return variants.some((v) => coordinateFor(v, level, frame) != null)
   }
 
-  /** The level options to offer for the given frame, in display order (DNA before Protein). */
+  const LEVEL_LABELS: Record<SequenceLevel, string> = {cdna: 'cDNA', genomic: 'Genomic', protein: 'Protein'}
+  const LEVEL_ORDER: SequenceLevel[] = ['cdna', 'genomic', 'protein']
+
+  /**
+   * The level options to offer for the given frame, in display order.
+   *
+   * In the **mapped** frame returns whichever of cDNA / Genomic / Protein have data (up to all three
+   * for a nucleotide assay). In the **raw** frame cdna and genomic both alias `hgvsNt`, so the
+   * distinction is meaningless — the submitted string is target-relative and its level is only
+   * determined after mapping. A single "Nucleotide" option is returned instead, with the `value`
+   * keyed to `assayLevel` so that a frame switch routes to the right mapped slot.
+   */
   function sequenceTypeOptions(
     variants: LeanVariant[],
     frame: CoordinateFrame
   ): Array<{title: string; value: SequenceLevel}> {
-    const options: Array<{title: string; value: SequenceLevel}> = []
-    if (levelAvailable(variants, 'dna', frame)) options.push({title: 'DNA', value: 'dna'})
-    if (levelAvailable(variants, 'protein', frame)) options.push({title: 'Protein', value: 'protein'})
-    return options
+    if (frame === 'raw') {
+      const options: Array<{title: string; value: SequenceLevel}> = []
+
+      if (variants.some((v) => v.hgvsNt != null)) {
+        const ntLevel =
+          (variants.find((v) => v.assayLevel === 'cdna' || v.assayLevel === 'genomic')?.assayLevel as SequenceLevel) ??
+          'cdna'
+        options.push({title: 'Nucleotide', value: ntLevel})
+      }
+
+      if (variants.some((v) => v.hgvsPro != null)) options.push({title: 'Protein', value: 'protein'})
+      return options
+    }
+
+    return LEVEL_ORDER.filter((level) => levelAvailable(variants, level, frame)).map((level) => ({
+      title: LEVEL_LABELS[level],
+      value: level
+    }))
   }
 
   /**

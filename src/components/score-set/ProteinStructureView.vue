@@ -119,7 +119,8 @@ export default {
       return [
         {label: 'PDB structure', icon: 'pi pi-download', command: () => this.downloadPdb()},
         {label: 'PyMOL coloring script (.pml)', icon: 'pi pi-palette', command: () => this.downloadPml()},
-        {label: 'ChimeraX coloring script (.cxc)', icon: 'pi pi-palette', command: () => this.downloadCxc()}
+        {label: 'ChimeraX coloring script (.cxc)', icon: 'pi pi-palette', command: () => this.downloadCxc()},
+        {label: 'Mol* coloring script (.mvsj)', icon: 'pi pi-palette', command: () => this.downloadMvsj()}
       ]
     },
     currentColorByLabel: function () {
@@ -281,6 +282,15 @@ export default {
       this.downloadFile(new Blob([this.buildCxc()], {type: 'text/plain'}), filename)
     },
 
+    downloadMvsj: function () {
+      if (!this.selectedModel?.cifUrl) {
+        return
+      }
+      const pdbName = this.selectedModel.pdbUrl?.split('/').pop() || `AF-${this.selectedAlphaFold?.id}-F1.pdb`
+      const filename = `${pdbName.replace(/\.pdb$/i, '')}-${_.kebabCase(this.currentColorByLabel)}.mvsj`
+      this.downloadFile(new Blob([this.buildMvsj()], {type: 'application/json'}), filename)
+    },
+
     /**
      * Build a PyMOL script that reproduces the coloring currently shown in the viewer. The same
      * (residue number, color) pairs are fed to the molstar viewer, so loading the companion PDB
@@ -360,6 +370,72 @@ export default {
       }
 
       return lines.join('\n') + '\n'
+    },
+
+    /**
+     * Build a MolViewSpec (.mvsj) document that reproduces the coloring shown in the viewer, for
+     * loading in the Mol* viewer (drag-and-drop, or the ?mvs-url= parameter). The document fetches
+     * the AlphaFold structure by URL, so it is self-contained and needs no companion file. Residues
+     * are selected by author numbering (auth_seq_id = UniProt position), matching MaveDB's numbers.
+     */
+    buildMvsj: function () {
+      const modelId = this.selectedModel?.entryId || `AF-${this.selectedAlphaFold?.id}-F1`
+      const colorNodes = []
+
+      // Base color for residues that are not part of the score coloring (selector defaults to "all").
+      const nonSelected = this.normalizeHex(this.nonSelectedColor)
+      if (nonSelected) {
+        colorNodes.push({kind: 'color', params: {color: `#${nonSelected}`}})
+      }
+
+      const residuesByColor = this.groupResiduesByColor()
+      for (const hex of Object.keys(residuesByColor)) {
+        const expressions = this.residueRuns(residuesByColor[hex]).map(([start, end]) => ({
+          auth_asym_id: 'A',
+          beg_auth_seq_id: start,
+          end_auth_seq_id: end
+        }))
+        if (expressions.length > 0) {
+          colorNodes.push({
+            kind: 'color',
+            params: {selector: expressions.length === 1 ? expressions[0] : expressions, color: `#${hex}`}
+          })
+        }
+      }
+
+      const tree = {
+        metadata: {version: '1', title: `MaveDB — ${modelId} — ${this.currentColorByLabel}`},
+        root: {
+          kind: 'root',
+          children: [
+            {
+              kind: 'download',
+              params: {url: this.selectedModel.cifUrl},
+              children: [
+                {
+                  kind: 'parse',
+                  params: {format: 'mmcif'},
+                  children: [
+                    {
+                      kind: 'structure',
+                      params: {type: 'model'},
+                      children: [
+                        {
+                          kind: 'component',
+                          params: {selector: 'polymer'},
+                          children: [{kind: 'representation', params: {type: 'cartoon'}, children: colorNodes}]
+                        }
+                      ]
+                    }
+                  ]
+                }
+              ]
+            }
+          ]
+        }
+      }
+
+      return JSON.stringify(tree, null, 2) + '\n'
     },
 
     // Normalize a CSS hex color (#rgb or #rrggbb, any case) to lowercase 6-digit hex, or null.

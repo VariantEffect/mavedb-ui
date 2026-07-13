@@ -159,6 +159,10 @@ export function useVariantLookup(
       // current-only list (e.g. a cited *superseded* measurement), enable superseded once so it resolves and its
       // banner shows. The watcher refetches. Guarded by the one-shot flag so a later manual toggle-off is
       // honored (switches to a current variant below) instead of flipping superseded back on.
+      //
+      // NOTE: this deliberately triggers a second full fetch/clear cycle on load (current-only, then
+      // superseded). It's correct but redundant — a proper query cache would dedup the shared
+      // reads for free. Not worth hand-collapsing before such a migration.
       const shouldHonorCitation =
         !honoredInitialHighlight &&
         highlightUrn.value &&

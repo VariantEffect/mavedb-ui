@@ -38,7 +38,12 @@ export function useMeasurementCache(asOf: Ref<string | null>): UseMeasurementCac
   async function loadScoreSet(scoreSetUrn: string) {
     if (scoreSets.value[scoreSetUrn]) return
     try {
-      scoreSets.value = {...scoreSets.value, [scoreSetUrn]: await getScoreSet(scoreSetUrn)}
+      // Await into a local first, then spread — writing `{...scoreSets.value, [k]: await …}` would
+      // capture the spread baseline before the await resolves, so two concurrent loaders (the selected
+      // measurement + a prefetch) both snapshot the same pre-write map and the later write clobbers the
+      // earlier key.
+      const scoreSet = await getScoreSet(scoreSetUrn)
+      scoreSets.value = {...scoreSets.value, [scoreSetUrn]: scoreSet}
     } catch (error) {
       console.error(`Error fetching score set "${scoreSetUrn}"`, error)
     }
@@ -47,7 +52,10 @@ export function useMeasurementCache(asOf: Ref<string | null>): UseMeasurementCac
   async function loadScores(scoreSetUrn: string) {
     if (scores.value[scoreSetUrn]) return
     try {
-      scores.value = {...scores.value, [scoreSetUrn]: await getLeanScoreSetVariants(scoreSetUrn)}
+      // Await into a local before spreading — see loadScoreSet for why an inline `await` in the spread
+      // literal races and drops keys under concurrent loads.
+      const leanVariants = await getLeanScoreSetVariants(scoreSetUrn)
+      scores.value = {...scores.value, [scoreSetUrn]: leanVariants}
     } catch (error) {
       console.error(`Error fetching scores for score set "${scoreSetUrn}"`, error)
     }

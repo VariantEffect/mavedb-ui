@@ -197,7 +197,7 @@ export default defineComponent({
     dataTypeOptions(): Array<{label: string; value: string}> {
       const options = [
         {label: 'Scores', value: 'scores'},
-        {label: 'Mapped HGVS', value: 'mappedHgvs'},
+        {label: 'Reference-frame HGVS', value: 'mappedHgvs'},
         {label: 'Custom columns', value: 'includeCustomColumns'},
         {label: 'Without NA columns', value: 'dropNaColumns'}
       ]

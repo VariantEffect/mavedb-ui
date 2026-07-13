@@ -37,7 +37,7 @@
           <span
             >{{ notShownCounts.noCoordinate }}
             {{ notShownCounts.noCoordinate === 1 ? 'variant has' : 'variants have' }} no
-            {{ sequenceType === 'protein' ? 'protein' : 'DNA' }} representation in this view.</span
+            {{ sequenceType === 'protein' ? 'protein' : 'nucleotide' }} representation in this view.</span
           >
         </div>
         <div v-if="notShownCounts.complex > 0" class="flex items-center gap-1.5">
@@ -66,7 +66,6 @@ import type {PropType} from 'vue'
 
 import {AMINO_ACIDS, AMINO_ACIDS_WITH_TER, singleLetterAminoAcidOrHgvsCode} from '@/lib/amino-acids'
 import {saveChartAsSvg, saveChartAsPng} from '@/lib/chart-export'
-import geneticCodes from '@/lib/genetic-codes'
 import makeHeatmap from '@/lib/heatmap'
 import type {Heatmap, HeatmapDatum, HeatmapRowSpecification} from '@/lib/heatmap'
 import {NUCLEOTIDE_BASES} from '@/lib/nucleotides'
@@ -79,7 +78,7 @@ import {
   tooltipVariantDetailsLink
 } from '@/lib/tooltips'
 import {inferReferenceSequenceFromBlocks, isStartOrStopLoss, type DisplayVariant, type HgvsField} from '@/lib/variants'
-import {useVariantCoordinates} from '@/composables/use-variant-coordinates'
+import {useVariantCoordinates, type SequenceLevel} from '@/composables/use-variant-coordinates'
 import {components} from '@/schema/openapi'
 
 interface VariantHeatmapDatum {
@@ -178,8 +177,8 @@ export default defineComponent({
 
   props: {
     coordinates: {
-      type: String as PropType<'raw' | 'mapped'>,
-      default: 'raw'
+      type: String as PropType<'submitted' | 'reference'>,
+      default: 'submitted'
     },
     externalSelection: {
       type: Object as PropType<DisplayVariant | null>,
@@ -211,7 +210,7 @@ export default defineComponent({
       default: 'standard'
     },
     allowedSequenceTypes: {
-      type: Array as PropType<('dna' | 'protein')[] | undefined>,
+      type: Array as PropType<SequenceLevel[] | undefined>,
       default: undefined
     },
     variants: {
@@ -223,7 +222,7 @@ export default defineComponent({
       default: false
     },
     sequenceType: {
-      type: String as PropType<'dna' | 'protein'>,
+      type: String as PropType<SequenceLevel>,
       default: 'protein'
     },
     layout: {
@@ -346,10 +345,12 @@ export default defineComponent({
 
     inferredTargetSequenceAndOffset: function () {
       // Accession targets have no stored sequence; infer it from the submitted (raw) blocks.
-      const level = this.targetResidueType == 'aa' ? 'protein' : 'dna'
+      // Use the first variant's assayLevel to pick cdna vs genomic — accession assays are uniform.
+      const ntLevel: SequenceLevel = this.variants[0]?.assayLevel === 'genomic' ? 'genomic' : 'cdna'
+      const level: SequenceLevel = this.targetResidueType === 'aa' ? 'protein' : ntLevel
       const {referenceSequence, referenceSequenceRange} = inferReferenceSequenceFromBlocks(
         this.variants,
-        (v) => this.coordinateFor(v, level, 'raw'),
+        (v) => this.coordinateFor(v, level, 'submitted'),
         this.targetResidueType == 'aa' ? 'aa' : 'nt'
       )
       return {
@@ -371,15 +372,15 @@ export default defineComponent({
     ////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 
     wtResidueType: function () {
-      return this.sequenceType == 'dna' ? 'nt' : 'aa'
+      return this.sequenceType !== 'protein' ? 'nt' : 'aa'
     },
 
     wtSequenceAndOffset: function () {
       // Option A: the WT sequence is expressed in the same coordinate system as the plotted cells.
-      // In the raw frame with a target sequence of the matching residue type, that sequence is the
-      // authoritative WT in target coordinates. Otherwise (mapped frame, or a residue type the target
+      // In the submitted frame with a target sequence of the matching residue type, that sequence is the
+      // authoritative WT in target coordinates. Otherwise (reference frame, or a residue type the target
       // sequence doesn't provide) infer the WT from the plotted blocks in the current (level, frame).
-      if (this.coordinates == 'raw' && this.wtResidueType == this.targetResidueType && this.targetSequence) {
+      if (this.coordinates == 'submitted' && this.wtResidueType == this.targetResidueType && this.targetSequence) {
         return {
           wtSequence: this.targetSequence,
           wtSequenceOffset: this.targetSequenceOffset
@@ -510,11 +511,11 @@ export default defineComponent({
     ////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 
     heatmapRows: function () {
-      return this.sequenceType == 'dna' ? HEATMAP_NUCLEOTIDE_ROWS : HEATMAP_AMINO_ACID_ROWS
+      return this.sequenceType !== 'protein' ? HEATMAP_NUCLEOTIDE_ROWS : HEATMAP_AMINO_ACID_ROWS
     },
 
     heatmapRowForSubstitution: function () {
-      return this.sequenceType == 'dna' ? heatmapRowForNucleotideVariant : heatmapRowForProteinVariant
+      return this.sequenceType !== 'protein' ? heatmapRowForNucleotideVariant : heatmapRowForProteinVariant
     },
 
     ////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
@@ -1044,30 +1045,40 @@ export default defineComponent({
     },
 
     tooltipHtmlGetter: function (v: VariantClassHeatmapDatum) {
-      // Identity: WT flag plus the variant's identifiers, resolved in the current coordinate frame.
-      // Prefers the HGVS in the coordinate frame of the current heatmap display, with HGVS in the
-      // non-displayed frame displayed as the secondary HGVS label when they differ.
+      // Identity: WT flag plus the variant's identifiers. The primary line leads with the plotted
+      // axis's representation; the secondary line is that level's natural pair, which is transcript-
+      // specific: protein `NP_:p.` and coding `NM_:c.` are the same transcript in two registers, so
+      // each pairs with the other. The genomic `NC_:g.` axis stands alone — a genomic position spans
+      // transcripts and its intronic/UTR positions have no coding equivalent, so no pair is shown.
+      // Unmapped variants have no mapped coordinate, so fall back to labelForVariant.
       const identity = []
       if (v.wt) {
         identity.push(tooltipTitle('Wild-type'))
       }
       const instance = v.instance
       if (instance) {
-        const ntHgvs = this.getHgvsNt(instance, this.coordinates)
-        const primaryLabel =
-          this.sequenceType === 'dna'
-            ? (ntHgvs ?? this.labelForVariant(instance, this.coordinates))
-            : this.labelForVariant(instance, this.coordinates)
+        let primaryHgvs: string | undefined
+        let pairHgvs: string | undefined
+        if (this.sequenceType === 'protein') {
+          primaryHgvs = this.getHgvsPro(instance, this.coordinates)
+          pairHgvs = this.getHgvsNt(instance, this.coordinates)
+        } else if (this.sequenceType === 'genomic') {
+          primaryHgvs = this.coordinateFor(instance, 'genomic', this.coordinates)?.hgvs
+          pairHgvs = undefined
+        } else {
+          primaryHgvs = this.getHgvsNt(instance, this.coordinates)
+          pairHgvs = this.getHgvsPro(instance, this.coordinates)
+        }
+        const primaryLabel = primaryHgvs ?? this.labelForVariant(instance, this.coordinates)
         if (primaryLabel) {
           identity.push(tooltipTitle(primaryLabel))
         }
-        const underlyingLabel = this.sequenceType === 'dna' ? this.getHgvsPro(instance, this.coordinates) : ntHgvs
-        if (underlyingLabel && underlyingLabel !== primaryLabel) {
-          identity.push(tooltipNote(underlyingLabel))
+        if (pairHgvs && pairHgvs !== primaryLabel) {
+          identity.push(tooltipNote(pairHgvs))
         }
       }
       if (instance?.clingenAlleleId) {
-        identity.push(tooltipVariantDetailsLink(instance.clingenAlleleId))
+        identity.push(tooltipVariantDetailsLink(instance.clingenAlleleId, instance.variantUrn))
       }
 
       // Aggregate score statistics for the cell.
@@ -1258,29 +1269,6 @@ export default defineComponent({
 
     showProteinStructure() {
       this.proteinStructureVisible = true
-    },
-
-    translateDnaToAminoAcids1Char: function (dna) {
-      const triplets = this.dnaToTriplets(dna)
-      return triplets.map((triplet) => this.translateCodon(triplet))
-    },
-
-    dnaToTriplets: function (dna) {
-      if (_.isArray(dna)) {
-        dna = dna.join('')
-      }
-      return _.words(dna, /.../g)
-    },
-
-    dnaToSingletons: function (dna) {
-      if (_.isArray(dna)) {
-        dna = dna.join('')
-      }
-      return _.words(dna, /./g)
-    },
-
-    translateCodon: function (codon) {
-      return geneticCodes.standard.dna.codonToAa[codon]
     },
 
     variantSelected: function (v: VariantClassHeatmapDatum) {

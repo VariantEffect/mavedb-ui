@@ -5,7 +5,7 @@
         <ScoreSetHeatmap
           ref="scoreSetHeatmap"
           :allowed-sequence-types="['protein']"
-          coordinates="mapped"
+          coordinates="reference"
           mode="protein-viz"
           :score-set="scoreSet"
           :show-protein-structure-button="false"

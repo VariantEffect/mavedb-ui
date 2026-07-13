@@ -17,7 +17,7 @@
 
   <!-- Main nav -->
   <nav aria-label="Main navigation" class="sticky top-0 z-100 border-b border-border bg-white">
-    <div class="mx-auto flex h-[58px] max-w-screen-xl items-center gap-6 px-6">
+    <div class="mx-auto flex h-[var(--nav-height)] max-w-screen-xl items-center gap-6 px-6">
       <!-- Logo -->
       <router-link class="shrink-0" to="/">
         <img

@@ -164,6 +164,11 @@
 
   /* ── Custom breakpoints ────────────────────────────────────── */
   --breakpoint-tablet: 56rem; /* 896px — between md (768) and lg (1024) */
+
+  /* ── Layout ──────────────────────────────────────────────────── */
+  /* Height of the sticky global nav (MvNavBar). Single source of truth: anything that must sit below
+     the nav (e.g. full-height side panels) offsets by var(--nav-height) instead of a hard-coded px. */
+  --nav-height: 58px;
 }
 
 /* ── Base Styles ───────────────────────────────────────────────── */

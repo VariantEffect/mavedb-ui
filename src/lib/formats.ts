@@ -2,13 +2,6 @@ import moment from 'moment'
 import {Opts} from 'linkifyjs'
 import linkifyHtml from 'linkify-html'
 
-export function formatClinvarVersion(dbVersion: string): string {
-  const match = dbVersion.match(/^(\d{2})_(\d{4})$/)
-  if (!match) return dbVersion
-  const [, month, year] = match
-  return new Date(Number(year), Number(month) - 1).toLocaleString('en-US', {month: 'long', year: 'numeric'})
-}
-
 export function formatDate(x: string) {
   return moment(x).format('MMM DD, YYYY')
 }

@@ -39,8 +39,16 @@ export function tooltipNote(text: string): string {
   return `<div class="italic opacity-[.75]">${text}</div>`
 }
 
+export function tooltipFootnote(text: string): string {
+  return `<div class="text-[11px] opacity-[.65] italic mt-1">*${text}</div>`
+}
+
 export function tooltipText(text: string): string {
   return `<div>${text}</div>`
+}
+
+export function tooltipEmptyLine(): string {
+  return `<div class="h-1"></div>`
 }
 
 export function tooltipKeyValue(label: string, value: string | number | null | undefined): string {

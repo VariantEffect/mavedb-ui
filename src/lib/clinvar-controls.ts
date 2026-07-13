@@ -1,3 +1,12 @@
+import type {components} from '@/schema/openapi'
+
+export type ClinvarControlOption = components['schemas']['ClinicalControlOptions']
+export type ClinvarVariantLink = components['schemas']['ClinvarVariantLink']
+export type ClinvarControl = components['schemas']['ClinicalControlWithClinvarLinks']
+
+type AlleleAnnotations = components['schemas']['AlleleAnnotations']
+type ClinvarAnnotation = components['schemas']['ClinvarAnnotation']
+
 /**
  * List of ClinVar clinical significance classifications.
  *
@@ -28,7 +37,7 @@ export const CLINVAR_CLINICAL_SIGNIFICANCE_CLASSIFICATIONS = [
   {
     name: 'Pathogenic/Likely pathogenic',
     description: 'Pathogenic/Likely pathogenic variant (in different submissions)',
-    shortDescription: 'Path/LP (both)'
+    shortDescription: 'Pathogenic / Likely pathogenic'
   },
   {
     name: 'Benign',
@@ -43,7 +52,7 @@ export const CLINVAR_CLINICAL_SIGNIFICANCE_CLASSIFICATIONS = [
   {
     name: 'Benign/Likely benign',
     description: 'Benign/Likely benign variant (in different submissions)',
-    shortDescription: 'B/LB (both)'
+    shortDescription: 'Benign / Likely benign'
   },
   {
     name: 'Uncertain significance',
@@ -71,7 +80,8 @@ export const CLINVAR_REVIEW_STATUS_STARS: {[status: string]: number} = {
   'criteria provided, conflicting classifications': 1,
   'criteria provided, single submitter': 1,
   'criteria provided, multiple submitters, no conflicts': 2,
-  'reviewed by expert panel': 3
+  'reviewed by expert panel': 3,
+  'practice guideline': 4
 }
 
 export const DEFAULT_CLNSIG_FIELD = 'clinicalSignificance'
@@ -87,23 +97,45 @@ export const DEFAULT_CLINICAL_SIGNIFICANCE_CLASSIFICATIONS = [
 ]
 export const DEFAULT_MIN_STAR_RATING = 1
 
-export const DEFAULT_CLINICAL_CONTROL_DB = 'ClinVar'
+export const DEFAULT_CLINVAR_CONTROL_DB = 'ClinVar'
 
-export interface ClinicalControlOption {
-  dbName: string
-  availableVersions: string[]
+/** Turn a ClinVar `dbVersion` like `03_2024` into "March 2024"; pass through anything unrecognized. */
+export function formatClinvarVersion(dbVersion: string): string {
+  const match = dbVersion.match(/^(\d{2})_(\d{4})$/)
+  if (!match) return dbVersion
+  const [, month, year] = match
+  return new Date(Number(year), Number(month) - 1).toLocaleString('en-US', {month: 'long', year: 'numeric'})
 }
 
-export interface ClinicalControl {
-  dbName: string
-  dbVersion: string
-  dbIdentifier: string
-  clnsigField: string
-  clnrevstatField: string
-  geneSymbol: string
-  modificationDate: Date
-  creationDate: Date
-  mappedVariants: Array<object>
+/** Deep link to a ClinVar allele record, or null when the allele id is missing. */
+export function clinvarAlleleUrl(alleleId: string | null | undefined): string | null {
+  if (!alleleId) return null
+  return `https://www.ncbi.nlm.nih.gov/clinvar/allele/${encodeURIComponent(alleleId)}/`
+}
+
+/** Deep link to a ClinVar variation record, or null when the variation id is missing. */
+export function clinvarVariationUrl(variationId: string | null | undefined): string | null {
+  if (!variationId) return null
+  return `https://www.ncbi.nlm.nih.gov/clinvar/variation/${encodeURIComponent(variationId)}/`
+}
+
+/** The most recent ClinVar annotation (by `dbVersion`), or null when there are none. */
+export function latestClinvar(annotations: AlleleAnnotations | null): ClinvarAnnotation | null {
+  const clinvar = annotations?.clinvar
+  if (!clinvar?.length) return null
+  return clinvar.reduce((best, c) => (c.dbVersion > best.dbVersion ? c : best))
+}
+
+/**
+ * Whether a ClinVar `clinicalSignificance` is an actual classification. ClinVar's split germline/somatic
+ * model emits a literal `-` (occasionally empty) on an axis with no submission — e.g. a record carrying
+ * somatic/oncogenicity data but no germline classification. Such a value is not a usable classification:
+ * it must not become a clinvar control, render as a call, or (as a `-` on the *assayed* allele) block
+ * fall-through to a sibling allele. Filter significances through this before treating them as calls.
+ */
+export function isClassifiedSignificance(significance: string | null | undefined): boolean {
+  const s = significance?.trim()
+  return !!s && !/^-+$/.test(s)
 }
 
 /**

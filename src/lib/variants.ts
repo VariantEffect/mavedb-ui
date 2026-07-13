@@ -1,7 +1,7 @@
 import _ from 'lodash'
 
 import {AMINO_ACIDS_WITH_TER, singleLetterAminoAcidOrHgvsCode} from '@/lib/amino-acids'
-import {DEFAULT_CLNREVSTAT_FIELD, DEFAULT_CLNSIG_FIELD} from '@/lib/clinical-controls'
+import type {ClinvarControlPlacement} from '@/lib/clinvar-control-placement'
 import geneticCodes from '@/lib/genetic-codes'
 import {parseSimpleNtVariant, parseSimpleProVariant} from '@/lib/mave-hgvs'
 import {parseScoresOrCounts} from '@/lib/scores'
@@ -22,7 +22,7 @@ export type LeanVariant = components['schemas']['LeanVariant']
  * visualizations and search consume this shape.
  */
 export type DisplayVariant = LeanVariant & {
-  control?: ClinicalControlVariant | null
+  control?: ClinvarControlVariant | null
 }
 
 export type HgvsReferenceSequenceType = 'c' | 'p' // | 'n'
@@ -32,11 +32,12 @@ export interface SequenceRange {
   length: number
 }
 
-export interface ClinicalControlVariant {
-  [DEFAULT_CLNSIG_FIELD]: string
-  [DEFAULT_CLNREVSTAT_FIELD]: string
-  dbIdentifier?: string
-}
+/**
+ * The clinical-control facet merged onto a variant: the divergence fold's placement
+ * ({@link ClinvarControlPlacement}) — representative call for one-label surfaces, plus the winning-set
+ * classifications and the excluded/directional flags the histogram bins off.
+ */
+export type ClinvarControlVariant = ClinvarControlPlacement
 
 type ParsedSimpleDnaVariation = SimpleDnaVariation & {
   residueType?: 'nt'
@@ -73,7 +74,7 @@ export interface RawVariant {
     clingen_allele_id?: string
   }
 
-  control?: ClinicalControlVariant
+  control?: ClinvarControlVariant
   mavedb_label?: string
 }
 

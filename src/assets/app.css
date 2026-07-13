@@ -171,6 +171,19 @@
   --nav-height: 58px;
 }
 
+/* Badges/tags wired to the vocabulary Key via `v-key-term`. The hover ring (inset box-shadow) follows
+   the element's own border-radius and text color, matching the ad-hoc affordance the inline badges used. */
+.key-term {
+  cursor: help;
+}
+.key-term:hover {
+  box-shadow: inset 0 0 0 1px currentColor;
+}
+.key-term:focus-visible {
+  outline: 2px solid var(--color-sage);
+  outline-offset: 1px;
+}
+
 /* ── Base Styles ───────────────────────────────────────────────── */
 
 /* All headings use the Exo 2 display font */

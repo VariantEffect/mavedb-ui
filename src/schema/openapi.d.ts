@@ -1683,8 +1683,9 @@ export interface components {
      * ``genomic``) — always shown, since the measured level is the clinically load-bearing fact.
      * ``relationship`` says how the measurement relates to the queried ClinGen id: ``direct`` (assayed at
      * this allele), ``protein_consequence`` (a protein measurement of a nt query's consequence), or
-     * ``nucleotide_encoding`` (a nt measurement encoding a protein query). ``primaryClassification`` is the
-     * primary readable functional classification, omitted when absent or gated. ``isCurrent`` /
+     * ``nucleotide_encoding`` (a nt measurement encoding a protein query). ``preferredClassification`` is the
+     * readable functional classification the UI defaults to (primary-first cascade, RUO excluded), omitted
+     * when absent or gated. ``isCurrent`` /
      * ``supersededByScoreSet`` let a superseded measurement (surfaced only under ``include_superseded``)
      * self-describe; ``supersededByScoreSet`` is the superseding *score set*'s URN.
      */
@@ -1703,7 +1704,7 @@ export interface components {
       scoreSetUrn: string;
       /** Scoresettitle */
       scoreSetTitle: string;
-      primaryClassification?: components["schemas"]["SavedFunctionalClassification"] | null;
+      preferredClassification?: components["schemas"]["SavedFunctionalClassification"] | null;
       /** Iscurrent */
       isCurrent: boolean;
       /** Supersededbyscoreset */
@@ -1868,8 +1869,8 @@ export interface components {
       /** Availableversions */
       availableVersions: string[];
     };
-    /** ClinicalControlWithMappedVariants */
-    ClinicalControlWithMappedVariants: {
+    /** ClinicalControlWithClinvarLinks */
+    ClinicalControlWithClinvarLinks: {
       /** Dbidentifier */
       dbIdentifier: string;
       /** Genesymbol */
@@ -1896,8 +1897,8 @@ export interface components {
       creationDate: string;
       /** Recordtype */
       recordType?: string;
-      /** Mappedvariants */
-      mappedVariants: components["schemas"]["MappedVariantForClinicalControl"][];
+      /** Clinvarlinks */
+      clinvarLinks: components["schemas"]["ClinvarVariantLink"][];
     };
     /**
      * ClinvarAnnotation
@@ -1914,6 +1915,16 @@ export interface components {
       clinvarAlleleId: string;
       /** Dbversion */
       dbVersion: string;
+    };
+    /**
+     * ClinvarVariantLink
+     * @description One score-set variant a ClinVar control reaches, tagged with the annotated allele's digest.
+     */
+    ClinvarVariantLink: {
+      /** Varianturn */
+      variantUrn: string;
+      /** Alleledigest */
+      alleleDigest?: string | null;
     };
     /**
      * Coding
@@ -3829,11 +3840,6 @@ export interface components {
       clingenAlleleId?: string | null;
       /** Recordtype */
       recordType?: string;
-    };
-    /** MappedVariantForClinicalControl */
-    MappedVariantForClinicalControl: {
-      /** Varianturn */
-      variantUrn: string;
     };
     /**
      * MappedVariantWithMappingDetails
@@ -11109,7 +11115,7 @@ export interface operations {
       /** @description Successful Response */
       200: {
         content: {
-          "application/json": components["schemas"]["ClinicalControlWithMappedVariants"][];
+          "application/json": components["schemas"]["ClinicalControlWithClinvarLinks"][];
         };
       };
       /** @description Authentication required. */

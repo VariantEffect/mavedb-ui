@@ -115,7 +115,7 @@ export async function publishScoreSet(urn: string) {
   return response.data
 }
 
-export async function getScoreSetClinicalControlOptions(urn: string) {
+export async function getScoreSetClinvarControlOptions(urn: string) {
   const response = await axios.get(
     `${config.apiBaseUrl}/score-sets/${encodeURIComponent(urn)}/clinical-controls/options`
   )

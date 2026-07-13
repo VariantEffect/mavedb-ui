@@ -99,7 +99,7 @@ import Message from 'primevue/message'
 
 import useItem from '@/composition/item.ts'
 import {addCollectionScoreSet, addCollectionExperiment} from '@/api/mavedb/collections'
-import {getScoreSet} from '@/api/mavedb/variants'
+import {getScoreSet} from '@/api/mavedb/score-sets'
 import {getExperiment} from '@/api/mavedb/experiments'
 import {getErrorResponse} from '@/api/mavedb'
 import {type DataSetType, DATA_SET_TYPE_LABELS} from '@/lib/collections'

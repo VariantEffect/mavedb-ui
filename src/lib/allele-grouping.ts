@@ -33,8 +33,17 @@ export interface AlleleGroup {
   pageRoot: boolean
   /** Grouped confidence: the strongest derivation among the members. */
   derivation: Derivation | null
-  /** Members share one annotation block, so it renders once; otherwise render each level's separately. */
+  /**
+   * Whether the members' annotations can render as one block. Missingness is NOT a difference: a field
+   * present on one level and absent on the other coalesces to the present value. Only a genuine
+   * present-vs-present disagreement makes this false (→ render each level separately, with a note).
+   */
   annotationsMatch: boolean
+  /**
+   * The per-field union of the members' annotations (present-wins). Used to render the single block when
+   * `annotationsMatch` — so a coalesced group shows every field any member has, not just member[0]'s.
+   */
+  coalescedAnnotations: AlleleAnnotations | null
   /** Distinct linked CAIDs to surface, excluding the page anchor (which is this page). */
   clingenLinks: string[]
 }
@@ -44,6 +53,27 @@ export interface GroupAllelesInput {
   annotations: Record<string, AlleleAnnotations>
   /** The ClinGen id the page is anchored on. */
   pageClingenAlleleId: string | null
+}
+
+/**
+ * Merge the members' annotations field-by-field, present-wins. Missingness is not divergence: a field on
+ * only one member is simply carried through. `conflict` is true only when two members both carry a field
+ * and disagree — the case worth flagging as "differs by level".
+ */
+function coalesceAnnotations(members: AlleleMember[]): {merged: AlleleAnnotations | null; conflict: boolean} {
+  const present = members.map((m) => m.annotations).filter((a): a is AlleleAnnotations => a != null)
+  if (present.length === 0) return {merged: null, conflict: false}
+  if (present.length === 1) return {merged: present[0], conflict: false}
+
+  const merged: Record<string, unknown> = {}
+  let conflict = false
+  for (const key of _.union(...present.map((a) => Object.keys(a)))) {
+    const values = present.map((a) => (a as Record<string, unknown>)[key]).filter((v) => v != null)
+    if (values.length === 0) continue
+    if (values.length > 1 && !values.every((v) => _.isEqual(v, values[0]))) conflict = true
+    merged[key] = values[0]
+  }
+  return {merged: merged as AlleleAnnotations, conflict}
 }
 
 function pickDerivation(members: AlleleMember[]): Derivation | null {
@@ -115,14 +145,18 @@ export function groupAlleles(input: GroupAllelesInput): AlleleGroup[] {
     // Sort members genomic → cDNA → protein so the group reads consistently regardless of input order.
     members.sort((a, b) => (LEVEL_ORDER[a.level ?? ''] ?? 99) - (LEVEL_ORDER[b.level ?? ''] ?? 99))
 
+    // Coalesce annotations across levels (present-wins); only a real present-vs-present disagreement
+    // counts as divergence. Missing-on-one-level is not treated as different.
+    const {merged, conflict} = coalesceAnnotations(members)
+
     groups.push({
       key: members[0].digest,
       members,
       measured: members.some((m) => m.derivation === 'authoritative'),
       pageRoot: members.some((m) => m.pageRoot),
       derivation: pickDerivation(members),
-      // If both members carry identical annotations, the UI renders one shared block instead of two.
-      annotationsMatch: members.length < 2 || _.isEqual(members[0].annotations, members[1].annotations),
+      annotationsMatch: !conflict,
+      coalescedAnnotations: merged,
       clingenLinks: _.uniq(
         members.map((m) => m.clingenAlleleId).filter((id): id is string => id != null && id !== pageClingenAlleleId)
       )

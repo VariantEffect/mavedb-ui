@@ -1,6 +1,6 @@
 import {describe, expect, it} from 'vitest'
 
-import {aggregateByStudy} from '@/lib/measurement-aggregation'
+import {aggregateByScoreSet} from '@/lib/measurement-aggregation'
 import type {components} from '@/schema/openapi'
 
 type AlleleMeasurement = components['schemas']['AlleleMeasurement']
@@ -11,21 +11,21 @@ function m(overrides: Partial<AlleleMeasurement>): AlleleMeasurement {
     relationship: 'nucleotide_encoding',
     assayLevel: 'cdna',
     scoreSetUrn: 'urn:mavedb:x',
-    scoreSetTitle: 'Study X',
+    scoreSetTitle: 'Score set X',
     ...overrides
   } as AlleleMeasurement
 }
 
-function classified(fc: string): AlleleMeasurement['primaryClassification'] {
-  return {functionalClassification: fc} as AlleleMeasurement['primaryClassification']
+function classified(fc: string): AlleleMeasurement['preferredClassification'] {
+  return {functionalClassification: fc} as AlleleMeasurement['preferredClassification']
 }
 
-describe('aggregateByStudy', () => {
-  it('collapses a study’s many nucleotide encodings into one entry with a score range', () => {
-    const result = aggregateByStudy([
-      m({scoreSetUrn: 'urn:s1', scoreSetTitle: 'Findlay', score: -2.0, primaryClassification: classified('abnormal')}),
-      m({scoreSetUrn: 'urn:s1', scoreSetTitle: 'Findlay', score: -1.7, primaryClassification: classified('abnormal')}),
-      m({scoreSetUrn: 'urn:s1', scoreSetTitle: 'Findlay', score: -1.9, primaryClassification: classified('abnormal')})
+describe('aggregateByScoreSet', () => {
+  it('collapses a score set’s many nucleotide encodings into one entry with a score range', () => {
+    const result = aggregateByScoreSet([
+      m({scoreSetUrn: 'urn:s1', scoreSetTitle: 'Findlay', score: -2.0, preferredClassification: classified('abnormal')}),
+      m({scoreSetUrn: 'urn:s1', scoreSetTitle: 'Findlay', score: -1.7, preferredClassification: classified('abnormal')}),
+      m({scoreSetUrn: 'urn:s1', scoreSetTitle: 'Findlay', score: -1.9, preferredClassification: classified('abnormal')})
     ])
     expect(result).toHaveLength(1)
     expect(result[0].measurements).toHaveLength(3)
@@ -34,8 +34,8 @@ describe('aggregateByStudy', () => {
     expect(result[0].scoreRange).toEqual({min: -2.0, max: -1.7})
   })
 
-  it('separates distinct studies and sorts the more-corroborated one first', () => {
-    const result = aggregateByStudy([
+  it('separates distinct score sets and sorts the more-corroborated one first', () => {
+    const result = aggregateByScoreSet([
       m({scoreSetUrn: 'urn:solo', scoreSetTitle: 'Giacomelli', assayLevel: 'protein', score: -2.1}),
       m({scoreSetUrn: 'urn:many', scoreSetTitle: 'Findlay', score: -2.0}),
       m({scoreSetUrn: 'urn:many', scoreSetTitle: 'Findlay', score: -1.8})
@@ -45,17 +45,17 @@ describe('aggregateByStudy', () => {
     expect(result[1].level).toBe('protein')
   })
 
-  it('flags a study that assayed both levels as mixed and surfaces internal disagreement', () => {
-    const result = aggregateByStudy([
-      m({scoreSetUrn: 'urn:s', assayLevel: 'protein', primaryClassification: classified('abnormal')}),
-      m({scoreSetUrn: 'urn:s', assayLevel: 'cdna', primaryClassification: classified('normal')})
+  it('flags a score set that assayed both levels as mixed and surfaces internal disagreement', () => {
+    const result = aggregateByScoreSet([
+      m({scoreSetUrn: 'urn:s', assayLevel: 'protein', preferredClassification: classified('abnormal')}),
+      m({scoreSetUrn: 'urn:s', assayLevel: 'cdna', preferredClassification: classified('normal')})
     ])
     expect(result[0].level).toBe('mixed')
     expect(new Set(result[0].classifications)).toEqual(new Set(['abnormal', 'normal']))
   })
 
   it('returns a null score range when no measurement carries a score', () => {
-    const result = aggregateByStudy([m({scoreSetUrn: 'urn:s', score: null})])
+    const result = aggregateByScoreSet([m({scoreSetUrn: 'urn:s', score: null})])
     expect(result[0].scoreRange).toBeNull()
   })
 })

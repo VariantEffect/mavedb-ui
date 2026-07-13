@@ -80,6 +80,31 @@ describe('groupAlleles — projection pairing + confidence', () => {
     expect(pair.annotationsMatch).toBe(true)
   })
 
+  it('coalesces missing-vs-present annotations (missingness is not a difference)', () => {
+    // Only the cdna member is annotated; the genomic member has nothing. This must NOT read as divergence.
+    const groups = run({
+      alleles: nucleotide,
+      annotations: {c: vep('missense_variant')}
+    })
+    const pair = groups.find((g) => g.members.length === 2)!
+    expect(pair.annotationsMatch).toBe(true)
+    expect(pair.coalescedAnnotations?.vep?.consequence).toBe('missense_variant')
+  })
+
+  it('coalesces disjoint fields across levels into one block', () => {
+    const groups = run({
+      alleles: nucleotide,
+      annotations: {
+        c: {vep: {consequence: 'missense_variant'}},
+        g: {gnomad: {alleleFrequency: 0.01}}
+      } as unknown as Record<string, AlleleAnnotations>
+    })
+    const pair = groups.find((g) => g.members.length === 2)!
+    expect(pair.annotationsMatch).toBe(true)
+    expect(pair.coalescedAnnotations?.vep?.consequence).toBe('missense_variant')
+    expect(pair.coalescedAnnotations?.gnomad?.alleleFrequency).toBe(0.01)
+  })
+
   it('leaves a projection-failed candidate (dangling projectionOf) as a one-member group', () => {
     const groups = run({
       alleles: {

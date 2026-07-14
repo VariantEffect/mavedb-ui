@@ -108,15 +108,45 @@ export function formatClinvarVersion(dbVersion: string): string {
 }
 
 /** Deep link to a ClinVar allele record, or null when the allele id is missing. */
-export function clinvarAlleleUrl(alleleId: string | null | undefined): string | null {
+function clinvarAlleleUrl(alleleId: string | null | undefined): string | null {
   if (!alleleId) return null
-  return `https://www.ncbi.nlm.nih.gov/clinvar/allele/${encodeURIComponent(alleleId)}/`
+  return `http://www.ncbi.nlm.nih.gov/clinvar/?term=${encodeURIComponent(alleleId)}[alleleid]`
 }
 
 /** Deep link to a ClinVar variation record, or null when the variation id is missing. */
-export function clinvarVariationUrl(variationId: string | null | undefined): string | null {
+function clinvarVariationUrl(variationId: string | null | undefined): string | null {
   if (!variationId) return null
   return `https://www.ncbi.nlm.nih.gov/clinvar/variation/${encodeURIComponent(variationId)}/`
+}
+
+/**
+ * Deep link to a ClinVar record — prefers the variation page, falls back to the allele page. Structural:
+ * accepts any object carrying the id fields, whichever format it arrives in — a `ClinvarAnnotation`
+ * (`clinvarVariationId`/`clinvarAlleleId`) or a clinical control (`dbIdentifier`, an allele id).
+ */
+export function clinvarVariantUrl(record: {
+  clinvarVariationId?: string | null
+  clinvarAlleleId?: string | null
+  dbIdentifier?: string | null
+}): string | null {
+  return (
+    clinvarVariationUrl(record.clinvarVariationId) ??
+    clinvarAlleleUrl(record.clinvarAlleleId ?? record.dbIdentifier) ??
+    null
+  )
+}
+
+/**
+ * The badge color for a ClinVar clinical significance — pathogenic red, benign green, and `undefined` for
+ * everything else (VUS, conflicting, a `-`), so callers fall back to their own default text color.
+ * Substring match so the P/LP and B/LB aggregate labels all resolve to the directional color.
+ */
+export function clinicalSignificanceColor(significance: string | null | undefined): string | undefined {
+  const s = significance?.toLowerCase() ?? ''
+  if (s.includes('conflicting')) return undefined
+  if (s.includes('pathogenic')) return 'var(--color-badge-pathogenic)'
+  if (s.includes('benign')) return 'var(--color-badge-benign)'
+  return undefined
 }
 
 /** The most recent ClinVar annotation (by `dbVersion`), or null when there are none. */

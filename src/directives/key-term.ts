@@ -16,9 +16,11 @@ interface KeyTermEl extends HTMLElement {
  *
  * `stopPropagation` keeps a badge click from also triggering an enclosing clickable card.
  */
-function bind(el: KeyTermEl, binding: DirectiveBinding<string>) {
-  const {open} = useKeyDrawer()
+function bind(el: KeyTermEl, binding: DirectiveBinding<string | null | undefined>) {
   const term = binding.value
+  if (!term) return
+
+  const {open} = useKeyDrawer()
 
   const onClick = (e: Event) => {
     e.stopPropagation()
@@ -48,7 +50,7 @@ function unbind(el: KeyTermEl) {
   delete el.__keyTerm
 }
 
-export const vKeyTerm: Directive<KeyTermEl, string> = {
+export const vKeyTerm: Directive<KeyTermEl, string | null | undefined> = {
   mounted: bind,
   updated(el, binding) {
     if (binding.value !== binding.oldValue) {

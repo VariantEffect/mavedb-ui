@@ -1,5 +1,5 @@
 ---
-title: "Carrying a measured variant across every molecular level with Cat-VRS"
+title: "Carrying a measured variant across molecular levels with Cat-VRS"
 slug: mavedb-protein-variant-cat-vrs
 summary: "A multiplexed assay measures a variant at one molecular level, but consumers need it at others. MaveDB plans to use Cat-VRS to present each measured variant as a category spanning all equivalent changes — without losing which level was measured."
 products:

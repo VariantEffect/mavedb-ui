@@ -1,7 +1,7 @@
 ---
-title: "Annotating a variant once across every score set that measured it"
+title: "Linking the same variant across multiple assays"
 slug: mavedb-vrs-cross-score-set-harmonization
-summary: "Because every MAVE variant carries a VRS digest, the same change measured in independent experiments collapses to one record — annotated once, with a built-in path to link out to the wider variant ecosystem."
+summary: "Assigning a VRS digest to every MAVE variant allows the same change measured in independent experiments to be linked together, annotated once, and connected to the wider variant ecosystem."
 products:
   - name: VRS
     version: "2.0"
@@ -12,10 +12,10 @@ contributors:
   - bencap
   - afrubin
   - MaveDB team
-last_updated: 2026-07-14
+last_updated: 2026-07-15
 ---
 
-# Annotating a variant once across every score set that measured it
+# Linking the same variant across multiple assays
 
 Some of the most interesting variants in MaveDB are the ones that were measured more than once.
 Different labs, using different experiments, often test the same genetic change, but due to technical differences in assay design it was challenging to identify these cases.

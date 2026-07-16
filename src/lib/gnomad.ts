@@ -1,0 +1,60 @@
+/**
+ * @fileoverview
+ * gnomAD frequency annotations and related utilities.
+ *
+ * gnomAD is a population-scale variant frequency database. This module provides a type for the gnomAD
+ * annotation schema, and functions to collect the distinct frequencies across a variant's alleles, format them,
+ * and link to the gnomAD variant page.
+ */
+
+import {hgvsLabelRank} from '@/lib/formats'
+import type {components} from '@/schema/openapi'
+
+type GnomadAnnotation = components['schemas']['GnomadAnnotation']
+
+/** One underlying gnomAD measurement, tagged with the reference-frame HGVS of the allele it annotates. */
+export interface UnderlyingGnomad {
+  hgvs: string | null
+  gnomad: GnomadAnnotation
+}
+
+/**
+ * Collect the distinct gnomAD measurements across a variant record's alleles.
+ *
+ * A protein change is encoded by several genomic variants, each with its own gnomAD frequency. Enumerate
+ * this set of distinct frequencies, deduplicating by gnomAD variant id and preferring a coding HGVS for
+ * the label. Sort by descending allele frequency.
+ */
+export function collectGnomadFrequencies(
+  annotations: Record<string, {gnomad?: GnomadAnnotation | null}> | null | undefined,
+  alleles: Record<string, {hgvs?: string | null}> | null | undefined
+): UnderlyingGnomad[] {
+  if (!annotations) return []
+  const byVariant = new Map<string, UnderlyingGnomad>()
+  for (const [digest, ann] of Object.entries(annotations)) {
+    const gnomad = ann.gnomad
+    if (!gnomad) continue
+
+    const hgvs = alleles?.[digest]?.hgvs ?? null
+    const existing = byVariant.get(gnomad.dbIdentifier)
+    if (!existing) {
+      byVariant.set(gnomad.dbIdentifier, {hgvs, gnomad})
+    } else if (hgvsLabelRank(hgvs) > hgvsLabelRank(existing.hgvs)) {
+      existing.hgvs = hgvs
+    }
+  }
+  return [...byVariant.values()].sort((a, b) => b.gnomad.alleleFrequency - a.gnomad.alleleFrequency)
+}
+
+/** Deep link to a gnomAD variant page, choosing the dataset that matches the annotation's version. */
+export function gnomadVariantUrl(gnomad: {dbIdentifier: string; dbVersion: string}): string {
+  const major = parseInt(gnomad.dbVersion, 10)
+  const dataset = major === 3 ? 'gnomad_r3' : major === 2 ? 'gnomad_r2_1' : 'gnomad_r4'
+  return `https://gnomad.broadinstitute.org/variant/${encodeURIComponent(gnomad.dbIdentifier)}?dataset=${dataset}`
+}
+
+/** A frequency (e.g. gnomAD AF): scientific notation for the very rare, else 3 significant figures. */
+export function formatFrequency(value: number | null | undefined): string {
+  if (value == null) return '—'
+  return value < 0.0001 ? value.toExponential(2) : value.toPrecision(3)
+}

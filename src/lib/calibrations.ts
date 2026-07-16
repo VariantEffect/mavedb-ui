@@ -6,6 +6,7 @@
 import axios from 'axios'
 
 import {createScoreCalibration, updateScoreCalibration} from '@/api/mavedb'
+import {FUNCTIONAL_CLASSIFICATIONS, type FunctionalClassification} from '@/lib/functional-impact'
 import {HistogramBin, HistogramShader} from '@/lib/histogram'
 import {components} from '@/schema/openapi'
 
@@ -14,10 +15,6 @@ export type ScoreCalibrationFunctionalClassification =
   components['schemas']['mavedb__view_models__score_calibration__FunctionalClassification']
 export type FunctionalClassificationVariants = components['schemas']['FunctionalClassificationVariants']
 export type FunctionalClassificationVariant = components['schemas']['VariantEffectMeasurement']
-
-export const NORMAL_RANGE_DEFAULT_COLOR = 'var(--color-cal-normal)'
-export const ABNORMAL_RANGE_DEFAULT_COLOR = 'var(--color-cal-abnormal)'
-export const NOT_SPECIFIED_RANGE_DEFAULT_COLOR = 'var(--color-cal-unspecified)'
 
 export const BENIGN_CRITERION = 'BS3'
 export const PATHOGENIC_CRITERION = 'PS3'
@@ -117,34 +114,11 @@ export function prepareCalibrationsForHistogram(scoreCalibrations: ScoreCalibrat
 }
 
 /**
- * Derives the display color associated with a functional range classification.
- *
- * The color returned depends on the `classification` property of the supplied
- * `functionalClassification` object:
- * - `'normal'`        => NORMAL_RANGE_DEFAULT_COLOR
- * - `'abnormal'`      => ABNORMAL_RANGE_DEFAULT_COLOR
- * - `'not_specified'` => NOT_SPECIFIED_RANGE_DEFAULT_COLOR
- * - any other value   => `'#000000'` (fallback)
- *
- * This utility centralizes the mapping logic so UI components can remain
- * agnostic of the underlying color constants.
- *
- * @param range The functional range whose `classification` determines the color.
- * @returns A hex color string representing the classification.
- * @example
- * const color = getRangeColor({ classification: 'normal' }); // e.g. '#3BAA5C'
- * @remarks If new classifications are introduced, extend this function to handle them explicitly.
+ * Derives the histogram range-fill color for a functional range from the shared functional-impact
+ * vocabulary (keyed by its `functionalClassification`). Falls back to black for an unknown value.
  */
 export function getClassificationColor(range: ScoreCalibrationFunctionalClassification): string {
-  if (range.functionalClassification === 'normal') {
-    return NORMAL_RANGE_DEFAULT_COLOR
-  } else if (range.functionalClassification === 'abnormal') {
-    return ABNORMAL_RANGE_DEFAULT_COLOR
-  } else if (range.functionalClassification === 'not_specified') {
-    return NOT_SPECIFIED_RANGE_DEFAULT_COLOR
-  } else {
-    return '#000000'
-  }
+  return FUNCTIONAL_CLASSIFICATIONS[range.functionalClassification as FunctionalClassification]?.rangeColor ?? '#000000'
 }
 
 /**

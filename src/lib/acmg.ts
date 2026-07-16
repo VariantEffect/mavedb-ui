@@ -8,7 +8,6 @@
 
 import {components} from '@/schema/openapi'
 
-type ScoreCalibration = components['schemas']['ScoreCalibration']
 type ScoreCalibrationFunctionalClassification =
   components['schemas']['mavedb__view_models__score_calibration__FunctionalClassification']
 
@@ -27,31 +26,6 @@ export const EVIDENCE_STRENGTH_AS_POINTS = {
 
 /** The evidence-strength tiers, strongest first. */
 export const EVIDENCE_STRENGTH = Object.keys(EVIDENCE_STRENGTH_AS_POINTS)
-
-/**
- * Checks if a score set has any calibrations with functional classifications that have evidence strengths.
- * This is used to determine if pathogenicity annotations are available for variants in the score set.
- *
- * @param scoreCalibrations - Array of score calibrations from a score set
- * @returns True if any calibration has at least one functional classification with an evidence strength
- */
-export function hasPathogenicityCalibrations(
-  scoreSet: {scoreCalibrations?: ScoreCalibration[] | null} | null | undefined,
-  {excludeResearchUseOnly = true}: {excludeResearchUseOnly?: boolean} = {}
-): boolean {
-  const scoreCalibrations = scoreSet?.scoreCalibrations
-  if (!scoreCalibrations || scoreCalibrations.length === 0) {
-    return false
-  }
-
-  return scoreCalibrations.some(
-    (cal) =>
-      !(excludeResearchUseOnly && cal.researchUseOnly) &&
-      cal.functionalClassifications &&
-      Array.isArray(cal.functionalClassifications) &&
-      cal.functionalClassifications.some((funcCal) => funcCal.acmgClassification)
-  )
-}
 
 /**
  * Formats the ACMG evidence code from a functional classification's ACMG classification data.

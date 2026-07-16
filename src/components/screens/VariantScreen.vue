@@ -219,7 +219,7 @@
               <span class="text-[10px] font-semibold uppercase tracking-[0.3px] text-[#aaa]">Functional impact</span>
               <MvClassificationTag
                 v-if="lookup.calibrationResolution.classification.value"
-                v-key-term="'consequence'"
+                v-key-term="'functional-impact'"
                 :classification="lookup.calibrationResolution.classification.value"
               />
               <span v-else class="text-sm text-text-muted">—</span>
@@ -443,8 +443,7 @@ import MvRowActionMenu, {type RowAction} from '@/components/common/MvRowActionMe
 import VariantInfoSection from '@/components/variant/VariantInfoSection.vue'
 import {useVariantLookup} from '@/composables/use-variant-lookup'
 import {assayLevelDisplay} from '@/lib/measurement-types'
-import {hasPathogenicityCalibrations} from '@/lib/acmg'
-import {hasFunctionalCalibrations} from '@/lib/calibrations'
+import {hasFunctionalCalibrations, hasPathogenicityCalibrations} from '@/lib/calibrations'
 import {confidenceBadge, groupAlleles, type AlleleGroup, type ConfidenceBadge} from '@/lib/allele-grouping'
 import {formatConsequence} from '@/lib/formats'
 import type {components} from '@/schema/openapi'

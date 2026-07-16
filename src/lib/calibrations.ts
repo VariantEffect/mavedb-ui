@@ -166,6 +166,31 @@ export function functionalClassificationContainsVariant(
 }
 
 /**
+ * Checks if a score set has any calibrations with functional classifications that have evidence strengths.
+ * This is used to determine if pathogenicity annotations are available for variants in the score set.
+ *
+ * @param scoreCalibrations - Array of score calibrations from a score set
+ * @returns True if any calibration has at least one functional classification with an evidence strength
+ */
+export function hasPathogenicityCalibrations(
+  scoreSet: {scoreCalibrations?: ScoreCalibration[] | null} | null | undefined,
+  {excludeResearchUseOnly = true}: {excludeResearchUseOnly?: boolean} = {}
+): boolean {
+  const scoreCalibrations = scoreSet?.scoreCalibrations
+  if (!scoreCalibrations || scoreCalibrations.length === 0) {
+    return false
+  }
+
+  return scoreCalibrations.some(
+    (cal) =>
+      !(excludeResearchUseOnly && cal.researchUseOnly) &&
+      cal.functionalClassifications &&
+      Array.isArray(cal.functionalClassifications) &&
+      cal.functionalClassifications.some((funcCal) => funcCal.acmgClassification)
+  )
+}
+
+/**
  * Checks if a score set has any calibrations with functional classifications.
  * This is used to determine if functional impact annotations are available for variants in the score set.
  *

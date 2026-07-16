@@ -1,5 +1,6 @@
 import config from '@/config'
 import type {KeySection} from '@/composables/use-key-drawer'
+import {ALLELE_CONFIDENCE} from '@/lib/allele-grouping'
 
 /**
  * Variant-page content for the generic {@link MvKeyDrawer}. These are the tier-2 vocabulary glosses; the
@@ -47,21 +48,8 @@ export const VARIANT_KEY_SECTIONS: KeySection[] = [
   {
     id: 'confidence',
     title: 'How a coordinate was established',
-    terms: [
-      {label: 'Measured', definition: 'Directly assayed in this score set.', class: 'bg-sage/15 text-sage'},
-      {
-        label: 'Resolved',
-        definition:
-          'Derived from the measured allele by reverse translation — the same change expressed at another level.',
-        class: 'bg-nucleotide-light text-nucleotide'
-      },
-      {
-        label: 'Candidate',
-        definition:
-          'A change that encodes the same protein change as your variant, but is a distinct nucleotide change.',
-        class: 'bg-amber-100 text-amber-700'
-      }
-    ]
+    // Assembled from the shared confidence vocabulary so badges and this gloss can never drift apart.
+    terms: Object.values(ALLELE_CONFIDENCE).map((c) => ({label: c.label, definition: c.definition, class: c.class}))
   },
   {
     id: 'selected-allele',

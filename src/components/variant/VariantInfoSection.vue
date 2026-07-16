@@ -13,14 +13,16 @@
     </MvDetailRow>
     <MvDetailRow :label="`ClinVar allele ${clinvarAlleleIds.length > 1 ? 'IDs' : 'ID'}`">
       <template v-for="(cvId, i) in clinvarAlleleIds" :key="cvId">
-        <a class="text-link" :href="`http://www.ncbi.nlm.nih.gov/clinvar/?term=${cvId}[alleleid]`" target="_blank">{{
+        <a class="text-link" :href="clinvarVariantUrl({clinvarAlleleId: cvId}) ?? undefined" target="_blank">{{
           cvId
         }}</a>
         <template v-if="i < clinvarAlleleIds.length - 1">, </template>
       </template>
+      <template v-if="clinvarAlleleIds.length === 0"><span class="text-text-muted">—</span></template>
     </MvDetailRow>
-    <MvDetailRow label="Functional consequence">
-      <MvClassificationTag v-if="classification" :classification="classification" />
+    <MvDetailRow label="Molecular consequence">
+      <span v-if="molecularConsequence">{{ formatConsequence(molecularConsequence) }}</span>
+      <span v-else class="italic text-text-muted">—</span>
     </MvDetailRow>
     <MvDetailRow :align="'flex-start'" :label="`Genomic ${genomicLocations.length > 1 ? 'locations' : 'location'}`">
       <table v-if="genomicLocations.length > 0" class="border-collapse">
@@ -39,8 +41,9 @@
 <script lang="ts">
 import {defineComponent, type PropType} from 'vue'
 
-import MvClassificationTag from '@/components/common/MvClassificationTag.vue'
 import MvDetailRow from '@/components/common/MvDetailRow.vue'
+import {clinvarVariantUrl} from '@/lib/clinvar-controls'
+import {formatConsequence} from '@/lib/formats'
 
 type GenomicLocation = {chromosome: string; start: string | number; referenceGenome: string}
 
@@ -48,7 +51,6 @@ export default defineComponent({
   name: 'VariantInfoSection',
 
   components: {
-    MvClassificationTag,
     MvDetailRow
   },
 
@@ -56,8 +58,13 @@ export default defineComponent({
     alleleName: {type: [String, null] as PropType<string | null>, default: null},
     clingenAlleleId: {type: [String, null] as PropType<string | null>, default: null},
     clinvarAlleleIds: {type: Array as PropType<string[]>, default: () => []},
-    classification: {type: [String, null] as PropType<string | null>, default: null},
+    molecularConsequence: {type: [String, null] as PropType<string | null>, default: null},
     genomicLocations: {type: Array as PropType<GenomicLocation[]>, default: () => []}
+  },
+
+  methods: {
+    clinvarVariantUrl,
+    formatConsequence
   }
 })
 </script>

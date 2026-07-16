@@ -1,7 +1,8 @@
 import {computed, ref, watch, type ComputedRef, type Ref} from 'vue'
 
 import {getScoreCalibrationVariants} from '@/api/mavedb/calibrations'
-import {formatEvidenceCode, functionalClassificationContainsVariant} from '@/lib/calibrations'
+import {formatEvidenceCode} from '@/lib/acmg'
+import {functionalClassificationContainsVariant} from '@/lib/calibrations'
 import type {components} from '@/schema/openapi'
 
 type ScoreCalibration = components['schemas']['ScoreCalibration']

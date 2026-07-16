@@ -61,7 +61,7 @@ import {
 } from '@/composables/use-calibration-editor'
 import {searchEditableScoreSets, getScoreSet} from '@/api/mavedb'
 import {acceptNewPublicationIdentifier} from '@/lib/form-helpers'
-import {EVIDENCE_STRENGTH, BENIGN_CRITERION, PATHOGENIC_CRITERION} from '@/lib/calibrations'
+import {EVIDENCE_STRENGTH, BENIGN_CRITERION, PATHOGENIC_CRITERION} from '@/lib/acmg'
 import {
   DRAFT_CALIBRATION_COPYABLE_KEYS,
   createDefaultClassification,

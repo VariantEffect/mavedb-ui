@@ -76,12 +76,8 @@ import {defineComponent, type PropType} from 'vue'
 
 import MvDetailRow from '@/components/common/MvDetailRow.vue'
 import MvEvidenceTag from '@/components/common/MvEvidenceTag.vue'
-import {
-  findClassificationByType,
-  formatEvidenceCode,
-  getClassificationOddsPath,
-  getPrimaryCalibration
-} from '@/lib/calibrations'
+import {formatEvidenceCode} from '@/lib/acmg'
+import {findClassificationByType, getClassificationOddsPath, getPrimaryCalibration} from '@/lib/calibrations'
 import {getExperimentKeyword} from '@/lib/experiments'
 import {assayLevelDisplay} from '@/lib/measurement-types'
 import {getScoreSetShortName} from '@/lib/score-sets'

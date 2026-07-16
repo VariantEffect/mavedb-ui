@@ -16,48 +16,13 @@ export type ScoreCalibrationFunctionalClassification =
 export type FunctionalClassificationVariants = components['schemas']['FunctionalClassificationVariants']
 export type FunctionalClassificationVariant = components['schemas']['VariantEffectMeasurement']
 
-export const BENIGN_CRITERION = 'BS3'
-export const PATHOGENIC_CRITERION = 'PS3'
-
-export const EVIDENCE_STRENGTH_AS_POINTS = {
-  VERY_STRONG: 8,
-  STRONG: 4,
-  MODERATE_PLUS: 3,
-  MODERATE: 2,
-  SUPPORTING: 1
-}
-
-export const INDETERMINATE_CALIBRATION_EVIDENCE = ['INDETERMINATE'] as const
-export const EVIDENCE_STRENGTH = EVIDENCE_STRENGTH_AS_POINTS ? Object.keys(EVIDENCE_STRENGTH_AS_POINTS) : []
-export const NORMAL_CALIBRATION_EVIDENCE = EVIDENCE_STRENGTH_AS_POINTS
-  ? Object.keys(EVIDENCE_STRENGTH_AS_POINTS).map((key) => `${BENIGN_CRITERION}_${key}`)
-  : []
-export const ABNORMAL_CALIBRATION_EVIDENCE = EVIDENCE_STRENGTH_AS_POINTS
-  ? Object.keys(EVIDENCE_STRENGTH_AS_POINTS).map((key) => `${PATHOGENIC_CRITERION}_${key}`)
-  : []
-
-export const EVIDENCE_STRENGTHS = EVIDENCE_STRENGTH_AS_POINTS
-  ? Object.fromEntries(
-      Object.entries(EVIDENCE_STRENGTH_AS_POINTS)
-        .map(([key, value]) => [`${BENIGN_CRITERION}_${key}`, value * -1])
-        .concat(
-          Object.entries(EVIDENCE_STRENGTH_AS_POINTS).map(([key, value]) => [`${PATHOGENIC_CRITERION}_${key}`, value])
-        )
-    )
-  : {}
-
-export const EVIDENCE_STRENGTHS_REVERSED = Object.fromEntries(
-  Object.entries(EVIDENCE_STRENGTHS).map(([key, value]) => [value, key])
-)
-
 /**
  * Prepares a list of histogram shader configuration objects from persisted score calibration data.
  *
  * Each functional range in the provided calibration is converted into a HistogramShader descriptor
  * containing:
  * - min / max: numeric bounds either taken directly from the `range` tuple or calculated from variant scores.
- * - title: resolved from the ACMG classification evidence strength (via `EVIDENCE_STRENGTHS_REVERSED`)
- *   when available; otherwise falls back to the range's `label`.
+ * - title: the range's `label`.
  * - color / thresholdColor: both derived from `getRangeColor(range)` to ensure visual consistency.
  * - align: fixed to `'center'` for consistent label placement.
  * - startOpacity / stopOpacity: fixed opacity values (0.15 → 0.05) establishing a subtle gradient.
@@ -201,31 +166,6 @@ export function functionalClassificationContainsVariant(
 }
 
 /**
- * Checks if a score set has any calibrations with functional classifications that have evidence strengths.
- * This is used to determine if pathogenicity annotations are available for variants in the score set.
- *
- * @param scoreCalibrations - Array of score calibrations from a score set
- * @returns True if any calibration has at least one functional classification with an evidence strength
- */
-export function hasPathogenicityCalibrations(
-  scoreSet: {scoreCalibrations?: ScoreCalibration[] | null} | null | undefined,
-  {excludeResearchUseOnly = true}: {excludeResearchUseOnly?: boolean} = {}
-): boolean {
-  const scoreCalibrations = scoreSet?.scoreCalibrations
-  if (!scoreCalibrations || scoreCalibrations.length === 0) {
-    return false
-  }
-
-  return scoreCalibrations.some(
-    (cal) =>
-      !(excludeResearchUseOnly && cal.researchUseOnly) &&
-      cal.functionalClassifications &&
-      Array.isArray(cal.functionalClassifications) &&
-      cal.functionalClassifications.some((funcCal) => funcCal.acmgClassification)
-  )
-}
-
-/**
  * Checks if a score set has any calibrations with functional classifications.
  * This is used to determine if functional impact annotations are available for variants in the score set.
  *
@@ -303,22 +243,6 @@ export function getClassificationOddsPath(
 ): string | null {
   const range = findClassificationByType(calibration, type)
   return range?.oddspathsRatio != null ? range.oddspathsRatio.toFixed(precision) : null
-}
-
-/**
- * Formats the ACMG evidence code from a functional classification's ACMG classification data.
- *
- * @param classification - A functional classification that may contain an `acmgClassification`
- *   with `criterion` (e.g. "PS3", "BS3") and `evidenceStrength` (e.g. "Strong", "Moderate").
- * @returns A formatted code like "PS3_STRONG", or an empty string if evidence data is missing.
- */
-export function formatEvidenceCode(
-  classification: ScoreCalibrationFunctionalClassification | null | undefined
-): string {
-  if (!classification?.acmgClassification?.evidenceStrength) return ''
-  const criterion = classification.acmgClassification.criterion
-  const strength = classification.acmgClassification.evidenceStrength.toUpperCase()
-  return `${criterion}_${strength}`
 }
 
 export type CalibrationSaveResult =

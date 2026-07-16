@@ -47,26 +47,26 @@
   <div v-if="showControls" class="mavedb-histogram-custom-controls">
     <fieldset class="mavedb-histogram-controls-panel">
       <legend>Clinical Series Options</legend>
-      <div v-if="showClinicalControlOptions" class="mavedb-histogram-control">
+      <div v-if="clinical.showOptions" class="mavedb-histogram-control">
         <label class="mavedb-histogram-control-label" for="mavedb-histogram-db-select"
           >Clinical control database:
         </label>
         <PSelect
-          v-model="controlDb"
-          :disabled="!refreshedClinicalControls"
+          v-model="clinical.controlDb"
+          :disabled="!clinical.refreshed"
           input-id="mavedb-histogram-db-select"
           option-label="dbName"
-          :options="clinicalControlOptions"
+          :options="clinical.options"
           style="align-items: center; height: 1.5rem"
         />
         <label class="mavedb-histogram-control-label" for="mavedb-histogram-version-select"
           >Clinical control version:
         </label>
         <PSelect
-          v-model="controlVersion"
-          :disabled="!refreshedClinicalControls"
+          v-model="clinical.controlVersion"
+          :disabled="!clinical.refreshed"
           input-id="mavedb-histogram-version-select"
-          :options="controlDb?.availableVersions"
+          :options="clinical.controlDb?.availableVersions"
           style="align-items: center; height: 1.5rem"
         />
       </div>
@@ -76,7 +76,7 @@
         </label>
         <Rating
           v-model="customMinStarRating"
-          :disabled="!refreshedClinicalControls"
+          :disabled="!clinical.refreshed"
           input-id="mavedb-histogram-star-select"
           :stars="4"
           style="display: inline"
@@ -88,13 +88,30 @@
           <div v-for="typeOption of variantTypeOptions" :key="typeOption.name" class="flex gap-1 align-items-center">
             <Checkbox
               v-model="customSelectedControlVariantTypeFilters"
-              :disabled="!refreshedClinicalControls"
+              :disabled="!clinical.refreshed"
               :name="scopedId('variant-type-inputs')"
               :value="typeOption.name"
             />
             <label :for="scopedId('variant-type-inputs')">{{ typeOption.shortDescription }}</label>
           </div>
         </div>
+      </div>
+      <div class="mavedb-histogram-control">
+        <div class="flex gap-1 align-items-center">
+          <Checkbox
+            v-model="customSoftConflictsEnabled"
+            binary
+            :disabled="!clinical.refreshed"
+            input-id="mavedb-histogram-soft-conflicts"
+          />
+          <label class="mavedb-histogram-control-label" for="mavedb-histogram-soft-conflicts">
+            Fold soft conflicts into their directional call
+          </label>
+        </div>
+        <span class="block text-xs italic text-text-muted">
+          A directional call with a related uncertain or conflicting record is shown in its directional series. Turn off
+          to view uncertain and conflicting records as their own series.
+        </span>
       </div>
       <div class="mavedb-histogram-control">
         <span class="mavedb-histogram-control-label">Include variants with classification: </span>
@@ -106,7 +123,9 @@
           >
             <Checkbox
               v-model="customSelectedClinicalSignificanceClassifications"
-              :disabled="!refreshedClinicalControls"
+              :disabled="
+                !clinical.refreshed || (customSoftConflictsEnabled && isUncertainSignificance(classification.name))
+              "
               :name="scopedId('clinical-significance-inputs')"
               :value="classification.name"
             />
@@ -123,7 +142,7 @@
           <div v-for="typeOption of variantTypeOptions" :key="typeOption.name" class="flex gap-1 align-items-center">
             <Checkbox
               v-model="customSelectedVariantTypeFilters"
-              :disabled="!refreshedClinicalControls"
+              :disabled="!clinical.refreshed"
               :name="scopedId('variant-type-inputs')"
               :value="typeOption.name"
             />
@@ -133,12 +152,9 @@
       </div>
     </fieldset>
   </div>
-  <div
-    v-if="clinicalControlsEnabled && (!refreshedClinicalControls || !associatedClinicalControls)"
-    style="font-size: small"
-  >
+  <div v-if="clinvarControlsEnabled && (!clinical.refreshed || !clinical.associated)" style="font-size: small">
     <ProgressSpinner style="height: 24px; width: 24px" />
-    Loading clinical control options in the background. Additional histogram views will be available once loaded.
+    Loading clinvar control options in the background. Additional histogram views will be available once loaded.
   </div>
   <div v-if="isCalibrationClassViewActive && isLoadingActiveCalibrationVariants" style="font-size: small">
     <ProgressSpinner style="height: 24px; width: 24px" />
@@ -146,12 +162,16 @@
   </div>
   <div ref="histogramContainer" class="mavedb-histogram-container" />
   <span
-    v-if="vizOptions[activeViz]?.clinicalControlLegendNoteEnabled && refreshedClinicalControls"
+    v-if="vizOptions[activeViz]?.clinvarControlLegendNoteEnabled && clinical.refreshed"
     class="mt-1 block text-center text-xs italic leading-tight"
   >
     Note: The ClinVar annotations shown above are matched to variants in this score set and may not correspond to the
     control variants used to derive the displayed calibration. For details on which variants were used, refer to the
     sources associated with each calibration.
+  </span>
+  <span v-if="hasProjectedControlPlotted" class="mt-1 block text-center text-xs italic leading-tight">
+    Note: Some ClinVar controls shown (marked *) are carried over from a sibling allele that shares the protein
+    consequence — the assayed variant itself has no ClinVar record.
   </span>
   <span v-if="selectedCalibrationIsClassBased" class="mavedb-class-based-calibration-note">
     *Class-based calibrations may not be visualized as thresholds. To view the distribution of variants within each
@@ -188,20 +208,24 @@ import useScopedId from '@/composables/scoped-id'
 import config from '@/config'
 import {saveChartAsSvg, saveChartAsPng} from '@/lib/chart-export'
 import {
-  BENIGN_CLINICAL_SIGNIFICANCE_CLASSIFICATIONS,
   CLINVAR_REVIEW_STATUS_STARS,
   CONFLICTING_CLINICAL_SIGNIFICANCE_CLASSIFICATIONS,
   DEFAULT_CLNREVSTAT_FIELD,
   DEFAULT_CLNSIG_FIELD,
-  DEFAULT_CLINICAL_CONTROL_DB,
   DEFAULT_CLINICAL_SIGNIFICANCE_CLASSIFICATIONS,
   DEFAULT_MIN_STAR_RATING,
-  PATHOGENIC_CLINICAL_SIGNIFICANCE_CLASSIFICATIONS,
+  UNCERTAIN_SIGNIFICANCE_CLASSIFICATIONS,
   clinvarClinicalSignificanceClassifications,
   clinvarConflictingSignificanceClassificationForVersion,
-  conflictingClinicalSignificanceSeriesLabelForVersion
-} from '@/lib/clinical-controls'
-import type {ClinicalControl, ClinicalControlOption} from '@/lib/clinical-controls'
+  conflictingClinicalSignificanceSeriesLabelForVersion,
+  isUncertainSignificance
+} from '@/lib/clinvar-controls'
+import {
+  resolveControlSeries,
+  type ClinvarControlSeriesKey,
+  type ControlSeriesOptions
+} from '@/lib/clinvar-control-series'
+import type {ClinvarControlsStore} from '@/composables/use-clinvar-controls'
 import makeHistogram, {
   DEFAULT_SERIES_COLOR,
   Histogram,
@@ -213,6 +237,7 @@ import makeHistogram, {
 } from '@/lib/histogram'
 import {getScoreCalibrationVariants} from '@/api/mavedb'
 import {
+  chooseDefaultCalibration,
   prepareCalibrationsForHistogram,
   shaderOverlapsBin,
   functionalClassificationContainsVariant,
@@ -222,6 +247,8 @@ import type {FunctionalClassificationVariant} from '@/lib/calibrations'
 import {
   tooltipBadgeBlock,
   tooltipCountRow,
+  tooltipEmptyLine,
+  tooltipFootnote,
   tooltipKeyValue,
   tooltipLink,
   tooltipNote,
@@ -254,7 +281,7 @@ interface Margins {
 interface VizOption {
   label: string
   view: 'distribution' | 'clinical' | 'effect' | 'custom' | 'calibration-classes'
-  clinicalControlLegendNoteEnabled: boolean
+  clinvarControlLegendNoteEnabled: boolean
 }
 
 export default defineComponent({
@@ -264,8 +291,8 @@ export default defineComponent({
 
   props: {
     coordinates: {
-      type: String as PropType<'raw' | 'mapped'>,
-      default: 'raw'
+      type: String as PropType<'submitted' | 'reference'>,
+      default: 'submitted'
     },
     defaultHistogram: {
       type: String,
@@ -308,6 +335,13 @@ export default defineComponent({
     lockSelection: {
       type: Boolean,
       default: false
+    },
+    // Shared clinical-control state (fetch + db/version selection + variant.control associations), owned by
+    // the parent via the `useClinvarControls`. Guarantees that the histogram and other components agree on
+    // the same control version and variant associations.
+    clinical: {
+      type: Object as PropType<ClinvarControlsStore>,
+      required: true
     }
   },
 
@@ -335,20 +369,12 @@ export default defineComponent({
       },
       defaultVizApplied: false,
 
-      clinicalControls: [] as ClinicalControl[],
-      clinicalControlOptions: [] as ClinicalControlOption[],
-      clinicalControlCache: {} as Record<string, Record<string, ClinicalControl[]>>,
-      someVariantsHaveClinicalSignificance: false,
-      clinicalControlsEnabled: true,
-      refreshedClinicalControls: false,
-      associatedClinicalControls: false,
+      clinvarControlsEnabled: true,
 
-      controlDb: null as ClinicalControlOption | null,
-      controlVersion: null as string | null,
-
-      clinicalSignificanceClassificationOptions: clinvarClinicalSignificanceClassifications(null),
       variantTypeOptions: EFFECT_TYPE_FILTER_OPTIONS,
       customMinStarRating: DEFAULT_MIN_STAR_RATING,
+
+      customSoftConflictsEnabled: true,
       customSelectedClinicalSignificanceClassifications: DEFAULT_CLINICAL_SIGNIFICANCE_CLASSIFICATIONS,
       customSelectedVariantTypeFilters: [] as EffectBucketName[],
       customSelectedControlVariantTypeFilters: DEFAULT_EFFECT_TYPE_FILTERS.concat(
@@ -361,8 +387,13 @@ export default defineComponent({
   },
 
   computed: {
+    // The ClinVar significance labels track the selected control version (the "Conflicting" wording
+    // changed in 2025). Was previously a data field reassigned from the controlDbAndVersion watcher.
+    clinicalSignificanceClassificationOptions() {
+      return clinvarClinicalSignificanceClassifications(this.clinical.controlVersion)
+    },
+    // Worth offering as soon as some variant carries a VEP consequence (anything but 'No consequence').
     proteinEffectOptionsAvailable: function () {
-      // Worth offering as soon as some variant carries a VEP consequence (anything but 'No consequence').
       return this.variants.some((v) => consequenceBucket(v.consequence) !== 'No consequence')
     },
     selectedCalibrationIsClassBased: function () {
@@ -370,6 +401,14 @@ export default defineComponent({
         this.activeCalibration.value != null &&
         this.activeCalibration.value.functionalClassifications?.every((fc) => fc.class != null)
       )
+    },
+    // True when a clinical-control view is active and at least one plotted control is a projection from a
+    // sibling allele. Gates the passthrough note.
+    hasProjectedControlPlotted: function (): boolean {
+      if (!this.vizOptions[this.activeViz]?.clinvarControlLegendNoteEnabled || !this.clinical.refreshed) {
+        return false
+      }
+      return (this.variants as DisplayVariant[]).some((v) => v.control?.projected)
     },
     selectedCalibrationClassMap: function () {
       if (!this.selectedCalibrationIsClassBased) {
@@ -410,12 +449,12 @@ export default defineComponent({
       return calibrationUrn != null && this.calibrationClassVariantsLoadingByUrn[calibrationUrn] === true
     },
     series: function () {
-      if (!this.refreshedClinicalControls) {
+      if (!this.clinical.refreshed) {
         return null
       }
 
-      this.assureActiveVizIsAvailable()
-
+      // NOTE: keep this getter pure — clamping `activeViz` (a side effect) lives in the `vizOptions` watcher.
+      // An out-of-range index simply yields `undefined` here, which we treat as "no series".
       if (!this.vizOptions[this.activeViz]) {
         return null
       }
@@ -442,31 +481,31 @@ export default defineComponent({
             }
           }))
         }
-        case 'clinical':
+        case 'clinical': {
+          // The fixed clinical view: all directional classes, no star gate, soft conflicts folded into their
+          // directional lean (there are no uncertain series in the default).
+          const opts = {
+            softConflictsEnabled: true,
+            selectedSignificances: DEFAULT_CLINICAL_SIGNIFICANCE_CLASSIFICATIONS,
+            minStars: Number.NEGATIVE_INFINITY
+          }
           return [
             {
-              classifier: (d: HistogramDatum) =>
-                _.intersection(
-                  PATHOGENIC_CLINICAL_SIGNIFICANCE_CLASSIFICATIONS,
-                  this.selectedClinicalSignificanceClassifications
-                ).includes(d.control?.[DEFAULT_CLNSIG_FIELD]),
+              classifier: (d: HistogramDatum) => this.controlSeries(d, opts) === 'pathogenic',
               options: {
                 color: '#e41a1c',
                 title: 'Pathogenic/Likely Pathogenic'
               }
             },
             {
-              classifier: (d: HistogramDatum) =>
-                _.intersection(
-                  BENIGN_CLINICAL_SIGNIFICANCE_CLASSIFICATIONS,
-                  this.selectedClinicalSignificanceClassifications
-                ).includes(d.control?.[DEFAULT_CLNSIG_FIELD]),
+              classifier: (d: HistogramDatum) => this.controlSeries(d, opts) === 'benign',
               options: {
                 color: '#377eb8',
                 title: 'Benign/Likely Benign'
               }
             }
           ]
+        }
 
         case 'effect': {
           // The dedicated effect view shows every annotated bucket (Start/Stop Loss omitted for
@@ -478,15 +517,15 @@ export default defineComponent({
         }
 
         case 'custom': {
+          const opts = {
+            softConflictsEnabled: this.customSoftConflictsEnabled,
+            selectedSignificances: this.customSelectedClinicalSignificanceClassifications,
+            minStars: this.customMinStarRating
+          }
           const series = [
             {
               classifier: (d: HistogramDatum) =>
-                _.intersection(
-                  PATHOGENIC_CLINICAL_SIGNIFICANCE_CLASSIFICATIONS,
-                  this.selectedClinicalSignificanceClassifications
-                ).includes(d.control?.[DEFAULT_CLNSIG_FIELD]) &&
-                CLINVAR_REVIEW_STATUS_STARS[d.control?.[DEFAULT_CLNREVSTAT_FIELD]] >= this.minStarRating &&
-                this.filterControlVariantByEffect(d),
+                this.controlSeries(d, opts) === 'pathogenic' && this.filterControlVariantByEffect(d),
               options: {
                 color: '#e41a1c',
                 title: 'Pathogenic/Likely Pathogenic'
@@ -494,12 +533,7 @@ export default defineComponent({
             },
             {
               classifier: (d: HistogramDatum) =>
-                _.intersection(
-                  BENIGN_CLINICAL_SIGNIFICANCE_CLASSIFICATIONS,
-                  this.selectedClinicalSignificanceClassifications
-                ).includes(d.control?.[DEFAULT_CLNSIG_FIELD]) &&
-                CLINVAR_REVIEW_STATUS_STARS[d.control?.[DEFAULT_CLNREVSTAT_FIELD]] >= this.minStarRating &&
-                this.filterControlVariantByEffect(d),
+                this.controlSeries(d, opts) === 'benign' && this.filterControlVariantByEffect(d),
               options: {
                 color: '#377eb8',
                 title: 'Benign/Likely Benign'
@@ -507,37 +541,40 @@ export default defineComponent({
             }
           ]
 
-          if (this.selectedClinicalSignificanceClassifications.includes('Uncertain significance')) {
-            series.push({
-              classifier: (d: DisplayVariant) =>
-                d.control?.[DEFAULT_CLNSIG_FIELD] == 'Uncertain significance' &&
-                (CLINVAR_REVIEW_STATUS_STARS[d.control?.[DEFAULT_CLNREVSTAT_FIELD]] ?? -1) >= this.minStarRating &&
-                this.filterControlVariantByEffect(d),
-              options: {
-                color: '#999999',
-                title: 'Uncertain significance'
-              }
-            })
-          }
+          // Uncertain series exist only when the soft-conflict fold is off (the two modes are mutually
+          // exclusive) — and then only for the uncertain classes the user has selected. controlSeries already
+          // returns null for uncertain records while the fold is on, so this gate keeps the empty series hidden.
+          if (!this.customSoftConflictsEnabled) {
+            if (
+              this.customSelectedClinicalSignificanceClassifications.some((c) =>
+                UNCERTAIN_SIGNIFICANCE_CLASSIFICATIONS.includes(c)
+              )
+            ) {
+              series.push({
+                classifier: (d: HistogramDatum) =>
+                  this.controlSeries(d, opts) === 'uncertain' && this.filterControlVariantByEffect(d),
+                options: {
+                  color: '#999999',
+                  title: 'Uncertain significance'
+                }
+              })
+            }
 
-          // Account for both possible conflicting classifications.
-          if (
-            this.selectedClinicalSignificanceClassifications.includes('Conflicting classifications of pathogenicity') ||
-            this.selectedClinicalSignificanceClassifications.includes('Conflicting interpretations of pathogenicity')
-          ) {
-            series.push({
-              classifier: (d: HistogramDatum) =>
-                _.intersection(
-                  CONFLICTING_CLINICAL_SIGNIFICANCE_CLASSIFICATIONS,
-                  this.selectedClinicalSignificanceClassifications
-                ).includes(d.control?.[DEFAULT_CLNSIG_FIELD]) &&
-                CLINVAR_REVIEW_STATUS_STARS[d.control?.[DEFAULT_CLNREVSTAT_FIELD]] >= this.minStarRating &&
-                this.filterControlVariantByEffect(d),
-              options: {
-                color: '#984ea3',
-                title: conflictingClinicalSignificanceSeriesLabelForVersion(this.controlVersion)
-              }
-            })
+            // Account for both possible conflicting classifications.
+            if (
+              this.customSelectedClinicalSignificanceClassifications.some((c) =>
+                CONFLICTING_CLINICAL_SIGNIFICANCE_CLASSIFICATIONS.includes(c)
+              )
+            ) {
+              series.push({
+                classifier: (d: HistogramDatum) =>
+                  this.controlSeries(d, opts) === 'conflicting' && this.filterControlVariantByEffect(d),
+                options: {
+                  color: '#984ea3',
+                  title: conflictingClinicalSignificanceSeriesLabelForVersion(this.clinical.controlVersion)
+                }
+              })
+            }
           }
 
           if (this.proteinEffectOptionsAvailable) {
@@ -554,29 +591,28 @@ export default defineComponent({
 
     vizOptions: function () {
       const options: VizOption[] = [
-        {label: 'Overall Distribution', view: 'distribution', clinicalControlLegendNoteEnabled: false}
+        {label: 'Overall Distribution', view: 'distribution', clinvarControlLegendNoteEnabled: false}
       ]
 
-      if (this.someVariantsHaveClinicalSignificance) {
-        options.push({label: 'Clinical View', view: 'clinical', clinicalControlLegendNoteEnabled: true})
+      if (this.clinical.someVariantsHaveClinicalSignificance) {
+        options.push({label: 'Clinical View', view: 'clinical', clinvarControlLegendNoteEnabled: true})
       }
 
       if (this.selectedCalibrationIsClassBased) {
         options.push({
           label: 'Calibration Class View',
           view: 'calibration-classes',
-          clinicalControlLegendNoteEnabled: false
+          clinvarControlLegendNoteEnabled: false
         })
       }
 
-      // crude to be based on clinical significance. may be a better option for viz control
       if (this.proteinEffectOptionsAvailable) {
-        options.push({label: 'Protein Effect View', view: 'effect', clinicalControlLegendNoteEnabled: false})
+        options.push({label: 'Protein Effect View', view: 'effect', clinvarControlLegendNoteEnabled: false})
       }
 
       // custom view should always come last
-      if (this.someVariantsHaveClinicalSignificance) {
-        options.push({label: 'Custom', view: 'custom', clinicalControlLegendNoteEnabled: true})
+      if (this.clinical.someVariantsHaveClinicalSignificance) {
+        options.push({label: 'Custom', view: 'custom', clinvarControlLegendNoteEnabled: true})
       }
       return options
     },
@@ -602,14 +638,6 @@ export default defineComponent({
       } else {
         return calibrationObjects
       }
-    },
-
-    showClinicalControlOptions: function () {
-      const hasMultipleDbs = this.clinicalControlOptions.length > 1
-      const hasSingleDbWithMultipleVersions =
-        this.clinicalControlOptions.length == 1 && this.clinicalControlOptions[0].availableVersions.length > 1
-
-      return hasMultipleDbs || hasSingleDbWithMultipleVersions
     },
 
     activeCalibrationOptions: function () {
@@ -686,10 +714,6 @@ export default defineComponent({
       return this.customSelectedVariantTypeFilters
     },
 
-    controlDbAndVersion() {
-      return `${this.controlDb?.dbName}|${this.controlVersion}`
-    },
-
     tooltipHtmlGetter: function () {
       return (
         variant: DisplayVariant | null,
@@ -707,12 +731,9 @@ export default defineComponent({
 
   watch: {
     scoreSet: {
-      handler: async function () {
+      handler: function () {
         this.calibrationClassVariantsByUrn = {}
         this.calibrationClassVariantsLoadingByUrn = {}
-
-        await this.loadClinicalControlOptions()
-        // Changes to clinical control options will trigger loading of clinical controls.
       },
       immediate: true
     },
@@ -787,7 +808,7 @@ export default defineComponent({
         this.customSelectedClinicalSignificanceClassifications =
           this.customSelectedClinicalSignificanceClassifications.map((classification) => {
             if (CONFLICTING_CLINICAL_SIGNIFICANCE_CLASSIFICATIONS.includes(classification)) {
-              return clinvarConflictingSignificanceClassificationForVersion(this.controlVersion).name
+              return clinvarConflictingSignificanceClassificationForVersion(this.clinical.controlVersion).name
             }
             return classification
           })
@@ -795,6 +816,17 @@ export default defineComponent({
     },
     selectedClinicalSignificanceClassifications: {
       handler: function () {
+        this.renderOrRefreshHistogram()
+      }
+    },
+    customSoftConflictsEnabled: {
+      handler: function (enabled: boolean) {
+        // The two modes are mutually exclusive: folding soft conflicts in hides the uncertain series, so drop
+        // any uncertain significances from the selection.
+        if (enabled) {
+          this.customSelectedClinicalSignificanceClassifications =
+            this.customSelectedClinicalSignificanceClassifications.filter((c) => !this.isUncertainSignificance(c))
+        }
         this.renderOrRefreshHistogram()
       }
     },
@@ -808,37 +840,10 @@ export default defineComponent({
         this.renderOrRefreshHistogram()
       }
     },
-    clinicalControlOptions: {
+    // The store re-associates `variant.control` off the main thread; re-render once it settles so the
+    // clinical series pick up any new annotations.
+    'clinical.associated': {
       handler: function () {
-        if (!this.controlDb) {
-          const defaultControlDb = this.clinicalControlOptions.find(
-            (option) => option.dbName == DEFAULT_CLINICAL_CONTROL_DB
-          )
-          this.controlDb = defaultControlDb ? defaultControlDb : this.clinicalControlOptions[0]
-        }
-        if (!this.controlVersion) {
-          this.controlVersion = this.controlDb?.availableVersions[0]
-        }
-        const cache: Record<string, Record<string, ClinicalControl[]>> = {}
-        for (const dbOption of this.clinicalControlOptions) {
-          cache[dbOption.dbName] = {}
-          for (const version of dbOption.availableVersions) {
-            cache[dbOption.dbName][version] = []
-          }
-        }
-        this.clinicalControlCache = cache
-      }
-    },
-    controlDbAndVersion: {
-      handler: function () {
-        this.clinicalSignificanceClassificationOptions = clinvarClinicalSignificanceClassifications(this.controlVersion)
-        this.loadClinicalControls()
-      }
-    },
-    clinicalControls: {
-      handler: function () {
-        this.disassociateClinicalControlsWithVariants()
-        this.associateClinicalControlsWithVariants()
         this.renderOrRefreshHistogram()
       }
     },
@@ -857,6 +862,11 @@ export default defineComponent({
     },
     vizOptions: {
       handler(newOptions: VizOption[]) {
+        // Clamp first: if the available views shrank (e.g. the clinical view disappeared), keep `activeViz`
+        // in range.
+        if (this.activeViz >= newOptions.length) {
+          this.activeViz = 0
+        }
         if (this.defaultVizApplied) return
         const idx = newOptions.findIndex((opt: VizOption) => opt.view === this.defaultHistogram)
         if (idx >= 0) {
@@ -901,9 +911,9 @@ export default defineComponent({
       if (underlyingNt && underlyingNt !== label) {
         identity.push(tooltipNote(underlyingNt))
       }
-      // In the mapped frame an unmapped variant's label is its submitted (target-frame) HGVS; flag it so
-      // the string isn't mistaken for a mapped coordinate.
-      if (this.coordinates == 'mapped' && this.isUnmapped(variant)) {
+      // In the reference frame an unmapped variant's label is its submitted (target-frame) HGVS; flag it
+      // so the string isn't mistaken for a reference coordinate.
+      if (this.coordinates == 'reference' && this.isUnmapped(variant)) {
         identity.push(tooltipNote('Could not be mapped'))
       }
 
@@ -916,7 +926,7 @@ export default defineComponent({
       }
 
       if (variant.clingenAlleleId) {
-        identity.push(tooltipVariantDetailsLink(variant.clingenAlleleId))
+        identity.push(tooltipVariantDetailsLink(variant.clingenAlleleId, variant.variantUrn))
       }
 
       const sections = [tooltipSection(identity)]
@@ -937,7 +947,30 @@ export default defineComponent({
       if (!control) {
         return null
       }
+      // Hard discordance: the DNA variants encoding this change carry both pathogenic and benign
+      // calls, so there is no single call to show and it is excluded from the controls. Say so, rather
+      // than surfacing one side's call as if it were the answer.
+      if (control.discordance === 'hard') {
+        return tooltipSection([
+          tooltipSectionLabel('ClinVar'),
+          tooltipText('Conflicting classifications across DNA variants — excluded from controls')
+        ])
+      }
       const significance = control[DEFAULT_CLNSIG_FIELD]
+      // Soft conflict: the representative directional call stands, but a related record is uncertain/Conflicting.
+      // Flag it beneath the call so the fold isn't silent (differentiating a VUS from ClinVar's own verdict).
+      const softConflictNote =
+        control.discordance === 'soft'
+          ? control.classifications.some((c) =>
+              CONFLICTING_CLINICAL_SIGNIFICANCE_CLASSIFICATIONS.includes(c.significance)
+            )
+            ? tooltipFootnote(
+                'A related variant with the same protein consequence is conflicting — the directional call is shown.'
+              )
+            : tooltipFootnote(
+                'A related variant with the same protein consequence is of uncertain significance — the directional call is shown.'
+              )
+          : null
       const reviewStatus = control[DEFAULT_CLNREVSTAT_FIELD]
       const hasSignificance = Boolean(significance) && significance != 'NA'
       const hasReviewStatus = Boolean(reviewStatus) && reviewStatus != 'NA'
@@ -946,20 +979,33 @@ export default defineComponent({
       }
 
       const description =
-        clinvarClinicalSignificanceClassifications(this.controlVersion).find((c) => c.name == significance)
+        clinvarClinicalSignificanceClassifications(this.clinical.controlVersion).find((c) => c.name == significance)
           ?.description ?? significance
       const numStars = hasReviewStatus ? CLINVAR_REVIEW_STATUS_STARS[reviewStatus] : null
       const stars = numStars != null ? ` ${tooltipReviewStars(numStars)}` : ''
 
+      // A projected placement: the measured allele has no ClinVar record, so this call
+      // is about a related variant at a different level. Say so — otherwise the histogram appears to
+      // contradict the assay-facts card, which shows this variant's own (empty) measured-level ClinVar.
+      const projectedAsterisk = control.projected ? '*' : ''
+      const projectedNote = control.projected
+        ? tooltipFootnote(
+            'For a related variant with the same protein consequence — the measured variant has no ClinVar record.'
+          )
+        : null
+
       return tooltipSection([
         tooltipSectionLabel('ClinVar'),
-        tooltipText(`${description}${stars}`),
+        tooltipText(`${description}${stars}${projectedAsterisk}`),
         hasReviewStatus
           ? tooltipLink(
               `http://www.ncbi.nlm.nih.gov/clinvar/?term=${control.dbIdentifier}[alleleid]`,
               'View in ClinVar'
             )
-          : null
+          : null,
+        tooltipEmptyLine(),
+        softConflictNote,
+        projectedNote
       ])
     },
 
@@ -1072,6 +1118,15 @@ export default defineComponent({
         options: {color: bucket.color, title: bucket.name}
       }))
     },
+    /**
+     * The single clinical-control series a variant belongs to — a thin wrapper over the pure
+     * {@link resolveControlSeries}, reading the placement off `variant.control`.
+     */
+    controlSeries(variant: DisplayVariant, opts: ControlSeriesOptions): ClinvarControlSeriesKey | null {
+      return resolveControlSeries(variant.control, opts)
+    },
+    /** Whether a significance string is an uncertain call — used to gate the mutually-exclusive filters. */
+    isUncertainSignificance,
     filterControlVariantByEffect(variant: DisplayVariant) {
       // Keep a control variant only when its effect bucket is among the selected filters.
       if (!this.proteinEffectOptionsAvailable) {
@@ -1109,9 +1164,19 @@ export default defineComponent({
     },
 
     renderOrRefreshHistogram: function () {
+      // Reactive triggers (now driven by a shared clinical-controls store) can fire before this instance is
+      // mounted — e.g. the second histogram on a page is created after the store has already settled, so its
+      // creation-time watchers run before `mounted()`. Building the chart with an absent container permanently
+      // poisons it: the lib records `svg = null` and every later refresh() no-ops, leaving an empty container.
+      // Short-circuit until the DOM exists; `mounted()` re-invokes this once the ref is available.
+      const container = this.$refs.histogramContainer as HTMLElement | undefined
+      if (!container) {
+        return
+      }
+
       if (!this.histogram) {
         this.histogram = makeHistogram()
-          .render(this.$refs.histogramContainer)
+          .render(container)
           .bottomAxisLabel('Functional Score')
           .leftAxisLabel('Number of Variants')
           .numBins(30)
@@ -1141,8 +1206,8 @@ export default defineComponent({
         .seriesClassifier(seriesClassifier)
         .title('Distribution of Functional Scores')
         .legendNote(
-          this.vizOptions[this.activeViz]?.clinicalControlLegendNoteEnabled && this.refreshedClinicalControls
-            ? `${this.controlDb?.dbName} data from version ${this.controlVersion}`
+          this.vizOptions[this.activeViz]?.clinvarControlLegendNoteEnabled && this.clinical.refreshed
+            ? `${this.clinical.controlDb?.dbName} data from version ${this.clinical.controlVersion}`
             : null
         )
         .shaders(this.histogramShaders)
@@ -1243,112 +1308,6 @@ export default defineComponent({
         }
       }
     },
-    loadClinicalControls: async function () {
-      if (
-        this.controlDb &&
-        this.controlVersion &&
-        this.clinicalControlCache[this.controlDb.dbName]?.[this.controlVersion].length > 0
-      ) {
-        this.clinicalControls = this.clinicalControlCache[this.controlDb.dbName][this.controlVersion]
-        this.refreshedClinicalControls = true
-        return
-      }
-
-      this.refreshedClinicalControls = false
-      let queryString = ''
-      if (this.controlDb) {
-        queryString += `?db=${encodeURIComponent(this.controlDb.dbName)}`
-      }
-      if (this.controlVersion) {
-        queryString += queryString
-          ? `&version=${encodeURIComponent(this.controlVersion)}`
-          : `?version=${encodeURIComponent(this.controlVersion)}`
-      }
-
-      if (this.scoreSet) {
-        try {
-          const response = await axios.get(
-            `${config.apiBaseUrl}/score-sets/${this.scoreSet.urn}/clinical-controls${queryString}`
-          )
-          if (response.data) {
-            this.clinicalControls = response.data
-
-            if (this.controlDb && this.controlVersion) {
-              this.clinicalControlCache[this.controlDb.dbName][this.controlVersion] = response.data
-            }
-          }
-        } catch {
-          // this.$toast.add({
-          //   severity: 'warn',
-          //   summary:
-          //     'No clinical control variants are associated with variants belonging to this score set. Clinical features are disabled.',
-          //   detail: error.detail,
-          //   life: 3000
-          // })
-          this.associatedClinicalControls = true
-        }
-      }
-      this.refreshedClinicalControls = true
-    },
-
-    loadClinicalControlOptions: async function () {
-      if (this.scoreSet) {
-        try {
-          const response = await axios.get(
-            `${config.apiBaseUrl}/score-sets/${this.scoreSet.urn}/clinical-controls/options`
-          )
-          if (response.status == 200) {
-            this.clinicalControlOptions = response.data
-          }
-        } catch {
-          // this.$toast.add({
-          //   severity: 'warn',
-          //   summary:
-          //     'No clinical control variants are associated with variants belonging to this score set. Clinical features are disabled.',
-          //   detail: error.detail,
-          //   life: 3000
-          // })
-          // We still want to set the refreshed flag to true so that the loading spinner goes away.
-          this.refreshedClinicalControls = true
-          this.associatedClinicalControls = true
-        }
-      }
-    },
-
-    disassociateClinicalControlsWithVariants: function () {
-      this.associatedClinicalControls = false
-      this.someVariantsHaveClinicalSignificance = false
-
-      for (const variant of this.variants) {
-        variant.control = null
-      }
-    },
-
-    associateClinicalControlsWithVariants: function () {
-      let associatedAnyControlsWithVariants = false
-
-      for (const clinicalControl of this.clinicalControls) {
-        clinicalControl.mappedVariants.forEach((mappedVariant) => {
-          const variant = this.variants.find((variant) => variant.variantUrn === mappedVariant.variantUrn)
-          if (variant) {
-            associatedAnyControlsWithVariants = true
-            variant.control = clinicalControl
-          }
-        })
-      }
-
-      this.associatedClinicalControls = true
-      this.someVariantsHaveClinicalSignificance = associatedAnyControlsWithVariants
-
-      //   if (!this.someVariantsHaveClinicalSignificance) {
-      //     this.$toast.add({
-      //       severity: 'warn',
-      //       summary:
-      //         'No clinical control variants are associated with variants belonging to this score set. Clinical features are disabled.'
-      //     })
-      //   }
-    },
-
     chooseDefaultCalibration: function () {
       if (this.activeCalibration.value) {
         return this.activeCalibration
@@ -1358,54 +1317,29 @@ export default defineComponent({
         return {label: 'None', value: null}
       }
 
+      // Honor an externally-selected calibration when it matches an available option (e.g. the
+      // VariantScreen composable defaults one before this histogram mounts).
       if (this.selectedCalibration) {
         const matchingCalibration = this.activeCalibrationOptions.find(
           (option) => option.value?.urn === this.selectedCalibration
         )
         if (matchingCalibration) {
-          return {
-            ...matchingCalibration
-          }
+          return {...matchingCalibration}
         }
       }
 
-      // Always default to showing the primary calibration if none is selected and one exists.
-      const primaryCalibration = this.activeCalibrationOptions.find((option) => option.value?.primary === true)
-      if (primaryCalibration) {
-        return primaryCalibration
-      }
-
-      // If no primary, prefer investigator provided calibrations
-      const investigatorProvided = this.activeCalibrationOptions.find(
-        (option) => option.value?.investigatorProvided === true
+      // Otherwise fall back to the shared default precedence, applied over the sorted options so ties break
+      // the same way the dropdown orders them.
+      const sortedCalibrations = this.activeCalibrationOptions
+        .map((option) => option.value)
+        .filter((value): value is NonNullable<typeof value> => value != null)
+      const defaultUrn = chooseDefaultCalibration(sortedCalibrations)?.urn ?? null
+      return (
+        this.activeCalibrationOptions.find((option) => option.value?.urn === defaultUrn) || {
+          label: 'None',
+          value: null
+        }
       )
-      if (investigatorProvided) {
-        return investigatorProvided
-      }
-
-      // Next, prefer any calibration that is not research use only
-      const nonResearchUseOnly = this.activeCalibrationOptions.find(
-        (option) => option.value != null && option.value.researchUseOnly !== true
-      )
-      if (nonResearchUseOnly) {
-        return nonResearchUseOnly
-      }
-
-      // Next, prefer any calibration that has any functional ranges defined
-      const anyWithRanges = this.activeCalibrationOptions.find(
-        (option) => option.value?.functionalClassifications && option.value.functionalClassifications.length > 0
-      )
-      if (anyWithRanges) {
-        return anyWithRanges
-      }
-
-      // Next, prefer any calibration at all
-      const anyCalibration = this.activeCalibrationOptions.find((option) => option.value != null)
-      if (anyCalibration) {
-        return anyCalibration
-      }
-
-      return {label: 'None', value: null}
     },
 
     titleCase(s: string) {

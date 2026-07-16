@@ -1,6 +1,7 @@
 import config from '@/config'
 import type {KeySection} from '@/composables/use-key-drawer'
 import {ALLELE_CONFIDENCE} from '@/lib/allele-grouping'
+import {FUNCTIONAL_CLASSIFICATIONS} from '@/lib/functional-impact'
 import {LEVEL_BUCKETS, RELATIONSHIPS} from '@/lib/measurement-types'
 
 /**
@@ -67,16 +68,10 @@ export const VARIANT_KEY_SECTIONS: KeySection[] = [
         definition: 'The predicted effect on the transcript or protein (e.g. missense), from VEP.'
       },
       {label: 'Functional impact', definition: "The assay's verdict on whether the variant alters function."},
-      {
-        label: 'Functionally Abnormal',
-        definition: 'The assay scored the variant as altering function.',
-        class: 'mave-classification-abnormal'
-      },
-      {
-        label: 'Functionally Normal',
-        definition: 'The assay scored the variant as retaining function.',
-        class: 'mave-classification-normal'
-      }
+      // The two functional calls derive from the shared classification vocabulary so tag and gloss can't drift.
+      ...Object.values(FUNCTIONAL_CLASSIFICATIONS)
+        .filter((c) => c.definition)
+        .map((c) => ({label: c.label, definition: c.definition!, class: c.class}))
     ]
   },
   {

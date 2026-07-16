@@ -1,7 +1,7 @@
 <template>
   <span
     class="inline-block max-w-full rounded px-2.5 py-0.5 text-xs font-bold leading-snug tracking-wide"
-    :class="`mave-classification-${classification}`"
+    :class="tagClass"
   >
     {{ label }}
   </span>
@@ -10,17 +10,7 @@
 <script lang="ts">
 import {defineComponent, type PropType} from 'vue'
 
-const LABELS: Record<string, string> = {
-  abnormal: 'Functionally Abnormal',
-  normal: 'Functionally Normal',
-  not_specified: 'Not Specified'
-}
-
-const SHORT_LABELS: Record<string, string> = {
-  abnormal: 'Abnormal',
-  normal: 'Normal',
-  not_specified: 'Not Specified'
-}
+import {FUNCTIONAL_CLASSIFICATIONS, type FunctionalClassification} from '@/lib/functional-impact'
 
 export default defineComponent({
   name: 'MvClassificationTag',
@@ -37,9 +27,15 @@ export default defineComponent({
   },
 
   computed: {
+    entry(): (typeof FUNCTIONAL_CLASSIFICATIONS)[FunctionalClassification] | undefined {
+      return FUNCTIONAL_CLASSIFICATIONS[this.classification as FunctionalClassification]
+    },
     label(): string {
-      const lookup = this.compact ? SHORT_LABELS : LABELS
-      return lookup[this.classification] ?? this.classification
+      if (!this.entry) return this.classification
+      return this.compact ? this.entry.shortLabel : this.entry.label
+    },
+    tagClass(): string {
+      return this.entry?.class ?? `mave-classification-${this.classification}`
     }
   }
 })

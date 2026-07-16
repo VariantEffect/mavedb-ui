@@ -163,7 +163,7 @@ describe('levelAvailable / sequenceTypeOptions — availability per frame', () =
   it('sequenceTypeOptions offers one NT option in submitted frame labelled Nucleotide, value keyed by assayLevel', () => {
     expect(sequenceTypeOptions([dnaAssay], 'submitted')).toEqual([
       {title: 'Nucleotide', value: 'cdna'},
-      {title: 'Protein', value: 'protein'}
+      {title: 'Amino acid', value: 'protein'}
     ])
     expect(sequenceTypeOptions([genomicAssay], 'submitted')).toEqual([{title: 'Nucleotide', value: 'genomic'}])
   })
@@ -172,7 +172,7 @@ describe('levelAvailable / sequenceTypeOptions — availability per frame', () =
     expect(sequenceTypeOptions([dnaAssay], 'reference')).toEqual([
       {title: 'cDNA', value: 'cdna'},
       {title: 'Genomic', value: 'genomic'},
-      {title: 'Protein', value: 'protein'}
+      {title: 'Amino acid', value: 'protein'}
     ])
   })
 
@@ -180,13 +180,13 @@ describe('levelAvailable / sequenceTypeOptions — availability per frame', () =
     expect(sequenceTypeOptions([genomicAssay], 'reference')).toEqual([
       {title: 'cDNA', value: 'cdna'},
       {title: 'Genomic', value: 'genomic'},
-      {title: 'Protein', value: 'protein'}
+      {title: 'Amino acid', value: 'protein'}
     ])
   })
 
   it('a protein assay never offers cdna or genomic — in either frame (#784)', () => {
-    expect(sequenceTypeOptions([proteinAssay], 'submitted')).toEqual([{title: 'Protein', value: 'protein'}])
-    expect(sequenceTypeOptions([proteinAssay], 'reference')).toEqual([{title: 'Protein', value: 'protein'}])
+    expect(sequenceTypeOptions([proteinAssay], 'submitted')).toEqual([{title: 'Amino acid', value: 'protein'}])
+    expect(sequenceTypeOptions([proteinAssay], 'reference')).toEqual([{title: 'Amino acid', value: 'protein'}])
     expect(levelAvailable([proteinAssay], 'cdna', 'reference')).toBe(false)
     expect(levelAvailable([proteinAssay], 'genomic', 'reference')).toBe(false)
   })
@@ -195,7 +195,7 @@ describe('levelAvailable / sequenceTypeOptions — availability per frame', () =
     expect(sequenceTypeOptions([dnaAssay, proteinAssay], 'reference')).toEqual([
       {title: 'cDNA', value: 'cdna'},
       {title: 'Genomic', value: 'genomic'},
-      {title: 'Protein', value: 'protein'}
+      {title: 'Amino acid', value: 'protein'}
     ])
   })
 })

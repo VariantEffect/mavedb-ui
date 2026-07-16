@@ -99,7 +99,7 @@ import {type AlleleGroup, confidenceBadge} from '@/lib/allele-grouping'
 import {formatClinicalSignificance, latestClinvar} from '@/lib/clinvar-controls'
 import {formatConsequence} from '@/lib/formats'
 import {formatFrequency} from '@/lib/gnomad'
-import {ASSAY_LEVEL_LABELS, LEVEL_BUCKET_CLASSES, assayLevelBucket} from '@/lib/measurement-types'
+import {assayLevelDisplay} from '@/lib/measurement-types'
 import type {components} from '@/schema/openapi'
 
 type AlleleAnnotations = components['schemas']['AlleleAnnotations']
@@ -137,10 +137,10 @@ export default defineComponent({
       return group.members.map((m) => ({label: this.levelLabel(m.level), annotations: m.annotations}))
     },
     levelLabel(level: string | null | undefined): string {
-      return ASSAY_LEVEL_LABELS[level as keyof typeof ASSAY_LEVEL_LABELS] ?? level ?? '—'
+      return level ? assayLevelDisplay(level).label : '—'
     },
     levelClass(level: string | null | undefined): string {
-      return LEVEL_BUCKET_CLASSES[assayLevelBucket(level)]
+      return assayLevelDisplay(level).class
     }
   }
 })

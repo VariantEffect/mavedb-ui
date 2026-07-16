@@ -124,9 +124,9 @@
   --color-nucleotide: #2e7d32;
   --color-nucleotide-light: #e8f5e9;
   --color-nucleotide-border: #c8e4c6;
-  --color-protein: #7e5daf;
-  --color-protein-light: #f1ecf8;
-  --color-protein-border: #b5a0d0;
+  --color-amino-acid: #7e5daf;
+  --color-amino-acid-light: #f1ecf8;
+  --color-amino-acid-border: #b5a0d0;
   --color-synonymous-nucleotide: #8a5700;
   --color-synonymous-nucleotide-light: #fef8e1;
   --color-synonymous-nucleotide-border: #f5c97a;

@@ -83,7 +83,7 @@ import {
   getPrimaryCalibration
 } from '@/lib/calibrations'
 import {getExperimentKeyword} from '@/lib/experiments'
-import {ASSAY_LEVEL_LABELS} from '@/lib/measurement-types'
+import {assayLevelDisplay} from '@/lib/measurement-types'
 import {getScoreSetShortName} from '@/lib/score-sets'
 import {components} from '@/schema/openapi'
 
@@ -102,7 +102,7 @@ export default defineComponent({
 
   props: {
     // The measured assay level (protein / cdna / genomic) — score-set-wide, shared across its variants.
-    assayLevel: {type: String as PropType<keyof typeof ASSAY_LEVEL_LABELS | null>, default: null},
+    assayLevel: {type: String as PropType<string | null>, default: null},
     columns: {type: Number as PropType<1 | 2>, default: 2},
     linkTitle: {type: Boolean, default: true},
     showUrn: {type: Boolean, default: false},
@@ -112,7 +112,7 @@ export default defineComponent({
 
   computed: {
     assayLevelLabel(): string | null {
-      return this.assayLevel ? (ASSAY_LEVEL_LABELS[this.assayLevel] ?? null) : null
+      return this.assayLevel ? assayLevelDisplay(this.assayLevel).label : null
     },
     gridClass(): string {
       return this.columns === 2

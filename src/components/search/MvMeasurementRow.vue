@@ -24,7 +24,7 @@
 import {defineComponent, type PropType} from 'vue'
 
 import MvClassificationTag from '@/components/common/MvClassificationTag.vue'
-import {ASSAY_LEVEL_LABELS, LEVEL_BUCKET_CLASSES, assayLevelBucket} from '@/lib/measurement-types'
+import {assayLevelDisplay} from '@/lib/measurement-types'
 import type {components} from '@/schema/openapi'
 
 type AlleleMeasurement = components['schemas']['AlleleMeasurement']
@@ -44,10 +44,10 @@ export default defineComponent({
       return this.measurement.assayLevelHgvs || this.measurement.submittedHgvs || '—'
     },
     levelLabel(): string {
-      return ASSAY_LEVEL_LABELS[this.measurement.assayLevel as keyof typeof ASSAY_LEVEL_LABELS] ?? 'Nucleotide'
+      return assayLevelDisplay(this.measurement.assayLevel).label
     },
     levelClass(): string {
-      return LEVEL_BUCKET_CLASSES[assayLevelBucket(this.measurement.assayLevel)]
+      return assayLevelDisplay(this.measurement.assayLevel).class
     },
     classification(): string | null {
       return this.measurement.preferredClassification?.functionalClassification ?? null

@@ -101,7 +101,7 @@ export function useVariantCoordinates() {
     return variants.some((v) => coordinateFor(v, level, frame) != null)
   }
 
-  const LEVEL_LABELS: Record<SequenceLevel, string> = {cdna: 'cDNA', genomic: 'Genomic', protein: 'Protein'}
+  const LEVEL_LABELS: Record<SequenceLevel, string> = {cdna: 'cDNA', genomic: 'Genomic', protein: 'Amino acid'}
   const LEVEL_ORDER: SequenceLevel[] = ['cdna', 'genomic', 'protein']
 
   /**
@@ -127,7 +127,7 @@ export function useVariantCoordinates() {
         options.push({title: 'Nucleotide', value: ntLevel})
       }
 
-      if (variants.some((v) => v.hgvsPro != null)) options.push({title: 'Protein', value: 'protein'})
+      if (variants.some((v) => v.hgvsPro != null)) options.push({title: 'Amino acid', value: 'protein'})
       return options
     }
 

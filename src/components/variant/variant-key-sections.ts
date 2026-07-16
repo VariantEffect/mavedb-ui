@@ -1,6 +1,7 @@
 import config from '@/config'
 import type {KeySection} from '@/composables/use-key-drawer'
 import {ALLELE_CONFIDENCE} from '@/lib/allele-grouping'
+import {LEVEL_BUCKETS} from '@/lib/measurement-types'
 
 /**
  * Variant-page content for the generic {@link MvKeyDrawer}. These are the tier-2 vocabulary glosses; the
@@ -36,14 +37,8 @@ export const VARIANT_KEY_SECTIONS: KeySection[] = [
     id: 'assay-level',
     title: 'Assay level',
     gloss: 'The level at which a result measured the change.',
-    terms: [
-      {
-        label: 'Nucleotide',
-        definition: 'Assayed as a DNA/RNA change (coding or genomic).',
-        class: 'bg-nucleotide-light text-nucleotide'
-      },
-      {label: 'Protein', definition: 'Assayed as an amino-acid change.', class: 'bg-protein-light text-protein'}
-    ]
+    // Derived from the shared bucket vocabulary so badges and this gloss can never drift apart.
+    terms: Object.values(LEVEL_BUCKETS).map((b) => ({label: b.label, definition: b.definition, class: b.class}))
   },
   {
     id: 'confidence',

@@ -3,8 +3,8 @@ import {describe, expect, it} from 'vitest'
 import {assayLevelBucket, dominantAssayLevel} from '@/lib/measurement-types'
 
 describe('assayLevelBucket', () => {
-  it('returns "protein" for protein', () => {
-    expect(assayLevelBucket('protein')).toBe('protein')
+  it('returns "amino acid" for protein', () => {
+    expect(assayLevelBucket('protein')).toBe('amino acid')
   })
 
   it('returns "nucleotide" for cdna', () => {

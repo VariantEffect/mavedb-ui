@@ -75,9 +75,7 @@ import {defineComponent, type PropType} from 'vue'
 import MvClassificationTag from '@/components/common/MvClassificationTag.vue'
 import MvEvidenceTag from '@/components/common/MvEvidenceTag.vue'
 import {
-  assayLevelBucket,
-  LEVEL_BUCKET_CLASSES,
-  LEVEL_BUCKET_LABELS,
+  assayLevelDisplay,
   RELATIONSHIP_LABELS,
   type MeasurementRelationship
 } from '@/lib/measurement-types'
@@ -119,10 +117,10 @@ export default defineComponent({
 
   computed: {
     levelLabel(): string {
-      return LEVEL_BUCKET_LABELS[assayLevelBucket(this.assayLevel)].full
+      return assayLevelDisplay(this.assayLevel).label
     },
     levelClass(): string {
-      return LEVEL_BUCKET_CLASSES[assayLevelBucket(this.assayLevel)]
+      return assayLevelDisplay(this.assayLevel).class
     },
     relationshipLabel(): string {
       return RELATIONSHIP_LABELS[this.relationship] ?? this.relationship

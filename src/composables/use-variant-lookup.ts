@@ -104,11 +104,13 @@ export function useVariantLookup(
   const nucleotideCount = computed(
     () => variants.value.filter((m) => assayLevelBucket(m.assayLevel) === 'nucleotide').length
   )
-  const proteinCount = computed(() => variants.value.filter((m) => assayLevelBucket(m.assayLevel) === 'protein').length)
+  const proteinCount = computed(
+    () => variants.value.filter((m) => assayLevelBucket(m.assayLevel) === 'amino acid').length
+  )
   const filteredVariants = computed(() =>
     variants.value.filter((m) => {
       const bucket = assayLevelBucket(m.assayLevel)
-      return bucket === 'protein' ? showProtein.value : showNucleotide.value
+      return bucket === 'amino acid' ? showProtein.value : showNucleotide.value
     })
   )
 

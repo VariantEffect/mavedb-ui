@@ -125,11 +125,11 @@
               <MvBadgeToggle
                 v-if="lookup.proteinCount.value > 0"
                 v-model="lookup.showProtein.value"
-                active-background="var(--color-protein-light)"
-                active-border="var(--color-protein-border)"
-                color="var(--color-protein)"
+                active-background="var(--color-amino-acid-light)"
+                active-border="var(--color-amino-acid-border)"
+                color="var(--color-amino-acid)"
                 :count="lookup.proteinCount.value"
-                label="Protein"
+                label="Amino acid"
               />
             </div>
           </div>
@@ -442,7 +442,7 @@ import MvMeasurementCard from '@/components/variant/MvMeasurementCard.vue'
 import MvRowActionMenu, {type RowAction} from '@/components/common/MvRowActionMenu.vue'
 import VariantInfoSection from '@/components/variant/VariantInfoSection.vue'
 import {useVariantLookup} from '@/composables/use-variant-lookup'
-import {assayLevelBucket, LEVEL_BUCKET_LABELS} from '@/lib/measurement-types'
+import {assayLevelDisplay} from '@/lib/measurement-types'
 import {hasFunctionalCalibrations, hasPathogenicityCalibrations} from '@/lib/calibrations'
 import {confidenceBadge, groupAlleles, type AlleleGroup, type ConfidenceBadge} from '@/lib/allele-grouping'
 import {formatConsequence} from '@/lib/formats'
@@ -599,7 +599,7 @@ export default defineComponent({
     },
     measurementOptions(): {label: string; urn: string}[] {
       return this.lookup.filteredVariants.value.map((m) => ({
-        label: `${m.scoreSetTitle || 'Untitled score set'} (${LEVEL_BUCKET_LABELS[assayLevelBucket(m.assayLevel)].short})`,
+        label: `${m.scoreSetTitle || 'Untitled score set'} (${assayLevelDisplay(m.assayLevel).label})`,
         urn: m.variantUrn
       }))
     },

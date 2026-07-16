@@ -1,9 +1,36 @@
+import type {KeySection} from '@/composables/use-key-drawer'
 import {hgvsLabelRank} from '@/lib/formats'
 import type {components} from '@/schema/openapi'
 
 export type ClinvarControlOption = components['schemas']['ClinicalControlOptions']
 export type ClinvarVariantLink = components['schemas']['ClinvarVariantLink']
 export type ClinvarControl = components['schemas']['ClinicalControlWithClinvarLinks']
+
+/** Key-drawer glossary for the ClinVar clinical-significance buckets this module classifies into. */
+export const CLINICAL_SIGNIFICANCE_KEY_SECTION: KeySection = {
+  id: 'clinical',
+  title: 'Clinical significance (ClinVar)',
+  gloss: 'Germline classifications, shown with their ClinVar review-star rating.',
+  terms: [
+    {label: 'Pathogenic / Likely pathogenic', definition: 'Classified as disease-causing, or likely to be.'},
+    {label: 'Benign / Likely benign', definition: 'Classified as not disease-causing, or likely not to be.'},
+    {label: 'VUS', definition: 'Variant of uncertain significance — not enough evidence to classify.'},
+    {label: 'Conflicting', definition: 'Submitters disagree on the classification.'}
+  ]
+}
+
+/** Key-drawer glossary for sibling-allele ClinVar controls (calls carried over from a sibling allele). */
+export const SIBLING_CONTROL_KEY_SECTION: KeySection = {
+  id: 'passthrough',
+  title: 'Sibling-allele controls',
+  terms: [
+    {
+      label: 'From a sibling allele',
+      definition:
+        'A ClinVar call carried over from a sibling allele that shares the protein consequence, shown when the assayed variant itself has no ClinVar record. Marked with *.'
+    }
+  ]
+}
 
 type AlleleAnnotations = components['schemas']['AlleleAnnotations']
 type ClinvarAnnotation = components['schemas']['ClinvarAnnotation']

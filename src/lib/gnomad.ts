@@ -7,10 +7,35 @@
  * and link to the gnomAD variant page.
  */
 
+import type {KeySection} from '@/composables/use-key-drawer'
 import {hgvsLabelRank} from '@/lib/formats'
 import type {components} from '@/schema/openapi'
 
 type GnomadAnnotation = components['schemas']['GnomadAnnotation']
+
+/** Key-drawer glossary for the gnomAD population-frequency terms this module surfaces. */
+export const POPULATION_KEY_SECTION: KeySection = {
+  id: 'population',
+  title: 'Population frequency (gnomAD)',
+  gloss: 'How often the allele is seen in reference populations — high frequency argues against pathogenicity.',
+  terms: [
+    {
+      label: 'Allele frequency (AF)',
+      definition:
+        'The fraction of sampled reference-population chromosomes carrying this allele in gnomAD (allele count ÷ allele number).'
+    },
+    {
+      label: 'AC / AN',
+      definition:
+        'Allele count and allele number: the observed carriers and the total chromosomes sampled that the frequency is computed from.'
+    },
+    {
+      label: 'FAF95',
+      definition:
+        "Filtering allele frequency at 95% confidence: a sampling-adjusted, conservative estimate of the population frequency. When it exceeds a disease's maximum credible allele frequency, the variant is too common to be pathogenic (ACMG BA1/BS1)."
+    }
+  ]
+}
 
 /** One underlying gnomAD measurement, tagged with the reference-frame HGVS of the allele it annotates. */
 export interface UnderlyingGnomad {

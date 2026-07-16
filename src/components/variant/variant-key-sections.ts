@@ -1,8 +1,11 @@
 import config from '@/config'
 import type {KeySection} from '@/composables/use-key-drawer'
+import {COORDINATE_FRAME_KEY_SECTION} from '@/composables/use-variant-coordinates'
 import {ACMG_CRITERIA} from '@/lib/acmg'
 import {ALLELE_CONFIDENCE} from '@/lib/allele-grouping'
+import {CLINICAL_SIGNIFICANCE_KEY_SECTION, SIBLING_CONTROL_KEY_SECTION} from '@/lib/clinvar-controls'
 import {FUNCTIONAL_CLASSIFICATIONS} from '@/lib/functional-impact'
+import {POPULATION_KEY_SECTION} from '@/lib/gnomad'
 import {LEVEL_BUCKETS, RELATIONSHIPS} from '@/lib/measurement-types'
 
 /**
@@ -46,20 +49,7 @@ export const VARIANT_KEY_SECTIONS: KeySection[] = [
       }
     ]
   },
-  {
-    id: 'frame',
-    title: 'Coordinate frame',
-    terms: [
-      {
-        label: 'Submitted',
-        definition: 'Coordinates exactly as the depositor submitted them, relative to the target sequence.'
-      },
-      {
-        label: 'Reference',
-        definition: "Coordinates re-expressed against a standard reference sequence by MaveDB's mapping pipeline."
-      }
-    ]
-  },
+  COORDINATE_FRAME_KEY_SECTION,
   {
     id: 'consequence',
     title: 'Molecular consequence',
@@ -95,50 +85,9 @@ export const VARIANT_KEY_SECTIONS: KeySection[] = [
       {label: 'OddsPath', definition: 'The odds of pathogenicity implied by the score; sets the evidence strength.'}
     ]
   },
-  {
-    id: 'population',
-    title: 'Population frequency (gnomAD)',
-    gloss: 'How often the allele is seen in reference populations — high frequency argues against pathogenicity.',
-    terms: [
-      {
-        label: 'Allele frequency (AF)',
-        definition:
-          'The fraction of sampled reference-population chromosomes carrying this allele in gnomAD (allele count ÷ allele number).'
-      },
-      {
-        label: 'AC / AN',
-        definition:
-          'Allele count and allele number: the observed carriers and the total chromosomes sampled that the frequency is computed from.'
-      },
-      {
-        label: 'FAF95',
-        definition:
-          "Filtering allele frequency at 95% confidence: a sampling-adjusted, conservative estimate of the population frequency. When it exceeds a disease's maximum credible allele frequency, the variant is too common to be pathogenic (ACMG BA1/BS1)."
-      }
-    ]
-  },
-  {
-    id: 'clinical',
-    title: 'Clinical significance (ClinVar)',
-    gloss: 'Germline classifications, shown with their ClinVar review-star rating.',
-    terms: [
-      {label: 'Pathogenic / Likely pathogenic', definition: 'Classified as disease-causing, or likely to be.'},
-      {label: 'Benign / Likely benign', definition: 'Classified as not disease-causing, or likely not to be.'},
-      {label: 'VUS', definition: 'Variant of uncertain significance — not enough evidence to classify.'},
-      {label: 'Conflicting', definition: 'Submitters disagree on the classification.'}
-    ]
-  },
-  {
-    id: 'passthrough',
-    title: 'Sibling-allele controls',
-    terms: [
-      {
-        label: 'From a sibling allele',
-        definition:
-          'A ClinVar call carried over from a sibling allele that shares the protein consequence, shown when the assayed variant itself has no ClinVar record. Marked with *.'
-      }
-    ]
-  },
+  POPULATION_KEY_SECTION,
+  CLINICAL_SIGNIFICANCE_KEY_SECTION,
+  SIBLING_CONTROL_KEY_SECTION,
   {
     id: 'as-of',
     title: 'As of',

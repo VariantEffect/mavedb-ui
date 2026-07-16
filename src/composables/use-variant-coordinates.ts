@@ -1,3 +1,4 @@
+import type {KeySection} from '@/composables/use-key-drawer'
 import type {components} from '@/schema/openapi'
 import type {HgvsField, LeanVariant} from '@/lib/variants'
 
@@ -7,6 +8,22 @@ export type SequenceLevel = components['schemas']['SequenceLevel']
 
 /** The coordinate frame: `submitted` = submitted/target numbering, `reference` = reference numbering. */
 export type CoordinateFrame = 'submitted' | 'reference'
+
+/** Key-drawer glossary for the coordinate-frame axis this composable resolves. */
+export const COORDINATE_FRAME_KEY_SECTION: KeySection = {
+  id: 'frame',
+  title: 'Coordinate frame',
+  terms: [
+    {
+      label: 'Submitted',
+      definition: 'Coordinates exactly as the depositor submitted them, relative to the target sequence.'
+    },
+    {
+      label: 'Reference',
+      definition: "Coordinates re-expressed against a standard reference sequence by MaveDB's mapping pipeline."
+    }
+  ]
+}
 
 /**
  * Stateless resolution of a variant's HGVS coordinate across two orthogonal axes — sequence

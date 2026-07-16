@@ -2,6 +2,7 @@ import {computed, ref, watch, type ComputedRef, type Ref} from 'vue'
 
 import {useCalibrationResolution, type UseCalibrationResolutionReturn} from '@/composables/use-calibration-resolution'
 import {scoreSetUrnOf, type UseMeasurementCacheReturn} from '@/composables/use-measurement-cache'
+import {chooseDefaultCalibration} from '@/lib/calibrations'
 import type {DisplayVariant} from '@/lib/variants'
 import type {components} from '@/schema/openapi'
 
@@ -25,6 +26,8 @@ export interface UseMeasurementSelectionReturn {
   selectedCalibration: Ref<string | null>
   selectedCalibrationObject: ComputedRef<ScoreCalibration | null>
   calibrationResolution: UseCalibrationResolutionReturn
+  // True while the selected measurement's detail or lean scores are still in flight.
+  selectedLoading: ComputedRef<boolean>
 }
 
 /**
@@ -48,6 +51,11 @@ export function useMeasurementSelection(
   const selectedCalibration = ref<string | null>(null)
 
   const selectedVariant = computed(() => variants.value.find((m) => m.variantUrn === selectedVariantUrn.value))
+  const selectedLoading = computed(() => {
+    const urn = selectedVariantUrn.value
+    if (!urn) return false
+    return cache.isDetailLoading(urn) || cache.isScoresLoading(scoreSetUrnOf(urn))
+  })
   const selectedVariantDetail = computed<VariantDetail | null>(() => {
     if (!selectedVariantUrn.value) return null
     return cache.variantDetails.value[selectedVariantUrn.value] || null
@@ -72,7 +80,7 @@ export function useMeasurementSelection(
     return cache.scores.value[selectedScoreSetUrn.value] || null
   })
   const variantScoreRow = computed(() => (scores.value || []).find((s) => s.variantUrn === selectedVariantUrn.value))
-  const selectedVariantScore = computed(() => variantScoreRow.value?.score ?? null)
+  const selectedVariantScore = computed(() => selectedVariant.value?.score ?? null)
 
   const selectedCalibrationObject = computed<ScoreCalibration | null>(() => {
     if (!selectedCalibration.value || !selectedScoreSet.value?.scoreCalibrations) return null
@@ -107,14 +115,35 @@ export function useMeasurementSelection(
   })
 
   watch(selectedVariantUrn, async (newUrn) => {
-    selectedCalibration.value = null
-    if (newUrn) await cache.loadDetail(newUrn)
+    if (!newUrn) return
+    // Load the display essentials (detail + score set) first, then the heavier lean score distribution.
+    // This allows the majority of data to render while we wait for any visualizations to load.
+    await cache.loadDetail(newUrn)
+    cache.loadScores(scoreSetUrnOf(newUrn))
   })
+
+  // A new score set invalidates any manual calibration pick (a stale URN wouldn't match the new set).
+  watch(selectedScoreSetUrn, () => {
+    selectedCalibration.value = null
+  })
+
+  // Default the calibration from the score set as soon as it loads. Only fills an empty selection,
+  // so a user's manual pick via the histogram dropdown is always retained.
+  watch(
+    selectedScoreSet,
+    (scoreSet) => {
+      if (!selectedCalibration.value) {
+        selectedCalibration.value = chooseDefaultCalibration(scoreSet?.scoreCalibrations)?.urn ?? null
+      }
+    },
+    {immediate: true}
+  )
 
   return {
     selectedVariantUrn,
     selectVariant,
     selectedVariant,
+    selectedLoading,
     selectedVariantDetail,
     selectedVariantName,
     selectedClingenAlleleId,

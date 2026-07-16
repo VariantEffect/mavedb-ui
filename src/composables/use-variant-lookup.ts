@@ -185,6 +185,12 @@ export function useVariantLookup(
       const selected = highlighted ? highlightUrn.value! : variants.value[0].variantUrn
       selection.selectedVariantUrn.value = selected
 
+      // Prioritize the display variant: load its detail + score set (both quick, and enough to explore —
+      // score, classification, identity, assay facts) before fanning out. The selection watcher loads the
+      // heavier lean score distribution (histogram only), which rides behind this and the prefetch below.
+      await cache.loadDetail(selected)
+      if (epoch !== queryEpoch) return
+
       // Background-fetch the rest (details + their score sets, which back the cards' assay facts), capped so
       // a large equivalence class doesn't fire a request storm. Skip if a newer query epoch has started.
       for (const m of variants.value) {

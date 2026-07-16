@@ -76,7 +76,7 @@ import MvClassificationTag from '@/components/common/MvClassificationTag.vue'
 import MvEvidenceTag from '@/components/common/MvEvidenceTag.vue'
 import {
   assayLevelDisplay,
-  RELATIONSHIP_LABELS,
+  RELATIONSHIPS,
   type MeasurementRelationship
 } from '@/lib/measurement-types'
 import type {components} from '@/schema/openapi'
@@ -123,7 +123,7 @@ export default defineComponent({
       return assayLevelDisplay(this.assayLevel).class
     },
     relationshipLabel(): string {
-      return RELATIONSHIP_LABELS[this.relationship] ?? this.relationship
+      return RELATIONSHIPS[this.relationship]?.label ?? this.relationship
     },
     classification(): string | null {
       return this.preferredClassification?.functionalClassification ?? null

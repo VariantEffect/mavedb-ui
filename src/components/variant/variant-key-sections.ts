@@ -1,7 +1,7 @@
 import config from '@/config'
 import type {KeySection} from '@/composables/use-key-drawer'
 import {ALLELE_CONFIDENCE} from '@/lib/allele-grouping'
-import {LEVEL_BUCKETS} from '@/lib/measurement-types'
+import {LEVEL_BUCKETS, RELATIONSHIPS} from '@/lib/measurement-types'
 
 /**
  * Variant-page content for the generic {@link MvKeyDrawer}. These are the tier-2 vocabulary glosses; the
@@ -17,21 +17,8 @@ export const VARIANT_KEY_SECTIONS: KeySection[] = [
     id: 'relationship',
     title: 'Relationship to your variant',
     gloss: 'How each result relates to the allele you searched.',
-    terms: [
-      {
-        label: 'Your variant',
-        definition: 'The result assayed exactly the allele you searched.',
-        class: 'bg-sage/15 text-sage'
-      },
-      {
-        label: 'Its protein consequence',
-        definition: 'The result assayed the protein change your variant produces.'
-      },
-      {
-        label: 'Encodes the protein consequence',
-        definition: 'The result assayed a nucleotide allele that encodes the same protein change as your variant.'
-      }
-    ]
+    // Derived from the shared relationship vocabulary so cards and this gloss can never drift apart.
+    terms: Object.values(RELATIONSHIPS).map((r) => ({label: r.label, definition: r.definition, class: r.class}))
   },
   {
     id: 'assay-level',

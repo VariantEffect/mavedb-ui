@@ -53,10 +53,23 @@ export function dominantAssayLevel(levels: Array<SequenceLevel | null | undefine
   return best
 }
 
-// How a measurement relates to the queried ClinGen allele — the RT asymmetry. Phrased relative to the
-// user's variant, so the labels self-explain under the "relative to your variant" anchor heading.
-export const RELATIONSHIP_LABELS: Record<MeasurementRelationship, string> = {
-  direct: 'Your variant',
-  protein_consequence: 'Its protein consequence',
-  nucleotide_encoding: 'Encodes the protein consequence'
+/**
+ * Single source of truth for the measurement-to-query relationship vocabulary (the RT asymmetry): the
+ * card label, an optional chip class, and the Key-drawer gloss. Phrased relative to the user's variant so
+ * the labels self-explain under the "relative to your variant" anchor. Insertion order is display order.
+ */
+export const RELATIONSHIPS: Record<MeasurementRelationship, {label: string; class?: string; definition: string}> = {
+  direct: {
+    label: 'Your variant',
+    class: 'bg-sage/15 text-sage',
+    definition: 'The result assayed exactly the allele you searched.'
+  },
+  protein_consequence: {
+    label: 'Its protein consequence',
+    definition: 'The result assayed the protein change your variant produces.'
+  },
+  nucleotide_encoding: {
+    label: 'Encodes the protein consequence',
+    definition: 'The result assayed a nucleotide allele that encodes the same protein change as your variant.'
+  }
 }

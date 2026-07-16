@@ -1,3 +1,4 @@
+import {hgvsLabelRank} from '@/lib/formats'
 import type {components} from '@/schema/openapi'
 
 export type ClinvarControlOption = components['schemas']['ClinicalControlOptions']
@@ -74,6 +75,8 @@ export const CONFLICTING_CLINICAL_SIGNIFICANCE_CLASSIFICATIONS = [
   'Conflicting classifications of pathogenicity'
 ]
 
+export const UNCERTAIN_SIGNIFICANCE_CLASSIFICATIONS = ['Uncertain significance']
+
 export const CLINVAR_REVIEW_STATUS_STARS: {[status: string]: number} = {
   'no assertion criteria provided': 0,
   'criteria provided, conflicting interpretations': 1,
@@ -99,12 +102,27 @@ export const DEFAULT_MIN_STAR_RATING = 1
 
 export const DEFAULT_CLINVAR_CONTROL_DB = 'ClinVar'
 
+/** Germline-less (`-`) ClinVar records carry no call; renderers show this instead of a bare dash. */
+export const NO_GERMLINE_CLASSIFICATION_LABEL = 'No germline classification'
+
 /** Turn a ClinVar `dbVersion` like `03_2024` into "March 2024"; pass through anything unrecognized. */
 export function formatClinvarVersion(dbVersion: string): string {
   const match = dbVersion.match(/^(\d{2})_(\d{4})$/)
   if (!match) return dbVersion
   const [, month, year] = match
   return new Date(Number(year), Number(month) - 1).toLocaleString('en-US', {month: 'long', year: 'numeric'})
+}
+
+/**
+ * A comparable sort key for a ClinVar `dbVersion` in `MM_YYYY` form, ordering by year then month — the
+ * frontend mirror of the API's `clinvar_version_sort_key`. `MM_YYYY` must NOT be compared as a raw string
+ * (month-first, so `"12_2020" > "01_2024"`); this parses it. Unrecognized versions sort to the bottom (`-1`).
+ */
+export function clinvarVersionKey(dbVersion: string): number {
+  const match = dbVersion.match(/^(\d{2})_(\d{4})$/)
+  if (!match) return -1
+  const [, month, year] = match
+  return Number(year) * 100 + Number(month)
 }
 
 /** Deep link to a ClinVar allele record, or null when the allele id is missing. */
@@ -149,11 +167,115 @@ export function clinicalSignificanceColor(significance: string | null | undefine
   return undefined
 }
 
+/**
+ * The ClinVar annotation for an allele at a given release, or null when it has none there. With no
+ * `version`, returns the most recent by `dbVersion` — the fallback used when a release isn't pinned.
+ */
+export function selectClinvar(
+  clinvar: ClinvarAnnotation[] | null | undefined,
+  version?: string | null
+): ClinvarAnnotation | null {
+  if (!clinvar?.length) return null
+  if (version) return clinvar.find((c) => c.dbVersion === version) ?? null
+  return clinvar.reduce((best, c) => (clinvarVersionKey(c.dbVersion) > clinvarVersionKey(best.dbVersion) ? c : best))
+}
+
 /** The most recent ClinVar annotation (by `dbVersion`), or null when there are none. */
 export function latestClinvar(annotations: AlleleAnnotations | null): ClinvarAnnotation | null {
-  const clinvar = annotations?.clinvar
-  if (!clinvar?.length) return null
-  return clinvar.reduce((best, c) => (c.dbVersion > best.dbVersion ? c : best))
+  return selectClinvar(annotations?.clinvar)
+}
+
+/**
+ * One ClinVar record reaching a measurement, resolved at a release. The single walk every ClinVar surface
+ * projects from: the fold reads `clinvar`/`digest`, the popover enumerates the `classified` subset, and the
+ * headline's `-` fallback reads `onAssayed` to prefer the measured allele's own record.
+ */
+export interface MeasurementClinvarRecord {
+  /** VRS digest of the allele this record annotates. */
+  digest: string
+  /** True when the record is on the measured allele itself (digest === assayLevelDigest), not a sibling. */
+  onAssayed: boolean
+  /** Reference-frame HGVS of the annotated allele, for labeling; null when the sidecar has none. */
+  hgvs: string | null
+  /** True for a real classification; false for a `-` germline-less (somatic/oncogenicity-only) placeholder. */
+  classified: boolean
+  clinvar: ClinvarAnnotation
+}
+
+/** Canonical identity of a ClinVar record: the variation id when present, else the allele id. Dedupes records
+ *  shared across reference frames, keys them in a list, and excludes the one already shown in a headline. */
+export function clinvarRecordId(clinvar: {clinvarVariationId?: string | null; clinvarAlleleId: string}): string {
+  return clinvar.clinvarVariationId ?? clinvar.clinvarAlleleId
+}
+
+/**
+ * Resolve the ClinVar records reaching one measurement at `version` — the single walk over the annotations
+ * map that the fold, the underlying-record popover, and the `-` headline fallback all project from, so no
+ * surface re-walks it. One record per annotated allele digest (unclassified `-` records included, tagged);
+ * downstream projections filter/fold as they need.
+ */
+export function resolveClinvarRecords(
+  annotations: Record<string, {clinvar?: ClinvarAnnotation[] | null}> | null | undefined,
+  alleles: Record<string, {hgvs?: string | null}> | null | undefined,
+  assayLevelDigest: string | null | undefined,
+  version?: string | null
+): MeasurementClinvarRecord[] {
+  if (!annotations) return []
+  const records: MeasurementClinvarRecord[] = []
+  for (const [digest, ann] of Object.entries(annotations)) {
+    const clinvar = selectClinvar(ann.clinvar, version)
+    if (!clinvar) continue
+    records.push({
+      digest,
+      onAssayed: digest === assayLevelDigest,
+      hgvs: alleles?.[digest]?.hgvs ?? null,
+      classified: isClassifiedSignificance(clinvar.clinicalSignificance),
+      clinvar
+    })
+  }
+  return records
+}
+
+/**
+ * The distinct *underlying* records for the popover, projected from a resolved walk — the records on sibling
+ * alleles the headline folded over. Excludes the measured allele's own record (`onAssayed`): that is the
+ * primary, already shown as the headline, not "underlying" — so a lone assayed record yields no popover, and
+ * a protein-level allele's projected headline still lists the nucleotide sibling it was drawn from.
+ *
+ * Germline-less `-` submissions are kept (a record that exists is worth linking to; only the control fold
+ * drops `-`). Dedupes by ClinVar record id across the DNA/protein frames that share one record (preferring a
+ * coding HGVS for the label), and sorts directional calls (P/LP, B/LB) ahead of VUS and `-`, then by stars.
+ */
+export function enumerateUnderlyingClinvar(records: MeasurementClinvarRecord[]): MeasurementClinvarRecord[] {
+  const byRecord = new Map<string, MeasurementClinvarRecord>()
+  for (const rec of records) {
+    if (rec.onAssayed) continue
+    const key = clinvarRecordId(rec.clinvar)
+    const existing = byRecord.get(key)
+    if (!existing) byRecord.set(key, {...rec})
+    else if (hgvsLabelRank(rec.hgvs) > hgvsLabelRank(existing.hgvs)) existing.hgvs = rec.hgvs
+  }
+  const isDirectional = (significance: string) =>
+    PATHOGENIC_CLINICAL_SIGNIFICANCE_CLASSIFICATIONS.includes(significance) ||
+    BENIGN_CLINICAL_SIGNIFICANCE_CLASSIFICATIONS.includes(significance)
+  return [...byRecord.values()].sort((a, b) => {
+    const dirDelta =
+      Number(isDirectional(b.clinvar.clinicalSignificance)) - Number(isDirectional(a.clinvar.clinicalSignificance))
+    if (dirDelta !== 0) return dirDelta
+    return (
+      (CLINVAR_REVIEW_STATUS_STARS[b.clinvar.clinicalReviewStatus] ?? 0) -
+      (CLINVAR_REVIEW_STATUS_STARS[a.clinvar.clinicalReviewStatus] ?? 0)
+    )
+  })
+}
+
+/**
+ * The label to render for a ClinVar `clinicalSignificance` — the classification itself, or, for a `-`
+ * germline-less (somatic/oncogenicity-only) placeholder, {@link NO_GERMLINE_CLASSIFICATION_LABEL} rather
+ * than a bare dash that reads as "no record". The single wording every ClinVar renderer shares.
+ */
+export function formatClinicalSignificance(significance: string | null | undefined): string {
+  return isClassifiedSignificance(significance) ? significance! : NO_GERMLINE_CLASSIFICATION_LABEL
 }
 
 /**
@@ -166,6 +288,14 @@ export function latestClinvar(annotations: AlleleAnnotations | null): ClinvarAnn
 export function isClassifiedSignificance(significance: string | null | undefined): boolean {
   const s = significance?.trim()
   return !!s && !/^-+$/.test(s)
+}
+
+/** Whether a significance is an uncertain call — a plain VUS or a ClinVar-*Conflicting* aggregate value. */
+export function isUncertainSignificance(significance: string): boolean {
+  return (
+    UNCERTAIN_SIGNIFICANCE_CLASSIFICATIONS.includes(significance) ||
+    CONFLICTING_CLINICAL_SIGNIFICANCE_CLASSIFICATIONS.includes(significance)
+  )
 }
 
 /**

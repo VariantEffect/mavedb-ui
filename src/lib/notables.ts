@@ -1,4 +1,5 @@
 /**
+ * @fileoverview
  * Notable-variant samplers for the score-set variant search's empty state.
  *
  * When the search box is empty the dropdown offers a few "interesting" variants to jump to instead of a
@@ -18,6 +19,7 @@ import {
   DEFAULT_MIN_STAR_RATING,
   PATHOGENIC_CLINICAL_SIGNIFICANCE_CLASSIFICATIONS
 } from '@/lib/clinvar-controls'
+import type {UsableControlPlacement} from '@/lib/clinvar-control-placement'
 import {consequenceBucket, EFFECT_BUCKETS} from '@/lib/consequences'
 import type {DisplayVariant} from '@/lib/variants'
 
@@ -26,9 +28,19 @@ function scored(variants: DisplayVariant[]): DisplayVariant[] {
   return variants.filter((v) => typeof v.score === 'number')
 }
 
+/**
+ * A control clean enough to headline a notables row: an unambiguous or concordant call. Soft conflicts (a
+ * directional lean beside an uncertain/Conflicting record) and hard discordance are excluded. Notables should
+ * be "definitive" exemplars, so we don't front a call we are hedging.
+ */
+function isDefinitiveControl(control: DisplayVariant['control']): control is UsableControlPlacement {
+  return control != null && (control.discordance === 'none' || control.discordance === 'concordant')
+}
+
 /** Star rating of a control's review status; -1 when the status is absent/unknown (never passes a ≥ gate). */
 function controlStars(variant: DisplayVariant): number {
-  const status = variant.control?.[DEFAULT_CLNREVSTAT_FIELD]
+  const control = variant.control
+  const status = isDefinitiveControl(control) ? control[DEFAULT_CLNREVSTAT_FIELD] : undefined
   return status != null ? (CLINVAR_REVIEW_STATUS_STARS[status] ?? -1) : -1
 }
 
@@ -46,11 +58,10 @@ export function clinicalExtremesPerClass(
   minStar: number = DEFAULT_MIN_STAR_RATING
 ): DisplayVariant[] {
   const definitive = (classes: string[]) =>
-    scored(variants).filter(
-      (v) =>
-        // Skip hard-discordant variants: they carry ClinVar data but aren't usable controls.
-        !v.control?.excluded && classes.includes(v.control?.[DEFAULT_CLNSIG_FIELD] ?? '') && controlStars(v) >= minStar
-    )
+    scored(variants).filter((v) => {
+      if (!isDefinitiveControl(v.control)) return false
+      return classes.includes(v.control[DEFAULT_CLNSIG_FIELD]) && controlStars(v) >= minStar
+    })
   const pathogenic = definitive(PATHOGENIC_CLINICAL_SIGNIFICANCE_CLASSIFICATIONS)
   const benign = definitive(BENIGN_CLINICAL_SIGNIFICANCE_CLASSIFICATIONS)
   if (!pathogenic.length && !benign.length) return []

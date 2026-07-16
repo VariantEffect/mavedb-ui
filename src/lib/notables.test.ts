@@ -13,13 +13,16 @@ import type {DisplayVariant} from '@/lib/variants'
 function v(
   urn: string,
   score: number | null,
-  extras: {consequence?: string | null; clnsig?: string; stars?: keyof typeof STARS} = {}
+  extras: {consequence?: string | null; clnsig?: string; stars?: keyof typeof STARS; discordance?: string} = {}
 ): DisplayVariant {
   const variant = {variantUrn: urn, score, consequence: extras.consequence ?? null} as DisplayVariant
   if (extras.clnsig) {
     variant.control = {
       clinicalSignificance: extras.clnsig,
-      clinicalReviewStatus: extras.stars ?? '1-star'
+      clinicalReviewStatus: extras.stars ?? '1-star',
+      // Notables only headline clean/concordant controls; default to a clean call so the star/class logic
+      // is exercised, and let a test opt into 'soft'/'hard' to assert exclusion.
+      discordance: extras.discordance ?? 'none'
     } as DisplayVariant['control']
   }
   return variant
@@ -34,9 +37,11 @@ const STARS = {
 
 // Rewrite the factory's star shorthand into the real review-status strings.
 function withStars(variant: DisplayVariant): DisplayVariant {
-  const shorthand = variant.control?.clinicalReviewStatus as keyof typeof STARS | undefined
+  const control = variant.control
+  if (!control || control.discordance === 'hard') return variant
+  const shorthand = control.clinicalReviewStatus as keyof typeof STARS | undefined
   if (shorthand && STARS[shorthand]) {
-    ;(variant.control as {clinicalReviewStatus: string}).clinicalReviewStatus = STARS[shorthand]
+    ;(control as {clinicalReviewStatus: string}).clinicalReviewStatus = STARS[shorthand]
   }
   return variant
 }
@@ -86,6 +91,25 @@ describe('clinicalExtremesPerClass', () => {
     const result = clinicalExtremesPerClass(variants, 1)
     // Only the benign passes → single-class fallback, benign returned.
     expect(result.map((r) => r.variantUrn)).toEqual(['b-ok'])
+  })
+
+  it('excludes soft-conflict controls — a directional lean beside an uncertain record is not definitive', () => {
+    const variants = [
+      // Both carry a directional representative at a passing star, but the soft one is a soft conflict and
+      // must not headline; only the clean pathogenic exemplar survives (single-class fallback).
+      v('p-soft', -3, {clnsig: 'Pathogenic', stars: '2-star', discordance: 'soft'}),
+      v('p-clean', -1, {clnsig: 'Pathogenic', stars: '2-star', discordance: 'none'})
+    ].map(withStars)
+    expect(clinicalExtremesPerClass(variants, 1).map((r) => r.variantUrn)).toEqual(['p-clean'])
+  })
+
+  it('includes concordant controls — a same-direction agreement is still definitive', () => {
+    const variants = [
+      v('p-concordant', -4, {clnsig: 'Pathogenic', stars: '2-star', discordance: 'concordant'}),
+      v('b-ok', 3, {clnsig: 'Benign', stars: '1-star'})
+    ].map(withStars)
+    // Both classes present and usable → one exemplar each, pathogenic-then-benign.
+    expect(clinicalExtremesPerClass(variants, 1).map((r) => r.variantUrn)).toEqual(['p-concordant', 'b-ok'])
   })
 
   it('returns nothing when no definitive controls clear the star gate', () => {

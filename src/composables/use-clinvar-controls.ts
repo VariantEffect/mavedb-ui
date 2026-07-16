@@ -152,7 +152,7 @@ export function useClinvarControls(
       variant.control = placement
       // "Has clinical significance" gates the clinical view — a hard-discordant variant carries ClinVar
       // data but is not a usable control, so it doesn't count toward showing the view.
-      if (placement && !placement.excluded) {
+      if (placement && placement.discordance !== 'hard') {
         usableAny = true
       }
     }

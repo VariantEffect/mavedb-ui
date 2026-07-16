@@ -1,6 +1,13 @@
 import {describe, expect, test} from 'vitest'
 
-import {reduceControlPlacement, type ClinvarControlPlacement, type ControlLink} from '@/lib/clinvar-control-placement'
+import {
+  reduceControlPlacement,
+  resolveClinvarHeadline,
+  type ClinvarControlPlacement,
+  type ControlLink,
+  type UsableControlPlacement
+} from '@/lib/clinvar-control-placement'
+import type {MeasurementClinvarRecord} from '@/lib/clinvar-controls'
 
 // Review statuses and their star ratings (mirrors CLINVAR_REVIEW_STATUS_STARS), so the representative-pick
 // and per-classification-status tests are explicit about stars.
@@ -30,6 +37,12 @@ function link(significance: string, alleleDigest?: string, reviewStatus: string 
 /** The set of distinct significances in a placement (order-independent assertions). */
 const sigs = (p: ClinvarControlPlacement) => p.classifications.map((c) => c.significance).sort()
 
+/** Narrow to a usable placement — hard discordance has no representative, so asserting one there is a bug. */
+function usable(p: ClinvarControlPlacement): UsableControlPlacement {
+  if (p.discordance === 'hard') throw new Error('expected a usable placement, got hard discordance')
+  return p
+}
+
 describe('reduceControlPlacement — divergence fold', () => {
   test('no controls reach the variant → null', () => {
     expect(reduceControlPlacement([], ASSAY)).toBeNull()
@@ -37,23 +50,23 @@ describe('reduceControlPlacement — divergence fold', () => {
 
   describe('single direct call at the assayed level (projected = false)', () => {
     test.each([
-      [P, {directional: true, excluded: false}],
-      [LP, {directional: true, excluded: false}],
-      [PLP, {directional: true, excluded: false}],
-      [B, {directional: true, excluded: false}],
-      [LB, {directional: true, excluded: false}],
-      [BLB, {directional: true, excluded: false}],
-      [VUS, {directional: false, excluded: false}],
+      [P, {directional: true}],
+      [LP, {directional: true}],
+      [PLP, {directional: true}],
+      [B, {directional: true}],
+      [LB, {directional: true}],
+      [BLB, {directional: true}],
+      [VUS, {directional: false}],
       // ClinVar's own aggregate "conflicting" value is neither pathogenic- nor benign-side, so it is not
-      // directional and does not by itself trigger hard-discordance exclusion.
-      [CONFLICTING, {directional: false, excluded: false}]
-    ])('%s → directional/excluded flags, not projected', (significance, expected) => {
+      // directional and does not by itself trigger any discordance.
+      [CONFLICTING, {directional: false}]
+    ])('%s → directional flag, no discordance, not projected', (significance, expected) => {
       const p = reduceControlPlacement([link(significance, ASSAY)], ASSAY)!
-      expect(p.directional).toBe(expected.directional)
-      expect(p.excluded).toBe(expected.excluded)
+      expect(usable(p).directional).toBe(expected.directional)
+      expect(p.discordance).toBe('none')
       expect(p.projected).toBe(false)
       expect(sigs(p)).toEqual([significance])
-      expect(p.clinicalSignificance).toBe(significance)
+      expect(usable(p).clinicalSignificance).toBe(significance)
     })
   })
 
@@ -61,21 +74,21 @@ describe('reduceControlPlacement — divergence fold', () => {
     test('a lone assayed VUS blocks a sibling LP (any assayed call stops the fall-through)', () => {
       const p = reduceControlPlacement([link(VUS, ASSAY), link(LP, SIB)], ASSAY)!
       expect(sigs(p)).toEqual([VUS])
-      expect(p.directional).toBe(false)
+      expect(usable(p).directional).toBe(false)
       expect(p.projected).toBe(false)
     })
 
     test('an assayed directional call is not overridden into hard discordance by a discordant sibling', () => {
       const p = reduceControlPlacement([link(P, ASSAY), link(B, SIB)], ASSAY)!
       expect(sigs(p)).toEqual([P])
-      expect(p.excluded).toBe(false)
+      expect(p.discordance).toBe('none')
       expect(p.projected).toBe(false)
     })
 
     test('multiple assayed-level calls are all consulted (assayed-level discordance is still real)', () => {
-      // Two ClinVar submissions on the *same* assayed allele that disagree on direction → excluded.
+      // Two ClinVar submissions on the *same* assayed allele that disagree on direction → hard.
       const p = reduceControlPlacement([link(P, ASSAY), link(B, ASSAY), link(LP, SIB)], ASSAY)!
-      expect(p.excluded).toBe(true)
+      expect(p.discordance).toBe('hard')
       expect(p.projected).toBe(false)
       // The sibling LP is not consulted — only the two assayed-level calls.
       expect(sigs(p)).toEqual([B, P])
@@ -86,11 +99,12 @@ describe('reduceControlPlacement — divergence fold', () => {
     test('single sibling call → placed on its side, flagged projected', () => {
       const p = reduceControlPlacement([link(LB, SIB)], ASSAY)!
       expect(sigs(p)).toEqual([LB])
-      expect(p.directional).toBe(true)
+      expect(usable(p).directional).toBe(true)
+      expect(p.discordance).toBe('none')
       expect(p.projected).toBe(true)
     })
 
-    describe('hard discordance (both directions present) → excluded', () => {
+    describe('hard discordance (both directions present) → discordance = hard', () => {
       test.each([
         ['P + B', [P, B]],
         ['P + LB', [P, LB]],
@@ -98,46 +112,81 @@ describe('reduceControlPlacement — divergence fold', () => {
         ['LP + LB', [LP, LB]],
         ['PLP + BLB', [PLP, BLB]],
         ['P + B + VUS (VUS does not rescue)', [P, B, VUS]]
-      ])('%s → excluded', (_label, significances) => {
+      ])('%s → hard', (_label, significances) => {
         const links = significances.map((s, i) => link(s, i === 0 ? SIB : SIB2))
         const p = reduceControlPlacement(links, ASSAY)!
-        expect(p.excluded).toBe(true)
+        expect(p.discordance).toBe('hard')
         expect(p.projected).toBe(true)
+      })
+
+      test('carries the full set to reconstruct, but no representative — no fake single winner', () => {
+        const p = reduceControlPlacement([link(P, SIB, ONE_STAR), link(B, SIB2, TWO_STAR)], ASSAY)!
+        expect(p.discordance).toBe('hard')
+        // The conflicting calls are still enumerable by any surface.
+        expect(sigs(p)).toEqual([B, P])
+        // But there is physically no winner: the representative fields are absent from the value (and type).
+        expect('clinicalSignificance' in p).toBe(false)
+        expect('alleleDigest' in p).toBe(false)
+        expect('directional' in p).toBe(false)
       })
     })
 
-    describe('soft discordance (one direction, ± VUS) → included, multi-membership', () => {
-      test('same-side {P, LP} → both calls carried, pathogenic, not excluded', () => {
+    describe('concordant (≥2 distinct calls in one direction, no uncertain record) → discordance = concordant', () => {
+      test('same-side {P, LP} → both calls carried, pathogenic, concordant', () => {
         const p = reduceControlPlacement([link(P, SIB), link(LP, SIB2)], ASSAY)!
-        expect(p.excluded).toBe(false)
-        expect(p.directional).toBe(true)
+        expect(p.discordance).toBe('concordant')
+        expect(usable(p).directional).toBe(true)
         expect(sigs(p)).toEqual([LP, P])
       })
 
-      test('same-side {B, LB} → benign', () => {
+      test('same-side {B, LB} → benign, concordant', () => {
         const p = reduceControlPlacement([link(B, SIB), link(LB, SIB2)], ASSAY)!
-        expect(p.excluded).toBe(false)
+        expect(p.discordance).toBe('concordant')
         expect(sigs(p)).toEqual([B, LB])
       })
+    })
 
-      test('directional + VUS {LP, VUS} → directional (VUS suppressed downstream)', () => {
+    describe('soft conflict (a directional lean + an uncertain record) → discordance = soft', () => {
+      // The VUS widening: a directional lean beside a VUS is now a *soft conflict* (was previously `none`).
+      // The lean still represents and `directional` stays true; the histogram folds it into the directional
+      // series only while its soft-conflicts toggle is on.
+      test('directional + VUS {LP, VUS} → soft, lean represents', () => {
         const p = reduceControlPlacement([link(LP, SIB), link(VUS, SIB2)], ASSAY)!
-        expect(p.directional).toBe(true)
-        expect(p.excluded).toBe(false)
+        expect(p.discordance).toBe('soft')
+        expect(usable(p).directional).toBe(true)
+        expect(usable(p).clinicalSignificance).toBe(LP)
         expect(sigs(p)).toEqual([LP, VUS])
       })
 
-      test('benign + VUS {B, VUS} → directional benign', () => {
+      test('benign + VUS {B, VUS} → soft, benign lean represents', () => {
         const p = reduceControlPlacement([link(B, SIB), link(VUS, SIB2)], ASSAY)!
-        expect(p.directional).toBe(true)
+        expect(p.discordance).toBe('soft')
+        expect(usable(p).directional).toBe(true)
+        expect(usable(p).clinicalSignificance).toBe(B)
         expect(sigs(p)).toEqual([B, VUS])
+      })
+
+      // A directional lean beside a ClinVar-*Conflicting* record is the same soft conflict (folds in what was
+      // the retired `contested` value).
+      test('directional + Conflicting {P, CONFLICTING} → soft, directional lean represents', () => {
+        const p = reduceControlPlacement([link(P, SIB), link(CONFLICTING, SIB2)], ASSAY)!
+        expect(p.discordance).toBe('soft')
+        expect(usable(p).directional).toBe(true)
+        expect(usable(p).clinicalSignificance).toBe(P)
+        expect(sigs(p)).toEqual([CONFLICTING, P].sort())
+      })
+
+      test('same-direction multiplicity + an uncertain record → soft outranks concordant', () => {
+        const p = reduceControlPlacement([link(P, SIB), link(LP, SIB2), link(CONFLICTING, SIB)], ASSAY)!
+        expect(p.discordance).toBe('soft')
+        expect(usable(p).directional).toBe(true)
       })
     })
 
     test('VUS-only siblings → not directional (lands in the VUS series)', () => {
       const p = reduceControlPlacement([link(VUS, SIB), link(VUS, SIB2)], ASSAY)!
-      expect(p.directional).toBe(false)
-      expect(p.excluded).toBe(false)
+      expect(usable(p).directional).toBe(false)
+      expect(p.discordance).toBe('none')
       // Duplicate significances collapse to one classification.
       expect(sigs(p)).toEqual([VUS])
     })
@@ -166,18 +215,18 @@ describe('reduceControlPlacement — divergence fold', () => {
   describe('representative pick (for one-label surfaces: search dot, notables, tooltip)', () => {
     test('a directional call is preferred over a higher-star VUS', () => {
       const p = reduceControlPlacement([link(LP, SIB, ONE_STAR), link(VUS, SIB2, THREE_STAR)], ASSAY)!
-      expect(p.clinicalSignificance).toBe(LP)
+      expect(usable(p).clinicalSignificance).toBe(LP)
     })
 
     test('among directional calls, the highest-star one represents', () => {
-      const p = reduceControlPlacement([link(LP, SIB, ONE_STAR), link(P, SIB2, TWO_STAR)], ASSAY)!
+      const p = usable(reduceControlPlacement([link(LP, SIB, ONE_STAR), link(P, SIB2, TWO_STAR)], ASSAY)!)
       expect(p.clinicalSignificance).toBe(P)
       expect(p.clinicalReviewStatus).toBe(TWO_STAR)
     })
 
     test('VUS-only → the VUS represents', () => {
       const p = reduceControlPlacement([link(VUS, SIB, TWO_STAR)], ASSAY)!
-      expect(p.clinicalSignificance).toBe(VUS)
+      expect(usable(p).clinicalSignificance).toBe(VUS)
     })
   })
 
@@ -185,13 +234,34 @@ describe('reduceControlPlacement — divergence fold', () => {
     test('carries the digest of the representative call', () => {
       const p = reduceControlPlacement([link(LP, 's1', ONE_STAR), link(P, 's2', TWO_STAR)], 'assay')!
       // Representative is the highest-star directional (P on s2), so its digest surfaces.
-      expect(p.alleleDigest).toBe('s2')
+      expect(usable(p).alleleDigest).toBe('s2')
     })
 
     test('a direct assayed-level call surfaces the assayed digest', () => {
       const p = reduceControlPlacement([link(P, ASSAY), link(LP, SIB)], ASSAY)!
-      expect(p.alleleDigest).toBe(ASSAY)
+      expect(usable(p).alleleDigest).toBe(ASSAY)
       expect(p.projected).toBe(false)
+    })
+  })
+
+  describe('none (a single call, or uncertain-only records) → discordance = none', () => {
+    test('a lone Conflicting record (no directional lean) is not a soft conflict', () => {
+      const p = reduceControlPlacement([link(CONFLICTING, SIB)], ASSAY)!
+      expect(p.discordance).toBe('none')
+      expect(usable(p).directional).toBe(false)
+      expect(usable(p).clinicalSignificance).toBe(CONFLICTING)
+    })
+
+    test('uncertain-only {VUS, Conflicting} → none (no directional lean to conflict with)', () => {
+      const p = reduceControlPlacement([link(VUS, SIB), link(CONFLICTING, SIB2)], ASSAY)!
+      expect(p.discordance).toBe('none')
+      expect(usable(p).directional).toBe(false)
+      expect(sigs(p)).toEqual([CONFLICTING, VUS].sort())
+    })
+
+    test('opposite directions outrank an uncertain record → hard, not soft', () => {
+      const p = reduceControlPlacement([link(P, SIB), link(B, SIB2), link(CONFLICTING, SIB2)], ASSAY)!
+      expect(p.discordance).toBe('hard')
     })
   })
 
@@ -222,5 +292,96 @@ describe('reduceControlPlacement — divergence fold', () => {
       expect(p.projected).toBe(false)
       expect(sigs(p)).toEqual([LP, P])
     })
+  })
+})
+
+/** A resolved record for one allele — the walk's output that the headline projects from. */
+function rec(significance: string, digest: string, reviewStatus: string = ONE_STAR): MeasurementClinvarRecord {
+  return {
+    digest,
+    onAssayed: digest === ASSAY,
+    hgvs: null,
+    classified: !!significance.trim() && !/^-+$/.test(significance.trim()),
+    clinvar: {
+      clinicalSignificance: significance,
+      clinicalReviewStatus: reviewStatus,
+      clinvarVariationId: null,
+      clinvarAlleleId: `${significance}@${digest}`,
+      dbVersion: '03_2024'
+    }
+  }
+}
+
+describe('resolveClinvarHeadline — the display decision', () => {
+  test('no records → none', () => {
+    expect(resolveClinvarHeadline([], ASSAY)).toEqual({kind: 'none'})
+  })
+
+  test('a usable call → kind "call", carrying the representative record and placement', () => {
+    const headline = resolveClinvarHeadline([rec(P, ASSAY), rec(VUS, SIB)], ASSAY)
+    expect(headline.kind).toBe('call')
+    if (headline.kind !== 'call') throw new Error('expected a call')
+    expect(headline.clinvar.clinicalSignificance).toBe(P)
+    expect(headline.placement.discordance).not.toBe('hard')
+  })
+
+  test('opposite-direction calls in the winning set → kind "conflicting"', () => {
+    const headline = resolveClinvarHeadline([rec(P, ASSAY), rec(B, ASSAY)], ASSAY)
+    expect(headline.kind).toBe('conflicting')
+  })
+
+  test('a directional lean + a Conflicting sibling → kind "call", note "soft-conflicting"', () => {
+    const headline = resolveClinvarHeadline([rec(P, SIB), rec(CONFLICTING, SIB2)], ASSAY)
+    expect(headline.kind).toBe('call')
+    if (headline.kind !== 'call') throw new Error('expected a call')
+    // The lean shows, and the note flags ClinVar's own conflict verdict for the surface to render.
+    expect(headline.clinvar.clinicalSignificance).toBe(P)
+    expect(headline.placement.discordance).toBe('soft')
+    expect(headline.note).toBe('soft-conflicting')
+  })
+
+  test('a directional lean + a VUS sibling → kind "call", note "soft-vus"', () => {
+    const headline = resolveClinvarHeadline([rec(LP, SIB), rec(VUS, SIB2)], ASSAY)
+    expect(headline.kind).toBe('call')
+    if (headline.kind !== 'call') throw new Error('expected a call')
+    expect(headline.clinvar.clinicalSignificance).toBe(LP)
+    expect(headline.placement.discordance).toBe('soft')
+    expect(headline.note).toBe('soft-vus')
+  })
+
+  test('≥2 agreeing same-direction records → kind "call", note "concordant"', () => {
+    const headline = resolveClinvarHeadline([rec(P, SIB), rec(LP, SIB2)], ASSAY)
+    expect(headline.kind).toBe('call')
+    if (headline.kind !== 'call') throw new Error('expected a call')
+    expect(headline.placement.discordance).toBe('concordant')
+    expect(headline.note).toBe('concordant')
+  })
+
+  test('a lone unambiguous call → kind "call", note "none"', () => {
+    const headline = resolveClinvarHeadline([rec(P, ASSAY)], ASSAY)
+    expect(headline.kind).toBe('call')
+    if (headline.kind !== 'call') throw new Error('expected a call')
+    expect(headline.note).toBe('none')
+  })
+
+  test('only a `-` record → kind "presence" (not dropped; precedence, not the fold)', () => {
+    const headline = resolveClinvarHeadline([rec('-', ASSAY)], ASSAY)
+    expect(headline.kind).toBe('presence')
+    if (headline.kind !== 'presence') throw new Error('expected presence')
+    expect(headline.record.digest).toBe(ASSAY)
+  })
+
+  test('a real call outranks a co-occurring `-` — presence never shadows a classification', () => {
+    const headline = resolveClinvarHeadline([rec('-', ASSAY), rec(LP, SIB)], ASSAY)
+    expect(headline.kind).toBe('call')
+    if (headline.kind !== 'call') throw new Error('expected a call')
+    expect(headline.clinvar.clinicalSignificance).toBe(LP)
+  })
+
+  test('presence prefers the measured allele`s own `-` record over a sibling`s', () => {
+    const headline = resolveClinvarHeadline([rec('-', SIB), rec('-', ASSAY)], ASSAY)
+    expect(headline.kind).toBe('presence')
+    if (headline.kind !== 'presence') throw new Error('expected presence')
+    expect(headline.record.onAssayed).toBe(true)
   })
 })

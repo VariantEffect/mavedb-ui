@@ -55,7 +55,7 @@
       <div v-if="classification || evidenceCode" class="mt-1.5">
         <span class="mb-1 block text-[10px] font-bold uppercase tracking-[0.3px] text-[#aaa]">Classified as</span>
         <div class="flex flex-wrap items-center gap-1.5">
-          <MvClassificationTag v-if="classification" v-key-term="'consequence'" :classification="classification" />
+          <MvClassificationTag v-if="classification" v-key-term="'functional-impact'" :classification="classification" />
           <MvEvidenceTag v-if="evidenceCode" v-key-term="'acmg'" :code="evidenceCode" />
           <span v-if="oddspathsRatio != null" v-key-term="'acmg'" class="text-xs text-text-muted"
             >(OddsPath {{ oddspathsRatio.toPrecision(3) }})</span

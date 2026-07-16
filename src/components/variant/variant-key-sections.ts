@@ -1,5 +1,6 @@
 import config from '@/config'
 import type {KeySection} from '@/composables/use-key-drawer'
+import {ACMG_CRITERIA} from '@/lib/acmg'
 import {ALLELE_CONFIDENCE} from '@/lib/allele-grouping'
 import {FUNCTIONAL_CLASSIFICATIONS} from '@/lib/functional-impact'
 import {LEVEL_BUCKETS, RELATIONSHIPS} from '@/lib/measurement-types'
@@ -61,14 +62,20 @@ export const VARIANT_KEY_SECTIONS: KeySection[] = [
   },
   {
     id: 'consequence',
-    title: 'Consequence vs impact',
+    title: 'Molecular consequence',
     terms: [
       {
         label: 'Molecular consequence',
         definition: 'The predicted effect on the transcript or protein (e.g. missense), from VEP.'
-      },
+      }
+    ]
+  },
+  {
+    id: 'functional-impact',
+    title: 'Functional impact',
+    terms: [
       {label: 'Functional impact', definition: "The assay's verdict on whether the variant alters function."},
-      // The two functional calls derive from the shared classification vocabulary so tag and gloss can't drift.
+      // Derived from the shared classification vocabulary so tag and gloss can't drift.
       ...Object.values(FUNCTIONAL_CLASSIFICATIONS)
         .filter((c) => c.definition)
         .map((c) => ({label: c.label, definition: c.definition!, class: c.class}))
@@ -79,8 +86,8 @@ export const VARIANT_KEY_SECTIONS: KeySection[] = [
     title: 'ACMG functional evidence',
     gloss: 'How the functional result maps onto clinical-classification evidence.',
     terms: [
-      {label: 'PS3', definition: 'Functional evidence supporting a pathogenic classification.'},
-      {label: 'BS3', definition: 'Functional evidence supporting a benign classification.'},
+      // PS3/BS3 derive from the shared ACMG criteria vocabulary so the codes and glosses can't drift.
+      ...Object.values(ACMG_CRITERIA),
       {
         label: 'Evidence strength',
         definition: 'How much weight the evidence carries: supporting → moderate → strong → very strong.'

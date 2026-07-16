@@ -28,6 +28,22 @@ export const EVIDENCE_STRENGTH_AS_POINTS = {
 export const EVIDENCE_STRENGTH = Object.keys(EVIDENCE_STRENGTH_AS_POINTS)
 
 /**
+ * The two ACMG functional-evidence criteria with their Key-drawer glosses, keyed by criterion code so the
+ * drawer labels are the very constants the evidence tags render — they can't drift. Pathogenic first
+ * (display order).
+ */
+export const ACMG_CRITERIA: Record<string, {label: string; definition: string}> = {
+  [PATHOGENIC_CRITERION]: {
+    label: PATHOGENIC_CRITERION,
+    definition: 'Functional evidence supporting a pathogenic classification.'
+  },
+  [BENIGN_CRITERION]: {
+    label: BENIGN_CRITERION,
+    definition: 'Functional evidence supporting a benign classification.'
+  }
+}
+
+/**
  * Formats the ACMG evidence code from a functional classification's ACMG classification data.
  *
  * @param classification - A functional classification that may contain an `acmgClassification`

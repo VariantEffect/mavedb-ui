@@ -1,6 +1,6 @@
 import {describe, expect, it} from 'vitest'
 
-import {groupAlleles, type GroupAllelesInput} from '@/lib/allele-grouping'
+import {ALLELE_CONFIDENCE, confidenceBadge, groupAlleles, type GroupAllelesInput} from '@/lib/allele-grouping'
 import type {components} from '@/schema/openapi'
 
 type AlleleIdentity = components['schemas']['AlleleIdentity']
@@ -126,6 +126,18 @@ describe('groupAlleles — projection pairing + confidence', () => {
     })
     expect(groups).toHaveLength(1)
     expect(groups[0].measured).toBe(false)
+  })
+
+  it('badges measured over derivation, maps projection→Resolved / candidate→Candidate, else null', () => {
+    // `measured` wins even if a derivation is also present (a stray measured sibling still reads "Measured").
+    expect(confidenceBadge({measured: true, derivation: 'projection'})).toBe(ALLELE_CONFIDENCE.measured)
+    expect(confidenceBadge({measured: false, derivation: 'projection'})).toBe(ALLELE_CONFIDENCE.projection)
+    expect(confidenceBadge({measured: false, derivation: 'candidate'})).toBe(ALLELE_CONFIDENCE.candidate)
+    // `authoritative` is only ever surfaced via `measured`; on its own it has no derived badge.
+    expect(confidenceBadge({measured: false, derivation: 'authoritative'})).toBeNull()
+    expect(confidenceBadge({measured: false, derivation: null})).toBeNull()
+    // The user-facing labels are decoupled from the enum keys.
+    expect(ALLELE_CONFIDENCE.projection.label).toBe('Resolved')
   })
 
   it('surfaces distinct linked CAIDs, excluding the page anchor', () => {

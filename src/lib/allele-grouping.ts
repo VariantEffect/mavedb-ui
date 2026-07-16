@@ -1,3 +1,10 @@
+/**
+ * @fileoverview
+ * Allele grouping: collapse a variant's alleles into one or more groups for display, pairing c↔g projections
+ * and deduplicating their annotations. The groups are the rendered entries in the variant detail's
+ * "alleles" section, and the source of truth for the histogram's per-allele controls.
+ */
+
 import _ from 'lodash'
 
 import type {components} from '@/schema/openapi'
@@ -5,47 +12,71 @@ import type {components} from '@/schema/openapi'
 type AlleleIdentity = components['schemas']['AlleleIdentity']
 type AlleleAnnotations = components['schemas']['AlleleAnnotations']
 
-/** Confidence/provenance axis (orthogonal to Cat-VRS `relation`); strongest first. */
+/** Confidence/provenance axis (orthogonal to Cat-VRS's `relation`); strongest confidence first. */
 export type Derivation = 'authoritative' | 'projection' | 'candidate'
 const DERIVATION_RANK: Record<string, number> = {authoritative: 0, projection: 1, candidate: 2}
 
 // Level display order (genomic → coding → protein) so a group reads bottom-up through the layer stack.
 const LEVEL_ORDER: Record<string, number> = {genomic: 0, cdna: 1, protein: 2}
 
+/** A member of an allele group: a single level's identity, its annotations, and whether it is the page root. */
 export interface AlleleMember extends AlleleIdentity {
   digest: string
   annotations: AlleleAnnotations | null
-  /** This allele is the CAID/PAID the page is anchored on. */
+  // Whether this allele is the CAID/PAID the page is anchored on.
   pageRoot: boolean
 }
 
 /**
  * A group of alleles rendered as one entry. Either a single allele (the protein apex, an unpaired
  * measured allele, or a projection-failed one-member candidate) or a c↔g projection pair collapsed into
- * one — the same change at two levels — with its annotations deduplicated.
+ * one (the same change at two levels).
  */
 export interface AlleleGroup {
   key: string
   members: AlleleMember[]
-  /** Contains the measured (authoritative) allele. */
+  // The measured (authoritative) allele.
   measured: boolean
-  /** Contains the page-anchor allele. */
+  // Whether this group contains the page-anchor allele.
   pageRoot: boolean
-  /** Grouped confidence: the strongest derivation among the members. */
+  // Grouped confidence: the strongest derivation among the members.
   derivation: Derivation | null
-  /**
-   * Whether the members' annotations can render as one block. Missingness is NOT a difference: a field
-   * present on one level and absent on the other coalesces to the present value. Only a genuine
-   * present-vs-present disagreement makes this false (→ render each level separately, with a note).
-   */
+  // Whether the members' annotations can render as one block.
   annotationsMatch: boolean
-  /**
-   * The per-field union of the members' annotations (present-wins). Used to render the single block when
-   * `annotationsMatch` — so a coalesced group shows every field any member has, not just member[0]'s.
-   */
+  // The per-field union of the members' annotations (present-wins).
   coalescedAnnotations: AlleleAnnotations | null
-  /** Distinct linked CAIDs to surface, excluding the page anchor (which is this page). */
+  // Distinct linked CAIDs to surface.
   clingenLinks: string[]
+}
+
+/** A provenance badge + its Key-drawer gloss: how a group's coordinate was established. */
+export interface ConfidenceBadge {
+  label: string
+  class: string
+  definition: string
+}
+
+// Single source for the confidence axis (badges + the Key drawer's "confidence" section). Keyed by
+// outcome, not raw `Derivation`: `measured` (authoritative) reads "Measured"; the two derived states map
+// straight from `derivation`. Insertion order is the drawer's display order.
+export const ALLELE_CONFIDENCE: Record<string, ConfidenceBadge> = {
+  measured: {label: 'Measured', class: 'bg-sage/15 text-sage', definition: 'Directly assayed in this score set.'},
+  projection: {
+    label: 'Resolved',
+    class: 'bg-nucleotide-light text-nucleotide',
+    definition: 'Derived from the measured allele by reverse translation — the same change expressed at another level.'
+  },
+  candidate: {
+    label: 'Candidate',
+    class: 'bg-amber-100 text-amber-700',
+    definition: 'A change that encodes the same protein change as your variant, but is a distinct nucleotide change.'
+  }
+}
+
+/** Confidence badge for a group: `measured` wins, else the derived state; null when neither applies. */
+export function confidenceBadge(group: Pick<AlleleGroup, 'measured' | 'derivation'>): ConfidenceBadge | null {
+  if (group.measured) return ALLELE_CONFIDENCE.measured
+  return group.derivation ? (ALLELE_CONFIDENCE[group.derivation] ?? null) : null
 }
 
 export interface GroupAllelesInput {

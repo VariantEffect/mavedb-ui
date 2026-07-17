@@ -7,6 +7,7 @@
  */
 
 import {components} from '@/schema/openapi'
+import type {KeySection} from '@/composables/use-key-drawer'
 
 type ScoreCalibrationFunctionalClassification =
   components['schemas']['mavedb__view_models__score_calibration__FunctionalClassification']
@@ -43,13 +44,17 @@ export const ACMG_CRITERIA: Record<string, {label: string; definition: string}> 
   }
 }
 
-/**
- * Formats the ACMG evidence code from a functional classification's ACMG classification data.
- *
- * @param classification - A functional classification that may contain an `acmgClassification`
- *   with `criterion` (e.g. "PS3", "BS3") and `evidenceStrength` (e.g. "Strong", "Moderate").
- * @returns A formatted code like "PS3_STRONG", or an empty string if evidence data is missing.
- */
+export const ACMG_KEY_SECTION: KeySection = {
+  id: 'acmg',
+  title: 'ACMG functional evidence',
+  gloss: 'How the functional result maps onto clinical-classification evidence.',
+  terms: [
+    ...Object.values(ACMG_CRITERIA),
+    {label: 'Evidence strength', definition: 'How much weight the evidence carries: supporting → moderate → strong → very strong.'},
+    {label: 'OddsPath', definition: 'The odds of pathogenicity implied by the score; sets the evidence strength.'}
+  ]
+}
+
 export function formatEvidenceCode(
   classification: ScoreCalibrationFunctionalClassification | null | undefined
 ): string {

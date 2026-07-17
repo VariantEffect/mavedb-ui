@@ -4,6 +4,8 @@
  * module; the heavier editor/draft calibration model stays in `calibration-types.ts`.
  */
 
+import type {KeySection} from '@/composables/use-key-drawer'
+
 export type FunctionalClassification = 'abnormal' | 'normal' | 'not_specified'
 
 /**
@@ -38,4 +40,15 @@ export const FUNCTIONAL_CLASSIFICATIONS: Record<
     class: 'mave-classification-not_specified',
     rangeColor: 'var(--color-cal-unspecified)'
   }
+}
+
+export const FUNCTIONAL_IMPACT_KEY_SECTION: KeySection = {
+  id: 'functional-impact',
+  title: 'Functional impact',
+  terms: [
+    {label: 'Functional impact', definition: "The assay's verdict on whether the variant alters function."},
+    ...Object.values(FUNCTIONAL_CLASSIFICATIONS)
+      .filter((c) => c.definition)
+      .map((c) => ({label: c.label, definition: c.definition!, class: c.class}))
+  ]
 }

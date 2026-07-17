@@ -8,6 +8,7 @@
 import _ from 'lodash'
 
 import type {components} from '@/schema/openapi'
+import type {KeySection} from '@/composables/use-key-drawer'
 
 type AlleleIdentity = components['schemas']['AlleleIdentity']
 type AlleleAnnotations = components['schemas']['AlleleAnnotations']
@@ -71,6 +72,12 @@ export const ALLELE_CONFIDENCE: Record<string, ConfidenceBadge> = {
     class: 'bg-amber-100 text-amber-700',
     definition: 'A change that encodes the same protein change as your variant, but is a distinct nucleotide change.'
   }
+}
+
+export const CONFIDENCE_KEY_SECTION: KeySection = {
+  id: 'confidence',
+  title: 'How a coordinate was established',
+  terms: Object.values(ALLELE_CONFIDENCE).map((c) => ({label: c.label, definition: c.definition, class: c.class}))
 }
 
 /** Confidence badge for a group: `measured` wins, else the derived state; null when neither applies. */

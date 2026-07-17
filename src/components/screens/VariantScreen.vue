@@ -404,9 +404,6 @@
       </template>
     </div>
 
-    <!-- Vocabulary Key: mounted once; opened from the control-header trigger or deep-linked from a badge.
-         Generic drawer + variant-page content injected via props. -->
-    <MvKeyDrawer :docs-url="keyDocsUrl" :sections="keySections" />
   </MvLayout>
 </template>
 
@@ -436,8 +433,6 @@ import MvRelatedAlleles from '@/components/variant/MvRelatedAlleles.vue'
 import MvClassificationTag from '@/components/common/MvClassificationTag.vue'
 import VariantGnomadStat from '@/components/variant/VariantGnomadStat.vue'
 import VariantClinvarStat from '@/components/variant/VariantClinvarStat.vue'
-import MvKeyDrawer from '@/components/common/MvKeyDrawer.vue'
-import {VARIANT_KEY_SECTIONS, VARIANT_KEY_DOCS_URL} from '@/components/variant/variant-key-sections'
 import MvMeasurementCard from '@/components/variant/MvMeasurementCard.vue'
 import MvRowActionMenu, {type RowAction} from '@/components/common/MvRowActionMenu.vue'
 import VariantInfoSection from '@/components/variant/VariantInfoSection.vue'
@@ -463,7 +458,6 @@ export default defineComponent({
     VariantClinvarStat,
     MvAssayFactsCard,
     MvBadgeToggle,
-    MvKeyDrawer,
     MvEmptyState,
     MvErrorState,
     MvEvidenceTag,
@@ -508,9 +502,7 @@ export default defineComponent({
       head: useHead({title: 'Variant search results'}),
       lookup,
       clinvarControls,
-      keyDrawer: useKeyDrawer(),
-      keySections: VARIANT_KEY_SECTIONS,
-      keyDocsUrl: VARIANT_KEY_DOCS_URL
+      keyDrawer: useKeyDrawer()
     }
   },
 

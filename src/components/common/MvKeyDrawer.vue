@@ -65,32 +65,27 @@
 </template>
 
 <script lang="ts">
-import {defineComponent, nextTick, type PropType} from 'vue'
+import {defineComponent, nextTick} from 'vue'
 
-import {useKeyDrawer, type KeySection} from '@/composables/use-key-drawer'
+import {useKeyDrawer} from '@/composables/use-key-drawer'
+import {GLOSSARY_DOCS_URL, GLOSSARY_SECTIONS} from '@/glossary'
 
 /**
- * Generic vocabulary "Key" — a non-modal, right-side (mobile: pop-out card) definitions drawer. Content
- * is injected via `sections`, so this component carries no page-specific text; a page supplies its own
- * sections (see e.g. the variant page's `variant-key-sections`). Mounted once per page; opened from a
- * trigger or deep-linked from a badge via the shared {@link useKeyDrawer} singleton (or the `v-key-term`
- * directive). On a deep link it scrolls the target section into view and flashes it. Closes only on ✕ or
- * Esc, so it can stay open while the reader scans the page beneath it.
+ * Vocabulary "Key" drawer — non-modal, right-side (mobile: pop-out card). Mounted once at the app root
+ * so it's reachable from any screen. Opened from a trigger or deep-linked from any badge via the shared
+ * {@link useKeyDrawer} singleton (or the `v-key-term` directive). On a deep link it scrolls the target
+ * section into view and flashes it. Closes only on ✕ or Esc, so it can stay open while the reader scans.
  */
 export default defineComponent({
   name: 'MvKeyDrawer',
 
   props: {
-    /** The definition sections to render, in display order. */
-    sections: {type: Array as PropType<KeySection[]>, required: true},
     /** Header label (and the noun in the close button's aria-label). */
-    title: {type: String, default: 'Key'},
-    /** Default "more →" docs link for every section; a section may override via its own `docsUrl`. */
-    docsUrl: {type: String as PropType<string | undefined>, default: undefined}
+    title: {type: String, default: 'Key'}
   },
 
   setup() {
-    return {drawer: useKeyDrawer()}
+    return {drawer: useKeyDrawer(), sections: GLOSSARY_SECTIONS, docsUrl: GLOSSARY_DOCS_URL}
   },
 
   data() {

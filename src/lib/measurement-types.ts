@@ -1,4 +1,5 @@
 import type {components} from '@/schema/openapi'
+import type {KeySection} from '@/composables/use-key-drawer'
 import type {SequenceLevel} from '@/composables/use-variant-coordinates'
 
 export type MeasurementRelationship = components['schemas']['MeasurementRelationship']
@@ -10,6 +11,34 @@ export type LevelBucket = 'nucleotide' | 'amino acid'
 
 export function assayLevelBucket(level: string | null | undefined): LevelBucket {
   return level === 'protein' ? 'amino acid' : 'nucleotide'
+}
+
+/**
+ * Single source of truth for the measurement-to-query relationship vocabulary (the RT asymmetry): the
+ * card label, an optional chip class, and the Key-drawer gloss. Phrased relative to the user's variant so
+ * the labels self-explain under the "relative to your variant" anchor. Insertion order is display order.
+ */
+export const RELATIONSHIPS: Record<MeasurementRelationship, {label: string; class?: string; definition: string}> = {
+  direct: {
+    label: 'Your variant',
+    class: 'bg-sage/15 text-sage',
+    definition: 'The result assayed exactly the allele you searched.'
+  },
+  protein_consequence: {
+    label: 'Its protein consequence',
+    definition: 'The result assayed the protein change your variant produces.'
+  },
+  nucleotide_encoding: {
+    label: 'Encodes the protein consequence',
+    definition: 'The result assayed a nucleotide allele that encodes the same protein change as your variant.'
+  }
+}
+
+export const RELATIONSHIP_KEY_SECTION: KeySection = {
+  id: 'relationship',
+  title: 'Relationship to your variant',
+  gloss: 'How each result relates to the allele you searched.',
+  terms: Object.values(RELATIONSHIPS).map((r) => ({label: r.label, definition: r.definition, class: r.class}))
 }
 
 /**
@@ -28,6 +57,13 @@ export const LEVEL_BUCKETS: Record<LevelBucket, {label: string; class: string; d
     class: 'bg-amino-acid-light text-amino-acid',
     definition: 'Assayed as an amino-acid change.'
   }
+}
+
+export const ASSAY_LEVEL_KEY_SECTION: KeySection = {
+  id: 'assay-level',
+  title: 'Assay level',
+  gloss: 'The level at which a result measured the change.',
+  terms: Object.values(LEVEL_BUCKETS).map((b) => ({label: b.label, definition: b.definition, class: b.class}))
 }
 
 /** The display label, color classes, and gloss for a raw SequenceLevel, collapsed to its bucket. */
@@ -51,25 +87,4 @@ export function dominantAssayLevel(levels: Array<SequenceLevel | null | undefine
     }
   }
   return best
-}
-
-/**
- * Single source of truth for the measurement-to-query relationship vocabulary (the RT asymmetry): the
- * card label, an optional chip class, and the Key-drawer gloss. Phrased relative to the user's variant so
- * the labels self-explain under the "relative to your variant" anchor. Insertion order is display order.
- */
-export const RELATIONSHIPS: Record<MeasurementRelationship, {label: string; class?: string; definition: string}> = {
-  direct: {
-    label: 'Your variant',
-    class: 'bg-sage/15 text-sage',
-    definition: 'The result assayed exactly the allele you searched.'
-  },
-  protein_consequence: {
-    label: 'Its protein consequence',
-    definition: 'The result assayed the protein change your variant produces.'
-  },
-  nucleotide_encoding: {
-    label: 'Encodes the protein consequence',
-    definition: 'The result assayed a nucleotide allele that encodes the same protein change as your variant.'
-  }
 }

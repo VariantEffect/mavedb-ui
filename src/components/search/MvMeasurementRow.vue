@@ -1,6 +1,7 @@
 <template>
   <div class="flex flex-wrap items-baseline gap-x-3 gap-y-0.5 border-b border-gray-50 py-1.5 text-sm last:border-b-0">
     <span
+      v-key-term="'assay-level'"
       class="inline-block rounded-sm px-1.5 py-0.5 text-[10px] font-semibold uppercase tracking-[0.3px]"
       :class="levelClass"
       >{{ levelLabel }}</span

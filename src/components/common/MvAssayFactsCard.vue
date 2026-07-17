@@ -33,7 +33,7 @@
         :value="getKeyword('Phenotypic Assay Mechanism')"
       />
       <MvDetailRow fallback="Not specified" label="Model system" :value="getKeyword('Phenotypic Assay Model System')" />
-      <MvDetailRow fallback="Not mapped" label="Assay level" :value="assayLevelLabel" />
+      <MvDetailRow fallback="Not mapped" label="Assay level" term="assay-level" :value="assayLevelLabel" />
       <MvDetailRow fallback="Not specified" label="Detects splicing?">
         <span
           v-if="detectsSplicing != null"

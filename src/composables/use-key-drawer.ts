@@ -23,7 +23,7 @@ export interface KeySection {
 /**
  * Module-level singleton driving the vocabulary "Key" drawer. Any component can call `open(term)` to
  * surface a definition without threading props/events through the page — the drawer itself is mounted
- * once at the variant-page root and reads this shared state. `activeTerm` is the anchor id the drawer
+ * once at the app root and reads this shared state. `activeTerm` is the anchor id the drawer
  * scrolls to and briefly highlights on open; passing nothing opens it at the top.
  *
  * Deliberately global rather than provide/inject: the trigger (control header) and the deep-linking

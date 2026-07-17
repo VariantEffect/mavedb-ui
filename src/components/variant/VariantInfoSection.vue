@@ -20,7 +20,7 @@
       </template>
       <template v-if="clinvarAlleleIds.length === 0"><span class="text-text-muted">—</span></template>
     </MvDetailRow>
-    <MvDetailRow label="Molecular consequence">
+    <MvDetailRow label="Molecular consequence" term="consequence">
       <span v-if="molecularConsequence">{{ formatConsequence(molecularConsequence) }}</span>
       <span v-else class="italic text-text-muted">—</span>
     </MvDetailRow>

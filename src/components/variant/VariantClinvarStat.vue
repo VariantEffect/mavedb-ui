@@ -1,7 +1,7 @@
 <template>
   <div :class="plain ? 'flex h-full flex-col gap-0.5' : 'stat'">
     <!-- Label defaults to the score-set stat label; callers (e.g. the variant screen) inject their own. -->
-    <slot name="label"><span class="stat-label">ClinVar</span></slot>
+    <slot name="label"><span v-key-term="'clinical'" class="stat-label">ClinVar</span></slot>
     <!-- Hard discordance: related variants carry both pathogenic and benign calls — no single call to show. -->
     <span v-if="headline.kind === 'conflicting'" class="stat-value text-sm font-semibold">
       Conflicting classifications

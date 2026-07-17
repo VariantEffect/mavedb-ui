@@ -219,7 +219,6 @@
               <span class="text-[10px] font-semibold uppercase tracking-[0.3px] text-[#aaa]">Functional impact</span>
               <MvClassificationTag
                 v-if="lookup.calibrationResolution.classification.value"
-                v-key-term="'functional-impact'"
                 :classification="lookup.calibrationResolution.classification.value"
               />
               <span v-else class="text-sm text-text-muted">—</span>
@@ -234,7 +233,6 @@
               <span class="text-[10px] font-semibold uppercase tracking-[0.3px] text-[#aaa]">ACMG code</span>
               <MvEvidenceTag
                 v-if="lookup.calibrationResolution.formattedEvidenceCode.value"
-                v-key-term="'acmg'"
                 :code="lookup.calibrationResolution.formattedEvidenceCode.value"
               />
               <span v-else class="text-sm text-text-muted">—</span>

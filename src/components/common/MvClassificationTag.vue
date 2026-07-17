@@ -1,5 +1,6 @@
 <template>
   <span
+    v-key-term="'functional-impact'"
     class="inline-block max-w-full rounded px-2.5 py-0.5 text-xs font-bold leading-snug tracking-wide"
     :class="tagClass"
   >

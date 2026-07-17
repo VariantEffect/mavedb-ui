@@ -1,7 +1,7 @@
 <template>
   <div :class="plain ? 'flex h-full flex-col gap-0.5' : 'stat'">
     <!-- Label defaults to the score-set stat label; callers (e.g. the variant screen) inject their own. -->
-    <slot name="label"><span class="stat-label">gnomAD</span></slot>
+    <slot name="label"><span v-key-term="'population'" class="stat-label">gnomAD</span></slot>
     <!-- The measured allele's own frequency (a nucleotide-level assay): the canonical stat, straight up. -->
     <MvGnomadSummary v-if="assayGnomad" :gnomad="assayGnomad" />
     <!-- No gnomAD on the measured allele itself, but sibling variants carry frequencies (protein level assay). 

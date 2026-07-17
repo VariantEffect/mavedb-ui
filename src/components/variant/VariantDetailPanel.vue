@@ -31,7 +31,7 @@
       <!-- Facts -->
       <div class="grid grid-cols-2 gap-px border-t border-border-light bg-border-light tablet:grid-cols-4">
         <div class="stat">
-          <span class="stat-label">Molecular consequence</span>
+          <span v-key-term="'consequence'" class="stat-label">Molecular consequence</span>
           <span class="stat-value font-semibold">{{
             consequence?.consequence ? formatToken(consequence.consequence) : '—'
           }}</span>
@@ -41,7 +41,7 @@
         </div>
 
         <div class="stat">
-          <span class="stat-label">Classification</span>
+          <span v-key-term="'functional-impact'" class="stat-label">Classification</span>
           <span v-if="selectedClassification" class="flex flex-wrap items-center gap-1.5">
             <span class="rounded px-1.5 py-0.5 text-xs-plus" :class="classificationClass">
               {{ formatToken(selectedClassification.classification.functionalClassification) }}
@@ -76,7 +76,7 @@
           class="inline-flex items-center gap-1 rounded-full bg-amber-100 px-2 py-0.5 text-xs font-semibold text-amber-800"
         >
           <i class="pi pi-exclamation-triangle text-[10px]" />
-          Superseded
+          <span v-key-term="'superseded'">Superseded</span>
         </span>
         <router-link
           v-if="detail.clingenAlleleId"

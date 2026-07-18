@@ -13,9 +13,13 @@ import type {KeySection} from '@/composables/use-key-drawer'
 type AlleleIdentity = components['schemas']['AlleleIdentity']
 type AlleleAnnotations = components['schemas']['AlleleAnnotations']
 
-/** Confidence/provenance axis (orthogonal to Cat-VRS's `relation`); strongest confidence first. */
-export type Derivation = 'authoritative' | 'projection' | 'convergent' | 'candidate'
-const DERIVATION_RANK: Record<string, number> = {authoritative: 0, projection: 1, convergent: 2, candidate: 3}
+/**
+ * Confidence/provenance axis (orthogonal to Cat-VRS's `relation`); strongest confidence first. The
+ * measured allele carries no derivation — it is flagged `isFocus` on the identity instead (the API
+ * dropped the `authoritative` derivation value in favour of that focus marker).
+ */
+export type Derivation = 'projection' | 'convergent' | 'candidate'
+const DERIVATION_RANK: Record<string, number> = {projection: 0, convergent: 1, candidate: 2}
 
 // Level display order (genomic → coding → protein) so a group reads bottom-up through the layer stack.
 const LEVEL_ORDER: Record<string, number> = {genomic: 0, cdna: 1, protein: 2}
@@ -36,7 +40,7 @@ export interface AlleleMember extends AlleleIdentity {
 export interface AlleleGroup {
   key: string
   members: AlleleMember[]
-  // The measured (authoritative) allele.
+  // Whether the group contains the view's focus allele (the measured allele on the variant page).
   measured: boolean
   // Whether this group contains the page-anchor allele.
   pageRoot: boolean
@@ -58,8 +62,8 @@ export interface ConfidenceBadge {
 }
 
 // Single source for the confidence axis (badges + the Key drawer's "confidence" section). Keyed by
-// outcome, not raw `Derivation`: `measured` (authoritative) reads "Measured"; the two derived states map
-// straight from `derivation`. Insertion order is the drawer's display order.
+// outcome, not raw `Derivation`: the focus/measured allele reads "Measured" (it has no derivation); the
+// derived states map straight from `derivation`. Insertion order is the drawer's display order.
 export const ALLELE_CONFIDENCE: Record<string, ConfidenceBadge> = {
   measured: {label: 'Measured', class: 'bg-sage/15 text-sage', definition: 'Directly assayed in this score set.'},
   projection: {
@@ -158,6 +162,7 @@ function makeMember(
     level: identity.level,
     hgvs: identity.hgvs,
     clingenAlleleId: identity.clingenAlleleId ?? null,
+    isFocus: identity.isFocus,
     relation: identity.relation ?? null,
     derivation: identity.derivation ?? null,
     annotations: annotations[digest] ?? null,
@@ -197,7 +202,7 @@ export function groupAlleles(input: GroupAllelesInput): AlleleGroup[] {
     groups.push({
       key: members[0].digest,
       members,
-      measured: members.some((m) => m.derivation === 'authoritative'),
+      measured: members.some((m) => m.isFocus),
       pageRoot: members.some((m) => m.pageRoot),
       derivation: pickDerivation(members),
       annotationsMatch: !conflict,

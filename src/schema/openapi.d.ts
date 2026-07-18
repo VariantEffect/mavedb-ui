@@ -31,6 +31,27 @@ export interface paths {
      */
     delete: operations["delete_my_access_key_api_v1_users_me_access_keys__key_id__delete"];
   };
+  "/api/v1/alleles/{identifier}": {
+    /**
+     * Fetch allele detail by VRS digest, CAID, or PAID
+     * @description Fetch the detail envelope for a deduplicated allele, by any of its identifiers.
+     *
+     * The allele-grain sibling of ``GET /variants/{urn}``. Flat anchor identity (digest, level, HGVS,
+     * ClinGen id, spec-pure VRS) plus the cross-layer equivalence class (each member labelled relative to
+     * the focus) and a digest-keyed annotation map. The ``identifier`` may be:
+     *
+     * - a **VRS digest** (``ga4gh:VA.…``) — focuses that one allele.
+     * - a **CAID** (``CA…``) — the nt-canonical change; The coding frame is the preferential focus,
+     *   falling back to the genomic frame if no coding frame exists.
+     * - a **PAID** (``PA…``) — the protein change; the protein allele is focused and its nucleotide
+     *   equivalents surface as reverse-translation candidates.
+     *
+     * This is a **public molecular resource**. It carries no score-set-level information. No scores,
+     * classifications, measurements, or version standing. Only the allele's own identity, its cross-layer
+     * equivalence class, and public reference annotations (VEP / gnomAD / ClinVar).
+     */
+    get: operations["get_allele_api_v1_alleles__identifier__get"];
+  };
   "/api/v1/api/version": {
     /**
      * Show API version
@@ -1651,21 +1672,49 @@ export interface components {
       clinvar?: components["schemas"]["ClinvarAnnotation"][];
     };
     /**
+     * AlleleDetail
+     * @description The allele-detail envelope (``GET /alleles/{digest|CAID}``).
+     *
+     * Flat anchor-identity fields (``digest`` / ``level`` / ``hgvs`` / ``clingenAlleleId`` and the spec-pure
+     * GA4GH ``vrs`` variation) plus the MaveDB layer riding alongside. This layer, keyed by VRS digest,
+     * contains the ``alleles`` map: the full cross-layer equivalence class. Each entry is an ``AlleleIdentity``,
+     * labelled relative to the focus (``isFocus`` marks the queried allele / the CAID's representations) and
+     * the digest-keyed ``annotations`` map. The two maps share keys. Measurement-agnostic: no score,
+     * classification, or version standing, and no re-anchored Cat-VRS (those belong to ``GET /variants/{urn}``).
+     * Absent fields are omitted.
+     */
+    AlleleDetail: {
+      /** Digest */
+      digest: string;
+      /** Level */
+      level?: string | null;
+      /** Hgvs */
+      hgvs?: string | null;
+      /** Clingenalleleid */
+      clingenAlleleId?: string | null;
+      /** Vrs */
+      vrs?: Record<string, never> | null;
+      /**
+       * Alleles
+       * @default {}
+       */
+      alleles?: {
+        [key: string]: components["schemas"]["AlleleIdentity"];
+      };
+      /**
+       * Annotations
+       * @default {}
+       */
+      annotations?: {
+        [key: string]: components["schemas"]["AlleleAnnotations"];
+      };
+    };
+    /**
      * AlleleIdentity
-     * @description The MaveDB molecular-identity facts for one of the variant's linked alleles.
-     *
-     * An entry of the ``alleles`` sidecar, keyed by VRS digest. ``level`` + ``hgvs`` (the reference-frame
-     * HGVS) are what the UI labels the per-level annotation panel by — never the digest.
-     *
-     * Three independent axes:
-     * - ``relation`` (Cat-VRS, structural): member→defining relation; ``null`` when it *is* the measured
-     *   allele, or when the allele is not a Cat-VRS member.
-     * - ``derivation`` (provenance): ``authoritative`` (measured) / ``projection`` (deterministic,
-     *   precise, derived from the measured change) / ``candidate`` (protein-assay reverse-translation,
-     *   ambiguous) / ``convergent`` (a distinct, precise nucleotide change that converges on the measured
-     *   protein consequence). Orthogonal to ``relation``. Do not conflate them.
-     * - ``projectionOf`` (provenance): the VRS digest of this allele's projection sibling (the paired c↔g member of
-     *   its projection pair group); ``null`` for the protein apex and pre-reverse-translation data.
+     * @description One allele in a view's ``alleles`` map, keyed by VRS digest and labelled relative to the view's
+     * focus allele. ``isFocus`` marks the anchor (measured allele / queried allele); ``relation`` and
+     * ``derivation`` describe every other member's structural + provenance relationship to it, and are
+     * absent on the focus itself.
      */
     AlleleIdentity: {
       /** Level */
@@ -1674,6 +1723,8 @@ export interface components {
       hgvs?: string | null;
       /** Clingenalleleid */
       clingenAlleleId?: string | null;
+      /** Isfocus */
+      isFocus: boolean;
       /** Relation */
       relation?: string | null;
       /** Derivation */
@@ -6619,6 +6670,66 @@ export interface operations {
       200: {
         content: {
           "application/json": unknown;
+        };
+      };
+      /** @description Authentication required. */
+      401: {
+        content: never;
+      };
+      /** @description Forbidden. Insufficient permissions. */
+      403: {
+        content: never;
+      };
+      /** @description Resource not found. */
+      404: {
+        content: never;
+      };
+      /** @description Validation Error */
+      422: {
+        content: {
+          "application/json": components["schemas"]["HTTPValidationError"];
+        };
+      };
+      /** @description Internal server error. */
+      500: {
+        content: never;
+      };
+    };
+  };
+  /**
+   * Fetch allele detail by VRS digest, CAID, or PAID
+   * @description Fetch the detail envelope for a deduplicated allele, by any of its identifiers.
+   *
+   * The allele-grain sibling of ``GET /variants/{urn}``. Flat anchor identity (digest, level, HGVS,
+   * ClinGen id, spec-pure VRS) plus the cross-layer equivalence class (each member labelled relative to
+   * the focus) and a digest-keyed annotation map. The ``identifier`` may be:
+   *
+   * - a **VRS digest** (``ga4gh:VA.…``) — focuses that one allele.
+   * - a **CAID** (``CA…``) — the nt-canonical change; The coding frame is the preferential focus,
+   *   falling back to the genomic frame if no coding frame exists.
+   * - a **PAID** (``PA…``) — the protein change; the protein allele is focused and its nucleotide
+   *   equivalents surface as reverse-translation candidates.
+   *
+   * This is a **public molecular resource**. It carries no score-set-level information. No scores,
+   * classifications, measurements, or version standing. Only the allele's own identity, its cross-layer
+   * equivalence class, and public reference annotations (VEP / gnomAD / ClinVar).
+   */
+  get_allele_api_v1_alleles__identifier__get: {
+    parameters: {
+      query?: {
+        /** @description Reconstruct the molecular layer (equivalence-class membership + VEP/gnomAD/ClinVar annotations) as it stood at this instant. ISO 8601, ideally timezone-aware. The focus allele's own identity is content-addressed and immutable, so it is unaffected. Defaults to current. */
+        as_of?: string | null;
+      };
+      path: {
+        /** @description A GA4GH VRS digest (one allele), or a ClinGen allele id — a nucleotide CAID (the nt-canonical change, its genomic + coding frames) or a protein PAID. */
+        identifier: string;
+      };
+    };
+    responses: {
+      /** @description Successful Response */
+      200: {
+        content: {
+          "application/json": components["schemas"]["AlleleDetail"];
         };
       };
       /** @description Authentication required. */

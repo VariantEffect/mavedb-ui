@@ -23,9 +23,9 @@ describe('groupAlleles — projection pairing + confidence', () => {
   // Nucleotide (cdna) assay: the measured cdna folds into its pair's group with its genomic projection;
   // the protein apex is a deterministic projection, unpaired.
   const nucleotide: Record<string, AlleleIdentity> = {
-    c: {level: 'cdna', hgvs: 'NM_x:c.6C>T', relation: null, derivation: 'authoritative', projectionOf: 'g'},
-    g: {level: 'genomic', hgvs: 'NC_x:g.100C>T', relation: 'is_genomic_of', derivation: 'projection', projectionOf: 'c'},
-    p: {level: 'protein', hgvs: 'NP_x:p.Leu2Phe', relation: 'translation_of', derivation: 'projection'}
+    c: {level: 'cdna', hgvs: 'NM_x:c.6C>T', relation: null, isFocus: true, projectionOf: 'g'},
+    g: {level: 'genomic', hgvs: 'NC_x:g.100C>T', relation: 'is_genomic_of', isFocus: false, derivation: 'projection', projectionOf: 'c'},
+    p: {level: 'protein', hgvs: 'NP_x:p.Leu2Phe', relation: 'translation_of', isFocus: false, derivation: 'projection'}
   }
 
   it('collapses the measured c↔g pair into one group and keeps the apex separate', () => {
@@ -33,9 +33,10 @@ describe('groupAlleles — projection pairing + confidence', () => {
     expect(groups).toHaveLength(2)
 
     const [pair, apex] = groups
-    // Measured pair floats to the top, carries both levels, and is labeled by the authoritative member.
+    // Measured pair floats to the top and carries both levels; its confidence comes from the genomic
+    // projection member (the focus/measured member has no derivation of its own).
     expect(pair.measured).toBe(true)
-    expect(pair.derivation).toBe('authoritative')
+    expect(pair.derivation).toBe('projection')
     expect(pair.members.map((m) => m.level)).toEqual(['genomic', 'cdna'])
 
     expect(apex.measured).toBe(false)
@@ -43,13 +44,13 @@ describe('groupAlleles — projection pairing + confidence', () => {
     expect(apex.derivation).toBe('projection')
   })
 
-  // Protein assay: the protein apex is authoritative/measured; the nucleotide fan-out is candidate pairs.
+  // Protein assay: the protein apex is the focus/measured allele; the nucleotide fan-out is candidate pairs.
   const protein: Record<string, AlleleIdentity> = {
-    p: {level: 'protein', hgvs: 'NP_x:p.Leu6Gly', relation: null, derivation: 'authoritative'},
-    c1: {level: 'cdna', hgvs: 'NM_x:c.16C>G', relation: 'encodes', derivation: 'candidate', projectionOf: 'g1'},
-    g1: {level: 'genomic', hgvs: 'NC_x:g.200C>G', relation: 'is_genomic_of', derivation: 'candidate', projectionOf: 'c1'},
-    c2: {level: 'cdna', hgvs: 'NM_x:c.16C>A', relation: 'encodes', derivation: 'candidate', projectionOf: 'g2'},
-    g2: {level: 'genomic', hgvs: 'NC_x:g.200C>A', relation: 'is_genomic_of', derivation: 'candidate', projectionOf: 'c2'}
+    p: {level: 'protein', hgvs: 'NP_x:p.Leu6Gly', relation: null, isFocus: true},
+    c1: {level: 'cdna', hgvs: 'NM_x:c.16C>G', relation: 'encodes', isFocus: false, derivation: 'candidate', projectionOf: 'g1'},
+    g1: {level: 'genomic', hgvs: 'NC_x:g.200C>G', relation: 'is_genomic_of', isFocus: false, derivation: 'candidate', projectionOf: 'c1'},
+    c2: {level: 'cdna', hgvs: 'NM_x:c.16C>A', relation: 'encodes', isFocus: false, derivation: 'candidate', projectionOf: 'g2'},
+    g2: {level: 'genomic', hgvs: 'NC_x:g.200C>A', relation: 'is_genomic_of', isFocus: false, derivation: 'candidate', projectionOf: 'c2'}
   }
 
   it('keeps the apex measured and collapses each candidate hypothesis into one group', () => {
@@ -108,20 +109,20 @@ describe('groupAlleles — projection pairing + confidence', () => {
   it('leaves a projection-failed candidate (dangling projectionOf) as a one-member group', () => {
     const groups = run({
       alleles: {
-        p: {level: 'protein', hgvs: 'NP_x:p.Leu6Gly', relation: null, derivation: 'authoritative'},
-        c1: {level: 'cdna', hgvs: 'NM_x:c.16C>G', relation: 'encodes', derivation: 'candidate', projectionOf: 'missing'}
+        p: {level: 'protein', hgvs: 'NP_x:p.Leu6Gly', relation: null, isFocus: true},
+        c1: {level: 'cdna', hgvs: 'NM_x:c.16C>G', relation: 'encodes', isFocus: false, derivation: 'candidate', projectionOf: 'missing'}
       }
     })
     const candidate = groups.find((g) => g.derivation === 'candidate')!
     expect(candidate.members).toHaveLength(1)
   })
 
-  // `measured` keys off derivation === 'authoritative', not relation == null: the defining allele AND any
-  // non-member link both carry relation null, so a null-relation non-authoritative allele must NOT be pinned.
-  it('does not flag a null-relation non-authoritative allele as measured', () => {
+  // `measured` keys off `isFocus`, not relation == null: the focus allele AND any non-member link both
+  // carry relation null, so a null-relation non-focus allele must NOT be pinned.
+  it('does not flag a null-relation non-focus allele as measured', () => {
     const groups = run({
       alleles: {
-        n: {level: 'protein', hgvs: 'NP_x:p.Leu6Gly', relation: null, derivation: 'projection'}
+        n: {level: 'protein', hgvs: 'NP_x:p.Leu6Gly', relation: null, isFocus: false, derivation: 'projection'}
       }
     })
     expect(groups).toHaveLength(1)
@@ -136,8 +137,7 @@ describe('groupAlleles — projection pairing + confidence', () => {
     expect(confidenceBadge({measured: false, derivation: 'convergent'})).toBe(ALLELE_CONFIDENCE.convergent)
     // The protein-assay reverse-translation fan-out: genuinely ambiguous.
     expect(confidenceBadge({measured: false, derivation: 'candidate'})).toBe(ALLELE_CONFIDENCE.candidate)
-    // `authoritative` is only ever surfaced via `measured`; on its own it has no derived badge.
-    expect(confidenceBadge({measured: false, derivation: 'authoritative'})).toBeNull()
+    // The focus/measured allele carries no derivation; on its own (measured false) it has no badge.
     expect(confidenceBadge({measured: false, derivation: null})).toBeNull()
     // The user-facing labels are decoupled from the enum keys.
     expect(ALLELE_CONFIDENCE.projection.label).toBe('Resolved')
@@ -147,8 +147,8 @@ describe('groupAlleles — projection pairing + confidence', () => {
   it('surfaces distinct linked CAIDs, excluding the page anchor', () => {
     const groups = run({
       alleles: {
-        c: {level: 'cdna', hgvs: 'NM_x:c.6C>T', relation: null, clingenAlleleId: 'CA1', derivation: 'authoritative', projectionOf: 'g'},
-        g: {level: 'genomic', hgvs: 'NC_x:g.100C>T', relation: 'is_genomic_of', clingenAlleleId: 'CA1', derivation: 'projection', projectionOf: 'c'}
+        c: {level: 'cdna', hgvs: 'NM_x:c.6C>T', relation: null, clingenAlleleId: 'CA1', isFocus: true, projectionOf: 'g'},
+        g: {level: 'genomic', hgvs: 'NC_x:g.100C>T', relation: 'is_genomic_of', clingenAlleleId: 'CA1', isFocus: false, derivation: 'projection', projectionOf: 'c'}
       },
       pageClingenAlleleId: 'CA1'
     })

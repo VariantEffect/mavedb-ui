@@ -14,8 +14,8 @@ type AlleleIdentity = components['schemas']['AlleleIdentity']
 type AlleleAnnotations = components['schemas']['AlleleAnnotations']
 
 /** Confidence/provenance axis (orthogonal to Cat-VRS's `relation`); strongest confidence first. */
-export type Derivation = 'authoritative' | 'projection' | 'candidate'
-const DERIVATION_RANK: Record<string, number> = {authoritative: 0, projection: 1, candidate: 2}
+export type Derivation = 'authoritative' | 'projection' | 'convergent' | 'candidate'
+const DERIVATION_RANK: Record<string, number> = {authoritative: 0, projection: 1, convergent: 2, candidate: 3}
 
 // Level display order (genomic → coding → protein) so a group reads bottom-up through the layer stack.
 const LEVEL_ORDER: Record<string, number> = {genomic: 0, cdna: 1, protein: 2}
@@ -65,12 +65,19 @@ export const ALLELE_CONFIDENCE: Record<string, ConfidenceBadge> = {
   projection: {
     label: 'Resolved',
     class: 'bg-nucleotide-light text-nucleotide',
-    definition: 'Derived from the measured allele by reverse translation — the same change expressed at another level.'
+    definition: 'Derived from the measured allele — the same change expressed at another coordinate level.'
+  },
+  convergent: {
+    label: 'Convergent',
+    class: 'bg-synonymous-nucleotide-light text-synonymous-nucleotide',
+    definition:
+      'A distinct nucleotide change that produces the same protein change as the measured variant — a separate variant that converges on the same consequence, not the one assayed here.'
   },
   candidate: {
     label: 'Candidate',
     class: 'bg-amber-100 text-amber-700',
-    definition: 'A change that encodes the same protein change as your variant, but is a distinct nucleotide change.'
+    definition:
+      'A possible nucleotide change behind a protein-level measurement — one of several synonymous codons; which was actually assayed is unknown.'
   }
 }
 

@@ -322,41 +322,6 @@ export interface paths {
      */
     get: operations["fetch_license_api_v1_licenses__item_id__get"];
   };
-  "/api/v1/mapped-variants/{urn}": {
-    /**
-     * Fetch mapped variant by URN
-     * @description Fetch a single mapped variant by URN.
-     */
-    get: operations["show_mapped_variant_api_v1_mapped_variants__urn__get"];
-  };
-  "/api/v1/mapped-variants/{urn}/va/study-result": {
-    /**
-     * Construct a VA-Spec StudyResult from a mapped variant
-     * @description Construct a single VA-Spec StudyResult from a mapped variant by URN.
-     */
-    get: operations["show_mapped_variant_study_result_api_v1_mapped_variants__urn__va_study_result_get"];
-  };
-  "/api/v1/mapped-variants/{urn}/va/functional-statement": {
-    /**
-     * Construct a VA-Spec Statement from a mapped variant
-     * @description Construct a single VA-Spec Statement from a mapped variant by URN.
-     */
-    get: operations["show_mapped_variant_functional_impact_statement_api_v1_mapped_variants__urn__va_functional_statement_get"];
-  };
-  "/api/v1/mapped-variants/{urn}/va/pathogenicity-statement": {
-    /**
-     * Construct a VA-Spec EvidenceLine from a mapped variant
-     * @description Construct a list of VA-Spec EvidenceLine(s) from a mapped variant by URN.
-     */
-    get: operations["show_mapped_variant_acmg_evidence_line_api_v1_mapped_variants__urn__va_pathogenicity_statement_get"];
-  };
-  "/api/v1/mapped-variants/vrs/{identifier}": {
-    /**
-     * Fetch mapped variants by VRS identifier
-     * @description Fetch a single mapped variant by GA4GH identifier.
-     */
-    get: operations["show_mapped_variants_by_identifier_api_v1_mapped_variants_vrs__identifier__get"];
-  };
   "/api/v1/orcid/users/{orcid_id}": {
     /**
      * Look up an ORCID user by ORCID ID
@@ -1339,6 +1304,17 @@ export interface paths {
      */
     put: operations["update_user_api_v1_users___id__put"];
   };
+  "/api/v1/variants/vrs/{identifier}": {
+    /**
+     * Look up variants by VRS identifier
+     * @description Resolve a GA4GH VRS identifier to the readable variants whose mapping links that allele.
+     *
+     * The new-substrate replacement for the legacy mapped-variant VRS lookup: a deduplicated allele may be
+     * shared across score sets, so one identifier can resolve to several variants. Results are filtered to
+     * the score sets the caller may read; a 404 is returned when nothing readable matches.
+     */
+    get: operations["lookup_variants_by_vrs_identifier_api_v1_variants_vrs__identifier__get"];
+  };
   "/api/v1/variants/{urn}": {
     /**
      * Fetch assayed variant detail by URN
@@ -1349,6 +1325,27 @@ export interface paths {
      * the citable unit) but self-describes via isCurrent/supersededByScoreSet rather than reading as current.
      */
     get: operations["get_variant_api_v1_variants__urn__get"];
+  };
+  "/api/v1/variants/{urn}/va/study-result": {
+    /**
+     * Construct a VA-Spec StudyResult for a variant
+     * @description Construct a single VA-Spec StudyResult for a variant by URN, from its mapping substrate.
+     */
+    get: operations["get_variant_study_result_api_v1_variants__urn__va_study_result_get"];
+  };
+  "/api/v1/variants/{urn}/va/functional-statement": {
+    /**
+     * Construct a VA-Spec functional-impact Statement for a variant
+     * @description Construct a single VA-Spec functional-impact Statement for a variant by URN.
+     */
+    get: operations["get_variant_functional_impact_statement_api_v1_variants__urn__va_functional_statement_get"];
+  };
+  "/api/v1/variants/{urn}/va/pathogenicity-statement": {
+    /**
+     * Construct a VA-Spec pathogenicity Statement for a variant
+     * @description Construct a single VA-Spec pathogenicity Statement for a variant by URN.
+     */
+    get: operations["get_variant_pathogenicity_statement_api_v1_variants__urn__va_pathogenicity_statement_get"];
   };
   "/api/v1/alphafold-files/version": {
     /**
@@ -1656,8 +1653,10 @@ export interface components {
      * - ``relation`` (Cat-VRS, structural): member→defining relation; ``null`` when it *is* the measured
      *   allele, or when the allele is not a Cat-VRS member.
      * - ``derivation`` (provenance): ``authoritative`` (measured) / ``projection`` (deterministic,
-     *   precise) / ``candidate`` (reverse-translation, ambiguous). Orthogonal to ``relation`` — never
-     *   conflate them.
+     *   precise, derived from the measured change) / ``candidate`` (protein-assay reverse-translation,
+     *   ambiguous) / ``convergent`` (a distinct, precise nucleotide change that converges on the measured
+     *   protein consequence — a synonymous cousin, paired with the ``co_encodes`` relation). Orthogonal to
+     *   ``relation`` — never conflate them.
      * - ``projectionOf`` (provenance): the VRS digest of this allele's projection sibling (the paired c↔g member of
      *   its projection pair group); ``null`` for the protein apex and pre-reverse-translation data.
      */
@@ -3842,48 +3841,6 @@ export interface components {
       recordType?: string;
     };
     /**
-     * MappedVariantWithMappingDetails
-     * @description Client-facing variant of :class:`SavedMappedVariantWithMappingDetails`.
-     */
-    MappedVariantWithMappingDetails: {
-      /** Premapped */
-      preMapped?: unknown;
-      /** Postmapped */
-      postMapped?: unknown;
-      /** Vrsversion */
-      vrsVersion?: string | null;
-      /** Errormessage */
-      errorMessage?: string | null;
-      /**
-       * Modificationdate
-       * Format: date
-       */
-      modificationDate: string;
-      /**
-       * Mappeddate
-       * Format: date
-       */
-      mappedDate: string;
-      /** Mappingapiversion */
-      mappingApiVersion: string;
-      /** Current */
-      current: boolean;
-      alignmentLevel?: components["schemas"]["SequenceLevel"] | null;
-      /** Atmismatchedlocus */
-      atMismatchedLocus?: boolean | null;
-      /** Neargap */
-      nearGap?: boolean | null;
-      /** Varianturn */
-      variantUrn: string;
-      /** Id */
-      id: number;
-      /** Clingenalleleid */
-      clingenAlleleId?: string | null;
-      /** Recordtype */
-      recordType?: string;
-      targetGeneMapping?: components["schemas"]["TargetGeneMapping"] | null;
-    };
-    /**
      * MappingState
      * @enum {string}
      */
@@ -5536,69 +5493,6 @@ export interface components {
       targetSequence?: components["schemas"]["TargetSequenceCreate"] | null;
       targetAccession?: components["schemas"]["TargetAccessionCreate"] | null;
     };
-    /** TargetGeneMapping */
-    TargetGeneMapping: {
-      alignmentLevel: components["schemas"]["SequenceLevel"];
-      /**
-       * Preferred
-       * @default false
-       */
-      preferred?: boolean;
-      /** Referenceassembly */
-      referenceAssembly?: string | null;
-      /** Referenceaccession */
-      referenceAccession?: string | null;
-      /** Referencesequenceid */
-      referenceSequenceId?: string | null;
-      /** Alignmentscore */
-      alignmentScore?: number | null;
-      /** Nextbestalignmentscore */
-      nextBestAlignmentScore?: number | null;
-      /** Alignmentlength */
-      alignmentLength?: number | null;
-      /** Alignmentstring */
-      alignmentString?: string | null;
-      /** Mismatchcount */
-      mismatchCount?: number | null;
-      /** Gapcount */
-      gapCount?: number | null;
-      /** Percentidentity */
-      percentIdentity?: number | null;
-      /** Totalvariants */
-      totalVariants?: number | null;
-      /** Variantsfailed */
-      variantsFailed?: number | null;
-      /** Variantswithalignmentwarnings */
-      variantsWithAlignmentWarnings?: number | null;
-      /** Variantsmappedcleanly */
-      variantsMappedCleanly?: number | null;
-      /** Toolname */
-      toolName: string;
-      /** Toolversion */
-      toolVersion: string;
-      /** Toolparameters */
-      toolParameters?: Record<string, never> | null;
-      /** Alignmentmetadata */
-      alignmentMetadata?: Record<string, never> | null;
-      /** Vrsversion */
-      vrsVersion?: string | null;
-      /** Mappeddate */
-      mappedDate?: string | null;
-      /** Id */
-      id: number;
-      /**
-       * Creationdate
-       * Format: date
-       */
-      creationDate: string;
-      /**
-       * Modificationdate
-       * Format: date
-       */
-      modificationDate: string;
-      /** Recordtype */
-      recordType?: string;
-    };
     /**
      * TargetGeneWithScoreSetUrn
      * @description Target gene view model containing its score set urn.
@@ -6355,6 +6249,24 @@ export interface components {
        * @description Reports the disease context in which the variant's association with therapeutic sensitivity or resistance is evaluated. Note that this is a required qualifier in therapeutic response propositions.
        */
       conditionQualifier: components["schemas"]["Condition"] | components["schemas"]["iriReference"];
+    };
+    /**
+     * VariantVrsMatch
+     * @description One variant whose mapping links an allele bearing the queried VRS identifier.
+     *
+     * The ``GET /variants/vrs/{identifier}`` lookup result. The ClinGen id + level ride from the matched
+     * (deduplicated) allele; the URN from the variant it is linked to. Replaces the legacy MappedVariant VRS
+     * lookup on the new Allele substrate (#743, item 3.5).
+     */
+    VariantVrsMatch: {
+      /** Varianturn */
+      variantUrn: string;
+      /** Clingenalleleid */
+      clingenAlleleId?: string | null;
+      /** Vrsid */
+      vrsId?: string | null;
+      /** Level */
+      level?: string | null;
     };
     /**
      * Variation
@@ -8372,230 +8284,6 @@ export interface operations {
         content: {
           "application/json": components["schemas"]["License"];
         };
-      };
-      /** @description Resource not found. */
-      404: {
-        content: never;
-      };
-      /** @description Validation Error */
-      422: {
-        content: {
-          "application/json": components["schemas"]["HTTPValidationError"];
-        };
-      };
-      /** @description Internal server error. */
-      500: {
-        content: never;
-      };
-    };
-  };
-  /**
-   * Fetch mapped variant by URN
-   * @description Fetch a single mapped variant by URN.
-   */
-  show_mapped_variant_api_v1_mapped_variants__urn__get: {
-    parameters: {
-      header?: {
-        "x-active-roles"?: string | null;
-      };
-      path: {
-        urn: string;
-      };
-    };
-    responses: {
-      /** @description Successful Response */
-      200: {
-        content: {
-          "application/json": components["schemas"]["MappedVariantWithMappingDetails"];
-        };
-      };
-      /** @description Authentication required. */
-      401: {
-        content: never;
-      };
-      /** @description Forbidden. Insufficient permissions. */
-      403: {
-        content: never;
-      };
-      /** @description Resource not found. */
-      404: {
-        content: never;
-      };
-      /** @description Validation Error */
-      422: {
-        content: {
-          "application/json": components["schemas"]["HTTPValidationError"];
-        };
-      };
-      /** @description Internal server error. */
-      500: {
-        content: never;
-      };
-    };
-  };
-  /**
-   * Construct a VA-Spec StudyResult from a mapped variant
-   * @description Construct a single VA-Spec StudyResult from a mapped variant by URN.
-   */
-  show_mapped_variant_study_result_api_v1_mapped_variants__urn__va_study_result_get: {
-    parameters: {
-      header?: {
-        "x-active-roles"?: string | null;
-      };
-      path: {
-        urn: string;
-      };
-    };
-    responses: {
-      /** @description Successful Response */
-      200: {
-        content: {
-          "application/json": components["schemas"]["ExperimentalVariantFunctionalImpactStudyResult"];
-        };
-      };
-      /** @description Authentication required. */
-      401: {
-        content: never;
-      };
-      /** @description Forbidden. Insufficient permissions. */
-      403: {
-        content: never;
-      };
-      /** @description Resource not found. */
-      404: {
-        content: never;
-      };
-      /** @description Validation Error */
-      422: {
-        content: {
-          "application/json": components["schemas"]["HTTPValidationError"];
-        };
-      };
-      /** @description Internal server error. */
-      500: {
-        content: never;
-      };
-    };
-  };
-  /**
-   * Construct a VA-Spec Statement from a mapped variant
-   * @description Construct a single VA-Spec Statement from a mapped variant by URN.
-   */
-  show_mapped_variant_functional_impact_statement_api_v1_mapped_variants__urn__va_functional_statement_get: {
-    parameters: {
-      header?: {
-        "x-active-roles"?: string | null;
-      };
-      path: {
-        urn: string;
-      };
-    };
-    responses: {
-      /** @description Successful Response */
-      200: {
-        content: {
-          "application/json": components["schemas"]["Statement"];
-        };
-      };
-      /** @description Authentication required. */
-      401: {
-        content: never;
-      };
-      /** @description Forbidden. Insufficient permissions. */
-      403: {
-        content: never;
-      };
-      /** @description Resource not found. */
-      404: {
-        content: never;
-      };
-      /** @description Validation Error */
-      422: {
-        content: {
-          "application/json": components["schemas"]["HTTPValidationError"];
-        };
-      };
-      /** @description Internal server error. */
-      500: {
-        content: never;
-      };
-    };
-  };
-  /**
-   * Construct a VA-Spec EvidenceLine from a mapped variant
-   * @description Construct a list of VA-Spec EvidenceLine(s) from a mapped variant by URN.
-   */
-  show_mapped_variant_acmg_evidence_line_api_v1_mapped_variants__urn__va_pathogenicity_statement_get: {
-    parameters: {
-      header?: {
-        "x-active-roles"?: string | null;
-      };
-      path: {
-        urn: string;
-      };
-    };
-    responses: {
-      /** @description Successful Response */
-      200: {
-        content: {
-          "application/json": components["schemas"]["VariantPathogenicityStatement"];
-        };
-      };
-      /** @description Authentication required. */
-      401: {
-        content: never;
-      };
-      /** @description Forbidden. Insufficient permissions. */
-      403: {
-        content: never;
-      };
-      /** @description Resource not found. */
-      404: {
-        content: never;
-      };
-      /** @description Validation Error */
-      422: {
-        content: {
-          "application/json": components["schemas"]["HTTPValidationError"];
-        };
-      };
-      /** @description Internal server error. */
-      500: {
-        content: never;
-      };
-    };
-  };
-  /**
-   * Fetch mapped variants by VRS identifier
-   * @description Fetch a single mapped variant by GA4GH identifier.
-   */
-  show_mapped_variants_by_identifier_api_v1_mapped_variants_vrs__identifier__get: {
-    parameters: {
-      query?: {
-        only_current?: boolean;
-      };
-      header?: {
-        "x-active-roles"?: string | null;
-      };
-      path: {
-        /** @description String, a valid GA4GH digest based identifier. */
-        identifier: string;
-      };
-    };
-    responses: {
-      /** @description Successful Response */
-      200: {
-        content: {
-          "application/json": components["schemas"]["MappedVariant"][];
-        };
-      };
-      /** @description Authentication required. */
-      401: {
-        content: never;
-      };
-      /** @description Forbidden. Insufficient permissions. */
-      403: {
-        content: never;
       };
       /** @description Resource not found. */
       404: {
@@ -12678,6 +12366,58 @@ export interface operations {
     };
   };
   /**
+   * Look up variants by VRS identifier
+   * @description Resolve a GA4GH VRS identifier to the readable variants whose mapping links that allele.
+   *
+   * The new-substrate replacement for the legacy mapped-variant VRS lookup: a deduplicated allele may be
+   * shared across score sets, so one identifier can resolve to several variants. Results are filtered to
+   * the score sets the caller may read; a 404 is returned when nothing readable matches.
+   */
+  lookup_variants_by_vrs_identifier_api_v1_variants_vrs__identifier__get: {
+    parameters: {
+      query?: {
+        only_current?: boolean;
+      };
+      header?: {
+        "x-active-roles"?: string | null;
+      };
+      path: {
+        /** @description A valid GA4GH digest-based identifier for the mapped allele. */
+        identifier: string;
+      };
+    };
+    responses: {
+      /** @description Successful Response */
+      200: {
+        content: {
+          "application/json": components["schemas"]["VariantVrsMatch"][];
+        };
+      };
+      /** @description Authentication required. */
+      401: {
+        content: never;
+      };
+      /** @description Forbidden. Insufficient permissions. */
+      403: {
+        content: never;
+      };
+      /** @description Resource not found. */
+      404: {
+        content: never;
+      };
+      /** @description Validation Error */
+      422: {
+        content: {
+          "application/json": components["schemas"]["HTTPValidationError"];
+        };
+      };
+      /** @description Internal server error. */
+      500: {
+        content: never;
+      };
+    };
+  };
+  /**
    * Fetch assayed variant detail by URN
    * @description Fetch the two-tier detail envelope for a single assayed variant by URN.
    *
@@ -12703,6 +12443,138 @@ export interface operations {
       200: {
         content: {
           "application/json": components["schemas"]["VariantDetail"];
+        };
+      };
+      /** @description Authentication required. */
+      401: {
+        content: never;
+      };
+      /** @description Forbidden. Insufficient permissions. */
+      403: {
+        content: never;
+      };
+      /** @description Resource not found. */
+      404: {
+        content: never;
+      };
+      /** @description Validation Error */
+      422: {
+        content: {
+          "application/json": components["schemas"]["HTTPValidationError"];
+        };
+      };
+      /** @description Internal server error. */
+      500: {
+        content: never;
+      };
+    };
+  };
+  /**
+   * Construct a VA-Spec StudyResult for a variant
+   * @description Construct a single VA-Spec StudyResult for a variant by URN, from its mapping substrate.
+   */
+  get_variant_study_result_api_v1_variants__urn__va_study_result_get: {
+    parameters: {
+      header?: {
+        "x-active-roles"?: string | null;
+      };
+      path: {
+        urn: string;
+      };
+    };
+    responses: {
+      /** @description Successful Response */
+      200: {
+        content: {
+          "application/json": components["schemas"]["ExperimentalVariantFunctionalImpactStudyResult"];
+        };
+      };
+      /** @description Authentication required. */
+      401: {
+        content: never;
+      };
+      /** @description Forbidden. Insufficient permissions. */
+      403: {
+        content: never;
+      };
+      /** @description Resource not found. */
+      404: {
+        content: never;
+      };
+      /** @description Validation Error */
+      422: {
+        content: {
+          "application/json": components["schemas"]["HTTPValidationError"];
+        };
+      };
+      /** @description Internal server error. */
+      500: {
+        content: never;
+      };
+    };
+  };
+  /**
+   * Construct a VA-Spec functional-impact Statement for a variant
+   * @description Construct a single VA-Spec functional-impact Statement for a variant by URN.
+   */
+  get_variant_functional_impact_statement_api_v1_variants__urn__va_functional_statement_get: {
+    parameters: {
+      header?: {
+        "x-active-roles"?: string | null;
+      };
+      path: {
+        urn: string;
+      };
+    };
+    responses: {
+      /** @description Successful Response */
+      200: {
+        content: {
+          "application/json": components["schemas"]["Statement"];
+        };
+      };
+      /** @description Authentication required. */
+      401: {
+        content: never;
+      };
+      /** @description Forbidden. Insufficient permissions. */
+      403: {
+        content: never;
+      };
+      /** @description Resource not found. */
+      404: {
+        content: never;
+      };
+      /** @description Validation Error */
+      422: {
+        content: {
+          "application/json": components["schemas"]["HTTPValidationError"];
+        };
+      };
+      /** @description Internal server error. */
+      500: {
+        content: never;
+      };
+    };
+  };
+  /**
+   * Construct a VA-Spec pathogenicity Statement for a variant
+   * @description Construct a single VA-Spec pathogenicity Statement for a variant by URN.
+   */
+  get_variant_pathogenicity_statement_api_v1_variants__urn__va_pathogenicity_statement_get: {
+    parameters: {
+      header?: {
+        "x-active-roles"?: string | null;
+      };
+      path: {
+        urn: string;
+      };
+    };
+    responses: {
+      /** @description Successful Response */
+      200: {
+        content: {
+          "application/json": components["schemas"]["VariantPathogenicityStatement"];
         };
       };
       /** @description Authentication required. */

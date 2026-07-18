@@ -128,16 +128,20 @@ describe('groupAlleles — projection pairing + confidence', () => {
     expect(groups[0].measured).toBe(false)
   })
 
-  it('badges measured over derivation, maps projection→Resolved / candidate→Candidate, else null', () => {
+  it('badges measured over derivation, maps projection→Resolved / convergent→Convergent / candidate→Candidate, else null', () => {
     // `measured` wins even if a derivation is also present (a stray measured sibling still reads "Measured").
     expect(confidenceBadge({measured: true, derivation: 'projection'})).toBe(ALLELE_CONFIDENCE.measured)
     expect(confidenceBadge({measured: false, derivation: 'projection'})).toBe(ALLELE_CONFIDENCE.projection)
+    // A synonymous cousin under a nucleotide assay: a distinct change sharing the consequence, not ambiguous.
+    expect(confidenceBadge({measured: false, derivation: 'convergent'})).toBe(ALLELE_CONFIDENCE.convergent)
+    // The protein-assay reverse-translation fan-out: genuinely ambiguous.
     expect(confidenceBadge({measured: false, derivation: 'candidate'})).toBe(ALLELE_CONFIDENCE.candidate)
     // `authoritative` is only ever surfaced via `measured`; on its own it has no derived badge.
     expect(confidenceBadge({measured: false, derivation: 'authoritative'})).toBeNull()
     expect(confidenceBadge({measured: false, derivation: null})).toBeNull()
     // The user-facing labels are decoupled from the enum keys.
     expect(ALLELE_CONFIDENCE.projection.label).toBe('Resolved')
+    expect(ALLELE_CONFIDENCE.convergent.label).toBe('Convergent')
   })
 
   it('surfaces distinct linked CAIDs, excluding the page anchor', () => {

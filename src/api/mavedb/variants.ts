@@ -6,7 +6,7 @@ import {components} from '@/schema/openapi'
 
 type VariantDetail = components['schemas']['VariantDetail']
 type AlleleMeasurement = components['schemas']['AlleleMeasurement']
-type MappedVariant = components['schemas']['MappedVariant']
+type VariantVrsMatch = components['schemas']['VariantVrsMatch']
 
 // The ClinGen-allele-centric variant page's entrypoint: every measurement whose cross-layer
 // equivalence class touches this CAID/PAID, in the API's default order (direct-first). `includeSuperseded`
@@ -31,8 +31,8 @@ export const getAlleleMeasurements = memoizeRead(
     `${clingenAlleleId}|${options?.includeSuperseded ?? false}|${options?.includeNucleotideSiblings ?? false}|${options?.asOf ?? ''}`
 )
 
-export async function lookupVariantsByVrsDigest(identifier: string): Promise<MappedVariant[]> {
-  const response = await axios.get(`${config.apiBaseUrl}/mapped-variants/vrs/${encodeURIComponent(identifier)}`, {
+export async function lookupVariantsByVrsDigest(identifier: string): Promise<VariantVrsMatch[]> {
+  const response = await axios.get(`${config.apiBaseUrl}/variants/vrs/${encodeURIComponent(identifier)}`, {
     params: {only_current: true}
   })
   return response.data
@@ -50,9 +50,8 @@ export const getVariantDetail = memoizeRead(
 
 export async function getVariantAnnotation(variantUrn: string, annotationType: string): Promise<unknown> {
   const response = await axios.get(
-    `${config.apiBaseUrl}/mapped-variants/${encodeURIComponent(variantUrn)}/va/${encodeURIComponent(annotationType)}`,
+    `${config.apiBaseUrl}/variants/${encodeURIComponent(variantUrn)}/va/${encodeURIComponent(annotationType)}`,
     {responseType: 'json'}
   )
   return response.data
 }
-

@@ -811,19 +811,19 @@ export interface paths {
   };
   "/api/v1/score-sets/{urn}/annotated-variants/pathogenicity-statement": {
     /**
-     * Get pathogenicity statement annotations for mapped variants within a score set
+     * Get pathogenicity statement annotations for variants within a score set
      * @description Retrieve annotated variants with pathogenicity statements for a given score set.
      *
-     * This endpoint streams pathogenicity evidence lines for all current mapped variants
+     * This endpoint streams pathogenicity evidence lines for all current annotated variants
      * associated with a specific score set. The response is returned as newline-delimited
      * JSON (NDJSON) format for efficient processing of large datasets.
      *
      * NDJSON Response Format:
-     *     Each line in the response corresponds to a mapped variant and contains a JSON
+     *     Each line in the response corresponds to an annotated variant and contains a JSON
      *     object with the following structure:
      *     ```
      *     {
-     *         "variant_urn": "<URN of the mapped variant>",
+     *         "variant_urn": "<URN of the annotated variant>",
      *         "annotation": {
      *             ... // Pathogenicity evidence line details
      *         }
@@ -839,36 +839,39 @@ export interface paths {
      *
      * Returns:
      *     Any: StreamingResponse containing newline-delimited JSON with pathogenicity
-     *         evidence lines for each mapped variant. Response includes headers with
+     *         evidence lines for each annotated variant. Response includes headers with
      *         total count, processing start time, and stream type information.
+     *
+     * A score set that exists but has no annotatable variants (never mapped, or none live at ``as_of``)
+     * streams an empty body with ``X-Total-Count: 0`` — an empty collection, not a 404.
      *
      * Raises:
      *     HTTPException: 404 error if the score set with the given URN is not found.
-     *     HTTPException: 404 error if no mapped variants are associated with the score set.
      *     HTTPException: 403 error if the user lacks READ permissions for the score set.
      *
      * Note:
      *     This function logs the request context and validates user permissions before
-     *     processing. Only current (non-historical) mapped variants are included in
-     *     the response.
+     *     processing. Use the `as_of` parameter to reconstruct the molecular layer as it stood at a specific
+     *     instant, over the variant's fixed score. The response is streamed to allow for efficient handling
+     *     of large datasets, and progress updates are logged for monitoring purposes.
      */
     get: operations["get_score_set_annotated_variants_api_v1_score_sets__urn__annotated_variants_pathogenicity_statement_get"];
   };
   "/api/v1/score-sets/{urn}/annotated-variants/functional-statement": {
     /**
-     * Get functional impact statement annotations for mapped variants within a score set
+     * Get functional impact statement annotations for annotated variants within a score set
      * @description Retrieve functional impact statements for annotated variants in a score set.
      *
-     * This endpoint streams functional impact statements for all current mapped variants
+     * This endpoint streams functional impact statements for all current annotated variants
      * associated with a specific score set. The response is delivered as newline-delimited
      * JSON (NDJSON) format.
      *
      * NDJSON Response Format:
-     *     Each line in the response corresponds to a mapped variant and contains a JSON
+     *     Each line in the response corresponds to an annotated variant and contains a JSON
      *     object with the following structure:
      *     ```
      *     {
-     *         "variant_urn": "<URN of the mapped variant>",
+     *         "variant_urn": "<URN of the annotated variant>",
      *         "annotation": {
      *             ... // Functional impact statement details
      *         }
@@ -882,36 +885,38 @@ export interface paths {
      *
      * Returns:
      *     StreamingResponse: NDJSON stream containing functional impact statements for each
-     *         mapped variant. Response includes headers with total count, processing start time,
+     *         annotated variant. Response includes headers with total count, processing start time,
      *         and stream type information.
      *
      * Raises:
      *     HTTPException:
      *         - 404 if the score set with the given URN is not found
-     *         - 404 if no mapped variants are associated with the score set
+     *         - 404 if no annotated variants are associated with the score set
      *         - 403 if the user lacks READ permission for the score set
      *
      * Note:
-     *     Only current (non-historical) mapped variants are included in the response.
-     *     The function requires appropriate read permissions on the score set.
+     *     The function requires appropriate read permissions on the score set. Use the `as_of`
+     *     parameter to reconstruct the molecular layer as it stood at a specific instant, over
+     *     the variant's fixed score. The response is streamed to allow for efficient handling of
+     *     large datasets, and progress updates are logged for monitoring purposes.
      */
     get: operations["get_score_set_annotated_variants_functional_statement_api_v1_score_sets__urn__annotated_variants_functional_statement_get"];
   };
   "/api/v1/score-sets/{urn}/annotated-variants/study-result": {
     /**
-     * Get functional study result annotations for mapped variants within a score set
+     * Get functional study result annotations for annotated variants within a score set
      * @description Retrieve functional study results for annotated variants in a score set.
      *
-     * This endpoint streams functional study result annotations for all current mapped variants
+     * This endpoint streams functional study result annotations for all current annotated variants
      * associated with a specific score set. The results are returned as newline-delimited JSON
      * (NDJSON) format for efficient streaming of large datasets.
      *
      * NDJSON Response Format:
-     *     Each line in the response corresponds to a mapped variant and contains a JSON
+     *     Each line in the response corresponds to a annotated variant and contains a JSON
      *     object with the following structure:
      *     ```
      *     {
-     *         "variant_urn": "<URN of the mapped variant>",
+     *         "variant_urn": "<URN of the annotated variant>",
      *         "annotation": {
      *             ... // Functional study result details
      *         }
@@ -926,7 +931,7 @@ export interface paths {
      * Returns:
      *     StreamingResponse: A streaming response containing functional study results in NDJSON format.
      *         Headers include:
-     *         - X-Total-Count: Total number of mapped variants being streamed
+     *         - X-Total-Count: Total number of annotated variants being streamed
      *         - X-Processing-Started: ISO timestamp when processing began
      *         - X-Stream-Type: Set to "functional-study-result"
      *         - Access-Control-Expose-Headers: Exposed headers for CORS
@@ -934,13 +939,14 @@ export interface paths {
      * Raises:
      *     HTTPException:
      *         - 404 if the score set with the given URN is not found
-     *         - 404 if no mapped variants are associated with the score set
+     *         - 404 if no annotated variants are associated with the score set
      *         - 403 if the user lacks READ permission for the score set
      *
      * Notes:
-     *     - Only returns current mapped variants (MappedVariant.current == True)
-     *     - Eagerly loads related ScoreSet data including publications, users, license, and experiment
-     *     - Logs requests and errors for monitoring and debugging purposes
+     *     - The `as_of` parameter allows reconstruction of the molecular layer as it stood at a specific
+     *       instant, over the variant's fixed score. It is ISO 8601 formatted and ideally timezone-aware.
+     *     - The response is streamed to allow for efficient handling of large datasets, and progress updates
+     *       are logged for monitoring purposes.
      */
     get: operations["get_score_set_annotated_variants_functional_study_result_api_v1_score_sets__urn__annotated_variants_study_result_get"];
   };
@@ -1309,9 +1315,11 @@ export interface paths {
      * Look up variants by VRS identifier
      * @description Resolve a GA4GH VRS identifier to the readable variants whose mapping links that allele.
      *
-     * The new-substrate replacement for the legacy mapped-variant VRS lookup: a deduplicated allele may be
-     * shared across score sets, so one identifier can resolve to several variants. Results are filtered to
-     * the score sets the caller may read; a 404 is returned when nothing readable matches.
+     * A deduplicated allele may be shared across score sets, so one identifier can resolve to several
+     * variants. This is a lookup returning a collection: results are filtered to the score sets the caller
+     * may read, and an empty list is returned when nothing readable matches. An absent identifier and a
+     * match visible only in a private score set are deliberately indistinguishable (both yield ``[]``), so
+     * the response never reveals a private allele's existence.
      */
     get: operations["lookup_variants_by_vrs_identifier_api_v1_variants_vrs__identifier__get"];
   };
@@ -1655,8 +1663,7 @@ export interface components {
      * - ``derivation`` (provenance): ``authoritative`` (measured) / ``projection`` (deterministic,
      *   precise, derived from the measured change) / ``candidate`` (protein-assay reverse-translation,
      *   ambiguous) / ``convergent`` (a distinct, precise nucleotide change that converges on the measured
-     *   protein consequence — a synonymous cousin, paired with the ``co_encodes`` relation). Orthogonal to
-     *   ``relation`` — never conflate them.
+     *   protein consequence). Orthogonal to ``relation``. Do not conflate them.
      * - ``projectionOf`` (provenance): the VRS digest of this allele's projection sibling (the paired c↔g member of
      *   its projection pair group); ``null`` for the protein apex and pre-reverse-translation data.
      */
@@ -10424,19 +10431,19 @@ export interface operations {
     };
   };
   /**
-   * Get pathogenicity statement annotations for mapped variants within a score set
+   * Get pathogenicity statement annotations for variants within a score set
    * @description Retrieve annotated variants with pathogenicity statements for a given score set.
    *
-   * This endpoint streams pathogenicity evidence lines for all current mapped variants
+   * This endpoint streams pathogenicity evidence lines for all current annotated variants
    * associated with a specific score set. The response is returned as newline-delimited
    * JSON (NDJSON) format for efficient processing of large datasets.
    *
    * NDJSON Response Format:
-   *     Each line in the response corresponds to a mapped variant and contains a JSON
+   *     Each line in the response corresponds to an annotated variant and contains a JSON
    *     object with the following structure:
    *     ```
    *     {
-   *         "variant_urn": "<URN of the mapped variant>",
+   *         "variant_urn": "<URN of the annotated variant>",
    *         "annotation": {
    *             ... // Pathogenicity evidence line details
    *         }
@@ -10452,21 +10459,28 @@ export interface operations {
    *
    * Returns:
    *     Any: StreamingResponse containing newline-delimited JSON with pathogenicity
-   *         evidence lines for each mapped variant. Response includes headers with
+   *         evidence lines for each annotated variant. Response includes headers with
    *         total count, processing start time, and stream type information.
+   *
+   * A score set that exists but has no annotatable variants (never mapped, or none live at ``as_of``)
+   * streams an empty body with ``X-Total-Count: 0`` — an empty collection, not a 404.
    *
    * Raises:
    *     HTTPException: 404 error if the score set with the given URN is not found.
-   *     HTTPException: 404 error if no mapped variants are associated with the score set.
    *     HTTPException: 403 error if the user lacks READ permissions for the score set.
    *
    * Note:
    *     This function logs the request context and validates user permissions before
-   *     processing. Only current (non-historical) mapped variants are included in
-   *     the response.
+   *     processing. Use the `as_of` parameter to reconstruct the molecular layer as it stood at a specific
+   *     instant, over the variant's fixed score. The response is streamed to allow for efficient handling
+   *     of large datasets, and progress updates are logged for monitoring purposes.
    */
   get_score_set_annotated_variants_api_v1_score_sets__urn__annotated_variants_pathogenicity_statement_get: {
     parameters: {
+      query?: {
+        /** @description Reconstruct the molecular layer (Cat-VRS membership, VEP/gnomAD/ClinVar annotations) as it stood at this instant, over the variant's fixed score. ISO 8601, ideally timezone-aware. Content valid-time only — it never re-selects a score-set version, and scores/classifications are as-of-invariant. Defaults to current. */
+        as_of?: string | null;
+      };
       header?: {
         "x-active-roles"?: string | null;
       };
@@ -10475,7 +10489,7 @@ export interface operations {
       };
     };
     responses: {
-      /** @description Stream pathogenicity statement annotations for mapped variants. */
+      /** @description Stream pathogenicity statement annotations for variants. */
       200: {
         content: {
           "application/json": {
@@ -10509,19 +10523,19 @@ export interface operations {
     };
   };
   /**
-   * Get functional impact statement annotations for mapped variants within a score set
+   * Get functional impact statement annotations for annotated variants within a score set
    * @description Retrieve functional impact statements for annotated variants in a score set.
    *
-   * This endpoint streams functional impact statements for all current mapped variants
+   * This endpoint streams functional impact statements for all current annotated variants
    * associated with a specific score set. The response is delivered as newline-delimited
    * JSON (NDJSON) format.
    *
    * NDJSON Response Format:
-   *     Each line in the response corresponds to a mapped variant and contains a JSON
+   *     Each line in the response corresponds to an annotated variant and contains a JSON
    *     object with the following structure:
    *     ```
    *     {
-   *         "variant_urn": "<URN of the mapped variant>",
+   *         "variant_urn": "<URN of the annotated variant>",
    *         "annotation": {
    *             ... // Functional impact statement details
    *         }
@@ -10535,21 +10549,27 @@ export interface operations {
    *
    * Returns:
    *     StreamingResponse: NDJSON stream containing functional impact statements for each
-   *         mapped variant. Response includes headers with total count, processing start time,
+   *         annotated variant. Response includes headers with total count, processing start time,
    *         and stream type information.
    *
    * Raises:
    *     HTTPException:
    *         - 404 if the score set with the given URN is not found
-   *         - 404 if no mapped variants are associated with the score set
+   *         - 404 if no annotated variants are associated with the score set
    *         - 403 if the user lacks READ permission for the score set
    *
    * Note:
-   *     Only current (non-historical) mapped variants are included in the response.
-   *     The function requires appropriate read permissions on the score set.
+   *     The function requires appropriate read permissions on the score set. Use the `as_of`
+   *     parameter to reconstruct the molecular layer as it stood at a specific instant, over
+   *     the variant's fixed score. The response is streamed to allow for efficient handling of
+   *     large datasets, and progress updates are logged for monitoring purposes.
    */
   get_score_set_annotated_variants_functional_statement_api_v1_score_sets__urn__annotated_variants_functional_statement_get: {
     parameters: {
+      query?: {
+        /** @description Reconstruct the molecular layer (Cat-VRS membership, VEP/gnomAD/ClinVar annotations) as it stood at this instant, over the variant's fixed score. ISO 8601, ideally timezone-aware. Content valid-time only — it never re-selects a score-set version, and scores/classifications are as-of-invariant. Defaults to current. */
+        as_of?: string | null;
+      };
       header?: {
         "x-active-roles"?: string | null;
       };
@@ -10558,7 +10578,7 @@ export interface operations {
       };
     };
     responses: {
-      /** @description Stream functional impact statement annotations for mapped variants. */
+      /** @description Stream functional impact statement annotations for annotated variants. */
       200: {
         content: {
           "application/json": {
@@ -10592,19 +10612,19 @@ export interface operations {
     };
   };
   /**
-   * Get functional study result annotations for mapped variants within a score set
+   * Get functional study result annotations for annotated variants within a score set
    * @description Retrieve functional study results for annotated variants in a score set.
    *
-   * This endpoint streams functional study result annotations for all current mapped variants
+   * This endpoint streams functional study result annotations for all current annotated variants
    * associated with a specific score set. The results are returned as newline-delimited JSON
    * (NDJSON) format for efficient streaming of large datasets.
    *
    * NDJSON Response Format:
-   *     Each line in the response corresponds to a mapped variant and contains a JSON
+   *     Each line in the response corresponds to a annotated variant and contains a JSON
    *     object with the following structure:
    *     ```
    *     {
-   *         "variant_urn": "<URN of the mapped variant>",
+   *         "variant_urn": "<URN of the annotated variant>",
    *         "annotation": {
    *             ... // Functional study result details
    *         }
@@ -10619,7 +10639,7 @@ export interface operations {
    * Returns:
    *     StreamingResponse: A streaming response containing functional study results in NDJSON format.
    *         Headers include:
-   *         - X-Total-Count: Total number of mapped variants being streamed
+   *         - X-Total-Count: Total number of annotated variants being streamed
    *         - X-Processing-Started: ISO timestamp when processing began
    *         - X-Stream-Type: Set to "functional-study-result"
    *         - Access-Control-Expose-Headers: Exposed headers for CORS
@@ -10627,16 +10647,21 @@ export interface operations {
    * Raises:
    *     HTTPException:
    *         - 404 if the score set with the given URN is not found
-   *         - 404 if no mapped variants are associated with the score set
+   *         - 404 if no annotated variants are associated with the score set
    *         - 403 if the user lacks READ permission for the score set
    *
    * Notes:
-   *     - Only returns current mapped variants (MappedVariant.current == True)
-   *     - Eagerly loads related ScoreSet data including publications, users, license, and experiment
-   *     - Logs requests and errors for monitoring and debugging purposes
+   *     - The `as_of` parameter allows reconstruction of the molecular layer as it stood at a specific
+   *       instant, over the variant's fixed score. It is ISO 8601 formatted and ideally timezone-aware.
+   *     - The response is streamed to allow for efficient handling of large datasets, and progress updates
+   *       are logged for monitoring purposes.
    */
   get_score_set_annotated_variants_functional_study_result_api_v1_score_sets__urn__annotated_variants_study_result_get: {
     parameters: {
+      query?: {
+        /** @description Reconstruct the molecular layer (Cat-VRS membership, VEP/gnomAD/ClinVar annotations) as it stood at this instant, over the variant's fixed score. ISO 8601, ideally timezone-aware. Content valid-time only — it never re-selects a score-set version, and scores/classifications are as-of-invariant. Defaults to current. */
+        as_of?: string | null;
+      };
       header?: {
         "x-active-roles"?: string | null;
       };
@@ -10645,7 +10670,7 @@ export interface operations {
       };
     };
     responses: {
-      /** @description Stream functional study result annotations for mapped variants. */
+      /** @description Stream functional study result annotations for annotated variants. */
       200: {
         content: {
           "application/json": {
@@ -12369,14 +12394,17 @@ export interface operations {
    * Look up variants by VRS identifier
    * @description Resolve a GA4GH VRS identifier to the readable variants whose mapping links that allele.
    *
-   * The new-substrate replacement for the legacy mapped-variant VRS lookup: a deduplicated allele may be
-   * shared across score sets, so one identifier can resolve to several variants. Results are filtered to
-   * the score sets the caller may read; a 404 is returned when nothing readable matches.
+   * A deduplicated allele may be shared across score sets, so one identifier can resolve to several
+   * variants. This is a lookup returning a collection: results are filtered to the score sets the caller
+   * may read, and an empty list is returned when nothing readable matches. An absent identifier and a
+   * match visible only in a private score set are deliberately indistinguishable (both yield ``[]``), so
+   * the response never reveals a private allele's existence.
    */
   lookup_variants_by_vrs_identifier_api_v1_variants_vrs__identifier__get: {
     parameters: {
       query?: {
-        only_current?: boolean;
+        /** @description Reconstruct the molecular layer (Cat-VRS membership, VEP/gnomAD/ClinVar annotations) as it stood at this instant, over the variant's fixed score. ISO 8601, ideally timezone-aware. Content valid-time only — it never re-selects a score-set version, and scores/classifications are as-of-invariant. Defaults to current. */
+        as_of?: string | null;
       };
       header?: {
         "x-active-roles"?: string | null;
@@ -12475,6 +12503,10 @@ export interface operations {
    */
   get_variant_study_result_api_v1_variants__urn__va_study_result_get: {
     parameters: {
+      query?: {
+        /** @description Reconstruct the molecular layer (Cat-VRS membership, VEP/gnomAD/ClinVar annotations) as it stood at this instant, over the variant's fixed score. ISO 8601, ideally timezone-aware. Content valid-time only — it never re-selects a score-set version, and scores/classifications are as-of-invariant. Defaults to current. */
+        as_of?: string | null;
+      };
       header?: {
         "x-active-roles"?: string | null;
       };
@@ -12519,6 +12551,10 @@ export interface operations {
    */
   get_variant_functional_impact_statement_api_v1_variants__urn__va_functional_statement_get: {
     parameters: {
+      query?: {
+        /** @description Reconstruct the molecular layer (Cat-VRS membership, VEP/gnomAD/ClinVar annotations) as it stood at this instant, over the variant's fixed score. ISO 8601, ideally timezone-aware. Content valid-time only — it never re-selects a score-set version, and scores/classifications are as-of-invariant. Defaults to current. */
+        as_of?: string | null;
+      };
       header?: {
         "x-active-roles"?: string | null;
       };
@@ -12563,6 +12599,10 @@ export interface operations {
    */
   get_variant_pathogenicity_statement_api_v1_variants__urn__va_pathogenicity_statement_get: {
     parameters: {
+      query?: {
+        /** @description Reconstruct the molecular layer (Cat-VRS membership, VEP/gnomAD/ClinVar annotations) as it stood at this instant, over the variant's fixed score. ISO 8601, ideally timezone-aware. Content valid-time only — it never re-selects a score-set version, and scores/classifications are as-of-invariant. Defaults to current. */
+        as_of?: string | null;
+      };
       header?: {
         "x-active-roles"?: string | null;
       };

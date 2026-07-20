@@ -158,7 +158,7 @@ export default {
       }
       return _.filter(
         this.allStructureModels,
-        (m) => Math.max(0, Math.min(m.end, range.high) - Math.max(m.start, range.low)) > 0
+        (model) => this.modelScoresetOverlap(model, range) > 0
       )
     },
     // Show the structure selector whenever we're displaying a fragment of the protein — even a single
@@ -227,6 +227,9 @@ export default {
   },
 
   methods: {
+    modelScoresetOverlap: function(model, range) {
+      return Math.max(0, Math.min(model.end, range.high) - Math.max(model.start, range.low))
+    },
     clickedResidue: function (e) {
       this.$emit('clickedResidue', this.toCanonicalResidueEvent(e.eventData))
     },
@@ -317,9 +320,8 @@ export default {
       // scored residues first; fall back to the widest coverage when scores haven't loaded yet.
       const range = this.scoredResidueRange
       if (range) {
-        const overlap = (m) => Math.max(0, Math.min(m.end, range.high) - Math.max(m.start, range.low))
-        const best = _.maxBy(models, overlap)
-        if (best && overlap(best) > 0) {
+        const best = _.maxBy(models, (m) => this.modelScoresetOverlap(m, range))
+        if (best && this.modelScoresetOverlap(best, range) > 0) {
           return best
         }
       }

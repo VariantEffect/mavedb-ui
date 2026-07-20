@@ -16,8 +16,14 @@
         label="Download"
         :menu-button-props="{class: 'p-button-sm p-button-secondary'}"
         :model="downloadMenuItems"
-        @click="downloadMenuItems[0]?.command?.()"
-      />
+        @click="downloadPdb()"
+      >
+        <template #menuitemicon="{item, class: iconClass}">
+          <span v-if="item.faIcons" :class="['protein-download-menu-icon', iconClass]">
+            <FontAwesomeIcon v-for="faIcon in item.faIcons" :key="faIcon" :icon="faIcon" />
+          </span>
+        </template>
+      </SplitButton>
     </div>
     <div v-show="selectedAlphaFold" id="pdbe-molstar-viewer-container" class="flex-1 relative z-5000"></div>
     <div v-if="!selectedAlphaFold" class="m-auto">No AlphaFold entry found</div>
@@ -35,6 +41,7 @@ import FloatLabel from 'primevue/floatlabel'
 import Select from 'primevue/select'
 import SelectButton from 'primevue/selectbutton'
 import SplitButton from 'primevue/splitbutton'
+import {FontAwesomeIcon} from '@fortawesome/vue-fontawesome'
 import {PDBeMolstarPlugin} from 'pdbe-molstar/lib/viewer'
 import 'pdbe-molstar/build/pdbe-molstar-light.css'
 import _ from 'lodash'
@@ -45,7 +52,7 @@ import useScopedId from '@/composables/scoped-id'
 export default {
   name: 'ProteinStructureView',
 
-  components: {FloatLabel, Select, SelectButton, SplitButton},
+  components: {FloatLabel, FontAwesomeIcon, Select, SelectButton, SplitButton},
 
   props: {
     uniprotId: {
@@ -115,12 +122,19 @@ export default {
   }),
 
   computed: {
+    // Flat model for the SplitButton's internal TieredMenu. Disabled rows act as group headers (skipped by
+    // the menu's keyboard navigation) and separators divide the groups so it reads like the grouped-select example.
     downloadMenuItems: function () {
       return [
-        {label: 'PDB structure', icon: 'pi pi-download', command: () => this.downloadPdb()},
-        {label: 'PyMOL Macro Language (.pml)', icon: 'pi pi-palette', command: () => this.downloadPml()},
-        {label: 'ChimeraX command file (.cxc)', icon: 'pi pi-palette', command: () => this.downloadCxc()},
-        {label: 'MolViewSpec JSON (.mvsj)', icon: 'pi pi-palette', command: () => this.downloadMvsj()}
+        {label: 'Model', class: 'protein-download-menu-header', disabled: true},
+        {label: 'PDB structure', faIcons: ['fa-solid fa-cube'], command: () => this.downloadPdb()},
+        {separator: true},
+        {label: 'Coloring', class: 'protein-download-menu-header', disabled: true},
+        {label: 'PyMOL Macro Language (.pml)', faIcons: ['fa-solid fa-palette'], command: () => this.downloadPml()},
+        {label: 'ChimeraX command file (.cxc)', faIcons: ['fa-solid fa-palette'], command: () => this.downloadCxc()},
+        {separator: true},
+        {label: 'Model + Coloring', class: 'protein-download-menu-header', disabled: true},
+        {label: 'MolViewSpec JSON (.mvsj)', faIcons: ['fa-solid fa-cube', 'fa-solid fa-palette'], command: () => this.downloadMvsj()}
       ]
     },
     currentColorByLabel: function () {
@@ -580,5 +594,24 @@ export default {
 <style>
 .msp-plugin .msp-layout-standard {
   border: 0;
+}
+
+/* Render the disabled group rows in the download menu as section headers rather than grayed-out items. */
+.p-tieredmenu-item.protein-download-menu-header {
+  opacity: 1;
+}
+.protein-download-menu-header .p-tieredmenu-item-label {
+  font-size: 0.75rem;
+  font-weight: 600;
+  letter-spacing: 0.04em;
+  text-transform: uppercase;
+  color: var(--p-text-muted-color);
+}
+
+/* Lay out the (possibly multiple) FontAwesome icons rendered for a download menu item. */
+.protein-download-menu-icon {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.25rem;
 }
 </style>

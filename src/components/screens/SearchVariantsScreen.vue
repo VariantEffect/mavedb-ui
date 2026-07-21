@@ -1018,9 +1018,7 @@ export default defineComponent({
           let mappedVariants
           try {
             mappedVariants = await lookupVariantsByVrsDigest(searchStr)
-          } catch (error: unknown) {
-            const {status} = getErrorResponse(error)
-            if (status === 404) {
+            if (mappedVariants.length === 0) {
               this.toast.add({
                 severity: 'warn',
                 summary: 'VRS identifier not found',
@@ -1029,6 +1027,7 @@ export default defineComponent({
               })
               return
             }
+          } catch (error: unknown) {
             throw error
           }
           for (const mappedVariant of mappedVariants) {

@@ -12,15 +12,19 @@
     </div>
     <div v-else-if="status === 'error'" class="flex items-center justify-center gap-2 px-5 py-4 text-sm text-red-600">
       <span class="flex items-center">Could not load variant detail.</span>
-      <button type="button" class="font-semibold text-link hover:underline" @click="fetchDetail(urn)">Retry</button>
+      <button class="font-semibold text-link hover:underline" type="button" @click="fetchDetail(urn)">Retry</button>
     </div>
 
     <template v-else-if="detail">
-      <!-- Identity -->
-      <div class="flex flex-wrap items-baseline gap-x-2.5 gap-y-1 px-4 pb-3 pt-3.5 tablet:px-5">
+      <!-- Identity: shown with the facts grid, and in the empty state only when an alternate spelling
+           (a distinct underlying nucleotide coordinate) disambiguates the selection. -->
+      <div
+        v-if="anyAnnotationsAvailable || hasAlternateSpelling"
+        class="flex flex-wrap items-baseline gap-x-2.5 gap-y-1 px-4 pb-3 pt-3.5 tablet:px-5"
+      >
         <span class="font-mono text-base font-bold leading-none text-text-primary">{{ coordinate || detail.urn }}</span>
         <span
-          v-if="underlyingCoordinate && underlyingCoordinate !== coordinate"
+          v-if="hasAlternateSpelling"
           v-tooltip.top="'Underlying nucleotide coordinate'"
           class="font-mono text-xs text-text-muted"
         >
@@ -29,21 +33,19 @@
       </div>
 
       <!-- Facts -->
-      <div class="grid grid-cols-2 gap-px border-t border-border-light bg-border-light tablet:grid-cols-4">
+      <div
+        v-if="anyAnnotationsAvailable"
+        class="grid grid-cols-2 gap-px border-t border-border-light bg-border-light tablet:grid-cols-4"
+      >
         <div class="stat">
           <span v-key-term="'consequence'" class="stat-label">Molecular consequence</span>
           <template v-if="consequence?.consequence">
             <span class="stat-value font-semibold">{{ formatToken(consequence.consequence) }}</span>
-            <span class="stat-value font-semibold">{{
-              consequence?.consequence ? formatToken(consequence.consequence) : '—'
-            }}</span>
             <span class="mt-auto text-[10px] text-text-muted">
               As of VEP version {{ consequence?.sourceVersion ?? '—' }}</span
             >
           </template>
-          <template v-else>
-            <span class="stat-value font-semibold">—</span>
-          </template>
+          <span v-else class="stat-value font-semibold">—</span>
         </div>
         <div class="stat">
           <span v-key-term="'functional-impact'" class="stat-label">Classification</span>
@@ -71,8 +73,14 @@
         />
       </div>
 
-      <!-- Status and Links -->
+      <!-- No facts to display: a quiet empty state. -->
+      <p v-else class="px-4 py-3 text-xs text-text-muted tablet:px-5">
+        No reference annotations were found for this variant.
+      </p>
+
+      <!-- Status and links — the superseded badge and full-details link, shared by both states. -->
       <div
+        v-if="!detail.isCurrent || detail.clingenAlleleId"
         class="border-t border-border-light bg-surface flex flex-wrap items-baseline gap-x-2.5 gap-y-1 px-4 pb-3 pt-3.5 tablet:px-5"
       >
         <span
@@ -103,6 +111,9 @@ import MvLoader from '@/components/common/MvLoader.vue'
 import VariantGnomadStat from '@/components/variant/VariantGnomadStat.vue'
 import VariantClinvarStat from '@/components/variant/VariantClinvarStat.vue'
 import {getVariantDetail} from '@/api/mavedb/variants'
+import {collectGnomadFrequencies} from '@/lib/gnomad'
+import {enumerateUnderlyingClinvar, resolveClinvarRecords} from '@/lib/clinvar-controls'
+import {resolveClinvarHeadline} from '@/lib/clinvar-control-placement'
 import type {components} from '@/schema/openapi'
 
 type VariantDetail = components['schemas']['VariantDetail']
@@ -189,6 +200,30 @@ export default defineComponent({
       return this.detail?.supersededByScoreSet
         ? `Superseded by score set ${this.detail.supersededByScoreSet}. That version may not contain a corresponding variant.`
         : 'This measurement is from a superseded version of its score set. The newer version may not contain a corresponding variant.'
+    },
+    hasGnomad(): boolean {
+      if (this.gnomad) return true
+      return collectGnomadFrequencies(this.detail?.annotations ?? {}, this.detail?.alleles ?? {}).length > 0
+    },
+    hasClinvar(): boolean {
+      const records = resolveClinvarRecords(
+        this.detail?.annotations ?? {},
+        this.detail?.alleles ?? {},
+        this.detail?.assayLevelDigest ?? null,
+        this.clinvarVersion
+      )
+      const headline = resolveClinvarHeadline(records, this.detail?.assayLevelDigest ?? null)
+      return headline.kind !== 'none' || enumerateUnderlyingClinvar(records).length > 0
+    },
+    // The facts grid only earns its place when a cell resolves; otherwise it's four dashes (clutter), and the
+    // template falls back to an empty state instead.
+    anyAnnotationsAvailable(): boolean {
+      return !!this.consequence?.consequence || this.selectedClassification != null || this.hasGnomad || this.hasClinvar
+    },
+    // A distinct underlying nucleotide coordinate — an alternate spelling worth keeping the identity line for,
+    // so it disambiguates coding variants that collapse to the same protein change.
+    hasAlternateSpelling(): boolean {
+      return !!this.underlyingCoordinate && this.underlyingCoordinate !== this.coordinate
     }
   },
 

@@ -15,11 +15,11 @@ export const vrsDigestRegex = /^ga4gh:[^.]+\.[0-9A-Za-z_-]{32}$/
 
 /**
  * Extracts the score set URN from a MaveDB variant URN.
- * Variant URNs follow the format urn:mavedb:XXXXXXXX-X-N-SUFFIX.
- * The score set URN is the first three hyphenated segments.
+ * Variant URNs follow the format urn:mavedb:XXXXXXXX-X-N#SUFFIX.
+ * The score set URN is the portion before the '#' variant separator.
  */
 export function scoreSetUrnFromVariantUrn(variantUrn: string): string | null {
-  const match = variantUrn.match(/^(urn:mavedb:[^-]+-[^-]+-[^-]+)(?:-.+)?$/)
+  const match = variantUrn.match(/^(urn:mavedb:[^-]+-[^-]+-[^-]+)#.+$/)
   return match?.[1] ?? null
 }
 
@@ -93,10 +93,15 @@ export function extractIdFromUrl(url: string | undefined): string | undefined {
 
 /** Transform a raw ClinGen allele API response into an AlleleResult for display. */
 export function createAlleleResult(data: ClinGenAllele, maneStatus: string | null): AlleleResult {
+  const clingenAlleleId = extractIdFromUrl(data['@id'])
   const allele: AlleleResult = {
     clingenAlleleUrl: data['@id'],
-    clingenAlleleId: extractIdFromUrl(data['@id']),
-    canonicalAlleleName: data.communityStandardTitle?.[0],
+    clingenAlleleId,
+    // Complete records carry a communityStandardTitle; lean amino-acid records (no title, genomic, or
+    // transcript alleles) only carry the protein hgvs. Fall back to that, then to the ClinGen ID, so the
+    // card always has a heading instead of rendering undefined.
+    canonicalAlleleName:
+      data.communityStandardTitle?.[0] ?? data.aminoAcidAlleles?.[0]?.hgvs?.[0] ?? clingenAlleleId,
     maneStatus,
     genomicAlleles: data.genomicAlleles ?? [],
     grch38Hgvs: null,

@@ -1,6 +1,6 @@
 import {describe, expect, it} from 'vitest'
 
-import {mergeAlleleSpellings, type AlleleResult} from '@/lib/mavemd'
+import {createAlleleResult, mergeAlleleSpellings, type AlleleResult} from '@/lib/mavemd'
 
 function result(overrides: Partial<AlleleResult>): AlleleResult {
   return {
@@ -18,6 +18,37 @@ function result(overrides: Partial<AlleleResult>): AlleleResult {
     ...overrides
   }
 }
+
+describe('createAlleleResult', () => {
+  it('titles a complete record from its communityStandardTitle', () => {
+    const allele = createAlleleResult(
+      {'@id': 'http://reg.genome.network/allele/CA123', communityStandardTitle: ['NM_x:c.818G>A']},
+      null
+    )
+    expect(allele.canonicalAlleleName).toBe('NM_x:c.818G>A')
+  })
+
+  it('falls back to the protein hgvs for a lean amino-acid record with no title', () => {
+    const allele = createAlleleResult(
+      {
+        '@id': 'http://reg.genome.network/allele/PA2579942745',
+        aminoAcidAlleles: [
+          {hgvs: ['NP_001484.1:p.Pro368Ser'], matchingRegisteredTranscripts: [{'@id': 'CA415209784'}]}
+        ]
+      },
+      null
+    )
+    expect(allele.canonicalAlleleName).toBe('NP_001484.1:p.Pro368Ser')
+  })
+
+  it('falls back to the ClinGen ID when a record has neither a title nor a protein hgvs', () => {
+    const allele = createAlleleResult(
+      {'@id': 'http://reg.genome.network/allele/PA2830778226', aminoAcidAlleles: [{}]},
+      null
+    )
+    expect(allele.canonicalAlleleName).toBe('PA2830778226')
+  })
+})
 
 describe('mergeAlleleSpellings', () => {
   it('folds a transcript spelling onto the target and keeps distinct MANE coordinates', () => {

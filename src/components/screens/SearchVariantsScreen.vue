@@ -431,7 +431,11 @@
             <router-link
               v-if="scoreSetUrnFromVariantUrn(allele.variantUrn)"
               class="text-sm font-semibold text-link hover:underline"
-              :to="{name: 'scoreSet', params: {urn: scoreSetUrnFromVariantUrn(allele.variantUrn)}}"
+              :to="{
+                name: 'scoreSet',
+                params: {urn: scoreSetUrnFromVariantUrn(allele.variantUrn)},
+                query: {variantUrn: allele.variantUrn}
+              }"
             >
               View score set &rarr;
             </router-link>
@@ -1091,9 +1095,9 @@ export default defineComponent({
                   }
                   this.alleles.push(card)
                 } else {
-                  const bareAllele = createAlleleResult(result, null)
-                  bareAllele.canonicalAlleleName = searchStr
-                  this.alleles.push(bareAllele)
+                  // No registered transcripts to merge; createAlleleResult titles it from the record's
+                  // own protein hgvs (falling back to the ClinGen ID).
+                  this.alleles.push(createAlleleResult(result, null))
                 }
               }
               break

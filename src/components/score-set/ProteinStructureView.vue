@@ -192,16 +192,22 @@ export default {
     // Flat model for the SplitButton's internal TieredMenu. Disabled rows act as group headers (skipped by
     // the menu's keyboard navigation) and separators divide the groups so it reads like the grouped-select example.
     downloadMenuItems: function () {
-      const structureItem = {label: 'Structure file', faIcons: ['fa-solid fa-cube'], command: () => this.downloadStructure()}
+      // One item per structure format the source provides (AlphaFold offers pdb/cif/bcif; 3D-Beacons
+      // sources typically one).
+      const structureItems = _.map(this.selectedModel?.downloads, (download) => ({
+        label: download.label,
+        faIcons: ['fa-solid fa-cube'],
+        command: () => this.downloadStructure(download)
+      }))
       // Coloring exports write canonical UniProt residue numbers, which match AlphaFold and SWISS-MODEL
       // (numbered by canonical position) but not PDBe structures (author numbering) — the colors would land
-      // on the wrong residues. For PDBe, offer only the raw structure file.
+      // on the wrong residues. For PDBe, offer only the raw structure files.
       if (this.selectedModel?.provider === 'PDBe') {
-        return [structureItem]
+        return structureItems
       }
       return [
         {label: 'Model', class: 'protein-download-menu-header', disabled: true},
-        structureItem,
+        ...structureItems,
         {separator: true},
         {label: 'Coloring', class: 'protein-download-menu-header', disabled: true},
         {label: 'PyMOL Macro Language (.pml)', faIcons: ['fa-solid fa-palette'], command: () => this.downloadPml()},
@@ -305,6 +311,17 @@ export default {
       }
       return ranges
     },
+    // The download formats offered for a structure, in a stable order (pdb, cif, bcif), skipping any the
+    // source doesn't provide. Each entry drives one item in the download menu's Model group.
+    structureDownloads: function (urlsByFormat) {
+      return [
+        {format: 'pdb', label: 'PDB (.pdb)'},
+        {format: 'cif', label: 'mmCIF (.cif)'},
+        {format: 'bcif', label: 'BinaryCIF (.bcif)'}
+      ]
+        .filter((f) => urlsByFormat[f.format])
+        .map((f) => ({...f, url: urlsByFormat[f.format]}))
+    },
     fetchStructureModels: async function () {
       // Prefer the canonical AlphaFold model when one exists (normal-length proteins).
       try {
@@ -321,7 +338,8 @@ export default {
               start: canonical.uniprotStart,
               end: canonical.uniprotEnd,
               fullLength: true,
-              label: `AlphaFold · ${canonical.uniprotStart}–${canonical.uniprotEnd}`
+              label: `AlphaFold · ${canonical.uniprotStart}–${canonical.uniprotEnd}`,
+              downloads: this.structureDownloads({pdb: canonical.pdbUrl, cif: canonical.cifUrl, bcif: canonical.bcifUrl})
             }
           ]
         }
@@ -341,18 +359,22 @@ export default {
         return _.chain(data.structures)
           .map('summary')
           .filter((s) => s?.model_url && ['PDBe', 'SWISS-MODEL'].includes(s.provider))
-          .map((s) => ({
-            id: s.model_identifier,
-            url: s.model_url,
-            format: cifFormats[s.model_format] || 'cif',
-            provider: s.provider,
-            start: s.uniprot_start,
-            end: s.uniprot_end,
-            fullLength: false,
-            label:
-              `${s.provider} · ${s.uniprot_start}–${s.uniprot_end}` +
-              (s.resolution ? ` · ${s.resolution.toFixed(1)}Å` : '')
-          }))
+          .map((s) => {
+            const format = cifFormats[s.model_format] || 'cif'
+            return {
+              id: s.model_identifier,
+              url: s.model_url,
+              format,
+              provider: s.provider,
+              start: s.uniprot_start,
+              end: s.uniprot_end,
+              fullLength: false,
+              label:
+                `${s.provider} · ${s.uniprot_start}–${s.uniprot_end}` +
+                (s.resolution ? ` · ${s.resolution.toFixed(1)}Å` : ''),
+              downloads: this.structureDownloads({[format]: s.model_url})
+            }
+          })
           .sortBy('start')
           .value()
       } catch {
@@ -425,15 +447,16 @@ export default {
       this.render()
     },
 
-    downloadStructure: async function () {
-      const model = this.selectedModel
-      if (!model?.url) {
+    downloadStructure: async function (download) {
+      // Default (main split-button click) to the first offered format.
+      const target = download || this.selectedModel?.downloads?.[0]
+      if (!target?.url) {
         return
       }
       try {
         // Fetch as a blob so any structure format (cif, bcif, pdb) downloads byte-for-byte intact.
-        const response = await axios.get(model.url, {responseType: 'blob'})
-        const filename = model.url.split('/').pop() || `${model.id}.${model.format}`
+        const response = await axios.get(target.url, {responseType: 'blob'})
+        const filename = target.url.split('/').pop() || `${this.selectedModel?.id}.${target.format}`
         this.downloadFile(response.data, filename)
       } catch {
         this.$toast.add({severity: 'error', summary: 'Error', detail: 'Failed to download structure file'})

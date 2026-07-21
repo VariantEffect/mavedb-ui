@@ -32,14 +32,19 @@
       <div class="grid grid-cols-2 gap-px border-t border-border-light bg-border-light tablet:grid-cols-4">
         <div class="stat">
           <span v-key-term="'consequence'" class="stat-label">Molecular consequence</span>
-          <span class="stat-value font-semibold">{{
-            consequence?.consequence ? formatToken(consequence.consequence) : '—'
-          }}</span>
-          <span class="mt-auto text-[10px] text-text-muted">
-            As of VEP version {{ consequence?.sourceVersion ?? '—' }}</span
-          >
+          <template v-if="consequence?.consequence">
+            <span class="stat-value font-semibold">{{ formatToken(consequence.consequence) }}</span>
+            <span class="stat-value font-semibold">{{
+              consequence?.consequence ? formatToken(consequence.consequence) : '—'
+            }}</span>
+            <span class="mt-auto text-[10px] text-text-muted">
+              As of VEP version {{ consequence?.sourceVersion ?? '—' }}</span
+            >
+          </template>
+          <template v-else>
+            <span class="stat-value font-semibold">—</span>
+          </template>
         </div>
-
         <div class="stat">
           <span v-key-term="'functional-impact'" class="stat-label">Classification</span>
           <span v-if="selectedClassification" class="flex flex-wrap items-center gap-1.5">

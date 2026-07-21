@@ -221,6 +221,19 @@ export default {
       const match = _.find(this.colorByOptions, (option) => _.isEqual(option.value, this.colorBy))
       return match?.name || 'Custom'
     },
+    // Base name (no extension) for downloaded files. AlphaFold's file URLs already have clean, versioned
+    // names (AF-<acc>-F1-model_v6), so keep them. 3D-Beacons URLs (PDBe, SWISS-MODEL) carry query strings
+    // and their ids contain ":", so build a filesystem-safe name from the UniProt id and residue range.
+    downloadBaseName: function () {
+      const model = this.selectedModel
+      if (!model) {
+        return 'structure'
+      }
+      if (model.provider === 'AlphaFold DB') {
+        return model.url.split('/').pop().replace(/\.[^.]+$/, '')
+      }
+      return `${this.uniprotId}_${model.start}-${model.end}`
+    },
   },
 
   watch: {
@@ -456,7 +469,7 @@ export default {
       try {
         // Fetch as a blob so any structure format (cif, bcif, pdb) downloads byte-for-byte intact.
         const response = await axios.get(target.url, {responseType: 'blob'})
-        const filename = target.url.split('/').pop() || `${this.selectedModel?.id}.${target.format}`
+        const filename = `${this.downloadBaseName}.${target.format}`
         this.downloadFile(response.data, filename)
       } catch {
         this.$toast.add({severity: 'error', summary: 'Error', detail: 'Failed to download structure file'})
@@ -478,7 +491,7 @@ export default {
       if (!this.selectedModel) {
         return
       }
-      const filename = `${this.selectedModel.id}-${_.kebabCase(this.currentColorByLabel)}.pml`
+      const filename = `${this.downloadBaseName}-${_.kebabCase(this.currentColorByLabel)}.pml`
       this.downloadFile(new Blob([this.buildPml()], {type: 'text/plain'}), filename)
     },
 
@@ -486,7 +499,7 @@ export default {
       if (!this.selectedModel) {
         return
       }
-      const filename = `${this.selectedModel.id}-${_.kebabCase(this.currentColorByLabel)}.cxc`
+      const filename = `${this.downloadBaseName}-${_.kebabCase(this.currentColorByLabel)}.cxc`
       this.downloadFile(new Blob([this.buildCxc()], {type: 'text/plain'}), filename)
     },
 
@@ -494,7 +507,7 @@ export default {
       if (!this.selectedModel?.url) {
         return
       }
-      const filename = `${this.selectedModel.id}-${_.kebabCase(this.currentColorByLabel)}.mvsj`
+      const filename = `${this.downloadBaseName}-${_.kebabCase(this.currentColorByLabel)}.mvsj`
       this.downloadFile(new Blob([this.buildMvsj()], {type: 'application/json'}), filename)
     },
 
